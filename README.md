@@ -1,5 +1,5 @@
-# feature-requests ✨
-A place to request new features and track their development using Github Issues/Projects
+# feature-requests 🏁
+Request new features and check our roadmap for the next few months
 
 ## Roadmap
 
