@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "preserveConstEnums": true,
+    "strictNullChecks": true,
+    "moduleResolution": "node",
+    "target": "es6",
+    "outDir": "./dist",
+    "sourceMap": true,
+    "module": "CommonJS",
+    "lib": [
+      "es2015",
+      "es2016.array.include"
+    ]
+  },
+  "exclude": [
+    "node_modules",
+    "dist"
+  ],
+  "include": [
+    "./src/**/*.ts",
+    "./tests/**/*.ts",
+    "./custom.d.ts"
+  ]
+}
