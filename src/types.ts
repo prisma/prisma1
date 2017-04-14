@@ -19,5 +19,13 @@ export interface AuthServer {
   validateAuthToken(token: string): Promise<TokenValidationResult>
 }
 
-export interface OutputStream {
+export interface SchemaInfo {
+  schema: string
+  source: string
+}
+
+export interface ProjectInfo {
+  projectId: string
+  version: string
+  schema: string
 }

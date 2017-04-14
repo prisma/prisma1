@@ -1,32 +1,34 @@
 import test from 'ava'
-import {TestResolver} from '../src/utils/file'
-import * as os from 'os'
-import * as path from 'path'
+import TestResolver from '../src/resolvers/TestResolver'
 import authCommand from '../src/commands/auth'
 import 'isomorphic-fetch'
-import {GraphcoolAuthServer} from '../src/commands/auth'
-import {TokenValidationResult, AuthServer} from '../src/types'
+import {authEndpoint, authConfigFilePath, testToken, systemAPIEndpoint} from '../src/utils/constants'
+import TestAuthServer from '../src/api/TestAuthServer'
 const fetchMock = require('fetch-mock')
 const debug = require('debug')('graphcool')
-
-const TEST_TOKEN = 'abcdefghijklmnopqrstuvwxyz'
-const apiEndpoint = 'https://cli-auth-api.graph.cool'
-
-const configFilePath = path.join(os.homedir(), '.graphcool')
-
 
 test.afterEach(() => {
   fetchMock.reset()
 })
 
 /*
- * Test succeeding authentication and verify the token is stored in <home>/.graphcool
+ * Test succeeding authentication and verify
+ * the token is stored in ~/.graphcool
  */
-test('Succeeding auth', async t => {
+test('Succeeding auth without token', async t => {
   // configure HTTP mocks
-  fetchMock.post(`${apiEndpoint}/create`, {})
-  fetchMock.get(`${apiEndpoint}/*`, {
-    authToken: TEST_TOKEN
+  fetchMock.post(`${authEndpoint}/create`, {})
+  fetchMock.get(`${authEndpoint}/*`, {
+    authToken: testToken
+  })
+  fetchMock.post(`${systemAPIEndpoint}`, {
+    data: {
+      viewer: {
+        user: {
+          id: "abcdefghik"
+        }
+      }
+    }
   })
 
   // configure auth dependencies
@@ -34,29 +36,44 @@ test('Succeeding auth', async t => {
   const props = { token: undefined }
   const authServer = new TestAuthServer()
 
-  // start authentication
+  // authenticate
   await t.notThrows(
     authCommand(props, resolver, authServer)
   )
 
   // verify result
-  const {token} = JSON.parse(resolver.read(configFilePath))
-  t.is(token, TEST_TOKEN)
+  const {token} = JSON.parse(resolver.read(authConfigFilePath))
+  t.is(token, testToken)
 })
 
+/*
+ * Test succeeding authentication with existing token
+ * and verify the correct token is still stored in ~/.graphcool
+ */
+test('Succeeding auth with existing token', async t => {
+  // configure HTTP mocks
+  fetchMock.post(`${systemAPIEndpoint}`, {
+    data: {
+      viewer: {
+        user: {
+          id: "abcdefghik"
+        }
+      }
+    }
+  })
 
+  // configure auth dependencies
+  const resolver = new TestResolver({ authConfigFilePath: testToken })
+  const props = { token: testToken }
+  const authServer = new TestAuthServer()
 
+  // authenticate
+  await t.notThrows(
+    authCommand(props, resolver, authServer)
+  )
 
-export class TestAuthServer extends GraphcoolAuthServer implements AuthServer {
-
-  getAuthToken(): Promise<string> {
-    return new Promise((resolve, reject) => resolve(TEST_TOKEN))
-  }
-
-  async validateAuthToken(token: string): Promise<TokenValidationResult> {
-    return super.validateAuthToken(token)
-  }
-}
-
-
+  // verify result
+  const {token} = JSON.parse(resolver.read(authConfigFilePath))
+  t.is(token, testToken)
+})
 

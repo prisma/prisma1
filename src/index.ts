@@ -1,13 +1,12 @@
 #!/usr/bin/env node
 
 import * as minimist from 'minimist'
+import {Command} from './types'
 
 function main() {
   const argv = minimist(process.argv.slice(2))
 
-  // const command = argv._[0] as Command | undefined
-
-  process.stdout.write(JSON.stringify(argv))
+  const command = argv._[0] as Command | undefined
 
 }
 

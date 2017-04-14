@@ -1,81 +1,75 @@
-import { Region } from '../types'
+import {Region, Resolver, SchemaInfo} from '../types'
 import figures = require('figures')
 import generateName = require('sillyname')
+import { createProject } from '../api/api'
 import ora = require('ora')
-import * as chalk from 'chalk'
-import fetch from 'node-fetch'
 import * as fs from 'fs'
 import * as path from 'path'
-// import { writeSchemaFile } from '../utils/file'
+import {
+  graphcoolProjectFileName,
+  creatingProjectMessage,
+  createdProjectMessage,
+  couldNotCreateProjectMessage,
+  projectAlreadyExistsMessage
+} from '../utils/constants'
+import {writeProjectFile} from '../utils/file'
+const debug = require('debug')('graphcool')
 
 interface Props {
-  schema?: string
+  schemaUrl?: string
   name?: string
   alias?: string
   region?: Region // TODO coming soon...
 }
 
-export default async(props: Props): Promise<void> => {
-  if (fs.existsSync('graphcool.schema') && fs.readFileSync('graphcool.schema').toString().includes('# projectId: "')) {
-    throw new Error(`graphcool.schema already exists with a projectId. Looks like you've already setup your backend.`)
+export default async(props: Props, resolver: Resolver): Promise<void> => {
+  if (fs.existsSync(graphcoolProjectFileName) && fs.readFileSync(graphcoolProjectFileName).toString().includes('@ project "')) {
+    process.stdout.write(projectAlreadyExistsMessage)
+    process.exit(1)
   }
 
   const name = props.name || generateName()
   const aliasPart = props.alias ? `alias: "${props.alias}"` : ''
 
-  const spinner = ora(`Creating project ${chalk.bold(name)}...`).start()
+  const spinner = ora(creatingProjectMessage(name)).start()
 
-  // resolve schema
-  const schema = await getSchema(props.schema)
+  try {
 
-  // create project
-  const result = await api().query(`mutation addProject($schema: String) {
-    addProject(input: {
-      name: "${name}"
-      ${aliasPart}
-      schema: $schema
-      clientMutationId: "static"
-    }) {
-      project {
-        id
-        schema
-      }
-    }
-  }`, {schema: schema.schema})
+    // resolve schema
+    const schema = await getSchema(props.schemaUrl, resolver)
+    debug(`Resolved schema: ${JSON.stringify(schema)}`)
 
-  const projectId = result.addProject.project.id
-  const resultSchema = result.addProject.project.schema
+    // create project
+    const projectInfo = await createProject(name, aliasPart, schema.schema, resolver)
+    writeProjectFile(projectInfo, resolver)
+    debug(`Did create project: ${JSON.stringify(projectInfo)}`)
 
-  writeSchemaFile(resultSchema, projectId)
+    spinner.stop()
 
-  spinner.stop()
+    const message = createdProjectMessage(name, schema.source, projectInfo.projectId)
+    process.stdout.write(message)
 
-  const message = `${chalk.green(figures.tick)}  Created project ${chalk.bold(name)} from ${chalk.bold(schema.source)}. Your endpoints are:
- 
-  ${chalk.blue(figures.pointer)} Simple API: https://api.graph.cool/simple/v1/${projectId}
-  ${chalk.blue(figures.pointer)} Relay API: https://api.graph.cool/relay/v1/${projectId}`
+  } catch(e) {
+    debug(`Could not create project: ${e.message}`)
+    process.stdout.write(couldNotCreateProjectMessage)
+    process.exit(1)
+  }
 
-  console.log(message)
 }
 
-interface SchemaResult {
-  schema: string
-  source: string
-}
-
-async function getSchema(schemaProp: string | undefined): Promise<SchemaResult> {
-  if (schemaProp) {
-    if (schemaProp.startsWith('http')) {
-      const response = await fetch(schemaProp)
+async function getSchema(schemaUrl: string | undefined, resolver: Resolver): Promise<SchemaInfo> {
+  if (schemaUrl) {
+    if (schemaUrl.startsWith('http')) {
+      const response = await fetch(schemaUrl)
       const schema = await response.text()
       return {
         schema,
-        source: schemaProp,
+        source: schemaUrl,
       }
     } else {
       return {
-        schema: fs.readFileSync(path.resolve(schemaProp)).toString(),
-        source: schemaProp,
+        schema: resolver.read(schemaUrl),
+        source: schemaUrl,
       }
     }
   } else {
