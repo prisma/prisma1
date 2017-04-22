@@ -29,3 +29,18 @@ export interface ProjectInfo {
   version: string
   schema: string
 }
+
+export interface VerbalDescription {
+  type: string
+  action: string
+  name: string
+  description: string
+  subdescriptions?: [VerbalDescription]
+}
+
+export interface MigrationResult {
+  verbalDescriptions: [VerbalDescription]
+  projectInfo: ProjectInfo
+}
+
+

@@ -45,6 +45,13 @@ ${chalk.red(figures.cross)}  ${graphcoolProjectFileName} already exists for the 
 Looks like you've already setup your backend.\n`
 
 /*
+ * Terminal output: push
+ */
+export const noProjectFileMessage = `\
+Please provide a valid project (${graphcoolProjectFileName}) file for the schema migration.
+`
+
+/*
  * Testing
  */
 export const testToken = 'abcdefghijklmnopqrstuvwxyz'

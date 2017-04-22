@@ -6,7 +6,7 @@ export function writeProjectFile(projectInfo: ProjectInfo, resolver: Resolver) {
   resolver.write(graphcoolProjectFileName, schemaWithHeader)
 }
 
-export function readProjectIdFromSchemaFile(resolver: Resolver): string {
+export function readProjectIdFromProjectFile(resolver: Resolver): string {
   const contents = resolver.read(graphcoolProjectFileName)
 
   const matches = contents.match(/# @project ([a-z0-9]*)/)
@@ -16,8 +16,14 @@ export function readProjectIdFromSchemaFile(resolver: Resolver): string {
   }
 
   return matches[1]
+}
 
+export function readDataModelFromProjectFile(resolver: Resolver): string {
+  const contents = resolver.read(graphcoolProjectFileName)
 
+  const dataModelStartIndex = contents.indexOf(`@type`)
+  const dataModel = contents.substring(dataModelStartIndex, contents.length)
+  return dataModel
 }
 
 export function readAuthConfig(resolver: Resolver): AuthConfig {

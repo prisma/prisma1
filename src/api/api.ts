@@ -1,9 +1,12 @@
-import {Resolver, ProjectInfo} from '../types'
+import {Resolver, ProjectInfo, VerbalDescription, MigrationResult} from '../types'
 import {authConfigFilePath, systemAPIEndpoint} from '../utils/constants'
 const debug = require('debug')('graphcool-create')
 import 'isomorphic-fetch'
 
-async function sendGraphQLRequest(queryString: string, resolver: Resolver): Promise<any> {
+async function sendGraphQLRequest(
+  queryString: string,
+  resolver: Resolver
+): Promise<any> {
 
   const token = resolver.read(authConfigFilePath)
 
@@ -19,9 +22,13 @@ async function sendGraphQLRequest(queryString: string, resolver: Resolver): Prom
 
 }
 
-export async function createProject(name: string, aliasPart: string, schema: string, resolver: Resolver): Promise<ProjectInfo> {
+export async function createProject(
+  name: string,
+  aliasPart: string,
+  schema: string,
+  resolver: Resolver
+): Promise<ProjectInfo> {
 
-  // create project
   const result = await sendGraphQLRequest(`mutation addProject($schema: String) {
     addProject(input: {
       name: "${name}"
@@ -43,4 +50,48 @@ export async function createProject(name: string, aliasPart: string, schema: str
   const projectInfo = {projectId, version, schema: fullSchema}
 
   return projectInfo
+}
+
+export async function pushNewSchema(
+  projectId: string,
+  newSchema: string,
+  isDryRun: boolean,
+  resolver: Resolver
+): Promise<MigrationResult> {
+
+  const mutation = `\
+    mutation {
+      migrateProject(input: {
+        id: "${projectId}"
+        newSchema: "${newSchema}"
+        isDryRun: ${isDryRun}
+      }) {
+        project {
+          id
+          schema
+        }
+        verbalDescriptions {
+          type
+          action
+          name
+          description
+          subDescriptions {
+            type
+            action
+            name
+            description
+          }
+        }
+      }
+    }
+  `
+
+  const result = await sendGraphQLRequest(mutation, resolver)
+  const json = await result.json()
+
+  const projectInfo = json.migrateProject.project as ProjectInfo
+  const verbalDescriptions = json.migrateProject.verbalDescriptions as [VerbalDescription]
+  const migrationResult = { projectInfo, verbalDescriptions } as MigrationResult
+
+  return migrationResult
 }
