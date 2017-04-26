@@ -1,8 +1,7 @@
-import {Region, Resolver, SchemaInfo} from '../types'
+import {Region, Resolver, SchemaInfo, SystemEnvironment} from '../types'
 import figures = require('figures')
 import generateName = require('sillyname')
 import { createProject } from '../api/api'
-import ora = require('ora')
 import * as fs from 'fs'
 import * as path from 'path'
 import {
@@ -22,36 +21,37 @@ interface Props {
   region?: Region // TODO coming soon...
 }
 
-export default async(props: Props, resolver: Resolver): Promise<void> => {
-  if (fs.existsSync(graphcoolProjectFileName) && fs.readFileSync(graphcoolProjectFileName).toString().includes('@ project "')) {
-    process.stdout.write(projectAlreadyExistsMessage)
+export default async(props: Props, env: SystemEnvironment): Promise<void> => {
+
+  const {resolver, out} = env
+
+  if (resolver.exists(graphcoolProjectFileName) && resolver.read(graphcoolProjectFileName).toString().includes('@ project "')) {
+    out.write(projectAlreadyExistsMessage)
     process.exit(1)
   }
 
   const name = props.name || generateName()
   const aliasPart = props.alias ? `alias: "${props.alias}"` : ''
 
-  const spinner = ora(creatingProjectMessage(name)).start()
+  out.startSpinner(creatingProjectMessage(name))
 
   try {
 
     // resolve schema
     const schema = await getSchema(props.schemaUrl, resolver)
-    debug(`Resolved schema: ${JSON.stringify(schema)}`)
 
     // create project
     const projectInfo = await createProject(name, aliasPart, schema.schema, resolver)
     writeProjectFile(projectInfo, resolver)
-    debug(`Did create project: ${JSON.stringify(projectInfo)}`)
 
-    spinner.stop()
+    out.stopSpinner()
 
     const message = createdProjectMessage(name, schema.source, projectInfo.projectId)
-    process.stdout.write(message)
+    out.write(message)
 
   } catch(e) {
     debug(`Could not create project: ${e.message}`)
-    process.stdout.write(couldNotCreateProjectMessage)
+    out.write(couldNotCreateProjectMessage)
     process.exit(1)
   }
 

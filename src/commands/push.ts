@@ -1,15 +1,18 @@
-import {Resolver, MigrationMessage, ProjectInfo, MigrationErrorMessage} from '../types'
+import {MigrationMessage, ProjectInfo, MigrationErrorMessage, SystemEnvironment, Out} from '../types'
 import {
   graphcoolProjectFileName,
   noProjectFileMessage,
   couldNotMigrateSchemaMessage,
   pushingNewSchemaMessage, noActionRequiredMessage, migrationDryRunMessage, migrationPerformedMessage,
-  migrationErrorMessage
+  migrationErrorMessage, invalidProjectFileMessage
 } from '../utils/constants'
-import {readProjectIdFromProjectFile, readDataModelFromProjectFile, writeProjectFile} from '../utils/file'
+import {
+  writeProjectFile,
+  readProjectInfoFromProjectFile
+} from '../utils/file'
 import {pushNewSchema} from '../api/api'
-import ora = require('ora')
 import figures = require('figures')
+import * as chalk from 'chalk'
 const debug = require('debug')('graphcool')
 
 interface Props {
@@ -17,48 +20,51 @@ interface Props {
   projectFilePath?: string
 }
 
-export default async(props: Props, resolver: Resolver): Promise<void> => {
+export default async(props: Props, env: SystemEnvironment): Promise<void> => {
+
+  const {resolver, out} = env
 
   if (!resolver.exists(graphcoolProjectFileName) && !resolver.exists(`${props.projectFilePath}/${graphcoolProjectFileName}`)) {
-    process.stdout.write(noProjectFileMessage)
+    out.write(noProjectFileMessage)
     process.exit(1)
   }
 
-  const projectId = readProjectIdFromProjectFile(resolver, props.projectFilePath)
-  const newSchema = readDataModelFromProjectFile(resolver, props.projectFilePath)
-  const version = '1'
+  const projectInfo = readProjectInfoFromProjectFile(resolver, props.projectFilePath)
+  if (!projectInfo) {
+    out.write(invalidProjectFileMessage)
+    process.exit(1)
+  }
+
+  const {projectId, schema, version} = projectInfo!
   const isDryRun = props.isDryRun
 
-  const spinner = ora(pushingNewSchemaMessage).start()
+  out.startSpinner(pushingNewSchemaMessage)
 
   try {
 
-    const schemaWithFrontmatter = `# projectId: ${projectId}\n# version: ${version}\n\n${newSchema}`
-    // debug(`Schema with frontmatter: \n${schemaWithFrontmatter}`)
-
+    const schemaWithFrontmatter = `# projectId: ${projectId}\n# version: ${version}\n\n${schema}`
     const migrationResult = await pushNewSchema(schemaWithFrontmatter, isDryRun, resolver)
-    spinner.stop()
+    out.stopSpinner()
 
     // no action required
     if (migrationResult.messages.length === 0 && migrationResult.errors.length === 0) {
-      process.stdout.write(noActionRequiredMessage)
+      out.write(noActionRequiredMessage)
       process.exit(0)
     }
 
     // migration successful
     else if (migrationResult.messages.length > 0 && migrationResult.errors.length === 0) {
-      debug(`migration successful: ${isDryRun}`)
 
       const migrationMessage = isDryRun ? migrationDryRunMessage : migrationPerformedMessage
 
-      process.stdout.write(`${migrationMessage}`)
-      printMigrationMessages(migrationResult.messages, 0)
+      out.write(`${migrationMessage}`)
+      printMigrationMessages(migrationResult.messages, 1, out)
 
       // update project file if necessary
       if (!isDryRun) {
         const projectInfo = {
           projectId,
-          schema: newSchema,
+          schema,
           version: migrationResult.newVersion
         } as ProjectInfo
         writeProjectFile(projectInfo, resolver)
@@ -67,31 +73,31 @@ export default async(props: Props, resolver: Resolver): Promise<void> => {
 
     // something went wrong
     else if (migrationResult.messages.length === 0 && migrationResult.errors.length > 0) {
-      process.stdout.write(`\n\n${migrationErrorMessage}`)
-      printMigrationErrors(migrationResult.errors)
+      out.write(`\n\n${migrationErrorMessage}`)
+      printMigrationErrors(migrationResult.errors, out)
     }
 
   } catch(e) {
     debug(`Could not push new schema: ${e.message}`)
-    process.stdout.write(couldNotMigrateSchemaMessage)
+    out.write(couldNotMigrateSchemaMessage)
     process.exit(1)
   }
 
 }
 
-function printMigrationMessages(migrationMessages: [MigrationMessage], indentationLevel: number) {
+function printMigrationMessages(migrationMessages: [MigrationMessage], indentationLevel: number, out: Out) {
   migrationMessages.forEach(migrationMessage => {
-    const indentation = spaces(indentationLevel * 2)
-    process.stdout.write(`${indentation}${figures.play} ${migrationMessage.description}\n`)
+    const indentation = spaces(indentationLevel * 4)
+    out.write(`${indentation}${chalk.green(figures.play)} ${migrationMessage.description}\n`)
     if (migrationMessage.subDescriptions) {
-      printMigrationMessages(migrationMessage.subDescriptions, indentationLevel + 1)
+      printMigrationMessages(migrationMessage.subDescriptions, indentationLevel + 1, out)
     }
   })
 }
 
-function printMigrationErrors(errors: [MigrationErrorMessage]) {
+function printMigrationErrors(errors: [MigrationErrorMessage], out: Out) {
   errors.forEach(error => {
-    process.stdout.write(`${figures.cross} ${error.description}\n`)
+    out.write(`${chalk.green(figures.cross)} ${error.description}\n`)
   })
 }
 

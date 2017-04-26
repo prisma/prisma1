@@ -9,14 +9,25 @@ import * as fs from 'fs'
  */
 
 export function writeProjectFile(projectInfo: ProjectInfo, resolver: Resolver) {
-  debug(`Write project file: ${JSON.stringify(projectInfo)}`)
   const schemaWithHeader = `# projectId: ${projectInfo.projectId}\n# version: ${projectInfo.version || ''}\n\n${projectInfo.schema}`
   resolver.write(graphcoolProjectFileName, schemaWithHeader)
 }
 
+export function readProjectInfoFromProjectFile(resolver: Resolver, path?: string): ProjectInfo | undefined {
+  const projectId = readProjectIdFromProjectFile(resolver, path)
+
+  if (!projectId) {
+    return undefined
+  }
+
+  const version = readVersionFromProjectFile(resolver, path)
+  const schema = readDataModelFromProjectFile(resolver, path)
+
+  return { projectId, version, schema} as ProjectInfo
+}
+
 export function readProjectIdFromProjectFile(resolver: Resolver, path?: string): string | undefined {
   const pathToProjectFile = getPathToProjectFile(path)
-  debug(`Path to project file: ${pathToProjectFile}`)
   const contents = resolver.read(pathToProjectFile)
 
   const matches = contents.match(/# projectId: ([a-z0-9]*)/)
@@ -29,14 +40,27 @@ export function readProjectIdFromProjectFile(resolver: Resolver, path?: string):
   return matches[1]
 }
 
+export function readVersionFromProjectFile(resolver: Resolver, path?: string): string | undefined {
+  const pathToProjectFile = getPathToProjectFile(path)
+  const contents = resolver.read(pathToProjectFile)
+
+  const matches = contents.match(/# version: ([a-z0-9]*)/)
+
+  if (!matches || matches.length !== 2) {
+    return undefined
+  }
+}
+
+
 export function readDataModelFromProjectFile(resolver: Resolver, path?: string): string {
-  const pathToProjectFile = path ? `${path}/${graphcoolProjectFileName}` : `./${graphcoolProjectFileName}`
+  const pathToProjectFile =getPathToProjectFile(path)
   const contents = resolver.read(pathToProjectFile)
 
   const dataModelStartIndex = contents.indexOf(`type`)
   const dataModel = contents.substring(dataModelStartIndex, contents.length)
   return dataModel
 }
+
 
 function getPathToProjectFile(filePath?: string): string {
   if (!filePath) {

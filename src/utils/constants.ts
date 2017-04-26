@@ -49,30 +49,35 @@ Looks like you've already setup your backend.\n`
  * Terminal output: push
  */
 export const noProjectFileMessage = `\
-Please provide a valid project (${graphcoolProjectFileName}) file for the schema migration.
+${chalk.red(figures.cross)}  Please provide a valid project file (${graphcoolProjectFileName}) for the schema migration.
 `
+
+export const invalidProjectFileMessage = `\
+${chalk.red(figures.cross)}  The project file (${graphcoolProjectFileName}) that you provided doesn't seem to be valid. Please make sure it contains the ID of your project.
+`
+
 export const pushingNewSchemaMessage = `\
 Migrating the schema in your project...\
 `
 
 export const couldNotMigrateSchemaMessage = `
-An error occured while trying to migrate the project.
+${chalk.red(figures.cross)}  An error occured while trying to migrate the project.
 `
 
 export const noActionRequiredMessage = `\
-The schema you uploaded is identical to the current schema of the project, no action required ${figures.tick}
+${chalk.red(figures.star)}  The schema you uploaded is identical to the current schema of the project, no action required.
 `
 
 export const migrationDryRunMessage = `\
-This was a dry run of the migration. Here's the list of actions that would need to be done for the schema migration:
+${chalk.red(figures.star)}  This was a dry run of the migration. Here's the list of actions that would need to be done for the schema migration:
 `
 
 export const migrationPerformedMessage = `\
-Your schema was successfully updated. Here's the list of actions that were performed for the schema migration:\n
+${chalk.green(figures.tick)}  Your schema was successfully updated. Here's the list of actions that were performed for the schema migration:\n
 `
 
 export const migrationErrorMessage = `\
-There are issues with the new schema that your provided. Please make sure to fix the following issues before retrying:\n
+${chalk.red(figures.cross)}  There are issues with the new schema that your provided. Please make sure to fix the following issues before retrying:\n
 `
 
 /*
@@ -82,7 +87,7 @@ export const projectsMessage = `\
 `
 
 export const couldNotFetchProjectsMessage = `\
-An error occurded while trying to fetch your projects: 
+${chalk.red(figures.cross)}  An error occurded while trying to fetch your projects: 
 `
 
 /*
@@ -94,9 +99,9 @@ Fetching project data ...\
 `
 
 export const noProjectIdMessage = `\
-${chalk.red(figures.cross)} Please provide a valid project Id.
+${chalk.red(figures.cross)}  Please provide a valid project Id.
 `
 
 export const wroteProjectFileMessage = `\
-${chalk.green(figures.tick)} Your project file was successfully updated.
+${chalk.green(figures.tick)}  Your project file was successfully updated.
 `

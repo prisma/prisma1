@@ -1,11 +1,13 @@
 import test from 'ava'
-import TestResolver from '../src/resolvers/TestResolver'
+import TestResolver from '../src/system/TestResolver'
 const fetchMock = require('fetch-mock')
 const debug = require('debug')('graphcool')
 import 'isomorphic-fetch'
 import pushCommand from '../src/commands/push'
 import {systemAPIEndpoint, graphcoolProjectFileName, graphcoolConfigFilePath} from '../src/utils/constants'
 import {mockedPushSchemaResponse, mockProjectFile2, mockProjectFile3} from '../mock_data/mockData'
+import {SystemEnvironment} from '../src/types'
+import TestOut from '../src/system/TestOut'
 
 test.afterEach(() => {
   fetchMock.reset()
@@ -25,18 +27,17 @@ test('Succeeding schema migration', async t => {
   const storage = {}
   storage[`./${graphcoolProjectFileName}`] = mockProjectFile2
   storage[graphcoolConfigFilePath] = '{"token": "abcdefgh"}'
-  const resolver = new TestResolver(storage)
+  const env = testEnvironment(storage)
   const props = {isDryRun: false}
 
   await t.notThrows(
-    pushCommand(props, resolver)
+    pushCommand(props, env)
   )
 
   const expectedProjectFileContent = mockProjectFile3
-  const result = resolver.read(`./${graphcoolProjectFileName}`)
+  const result = env.resolver.read(`./${graphcoolProjectFileName}`)
 
   t.is(result, expectedProjectFileContent)
-
 })
 
 /*
@@ -49,13 +50,25 @@ test('Succeeding schema migration', async t => {
 //
 //   // dummy migration data
 //   const storage = {}
-//   storage[graphcoolProjectFileName] = mockProjectFile2
-//   const resolver = new TestResolver(storage)
+//   storage[`./${graphcoolProjectFileName}`] = mockProjectFile2
+//   storage[graphcoolConfigFilePath] = '{"token": "abcdefgh"}'
+//   const env = testEnvironment(storage)
 //   const props = {isDryRun: true}
 //
-//   await pushCommand(props, resolver)
-//   const expectedProjectFileContent = mockProjectFile2
+//   await t.notThrows(
+//     pushCommand(props, env)
+//   )
 //
-//   t.is(resolver.read(graphcoolProjectFileName), expectedProjectFileContent)
+//   const expectedProjectFileContent = mockProjectFile3
+//   const result = env.resolver.read(`./${graphcoolProjectFileName}`)
+//
+//   t.is(result, expectedProjectFileContent)
 //
 // })
+
+function testEnvironment(storage: any): SystemEnvironment {
+  return {
+    resolver: new TestResolver(storage),
+    out: new TestOut()
+  }
+}

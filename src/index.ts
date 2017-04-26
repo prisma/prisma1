@@ -1,15 +1,18 @@
 #!/usr/bin/env node
 
 import * as minimist from 'minimist'
-import {Command} from './types'
+import {Command, SystemEnvironment} from './types'
 import pushCommand from './commands/push'
 import projectsCommand from './commands/projects'
 import pullCommand from './commands/pull'
-import FileSystemResolver from './resolvers/FileSystemResolver'
+import authCommand from './commands/auth'
+import FileSystemResolver from './system/FileSystemResolver'
 const debug = require('debug')('graphcool')
 import figures = require('figures')
 import * as chalk from 'chalk'
 import {usagePull, usageProjects, usageInit, usageRoot} from './utils/usage'
+import StdOut from './system/StdOut'
+import {GraphcoolAuthServer} from './api/GraphcoolAuthServer'
 
 async function main() {
   const argv = minimist(process.argv.slice(2))
@@ -31,14 +34,14 @@ async function main() {
       const isDryRun = true // (argv['dry'] || argv['d']) ? true : false
       const projectFilePath = argv['path'] || argv['p']
       const resolver = new FileSystemResolver()
-      await pushCommand({isDryRun, projectFilePath}, resolver)
+      await pushCommand({isDryRun, projectFilePath}, defaultEnvironment())
       break
     }
 
     case 'projects': {
       checkHelp(argv, usageProjects)
 
-      await projectsCommand({}, new FileSystemResolver())
+      await projectsCommand({}, defaultEnvironment())
       break
     }
 
@@ -46,9 +49,18 @@ async function main() {
       checkHelp(argv, usagePull)
 
       const projectId = argv['project-id'] || argv['p']
-      await pullCommand({projectId}, new FileSystemResolver())
+      await pullCommand({projectId}, defaultEnvironment())
       break
     }
+
+    case 'auth': {
+      checkHelp(argv, usagePull)
+
+      const token = argv['token'] || argv['t']
+      await authCommand({token}, defaultEnvironment(), new GraphcoolAuthServer())
+      break
+    }
+
 
     case 'help': {
       process.stdout.write(usageRoot)
@@ -63,6 +75,13 @@ async function main() {
   }
 
   process.stdout.write('\n\n')
+}
+
+function defaultEnvironment(): SystemEnvironment {
+  return {
+    resolver: new FileSystemResolver(),
+    out: new StdOut()
+  }
 }
 
 function checkHelp(argv: any, usage: string) {

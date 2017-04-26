@@ -55,5 +55,4 @@ export class GraphcoolAuthServer implements AuthServer {
     return 'valid'
   }
 
-
 }

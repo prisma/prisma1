@@ -51,3 +51,14 @@ export interface MigrationResult {
   errors: [MigrationErrorMessage]
   newVersion: string
 }
+
+export interface Out {
+  write(message: string): void
+  startSpinner(message: string): void
+  stopSpinner(): void
+}
+
+export interface SystemEnvironment {
+  out: Out
+  resolver: Resolver
+}

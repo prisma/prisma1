@@ -1,6 +1,5 @@
-import ora = require('ora')
 import {writeGraphcoolConfig, deleteGraphcoolConfig} from '../utils/file'
-import {AuthServer, Resolver, TokenValidationResult} from '../types'
+import {AuthServer, SystemEnvironment} from '../types'
 import {
   openBrowserMessage,
   authenticationSuccessMessage,
@@ -12,26 +11,26 @@ interface Props {
   token?: string
 }
 
-export default async(props: Props, resolver: Resolver, authServer: AuthServer): Promise<void> => {
+export default async(props: Props, env: SystemEnvironment, authServer: AuthServer): Promise<void> => {
+
+  const {resolver, out} = env
 
   let token = props.token!
 
   if (!token) {
-    const spinner = ora(openBrowserMessage).start()
+    out.startSpinner(openBrowserMessage)
     try {
       token = await authServer.requestAuthToken()
     } catch(e) {
-      process.stdout.write(couldNotRetrieveTokenMessage)
+      out.write(couldNotRetrieveTokenMessage)
       process.exit(1)
     }
-    spinner.stop()
+    out.stopSpinner()
   }
 
   writeGraphcoolConfig({token}, resolver)
-  debug(`Did write auth config: ${JSON.stringify(resolver)}`)
 
   const result = await authServer.validateAuthToken(token)
-  debug(`Auth token: ${result}`)
   switch (result) {
     case 'invalid':
       deleteGraphcoolConfig(resolver)
@@ -40,6 +39,6 @@ export default async(props: Props, resolver: Resolver, authServer: AuthServer): 
       break
   }
 
-  process.stdout.write(authenticationSuccessMessage)
+  out.write(authenticationSuccessMessage)
 }
 

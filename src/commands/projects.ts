@@ -1,4 +1,4 @@
-import {Resolver} from '../types'
+import {Resolver, SystemEnvironment} from '../types'
 import {fetchProjects} from '../api/api'
 const debug = require('debug')('graphcool')
 import figures = require('figures')
@@ -8,7 +8,9 @@ interface Props {
 
 }
 
-export default async(props: Props, resolver: Resolver): Promise<void> => {
+export default async(props: Props, env: SystemEnvironment): Promise<void> => {
+
+  const {resolver, out} = env
 
   try {
     const projects = await fetchProjects(resolver)
@@ -17,9 +19,9 @@ export default async(props: Props, resolver: Resolver): Promise<void> => {
       .map(project => `${figures.star}  ${project.name} (${project.projectId})`)
       .join('\n')
 
-    process.stdout.write(outputString)
+    out.write(outputString)
   } catch (e) {
-    process.stdout.write(`${couldNotFetchProjectsMessage} ${e.message}`)
+    out.write(`${couldNotFetchProjectsMessage} ${e.message}`)
   }
 
 }
