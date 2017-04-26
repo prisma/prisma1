@@ -19,7 +19,7 @@ export default async(props: Props, resolver: Resolver, authServer: AuthServer): 
   if (!token) {
     const spinner = ora(openBrowserMessage).start()
     try {
-      token = await authServer.getAuthToken()
+      token = await authServer.requestAuthToken()
     } catch(e) {
       process.stdout.write(couldNotRetrieveTokenMessage)
       process.exit(1)

@@ -5,7 +5,7 @@ import {testToken} from '../utils/constants'
 
 export default class TestAuthServer extends GraphcoolAuthServer implements AuthServer {
 
-  getAuthToken(): Promise<string> {
+  requestAuthToken(): Promise<string> {
     return new Promise((resolve, reject) => resolve(testToken))
   }
 

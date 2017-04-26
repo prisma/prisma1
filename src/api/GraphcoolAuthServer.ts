@@ -5,7 +5,7 @@ const debug = require('debug')('graphcool')
 
 export class GraphcoolAuthServer implements AuthServer {
 
-  async getAuthToken(): Promise<string> {
+  async requestAuthToken(): Promise<string> {
     const apiEndpoint = 'https://cli-auth-api.graph.cool'
     const cliToken = cuid()
 

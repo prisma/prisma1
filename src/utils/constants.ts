@@ -50,6 +50,25 @@ Looks like you've already setup your backend.\n`
 export const noProjectFileMessage = `\
 Please provide a valid project (${graphcoolProjectFileName}) file for the schema migration.
 `
+export const pushingNewSchemaMessage = `\
+Migrating the schema in your project...
+`
+
+export const couldNotMigrateSchemaMessage = `
+An error occured while trying to migrate the project.
+`
+
+export const noActionRequiredMessage = `\
+The schema you uploaded is identical to the current schema of the project, no action required ${figures.tick}
+`
+
+export const migrationDryRunMessage = `\
+This was a dry run of the migration. Here's the list of actions that would need to be done for the schema migration:
+`
+
+export const migrationPerformedMessage = `\
+Your schema was successfully updated. Here's the list of actions that were performed for the schema migration:
+`
 
 /*
  * Testing

@@ -1,13 +1,16 @@
 import {AuthConfig, Resolver, ProjectInfo} from '../types'
 import { authConfigFilePath, graphcoolProjectFileName } from './constants'
+const debug = require('debug')('graphcool')
 
 export function writeProjectFile(projectInfo: ProjectInfo, resolver: Resolver) {
   const schemaWithHeader = `# @project ${projectInfo.projectId}\n# @version ${projectInfo.version}\n\n${projectInfo.schema}`
   resolver.write(graphcoolProjectFileName, schemaWithHeader)
 }
 
-export function readProjectIdFromProjectFile(resolver: Resolver): string {
-  const contents = resolver.read(graphcoolProjectFileName)
+export function readProjectIdFromProjectFile(resolver: Resolver, path?: string): string {
+  const pathToProjectFile = path ? `${path}/${graphcoolProjectFileName}` : `./${graphcoolProjectFileName}`
+  debug(`Read project ID from file: ${pathToProjectFile}`)
+  const contents = resolver.read(pathToProjectFile)
 
   const matches = contents.match(/# @project ([a-z0-9]*)/)
 
@@ -18,10 +21,11 @@ export function readProjectIdFromProjectFile(resolver: Resolver): string {
   return matches[1]
 }
 
-export function readDataModelFromProjectFile(resolver: Resolver): string {
-  const contents = resolver.read(graphcoolProjectFileName)
+export function readDataModelFromProjectFile(resolver: Resolver, path?: string): string {
+  const pathToProjectFile = path ? `${path}/${graphcoolProjectFileName}` : `./${graphcoolProjectFileName}`
+  const contents = resolver.read(pathToProjectFile)
 
-  const dataModelStartIndex = contents.indexOf(`@type`)
+  const dataModelStartIndex = contents.indexOf(`type`)
   const dataModel = contents.substring(dataModelStartIndex, contents.length)
   return dataModel
 }

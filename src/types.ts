@@ -1,4 +1,4 @@
-export type Command = 'auth' | 'create' | 'eject' | 'export' | 'fetch' | 'import' | 'projects' | 'update' | 'version' | 'help'
+export type Command = 'auth' | 'push' | 'create' | 'eject' | 'export' | 'fetch' | 'import' | 'projects' | 'update' | 'version' | 'help'
 
 export type Region = 'eu-west-1'
 
@@ -15,7 +15,7 @@ export interface Resolver {
 export type TokenValidationResult = 'valid' | 'invalid'
 
 export interface AuthServer {
-  getAuthToken(): Promise<string> // returns token
+  requestAuthToken(): Promise<string>
   validateAuthToken(token: string): Promise<TokenValidationResult>
 }
 
@@ -30,17 +30,15 @@ export interface ProjectInfo {
   schema: string
 }
 
-export interface VerbalDescription {
+export interface MigrationMessage {
   type: string
   action: string
   name: string
   description: string
-  subdescriptions?: [VerbalDescription]
+  subDescriptions?: [MigrationMessage]
 }
 
 export interface MigrationResult {
-  verbalDescriptions: [VerbalDescription]
-  projectInfo: ProjectInfo
+  migrationMessages: [MigrationMessage]
+  // projectInfo: ProjectInfo
 }
-
-

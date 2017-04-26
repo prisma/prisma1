@@ -8,7 +8,7 @@ import {
   graphcoolProjectFileName
 } from '../src/utils/constants'
 import 'isomorphic-fetch'
-import {readProjectIdFromSchemaFile} from '../src/utils/file'
+import {readProjectIdFromProjectFile} from '../src/utils/file'
 
 test.afterEach(() => {
   fetchMock.reset()
@@ -38,7 +38,7 @@ test('Succeeding project creation', async t => {
 
   const expectedProjectFileContent = `# @project abcdefghi\n# @version 0.1\n\ntype Tweet {\n  id: ID!\n  createdAt: DateTime!\n  updatedAt: DateTime!\n  text: String!\n}`
   t.is(resolver.read(graphcoolProjectFileName), expectedProjectFileContent)
-  t.is(readProjectIdFromSchemaFile(resolver), 'abcdefghi')
+  t.is(readProjectIdFromProjectFile(resolver), 'abcdefghi')
 
 })
 
