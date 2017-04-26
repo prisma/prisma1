@@ -31,18 +31,19 @@ async function sendGraphQLRequest(
 
 export async function createProject(
   name: string,
-  alias: string,
   schema: string,
-  resolver: Resolver
+  resolver: Resolver,
+  alias?: string,
+  region?: string
 ): Promise<ProjectInfo> {
 
-  const includeAlias = alias.length > 0
-
   const mutation = `\
-mutation addProject($schema: String!, name: String!) {
+mutation addProject($schema: String!, $name: String!, $alias: String, $region: Region) {
     addProject(input: {
       name: $name,
       schema: $schema,
+      alias: $alias,
+      region: $region,
       clientMutationId: "static"
     }) {
       project {
@@ -52,18 +53,25 @@ mutation addProject($schema: String!, name: String!) {
     }
   }
 `
-  const variables = { name, schema }
+
+  let variables = { name, schema }
+  if (alias) {
+    variables = {...variables, alias}
+  }
+  if (region) {
+    variables = {...variables, region}
+  }
 
   debug(`Send variables: ${JSON.stringify(variables)}`)
 
   const result = await sendGraphQLRequest(mutation, resolver, variables)
   const json = await result.json()
 
-  debug(`Received JSON: ${json}`)
+  debug(`Received JSON: ${JSON.stringify(json)}`)
 
-  const projectId = json.addProject.project.id
+  const projectId = json.data.addProject.project.id
   const version = '1'// result.addProject.version
-  const fullSchema = json.addProject.project.schema
+  const fullSchema = json.data.addProject.project.schema
   const projectInfo = {projectId, version, schema: fullSchema}
 
   return projectInfo

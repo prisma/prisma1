@@ -6,6 +6,7 @@ import pushCommand from './commands/push'
 import projectsCommand from './commands/projects'
 import pullCommand from './commands/pull'
 import authCommand from './commands/auth'
+import initCommand from './commands/init'
 import FileSystemResolver from './system/FileSystemResolver'
 const debug = require('debug')('graphcool')
 import figures = require('figures')
@@ -26,6 +27,16 @@ async function main() {
     case undefined: {
       process.stdout.write(usageRoot)
       process.exit(0)
+    }
+
+    case 'init': {
+      const name = argv['name'] || argv['n']
+      const alias = argv['alias'] || argv['a']
+      const schemaUrl = argv['url'] || argv['u']
+
+      const props = {name, alias, schemaUrl}
+      await initCommand(props, defaultEnvironment())
+      break
     }
 
     case 'push': {

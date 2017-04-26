@@ -55,7 +55,6 @@ export const mockProjectFile3 = `\
 ${mockSchema2}
 `
 
-
 export const mockedPushSchemaResponse = `\
 {
   "data": {
@@ -127,10 +126,12 @@ export const mockedPushSchemaResponse = `\
 
 export const mockedCreateProjectResponse = `\
 {
-  "addProject": {
-    "project": {
-      "id": "abcdefghi",
-      "schema": "type Tweet {\\n  id: ID!\\n  createdAt: DateTime!\\n  updatedAt: DateTime!\\n  text: String!\\n}"
+  "data": {
+    "addProject": {
+      "project": {
+        "id": "abcdefghi",
+        "schema": "type Tweet {\\n  id: ID!\\n  createdAt: DateTime!\\n  updatedAt: DateTime!\\n  text: String!\\n}"
+      }
     }
   }
 }`

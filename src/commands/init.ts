@@ -43,7 +43,7 @@ export default async(props: Props, env: SystemEnvironment): Promise<void> => {
     debug(`Schema: ${JSON.stringify(schema)}`)
 
     // create project
-    const projectInfo = await createProject(name, alias, schema.schema, resolver)
+    const projectInfo = await createProject(name, schema.schema, resolver, props.alias, props.region)
     debug(`Project info: ${JSON.stringify(projectInfo)}`)
     writeProjectFile(projectInfo, resolver)
 
