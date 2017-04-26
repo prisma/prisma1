@@ -1,4 +1,4 @@
-import {Region, Resolver, SchemaInfo, MigrationMessage, ProjectInfo} from '../types'
+import {Region, Resolver, SchemaInfo, MigrationMessage, ProjectInfo, MigrationErrorMessage} from '../types'
 import {
   graphcoolProjectFileName,
   noProjectFileMessage,
@@ -18,7 +18,6 @@ interface Props {
 }
 
 export default async(props: Props, resolver: Resolver): Promise<void> => {
-  // debug(`Execute 'push'\nProps: ${JSON.stringify(props)}`)
   if (!fs.existsSync(graphcoolProjectFileName) && !fs.existsSync(`${props.projectFilePath}/${graphcoolProjectFileName}`)) {
     process.stdout.write(noProjectFileMessage)
     process.exit(1)
@@ -28,35 +27,45 @@ export default async(props: Props, resolver: Resolver): Promise<void> => {
   const newSchema = readDataModelFromProjectFile(resolver, props.projectFilePath)
   const isDryRun = props.isDryRun || true
 
-  // debug(`Push new schema: ${projectId} (dry: ${isDryRun})\n\n${newSchema}`)
-  // TODO: check against remote schema to see if there are any changes
-
   const spinner = ora(pushingNewSchemaMessage).start()
 
   try {
-    const migrationMessages = await pushNewSchema(projectId, newSchema, isDryRun, resolver)
+
+    const migrationResult = await pushNewSchema(projectId, newSchema, isDryRun, resolver)
 
     spinner.stop()
 
-    if (migrationMessages.length === 0) {
+    // no action required
+    if (migrationResult.messages.length === 0 && migrationResult.errors.length === 0) {
       process.stdout.write(noActionRequiredMessage)
       process.exit(0)
     }
 
-    const migrationMessage = isDryRun ? migrationDryRunMessage : migrationPerformedMessage
-    process.stdout.write(migrationMessage)
+    // migration successful
+    else if (migrationResult.messages.length > 0 && migrationResult.errors.length === 0) {
 
-    printMessages(migrationMessages, 0)
+      const migrationMessage = isDryRun ? migrationDryRunMessage : migrationPerformedMessage
 
-    // update project file if necessary
-    if (!isDryRun) {
-      const projectInfo = {
-        projectId,
-        schema: newSchema,
-        version: '1.0'
-      } as ProjectInfo
-      writeProjectFile(projectInfo, resolver)
+      process.stdout.write(migrationMessage)
+      printMigrationMessages(migrationResult.messages, 0)
+
+      // update project file if necessary
+      if (!isDryRun) {
+        const projectInfo = {
+          projectId,
+          schema: newSchema,
+          version: '1.0'
+        } as ProjectInfo
+        writeProjectFile(projectInfo, resolver)
+      }
     }
+
+    // something went wrong
+    else if (migrationResult.messages.length === 0 && migrationResult.errors.length > 0) {
+      printMigrationErrors(migrationResult.errors)
+    }
+
+
 
   } catch(e) {
     debug(`Could not push new schema: ${e.message}`)
@@ -66,14 +75,19 @@ export default async(props: Props, resolver: Resolver): Promise<void> => {
 
 }
 
-function printMessages(migrationMessages: [MigrationMessage], indentationLevel: number) {
+function printMigrationMessages(migrationMessages: [MigrationMessage], indentationLevel: number) {
   migrationMessages.forEach(migrationMessage => {
     const indentation = spaces(indentationLevel * 2)
     process.stdout.write(`${indentation}${figures.play} ${migrationMessage.description}\n`)
-    // debug(`Sub Descriptions: ${migrationMessage.subDescriptions}`)
     if (migrationMessage.subDescriptions) {
-      printMessages(migrationMessage.subDescriptions, indentationLevel + 1)
+      printMigrationMessages(migrationMessage.subDescriptions, indentationLevel + 1)
     }
+  })
+}
+
+function printMigrationErrors(errors: [MigrationErrorMessage]) {
+  errors.forEach(error => {
+    process.stdout.write(`${figures.cross} ${error.description}\n`)
   })
 }
 

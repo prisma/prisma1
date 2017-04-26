@@ -26,8 +26,9 @@ export interface SchemaInfo {
 
 export interface ProjectInfo {
   projectId: string
-  version: string
-  schema: string
+  name?: string
+  schema?: string
+  version?: string
 }
 
 export interface MigrationMessage {
@@ -36,4 +37,15 @@ export interface MigrationMessage {
   name: string
   description: string
   subDescriptions?: [MigrationMessage]
+}
+
+export interface MigrationErrorMessage {
+  type: string
+  description: string
+  field: string
+}
+
+export interface MigrationResult {
+  messages: [MigrationMessage]
+  errors: [MigrationErrorMessage]
 }

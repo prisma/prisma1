@@ -1,4 +1,4 @@
-import {Resolver, ProjectInfo, MigrationMessage} from '../types'
+import {Resolver, ProjectInfo, MigrationMessage, MigrationErrorMessage, MigrationResult} from '../types'
 import {authConfigFilePath, systemAPIEndpoint} from '../utils/constants'
 const debug = require('debug')('graphcool')
 import 'isomorphic-fetch'
@@ -70,7 +70,7 @@ export async function pushNewSchema(
   newSchema: string,
   isDryRun: boolean,
   resolver: Resolver
-): Promise<[MigrationMessage]> {
+): Promise<MigrationResult> {
 
   const mutation = `\
      mutation($id: String!, $newSchema: String!, $isDryRun: Boolean!) {
@@ -91,6 +91,11 @@ export async function pushNewSchema(
             description
           }
         }
+        errors {
+          description
+          type
+          field
+        }
       }
     }
   `
@@ -106,9 +111,36 @@ export async function pushNewSchema(
 
   debug(`Received json for 'push': ${JSON.stringify(json)}`)
 
-  // const projectInfo = json.migrateProject.project as ProjectInfo
-  const migrationMessages = json.data.migrateProject.migrationMessages as [MigrationMessage]
-  // const migrationResult = { projectInfo, migrationMessages } as MigrationResult
+  const messages = json.data.migrateProject.migrationMessages as [MigrationMessage]
+  const errors = json.data.migrateProject.errors as [MigrationErrorMessage]
 
-  return migrationMessages
+  const migrationResult = { messages, errors } as MigrationResult
+
+  return migrationResult
+}
+
+export async function fetchProjects(resolver: Resolver): Promise<[ProjectInfo]> {
+
+  const query = `\
+viewer{
+  user {
+    projects {
+      edges {
+        node {
+          id
+          name
+        }
+      }
+    }
+  }
+}
+`
+
+  const result = await sendGraphQLRequest(query, resolver)
+  const json = await result.json()
+
+  const projects = json.data.viewer.user.projects.edges.map(edge => edge.node)
+  const projectInfos = projects.map(project => ({projectId: project.id, name: project.name})) as [ProjectInfo]
+
+  return projectInfos
 }

@@ -50,7 +50,7 @@ function getPathToProjectFile(filePath?: string): string {
 
 export function readAuthConfig(resolver: Resolver): AuthConfig {
   const configFileContent = resolver.read(authConfigFilePath)
-  return { token: configFileContent }
+  return JSON.parse(configFileContent)
 }
 
 export function writeAuthConfig(config: AuthConfig, resolver: Resolver): void {
