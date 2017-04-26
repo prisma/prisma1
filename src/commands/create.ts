@@ -31,7 +31,8 @@ export default async(props: Props, env: SystemEnvironment): Promise<void> => {
   }
 
   const name = props.name || generateName()
-  const aliasPart = props.alias ? `alias: "${props.alias}"` : ''
+  const alias = props.alias || ''
+  debug(`Create project: ${name}`)
 
   out.startSpinner(creatingProjectMessage(name))
 
@@ -39,9 +40,11 @@ export default async(props: Props, env: SystemEnvironment): Promise<void> => {
 
     // resolve schema
     const schema = await getSchema(props.schemaUrl, resolver)
+    debug(`Schema: ${JSON.stringify(schema)}`)
 
     // create project
-    const projectInfo = await createProject(name, aliasPart, schema.schema, resolver)
+    const projectInfo = await createProject(name, alias, schema.schema, resolver)
+    debug(`Project info: ${JSON.stringify(projectInfo)}`)
     writeProjectFile(projectInfo, resolver)
 
     out.stopSpinner()
@@ -79,6 +82,7 @@ async function getSchema(schemaUrl: string | undefined, resolver: Resolver): Pro
     }
 
     const file = schemaFiles.find(f => f === 'graphcool.schema') || schemaFiles[0]
+    debug(`Schema File: ${file}`)
 
     return {
       schema: fs.readFileSync(path.resolve(file)).toString(),

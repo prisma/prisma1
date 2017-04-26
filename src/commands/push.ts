@@ -85,7 +85,7 @@ export default async(props: Props, env: SystemEnvironment): Promise<void> => {
 
 }
 
-function printMigrationMessages(migrationMessages: [MigrationMessage], indentationLevel: number, out: Out) {
+function printMigrationMessages(migrationMessages: MigrationMessage[], indentationLevel: number, out: Out) {
   migrationMessages.forEach(migrationMessage => {
     const indentation = spaces(indentationLevel * 4)
     out.write(`${indentation}${chalk.green(figures.play)} ${migrationMessage.description}\n`)

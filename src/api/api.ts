@@ -12,15 +12,11 @@ async function sendGraphQLRequest(
   const configContents = resolver.read(graphcoolConfigFilePath)
   const {token} = JSON.parse(configContents)
 
-  // debug(`Send GraphQL request with token: ${token}`)
-
   const queryVariables = variables || {}
   const payload = {
     query: queryString,
     variables: queryVariables
   }
-
-  // debug(`Send payload as POST body: ${JSON.stringify(payload)}`)
 
   const result = await fetch(systemAPIEndpoint, {
     method: 'POST',
@@ -35,16 +31,18 @@ async function sendGraphQLRequest(
 
 export async function createProject(
   name: string,
-  aliasPart: string,
+  alias: string,
   schema: string,
   resolver: Resolver
 ): Promise<ProjectInfo> {
 
-  const result = await sendGraphQLRequest(`mutation addProject($schema: String) {
+  const includeAlias = alias.length > 0
+
+  const mutation = `\
+mutation addProject($schema: String!, name: String!) {
     addProject(input: {
-      name: "${name}"
-      ${aliasPart}
-      schema: "${schema}"
+      name: $name,
+      schema: $schema,
       clientMutationId: "static"
     }) {
       project {
@@ -52,11 +50,19 @@ export async function createProject(
         schema
       }
     }
-  }`, resolver)
+  }
+`
+  const variables = { name, schema }
 
+  debug(`Send variables: ${JSON.stringify(variables)}`)
+
+  const result = await sendGraphQLRequest(mutation, resolver, variables)
   const json = await result.json()
+
+  debug(`Received JSON: ${json}`)
+
   const projectId = json.addProject.project.id
-  const version = '0.1'// result.addProject.version
+  const version = '1'// result.addProject.version
   const fullSchema = json.addProject.project.schema
   const projectInfo = {projectId, version, schema: fullSchema}
 

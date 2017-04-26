@@ -5,7 +5,7 @@ const debug = require('debug')('graphcool')
 import createCommand from '../src/commands/create'
 import {
   systemAPIEndpoint,
-  graphcoolProjectFileName
+  graphcoolProjectFileName, graphcoolConfigFilePath
 } from '../src/utils/constants'
 import {mockSchema1, mockedCreateProjectResponse} from '../mock_data/mockData'
 import 'isomorphic-fetch'
@@ -28,11 +28,12 @@ test('Succeeding project creation', async t => {
   // create dummy project data
   const name = 'My Project'
   const schema = mockSchema1
-  const schemaUrl = 'myproject.schema'
+  const schemaUrl = './myproject.schema'
   const props = { name, schemaUrl }
 
   const storage = {}
   storage[schemaUrl] = mockSchema1
+  storage[graphcoolConfigFilePath] = '{"token": "abcdefgh"}'
   const env = testEnvironment(storage)
 
   await t.notThrows(
