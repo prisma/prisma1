@@ -6,7 +6,7 @@ import figures = require('figures')
 /*
  * Networking
  */
-export const systemAPIEndpoint = 'https://api.graph.cool/system'
+export const systemAPIEndpoint = 'https://dev.api.graph.cool/system'
 export const authEndpoint = 'https://cli-auth-api.graph.cool'
 
 /*

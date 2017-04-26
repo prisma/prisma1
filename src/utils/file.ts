@@ -9,18 +9,19 @@ import * as fs from 'fs'
  */
 
 export function writeProjectFile(projectInfo: ProjectInfo, resolver: Resolver) {
-  const schemaWithHeader = `# @project ${projectInfo.projectId}\n# @version ${projectInfo.version || ''}\n\n${projectInfo.schema}`
+  const schemaWithHeader = `# projectId: ${projectInfo.projectId}\n# version: ${projectInfo.version || ''}\n\n${projectInfo.schema}`
   resolver.write(graphcoolProjectFileName, schemaWithHeader)
 }
 
-export function readProjectIdFromProjectFile(resolver: Resolver, path?: string): string {
+export function readProjectIdFromProjectFile(resolver: Resolver, path?: string): string | undefined {
   const pathToProjectFile = getPathToProjectFile(path)
   const contents = resolver.read(pathToProjectFile)
 
-  const matches = contents.match(/# @project ([a-z0-9]*)/)
+  const matches = contents.match(/# projectId: ([a-z0-9]*)/)
 
   if (!matches || matches.length !== 2) {
-    throw new Error(`${pathToProjectFile} doesn't contain a project ID.`)
+    return undefined
+    // throw new Error(`${pathToProjectFile} doesn't contain a project ID.`)
   }
 
   return matches[1]

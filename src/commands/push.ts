@@ -26,13 +26,16 @@ export default async(props: Props, resolver: Resolver): Promise<void> => {
 
   const projectId = readProjectIdFromProjectFile(resolver, props.projectFilePath)
   const newSchema = readDataModelFromProjectFile(resolver, props.projectFilePath)
+  const version = ''
   const isDryRun = props.isDryRun || true
 
   const spinner = ora(pushingNewSchemaMessage).start()
 
   try {
 
-    const migrationResult = await pushNewSchema(projectId, newSchema, isDryRun, resolver)
+    const schemaWithFrontmatter = `# projectId: ${projectId}\n# version: ${version}\n${newSchema}`
+
+    const migrationResult = await pushNewSchema(schemaWithFrontmatter, isDryRun, resolver)
     spinner.stop()
 
     // no action required
@@ -65,8 +68,6 @@ export default async(props: Props, resolver: Resolver): Promise<void> => {
       process.stdout.write(`\n\n${migrationErrorMessage}`)
       printMigrationErrors(migrationResult.errors)
     }
-
-
 
   } catch(e) {
     debug(`Could not push new schema: ${e.message}`)

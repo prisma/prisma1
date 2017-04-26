@@ -66,16 +66,14 @@ export async function createProject(
 }
 
 export async function pushNewSchema(
-  projectId: string,
   newSchema: string,
   isDryRun: boolean,
   resolver: Resolver
 ): Promise<MigrationResult> {
 
   const mutation = `\
-     mutation($id: String!, $newSchema: String!, $isDryRun: Boolean!) {
+     mutation($newSchema: String!, $isDryRun: Boolean!) {
       migrateProject(input: {
-        id: $id,
         newSchema: $newSchema,
         isDryRun: $isDryRun
       }) {
@@ -101,7 +99,6 @@ export async function pushNewSchema(
   `
 
   const variables = {
-    id: projectId,
     newSchema,
     isDryRun
   }

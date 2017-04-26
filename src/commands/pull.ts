@@ -12,22 +12,21 @@ interface Props {
 
 export default async(props: Props, resolver: Resolver): Promise<void> => {
 
-  try {
-    const projectId = props.projectId ? props.projectId : readProjectIdFromProjectFile(resolver)
+  const projectId = props.projectId ? props.projectId : readProjectIdFromProjectFile(resolver)
 
-    const spinner = ora(fetchingProjectDataMessage).start()
-    const projectInfo = await pullProjectInfo(projectId, resolver)
-
-    debug(`Project Info: \n\n${JSON.stringify(projectInfo)}`)
-
-    spinner.stop()
-    writeProjectFile(projectInfo, resolver)
-
-    process.stdout.write(wroteProjectFileMessage)
-
-  } catch (e) {
+  if (!projectId) {
     process.stdout.write(noProjectIdMessage)
+    process.exit(0)
   }
 
+  const spinner = ora(fetchingProjectDataMessage).start()
+  const projectInfo = await pullProjectInfo(projectId!, resolver)
+
+  debug(`Project Info: \n\n${JSON.stringify(projectInfo)}`)
+
+  spinner.stop()
+  writeProjectFile(projectInfo, resolver)
+
+  process.stdout.write(wroteProjectFileMessage)
 
 }
