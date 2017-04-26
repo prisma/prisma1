@@ -9,7 +9,7 @@ export const usageRoot = `  Usage: graphcool [command]
     init         Create a new project
     pull         Pull the latest project config
     push         Push project config changes
-    export       Export database
+    export       Export project data
     projects     List projects
     auth         Sign up or login
     version      Print version
@@ -26,7 +26,7 @@ export const usageInit = `  Usage: graphcool init [options]
     -f, --file <schema-file>  Local GraphQL schema file
     -n, --name <name>         Project name
     -a, --alias <alias>       Project alias
-    -r, --region <region>     AWS Region (default: us-west-1)
+    -r, --region <region>     AWS Region (default: us-west-2)
     -h, --help                Output usage information
     
   Note: This command will create a ${chalk.bold('project.graphcool')} config file in the current directory.
@@ -47,9 +47,26 @@ export const usagePush = `  Usage: graphcool push [options]
   Push project config changes
   
   Options:
-    -c, --config       Config file (default: project.graphcool)
     -d, --dry-run      Simulate command
     -f, --force        Don't prompt for confirmation
+    -c, --config       Config file (default: project.graphcool)
+    -h, --help         Output usage information
+`
+
+export const usageExport = `  Usage: graphcool export [options]
+  
+  Export project data
+  
+  Options:
+    -c, --config       Config file (default: project.graphcool)
+    -h, --help         Output usage information
+`
+
+export const usageProjects = `  Usage: graphcool projects [options]
+  
+  List projects
+  
+  Options:
     -h, --help         Output usage information
 `
 
@@ -62,12 +79,4 @@ export const usageAuth = `  Usage: graphcool auth [options]
     -h, --help             Output usage information
     
   Note: Your session token will be store at ~/.graphcool
-`
-
-export const usageProjects = `  Usage: graphcool projects [options]
-  
-  List projects
-  
-  Options:
-    -h, --help         Output usage information
 `
