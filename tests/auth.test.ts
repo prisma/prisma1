@@ -2,7 +2,7 @@ import test from 'ava'
 import TestResolver from '../src/resolvers/TestResolver'
 import authCommand from '../src/commands/auth'
 import 'isomorphic-fetch'
-import {authEndpoint, authConfigFilePath, systemAPIEndpoint} from '../src/utils/constants'
+import {authEndpoint, graphcoolConfigFilePath, systemAPIEndpoint} from '../src/utils/constants'
 import TestAuthServer from '../src/api/TestAuthServer'
 const fetchMock = require('fetch-mock')
 const debug = require('debug')('graphcool')
@@ -43,7 +43,7 @@ test('Succeeding auth without token', async t => {
   )
 
   // verify result
-  const {token} = JSON.parse(resolver.read(authConfigFilePath))
+  const {token} = JSON.parse(resolver.read(graphcoolConfigFilePath))
   t.is(token, testToken)
 })
 
@@ -64,7 +64,7 @@ test('Succeeding auth with existing token', async t => {
   })
 
   // configure auth dependencies
-  const resolver = new TestResolver({ authConfigFilePath: testToken })
+  const resolver = new TestResolver({ graphcoolConfigFilePath: testToken })
   const props = { token: testToken }
   const authServer = new TestAuthServer()
 
@@ -74,7 +74,7 @@ test('Succeeding auth with existing token', async t => {
   )
 
   // verify result
-  const {token} = JSON.parse(resolver.read(authConfigFilePath))
+  const {token} = JSON.parse(resolver.read(graphcoolConfigFilePath))
   t.is(token, testToken)
 })
 

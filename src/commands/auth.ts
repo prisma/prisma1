@@ -1,5 +1,5 @@
 import ora = require('ora')
-import {writeAuthConfig, deleteAuthConfig} from '../utils/file'
+import {writeGraphcoolConfig, deleteGraphcoolConfig} from '../utils/file'
 import {AuthServer, Resolver, TokenValidationResult} from '../types'
 import {
   openBrowserMessage,
@@ -27,14 +27,14 @@ export default async(props: Props, resolver: Resolver, authServer: AuthServer): 
     spinner.stop()
   }
 
-  writeAuthConfig({token}, resolver)
+  writeGraphcoolConfig({token}, resolver)
   debug(`Did write auth config: ${JSON.stringify(resolver)}`)
 
   const result = await authServer.validateAuthToken(token)
   debug(`Auth token: ${result}`)
   switch (result) {
     case 'invalid':
-      deleteAuthConfig(resolver)
+      deleteGraphcoolConfig(resolver)
       throw new Error('Invalid auth token')
     case 'valid':
       break

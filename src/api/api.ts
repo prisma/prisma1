@@ -1,5 +1,5 @@
 import {Resolver, ProjectInfo, MigrationMessage, MigrationErrorMessage, MigrationResult} from '../types'
-import {authConfigFilePath, systemAPIEndpoint} from '../utils/constants'
+import {graphcoolConfigFilePath, systemAPIEndpoint} from '../utils/constants'
 const debug = require('debug')('graphcool')
 import 'isomorphic-fetch'
 
@@ -9,7 +9,7 @@ async function sendGraphQLRequest(
   variables?: any
 ): Promise<any> {
 
-  const {token} = JSON.parse(resolver.read(authConfigFilePath))
+  const {token} = JSON.parse(resolver.read(graphcoolConfigFilePath))
   // const token = `eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE0OTIxMTI1ODgsImNsaWVudElkIjoiY2luYmt5c2d2MDAwMngzaTZxZDR3ZHc1dCJ9.ujuTZXtmiqjdOBX6-beq7EUE9RxgNNSj0UG-acmMcbk`
   debug(`Send GraphQL request with token: ${token}`)
 
@@ -122,13 +122,15 @@ export async function pushNewSchema(
 export async function fetchProjects(resolver: Resolver): Promise<[ProjectInfo]> {
 
   const query = `\
-viewer{
-  user {
-    projects {
-      edges {
-        node {
-          id
-          name
+{
+  viewer {
+	  user {
+      projects {
+        edges {
+          node {
+            id
+            name
+          }
         }
       }
     }
@@ -139,8 +141,35 @@ viewer{
   const result = await sendGraphQLRequest(query, resolver)
   const json = await result.json()
 
+  debug(`Received data: ${JSON.stringify(json)}`)
+
   const projects = json.data.viewer.user.projects.edges.map(edge => edge.node)
   const projectInfos = projects.map(project => ({projectId: project.id, name: project.name})) as [ProjectInfo]
 
   return projectInfos
+}
+
+export async function pullProjectInfo(projectId: string, resolver: Resolver): Promise<ProjectInfo> {
+
+  const query = `\
+query ($projectId: ID!){
+  viewer {
+    project(id: $projectId) {
+      id
+      name
+      schema
+    }
+  }
+}`
+
+  const variables = { projectId }
+  const result = await sendGraphQLRequest(query, resolver, variables)
+  const json = await result.json()
+
+  const projectInfo = {
+    projectId: json.data.viewer.project.id,
+    name: json.data.viewer.project.name,
+    schema: json.data.viewer.project.schema,
+  } as ProjectInfo
+  return projectInfo
 }

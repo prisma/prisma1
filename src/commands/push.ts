@@ -1,4 +1,4 @@
-import {Region, Resolver, SchemaInfo, MigrationMessage, ProjectInfo, MigrationErrorMessage} from '../types'
+import {Resolver, MigrationMessage, ProjectInfo, MigrationErrorMessage} from '../types'
 import {
   graphcoolProjectFileName,
   noProjectFileMessage,
@@ -33,7 +33,6 @@ export default async(props: Props, resolver: Resolver): Promise<void> => {
   try {
 
     const migrationResult = await pushNewSchema(projectId, newSchema, isDryRun, resolver)
-
     spinner.stop()
 
     // no action required
@@ -47,7 +46,7 @@ export default async(props: Props, resolver: Resolver): Promise<void> => {
 
       const migrationMessage = isDryRun ? migrationDryRunMessage : migrationPerformedMessage
 
-      process.stdout.write(migrationMessage)
+      process.stdout.write(`${migrationMessage}`)
       printMigrationMessages(migrationResult.messages, 0)
 
       // update project file if necessary
@@ -63,7 +62,7 @@ export default async(props: Props, resolver: Resolver): Promise<void> => {
 
     // something went wrong
     else if (migrationResult.messages.length === 0 && migrationResult.errors.length > 0) {
-      process.stdout.write(migrationErrorMessage)
+      process.stdout.write(`\n\n${migrationErrorMessage}`)
       printMigrationErrors(migrationResult.errors)
     }
 

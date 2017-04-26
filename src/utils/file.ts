@@ -1,22 +1,26 @@
-import {AuthConfig, Resolver, ProjectInfo} from '../types'
-import {authConfigFilePath, graphcoolProjectFileName, projectFileSuffixes} from './constants'
+import {GraphcoolConfig, Resolver, ProjectInfo} from '../types'
+import {graphcoolConfigFilePath, graphcoolProjectFileName, projectFileSuffixes} from './constants'
 import * as path from 'path'
 const debug = require('debug')('graphcool')
+import * as fs from 'fs'
+
+/*
+ * Graphcool Config (/project.graphcool)
+ */
 
 export function writeProjectFile(projectInfo: ProjectInfo, resolver: Resolver) {
-  const schemaWithHeader = `# @project ${projectInfo.projectId}\n# @version ${projectInfo.version}\n\n${projectInfo.schema}`
+  const schemaWithHeader = `# @project ${projectInfo.projectId}\n# @version ${projectInfo.version || ''}\n\n${projectInfo.schema}`
   resolver.write(graphcoolProjectFileName, schemaWithHeader)
 }
 
 export function readProjectIdFromProjectFile(resolver: Resolver, path?: string): string {
   const pathToProjectFile = getPathToProjectFile(path)
-  debug(`Read project ID from file: ${pathToProjectFile}`)
   const contents = resolver.read(pathToProjectFile)
 
   const matches = contents.match(/# @project ([a-z0-9]*)/)
 
   if (!matches || matches.length !== 2) {
-    throw new Error(`${graphcoolProjectFileName} doesn't contain a project ID.`)
+    throw new Error(`${pathToProjectFile} doesn't contain a project ID.`)
   }
 
   return matches[1]
@@ -42,21 +46,30 @@ function getPathToProjectFile(filePath?: string): string {
     return filePath
   }
 
-  // TODO: search in current directory for file with suffix
-
   // the path only points to a directory
   return path.join(filePath, graphcoolProjectFileName)
 }
 
-export function readAuthConfig(resolver: Resolver): AuthConfig {
-  const configFileContent = resolver.read(authConfigFilePath)
+function findProjectFile(): string | undefined {
+  const schemaFiles = fs.readdirSync('.').filter(f => f.endsWith('.schema'))
+  const file = schemaFiles.find(f => f === graphcoolProjectFileName) || schemaFiles[0]
+  return file
+}
+
+
+/*
+ * Graphcool Config (~/.graphcool)
+ */
+
+export function readGraphcoolConfig(resolver: Resolver): GraphcoolConfig {
+  const configFileContent = resolver.read(graphcoolConfigFilePath)
   return JSON.parse(configFileContent)
 }
 
-export function writeAuthConfig(config: AuthConfig, resolver: Resolver): void {
-  resolver.write(authConfigFilePath, JSON.stringify(config, null, 2))
+export function writeGraphcoolConfig(config: GraphcoolConfig, resolver: Resolver): void {
+  resolver.write(graphcoolConfigFilePath, JSON.stringify(config, null, 2))
 }
 
-export function deleteAuthConfig(resolver: Resolver): void {
-  resolver.delete(authConfigFilePath)
+export function deleteGraphcoolConfig(resolver: Resolver): void {
+  resolver.delete(graphcoolConfigFilePath)
 }

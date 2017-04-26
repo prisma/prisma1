@@ -4,6 +4,7 @@ import * as minimist from 'minimist'
 import {Command} from './types'
 import pushCommand from './commands/push'
 import projectsCommand from './commands/projects'
+import pullCommand from './commands/pull'
 import FileSystemResolver from './resolvers/FileSystemResolver'
 const debug = require('debug')('graphcool')
 
@@ -30,13 +31,23 @@ async function main() {
 
     case 'projects': {
       await projectsCommand({}, new FileSystemResolver())
+      break
     }
+
+
+    case 'pull': {
+      const projectId = argv['project-id'] || argv['p']
+      await pullCommand({projectId}, new FileSystemResolver())
+      break
+    }
+
     default: {
 
       break
     }
   }
 
+  process.stdout.write('\n\n')
 }
 
 function onError(e: Error) {

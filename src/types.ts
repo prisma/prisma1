@@ -1,8 +1,8 @@
-export type Command = 'auth' | 'push' | 'create' | 'eject' | 'export' | 'fetch' | 'import' | 'projects' | 'update' | 'version' | 'help'
+export type Command = 'auth' | 'push' | 'create' | 'eject' | 'export' | 'pull' | 'import' | 'projects' | 'update' | 'version' | 'help'
 
 export type Region = 'eu-west-1'
 
-export interface AuthConfig {
+export interface GraphcoolConfig {
   token: string
 }
 

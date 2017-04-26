@@ -13,7 +13,7 @@ export const authEndpoint = 'https://cli-auth-api.graph.cool'
  * File paths / names
  */
 export const graphcoolProjectFileName = 'project.graphcool'
-export const authConfigFilePath = path.join(os.homedir(), '.graphcool')
+export const graphcoolConfigFilePath = path.join(os.homedir(), '.graphcool')
 export const projectFileSuffixes = ['.graphql', '.graphcool', '.schema']
 
 /*
@@ -52,7 +52,7 @@ export const noProjectFileMessage = `\
 Please provide a valid project (${graphcoolProjectFileName}) file for the schema migration.
 `
 export const pushingNewSchemaMessage = `\
-Migrating the schema in your project...
+Migrating the schema in your project...\
 `
 
 export const couldNotMigrateSchemaMessage = `
@@ -73,4 +73,30 @@ Your schema was successfully updated. Here's the list of actions that were perfo
 
 export const migrationErrorMessage = `\
 There are issues with the new schema that your provided. Please make sure to fix the following issues before retrying:\n
+`
+
+/*
+ * Terminal output: projects
+ */
+export const projectsMessage = `\
+`
+
+export const couldNotFetchProjectsMessage = `\
+An error occurded while trying to fetch your projects: 
+`
+
+/*
+ * Terminal output: pull
+ */
+
+export const fetchingProjectDataMessage = `\
+Fetching project data ...\
+`
+
+export const noProjectIdMessage = `\
+${chalk.red(figures.cross)} Please provide a valid project Id.
+`
+
+export const wroteProjectFileMessage = `\
+${chalk.green(figures.tick)} Your project file was successfully updated.
 `
