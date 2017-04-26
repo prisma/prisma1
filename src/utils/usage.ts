@@ -6,51 +6,65 @@ export const usageRoot = `  Usage: graphcool [command]
     Read more at https://www.graph.cool/docs/cli
 
   Commands:
-    auth         Sign up or login
-    create       Create a new project
-    eject        Eject config from Schema format to YAML
+    init         Create a new project
+    pull         Pull the latest project config
+    push         Push project config changes
     export       Export database
-    fetch        Fetch newest config for project
-    import       Import data
     projects     List projects
-    migrate      Apply config changes to project
+    auth         Sign up or login
     version      Print version
 
   Run 'graphcool COMMAND --help' for more information on a command.
 `
 
+export const usageInit = `  Usage: graphcool init [options]
+  
+  Create a new project from scratch or based on an existing GraphQL schema.
+  
+  Options:
+    -u, --url <schema-url>    Url to a GraphQL schema
+    -f, --file <schema-file>  Local GraphQL schema file
+    -n, --name <name>         Project name
+    -a, --alias <alias>       Project alias
+    -r, --region <region>     AWS Region (default: us-west-1)
+    -h, --help                Output usage information
+    
+  Note: This command will create a ${chalk.bold('project.graphcool')} config file in the current directory.
+`
+
+export const usagePull = `  Usage: graphcool pull [options]
+  
+  Pull the latest project config from Graphcool
+  
+  Options:
+    -p, --project      ID or alias of source project (defaults to project from config file)
+    -c, --config       Config file (default: project.graphcool)
+    -h, --help         Output usage information
+`
+
+export const usagePush = `  Usage: graphcool push [options]
+  
+  Push project config changes
+  
+  Options:
+    -c, --config       Config file (default: project.graphcool)
+    -d, --dry-run      Simulate command
+    -f, --force        Don't prompt for confirmation
+    -h, --help         Output usage information
+`
+
 export const usageAuth = `  Usage: graphcool auth [options]
   
-  Sign up or login
+  Sign up or login (opens your browser for authentication)
   
   Options:
     -t, --token <token>    System token
     -h, --help             Output usage information
+    
+  Note: Your session token will be store at ~/.graphcool
 `
 
-export const usageCreate = `  Usage: graphcool create [options] [schema]
-  
-  Create a new project (uses graphcool.schema as template if exists)
-  
-  The [schema] argument is optional but can point to any kind of .schema file or URL.
-  
-  Options:
-    -n, --name <name>      Project name
-    -a, --alias <alias>    Project alias (https://api.graph.cool/ENDPOINT/ALIAS)
-    -r, --region <region>  AWS Region (default: us-west-1)
-    -h, --help             Output usage information
-`
-
-export const usagePull = `  Usage: graphcool pull
-  
-  Fetch newest config for project 
-  
-  Options:
-    -p, --project-id   Project id to fetch (defaults to project from config in current directory)
-    -h, --help         Output usage information
-`
-
-export const usageProjects = `  Usage: graphcool projects
+export const usageProjects = `  Usage: graphcool projects [options]
   
   List projects
   

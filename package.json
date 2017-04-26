@@ -1,6 +1,6 @@
 {
   "name": "graphcool",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "bin": {
     "graphql": "dist/index.js",
     "graphcool": "dist/index.js"
@@ -11,6 +11,7 @@
   ],
   "scripts": {
     "test": "tsc && ava ./dist/tests/**/*.js",
+    "postinstall": "echo Run graphcool init to get started",
     "build": "rm -rf dist && tsc && chmod +x dist/src/index.js"
   },
   "author": "",

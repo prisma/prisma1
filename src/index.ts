@@ -9,7 +9,7 @@ import FileSystemResolver from './resolvers/FileSystemResolver'
 const debug = require('debug')('graphcool')
 import figures = require('figures')
 import * as chalk from 'chalk'
-import {usagePull, usageProjects, usageCreate, usageRoot} from './utils/usage'
+import {usagePull, usageProjects, usageInit, usageRoot} from './utils/usage'
 
 async function main() {
   const argv = minimist(process.argv.slice(2))
@@ -26,7 +26,7 @@ async function main() {
     }
 
     case 'push': {
-      checkHelp(argv, usageCreate)
+      checkHelp(argv, usageInit)
 
       const isDryRun = true // (argv['dry'] || argv['d']) ? true : false
       const projectFilePath = argv['path'] || argv['p']
