@@ -13,7 +13,7 @@ import figures = require('figures')
 const debug = require('debug')('graphcool')
 
 interface Props {
-  isDryRun?: boolean
+  isDryRun: boolean
   projectFilePath?: string
 }
 
@@ -27,14 +27,14 @@ export default async(props: Props, resolver: Resolver): Promise<void> => {
   const projectId = readProjectIdFromProjectFile(resolver, props.projectFilePath)
   const newSchema = readDataModelFromProjectFile(resolver, props.projectFilePath)
   const version = '1'
-  const isDryRun = props.isDryRun || true
+  const isDryRun = props.isDryRun
 
   const spinner = ora(pushingNewSchemaMessage).start()
 
   try {
 
     const schemaWithFrontmatter = `# projectId: ${projectId}\n# version: ${version}\n\n${newSchema}`
-    debug(`Schema with frontmatter: \n${schemaWithFrontmatter}`)
+    // debug(`Schema with frontmatter: \n${schemaWithFrontmatter}`)
 
     const migrationResult = await pushNewSchema(schemaWithFrontmatter, isDryRun, resolver)
     spinner.stop()
@@ -47,6 +47,7 @@ export default async(props: Props, resolver: Resolver): Promise<void> => {
 
     // migration successful
     else if (migrationResult.messages.length > 0 && migrationResult.errors.length === 0) {
+      debug(`migration successful: ${isDryRun}`)
 
       const migrationMessage = isDryRun ? migrationDryRunMessage : migrationPerformedMessage
 
@@ -58,7 +59,7 @@ export default async(props: Props, resolver: Resolver): Promise<void> => {
         const projectInfo = {
           projectId,
           schema: newSchema,
-          version: '1.0'
+          version: migrationResult.newVersion
         } as ProjectInfo
         writeProjectFile(projectInfo, resolver)
       }

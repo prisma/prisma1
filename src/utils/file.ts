@@ -9,6 +9,7 @@ import * as fs from 'fs'
  */
 
 export function writeProjectFile(projectInfo: ProjectInfo, resolver: Resolver) {
+  debug(`Write project file: ${JSON.stringify(projectInfo)}`)
   const schemaWithHeader = `# projectId: ${projectInfo.projectId}\n# version: ${projectInfo.version || ''}\n\n${projectInfo.schema}`
   resolver.write(graphcoolProjectFileName, schemaWithHeader)
 }

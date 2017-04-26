@@ -11,6 +11,8 @@ test.afterEach(() => {
   fetchMock.reset()
 })
 
+// test cases for not authorized (not enough permissions)
+
 /*
  * Test succeeding schema migration and verify updated project info is stored in in ./project.graphcool
  */
@@ -31,7 +33,9 @@ test('Succeeding schema migration', async t => {
   )
 
   const expectedProjectFileContent = mockProjectFile3
-  t.is(resolver.read(`./${graphcoolProjectFileName}`), expectedProjectFileContent)
+  const result = resolver.read(`./${graphcoolProjectFileName}`)
+
+  t.is(result, expectedProjectFileContent)
 
 })
 

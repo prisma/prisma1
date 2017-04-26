@@ -49,4 +49,5 @@ export interface MigrationErrorMessage {
 export interface MigrationResult {
   messages: [MigrationMessage]
   errors: [MigrationErrorMessage]
+  newVersion: string
 }

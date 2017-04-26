@@ -10,21 +10,17 @@ async function sendGraphQLRequest(
 ): Promise<any> {
 
   const configContents = resolver.read(graphcoolConfigFilePath)
-  debug(`Config contents: ${configContents}`)
-
   const {token} = JSON.parse(configContents)
-  // const token = `eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE0OTIxMTI1ODgsImNsaWVudElkIjoiY2luYmt5c2d2MDAwMngzaTZxZDR3ZHc1dCJ9.ujuTZXtmiqjdOBX6-beq7EUE9RxgNNSj0UG-acmMcbk`
-  debug(`Send GraphQL request with token: ${token}`)
+
+  // debug(`Send GraphQL request with token: ${token}`)
 
   const queryVariables = variables || {}
-
   const payload = {
     query: queryString,
     variables: queryVariables
   }
 
-  debug(`Send payload as POST body: ${JSON.stringify(payload)}`)
-  console.log()
+  // debug(`Send payload as POST body: ${JSON.stringify(payload)}`)
 
   const result = await fetch(systemAPIEndpoint, {
     method: 'POST',
@@ -34,9 +30,7 @@ async function sendGraphQLRequest(
     },
     body: JSON.stringify(payload),
   })
-
   return result
-
 }
 
 export async function createProject(
@@ -76,33 +70,31 @@ export async function pushNewSchema(
 ): Promise<MigrationResult> {
 
   const mutation = `\
-     mutation($newSchema: String!, $isDryRun: Boolean!) {
-      migrateProject(input: {
-        newSchema: $newSchema,
-        isDryRun: $isDryRun
-      }) {
-        migrationMessages {
-          type
-          action
-          name
-          description
-          subDescriptions {
-            type
-            action
-            name
-            description
-          }
-        }
-        errors {
-          description
-          type
-          field
-        }
+ mutation($newSchema: String!, $isDryRun: Boolean!) {
+  migrateProject(input: {
+    newSchema: $newSchema,
+    isDryRun: $isDryRun
+  }) {
+    migrationMessages {
+      type
+      action
+      name
+      description
+      subDescriptions {
+        type
+        action
+        name
+        description
       }
     }
-  `
-
-  debug(`Send mutation`)
+    errors {
+      description
+      type
+      field
+    }
+  }
+}
+`
 
   const variables = {
     newSchema,
@@ -112,12 +104,12 @@ export async function pushNewSchema(
   const result = await sendGraphQLRequest(mutation, resolver, variables)
   const json = await result.json()
 
-  debug(`Received json for 'push': ${JSON.stringify(json)}`)
+  // debug(`Received json for 'push': ${JSON.stringify(json)}`)
 
   const messages = json.data.migrateProject.migrationMessages as [MigrationMessage]
   const errors = json.data.migrateProject.errors as [MigrationErrorMessage]
-
-  const migrationResult = { messages, errors } as MigrationResult
+  const newVersion = json.data.migrateProject.project.version
+  const migrationResult = { messages, errors, newVersion } as MigrationResult
 
   return migrationResult
 }

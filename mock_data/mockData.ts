@@ -37,18 +37,21 @@ type Image {
 export const mockProjectFile1 = `\
 # projectId: abcdefghijklmn
 # version: 2
+
 ${mockSchema1}
 `
 
 export const mockProjectFile2 = `\
 # projectId: abcdefghijklmn
 # version: 2
+
 ${mockSchema2}
 `
 
 export const mockProjectFile3 = `\
 # projectId: abcdefghijklmn
 # version: 3
+
 ${mockSchema2}
 `
 
