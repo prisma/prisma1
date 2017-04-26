@@ -3,7 +3,8 @@ import {
   graphcoolProjectFileName,
   noProjectFileMessage,
   couldNotMigrateSchemaMessage,
-  pushingNewSchemaMessage, noActionRequiredMessage, migrationDryRunMessage, migrationPerformedMessage
+  pushingNewSchemaMessage, noActionRequiredMessage, migrationDryRunMessage, migrationPerformedMessage,
+  migrationErrorMessage
 } from '../utils/constants'
 import * as fs from 'fs'
 import {readProjectIdFromProjectFile, readDataModelFromProjectFile, writeProjectFile} from '../utils/file'
@@ -62,6 +63,7 @@ export default async(props: Props, resolver: Resolver): Promise<void> => {
 
     // something went wrong
     else if (migrationResult.messages.length === 0 && migrationResult.errors.length > 0) {
+      process.stdout.write(migrationErrorMessage)
       printMigrationErrors(migrationResult.errors)
     }
 

@@ -68,6 +68,9 @@ This was a dry run of the migration. Here's the list of actions that would need 
 `
 
 export const migrationPerformedMessage = `\
-Your schema was successfully updated. Here's the list of actions that were performed for the schema migration:
+Your schema was successfully updated. Here's the list of actions that were performed for the schema migration:\n
 `
 
+export const migrationErrorMessage = `\
+There are issues with the new schema that your provided. Please make sure to fix the following issues before retrying:\n
+`
