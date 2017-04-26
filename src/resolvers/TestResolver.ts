@@ -20,5 +20,9 @@ export default class TestResolver implements Resolver {
     delete this.storage[path]
   }
 
+  exists(path: string): boolean {
+    return (typeof(this.storage[path]) !== 'undefined') || (typeof(this.storage[`./${path}`]) !== 'undefined')
+  }
+
 }
 

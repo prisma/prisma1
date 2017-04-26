@@ -5,7 +5,7 @@ const debug = require('debug')('graphcool')
 import * as fs from 'fs'
 
 /*
- * Graphcool Config (/project.graphcool)
+ * Project File (.../project.graphcool)
  */
 
 export function writeProjectFile(projectInfo: ProjectInfo, resolver: Resolver) {
@@ -15,6 +15,7 @@ export function writeProjectFile(projectInfo: ProjectInfo, resolver: Resolver) {
 
 export function readProjectIdFromProjectFile(resolver: Resolver, path?: string): string | undefined {
   const pathToProjectFile = getPathToProjectFile(path)
+  debug(`Path to project file: ${pathToProjectFile}`)
   const contents = resolver.read(pathToProjectFile)
 
   const matches = contents.match(/# projectId: ([a-z0-9]*)/)

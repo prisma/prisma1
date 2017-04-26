@@ -16,4 +16,8 @@ export default class FileSystemResolver implements Resolver {
     fs.unlinkSync(path.resolve(fileUrl))
   }
 
+  exists(path: string): boolean {
+    return fs.existsSync(path)
+  }
+
 }

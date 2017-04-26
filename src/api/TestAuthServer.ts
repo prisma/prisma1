@@ -1,7 +1,7 @@
 
 import {GraphcoolAuthServer} from '../api/GraphcoolAuthServer'
 import {AuthServer, TokenValidationResult} from '../types'
-import {testToken} from '../../tests/mockData'
+import {testToken} from '../../mock_data/mockData'
 
 export default class TestAuthServer extends GraphcoolAuthServer implements AuthServer {
 

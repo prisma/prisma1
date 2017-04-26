@@ -1,6 +1,7 @@
 import {AuthServer, TokenValidationResult} from '../types'
 import cuid = require('cuid')
 import open = require('open')
+import {systemAPIEndpoint} from '../utils/constants'
 const debug = require('debug')('graphcool')
 
 export class GraphcoolAuthServer implements AuthServer {
@@ -39,7 +40,7 @@ export class GraphcoolAuthServer implements AuthServer {
     }`
 
     try {
-      await fetch('https://api.graph.cool/system', {
+      await fetch(systemAPIEndpoint, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

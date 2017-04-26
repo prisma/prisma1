@@ -9,7 +9,10 @@ async function sendGraphQLRequest(
   variables?: any
 ): Promise<any> {
 
-  const {token} = JSON.parse(resolver.read(graphcoolConfigFilePath))
+  const configContents = resolver.read(graphcoolConfigFilePath)
+  debug(`Config contents: ${configContents}`)
+
+  const {token} = JSON.parse(configContents)
   // const token = `eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE0OTIxMTI1ODgsImNsaWVudElkIjoiY2luYmt5c2d2MDAwMngzaTZxZDR3ZHc1dCJ9.ujuTZXtmiqjdOBX6-beq7EUE9RxgNNSj0UG-acmMcbk`
   debug(`Send GraphQL request with token: ${token}`)
 
@@ -21,6 +24,7 @@ async function sendGraphQLRequest(
   }
 
   debug(`Send payload as POST body: ${JSON.stringify(payload)}`)
+  console.log()
 
   const result = await fetch(systemAPIEndpoint, {
     method: 'POST',
@@ -97,6 +101,8 @@ export async function pushNewSchema(
       }
     }
   `
+
+  debug(`Send mutation`)
 
   const variables = {
     newSchema,

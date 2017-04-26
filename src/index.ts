@@ -57,7 +57,7 @@ async function main() {
     }
 
     default: {
-      console.log(`Unknown command: ${command}\n\n${usageRoot}`)
+      process.stdout.write(`Unknown command: ${command}\n\n${usageRoot}`)
       break
     }
   }

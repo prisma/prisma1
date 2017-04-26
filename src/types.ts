@@ -10,6 +10,7 @@ export interface Resolver {
   read(path: string): string
   write(path: string, value: string)
   delete(path: string)
+  exists(path: string): boolean
 }
 
 export type TokenValidationResult = 'valid' | 'invalid'

@@ -6,7 +6,6 @@ import {
   pushingNewSchemaMessage, noActionRequiredMessage, migrationDryRunMessage, migrationPerformedMessage,
   migrationErrorMessage
 } from '../utils/constants'
-import * as fs from 'fs'
 import {readProjectIdFromProjectFile, readDataModelFromProjectFile, writeProjectFile} from '../utils/file'
 import {pushNewSchema} from '../api/api'
 import ora = require('ora')
@@ -19,21 +18,23 @@ interface Props {
 }
 
 export default async(props: Props, resolver: Resolver): Promise<void> => {
-  if (!fs.existsSync(graphcoolProjectFileName) && !fs.existsSync(`${props.projectFilePath}/${graphcoolProjectFileName}`)) {
+
+  if (!resolver.exists(graphcoolProjectFileName) && !resolver.exists(`${props.projectFilePath}/${graphcoolProjectFileName}`)) {
     process.stdout.write(noProjectFileMessage)
     process.exit(1)
   }
 
   const projectId = readProjectIdFromProjectFile(resolver, props.projectFilePath)
   const newSchema = readDataModelFromProjectFile(resolver, props.projectFilePath)
-  const version = ''
+  const version = '1'
   const isDryRun = props.isDryRun || true
 
   const spinner = ora(pushingNewSchemaMessage).start()
 
   try {
 
-    const schemaWithFrontmatter = `# projectId: ${projectId}\n# version: ${version}\n${newSchema}`
+    const schemaWithFrontmatter = `# projectId: ${projectId}\n# version: ${version}\n\n${newSchema}`
+    debug(`Schema with frontmatter: \n${schemaWithFrontmatter}`)
 
     const migrationResult = await pushNewSchema(schemaWithFrontmatter, isDryRun, resolver)
     spinner.stop()
