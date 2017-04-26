@@ -3,6 +3,7 @@
 import * as minimist from 'minimist'
 import {Command} from './types'
 import pushCommand from './commands/push'
+import projectsCommand from './commands/projects'
 import FileSystemResolver from './resolvers/FileSystemResolver'
 const debug = require('debug')('graphcool')
 
@@ -25,6 +26,10 @@ async function main() {
       const resolver = new FileSystemResolver()
       await pushCommand({isDryRun, projectFilePath}, resolver)
       break
+    }
+
+    case 'projects': {
+      await projectsCommand({}, new FileSystemResolver())
     }
     default: {
 

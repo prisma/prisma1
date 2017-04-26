@@ -2,10 +2,11 @@ import test from 'ava'
 import TestResolver from '../src/resolvers/TestResolver'
 import authCommand from '../src/commands/auth'
 import 'isomorphic-fetch'
-import {authEndpoint, authConfigFilePath, testToken, systemAPIEndpoint} from '../src/utils/constants'
+import {authEndpoint, authConfigFilePath, systemAPIEndpoint} from '../src/utils/constants'
 import TestAuthServer from '../src/api/TestAuthServer'
 const fetchMock = require('fetch-mock')
 const debug = require('debug')('graphcool')
+import {testToken} from './mockData'
 
 test.afterEach(() => {
   fetchMock.reset()

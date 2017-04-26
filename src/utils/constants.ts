@@ -14,6 +14,7 @@ export const authEndpoint = 'https://cli-auth-api.graph.cool'
  */
 export const graphcoolProjectFileName = 'project.graphcool'
 export const authConfigFilePath = path.join(os.homedir(), '.graphcool')
+export const projectFileSuffixes = ['.graphql', '.graphcool', '.schema']
 
 /*
  * Terminal output: auth
@@ -70,30 +71,3 @@ export const migrationPerformedMessage = `\
 Your schema was successfully updated. Here's the list of actions that were performed for the schema migration:
 `
 
-/*
- * Testing
- */
-export const testToken = 'abcdefghijklmnopqrstuvwxyz'
-
-export const mockFullSchema = `\
-  type Tweet {
-    id: ID!
-    createdAt: DateTime!
-    updatedAt: DateTime!
-    text: String!
-  }`
-
-export const mockSchema = `\
-  type Tweet {
-    text: String!
-  }`
-
-export const mockedCreateProjectResponse = `\
-{
-  "addProject": {
-    "project": {
-      "id": "abcdefghi",
-      "schema": "type Tweet {\\n  id: ID!\\n  createdAt: DateTime!\\n  updatedAt: DateTime!\\n  text: String!\\n}"
-    }
-  }
-}`

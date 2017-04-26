@@ -37,8 +37,3 @@ export interface MigrationMessage {
   description: string
   subDescriptions?: [MigrationMessage]
 }
-
-export interface MigrationResult {
-  migrationMessages: [MigrationMessage]
-  // projectInfo: ProjectInfo
-}

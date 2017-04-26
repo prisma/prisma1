@@ -1,4 +1,4 @@
-import {Resolver, ProjectInfo, MigrationMessage, MigrationResult} from '../types'
+import {Resolver, ProjectInfo, MigrationMessage} from '../types'
 import {authConfigFilePath, systemAPIEndpoint} from '../utils/constants'
 const debug = require('debug')('graphcool')
 import 'isomorphic-fetch'
