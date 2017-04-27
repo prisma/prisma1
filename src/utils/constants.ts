@@ -6,7 +6,7 @@ import figures = require('figures')
 /*
  * Networking
  */
-export const systemAPIEndpoint = 'https://dev.api.graph.cool/system'
+export const systemAPIEndpoint = 'https://api.graph.cool/system'
 export const authEndpoint = 'https://cli-auth-api.graph.cool'
 
 /*
@@ -21,7 +21,7 @@ export const projectFileSuffixes = ['.graphql', '.graphcool', '.schema']
  */
 export const openBrowserMessage = `Authenticating using your browser...`
 export const couldNotRetrieveTokenMessage = `\
-${chalk.red(figures.cross)} Oups, something went wrong during authentication.
+${chalk.red(figures.cross)}  Oups, something went wrong during authentication.
 
 Please try again or get in touch with us if the problem persists: http://slack.graph.cool/\n\n`
 export const authenticationSuccessMessage = `${chalk.green(figures.tick)}  Authenticated successfully\n\n`

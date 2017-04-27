@@ -15,10 +15,11 @@ import {writeProjectFile} from '../utils/file'
 const debug = require('debug')('graphcool')
 
 interface Props {
-  schemaUrl?: string
+  localSchemaFile?: string
+  remoteSchemaUrl?: string
   name?: string
   alias?: string
-  region?: Region // TODO coming soon...
+  region?: Region
 }
 
 export default async(props: Props, env: SystemEnvironment): Promise<void> => {
@@ -38,7 +39,8 @@ export default async(props: Props, env: SystemEnvironment): Promise<void> => {
   try {
 
     // resolve schema
-    const schema = await getSchema(props.schemaUrl, resolver)
+    const schemaUrl = props.localSchemaFile ? props.localSchemaFile : props.remoteSchemaUrl
+    const schema = await getSchema(schemaUrl, resolver)
     debug(`Schema: ${JSON.stringify(schema)}`)
 
     // create project
@@ -52,14 +54,17 @@ export default async(props: Props, env: SystemEnvironment): Promise<void> => {
     out.write(message)
 
   } catch(e) {
-    debug(`Could not create project: ${e.message}`)
-    out.write(couldNotCreateProjectMessage)
+    debug(`Could not create project: ${JSON.stringify(e)}`)
+    out.write(`${couldNotCreateProjectMessage}`)
     process.exit(1)
   }
 
 }
 
 async function getSchema(schemaUrl: string | undefined, resolver: Resolver): Promise<SchemaInfo> {
+
+  debug(`Resolving schema: ${schemaUrl}`)
+
   if (schemaUrl) {
     if (schemaUrl.startsWith('http')) {
       const response = await fetch(schemaUrl)

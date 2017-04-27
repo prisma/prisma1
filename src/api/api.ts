@@ -62,12 +62,12 @@ mutation addProject($schema: String!, $name: String!, $alias: String, $region: R
     variables = {...variables, region}
   }
 
-  debug(`Send variables: ${JSON.stringify(variables)}`)
+  debug(`Send variables: ${JSON.stringify(variables)}\n`)
 
   const result = await sendGraphQLRequest(mutation, resolver, variables)
   const json = await result.json()
 
-  debug(`Received JSON: ${JSON.stringify(json)}`)
+  debug(`Received JSON: ${JSON.stringify(json)}\n`)
 
   const projectId = json.data.addProject.project.id
   const version = '1'// result.addProject.version
@@ -150,7 +150,7 @@ export async function fetchProjects(resolver: Resolver): Promise<[ProjectInfo]> 
   const result = await sendGraphQLRequest(query, resolver)
   const json = await result.json()
 
-  debug(`Received data: ${JSON.stringify(json)}`)
+  debug(`Received data: ${JSON.stringify(json)}\n`)
 
   const projects = json.data.viewer.user.projects.edges.map(edge => edge.node)
   const projectInfos = projects.map(project => ({projectId: project.id, name: project.name})) as [ProjectInfo]

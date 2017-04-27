@@ -36,9 +36,9 @@ type Image {
 
 export const mockProjectFile1 = `\
 # projectId: abcdefghijklmn
-# version: 2
+# version: 1
 
-${mockSchema1}
+${mockFullSchema}
 `
 
 export const mockProjectFile2 = `\
@@ -129,8 +129,8 @@ export const mockedCreateProjectResponse = `\
   "data": {
     "addProject": {
       "project": {
-        "id": "abcdefghi",
-        "schema": "type Tweet {\\n  id: ID!\\n  createdAt: DateTime!\\n  updatedAt: DateTime!\\n  text: String!\\n}"
+        "id": "abcdefghijklmn",
+        "schema": "type Tweet {\\n  id: ID!\\n  createdAt: DateTime!\\n  updatedAt: DateTime!\\n  text: String!\\n}\\n"
       }
     }
   }

@@ -36,9 +36,11 @@ async function main() {
 
       const name = argv['name'] || argv['n']
       const alias = argv['alias'] || argv['a']
-      const schemaUrl = argv['url'] || argv['u']
+      const region = argv['region'] || argv['r']
+      const remoteSchemaUrl = argv['url'] || argv['u']
+      const localSchemaFile =  argv['file'] || argv['f']
 
-      const props = {name, alias, schemaUrl}
+      const props = {name, alias, remoteSchemaUrl, localSchemaFile, region}
       await initCommand(props, defaultEnvironment())
       break
     }
@@ -72,7 +74,6 @@ async function main() {
 
     case 'auth': {
       checkHelp(argv, usageAuth)
-      await checkAuth()
 
       const token = argv['token'] || argv['t']
       await authCommand({token}, defaultEnvironment(), new GraphcoolAuthServer())
