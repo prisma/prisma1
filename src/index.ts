@@ -11,9 +11,10 @@ import FileSystemResolver from './system/FileSystemResolver'
 const debug = require('debug')('graphcool')
 import figures = require('figures')
 import * as chalk from 'chalk'
-import {usagePull, usageProjects, usageInit, usageRoot} from './utils/usage'
+import {usagePull, usageProjects, usageInit, usageRoot, usagePush, usageAuth} from './utils/usage'
 import StdOut from './system/StdOut'
 import {GraphcoolAuthServer} from './api/GraphcoolAuthServer'
+import {readGraphcoolConfig} from './utils/file'
 
 async function main() {
   const argv = minimist(process.argv.slice(2))
@@ -30,6 +31,9 @@ async function main() {
     }
 
     case 'init': {
+      checkHelp(argv, usageInit)
+      await checkAuth()
+
       const name = argv['name'] || argv['n']
       const alias = argv['alias'] || argv['a']
       const schemaUrl = argv['url'] || argv['u']
@@ -40,17 +44,18 @@ async function main() {
     }
 
     case 'push': {
-      checkHelp(argv, usageInit)
+      checkHelp(argv, usagePush)
+      await checkAuth()
 
       const isDryRun = true // (argv['dry'] || argv['d']) ? true : false
       const projectFilePath = argv['path'] || argv['p']
-      const resolver = new FileSystemResolver()
       await pushCommand({isDryRun, projectFilePath}, defaultEnvironment())
       break
     }
 
     case 'projects': {
       checkHelp(argv, usageProjects)
+      await checkAuth()
 
       await projectsCommand({}, defaultEnvironment())
       break
@@ -58,6 +63,7 @@ async function main() {
 
     case 'pull': {
       checkHelp(argv, usagePull)
+      await checkAuth()
 
       const projectId = argv['project-id'] || argv['p']
       await pullCommand({projectId}, defaultEnvironment())
@@ -65,13 +71,13 @@ async function main() {
     }
 
     case 'auth': {
-      checkHelp(argv, usagePull)
+      checkHelp(argv, usageAuth)
+      await checkAuth()
 
       const token = argv['token'] || argv['t']
       await authCommand({token}, defaultEnvironment(), new GraphcoolAuthServer())
       break
     }
-
 
     case 'help': {
       process.stdout.write(usageRoot)
@@ -88,10 +94,11 @@ async function main() {
   process.stdout.write('\n\n')
 }
 
-function defaultEnvironment(): SystemEnvironment {
-  return {
-    resolver: new FileSystemResolver(),
-    out: new StdOut()
+async function checkAuth() {
+  try {
+    readGraphcoolConfig(new FileSystemResolver())
+  } catch (e) {
+    await authCommand({}, defaultEnvironment(), new GraphcoolAuthServer())
   }
 }
 
@@ -99,6 +106,13 @@ function checkHelp(argv: any, usage: string) {
   if (argv['help'] || argv['h']) {
     process.stdout.write(usage)
     process.exit(0)
+  }
+}
+
+function defaultEnvironment(): SystemEnvironment {
+  return {
+    resolver: new FileSystemResolver(),
+    out: new StdOut()
   }
 }
 

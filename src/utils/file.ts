@@ -51,7 +51,6 @@ export function readVersionFromProjectFile(resolver: Resolver, path?: string): s
   }
 }
 
-
 export function readDataModelFromProjectFile(resolver: Resolver, path?: string): string {
   const pathToProjectFile =getPathToProjectFile(path)
   const contents = resolver.read(pathToProjectFile)
@@ -60,6 +59,7 @@ export function readDataModelFromProjectFile(resolver: Resolver, path?: string):
   const dataModel = contents.substring(dataModelStartIndex, contents.length)
   return dataModel
 }
+
 
 
 function getPathToProjectFile(filePath?: string): string {

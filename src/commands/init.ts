@@ -25,13 +25,12 @@ export default async(props: Props, env: SystemEnvironment): Promise<void> => {
 
   const {resolver, out} = env
 
-  if (resolver.exists(graphcoolProjectFileName) && resolver.read(graphcoolProjectFileName).toString().includes('@ project "')) {
+  if (resolver.exists(graphcoolProjectFileName) && resolver.read(graphcoolProjectFileName).toString().includes('# projectId:')) {
     out.write(projectAlreadyExistsMessage)
     process.exit(1)
   }
 
   const name = props.name || generateName()
-  const alias = props.alias || ''
   debug(`Create project: ${name}`)
 
   out.startSpinner(creatingProjectMessage(name))
