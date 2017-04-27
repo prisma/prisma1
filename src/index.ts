@@ -16,6 +16,7 @@ import StdOut from './system/StdOut'
 import {GraphcoolAuthServer} from './api/GraphcoolAuthServer'
 import {readGraphcoolConfig} from './utils/file'
 import {graphcoolProjectFileName} from './utils/constants'
+const {version} = require('../package.json')
 
 async function main() {
   const argv = minimist(process.argv.slice(2))
@@ -84,6 +85,11 @@ async function main() {
     case 'help': {
       process.stdout.write(usageRoot)
       process.exit(0)
+      break
+    }
+
+    case 'version': {
+      process.stdout.write(version)
       break
     }
 

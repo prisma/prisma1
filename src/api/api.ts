@@ -70,7 +70,7 @@ mutation addProject($schema: String!, $name: String!, $alias: String, $region: R
   debug(`Received JSON: ${JSON.stringify(json)}\n`)
 
   const projectId = json.data.addProject.project.id
-  const version = '1'// result.addProject.version
+  const version = '1' // result.addProject.version
   const fullSchema = json.data.addProject.project.schema
   const projectInfo = {projectId, version, schema: fullSchema}
 
@@ -117,8 +117,6 @@ export async function pushNewSchema(
     newSchema,
     isDryRun
   }
-
-  debug(`Variables for : ${JSON.stringify(variables)}`)
 
   const result = await sendGraphQLRequest(mutation, resolver, variables)
   const json = await result.json()
