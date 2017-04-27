@@ -28,7 +28,7 @@ test('Succeeding schema migration', async t => {
   storage[`./${graphcoolProjectFileName}`] = mockProjectFile2
   storage[graphcoolConfigFilePath] = '{"token": "abcdefgh"}'
   const env = testEnvironment(storage)
-  const props = {isDryRun: false}
+  const props = { isDryRun: false , projectFilePath: graphcoolProjectFileName}
 
   await t.notThrows(
     pushCommand(props, env)
@@ -43,28 +43,27 @@ test('Succeeding schema migration', async t => {
 /*
  * Test succeeding schema migration (dry run) and verify project info is not updated ./project.graphcool
  */
-// test('Succeeding schema migration (dry)', async t => {
-//
-//   // configure HTTP mocks
-//   fetchMock.post(systemAPIEndpoint, JSON.parse(mockedPushSchemaResponse))
-//
-//   // dummy migration data
-//   const storage = {}
-//   storage[`./${graphcoolProjectFileName}`] = mockProjectFile2
-//   storage[graphcoolConfigFilePath] = '{"token": "abcdefgh"}'
-//   const env = testEnvironment(storage)
-//   const props = {isDryRun: true}
-//
-//   await t.notThrows(
-//     pushCommand(props, env)
-//   )
-//
-//   const expectedProjectFileContent = mockProjectFile3
-//   const result = env.resolver.read(`./${graphcoolProjectFileName}`)
-//
-//   t.is(result, expectedProjectFileContent)
-//
-// })
+test('Succeeding schema migration (dry)', async t => {
+
+  // configure HTTP mocks
+  fetchMock.post(systemAPIEndpoint, JSON.parse(mockedPushSchemaResponse))
+
+  // dummy migration data
+  const storage = {}
+  storage[`./${graphcoolProjectFileName}`] = mockProjectFile2
+  storage[graphcoolConfigFilePath] = '{"token": "abcdefgh"}'
+  const env = testEnvironment(storage)
+  const props = { isDryRun: true , projectFilePath: graphcoolProjectFileName}
+
+  await t.notThrows(
+    pushCommand(props, env)
+  )
+
+  const expectedProjectFileContent = mockProjectFile2
+  const result = env.resolver.read(`./${graphcoolProjectFileName}`)
+
+  t.is(result, expectedProjectFileContent)
+})
 
 function testEnvironment(storage: any): SystemEnvironment {
   return {

@@ -17,7 +17,7 @@ const debug = require('debug')('graphcool')
 
 interface Props {
   isDryRun: boolean
-  projectFilePath?: string
+  projectFilePath: string
 }
 
 export default async(props: Props, env: SystemEnvironment): Promise<void> => {
@@ -46,6 +46,9 @@ export default async(props: Props, env: SystemEnvironment): Promise<void> => {
     const migrationResult = await pushNewSchema(schemaWithFrontmatter, isDryRun, resolver)
     out.stopSpinner()
 
+    debug(`Received migration result`)
+
+
     // no action required
     if (migrationResult.messages.length === 0 && migrationResult.errors.length === 0) {
       out.write(noActionRequiredMessage)
@@ -54,6 +57,8 @@ export default async(props: Props, env: SystemEnvironment): Promise<void> => {
 
     // migration successful
     else if (migrationResult.messages.length > 0 && migrationResult.errors.length === 0) {
+
+      debug(`Migration successful`)
 
       const migrationMessage = isDryRun ? migrationDryRunMessage : migrationPerformedMessage
 

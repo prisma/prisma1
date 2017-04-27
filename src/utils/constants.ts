@@ -6,7 +6,7 @@ import figures = require('figures')
 /*
  * Networking
  */
-export const systemAPIEndpoint = 'https://api.graph.cool/system'
+export const systemAPIEndpoint = 'https://dev.api.graph.cool/system'
 export const authEndpoint = 'https://cli-auth-api.graph.cool'
 
 /*
@@ -66,7 +66,7 @@ export const noActionRequiredMessage = `\
 ${chalk.red(figures.star)}  The schema you uploaded is identical to the current schema of the project, no action required.\n\n`
 
 export const migrationDryRunMessage = `\
-${chalk.red(figures.star)}  This was a dry run of the migration. Here's the list of actions that would need to be done for the schema migration:\n\n`
+${chalk.green(figures.star)}  This was a dry run of the migration. Here's the list of actions that would need to be done for the schema migration:\n\n`
 
 export const migrationPerformedMessage = `\
 ${chalk.green(figures.tick)}  Your schema was successfully updated. Here's the list of actions that were performed for the schema migration:\n\n`

@@ -57,7 +57,7 @@ test('Succeeding project creation with local schema file', async t => {
   t.is(readProjectIdFromProjectFile(env.resolver), 'abcdefghijklmn')
 })
 
-test('Succeding project creation with remote schema file', async t => {
+test('Succeeding project creation with remote schema file', async t => {
 
   // configure HTTP mocks
   fetchMock.post(systemAPIEndpoint, JSON.parse(mockedCreateProjectResponse))

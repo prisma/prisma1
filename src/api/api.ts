@@ -106,6 +106,9 @@ export async function pushNewSchema(
       type
       field
     }
+    project {
+      version
+    }
   }
 }
 `
@@ -115,10 +118,12 @@ export async function pushNewSchema(
     isDryRun
   }
 
+  debug(`Variables for : ${JSON.stringify(variables)}`)
+
   const result = await sendGraphQLRequest(mutation, resolver, variables)
   const json = await result.json()
 
-  // debug(`Received json for 'push': ${JSON.stringify(json)}`)
+  debug(`Received json for 'push': ${JSON.stringify(json)}`)
 
   const messages = json.data.migrateProject.migrationMessages as [MigrationMessage]
   const errors = json.data.migrateProject.errors as [MigrationErrorMessage]

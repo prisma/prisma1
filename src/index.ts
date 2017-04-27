@@ -15,6 +15,7 @@ import {usagePull, usageProjects, usageInit, usageRoot, usagePush, usageAuth} fr
 import StdOut from './system/StdOut'
 import {GraphcoolAuthServer} from './api/GraphcoolAuthServer'
 import {readGraphcoolConfig} from './utils/file'
+import {graphcoolProjectFileName} from './utils/constants'
 
 async function main() {
   const argv = minimist(process.argv.slice(2))
@@ -49,8 +50,8 @@ async function main() {
       checkHelp(argv, usagePush)
       await checkAuth()
 
-      const isDryRun = true // (argv['dry'] || argv['d']) ? true : false
-      const projectFilePath = argv['path'] || argv['p']
+      const isDryRun = (argv['dry'] || argv['d']) ? true : false
+      const projectFilePath = (argv['config'] || argv['c']) || graphcoolProjectFileName
       await pushCommand({isDryRun, projectFilePath}, defaultEnvironment())
       break
     }

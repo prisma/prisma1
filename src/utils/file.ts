@@ -23,6 +23,8 @@ export function readProjectInfoFromProjectFile(resolver: Resolver, path?: string
   const version = readVersionFromProjectFile(resolver, path)
   const schema = readDataModelFromProjectFile(resolver, path)
 
+  debug(`Read project info: ${projectId}, ${version}`)
+
   return { projectId, version, schema} as ProjectInfo
 }
 
@@ -49,6 +51,8 @@ export function readVersionFromProjectFile(resolver: Resolver, path?: string): s
   if (!matches || matches.length !== 2) {
     return undefined
   }
+
+  return matches[1]
 }
 
 export function readDataModelFromProjectFile(resolver: Resolver, path?: string): string {
