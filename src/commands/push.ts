@@ -46,9 +46,6 @@ export default async(props: Props, env: SystemEnvironment): Promise<void> => {
     const migrationResult = await pushNewSchema(schemaWithFrontmatter, isDryRun, resolver)
     out.stopSpinner()
 
-    debug(`Received migration result`)
-
-
     // no action required
     if (migrationResult.messages.length === 0 && migrationResult.errors.length === 0) {
       out.write(noActionRequiredMessage)
@@ -57,9 +54,6 @@ export default async(props: Props, env: SystemEnvironment): Promise<void> => {
 
     // migration successful
     else if (migrationResult.messages.length > 0 && migrationResult.errors.length === 0) {
-
-      debug(`Migration successful`)
-
       const migrationMessage = isDryRun ? migrationDryRunMessage : migrationPerformedMessage
 
       out.write(`${migrationMessage}`)
@@ -85,7 +79,6 @@ export default async(props: Props, env: SystemEnvironment): Promise<void> => {
   } catch(e) {
     debug(`Could not push new schema: ${e.message}`)
     out.write(couldNotMigrateSchemaMessage)
-    process.exit(1)
   }
 
 }
@@ -101,8 +94,9 @@ function printMigrationMessages(migrationMessages: MigrationMessage[], indentati
 }
 
 function printMigrationErrors(errors: [MigrationErrorMessage], out: Out) {
+  const indentation = spaces(4)
   errors.forEach(error => {
-    out.write(`${chalk.green(figures.cross)} ${error.description}\n`)
+    out.write(`${indentation}${chalk.red(figures.cross)} ${error.description}\n`)
   })
 }
 

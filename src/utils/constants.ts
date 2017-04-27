@@ -66,13 +66,13 @@ export const noActionRequiredMessage = `\
 ${chalk.red(figures.star)}  The schema you uploaded is identical to the current schema of the project, no action required.\n\n`
 
 export const migrationDryRunMessage = `\
-${chalk.green(figures.star)}  This was a dry run of the migration. Here's the list of actions that would need to be done for the schema migration:\n\n`
+This was a dry run of the migration. Here's the list of actions that would need to be done for the schema migration:\n\n`
 
 export const migrationPerformedMessage = `\
 ${chalk.green(figures.tick)}  Your schema was successfully updated. Here's the list of actions that were performed for the schema migration:\n\n`
 
 export const migrationErrorMessage = `\
-${chalk.red(figures.cross)}  There are issues with the new schema that your provided. Please make sure to fix the following issues before retrying:\n\n`
+There are issues with the new schema that your provided. Please make sure to fix the following issues before retrying:\n\n`
 
 /*
  * Terminal output: projects

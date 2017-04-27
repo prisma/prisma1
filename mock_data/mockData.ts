@@ -135,3 +135,26 @@ export const mockedCreateProjectResponse = `\
     }
   }
 }`
+
+export const mockedInvalidSessionPushResponse = `\
+{  
+  "data":{  
+    "migrateProject":null
+  },
+  "errors":[  
+    {  
+      "locations":[  
+        {  
+          "line":2,
+          "column":3
+        }
+      ],
+      "path":[  
+        "migrateProject"
+      ],
+      "code":2001,
+      "message":"No valid session",
+      "requestId":"cj20bqob10nnz0158flvxpedm"
+    }
+  ]
+}`

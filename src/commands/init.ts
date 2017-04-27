@@ -56,7 +56,6 @@ export default async(props: Props, env: SystemEnvironment): Promise<void> => {
   } catch(e) {
     debug(`Could not create project: ${JSON.stringify(e)}`)
     out.write(`${couldNotCreateProjectMessage}`)
-    process.exit(1)
   }
 
 }
