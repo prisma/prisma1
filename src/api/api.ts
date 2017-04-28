@@ -186,6 +186,12 @@ query ($projectId: ID!){
   const result = await sendGraphQLRequest(query, resolver, variables)
   const json = await result.json()
 
+  if (!json.data.viewer.project) {
+    throw json
+  }
+
+  debug(`${JSON.stringify(json)}`)
+
   const projectInfo = {
     projectId: json.data.viewer.project.id,
     name: json.data.viewer.project.name,

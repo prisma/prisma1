@@ -1,6 +1,6 @@
 import {SystemEnvironment} from '../types'
 import {readProjectIdFromProjectFile, writeProjectFile} from '../utils/file'
-import {pullProjectInfo} from '../api/api'
+import {pullProjectInfo, parseErrors, generateErrorOutput} from '../api/api'
 import {
   fetchingProjectDataMessage, noProjectIdMessage, wroteProjectFileMessage,
   noProjectFileMessageFound
@@ -36,7 +36,15 @@ export default async(props: Props, env: SystemEnvironment): Promise<void> => {
 
   } catch(e) {
     out.stopSpinner()
-    debug(JSON.stringify(e))
+    debug(`${JSON.stringify(e)}`)
+
+    if (e.errors) {
+      const errors = parseErrors(e)
+      const output = generateErrorOutput(errors)
+      out.write(`${output}`)
+      process.exit(0)
+    }
+
     out.write(noProjectFileMessageFound)
     process.exit(0)
   }
