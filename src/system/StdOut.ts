@@ -14,7 +14,9 @@ export default class StdOut implements Out {
   }
 
   stopSpinner() {
-    this.spinner.stop()
+    if (this.spinner) {
+      this.spinner.stop()
+    }
   }
 
 }

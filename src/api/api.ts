@@ -1,14 +1,6 @@
-<<<<<<< HEAD
-import {Resolver, ProjectInfo, MigrationMessage, MigrationErrorMessage, MigrationResult, APIError} from '../types'
-import {graphcoolConfigFilePath, systemAPIEndpoint, contactUsInSlackMessage} from '../utils/constants'
-import * as fs from 'fs'
-import * as http from 'http'
-
-=======
 import { Resolver, ProjectInfo, MigrationMessage, MigrationErrorMessage, MigrationResult, APIError } from '../types'
 import { graphcoolConfigFilePath, systemAPIEndpoint, contactUsInSlackMessage } from '../utils/constants'
 import * as fetch from 'isomorphic-fetch'
->>>>>>> 5c2e25739c4c640d38fa10e2cfa042781840286f
 const debug = require('debug')('graphcool')
 
 async function sendGraphQLRequest(queryString: string,
@@ -226,19 +218,11 @@ mutation ($projectId: String!){
   const result = await sendGraphQLRequest(mutation, resolver, variables)
   const json = await result.json()
 
-  debug(`Received JSON: ${JSON.stringify(json)}`)
-
   if (!json.data.exportData) {
     throw json
   }
 
-  const url = json.data.exportData.url
-  debug(`Download data from url: ${url}`)
-
-  const dataResponse = await fetch(url)
-  debug(`Received data response: ${JSON.stringify(dataResponse)}`)
-
-  return url
+  return json.data.exportData.url
 }
 
 export function parseErrors(response: any): APIError[] {

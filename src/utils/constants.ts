@@ -12,7 +12,7 @@ export const authEndpoint = 'https://cli-auth-api.graph.cool'
 /*
  * File paths / names
  */
-export const graphcoolProjectFileName = 'project2.graphcool'
+export const graphcoolProjectFileName = 'project.graphcool'
 export const graphcoolConfigFilePath = path.join(os.homedir(), '.graphcool')
 export const projectFileSuffixes = ['.graphql', '.graphcool', '.schema']
 
@@ -104,6 +104,12 @@ ${chalk.green(figures.tick)}  Your project file was successfully updated.`
 export const exportingDataMessage = `\
 Exporting your project data ...\
 `
+
+export const downloadUrlMessage = (url: string) => `\
+${chalk.green(figures.tick)}  You can download your project data by pasting this URL in a browser:
+ 
+  ${chalk.blue(figures.pointer)} Download URL: ${url}
+\n`
 
 
 
