@@ -1,10 +1,7 @@
 {
   "name": "graphcool",
   "version": "0.0.2",
-  "bin": {
-    "graphql": "dist/index.js",
-    "graphcool": "dist/index.js"
-  },
+  "bin": "dist/src/index.js",
   "files": [
     "README.md",
     "dist/"

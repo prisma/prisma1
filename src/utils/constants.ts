@@ -21,9 +21,8 @@ export const projectFileSuffixes = ['.graphql', '.graphcool', '.schema']
  */
 export const openBrowserMessage = `Authenticating using your browser...`
 export const couldNotRetrieveTokenMessage = `\
-${chalk.red(figures.cross)}  Oups, something went wrong during authentication.
+${chalk.red(figures.cross)}  Oups, something went wrong during authentication.\n\n`
 
-Please try again or get in touch with us if the problem persists: http://slack.graph.cool/\n\n`
 export const authenticationSuccessMessage = `${chalk.green(figures.tick)}  Authenticated successfully\n\n`
 
 /*
@@ -38,9 +37,7 @@ ${chalk.green(figures.tick)}  Created project ${chalk.bold(name)} from ${chalk.b
 \n`
 
 export const couldNotCreateProjectMessage = `\
-${chalk.red(figures.cross)}  Oups, something went wrong while creating the project.
-
-Please try again or get in touch with us if the problem persists: http://slack.graph.cool/\n\n`
+${chalk.red(figures.cross)}  Oups, something went wrong while creating the project.\n\n`
 
 export const projectAlreadyExistsMessage = `\
 ${chalk.red(figures.cross)}  ${graphcoolProjectFileName} already exists for the current project. \
@@ -81,7 +78,7 @@ export const projectsMessage = `\
 `
 
 export const couldNotFetchProjectsMessage = `\
-${chalk.red(figures.cross)}  An error occurded while trying to fetch your projects:\n\n`
+${chalk.red(figures.cross)}  An error occured while trying to fetch your projects:\n\n`
 
 /*
  * Terminal output: pull
@@ -91,8 +88,22 @@ export const fetchingProjectDataMessage = `\
 Fetching project data ...\
 `
 
+export const noProjectFileMessageFound = `\
+${chalk.red(figures.cross)}  There is no project file (project.graphcool) in the current directory.\n\n`
+
+
 export const noProjectIdMessage = `\
 ${chalk.red(figures.cross)}  Please provide a valid project Id.\n\n`
 
 export const wroteProjectFileMessage = `\
 ${chalk.green(figures.tick)}  Your project file was successfully updated.\n\n`
+
+
+/*
+ * Terminal output: general
+ */
+
+
+export const contactUsInSlackMessage = `\
+Please try again or get in touch with us if the problem persists: http://slack.graph.cool/\n\n
+`

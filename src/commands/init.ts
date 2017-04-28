@@ -1,7 +1,7 @@
 import {Region, Resolver, SchemaInfo, SystemEnvironment} from '../types'
 import figures = require('figures')
 import generateName = require('sillyname')
-import { createProject } from '../api/api'
+import {createProject, parseErrors, generateErrorOutput} from '../api/api'
 import * as fs from 'fs'
 import * as path from 'path'
 import {
@@ -41,7 +41,7 @@ export default async(props: Props, env: SystemEnvironment): Promise<void> => {
     // resolve schema
     const schemaUrl = props.localSchemaFile ? props.localSchemaFile : props.remoteSchemaUrl
     const schema = await getSchema(schemaUrl, resolver)
-    debug(`Schema: ${JSON.stringify(schema)}`)
+    // debug(`Schema: ${JSON.stringify(schema)}`)
 
     // create project
     const projectInfo = await createProject(name, schema.schema, resolver, props.alias, props.region)
@@ -54,8 +54,13 @@ export default async(props: Props, env: SystemEnvironment): Promise<void> => {
     out.write(message)
 
   } catch(e) {
+    out.stopSpinner()
     debug(`Could not create project: ${JSON.stringify(e)}`)
     out.write(`${couldNotCreateProjectMessage}`)
+
+    const errors = parseErrors(e)
+    const output = generateErrorOutput(errors)
+    out.write(`${output}`)
   }
 
 }

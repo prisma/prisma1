@@ -10,7 +10,7 @@ import {
   writeProjectFile,
   readProjectInfoFromProjectFile
 } from '../utils/file'
-import {pushNewSchema} from '../api/api'
+import {pushNewSchema, parseErrors, generateErrorOutput} from '../api/api'
 import figures = require('figures')
 import * as chalk from 'chalk'
 const debug = require('debug')('graphcool')
@@ -79,6 +79,10 @@ export default async(props: Props, env: SystemEnvironment): Promise<void> => {
   } catch(e) {
     debug(`Could not push new schema: ${e.message}`)
     out.write(couldNotMigrateSchemaMessage)
+
+    const errors = parseErrors(e)
+    const output = generateErrorOutput(errors)
+    out.write(`${output}`)
   }
 
 }

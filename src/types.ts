@@ -62,3 +62,9 @@ export interface SystemEnvironment {
   out: Out
   resolver: Resolver
 }
+
+export interface APIError {
+  message: string
+  requestId: string
+  code: string
+}

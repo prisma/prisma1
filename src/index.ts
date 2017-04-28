@@ -16,7 +16,7 @@ import StdOut from './system/StdOut'
 import {GraphcoolAuthServer} from './api/GraphcoolAuthServer'
 import {readGraphcoolConfig} from './utils/file'
 import {graphcoolProjectFileName} from './utils/constants'
-const {version} = require('../package.json')
+// const {version} = require('../package.json')
 
 async function main() {
   const argv = minimist(process.argv.slice(2))
@@ -31,6 +31,21 @@ async function main() {
       process.stdout.write(usageRoot)
       process.exit(0)
     }
+
+    // case 'create': {
+    //   checkHelp(argv, usageInit)
+    //   await checkAuth()
+    //
+    //   const name = argv['name'] || argv['n']
+    //   const alias = argv['alias'] || argv['a']
+    //   const region = argv['region'] || argv['r']
+    //   const remoteSchemaUrl = argv._[0]
+    //   const localSchemaFile =  argv['file'] || argv['f']
+    //
+    //   const props = {name, alias, remoteSchemaUrl, localSchemaFile, region}
+    //   await initCommand(props, defaultEnvironment())
+    //   break
+    // }
 
     case 'init': {
       checkHelp(argv, usageInit)
@@ -89,7 +104,7 @@ async function main() {
     }
 
     case 'version': {
-      process.stdout.write(version)
+      // process.stdout.write(version)
       break
     }
 

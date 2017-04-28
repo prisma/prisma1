@@ -1,5 +1,5 @@
-import {Resolver, ProjectInfo, MigrationMessage, MigrationErrorMessage, MigrationResult} from '../types'
-import {graphcoolConfigFilePath, systemAPIEndpoint} from '../utils/constants'
+import {Resolver, ProjectInfo, MigrationMessage, MigrationErrorMessage, MigrationResult, APIError} from '../types'
+import {graphcoolConfigFilePath, systemAPIEndpoint, contactUsInSlackMessage} from '../utils/constants'
 const debug = require('debug')('graphcool')
 import 'isomorphic-fetch'
 
@@ -69,6 +69,10 @@ mutation addProject($schema: String!, $name: String!, $alias: String, $region: R
 
   debug(`Received JSON: ${JSON.stringify(json)}\n`)
 
+  if (!json.data.addProject) {
+    throw json
+  }
+
   const projectId = json.data.addProject.project.id
   const version = '1' // result.addProject.version
   const fullSchema = json.data.addProject.project.schema
@@ -122,6 +126,10 @@ export async function pushNewSchema(
   const json = await result.json()
 
   debug(`Received json for 'push': ${JSON.stringify(json)}`)
+
+  if (!json.data.migrateProject) {
+    throw json
+  }
 
   const messages = json.data.migrateProject.migrationMessages as [MigrationMessage]
   const errors = json.data.migrateProject.errors as [MigrationErrorMessage]
@@ -185,3 +193,35 @@ query ($projectId: ID!){
   } as ProjectInfo
   return projectInfo
 }
+
+
+export function parseErrors(response: any): APIError[] {
+  debug(`Parse errors: ${JSON.stringify(response)}`)
+  const errors: APIError[] = response.errors.map(error => ({
+    message: error.message,
+    requestId: error.requestId,
+    code: String(error.code)
+  }))
+
+  return errors
+}
+
+export function generateErrorOutput(apiErrors: APIError[]): string {
+  const lines = apiErrors.map(error => `    ${error.message} (Request ID: ${error.requestId})`)
+  const output = `  Errors:\n ${lines.join('\n')}\n\n${contactUsInSlackMessage}`
+  return output
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -7,7 +7,9 @@ import {
   systemAPIEndpoint,
   graphcoolProjectFileName, graphcoolConfigFilePath
 } from '../src/utils/constants'
-import {mockSchema1, mockedCreateProjectResponse, mockProjectFile1} from '../mock_data/mockData'
+import {mockedCreateProjectResponse, mockProjectFile1} from '../mock_data/mockData'
+import {simpleTwitterSchema} from '../mock_data/schemas'
+
 import 'isomorphic-fetch'
 import {readProjectIdFromProjectFile} from '../src/utils/file'
 import {SystemEnvironment} from '../src/types'
@@ -39,12 +41,12 @@ test('Succeeding project creation with local schema file', async t => {
 
   // create dummy project data
   const name = 'My Project'
-  const schema = mockSchema1
+  const schema = simpleTwitterSchema
   const localSchemaFile = './myproject.schema'
   const props = { name, localSchemaFile }
 
   const storage = {}
-  storage[localSchemaFile] = mockSchema1
+  storage[localSchemaFile] = simpleTwitterSchema
   storage[graphcoolConfigFilePath] = '{"token": "abcdefgh"}'
   const env = testEnvironment(storage)
 
@@ -62,7 +64,7 @@ test('Succeeding project creation with remote schema file', async t => {
   // configure HTTP mocks
   fetchMock.post(systemAPIEndpoint, JSON.parse(mockedCreateProjectResponse))
   const remoteSchemaUrl = 'https://graphqlbin/project.schema'
-  const schema = mockSchema1
+  const schema = simpleTwitterSchema
   fetchMock.get(remoteSchemaUrl, schema)
 
   // create dummy project data
