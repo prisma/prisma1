@@ -32,20 +32,21 @@ async function main() {
       process.exit(0)
     }
 
-    // case 'create': {
-    //   checkHelp(argv, usageInit)
-    //   await checkAuth()
-    //
-    //   const name = argv['name'] || argv['n']
-    //   const alias = argv['alias'] || argv['a']
-    //   const region = argv['region'] || argv['r']
-    //   const remoteSchemaUrl = argv._[0]
-    //   const localSchemaFile =  argv['file'] || argv['f']
-    //
-    //   const props = {name, alias, remoteSchemaUrl, localSchemaFile, region}
-    //   await initCommand(props, defaultEnvironment())
-    //   break
-    // }
+    case 'create': {
+      checkHelp(argv, usageInit)
+      await checkAuth()
+
+      const name = argv['name'] || argv['n']
+      const alias = argv['alias'] || argv['a']
+      const region = argv['region'] || argv['r']
+      const schemaUrl = argv._[1]
+      const remoteSchemaUrl = schemaUrl
+      const localSchemaFile = schemaUrl
+
+      const props = {name, alias, remoteSchemaUrl, localSchemaFile, region}
+      await initCommand(props, defaultEnvironment())
+      break
+    }
 
     case 'init': {
       checkHelp(argv, usageInit)

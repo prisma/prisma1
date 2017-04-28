@@ -48,7 +48,6 @@ export const usagePush = `  Usage: graphcool push [options]
   
   Options:
     -d, --dry-run      Simulate command
-    -f, --force        Don't prompt for confirmation
     -c, --config       Config file (default: project.graphcool)
     -h, --help         Output usage information
 `

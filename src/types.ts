@@ -1,4 +1,4 @@
-export type Command = 'auth' | 'push' | 'init' | 'eject' | 'export' | 'pull' | 'import' | 'projects' | 'update' | 'version' | 'help'
+export type Command = 'auth' | 'push' | 'init' | 'eject' | 'export' | 'pull' | 'import' | 'projects' | 'update' | 'version' | 'help' | 'create'
 
 export type Region = 'eu-west-1'
 
