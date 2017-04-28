@@ -14,28 +14,26 @@ interface Props {
 export default async(props: Props, env: SystemEnvironment): Promise<void> => {
   const {resolver, out} = env
 
-  debug(`Export for project Id: ${JSON.stringify(props)}`)
-
   try {
+    out.startSpinner(exportingDataMessage)
+
     const projectId = props.projectId ? props.projectId : readProjectIdFromProjectFile(resolver)
-
-    debug(`Export for project Id: ${projectId}`)
-
     if (!projectId) {
       out.write(noProjectIdMessage)
       process.exit(0)
     }
 
-    out.startSpinner(exportingDataMessage)
+    debug(`Export for project Id: ${projectId}`)
     const url = await exportProjectData(projectId!, resolver)
 
     const message = downloadUrlMessage(url)
+    out.stopSpinner()
     out.write(message)
 
   } catch(e) {
     out.stopSpinner()
     debug(`Received error: ${JSON.stringify(e)}`)
-    //
+
     if (e.errors) {
       const errors = parseErrors(e)
       const output = generateErrorOutput(errors)
