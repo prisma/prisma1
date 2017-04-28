@@ -8,7 +8,7 @@ import {systemAPIEndpoint, graphcoolProjectFileName, graphcoolConfigFilePath} fr
 import {
   mockedPushSchemaResponse, mockProjectFile2, mockProjectFile3,
   mockedInvalidSessionPushResponse
-} from '../mock_data/mockData'
+} from './mock_data/mockData'
 import {SystemEnvironment} from '../src/types'
 import TestOut from '../src/system/TestOut'
 
@@ -18,7 +18,7 @@ test.afterEach(() => {
 })
 
 /*
- * Test succeeding schema migration and verify updated project info is stored in in ./project.graphcool
+ * Test succeeding schema migration and verify updated project info is stored in in ./project2.graphcool
  */
 test('Succeeding schema migration', async t => {
 
@@ -43,7 +43,7 @@ test('Succeeding schema migration', async t => {
 })
 
 /*
- * Test succeeding schema migration (dry run) and verify project info is not updated ./project.graphcool
+ * Test succeeding schema migration (dry run) and verify project info is not updated ./project2.graphcool
  */
 test('Succeeding schema migration (dry)', async t => {
 
@@ -69,7 +69,7 @@ test('Succeeding schema migration (dry)', async t => {
 
 
 /*
- * Test failing schema migration because of invalid session ./project.graphcool
+ * Test failing schema migration because of invalid session ./project2.graphcool
  */
 // test('Failing schema migration because of lacking permissions (No valid session)', async t => {
 //

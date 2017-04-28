@@ -7,8 +7,8 @@ import {
   systemAPIEndpoint,
   graphcoolProjectFileName, graphcoolConfigFilePath
 } from '../src/utils/constants'
-import {mockedCreateProjectResponse, mockProjectFile1} from '../mock_data/mockData'
-import {simpleTwitterSchema} from '../mock_data/schemas'
+import {mockedCreateProjectResponse, mockProjectFile1} from './mock_data/mockData'
+import {simpleTwitterSchema} from './mock_data/schemas'
 
 import 'isomorphic-fetch'
 import {readProjectIdFromProjectFile} from '../src/utils/file'
@@ -24,7 +24,7 @@ import TestOut from '../src/system/TestOut'
  -r, --region <region>     AWS Region (default: us-west-2)
  -h, --help                Output usage information
 
- Note: This command will create a ${chalk.bold('project.graphcool')} config file in the current directory.
+ Note: This command will create a ${chalk.bold('project2.graphcool')} config file in the current directory.
 */
 
 test.afterEach(() => {
@@ -32,7 +32,7 @@ test.afterEach(() => {
 })
 
 /*
- * Test succeeding project creation and verify project info is stored in in ./project.graphcool
+ * Test succeeding project creation and verify project info is stored in in ./project2.graphcool
  */
 test('Succeeding project creation with local schema file', async t => {
 

@@ -6,7 +6,7 @@ import {authEndpoint, graphcoolConfigFilePath, systemAPIEndpoint} from '../src/u
 import TestAuthServer from '../src/api/TestAuthServer'
 const fetchMock = require('fetch-mock')
 const debug = require('debug')('graphcool')
-import {testToken} from '../mock_data/mockData'
+import {testToken} from './mock_data/mockData'
 import {SystemEnvironment} from '../src/types'
 import TestOut from '../src/system/TestOut'
 

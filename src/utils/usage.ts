@@ -1,20 +1,33 @@
 import * as chalk from 'chalk'
 
-export const usageRoot = `  Usage: graphcool [command]
+export const usageRoot = `  Usage: ${chalk.bold('graphcool')} [command]
   
-    ${chalk.bold('Serverless GraphQL database for frontend developers')}
+    ${chalk.bold('Serverless GraphQL backend for frontend developers')}
     Read more at https://www.graph.cool/docs/cli
 
-  Commands:
-    init         Create a new project
-    pull         Pull the latest project config
-    push         Push project config changes
-    export       Export project data
-    projects     List projects
-    auth         Sign up or login
-    version      Print version
-
+  ${chalk.dim('Commands:')}
+    init           Create a new project
+    pull           Pull the latest project config
+    push           Push project config changes
+    export         Export project data
+    endpoints      Print GraphQL endpoints
+    console        Open Graphcool Console
+    projects       List projects
+    auth           Sign up or login
+    version        Print version
+    
   Run 'graphcool COMMAND --help' for more information on a command.
+  
+  ${chalk.dim('Examples:')}
+  
+  ${chalk.gray('-')} Initialize a new Graphcool project
+    ${chalk.cyan('$ graphcool init')}
+  
+  ${chalk.gray('-')} Local setup of an existing project
+    ${chalk.cyan('$ graphcool pull -p <project-id | alias>')}
+    
+  ${chalk.gray('-')} Update live project with local changes
+    ${chalk.cyan('$ graphcool push')}
 `
 
 export const usageInit = `  Usage: graphcool init [options]
@@ -29,7 +42,7 @@ export const usageInit = `  Usage: graphcool init [options]
     -r, --region <region>     AWS Region (default: us-west-2)
     -h, --help                Output usage information
     
-  Note: This command will create a ${chalk.bold('project.graphcool')} config file in the current directory.
+  Note: This command will create a ${chalk.bold('project2.graphcool')} config file in the current directory.
 `
 
 export const usagePull = `  Usage: graphcool pull [options]
@@ -61,6 +74,14 @@ export const usageExport = `  Usage: graphcool export [options]
     -h, --help         Output usage information
 `
 
+export const usageConsole = `  Usage: graphcool console [options]
+  
+  Open current project in Graphcool Console with your browser
+
+  Options:
+    -h, --help         Output usage information
+`
+
 export const usageProjects = `  Usage: graphcool projects [options]
   
   List projects
@@ -78,4 +99,12 @@ export const usageAuth = `  Usage: graphcool auth [options]
     -h, --help             Output usage information
     
   Note: Your session token will be store at ~/.graphcool
+`
+
+export const usageVersion = `  Usage: graphcool version [options]
+  
+  Print version
+  
+  Options:
+    -h, --help         Output usage information
 `

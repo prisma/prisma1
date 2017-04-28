@@ -1,7 +1,9 @@
 import {AuthServer, TokenValidationResult} from '../types'
+import {systemAPIEndpoint, authEndpoint} from '../utils/constants'
+import * as fetch from 'isomorphic-fetch'
 import cuid = require('cuid')
 import open = require('open')
-import {systemAPIEndpoint, authEndpoint} from '../utils/constants'
+
 const debug = require('debug')('graphcool')
 
 export class GraphcoolAuthServer implements AuthServer {
