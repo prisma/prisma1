@@ -1,16 +1,19 @@
+<<<<<<< HEAD
 import {Resolver, ProjectInfo, MigrationMessage, MigrationErrorMessage, MigrationResult, APIError} from '../types'
 import {graphcoolConfigFilePath, systemAPIEndpoint, contactUsInSlackMessage} from '../utils/constants'
 import * as fs from 'fs'
 import * as http from 'http'
 
+=======
+import { Resolver, ProjectInfo, MigrationMessage, MigrationErrorMessage, MigrationResult, APIError } from '../types'
+import { graphcoolConfigFilePath, systemAPIEndpoint, contactUsInSlackMessage } from '../utils/constants'
+import * as fetch from 'isomorphic-fetch'
+>>>>>>> 5c2e25739c4c640d38fa10e2cfa042781840286f
 const debug = require('debug')('graphcool')
-import 'isomorphic-fetch'
 
-async function sendGraphQLRequest(
-  queryString: string,
-  resolver: Resolver,
-  variables?: any
-): Promise<any> {
+async function sendGraphQLRequest(queryString: string,
+                                  resolver: Resolver,
+                                  variables?: any): Promise<any> {
 
   const configContents = resolver.read(graphcoolConfigFilePath)
   const {token} = JSON.parse(configContents)
@@ -32,13 +35,11 @@ async function sendGraphQLRequest(
   return result
 }
 
-export async function createProject(
-  name: string,
-  schema: string,
-  resolver: Resolver,
-  alias?: string,
-  region?: string
-): Promise<ProjectInfo> {
+export async function createProject(name: string,
+                                    schema: string,
+                                    resolver: Resolver,
+                                    alias?: string,
+                                    region?: string): Promise<ProjectInfo> {
 
   const mutation = `\
 mutation addProject($schema: String!, $name: String!, $alias: String, $region: Region) {
@@ -57,7 +58,7 @@ mutation addProject($schema: String!, $name: String!, $alias: String, $region: R
   }
 `
 
-  let variables = { name, schema }
+  let variables: any = {name, schema}
   if (alias) {
     variables = {...variables, alias}
   }
@@ -84,11 +85,9 @@ mutation addProject($schema: String!, $name: String!, $alias: String, $region: R
   return projectInfo
 }
 
-export async function pushNewSchema(
-  newSchema: string,
-  isDryRun: boolean,
-  resolver: Resolver
-): Promise<MigrationResult> {
+export async function pushNewSchema(newSchema: string,
+                                    isDryRun: boolean,
+                                    resolver: Resolver): Promise<MigrationResult> {
 
   const mutation = `\
  mutation($newSchema: String!, $isDryRun: Boolean!) {
@@ -137,7 +136,7 @@ export async function pushNewSchema(
   const messages = json.data.migrateProject.migrationMessages as [MigrationMessage]
   const errors = json.data.migrateProject.errors as [MigrationErrorMessage]
   const newVersion = json.data.migrateProject.project.version
-  const migrationResult = { messages, errors, newVersion } as MigrationResult
+  const migrationResult = {messages, errors, newVersion} as MigrationResult
 
   return migrationResult
 }
@@ -153,6 +152,7 @@ export async function fetchProjects(resolver: Resolver): Promise<[ProjectInfo]> 
           node {
             id
             name
+            alias
           }
         }
       }
@@ -167,7 +167,11 @@ export async function fetchProjects(resolver: Resolver): Promise<[ProjectInfo]> 
   debug(`Received data: ${JSON.stringify(json)}\n`)
 
   const projects = json.data.viewer.user.projects.edges.map(edge => edge.node)
-  const projectInfos = projects.map(project => ({projectId: project.id, name: project.name})) as [ProjectInfo]
+  const projectInfos: [ProjectInfo] = projects.map(p => ({
+    projectId: p.id,
+    name: p.name,
+    alias: p.alias
+  }))
 
   return projectInfos
 }
@@ -180,12 +184,13 @@ query ($projectId: ID!){
     project(id: $projectId) {
       id
       name
+      alias
       schema
     }
   }
 }`
 
-  const variables = { projectId }
+  const variables = {projectId}
   const result = await sendGraphQLRequest(query, resolver, variables)
   const json = await result.json()
 
@@ -195,13 +200,15 @@ query ($projectId: ID!){
 
   debug(`${JSON.stringify(json)}`)
 
-  const projectInfo = {
+  const projectInfo: ProjectInfo = {
     projectId: json.data.viewer.project.id,
     name: json.data.viewer.project.name,
     schema: json.data.viewer.project.schema,
-  } as ProjectInfo
+    alias: json.data.viewer.project.alias,
+  }
   return projectInfo
 }
+
 
 export async function exportProjectData(projectId: string, resolver: Resolver): Promise<string> {
 
@@ -231,29 +238,7 @@ mutation ($projectId: String!){
   const dataResponse = await fetch(url)
   debug(`Received data response: ${JSON.stringify(dataResponse)}`)
 
-  try {
-    const blob = await dataResponse.blob()
-    debug(`Blob received: ${blob}`)
-  } catch(e) {
-    debug(`ERROR: ${JSON.stringify(e)}`)
-  }
-  // download(url, './test.zip')
-
-  return ''
-}
-
-function download(url: string, destination: string) {
-  debug(`Download data from url: ${url}`)
-  const file = fs.createWriteStream(destination)
-  debug(`Created file stream`)
-  const request = http.get(url, response => {
-    debug(`Received response: ${JSON.stringify(response)}`)
-    response.pipe(file)
-    file.on('finish', () => file.close())
-  }).on('error', error => {
-    debug(`An error occured while writing to the file: ${JSON.stringify(error)}`)
-    fs.unlink(destination)
-  })
+  return url
 }
 
 export function parseErrors(response: any): APIError[] {
@@ -272,17 +257,3 @@ export function generateErrorOutput(apiErrors: APIError[]): string {
   const output = `  Errors:\n ${lines.join('\n')}\n\n${contactUsInSlackMessage}`
   return output
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-

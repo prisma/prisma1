@@ -1,4 +1,4 @@
-import {Out} from '../types'
+import { Out } from '../types'
 import ora = require('ora')
 
 export default class StdOut implements Out {

@@ -1,4 +1,7 @@
-import {MigrationMessage, ProjectInfo, MigrationErrorMessage, SystemEnvironment, Out} from '../types'
+import { MigrationMessage, ProjectInfo, MigrationErrorMessage, SystemEnvironment, Out } from '../types'
+import { pushNewSchema, parseErrors, generateErrorOutput } from '../api/api'
+import figures = require('figures')
+import * as chalk from 'chalk'
 import {
   graphcoolProjectFileName,
   noProjectFileMessage,
@@ -10,9 +13,7 @@ import {
   writeProjectFile,
   readProjectInfoFromProjectFile
 } from '../utils/file'
-import {pushNewSchema, parseErrors, generateErrorOutput} from '../api/api'
-import figures = require('figures')
-import * as chalk from 'chalk'
+
 const debug = require('debug')('graphcool')
 
 interface Props {
@@ -20,7 +21,7 @@ interface Props {
   projectFilePath: string
 }
 
-export default async(props: Props, env: SystemEnvironment): Promise<void> => {
+export default async (props: Props, env: SystemEnvironment): Promise<void> => {
 
   const {resolver, out} = env
 
@@ -41,9 +42,9 @@ export default async(props: Props, env: SystemEnvironment): Promise<void> => {
   out.startSpinner(pushingNewSchemaMessage)
 
   try {
-
     const schemaWithFrontmatter = `# projectId: ${projectId}\n# version: ${version}\n\n${schema}`
     const migrationResult = await pushNewSchema(schemaWithFrontmatter, isDryRun, resolver)
+
     out.stopSpinner()
 
     // no action required
@@ -72,17 +73,20 @@ export default async(props: Props, env: SystemEnvironment): Promise<void> => {
 
     // something went wrong
     else if (migrationResult.messages.length === 0 && migrationResult.errors.length > 0) {
-      out.write(`\n\n${migrationErrorMessage}`)
+      out.write(`\n${migrationErrorMessage}`)
       printMigrationErrors(migrationResult.errors, out)
     }
 
-  } catch(e) {
+  } catch (e) {
     debug(`Could not push new schema: ${e.message}`)
+
     out.write(couldNotMigrateSchemaMessage)
 
     const errors = parseErrors(e)
     const output = generateErrorOutput(errors)
     out.write(`${output}`)
+
+    process.exit(1)
   }
 
 }
@@ -91,6 +95,7 @@ function printMigrationMessages(migrationMessages: MigrationMessage[], indentati
   migrationMessages.forEach(migrationMessage => {
     const indentation = spaces(indentationLevel * 4)
     out.write(`${indentation}${chalk.green(figures.play)} ${migrationMessage.description}\n`)
+
     if (migrationMessage.subDescriptions) {
       printMigrationMessages(migrationMessage.subDescriptions, indentationLevel + 1, out)
     }
@@ -104,6 +109,4 @@ function printMigrationErrors(errors: [MigrationErrorMessage], out: Out) {
   })
 }
 
-function spaces(n: number) {
-  return Array(n+1).join(' ')
-}
+const spaces = (n: number) => Array(n + 1).join(' ')

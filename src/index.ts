@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 
 import * as minimist from 'minimist'
-import {Command, SystemEnvironment} from './types'
+import { Command, SystemEnvironment } from './types'
 import pushCommand from './commands/push'
+import consoleCommand from './commands/console'
 import projectsCommand from './commands/projects'
 import pullCommand from './commands/pull'
 import authCommand from './commands/auth'
@@ -12,19 +13,22 @@ import FileSystemResolver from './system/FileSystemResolver'
 const debug = require('debug')('graphcool')
 import figures = require('figures')
 import * as chalk from 'chalk'
-import {usagePull, usageProjects, usageInit, usageRoot, usagePush, usageAuth} from './utils/usage'
+import {
+  usagePull, usageProjects, usageInit, usageRoot, usagePush, usageAuth, usageVersion,
+  usageConsole
+} from './utils/usage'
 import StdOut from './system/StdOut'
-import {GraphcoolAuthServer} from './api/GraphcoolAuthServer'
-import {readGraphcoolConfig} from './utils/file'
-import {graphcoolProjectFileName} from './utils/constants'
-// const {version} = require('../package.json')
+import { GraphcoolAuthServer } from './api/GraphcoolAuthServer'
+import { readGraphcoolConfig } from './utils/file'
+import { graphcoolProjectFileName } from './utils/constants'
+const {version} = require('../../package.json')
 
 async function main() {
   const argv = minimist(process.argv.slice(2))
 
   const command = argv._[0] as Command | undefined
 
-  process.stdout.write('\n')
+  // process.stdout.write('\n')
 
   switch (command) {
 
@@ -57,7 +61,7 @@ async function main() {
       const alias = argv['alias'] || argv['a']
       const region = argv['region'] || argv['r']
       const remoteSchemaUrl = argv['url'] || argv['u']
-      const localSchemaFile =  argv['file'] || argv['f']
+      const localSchemaFile = argv['file'] || argv['f']
 
       const props = {name, alias, remoteSchemaUrl, localSchemaFile, region}
       await initCommand(props, defaultEnvironment())
@@ -68,9 +72,17 @@ async function main() {
       checkHelp(argv, usagePush)
       await checkAuth()
 
-      const isDryRun = (argv['dry'] || argv['d']) ? true : false
+      const isDryRun = !!(argv['dry'] || argv['d'])
       const projectFilePath = (argv['config'] || argv['c']) || graphcoolProjectFileName
       await pushCommand({isDryRun, projectFilePath}, defaultEnvironment())
+      break
+    }
+
+    case 'console': {
+      checkHelp(argv, usageConsole)
+      await checkAuth()
+
+      await consoleCommand({}, defaultEnvironment())
       break
     }
 
@@ -115,7 +127,9 @@ async function main() {
     }
 
     case 'version': {
-      // process.stdout.write(version)
+      checkHelp(argv, usageVersion)
+
+      process.stdout.write(version)
       break
     }
 
@@ -125,7 +139,7 @@ async function main() {
     }
   }
 
-  process.stdout.write('\n\n')
+  process.stdout.write('\n')
 }
 
 async function checkAuth() {
@@ -157,6 +171,5 @@ function onError(e: Error) {
 }
 
 process.on('unhandledRejection', e => onError(e))
+
 main()
-
-

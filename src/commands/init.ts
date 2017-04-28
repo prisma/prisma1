@@ -1,9 +1,11 @@
-import {Region, Resolver, SchemaInfo, SystemEnvironment} from '../types'
+import { Region, Resolver, SchemaInfo, SystemEnvironment } from '../types'
 import figures = require('figures')
 import generateName = require('sillyname')
-import {createProject, parseErrors, generateErrorOutput} from '../api/api'
+import { createProject, parseErrors, generateErrorOutput } from '../api/api'
 import * as fs from 'fs'
 import * as path from 'path'
+import * as fetch from 'isomorphic-fetch'
+import { writeProjectFile } from '../utils/file'
 import {
   graphcoolProjectFileName,
   creatingProjectMessage,
@@ -11,7 +13,7 @@ import {
   couldNotCreateProjectMessage,
   projectAlreadyExistsMessage
 } from '../utils/constants'
-import {writeProjectFile} from '../utils/file'
+
 const debug = require('debug')('graphcool')
 
 interface Props {
@@ -22,7 +24,7 @@ interface Props {
   region?: Region
 }
 
-export default async(props: Props, env: SystemEnvironment): Promise<void> => {
+export default async (props: Props, env: SystemEnvironment): Promise<void> => {
 
   const {resolver, out} = env
 
@@ -53,7 +55,7 @@ export default async(props: Props, env: SystemEnvironment): Promise<void> => {
     const message = createdProjectMessage(name, schema.source, projectInfo.projectId)
     out.write(message)
 
-  } catch(e) {
+  } catch (e) {
     out.stopSpinner()
     debug(`Could not create project: ${JSON.stringify(e)}`)
     out.write(`${couldNotCreateProjectMessage}`)

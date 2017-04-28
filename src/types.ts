@@ -1,4 +1,15 @@
-export type Command = 'auth' | 'push' | 'init' | 'eject' | 'export' | 'pull' | 'import' | 'projects' | 'update' | 'version' | 'help' | 'create'
+export type Command =
+  'auth'
+  | 'push'
+  | 'init'
+  | 'export'
+  | 'pull'
+  | 'endpoints'
+  | 'console'
+  | 'projects'
+  | 'version'
+  | 'help'
+  | 'create'
 
 export type Region = 'eu-west-1'
 
@@ -30,6 +41,7 @@ export interface ProjectInfo {
   name?: string
   schema?: string
   version?: string
+  alias?: string
 }
 
 export interface MigrationMessage {
