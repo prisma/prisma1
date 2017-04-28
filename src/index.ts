@@ -7,6 +7,7 @@ import projectsCommand from './commands/projects'
 import pullCommand from './commands/pull'
 import authCommand from './commands/auth'
 import initCommand from './commands/init'
+import exportCommand from './commands/export'
 import FileSystemResolver from './system/FileSystemResolver'
 const debug = require('debug')('graphcool')
 import figures = require('figures')
@@ -95,6 +96,15 @@ async function main() {
 
       const token = argv['token'] || argv['t']
       await authCommand({token}, defaultEnvironment(), new GraphcoolAuthServer())
+      break
+    }
+
+    case 'export': {
+      checkHelp(argv, usageAuth)
+      await checkAuth()
+
+      const projectId = argv['project-id'] || argv['p']
+      await exportCommand({projectId}, defaultEnvironment())
       break
     }
 

@@ -1,5 +1,8 @@
 import {Resolver, ProjectInfo, MigrationMessage, MigrationErrorMessage, MigrationResult, APIError} from '../types'
 import {graphcoolConfigFilePath, systemAPIEndpoint, contactUsInSlackMessage} from '../utils/constants'
+import * as fs from 'fs'
+import * as http from 'http'
+
 const debug = require('debug')('graphcool')
 import 'isomorphic-fetch'
 
@@ -200,6 +203,58 @@ query ($projectId: ID!){
   return projectInfo
 }
 
+export async function exportProjectData(projectId: string, resolver: Resolver): Promise<string> {
+
+  const mutation = `\
+mutation ($projectId: String!){
+  exportData(input:{
+    projectId: $projectId,
+    clientMutationId: "asd"
+  }) {
+    url
+  }
+}`
+
+  const variables = { projectId }
+  const result = await sendGraphQLRequest(mutation, resolver, variables)
+  const json = await result.json()
+
+  debug(`Received JSON: ${JSON.stringify(json)}`)
+
+  if (!json.data.exportData) {
+    throw json
+  }
+
+  const url = json.data.exportData.url
+  debug(`Download data from url: ${url}`)
+
+  const dataResponse = await fetch(url)
+  debug(`Received data response: ${JSON.stringify(dataResponse)}`)
+
+  try {
+    const blob = await dataResponse.blob()
+    debug(`Blob received: ${blob}`)
+  } catch(e) {
+    debug(`ERROR: ${JSON.stringify(e)}`)
+  }
+  // download(url, './test.zip')
+
+  return ''
+}
+
+function download(url: string, destination: string) {
+  debug(`Download data from url: ${url}`)
+  const file = fs.createWriteStream(destination)
+  debug(`Created file stream`)
+  const request = http.get(url, response => {
+    debug(`Received response: ${JSON.stringify(response)}`)
+    response.pipe(file)
+    file.on('finish', () => file.close())
+  }).on('error', error => {
+    debug(`An error occured while writing to the file: ${JSON.stringify(error)}`)
+    fs.unlink(destination)
+  })
+}
 
 export function parseErrors(response: any): APIError[] {
   debug(`Parse errors: ${JSON.stringify(response)}`)

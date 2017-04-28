@@ -100,6 +100,16 @@ ${chalk.green(figures.tick)}  Your project file was successfully updated.\n\n`
 
 
 /*
+ * Terminal output: export
+ */
+
+export const exportingDataMessage = `\
+Exporting your project data ...\
+`
+
+
+
+/*
  * Terminal output: general
  */
 
