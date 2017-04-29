@@ -237,7 +237,7 @@ export function parseErrors(response: any): APIError[] {
 }
 
 export function generateErrorOutput(apiErrors: APIError[]): string {
-  const lines = apiErrors.map(error => `    ${error.message} (Request ID: ${error.requestId})`)
-  const output = `  Errors:\n ${lines.join('\n')}\n\n${contactUsInSlackMessage}`
+  const lines = apiErrors.map(error => `${error.message} (Request ID: ${error.requestId})`)
+  const output = `\n${lines.join('\n')}\n\n${contactUsInSlackMessage}`
   return output
 }

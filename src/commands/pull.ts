@@ -44,11 +44,10 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
       const errors = parseErrors(e)
       const output = generateErrorOutput(errors)
       out.write(`${output}`)
-      process.exit(1)
+    } else {
+      throw e
     }
 
-    out.write(noProjectFileMessageFound)
-    process.exit(1)
   }
 
 }

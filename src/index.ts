@@ -165,7 +165,7 @@ function defaultEnvironment(): SystemEnvironment {
 }
 
 function onError(e: Error) {
-  console.log(`${chalk.red(figures.cross)} Error: ${e.message}\n`)
+  console.log(`${chalk.red(figures.cross)}  Error: ${e.message}\n`)
   console.error(e.stack)
   process.exit(1)
 }

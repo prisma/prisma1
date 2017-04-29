@@ -78,15 +78,16 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
     }
 
   } catch (e) {
-    debug(`Could not push new schema: ${e.message}`)
-
+    out.stopSpinner()
     out.write(couldNotMigrateSchemaMessage)
 
-    const errors = parseErrors(e)
-    const output = generateErrorOutput(errors)
-    out.write(`${output}`)
-
-    process.exit(1)
+    if (e.errors) {
+      const errors = parseErrors(e)
+      const output = generateErrorOutput(errors)
+      out.write(`${output}`)
+    } else {
+      throw e
+    }
   }
 
 }

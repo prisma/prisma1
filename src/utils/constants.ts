@@ -21,7 +21,7 @@ export const projectFileSuffixes = ['.graphql', '.graphcool', '.schema']
  */
 export const openBrowserMessage = `Authenticating using your browser...`
 export const couldNotRetrieveTokenMessage = `\
-${chalk.red(figures.cross)}  Oups, something went wrong during authentication.\n`
+${chalk.red(figures.cross)}  Whoops, something went wrong during authentication.\n`
 
 export const authenticationSuccessMessage = `${chalk.green(figures.tick)}  Authenticated successfully\n`
 
@@ -37,7 +37,7 @@ ${chalk.green(figures.tick)}  Created project ${chalk.bold(name)} from ${chalk.b
 \n`
 
 export const couldNotCreateProjectMessage = `\
-${chalk.red(figures.cross)}  Oups, something went wrong while creating the project.\n`
+${chalk.red(figures.cross)}  Whoops, something went wrong while creating the project.\n`
 
 export const projectAlreadyExistsMessage = `\
 ${chalk.red(figures.cross)}  ${graphcoolProjectFileName} already exists for the current project. \
@@ -60,16 +60,16 @@ export const couldNotMigrateSchemaMessage = `
 ${chalk.red(figures.cross)}  An error occured while trying to migrate the project.\n`
 
 export const noActionRequiredMessage = `\
-${chalk.red(figures.star)}  The schema you uploaded is identical to the current schema of the project, no action required.\n`
+${chalk.green(figures.tick)}  Identical schema, no action required.\n`
 
 export const migrationDryRunMessage = `\
-This was a dry run of the migration. Here's the list of actions that would need to be done for the schema migration:\n`
+This was a dry run of the migration. Here are the potential changes:\n`
 
 export const migrationPerformedMessage = `\
-${chalk.green(figures.tick)}  Your schema was successfully updated. Here's the list of actions that were performed for the schema migration:\n`
+${chalk.green(figures.tick)}  Your schema was successfully updated. Here are the changes:\n`
 
 export const migrationErrorMessage = `\
-There are issues with the new schema that you provided. Please fix the following issues and try again:\n`
+There are issues with the new schema that you provided:\n`
 
 /*
  * Terminal output: projects
@@ -78,21 +78,20 @@ export const projectsMessage = `\
 `
 
 export const couldNotFetchProjectsMessage = `\
-${chalk.red(figures.cross)}  An error occured while trying to fetch your projects:\n`
+${chalk.red(figures.cross)}  An error occured while trying to fetch your projects.\n`
 
 /*
  * Terminal output: pull
  */
 
 export const fetchingProjectDataMessage = `\
-Fetching project data ...\
-`
+Fetching project data ...`
 
 export const noProjectFileMessageFound = `\
 ${chalk.red(figures.cross)}  There is no project file (project.graphcool) in the current directory.\n`
 
 export const noProjectIdMessage = `\
-${chalk.red(figures.cross)}  Please provide a valid project Id.\n`
+${chalk.red(figures.cross)}  Please provide a valid project ID.\n`
 
 export const wroteProjectFileMessage = `\
 ${chalk.green(figures.tick)}  Your project file was successfully updated.`
@@ -102,8 +101,7 @@ ${chalk.green(figures.tick)}  Your project file was successfully updated.`
  */
 
 export const exportingDataMessage = `\
-Exporting your project data ...\
-`
+Exporting your project data ...`
 
 export const downloadUrlMessage = (url: string) => `\
 ${chalk.green(figures.tick)}  You can download your project data by pasting this URL in a browser:
@@ -112,11 +110,9 @@ ${chalk.green(figures.tick)}  You can download your project data by pasting this
 \n`
 
 
-
 /*
  * Terminal output: general
  */
 
 export const contactUsInSlackMessage = `\
-Please try again or get in touch with us if the problem persists: http://slack.graph.cool/\n
-`
+Get in touch if you need help: http://slack.graph.cool/`

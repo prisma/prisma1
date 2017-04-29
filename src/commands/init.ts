@@ -43,7 +43,6 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
     // resolve schema
     const schemaUrl = props.localSchemaFile ? props.localSchemaFile : props.remoteSchemaUrl
     const schema = await getSchema(schemaUrl, resolver)
-    // debug(`Schema: ${JSON.stringify(schema)}`)
 
     // create project
     const projectInfo = await createProject(name, schema.schema, resolver, props.alias, props.region)
@@ -60,9 +59,13 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
     debug(`Could not create project: ${JSON.stringify(e)}`)
     out.write(`${couldNotCreateProjectMessage}`)
 
-    const errors = parseErrors(e)
-    const output = generateErrorOutput(errors)
-    out.write(`${output}`)
+    if (e.errors) {
+      const errors = parseErrors(e)
+      const output = generateErrorOutput(errors)
+      out.write(`${output}`)
+    } else {
+      throw e
+    }
   }
 
 }
