@@ -72,7 +72,7 @@ async function main() {
       checkHelp(argv, usagePush)
       await checkAuth()
 
-      const isDryRun = !!(argv['dry'] || argv['d'])
+      const isDryRun = !!(argv['dry-run'] || argv['d'])
       const projectFilePath = (argv['config'] || argv['c']) || graphcoolProjectFileName
       await pushCommand({isDryRun, projectFilePath}, defaultEnvironment())
       break
