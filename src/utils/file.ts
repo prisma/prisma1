@@ -5,7 +5,7 @@ const debug = require('debug')('graphcool')
 import * as fs from 'fs'
 
 /*
- * Project File (.../project2.graphcool)
+ * Project File (.../project.graphcool)
  */
 
 export function writeProjectFile(projectInfo: ProjectInfo, resolver: Resolver) {

@@ -96,6 +96,9 @@ ${chalk.red(figures.cross)}  Please provide a valid project ID.\n`
 export const wroteProjectFileMessage = `\
 ${chalk.green(figures.tick)}  Your project file was successfully updated.`
 
+export const newVersionMessage = (newVersion: string) => `\
+The new schema version is ${chalk.bold(newVersion)}.`
+
 /*
  * Terminal output: export
  */

@@ -28,8 +28,6 @@ async function main() {
 
   const command = argv._[0] as Command | undefined
 
-  // process.stdout.write('\n')
-
   switch (command) {
 
     case undefined: {
@@ -98,8 +96,9 @@ async function main() {
       checkHelp(argv, usagePull)
       await checkAuth()
 
-      const projectId = argv['project-id'] || argv['p']
-      await pullCommand({projectId}, defaultEnvironment())
+      const project = argv['project'] || argv['p']
+      const config = argv['config'] || argv['c']
+      await pullCommand({project, config}, defaultEnvironment())
       break
     }
 

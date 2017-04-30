@@ -178,6 +178,7 @@ query ($projectId: ID!){
       name
       alias
       schema
+      version
     }
   }
 }`
@@ -197,6 +198,7 @@ query ($projectId: ID!){
     name: json.data.viewer.project.name,
     schema: json.data.viewer.project.schema,
     alias: json.data.viewer.project.alias,
+    version: json.data.viewer.project.version,
   }
   return projectInfo
 }
