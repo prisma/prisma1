@@ -8,6 +8,7 @@ import projectsCommand from './commands/projects'
 import pullCommand from './commands/pull'
 import authCommand from './commands/auth'
 import initCommand from './commands/init'
+import interactiveInitCommand from './commands/interactiveInit'
 import exportCommand from './commands/export'
 import FileSystemResolver from './system/FileSystemResolver'
 const debug = require('debug')('graphcool')
@@ -61,8 +62,13 @@ async function main() {
       const remoteSchemaUrl = argv['url'] || argv['u']
       const localSchemaFile = argv['file'] || argv['f']
 
-      const props = {name, alias, remoteSchemaUrl, localSchemaFile, region}
-      await initCommand(props, defaultEnvironment())
+      debug(`${Object.keys(argv).length} keys in argv`)
+      if (Object.keys(argv).length > 1) {
+        const props = {name, alias, remoteSchemaUrl, localSchemaFile, region}
+        await initCommand(props, defaultEnvironment())
+      } else {
+        await interactiveInitCommand(defaultEnvironment())
+      }
       break
     }
 

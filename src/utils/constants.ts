@@ -43,6 +43,12 @@ export const projectAlreadyExistsMessage = `\
 ${chalk.red(figures.cross)}  ${graphcoolProjectFileName} already exists for the current project. \
 Looks like you've already setup your backend.\n`
 
+export const howDoYouWantToGetStarted = (options: string[]) => `\
+
+How do you want to get started?
+
+${options.map(option => `${option}`).join('\n')}`
+
 /*
  * Terminal output: push
  */

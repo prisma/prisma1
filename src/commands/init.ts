@@ -103,3 +103,4 @@ async function getSchema(schemaUrl: string | undefined, resolver: Resolver): Pro
     }
   }
 }
+
