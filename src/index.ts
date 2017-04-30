@@ -20,7 +20,7 @@ import {
 import StdOut from './system/StdOut'
 import { GraphcoolAuthServer } from './api/GraphcoolAuthServer'
 import { readGraphcoolConfig } from './utils/file'
-import { graphcoolProjectFileName } from './utils/constants'
+import {graphcoolProjectFileName, setDebugMessage} from './utils/constants'
 const {version} = require('../../package.json')
 
 async function main() {
@@ -164,7 +164,7 @@ function defaultEnvironment(): SystemEnvironment {
 }
 
 function onError(e: Error) {
-  console.log(`${chalk.red(figures.cross)}  Error: ${e.message}\n`)
+  console.log(`${chalk.red(figures.cross)}  Error: ${e.message}\n${setDebugMessage}\n`)
   console.error(e.stack)
   process.exit(1)
 }
