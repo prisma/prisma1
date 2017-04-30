@@ -29,7 +29,7 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
   const {resolver, out} = env
 
   if (resolver.exists(graphcoolProjectFileName) && resolver.read(graphcoolProjectFileName).toString().includes('# projectId:')) {
-    out.write(projectAlreadyExistsMessage)
+    out.writeError(projectAlreadyExistsMessage)
     process.exit(1)
   }
 
@@ -57,12 +57,12 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
   } catch (e) {
     out.stopSpinner()
     debug(`Could not create project: ${JSON.stringify(e)}`)
-    out.write(`${couldNotCreateProjectMessage}`)
+    out.writeError(`${couldNotCreateProjectMessage}`)
 
     if (e.errors) {
       const errors = parseErrors(e)
       const output = generateErrorOutput(errors)
-      out.write(`${output}`)
+      out.writeError(`${output}`)
     } else {
       throw e
     }

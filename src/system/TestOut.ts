@@ -5,6 +5,9 @@ export default class TestOut implements Out {
   write(message: string): void {
   }
 
+  writeError(message: string): void {
+  }
+
   startSpinner(message: string) {
   }
 

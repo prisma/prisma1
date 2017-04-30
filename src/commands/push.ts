@@ -26,13 +26,13 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
   const {resolver, out} = env
 
   if (!resolver.exists(graphcoolProjectFileName) && !resolver.exists(`${props.projectFilePath}/${graphcoolProjectFileName}`)) {
-    out.write(noProjectFileMessage)
+    out.writeError(noProjectFileMessage)
     process.exit(1)
   }
 
   const projectInfo = readProjectInfoFromProjectFile(resolver, props.projectFilePath)
   if (!projectInfo) {
-    out.write(invalidProjectFileMessage)
+    out.writeError(invalidProjectFileMessage)
     process.exit(1)
   }
 
@@ -71,7 +71,7 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
       }
     }
 
-    // something went wrong
+    // can't do migration because of issues with schema
     else if (migrationResult.messages.length === 0 && migrationResult.errors.length > 0) {
       out.write(`\n${migrationErrorMessage}`)
       printMigrationErrors(migrationResult.errors, out)
@@ -79,12 +79,12 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
 
   } catch (e) {
     out.stopSpinner()
-    out.write(couldNotMigrateSchemaMessage)
+    out.writeError(couldNotMigrateSchemaMessage)
 
     if (e.errors) {
       const errors = parseErrors(e)
       const output = generateErrorOutput(errors)
-      out.write(`${output}`)
+      out.writeError(`${output}`)
     } else {
       throw e
     }

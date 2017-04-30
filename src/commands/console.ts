@@ -15,7 +15,7 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
   const currentProjectId = readProjectIdFromProjectFile(resolver)
 
   if (!currentProjectId) {
-    out.write(noProjectFileMessageFound)
+    out.writeError(noProjectFileMessageFound)
     process.exit(1)
   }
 

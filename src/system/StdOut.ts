@@ -9,6 +9,10 @@ export default class StdOut implements Out {
     process.stdout.write(message)
   }
 
+  writeError(message: string): void {
+    process.stderr.write(message)
+  }
+
   startSpinner(message: string) {
     this.spinner = ora(message).start()
   }

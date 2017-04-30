@@ -19,7 +19,7 @@ export default async(props: Props, env: SystemEnvironment): Promise<void> => {
 
     const projectId = props.projectId ? props.projectId : readProjectIdFromProjectFile(resolver)
     if (!projectId) {
-      out.write(noProjectIdMessage)
+      out.writeError(noProjectIdMessage)
       process.exit(0)
     }
 
@@ -37,7 +37,7 @@ export default async(props: Props, env: SystemEnvironment): Promise<void> => {
     if (e.errors) {
       const errors = parseErrors(e)
       const output = generateErrorOutput(errors)
-      out.write(`${output}`)
+      out.writeError(`${output}`)
     } else {
       throw e
     }

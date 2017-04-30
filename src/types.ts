@@ -66,6 +66,7 @@ export interface MigrationResult {
 
 export interface Out {
   write(message: string): void
+  writeError(message: string): void
   startSpinner(message: string): void
   stopSpinner(): void
 }

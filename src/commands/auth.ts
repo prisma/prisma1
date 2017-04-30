@@ -23,7 +23,7 @@ export default async (props: Props, env: SystemEnvironment, authServer: AuthServ
     try {
       token = await authServer.requestAuthToken()
     } catch (e) {
-      out.write(couldNotRetrieveTokenMessage)
+      out.writeError(couldNotRetrieveTokenMessage)
       process.exit(1)
     }
 

@@ -41,7 +41,7 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
     // out.write(outputString)
     out.write(output)
   } catch (e) {
-    out.write(`${couldNotFetchProjectsMessage} ${e.message}`)
+    out.writeError(`${couldNotFetchProjectsMessage} ${e.message}`)
     process.exit(1)
   }
 
