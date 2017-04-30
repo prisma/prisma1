@@ -12,3 +12,8 @@ If an existing feature request is very important for you, please go ahead and :+
 ## Requesting a new feature
 
 We love your ideas for new features. If you're missing a certain feature, please feel free to [request a new feature here](https://github.com/graphcool/feature-requests/issues/new). (Please make sure to check first if somebody else already requested it.)
+
+## Keep up to date
+
+* Subscribe to the features you're interested in
+* Check [the changelog](https://www.graph.cool/docs/faq/graphcool-changelog-chiooo0ahn/) to see what we've recently built
