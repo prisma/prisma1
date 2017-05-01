@@ -115,10 +115,13 @@ ${chalk.green(figures.tick)}  Your project file was successfully updated.`
 export const newVersionMessage = (newVersion: string) => `\
 The new schema version is ${chalk.bold(newVersion)}.`
 
+export const differentProjectIdWarningMessage = (inputProjectId: string, readProjectId: string) => `\
+The project ID you provided (${inputProjectId}) is different than the one in the current project file (${readProjectId}). 
+This will override the current project file with a different project, do you still want to continue? [y|n]\n`
+
 /*
  * Terminal output: export
  */
-
 export const exportingDataMessage = `\
 Exporting your project data ...`
 
@@ -132,7 +135,6 @@ ${chalk.green(figures.tick)}  You can download your project data by pasting this
 /*
  * Terminal output: general
  */
-
 export const contactUsInSlackMessage = `\
 Get in touch if you need help: http://slack.graph.cool/`
 

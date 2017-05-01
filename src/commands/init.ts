@@ -21,6 +21,7 @@ interface Props {
   name?: string
   alias?: string
   region?: Region
+  outputPath?: string
 }
 
 export default async (props: Props, env: SystemEnvironment): Promise<void> => {
@@ -46,7 +47,7 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
     // create project
     const projectInfo = await createProject(name, schema.schema, resolver, props.alias, props.region)
     debug(`Project info: ${JSON.stringify(projectInfo)}`)
-    writeProjectFile(projectInfo, resolver)
+    writeProjectFile(projectInfo, resolver, props.outputPath)
 
     out.stopSpinner()
 

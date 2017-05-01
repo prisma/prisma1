@@ -61,9 +61,10 @@ async function main() {
       const region = argv['region'] || argv['r']
       const remoteSchemaUrl = argv['url'] || argv['u']
       const localSchemaFile = argv['file'] || argv['f']
+      const outputPath = argv['output'] || argv['o']
 
       if (Object.keys(argv).length > 1) {
-        const props = {name, alias, remoteSchemaUrl, localSchemaFile, region}
+        const props = {name, alias, remoteSchemaUrl, localSchemaFile, region, outputPath}
         await initCommand(props, defaultEnvironment())
       } else {
         await interactiveInitCommand(defaultEnvironment())

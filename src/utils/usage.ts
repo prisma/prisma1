@@ -35,10 +35,11 @@ export const usageInit = `  Usage: graphcool init [options]
   Create a new project from scratch or based on an existing GraphQL schema.
   
   Options:
-    -u, --url <schema-url>    Url to a GraphQL schema
+    -u, --url <schema-url>    URL to a GraphQL schema
     -f, --file <schema-file>  Local GraphQL schema file
     -n, --name <name>         Project name
     -a, --alias <alias>       Project alias
+    -o, --output <path>       Path to output project file (default: project.graphcool)
     -r, --region <region>     AWS Region (default: us-west-2)
     -h, --help                Output usage information
     

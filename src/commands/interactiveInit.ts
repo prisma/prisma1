@@ -11,7 +11,7 @@ const BLANK_PROJECT = 1
 
 export default async (env: SystemEnvironment): Promise<void> => {
 
-  const {resolver, out} = env
+  const {out} = env
 
   const options = [
     `${figures.pointer} Instagram starter kit`,
@@ -26,7 +26,7 @@ export default async (env: SystemEnvironment): Promise<void> => {
   term.hideCursor()
   let currentIndex = INSTAGRAM_STARTER // 0
 
-  term.on( 'key' , function( name ) {
+  term.on('key', (name: string) => {
     currentIndex = handleKeyEvent(name, currentIndex, options, env)
   })
 
