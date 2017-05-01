@@ -89,12 +89,12 @@ async function getSchema(schemaUrl: string | undefined, resolver: Resolver): Pro
       }
     }
   } else {
-    const schemaFiles = fs.readdirSync('.').filter(f => f.endsWith('.schema'))
+    const schemaFiles = fs.readdirSync('.').filter(f => f.endsWith('.graphql'))
     if (schemaFiles.length === 0) {
-      throw new Error('No .schema file found or specified')
+      throw new Error('No .graphql file found or specified')
     }
 
-    const file = schemaFiles.find(f => f === 'graphcool.schema') || schemaFiles[0]
+    const file = schemaFiles.find(f => f === 'graphcool.graphql') || schemaFiles[0]
     debug(`Schema File: ${file}`)
 
     return {

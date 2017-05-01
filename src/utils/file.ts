@@ -80,12 +80,6 @@ function getPathToProjectFile(filePath?: string): string {
   return path.join(filePath, graphcoolProjectFileName)
 }
 
-function findProjectFile(): string | undefined {
-  const schemaFiles = fs.readdirSync('.').filter(f => f.endsWith('.schema'))
-  const file = schemaFiles.find(f => f === graphcoolProjectFileName) || schemaFiles[0]
-  return file
-}
-
 function isValidProjectFilePath(projectFilePath?: string): boolean {
   if (!projectFilePath) {
     return false
@@ -94,11 +88,10 @@ function isValidProjectFilePath(projectFilePath?: string): boolean {
 }
 
 export function writeExampleSchemaFile(resolver: Resolver): string {
-  const path = 'example.schema'
+  const path = 'example.graphql'
   resolver.write(path, exampleSchema)
   return path
 }
-
 
 
 /*

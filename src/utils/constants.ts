@@ -14,7 +14,7 @@ export const authEndpoint = 'https://cli-auth-api.graph.cool'
  */
 export const graphcoolProjectFileName = 'project.graphcool'
 export const graphcoolConfigFilePath = path.join(os.homedir(), '.graphcool')
-export const projectFileSuffixes = ['.graphql', '.graphcool', '.schema']
+export const projectFileSuffixes = ['.graphql', '.graphcool']
 
 export const instagramExampleSchemaUrl = 'http://graphqlbin.com/instagram.graphql'
 export const exampleSchema = `\
