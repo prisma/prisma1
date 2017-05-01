@@ -62,7 +62,6 @@ async function main() {
       const remoteSchemaUrl = argv['url'] || argv['u']
       const localSchemaFile = argv['file'] || argv['f']
 
-      debug(`${Object.keys(argv).length} keys in argv`)
       if (Object.keys(argv).length > 1) {
         const props = {name, alias, remoteSchemaUrl, localSchemaFile, region}
         await initCommand(props, defaultEnvironment())
@@ -123,7 +122,7 @@ async function main() {
 
       const sourceProjectId = argv['source'] || argv['s']
       const projectFile = argv['project'] || argv['p']
-      await exportCommand({projectId}, defaultEnvironment())
+      await exportCommand({sourceProjectId, projectFile}, defaultEnvironment())
       break
     }
 
@@ -172,8 +171,9 @@ function defaultEnvironment(): SystemEnvironment {
 }
 
 function onError(e: Error) {
-  console.log(`${chalk.red(figures.cross)}  Error: ${e.message}\n${setDebugMessage}\n`)
+  console.error(`${chalk.red(figures.cross)}  Error: ${e.message}\n`)
   console.error(e.stack)
+  console.error(`\n${setDebugMessage}`)
   process.exit(1)
 }
 

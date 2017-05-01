@@ -9,9 +9,9 @@ import * as fs from 'fs'
  */
 
 export function writeProjectFile(projectInfo: ProjectInfo, resolver: Resolver, path?: string) {
-  path = path || graphcoolProjectFileName
+  path = isValidProjectFilePath(path) ? path : graphcoolProjectFileName
   const schemaWithHeader = `# projectId: ${projectInfo.projectId}\n# version: ${projectInfo.version || ''}\n\n${projectInfo.schema}`
-  resolver.write(path, schemaWithHeader)
+  resolver.write(path!, schemaWithHeader)
 }
 
 export function readProjectInfoFromProjectFile(resolver: Resolver, path?: string): ProjectInfo | undefined {
@@ -86,11 +86,19 @@ function findProjectFile(): string | undefined {
   return file
 }
 
+function isValidProjectFilePath(projectFilePath?: string): boolean {
+  if (!projectFilePath) {
+    return false
+  }
+  return projectFilePath.endsWith('.graphcool')
+}
+
 export function writeExampleSchemaFile(resolver: Resolver): string {
   const path = 'example.schema'
   resolver.write(path, exampleSchema)
   return path
 }
+
 
 
 /*
