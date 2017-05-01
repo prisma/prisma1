@@ -10,7 +10,7 @@ import * as fs from 'fs'
 
 export function writeProjectFile(projectInfo: ProjectInfo, resolver: Resolver, path?: string) {
   path = isValidProjectFilePath(path) ? path : graphcoolProjectFileName
-  const schemaWithHeader = `# projectId: ${projectInfo.projectId}\n# version: ${projectInfo.version || ''}\n\n${projectInfo.schema}`
+  const schemaWithHeader = `# project: ${projectInfo.projectId}\n# version: ${projectInfo.version || ''}\n\n${projectInfo.schema}`
   resolver.write(path!, schemaWithHeader)
 }
 
@@ -33,7 +33,7 @@ export function readProjectIdFromProjectFile(resolver: Resolver, path?: string):
   const pathToProjectFile = getPathToProjectFile(path)
   const contents = resolver.read(pathToProjectFile)
 
-  const matches = contents.match(/# projectId: ([a-z0-9]*)/)
+  const matches = contents.match(/# project: ([a-z0-9]*)/)
 
   if (!matches || matches.length !== 2) {
     return undefined

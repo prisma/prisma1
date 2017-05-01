@@ -27,7 +27,7 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
 
   const {resolver, out} = env
 
-  if (resolver.exists(graphcoolProjectFileName) && resolver.read(graphcoolProjectFileName).toString().includes('# projectId:')) {
+  if (resolver.exists(graphcoolProjectFileName) && resolver.read(graphcoolProjectFileName).toString().includes('# project:')) {
     out.writeError(projectAlreadyExistsMessage)
     process.exit(1)
   }

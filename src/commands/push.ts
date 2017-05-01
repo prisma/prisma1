@@ -42,7 +42,7 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
   out.startSpinner(pushingNewSchemaMessage)
 
   try {
-    const schemaWithFrontmatter = `# projectId: ${projectId}\n# version: ${version}\n\n${schema}`
+    const schemaWithFrontmatter = `# project: ${projectId}\n# version: ${version}\n\n${schema}`
     const migrationResult = await pushNewSchema(schemaWithFrontmatter, isDryRun, resolver)
 
     out.stopSpinner()

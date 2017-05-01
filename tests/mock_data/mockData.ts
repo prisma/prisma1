@@ -6,21 +6,21 @@ import {modifiedTwitterSchema, simpleTwitterSchemaWithSystemFields} from './sche
 export const testToken = 'abcdefghijklmnopqrstuvwxyz'
 
 export const mockProjectFile1 = `\
-# projectId: abcdefghijklmn
+# project: abcdefghijklmn
 # version: 1
 
 ${simpleTwitterSchemaWithSystemFields}
 `
 
 export const mockProjectFile2 = `\
-# projectId: abcdefghijklmn
+# project: abcdefghijklmn
 # version: 2
 
 ${modifiedTwitterSchema}
 `
 
 export const mockProjectFile3 = `\
-# projectId: abcdefghijklmn
+# project: abcdefghijklmn
 # version: 3
 
 ${modifiedTwitterSchema}
