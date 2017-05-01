@@ -1,8 +1,14 @@
 import {SystemEnvironment} from '../types'
-import {howDoYouWantToGetStarted} from '../utils/constants'
+import {howDoYouWantToGetStarted, instagramExampleSchemaUrl} from '../utils/constants'
 const term = require( 'terminal-kit' ).terminal
 import * as chalk from 'chalk'
 import figures = require('figures')
+import initCommand from './init'
+import {writeExampleSchemaFile} from '../utils/file'
+const debug = require('debug')('graphcool')
+
+const INSTAGRAM_STARTER = 0
+const BLANK_PROJECT = 1
 
 export default async (env: SystemEnvironment): Promise<void> => {
 
@@ -11,31 +17,47 @@ export default async (env: SystemEnvironment): Promise<void> => {
   const options = [
     `${figures.pointer} Instagram starter kit`,
     `  Blank project`,
-    `  Schema from disk`,
-    `  One more option`,
-    `  Hmm and waht else?`,
   ]
 
+  term.saveCursor()
   out.write(howDoYouWantToGetStarted(options))
 
   term.grabInput()
   term.up(options.length)
   term.hideCursor()
-  let currentIndex = 0
+  let currentIndex = INSTAGRAM_STARTER // 0
 
   term.on( 'key' , function( name ) {
-    currentIndex = handleKeyEvent(name, currentIndex, options)
-
-    if ( name === 'CTRL_C' ) {
-      term.hideCursor()
-      process.exit()
-    }
-
+    currentIndex = handleKeyEvent(name, currentIndex, options, env)
   })
 
 }
 
-function handleKeyEvent(name: string, currentIndex: number, options: string[]): number {
+function handleSelect(selectedIndex: number, env: SystemEnvironment) {
+  term.restoreCursor()
+  term.eraseDisplayBelow()
+  term.hideCursor(false)
+  switch (selectedIndex) {
+    case INSTAGRAM_STARTER: {
+      term.grabInput(false)
+      const remoteSchemaUrl = instagramExampleSchemaUrl
+      const name = 'Instagram'
+      initCommand({remoteSchemaUrl, name}, env)
+      break
+    }
+    case BLANK_PROJECT: {
+      term.grabInput(false)
+      const localSchemaFile = writeExampleSchemaFile(env.resolver)
+      initCommand({localSchemaFile}, env)
+      break
+    }
+    default: {
+      break
+    }
+  }
+}
+
+function handleKeyEvent(name: string, currentIndex: number, options: string[], env: SystemEnvironment): number {
 
   switch (name) {
     case 'DOWN': {
@@ -55,6 +77,14 @@ function handleKeyEvent(name: string, currentIndex: number, options: string[]): 
         currentIndex--
       }
       break
+    }
+    case 'ENTER': {
+      handleSelect(currentIndex, env)
+      break
+    }
+    case 'CTRL_C': {
+      term.hideCursor(false)
+      process.exit()
     }
     default: {
       break
@@ -85,7 +115,6 @@ function overwritePreviousLines(lines: string[]): void {
     }
   })
 }
-
 
 function replaceFirstCharacters(str, n, insert) {
   const tmp = str.substring(n, str.length)

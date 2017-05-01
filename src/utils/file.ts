@@ -1,5 +1,5 @@
 import {GraphcoolConfig, Resolver, ProjectInfo} from '../types'
-import {graphcoolConfigFilePath, graphcoolProjectFileName, projectFileSuffixes} from './constants'
+import {graphcoolConfigFilePath, graphcoolProjectFileName, projectFileSuffixes, exampleSchema} from './constants'
 import * as path from 'path'
 const debug = require('debug')('graphcool')
 import * as fs from 'fs'
@@ -64,8 +64,6 @@ export function readDataModelFromProjectFile(resolver: Resolver, path?: string):
   return dataModel
 }
 
-
-
 function getPathToProjectFile(filePath?: string): string {
   if (!filePath) {
     return `./${graphcoolProjectFileName}` // default filePath
@@ -85,6 +83,12 @@ function findProjectFile(): string | undefined {
   const schemaFiles = fs.readdirSync('.').filter(f => f.endsWith('.schema'))
   const file = schemaFiles.find(f => f === graphcoolProjectFileName) || schemaFiles[0]
   return file
+}
+
+export function writeExampleSchemaFile(resolver: Resolver): string {
+  const path = 'example.schema'
+  resolver.write(path, exampleSchema)
+  return path
 }
 
 

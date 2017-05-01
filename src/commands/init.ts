@@ -13,7 +13,6 @@ import {
   couldNotCreateProjectMessage,
   projectAlreadyExistsMessage
 } from '../utils/constants'
-
 const debug = require('debug')('graphcool')
 
 interface Props {

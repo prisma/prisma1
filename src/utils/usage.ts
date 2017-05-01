@@ -42,7 +42,7 @@ export const usageInit = `  Usage: graphcool init [options]
     -r, --region <region>     AWS Region (default: us-west-2)
     -h, --help                Output usage information
     
-  Note: This command will create a ${chalk.bold('project2.graphcool')} config file in the current directory.
+  Note: This command will create a ${chalk.bold('project.graphcool')} config file in the current directory.
 `
 
 export const usagePull = `  Usage: graphcool pull [options]

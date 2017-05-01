@@ -18,7 +18,7 @@ test.afterEach(() => {
 })
 
 /*
- * Test succeeding schema migration and verify updated project info is stored in in ./project2.graphcool
+ * Test succeeding schema migration and verify updated project info is stored in in ./project.graphcool
  */
 test('Succeeding schema migration', async t => {
 
@@ -43,7 +43,7 @@ test('Succeeding schema migration', async t => {
 })
 
 /*
- * Test succeeding schema migration (dry run) and verify project info is not updated ./project2.graphcool
+ * Test succeeding schema migration (dry run) and verify project info is not updated ./project.graphcool
  */
 test('Succeeding schema migration (dry)', async t => {
 
@@ -69,7 +69,7 @@ test('Succeeding schema migration (dry)', async t => {
 
 
 /*
- * Test failing schema migration because of invalid session ./project2.graphcool
+ * Test failing schema migration because of invalid session ./project.graphcool
  */
 // test('Failing schema migration because of lacking permissions (No valid session)', async t => {
 //

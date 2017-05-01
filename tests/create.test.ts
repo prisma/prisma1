@@ -24,7 +24,7 @@ import TestOut from '../src/system/TestOut'
  -r, --region <region>     AWS Region (default: us-west-2)
  -h, --help                Output usage information
 
- Note: This command will create a ${chalk.bold('project2.graphcool')} config file in the current directory.
+ Note: This command will create a ${chalk.bold('project.graphcool')} config file in the current directory.
 */
 
 test.afterEach(() => {
