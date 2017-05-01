@@ -14,7 +14,7 @@ export const authEndpoint = 'https://cli-auth-api.graph.cool'
  */
 export const graphcoolProjectFileName = 'project.graphcool'
 export const graphcoolConfigFilePath = path.join(os.homedir(), '.graphcool')
-export const projectFileSuffixes = ['.graphql', '.graphcool', '.schema']
+export const projectFileSuffix = '.graphcool'
 
 export const instagramExampleSchemaUrl = 'http://graphqlbin.com/instagram.graphql'
 export const exampleSchema = `\
@@ -87,6 +87,14 @@ ${chalk.green(figures.tick)}  Your schema was successfully updated. Here are the
 
 export const migrationErrorMessage = `\
 There are issues with the new schema that you provided:\n`
+
+export const invalidProjectFilePathMessage = (projectFilePath: string) => `\
+${projectFilePath} is not a valid project file (must end with ${projectFileSuffix}).\n`
+
+export const multipleProjectFilesMessage = (projectFiles: string[]) => `\
+Found ${projectFiles.length} project files. You can specify the one you want to push by passing it as an argument.
+For example: '$ graphcool push -p ${projectFiles[0]}'
+`
 
 /*
  * Terminal output: projects

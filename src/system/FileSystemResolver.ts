@@ -1,6 +1,7 @@
 import * as fs from 'fs'
 import * as path from 'path'
 import {Resolver} from '../types'
+import {projectFileSuffix} from '../utils/constants'
 
 export default class FileSystemResolver implements Resolver {
 
@@ -18,6 +19,16 @@ export default class FileSystemResolver implements Resolver {
 
   exists(path: string): boolean {
     return fs.existsSync(path)
+  }
+
+  projectFiles(directory?: string): string[] {
+    const path = directory || '.'
+    const files = this.readDirectory(path)
+    return files.filter(file => file.endsWith(projectFileSuffix))
+  }
+
+  readDirectory(path: string): string[] {
+    return fs.readdirSync(path)
   }
 
 }

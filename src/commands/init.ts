@@ -11,7 +11,7 @@ import {
   creatingProjectMessage,
   createdProjectMessage,
   couldNotCreateProjectMessage,
-  projectAlreadyExistsMessage
+  projectAlreadyExistsMessage, projectFileSuffix
 } from '../utils/constants'
 const debug = require('debug')('graphcool')
 
@@ -89,12 +89,12 @@ async function getSchema(schemaUrl: string | undefined, resolver: Resolver): Pro
       }
     }
   } else {
-    const schemaFiles = fs.readdirSync('.').filter(f => f.endsWith('.schema'))
+    const schemaFiles = resolver.readDirectory('.').filter(f => f.endsWith(projectFileSuffix))
     if (schemaFiles.length === 0) {
-      throw new Error('No .schema file found or specified')
+      throw new Error(`No ${projectFileSuffix} file found or specified`)
     }
 
-    const file = schemaFiles.find(f => f === 'graphcool.schema') || schemaFiles[0]
+    const file = schemaFiles.find(f => f === graphcoolProjectFileName) || schemaFiles[0]
     debug(`Schema File: ${file}`)
 
     return {

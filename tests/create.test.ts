@@ -56,7 +56,7 @@ test('Succeeding project creation with local schema file', async t => {
 
   const expectedProjectFileContent = mockProjectFile1
   t.is(env.resolver.read(graphcoolProjectFileName), expectedProjectFileContent)
-  t.is(readProjectIdFromProjectFile(env.resolver), 'abcdefghijklmn')
+  t.is(readProjectIdFromProjectFile(env.resolver, graphcoolProjectFileName), 'abcdefghijklmn')
 })
 
 test('Succeeding project creation with remote schema file', async t => {
@@ -81,7 +81,7 @@ test('Succeeding project creation with remote schema file', async t => {
 
   const expectedProjectFileContent = mockProjectFile1
   t.is(env.resolver.read(graphcoolProjectFileName), expectedProjectFileContent)
-  t.is(readProjectIdFromProjectFile(env.resolver), 'abcdefghijklmn')
+  t.is(readProjectIdFromProjectFile(env.resolver, graphcoolProjectFileName), 'abcdefghijklmn')
 })
 
 function testEnvironment(storage: any): SystemEnvironment {

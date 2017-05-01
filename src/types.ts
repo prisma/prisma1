@@ -22,6 +22,8 @@ export interface Resolver {
   write(path: string, value: string)
   delete(path: string)
   exists(path: string): boolean
+  projectFiles(directory?: string): string[]
+  readDirectory(path: string): string[]
 }
 
 export type TokenValidationResult = 'valid' | 'invalid'

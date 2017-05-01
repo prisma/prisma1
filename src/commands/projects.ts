@@ -1,7 +1,7 @@
 import { SystemEnvironment } from '../types'
 import { fetchProjects } from '../api/api'
 import figures = require('figures')
-import { couldNotFetchProjectsMessage } from '../utils/constants'
+import {couldNotFetchProjectsMessage, graphcoolProjectFileName} from '../utils/constants'
 import { readProjectIdFromProjectFile } from '../utils/file'
 
 const {table, getBorderCharacters} = require('table')
@@ -17,12 +17,7 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
 
   try {
     const projects = await fetchProjects(resolver)
-
-    // const outputString = projects
-    //   .map(project => `${figures.star}  ${project.name} (${project.projectId})`)
-    //   .join('\n')
-
-    const currentProjectId = readProjectIdFromProjectFile(resolver)
+    const currentProjectId = readProjectIdFromProjectFile(resolver, graphcoolProjectFileName)
 
     const data = projects.map(p => {
       const isCurrentProject = currentProjectId === p.projectId || currentProjectId === p.alias

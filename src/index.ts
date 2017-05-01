@@ -87,7 +87,7 @@ async function main() {
       await checkAuth()
 
       const isDryRun = !!(argv['dry-run'] || argv['d'])
-      const projectFilePath = (argv['project'] || argv['p']) || graphcoolProjectFileName
+      const projectFilePath = (argv['project'] || argv['p'])
       await pushCommand({isDryRun, projectFilePath}, defaultEnvironment())
       break
     }
@@ -100,6 +100,16 @@ async function main() {
       const projectFile = argv['project'] || argv['p']
       const outputPath = argv['output'] || argv['o']
       await pullCommand({sourceProjectId, projectFile, outputPath}, defaultEnvironment())
+      break
+    }
+
+    case 'export': {
+      checkHelp(argv, usageExport)
+      await checkAuth()
+
+      const sourceProjectId = argv['source'] || argv['s']
+      const projectFile = argv['project'] || argv['p']
+      await exportCommand({sourceProjectId, projectFile}, defaultEnvironment())
       break
     }
 
@@ -124,16 +134,6 @@ async function main() {
 
       const token = argv['token'] || argv['t']
       await authCommand({token}, defaultEnvironment(), new GraphcoolAuthServer())
-      break
-    }
-
-    case 'export': {
-      checkHelp(argv, usageExport)
-      await checkAuth()
-
-      const sourceProjectId = argv['source'] || argv['s']
-      const projectFile = argv['project'] || argv['p']
-      await exportCommand({sourceProjectId, projectFile}, defaultEnvironment())
       break
     }
 
