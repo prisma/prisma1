@@ -7,8 +7,8 @@ export const usageRoot = `  Usage: ${chalk.bold('graphcool')} [command]
 
   ${chalk.dim('Commands:')}
     init           Create a new project
-    pull           Pull the latest project config
-    push           Push project config changes
+    pull           Pull the latest project file
+    push           Push project file changes
     export         Export project data
     endpoints      Print GraphQL endpoints
     console        Open Graphcool Console
@@ -42,26 +42,27 @@ export const usageInit = `  Usage: graphcool init [options]
     -r, --region <region>     AWS Region (default: us-west-2)
     -h, --help                Output usage information
     
-  Note: This command will create a ${chalk.bold('project.graphcool')} config file in the current directory.
+  Note: This command will create a ${chalk.bold('project.graphcool')} project file in the current directory.
 `
 
 export const usagePull = `  Usage: graphcool pull [options]
   
-  Pull the latest project config from Graphcool
+  Pull the latest project file from Graphcool
   
   Options:
-    -p, --project      ID or alias of source project (defaults to project from config file)
-    -c, --config       Config file (default: project.graphcool)
+    -s, --source       ID or alias of source project (defaults to ID or alias from project file)
+    -p, --project      Project file (default: project.graphcool)
+    -o, --output       Path to output project file (default: project.graphcool)
     -h, --help         Output usage information
 `
 
 export const usagePush = `  Usage: graphcool push [options]
   
-  Push project config changes
+  Push project file changes
   
   Options:
     -d, --dry-run      Simulate command
-    -c, --config       Config file (default: project.graphcool)
+    -p, --project      Project file (default: project.graphcool)
     -h, --help         Output usage information
 `
 
@@ -70,7 +71,7 @@ export const usageExport = `  Usage: graphcool export [options]
   Export project data
   
   Options:
-    -c, --config       Config file (default: project.graphcool)
+    -p, --project      Project file (default: project.graphcool)
     -h, --help         Output usage information
 `
 

@@ -1,7 +1,6 @@
 import {SystemEnvironment} from '../types'
 import {howDoYouWantToGetStarted, instagramExampleSchemaUrl} from '../utils/constants'
 const term = require( 'terminal-kit' ).terminal
-import * as chalk from 'chalk'
 import figures = require('figures')
 import initCommand from './init'
 import {writeExampleSchemaFile} from '../utils/file'
@@ -37,6 +36,7 @@ function handleSelect(selectedIndex: number, env: SystemEnvironment) {
   term.restoreCursor()
   term.eraseDisplayBelow()
   term.hideCursor(false)
+
   switch (selectedIndex) {
     case INSTAGRAM_STARTER: {
       term.grabInput(false)
