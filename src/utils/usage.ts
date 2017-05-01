@@ -71,6 +71,8 @@ export const usageExport = `  Usage: graphcool export [options]
   Export project data
   
   Options:
+ 
+    -s, --source       ID or alias of source project (defaults to ID or alias from project file)
     -p, --project      Project file (default: project.graphcool)
     -h, --help         Output usage information
 `

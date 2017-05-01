@@ -16,7 +16,7 @@ import figures = require('figures')
 import * as chalk from 'chalk'
 import {
   usagePull, usageProjects, usageInit, usageRoot, usagePush, usageAuth, usageVersion,
-  usageConsole
+  usageConsole, usageExport
 } from './utils/usage'
 import StdOut from './system/StdOut'
 import { GraphcoolAuthServer } from './api/GraphcoolAuthServer'
@@ -77,8 +77,19 @@ async function main() {
       await checkAuth()
 
       const isDryRun = !!(argv['dry-run'] || argv['d'])
-      const projectFilePath = (argv['config'] || argv['c']) || graphcoolProjectFileName
+      const projectFilePath = (argv['project'] || argv['p']) || graphcoolProjectFileName
       await pushCommand({isDryRun, projectFilePath}, defaultEnvironment())
+      break
+    }
+
+    case 'pull': {
+      checkHelp(argv, usagePull)
+      await checkAuth()
+
+      const sourceProjectId = argv['source'] || argv['s']
+      const projectFile = argv['project'] || argv['p']
+      const outputPath = argv['output'] || argv['o']
+      await pullCommand({sourceProjectId, projectFile, outputPath}, defaultEnvironment())
       break
     }
 
@@ -98,16 +109,6 @@ async function main() {
       break
     }
 
-    case 'pull': {
-      checkHelp(argv, usagePull)
-      await checkAuth()
-
-      const project = argv['project'] || argv['p']
-      const config = argv['config'] || argv['c']
-      await pullCommand({project, config}, defaultEnvironment())
-      break
-    }
-
     case 'auth': {
       checkHelp(argv, usageAuth)
 
@@ -117,10 +118,11 @@ async function main() {
     }
 
     case 'export': {
-      checkHelp(argv, usageAuth)
+      checkHelp(argv, usageExport)
       await checkAuth()
 
-      const projectId = argv['project-id'] || argv['p']
+      const sourceProjectId = argv['source'] || argv['s']
+      const projectFile = argv['project'] || argv['p']
       await exportCommand({projectId}, defaultEnvironment())
       break
     }

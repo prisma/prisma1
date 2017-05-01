@@ -8,9 +8,10 @@ import * as fs from 'fs'
  * Project File (.../project.graphcool)
  */
 
-export function writeProjectFile(projectInfo: ProjectInfo, resolver: Resolver) {
+export function writeProjectFile(projectInfo: ProjectInfo, resolver: Resolver, path?: string) {
+  path = path || graphcoolProjectFileName
   const schemaWithHeader = `# projectId: ${projectInfo.projectId}\n# version: ${projectInfo.version || ''}\n\n${projectInfo.schema}`
-  resolver.write(graphcoolProjectFileName, schemaWithHeader)
+  resolver.write(path, schemaWithHeader)
 }
 
 export function readProjectInfoFromProjectFile(resolver: Resolver, path?: string): ProjectInfo | undefined {

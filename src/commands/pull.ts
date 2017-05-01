@@ -10,8 +10,9 @@ import {
 const debug = require('debug')('graphcool')
 
 interface Props {
-  project?: string
-  config?: string
+  sourceProjectId?: string
+  projectFile?: string
+  outputPath?: string
 }
 
 export default async (props: Props, env: SystemEnvironment): Promise<void> => {
@@ -20,13 +21,12 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
 
   try {
 
-    let currentVersion
-    let projectId
-    if (props.config) {
-      projectId = readProjectIdFromProjectFile(resolver, props.config)
-      currentVersion = readVersionFromProjectFile(resolver, props.config)
-    } else if (props.project) {
-      projectId = props.project
+    let projectId, currentVersion
+    if (props.projectFile) {
+      projectId = readProjectIdFromProjectFile(resolver, props.projectFile)
+      currentVersion = readVersionFromProjectFile(resolver, props.projectFile)
+    } else if (props.sourceProjectId) {
+      projectId = props.sourceProjectId
     } else {
       projectId = readProjectIdFromProjectFile(resolver)
       currentVersion = readVersionFromProjectFile(resolver)
@@ -43,7 +43,7 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
     debug(`Project Info: \n${JSON.stringify(projectInfo)}`)
 
     out.stopSpinner()
-    writeProjectFile(projectInfo, resolver)
+    writeProjectFile(projectInfo, resolver, props.outputPath)
 
     out.write(wroteProjectFileMessage)
     if (projectInfo.version && currentVersion) {

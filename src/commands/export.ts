@@ -8,7 +8,8 @@ import {exportProjectData, parseErrors, generateErrorOutput} from '../api/api'
 const debug = require('debug')('graphcool')
 
 interface Props {
-  projectId?: string
+  sourceProjectId?: string
+  projectFile?: string
 }
 
 export default async(props: Props, env: SystemEnvironment): Promise<void> => {
@@ -17,7 +18,15 @@ export default async(props: Props, env: SystemEnvironment): Promise<void> => {
   try {
     out.startSpinner(exportingDataMessage)
 
-    const projectId = props.projectId ? props.projectId : readProjectIdFromProjectFile(resolver)
+    let projectId
+    if (props.sourceProjectId) {
+      projectId = props.sourceProjectId
+    } else if (props.projectFile) {
+      projectId = readProjectIdFromProjectFile(resolver, props.projectFile)
+    } else {
+      projectId = readProjectIdFromProjectFile(resolver)
+    }
+
     if (!projectId) {
       out.writeError(noProjectIdMessage)
       process.exit(0)
