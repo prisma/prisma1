@@ -1,6 +1,7 @@
 import * as chalk from 'chalk'
 
-export const usageRoot = `  Usage: ${chalk.bold('graphcool')} [command]
+export const usageRoot = `
+  ${chalk.dim('Usage:')} ${chalk.bold('graphcool')} [command]
   
     ${chalk.bold('Serverless GraphQL backend for frontend developers')}
     Read more at https://www.graph.cool/docs/cli
@@ -28,9 +29,11 @@ export const usageRoot = `  Usage: ${chalk.bold('graphcool')} [command]
     
   ${chalk.gray('-')} Update live project with local changes
     ${chalk.cyan('$ graphcool push')}
+    
 `
 
-export const usageInit = `  Usage: graphcool init [options]
+export const usageInit = `
+  Usage: graphcool init [options]
   
   Create a new project from scratch or based on an existing GraphQL schema.
   
@@ -44,9 +47,11 @@ export const usageInit = `  Usage: graphcool init [options]
     -h, --help                Output usage information
     
   Note: This command will create a ${chalk.bold('project.graphcool')} project file in the current directory.
+  
 `
 
-export const usagePull = `  Usage: graphcool pull [options]
+export const usagePull = `
+  Usage: graphcool pull [options]
   
   Pull the latest project file from Graphcool
   
@@ -55,9 +60,11 @@ export const usagePull = `  Usage: graphcool pull [options]
     -p, --project      Project file (default: project.graphcool)
     -o, --output       Path to output project file (default: project.graphcool)
     -h, --help         Output usage information
+    
 `
 
-export const usagePush = `  Usage: graphcool push [options]
+export const usagePush = `
+  Usage: graphcool push [options]
   
   Push project file changes
   
@@ -65,9 +72,11 @@ export const usagePush = `  Usage: graphcool push [options]
     -d, --dry-run      Simulate command
     -p, --project      Project file (default: project.graphcool)
     -h, --help         Output usage information
+    
 `
 
-export const usageExport = `  Usage: graphcool export [options]
+export const usageExport = `
+  Usage: graphcool export [options]
   
   Export project data
   
@@ -76,25 +85,31 @@ export const usageExport = `  Usage: graphcool export [options]
     -s, --source       ID or alias of source project (defaults to ID or alias from project file)
     -p, --project      Project file (default: project.graphcool)
     -h, --help         Output usage information
+    
 `
 
-export const usageConsole = `  Usage: graphcool console [options]
+export const usageConsole = `
+  Usage: graphcool console [options]
   
   Open current project in Graphcool Console with your browser
 
   Options:
     -h, --help         Output usage information
+    
 `
 
-export const usageProjects = `  Usage: graphcool projects [options]
+export const usageProjects = `
+  Usage: graphcool projects [options]
   
   List projects
   
   Options:
     -h, --help         Output usage information
+    
 `
 
-export const usageAuth = `  Usage: graphcool auth [options]
+export const usageAuth = `
+  Usage: graphcool auth [options]
   
   Sign up or login (opens your browser for authentication)
   
@@ -103,12 +118,15 @@ export const usageAuth = `  Usage: graphcool auth [options]
     -h, --help             Output usage information
     
   Note: Your session token will be store at ~/.graphcool
+  
 `
 
-export const usageVersion = `  Usage: graphcool version [options]
+export const usageVersion = `
+  Usage: graphcool version [options]
   
   Print version
   
   Options:
     -h, --help         Output usage information
+    
 `

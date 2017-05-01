@@ -1,52 +1,63 @@
-import {SystemEnvironment} from '../types'
-import {howDoYouWantToGetStarted, instagramExampleSchemaUrl} from '../utils/constants'
-const term = require( 'terminal-kit' ).terminal
+import { SystemEnvironment } from '../types'
+import { howDoYouWantToGetStarted, instagramExampleSchemaUrl } from '../utils/constants'
+const term = require('terminal-kit').terminal
 import figures = require('figures')
 import initCommand from './init'
-import {writeExampleSchemaFile} from '../utils/file'
+import { writeExampleSchemaFile } from '../utils/file'
 const debug = require('debug')('graphcool')
 
 const INSTAGRAM_STARTER = 0
 const BLANK_PROJECT = 1
 
-export default async (env: SystemEnvironment): Promise<void> => {
+type CheckAuth = () => Promise<void>
+
+interface Props {
+  checkAuth: CheckAuth
+}
+
+export default async (props: Props, env: SystemEnvironment): Promise<void> => {
 
   const {out} = env
 
   const options = [
-    `${figures.pointer} Instagram starter kit`,
-    `  Blank project`,
+    `  ${figures.pointer} Instagram starter kit`,
+    `    Blank project`,
   ]
 
   term.saveCursor()
   out.write(howDoYouWantToGetStarted(options))
 
   term.grabInput()
-  term.up(options.length)
+  term.up(options.length + 1) // +1 because of the new line at the end
   term.hideCursor()
   let currentIndex = INSTAGRAM_STARTER // 0
 
   term.on('key', (name: string) => {
-    currentIndex = handleKeyEvent(name, currentIndex, options, env)
+    currentIndex = handleKeyEvent(name, currentIndex, options, props.checkAuth, env)
   })
 
 }
 
-function handleSelect(selectedIndex: number, env: SystemEnvironment) {
+async function handleSelect(selectedIndex: number, checkAuth: CheckAuth, env: SystemEnvironment) {
   term.restoreCursor()
   term.eraseDisplayBelow()
   term.hideCursor(false)
+  env.out.write('\n')
+
+  if (selectedIndex === INSTAGRAM_STARTER || selectedIndex === BLANK_PROJECT) {
+    term.grabInput(false)
+
+    await checkAuth()
+  }
 
   switch (selectedIndex) {
     case INSTAGRAM_STARTER: {
-      term.grabInput(false)
       const remoteSchemaUrl = instagramExampleSchemaUrl
       const name = 'Instagram'
       initCommand({remoteSchemaUrl, name}, env)
       break
     }
     case BLANK_PROJECT: {
-      term.grabInput(false)
       const localSchemaFile = writeExampleSchemaFile(env.resolver)
       initCommand({localSchemaFile}, env)
       break
@@ -57,33 +68,35 @@ function handleSelect(selectedIndex: number, env: SystemEnvironment) {
   }
 }
 
-function handleKeyEvent(name: string, currentIndex: number, options: string[], env: SystemEnvironment): number {
+function handleKeyEvent(name: string, currentIndex: number, options: string[], checkAuth: CheckAuth, env: SystemEnvironment): number {
 
   switch (name) {
     case 'DOWN': {
       if (currentIndex < options.length - 1) {
-        options[currentIndex] = replaceFirstCharacters(options[currentIndex], 1, ' ')
-        options[currentIndex+1] = replaceFirstCharacters(options[currentIndex+1], 1, `${figures.pointer}`)
-        overwriteNextLines([options[currentIndex], options[currentIndex+1]])
+        options[currentIndex] = replaceFirstCharacters(options[currentIndex], 3, '   ')
+        options[currentIndex + 1] = replaceFirstCharacters(options[currentIndex + 1], 3, `  ${figures.pointer}`)
+        overwriteNextLines([options[currentIndex], options[currentIndex + 1]])
         currentIndex++
       }
       break
     }
     case 'UP': {
       if (currentIndex > 0) {
-        options[currentIndex] = replaceFirstCharacters(options[currentIndex], 1, ' ')
-        options[currentIndex-1] = replaceFirstCharacters(options[currentIndex-1], 1, `${figures.pointer}`)
-        overwritePreviousLines([options[currentIndex], options[currentIndex-1]])
+        options[currentIndex] = replaceFirstCharacters(options[currentIndex], 3, '   ')
+        options[currentIndex - 1] = replaceFirstCharacters(options[currentIndex - 1], 3, `  ${figures.pointer}`)
+        overwritePreviousLines([options[currentIndex], options[currentIndex - 1]])
         currentIndex--
       }
       break
     }
     case 'ENTER': {
-      handleSelect(currentIndex, env)
+      handleSelect(currentIndex, checkAuth, env)
       break
     }
     case 'CTRL_C': {
       term.hideCursor(false)
+      term.eraseDisplayBelow()
+      env.out.write('\n')
       process.exit()
     }
     default: {
@@ -97,7 +110,7 @@ function handleKeyEvent(name: string, currentIndex: number, options: string[], e
 function overwriteNextLines(lines: string[]): void {
   lines.forEach((line, index) => {
     term.eraseLineAfter()
-    term.white(line)
+    term.defaultColor(line)
     term.left(10000)
     if (index < lines.length - 1) {
       term.down()
@@ -108,7 +121,7 @@ function overwriteNextLines(lines: string[]): void {
 function overwritePreviousLines(lines: string[]): void {
   lines.forEach((line, index) => {
     term.eraseLineBefore()
-    term.white(line)
+    term.defaultColor(line)
     term.left(10000)
     if (index < lines.length - 1) {
       term.up()

@@ -29,7 +29,7 @@ type User {
 /*
  * Terminal output: auth
  */
-export const openBrowserMessage = `Authenticating using your browser...`
+export const openBrowserMessage = `You need to authenticate. Your browser will open shortly...`
 export const couldNotRetrieveTokenMessage = `\
 ${chalk.red(figures.cross)}  Whoops, something went wrong during authentication.\n`
 
@@ -55,9 +55,10 @@ Looks like you've already setup your backend.\n`
 
 export const howDoYouWantToGetStarted = (options: string[]) => `\
 
-How do you want to get started?
+  How do you want to get started?
 
-${options.map(option => `${option}`).join('\n')}`
+${options.map(option => `${option}`).join('\n')}
+`
 
 /*
  * Terminal output: push

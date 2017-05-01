@@ -11,17 +11,25 @@ import initCommand from './commands/init'
 import interactiveInitCommand from './commands/interactiveInit'
 import exportCommand from './commands/export'
 import FileSystemResolver from './system/FileSystemResolver'
-const debug = require('debug')('graphcool')
 import figures = require('figures')
 import * as chalk from 'chalk'
-import {
-  usagePull, usageProjects, usageInit, usageRoot, usagePush, usageAuth, usageVersion,
-  usageConsole, usageExport
-} from './utils/usage'
 import StdOut from './system/StdOut'
 import { GraphcoolAuthServer } from './api/GraphcoolAuthServer'
 import { readGraphcoolConfig } from './utils/file'
-import {graphcoolProjectFileName, setDebugMessage} from './utils/constants'
+import { graphcoolProjectFileName, setDebugMessage } from './utils/constants'
+import {
+  usagePull,
+  usageProjects,
+  usageInit,
+  usageRoot,
+  usagePush,
+  usageAuth,
+  usageVersion,
+  usageConsole,
+  usageExport,
+} from './utils/usage'
+
+const debug = require('debug')('graphcool')
 const {version} = require('../../package.json')
 
 async function main() {
@@ -36,6 +44,7 @@ async function main() {
       process.exit(0)
     }
 
+    // TODO remove legacy support
     case 'create': {
       checkHelp(argv, usageInit)
       await checkAuth()
@@ -54,7 +63,6 @@ async function main() {
 
     case 'init': {
       checkHelp(argv, usageInit)
-      await checkAuth()
 
       const name = argv['name'] || argv['n']
       const alias = argv['alias'] || argv['a']
@@ -63,11 +71,13 @@ async function main() {
       const localSchemaFile = argv['file'] || argv['f']
       const outputPath = argv['output'] || argv['o']
 
-      if (Object.keys(argv).length > 1) {
+      if (!remoteSchemaUrl && !localSchemaFile) {
+        await interactiveInitCommand({checkAuth}, defaultEnvironment())
+      } else {
+        await checkAuth()
+
         const props = {name, alias, remoteSchemaUrl, localSchemaFile, region, outputPath}
         await initCommand(props, defaultEnvironment())
-      } else {
-        await interactiveInitCommand(defaultEnvironment())
       }
       break
     }

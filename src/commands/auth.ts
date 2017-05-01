@@ -1,9 +1,10 @@
 import { writeGraphcoolConfig, deleteGraphcoolConfig } from '../utils/file'
 import { AuthServer, SystemEnvironment } from '../types'
+import { sleep } from '../utils/system'
 import {
   openBrowserMessage,
   authenticationSuccessMessage,
-  couldNotRetrieveTokenMessage
+  couldNotRetrieveTokenMessage,
 } from '../utils/constants'
 
 const debug = require('debug')('graphcool-auth')
@@ -19,6 +20,8 @@ export default async (props: Props, env: SystemEnvironment, authServer: AuthServ
 
   if (!token) {
     out.startSpinner(openBrowserMessage)
+
+    await sleep(500)
 
     try {
       token = await authServer.requestAuthToken()

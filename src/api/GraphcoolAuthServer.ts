@@ -1,5 +1,5 @@
-import {AuthServer, TokenValidationResult} from '../types'
-import {systemAPIEndpoint, authEndpoint} from '../utils/constants'
+import { AuthServer, TokenValidationResult } from '../types'
+import { systemAPIEndpoint, authEndpoint } from '../utils/constants'
 import * as fetch from 'isomorphic-fetch'
 import cuid = require('cuid')
 import open = require('open')
@@ -10,7 +10,6 @@ export class GraphcoolAuthServer implements AuthServer {
 
   async requestAuthToken(): Promise<string> {
     const cliToken = cuid()
-    // const apiEndpoint = 'https://cli-auth-api.graph.cool'
 
     debug(`Fetching from '${authEndpoint}/create' with token: ${cliToken}`)
 
@@ -20,10 +19,10 @@ export class GraphcoolAuthServer implements AuthServer {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ cliToken }),
+        body: JSON.stringify({cliToken}),
       })
     }
-    catch(e) {
+    catch (e) {
       debug(`Error when trying to authenticate: ${JSON.stringify(e)}`)
     }
 
@@ -65,7 +64,7 @@ export class GraphcoolAuthServer implements AuthServer {
         body: authQuery
       })
     }
-    catch(e) {
+    catch (e) {
       return 'invalid'
     }
 
