@@ -1,4 +1,5 @@
 import {Resolver} from '../types'
+import {projectFileSuffix} from '../utils/constants'
 
 export default class TestResolver implements Resolver {
 
@@ -54,6 +55,17 @@ export default class TestResolver implements Resolver {
 
   exists(path: string): boolean {
     return (typeof(this.storage[path]) !== 'undefined') || (typeof(this.storage[`./${path}`]) !== 'undefined')
+  }
+
+  projectFiles(directory?: string): string[] {
+    const path = directory || '.'
+    const files = this.readDirectory(path)
+    return files.filter(file => file.endsWith(projectFileSuffix))
+  }
+
+  readDirectory(path: string): string[] {
+    const paths = Object.keys(this.storage)
+    return paths.filter(fullPath => fullPath.startsWith(path))
   }
 
 }

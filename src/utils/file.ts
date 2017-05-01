@@ -1,5 +1,10 @@
 import {GraphcoolConfig, Resolver, ProjectInfo} from '../types'
-import {graphcoolConfigFilePath, graphcoolProjectFileName, projectFileSuffixes, exampleSchema} from './constants'
+import {
+  graphcoolConfigFilePath,
+  graphcoolProjectFileName,
+  exampleSchema,
+  projectFileSuffix
+} from './constants'
 import * as path from 'path'
 const debug = require('debug')('graphcool')
 import * as fs from 'fs'
@@ -14,7 +19,7 @@ export function writeProjectFile(projectInfo: ProjectInfo, resolver: Resolver, p
   resolver.write(path!, schemaWithHeader)
 }
 
-export function readProjectInfoFromProjectFile(resolver: Resolver, path?: string): ProjectInfo | undefined {
+export function readProjectInfoFromProjectFile(resolver: Resolver, path: string): ProjectInfo | undefined {
   const projectId = readProjectIdFromProjectFile(resolver, path)
 
   if (!projectId) {
@@ -24,15 +29,11 @@ export function readProjectInfoFromProjectFile(resolver: Resolver, path?: string
   const version = readVersionFromProjectFile(resolver, path)
   const schema = readDataModelFromProjectFile(resolver, path)
 
-  debug(`Read project info: ${projectId}, ${version}`)
-
   return { projectId, version, schema} as ProjectInfo
 }
 
-export function readProjectIdFromProjectFile(resolver: Resolver, path?: string): string | undefined {
-  const pathToProjectFile = getPathToProjectFile(path)
-  const contents = resolver.read(pathToProjectFile)
-
+export function readProjectIdFromProjectFile(resolver: Resolver, path: string): string | undefined {
+  const contents = resolver.read(path)
   const matches = contents.match(/# project: ([a-z0-9]*)/)
 
   if (!matches || matches.length !== 2) {
@@ -43,10 +44,8 @@ export function readProjectIdFromProjectFile(resolver: Resolver, path?: string):
   return matches[1]
 }
 
-export function readVersionFromProjectFile(resolver: Resolver, path?: string): string | undefined {
-  const pathToProjectFile = getPathToProjectFile(path)
-  const contents = resolver.read(pathToProjectFile)
-
+export function readVersionFromProjectFile(resolver: Resolver, path: string): string | undefined {
+  const contents = resolver.read(path)
   const matches = contents.match(/# version: ([a-z0-9]*)/)
 
   if (!matches || matches.length !== 2) {
@@ -56,35 +55,20 @@ export function readVersionFromProjectFile(resolver: Resolver, path?: string): s
   return matches[1]
 }
 
-export function readDataModelFromProjectFile(resolver: Resolver, path?: string): string {
-  const pathToProjectFile =getPathToProjectFile(path)
-  const contents = resolver.read(pathToProjectFile)
+export function readDataModelFromProjectFile(resolver: Resolver, path: string): string {
+  const contents = resolver.read(path)
 
   const dataModelStartIndex = contents.indexOf(`type`)
   const dataModel = contents.substring(dataModelStartIndex, contents.length)
   return dataModel
 }
 
-function getPathToProjectFile(filePath?: string): string {
-  if (!filePath) {
-    return `./${graphcoolProjectFileName}` // default filePath
-  }
 
-  // does the path already point to a project file
-  const projectFileResult = projectFileSuffixes.filter(suffix => filePath.endsWith(suffix))
-  if (projectFileResult.length > 0) {
-    return filePath
-  }
-
-  // the path only points to a directory
-  return path.join(filePath, graphcoolProjectFileName)
-}
-
-function isValidProjectFilePath(projectFilePath?: string): boolean {
+export function isValidProjectFilePath(projectFilePath?: string): boolean {
   if (!projectFilePath) {
     return false
   }
-  return projectFilePath.endsWith('.graphcool')
+  return projectFilePath.endsWith(projectFileSuffix)
 }
 
 export function writeExampleSchemaFile(resolver: Resolver): string {

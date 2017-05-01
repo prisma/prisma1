@@ -1,8 +1,8 @@
-import {SystemEnvironment} from '../types'
-import {readProjectIdFromProjectFile} from '../utils/file'
+import {SystemEnvironment, Resolver} from '../types'
+import {readProjectIdFromProjectFile, isValidProjectFilePath} from '../utils/file'
 import {
   noProjectIdMessage, exportingDataMessage, noProjectFileMessageFound,
-  downloadUrlMessage
+  downloadUrlMessage, invalidProjectFilePathMessage, noProjectFileMessage, multipleProjectFilesMessage
 } from '../utils/constants'
 import {exportProjectData, parseErrors, generateErrorOutput} from '../api/api'
 const debug = require('debug')('graphcool')
@@ -18,15 +18,7 @@ export default async(props: Props, env: SystemEnvironment): Promise<void> => {
   try {
     out.startSpinner(exportingDataMessage)
 
-    let projectId
-    if (props.sourceProjectId) {
-      projectId = props.sourceProjectId
-    } else if (props.projectFile) {
-      projectId = readProjectIdFromProjectFile(resolver, props.projectFile)
-    } else {
-      projectId = readProjectIdFromProjectFile(resolver)
-    }
-
+    const projectId = props.sourceProjectId || getProjectId(props, env)
     if (!projectId) {
       out.writeError(noProjectIdMessage)
       process.exit(0)
@@ -53,4 +45,28 @@ export default async(props: Props, env: SystemEnvironment): Promise<void> => {
 
   }
 
+}
+
+function getProjectId(props: Props, env: SystemEnvironment): string | undefined {
+  const {resolver, out} = env
+
+  // check if provided file is valid (ends with correct suffix)
+  if (props.projectFile  && isValidProjectFilePath(props.projectFile)) {
+    return readProjectIdFromProjectFile(resolver, props.projectFile!)
+  } else if (props.projectFile && !isValidProjectFilePath(props.projectFile)) {
+    out.writeError(invalidProjectFilePathMessage(props.projectFile))
+    process.exit(1)
+  }
+
+  // no project file provided, search for one in current dir
+  const projectFiles = resolver.projectFiles('.')
+  if (projectFiles.length === 0) {
+    out.writeError(noProjectFileMessage)
+    process.exit(1)
+  } else if (projectFiles.length > 1) {
+    out.writeError(multipleProjectFilesMessage(projectFiles))
+    process.exit(1)
+  }
+
+  return readProjectIdFromProjectFile(resolver, projectFiles[0])
 }

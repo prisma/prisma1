@@ -1,4 +1,4 @@
-import { MigrationMessage, ProjectInfo, MigrationErrorMessage, SystemEnvironment, Out } from '../types'
+import {MigrationMessage, ProjectInfo, MigrationErrorMessage, SystemEnvironment, Out, Resolver} from '../types'
 import { pushNewSchema, parseErrors, generateErrorOutput } from '../api/api'
 import figures = require('figures')
 import * as chalk from 'chalk'
@@ -7,30 +7,26 @@ import {
   noProjectFileMessage,
   couldNotMigrateSchemaMessage,
   pushingNewSchemaMessage, noActionRequiredMessage, migrationDryRunMessage, migrationPerformedMessage,
-  migrationErrorMessage, invalidProjectFileMessage
+  migrationErrorMessage, invalidProjectFileMessage, invalidProjectFilePathMessage, multipleProjectFilesMessage
 } from '../utils/constants'
 import {
   writeProjectFile,
-  readProjectInfoFromProjectFile
+  readProjectInfoFromProjectFile, isValidProjectFilePath
 } from '../utils/file'
 
 const debug = require('debug')('graphcool')
 
 interface Props {
   isDryRun: boolean
-  projectFilePath: string
+  projectFilePath?: string
 }
 
 export default async (props: Props, env: SystemEnvironment): Promise<void> => {
 
   const {resolver, out} = env
+  const projectFilePath = getProjectFilePath(props, env)
 
-  if (!resolver.exists(graphcoolProjectFileName) && !resolver.exists(`${props.projectFilePath}/${graphcoolProjectFileName}`)) {
-    out.writeError(noProjectFileMessage)
-    process.exit(1)
-  }
-
-  const projectInfo = readProjectInfoFromProjectFile(resolver, props.projectFilePath)
+  const projectInfo = readProjectInfoFromProjectFile(resolver, projectFilePath)
   if (!projectInfo) {
     out.writeError(invalidProjectFileMessage)
     process.exit(1)
@@ -90,6 +86,30 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
     }
   }
 
+}
+
+function getProjectFilePath(props: Props, env: SystemEnvironment): string {
+  const {resolver, out} = env
+
+  // check if provided file is valid (ends with correct suffix)
+  if (props.projectFilePath && isValidProjectFilePath(props.projectFilePath)) {
+    return props.projectFilePath
+  } else if (props.projectFilePath && !isValidProjectFilePath(props.projectFilePath)) {
+    out.writeError(invalidProjectFilePathMessage(props.projectFilePath))
+    process.exit(1)
+  }
+
+  // no project file provided, search for one in current dir
+  const projectFiles = resolver.projectFiles('.')
+  if (projectFiles.length === 0) {
+    out.writeError(noProjectFileMessage)
+    process.exit(1)
+  } else if (projectFiles.length > 1) {
+    out.writeError(multipleProjectFilesMessage(projectFiles))
+    process.exit(1)
+  }
+
+  return projectFiles[0]
 }
 
 function printMigrationMessages(migrationMessages: MigrationMessage[], indentationLevel: number, out: Out) {
