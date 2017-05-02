@@ -13,9 +13,12 @@ export default async (env: SystemEnvironment): Promise<void> => {
 
   const {out} = env
 
+  const schemaFiles = env.resolver.schemaFiles('.').map(project => `  ${project}`)
+
   const options = [
     `${figures.pointer} Instagram starter kit`,
     `  Blank project`,
+    ...schemaFiles,
   ]
 
   term.saveCursor()
@@ -52,6 +55,15 @@ function handleSelect(selectedIndex: number, env: SystemEnvironment) {
       break
     }
     default: {
+      term.grabInput(false)
+      const schemaFiles = env.resolver.schemaFiles('.')
+      const previousOptions = 2
+      if (selectedIndex > schemaFiles.length + previousOptions) {
+        break
+      }
+      const projectFileIndex = selectedIndex - previousOptions
+      const localSchemaFile = schemaFiles[projectFileIndex]
+      initCommand({localSchemaFile}, env)
       break
     }
   }
@@ -83,6 +95,8 @@ function handleKeyEvent(name: string, currentIndex: number, options: string[], e
       break
     }
     case 'CTRL_C': {
+      term.restoreCursor()
+      term.eraseDisplayBelow()
       term.hideCursor(false)
       process.exit()
     }
