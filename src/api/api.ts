@@ -26,6 +26,12 @@ async function sendGraphQLRequest(queryString: string,
     },
     body: JSON.stringify(payload),
   })
+
+  if (process.env.DEBUG) {
+    const json = await result.json()
+    debug(`Received JSON response: \n${JSON.stringify(json)}`)
+  }
+
   return result
 }
 
