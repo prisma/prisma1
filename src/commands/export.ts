@@ -2,7 +2,8 @@ import {SystemEnvironment, Resolver} from '../types'
 import {readProjectIdFromProjectFile, isValidProjectFilePath} from '../utils/file'
 import {
   noProjectIdMessage, exportingDataMessage, noProjectFileMessageFound,
-  downloadUrlMessage, invalidProjectFilePathMessage, noProjectFileMessage, multipleProjectFilesMessage
+  downloadUrlMessage, invalidProjectFilePathMessage, noProjectFileMessage, multipleProjectFilesMessage,
+  multipleProjectFilesForExportMessage
 } from '../utils/constants'
 import {exportProjectData, parseErrors, generateErrorOutput} from '../api/api'
 const debug = require('debug')('graphcool')
@@ -16,13 +17,14 @@ export default async(props: Props, env: SystemEnvironment): Promise<void> => {
   const {resolver, out} = env
 
   try {
-    out.startSpinner(exportingDataMessage)
 
     const projectId = props.sourceProjectId || getProjectId(props, env)
     if (!projectId) {
       out.writeError(noProjectIdMessage)
       process.exit(0)
     }
+
+    out.startSpinner(exportingDataMessage)
 
     debug(`Export for project Id: ${projectId}`)
     const url = await exportProjectData(projectId!, resolver)
@@ -64,7 +66,7 @@ function getProjectId(props: Props, env: SystemEnvironment): string | undefined 
     out.writeError(noProjectFileMessage)
     process.exit(1)
   } else if (projectFiles.length > 1) {
-    out.writeError(multipleProjectFilesMessage(projectFiles))
+    out.writeError(multipleProjectFilesForExportMessage(projectFiles))
     process.exit(1)
   }
 

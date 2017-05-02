@@ -27,9 +27,9 @@ import TestOut from '../src/system/TestOut'
  Note: This command will create a ${chalk.bold('project.graphcool')} config file in the current directory.
 */
 
-test.afterEach(() => {
-  fetchMock.reset()
-})
+// test.afterEach(() => {
+//   fetchMock.reset()
+// })
 
 /*
  * Test succeeding project creation and verify project info is stored in in ./project2.graphcool
@@ -38,11 +38,23 @@ test('Succeeding project creation with local schema file', async t => {
 
   // configure HTTP mocks
   fetchMock.post(systemAPIEndpoint, JSON.parse(mockedCreateProjectResponse))
+  debug(`Expect resonse: ${JSON.stringify(mockedCreateProjectResponse)}`)
 
+
+  const result = await fetch(systemAPIEndpoint, {
+    method: 'POST',
+    body: JSON.stringify({}),
+  })
+  const json = await result.json()
+
+  debug(`Actual resonse: ${JSON.stringify(json)}`)
+  //
+  //
+  // t.pass()
   // create dummy project data
   const name = 'My Project'
   const schema = simpleTwitterSchema
-  const localSchemaFile = './myproject.schema'
+  const localSchemaFile = './myproject.graphql'
   const props = { name, localSchemaFile }
 
   const storage = {}
@@ -59,30 +71,30 @@ test('Succeeding project creation with local schema file', async t => {
   t.is(readProjectIdFromProjectFile(env.resolver, graphcoolProjectFileName), 'abcdefghijklmn')
 })
 
-test('Succeeding project creation with remote schema file', async t => {
-
-  // configure HTTP mocks
-  fetchMock.post(systemAPIEndpoint, JSON.parse(mockedCreateProjectResponse))
-  const remoteSchemaUrl = 'https://graphqlbin/project.schema'
-  const schema = simpleTwitterSchema
-  fetchMock.get(remoteSchemaUrl, schema)
-
-  // create dummy project data
-  const name = 'MyProject'
-  const props = { name, remoteSchemaUrl }
-
-  const storage = {}
-  storage[graphcoolConfigFilePath] = '{"token": "abcdefgh"}'
-  const env = testEnvironment(storage)
-
-  await t.notThrows(
-    createCommand(props, env)
-  )
-
-  const expectedProjectFileContent = mockProjectFile1
-  t.is(env.resolver.read(graphcoolProjectFileName), expectedProjectFileContent)
-  t.is(readProjectIdFromProjectFile(env.resolver, graphcoolProjectFileName), 'abcdefghijklmn')
-})
+// test('Succeeding project creation with remote schema file', async t => {
+//
+//   // configure HTTP mocks
+//   fetchMock.post(systemAPIEndpoint, JSON.parse(mockedCreateProjectResponse))
+//   const remoteSchemaUrl = 'https://graphqlbin/project.schema'
+//   const schema = simpleTwitterSchema
+//   fetchMock.get(remoteSchemaUrl, schema)
+//
+//   // create dummy project data
+//   const name = 'MyProject'
+//   const props = { name, remoteSchemaUrl }
+//
+//   const storage = {}
+//   storage[graphcoolConfigFilePath] = '{"token": "abcdefgh"}'
+//   const env = testEnvironment(storage)
+//
+//   await t.notThrows(
+//     createCommand(props, env)
+//   )
+//
+//   const expectedProjectFileContent = mockProjectFile1
+//   t.is(env.resolver.read(graphcoolProjectFileName), expectedProjectFileContent)
+//   t.is(readProjectIdFromProjectFile(env.resolver, graphcoolProjectFileName), 'abcdefghijklmn')
+// })
 
 function testEnvironment(storage: any): SystemEnvironment {
   return {

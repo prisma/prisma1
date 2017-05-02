@@ -127,6 +127,12 @@ export const differentProjectIdWarningMessage = (inputProjectId: string, readPro
 The project ID you provided (${inputProjectId}) is different than the one in the current project file (${readProjectId}). 
 This will override the current project file with a different project, do you still want to continue? [y|n]\n`
 
+export const multipleProjectFilesForPullMessage = (projectFiles: string[]) => `\
+Found ${projectFiles.length} project files. You can specify the one you want for which you want to pull the new schema by passing it as an argument.
+For example: '$ graphcool pull -p ${projectFiles[0]}'
+`
+
+
 /*
  * Terminal output: export
  */
@@ -138,6 +144,12 @@ ${chalk.green(figures.tick)}  You can download your project data by pasting this
  
   ${chalk.blue(figures.pointer)} Download URL: ${url}
 \n`
+
+
+export const multipleProjectFilesForExportMessage = (projectFiles: string[]) => `\
+Found ${projectFiles.length} project files. You can specify the one you for which you want to export the data by passing it as an argument.
+For example: '$ graphcool export -p ${projectFiles[0]}'
+`
 
 
 /*

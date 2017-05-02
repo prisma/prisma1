@@ -1,6 +1,5 @@
 import { Resolver, ProjectInfo, MigrationMessage, MigrationErrorMessage, MigrationResult, APIError } from '../types'
 import { graphcoolConfigFilePath, systemAPIEndpoint, contactUsInSlackMessage } from '../utils/constants'
-import * as fetch from 'isomorphic-fetch'
 const debug = require('debug')('graphcool')
 
 async function sendGraphQLRequest(queryString: string,
@@ -15,6 +14,8 @@ async function sendGraphQLRequest(queryString: string,
     query: queryString,
     variables: queryVariables
   }
+
+  debug(`Send request (token: ${token}) with payload: ${JSON.stringify(payload)}`)
 
   const result = await fetch(systemAPIEndpoint, {
     method: 'POST',
@@ -57,8 +58,6 @@ mutation addProject($schema: String!, $name: String!, $alias: String, $region: R
   if (region) {
     variables = {...variables, region}
   }
-
-  debug(`Send variables: ${JSON.stringify(variables)}\n`)
 
   const result = await sendGraphQLRequest(mutation, resolver, variables)
   const json = await result.json()

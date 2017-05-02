@@ -10,7 +10,7 @@ import {
   noProjectIdMessage,
   wroteProjectFileMessage,
   newVersionMessage, differentProjectIdWarningMessage, invalidProjectFilePathMessage, noProjectFileMessage,
-  multipleProjectFilesMessage, graphcoolProjectFileName
+  multipleProjectFilesMessage, graphcoolProjectFileName, multipleProjectFilesForPullMessage
 } from '../utils/constants'
 var term = require( 'terminal-kit' ).terminal
 
@@ -103,7 +103,7 @@ function getProjectFilePath(props: Props, env: SystemEnvironment): string {
     out.writeError(noProjectFileMessage)
     process.exit(1)
   } else if (projectFiles.length > 1) {
-    out.writeError(multipleProjectFilesMessage(projectFiles))
+    out.writeError(multipleProjectFilesForPullMessage(projectFiles))
     process.exit(1)
   }
 
