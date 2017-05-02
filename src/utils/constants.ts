@@ -31,7 +31,7 @@ type User {
  */
 export const openBrowserMessage = `Authenticating using your browser...`
 export const couldNotRetrieveTokenMessage = `\
-${chalk.red(figures.cross)}  Whoops, something went wrong during authentication.\n`
+Whoops, something went wrong during authentication.\n`
 
 export const authenticationSuccessMessage = `${chalk.green(figures.tick)}  Authenticated successfully\n`
 
@@ -47,10 +47,10 @@ ${chalk.green(figures.tick)}  Created project ${chalk.bold(name)} from ${chalk.b
 \n`
 
 export const couldNotCreateProjectMessage = `\
-${chalk.red(figures.cross)}  Whoops, something went wrong while creating the project.\n`
+Whoops, something went wrong while creating the project.\n`
 
 export const projectAlreadyExistsMessage = `\
-${chalk.red(figures.cross)}  ${graphcoolProjectFileName} already exists for the current project. \
+${graphcoolProjectFileName} already exists for the current project. \
 Looks like you've already setup your backend.\n`
 
 export const howDoYouWantToGetStarted = (options: string[]) => `\
@@ -63,17 +63,17 @@ ${options.map(option => `${option}`).join('\n')}`
  * Terminal output: push
  */
 export const noProjectFileMessage = `\
-${chalk.red(figures.cross)}  Please provide a valid project file (${graphcoolProjectFileName}) for the schema migration.\n`
+Please provide a valid project file (${graphcoolProjectFileName}) for the schema migration.\n`
 
 export const invalidProjectFileMessage = `\
-${chalk.red(figures.cross)}  The project file (${graphcoolProjectFileName}) that you provided doesn't seem to be valid. Please make sure it contains the ID of your project.\n`
+The project file (${graphcoolProjectFileName}) that you provided doesn't seem to be valid. Please make sure it contains the ID of your project.\n`
 
 export const pushingNewSchemaMessage = `\
 Migrating the schema in your project...\
 `
 
 export const couldNotMigrateSchemaMessage = `
-${chalk.red(figures.cross)}  An error occured while trying to migrate the project.\n`
+An error occured while trying to migrate the project.\n`
 
 export const noActionRequiredMessage = `\
 ${chalk.green(figures.tick)}  Identical schema, no action required.\n`
@@ -102,7 +102,7 @@ export const projectsMessage = `\
 `
 
 export const couldNotFetchProjectsMessage = `\
-${chalk.red(figures.cross)}  An error occured while trying to fetch your projects.\n`
+An error occured while trying to fetch your projects.\n`
 
 /*
  * Terminal output: pull
@@ -112,10 +112,10 @@ export const fetchingProjectDataMessage = `\
 Fetching project data ...`
 
 export const noProjectFileMessageFound = `\
-${chalk.red(figures.cross)}  There is no project file (project.graphcool) in the current directory.\n`
+There is no project file (project.graphcool) in the current directory.\n`
 
 export const noProjectIdMessage = `\
-${chalk.red(figures.cross)}  Please provide a valid project ID.\n`
+Please provide a valid project ID.\n`
 
 export const wroteProjectFileMessage = `\
 ${chalk.green(figures.tick)}  Your project file was successfully updated.`

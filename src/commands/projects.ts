@@ -33,7 +33,6 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
       drawHorizontalLine: () => false,
     }).trimRight()
 
-    // out.write(outputString)
     out.write(output)
   } catch (e) {
     throw new Error(`${couldNotFetchProjectsMessage} ${e.message}`)

@@ -71,8 +71,6 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
   } catch (e) {
     out.stopSpinner()
 
-    debug(`${JSON.stringify(e)}`)
-
     if (e.errors) {
       const errors = parseErrors(e)
       const output = generateErrorOutput(errors)

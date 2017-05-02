@@ -172,8 +172,16 @@ function defaultEnvironment(): SystemEnvironment {
 }
 
 function onError(e: Error) {
-  console.error(`${chalk.red(figures.cross)}  Error: ${e.message}\n`)
-  console.error(e.stack)
+
+  // prevent the same error output twice
+  const errorMessage = `Error: ${e.message}`
+  if (e.stack && !e.stack.startsWith(errorMessage!)) {
+    console.error(`${chalk.red(figures.cross)}  Error: ${errorMessage}\n`)
+    console.error(e.stack)
+  } else {
+    console.error(`${chalk.red(figures.cross)}  ${e.stack}`)
+  }
+
   console.error(`\n${setDebugMessage}`)
   process.exit(1)
 }
