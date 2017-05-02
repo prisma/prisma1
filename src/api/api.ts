@@ -62,8 +62,6 @@ mutation addProject($schema: String!, $name: String!, $alias: String, $region: R
   const result = await sendGraphQLRequest(mutation, resolver, variables)
   const json = await result.json()
 
-  debug(`Received JSON: ${JSON.stringify(json)}\n`)
-
   if (!json.data.addProject) {
     throw json
   }
@@ -154,8 +152,6 @@ export async function fetchProjects(resolver: Resolver): Promise<[ProjectInfo]> 
   const result = await sendGraphQLRequest(query, resolver)
   const json = await result.json()
 
-  debug(`Received data: ${JSON.stringify(json)}\n`)
-
   const projects = json.data.viewer.user.projects.edges.map(edge => edge.node)
   const projectInfos: [ProjectInfo] = projects.map(p => ({
     projectId: p.id,
@@ -183,12 +179,8 @@ query ($projectId: ID!){
 
   const variables = {projectId}
 
-  debug(`Pull with variables: ${JSON.stringify(variables)}`)
-
   const result = await sendGraphQLRequest(query, resolver, variables)
   const json = await result.json()
-
-  debug(`Received JSON: ${JSON.stringify(json)}`)
 
   if (!json.data.viewer.project) {
     throw json
@@ -228,7 +220,6 @@ mutation ($projectId: String!){
 }
 
 export function parseErrors(response: any): APIError[] {
-  debug(`Parse errors: ${JSON.stringify(response)}`)
   const errors: APIError[] = response.errors.map(error => ({
     message: error.message,
     requestId: error.requestId,

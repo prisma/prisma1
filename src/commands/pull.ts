@@ -56,7 +56,6 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
 
     out.startSpinner(fetchingProjectDataMessage)
     const projectInfo = await pullProjectInfo(projectId!, resolver)
-    debug(`Project Info: \n${JSON.stringify(projectInfo)}`)
 
     out.stopSpinner()
     const outputPath = props.outputPath || projectFile

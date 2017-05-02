@@ -25,7 +25,6 @@ export default async(props: Props, env: SystemEnvironment): Promise<void> => {
 
     out.startSpinner(exportingDataMessage)
 
-    debug(`Export for project Id: ${projectId}`)
     const url = await exportProjectData(projectId!, resolver)
 
     const message = downloadUrlMessage(url)
@@ -34,8 +33,6 @@ export default async(props: Props, env: SystemEnvironment): Promise<void> => {
 
   } catch(e) {
     out.stopSpinner()
-    debug(`Received error: ${JSON.stringify(e)}`)
-
     if (e.errors) {
       const errors = parseErrors(e)
       const output = generateErrorOutput(errors)

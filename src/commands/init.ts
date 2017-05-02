@@ -44,7 +44,6 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
 
     // create project
     const projectInfo = await createProject(name, schema.schema, resolver, props.alias, props.region)
-    debug(`Project info: ${JSON.stringify(projectInfo)}`)
     writeProjectFile(projectInfo, resolver, props.outputPath)
 
     out.stopSpinner()
@@ -54,7 +53,6 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
 
   } catch (e) {
     out.stopSpinner()
-    debug(`Could not create project: ${JSON.stringify(e)}`)
     out.writeError(`${couldNotCreateProjectMessage}`)
 
     if (e.errors) {
@@ -69,9 +67,6 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
 }
 
 async function getSchema(schemaUrl: string | undefined, resolver: Resolver): Promise<SchemaInfo> {
-
-  debug(`Resolving schema: ${schemaUrl}`)
-
   if (schemaUrl) {
     if (schemaUrl.startsWith('http')) {
       const response = await fetch(schemaUrl)
@@ -93,8 +88,6 @@ async function getSchema(schemaUrl: string | undefined, resolver: Resolver): Pro
     }
 
     const file = schemaFiles.find(f => f === graphcoolProjectFileName) || schemaFiles[0]
-    debug(`Schema File: ${file}`)
-
     return {
       schema: fs.readFileSync(path.resolve(file)).toString(),
       source: schemaFiles[0],

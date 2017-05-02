@@ -155,7 +155,6 @@ async function main() {
       break
     }
   }
-
   process.stdout.write('\n')
 }
 

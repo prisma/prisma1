@@ -35,8 +35,6 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
   const {projectId, schema, version} = projectInfo!
   const isDryRun = props.isDryRun
 
-  debug(`Start push for project: ${JSON.stringify(projectInfo!)}`)
-
   out.startSpinner(pushingNewSchemaMessage)
 
   try {
