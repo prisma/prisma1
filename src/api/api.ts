@@ -121,8 +121,6 @@ export async function pushNewSchema(newSchema: string,
   const result = await sendGraphQLRequest(mutation, resolver, variables)
   const json = await result.json()
 
-  debug(`Received json for 'push': ${JSON.stringify(json)}`)
-
   if (!json.data.migrateProject) {
     throw json
   }

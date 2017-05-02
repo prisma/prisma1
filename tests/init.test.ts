@@ -14,25 +14,19 @@ import {readProjectIdFromProjectFile, readVersionFromProjectFile} from '../src/u
 import {SystemEnvironment} from '../src/types'
 import TestOut from '../src/system/TestOut'
 
-/**
- Options:
- -u, --url <schema-url>    Url to a GraphQL schema
- -f, --file <schema-file>  Local GraphQL schema file
- -n, --name <name>         Project name
- -a, --alias <alias>       Project alias
- -r, --region <region>     AWS Region (default: us-west-2)
- -h, --help                Output usage information
-
- Note: This command will create a ${chalk.bold('project.graphcool')} config file in the current directory.
-*/
+/*
+ Tests:
+ - Succeeding project creation with local schema file
+ - Succeeding project creation with remote schema file
+ - Succeeding project creation with local file and different output path
+ - Failing project creation because of invalid output path
+ - Succeeding project creation with alias
+ */
 
 test.afterEach(() => {
   fetchMock.reset()
 })
 
-/*
- * Test succeeding project creation and verify project info is stored in in ./project.graphcool
- */
 test('Succeeding project creation with local schema file', async t => {
 
   // configure HTTP mocks
@@ -55,12 +49,8 @@ test('Succeeding project creation with local schema file', async t => {
   const expectedProjectFileContent = mockProjectFile1
   t.is(env.resolver.read(graphcoolProjectFileName), expectedProjectFileContent)
   t.is(readProjectIdFromProjectFile(env.resolver, graphcoolProjectFileName), 'abcdefghijklmn')
-  t.is(readVersionFromProjectFile(env.resolver, graphcoolProjectFileName), '1')}
-  )
+  t.is(readVersionFromProjectFile(env.resolver, graphcoolProjectFileName), '1')})
 
-/*
- * Test succeeding project creation and verify project info is stored in in ./project.graphcool
- */
 test('Succeeding project creation with remote schema file', async t => {
 
   // configure HTTP mocks
@@ -88,7 +78,7 @@ test('Succeeding project creation with remote schema file', async t => {
   t.is(readVersionFromProjectFile(env.resolver, graphcoolProjectFileName), '1')
 })
 
-test('Succeeding project creation with local file and specify different output path', async t => {
+test('Succeeding project creation with local file and different output path', async t => {
 
   // configure HTTP mocks
   fetchMock.post(systemAPIEndpoint, JSON.parse(mockedCreateProjectResponse))
@@ -114,7 +104,7 @@ test('Succeeding project creation with local file and specify different output p
   t.is(readVersionFromProjectFile(env.resolver, outputPath), '1')
 })
 
-test('Failing project creation because of invalid outp path', async t => {
+test('Failing project creation because of invalid output path', async t => {
 
   // configure HTTP mocks
   fetchMock.post(systemAPIEndpoint, JSON.parse(mockedCreateProjectResponse))

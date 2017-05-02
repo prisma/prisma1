@@ -18,7 +18,7 @@ const debug = require('debug')('graphcool')
 
 interface Props {
   isDryRun: boolean
-  projectFilePath?: string
+  projectFile?: string
 }
 
 export default async (props: Props, env: SystemEnvironment): Promise<void> => {
@@ -34,6 +34,8 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
 
   const {projectId, schema, version} = projectInfo!
   const isDryRun = props.isDryRun
+
+  debug(`Start push for project: ${JSON.stringify(projectInfo!)}`)
 
   out.startSpinner(pushingNewSchemaMessage)
 
@@ -92,10 +94,10 @@ function getProjectFilePath(props: Props, env: SystemEnvironment): string {
   const {resolver, out} = env
 
   // check if provided file is valid (ends with correct suffix)
-  if (props.projectFilePath && isValidProjectFilePath(props.projectFilePath)) {
-    return props.projectFilePath
-  } else if (props.projectFilePath && !isValidProjectFilePath(props.projectFilePath)) {
-    out.writeError(invalidProjectFilePathMessage(props.projectFilePath))
+  if (props.projectFile && isValidProjectFilePath(props.projectFile)) {
+    return props.projectFile
+  } else if (props.projectFile && !isValidProjectFilePath(props.projectFile)) {
+    out.writeError(invalidProjectFilePathMessage(props.projectFile))
     process.exit(1)
   }
 

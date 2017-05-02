@@ -77,8 +77,8 @@ async function main() {
       await checkAuth()
 
       const isDryRun = !!(argv['dry-run'] || argv['d'])
-      const projectFilePath = (argv['project'] || argv['p'])
-      await pushCommand({isDryRun, projectFilePath}, defaultEnvironment())
+      const projectFile = (argv['project'] || argv['p'])
+      await pushCommand({isDryRun, projectFile}, defaultEnvironment())
       break
     }
 
