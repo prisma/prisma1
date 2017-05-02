@@ -16,7 +16,7 @@ import * as chalk from 'chalk'
 import StdOut from './system/StdOut'
 import { GraphcoolAuthServer } from './api/GraphcoolAuthServer'
 import { readGraphcoolConfig } from './utils/file'
-import { graphcoolProjectFileName, setDebugMessage } from './utils/constants'
+import {setDebugMessage, contactUsInSlackMessage} from './utils/constants'
 import {
   usagePull,
   usageProjects,
@@ -187,14 +187,15 @@ function onError(e: Error) {
   const errorMessage = `Error: ${e.message}`
   if (e.stack && !e.stack.startsWith(errorMessage!)) {
     console.error(`${chalk.red(figures.cross)}  Error: ${errorMessage}\n`)
-    if (process.env.DEBUG) {
-      console.error(e.stack)
-    }
+    debug(e.stack)
   } else {
-    console.error(`${chalk.red(figures.cross)}  ${e.stack}`)
+    const errorLines = e.stack!.split('\n')
+    const firstErrorLine = errorLines[0]
+    console.error(`${chalk.red(figures.cross)}  ${firstErrorLine}`)
+    debug(e.stack)
   }
 
-  console.error(`\n${setDebugMessage}`)
+  console.error(`\n${setDebugMessage}\n${contactUsInSlackMessage}`)
   process.exit(1)
 }
 
