@@ -1,23 +1,25 @@
 import test from 'ava'
 import TestResolver from '../src/system/TestResolver'
 import authCommand from '../src/commands/auth'
-import 'isomorphic-fetch'
 import {authEndpoint, graphcoolConfigFilePath, systemAPIEndpoint} from '../src/utils/constants'
 import TestAuthServer from '../src/api/TestAuthServer'
-const fetchMock = require('fetch-mock')
-const debug = require('debug')('graphcool')
 import {testToken} from './mock_data/mockData'
 import {SystemEnvironment} from '../src/types'
 import TestOut from '../src/system/TestOut'
+import 'isomorphic-fetch'
+const fetchMock = require('fetch-mock')
+const debug = require('debug')('graphcool')
+
+/*
+ Tests:
+- Succeeding auth without token
+- Succeeding auth with existing token
+ */
 
 test.afterEach(() => {
   fetchMock.reset()
 })
 
-/*
- * Test succeeding authentication and verify
- * the token is stored in ~/.graphcool
- */
 test('Succeeding auth without token', async t => {
   // configure HTTP mocks
   fetchMock.post(`${authEndpoint}/create`, {})
@@ -35,13 +37,12 @@ test('Succeeding auth without token', async t => {
   })
 
   // configure auth dependencies
-  const props = { token: undefined }
   const env = testEnvironment({})
   const authServer = new TestAuthServer()
 
   // authenticate
   await t.notThrows(
-    authCommand(props, env, authServer)
+    authCommand({}, env, authServer)
   )
 
   // verify result
@@ -49,10 +50,6 @@ test('Succeeding auth without token', async t => {
   t.is(token, testToken)
 })
 
-/*
- * Test succeeding authentication with existing token
- * and verify the correct token is still stored in ~/.graphcool
- */
 test('Succeeding auth with existing token', async t => {
   // configure HTTP mocks
   fetchMock.post(`${systemAPIEndpoint}`, {
@@ -67,7 +64,8 @@ test('Succeeding auth with existing token', async t => {
 
   // configure auth dependencies
   const props = { token: testToken }
-  const env = testEnvironment({ graphcoolConfigFilePath: testToken })
+  const env = testEnvironment({})
+  env.resolver.write(graphcoolConfigFilePath, testToken)
   const authServer = new TestAuthServer()
 
   // authenticate

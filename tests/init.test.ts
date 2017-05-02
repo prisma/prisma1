@@ -1,7 +1,5 @@
 import test from 'ava'
 import TestResolver from '../src/system/TestResolver'
-const fetchMock = require('fetch-mock')
-const debug = require('debug')('graphcool')
 import createCommand from '../src/commands/init'
 import {
   systemAPIEndpoint,
@@ -16,6 +14,8 @@ import 'isomorphic-fetch'
 import {readProjectIdFromProjectFile, readVersionFromProjectFile} from '../src/utils/file'
 import {SystemEnvironment} from '../src/types'
 import TestOut from '../src/system/TestOut'
+const fetchMock = require('fetch-mock')
+const debug = require('debug')('graphcool')
 
 /*
  Tests:

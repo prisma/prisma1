@@ -1,21 +1,17 @@
 import test from 'ava'
 import TestResolver from '../src/system/TestResolver'
-const fetchMock = require('fetch-mock')
-const debug = require('debug')('graphcool')
-import 'isomorphic-fetch'
 import pullCommand from '../src/commands/pull'
 import {systemAPIEndpoint, graphcoolProjectFileName, graphcoolConfigFilePath} from '../src/utils/constants'
 import {
   mockedPullProjectResponse1, mockedPullProjectFile1, mockedPullProjectFile2, mockedPullProjectResponse2,
-  mockedCreateProjectResponseWithAlias, mockedPullProjectFileWithAlias1, mockedPullProjectResponseWithAlias1,
+  mockedPullProjectFileWithAlias1, mockedPullProjectResponseWithAlias1,
   mockedPullProjectResponseWithAlias2, mockedPullProjectFileWithAlias2
 } from './mock_data/mockData'
 import {SystemEnvironment} from '../src/types'
 import TestOut from '../src/system/TestOut'
-
-test.afterEach(() => {
-  fetchMock.restore()
-})
+import 'isomorphic-fetch'
+const fetchMock = require('fetch-mock')
+const debug = require('debug')('graphcool')
 
 /*
  Tests:
@@ -28,6 +24,10 @@ test.afterEach(() => {
 - Pull without project file (defaulting to project.graphcoool) and specify output path
 - Pull without project files but with multiple project files in current directory
  */
+
+test.afterEach(() => {
+  fetchMock.restore()
+})
 
 test('Pull without project file but passing project ID as argument', async t => {
 

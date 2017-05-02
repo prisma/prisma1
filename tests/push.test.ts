@@ -1,20 +1,15 @@
 import test from 'ava'
 import TestResolver from '../src/system/TestResolver'
-const fetchMock = require('fetch-mock')
-const debug = require('debug')('graphcool')
 import 'isomorphic-fetch'
 import pushCommand from '../src/commands/push'
 import {systemAPIEndpoint, graphcoolProjectFileName, graphcoolConfigFilePath} from '../src/utils/constants'
 import {
   mockedPushSchemaResponse, mockProjectFile2, mockProjectFile3,
-  mockedInvalidSessionPushResponse
 } from './mock_data/mockData'
 import {SystemEnvironment} from '../src/types'
 import TestOut from '../src/system/TestOut'
-
-test.afterEach(() => {
-  fetchMock.restore()
-})
+const fetchMock = require('fetch-mock')
+const debug = require('debug')('graphcool')
 
 /*
 Tests:
@@ -23,6 +18,10 @@ Tests:
 - Succeeding schema migration without specified project file (fallback to default)
 - Succeeding schema migration with renamed project file
  */
+
+test.afterEach(() => {
+  fetchMock.restore()
+})
 
 test('Succeeding schema migration with default project file', async t => {
 

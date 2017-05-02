@@ -1,8 +1,5 @@
 import test from 'ava'
 import TestResolver from '../src/system/TestResolver'
-const fetchMock = require('fetch-mock')
-const debug = require('debug')('graphcool')
-import 'isomorphic-fetch'
 import exportCommand from '../src/commands/export'
 import {systemAPIEndpoint, graphcoolProjectFileName, graphcoolConfigFilePath} from '../src/utils/constants'
 import {
@@ -12,10 +9,9 @@ import {SystemEnvironment} from '../src/types'
 import TestOut from '../src/system/TestOut'
 import {mockedExportResponse} from './mock_data/mockData'
 import {mockedPullProjectFile1} from './mock_data/mockData'
-
-test.afterEach(() => {
-  fetchMock.restore()
-})
+import 'isomorphic-fetch'
+const fetchMock = require('fetch-mock')
+const debug = require('debug')('graphcool')
 
 /*
  Tests:
@@ -23,6 +19,10 @@ test.afterEach(() => {
 - Export with project file
 - Export with multiple project files
  */
+
+test.afterEach(() => {
+  fetchMock.restore()
+})
 
 test('Export without project file but passing project ID as argument', async t => {
 
