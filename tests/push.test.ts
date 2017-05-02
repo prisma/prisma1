@@ -13,8 +13,7 @@ import {SystemEnvironment} from '../src/types'
 import TestOut from '../src/system/TestOut'
 
 test.afterEach(() => {
-  debug(`Reset fetchMock!`)
-  fetchMock.reset()
+  fetchMock.restore()
 })
 
 /*

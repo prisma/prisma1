@@ -16,8 +16,6 @@ async function sendGraphQLRequest(queryString: string,
     variables: queryVariables
   }
 
-  debug(`Send request (token: ${token}) with payload: ${JSON.stringify(payload)}`)
-
   const result = await fetch(systemAPIEndpoint, {
     method: 'POST',
     headers: {
@@ -184,25 +182,27 @@ query ($projectId: ID!){
 }`
 
   const variables = {projectId}
+
+  debug(`Pull with variables: ${JSON.stringify(variables)}`)
+
   const result = await sendGraphQLRequest(query, resolver, variables)
   const json = await result.json()
+
+  debug(`Received JSON: ${JSON.stringify(json)}`)
 
   if (!json.data.viewer.project) {
     throw json
   }
-
-  debug(`${JSON.stringify(json)}`)
 
   const projectInfo: ProjectInfo = {
     projectId: json.data.viewer.project.id,
     name: json.data.viewer.project.name,
     schema: json.data.viewer.project.schema,
     alias: json.data.viewer.project.alias,
-    version: json.data.viewer.project.version,
+    version: String(json.data.viewer.project.version),
   }
   return projectInfo
 }
-
 
 export async function exportProjectData(projectId: string, resolver: Resolver): Promise<string> {
 

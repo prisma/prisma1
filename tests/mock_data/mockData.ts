@@ -95,6 +95,114 @@ export const mockedPushSchemaResponse = `\
 }
 `
 
+export const mockedPullResponseSchema = `\
+type File {\\n  contentType: String!\\n  createdAt: DateTime!\\n  id: ID! @isUnique\\n  name: String!\\n  secret: String! @isUnique\\n  size: Int!\\n  updatedAt: DateTime!\\n  url: String! @isUnique\\n}\\n                \\ntype User {\\n  createdAt: DateTime!\\n  id: ID! @isUnique\\n  updatedAt: DateTime!\\n}`
+
+export const mockedPullResponseSchemaWithLineBreaks = `\
+type File {
+  contentType: String!
+  createdAt: DateTime!
+  id: ID! @isUnique
+  name: String!
+  secret: String! @isUnique
+  size: Int!
+  updatedAt: DateTime!
+  url: String! @isUnique
+}
+                
+type User {
+  createdAt: DateTime!
+  id: ID! @isUnique
+  updatedAt: DateTime!
+}`
+
+export const mockedPullProjectResponse1 = `\
+{
+  "data": {
+    "viewer": {
+      "project": {
+        "name": "Solsticeboa Lynx",
+        "alias": null,
+        "version": 1,
+        "id": "cj26898xqm9tz0126n34d64ey",
+        "schema": "${mockedPullResponseSchema}"
+      }
+    }
+  }
+}`
+
+export const mockedPullProjectResponseWithAlias1 = `\
+{
+  "data": {
+    "viewer": {
+      "project": {
+        "name": "Solsticeboa Lynx",
+        "alias": "example",
+        "version": 1,
+        "id": "cj26898xqm9tz0126n34d64ey",
+        "schema": "${mockedPullResponseSchema}"
+      }
+    }
+  }
+}`
+
+export const mockedPullProjectResponse2 = `\
+{
+  "data": {
+    "viewer": {
+      "project": {
+        "name": "Solsticeboa Lynx",
+        "alias": null,
+        "version": 2,
+        "id": "cj26898xqm9tz0126n34d64ey",
+        "schema": "${mockedPullResponseSchema}"
+      }
+    }
+  }
+}`
+
+export const mockedPullProjectResponseWithAlias2 = `\
+{
+  "data": {
+    "viewer": {
+      "project": {
+        "name": "Solsticeboa Lynx",
+        "alias": "example",
+        "version": 2,
+        "id": "cj26898xqm9tz0126n34d64ey",
+        "schema": "${mockedPullResponseSchema}"
+      }
+    }
+  }
+}`
+
+
+export const mockedPullProjectFile1 = `\
+# project: cj26898xqm9tz0126n34d64ey
+# version: 1
+
+${mockedPullResponseSchemaWithLineBreaks}`
+
+export const mockedPullProjectFile2 = `\
+# project: cj26898xqm9tz0126n34d64ey
+# version: 2
+
+${mockedPullResponseSchemaWithLineBreaks}`
+
+
+export const mockedPullProjectFileWithAlias1 = `\
+# project: example
+# version: 1
+
+${mockedPullResponseSchemaWithLineBreaks}`
+
+export const mockedPullProjectFileWithAlias2 = `\
+# project: example
+# version: 2
+
+${mockedPullResponseSchemaWithLineBreaks}`
+
+
 export const mockedCreateProjectResponse = `\
 {
   "data": {
