@@ -7,7 +7,7 @@ import {
 } from '../src/utils/constants'
 import {
   mockedCreateProjectResponse, mockProjectFile1, mockedCreateProjectResponseWithAlias,
-  mockProjectFileWithAlias1
+  mockProjectFileWithAlias1, testSeparator
 } from './mock_data/mockData'
 import {simpleTwitterSchema} from './mock_data/schemas'
 import 'isomorphic-fetch'
@@ -30,14 +30,19 @@ test.afterEach(() => {
   fetchMock.restore()
 })
 
-test('Succeeding project creation with local schema file', async t => {
+const description1 = 'Succeeding project creation with local schema file'
+test(description1, async t => {
+  const name = 'MyProject'
+  const localSchemaFile = './myproject.graphql'
+
+  const command1 = `$ graphcool init -f ${localSchemaFile} -n ${name}`
+  const separator = testSeparator(description1, command1)
+  console.log(separator)
 
   // configure HTTP mocks
   fetchMock.post(systemAPIEndpoint, JSON.parse(mockedCreateProjectResponse))
 
   // create dummy project data
-  const name = 'My Project'
-  const localSchemaFile = './myproject.graphql'
   const props = { name, localSchemaFile }
 
   // prepare environment
@@ -54,17 +59,23 @@ test('Succeeding project creation with local schema file', async t => {
   t.is(readProjectIdFromProjectFile(env.resolver, graphcoolProjectFileName), 'abcdefghijklmn')
   t.is(readVersionFromProjectFile(env.resolver, graphcoolProjectFileName), '1')})
 
-test('Succeeding project creation with remote schema file', async t => {
+
+const description2 = 'Succeeding project creation with remote schema file'
+test(description2, async t => {
+  const name = 'MyProject'
+  const remoteSchemaUrl = 'https://graphqlbin/project.graphql'
+
+  const command2 = `$ graphcool init -u ${remoteSchemaUrl} -n ${name}`
+  const separator = testSeparator(description2, command2)
+  console.log(separator)
 
   // configure HTTP mocks
   fetchMock.post(systemAPIEndpoint, JSON.parse(mockedCreateProjectResponse))
 
-  const remoteSchemaUrl = 'https://graphqlbin/project.graphql'
   const schema = simpleTwitterSchema
   fetchMock.get(remoteSchemaUrl, schema)
 
   // create dummy project data
-  const name = 'MyProject'
   const props = { name, remoteSchemaUrl }
 
   // prepare environment
@@ -81,15 +92,20 @@ test('Succeeding project creation with remote schema file', async t => {
   t.is(readVersionFromProjectFile(env.resolver, graphcoolProjectFileName), '1')
 })
 
-test('Succeeding project creation with local file and different output path', async t => {
+const description3 = 'Succeeding project creation with local file and different output path'
+test(description3, async t => {
+  const name = 'MyProject'
+  const localSchemaFile = './myproject.graphql'
+  const outputPath = '/Desktop/example.graphcool'
+
+  const command3 = `$ graphcool init -f ${localSchemaFile} -n ${name} -o ${outputPath}`
+  const separator = testSeparator(description3, command3)
+  console.log(separator)
 
   // configure HTTP mocks
   fetchMock.post(systemAPIEndpoint, JSON.parse(mockedCreateProjectResponse))
 
   // create dummy project data
-  const name = 'My Project'
-  const localSchemaFile = './myproject.graphql'
-  const outputPath = '/Desktop/example.graphcool'
   const props = { name, localSchemaFile, outputPath }
 
   // prepare environment
@@ -107,15 +123,21 @@ test('Succeeding project creation with local file and different output path', as
   t.is(readVersionFromProjectFile(env.resolver, outputPath), '1')
 })
 
-test('Succeeding project creation because with invalid output path, falls back to default', async t => {
+
+const description4 = 'Succeeding project creation because with invalid output path, falls back to default'
+test(description4, async t => {
+  const name = 'MyProject'
+  const localSchemaFile = './myproject.graphql'
+  const outputPath = '/Desktop/example.graphql'
+
+  const command4 = `$ graphcool init -f ${localSchemaFile} -n ${name} -o ${outputPath}`
+  const separator = testSeparator(description4, command4)
+  console.log(separator)
 
   // configure HTTP mocks
   fetchMock.post(systemAPIEndpoint, JSON.parse(mockedCreateProjectResponse))
 
   // create dummy project data
-  const name = 'My Project'
-  const localSchemaFile = './myproject.graphql'
-  const outputPath = '/Desktop/example.graphql'
   const props = { name, localSchemaFile, outputPath }
 
   // prepare environment
@@ -131,15 +153,21 @@ test('Succeeding project creation because with invalid output path, falls back t
   t.is(env.resolver.read(graphcoolProjectFileName), expectedProjectFileContent)
 })
 
-test('Succeeding project creation with alias', async t => {
+
+const description5 = 'Succeeding project creation with alias'
+test(description5, async t => {
+  const name = 'MyProject'
+  const localSchemaFile = './myproject.graphql'
+  const alias = 'example'
+
+  const command5 = `$ graphcool init -f ${localSchemaFile} -n ${name} -a ${alias}`
+  const separator = testSeparator(description5, command5)
+  console.log(separator)
 
   // configure HTTP mocks
   fetchMock.post(systemAPIEndpoint, JSON.parse(mockedCreateProjectResponseWithAlias))
 
   // create dummy project data
-  const name = 'My Project'
-  const localSchemaFile = './myproject.graphql'
-  const alias = 'example'
   const props = { name, alias, localSchemaFile }
 
   // prepare environment

@@ -10,6 +10,7 @@ import TestOut from '../src/system/TestOut'
 import {mockedExportResponse} from './mock_data/mockData'
 import {mockedPullProjectFile1} from './mock_data/mockData'
 import 'isomorphic-fetch'
+import {testSeparator} from './mock_data/mockData'
 const fetchMock = require('fetch-mock')
 const debug = require('debug')('graphcool')
 
@@ -24,7 +25,13 @@ test.afterEach(() => {
   fetchMock.restore()
 })
 
-test('Export without project file but passing project ID as argument', async t => {
+const description1 = 'Export without project file but passing project ID as argument'
+test(description1, async t => {
+  const sourceProjectId = "cj26898xqm9tz0126n34d64ey"
+
+  const command1 = `$ graphcool export -s ${sourceProjectId}`
+  const separator = testSeparator(description1, command1)
+  console.log(separator)
 
   // configure HTTP mocks
   const mockedResponse = JSON.parse(mockedExportResponse)
@@ -33,7 +40,6 @@ test('Export without project file but passing project ID as argument', async t =
   // dummy export data
   const env = testEnvironment({})
   env.resolver.write(graphcoolConfigFilePath, '{"token": ""}')
-  const sourceProjectId = "cj26898xqm9tz0126n34d64ey"
   const props = { sourceProjectId }
 
   await t.notThrows(
@@ -41,7 +47,13 @@ test('Export without project file but passing project ID as argument', async t =
   )
 })
 
-test('Export with project file', async t => {
+const description2 = 'Export with project file'
+test(description2, async t => {
+  const projectFile = 'example.graphcool'
+
+  const command2 = `$ graphcool export -p ${projectFile}`
+  const separator = testSeparator(description2, command2)
+  console.log(separator)
 
   // configure HTTP mocks
   const mockedResponse = JSON.parse(mockedExportResponse)
@@ -49,7 +61,6 @@ test('Export with project file', async t => {
 
   // dummy export data
   const env = testEnvironment({})
-  const projectFile = 'example.graphcool'
   env.resolver.write(projectFile, mockedPullProjectFile1)
   env.resolver.write(graphcoolConfigFilePath, '{"token": ""}')
   const props = { projectFile }
@@ -59,7 +70,11 @@ test('Export with project file', async t => {
   )
 })
 
-test('Export with multiple project files', async t => {
+const description3 = 'Export with multiple project files'
+test(description3, async t => {
+  const command3 = `$ graphcool export`
+  const separator = testSeparator(description3, command3)
+  console.log(separator)
 
   // configure HTTP mocks
   const mockedResponse = JSON.parse(mockedExportResponse)

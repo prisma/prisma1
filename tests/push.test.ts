@@ -4,7 +4,7 @@ import 'isomorphic-fetch'
 import pushCommand from '../src/commands/push'
 import {systemAPIEndpoint, graphcoolProjectFileName, graphcoolConfigFilePath} from '../src/utils/constants'
 import {
-  mockedPushSchemaResponse, mockProjectFile2, mockProjectFile3,
+  mockedPushSchemaResponse, mockProjectFile2, mockProjectFile3, testSeparator,
 } from './mock_data/mockData'
 import {SystemEnvironment} from '../src/types'
 import TestOut from '../src/system/TestOut'
@@ -23,7 +23,11 @@ test.afterEach(() => {
   fetchMock.restore()
 })
 
-test('Succeeding schema migration with default project file', async t => {
+const description1 = 'Succeeding schema migration with default project file'
+test(description1, async t => {
+  const command1 = `$ graphcool push -p ${graphcoolProjectFileName}`
+  const separator = testSeparator(description1, command1)
+  console.log(separator)
 
   // configure HTTP mocks
   fetchMock.post(systemAPIEndpoint, JSON.parse(mockedPushSchemaResponse))
@@ -44,7 +48,11 @@ test('Succeeding schema migration with default project file', async t => {
   t.is(result, expectedProjectFileContent)
 })
 
-test('Succeeding schema migration as dry run', async t => {
+const description2 = 'Succeeding schema migration as dry run'
+test(description2, async t => {
+  const command2 = `$ graphcool push -p ${graphcoolProjectFileName} -d`
+  const separator = testSeparator(description2, command2)
+  console.log(separator)
 
   // configure HTTP mocks
   fetchMock.post(systemAPIEndpoint, JSON.parse(mockedPushSchemaResponse))
@@ -65,7 +73,11 @@ test('Succeeding schema migration as dry run', async t => {
   t.is(result, expectedProjectFileContent)
 })
 
-test('Succeeding schema migration without specified project file (fallback to default)', async t => {
+const description3 = 'Succeeding schema migration without specified project file (fallback to default)'
+test(description3, async t => {
+  const command3 = `$ graphcool push`
+  const separator = testSeparator(description3, command3)
+  console.log(separator)
 
   // configure HTTP mocks
   fetchMock.post(systemAPIEndpoint, JSON.parse(mockedPushSchemaResponse))
@@ -86,7 +98,11 @@ test('Succeeding schema migration without specified project file (fallback to de
   t.is(result, expectedProjectFileContent)
 })
 
-test('Succeeding schema migration with renamed project file', async t => {
+const description4 = 'Succeeding schema migration with renamed project file'
+test(description4, async t => {
+  const command4 = `$ graphcool push`
+  const separator = testSeparator(description4, command4)
+  console.log(separator)
 
   // configure HTTP mocks
   fetchMock.post(systemAPIEndpoint, JSON.parse(mockedPushSchemaResponse))

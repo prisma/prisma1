@@ -3,7 +3,7 @@ import TestResolver from '../src/system/TestResolver'
 import authCommand from '../src/commands/auth'
 import {authEndpoint, graphcoolConfigFilePath, systemAPIEndpoint} from '../src/utils/constants'
 import TestAuthServer from '../src/api/TestAuthServer'
-import {testToken} from './mock_data/mockData'
+import {testToken, testSeparator} from './mock_data/mockData'
 import {SystemEnvironment} from '../src/types'
 import TestOut from '../src/system/TestOut'
 import 'isomorphic-fetch'
@@ -20,7 +20,12 @@ test.afterEach(() => {
   fetchMock.reset()
 })
 
-test('Succeeding auth without token', async t => {
+const description1 = 'Succeeding auth without token'
+test(description1, async t => {
+  const command1 = '$ graphcool auth'
+  const separator = testSeparator(description1, command1)
+  console.log(separator)
+
   // configure HTTP mocks
   fetchMock.post(`${authEndpoint}/create`, {})
   fetchMock.get(`${authEndpoint}/*`, {
@@ -50,7 +55,12 @@ test('Succeeding auth without token', async t => {
   t.is(token, testToken)
 })
 
-test('Succeeding auth with existing token', async t => {
+const description2 = 'Succeeding auth with existing token'
+test(description2, async t => {
+  const command2 = `$ graphcool auth -t ${testToken}`
+  const separator = testSeparator(description2, command2)
+  console.log(separator)
+
   // configure HTTP mocks
   fetchMock.post(`${systemAPIEndpoint}`, {
     data: {

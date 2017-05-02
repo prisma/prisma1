@@ -1,5 +1,8 @@
 import {modifiedTwitterSchema, simpleTwitterSchemaWithSystemFields} from './schemas'
 
+const separator = '================================================================================'
+export const testSeparator = (description: string, command: string) => `${separator}\n${description}\n${separator}\n${command}\n`
+
 /*
  * Testing
  */
