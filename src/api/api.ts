@@ -16,6 +16,8 @@ async function sendGraphQLRequest(queryString: string,
     variables: queryVariables
   }
 
+  debug(`Send request to ${systemAPIEndpoint}\nPayload: \n${JSON.stringify(payload)}`)
+
   const result = await fetch(systemAPIEndpoint, {
     method: 'POST',
     headers: {
