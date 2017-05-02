@@ -107,6 +107,19 @@ export const mockedCreateProjectResponse = `\
   }
 }`
 
+export const mockedCreateProjectResponseWithAlias = `\
+{
+  "data": {
+    "addProject": {
+      "project": {
+        "id": "abcdefghijklmn",
+        "schema": "type Tweet {\\n  id: ID!\\n  createdAt: DateTime!\\n  updatedAt: DateTime!\\n  text: String!\\n}\\n",
+        "alias": "example"
+      }
+    }
+  }
+}`
+
 export const mockedInvalidSessionPushResponse = `\
 {  
   "data":{  

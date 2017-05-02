@@ -1,5 +1,6 @@
 import { Resolver, ProjectInfo, MigrationMessage, MigrationErrorMessage, MigrationResult, APIError } from '../types'
 import { graphcoolConfigFilePath, systemAPIEndpoint, contactUsInSlackMessage } from '../utils/constants'
+import 'isomorphic-fetch'
 const debug = require('debug')('graphcool')
 
 async function sendGraphQLRequest(queryString: string,
@@ -46,6 +47,7 @@ mutation addProject($schema: String!, $name: String!, $alias: String, $region: R
       project {
         id
         schema
+        alias
       }
     }
   }
@@ -70,8 +72,9 @@ mutation addProject($schema: String!, $name: String!, $alias: String, $region: R
 
   const projectId = json.data.addProject.project.id
   const version = '1' // result.addProject.version
-  const fullSchema = json.data.addProject.project.schema
-  const projectInfo = {projectId, version, schema: fullSchema}
+  schema = json.data.addProject.project.schema
+  alias = json.data.addProject.project.alias
+  const projectInfo = {projectId, version, alias, schema: schema}
 
   return projectInfo
 }

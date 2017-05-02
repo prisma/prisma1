@@ -4,8 +4,8 @@ import generateName = require('sillyname')
 import { createProject, parseErrors, generateErrorOutput } from '../api/api'
 import * as fs from 'fs'
 import * as path from 'path'
-import * as fetch from 'isomorphic-fetch'
 import { writeProjectFile } from '../utils/file'
+import 'isomorphic-fetch'
 import {
   graphcoolProjectFileName,
   creatingProjectMessage,
