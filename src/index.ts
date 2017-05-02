@@ -187,7 +187,9 @@ function onError(e: Error) {
   const errorMessage = `Error: ${e.message}`
   if (e.stack && !e.stack.startsWith(errorMessage!)) {
     console.error(`${chalk.red(figures.cross)}  Error: ${errorMessage}\n`)
-    console.error(e.stack)
+    if (process.env.DEBUG) {
+      console.error(e.stack)
+    }
   } else {
     console.error(`${chalk.red(figures.cross)}  ${e.stack}`)
   }

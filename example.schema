@@ -1,7 +1,0 @@
-type User {
-  id: ID!
-}
-
-# type Tweet {
-#   text: String!
-# }
