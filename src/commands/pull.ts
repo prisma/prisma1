@@ -32,8 +32,7 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
     const currentVersion = readVersionFromProjectFile(resolver, projectFile)
 
     if (!projectId) {
-      out.writeError(noProjectIdMessage)
-      process.exit(1)
+      throw new Error(noProjectIdMessage)
     }
 
     // warn if the current project file is different from specified project id
@@ -93,18 +92,15 @@ function getProjectFilePath(props: Props, env: SystemEnvironment): string {
   if (props.projectFile && isValidProjectFilePath(props.projectFile)) {
     return props.projectFile
   } else if (props.projectFile && !isValidProjectFilePath(props.projectFile)) {
-    out.writeError(invalidProjectFilePathMessage(props.projectFile))
-    process.exit(1)
+    throw new Error(invalidProjectFilePathMessage(props.projectFile))
   }
 
   // no project file provided, search for one in current dir
   const projectFiles = resolver.projectFiles('.')
   if (projectFiles.length === 0) {
-    out.writeError(noProjectFileMessage)
-    process.exit(1)
+    throw new Error(noProjectFileMessage)
   } else if (projectFiles.length > 1) {
-    out.writeError(multipleProjectFilesForPullMessage(projectFiles))
-    process.exit(1)
+    throw new Error(multipleProjectFilesForPullMessage(projectFiles))
   }
 
   return projectFiles[0]

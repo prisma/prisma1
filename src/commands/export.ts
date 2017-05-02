@@ -20,8 +20,7 @@ export default async(props: Props, env: SystemEnvironment): Promise<void> => {
 
     const projectId = props.sourceProjectId || getProjectId(props, env)
     if (!projectId) {
-      out.writeError(noProjectIdMessage)
-      process.exit(0)
+      throw new Error(noProjectIdMessage)
     }
 
     out.startSpinner(exportingDataMessage)
@@ -56,18 +55,15 @@ function getProjectId(props: Props, env: SystemEnvironment): string | undefined 
   if (props.projectFile  && isValidProjectFilePath(props.projectFile)) {
     return readProjectIdFromProjectFile(resolver, props.projectFile!)
   } else if (props.projectFile && !isValidProjectFilePath(props.projectFile)) {
-    out.writeError(invalidProjectFilePathMessage(props.projectFile))
-    process.exit(1)
+    throw new Error(invalidProjectFilePathMessage(props.projectFile))
   }
 
   // no project file provided, search for one in current dir
   const projectFiles = resolver.projectFiles('.')
   if (projectFiles.length === 0) {
-    out.writeError(noProjectFileMessage)
-    process.exit(1)
+    throw new Error(noProjectFileMessage)
   } else if (projectFiles.length > 1) {
-    out.writeError(multipleProjectFilesForExportMessage(projectFiles))
-    process.exit(1)
+    throw new Error(multipleProjectFilesForExportMessage(projectFiles))
   }
 
   return readProjectIdFromProjectFile(resolver, projectFiles[0])

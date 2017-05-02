@@ -29,8 +29,7 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
   const {resolver, out} = env
 
   if (resolver.exists(graphcoolProjectFileName) && resolver.read(graphcoolProjectFileName).toString().includes('# project:')) {
-    out.writeError(projectAlreadyExistsMessage)
-    process.exit(1)
+    throw new Error(projectAlreadyExistsMessage)
   }
 
   const name = props.name || generateName()
