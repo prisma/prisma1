@@ -24,7 +24,7 @@ import TestOut from '../src/system/TestOut'
  */
 
 test.afterEach(() => {
-  fetchMock.reset()
+  fetchMock.restore()
 })
 
 test('Succeeding project creation with local schema file', async t => {

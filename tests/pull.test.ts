@@ -193,7 +193,6 @@ test('Pull without project file (defaulting to project.graphcoool) and specify o
 
 test('Pull without project files but with multiple project files in current directory', async t => {
 
-  // dummy pull data
   const projectFile1 = 'example.graphcool'
   const projectFile2 = graphcoolProjectFileName
   const env = testEnvironment({})

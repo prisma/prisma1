@@ -18,13 +18,13 @@ test.afterEach(() => {
 
 /*
 Tests:
-- Succeeding schema migration with project.graphcool as project file
+- Succeeding schema migration with default project file
 - Succeeding schema migration as dry run
-- Succeeding schema migration without argument for project file (fallback to default)
+- Succeeding schema migration without specified project file (fallback to default)
 - Succeeding schema migration with renamed project file
  */
 
-test('Succeeding schema migration with project.graphcool as project file', async t => {
+test('Succeeding schema migration with default project file', async t => {
 
   // configure HTTP mocks
   fetchMock.post(systemAPIEndpoint, JSON.parse(mockedPushSchemaResponse))
@@ -66,7 +66,7 @@ test('Succeeding schema migration as dry run', async t => {
   t.is(result, expectedProjectFileContent)
 })
 
-test('Succeeding schema migration without argument for project file (fallback to default)', async t => {
+test('Succeeding schema migration without specified project file (fallback to default)', async t => {
 
   // configure HTTP mocks
   fetchMock.post(systemAPIEndpoint, JSON.parse(mockedPushSchemaResponse))
