@@ -5,9 +5,7 @@ import {
   exampleSchema,
   projectFileSuffix
 } from './constants'
-import * as path from 'path'
 const debug = require('debug')('graphcool')
-import * as fs from 'fs'
 
 /*
  * Project File (.../project.graphcool)
@@ -15,7 +13,7 @@ import * as fs from 'fs'
 
 export function writeProjectFile(projectInfo: ProjectInfo, resolver: Resolver, path?: string) {
   path = isValidProjectFilePath(path) ? path : graphcoolProjectFileName
-  const schemaWithHeader = `# project: ${projectInfo.projectId}\n# version: ${projectInfo.version || ''}\n\n${projectInfo.schema}`
+  const schemaWithHeader = `# project: ${projectInfo.alias || projectInfo.projectId}\n# version: ${projectInfo.version || ''}\n\n${projectInfo.schema}`
   resolver.write(path!, schemaWithHeader)
 }
 
@@ -38,7 +36,6 @@ export function readProjectIdFromProjectFile(resolver: Resolver, path: string): 
 
   if (!matches || matches.length !== 2) {
     return undefined
-    // throw new Error(`${pathToProjectFile} doesn't contain a project ID.`)
   }
 
   return matches[1]

@@ -1,6 +1,6 @@
 import { Resolver, ProjectInfo, MigrationMessage, MigrationErrorMessage, MigrationResult, APIError } from '../types'
 import { graphcoolConfigFilePath, systemAPIEndpoint, contactUsInSlackMessage } from '../utils/constants'
-import * as fetch from 'isomorphic-fetch'
+import 'isomorphic-fetch'
 const debug = require('debug')('graphcool')
 
 async function sendGraphQLRequest(queryString: string,
@@ -45,6 +45,7 @@ mutation addProject($schema: String!, $name: String!, $alias: String, $region: R
       project {
         id
         schema
+        alias
       }
     }
   }
@@ -58,8 +59,6 @@ mutation addProject($schema: String!, $name: String!, $alias: String, $region: R
     variables = {...variables, region}
   }
 
-  debug(`Send variables: ${JSON.stringify(variables)}\n`)
-
   const result = await sendGraphQLRequest(mutation, resolver, variables)
   const json = await result.json()
 
@@ -71,8 +70,9 @@ mutation addProject($schema: String!, $name: String!, $alias: String, $region: R
 
   const projectId = json.data.addProject.project.id
   const version = '1' // result.addProject.version
-  const fullSchema = json.data.addProject.project.schema
-  const projectInfo = {projectId, version, schema: fullSchema}
+  schema = json.data.addProject.project.schema
+  alias = json.data.addProject.project.alias
+  const projectInfo = {projectId, version, alias, schema: schema}
 
   return projectInfo
 }
@@ -118,8 +118,6 @@ export async function pushNewSchema(newSchema: string,
 
   const result = await sendGraphQLRequest(mutation, resolver, variables)
   const json = await result.json()
-
-  debug(`Received json for 'push': ${JSON.stringify(json)}`)
 
   if (!json.data.migrateProject) {
     throw json
@@ -184,25 +182,27 @@ query ($projectId: ID!){
 }`
 
   const variables = {projectId}
+
+  debug(`Pull with variables: ${JSON.stringify(variables)}`)
+
   const result = await sendGraphQLRequest(query, resolver, variables)
   const json = await result.json()
+
+  debug(`Received JSON: ${JSON.stringify(json)}`)
 
   if (!json.data.viewer.project) {
     throw json
   }
-
-  debug(`${JSON.stringify(json)}`)
 
   const projectInfo: ProjectInfo = {
     projectId: json.data.viewer.project.id,
     name: json.data.viewer.project.name,
     schema: json.data.viewer.project.schema,
     alias: json.data.viewer.project.alias,
-    version: json.data.viewer.project.version,
+    version: String(json.data.viewer.project.version),
   }
   return projectInfo
 }
-
 
 export async function exportProjectData(projectId: string, resolver: Resolver): Promise<string> {
 

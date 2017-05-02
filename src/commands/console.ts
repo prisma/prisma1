@@ -15,8 +15,7 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
   const currentProjectId = readProjectIdFromProjectFile(resolver, graphcoolConfigFilePath)
 
   if (!currentProjectId) {
-    out.writeError(noProjectFileMessageFound)
-    process.exit(1)
+    throw new Error(noProjectFileMessageFound)
   }
 
   await pullProjectInfo(currentProjectId!, resolver)

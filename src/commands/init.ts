@@ -4,8 +4,8 @@ import generateName = require('sillyname')
 import { createProject, parseErrors, generateErrorOutput } from '../api/api'
 import * as fs from 'fs'
 import * as path from 'path'
-import * as fetch from 'isomorphic-fetch'
 import { writeProjectFile } from '../utils/file'
+import 'isomorphic-fetch'
 import {
   graphcoolProjectFileName,
   creatingProjectMessage,
@@ -29,12 +29,10 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
   const {resolver, out} = env
 
   if (resolver.exists(graphcoolProjectFileName) && resolver.read(graphcoolProjectFileName).toString().includes('# project:')) {
-    out.writeError(projectAlreadyExistsMessage)
-    process.exit(1)
+    throw new Error(projectAlreadyExistsMessage)
   }
 
   const name = props.name || generateName()
-  debug(`Create project: ${name}`)
 
   out.startSpinner(creatingProjectMessage(name))
 

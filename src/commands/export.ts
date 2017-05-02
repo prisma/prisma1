@@ -2,7 +2,8 @@ import {SystemEnvironment, Resolver} from '../types'
 import {readProjectIdFromProjectFile, isValidProjectFilePath} from '../utils/file'
 import {
   noProjectIdMessage, exportingDataMessage, noProjectFileMessageFound,
-  downloadUrlMessage, invalidProjectFilePathMessage, noProjectFileMessage, multipleProjectFilesMessage
+  downloadUrlMessage, invalidProjectFilePathMessage, noProjectFileMessage, multipleProjectFilesMessage,
+  multipleProjectFilesForExportMessage
 } from '../utils/constants'
 import {exportProjectData, parseErrors, generateErrorOutput} from '../api/api'
 const debug = require('debug')('graphcool')
@@ -16,13 +17,13 @@ export default async(props: Props, env: SystemEnvironment): Promise<void> => {
   const {resolver, out} = env
 
   try {
-    out.startSpinner(exportingDataMessage)
 
     const projectId = props.sourceProjectId || getProjectId(props, env)
     if (!projectId) {
-      out.writeError(noProjectIdMessage)
-      process.exit(0)
+      throw new Error(noProjectIdMessage)
     }
+
+    out.startSpinner(exportingDataMessage)
 
     debug(`Export for project Id: ${projectId}`)
     const url = await exportProjectData(projectId!, resolver)
@@ -54,18 +55,15 @@ function getProjectId(props: Props, env: SystemEnvironment): string | undefined 
   if (props.projectFile  && isValidProjectFilePath(props.projectFile)) {
     return readProjectIdFromProjectFile(resolver, props.projectFile!)
   } else if (props.projectFile && !isValidProjectFilePath(props.projectFile)) {
-    out.writeError(invalidProjectFilePathMessage(props.projectFile))
-    process.exit(1)
+    throw new Error(invalidProjectFilePathMessage(props.projectFile))
   }
 
   // no project file provided, search for one in current dir
   const projectFiles = resolver.projectFiles('.')
   if (projectFiles.length === 0) {
-    out.writeError(noProjectFileMessage)
-    process.exit(1)
+    throw new Error(noProjectFileMessage)
   } else if (projectFiles.length > 1) {
-    out.writeError(multipleProjectFilesMessage(projectFiles))
-    process.exit(1)
+    throw new Error(multipleProjectFilesForExportMessage(projectFiles))
   }
 
   return readProjectIdFromProjectFile(resolver, projectFiles[0])

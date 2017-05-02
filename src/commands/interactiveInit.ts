@@ -19,9 +19,12 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
 
   const {out} = env
 
+  const schemaFiles = env.resolver.schemaFiles('.').map(project => `  ${project}`)
+
   const options = [
-    `  ${figures.pointer} Instagram starter kit`,
-    `    Blank project`,
+    `${figures.pointer} Instagram starter kit`,
+    `  Blank project`,
+    ...schemaFiles,
   ]
 
   term.saveCursor()
@@ -63,6 +66,15 @@ async function handleSelect(selectedIndex: number, checkAuth: CheckAuth, env: Sy
       break
     }
     default: {
+      term.grabInput(false)
+      const schemaFiles = env.resolver.schemaFiles('.')
+      const previousOptions = 2
+      if (selectedIndex > schemaFiles.length + previousOptions) {
+        break
+      }
+      const projectFileIndex = selectedIndex - previousOptions
+      const localSchemaFile = schemaFiles[projectFileIndex]
+      initCommand({localSchemaFile}, env)
       break
     }
   }
@@ -94,6 +106,8 @@ function handleKeyEvent(name: string, currentIndex: number, options: string[], c
       break
     }
     case 'CTRL_C': {
+      term.restoreCursor()
+      term.eraseDisplayBelow()
       term.hideCursor(false)
       term.eraseDisplayBelow()
       env.out.write('\n')

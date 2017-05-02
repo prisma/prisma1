@@ -18,7 +18,7 @@ const debug = require('debug')('graphcool')
 
 interface Props {
   isDryRun: boolean
-  projectFilePath?: string
+  projectFile?: string
 }
 
 export default async (props: Props, env: SystemEnvironment): Promise<void> => {
@@ -28,12 +28,14 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
 
   const projectInfo = readProjectInfoFromProjectFile(resolver, projectFilePath)
   if (!projectInfo) {
-    out.writeError(invalidProjectFileMessage)
-    process.exit(1)
+    throw new Error(invalidProjectFileMessage)
+
   }
 
   const {projectId, schema, version} = projectInfo!
   const isDryRun = props.isDryRun
+
+  debug(`Start push for project: ${JSON.stringify(projectInfo!)}`)
 
   out.startSpinner(pushingNewSchemaMessage)
 
@@ -46,7 +48,7 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
     // no action required
     if (migrationResult.messages.length === 0 && migrationResult.errors.length === 0) {
       out.write(noActionRequiredMessage)
-      process.exit(0)
+      return
     }
 
     // migration successful
@@ -92,21 +94,18 @@ function getProjectFilePath(props: Props, env: SystemEnvironment): string {
   const {resolver, out} = env
 
   // check if provided file is valid (ends with correct suffix)
-  if (props.projectFilePath && isValidProjectFilePath(props.projectFilePath)) {
-    return props.projectFilePath
-  } else if (props.projectFilePath && !isValidProjectFilePath(props.projectFilePath)) {
-    out.writeError(invalidProjectFilePathMessage(props.projectFilePath))
-    process.exit(1)
+  if (props.projectFile && isValidProjectFilePath(props.projectFile)) {
+    return props.projectFile
+  } else if (props.projectFile && !isValidProjectFilePath(props.projectFile)) {
+    throw new Error(invalidProjectFilePathMessage(props.projectFile))
   }
 
   // no project file provided, search for one in current dir
   const projectFiles = resolver.projectFiles('.')
   if (projectFiles.length === 0) {
-    out.writeError(noProjectFileMessage)
-    process.exit(1)
+    throw new Error(noProjectFileMessage)
   } else if (projectFiles.length > 1) {
-    out.writeError(multipleProjectFilesMessage(projectFiles))
-    process.exit(1)
+    throw new Error(multipleProjectFilesMessage(projectFiles))
   }
 
   return projectFiles[0]

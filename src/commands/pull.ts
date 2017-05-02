@@ -10,7 +10,7 @@ import {
   noProjectIdMessage,
   wroteProjectFileMessage,
   newVersionMessage, differentProjectIdWarningMessage, invalidProjectFilePathMessage, noProjectFileMessage,
-  multipleProjectFilesMessage, graphcoolProjectFileName
+  graphcoolProjectFileName, multipleProjectFilesForPullMessage
 } from '../utils/constants'
 var term = require( 'terminal-kit' ).terminal
 
@@ -28,29 +28,30 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
   try {
 
     const projectId = getProjectId(props, env)
-    const projectFile = props.projectFile || graphcoolProjectFileName
-    const currentVersion = readVersionFromProjectFile(resolver, projectFile)
+    const projectFile: string = props.projectFile || graphcoolProjectFileName
+    const currentVersion = getCurrentVersion(projectFile, resolver)
 
     if (!projectId) {
-      out.writeError(noProjectIdMessage)
-      process.exit(1)
+      throw new Error(noProjectIdMessage)
     }
 
     // warn if the current project file is different from specified project id
-    const readProjectId = readProjectIdFromProjectFile(resolver, graphcoolProjectFileName)
-    if (readProjectId && projectId !== readProjectId) {
-      out.write(differentProjectIdWarningMessage(projectId!, readProjectId))
-      term.grabInput(true)
+    if (resolver.exists(graphcoolProjectFileName)) {
+      const readProjectId = readProjectIdFromProjectFile(resolver, graphcoolProjectFileName)
+      if (readProjectId && projectId !== readProjectId) {
+        out.write(differentProjectIdWarningMessage(projectId!, readProjectId))
+        term.grabInput(true)
 
-      await new Promise(resolve => {
-        term.on('key' , function(name) {
-          if (name !== 'y') {
-            process.exit(0)
-          }
-          term.grabInput(false)
-          resolve()
+        await new Promise(resolve => {
+          term.on('key' , function(name) {
+            if (name !== 'y') {
+              process.exit(0)
+            }
+            term.grabInput(false)
+            resolve()
+          })
         })
-      })
+      }
     }
 
     out.startSpinner(fetchingProjectDataMessage)
@@ -58,7 +59,8 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
     debug(`Project Info: \n${JSON.stringify(projectInfo)}`)
 
     out.stopSpinner()
-    writeProjectFile(projectInfo, resolver, props.outputPath)
+    const outputPath = props.outputPath || projectFile
+    writeProjectFile(projectInfo, resolver, outputPath)
 
     out.write(wroteProjectFileMessage)
     if (projectInfo.version && currentVersion) {
@@ -71,8 +73,6 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
 
   } catch (e) {
     out.stopSpinner()
-
-    debug(`${JSON.stringify(e)}`)
 
     if (e.errors) {
       const errors = parseErrors(e)
@@ -93,18 +93,15 @@ function getProjectFilePath(props: Props, env: SystemEnvironment): string {
   if (props.projectFile && isValidProjectFilePath(props.projectFile)) {
     return props.projectFile
   } else if (props.projectFile && !isValidProjectFilePath(props.projectFile)) {
-    out.writeError(invalidProjectFilePathMessage(props.projectFile))
-    process.exit(1)
+    throw new Error(invalidProjectFilePathMessage(props.projectFile))
   }
 
   // no project file provided, search for one in current dir
   const projectFiles = resolver.projectFiles('.')
   if (projectFiles.length === 0) {
-    out.writeError(noProjectFileMessage)
-    process.exit(1)
+    throw new Error(noProjectFileMessage)
   } else if (projectFiles.length > 1) {
-    out.writeError(multipleProjectFilesMessage(projectFiles))
-    process.exit(1)
+    throw new Error(multipleProjectFilesForPullMessage(projectFiles))
   }
 
   return projectFiles[0]
@@ -117,6 +114,13 @@ function getProjectId(props: Props, env: SystemEnvironment): string | undefined 
 
   const projectFile = getProjectFilePath(props, env)
   return readProjectIdFromProjectFile(env.resolver, projectFile)
+}
+
+function getCurrentVersion(path: string, resolver: Resolver): string | undefined {
+  if (resolver.exists(path)) {
+    return readVersionFromProjectFile(resolver, path)
+  }
+  return undefined
 }
 
 

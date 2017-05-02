@@ -23,6 +23,7 @@ export interface Resolver {
   delete(path: string)
   exists(path: string): boolean
   projectFiles(directory?: string): string[]
+  schemaFiles(directory?: string): string[]
   readDirectory(path: string): string[]
 }
 
