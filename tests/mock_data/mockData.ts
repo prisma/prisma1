@@ -12,11 +12,25 @@ export const mockProjectFile1 = `\
 ${simpleTwitterSchemaWithSystemFields}
 `
 
+export const mockProjectFileWithAlias1 = `\
+# project: example
+# version: 1
+
+${simpleTwitterSchemaWithSystemFields}
+`
+
 export const mockProjectFile2 = `\
 # project: abcdefghijklmn
 # version: 2
 
 ${modifiedTwitterSchema}
+`
+
+export const mockProjectFileWithAlias2 = `\
+# project: example
+# version: 2
+
+${simpleTwitterSchemaWithSystemFields}
 `
 
 export const mockProjectFile3 = `\
@@ -250,3 +264,15 @@ export const mockedInvalidSessionPushResponse = `\
     }
   ]
 }`
+
+export const mockedExportLink = `https://s3-eu-west-1.amazonaws.com/graphcool-backend-system-prod-1-data-export/cj27oenv2h2i40115qa7hsigm.zip`
+
+export const mockedExportResponse = `\
+{
+  "data": {
+    "exportData": {
+      "url": "${mockedExportLink}"
+    }
+  }
+}`
+

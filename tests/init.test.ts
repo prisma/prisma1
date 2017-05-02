@@ -7,7 +7,10 @@ import {
   systemAPIEndpoint,
   graphcoolProjectFileName, graphcoolConfigFilePath
 } from '../src/utils/constants'
-import {mockedCreateProjectResponse, mockProjectFile1, mockedCreateProjectResponseWithAlias} from './mock_data/mockData'
+import {
+  mockedCreateProjectResponse, mockProjectFile1, mockedCreateProjectResponseWithAlias,
+  mockProjectFileWithAlias1
+} from './mock_data/mockData'
 import {simpleTwitterSchema} from './mock_data/schemas'
 import 'isomorphic-fetch'
 import {readProjectIdFromProjectFile, readVersionFromProjectFile} from '../src/utils/file'
@@ -19,7 +22,7 @@ import TestOut from '../src/system/TestOut'
  - Succeeding project creation with local schema file
  - Succeeding project creation with remote schema file
  - Succeeding project creation with local file and different output path
- - Failing project creation because of invalid output path
+ - Succeeding project creation because with invalid output path, falls back to default
  - Succeeding project creation with alias
  */
 
@@ -104,7 +107,7 @@ test('Succeeding project creation with local file and different output path', as
   t.is(readVersionFromProjectFile(env.resolver, outputPath), '1')
 })
 
-test('Failing project creation because of invalid output path', async t => {
+test('Succeeding project creation because with invalid output path, falls back to default', async t => {
 
   // configure HTTP mocks
   fetchMock.post(systemAPIEndpoint, JSON.parse(mockedCreateProjectResponse))
@@ -124,8 +127,8 @@ test('Failing project creation because of invalid output path', async t => {
     createCommand(props, env)
   )
 
-  const expectedProjectFileContent = undefined
-  t.is(env.resolver.read(outputPath), expectedProjectFileContent)
+  const expectedProjectFileContent = mockProjectFile1
+  t.is(env.resolver.read(graphcoolProjectFileName), expectedProjectFileContent)
 })
 
 test('Succeeding project creation with alias', async t => {
@@ -148,9 +151,9 @@ test('Succeeding project creation with alias', async t => {
     createCommand(props, env)
   )
 
-  const expectedProjectFileContent = mockProjectFile1
+  const expectedProjectFileContent = mockProjectFileWithAlias1
   t.is(env.resolver.read(graphcoolProjectFileName), expectedProjectFileContent)
-  t.is(readProjectIdFromProjectFile(env.resolver, graphcoolProjectFileName), 'abcdefghijklmn')
+  t.is(readProjectIdFromProjectFile(env.resolver, graphcoolProjectFileName), alias)
   t.is(readVersionFromProjectFile(env.resolver, graphcoolProjectFileName), '1')
 })
 

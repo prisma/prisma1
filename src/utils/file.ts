@@ -36,7 +36,6 @@ export function readProjectIdFromProjectFile(resolver: Resolver, path: string): 
 
   if (!matches || matches.length !== 2) {
     return undefined
-    // throw new Error(`${pathToProjectFile} doesn't contain a project ID.`)
   }
 
   return matches[1]

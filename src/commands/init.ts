@@ -33,7 +33,6 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
   }
 
   const name = props.name || generateName()
-  debug(`Create project: ${name}`)
 
   out.startSpinner(creatingProjectMessage(name))
 

@@ -10,7 +10,7 @@ import {
   noProjectIdMessage,
   wroteProjectFileMessage,
   newVersionMessage, differentProjectIdWarningMessage, invalidProjectFilePathMessage, noProjectFileMessage,
-  multipleProjectFilesMessage, graphcoolProjectFileName, multipleProjectFilesForPullMessage
+  graphcoolProjectFileName, multipleProjectFilesForPullMessage
 } from '../utils/constants'
 var term = require( 'terminal-kit' ).terminal
 
