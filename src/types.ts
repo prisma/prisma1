@@ -1,3 +1,4 @@
+import TestOut from './system/TestOut'
 export type Command =
   'auth'
   | 'push'
@@ -76,6 +77,11 @@ export interface Out {
 
 export interface SystemEnvironment {
   out: Out
+  resolver: Resolver
+}
+
+export interface TestSystemEnvironment {
+  out: TestOut
   resolver: Resolver
 }
 

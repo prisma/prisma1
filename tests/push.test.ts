@@ -6,7 +6,7 @@ import {systemAPIEndpoint, graphcoolProjectFileName, graphcoolConfigFilePath} fr
 import {
   mockedPushSchemaResponse, mockProjectFile2, mockProjectFile3, testSeparator,
 } from './mock_data/mockData'
-import {SystemEnvironment} from '../src/types'
+import { SystemEnvironment, TestSystemEnvironment } from '../src/types'
 import TestOut from '../src/system/TestOut'
 const fetchMock = require('fetch-mock')
 const debug = require('debug')('graphcool')
@@ -23,12 +23,7 @@ test.afterEach(() => {
   fetchMock.restore()
 })
 
-const description1 = 'Succeeding schema migration with default project file'
-test(description1, async t => {
-  const command1 = `$ graphcool push -p ${graphcoolProjectFileName}`
-  const separator = testSeparator(description1, command1)
-  console.log(separator)
-
+test('Succeeding schema migration with default project file', async t => {
   // configure HTTP mocks
   fetchMock.post(systemAPIEndpoint, JSON.parse(mockedPushSchemaResponse))
 
@@ -37,6 +32,8 @@ test(description1, async t => {
   env.resolver.write(graphcoolProjectFileName, mockProjectFile2)
   env.resolver.write(graphcoolConfigFilePath, '{"token": ""}')
   const props = { isDryRun: false , projectFilePath: graphcoolProjectFileName}
+
+  env.out.prefix((t as any)._test.title, `$ graphcool push -p ${graphcoolProjectFileName}`)
 
   await t.notThrows(
     pushCommand(props, env)
@@ -48,12 +45,7 @@ test(description1, async t => {
   t.is(result, expectedProjectFileContent)
 })
 
-const description2 = 'Succeeding schema migration as dry run'
-test(description2, async t => {
-  const command2 = `$ graphcool push -p ${graphcoolProjectFileName} -d`
-  const separator = testSeparator(description2, command2)
-  console.log(separator)
-
+test('Succeeding schema migration as dry run', async t => {
   // configure HTTP mocks
   fetchMock.post(systemAPIEndpoint, JSON.parse(mockedPushSchemaResponse))
 
@@ -62,6 +54,8 @@ test(description2, async t => {
   env.resolver.write(graphcoolProjectFileName, mockProjectFile2)
   env.resolver.write(graphcoolConfigFilePath, '{"token": ""}')
   const props = { isDryRun: true , projectFile: graphcoolProjectFileName}
+
+  env.out.prefix((t as any)._test.title, `$ graphcool push -p ${graphcoolProjectFileName} -d`)
 
   await t.notThrows(
     pushCommand(props, env)
@@ -73,12 +67,7 @@ test(description2, async t => {
   t.is(result, expectedProjectFileContent)
 })
 
-const description3 = 'Succeeding schema migration without specified project file (fallback to default)'
-test(description3, async t => {
-  const command3 = `$ graphcool push`
-  const separator = testSeparator(description3, command3)
-  console.log(separator)
-
+test('Succeeding schema migration without specified project file (fallback to default)', async t => {
   // configure HTTP mocks
   fetchMock.post(systemAPIEndpoint, JSON.parse(mockedPushSchemaResponse))
 
@@ -87,6 +76,8 @@ test(description3, async t => {
   env.resolver.write(graphcoolProjectFileName, mockProjectFile2)
   env.resolver.write(graphcoolConfigFilePath, '{"token": ""}')
   const props = { isDryRun: false }
+
+  env.out.prefix((t as any)._test.title, `$ graphcool push`)
 
   await t.notThrows(
     pushCommand(props, env)
@@ -98,12 +89,7 @@ test(description3, async t => {
   t.is(result, expectedProjectFileContent)
 })
 
-const description4 = 'Succeeding schema migration with renamed project file'
-test(description4, async t => {
-  const command4 = `$ graphcool push`
-  const separator = testSeparator(description4, command4)
-  console.log(separator)
-
+test('Succeeding schema migration with renamed project file', async t => {
   // configure HTTP mocks
   fetchMock.post(systemAPIEndpoint, JSON.parse(mockedPushSchemaResponse))
 
@@ -113,6 +99,8 @@ test(description4, async t => {
   env.resolver.write(projectFile, mockProjectFile2)
   env.resolver.write(graphcoolConfigFilePath, '{"token": ""}')
   const props = { isDryRun: false }
+
+  env.out.prefix((t as any)._test.title, `$ graphcool push`)
 
   await t.notThrows(
     pushCommand(props, env)
@@ -124,11 +112,9 @@ test(description4, async t => {
   t.is(result, expectedProjectFileContent)
 })
 
-
-
-function testEnvironment(storage: any): SystemEnvironment {
+function testEnvironment(storage: any): TestSystemEnvironment {
   return {
     resolver: new TestResolver(storage),
-    out: new TestOut()
+    out: new TestOut(),
   }
 }

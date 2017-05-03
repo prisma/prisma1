@@ -1,19 +1,25 @@
-import {Out} from '../types'
+import { Out } from '../types'
+import * as fs from 'fs'
 
 export default class TestOut implements Out {
 
   write(message: string): void {
-    console.log(message)
+    fs.appendFileSync('test.out', message)
   }
 
   writeError(message: string): void {
-    console.error(message)
+    fs.appendFileSync('test.out', message)
   }
 
-  startSpinner(message: string) {
+  startSpinner(message: string): void {
   }
 
-  stopSpinner() {
+  stopSpinner(): void {
+  }
+
+  prefix(description: string, command: string): void {
+    const separator = '================================================================================'
+    fs.appendFileSync('test.out', `\n${separator}\n${description}\n${separator}\n${command}\n`)
   }
 
 }

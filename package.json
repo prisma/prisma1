@@ -7,7 +7,7 @@
     "dist/"
   ],
   "scripts": {
-    "test": "tsc && ava --serial ./dist/tests/*.js",
+    "test": "tsc && rm -f test.out && ava --serial ./dist/tests/*.js",
     "postinstall": "echo Run graphcool init to get started",
     "build": "rm -rf dist && tsc && chmod +x dist/src/index.js"
   },
