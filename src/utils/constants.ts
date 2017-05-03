@@ -45,7 +45,7 @@ ${chalk.green(figures.tick)}  Created project ${chalk.bold(name)} from ${chalk.b
  
   ${chalk.blue(figures.pointer)} Simple API: https://api.graph.cool/simple/v1/${projectId}
   ${chalk.blue(figures.pointer)} Relay API: https://api.graph.cool/relay/v1/${projectId}
-\n`
+`
 
 export const couldNotCreateProjectMessage = `\
 Whoops, something went wrong while creating the project.\n`
@@ -120,10 +120,10 @@ export const noProjectIdMessage = `\
 Please provide a valid project ID.\n`
 
 export const wroteProjectFileMessage = `\
-${chalk.green(figures.tick)}  Your project file was successfully updated.`
+${chalk.green(figures.tick)}  Your project file was successfully updated.\n`
 
 export const newVersionMessage = (newVersion: string) => `\
-The new schema version is ${chalk.bold(newVersion)}.`
+The new schema version is ${chalk.bold(newVersion)}.\n`
 
 export const differentProjectIdWarningMessage = (inputProjectId: string, readProjectId: string) => `\
 The project ID you provided (${inputProjectId}) is different than the one in the current project file (${readProjectId}). 
@@ -131,7 +131,7 @@ This will override the current project file with a different project, do you sti
 
 export const multipleProjectFilesForPullMessage = (projectFiles: string[]) => `\
 Found ${projectFiles.length} project files. You can specify the one you want for which you want to pull the new schema by passing it as an argument.
-For example: '$ graphcool pull -p ${projectFiles[0]}'
+For example: '$ graphcool pull -p ${projectFiles[0]}\n'
 `
 
 
@@ -144,8 +144,7 @@ Exporting your project data ...`
 export const downloadUrlMessage = (url: string) => `\
 ${chalk.green(figures.tick)}  You can download your project data by pasting this URL in a browser:
  
-  ${chalk.blue(figures.pointer)} Download URL: ${url}
-\n`
+  ${chalk.blue(figures.pointer)} Download URL: ${url}\n`
 
 
 export const multipleProjectFilesForExportMessage = (projectFiles: string[]) => `\

@@ -19,7 +19,8 @@ export default class TestOut implements Out {
 
   prefix(description: string, command: string): void {
     const separator = '================================================================================'
-    fs.appendFileSync('test.out', `\n${separator}\n${description}\n${separator}\n${command}\n`)
+    const message = `\n${separator}\n${description}\n${separator}\n${command}\n`
+    fs.appendFileSync('test.out', message)
   }
 
 }

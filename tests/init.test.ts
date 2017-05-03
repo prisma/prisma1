@@ -1,19 +1,20 @@
 import test from 'ava'
 import TestResolver from '../src/system/TestResolver'
-import createCommand from '../src/commands/init'
+import initCommand from '../src/commands/init'
 import {
   systemAPIEndpoint,
   graphcoolProjectFileName, graphcoolConfigFilePath
 } from '../src/utils/constants'
 import {
   mockedCreateProjectResponse, mockProjectFile1, mockedCreateProjectResponseWithAlias,
-  mockProjectFileWithAlias1, testSeparator
+  mockProjectFileWithAlias1,
 } from './mock_data/mockData'
 import { simpleTwitterSchema } from './mock_data/schemas'
 import 'isomorphic-fetch'
 import { readProjectIdFromProjectFile, readVersionFromProjectFile } from '../src/utils/file'
-import { SystemEnvironment, TestSystemEnvironment } from '../src/types'
+import { TestSystemEnvironment } from '../src/types'
 import TestOut from '../src/system/TestOut'
+
 const fetchMock = require('fetch-mock')
 const debug = require('debug')('graphcool')
 
@@ -48,7 +49,7 @@ test('Succeeding project creation with local schema file', async t => {
   env.out.prefix((t as any)._test.title, `$ graphcool init -f ${localSchemaFile} -n ${name}`)
 
   await t.notThrows(
-    createCommand(props, env)
+    initCommand(props, env)
   )
 
   const expectedProjectFileContent = mockProjectFile1
@@ -77,7 +78,7 @@ test('Succeeding project creation with remote schema file', async t => {
   env.out.prefix((t as any)._test.title, `$ graphcool init -u ${remoteSchemaUrl} -n ${name}`)
 
   await t.notThrows(
-    createCommand(props, env)
+    initCommand(props, env)
   )
 
   const expectedProjectFileContent = mockProjectFile1
@@ -105,7 +106,7 @@ test('Succeeding project creation with local file and different output path', as
   env.out.prefix((t as any)._test.title, `$ graphcool init -f ${localSchemaFile} -n ${name} -o ${outputPath}`)
 
   await t.notThrows(
-    createCommand(props, env)
+    initCommand(props, env)
   )
 
   const expectedProjectFileContent = mockProjectFile1
@@ -133,7 +134,7 @@ test('Succeeding project creation because with invalid output path, falls back t
   env.out.prefix((t as any)._test.title, `$ graphcool init -f ${localSchemaFile} -n ${name} -o ${outputPath}`)
 
   await t.notThrows(
-    createCommand(props, env)
+    initCommand(props, env)
   )
 
   const expectedProjectFileContent = mockProjectFile1
@@ -159,7 +160,7 @@ test('Succeeding project creation with alias', async t => {
   env.out.prefix((t as any)._test.title, `$ graphcool init -f ${localSchemaFile} -n ${name} -a ${alias}`)
 
   await t.notThrows(
-    createCommand(props, env)
+    initCommand(props, env)
   )
 
   const expectedProjectFileContent = mockProjectFileWithAlias1

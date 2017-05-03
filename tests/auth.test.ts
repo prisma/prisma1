@@ -17,7 +17,7 @@ const debug = require('debug')('graphcool')
  */
 
 test.afterEach(() => {
-  fetchMock.reset()
+  fetchMock.restore()
 })
 
 test('Succeeding auth without token', async t => {
@@ -75,13 +75,13 @@ test('Succeeding auth with existing token', async t => {
   env.out.prefix((t as any)._test.title, `$ graphcool auth -t ${testToken}`)
 
   // authenticate
-  //await t.notThrows(
-    //authCommand(props, env, authServer)
-  //)
+  await t.notThrows(
+    authCommand(props, env, authServer)
+  )
 
-  //// verify result
-  //const {token} = JSON.parse(env.resolver.read(graphcoolConfigFilePath))
-  //t.is(token, testToken)
+  // verify result
+  const {token} = JSON.parse(env.resolver.read(graphcoolConfigFilePath))
+  t.is(token, testToken)
 })
 
 function testEnvironment(storage: any): TestSystemEnvironment {

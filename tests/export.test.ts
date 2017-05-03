@@ -7,7 +7,6 @@ import TestOut from '../src/system/TestOut'
 import { mockedExportResponse } from './mock_data/mockData'
 import { mockedPullProjectFile1 } from './mock_data/mockData'
 import 'isomorphic-fetch'
-import { testSeparator } from './mock_data/mockData'
 const fetchMock = require('fetch-mock')
 const debug = require('debug')('graphcool')
 

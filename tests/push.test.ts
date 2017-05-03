@@ -3,11 +3,10 @@ import TestResolver from '../src/system/TestResolver'
 import 'isomorphic-fetch'
 import pushCommand from '../src/commands/push'
 import {systemAPIEndpoint, graphcoolProjectFileName, graphcoolConfigFilePath} from '../src/utils/constants'
-import {
-  mockedPushSchemaResponse, mockProjectFile2, mockProjectFile3, testSeparator,
-} from './mock_data/mockData'
-import { SystemEnvironment, TestSystemEnvironment } from '../src/types'
+import { mockedPushSchemaResponse, mockProjectFile2, mockProjectFile3 } from './mock_data/mockData'
+import { TestSystemEnvironment } from '../src/types'
 import TestOut from '../src/system/TestOut'
+
 const fetchMock = require('fetch-mock')
 const debug = require('debug')('graphcool')
 
