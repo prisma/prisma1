@@ -3,7 +3,12 @@ Request new features and check our roadmap for the next few months
 
 ## Roadmap
 
-You can check our roadmap for the next few months here: [Roadmap](https://github.com/graphcool/feature-requests/projects/1)
+Feature requests are tagged with their respective stage:
+
+* `stage/discussing`: Open for discussions. Your feedback is **very helpful** in this stage, please share your opinion!
+* `stage/waiting`: Waiting to be implemented.
+* `stage/wip`: Work in progress.
+* `stage/beta`: Already available in the beta program. Reach out in Slack to learn more!
 
 ## +1 a feature request
 
