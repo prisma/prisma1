@@ -1,21 +1,20 @@
 import * as chalk from 'chalk'
 
 export const usageRoot = `
-  ${chalk.dim('Usage:')} ${chalk.bold('graphcool')} [command]
+  Serverless GraphQL backend for frontend developers (${chalk.underline('https://www.graph.cool')})
   
-    ${chalk.bold('Serverless GraphQL backend for frontend developers')}
-    Read more at https://www.graph.cool/docs/cli
+  ${chalk.dim('Usage:')} ${chalk.bold('graphcool')} [command]
 
   ${chalk.dim('Commands:')}
-    init           Create a new project
-    pull           Pull the latest project file
-    push           Push project file changes
-    export         Export project data
-    endpoints      Print GraphQL endpoints
-    console        Open Graphcool Console
-    projects       List projects
-    auth           Sign up or login
-    version        Print version
+    init         Create a new project
+    pull         Pull the latest project file
+    push         Push project file changes
+    export       Export project data
+    endpoints    Print GraphQL endpoints
+    console      Open Graphcool Console
+    projects     List projects
+    auth         Sign up or login
+    version      Print version
     
   Run 'graphcool COMMAND --help' for more information on a command.
   
