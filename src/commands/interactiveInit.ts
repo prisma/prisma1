@@ -19,12 +19,12 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
 
   const {out} = env
 
-  const schemaFiles = env.resolver.schemaFiles('.').map(project => `  ${project}`)
+  const schemaFiles = env.resolver.schemaFiles('.')
 
   const options = [
-    `${figures.pointer} Instagram starter kit`,
-    `  Blank project`,
-    ...schemaFiles,
+    `  ${figures.pointer} Instagram starter kit`,
+    `    Blank project`,
+    ...schemaFiles.map(f => `    From ./${f}`),
   ]
 
   term.saveCursor()

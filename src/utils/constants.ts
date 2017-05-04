@@ -160,5 +160,5 @@ export const contactUsInSlackMessage = `\
 Get in touch if you need help: http://slack.graph.cool/`
 
 export const setDebugMessage = `\
-You can enable additional output with \`$ export DEBUG=graphcool\` and rerunning the command.
+You can enable additional output with \`export DEBUG=graphcool\` and rerunning the command.
 Open an issue on GitHub: https://github.com/graphcool/graphcool-cli.`
