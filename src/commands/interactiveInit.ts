@@ -32,21 +32,62 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
   out.write(howDoYouWantToGetStarted(options))
 
   term.grabInput()
-  term.up(options.length + 1) // +1 because of the new line at the end
+  term.up(options.length)
   term.hideCursor()
   let currentIndex = INSTAGRAM_STARTER // 0
 
   await new Promise(resolve => {
-    term.on('key', (name: string) => {
-      currentIndex = handleKeyEvent(name, currentIndex, options, props.checkAuth, env)
+    term.on('key', async (name: string) => {
+      currentIndex = await handleKeyEvent(name, currentIndex, options, props.checkAuth, env, resolve)
     })
   })
-
-
 }
 
-async function handleSelect(selectedIndex: number, checkAuth: CheckAuth, env: SystemEnvironment) {
+async function handleKeyEvent(name: string, currentIndex: number, options: string[], checkAuth: CheckAuth, env: SystemEnvironment, callback: () => void): Promise<number> {
+
+  switch (name) {
+    case 'DOWN': {
+      if (currentIndex < options.length - 1) {
+        options[currentIndex] = replaceFirstCharacters(options[currentIndex], 8, '   ')
+        options[currentIndex + 1] = replaceFirstCharacters(options[currentIndex + 1], 3, `  ${chalk.blue(figures.pointer)}`)
+        overwriteNextLines([options[currentIndex], options[currentIndex + 1]])
+        currentIndex++
+      }
+      break
+    }
+    case 'UP': {
+      if (currentIndex > 0) {
+        options[currentIndex] = replaceFirstCharacters(options[currentIndex], 8, '   ')
+        options[currentIndex - 1] = replaceFirstCharacters(options[currentIndex - 1], 3, `  ${chalk.blue(figures.pointer)}`)
+        overwritePreviousLines([options[currentIndex], options[currentIndex - 1]])
+        currentIndex--
+      }
+      break
+    }
+    case 'ENTER': {
+      await handleSelect(currentIndex, options, checkAuth, env)
+      callback()
+      break
+    }
+    case 'CTRL_C': {
+      term.restoreCursor()
+      term.eraseDisplayBelow()
+      term.hideCursor(false)
+      term.eraseDisplayBelow()
+      env.out.write('\n')
+      process.exit()
+    }
+    default: {
+      break
+    }
+  }
+
+  return currentIndex
+}
+
+async function handleSelect(selectedIndex: number, options: string[], checkAuth: CheckAuth, env: SystemEnvironment): Promise<void> {
   term.restoreCursor()
+  term.up(options.length + 3) // 3 is depending on the help text
   term.eraseDisplayBelow()
   term.hideCursor(false)
   env.out.write('\n')
@@ -82,48 +123,6 @@ async function handleSelect(selectedIndex: number, checkAuth: CheckAuth, env: Sy
       break
     }
   }
-}
-
-function handleKeyEvent(name: string, currentIndex: number, options: string[], checkAuth: CheckAuth, env: SystemEnvironment): number {
-
-  const offset = 8
-  switch (name) {
-    case 'DOWN': {
-      if (currentIndex < options.length - 1) {
-        options[currentIndex] = replaceFirstCharacters(options[currentIndex], offset, '   ')
-        options[currentIndex + 1] = replaceFirstCharacters(options[currentIndex + 1], offset, `  ${chalk.blue(figures.pointer)}`)
-        overwriteNextLines([options[currentIndex], options[currentIndex + 1]])
-        currentIndex++
-      }
-      break
-    }
-    case 'UP': {
-      if (currentIndex > 0) {
-        options[currentIndex] = replaceFirstCharacters(options[currentIndex], offset, '   ')
-        options[currentIndex - 1] = replaceFirstCharacters(options[currentIndex - 1], offset, `  ${chalk.blue(figures.pointer)}`)
-        overwritePreviousLines([options[currentIndex], options[currentIndex - 1]])
-        currentIndex--
-      }
-      break
-    }
-    case 'ENTER': {
-      handleSelect(currentIndex, checkAuth, env)
-      break
-    }
-    case 'CTRL_C': {
-      term.restoreCursor()
-      term.eraseDisplayBelow()
-      term.hideCursor(false)
-      term.eraseDisplayBelow()
-      env.out.write('\n')
-      process.exit()
-    }
-    default: {
-      break
-    }
-  }
-
-  return currentIndex
 }
 
 function overwriteNextLines(lines: string[]): void {

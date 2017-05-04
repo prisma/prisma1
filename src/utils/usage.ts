@@ -7,11 +7,12 @@ export const usageRoot = `
 
   ${chalk.dim('Commands:')}
     init         Create a new project
-    pull         Pull the latest project file
     push         Push project file changes
+    pull         Pull the latest project file
     export       Export project data
     endpoints    Print GraphQL endpoints
     console      Open Graphcool Console
+    playground   Open GraphQL Playground
     projects     List projects
     auth         Sign up or login
     version      Print version
