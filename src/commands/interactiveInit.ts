@@ -1,6 +1,7 @@
 import { SystemEnvironment } from '../types'
 import { howDoYouWantToGetStarted, instagramExampleSchemaUrl } from '../utils/constants'
 const term = require('terminal-kit').terminal
+import * as chalk from 'chalk'
 import figures = require('figures')
 import initCommand from './init'
 import { writeExampleSchemaFile } from '../utils/file'
@@ -22,7 +23,7 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
   const schemaFiles = env.resolver.schemaFiles('.')
 
   const options = [
-    `  ${figures.pointer} Instagram starter kit`,
+    `  ${chalk.blue(figures.pointer)} Instagram starter kit`,
     `    Blank project`,
     ...schemaFiles.map(f => `    From ./${f}`),
   ]
@@ -35,9 +36,12 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
   term.hideCursor()
   let currentIndex = INSTAGRAM_STARTER // 0
 
-  term.on('key', (name: string) => {
-    currentIndex = handleKeyEvent(name, currentIndex, options, props.checkAuth, env)
+  await new Promise(resolve => {
+    term.on('key', (name: string) => {
+      currentIndex = handleKeyEvent(name, currentIndex, options, props.checkAuth, env)
+    })
   })
+
 
 }
 
@@ -57,12 +61,12 @@ async function handleSelect(selectedIndex: number, checkAuth: CheckAuth, env: Sy
     case INSTAGRAM_STARTER: {
       const remoteSchemaUrl = instagramExampleSchemaUrl
       const name = 'Instagram'
-      initCommand({remoteSchemaUrl, name}, env)
+      await initCommand({remoteSchemaUrl, name}, env)
       break
     }
     case BLANK_PROJECT: {
       const localSchemaFile = writeExampleSchemaFile(env.resolver)
-      initCommand({localSchemaFile}, env)
+      await initCommand({localSchemaFile}, env)
       break
     }
     default: {
@@ -74,7 +78,7 @@ async function handleSelect(selectedIndex: number, checkAuth: CheckAuth, env: Sy
       }
       const projectFileIndex = selectedIndex - previousOptions
       const localSchemaFile = schemaFiles[projectFileIndex]
-      initCommand({localSchemaFile}, env)
+      await initCommand({localSchemaFile}, env)
       break
     }
   }
@@ -82,11 +86,12 @@ async function handleSelect(selectedIndex: number, checkAuth: CheckAuth, env: Sy
 
 function handleKeyEvent(name: string, currentIndex: number, options: string[], checkAuth: CheckAuth, env: SystemEnvironment): number {
 
+  const offset = 8
   switch (name) {
     case 'DOWN': {
       if (currentIndex < options.length - 1) {
-        options[currentIndex] = replaceFirstCharacters(options[currentIndex], 3, '   ')
-        options[currentIndex + 1] = replaceFirstCharacters(options[currentIndex + 1], 3, `  ${figures.pointer}`)
+        options[currentIndex] = replaceFirstCharacters(options[currentIndex], offset, '   ')
+        options[currentIndex + 1] = replaceFirstCharacters(options[currentIndex + 1], offset, `  ${chalk.blue(figures.pointer)}`)
         overwriteNextLines([options[currentIndex], options[currentIndex + 1]])
         currentIndex++
       }
@@ -94,8 +99,8 @@ function handleKeyEvent(name: string, currentIndex: number, options: string[], c
     }
     case 'UP': {
       if (currentIndex > 0) {
-        options[currentIndex] = replaceFirstCharacters(options[currentIndex], 3, '   ')
-        options[currentIndex - 1] = replaceFirstCharacters(options[currentIndex - 1], 3, `  ${figures.pointer}`)
+        options[currentIndex] = replaceFirstCharacters(options[currentIndex], offset, '   ')
+        options[currentIndex - 1] = replaceFirstCharacters(options[currentIndex - 1], offset, `  ${chalk.blue(figures.pointer)}`)
         overwritePreviousLines([options[currentIndex], options[currentIndex - 1]])
         currentIndex--
       }
