@@ -9,6 +9,7 @@ Feature requests are tagged with their respective stage:
 * `stage/waiting`: Waiting to be implemented.
 * `stage/wip`: Work in progress.
 * `stage/beta`: Already available in the beta program. Reach out in Slack to learn more!
+* `stage/completed`: Done :muscle:
 
 ## +1 a feature request
 
