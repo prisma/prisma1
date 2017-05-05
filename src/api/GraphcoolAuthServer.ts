@@ -1,9 +1,8 @@
 import { AuthServer, TokenValidationResult } from '../types'
 import { systemAPIEndpoint, authEndpoint } from '../utils/constants'
-import * as fetch from 'isomorphic-fetch'
+import 'isomorphic-fetch'
 import cuid = require('cuid')
 import open = require('open')
-
 const debug = require('debug')('graphcool')
 
 export class GraphcoolAuthServer implements AuthServer {
@@ -30,7 +29,6 @@ export class GraphcoolAuthServer implements AuthServer {
       if (authToken) {
         return authToken as string
       }
-
     }
   }
 
@@ -45,13 +43,19 @@ export class GraphcoolAuthServer implements AuthServer {
     }`
 
     try {
-      await fetch(systemAPIEndpoint, {
+      const result = await fetch(systemAPIEndpoint, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
-        body: authQuery
+        body: JSON.stringify({query: authQuery})
       })
+      const json = await result.json()
+
+      if (!json.data.viewer.user || json.errors) {
+        return 'invalid'
+      }
     }
     catch (e) {
       return 'invalid'

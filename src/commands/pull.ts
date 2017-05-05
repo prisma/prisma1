@@ -9,8 +9,12 @@ import {
   fetchingProjectDataMessage,
   noProjectIdMessage,
   wroteProjectFileMessage,
-  newVersionMessage, differentProjectIdWarningMessage, invalidProjectFilePathMessage, noProjectFileMessage,
-  graphcoolProjectFileName, multipleProjectFilesForPullMessage
+  newVersionMessage,
+  differentProjectIdWarningMessage,
+  invalidProjectFilePathMessage,
+  noProjectFileForPullMessage,
+  graphcoolProjectFileName,
+  multipleProjectFilesForPullMessage
 } from '../utils/constants'
 var term = require( 'terminal-kit' ).terminal
 
@@ -98,7 +102,7 @@ function getProjectFilePath(props: Props, env: SystemEnvironment): string {
   // no project file provided, search for one in current dir
   const projectFiles = resolver.projectFiles('.')
   if (projectFiles.length === 0) {
-    throw new Error(noProjectFileMessage)
+    throw new Error(noProjectFileForPullMessage)
   } else if (projectFiles.length > 1) {
     throw new Error(multipleProjectFilesForPullMessage(projectFiles))
   }

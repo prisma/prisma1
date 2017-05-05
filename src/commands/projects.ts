@@ -17,11 +17,14 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
 
   try {
     const projects = await fetchProjects(resolver)
-    const currentProjectId = readProjectIdFromProjectFile(resolver, graphcoolProjectFileName)
 
-    const data = projects.map(p => {
-      const isCurrentProject = currentProjectId === p.projectId || currentProjectId === p.alias
-      return [isCurrentProject ? '*' : ' ', `${p.alias || p.projectId}   `, p.name]
+    const currentProjectId = resolver.exists(graphcoolProjectFileName) ?
+      readProjectIdFromProjectFile(resolver, graphcoolProjectFileName) :
+      null
+
+    const data = projects.map(project => {
+      const isCurrentProject = currentProjectId !== null && (currentProjectId === project.projectId || currentProjectId === project.alias)
+      return [isCurrentProject ? '*' : ' ', `${project.alias || project.projectId}   `, project.name]
     })
 
     const output = table(data, {
