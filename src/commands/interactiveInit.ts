@@ -23,9 +23,9 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
   const schemaFiles = env.resolver.schemaFiles('.')
 
   const options = [
-    `  ${chalk.blue(figures.pointer)} Instagram starter kit`,
-    `    Blank project`,
-    ...schemaFiles.map(f => `    From ./${f}`),
+    `  ${chalk.blue(figures.pointer)} Quickstart (Instagram tutorial - recommended for beginners)`,
+    `    New project from scratch`,
+    ...schemaFiles.map(f => `    From local schema ./${f}`),
   ]
 
   term.saveCursor()

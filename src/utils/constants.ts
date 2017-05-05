@@ -55,7 +55,9 @@ Looks like you've already setup your backend.\n`
 
 export const howDoYouWantToGetStarted = (options: string[]) => `\
 
-  How do you want to get started?
+  Welcome to the Graphcool CLI. 
+
+  ${chalk.bold('How do you want to create a new project?')}
 
 ${options.map(option => `${option}`).join('\n')}
 `
