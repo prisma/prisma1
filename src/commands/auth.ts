@@ -22,17 +22,13 @@ export default async (props: Props, env: SystemEnvironment, authServer: AuthServ
     out.startSpinner(openBrowserMessage)
 
     await sleep(500)
-
     try {
       token = await authServer.requestAuthToken()
     } catch (e) {
       throw new Error(couldNotRetrieveTokenMessage)
     }
-
     out.stopSpinner()
   }
-
-  writeGraphcoolConfig({token}, resolver)
 
   const validateResult = await authServer.validateAuthToken(token)
   switch (validateResult) {
@@ -43,6 +39,7 @@ export default async (props: Props, env: SystemEnvironment, authServer: AuthServ
       break
   }
 
+  writeGraphcoolConfig({token}, resolver)
   out.write(authenticationSuccessMessage)
 }
 
