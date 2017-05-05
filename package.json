@@ -40,6 +40,7 @@
     "minimist": "^1.2.0",
     "open": "^0.0.5",
     "ora": "^1.2.0",
+    "raven": "^1.2.1",
     "sillyname": "^0.1.0",
     "table": "4.0.1",
     "terminal-kit": "^1.4.4"

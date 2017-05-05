@@ -17,7 +17,12 @@ import * as chalk from 'chalk'
 import StdOut from './system/StdOut'
 import { GraphcoolAuthServer } from './api/GraphcoolAuthServer'
 import { readGraphcoolConfig } from './utils/file'
-import {setDebugMessage, contactUsInSlackMessage} from './utils/constants'
+import {
+  setDebugMessage,
+  contactUsInSlackMessage,
+  sentryId,
+  sentryKey
+} from './utils/constants'
 import {
   usagePull,
   usageProjects,
@@ -30,10 +35,15 @@ import {
   usageExport,
 } from './utils/usage'
 
+var Raven = require('raven')
 const debug = require('debug')('graphcool')
 const {version} = require('../../package.json')
 
 async function main() {
+
+  // initialize sentry
+  Raven.config(`https://${sentryKey}@sentry.io/${sentryId}`).install()
+
   const argv = minimist(process.argv.slice(2))
 
   const command = argv._[0] as Command | undefined
@@ -192,6 +202,7 @@ function defaultEnvironment(): SystemEnvironment {
 }
 
 function onError(e: Error) {
+  Raven.captureException(e)
 
   // prevent the same error output twice
   const errorMessage = `Error: ${e.message}`
