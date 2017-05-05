@@ -4,12 +4,14 @@ import * as chalk from 'chalk'
 import figures = require('figures')
 
 /*
- * Networking
+ * Networking & URLs
  */
 export const systemAPIEndpoint = 'https://api.graph.cool/system'
 export const authEndpoint = 'https://cli-auth-api.graph.cool'
 export const consoleURL = (token: string, projectName?: string) =>
   `https://console.graph.cool/token/?token=${token}${projectName ? `&redirect=/${encodeURIComponent(projectName)}` : ''}`
+export const sampleSchemaURL = `http://graphqlbin.com/empty.graphql`
+
 
 /*
  * File paths / names

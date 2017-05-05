@@ -1,5 +1,5 @@
 import { SystemEnvironment } from '../types'
-import { howDoYouWantToGetStarted, instagramExampleSchemaUrl } from '../utils/constants'
+import {howDoYouWantToGetStarted, instagramExampleSchemaUrl, sampleSchemaURL} from '../utils/constants'
 const term = require('terminal-kit').terminal
 import * as chalk from 'chalk'
 import figures = require('figures')
@@ -30,7 +30,6 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
   ]
 
   term.saveCursor()
-
   out.write(howDoYouWantToGetStarted())
 
   term.grabInput()
@@ -100,8 +99,8 @@ async function handleSelect(selectedIndex: number, options: string[][], checkAut
       break
     }
     case BLANK_PROJECT: {
-      const localSchemaFile = writeExampleSchemaFile(env.resolver)
-      await initCommand({localSchemaFile}, env)
+      const remoteSchemaUrl = sampleSchemaURL
+      await initCommand({remoteSchemaUrl}, env)
       break
     }
     default: {

@@ -11,7 +11,7 @@ import {
   creatingProjectMessage,
   createdProjectMessage,
   couldNotCreateProjectMessage,
-  projectAlreadyExistsMessage, projectFileSuffix
+  projectAlreadyExistsMessage, projectFileSuffix, sampleSchemaURL
 } from '../utils/constants'
 const debug = require('debug')('graphcool')
 
@@ -33,11 +33,9 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
   }
 
   const name = props.name || generateName()
-
   out.startSpinner(creatingProjectMessage(name))
 
   try {
-
     // resolve schema
     const schemaUrl = props.localSchemaFile ? props.localSchemaFile : props.remoteSchemaUrl
     const schema = await getSchema(schemaUrl, resolver)
