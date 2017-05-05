@@ -3,11 +3,16 @@ import { pushNewSchema, parseErrors, generateErrorOutput } from '../api/api'
 import figures = require('figures')
 import * as chalk from 'chalk'
 import {
-  graphcoolProjectFileName,
-  noProjectFileMessage,
+  noProjectFileForPushMessage,
   couldNotMigrateSchemaMessage,
-  pushingNewSchemaMessage, noActionRequiredMessage, migrationDryRunMessage, migrationPerformedMessage,
-  migrationErrorMessage, invalidProjectFileMessage, invalidProjectFilePathMessage, multipleProjectFilesMessage
+  pushingNewSchemaMessage,
+  noActionRequiredMessage,
+  migrationDryRunMessage,
+  migrationPerformedMessage,
+  migrationErrorMessage,
+  invalidProjectFileMessage,
+  invalidProjectFilePathMessage,
+  multipleProjectFilesMessage
 } from '../utils/constants'
 import {
   writeProjectFile,
@@ -29,7 +34,6 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
   const projectInfo = readProjectInfoFromProjectFile(resolver, projectFilePath)
   if (!projectInfo) {
     throw new Error(invalidProjectFileMessage)
-
   }
 
   const {projectId, schema, version} = projectInfo!
@@ -101,7 +105,7 @@ function getProjectFilePath(props: Props, env: SystemEnvironment): string {
   // no project file provided, search for one in current dir
   const projectFiles = resolver.projectFiles('.')
   if (projectFiles.length === 0) {
-    throw new Error(noProjectFileMessage)
+    throw new Error(noProjectFileForPushMessage)
   } else if (projectFiles.length > 1) {
     throw new Error(multipleProjectFilesMessage(projectFiles))
   }

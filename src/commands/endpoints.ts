@@ -1,17 +1,11 @@
-import {SystemEnvironment} from '../types'
+import {SystemEnvironment, Resolver} from '../types'
 import {readProjectIdFromProjectFile, isValidProjectFilePath} from '../utils/file'
 import {
   noProjectIdMessage,
-  exportingDataMessage,
-  noProjectFileOrIdMessage,
-  downloadUrlMessage,
   invalidProjectFilePathMessage,
-  multipleProjectFilesForExportMessage
+  noProjectFileOrIdMessage,
+  multipleProjectFilesForExportMessage, endpointsMessage
 } from '../utils/constants'
-import {
-  exportProjectData,
-  parseErrors,
-  generateErrorOutput} from '../api/api'
 const debug = require('debug')('graphcool')
 
 interface Props {
@@ -20,36 +14,18 @@ interface Props {
 }
 
 export default async(props: Props, env: SystemEnvironment): Promise<void> => {
-  const {resolver, out} = env
 
-  try {
+  const {out} = env
 
-    const projectId = props.sourceProjectId || getProjectId(props, env)
-    if (!projectId) {
-      throw new Error(noProjectIdMessage)
-    }
-
-    out.startSpinner(exportingDataMessage)
-
-    const url = await exportProjectData(projectId!, resolver)
-
-    const message = downloadUrlMessage(url)
-    out.stopSpinner()
-    out.write(message)
-
-  } catch(e) {
-    out.stopSpinner()
-    if (e.errors) {
-      const errors = parseErrors(e)
-      const output = generateErrorOutput(errors)
-      out.writeError(`${output}`)
-    } else {
-      throw e
-    }
-
+  const projectId = props.sourceProjectId || getProjectId(props, env)
+  if (!projectId) {
+    throw new Error(noProjectIdMessage)
   }
 
+  const message = endpointsMessage(projectId)
+  out.write(message)
 }
+
 
 function getProjectId(props: Props, env: SystemEnvironment): string | undefined {
   const {resolver} = env

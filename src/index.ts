@@ -10,6 +10,7 @@ import authCommand from './commands/auth'
 import initCommand from './commands/init'
 import interactiveInitCommand from './commands/interactiveInit'
 import exportCommand from './commands/export'
+import endpointsCommand from './commands/endpoints'
 import FileSystemResolver from './system/FileSystemResolver'
 import figures = require('figures')
 import * as chalk from 'chalk'
@@ -110,6 +111,16 @@ async function main() {
       const sourceProjectId = argv['source'] || argv['s']
       const projectFile = argv['project'] || argv['p']
       await exportCommand({sourceProjectId, projectFile}, defaultEnvironment())
+      break
+    }
+
+    case 'endpoints': {
+      checkHelp(argv, usageExport)
+      await checkAuth()
+
+      const sourceProjectId = argv['source'] || argv['s']
+      const projectFile = argv['project'] || argv['p']
+      await endpointsCommand({sourceProjectId, projectFile}, defaultEnvironment())
       break
     }
 

@@ -65,7 +65,7 @@ ${options.map(option => `${option}`).join('\n')}
 /*
  * Terminal output: push
  */
-export const noProjectFileMessage = `\
+export const noProjectFileForPushMessage = `\
 Please provide a valid project file (${graphcoolProjectFileName}) for the schema migration.\n`
 
 export const invalidProjectFileMessage = `\
@@ -107,6 +107,18 @@ export const projectsMessage = `\
 export const couldNotFetchProjectsMessage = `\
 An error occured while trying to fetch your projects.\n`
 
+
+/*
+ * Terminal output: endpoints
+ */
+
+export const endpointsMessage = (projectId: string) => `\
+ The endpoints for your project are are:
+ 
+   ${chalk.blue(figures.pointer)} Simple API: https://api.graph.cool/simple/v1/${projectId}
+   ${chalk.blue(figures.pointer)} Relay API: https://api.graph.cool/relay/v1/${projectId}\n`
+
+
 /*
  * Terminal output: pull
  */
@@ -114,7 +126,7 @@ An error occured while trying to fetch your projects.\n`
 export const fetchingProjectDataMessage = `\
 Fetching project data ...`
 
-export const noProjectFileMessageFound = `\
+export const noProjectFileForPullMessage = `\
 There is no project file (project.graphcool) in the current directory.\n`
 
 export const noProjectIdMessage = `\
@@ -147,11 +159,10 @@ export const downloadUrlMessage = (url: string) => `\
  
   ${chalk.blue(figures.pointer)} Download URL: ${url}\n`
 
-
 export const multipleProjectFilesForExportMessage = (projectFiles: string[]) => `\
 Found ${projectFiles.length} project files. You can specify the one you for which you want to export the data by passing it as an argument.
-For example: '$ graphcool export -p ${projectFiles[0]}'
-`
+For example: '$ graphcool export -p ${projectFiles[0]}'\n`
+
 
 
 /*
@@ -163,3 +174,6 @@ Get in touch if you need help: http://slack.graph.cool/`
 export const setDebugMessage = `\
 You can enable additional output with \`export DEBUG=graphcool\` and rerunning the command.
 Open an issue on GitHub: https://github.com/graphcool/graphcool-cli.`
+
+export const noProjectFileOrIdMessage = `\
+No project file or project ID provided.\n`

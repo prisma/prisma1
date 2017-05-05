@@ -88,12 +88,27 @@ export const usageExport = `
     
 `
 
+export const usageEndpoints = `
+  Usage: graphcool endpoints [options]
+  
+  Export project data
+  
+  Options:
+ 
+    -s, --source       ID or alias of source project (defaults to ID or alias from project file)
+    -p, --project      Project file (default: project.graphcool)
+    -h, --help         Output usage information
+    
+`
+
 export const usageConsole = `
   Usage: graphcool console [options]
   
   Open current project in Graphcool Console with your browser
 
-  Options:
+  Options: 
+    -s, --source       ID or alias of source project (defaults to ID or alias from project file)
+    -p, --project      Project file (default: project.graphcool)
     -h, --help         Output usage information
     
 `

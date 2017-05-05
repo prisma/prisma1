@@ -1,5 +1,8 @@
 import { SystemEnvironment } from '../types'
-import { howDoYouWantToGetStarted, instagramExampleSchemaUrl } from '../utils/constants'
+import {
+  howDoYouWantToGetStarted, instagramExampleSchemaUrl, graphcoolProjectFileName,
+  projectAlreadyExistsMessage
+} from '../utils/constants'
 const term = require('terminal-kit').terminal
 import * as chalk from 'chalk'
 import figures = require('figures')
@@ -10,6 +13,8 @@ const debug = require('debug')('graphcool')
 const INSTAGRAM_STARTER = 0
 const BLANK_PROJECT = 1
 
+const CHARACTER_OFFSET = 8
+
 type CheckAuth = () => Promise<void>
 
 interface Props {
@@ -18,12 +23,16 @@ interface Props {
 
 export default async (props: Props, env: SystemEnvironment): Promise<void> => {
 
-  const {out} = env
+  const {out, resolver} = env
 
-  const schemaFiles = env.resolver.schemaFiles('.')
+  if (resolver.exists(graphcoolProjectFileName) && resolver.read(graphcoolProjectFileName).toString().includes('# project:')) {
+    throw new Error(projectAlreadyExistsMessage)
+  }
+
+  const schemaFiles = resolver.schemaFiles('.')
 
   const options = [
-    `  ${chalk.blue(figures.pointer)} Quickstart (Instagram tutorial - recommended for beginners)`,
+    `  ${chalk.blue(figures.pointer)} Quickstart (Instagram Example)`,
     `    New project from scratch`,
     ...schemaFiles.map(f => `    From local schema ./${f}`),
   ]
@@ -32,6 +41,9 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
   out.write(howDoYouWantToGetStarted(options))
 
   term.grabInput()
+  // const totalLines = options
+  //   .map(line => numberOfLines(line))
+  //   .reduce((previous, current) => previous + current)
   term.up(options.length)
   term.hideCursor()
   let currentIndex = INSTAGRAM_STARTER // 0
@@ -48,8 +60,12 @@ async function handleKeyEvent(name: string, currentIndex: number, options: strin
   switch (name) {
     case 'DOWN': {
       if (currentIndex < options.length - 1) {
-        options[currentIndex] = replaceFirstCharacters(options[currentIndex], 8, '   ')
+
+        // update positioning of pointer within the options
+        options[currentIndex] = replaceFirstCharacters(options[currentIndex], CHARACTER_OFFSET, '   ')
         options[currentIndex + 1] = replaceFirstCharacters(options[currentIndex + 1], 3, `  ${chalk.blue(figures.pointer)}`)
+
+        // render updated options
         overwriteNextLines([options[currentIndex], options[currentIndex + 1]])
         currentIndex++
       }
@@ -57,7 +73,7 @@ async function handleKeyEvent(name: string, currentIndex: number, options: strin
     }
     case 'UP': {
       if (currentIndex > 0) {
-        options[currentIndex] = replaceFirstCharacters(options[currentIndex], 8, '   ')
+        options[currentIndex] = replaceFirstCharacters(options[currentIndex], CHARACTER_OFFSET, '   ')
         options[currentIndex - 1] = replaceFirstCharacters(options[currentIndex - 1], 3, `  ${chalk.blue(figures.pointer)}`)
         overwritePreviousLines([options[currentIndex], options[currentIndex - 1]])
         currentIndex--
@@ -136,6 +152,22 @@ function overwriteNextLines(lines: string[]): void {
   })
 }
 
+function overwriteNextOptions(options: string[]): void {
+
+  options.forEach((option, optionIndex) => {
+    const lines = option.split('\n')
+    lines.forEach((line, lineIndex) => {
+      term.eraseLineAfter()
+      term.defaultColor(line)
+      term.left(10000)
+      if (lineIndex < lines.length - 1 && optionIndex < options.length) {
+        term.down()
+      }
+    })
+
+  })
+}
+
 function overwritePreviousLines(lines: string[]): void {
   lines.forEach((line, index) => {
     term.eraseLineBefore()
@@ -150,4 +182,8 @@ function overwritePreviousLines(lines: string[]): void {
 function replaceFirstCharacters(str, n, insert) {
   const tmp = str.substring(n, str.length)
   return insert + tmp
+}
+
+function numberOfLines(str: string): number {
+  return str.split('\n').length - 1
 }
