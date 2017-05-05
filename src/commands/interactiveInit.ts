@@ -5,7 +5,6 @@ import * as chalk from 'chalk'
 import figures = require('figures')
 import * as _ from 'lodash'
 import initCommand from './init'
-import { writeExampleSchemaFile } from '../utils/file'
 const debug = require('debug')('graphcool')
 
 const INSTAGRAM_STARTER = 0

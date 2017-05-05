@@ -11,7 +11,9 @@ import {
   creatingProjectMessage,
   createdProjectMessage,
   couldNotCreateProjectMessage,
-  projectAlreadyExistsMessage, projectFileSuffix, sampleSchemaURL
+  projectAlreadyExistsMessage,
+  projectFileSuffix,
+  sampleSchemaURL
 } from '../utils/constants'
 const debug = require('debug')('graphcool')
 

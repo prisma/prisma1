@@ -1,10 +1,14 @@
-import {SystemEnvironment, Resolver} from '../types'
-import {readProjectIdFromProjectFile, isValidProjectFilePath} from '../utils/file'
+import {SystemEnvironment} from '../types'
+import {
+  readProjectIdFromProjectFile,
+  isValidProjectFilePath
+} from '../utils/file'
 import {
   noProjectIdMessage,
   invalidProjectFilePathMessage,
   noProjectFileOrIdMessage,
-  multipleProjectFilesForExportMessage, endpointsMessage
+  multipleProjectFilesForExportMessage,
+  endpointsMessage
 } from '../utils/constants'
 const debug = require('debug')('graphcool')
 

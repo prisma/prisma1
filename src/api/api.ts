@@ -1,5 +1,16 @@
-import { Resolver, ProjectInfo, MigrationMessage, MigrationErrorMessage, MigrationResult, APIError } from '../types'
-import { graphcoolConfigFilePath, systemAPIEndpoint, contactUsInSlackMessage } from '../utils/constants'
+import {
+  Resolver,
+  ProjectInfo,
+  MigrationMessage,
+  MigrationErrorMessage,
+  MigrationResult,
+  APIError
+} from '../types'
+import {
+  graphcoolConfigFilePath,
+  systemAPIEndpoint,
+  contactUsInSlackMessage
+} from '../utils/constants'
 import 'isomorphic-fetch'
 const debug = require('debug')('graphcool')
 

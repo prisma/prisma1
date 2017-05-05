@@ -1,5 +1,8 @@
 import {SystemEnvironment} from '../types'
-import {readProjectIdFromProjectFile, isValidProjectFilePath} from '../utils/file'
+import {
+  readProjectIdFromProjectFile,
+  isValidProjectFilePath
+} from '../utils/file'
 import {
   noProjectIdMessage,
   exportingDataMessage,
@@ -11,7 +14,8 @@ import {
 import {
   exportProjectData,
   parseErrors,
-  generateErrorOutput} from '../api/api'
+  generateErrorOutput
+} from '../api/api'
 const debug = require('debug')('graphcool')
 
 interface Props {
