@@ -9,7 +9,7 @@ import figures = require('figures')
 export const systemAPIEndpoint = 'https://api.graph.cool/system'
 export const authEndpoint = 'https://cli-auth-api.graph.cool'
 export const consoleURL = (token: string, projectName?: string) =>
-  `https://console.graph.cool/token/?token=${token}${projectName ? `&redirect=/${projectName}` : ''}`
+  `https://console.graph.cool/token/?token=${token}${projectName ? `&redirect=/${encodeURIComponent(projectName)}` : ''}`
 
 /*
  * File paths / names

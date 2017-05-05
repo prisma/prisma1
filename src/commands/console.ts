@@ -1,37 +1,58 @@
-import { readGraphcoolConfig, readProjectIdFromProjectFile } from '../utils/file'
-import {SystemEnvironment, Resolver} from '../types'
+import {readGraphcoolConfig, readProjectIdFromProjectFile, isValidProjectFilePath} from '../utils/file'
+import {SystemEnvironment} from '../types'
 import open = require('open')
 import { pullProjectInfo } from '../api/api'
 import {
-  graphcoolConfigFilePath,
-  graphcoolProjectFileName,
-  noProjectFileOrIdMessage
+  consoleURL,
+  invalidProjectFilePathMessage,
+  notAuthenticatedMessage
 } from '../utils/constants'
 
 const debug = require('debug')('graphcool-auth')
 
 interface Props {
+  projectFile?: string
 }
 
 export default async (props: Props, env: SystemEnvironment): Promise<void> => {
   const {resolver} = env
 
-  const currentProjectId = getCurrentProjectId(resolver)
-
-  if (!currentProjectId) {
-    throw new Error(noProjectFileOrIdMessage)
+  const {token} = readGraphcoolConfig(resolver)
+  if (!token) {
+    throw new Error(notAuthenticatedMessage)
   }
 
-  await pullProjectInfo(currentProjectId!, resolver)
-  const {token} = readGraphcoolConfig(resolver)
-
-  open(`https://console.graph.cool/token/?token=${token}/Freecom`)
-
+  const url = await getURL(token, props, env)
+  open(url)
 }
 
-function getCurrentProjectId(resolver: Resolver): string | undefined {
-  if (resolver.exists(graphcoolConfigFilePath)) {
-    return readProjectIdFromProjectFile(resolver, graphcoolProjectFileName)
+async function getURL(token: string, props: Props, env: SystemEnvironment): Promise<string> {
+  const currentProjectId = getProjectId(props, env)
+  if (!currentProjectId) {
+    return consoleURL(token)
   }
-  return undefined
+
+  const projectInfo = await pullProjectInfo(currentProjectId!, env.resolver)
+  return consoleURL(token, projectInfo.name)
+}
+
+function getProjectId(props: Props, env: SystemEnvironment): string | undefined {
+  const {resolver} = env
+
+  // check if provided file is valid (ends with correct suffix)
+  if (props.projectFile  && isValidProjectFilePath(props.projectFile)) {
+    return readProjectIdFromProjectFile(resolver, props.projectFile!)
+  } else if (props.projectFile && !isValidProjectFilePath(props.projectFile)) {
+    throw new Error(invalidProjectFilePathMessage(props.projectFile))
+  }
+
+  // no project file provided, search for one in current dir
+  const projectFiles = resolver.projectFiles('.')
+  if (projectFiles.length === 0) {
+    return undefined
+  } else if (projectFiles.length > 1) {
+    return undefined
+  }
+
+  return readProjectIdFromProjectFile(resolver, projectFiles[0])
 }
