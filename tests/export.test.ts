@@ -21,25 +21,6 @@ test.afterEach(() => {
   fetchMock.restore()
 })
 
-test('Export without project file but passing project ID as argument', async t => {
-  const sourceProjectId = 'cj26898xqm9tz0126n34d64ey'
-
-  // configure HTTP mocks
-  const mockedResponse = JSON.parse(mockedExportResponse)
-  fetchMock.post(systemAPIEndpoint, mockedResponse)
-
-  // dummy export data
-  const env = testEnvironment({})
-  env.resolver.write(graphcoolConfigFilePath, '{"token": ""}')
-  const props = {sourceProjectId}
-
-  env.out.prefix((t as any)._test.title, `$ graphcool export -s ${sourceProjectId}`)
-
-  await t.notThrows(
-    exportCommand(props, env)
-  )
-})
-
 test('Export with project file', async t => {
   const projectFile = 'example.graphcool'
 

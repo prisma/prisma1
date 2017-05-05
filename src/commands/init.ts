@@ -1,4 +1,4 @@
-import { Region, Resolver, SchemaInfo, SystemEnvironment } from '../types'
+import {Region, Resolver, SchemaInfo, SystemEnvironment, ProjectInfo} from '../types'
 import figures = require('figures')
 import generateName = require('sillyname')
 import { createProject, parseErrors, generateErrorOutput } from '../api/api'
@@ -41,8 +41,9 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
     const schema = await getSchema(schemaUrl, resolver)
 
     // create project
-    const projectInfo = await createProject(name, schema.schema, resolver, props.alias, props.region)
+    const projectInfo = await createProjectAndGetProjectInfo(name, schema, resolver, props.alias, props.region)
     writeProjectFile(projectInfo, resolver, props.outputPath)
+
 
     out.stopSpinner()
 
@@ -61,7 +62,14 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
       throw e
     }
   }
+}
 
+async function createProjectAndGetProjectInfo(name: string, schema: SchemaInfo, resolver: Resolver, alias?: string, region?: string): Promise<ProjectInfo> {
+  const projectInfo = await createProject(name, schema.schema, resolver, alias, region)
+  if (schema.source === sampleSchemaURL) {
+    projectInfo.schema = `${projectInfo.schema}\n\n# type Tweet {\n#   text: String!\n# }`
+  }
+  return projectInfo
 }
 
 async function getSchema(schemaUrl: string | undefined, resolver: Resolver): Promise<SchemaInfo> {
