@@ -53,13 +53,13 @@ export const projectAlreadyExistsMessage = `\
 ${graphcoolProjectFileName} already exists for the current project. \
 Looks like you've already setup your backend.\n`
 
-export const howDoYouWantToGetStarted = (options: string[]) => `\
+export const howDoYouWantToGetStarted = () => `\
 
-  Welcome to the Graphcool CLI. 
+  You are about to create a new Graphcool project. 
 
-  ${chalk.bold('How do you want to create a new project?')}
 
-${options.map(option => `${option}`).join('\n')}
+  ${chalk.bold('How do you want to continue?')}
+
 `
 
 /*
