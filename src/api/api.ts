@@ -26,13 +26,13 @@ async function sendGraphQLRequest(queryString: string,
     },
     body: JSON.stringify(payload),
   })
+  const json = await result.json()
 
-  if (process.env.DEBUG) {
-    const json = await result.json()
+  if (process.env.DEBUG === 'graphcool') {
     debug(`Received JSON response: \n${JSON.stringify(json)}`)
   }
 
-  return result
+  return json
 }
 
 export async function createProject(name: string,
@@ -67,8 +67,7 @@ mutation addProject($schema: String!, $name: String!, $alias: String, $region: R
     variables = {...variables, region}
   }
 
-  const result = await sendGraphQLRequest(mutation, resolver, variables)
-  const json = await result.json()
+  const json = await sendGraphQLRequest(mutation, resolver, variables)
 
   if (!json.data.addProject) {
     throw json
@@ -122,8 +121,7 @@ export async function pushNewSchema(newSchema: string,
     isDryRun
   }
 
-  const result = await sendGraphQLRequest(mutation, resolver, variables)
-  const json = await result.json()
+  const json = await sendGraphQLRequest(mutation, resolver, variables)
 
   if (!json.data.migrateProject) {
     throw json
@@ -154,11 +152,9 @@ export async function fetchProjects(resolver: Resolver): Promise<[ProjectInfo]> 
       }
     }
   }
-}
-`
+}`
 
-  const result = await sendGraphQLRequest(query, resolver)
-  const json = await result.json()
+  const json = await sendGraphQLRequest(query, resolver) // await fetch(systemAPIEndpoint, {
 
   const projects = json.data.viewer.user.projects.edges.map(edge => edge.node)
   const projectInfos: [ProjectInfo] = projects.map(p => ({
@@ -187,8 +183,7 @@ query ($projectId: ID!){
 
   const variables = {projectId}
 
-  const result = await sendGraphQLRequest(query, resolver, variables)
-  const json = await result.json()
+  const json = await sendGraphQLRequest(query, resolver, variables)
 
   if (!json.data.viewer.project) {
     throw json
@@ -217,8 +212,7 @@ mutation ($projectId: String!){
 }`
 
   const variables = { projectId }
-  const result = await sendGraphQLRequest(mutation, resolver, variables)
-  const json = await result.json()
+  const json = await sendGraphQLRequest(mutation, resolver, variables)
 
   if (!json.data.exportData) {
     throw json
