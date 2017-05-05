@@ -108,9 +108,8 @@ async function main() {
       checkHelp(argv, usageExport)
       await checkAuth()
 
-      const sourceProjectId = argv['source'] || argv['s']
       const projectFile = argv['project'] || argv['p']
-      await exportCommand({sourceProjectId, projectFile}, defaultEnvironment())
+      await exportCommand({projectFile}, defaultEnvironment())
       break
     }
 
@@ -118,9 +117,8 @@ async function main() {
       checkHelp(argv, usageExport)
       await checkAuth()
 
-      const sourceProjectId = argv['source'] || argv['s']
       const projectFile = argv['project'] || argv['p']
-      await endpointsCommand({sourceProjectId, projectFile}, defaultEnvironment())
+      await endpointsCommand({projectFile}, defaultEnvironment())
       break
     }
 
@@ -128,7 +126,8 @@ async function main() {
       checkHelp(argv, usageConsole)
       await checkAuth()
 
-      await consoleCommand({}, defaultEnvironment())
+      const projectFile = argv['project'] || argv['p']
+      await consoleCommand({projectFile}, defaultEnvironment())
       break
     }
 

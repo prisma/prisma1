@@ -9,7 +9,6 @@ import {
 const debug = require('debug')('graphcool')
 
 interface Props {
-  sourceProjectId?: string
   projectFile?: string
 }
 
@@ -17,7 +16,7 @@ export default async(props: Props, env: SystemEnvironment): Promise<void> => {
 
   const {out} = env
 
-  const projectId = props.sourceProjectId || getProjectId(props, env)
+  const projectId = getProjectId(props, env)
   if (!projectId) {
     throw new Error(noProjectIdMessage)
   }
