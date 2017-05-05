@@ -60,7 +60,7 @@ async function handleKeyEvent(name: string, currentIndex: number, options: strin
       break
     }
     case 'ENTER': {
-      await handleSelect(currentIndex, options, checkAuth, env)
+      await handleSelect(currentIndex, checkAuth, env)
       callback()
       break
     }
@@ -79,7 +79,7 @@ async function handleKeyEvent(name: string, currentIndex: number, options: strin
   return currentIndex
 }
 
-async function handleSelect(selectedIndex: number, options: string[][], checkAuth: CheckAuth, env: SystemEnvironment): Promise<void> {
+async function handleSelect(selectedIndex: number, checkAuth: CheckAuth, env: SystemEnvironment): Promise<void> {
   term.restoreCursor()
   term.eraseDisplayBelow()
   term.hideCursor(false)

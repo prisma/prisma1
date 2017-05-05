@@ -44,7 +44,6 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
     const projectInfo = await createProjectAndGetProjectInfo(name, schema, resolver, props.alias, props.region)
     writeProjectFile(projectInfo, resolver, props.outputPath)
 
-
     out.stopSpinner()
 
     const message = createdProjectMessage(name, schema.source, projectInfo.projectId)
