@@ -8,6 +8,8 @@ import figures = require('figures')
  */
 export const systemAPIEndpoint = 'https://api.graph.cool/system'
 export const authEndpoint = 'https://cli-auth-api.graph.cool'
+export const consoleURL = (token: string, projectName?: string) =>
+  `https://console.graph.cool/token/?token=${token}${projectName ? `&redirect=/${projectName}` : ''}`
 
 /*
  * File paths / names
@@ -177,3 +179,6 @@ Open an issue on GitHub: https://github.com/graphcool/graphcool-cli.`
 
 export const noProjectFileOrIdMessage = `\
 No project file or project ID provided.\n`
+
+export const notAuthenticatedMessage = `\
+You're currently not logged in. You can use the auth command to authenticate with Graphcool: '$ graphcool auth'`
