@@ -30,16 +30,14 @@ export default async (props: Props, env: SystemEnvironment, authServer: AuthServ
     out.stopSpinner()
   }
 
-  const validateResult = await authServer.validateAuthToken(token)
-  switch (validateResult) {
-    case 'invalid':
-      deleteGraphcoolConfig(resolver)
-      throw new Error('Invalid auth token')
-    case 'valid':
-      break
+  const authenticatedUserEmail = await authServer.validateAuthToken(token)
+  if (authenticatedUserEmail) {
+    writeGraphcoolConfig({token}, resolver)
+    out.write(authenticationSuccessMessage(authenticatedUserEmail))
+  } else {
+    deleteGraphcoolConfig(resolver)
+    throw new Error('Invalid auth token')
   }
 
-  writeGraphcoolConfig({token}, resolver)
-  out.write(authenticationSuccessMessage)
 }
 

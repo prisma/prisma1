@@ -45,7 +45,7 @@ export const openBrowserMessage = `You need to authenticate. Your browser will o
 export const couldNotRetrieveTokenMessage = `\
 Whoops, something went wrong during authentication.\n`
 
-export const authenticationSuccessMessage = ` ${chalk.green(figures.tick)} Authenticated successfully\n`
+export const authenticationSuccessMessage = (email: string) => ` ${chalk.green(figures.tick)} Authenticated user: ${chalk.bold(email)}\n`
 
 /*
  * Terminal output: create

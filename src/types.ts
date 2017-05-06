@@ -28,11 +28,9 @@ export interface Resolver {
   readDirectory(path: string): string[]
 }
 
-export type TokenValidationResult = 'valid' | 'invalid'
-
 export interface AuthServer {
   requestAuthToken(): Promise<string>
-  validateAuthToken(token: string): Promise<TokenValidationResult>
+  validateAuthToken(token: string)
 }
 
 export interface SchemaInfo {
