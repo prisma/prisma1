@@ -10,6 +10,7 @@ import {
 import { TestSystemEnvironment } from '../src/types'
 import TestOut from '../src/system/TestOut'
 import 'isomorphic-fetch'
+import
 
 const fetchMock = require('fetch-mock')
 const debug = require('debug')('graphcool')
@@ -214,8 +215,9 @@ test('Pull without project files but with multiple project files in current dire
 
   env.out.prefix((t as any)._test.title, `$ graphcool pull`)
 
+
   await t.throws(
-    pullCommand(props, env)
+    pull(props, env)
   )
 
   const expectedProjectFileContent1 = mockedPullProjectFile1
@@ -225,6 +227,16 @@ test('Pull without project files but with multiple project files in current dire
   t.is(result1, expectedProjectFileContent1)
   t.is(result2, expectedProjectFileContent2)
 })
+
+function pull(props, env) {
+  try {
+    pullCommand(props, env)
+  }
+  catch (e) {
+
+    throw e
+  }
+}
 
 function testEnvironment(storage: any): TestSystemEnvironment {
   return {

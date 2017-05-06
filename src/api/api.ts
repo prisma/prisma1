@@ -63,6 +63,7 @@ mutation addProject($schema: String!, $name: String!, $alias: String, $region: R
     }) {
       project {
         id
+        name
         schema
         alias
         version
@@ -81,9 +82,6 @@ mutation addProject($schema: String!, $name: String!, $alias: String, $region: R
 
   const json = await sendGraphQLRequest(mutation, resolver, variables)
 
-  console.log(`Received json: ${JSON.stringify(json)}`)
-
-
   if (!json.data.addProject) {
     throw json
   }
@@ -91,9 +89,10 @@ mutation addProject($schema: String!, $name: String!, $alias: String, $region: R
   const projectId = json.data.addProject.project.id
   const version = json.data.addProject.project.version
   schema = json.data.addProject.project.schema
-  const projectInfo = {projectId, version, alias, schema}
+  const alias = json.data.addProject.project.alias
+  const name = json.data.addProject.project.name
 
-  console.log(`Received project info: ${JSON.stringify(projectInfo)}`)
+  const projectInfo = {projectId, version, alias, schema, name}
 
   return projectInfo
 }
@@ -126,8 +125,11 @@ export async function pushNewSchema(newSchema: string,
       field
     }
     project {
-      version
-      schema
+        id
+        name
+        schema
+        alias
+        version
     }
   }
 }
@@ -164,7 +166,9 @@ export async function fetchProjects(resolver: Resolver): Promise<[ProjectInfo]> 
           node {
             id
             name
+            schema
             alias
+            version
           }
         }
       }
@@ -178,7 +182,9 @@ export async function fetchProjects(resolver: Resolver): Promise<[ProjectInfo]> 
   const projectInfos: [ProjectInfo] = projects.map(p => ({
     projectId: p.id,
     name: p.name,
-    alias: p.alias
+    alias: p.alias,
+    schema: p.schema,
+    version: p.version,
   }))
 
   return projectInfos

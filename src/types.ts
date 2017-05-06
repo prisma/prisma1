@@ -42,10 +42,10 @@ export interface SchemaInfo {
 
 export interface ProjectInfo {
   projectId: string
-  name?: string
-  schema?: string
+  name: string
+  schema: string
   version: string
-  alias?: string
+  alias: string
 }
 
 export interface MigrationMessage {

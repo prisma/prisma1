@@ -201,7 +201,7 @@ function defaultEnvironment(): SystemEnvironment {
   }
 }
 
-function onError(e: Error) {
+export function onError(e: Error) {
   Raven.captureException(e)
 
   // prevent the same error output twice
