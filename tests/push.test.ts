@@ -42,7 +42,7 @@ test('Succeeding schema migration with default project file', async t => {
   const expectedProjectFileContent = mockProjectFile3
   const result = env.resolver.read(`./${graphcoolProjectFileName}`)
 
-  t.is(result, expectedProjectFileContent)  
+  t.is(result, expectedProjectFileContent)
 })
 
 test('Succeeding schema migration as dry run', async t => {

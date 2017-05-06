@@ -93,8 +93,7 @@ async function handleSelect(selectedIndex: number, checkAuth: CheckAuth, env: Sy
   switch (selectedIndex) {
     case INSTAGRAM_STARTER: {
       const remoteSchemaUrl = instagramExampleSchemaUrl
-      const name = 'Instagram'
-      await initCommand({remoteSchemaUrl, name}, env)
+      await initCommand({remoteSchemaUrl}, env)
       break
     }
     case BLANK_PROJECT: {
