@@ -144,7 +144,7 @@ export const noProjectIdMessage = `\
 Please provide a valid project ID.\n`
 
 export const wroteProjectFileMessage = `\
- ${chalk.green(figures.tick)}  Your project file was successfully updated.\n`
+ ${chalk.green(figures.tick)}  Your project file was successfully updated. Reload it in your editor if needed.\n`
 
 export const newVersionMessage = (newVersion: string) => `\
 The new schema version is ${chalk.bold(newVersion)}.\n`
@@ -191,3 +191,6 @@ No project file or project ID provided.\n`
 
 export const notAuthenticatedMessage = `\
 You're currently not logged in. You can use the auth command to authenticate with Graphcool: '$ graphcool auth'`
+
+export const projectFileWasUpdatedMessage = `\
+Your project file was updated. Reload it in your editor if needed.\n`

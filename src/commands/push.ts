@@ -12,7 +12,7 @@ import {
   migrationErrorMessage,
   invalidProjectFileMessage,
   invalidProjectFilePathMessage,
-  multipleProjectFilesMessage
+  multipleProjectFilesMessage, projectFileWasUpdatedMessage
 } from '../utils/constants'
 import {
   writeProjectFile,
@@ -68,6 +68,7 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
           version: migrationResult.newVersion
         } as ProjectInfo
         writeProjectFile(projectInfo, resolver)
+        out.write(projectFileWasUpdatedMessage)
       }
     }
 

@@ -140,8 +140,6 @@ export async function pushNewSchema(newSchema: string,
 
   const json = await sendGraphQLRequest(mutation, resolver, variables)
 
-  console.log(`Received JSON: ${JSON.stringify(json)}`)
-
   if (!json.data.migrateProject) {
     throw json
   }
@@ -151,8 +149,6 @@ export async function pushNewSchema(newSchema: string,
   const newVersion = json.data.migrateProject.project.version
   newSchema = json.data.migrateProject.project.schema
   const migrationResult = {messages, errors, newVersion, newSchema} as MigrationResult
-
-  console.log(`Received migration result: ${JSON.stringify(migrationResult)}`)
 
   return migrationResult
 }
