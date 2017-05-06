@@ -64,7 +64,7 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
       if (!isDryRun) {
         const projectInfo = {
           projectId,
-          schema,
+          schema: migrationResult.newSchema,
           version: migrationResult.newVersion
         } as ProjectInfo
         writeProjectFile(projectInfo, resolver)

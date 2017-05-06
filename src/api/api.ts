@@ -65,6 +65,7 @@ mutation addProject($schema: String!, $name: String!, $alias: String, $region: R
         id
         schema
         alias
+        version
       }
     }
   }
@@ -80,14 +81,19 @@ mutation addProject($schema: String!, $name: String!, $alias: String, $region: R
 
   const json = await sendGraphQLRequest(mutation, resolver, variables)
 
+  console.log(`Received json: ${JSON.stringify(json)}`)
+
+
   if (!json.data.addProject) {
     throw json
   }
 
   const projectId = json.data.addProject.project.id
-  const version = '1' // result.addProject.version
+  const version = json.data.addProject.project.version
   schema = json.data.addProject.project.schema
   const projectInfo = {projectId, version, alias, schema}
+
+  console.log(`Received project info: ${JSON.stringify(projectInfo)}`)
 
   return projectInfo
 }
@@ -121,6 +127,7 @@ export async function pushNewSchema(newSchema: string,
     }
     project {
       version
+      schema
     }
   }
 }
@@ -133,6 +140,8 @@ export async function pushNewSchema(newSchema: string,
 
   const json = await sendGraphQLRequest(mutation, resolver, variables)
 
+  console.log(`Received JSON: ${JSON.stringify(json)}`)
+
   if (!json.data.migrateProject) {
     throw json
   }
@@ -140,7 +149,10 @@ export async function pushNewSchema(newSchema: string,
   const messages = json.data.migrateProject.migrationMessages as [MigrationMessage]
   const errors = json.data.migrateProject.errors as [MigrationErrorMessage]
   const newVersion = json.data.migrateProject.project.version
-  const migrationResult = {messages, errors, newVersion} as MigrationResult
+  newSchema = json.data.migrateProject.project.schema
+  const migrationResult = {messages, errors, newVersion, newSchema} as MigrationResult
+
+  console.log(`Received migration result: ${JSON.stringify(migrationResult)}`)
 
   return migrationResult
 }

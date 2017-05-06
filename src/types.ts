@@ -66,6 +66,7 @@ export interface MigrationResult {
   messages: [MigrationMessage]
   errors: [MigrationErrorMessage]
   newVersion: string
+  newSchema: string
 }
 
 export interface Out {
