@@ -4,6 +4,7 @@ import generateName = require('sillyname')
 import { createProject, parseErrors, generateErrorOutput } from '../api/api'
 import * as fs from 'fs'
 import * as path from 'path'
+import { projectInfoToContents } from '../utils/utils'
 import { writeProjectFile } from '../utils/file'
 import 'isomorphic-fetch'
 import {
@@ -48,7 +49,7 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
 
     out.stopSpinner()
 
-    const message = createdProjectMessage(name, schema.source, projectInfo.projectId)
+    const message = createdProjectMessage(name, schema.source, projectInfo.projectId, projectInfoToContents(projectInfo))
     out.write(message)
 
   } catch (e) {

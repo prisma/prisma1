@@ -44,7 +44,7 @@ export interface ProjectInfo {
   projectId: string
   name?: string
   schema?: string
-  version?: string
+  version: string
   alias?: string
 }
 

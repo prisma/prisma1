@@ -1,10 +1,12 @@
 import {GraphcoolConfig, Resolver, ProjectInfo} from '../types'
+import { projectInfoToContents } from './utils'
 import {
   graphcoolConfigFilePath,
   graphcoolProjectFileName,
   exampleSchema,
   projectFileSuffix
 } from './constants'
+
 const debug = require('debug')('graphcool')
 
 /*
@@ -13,8 +15,7 @@ const debug = require('debug')('graphcool')
 
 export function writeProjectFile(projectInfo: ProjectInfo, resolver: Resolver, path?: string) {
   path = isValidProjectFilePath(path) ? path : graphcoolProjectFileName
-  const schemaWithHeader = `# project: ${projectInfo.alias || projectInfo.projectId}\n# version: ${projectInfo.version || ''}\n\n${projectInfo.schema}`
-  resolver.write(path!, schemaWithHeader)
+  resolver.write(path!, projectInfoToContents(projectInfo))
 }
 
 export function readProjectInfoFromProjectFile(resolver: Resolver, path: string): ProjectInfo | undefined {

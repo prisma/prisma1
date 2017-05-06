@@ -51,11 +51,15 @@ export const authenticationSuccessMessage = ` ${chalk.green(figures.tick)}  Auth
  * Terminal output: create
  */
 export const creatingProjectMessage = (name: string) => `Creating project ${chalk.bold(name)}...`
-export const createdProjectMessage = (name: string, schemaSource: string, projectId: string) => `\
+export const createdProjectMessage = (name: string, schemaSource: string, projectId: string, projectFileContent: string) => `\
  ${chalk.green(figures.tick)} Created project ${chalk.bold(name)} from ${chalk.bold(schemaSource)}. Your endpoints are:
  
    ${chalk.blue(figures.pointer)} Simple API: https://api.graph.cool/simple/v1/${projectId}
-   ${chalk.blue(figures.pointer)} Relay API: https://api.graph.cool/relay/v1/${projectId}\n`
+   ${chalk.blue(figures.pointer)} Relay API: https://api.graph.cool/relay/v1/${projectId}
+
+  Your project.graphcool file looks like:
+  ${projectFileContent}
+  `
 
 export const couldNotCreateProjectMessage = `\
 Whoops, something went wrong while creating the project.\n`
