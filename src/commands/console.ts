@@ -1,39 +1,42 @@
 import {readGraphcoolConfig, readProjectIdFromProjectFile, isValidProjectFilePath} from '../utils/file'
-import {SystemEnvironment} from '../types'
+import {SystemEnvironment, ProjectInfo} from '../types'
 import open = require('open')
 import { pullProjectInfo } from '../api/api'
 import {
   consoleURL,
   invalidProjectFilePathMessage,
-  notAuthenticatedMessage
+  notAuthenticatedMessage, openedConsoleMessage
 } from '../utils/constants'
-
-const debug = require('debug')('graphcool-auth')
+const debug = require('debug')('graphcool')
 
 interface Props {
   projectFile?: string
 }
 
 export default async (props: Props, env: SystemEnvironment): Promise<void> => {
-  const {resolver} = env
+  const {resolver, out} = env
 
   const {token} = readGraphcoolConfig(resolver)
   if (!token) {
     throw new Error(notAuthenticatedMessage)
   }
 
-  const url = await getURL(token, props, env)
+  const projectInfo = await getProjectInfo(token, props, env)
+  const url = projectInfo ? consoleURL(token, projectInfo.name) : consoleURL(token)
+
   open(url)
+  out.write(openedConsoleMessage(projectInfo ? projectInfo.name : undefined))
 }
 
-async function getURL(token: string, props: Props, env: SystemEnvironment): Promise<string> {
+
+async function getProjectInfo(token: string, props: Props, env: SystemEnvironment): Promise<ProjectInfo | undefined> {
   const currentProjectId = getProjectId(props, env)
   if (!currentProjectId) {
-    return consoleURL(token)
+    return undefined
   }
 
   const projectInfo = await pullProjectInfo(currentProjectId!, env.resolver)
-  return consoleURL(token, projectInfo.name)
+  return projectInfo
 }
 
 function getProjectId(props: Props, env: SystemEnvironment): string | undefined {

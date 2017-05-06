@@ -7,6 +7,7 @@ export type Command =
   | 'pull'
   | 'endpoints'
   | 'console'
+  | 'playground'
   | 'projects'
   | 'version'
   | 'help'

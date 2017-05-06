@@ -4,6 +4,7 @@ import * as minimist from 'minimist'
 import { Command, SystemEnvironment } from './types'
 import pushCommand from './commands/push'
 import consoleCommand from './commands/console'
+import playgroundCommand from './commands/playground'
 import projectsCommand from './commands/projects'
 import pullCommand from './commands/pull'
 import authCommand from './commands/auth'
@@ -29,7 +30,7 @@ import {
   usageAuth,
   usageVersion,
   usageConsole,
-  usageExport,
+  usageExport, usageEndpoints, usagePlayground,
 } from './utils/usage'
 
 var Raven = require('raven')
@@ -121,7 +122,7 @@ async function main() {
     }
 
     case 'endpoints': {
-      checkHelp(argv, usageExport)
+      checkHelp(argv, usageEndpoints)
       await checkAuth()
 
       const projectFile = argv['project'] || argv['p']
@@ -137,6 +138,16 @@ async function main() {
       await consoleCommand({projectFile}, defaultEnvironment())
       break
     }
+
+    case 'playground': {
+      checkHelp(argv, usagePlayground)
+      await checkAuth()
+
+      const projectFile = argv['project'] || argv['p']
+      await playgroundCommand({projectFile}, defaultEnvironment())
+      break
+    }
+
 
     case 'projects': {
       checkHelp(argv, usageProjects)

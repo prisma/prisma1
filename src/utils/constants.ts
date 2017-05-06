@@ -10,6 +10,8 @@ export const systemAPIEndpoint = 'https://api.graph.cool/system'
 export const authEndpoint = 'https://cli-auth-api.graph.cool'
 export const consoleURL = (token: string, projectName?: string) =>
   `https://console.graph.cool/token/?token=${token}${projectName ? `&redirect=/${encodeURIComponent(projectName)}` : ''}`
+export const playgroundURL = (token: string, projectName: string) =>
+  `https://console.graph.cool/token/?token=${token}&redirect=/${encodeURIComponent(projectName)}/playground`
 export const sampleSchemaURL = `http://graphqlbin.com/empty.graphql`
 
 /*
@@ -180,6 +182,23 @@ Found ${projectFiles.length} project files. You can specify the one you for whic
 For example: '$ graphcool export -p ${projectFiles[0]}'\n`
 
 
+/*
+ * Terminal output: console
+ */
+export const openedConsoleMessage = (projectName?: string) => projectName ? `\
+The Console for project ${chalk.bold(projectName)} was opened in your browser.\n` : `\
+The Console was opened in your browser.\n`
+
+
+/*
+ * Terminal output: playground
+ */
+export const tooManyProjectFilesForPlaygroundMessage = (projectFiles: string[]) => `\
+Found ${projectFiles.length} project files. You can specify the one you for which you want open the Playground by passing it as an argument. 
+For example: '$ graphcool playground -p ${projectFiles[0]}'\n`
+
+export const openedPlaygroundMessage = (projectName: string) => `\
+The Playground for project ${chalk.bold(projectName)} was opened in your browser.\n`
 
 /*
  * Terminal output: general
@@ -199,3 +218,4 @@ You're currently not logged in. You can use the auth command to authenticate wit
 
 export const projectFileWasUpdatedMessage = `\
 Your project file was updated. Reload it in your editor if needed.\n`
+
