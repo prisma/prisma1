@@ -49,7 +49,7 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
 
     out.stopSpinner()
 
-    const message = createdProjectMessage(name, schema.source, projectInfo.projectId, projectInfoToContents(projectInfo))
+    const message = createdProjectMessage(name, projectInfo.projectId, projectInfoToContents(projectInfo))
     out.write(message)
 
   } catch (e) {

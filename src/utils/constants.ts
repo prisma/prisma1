@@ -51,16 +51,24 @@ export const authenticationSuccessMessage = ` ${chalk.green(figures.tick)} Authe
  * Terminal output: create
  */
 export const creatingProjectMessage = (name: string) => `Creating project ${chalk.bold(name)}...`
-export const createdProjectMessage = (name: string, schemaSource: string, projectId: string, projectFileContent: string) => `\
- ${chalk.green(figures.tick)} Created project ${chalk.bold(name)} from ${chalk.bold(schemaSource)}. Your endpoints are:
+export const createdProjectMessage = (name: string, projectId: string, projectFileContent: string) => `\
+ ${chalk.green(figures.tick)} Created project ${chalk.bold(name)} (ID: ${projectId}) successfully.
  
-   ${chalk.blue(figures.pointer)} Simple API: https://api.graph.cool/simple/v1/${projectId}
-   ${chalk.blue(figures.pointer)} Relay API: https://api.graph.cool/relay/v1/${projectId}
+ 
+   ${chalk.bold('Here is what you can do next:')}
 
- ${chalk.green(figures.tick)} Your ${chalk.bold('project.graphcool')} file looks like:
+   1) Use one of the following endpoints to connect to your GraphQL API:
+ 
+        Simple API:   https://api.graph.cool/simple/v1/${projectId}
+        Relay API:    https://api.graph.cool/relay/v1/${projectId}
 
-   ${projectFileContent.replace(/\r?\n/g, '\n   ')}
+   2) Open ${chalk.bold('project.graphcool')} in your editor to update your schema.
+      You can push your changes using ${chalk.cyan('`graphcool push`')}.
+      
+   3) Read more about the CLI workflow in the docs: ${chalk.underline('https://www.graph.cool/docs/reference/cli')}
   `
+
+// ${projectFileContent.replace(/\r?\n/g, '\n      ')}
 
 export const couldNotCreateProjectMessage = `\
 Whoops, something went wrong while creating the project.\n`
@@ -185,11 +193,11 @@ For example: '$ graphcool export -p ${projectFiles[0]}'\n`
  * Terminal output: general
  */
 export const contactUsInSlackMessage = `\
-Get in touch if you need help: http://slack.graph.cool/`
+ * Get in touch if you need help: http://slack.graph.cool/`
 
 export const setDebugMessage = `\
-You can enable additional output with \`export DEBUG=graphcool\` and rerunning the command.
-Open an issue on GitHub: https://github.com/graphcool/graphcool-cli.`
+ * You can enable additional output with \`export DEBUG=graphcool\` and rerunning the command.
+ * Open an issue on GitHub: https://github.com/graphcool/graphcool-cli.`
 
 export const noProjectFileOrIdMessage = `\
 No project file or project ID provided.\n`
