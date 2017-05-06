@@ -13,13 +13,10 @@ import exportCommand from './commands/export'
 import endpointsCommand from './commands/endpoints'
 import FileSystemResolver from './system/FileSystemResolver'
 import figures = require('figures')
-import * as chalk from 'chalk'
 import StdOut from './system/StdOut'
 import { GraphcoolAuthServer } from './api/GraphcoolAuthServer'
 import { readGraphcoolConfig } from './utils/file'
 import {
-  setDebugMessage,
-  contactUsInSlackMessage,
   sentryId,
   sentryKey
 } from './utils/constants'
@@ -201,25 +198,6 @@ function defaultEnvironment(): SystemEnvironment {
   }
 }
 
-export function onError(e: Error) {
-  Raven.captureException(e)
-
-  // prevent the same error output twice
-  const errorMessage = `Error: ${e.message}`
-  if (e.stack && !e.stack.startsWith(errorMessage!)) {
-    console.error(`${chalk.red(figures.cross)}  Error: ${errorMessage}\n`)
-    debug(e.stack)
-  } else {
-    const errorLines = e.stack!.split('\n')
-    const firstErrorLine = errorLines[0]
-    console.error(`${chalk.red(figures.cross)}  ${firstErrorLine}`)
-    debug(e.stack)
-  }
-
-  console.error(`\n${setDebugMessage}\n${contactUsInSlackMessage}`)
-  process.exit(1)
-}
-
-process.on('unhandledRejection', e => onError(e))
+process.on('unhandledRejection', e => new StdOut().onError(e))
 
 main()

@@ -74,6 +74,7 @@ export interface Out {
   writeError(message: string): void
   startSpinner(message: string): void
   stopSpinner(): void
+  onError(error: Error): void
 }
 
 export interface SystemEnvironment {

@@ -10,7 +10,6 @@ import {
 import { TestSystemEnvironment } from '../src/types'
 import TestOut from '../src/system/TestOut'
 import 'isomorphic-fetch'
-// import
 
 const fetchMock = require('fetch-mock')
 const debug = require('debug')('graphcool')
@@ -233,7 +232,7 @@ async function pull(props, env) {
     await pullCommand(props, env)
   }
   catch (e) {
-
+    env.out.onError(e)
     throw e
   }
 }

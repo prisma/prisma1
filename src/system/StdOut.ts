@@ -1,6 +1,12 @@
 import { Out } from '../types'
 import ora = require('ora')
 
+import * as chalk from 'chalk'
+import {setDebugMessage, contactUsInSlackMessage} from '../utils/constants'
+import figures = require('figures')
+var Raven = require('raven')
+const debug = require('debug')('graphcool')
+
 export default class StdOut implements Out {
 
   spinner: any
@@ -22,5 +28,25 @@ export default class StdOut implements Out {
       this.spinner.stop()
     }
   }
+
+  onError(error: Error): void {
+    Raven.captureException(error)
+
+    // prevent the same error output twice
+    const errorMessage = `Error: ${error.message}`
+    if (error.stack && !error.stack.startsWith(errorMessage!)) {
+      console.error(`${chalk.red(figures.cross)}  Error: ${errorMessage}\n`)
+      debug(error.stack)
+    } else {
+      const errorLines = error.stack!.split('\n')
+      const firstErrorLine = errorLines[0]
+      console.error(`${chalk.red(figures.cross)}  ${firstErrorLine}`)
+      debug(error.stack)
+    }
+
+    console.error(`\n${setDebugMessage}\n${contactUsInSlackMessage}`)
+    process.exit(1)
+  }
+
 
 }
