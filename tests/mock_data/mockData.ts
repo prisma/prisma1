@@ -1,4 +1,4 @@
-import {modifiedTwitterSchema, simpleTwitterSchemaWithSystemFields} from './schemas'
+import {modifiedTwitterSchema, simpleTwitterSchemaWithSystemFields, modifiedTwitterSchemaJSONFriendly} from './schemas'
 
 /*
  * Testing
@@ -37,8 +37,7 @@ export const mockProjectFile3 = `\
 # project: abcdefghijklmn
 # version: 3
 
-${modifiedTwitterSchema}
-`
+${modifiedTwitterSchema}`
 
 export const mockedPushSchemaResponse = `\
 {
@@ -102,7 +101,11 @@ export const mockedPushSchemaResponse = `\
       ],
       "errors": [],
       "project": {
-        "version": "3"
+        "version": 3,
+        "name": "Example",
+        "alias": null,
+        "schema": "${modifiedTwitterSchemaJSONFriendly}",
+        "id": "cj26898xqm9tz0126n34d64ey"
       }
     }
   }
@@ -223,7 +226,10 @@ export const mockedCreateProjectResponse = `\
     "addProject": {
       "project": {
         "id": "abcdefghijklmn",
-        "schema": "type Tweet {\\n  id: ID!\\n  createdAt: DateTime!\\n  updatedAt: DateTime!\\n  text: String!\\n}\\n"
+        "schema": "type Tweet {\\n  id: ID!\\n  createdAt: DateTime!\\n  updatedAt: DateTime!\\n  text: String!\\n}\\n",
+        "version": 1,
+        "alias": null,
+        "name": "Example"
       }
     }
   }
@@ -236,7 +242,9 @@ export const mockedCreateProjectResponseWithAlias = `\
       "project": {
         "id": "abcdefghijklmn",
         "schema": "type Tweet {\\n  id: ID!\\n  createdAt: DateTime!\\n  updatedAt: DateTime!\\n  text: String!\\n}\\n",
-        "alias": "example"
+        "alias": "example",
+        "version": 1,
+        "name": "Example"      
       }
     }
   }

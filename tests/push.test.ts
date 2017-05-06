@@ -6,6 +6,7 @@ import {systemAPIEndpoint, graphcoolProjectFileName, graphcoolConfigFilePath} fr
 import { mockedPushSchemaResponse, mockProjectFile2, mockProjectFile3 } from './mock_data/mockData'
 import { TestSystemEnvironment } from '../src/types'
 import TestOut from '../src/system/TestOut'
+import {modifiedTwitterSchemaJSONFriendly} from './mock_data/schemas'
 
 const fetchMock = require('fetch-mock')
 const debug = require('debug')('graphcool')

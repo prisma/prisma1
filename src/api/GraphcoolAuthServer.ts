@@ -1,4 +1,4 @@
-import { AuthServer, TokenValidationResult } from '../types'
+import { AuthServer } from '../types'
 import { systemAPIEndpoint, authEndpoint } from '../utils/constants'
 import 'isomorphic-fetch'
 import cuid = require('cuid')
@@ -32,12 +32,13 @@ export class GraphcoolAuthServer implements AuthServer {
     }
   }
 
-  async validateAuthToken(token: string): Promise<TokenValidationResult> {
+  async validateAuthToken(token: string) {
 
     const authQuery = `{
       viewer {
         user {
           id
+          email
         }
       }
     }`
@@ -53,15 +54,15 @@ export class GraphcoolAuthServer implements AuthServer {
       })
       const json = await result.json()
 
-      if (!json.data.viewer.user || json.errors) {
-        return 'invalid'
+      if (!json.data.viewer.user || !json.data.viewer.user.email || json.errors) {
+        return undefined
       }
+
+      return json.data.viewer.user.email
     }
     catch (e) {
-      return 'invalid'
+      return undefined
     }
-
-    return 'valid'
   }
 
 }
