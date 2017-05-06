@@ -110,6 +110,17 @@ export const usageConsole = `
     
 `
 
+export const usagePlayground = `
+  Usage: graphcool console [options]
+  
+  Open current project in Graphcool Playground with your browser
+
+  Options: 
+    -p, --project      Project file (default: project.graphcool)
+    -h, --help         Output usage information
+    
+`
+
 export const usageProjects = `
   Usage: graphcool projects [options]
   

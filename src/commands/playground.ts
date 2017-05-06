@@ -1,13 +1,17 @@
 import {readGraphcoolConfig, readProjectIdFromProjectFile, isValidProjectFilePath} from '../utils/file'
 import {SystemEnvironment, ProjectInfo} from '../types'
-import open = require('open')
 import { pullProjectInfo } from '../api/api'
+import open = require('open')
 import {
-  consoleURL,
   invalidProjectFilePathMessage,
-  notAuthenticatedMessage, openedConsoleMessage
+  notAuthenticatedMessage,
+  playgroundURL,
+  tooManyProjectFilesForPlaygroundMessage,
+  noProjectIdMessage,
+  openedPlaygroundMessage
 } from '../utils/constants'
-const debug = require('debug')('graphcool')
+
+const debug = require('debug')('graphcool-auth')
 
 interface Props {
   projectFile?: string
@@ -21,18 +25,16 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
     throw new Error(notAuthenticatedMessage)
   }
 
-  const projectInfo = await getProjectInfo(token, props, env)
-  const url = projectInfo ? consoleURL(token, projectInfo.name) : consoleURL(token)
-
+  const projectInfo = await getProjectInfo(props, env)
+  const url = playgroundURL(token, projectInfo.name)
   open(url)
-  out.write(openedConsoleMessage(projectInfo ? projectInfo.name : undefined))
+  out.write(openedPlaygroundMessage(projectInfo.name))
 }
 
-
-async function getProjectInfo(token: string, props: Props, env: SystemEnvironment): Promise<ProjectInfo | undefined> {
+async function getProjectInfo(props: Props, env: SystemEnvironment): Promise<ProjectInfo> {
   const currentProjectId = getProjectId(props, env)
   if (!currentProjectId) {
-    return undefined
+    throw new Error(noProjectIdMessage)
   }
 
   const projectInfo = await pullProjectInfo(currentProjectId!, env.resolver)
@@ -54,7 +56,7 @@ function getProjectId(props: Props, env: SystemEnvironment): string | undefined 
   if (projectFiles.length === 0) {
     return undefined
   } else if (projectFiles.length > 1) {
-    return undefined
+    throw new Error(tooManyProjectFilesForPlaygroundMessage(projectFiles))
   }
 
   return readProjectIdFromProjectFile(resolver, projectFiles[0])

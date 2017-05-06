@@ -44,7 +44,7 @@ export default class StdOut implements Out {
       debug(error.stack)
     }
 
-    console.error(`\n${setDebugMessage}\n${contactUsInSlackMessage}`)
+    console.error(`\n${setDebugMessage}\n${contactUsInSlackMessage}\n`)
     process.exit(1)
   }
 
