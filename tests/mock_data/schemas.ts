@@ -29,3 +29,4 @@ type Image {
   taken: DateTime
 }`
 
+export const modifiedTwitterSchemaJSONFriendly = `type Tweet {\\n  text: String!\\n  author: Customer! @relation(name: \\"TweetsByCustomer\\")\\n}\\n\\ntype Customer {\\n  name: String!\\n  tweets: [Tweet!]! @relation(name: \\"TweetsByCustomer\\")\\n}\\n\\ntype Image {\\n  url: String!\\n  type: String\\n  taken: DateTime\\n}`
