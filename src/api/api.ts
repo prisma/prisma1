@@ -89,10 +89,10 @@ mutation addProject($schema: String!, $name: String!, $alias: String, $region: R
   const projectId = json.data.addProject.project.id
   const version = json.data.addProject.project.version
   schema = json.data.addProject.project.schema
-  const alias = json.data.addProject.project.alias
-  const name = json.data.addProject.project.name
+  const returnedAlias = json.data.addProject.project.alias
+  name = json.data.addProject.project.name
 
-  const projectInfo = {projectId, version, alias, schema, name}
+  const projectInfo = {projectId, version, alias: returnedAlias, schema, name}
 
   return projectInfo
 }

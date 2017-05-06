@@ -10,7 +10,7 @@ import {
 import { TestSystemEnvironment } from '../src/types'
 import TestOut from '../src/system/TestOut'
 import 'isomorphic-fetch'
-import
+// import
 
 const fetchMock = require('fetch-mock')
 const debug = require('debug')('graphcool')
@@ -228,9 +228,9 @@ test('Pull without project files but with multiple project files in current dire
   t.is(result2, expectedProjectFileContent2)
 })
 
-function pull(props, env) {
+async function pull(props, env) {
   try {
-    pullCommand(props, env)
+    await pullCommand(props, env)
   }
   catch (e) {
 
