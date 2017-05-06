@@ -144,7 +144,7 @@ export const noProjectIdMessage = `\
 Please provide a valid project ID.\n`
 
 export const wroteProjectFileMessage = `\
- ${chalk.green(figures.tick)}  Your project file was successfully updated. Reload it in your editor if needed.\n`
+ ${chalk.green(figures.tick)}  Your project file was successfully updated. Reload it in your editor if needed. `
 
 export const newVersionMessage = (newVersion: string) => `\
 The new schema version is ${chalk.bold(newVersion)}.\n`
