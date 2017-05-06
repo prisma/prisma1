@@ -45,7 +45,7 @@ export const openBrowserMessage = `You need to authenticate. Your browser will o
 export const couldNotRetrieveTokenMessage = `\
 Whoops, something went wrong during authentication.\n`
 
-export const authenticationSuccessMessage = ` ${chalk.green(figures.tick)}  Authenticated successfully\n`
+export const authenticationSuccessMessage = ` ${chalk.green(figures.tick)} Authenticated successfully\n`
 
 /*
  * Terminal output: create
@@ -57,8 +57,9 @@ export const createdProjectMessage = (name: string, schemaSource: string, projec
    ${chalk.blue(figures.pointer)} Simple API: https://api.graph.cool/simple/v1/${projectId}
    ${chalk.blue(figures.pointer)} Relay API: https://api.graph.cool/relay/v1/${projectId}
 
-  Your project.graphcool file looks like:
-  ${projectFileContent}
+ ${chalk.green(figures.tick)} Your ${chalk.bold('project.graphcool')} file looks like:
+
+   ${projectFileContent.replace(/\r?\n/g, '\n   ')}
   `
 
 export const couldNotCreateProjectMessage = `\
@@ -94,13 +95,13 @@ export const couldNotMigrateSchemaMessage = `
 An error occured while trying to migrate the project.\n`
 
 export const noActionRequiredMessage = `\
- ${chalk.green(figures.tick)}  Identical schema, no action required.\n`
+ ${chalk.green(figures.tick)} Identical schema, no action required.\n`
 
 export const migrationDryRunMessage = `\
 This was a dry run of the migration. Here are the potential changes:\n`
 
 export const migrationPerformedMessage = `\
- ${chalk.green(figures.tick)}  Your schema was successfully updated. Here are the changes:\n`
+ ${chalk.green(figures.tick)} Your schema was successfully updated. Here are the changes:\n`
 
 export const migrationErrorMessage = `\
 There are issues with the new schema that you provided:\n`
@@ -148,7 +149,7 @@ export const noProjectIdMessage = `\
 Please provide a valid project ID.\n`
 
 export const wroteProjectFileMessage = `\
- ${chalk.green(figures.tick)}  Your project file was successfully updated. Reload it in your editor if needed. `
+ ${chalk.green(figures.tick)} Your project file was successfully updated. Reload it in your editor if needed. `
 
 export const newVersionMessage = (newVersion: string) => `\
 The new schema version is ${chalk.bold(newVersion)}.\n`
@@ -170,9 +171,9 @@ export const exportingDataMessage = `\
 Exporting your project data ...`
 
 export const downloadUrlMessage = (url: string) => `\
- ${chalk.green(figures.tick)}  You can download your project data by pasting this URL in a browser:
- 
-  ${chalk.blue(figures.pointer)} Download URL: ${url}\n`
+ ${chalk.green(figures.tick)} You can download your project data by pasting this URL in a browser:
+
+   ${chalk.blue(figures.pointer)} Download URL: ${url}\n`
 
 export const multipleProjectFilesForExportMessage = (projectFiles: string[]) => `\
 Found ${projectFiles.length} project files. You can specify the one you for which you want to export the data by passing it as an argument.
