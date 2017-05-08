@@ -69,9 +69,7 @@ export const createdProjectMessage = (name: string, projectId: string, projectFi
       You can push your changes using ${chalk.cyan('`graphcool push`')}.
       
    3) Read more about the CLI workflow in the docs: ${chalk.underline('https://www.graph.cool/docs/reference/cli')}
-  `
-
-// ${projectFileContent.replace(/\r?\n/g, '\n      ')}
+`
 
 export const couldNotCreateProjectMessage = `\
 Whoops, something went wrong while creating the project.\n`
@@ -87,6 +85,10 @@ export const howDoYouWantToGetStarted = () => `\
 
   ${chalk.bold('How do you want to continue?')}
 
+`
+
+export const invalidSchemaFileMessage = (schemaFileName: string) =>  `\
+Your schema file ${chalk.bold(schemaFileName)} is invalid. A schema file must end with ${chalk.bold(schemaFileSuffix)}.
 `
 
 /*
@@ -127,8 +129,6 @@ Found ${projectFiles.length} project files. You can specify the one you want to 
 /*
  * Terminal output: projects
  */
-export const projectsMessage = `\
-`
 
 export const couldNotFetchProjectsMessage = `\
 An error occured while trying to fetch your projects.\n`
@@ -163,7 +163,6 @@ export const wroteProjectFileMessage = (projectFile: string) => `\
 
 export const pulledInitialProjectFileMessage = (projectFile: string) => `\
  ${chalk.green(figures.tick)} Your project file was written to ${chalk.bold(projectFile)}`
-
 
 export const newVersionMessage = (newVersion: string) => `\
 The new schema version is ${chalk.bold(newVersion)}.\n`
@@ -236,7 +235,7 @@ export const contactUsInSlackMessage = `\
  * Get in touch if you need help: http://slack.graph.cool/`
 
 export const setDebugMessage = `\
- * You can enable additional output with \`export DEBUG=graphcool\` and rerunning the command.
+ * You can enable additional output by setting \`export DEBUG=graphcool\` and rerunning the command.
  * Open an issue on GitHub: https://github.com/graphcool/graphcool-cli.`
 
 export const noProjectFileOrIdMessage = `\

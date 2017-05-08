@@ -5,7 +5,7 @@ import { createProject, parseErrors, generateErrorOutput } from '../api/api'
 import * as fs from 'fs'
 import * as path from 'path'
 import { projectInfoToContents } from '../utils/utils'
-import { writeProjectFile } from '../utils/file'
+import {writeProjectFile, isValidSchemaFilePath} from '../utils/file'
 import 'isomorphic-fetch'
 import {
   graphcoolProjectFileName,
@@ -14,7 +14,7 @@ import {
   couldNotCreateProjectMessage,
   projectAlreadyExistsMessage,
   projectFileSuffix,
-  sampleSchemaURL
+  sampleSchemaURL, invalidSchemaFileMessage
 } from '../utils/constants'
 const debug = require('debug')('graphcool')
 
@@ -41,6 +41,9 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
   try {
     // resolve schema
     const schemaUrl = props.localSchemaFile ? props.localSchemaFile : props.remoteSchemaUrl
+    if (!isValidSchemaFilePath(schemaUrl)) {
+      throw new Error(invalidSchemaFileMessage(schemaUrl!))
+    }
     const schema = await getSchema(schemaUrl, resolver)
 
     // create project

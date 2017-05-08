@@ -4,7 +4,7 @@ import {
   graphcoolConfigFilePath,
   graphcoolProjectFileName,
   exampleSchema,
-  projectFileSuffix
+  projectFileSuffix, schemaFileSuffix
 } from './constants'
 
 const debug = require('debug')('graphcool')
@@ -68,6 +68,14 @@ export function isValidProjectFilePath(projectFilePath?: string): boolean {
   }
   return projectFilePath.endsWith(projectFileSuffix)
 }
+
+export function isValidSchemaFilePath(schemaFilePath?: string): boolean {
+  if (!schemaFilePath) {
+    return false
+  }
+  return schemaFilePath.endsWith(schemaFileSuffix)
+}
+
 
 export function writeExampleSchemaFile(resolver: Resolver): string {
   const path = 'example.graphql'

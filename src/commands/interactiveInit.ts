@@ -27,7 +27,7 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
   const schemaFiles = env.resolver.schemaFiles('.')
 
   const options = [
-    [`${chalk.bold('Quickstart')}`, `Sets up a full-stack Instagram example to explore how things work.`, ''],
+    [`${chalk.bold('Quickstart')}`, `Sets up an Instagram example project to explore how things work.`, ''],
     [`${chalk.bold('New blank project')}`, `Creates a new Graphcool project from scratch.`, ''],
     ...schemaFiles.map(f => [`${chalk.bold('From local schema ./' + f)}`, 'Creates a new Graphcool project based on the local schema.', '']),
   ]
