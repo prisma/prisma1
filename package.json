@@ -1,6 +1,6 @@
 {
   "name": "graphcool",
-  "version": "0.2.0",
+  "version": "0.2.2",
   "bin": {
     "graphcool": "dist/src/index.js",
     "gc": "dist/src/index.js"
@@ -12,7 +12,8 @@
   "scripts": {
     "test": "npm run build && rm -f test.out && ava --serial ./dist/tests/*.js",
     "postinstall": "echo Run graphcool init to get started",
-    "build": "rm -rf dist && tsc && chmod +x dist/src/index.js"
+    "build": "rm -rf dist && tsc && chmod +x dist/src/index.js",
+    "prepublish": "npm run build"
   },
   "author": "",
   "license": "ISC",

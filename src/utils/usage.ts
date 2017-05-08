@@ -43,7 +43,7 @@ export const usageInit = `
     -n, --name <name>         Project name
     -a, --alias <alias>       Project alias
     -o, --output <path>       Path to output project file (default: project.graphcool)
-    -r, --region <region>     AWS Region (default: us-west-2)
+    -r, --region <region>     AWS Region (options: us-west-2 (default), eu-west-1, ap-northeast-1)
     -h, --help                Output usage information
     
   Note: This command will create a ${chalk.bold('project.graphcool')} project file in the current directory.
