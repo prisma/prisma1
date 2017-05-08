@@ -121,8 +121,7 @@ export const invalidProjectFilePathMessage = (projectFilePath: string) => `\
 ${projectFilePath} is not a valid project file (must end with ${projectFileSuffix}).\n`
 
 export const multipleProjectFilesMessage = (projectFiles: string[]) => `\
-Found ${projectFiles.length} project files. You can specify the one you want to push by passing it as an argument.
-For example: '$ graphcool push -p ${projectFiles[0]}'
+Found ${projectFiles.length} project files. You can specify the one you want to push, e.g.: '$ graphcool push -p ${projectFiles[0]}'
 `
 
 /*
@@ -159,8 +158,12 @@ There is no project file (project.graphcool) in the current directory.\n`
 export const noProjectIdMessage = `\
 Please provide a valid project ID.\n`
 
-export const wroteProjectFileMessage = `\
- ${chalk.green(figures.tick)} Your project file was successfully updated. Reload it in your editor if needed. `
+export const wroteProjectFileMessage = (projectFile: string) => `\
+ ${chalk.green(figures.tick)} Your project file (${chalk.bold(projectFile)}) was successfully updated. Reload it in your editor if needed. `
+
+export const pulledInitialProjectFileMessage = (projectFile: string) => `\
+ ${chalk.green(figures.tick)} Your project file was written to ${chalk.bold(projectFile)}`
+
 
 export const newVersionMessage = (newVersion: string) => `\
 The new schema version is ${chalk.bold(newVersion)}.\n`
@@ -170,8 +173,7 @@ The project ID you provided (${inputProjectId}) is different than the one in the
 This will override the current project file with a different project, do you still want to continue? [y|n]\n`
 
 export const multipleProjectFilesForPullMessage = (projectFiles: string[]) => `\
-Found ${projectFiles.length} project files. You can specify the one you want for which you want to pull the new schema by passing it as an argument.
-For example: '$ graphcool pull -p ${projectFiles[0]}\n'
+Found ${projectFiles.length} project files. You can specify the one you want for which you want to pull the new schema, e.g.: '$ graphcool pull -p ${projectFiles[0]}\n'
 `
 
 
@@ -187,8 +189,7 @@ export const downloadUrlMessage = (url: string) => `\
    ${chalk.blue(figures.pointer)} Download URL: ${url}\n`
 
 export const multipleProjectFilesForExportMessage = (projectFiles: string[]) => `\
-Found ${projectFiles.length} project files. You can specify the one you for which you want to export the data by passing it as an argument.
-For example: '$ graphcool export -p ${projectFiles[0]}'\n`
+Found ${projectFiles.length} project files. You can specify the one you for which you want to export the data, e.g.: '$ graphcool export -p ${projectFiles[0]}'\n`
 
 
 /*
@@ -217,8 +218,7 @@ Cloned your project as ${chalk.bold(clonedProjectName)}. The project file was wr
  * Terminal output: playground
  */
 export const tooManyProjectFilesForPlaygroundMessage = (projectFiles: string[]) => `\
-Found ${projectFiles.length} project files. You can specify the one you for which you want open the Playground by passing it as an argument. 
-For example: '$ graphcool playground -p ${projectFiles[0]}'\n`
+Found ${projectFiles.length} project files. You can specify the one you for which you want open the Playground, e.g.: '$ graphcool playground -p ${projectFiles[0]}'\n`
 
 export const openedPlaygroundMessage = (projectName: string) => `\
 The Playground for project ${chalk.bold(projectName)} was opened in your browser.\n`

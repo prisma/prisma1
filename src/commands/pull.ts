@@ -14,7 +14,7 @@ import {
   invalidProjectFilePathMessage,
   noProjectFileForPullMessage,
   graphcoolProjectFileName,
-  multipleProjectFilesForPullMessage
+  multipleProjectFilesForPullMessage, pulledInitialProjectFileMessage
 } from '../utils/constants'
 var term = require( 'terminal-kit' ).terminal
 
@@ -63,9 +63,14 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
 
     out.stopSpinner()
     const outputPath = props.outputPath || projectFile
+
+    const message = resolver.projectFiles('.').length === 0 ?
+      pulledInitialProjectFileMessage(outputPath) :
+      wroteProjectFileMessage(outputPath)
+
     writeProjectFile(projectInfo, resolver, outputPath)
 
-    out.write(wroteProjectFileMessage)
+    out.write(message)
     if (projectInfo.version && currentVersion) {
       const shouldDisplayVersionUpdate = parseInt(projectInfo.version!) > parseInt(currentVersion!)
       if (shouldDisplayVersionUpdate) {
