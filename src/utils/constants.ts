@@ -210,9 +210,15 @@ Found ${projectFiles.length} project files. You can specify the one for which yo
 export const cloningProjectMessage = `\
 Cloning your project ...`
 
-export const clonedProjectMessage = (clonedProjectName: string, outputPath: string) => `\
-Cloned your project as ${chalk.bold(clonedProjectName)}. The project file was written to ${chalk.bold(outputPath)}.
+export const clonedProjectMessage = (clonedProjectName: string, outputPath: string, projectId: string) => `\
+ ${chalk.green(figures.tick)} Cloned your project as ${chalk.bold(clonedProjectName)}. The project file was written to ${chalk.bold(outputPath)}.
+ 
+   Here are your endpoints: 
+   
+        Simple API:   https://api.graph.cool/simple/v1/${projectId}
+        Relay API:    https://api.graph.cool/relay/v1/${projectId}  
 `
+
 
 /*
  * Terminal output: playground

@@ -52,7 +52,7 @@ export default async(props: Props, env: SystemEnvironment): Promise<void> => {
     writeProjectFile(clonedProjectInfo, resolver, outputPath)
 
     out.stopSpinner()
-    const message = clonedProjectMessage(clonedProjectName, outputPath)
+    const message = clonedProjectMessage(clonedProjectName, outputPath, clonedProjectInfo.projectId)
     out.write(message)
 
   } catch(e) {
