@@ -14,6 +14,10 @@ type CheckAuth = () => Promise<void>
 
 interface Props {
   checkAuth: CheckAuth
+  name?: string
+  alias?: string
+  region?: string
+  outputPath?: string
 }
 
 export default async (props: Props, env: SystemEnvironment): Promise<void> => {
@@ -40,12 +44,12 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
 
   await new Promise(resolve => {
     term.on('key', async (name: string) => {
-      currentIndex = await handleKeyEvent(name, currentIndex, options, props.checkAuth, env, resolve)
+      currentIndex = await handleKeyEvent(name, currentIndex, options, props, env, resolve)
     })
   })
 }
 
-async function handleKeyEvent(name: string, currentIndex: number, options: string[][], checkAuth: CheckAuth, env: SystemEnvironment, callback: () => void): Promise<number> {
+async function handleKeyEvent(name: string, currentIndex: number, options: string[][], props: Props, env: SystemEnvironment, callback: () => void): Promise<number> {
 
   switch (name) {
     case 'DOWN': {
@@ -59,7 +63,7 @@ async function handleKeyEvent(name: string, currentIndex: number, options: strin
       break
     }
     case 'ENTER': {
-      await handleSelect(currentIndex, checkAuth, env)
+      await handleSelect(currentIndex, props, env)
       callback()
       break
     }
@@ -78,7 +82,7 @@ async function handleKeyEvent(name: string, currentIndex: number, options: strin
   return currentIndex
 }
 
-async function handleSelect(selectedIndex: number, checkAuth: CheckAuth, env: SystemEnvironment): Promise<void> {
+async function handleSelect(selectedIndex: number, props: Props, env: SystemEnvironment): Promise<void> {
   term.restoreCursor()
   term.eraseDisplayBelow()
   term.hideCursor(false)
@@ -87,18 +91,20 @@ async function handleSelect(selectedIndex: number, checkAuth: CheckAuth, env: Sy
   if (selectedIndex === INSTAGRAM_STARTER || selectedIndex === BLANK_PROJECT) {
     term.grabInput(false)
 
-    await checkAuth()
+    await props.checkAuth()
   }
 
   switch (selectedIndex) {
     case INSTAGRAM_STARTER: {
       const remoteSchemaUrl = instagramExampleSchemaUrl
-      await initCommand({remoteSchemaUrl}, env)
+      const initProps = getPropsForInit(props)
+      await initCommand({...initProps, remoteSchemaUrl}, env)
       break
     }
     case BLANK_PROJECT: {
       const remoteSchemaUrl = sampleSchemaURL
-      await initCommand({remoteSchemaUrl}, env)
+      const initProps = getPropsForInit(props)
+      await initCommand({...initProps, remoteSchemaUrl}, env)
       break
     }
     default: {
@@ -110,9 +116,19 @@ async function handleSelect(selectedIndex: number, checkAuth: CheckAuth, env: Sy
       }
       const projectFileIndex = selectedIndex - previousOptions
       const localSchemaFile = schemaFiles[projectFileIndex]
-      await initCommand({localSchemaFile}, env)
+      const initProps = getPropsForInit(props)
+      await initCommand({...initProps, localSchemaFile}, env)
       break
     }
+  }
+}
+
+function getPropsForInit(props: Props): any {
+  return {
+    name: props.name,
+    alias: props.alias,
+    region: props.region,
+    outputPath: props.outputPath
   }
 }
 

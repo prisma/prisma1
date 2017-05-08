@@ -82,7 +82,8 @@ async function main() {
       const outputPath = argv['output'] || argv['o']
 
       if (!remoteSchemaUrl && !localSchemaFile) {
-        await interactiveInitCommand({checkAuth}, defaultEnvironment())
+        const props = {name, alias, outputPath, checkAuth}
+        await interactiveInitCommand(props, defaultEnvironment())
       } else {
         await checkAuth()
 
