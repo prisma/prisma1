@@ -26,10 +26,11 @@ export const sentryId = '165377'
  * File paths / names
  */
 export const graphcoolProjectFileName = 'project.graphcool'
+export const graphcoolCloneProjectFileName = (projectFileName?: string) => projectFileName ?
+  `clone-${projectFileName.startsWith(`./`) ? projectFileName.substring(2) : projectFileName}`: `clone-${graphcoolProjectFileName}`
 export const graphcoolConfigFilePath = path.join(os.homedir(), '.graphcool')
 export const projectFileSuffix = '.graphcool'
 export const schemaFileSuffix = '.graphql'
-
 export const instagramExampleSchemaUrl = 'http://graphqlbin.com/instagram.graphql'
 export const exampleSchema = `\
 type User {

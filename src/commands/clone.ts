@@ -9,7 +9,8 @@ import {
   noProjectFileOrIdMessage,
   invalidProjectFilePathMessage,
   multipleProjectFilesForCloneMessage,
-  graphcoolProjectFileName, clonedProjectMessage
+  clonedProjectMessage,
+  graphcoolCloneProjectFileName, graphcoolProjectFileName
 } from '../utils/constants'
 import {
   parseErrors,
@@ -32,7 +33,7 @@ export default async(props: Props, env: SystemEnvironment): Promise<void> => {
 
   try {
 
-    const projectId = getProjectId(props, env)
+    const projectId = getProjectId(props, resolver)
     if (!projectId) {
       throw new Error(noProjectIdMessage)
     }
@@ -45,13 +46,14 @@ export default async(props: Props, env: SystemEnvironment): Promise<void> => {
     const clonedProjectName = await getClonedProjectName(props, projectId, resolver)
     const clonedProjectInfo = await cloneProject(projectId, clonedProjectName, includeMutationCallbacks, includeData, resolver)
 
-    const outputPath = props.outputPath || `clone-${graphcoolProjectFileName}`
+    const projectFile = props.projectFile || graphcoolProjectFileName
+    const outputPath = props.outputPath || graphcoolCloneProjectFileName(projectFile)
+
     writeProjectFile(clonedProjectInfo, resolver, outputPath)
 
     out.stopSpinner()
     const message = clonedProjectMessage(clonedProjectName, outputPath)
     out.write(message)
-
 
   } catch(e) {
     out.stopSpinner()
@@ -69,7 +71,7 @@ export default async(props: Props, env: SystemEnvironment): Promise<void> => {
 
 async function getClonedProjectName(props: Props, projectId: string, resolver: Resolver): Promise<string> {
   if (props.name) {
-    Promise.resolve(props.name)
+    return Promise.resolve(props.name)
   }
 
   const projectInfo = await pullProjectInfo(projectId, resolver)
@@ -77,8 +79,7 @@ async function getClonedProjectName(props: Props, projectId: string, resolver: R
   return clonedPojectName
 }
 
-function getProjectFilePath(props: Props, env: SystemEnvironment): string {
-  const {resolver, out} = env
+function getProjectFilePath(props: Props, resolver: Resolver): string {
 
   // check if provided file is valid (ends with correct suffix)
   if (props.projectFile && isValidProjectFilePath(props.projectFile)) {
@@ -98,12 +99,12 @@ function getProjectFilePath(props: Props, env: SystemEnvironment): string {
   return projectFiles[0]
 }
 
-function getProjectId(props: Props, env: SystemEnvironment): string | undefined {
+function getProjectId(props: Props, resolver: Resolver): string | undefined {
   if (props.sourceProjectId) {
     return props.sourceProjectId
   }
 
-  const projectFile = getProjectFilePath(props, env)
-  return readProjectIdFromProjectFile(env.resolver, projectFile)
+  const projectFile = getProjectFilePath(props, resolver)
+  return readProjectIdFromProjectFile(resolver, projectFile)
 }
 

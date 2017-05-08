@@ -12,6 +12,13 @@ export const mockProjectFile1 = `\
 ${simpleTwitterSchemaWithSystemFields}
 `
 
+export const clonedMockProjectFile1 = `\
+# project: nmlkjihgfedcba
+# version: 1
+
+${simpleTwitterSchemaWithSystemFields}
+`
+
 export const mockProjectFileWithAlias1 = `\
 # project: example
 # version: 1
@@ -230,6 +237,21 @@ export const mockedCreateProjectResponse = `\
         "version": 1,
         "alias": null,
         "name": "Example"
+      }
+    }
+  }
+}`
+
+export const mockedClonedProjectResponse = `\
+{
+  "data": {
+    "cloneProject": {
+      "project": {
+        "id": "nmlkjihgfedcba",
+        "schema": "type Tweet {\\n  id: ID!\\n  createdAt: DateTime!\\n  updatedAt: DateTime!\\n  text: String!\\n}\\n",
+        "version": 1,
+        "alias": null,
+        "name": "Clone of Example"
       }
     }
   }
