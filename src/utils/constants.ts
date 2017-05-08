@@ -198,6 +198,20 @@ The Console for project ${chalk.bold(projectName)} was opened in your browser.\n
 The Console was opened in your browser.\n`
 
 
+
+/*
+ * Terminal output: clone
+ */
+export const multipleProjectFilesForCloneMessage = (projectFiles: string[]) => `\
+Found ${projectFiles.length} project files. You can specify the one for which you want to clone the project, e.g.: '$ graphcool clone -p ${projectFiles[0]}'\n`
+
+export const cloningProjectMessage = `\
+Cloning your project ...`
+
+export const clonedProjectMessage = (clonedProjectName: string, outputPath: string) => `\
+Cloned your project as ${chalk.bold(clonedProjectName)}. The project file was written to ${chalk.bold(outputPath)}.
+`
+
 /*
  * Terminal output: playground
  */

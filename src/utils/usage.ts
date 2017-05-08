@@ -87,6 +87,22 @@ export const usageExport = `
     
 `
 
+export const usageClone = `
+  Usage: graphcool clone [options]
+  
+  Clone Graphcool project
+  
+  Options:
+    -n, --name         Name of the cloned project
+    -s, --source       ID or alias of source project (defaults to ID or alias from project file)
+    -p, --project      Project file (default: project.graphcool)
+    -o, --output       Path to output project file (default: project.graphcool)
+    -i, --include      Include items (options: data, mutation-callbacks, all, none; default: all)
+    -h, --help         Output usage information
+    
+`
+
+
 export const usageEndpoints = `
   Usage: graphcool endpoints [options]
   

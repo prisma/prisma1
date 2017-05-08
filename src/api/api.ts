@@ -245,6 +245,49 @@ mutation ($projectId: String!){
   return json.data.exportData.url
 }
 
+export async function cloneProject(
+  projectId: String,
+  clonedProjectName: string,
+  includeMutationCallbacks: boolean,
+  includeData: boolean,
+  resolver: Resolver): Promise<ProjectInfo> {
+  const mutation = `\
+mutation ($projectId: String!, $name: String!, $includeMutationCallbacks: Boolean!, $includeData: Boolean!){
+  cloneProject(input:{
+    name: $name,
+    projectId: $projectId,
+    includeData: $includeData,
+    includeMutationCallbacks: $includeMutationCallbacks,
+    clientMutationId: "asd"
+  }) {
+    project {
+      id
+      name
+      alias
+      schema
+      version
+    }
+  }
+}`
+
+  const variables = { projectId, name: clonedProjectName, includeMutationCallbacks, includeData }
+  const json = await sendGraphQLRequest(mutation, resolver, variables)
+
+  if (!json.data.cloneProject) {
+    throw json
+  }
+
+  const projectInfo: ProjectInfo = {
+    projectId: json.data.cloneProject.project.id,
+    name: json.data.cloneProject.project.name,
+    schema: json.data.cloneProject.project.schema,
+    alias: json.data.cloneProject.project.alias,
+    version: String(json.data.cloneProject.project.version),
+  }
+
+  return projectInfo
+}
+
 export function parseErrors(response: any): APIError[] {
   const errors: APIError[] = response.errors.map(error => ({
     message: error.message,

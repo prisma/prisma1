@@ -4,6 +4,7 @@ import * as minimist from 'minimist'
 import { Command, SystemEnvironment } from './types'
 import pushCommand from './commands/push'
 import consoleCommand from './commands/console'
+import cloneCommand from './commands/clone'
 import playgroundCommand from './commands/playground'
 import projectsCommand from './commands/projects'
 import pullCommand from './commands/pull'
@@ -88,6 +89,33 @@ async function main() {
         const props = {name, alias, remoteSchemaUrl, localSchemaFile, region, outputPath}
         await initCommand(props, defaultEnvironment())
       }
+      break
+    }
+
+    case 'clone': {
+      checkHelp(argv, usageInit)
+      await checkAuth()
+
+      const name = argv['name'] || argv['n']
+      const sourceProjectId = argv['source'] || argv['s']
+      const projectFile = (argv['project'] || argv['p'])
+      const outputPath = argv['output'] || argv['o']
+      const includes = argv['include'] || argv['i']
+
+      const includeMutationCallbacks = includes === 'all' || includes === 'mutation-callbacks'
+      const includeData = includes === 'all' || includes === 'data'
+
+      const props = {
+        sourceProjectId,
+        projectFile,
+        outputPath,
+        name,
+        includeMutationCallbacks,
+        includeData
+      }
+
+      await cloneCommand(props, defaultEnvironment())
+
       break
     }
 

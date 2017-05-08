@@ -3,6 +3,7 @@ export type Command =
   'auth'
   | 'push'
   | 'init'
+  | 'clone'
   | 'export'
   | 'pull'
   | 'endpoints'
