@@ -136,7 +136,7 @@ ${projectFilePath} is not a valid project file (must end with ${projectFileSuffi
 `
 
 export const multipleProjectFilesMessage = (projectFiles: string[]) => `\
-Found ${projectFiles.length} project files. You can specify the one you want to push, e.g.: '$ graphcool push -p ${projectFiles[0]}'
+Found ${projectFiles.length} project files. You can specify the one you want to push, e.g.: ${chalk.cyan(`\`graphcool push -p ${projectFiles[0]}\``)}
 `
 
 /*
@@ -165,7 +165,8 @@ export const endpointsMessage = (projectId: string) => `\
  */
 
 export const fetchingProjectDataMessage = `\
-Fetching project data ...`
+Fetching project data ...
+`
 
 export const noProjectFileForPullMessage = `\
 There is no project file (project.graphcool) in the current directory.
@@ -196,7 +197,7 @@ Do you want to continue? [y|n]
 `
 
 export const multipleProjectFilesForPullMessage = (projectFiles: string[]) => `\
-Found ${projectFiles.length} project files. You can specify the one you want for which you want to pull the new schema, e.g.: '$ graphcool pull -p ${projectFiles[0]}\n'
+Found ${projectFiles.length} project files. You can specify the one you want for which you want to pull the new schema, e.g.: ${chalk.cyan(`\`graphcool pull -p ${projectFiles[0]}\``)}
 `
 
 
@@ -213,7 +214,7 @@ export const downloadUrlMessage = (url: string) => `\
 `
 
 export const multipleProjectFilesForExportMessage = (projectFiles: string[]) => `\
-Found ${projectFiles.length} project files. You can specify the one you for which you want to export the data, e.g.: '$ graphcool export -p ${projectFiles[0]}'
+Found ${projectFiles.length} project files. You can specify the one you for which you want to export the data, e.g.: ${chalk.cyan(`\`graphcool export -p ${projectFiles[0]}\``)}
 `
 
 
@@ -232,7 +233,7 @@ The Console was opened in your browser.
  * Terminal output: clone
  */
 export const multipleProjectFilesForCloneMessage = (projectFiles: string[]) => `\
-Found ${projectFiles.length} project files. You can specify the one for which you want to clone the project, e.g.: '$ graphcool clone -p ${projectFiles[0]}'
+Found ${projectFiles.length} project files. You can specify the one for which you want to clone the project, e.g.: ${chalk.cyan(`\`graphcool clone -p ${projectFiles[0]}\``)}
 `
 
 export const cloningProjectMessage = `\
@@ -252,7 +253,7 @@ export const clonedProjectMessage = (clonedProjectName: string, outputPath: stri
  * Terminal output: playground
  */
 export const tooManyProjectFilesForPlaygroundMessage = (projectFiles: string[]) => `\
-Found ${projectFiles.length} project files. You can specify the one you for which you want open the Playground, e.g.: '$ graphcool playground -p ${projectFiles[0]}'
+Found ${projectFiles.length} project files. You can specify the one you for which you want open the Playground, e.g.: ${chalk.cyan(`\`graphcool playground -p ${projectFiles[0]}\``)}
 `
 
 export const openedPlaygroundMessage = (projectName: string) => `\
@@ -264,7 +265,7 @@ The Playground for project ${chalk.bold(projectName)} was opened in your browser
  * Terminal output: status
  */
 export const multipleProjectFilesForStatusMessage = (projectFiles: string[]) =>  `\
-Found ${projectFiles.length} project files. You can specify the one you for which you want display the status, e.g.: '$ graphcool status -p ${projectFiles[0]}'
+Found ${projectFiles.length} project files. You can specify the one you for which you want display the status, e.g.: ${chalk.cyan(`\`graphcool status -p ${projectFiles[0]}\``)}
 `
 
 export const localSchemaBehindRemoteMessage = (remoteVersion: string, localVersion: string) => `\
@@ -308,7 +309,8 @@ No project file found.
 `
 
 export const notAuthenticatedMessage = `\
-You're currently not logged in. You can use the auth command to authenticate with Graphcool: '$ graphcool auth'`
+You're currently not logged in. You can use the auth command to authenticate with ${chalk.cyan(`\`graphcool auth\``)}
+`
 
 export const projectFileWasUpdatedMessage = `\
 Your project file was updated. Reload it in your editor if needed.

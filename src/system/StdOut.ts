@@ -4,6 +4,7 @@ import ora = require('ora')
 import * as chalk from 'chalk'
 import {setDebugMessage, contactUsInSlackMessage} from '../utils/constants'
 import figures = require('figures')
+import {makePartsEnclodesByCharacterBold} from '../utils/utils'
 var Raven = require('raven')
 const debug = require('debug')('graphcool')
 
@@ -32,10 +33,12 @@ export default class StdOut implements Out {
   onError(error: Error): void {
     Raven.captureException(error)
 
+    console.log(`Caught Error: ${JSON.stringify(error)}`)
+
     // prevent the same error output twice
-    const errorMessage = `Error: ${error.message}`
+    const errorMessage = makePartsEnclodesByCharacterBold(`Error: ${error.message}`, `\``)
     if (error.stack && !error.stack.startsWith(errorMessage!)) {
-      console.error(`${chalk.red(figures.cross)}  Error: ${errorMessage}\n`)
+      console.error(`${chalk.red(figures.cross)}  ${errorMessage}`)
       debug(error.stack)
     } else {
       const errorLines = error.stack!.split('\n')

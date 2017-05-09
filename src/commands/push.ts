@@ -20,6 +20,7 @@ import {
   readProjectInfoFromProjectFile,
   isValidProjectFilePath
 } from '../utils/file'
+import {makePartsEnclodesByCharacterBold} from '../utils/utils'
 
 const debug = require('debug')('graphcool')
 
@@ -127,7 +128,8 @@ function getProjectFilePath(props: Props, env: SystemEnvironment): string {
 function printMigrationMessages(migrationMessages: MigrationMessage[], indentationLevel: number, out: Out) {
   migrationMessages.forEach(migrationMessage => {
     const indentation = spaces(indentationLevel * 4)
-    out.write(`${indentation}${chalk.green(figures.play)} ${migrationMessage.description}\n`)
+    const outputMessage = makePartsEnclodesByCharacterBold(migrationMessage.description, `\``)
+    out.write(`${indentation}${chalk.green(figures.play)} ${outputMessage}\n`)
 
     if (migrationMessage.subDescriptions) {
       printMigrationMessages(migrationMessage.subDescriptions, indentationLevel + 1, out)
@@ -138,8 +140,10 @@ function printMigrationMessages(migrationMessages: MigrationMessage[], indentati
 function printMigrationErrors(errors: [MigrationErrorMessage], out: Out) {
   const indentation = spaces(4)
   errors.forEach(error => {
-    out.write(`${indentation}${chalk.red(figures.cross)} ${error.description}\n`)
+    const outputMessage = makePartsEnclodesByCharacterBold(error.description, `\``)
+    out.write(`${indentation}${chalk.red(figures.cross)} ${outputMessage}\n`)
   })
 }
+
 
 const spaces = (n: number) => Array(n + 1).join(' ')
