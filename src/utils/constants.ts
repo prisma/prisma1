@@ -175,10 +175,12 @@ Please provide a valid project ID.
 `
 
 export const wroteProjectFileMessage = (projectFile: string) => `\
- ${chalk.green(figures.tick)} Your project file (${chalk.bold(projectFile)}) was successfully updated. Reload it in your editor if needed. `
+ ${chalk.green(figures.tick)} Your project file (${chalk.bold(projectFile)}) was successfully updated. Reload it in your editor if needed. 
+`
 
 export const pulledInitialProjectFileMessage = (projectFile: string) => `\
- ${chalk.green(figures.tick)} Your project file was written to ${chalk.bold(projectFile)}`
+ ${chalk.green(figures.tick)} Your project file was written to ${chalk.bold(projectFile)}
+`
 
 export const newVersionMessage = (newVersion: string) => `\
 The new schema version is ${chalk.bold(newVersion)}.
@@ -280,11 +282,13 @@ Everything up-to-date.
 `
 
 export const potentialChangesMessage = `\
-Here are all the actions to be taken for a schema migration: 
+Here are all the local changes: 
+
 `
 
 export const issuesInSchemaMessage = `\
 The current version of your schema contains some issues: 
+
 `
 
 

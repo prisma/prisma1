@@ -54,8 +54,10 @@ export interface MigrationMessage {
   action: string
   name: string
   description: string
-  subDescriptions?: [MigrationMessage]
+  subDescriptions?: [MigrationMessage] // only ever goes one level deep
 }
+
+export type MigrationActionType = 'create' | 'delete' | 'update' | 'unknown'
 
 export interface MigrationErrorMessage {
   type: string

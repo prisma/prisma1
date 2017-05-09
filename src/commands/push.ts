@@ -1,4 +1,7 @@
-import {MigrationMessage, ProjectInfo, MigrationErrorMessage, SystemEnvironment, Out} from '../types'
+import {
+  MigrationMessage, ProjectInfo, MigrationErrorMessage, SystemEnvironment, Out,
+  MigrationActionType
+} from '../types'
 import {pushNewSchema, parseErrors, generateErrorOutput, pullProjectInfo} from '../api/api'
 import figures = require('figures')
 import * as chalk from 'chalk'
@@ -125,20 +128,44 @@ function getProjectFilePath(props: Props, env: SystemEnvironment): string {
   return projectFiles[0]
 }
 
-function printMigrationMessages(migrationMessages: MigrationMessage[], indentationLevel: number, out: Out) {
+function printMigrationMessages(migrationMessages: MigrationMessage[], out: Out) {
   migrationMessages.forEach(migrationMessage => {
-    const indentation = spaces(indentationLevel * 4)
+    const actionType = getMigrationActionType(migrationMessage.description)
+    const symbol = getSymbolForMigrationActionType(actionType)
     const outputMessage = makePartsEnclodesByCharacterBold(migrationMessage.description, `\``)
-    out.write(`${indentation}${chalk.green(figures.play)} ${outputMessage}\n`)
-
-    if (migrationMessage.subDescriptions) {
-      printMigrationMessages(migrationMessage.subDescriptions, indentationLevel + 1, out)
-    }
+    out.write(`  | (${symbol}) ${outputMessage}\n`)
+    migrationMessage.subDescriptions!.forEach(subMessage => {
+      const actionType = getMigrationActionType(subMessage.description)
+      const symbol = getSymbolForMigrationActionType(actionType)
+      const outputMessage = makePartsEnclodesByCharacterBold(subMessage.description, `\``)
+      out.write(`  ├── (${symbol}) ${outputMessage}\n`)
+    })
   })
 }
 
+function getMigrationActionType(message: string): MigrationActionType {
+  if (message.indexOf('create') >= 0) {
+    return 'create'
+  } else if (message.indexOf('update') >= 0) {
+    return 'update'
+  } else if (message.indexOf('delete') >= 0) {
+    return 'delete'
+  }
+  return 'unknown'
+}
+
+function getSymbolForMigrationActionType(type: MigrationActionType): string {
+  switch (type) {
+    case 'create': return '+'
+    case 'delete': return '-'
+    case 'update': return '*'
+    case 'unknown': return '?'
+  }
+}
+
+
 function printMigrationErrors(errors: [MigrationErrorMessage], out: Out) {
-  const indentation = spaces(4)
+  const indentation = spaces(2)
   errors.forEach(error => {
     const outputMessage = makePartsEnclodesByCharacterBold(error.description, `\``)
     out.write(`${indentation}${chalk.red(figures.cross)} ${outputMessage}\n`)
