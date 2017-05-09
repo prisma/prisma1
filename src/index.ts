@@ -31,7 +31,10 @@ import {
   usageAuth,
   usageVersion,
   usageConsole,
-  usageExport, usageEndpoints, usagePlayground,
+  usageExport,
+  usageEndpoints,
+  usagePlayground,
+  usageClone
 } from './utils/usage'
 
 var Raven = require('raven')
@@ -94,7 +97,7 @@ async function main() {
     }
 
     case 'clone': {
-      checkHelp(argv, usageInit)
+      checkHelp(argv, usageClone)
       await checkAuth()
 
       const name = argv['name'] || argv['n']

@@ -69,8 +69,8 @@ export const usagePush = `
   Push project file changes
   
   Options:
-    -d, --dry-run      Simulate command
     -p, --project      Project file (default: project.graphcool)
+    -f, --force        Accept data loss caused by schema changes
     -h, --help         Output usage information
     
 `
