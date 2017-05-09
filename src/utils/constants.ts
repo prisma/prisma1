@@ -112,8 +112,7 @@ The project file (${graphcoolProjectFileName}) that you provided doesn't seem to
 `
 
 export const pushingNewSchemaMessage = `\
-Migrating the schema in your project...\
-`
+Migrating the schema in your project...`
 
 export const couldNotMigrateSchemaMessage = `
 An error occured while trying to migrate the project.
@@ -165,8 +164,7 @@ export const endpointsMessage = (projectId: string) => `\
  */
 
 export const fetchingProjectDataMessage = `\
-Fetching project data ...
-`
+Fetching project data ...`
 
 export const noProjectFileForPullMessage = `\
 There is no project file (project.graphcool) in the current directory.

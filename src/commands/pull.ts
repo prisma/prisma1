@@ -75,7 +75,7 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
       })
     }
 
-    out.startSpinner(fetchingProjectDataMessage)
+    out.startSpinner(`${fetchingProjectDataMessage}`)
     const projectInfo = await pullProjectInfo(projectId!, resolver)
 
     out.stopSpinner()
