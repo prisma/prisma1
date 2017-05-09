@@ -13,6 +13,7 @@ import initCommand from './commands/init'
 import interactiveInitCommand from './commands/interactiveInit'
 import exportCommand from './commands/export'
 import endpointsCommand from './commands/endpoints'
+import statusCommand from './commands/status'
 import FileSystemResolver from './system/FileSystemResolver'
 import figures = require('figures')
 import StdOut from './system/StdOut'
@@ -34,7 +35,7 @@ import {
   usageExport,
   usageEndpoints,
   usagePlayground,
-  usageClone
+  usageClone, usageStatus
 } from './utils/usage'
 
 var Raven = require('raven')
@@ -150,6 +151,15 @@ async function main() {
 
       const projectFile = argv['project'] || argv['p']
       await exportCommand({projectFile}, defaultEnvironment())
+      break
+    }
+
+    case 'status': {
+      checkHelp(argv, usageStatus)
+      await checkAuth()
+
+      const projectFile = argv['project'] || argv['p']
+      await statusCommand({projectFile}, defaultEnvironment())
       break
     }
 

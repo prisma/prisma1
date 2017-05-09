@@ -87,6 +87,18 @@ export const usageExport = `
     
 `
 
+export const usageStatus = `
+  Usage: graphcool status [options]
+  
+  Display difference between local and remote schema versions
+  
+  Options:
+ 
+    -p, --project      Project file (default: project.graphcool)
+    -h, --help         Output usage information
+    
+`
+
 export const usageClone = `
   Usage: graphcool clone [options]
   

@@ -2,6 +2,7 @@ import TestOut from './system/TestOut'
 export type Command =
   'auth'
   | 'push'
+  | 'status'
   | 'init'
   | 'clone'
   | 'export'

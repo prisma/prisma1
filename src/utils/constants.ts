@@ -62,13 +62,13 @@ export const createdProjectMessage = (name: string, projectId: string, projectFi
  
    ${chalk.bold('Here is what you can do next:')}
 
-   1) Use one of the following endpoints to connect to your GraphQL API:
+   1) Open ${chalk.bold('project.graphcool')} in your editor to update your schema.
+      You can push your changes using ${chalk.cyan('`graphcool push`')}.
+      
+   2) Use one of the following endpoints to connect to your GraphQL API:
  
         Simple API:   https://api.graph.cool/simple/v1/${projectId}
         Relay API:    https://api.graph.cool/relay/v1/${projectId}
-
-   2) Open ${chalk.bold('project.graphcool')} in your editor to update your schema.
-      You can push your changes using ${chalk.cyan('`graphcool push`')}.
       
    3) Read more about the CLI workflow in the docs: ${chalk.underline('https://www.graph.cool/docs/reference/cli')}
 `
@@ -254,6 +254,36 @@ export const openedPlaygroundMessage = (projectName: string) => `\
 The Playground for project ${chalk.bold(projectName)} was opened in your browser.
 `
 
+
+/*
+ * Terminal output: status
+ */
+export const multipleProjectFilesForStatusMessage = (projectFiles: string[]) =>  `\
+Found ${projectFiles.length} project files. You can specify the one you for which you want display the status, e.g.: '$ graphcool status -p ${projectFiles[0]}'
+`
+
+export const localSchemaBehindRemoteMessage = (remoteVersion: string, localVersion: string) => `\
+The local version of your schema (${localVersion}) is behind the remote version (${remoteVersion}). 
+Save your local changes and execute 'graphcool pull' before a schema migration.
+`
+
+export const remoteSchemaBehindLocalMessage = (remoteVersion: string, localVersion: string) => `\
+There is an issue with your schema. The remote version (${remoteVersion}) is behind the local version (${localVersion}). 
+`
+
+export const everythingUpToDateMessage = `\
+Everything up-to-date.
+`
+
+export const potentialChangesMessage = `\
+Here are all the actions to be taken for a schema migration: 
+`
+
+export const issuesInSchemaMessage = `\
+The current version of your schema contains some issues: 
+`
+
+
 /*
  * Terminal output: general
  */
@@ -273,5 +303,9 @@ You're currently not logged in. You can use the auth command to authenticate wit
 
 export const projectFileWasUpdatedMessage = `\
 Your project file was updated. Reload it in your editor if needed.
+`
+
+export const canNotReadVersionFromProjectFile = (projectFile: string) => `\
+No schema version specified in ${chalk.bold(projectFile)}.
 `
 

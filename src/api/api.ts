@@ -54,22 +54,22 @@ export async function createProject(name: string,
 
   const mutation = `\
 mutation addProject($schema: String!, $name: String!, $alias: String, $region: Region) {
-    addProject(input: {
-      name: $name,
-      schema: $schema,
-      alias: $alias,
-      region: $region,
-      clientMutationId: "static"
-    }) {
-      project {
-        id
-        name
-        schema
-        alias
-        version
-      }
+  addProject(input: {
+    name: $name,
+    schema: $schema,
+    alias: $alias,
+    region: $region,
+    clientMutationId: "static"
+  }) {
+    project {
+      id
+      name
+      schema
+      alias
+      version
     }
   }
+}
 `
 
   let variables: any = {name, schema}
@@ -125,11 +125,11 @@ export async function pushNewSchema(newSchema: string,
       field
     }
     project {
-        id
-        name
-        schema
-        alias
-        version
+      id
+      name
+      schema
+      alias
+      version
     }
   }
 }
@@ -138,6 +138,60 @@ export async function pushNewSchema(newSchema: string,
   const variables = {
     newSchema,
     force
+  }
+
+  const json = await sendGraphQLRequest(mutation, resolver, variables)
+
+  if (!json.data.migrateProject) {
+    throw json
+  }
+
+  const messages = json.data.migrateProject.migrationMessages as [MigrationMessage]
+  const errors = json.data.migrateProject.errors as [MigrationErrorMessage]
+  const newVersion = json.data.migrateProject.project.version
+  newSchema = json.data.migrateProject.project.schema
+  const migrationResult = {messages, errors, newVersion, newSchema} as MigrationResult
+
+  return migrationResult
+}
+
+export async function statusMessage(newSchema: string, resolver: Resolver): Promise<MigrationResult> {
+
+  const mutation = `\
+mutation($newSchema: String!) {
+  migrateProject(input: {
+    newSchema: $newSchema,
+    isDryRun: true
+  }) {
+    migrationMessages {
+      type
+      action
+      name
+      description
+      subDescriptions {
+        type
+        action
+        name
+        description
+      }
+    }
+    errors {
+      description
+      type
+      field
+    }
+    project {
+        id
+        name
+        schema
+        alias
+        version
+    }
+  }
+}`
+
+  const variables = {
+    newSchema,
   }
 
   const json = await sendGraphQLRequest(mutation, resolver, variables)

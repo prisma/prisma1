@@ -16,7 +16,7 @@ Tests:
 - Succeeding schema migration with default project file
 - Succeeding schema migration without specified project file (fallback to default)
 - Succeeding schema migration with renamed project file
- */
+*/
 
 test.afterEach(() => {
   fetchMock.restore()

@@ -43,13 +43,15 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
 
   out.startSpinner(pushingNewSchemaMessage)
 
-  // first compare local and remote versions and fail if remote is ahead
-  const remoteProjectInfo = await pullProjectInfo(projectInfo.projectId, resolver)
-  if (parseInt(remoteProjectInfo.version) > parseInt(projectInfo.version)) {
-    throw new Error(remoteSchemaAheadMessage(projectInfo.version, remoteProjectInfo.version))
-  }
-
   try {
+
+    // first compare local and remote versions and fail if remote is ahead
+    const remoteProjectInfo = await pullProjectInfo(projectInfo.projectId, resolver)
+    if (parseInt(remoteProjectInfo.version) > parseInt(projectInfo.version)) {
+      out.stopSpinner()
+      throw new Error(remoteSchemaAheadMessage(projectInfo.version, remoteProjectInfo.version))
+    }
+
     const schemaWithFrontmatter = `# project: ${projectId}\n# version: ${version}\n\n${schema}`
     const migrationResult = await pushNewSchema(schemaWithFrontmatter, force, resolver)
 
@@ -81,7 +83,7 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
 
     // can't do migration because of issues with schema
     else if (migrationResult.messages.length === 0 && migrationResult.errors.length > 0) {
-      out.write(`\n${migrationErrorMessage}`)
+      out.write(`${migrationErrorMessage}`)
       printMigrationErrors(migrationResult.errors, out)
       out.write(`\n`)
     }
