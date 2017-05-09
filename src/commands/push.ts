@@ -59,6 +59,7 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
 
       out.write(`${migrationMessage}`)
       printMigrationMessages(migrationResult.messages, 1, out)
+      out.write(`\n`)
 
       // update project file if necessary
       if (!isDryRun) {
@@ -76,6 +77,7 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
     else if (migrationResult.messages.length === 0 && migrationResult.errors.length > 0) {
       out.write(`\n${migrationErrorMessage}`)
       printMigrationErrors(migrationResult.errors, out)
+      out.write(`\n`)
     }
 
   } catch (e) {

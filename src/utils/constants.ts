@@ -46,9 +46,11 @@ type User {
  */
 export const openBrowserMessage = `You need to authenticate. Your browser will open shortly...`
 export const couldNotRetrieveTokenMessage = `\
-Whoops, something went wrong during authentication.\n`
+Whoops, something went wrong during authentication.
+`
 
-export const authenticationSuccessMessage = (email: string) => ` ${chalk.green(figures.tick)} Authenticated user: ${chalk.bold(email)}\n`
+export const authenticationSuccessMessage = (email: string) => ` ${chalk.green(figures.tick)} Authenticated user: ${chalk.bold(email)}
+`
 
 /*
  * Terminal output: create
@@ -72,11 +74,13 @@ export const createdProjectMessage = (name: string, projectId: string, projectFi
 `
 
 export const couldNotCreateProjectMessage = `\
-Whoops, something went wrong while creating the project.\n`
+Whoops, something went wrong while creating the project.
+`
 
 export const projectAlreadyExistsMessage = `\
 ${graphcoolProjectFileName} already exists for the current project. \
-Looks like you've already setup your backend.\n`
+Looks like you've already setup your backend.
+`
 
 export const howDoYouWantToGetStarted = () => `\
 
@@ -95,32 +99,40 @@ Your schema file ${chalk.bold(schemaFileName)} is invalid. A schema file must en
  * Terminal output: push
  */
 export const noProjectFileForPushMessage = `\
-Please provide a valid project file (${graphcoolProjectFileName}) for the schema migration.\n`
+Please provide a valid project file (${graphcoolProjectFileName}) for the schema migration.
+`
 
 export const invalidProjectFileMessage = `\
-The project file (${graphcoolProjectFileName}) that you provided doesn't seem to be valid. Please make sure it contains the ID of your project.\n`
+The project file (${graphcoolProjectFileName}) that you provided doesn't seem to be valid. Please make sure it contains the ID of your project.
+`
 
 export const pushingNewSchemaMessage = `\
 Migrating the schema in your project...\
 `
 
 export const couldNotMigrateSchemaMessage = `
-An error occured while trying to migrate the project.\n`
+An error occured while trying to migrate the project.
+`
 
 export const noActionRequiredMessage = `\
- ${chalk.green(figures.tick)} Identical schema, no action required.\n`
+ ${chalk.green(figures.tick)} Identical schema, no action required.
+`
 
 export const migrationDryRunMessage = `\
-This was a dry run of the migration. Here are the potential changes:\n`
+This was a dry run of the migration. Here are the potential changes:
+`
 
 export const migrationPerformedMessage = `\
- ${chalk.green(figures.tick)} Your schema was successfully updated. Here are the changes:\n`
+ ${chalk.green(figures.tick)} Your schema was successfully updated. Here are the changes:
+`
 
 export const migrationErrorMessage = `\
-There are issues with the new schema that you provided:\n`
+There are issues with the new schema that you provided:
+`
 
 export const invalidProjectFilePathMessage = (projectFilePath: string) => `\
-${projectFilePath} is not a valid project file (must end with ${projectFileSuffix}).\n`
+${projectFilePath} is not a valid project file (must end with ${projectFileSuffix}).
+`
 
 export const multipleProjectFilesMessage = (projectFiles: string[]) => `\
 Found ${projectFiles.length} project files. You can specify the one you want to push, e.g.: '$ graphcool push -p ${projectFiles[0]}'
@@ -131,7 +143,8 @@ Found ${projectFiles.length} project files. You can specify the one you want to 
  */
 
 export const couldNotFetchProjectsMessage = `\
-An error occured while trying to fetch your projects.\n`
+An error occured while trying to fetch your projects.
+`
 
 
 /*
@@ -142,7 +155,8 @@ export const endpointsMessage = (projectId: string) => `\
  The endpoints for your project are are:
  
    ${chalk.blue(figures.pointer)} Simple API: https://api.graph.cool/simple/v1/${projectId}
-   ${chalk.blue(figures.pointer)} Relay API: https://api.graph.cool/relay/v1/${projectId}\n`
+   ${chalk.blue(figures.pointer)} Relay API: https://api.graph.cool/relay/v1/${projectId}
+`
 
 
 /*
@@ -153,10 +167,12 @@ export const fetchingProjectDataMessage = `\
 Fetching project data ...`
 
 export const noProjectFileForPullMessage = `\
-There is no project file (project.graphcool) in the current directory.\n`
+There is no project file (project.graphcool) in the current directory.
+`
 
 export const noProjectIdMessage = `\
-Please provide a valid project ID.\n`
+Please provide a valid project ID.
+`
 
 export const wroteProjectFileMessage = (projectFile: string) => `\
  ${chalk.green(figures.tick)} Your project file (${chalk.bold(projectFile)}) was successfully updated. Reload it in your editor if needed. `
@@ -165,11 +181,13 @@ export const pulledInitialProjectFileMessage = (projectFile: string) => `\
  ${chalk.green(figures.tick)} Your project file was written to ${chalk.bold(projectFile)}`
 
 export const newVersionMessage = (newVersion: string) => `\
-The new schema version is ${chalk.bold(newVersion)}.\n`
+The new schema version is ${chalk.bold(newVersion)}.
+`
 
 export const differentProjectIdWarningMessage = (inputProjectId: string, readProjectId: string) => `\
 The project ID you provided (${inputProjectId}) is different than the one in the current project file (${readProjectId}). 
-This will override the current project file with a different project, do you still want to continue? [y|n]\n`
+This will override the current project file with a different project, do you still want to continue? [y|n]
+`
 
 export const multipleProjectFilesForPullMessage = (projectFiles: string[]) => `\
 Found ${projectFiles.length} project files. You can specify the one you want for which you want to pull the new schema, e.g.: '$ graphcool pull -p ${projectFiles[0]}\n'
@@ -185,18 +203,22 @@ Exporting your project data ...`
 export const downloadUrlMessage = (url: string) => `\
  ${chalk.green(figures.tick)} You can download your project data by pasting this URL in a browser:
 
-   ${chalk.blue(figures.pointer)} Download URL: ${url}\n`
+   ${chalk.blue(figures.pointer)} Download URL: ${url}
+`
 
 export const multipleProjectFilesForExportMessage = (projectFiles: string[]) => `\
-Found ${projectFiles.length} project files. You can specify the one you for which you want to export the data, e.g.: '$ graphcool export -p ${projectFiles[0]}'\n`
+Found ${projectFiles.length} project files. You can specify the one you for which you want to export the data, e.g.: '$ graphcool export -p ${projectFiles[0]}'
+`
 
 
 /*
  * Terminal output: console
  */
 export const openedConsoleMessage = (projectName?: string) => projectName ? `\
-The Console for project ${chalk.bold(projectName)} was opened in your browser.\n` : `\
-The Console was opened in your browser.\n`
+The Console for project ${chalk.bold(projectName)} was opened in your browser.
+` : `\
+The Console was opened in your browser.
+`
 
 
 
@@ -204,7 +226,8 @@ The Console was opened in your browser.\n`
  * Terminal output: clone
  */
 export const multipleProjectFilesForCloneMessage = (projectFiles: string[]) => `\
-Found ${projectFiles.length} project files. You can specify the one for which you want to clone the project, e.g.: '$ graphcool clone -p ${projectFiles[0]}'\n`
+Found ${projectFiles.length} project files. You can specify the one for which you want to clone the project, e.g.: '$ graphcool clone -p ${projectFiles[0]}'
+`
 
 export const cloningProjectMessage = `\
 Cloning your project ...`
@@ -223,10 +246,12 @@ export const clonedProjectMessage = (clonedProjectName: string, outputPath: stri
  * Terminal output: playground
  */
 export const tooManyProjectFilesForPlaygroundMessage = (projectFiles: string[]) => `\
-Found ${projectFiles.length} project files. You can specify the one you for which you want open the Playground, e.g.: '$ graphcool playground -p ${projectFiles[0]}'\n`
+Found ${projectFiles.length} project files. You can specify the one you for which you want open the Playground, e.g.: '$ graphcool playground -p ${projectFiles[0]}'
+`
 
 export const openedPlaygroundMessage = (projectName: string) => `\
-The Playground for project ${chalk.bold(projectName)} was opened in your browser.\n`
+The Playground for project ${chalk.bold(projectName)} was opened in your browser.
+`
 
 /*
  * Terminal output: general
@@ -239,11 +264,13 @@ export const setDebugMessage = `\
  * Open an issue on GitHub: https://github.com/graphcool/graphcool-cli.`
 
 export const noProjectFileOrIdMessage = `\
-No project file or project ID provided.\n`
+No project file or project ID provided.
+`
 
 export const notAuthenticatedMessage = `\
 You're currently not logged in. You can use the auth command to authenticate with Graphcool: '$ graphcool auth'`
 
 export const projectFileWasUpdatedMessage = `\
-Your project file was updated. Reload it in your editor if needed.\n`
+Your project file was updated. Reload it in your editor if needed.
+`
 
