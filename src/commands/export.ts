@@ -6,10 +6,10 @@ import {
 import {
   noProjectIdMessage,
   exportingDataMessage,
-  noProjectFileOrIdMessage,
   downloadUrlMessage,
   invalidProjectFilePathMessage,
-  multipleProjectFilesForExportMessage
+  multipleProjectFilesForExportMessage,
+  noProjectFileMessage
 } from '../utils/constants'
 import {
   exportProjectData,
@@ -67,7 +67,7 @@ function getProjectId(props: Props, env: SystemEnvironment): string | undefined 
   // no project file provided, search for one in current dir
   const projectFiles = resolver.projectFiles('.')
   if (projectFiles.length === 0) {
-    throw new Error(noProjectFileOrIdMessage)
+    throw new Error(noProjectFileMessage)
   } else if (projectFiles.length > 1) {
     throw new Error(multipleProjectFilesForExportMessage(projectFiles))
   }

@@ -190,6 +190,11 @@ The project ID you provided (${inputProjectId}) is different than the one in the
 This will override the current project file with a different project, do you still want to continue? [y|n]
 `
 
+export const warnOverrideProjectFileMessage = (projectFile: string) => `\
+You are about to override the local project file ${chalk.bold(projectFile)}. Make sure to save local changes that you want to preserve.
+Do you want to continue? [y|n]
+`
+
 export const multipleProjectFilesForPullMessage = (projectFiles: string[]) => `\
 Found ${projectFiles.length} project files. You can specify the one you want for which you want to pull the new schema, e.g.: '$ graphcool pull -p ${projectFiles[0]}\n'
 `
@@ -298,6 +303,10 @@ export const noProjectFileOrIdMessage = `\
 No project file or project ID provided.
 `
 
+export const noProjectFileMessage = `\
+No project file found.
+`
+
 export const notAuthenticatedMessage = `\
 You're currently not logged in. You can use the auth command to authenticate with Graphcool: '$ graphcool auth'`
 
@@ -309,3 +318,6 @@ export const canNotReadVersionFromProjectFile = (projectFile: string) => `\
 No schema version specified in ${chalk.bold(projectFile)}.
 `
 
+export const canNotReadProjectIdFromProjectFile = `\
+Could not read the project's ID from project file.
+`

@@ -141,7 +141,8 @@ async function main() {
       const sourceProjectId = argv['source'] || argv['s']
       const projectFile = argv['project'] || argv['p']
       const outputPath = argv['output'] || argv['o']
-      await pullCommand({sourceProjectId, projectFile, outputPath}, defaultEnvironment())
+      const force = !!(argv['force'] || argv['f'])
+      await pullCommand({sourceProjectId, projectFile, outputPath, force}, defaultEnvironment())
       break
     }
 

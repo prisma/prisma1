@@ -40,7 +40,7 @@ test('Pull without project file but passing project ID as argument', async t => 
   // dummy pull data
   const env = testEnvironment({})
   env.resolver.write(graphcoolConfigFilePath, '{"token": ""}')
-  const props = {sourceProjectId}
+  const props = { force: true, sourceProjectId}
 
   env.out.prefix((t as any)._test.title, `$ graphcool pull -s ${sourceProjectId}`)
 
@@ -64,7 +64,7 @@ test('Pull without project file (defaulting to project.graphcoool)', async t => 
   const env = testEnvironment({})
   env.resolver.write(graphcoolConfigFilePath, '{"token": ""}')
   env.resolver.write(graphcoolProjectFileName, mockedPullProjectFile1)
-  const props = {}
+  const props = { force: true }
 
   env.out.prefix((t as any)._test.title, `$ graphcool pull`)
 
@@ -88,7 +88,7 @@ test('Pull without project file (defaulting to project.graphcoool) updating vers
   const env = testEnvironment({})
   env.resolver.write(graphcoolConfigFilePath, '{"token": ""}')
   env.resolver.write(graphcoolProjectFileName, mockedPullProjectFile1)
-  const props = {}
+  const props = { force: true }
 
   env.out.prefix((t as any)._test.title, `$ graphcool pull`)
 
@@ -114,7 +114,7 @@ test('Pull without project file but passing project ID as argument, result has a
   // dummy pull data
   const env = testEnvironment({})
   env.resolver.write(graphcoolConfigFilePath, '{"token": ""}')
-  const props = {sourceProjectId}
+  const props = { force: true, sourceProjectId}
 
   env.out.prefix((t as any)._test.title, `$ graphcool pull -s ${sourceProjectId}`)
 
@@ -138,7 +138,7 @@ test('Pull without project file (defaulting to project.graphcoool) result has an
   const env = testEnvironment({})
   env.resolver.write(graphcoolConfigFilePath, '{"token": ""}')
   env.resolver.write(graphcoolProjectFileName, mockedPullProjectFile1)
-  const props = {}
+  const props = { force: true }
 
   env.out.prefix((t as any)._test.title, `$ graphcool pull`)
 
@@ -164,7 +164,7 @@ test('Pull with specific project file, updating version from 1 to 2', async t =>
   const env = testEnvironment({})
   env.resolver.write(graphcoolConfigFilePath, '{"token": ""}')
   env.resolver.write(projectFile, mockedPullProjectFile1)
-  const props = {projectFile}
+  const props = { force: true, projectFile}
 
   env.out.prefix((t as any)._test.title, `$ graphcool pull -p ${projectFile}`)
 
@@ -189,7 +189,7 @@ test('Pull without project file (defaulting to project.graphcoool) and specify o
   const env = testEnvironment({})
   env.resolver.write(graphcoolConfigFilePath, '{"token": ""}')
   env.resolver.write(graphcoolProjectFileName, mockedPullProjectFile1)
-  const props = {outputPath}
+  const props = { force: true, outputPath}
 
   env.out.prefix((t as any)._test.title, `$ graphcool pull -o ${outputPath}`)
 
@@ -210,7 +210,7 @@ test('Pull without project files but with multiple project files in current dire
   env.resolver.write(graphcoolConfigFilePath, '{"token": ""}')
   env.resolver.write(projectFile1, mockedPullProjectFile1)
   env.resolver.write(projectFile2, mockedPullProjectFile1)
-  const props = {}
+  const props = { force: true }
 
   env.out.prefix((t as any)._test.title, `$ graphcool pull`)
 

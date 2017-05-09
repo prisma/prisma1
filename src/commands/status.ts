@@ -10,6 +10,7 @@ import {
   invalidProjectFilePathMessage,
   multipleProjectFilesForStatusMessage, canNotReadVersionFromProjectFile, localSchemaBehindRemoteMessage,
   remoteSchemaBehindLocalMessage, everythingUpToDateMessage, potentialChangesMessage, issuesInSchemaMessage,
+  noProjectFileMessage,
 } from '../utils/constants'
 import {
   parseErrors,
@@ -72,7 +73,6 @@ export default async(props: Props, env: SystemEnvironment): Promise<void> => {
       printMigrationErrors(migrationResult.errors, out)
     }
 
-
   } catch(e) {
     out.stopSpinner()
     if (e.errors) {
@@ -82,7 +82,6 @@ export default async(props: Props, env: SystemEnvironment): Promise<void> => {
     } else {
       throw e
     }
-
   }
 
 }
@@ -98,7 +97,7 @@ function getProjectFilePath(props: Props, resolver: Resolver): string {
   // no project file provided, search for one in current dir
   const projectFiles = resolver.projectFiles('.')
   if (projectFiles.length === 0) {
-    throw new Error(noProjectFileOrIdMessage)
+    throw new Error(noProjectFileMessage)
   } else if (projectFiles.length > 1) {
     throw new Error(multipleProjectFilesForStatusMessage(projectFiles))
   }

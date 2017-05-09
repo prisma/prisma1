@@ -7,8 +7,8 @@ import {
   notAuthenticatedMessage,
   playgroundURL,
   tooManyProjectFilesForPlaygroundMessage,
-  noProjectIdMessage,
-  openedPlaygroundMessage
+  openedPlaygroundMessage,
+  canNotReadProjectIdFromProjectFile
 } from '../utils/constants'
 
 const debug = require('debug')('graphcool-auth')
@@ -34,7 +34,7 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
 async function getProjectInfo(props: Props, env: SystemEnvironment): Promise<ProjectInfo> {
   const currentProjectId = getProjectId(props, env)
   if (!currentProjectId) {
-    throw new Error(noProjectIdMessage)
+    throw new Error(canNotReadProjectIdFromProjectFile)
   }
 
   const projectInfo = await pullProjectInfo(currentProjectId!, env.resolver)

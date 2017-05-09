@@ -14,7 +14,7 @@ import {
   invalidProjectFilePathMessage,
   noProjectFileForPullMessage,
   graphcoolProjectFileName,
-  multipleProjectFilesForPullMessage, pulledInitialProjectFileMessage
+  multipleProjectFilesForPullMessage, pulledInitialProjectFileMessage, warnOverrideProjectFileMessage
 } from '../utils/constants'
 var term = require( 'terminal-kit' ).terminal
 
@@ -24,6 +24,7 @@ interface Props {
   sourceProjectId?: string
   projectFile?: string
   outputPath?: string
+  force: boolean
 }
 
 export default async (props: Props, env: SystemEnvironment): Promise<void> => {
@@ -32,7 +33,8 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
   try {
 
     const projectId = getProjectId(props, env)
-    const projectFile: string = props.projectFile || graphcoolProjectFileName
+    const projectFile = props.projectFile || graphcoolProjectFileName
+    const outputPath = props.outputPath || projectFile
     const currentVersion = getCurrentVersion(projectFile, resolver)
 
     if (!projectId) {
@@ -58,11 +60,25 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
       }
     }
 
+    if (!props.force && projectFile === outputPath) {
+      out.write(warnOverrideProjectFileMessage(projectFile))
+      term.grabInput(true)
+
+      await new Promise(resolve => {
+        term.on('key' , function(name) {
+          if (name !== 'y') {
+            process.exit(0)
+          }
+          term.grabInput(false)
+          resolve()
+        })
+      })
+    }
+
     out.startSpinner(fetchingProjectDataMessage)
     const projectInfo = await pullProjectInfo(projectId!, resolver)
 
     out.stopSpinner()
-    const outputPath = props.outputPath || projectFile
 
     const message = resolver.projectFiles('.').length === 0 ?
       pulledInitialProjectFileMessage(outputPath) :

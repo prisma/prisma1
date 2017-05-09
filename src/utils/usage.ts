@@ -35,6 +35,7 @@ export const usageRoot = `
 export const usageInit = `
   Usage: graphcool init [options]
   
+  
   Create a new project from scratch or based on an existing GraphQL schema.
   
   Options:
@@ -59,6 +60,7 @@ export const usagePull = `
     -s, --source       ID or alias of source project (defaults to ID or alias from project file)
     -p, --project      Project file (default: project.graphcool)
     -o, --output       Path to output project file (default: project.graphcool)
+    -f, --force        Override project file
     -h, --help         Output usage information
     
 `
