@@ -39,8 +39,8 @@ export const usageInit = `
   Create a new project from scratch or based on an existing GraphQL schema.
   
   Options:
-    -u, --url <schema-url>    URL to a GraphQL schema
-    -f, --file <schema-file>  Local GraphQL schema file
+    -u, --url <schema-url>    URL to a GraphQL schema (ends with .graphql)
+    -f, --file <path>         Path to local GraphQL schema file (ends with .graphql)
     -n, --name <name>         Project name
     -a, --alias <alias>       Project alias
     -o, --output <path>       Path to output project file (default: project.graphcool)
@@ -57,11 +57,11 @@ export const usagePull = `
   Pull the latest project file from Graphcool
   
   Options:
-    -s, --source       ID or alias of source project (defaults to ID or alias from project file)
-    -p, --project      Project file (default: project.graphcool)
-    -o, --output       Path to output project file (default: project.graphcool)
-    -f, --force        Override project file
-    -h, --help         Output usage information
+    -s, --source <project-id>  ID or alias of source project (defaults to ID or alias from project file)
+    -p, --project <path>       Project file (default: project.graphcool)
+    -o, --output <path>        Path to output project file (default: project.graphcool)
+    -f, --force                Override project file
+    -h, --help                 Output usage information
     
 `
 
@@ -71,9 +71,9 @@ export const usagePush = `
   Push project file changes
   
   Options:
-    -p, --project      Project file (default: project.graphcool)
-    -f, --force        Accept data loss caused by schema changes
-    -h, --help         Output usage information
+    -p, --project <path>  Project file (default: project.graphcool)
+    -f, --force           Accept data loss caused by schema changes
+    -h, --help            Output usage information
     
 `
 
@@ -84,8 +84,8 @@ export const usageExport = `
   
   Options:
  
-    -p, --project      Project file (default: project.graphcool)
-    -h, --help         Output usage information
+    -p, --project <path>  Project file (default: project.graphcool)
+    -h, --help            Output usage information
     
 `
 
@@ -96,8 +96,8 @@ export const usageStatus = `
   
   Options:
  
-    -p, --project      Project file (default: project.graphcool)
-    -h, --help         Output usage information
+    -p, --project <path>  Project file (default: project.graphcool)
+    -h, --help            Output usage information
     
 `
 
@@ -107,12 +107,12 @@ export const usageClone = `
   Clone Graphcool project
   
   Options:
-    -n, --name         Name of the cloned project
-    -s, --source       ID or alias of source project (defaults to ID or alias from project file)
-    -p, --project      Project file (default: project.graphcool)
-    -o, --output       Path to output project file (default: project.graphcool)
-    -i, --include      Include items (options: data, mutation-callbacks, all, none; default: all)
-    -h, --help         Output usage information
+    -n, --name <name>          Name of the cloned project
+    -s, --source <project-id>  ID or alias of source project (defaults to ID or alias from project file)
+    -p, --project <path>       Project file (default: project.graphcool)
+    -o, --output <path>        Path to output project file (default: project.graphcool)
+    -i, --include <option>     Include items (options: data, mutation-callbacks, all (default), none)
+    -h, --help                 Output usage information
     
 `
 
@@ -124,8 +124,8 @@ export const usageEndpoints = `
   
   Options:
  
-    -p, --project      Project file (default: project.graphcool)
-    -h, --help         Output usage information
+    -p, --project <path>  Project file (default: project.graphcool)
+    -h, --help            Output usage information
     
 `
 
