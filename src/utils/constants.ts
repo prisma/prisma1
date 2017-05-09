@@ -124,10 +124,12 @@ export const noActionRequiredMessage = `\
 
 export const migrationPerformedMessage = `\
  ${chalk.green(figures.tick)} Your schema was successfully updated. Here are the changes:
+ 
 `
 
 export const migrationErrorMessage = `\
-There are issues with the new schema that you provided:
+There are issues with the new schema:
+
 `
 
 export const invalidProjectFilePathMessage = (projectFilePath: string) => `\

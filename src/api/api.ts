@@ -105,7 +105,8 @@ export async function pushNewSchema(newSchema: string,
  mutation($newSchema: String!, $force: Boolean!) {
   migrateProject(input: {
     newSchema: $newSchema,
-    force: $force
+    force: $force,
+    isDryRun: false
   }) {
     migrationMessages {
       type

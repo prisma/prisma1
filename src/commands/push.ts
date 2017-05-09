@@ -72,7 +72,7 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
       const migrationMessage = migrationPerformedMessage
 
       out.write(`${migrationMessage}`)
-      printMigrationMessages(migrationResult.messages, 1, out)
+      printMigrationMessages(migrationResult.messages, out)
       out.write(`\n`)
 
       // update project file if necessary
