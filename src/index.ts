@@ -127,9 +127,9 @@ async function main() {
       checkHelp(argv, usagePush)
       await checkAuth()
 
-      const isDryRun = !!(argv['dry-run'] || argv['d'])
+      const force = !!(argv['force'] || argv['f'])
       const projectFile = (argv['project'] || argv['p'])
-      await pushCommand({isDryRun, projectFile}, defaultEnvironment())
+      await pushCommand({force, projectFile}, defaultEnvironment())
       break
     }
 

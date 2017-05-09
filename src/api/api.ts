@@ -98,14 +98,14 @@ mutation addProject($schema: String!, $name: String!, $alias: String, $region: R
 }
 
 export async function pushNewSchema(newSchema: string,
-                                    isDryRun: boolean,
+                                    force: boolean,
                                     resolver: Resolver): Promise<MigrationResult> {
 
   const mutation = `\
- mutation($newSchema: String!, $isDryRun: Boolean!) {
+ mutation($newSchema: String!, $force: Boolean!) {
   migrateProject(input: {
     newSchema: $newSchema,
-    isDryRun: $isDryRun
+    force: $force
   }) {
     migrationMessages {
       type
@@ -137,7 +137,7 @@ export async function pushNewSchema(newSchema: string,
 
   const variables = {
     newSchema,
-    isDryRun
+    force
   }
 
   const json = await sendGraphQLRequest(mutation, resolver, variables)

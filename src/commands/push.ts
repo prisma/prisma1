@@ -1,5 +1,5 @@
-import {MigrationMessage, ProjectInfo, MigrationErrorMessage, SystemEnvironment, Out, Resolver} from '../types'
-import { pushNewSchema, parseErrors, generateErrorOutput } from '../api/api'
+import {MigrationMessage, ProjectInfo, MigrationErrorMessage, SystemEnvironment, Out} from '../types'
+import {pushNewSchema, parseErrors, generateErrorOutput, pullProjectInfo} from '../api/api'
 import figures = require('figures')
 import * as chalk from 'chalk'
 import {
@@ -7,22 +7,24 @@ import {
   couldNotMigrateSchemaMessage,
   pushingNewSchemaMessage,
   noActionRequiredMessage,
-  migrationDryRunMessage,
   migrationPerformedMessage,
   migrationErrorMessage,
   invalidProjectFileMessage,
   invalidProjectFilePathMessage,
-  multipleProjectFilesMessage, projectFileWasUpdatedMessage
+  multipleProjectFilesMessage,
+  projectFileWasUpdatedMessage,
+  remoteSchemaAheadMessage
 } from '../utils/constants'
 import {
   writeProjectFile,
-  readProjectInfoFromProjectFile, isValidProjectFilePath
+  readProjectInfoFromProjectFile,
+  isValidProjectFilePath
 } from '../utils/file'
 
 const debug = require('debug')('graphcool')
 
 interface Props {
-  isDryRun: boolean
+  force: boolean
   projectFile?: string
 }
 
@@ -37,13 +39,19 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
   }
 
   const {projectId, schema, version} = projectInfo!
-  const isDryRun = props.isDryRun
+  const force = props.force
 
   out.startSpinner(pushingNewSchemaMessage)
 
+  // first compare local and remote versions and fail if remote is ahead
+  const remoteProjectInfo = await pullProjectInfo(projectInfo.projectId, resolver)
+  if (parseInt(remoteProjectInfo.version) > parseInt(projectInfo.version)) {
+    throw new Error(remoteSchemaAheadMessage(projectInfo.version, remoteProjectInfo.version))
+  }
+
   try {
     const schemaWithFrontmatter = `# project: ${projectId}\n# version: ${version}\n\n${schema}`
-    const migrationResult = await pushNewSchema(schemaWithFrontmatter, isDryRun, resolver)
+    const migrationResult = await pushNewSchema(schemaWithFrontmatter, force, resolver)
 
     out.stopSpinner()
 
@@ -55,22 +63,20 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
 
     // migration successful
     else if (migrationResult.messages.length > 0 && migrationResult.errors.length === 0) {
-      const migrationMessage = isDryRun ? migrationDryRunMessage : migrationPerformedMessage
+      const migrationMessage = migrationPerformedMessage
 
       out.write(`${migrationMessage}`)
       printMigrationMessages(migrationResult.messages, 1, out)
       out.write(`\n`)
 
       // update project file if necessary
-      if (!isDryRun) {
-        const projectInfo = {
-          projectId,
-          schema: migrationResult.newSchema,
-          version: migrationResult.newVersion
-        } as ProjectInfo
-        writeProjectFile(projectInfo, resolver)
-        out.write(projectFileWasUpdatedMessage)
-      }
+      const projectInfo = {
+        projectId,
+        schema: migrationResult.newSchema,
+        version: migrationResult.newVersion
+      } as ProjectInfo
+      writeProjectFile(projectInfo, resolver)
+      out.write(projectFileWasUpdatedMessage)
     }
 
     // can't do migration because of issues with schema
