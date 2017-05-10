@@ -54,7 +54,6 @@ export const authenticationSuccessMessage = (email: string) => ` ${chalk.green(f
 /*
  * Terminal output: create
  */
-export const copyingProjectMessage = (name: string) => `Creating copy of project as ${chalk.bold(name)}...`
 export const creatingProjectMessage = (name: string) => `Creating project ${chalk.bold(name)}...`
 export const createdProjectMessage = (name: string, projectId: string, projectFileContent: string) => `\
  ${chalk.green(figures.tick)} Created project ${chalk.bold(name)} (ID: ${projectId}) successfully.
