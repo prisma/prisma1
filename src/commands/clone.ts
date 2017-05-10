@@ -33,8 +33,6 @@ export default async(props: Props, env: SystemEnvironment): Promise<void> => {
 
   try {
 
-    console.log(`Clone with props: ${JSON.stringify(props)}`)
-
     const projectId = props.sourceProjectId
     out.startSpinner(cloningProjectMessage)
 
@@ -46,8 +44,6 @@ export default async(props: Props, env: SystemEnvironment): Promise<void> => {
 
     const projectFile = props.projectFile || graphcoolProjectFileName
     const outputPath = props.outputPath || graphcoolCloneProjectFileName(projectFile)
-
-    console.log(`Project file: ${projectFile}, Output path: ${outputPath}`)
 
     writeProjectFile(clonedProjectInfo, resolver, outputPath)
 

@@ -126,7 +126,6 @@ async function handleSelect(selectedIndex: number, props: Props, env: SystemEnvi
         const copyProjectId = readProjectIdFromProjectFile(env.resolver, projectFile)
         const initProps = getPropsForInit(props)
         const initProps2 = {...initProps, copyProjectId, projectFile}
-        console.log(`Call init with props: ${JSON.stringify(initProps2)}`)
         await initCommand(initProps2, env)
       }
 
