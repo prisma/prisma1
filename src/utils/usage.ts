@@ -8,7 +8,7 @@ export const usageRoot = `
   ${chalk.dim('Commands:')}
     init         Create a new project
     push         Push project file changes
-    pull         Pull the latest project file
+    pull         Download the latest project file
     export       Export project data
     endpoints    Print GraphQL endpoints
     console      Open Graphcool Console
@@ -38,7 +38,7 @@ export const usageInit = `
   Create a new project from scratch or based on an existing GraphQL schema.
   
   Options:
-    -s, --schema <path>        Path (local file or remote URL) to a GraphQL schema (ends with .graphql)
+    -s, --schema <path | url>  Path / URL to a GraphQL schema (ends with .graphql)
     -c, --copy <id | alias>    ID or alias of the project to be copied
     --copy-opts <options>      Include items for copy (options: data, mutation-callbacks, all (default), none)
     -n, --name <name>          Project name
@@ -46,9 +46,18 @@ export const usageInit = `
     -o, --output <path>        Path to output project file (default: project.graphcool)
     -r, --region <region>      AWS Region (options: us-west-2 (default), eu-west-1, ap-northeast-1)
     -h, --help                 Output usage information
-    
-  Note: This command will create a ${chalk.bold('project.graphcool')} project file in the current directory.
+      
+  ${chalk.dim('Examples:')}
   
+  ${chalk.gray('-')} Initialize a new Graphcool project
+    ${chalk.cyan('$ graphcool init')}
+    
+  ${chalk.gray('-')} Create a new project based on a schema
+    ${chalk.cyan('$ graphcool init --schema <path | url>')}
+  
+  ${chalk.gray('-')} Create a copy of an existing project
+    ${chalk.cyan('$ graphcool init --copy <project-id | alias>')}
+
 `
 
 export const usagePull = `
@@ -61,7 +70,18 @@ export const usagePull = `
     -o, --output <path>         Path to output project file (default: project.graphcool)
     -f, --force                 Override project file
     -h, --help                  Output usage information
-   
+     
+  ${chalk.dim('Examples:')}
+  
+  ${chalk.gray('-')} Download latest project file for current project ([<project-file>] defaults to project.graphcool)
+    ${chalk.cyan('$ graphcool pull')}
+  
+  ${chalk.gray('-')} Download latest project for specific project (written to project.graphcool)
+    ${chalk.cyan('$ graphcool pull --project <project-id | alias>')}
+    
+  ${chalk.gray('-')} Download latest project for specific project (written to example.graphcool)
+    ${chalk.cyan('$ graphcool pull --project <project-id | alias> --output example.graphcool')}
+    
 `
 
 export const usagePush = `
@@ -71,7 +91,18 @@ export const usagePush = `
   
   Options:
     -f, --force           Accept data loss caused by schema changes
-    -h, --help            Output usage information
+    -h, --help            Output usage information    
+     
+  ${chalk.dim('Examples:')}
+      
+  ${chalk.gray('-')} Push local changes from current project file ([<project-file>] defaults to project.graphcool)
+    ${chalk.cyan('$ graphcool push')}
+  
+  ${chalk.gray('-')} Push local changes from specific project file 
+    ${chalk.cyan('$ graphcool push <project-file>')}
+      
+  ${chalk.gray('-')} Push local changes from current project file accepting potential data loss caused by schema changes
+    ${chalk.cyan('$ graphcool push --force <project-id | alias>')}
     
 `
 
@@ -83,7 +114,15 @@ export const usageExport = `
   Options:
  
     -h, --help            Output usage information
-    
+     
+  ${chalk.dim('Examples:')}
+      
+  ${chalk.gray('-')} Export data from current project ([<project-file>] defaults to project.graphcool)
+    ${chalk.cyan('$ graphcool export')}
+  
+  ${chalk.gray('-')} Export data from specific project file 
+    ${chalk.cyan('$ graphcool export <project-file>')}
+
 `
 
 export const usageStatus = `
@@ -95,6 +134,14 @@ export const usageStatus = `
  
     -h, --help            Output usage information
     
+  ${chalk.dim('Examples:')}
+      
+  ${chalk.gray('-')} Status for current project ([<project-file>] defaults to project.graphcool)
+    ${chalk.cyan('$ graphcool status')}
+  
+  ${chalk.gray('-')} Status for specific project
+    ${chalk.cyan('$ graphcool status <project-file>')}
+
 `
 
 
@@ -107,6 +154,14 @@ export const usageEndpoints = `
  
     -h, --help            Output usage information
     
+  ${chalk.dim('Examples:')}
+      
+  ${chalk.gray('-')} Display API endpoints for current project ([<project-file>] defaults to project.graphcool)
+    ${chalk.cyan('$ graphcool endpoints')}
+  
+  ${chalk.gray('-')} Display API endpoints for specific project
+    ${chalk.cyan('$ graphcool endpoints <project-file>')}
+
 `
 
 export const usageConsole = `
@@ -117,15 +172,31 @@ export const usageConsole = `
   Options: 
     -h, --help             Output usage information
     
+  ${chalk.dim('Examples:')}
+      
+  ${chalk.gray('-')} Open console for current project ([<project-file>] defaults to project.graphcool)
+    ${chalk.cyan('$ graphcool console')}
+  
+  ${chalk.gray('-')} Open console for specific project
+    ${chalk.cyan('$ graphcool console <project-file>')}
+    
 `
 
 export const usagePlayground = `
-  Usage: graphcool console [options]
+  Usage: graphcool console [options] [<project-file>]
   
   Open current project in Graphcool Playground with your browser
 
   Options: 
     -h, --help             Output usage information
+    
+  ${chalk.dim('Examples:')}
+      
+  ${chalk.gray('-')} Open playground for current project ([<project-file>] defaults to project.graphcool)
+    ${chalk.cyan('$ graphcool playground')}
+  
+  ${chalk.gray('-')} Open playground for specific project
+    ${chalk.cyan('$ graphcool playground <project-file>')}    
     
 `
 
@@ -137,6 +208,11 @@ export const usageProjects = `
   Options:
     -h, --help         Output usage information
     
+  ${chalk.dim('Example:')}
+      
+  ${chalk.gray('-')} Display all project in user's account
+    ${chalk.cyan('$ graphcool projects')}
+        
 `
 
 export const usageAuth = `
@@ -150,14 +226,27 @@ export const usageAuth = `
     
   Note: Your session token will be store at ~/.graphcool
   
+  ${chalk.dim('Examples:')}
+      
+  ${chalk.gray('-')} Authenticate using the browser
+    ${chalk.cyan('$ graphcool auth')}
+  
+  ${chalk.gray('-')} Authenticate using an existing token
+    ${chalk.cyan('$ graphcool auth -t <token>')}    
+  
 `
 
 export const usageVersion = `
   Usage: graphcool version [options]
   
-  Print version
+  Print version of Graphcool CLI
   
   Options:
     -h, --help         Output usage information
     
+  ${chalk.dim('Example:')}
+      
+  ${chalk.gray('-')} Print current version of Graphcool CLI
+    ${chalk.cyan('$ graphcool version')}
+            
 `

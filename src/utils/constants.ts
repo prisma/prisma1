@@ -41,6 +41,7 @@ type User {
 #   text: String!
 # }`
 
+
 /*
  * Terminal output: auth
  */
