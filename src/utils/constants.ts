@@ -124,8 +124,7 @@ export const noActionRequiredMessage = `\
 `
 
 export const migrationPerformedMessage = `\
- ${chalk.green(figures.tick)} Your schema was successfully updated. Here are the changes:
- 
+ ${chalk.green(figures.tick)} Your schema was successfully updated. Here are the changes: 
 `
 
 export const migrationErrorMessage = `\
@@ -138,7 +137,7 @@ ${projectFilePath} is not a valid project file (must end with ${projectFileSuffi
 `
 
 export const multipleProjectFilesMessage = (projectFiles: string[]) => `\
-Found ${projectFiles.length} project files. You can specify the one you want to push, e.g.: ${chalk.cyan(`\`graphcool push -p ${projectFiles[0]}\``)}
+Found ${projectFiles.length} project files. You can specify the one you want to push, e.g.: ${chalk.cyan(`\`graphcool push ${projectFiles[0]}\``)}
 `
 
 /*
@@ -200,7 +199,7 @@ Do you want to continue? [y|N]
 `
 
 export const multipleProjectFilesForPullMessage = (projectFiles: string[]) => `\
-Found ${projectFiles.length} project files. You can specify the one you want for which you want to pull the new schema, e.g.: ${chalk.cyan(`\`graphcool pull -p ${projectFiles[0]}\``)}
+Found ${projectFiles.length} project files. You can specify the one you want for which you want to pull the new schema, e.g.: ${chalk.cyan(`\`graphcool pull ${projectFiles[0]}\``)}
 `
 
 
@@ -217,7 +216,7 @@ export const downloadUrlMessage = (url: string) => `\
 `
 
 export const multipleProjectFilesForExportMessage = (projectFiles: string[]) => `\
-Found ${projectFiles.length} project files. You can specify the one you for which you want to export the data, e.g.: ${chalk.cyan(`\`graphcool export -p ${projectFiles[0]}\``)}
+Found ${projectFiles.length} project files. You can specify the one you for which you want to export the data, e.g.: ${chalk.cyan(`\`graphcool export ${projectFiles[0]}\``)}
 `
 
 
@@ -236,7 +235,7 @@ The Console was opened in your browser.
  * Terminal output: clone
  */
 export const multipleProjectFilesForCloneMessage = (projectFiles: string[]) => `\
-Found ${projectFiles.length} project files. You can specify the one for which you want to clone the project, e.g.: ${chalk.cyan(`\`graphcool clone -p ${projectFiles[0]}\``)}
+Found ${projectFiles.length} project files. You can specify the one for which you want to clone the project, e.g.: ${chalk.cyan(`\`graphcool clone ${projectFiles[0]}\``)}
 `
 
 export const cloningProjectMessage = `\
@@ -256,7 +255,7 @@ export const clonedProjectMessage = (clonedProjectName: string, outputPath: stri
  * Terminal output: playground
  */
 export const tooManyProjectFilesForPlaygroundMessage = (projectFiles: string[]) => `\
-Found ${projectFiles.length} project files. You can specify the one you for which you want open the Playground, e.g.: ${chalk.cyan(`\`graphcool playground -p ${projectFiles[0]}\``)}
+Found ${projectFiles.length} project files. You can specify the one you for which you want open the Playground, e.g.: ${chalk.cyan(`\`graphcool playground ${projectFiles[0]}\``)}
 `
 
 export const openedPlaygroundMessage = (projectName: string) => `\
@@ -268,7 +267,7 @@ The Playground for project ${chalk.bold(projectName)} was opened in your browser
  * Terminal output: status
  */
 export const multipleProjectFilesForStatusMessage = (projectFiles: string[]) =>  `\
-Found ${projectFiles.length} project files. You can specify the one you for which you want display the status, e.g.: ${chalk.cyan(`\`graphcool status -p ${projectFiles[0]}\``)}
+Found ${projectFiles.length} project files. You can specify the one you for which you want display the status, e.g.: ${chalk.cyan(`\`graphcool status ${projectFiles[0]}\``)}
 `
 
 export const localSchemaBehindRemoteMessage = (remoteVersion: string, localVersion: string) => `\

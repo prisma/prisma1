@@ -39,7 +39,7 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
   out.write(howDoYouWantToGetStarted())
 
   term.grabInput()
-  // term.hideCursor()
+  term.hideCursor()
 
   let currentIndex = INSTAGRAM_STARTER // 0
 
