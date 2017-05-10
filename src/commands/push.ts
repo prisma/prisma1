@@ -134,11 +134,12 @@ function getProjectFilePath(props: Props, env: SystemEnvironment): string {
 }
 
 function printMigrationMessages(migrationMessages: MigrationMessage[], out: Out) {
-  migrationMessages.forEach(migrationMessage => {
+  migrationMessages.forEach((migrationMessage, index) => {
     const actionType = getMigrationActionType(migrationMessage.description)
     const symbol = getSymbolForMigrationActionType(actionType)
-    const outputMessage = makePartsEnclodesByCharacterBold(migrationMessage.description, `\``)
-    out.write(`\n  | (${symbol})  ${outputMessage}\n`)
+    const description = makePartsEnclodesByCharacterBold(migrationMessage.description, `\``)
+    const outputMessage = `${index > 0 ? `  |` : ``}\n  | (${symbol})  ${description}\n`
+    out.write(outputMessage)
     migrationMessage.subDescriptions!.forEach(subMessage => {
       const actionType = getMigrationActionType(subMessage.description)
       const symbol = getSymbolForMigrationActionType(actionType)
