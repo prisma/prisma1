@@ -20,7 +20,7 @@ import {
 const debug = require('debug')('graphcool')
 
 interface Props {
-  sourceProjectId?: string
+  sourceProjectId: string
   projectFile?: string
   outputPath?: string
   name?: string
@@ -33,11 +33,9 @@ export default async(props: Props, env: SystemEnvironment): Promise<void> => {
 
   try {
 
-    const projectId = getProjectId(props, resolver)
-    if (!projectId) {
-      throw new Error(noProjectIdMessage)
-    }
+    console.log(`Clone with props: ${JSON.stringify(props)}`)
 
+    const projectId = props.sourceProjectId
     out.startSpinner(cloningProjectMessage)
 
     const includeMutationCallbacks = props.includeMutationCallbacks !== undefined ? props.includeMutationCallbacks : true
@@ -48,6 +46,8 @@ export default async(props: Props, env: SystemEnvironment): Promise<void> => {
 
     const projectFile = props.projectFile || graphcoolProjectFileName
     const outputPath = props.outputPath || graphcoolCloneProjectFileName(projectFile)
+
+    console.log(`Project file: ${projectFile}, Output path: ${outputPath}`)
 
     writeProjectFile(clonedProjectInfo, resolver, outputPath)
 
@@ -78,33 +78,3 @@ async function getClonedProjectName(props: Props, projectId: string, resolver: R
   const clonedPojectName = `Clone of ${projectInfo.name}`
   return clonedPojectName
 }
-
-function getProjectFilePath(props: Props, resolver: Resolver): string {
-
-  // check if provided file is valid (ends with correct suffix)
-  if (props.projectFile && isValidProjectFilePath(props.projectFile)) {
-    return props.projectFile
-  } else if (props.projectFile && !isValidProjectFilePath(props.projectFile)) {
-    throw new Error(invalidProjectFilePathMessage(props.projectFile))
-  }
-
-  // no project file provided, search for one in current dir
-  const projectFiles = resolver.projectFiles('.')
-  if (projectFiles.length === 0) {
-    throw new Error(noProjectFileOrIdMessage)
-  } else if (projectFiles.length > 1) {
-    throw new Error(multipleProjectFilesForCloneMessage(projectFiles))
-  }
-
-  return projectFiles[0]
-}
-
-function getProjectId(props: Props, resolver: Resolver): string | undefined {
-  if (props.sourceProjectId) {
-    return props.sourceProjectId
-  }
-
-  const projectFile = getProjectFilePath(props, resolver)
-  return readProjectIdFromProjectFile(resolver, projectFile)
-}
-

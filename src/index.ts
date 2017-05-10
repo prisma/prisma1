@@ -4,7 +4,6 @@ import * as minimist from 'minimist'
 import { Command, SystemEnvironment } from './types'
 import pushCommand from './commands/push'
 import consoleCommand from './commands/console'
-import cloneCommand from './commands/clone'
 import playgroundCommand from './commands/playground'
 import projectsCommand from './commands/projects'
 import pullCommand from './commands/pull'
@@ -35,7 +34,7 @@ import {
   usageExport,
   usageEndpoints,
   usagePlayground,
-  usageClone, usageStatus
+  usageStatus
 } from './utils/usage'
 
 var Raven = require('raven')
@@ -81,55 +80,56 @@ async function main() {
       const name = argv['name'] || argv['n']
       const alias = argv['alias'] || argv['a']
       const region = argv['region'] || argv['r']
-      const remoteSchemaUrl = argv['url'] || argv['u']
-      const localSchemaFile = argv['file'] || argv['f']
+      const schemaUrl = argv['schema'] || argv['s']
+      const copyProjectId = argv['copy'] || argv['c']
+      const copyOptions = argv['copy-options']
       const outputPath = argv['output'] || argv['o']
 
-      if (!remoteSchemaUrl && !localSchemaFile) {
+      if (!schemaUrl && !copyProjectId) {
         const props = {name, alias, outputPath, checkAuth}
         await interactiveInitCommand(props, defaultEnvironment())
       } else {
         await checkAuth()
 
-        const props = {name, alias, remoteSchemaUrl, localSchemaFile, region, outputPath}
+        const props = {name, alias, schemaUrl, copyProjectId, copyOptions, region, outputPath}
         await initCommand(props, defaultEnvironment())
       }
       break
     }
 
-    case 'clone': {
-      checkHelp(argv, usageClone)
-      await checkAuth()
-
-      const name = argv['name'] || argv['n']
-      const sourceProjectId = argv['source'] || argv['s']
-      const projectFile = (argv['project'] || argv['p'])
-      const outputPath = argv['output'] || argv['o']
-      const includes = argv['include'] || argv['i']
-
-      const includeMutationCallbacks = includes === 'all' || includes === 'mutation-callbacks'
-      const includeData = includes === 'all' || includes === 'data'
-
-      const props = {
-        sourceProjectId,
-        projectFile,
-        outputPath,
-        name,
-        includeMutationCallbacks,
-        includeData
-      }
-
-      await cloneCommand(props, defaultEnvironment())
-
-      break
-    }
+    // case 'clone': {
+    //   checkHelp(argv, usageClone)
+    //   await checkAuth()
+    //
+    //   const name = argv['name'] || argv['n']
+    //   const sourceProjectId = argv['source'] || argv['s']
+    //   const projectFile = argv._[1]
+    //   const outputPath = argv['output'] || argv['o']
+    //   const includes = argv['include'] || argv['i']
+    //
+    //   const includeMutationCallbacks = includes === 'all' || includes === 'mutation-callbacks'
+    //   const includeData = includes === 'all' || includes === 'data'
+    //
+    //   const props = {
+    //     sourceProjectId,
+    //     projectFile,
+    //     outputPath,
+    //     name,
+    //     includeMutationCallbacks,
+    //     includeData
+    //   }
+    //
+    //   await cloneCommand(props, defaultEnvironment())
+    //
+    //   break
+    // }
 
     case 'push': {
       checkHelp(argv, usagePush)
       await checkAuth()
 
       const force = !!(argv['force'] || argv['f'])
-      const projectFile = (argv['project'] || argv['p'])
+      const projectFile = argv._[1]
       await pushCommand({force, projectFile}, defaultEnvironment())
       break
     }
@@ -139,7 +139,7 @@ async function main() {
       await checkAuth()
 
       const sourceProjectId = argv['source'] || argv['s']
-      const projectFile = argv['project'] || argv['p']
+      const projectFile = argv._[1]
       const outputPath = argv['output'] || argv['o']
       const force = !!(argv['force'] || argv['f'])
       await pullCommand({sourceProjectId, projectFile, outputPath, force}, defaultEnvironment())
@@ -150,7 +150,7 @@ async function main() {
       checkHelp(argv, usageExport)
       await checkAuth()
 
-      const projectFile = argv['project'] || argv['p']
+      const projectFile = argv._[1]
       await exportCommand({projectFile}, defaultEnvironment())
       break
     }
@@ -159,7 +159,7 @@ async function main() {
       checkHelp(argv, usageStatus)
       await checkAuth()
 
-      const projectFile = argv['project'] || argv['p']
+      const projectFile = argv._[1]
       await statusCommand({projectFile}, defaultEnvironment())
       break
     }
@@ -168,7 +168,7 @@ async function main() {
       checkHelp(argv, usageEndpoints)
       await checkAuth()
 
-      const projectFile = argv['project'] || argv['p']
+      const projectFile = argv._[1]
       await endpointsCommand({projectFile}, defaultEnvironment())
       break
     }
@@ -177,7 +177,7 @@ async function main() {
       checkHelp(argv, usageConsole)
       await checkAuth()
 
-      const projectFile = argv['project'] || argv['p']
+      const projectFile = argv._[1]
       await consoleCommand({projectFile}, defaultEnvironment())
       break
     }
@@ -186,7 +186,7 @@ async function main() {
       checkHelp(argv, usagePlayground)
       await checkAuth()
 
-      const projectFile = argv['project'] || argv['p']
+      const projectFile = argv._[1]
       await playgroundCommand({projectFile}, defaultEnvironment())
       break
     }

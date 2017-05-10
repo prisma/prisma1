@@ -1,6 +1,7 @@
 import {Region, Resolver, SchemaInfo, SystemEnvironment, ProjectInfo} from '../types'
 import figures = require('figures')
 import generateName = require('sillyname')
+import cloneCommand from './clone'
 import { createProject, parseErrors, generateErrorOutput } from '../api/api'
 import * as fs from 'fs'
 import * as path from 'path'
@@ -19,8 +20,10 @@ import {
 const debug = require('debug')('graphcool')
 
 interface Props {
-  localSchemaFile?: string
-  remoteSchemaUrl?: string
+  copyProjectId?: string // for copy
+  projectFile?: string
+  copyOptions?: string
+  schemaUrl?: string
   name?: string
   alias?: string
   region?: Region
@@ -31,42 +34,67 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
 
   const {resolver, out} = env
 
-  if (resolver.exists(graphcoolProjectFileName) && resolver.read(graphcoolProjectFileName).toString().includes('# project:')) {
-    throw new Error(projectAlreadyExistsMessage)
+  if (props.copyProjectId) {
+    // clone
+    const includes = props.copyOptions || 'all'
+    const includeMutationCallbacks = includes === 'all' || includes === 'mutation-callbacks'
+    const includeData = includes === 'all' || includes === 'data'
+    const cloneProps = {
+      sourceProjectId: props.copyProjectId,
+      projectFile: props.projectFile,
+      outputPath: props.outputPath,
+      name: props.name,
+      includeData,
+      includeMutationCallbacks
+    }
+    await cloneCommand(cloneProps, env)
+
+  } else {
+    // create new
+    if (projectFileAlreadyExists(resolver)) {
+      throw new Error(projectAlreadyExistsMessage)
+    }
+
+    const name = props.name || generateName()
+    out.startSpinner(creatingProjectMessage(name))
+
+    try {
+      // resolve schema
+      const schemaUrl = props.schemaUrl
+      if (!isValidSchemaFilePath(schemaUrl)) {
+        throw new Error(invalidSchemaFileMessage(schemaUrl!))
+      }
+      const schema = await getSchema(schemaUrl, resolver)
+
+      // create project
+      const projectInfo = await createProjectAndGetProjectInfo(name, schema, resolver, props.alias, props.region)
+      writeProjectFile(projectInfo, resolver, props.outputPath)
+
+      out.stopSpinner()
+
+      const message = createdProjectMessage(name, projectInfo.projectId, projectInfoToContents(projectInfo))
+      out.write(message)
+
+    } catch (e) {
+      out.stopSpinner()
+      out.writeError(`${couldNotCreateProjectMessage}`)
+
+      if (e.errors) {
+        const errors = parseErrors(e)
+        const output = generateErrorOutput(errors)
+        out.writeError(`${output}`)
+      } else {
+        throw e
+      }
+    }
   }
 
-  const name = props.name || generateName()
-  out.startSpinner(creatingProjectMessage(name))
 
-  try {
-    // resolve schema
-    const schemaUrl = props.localSchemaFile ? props.localSchemaFile : props.remoteSchemaUrl
-    if (!isValidSchemaFilePath(schemaUrl)) {
-      throw new Error(invalidSchemaFileMessage(schemaUrl!))
-    }
-    const schema = await getSchema(schemaUrl, resolver)
+}
 
-    // create project
-    const projectInfo = await createProjectAndGetProjectInfo(name, schema, resolver, props.alias, props.region)
-    writeProjectFile(projectInfo, resolver, props.outputPath)
-
-    out.stopSpinner()
-
-    const message = createdProjectMessage(name, projectInfo.projectId, projectInfoToContents(projectInfo))
-    out.write(message)
-
-  } catch (e) {
-    out.stopSpinner()
-    out.writeError(`${couldNotCreateProjectMessage}`)
-
-    if (e.errors) {
-      const errors = parseErrors(e)
-      const output = generateErrorOutput(errors)
-      out.writeError(`${output}`)
-    } else {
-      throw e
-    }
-  }
+function projectFileAlreadyExists(resolver: Resolver): boolean {
+  const projectFiles = resolver.projectFiles('.')
+  return projectFiles.length > 0
 }
 
 async function createProjectAndGetProjectInfo(name: string, schema: SchemaInfo, resolver: Resolver, alias?: string, region?: string): Promise<ProjectInfo> {

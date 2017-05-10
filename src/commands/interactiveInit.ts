@@ -5,6 +5,7 @@ import * as chalk from 'chalk'
 import figures = require('figures')
 import * as _ from 'lodash'
 import initCommand from './init'
+import {readProjectIdFromProjectFile} from '../utils/file'
 const debug = require('debug')('graphcool')
 
 const INSTAGRAM_STARTER = 0
@@ -22,21 +23,23 @@ interface Props {
 
 export default async (props: Props, env: SystemEnvironment): Promise<void> => {
 
-  const {out} = env
+  const {out, resolver} = env
 
-  const schemaFiles = env.resolver.schemaFiles('.')
+  const schemaFiles = resolver.schemaFiles('.')
+  const projectFiles = resolver.projectFiles('.')
 
   const options = [
     [`${chalk.bold('Quickstart')}`, `Sets up an Instagram example project to explore how things work.`, ''],
     [`${chalk.bold('New blank project')}`, `Creates a new Graphcool project from scratch.`, ''],
     ...schemaFiles.map(f => [`${chalk.bold('From local schema ./' + f)}`, 'Creates a new Graphcool project based on the local schema.', '']),
+    ...projectFiles.map(f => [`${chalk.bold('Copy existing project ./' + f)}`, 'Creates a clone of an existing Graphcool project.', '']),
   ]
 
   term.saveCursor()
   out.write(howDoYouWantToGetStarted())
 
   term.grabInput()
-  term.hideCursor()
+  // term.hideCursor()
 
   let currentIndex = INSTAGRAM_STARTER // 0
 
@@ -96,28 +99,37 @@ async function handleSelect(selectedIndex: number, props: Props, env: SystemEnvi
 
   switch (selectedIndex) {
     case INSTAGRAM_STARTER: {
-      const remoteSchemaUrl = instagramExampleSchemaUrl
+      const schemaUrl = instagramExampleSchemaUrl
       const initProps = getPropsForInit(props)
-      await initCommand({...initProps, remoteSchemaUrl}, env)
+      await initCommand({...initProps, schemaUrl}, env)
       break
     }
     case BLANK_PROJECT: {
-      const remoteSchemaUrl = sampleSchemaURL
+      const schemaUrl = sampleSchemaURL
       const initProps = getPropsForInit(props)
-      await initCommand({...initProps, remoteSchemaUrl}, env)
+      await initCommand({...initProps, schemaUrl}, env)
       break
     }
     default: {
       term.grabInput(false)
       const schemaFiles = env.resolver.schemaFiles('.')
+      const projectFiles = env.resolver.projectFiles('.')
       const previousOptions = 2
-      if (selectedIndex > schemaFiles.length + previousOptions) {
-        break
+      if (selectedIndex >= previousOptions && selectedIndex < previousOptions + schemaFiles.length) {
+        const schemaFileIndex = selectedIndex - previousOptions
+        const localSchemaFile = schemaFiles[schemaFileIndex]
+        const initProps = getPropsForInit(props)
+        await initCommand({...initProps, localSchemaFile}, env)
+      } else if (selectedIndex >= previousOptions + schemaFiles.length && selectedIndex < previousOptions + schemaFiles.length + projectFiles.length) {
+        const projectFileIndex = selectedIndex - schemaFiles.length - previousOptions
+        const projectFile = projectFiles[projectFileIndex]
+        const copyProjectId = readProjectIdFromProjectFile(env.resolver, projectFile)
+        const initProps = getPropsForInit(props)
+        const initProps2 = {...initProps, copyProjectId, projectFile}
+        console.log(`Call init with props: ${JSON.stringify(initProps2)}`)
+        await initCommand(initProps2, env)
       }
-      const projectFileIndex = selectedIndex - previousOptions
-      const localSchemaFile = schemaFiles[projectFileIndex]
-      const initProps = getPropsForInit(props)
-      await initCommand({...initProps, localSchemaFile}, env)
+
       break
     }
   }

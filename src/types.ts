@@ -4,7 +4,6 @@ export type Command =
   | 'push'
   | 'status'
   | 'init'
-  | 'clone'
   | 'export'
   | 'pull'
   | 'endpoints'
@@ -54,7 +53,7 @@ export interface MigrationMessage {
   action: string
   name: string
   description: string
-  subDescriptions?: [MigrationMessage] // only ever goes one level deep
+  subDescriptions?: [MigrationMessage] // only ever goes one level deep`
 }
 
 export type MigrationActionType = 'create' | 'delete' | 'update' | 'unknown'

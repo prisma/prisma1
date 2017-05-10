@@ -33,8 +33,6 @@ export default class StdOut implements Out {
   onError(error: Error): void {
     Raven.captureException(error)
 
-    console.log(`Caught Error: ${JSON.stringify(error)}`)
-
     // prevent the same error output twice
     const errorMessage = makePartsEnclodesByCharacterBold(`Error: ${error.message}`, `\``)
     if (error.stack && !error.stack.startsWith(errorMessage!)) {

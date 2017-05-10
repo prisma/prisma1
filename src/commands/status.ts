@@ -111,7 +111,7 @@ function printMigrationMessages(migrationMessages: MigrationMessage[], out: Out)
     const actionType = getMigrationActionType(migrationMessage.description)
     const symbol = getSymbolForMigrationActionType(actionType)
     const outputMessage = makePartsEnclodesByCharacterBold(migrationMessage.description, `\``)
-    out.write(`  | (${symbol}) ${outputMessage}\n`)
+    out.write(`\n  | (${symbol}) ${outputMessage}\n`)
     migrationMessage.subDescriptions!.forEach(subMessage => {
       const actionType = getMigrationActionType(subMessage.description)
       const symbol = getSymbolForMigrationActionType(actionType)

@@ -6,13 +6,14 @@ import figures = require('figures')
 /*
  * Networking & URLs
  */
-export const systemAPIEndpoint = 'https://api.graph.cool/system'
+export const systemAPIEndpoint = 'https://dev.api.graph.cool/system'
 export const authEndpoint = 'https://cli-auth-api.graph.cool'
 export const consoleURL = (token: string, projectName?: string) =>
   `https://console.graph.cool/token/?token=${token}${projectName ? `&redirect=/${encodeURIComponent(projectName)}` : ''}`
 export const playgroundURL = (token: string, projectName: string) =>
   `https://console.graph.cool/token/?token=${token}&redirect=/${encodeURIComponent(projectName)}/playground`
 export const sampleSchemaURL = `http://graphqlbin.com/empty.graphql`
+export const instagramExampleSchemaUrl = 'http://graphqlbin.com/instagram.graphql'
 
 /*
  * Sentry
@@ -31,7 +32,6 @@ export const graphcoolCloneProjectFileName = (projectFileName?: string) => proje
 export const graphcoolConfigFilePath = path.join(os.homedir(), '.graphcool')
 export const projectFileSuffix = '.graphcool'
 export const schemaFileSuffix = '.graphql'
-export const instagramExampleSchemaUrl = 'http://graphqlbin.com/instagram.graphql'
 export const exampleSchema = `\
 type User {
   id: ID!
@@ -45,8 +45,7 @@ type User {
  * Terminal output: auth
  */
 export const openBrowserMessage = `You need to authenticate. Your browser will open shortly...`
-export const couldNotRetrieveTokenMessage = `\
-Whoops, something went wrong during authentication.
+export const couldNotRetrieveTokenMessage = `Whoops, something went wrong during authentication.
 `
 
 export const authenticationSuccessMessage = (email: string) => ` ${chalk.green(figures.tick)} Authenticated user: ${chalk.bold(email)}
@@ -55,6 +54,7 @@ export const authenticationSuccessMessage = (email: string) => ` ${chalk.green(f
 /*
  * Terminal output: create
  */
+export const copyingProjectMessage = (name: string) => `Creating copy of project as ${chalk.bold(name)}...`
 export const creatingProjectMessage = (name: string) => `Creating project ${chalk.bold(name)}...`
 export const createdProjectMessage = (name: string, projectId: string, projectFileContent: string) => `\
  ${chalk.green(figures.tick)} Created project ${chalk.bold(name)} (ID: ${projectId}) successfully.
@@ -75,6 +75,7 @@ export const createdProjectMessage = (name: string, projectId: string, projectFi
 
 export const couldNotCreateProjectMessage = `\
 Whoops, something went wrong while creating the project.
+
 `
 
 export const projectAlreadyExistsMessage = `\
@@ -190,12 +191,12 @@ The new schema version is ${chalk.bold(newVersion)}.
 
 export const differentProjectIdWarningMessage = (inputProjectId: string, readProjectId: string) => `\
 The project ID you provided (${inputProjectId}) is different than the one in the current project file (${readProjectId}). 
-This will override the current project file with a different project, do you still want to continue? [y|n]
+This will override the current project file with a different project, do you still want to continue? [y|N]
 `
 
 export const warnOverrideProjectFileMessage = (projectFile: string) => `\
 You are about to override the local project file ${chalk.bold(projectFile)}. Make sure to save local changes that you want to preserve.
-Do you want to continue? [y|n]
+Do you want to continue? [y|N]
 `
 
 export const multipleProjectFilesForPullMessage = (projectFiles: string[]) => `\
@@ -285,7 +286,6 @@ Everything up-to-date.
 
 export const potentialChangesMessage = `\
 Here are all the local changes: 
-
 `
 
 export const issuesInSchemaMessage = `\
