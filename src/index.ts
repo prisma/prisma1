@@ -97,33 +97,6 @@ async function main() {
       break
     }
 
-    // case 'clone': {
-    //   checkHelp(argv, usageClone)
-    //   await checkAuth()
-    //
-    //   const name = argv['name'] || argv['n']
-    //   const sourceProjectId = argv['source'] || argv['s']
-    //   const projectFile = argv._[1]
-    //   const outputPath = argv['output'] || argv['o']
-    //   const includes = argv['include'] || argv['i']
-    //
-    //   const includeMutationCallbacks = includes === 'all' || includes === 'mutation-callbacks'
-    //   const includeData = includes === 'all' || includes === 'data'
-    //
-    //   const props = {
-    //     sourceProjectId,
-    //     projectFile,
-    //     outputPath,
-    //     name,
-    //     includeMutationCallbacks,
-    //     includeData
-    //   }
-    //
-    //   await cloneCommand(props, defaultEnvironment())
-    //
-    //   break
-    // }
-
     case 'push': {
       checkHelp(argv, usagePush)
       await checkAuth()

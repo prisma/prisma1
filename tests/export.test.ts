@@ -18,6 +18,7 @@ const debug = require('debug')('graphcool')
  */
 
 test.afterEach(() => {
+  new TestOut().write('\n')
   fetchMock.restore()
 })
 

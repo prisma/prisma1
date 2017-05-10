@@ -6,7 +6,7 @@ import figures = require('figures')
 /*
  * Networking & URLs
  */
-export const systemAPIEndpoint = 'https://api.graph.cool/system'
+export const systemAPIEndpoint = process.env.ENV === 'DEV' ? 'https://dev.api.graph.cool/system' : 'https://api.graph.cool/system'
 export const authEndpoint = 'https://cli-auth-api.graph.cool'
 export const consoleURL = (token: string, projectName?: string) =>
   `https://console.graph.cool/token/?token=${token}${projectName ? `&redirect=/${encodeURIComponent(projectName)}` : ''}`
@@ -141,8 +141,7 @@ ${projectFilePath} is not a valid project file (must end with ${projectFileSuffi
 `
 
 export const multipleProjectFilesMessage = (projectFiles: string[]) => `\
-Found ${projectFiles.length} project files. You can specify the one you want to push, e.g.: ${chalk.cyan(`\`graphcool push ${projectFiles[0]}\``)}
-`
+Found ${projectFiles.length} project files. You can specify the one you want to push, e.g.: ${chalk.cyan(`\`graphcool push ${projectFiles[0]}\``)}`
 
 /*
  * Terminal output: projects

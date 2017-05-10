@@ -97,7 +97,6 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
       out.write(potentialDataLossMessage)
     }
 
-
   } catch (e) {
     out.stopSpinner()
     out.writeError(couldNotMigrateSchemaMessage)

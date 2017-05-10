@@ -20,9 +20,9 @@ import {
 const debug = require('debug')('graphcool')
 
 interface Props {
-  copyProjectId?: string // for copy
-  projectFile?: string
-  copyOptions?: string
+  copyProjectId?: string // only used for copy
+  projectFile?: string // only used for copy
+  copyOptions?: string // only used for copy
   schemaUrl?: string
   name?: string
   alias?: string

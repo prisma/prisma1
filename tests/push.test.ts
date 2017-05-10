@@ -19,6 +19,7 @@ Tests:
 */
 
 test.afterEach(() => {
+  new TestOut().write('\n')
   fetchMock.restore()
 })
 

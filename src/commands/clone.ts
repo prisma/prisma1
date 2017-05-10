@@ -26,6 +26,7 @@ interface Props {
   name?: string
   includeMutationCallbacks?: boolean
   includeData?: boolean
+  alias?: string
 }
 
 export default async(props: Props, env: SystemEnvironment): Promise<void> => {
