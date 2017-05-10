@@ -1,6 +1,11 @@
 import {
-  MigrationMessage, ProjectInfo, MigrationErrorMessage, SystemEnvironment, Out,
-  MigrationActionType
+  MigrationMessage,
+  ProjectInfo,
+  MigrationErrorMessage,
+  SystemEnvironment,
+  Out,
+  MigrationActionType,
+  Resolver
 } from '../types'
 import {pushNewSchema, parseErrors, generateErrorOutput, pullProjectInfo} from '../api/api'
 import figures = require('figures')
@@ -16,7 +21,8 @@ import {
   invalidProjectFilePathMessage,
   multipleProjectFilesMessage,
   projectFileWasUpdatedMessage,
-  remoteSchemaAheadMessage, potentialChangesMessage, destructiveChangesInStatusMessage, potentialDataLossMessage
+  remoteSchemaAheadMessage,
+  potentialDataLossMessage
 } from '../utils/constants'
 import {
   writeProjectFile,
@@ -35,7 +41,7 @@ interface Props {
 export default async (props: Props, env: SystemEnvironment): Promise<void> => {
 
   const {resolver, out} = env
-  const projectFilePath = getProjectFilePath(props, env)
+  const projectFilePath = getProjectFilePath(props, resolver)
 
   const projectInfo = readProjectInfoFromProjectFile(resolver, projectFilePath)
   if (!projectInfo) {
@@ -112,8 +118,7 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
 
 }
 
-function getProjectFilePath(props: Props, env: SystemEnvironment): string {
-  const {resolver, out} = env
+function getProjectFilePath(props: Props, resolver: Resolver): string {
 
   // check if provided file is valid (ends with correct suffix)
   if (props.projectFile && isValidProjectFilePath(props.projectFile)) {
