@@ -41,7 +41,6 @@ type User {
 #   text: String!
 # }`
 
-
 /*
  * Terminal output: auth
  */
@@ -156,8 +155,10 @@ An error occured while trying to fetch your projects.
 export const endpointsMessage = (projectId: string) => `\
  The endpoints for your project are are:
  
-   ${chalk.blue(figures.pointer)} Simple API: https://api.graph.cool/simple/v1/${projectId}
-   ${chalk.blue(figures.pointer)} Relay API: https://api.graph.cool/relay/v1/${projectId}
+   Simple API:         https://api.graph.cool/simple/v1/${projectId}
+   Relay API:          https://api.graph.cool/relay/v1/${projectId}
+   Subscriptions API:  wss://subscriptions.graph.cool/v1/${projectId}
+   File API:           https://api.graph.cool/file/v1/${projectId}
 `
 
 
