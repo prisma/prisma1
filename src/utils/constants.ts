@@ -6,7 +6,7 @@ import figures = require('figures')
 /*
  * Networking & URLs
  */
-export const systemAPIEndpoint = 'https://api.graph.cool/system'
+export const systemAPIEndpoint = 'https://dev.api.graph.cool/system'
 export const authEndpoint = 'https://cli-auth-api.graph.cool'
 export const consoleURL = (token: string, projectName?: string) =>
   `https://console.graph.cool/token/?token=${token}${projectName ? `&redirect=/${encodeURIComponent(projectName)}` : ''}`
@@ -129,6 +129,11 @@ export const migrationPerformedMessage = `\
 export const migrationErrorMessage = `\
 There are issues with the new schema:
 
+`
+
+export const potentialDataLossMessage = `\
+Your changes might result in data loss. 
+Review your changes with ${chalk.cyan(`\`graphcool status\``)} or use ${chalk.cyan(`\`graphcool push --force\``)} if you know what you're doing!
 `
 
 export const invalidProjectFilePathMessage = (projectFilePath: string) => `\
@@ -291,6 +296,12 @@ Here are all the local changes:
 export const issuesInSchemaMessage = `\
 The current version of your schema contains some issues: 
 
+`
+
+export const destructiveChangesInStatusMessage = `\
+
+Pushing the current version of your schema can result in data loss. 
+Use ${chalk.cyan(`\`graphcool push --force\``)} if you know what you're doing!
 `
 
 

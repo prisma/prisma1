@@ -10,7 +10,7 @@ import {
   invalidProjectFilePathMessage,
   multipleProjectFilesForStatusMessage, canNotReadVersionFromProjectFile, localSchemaBehindRemoteMessage,
   remoteSchemaBehindLocalMessage, everythingUpToDateMessage, potentialChangesMessage, issuesInSchemaMessage,
-  noProjectFileMessage,
+  noProjectFileMessage, destructiveChangesInStatusMessage,
 } from '../utils/constants'
 import {
   parseErrors,
@@ -70,8 +70,19 @@ export default async(props: Props, env: SystemEnvironment): Promise<void> => {
 
     // issues with local schema that prevent migration
     else if (migrationResult.messages.length === 0 && migrationResult.errors.length > 0) {
+
+      const migrationMessage = potentialChangesMessage
       out.write(`${issuesInSchemaMessage}`)
       printMigrationErrors(migrationResult.errors, out)
+    }
+
+    // potentially destructive changes
+    else if (migrationResult.errors[0].description.indexOf(`destructive changes`) >= 0) {
+      const migrationMessage = potentialChangesMessage
+
+      out.write(`${migrationMessage}`)
+      printMigrationMessages(migrationResult.messages, out)
+      out.write(destructiveChangesInStatusMessage)
     }
 
   } catch(e) {

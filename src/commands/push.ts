@@ -16,7 +16,7 @@ import {
   invalidProjectFilePathMessage,
   multipleProjectFilesMessage,
   projectFileWasUpdatedMessage,
-  remoteSchemaAheadMessage
+  remoteSchemaAheadMessage, potentialChangesMessage, destructiveChangesInStatusMessage, potentialDataLossMessage
 } from '../utils/constants'
 import {
   writeProjectFile,
@@ -91,6 +91,12 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
       printMigrationErrors(migrationResult.errors, out)
       out.write(`\n`)
     }
+
+    // potentially destructive changes
+    else if (migrationResult.errors[0].description.indexOf(`destructive changes`) >= 0) {
+      out.write(potentialDataLossMessage)
+    }
+
 
   } catch (e) {
     out.stopSpinner()
