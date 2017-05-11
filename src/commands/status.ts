@@ -21,7 +21,7 @@ import {
   potentialChangesMessage,
   issuesInSchemaMessage,
   noProjectFileMessage,
-  destructiveChangesInStatusMessage,
+  destructiveChangesInStatusMessage, usePushToUpdateMessage,
 } from '../utils/constants'
 import {
   parseErrors,
@@ -77,6 +77,7 @@ export default async(props: Props, env: SystemEnvironment): Promise<void> => {
 
       out.write(`${migrationMessage}`)
       printMigrationMessages(migrationResult.messages, out)
+      out.write(usePushToUpdateMessage)
     }
 
     // issues with local schema that prevent migration

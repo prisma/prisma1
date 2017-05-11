@@ -7,7 +7,10 @@ import {
   MigrationActionType,
   Resolver
 } from '../types'
-import {pushNewSchema, parseErrors, generateErrorOutput, pullProjectInfo} from '../api/api'
+import {pushNewSchema,
+  parseErrors,
+  generateErrorOutput,
+  pullProjectInfo} from '../api/api'
 import figures = require('figures')
 import * as chalk from 'chalk'
 import {

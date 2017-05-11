@@ -288,6 +288,10 @@ export const potentialChangesMessage = `\
 Here are all the local changes: 
 `
 
+export const usePushToUpdateMessage = `
+Use ${chalk.cyan(`\`graphcool push\``)} to apply your schema changes.
+`
+
 export const issuesInSchemaMessage = `\
 The current version of your schema contains some issues: 
 
