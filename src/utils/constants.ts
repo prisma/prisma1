@@ -277,7 +277,7 @@ Save your local changes and execute ${chalk.cyan(`\`graphcool pull\``)} before a
 `
 
 export const remoteSchemaBehindLocalMessage = (remoteVersion: string, localVersion: string) => `\
-There is an issue with your schema. The remote version (${remoteVersion}) is behind the local version (${localVersion}). 
+The remote version (${remoteVersion}) is behind the local version (${localVersion}). Please don't make manual changes to the project file's header. 
 `
 
 export const everythingUpToDateMessage = `\
