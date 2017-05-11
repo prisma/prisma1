@@ -100,8 +100,7 @@ Your schema file ${chalk.bold(schemaFileName)} is invalid. A schema file must en
  */
 
 export const remoteSchemaAheadMessage = (remoteVersion: string, localVersion: string) => `\
-The local version of your schema (${localVersion}) is behind the remote version (${remoteVersion}). Save your local changes and pull before retrying.
-`
+The local version of your schema (${localVersion}) is behind the remote version (${remoteVersion}). Save your local changes and run ${chalk.cyan(`\`graphcool pull\``)} before retrying.`
 
 export const noProjectFileForPushMessage = `\
 Please provide a valid project file (${graphcoolProjectFileName}) for the schema migration.
@@ -114,9 +113,6 @@ The project file (${graphcoolProjectFileName}) that you provided doesn't seem to
 export const pushingNewSchemaMessage = `\
 Migrating the schema in your project...`
 
-export const couldNotMigrateSchemaMessage = `
-An error occured while trying to migrate the project.
-`
 
 export const noActionRequiredMessage = `\
  ${chalk.green(figures.tick)} Identical schema, no action required.
@@ -277,7 +273,7 @@ Found ${projectFiles.length} project files. You can specify the one you for whic
 
 export const localSchemaBehindRemoteMessage = (remoteVersion: string, localVersion: string) => `\
 The local version of your schema (${localVersion}) is behind the remote version (${remoteVersion}). 
-Save your local changes and execute 'graphcool pull' before a schema migration.
+Save your local changes and execute ${chalk.cyan(`\`graphcool pull\``)} before a schema migration.
 `
 
 export const remoteSchemaBehindLocalMessage = (remoteVersion: string, localVersion: string) => `\

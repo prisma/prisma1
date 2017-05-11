@@ -1,16 +1,27 @@
-import {SystemEnvironment, Resolver, MigrationMessage, Out, MigrationErrorMessage, MigrationActionType} from '../types'
+import {SystemEnvironment,
+  Resolver,
+  MigrationMessage,
+  Out,
+  MigrationErrorMessage,
+  MigrationActionType} from '../types'
 import {
   readProjectIdFromProjectFile,
   isValidProjectFilePath,
-  readDataModelFromProjectFile, readVersionFromProjectFile
+  readDataModelFromProjectFile,
+  readVersionFromProjectFile
 } from '../utils/file'
 import {
   noProjectIdMessage,
-  noProjectFileOrIdMessage,
   invalidProjectFilePathMessage,
-  multipleProjectFilesForStatusMessage, canNotReadVersionFromProjectFile, localSchemaBehindRemoteMessage,
-  remoteSchemaBehindLocalMessage, everythingUpToDateMessage, potentialChangesMessage, issuesInSchemaMessage,
-  noProjectFileMessage, destructiveChangesInStatusMessage,
+  multipleProjectFilesForStatusMessage,
+  canNotReadVersionFromProjectFile,
+  localSchemaBehindRemoteMessage,
+  remoteSchemaBehindLocalMessage,
+  everythingUpToDateMessage,
+  potentialChangesMessage,
+  issuesInSchemaMessage,
+  noProjectFileMessage,
+  destructiveChangesInStatusMessage,
 } from '../utils/constants'
 import {
   parseErrors,

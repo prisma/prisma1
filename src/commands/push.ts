@@ -12,7 +12,6 @@ import figures = require('figures')
 import * as chalk from 'chalk'
 import {
   noProjectFileForPushMessage,
-  couldNotMigrateSchemaMessage,
   pushingNewSchemaMessage,
   noActionRequiredMessage,
   migrationPerformedMessage,
@@ -57,9 +56,9 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
 
     // first compare local and remote versions and fail if remote is ahead
     const remoteProjectInfo = await pullProjectInfo(projectInfo.projectId, resolver)
-    if (parseInt(remoteProjectInfo.version) > parseInt(projectInfo.version)) {
+    if (parseInt(projectInfo.version) > parseInt(remoteProjectInfo.version)) {
       out.stopSpinner()
-      throw new Error(remoteSchemaAheadMessage(projectInfo.version, remoteProjectInfo.version))
+      throw new Error(remoteSchemaAheadMessage(remoteProjectInfo.version, projectInfo.version))
     }
 
     const schemaWithFrontmatter = `# project: ${projectId}\n# version: ${version}\n\n${schema}`
@@ -105,7 +104,6 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
 
   } catch (e) {
     out.stopSpinner()
-    out.writeError(couldNotMigrateSchemaMessage)
 
     if (e.errors) {
       const errors = parseErrors(e)
