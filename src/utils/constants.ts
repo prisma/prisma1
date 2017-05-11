@@ -9,9 +9,9 @@ import figures = require('figures')
 export const systemAPIEndpoint = process.env.ENV === 'DEV' ? 'https://dev.api.graph.cool/system' : 'https://api.graph.cool/system'
 export const authEndpoint = 'https://cli-auth-api.graph.cool'
 export const consoleURL = (token: string, projectName?: string) =>
-  `https://console.graph.cool/token/?token=${token}${projectName ? `&redirect=/${encodeURIComponent(projectName)}` : ''}`
+  `https://console.graph.cool/token?token=${token}${projectName ? `&redirect=/${encodeURIComponent(projectName)}` : ''}`
 export const playgroundURL = (token: string, projectName: string) =>
-  `https://console.graph.cool/token/?token=${token}&redirect=/${encodeURIComponent(projectName)}/playground`
+  `https://console.graph.cool/token?token=${token}&redirect=/${encodeURIComponent(projectName)}/playground`
 export const sampleSchemaURL = `http://graphqlbin.com/empty.graphql`
 export const instagramExampleSchemaUrl = 'http://graphqlbin.com/instagram.graphql'
 
