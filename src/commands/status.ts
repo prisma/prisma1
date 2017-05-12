@@ -21,7 +21,8 @@ import {
   potentialChangesMessage,
   issuesInSchemaMessage,
   noProjectFileMessage,
-  destructiveChangesInStatusMessage, usePushToUpdateMessage,
+  destructiveChangesInStatusMessage,
+  usePushToUpdateMessage,
 } from '../utils/constants'
 import {
   parseErrors,

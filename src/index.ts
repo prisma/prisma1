@@ -164,7 +164,6 @@ async function main() {
       break
     }
 
-
     case 'projects': {
       checkHelp(argv, usageProjects)
       await checkAuth()
@@ -203,11 +202,11 @@ async function main() {
   process.stdout.write('\n')
 }
 
-async function checkAuth() {
+async function checkAuth(projectType?: string) {
   try {
     readGraphcoolConfig(new FileSystemResolver())
   } catch (e) {
-    await authCommand({}, defaultEnvironment(), new GraphcoolAuthServer())
+    await authCommand({}, defaultEnvironment(), new GraphcoolAuthServer(projectType))
   }
 }
 

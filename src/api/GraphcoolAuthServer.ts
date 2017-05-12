@@ -7,13 +7,19 @@ const debug = require('debug')('graphcool')
 
 export class GraphcoolAuthServer implements AuthServer {
 
+  _projectType?: string = undefined
+
+  constructor(projectType?: string) {
+    this._projectType = projectType
+  }
+
   async requestAuthToken(): Promise<string> {
     const cliToken = cuid()
 
     await fetch(`${authEndpoint}/create`, {
       method: 'post',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({cliToken}),
     })
@@ -22,7 +28,10 @@ export class GraphcoolAuthServer implements AuthServer {
     open(`${frontend}/?token=${cliToken}`)
 
     while (true) {
-      const result = await fetch(`${authEndpoint}/${cliToken}`)
+      const url = this._projectType ?
+        `${authEndpoint}/${cliToken}?projectType=${this._projectType}` : `${authEndpoint}/${cliToken}`
+      console.log(`Authenticate with URL: ${url}`)
+      const result = await fetch(url)
 
       const json = await result.json()
       const {authToken} = json
@@ -48,7 +57,7 @@ export class GraphcoolAuthServer implements AuthServer {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({query: authQuery})
       })

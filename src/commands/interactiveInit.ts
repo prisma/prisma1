@@ -11,7 +11,7 @@ const debug = require('debug')('graphcool')
 const INSTAGRAM_STARTER = 0
 const BLANK_PROJECT = 1
 
-type CheckAuth = () => Promise<void>
+type CheckAuth = (token?: string) => Promise<void>
 
 interface Props {
   checkAuth: CheckAuth
@@ -94,7 +94,8 @@ async function handleSelect(selectedIndex: number, props: Props, env: SystemEnvi
   if (selectedIndex === INSTAGRAM_STARTER || selectedIndex === BLANK_PROJECT) {
     term.grabInput(false)
 
-    await props.checkAuth()
+    const projectType = selectedIndex === INSTAGRAM_STARTER ? 'instagram' : 'blank'
+    await props.checkAuth(projectType)
   }
 
   switch (selectedIndex) {
