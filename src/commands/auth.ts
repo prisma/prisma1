@@ -25,7 +25,7 @@ export default async (props: Props, env: SystemEnvironment, authServer: AuthServ
     try {
       token = await authServer.requestAuthToken()
     } catch (e) {
-      debug(e)
+      debug(e.stack || e)
       throw new Error(couldNotRetrieveTokenMessage)
     }
     out.stopSpinner()
