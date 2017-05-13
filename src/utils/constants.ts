@@ -6,8 +6,9 @@ import figures = require('figures')
 /*
  * Networking & URLs
  */
+export const authUIEndpoint = process.env.ENV === 'DEV' ? 'https://dev.console.graph.cool/cli/auth' : 'https://console.graph.cool/cli/auth'
 export const systemAPIEndpoint = process.env.ENV === 'DEV' ? 'https://dev.api.graph.cool/system' : 'https://api.graph.cool/system'
-export const authEndpoint = 'https://cli-auth-api.graph.cool'
+export const authEndpoint = process.env.ENV === 'DEV' ? 'https://cli-auth-api.graph.cool/dev' : 'https://cli-auth-api.graph.cool/prod'
 export const consoleURL = (token: string, projectName?: string) =>
   `https://console.graph.cool/token?token=${token}${projectName ? `&redirect=/${encodeURIComponent(projectName)}` : ''}`
 export const playgroundURL = (token: string, projectName: string) =>

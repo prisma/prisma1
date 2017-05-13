@@ -1,5 +1,5 @@
 import { AuthServer } from '../types'
-import { systemAPIEndpoint, authEndpoint } from '../utils/constants'
+import { systemAPIEndpoint, authEndpoint, authUIEndpoint } from '../utils/constants'
 import 'isomorphic-fetch'
 import cuid = require('cuid')
 import open = require('open')
@@ -7,7 +7,7 @@ const debug = require('debug')('graphcool')
 
 export class GraphcoolAuthServer implements AuthServer {
 
-  _projectType?: string = undefined
+  _projectType: string | undefined = undefined
 
   constructor(projectType?: string) {
     this._projectType = projectType
@@ -24,13 +24,11 @@ export class GraphcoolAuthServer implements AuthServer {
       body: JSON.stringify({cliToken}),
     })
 
-    const frontend = 'https://cli-auth.graph.cool'
-    open(`${frontend}/?token=${cliToken}`)
+    const projectTypeParam = this._projectType ? `&projectType=${this._projectType}` : ''
+    open(`${authUIEndpoint}?cliToken=${cliToken}${projectTypeParam}`)
 
     while (true) {
-      const url = this._projectType ?
-        `${authEndpoint}/${cliToken}?projectType=${this._projectType}` : `${authEndpoint}/${cliToken}`
-      console.log(`Authenticate with URL: ${url}`)
+      const url = `${authEndpoint}/${cliToken}`
       const result = await fetch(url)
 
       const json = await result.json()
