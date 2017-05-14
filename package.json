@@ -1,12 +1,13 @@
 {
   "name": "graphcool",
-  "version": "0.4.6",
+  "version": "0.4.8",
   "bin": {
     "graphcool": "dist/src/index.js",
     "gc": "dist/src/index.js"
   },
   "files": [
     "README.md",
+    "LICENSE",
     "dist/"
   ],
   "scripts": {
@@ -16,7 +17,7 @@
     "prepublish": "npm run build"
   },
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "devDependencies": {
     "ava": "^0.19.1",
     "fetch-mock": "^5.10.0",

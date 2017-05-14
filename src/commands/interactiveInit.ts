@@ -1,17 +1,14 @@
-import { SystemEnvironment } from '../types'
-import {howDoYouWantToGetStarted, instagramExampleSchemaUrl, sampleSchemaURL} from '../utils/constants'
-const term = require('terminal-kit').terminal
+import { CheckAuth, SystemEnvironment } from '../types'
+import { howDoYouWantToGetStarted, sampleSchemaURL } from '../utils/constants'
 import * as chalk from 'chalk'
 import figures = require('figures')
 import * as _ from 'lodash'
 import initCommand from './init'
-import {readProjectIdFromProjectFile} from '../utils/file'
+import { readProjectIdFromProjectFile } from '../utils/file'
+const {terminal} = require('terminal-kit')
 const debug = require('debug')('graphcool')
 
-const INSTAGRAM_STARTER = 0
-const BLANK_PROJECT = 1
-
-type CheckAuth = (token?: string) => Promise<void>
+const BLANK_PROJECT = 0
 
 interface Props {
   checkAuth: CheckAuth
@@ -29,24 +26,34 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
   const projectFiles = resolver.projectFiles('.')
 
   const options = [
-    [`${chalk.bold('Quickstart')}`, `Sets up an Instagram example project to explore how things work.`, ''],
     [`${chalk.bold('New blank project')}`, `Creates a new Graphcool project from scratch.`, ''],
     ...schemaFiles.map(f => [`${chalk.bold('From local schema ./' + f)}`, 'Creates a new Graphcool project based on the local schema.', '']),
     ...projectFiles.map(f => [`${chalk.bold('Copy existing project ./' + f)}`, 'Creates a clone of an existing Graphcool project.', '']),
   ]
 
-  term.saveCursor()
+  // no need for interactivity when there are no options
+  // NOTE: this should probably be refactored to an outer layer
+  if (schemaFiles.length === 0 && projectFiles.length === 0) {
+    await props.checkAuth('init')
+
+    const schemaUrl = sampleSchemaURL
+    const initProps = getPropsForInit(props)
+    await initCommand({...initProps, schemaUrl}, env)
+    return
+  }
+
+  terminal.saveCursor()
   out.write(howDoYouWantToGetStarted())
 
-  term.grabInput()
-  term.hideCursor()
+  terminal.grabInput()
+  terminal.hideCursor()
 
-  let currentIndex = INSTAGRAM_STARTER // 0
+  let currentIndex = BLANK_PROJECT // 0
 
   render(options, currentIndex)
 
   await new Promise(resolve => {
-    term.on('key', async (name: string) => {
+    terminal.on('key', async (name: string) => {
       currentIndex = await handleKeyEvent(name, currentIndex, options, props, env, resolve)
     })
   })
@@ -71,9 +78,9 @@ async function handleKeyEvent(name: string, currentIndex: number, options: strin
       break
     }
     case 'CTRL_C': {
-      term.restoreCursor()
-      term.eraseDisplayBelow()
-      term.hideCursor(false)
+      terminal.restoreCursor()
+      terminal.eraseDisplayBelow()
+      terminal.hideCursor(false)
       env.out.write('\n')
       process.exit()
     }
@@ -86,25 +93,18 @@ async function handleKeyEvent(name: string, currentIndex: number, options: strin
 }
 
 async function handleSelect(selectedIndex: number, props: Props, env: SystemEnvironment): Promise<void> {
-  term.restoreCursor()
-  term.eraseDisplayBelow()
-  term.hideCursor(false)
+  terminal.restoreCursor()
+  terminal.eraseDisplayBelow()
+  terminal.hideCursor(false)
   env.out.write('\n')
 
-  if (selectedIndex === INSTAGRAM_STARTER || selectedIndex === BLANK_PROJECT) {
-    term.grabInput(false)
+  if (selectedIndex === BLANK_PROJECT) {
+    terminal.grabInput(false)
 
-    const projectType = selectedIndex === INSTAGRAM_STARTER ? 'instagram' : 'blank'
-    await props.checkAuth(projectType)
+    await props.checkAuth('init')
   }
 
   switch (selectedIndex) {
-    case INSTAGRAM_STARTER: {
-      const schemaUrl = instagramExampleSchemaUrl
-      const initProps = getPropsForInit(props)
-      await initCommand({...initProps, schemaUrl}, env)
-      break
-    }
     case BLANK_PROJECT: {
       const schemaUrl = sampleSchemaURL
       const initProps = getPropsForInit(props)
@@ -112,10 +112,10 @@ async function handleSelect(selectedIndex: number, props: Props, env: SystemEnvi
       break
     }
     default: {
-      term.grabInput(false)
+      terminal.grabInput(false)
       const schemaFiles = env.resolver.schemaFiles('.')
       const projectFiles = env.resolver.projectFiles('.')
-      const previousOptions = 2
+      const previousOptions = 1
       if (selectedIndex >= previousOptions && selectedIndex < previousOptions + schemaFiles.length) {
         const schemaFileIndex = selectedIndex - previousOptions
         const localSchemaFile = schemaFiles[schemaFileIndex]
@@ -151,9 +151,9 @@ function rerender(options: string[][], currentIndex: number): void {
 
 function clear(options: string[][]) {
   const lineCount = _.flatten(options).length - 1
-  term.up(lineCount)
-  term.left(10000)
-  term.eraseDisplayBelow()
+  terminal.up(lineCount)
+  terminal.left(10000)
+  terminal.eraseDisplayBelow()
 }
 
 function render(options: string[][], currentIndex: number) {
@@ -162,5 +162,5 @@ function render(options: string[][], currentIndex: number) {
     .flatten()
     .join('\n')
 
-  term(lines, currentIndex)
+  terminal(lines, currentIndex)
 }

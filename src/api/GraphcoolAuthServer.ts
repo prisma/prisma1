@@ -1,4 +1,4 @@
-import { AuthServer } from '../types'
+import { AuthServer, AuthTrigger } from '../types'
 import { systemAPIEndpoint, authEndpoint, authUIEndpoint } from '../utils/constants'
 import 'isomorphic-fetch'
 import cuid = require('cuid')
@@ -7,10 +7,10 @@ const debug = require('debug')('graphcool')
 
 export class GraphcoolAuthServer implements AuthServer {
 
-  _projectType: string | undefined = undefined
+  private authTrigger: AuthTrigger
 
-  constructor(projectType?: string) {
-    this._projectType = projectType
+  constructor(authTrigger: AuthTrigger) {
+    this.authTrigger = authTrigger
   }
 
   async requestAuthToken(): Promise<string> {
@@ -24,8 +24,8 @@ export class GraphcoolAuthServer implements AuthServer {
       body: JSON.stringify({cliToken}),
     })
 
-    const projectTypeParam = this._projectType ? `&projectType=${this._projectType}` : ''
-    open(`${authUIEndpoint}?cliToken=${cliToken}${projectTypeParam}`)
+    // TODO adjust
+    open(`${authUIEndpoint}?cliToken=${cliToken}&authTrigger=${this.authTrigger}`)
 
     while (true) {
       const url = `${authEndpoint}/${cliToken}`

@@ -9,12 +9,12 @@ import figures = require('figures')
 export const authUIEndpoint = process.env.ENV === 'DEV' ? 'https://dev.console.graph.cool/cli/auth' : 'https://console.graph.cool/cli/auth'
 export const systemAPIEndpoint = process.env.ENV === 'DEV' ? 'https://dev.api.graph.cool/system' : 'https://api.graph.cool/system'
 export const authEndpoint = process.env.ENV === 'DEV' ? 'https://cli-auth-api.graph.cool/dev' : 'https://cli-auth-api.graph.cool/prod'
+export const docsEndpoint = process.env.ENV === 'DEV' ? 'https://dev.graph.cool/docs' : 'https://www.graph.cool/docs'
 export const consoleURL = (token: string, projectName?: string) =>
   `https://console.graph.cool/token?token=${token}${projectName ? `&redirect=/${encodeURIComponent(projectName)}` : ''}`
 export const playgroundURL = (token: string, projectName: string) =>
   `https://console.graph.cool/token?token=${token}&redirect=/${encodeURIComponent(projectName)}/playground`
 export const sampleSchemaURL = `http://graphqlbin.com/empty.graphql`
-export const instagramExampleSchemaUrl = 'http://graphqlbin.com/instagram.graphql'
 
 /*
  * Sentry
@@ -264,6 +264,12 @@ export const openedPlaygroundMessage = (projectName: string) => `\
 The Playground for project ${chalk.bold(projectName)} was opened in your browser.
 `
 
+/*
+ * Terminal output: quickstart
+ */
+export const openedQuickstartMessage = `\
+The Quickstart tutorial was opened in your browser.
+`
 
 /*
  * Terminal output: status

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import * as minimist from 'minimist'
-import { Command, SystemEnvironment } from './types'
+import { AuthTrigger, Command, SystemEnvironment } from './types'
 import pushCommand from './commands/push'
 import consoleCommand from './commands/console'
 import playgroundCommand from './commands/playground'
@@ -13,6 +13,7 @@ import interactiveInitCommand from './commands/interactiveInit'
 import exportCommand from './commands/export'
 import endpointsCommand from './commands/endpoints'
 import statusCommand from './commands/status'
+import quickstartCommand from './commands/quickstart'
 import FileSystemResolver from './system/FileSystemResolver'
 import figures = require('figures')
 import StdOut from './system/StdOut'
@@ -34,10 +35,10 @@ import {
   usageExport,
   usageEndpoints,
   usagePlayground,
-  usageStatus
+  usageStatus, usageQuickstart
 } from './utils/usage'
 
-var Raven = require('raven')
+const Raven = require('raven')
 const debug = require('debug')('graphcool')
 const {version} = require('../../package.json')
 
@@ -50,17 +51,21 @@ async function main() {
 
   const command = argv._[0] as Command | undefined
 
+  const showQuickstart = true
+
   switch (command) {
 
     case undefined: {
-      process.stdout.write(usageRoot)
+      process.stdout.write(usageRoot(showQuickstart))
       process.exit(0)
     }
 
     // TODO remove legacy support
     case 'create': {
       checkHelp(argv, usageInit)
-      await checkAuth()
+      await checkAuth('auth')
+
+      console.log('`graphcool create` is deprecated. Use `graphcool init` instead.')
 
       const name = argv['name'] || argv['n']
       const alias = argv['alias'] || argv['a']
@@ -89,7 +94,7 @@ async function main() {
         const props = {name, alias, outputPath, checkAuth}
         await interactiveInitCommand(props, defaultEnvironment())
       } else {
-        await checkAuth()
+        await checkAuth('init')
 
         const props = {name, alias, schemaUrl, copyProjectId, copyOptions, region, outputPath}
         await initCommand(props, defaultEnvironment())
@@ -99,7 +104,7 @@ async function main() {
 
     case 'push': {
       checkHelp(argv, usagePush)
-      await checkAuth()
+      await checkAuth('auth')
 
       const force = !!(argv['force'] || argv['f'])
       const projectFile = argv._[1]
@@ -109,7 +114,7 @@ async function main() {
 
     case 'pull': {
       checkHelp(argv, usagePull)
-      await checkAuth()
+      await checkAuth('auth')
 
       const sourceProjectId = argv['source'] || argv['s']
       const projectFile = argv._[1]
@@ -121,7 +126,7 @@ async function main() {
 
     case 'export': {
       checkHelp(argv, usageExport)
-      await checkAuth()
+      await checkAuth('auth')
 
       const projectFile = argv._[1]
       await exportCommand({projectFile}, defaultEnvironment())
@@ -130,7 +135,7 @@ async function main() {
 
     case 'status': {
       checkHelp(argv, usageStatus)
-      await checkAuth()
+      await checkAuth('auth')
 
       const projectFile = argv._[1]
       await statusCommand({projectFile}, defaultEnvironment())
@@ -139,7 +144,7 @@ async function main() {
 
     case 'endpoints': {
       checkHelp(argv, usageEndpoints)
-      await checkAuth()
+      await checkAuth('auth')
 
       const projectFile = argv._[1]
       await endpointsCommand({projectFile}, defaultEnvironment())
@@ -148,7 +153,7 @@ async function main() {
 
     case 'console': {
       checkHelp(argv, usageConsole)
-      await checkAuth()
+      await checkAuth('auth')
 
       const projectFile = argv._[1]
       await consoleCommand({projectFile}, defaultEnvironment())
@@ -157,7 +162,7 @@ async function main() {
 
     case 'playground': {
       checkHelp(argv, usagePlayground)
-      await checkAuth()
+      await checkAuth('auth')
 
       const projectFile = argv._[1]
       await playgroundCommand({projectFile}, defaultEnvironment())
@@ -166,7 +171,7 @@ async function main() {
 
     case 'projects': {
       checkHelp(argv, usageProjects)
-      await checkAuth()
+      await checkAuth('auth')
 
       await projectsCommand({}, defaultEnvironment())
       break
@@ -176,12 +181,21 @@ async function main() {
       checkHelp(argv, usageAuth)
 
       const token = argv['token'] || argv['t']
-      await authCommand({token}, defaultEnvironment(), new GraphcoolAuthServer())
+      await authCommand({token}, defaultEnvironment(), new GraphcoolAuthServer('auth'))
+      break
+    }
+
+    case 'quickstart': {
+      checkHelp(argv, usageQuickstart)
+
+      const props = {checkAuth}
+      await quickstartCommand(props, defaultEnvironment())
+
       break
     }
 
     case 'help': {
-      process.stdout.write(usageRoot)
+      process.stdout.write(usageRoot(showQuickstart))
       process.exit(0)
       break
     }
@@ -194,7 +208,7 @@ async function main() {
     }
 
     default: {
-      process.stdout.write(`Unknown command: ${command}\n\n${usageRoot}`)
+      process.stdout.write(`Unknown command: ${command}\n\n${usageRoot(showQuickstart)}`)
       break
     }
   }
@@ -202,11 +216,13 @@ async function main() {
   process.stdout.write('\n')
 }
 
-async function checkAuth(projectType?: string) {
+async function checkAuth(authTrigger: AuthTrigger): Promise<boolean> {
   try {
     readGraphcoolConfig(new FileSystemResolver())
+    return true
   } catch (e) {
-    await authCommand({}, defaultEnvironment(), new GraphcoolAuthServer(projectType))
+    await authCommand({}, defaultEnvironment(), new GraphcoolAuthServer(authTrigger))
+    return false
   }
 }
 

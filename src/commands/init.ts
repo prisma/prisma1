@@ -1,4 +1,4 @@
-import {Region, Resolver, SchemaInfo, SystemEnvironment, ProjectInfo} from '../types'
+import { Region, Resolver, SchemaInfo, SystemEnvironment, ProjectInfo } from '../types'
 import figures = require('figures')
 import generateName = require('sillyname')
 import cloneCommand from './clone'
@@ -6,7 +6,7 @@ import { createProject, parseErrors, generateErrorOutput } from '../api/api'
 import * as fs from 'fs'
 import * as path from 'path'
 import { projectInfoToContents } from '../utils/utils'
-import {writeProjectFile, isValidSchemaFilePath} from '../utils/file'
+import { writeProjectFile, isValidSchemaFilePath } from '../utils/file'
 import 'isomorphic-fetch'
 import {
   graphcoolProjectFileName,
@@ -88,7 +88,6 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
       }
     }
   }
-
 
 }
 

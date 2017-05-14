@@ -12,7 +12,8 @@ export type Command =
   | 'projects'
   | 'version'
   | 'help'
-  | 'create'
+  | 'create' // TODO remove at version 1.1
+  | 'quickstart'
 
 export type Region = 'eu-west-1'
 
@@ -94,3 +95,6 @@ export interface APIError {
   requestId: string
   code: string
 }
+
+export type AuthTrigger = 'auth' | 'init' | 'quickstart'
+export type CheckAuth = (authTrigger: AuthTrigger) => Promise<boolean>

@@ -1,21 +1,22 @@
 import * as chalk from 'chalk'
 
-export const usageRoot = `
+export const usageRoot = (showQuickstart: boolean) => `
   Serverless GraphQL backend for frontend developers (${chalk.underline('https://www.graph.cool')})
   
   ${chalk.dim('Usage:')} ${chalk.bold('graphcool')} [command]
 
-  ${chalk.dim('Commands:')}
-    init         Create a new project
-    push         Push project file changes
-    pull         Download the latest project file
-    export       Export project data
-    endpoints    Print GraphQL endpoints
-    console      Open Graphcool Console
-    playground   Open GraphQL Playground
-    projects     List projects
-    auth         Sign up or login
-    version      Print version
+  ${chalk.dim('Commands:')}${showQuickstart ? `
+    quickstart    Tutorial to get started with Graphcool`: ''}
+    init          Create a new project
+    push          Push project file changes
+    pull          Download the latest project file
+    export        Export project data
+    endpoints     Print GraphQL endpoints
+    console       Open Graphcool Console
+    playground    Open GraphQL Playground
+    projects      List projects
+    auth          Sign up or login
+    version       Print version
     
   Run 'graphcool COMMAND --help' for more information on a command.
   
@@ -210,7 +211,7 @@ export const usageProjects = `
     
   ${chalk.dim('Example:')}
       
-  ${chalk.gray('-')} Display all project in user's account
+  ${chalk.gray('-')} Display all projects in your account
     ${chalk.cyan('$ graphcool projects')}
         
 `
@@ -236,17 +237,22 @@ export const usageAuth = `
   
 `
 
-export const usageVersion = `
-  Usage: graphcool version [options]
+export const usageQuickstart = `
+  Usage: graphcool quickstart [options]
   
   Print version of Graphcool CLI
   
   Options:
     -h, --help         Output usage information
-    
-  ${chalk.dim('Example:')}
-      
-  ${chalk.gray('-')} Print current version of Graphcool CLI
-    ${chalk.cyan('$ graphcool version')}
+            
+`
+
+export const usageVersion = `
+  Usage: graphcool version [options]
+  
+  Tutorial to get started with Graphcool
+  
+  Options:
+    -h, --help         Output usage information
             
 `

@@ -1,4 +1,4 @@
-import {SystemEnvironment, Resolver} from '../types'
+import { SystemEnvironment, Resolver } from '../types'
 import {
   readProjectIdFromProjectFile, writeProjectFile, readVersionFromProjectFile,
   isValidProjectFilePath
@@ -16,8 +16,8 @@ import {
   graphcoolProjectFileName,
   multipleProjectFilesForPullMessage, pulledInitialProjectFileMessage, warnOverrideProjectFileMessage
 } from '../utils/constants'
-var term = require( 'terminal-kit' ).terminal
 
+const {terminal} = require('terminal-kit')
 const debug = require('debug')('graphcool')
 
 interface Props {
@@ -46,14 +46,14 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
       const readProjectId = readProjectIdFromProjectFile(resolver, graphcoolProjectFileName)
       if (readProjectId && projectId !== readProjectId) {
         out.write(differentProjectIdWarningMessage(projectId!, readProjectId))
-        term.grabInput(true)
+        terminal.grabInput(true)
 
         await new Promise(resolve => {
-          term.on('key' , function(name) {
+          terminal.on('key', function (name) {
             if (name !== 'y') {
               process.exit(0)
             }
-            term.grabInput(false)
+            terminal.grabInput(false)
             resolve()
           })
         })
@@ -62,14 +62,14 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
 
     if (!props.force && projectFile === outputPath) {
       out.write(warnOverrideProjectFileMessage(projectFile))
-      term.grabInput(true)
+      terminal.grabInput(true)
 
       await new Promise(resolve => {
-        term.on('key' , function(name) {
+        terminal.on('key', function (name) {
           if (name !== 'y') {
             process.exit(0)
           }
-          term.grabInput(false)
+          terminal.grabInput(false)
           resolve()
         })
       })
