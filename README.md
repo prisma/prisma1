@@ -3,12 +3,12 @@ Request new features and check our roadmap for the next few months
 
 ## Roadmap
 
-Feature requests are tagged with their respective stage:
+Your feedback is **very helpful**, please share your opinion and thoughts! 🤔 Feature requests are organized in different stages:
 
-* `stage/discussing`: Open for discussions. Your feedback is **very helpful** in this stage, please share your opinion!
-* `stage/waiting`: Waiting to be implemented.
-* `stage/wip`: Work in progress.
-* `stage/beta`: Already available in the beta program. Reach out in Slack to learn more!
+* `stage/discussing`: Open for discussion 💬
+* `stage/waiting`: Waiting to be implemented ⏲
+* `stage/wip`: Work in progress ⚙️
+* `stage/beta`: Already available in the beta program. Reach out in [Slack](https://slack.graph.cool) to learn more! 👩‍🎓
 * `stage/completed`: Done :muscle:
 
 ## +1 a feature request
