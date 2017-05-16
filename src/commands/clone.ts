@@ -72,6 +72,6 @@ async function getClonedProjectName(props: Props, projectId: string, resolver: R
   }
 
   const projectInfo = await pullProjectInfo(projectId, resolver)
-  const clonedPojectName = `Clone of ${projectInfo.name}`
+  const clonedPojectName = `${projectInfo.name} copy`
   return clonedPojectName
 }
