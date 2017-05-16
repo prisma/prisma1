@@ -89,8 +89,8 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
         schema: migrationResult.newSchema,
         version: migrationResult.newVersion
       } as ProjectInfo
-      writeProjectFile(projectInfo, resolver)
-      out.write(projectFileWasUpdatedMessage)
+      writeProjectFile(projectInfo, resolver, projectFilePath)
+      out.write(projectFileWasUpdatedMessage(projectFilePath))
     }
 
     // can't do migration because of issues with schema
@@ -160,7 +160,7 @@ function getMigrationActionType(message: string): MigrationActionType {
     return 'create'
   } else if (message.indexOf('update') >= 0) {
     return 'update'
-  } else if (message.indexOf('delete') >= 0) {
+  } else if (message.indexOf('delete') >= 0 || message.indexOf('remove') >= 0) {
     return 'delete'
   }
   return 'unknown'

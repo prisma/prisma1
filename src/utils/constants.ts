@@ -337,8 +337,8 @@ export const notAuthenticatedMessage = `\
 You're currently not logged in. You can use the auth command to authenticate with ${chalk.cyan(`\`graphcool auth\``)}
 `
 
-export const projectFileWasUpdatedMessage = `\
-Your project file was updated. Reload it in your editor if needed.
+export const projectFileWasUpdatedMessage = (projectFile: string) => `\
+Your project file ${chalk.bold(projectFile)} was updated. Reload it in your editor if needed.
 `
 
 export const canNotReadVersionFromProjectFile = (projectFile: string) => `\

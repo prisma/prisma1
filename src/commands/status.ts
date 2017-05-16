@@ -151,7 +151,7 @@ function getMigrationActionType(message: string): MigrationActionType {
     return 'create'
   } else if (message.indexOf('update') >= 0) {
     return 'update'
-  } else if (message.indexOf('delete') >= 0) {
+  } else if (message.indexOf('delete') >= 0 || message.indexOf('remove') >= 0) {
     return 'delete'
   }
   return 'unknown'
