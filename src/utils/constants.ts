@@ -78,9 +78,13 @@ Whoops, something went wrong while creating the project.
 
 `
 
-export const projectAlreadyExistsMessage = `\
-${graphcoolProjectFileName} already exists for the current project. \
-Looks like you've already setup your backend.
+// export const projectAlreadyExistsMessage = `\
+// ${graphcoolProjectFileName} already exists for the current project. \
+// Looks like you've already setup your backend.
+// `
+
+export const projectAlreadyExistsMessage = (projectFiles: string[]) => `\
+Found ${projectFiles.length} project ${projectFiles.length === 1 ? 'file' : 'files'} in current directory, looks like you've already setup your backend. You can still use 
 `
 
 export const howDoYouWantToGetStarted = () => `\

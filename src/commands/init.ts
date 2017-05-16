@@ -51,8 +51,9 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
 
   } else {
     // create new
-    if (projectFileAlreadyExists(resolver)) {
-      throw new Error(projectAlreadyExistsMessage)
+    const projectFiles = resolver.projectFiles('.')
+    if (projectFiles.length > 0 && !props.outputPath) {
+      throw new Error(projectAlreadyExistsMessage(projectFiles))
     }
 
     const name = props.name || generateName()
@@ -89,11 +90,6 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
     }
   }
 
-}
-
-function projectFileAlreadyExists(resolver: Resolver): boolean {
-  const projectFiles = resolver.projectFiles('.')
-  return projectFiles.length > 0
 }
 
 async function createProjectAndGetProjectInfo(name: string, schema: SchemaInfo, resolver: Resolver, alias?: string, region?: string): Promise<ProjectInfo> {
