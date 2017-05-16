@@ -2,7 +2,7 @@
 
 Manage your GraphQL backend from your terminal
 
-![](http://imgur.com/LS8lDqk.gif)
+![](http://imgur.com/PABWSL7.gif)
 
 ## Quickstart
 
