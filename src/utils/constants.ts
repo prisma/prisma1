@@ -154,7 +154,7 @@ An error occured while trying to fetch your projects.
  */
 
 export const endpointsMessage = (projectId: string) => `\
- The endpoints for your project are are:
+ The endpoints for your project are:
  
    Simple API:         https://api.graph.cool/simple/v1/${projectId}
    Relay API:          https://api.graph.cool/relay/v1/${projectId}
