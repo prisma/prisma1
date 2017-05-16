@@ -6,9 +6,9 @@ import {
 import {
   noProjectIdMessage,
   invalidProjectFilePathMessage,
-  noProjectFileOrIdMessage,
-  multipleProjectFilesForExportMessage,
-  endpointsMessage, noProjectFileMessage
+  endpointsMessage,
+  noProjectFileMessage,
+  multipleProjectFilesForEndpointsMessage
 } from '../utils/constants'
 const debug = require('debug')('graphcool')
 
@@ -45,7 +45,7 @@ function getProjectId(props: Props, env: SystemEnvironment): string | undefined 
   if (projectFiles.length === 0) {
     throw new Error(noProjectFileMessage)
   } else if (projectFiles.length > 1) {
-    throw new Error(multipleProjectFilesForExportMessage(projectFiles))
+    throw new Error(multipleProjectFilesForEndpointsMessage(projectFiles))
   }
 
   return readProjectIdFromProjectFile(resolver, projectFiles[0])

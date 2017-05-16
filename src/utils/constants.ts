@@ -162,6 +162,11 @@ export const endpointsMessage = (projectId: string) => `\
    File API:           https://api.graph.cool/file/v1/${projectId}
 `
 
+export const multipleProjectFilesForEndpointsMessage = (projectFiles: string[]) => `\
+Found ${projectFiles.length} project files. You can specify the one you for which you want to display the endpoints, e.g.: ${chalk.cyan(`\`graphcool endpoints ${projectFiles[0]}\``)}`
+
+
+
 
 /*
  * Terminal output: pull
@@ -218,8 +223,7 @@ export const downloadUrlMessage = (url: string) => `\
 `
 
 export const multipleProjectFilesForExportMessage = (projectFiles: string[]) => `\
-Found ${projectFiles.length} project files. You can specify the one you for which you want to export the data, e.g.: ${chalk.cyan(`\`graphcool export ${projectFiles[0]}\``)}
-`
+Found ${projectFiles.length} project files. You can specify the one you for which you want to export the data, e.g.: ${chalk.cyan(`\`graphcool export ${projectFiles[0]}\``)}`
 
 
 /*
