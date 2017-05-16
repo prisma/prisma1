@@ -116,11 +116,12 @@ async function main() {
       checkHelp(argv, usagePull)
       await checkAuth('auth')
 
-      const sourceProjectId = argv['source'] || argv['s']
+      const sourceProjectId = argv['project'] || argv['p']
       const projectFile = argv._[1]
       const outputPath = argv['output'] || argv['o']
       const force = !!(argv['force'] || argv['f'])
-      await pullCommand({sourceProjectId, projectFile, outputPath, force}, defaultEnvironment())
+      const props = {sourceProjectId, projectFile, outputPath, force}
+      await pullCommand(props, defaultEnvironment())
       break
     }
 

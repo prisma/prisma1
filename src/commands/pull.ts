@@ -41,6 +41,7 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
       throw new Error(noProjectIdMessage)
     }
 
+
     // warn if the current project file is different from specified project id
     if (resolver.exists(graphcoolProjectFileName)) {
       const readProjectId = readProjectIdFromProjectFile(resolver, graphcoolProjectFileName)
@@ -60,7 +61,7 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
       }
     }
 
-    if (!props.force && projectFile === outputPath) {
+    if (!props.force && projectFile === outputPath && resolver.exists(projectFile)) {
       out.write(warnOverrideProjectFileMessage(projectFile))
       terminal.grabInput(true)
 
@@ -110,8 +111,8 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
 
 }
 
-function getProjectFilePath(props: Props, env: SystemEnvironment): string {
-  const {resolver, out} = env
+function getProjectFilePath(props: Props, env: SystemEnvironment): string | undefined {
+  const {resolver} = env
 
   // check if provided file is valid (ends with correct suffix)
   if (props.projectFile && isValidProjectFilePath(props.projectFile)) {
@@ -123,7 +124,8 @@ function getProjectFilePath(props: Props, env: SystemEnvironment): string {
   // no project file provided, search for one in current dir
   const projectFiles = resolver.projectFiles('.')
   if (projectFiles.length === 0) {
-    throw new Error(noProjectFileForPullMessage)
+    // throw new Error(noProjectFileForPullMessage)
+    return undefined
   } else if (projectFiles.length > 1) {
     throw new Error(multipleProjectFilesForPullMessage(projectFiles))
   }
@@ -137,7 +139,10 @@ function getProjectId(props: Props, env: SystemEnvironment): string | undefined 
   }
 
   const projectFile = getProjectFilePath(props, env)
-  return readProjectIdFromProjectFile(env.resolver, projectFile)
+  if (projectFile && env.resolver.exists(projectFile!)) {
+    return readProjectIdFromProjectFile(env.resolver, projectFile!)
+  }
+  return undefined
 }
 
 function getCurrentVersion(path: string, resolver: Resolver): string | undefined {
