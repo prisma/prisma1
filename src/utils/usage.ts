@@ -103,7 +103,7 @@ export const usagePush = `
     ${chalk.cyan('$ graphcool push <project-file>')}
       
   ${chalk.gray('-')} Push local changes from current project file accepting potential data loss caused by schema changes
-    ${chalk.cyan('$ graphcool push --force <project-id | alias>')}
+    ${chalk.cyan('$ graphcool push --force <project-file>')}
     
 `
 
