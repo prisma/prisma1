@@ -286,7 +286,7 @@ mutation ($projectId: String!){
     projectId: $projectId,
     clientMutationId: "asd"
   }) {
-    deleteId
+    deletedId
   }
 }`
 
