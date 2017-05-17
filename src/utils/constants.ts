@@ -318,7 +318,7 @@ Use ${chalk.cyan(`\`graphcool push --force\``)} if you know what you're doing!
  * Terminal output: delete
  */
 
-export const deletingProjectMessage = (projectId?: string) => ? projectId `\
+export const deletingProjectMessage = (projectId?: string) => projectId ? `\
 Deleting project with Id ${projectId} ...` : `\
 Deleting projects ...
 `
