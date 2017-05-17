@@ -1,6 +1,8 @@
 import { SystemEnvironment, Resolver } from '../types'
 import {
-  readProjectIdFromProjectFile, writeProjectFile, readVersionFromProjectFile,
+  readProjectIdFromProjectFile,
+  writeProjectFile,
+  readVersionFromProjectFile,
   isValidProjectFilePath
 } from '../utils/file'
 import { pullProjectInfo, parseErrors, generateErrorOutput } from '../api/api'
@@ -12,9 +14,10 @@ import {
   newVersionMessage,
   differentProjectIdWarningMessage,
   invalidProjectFilePathMessage,
-  noProjectFileForPullMessage,
   graphcoolProjectFileName,
-  multipleProjectFilesForPullMessage, pulledInitialProjectFileMessage, warnOverrideProjectFileMessage
+  multipleProjectFilesForPullMessage,
+  pulledInitialProjectFileMessage,
+  warnOverrideProjectFileMessage
 } from '../utils/constants'
 
 const {terminal} = require('terminal-kit')
@@ -40,7 +43,6 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
     if (!projectId) {
       throw new Error(noProjectIdMessage)
     }
-
 
     // warn if the current project file is different from specified project id
     if (resolver.exists(graphcoolProjectFileName)) {

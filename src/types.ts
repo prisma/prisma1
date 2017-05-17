@@ -14,6 +14,7 @@ export type Command =
   | 'help'
   | 'create' // TODO remove at version 1.1
   | 'quickstart'
+  | 'delete'
 
 export type Region = 'eu-west-1'
 

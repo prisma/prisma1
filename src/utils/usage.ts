@@ -126,6 +126,26 @@ export const usageExport = `
 
 `
 
+export const usageDelete = `
+  Usage: graphcool delete [options] 
+  
+  Delete a Graphcool project
+  
+  Options:
+ 
+    -p, --project <id | alias>  ID or alias of  project to delete
+    -h, --help                  Output usage information
+     
+  ${chalk.dim('Examples:')}
+      
+  ${chalk.gray('-')} Delete project with ID <project-id>
+    ${chalk.cyan('$ graphcool delete -p <project-id>')}
+  
+  ${chalk.gray('-')} Select which projects to delete (interactive)
+    ${chalk.cyan('$ graphcool delete ')}
+`
+
+
 export const usageStatus = `
   Usage: graphcool status [options] [<project-file>] 
   

@@ -278,6 +278,28 @@ query ($projectId: ID!){
   return projectInfo
 }
 
+export async function deleteProject(projectId: string, resolver: Resolver): Promise<string> {
+
+  const mutation = `\
+mutation ($projectId: String!){
+  deleteProject(input:{
+    projectId: $projectId,
+    clientMutationId: "asd"
+  }) {
+    deleteId
+  }
+}`
+
+  const variables = { projectId }
+  const json = await sendGraphQLRequest(mutation, resolver, variables)
+
+  if (!json.data.deleteProject) {
+    throw json
+  }
+
+  return json.data.deleteProject.deletedId
+}
+
 export async function exportProjectData(projectId: string, resolver: Resolver): Promise<string> {
 
   const mutation = `\

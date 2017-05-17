@@ -14,6 +14,7 @@ import exportCommand from './commands/export'
 import endpointsCommand from './commands/endpoints'
 import statusCommand from './commands/status'
 import quickstartCommand from './commands/quickstart'
+import deleteCommand from './commands/delete'
 import FileSystemResolver from './system/FileSystemResolver'
 import figures = require('figures')
 import StdOut from './system/StdOut'
@@ -35,7 +36,7 @@ import {
   usageExport,
   usageEndpoints,
   usagePlayground,
-  usageStatus, usageQuickstart
+  usageStatus, usageQuickstart, usageDelete
 } from './utils/usage'
 
 const Raven = require('raven')
@@ -111,6 +112,16 @@ async function main() {
       await pushCommand({force, projectFile}, defaultEnvironment())
       break
     }
+
+    case 'delete': {
+      checkHelp(argv, usageDelete)
+      await checkAuth('auth')
+
+      const sourceProjectId = argv['project'] || argv['p']
+      await deleteCommand({sourceProjectId}, defaultEnvironment())
+      break
+    }
+
 
     case 'pull': {
       checkHelp(argv, usagePull)

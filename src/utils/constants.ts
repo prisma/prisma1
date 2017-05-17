@@ -179,10 +179,6 @@ Found ${projectFiles.length} project files. You can specify the one you for whic
 export const fetchingProjectDataMessage = `\
 Fetching project data ...`
 
-export const noProjectFileForPullMessage = `\
-There is no project file (project.graphcool) in the current directory.
-`
-
 export const noProjectIdMessage = `\
 Please provide a valid project ID.
 `
@@ -318,10 +314,23 @@ Pushing the current version of your schema can result in data loss.
 Use ${chalk.cyan(`\`graphcool push --force\``)} if you know what you're doing!
 `
 
+/*
+ * Terminal output: delete
+ */
+
+export const deletingProjectMessage = (projectId?: string) => ? projectId `\
+Deleting project with Id ${projectId} ...` : `\
+Deleting projects ...
+`
+
+export const deletedProjectMessage = `\
+${chalk.green(figures.tick)} Your project was successfully deleted.`
+
 
 /*
  * Terminal output: general
  */
+
 export const contactUsInSlackMessage = `\
  * Get in touch if you need help: http://slack.graph.cool/`
 
