@@ -42,10 +42,10 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
   } else {
 
     const projects = await fetchProjects(resolver)
-    out.write(`\n`)
     terminal.saveCursor()
     terminal.grabInput()
     terminal.hideCursor()
+    terminal(`\n`)
 
     let currentIndex = 0, selectedIndices = []
 
@@ -126,20 +126,14 @@ async function handleSelect(selectedIndices: number[], projects: ProjectInfo[], 
     })
   })
 
-  env.out.write(`\n\nDELETING YOUR PROJECTS NOW!!`)
-
   const projectIdsToDelete = selectedIndices.reduce((prev: string[], current: number) => {
     prev.push(projects[current].projectId)
     return prev
   }, [])
 
-  console.log(`\n\nDelete ${projectIdsToDelete}`)
-
   terminal.restoreCursor()
   terminal.eraseDisplayBelow()
   terminal.hideCursor(false)
-  env.out.write('\n')
-
   env.out.startSpinner(deletingProjectsMessage(projectIdsToDelete))
 
   try {

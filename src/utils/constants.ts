@@ -320,12 +320,10 @@ Use ${chalk.cyan(`\`graphcool push --force\``)} if you know what you're doing!
 
 export const deletingProjectMessage = (projectId?: string) => projectId ? `\
 Deleting project with Id ${projectId} ...` : `\
-Deleting projects ...
-`
+Deleting projects ...`
 
 export const deletingProjectsMessage = (projectIds: string[]) => `\
-Deleting ${projectIds.length} projects ...
-`
+Deleting ${projectIds.length} projects ...`
 
 export const deletedProjectMessage = (projectIds: string[]) => projectIds.length > 1 ?  `\
 ${chalk.green(figures.tick)} Successfully deleted ${projectIds.length} projects.` : `\
