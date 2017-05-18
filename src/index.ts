@@ -46,7 +46,7 @@ const {version} = require('../../package.json')
 async function main() {
 
   // initialize sentry
-  Raven.config(`https://${sentryKey}@sentry.io/${sentryId}`).install()
+  // Raven.config(`https://${sentryKey}@sentry.io/${sentryId}`).install()
 
   const argv = minimist(process.argv.slice(2))
 

@@ -1,8 +1,8 @@
-import {SystemEnvironment} from '../types'
+import {SystemEnvironment, ProjectInfo} from '../types'
 import { deleteProject, fetchProjects, parseErrors, generateErrorOutput } from '../api/api'
 import {
   deletingProjectMessage,
-  deletedProjectMessage
+  deletedProjectMessage, deletingProjectWarningMessage, deletingProjectsMessage
 } from '../utils/constants'
 import * as chalk from 'chalk'
 import figures = require('figures')
@@ -22,9 +22,9 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
     out.startSpinner(deletingProjectMessage(props.sourceProjectId))
 
     try {
-      await deleteProject(props.sourceProjectId, resolver)
+      await deleteProject([props.sourceProjectId], resolver)
       out.stopSpinner()
-      out.write(deletedProjectMessage)
+      out.write(deletedProjectMessage([props.sourceProjectId]))
 
     } catch(e) {
       out.stopSpinner()
@@ -40,9 +40,6 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
   } else {
 
     const projects = await fetchProjects(resolver)
-    const lines = projects.map(project => {
-      return `${project.name} (${project.projectId})`
-    })
     out.write(`\n`)
     terminal.saveCursor()
     terminal.grabInput()
@@ -50,11 +47,11 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
 
     let currentIndex = 0, selectedIndices = []
 
-    render(lines, currentIndex, selectedIndices)
+    render(projects, currentIndex, selectedIndices)
 
     await new Promise(resolve => {
       terminal.on('key', async (name: string) => {
-        currentIndex = await handleKeyEvent(name, currentIndex, selectedIndices, lines, env, resolve)
+        currentIndex = await handleKeyEvent(name, currentIndex, selectedIndices, projects, env, resolve)
       })
     })
   }
@@ -65,30 +62,36 @@ async function handleKeyEvent(
   name: string,
   currentIndex: number,
   selectedIndices: number[],
-  options: string[],
+  projects: ProjectInfo[],
   env: SystemEnvironment,
   callback: () => void
 ): Promise<number> {
 
   switch (name) {
     case 'DOWN': {
-      currentIndex = (currentIndex + 1) % options.length
-      rerender(options, currentIndex, selectedIndices)
+      currentIndex = (currentIndex + 1) % projects.length
+      rerender(projects, currentIndex, selectedIndices)
       break
     }
     case 'UP': {
-      currentIndex = (currentIndex + options.length - 1) % options.length
-      rerender(options, currentIndex, selectedIndices)
+      currentIndex = (currentIndex + projects.length - 1) % projects.length
+      rerender(projects, currentIndex, selectedIndices)
       break
     }
-    case 'ENTER': {
+    case ' ': { // SPACE
       const index = selectedIndices.indexOf(currentIndex)
       if (index >= 0) {
         selectedIndices.splice(index, 1)
       } else {
         selectedIndices.push(currentIndex)
       }
-      rerender(options, currentIndex, selectedIndices)
+      rerender(projects, currentIndex, selectedIndices)
+      break
+    }
+    case 'ENTER': {
+      await handleSelect(selectedIndices, projects, env)
+      terminal.grabInput(false)
+      callback()
       break
     }
     case 'CTRL_C': {
@@ -106,66 +109,75 @@ async function handleKeyEvent(
   return currentIndex
 }
 
-async function handleSelect(selectedIndex: number, env: SystemEnvironment): Promise<void> {
+async function handleSelect(selectedIndices: number[], projects: ProjectInfo[], env: SystemEnvironment): Promise<void> {
+
+  terminal(`\n\n${deletingProjectWarningMessage}`)
+
+  terminal.grabInput(true)
+  await new Promise(resolve => {
+    terminal.on('key', function (name) {
+      if (name !== 'y') {
+        process.exit(0)
+      }
+      terminal.grabInput(false)
+      resolve()
+    })
+  })
+
+  env.out.write(`\n\nDELETING YOUR PROJECTS NOW!!`)
+
+  const projectIdsToDelete = selectedIndices.reduce((prev: string[], current: number) => {
+    prev.push(projects[current].projectId)
+    return prev
+  }, [])
+
+  console.log(`\n\nDelete ${projectIdsToDelete}`)
+
   terminal.restoreCursor()
   terminal.eraseDisplayBelow()
   terminal.hideCursor(false)
   env.out.write('\n')
 
-    // if (selectedIndex === BLANK_PROJECT) {
-    //   terminal.grabInput(false)
-    //
-    //   await props.checkAuth('init')
-    // }
-    //
-    // switch (selectedIndex) {
-    //   case BLANK_PROJECT: {
-    //     const schemaUrl = sampleSchemaURL
-    //     const initProps = getPropsForInit(props)
-    //     await initCommand({...initProps, schemaUrl}, env)
-    //     break
-    //   }
-    //   default: {
-    //     terminal.grabInput(false)
-    //     const schemaFiles = env.resolver.schemaFiles('.')
-    //     const projectFiles = env.resolver.projectFiles('.')
-    //     const previousOptions = 1
-    //     if (selectedIndex >= previousOptions && selectedIndex < previousOptions + schemaFiles.length) {
-    //       const schemaFileIndex = selectedIndex - previousOptions
-    //       const localSchemaFile = schemaFiles[schemaFileIndex]
-    //       const initProps = getPropsForInit(props)
-    //       await initCommand({...initProps, localSchemaFile}, env)
-    //     } else if (selectedIndex >= previousOptions + schemaFiles.length && selectedIndex < previousOptions + schemaFiles.length + projectFiles.length) {
-    //       const projectFileIndex = selectedIndex - schemaFiles.length - previousOptions
-    //       const projectFile = projectFiles[projectFileIndex]
-    //       const copyProjectId = readProjectIdFromProjectFile(env.resolver, projectFile)
-    //       const initProps = getPropsForInit(props)
-    //       const initProps2 = {...initProps, copyProjectId, projectFile}
-    //       await initCommand(initProps2, env)
-    //     }
-    //
-    //     break
-    //   }
-    // }
+  env.out.startSpinner(deletingProjectsMessage(projectIdsToDelete))
+
+  try {
+    await deleteProject(projectIdsToDelete, env.resolver)
+    env.out.stopSpinner()
+    env.out.write(deletedProjectMessage(projectIdsToDelete))
+
+  } catch(e) {
+    env.out.stopSpinner()
+
+    if (e.errors) {
+      const errors = parseErrors(e)
+      const output = generateErrorOutput(errors)
+      env.out.writeError(`${output}`)
+    } else {
+      throw e
+    }
+  }
+
 }
 
 
 
-function rerender(options: string[], currentIndex: number, selectedIndices: number[]): void {
-  clear(options)
-  render(options, currentIndex, selectedIndices)
+function rerender(projects: ProjectInfo[], currentIndex: number, selectedIndices: number[]): void {
+  clear(projects)
+  render(projects, currentIndex, selectedIndices)
 }
 
-function clear(options: string[]) {
-  const lineCount = _.flatten(options).length - 1
+function clear(projects: ProjectInfo[]) {
+  const lineCount = _.flatten(projects).length - 1
   terminal.up(lineCount)
   terminal.left(10000)
   terminal.eraseDisplayBelow()
 }
 
-function render(projects: string[], currentIndex: number, selectedIndices: number[]) {
+function render(projects: ProjectInfo[], currentIndex: number, selectedIndices: number[]) {
+
   const lines = _.chain(projects)
-    .map((l, lineIndex) => (selectedIndices.indexOf(lineIndex) >= 0) ? `${chalk.red(figures.circleFilled)}  ${l}` : `${figures.circle}  ${l}`)
+    .map(project => `${project.name} (${project.projectId})`)
+    .map((l, lineIndex) => (selectedIndices.indexOf(lineIndex) >= 0) ? `${chalk.red(figures.circleFilled)}  ${chalk.red(l)}` : `${figures.circle}  ${l}`)
     .map((l, lineIndex) => (lineIndex === currentIndex) ? `${chalk.bold(l)}` : `${l}`)
     .join('\n')
 

@@ -323,9 +323,16 @@ Deleting project with Id ${projectId} ...` : `\
 Deleting projects ...
 `
 
-export const deletedProjectMessage = `\
+export const deletingProjectsMessage = (projectIds: string[]) => `\
+Deleting ${projectIds.length} projects ...
+`
+
+export const deletedProjectMessage = (projectIds: string[]) => projectIds.length > 1 ?  `\
+${chalk.green(figures.tick)} Successfully deleted ${projectIds.length} projects.` : `\
 ${chalk.green(figures.tick)} Your project was successfully deleted.`
 
+export const deletingProjectWarningMessage = `\
+Are you absolutely sure you want to delete these projects? ${chalk.bold(`This operation can not be undone!`)} [y|N]`
 
 /*
  * Terminal output: general

@@ -31,7 +31,7 @@ export default class StdOut implements Out {
   }
 
   onError(error: Error): void {
-    Raven.captureException(error)
+    // Raven.captureException(error)
 
     // prevent the same error output twice
     const errorMessage = makePartsEnclodesByCharacterBold(`Error: ${error.message}`, `\``)

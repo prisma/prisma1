@@ -278,26 +278,31 @@ query ($projectId: ID!){
   return projectInfo
 }
 
-export async function deleteProject(projectId: string, resolver: Resolver): Promise<string> {
+export async function deleteProject(projectIds: string[], resolver: Resolver): Promise<string[]> {
 
-  const mutation = `\
-mutation ($projectId: String!){
-  deleteProject(input:{
-    projectId: $projectId,
-    clientMutationId: "asd"
-  }) {
-    deletedId
-  }
-}`
+  const inputArguments = projectIds.reduce((prev, current, index) => {
+    return `${prev}$projectId${index}: String!${index < (projectIds.length - 1) ? ', ' : ''}`
+  }, '')
+  const singleMutations = projectIds.map((projectId, index) => `\
+  ${projectId}: deleteProject(input:{
+      projectId: $projectId${index},
+      clientMutationId: "asd"
+    }) {
+      deletedId
+  }`)
 
-  const variables = { projectId }
+  const header = `mutation (${inputArguments}) `
+  const body = singleMutations.join('\n')
+  const mutation = `${header} { \n${body} \n}`
+  const variables = projectIds.reduce((prev, current, index) => {
+    prev[`projectId${index}`] = current
+    return prev
+  }, {})
+
   const json = await sendGraphQLRequest(mutation, resolver, variables)
 
-  if (!json.data.deleteProject) {
-    throw json
-  }
-
-  return json.data.deleteProject.deletedId
+  const deletedIds: string[] = Object.keys(json.data).map(key => json.data[key]).map(deleted => deleted.deletedId)
+  return deletedIds
 }
 
 export async function exportProjectData(projectId: string, resolver: Resolver): Promise<string> {
