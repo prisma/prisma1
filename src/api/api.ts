@@ -301,7 +301,11 @@ export async function deleteProject(projectIds: string[], resolver: Resolver): P
 
   const json = await sendGraphQLRequest(mutation, resolver, variables)
 
-  const deletedIds: string[] = Object.keys(json.data).map(key => json.data[key]).map(deleted => deleted.deletedId)
+  if (json.errors) {
+    throw json
+  }
+
+  const deletedIds: string[] = Object.keys(json.data).map(key => json.data[key])
   return deletedIds
 }
 

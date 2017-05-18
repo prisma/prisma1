@@ -2,7 +2,9 @@ import {SystemEnvironment, ProjectInfo} from '../types'
 import { deleteProject, fetchProjects, parseErrors, generateErrorOutput } from '../api/api'
 import {
   deletingProjectMessage,
-  deletedProjectMessage, deletingProjectWarningMessage, deletingProjectsMessage
+  deletedProjectMessage,
+  deletingProjectWarningMessage,
+  deletingProjectsMessage
 } from '../utils/constants'
 import * as chalk from 'chalk'
 import figures = require('figures')
