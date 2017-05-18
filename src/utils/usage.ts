@@ -15,6 +15,7 @@ export const usageRoot = (showQuickstart: boolean) => `
     console       Open Graphcool Console
     playground    Open GraphQL Playground
     projects      List projects
+    delete        Delete existing projects
     auth          Sign up or login
     version       Print version
     
