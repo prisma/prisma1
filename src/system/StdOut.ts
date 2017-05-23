@@ -38,11 +38,13 @@ export default class StdOut implements Out {
     if (error.stack && !error.stack.startsWith(errorMessage!)) {
       console.error(`${chalk.red(figures.cross)}  ${errorMessage}`)
       debug(error.stack)
-    } else {
+    } else if (error.stack) {
       const errorLines = error.stack!.split('\n')
       const firstErrorLine = errorLines[0]
       console.error(`${chalk.red(figures.cross)}  ${firstErrorLine}`)
       debug(error.stack)
+    } else {
+      console.error(JSON.stringify(error))
     }
 
     console.error(`\n${setDebugMessage}\n${contactUsInSlackMessage}\n`)
