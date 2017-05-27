@@ -76,14 +76,6 @@ export function isValidSchemaFilePath(schemaFilePath?: string): boolean {
   return schemaFilePath.endsWith(schemaFileSuffix)
 }
 
-
-export function writeExampleSchemaFile(resolver: Resolver): string {
-  const path = 'example.graphql'
-  resolver.write(path, exampleSchema)
-  return path
-}
-
-
 /*
  * Graphcool Config (~/.graphcool)
  */

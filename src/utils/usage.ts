@@ -6,7 +6,7 @@ export const usageRoot = (showQuickstart: boolean) => `
   ${chalk.dim('Usage:')} ${chalk.bold('graphcool')} [command]
 
   ${chalk.dim('Commands:')}${showQuickstart ? `
-    quickstart    Tutorial to get started with Graphcool`: ''}
+    quickstart    Open Graphcool Quickstart examples`: ''}
     init          Create a new project
     push          Push project file changes
     pull          Download the latest project file

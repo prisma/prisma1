@@ -22,7 +22,7 @@ import { GraphcoolAuthServer } from './api/GraphcoolAuthServer'
 import { readGraphcoolConfig } from './utils/file'
 import {
   sentryId,
-  sentryKey
+  sentryKey, graphcoolConfigFilePath
 } from './utils/constants'
 import {
   usagePull,
@@ -52,12 +52,12 @@ async function main() {
 
   const command = argv._[0] as Command | undefined
 
-  const showQuickstart = true
+  const displayQuickstart = shouldDisplayQuickstart()
 
   switch (command) {
 
     case undefined: {
-      process.stdout.write(usageRoot(showQuickstart))
+      process.stdout.write(usageRoot(displayQuickstart))
       process.exit(0)
     }
 
@@ -121,7 +121,6 @@ async function main() {
       await deleteCommand({sourceProjectId}, defaultEnvironment())
       break
     }
-
 
     case 'pull': {
       checkHelp(argv, usagePull)
@@ -207,7 +206,7 @@ async function main() {
     }
 
     case 'help': {
-      process.stdout.write(usageRoot(showQuickstart))
+      process.stdout.write(usageRoot(displayQuickstart))
       process.exit(0)
       break
     }
@@ -220,7 +219,7 @@ async function main() {
     }
 
     default: {
-      process.stdout.write(`Unknown command: ${command}\n\n${usageRoot(showQuickstart)}`)
+      process.stdout.write(`Unknown command: ${command}\n\n${usageRoot(displayQuickstart)}`)
       break
     }
   }
@@ -236,6 +235,17 @@ async function checkAuth(authTrigger: AuthTrigger): Promise<boolean> {
     await authCommand({}, defaultEnvironment(), new GraphcoolAuthServer(authTrigger))
     return false
   }
+}
+
+function shouldDisplayQuickstart(): boolean {
+  const resolver = new FileSystemResolver()
+  if (resolver.exists(graphcoolConfigFilePath)) {
+    const content = JSON.parse(resolver.read(graphcoolConfigFilePath))
+    if (content.token && content.token.length > 0) {
+      return false
+    }
+  }
+  return true
 }
 
 function checkHelp(argv: any, usage: string) {
