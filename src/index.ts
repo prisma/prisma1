@@ -57,6 +57,11 @@ async function main() {
   switch (command) {
 
     case undefined: {
+      if (argv['version'] || argv['v']) {
+        process.stdout.write(version)
+        break
+      }
+
       process.stdout.write(usageRoot(displayQuickstart))
       process.exit(0)
     }
@@ -219,6 +224,11 @@ async function main() {
     }
 
     default: {
+      if (argv['version'] || argv['v']) {
+        process.stdout.write(version)
+        break
+      }
+
       process.stdout.write(`Unknown command: ${command}\n\n${usageRoot(displayQuickstart)}`)
       break
     }
