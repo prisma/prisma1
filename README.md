@@ -1,6 +1,6 @@
 # graphcool-cli
 
-Manage your GraphQL backend from your terminal
+📟 Manage your GraphQL backend from your terminal
 
 ## Features
 
