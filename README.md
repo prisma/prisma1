@@ -2,9 +2,15 @@
 
 Manage your GraphQL backend from your terminal
 
-![](http://imgur.com/PABWSL7.gif)
+## Features
+
+* Instantly setup a production-ready GraphQL backend
+* Edit your schema locally and version control changes
+* Supports multi-stage envirnoment workflows
 
 ## Quickstart
+
+Watch this [video tutorial](https://www.youtube.com/watch?v=sf0ZkyalSTg) 🎥 to get started with the CLI and follow the frontend [quickstart guide](https://www.graph.cool/docs/quickstart/).
 
 ```sh
 # Create a new GraphQL backend
@@ -14,7 +20,13 @@ graphcool init
 graphcool push
 ```
 
+Check out the CLI in action:
+
+![](http://imgur.com/PABWSL7.gif)
+
 ## Install
+
+Installs the global `graphcool` command.
 
 ```sh
 npm install -g graphcool
@@ -23,12 +35,12 @@ npm install -g graphcool
 ## Usage
 
 ```sh
+
   Serverless GraphQL backend for frontend developers (https://www.graph.cool)
   
   Usage: graphcool [command]
 
   Commands:
-    quickstart    Tutorial to get started with Graphcool
     init          Create a new project
     push          Push project file changes
     pull          Download the latest project file
@@ -52,6 +64,7 @@ npm install -g graphcool
     
   - Update live project with local changes
     $ graphcool push
+    
 ```
 
 
