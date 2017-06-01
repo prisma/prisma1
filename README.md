@@ -5,8 +5,8 @@
 ## Features
 
 * Instantly setup a production-ready GraphQL backend
-* Edit your schema locally and version control changes
-* Supports multi-stage envirnoment workflows
+* **Edit your schema locally** and version control changes via [GraphQL SDL](https://www.graph.cool/docs/faq/graphql-sdl-schema-definition-language-kr84dktnp0/)
+* Supports [multi-stage](https://www.graph.cool/docs/tutorials/cli-multi-staging-workflow-ex4wo4zaep/) environment workflows
 
 ## Quickstart
 
@@ -26,7 +26,7 @@ Check out the CLI in action:
 
 ## Install
 
-Installs the global `graphcool` command.
+Installs the global `graphcool` command via NPM (or Yarn).
 
 ```sh
 npm install -g graphcool
@@ -66,6 +66,12 @@ npm install -g graphcool
     $ graphcool push
     
 ```
+
+## Resources
+
+* [Quickstart](https://www.graph.cool/docs/quickstart/): Using GraphQL with React, VueJS, Apollo, Relay & more
+* [Exploring Graphcool: The Serverless GraphQL Backend](https://www.graph.cool/docs/tutorials/graphcool-features-overview-ped6wohw0o/)
+* [Using the Graphcool CLI for a multi-stage development workflow](https://www.graph.cool/docs/tutorials/cli-multi-staging-workflow-ex4wo4zaep/)
 
 
 ## Help & Community [![Slack Status](https://slack.graph.cool/badge.svg)](https://slack.graph.cool)
