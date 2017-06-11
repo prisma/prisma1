@@ -1,15 +1,14 @@
-import { SystemEnvironment, Resolver } from '../types'
+import { SystemEnvironment, Resolver, ProjectInfo } from '../types'
 import {
   readProjectIdFromProjectFile,
   writeProjectFile,
   readVersionFromProjectFile,
   isValidProjectFilePath
 } from '../utils/file'
-import { pullProjectInfo, parseErrors, generateErrorOutput } from '../api/api'
-import figures = require('figures')
+import { pullProjectInfo, parseErrors, generateErrorOutput, fetchProjects } from '../api/api'
+import * as _ from 'lodash'
 import {
   fetchingProjectDataMessage,
-  noProjectIdMessage,
   wroteProjectFileMessage,
   newVersionMessage,
   differentProjectIdWarningMessage,
@@ -19,6 +18,7 @@ import {
   pulledInitialProjectFileMessage,
   warnOverrideProjectFileMessage
 } from '../utils/constants'
+import figures = require('figures')
 
 const {terminal} = require('terminal-kit')
 const debug = require('debug')('graphcool')
@@ -35,14 +35,10 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
 
   try {
 
-    const projectId = getProjectId(props, env)
+    const projectId = await getProjectId(props, env)
     const projectFile = props.projectFile || graphcoolProjectFileName
     const outputPath = props.outputPath || projectFile
     const currentVersion = getCurrentVersion(projectFile, resolver)
-
-    if (!projectId) {
-      throw new Error(noProjectIdMessage)
-    }
 
     // warn if the current project file is different from specified project id
     if (resolver.exists(graphcoolProjectFileName)) {
@@ -52,7 +48,7 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
         terminal.grabInput(true)
 
         await new Promise(resolve => {
-          terminal.on('key', function (name) {
+          terminal.on('key', name => {
             if (name !== 'y') {
               process.exit(0)
             }
@@ -126,7 +122,6 @@ function getProjectFilePath(props: Props, env: SystemEnvironment): string | unde
   // no project file provided, search for one in current dir
   const projectFiles = resolver.projectFiles('.')
   if (projectFiles.length === 0) {
-    // throw new Error(noProjectFileForPullMessage)
     return undefined
   } else if (projectFiles.length > 1) {
     throw new Error(multipleProjectFilesForPullMessage(projectFiles))
@@ -135,16 +130,20 @@ function getProjectFilePath(props: Props, env: SystemEnvironment): string | unde
   return projectFiles[0]
 }
 
-function getProjectId(props: Props, env: SystemEnvironment): string | undefined {
+async function getProjectId(props: Props, env: SystemEnvironment): Promise<string> {
   if (props.sourceProjectId) {
     return props.sourceProjectId
   }
 
   const projectFile = getProjectFilePath(props, env)
-  if (projectFile && env.resolver.exists(projectFile!)) {
-    return readProjectIdFromProjectFile(env.resolver, projectFile!)
+  if (projectFile && env.resolver.exists(projectFile)) {
+    const projectId = readProjectIdFromProjectFile(env.resolver, projectFile)
+    if (projectId) {
+      return projectId
+    }
   }
-  return undefined
+
+  return interactiveProjectSelection(env)
 }
 
 function getCurrentVersion(path: string, resolver: Resolver): string | undefined {
@@ -154,4 +153,81 @@ function getCurrentVersion(path: string, resolver: Resolver): string | undefined
   return undefined
 }
 
+async function interactiveProjectSelection(env: SystemEnvironment): Promise<string> {
+  const projects = await fetchProjects(env.resolver)
+  terminal.saveCursor()
+  terminal.grabInput()
+  terminal.hideCursor()
+  terminal(`\n`)
 
+  let currentIndex = 0
+
+  render(projects, currentIndex)
+
+  const projectId = await new Promise<string>(resolve => {
+    terminal.on('key', async (name: string) => {
+      currentIndex = await handleKeyEvent(name, currentIndex, projects, resolve)
+    })
+  })
+
+  return projectId
+}
+
+function rerender(projects: ProjectInfo[], currentIndex: number): void {
+  clear(projects)
+  render(projects, currentIndex)
+}
+
+function clear(projects: ProjectInfo[]) {
+  const lineCount = _.flatten(projects).length - 1
+  terminal.up(lineCount)
+  terminal.left(10000)
+  terminal.eraseDisplayBelow()
+}
+
+function render(projects: ProjectInfo[], currentIndex: number) {
+
+  const lines = _.chain(projects)
+    .map(project => `${project.name} (${project.projectId})`)
+    .map((l, lineIndex) => (lineIndex === currentIndex) ? `${figures.pointer} ${l}` : `  ${l}`)
+    .join('\n')
+
+  terminal(lines, currentIndex)
+}
+
+async function handleKeyEvent(name: string,
+                              currentIndex: number,
+                              projects: ProjectInfo[],
+                              callback: (projectId: string) => void): Promise<number> {
+
+  switch (name) {
+    case 'DOWN': {
+      currentIndex = (currentIndex + 1) % projects.length
+      rerender(projects, currentIndex)
+      break
+    }
+    case 'UP': {
+      currentIndex = (currentIndex + projects.length - 1) % projects.length
+      rerender(projects, currentIndex)
+      break
+    }
+    case 'ENTER': {
+      clear(projects)
+      terminal.hideCursor(false)
+      terminal.grabInput(false)
+      callback(projects[currentIndex].projectId)
+      break
+    }
+    case 'CTRL_C': {
+      clear(projects)
+      terminal.hideCursor(false)
+      terminal.grabInput(false)
+      process.exit()
+    }
+    default: {
+      break
+    }
+  }
+
+  return currentIndex
+}

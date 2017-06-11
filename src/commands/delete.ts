@@ -1,4 +1,4 @@
-import {SystemEnvironment, ProjectInfo} from '../types'
+import { SystemEnvironment, ProjectInfo } from '../types'
 import { deleteProject, fetchProjects, parseErrors, generateErrorOutput } from '../api/api'
 import {
   deletingProjectMessage,
@@ -9,9 +9,10 @@ import {
 import * as chalk from 'chalk'
 import figures = require('figures')
 import * as _ from 'lodash'
+import { readProjectIdFromProjectFile } from '../utils/file'
+
 const {terminal} = require('terminal-kit')
 const debug = require('debug')('graphcool')
-
 
 interface Props {
   sourceProjectId?: string
@@ -28,7 +29,7 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
       out.stopSpinner()
       out.write(deletedProjectMessage([props.sourceProjectId]))
 
-    } catch(e) {
+    } catch (e) {
       out.stopSpinner()
 
       if (e.errors) {
@@ -47,7 +48,10 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
     terminal.hideCursor()
     terminal(`\n`)
 
-    let currentIndex = 0, selectedIndices = []
+    // initially select current project
+    const projectId = getProjectId(env)
+    let currentIndex = projectId ? projects.map(p => p.projectId).indexOf(projectId) : 0
+    const selectedIndices = []
 
     render(projects, currentIndex, selectedIndices)
 
@@ -60,14 +64,29 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
 
 }
 
-async function handleKeyEvent(
-  name: string,
-  currentIndex: number,
-  selectedIndices: number[],
-  projects: ProjectInfo[],
-  env: SystemEnvironment,
-  callback: () => void
-): Promise<number> {
+function getProjectId(env: SystemEnvironment): string | undefined {
+  const projectFiles = env.resolver.projectFiles('.')
+
+  if (projectFiles.length !== 1) {
+    return
+  }
+
+  const projectFile = projectFiles[0]
+
+  if (projectFile && env.resolver.exists(projectFile)) {
+    const projectId = readProjectIdFromProjectFile(env.resolver, projectFile)
+    if (projectId) {
+      return projectId
+    }
+  }
+}
+
+async function handleKeyEvent(name: string,
+                              currentIndex: number,
+                              selectedIndices: number[],
+                              projects: ProjectInfo[],
+                              env: SystemEnvironment,
+                              callback: () => void): Promise<number> {
 
   switch (name) {
     case 'DOWN': {
@@ -97,10 +116,9 @@ async function handleKeyEvent(
       break
     }
     case 'CTRL_C': {
-      terminal.restoreCursor()
-      terminal.eraseDisplayBelow()
+      clear(projects)
       terminal.hideCursor(false)
-      env.out.write('\n')
+      terminal.grabInput(false)
       process.exit()
     }
     default: {
@@ -141,7 +159,7 @@ async function handleSelect(selectedIndices: number[], projects: ProjectInfo[], 
     env.out.stopSpinner()
     env.out.write(deletedProjectMessage(projectIdsToDelete))
 
-  } catch(e) {
+  } catch (e) {
     env.out.stopSpinner()
 
     if (e.errors) {
@@ -154,8 +172,6 @@ async function handleSelect(selectedIndices: number[], projects: ProjectInfo[], 
   }
 
 }
-
-
 
 function rerender(projects: ProjectInfo[], currentIndex: number, selectedIndices: number[]): void {
   clear(projects)
@@ -173,11 +189,9 @@ function render(projects: ProjectInfo[], currentIndex: number, selectedIndices: 
 
   const lines = _.chain(projects)
     .map(project => `${project.name} (${project.projectId})`)
-    .map((l, lineIndex) => (selectedIndices.indexOf(lineIndex) >= 0) ? `${chalk.red(figures.circleFilled)}  ${chalk.red(l)}` : `${figures.circle}  ${l}`)
-    .map((l, lineIndex) => (lineIndex === currentIndex) ? `${chalk.bold(l)}` : `${l}`)
+    .map((l, lineIndex) => (selectedIndices.includes(lineIndex)) ? `${chalk.red(figures.circleFilled)}  ${chalk.red(l)}` : `${figures.circle}  ${l}`)
+    .map((l, lineIndex) => (lineIndex === currentIndex) ? `${figures.pointer} ${l}` : `  ${l}`)
     .join('\n')
 
   terminal(lines, currentIndex)
 }
-
-
