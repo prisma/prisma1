@@ -1,6 +1,6 @@
 {
   "name": "graphcool",
-  "version": "0.5.4",
+  "version": "1.0.0",
   "bin": {
     "graphcool": "dist/src/index.js",
     "gc": "dist/src/index.js"
