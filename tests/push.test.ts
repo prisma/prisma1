@@ -6,7 +6,7 @@ import statusCommand from '../src/commands/status'
 import {systemAPIEndpoint, graphcoolProjectFileName, graphcoolConfigFilePath} from '../src/utils/constants'
 import {
   mockedPushSchemaResponse, mockProjectFile2, mockProjectFile3,
-  mockedPullProjectResponse1, mockedPushSchemaResponseError
+  mockedPullProjectResponse1, mockedPushSchemaResponseError, mockModifiedProjectFile1, mockedPushSchema1ResponseError
 } from './mock_data/mockData'
 import { TestSystemEnvironment } from '../src/types'
 import TestOut from '../src/system/TestOut'
@@ -37,7 +37,7 @@ test('Succeeding schema migration using --force with default project file', asyn
 
   // dummy migration data
   const env = testEnvironment({})
-  env.resolver.write(graphcoolProjectFileName, mockProjectFile2)
+  env.resolver.write(graphcoolProjectFileName, mockModifiedProjectFile1)
   env.resolver.write(graphcoolConfigFilePath, '{"token": ""}')
   const props = { force: true , projectFilePath: graphcoolProjectFileName}
 
@@ -60,7 +60,7 @@ test('Succeeding schema migration using --force without specified project file (
 
   // dummy migration data
   const env = testEnvironment({})
-  env.resolver.write(graphcoolProjectFileName, mockProjectFile2)
+  env.resolver.write(graphcoolProjectFileName, mockModifiedProjectFile1)
   env.resolver.write(graphcoolConfigFilePath, '{"token": ""}')
   const props = { force: true }
 
@@ -84,7 +84,7 @@ test('Succeeding schema migration using --force with renamed project file', asyn
   // dummy migration data
   const projectFile = 'example.graphcool'
   const env = testEnvironment({})
-  env.resolver.write(projectFile, mockProjectFile2)
+  env.resolver.write(projectFile, mockModifiedProjectFile1)
   env.resolver.write(graphcoolConfigFilePath, '{"token": ""}')
   const props = { force: true }
 
@@ -95,7 +95,7 @@ test('Succeeding schema migration using --force with renamed project file', asyn
   )
 
   const expectedProjectFileContent = mockProjectFile3
-  const result = env.resolver.read(graphcoolProjectFileName)
+  const result = env.resolver.read(projectFile)
 
   t.is(result, expectedProjectFileContent)
 })
@@ -127,12 +127,12 @@ test('Failing schema migration because of multiple project files', async t => {
 test('Schema migration displaying data loss', async t => {
   // configure HTTP mocks
   fetchMock.once(systemAPIEndpoint, JSON.parse(mockedPullProjectResponse1))
-  fetchMock.once(systemAPIEndpoint, JSON.parse(mockedPushSchemaResponseError))
+  fetchMock.once(systemAPIEndpoint, JSON.parse(mockedPushSchema1ResponseError))
 
   // dummy migration data
   const projectFile = 'project.graphcool'
   const env = testEnvironment({})
-  env.resolver.write(projectFile, mockProjectFile2)
+  env.resolver.write(projectFile, mockModifiedProjectFile1)
   env.resolver.write(graphcoolConfigFilePath, '{"token": ""}')
   const props = { force: true }
 
@@ -142,7 +142,7 @@ test('Schema migration displaying data loss', async t => {
     push(props, env)
   )
 
-  t.is(env.resolver.read(projectFile), mockProjectFile2)
+  t.is(env.resolver.read(projectFile), mockModifiedProjectFile1)
 })
 
 test('Status with potential data loss', async t => {

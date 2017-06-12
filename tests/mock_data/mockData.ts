@@ -26,6 +26,13 @@ export const mockProjectFileWithAlias1 = `\
 ${simpleTwitterSchemaWithSystemFields}
 `
 
+export const mockModifiedProjectFile1 = `\
+# project: abcdefghijklmn
+# version: 1
+
+${modifiedTwitterSchema}
+`
+
 export const mockProjectFile2 = `\
 # project: abcdefghijklmn
 # version: 2
@@ -79,6 +86,41 @@ export const mockedPushSchemaResponseError = `
   }
 }
 `
+
+export const mockedPushSchema1ResponseError = `
+{
+  "data":{
+    "migrateProject":{
+      "migrationMessages":[
+        {
+          "name":"Tweet",
+          "description":"The type \Tweet\ is removed. This also deletes all its field and relations.",
+          "subDescriptions":[
+
+          ],
+          "type":"Type",
+          "action":"Delete"
+        }
+      ],
+      "errors":[
+        {
+          "description":"Your migration includes potentially destructive changes. Review using \`graphcool status\` and continue using \`graphcool push --force\`.",
+          "type":"Global",
+          "field":null
+        }
+      ],
+      "project":{
+        "name":"Desertspirit Ninja",
+        "alias":null,
+        "version":1,
+        "id":"cj2j7bpzc05p9011800fq3lxp",
+        "schema":"type File implements Node {\\n  contentType: String!\\n  createdAt: DateTime!\\n  id: ID! @isUnique\\n  name: String!\\n  secret: String! @isUnique\\n  size: Int!\\n  updatedAt: DateTime!\\n  url: String! @isUnique\\n}\\n\\ntype Tweet implements Node {\\n  createdAt: DateTime!\\n  id: ID! @isUnique\\n  text: String!\\n  updatedAt: DateTime!\\n}\\n\\ntype User implements Node {\\n  createdAt: DateTime!\\n  id: ID! @isUnique\\n  updatedAt: DateTime!\\n}"
+      }
+    }
+  }
+}
+`
+
 
 export const mockedPushSchemaResponse = `\
 {
