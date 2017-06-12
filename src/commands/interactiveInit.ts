@@ -118,9 +118,9 @@ async function handleSelect(selectedIndex: number, props: Props, env: SystemEnvi
       const previousOptions = 1
       if (selectedIndex >= previousOptions && selectedIndex < previousOptions + schemaFiles.length) {
         const schemaFileIndex = selectedIndex - previousOptions
-        const localSchemaFile = schemaFiles[schemaFileIndex]
+        const schemaUrl = schemaFiles[schemaFileIndex]
         const initProps = getPropsForInit(props)
-        await initCommand({...initProps, localSchemaFile}, env)
+        await initCommand({...initProps, schemaUrl}, env)
       } else if (selectedIndex >= previousOptions + schemaFiles.length && selectedIndex < previousOptions + schemaFiles.length + projectFiles.length) {
         const projectFileIndex = selectedIndex - schemaFiles.length - previousOptions
         const projectFile = projectFiles[projectFileIndex]
