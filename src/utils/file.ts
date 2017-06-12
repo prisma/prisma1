@@ -33,7 +33,7 @@ export function readProjectInfoFromProjectFile(resolver: Resolver, path: string)
 
 export function readProjectIdFromProjectFile(resolver: Resolver, path: string): string | undefined {
   const contents = resolver.read(path)
-  const matches = contents.match(/# project: ([a-z0-9]*)/)
+  const matches = contents.match(/# project: ([a-z0-9-]*)/)
 
   if (!matches || matches.length !== 2) {
     return undefined
@@ -44,7 +44,7 @@ export function readProjectIdFromProjectFile(resolver: Resolver, path: string): 
 
 export function readVersionFromProjectFile(resolver: Resolver, path: string): string | undefined {
   const contents = resolver.read(path)
-  const matches = contents.match(/# version: ([a-z0-9]*)/)
+  const matches = contents.match(/# version: ([a-z0-9-]*)/)
 
   if (!matches || matches.length !== 2) {
     return undefined
