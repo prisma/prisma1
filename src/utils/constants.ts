@@ -19,10 +19,9 @@ export const sampleSchemaURL = `http://graphqlbin.com/empty.graphql`
 /*
  * Sentry
  */
-// DSN: https:df8b750d27504597af166dc757a890ed//@sentry.io/165377
-export const sentryKey = 'df8b750d27504597af166dc757a890ed'
-export const sentryId = '165377'
-
+// DSN: https://6ef6eea3afb041f2aca71d08742a36d1@sentry.io/178603
+export const sentryKey = '6ef6eea3afb041f2aca71d08742a36d1'
+export const sentryId = '178603'
 
 /*
  * File paths / names
@@ -34,13 +33,75 @@ export const graphcoolConfigFilePath = path.join(os.homedir(), '.graphcoolrc')
 export const projectFileSuffix = '.graphcool'
 export const schemaFileSuffix = '.graphql'
 export const exampleSchema = `\
+# \`User\` is a system type with special characteristics.
+# You can read about it in the documentation: 
+# https://www.graph.cool/docs/reference/schema/system-artifacts-uhieg2shio/#user-type
 type User {
-  id: ID!
+  id: ID! @isUnique
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
+
+# \`File\` is a system type with special characteristics.
+# You can read about it in the documentation: 
+# https://www.graph.cool/docs/reference/schema/system-artifacts-uhieg2shio/#file-type
+type File {
+  id: ID! @isUnique
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  contentType: String!
+  name: String!
+  secret: String! @isUnique
+  size: Int!
+  url: String! @isUnique
+}
+
+# You can easily add custom types, here is an example.
+# If you want to add the \`Tweet\` type to your schema, 
+# remove the below comments and run \`graphcool push\`.
+# type Tweet {
+#   text: String!
+# }`
+
+export const blankProjectFileFromExampleSchema = (projectId: string, version: string) => `\
+# project: ${projectId}
+# version: ${version}
+
+
+###########################################################################
+# \`User\` and \`File\` are generated and have special characteristics.
+# You can read about them in the documentation:
+# https://www.graph.cool/docs/reference/schema/system-artifacts-uhieg2shio/
+###########################################################################
+
+type User {
+  id: ID! @isUnique
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type File {
+  id: ID! @isUnique
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  contentType: String!
+  name: String!
+  secret: String! @isUnique
+  size: Int!
+  url: String! @isUnique
+}
+
+
+###########################################################################
+# You can easily add custom definitions, \`Tweet\` below is an example.
+# If you want to add \`Tweet\` to your schema, 
+# remove the below comments and run \`graphcool push\`.
+###########################################################################
 
 # type Tweet {
 #   text: String!
 # }`
+
 
 /*
  * Terminal output: auth

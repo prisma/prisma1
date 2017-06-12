@@ -4,7 +4,7 @@ import {
   graphcoolConfigFilePath,
   graphcoolProjectFileName,
   exampleSchema,
-  projectFileSuffix, schemaFileSuffix
+  projectFileSuffix, schemaFileSuffix, blankProjectFileFromExampleSchema
 } from './constants'
 
 const debug = require('debug')('graphcool')
@@ -16,6 +16,13 @@ const debug = require('debug')('graphcool')
 export function writeProjectFile(projectInfo: ProjectInfo, resolver: Resolver, path?: string) {
   path = isValidProjectFilePath(path) ? path : graphcoolProjectFileName
   resolver.write(path!, projectInfoToContents(projectInfo))
+}
+
+export function writeBlankProjectFileWithInfo(projectInfo: ProjectInfo, resolver: Resolver, path?: string) {
+  path = isValidProjectFilePath(path) ? path : graphcoolProjectFileName
+  const fullProjectFile = blankProjectFileFromExampleSchema(
+    projectInfo.alias ? projectInfo.alias : projectInfo.projectId, projectInfo.version)
+  resolver.write(path!, fullProjectFile)
 }
 
 export function readProjectInfoFromProjectFile(resolver: Resolver, path: string): ProjectInfo | undefined {

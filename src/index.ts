@@ -38,7 +38,7 @@ const {version} = require('../../package.json')
 async function main() {
 
   // initialize sentry
-  // Raven.config(`https://${sentryKey}@sentry.io/${sentryId}`).install()
+  Raven.config(`https://${sentryKey}@sentry.io/${sentryId}`).install()
 
   const argv = minimist(process.argv.slice(2))
 
@@ -90,13 +90,11 @@ async function main() {
       const copyOptions = argv['copy-options']
       const outputPath = argv['output'] || argv['o']
 
-
       if (!schemaUrl && !copyProjectId) {
         const props = {name, alias, outputPath, checkAuth}
         await interactiveInitCommand(props, defaultEnvironment())
       } else {
         await checkAuth('init')
-
         const props = {name, alias, schemaUrl, copyProjectId, copyOptions, region, outputPath}
         await initCommand(props, defaultEnvironment())
       }

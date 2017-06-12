@@ -6,7 +6,7 @@ import { createProject, parseErrors, generateErrorOutput } from '../api/api'
 import * as fs from 'fs'
 import * as path from 'path'
 import { projectInfoToContents } from '../utils/utils'
-import { writeProjectFile, isValidSchemaFilePath } from '../utils/file'
+import {writeProjectFile, isValidSchemaFilePath, writeBlankProjectFileWithInfo} from '../utils/file'
 import 'isomorphic-fetch'
 import {
   graphcoolProjectFileName,
@@ -69,7 +69,11 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
 
       // create project
       const projectInfo = await createProjectAndGetProjectInfo(name, schema, resolver, props.alias, props.region)
-      writeProjectFile(projectInfo, resolver, props.outputPath)
+      if (!isBlankProject(props)) {
+        writeProjectFile(projectInfo, resolver, props.outputPath)
+      } else {
+        writeBlankProjectFileWithInfo(projectInfo, resolver, props.outputPath)
+      }
 
       out.stopSpinner()
 
@@ -90,6 +94,10 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
     }
   }
 
+}
+
+function isBlankProject(props: Props) {
+  return props.schemaUrl === sampleSchemaURL
 }
 
 async function createProjectAndGetProjectInfo(name: string, schema: SchemaInfo, resolver: Resolver, alias?: string, region?: string): Promise<ProjectInfo> {
