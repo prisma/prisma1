@@ -8,7 +8,7 @@ import ora = require('ora')
 
 const debug = require('debug')('graphcool')
 
-Raven.config('https://6ef6eea3afb041f2aca71d08742a36d1:51bdc5643a7648ffbfb3d3017879467c@sentry.io/178603').install()
+Raven.config('https://6ef6eea3afb041f2aca71d08742a36d1:51bdc5643a7648ffbfb3d3017879467c@sentry.io/178603')
 
 export default class StdOut implements Out {
 
@@ -32,8 +32,7 @@ export default class StdOut implements Out {
     }
   }
 
-  onError(error: Error): void {
-    Raven.captureException(error)
+  async onError(error: Error): Promise<void> {
 
     // prevent the same error output twice
     const errorMessage = makePartsEnclodesByCharacterBold(`Error: ${error.message}`, `\``)
@@ -50,6 +49,9 @@ export default class StdOut implements Out {
     }
 
     console.error(`\n${setDebugMessage}\n${contactUsInSlackMessage}\n`)
+
+    await new Promise(resolve => Raven.captureException(error, resolve))
+
     process.exit(1)
   }
 
