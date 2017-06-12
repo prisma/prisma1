@@ -1,12 +1,14 @@
 import { Out } from '../types'
+import { setDebugMessage, contactUsInSlackMessage } from '../utils/constants'
+import { makePartsEnclodesByCharacterBold } from '../utils/utils'
+import * as chalk from 'chalk'
+import figures = require('figures')
+import Raven = require('raven')
 import ora = require('ora')
 
-import * as chalk from 'chalk'
-import {setDebugMessage, contactUsInSlackMessage} from '../utils/constants'
-import figures = require('figures')
-import {makePartsEnclodesByCharacterBold} from '../utils/utils'
-var Raven = require('raven')
 const debug = require('debug')('graphcool')
+
+Raven.config('https://6ef6eea3afb041f2aca71d08742a36d1:51bdc5643a7648ffbfb3d3017879467c@sentry.io/178603').install()
 
 export default class StdOut implements Out {
 
@@ -31,7 +33,7 @@ export default class StdOut implements Out {
   }
 
   onError(error: Error): void {
-    // Raven.captureException(error)
+    Raven.captureException(error)
 
     // prevent the same error output twice
     const errorMessage = makePartsEnclodesByCharacterBold(`Error: ${error.message}`, `\``)
