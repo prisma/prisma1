@@ -47,6 +47,13 @@ export const mockProjectFileWithAlias2 = `\
 ${simpleTwitterSchemaWithSystemFields}
 `
 
+export const mockProjectFileWithUppercaseAlias1 = `\
+# project: Example
+# version: 1
+
+${simpleTwitterSchemaWithSystemFields}
+`
+
 export const mockProjectFile3 = `\
 # project: abcdefghijklmn
 # version: 3
