@@ -8,8 +8,6 @@ import ora = require('ora')
 
 const debug = require('debug')('graphcool')
 
-Raven.config('https://6ef6eea3afb041f2aca71d08742a36d1:51bdc5643a7648ffbfb3d3017879467c@sentry.io/178603')
-
 export default class StdOut implements Out {
 
   spinner: any

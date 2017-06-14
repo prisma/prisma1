@@ -21,8 +21,7 @@ import StdOut from './system/StdOut'
 import { GraphcoolAuthServer } from './api/GraphcoolAuthServer'
 import { readGraphcoolConfig } from './utils/file'
 import {
-  sentryId,
-  sentryKey,
+  sentryDSN,
   graphcoolConfigFilePath,
   unknownOptionsWarning
 } from './utils/constants'
@@ -38,7 +37,7 @@ const {version} = require('../../package.json')
 async function main() {
 
   // initialize sentry
-  Raven.config(`https://${sentryKey}@sentry.io/${sentryId}`).install()
+  Raven.config(sentryDSN).install()
 
   const argv = minimist(process.argv.slice(2))
 
