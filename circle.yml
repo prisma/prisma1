@@ -1,0 +1,13 @@
+machine:
+  node:
+    version: 7.10.0
+    
+dependencies:
+  override:
+    - npm install -g yarn
+    - rm -rf node_modules
+    - yarn install
+
+test:
+  override:
+    - npm test
