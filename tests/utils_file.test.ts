@@ -1,5 +1,6 @@
 import test from 'ava'
 import TestResolver from '../src/system/TestResolver'
+import { Config } from '../src/utils/config'
 import TestOut from '../src/system/TestOut'
 import { graphcoolProjectFileName } from '../src/utils/constants'
 import { TestSystemEnvironment } from '../src/types'
@@ -44,10 +45,13 @@ test('readProjectIdFromProjectFile with a file missing a project id', async t =>
   t.is(project_id, undefined)
 })
 
-
 function testEnvironment(storage: any): TestSystemEnvironment {
+  const resolver = new TestResolver(storage)
+  const config = new Config(resolver)
+
   return {
-    resolver: new TestResolver(storage),
+    resolver: resolver,
     out: new TestOut(),
+    config: config
   }
 }

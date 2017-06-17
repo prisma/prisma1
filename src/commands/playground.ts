@@ -1,4 +1,4 @@
-import {readGraphcoolConfig, readProjectIdFromProjectFile, isValidProjectFilePath} from '../utils/file'
+import {readProjectIdFromProjectFile, isValidProjectFilePath} from '../utils/file'
 import {SystemEnvironment, ProjectInfo} from '../types'
 import { pullProjectInfo } from '../api/api'
 import open = require('open')
@@ -20,7 +20,7 @@ interface Props {
 export default async (props: Props, env: SystemEnvironment): Promise<void> => {
   const {resolver, out} = env
 
-  const {token} = readGraphcoolConfig(resolver)
+  const token = env.config.get('token')
   if (!token) {
     throw new Error(notAuthenticatedMessage)
   }

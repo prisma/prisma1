@@ -5,6 +5,12 @@ import {modifiedTwitterSchema, simpleTwitterSchemaWithSystemFields, modifiedTwit
  */
 export const testToken = 'abcdefghijklmnopqrstuvwxyz'
 
+export const mockConfigFile = `\
+{
+  "token": "1234"
+}\
+`
+
 export const mockProjectFile1 = `\
 # project: abcdefghijklmn
 # version: 1

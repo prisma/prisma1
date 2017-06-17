@@ -1,3 +1,4 @@
+import {Config} from './utils/config'
 import TestOut from './system/TestOut'
 export type Command =
   'auth'
@@ -19,8 +20,9 @@ export type Command =
 export type Region = 'eu-west-1'
 
 export interface GraphcoolConfig {
-  token: string
+  token?: string
 }
+export type GraphcoolConfigOptionName = 'token'
 
 export interface Resolver {
   read(path: string): string
@@ -84,11 +86,13 @@ export interface Out {
 export interface SystemEnvironment {
   out: Out
   resolver: Resolver
+  config: Config
 }
 
 export interface TestSystemEnvironment {
   out: TestOut
   resolver: Resolver
+  config: Config
 }
 
 export interface APIError {
@@ -98,4 +102,4 @@ export interface APIError {
 }
 
 export type AuthTrigger = 'auth' | 'init' | 'quickstart'
-export type CheckAuth = (authTrigger: AuthTrigger) => Promise<boolean>
+export type CheckAuth = (env: SystemEnvironment, authTrigger: AuthTrigger) => Promise<boolean>

@@ -1,4 +1,3 @@
-import { writeGraphcoolConfig, deleteGraphcoolConfig } from '../utils/file'
 import { AuthServer, SystemEnvironment } from '../types'
 import { sleep } from '../utils/system'
 import {
@@ -33,10 +32,12 @@ export default async (props: Props, env: SystemEnvironment, authServer: AuthServ
 
   const authenticatedUserEmail = await authServer.validateAuthToken(token)
   if (authenticatedUserEmail) {
-    writeGraphcoolConfig({token}, resolver)
+    env.config.set({ token })
+    env.config.save()
     out.write(authenticationSuccessMessage(authenticatedUserEmail))
   } else {
-    deleteGraphcoolConfig(resolver)
+    env.config.unset('token')
+    env.config.save()
     throw new Error('Invalid auth token')
   }
 

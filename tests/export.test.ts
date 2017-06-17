@@ -1,5 +1,6 @@
 import test from 'ava'
 import TestResolver from '../src/system/TestResolver'
+import { Config } from '../src/utils/config'
 import exportCommand from '../src/commands/export'
 import { systemAPIEndpoint, graphcoolProjectFileName, graphcoolConfigFilePath } from '../src/utils/constants'
 import { TestSystemEnvironment } from '../src/types'
@@ -64,9 +65,12 @@ test('Export with multiple project files', async t => {
 })
 
 function testEnvironment(storage: any): TestSystemEnvironment {
+  const resolver = new TestResolver(storage)
+  const config = new Config(resolver)
+
   return {
-    resolver: new TestResolver(storage),
+    resolver: resolver,
     out: new TestOut(),
+    config: config
   }
 }
-
