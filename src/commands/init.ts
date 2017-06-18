@@ -77,7 +77,7 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
 
       out.stopSpinner()
 
-      const message = createdProjectMessage(name, projectInfo.projectId, projectInfoToContents(projectInfo))
+      const message = createdProjectMessage(name, projectInfo.projectId, projectInfoToContents(projectInfo), props.outputPath)
       out.write(message)
 
     } catch (e) {
@@ -136,4 +136,3 @@ async function getSchema(schemaUrl: string | undefined, resolver: Resolver): Pro
     }
   }
 }
-
