@@ -1,5 +1,6 @@
 import test from 'ava'
 import TestResolver from '../src/system/TestResolver'
+import { Config } from '../src/utils/config'
 import 'isomorphic-fetch'
 import pushCommand from '../src/commands/push'
 import statusCommand from '../src/commands/status'
@@ -166,9 +167,13 @@ test('Status with potential data loss', async t => {
 })
 
 function testEnvironment(storage: any): TestSystemEnvironment {
+  const resolver = new TestResolver(storage)
+  const config = new Config(resolver)
+
   return {
-    resolver: new TestResolver(storage),
+    resolver: resolver,
     out: new TestOut(),
+    config: config
   }
 }
 

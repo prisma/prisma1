@@ -1,5 +1,6 @@
 import test from 'ava'
 import TestResolver from '../src/system/TestResolver'
+import { Config } from '../src/utils/config'
 import initCommand from '../src/commands/init'
 import {
   systemAPIEndpoint,
@@ -171,9 +172,12 @@ test('Succeeding project creation with alias', async t => {
 })
 
 function testEnvironment(storage: any): TestSystemEnvironment {
+  const resolver = new TestResolver(storage)
+  const config = new Config(resolver)
+
   return {
-    resolver: new TestResolver(storage),
+    resolver: resolver,
     out: new TestOut(),
+    config: config
   }
 }
-

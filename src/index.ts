@@ -19,7 +19,6 @@ import FileSystemResolver from './system/FileSystemResolver'
 import figures = require('figures')
 import StdOut from './system/StdOut'
 import { GraphcoolAuthServer } from './api/GraphcoolAuthServer'
-import { readGraphcoolConfig } from './utils/file'
 import {
   sentryDSN,
   graphcoolConfigFilePath,
@@ -34,11 +33,13 @@ const Raven = require('raven')
 const debug = require('debug')('graphcool')
 const {version} = require('../../package.json')
 
-async function main() {
+import {Config} from './utils/config'
 
+async function main() {
   // initialize sentry
   Raven.config(sentryDSN).install()
 
+  const env = defaultEnvironment()
   const argv = minimist(process.argv.slice(2))
 
   const command = argv._[0] as Command | undefined
@@ -63,7 +64,7 @@ async function main() {
 
     // TODO remove legacy support
     case 'create': {
-      await checkAuth('auth')
+      await checkAuth(env, 'auth')
 
       console.log('`graphcool create` is deprecated and will be removed in a future version. Use `graphcool init` instead.')
 
@@ -75,7 +76,7 @@ async function main() {
       const localSchemaFile = schemaUrl
 
       const props = {name, alias, remoteSchemaUrl, localSchemaFile, region}
-      await initCommand(props, defaultEnvironment())
+      await initCommand(props, env)
       break
     }
 
@@ -91,104 +92,104 @@ async function main() {
 
       if (!schemaUrl && !copyProjectId) {
         const props = {name, alias, outputPath, checkAuth}
-        await interactiveInitCommand(props, defaultEnvironment())
+        await interactiveInitCommand(props, env)
       } else {
-        await checkAuth('init')
+        await checkAuth(env, 'init')
         const props = {name, alias, schemaUrl, copyProjectId, copyOptions, region, outputPath}
-        await initCommand(props, defaultEnvironment())
+        await initCommand(props, env)
       }
       break
     }
 
     case 'push': {
-      await checkAuth('auth')
+      await checkAuth(env, 'auth')
       checkOptions('push', argv)
 
 
       const force = !!(argv['force'] || argv['f'])
       const projectFile = argv._[1]
-      await pushCommand({force, projectFile}, defaultEnvironment())
+      await pushCommand({force, projectFile}, env)
       break
     }
 
     case 'delete': {
-      await checkAuth('auth')
+      await checkAuth(env, 'auth')
 
       const sourceProjectId = argv['project'] || argv['p']
-      await deleteCommand({sourceProjectId}, defaultEnvironment())
+      await deleteCommand({sourceProjectId}, env)
       break
     }
 
     case 'pull': {
-      await checkAuth('auth')
+      await checkAuth(env, 'auth')
 
       const sourceProjectId = argv['project'] || argv['p']
       const projectFile = argv._[1]
       const outputPath = argv['output'] || argv['o']
       const force = !!(argv['force'] || argv['f'])
       const props = {sourceProjectId, projectFile, outputPath, force}
-      await pullCommand(props, defaultEnvironment())
+      await pullCommand(props, env)
       break
     }
 
     case 'export': {
-      await checkAuth('auth')
+      await checkAuth(env, 'auth')
 
       const projectFile = argv._[1]
-      await exportCommand({projectFile}, defaultEnvironment())
+      await exportCommand({projectFile}, env)
       break
     }
 
     case 'status': {
-      await checkAuth('auth')
+      await checkAuth(env, 'auth')
 
       const projectFile = argv._[1]
-      await statusCommand({projectFile}, defaultEnvironment())
+      await statusCommand({projectFile}, env)
       break
     }
 
     case 'endpoints': {
-      await checkAuth('auth')
+      await checkAuth(env, 'auth')
 
       const projectFile = argv._[1]
-      await endpointsCommand({projectFile}, defaultEnvironment())
+      await endpointsCommand({projectFile}, env)
       break
     }
 
     case 'console': {
-      await checkAuth('auth')
+      await checkAuth(env, 'auth')
 
       const projectFile = argv._[1]
-      await consoleCommand({projectFile}, defaultEnvironment())
+      await consoleCommand({projectFile}, env)
       break
     }
 
     case 'playground': {
-      await checkAuth('auth')
+      await checkAuth(env, 'auth')
 
       const projectFile = argv._[1]
-      await playgroundCommand({projectFile}, defaultEnvironment())
+      await playgroundCommand({projectFile}, env)
       break
     }
 
     case 'projects': {
-      await checkAuth('auth')
+      await checkAuth(env, 'auth')
 
-      await projectsCommand({}, defaultEnvironment())
+      await projectsCommand({}, env)
       break
     }
 
     case 'auth': {
 
       const token = argv['token'] || argv['t']
-      await authCommand({token}, defaultEnvironment(), new GraphcoolAuthServer('auth'))
+      await authCommand({token}, env, new GraphcoolAuthServer('auth'))
       break
     }
 
     case 'quickstart': {
 
       const props = {checkAuth}
-      await quickstartCommand(props, defaultEnvironment())
+      await quickstartCommand(props, env)
 
       break
     }
@@ -219,14 +220,13 @@ async function main() {
   process.stdout.write('\n')
 }
 
-async function checkAuth(authTrigger: AuthTrigger): Promise<boolean> {
-  try {
-    readGraphcoolConfig(new FileSystemResolver())
+async function checkAuth(env: SystemEnvironment, authTrigger: AuthTrigger): Promise<boolean> {
+  if (env.config.get('token')) {
     return true
-  } catch (e) {
-    await authCommand({}, defaultEnvironment(), new GraphcoolAuthServer(authTrigger))
-    return false
   }
+
+  await authCommand({}, env, new GraphcoolAuthServer(authTrigger))
+  return false
 }
 
 function shouldDisplayQuickstart(): boolean {
@@ -260,9 +260,15 @@ function checkOptions(command: Command, inputArgs: any) {
 }
 
 function defaultEnvironment(): SystemEnvironment {
+  const resolver = new FileSystemResolver()
+
+  var config = new Config(resolver)
+  config.load()
+
   return {
-    resolver: new FileSystemResolver(),
-    out: new StdOut()
+    resolver: resolver,
+    out: new StdOut(),
+    config: config
   }
 }
 

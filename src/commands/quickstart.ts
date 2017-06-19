@@ -9,7 +9,7 @@ interface Props {
 }
 
 export default async (props: Props, env: SystemEnvironment): Promise<void> => {
-  const alreadyAuthenticated = await props.checkAuth('quickstart')
+  const alreadyAuthenticated = await props.checkAuth(env, 'quickstart')
 
   if (alreadyAuthenticated) {
     open(`${docsEndpoint}/quickstart`)

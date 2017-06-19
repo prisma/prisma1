@@ -82,20 +82,3 @@ export function isValidSchemaFilePath(schemaFilePath?: string): boolean {
   }
   return schemaFilePath.endsWith(schemaFileSuffix)
 }
-
-/*
- * Graphcool Config (~/.graphcool)
- */
-
-export function readGraphcoolConfig(resolver: Resolver): GraphcoolConfig {
-  const configFileContent = resolver.read(graphcoolConfigFilePath)
-  return JSON.parse(configFileContent)
-}
-
-export function writeGraphcoolConfig(config: GraphcoolConfig, resolver: Resolver): void {
-  resolver.write(graphcoolConfigFilePath, JSON.stringify(config, null, 2))
-}
-
-export function deleteGraphcoolConfig(resolver: Resolver): void {
-  resolver.delete(graphcoolConfigFilePath)
-}

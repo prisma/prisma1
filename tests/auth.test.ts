@@ -1,5 +1,6 @@
 import test from 'ava'
 import TestResolver from '../src/system/TestResolver'
+import { Config } from '../src/utils/config'
 import authCommand from '../src/commands/auth'
 import { authEndpoint, graphcoolConfigFilePath, systemAPIEndpoint } from '../src/utils/constants'
 import TestAuthServer from '../src/api/TestAuthServer'
@@ -86,8 +87,12 @@ test('Succeeding auth with existing token', async t => {
 })
 
 function testEnvironment(storage: any): TestSystemEnvironment {
+  const resolver = new TestResolver(storage)
+  const config = new Config(resolver)
+
   return {
-    resolver: new TestResolver(storage),
+    resolver: resolver,
     out: new TestOut(),
+    config: config
   }
 }

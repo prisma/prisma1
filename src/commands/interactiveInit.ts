@@ -34,7 +34,7 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
   // no need for interactivity when there are no options
   // NOTE: this should probably be refactored to an outer layer
   if (schemaFiles.length === 0 && projectFiles.length === 0) {
-    await props.checkAuth('init')
+    await props.checkAuth(env, 'init')
 
     const schemaUrl = sampleSchemaURL
     const initProps = getPropsForInit(props)
@@ -101,7 +101,7 @@ async function handleSelect(selectedIndex: number, props: Props, env: SystemEnvi
   if (selectedIndex === BLANK_PROJECT) {
     terminal.grabInput(false)
 
-    await props.checkAuth('init')
+    await props.checkAuth(env, 'init')
   }
 
   switch (selectedIndex) {
