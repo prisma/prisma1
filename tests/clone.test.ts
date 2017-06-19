@@ -12,7 +12,7 @@ import {
   mockedClonedProjectResponse,
   mockProjectFile1,
   clonedMockProjectFile1
-} from './mock_data/mockData'
+} from './fixtures/mock_data'
 import 'isomorphic-fetch'
 import { readProjectIdFromProjectFile,
   readVersionFromProjectFile

@@ -9,8 +9,8 @@ import {
 import {
   mockedCreateProjectResponse, mockProjectFile1, mockedCreateProjectResponseWithAlias,
   mockProjectFileWithAlias1,
-} from './mock_data/mockData'
-import { simpleTwitterSchema } from './mock_data/schemas'
+} from './fixtures/mock_data'
+import { simpleTwitterSchema } from './fixtures/schemas'
 import 'isomorphic-fetch'
 import { readProjectIdFromProjectFile, readVersionFromProjectFile } from '../src/utils/file'
 import { TestSystemEnvironment } from '../src/types'

@@ -4,7 +4,7 @@ import { Config } from '../src/utils/config'
 import TestOut from '../src/system/TestOut'
 import { graphcoolProjectFileName } from '../src/utils/constants'
 import { TestSystemEnvironment } from '../src/types'
-import { mockProjectFile1, mockProjectFileWithUppercaseAlias1 } from './mock_data/mockData'
+import { mockProjectFile1, mockProjectFileWithUppercaseAlias1 } from './fixtures/mock_data'
 import { readProjectIdFromProjectFile } from '../src/utils/file'
 
 /*

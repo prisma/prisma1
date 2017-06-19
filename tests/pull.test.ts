@@ -7,7 +7,7 @@ import {
   mockedPullProjectResponse1, mockedPullProjectFile1, mockedPullProjectFile2, mockedPullProjectResponse2,
   mockedPullProjectFileWithAlias1, mockedPullProjectResponseWithAlias1,
   mockedPullProjectResponseWithAlias2, mockedPullProjectFileWithAlias2,
-} from './mock_data/mockData'
+} from './fixtures/mock_data'
 import { TestSystemEnvironment } from '../src/types'
 import TestOut from '../src/system/TestOut'
 import 'isomorphic-fetch'

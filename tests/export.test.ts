@@ -5,8 +5,8 @@ import exportCommand from '../src/commands/export'
 import { systemAPIEndpoint, graphcoolProjectFileName, graphcoolConfigFilePath } from '../src/utils/constants'
 import { TestSystemEnvironment } from '../src/types'
 import TestOut from '../src/system/TestOut'
-import { mockedExportResponse } from './mock_data/mockData'
-import { mockedPullProjectFile1 } from './mock_data/mockData'
+import { mockedExportResponse } from './fixtures/mock_data'
+import { mockedPullProjectFile1 } from './fixtures/mock_data'
 import 'isomorphic-fetch'
 const fetchMock = require('fetch-mock')
 const debug = require('debug')('graphcool')
