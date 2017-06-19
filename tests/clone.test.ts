@@ -1,6 +1,5 @@
 import test from 'ava'
-import TestResolver from '../src/system/TestResolver'
-import { Config } from '../src/utils/config'
+import { testEnvironment } from './helpers/test_environment'
 import initCommand from '../src/commands/init'
 import {
   systemAPIEndpoint,
@@ -17,7 +16,6 @@ import 'isomorphic-fetch'
 import { readProjectIdFromProjectFile,
   readVersionFromProjectFile
 } from '../src/utils/file'
-import { TestSystemEnvironment } from '../src/types'
 import TestOut from '../src/system/TestOut'
 
 const fetchMock = require('fetch-mock')
@@ -183,7 +181,6 @@ test('Failing because no project ID provided (no project file in current directo
 
 })
 
-
 async function init(props, env) {
   try {
     await initCommand(props, env)
@@ -191,16 +188,5 @@ async function init(props, env) {
   catch (e) {
     env.out.onError(e)
     throw e
-  }
-}
-
-function testEnvironment(storage: any): TestSystemEnvironment {
-  const resolver = new TestResolver(storage)
-  const config = new Config(resolver)
-
-  return {
-    resolver: resolver,
-    out: new TestOut(),
-    config: config
   }
 }

@@ -1,6 +1,5 @@
 import test from 'ava'
-import TestResolver from '../src/system/TestResolver'
-import { Config } from '../src/utils/config'
+import { testEnvironment } from './helpers/test_environment'
 import 'isomorphic-fetch'
 import pushCommand from '../src/commands/push'
 import statusCommand from '../src/commands/status'
@@ -9,7 +8,6 @@ import {
   mockedPushSchemaResponse, mockProjectFile2, mockProjectFile3,
   mockedPullProjectResponse1, mockedPushSchemaResponseError, mockModifiedProjectFile1, mockedPushSchema1ResponseError
 } from './fixtures/mock_data'
-import { TestSystemEnvironment } from '../src/types'
 import TestOut from '../src/system/TestOut'
 
 const fetchMock = require('fetch-mock')
@@ -165,17 +163,6 @@ test('Status with potential data loss', async t => {
 
   t.is(env.resolver.read(projectFile), mockProjectFile2)
 })
-
-function testEnvironment(storage: any): TestSystemEnvironment {
-  const resolver = new TestResolver(storage)
-  const config = new Config(resolver)
-
-  return {
-    resolver: resolver,
-    out: new TestOut(),
-    config: config
-  }
-}
 
 async function push(props, env) {
   try {

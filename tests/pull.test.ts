@@ -1,6 +1,5 @@
 import test from 'ava'
-import TestResolver from '../src/system/TestResolver'
-import { Config } from '../src/utils/config'
+import { testEnvironment } from './helpers/test_environment'
 import pullCommand from '../src/commands/pull'
 import { systemAPIEndpoint, graphcoolProjectFileName, graphcoolConfigFilePath } from '../src/utils/constants'
 import {
@@ -8,7 +7,6 @@ import {
   mockedPullProjectFileWithAlias1, mockedPullProjectResponseWithAlias1,
   mockedPullProjectResponseWithAlias2, mockedPullProjectFileWithAlias2,
 } from './fixtures/mock_data'
-import { TestSystemEnvironment } from '../src/types'
 import TestOut from '../src/system/TestOut'
 import 'isomorphic-fetch'
 
@@ -236,16 +234,5 @@ async function pull(props, env) {
   catch (e) {
     env.out.onError(e)
     throw e
-  }
-}
-
-function testEnvironment(storage: any): TestSystemEnvironment {
-  const resolver = new TestResolver(storage)
-  const config = new Config(resolver)
-
-  return {
-    resolver: resolver,
-    out: new TestOut(),
-    config: config
   }
 }
