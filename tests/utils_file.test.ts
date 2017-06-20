@@ -1,10 +1,10 @@
 import test from 'ava'
-import TestResolver from '../src/system/TestResolver'
+import TestResolver from './helpers/test_resolver'
 import { Config } from '../src/utils/config'
-import TestOut from '../src/system/TestOut'
+import TestOut from './helpers/test_out'
 import { graphcoolProjectFileName } from '../src/utils/constants'
-import { TestSystemEnvironment } from '../src/types'
-import { mockProjectFile1, mockProjectFileWithUppercaseAlias1 } from './mock_data/mockData'
+import { testEnvironment } from './helpers/test_environment'
+import { mockProjectFile1, mockProjectFileWithUppercaseAlias1 } from './fixtures/mock_data'
 import { readProjectIdFromProjectFile } from '../src/utils/file'
 
 /*
@@ -44,14 +44,3 @@ test('readProjectIdFromProjectFile with a file missing a project id', async t =>
 
   t.is(project_id, undefined)
 })
-
-function testEnvironment(storage: any): TestSystemEnvironment {
-  const resolver = new TestResolver(storage)
-  const config = new Config(resolver)
-
-  return {
-    resolver: resolver,
-    out: new TestOut(),
-    config: config
-  }
-}

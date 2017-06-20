@@ -1,12 +1,10 @@
 import test from 'ava'
-import TestResolver from '../src/system/TestResolver'
-import { Config } from '../src/utils/config'
+import { testEnvironment } from './helpers/test_environment'
 import exportCommand from '../src/commands/export'
 import { systemAPIEndpoint, graphcoolProjectFileName, graphcoolConfigFilePath } from '../src/utils/constants'
-import { TestSystemEnvironment } from '../src/types'
-import TestOut from '../src/system/TestOut'
-import { mockedExportResponse } from './mock_data/mockData'
-import { mockedPullProjectFile1 } from './mock_data/mockData'
+import TestOut from './helpers/test_out'
+import { mockedExportResponse } from './fixtures/mock_data'
+import { mockedPullProjectFile1 } from './fixtures/mock_data'
 import 'isomorphic-fetch'
 const fetchMock = require('fetch-mock')
 const debug = require('debug')('graphcool')
@@ -63,14 +61,3 @@ test('Export with multiple project files', async t => {
     exportCommand(props, env)
   )
 })
-
-function testEnvironment(storage: any): TestSystemEnvironment {
-  const resolver = new TestResolver(storage)
-  const config = new Config(resolver)
-
-  return {
-    resolver: resolver,
-    out: new TestOut(),
-    config: config
-  }
-}

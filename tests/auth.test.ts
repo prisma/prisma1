@@ -1,12 +1,10 @@
 import test from 'ava'
-import TestResolver from '../src/system/TestResolver'
-import { Config } from '../src/utils/config'
+import { testEnvironment } from './helpers/test_environment'
 import authCommand from '../src/commands/auth'
 import { authEndpoint, graphcoolConfigFilePath, systemAPIEndpoint } from '../src/utils/constants'
-import TestAuthServer from '../src/api/TestAuthServer'
-import { testToken } from './mock_data/mockData'
-import { TestSystemEnvironment } from '../src/types'
-import TestOut from '../src/system/TestOut'
+import TestAuthServer from './helpers/test_auth_server'
+import { testToken } from './fixtures/mock_data'
+import TestOut from './helpers/test_out'
 import 'isomorphic-fetch'
 const fetchMock = require('fetch-mock')
 const debug = require('debug')('graphcool')
@@ -85,14 +83,3 @@ test('Succeeding auth with existing token', async t => {
   const {token} = JSON.parse(env.resolver.read(graphcoolConfigFilePath))
   t.is(token, testToken)
 })
-
-function testEnvironment(storage: any): TestSystemEnvironment {
-  const resolver = new TestResolver(storage)
-  const config = new Config(resolver)
-
-  return {
-    resolver: resolver,
-    out: new TestOut(),
-    config: config
-  }
-}

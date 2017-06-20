@@ -1,6 +1,5 @@
 import test from 'ava'
-import TestResolver from '../src/system/TestResolver'
-import { Config } from '../src/utils/config'
+import { testEnvironment } from './helpers/test_environment'
 import initCommand from '../src/commands/init'
 import {
   systemAPIEndpoint,
@@ -9,12 +8,11 @@ import {
 import {
   mockedCreateProjectResponse, mockProjectFile1, mockedCreateProjectResponseWithAlias,
   mockProjectFileWithAlias1,
-} from './mock_data/mockData'
-import { simpleTwitterSchema } from './mock_data/schemas'
+} from './fixtures/mock_data'
+import { simpleTwitterSchema } from './fixtures/schemas'
 import 'isomorphic-fetch'
 import { readProjectIdFromProjectFile, readVersionFromProjectFile } from '../src/utils/file'
-import { TestSystemEnvironment } from '../src/types'
-import TestOut from '../src/system/TestOut'
+import TestOut from './helpers/test_out'
 
 const fetchMock = require('fetch-mock')
 const debug = require('debug')('graphcool')
@@ -170,14 +168,3 @@ test('Succeeding project creation with alias', async t => {
   t.is(readProjectIdFromProjectFile(env.resolver, graphcoolProjectFileName), alias)
   t.is(readVersionFromProjectFile(env.resolver, graphcoolProjectFileName), '1')
 })
-
-function testEnvironment(storage: any): TestSystemEnvironment {
-  const resolver = new TestResolver(storage)
-  const config = new Config(resolver)
-
-  return {
-    resolver: resolver,
-    out: new TestOut(),
-    config: config
-  }
-}

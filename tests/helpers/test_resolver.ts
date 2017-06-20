@@ -1,5 +1,5 @@
-import {Resolver} from '../types'
-import {projectFileSuffix, schemaFileSuffix} from '../utils/constants'
+import {Resolver} from '../../src/types'
+import {projectFileSuffix, schemaFileSuffix} from '../../src/utils/constants'
 
 export default class TestResolver implements Resolver {
 
