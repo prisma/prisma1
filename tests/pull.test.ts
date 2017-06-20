@@ -7,7 +7,7 @@ import {
   mockedPullProjectFileWithAlias1, mockedPullProjectResponseWithAlias1,
   mockedPullProjectResponseWithAlias2, mockedPullProjectFileWithAlias2,
 } from './fixtures/mock_data'
-import TestOut from '../src/system/TestOut'
+import TestOut from './helpers/test_out'
 import 'isomorphic-fetch'
 
 const fetchMock = require('fetch-mock')

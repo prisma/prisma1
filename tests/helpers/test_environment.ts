@@ -1,7 +1,13 @@
-import TestResolver from '../../src/system/TestResolver'
-import { TestSystemEnvironment } from '../../src/types'
-import TestOut from '../../src/system/TestOut'
+import TestResolver from './test_resolver'
+import {Resolver} from '../../src/types'
+import TestOut from './test_out'
 import { Config } from '../../src/utils/config'
+
+export interface TestSystemEnvironment {
+  out: TestOut
+  resolver: Resolver
+  config: Config
+}
 
 export function testEnvironment(storage: any): TestSystemEnvironment {
   const resolver = new TestResolver(storage)

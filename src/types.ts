@@ -1,5 +1,4 @@
 import {Config} from './utils/config'
-import TestOut from './system/TestOut'
 export type Command =
   'auth'
   | 'push'
@@ -85,12 +84,6 @@ export interface Out {
 
 export interface SystemEnvironment {
   out: Out
-  resolver: Resolver
-  config: Config
-}
-
-export interface TestSystemEnvironment {
-  out: TestOut
   resolver: Resolver
   config: Config
 }
