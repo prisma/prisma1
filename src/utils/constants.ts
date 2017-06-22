@@ -428,8 +428,8 @@ Could not read the project's ID from project file.
 
 export const unknownOptionsWarning = (command: string, unknownOptions: string[]) => unknownOptions.length > 1 ? `\
 ${chalk.bold('Error:')} The following options are not recognized: ${chalk.red(`${unknownOptions.map(a => a)}`)}
-Use ${chalk.cyan(`\`graphcool ${command} help\``)} to see a list of all possible options.
+Use ${chalk.cyan(`\`graphcool ${command} --help\``)} to see a list of all possible options.
 ` : `\
 ${chalk.bold('Error:')} The following option is not recognized: ${chalk.red(`${unknownOptions[0]}`)}
-Use ${chalk.cyan(`\`graphcool ${command} help\``)} to see a list of all possible options.
+Use ${chalk.cyan(`\`graphcool ${command} --help\``)} to see a list of all possible options.
 `
