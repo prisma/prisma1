@@ -3,7 +3,6 @@ import figures = require('figures')
 import generateName = require('sillyname')
 import cloneCommand from './clone'
 import { createProject, parseErrors, generateErrorOutput } from '../api/api'
-import * as fs from 'fs'
 import * as path from 'path'
 import { projectInfoToContents } from '../utils/utils'
 import {writeProjectFile, isValidSchemaFilePath, writeBlankProjectFileWithInfo} from '../utils/file'
@@ -65,7 +64,7 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
       if (!isValidSchemaFilePath(schemaUrl)) {
         throw new Error(invalidSchemaFileMessage(schemaUrl!))
       }
-      const schema = await getSchema(schemaUrl, resolver)
+      const schema = await getSchema(schemaUrl!, resolver)
 
       // create project
       const projectInfo = await createProjectAndGetProjectInfo(name, schema, resolver, props.alias, props.region)
@@ -108,31 +107,18 @@ async function createProjectAndGetProjectInfo(name: string, schema: SchemaInfo, 
   return projectInfo
 }
 
-async function getSchema(schemaUrl: string | undefined, resolver: Resolver): Promise<SchemaInfo> {
-  if (schemaUrl) {
-    if (schemaUrl.startsWith('http')) {
-      const response = await fetch(schemaUrl)
-      const schema = await response.text()
-      return {
-        schema,
-        source: schemaUrl,
-      }
-    } else {
-      return {
-        schema: resolver.read(schemaUrl),
-        source: schemaUrl,
-      }
+async function getSchema(schemaUrl: string, resolver: Resolver): Promise<SchemaInfo> {
+  if (schemaUrl.startsWith('http')) {
+    const response = await fetch(schemaUrl)
+    const schema = await response.text()
+    return {
+      schema,
+      source: schemaUrl,
     }
   } else {
-    const schemaFiles = resolver.readDirectory('.').filter(f => f.endsWith(projectFileSuffix))
-    if (schemaFiles.length === 0) {
-      throw new Error(`No ${projectFileSuffix} file found or specified`)
-    }
-
-    const file = schemaFiles.find(f => f === graphcoolProjectFileName) || schemaFiles[0]
     return {
-      schema: fs.readFileSync(path.resolve(file)).toString(),
-      source: schemaFiles[0],
+      schema: resolver.read(schemaUrl),
+      source: schemaUrl,
     }
   }
 }
