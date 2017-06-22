@@ -91,7 +91,7 @@ async function main() {
       const outputPath = argv['output'] || argv['o']
 
       if (!schemaUrl && !copyProjectId) {
-        const props = {name, alias, outputPath, checkAuth}
+        const props = {name, alias, outputPath, checkAuth, region}
         await interactiveInitCommand(props, env)
       } else {
         await checkAuth(env, 'init')
