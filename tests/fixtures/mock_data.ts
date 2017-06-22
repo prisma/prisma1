@@ -238,7 +238,8 @@ export const mockedPullProjectResponse1 = `\
         "alias": null,
         "version": 1,
         "id": "cj26898xqm9tz0126n34d64ey",
-        "schema": "${mockedPullResponseSchema}"
+        "schema": "${mockedPullResponseSchema}",
+        "region": "EU_WEST_1"
       }
     }
   }
@@ -253,7 +254,8 @@ export const mockedPullProjectResponseWithAlias1 = `\
         "alias": "example",
         "version": 1,
         "id": "cj26898xqm9tz0126n34d64ey",
-        "schema": "${mockedPullResponseSchema}"
+        "schema": "${mockedPullResponseSchema}",
+        "region": "EU_WEST_1"
       }
     }
   }
@@ -268,7 +270,8 @@ export const mockedPullProjectResponse2 = `\
         "alias": null,
         "version": 2,
         "id": "cj26898xqm9tz0126n34d64ey",
-        "schema": "${mockedPullResponseSchema}"
+        "schema": "${mockedPullResponseSchema}",
+        "region": "EU_WEST_1"
       }
     }
   }
@@ -283,7 +286,8 @@ export const mockedPullProjectResponseWithAlias2 = `\
         "alias": "example",
         "version": 2,
         "id": "cj26898xqm9tz0126n34d64ey",
-        "schema": "${mockedPullResponseSchema}"
+        "schema": "${mockedPullResponseSchema}",
+        "region": "EU_WEST_1"
       }
     }
   }
@@ -325,7 +329,8 @@ export const mockedCreateProjectResponse = `\
         "schema": "type Tweet {\\n  id: ID!\\n  createdAt: DateTime!\\n  updatedAt: DateTime!\\n  text: String!\\n}\\n",
         "version": 1,
         "alias": null,
-        "name": "Example"
+        "name": "Example",
+        "region": "EU_WEST_1"
       }
     }
   }
@@ -340,7 +345,8 @@ export const mockedClonedProjectResponse = `\
         "schema": "type Tweet {\\n  id: ID!\\n  createdAt: DateTime!\\n  updatedAt: DateTime!\\n  text: String!\\n}\\n",
         "version": 1,
         "alias": null,
-        "name": "Clone of Example"
+        "name": "Clone of Example",
+        "region": "EU_WEST_1"
       }
     }
   }
@@ -355,7 +361,8 @@ export const mockedCreateProjectResponseWithAlias = `\
         "schema": "type Tweet {\\n  id: ID!\\n  createdAt: DateTime!\\n  updatedAt: DateTime!\\n  text: String!\\n}\\n",
         "alias": "example",
         "version": 1,
-        "name": "Example"      
+        "name": "Example",
+        "region": "EU_WEST_1"
       }
     }
   }

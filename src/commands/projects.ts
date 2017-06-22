@@ -24,14 +24,14 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
 
     const data = projects.map(project => {
       const isCurrentProject = currentProjectId !== null && (currentProjectId === project.projectId || currentProjectId === project.alias)
-      return [isCurrentProject ? '*' : ' ', `${project.alias || project.projectId}   `, project.name]
+      return [isCurrentProject ? '*' : ' ', `${project.alias || project.projectId}   `, project.name, project.region]
     })
 
     const output = table(data, {
       border: getBorderCharacters('void'),
       columnDefault: {
         paddingLeft: '0',
-        paddingRight: '1',
+        paddingRight: '2',
       },
       drawHorizontalLine: () => false,
     }).trimRight()
