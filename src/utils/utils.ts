@@ -22,3 +22,7 @@ export function makePartsEnclodesByCharacterBold(str: string, character: string)
   }
   return components.join(chalk.bold(`\``))
 }
+
+export function regionEnumToOption(regionEnum: string): string {
+  return regionEnum.toLowerCase().replace(/_/g, '-')
+}
