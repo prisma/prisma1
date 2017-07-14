@@ -14,7 +14,9 @@ import {
   couldNotCreateProjectMessage,
   projectAlreadyExistsMessage,
   projectFileSuffix,
-  sampleSchemaURL, invalidSchemaFileMessage, invalidProjectNameMessage
+  sampleSchemaURL,
+  invalidSchemaFileMessage,
+  invalidProjectNameMessage,
 } from '../utils/constants'
 import { isValidProjectName } from '../utils/validation'
 const debug = require('debug')('graphcool')
