@@ -14,8 +14,9 @@ import {
   couldNotCreateProjectMessage,
   projectAlreadyExistsMessage,
   projectFileSuffix,
-  sampleSchemaURL, invalidSchemaFileMessage
+  sampleSchemaURL, invalidSchemaFileMessage, invalidProjectNameMessage
 } from '../utils/constants'
+import { isValidProjectName } from '../utils/validation'
 const debug = require('debug')('graphcool')
 
 interface Props {
@@ -53,6 +54,9 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
     const projectFiles = resolver.projectFiles('.')
     if (projectFiles.length > 0 && !props.outputPath) {
       throw new Error(projectAlreadyExistsMessage(projectFiles))
+    }
+    if (props.name && !isValidProjectName(props.name)) {
+      throw new Error(invalidProjectNameMessage(props.name))
     }
 
     const name = props.name || generateName()

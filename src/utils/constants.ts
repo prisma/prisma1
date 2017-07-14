@@ -146,6 +146,9 @@ export const projectAlreadyExistsMessage = (projectFiles: string[]) => `\
 Found ${projectFiles.length} project ${projectFiles.length === 1 ? 'file' : 'files'} in current directory, looks like you've already setup your backend. You can still use
 `
 
+export const invalidProjectNameMessage = (projectName: string) => `\
+'${projectName}' is not a valid project name. It must begin with an uppercase letter.`
+
 export const howDoYouWantToGetStarted = () => `\
 
   You are about to create a new Graphcool project.

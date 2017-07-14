@@ -24,6 +24,7 @@ const debug = require('debug')('graphcool')
  - Succeeding project creation with local file and different output path
  - Succeeding project creation because with invalid output path, falls back to default
  - Succeeding project creation with alias
+ - Failing project creation with an invalid project name
  */
 
 test.afterEach(() => {
@@ -167,4 +168,23 @@ test('Succeeding project creation with alias', async t => {
   t.is(env.resolver.read(graphcoolProjectFileName), expectedProjectFileContent)
   t.is(readProjectIdFromProjectFile(env.resolver, graphcoolProjectFileName), alias)
   t.is(readVersionFromProjectFile(env.resolver, graphcoolProjectFileName), '1')
+})
+
+test.only('Failing project creation with an invalid project name', async t => {
+  const name = 'myProject'
+
+  // create dummy project data
+  const props = {name}
+
+  // prepare environment
+  const env = testEnvironment({})
+  env.resolver.write(graphcoolConfigFilePath, '{"token": "abcdefgh"}')
+
+  env.out.prefix((t as any)._test.title, `$ graphcool init -n ${name}`)
+
+  const error = await t.throws(
+    initCommand(props, env)
+  )
+
+  t.is(error.message, `\'myProject\' is not a valid project name. It must begin with an uppercase letter.`)
 })
