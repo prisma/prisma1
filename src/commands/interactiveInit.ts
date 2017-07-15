@@ -25,11 +25,18 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
   const schemaFiles = resolver.schemaFiles('.')
   const projectFiles = resolver.projectFiles('.')
 
-  const options = [
+  let options = [
     [`${chalk.bold('New blank project')}`, `Creates a new Graphcool project from scratch.`, ''],
     ...schemaFiles.map(f => [`${chalk.bold('From local schema ./' + f)}`, 'Creates a new Graphcool project based on the local schema.', '']),
-    ...projectFiles.map(f => [`${chalk.bold('Copy existing project ./' + f)}`, 'Creates a clone of an existing Graphcool project.', '']),
   ]
+
+  // only recommend copy when no region has been specified, because copy across regions is not yet possible
+  if (!props.region) {
+    options = [
+      ...options,
+      ...projectFiles.map(f => [`${chalk.bold('Copy existing project ./' + f)}`, 'Creates a clone of an existing Graphcool project.', '']),
+    ]
+  }
 
   // no need for interactivity when there are no options
   // NOTE: this should probably be refactored to an outer layer

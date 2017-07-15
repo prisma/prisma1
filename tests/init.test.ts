@@ -13,6 +13,7 @@ import { simpleTwitterSchema } from './fixtures/schemas'
 import 'isomorphic-fetch'
 import { readProjectIdFromProjectFile, readVersionFromProjectFile } from '../src/utils/file'
 import TestOut from './helpers/test_out'
+import { Region } from "../src/types";
 
 const fetchMock = require('fetch-mock')
 const debug = require('debug')('graphcool')
@@ -22,6 +23,7 @@ const debug = require('debug')('graphcool')
  - Succeeding project creation with local schema file
  - Succeeding project creation with remote schema file
  - Succeeding project creation with local file and different output path
+ - Succeeding project creation with local schema file and custom region
  - Succeeding project creation because with invalid output path, falls back to default
  - Succeeding project creation with alias
  - Failing project creation with an invalid project name
@@ -48,6 +50,34 @@ test('Succeeding project creation with local schema file', async t => {
   env.resolver.write(graphcoolConfigFilePath, '{"token": "abcdefgh"}')
 
   env.out.prefix((t as any)._test.title, `$ graphcool init -s ${schemaUrl} -n ${name}`)
+
+  await t.notThrows(
+    initCommand(props, env)
+  )
+
+  const expectedProjectFileContent = mockProjectFile1
+  t.is(env.resolver.read(graphcoolProjectFileName), expectedProjectFileContent)
+  t.is(readProjectIdFromProjectFile(env.resolver, graphcoolProjectFileName), 'abcdefghijklmn')
+  t.is(readVersionFromProjectFile(env.resolver, graphcoolProjectFileName), '1')
+})
+
+test.only('Succeeding project creation with local schema file and lowercase region', async t => {
+  const name = 'MyProject'
+  const schemaUrl = './myproject.graphql'
+  const region: Region = 'eu_west_1'
+
+  // configure HTTP mocks
+  fetchMock.post(systemAPIEndpoint, JSON.parse(mockedCreateProjectResponse))
+
+  // create dummy project data
+  const props = {name, schemaUrl, region}
+
+  // prepare environment
+  const env = testEnvironment({})
+  env.resolver.write(schemaUrl, simpleTwitterSchema)
+  env.resolver.write(graphcoolConfigFilePath, '{"token": "abcdefgh"}')
+
+  env.out.prefix((t as any)._test.title, `$ graphcool init -s ${schemaUrl} -n ${name} -r ${region}`)
 
   await t.notThrows(
     initCommand(props, env)

@@ -147,6 +147,10 @@ Found ${projectFiles.length} project ${projectFiles.length === 1 ? 'file' : 'fil
 You can still use graphcool init --output file.graphcool to specify a custom output file.
 `
 
+export const cantCopyAcrossRegions = `\
+A project can't be copied across regions. Please specify the --copy parameter without --region.
+`
+
 export const invalidProjectNameMessage = (projectName: string) => `\
 '${projectName}' is not a valid project name. It must begin with an uppercase letter.`
 

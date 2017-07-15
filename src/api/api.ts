@@ -78,7 +78,7 @@ mutation addProject($schema: String!, $name: String!, $alias: String, $region: R
     variables = {...variables, alias}
   }
   if (region) {
-    variables = {...variables, region}
+    variables = {...variables, region: region.toUpperCase()}
   }
 
   const json = await sendGraphQLRequest(mutation, resolver, variables)

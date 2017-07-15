@@ -16,7 +16,7 @@ import {
   projectFileSuffix,
   sampleSchemaURL,
   invalidSchemaFileMessage,
-  invalidProjectNameMessage,
+  invalidProjectNameMessage, cantCopyAcrossRegions,
 } from '../utils/constants'
 import { isValidProjectName } from '../utils/validation'
 const debug = require('debug')('graphcool')
@@ -37,6 +37,9 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
   const {resolver, out} = env
 
   if (props.copyProjectId) {
+    if (props.region) {
+      throw new Error(cantCopyAcrossRegions)
+    }
     // clone
     const includes = props.copyOptions || 'all'
     const includeMutationCallbacks = includes === 'all' || includes === 'mutation-callbacks'

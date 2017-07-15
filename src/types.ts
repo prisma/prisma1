@@ -16,7 +16,7 @@ export type Command =
   | 'quickstart'
   | 'delete'
 
-export type Region = 'eu-west-1'
+export type Region = 'eu_west_1' | 'ap_northeast_1' | 'us_west_2'
 
 export interface GraphcoolConfig {
   token?: string
