@@ -1,24 +1,21 @@
 import { Region, Resolver, SchemaInfo, SystemEnvironment, ProjectInfo } from '../types'
 import figures = require('figures')
 import generateName = require('sillyname')
+import 'isomorphic-fetch'
 import cloneCommand from './clone'
 import { createProject, parseErrors, generateErrorOutput } from '../api/api'
-import * as path from 'path'
 import { projectInfoToContents } from '../utils/utils'
 import {writeProjectFile, isValidSchemaFilePath, writeBlankProjectFileWithInfo} from '../utils/file'
-import 'isomorphic-fetch'
+import { isValidProjectName } from '../utils/validation'
 import {
-  graphcoolProjectFileName,
   creatingProjectMessage,
   createdProjectMessage,
   couldNotCreateProjectMessage,
   projectAlreadyExistsMessage,
-  projectFileSuffix,
   sampleSchemaURL,
   invalidSchemaFileMessage,
   invalidProjectNameMessage, cantCopyAcrossRegions,
 } from '../utils/constants'
-import { isValidProjectName } from '../utils/validation'
 const debug = require('debug')('graphcool')
 
 interface Props {

@@ -3,7 +3,7 @@ import * as cuid from 'cuid'
 import * as bluebird from 'bluebird'
 import {sum} from 'lodash'
 
-async function getPing(url: string) {
+async function runPing(url: string): Promise<number> {
   const pingUrl = async () => {
     const start = Date.now()
 
@@ -24,7 +24,7 @@ const regions: Region[] = [
 
 export async function getFastestRegion(): Promise<Region> {
   const pingResults = await bluebird.map(regions, async (region: string) => {
-    const ping = await getPing(getPingUrl(region))
+    const ping = await runPing(getPingUrl(region))
     return {
       region, ping,
     }

@@ -13,7 +13,7 @@ import { simpleTwitterSchema } from './fixtures/schemas'
 import 'isomorphic-fetch'
 import { readProjectIdFromProjectFile, readVersionFromProjectFile } from '../src/utils/file'
 import TestOut from './helpers/test_out'
-import { Region } from "../src/types";
+import { Region } from "../src/types"
 
 const fetchMock = require('fetch-mock')
 const debug = require('debug')('graphcool')
