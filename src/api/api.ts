@@ -12,6 +12,7 @@ import {
   contactUsInSlackMessage
 } from '../utils/constants'
 import 'isomorphic-fetch'
+import { getFastestRegion } from '../utils/ping'
 const debug = require('debug')('graphcool')
 
 async function sendGraphQLRequest(queryString: string,
@@ -79,6 +80,9 @@ mutation addProject($schema: String!, $name: String!, $alias: String, $region: R
   }
   if (region) {
     variables = {...variables, region: region.toUpperCase()}
+  } else {
+    const fastestRegion = await getFastestRegion()
+    variables = {...variables, region: fastestRegion.toUpperCase()}
   }
 
   const json = await sendGraphQLRequest(mutation, resolver, variables)
