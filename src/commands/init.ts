@@ -1,20 +1,20 @@
 import { Region, Resolver, SchemaInfo, SystemEnvironment, ProjectInfo } from '../types'
 import figures = require('figures')
 import generateName = require('sillyname')
+import 'isomorphic-fetch'
 import cloneCommand from './clone'
 import { createProject, parseErrors, generateErrorOutput } from '../api/api'
-import * as path from 'path'
 import { projectInfoToContents } from '../utils/utils'
 import {writeProjectFile, isValidSchemaFilePath, writeBlankProjectFileWithInfo} from '../utils/file'
-import 'isomorphic-fetch'
+import { isValidProjectName } from '../utils/validation'
 import {
-  graphcoolProjectFileName,
   creatingProjectMessage,
   createdProjectMessage,
   couldNotCreateProjectMessage,
   projectAlreadyExistsMessage,
-  projectFileSuffix,
-  sampleSchemaURL, invalidSchemaFileMessage
+  sampleSchemaURL,
+  invalidSchemaFileMessage,
+  invalidProjectNameMessage, cantCopyAcrossRegions,
 } from '../utils/constants'
 const debug = require('debug')('graphcool')
 
@@ -34,6 +34,9 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
   const {resolver, out} = env
 
   if (props.copyProjectId) {
+    if (props.region) {
+      throw new Error(cantCopyAcrossRegions)
+    }
     // clone
     const includes = props.copyOptions || 'all'
     const includeMutationCallbacks = includes === 'all' || includes === 'mutation-callbacks'
@@ -53,6 +56,9 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
     const projectFiles = resolver.projectFiles('.')
     if (projectFiles.length > 0 && !props.outputPath) {
       throw new Error(projectAlreadyExistsMessage(projectFiles))
+    }
+    if (props.name && !isValidProjectName(props.name)) {
+      throw new Error(invalidProjectNameMessage(props.name))
     }
 
     const name = props.name || generateName()

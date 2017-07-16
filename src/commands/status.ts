@@ -23,6 +23,7 @@ import {
   noProjectFileMessage,
   destructiveChangesInStatusMessage,
   usePushToUpdateMessage,
+  statusHeaderMessage,
 } from '../utils/constants'
 import {
   parseErrors,
@@ -58,6 +59,8 @@ export default async(props: Props, env: SystemEnvironment): Promise<void> => {
     const localSchema = readDataModelFromProjectFile(resolver, projectFile)
     const schemaWithFrontmatter = `# project: ${projectId}\n# version: ${localVersion}\n\n${localSchema}`
     const migrationResult = await statusMessage(schemaWithFrontmatter, resolver)
+
+    out.write(statusHeaderMessage(projectId, migrationResult.newVersion))
 
     if (parseInt(localVersion) < parseInt(migrationResult.newVersion)) {
       out.write(localSchemaBehindRemoteMessage(migrationResult.newVersion, localVersion))
