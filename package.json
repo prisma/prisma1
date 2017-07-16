@@ -11,7 +11,7 @@
     "dist/"
   ],
   "scripts": {
-    "test": "npm run build && rm -f test.out && ava --serial ./dist/tests/*.js",
+    "test": "npm run build && rm -f test.out && ava --serial ./dist/tests/*.js && node dist/src/index.js",
     "postinstall": "echo Run graphcool init to get started",
     "build": "rm -rf dist && tsc && chmod +x dist/src/index.js",
     "prepublish": "npm run build"
