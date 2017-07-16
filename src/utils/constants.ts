@@ -358,6 +358,12 @@ export const remoteSchemaBehindLocalMessage = (remoteVersion: string, localVersi
 The remote version (${remoteVersion}) is behind the local version (${localVersion}). Please don't make manual changes to the project file's header.
 `
 
+export const statusHeaderMessage = (projectId: string, version: string) => `\
+Project ID: ${projectId}
+Remote Schema Version: ${version}
+
+`
+
 export const everythingUpToDateMessage = `\
 Everything up-to-date.
 `
