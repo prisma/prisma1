@@ -143,7 +143,7 @@ Whoops, something went wrong while creating the project.
 // `
 
 export const projectAlreadyExistsMessage = (projectFiles: string[]) => `\
-Found ${projectFiles.length} project ${projectFiles.length === 1 ? 'file' : 'files'} in current directory, looks like you've already setup your backend.
+Found ${projectFiles.length} project ${projectFiles.length === 1 ? 'file' : 'files'} in the current directory. Looks like you've already setup your backend.
 You can still use graphcool init --output file.graphcool to specify a custom output file.
 `
 
