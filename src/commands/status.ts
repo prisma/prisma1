@@ -22,7 +22,8 @@ import {
   issuesInSchemaMessage,
   noProjectFileMessage,
   destructiveChangesInStatusMessage,
-  usePushToUpdateMessage, statusHeaderMessage,
+  usePushToUpdateMessage,
+  statusHeaderMessage,
 } from '../utils/constants'
 import {
   parseErrors,
