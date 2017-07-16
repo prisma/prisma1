@@ -85,7 +85,8 @@ async function main() {
       const name = argv['name'] || argv['n']
       const alias = argv['alias'] || argv['a']
       const region = argv['region'] || argv['r']
-      const schemaUrl = argv['schema'] || argv['s']
+      // if there are exactly 2 argv's, use the 2nd argument as an alternative for the schemaUrl
+      const schemaUrl = argv['schema'] || argv['s'] || argv.length === 2 && argv._[1]
       const copyProjectId = argv['copy'] || argv['c']
       const copyOptions = argv['copy-options']
       const outputPath = argv['output'] || argv['o']
