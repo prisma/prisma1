@@ -16,7 +16,7 @@ async function runPing(url: string): Promise<number> {
   return sum(pings) / pings.length
 }
 
-const regions: Region[] = [
+export const regions: Region[] = [
   'eu_west_1',
   'ap_northeast_1',
   'us_west_2',
@@ -40,4 +40,6 @@ export async function getFastestRegion(): Promise<Region> {
   return fastestRegion.region
 }
 
-const getPingUrl = (region: string) => `http://dynamodb.${region.replace(/_/g, '-')}.amazonaws.com/ping?x=${cuid()}`
+export const getDynamoUrl = (region: string) => `http://dynamodb.${region.replace(/_/g, '-')}.amazonaws.com`
+
+const getPingUrl = (region: string) => `${getDynamoUrl(region)}/ping?x=${cuid()}`

@@ -9,9 +9,10 @@ import {
   mockedCreateProjectResponse, mockProjectFile1, mockedCreateProjectResponseWithAlias,
   mockProjectFileWithAlias1,
 } from './fixtures/mock_data'
+import { readProjectIdFromProjectFile, readVersionFromProjectFile } from '../src/utils/file'
+import { getDynamoUrl, regions } from '../src/utils/ping'
 import { simpleTwitterSchema } from './fixtures/schemas'
 import 'isomorphic-fetch'
-import { readProjectIdFromProjectFile, readVersionFromProjectFile } from '../src/utils/file'
 import TestOut from './helpers/test_out'
 import { Region } from "../src/types"
 
@@ -28,6 +29,10 @@ const debug = require('debug')('graphcool')
  - Succeeding project creation with alias
  - Failing project creation with an invalid project name
  */
+
+test.beforeEach(() => {
+  fetchMock.mock(`glob:${getDynamoUrl('*')}*`, 404)
+})
 
 test.afterEach(() => {
   new TestOut().write('\n')
@@ -61,7 +66,7 @@ test('Succeeding project creation with local schema file', async t => {
   t.is(readVersionFromProjectFile(env.resolver, graphcoolProjectFileName), '1')
 })
 
-test.only('Succeeding project creation with local schema file and lowercase region', async t => {
+test('Succeeding project creation with local schema file and lowercase region', async t => {
   const name = 'MyProject'
   const schemaUrl = './myproject.graphql'
   const region: Region = 'eu_west_1'
@@ -200,7 +205,7 @@ test('Succeeding project creation with alias', async t => {
   t.is(readVersionFromProjectFile(env.resolver, graphcoolProjectFileName), '1')
 })
 
-test.only('Failing project creation with an invalid project name', async t => {
+test('Failing project creation with an invalid project name', async t => {
   const name = 'myProject'
 
   // create dummy project data
@@ -216,5 +221,5 @@ test.only('Failing project creation with an invalid project name', async t => {
     initCommand(props, env)
   )
 
-  t.is(error.message, `\'myProject\' is not a valid project name. It must begin with an uppercase letter.`)
+  t.is(error.message.trim(), `\'myProject\' is not a valid project name. It must begin with an uppercase letter.`)
 })
