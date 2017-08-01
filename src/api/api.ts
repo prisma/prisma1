@@ -408,14 +408,13 @@ export async function checkStatus(
   instruction: CommandInstruction,
   resolver: Resolver,
 ): Promise<any> {
-  const configContents = resolver.read(graphcoolConfigFilePath)
-  if (!configContents) {
-    return
-  }
-  const {token} = JSON.parse(configContents)
-  console.log('checking status')
-
   try {
+    const configContents = resolver.read(graphcoolConfigFilePath)
+    if (!configContents) {
+      return
+    }
+    const {token} = JSON.parse(configContents)
+
     await fetch(statusEndpoint, {
       method: 'post',
       headers: {
@@ -426,6 +425,5 @@ export async function checkStatus(
     })
   } catch (e) {
     // no op
-    console.error(e)
   }
 }

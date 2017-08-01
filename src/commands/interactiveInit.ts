@@ -5,7 +5,7 @@ import figures = require('figures')
 import * as _ from 'lodash'
 import initCommand from './init'
 import { readProjectIdFromProjectFile } from '../utils/file'
-import { checkAuth } from '../index'
+import { checkAuth } from '../utils/auth'
 const {terminal} = require('terminal-kit')
 const debug = require('debug')('graphcool')
 

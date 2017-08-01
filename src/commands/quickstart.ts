@@ -1,7 +1,7 @@
 import { CheckAuth, SystemEnvironment } from '../types'
 import open = require('open')
 import { docsEndpoint, openedQuickstartMessage } from '../utils/constants'
-import { checkAuth } from '../index'
+import { checkAuth } from '../utils/auth'
 
 const debug = require('debug')('graphcool-auth')
 

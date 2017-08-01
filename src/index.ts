@@ -6,7 +6,6 @@ import consoleCommand, { ConsoleProps } from './commands/console'
 import playgroundCommand, { PlaygroundProps } from './commands/playground'
 import projectsCommand from './commands/projects'
 import pullCommand, { PullProps } from './commands/pull'
-import authCommand, { AuthProps } from './commands/auth'
 import initCommand, { InitProps } from './commands/init'
 import interactiveInitCommand, { InteractiveInitProps } from './commands/interactiveInit'
 import exportCommand, { ExportProps } from './commands/export'
@@ -14,6 +13,9 @@ import endpointsCommand, { EndpointsProps } from './commands/endpoints'
 import statusCommand, { StatusProps } from './commands/status'
 import quickstartCommand from './commands/quickstart'
 import deleteCommand, { DeleteProps } from './commands/delete'
+import authCommand, { AuthProps } from './commands/auth'
+import { getCommand } from './utils/parseCommand'
+import { checkAuth } from './utils/auth'
 import FileSystemResolver from './system/FileSystemResolver'
 import StdOut from './system/StdOut'
 import { GraphcoolAuthServer } from './api/GraphcoolAuthServer'
@@ -30,7 +32,6 @@ const debug = require('debug')('graphcool')
 const {version} = require('../../package.json')
 
 import {Config} from './utils/config'
-import { getCommand } from './utils/parseCommand'
 
 async function main() {
   // initialize sentry
@@ -151,15 +152,6 @@ async function main() {
   }
 
   process.stdout.write('\n')
-}
-
-export async function checkAuth(env: SystemEnvironment, authTrigger: AuthTrigger): Promise<boolean> {
-  if (env.config.get('token')) {
-    return true
-  }
-
-  await authCommand({}, env, new GraphcoolAuthServer(authTrigger))
-  return false
 }
 
 function shouldDisplayQuickstart(): boolean {
