@@ -4,12 +4,14 @@ import {
   MigrationMessage,
   MigrationErrorMessage,
   MigrationResult,
-  APIError
+  APIError,
+  CommandInstruction,
 } from '../types'
 import {
   graphcoolConfigFilePath,
   systemAPIEndpoint,
-  contactUsInSlackMessage
+  contactUsInSlackMessage,
+  statusEndpoint,
 } from '../utils/constants'
 import 'isomorphic-fetch'
 import { getFastestRegion } from '../utils/ping'
@@ -400,4 +402,30 @@ export function generateErrorOutput(apiErrors: APIError[]): string {
   const lines = apiErrors.map(error => `${error.message} (Request ID: ${error.requestId})`)
   const output = `\n${lines.join('\n')}\n\n${contactUsInSlackMessage}`
   return output
+}
+
+export async function checkStatus(
+  instruction: CommandInstruction,
+  resolver: Resolver,
+): Promise<any> {
+  const configContents = resolver.read(graphcoolConfigFilePath)
+  if (!configContents) {
+    return
+  }
+  const {token} = JSON.parse(configContents)
+  console.log('checking status')
+
+  try {
+    await fetch(statusEndpoint, {
+      method: 'post',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(instruction),
+    })
+  } catch (e) {
+    // no op
+    console.error(e)
+  }
 }

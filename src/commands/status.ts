@@ -35,11 +35,11 @@ import figures = require('figures')
 import * as chalk from 'chalk'
 import {makePartsEnclodesByCharacterBold} from '../utils/utils'
 
-interface Props {
+export interface StatusProps {
   projectFile?: string
 }
 
-export default async(props: Props, env: SystemEnvironment): Promise<void> => {
+export default async(props: StatusProps, env: SystemEnvironment): Promise<void> => {
   const {resolver, out} = env
 
   try {
@@ -114,7 +114,7 @@ export default async(props: Props, env: SystemEnvironment): Promise<void> => {
 
 }
 
-function getProjectFilePath(props: Props, resolver: Resolver): string {
+function getProjectFilePath(props: StatusProps, resolver: Resolver): string {
   // check if provided file is valid (ends with correct suffix)
   if (props.projectFile && isValidProjectFilePath(props.projectFile)) {
     return props.projectFile

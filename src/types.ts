@@ -1,9 +1,24 @@
 import {Config} from './utils/config'
+import { AuthProps } from './commands/auth'
+import { InteractiveInitProps } from './commands/interactiveInit'
+import { PushProps } from './commands/push'
+import { PlaygroundProps } from './commands/playground'
+import { InitProps } from './commands/init'
+import { ExportProps } from './commands/export'
+import { DeleteProps } from './commands/delete'
+import { ConsoleProps } from './commands/console'
+import { CloneProps } from './commands/clone'
+import { EndpointsProps } from './commands/endpoints'
+import { ProjectsProps } from './commands/projects'
+import { PullProps } from './commands/pull'
+import { StatusProps } from './commands/status'
+import { QuickstartProps } from './commands/quickstart'
 export type Command =
   'auth'
   | 'push'
   | 'status'
   | 'init'
+  | 'interactiveInit'
   | 'export'
   | 'pull'
   | 'endpoints'
@@ -14,7 +29,34 @@ export type Command =
   | 'help'
   | 'create' // TODO remove at version 1.1
   | 'quickstart'
+  | 'usage'
   | 'delete'
+
+export type CommandProps =
+  AuthProps
+  | CloneProps
+  | ConsoleProps
+  | DeleteProps
+  | EndpointsProps
+  | ExportProps
+  | InitProps
+  | InteractiveInitProps
+  | PlaygroundProps
+  | ProjectsProps
+  | PullProps
+  | PushProps
+  | QuickstartProps
+  | StatusProps
+  | UsageProps
+
+interface UsageProps {
+  command: Command
+}
+
+export interface CommandInstruction {
+  props?: CommandProps
+  command?: Command
+}
 
 export type Region = 'eu_west_1' | 'ap_northeast_1' | 'us_west_2'
 

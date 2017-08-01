@@ -8,11 +8,11 @@ import { regionEnumToOption } from '../utils/utils'
 const {table, getBorderCharacters} = require('table')
 const debug = require('debug')('graphcool')
 
-interface Props {
+export interface ProjectsProps {
 
 }
 
-export default async (props: Props, env: SystemEnvironment): Promise<void> => {
+export default async (props: ProjectsProps, env: SystemEnvironment): Promise<void> => {
 
   const {resolver, out} = env
 

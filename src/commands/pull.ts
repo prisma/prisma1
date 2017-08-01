@@ -23,14 +23,14 @@ import figures = require('figures')
 const {terminal} = require('terminal-kit')
 const debug = require('debug')('graphcool')
 
-interface Props {
+export interface PullProps {
   sourceProjectId?: string
   projectFile?: string
   outputPath?: string
   force: boolean
 }
 
-export default async (props: Props, env: SystemEnvironment): Promise<void> => {
+export default async (props: PullProps, env: SystemEnvironment): Promise<void> => {
   const {resolver, out} = env
 
   try {
@@ -109,7 +109,7 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
 
 }
 
-function getProjectFilePath(props: Props, env: SystemEnvironment): string | undefined {
+function getProjectFilePath(props: PullProps, env: SystemEnvironment): string | undefined {
   const {resolver} = env
 
   // check if provided file is valid (ends with correct suffix)
@@ -130,7 +130,7 @@ function getProjectFilePath(props: Props, env: SystemEnvironment): string | unde
   return projectFiles[0]
 }
 
-async function getProjectId(props: Props, env: SystemEnvironment): Promise<string> {
+async function getProjectId(props: PullProps, env: SystemEnvironment): Promise<string> {
   if (props.sourceProjectId) {
     return props.sourceProjectId
   }

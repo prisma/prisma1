@@ -19,7 +19,7 @@ import {
 } from '../api/api'
 const debug = require('debug')('graphcool')
 
-interface Props {
+export interface CloneProps {
   sourceProjectId: string
   projectFile?: string
   outputPath?: string
@@ -29,7 +29,7 @@ interface Props {
   alias?: string
 }
 
-export default async(props: Props, env: SystemEnvironment): Promise<void> => {
+export default async(props: CloneProps, env: SystemEnvironment): Promise<void> => {
   const {resolver, out} = env
 
   try {
@@ -66,7 +66,7 @@ export default async(props: Props, env: SystemEnvironment): Promise<void> => {
 
 }
 
-async function getClonedProjectName(props: Props, projectId: string, resolver: Resolver): Promise<string> {
+async function getClonedProjectName(props: CloneProps, projectId: string, resolver: Resolver): Promise<string> {
   if (props.name) {
     return Promise.resolve(props.name)
   }

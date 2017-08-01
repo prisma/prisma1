@@ -8,11 +8,11 @@ import {
 
 const debug = require('debug')('graphcool-auth')
 
-interface Props {
+export interface AuthProps {
   token?: string
 }
 
-export default async (props: Props, env: SystemEnvironment, authServer: AuthServer): Promise<void> => {
+export default async (props: AuthProps, env: SystemEnvironment, authServer: AuthServer): Promise<void> => {
   const {resolver, out} = env
 
   let token = props.token!
