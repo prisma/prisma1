@@ -1,0 +1,5 @@
+mutation {
+  createPost(imageUrl: "test" description: "test") {
+    id
+  }
+}
