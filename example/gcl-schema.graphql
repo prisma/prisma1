@@ -1,0 +1,151 @@
+# TODO now
+# * challenge "src" to prevent deep nesting. alternative: file aware DSL
+# * Multi graphql files
+# * Reference graphql query from JS file
+
+# TODO next release
+# * migration scripts: @migrationValue not stateless: https://www.graph.cool/forum/t/continuous-deployment-and-graphcool-cli/368/5?u=nilan
+
+# Future feature ideas:
+# * unpersisted subscriptions
+# * co query for convenience
+
+type Query {
+  config(gcl: Module): Boolean
+}
+
+input Module {
+  databaseSchema: DatabaseSchema!
+  functions: [Function!]
+  modelPermissions: [ModelPermission!]!
+  relationPermissions: [RelationPermission!]!
+  pats: [PermanentAuthenticationToken!]
+  modules: [Module!]
+}
+
+input DatabaseSchema {
+  src: String!
+}
+
+input Function {
+  name: String!
+  description: String
+  isEnabled: Boolean = true
+  handler: FunctionHandler!
+  event: FunctionEvent
+  serversideSubscription: ServersideSubscription
+  nodeCallback: NodeCallback
+}
+
+input NodeCallback {
+  target: String!
+  operation: FunctionEventNodeCallbackOperation!
+  step: RequestPipelineSteps!
+  order: Int!
+}
+
+input ServersideSubscription {
+  subscriptionQuery: ServersideSubscriptionQuery
+  schemaExtension: ServersideSubscriptionQuery # TODO talk to Søren why we have that here
+}
+
+input ServersideSubscriptionQuery {
+  src: String!
+}
+
+input FunctionHandler {
+  webhook: FunctionHandlerWebhook
+  code: FunctionHandlerCode
+}
+
+input FunctionHandlerWebhook {
+  url: String!
+  headers: [Header!]
+}
+
+input FunctionHandlerCode {
+  src: String!
+}
+
+input Header {
+  name: String!
+  value: String!
+}
+
+input FunctionEvent {
+  serverSideSubscription: FunctionEventServerSideSubscription
+  middleware: FunctionEventMiddleware
+  schemaExtension: FunctionEventSchemaExtension
+  nodeCallback: FunctionEventNodeCallback
+}
+
+input FunctionEventMiddleware {
+  order: Int # optional override
+}
+
+input FunctionEventServerSideSubscription {
+  subscriptionQuery: FunctionEventServerSideSubscriptionQuery!
+}
+
+input FunctionEventServerSideSubscriptionQuery {
+  src: String!
+}
+
+input FunctionEventSchemaExtension {
+  schema: String!
+}
+
+input FunctionEventNodeCallback {
+  target: String! # type, relation or interface
+  operation: FunctionEventNodeCallbackOperation!
+  step: FunctionEventNodeCallbackStep!
+  order: Int
+}
+
+enum FunctionEventNodeCallbackOperation { CREATE, UPDATE, DELETE, CONNECT, DISCONNECT }
+
+enum FunctionEventNodeCallbackStep {
+  BeforeValidation
+  AfterValidation
+  AfterWrite
+}
+
+enum RequestPipelineSteps {
+  TRANSFORM_REQUEST
+  TRANSFORM_ARGUMENT
+  PRE_WRITE
+  TRANSFORM_PAYLOAD
+  TRANSFORM_RESPONSE
+}
+
+input RelationPermission {
+  description: String
+  isEnabled: Boolean = true
+  #operation: [String!]! # alternative idea: parameters by @nilan
+  authenticated: Boolean = false
+  query: PermissionQuery
+  fields: [String!] # wildcard syntax to limit intersection
+  relation: String!
+  disconnect: Boolean!
+  connect: Boolean!
+}
+
+input ModelPermission {
+  description: String
+  isEnabled: Boolean = true
+  #operation: [String!]! # alternative idea: parameters by @nilan
+  operation: String!
+  authenticated: Boolean = false
+  query: PermissionQuery
+  fields: [String!] # wildcard syntax to limit intersection
+}
+
+input PermissionQuery {
+  src: String!
+  # operation: String
+}
+
+input PermanentAuthenticationToken {
+  name: String!
+  description: String
+}

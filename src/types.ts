@@ -140,3 +140,13 @@ export interface APIError {
 
 export type AuthTrigger = 'auth' | 'init' | 'quickstart'
 export type CheckAuth = (env: SystemEnvironment, authTrigger: AuthTrigger) => Promise<boolean>
+
+export interface ProjectDefinition {
+  modules: GraphcoolModule[]
+}
+
+export interface GraphcoolModule {
+  name: string
+  content: string
+  files: {[fileName: string]: string}
+}
