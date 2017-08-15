@@ -27,7 +27,7 @@ async function moduleToFs(module: GraphcoolModule, outputDir: string, force: boo
       // ignore if file doesn't exist yet
     }
 
-    if (currentFile !== null && currentFile !== content) {
+    if (currentFile !== null && currentFile !== content && !force) {
       const localDescriptor = concordance.describe(currentFile, concordanceOptions)
       const remoteDescriptor = concordance.describe(content, concordanceOptions)
       const diff = concordance.diffDescriptors(localDescriptor, remoteDescriptor)
