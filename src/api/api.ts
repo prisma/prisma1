@@ -40,7 +40,8 @@ async function sendGraphQLRequest(queryString: string,
     },
     body: JSON.stringify(payload),
   })
-  const json = await result.json()
+  const text = await result.text()
+  const json = JSON.parse(text)
 
   if (process.env.DEBUG === 'graphcool') {
     debug(`Received JSON response: \n${JSON.stringify(json)}`)
@@ -71,6 +72,7 @@ mutation addProject($schema: String!, $name: String!, $alias: String, $region: R
       alias
       version
       region
+      projectDefinitionWithFileContent
     }
   }
 }
@@ -93,14 +95,25 @@ mutation addProject($schema: String!, $name: String!, $alias: String, $region: R
     throw json
   }
 
-  const projectId = json.data.addProject.project.id
-  const version = json.data.addProject.project.version
-  schema = json.data.addProject.project.schema
-  const returnedAlias = json.data.addProject.project.alias
-  name = json.data.addProject.project.name
-  const returnedRegion = json.data.addProject.project.region
+  const {project} = json.data.addProject
 
-  const projectInfo = {projectId, version, alias: returnedAlias, schema, name, region: returnedRegion}
+  const projectId = project.id
+  const version = project.version
+  schema = project.schema
+  const returnedAlias = project.alias
+  name = project.name
+  const returnedRegion = project.region
+  const projectDefinition = JSON.parse(project.projectDefinitionWithFileContent)
+
+  const projectInfo: ProjectInfo = {
+    projectId,
+    version,
+    alias: returnedAlias,
+    schema,
+    name,
+    region: returnedRegion,
+    projectDefinition,
+  }
 
   return projectInfo
 }
@@ -267,6 +280,7 @@ query ($projectId: ID!){
       schema
       version
       region
+      projectDefinitionWithFileContent
     }
   }
 }`
@@ -275,17 +289,22 @@ query ($projectId: ID!){
 
   const json = await sendGraphQLRequest(query, resolver, variables)
 
+  console.log(json)
+
   if (!json.data.viewer.project) {
     throw json
   }
 
+  const {project} = json.data.viewer
+
   const projectInfo: ProjectInfo = {
-    projectId: json.data.viewer.project.id,
-    name: json.data.viewer.project.name,
-    schema: json.data.viewer.project.schema,
-    alias: json.data.viewer.project.alias,
-    version: String(json.data.viewer.project.version),
-    region: json.data.viewer.project.region,
+    projectId: project.id,
+    name: project.name,
+    schema: project.schema,
+    alias: project.alias,
+    version: String(project.version),
+    region: project.region,
+    projectDefinition: JSON.parse(project.projectDefinitionWithFileContent),
   }
   return projectInfo
 }
@@ -365,6 +384,7 @@ mutation ($projectId: String!, $name: String!, $includeMutationCallbacks: Boolea
       schema
       version
       region
+      projectDefinitionWithFileContent
     }
   }
 }`
@@ -376,13 +396,16 @@ mutation ($projectId: String!, $name: String!, $includeMutationCallbacks: Boolea
     throw json
   }
 
+  const {project} = json.data.cloneProject
+
   const projectInfo: ProjectInfo = {
-    projectId: json.data.cloneProject.project.id,
-    name: json.data.cloneProject.project.name,
-    schema: json.data.cloneProject.project.schema,
-    alias: json.data.cloneProject.project.alias,
-    version: String(json.data.cloneProject.project.version),
-    region: json.data.cloneProject.project.region,
+    projectId: project.id,
+    name: project.name,
+    schema: project.schema,
+    alias: project.alias,
+    version: String(project.version),
+    region: project.region,
+    projectDefinition: JSON.parse(project.projectDefinitionWithFileContent)
   }
 
   return projectInfo

@@ -2,8 +2,6 @@ import {ProjectInfo} from '../types'
 import * as chalk from 'chalk'
 import figures = require('figures')
 
-const debug = require('debug')('graphcool')
-
 interface Range {
   startIndex: number
   endIndex: number

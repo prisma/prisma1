@@ -19,6 +19,7 @@ import {
   warnOverrideProjectFileMessage
 } from '../utils/constants'
 import figures = require('figures')
+import projectToFs from '../utils/projectToFs'
 
 const {terminal} = require('terminal-kit')
 const debug = require('debug')('graphcool')
@@ -76,7 +77,6 @@ export default async (props: PullProps, env: SystemEnvironment): Promise<void> =
 
     out.startSpinner(`${fetchingProjectDataMessage}`)
     const projectInfo = await pullProjectInfo(projectId!, resolver)
-
     out.stopSpinner()
 
     const message = resolver.projectFiles('.').length === 0 ?
@@ -84,6 +84,8 @@ export default async (props: PullProps, env: SystemEnvironment): Promise<void> =
       wroteProjectFileMessage(outputPath)
 
     writeProjectFile(projectInfo, resolver, outputPath)
+
+    await projectToFs(projectInfo.projectDefinition, './')
 
     out.write(message)
     if (projectInfo.version && currentVersion) {

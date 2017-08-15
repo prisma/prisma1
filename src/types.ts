@@ -93,6 +93,7 @@ export interface ProjectInfo {
   version: string
   alias: string
   region: string
+  projectDefinition: ProjectDefinition
 }
 
 export interface MigrationMessage {
