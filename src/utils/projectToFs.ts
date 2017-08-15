@@ -11,14 +11,6 @@ export default async function projectToFs(project: ProjectDefinition, outputDir:
   }
 }
 
-function formatDescriptorDiff(actualDescriptor, expectedDescriptor, options) {
-  options = Object.assign({}, options, concordanceOptions);
-  return {
-    label: 'Difference:',
-    formatted: concordance.diffDescriptors(actualDescriptor, expectedDescriptor, options)
-  };
-}
-
 async function moduleToFs(module: GraphcoolModule, outputDir: string, force: boolean = false) {
   fs.writeFileSync(path.join(outputDir, 'project.gcl'), module.content)
 
