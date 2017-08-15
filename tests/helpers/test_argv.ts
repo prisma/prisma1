@@ -1,4 +1,4 @@
-export function getArgv(value) {
+export function getArgv(value: string): string[] {
   const myRegexp = /([^\s'"]+(['"])([^\2]*?)\2)|[^\s'"]+|(['"])([^\4]*?)\4/gi
   const myString = value
   const myArray = [

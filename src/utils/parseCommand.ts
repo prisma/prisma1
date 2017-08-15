@@ -4,13 +4,13 @@ import { unknownOptionsWarning } from './constants'
 import { optionsForCommand } from './arguments'
 import { checkStatus } from '../api/api'
 
-export async function getCommand(args: string[], version: string, env: SystemEnvironment): Promise<CommandInstruction> {
-  const instruction = parseCommand(args)
+export async function parseCommand(args: string[], version: string, env: SystemEnvironment): Promise<CommandInstruction> {
+  const instruction = getInstruction(args)
   await checkStatus(instruction, env.resolver)
   return instruction
 }
 
-function parseCommand(args: string[]): CommandInstruction {
+function getInstruction(args: string[]): CommandInstruction {
   const argv = minimist(args.slice(2))
   const command = argv._[0] as Command | undefined
 
@@ -28,25 +28,13 @@ function parseCommand(args: string[]): CommandInstruction {
       }
     }
   } else {
+    // will trigger usage
     return {}
   }
 
   checkOptions(command, argv)
 
   switch (command) {
-    // TODO remove legacy support
-    case 'create': {
-      const name = argv['name'] || argv['n']
-      const alias = argv['alias'] || argv['a']
-      const region = argv['region'] || argv['r']
-      const schemaUrl = argv._[1]
-
-      return {
-        props: {name, alias, schemaUrl, region},
-        command,
-      }
-    }
-
     case 'init': {
       const name = argv['name'] || argv['n']
       const alias = argv['alias'] || argv['a']
@@ -121,7 +109,6 @@ function parseCommand(args: string[]): CommandInstruction {
     }
 
     case 'auth': {
-
       const token = argv['token'] || argv['t']
 
       return {
@@ -139,12 +126,14 @@ function parseCommand(args: string[]): CommandInstruction {
     }
 
     default: {
-      return {}
+      return {
+        command: 'unknown'
+      }
     }
   }
 }
 
-function checkOptions(command: Command, inputArgs: any) {
+function checkOptions(command: Command, inputArgs: any): void {
   const allowedOptions = optionsForCommand(command)
   const input = Object.keys(inputArgs)
   const unknownOptions = input.filter(x => allowedOptions.indexOf(x) < 0).filter(x => x !== '_')

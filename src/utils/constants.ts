@@ -10,7 +10,7 @@ export const authUIEndpoint = process.env.ENV === 'DEV' ? 'https://dev.console.g
 export const systemAPIEndpoint = process.env.ENV === 'DEV' ? 'https://dev.api.graph.cool/system' : 'https://api.graph.cool/system'
 export const authEndpoint = process.env.ENV === 'DEV' ? 'https://cli-auth-api.graph.cool/dev' : 'https://cli-auth-api.graph.cool/prod'
 export const docsEndpoint = process.env.ENV === 'DEV' ? 'https://dev.graph.cool/docs' : 'https://www.graph.cool/docs'
-export const statusEndpoint = 'https://fyc6xp1bl9.execute-api.eu-west-1.amazonaws.com/prod/status'
+export const statusEndpoint = 'https://crm.graph.cool/prod/status'
 export const consoleURL = (token: string, projectName?: string) =>
   `https://console.graph.cool/token?token=${token}${projectName ? `&redirect=/${encodeURIComponent(projectName)}` : ''}`
 export const playgroundURL = (token: string, projectName: string) =>

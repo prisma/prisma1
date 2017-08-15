@@ -31,6 +31,7 @@ export type Command =
   | 'quickstart'
   | 'usage'
   | 'delete'
+  | 'unknown'
 
 export type CommandProps =
   AuthProps

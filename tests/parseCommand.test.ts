@@ -1,5 +1,5 @@
 import test from 'ava'
-import { getCommand } from '../src/utils/parseCommand'
+import { parseCommand } from '../src/utils/parseCommand'
 import { getArgv } from './helpers/test_argv'
 const {version} = require('../../package.json')
 import { testEnvironment } from './helpers/test_environment'
@@ -8,7 +8,7 @@ import { Command } from '../src/types'
 const env = testEnvironment({})
 
 function getCmd(input: string) {
-  return getCommand(getArgv(input), version, env)
+  return parseCommand(getArgv(input), version, env)
 }
 
 test('init without args', async t => {

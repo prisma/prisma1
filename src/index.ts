@@ -14,7 +14,7 @@ import statusCommand, { StatusProps } from './commands/status'
 import quickstartCommand from './commands/quickstart'
 import deleteCommand, { DeleteProps } from './commands/delete'
 import authCommand, { AuthProps } from './commands/auth'
-import { getCommand } from './utils/parseCommand'
+import { parseCommand } from './utils/parseCommand'
 import { checkAuth } from './utils/auth'
 import FileSystemResolver from './system/FileSystemResolver'
 import StdOut from './system/StdOut'
@@ -41,22 +41,13 @@ async function main() {
 
   const displayQuickstart = shouldDisplayQuickstart()
 
-  const {command, props}: CommandInstruction = await getCommand(process.argv, version, env)
+  const {command, props}: CommandInstruction = await parseCommand(process.argv, version, env)
 
   switch (command) {
 
     case undefined: {
       process.stdout.write(usageRoot(displayQuickstart))
       process.exit(0)
-    }
-
-    // TODO remove legacy support
-    case 'create': {
-      console.log('`graphcool create` is deprecated and will be removed in a future version. Use `graphcool init` instead.')
-
-      await checkAuth(env, 'auth')
-      await initCommand(props as InitProps, env)
-      break
     }
 
     case 'init': {
@@ -145,6 +136,7 @@ async function main() {
       break
     }
 
+    case 'unknown':
     default: {
       process.stdout.write(`Unknown command: ${command}\n\n${usageRoot(displayQuickstart)}`)
       break
