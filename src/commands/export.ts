@@ -18,11 +18,11 @@ import {
 } from '../api/api'
 const debug = require('debug')('graphcool')
 
-interface Props {
+export interface ExportProps {
   projectFile?: string
 }
 
-export default async(props: Props, env: SystemEnvironment): Promise<void> => {
+export default async(props: ExportProps, env: SystemEnvironment): Promise<void> => {
   const {resolver, out} = env
 
   try {
@@ -54,7 +54,7 @@ export default async(props: Props, env: SystemEnvironment): Promise<void> => {
 
 }
 
-function getProjectId(props: Props, env: SystemEnvironment): string | undefined {
+function getProjectId(props: ExportProps, env: SystemEnvironment): string | undefined {
   const {resolver} = env
 
   // check if provided file is valid (ends with correct suffix)

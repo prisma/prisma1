@@ -9,11 +9,11 @@ import {
 } from '../utils/constants'
 const debug = require('debug')('graphcool')
 
-interface Props {
+export interface ConsoleProps {
   projectFile?: string
 }
 
-export default async (props: Props, env: SystemEnvironment): Promise<void> => {
+export default async (props: ConsoleProps, env: SystemEnvironment): Promise<void> => {
   const {resolver, out} = env
 
   const token = env.config.get('token')
@@ -29,7 +29,7 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
 }
 
 
-async function getProjectInfo(token: string, props: Props, env: SystemEnvironment): Promise<ProjectInfo | undefined> {
+async function getProjectInfo(token: string, props: ConsoleProps, env: SystemEnvironment): Promise<ProjectInfo | undefined> {
   const currentProjectId = getProjectId(props, env)
   if (!currentProjectId) {
     return undefined
@@ -39,7 +39,7 @@ async function getProjectInfo(token: string, props: Props, env: SystemEnvironmen
   return projectInfo
 }
 
-function getProjectId(props: Props, env: SystemEnvironment): string | undefined {
+function getProjectId(props: ConsoleProps, env: SystemEnvironment): string | undefined {
   const {resolver} = env
 
   // check if provided file is valid (ends with correct suffix)

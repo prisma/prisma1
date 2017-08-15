@@ -13,11 +13,11 @@ import {
 
 const debug = require('debug')('graphcool-auth')
 
-interface Props {
+export interface PlaygroundProps {
   projectFile?: string
 }
 
-export default async (props: Props, env: SystemEnvironment): Promise<void> => {
+export default async (props: PlaygroundProps, env: SystemEnvironment): Promise<void> => {
   const {resolver, out} = env
 
   const token = env.config.get('token')
@@ -31,7 +31,7 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
   out.write(openedPlaygroundMessage(projectInfo.name))
 }
 
-async function getProjectInfo(props: Props, env: SystemEnvironment): Promise<ProjectInfo> {
+async function getProjectInfo(props: PlaygroundProps, env: SystemEnvironment): Promise<ProjectInfo> {
   const currentProjectId = getProjectId(props, env)
   if (!currentProjectId) {
     throw new Error(canNotReadProjectIdFromProjectFile)
@@ -41,7 +41,7 @@ async function getProjectInfo(props: Props, env: SystemEnvironment): Promise<Pro
   return projectInfo
 }
 
-function getProjectId(props: Props, env: SystemEnvironment): string | undefined {
+function getProjectId(props: PlaygroundProps, env: SystemEnvironment): string | undefined {
   const {resolver} = env
 
   // check if provided file is valid (ends with correct suffix)

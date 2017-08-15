@@ -18,7 +18,7 @@ import {
 } from '../utils/constants'
 const debug = require('debug')('graphcool')
 
-interface Props {
+export interface InitProps {
   copyProjectId?: string // only used for copy
   projectFile?: string // only used for copy
   copyOptions?: string // only used for copy
@@ -29,7 +29,7 @@ interface Props {
   outputPath?: string
 }
 
-export default async (props: Props, env: SystemEnvironment): Promise<void> => {
+export default async (props: InitProps, env: SystemEnvironment): Promise<void> => {
 
   const {resolver, out} = env
 
@@ -101,7 +101,7 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
 
 }
 
-function isBlankProject(props: Props) {
+function isBlankProject(props: InitProps) {
   return props.schemaUrl === sampleSchemaURL
 }
 

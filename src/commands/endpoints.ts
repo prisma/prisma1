@@ -12,11 +12,11 @@ import {
 } from '../utils/constants'
 const debug = require('debug')('graphcool')
 
-interface Props {
+export interface EndpointsProps {
   projectFile?: string
 }
 
-export default async(props: Props, env: SystemEnvironment): Promise<void> => {
+export default async(props: EndpointsProps, env: SystemEnvironment): Promise<void> => {
 
   const {out} = env
 
@@ -30,7 +30,7 @@ export default async(props: Props, env: SystemEnvironment): Promise<void> => {
 }
 
 
-function getProjectId(props: Props, env: SystemEnvironment): string | undefined {
+function getProjectId(props: EndpointsProps, env: SystemEnvironment): string | undefined {
   const {resolver} = env
 
   // check if provided file is valid (ends with correct suffix)

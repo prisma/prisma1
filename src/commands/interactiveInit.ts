@@ -5,20 +5,20 @@ import figures = require('figures')
 import * as _ from 'lodash'
 import initCommand from './init'
 import { readProjectIdFromProjectFile } from '../utils/file'
+import { checkAuth } from '../utils/auth'
 const {terminal} = require('terminal-kit')
 const debug = require('debug')('graphcool')
 
 const BLANK_PROJECT = 0
 
-interface Props {
-  checkAuth: CheckAuth
+export interface InteractiveInitProps {
   name?: string
   alias?: string
   region?: string
   outputPath?: string
 }
 
-export default async (props: Props, env: SystemEnvironment): Promise<void> => {
+export default async (props: InteractiveInitProps, env: SystemEnvironment): Promise<void> => {
 
   const {out, resolver} = env
 
@@ -41,7 +41,7 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
   // no need for interactivity when there are no options
   // NOTE: this should probably be refactored to an outer layer
   if (schemaFiles.length === 0 && projectFiles.length === 0) {
-    await props.checkAuth(env, 'init')
+    await checkAuth(env, 'init')
 
     const schemaUrl = sampleSchemaURL
     const initProps = getPropsForInit(props)
@@ -66,7 +66,7 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
   })
 }
 
-async function handleKeyEvent(name: string, currentIndex: number, options: string[][], props: Props, env: SystemEnvironment, callback: () => void): Promise<number> {
+async function handleKeyEvent(name: string, currentIndex: number, options: string[][], props: InteractiveInitProps, env: SystemEnvironment, callback: () => void): Promise<number> {
 
   switch (name) {
     case 'DOWN': {
@@ -99,7 +99,7 @@ async function handleKeyEvent(name: string, currentIndex: number, options: strin
   return currentIndex
 }
 
-async function handleSelect(selectedIndex: number, props: Props, env: SystemEnvironment): Promise<void> {
+async function handleSelect(selectedIndex: number, props: InteractiveInitProps, env: SystemEnvironment): Promise<void> {
   terminal.restoreCursor()
   terminal.eraseDisplayBelow()
   terminal.hideCursor(false)
@@ -108,7 +108,7 @@ async function handleSelect(selectedIndex: number, props: Props, env: SystemEnvi
   if (selectedIndex === BLANK_PROJECT) {
     terminal.grabInput(false)
 
-    await props.checkAuth(env, 'init')
+    await checkAuth(env, 'init')
   }
 
   switch (selectedIndex) {
@@ -142,7 +142,7 @@ async function handleSelect(selectedIndex: number, props: Props, env: SystemEnvi
   }
 }
 
-function getPropsForInit(props: Props): any {
+function getPropsForInit(props: InteractiveInitProps): any {
   return {
     name: props.name,
     alias: props.alias,

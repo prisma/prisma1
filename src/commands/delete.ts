@@ -14,11 +14,11 @@ import { readProjectIdFromProjectFile } from '../utils/file'
 const {terminal} = require('terminal-kit')
 const debug = require('debug')('graphcool')
 
-interface Props {
+export interface DeleteProps {
   sourceProjectId?: string
 }
 
-export default async (props: Props, env: SystemEnvironment): Promise<void> => {
+export default async (props: DeleteProps, env: SystemEnvironment): Promise<void> => {
   const {resolver, out} = env
 
   if (props.sourceProjectId) {
