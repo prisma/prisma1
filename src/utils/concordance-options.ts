@@ -108,6 +108,6 @@ const colorTheme = {
   undefined: ansiStyles.yellow
 }
 
-const concordanceOptions = {maxDepth: 1, plugins: [], colorTheme}
+const concordanceOptions = {maxDepth: 2, plugins: [], theme: colorTheme}
 
 export default concordanceOptions

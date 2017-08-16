@@ -1,4 +1,5 @@
 import * as path from 'path'
+import * as chalk from 'chalk'
 import * as fs from 'fs'
 import { GraphcoolModule, ProjectDefinition } from '../types'
 import * as mkdirp from 'mkdirp'
@@ -30,9 +31,9 @@ async function moduleToFs(module: GraphcoolModule, outputDir: string, force: boo
     if (currentFile !== null && currentFile !== content && !force) {
       const localDescriptor = concordance.describe(currentFile, concordanceOptions)
       const remoteDescriptor = concordance.describe(content, concordanceOptions)
-      const diff = concordance.diffDescriptors(localDescriptor, remoteDescriptor)
-      console.log(diff)
-      throw new Error(`The remote version of ${relativePath} as changed. Use --force to override it.`)
+      const diff = concordance.diffDescriptors(localDescriptor, remoteDescriptor, concordanceOptions)
+      console.log('')
+      throw new Error(`The remote version of ${chalk.bold(relativePath)} as changed. Use --force to override it.\n\n ${diff}`)
     }
 
     mkdirp.sync(dir)

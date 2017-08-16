@@ -40,8 +40,7 @@ async function sendGraphQLRequest(queryString: string,
     },
     body: JSON.stringify(payload),
   })
-  const text = await result.text()
-  const json = JSON.parse(text)
+  const json = await result.json()
 
   if (process.env.DEBUG === 'graphcool') {
     debug(`Received JSON response: \n${JSON.stringify(json)}`)
@@ -288,8 +287,6 @@ query ($projectId: ID!){
   const variables = {projectId}
 
   const json = await sendGraphQLRequest(query, resolver, variables)
-
-  console.log(json)
 
   if (!json.data.viewer.project) {
     throw json
