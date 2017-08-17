@@ -1,5 +1,5 @@
 ---
-alias: tifghei9go
+alias: ak36byy6wl
 description: Relay introduces new concepts on top of GraphQL. Learn more about terms like connections, edges and nodes in Relay and see a pagination example.
 ---
 
