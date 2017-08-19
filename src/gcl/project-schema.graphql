@@ -1,15 +1,3 @@
-# TODO now
-# * challenge "src" to prevent deep nesting. alternative: file aware DSL
-# * Multi graphql files
-# * Reference graphql query from JS file
-
-# TODO next release
-# * migration scripts: @migrationValue not stateless: https://www.graph.cool/forum/t/continuous-deployment-and-graphcool-cli/368/5?u=nilan
-
-# Future feature ideas:
-# * unpersisted subscriptions
-# * co query for convenience
-
 type Query {
   config(gcl: Module): Boolean
 }

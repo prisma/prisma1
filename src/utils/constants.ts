@@ -25,9 +25,10 @@ export const sentryDSN = 'https://6ef6eea3afb041f2aca71d08742a36d1:51bdc5643a764
 /*
  * File paths / names
  */
-export const graphcoolProjectFileName = 'project.graphcool'
-export const graphcoolCloneProjectFileName = (projectFileName?: string) => projectFileName ?
-  `clone-${projectFileName.startsWith(`./`) ? projectFileName.substring(2) : projectFileName}`: `clone-${graphcoolProjectFileName}`
+export const graphcoolEnvironmentFileName = '.env.gcl'
+// TODO enable when we have the new flow here defined
+// export const graphcoolCloneProjectFileName = (projectFileName?: string) => projectFileName ?
+//   `clone-${projectFileName.startsWith(`./`) ? projectFileName.substring(2) : projectFileName}`: `clone-${graphcoolProjectFileName}`
 export const graphcoolConfigFilePath = path.join(os.homedir(), '.graphcoolrc')
 export const projectFileSuffix = '.graphcool'
 export const schemaFileSuffix = '.graphql'
@@ -177,11 +178,11 @@ export const remoteSchemaAheadMessage = (remoteVersion: string, localVersion: st
 The local version of your schema (${localVersion}) is behind the remote version (${remoteVersion}). Save your local changes and run ${chalk.cyan(`\`graphcool pull\``)} before retrying.`
 
 export const noProjectFileForPushMessage = `\
-Please provide a valid project file (${graphcoolProjectFileName}) for the schema migration.
+Please provide a valid project environment (${graphcoolEnvironmentFileName}) for the schema migration.
 `
 
 export const invalidProjectFileMessage = `\
-The project file (${graphcoolProjectFileName}) that you provided doesn't seem to be valid. Please make sure it contains the ID of your project.
+The project environment file (${graphcoolEnvironmentFileName}) that you provided doesn't seem to be valid. Please make sure it contains the ID of your project.
 `
 
 export const pushingNewSchemaMessage = `\

@@ -2,7 +2,7 @@ import { Region, Resolver, SchemaInfo, SystemEnvironment, ProjectInfo } from '..
 import figures = require('figures')
 import generateName = require('sillyname')
 import 'isomorphic-fetch'
-import cloneCommand from './clone'
+// import cloneCommand from './clone'
 import { createProject, parseErrors, generateErrorOutput } from '../api/api'
 import { projectInfoToContents } from '../utils/utils'
 import {writeProjectFile, isValidSchemaFilePath, writeBlankProjectFileWithInfo} from '../utils/file'
@@ -49,7 +49,8 @@ export default async (props: InitProps, env: SystemEnvironment): Promise<void> =
       includeData,
       includeMutationCallbacks
     }
-    await cloneCommand(cloneProps, env)
+    // TODO enable when new clone flow is defined
+    // await cloneCommand(cloneProps, env)
 
   } else {
     // create new

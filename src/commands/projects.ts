@@ -1,7 +1,9 @@
 import { SystemEnvironment } from '../types'
 import { fetchProjects } from '../api/api'
 import figures = require('figures')
-import {couldNotFetchProjectsMessage, graphcoolProjectFileName} from '../utils/constants'
+import {
+  couldNotFetchProjectsMessage, graphcoolEnvironmentFileName,
+} from '../utils/constants'
 import { readProjectIdFromProjectFile } from '../utils/file'
 import { regionEnumToOption } from '../utils/utils'
 
@@ -19,8 +21,8 @@ export default async (props: ProjectsProps, env: SystemEnvironment): Promise<voi
   try {
     const projects = await fetchProjects(resolver)
 
-    const currentProjectId = resolver.exists(graphcoolProjectFileName) ?
-      readProjectIdFromProjectFile(resolver, graphcoolProjectFileName) :
+    const currentProjectId = resolver.exists(graphcoolEnvironmentFileName) ?
+      readProjectIdFromProjectFile(resolver, graphcoolEnvironmentFileName) :
       null
 
     const data = projects.map(project => {

@@ -10,7 +10,7 @@ import {
   invalidProjectFilePathMessage,
   multipleProjectFilesForCloneMessage,
   clonedProjectMessage,
-  graphcoolCloneProjectFileName, graphcoolProjectFileName
+  // graphcoolCloneProjectFileName, graphcoolProjectFileName
 } from '../utils/constants'
 import {
   parseErrors,
@@ -43,8 +43,8 @@ export default async(props: CloneProps, env: SystemEnvironment): Promise<void> =
     const clonedProjectName = await getClonedProjectName(props, projectId, resolver)
     const clonedProjectInfo = await cloneProject(projectId, clonedProjectName, includeMutationCallbacks, includeData, resolver)
 
-    const projectFile = props.projectFile || graphcoolProjectFileName
-    const outputPath = props.outputPath || graphcoolCloneProjectFileName(projectFile)
+    const projectFile = props.projectFile// || graphcoolProjectFileName
+    const outputPath = props.outputPath || '' // || graphcoolCloneProjectFileName(projectFile)
 
     writeProjectFile(clonedProjectInfo, resolver, outputPath)
 

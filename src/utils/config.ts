@@ -1,42 +1,28 @@
-import {
-  Resolver,
-  GraphcoolConfig,
-  GraphcoolConfigOptionName
-} from '../types'
-
 import { graphcoolConfigFilePath } from './constants'
+import * as fs from 'fs'
 
-export class Config {
-  configs: GraphcoolConfig
-  resolver: Resolver
+class Config {
+  token: string
 
-  constructor(resolver: Resolver) {
-    this.resolver = resolver
-    this.configs = {}
-  }
-
-  set(updates: GraphcoolConfig) {
-    this.configs = Object.assign(this.configs, updates)
-  }
-
-  unset(name: GraphcoolConfigOptionName) {
-    delete this.configs[name]
-  }
-
-  get(name: GraphcoolConfigOptionName): any {
-    return this.configs[name]
+  setToken(token: string) {
+    this.token = token
   }
 
   load() {
-    if (!this.resolver.exists(graphcoolConfigFilePath)) {
-      return
+    if (fs.existsSync(graphcoolConfigFilePath)) {
+      const configContent = fs.readFileSync(graphcoolConfigFilePath, 'utf-8')
+      this.token = JSON.parse(configContent).token
     }
-
-    const configContent = this.resolver.read(graphcoolConfigFilePath)
-    this.configs = JSON.parse(configContent)
   }
 
   save() {
-    this.resolver.write(graphcoolConfigFilePath, JSON.stringify(this.configs, null, 2))
+    const json = JSON.stringify({token: this.token}, null, 2)
+    fs.writeFileSync(graphcoolConfigFilePath, json)
   }
 }
+
+// expose it as a singleton
+const config = new Config()
+config.load()
+
+export default config

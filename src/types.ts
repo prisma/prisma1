@@ -59,22 +59,8 @@ export interface CommandInstruction {
   command?: Command
 }
 
+// TODO Remove in favor of ProjectRegion
 export type Region = 'eu_west_1' | 'ap_northeast_1' | 'us_west_2'
-
-export interface GraphcoolConfig {
-  token?: string
-}
-export type GraphcoolConfigOptionName = 'token'
-
-export interface Resolver {
-  read(path: string): string
-  write(path: string, value: string)
-  delete(path: string)
-  exists(path: string): boolean
-  projectFiles(directory?: string): string[]
-  schemaFiles(directory?: string): string[]
-  readDirectory(path: string): string[]
-}
 
 export interface AuthServer {
   requestAuthToken(): Promise<string>
@@ -86,13 +72,20 @@ export interface SchemaInfo {
   source: string
 }
 
-export interface ProjectInfo {
-  projectId: string
+export interface Project {
+  id: string
   name: string
   schema: string
   version: string
   alias: string
   region: string
+}
+
+export interface RemoteProject extends Project {
+  projectDefinitionWithFileContent: string
+}
+
+export interface ProjectInfo extends Project {
   projectDefinition: ProjectDefinition
 }
 
@@ -112,9 +105,15 @@ export interface MigrationErrorMessage {
   field: string
 }
 
+export interface MigrateProjectPayload {
+  migrationMessages: MigrationMessage[]
+  errors: MigrationErrorMessage[]
+  project: Project
+}
+
 export interface MigrationResult {
-  messages: [MigrationMessage]
-  errors: [MigrationErrorMessage]
+  migrationMessages: MigrationMessage[]
+  errors: MigrationErrorMessage[]
   newVersion: string
   newSchema: string
 }
@@ -129,7 +128,6 @@ export interface Out {
 
 export interface SystemEnvironment {
   out: Out
-  resolver: Resolver
   config: Config
 }
 
@@ -150,4 +148,18 @@ export interface GraphcoolModule {
   name: string
   content: string
   files: {[fileName: string]: string}
+}
+
+export interface ProjectEnvironment {
+  version: number
+  projectType: ProjectType
+  hosted: ProjectEnvironmentHosted
+}
+
+type ProjectType = 'HOSTED' | 'DOCKER'
+type ProjectRegion = 'EU_WEST_1' | 'AP_NORTHEAST_1' | 'US_WEST_2'
+
+export interface ProjectEnvironmentHosted {
+  project: string // can be project id or alias
+  region: ProjectRegion
 }

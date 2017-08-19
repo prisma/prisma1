@@ -1,0 +1,18 @@
+type Query {
+  config(gcl: Environment): Boolean
+}
+
+type Environment {
+  version: Int!
+  projectType: ProjectType!
+  hosted: HostedConfig
+}
+
+type HostedConfig {
+  projectId: String!
+}
+
+enum ProjectType {
+  HOSTED
+  DOCKER
+}
