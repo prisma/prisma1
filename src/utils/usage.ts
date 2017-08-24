@@ -1,37 +1,37 @@
 import * as chalk from 'chalk'
 
-export const usageRoot = (showQuickstart: boolean) => `
+export const usageRoot = () => `
   Serverless GraphQL backend for frontend developers (${chalk.underline('https://www.graph.cool')})
   
   ${chalk.dim('Usage:')} ${chalk.bold('graphcool')} [command]
 
-  ${chalk.dim('Commands:')}${showQuickstart ? `
-    quickstart    Open Graphcool Quickstart examples`: ''}
+  ${chalk.dim('Commands:')}
     init          Create a new project
     push          Push project file changes
     pull          Download the latest project file
+    import        Import project data
     export        Export project data
-    endpoints     Print GraphQL endpoints
-    console       Open Graphcool Console
+    info          Print project info (endpoint, version, ...)
     playground    Open GraphQL Playground
-    projects      List projects
-    delete        Delete existing projects
+    console       Open Graphcool Console in browser
+    projects      List all projects
+    delete        Delete one or more projects
     auth          Sign up or login
     version       Print version
-    
+
   Run 'graphcool COMMAND --help' for more information on a command.
-  
+
   ${chalk.dim('Examples:')}
-  
+
   ${chalk.gray('-')} Initialize a new Graphcool project
     ${chalk.cyan('$ graphcool init')}
-  
+
   ${chalk.gray('-')} Local setup of an existing project
     ${chalk.cyan('$ graphcool pull -p <project-id | alias>')}
-    
+
   ${chalk.gray('-')} Update live project with local changes
     ${chalk.cyan('$ graphcool push')}
-    
+
 `
 
 export const usageInit = `

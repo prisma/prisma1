@@ -41,7 +41,7 @@ async function main() {
   switch (command) {
 
     case undefined: {
-      process.stdout.write(usageRoot(displayQuickstart))
+      process.stdout.write(usageRoot())
       process.exit(0)
     }
     // TODO reenable later when we have the new init flow defined
@@ -122,7 +122,7 @@ async function main() {
     }
 
     case 'help': {
-      process.stdout.write(usageRoot(displayQuickstart))
+      process.stdout.write(usageRoot())
       process.exit(0)
       break
     }
@@ -134,23 +134,12 @@ async function main() {
 
     case 'unknown':
     default: {
-      process.stdout.write(`Unknown command: ${command}\n\n${usageRoot(displayQuickstart)}`)
+      process.stdout.write(`Unknown command: ${command}\n\n${usageRoot()}`)
       break
     }
   }
 
   process.stdout.write('\n')
-}
-
-function shouldDisplayQuickstart(): boolean {
-  const resolver = new FileSystemResolver()
-  if (resolver.exists(graphcoolConfigFilePath)) {
-    const content = JSON.parse(resolver.read(graphcoolConfigFilePath))
-    if (content.token && content.token.length > 0) {
-      return false
-    }
-  }
-  return true
 }
 
 process.on('unhandledRejection', e => new StdOut().onError(e))
