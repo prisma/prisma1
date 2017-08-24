@@ -8,7 +8,7 @@ import {
   mockedPushSchemaResponse, mockProjectFile2, mockProjectFile3,
   mockedPullProjectResponse1, mockedPushSchemaResponseError, mockModifiedProjectFile1, mockedPushSchema1ResponseError
 } from './fixtures/mock_data'
-import TestOut from './helpers/test_out'
+import TestOut from '../src/io/test_out'
 
 const fetchMock = require('fetch-mock')
 const debug = require('debug')('graphcool')

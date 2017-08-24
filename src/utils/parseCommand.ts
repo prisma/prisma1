@@ -2,11 +2,11 @@ import * as minimist from 'minimist'
 import { Command, CommandInstruction, SystemEnvironment } from '../types'
 import { unknownOptionsWarning } from './constants'
 import { optionsForCommand } from './arguments'
-import { checkStatus } from '../api/api'
+import client from '../io/client'
 
-export async function parseCommand(args: string[], version: string, env: SystemEnvironment): Promise<CommandInstruction> {
+export async function parseCommand(args: string[], version: string): Promise<CommandInstruction> {
   const instruction = getInstruction(args)
-  await checkStatus(instruction, env.resolver)
+  await client.checkStatus(instruction)
   return instruction
 }
 

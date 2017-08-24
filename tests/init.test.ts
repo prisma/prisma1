@@ -13,7 +13,7 @@ import { readProjectIdFromProjectFile, readVersionFromProjectFile } from '../src
 import { getDynamoUrl } from '../src/utils/ping'
 import { simpleTwitterSchema } from './fixtures/schemas'
 import 'isomorphic-fetch'
-import TestOut from './helpers/test_out'
+import TestOut from '../src/io/test_out'
 import { Region } from '../src/types'
 
 const fetchMock = require('fetch-mock')

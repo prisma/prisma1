@@ -15,7 +15,7 @@ import {
   exportProjectData,
   parseErrors,
   generateErrorOutput
-} from '../api/api'
+} from '../utils/api'
 const debug = require('debug')('graphcool')
 
 export interface ExportProps {

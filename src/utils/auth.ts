@@ -1,12 +1,13 @@
-import { AuthTrigger, SystemEnvironment } from '../types'
-import { GraphcoolAuthServer } from '../api/GraphcoolAuthServer'
+import { AuthTrigger } from '../types'
+import { GraphcoolAuthServer } from '../io/GraphcoolAuthServer'
 import authCommand, { AuthProps } from '../commands/auth'
+import config from './config'
 
-export async function checkAuth(env: SystemEnvironment, authTrigger: AuthTrigger): Promise<boolean> {
-  if (env.config.get('token')) {
+export async function checkAuth(authTrigger: AuthTrigger): Promise<boolean> {
+  if (config.token) {
     return true
   }
 
-  await authCommand({}, env, new GraphcoolAuthServer(authTrigger))
+  await authCommand({}, new GraphcoolAuthServer(authTrigger))
   return false
 }

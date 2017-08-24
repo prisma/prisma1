@@ -3,7 +3,7 @@ import figures = require('figures')
 import generateName = require('sillyname')
 import 'isomorphic-fetch'
 // import cloneCommand from './clone'
-import { createProject, parseErrors, generateErrorOutput } from '../api/api'
+import { createProject, parseErrors, generateErrorOutput } from '../utils/api'
 import { projectInfoToContents } from '../utils/utils'
 import {writeProjectFile, isValidSchemaFilePath, writeBlankProjectFileWithInfo} from '../utils/file'
 import { isValidProjectName } from '../utils/validation'

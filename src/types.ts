@@ -117,19 +117,20 @@ export interface MigrationResult {
   newVersion: string
   newSchema: string
 }
-
-export interface Out {
-  write(message: string): void
-  writeError(message: string): void
-  startSpinner(message: string): void
-  stopSpinner(): void
-  onError(error: Error): void
-}
-
-export interface SystemEnvironment {
-  out: Out
-  config: Config
-}
+// TODO remove after cleanup
+//
+// export interface Out {
+//   write(message: string): void
+//   writeError(message: string): void
+//   startSpinner(message: string): void
+//   stopSpinner(): void
+//   onError(error: Error): void
+// }
+//
+// export interface SystemEnvironment {
+//   out: Out
+//   config: Config
+// }
 
 export interface APIError {
   message: string
@@ -138,7 +139,7 @@ export interface APIError {
 }
 
 export type AuthTrigger = 'auth' | 'init' | 'quickstart'
-export type CheckAuth = (env: SystemEnvironment, authTrigger: AuthTrigger) => Promise<boolean>
+export type CheckAuth = (authTrigger: AuthTrigger) => Promise<boolean>
 
 export interface ProjectDefinition {
   modules: GraphcoolModule[]

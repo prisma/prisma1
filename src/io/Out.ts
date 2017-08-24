@@ -1,32 +1,52 @@
-import { Out } from '../types'
 import { setDebugMessage, contactUsInSlackMessage } from '../utils/constants'
 import { makePartsEnclodesByCharacterBold } from '../utils/utils'
 import * as chalk from 'chalk'
 import figures = require('figures')
 import Raven = require('raven')
 import ora = require('ora')
+import * as fs from 'fs'
 
 const debug = require('debug')('graphcool')
 
-export default class StdOut implements Out {
+class Out {
 
   spinner: any
+  private out: (msg: string) => void
+  private err: (msg: string) => void
+
+  constructor() {
+    let out: (msg: string) => void
+    let err: (msg: string) => void
+    if (process.env.NODE_ENV === 'test') {
+      out = process.stdout.write
+      err = process.stderr.write
+    } else {
+      out = (message: string) => fs.appendFileSync('test.out', message)
+      err = (message: string) => fs.appendFileSync('test.out', message)
+    }
+    this.out = out
+    this.err = err
+  }
 
   write(message: string): void {
-    process.stdout.write(message)
+    this.out(message)
   }
 
   writeError(message: string): void {
-    process.stderr.write(message)
+    this.err(message)
   }
 
   startSpinner(message: string) {
-    this.spinner = ora(message).start()
+    if (process.env.NODE_ENV !== 'test') {
+      this.spinner = ora(message).start()
+    }
   }
 
   stopSpinner() {
-    if (this.spinner) {
-      this.spinner.stop()
+    if (process.env.NODE_ENV !== 'test') {
+      if (this.spinner) {
+        this.spinner.stop()
+      }
     }
   }
 
@@ -55,3 +75,7 @@ export default class StdOut implements Out {
 
 
 }
+
+const out = new Out()
+
+export default out

@@ -29,7 +29,7 @@ import {
   parseErrors,
   generateErrorOutput,
   statusMessage
-} from '../api/api'
+} from '../utils/api'
 const debug = require('debug')('graphcool')
 import figures = require('figures')
 import * as chalk from 'chalk'

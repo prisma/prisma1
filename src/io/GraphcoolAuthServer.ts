@@ -3,7 +3,6 @@ import { systemAPIEndpoint, authEndpoint, authUIEndpoint } from '../utils/consta
 import 'isomorphic-fetch'
 import cuid = require('cuid')
 import open = require('open')
-const debug = require('debug')('graphcool')
 
 export class GraphcoolAuthServer implements AuthServer {
 

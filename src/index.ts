@@ -17,8 +17,8 @@ import authCommand, { AuthProps } from './commands/auth'
 import { parseCommand } from './utils/parseCommand'
 import { checkAuth } from './utils/auth'
 import FileSystemResolver from './system/FileSystemResolver'
-import StdOut from './system/StdOut'
-import { GraphcoolAuthServer } from './api/GraphcoolAuthServer'
+import StdOut from './io/StdOut'
+import { GraphcoolAuthServer } from './io/GraphcoolAuthServer'
 import {
   sentryDSN,
   graphcoolConfigFilePath,
@@ -31,17 +31,13 @@ const Raven = require('raven')
 const debug = require('debug')('graphcool')
 const {version} = require('../../package.json')
 
-import {Config} from './utils/config'
-
 async function main() {
   // initialize sentry
   Raven.config(sentryDSN).install()
 
-  const env = defaultEnvironment()
-
   const displayQuickstart = shouldDisplayQuickstart()
 
-  const {command, props}: CommandInstruction = await parseCommand(process.argv, version, env)
+  const {command, props}: CommandInstruction = await parseCommand(process.argv, version)
 
   switch (command) {
 
@@ -155,19 +151,6 @@ function shouldDisplayQuickstart(): boolean {
     }
   }
   return true
-}
-
-function defaultEnvironment(): SystemEnvironment {
-  const resolver = new FileSystemResolver()
-
-  var config = new Config(resolver)
-  config.load()
-
-  return {
-    resolver: resolver,
-    out: new StdOut(),
-    config: config
-  }
 }
 
 process.on('unhandledRejection', e => new StdOut().onError(e))

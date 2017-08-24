@@ -4,7 +4,7 @@ import authCommand from '../src/commands/auth'
 import { authEndpoint, graphcoolConfigFilePath, systemAPIEndpoint } from '../src/utils/constants'
 import TestAuthServer from './helpers/test_auth_server'
 import { testToken } from './fixtures/mock_data'
-import TestOut from './helpers/test_out'
+import TestOut from '../src/io/test_out'
 import 'isomorphic-fetch'
 const fetchMock = require('fetch-mock')
 const debug = require('debug')('graphcool')

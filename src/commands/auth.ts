@@ -5,6 +5,8 @@ import {
   authenticationSuccessMessage,
   couldNotRetrieveTokenMessage,
 } from '../utils/constants'
+import out from '../io/Out'
+import config from '../utils/config'
 
 const debug = require('debug')('graphcool-auth')
 
@@ -12,8 +14,7 @@ export interface AuthProps {
   token?: string
 }
 
-export default async (props: AuthProps, env: SystemEnvironment, authServer: AuthServer): Promise<void> => {
-  const {resolver, out} = env
+export default async (props: AuthProps, authServer: AuthServer): Promise<void> => {
 
   let token = props.token!
 
@@ -32,12 +33,12 @@ export default async (props: AuthProps, env: SystemEnvironment, authServer: Auth
 
   const authenticatedUserEmail = await authServer.validateAuthToken(token)
   if (authenticatedUserEmail) {
-    env.config.set({ token })
-    env.config.save()
+    config.setToken(token)
+    config.save()
     out.write(authenticationSuccessMessage(authenticatedUserEmail))
   } else {
-    env.config.unset('token')
-    env.config.save()
+    config.unsetToken()
+    config.save()
     throw new Error('Invalid auth token')
   }
 

@@ -1,6 +1,6 @@
 import TestResolver from './test_resolver'
 import {Resolver} from '../../src/types'
-import TestOut from './test_out'
+import TestOut from '../../src/io/test_out'
 import { Config } from '../../src/utils/config'
 
 export interface TestSystemEnvironment {

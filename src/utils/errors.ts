@@ -2,7 +2,7 @@ import {
   APIError,
 } from '../types'
 
-import { contactUsInSlackMessage } from '../utils/constants'
+import { contactUsInSlackMessage } from './constants'
 
 export function parseErrors(response: any): APIError[] {
   const errors: APIError[] = response.errors.map(error => ({

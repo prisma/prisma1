@@ -1,7 +1,7 @@
 import test from 'ava'
 import TestResolver from './helpers/test_resolver'
 import { Config } from '../src/utils/config'
-import TestOut from './helpers/test_out'
+import TestOut from '../src/io/test_out'
 import { graphcoolProjectFileName } from '../src/utils/constants'
 import { testEnvironment } from './helpers/test_environment'
 import { mockProjectFile1, mockProjectFileWithUppercaseAlias1 } from './fixtures/mock_data'

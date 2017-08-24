@@ -1,5 +1,5 @@
 import { SystemEnvironment } from '../types'
-import { fetchProjects } from '../api/api'
+import { fetchProjects } from '../utils/api'
 import figures = require('figures')
 import {
   couldNotFetchProjectsMessage, graphcoolEnvironmentFileName,

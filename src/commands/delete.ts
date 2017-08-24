@@ -1,5 +1,5 @@
 import { SystemEnvironment, ProjectInfo } from '../types'
-import { deleteProject, fetchProjects, parseErrors, generateErrorOutput } from '../api/api'
+import { deleteProject, fetchProjects, parseErrors, generateErrorOutput } from '../utils/api'
 import {
   deletingProjectMessage,
   deletedProjectMessage,

@@ -2,10 +2,14 @@ import { graphcoolConfigFilePath } from './constants'
 import * as fs from 'fs'
 
 class Config {
-  token: string
+  token: string | null = null
 
   setToken(token: string) {
     this.token = token
+  }
+
+  unsetToken() {
+    this.token = null
   }
 
   load() {

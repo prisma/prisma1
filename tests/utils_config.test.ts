@@ -1,6 +1,6 @@
 import test from 'ava'
 import TestResolver from './helpers/test_resolver'
-import TestOut from './helpers/test_out'
+import TestOut from '../src/io/test_out'
 import { Config } from '../src/utils/config'
 import { graphcoolConfigFilePath } from '../src/utils/constants'
 const configFileContent = '{"token":"1234"}'

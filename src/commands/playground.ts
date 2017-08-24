@@ -1,6 +1,6 @@
 import {readProjectIdFromProjectFile, isValidProjectFilePath} from '../utils/file'
 import {SystemEnvironment, ProjectInfo} from '../types'
-import { pullProjectInfo } from '../api/api'
+import { pullProjectInfo } from '../utils/api'
 import open = require('open')
 import {
   invalidProjectFilePathMessage,

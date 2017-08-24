@@ -16,7 +16,7 @@ import {
   parseErrors,
   generateErrorOutput,
   pullProjectInfo, cloneProject
-} from '../api/api'
+} from '../utils/api'
 const debug = require('debug')('graphcool')
 
 export interface CloneProps {

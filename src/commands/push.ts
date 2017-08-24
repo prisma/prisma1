@@ -10,7 +10,7 @@ import {
 import {pushNewSchema,
   parseErrors,
   generateErrorOutput,
-  pullProjectInfo} from '../api/api'
+  pullProjectInfo} from '../utils/api'
 import figures = require('figures')
 import * as chalk from 'chalk'
 import {

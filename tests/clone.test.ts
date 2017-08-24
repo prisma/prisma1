@@ -16,7 +16,7 @@ import 'isomorphic-fetch'
 import { readProjectIdFromProjectFile,
   readVersionFromProjectFile
 } from '../src/utils/file'
-import TestOut from './helpers/test_out'
+import TestOut from '../src/io/test_out'
 
 const fetchMock = require('fetch-mock')
 const debug = require('debug')('graphcool')

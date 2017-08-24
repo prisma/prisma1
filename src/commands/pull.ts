@@ -5,7 +5,7 @@ import {
   readVersionFromProjectFile,
   isValidProjectFilePath
 } from '../utils/file'
-import { pullProjectInfo, parseErrors, generateErrorOutput, fetchProjects } from '../api/api'
+import { pullProjectInfo, parseErrors, generateErrorOutput, fetchProjects } from '../utils/api'
 import * as _ from 'lodash'
 import {
   fetchingProjectDataMessage,
