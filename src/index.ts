@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 
-import { AuthTrigger, Command, CommandInstruction, SystemEnvironment } from './types'
+import { AuthTrigger, Command, CommandInstruction} from './types'
 import pushCommand, { PushProps } from './commands/push'
 import consoleCommand, { ConsoleProps } from './commands/console'
 import playgroundCommand, { PlaygroundProps } from './commands/playground'
 import projectsCommand from './commands/projects'
 import pullCommand, { PullProps } from './commands/pull'
-import initCommand, { InitProps } from './commands/init'
-import interactiveInitCommand, { InteractiveInitProps } from './commands/interactiveInit'
+// import initCommand, { InitProps } from './commands/init'
+// import interactiveInitCommand, { InteractiveInitProps } from './commands/interactiveInit'
 import exportCommand, { ExportProps } from './commands/export'
 import endpointsCommand, { EndpointsProps } from './commands/endpoints'
 import statusCommand, { StatusProps } from './commands/status'
@@ -17,7 +17,6 @@ import authCommand, { AuthProps } from './commands/auth'
 import { parseCommand } from './utils/parseCommand'
 import { checkAuth } from './utils/auth'
 import FileSystemResolver from './system/FileSystemResolver'
-import StdOut from './io/StdOut'
 import { GraphcoolAuthServer } from './io/GraphcoolAuthServer'
 import {
   sentryDSN,
@@ -45,74 +44,75 @@ async function main() {
       process.stdout.write(usageRoot(displayQuickstart))
       process.exit(0)
     }
-
-    case 'init': {
-      await checkAuth(env, 'init')
-      await initCommand(props as InitProps, env)
-      break
-    }
-
-    case 'interactiveInit': {
-      await interactiveInitCommand(props as InteractiveInitProps, env)
-      break
-    }
+    // TODO reenable later when we have the new init flow defined
+    //
+    // case 'init': {
+    //   await checkAuth('init')
+    //   await initCommand(props as InitProps)
+    //   break
+    // }
+    //
+    // case 'interactiveInit': {
+    //   await interactiveInitCommand(props as InteractiveInitProps, env)
+    //   break
+    // }
 
     case 'push': {
-      await checkAuth(env, 'auth')
-      await pushCommand(props as PushProps, env)
+      await checkAuth('auth')
+      await pushCommand(props as PushProps)
       break
     }
 
     case 'delete': {
-      await checkAuth(env, 'auth')
+      await checkAuth('auth')
       await deleteCommand(props as DeleteProps, env)
       break
     }
 
     case 'pull': {
-      await checkAuth(env, 'auth')
+      await checkAuth('auth')
       await pullCommand(props as PullProps, env)
       break
     }
 
     case 'export': {
-      await checkAuth(env, 'auth')
+      await checkAuth('auth')
       await exportCommand(props as ExportProps, env)
       break
     }
 
     case 'status': {
-      await checkAuth(env, 'auth')
+      await checkAuth('auth')
       await statusCommand(props as StatusProps, env)
       break
     }
 
     case 'endpoints': {
-      await checkAuth(env, 'auth')
+      await checkAuth('auth')
       await endpointsCommand(props as EndpointsProps, env)
       break
     }
 
     case 'console': {
-      await checkAuth(env, 'auth')
+      await checkAuth('auth')
       await consoleCommand(props as ConsoleProps, env)
       break
     }
 
     case 'playground': {
-      await checkAuth(env, 'auth')
+      await checkAuth('auth')
       await playgroundCommand(props as PlaygroundProps, env)
       break
     }
 
     case 'projects': {
-      await checkAuth(env, 'auth')
+      await checkAuth('auth')
       await projectsCommand({}, env)
       break
     }
 
     case 'auth': {
-      await authCommand(props as AuthProps, env, new GraphcoolAuthServer('auth'))
+      await authCommand(props as AuthProps, new GraphcoolAuthServer('auth'))
       break
     }
 

@@ -40,9 +40,8 @@ export interface PushProps {
   projectFile?: string
 }
 
-export default async (props: PushProps, env: SystemEnvironment): Promise<void> => {
+export default async (props: PushProps): Promise<void> => {
 
-  const {resolver, out} = env
   const projectFilePath = getProjectFilePath(props, resolver)
 
   const projectInfo = readProjectInfoFromProjectFile(resolver, projectFilePath)

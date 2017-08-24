@@ -16,6 +16,7 @@ import {
   invalidSchemaFileMessage,
   invalidProjectNameMessage, cantCopyAcrossRegions,
 } from '../utils/constants'
+import out from '../io/Out'
 const debug = require('debug')('graphcool')
 
 export interface InitProps {
@@ -29,9 +30,7 @@ export interface InitProps {
   outputPath?: string
 }
 
-export default async (props: InitProps, env: SystemEnvironment): Promise<void> => {
-
-  const {resolver, out} = env
+export default async (props: InitProps): Promise<void> => {
 
   if (props.copyProjectId) {
     if (props.region) {
@@ -49,12 +48,12 @@ export default async (props: InitProps, env: SystemEnvironment): Promise<void> =
       includeData,
       includeMutationCallbacks
     }
-    // TODO enable when new clone flow is defined
+    // TODO pull this out to the top level
     // await cloneCommand(cloneProps, env)
 
   } else {
     // create new
-    const projectFiles = resolver.projectFiles('.')
+    const projectFiles = getProjectFiles('.')
     if (projectFiles.length > 0 && !props.outputPath) {
       throw new Error(projectAlreadyExistsMessage(projectFiles))
     }
