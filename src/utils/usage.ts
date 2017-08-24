@@ -4,6 +4,9 @@ export const usageRoot = () => `
   Serverless GraphQL backend for frontend developers (${chalk.underline('https://www.graph.cool')})
   
   ${chalk.dim('Usage:')} ${chalk.bold('graphcool')} [command]
+ 
+  ${chalk.dim('Management Commands:')}
+    env           Manage project environment
 
   ${chalk.dim('Commands:')}
     init          Create a new project
@@ -34,18 +37,55 @@ export const usageRoot = () => `
 
 `
 
+export const usageEnvironment = `
+  Usage: graphcool env COMMAND
+  
+  Manage project environment.
+  
+  ${chalk.dim('Commands:')}
+    set         Sets a project environment
+    rename      Renames a project environment
+    remove      Removes a project environment
+    default     Set the default environment
+  
+  ${chalk.dim('Options:')}
+    -h, --help  Output usage information
+`
+
+export const usageSetEnvironment = `
+  Usage: graphcool env set <environment-name> <project-id>
+  
+  Adds a project environment based on a project id.
+`
+
+export const usageRenameEnvironment = `
+  Usage: graphcool env rename <old-name> <new-name>
+  
+  Renames a project environment
+`
+
+export const usageRemoveEnvironment = `
+  Usage: graphcool env remove <environment-name>
+
+  Removes a project environment
+`
+
+export const usageDefaultEnvironment = `
+  Usage: graphcool env default <environment-name>
+
+  Set the default environment
+`
+
 export const usageInit = `
   Usage: graphcool init [options]
   
-  Create a new project from scratch or based on an existing GraphQL schema.
+  Create a new project definition and environment from scratch or based on an existing GraphQL schema.
   
   Options:
     -s, --schema <path | url>  Path / URL to a GraphQL schema (ends with .graphql)
-    -c, --copy <id | alias>    ID or alias of the project to be copied
-    --copy-opts <options>      Include items for copy (options: data, mutation-callbacks, all (default), none)
     -n, --name <name>          Project name
     -a, --alias <alias>        Project alias
-    -o, --output <path>        Path to output project file (default: project.graphcool)
+    -e, --env <environment>    Local environment name for the project (e.g. "dev" or "production")
     -r, --region <region>      AWS Region (options: us-west-2 (default), eu-west-1, ap-northeast-1)
     -h, --help                 Output usage information
       
@@ -56,74 +96,72 @@ export const usageInit = `
     
   ${chalk.gray('-')} Create a new project based on a schema
     ${chalk.cyan('$ graphcool init --schema <path | url>')}
-  
-  ${chalk.gray('-')} Create a copy of an existing project
-    ${chalk.cyan('$ graphcool init --copy <project-id | alias>')}
 
 `
 
 export const usagePull = `
-  Usage: graphcool pull [options] [<project-file>] 
+  Usage: graphcool pull [options]
   
-  Pull the latest project file from Graphcool
+  Pull the latest project definition from Graphcool
   
   Options:
-    -p, --project <id | alias>  ID or alias of source project (defaults to ID or alias from project file)
-    -o, --output <path>         Path to output project file (default: project.graphcool)
+    -p, --project <id | alias>  ID or alias of  project to delete (deprecated, use -e in the future)
+    -e, --env <environment>     Name of the project environment to pull from
     -f, --force                 Override project file
     -h, --help                  Output usage information
      
   ${chalk.dim('Examples:')}
   
-  ${chalk.gray('-')} Download latest project file for current project ([<project-file>] defaults to project.graphcool)
+  ${chalk.gray('-')} Download latest project file for current project and the default environment (written to graphcool.yml)
     ${chalk.cyan('$ graphcool pull')}
   
-  ${chalk.gray('-')} Download latest project for specific project (written to project.graphcool)
-    ${chalk.cyan('$ graphcool pull --project <project-id | alias>')}
-    
-  ${chalk.gray('-')} Download latest project for specific project (written to example.graphcool)
-    ${chalk.cyan('$ graphcool pull --project <project-id | alias> --output example.graphcool')}
+  ${chalk.gray('-')} Download latest definition for specific project environment (written to graphcool.yml)
+    ${chalk.cyan('$ graphcool pull --env <environment-name>')}
     
 `
 
 export const usagePush = `
-  Usage: graphcool push [options] [<project-file>]  
+  Usage: graphcool push [options]
   
-  Push project file changes
+  Push project definition changes
   
   Options:
-    -f, --force           Accept data loss caused by schema changes
-    -h, --help            Output usage information    
+    -p, --project <id | alias>  ID or alias of  project to delete (deprecated, use -e in the future)
+    -e, --env <environment>     Project environment to be pushed to
+    -f, --force                 Accept data loss caused by schema changes
+    -h, --help                  Output usage information
      
   ${chalk.dim('Examples:')}
       
-  ${chalk.gray('-')} Push local changes from current project file ([<project-file>] defaults to project.graphcool)
+  ${chalk.gray('-')} Push local changes from graphcool.yml to the default project environment.
     ${chalk.cyan('$ graphcool push')}
   
-  ${chalk.gray('-')} Push local changes from specific project file 
-    ${chalk.cyan('$ graphcool push <project-file>')}
+  ${chalk.gray('-')} Push local changes to a specific environment
+    ${chalk.cyan('$ graphcool push --env production')}
       
   ${chalk.gray('-')} Push local changes from current project file accepting potential data loss caused by schema changes
-    ${chalk.cyan('$ graphcool push --force <project-file>')}
+    ${chalk.cyan('$ graphcool push --force --env production')}
     
 `
 
 export const usageExport = `
-  Usage: graphcool export [options] [<project-file>] 
+  Usage: graphcool export [options]
   
   Export project data
   
   Options:
  
-    -h, --help            Output usage information
+    -e, --env                   Project environment
+    -p, --project <id | alias>  ID or alias of  project to delete
+    -h, --help                  Output usage information
      
   ${chalk.dim('Examples:')}
       
-  ${chalk.gray('-')} Export data from current project ([<project-file>] defaults to project.graphcool)
+  ${chalk.gray('-')} Export data from current project environment
     ${chalk.cyan('$ graphcool export')}
   
-  ${chalk.gray('-')} Export data from specific project file 
-    ${chalk.cyan('$ graphcool export <project-file>')}
+  ${chalk.gray('-')} Export data from specific project environment
+    ${chalk.cyan('$ graphcool export --env dev')}
 
 `
 
@@ -134,6 +172,7 @@ export const usageDelete = `
   
   Options:
  
+    -e, --env                   Project environment
     -p, --project <id | alias>  ID or alias of  project to delete
     -h, --help                  Output usage information
      
@@ -173,7 +212,7 @@ export const usageEndpoints = `
   Export project data 
   
   Options:
- 
+    -e, --env             Project environment to get the endpoints from.
     -h, --help            Output usage information
     
   ${chalk.dim('Examples:')}
@@ -192,6 +231,7 @@ export const usageConsole = `
   Open current project in Graphcool Console with your browser
 
   Options: 
+    -e, --env              Project environment to open the console for.
     -h, --help             Output usage information
     
   ${chalk.dim('Examples:')}
@@ -210,6 +250,7 @@ export const usagePlayground = `
   Open current project in Graphcool Playground with your browser
 
   Options: 
+    -e, --env              Project environment to open the console for.
     -h, --help             Output usage information
     
   ${chalk.dim('Examples:')}
