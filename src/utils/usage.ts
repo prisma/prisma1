@@ -7,9 +7,9 @@ export const usageRoot = () => `
 
   ${chalk.dim('Commands:')}
     init          Create a new project
+    env           Manage project environments
     push          Push project file changes
     pull          Download the latest project file
-    env           Manage project environment
     import        Import project data
     export        Export project data
     logs          View logs
@@ -18,7 +18,7 @@ export const usageRoot = () => `
     console       Open Graphcool Console in browser
     projects      List all projects
     delete        Delete one or more projects
-    auth          Sign up or login
+    auth          Create account or login
     version       Print version
 
   Run 'graphcool COMMAND --help' for more information on a command.
