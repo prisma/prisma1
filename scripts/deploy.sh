@@ -22,6 +22,7 @@ export BLUE_ID="${BLUE_ID:?BLUE_ID env variable not set}"
 export GREEN_ID="${GREEN_ID:?GREEN_ID env variable not set}"
 export SYSTEM_AUTH_TOKEN="${SYSTEM_AUTH_TOKEN:?SYSTEM_AUTH_TOKEN env variable not set}"
 
+exit 1
 docs-cli -c .
 
 # trigger rebuild of docs
