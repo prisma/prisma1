@@ -2,19 +2,17 @@ import * as chalk from 'chalk'
 
 export const usageRoot = () => `
   Serverless GraphQL backend for frontend developers (${chalk.underline('https://www.graph.cool')})
-  
+
   ${chalk.dim('Usage:')} ${chalk.bold('graphcool')} [command]
- 
-  ${chalk.dim('Management Commands:')}
-    env           Manage project environment
 
   ${chalk.dim('Commands:')}
     init          Create a new project
     push          Push project file changes
     pull          Download the latest project file
+    env           Manage project environment
     import        Import project data
     export        Export project data
-    info          Print project info (endpoint, version, ...)
+    info          Print project info (environments, endpoints, ...)
     playground    Open GraphQL Playground
     console       Open Graphcool Console in browser
     projects      List all projects
@@ -206,8 +204,9 @@ export const usageStatus = `
 `
 
 
+// TODO adjust
 export const usageEndpoints = `
-  Usage: graphcool endpoints [options] [<project-file>] 
+  Usage: graphcool info [options] [<project-file>] 
   
   Export project data 
   
