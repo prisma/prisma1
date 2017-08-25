@@ -16,6 +16,7 @@ jobs:
       - run:
           name: Deploy content to dev
           command: ./scripts/deploy.sh
+          shell: bash
           environment:
             BLUE_ID: 'cj67nv8do36px0187fa6i2n6z'
             GREEN_ID: 'cj6glidms1ego0162chqa3al4'

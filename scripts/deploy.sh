@@ -1,8 +1,6 @@
 #! /bin/bash
 
 set -e
-pwd
-ls
 
 if [ ! -z "$CIRCLE_BRANCH" ]; then
   UPPER_BRANCH=$(echo $CIRCLE_BRANCH | tr '[a-z]' '[A-Z]')
