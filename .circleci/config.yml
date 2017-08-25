@@ -12,7 +12,7 @@ jobs:
     working_directory: ~/repo
     steps:
       - checkout
-      - run: yarn global add docs-cli
+      - run: npm i -g docs-cli
 
 
   build-dev:
