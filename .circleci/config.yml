@@ -16,11 +16,13 @@ jobs:
       # - image: circleci/mongo:3.4.4
 
     working_directory: ~/repo
+    steps:
+      - checkout
+      - run: yarn global add docs-cli
 
 
   build-dev:
     steps:
-      - run: yarn global add docs-cli
       - run:
         name: Deploy content to dev
         command: ./scripts/deploy.sh
@@ -29,7 +31,6 @@ jobs:
           GREEN_ID: 'cj6glidms1ego0162chqa3al4'
   build-master:
     steps:
-      - run: yarn global add docs-cli
       - run:
         name: Deploy content to dev
         command: ./scripts/deploy.sh
