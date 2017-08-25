@@ -7,13 +7,7 @@ version: 2
 jobs:
   build:
     docker:
-      # specify the version you desire here
       - image: circleci/node:7.10
-      
-      # Specify service dependencies here if necessary
-      # CircleCI maintains a library of pre-built images
-      # documented at https://circleci.com/docs/2.0/circleci-images/
-      # - image: circleci/mongo:3.4.4
 
     working_directory: ~/repo
     steps:
@@ -22,6 +16,8 @@ jobs:
 
 
   build-dev:
+    docker:
+      - image: circleci/node:7.10
     steps:
       - run:
         name: Deploy content to dev
@@ -30,6 +26,8 @@ jobs:
           BLUE_ID: 'cj67nv8do36px0187fa6i2n6z'
           GREEN_ID: 'cj6glidms1ego0162chqa3al4'
   build-master:
+    docker:
+      - image: circleci/node:7.10
     steps:
       - run:
         name: Deploy content to dev
