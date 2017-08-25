@@ -148,9 +148,13 @@ In order to create a new project, either do that in a seperate folder or add it 
 providing the --env option.
 `
 
-export const noDefaultEnvironmentProvidedMessage = () => `\
+export const noDefaultEnvironmentProvidedMessage = `\
 You didn't provide a default project environment yet. Either specify the environment with --env env-name or add a new one
 with 'graphcool env set dev PROJECT_ID'
+`
+
+export const envDoesntExist = (env: string) => `\
+  The provided environment "${env}" doesn't exist.
 `
 
 export const cantCopyAcrossRegions = `\

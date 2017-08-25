@@ -18,6 +18,8 @@ import { checkAuth } from './utils/auth'
 import { GraphcoolAuthServer } from './io/GraphcoolAuthServer'
 import { sentryDSN, } from './utils/constants'
 import { usageRoot, } from './utils/usage'
+import env from './io/Environment'
+import { pick } from 'lodash'
 
 const Raven = require('raven')
 const debug = require('debug')('graphcool')
@@ -54,7 +56,8 @@ async function main() {
 
     case 'delete': {
       await checkAuth('auth')
-      await deleteCommand(props as DeleteProps)
+      const projectId = env.getProjectId(props)
+      await deleteCommand({projectId})
       break
     }
 

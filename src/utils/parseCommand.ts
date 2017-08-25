@@ -69,11 +69,12 @@ function getInstruction(args: string[]): CommandInstruction {
     }
 
     case 'delete': {
-      const sourceProjectId = argv['project'] || argv['p']
+      const project = argv['project'] || argv['p']
+      const env = argv['env'] || argv['e']
 
       return {
         command,
-        props: {sourceProjectId}
+        props: {project, env}
       }
     }
 

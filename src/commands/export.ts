@@ -19,7 +19,7 @@ import {
 const debug = require('debug')('graphcool')
 
 export interface ExportProps {
-  projectFile?: string
+  projectId: string
 }
 
 export default async(props: ExportProps, env: SystemEnvironment): Promise<void> => {

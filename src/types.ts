@@ -4,7 +4,7 @@ import { PushProps } from './commands/push'
 import { PlaygroundProps } from './commands/playground'
 import { InitProps } from './commands/init'
 import { ExportProps } from './commands/export'
-import { DeleteProps } from './commands/delete'
+import { DeleteCliProps, DeleteProps } from './commands/delete'
 import { ConsoleProps } from './commands/console'
 import { CloneProps } from './commands/clone'
 import { EndpointsProps } from './commands/endpoints'
@@ -36,7 +36,7 @@ export type CommandProps =
   AuthProps
   | CloneProps
   | ConsoleProps
-  | DeleteProps
+  | DeleteCliProps
   | EndpointsProps
   | ExportProps
   | InitProps
@@ -151,6 +151,7 @@ export interface HostedProjectEnvironment {
 }
 
 export interface DockerProjectEnvironment {
+  projectId: string
   port: number
   version: number
 }
