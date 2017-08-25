@@ -86,7 +86,6 @@ export const usageInit = `
   Create a new project definition and environment from scratch or based on an existing GraphQL schema.
   
   Options:
-    -s, --schema <path | url>  Path / URL to a GraphQL schema (ends with .graphql)
     -n, --name <name>          Project name
     -a, --alias <alias>        Project alias
     -e, --env <environment>    Local environment name for the project (e.g. "dev" or "production")
@@ -99,7 +98,7 @@ export const usageInit = `
     ${chalk.cyan('$ graphcool init')}
     
   ${chalk.gray('-')} Create a new project based on a schema
-    ${chalk.cyan('$ graphcool init --schema <path | url>')}
+    ${chalk.cyan('$ graphcool init')}
 
 `
 

@@ -7,7 +7,7 @@ import {
 } from '../types'
 import { getFastestRegion } from '../utils/ping'
 import {omit} from 'lodash'
-import config from '../utils/config'
+import config from './config'
 
 const REMOTE_PROJECT_FRAGMENT = `
   fragment RemoteProject on Project {
@@ -35,7 +35,7 @@ class Client {
     })
   }
 
-  async createProject(name: string, schema: string, alias?: string, region?: string): Promise<ProjectInfo> {
+  async createProject(name: string, projectDefinition: ProjectDefinition, alias?: string, region?: string): Promise<ProjectInfo> {
     const mutation = `\
       mutation addProject($schema: String!, $name: String!, $alias: String, $region: Region) {
         addProject(input: {
@@ -54,7 +54,7 @@ class Client {
       `
 
     // gather variables
-    let variables: any = {name, schema}
+    let variables: any = {name}
     if (alias) {
       variables = {...variables, alias}
     }
@@ -66,6 +66,8 @@ class Client {
     }
 
     const {addProject: {project}} = await this.client.request<{addProject: {project: RemoteProject}}>(mutation, variables)
+
+    // TODO set project definition, should be possibility in the addProject mutation
 
     return this.getProjectDefinition(project)
   }
@@ -176,6 +178,29 @@ class Client {
       `, {projectId})
 
     return this.getProjectDefinition(project)
+  }
+
+  async getProjectVersion(projectId: string): Promise<number> {
+    interface ProjectInfoPayload {
+      viewer: {
+        project: {
+          version: number
+        }
+      }
+    }
+
+    const {viewer: {project}} = await this.client.request<ProjectInfoPayload>(`
+      query ($projectId: ID!){
+        viewer {
+          project(id: $projectId) {
+            version
+          }
+        }
+      }
+      ${REMOTE_PROJECT_FRAGMENT}
+      `, {projectId})
+
+    return project.version
   }
 
   async deleteProjects(projectIds: string[]): Promise<string[]> {

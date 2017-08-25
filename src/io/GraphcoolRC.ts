@@ -1,7 +1,7 @@
-import { graphcoolConfigFilePath } from './constants'
+import { graphcoolRCFilePath } from '../utils/constants'
 import * as fs from 'fs'
 
-class Config {
+class GraphcoolRC {
   token: string | null = null
 
   setToken(token: string) {
@@ -13,20 +13,20 @@ class Config {
   }
 
   load() {
-    if (fs.existsSync(graphcoolConfigFilePath)) {
-      const configContent = fs.readFileSync(graphcoolConfigFilePath, 'utf-8')
+    if (fs.existsSync(graphcoolRCFilePath)) {
+      const configContent = fs.readFileSync(graphcoolRCFilePath, 'utf-8')
       this.token = JSON.parse(configContent).token
     }
   }
 
   save() {
     const json = JSON.stringify({token: this.token}, null, 2)
-    fs.writeFileSync(graphcoolConfigFilePath, json)
+    fs.writeFileSync(graphcoolRCFilePath, json)
   }
 }
 
 // expose it as a singleton
-const config = new Config()
+const config = new GraphcoolRC()
 config.load()
 
 export default config

@@ -1,10 +1,10 @@
 import * as path from 'path'
 import * as chalk from 'chalk'
 import * as fs from 'fs'
-import { GraphcoolModule, ProjectDefinition } from '../types'
+import { GraphcoolModule, ProjectDefinition } from '../../types'
 import * as mkdirp from 'mkdirp'
 import * as concordance from 'concordance'
-import concordanceOptions from './concordance-options'
+import concordanceOptions from '../../utils/concordance-options'
 
 export default async function projectToFs(project: ProjectDefinition, outputDir: string): Promise<any> {
   for (const module of project.modules) {

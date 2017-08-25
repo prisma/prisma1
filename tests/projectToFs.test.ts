@@ -4,9 +4,9 @@ import * as path from 'path'
 import * as rimraf from 'rimraf'
 import * as mkdirp from 'mkdirp'
 import { mockFileNames, mockFiles, mockDefinition, changedMockDefinition } from './fixtures/mock_modules'
-import projectToFs from '../src/utils/projectToFs'
+import projectToFs from '../src/io/ProjectDefinition/projectToFs'
 import * as globby from 'globby'
-import fsToProject from '../src/utils/fsToProject'
+import fsToProject from '../src/io/ProjectDefinition/fsToProject'
 
 const projectToFsDir = path.join(__dirname, '/project-to-fs-test')
 const projectToFsDirChanged = path.join(__dirname, '/project-to-fs-test-changed')

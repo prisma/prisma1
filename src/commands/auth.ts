@@ -6,7 +6,7 @@ import {
   couldNotRetrieveTokenMessage,
 } from '../utils/constants'
 import out from '../io/Out'
-import config from '../utils/config'
+import config from '../io/config'
 
 const debug = require('debug')('graphcool-auth')
 

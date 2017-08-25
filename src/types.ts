@@ -1,4 +1,3 @@
-import {Config} from './utils/config'
 import { AuthProps } from './commands/auth'
 import { InteractiveInitProps } from './commands/interactiveInit'
 import { PushProps } from './commands/push'
@@ -60,7 +59,7 @@ export interface CommandInstruction {
 }
 
 // TODO Remove in favor of ProjectRegion
-export type Region = 'eu_west_1' | 'ap_northeast_1' | 'us_west_2'
+export type Region = 'EU_WEST_1' | 'AP_NORTHEAST_1' | 'US_WEST_2'
 
 export interface AuthServer {
   requestAuthToken(): Promise<string>
@@ -117,20 +116,6 @@ export interface MigrationResult {
   newVersion: string
   newSchema: string
 }
-// TODO remove after cleanup
-//
-// export interface Out {
-//   write(message: string): void
-//   writeError(message: string): void
-//   startSpinner(message: string): void
-//   stopSpinner(): void
-//   onError(error: Error): void
-// }
-//
-// export interface SystemEnvironment {
-//   out: Out
-//   config: Config
-// }
 
 export interface APIError {
   message: string
@@ -151,16 +136,21 @@ export interface GraphcoolModule {
   files: {[fileName: string]: string}
 }
 
-export interface ProjectEnvironment {
-  version: number
-  projectType: ProjectType
-  hosted: ProjectEnvironmentHosted
+export interface EnvironmentConfig {
+  default: string | null
+  environments: Environments
 }
 
-type ProjectType = 'HOSTED' | 'DOCKER'
-type ProjectRegion = 'EU_WEST_1' | 'AP_NORTHEAST_1' | 'US_WEST_2'
+export type ProjectEnvironment = HostedProjectEnvironment | DockerProjectEnvironment
 
-export interface ProjectEnvironmentHosted {
-  project: string // can be project id or alias
-  region: ProjectRegion
+export interface Environments {[environment: string]: ProjectEnvironment}
+
+export interface HostedProjectEnvironment {
+  projectId: string
+  version: number
+}
+
+export interface DockerProjectEnvironment {
+  port: number
+  version: number
 }

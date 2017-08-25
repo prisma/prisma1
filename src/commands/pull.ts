@@ -19,7 +19,7 @@ import {
   warnOverrideProjectFileMessage
 } from '../utils/constants'
 import figures = require('figures')
-import projectToFs from '../utils/projectToFs'
+import projectToFs from '../io/ProjectDefinition/projectToFs'
 
 const {terminal} = require('terminal-kit')
 const debug = require('debug')('graphcool')

@@ -1,8 +1,8 @@
 import * as path from 'path'
 import * as fs from 'fs'
-import { ProjectDefinition, GraphcoolModule } from '../types'
+import { ProjectDefinition, GraphcoolModule } from '../../types'
 import gclToJson from 'gcl-lib'
-import { GCL } from '../gcl-types'
+import { GCL } from '../../gcl-types'
 
 export default async function fsToProject(inputDir: string): Promise<ProjectDefinition> {
 

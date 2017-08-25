@@ -2,6 +2,7 @@ import * as os from 'os'
 import * as path from 'path'
 import * as chalk from 'chalk'
 import figures = require('figures')
+import { EnvironmentConfig, ProjectDefinition } from '../types'
 
 /*
  * Networking & URLs
@@ -29,7 +30,7 @@ export const graphcoolEnvironmentFileName = '.env.gcl'
 // TODO enable when we have the new flow here defined
 // export const graphcoolCloneProjectFileName = (projectFileName?: string) => projectFileName ?
 //   `clone-${projectFileName.startsWith(`./`) ? projectFileName.substring(2) : projectFileName}`: `clone-${graphcoolProjectFileName}`
-export const graphcoolConfigFilePath = path.join(os.homedir(), '.graphcoolrc')
+export const graphcoolRCFilePath = path.join(os.homedir(), '.graphcoolrc')
 export const projectFileSuffix = '.graphcool'
 export const schemaFileSuffix = '.graphql'
 export const exampleSchema = `\
@@ -117,6 +118,8 @@ export const authenticationSuccessMessage = (email: string) => ` ${chalk.green(f
  * Terminal output: create
  */
 export const creatingProjectMessage = (name: string) => `Creating project ${chalk.bold(name)}...`
+// TODO incorporate environment into createdProjectMessage
+// something like: it's now accessible with the env 'dev'
 export const createdProjectMessage = (name: string, projectId: string, projectFileContent: string, projectOutputPath?: string) => `\
  ${chalk.green(figures.tick)} Created project ${chalk.bold(name)} (ID: ${projectId}) successfully.
 
@@ -139,14 +142,15 @@ Whoops, something went wrong while creating the project.
 
 `
 
-// export const projectAlreadyExistsMessage = `\
-// ${graphcoolProjectFileName} already exists for the current project. \
-// Looks like you've already setup your backend.
-// `
+export const envExistsButNoEnvNameProvided = (env: EnvironmentConfig) => `\
+You already have a project environment set up with the environments "${Object.keys(env.environments).join(', ')}".
+In order to create a new project, either do that in a seperate folder or add it to the current environments with
+providing the --env option.
+`
 
-export const projectAlreadyExistsMessage = (projectFiles: string[]) => `\
-Found ${projectFiles.length} project ${projectFiles.length === 1 ? 'file' : 'files'} in the current directory. Looks like you've already setup your backend.
-You can still use graphcool init --output file.graphcool to specify a custom output file.
+export const noDefaultEnvironmentProvidedMessage = () => `\
+You didn't provide a default project environment yet. Either specify the environment with --env env-name or add a new one
+with 'graphcool env set dev PROJECT_ID'
 `
 
 export const cantCopyAcrossRegions = `\
@@ -450,3 +454,22 @@ Use ${chalk.cyan(`\`graphcool ${command} --help\``)} to see a list of all possib
 ${chalk.bold('Error:')} The following option is not recognized: ${chalk.red(`${unknownOptions[0]}`)}
 Use ${chalk.cyan(`\`graphcool ${command} --help\``)} to see a list of all possible options.
 `
+
+
+export const defaultDefinition: ProjectDefinition = {
+  "modules": [{
+    "name": "",
+    "content": "{\n  databaseSchema: {\n    src: \"./databaseSchema/project.graphql\"\n  }\n  modelPermissions: [{\n    description: \"some description\"\n    isEnabled: true\n    operation: \"Todo.READ\"\n    authenticated: true\n    query: {\n      src: \"./permissions/cj6ck6o9i0000wd98eyplfjn2.graphql\"\n    }\n    fields: [\"*\"]\n  }, {\n    isEnabled: true\n    operation: \"Todo.READ\"\n    authenticated: false\n    query: {\n      src: \"./permissions/cj6ck6o9n0001wd98cpatb52d.graphql\"\n    }\n    fields: [\"todo.status\"]\n  }, {\n    isEnabled: true\n    operation: \"Comment.READ\"\n    authenticated: false\n    fields: [\"*\"]\n  }, {\n    isEnabled: true\n    operation: \"Comment.CREATE\"\n    authenticated: false\n    fields: [\"*\"]\n  }, {\n    isEnabled: true\n    operation: \"Comment.UPDATE\"\n    authenticated: false\n    fields: [\"*\"]\n  }, {\n    isEnabled: true\n    operation: \"Comment.DELETE\"\n    authenticated: false\n    fields: [\"*\"]\n  }, {\n    isEnabled: true\n    operation: \"User.READ\"\n    authenticated: false\n    fields: [\"*\"]\n  }, {\n    isEnabled: true\n    operation: \"User.CREATE\"\n    authenticated: false\n    fields: [\"*\"]\n  }, {\n    isEnabled: true\n    operation: \"User.UPDATE\"\n    authenticated: false\n    fields: [\"*\"]\n  }, {\n    isEnabled: true\n    operation: \"User.DELETE\"\n    authenticated: false\n    fields: [\"*\"]\n  }]\n  relationPermissions: [{\n    isEnabled: true\n    relation: \"CommentToTodo\"\n    connect: true\n    disconnect: false\n    authenticated: true\n    query: {\n      src: \"./permissions/pid.graphql\"\n    }\n  }, {\n    isEnabled: true\n    relation: \"CommentToTodo\"\n    connect: true\n    disconnect: true\n    authenticated: false\n  }]\n  functions: [{\n    name: \"chargeCreditCard\"\n    isEnabled: true\n    handler: {\n      code: {\n        src: \"./code/chargeCreditCard.js\"\n      }\n    }\n    nodeCallback: {\n      target: \"Todo\"\n      operation: CREATE\n      step: TRANSFORM_RESPONSE\n      order: 0\n    }\n  }, {\n    name: \"sendReceiptToCustomer\"\n    isEnabled: true\n    handler: {\n      webhook: {\n        url: \"some.url\"\n        headers: []\n      }\n    }\n    serversideSubscription: {\n      subscriptionQuery: {\n        src: \"./code/sendReceiptToCustomer.graphql\"\n      }\n    }\n  }, {\n    name: \"checkAvailability\"\n    isEnabled: true\n    handler: {\n      code: {\n        src: \"./code/checkAvailability.js\"\n      }\n    }\n    serversideSubscription: {\n      schemaExtension: {\n        src: \"./code/checkAvailability.graphql\"\n      }\n    }\n  }]\n  pats: []\n}",
+    "files": {
+      "./databaseSchema/project.graphql": "type Comment implements Node {\n  id: ID! @isUnique\n  isHighlightedOf: Todo @relation(name: \"CommentToTodo\")\n  text: String!\n  todo: [Todo!]! @relation(name: \"CommentToTodo\")\n}\n\ntype Todo implements Node {\n  comments: Comment! @relation(name: \"CommentToTodo\")\n  highlightedComment: Comment @relation(name: \"CommentToTodo\")\n  id: ID! @isUnique\n  score: Float @defaultValue(value: 3.1415)\n  status: TodoStatus @defaultValue(value: Done)\n  title: String! @defaultValue(value: \"Default Title\")\n}\n\nenum TodoStatus {\n  Active\n  Done\n}\n\ntype User implements Node {\n  id: ID! @isUnique\n}",
+      "./code/checkAvailability.graphql": "\ntype AvailabilityPayload {\n  isAvailable: Boolean!\n}\n\nextend type Query {\n  checkAvailability(what: String!): AvailabilityPayload!\n}\n    \"",
+      "./code/sendReceiptToCustomer.graphql": "subscription { Todo{node{title}} }\"",
+      "./code/chargeCreditCard.js": "// charge the credit card ...",
+      "./code/checkAvailability.js": "module.exports = function { return {data: {isAvailable: true}}}\"",
+      "./permissions/cj6ck6o9i0000wd98eyplfjn2.graphql": "this is a permission query",
+      "./permissions/cj6ck6o9n0001wd98cpatb52d.graphql": "this is another permission query",
+      "./permissions/pid.graphql": "some graph query for relation permission"
+    }
+  }]
+}
+

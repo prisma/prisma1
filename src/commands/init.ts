@@ -1,130 +1,73 @@
-import { Region, Resolver, SchemaInfo, SystemEnvironment, ProjectInfo } from '../types'
-import figures = require('figures')
-import generateName = require('sillyname')
+import { Region } from '../types'
 import 'isomorphic-fetch'
 // import cloneCommand from './clone'
-import { createProject, parseErrors, generateErrorOutput } from '../utils/api'
 import { projectInfoToContents } from '../utils/utils'
-import {writeProjectFile, isValidSchemaFilePath, writeBlankProjectFileWithInfo} from '../utils/file'
 import { isValidProjectName } from '../utils/validation'
 import {
-  creatingProjectMessage,
-  createdProjectMessage,
   couldNotCreateProjectMessage,
-  projectAlreadyExistsMessage,
-  sampleSchemaURL,
-  invalidSchemaFileMessage,
-  invalidProjectNameMessage, cantCopyAcrossRegions,
+  createdProjectMessage,
+  creatingProjectMessage,
+  defaultDefinition,
+  envExistsButNoEnvNameProvided,
+  invalidProjectNameMessage,
 } from '../utils/constants'
 import out from '../io/Out'
-const debug = require('debug')('graphcool')
+import env from '../io/Environment'
+import client from '../io/Client'
+import { generateErrorOutput, parseErrors } from '../utils/errors'
+import definition from '../io/ProjectDefinition/ProjectDefinition'
+import generateName = require('sillyname')
 
 export interface InitProps {
-  copyProjectId?: string // only used for copy
-  projectFile?: string // only used for copy
-  copyOptions?: string // only used for copy
-  schemaUrl?: string
   name?: string
   alias?: string
   region?: Region
   outputPath?: string
+  env?: string
 }
+
+// TODO: Blank project detection: We don't have a single file anymore, but projects now.
 
 export default async (props: InitProps): Promise<void> => {
-
-  if (props.copyProjectId) {
-    if (props.region) {
-      throw new Error(cantCopyAcrossRegions)
-    }
-    // clone
-    const includes = props.copyOptions || 'all'
-    const includeMutationCallbacks = includes === 'all' || includes === 'mutation-callbacks'
-    const includeData = includes === 'all' || includes === 'data'
-    const cloneProps = {
-      sourceProjectId: props.copyProjectId,
-      projectFile: props.projectFile,
-      outputPath: props.outputPath,
-      name: props.name,
-      includeData,
-      includeMutationCallbacks
-    }
-    // TODO pull this out to the top level
-    // await cloneCommand(cloneProps, env)
-
-  } else {
-    // create new
-    const projectFiles = getProjectFiles('.')
-    if (projectFiles.length > 0 && !props.outputPath) {
-      throw new Error(projectAlreadyExistsMessage(projectFiles))
-    }
-    if (props.name && !isValidProjectName(props.name)) {
-      throw new Error(invalidProjectNameMessage(props.name))
-    }
-
-    const name = props.name || generateName()
-    out.startSpinner(creatingProjectMessage(name))
-
-    try {
-      // resolve schema
-      const schemaUrl = props.schemaUrl
-      if (!isValidSchemaFilePath(schemaUrl)) {
-        throw new Error(invalidSchemaFileMessage(schemaUrl!))
-      }
-      const schema = await getSchema(schemaUrl!, resolver)
-
-      // create project
-      const projectInfo = await createProjectAndGetProjectInfo(name, schema, resolver, props.alias, props.region)
-      if (!isBlankProject(props)) {
-        writeProjectFile(projectInfo, resolver, props.outputPath)
-      } else {
-        writeBlankProjectFileWithInfo(projectInfo, resolver, props.outputPath)
-      }
-
-      out.stopSpinner()
-
-      const message = createdProjectMessage(name, projectInfo.projectId, projectInfoToContents(projectInfo), props.outputPath)
-      out.write(message)
-
-    } catch (e) {
-      out.stopSpinner()
-      out.writeError(`${couldNotCreateProjectMessage}`)
-
-      if (e.errors) {
-        const errors = parseErrors(e)
-        const output = generateErrorOutput(errors)
-        out.writeError(`${output}`)
-      } else {
-        throw e
-      }
-    }
+  // create new
+  if (env.default && !props.env) {
+    throw new Error(envExistsButNoEnvNameProvided(env.env))
   }
 
-}
-
-function isBlankProject(props: InitProps) {
-  return props.schemaUrl === sampleSchemaURL
-}
-
-async function createProjectAndGetProjectInfo(name: string, schema: SchemaInfo, resolver: Resolver, alias?: string, region?: string): Promise<ProjectInfo> {
-  const projectInfo = await createProject(name, schema.schema, resolver, alias, region)
-  if (schema.source === sampleSchemaURL) {
-    projectInfo.schema = `${projectInfo.schema}\n\n# type Tweet {\n#   text: String!\n# }`
+  if (props.name && !isValidProjectName(props.name)) {
+    throw new Error(invalidProjectNameMessage(props.name))
   }
-  return projectInfo
-}
 
-async function getSchema(schemaUrl: string, resolver: Resolver): Promise<SchemaInfo> {
-  if (schemaUrl.startsWith('http')) {
-    const response = await fetch(schemaUrl)
-    const schema = await response.text()
-    return {
-      schema,
-      source: schemaUrl,
-    }
-  } else {
-    return {
-      schema: resolver.read(schemaUrl),
-      source: schemaUrl,
+  const name = props.name || generateName()
+  out.startSpinner(creatingProjectMessage(name))
+
+  // TODO refactor completely. We're not creating a project based on a schema anymore, but the complete project definition
+  try {
+    // TODO later add default / empty definition if there isn't a definition in this folder yet
+    const projectDefinition = definition.definition || defaultDefinition
+
+    // create project
+    const project = await client.createProject(name, projectDefinition, props.alias, props.region)
+
+    // add environment
+    await env.set(props.env || 'dev', project.id)
+    env.save()
+
+    out.stopSpinner()
+
+    const message = createdProjectMessage(name, project.id, projectInfoToContents(project), props.outputPath)
+    out.write(message)
+
+  } catch (e) {
+    out.stopSpinner()
+    out.writeError(`${couldNotCreateProjectMessage}`)
+
+    if (e.errors) {
+      const errors = parseErrors(e)
+      const output = generateErrorOutput(errors)
+      out.writeError(`${output}`)
+    } else {
+      throw e
     }
   }
 }

@@ -6,8 +6,8 @@ import consoleCommand, { ConsoleProps } from './commands/console'
 import playgroundCommand, { PlaygroundProps } from './commands/playground'
 import projectsCommand from './commands/projects'
 import pullCommand, { PullProps } from './commands/pull'
-// import initCommand, { InitProps } from './commands/init'
-// import interactiveInitCommand, { InteractiveInitProps } from './commands/interactiveInit'
+import initCommand, { InitProps } from './commands/init'
+import interactiveInitCommand, { InteractiveInitProps } from './commands/interactiveInit'
 import exportCommand, { ExportProps } from './commands/export'
 import endpointsCommand, { EndpointsProps } from './commands/endpoints'
 import statusCommand, { StatusProps } from './commands/status'
@@ -16,11 +16,9 @@ import deleteCommand, { DeleteProps } from './commands/delete'
 import authCommand, { AuthProps } from './commands/auth'
 import { parseCommand } from './utils/parseCommand'
 import { checkAuth } from './utils/auth'
-import FileSystemResolver from './system/FileSystemResolver'
 import { GraphcoolAuthServer } from './io/GraphcoolAuthServer'
 import {
   sentryDSN,
-  graphcoolConfigFilePath,
 } from './utils/constants'
 import {
   usageRoot,
@@ -34,8 +32,6 @@ async function main() {
   // initialize sentry
   Raven.config(sentryDSN).install()
 
-  const displayQuickstart = shouldDisplayQuickstart()
-
   const {command, props}: CommandInstruction = await parseCommand(process.argv, version)
 
   switch (command) {
@@ -44,18 +40,16 @@ async function main() {
       process.stdout.write(usageRoot())
       process.exit(0)
     }
-    // TODO reenable later when we have the new init flow defined
-    //
-    // case 'init': {
-    //   await checkAuth('init')
-    //   await initCommand(props as InitProps)
-    //   break
-    // }
-    //
-    // case 'interactiveInit': {
-    //   await interactiveInitCommand(props as InteractiveInitProps, env)
-    //   break
-    // }
+    case 'init': {
+      await checkAuth('init')
+      await initCommand(props as InitProps)
+      break
+    }
+
+    case 'interactiveInit': {
+      await interactiveInitCommand(props as InteractiveInitProps)
+      break
+    }
 
     case 'push': {
       await checkAuth('auth')
@@ -65,49 +59,49 @@ async function main() {
 
     case 'delete': {
       await checkAuth('auth')
-      await deleteCommand(props as DeleteProps, env)
+      await deleteCommand(props as DeleteProps)
       break
     }
 
     case 'pull': {
       await checkAuth('auth')
-      await pullCommand(props as PullProps, env)
+      await pullCommand(props as PullProps)
       break
     }
 
     case 'export': {
       await checkAuth('auth')
-      await exportCommand(props as ExportProps, env)
+      await exportCommand(props as ExportProps)
       break
     }
 
     case 'status': {
       await checkAuth('auth')
-      await statusCommand(props as StatusProps, env)
+      await statusCommand(props as StatusProps)
       break
     }
 
     case 'endpoints': {
       await checkAuth('auth')
-      await endpointsCommand(props as EndpointsProps, env)
+      await endpointsCommand(props as EndpointsProps)
       break
     }
 
     case 'console': {
       await checkAuth('auth')
-      await consoleCommand(props as ConsoleProps, env)
+      await consoleCommand(props as ConsoleProps)
       break
     }
 
     case 'playground': {
       await checkAuth('auth')
-      await playgroundCommand(props as PlaygroundProps, env)
+      await playgroundCommand(props as PlaygroundProps)
       break
     }
 
     case 'projects': {
       await checkAuth('auth')
-      await projectsCommand({}, env)
+      await projectsCommand({})
       break
     }
 
@@ -117,7 +111,7 @@ async function main() {
     }
 
     case 'quickstart': {
-      await quickstartCommand({}, env)
+      await quickstartCommand({})
       break
     }
 
