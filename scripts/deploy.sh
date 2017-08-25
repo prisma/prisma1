@@ -18,8 +18,9 @@ export PAT_BLUE="${PAT_BLUE:?PAT_BLUE env variable not set}"
 export PAT_GREEN="${PAT_GREEN:?PAT_GREEN env variable not set}"
 export BLUE_ID="${BLUE_ID:?BLUE_ID env variable not set}"
 export GREEN_ID="${GREEN_ID:?GREEN_ID env variable not set}"
+export SYSTEM_AUTH_TOKEN="${SYSTEM_AUTH_TOKEN:?SYSTEM_AUTH_TOKEN env variable not set}"
 
-docs-cli -c content
+docs-cli -c .
 
 # trigger rebuild of docs
 #curl -X POST https://circleci.com/api/v1.1/project/github/graphcool/homepage/tree/$BRANCH?circle-token=$CIRCLE_TOKEN
