@@ -12,7 +12,7 @@ jobs:
     working_directory: ~/repo
     steps:
       - checkout
-      - run: npm i -g docs-cli
+      - run: sudo npm i -g docs-cli
 
 
   build-dev:
