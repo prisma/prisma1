@@ -1,4 +1,4 @@
-import { AuthServer, SystemEnvironment } from '../types'
+import { AuthServer } from '../types'
 import { sleep } from '../utils/system'
 import {
   openBrowserMessage,
@@ -6,7 +6,7 @@ import {
   couldNotRetrieveTokenMessage,
 } from '../utils/constants'
 import out from '../io/Out'
-import config from '../io/config'
+import config from '../io/GraphcoolRC'
 
 const debug = require('debug')('graphcool-auth')
 
@@ -14,9 +14,7 @@ export interface AuthProps {
   token?: string
 }
 
-export default async (props: AuthProps, authServer: AuthServer): Promise<void> => {
-
-  let token = props.token!
+export default async ({token}: AuthProps, authServer: AuthServer): Promise<void> => {
 
   if (!token) {
     out.startSpinner(openBrowserMessage)
