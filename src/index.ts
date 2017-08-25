@@ -1,13 +1,12 @@
 #!/usr/bin/env node
 
-import { AuthTrigger, Command, CommandInstruction} from './types'
+import { CommandInstruction } from './types'
 import pushCommand, { PushProps } from './commands/push'
 import consoleCommand, { ConsoleProps } from './commands/console'
 import playgroundCommand, { PlaygroundProps } from './commands/playground'
 import projectsCommand from './commands/projects'
 import pullCommand, { PullProps } from './commands/pull'
 import initCommand, { InitProps } from './commands/init'
-import interactiveInitCommand, { InteractiveInitProps } from './commands/interactiveInit'
 import exportCommand, { ExportProps } from './commands/export'
 import endpointsCommand, { EndpointsProps } from './commands/endpoints'
 import statusCommand, { StatusProps } from './commands/status'
@@ -17,12 +16,8 @@ import authCommand, { AuthProps } from './commands/auth'
 import { parseCommand } from './utils/parseCommand'
 import { checkAuth } from './utils/auth'
 import { GraphcoolAuthServer } from './io/GraphcoolAuthServer'
-import {
-  sentryDSN,
-} from './utils/constants'
-import {
-  usageRoot,
-} from './utils/usage'
+import { sentryDSN, } from './utils/constants'
+import { usageRoot, } from './utils/usage'
 
 const Raven = require('raven')
 const debug = require('debug')('graphcool')
@@ -46,10 +41,10 @@ async function main() {
       break
     }
 
-    case 'interactiveInit': {
-      await interactiveInitCommand(props as InteractiveInitProps)
-      break
-    }
+    // case 'interactiveInit': {
+    //   await interactiveInitCommand(props as InteractiveInitProps)
+    //   break
+    // }
 
     case 'push': {
       await checkAuth('auth')
