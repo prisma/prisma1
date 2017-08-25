@@ -11,7 +11,6 @@ export interface ConsoleProps {
 }
 
 export default async (props: ConsoleProps): Promise<void> => {
-  const {resolver, out} = env
 
   const token = env.config.get('token')
   if (!token) {
