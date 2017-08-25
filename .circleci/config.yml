@@ -12,42 +12,42 @@ jobs:
     working_directory: ~/repo
     steps:
       - checkout
-      - run: npm i -g docs-cli
-
-
-  build-dev:
-    docker:
-      - image: circleci/node:7.10
-    steps:
+      - run: sudo npm i -g docs-cli
       - run:
-        name: Deploy content to dev
-        command: ./scripts/deploy.sh
-        environment:
-          BLUE_ID: 'cj67nv8do36px0187fa6i2n6z'
-          GREEN_ID: 'cj6glidms1ego0162chqa3al4'
-  build-master:
-    docker:
-      - image: circleci/node:7.10
-    steps:
-      - run:
-        name: Deploy content to dev
-        command: ./scripts/deploy.sh
-        environment:
-          BLUE_ID: 'cj67nv8do36px0187fa6i2n6z'
-          GREEN_ID: 'cj6glidms1ego0162chqa3al4'
+          name: Deploy content to dev
+          command: ./scripts/deploy.sh
+          environment:
+            BLUE_ID: 'cj67nv8do36px0187fa6i2n6z'
+            GREEN_ID: 'cj6glidms1ego0162chqa3al4'
 
-workflows:
-  version: 2
-  build-dev:
-    jobs:
-      - build-dev:
-        filters:
-          branches:
-            only: /dev/
 
-  build-master:
-    jobs:
-      - build-dev:
-        filters:
-          branches:
-            only: /master/
+          #   build-dev:
+          #     docker:
+          #       - image: circleci/node:7.10
+          #     steps:
+          #       - run:
+          #         name: Deploy content to dev
+          #         command: ./scripts/deploy.sh
+          #         environment:
+          #           BLUE_ID: 'cj67nv8do36px0187fa6i2n6z'
+          #           GREEN_ID: 'cj6glidms1ego0162chqa3al4'
+          #   build-master:
+          #     docker:
+          #       - image: circleci/node:7.10
+          #     steps:
+          # 
+          # workflows:
+          #   version: 2
+          #   build-dev:
+          #     jobs:
+          #       - build-dev:
+          #         filters:
+          #           branches:
+          #             only: /dev/
+          # 
+          #   build-master:
+          #     jobs:
+          #       - build-dev:
+          #         filters:
+          #           branches:
+          #             only: /master/

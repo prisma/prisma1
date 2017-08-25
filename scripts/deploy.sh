@@ -1,6 +1,8 @@
-#! /bin/bash
+#!/bin/bash
 
 set -e
+set -o pipefail
+
 
 if [ ! -z "$CIRCLE_BRANCH" ]; then
   UPPER_BRANCH=$(echo $CIRCLE_BRANCH | tr '[a-z]' '[A-Z]')
