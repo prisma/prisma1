@@ -12,6 +12,7 @@ export const usageRoot = () => `
     env           Manage project environment
     import        Import project data
     export        Export project data
+    logs          View logs
     info          Print project info (environments, endpoints, ...)
     playground    Open GraphQL Playground
     console       Open Graphcool Console in browser
@@ -48,30 +49,35 @@ export const usageEnvironment = `
   
   ${chalk.dim('Options:')}
     -h, --help  Output usage information
+
 `
 
 export const usageSetEnvironment = `
   Usage: graphcool env set <environment-name> <project-id>
   
   Adds a project environment based on a project id.
+
 `
 
 export const usageRenameEnvironment = `
   Usage: graphcool env rename <old-name> <new-name>
   
   Renames a project environment
+
 `
 
 export const usageRemoveEnvironment = `
   Usage: graphcool env remove <environment-name>
 
   Removes a project environment
+
 `
 
 export const usageDefaultEnvironment = `
   Usage: graphcool env default <environment-name>
 
   Set the default environment
+
 `
 
 export const usageInit = `
@@ -160,6 +166,32 @@ export const usageExport = `
   
   ${chalk.gray('-')} Export data from specific project environment
     ${chalk.cyan('$ graphcool export --env dev')}
+
+`
+
+export const usageLogs = `
+  Usage: graphcool logs COMMAND
+
+  View logs.
+
+  ${chalk.dim('Commands:')}
+    function <function-name>   View function execution logs
+    requests                   View request logs (COMING SOON)
+
+  ${chalk.dim('Options:')}
+    -h, --help  Output usage information
+
+`
+
+export const usageLogsFunction = `
+  Usage: graphcool logs function <function-name>
+
+  View function execution logs.
+
+  Options:
+ 
+    --no-color            Produce monochrome output
+    -f, --follow          Follow log output
 
 `
 
