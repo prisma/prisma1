@@ -18,4 +18,3 @@ export default async({projectId}: InfoProps): Promise<void> => {
   const message = endpointsMessage(projectId)
   out.write(message)
 }
-

@@ -5,14 +5,13 @@ import pushCommand, { PushProps } from './commands/push'
 import consoleCommand, { ConsoleProps } from './commands/console'
 import playgroundCommand, { PlaygroundProps } from './commands/playground'
 import projectsCommand from './commands/projects'
-import pullCommand, { PullProps } from './commands/pull'
+import pullCommand, { PullCliProps, PullProps } from './commands/pull'
 import initCommand, { InitProps } from './commands/init'
 import exportCommand, { ExportProps } from './commands/export'
-import endpointsCommand, { EndpointsProps } from './commands/endpoints'
-import statusCommand, { StatusProps } from './commands/status'
 import quickstartCommand from './commands/quickstart'
-import deleteCommand, { DeleteProps } from './commands/delete'
+import deleteCommand, { DeleteCliProps, DeleteProps } from './commands/delete'
 import authCommand, { AuthProps } from './commands/auth'
+import infoCommand from './commands/info'
 import { parseCommand } from './utils/parseCommand'
 import { checkAuth } from './utils/auth'
 import { GraphcoolAuthServer } from './io/GraphcoolAuthServer'
@@ -20,6 +19,7 @@ import { sentryDSN, } from './utils/constants'
 import { usageRoot, } from './utils/usage'
 import env from './io/Environment'
 import { pick } from 'lodash'
+import { InfoProps } from './commands/info'
 
 const Raven = require('raven')
 const debug = require('debug')('graphcool')
@@ -57,15 +57,19 @@ async function main() {
 
     case 'delete': {
       await checkAuth('auth')
-      const projectId = env.getProjectId(props)
+      const projectId = env.getProjectId(props as DeleteCliProps)
       await deleteCommand({projectId})
       break
     }
 
     case 'pull': {
       await checkAuth('auth')
-      const projectId = env.getProjectId(pick(props, ['project', 'env']))
-      await pullCommand(props as PullProps)
+      const projectId: string = env.getProjectId(pick<string, PullCliProps>(props as PullCliProps, ['project', 'env']))
+      await pullCommand({
+        projectId,
+        outputPath: (props as any).outputPath,
+        force: (props as any).force,
+      })
       break
     }
 
@@ -75,15 +79,10 @@ async function main() {
       break
     }
 
-    case 'status': {
+    case 'info': {
       await checkAuth('auth')
-      await statusCommand(props as StatusProps)
-      break
-    }
-
-    case 'endpoints': {
-      await checkAuth('auth')
-      await endpointsCommand(props as EndpointsProps)
+      const projectId = env.getProjectId(props)
+      await infoCommand(props as InfoProps)
       break
     }
 

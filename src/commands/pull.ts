@@ -37,8 +37,7 @@ export interface PullCliProps {
   force: boolean
 }
 
-export default async (props: PullProps, env: SystemEnvironment): Promise<void> => {
-  const {resolver, out} = env
+export default async (props: PullProps): Promise<void> => {
 
   try {
 

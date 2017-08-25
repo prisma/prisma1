@@ -1,22 +1,7 @@
-import {SystemEnvironment} from '../types'
-import {
-  readProjectIdFromProjectFile,
-  isValidProjectFilePath
-} from '../utils/file'
-import {
-  noProjectIdMessage,
-  exportingDataMessage,
-  downloadUrlMessage,
-  invalidProjectFilePathMessage,
-  multipleProjectFilesForExportMessage,
-  noProjectFileMessage
-} from '../utils/constants'
-import {
-  exportProjectData,
-  parseErrors,
-  generateErrorOutput
-} from '../utils/api'
-const debug = require('debug')('graphcool')
+import { downloadUrlMessage, exportingDataMessage } from '../utils/constants'
+import out from '../io/Out'
+import client from '../io/Client'
+import { generateErrorOutput, parseErrors } from '../utils/errors'
 
 export interface ExportProps {
   projectId: string
@@ -27,24 +12,13 @@ export interface ExportCliProps {
   project?: string
 }
 
-export default async(props: ExportProps, env: SystemEnvironment): Promise<void> => {
-  const {resolver, out} = env
-
+export default async({projectId}: ExportProps, env: SystemEnvironment): Promise<void> => {
   try {
-
-    const projectId = getProjectId(props, env)
-    if (!projectId) {
-      throw new Error(noProjectIdMessage)
-    }
-
     out.startSpinner(exportingDataMessage)
-
-    const url = await exportProjectData(projectId!, resolver)
-
+    const url = await client.exportProjectData(projectId)
     const message = downloadUrlMessage(url)
     out.stopSpinner()
     out.write(message)
-
   } catch(e) {
     out.stopSpinner()
     if (e.errors) {
@@ -54,28 +28,5 @@ export default async(props: ExportProps, env: SystemEnvironment): Promise<void> 
     } else {
       throw e
     }
-
   }
-
-}
-
-function getProjectId(props: ExportProps, env: SystemEnvironment): string | undefined {
-  const {resolver} = env
-
-  // check if provided file is valid (ends with correct suffix)
-  if (props.projectFile  && isValidProjectFilePath(props.projectFile)) {
-    return readProjectIdFromProjectFile(resolver, props.projectFile!)
-  } else if (props.projectFile && !isValidProjectFilePath(props.projectFile)) {
-    throw new Error(invalidProjectFilePathMessage(props.projectFile))
-  }
-
-  // no project file provided, search for one in current dir
-  const projectFiles = resolver.projectFiles('.')
-  if (projectFiles.length === 0) {
-    throw new Error(noProjectFileMessage)
-  } else if (projectFiles.length > 1) {
-    throw new Error(multipleProjectFilesForExportMessage(projectFiles))
-  }
-
-  return readProjectIdFromProjectFile(resolver, projectFiles[0])
 }

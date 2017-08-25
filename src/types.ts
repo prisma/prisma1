@@ -12,16 +12,16 @@ import { ProjectsProps } from './commands/projects'
 import { PullCliProps } from './commands/pull'
 import { StatusProps } from './commands/status'
 import { QuickstartProps } from './commands/quickstart'
+import { InfoCliProps } from './commands/info'
 
 export type Command =
   'auth'
   | 'push'
-  | 'status'
   | 'init'
   | 'interactiveInit'
   | 'export'
   | 'pull'
-  | 'endpoints'
+  | 'info'
   | 'console'
   | 'playground'
   | 'projects'
@@ -38,17 +38,16 @@ export type CommandProps =
   | CloneProps
   | ConsoleProps
   | DeleteCliProps
-  | EndpointsProps
   | ExportProps
   | InitProps
-  // | InteractiveInitProps
+  | InfoCliProps
   | PlaygroundProps
   | ProjectsProps
   | PullCliProps
-  // | PushProps
   | QuickstartProps
-  | StatusProps
   | UsageProps
+// | InteractiveInitProps
+// | PushProps
 
 interface UsageProps {
   command: Command
