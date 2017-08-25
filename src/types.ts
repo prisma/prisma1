@@ -3,14 +3,12 @@ import { AuthProps } from './commands/auth'
 // import { PushProps } from './commands/push'
 import { PlaygroundProps } from './commands/playground'
 import { InitProps } from './commands/init'
-import { ExportProps } from './commands/export'
+import { ExportCliProps } from './commands/export'
 import { DeleteCliProps } from './commands/delete'
 import { ConsoleProps } from './commands/console'
 import { CloneProps } from './commands/clone'
-import { EndpointsProps } from './commands/endpoints'
 import { ProjectsProps } from './commands/projects'
 import { PullCliProps } from './commands/pull'
-import { StatusProps } from './commands/status'
 import { QuickstartProps } from './commands/quickstart'
 import { InfoCliProps } from './commands/info'
 
@@ -38,7 +36,7 @@ export type CommandProps =
   | CloneProps
   | ConsoleProps
   | DeleteCliProps
-  | ExportProps
+  | ExportCliProps
   | InitProps
   | InfoCliProps
   | PlaygroundProps

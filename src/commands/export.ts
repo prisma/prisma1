@@ -12,7 +12,7 @@ export interface ExportCliProps {
   project?: string
 }
 
-export default async({projectId}: ExportProps, env: SystemEnvironment): Promise<void> => {
+export default async({projectId}: ExportProps): Promise<void> => {
   try {
     out.startSpinner(exportingDataMessage)
     const url = await client.exportProjectData(projectId)
