@@ -15,8 +15,7 @@ jobs:
       - run: sudo npm i -g docs-cli
       - run:
           name: Deploy content to dev
-          command: ./scripts/deploy.sh
-          shell: bash
+          command: bash ./scripts/deploy.sh
           environment:
             BLUE_ID: 'cj67nv8do36px0187fa6i2n6z'
             GREEN_ID: 'cj6glidms1ego0162chqa3al4'
