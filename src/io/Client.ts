@@ -203,6 +203,29 @@ class Client {
     return project.version
   }
 
+  async getProjectName(projectId: string): Promise<string> {
+    interface ProjectInfoPayload {
+      viewer: {
+        project: {
+          name: number
+        }
+      }
+    }
+
+    const {viewer: {project}} = await this.client.request<ProjectInfoPayload>(`
+      query ($projectId: ID!){
+        viewer {
+          project(id: $projectId) {
+            name
+          }
+        }
+      }
+      ${REMOTE_PROJECT_FRAGMENT}
+      `, {projectId})
+
+    return project.name
+  }
+
   async deleteProjects(projectIds: string[]): Promise<string[]> {
     const inputArguments = projectIds.reduce((prev, current, index) => {
       return `${prev}$projectId${index}: String!${index < (projectIds.length - 1) ? ', ' : ''}`

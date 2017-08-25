@@ -1,17 +1,18 @@
 import { AuthProps } from './commands/auth'
-import { InteractiveInitProps } from './commands/interactiveInit'
-import { PushProps } from './commands/push'
+// import { InteractiveInitProps } from './commands/interactiveInit'
+// import { PushProps } from './commands/push'
 import { PlaygroundProps } from './commands/playground'
 import { InitProps } from './commands/init'
 import { ExportProps } from './commands/export'
-import { DeleteCliProps, DeleteProps } from './commands/delete'
+import { DeleteCliProps } from './commands/delete'
 import { ConsoleProps } from './commands/console'
 import { CloneProps } from './commands/clone'
 import { EndpointsProps } from './commands/endpoints'
 import { ProjectsProps } from './commands/projects'
-import { PullProps } from './commands/pull'
+import { PullCliProps } from './commands/pull'
 import { StatusProps } from './commands/status'
 import { QuickstartProps } from './commands/quickstart'
+
 export type Command =
   'auth'
   | 'push'
@@ -40,11 +41,11 @@ export type CommandProps =
   | EndpointsProps
   | ExportProps
   | InitProps
-  | InteractiveInitProps
+  // | InteractiveInitProps
   | PlaygroundProps
   | ProjectsProps
-  | PullProps
-  | PushProps
+  | PullCliProps
+  // | PushProps
   | QuickstartProps
   | StatusProps
   | UsageProps

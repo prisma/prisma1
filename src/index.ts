@@ -48,11 +48,12 @@ async function main() {
     //   break
     // }
 
-    case 'push': {
-      await checkAuth('auth')
-      await pushCommand(props as PushProps)
-      break
-    }
+    // TODO reenable push as soon as the backend is ready
+    // case 'push': {
+    //   await checkAuth('auth')
+    //   await pushCommand(props as PushProps)
+    //   break
+    // }
 
     case 'delete': {
       await checkAuth('auth')
@@ -63,6 +64,7 @@ async function main() {
 
     case 'pull': {
       await checkAuth('auth')
+      const projectId = env.getProjectId(pick(props, ['project', 'env']))
       await pullCommand(props as PullProps)
       break
     }

@@ -22,6 +22,11 @@ export interface ExportProps {
   projectId: string
 }
 
+export interface ExportCliProps {
+  env?: string
+  project?: string
+}
+
 export default async(props: ExportProps, env: SystemEnvironment): Promise<void> => {
   const {resolver, out} = env
 

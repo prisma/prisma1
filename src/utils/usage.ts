@@ -115,7 +115,7 @@ export const usagePull = `
      
   ${chalk.dim('Examples:')}
   
-  ${chalk.gray('-')} Download latest project file for current project and the default environment (written to graphcool.yml)
+  ${chalk.gray('-')} Download latest project file for default project and the default environment (written to graphcool.yml)
     ${chalk.cyan('$ graphcool pull')}
   
   ${chalk.gray('-')} Download latest definition for specific project environment (written to graphcool.yml)
@@ -142,7 +142,7 @@ export const usagePush = `
   ${chalk.gray('-')} Push local changes to a specific environment
     ${chalk.cyan('$ graphcool push --env production')}
       
-  ${chalk.gray('-')} Push local changes from current project file accepting potential data loss caused by schema changes
+  ${chalk.gray('-')} Push local changes from default project file accepting potential data loss caused by schema changes
     ${chalk.cyan('$ graphcool push --force --env production')}
     
 `
@@ -160,7 +160,7 @@ export const usageExport = `
      
   ${chalk.dim('Examples:')}
       
-  ${chalk.gray('-')} Export data from current project environment
+  ${chalk.gray('-')} Export data from default project environment
     ${chalk.cyan('$ graphcool export')}
   
   ${chalk.gray('-')} Export data from specific project environment
@@ -215,31 +215,11 @@ export const usageDelete = `
 `
 
 
-export const usageStatus = `
-  Usage: graphcool status [options] [<project-file>] 
-  
-  Display difference between local and remote schema versions
-  
-  Options:
- 
-    -h, --help            Output usage information
-    
-  ${chalk.dim('Examples:')}
-      
-  ${chalk.gray('-')} Status for current project ([<project-file>] defaults to project.graphcool)
-    ${chalk.cyan('$ graphcool status')}
-  
-  ${chalk.gray('-')} Status for specific project
-    ${chalk.cyan('$ graphcool status <project-file>')}
 
-`
-
-
-// TODO adjust
-export const usageEndpoints = `
-  Usage: graphcool info [options] [<project-file>] 
+export const usageInfo = `
+  Usage: graphcool info [options]
   
-  Export project data 
+  Print project info (environments, endpoints, ...) 
   
   Options:
     -e, --env             Project environment to get the endpoints from.
@@ -247,18 +227,18 @@ export const usageEndpoints = `
     
   ${chalk.dim('Examples:')}
       
-  ${chalk.gray('-')} Display API endpoints for current project ([<project-file>] defaults to project.graphcool)
-    ${chalk.cyan('$ graphcool endpoints')}
+  ${chalk.gray('-')} Print project info for the default project environment
+    ${chalk.cyan('$ graphcool info')}
   
-  ${chalk.gray('-')} Display API endpoints for specific project
-    ${chalk.cyan('$ graphcool endpoints <project-file>')}
+  ${chalk.gray('-')} Print project info for a specific project environment
+    ${chalk.cyan('$ graphcool info -e dev')}
 
 `
 
 export const usageConsole = `
-  Usage: graphcool console [options] [<project-file>] 
+  Usage: graphcool console [options]
   
-  Open current project in Graphcool Console with your browser
+  Open default project in Graphcool Console with your browser
 
   Options: 
     -e, --env              Project environment to open the console for.
@@ -266,18 +246,18 @@ export const usageConsole = `
     
   ${chalk.dim('Examples:')}
       
-  ${chalk.gray('-')} Open console for current project ([<project-file>] defaults to project.graphcool)
+  ${chalk.gray('-')} Open console for the default project environment
     ${chalk.cyan('$ graphcool console')}
   
-  ${chalk.gray('-')} Open console for specific project
-    ${chalk.cyan('$ graphcool console <project-file>')}
+  ${chalk.gray('-')} Open console for specific project environment
+    ${chalk.cyan('$ graphcool console -e dev')}
     
 `
 
 export const usagePlayground = `
-  Usage: graphcool console [options] [<project-file>]
+  Usage: graphcool console [options]
   
-  Open current project in Graphcool Playground with your browser
+  Open default project in Graphcool Playground with your browser
 
   Options: 
     -e, --env              Project environment to open the console for.
@@ -285,11 +265,11 @@ export const usagePlayground = `
     
   ${chalk.dim('Examples:')}
       
-  ${chalk.gray('-')} Open playground for current project ([<project-file>] defaults to project.graphcool)
+  ${chalk.gray('-')} Open playground for the default project environment
     ${chalk.cyan('$ graphcool playground')}
   
-  ${chalk.gray('-')} Open playground for specific project
-    ${chalk.cyan('$ graphcool playground <project-file>')}    
+  ${chalk.gray('-')} Open playground for a specific project environment
+    ${chalk.cyan('$ graphcool playground -e dev')}    
     
 `
 

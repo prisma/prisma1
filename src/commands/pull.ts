@@ -25,8 +25,14 @@ const {terminal} = require('terminal-kit')
 const debug = require('debug')('graphcool')
 
 export interface PullProps {
-  sourceProjectId?: string
-  projectFile?: string
+  projectId: string
+  outputPath?: string
+  force: boolean
+}
+
+export interface PullCliProps {
+  project?: string
+  env?: string
   outputPath?: string
   force: boolean
 }

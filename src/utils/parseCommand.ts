@@ -79,27 +79,26 @@ function getInstruction(args: string[]): CommandInstruction {
     }
 
     case 'pull': {
-      const sourceProjectId = argv['project'] || argv['p']
+      const project = argv['project'] || argv['p']
+      const env = argv['env'] || argv['e']
       const projectFile = argv._[1]
       const outputPath = argv['output'] || argv['o']
       const force = !!(argv['force'] || argv['f'])
 
       return {
         command,
-        props: {sourceProjectId, projectFile, outputPath, force},
+        props: {project, env, projectFile, outputPath, force},
       }
     }
 
     case 'export':
-    case 'status':
-    case 'endpoints':
     case 'console':
     case 'playground': {
-      const projectFile = argv._[1]
+      const env = argv['env'] || argv['e']
 
       return {
         command,
-        props: {projectFile}
+        props: {env}
       }
     }
 
