@@ -1,3 +1,8 @@
+---
+alias: ling1meibo 
+description: An overview of how data modelling is done with Graphcool.
+---
+
 # Data Modelling
 
 ## Using GraphQL SDL to Define Your Data Model

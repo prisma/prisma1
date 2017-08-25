@@ -1,3 +1,8 @@
+---
+alias: fae2eeng4z 
+description: An overview of how Graphcool abstracts away the Database Layer.
+---
+
 # Database
 
 ## Graphcool Abstracts Away the Database Layer

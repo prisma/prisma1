@@ -1,3 +1,8 @@
+---
+alias: ai9onos0fu 
+description: An overview how data validation and transformation works in Graphcool.
+---
+
 # Synchronous Functions for Transforming & Validating Data
 
 ## Overview

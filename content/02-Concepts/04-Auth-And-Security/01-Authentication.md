@@ -1,3 +1,8 @@
+---
+alias: aix9viidei 
+description: An overview of how authentication works in Graphcool.
+---
+
 # Authentication
 
 ## Token-based Authentication

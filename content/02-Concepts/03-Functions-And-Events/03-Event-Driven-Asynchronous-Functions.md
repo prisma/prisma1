@@ -1,3 +1,8 @@
+---
+alias: gie1quae4z 
+description: An overview of how to use event-driven asynchronous functions in Graphcool.
+---
+
 # Event-Driven Asynchronous Functions
 
 ## Overview

@@ -1,3 +1,8 @@
+---
+alias: mie4aihe7u 
+description: An overview of how schema extensions work with Graphcool.
+---
+
 # Schema Extensions
 
 ## Overview

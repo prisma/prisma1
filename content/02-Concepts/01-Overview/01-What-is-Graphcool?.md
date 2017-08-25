@@ -1,3 +1,8 @@
+---
+alias: apohpae9ju 
+description: An overview of the Graphcool platform.
+---
+
 # What is Graphcool
 
 ## A new kind of backend development framework
@@ -8,7 +13,7 @@ It's crucial to understand that this new level of abstraction also makes Graphco
 
 With Graphcool, it's possible to build truly event-driven applications where the different pieces of functionality are composed like Lego bricks!
 
-## Traditional backend development is focussed on infrastructure
+## Traditional Backend Development is Focussed on Infrastructure
 
 In traditional backend development, there are a couple of common infrastructure-related tasks that developers need to repeatedly perform to get an API up-and-running:
 
@@ -23,7 +28,7 @@ Looking closer at these tasks, they're all related to *infrastructure* but in-an
 
 Graphcool provides developers with the right tools so they don't have to worry about infrastructure any more but instead can focus on custom business logic and value-adding features!
 
-## GraphQL and Serverless enable a new architecture
+## GraphQL and Serverless Enable a new Architecture
 
 As mentioned above, Graphcool is based on GraphQL and Serverless, two technologies that are each revolutionary approaches for the problem domains they've been developed for. Both technologies are still very young but are seeing major adoption in the developer communities. 
 
@@ -32,9 +37,3 @@ GraphQL is a query language for APIs, solving many of the problems and inefficie
 Serverless on the other hand is a new paradigm that enables developers to write and deploy individual functions rather than having to take care of full servers that need to be implemented and managed. This lightweight approach to development lays the foundation for event-driven architectures and makes it easy to build large-scale applications that are composed from smaller units of functionality. 
 
 Taken together, GraphQL and Serverless enable a completely new kind of architecture that's a game changer for server-side development. We're calling this: The Serverless GraphQL Backend Architecture. The idea of this architecture is heavily based on the principles mentioned in the [12 factor app methodology](https://12factor.net/).
-
-
-
-
-
-

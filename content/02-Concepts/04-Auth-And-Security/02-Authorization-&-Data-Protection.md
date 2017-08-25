@@ -1,3 +1,8 @@
+---
+alias: eew4hahphe 
+description: An overview of how authorization works in Graphcool.
+---
+
 # Authorization & Data Protection
 
 ## All CRUD Operations are Whitelisted by Default
