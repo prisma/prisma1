@@ -6,7 +6,6 @@ related:
   - https://blog.graph.cool/using-the-graphcool-cli-for-a-multi-stage-development-workflow-e69a32c690c1
   - tdoghei9go
   - tijghei9go
-  - ak36byy6wl
   - cboghez0go
 ---
 
