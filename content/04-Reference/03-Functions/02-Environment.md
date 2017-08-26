@@ -1,5 +1,5 @@
 ---
-alias: aiw4aimie9
+alias: lah7reidae
 description: Graphcool Functions can run either inline or using a remote webhook.
 ---
 
