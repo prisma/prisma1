@@ -1,14 +1,18 @@
 ---
 alias: opheidaix3
-description: Relay introduces new concepts on top of GraphQL. Learn more about terms like connections, edges and nodes in Relay and see a pagination example.
+description: Graphcool uses a dedicated YAML format for configuration.
 ---
 
-# This is another Test
+# Project Configuration (YAML)
 
-The terminology of Relay can be quite overwhelming in the beginning. Relay introduces a handful of new concepts on top of GraphQL, mainly in order to manage relationships between models.
+Every Graphcool project consists of several different pieces of information that developers can provide:
 
+- Database model: Determines the types that are to be persisted in the database. These types typically represent the entities from the application domain.
+- Permission rules: Define which users are allowed to perform what operations in the API. 
+- Serverless functions: Used to implement custom business logic
 
+To manage each of these components in a coherent way, Graphcool uses a custom configuration format written in [YAML](https://en.wikipedia.org/wiki/YAML).
 
+![](http://imgur.com/tMQKBfg.png)
 
-
-
+![](http://imgur.com/hgABTZY.png)
