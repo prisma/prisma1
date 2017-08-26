@@ -1,15 +1,6 @@
 ---
 alias: zezoo7uaph
-path: /docs/reference/console/schema-editor
-layout: REFERENCE
 description: The schema editor in the Graphcool Console allows you to manage and evolve the data schema for your Graphcool project.
-tags:
-  - console
-related:
-  further:
-    - ahwoh2fohj
-    - paesahku9t
-  more:
 ---
 
 # Schema Editor

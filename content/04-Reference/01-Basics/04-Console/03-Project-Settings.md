@@ -1,15 +1,6 @@
 ---
 alias: aechi6iequ
-path: /docs/reference/console/projects
-layout: REFERENCE
 description: The Graphcool project settings gives you an overview of your monthly usage, allows you to manage collaborators and more.
-tags:
-  - console
-related:
-  further:
-    - eip7ahqu5o
-    - heshoov3ai
-  more:
 ---
 
 # Project Settings

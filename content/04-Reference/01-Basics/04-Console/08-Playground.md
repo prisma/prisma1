@@ -1,14 +1,6 @@
 ---
 alias: oe1ier4iej
-path: /docs/reference/console/playground
-layout: REFERENCE
 description: In the Graphcool console, you can manage multiple GraphQL projects, define your GraphQL schema and create or modify your data set.
-tags:
-  - console
-related:
-  further:
-    - ook6luephu
-  more:
 ---
 
 # Playground

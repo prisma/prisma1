@@ -1,14 +1,6 @@
 ---
 alias: ejamaid4ae
-path: /docs/reference/console/functions-view
-layout: REFERENCE
 description: The functions view in the Graphcool Console allows you to manage Graphcool functions in your Graphcool project.
-tags:
-  - console
-related:
-  further:
-    - boo6uteemo
-  more:
 ---
 
 # Functions View

@@ -1,13 +1,6 @@
 ---
 alias: och3ookaeb
-path: /docs/reference/console/data-browser
-layout: REFERENCE
 description: In the Graphcool console, you can manage multiple GraphQL projects, define your GraphQL schema and create or modify your data set.
-tags:
-  - console
-related:
-  further:
-  more:
 ---
 
 # Data Browser
