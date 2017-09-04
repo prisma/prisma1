@@ -15,7 +15,7 @@ The trigger of the request pipeline associates the Request Pipeline function wit
 
 Every request to the GraphQL APIs pass several execution layers. The request pipeline allows you to **transform and validate data** as well as **prevent a request from reaching the next layer**, effectively aborting the request.
 
-![](./hook-points.png)
+<!-- ![](./hook-points.png) -->
 
 ### Execution Layers
 
