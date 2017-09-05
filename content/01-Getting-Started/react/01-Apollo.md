@@ -6,7 +6,6 @@ ordered: true
 ---
 
 # Apollo is awesome
-!InfoBox[This is a Info Box!](type="info"){type="info2"}
 
 The terminology of Relay can be quite overwhelming in the beginning. Relay introduces a handful of new concepts on top of GraphQL, mainly in order to manage relationships between models.
 
