@@ -5,7 +5,7 @@ description: An introduction to GraphQL.
 
 # GraphQL Primer
 
-> In case you're already familiar with GraphQL, please continue with the [next section](http://#).
+> In case you're already familiar with GraphQL, please continue with the [next section](!alias-sai7aes3iv).
 
 
 ## GraphQL Overview
@@ -137,7 +137,7 @@ GraphQL further offers a mechanism for clients to receive *event*-*based* realti
 
 > You can learn more about events and their role in the Graphcool system in the next chapter.
 
-The client can subscribe by sending a *subscription query* which establishes a websocket connection to the server*.* A subscription query is based on the exact same syntax as queries and mutations. Here is an example to subscribe to the event of a new `Post` being created. With this subscription query, the server will push the `title` as well as the `author`'s `name` to the client:
+The client can subscribe by sending a *subscription query* which establishes a websocket connection to the server. A subscription query is based on the exact same syntax as queries and mutations. Here is an example to subscribe to the event of a new `Post` being created. With this subscription query, the server will push the `title` as well as the `author`'s `name` to the client:
 
 ```graphql
 subscription {
@@ -154,7 +154,7 @@ subscription {
 }
 ```
 
-In this case, `Post` is the root field of the subscription query. We further specify a `filter` object that allows us to define that we're only interested in *created-*mutations. If we also wanted to be notified about *updated*- and *deleted*-mutations, we would only have to update the array to also include these values: `[CREATED, UPDATED, DELETED]`.
+In this case, `Post` is the root field of the subscription query. We further specify a `filter` object that allows us to define that we're only interested in *created*-mutations. If we also wanted to be notified about *updated*- and *deleted*-mutations, we would only have to update the array to also include these values: `[CREATED, UPDATED, DELETED]`.
 
 > If you want to learn more about subscription queries and why the selection set starts with the `node` keyword, you can read the [reference documentation](http:/#) for subscriptions.
 
