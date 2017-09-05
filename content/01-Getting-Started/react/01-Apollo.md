@@ -12,6 +12,33 @@ The terminology of Relay can be quite overwhelming in the beginning. Relay intro
 This already leads to the first new term: a one-to-many relationship between two
 models is called a **connection**.
 
+<InfoBox type="info">
+
+*This is markdown*
+```js
+console.log('hi');
+```
+
+</InfoBox>
+
+<InfoBox type="warning">
+
+*This is markdown*
+```js
+console.log('hi');
+```
+
+</InfoBox>
+
+<InfoBox type="danger">
+
+*This is markdown*
+```js
+console.log('hi');
+```
+
+</InfoBox>
+
 ## Trolo
 
 ### Example
