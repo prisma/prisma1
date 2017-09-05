@@ -6,11 +6,39 @@ ordered: true
 ---
 
 # Apollo is awesome
+!InfoBox[This is a Info Box!](type="info"){type="info2"}
 
 The terminology of Relay can be quite overwhelming in the beginning. Relay introduces a handful of new concepts on top of GraphQL, mainly in order to manage relationships between models.
 
 This already leads to the first new term: a one-to-many relationship between two
 models is called a **connection**.
+
+<InfoBox type="info">
+
+*This is markdown*
+```js
+console.log('hi');
+```
+
+</InfoBox>
+
+<InfoBox type="warning">
+
+*This is markdown*
+```js
+console.log('hi');
+```
+
+</InfoBox>
+
+<InfoBox type="danger">
+
+*This is markdown*
+```js
+console.log('hi');
+```
+
+</InfoBox>
 
 ## Trolo
 
