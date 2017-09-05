@@ -1,5 +1,5 @@
 ---
-alias: eer4wiang0
+alias: eer4witng0
 description: The file management system allows you to upload, modify and delete files with the GraphQL APIs. Files will be directly available in your backend.
 ---
 
