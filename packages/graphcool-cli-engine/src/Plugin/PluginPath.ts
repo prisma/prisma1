@@ -134,7 +134,6 @@ export class PluginPath {
   async require(): Promise<ParsedPlugin> {
     let required
     try {
-      console.log('requiring', this.path)
       required = require(this.path)
     } catch (err) {
       if (await this.repair(err)) {
@@ -148,6 +147,7 @@ export class PluginPath {
     const exportedTopics: ParsedTopic[] = required.topics && required.topics.map(t => this.undefaultTopic(t))
     const topics: ParsedTopic[] = this.parsePjsonTopics().concat(exportedTopics || []).concat(exportedTopic || [])
     const commands: ParsedCommand[] = required.commands && required.commands.map(t => this.undefaultCommand(t))
+
     return {topics, commands}
   }
 

@@ -4,11 +4,11 @@ import * as os from 'os'
 import * as fs from 'fs-extra'
 
 export class Config {
-  debug: boolean = true
+  debug: boolean = Boolean(process.env.DEBUG && process.env.DEBUG!.includes('*'))
   windows: boolean = false
   bin: string = 'graphcool'
   mock: boolean = true
-  argv: string[] = []
+  argv: string[] = process.argv.slice(1)
   // TODO check if this is correct
   commandsDir: string = path.join(__dirname, '../dist/commands')
   defaultCommand: string = 'help'
@@ -34,7 +34,7 @@ export class Config {
     // noop
     if (options) {
       this.mock = options.mock
-      this.argv = options.argv ? options.argv : []
+      this.argv = options.argv || this.argv
       if (options.root) {
         this.root = options.root
         const pjsonPath = path.join(options.root, 'package.json')

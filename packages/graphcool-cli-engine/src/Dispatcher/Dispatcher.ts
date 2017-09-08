@@ -2,6 +2,8 @@
 import * as path from 'path'
 import {undefault} from '../util'
 import { Config } from '../Config'
+import { Output } from '../Output/index'
+import Plugins from '../Plugin/Plugins'
 const debug = require('debug')('cli:dispatcher')
 
 export class CommandManagerBase {
@@ -56,16 +58,14 @@ export class CLICommandManager extends CommandManagerBase {
 // TODO look into this later: https://sourcegraph.com/github.com/heroku/cli-engine/-/blob/src/plugins/index.js#L9:33
 // not needed right now
 //
-// class PluginCommandManager extends CommandManagerBase {
-//   async findCommand (id) {
-//     const {default: Output} = require('cli-engine-command/lib/output')
-//     const {default: Plugins} = require('./plugins')
-//     let out = new Output(this.config)
-//     let plugins = new Plugins(out)
-//     await plugins.load()
-//     return plugins.findCommand(id || this.config.defaultCommand || 'help')
-//   }
-// }
+class PluginCommandManager extends CommandManagerBase {
+  async findCommand (id) {
+    let out = new Output(this.config)
+    let plugins = new Plugins(out)
+    await plugins.load()
+    return plugins.findCommand(id || this.config.defaultCommand || 'help')
+  }
+}
 
 export class Dispatcher {
   config: Config
@@ -75,11 +75,9 @@ export class Dispatcher {
     this.config = config
     this.managers = [
       new CLICommandManager(config),
-      new BuiltinCommandManager(config)
+      new BuiltinCommandManager(config),
+      new PluginCommandManager(config)
     ]
-    // if (this.config.userPlugins) {
-    //   this.managers.unshift(new PluginCommandManager(config))
-    // }
   }
 
   async findCommand (id: string): Promise<{
