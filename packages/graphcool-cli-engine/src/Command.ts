@@ -7,6 +7,7 @@ import { Config } from './Config'
 import { RunOptions } from './types'
 import { OutputArgs, OutputFlags, Parser } from './Parser'
 import Help from './Help'
+import { Client } from './Client/Client'
 
 export class Command {
   static topic: string
@@ -51,6 +52,7 @@ export class Command {
 
   protected static version = pjson.version
 
+  client: Client
   out: Output
   config: Config
   flags: OutputFlags

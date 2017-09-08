@@ -11,6 +11,7 @@ import * as util from 'util'
 import { errtermwidth } from './actions/screen'
 import { TableOptions } from './table'
 import ExitError from '../errors/ExitError'
+import * as inquirer from 'inquirer'
 
 export const CustomColors = {
   // map gray -> dim because it's not solarized compatible
@@ -78,6 +79,7 @@ export class Output {
   stdout: StreamOutput
   stderr: StreamOutput
   prompter: Prompter
+  prompt: any
 
   constructor(config: Config) {
     this.config = config
@@ -90,6 +92,7 @@ export class Output {
       CustomColors.supports = false
     }
     this.prompter = new Prompter(this)
+    this.prompt = inquirer.createPromptModule({ output: process.stdout })
   }
 
   get color(): chalk & { graphcool: (s: string) => string } {
@@ -177,7 +180,7 @@ export class Output {
     logToFile(util.inspect(err) + '\n', this.errlog)
   }
 
-  prompt(name: string, options: PromptOptions) {
+  oldprompt(name: string, options: PromptOptions) {
     return this.prompter.prompt(name, options)
   }
 
