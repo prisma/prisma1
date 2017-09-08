@@ -1,6 +1,6 @@
 ---
 alias: ai9onos0fu 
-description: An overview how data validation and transformation works in Graphcool.
+description: An overview of the three different function types that can be used on the Graphcool platform and how to use them.
 ---
 
 # Hooks
