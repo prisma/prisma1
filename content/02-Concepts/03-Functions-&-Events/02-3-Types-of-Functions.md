@@ -30,7 +30,7 @@ mutation {
 
 <InfoBox type="info">
 
-The `operationBefore` and `operationAfter` hooks offer relatively simple ways to inject custom functionality into the GraphQL Engine. For more advanced use cases, you should look into the Proxy Layer.
+The `operationBefore` and `operationAfter` hooks offer relatively simple ways to inject custom functionality into the GraphQL Engine. For more advanced use cases, the Proxy Layer should be used.
 
 </InfoBox>
 
@@ -83,8 +83,84 @@ The input type of the function is identical to the for `operationBefore`, meanin
 
 ## Resolvers
 
+As was discussed in the [Database & API]() chapter, Graphcool generates a GraphQL schema based on the data model that you define for your project. It also generates the resolvers that implement the functionality defined in the schema. However, the auto-generated functionality is limited to CRUD operations along with filtering, ordering and pagination capabilities.  
+
+Sometimes you might want to add more custom functionality to your API that's not covered by the above mentioned CRUD capabilities. In these cases, you can extend your GraphQL schema (meaning you can add new fields to existing types) manually and implement the corresponding resolver functions yourself.
+
+You can do this for the schema's root types as well as regular model types! There generally are two major use cases for these custom resolvers:
+
+- "Shortcuts" to the GraphQL Engine
+- Integrating external systems
 
 
+<InfoBox type="info">
+
+All the functionality that you can implement with custom resolvers can also be implemented through the Proxy Layer. It is up to you where you want to put certain functionality. The Proxy Layer should generally be considered for more advanced use cases though - if your use case is rather simple and you only have a few custom resolvers to be implemented, the Proxy Layer might be an overkill.  
+
+</InfoBox>
+
+
+### Shortcuts to the GraphQL Engine
+
+Consider the following model type:
+
+```graphql
+type Person {
+  name: String!
+  age: Int!
+}
+```
+
+If you had an application that frequently needed to load the names of all persons that are under 18 years old, the app would have to send the following query every time:
+
+```graphql
+query {
+  allPersons(filter: {
+    age_lt: 18
+  }) {
+    name
+  }
+}
+```
+
+This is just a simple example and already rather verbose. With a custom resolver, you could now add a new field to the schema's `Query` type that hides the filter (which you are going to implement yourself in the corresponding resolver function):
+
+```graphql
+extend type Query {
+  allPersonsUnder18: [Person!]!
+}
+```
+
+Notice that inside your serverless function, you can use the [`graphcool-lib`](https://github.com/graphcool/graphcool-lib) which provides you with a lot of convenience when accessing the GraphQL Engine.  
+
+
+### Integrating external systems
+
+Another very powerful use case for custom resolvers is the integration of external systems like 3rd-party APIs or existing microservices.
+
+Consider this simple model type:
+
+```graphql
+type Country {
+  name: String!
+}
+```
+
+By adding a custom field to it and implementing a resolver you're effectively able to augment the capabilities of this type. You could for example add new fields to represent the capital of a country:
+
+```graphql
+type Country {
+  name: String!
+  capital: String!
+}
+```
+
+This new field `capital` now needs to be backed by a custom resolver function that is able to retrieve the capital of a country from some external source.
+
+
+## Server-side Subscriptions & Events
+
+The last kind of function are server-side subscriptions. In contrast to hooks and custom resolvers, subscriptions are executed _asynchronously_ and triggered by (typed) _events_.
 
 
 
