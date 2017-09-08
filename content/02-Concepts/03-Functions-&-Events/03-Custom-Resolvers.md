@@ -9,7 +9,7 @@ As was discussed in the [Database & API]() chapter, Graphcool generates a GraphQ
 
 Sometimes you might want to add more custom functionality to your API that's not covered by the above mentioned CRUD capabilities. In these cases, you can extend your GraphQL schema (meaning you can add new fields to existing types) manually and implement the corresponding resolver functions yourself.
 
-You can do this for the schema's root types as well as regular model types! There generally are two major use cases for these custom resolvers:
+You can do this for the schema's root types as well as regular model types! There generally are three major use cases for these custom resolvers:
 
 - Custom Authentication
 - "Shortcuts" to the GraphQL Engine
