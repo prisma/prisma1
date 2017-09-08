@@ -65,7 +65,7 @@ The input for the function would now be the following object:
 ```
 
 
-## After writing to the database: `operationBefore`
+## After writing to the database: `operationAfter`
 
 Analogously to the `operationBefore` hook, a function that's associated with `operationAfter` is invoked right after the data from the mutation was written to the database.
 
