@@ -30,7 +30,7 @@ function renderList(items: string[][]): string {
       }
       left = `${S(trimCmd(left, maxLeftLength)).padRight(maxLeftLength)}`
       right = linewrap(maxLeftLength + 2, right)
-      return `${left}  ${right}`
+      return `${left}    ${right}`
     }).join('\n')
 }
 
@@ -74,7 +74,7 @@ export default class Help extends Command {
 
   topics(ptopics: any[] | null = null, id: string | null = null, offset: number = 1) {
     const color = this.out.color
-    this.out.log(`${color.bold('Usage:')} ${this.config.bin} ${id || ''}${id ? ':' : ''}COMMAND
+    this.out.log(`${color.bold('Usage:')} ${this.config.bin} ${id || ''}${id ? ' ' : ''}COMMAND
 
 Help topics, type ${this.out.color.cmd(this.config.bin + ' help TOPIC')} for more details:\n`)
     let topics = (ptopics || this.plugins.topics).filter(t => {
@@ -101,7 +101,7 @@ Help topics, type ${this.out.color.cmd(this.config.bin + ' help TOPIC')} for mor
       return
     }
     commands.sort(compare('command'))
-    const helpCmd = this.out.color.cmd(`${this.config.bin} help ${topic}:COMMAND`)
+    const helpCmd = this.out.color.cmd(`${this.config.bin} help ${topic} COMMAND`)
     this.out.log(`${this.config.bin} ${this.out.color.bold(topic)} commands: (get help with ${helpCmd})`)
     this.out.log(renderList(commands.map(c => c.buildHelpLine(this.config))))
     this.out.log('')

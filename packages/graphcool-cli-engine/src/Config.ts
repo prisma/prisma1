@@ -25,13 +25,13 @@ export class Config {
       defaultCommand: 'help',
     }
   }
-  graphcoolRCFilePath = path.join(os.homedir(), '.graphcool')
-  // TODO put in root field
+  definitionDir = process.cwd()
+  dotGraphcoolFilePath = path.join(os.homedir(), '.graphcool')
   root = path.join(__dirname, '..')
   /* tslint:disable-next-line */
   __cache = {}
   home = os.homedir() || os.tmpdir()
-  token: string
+  token: string | null
   authUIEndpoint = process.env.ENV === 'DEV' ? 'https://dev.console.graph.cool/cli/auth' : 'https://console.graph.cool/cli/auth'
   systemAPIEndpoint = process.env.ENV === 'DEV' ? 'https://dev.api.graph.cool/system' : 'https://api.graph.cool/system'
   authEndpoint = process.env.ENV === 'DEV' ? 'https://cli-auth-api.graph.cool/dev' : 'https://cli-auth-api.graph.cool/prod'
@@ -40,8 +40,8 @@ export class Config {
 
   constructor(options?: RunOptions) {
     // noop
-    if (fs.pathExistsSync(this.graphcoolRCFilePath)) {
-      const configContent = fs.readFileSync(this.graphcoolRCFilePath, 'utf-8')
+    if (fs.pathExistsSync(this.dotGraphcoolFilePath)) {
+      const configContent = fs.readFileSync(this.dotGraphcoolFilePath, 'utf-8')
       this.token = JSON.parse(configContent).token
     }
 
@@ -55,8 +55,12 @@ export class Config {
       }
     }
   }
-  setToken(token: string) {
+  setToken(token: string | null) {
     this.token = token
+  }
+  saveToken() {
+    const json = JSON.stringify({token: this.token}, null, 2)
+    fs.writeFileSync(this.dotGraphcoolFilePath, json)
   }
   get arch(): string {
     return os.arch() === 'ia32' ? 'x86' : os.arch()

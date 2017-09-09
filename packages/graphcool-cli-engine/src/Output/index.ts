@@ -1,6 +1,7 @@
 import { Config } from '../Config'
 import StreamOutput, { logToFile } from './StreamOutput'
 import * as chalk from 'chalk'
+import * as styles from 'ansi-styles'
 import { ActionBase, shouldDisplaySpinner } from './actions/ActionBase'
 import Prompter, { PromptOptions } from './Prompter'
 import * as supports from 'supports-color'
@@ -29,7 +30,7 @@ export const CustomColors = {
       return s
     }
     const has256 = CustomColors.supports.has256 || (process.env.TERM || '').indexOf('256') !== -1
-    return has256 ? '\u001b[38;5;104m' + s + chalk.styles.reset.open : chalk.magenta(s)
+    return has256 ? '\u001b[38;5;104m' + s + styles.reset.open : chalk.magenta(s)
   }
 }
 
@@ -180,7 +181,7 @@ export class Output {
     logToFile(util.inspect(err) + '\n', this.errlog)
   }
 
-  oldprompt(name: string, options: PromptOptions) {
+  oldprompt(name: string, options?: PromptOptions) {
     return this.prompter.prompt(name, options)
   }
 

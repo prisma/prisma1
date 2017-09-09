@@ -3,6 +3,7 @@ import { Arg } from './Flags/index'
 import { Output } from './Output/index'
 import { Config } from './Config'
 import { linewrap } from './util'
+import * as chalk from 'chalk'
 
 function renderList(items: string[][]): string {
   const S = require('string')
@@ -18,7 +19,7 @@ function renderList(items: string[][]): string {
       }
       left = `${S(left).padRight(maxLength)}`
       right = linewrap(maxLength + 2, right)
-      return `${left}  ${right}`
+      return `${left}    ${right}`
     })
   return lines.join('\n')
 }
@@ -28,12 +29,12 @@ function buildUsage(command: any): string {
   if (command.usage) {
     return command.usage.trim()
   }
-  const cmd = command.id
+  const cmd = command.id.replace(/:/g, ' ')
   if (!command.args) {
-    return cmd.trim()
+    return chalk.bold(cmd.trim())
   }
   const args = command.args.map(renderArg)
-  return `${cmd} ${args.join(' ')}`.trim()
+  return `${chalk.bold(cmd)} ${args.join(' ')}`.trim()
 }
 
 function renderArg(arg: Arg): string {

@@ -4,10 +4,11 @@ import packagejson = require('../package.json')
 const pjson = packagejson as any
 import { Output } from './Output'
 import { Config } from './Config'
-import { RunOptions } from './types'
+import { ProjectDefinition, RunOptions } from './types'
 import { OutputArgs, OutputFlags, Parser } from './Parser'
 import Help from './Help'
 import { Client } from './Client/Client'
+import ProjectDefinitionClass from './ProjectDefinition/ProjectDefinition'
 
 export class Command {
   static topic: string
@@ -55,6 +56,7 @@ export class Command {
   client: Client
   out: Output
   config: Config
+  definition: ProjectDefinitionClass
   flags: OutputFlags
   args?: OutputArgs
   argv: string[]
@@ -63,6 +65,7 @@ export class Command {
     this.config = new Config(options.config)
     this.out = new Output(this.config)
     this.argv = (options.config && options.config.argv) ? options.config.argv : []
+    this.definition = new ProjectDefinitionClass(this.out, this.config)
   }
 
   async run(...rest: void[]): Promise<void> {

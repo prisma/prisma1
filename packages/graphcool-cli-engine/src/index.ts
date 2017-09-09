@@ -4,17 +4,14 @@ export {
   RunOptions,
   ProjectDefinition,
   ProjectInfo,
-  ProjectEnvironment,
   GraphcoolModule,
   EnvironmentConfig,
   Environments,
-  DockerProjectEnvironment,
   RemoteProject,
   APIError,
   AuthServer,
   AuthTrigger,
   CheckAuth,
-  HostedProjectEnvironment,
   MigrateProjectPayload,
   MigrationActionType,
   MigrationErrorMessage,
@@ -23,3 +20,5 @@ export {
   Region,
   SchemaInfo
 } from './types'
+
+export {flags, Flag, Arg, Flags} from './Flags'

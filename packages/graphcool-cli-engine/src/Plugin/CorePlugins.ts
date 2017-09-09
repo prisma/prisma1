@@ -31,7 +31,6 @@ export default class CorePlugins extends Manager {
       }
       return plugins
     } catch (err) {
-      console.log('NO CORE PLUGINS')
       this.out.warn(err, 'Error loading core plugins')
       return []
     }

@@ -95,17 +95,4 @@ export interface EnvironmentConfig {
   environments: Environments
 }
 
-export type ProjectEnvironment = HostedProjectEnvironment | DockerProjectEnvironment
-
-export interface Environments {[environment: string]: ProjectEnvironment}
-
-export interface HostedProjectEnvironment {
-  projectId: string
-  version: number
-}
-
-export interface DockerProjectEnvironment {
-  projectId: string
-  port: number
-  version: number
-}
+export interface Environments {[environment: string]: string}

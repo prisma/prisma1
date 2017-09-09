@@ -3,9 +3,9 @@ import { Output } from './index'
 import { PromptMaskError } from '../errors/PromptMaskError'
 
 export interface PromptOptions {
-  name: string,
-  prompt: string,
-  mask: boolean
+  name?: string,
+  prompt?: string,
+  mask?: boolean
   hide?: boolean
 }
 
@@ -16,7 +16,7 @@ export default class Prompter {
     this.out = out
   }
 
-  prompt (name: string, options: PromptOptions): Promise<string> {
+  prompt (name: string, options: PromptOptions = {}): Promise<string> {
     options = options || {}
     options.name = name
     options.prompt = name ? this.out.color.dim(`${name}: `) : this.out.color.dim('> ')
@@ -33,11 +33,11 @@ export default class Prompter {
           process.stdin.setEncoding('utf8')
           this.out.stderr.write(options.prompt || '>')
           process.stdin.resume()
-          process.stdin.once('data', function (data) {
+          process.stdin.once('data', (data) => {
             process.stdin.pause()
             data = data.trim()
             if (data === '') {
-              resolve(this.prompt(name))
+              resolve(this.prompt(name, {name}))
             } else {
               resolve(data)
             }

@@ -10,6 +10,6 @@ export default class Trolo extends Command {
   $ BLA
   `
   async run() {
-    this.out.log('ran command 2')
+    this.out.log('ran command 3')
   }
 }

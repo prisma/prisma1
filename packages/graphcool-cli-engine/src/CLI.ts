@@ -73,8 +73,10 @@ export class CLI {
       // CONTINUE!!!
       // here the magic happens!!!
       // here we have to convert the spaces to colons until the first flag
-      debug(`argv:`, this.config.argv)
-      const id = this.config.argv[1]
+      const id = this.getCommandId(this.config.argv.slice(1))
+      const firstFlag = this.config.argv.findIndex(param => param.startsWith('-'))
+      this.config.argv = this.config.argv.slice(firstFlag)
+      debug(`command id: ${id}`)
       const dispatcher = new Dispatcher(this.config)
       const result = await dispatcher.findCommand(id || this.config.defaultCommand || 'help')
       const {plugin} = result
@@ -126,6 +128,15 @@ export class CLI {
   get Help () {
     const {default: Help} = require('./commands/help')
     return Help
+  }
+
+  private getCommandId(argv: string[]) {
+    const firstFlag = argv.findIndex(param => param.startsWith('-'))
+    if (firstFlag === -1) {
+      return argv.join(':')
+    } else {
+      return argv.slice(0, firstFlag).join(':')
+    }
   }
 }
 
