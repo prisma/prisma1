@@ -22,7 +22,6 @@ export interface Project {
   id: string
   name: string
   schema: string
-  version: number
   alias: string
   region: string
 }
@@ -35,7 +34,6 @@ export interface ProjectInfo extends Project {
   id: string
   name: string
   schema: string
-  version: number
   alias: string
   region: string
   projectDefinition: ProjectDefinition
@@ -66,7 +64,6 @@ export interface MigrateProjectPayload {
 export interface MigrationResult {
   migrationMessages: MigrationMessage[]
   errors: MigrationErrorMessage[]
-  newVersion: number
   newSchema: string
   projectDefinition: ProjectDefinition
 }

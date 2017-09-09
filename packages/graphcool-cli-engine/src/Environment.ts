@@ -4,17 +4,19 @@ import fs from './fs'
 import { Output } from './Output/index'
 import { EnvironmentConfig } from './types'
 import { Client } from './Client/Client'
-import EnvDoesntExistError from './errors/EnvDoesntExistError'
+import { Config } from './Config';
+import { EnvDoesntExistError } from './errors/EnvDoesntExistError'
 
-const envPath = path.join(process.cwd(), '.graphcoolrc')
-
-class Environment {
+export class Environment {
   env: EnvironmentConfig
   out: Output
   client: Client
+  config: Config
 
-  constructor(out: Output, client: Client) {
+  constructor(out: Output, config: Config, client: Client) {
     this.out = out
+    this.config = config
+    this.client = client
   }
 
   public initEmptyEnvironment() {
@@ -33,9 +35,9 @@ class Environment {
   }
 
   public load() {
-    if (fs.existsSync(envPath)) {
+    if (fs.existsSync(this.config.envPath)) {
       try {
-        this.env = yaml.safeLoad(fs.readFileSync(envPath, 'utf-8'))
+        this.env = yaml.safeLoad(fs.readFileSync(this.config.envPath, 'utf-8'))
       } catch (e) {
         this.out.error(`Error in .graphcoolrc: `)
         this.out.error(e.message)
@@ -48,22 +50,20 @@ class Environment {
 
   public save() {
     const file = yaml.safeDump(this.env)
-    fs.writeFileSync(envPath, file)
+    fs.writeFileSync(this.config.envPath, file)
   }
 
   public setEnv(name: string, projectId: string) {
     this.env.environments[name] = projectId
   }
 
-  public async set(name: string, projectId: string) {
-    const version = await this.client.getProjectVersion(projectId)
-
+  public set (name: string, projectId: string) {
     this.env.environments[name] = projectId
   }
 
   public setDefault(name: string) {
     if (!this.env.environments[name]) {
-      throw new Error(`Environment ${name} doesn't exist in local .graphcoolrc definition`)
+      this.out.error(new EnvDoesntExistError(name))
     }
     this.env.default = name
   }
@@ -72,7 +72,7 @@ class Environment {
     const oldEnv = this.env.environments[oldName]
 
     if (!oldEnv) {
-      throw new Error(`Environment ${oldName} doesn't exist`)
+      this.out.error(new EnvDoesntExistError(oldName))
     }
 
     delete this.env.environments[oldName]
@@ -86,7 +86,7 @@ class Environment {
     const oldEnv = this.env.environments[envName]
 
     if (!oldEnv) {
-      throw new Error(`Environment ${envName} doesn't exist`)
+      this.out.error(new EnvDoesntExistError(envName))
     }
 
     delete this.env.environments[envName]
@@ -101,46 +101,47 @@ class Environment {
     })
   }
 
-  public async getProjectId({project, env, skipDefault}: {project?: string, env?: string, skipDefault?: boolean}): Promise<string | null> {
+  public async getEnvironment({project, env, skipDefault}: { project?: string, env?: string, skipDefault?: boolean }): Promise<{ projectId: string | null, envName: string | null }> {
+    let projectId: null | string = null
+
+    if (env) {
+      projectId = this.env.environments[env] || null
+      return {
+        envName: env, projectId,
+      }
+    }
+
     if (project) {
       const projects = await this.client.fetchProjects()
       const foundProject = projects.find(p => p.id === project || p.alias === project)
-      if (!foundProject) {
-        throw new Error(`Project with alias or id "${project}" could not be found in this account`)
+      projectId = foundProject ? foundProject.id : null
+      if (projectId) {
+        const resultEnv = this.getEnvironmentName(projectId)
+
+        return {
+          projectId, envName: resultEnv,
+        }
       }
-      return foundProject.id
-    }
-
-    if (env) {
-      const projectId = this.env.environments[env]
-
-      if (!projectId) {
-        throw new EnvDoesntExistError(env)
-      }
-
-      return projectId
     }
 
     if (this.default && !skipDefault) {
-      return this.default
-    }
-
-    return null
-  }
-
-  public getEnvironmentName(projectId: string): {envName: string} | null {
-    const envName = Object.keys(this.env.environments).find(key => {
-      const projectEnv = this.env.environments[key]
-      return projectEnv === projectId
-    })
-
-    if (envName) {
       return {
-        envName,
+        projectId: this.default,
+        envName: this.env.default,
       }
     }
 
-    return null
+    return {
+      projectId: null,
+      envName: null,
+    }
+  }
+
+  private getEnvironmentName(projectId: string): string | null {
+    return Object.keys(this.env.environments).find(key => {
+      const projectEnv = this.env.environments[key]
+      return projectEnv === projectId
+    }) || null
   }
 
 }

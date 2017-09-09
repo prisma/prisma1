@@ -36,5 +36,8 @@
       "tslint",
       "git add"
     ]
+  },
+  "dependencies": {
+    "figures": "^2.0.0"
   }
 }

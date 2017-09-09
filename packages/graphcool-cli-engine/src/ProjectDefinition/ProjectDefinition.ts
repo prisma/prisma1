@@ -8,7 +8,7 @@ import fs from '../fs'
 import { Output } from '../Output/index'
 import { Config } from '../Config'
 
-export default class ProjectDefinitionClass {
+export class ProjectDefinitionClass {
   definition: ProjectDefinition | null
   out: Output
   config: Config

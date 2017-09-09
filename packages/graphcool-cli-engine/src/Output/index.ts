@@ -13,6 +13,7 @@ import { errtermwidth } from './actions/screen'
 import { TableOptions } from './table'
 import ExitError from '../errors/ExitError'
 import * as inquirer from 'inquirer'
+import { MigrationPrinter } from './migration'
 
 export const CustomColors = {
   // map gray -> dim because it's not solarized compatible
@@ -81,6 +82,7 @@ export class Output {
   stderr: StreamOutput
   prompter: Prompter
   prompt: any
+  migration: MigrationPrinter
 
   constructor(config: Config) {
     this.config = config
@@ -94,6 +96,7 @@ export class Output {
     }
     this.prompter = new Prompter(this)
     this.prompt = inquirer.createPromptModule({ output: process.stdout })
+    this.migration = new MigrationPrinter(this)
   }
 
   get color(): chalk & { graphcool: (s: string) => string } {

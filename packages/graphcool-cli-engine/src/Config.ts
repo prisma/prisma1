@@ -37,6 +37,7 @@ export class Config {
   authEndpoint = process.env.ENV === 'DEV' ? 'https://cli-auth-api.graph.cool/dev' : 'https://cli-auth-api.graph.cool/prod'
   docsEndpoint = process.env.ENV === 'DEV' ? 'https://dev.graph.cool/docs' : 'https://www.graph.cool/docs'
   statusEndpoint = 'https://crm.graph.cool/prod/status'
+  envPath = path.join(process.cwd(), '.graphcoolrc')
 
   constructor(options?: RunOptions) {
     // noop

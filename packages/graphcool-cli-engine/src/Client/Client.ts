@@ -20,7 +20,6 @@ const REMOTE_PROJECT_FRAGMENT = `
     name
     schema
     alias
-    version
     region
     projectDefinitionWithFileContent
   }
@@ -34,8 +33,8 @@ export class Client {
   private mocks: {[request: string]: string} = {}
 
   constructor(config: Config) {
-    this.updateClient()
     this.config = config
+    this.updateClient()
   }
 
   updateClient() {
@@ -107,9 +106,9 @@ export class Client {
     // push schema only
     const tempDefinition: ProjectDefinition = JSON.parse(project.projectDefinitionWithFileContent)
     tempDefinition.modules[0].files['./types.graphql'] = projectDefinition.modules[0].files['./types.graphql']
-    const res1 = await this.push(project.id, true, false, project.version, tempDefinition)
+    const res1 = await this.push(project.id, true, false, tempDefinition)
 
-    const res2 = await this.push(project.id, true, false, res1.newVersion, projectDefinition)
+    const res2 = await this.push(project.id, true, false, projectDefinition)
 
     if (res1.errors && res1.errors.length > 0) {
       throw new Error(res1.errors.map(e => e.description).join('\n'))
@@ -150,7 +149,6 @@ export class Client {
             name
             schema
             alias
-            version
             projectDefinitionWithFileContent
           }
         }
@@ -165,20 +163,18 @@ export class Client {
     return {
       migrationMessages: migrateProject.migrationMessages,
       errors: migrateProject.errors,
-      newVersion: migrateProject.project.version,
       newSchema: migrateProject.project.schema,
       projectDefinition: this.getProjectDefinition(migrateProject.project as any).projectDefinition,
     }
   }
 
-  async push(projectId: string, force: boolean, isDryRun: boolean, version: number, config: ProjectDefinition): Promise<MigrationResult> {
+  async push(projectId: string, force: boolean, isDryRun: boolean, config: ProjectDefinition): Promise<MigrationResult> {
     const mutation = `\
-      mutation($projectId: String!, $force: Boolean, $isDryRun: Boolean!, $version: Int!, $config: String!) {
+      mutation($projectId: String!, $force: Boolean, $isDryRun: Boolean!, $config: String!) {
         push(input: {
           projectId: $projectId
           force: $force
           isDryRun: $isDryRun
-          version: $version
           config: $config
         }) {
           migrationMessages {
@@ -202,7 +198,6 @@ export class Client {
             id
             name
             alias
-            version
             projectDefinitionWithFileContent
           }
         }
@@ -212,7 +207,6 @@ export class Client {
       projectId,
       force,
       isDryRun,
-      version,
       config: JSON.stringify(config),
     })
 
@@ -221,7 +215,6 @@ export class Client {
     return {
       migrationMessages: push.migrationMessages,
       errors: push.errors,
-      newVersion: push.project.version,
       newSchema: push.project.schema,
       projectDefinition: this.getProjectDefinition(push.project as any).projectDefinition,
     }
@@ -250,7 +243,6 @@ export class Client {
                   id
                   name
                   alias
-                  version
                   region
                 }
               }
@@ -281,28 +273,6 @@ export class Client {
       `, {projectId})
 
     return this.getProjectDefinition(project)
-  }
-
-  async getProjectVersion(projectId: string): Promise<number> {
-    interface ProjectInfoPayload {
-      viewer: {
-        project: {
-          version: number
-        }
-      }
-    }
-
-    const {viewer: {project}} = await this.client.request<ProjectInfoPayload>(`
-      query ($projectId: ID!){
-        viewer {
-          project(id: $projectId) {
-            version
-          }
-        }
-      }
-      `, {projectId})
-
-    return project.version
   }
 
   async getProjectName(projectId: string): Promise<string> {

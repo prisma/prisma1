@@ -1,5 +1,9 @@
+export { EnvDoesntExistError } from './errors/EnvDoesntExistError'
+
 export { Command } from './Command'
 export { CLI, run } from './CLI'
+export { Output } from  './Output'
+export { ProjectDefinitionClass } from './ProjectDefinition/ProjectDefinition'
 export {
   RunOptions,
   ProjectDefinition,
@@ -18,7 +22,8 @@ export {
   MigrationResult,
   Project,
   Region,
-  SchemaInfo
+  SchemaInfo,
 } from './types'
 
 export {flags, Flag, Arg, Flags} from './Flags'
+

@@ -1,14 +1,17 @@
 import 'source-map-support/register'
 import { Arg, Flags } from './Flags/index'
-import packagejson = require('../package.json')
-const pjson = packagejson as any
 import { Output } from './Output'
 import { Config } from './Config'
-import { ProjectDefinition, RunOptions } from './types'
+import { RunOptions } from './types'
 import { OutputArgs, OutputFlags, Parser } from './Parser'
 import Help from './Help'
 import { Client } from './Client/Client'
-import ProjectDefinitionClass from './ProjectDefinition/ProjectDefinition'
+import { ProjectDefinitionClass } from './ProjectDefinition/ProjectDefinition'
+import { Auth } from './Auth'
+import { Environment } from './Environment'
+import packagejson = require('../package.json')
+
+const pjson = packagejson as any
 
 export class Command {
   static topic: string
@@ -41,12 +44,12 @@ export class Command {
     return cmd
   }
 
-  static buildHelp (config: Config): string {
+  static buildHelp(config: Config): string {
     const help = new Help(config)
     return help.command(this)
   }
 
-  static buildHelpLine (config: Config): string[] {
+  static buildHelpLine(config: Config): string[] {
     const help = new Help(config)
     return help.commandLine(this)
   }
@@ -57,15 +60,21 @@ export class Command {
   out: Output
   config: Config
   definition: ProjectDefinitionClass
+  auth: Auth
+  env: Environment
   flags: OutputFlags
   args?: OutputArgs
   argv: string[]
 
-  constructor(options: {config?: RunOptions} = {config: {mock: true}}) {
+  constructor(options: { config?: RunOptions } = {config: {mock: true}}) {
     this.config = new Config(options.config)
     this.out = new Output(this.config)
     this.argv = (options.config && options.config.argv) ? options.config.argv : []
     this.definition = new ProjectDefinitionClass(this.out, this.config)
+    this.auth = new Auth(this.out, this.config)
+    this.client = new Client(this.config)
+    this.env = new Environment(this.out, this.config, this.client)
+    this.env.load()
   }
 
   async run(...rest: void[]): Promise<void> {
@@ -86,11 +95,11 @@ export class Command {
     this.args = args
   }
 
-  get stdout (): string {
+  get stdout(): string {
     return this.out.stdout.output
   }
 
-  get stderr (): string {
+  get stderr(): string {
     return this.out.stderr.output
   }
 }

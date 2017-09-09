@@ -25,7 +25,7 @@
     "typescript": "^2.4.2"
   },
   "scripts": {
-    "build": "rimraf dist && tsc -d",
+    "build": "tsc -d",
     "lint": "tslint src/**/*.ts",
     "precommit": "lint-staged",
     "prettier": "prettier --single-quote --no-semi --trailing-comma all --write '*.ts' 'src/**/*.ts'",

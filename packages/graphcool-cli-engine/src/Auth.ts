@@ -8,7 +8,7 @@ import { AuthTrigger } from './types'
 export class Auth {
   out: Output
   config: Config
-  authTrigger: AuthTrigger
+  authTrigger: AuthTrigger = 'auth'
 
   constructor(out: Output, config: Config) {
     this.out = out
