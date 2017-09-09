@@ -5,7 +5,7 @@ description: An overview of the Graphcool platform.
 
 # Graphcool Backend Architecture
 
-## The GraphQL Engine
+## GraphQL Engine
 
 ### Features of the GraphQL Engine
 
@@ -13,9 +13,9 @@ The core of the Graphcool backend is the _GraphQL engine_. It implements the map
 
 > Though not 100% technically accurate, you can somewhat think of the GraphQL engine as a "GraphQL ORM".
 
-Another major part of the GraphQL engine's functionality is the _event gateway_. The event gateway enables clients to _subscribe_ to events that are happening inside the Graphcool system and pushes out the corresponding data to them. 
+Another major part of the GraphQL engine's functionality is the _event gateway_. The event gateway enables clients to _subscribe_ to events that are happening inside the Graphcool system and pushes out the corresponding data to them when the event occurs. 
 
-The GraphQL engine also implements Graphcool's authorization system to ensure proper access rights and data protection.
+The GraphQL engine also implements Graphcool's authorization system to ensure proper data protection and access rights.
 
 ### GraphQL Engine Infrastructure Components
 
@@ -26,11 +26,43 @@ The GraphQL engine is powered by a set of (exchangeable) infrastructure componen
 - Message Queue
 - File Storage
 
-When choosing the hosted solution, each of these components will come with a concrete implementation:
+When choosing the hosted version of Graphcool, each of these components will come with a concrete implementation:
 
-- Database: AWS Aurora
-- Serverless Function Runtime: AWS Lambda
-- Message Queue: RabbitMQ
-- File Storage: S3
+- Database: [AWS Aurora](https://aws.amazon.com/rds/aurora)
+- Serverless Function Runtime: [AWS Lambda](https://aws.amazon.com/lambda)
+- Message Queue: [RabbitMQ](https://www.rabbitmq.com/)
+- File Storage: [S3](https://aws.amazon.com/s3/)
+
+In the self-hosted version, the same products are used by default but can be swapped by the developer as needed.
+
+
+## API Proxy Layer
+
+The API proxy layer is a proper HTTP server that sits in front of the automatically generated CRUD GraphQL API provided by the GraphQL engine. It tightly integrates with the API and easily lets you customize it. This allows to hide certain operations or add more functionality to the API.
+
+The proxy layer is not a required component in the Graphcool architecture, but it's an extremely powerful construct. If you're not making use of a proxy layer, your client applications can simply access the GraphQL engine's CRUD API with all its default operations.
+
+
+## Integrating with external systems
+
+One major use case of GraphQL in general is to act as an integration layer (API gateway) for external systems like microservices, 3rd-party APIs and legacy infrastructures.
+
+Graphcool enables this use case and makes it easy to integrate your Graphcool backend with external systems. There are two main ways of doing this:
+
+- Using the _GraphQL proxy layer_
+- Implementing _resolvers_ (as serverless functions) directly in the GraphQL engine
+
+If your use case for integrating an external system is rather simple, going for a resolver is a reasonable choice. For mode advanced use cases, consider using the API proxy layer.
+
+
+
+
+
+
+
+
+
+ 
+
 
 
