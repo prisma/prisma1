@@ -55,9 +55,23 @@ Graphcool enables this use case and makes it easy to integrate your Graphcool ba
 If your use case for integrating an external system is rather simple, going for a resolver is a reasonable choice. For mode advanced use cases, consider using the API proxy layer.
 
 
+## Modules
+
+Graphcool also has the concept of _modules_ that allow for easily pulling it additional functionality into a Graphcool project. A module is nothing but a regular Graphcool project that implements a specific piece functionality, for example a concrete authentication approach like a [Facebook login](https://github.com/graphcool-examples/functions/tree/master/authentication/facebook-authentication).
+
+### Specifying modules in the project configuration
+
+The Graphcool project configuration has the top-level property `modules`. Each item that's listed under this property needs to point to the configuration file of another Graphcool project that's available locally on your machine (commonly inside a `modules` folder inside your project).
+
+### Adding new modules through the CLI
+
+When adding a new module to a Graphcool project, you can either download all required project files, including the project configuration (YAML), and manually put it into the `modules` directory or use the CLI for that process.
+
+When using the CLI, you can simply execute the appropriate command and point it to a GitHub repository where the module is stored.
 
 
 
+ 
 
 
 
