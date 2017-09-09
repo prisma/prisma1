@@ -32,6 +32,6 @@ ${chalk.gray('-')} Deploy local changes from default project file accepting pote
     }),
   }
   async run() {
-    this.out.log('Trolo')
+    this.out.log('Trolo', this.flags, this.args, this.argv)
   }
 }

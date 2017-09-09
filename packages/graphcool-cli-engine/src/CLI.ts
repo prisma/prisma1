@@ -70,12 +70,12 @@ export class CLI {
       this.cmd = await this.Help.run(this.config)
     } else {
       debug('dispatcher')
-      // CONTINUE!!!
-      // here the magic happens!!!
-      // here we have to convert the spaces to colons until the first flag
       const id = this.getCommandId(this.config.argv.slice(1))
       const firstFlag = this.config.argv.findIndex(param => param.startsWith('-'))
-      this.config.argv = this.config.argv.slice(firstFlag)
+      // if there is a subcommand, cut the first away so the Parser still works correctly
+      if (firstFlag === 3) {
+        this.config.argv = this.config.argv.slice(1)
+      }
       debug(`command id: ${id}`)
       const dispatcher = new Dispatcher(this.config)
       const result = await dispatcher.findCommand(id || this.config.defaultCommand || 'help')
