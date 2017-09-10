@@ -12,15 +12,12 @@ export function projectToFs(project: ProjectDefinition, outputDir: string, out: 
 }
 
 function moduleToFs(module: GraphcoolModule, outputDir: string, out: Output, files?: string[], silent?: boolean) {
-  if (!silent) {
-    out.log('\n')
-  }
   if ((files && files.includes('graphcool.yml') || !files)) {
     const ymlPath = path.join(outputDir, 'graphcool.yml')
     fs.writeFileSync(ymlPath, module.content)
-    if (!silent) {
-      out.log(chalk.blue(`Written to graphcool.yml\n`))
-    }
+    // if (!silent) {
+    //   out.log(chalk.blue(`Written to graphcool.yml\n`))
+    // }
   }
 
   const fileNames = files ? Object.keys(module.files).filter(f => files.includes(f)) : Object.keys(module.files)
@@ -40,8 +37,8 @@ function moduleToFs(module: GraphcoolModule, outputDir: string, out: Output, fil
 
     fs.mkdirpSync(dir, {fs})
     fs.writeFileSync(filePath, content)
-    if (!silent) {
-      out.log(chalk.blue(`Written to ${relativePath}\n`))
-    }
+    // if (!silent) {
+    //   out.log(chalk.blue(`Written to ${relativePath}\n`))
+    // }
   }
 }

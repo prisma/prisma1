@@ -22,20 +22,20 @@ export class ProjectDefinitionClass {
   public async load() {
     if (fs.existsSync(path.join(this.config.definitionDir, 'graphcool.yml'))) {
       this.definition = await fsToProject(this.config.definitionDir, this.out)
-      if (process.env.DEBUG && process.env.DEBUG!.includes('*')) {
-        const definitionJsonPath = path.join(this.config.definitionDir, 'definition.json')
-        fs.writeFileSync(definitionJsonPath, JSON.stringify(this.definition, null, 2))
-      }
+      // if (process.env.DEBUG && process.env.DEBUG!.includes('*')) {
+      //   const definitionJsonPath = path.join(this.config.definitionDir, 'definition.json')
+      //   fs.writeFileSync(definitionJsonPath, JSON.stringify(this.definition, null, 2))
+      // }
     }
   }
 
   public async save(files?: string[], silent?: boolean) {
     projectToFs(this.definition!, this.config.definitionDir, this.out, files, silent)
 
-    if (process.env.DEBUG && process.env.DEBUG!.includes('*')) {
-      const definitionJsonPath = path.join(this.config.definitionDir, 'definition.json')
-      fs.writeFileSync(definitionJsonPath, JSON.stringify(this.definition, null, 2))
-    }
+    // if (process.env.DEBUG && process.env.DEBUG!.includes('*')) {
+    //   const definitionJsonPath = path.join(this.config.definitionDir, 'definition.json')
+    //   fs.writeFileSync(definitionJsonPath, JSON.stringify(this.definition, null, 2))
+    // }
   }
 
   public async saveTypes() {

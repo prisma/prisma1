@@ -14,6 +14,9 @@ import { TableOptions } from './table'
 import ExitError from '../errors/ExitError'
 import * as inquirer from 'inquirer'
 import { MigrationPrinter } from './migration'
+import * as treeify from 'treeify'
+import * as dirTree from 'directory-tree'
+import * as leftpad from 'left-pad'
 
 export const CustomColors = {
   // map gray -> dim because it's not solarized compatible
@@ -203,4 +206,23 @@ export class Output {
       process.exit(code)
     }
   }
+
+  tree(dirPath: string) {
+    const tree = dirTree(dirPath)
+    const convertedTree = treeConverter(tree)
+    const printedTree = treeify.asTree(convertedTree, true)
+    this.log(chalk.blue(printedTree.split('\n').map(l => '   ' + l).join('\n')))
+  }
+}
+
+function treeConverter(tree) {
+  if (!tree.children) {
+    return tree.name
+  }
+  return tree.children.reduce((acc, curr) => {
+    if (!curr.children) {
+      return {...acc, [curr.name]: null}
+    }
+    return {...acc, [curr.name]: treeConverter(curr)}
+  }, {})
 }

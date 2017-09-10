@@ -91,7 +91,8 @@ export default class Init extends Command {
 
     name = name || sillyName()
 
-    this.out.action.start(`Creating project ${chalk.bold(name)}`)
+    this.out.log('')
+    this.out.action.start(`   Creating project ${chalk.bold(name)}`)
 
     try {
       // create project
@@ -108,17 +109,15 @@ export default class Init extends Command {
 
       if (newProject) {
         this.env.setDefault(newEnv)
-        this.out.log('\n')
         this.definition.save(undefined, false)
-        this.out.log('\n')
       }
       this.env.save()
 
       this.out.action.stop(
-        `${chalk.green(figures.tick)} Created project ${chalk.bold(
-          name,
-        )} (ID: ${createdProject.id}) successfully.`,
+        chalk.green(figures.tick)
       )
+      this.out.log(`${chalk.blue.bold('\n   Written files:')}`)
+      this.out.tree(this.config.definitionDir)
 
       this.out.log(`\
    ${chalk.bold('Here is what you can do next:')}
@@ -127,11 +126,18 @@ export default class Init extends Command {
         'types.graphql',
       )} in your editor to update your project definition.
       You can deploy your changes using ${chalk.cyan('`graphcool deploy`')}.
+   
+   2) Install a graphcool module to your project:
+   
+      ${chalk.bold('facebook-authentication')}
+      $ ${chalk.cyan('graphcool module add graphcool/modules/authentication/facebook-auth')}
+      
+      ${chalk.bold('algolia-syncing')}
+      $ ${chalk.cyan('graphcool module add graphcool/modules/syncing/algolia')}
 
-   2) Use one of the following endpoints to connect to your GraphQL API:
+   3) Use the following endpoint to connect to your GraphQL API:
 
-        Simple API:   https://api.graph.cool/simple/v1/${createdProject.id}
-        Relay API:    https://api.graph.cool/relay/v1/${createdProject.id}
+      ${chalk.cyan(`https://api.graph.cool/simple/v1/${createdProject.id}`)}
 `)
     } catch (e) {
       this.out.action.stop()

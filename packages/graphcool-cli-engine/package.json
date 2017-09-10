@@ -68,6 +68,7 @@
     "chalk": "^2.1.0",
     "cuid": "^1.3.8",
     "debug": "^3.0.1",
+    "directory-tree": "^2.0.0",
     "find-up": "^2.1.0",
     "fs-extra": "^4.0.1",
     "graphql-request": "^1.3.4",
@@ -92,6 +93,7 @@
     "string": "3.x",
     "string-similarity": "^1.2.0",
     "strip-ansi": "^4.0.0",
-    "supports-color": "^4.4.0"
+    "supports-color": "^4.4.0",
+    "treeify": "^1.0.1"
   }
 }

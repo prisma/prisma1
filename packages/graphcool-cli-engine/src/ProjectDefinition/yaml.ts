@@ -7,7 +7,11 @@ import { Output } from '../Output/index'
 
 const ajv = new Ajv()
 
-ajv.addMetaSchema(require('ajv/lib/refs/json-schema-draft-04.json'))
+try {
+  ajv.addMetaSchema(require('ajv/lib/refs/json-schema-draft-04.json'))
+} catch (e) {
+  // noop
+}
 const validate = ajv.compile(schema)
 
 export async function readDefinition(
