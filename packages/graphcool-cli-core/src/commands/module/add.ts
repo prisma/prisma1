@@ -1,4 +1,4 @@
-import {Command, flags, Flags, readDefinition, fsToModule} from 'graphcool-cli-engine'
+import { Command, flags, Flags, readDefinition } from 'graphcool-cli-engine'
 import * as download from 'download-github-repo'
 import * as cuid from 'cuid'
 import * as path from 'path'
@@ -14,10 +14,12 @@ export default class ModuleAdd extends Command {
   static command = 'add'
   static description = 'Add a new module'
   static hidden = true
-  static args = [{
-    name: 'moduleUrl',
-    required: true,
-  }]
+  static args = [
+    {
+      name: 'moduleUrl',
+      required: true,
+    },
+  ]
   async run() {
     await this.definition.load()
     const moduleUrl = this.argv[1]
@@ -25,7 +27,8 @@ export default class ModuleAdd extends Command {
     const ghUser = splittedModule[0]
     const ghRepo = splittedModule[1]
     const moduleDirName = splittedModule[splittedModule.length - 1]
-    const subPath = splittedModule.length > 2 ? splittedModule.slice(2).join('/') : ''
+    const subPath =
+      splittedModule.length > 2 ? splittedModule.slice(2).join('/') : ''
 
     const tmpDir = path.join(os.tmpdir(), `${cuid()}/`)
     fs.mkdirpSync(tmpDir)
@@ -55,24 +58,31 @@ export default class ModuleAdd extends Command {
     const rootDefinitionString = this.definition.definition!.modules[0].content
     const rootDefinition = await readDefinition(rootDefinitionString, this.out)
     debug('setting module', moduleDirName, relativeModulePath)
-    rootDefinition.modules[moduleDirName] = path.join(relativeModulePath, 'graphcool.yml')
+    if (!rootDefinition.modules) {
+      rootDefinition.modules = {}
+    }
+    rootDefinition.modules[moduleDirName] = path.join(
+      relativeModulePath,
+      'graphcool.yml',
+    )
     const file = yaml.safeDump(rootDefinition)
-    fs.writeFileSync(path.join(this.config.definitionDir, 'graphcool.yml'), file)
+    fs.writeFileSync(
+      path.join(this.config.definitionDir, 'graphcool.yml'),
+      file,
+    )
     debug('Added module to graphcool.yml')
 
-    const module = await fsToModule(target, this.out)
-    this.definition.definition!.modules.push({
-      ...module,
-      name: moduleDirName,
-    })
-
-    this.out.log(`Successfully added module ${moduleDirName}. You now can run ${chalk.bold('graphcool deploy')} to deploy changes`)
+    this.out.log(
+      `Successfully added module ${moduleDirName}. You now can run ${chalk.bold(
+        'graphcool deploy',
+      )} to deploy changes`,
+    )
   }
 }
 
 function downloadRepo(repo: string, destination: string) {
   return new Promise((resolve, reject) => {
-    download(repo, destination, (err) => {
+    download(repo, destination, err => {
       if (err) {
         reject(err)
       } else {

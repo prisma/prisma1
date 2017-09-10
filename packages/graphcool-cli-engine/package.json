@@ -1,6 +1,6 @@
 {
   "name": "graphcool-cli-engine",
-  "version": "0.0.8",
+  "version": "0.0.10",
   "main": "dist/index.js",
   "files": [
     "dist"
@@ -37,7 +37,8 @@
       "prettier --single-quote --no-semi --trailing-comma all --write",
       "tslint",
       "git add"
-    ]
+    ],
+    "gitDir": "../../"
   },
   "jest": {
     "moduleFileExtensions": [

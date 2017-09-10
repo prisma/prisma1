@@ -5,7 +5,8 @@ import * as fs from 'fs-extra'
 import * as cuid from 'cuid'
 
 // TODO replace with process.cwd()
-let cwd = '/Users/tim/code/cli-tests/new'
+// let cwd = '/Users/tim/code/cli-tests/new'
+let cwd = process.cwd()
 if (process.env.NODE_ENV === 'test') {
   cwd = path.join(os.tmpdir(), `${cuid()}/`)
   fs.mkdirpSync(cwd)
@@ -22,7 +23,9 @@ export class Config {
   /**
    * Local settings
    */
-  debug: boolean = Boolean(process.env.DEBUG && process.env.DEBUG!.includes('*'))
+  debug: boolean = Boolean(
+    process.env.DEBUG && process.env.DEBUG!.includes('*'),
+  )
   windows: boolean = false
   bin: string = 'graphcool'
   mock: boolean = true
@@ -39,7 +42,7 @@ export class Config {
     dependencies: {},
     'cli-engine': {
       defaultCommand: 'help',
-    }
+    },
   }
 
   /**
@@ -55,11 +58,21 @@ export class Config {
    * Urls
    */
   token: string | null
-  authUIEndpoint = process.env.ENV === 'DEV' ? 'https://dev.console.graph.cool/cli/auth' : 'https://console.graph.cool/cli/auth'
-  backendAddr = process.env.ENV === 'DEV' ? 'https://dev.api.graph.cool' : 'https://api.graph.cool'
-  systemAPIEndpoint = process.env.ENV === 'DEV' ? 'https://dev.api.graph.cool/system' : 'https://api.graph.cool/system'
-  authEndpoint = process.env.ENV === 'DEV' ? 'https://cli-auth-api.graph.cool/dev' : 'https://cli-auth-api.graph.cool/prod'
-  docsEndpoint = process.env.ENV === 'DEV' ? 'https://dev.graph.cool/docs' : 'https://www.graph.cool/docs'
+  authUIEndpoint = process.env.ENV === 'DEV'
+    ? 'https://dev.console.graph.cool/cli/auth'
+    : 'https://console.graph.cool/cli/auth'
+  backendAddr = process.env.ENV === 'DEV'
+    ? 'https://dev.api.graph.cool'
+    : 'https://api.graph.cool'
+  systemAPIEndpoint = process.env.ENV === 'DEV'
+    ? 'https://dev.api.graph.cool/system'
+    : 'https://api.graph.cool/system'
+  authEndpoint = process.env.ENV === 'DEV'
+    ? 'https://cli-auth-api.graph.cool/dev'
+    : 'https://cli-auth-api.graph.cool/prod'
+  docsEndpoint = process.env.ENV === 'DEV'
+    ? 'https://dev.graph.cool/docs'
+    : 'https://www.graph.cool/docs'
   statusEndpoint = 'https://crm.graph.cool/prod/status'
 
   /* tslint:disable-next-line */
@@ -71,7 +84,10 @@ export class Config {
       this.token = 'test token'
     } else {
       if (fs.existsSync(this.dotGraphcoolFilePath)) {
-        const configContent = fs.readFileSync(this.dotGraphcoolFilePath, 'utf-8')
+        const configContent = fs.readFileSync(
+          this.dotGraphcoolFilePath,
+          'utf-8',
+        )
         this.token = JSON.parse(configContent).token
       }
     }
@@ -94,7 +110,7 @@ export class Config {
     this.token = token
   }
   saveToken() {
-    const json = JSON.stringify({token: this.token}, null, 2)
+    const json = JSON.stringify({ token: this.token }, null, 2)
     fs.writeFileSync(this.dotGraphcoolFilePath, json)
   }
   get arch(): string {
@@ -104,23 +120,35 @@ export class Config {
     return os.platform() === 'win32' ? 'windows' : os.platform()
   }
   get userAgent(): string {
-    return `${this.name}/${this.version} (${this.platform}-${this.arch}) node-${process.version}`
+    return `${this.name}/${this.version} (${this.platform}-${this
+      .arch}) node-${process.version}`
   }
-  get dirname () {
+  get dirname() {
     return this.pjson['cli-engine'].dirname || this.bin
   }
-  get cacheDir () {
-    return dir(this, 'cache', this.platform === 'darwin' ? path.join(this.home, 'Library', 'Caches') : null)
+  get cacheDir() {
+    return dir(
+      this,
+      'cache',
+      this.platform === 'darwin'
+        ? path.join(this.home, 'Library', 'Caches')
+        : null,
+    )
   }
 }
 
-function dir (config: Config, category: string, d: string | null): string {
+function dir(config: Config, category: string, d: string | null): string {
   const cacheKey = `dir:${category}`
   const cache = config.__cache[cacheKey]
   if (cache) {
     return cache
   }
-  d = d || path.join(config.home, category === 'data' ? '.local/share' : '.' + category)
+  d =
+    d ||
+    path.join(
+      config.home,
+      category === 'data' ? '.local/share' : '.' + category,
+    )
   if (config.windows) {
     d = process.env.LOCALAPPDATA || d
   }

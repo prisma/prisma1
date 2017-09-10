@@ -5,11 +5,11 @@ import {
   Project,
   ProjectDefinition,
   ProjectInfo,
-  RemoteProject
+  RemoteProject,
 } from '../types'
 
 import { omit } from 'lodash'
-import { Config } from '../Config';
+import { Config } from '../Config'
 import { getFastestRegion } from './ping'
 
 import fs from '../fs'
@@ -32,9 +32,9 @@ const REMOTE_PROJECT_FRAGMENT = `
 export class Client {
   client: GraphQLClient
   config: Config
-  public mock: (input: {request: any, response: any}) => void
+  public mock: (input: { request: any; response: any }) => void
 
-  private mocks: {[request: string]: string} = {}
+  private mocks: { [request: string]: string } = {}
 
   constructor(config: Config) {
     this.config = config
@@ -44,8 +44,8 @@ export class Client {
   updateClient() {
     const client = new GraphQLClient(this.config.systemAPIEndpoint, {
       headers: {
-        Authorization: `Bearer ${this.config.token}`
-      }
+        Authorization: `Bearer ${this.config.token}`,
+      },
     })
 
     this.client = {
@@ -53,35 +53,28 @@ export class Client {
         debug(this.config.systemAPIEndpoint)
         debug(query)
         debug(variables)
-        const request = JSON.stringify({
-          query,
-          variables: variables ? variables : undefined,
-        }, null, 2)
+        const request = JSON.stringify(
+          {
+            query,
+            variables: variables ? variables : undefined,
+          },
+          null,
+          2,
+        )
         if (this.mocks[request]) {
           return Promise.resolve(this.mocks[request])
         }
-        return client.request(query, variables).then(data => {
-          // TODO remove when not needed anymore
-          const id = cuid()
-
-          const json = JSON.stringify({
-            request,
-            response: data,
-          }, null, 2)
-
-          const requestPath = path.join(this.config.definitionDir, `./${id}.json`)
-          fs.writeFileSync(requestPath, json)
-
-          // if (process.env.NODE_ENV === 'test') {
-          //   throw new Error(`Error, performed not mocked request. Saved under ${id}`)
-          // }
-          return data
-        })
-      }
+        return client.request(query, variables)
+      },
     } as any
   }
 
-  async createProject(name: string, projectDefinition: ProjectDefinition, alias?: string, region?: string): Promise<ProjectInfo> {
+  async createProject(
+    name: string,
+    projectDefinition: ProjectDefinition,
+    alias?: string,
+    region?: string,
+  ): Promise<ProjectInfo> {
     const mutation = `\
       mutation addProject($name: String!, $alias: String, $region: Region) {
         addProject(input: {
@@ -99,18 +92,20 @@ export class Client {
       `
 
     // gather variables
-    let variables: any = {name}
+    let variables: any = { name }
     if (alias) {
-      variables = {...variables, alias}
+      variables = { ...variables, alias }
     }
     if (region) {
-      variables = {...variables, region: region.toUpperCase()}
+      variables = { ...variables, region: region.toUpperCase() }
     } else {
       const fastestRegion = await getFastestRegion()
-      variables = {...variables, region: fastestRegion.toUpperCase()}
+      variables = { ...variables, region: fastestRegion.toUpperCase() }
     }
 
-    const {addProject: {project}} = await this.client.request<{ addProject: { project: RemoteProject } }>(mutation, variables)
+    const { addProject: { project } } = await this.client.request<{
+      addProject: { project: RemoteProject }
+    }>(mutation, variables)
 
     const res = await this.push(project.id, true, false, projectDefinition)
 
@@ -123,7 +118,12 @@ export class Client {
     return this.getProjectDefinition(project)
   }
 
-  async push(projectId: string, force: boolean, isDryRun: boolean, config: ProjectDefinition): Promise<MigrationResult> {
+  async push(
+    projectId: string,
+    force: boolean,
+    isDryRun: boolean,
+    config: ProjectDefinition,
+  ): Promise<MigrationResult> {
     const mutation = `\
       mutation($projectId: String!, $force: Boolean, $isDryRun: Boolean!, $config: String!) {
         push(input: {
@@ -159,7 +159,9 @@ export class Client {
         }
       }
     `
-    const {push} = await this.client.request<{ push: MigrateProjectPayload }>(mutation, {
+    const { push } = await this.client.request<{
+      push: MigrateProjectPayload
+    }>(mutation, {
       projectId,
       force,
       isDryRun,
@@ -172,7 +174,8 @@ export class Client {
       migrationMessages: push.migrationMessages,
       errors: push.errors,
       newSchema: push.project.schema,
-      projectDefinition: this.getProjectDefinition(push.project as any).projectDefinition,
+      projectDefinition: this.getProjectDefinition(push.project as any)
+        .projectDefinition,
     }
   }
 
@@ -217,7 +220,10 @@ export class Client {
       }
     }
 
-    const {viewer: {project}} = await this.client.request<ProjectInfoPayload>(`
+    const { viewer: { project } } = await this.client.request<
+      ProjectInfoPayload
+    >(
+      `
       query ($projectId: ID!){
         viewer {
           project(id: $projectId) {
@@ -226,7 +232,9 @@ export class Client {
         }
       }
       ${REMOTE_PROJECT_FRAGMENT}
-      `, {projectId})
+      `,
+      { projectId },
+    )
 
     return this.getProjectDefinition(project)
   }
@@ -240,7 +248,10 @@ export class Client {
       }
     }
 
-    const {viewer: {project}} = await this.client.request<ProjectInfoPayload>(`
+    const { viewer: { project } } = await this.client.request<
+      ProjectInfoPayload
+    >(
+      `
       query ($projectId: ID!){
         viewer {
           project(id: $projectId) {
@@ -248,22 +259,28 @@ export class Client {
           }
         }
       }
-      `, {projectId})
+      `,
+      { projectId },
+    )
 
     return project.name
   }
 
   async deleteProjects(projectIds: string[]): Promise<string[]> {
     const inputArguments = projectIds.reduce((prev, current, index) => {
-      return `${prev}$projectId${index}: String!${index < (projectIds.length - 1) ? ', ' : ''}`
+      return `${prev}$projectId${index}: String!${index < projectIds.length - 1
+        ? ', '
+        : ''}`
     }, '')
-    const singleMutations = projectIds.map((projectId, index) => `
+    const singleMutations = projectIds.map(
+      (projectId, index) => `
       ${projectId}: deleteProject(input:{
           projectId: $projectId${index},
           clientMutationId: "asd"
         }) {
           deletedId
-      }`)
+      }`,
+    )
 
     const header = `mutation (${inputArguments}) `
     const body = singleMutations.join('\n')
@@ -291,7 +308,8 @@ export class Client {
       }
     }
 
-    const {exportData} = await this.client.request<ExportPayload>(`
+    const { exportData } = await this.client.request<ExportPayload>(
+      `
       mutation ($projectId: String!){
         exportData(input:{
           projectId: $projectId,
@@ -300,23 +318,24 @@ export class Client {
           url
         }
       }
-    `, {projectId})
+    `,
+      { projectId },
+    )
 
     return exportData.url
   }
 
   async cloneProject(variables: {
-    projectId: string,
-    name: string,
-    includeMutationCallbacks: boolean,
-    includeData: boolean,
+    projectId: string
+    name: string
+    includeMutationCallbacks: boolean
+    includeData: boolean
   }): Promise<ProjectInfo> {
-
     interface CloneProjectPayload {
       project: RemoteProject
     }
 
-    const {project} = await this.client.request<CloneProjectPayload>(`
+    const { project } = await this.client.request<CloneProjectPayload>(`
       mutation ($projectId: String!, $name: String!, $includeMutationCallbacks: Boolean!, $includeData: Boolean!){
         cloneProject(input:{
           name: $name,
@@ -341,8 +360,8 @@ export class Client {
       await fetch(this.config.statusEndpoint, {
         method: 'post',
         headers: {
-          'Authorization': `Bearer ${this.config.token}`,
-          'Content-Type': 'application/json'
+          Authorization: `Bearer ${this.config.token}`,
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify(instruction),
       })
@@ -353,15 +372,20 @@ export class Client {
 
   private getProjectDefinition(project: RemoteProject): ProjectInfo {
     return {
-      ...omit<Project, RemoteProject>(project, 'projectDefinitionWithFileContent'),
-      projectDefinition: JSON.parse(project.projectDefinitionWithFileContent) as ProjectDefinition,
+      ...omit<Project, RemoteProject>(
+        project,
+        'projectDefinitionWithFileContent',
+      ),
+      projectDefinition: JSON.parse(
+        project.projectDefinitionWithFileContent,
+      ) as ProjectDefinition,
     }
   }
 }
 
 // only make this available in test mode
 if (process.env.NODE_ENV === 'test') {
-  Client.prototype.mock = function({request, response}) {
+  Client.prototype.mock = function({ request, response }) {
     if (!this.mocks) {
       this.mocks = {}
     }
