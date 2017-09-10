@@ -13,6 +13,7 @@ export default class Info extends Command {
     }),
   }
   async run() {
+    await this.auth.ensureAuth()
     let {env} = this.flags
 
     env = env || this.env.env.default

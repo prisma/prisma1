@@ -62,6 +62,7 @@
   "dependencies": {
     "figures": "^2.0.0",
     "sillyname": "^0.1.0",
+    "table": "^4.0.1",
     "ts-jest": "^21.0.0"
   }
 }
