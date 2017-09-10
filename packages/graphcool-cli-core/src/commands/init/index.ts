@@ -19,33 +19,35 @@ export default class Init extends Command {
   static flags: Flags = {
     copy: flags.string({
       char: 'c',
-      description: 'ID or alias of the project to be copied'
+      description: 'ID or alias of the project to be copied',
     }),
     name: flags.string({
       char: 'n',
-      description: 'Project name'
+      description: 'Project name',
     }),
     alias: flags.string({
       char: 'a',
-      description: 'Project alias'
+      description: 'Project alias',
     }),
     env: flags.string({
       char: 'e',
-      description: 'Local environment name for the new project'
+      description: 'Local environment name for the new project',
     }),
     region: flags.string({
       char: 'r',
-      description: 'AWS Region of the project (options: US_WEST_2 (default), EU_WEST_1, AP_NORTHEAST_1)'
+      description:
+        'AWS Region of the project (options: US_WEST_2 (default), EU_WEST_1, AP_NORTHEAST_1)',
     }),
     template: flags.string({
       char: 't',
-      description: 'The template to base the init on. (options: blank, instagram)'
-    })
+      description:
+        'The template to base the init on. (options: blank, instagram)',
+    }),
   }
 
   async run() {
-    const {copy, alias, env, region, template} = this.flags
-    let {name} = this.flags
+    const { copy, alias, env, region, template } = this.flags
+    let { name } = this.flags
     await this.definition.load()
     this.auth.setAuthTrigger('init')
     await this.auth.ensureAuth()
@@ -71,12 +73,16 @@ export default class Init extends Command {
     }
 
     if (env && this.env.env.environments[env]) {
-      this.out.error(new EnvAlreadyExistsError(Object.keys(this.env.env.environments)))
+      this.out.error(
+        new EnvAlreadyExistsError(Object.keys(this.env.env.environments)),
+      )
     }
 
     // create new
     if (this.env.default && !env) {
-      this.out.error(new EnvAlreadyExistsError(Object.keys(this.env.env.environments)))
+      this.out.error(
+        new EnvAlreadyExistsError(Object.keys(this.env.env.environments)),
+      )
     }
 
     if (name && !isValidProjectName(name)) {
@@ -88,13 +94,17 @@ export default class Init extends Command {
     this.out.action.start(`Creating project ${chalk.bold(name)}`)
 
     try {
-
       // create project
-      const project = await this.client.createProject(name, this.definition.definition!, alias, region)
+      const createdProject = await this.client.createProject(
+        name,
+        this.definition.definition!,
+        alias,
+        region,
+      )
 
       // add environment
       const newEnv = env || 'dev'
-      await this.env.set(newEnv, project.id)
+      await this.env.set(newEnv, createdProject.id)
 
       if (newProject) {
         this.env.setDefault(newEnv)
@@ -104,22 +114,25 @@ export default class Init extends Command {
       }
       this.env.save()
 
-      this.out.action.stop()
+      this.out.action.stop(
+        `${chalk.green(figures.tick)} Created project ${chalk.bold(
+          name,
+        )} (ID: ${createdProject.id}) successfully.`,
+      )
 
       this.out.log(`\
- ${chalk.green(figures.tick)} Created project ${chalk.bold(name)} (ID: ${project.id}) successfully.
-
    ${chalk.bold('Here is what you can do next:')}
 
-   1) Open ${chalk.bold('graphcool.yml')} or ${chalk.bold('types.graphql')} in your editor to update your project definition.
+   1) Open ${chalk.bold('graphcool.yml')} or ${chalk.bold(
+        'types.graphql',
+      )} in your editor to update your project definition.
       You can deploy your changes using ${chalk.cyan('`graphcool deploy`')}.
 
    2) Use one of the following endpoints to connect to your GraphQL API:
 
-        Simple API:   https://api.graph.cool/simple/v1/${project.id}
-        Relay API:    https://api.graph.cool/relay/v1/${project.id}
+        Simple API:   https://api.graph.cool/simple/v1/${createdProject.id}
+        Relay API:    https://api.graph.cool/relay/v1/${createdProject.id}
 `)
-
     } catch (e) {
       this.out.action.stop()
       this.out.error(e)
@@ -134,21 +147,33 @@ export default class Init extends Command {
       choices: [
         {
           value: 'blank',
-          name: [`${chalk.bold('New blank project')}`, `Creates a new Graphcool project from scratch.`, ''].join('\n')
+          name: [
+            `${chalk.bold('New blank project')}`,
+            `Creates a new Graphcool project from scratch.`,
+            '',
+          ].join('\n'),
         },
         {
           value: 'copy',
-          name: [`${chalk.bold('Copying an existing project')}`, `Copies a project from your account`, ''].join('\n')
+          name: [
+            `${chalk.bold('Copying an existing project')}`,
+            `Copies a project from your account`,
+            '',
+          ].join('\n'),
         },
         {
           value: 'example',
-          name: [`${chalk.bold('Based on example')}`, `Creates a new Graphcool project based on an example`, ''].join('\n')
+          name: [
+            `${chalk.bold('Based on example')}`,
+            `Creates a new Graphcool project based on an example`,
+            '',
+          ].join('\n'),
         },
       ],
-      pageSize: 12
+      pageSize: 12,
     }
 
-    const {init} = await this.out.prompt([initQuestion])
+    const { init } = await this.out.prompt([initQuestion])
 
     switch (init) {
       case 'blank':
@@ -166,7 +191,10 @@ export default class Init extends Command {
 
   private async projectSelection() {
     const projects = await this.client.fetchProjects()
-    const choices = projects.map(project => ({name: `${project.name} (${project.id})`, value: project.id}))
+    const choices = projects.map(p => ({
+      name: `${p.name} (${p.id})`,
+      value: p.id,
+    }))
 
     const question = {
       name: 'project',
@@ -175,7 +203,7 @@ export default class Init extends Command {
       choices,
     }
 
-    const {project} = await this.out.prompt([question])
+    const { project } = await this.out.prompt([question])
 
     return project
   }
@@ -188,21 +216,33 @@ export default class Init extends Command {
       choices: [
         {
           value: 'instagram',
-          name: [`${chalk.bold('Instagram')}`, `Contains an instagram clone with permission logic`, ''].join('\n')
+          name: [
+            `${chalk.bold('Instagram')}`,
+            `Contains an instagram clone with permission logic`,
+            '',
+          ].join('\n'),
         },
         {
           value: 'stripe',
-          name: [`${chalk.bold('Stripe Checkout')}`, `An example integrating the stripe checkout with schema extensions`, ''].join('\n')
+          name: [
+            `${chalk.bold('Stripe Checkout')}`,
+            `An example integrating the stripe checkout with schema extensions`,
+            '',
+          ].join('\n'),
         },
         {
           value: 'sendgrid',
-          name: [`${chalk.bold('Sendgrid Mails')}`, `An example that shows how to connect Graphcool to the Sendgrid API`, ''].join('\n')
-        }
+          name: [
+            `${chalk.bold('Sendgrid Mails')}`,
+            `An example that shows how to connect Graphcool to the Sendgrid API`,
+            '',
+          ].join('\n'),
+        },
       ],
       pageSize: 12,
     }
 
-    const {example} = await this.out.prompt(question)
+    const { example } = await this.out.prompt(question)
 
     return examples[example]
   }

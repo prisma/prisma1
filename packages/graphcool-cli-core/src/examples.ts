@@ -5,37 +5,33 @@ export const defaultDefinition: ProjectDefinition = {
   modules: [
     {
       name: '',
-      content: `
+      content: `# GraphQL types
 types: ./types.graphql
 
-functions: {}
+# functions
+functions:
+  hello:
+    handler:
+      code:
+        src: ./code/hello.js
+    type: schemaExtension
+    schema: ./schemas/hello.graphql
+ 
+# Graphcool modules
+modules: {}
 
+# Model/Relation permissions
 permissions:
-- isEnabled: true
-  operation: File.read
-  authenticated: false
-- isEnabled: true
-  operation: File.create
-  authenticated: false
-- isEnabled: true
-  operation: File.update
-  authenticated: false
-- isEnabled: true
-  operation: File.delete
-  authenticated: false
-- isEnabled: true
-  operation: User.read
-  authenticated: false
-- isEnabled: true
-  operation: User.create
-  authenticated: false
-- isEnabled: true
-  operation: User.update
-  authenticated: false
-- isEnabled: true
-  operation: User.delete
-  authenticated: false
+- operation: File.read
+- operation: File.create
+- operation: File.update
+- operation: File.delete
+- operation: User.read
+- operation: User.create
+- operation: User.update
+- operation: User.delete
   
+# Permanent Auth Token / Root Tokens
 rootTokens: []
 `,
       files: {
@@ -54,6 +50,21 @@ type User implements Node {
   createdAt: DateTime!
   id: ID! @isUnique
   updatedAt: DateTime!
+}
+`,
+        './code/hello.js': `\
+module.exports = function sum(event) {
+  const data = event.data
+  const message = \`Hello World ($\{data.extraMessage\})\`
+  return {data: {message: message}}
+}`,
+        './schemas/hello.graphql': `\
+type HelloPayload {
+  message: String!
+}
+
+extend type Query {
+  hello(extraMessage: String): HelloPayload
 }
 `,
       },
