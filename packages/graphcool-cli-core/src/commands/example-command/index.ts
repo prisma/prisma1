@@ -1,30 +1,21 @@
 import {Command, flags, Flags} from 'graphcool-cli-engine'
 
-export default class Trolo extends Command {
-  static topic = 'trolo'
-  static command = 'test'
-  static description = 'this is a description'
-  static help = `
-  
-  Example:
-  $ BLA
-  `
+export default class ExampleCommand extends Command {
+  static topic = 'example'
+  static command = 'command'
+  static description = 'example command'
   static hidden = true
   static flags: Flags = {
     env: flags.string({
       char: 'e',
-      description: 'Project environment to be deployed'
+      description: 'Environment name to set'
     }),
     project: flags.string({
       char: 'p',
-      description: 'ID or alias of  project to deploy'
-    }),
-    force: flags.string({
-      char: 'f',
-      description: 'Accept data loss caused by schema changes'
+      description: 'Project Id to set'
     }),
   }
   async run() {
-    this.out.log('ran command 3')
+    this.out.log('Running example command', this.flags)
   }
 }

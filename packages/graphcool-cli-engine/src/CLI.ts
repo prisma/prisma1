@@ -78,12 +78,11 @@ export class CLI {
     } else {
       debug('dispatcher')
       const id = this.getCommandId(this.config.argv.slice(1))
-      const firstFlag = this.config.argv.findIndex(param => param.startsWith('-'))
       // if there is a subcommand, cut the first away so the Parser still works correctly
-      if (firstFlag === 3) {
+      if (!this.config.argv[1].startsWith('-') && id !== 'help') {
         this.config.argv = this.config.argv.slice(1)
       }
-      debug(`command id: ${id}`)
+      debug(`command id: ${id}, argv: ${this.config.argv}`)
       const dispatcher = new Dispatcher(this.config)
       const result = await dispatcher.findCommand(id || this.config.defaultCommand || 'help')
       const {plugin} = result
@@ -146,11 +145,18 @@ export class CLI {
   }
 
   private getCommandId(argv: string[]) {
-    const firstFlag = argv.findIndex(param => param.startsWith('-'))
-    if (firstFlag === -1) {
-      return argv.join(':')
+    if (argv.includes('help')) {
+      return argv[0]
+    }
+    if (!argv[1].startsWith('-')) {
+      return argv.slice(0,2).join(':')
     } else {
-      return argv.slice(0, firstFlag).join(':')
+      const firstFlag = argv.findIndex(param => param.startsWith('-'))
+      if (firstFlag === -1) {
+        return argv.join(':')
+      } else {
+        return argv.slice(0, firstFlag).join(':')
+      }
     }
   }
 }

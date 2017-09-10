@@ -74,12 +74,12 @@ export class Environment {
     if (!oldEnv) {
       this.out.error(new EnvDoesntExistError(oldName))
     }
-
     delete this.env.environments[oldName]
+
+    this.env.environments[newName] = oldEnv
     if (this.env.default === oldName) {
       this.setDefault(newName)
     }
-    this.env.environments[newName] = oldEnv
   }
 
   public remove(envName: string) {
