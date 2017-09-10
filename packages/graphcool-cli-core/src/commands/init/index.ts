@@ -1,10 +1,10 @@
 import { Command, flags, Flags, ProjectDefinition } from 'graphcool-cli-engine'
 import * as chalk from 'chalk'
-import { EnvAlreadyExistsError } from '../errors/EnvAlreadyExistsError'
-import { InvalidProjectNameError } from '../errors/InvalidProjectNameError'
+import { EnvAlreadyExistsError } from '../../errors/EnvAlreadyExistsError'
+import { InvalidProjectNameError } from '../../errors/InvalidProjectNameError'
 import * as sillyName from 'sillyname'
 import * as figures from 'figures'
-import { defaultDefinition, examples } from '../examples'
+import { defaultDefinition, examples } from '../../examples'
 
 export default class Init extends Command {
   static topic = 'init'

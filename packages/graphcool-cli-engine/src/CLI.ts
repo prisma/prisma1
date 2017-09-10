@@ -98,7 +98,7 @@ export class CLI {
         //   nock.recorder.rec({
         //     dont_print: true,
         //   })
-        //   this.cmd = await foundCommand.run(this.config)
+        this.cmd = await foundCommand.run(this.config)
         //   const requests = nock.recorder.play()
         //   fs.writeFileSync(path.join(this.config.definitionDir, 'requests.js'), requests.join('\n'))
         // }
@@ -114,7 +114,7 @@ export class CLI {
 
     debug('flushing stdout')
     const {timeout} = require('./util')
-    await timeout(this.flush(), 1000)
+    await timeout(this.flush(), 5000)
     debug('exiting')
     out.exit(0)
   }

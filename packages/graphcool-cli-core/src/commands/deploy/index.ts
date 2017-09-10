@@ -1,7 +1,7 @@
 import {Command, flags, Flags, EnvDoesntExistError, EnvironmentConfig, ProjectDefinition} from 'graphcool-cli-engine'
 import * as chalk from 'chalk'
 import * as figures from 'figures'
-import {ProjectDoesntExistError} from '../errors/ProjectDoesntExistError'
+import {ProjectDoesntExistError} from '../../errors/ProjectDoesntExistError'
 
 export default class Deploy extends Command {
   static topic = 'deploy'

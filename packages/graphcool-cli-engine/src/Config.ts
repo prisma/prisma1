@@ -85,6 +85,7 @@ export class Config {
         const pjson = fs.readJSONSync(pjsonPath)
         if (pjson && pjson['cli-engine']) {
           this.pjson = pjson
+          this.version = pjson.version
         }
       }
     }

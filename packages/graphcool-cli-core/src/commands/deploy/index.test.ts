@@ -2,7 +2,7 @@ import * as nock from 'nock'
 import {Config} from 'graphcool-cli-engine'
 import { init } from '../test/mock-requests'
 import Deploy from './'
-import { changedDefaultDefinition, defaultDefinition } from '../examples'
+import { changedDefaultDefinition, defaultDefinition } from '../../examples'
 
 const config = new Config()
 describe('deploy', () => {

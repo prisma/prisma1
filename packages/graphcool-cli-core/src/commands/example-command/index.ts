@@ -9,6 +9,7 @@ export default class Trolo extends Command {
   Example:
   $ BLA
   `
+  static hidden = true
   static flags: Flags = {
     env: flags.string({
       char: 'e',
