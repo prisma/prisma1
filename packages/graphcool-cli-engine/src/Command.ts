@@ -67,12 +67,13 @@ export class Command {
   argv: string[]
 
   constructor(options: { config?: RunOptions } = {config: {mock: true}}) {
+    console.log('calling constructor')
     this.config = new Config(options.config)
     this.out = new Output(this.config)
     this.argv = (options.config && options.config.argv) ? options.config.argv : []
     this.definition = new ProjectDefinitionClass(this.out, this.config)
-    this.auth = new Auth(this.out, this.config)
     this.client = new Client(this.config)
+    this.auth = new Auth(this.out, this.config, this.client)
     this.env = new Environment(this.out, this.config, this.client)
     this.env.load()
   }

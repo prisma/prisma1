@@ -97,7 +97,7 @@ Help topics, type ${this.out.color.cmd(this.config.bin + ' help TOPIC')} for mor
 
   listCommandsHelp(topic: string, commands: Array<typeof Command>) {
     commands = commands.filter(c => !c.hidden)
-    if (commands.length === 0) {
+    if (commands.length <= 1) {
       return
     }
     commands.sort(compare('command'))

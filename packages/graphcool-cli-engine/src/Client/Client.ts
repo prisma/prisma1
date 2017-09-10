@@ -12,6 +12,10 @@ import { omit } from 'lodash'
 import { Config } from '../Config';
 import { getFastestRegion } from './ping'
 
+import fs from '../fs'
+import * as path from 'path'
+import * as cuid from 'cuid'
+
 const debug = require('debug')('graphcool')
 
 const REMOTE_PROJECT_FRAGMENT = `
@@ -58,11 +62,16 @@ export class Client {
         }
         return client.request(query, variables).then(data => {
           // TODO remove when not needed anymore
-          // const id = cuid()
-          // const requestPath = path.join(process.cwd(), `./${id}-request.json`)
-          // fs.writeFileSync(requestPath, request)
-          // const responsePath = path.join(process.cwd(), `./${id}-response.json`)
-          // fs.writeFileSync(responsePath, JSON.stringify(data, null, 2))
+          const id = cuid()
+
+          const json = JSON.stringify({
+            request,
+            response: data,
+          }, null, 2)
+
+          const requestPath = path.join(this.config.definitionDir, `./${id}.json`)
+          fs.writeFileSync(requestPath, json)
+
           // if (process.env.NODE_ENV === 'test') {
           //   throw new Error(`Error, performed not mocked request. Saved under ${id}`)
           // }
@@ -102,70 +111,16 @@ export class Client {
     }
 
     const {addProject: {project}} = await this.client.request<{ addProject: { project: RemoteProject } }>(mutation, variables)
-    // TODO rm this as soon as the backend has fixed this
-    // push schema only
-    const tempDefinition: ProjectDefinition = JSON.parse(project.projectDefinitionWithFileContent)
-    tempDefinition.modules[0].files['./types.graphql'] = projectDefinition.modules[0].files['./types.graphql']
-    const res1 = await this.push(project.id, true, false, tempDefinition)
 
-    const res2 = await this.push(project.id, true, false, projectDefinition)
+    const res = await this.push(project.id, true, false, projectDefinition)
 
-    if (res1.errors && res1.errors.length > 0) {
-      throw new Error(res1.errors.map(e => e.description).join('\n'))
+    if (res.errors && res.errors.length > 0) {
+      throw new Error(res.errors.map(e => e.description).join('\n'))
     }
 
     // TODO set project definition, should be possibility in the addProject mutation
 
     return this.getProjectDefinition(project)
-  }
-
-  async migrateProject(newSchema: string, force: boolean, isDryRun: boolean): Promise<MigrationResult> {
-    const mutation = `\
-      mutation($newSchema: String!, $force: Boolean!, $isDryRun: Boolean!) {
-        migrateProject(input: {
-          newSchema: $newSchema,
-          force: $force,
-          isDryRun: $isDryRun
-        }) {
-          migrationMessages {
-            type
-            action
-            name
-            description
-            subDescriptions {
-              type
-              action
-              name
-              description
-            }
-          }
-          errors {
-            description
-            type
-            field
-          }
-          project {
-            id
-            name
-            schema
-            alias
-            projectDefinitionWithFileContent
-          }
-        }
-      }
-    `
-    const {migrateProject} = await this.client.request<{ migrateProject: MigrateProjectPayload }>(mutation, {
-      newSchema,
-      force,
-      isDryRun
-    })
-
-    return {
-      migrationMessages: migrateProject.migrationMessages,
-      errors: migrateProject.errors,
-      newSchema: migrateProject.project.schema,
-      projectDefinition: this.getProjectDefinition(migrateProject.project as any).projectDefinition,
-    }
   }
 
   async push(projectId: string, force: boolean, isDryRun: boolean, config: ProjectDefinition): Promise<MigrationResult> {
@@ -176,6 +131,7 @@ export class Client {
           force: $force
           isDryRun: $isDryRun
           config: $config
+          version: 1
         }) {
           migrationMessages {
             type

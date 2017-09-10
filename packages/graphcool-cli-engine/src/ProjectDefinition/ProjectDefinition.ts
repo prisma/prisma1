@@ -8,6 +8,7 @@ import fs from '../fs'
 import { Output } from '../Output/index'
 import { Config } from '../Config'
 
+
 export class ProjectDefinitionClass {
   definition: ProjectDefinition | null
   out: Output
@@ -19,15 +20,17 @@ export class ProjectDefinitionClass {
   }
 
   public async load() {
+    const definitionJsonPath = path.join(this.config.definitionDir, 'definition.json')
     if (fs.existsSync(path.join(this.config.definitionDir, 'graphcool.yml'))) {
       this.definition = await fsToProject(this.config.definitionDir, this.out)
-      fs.writeFileSync('definition.json', JSON.stringify(this.definition, null, 2))
+      fs.writeFileSync(definitionJsonPath, JSON.stringify(this.definition, null, 2))
     }
   }
 
   public async save(files?: string[], silent?: boolean) {
+    const definitionJsonPath = path.join(this.config.definitionDir, 'definition.json')
     projectToFs(this.definition!, this.config.definitionDir, this.out, files, silent)
-    fs.writeFileSync('definition.json', JSON.stringify(this.definition, null, 2))
+    fs.writeFileSync(definitionJsonPath, JSON.stringify(this.definition, null, 2))
   }
 
   public async saveTypes() {

@@ -67,10 +67,6 @@ some multiline help
 `
   }
   let config = new Config({mock: true})
-  expect(Command.buildHelp(config)).toEqual(`Usage: graphcool config:get
-
-this is
-
-some multiline help\n`)
-  expect(Command.buildHelpLine(config)).toEqual(['config:get', null])
+  expect(Command.buildHelp(config)).toMatchSnapshot('buildHelp')
+  expect(Command.buildHelpLine(config)).toMatchSnapshot('buildHelpLine')
 })

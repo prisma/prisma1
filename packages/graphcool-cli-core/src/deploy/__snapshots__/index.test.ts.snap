@@ -1,0 +1,18 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`deploy with change 1`] = `
+"✔ Your project cj7elbt9z0a3z011214m21uwn of env dev was successfully updated.
+            Here are the changes: 
+
+
+  | (+)  A new type with the name \`Post\` is created.
+
+  └── (+)  A new field with the name \`imageUrl\` and type \`String!\` is created.
+
+"
+`;
+
+exports[`deploy without change 1`] = `
+"✔ Identical project definition for project cj7elbt9z0a3z011214m21uwn in env dev, no action required.
+"
+`;

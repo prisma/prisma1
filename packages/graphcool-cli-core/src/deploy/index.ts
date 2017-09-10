@@ -1,4 +1,4 @@
-import {Command, flags, Flags, EnvDoesntExistError} from 'graphcool-cli-engine'
+import {Command, flags, Flags, EnvDoesntExistError, EnvironmentConfig, ProjectDefinition} from 'graphcool-cli-engine'
 import * as chalk from 'chalk'
 import * as figures from 'figures'
 import {ProjectDoesntExistError} from '../errors/ProjectDoesntExistError'
@@ -33,9 +33,17 @@ ${chalk.gray('-')} Deploy local changes from default project file accepting pote
       description: 'Accept data loss caused by schema changes'
     }),
   }
+  static mockDefinition: ProjectDefinition
+  static mockEnv: EnvironmentConfig
   async run() {
     const {env, project, force} = this.flags
 
+    if (Deploy.mockDefinition) {
+      this.definition.set(Deploy.mockDefinition)
+    }
+    if (Deploy.mockEnv) {
+      this.env.env = Deploy.mockEnv
+    }
     await this.definition.load()
     await this.auth.ensureAuth()
 
@@ -56,7 +64,7 @@ ${chalk.gray('-')} Deploy local changes from default project file accepting pote
 
       try {
 
-        const migrationResult  = await this.client.push(projectId, force, true, this.definition.definition!)
+        const migrationResult  = await this.client.push(projectId, force, false, this.definition.definition!)
         this.out.action.stop()
 
         // no action required
@@ -70,7 +78,6 @@ ${chalk.gray('-')} Deploy local changes from default project file accepting pote
 
             this.out.migration.printMessages(migrationResult.migrationMessages)
             this.definition.set(migrationResult.projectDefinition)
-            await this.definition.saveTypes()
         }
 
         // can't do migration because of issues with schema

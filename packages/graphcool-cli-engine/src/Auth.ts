@@ -4,15 +4,18 @@ import 'isomorphic-fetch'
 import * as cuid from 'cuid'
 import * as opn from 'opn'
 import { AuthTrigger } from './types'
+import { Client } from './Client/Client'
 
 export class Auth {
   out: Output
   config: Config
   authTrigger: AuthTrigger = 'auth'
+  client: Client
 
-  constructor(out: Output, config: Config) {
+  constructor(out: Output, config: Config, client: Client) {
     this.out = out
     this.config = config
+    this.client = client
   }
 
   setAuthTrigger(authTrigger: AuthTrigger) {
@@ -30,6 +33,10 @@ export class Auth {
       this.out.exit(1)
     }
 
+    this.config.setToken(token)
+    this.config.saveToken()
+    this.client.updateClient()
+
     return true
   }
 
@@ -46,6 +53,7 @@ export class Auth {
   }
 
   async requestAuthToken(): Promise<string> {
+    this.out.action.start('Authenticating')
     const cliToken = cuid()
 
     await fetch(`${this.config.authEndpoint}/create`, {
@@ -66,6 +74,7 @@ export class Auth {
       const json = await result.json()
       const {authToken} = json
       if (authToken) {
+        this.out.action.stop()
         return authToken as string
       }
     }

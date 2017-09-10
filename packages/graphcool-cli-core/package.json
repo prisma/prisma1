@@ -11,7 +11,9 @@
   "devDependencies": {
     "@types/node": "^8.0.22",
     "husky": "^0.14.3",
+    "jest": "^21.0.2",
     "lint-staged": "^4.0.3",
+    "nock": "^9.0.14",
     "prettier": "^1.5.3",
     "rimraf": "^2.6.1",
     "source-map-support": "^0.4.15",
@@ -28,7 +30,8 @@
     "lint": "tslint src/**/*.ts",
     "precommit": "lint-staged",
     "prettier": "prettier --single-quote --no-semi --trailing-comma all --write '*.ts' 'src/**/*.ts'",
-    "prepublishOnly": "npm run lint && npm run build"
+    "prepublishOnly": "npm run lint && npm run build",
+    "test": "NODE_ENV=test jest"
   },
   "lint-staged": {
     "*.ts": [
@@ -37,7 +40,28 @@
       "git add"
     ]
   },
+  "jest": {
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "jsx",
+      "json"
+    ],
+    "rootDir": "./src",
+    "transform": {
+      "^.+\\.(ts|tsx)$": "../../../node_modules/ts-jest/preprocessor.js"
+    },
+    "testMatch": [
+      "**/*.test.(ts|js)"
+    ],
+    "setupFiles": [
+      "../test/init.js"
+    ]
+  },
   "dependencies": {
-    "figures": "^2.0.0"
+    "figures": "^2.0.0",
+    "sillyname": "^0.1.0",
+    "ts-jest": "^21.0.0"
   }
 }

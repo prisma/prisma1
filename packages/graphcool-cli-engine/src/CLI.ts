@@ -7,6 +7,12 @@ import Lock from './Plugin/Lock'
 import { Dispatcher } from './Dispatcher/Dispatcher'
 import { NotFound } from './NotFound'
 
+import * as nock from 'nock'
+import fs from './fs'
+
+
+
+
 const debug = require('debug')('cli')
 const handleEPIPE = err => { if (err.code !== 'EPIPE') {
    throw err
@@ -48,13 +54,14 @@ export class CLI {
         mock: false
       }
     }
+    const parentFilename = module.parent!.parent! ? module.parent!.parent!.filename : module.parent!.filename
     if (!config.initPath) {
-      config.initPath = module.parent!.parent!.filename
+      config.initPath = parentFilename
     }
     if (!config.root) {
       const findUp = require('find-up')
       config.root = path.dirname(findUp.sync('package.json', {
-        cwd: module.parent!.parent!.filename
+        cwd: parentFilename
       }))
     }
     this.config = new Config(config)
@@ -86,7 +93,15 @@ export class CLI {
         const lock = new Lock(out)
         await lock.unread()
         debug('running cmd')
-        this.cmd = await foundCommand.run(this.config)
+        // TODO remove this
+        // if (process.env.NODE_ENV !== 'test') {
+        //   nock.recorder.rec({
+        //     dont_print: true,
+        //   })
+        //   this.cmd = await foundCommand.run(this.config)
+        //   const requests = nock.recorder.play()
+        //   fs.writeFileSync(path.join(this.config.definitionDir, 'requests.js'), requests.join('\n'))
+        // }
       } else {
         const topic = await dispatcher.findTopic(id)
         if (topic) {
@@ -99,7 +114,7 @@ export class CLI {
 
     debug('flushing stdout')
     const {timeout} = require('./util')
-    await timeout(this.flush(), 10000)
+    await timeout(this.flush(), 1000)
     debug('exiting')
     out.exit(0)
   }

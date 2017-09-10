@@ -30,7 +30,7 @@
     "precommit": "lint-staged",
     "prettier": "prettier --single-quote --no-semi --trailing-comma all --write '*.ts' 'src/**/*.ts'",
     "prepublishOnly": "npm run lint && npm run build",
-    "test": "jest && yarn lint"
+    "test": "npm run lint && jest"
   },
   "lint-staged": {
     "*.ts": [

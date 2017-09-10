@@ -6,7 +6,9 @@ async function runPing(url: string): Promise<number> {
   const pingUrl = async () => {
     const start = Date.now()
 
-    await fetch(url)
+    if (process.env.NODE_ENV !== 'test') {
+      await fetch(url)
+    }
 
     return Date.now() - start
   }

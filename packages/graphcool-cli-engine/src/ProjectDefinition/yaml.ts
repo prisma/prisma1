@@ -7,7 +7,7 @@ import { Output } from '../Output/index'
 
 const ajv = new Ajv()
 
-ajv.addMetaSchema(require('ajv/lib/refs/json-schema-draft-04.json'))
+// ajv.addMetaSchema(require('ajv/lib/refs/json-schema-draft-04.json'))
 const validate = ajv.compile(schema)
 
 export async function readDefinition(file: string, out: Output): Promise<GraphcoolDefinition> {
