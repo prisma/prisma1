@@ -3,6 +3,7 @@ import { stdtermwidth } from '../Output/actions/screen'
 import { compare, linewrap } from '../util'
 import { Command } from '../Command'
 import Plugins from '../Plugin/Plugins'
+import * as chalk from 'chalk'
 
 function trimToMaxLeft(n: number): number {
   const max = Math.floor(stdtermwidth * 0.6)
@@ -74,9 +75,11 @@ export default class Help extends Command {
 
   topics(ptopics: any[] | null = null, id: string | null = null, offset: number = 1) {
     const color = this.out.color
-    this.out.log(`${color.bold('Usage:')} ${this.config.bin} ${id || ''}${id ? ' ' : ''}COMMAND
+    this.out.log(`\nServerless GraphQL backend for frontend developers (${chalk.underline('https://www.graph.cool')})
+    
+${chalk.bold('Usage:')} ${chalk.bold('graphcool')} COMMAND
 
-Help topics, type ${this.out.color.cmd(this.config.bin + ' help TOPIC')} for more details:\n`)
+${chalk.bold('Commands:')}`)
     let topics = (ptopics || this.plugins.topics).filter(t => {
       if (!t.id) {
         return
@@ -87,12 +90,21 @@ Help topics, type ${this.out.color.cmd(this.config.bin + ' help TOPIC')} for mor
     topics = topics.map(t => (
       [
         t.id,
-        t.description ? this.out.color.dim(t.description) : null
+        t.description ? chalk.dim(t.description) : null
       ]
     ))
     topics.sort()
     this.out.log(renderList(topics))
-    this.out.log('')
+    this.out.log(`\nRun ${chalk.bold.green('graphcool help')} COMMAND for more information on a command.
+
+${chalk.dim('Examples:')}
+
+${chalk.gray('-')} Initialize a new Graphcool project
+  ${chalk.green('$ graphcool init')}
+
+${chalk.gray('-')} Update live project with local changes
+  ${chalk.green('$ graphcool deploy')}
+`)
   }
 
   listCommandsHelp(topic: string, commands: Array<typeof Command>) {

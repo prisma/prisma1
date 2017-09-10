@@ -8,6 +8,7 @@ import * as yaml from 'js-yaml'
 /* tslint:disable-next-line */
 const debug = require('debug')('module')
 import * as chalk from 'chalk'
+import * as figures from 'figures'
 
 export default class ModuleAdd extends Command {
   static topic = 'module'
@@ -35,9 +36,10 @@ export default class ModuleAdd extends Command {
 
     const repoName = `${ghUser}/${ghRepo}`
 
-    this.out.action.start(`Downloading from ${repoName}`)
+    this.out.log('')
+    this.out.action.start(`   Downloading module ${chalk.bold(repoName)} `)
     await downloadRepo(repoName, tmpDir)
-    this.out.action.stop(`Done downloading ${repoName}`)
+    this.out.action.stop(chalk.green(figures.tick))
     debug(`Downloaded ${repoName} to ${tmpDir}`)
 
     const source = path.join(tmpDir, subPath)
@@ -47,33 +49,32 @@ export default class ModuleAdd extends Command {
       this.out.warn(`Path ${target} already exists. Overwriting it now.`)
     }
     fs.mkdirpSync(target)
-    debug(`Copying from ${source} to ${target}`)
     fs.copySync(source, target)
     fs.removeSync(source)
 
     // add it to local definition file
 
-    debug('Done!')
-
     const rootDefinitionString = this.definition.definition!.modules[0].content
     const rootDefinition = await readDefinition(rootDefinitionString, this.out)
-    debug('setting module', moduleDirName, relativeModulePath)
-    if (!rootDefinition.modules) {
-      rootDefinition.modules = {}
-    }
-    rootDefinition.modules[moduleDirName] = path.join(
+    const newModulePath = path.join(
       relativeModulePath,
       'graphcool.yml',
     )
+    if (!rootDefinition.modules) {
+      rootDefinition.modules = {}
+    }
+    rootDefinition.modules[moduleDirName] = newModulePath
     const file = yaml.safeDump(rootDefinition)
     fs.writeFileSync(
       path.join(this.config.definitionDir, 'graphcool.yml'),
       file,
     )
-    debug('Added module to graphcool.yml')
+    this.out.log(chalk.blue(`\n   Added ${chalk.bold(`${moduleDirName}: '${newModulePath}'`)} to graphcool.yml`))
+    this.out.log(chalk.blue.bold(`   Created ${relativeModulePath}:`))
+    this.out.tree(relativeModulePath, true)
 
     this.out.log(
-      `Successfully added module ${moduleDirName}. You now can run ${chalk.bold(
+      `   ${chalk.green(figures.tick)} You now can run ${chalk.bold(
         'graphcool deploy',
       )} to deploy changes`,
     )

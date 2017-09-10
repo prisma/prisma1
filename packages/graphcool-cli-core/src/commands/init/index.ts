@@ -117,7 +117,7 @@ export default class Init extends Command {
         chalk.green(figures.tick)
       )
       this.out.log(`${chalk.blue.bold('\n   Written files:')}`)
-      this.out.tree(this.config.definitionDir)
+      this.out.tree(this.config.definitionDir, true)
 
       this.out.log(`\
    ${chalk.bold('Here is what you can do next:')}
@@ -149,13 +149,13 @@ export default class Init extends Command {
     const initQuestion = {
       name: 'init',
       type: 'list',
-      message: 'How do you want to start?\n',
+      message: 'How do you want to start?',
       choices: [
         {
           value: 'blank',
           name: [
             `${chalk.bold('New blank project')}`,
-            `Creates a new Graphcool project from scratch.`,
+            `  Creates a new Graphcool project from scratch.`,
             '',
           ].join('\n'),
         },
@@ -163,7 +163,7 @@ export default class Init extends Command {
           value: 'copy',
           name: [
             `${chalk.bold('Copying an existing project')}`,
-            `Copies a project from your account`,
+            `  Copies a project from your account`,
             '',
           ].join('\n'),
         },
@@ -171,12 +171,12 @@ export default class Init extends Command {
           value: 'example',
           name: [
             `${chalk.bold('Based on example')}`,
-            `Creates a new Graphcool project based on an example`,
+            `  Creates a new Graphcool project based on an example`,
             '',
           ].join('\n'),
         },
       ],
-      pageSize: 12,
+      pageSize: 13,
     }
 
     const { init } = await this.out.prompt([initQuestion])

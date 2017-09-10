@@ -12,7 +12,7 @@ import * as util from 'util'
 import { errtermwidth } from './actions/screen'
 import { TableOptions } from './table'
 import ExitError from '../errors/ExitError'
-import * as inquirer from 'inquirer'
+import * as inquirer from 'graphcool-inquirer'
 import { MigrationPrinter } from './migration'
 import * as treeify from 'treeify'
 import * as dirTree from 'directory-tree'
@@ -207,11 +207,11 @@ export class Output {
     }
   }
 
-  tree(dirPath: string) {
+  tree(dirPath: string, padding = false) {
     const tree = dirTree(dirPath)
     const convertedTree = treeConverter(tree)
     const printedTree = treeify.asTree(convertedTree, true)
-    this.log(chalk.blue(printedTree.split('\n').map(l => '   ' + l).join('\n')))
+    this.log(chalk.blue(printedTree.split('\n').map(l => (padding ? '   ' : '') + l).join('\n')))
   }
 }
 
