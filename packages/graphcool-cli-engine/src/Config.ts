@@ -8,7 +8,6 @@ import * as cuid from 'cuid'
 let cwd = '/Users/tim/code/cli-tests/new'
 if (process.env.NODE_ENV === 'test') {
   cwd = path.join(os.tmpdir(), `${cuid()}/`)
-  console.log('Test cwd:', cwd)
   fs.mkdirpSync(cwd)
 }
 

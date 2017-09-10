@@ -67,7 +67,6 @@ export class Command {
   argv: string[]
 
   constructor(options: { config?: RunOptions } = {config: {mock: true}}) {
-    console.log('calling constructor')
     this.config = new Config(options.config)
     this.out = new Output(this.config)
     this.argv = (options.config && options.config.argv) ? options.config.argv : []
