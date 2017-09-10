@@ -15,6 +15,7 @@ export default class DefaultEnv extends Command {
     const {env} = this.flags
 
     this.env.setDefault(env)
+    this.env.save()
     this.out.log(`Successfully set ${env} as the default environment`)
   }
 }
