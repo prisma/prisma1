@@ -1117,9 +1117,9 @@ graceful-fs@~3.0.2:
   dependencies:
     natives "^1.1.0"
 
-graphcool-cli-core@1.3.17:
-  version "1.3.17"
-  resolved "https://registry.yarnpkg.com/graphcool-cli-core/-/graphcool-cli-core-1.3.17.tgz#1440ffbbbaf77836ff55268a3af78f601b82ccb1"
+graphcool-cli-core@1.3.18:
+  version "1.3.18"
+  resolved "https://registry.yarnpkg.com/graphcool-cli-core/-/graphcool-cli-core-1.3.18.tgz#d2ccc806521029ed3bf0a2730cac3ab19b64a602"
   dependencies:
     download-github-repo "^0.1.3"
     figures "^2.0.0"
@@ -1128,9 +1128,9 @@ graphcool-cli-core@1.3.17:
     table "^4.0.1"
     ts-jest "^21.0.0"
 
-graphcool-cli-engine@0.0.13:
-  version "0.0.13"
-  resolved "https://registry.yarnpkg.com/graphcool-cli-engine/-/graphcool-cli-engine-0.0.13.tgz#da2ca820e4f17ac3a1e6e32b9858265f1b70f9d6"
+graphcool-cli-engine@0.0.14:
+  version "0.0.14"
+  resolved "https://registry.yarnpkg.com/graphcool-cli-engine/-/graphcool-cli-engine-0.0.14.tgz#45faaca4666f09cc75150e496928da04b4300542"
   dependencies:
     "@heroku/linewrap" "^1.0.0"
     ajv "^5.2.2"

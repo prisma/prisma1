@@ -8,13 +8,13 @@ export default class Auth extends Command {
     
   Note: Your session token will be store at ~/.graphcool
   
-  ${chalk.blue('Examples:')}
+  ${chalk.green('Examples:')}
       
   ${chalk.gray('-')} Authenticate using the browser
-    ${chalk.blue('$ graphcool auth')}
+    ${chalk.green('$ graphcool auth')}
   
   ${chalk.gray('-')} Authenticate using an existing token
-    ${chalk.blue('$ graphcool auth -t <token>')}    
+    ${chalk.green('$ graphcool auth -t <token>')}    
   
   `
   static flags: Flags = {

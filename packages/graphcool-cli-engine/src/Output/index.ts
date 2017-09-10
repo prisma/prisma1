@@ -27,7 +27,7 @@ export const CustomColors = {
   addon: (s: string) => chalk.yellow(s),
   configVar: (s: string) => chalk.green(s),
   release: (s: string) => chalk.blue.bold(s),
-  cmd: (s: string) => chalk.cyan.bold(s),
+  cmd: (s: string) => chalk.green.bold(s),
   app: (s: string) => CustomColors.graphcool(`⬢ ${s}`),
   graphcool: (s: string) => {
     if (!CustomColors.supports) {

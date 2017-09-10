@@ -8,16 +8,16 @@ export default class Deploy extends Command {
   static description = 'Deploy project definition changes'
   static help = `
   
-  ${chalk.blue('Examples:')}
+  ${chalk.green('Examples:')}
       
 ${chalk.gray('-')} Deploy local changes from graphcool.yml to the default project environment.
-  ${chalk.blue('$ graphcool deploy')}
+  ${chalk.green('$ graphcool deploy')}
 
 ${chalk.gray('-')} Deploy local changes to a specific environment
-  ${chalk.blue('$ graphcool deploy --env production')}
+  ${chalk.green('$ graphcool deploy --env production')}
     
 ${chalk.gray('-')} Deploy local changes from default project file accepting potential data loss caused by schema changes
-  ${chalk.blue('$ graphcool deploy --force --env production')}
+  ${chalk.green('$ graphcool deploy --force --env production')}
   `
   static flags: Flags = {
     env: flags.string({

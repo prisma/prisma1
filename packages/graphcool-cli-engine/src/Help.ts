@@ -60,7 +60,7 @@ export default class Help {
     const color = this.out.color
     const flags = Object.keys(cmd.flags || {}).map(f => [f, cmd.flags[f]]).filter(f => !f[1].hidden)
     const args = (cmd.args || []).filter(a => !a.hidden)
-    const hasFlags = flags.length ? ` ${color.blue('[flags]')}` : ''
+    const hasFlags = flags.length ? ` ${color.green('[flags]')}` : ''
     const usage = `${color.bold('Usage:')} ${this.config.bin} ${buildUsage(cmd)}${hasFlags}\n`
     return [usage, cmd.description ? `\n${color.bold(cmd.description.trim())}\n` : '',
       this.renderAliases(cmd.aliases),
@@ -83,7 +83,7 @@ export default class Help {
       return ''
     }
     const a = aliases.map(a => `  $ ${this.config.bin} ${a}`).join('\n')
-    return `\n${this.out.color.blue('Aliases:')}\n${a}\n`
+    return `\n${this.out.color.green('Aliases:')}\n${a}\n`
   }
 
   renderArgs(args: Arg[]): string {
@@ -115,7 +115,7 @@ export default class Help {
       }
       return b[0] < a[0] ? 1 : 0
     })
-    return `\n${this.out.color.blue('Flags:')}\n` +
+    return `\n${this.out.color.green('Flags:')}\n` +
       renderList(flags.map(([name, f]) => {
         const label: string[] = []
         if (f.char) {

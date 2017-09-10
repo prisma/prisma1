@@ -11,10 +11,10 @@ export default class Init extends Command {
   static description = 'Create a new project definition and environment from scratch or based on an existing Graphcool definition.'
   static help = `
   
-  ${chalk.blue('Examples:')}
+  ${chalk.green('Examples:')}
   
   ${chalk.gray('-')} Initialize a new Graphcool project
-    ${chalk.blue('$ graphcool init')}
+    ${chalk.green('$ graphcool init')}
   `
   static flags: Flags = {
     copy: flags.string({
