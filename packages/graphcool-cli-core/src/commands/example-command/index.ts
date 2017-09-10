@@ -19,3 +19,4 @@ export default class ExampleCommand extends Command {
     this.out.log('Running example command', this.flags)
   }
 }
+

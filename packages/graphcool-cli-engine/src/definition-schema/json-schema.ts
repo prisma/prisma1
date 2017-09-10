@@ -155,6 +155,10 @@ export default {
       "items": {
         "$ref": "#/definitions/permission"
       }
+    },
+    "modules": {
+      "description": "Modules",
+      "type": "object"
     }
   },
   "additionalProperties": false,

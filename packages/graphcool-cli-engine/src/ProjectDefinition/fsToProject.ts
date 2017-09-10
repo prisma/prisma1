@@ -10,9 +10,33 @@ interface ErrorMessage {
   message: string
 }
 
-export default async function fsToProject(inputDir: string, out: Output): Promise<ProjectDefinition> {
+export async function fsToProject(inputDir: string, out: Output): Promise<ProjectDefinition> {
+  const rootModule = await fsToModule(path.join(inputDir, 'graphcool.yml'), out)
+  const modules: any[] = [rootModule]
 
-  const content = fs.readFileSync(path.join(inputDir, 'graphcool.yml'), 'utf-8')
+  const definition: GraphcoolDefinition = await readDefinition(rootModule.content, out)
+
+  if (definition.modules) {
+    for (const moduleName of Object.keys(definition.modules)) {
+      const modulePath = definition.modules[moduleName]
+      const resolvedModulePath = path.join(inputDir, modulePath)
+      const module = await fsToModule(resolvedModulePath, out)
+      modules.push({
+        ...module,
+        name: moduleName,
+      })
+    }
+  }
+
+  return {
+    modules,
+  }
+}
+
+export async function fsToModule(inputFile: string, out: Output): Promise<GraphcoolModule> {
+
+  const inputDir = path.dirname(inputFile)
+  const content = fs.readFileSync(inputFile, 'utf-8')
 
   const module: GraphcoolModule = {
     name: '',
@@ -123,12 +147,11 @@ export default async function fsToProject(inputDir: string, out: Output): Promis
   }
 
   return {
-    modules: [{
-      ...module,
-      files,
-    }]
+    ...module,
+    files,
   }
 }
+
 
 function isFile(type) {
   return content => {

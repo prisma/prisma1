@@ -9,6 +9,7 @@ import Info from './commands/info/index'
 import Playground from './commands/playground/index'
 import Console from './commands/console'
 import Projects from './commands/projects/index'
+import ModuleAdd from './commands/module/add'
 
 
 export const topics = [
@@ -20,6 +21,7 @@ export const topics = [
   {name: 'console', description: 'Opens the console for the current project'},
   {name: 'playground', description: 'Opens the playground for the current project'},
   {name: 'projects', description: 'List all projects'},
+  {name: 'module', description: 'Manage modules'}
 ]
 
-export const commands = [Deploy, Init, Auth, SetEnv, RemoveEnv, DefaultEnv, RenameEnv, Info, Playground, Console, Projects]
+export const commands = [Deploy, Init, Auth, SetEnv, RemoveEnv, DefaultEnv, RenameEnv, Info, Playground, Console, Projects, ModuleAdd]

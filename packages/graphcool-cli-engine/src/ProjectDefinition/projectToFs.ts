@@ -5,7 +5,7 @@ import { Output } from '../Output/index'
 import { GraphcoolModule, ProjectDefinition } from '../types'
 require('source-map-support/register')
 
-export default function projectToFs(project: ProjectDefinition, outputDir: string, out: Output, files?: string[], silent?: boolean): void {
+export function projectToFs(project: ProjectDefinition, outputDir: string, out: Output, files?: string[], silent?: boolean): void {
   for (const module of project.modules) {
     moduleToFs(module, outputDir, out, files, silent)
   }

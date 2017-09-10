@@ -60,7 +60,9 @@
     ]
   },
   "dependencies": {
+    "download-github-repo": "^0.1.3",
     "figures": "^2.0.0",
+    "js-yaml": "^3.9.1",
     "sillyname": "^0.1.0",
     "table": "^4.0.1",
     "ts-jest": "^21.0.0"

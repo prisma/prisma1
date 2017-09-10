@@ -70,7 +70,7 @@ export class Config {
     if (process.env.NODE_ENV === 'test') {
       this.token = 'test token'
     } else {
-      if (fs.pathExistsSync(this.dotGraphcoolFilePath)) {
+      if (fs.existsSync(this.dotGraphcoolFilePath)) {
         const configContent = fs.readFileSync(this.dotGraphcoolFilePath, 'utf-8')
         this.token = JSON.parse(configContent).token
       }

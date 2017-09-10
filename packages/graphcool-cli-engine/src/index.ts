@@ -1,3 +1,9 @@
+
+export {fsToProject, fsToModule} from './ProjectDefinition/fsToProject'
+export {projectToFs} from './ProjectDefinition/projectToFs'
+
+export { readDefinition } from './ProjectDefinition/yaml'
+
 export { EnvDoesntExistError } from './errors/EnvDoesntExistError'
 
 export { Config } from './Config'
@@ -27,4 +33,3 @@ export {
 } from './types'
 
 export { flags, Flag, Arg, Flags } from './Flags'
-

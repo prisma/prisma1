@@ -1,5 +1,5 @@
-import fsToProject from './fsToProject'
-import projectToFs from './projectToFs'
+import {fsToProject} from './fsToProject'
+import {projectToFs} from './projectToFs'
 import * as path from 'path'
 import { readDefinition } from './yaml'
 import * as chalk from 'chalk'
@@ -20,17 +20,22 @@ export class ProjectDefinitionClass {
   }
 
   public async load() {
-    const definitionJsonPath = path.join(this.config.definitionDir, 'definition.json')
     if (fs.existsSync(path.join(this.config.definitionDir, 'graphcool.yml'))) {
       this.definition = await fsToProject(this.config.definitionDir, this.out)
-      fs.writeFileSync(definitionJsonPath, JSON.stringify(this.definition, null, 2))
+      if (process.env.DEBUG && process.env.DEBUG!.includes('*')) {
+        const definitionJsonPath = path.join(this.config.definitionDir, 'definition.json')
+        fs.writeFileSync(definitionJsonPath, JSON.stringify(this.definition, null, 2))
+      }
     }
   }
 
   public async save(files?: string[], silent?: boolean) {
-    const definitionJsonPath = path.join(this.config.definitionDir, 'definition.json')
     projectToFs(this.definition!, this.config.definitionDir, this.out, files, silent)
-    fs.writeFileSync(definitionJsonPath, JSON.stringify(this.definition, null, 2))
+
+    if (process.env.DEBUG && process.env.DEBUG!.includes('*')) {
+      const definitionJsonPath = path.join(this.config.definitionDir, 'definition.json')
+      fs.writeFileSync(definitionJsonPath, JSON.stringify(this.definition, null, 2))
+    }
   }
 
   public async saveTypes() {

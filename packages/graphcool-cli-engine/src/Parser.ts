@@ -117,7 +117,8 @@ export class Parser {
       output.argv.push(arg)
     }
 
-    if (!this.input.variableArgs && output.argv.length > maxArgs) {
+    // TODO find better solution
+    if (!this.input.variableArgs && output.argv.length > maxArgs + 2) {
       throw new Error(`Unexpected argument ${output.argv[maxArgs]}`)
     }
     if (output.argv.length < minArgs) {
