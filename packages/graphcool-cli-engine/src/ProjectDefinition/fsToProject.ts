@@ -132,7 +132,7 @@ export async function fsToModule(inputFile: string, out: Output): Promise<Graphc
           }
         } else {
           errors.push({
-            message: `The file ${func.handler.code.src} for the schema extension of function ${funcName} does not exist`,
+            message: `The file ${func.handler.code!.src} for the schema extension of function ${funcName} does not exist`,
           })
         }
       }
