@@ -30,6 +30,21 @@ export interface RemoteProject extends Project {
   projectDefinitionWithFileContent: string
 }
 
+export interface FunctionLog {
+  id: string
+  requestId: string
+  duration: number
+  status: string
+  timestamp: string
+  message: string
+}
+
+export interface PAT {
+  id: string
+  name: string
+  token: string
+}
+
 export interface ProjectInfo extends Project {
   id: string
   name: string

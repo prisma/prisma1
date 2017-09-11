@@ -30,6 +30,7 @@ export {
   Project,
   Region,
   SchemaInfo,
+  PAT,
 } from './types'
 
 export { flags, Flag, Arg, Flags } from './Flags'

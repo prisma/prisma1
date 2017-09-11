@@ -1,7 +1,9 @@
 import { GraphQLClient } from 'graphql-request'
 import {
+  FunctionLog,
   MigrateProjectPayload,
   MigrationResult,
+  PAT,
   Project,
   ProjectDefinition,
   ProjectInfo,
@@ -239,6 +241,129 @@ export class Client {
     return this.getProjectDefinition(project)
   }
 
+  async getPats(projectId: string): Promise<PAT[]> {
+    interface ProjectPatPayload {
+      viewer: {
+        project: {
+          permanentAuthTokens: {
+            edges: Array<{
+              node: PAT
+            }>
+          }
+        }
+      }
+    }
+    const {
+      viewer: { project: { permanentAuthTokens } },
+    } = await this.client.request<ProjectPatPayload>(
+      `
+      query ($projectId: ID!){
+        viewer {
+          project(id: $projectId) {
+            permanentAuthTokens {
+              edges {
+                node {
+                  id
+                  name
+                  token
+                }
+              }
+            }
+          }
+        }
+      }
+      `,
+      { projectId },
+    )
+
+    if (!permanentAuthTokens) {
+      return []
+    }
+
+    return permanentAuthTokens.edges.map(edge => edge.node)
+  }
+
+  async getFunctionLogs(
+    projectId: string,
+    functionName: string,
+  ): Promise<FunctionLog[] | null> {
+    interface FunctionsPayload {
+      viewer: {
+        project: {
+          functions: {
+            edges: Array<{
+              node: {
+                id: string
+                name: string
+              }
+            }>
+          }
+        }
+      }
+    }
+    const { viewer: { project: { functions } } } = await this.client.request<
+      FunctionsPayload
+    >(
+      `
+      query ($projectId: ID!){
+        viewer {
+          project(id: $projectId) {
+            functions {
+              edges {
+                node {
+                  name
+                  id
+                }
+              }
+            }
+          }
+        }
+      }
+      `,
+      { projectId },
+    )
+
+    const normalizedFunctionName = normalizeName(functionName)
+    const foundFunction = functions.edges
+      .map(edge => edge.node)
+      .find(fn => normalizeName(fn.name) === normalizedFunctionName)
+
+    if (!foundFunction) {
+      return null
+    }
+
+    interface FunctionLogsPayload {
+      node: {
+        logs: {
+          edges: Array<{
+            node: FunctionLog
+          }>
+        }
+      }
+    }
+
+    const {node: {logs}} = await this.client.request<FunctionLogsPayload>(`query ($id: ID!) {
+      node(id: $id) {
+        ... on Function {
+          logs(last: 1000) {
+            edges {
+              node {
+                id
+                requestId
+                duration
+                status
+                timestamp
+                message
+              }
+            }
+          }
+        }
+      }
+    }`, {id: foundFunction.id})
+
+    return logs.edges.map(edge => edge.node)
+  }
+
   async getProjectName(projectId: string): Promise<string> {
     interface ProjectInfoPayload {
       viewer: {
@@ -391,4 +516,8 @@ if (process.env.NODE_ENV === 'test') {
     }
     this.mocks[JSON.stringify(request, null, 2)] = response
   }
+}
+
+function normalizeName(name: string) {
+  return name.toLowerCase().trim()
 }
