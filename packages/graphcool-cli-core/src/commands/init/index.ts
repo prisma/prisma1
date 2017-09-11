@@ -4,6 +4,8 @@ import { EnvAlreadyExistsError } from '../../errors/EnvAlreadyExistsError'
 import { InvalidProjectNameError } from '../../errors/InvalidProjectNameError'
 import * as sillyName from 'sillyname'
 import { defaultDefinition, examples } from '../../examples'
+import * as fs from 'fs-extra'
+import * as path from 'path'
 
 export default class Init extends Command {
   static topic = 'init'
@@ -44,12 +46,26 @@ export default class Init extends Command {
     }),
   }
 
+  static args = [{
+    name: 'dirName',
+    description: 'Optional dir name to run init graphcool in'
+  }]
+
   async run() {
     const { copy, alias, env, region, template } = this.flags
     let { name } = this.flags
     await this.definition.load()
     this.auth.setAuthTrigger('init')
     await this.auth.ensureAuth()
+
+    const dirName = this.args!.dirName
+
+    if (dirName) {
+      const newDefinitionPath = path.join(process.cwd(), dirName + '/')
+      fs.mkdirpSync(newDefinitionPath)
+      this.config.definitionDir = newDefinitionPath
+      this.config.envPath = path.join(newDefinitionPath, '.graphcoolrc')
+    }
 
     const newProject = !this.definition.definition
 
@@ -91,7 +107,8 @@ export default class Init extends Command {
     name = name || sillyName()
 
     this.out.log('')
-    this.out.action.start(`   Creating project ${chalk.bold(name)}`)
+    const projectMessage = dirName ? `   Creating project ${chalk.bold(name)} in folder ${chalk.bold(dirName) + '/'}` : `   Creating project ${chalk.bold(name)}`
+    this.out.action.start(projectMessage)
 
     try {
       // create project
@@ -114,7 +131,8 @@ export default class Init extends Command {
 
       this.out.action.stop(
       )
-      this.out.log(`${chalk.blue.bold('\n   Written files:')}`)
+      const inDir = dirName ? ` in ${dirName}/` : ''
+      this.out.log(`${chalk.blue.bold('\n   Written files' + inDir + ':')}`)
       this.out.tree(this.config.definitionDir, true)
 
       this.out.log(`\
@@ -138,7 +156,6 @@ export default class Init extends Command {
       ${chalk.cyan(`https://api.graph.cool/simple/v1/${createdProject.id}`)}
 `)
     } catch (e) {
-      debugger
       this.out.action.stop()
       this.out.error(e)
     }

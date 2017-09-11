@@ -79,7 +79,7 @@ export class CLI {
       debug('dispatcher')
       const id = this.getCommandId(this.config.argv.slice(1))
       // if there is a subcommand, cut the first away so the Parser still works correctly
-      if (this.config.argv[1] && this.config.argv[1].startsWith('-') && id !== 'help') {
+      if (this.config.argv[1] && this.config.argv[1].startsWith('-') && id !== 'help' && id !== 'init') {
         this.config.argv = this.config.argv.slice(1)
       }
       debug(`command id: ${id}, argv: ${this.config.argv}`)
@@ -148,7 +148,7 @@ export class CLI {
   }
 
   private getCommandId(argv: string[]) {
-    if (argv.includes('help')) {
+    if (argv.includes('help') || argv.includes('init')) {
       return argv[0]
     }
     if (argv[1] && !argv[1].startsWith('-')) {
