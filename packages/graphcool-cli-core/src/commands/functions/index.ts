@@ -38,7 +38,7 @@ export default class FunctionsOverview extends Command {
         const tableHeader = [
           [
             chalk.bold('Function Name'),
-            chalk.bold('Inline/Webhook'),
+            chalk.bold('Handler'),
             chalk.bold('Type'),
             chalk.bold('Requests (last 30min)'),
             chalk.bold('Errors (last 30min)'),

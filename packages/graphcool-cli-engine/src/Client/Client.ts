@@ -67,7 +67,10 @@ export class Client {
         if (this.mocks[request]) {
           return Promise.resolve(this.mocks[request])
         }
-        return client.request(query, variables)
+        return client.request(query, variables).then(data => {
+          debug(data)
+          return data
+        })
       },
     } as any
   }
@@ -298,7 +301,7 @@ export class Client {
     }
     const { viewer: { project: { functions } } } = await this.client.request<
       FunctionsPayload
-      >(
+    >(
       `
       query ($projectId: ID!){
         viewer {
@@ -327,17 +330,22 @@ export class Client {
     return functions.edges.map(edge => edge.node)
   }
 
-  async getFunction(projectId: string, functionName: string): Promise<FunctionInfo | null> {
+  async getFunction(
+    projectId: string,
+    functionName: string,
+  ): Promise<FunctionInfo | null> {
     const functions = await this.getFunctions(projectId)
     const normalizedFunctionName = normalizeName(functionName)
-    return functions.find(fn => normalizeName(fn.name) === normalizedFunctionName) || null
+    return (
+      functions.find(fn => normalizeName(fn.name) === normalizedFunctionName) ||
+      null
+    )
   }
 
   async getFunctionLogs(
-    projectId: string,
     functionId: string,
-    after?: string
-  ): Promise<{logs: FunctionLog[], endCursor: string}> {
+    after?: string,
+  ): Promise<{ logs: FunctionLog[]; endCursor?: string }> {
     interface FunctionLogsPayload {
       node: {
         logs: {
@@ -351,7 +359,10 @@ export class Client {
       }
     }
 
-    const {node: {logs}} = await this.client.request<FunctionLogsPayload>(`query ($id: ID!, $after: String) {
+    const { node: { logs } } = await this.client.request<
+      FunctionLogsPayload
+    >(
+      `query ($id: ID!, $after: String) {
       node(id: $id) {
         ... on Function {
           logs(last: 1000 after: $after) {
@@ -371,11 +382,13 @@ export class Client {
           }
         }
       }
-    }`, {id: functionId, after})
+    }`,
+      { id: functionId, after },
+    )
 
     return {
-      logs: logs.edges.map(edge => edge.node),
-      endCursor: logs.pageInfo.endCursor,
+      logs: logs ? logs.edges.map(edge => edge.node) : [],
+      endCursor: logs ? logs.pageInfo.endCursor : undefined,
     }
   }
 

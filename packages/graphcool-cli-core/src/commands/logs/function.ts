@@ -17,10 +17,10 @@ export default class FunctionLogs extends Command {
       char: 'p',
       description: 'Project Id to set',
     }),
-    // tail: flags.boolean({
-    //   char: 't',
-    //   description: 'Tail function logs in realtime',
-    // }),
+    tail: flags.boolean({
+      char: 't',
+      description: 'Tail function logs in realtime',
+    }),
   }
   static args = [{
     name: 'functionName'
@@ -43,7 +43,7 @@ export default class FunctionLogs extends Command {
       if (!fn) {
         this.out.error(`There is no function with the name ${this.argv[1]}. Run ${chalk.bold('graphcool functions')} to list all functions.`)
       } else {
-        const {logs, endCursor} = await this.client.getFunctionLogs(projectId, fn.id)
+        const {logs, endCursor} = await this.client.getFunctionLogs(fn.id)
         let lastCursor = endCursor
         if (logs.length === 0) {
           this.out.log(`No messages have been logged in the last 30 min for function ${chalk.bold(this.argv[1])}`)
@@ -52,14 +52,17 @@ export default class FunctionLogs extends Command {
           this.out.log(this.prettifyLogs(logs))
         }
 
+
         if (tail) {
           setInterval(async () => {
-            const tailResult = await this.client.getFunctionLogs(projectId, fn.id, lastCursor)
+            const tailResult = await this.client.getFunctionLogs(fn.id, lastCursor)
             if (tailResult.logs && tailResult.logs.length > 0) {
               tailResult.logs.sort(sortByTimestamp)
               this.out.log(this.prettifyLogs(tailResult.logs))
             }
-            lastCursor = tailResult.endCursor
+            if (tailResult.endCursor) {
+              lastCursor = tailResult.endCursor
+            }
           }, 3000)
         }
       }
