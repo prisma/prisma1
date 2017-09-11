@@ -98,6 +98,9 @@ export class Environment {
       if (envName) {
         delete this.env.environments[envName]
       }
+      if (this.env.default === envName) {
+        this.env.default = null
+      }
     })
   }
 
