@@ -1,5 +1,6 @@
 import { GraphQLClient } from 'graphql-request'
 import {
+  FunctionInfo,
   FunctionLog,
   MigrateProjectPayload,
   MigrationResult,
@@ -281,6 +282,49 @@ export class Client {
     }
 
     return permanentAuthTokens.edges.map(edge => edge.node)
+  }
+
+  async getFunctions(projectId: string): Promise<FunctionInfo[]> {
+    interface FunctionsPayload {
+      viewer: {
+        project: {
+          functions: {
+            edges: Array<{
+              node: FunctionInfo
+            }>
+          }
+        }
+      }
+    }
+    const { viewer: { project: { functions } } } = await this.client.request<
+      FunctionsPayload
+      >(
+      `
+      query ($projectId: ID!){
+        viewer {
+          project(id: $projectId) {
+            functions {
+              edges {
+                node {
+                  name
+                  id
+                  type
+                  stats {
+                    requestCount
+                    errorCount
+                  }
+                  __typename
+                }
+              }
+            }
+          }
+        }
+      }
+      `,
+      { projectId },
+    )
+
+    return functions.edges.map(edge => edge.node)
   }
 
   async getFunctionLogs(

@@ -16,7 +16,6 @@ import * as inquirer from 'graphcool-inquirer'
 import { MigrationPrinter } from './migration'
 import * as treeify from 'treeify'
 import * as dirTree from 'directory-tree'
-import * as leftpad from 'left-pad'
 
 export const CustomColors = {
   // map gray -> dim because it's not solarized compatible

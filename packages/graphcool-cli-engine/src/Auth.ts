@@ -108,6 +108,7 @@ export class Auth {
       return json.data.viewer.user.email
     }
     catch (e) {
+      console.log(e)
       return null
     }
   }

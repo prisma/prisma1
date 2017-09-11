@@ -138,6 +138,7 @@ export default class Init extends Command {
       ${chalk.cyan(`https://api.graph.cool/simple/v1/${createdProject.id}`)}
 `)
     } catch (e) {
+      debugger
       this.out.action.stop()
       this.out.error(e)
     }

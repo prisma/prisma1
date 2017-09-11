@@ -29,6 +29,7 @@ export default class GetRootToken extends Command {
   }
 
   async run() {
+    await this.auth.ensureAuth()
     const {env, project, token} = this.flags
     const {projectId} = await this.env.getEnvironment({
       project,

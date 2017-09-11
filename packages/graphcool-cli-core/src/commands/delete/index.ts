@@ -22,6 +22,7 @@ export default class Delete extends Command {
     }),
   }
   async run() {
+    await this.auth.ensureAuth()
     const { project, env } = this.flags
 
     let projectId = project

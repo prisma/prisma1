@@ -39,6 +39,17 @@ export interface FunctionLog {
   message: string
 }
 
+export interface FunctionInfo {
+  name: string
+  id: string
+  type: 'AUTH0' | 'WEBHOOK'
+  stats: {
+    requestCount: number
+    errorCount: number
+  }
+  __typename: 'SchemaExtensionFunction' | ''
+}
+
 export interface PAT {
   id: string
   name: string

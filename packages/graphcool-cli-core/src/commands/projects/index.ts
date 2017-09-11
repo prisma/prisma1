@@ -6,6 +6,7 @@ export default class Projects extends Command {
   static topic = 'projects'
   static description = 'List all projects'
   async run() {
+    await this.auth.ensureAuth()
     const projects = await this.client.fetchProjects()
 
     const currentProjectId = this.env.default ? this.env.default : null
