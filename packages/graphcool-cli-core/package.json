@@ -1,0 +1,72 @@
+{
+  "name": "graphcool-cli-core",
+  "version": "1.3.21",
+  "main": "dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "typings": "dist/index.d.ts",
+  "author": "Tim Suchanek <tim@graph.cool>",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^8.0.22",
+    "husky": "^0.14.3",
+    "jest": "^21.0.2",
+    "lint-staged": "^4.0.3",
+    "nock": "^9.0.14",
+    "prettier": "^1.5.3",
+    "rimraf": "^2.6.1",
+    "source-map-support": "^0.4.15",
+    "tslint": "^5.6.0",
+    "tslint-config-prettier": "^1.3.0",
+    "tslint-eslint-rules": "^4.1.1",
+    "typescript": "^2.4.2"
+  },
+  "engines": {
+    "node": ">=8.3.0"
+  },
+  "scripts": {
+    "build": "rimraf dist && tsc -d",
+    "lint": "tslint src/**/*.ts",
+    "precommit": "lint-staged",
+    "prettier": "prettier --single-quote --no-semi --trailing-comma all --write '*.ts' 'src/**/*.ts'",
+    "prepublishOnly": "npm run lint && npm run build",
+    "test": "NODE_ENV=test jest"
+  },
+  "lint-staged": {
+    "*.ts": [
+      "prettier --single-quote --no-semi --trailing-comma all --write",
+      "tslint",
+      "git add"
+    ],
+    "gitDir": "../../"
+  },
+  "jest": {
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "jsx",
+      "json"
+    ],
+    "rootDir": "./src",
+    "transform": {
+      "^.+\\.(ts|tsx)$": "../../../node_modules/ts-jest/preprocessor.js"
+    },
+    "testMatch": [
+      "**/*.test.(ts|js)"
+    ],
+    "setupFiles": [
+      "../test/init.js"
+    ]
+  },
+  "dependencies": {
+    "download-github-repo": "^0.1.3",
+    "figures": "^2.0.0",
+    "js-yaml": "^3.9.1",
+    "lodash.differenceby": "^4.8.0",
+    "sillyname": "^0.1.0",
+    "table": "^4.0.1",
+    "ts-jest": "^21.0.0"
+  }
+}

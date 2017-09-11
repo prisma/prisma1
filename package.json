@@ -1,59 +1,11 @@
 {
-  "name": "graphcool",
   "private": true,
-  "version": "1.2.1",
-  "bin": {
-    "graphcool": "dist/src/index.js",
-    "gc": "dist/src/index.js"
-  },
-  "files": [
-    "README.md",
-    "LICENSE",
-    "dist/"
+  "name": "graphcool-cli",
+  "workspaces": [
+    "packages/*"
   ],
-  "scripts": {
-    "test": "npm run build && rm -f test.out && ava --serial ./dist/tests/*.js && node dist/src/index.js",
-    "postinstall": "echo Run graphcool init to get started",
-    "build": "rm -rf dist && tsc && chmod +x dist/src/index.js",
-    "prepublish": "npm run build"
-  },
-  "author": "",
-  "license": "MIT",
-  "devDependencies": {
-    "ava": "^0.19.1",
-    "fetch-mock": "^5.10.0",
-    "mkdirp": "^0.5.1",
-    "typescript": "^2.3.1"
-  },
   "dependencies": {
-    "@types/chalk": "^0.4.31",
-    "@types/cuid": "^1.3.0",
-    "@types/debug": "^0.0.29",
-    "@types/isomorphic-fetch": "0.0.33",
-    "@types/lodash": "^4.14.63",
-    "@types/minimist": "^1.2.0",
-    "@types/node": "^7.0.14",
-    "@types/open": "^0.0.29",
-    "@types/ora": "^0.3.31",
-    "blessed": "^0.1.81",
-    "chalk": "^1.1.3",
-    "concordance": "^3.0.0",
-    "cuid": "^1.3.8",
-    "debug": "^2.6.6",
-    "figures": "^2.0.0",
-    "gcl-lib": "^0.0.1",
-    "globby": "^6.1.0",
-    "graphql-request": "^1.3.4",
-    "isomorphic-fetch": "^2.2.1",
-    "js-yaml": "^3.9.1",
-    "lodash": "^4.17.4",
-    "minimist": "^1.2.0",
-    "open": "^0.0.5",
-    "ora": "^1.2.0",
-    "raven": "^2.0.2",
-    "rimraf": "^2.6.1",
-    "sillyname": "^0.1.0",
-    "table": "4.0.1",
-    "terminal-kit": "^1.4.4"
+    "graphql-request": "^1.3.6",
+    "semver": "^5.4.1"
   }
 }
