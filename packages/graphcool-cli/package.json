@@ -50,8 +50,8 @@
   },
   "dependencies": {
     "fs-extra": "^4.0.1",
-    "graphcool-cli-core": "1.3.19",
-    "graphcool-cli-engine": "0.0.15",
+    "graphcool-cli-core": "1.3.20",
+    "graphcool-cli-engine": "0.0.16",
     "semver": "^5.4.1"
   },
   "engines": {

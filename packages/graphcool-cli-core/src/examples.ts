@@ -53,10 +53,12 @@ type User implements Node {
 }
 `,
         './code/hello.js': `\
-module.exports = function sum(event) {
-  const data = event.data
-  const message = \`Hello World ($\{data.extraMessage\})\`
-  return {data: {message: message}}
+module.exports = event => {
+  return {
+    data: {
+      message: \`Hello $\{event.data.name || 'World'\}\`
+    }
+  }
 }`,
         './schemas/hello.graphql': `\
 type HelloPayload {
@@ -64,7 +66,7 @@ type HelloPayload {
 }
 
 extend type Query {
-  hello(extraMessage: String): HelloPayload
+  hello(name: String): HelloPayload
 }
 `,
       },
