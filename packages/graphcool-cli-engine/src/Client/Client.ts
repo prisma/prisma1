@@ -344,8 +344,8 @@ export class Client {
 
   async getFunctionLogs(
     functionId: string,
-    after?: string,
-  ): Promise<{ logs: FunctionLog[]; endCursor?: string }> {
+    count: number = 1000,
+  ): Promise<FunctionLog[]> {
     interface FunctionLogsPayload {
       node: {
         logs: {
@@ -362,10 +362,10 @@ export class Client {
     const { node: { logs } } = await this.client.request<
       FunctionLogsPayload
     >(
-      `query ($id: ID!, $after: String) {
+      `query ($id: ID!, $count: Int!) {
       node(id: $id) {
         ... on Function {
-          logs(last: 1000 after: $after) {
+          logs(last: $count) {
             pageInfo {
               endCursor
             }
@@ -383,13 +383,10 @@ export class Client {
         }
       }
     }`,
-      { id: functionId, after },
+      { id: functionId, count },
     )
 
-    return {
-      logs: logs ? logs.edges.map(edge => edge.node) : [],
-      endCursor: logs ? logs.pageInfo.endCursor : undefined,
-    }
+    return logs ? logs.edges.map(edge => edge.node) : []
   }
 
   async getProjectName(projectId: string): Promise<string> {

@@ -1,7 +1,7 @@
 import { Command, flags, Flags } from 'graphcool-cli-engine'
 import {InvalidProjectError} from '../../errors/InvalidProjectError'
 import * as chalk from 'chalk'
-import * as sortedUniqBy from 'lodash.sorteduniqby'
+import * as differenceBy from 'lodash.differenceby'
 
 export default class FunctionLogs extends Command {
   static topic = 'logs'
@@ -43,8 +43,7 @@ export default class FunctionLogs extends Command {
       if (!fn) {
         this.out.error(`There is no function with the name ${this.argv[1]}. Run ${chalk.bold('graphcool functions')} to list all functions.`)
       } else {
-        const {logs, endCursor} = await this.client.getFunctionLogs(fn.id)
-        let lastCursor = endCursor
+        let logs = await this.client.getFunctionLogs(fn.id)
         if (logs.length === 0) {
           this.out.log(`No messages have been logged in the last 30 min for function ${chalk.bold(this.argv[1])}`)
         } else {
@@ -52,18 +51,18 @@ export default class FunctionLogs extends Command {
           this.out.log(this.prettifyLogs(logs))
         }
 
-
         if (tail) {
           setInterval(async () => {
-            const tailResult = await this.client.getFunctionLogs(fn.id, lastCursor)
-            if (tailResult.logs && tailResult.logs.length > 0) {
-              tailResult.logs.sort(sortByTimestamp)
-              this.out.log(this.prettifyLogs(tailResult.logs))
+            const tailLogs = await this.client.getFunctionLogs(fn.id, 50)
+            if (tailLogs.length > 0) {
+              const newLogs = differenceBy(tailLogs, logs, l => l.id)
+              if (newLogs.length > 0) {
+                newLogs.sort(sortByTimestamp)
+                this.out.log(this.prettifyLogs(newLogs))
+                logs = logs.concat(newLogs)
+              }
             }
-            if (tailResult.endCursor) {
-              lastCursor = tailResult.endCursor
-            }
-          }, 3000)
+          }, 6000)
         }
       }
     }
