@@ -64,7 +64,6 @@ export class Auth {
       body: JSON.stringify({cliToken}),
     })
 
-    // TODO adjust
     opn(`${this.config.authUIEndpoint}?cliToken=${cliToken}&authTrigger=${this.authTrigger}`)
 
     while (true) {

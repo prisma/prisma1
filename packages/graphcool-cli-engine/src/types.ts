@@ -5,7 +5,6 @@ export interface RunOptions {
   root?: string
 }
 
-// TODO Remove in favor of ProjectRegion
 export type Region = 'EU_WEST_1' | 'AP_NORTHEAST_1' | 'US_WEST_2'
 
 export interface AuthServer {

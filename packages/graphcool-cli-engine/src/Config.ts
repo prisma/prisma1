@@ -4,8 +4,6 @@ import * as os from 'os'
 import * as fs from 'fs-extra'
 import * as cuid from 'cuid'
 
-// TODO replace with process.cwd()
-// let cwd = '/Users/tim/code/cli-tests/new'
 let cwd = process.cwd()
 if (process.env.NODE_ENV === 'test') {
   cwd = path.join(os.tmpdir(), `${cuid()}/`)
@@ -33,8 +31,7 @@ export class Config {
   commandsDir: string = path.join(__dirname, '../dist/commands')
   defaultCommand: string = 'help'
   userPlugins: boolean = false
-  // TODO inject via package json of module.parent.filepath
-  version: string = '1.4'
+  version: string = '1.3.11'
   name: string = 'graphcool'
   pjson: any = {
     name: 'cli-engine',

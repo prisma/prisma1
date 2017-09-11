@@ -32,7 +32,6 @@ export class ActionBase {
     if (!task) {
       return
     }
-    // TODO: is this right?
     this.status = msg
     this._stop()
     task.active = false
