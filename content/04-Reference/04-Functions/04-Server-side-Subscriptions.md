@@ -5,15 +5,45 @@ description: Subscriptions are a simple yet powerful event-based concept on top 
 
 # Subscriptions
 
-Subscriptions are a simple yet powerful concept to handle business logic in your project. You can **subscribe to specific events**.
+Subscriptions are a simple yet powerful concept to handle business logic in your project. You can **subscribe to specific events** that are happening inside the GraphQL engine. All (successful) mutations are considered events.
 
-> Unlike hooks, functions for subscriptions are called **asynchronously**, _after_ a mutation was entirely processed.
+> Unlike hooks, functions for subscriptions are called **asynchronously**, _after_ a database transaction was entirely processed.
 
-## Trigger and Input Data
+## Input Type
 
-The trigger and input data for the function that is called as a reaction to server-side subscriptions follow the [Subscription API](!alias-aip7oojeiv).
+The input data for subscription functions is determined by the subscription query that you write for the subscription.
 
-#### Example
+The concrete shape of the subscription query is determined by the [Subscription API](!alias-aip7oojeiv).
+
+## Adding a Subscription function to the project
+
+When you want to create a subscription function in your Graphcool project, you need to add it to the project configuration file under the `functions` section. 
+
+### Example
+
+Here is an example of a subscription functions:
+
+```yaml
+functions:
+  sendWelcomeEmail:
+    type: subscription
+    query: newUser.graphql
+    handler:
+      webhook: http://example.org/welcome-email
+```
+
+`sendWelcomeEmail ` is invoked _after_ a `User` node was created and is defined as a _webhook_. It receives as input the payload of the subscription query that's defined in `newUser.graphql`
+
+### Properties
+
+Each function that's specified in the project configuration file needs to have the `type` and `handler` properties.
+
+For subscription functions, you additionally need to specify the `query` property which points to a file containing a regular GraphQL subscription query.
+
+
+## Example
+
+#### Calling out to 3rd-party APIs
 
 > Send an email when a new customer is created
 

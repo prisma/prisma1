@@ -12,15 +12,22 @@ Graphcool offers two of these hook points:
 - `operationBefore`: Invoked right _before_ a write to the database
 - `operationAfter`: Invoked right _after_ a write to the database
 
-Functions invoked through these hooks are executed _synchronously_.
+Functions invoked through these hooks are executed _synchronously_. 
 
-## Operation
+<InfoBox type=warning>
 
-Each hook is associated with a particular _write_-operation on one of your model types, for example _creating_ a new `Post` node or _updating_ a `User` node.
+Notice that for **nested mutations**, the `operationBefore` and `operationAfter` hooks are invoked for each _individual_ write operation. If you're creating a `User` and a new `Post` in the (nested) same mutation, this means `operationBefore` and `operationAfter` are each invoked twice. 
 
-## Adding a Hook function
+</InfoBox>
 
-When you want to create a hook function in your Graphcool project, you need to add it to the project configuration file in the `functions` section. Here is an example:
+
+## Adding a Hook function to the project
+
+When you want to create a hook function in your Graphcool project, you need to add it to the project configuration file under the `functions` section. 
+
+### Example
+
+Here is an example of two hook functions:
 
 ```yaml
 functions:
@@ -28,7 +35,7 @@ functions:
     type: operationBefore
     operation: User.create
     handler:
-      webhook: http://example.org/email-validator # this could also be a reference to a local function
+      webhook: http://example.org/email-validator
   reloadProfilePicture:
     type: operationAfter
     operation: Photo.update
@@ -37,48 +44,44 @@ functions:
         src: ./code/reloadProfile.js
 ```
 
-When adding a hook function to your project, you have two ways of specifying _how_ it should be invoked:
+`validateEmail` is invoked _before_ a `User` node is created and is defined as a _webhook_.
 
-- Using a **webhook**
-- Using a **managed function**
+`reloadProfilePicture` is invoked _after_ a `Photo` node is updated and is defined as a _managed function_.
+
+### Properties
+
+Each function that's specified in the project configuration file needs to have the `type` and `handler` properties.
+
+For hook functions, you additionally need to specify the concrete `operation` which consists of a model type and the specific database write (create, update or delete), e.g. `User.create` or `Post.delete`.
 
 
+## Input Type
 
-## Request Lifecycle
+The input type for these hook functions is determined by the input arguments of the mutation that invokes the function.
 
-Every request to the GraphQL APIs passes several execution layers. The request pipeline allows you to **transform and validate data** as well as **prevent a request from reaching the next layer**, effectively aborting the request.
+Consider the following mutation:
 
-### Execution Layers
+```
+updateUser(id: ID!, name: String, email: String): User
+```
 
-The different **execution layers** can be seen in the above diagram.
+The input type for the `operationBefore` and `operationAfter` functions can is the following:
 
-* First, the raw HTTP request hits your API layer.
-* The embedded GraphQL mutation is validated against the [GraphQL schema](!alias-ahwoh2fohj) in the **schema validation** step.
-* A valid GraphQL mutation is checked against [defined constraints](!alias-teizeit5se#field-constraints) and the [permission system](!alias-iegoo0heez) in the **data validation** step.
-* If the request contained a valid mutation in terms of the GraphQL schema as well as the constraints and permissions, data is written to the database in the **data write** step.
-* The mutation payload is sent back as response to the initial HTTP request.
-
-### Hook Points
-
-In between the execution layers, you can use functions at several **hook points**:
-
-* The [`operationBefore `](!alias-caich7oeph) hook after the schema validation allows you to **transforms the input arguments** of the GraphQL mutations and **enforce custom constraints**.
-* After the successful extraction of the GraphQL operations from the raw request, the **data validation** layer checks predefined constraints and permissions.
-* If the data validation succeeds, the **data is written to the database**.
-* The [`operationAfter`](!alias-ecoos0ait6)  hook allows you **transform the payload** that is sent back as response.
-
-> For a given trigger, only **one function** can be assigned to each hook point.
+```graphql
+type UpdateUserInput {
+  id: ID!
+  name: String
+  email: String
+}
+```
 
 ## Current Limitations
 
 * Callbacks need to be converted to Promises. [Here's a guide](https://egghead.io/lessons/javascript-convert-a-callback-to-a-promise).
 * Input arguments for nested mutations are *read-only* at the moment. Changes to these are ignored. This applies to all hook points.
 
-## Transform Input Arguments
 
-Functions used for the `operationBefore` hook point can do arbitrary transformations on input arguments or abort an incoming GraphQL mutation all together.
-
-### Examples
+## Examples
 
 #### No Transformation
 
@@ -116,38 +119,6 @@ module.exports = function (event) {
       error: 'Length and width must be greater than 0!'
     }
   }
-
-  return event
-}
-```
-
-## Transform Mutation Payloads
-
-Functions used for the `TRANSFORM_PAYLOAD` hook point can do arbitrary transformations on the [mutation payload](!alias-gahth9quoo) after a mutation has been successfully executed.
-
-### Examples
-
-#### No Transformation
-
-> The request is not modified at all.
-
-```js
-module.exports = function (event) {
-  console.log(`event: ${event}`)
-
-  return event
-}
-```
-
-#### Flip a boolean
-
-> A boolean contained in the input arguments is flipped.
-
-```js
-module.exports = function (event) {
-  console.log(`event: ${event}`)
-
-  event.data.isPaid = !event.data.isPaid
 
   return event
 }
