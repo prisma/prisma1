@@ -98,7 +98,7 @@ export default class Diff extends Command {
         }
 
         if (migrationResult.errors.length > 0) {
-          this.out.log(chalk.redBright(`\nThere are issues with the new project definition:`))
+          this.out.log(chalk.rgb(244, 157, 65)(`\nThere are issues with the new project definition:`))
           this.out.migration.printErrors(migrationResult.errors)
           this.out.log('')
         }
