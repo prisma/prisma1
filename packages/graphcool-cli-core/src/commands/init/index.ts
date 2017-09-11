@@ -146,7 +146,7 @@ export default class Init extends Command {
    2) Install a graphcool module to your project:
    
       ${chalk.bold('facebook-authentication')}
-      $ ${chalk.cyan('graphcool module add graphcool/modules/authentication/facebook-auth')}
+      $ ${chalk.cyan('graphcool module add graphcool/modules/authentication/facebook-authentication')}
       
       ${chalk.bold('algolia-syncing')}
       $ ${chalk.cyan('graphcool module add graphcool/modules/syncing/algolia')}
@@ -223,6 +223,7 @@ export default class Init extends Command {
       type: 'list',
       message: 'Please choose a project',
       choices,
+      pageSize: Math.min(process.stdout.rows!, projects.length) - 2,
     }
 
     const { project } = await this.out.prompt([question])
