@@ -1,6 +1,7 @@
 import {Command, flags, Flags} from 'graphcool-cli-engine'
 import * as opn from 'opn'
 import { playgroundURL } from '../../util'
+import { InvalidProjectError } from '../../errors/InvalidProjectError'
 
 export default class Playground extends Command {
   static topic = 'playground'
@@ -21,7 +22,7 @@ export default class Playground extends Command {
     const {projectId} = await this.env.getEnvironment({env})
 
     if (!projectId) {
-      this.out.error(`Please provide a valid environment that has a valid project id`)
+      this.out.error(new InvalidProjectError())
     } else {
       const projectInfo = await this.client.fetchProjectInfo(projectId)
       opn(playgroundURL(this.config.token!, projectInfo.name))

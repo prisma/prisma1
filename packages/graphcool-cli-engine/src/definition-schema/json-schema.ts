@@ -71,7 +71,7 @@ export default {
             "operationBefore",
             "operationAfter",
             "subscription",
-            "schemaExtension"
+            "resolver"
           ]
         },
         "operation": {

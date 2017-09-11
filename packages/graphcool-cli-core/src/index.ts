@@ -13,6 +13,7 @@ import ModuleAdd from './commands/module/add'
 import Delete from './commands/delete/index'
 import GetRootToken from './commands/get-root-token/index'
 import FunctionsOverview from './commands/functions/index'
+import FunctionLogs from './commands/logs/function'
 
 export const topics = [
   { name: 'deploy', description: 'Deploy local project definition' },
@@ -32,6 +33,7 @@ export const topics = [
   { name: 'module', description: 'Manage modules' },
   { name: 'get-root-token', description: 'Get the project root tokens' },
   { name: 'functions', description: 'List all functions of a project' },
+  { name: 'logs', description: 'Get logs of functions' }
 ]
 
 export const commands = [
@@ -50,4 +52,5 @@ export const commands = [
   Delete,
   GetRootToken,
   FunctionsOverview,
+  FunctionLogs
 ]

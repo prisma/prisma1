@@ -116,6 +116,17 @@ export class Output {
     this.stdout.log(data, ...args)
   }
 
+  getStyledJSON(obj: any) {
+    const json = JSON.stringify(obj, null, 2)
+    if (chalk.enabled) {
+      const cardinal = require('cardinal')
+      const theme = require('cardinal/themes/jq')
+      return cardinal.highlight(json, { json: true, theme })
+    } else {
+      return json
+    }
+  }
+
   async done(...rest: void[]): Promise<void> {
     this.action.stop()
   }
