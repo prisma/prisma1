@@ -7,12 +7,13 @@ description: Graphcool uses a dedicated YAML format for configuration.
 
 ## Overview
 
-Every Graphcool project consists of several component that developers can provide:
+Every Graphcool project consists of several components that developers can provide:
 
 - **Database model**: Determines the types that are to be persisted in the database. These types typically represent the entities from the application domain.
 - **Permission rules**: Define which users are allowed to perform what operations in the API. 
 - **Serverless functions**: Used to implement data validation and transformation, GraphQL resolvers functions and other business logic.
 - **Modules**: Other Graphcool projects that provide additional functionality to the current project.
+- **Root tokens**: The root tokens that provide access to all API operations.
 
 To manage each of these components in a coherent way, Graphcool uses a custom configuration format written in [YAML](https://en.wikipedia.org/wiki/YAML). The file can be altered manually or through dedicated commands of the CLI.
 
@@ -37,19 +38,19 @@ functions:
         headers:
             Content-Type: application/json
             Authorization: Bearer saiquiegh1wohb7shie9phai
-    type: resolver
-    schema: ./code/authenticate.graphql
+    type: subscription
+    query: ./code/sendSlackMessage/newMessage.graphql
 
 permissions:
 - operation: Message.read
   query: ./permissions/message.graphql
   authenticated: true
 
-rootTokens:
-- authenticate
-
 modules:
 - ./modules/facebookLogin/fb.yml
+
+rootTokens:
+- authenticate
 ```
 
 This project configuration expects the following project structure:
@@ -59,6 +60,8 @@ This project configuration expects the following project structure:
 ├── code
 │   ├── authenticate.graphql
 │   └── authenticate.js
+│   └── sendSlackMessage
+│       └── newMessage.graphql
 ├── modules
 │   └── facebookLogin
 │       ├── ...
@@ -68,7 +71,7 @@ This project configuration expects the following project structure:
 ```
 
 
-## YAML Format
+## YAML Structure
 
 The YAML configuration file has the following _root properties_:
 
