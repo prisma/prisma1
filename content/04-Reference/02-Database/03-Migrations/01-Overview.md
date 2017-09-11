@@ -1,26 +1,26 @@
 ---
 alias: paesahku9t
-path: /docs/reference/migrations/overview
-layout: REFERENCE
 description: Schema migrations allow you to evolve a GraphQL schema. Sometimes, data migrations are required as well.
-tags:
-  - migrations
-related:
-  further:
-    - kie1quohli
-    - uh8shohxie
-  more:
 ---
 
 # Migrations
 
-Schema migrations covers all changes you can make to your [data schema](!alias-ahwoh2fohj). This includes adding or modifying [types](!alias-ij2choozae), [fields](!alias-teizeit5se) and [relations](!alias-goh5uthoc1). Changes to your schema will be reflected in both the [Schema Editor in the Console](!alias-zezoo7uaph) as well as the [project file](!alias-uhieg2shio) and affect the operations in your [API](!alias-heshoov3ai).
+_Schema migrations_ need to be performed when you're updating your model schema:
 
-You can either use the [Console](!alias-uh8shohxie) or the [CLI](!alias-kie1quohli) to execute schema migrations, but we'll use the GraphQL schema to describe possible schema migrations in the following sections.
+- Adding, modifying or deleting a type in the model schema
+- Adding, modifying or deleting a field of a concrete type in the model schema
+- Adding, modifying or deleting a relation between two concrete types in the model schema
 
-## Schema Migrations in the Console
+A schema migration includes two steps:
 
-The [Console](!alias-uh8shohxie) provides two ways to update the schema. You can either use the **schema editor** to quickly iterate with schema changes. Or you create or modify the different elements using the UI.
+1. Update your type definitions in `types.graphql`
+2. Run `graphcool deploy` in the CLI
+
+<InfoBox type=warning>
+
+In case the migration requires additional information from your side, e.g. when you're renaming a type or a field or you add a non-nullable field to an existing type, you'll have to setup an additional file where this information is provided. Notice that the CLI will detect these cases for you and launch a wizard that supports you in creating that file.
+
+<InfoBox>
 
 ## Schema Migrations with the CLI
 
