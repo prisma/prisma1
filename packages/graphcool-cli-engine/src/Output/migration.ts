@@ -7,7 +7,7 @@ import figures = require('figures')
 import * as chalk from 'chalk'
 import { Output } from './index'
 import { makePartsEnclodesByCharacterBold } from './util'
-import { groupBy } from 'lodash'
+import * as groupBy from 'lodash.groupby'
 
 export class MigrationPrinter {
   out: Output
@@ -23,7 +23,6 @@ export class MigrationPrinter {
       const groupedByName = groupBy(typeMessages, m => m.name.split('.')[0])
       Object.keys(groupedByName).forEach(name => {
         this.out.log(`  ${chalk.bold(name)}`)
-        debugger
         const nameMessages = groupedByName[name]
         nameMessages.forEach(this.printMigrationMessage, this)
       })
@@ -31,15 +30,19 @@ export class MigrationPrinter {
     this.out.log('')
   }
   printErrors(errors: MigrationErrorMessage[]) {
-    const indentation = spaces(2)
-    errors.forEach(error => {
-      const outputMessage = makePartsEnclodesByCharacterBold(
-        error.description,
-        `\``,
-      )
-      this.out.log(
-        `${indentation}${chalk.red(figures.cross)} ${outputMessage}\n`,
-      )
+    const groupedByType = groupBy(errors, e => e.type)
+    Object.keys(groupedByType).forEach(type => {
+      const typeErrors = groupedByType[type]
+      this.out.log('\n  ' + chalk.bold(type))
+      typeErrors.forEach(error => {
+        const outputMessage = makePartsEnclodesByCharacterBold(
+          error.description,
+          `\``,
+        )
+        this.out.log(
+          `    ${chalk.red(figures.cross)} ${outputMessage}`,
+        )
+      })
     })
   }
 

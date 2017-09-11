@@ -24,8 +24,9 @@ export default class Diff extends Command {
   }
   static mockDefinition: ProjectDefinition
   static mockEnv: EnvironmentConfig
+
   async run() {
-    const { env, project, force } = this.flags
+    const {env, project, force} = this.flags
 
     if (Diff.mockDefinition) {
       this.definition.set(Diff.mockDefinition)
@@ -36,7 +37,7 @@ export default class Diff extends Command {
     await this.definition.load()
     await this.auth.ensureAuth()
 
-    const { projectId, envName } = await this.env.getEnvironment({
+    const {projectId, envName} = await this.env.getEnvironment({
       project,
       env,
     })
@@ -81,27 +82,28 @@ export default class Diff extends Command {
             )} in env ${chalk.bold(envName)}, no action required.\n`,
           )
           return
-        } else if (
-          migrationResult.migrationMessages.length > 0 &&
-          migrationResult.errors.length === 0
+        }
+
+        if (
+          migrationResult.migrationMessages.length > 0
         ) {
-          this.out.log(
+          this.out.log(chalk.blue(
             `\nYour project ${chalk.bold(
               projectId,
             )} of env ${chalk.bold(envName)} has changes:`,
-          )
+          ))
 
           this.out.migration.printMessages(migrationResult.migrationMessages)
           this.definition.set(migrationResult.projectDefinition)
-        } else if (
-          migrationResult.migrationMessages.length === 0 &&
-          migrationResult.errors.length > 0
-        ) {
-          // can't do migration because of issues with schema
-          this.out.log(`There are issues with the new project definition:\n`)
+        }
+
+        if (migrationResult.errors.length > 0) {
+          this.out.log(chalk.rgb(244, 157, 65)(`\nThere are issues with the new project definition:`))
           this.out.migration.printErrors(migrationResult.errors)
-          this.out.log(``)
-        } else if (
+          this.out.log('')
+        }
+
+        if (
           migrationResult.errors[0].description.includes(`destructive changes`)
         ) {
           // potentially destructive changes
