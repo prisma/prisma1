@@ -1,13 +1,13 @@
 ---
 alias: bboghez0go
-description: Server-side subscriptions are a simple yet powerful event-based concept on top of GraphQL to implement custom business logic asynchronously.
+description: Subscriptions are a simple yet powerful event-based concept on top of GraphQL to implement business logic asynchronously.
 ---
 
-# Server-side Subscriptions
+# Subscriptions
 
-Server-side Subscriptions (SSS) are a simple yet powerful concept to handle your custom business logic workflow. You can **subscribe to specific events**
+Subscriptions are a simple yet powerful concept to handle business logic in your project. You can **subscribe to specific events**.
 
-> Unlike functions as part of the [Request Pipeline](!alias-pa6guruhaf), functions for server-side subscriptions are called **asynchronously**, after the mutation was processed.
+> Unlike hooks, functions for subscriptions are called **asynchronously**, _after_ a mutation was entirely processed.
 
 ## Trigger and Input Data
 

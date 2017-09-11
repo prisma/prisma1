@@ -5,11 +5,11 @@ description: Graphcool Functions can run either inline or using a remote webhook
 
 # Graphcool Function Environment
 
-Whenever you use a function, you can choose between defining it inline or as a webhook.
+Whenever you use a function, you can choose between defining it as a managed function (meaning it will be deployed by Graphcool) or as a webhook.
 
-## Inline Functions
+## Managed Functions
 
-**Inline functions** can be specified using the functions editor in the Console. They run on a node runtime and **all npm modules are available for import**.
+**Managed functions** can be specified using the functions editor in the Console. They run on a node runtime and **all npm modules are available for import**.
 
 ### Node Runtime
 

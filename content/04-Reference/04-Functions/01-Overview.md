@@ -25,4 +25,63 @@ When being added, a function needs the following information:
 - `operation ` **[only applies if `type` is `operationBefore` or `operationAfter`]**: Specifies for which operation on which model type this function should be invoked, e.g. `User.update` or `Article.delete`.
 - `schema` **[only applies if `type` is `subscription`]**: Defines the necessary extensions on the `Query` or `Mutation` type (and potentially additional types that represent the input or return types of the new field).
 
+## Webhooks vs Managed Functions
+
+The `handler` of a function can either refer to a _webhook_ or to a _managed function_.
+
+### Webhooks
+
+A webhook needs a `url` that specifies where it can be invoked. You can further specify the HTTP `headers` that should be attached to the request that's sent to the webhook.
+
+Here is an example of a function that's specified as a webhook:
+
+```yaml
+functions:
+  hello:
+    handler:
+      webhook:
+        url: http://example.org/hello
+        headers:
+          Content-Type: application/json
+```
+
+If you don't want to specify any headers, you can simply write the configuration like so:
+
+```yaml
+functions:
+  hello:
+    handler:
+      webhook: http://example.org/hello
+```
+
+### Managed Functions
+
+With a managed function, you don't have to worry about explicit deployment of your function since it will get deployed along with your Graphcool project when you're running `graphcool deploy`.
+
+The code for a managed function needs to be located in your project directory, typically in a folder called `code`.
+
+Here is an example of a managed function in the project configuration file:
+
+```yaml 
+functions:
+  hello:
+    handler:
+      code:
+        src: ./code/hello.js
+```
+
+For conciseness, you can also refer to the file as the value for `code` or directly for `handler`. The following two notations are equivalent to the previous one:
+
+```yaml 
+functions:
+  hello:
+    handler:
+      code: ./code/hello.js
+```
+
+```yaml 
+functions:
+  hello:
+    handler: ./code/hello.js
+```
 

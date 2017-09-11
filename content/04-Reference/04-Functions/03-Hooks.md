@@ -40,9 +40,9 @@ functions:
 When adding a hook function to your project, you have two ways of specifying _how_ it should be invoked:
 
 - Using a **webhook**
-- Using the **Graphcool function runtime**
+- Using a **managed function**
 
-If you chose to 
+
 
 ## Request Lifecycle
 
