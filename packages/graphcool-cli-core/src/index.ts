@@ -16,6 +16,7 @@ import FunctionsOverview from './commands/functions/index'
 import FunctionLogs from './commands/logs/function'
 import Diff from './commands/diff/index'
 import Pull from './commands/pull/index'
+import Export from './commands/export/index'
 
 export const topics = [
   { name: 'deploy', description: 'Deploy local project definition' },
@@ -40,6 +41,10 @@ export const topics = [
     name: 'diff',
     description: 'Get the diff of the local and remote project definition',
   },
+  {
+    name: 'export',
+    description: 'Export project data'
+  }
 ]
 
 export const commands = [
@@ -61,4 +66,5 @@ export const commands = [
   FunctionLogs,
   Diff,
   Pull,
+  Export,
 ]
