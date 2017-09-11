@@ -98,45 +98,42 @@ ${chalk.gray(
           (!migrationResult.errors || migrationResult.errors.length === 0)
         ) {
           this.out.log(
-            `${chalk.green(
-              figures.tick,
-            )} Identical project definition for project ${chalk.bold(
+            `Identical project definition for project ${chalk.bold(
               projectId,
-            )} in env ${chalk.bold(envName)}, no action required.`,
+            )} in env ${chalk.bold(envName)}, no action required.\n`,
           )
           return
-        } else if (
-          migrationResult.migrationMessages.length > 0 &&
-          migrationResult.errors.length === 0
+        }
+
+        if (
+          migrationResult.migrationMessages.length > 0
         ) {
-          this.out.log(
-            `${chalk.green(figures.tick)} Your project ${chalk.bold(
+          const updateText = migrationResult.errors.length > 0 ? ` has changes:` : ` was successfully updated.\\nHere are the changes:`
+          this.out.log(chalk.blue(
+            `\nYour project ${chalk.bold(
               projectId,
-            )} of env ${chalk.bold(envName)} was successfully updated.
-Here are the changes:`,
-          )
+            )} of env ${chalk.bold(envName)}${updateText}\n`,
+          ))
 
           this.out.migration.printMessages(migrationResult.migrationMessages)
           this.definition.set(migrationResult.projectDefinition)
-        } else if (
-          migrationResult.migrationMessages.length === 0 &&
-          migrationResult.errors.length > 0
-        ) {
-          // can't do migration because of issues with schema
-          this.out.log(`There are issues with the new project definition:\n`)
+        }
+
+        if (migrationResult.errors.length > 0) {
+          this.out.log(chalk.rgb(244, 157, 65)(`\nThere are issues with the new project definition:`))
           this.out.migration.printErrors(migrationResult.errors)
-          this.out.log(`\n`)
-        } else if (
+          this.out.log('')
+        }
+
+        if (
           migrationResult.errors[0].description.includes(`destructive changes`)
         ) {
           // potentially destructive changes
           this.out.log(
             `Your changes might result in data loss.
-            Review your changes with ${chalk.cyan(
-              `\`graphcool status\``,
-            )} or use ${chalk.cyan(
+            Use ${chalk.cyan(
               `\`graphcool deploy --force\``,
-            )} if you know what you're doing!`,
+            )} if you know what you're doing!\n`,
           )
         }
       } catch (e) {
