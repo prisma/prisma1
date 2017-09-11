@@ -21,7 +21,7 @@ When you want to create a subscription function in your Graphcool project, you n
 
 ### Example
 
-Here is an example of a subscription functions:
+Here is an example of a subscription function:
 
 ```yaml
 functions:
@@ -32,7 +32,21 @@ functions:
       webhook: http://example.org/welcome-email
 ```
 
-`sendWelcomeEmail ` is invoked _after_ a `User` node was created and is defined as a _webhook_. It receives as input the payload of the subscription query that's defined in `newUser.graphql`
+This is what the referred `newUser.graphql ` contains:
+
+```graphql
+subscription {
+  User(filter: {
+    operation_in: [CREATED]
+  }) {
+    id
+    email
+    name
+  }
+}
+```
+
+`sendWelcomeEmail ` is invoked _after_ a `User` node was created and is defined as a _webhook_. It receives as input the payload of the subscription query that's defined in `newUser.graphql`, i.e. the new user's `id`, `name` and `email`.
 
 ### Properties
 

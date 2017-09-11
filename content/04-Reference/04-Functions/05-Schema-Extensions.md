@@ -1,28 +1,71 @@
 ---
 alias: su6wu3yoo2
-description: Schema extensions allow you to add custom GraphQL queries and mutations to your GraphQL API that are resolved by a Graphcool Function.
+description: Resolvers allow you to extend your GraphQL API with custom queries and mutations that are resolved by a serverless function.
 ---
 
 
-# Schema Extensions
+# Resolvers
 
-Schema Extensions (SE) allow you to add custom GraphQL queries and mutations to your GraphQL API that are resolved by a Graphcool Function.
+Resolvers allow you to extend your GraphQL API with custom queries and mutations that are resolved by a serverless function (the _resolver_).
 
-Functions for schema extensions are called **on demand**, when the according query or mutation is executed.
+Resolver functions are called when the corresponding query or mutation is executed. Similiar to hooks, resolvers are executed _synchronously_.
 
 ## Use Cases
 
-Schema Extensions are one of the most powerful features offered with Graphcool. As such, they cover a tool which is applicable for a wide range of situations. Here's a list of some of the most common use cases:
+Resolvers are one of the most powerful features offered with Graphcool. As such, they cover a tool which is applicable for a wide range of situations. Here's a list of some of the most common use cases:
 
-* You can build **custom authentication** workflows, like an integration with services like Auth0, Firebase Auth, AWS Cognito and AccountKit, Social Login providers like Facebook, Twitter and GitHub or an email-password based login.
+* You can build **authentication** workflows, like an integration with services like Auth0, Firebase Auth, AWS Cognito and AccountKit, Social Login providers like Facebook, Twitter and GitHub or an email-password based login. A few of these implementations are already [available as modules](https://github.com/graphcool/modules/tree/master/authentication).
 * You can **wrap an external API**, for example a weather API, geolocation API or any other REST API.
 * You can **wrap your Graphcool API**, for example to introduce a specific mutation or return data in a different shape.
 
 The [Graphcool Functions collection](https://github.com/graphcool-examples/functions/) on GitHub contains a lot of examples that can inspire you for more use cases, see also [custom mutations](!alias-thiele0aop) and [custom queries](!alias-nae4oth9ka).
 
-## Trigger and Input Data
+## Input Type
 
-The trigger and input data for the Schema Extension function is defined by extending the `Mutation` or `Query` type with a new field that returns a custom payload.
+The input type for a resolver function is defined by the input arguments of the field that's added to the GraphQL schema.
+
+## Adding a Resolver function to the project
+
+When you want to create a resolver function in your Graphcool project, you need to add it to the project configuration file under the `functions` section. 
+
+### Example
+
+Here is an example of a subscription function:
+
+```yaml
+functions:
+  loadWeather:
+    type: resolver
+    schema: weatherQuery.graphql
+    handler:
+      webhook: http://example.org/load-weather
+```
+
+This is what the referred `weatherQuery.graphql` contains:
+
+```graphql
+extend type Query {
+  weather(unit: TemperatureUnit): Weather
+}
+
+type Weather {
+  temperature: Int
+}
+
+enum TemperatureUnit {
+  CELCIUS
+  FAHRENHEIT
+}
+```
+
+`loadWeather ` is invoked _after_ a `User` node was created and is defined as a _webhook_. It receives as input the requested `TemnperatureUnit` (as this is the only argument for the `weather` field on the `Query` type) and returns a new type called `Weather`.
+
+### Properties
+
+Each function that's specified in the project configuration file needs to have the `type` and `handler` properties.
+
+For resolver functions, you additionally need to specify the `schema ` property which points to a file containing your extension of the `Query` or `Mutation` type as well as any additional types that you're defining for this operation.
+
 
 ## Extending the Schema
 
