@@ -48,7 +48,7 @@ export default class Init extends Command {
 
   static args = [{
     name: 'dirName',
-    description: 'Optional dir name to run init graphcool in'
+    description: 'Folder to initialize in (optional)'
   }]
 
   async run() {
