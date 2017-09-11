@@ -10,18 +10,38 @@ import Playground from './commands/playground/index'
 import Console from './commands/console'
 import Projects from './commands/projects/index'
 import ModuleAdd from './commands/module/add'
-
+import Delete from './commands/delete/index'
 
 export const topics = [
-  {name: 'deploy', description: 'Deploy local project definition'},
-  {name: 'init', description: 'Create a new project'},
-  {name: 'auth', description: 'Create account or login'},
-  {name: 'env', description: 'Manage project environment'},
-  {name: 'info', description: 'Print project info (environments, endpoints, ...) '},
-  {name: 'console', description: 'Opens the console for the current project'},
-  {name: 'playground', description: 'Opens the playground for the current project'},
-  {name: 'projects', description: 'List all projects'},
-  {name: 'module', description: 'Manage modules'}
+  { name: 'deploy', description: 'Deploy local project definition' },
+  { name: 'init', description: 'Create a new project' },
+  { name: 'auth', description: 'Create account or login' },
+  { name: 'env', description: 'Manage project environment' },
+  {
+    name: 'info',
+    description: 'Print project info (environments, endpoints, ...) ',
+  },
+  { name: 'console', description: 'Opens the console for the current project' },
+  {
+    name: 'playground',
+    description: 'Opens the playground for the current project',
+  },
+  { name: 'projects', description: 'List all projects' },
+  { name: 'module', description: 'Manage modules' },
 ]
 
-export const commands = [Deploy, Init, Auth, SetEnv, RemoveEnv, DefaultEnv, RenameEnv, Info, Playground, Console, Projects, ModuleAdd]
+export const commands = [
+  Deploy,
+  Init,
+  Auth,
+  SetEnv,
+  RemoveEnv,
+  DefaultEnv,
+  RenameEnv,
+  Info,
+  Playground,
+  Console,
+  Projects,
+  ModuleAdd,
+  Delete,
+]

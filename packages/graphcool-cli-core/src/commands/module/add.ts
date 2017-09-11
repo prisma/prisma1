@@ -39,7 +39,7 @@ export default class ModuleAdd extends Command {
     this.out.log('')
     this.out.action.start(`   Downloading module ${chalk.bold(repoName)} `)
     await downloadRepo(repoName, tmpDir)
-    this.out.action.stop(chalk.green(figures.tick))
+    this.out.action.stop()
     debug(`Downloaded ${repoName} to ${tmpDir}`)
 
     const source = path.join(tmpDir, subPath)

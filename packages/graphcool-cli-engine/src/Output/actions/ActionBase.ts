@@ -1,6 +1,6 @@
-// @flow
-
 import { Output } from '../'
+import * as chalk from 'chalk'
+import * as figures from 'figures'
 
 export function shouldDisplaySpinner(out: Output) {
   return !process.env.DEBUG && !out.mock && !out.config.debug && !!process.stdin.isTTY && !!process.stderr.isTTY && !process.env.CI && process.env.TERM !== 'dumb'
@@ -27,7 +27,7 @@ export class ActionBase {
     this.log(task)
   }
 
-  stop(msg: string = 'done') {
+  stop(msg: string = chalk.green(figures.tick)) {
     const task = this.task
     if (!task) {
       return

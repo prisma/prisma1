@@ -3,7 +3,6 @@ import * as chalk from 'chalk'
 import { EnvAlreadyExistsError } from '../../errors/EnvAlreadyExistsError'
 import { InvalidProjectNameError } from '../../errors/InvalidProjectNameError'
 import * as sillyName from 'sillyname'
-import * as figures from 'figures'
 import { defaultDefinition, examples } from '../../examples'
 
 export default class Init extends Command {
@@ -114,7 +113,6 @@ export default class Init extends Command {
       this.env.save()
 
       this.out.action.stop(
-        chalk.green(figures.tick)
       )
       this.out.log(`${chalk.blue.bold('\n   Written files:')}`)
       this.out.tree(this.config.definitionDir, true)
