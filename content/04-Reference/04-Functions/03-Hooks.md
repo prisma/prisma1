@@ -3,19 +3,50 @@ alias: pa6guruhaf
 description: Functions along the request pipeline of a GraphQL mutation allow you to transform input arguments, initiate workflows and transform the payload.
 ---
 
-# Request Pipeline
+# Hooks
 
-Every request that reaches your API goes through different stages that are collectively referred to as the *request pipeline*. Using functions, you can run **data transformation and validation** operations at different hook points along the request.
+Every request that's sent to your API goes through different stages. Graphcool allows to intercept the request and invoke serverless functions when it reaches one of the dedicated _hook points_. This allows to perform data transformation and validation operations on the request payload or synchronously call out to 3rd-party APIs.
 
-## Trigger
+Graphcool offers two of these hook points:
 
-The trigger of the request pipeline associates the Request Pipeline function with a [create, update or delete mutation](!alias-ol0yuoz6go) of a specific [type](!alias-ij2choozae).
+- `operationBefore`: Invoked right _before_ a write to the database
+- `operationAfter`: Invoked right _after_ a write to the database
+
+Functions invoked through these hooks are executed _synchronously_.
+
+## Operation
+
+Each hook is associated with a particular _write_-operation on one of your model types, for example _creating_ a new `Post` node or _updating_ a `User` node.
+
+## Adding a Hook function
+
+When you want to create a hook function in your Graphcool project, you need to add it to the project configuration file in the `functions` section. Here is an example:
+
+```yaml
+functions:
+  validateEmail:
+    type: operationBefore
+    operation: User.create
+    handler:
+      webhook: http://example.org/email-validator # this could also be a reference to a local function
+  reloadProfilePicture:
+    type: operationAfter
+    operation: Photo.update
+    handler:
+      code:
+        src: ./code/reloadProfile.js
+```
+
+When adding a hook function to your project, you have two ways of specifying _how_ it should be invoked:
+
+- Using a **webhook**
+- Using the **Graphcool function runtime**
+
+If you chose to 
 
 ## Request Lifecycle
 
-Every request to the GraphQL APIs pass several execution layers. The request pipeline allows you to **transform and validate data** as well as **prevent a request from reaching the next layer**, effectively aborting the request.
-
-<!-- ![](./hook-points.png) -->
+Every request to the GraphQL APIs passes several execution layers. The request pipeline allows you to **transform and validate data** as well as **prevent a request from reaching the next layer**, effectively aborting the request.
 
 ### Execution Layers
 
@@ -31,10 +62,10 @@ The different **execution layers** can be seen in the above diagram.
 
 In between the execution layers, you can use functions at several **hook points**:
 
-* The [`TRANSFORM_ARGUMENT` hook point](!alias-caich7oeph) after the schema validation allows you to **transforms the input arguments** of the GraphQL mutations and **enforce custom constraints**.
-* The [`PRE_WRITE` hook point](!alias-phe1gei6io) after the data validation gives you the chance to **commmunicate with external APIs and services** before data is actually written to the database.
+* The [`operationBefore `](!alias-caich7oeph) hook after the schema validation allows you to **transforms the input arguments** of the GraphQL mutations and **enforce custom constraints**.
 * After the successful extraction of the GraphQL operations from the raw request, the **data validation** layer checks predefined constraints and permissions.
-* The [`TRANSFORM_PAYLOAD` hook point](!alias-ecoos0ait6) allows you **transform the payload** that is sent back as response.
+* If the data validation succeeds, the **data is written to the database**.
+* The [`operationAfter`](!alias-ecoos0ait6)  hook allows you **transform the payload** that is sent back as response.
 
 > For a given trigger, only **one function** can be assigned to each hook point.
 
@@ -45,7 +76,7 @@ In between the execution layers, you can use functions at several **hook points*
 
 ## Transform Input Arguments
 
-Functions used for the `TRANSFORM_ARGUMENT` hook point can do arbitrary transformations on input arguments or abort an incoming GraphQL mutation all together.
+Functions used for the `operationBefore` hook point can do arbitrary transformations on input arguments or abort an incoming GraphQL mutation all together.
 
 ### Examples
 
