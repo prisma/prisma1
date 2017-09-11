@@ -86,9 +86,9 @@ export default class Diff extends Command {
           migrationResult.errors.length === 0
         ) {
           this.out.log(
-            `Your project ${chalk.bold(
+            `\nYour project ${chalk.bold(
               projectId,
-            )} of env ${chalk.bold(envName)} has changes:\n`,
+            )} of env ${chalk.bold(envName)} has changes:`,
           )
 
           this.out.migration.printMessages(migrationResult.migrationMessages)
