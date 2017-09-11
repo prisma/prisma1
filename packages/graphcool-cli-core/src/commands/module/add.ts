@@ -14,7 +14,6 @@ export default class ModuleAdd extends Command {
   static topic = 'module'
   static command = 'add'
   static description = 'Add a new module'
-  static hidden = true
   static args = [
     {
       name: 'moduleUrl',

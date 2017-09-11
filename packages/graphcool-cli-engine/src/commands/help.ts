@@ -109,7 +109,7 @@ ${chalk.gray('-')} Update live project with local changes
 
   listCommandsHelp(topic: string, commands: Array<typeof Command>) {
     commands = commands.filter(c => !c.hidden)
-    if (commands.length <= 1) {
+    if (commands.length === 0) {
       return
     }
     commands.sort(compare('command'))
