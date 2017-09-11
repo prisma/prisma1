@@ -38,7 +38,7 @@ export default class Delete extends Command {
       this.out.action.start(`Deleting project ${projectId}`)
       await this.client.deleteProjects([projectId])
       this.env.deleteIfExist([projectId])
-      env.save()
+      this.env.save()
       this.out.action.stop()
     } else {
       const projects = await this.client.fetchProjects()
@@ -55,6 +55,7 @@ export default class Delete extends Command {
       }
 
       const {projectsToDelete}: {projectsToDelete: Project[]} = await this.out.prompt(question)
+      const projectIdsToDelete = projectsToDelete.map(p => p.id)
 
       if (projectsToDelete.length === 0) {
         this.out.log(`You didn't select any project to delete, so none will be deleted`)
@@ -65,7 +66,9 @@ export default class Delete extends Command {
 
       this.out.log('')
       this.out.action.start(`${chalk.red.bold(`Deleting project${projectsToDelete.length > 1 ? 's': ''}`)} ${prettyProjects}`)
-      await this.client.deleteProjects(projectsToDelete.map(p => p.id))
+      await this.client.deleteProjects(projectIdsToDelete)
+      this.env.deleteIfExist(projectIdsToDelete)
+      this.env.save()
       this.out.action.stop()
     }
   }
