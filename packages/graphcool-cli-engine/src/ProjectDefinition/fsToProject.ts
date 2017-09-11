@@ -4,7 +4,7 @@ import { readDefinition } from './yaml'
 import fs from '../fs'
 import { GraphcoolModule, ProjectDefinition } from '../types'
 import { Output } from '../Output/index'
-import { FunctionDefinition, GraphcoolDefinition } from '../definition-schema/ts-definition'
+import { FunctionDefinition, GraphcoolDefinition } from 'graphcool-json-schema'
 
 interface ErrorMessage {
   message: string

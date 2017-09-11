@@ -1,8 +1,8 @@
 import * as Ajv from 'ajv'
 import * as anyjson from 'any-json'
-import schema from '../definition-schema/json-schema'
+import schema = require('graphcool-json-schema/dist/schema.json')
 import * as chalk from 'chalk'
-import { GraphcoolDefinition } from '../definition-schema/ts-definition'
+import { GraphcoolDefinition } from 'graphcool-json-schema'
 import { Output } from '../Output/index'
 
 const ajv = new Ajv()
