@@ -94,12 +94,17 @@ export class CLI {
         debug('running cmd')
         // TODO remove this
         // if (process.env.NODE_ENV !== 'test') {
+        //   console.log('RECORDING')
         //   nock.recorder.rec({
         //     dont_print: true,
         //   })
+        // }
         this.cmd = await foundCommand.run(this.config)
+        // if (process.env.NODE_ENV !== 'test') {
         //   const requests = nock.recorder.play()
-        //   fs.writeFileSync(path.join(this.config.definitionDir, 'requests.js'), requests.join('\n'))
+        //   const requestsPath = path.join(this.config.definitionDir, 'requests.js')
+        //   console.log('WRITING', requestsPath)
+        //   fs.writeFileSync(requestsPath, requests.join('\n'))
         // }
       } else {
         const topic = await dispatcher.findTopic(id)
