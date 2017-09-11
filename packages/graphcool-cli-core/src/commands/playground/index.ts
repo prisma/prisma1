@@ -6,7 +6,6 @@ import { InvalidProjectError } from '../../errors/InvalidProjectError'
 export default class Playground extends Command {
   static topic = 'playground'
   static description = 'Open the playground for the current selected project'
-  static hidden = true
   static flags: Flags = {
     env: flags.string({
       char: 'e',

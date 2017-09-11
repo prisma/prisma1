@@ -7,7 +7,6 @@ export default class FunctionLogs extends Command {
   static topic = 'logs'
   static command = 'function'
   static description = 'example command'
-  static hidden = true
   static flags: Flags = {
     env: flags.string({
       char: 'e',

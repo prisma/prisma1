@@ -15,6 +15,7 @@ import GetRootToken from './commands/get-root-token/index'
 import FunctionsOverview from './commands/functions/index'
 import FunctionLogs from './commands/logs/function'
 import Diff from './commands/diff/index'
+import Pull from './commands/pull/index'
 
 export const topics = [
   { name: 'deploy', description: 'Deploy local project definition' },
@@ -59,4 +60,5 @@ export const commands = [
   FunctionsOverview,
   FunctionLogs,
   Diff,
+  Pull,
 ]

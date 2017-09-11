@@ -12,7 +12,6 @@ import { table, getBorderCharacters } from 'table'
 export default class GetRootToken extends Command {
   static topic = 'get-root-token'
   static description = 'Get the root tokens of a specific prject'
-  static hidden = true
   static flags: Flags = {
     env: flags.string({
       char: 'e',

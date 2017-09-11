@@ -6,7 +6,6 @@ import { InvalidProjectError } from '../../errors/InvalidProjectError'
 export default class Console extends Command {
   static topic = 'console'
   static description = 'Open the console for the current selected project'
-  static hidden = true
   static flags: Flags = {
     env: flags.string({
       char: 'e',

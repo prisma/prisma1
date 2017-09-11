@@ -5,7 +5,6 @@ import { endpointsMessage } from '../../util'
 export default class Info extends Command {
   static topic = 'info'
   static description = 'Print project info (environments, endpoints, ...) '
-  static hidden = true
   static flags: Flags = {
     env: flags.string({
       char: 'e',
