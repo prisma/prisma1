@@ -61,7 +61,7 @@ The input type for these hook functions is determined by the input arguments of 
 
 Consider the following mutation:
 
-```
+```graphql
 updateUser(id: ID!, name: String, email: String): User
 ```
 
