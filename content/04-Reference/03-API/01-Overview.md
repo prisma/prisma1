@@ -14,5 +14,6 @@ Notice that every Graphcool project by default comes with two different APIs:
 - **Simple API**: Intuitive CRUD operations and data modelling
 - **Relay API**: Adheres to the schema requirements of Relay
 
+Here is an overview of the GraphQL API that's generated for you based on a simple model type:
 
-
+![](https://imgur.com/MoInfZM.png)

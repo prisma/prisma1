@@ -13,7 +13,7 @@ Every Graphcool project consists of several components that developers can provi
 - **Permission rules**: Define which users are allowed to perform what operations in the API. 
 - **Serverless functions**: Used to implement data validation and transformation, GraphQL resolvers functions and other business logic.
 - **Modules**: Other Graphcool projects that provide additional functionality to the current project.
-- **Root tokens**: The root tokens that provide access to all API operations.
+- **Root tokens**: The authentication tokens that provide access to all API operations.
 
 To manage each of these components in a coherent way, Graphcool uses a custom configuration format written in [YAML](https://en.wikipedia.org/wiki/YAML). The file can be altered manually or through dedicated commands of the CLI.
 
