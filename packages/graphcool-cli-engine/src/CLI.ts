@@ -111,11 +111,14 @@ export class CLI {
       }
     }
 
-    debug('flushing stdout')
-    const {timeout} = require('./util')
-    await timeout(this.flush(), 5000)
-    debug('exiting')
-    out.exit(0)
+    if (!this.config.argv.includes('logs') && !this.config.argv.includes('logs:function')) {
+      debug('flushing stdout')
+      const {timeout} = require('./util')
+      await timeout(this.flush(), 5000)
+
+      debug('exiting')
+      out.exit(0)
+    }
   }
 
   flush (): Promise<{} | void> {

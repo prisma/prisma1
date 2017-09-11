@@ -1,6 +1,7 @@
 import { Command, flags, Flags } from 'graphcool-cli-engine'
 import {InvalidProjectError} from '../../errors/InvalidProjectError'
 import * as chalk from 'chalk'
+import * as sortedUniqBy from 'lodash.sorteduniqby'
 
 export default class FunctionLogs extends Command {
   static topic = 'logs'
@@ -16,12 +17,17 @@ export default class FunctionLogs extends Command {
       char: 'p',
       description: 'Project Id to set',
     }),
+    // tail: flags.boolean({
+    //   char: 't',
+    //   description: 'Tail function logs in realtime',
+    // }),
   }
   static args = [{
     name: 'functionName'
   }]
   async run() {
     await this.auth.ensureAuth()
+    const {tail} = this.flags
     let {env} = this.flags
 
     env = env || this.env.env.default
@@ -33,20 +39,42 @@ export default class FunctionLogs extends Command {
     } else if (!this.argv[1]) {
       this.out.error(`Please provide a valid function name`)
     } else {
-      const logs = await this.client.getFunctionLogs(projectId, this.argv[1])
-      if (!logs) {
-        this.out.log(`There is no function with the name ${this.argv[1]}. Run ${chalk.bold('graphcool functions')} to list all functions.`)
-      } else if (logs.length === 0) {
-        this.out.log(`No messages have been logged in the last 30 min for function ${chalk.bold(this.argv[1])}`)
+      const fn = await this.client.getFunction(projectId, this.argv[1])
+      if (!fn) {
+        this.out.error(`There is no function with the name ${this.argv[1]}. Run ${chalk.bold('graphcool functions')} to list all functions.`)
       } else {
-        logs.sort((a, b) => a.timestamp < b.timestamp ? -1 : 1)
-        const formattedLogs = logs.map(log => {
-          const prettyMessage = this.out.getStyledJSON(JSON.parse(log.message))
-          return `${chalk.green.bold(log.timestamp)} ${chalk.blue.bold(`${log.duration}ms`)} ${prettyMessage}`
-        }).join('\n')
+        const {logs, endCursor} = await this.client.getFunctionLogs(projectId, fn.id)
+        let lastCursor = endCursor
+        if (logs.length === 0) {
+          this.out.log(`No messages have been logged in the last 30 min for function ${chalk.bold(this.argv[1])}`)
+        } else {
+          logs.sort(sortByTimestamp)
+          this.out.log(this.prettifyLogs(logs))
+        }
 
-        this.out.log(formattedLogs)
+        if (tail) {
+          setInterval(async () => {
+            const tailResult = await this.client.getFunctionLogs(projectId, fn.id, lastCursor)
+            if (tailResult.logs && tailResult.logs.length > 0) {
+              tailResult.logs.sort(sortByTimestamp)
+              this.out.log(this.prettifyLogs(tailResult.logs))
+            }
+            lastCursor = tailResult.endCursor
+          }, 3000)
+        }
       }
     }
   }
+  private prettifyLogs(logs: any) {
+    return logs.map(log => {
+      const prettyMessage = this.out.getStyledJSON(JSON.parse(log.message))
+      const status = log.status === 'SUCCESS' ? 'green' : 'red'
+      return `${chalk.cyan.bold(log.timestamp)} ${chalk.blue.bold(`${log.duration}ms`)} ${chalk.bold[status](log.status)} ${prettyMessage}`
+    }).join('\n')
+  }
+}
+
+
+function sortByTimestamp(a, b) {
+  return a.timestamp < b.timestamp ? -1 : 1
 }

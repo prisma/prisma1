@@ -327,58 +327,23 @@ export class Client {
     return functions.edges.map(edge => edge.node)
   }
 
+  async getFunction(projectId: string, functionName: string): Promise<FunctionInfo | null> {
+    const functions = await this.getFunctions(projectId)
+    const normalizedFunctionName = normalizeName(functionName)
+    return functions.find(fn => normalizeName(fn.name) === normalizedFunctionName) || null
+  }
+
   async getFunctionLogs(
     projectId: string,
-    functionName: string,
-  ): Promise<FunctionLog[] | null> {
-    interface FunctionsPayload {
-      viewer: {
-        project: {
-          functions: {
-            edges: Array<{
-              node: {
-                id: string
-                name: string
-              }
-            }>
-          }
-        }
-      }
-    }
-    const { viewer: { project: { functions } } } = await this.client.request<
-      FunctionsPayload
-    >(
-      `
-      query ($projectId: ID!){
-        viewer {
-          project(id: $projectId) {
-            functions {
-              edges {
-                node {
-                  name
-                  id
-                }
-              }
-            }
-          }
-        }
-      }
-      `,
-      { projectId },
-    )
-
-    const normalizedFunctionName = normalizeName(functionName)
-    const foundFunction = functions.edges
-      .map(edge => edge.node)
-      .find(fn => normalizeName(fn.name) === normalizedFunctionName)
-
-    if (!foundFunction) {
-      return null
-    }
-
+    functionId: string,
+    after?: string
+  ): Promise<{logs: FunctionLog[], endCursor: string}> {
     interface FunctionLogsPayload {
       node: {
         logs: {
+          pageInfo: {
+            endCursor: string
+          }
           edges: Array<{
             node: FunctionLog
           }>
@@ -386,10 +351,13 @@ export class Client {
       }
     }
 
-    const {node: {logs}} = await this.client.request<FunctionLogsPayload>(`query ($id: ID!) {
+    const {node: {logs}} = await this.client.request<FunctionLogsPayload>(`query ($id: ID!, $after: String) {
       node(id: $id) {
         ... on Function {
-          logs(last: 1000) {
+          logs(last: 1000 after: $after) {
+            pageInfo {
+              endCursor
+            }
             edges {
               node {
                 id
@@ -403,9 +371,12 @@ export class Client {
           }
         }
       }
-    }`, {id: foundFunction.id})
+    }`, {id: functionId, after})
 
-    return logs.edges.map(edge => edge.node)
+    return {
+      logs: logs.edges.map(edge => edge.node),
+      endCursor: logs.pageInfo.endCursor,
+    }
   }
 
   async getProjectName(projectId: string): Promise<string> {
