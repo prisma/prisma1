@@ -47,9 +47,6 @@ export class MigrationPrinter {
     migrationMessage: MigrationMessage,
     index: number,
   ) {
-    if (typeof migrationMessage.description === 'undefined') {
-      debugger
-    }
     const actionType = this.getType(migrationMessage.description)
     const symbol = this.getSymbol(actionType)
     const description = makePartsEnclodesByCharacterBold(

@@ -113,7 +113,7 @@ ${chalk.gray(
             `${chalk.green(figures.tick)} Your project ${chalk.bold(
               projectId,
             )} of env ${chalk.bold(envName)} was successfully updated.
-  Here are the changes:`,
+Here are the changes:`,
           )
 
           this.out.migration.printMessages(migrationResult.migrationMessages)
