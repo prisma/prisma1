@@ -20,7 +20,7 @@ A schema migration includes two steps:
 
 In case the migration requires additional information from your side, e.g. when you're renaming a type or a field or you add a non-nullable field to an existing type, you'll have to setup an additional file where this information is provided. Notice that the CLI will detect these cases for you and launch a wizard that supports you in creating that file.
 
-<InfoBox>
+</InfoBox>
 
 ## Schema Migrations with the CLI
 
