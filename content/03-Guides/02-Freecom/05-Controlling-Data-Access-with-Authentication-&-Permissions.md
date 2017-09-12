@@ -26,11 +26,11 @@ This dilemma can be solved using Graphcool's [Anonymous Auth Provider](!alias-we
 
 To use the anonymous auth provider in our app, we first need to enable it in the **Integrations** section in the [Graphcool console](https://console.graph.cool):
 
-![](./img/fc4-anon-auth-provider-1.png?width=650)
+![](./fc4-anon-auth-provider-1.png?width=650)
 
 In the popup, we have to specify the _type_ that we'd like to be able to authenticate - in our case that's the `Customer`:
 
-![](./img/fc4-anon-auth-provider-2.png?width=500)
+![](./fc4-anon-auth-provider-2.png?width=500)
 
 Once the integration is enabled, there is a new mutation available that's looks as follows:
 
@@ -121,14 +121,14 @@ Graphcool follows a [_whitelist_](!alias-iegoo0heez/#whitelist-permissions-for-m
 
 However, note that when you're creating new types for your schema, a set of permissions is generated for you allowing _all operations_ - this is why we were able to interact with the API in the previous chapter even though we've never actually created any permissions. You can verify this by selecting the **Permissions**-tab in the [Graphcool console](https://console.graph.cool).
 
-![](./img/fc4-permissions-overview.png?width=650)
+![](./fc4-permissions-overview.png?width=650)
 
 When restricting the access for specific operations on a type, we have two options:
 
 1. Add the general requirement that the user performing the operation needs to be _authenticated_
 2. Exercise fine-grained control and declare _specific requirements_ which the user has to meet in order to be allowed to perform the operation, using a so-called [permission query](!alias-iox3aqu0ee)
 
-![](./img/fc4-permissions-popup.png?width=500)
+![](./fc4-permissions-popup.png?width=500)
 
 If we only specify the first option, a user that sends a valid authentication token in the request's header will be able to perform the corresponding operation.
 
@@ -141,13 +141,13 @@ To implement our requirements from above, we have to take the second approach an
 
 Since we want to restrict access on the `Message` type, we are going to adjust the four already existing permissions for _reading_, _creating_, _updating_ and _deleting_ on it. Right now, all operations are allowed for all users:
 
-![](./img/fc4-message-permissions.png?width=350)
+![](./fc4-message-permissions.png?width=350)
 
 Let's adjust the permission for the _Read_ operation. Simply click the corresponding row to bring up the configuration popup.
 
 In the popup, we first have to specify which _fields_ this permission should apply to. At this point we could potentially specify that _everyone_ should still be able to read the `id` of the messages, but only a specific audience can read the `text` and other fields. However, we actually want to restrict the access on the whole type, so we're going to select all the fields:
 
-![](./img/fc4-select-fields.png?width=500)
+![](./fc4-select-fields.png?width=500)
 
 Next, we are switching to the **Define Rules** tab of the popup to specify the permission query.
 

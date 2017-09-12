@@ -49,10 +49,10 @@ There are two types of functions available on the Graphcool platform:
 When setting up a server-side subscription, you have to go through three major steps:
 
 1. Specify the _event trigger_, i.e. the _type_ for your subscription, e.g. `Message`.
-    ![](./img/part-5/sss-setup-1.png)
+    ![](fc5-sss-setup-1.png)
 2. Write the subscription query including the _payload_.
 3. Write the actual function that will be executed when the subscription fires.
-    ![](./img/part-5/sss-setup-2.png)
+    ![](fc5-sss-setup-2.png)
     
 A server-side subscription function takes exactly one input argument, namely the `event` that triggered it. This event carries the _payload_ from the subscription query.  
 
@@ -83,7 +83,7 @@ module.exports = function (event) {
 
 Before we go into detail about how to use server-side subscriptions in order to connect our app to Slack, let's take a quick look at the visualization of the flow that is happening when a user hits return to send a message in the chat:
 
-![](./img/part-5/create-message.png?width=800)
+![](fc5-create-message.png?width=800)
 
 Here's a brief outline of the interaction that takes place:
 

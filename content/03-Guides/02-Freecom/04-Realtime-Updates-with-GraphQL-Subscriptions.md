@@ -128,7 +128,7 @@ Rather than using the updated data manually in a callback, you can benefit from 
 
 To use subscriptions in your app, you need to configure the `ApolloClient` accordingly. This time, in addition to the GraphQL endpoint, we also need to provide a `SubscriptionClient` that handles the websocket connection between our app and the server.
 
-![](./img/fc3-subscriptions_overview.png)
+![](./fc3-subscriptions_overview.png)
 
 To find out more about how the `SubscriptionClient` works, you can visit the [repository](https://github.com/apollographql/subscriptions-transport-ws) where it's implemented. Let's now see how we can to setup the `ApolloClient` and prepare it for using subscriptions.
 

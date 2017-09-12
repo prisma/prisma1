@@ -87,7 +87,7 @@ const client = new ApolloClient({
 
 The `ApolloProvider` implements the bindings from Apollo to React. It's a component that, when wrapped around other React components, allows these children to interact with the specified GraphQL endpoint.
 
-![](./img/fc2-architecture-overview.png?width=600)
+![](./fc2-architecture-overview.png?width=600)
 
 In the picture, the React application is wrapped with the `ApolloProvider`, which again is associated with the `ApolloClient` that knows how to connect to the GraphQL API through its `NetworkInterface`. In code, the integration of the `ApolloProvider` looks as follows:
 

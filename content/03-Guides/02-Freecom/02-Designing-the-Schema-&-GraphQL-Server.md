@@ -136,7 +136,7 @@ Notice that each of the types now also includes the Graphcool [system fields](!a
 
 Here is a graphical overview of the relations in our final schema:
 
-![](./img/fc1-data-model.png?width=750)
+![](./fc1-data-model.png?width=750)
 
 - **one** `Agent` is related to **many** `Message`s
 - **one** `Agent` is related to **many** `Conversation `s
@@ -158,11 +158,11 @@ Once the project was created, you can interact with it via two different endpoin
 - [`Simple API`](!alias-heshoov3ai/): This endpoint creates an intuitive GraphQL API based on the provided data model and is optimized for usage with Apollo - _it's the one we'll be using in this tutorial!_
 - [`Relay API`](!alias-aizoong9ah/): This endpoint can be used in applications that use [Relay](https://facebook.github.io/relay/), a GraphQL client developed by Facebook and with some specific requirements for the GraphQL API
 
-![](./img/fc1-graphcool-init.png?width=800)
+![](./fc1-graphcool-init.png?width=800)
 
 We'll be using the endpoint for the `Simple API`! If you ever lose the endpoint, you can simply find it in the [Graphcool console](https://console.graph.cool) by selecting your project and clicking the _Endpoints_-button in the bottom-left corner.
 
-![](./img/fc1-endpoint.png)
+![](./fc1-endpoint.png)
 
 ## Playgrounds
 
