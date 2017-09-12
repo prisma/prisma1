@@ -80,6 +80,11 @@ type Article @model {
 }
 ``` 
 
+<InfoBox type=warning>
+
+Notice that you can not have custom fields that are called `createdAt` and `updatedAt` and of type `DateTime!`. When adding these to a model type, they will automatice be managed by Graphcool.
+
+</InfoBox>
 
 ## GraphQL Types
 
