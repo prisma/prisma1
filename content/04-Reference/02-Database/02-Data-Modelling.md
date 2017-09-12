@@ -14,7 +14,7 @@ To learn more about the SDL, you can check out the [official documentation](http
 This is an example for what a `types.graphql` could look like:
 
 ```graphql
-type Tweet {  
+type Tweet @model {  
   id: ID! @isUnique
   createdAt: DateTime!
   updatedAt: DateTime!
@@ -22,10 +22,8 @@ type Tweet {
   text: String!
 }
 
-type User {
+type User @model {
   id: ID! @isUnique
-  createdAt: DateTime!
-  updatedAt: DateTime!
   name: String!
   tweets: [Tweet!]! @relation(name: "UserOnTweet")
 }
@@ -41,12 +39,46 @@ There are several available building blocks to shape your model schema.
 
 Additionally, a project contains prepopulated types and fields, referred to as [system artifacts](!alias-uhieg2shio). Different [naming conventions](!alias-oe3raifamo) define valid names.
 
-### Obtaining a schema file
+### Writing a Model Schema
 
-You can obtain the schema file for a Graphcool project in the Schema view of the Console or by using the [get-graphql-schema tool](!alias-maiv5eekan).
+There are a few things that are special about the way a model schema is written.
 
-To create a new schema file from scratch, simply use your favorite text editor.
+#### Using the `@model` directive
 
+You data model contains the _model types_ that represent the entities from your application domain. The nodes of these types will be persisted in the database and further determine the shape of your API.
+
+Each type that you want to be part of this data model, you need to define with the `@model` directive following the type name.
+
+#### Unique IDs and the `Node` interface
+
+Every type that you define with the `@model` directive needs to have an `id: ID!` field, otherwise `graphcool deploy` is going to fail. This `id` however is managed by Graphcool: Every new node that is created in your project will get assigned a unique ID automatically.
+
+Notice that all your model types will implement the `Node` interface in the actual GraphQL schema that defines all the capabilities of your API. This is what the `Node` interface looks like:
+
+```graphql
+interface Node {
+  id: ID! @isUnique
+}
+```
+
+> You don't have to implement the `Node` interface yourself, this will be handled by Graphcool.
+
+#### System fields: `createdAt` and `updatedAt`
+
+Graphcool offers two special fields that can add to model types:
+
+- `createdAt: DateTime!`: Stores the exact date and time for when a node of this model type was created.
+- `updatedAt: DateTime!`: Stores the exact date and time for when a node of this model type was last updated.
+
+If you want your model types to expose these fields, you can simply add them to the type definition and Graphcool will take care of actually managing them for you.
+
+```graphql
+type Article @model {
+  id: ID!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+``` 
 
 
 ## GraphQL Types
