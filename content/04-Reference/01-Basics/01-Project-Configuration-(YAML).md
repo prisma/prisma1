@@ -17,6 +17,8 @@ Every Graphcool project consists of several components that developers can provi
 
 To manage each of these components in a coherent way, Graphcool uses a custom configuration format written in [YAML](https://en.wikipedia.org/wiki/YAML). The file can be altered manually or through dedicated commands of the CLI.
 
+
+
 ## Example
 
 Here is what a simple example of a project configuration file looks like:
@@ -112,3 +114,21 @@ This is what the additional YAML types look like that are used in the file:
 | --------- | ------------------ | --------------- | --------- | ------------------ | --------------- | --------------- | 
 | `url` | `string` | any | Yes | Specifies the URL where the function can be invoked. |
 | `headers` | `[string:string]` | any | No | Specifies any HTTP headers for the request that invokes the function. |
+
+
+## Environments
+
+When working with Graphcool, you can configure different _environmnets_ your project should be deployed to. You can use this for example to separate a development from a production environment.
+
+
+### `.graphcoolrc`
+
+Environments are managed in the `.graphcoolrc` file that's generated for you when you're creating a new project with `graphcool init`.
+
+`.graphcoolrc` is written in YAML and has the following root properties:
+
+| Root Property | Type | Description | 
+| --------- | ------------------ | --------------- | 
+| `default`| `string` | Specifies the name of the default environment. This environment will be used for all commands you're invoking with the CLI. If you want to run a command against a different environment than the default one, you need to specify the `--env` flag for the command. |
+| `environments` | `[string:string]` | A list of environments that are available. |
+
