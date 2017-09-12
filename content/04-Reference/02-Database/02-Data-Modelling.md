@@ -339,7 +339,15 @@ The *temporary directive `@migrationValue(value: String!)`* is used to migrate t
 
 
 
-## System Artifacts
+## System Artifacts (Deprecated)
+
+<InfoBox type=warning>
+
+The `User` and `File` system artifacts are deprecated as of October 2017. They will still be available and continue to function in all projects that have been created before that. However, in new projects they won't be available any more.
+
+Another change is that the `createdAt` and `updatedAt` fields are now _optional_ on model types. If you want your model types to expose these fields (which are still managed by the system), simply include them in the type definition.
+
+</InfoBox>
 
 In order to make the platform as seamless and integrated as possible, we introduced some predefined artifacts in each project. These artifacts are designed to be as minimal as possible and cannot be deleted. At the moment there are two type of artifacts: *system types* and *system fields*.
 
