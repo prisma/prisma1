@@ -5,15 +5,15 @@ description: Learn how to provide secure data access to your GraphQL backend and
 
 # User Authentication with Auth0 for React and Apollo
 
-<iframe height="315" src="https://www.youtube.com/embed/5uxq8Om-AZQ" frameborder="0" allowfullscreen></iframe>
+In this guide, you will learn how to implement user authentication with Auth0 & Graphcool and configure permission rules with Graphcool's to control data access among your users. For the frontend, you're going to use React & Apollo Client.
 
-In this guide we will have a closer look at how auth providers and the permission system tie together when using a Graphcool project.
-You will learn how to configure Auth0 and use Auth0 lock in combination with React and Apollo to handle user login and sign up and what permission setup is needed to get started with authentication.
+You're going to build a simple Instagram clone that fulfills the following requirements:
 
-In this Instagram clone, everyone will be able to see posts but only authenticated users should be able to create new posts. When a new user signs up, he has to enter his name and email address and state if he is interested in notification emails.
-
+- Everyone is able to see all the posts
+- Only authenticated users are able to create new posts
+- Upon signup, users need to provide their name, email and check a box to say whether they want to receive notification emails
+ 
 > You can find the complete example on [GitHub](https://github.com/graphcool-examples/react-graphql/tree/master/authentication-with-auth0-and-apollo).
-
 
 ## 1. Setting up the Graphcool project
 
@@ -22,19 +22,23 @@ In this Instagram clone, everyone will be able to see posts but only authenticat
 The app will use the following data model:
 
 ```graphql
-type Post {
+type Post @model {
+  id: ID!
   description: String!
   imageUrl: String!
 }
 
-type User {
+type User @model {  
+  id: ID!
   name: String!
   emailAddress: String!
   emailSubscription: Boolean!
 }
 ```
 
-You can create the project using the [Graphcool CLI](https://www.npmjs.com/package/graphcool):
+To create the project, you're going to use the [Graphcool CLI](https://www.npmjs.com/package/graphcool).
+
+You can create the project using the :
 
 ```sh
 # Install the Graphcool CLI
