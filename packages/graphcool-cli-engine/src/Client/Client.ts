@@ -113,6 +113,7 @@ export class Client {
       addProject: { project: RemoteProject }
     }>(mutation, variables)
 
+    await this.eject(project.id)
     const res = await this.push(project.id, true, false, projectDefinition)
 
     if (res.errors && res.errors.length > 0) {
@@ -122,6 +123,22 @@ export class Client {
     // TODO set project definition, should be possibility in the addProject mutation
 
     return this.getProjectDefinition(project)
+  }
+
+  async eject(projectId: string): Promise<boolean> {
+    const mutation = `mutation ($projectId: ID!) {
+      ejectProject(input: {
+        projectId: $projectId
+      }) {
+        project {
+          id
+        }
+      }
+    }`
+
+    await this.client.request(mutation, {projectId})
+
+    return true
   }
 
   async push(

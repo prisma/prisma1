@@ -272,5 +272,5 @@ export default class Init extends Command {
 }
 
 export function isValidProjectName(projectName: string): boolean {
-  return /^[A-Z][a-zA-Z0-9\s]*$/.test(projectName)
+  return /^[A-Z](.*)/.test(projectName)
 }
