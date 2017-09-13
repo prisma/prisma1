@@ -82,12 +82,13 @@ export class Client {
     region?: string,
   ): Promise<ProjectInfo> {
     const mutation = `\
-      mutation addProject($name: String!, $alias: String, $region: Region) {
+      mutation addProject($name: String!, $alias: String, $region: Region, $config: String) {
         addProject(input: {
           name: $name,
           alias: $alias,
           region: $region,
           clientMutationId: "static"
+          config: $config
         }) {
           project {
             ...RemoteProject
@@ -97,48 +98,20 @@ export class Client {
       ${REMOTE_PROJECT_FRAGMENT}
       `
 
-    // gather variables
-    let variables: any = { name }
-    if (alias) {
-      variables = { ...variables, alias }
-    }
-    if (region) {
-      variables = { ...variables, region: region.toUpperCase() }
-    } else {
-      const fastestRegion = await getFastestRegion()
-      variables = { ...variables, region: fastestRegion.toUpperCase() }
-    }
+    const newRegion = region || (await getFastestRegion())
 
     const { addProject: { project } } = await this.client.request<{
       addProject: { project: RemoteProject }
-    }>(mutation, variables)
-
-    await this.eject(project.id)
-    const res = await this.push(project.id, true, false, projectDefinition)
-
-    if (res.errors && res.errors.length > 0) {
-      throw new Error(res.errors.map(e => e.description).join('\n'))
-    }
+    }>(mutation, {
+      name,
+      alias,
+      region: newRegion,
+      config: JSON.stringify(projectDefinition),
+    })
 
     // TODO set project definition, should be possibility in the addProject mutation
 
     return this.getProjectDefinition(project)
-  }
-
-  async eject(projectId: string): Promise<boolean> {
-    const mutation = `mutation ($projectId: ID!) {
-      ejectProject(input: {
-        projectId: $projectId
-      }) {
-        project {
-          id
-        }
-      }
-    }`
-
-    await this.client.request(mutation, {projectId})
-
-    return true
   }
 
   async push(

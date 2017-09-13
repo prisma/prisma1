@@ -1,6 +1,6 @@
 {
   "name": "graphcool",
-  "version": "1.3.15",
+  "version": "1.3.16",
   "main": "dist/index.js",
   "bin": {
     "graphcool": "dist/index.js",
@@ -18,7 +18,6 @@
     "lint-staged": "^4.0.3",
     "prettier": "^1.5.3",
     "rimraf": "^2.6.1",
-    "source-map-support": "^0.4.15",
     "tslint": "^5.6.0",
     "tslint-config-prettier": "^1.3.0",
     "tslint-eslint-rules": "^4.1.1",
@@ -50,9 +49,10 @@
   },
   "dependencies": {
     "fs-extra": "^4.0.1",
-    "graphcool-cli-core": "1.3.27",
-    "graphcool-cli-engine": "0.0.21",
-    "semver": "^5.4.1"
+    "graphcool-cli-core": "1.3.28",
+    "graphcool-cli-engine": "0.0.22",
+    "semver": "^5.4.1",
+    "source-map-support": "^0.4.18"
   },
   "engines": {
     "node": ">=8.3.0"
