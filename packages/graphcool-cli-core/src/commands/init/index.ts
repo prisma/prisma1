@@ -150,7 +150,7 @@ export default class Init extends Command {
    2) Install a graphcool module to your project:
    
       ${chalk.bold('facebook-authentication')}
-      $ ${chalk.cyan('graphcool module add graphcool/modules/authentication/facebook-authentication')}
+      $ ${chalk.cyan('graphcool module add graphcool/modules/authentication/facebook')}
       
       ${chalk.bold('algolia-syncing')}
       $ ${chalk.cyan('graphcool module add graphcool/modules/syncing/algolia')}
