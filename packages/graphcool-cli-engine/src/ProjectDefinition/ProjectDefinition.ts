@@ -7,7 +7,8 @@ import { ProjectDefinition } from '../types'
 import fs from '../fs'
 import { Output } from '../Output/index'
 import { Config } from '../Config'
-
+import { GraphcoolDefinition } from 'graphcool-json-schema'
+const debug = require('debug')('project-definition')
 
 export class ProjectDefinitionClass {
   definition: ProjectDefinition | null
@@ -43,6 +44,41 @@ export class ProjectDefinitionClass {
     const types = this.definition!.modules[0].files[definition.types]
     this.out.log(chalk.blue(`Written ${definition.types}`))
     fs.writeFileSync(path.join(this.config.definitionDir, definition.types), types)
+  }
+
+  public async injectEnvironment() {
+    if (this.definition) {
+      this.definition.modules = await Promise.all(this.definition.modules.map(async module => {
+        const ymlDefinitinon: GraphcoolDefinition = await readDefinition(module.content, this.out)
+        Object.keys(ymlDefinitinon.functions).forEach(fnName => {
+          const fn = ymlDefinitinon.functions[fnName]
+          if (fn.handler.code && fn.handler.code.environment) {
+            const file = module.files[fn.handler.code.src]
+            module.files[fn.handler.code.src] = this.injectEnvironmentToFile(file, fn.handler.code.environment)
+            debug(`Injected env vars to file:`)
+            debug(`BEFORE`)
+            debug(file)
+            debug('AFTER')
+            debug(module.files[fn.handler.code.src])
+          }
+
+          ymlDefinitinon.functions[fnName] = fn
+        })
+
+        return module
+      }))
+
+    }
+  }
+
+  private injectEnvironmentToFile(file: string, environment: {[envVar: string]: string}): string {
+    // get first function line
+    const lines = file.split('\n')
+    Object.keys(environment).forEach(key => {
+      const envVar = environment[key]
+      lines.splice(0, 0 , `process.env['${key}'] = '${envVar}';`)
+    })
+    return lines.join('\n')
   }
 
   public set(definition: ProjectDefinition | null) {

@@ -123,10 +123,14 @@ export default class Init extends Command {
       const newEnv = env || 'dev'
       await this.env.set(newEnv, createdProject.id)
 
-      if (newProject) {
+      if (!this.env.default || newProject) {
         this.env.setDefault(newEnv)
+      }
+
+      if (newProject) {
         this.definition.save(undefined, false)
       }
+
       this.env.save()
 
       this.out.action.stop(

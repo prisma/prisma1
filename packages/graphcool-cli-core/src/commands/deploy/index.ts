@@ -55,8 +55,10 @@ ${chalk.gray(
     if (Deploy.mockEnv) {
       this.env.env = Deploy.mockEnv
     }
-    await this.definition.load()
     await this.auth.ensureAuth()
+    await this.definition.load()
+    // temoprary ugly solution
+    this.definition.injectEnvironment()
 
     const { projectId, envName } = await this.env.getEnvironment({
       project,
@@ -126,6 +128,7 @@ ${chalk.gray(
         }
 
         if (
+          migrationResult.errors && migrationResult.errors.length > 0 &&
           migrationResult.errors[0].description.includes(`destructive changes`)
         ) {
           // potentially destructive changes

@@ -4,6 +4,8 @@ import schema = require('graphcool-json-schema/dist/schema.json')
 import * as chalk from 'chalk'
 import { GraphcoolDefinition } from 'graphcool-json-schema'
 import { Output } from '../Output/index'
+import Variables from './Variables'
+const debug = require('debug')('yaml')
 
 const ajv = new Ajv()
 
@@ -14,11 +16,17 @@ try {
 }
 const validate = ajv.compile(schema)
 
+const __cache = {}
+
 export async function readDefinition(
   file: string,
   out: Output,
 ): Promise<GraphcoolDefinition> {
-  const json = await anyjson.decode(file, 'yaml')
+  if (__cache[file]) {
+    debug(`Getting definition from cache`)
+    return __cache[file]
+  }
+  const json = await anyjson.decode(file, 'yaml') as GraphcoolDefinition
   const valid = validate(json)
   // TODO activate as soon as the backend sends valid yaml
   if (!valid) {
@@ -34,5 +42,13 @@ export async function readDefinition(
     )
     out.exit(1)
   }
-  return json as GraphcoolDefinition
+
+  const vars = new Variables(json, out)
+  const populatedJson = await vars.populateDefinition(json)
+  if (populatedJson.custom) {
+    delete populatedJson.custom
+  }
+
+  __cache[file] = populatedJson
+  return populatedJson
 }

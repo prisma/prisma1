@@ -104,6 +104,7 @@ export default class Diff extends Command {
         }
 
         if (
+          migrationResult.errors && migrationResult.errors.length > 0 &&
           migrationResult.errors[0].description.includes(`destructive changes`)
         ) {
           // potentially destructive changes

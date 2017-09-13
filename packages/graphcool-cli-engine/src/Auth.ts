@@ -5,6 +5,7 @@ import * as cuid from 'cuid'
 import * as opn from 'opn'
 import { AuthTrigger } from './types'
 import { Client } from './Client/Client'
+import {GraphQLClient} from 'graphql-request'
 
 export class Auth {
   out: Output
@@ -27,8 +28,6 @@ export class Auth {
 
     const valid = await this.validateAuthToken(token)
     if (!valid) {
-      this.config.setToken(null)
-      this.config.saveToken()
       this.out.error(`Received invalid token. Please try ${this.out.color.bold('graphcool auth')} again to get a valid token.`)
       this.out.exit(1)
     }
@@ -80,6 +79,12 @@ export class Auth {
   }
 
   async validateAuthToken(token: string): Promise<string | null> {
+    const client = new GraphQLClient(this.config.systemAPIEndpoint, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      }
+    })
+
     const authQuery = `{
       viewer {
         user {
@@ -89,26 +94,12 @@ export class Auth {
       }
     }`
 
-    try {
-      const result = await fetch(this.config.systemAPIEndpoint, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({query: authQuery})
-      })
-      const json = await result.json()
+    const result = await client.request<{viewer: {user: {email: string}}}>(authQuery)
 
-      if (!json.data.viewer.user || !json.data.viewer.user.email || json.errors) {
-        return null
-      }
-
-      return json.data.viewer.user.email
-    }
-    catch (e) {
-      console.log(e)
+    if (!result.viewer.user || !result.viewer.user.email) {
       return null
     }
+
+    return result.viewer.user.email
   }
 }
