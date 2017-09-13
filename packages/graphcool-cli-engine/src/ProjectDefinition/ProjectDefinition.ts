@@ -71,6 +71,10 @@ export class ProjectDefinitionClass {
     }
   }
 
+  public set(definition: ProjectDefinition | null) {
+    this.definition = definition
+  }
+
   private injectEnvironmentToFile(file: string, environment: {[envVar: string]: string}): string {
     // get first function line
     const lines = file.split('\n')
@@ -79,9 +83,5 @@ export class ProjectDefinitionClass {
       lines.splice(0, 0 , `process.env['${key}'] = '${envVar}';`)
     })
     return lines.join('\n')
-  }
-
-  public set(definition: ProjectDefinition | null) {
-    this.definition = definition
   }
 }

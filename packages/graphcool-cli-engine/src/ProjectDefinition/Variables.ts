@@ -13,6 +13,7 @@ export default class Variables {
   selfRefSyntax: RegExp = RegExp(/^self:/g)
   stringRefSyntax: RegExp = RegExp(/('.*')|(".*")/g)
   variableSyntax: RegExp = RegExp(
+    /* tslint:disable-next-line */
     '\\${([ ~:a-zA-Z0-9._\'",\\-\\/\\(\\)]+?)}',
     'g',
   )
@@ -72,12 +73,7 @@ export default class Variables {
   }
 
   populateProperty(propertyParam, populateInPlace?: boolean) {
-    let property
-    if (populateInPlace) {
-      property = propertyParam
-    } else {
-      property = _.cloneDeep(propertyParam)
-    }
+    let property = populateInPlace ? propertyParam : _.cloneDeep(propertyParam)
     const allValuesToPopulate: any[] = []
 
     if (typeof property === 'string' && property.match(this.variableSyntax)) {
@@ -115,7 +111,7 @@ export default class Variables {
         allValuesToPopulate.push(singleValueToPopulate)
       })
       return BbPromise.all(allValuesToPopulate).then(() => {
-        if (property !== this.definition) {
+        if (property as any !== this.definition as any) {
           return this.populateProperty(property)
         }
         return BbPromise.resolve(property)
@@ -199,12 +195,7 @@ export default class Variables {
 
   getValueFromEnv(variableString) {
     const requestedEnvVar = variableString.split(':')[1]
-    let valueToPopulate
-    if (requestedEnvVar !== '' || '' in process.env) {
-      valueToPopulate = process.env[requestedEnvVar]
-    } else {
-      valueToPopulate = process.env
-    }
+    const valueToPopulate = requestedEnvVar !== '' || '' in process.env ? process.env[requestedEnvVar] : process.env
     return BbPromise.resolve(valueToPopulate)
   }
 

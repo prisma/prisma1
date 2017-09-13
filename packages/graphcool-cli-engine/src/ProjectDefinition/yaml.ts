@@ -16,15 +16,15 @@ try {
 }
 const validate = ajv.compile(schema)
 
-const __cache = {}
+const cache = {}
 
 export async function readDefinition(
   file: string,
   out: Output,
 ): Promise<GraphcoolDefinition> {
-  if (__cache[file]) {
+  if (cache[file]) {
     debug(`Getting definition from cache`)
-    return __cache[file]
+    return cache[file]
   }
   const json = await anyjson.decode(file, 'yaml') as GraphcoolDefinition
   const valid = validate(json)
@@ -49,6 +49,6 @@ export async function readDefinition(
     delete populatedJson.custom
   }
 
-  __cache[file] = populatedJson
+  cache[file] = populatedJson
   return populatedJson
 }
