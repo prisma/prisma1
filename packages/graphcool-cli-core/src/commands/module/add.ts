@@ -112,8 +112,10 @@ export default class ModuleAdd extends Command {
       let readme = fs.readFileSync(readmePath, 'utf-8')
       try {
         readme = trimReadme(readme)
-        this.out.log('')
         const readmeUrl = `https://github.com/${repoName}/tree/master/${subPath}`
+        this.out.log(
+          '   ' + chalk.bold.underline.magenta(`Setup Instructions`) + '\n',
+        )
         this.out.printMarkdown(
           readme + `\n\n[Further Instructions](${readmeUrl})`,
         )
@@ -158,6 +160,6 @@ function trimReadme(readme: string) {
   const configuration = configurationLines.slice(0, nextHeadline)
 
   return (
-    lines.slice(0, gettingStartedIndex).join('\n') + configuration.join('\n')
+    lines.slice(1, gettingStartedIndex).join('\n') + configuration.join('\n')
   )
 }
