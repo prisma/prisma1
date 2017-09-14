@@ -16,6 +16,12 @@ import * as inquirer from 'graphcool-inquirer'
 import { MigrationPrinter } from './migration'
 import * as treeify from 'treeify'
 import * as dirTree from 'directory-tree'
+import * as marked from 'marked'
+import * as TerminalRenderer from 'marked-terminal'
+
+marked.setOptions({
+  renderer: new TerminalRenderer(),
+})
 
 export const CustomColors = {
   // map gray -> dim because it's not solarized compatible
@@ -211,6 +217,10 @@ export class Output {
 
   logError(err: Error | string) {
     logToFile(util.inspect(err) + '\n', this.errlog)
+  }
+
+  printMarkdown(markdown: string) {
+    this.log(marked(markdown).split('\n').map(l => `   ${l}`).join('\n'))
   }
 
   oldprompt(name: string, options?: PromptOptions) {

@@ -27,7 +27,7 @@ export async function fsToProject(
     for (const moduleName of Object.keys(definition.modules)) {
       const modulePath = definition.modules[moduleName]
       const resolvedModulePath = path.join(inputDir, modulePath)
-      const module = await fsToModule(resolvedModulePath, out)
+      const module = await fsToModule(resolvedModulePath, out, moduleName)
       modules.push({
         ...module,
         name: moduleName,
@@ -43,6 +43,7 @@ export async function fsToProject(
 export async function fsToModule(
   inputFile: string,
   out: Output,
+  moduleName: string = 'root',
 ): Promise<GraphcoolModule> {
   const inputDir = path.dirname(inputFile)
   const content = fs.readFileSync(inputFile, 'utf-8')
@@ -59,7 +60,7 @@ export async function fsToModule(
   const definition: GraphcoolDefinition = await readDefinition(
     content,
     out,
-    'root',
+    moduleName,
   )
   const typesPath = path.join(inputDir, definition.types)
 

@@ -36,8 +36,19 @@ export default class ModuleAdd extends Command {
     const repoName = `${ghUser}/${ghRepo}`
 
     this.out.log('')
-    this.out.action.start(`   Downloading module ${chalk.bold(repoName)} `)
-    await downloadRepo(repoName, tmpDir)
+    this.out.action.start(
+      `   Downloading module ${chalk.bold.cyan(moduleUrl)} from ${chalk.bold(
+        repoName,
+      )} `,
+    )
+    try {
+      await downloadRepo(repoName, tmpDir)
+    } catch (e) {
+      if (e === 404) {
+        this.out.error(`Github repository ${repoName} could not be found`)
+      }
+      this.out.error(e)
+    }
     this.out.action.stop()
     debug(`Downloaded ${repoName} to ${tmpDir}`)
 
@@ -54,11 +65,12 @@ export default class ModuleAdd extends Command {
     // add it to local definition file
 
     const rootDefinitionString = this.definition.definition!.modules[0].content
-    const rootDefinition = await readDefinition(rootDefinitionString, this.out)
-    const newModulePath = path.join(
-      relativeModulePath,
-      'graphcool.yml',
+    const rootDefinition = await readDefinition(
+      rootDefinitionString,
+      this.out,
+      'root',
     )
+    const newModulePath = path.join(relativeModulePath, 'graphcool.yml')
     if (!rootDefinition.modules) {
       rootDefinition.modules = {}
     }
@@ -68,9 +80,30 @@ export default class ModuleAdd extends Command {
       path.join(this.config.definitionDir, 'graphcool.yml'),
       file,
     )
-    this.out.log(chalk.blue(`\n   Added ${chalk.bold(`${moduleDirName}: '${newModulePath}'`)} to graphcool.yml`))
+    this.out.log(
+      chalk.blue(
+        `\n   Added ${chalk.bold(
+          `${moduleDirName}: '${newModulePath}'`,
+        )} to graphcool.yml`,
+      ),
+    )
     this.out.log(chalk.blue.bold(`   Created ${relativeModulePath}:`))
     this.out.tree(relativeModulePath, true)
+
+    const readmePath = path.join(target, 'README.md')
+    if (fs.pathExistsSync(readmePath)) {
+      let readme = fs.readFileSync(readmePath, 'utf-8')
+      try {
+        readme = trimReadme(readme)
+        this.out.log('')
+        const readmeUrl = `https://github.com/${repoName}/tree/master/${subPath}`
+        this.out.printMarkdown(
+          readme + `\n\n[Further Instructions](${readmeUrl})`,
+        )
+      } catch (e) {
+        // noop
+      }
+    }
 
     this.out.log(
       `   ${chalk.green(figures.tick)} You now can run ${chalk.bold(
@@ -90,4 +123,24 @@ function downloadRepo(repo: string, destination: string) {
       }
     })
   })
+}
+
+function trimReadme(readme: string) {
+  const lines = readme.split('\n')
+  const gettingStartedIndex = lines.findIndex(l =>
+    l.trim().startsWith('## Getting Started'),
+  )
+  const cutLines = lines.slice(gettingStartedIndex)
+  const configurationIndex = cutLines.findIndex(l =>
+    l.trim().startsWith('## Configuration'),
+  )
+  const configurationLines = cutLines.slice(configurationIndex)
+  const nextHeadline = configurationLines
+    .slice(1)
+    .findIndex(l => l.trim().startsWith('#'))
+  const configuration = configurationLines.slice(0, nextHeadline)
+
+  return (
+    lines.slice(0, gettingStartedIndex).join('\n') + configuration.join('\n')
+  )
 }

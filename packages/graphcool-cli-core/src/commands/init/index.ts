@@ -46,10 +46,12 @@ export default class Init extends Command {
     }),
   }
 
-  static args = [{
-    name: 'dirName',
-    description: 'Folder to initialize in (optional)'
-  }]
+  static args = [
+    {
+      name: 'dirName',
+      description: 'Folder to initialize in (optional)',
+    },
+  ]
 
   async run() {
     const { copy, alias, env, region, template } = this.flags
@@ -107,7 +109,11 @@ export default class Init extends Command {
     name = name || sillyName()
 
     this.out.log('')
-    const projectMessage = dirName ? `   Creating project ${chalk.bold(name)} in folder ${chalk.bold(dirName) + '/'}` : `   Creating project ${chalk.bold(name)}`
+    const projectMessage = dirName
+      ? `   Creating project ${chalk.bold(name)} in folder ${chalk.bold(
+          dirName,
+        ) + '/'}`
+      : `   Creating project ${chalk.bold(name)}`
     this.out.action.start(projectMessage)
 
     try {
@@ -133,8 +139,7 @@ export default class Init extends Command {
 
       this.env.save()
 
-      this.out.action.stop(
-      )
+      this.out.action.stop()
       const inDir = dirName ? ` in ${dirName}/` : ''
       this.out.log(`${chalk.blue.bold('\n   Written files' + inDir + ':')}`)
       this.out.tree(this.config.definitionDir, true)
@@ -149,10 +154,17 @@ export default class Init extends Command {
    
    2) Install a graphcool module to your project:
    
-      ${chalk.bold('facebook-authentication')}
-      $ ${chalk.cyan('graphcool module add graphcool/modules/authentication/facebook')}
+      ${chalk.bold('Github Authentication')}
+      $ ${chalk.cyan(
+        'graphcool module add graphcool/modules/authentication/github',
+      )}
+   
+      ${chalk.bold('Facebook Authentication')}
+      $ ${chalk.cyan(
+        'graphcool module add graphcool/modules/authentication/facebook',
+      )}
       
-      ${chalk.bold('algolia-syncing')}
+      ${chalk.bold('Algolia Syncing')}
       $ ${chalk.cyan('graphcool module add graphcool/modules/syncing/algolia')}
 
    3) Use the following endpoint to connect to your GraphQL API:
