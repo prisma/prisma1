@@ -5,52 +5,70 @@ export const defaultDefinition: ProjectDefinition = {
   modules: [
     {
       name: '',
-      content: `# GraphQL types
+      content: `\
+# Welcome to Graphcool!
+#
+# This file is the main config file for your Graphcool Project.
+# It's very minimal at this point and uses default values.
+# We've included a hello world function here.
+# Just uncomment it an run \`graphcool deploy\`
+#
+# For full config options, check the docs:
+#    graph.cool/docs
+#
+# Happy Coding!
+
+
+# GraphQL types
 types: ./types.graphql
 
-# functions
-functions:
-  hello:
-    handler:
-      code:
-        src: ./code/hello.js
-    type: resolver
-    schema: ./schemas/hello.graphql
+
+# uncomment this:
+
+# functions:
+#   hello:
+#     handler:
+#       code:
+#         src: ./code/hello.js
+#     type: resolver
+#     schema: ./schemas/hello.graphql
+
  
 # Graphcool modules
 modules: {}
 
+
 # Model/Relation permissions
 permissions:
-- operation: File.read
-- operation: File.create
-- operation: File.update
-- operation: File.delete
-- operation: User.read
-- operation: User.create
-- operation: User.update
-- operation: User.delete
+- operation: "*"
+
   
 # Permanent Auth Token / Root Tokens
 rootTokens: []
+
 `,
       files: {
-        './types.graphql': `type File implements Node {
-  contentType: String!
-  createdAt: DateTime!
-  id: ID! @isUnique
-  name: String!
-  secret: String! @isUnique
-  size: Int!
-  updatedAt: DateTime!
-  url: String! @isUnique
-}
+        './types.graphql': `\
+# This file contains the GraphQL Types
+# Graphcool has one special type, the File type:
 
-type User implements Node {
-  createdAt: DateTime!
-  id: ID! @isUnique
-  updatedAt: DateTime!
-}
+# type File implements Node {
+#   contentType: String!
+#   createdAt: DateTime!
+#   id: ID! @isUnique
+#   name: String!
+#   secret: String! @isUnique
+#   size: Int!
+#   updatedAt: DateTime!
+#   url: String! @isUnique
+# }
+
+# All types need to have an id field defined like this:
+
+# type User implements Node {
+#   id: ID! @isUnique
+# }
+
 `,
         './code/hello.js': `\
 module.exports = event => {
