@@ -1356,19 +1356,6 @@ graceful-fs@~3.0.2:
   dependencies:
     natives "^1.1.0"
 
-graphcool-cli-core@1.3.30:
-  version "1.3.30"
-  resolved "https://registry.yarnpkg.com/graphcool-cli-core/-/graphcool-cli-core-1.3.30.tgz#bb86e461cea6794403b4436a53d787c3c8563a67"
-  dependencies:
-    chalk "^2.1.0"
-    download-github-repo "^0.1.3"
-    figures "^2.0.0"
-    js-yaml "^3.9.1"
-    lodash.differenceby "^4.8.0"
-    sillyname "^0.1.0"
-    source-map-support "^0.4.18"
-    table "^4.0.1"
-
 graphcool-inquirer@beta:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/graphcool-inquirer/-/graphcool-inquirer-1.0.1.tgz#ab9d85465261a063d364dae915be6f918dce8828"
