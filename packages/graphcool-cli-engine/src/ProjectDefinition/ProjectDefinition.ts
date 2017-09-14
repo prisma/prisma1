@@ -1,5 +1,5 @@
-import {fsToProject} from './fsToProject'
-import {projectToFs} from './projectToFs'
+import { fsToProject } from './fsToProject'
+import { projectToFs } from './projectToFs'
 import * as path from 'path'
 import { readDefinition } from './yaml'
 import * as chalk from 'chalk'
@@ -31,7 +31,13 @@ export class ProjectDefinitionClass {
   }
 
   public async save(files?: string[], silent?: boolean) {
-    projectToFs(this.definition!, this.config.definitionDir, this.out, files, silent)
+    projectToFs(
+      this.definition!,
+      this.config.definitionDir,
+      this.out,
+      files,
+      silent,
+    )
 
     // if (process.env.DEBUG && process.env.DEBUG!.includes('*')) {
     //   const definitionJsonPath = path.join(this.config.definitionDir, 'definition.json')
@@ -40,34 +46,51 @@ export class ProjectDefinitionClass {
   }
 
   public async saveTypes() {
-    const definition = await readDefinition(this.definition!.modules[0]!.content, this.out)
+    const definition = await readDefinition(
+      this.definition!.modules[0]!.content,
+      this.out,
+    )
     const types = this.definition!.modules[0].files[definition.types]
     this.out.log(chalk.blue(`Written ${definition.types}`))
-    fs.writeFileSync(path.join(this.config.definitionDir, definition.types), types)
+    fs.writeFileSync(
+      path.join(this.config.definitionDir, definition.types),
+      types,
+    )
   }
 
   public async injectEnvironment() {
     if (this.definition) {
-      this.definition.modules = await Promise.all(this.definition.modules.map(async module => {
-        const ymlDefinitinon: GraphcoolDefinition = await readDefinition(module.content, this.out)
-        Object.keys(ymlDefinitinon.functions).forEach(fnName => {
-          const fn = ymlDefinitinon.functions[fnName]
-          if (fn.handler.code && fn.handler.code.environment) {
-            const file = module.files[fn.handler.code.src]
-            module.files[fn.handler.code.src] = this.injectEnvironmentToFile(file, fn.handler.code.environment)
-            debug(`Injected env vars to file:`)
-            debug(`BEFORE`)
-            debug(file)
-            debug('AFTER')
-            debug(module.files[fn.handler.code.src])
+      this.definition.modules = await Promise.all(
+        this.definition.modules.map(async module => {
+          const ymlDefinitinon: GraphcoolDefinition = await readDefinition(
+            module.content,
+            this.out,
+          )
+          if (ymlDefinitinon.functions && ymlDefinitinon.functions) {
+            Object.keys(ymlDefinitinon.functions).forEach(fnName => {
+              const fn = ymlDefinitinon.functions[fnName]
+              if (fn.handler.code && fn.handler.code.environment) {
+                const file = module.files[fn.handler.code.src]
+                module.files[
+                  fn.handler.code.src
+                ] = this.injectEnvironmentToFile(
+                  file,
+                  fn.handler.code.environment,
+                )
+                debug(`Injected env vars to file:`)
+                debug(`BEFORE`)
+                debug(file)
+                debug('AFTER')
+                debug(module.files[fn.handler.code.src])
+              }
+
+              ymlDefinitinon.functions[fnName] = fn
+            })
           }
 
-          ymlDefinitinon.functions[fnName] = fn
-        })
-
-        return module
-      }))
-
+          return module
+        }),
+      )
     }
   }
 
@@ -75,12 +98,15 @@ export class ProjectDefinitionClass {
     this.definition = definition
   }
 
-  private injectEnvironmentToFile(file: string, environment: {[envVar: string]: string}): string {
+  private injectEnvironmentToFile(
+    file: string,
+    environment: { [envVar: string]: string },
+  ): string {
     // get first function line
     const lines = file.split('\n')
     Object.keys(environment).forEach(key => {
       const envVar = environment[key]
-      lines.splice(0, 0 , `process.env['${key}'] = '${envVar}';`)
+      lines.splice(0, 0, `process.env['${key}'] = '${envVar}';`)
     })
     return lines.join('\n')
   }
