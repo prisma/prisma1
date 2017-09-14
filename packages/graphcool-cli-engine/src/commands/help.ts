@@ -127,9 +127,9 @@ ${chalk.gray('-')} Update live project with local changes
       `${this.config.bin} help ${topic} COMMAND`,
     )
     this.out.log(
-      `${this.config.bin} ${this.out.color.bold(
+      `${this.out.color.bold(this.config.bin)} ${this.out.color.bold(
         topic,
-      )} commands: (get help with ${helpCmd})`,
+      )} commands: (get help with ${helpCmd})\n`,
     )
     this.out.log(renderList(commands.map(c => c.buildHelpLine(this.config))))
     if (commands.length === 1 && (commands[0] as any).help) {
