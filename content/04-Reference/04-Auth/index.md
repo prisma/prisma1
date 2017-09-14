@@ -1,3 +1,0 @@
----
-description: Example Description
----
