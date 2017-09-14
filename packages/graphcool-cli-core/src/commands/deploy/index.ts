@@ -15,7 +15,7 @@ export default class Deploy extends Command {
   static description = 'Deploy project definition changes'
   static help = `
   
-  ${chalk.green('Examples:')}
+  ${chalk.green.bold('Examples:')}
       
 ${chalk.gray(
     '-',
@@ -107,28 +107,36 @@ ${chalk.gray(
           return
         }
 
-        if (
-          migrationResult.migrationMessages.length > 0
-        ) {
-          const updateText = migrationResult.errors.length > 0 ? ` has changes:` : ` was successfully updated.\\nHere are the changes:`
-          this.out.log(chalk.blue(
-            `\nYour project ${chalk.bold(
-              projectId,
-            )} of env ${chalk.bold(envName)}${updateText}\n`,
-          ))
+        if (migrationResult.migrationMessages.length > 0) {
+          const updateText =
+            migrationResult.errors.length > 0
+              ? ` has changes:`
+              : ` was successfully updated.\\nHere are the changes:`
+          this.out.log(
+            chalk.blue(
+              `\nYour project ${chalk.bold(projectId)} of env ${chalk.bold(
+                envName,
+              )}${updateText}\n`,
+            ),
+          )
 
           this.out.migration.printMessages(migrationResult.migrationMessages)
           this.definition.set(migrationResult.projectDefinition)
         }
 
         if (migrationResult.errors.length > 0) {
-          this.out.log(chalk.rgb(244, 157, 65)(`\nThere are issues with the new project definition:`))
+          this.out.log(
+            chalk.rgb(244, 157, 65)(
+              `\nThere are issues with the new project definition:`,
+            ),
+          )
           this.out.migration.printErrors(migrationResult.errors)
           this.out.log('')
         }
 
         if (
-          migrationResult.errors && migrationResult.errors.length > 0 &&
+          migrationResult.errors &&
+          migrationResult.errors.length > 0 &&
           migrationResult.errors[0].description.includes(`destructive changes`)
         ) {
           // potentially destructive changes

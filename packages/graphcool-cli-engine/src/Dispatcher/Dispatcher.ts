@@ -1,6 +1,6 @@
 /* tslint:disable */
 import * as path from 'path'
-import {undefault} from '../util'
+import { undefault } from '../util'
 import { Config } from '../Config'
 import { Output } from '../Output/index'
 import Plugins from '../Plugin/Plugins'
@@ -8,26 +8,29 @@ const debug = require('debug')('cli:dispatcher')
 
 export class CommandManagerBase {
   config: Config
-  constructor (config: Config) {
+  constructor(config: Config) {
     this.config = config
   }
-  async findCommand (id: string): Promise<any> {
+  async findCommand(id: string): Promise<any> {
     return null
   }
-  async listTopics (prefix?: string): Promise<string[]> {
+  async listTopics(prefix?: string): Promise<string[]> {
     return []
   }
+  async findTopic(id: string): Promise<any> {
+    return null
+  }
 
-  require (p: string): any {
+  require(p: string): any {
     return undefault(require(p))
   }
 }
 
 export class BuiltinCommandManager extends CommandManagerBase {
-  async findCommand (id) {
+  async findCommand(id) {
     const builtins = {
       version: 'version',
-      help: 'help'
+      help: 'help',
     }
 
     let p = builtins[id]
@@ -36,13 +39,13 @@ export class BuiltinCommandManager extends CommandManagerBase {
       return this.require(p)
     }
   }
-  async listTopics (prefix?: string) {
+  async listTopics(prefix?: string) {
     return ['version', 'help']
   }
 }
 
 export class CLICommandManager extends CommandManagerBase {
-  async findCommand (id) {
+  async findCommand(id) {
     let root = this.config.commandsDir
     if (!root) return
     let p
@@ -59,11 +62,17 @@ export class CLICommandManager extends CommandManagerBase {
 // not needed right now
 //
 class PluginCommandManager extends CommandManagerBase {
-  async findCommand (id) {
+  async findCommand(id) {
     let out = new Output(this.config)
     let plugins = new Plugins(out)
     await plugins.load()
     return plugins.findCommand(id || this.config.defaultCommand || 'help')
+  }
+  async findTopic(id: string) {
+    let out = new Output(this.config)
+    let plugins = new Plugins(out)
+    await plugins.load()
+    return plugins.findTopic(id)
   }
 }
 
@@ -71,38 +80,44 @@ export class Dispatcher {
   config: Config
   managers: CommandManagerBase[]
 
-  constructor (config: Config) {
+  constructor(config: Config) {
     this.config = config
     this.managers = [
       new CLICommandManager(config),
       new BuiltinCommandManager(config),
-      new PluginCommandManager(config)
+      new PluginCommandManager(config),
     ]
   }
 
-  async findCommand (id: string): Promise<{
-    Command?: any,
+  async findCommand(
+    id: string,
+  ): Promise<{
+    Command?: any
     plugin?: Plugin
   }> {
     if (!id) return {}
     for (let manager of this.managers) {
       let Command = await manager.findCommand(id)
-      if (Command) return {Command}
+      if (Command) return { Command }
     }
     return {}
   }
 
-  findTopic (id: string) {
+  async findTopic(id: string) {
+    if (!id) return {}
+    for (let manager of this.managers) {
+      let topic = await manager.findTopic(id)
+      if (topic) return topic
+    }
     return null
-    // let Topic = await plugins.findTopic(id)
   }
 
-  async listTopics (prefix?: string) {
+  async listTopics(prefix?: string) {
     let arrs = await Promise.all(this.managers.map(m => m.listTopics(prefix)))
     return arrs.reduce((next, res) => res.concat(next), [])
   }
 
-  get cmdAskingForHelp (): boolean {
+  get cmdAskingForHelp(): boolean {
     for (let arg of this.config.argv) {
       if (['--help', '-h'].includes(arg)) return true
       if (arg === '--') return false

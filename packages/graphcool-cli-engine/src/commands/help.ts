@@ -32,7 +32,8 @@ function renderList(items: string[][]): string {
       left = `${S(trimCmd(left, maxLeftLength)).padRight(maxLeftLength)}`
       right = linewrap(maxLeftLength + 2, right)
       return `${left}    ${right}`
-    }).join('\n')
+    })
+    .join('\n')
 }
 
 export default class Help extends Command {
@@ -45,7 +46,9 @@ export default class Help extends Command {
   async run() {
     this.plugins = new Plugins(this.out)
     await this.plugins.load()
-    const cmd = this.config.argv.slice(1).find(arg => !['help', '-h', '--help'].includes(arg))
+    const cmd = this.config.argv
+      .slice(1)
+      .find(arg => !['help', '-h', '--help'].includes(arg))
     if (!cmd) {
       return this.topics()
     }
@@ -65,7 +68,7 @@ export default class Help extends Command {
       const cmds = await this.plugins.commandsForTopic(topic.id)
       const subtopics = await this.plugins.subtopicsForTopic(topic.id)
       if (subtopics && subtopics.length) {
-        this.topics(subtopics, topic.id, (topic.id.split(':').length + 1))
+        this.topics(subtopics, topic.id, topic.id.split(':').length + 1)
       }
       if (cmds) {
         this.listCommandsHelp(cmd, cmds)
@@ -73,9 +76,16 @@ export default class Help extends Command {
     }
   }
 
-  topics(ptopics: any[] | null = null, id: string | null = null, offset: number = 1) {
+  topics(
+    ptopics: any[] | null = null,
+    id: string | null = null,
+    offset: number = 1,
+  ) {
     const color = this.out.color
-    this.out.log(`\nServerless GraphQL backend for frontend developers (${chalk.underline('https://www.graph.cool')})
+    this.out
+      .log(`\nServerless GraphQL backend for frontend developers (${chalk.underline(
+      'https://www.graph.cool',
+    )})
     
 ${chalk.bold('Usage:')} ${chalk.bold('graphcool')} COMMAND
 
@@ -87,15 +97,15 @@ ${chalk.bold('Commands:')}`)
       const subtopic = t.id.split(':')[offset]
       return !t.hidden && !subtopic
     })
-    topics = topics.map(t => (
-      [
-        t.id,
-        t.description ? chalk.dim(t.description) : null
-      ]
-    ))
+    topics = topics.map(t => [
+      t.id,
+      t.description ? chalk.dim(t.description) : null,
+    ])
     topics.sort()
     this.out.log(renderList(topics))
-    this.out.log(`\nRun ${chalk.bold.green('graphcool help')} COMMAND for more information on a command.
+    this.out.log(`\nRun ${chalk.bold.green(
+      'graphcool help',
+    )} COMMAND for more information on a command.
 
 ${chalk.dim('Examples:')}
 
@@ -113,9 +123,19 @@ ${chalk.gray('-')} Update live project with local changes
       return
     }
     commands.sort(compare('command'))
-    const helpCmd = this.out.color.cmd(`${this.config.bin} help ${topic} COMMAND`)
-    this.out.log(`${this.config.bin} ${this.out.color.bold(topic)} commands: (get help with ${helpCmd})`)
+    const helpCmd = this.out.color.cmd(
+      `${this.config.bin} help ${topic} COMMAND`,
+    )
+    this.out.log(
+      `${this.config.bin} ${this.out.color.bold(
+        topic,
+      )} commands: (get help with ${helpCmd})`,
+    )
     this.out.log(renderList(commands.map(c => c.buildHelpLine(this.config))))
-    this.out.log('')
+    if (commands.length === 1 && (commands[0] as any).help) {
+      this.out.log((commands[0] as any).help)
+    } else {
+      this.out.log('')
+    }
   }
 }

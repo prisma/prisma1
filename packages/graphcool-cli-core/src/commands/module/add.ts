@@ -20,6 +20,23 @@ export default class ModuleAdd extends Command {
       required: true,
     },
   ]
+  static help = `
+  
+ ${chalk.green.bold('Examples:')}
+      
+  ${chalk.bold('Github Authentication')}
+  $ ${chalk.cyan(
+    'graphcool module add graphcool/modules/authentication/github',
+  )}
+
+  ${chalk.bold('Facebook Authentication')}
+  $ ${chalk.cyan(
+    'graphcool module add graphcool/modules/authentication/facebook',
+  )}
+  
+  ${chalk.bold('Algolia Syncing')}
+  $ ${chalk.cyan('graphcool module add graphcool/modules/syncing/algolia')}
+  `
   async run() {
     await this.definition.load()
     const moduleUrl = this.argv[1]
