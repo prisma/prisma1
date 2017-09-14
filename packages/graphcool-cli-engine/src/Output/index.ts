@@ -32,18 +32,21 @@ export const CustomColors = {
     if (!CustomColors.supports) {
       return s
     }
-    const has256 = CustomColors.supports.has256 || (process.env.TERM || '').indexOf('256') !== -1
-    return has256 ? '\u001b[38;5;104m' + s + styles.reset.open : chalk.magenta(s)
-  }
+    const has256 =
+      CustomColors.supports.has256 ||
+      (process.env.TERM || '').indexOf('256') !== -1
+    return has256
+      ? '\u001b[38;5;104m' + s + styles.reset.open
+      : chalk.magenta(s)
+  },
 }
 
 function wrap(msg: string): string {
   const linewrap = require('@heroku/linewrap')
-  return linewrap(6,
-    errtermwidth, {
-      skipScheme: 'ansi-color',
-      skip: /^\$ .*$/
-    })(msg)
+  return linewrap(6, errtermwidth, {
+    skipScheme: 'ansi-color',
+    skip: /^\$ .*$/,
+  })(msg)
 }
 
 function bangify(msg: string, c: string): string {
@@ -91,7 +94,9 @@ export class Output {
     this.mock = config.mock
     this.stdout = new StreamOutput(process.stdout, this)
     this.stderr = new StreamOutput(process.stderr, this)
-    this.action = shouldDisplaySpinner(this) ? new SpinnerAction(this) : new SimpleAction(this)
+    this.action = shouldDisplaySpinner(this)
+      ? new SpinnerAction(this)
+      : new SimpleAction(this)
     if (this.mock) {
       chalk.enabled = false
       CustomColors.supports = false
@@ -108,7 +113,7 @@ export class Output {
           return CustomColors[name]
         }
         return chalkProxy[name]
-      }
+      },
     })
   }
 
@@ -160,7 +165,9 @@ export class Output {
       if (this.config.debug) {
         this.stderr.log(err.stack || util.inspect(err))
       } else {
-        this.stderr.log(bangify(wrap(getErrorMessage(err)), this.color.red(arrow)))
+        this.stderr.log(
+          bangify(wrap(getErrorMessage(err)), this.color.red(arrow)),
+        )
       }
     } catch (e) {
       console.error('error displaying error')
@@ -183,7 +190,12 @@ export class Output {
             this.stderr.log(err.stack || util.inspect(err))
           }
         } else {
-          this.stderr.log(bangify(wrap(prefix + getErrorMessage(err)), this.color.yellow(arrow)))
+          this.stderr.log(
+            bangify(
+              wrap(prefix + getErrorMessage(err)),
+              this.color.yellow(arrow),
+            ),
+          )
         }
       } catch (e) {
         console.error('error displaying warning')
@@ -191,6 +203,10 @@ export class Output {
         console.error(err)
       }
     }, this.color.bold.yellow('!'))
+  }
+
+  getPrettyModule(moduleName: string) {
+    return chalk.bold.red(`[Error in module: ${moduleName}] `)
   }
 
   logError(err: Error | string) {
@@ -211,7 +227,7 @@ export class Output {
       console.error(`Exiting with code: ${code}`)
     }
     if (this.mock) {
-      throw new ExitError(code);
+      throw new ExitError(code)
     } else {
       process.exit(code)
     }
@@ -221,7 +237,11 @@ export class Output {
     const tree = dirTree(dirPath)
     const convertedTree = treeConverter(tree)
     const printedTree = treeify.asTree(convertedTree, true)
-    this.log(chalk.blue(printedTree.split('\n').map(l => (padding ? '   ' : '') + l).join('\n')))
+    this.log(
+      chalk.blue(
+        printedTree.split('\n').map(l => (padding ? '   ' : '') + l).join('\n'),
+      ),
+    )
   }
 }
 
@@ -231,8 +251,8 @@ function treeConverter(tree) {
   }
   return tree.children.reduce((acc, curr) => {
     if (!curr.children) {
-      return {...acc, [curr.name]: null}
+      return { ...acc, [curr.name]: null }
     }
-    return {...acc, [curr.name]: treeConverter(curr)}
+    return { ...acc, [curr.name]: treeConverter(curr) }
   }, {})
 }

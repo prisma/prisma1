@@ -21,16 +21,20 @@ const cache = {}
 export async function readDefinition(
   file: string,
   out: Output,
+  moduleName: string,
 ): Promise<GraphcoolDefinition> {
   if (cache[file]) {
     debug(`Getting definition from cache`)
     return cache[file]
   }
-  const json = await anyjson.decode(file, 'yaml') as GraphcoolDefinition
+  const json = (await anyjson.decode(file, 'yaml')) as GraphcoolDefinition
   const valid = validate(json)
   // TODO activate as soon as the backend sends valid yaml
   if (!valid) {
-    out.log(chalk.bold('Errors while validating graphcool.yml:\n'))
+    out.log(
+      out.getPrettyModule(moduleName) +
+        chalk.bold('Errors while validating graphcool.yml:\n'),
+    )
     out.error(
       chalk.red(
         ajv
@@ -43,7 +47,7 @@ export async function readDefinition(
     out.exit(1)
   }
 
-  const vars = new Variables(json, out)
+  const vars = new Variables(json, out, moduleName)
   const populatedJson = await vars.populateDefinition(json)
   if (populatedJson.custom) {
     delete populatedJson.custom

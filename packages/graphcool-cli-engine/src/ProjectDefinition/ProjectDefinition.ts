@@ -49,6 +49,7 @@ export class ProjectDefinitionClass {
     const definition = await readDefinition(
       this.definition!.modules[0]!.content,
       this.out,
+      'root',
     )
     const types = this.definition!.modules[0].files[definition.types]
     this.out.log(chalk.blue(`Written ${definition.types}`))
@@ -62,9 +63,12 @@ export class ProjectDefinitionClass {
     if (this.definition) {
       this.definition.modules = await Promise.all(
         this.definition.modules.map(async module => {
+          const moduleName =
+            module.name && module.name.length > 0 ? module.name : 'root'
           const ymlDefinitinon: GraphcoolDefinition = await readDefinition(
             module.content,
             this.out,
+            moduleName,
           )
           if (ymlDefinitinon.functions && ymlDefinitinon.functions) {
             Object.keys(ymlDefinitinon.functions).forEach(fnName => {

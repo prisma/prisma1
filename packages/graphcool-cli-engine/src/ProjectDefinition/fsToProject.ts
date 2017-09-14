@@ -10,11 +10,18 @@ interface ErrorMessage {
   message: string
 }
 
-export async function fsToProject(inputDir: string, out: Output): Promise<ProjectDefinition> {
+export async function fsToProject(
+  inputDir: string,
+  out: Output,
+): Promise<ProjectDefinition> {
   const rootModule = await fsToModule(path.join(inputDir, 'graphcool.yml'), out)
   const modules: any[] = [rootModule]
 
-  const definition: GraphcoolDefinition = await readDefinition(rootModule.content, out)
+  const definition: GraphcoolDefinition = await readDefinition(
+    rootModule.content,
+    out,
+    'root',
+  )
 
   if (definition.modules) {
     for (const moduleName of Object.keys(definition.modules)) {
@@ -33,21 +40,27 @@ export async function fsToProject(inputDir: string, out: Output): Promise<Projec
   }
 }
 
-export async function fsToModule(inputFile: string, out: Output): Promise<GraphcoolModule> {
-
+export async function fsToModule(
+  inputFile: string,
+  out: Output,
+): Promise<GraphcoolModule> {
   const inputDir = path.dirname(inputFile)
   const content = fs.readFileSync(inputFile, 'utf-8')
 
   const module: GraphcoolModule = {
     name: '',
     content,
-    files: {}
+    files: {},
   }
 
   let files = {}
   const errors: ErrorMessage[] = []
 
-  const definition: GraphcoolDefinition = await readDefinition(content, out)
+  const definition: GraphcoolDefinition = await readDefinition(
+    content,
+    out,
+    'root',
+  )
   const typesPath = path.join(inputDir, definition.types)
 
   if (fs.existsSync(typesPath)) {
@@ -64,7 +77,6 @@ export async function fsToModule(inputFile: string, out: Output): Promise<Graphc
 
   if (definition.permissions) {
     definition.permissions.forEach(permission => {
-
       if (permission.query && isGraphQLFile(permission.query)) {
         const queryPath = path.join(inputDir, permission.query)
         if (fs.existsSync(queryPath)) {
@@ -88,7 +100,8 @@ export async function fsToModule(inputFile: string, out: Output): Promise<Graphc
       if (func.handler.code && func.handler.code.src) {
         if (!isFunctionFile(func.handler.code.src)) {
           errors.push({
-            message: `The handler ${func.handler.code.src} for function ${funcName} is not a valid function path. It must end with .js and be in the current working directory.`
+            message: `The handler ${func.handler.code
+              .src} for function ${funcName} is not a valid function path. It must end with .js and be in the current working directory.`,
           })
         }
         const handlerPath = path.join(inputDir, func.handler.code.src)
@@ -100,7 +113,8 @@ export async function fsToModule(inputFile: string, out: Output): Promise<Graphc
           }
         } else {
           errors.push({
-            message: `The file ${func.handler.code.src} for function ${funcName} does not exist`,
+            message: `The file ${func.handler.code
+              .src} for function ${funcName} does not exist`,
           })
         }
       }
@@ -132,7 +146,8 @@ export async function fsToModule(inputFile: string, out: Output): Promise<Graphc
           }
         } else {
           errors.push({
-            message: `The file ${func.handler.code!.src} for the schema extension of function ${funcName} does not exist`,
+            message: `The file ${func.handler.code!
+              .src} for the schema extension of function ${funcName} does not exist`,
           })
         }
       }
@@ -140,7 +155,11 @@ export async function fsToModule(inputFile: string, out: Output): Promise<Graphc
   }
 
   if (errors.length > 0) {
-    out.log(chalk.bold('The following errors occured while reading the graphcool.yml project definition:'))
+    out.log(
+      chalk.bold(
+        'The following errors occured while reading the graphcool.yml project definition:',
+      ),
+    )
     const messages = errors.map(e => `  ${chalk.red(e.message)}`).join('\n')
     out.log(messages + '\n')
     process.exit(1)
@@ -151,7 +170,6 @@ export async function fsToModule(inputFile: string, out: Output): Promise<Graphc
     files,
   }
 }
-
 
 function isFile(type) {
   return content => {

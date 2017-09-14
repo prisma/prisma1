@@ -18,10 +18,16 @@ export default class Variables {
     'g',
   )
   out: Output
+  moduleName: string
 
-  constructor(graphcoolDefinition: GraphcoolDefinition, out: Output) {
+  constructor(
+    graphcoolDefinition: GraphcoolDefinition,
+    out: Output,
+    moduleName: string,
+  ) {
     this.definition = graphcoolDefinition
     this.out = out
+    this.moduleName = moduleName
 
     // this.fileRefSyntax = RegExp(/^file\((~?[a-zA-Z0-9._\-/]+?)\)/g);
     // this.optRefSyntax = RegExp(/^opt:/g);
@@ -111,7 +117,7 @@ export default class Variables {
         allValuesToPopulate.push(singleValueToPopulate)
       })
       return BbPromise.all(allValuesToPopulate).then(() => {
-        if (property as any !== this.definition as any) {
+        if ((property as any) !== (this.definition as any)) {
           return this.populateProperty(property)
         }
         return BbPromise.resolve(property)
@@ -139,7 +145,9 @@ export default class Variables {
             ` a string for variable ${matchedString}.`,
             ' Please make sure the value of the property is a string.',
           ].join('')
-          this.out.error(errorMessage)
+          this.out.error(
+            this.out.getPrettyModule(this.moduleName) + errorMessage,
+          )
         }
         return BbPromise.resolve(property)
       }
@@ -190,12 +198,15 @@ export default class Variables {
       ' You can only reference env vars, options, & files.',
       ' You can check our docs for more info.',
     ].join('')
-    this.out.error(errorMessage)
+    this.out.error(this.out.getPrettyModule(this.moduleName) + errorMessage)
   }
 
   getValueFromEnv(variableString) {
     const requestedEnvVar = variableString.split(':')[1]
-    const valueToPopulate = requestedEnvVar !== '' || '' in process.env ? process.env[requestedEnvVar] : process.env
+    const valueToPopulate =
+      requestedEnvVar !== '' || '' in process.env
+        ? process.env[requestedEnvVar]
+        : process.env
     return BbPromise.resolve(valueToPopulate)
   }
 
@@ -420,7 +431,8 @@ export default class Variables {
         //   varType = 'SSM parameter';
       }
       this.out.error(
-        `A valid ${varType} to satisfy the declaration '${variableString}' could not be found.`,
+        this.out.getPrettyModule(this.moduleName) +
+          `A valid ${varType} to satisfy the declaration '${variableString}' could not be found.`,
       )
     }
   }
