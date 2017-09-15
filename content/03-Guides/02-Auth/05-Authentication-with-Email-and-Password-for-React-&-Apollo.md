@@ -49,7 +49,7 @@ To make our application behave correctly we have to setup permissions for the `P
 
 As we want to restrict the creation of posts only to _authenticated_ users, we have to create the according permission for `CREATE` on the `Post` type.
 
-![](./img/create-post-permissions.png?width=500)
+![](./create-post-permissions.png?width=500)
 
 
 ### 1.3 Enabling email authentication

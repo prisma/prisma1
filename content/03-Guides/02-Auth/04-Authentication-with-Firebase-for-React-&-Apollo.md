@@ -67,7 +67,7 @@ To make our application behave correctly we have to setup permissions for the `P
 
 As we want to restrict the creation of posts only to _authenticated_ users, we have to create the according permission for `CREATE` on the `Post` type.
 
-![](./img/create-post-permissions.png?width=350)
+![](./create-post-permissions.png?width=350)
 
 
 ## 2. Preparation
@@ -83,7 +83,7 @@ If you have no Digits account yet, head over to their [website](https://get.digi
 
 In the [console](https://console.graph.cool), open the **Integrations** tab in the side-menu and select click on the Auth0 integration:
 
-![](./img/digits-auth-provider.png?width=450)
+![](./digits-auth-provider.png?width=450)
 
 Now copy over your **consumer key** and **consumer secret** from the previous step into the corresponding fields.
 
