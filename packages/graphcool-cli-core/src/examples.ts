@@ -11,10 +11,10 @@ export const defaultDefinition: ProjectDefinition = {
 # This file is the main config file for your Graphcool Project.
 # It's very minimal at this point and uses default values.
 # We've included a hello world function here.
-# Just uncomment it an run \`graphcool deploy\`
+# Just uncomment it and run \`graphcool deploy\`
 #
-# For full config options, check the docs:
-#    graph.cool/docs
+# Check out some examples:
+#    github.com/graphcool/examples
 #
 # Happy Coding!
 
@@ -31,7 +31,7 @@ types: ./types.graphql
 #       code:
 #         src: ./code/hello.js
 #     type: resolver
-#     schema: ./schemas/hello.graphql
+#     schema: ./code/hello.graphql
 
  
 # Graphcool modules
@@ -50,6 +50,16 @@ rootTokens: []
       files: {
         './types.graphql': `\
 # This file contains the GraphQL Types
+
+# All types need to have the three fields id, updatedAt and createdAt like this:
+
+type User implements Node {
+  id: ID! @isUnique
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+
 # Graphcool has one special type, the File type:
 
 # type File implements Node {
@@ -62,13 +72,6 @@ rootTokens: []
 #   updatedAt: DateTime!
 #   url: String! @isUnique
 # }
-
-# All types need to have an id field defined like this:
-
-# type User implements Node {
-#   id: ID! @isUnique
-# }
-
 `,
         './code/hello.js': `\
 module.exports = event => {
@@ -78,7 +81,7 @@ module.exports = event => {
     }
   }
 }`,
-        './schemas/hello.graphql': `\
+        './code/hello.graphql': `\
 type HelloPayload {
   message: String!
 }

@@ -111,7 +111,7 @@ ${chalk.gray(
           const updateText =
             migrationResult.errors.length > 0
               ? ` has changes:`
-              : ` was successfully updated.\\nHere are the changes:`
+              : ` was successfully updated.\nHere are the changes:`
           this.out.log(
             chalk.blue(
               `\nYour project ${chalk.bold(projectId)} of env ${chalk.bold(

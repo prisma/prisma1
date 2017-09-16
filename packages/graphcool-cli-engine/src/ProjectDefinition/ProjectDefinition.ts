@@ -3,14 +3,24 @@ import { projectToFs } from './projectToFs'
 import * as path from 'path'
 import { readDefinition } from './yaml'
 import * as chalk from 'chalk'
-import { ProjectDefinition } from '../types'
+import { GraphcoolModule, ProjectDefinition } from '../types'
 import fs from '../fs'
 import { Output } from '../Output/index'
 import { Config } from '../Config'
-import { GraphcoolDefinition } from 'graphcool-json-schema'
+import { GraphcoolDefinition, FunctionDefinition } from 'graphcool-json-schema'
 const debug = require('debug')('project-definition')
+import { flatMap } from 'lodash'
 
 export class ProjectDefinitionClass {
+  static sanitizeDefinition(definition: ProjectDefinition) {
+    const modules = definition.modules.map(module => {
+      const { name, content, files } = module
+      return { name, content, files }
+    })
+
+    return { modules }
+  }
+
   definition: ProjectDefinition | null
   out: Output
   config: Config
@@ -73,19 +83,19 @@ export class ProjectDefinitionClass {
           if (ymlDefinitinon.functions && ymlDefinitinon.functions) {
             Object.keys(ymlDefinitinon.functions).forEach(fnName => {
               const fn = ymlDefinitinon.functions[fnName]
-              if (fn.handler.code && fn.handler.code.environment) {
-                const file = module.files[fn.handler.code.src]
-                module.files[
-                  fn.handler.code.src
-                ] = this.injectEnvironmentToFile(
-                  file,
-                  fn.handler.code.environment,
-                )
-                debug(`Injected env vars to file:`)
-                debug(`BEFORE`)
-                debug(file)
-                debug('AFTER')
-                debug(module.files[fn.handler.code.src])
+              if (fn.handler.code) {
+                let newFile = module.files[fn.handler.code.src]
+                if (fn.handler.code.environment) {
+                  const file = module.files[fn.handler.code.src]
+                  newFile = this.injectEnvironmentToFile(
+                    file,
+                    fn.handler.code.environment,
+                  )
+                }
+
+                newFile = `'use latest'\n` + newFile
+
+                module.files[fn.handler.code.src] = newFile
               }
 
               ymlDefinitinon.functions[fnName] = fn
@@ -100,6 +110,35 @@ export class ProjectDefinitionClass {
 
   public set(definition: ProjectDefinition | null) {
     this.definition = definition
+  }
+
+  public getFunctionAndModule(
+    name: string,
+  ): { fn: FunctionDefinition; module: GraphcoolModule } | null {
+    if (this.definition && this.definition.modules) {
+      const functions: FunctionDefinition[] = flatMap(
+        this.definition.modules,
+        (m: GraphcoolModule) => {
+          return m.definition && m.definition.functions
+            ? m.definition.functions
+            : []
+        },
+      ) as any
+      const module = this.definition.modules.find(
+        m =>
+          (m.definition &&
+            m.definition.functions &&
+            Object.keys(m.definition.functions).includes(name)) ||
+          false,
+      )
+      if (module) {
+        return {
+          module,
+          fn: module.definition!.functions[name],
+        }
+      }
+    }
+    return null
   }
 
   private injectEnvironmentToFile(

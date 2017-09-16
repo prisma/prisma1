@@ -4,6 +4,7 @@ import { compare, linewrap } from '../util'
 import { Command } from '../Command'
 import Plugins from '../Plugin/Plugins'
 import * as chalk from 'chalk'
+const debug = require('debug')('help command')
 
 function trimToMaxLeft(n: number): number {
   const max = Math.floor(stdtermwidth * 0.6)
@@ -46,9 +47,23 @@ export default class Help extends Command {
   async run() {
     this.plugins = new Plugins(this.out)
     await this.plugins.load()
-    const cmd = this.config.argv
-      .slice(1)
-      .find(arg => !['help', '-h', '--help'].includes(arg))
+    const commandFinder = arg => !['help', '-h', '--help'].includes(arg)
+    const argv = this.config.argv.slice(1)
+    const firstCommandIndex = argv.findIndex(commandFinder)
+
+    let cmd = argv[firstCommandIndex]
+    if (argv.length > firstCommandIndex + 1) {
+      const secondCommand = argv
+        .slice(1)
+        .slice(firstCommandIndex)
+        .find(commandFinder)
+      if (secondCommand) {
+        cmd = `${argv[firstCommandIndex]}:${secondCommand}`
+      }
+    }
+
+    debug(`argv`, argv)
+    debug(`cmd`, cmd)
     if (!cmd) {
       return this.topics()
     }

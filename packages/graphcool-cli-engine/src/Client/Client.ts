@@ -18,6 +18,7 @@ import { getFastestRegion } from './ping'
 import fs from '../fs'
 import * as path from 'path'
 import * as cuid from 'cuid'
+import { ProjectDefinitionClass } from '../ProjectDefinition/ProjectDefinition'
 
 const debug = require('debug')('graphcool')
 
@@ -106,7 +107,9 @@ export class Client {
       name,
       alias,
       region: newRegion,
-      config: JSON.stringify(projectDefinition),
+      config: JSON.stringify(
+        ProjectDefinitionClass.sanitizeDefinition(projectDefinition),
+      ),
     })
 
     // TODO set project definition, should be possibility in the addProject mutation
@@ -161,7 +164,7 @@ export class Client {
       projectId,
       force,
       isDryRun,
-      config: JSON.stringify(config),
+      config: JSON.stringify(ProjectDefinitionClass.sanitizeDefinition(config)),
     })
 
     debug()
@@ -335,7 +338,7 @@ export class Client {
   async getFunctionLogs(
     functionId: string,
     count: number = 1000,
-  ): Promise<FunctionLog[]> {
+  ): Promise<FunctionLog[] | null> {
     interface FunctionLogsPayload {
       node: {
         logs: {
@@ -349,7 +352,7 @@ export class Client {
       }
     }
 
-    const { node: { logs } } = await this.client.request<
+    const { node } = await this.client.request<
       FunctionLogsPayload
     >(
       `query ($id: ID!, $count: Int!) {
@@ -376,7 +379,7 @@ export class Client {
       { id: functionId, count },
     )
 
-    return logs ? logs.edges.map(edge => edge.node) : []
+    return node && node.logs ? node.logs.edges.map(edge => edge.node) : null
   }
 
   async getProjectName(projectId: string): Promise<string> {

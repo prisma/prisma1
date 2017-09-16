@@ -1,3 +1,5 @@
+import { GraphcoolDefinition } from 'graphcool-json-schema'
+
 export interface RunOptions {
   argv?: string[]
   mock: boolean
@@ -109,7 +111,9 @@ export interface ProjectDefinition {
 export interface GraphcoolModule {
   name: string
   content: string
-  files: {[fileName: string]: string}
+  files: { [fileName: string]: string }
+  definition?: GraphcoolDefinition
+  baseDir?: string
 }
 
 export interface EnvironmentConfig {
@@ -117,4 +121,6 @@ export interface EnvironmentConfig {
   environments: Environments
 }
 
-export interface Environments {[environment: string]: string}
+export interface Environments {
+  [environment: string]: string
+}

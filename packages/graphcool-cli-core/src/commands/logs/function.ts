@@ -1,7 +1,9 @@
 import { Command, flags, Flags } from 'graphcool-cli-engine'
-import {InvalidProjectError} from '../../errors/InvalidProjectError'
+import { InvalidProjectError } from '../../errors/InvalidProjectError'
 import * as chalk from 'chalk'
 import * as differenceBy from 'lodash.differenceby'
+import { sortByTimestamp } from '../../util'
+
 const debug = require('debug')('logs')
 
 export default class FunctionLogs extends Command {
@@ -27,13 +29,13 @@ export default class FunctionLogs extends Command {
   }
   async run() {
     await this.auth.ensureAuth()
-    const {tail} = this.flags
-    let {env} = this.flags
+    const { tail } = this.flags
+    let { env } = this.flags
     const functionName = this.flags.function
 
     env = env || this.env.env.default
 
-    const {projectId} = await this.env.getEnvironment({env})
+    const { projectId } = await this.env.getEnvironment({ env })
     debug(`function name ${functionName}`)
 
     if (!projectId) {
@@ -41,13 +43,21 @@ export default class FunctionLogs extends Command {
     } else if (!functionName) {
       this.out.error(`Please provide a valid function name`)
     } else {
-      const fn = await this.client.getFunction(projectId, functionName)
+      let fn = await this.client.getFunction(projectId, functionName)
       if (!fn) {
-        this.out.error(`There is no function with the name ${functionName}. Run ${chalk.bold('graphcool functions')} to list all functions.`)
+        this.out.error(
+          `There is no function with the name ${functionName}. Run ${chalk.bold(
+            'graphcool functions',
+          )} to list all functions.`,
+        )
       } else {
-        let logs = await this.client.getFunctionLogs(fn.id)
+        let logs = (await this.client.getFunctionLogs(fn.id)) || []
         if (logs.length === 0) {
-          this.out.log(`No messages have been logged in the last 30 min for function ${chalk.bold(functionName)}`)
+          this.out.log(
+            `No messages have been logged in the last 30 min for function ${chalk.bold(
+              functionName,
+            )}`,
+          )
         } else {
           logs.sort(sortByTimestamp)
           this.out.log(this.prettifyLogs(logs))
@@ -55,30 +65,41 @@ export default class FunctionLogs extends Command {
 
         if (tail) {
           setInterval(async () => {
-            const tailLogs = await this.client.getFunctionLogs(fn.id, 50)
-            if (tailLogs.length > 0) {
-              const newLogs = differenceBy(tailLogs, logs, l => l.id)
-              if (newLogs.length > 0) {
-                newLogs.sort(sortByTimestamp)
-                this.out.log(this.prettifyLogs(newLogs))
-                logs = logs.concat(newLogs)
+            const tailLogs = await this.client.getFunctionLogs(fn!.id, 50)
+            if (tailLogs === null) {
+              fn = await this.client.getFunction(projectId, functionName)
+            } else {
+              if (tailLogs.length > 0) {
+                const newLogs = differenceBy(tailLogs, logs, l => l.id)
+                if (newLogs.length > 0) {
+                  newLogs.sort(sortByTimestamp)
+                  this.out.log(this.prettifyLogs(newLogs))
+                  logs = logs.concat(newLogs)
+                }
               }
             }
-          }, 6000)
+          }, 4000)
         }
       }
     }
   }
   private prettifyLogs(logs: any) {
-    return logs.map(log => {
-      const prettyMessage = this.out.getStyledJSON(JSON.parse(log.message))
-      const status = log.status === 'SUCCESS' ? 'green' : 'red'
-      return `${chalk.cyan.bold(log.timestamp)} ${chalk.blue.bold(`${log.duration}ms`)} ${chalk.bold[status](log.status)} ${prettyMessage}`
-    }).join('\n')
+    return logs
+      .map(log => {
+        const json = JSON.parse(log.message)
+        if (json.event) {
+          try {
+            json.event = JSON.parse(json.event)
+          } catch (e) {
+            // noop
+          }
+        }
+        const prettyMessage = this.out.getStyledJSON(json)
+        const status = log.status === 'SUCCESS' ? 'green' : 'red'
+        return `${chalk.cyan.bold(log.timestamp)} ${chalk.blue.bold(
+          `${log.duration}ms`,
+        )} ${chalk.bold[status](log.status)} ${prettyMessage}`
+      })
+      .join('\n')
   }
-}
-
-
-function sortByTimestamp(a, b) {
-  return a.timestamp < b.timestamp ? -1 : 1
 }

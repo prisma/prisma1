@@ -17,6 +17,7 @@ import FunctionLogs from './commands/logs/function'
 import Diff from './commands/diff/index'
 import Pull from './commands/pull/index'
 import Export from './commands/export/index'
+import InvokeLocal from './commands/invoke/local'
 
 export const topics = [
   { name: 'deploy', description: 'Deploy local project definition' },
@@ -43,8 +44,12 @@ export const topics = [
   },
   {
     name: 'export',
-    description: 'Export project data'
-  }
+    description: 'Export project data',
+  },
+  {
+    name: 'invoke',
+    description: 'Invokes a function locally',
+  },
 ]
 
 export const commands = [
@@ -67,4 +72,5 @@ export const commands = [
   Diff,
   Pull,
   Export,
+  InvokeLocal,
 ]

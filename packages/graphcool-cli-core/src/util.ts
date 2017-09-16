@@ -19,3 +19,7 @@ The ${chalk.bold('endpoints')} for your project are:
   Subscriptions API:  wss://subscriptions.graph.cool/v1/${projectId}
   File API:           https://api.graph.cool/file/v1/${projectId}
 `
+
+export function sortByTimestamp(a, b) {
+  return a.timestamp < b.timestamp ? -1 : 1
+}

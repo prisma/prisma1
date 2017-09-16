@@ -52,6 +52,7 @@ export async function fsToModule(
     name: '',
     content,
     files: {},
+    baseDir: inputDir,
   }
 
   let files = {}
@@ -168,6 +169,7 @@ export async function fsToModule(
 
   return {
     ...module,
+    definition,
     files,
   }
 }

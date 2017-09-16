@@ -199,14 +199,14 @@ export default class Init extends Command {
             '',
           ].join('\n'),
         },
-        {
-          value: 'example',
-          name: [
-            `${chalk.bold('Based on example')}`,
-            `  Creates a new Graphcool project based on an example`,
-            '',
-          ].join('\n'),
-        },
+        // {
+        //   value: 'example',
+        //   name: [
+        //     `${chalk.bold('Based on example')}`,
+        //     `  Creates a new Graphcool project based on an example`,
+        //     '',
+        //   ].join('\n'),
+        // },
       ],
       pageSize: 13,
     }
