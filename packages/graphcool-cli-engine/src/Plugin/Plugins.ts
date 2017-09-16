@@ -1,5 +1,5 @@
 
-import Plugin from './plugin'
+import Plugin from './Plugin'
 import * as uniqby from 'lodash.uniqby'
 import Lock from './Lock'
 import { Output } from '../Output/index'
