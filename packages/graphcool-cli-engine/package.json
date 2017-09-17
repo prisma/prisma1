@@ -103,6 +103,7 @@
     "string-similarity": "^1.2.0",
     "strip-ansi": "^4.0.0",
     "supports-color": "^4.4.0",
-    "treeify": "^1.0.1"
+    "treeify": "^1.0.1",
+    "yaml-ast-parser": "^0.0.34"
   }
 }

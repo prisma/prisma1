@@ -28,7 +28,13 @@ export async function readDefinition(
     return cache[file]
   }
   const json = (await anyjson.decode(file, 'yaml')) as GraphcoolDefinition
-  const valid = validate(json)
+
+  const vars = new Variables(json, out, moduleName)
+  const populatedJson = await vars.populateDefinition(json)
+  if (populatedJson.custom) {
+    delete populatedJson.custom
+  }
+  const valid = validate(populatedJson)
   // TODO activate as soon as the backend sends valid yaml
   if (!valid) {
     out.log(
@@ -45,12 +51,6 @@ export async function readDefinition(
       ),
     )
     out.exit(1)
-  }
-
-  const vars = new Variables(json, out, moduleName)
-  const populatedJson = await vars.populateDefinition(json)
-  if (populatedJson.custom) {
-    delete populatedJson.custom
   }
 
   cache[file] = populatedJson

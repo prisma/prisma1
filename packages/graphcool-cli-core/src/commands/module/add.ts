@@ -80,23 +80,20 @@ export default class ModuleAdd extends Command {
     fs.removeSync(source)
 
     // add it to local definition file
-    //
-    // const rootDefinitionString = this.definition.definition!.modules[0].content
-    // const rootDefinition = await readDefinition(
-    //   rootDefinitionString,
-    //   this.out,
-    //   'root',
-    // )
-    // const newModulePath = path.join(relativeModulePath, 'graphcool.yml')
-    // if (!rootDefinition.modules) {
-    //   rootDefinition.modules = {}
-    // }
-    // rootDefinition.modules[moduleDirName] = newModulePath
-    // const file = yaml.safeDump(rootDefinition)
-    // fs.writeFileSync(
-    //   path.join(this.config.definitionDir, 'graphcool.yml'),
-    //   file,
-    // )
+    const newModulePath = path.join(relativeModulePath, 'graphcool.yml')
+    const file = this.definition.insertModule(moduleDirName, newModulePath)
+    fs.writeFileSync(
+      path.join(this.config.definitionDir, 'graphcool.yml'),
+      file,
+    )
+    this.out.log('')
+    this.out.log(
+      chalk.blue(
+        `   ${chalk.bold('Added')} module ${chalk.bold(
+          moduleDirName,
+        )} to ${chalk.bold('graphcool.yml')}`,
+      ),
+    )
     this.out.log(chalk.blue.bold(`   Created ${relativeModulePath}:`))
     this.out.tree(relativeModulePath, true)
 

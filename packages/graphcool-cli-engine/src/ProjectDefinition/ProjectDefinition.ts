@@ -10,6 +10,7 @@ import { Config } from '../Config'
 import { GraphcoolDefinition, FunctionDefinition } from 'graphcool-json-schema'
 const debug = require('debug')('project-definition')
 import { flatMap } from 'lodash'
+import * as yamlParser from 'yaml-ast-parser'
 
 export class ProjectDefinitionClass {
   static sanitizeDefinition(definition: ProjectDefinition) {
@@ -108,6 +109,12 @@ export class ProjectDefinitionClass {
     }
   }
 
+  public insertModule(moduleName: string, relativePath: string) {
+    const file = this.definition!.modules[0].content
+    const insertion = `\n  ${moduleName}: ${relativePath}`
+    return this.insertToDefinition(file, 'modules', insertion)
+  }
+
   public set(definition: ProjectDefinition | null) {
     this.definition = definition
   }
@@ -152,5 +159,20 @@ export class ProjectDefinitionClass {
       lines.splice(0, 0, `process.env['${key}'] = '${envVar}';`)
     })
     return lines.join('\n')
+  }
+
+  private insertToDefinition(file: string, key: string, insertion: string) {
+    const obj = yamlParser.safeLoad(file)
+
+    const modulesMapping = obj.mappings.find(m => m.key.value === key)
+    const end = modulesMapping.endPosition
+
+    const newFile = file.slice(0, end) + insertion + file.slice(end)
+    const valueStart = modulesMapping.value.startPosition
+    const valueEnd = modulesMapping.value.endPosition
+    if (modulesMapping.value && valueEnd - valueStart < 4) {
+      console.log('cutting away the previous value')
+      return newFile.slice(0, valueStart) + newFile.slice(valueEnd)
+    }
   }
 }
