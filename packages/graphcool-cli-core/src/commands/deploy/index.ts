@@ -57,7 +57,7 @@ ${chalk.gray(
     }
     await this.auth.ensureAuth()
     await this.definition.load()
-    // temoprary ugly solution
+    // temporary ugly solution
     this.definition.injectEnvironment()
 
     const { projectId, envName } = await this.env.getEnvironment({

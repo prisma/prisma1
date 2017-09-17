@@ -171,7 +171,6 @@ export class ProjectDefinitionClass {
     const valueStart = modulesMapping.value.startPosition
     const valueEnd = modulesMapping.value.endPosition
     if (modulesMapping.value && valueEnd - valueStart < 4) {
-      console.log('cutting away the previous value')
       return newFile.slice(0, valueStart) + newFile.slice(valueEnd)
     }
   }

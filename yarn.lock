@@ -1356,6 +1356,21 @@ graceful-fs@~3.0.2:
   dependencies:
     natives "^1.1.0"
 
+graphcool-cli-core@1.3.42:
+  version "1.3.42"
+  resolved "https://registry.yarnpkg.com/graphcool-cli-core/-/graphcool-cli-core-1.3.42.tgz#0430d14f32f8074137511ce5dc00ee1ebf93e14a"
+  dependencies:
+    callsites "^2.0.0"
+    chalk "^2.1.0"
+    download-github-repo "^0.1.3"
+    figures "^2.0.0"
+    js-yaml "^3.9.1"
+    lodash.differenceby "^4.8.0"
+    sillyname "^0.1.0"
+    source-map-support "^0.4.18"
+    table "^4.0.1"
+    validator "^8.2.0"
+
 graphcool-inquirer@beta:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/graphcool-inquirer/-/graphcool-inquirer-1.0.1.tgz#ab9d85465261a063d364dae915be6f918dce8828"
@@ -3618,6 +3633,10 @@ validate-npm-package-license@^3.0.1:
   dependencies:
     spdx-correct "~1.0.0"
     spdx-expression-parse "~1.0.0"
+
+validator@^8.2.0:
+  version "8.2.0"
+  resolved "https://registry.yarnpkg.com/validator/-/validator-8.2.0.tgz#3c1237290e37092355344fef78c231249dab77b9"
 
 verror@1.10.0:
   version "1.10.0"

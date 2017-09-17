@@ -26,7 +26,7 @@ export default class Diff extends Command {
   static mockEnv: EnvironmentConfig
 
   async run() {
-    const {env, project, force} = this.flags
+    const { env, project, force } = this.flags
 
     if (Diff.mockDefinition) {
       this.definition.set(Diff.mockDefinition)
@@ -36,8 +36,10 @@ export default class Diff extends Command {
     }
     await this.definition.load()
     await this.auth.ensureAuth()
+    // temporary ugly solution
+    this.definition.injectEnvironment()
 
-    const {projectId, envName} = await this.env.getEnvironment({
+    const { projectId, envName } = await this.env.getEnvironment({
       project,
       env,
     })
@@ -84,27 +86,32 @@ export default class Diff extends Command {
           return
         }
 
-        if (
-          migrationResult.migrationMessages.length > 0
-        ) {
-          this.out.log(chalk.blue(
-            `\nYour project ${chalk.bold(
-              projectId,
-            )} of env ${chalk.bold(envName)} has changes:`,
-          ))
+        if (migrationResult.migrationMessages.length > 0) {
+          this.out.log(
+            chalk.blue(
+              `\nYour project ${chalk.bold(projectId)} of env ${chalk.bold(
+                envName,
+              )} has changes:`,
+            ),
+          )
 
           this.out.migration.printMessages(migrationResult.migrationMessages)
           this.definition.set(migrationResult.projectDefinition)
         }
 
         if (migrationResult.errors.length > 0) {
-          this.out.log(chalk.rgb(244, 157, 65)(`\nThere are issues with the new project definition:`))
+          this.out.log(
+            chalk.rgb(244, 157, 65)(
+              `\nThere are issues with the new project definition:`,
+            ),
+          )
           this.out.migration.printErrors(migrationResult.errors)
           this.out.log('')
         }
 
         if (
-          migrationResult.errors && migrationResult.errors.length > 0 &&
+          migrationResult.errors &&
+          migrationResult.errors.length > 0 &&
           migrationResult.errors[0].description.includes(`destructive changes`)
         ) {
           // potentially destructive changes

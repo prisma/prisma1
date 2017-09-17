@@ -49,7 +49,7 @@ export default class InvokeLocal extends Command {
       const result = this.definition.getFunctionAndModule(fnName)
       if (!result) {
         this.out.error(
-          `Function "${name}" couldn't be found in graphcool.yml or local modules`,
+          `Function "${fnName}" couldn't be found in graphcool.yml or local modules`,
         )
       } else if (
         !result.fn.handler ||
@@ -62,7 +62,7 @@ export default class InvokeLocal extends Command {
       } else {
         const { fn, module } = result
         // gather event
-        const json = await this.getEvent(projectId, module, fnName, fn)
+        const json = await this.getEvent(projectId, fnName)
 
         const invoker = new LocalInvoker(
           this.config,
@@ -73,19 +73,14 @@ export default class InvokeLocal extends Command {
           fn,
         )
 
-        const invokationResult = await invoker.invoke(json)
+        const invocationResult = await invoker.invoke(json)
         this.out.log(chalk.bold.magenta(`\nResult:\n`))
-        this.out.log(this.out.getStyledJSON(invokationResult))
+        this.out.log(this.out.getStyledJSON(invocationResult))
       }
     }
   }
 
-  private async getEvent(
-    projectId: string,
-    module: GraphcoolModule,
-    fnName: string,
-    fn: FunctionDefinition,
-  ) {
+  private async getEvent(projectId: string, fnName: string) {
     const { json, lastEvent } = this.flags
 
     if (!json && !lastEvent) {
@@ -122,11 +117,12 @@ export default class InvokeLocal extends Command {
         count++
       }
 
+      let relativeLastEventPath
       if (count > 1) {
         const lastEventPath = path.join(examplesDir, `${count - 1}.json`)
         const lastSavedEvent = fs.readJsonSync(lastEventPath)
         if (isEqual(lastEventJson, lastSavedEvent)) {
-          const relativeLastEventPath = `examples/${fnName}/${count - 1}.json`
+          relativeLastEventPath = `examples/${fnName}/${count - 1}.json`
           this.out.log(
             chalk.blue(
               `Using last event of ${chalk.bold(
@@ -136,21 +132,31 @@ export default class InvokeLocal extends Command {
               )}\n`,
             ),
           )
-          return lastEventJson
+          event = lastEventJson
         }
+      } else {
+        const examplePath = path.join(examplesDir, `${count}.json`)
+        fs.writeFileSync(examplePath, JSON.stringify(lastEventJson, null, 2))
+        relativeLastEventPath = `examples/${fnName}/${count}.json`
+        this.out.log(
+          chalk.blue(
+            `Written last event of ${chalk.bold(fnName)} to ${chalk.bold(
+              relativeLastEventPath,
+            )}`,
+          ),
+        )
+        this.out.log(
+          chalk.blue(
+            `To customize the input and have a faster execution, you from now on can use`,
+          ),
+        )
+        this.out.log(
+          chalk.blue.bold(
+            `graphcool invoke local -f ${fnName} -j ${relativeLastEventPath}\n`,
+          ),
+        )
+        event = lastEventJson
       }
-
-      const examplePath = path.join(examplesDir, `${count}.json`)
-      fs.writeFileSync(examplePath, JSON.stringify(lastEventJson, null, 2))
-      const relativeExamplePath = `examples/${fnName}/${count}.json`
-      this.out.log(
-        chalk.blue(
-          `Written last event of ${chalk.bold(fnName)} to ${chalk.bold(
-            relativeExamplePath,
-          )}\n`,
-        ),
-      )
-      event = lastEventJson
     }
 
     if (!event) {
@@ -163,7 +169,9 @@ export default class InvokeLocal extends Command {
   private async getLastEvent(projectId: string, fnName: string) {
     const fn = await this.client.getFunction(projectId, fnName)
     if (!fn) {
-      this.out.error(`Couldn't find function ${fnName} in project ${projectId}`)
+      this.out.error(
+        `Function "${fnName}" is not deployed in project ${projectId}`,
+      )
     } else {
       const logs = await this.client.getFunctionLogs(fn.id, 5)
       if (!logs) {
@@ -191,7 +199,9 @@ export default class InvokeLocal extends Command {
         if (foundLog) {
           return foundLog.event
         } else {
-          this.out.error(`Could not find a valid event for function ${fnName}`)
+          this.out.error(
+            `Could not find a valid event for function ${fnName} in the logs of project ${projectId}`,
+          )
         }
       }
     }
