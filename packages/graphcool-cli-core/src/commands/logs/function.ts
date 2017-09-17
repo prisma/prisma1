@@ -94,6 +94,24 @@ export default class FunctionLogs extends Command {
             // noop
           }
         }
+
+        const styleLog = (l: string) => {
+          let potentialJson = l.slice(26)
+          try {
+            potentialJson = JSON.parse(potentialJson)
+          } catch (e) {
+            // noop
+          }
+
+          return {
+            [l.slice(0, 26)]: potentialJson,
+          }
+        }
+
+        if (json.logs) {
+          json.logs = json.logs.map(styleLog)
+        }
+
         const prettyMessage = this.out.getStyledJSON(json)
         const status = log.status === 'SUCCESS' ? 'green' : 'red'
         return `${chalk.cyan.bold(log.timestamp)} ${chalk.blue.bold(
