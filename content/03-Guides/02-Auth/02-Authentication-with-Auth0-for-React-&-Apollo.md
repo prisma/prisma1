@@ -1,6 +1,7 @@
 ---
 alias: pheiph4ooj
 description: Learn how to provide secure data access to your GraphQL backend and provide user authentication with Auth0 in React and Apollo.
+github: https://github.com/graphcool-examples/react-graphql/tree/master/authentication-with-email-and-apollo
 ---
 
 # User Authentication with Auth0 for React and Apollo
