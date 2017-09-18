@@ -31,12 +31,12 @@ graphcool auth [flags]
   
 #### Examples
       
-##### Authenticate using the browser
+##### Authenticate using the browser.
 
 ```sh    
 graphcool auth
 ```
-##### Authenticate using an existing (temporary) authentication token
+##### Authenticate using an existing (temporary) authentication token.
 
 ```sh
 graphcool auth -t <token>
@@ -58,14 +58,14 @@ graphcool console [flags]
 -e, --env ENV    Environment name
 ```
 
-#### Examples
+####authentication-with-email-and-apollo
       
-##### Open the console for the current project
+##### Open the console for the current project.
 
 ```sh    
 graphcool console
 ```
-##### Open the console for the `prod` environment
+##### Open the console for the `prod` environment.
 
 ```sh
 graphcool console --env prod
@@ -99,7 +99,7 @@ graphcool deploy [flags]
  -p, --project PROJECT    ID or alias of  project to deploy
 ```
 
-#### Examples
+####authentication-with-email-and-apollo
       
 ##### Deploy local changes from graphcool.yml to the default project environment.
 
@@ -164,7 +164,7 @@ graphcool diff
 ```
 
 
-#####  See local changes from graphcool.yml for a specific environment
+#####  See local changes from graphcool.yml for a specific environment.
 
 ```sh
 graphcool diff --env prod
