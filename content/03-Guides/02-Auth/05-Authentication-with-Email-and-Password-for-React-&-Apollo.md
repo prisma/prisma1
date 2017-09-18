@@ -1,5 +1,5 @@
 ---
-alias: oopheesaj9
+alias: cu3jah9ech
 description: Learn how to secure data access in your GraphQL backend and an email/password-based user authentication to your users with React and Apollo Client.
 ---
 

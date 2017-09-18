@@ -1,5 +1,5 @@
 ---
-alias: quohtu9soo
+alias: iez5aithai
 path: /docs/tutorials/react-apollo-digits
 layout: TUTORIAL
 preview: digits.png
