@@ -1,16 +1,16 @@
 ---
 alias: cu3jah9ech
-description: Learn how to secure data access in your GraphQL backend and an email/password-based user authentication to your users with React and Apollo Client.
-github: "https://github.com/graphcool-examples/react-graphql/tree/master/authentication-with-email-and-apollo"
+description: Learn how to secure data access in your GraphQL backend and an Facebook-based user authentication to your users with React and Apollo Client.
+github: "https://github.com/graphcool-examples/react-graphql/tree/master/authentication-with-facebook-and-apollo"
 ---
 
-# User Authentication with Email for React and Apollo
+# User Authentication with Facebook for React and Apollo
 
-In this guide, you will learn how to implement an "Email & Password"-based authentication workflow with Graphcool and configure permission rules to control data access among your users. For the frontend, you're going to use React & Apollo Client.
+In this guide, you will learn how to implement a "Login-with-Facebook" authentication workflow with Graphcool and configure permission rules to control data access among your users. For the frontend, you're going to use React & Apollo Client.
 
 You're going to build a simple Instagram clone that fulfills the following requirements:
 
-- Upon signup, users need to provide their name, email and a password
+- For signup and login, users are redirected to Facebook to authorize the application
 - Everyone is able to see all the posts
 - Only authenticated users are able to create new posts
 - Only the author of a post can update or delete it
@@ -23,7 +23,6 @@ You're going to build a simple Instagram clone that fulfills the following requi
 The first thing you need to do is download the started project for this guide.
 
 <Instruction>
-
 
 *Open a terminal and download the starter project:*
 
@@ -62,7 +61,7 @@ graphcool init graphcool --template blank
 
 </Instruction>
 
-You're using the `--template blank` option which just creates an empty project for you. Since you're passing `graphcool` as the directory name to the `init` command, the CLI will also create this directory for you and put all generated files into it.
+You're using the `--template blank` option which just creates an empty Graphcool project for you. Since you're passing `graphcool` as the directory name to the `init` command, the CLI will also create this directory for you and put all generated files into it.
 
 Here is an overview of the generated files and the project structure which the CLI now created:
 
@@ -78,44 +77,46 @@ Here is an overview of the generated files and the project structure which the C
 `graphcool.yml` contains the _project definition_ with all the information around your data model and other type definitions, usage of serverless functions, permission rules and more.
 
 
-### Adding the "Email & Password" authentication module
+### Adding the `facebook` authentication module
 
 When working with Graphcool, you can easily add features to your project by pulling in a _module_. 
 
-> A Graphcool module is nothing but another Graphcool project. When running `graphcool module add <module>`, the CLI simply downloads all the code from the corresponding GitHub directory and puts it into your project inside a directory called `modules`.
+> A Graphcool module is nothing but another Graphcool project. When running `graphcool modules add <module>`, the CLI simply downloads all the code from the corresponding GitHub directory and puts it into your project inside a directory called `modules`.
 
 #### Installing the module
 
-For this tutorial, you'll use the [`email-password`](https://github.com/graphcool/modules/tree/master/authentication/email-password) authentication module that offers simple signup and login flows.
+For this tutorial, you'll use the [`facebook`](https://github.com/graphcool/modules/tree/master/authentication/facebook) authentication module that offers simple signup and login flows.
 
 <Instruction>
 
 *In the `graphcool` directory, execute the following command to add the module:*
 
 ```bash(path="graphcool")
-graphcool module add graphcool/modules/authentication/email-password
+graphcool modules add graphcool/modules/authentication/facebook
 ```
 
 </Instruction>
 
-> Notice that the [`graphcool/modules/authentication/email-password`](https://github.com/graphcool/modules/tree/master/authentication/email-password) simply corresponds to a path on GitHub. It points to the `authentication/email-password` directory in the `modules` repository in the [`graphcool`](https://github.com/graphcool/) GitHub organization. This directory contains the project definition and all additional files for the Graphcool project that is your module.
+> Notice that the [`graphcool/modules/authentication/facebook`](https://github.com/graphcool/modules/tree/master/authentication/facebook) simply corresponds to a path on GitHub. It points to the `authentication/facebook` directory in the `modules` repository in the [`graphcool`](https://github.com/graphcool/) GitHub organization. This directory contains the project definition and all additional files for the Graphcool project that is your module.
 
-#### A closer look at the `email-password` module
+#### A closer look at the `facebook` module
 
 Let's also quickly understand what the module actually contains, here is it's file structure:
 
 ```bash(nocopy)
 .
-└── email-password
-    ├── README.md
-    ├── code
-    │   ├── authenticate.js
-    │   └── signup.js
-    ├── graphcool.yml
-    ├── schemas
-    │   ├── authenticate.graphql
-    │   └── signup.graphql
-    └── types.graphql
+├── README.md
+├── code
+│   ├── facebookAuthentication.graphql
+│   ├── facebookAuthentication.js
+│   ├── userLoggedIn.graphql
+│   └── userLoggedIn.js
+├── docs
+│   ├── app-id.png
+│   └── facebook-login-settings.png
+├── graphcool.yml
+├── login.html
+└── types.graphql
 ```
 
 The most important parts for now are the project and type definitions. 
@@ -123,55 +124,40 @@ The most important parts for now are the project and type definitions.
 ##### Project definition: `graphcool.yml` 
 
 ```yml(nocopy)
-# GraphQL types
 types: ./types.graphql
 
-# functions
 functions:
-  signup:
+  facebook-authentication:
     handler:
       code:
-        src: ./code/signup.js
+        src: ./code/facebook-authentication.js
     type: resolver
-    schema: ./schemas/signup.graphql
-  authenticate:
-    handler:
-      code:
-        src: ./code/authenticate.js
-    type: resolver
-    schema: ./schemas/authenticate.graphql
-  loggednInUser:
-    type: resolver
-    schema: ./schemas/loggedInUser.graphql
-    handler:
-      code:
-        src: ./code/loggedInUser.js
+    schema: ./code/facebook-authentication.graphql
 
-# Permanent Auth Token / Root Tokens
-rootTokens: 
-  - signup
-  - authenticate
+rootTokens:
+- facebook-authentication
 ```
 
 ##### Type definitions: `types.graphql` 
 
 ```graphql(nocopy)
-type EmailUser implements Node {
+type FacebookUser implements Node {
   id: ID! @isUnique
   createdAt: DateTime!
+  facebookUserId: String @isUnique
+  facebookEmail: String
   updatedAt: DateTime!
-  email: String @isUnique
-  password: String
 }
 ```
 
-The project definition defines three `resolver` functions you can use for signup and login functionality as well as for querying the currently logged in user. You'll take a look at the implementations in a bit.
+The project definition defines two `resolver` functions. The first one, `facebookAuthentication` is used for the signup and login functionality. The second one, `loggedInUser` allows to validate whether an authentication token belongs to a currently logged in user in the Graphcool API.  You'll take a look at the implementations in a bit.
 
-The type definitions simply define the `EmailUser` user type that you use to represent authenticated users.
+The type definitions simply define the `FacebookUser` user type that you're going to use to represent authenticated users.
+
 
 ### Configuring the data model
 
-In addition to the `EmailUser` that you got from the `email-password` authentication module, you also need a type to represent the posts that your users will be creating once they're authenticated. Here's what the corresponding model looks like.
+In addition to the `FacebookUser` that you got from the `facebook` authentication module, you also need a type to represent the posts that your users will be creating once they're authenticated. Here's what the corresponding model looks like.
 
 <Instruction>
 
@@ -184,28 +170,27 @@ type Post {
   updatedAt: DateTime!
   description: String!
   imageUrl: String!
-  author: EmailUser @relation(name: "PostsByUser")
+  author: FacebookUser @relation(name: "PostsByUser")
 }
 ```
 
 </Instruction>
 
-The `author`-field represents the one end of the one-to-many relation between the `EmailUser` and the `Post` type. This relation represents the fact that an authenticated user can be the _author_ of a post.
+The `author`-field represents the one end of the one-to-many relation between the `FacebookUser` and the `Post` type. This relation represents the fact that an authenticated user can be the _author_ of a post.
 
 <Instruction>
 
-*To add the other end of the relation, you have to update the `EmailUser` type. Open `/graphcool/modules/email-password/types.graphql` and update the `EmailUser` type as follows:*
+*To add the other end of the relation, you have to update the `FacebookUser` type. Open `/graphcool/modules/facebook/types.graphql` and update the `FacebookUser` type as follows:*
 
-```graphql(path="graphcool/modules/email-password/types.graphql")
-type EmailUser implements Node {
+```graphql(path="graphcool/modules/facebook/types.graphql")
+type FacebookUser implements Node {
   id: ID! @isUnique
   createdAt: DateTime!
   updatedAt: DateTime!
-  email: String @isUnique
-  password: String
+  facebookUserId: String @isUnique
+  facebookEmail: String
   
   # custom fields
-  name: String!
   posts: [Post!]! @relation(name: "PostsByUser")
 }
 ```
@@ -219,8 +204,8 @@ Notice that the CLI doesn't care about _where_ (in which files) you're putting y
 
 You made two major local changes that you now need to apply to the "remote project" in your Graphcool account before its API gets updated:
 
-1. You added a module that includes new type definitions as well as three serverless function of type `resolver`.
-2. You configured the data model with a new `Post` type and a relation to the `EmailUser` type from the module.
+1. You added a module that includes new type definitions as well as two serverless functions of type `resolver`.
+2. You configured the data model with a new `Post` type and a relation to the `FacebookUser` type from the module.
 
 <Instruction>
 
@@ -238,7 +223,9 @@ Here's what the generated output looks like.
 $ graphcool deploy
 Deploying to project __PROJECT_ID__ with local environment dev.... ✔
 
-Your project __PROJECT_ID__ of env dev was successfully updated.\nHere are the changes:
+Your project __PROJECT_ID__ of env dev was successfully updated.
+Here are the changes:
+
 
 Types
 
@@ -246,38 +233,69 @@ Types
    + A new type with the name `Post` is created.
     ├── +  A new field with the name `description` and type `String!` is created.
     └── +  A new field with the name `imageUrl` and type `String!` is created.
-  EmailUser
-   + A new type with the name `EmailUser` is created.
-    ├── +  A new field with the name `email` and type `String` is created.
-    ├── +  A new field with the name `password` and type `String` is created.
-    └── +  A new field with the name `name` and type `String!` is created.
+  FacebookUser
+   + A new type with the name `FacebookUser` is created.
+    ├── +  A new field with the name `facebookUserId` and type `String` is created.
+    └── +  A new field with the name `facebookEmail` and type `String` is created.
 
 Relations
 
   PostsByUser
-   + The relation `PostsByUser` is created. It connects the type `Post` with the type `EmailUser`.
+   + The relation `PostsByUser` is created. It connects the type `Post` with the type `FacebookUser`.
 
 Resolver Functions
 
-  authenticate
-   + A new resolver function with the name `authenticate` is created.
-  loggednInUser
-   + A new resolver function with the name `loggednInUser` is created.
-  signup
-   + A new resolver function with the name `signup` is created.
+  facebookAuthentication
+   + A new resolver function with the name `facebookAuthentication` is created.
+  userLoggedIn
+   + A new resolver function with the name `userLoggedIn` is created.
 
 RootTokens
 
-  signup
-   + A rootToken with the name `signup` is created.
-  authenticate
-   + A rootToken with the name `authenticate` is created.
-
+  facebook-authentication
+   + A rootToken with the name `facebook-authentication` is created.
 ```
 
 This reflects precisely the changes we mentioned above.
 
 > You can now open your project in a GraphQL Playground (using the `graphcool playground` command) and send queries and mutations. 
+
+## Connecting the App with Facebook
+
+The "Login with Facebook" authentication works in the way that your app will be receiving an authentication token from the Facebook API that proves your users' identities. In order for this flow to work, you need to first create a _Facebook app_.
+
+### Creating a Facebook app
+
+<Instruction>
+
+*Follow the [instructions in the Facebook documentation](https://developers.facebook.com/docs/apps/register) to create your own Facebook app.*
+
+</Instruction>
+
+Once your app was created, you need to enable _Facebook Login_ and configure it with the right information.
+
+<Instruction>
+
+*Select **Facebook Login** in the left sidebar (listed under **PRODUCTS**) and add the following URLs to the **Valid OAuth redirects URIs**: `http://localhost:3000`.*
+
+![](https://imgur.com/pTkB4sX.png)
+
+</Instruction>
+
+
+### Configuring the Facebook SDK
+
+The Facebook SDK is already contained in the starter project, it's loaded asynchronously using a script inside `componentDidMount` of the `App` component. However, you still need to configure it with the information about your particular app.
+
+<Instruction>
+
+*Open the **Dashboard** in the sidebar of your Facebook app and copy the **App ID** as well as the **API Version** into `App.js`. Set them as the values for the two constants `FACEBOOK_APP_ID` and `FACEBOOK_API_VERSION` which are defined on top of the file.*
+
+![](https://imgur.com/L7b8GCn.png)
+
+</Instruction> 
+
+That's it - your app is now ready to use the Facebook login! 🎉
 
 
 ## Configuring Apollo Client
@@ -329,8 +347,6 @@ ReactDOM.render((
         <Switch>
           <Route exact path='/' component={App} />
           <Route exact path='/create' component={CreatePost} />
-          <Route exact path='/login' component={LoginUser} />
-          <Route exact path='/signup' component={CreateUser} />
         </Switch>
       </BrowserRouter>
     </ApolloProvider>
@@ -357,258 +373,73 @@ Then copy the value for `projectId` and replace the `__PROJECT_ID__` placeholder
 </Instruction>
 
 
-## Implementing the signup flow
+## Implementing Facebook authentication
 
-### Adjusting the `signupEmailUser` mutation
+### The "Login with Facebook" flow
 
-You'll start by implementing the signup flow in the app. Users need to provide a name, email and password to be able to create an account. 
+Here's what's supposed to happen when the user wants to authenticate themselves with Facebook in the app:
 
-The React component that's responsible for this functionality is implemented in `CreateUser.js` and is rendered under the `/signup` route.
+1. The user clicks the **Login with Facebook** button
+2. The Facebook UI is loaded and the user accepts
+3. The app receives a _Facebook access token_ (inside `_facebookCallback` in `App.js`)
+4. Your app calls the Graphcool mutation `authenticateFacebookUser(facebookToken: String!)`
+5. If no user exists yet that corresponds to the passed Facebook access token, a new `FacebookUser` node will be created
+6. In any case, the `authenticateFacebookUser(facebookToken: String!)` mutation returns a valid token for the user
+7. Your app stores the token and stores it in `localStorage` where it can be accessed by `ApolloClient` and used to authenticate all subsequent requests
 
-Before diving into the code, take a quick look at your API, and in particular the `signupEmailUser` mutation that was added to the project through the `email-password` module:
+### Creating a new `FacebookUser`
 
-```graphql(nocopy)
-signupEmailUser(email: String!, password: String!): SignupEmailUserPayload
-```
-
-And the corresponding type definition:
-
-```(nocopy)
-type SignupEmailUserPayload{
-  id: ID!
-  token: String!
-}
-```
-
-This mutation allows to create a new `EmailUser` by providing an email and a password. It also allows the client to directly receive an authentication token that can be used to authenticate all subsequent requests in the name of the logged in user.
-
-There is one minor issue with this mutation at the moment, it's lacking the possibility to also provide a name when a new user is created. So, you'll have to fix that first! 
-
-> Note: You could work around this problem by first calling the `signupEmailUser` mutation and then directlt invoking the `updateEmailUser` mutation to set the new user's `name`. For this guide however, you'll adjust the API of the `signupEmailUser` mutation and the corresponding `resolver` function in `signup.js`.
-
-First, you need to adjust the signature of the mutation.
+The first three steps are of the authentication flow are effectively taken care of by the Facebook SDK, it's now your task to add the required functionality on the Graphcool end. Step 4 stays you need to call the `authenticateFacebookUser(facebookToken: String!)` mutation with the token that your received from Facebook, so that's what you'll do next!
 
 <Instruction>
 
-*Open `signup.graphql` and adjust the extension of the `Mutation` type as follows:*
+*Open `App.js` and add the following mutation to the bottom of the file, also replacing the current export statement:*
 
-```graghql(path="graphcool/modules/email-password/schemas/signup.graphql")
-extend type Mutation {
-  signupEmailUser(email: String!, password: String!, name: String!): SignupEmailUserPayload
-}
-```
-
-</Instruction>
-
-Now, the caller of the mutation can also pass a `name` to it. To make sure that `name` also gets assigned to the new user when it's created, you also need to adjust the implementation of the corresponding serverless function.
-
-<Instruction>
-
-*Open `signup.js` and update the `createGraphcoolUser` function to look like this:*
-
-```js{7}(path="graphcool/modules/email-password/code/signup.js")
-function createGraphcoolUser(api, email, passwordHash, name) {
-  return api.request(`
-    mutation {
-      createEmailUser(
-        email: "${email}",
-        password: "${passwordHash}",
-        name: "${name}"
-      ) {
-        id
-      }
-    }`)
-    .then((userMutationResult) => {
-      return userMutationResult.createEmailUser.id
-    })
-}
-```
-
-</Instruction>
-
-Finally, you also need to adjust the call to the `createGraphcoolUser` and provide the `name` argument that you can extract from the input `event`.
-
-<Instruction>
-
-*Still in `signup.js`, add the required changes to the exported function:*
-
-```js{9,19}(path="graphcool/modules/email-password/code/signup.js")
-module.exports = function(event) {
-  if (!event.context.graphcool.pat) {
-    console.log('Please provide a valid root token!')
-    return { error: 'Email Signup not configured correctly.'}
+```js(path="src/components/App.js)
+const AUTHENTICATE_FACEBOOK_USER = gql`
+  mutation AuthenticateFacebookUserMutation($facebookToken: String!) {
+    authenticateFacebookUser(facebookToken: $facebookToken) {
+      token
+    }
   }
+`
 
-  const email = event.data.email
-  const password = event.data.password
-  const name = event.data.name
-  const graphcool = fromEvent(event)
-  const api = graphcool.api('simple/v1')
-  const SALT_ROUNDS = 10
+export default graphql(AUTHENTICATE_FACEBOOK_USER, { name: 'authenticateFacebookUserMutation' })(withRouter(App))
+```
 
-  if (validator.isEmail(email)) {
-    return getGraphcoolUser(api, email)
-      .then(graphcoolUser => {
-        if (graphcoolUser === null) {
-          return bcrypt.hash(password, SALT_ROUNDS)
-            .then(hash => createGraphcoolUser(api, email, hash, name))
-        } else {
-          return Promise.reject("Email already in use")
-        }
-      })
-      .then(graphcoolUserId => {
-        return graphcool.generateAuthToken(graphcoolUserId, 'EmailUser')
-          .then(token => {
-            return { data: {id: graphcoolUserId, token}}
-        })
-      })
-      .catch((error) => {
-        console.log(error)
+For this code to work you also need to add the following import to the top of the file:
 
-        // don't expose error message to client!
-        return { error: 'An unexpected error occured.' }
-      })
+```js(path="src/components/App.js)
+import { gql, graphql, compose } from 'react-apollo'
+```
+
+</Instruction>
+
+By using Apollo's higher-order component `graphql`, you're "combining" your React component with the `authenticateFacebookUser`-mutation. Apollo will now inject a function called `authenticateFacebookUserMutation` into the props of your component that will send the given mutation to the API for you.
+
+The last thing you need to do to make the authentication flow work, is actually call that function.
+
+<Instruction>
+
+*Still in `App.js`, adjust the implementation of `_facebookCallback` to look as follows:*
+
+```js(path="src/components/App.js)
+_facebookCallback = async facebookResponse => {
+  if (facebookResponse.status === 'connected') {
+    const facebookToken = facebookResponse.authResponse.accessToken
+    const graphcoolResponse = await this.props.authenticateFacebookUserMutation({variables: { facebookToken }})
+    const graphcoolToken = graphcoolResponse.data.authenticateFacebookUser.token
+    localStorage.setItem('graphcoolToken', graphcoolToken)
+    window.location.reload()
   } else {
-    return { error: "Not a valid email" }
+    console.warn(`User did not authorize the Facebook application.`)
   }
 }
 ```
 
 </Instruction>
 
-Finally, these changes need to be deployed to your Graphcool project.
-
-<Instruction>
-
-*Navigate to the `graphcool` directory in a terminal and execute the following command:*
-
-```bash(path="graphcool")
-graphcool deploy
-```
-
-</Instruction>
-
-Awesome, your `signupEmailUser` mutation now also accepts a `name` argument and assigns its value to the newly created `EmailUser` node right away. 💪
-
-### Calling the `signupEmailUser` mutation
-
-You'll now make use of this mutation by adding it to the `CreateUser` component with Apollo's `graphql` higher-order component.
-
-<Instruction>
-
-*Open `CreateUser.js` and add the following code to the bottom of the file, also replacing the current export statement:*
-
-```js(path="src/components/CreateUser.js")
-const SIGNUP_EMAIL_USER = gql`
-  mutation SignupEmailUser($email: String!, $password: String!, $name: String) {
-    signupEmailUser(email: $email, password: $password, name: $name) {
-      id
-      token
-    }
-  }
-`
-
-export default graphql(SIGNUP_EMAIL_USER, {name: 'signupEmailUserMutation'})(withRouter(CreateUser))
-```
-
-For this code to work, you also need to import `graphql` and `gql`, so add the following import statement to the top of the file:
-
-```js{}(path="src/components/CreateUser.js")
-
-```
-
-</Instruction>
-
-`SIGNUP_EMAIL_USER` represents the mutation. You're then adding the mutation to the component by wrapping it with a call to `graphql`. The `name` argument that you're providing determines the name of the function that Apollo now injects into the props of your component.
-
-Finally, you actually need to call the mutation and provide the arguments that you're extracting from the component's `state`.
-
-<Instruction>
-
-*Still in `CreateUser.js`, implement the `createUser` function like so:*
-
-```js{}(path="src/components/CreateUser.js")
-createUser = async () => {
-  const { email, password, name } = this.state
-
-  try {
-    const response = await this.props.signupEmailUserMutation({variables: {email, password, name}})
-    localStorage.setItem('graphcoolToken', response.data.signupEmailUser.token)
-    this.props.history.push('/')
-  } catch (e) {
-    console.error('An error occured: ', e)
-    this.props.history.push('/')
-  }
-
-}
-```
-
-</Instruction>
-
-You're simply calling the `signupEmailEmailMutation` and store the  returned authentication `token` in `localStorage`.
-
-You can now test the authentication by running the app with `yarn start` and navigating the the `http://localhost:3000/signup` route. After having added a new user with email, password and name, you can can verify that the user actually was created by opening the Graphcool console and checking the data browser:
-
-![](https://imgur.com/NNxHu2Z.png)
-
-![](https://imgur.com/LdV5ud7.png)
-
-
-## Implementing the authentication flow
-
-Now that the signup flow is out of the way, you can implement the actual login. It will work in a very similar way as the signup, except that this time you don't have to change anything about the API of the `authenticateEmailUser` mutation that you get from the `email-password` module.
-
-<Instruction>
-
-*Open `LoginUser.js` and add the `authenticateEmailUser` mutation to its bottom, again also replacing the current export statement:*
-
-```js{}(path="src/components/LoginUser.js")
-const AUTHENTICATE_EMAIL_USER = gql`
-  mutation AuthenticateEmailUser($email: String!, $password: String!) {
-    authenticateEmailUser(email: $email, password: $password) {
-      token
-    }
-  }
-`
-
-export default graphql(AUTHENTICATE_EMAIL_USER, {name: 'authenticateEmailUserMutation'})(withRouter(LoginUser))
-```
-
-For this work, don't forget to add the required import statements to the top of the file:
-
-```js{}(path="src/components/LoginUser.js")
-import { graphql, gql } from 'react-apollo'
-```
-
-</Instruction>
-
-This works in the same way as before: Apollo now injects the mutation function into the props of your component and you can call it by the `name` that's provided to the call to `graphql`.
-
-Lastly, you need to actually call the mutation.
-
-<Instruction>
-
-*Still in `LoginUser.js`, implement the `loginUser` function as follows:*
-
-```js{}(path="src/components/LoginUser.js")
-loginUser = async () => {
-  const { email, password } = this.state
-
-  try {
-    const response = await this.props.authenticateEmailUserMutation({variables: { email, password }})
-    localStorage.setItem('graphcoolToken', response.data.authenticateEmailUser.token)
-    this.props.history.push('/')
-  } catch (e) {
-    console.error('An error occured: ', e)
-    this.props.history.push('/')
-  }
-
-}
-```
-
-</Instruction>
-
-With this code in place, you can now test the authentication by running the app and navigating to the `http://localhost:3000/login` route.
+That's it, the Facebook authentication now is already implemented. If you run the app and then click the "Login with Facebook"-button, a new `FacebookUser` will be created in the database. You can verify that in the Graphcool console or a Playground.
 
 
 ## Checking the authenticated status
@@ -617,7 +448,7 @@ In the app, you want to be able to detect whether a user is currently logged in.
 
 Notice however that these tokens are _temporary_, meaning they'll eventually expire and can't be used for authentication any more. This means that ideally you should not only check whether you currently have a token available in `localStorage`, but actually validate it _against the API_ to confirm that it's either valid or expired.
 
-For exactly this purpose, the `email-password` module provides a dedicated query that you can send to the API, with an authentication token attached to the request, and the server will return the `id` of a logged-in user or `null` if the token is not valid.
+For exactly this purpose, the `facebook` module provides a dedicated query that you can send to the API, with an authentication token attached to the request, and the server will return the `id` of a logged-in user or `null` if the token is not valid.
 
 Here's what the query looks like:
 
@@ -647,16 +478,21 @@ const LOGGED_IN_USER = gql`
   }
 `
 
-export default graphql(LOGGED_IN_USER, { options: {fetchPolicy: 'network-only'}})(withRouter(App))
+export default compose(
+  graphql(AUTHENTICATE_FACEBOOK_USER, { name: 'authenticateFacebookUserMutation' }),
+  graphql(LOGGED_IN_USER, { options: { fetchPolicy: 'network-only'}})
+) (withRouter(App))
 ```
 
-Again, make sure to import `gql` and `graphql` on top of the file to make this code work:
+To make this work you now need to also import the `compose` function from the `react-apollo` package:
 
 ```js{}(path="src/components/App.js")
-import { gql, graphql } from 'react-apollo'
+import { gql, graphqlm compose } from 'react-apollo'
 ```
 
 </Instruction>
+
+> Apollo's `compose` function allows to easily inject multiple queries and mutations into a single React component.
 
 Whenever the `App` component now loads, Apollo executes the `loggedInUser` query against the API. So now you need to make sure that the result of the query is used accordingly to render the UI of your app. If the query was successful and returned the `id` of a logged-in user, you want to display a logout-button as well as a button for the user to create a new post. Otherwise, you simply render the same UI as before with the login- and signup-buttons.
 
@@ -668,7 +504,7 @@ Notice you're specifying the `fetchPolicy` when you're adding the `loggedInUser`
 
 ```js{}(path="src/components/App.js")
 _isLoggedIn = () => {
-  return this.props.data.authenticatedEmailUser && this.props.data.authenticatedEmailUser.id !== ''
+  return this.props.data.loggedInUser && this.props.data.loggedInUser.id !== ''
 }
 ```
 
@@ -864,7 +700,7 @@ const LOGGED_IN_USER = gql`
 `
 ```
 
-Now, you can use the `compose` function to easily add multiple GraphQL operations to the component. Adjust the current export statement to look like this:
+Now, you can use the `compose` function again to easily add multiple GraphQL operations to the component. Adjust the current export statement to look like this:
 
 ```js(path="src/components/CreatePost.js")
 export default compose(
@@ -1034,9 +870,9 @@ Awesome! Now the permission rules apply and all our initial requirements for the
 
 ## Summary
 
-In this guide, you learned how to build a simple app using an email-password based authentication workflow.
+In this guide, you learned how to build a simple app using an Facebook-based authentication workflow.
 
-You created your GraphQL server from scratch using the Graphcool CLI and customized the [`email-password`](https://github.com/graphcool/modules/tree/master/authentication/email-password) authentication module according to your needs.
+You created your GraphQL server from scratch using the Graphcool CLI and customized the [`facebook`](https://github.com/graphcool/modules/tree/master/authentication/facebook) authentication module according to your needs by adding a relation to the `Post` type.
 
 You then configured Apollo Client inside your React app and implemented all required operations. Finally you removed the wildcard permission from the project and explicitly defined permission rules for the operations that your API exposes.
 
