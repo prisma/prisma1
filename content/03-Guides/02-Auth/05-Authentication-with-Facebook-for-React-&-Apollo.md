@@ -51,9 +51,10 @@ npm install -g graphcool
 
 ### Creating a new Graphcool project
 
-Now that the CLI is installed, you can use it to create a new project.
 
 <Instruction>
+
+Now that the CLI is installed, you can use it to create a new project.
 
 ```bash(path="graphcool")
 graphcool init graphcool --template blank
@@ -308,7 +309,7 @@ The first thing you need to is add the dependencies for Apollo Client.
 
 *In the root directory of your project, add the following dependencies using [yarn](https://yarnpkg.com/en/):*
 
-```bash(path=".../authentication-with-email-and-apollo")
+```bash(path="")
 yarn add react-apollo apollo-client@alpha apollo-cache-inmemory@alpha apollo-link
 ```
 
