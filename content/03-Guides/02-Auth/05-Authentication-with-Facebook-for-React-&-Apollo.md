@@ -319,7 +319,7 @@ Next you need to instantiate the `ApolloClient` and configure it with the endpoi
 
 <Instruction>
 
-*Open `index.js` and att the following import statements to its top:*
+*Open `index.js` and add the following import statements to its top:*
 
 ```js(path="index.js")
 import ApolloClient from 'apollo-client'
