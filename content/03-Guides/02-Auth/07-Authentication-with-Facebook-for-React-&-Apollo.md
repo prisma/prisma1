@@ -1,5 +1,5 @@
 ---
-alias: cu3jah9ech
+alias: yi9jeuwohl
 description: Learn how to secure data access in your GraphQL backend and an Facebook-based user authentication to your users with React and Apollo Client.
 github: "https://github.com/graphcool-examples/react-graphql/tree/master/authentication-with-facebook-and-apollo"
 ---
