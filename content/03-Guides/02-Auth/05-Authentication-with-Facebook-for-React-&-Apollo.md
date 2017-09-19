@@ -220,7 +220,7 @@ graphcool deploy
 
 Here's what the generated output looks like. 
 
-```bash(nocopy)
+```(nocopy)
 $ graphcool deploy
 Deploying to project __PROJECT_ID__ with local environment dev.... ✔
 
