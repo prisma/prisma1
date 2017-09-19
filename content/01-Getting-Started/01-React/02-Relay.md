@@ -48,7 +48,6 @@ This creates a new project inside your Graphcool account as well as the local pr
     │   └── hello.js
     ├── graphcool.yml
     └── types.graphql
-
 ```
 
 Read the documentation to learn more about the file structure and [project configuration](https://www.graph.cool/docs/reference/basics/project-configuration-t%28yaml%29-opheidaix3).
