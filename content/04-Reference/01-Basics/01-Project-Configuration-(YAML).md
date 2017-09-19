@@ -133,6 +133,8 @@ In case your local changes might result in data loss, you need to add the `--for
 
 Sometimes your changes require _migration values_ to be added for the deployment. For example, when a you're adding a non-nullable field to a model type for which there are already existing nodes in the database.
 
+Notice that `graphcool diff` will print all changes between your local project and the remote project in your Graphcool account.
+
 ## Environments
 
 When working with Graphcool, you can configure different _environments_ that you can deploy your project to. You can use this for example to separate a _development_ from a _production_ environment.
@@ -252,6 +254,35 @@ For this purpose, you can simply use the `graphcool deploy` like with any other 
 
 When a module is deployed, the CLI simply _merges_ your current project definition with the one from the module and applies all changes that are introduced by the module.
 
+
+## Ejecting a project
+
+A remote Graphcool project (i.e. a project in your Graphcool account) can be in either of two modes:
+
+- _ejected_
+- _not ejected_
+
+<InfoBox type=info>
+
+These two modes exist due to the recent changes to the Graphcool platform and its new focus towards managing projects through the CLI rather than using the web-based Console. 
+
+Projects that are or have been created with any CLI version lower than 1.4 or in the Console are _non-ejected_ by default.
+
+Projects that are created with any CLI version greater or equal to 1.4 are _ejected_ by default. 
+
+</InfoBox>
+
+To eject a project, you can use the `graphcool eject` command of the CLI. If you want to manage your project locally with a CLI version greater or equal to 1.4, it needs to be ejected.
+
+### Non-ejected projects
+
+Non-ejected projects can only use CLI versions lower than 1.4 and are primarily managed through the Console. Particularly, managing _functions_ and _permissions_ can only be done in the Console with non-ejected projects.
+
+Managing the GraphQL type definitions can still be done both in the Console (in the _Schema Editor_) and the CLI (using `graphcool pull` and `graphcool push`).
+
+### Ejected projects
+
+Ejected projects can only use CLI versions greater or equal to 1.4. Non-ejected projects can only be modified with the CLI, all the features that are offered for non-ejected projects in the Console are _read-only_.
 
 
 
