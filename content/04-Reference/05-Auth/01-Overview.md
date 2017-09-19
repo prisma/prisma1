@@ -1,12 +1,13 @@
 ---
 alias: ohs4aek0pe
-description: Relay introduces new concepts on top of GraphQL. Learn more about terms like connections, edges and nodes in Relay and see a pagination example.
+description: The auth concept at Graphcool combines flexible authentication with powerful authorization solutions. Use Auth0, Firebase Auth or any Social Login
 ---
 
 # Overview
 
-The terminology of Relay can be quite overwhelming in the beginning. Relay introduces a handful of new concepts on top of GraphQL, mainly in order to manage relationships between models.
+Graphcool comes with **powerful authentication and authorization out-of-the-box**.
 
+You can choose between a wide range of option to enable  [user authentication](!alias-geekae9gah) for your project. [Authentication tokens](!alias-eip7ahqu5o) are used to authenticate users as well as server-side calls to your API.
 
-
+With the [authorization system](!alias-iegoo0heez), it's easy to create [powerful permission rules](!alias-iox3aqu0ee) that seamlessly integrate with authentication.
 

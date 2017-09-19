@@ -16,7 +16,7 @@ Functions invoked through these hooks are executed _synchronously_.
 
 <InfoBox type=warning>
 
-Notice that for **nested mutations**, the `operationBefore` and `operationAfter` hooks are invoked for each _individual_ write operation. If you're creating a `User` and a new `Post` in the (nested) same mutation, this means `operationBefore` and `operationAfter` are each invoked twice. 
+Notice that for [nested mutations](!alias-ol0yuoz6go#nested-mutations), the `operationBefore` and `operationAfter` hooks are invoked for each _individual_ write operation. If you're creating a `User` and a new `Post` in the same (nested) mutation, this means `operationBefore` and `operationAfter` are each invoked twice. 
 
 </InfoBox>
 

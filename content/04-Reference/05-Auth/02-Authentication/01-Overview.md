@@ -1,12 +1,19 @@
 ---
 alias: bee4oodood
-description: Relay introduces new concepts on top of GraphQL. Learn more about terms like connections, edges and nodes in Relay and see a pagination example.
+description: An overview of Graphcool's authentication system.
 ---
 
 # Overview
 
-The terminology of Relay can be quite overwhelming in the beginning. Relay introduces a handful of new concepts on top of GraphQL, mainly in order to manage relationships between models.
+Graphcool offers a very flexible authentication system that's based on [serverless functions](!alias-aiw4aimie9).
 
+In general, Graphcool allows you to specify that some of your available API operations should require authentication. This effectively that means the HTTP request that's carrying the operation needs to have a valid [authentication token](!alias-eip7ahqu5o) in its `Authorization` header. If that's not the case, the request will fail with a permission error.
+
+If you want to authenticate requests from your users, you need to generate a token for them. A token always needs to be associated with one particular node from your database.
+
+Tokens are generated inside [`resolver` functions](!alias-su6wu3yoo2). If you want to implement authentication, you first need to setup a corresponding `resolver` in your project that returns an authentication token.
+
+In order to get started quickly with authentication, you can use one of the existing [authentication modules](https://github.com/graphcool/modules/tree/master/authentication).
 
 
 
