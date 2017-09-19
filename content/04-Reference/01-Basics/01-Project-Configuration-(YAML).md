@@ -194,7 +194,7 @@ Modules are primarily are tool for _code organization_ that you can use to impro
 
 ### Predefined modules
 
-Graphcool provides a number of predefined modules that you can pull in into your project. The predefined modules are located in the [`modules`](https://github.com/graphcool/modules) repository of the `graphcool` GitHub organization.
+Graphcool provides a number of predefined modules that you can pull into your project. The predefined modules are located in the [`modules`](https://github.com/graphcool/modules) repository of the `graphcool` GitHub organization.
 
 However, any GitHub repository (or any directory inside a repository) that contains a Graphcool project definition and the corresponding files qualifies as a module. 
 

@@ -1,13 +1,17 @@
 ---
 alias: zboghez5go
-description: The Graphcool CLI is the main tool to manage a Graphcool project.
+description: An overview and explanation of all the commands of the Graphcool CLI. Learn about different options, workflows and example.
 ---
 
 # Graphcool CLI
 
 ## Overview
 
-The Graphcool is the main tool to manage your Graphcool projects.
+The Graphcool is the main tool to manage your Graphcool projects. 
+
+Generally, the shape and contents of a Graphcool project are determined by a [project definition](!alias-opheidaix3#project-configuration-yaml) written in YAML.
+
+The CLI offers tools to modify the local version of your project definition and file structure as well as syncing these changes with remote projects in your Graphcool account. 
 
 ## Commands
 
