@@ -183,7 +183,9 @@ Manage the local environments for your project. This command provides handy shor
 
 #### Usage
 
+```sh
 graphcool env <subcommand> [flags]
+```
 
 #### Subcommands
 
