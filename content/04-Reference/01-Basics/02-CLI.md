@@ -431,15 +431,6 @@ graphcool info [flags]
 graphcool info
 ```
 
-Assuming you're executing the command in a directory that contains a `.graphcoolrc` looking similar to this:
-
-```yml
-default: dev
-environments:
-  dev: cj7pyduqj0qyb0136kgf63887
-  prod: th4pydulr0vjb049lkgf63951
-``` 
-
 ##### Print project of concrete environment.
 
 ```sh
@@ -522,7 +513,7 @@ graphcool logs [flags]
 
 ### `graphcool modules`
 
-Manage the Graphcool modules inside your project. Modules are simple Graphcool projects that effectively get "merged" with your current project when you add them.
+Manage the Graphcool modules inside your project. Modules are simple Graphcool projects that effectively get _merged_ with your current project when you add them.
 
 #### Usage
 
