@@ -7,19 +7,16 @@ description: An overview and explanation of all the commands of the Graphcool CL
 
 ## Overview
 
-The Graphcool is the main tool to manage your Graphcool projects. 
-
-Generally, the shape and contents of a Graphcool project are determined by a [project definition](!alias-opheidaix3#project-configuration-yaml) written in YAML.
+The Graphcool is the main tool to manage your Graphcool projects. Generally, the shape and contents of a Graphcool project are determined by the [project definition](!alias-opheidaix3#project-configuration-yaml) file.
 
 The CLI offers tools to modify the local version of your project definition and file structure as well as syncing these changes with remote projects in your Graphcool account. 
 
+
 ## Commands
 
-### `auth`
+### `graphcool auth`
 
-Sign up or login (opens your browser for authentication). 
-
-Note: Your session token will be store in `~/.graphcool`.
+Sign up or login (opens your browser for authentication). The authentication token that's received after successful login will be stored in `~/.graphcool`.
 
 #### Usage 
 
@@ -46,7 +43,7 @@ graphcool auth
 graphcool auth -t <token>
 ```
 
-### `console`
+### `graphcool console`
 
 Open the console for the current project. The current project is determined by the default environment that's specified in the `.graphcoolrc` of the directory in which you're executing the command.
 
@@ -84,7 +81,7 @@ environments:
   prod: th4pydulr0vjb049lkgf63951
 ``` 
 
-### `deploy`
+### `graphcool deploy`
 
 Deploy project definition changes. Every time you're making a local change to the project on your machine, you need to synchronize these changes with the remote project. This applies to your type definitions, permission rules, serverless functions and any other change you might perform in your `graphcool.yml`-file.
 
@@ -142,7 +139,7 @@ environments:
   prod: th4pydulr0vjb049lkgf63951
 ``` 
 
-### `diff`
+### `graphcool diff`
 
 Displays all the changes between your local project definition and the remote project definition. This command essentially is a "dry-run" for the `graphcool deploy` command. 
 
@@ -184,7 +181,7 @@ environments:
 ``` 
 
 
-### `env`
+### `graphcool env`
 
 Manage the local environments for your project. This command provides handy shortcuts to manage the environments that are defined in your `.graphcoolrc` file.
 
@@ -263,7 +260,7 @@ graphcool env set [flags]
 ```
 
 
-### `export`
+### `graphcool export`
 
 Exports your project data by generating a URL from which you can download a .zip-file that contains all the data from your project.
 
@@ -306,7 +303,7 @@ environments:
 
 
 
-### `functions`
+### `graphcool functions`
 
 See a list of all the functions that are currently active.
 
@@ -346,7 +343,7 @@ environments:
   prod: th4pydulr0vjb049lkgf63951
 ``` 
 
-### `get-root-token`
+### `graphcool get-root-token`
 
 Get the root tokens of a specific project. If no concrete token is specified as an option, the command will only list the names of the available tokens.
 
@@ -383,7 +380,7 @@ Assuming the project has a root token that's called `my-token`.
 > To add a new root token to your project, add the name of the new token to the `rootTokens` section in `graphcool.yml` and run `graphcool deploy`.
 
 
-### `help`
+### `graphcool help`
 
 Prints instructions and examples for the usage of a specific command.
 
@@ -407,7 +404,7 @@ graphcool help init
 graphcool help
 ```
 
-### `info`
+### `graphcool info`
 
 Prints meta-data about a specific project. The information contains:
 
@@ -460,7 +457,7 @@ environments:
   prod: th4pydulr0vjb049lkgf63951
 ``` 
 
-### `init`
+### `graphcool init`
 
 Creates a new Graphcool project from scratch or based on an existing project. This command will create a new project in your Graphcool account as well as the local project definition and file structure, including:
 
@@ -506,7 +503,7 @@ graphcool init --copy myProject
 Assuming your Graphcool account contains a project with the alias `myProject`.
 
 
-### `logs`
+### `graphcool logs`
 
 Print the logs of the serverless functions that are setup in the current project.
 
@@ -525,7 +522,7 @@ graphcool logs [flags]
 -t, --tail                 Tail function logs in realtime
 ```
 
-### `modules`
+### `graphcool modules`
 
 Manage the Graphcool modules inside your project. Modules are simple Graphcool projects that effectively get "merged" with your current project when you add them.
 
@@ -557,7 +554,7 @@ Notice that `MODULE` is a path to a module on GitHub.
 
 The `email-password` module can be found [here](https://github.com/graphcool/modules/tree/master/authentication/email-password).
 
-### `playground`
+### `graphcool playground`
 
 Open a Playground for the current project. The current project is determined by the default environment that's specified in the `.graphcoolrc` of the directory in which you're executing the command.
 
@@ -574,7 +571,7 @@ graphcool playground --env ENV
 ```
 
 
-### `projects`
+### `graphcool projects`
 
 Prints a list of all the projects in your Graphcool account.
 

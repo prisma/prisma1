@@ -1,6 +1,6 @@
 ---
 alias: opheidaix3
-description: An overview of the project definition and file structure for Graphcool projects.
+description: An overview of the project definition, file structure and overall configuration of Graphcool projects.
 ---
 
 # Project Configuration
@@ -19,7 +19,7 @@ To manage each of these components in a coherent way, Graphcool uses a custom co
 
 ## Example
 
-Here is what a simple example of a project configuration file looks like:
+Here is what a simple example of a project definition file looks like:
 
 ```yml
 # Type Definitions
@@ -63,7 +63,7 @@ rootTokens:
 - authenticate
 ```
 
-This project configuration expects the following project structure:
+This project definition expects the following project structure:
 
 ```
 .
@@ -125,7 +125,7 @@ This is what the additional YAML types look like that are used in the file:
 
 ## Applying project changes
 
-After making a change to the project definition or any file inside the file structure of your local project, you need to sync these changes to the remote project in your Graphcool account.
+After making a change to the project definition or any file inside the file structure of your local project (e.g. making changes to the implementation of a serverless function), you need to sync these changes to the remote project that lives in your Graphcool account.
 
 The only way of doing this is by running the `graphcool deploy` command. 
 
