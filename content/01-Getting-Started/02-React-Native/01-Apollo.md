@@ -1,25 +1,21 @@
 ---
-alias: sot2faez6a
-description: Get started in 5 min with React, GraphQL and Relay Modern by building a simple Instagram clone.
+alias: tijghei9go
+description: Get started in 5 min with React Native, GraphQL and Apollo Client by building a simple Instagram clone.
 ---
 
-# React & Relay Quickstart
+# React Native & Apollo Quickstart
 
-## Overview
-
-* [React](https://facebook.github.io/react/): Frontend framework for building user interfaces
-* [Relay](https://facebook.github.io/relay/): Powerful GraphQL client developed by Facebook
+* [React Native](https://facebook.github.io/react-native/): Javascript framework for building native mobile apps with [React](https://facebook.github.io/react/)
+* [Apollo Client](https://github.com/apollographql/apollo-client): Fully-featured, production ready caching GraphQL client
 * [Graphcool](https://www.graph.cool): Flexible backend framework combining GraphQL + AWS Lambda
-
-## Get started
 
 <Instruction>
 
 *Clone example repository:*
 
 ```sh
-git clone https://github.com/graphcool-examples/react-graphql.git
-cd react-graphql/quickstart-with-relay-modern
+git clone https://github.com/graphcool-examples/react-native-graphql.git
+cd react-native-graphql/quickstart-with-apollo
 ```
 
 </Instruction>
@@ -83,28 +79,13 @@ graphcool deploy
 
 The `Post` type is now added to your data model and the corresponding CRUD operations are generated.
 
-The next step is to connect the app with your GraphQL API.
-
 <Instruction>
 
-*Use the following command to get access to the endpoint for the `Relay API`:*
-
-```sh
-graphcool info
-```
-
-</Instruction>
-
-
-<Instruction>
-
-*Copy the `Relay API` endpoint to `./src/createRelayEnvironment.js` as the argument for the call to `fetch` replacing `__RELAY_API_ENDPOINT__ `:*
+*The next step is to connect the app with your GraphQL API. Copy the `Simple API` endpoint to `./src/root.js` as the `uri` argument in the `createNetworkInterface` call:*
 
 ```js
-// replace `__RELAY_API_ENDPOINT__ ` with the endpoint from the previous step
-return fetch('__RELAY_API_ENDPOINT__', {
- ...
-})  
+// replace `__SIMPLE_API_ENDPOINT__` with the endpoint from the previous step
+const networkInterface = createNetworkInterface({ uri: '__SIMPLE_API_ENDPOINT__' })
 ```
 
 </Instruction>
@@ -112,12 +93,14 @@ return fetch('__RELAY_API_ENDPOINT__', {
 
 <Instruction>
 
-That's it. You can now install the dependencies and run the app:
+That's it. You now install the dependencies and run the app:
 
 
 ```sh
 yarn install
-yarn start # open http://localhost:3000 in your browser
+yarn start # starts the packager
+react-native run-ios # opens the simulator
+# or react-native run-android
 ```
 
 </Instruction>

@@ -52,7 +52,7 @@ Read the documentation to learn more about the file structure and [project confi
 
 <Instruction>
 
-*Next you need to onfigure your data model. Open `./graphcool/types.graphql` and add the following type definition to it:*
+*Next you need to configure your data model. Open `./graphcool/types.graphql` and add the following type definition to it:*
 
 ```graphql
 type Post {
