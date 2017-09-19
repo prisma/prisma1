@@ -58,8 +58,6 @@ graphcool console [flags]
 ```
 -e, --env ENV    Environment name
 ```
-
-####authentication-with-email-and-apollo
       
 ##### Open the console for the current project.
 
@@ -99,8 +97,6 @@ graphcool deploy [flags]
  -f, --force              Accept data loss caused by schema changes
  -p, --project PROJECT    ID or alias of  project to deploy
 ```
-
-####authentication-with-email-and-apollo
       
 ##### Deploy local changes from graphcool.yml to the default project environment.
 
