@@ -98,7 +98,7 @@ const networkInterface = createNetworkInterface({ uri: '__SIMPLE_API_ENDPOINT__'
 
 <Instruction>
 
-That's it. You now install the dependencies and run the app:
+That's it. You can now install the dependencies and run the app:
 
 
 ```sh
