@@ -1,5 +1,5 @@
 ---
-alias: tijghei9go
+alias: yuwocai8ta
 description: Get started in 5 min with React Native, GraphQL and Apollo Client by building a simple Instagram clone.
 ---
 
