@@ -8,7 +8,7 @@ description: Get started in 5 min with React, GraphQL and Apollo Client by build
 ## Overview
 
 * [React](https://facebook.github.io/react/): Frontend framework for building user interfaces
-* [Apollo Client](https://github.com/apollographql/apollo-client): Fully-featured, production ready caching GraphQL client
+* [Relay](https://facebook.github.io/relay/): Powerful GraphQL client developed by Facebook
 * [Graphcool](https://www.graph.cool): Flexible backend framework combining GraphQL + AWS Lambda
 
 ## Get started
@@ -19,7 +19,7 @@ description: Get started in 5 min with React, GraphQL and Apollo Client by build
 
 ```sh
 git clone https://github.com/graphcool-examples/react-graphql.git
-cd react-graphql/quickstart-with-apollo
+cd react-graphql/quickstart-with-relay-modern
 ```
 
 </Instruction>
@@ -83,14 +83,28 @@ graphcool deploy
 
 The `Post` type is now added to your data model and the corresponding CRUD operations are generated.
 
+The next step is to connect the app with your GraphQL API.
 
 <Instruction>
 
-*The next step is to connect the app with your GraphQL API. Copy the `Simple API` endpoint to `./src/index.js` as the `uri` argument in the `createNetworkInterface` call:*
+*Use the following command to get access to the endpoint for the `Relay API`:*
+
+```sh
+graphcool info
+```
+
+</Instruction>
+
+
+<Instruction>
+
+*Copy the `Relay API` endpoint to `./src/createRelayEnvironment.js` as the argument for the call to `fetch` replacing `__RELAY_API_ENDPOINT__ `:*
 
 ```js
-// replace `__SIMPLE_API_ENDPOINT__` with the endpoint from the previous step
-const networkInterface = createNetworkInterface({ uri: '__SIMPLE_API_ENDPOINT__' })
+// replace `__RELAY_API_ENDPOINT__ ` with the endpoint from the previous step
+return fetch('__RELAY_API_ENDPOINT__', {
+ ...
+})  
 ```
 
 </Instruction>
