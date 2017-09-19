@@ -1,6 +1,6 @@
 ---
 alias: opheidaix3
-description: Graphcool uses a dedicated YAML format for configuration.
+description: An overview of the project definition and file structure for Graphcool projects.
 ---
 
 # Project Configuration
@@ -12,7 +12,7 @@ Every Graphcool project consists of several components that developers can provi
 - **Database model**: Determines the types that are to be persisted in the database. These types typically represent the entities from the application domain. Read more in the [Database](!alias-viuf8uus7o) chapter.
 - **Permission rules**: Define which users are allowed to perform what operations in the API. Read more in the [Authorization](!alias-iegoo0heez) chapter.
 - **Serverless functions**: Used to implement data validation and transformation, GraphQL resolvers functions and other business logic. Read more in the [Functions](!alias-aiw4aimie9) chapter.
-- **Modules**: Other Graphcool projects that provide additional functionality to the current project. Read more in the [Modules](#Modules) section below.
+- **Modules**: Other Graphcool projects that provide additional functionality to the current project. Read more in the [Modules](#modules) section below.
 - **Root tokens**: The authentication tokens that provide access to all API operations. Read more in the [Authentication](!alias-bee4oodood) chapter. 
 
 To manage each of these components in a coherent way, Graphcool uses a custom configuration format written in [YAML](https://en.wikipedia.org/wiki/YAML). The file can be altered manually or through dedicated commands of the [CLI](!alias-zboghez5go).
@@ -127,7 +127,11 @@ This is what the additional YAML types look like that are used in the file:
 
 After making a change to the project definition or any file inside the file structure of your local project, you need to sync these changes to the remote project in your Graphcool account.
 
-The only way of doing this is by running the `graphcool deploy` command.
+The only way of doing this is by running the `graphcool deploy` command. 
+
+In case your local changes might result in data loss, you need to add the `--force` option to the command in order to signal to the CLI that you know what you're doing: `graphcool deploy --force`.
+
+Sometimes your changes require _migration values_ to be added for the deployment. For example, when a you're adding a non-nullable field to a model type for which there are already existing nodes in the database.
 
 ## Environments
 
