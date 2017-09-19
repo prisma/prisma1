@@ -5,11 +5,11 @@ description: Schema migrations allow you to evolve a GraphQL schema. Sometimes, 
 
 # Migrations
 
-_Schema migrations_ need to be performed when you're updating your model schema with any of the following actions:
+_Schema migrations_ need to be performed when you're updating your model type definitions with any of the following actions:
 
-- Adding, modifying or deleting a _type_ in the model schema
-- Adding, modifying or deleting a _field_ of a concrete type in the model schema
-- Adding, modifying or deleting a _relation_ between two concrete types in the model schema
+- Adding, modifying or deleting a _type_ in your model type definitions
+- Adding, modifying or deleting a _field_ of a concrete type in the model type definitions
+- Adding, modifying or deleting a _relation_ between two concrete types in the model type definitions
 
 A schema migration includes two steps:
 
@@ -18,10 +18,9 @@ A schema migration includes two steps:
 
 <InfoBox type=warning>
 
-In case the migration requires additional information from your side, e.g. when you're renaming a type or a field or you add a non-nullable field to an existing type, you'll have to provided a _migration file_ with the required information. Notice that the CLI will detect these cases for you and launch a wizard that supports you in creating the migration file.
+In case the migration requires additional information from your side, e.g. when you're renaming a type or a field or you add a non-nullable field to an existing type, you'll need to provide a _migration file_ with the required information. Notice that the CLI will detect these cases for you and launch a wizard that supports you in creating the migration file.
 
 </InfoBox>
-
 
 
 ## Migrating Types

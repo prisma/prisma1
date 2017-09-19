@@ -9,9 +9,9 @@ Graphcool lets you seamlessly integrate serverless functions inside your project
 
 There generally are three kinds of functions that you can implement
 
-- **Hooks**: Hooks allow you to synchronously invoke a function right before or after a database operation (commonly used for data transformation and validation)
-- **Subscriptions**: Subscriptions allow you to asynchronously invoke a function when an specific event occurs in the GraphQL engine
-- **Resolvers**: Resolvers allow you to extend your GraphQL schema with more functionality that goes beyond the auto-generated CRUD capabilities. Resolvers are also commonly used to implement authentication mechanisms.
+- [Hooks](!alias-pa6guruhaf) allow you to synchronously invoke a function right before or after a database operation (commonly used for data transformation and validation)
+- [Subscriptions](!alias-bboghez0go) allow you to asynchronously invoke a function when an specific event occurs in the [GraphQL engine](!alias-thei2kephu#graphql-engine)
+- [Resolvers](!alias-su6wu3yoo2) allow you to extend your GraphQL schema with more functionality that goes beyond the auto-generated CRUD capabilities. Resolvers are also commonly used to implement authentication mechanisms.
 
 ## Adding a function to your Graphcool project
 

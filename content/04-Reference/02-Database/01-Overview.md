@@ -5,7 +5,7 @@ description: An overview of how to configure and manage the database model with 
 
 # Overview
 
-When using Graphcool you don't manage your database layer _directly_ any more. Instead, you're defining your data model using the GraphQL [Schema Definition Language](https://www.graph.cool/docs/faq/graphql-sdl-schema-definition-language-kr84dktnp0/) (SDL) to define all your model types. Graphcool then generates the actual database schema for you.
+With Graphcool, you don't manage your database layer _directly_. Instead, you're defining your data model using the GraphQL [Schema Definition Language](https://www.graph.cool/docs/faq/graphql-sdl-schema-definition-language-kr84dktnp0/) (SDL) to define all your model types. Graphcool then generates and manages the underlying database schema for you.
 
 Migrations can be performed by updating your type definitions and running the `graphcool deploy` command in the CLI. In cases where additional information for a migration is required (such as default values for a non-nullable type that was added to the database schema), you need to provide an additional file with the required information.
 
