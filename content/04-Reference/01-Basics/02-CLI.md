@@ -189,7 +189,7 @@ graphcool env <subcommand> [flags]
 
 #### Subcommands
 
-##### `default`
+##### `graphcool env default`
 
 This command sets the default environment by replacing the `default` entry in your local `.graphcoolrc`-file with the environment that is provided.
 
@@ -205,7 +205,7 @@ graphcool env default [flags]
 -e, --env ENV    (required) Env to set as default
 ```
 
-##### `remove`
+##### `graphcool env remove`
 
 This command removes the specified environment from the list of environments in your local `.graphcoolrc`-file.
 
@@ -222,7 +222,7 @@ graphcool env remove [flags]
 ```
 
 
-##### `rename`
+##### `graphcool env rename`
 
 This command renames an environment in the list of environments in your local `.graphcoolrc`-file. You need to provide the old and new name of the environment as options for this command.
 
@@ -240,7 +240,7 @@ graphcool env remove [flags]
 ```
 
 
-##### `set`
+##### `graphcool env set`
 
 Adds a new environment to the list of environments in your local `.graphcoolrc`-file. 
 
