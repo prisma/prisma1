@@ -1,44 +1,124 @@
 ---
-alias: tikghei9go
-description: Relay introduces new concepts on top of GraphQL. Learn more about terms like connections, edges and nodes in Relay and see a pagination example.
-preview: movies-actors.png
-ordered: true
+alias: sot2faez6a
+description: Get started in 5 min with React, GraphQL and Apollo Client by building a simple Instagram clone.
 ---
 
-# Relay is awesome
+# React & Relay Quickstart
 
-The terminology of Relay can be quite overwhelming in the beginning. Relay introduces a handful of new concepts on top of GraphQL, mainly in order to manage relationships between models.
+## Overview
 
-This already leads to the first new term: a one-to-many relationship between two
-models is called a **connection**.
+* [React](https://facebook.github.io/react/): Frontend framework for building user interfaces
+* [Apollo Client](https://github.com/apollographql/apollo-client): Fully-featured, production ready caching GraphQL client
+* [Graphcool](https://www.graph.cool): Flexible backend framework combining GraphQL + AWS Lambda
 
-## Trolo
+## Get started
 
-### Example
+<Instruction>
 
-Let's consider this following simple GraphQL query. It fetches the `releaseDate`
-of the movie "Inception" and the names of all of its actors. The `actors` field is
-a connection between a movie and multiple actors.
+*Clone example repository:*
 
-**Stuf**
+```sh
+git clone https://github.com/graphcool-examples/react-graphql.git
+cd react-graphql/quickstart-with-apollo
+```
 
-This is another paragraph
+</Instruction>
 
-Bla
+<Instruction>
 
-* point 1
-* point 2
-* point 3
+*Create Graphcool project:*
 
-## Halli Hallo
+```sh
+# Install Graphcool CLI
+npm install -g graphcool
+
+# Create a new "blank" project inside a directory called "graphcool"
+graphcool init graphcool --template blank
+```
+
+</Instruction>
+
+This creates a new project inside your Graphcool account as well as the local project structure inside the `graphcool` directory:
+
+```
+.
+└── graphcool
+    ├── code
+    │   ├── hello.graphql
+    │   └── hello.js
+    ├── graphcool.yml
+    └── types.graphql
+
+```
+
+Read the documentation to learn more about the file structure and [project configuration](https://www.graph.cool/docs/reference/basics/project-configuration-t%28yaml%29-opheidaix3).
+
+<Instruction>
+
+*Next you need to onfigure your data model. Open `./graphcool/types.graphql` and add the following type definition to it:*
+
+```graphql
+type Post {
+  id: ID! @isUnique
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  description: String!
+  imageUrl: String!
+}
+```
+
+</Instruction>
+
+<Instruction>
+
+*Now apply the changes you just made locally to the remote project in your Graphcool account:*
+
+```sh
+cd graphcool
+graphcool deploy
+```
+
+</Instruction>
 
 
-HI
+The `Post` type is now added to your data model and the corresponding CRUD operations are generated.
 
-### Edges and nodes
 
-#### WHOOT
+<Instruction>
 
-Okay, let's see what's going on here. The `actors` connection now has a more
-complex structure containing the fields edges and node. These terms should be a
-bit more clear when looking at the following image.
+*The next step is to connect the app with your GraphQL API. Copy the `Simple API` endpoint to `./src/index.js` as the `uri` argument in the `createNetworkInterface` call:*
+
+```js
+// replace `__SIMPLE_API_ENDPOINT__` with the endpoint from the previous step
+const networkInterface = createNetworkInterface({ uri: '__SIMPLE_API_ENDPOINT__' })
+```
+
+</Instruction>
+
+
+<Instruction>
+
+That's it. You now install the dependencies and run the app:
+
+
+```sh
+yarn install
+yarn start # open http://localhost:3000 in your browser
+```
+
+</Instruction>
+
+
+## Next steps
+
+* [Advanced GraphQL features](https://blog.graph.cool/advanced-graphql-features-of-the-graphcool-api-5b8db3b0a71)
+* [Authentication & Permissions](https://www.graph.cool/docs/reference/auth/overview-ohs4aek0pe/)
+* [Implementing business logic with serverless functions](https://www.graph.cool/docs/reference/functions/overview-aiw4aimie9/)
+* [Dive deeper into GraphQL on How to GraphQL](https://www.howtographql.com)
+
+
+## Help & Community [![Slack Status](https://slack.graph.cool/badge.svg)](https://slack.graph.cool)
+
+Say hello in our [Slack](http://slack.graph.cool/) or visit the [Graphcool Forum](https://www.graph.cool/forum) if you run into issues or have questions. We love talking to you!
+
+![](http://i.imgur.com/5RHR6Ku.png)
