@@ -21,7 +21,7 @@ To manage each of these components in a coherent way, Graphcool uses a custom co
 
 ### Example
 
-Here is what a simple example of a project definition file looks like:
+Here is a simple example of a project definition file:
 
 ```yml
 # Type Definitions
@@ -185,7 +185,7 @@ Environments can be managed by manually changing the contents of `.graphcoolrc` 
 
 - `graphcool env default <env>`: Sets the `default` environment
 - `graphcool env set <env>`: Adds an environment to the `environments` list
-- `graphcool env reove <env>`: Removes an environment from the `environments` list
+- `graphcool env remove <env>`: Removes an environment from the `environments` list
 - `grahcool env rename <oldname> <newname>`: Renames an environment from the `environments` list
 
 
@@ -262,8 +262,8 @@ When a module is deployed, the CLI simply _merges_ your current project definiti
 
 A remote Graphcool project (i.e. a project in your Graphcool account) can be in either of two modes:
 
-- _Ejected_: Projects that are or have been created with any CLI version lower than 1.4 or in the Console are _non-ejected_ by default.
-- _Not ejected_: Projects that are created with any CLI version greater or equal to 1.4 are _ejected_ by default. 
+- _Not ejected_: Projects that are or have been created with any CLI version lower than 1.4 or in the Console are _non-ejected_ by default.
+- _Ejected_: Projects that are created with any CLI version greater or equal to 1.4 are _ejected_ by default. 
 
 > These two modes exist due to the recent changes to the Graphcool platform and its new focus towards managing projects through the CLI rather than using the web-based Console. 
 
