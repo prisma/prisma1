@@ -5,7 +5,9 @@ description: An overview of how to model application data in Graphcool.
 
 # Data Modelling
 
-Graphcool uses (a subset of) the GraphQL [Schema Definition Language] (SDL) for data modelling. Your model types are written in the `.graphql`-file, typically called `types.graphql`, which is the foundation for the actual database schema that Graphcool generates for you.
+## Overview
+
+Graphcool uses (a subset of) the GraphQL [Schema Definition Language] (https://www.graph.cool/docs/faq/graphql-sdl-schema-definition-language-kr84dktnp0/) for data modelling. Your data model is written in your project's `.graphql`-file, typically called `types.graphql`, which is the foundation for the actual database schema that Graphcool generates for you.
 
 To learn more about the SDL, you can check out the [official documentation](http://graphql.org/learn/schema/#type-language).
 
@@ -29,25 +31,29 @@ type User @model {
 }
 ```
 
-### Building blocks of the Model Schema
+### Building blocks of the data model
 
-There are several available building blocks to shape your model schema.
+There are several available building blocks to shape your data model.
 
-* [Types](!alias-ij2choozae) consist of multiple [fields](!alias-teizeit5se) and are used to group similar entities together.
-* [Relations](!alias-goh5uthoc1) describe interactions between types.
-* Special [Directives](!alias-aeph6oyeez) that cover different use cases are available.
+* [Types](#graphql-types) consist of multiple [fields](#fields) and are used to group similar entities together.
+* [Relations](#relations) describe interactions between types.
+* Special [Directives](#graphql-directives) that cover different use cases are available.
 
-Additionally, a project contains prepopulated types and fields, referred to as [system artifacts](!alias-uhieg2shio). Different [naming conventions](!alias-oe3raifamo) define valid names.
+Additionally, a project can contain prepopulated types and fields, referred to as [system artifacts](#system-artifacts). Different [naming conventions](#naming-conventions) define valid names.
 
-### Writing a Model Schema
+### Writing a data model
 
-There are a few things that are special about the way a model schema is written.
+There are a few things that are special about the way a data model is written.
+
+<!--
 
 #### Using the `@model` directive
 
 You data model contains the _model types_ that represent the entities from your application domain. The nodes of these types will be persisted in the database and further determine the shape of your API.
 
 Each type that you want to be part of this data model, you need to define with the `@model` directive following the type name.
+
+-->
 
 #### Unique IDs and the `Node` interface
 
@@ -86,17 +92,18 @@ Notice that you can not have custom fields that are called `createdAt` and `upda
 
 </InfoBox>
 
-## GraphQL Types
+## Model types
 
-A *GraphQL model type* defines the structure for a certain type of your data. If you are familiar with SQL databases you can think of a type as the schema for a table. A type has a name, an optional description and one or multiple [fields](!alias-teizeit5se).
+A *model type* defines the structure for a certain type of your data. If you are familiar with SQL databases you can think of a type as the schema for a table. A type has a name, an optional description and one or multiple [fields](!alias-teizeit5se).
 
 An instantiation of a type is called a *node*. The collection of all nodes is what you would refer to as your "application data". The term node refers to a node inside your data graph.
 
-Every type you define will be available as a type in your GraphQL schema. A common notation to quickly describe a type is the [GraphQL SDL (schema definition language)](!alias-kr84dktnp0).
+Every type you define will be available as a type in your GraphQL schema. 
 
-### GraphQL Types in the Model Schema
 
-A GraphQL type is defined in the model schema with the keyword `type`:
+### Defining a model type
+
+A GraphQL type is defined in the data model with the keyword `type`:
 
 ```graphql
 type Story {
@@ -114,20 +121,20 @@ type Author {
 }
 ```
 
-### Generated Operations Based On Types
+### Generated operations based on types
 
-The types that are included in your schema effect the available operations in the [GraphQL API](!alias-heshoov3ai). For every type,
+The types that are included in your schema effect the available operations in the [GraphQL API](!alias-abogasd0go). For every type,
 
-* [type queries](!alias-chuilei3ce) allow you to fetch one or many nodes of that type
-* [type mutations](!alias-eamaiva5yu) allow you to create, update or delete nodes of that type
-* [type subscriptions](!alias-ohc0oorahn) allow you to get notified of changes to nodes of that type
+* [type queries](!alias-nia9nushae) allow you to fetch one or many nodes of that type
+* [type mutations](!alias-ol0yuoz6go) allow you to create, update or delete nodes of that type
+* [type subscriptions](!alias-aip7oojeiv) allow you to get notified of changes to nodes of that type
 
 
 ## Fields
 
-*Fields* are the building blocks of a [types](!alias-ij2choozae) giving a node its shape. Every field is referenced by its name and is either [scalar](#scalar-types) or a [relation field](!alias-goh5uthoc1).
+*Fields* are the building blocks of a [types](#model-types) giving a node its shape. Every field is referenced by its name and is either [scalar](#scalar-types) or a [relation](#relations) field.
 
-> The `Post` type might have a `title` and a `text` field both of type String and an `id` field of type ID.
+> The `Post` type might have a `title` and a `text` field both of type String and an `id` field of type `ID`.
 
 ### Scalar Types
 
@@ -213,7 +220,7 @@ Required fields are usually marked using a `!` after the field type.
 
 ### Field Constraints
 
-Fields can be configured with certain field constraints to add further semantics to your [data schema](!alias-ahwoh2fohj).
+Fields can be configured with certain field constraints to add further semantics to your data model.
 
 #### Unique
 
@@ -223,33 +230,49 @@ Setting the *unique* constraint makes sure that two nodes of the type in questio
 
 Please note that only the first 191 characters in a String field are considered for uniqueness and the unique check is **case insensitive**. Storing two different strings is not possible if the first 191 characters are the same or if they only differ in casing.
 
-### Default Value
+To mark a field as unique, simply append the `@isUnique` directive to it:
+
+```graphql
+type User {
+  email: String! @isUnique
+}
+
+```
+
+### Default value
 
 You can set a default value for scalar fields. The value will be taken for new nodes when no value was supplied during creation.
 
-### Generated Operations Based On Fields
+To specify a default value for a field, you can use the `@defaultValue` directive:
 
-Fields in the data schema affect the available [query arguments](!alias-ohrai1theo). Unique fields in the data schema add a new query argument to [queries for fetching one node](!alias-ua6eer7shu).
+```graphql
+type Story {
+  isPublished: Boolean @defaultValue(value: "false")
+}
+```
 
+### Generated operations based on fields
+
+Fields in the data schema affect the available [query arguments](!alias-nia9nushae#query-arguments). Unique fields in the data schema add a new query argument to [queries for fetching one node](!alias-nia9nushae#fetching-a-single-node).
 
 
 ## Relations
 
-A *relation* defines the interaction between two [types](!alias-ij2choozae). Two types in a relation are connected via a [relation field](!alias-teizeit5se) on each type.
+A *relation* defines the semantics of a connection between two [types](#model-types). Two types in a relation are connected via a [relation field](#scalar-and-relation-fields) on each type.
 
 A relation can also connect a type with itself. It is then referred to as a *self-relation*.
 
-### Required Relations
+### Required relations
 
 For a `to-one` relation field, you can configure whether it is *required* or *optional*. The required flag acts as a contract in GraphQL that this field can never be `null`. A field for the address of a user would therefore be of type `Address` or `Address!`.
 
-Nodes for a type that contains a required `to-one` relation field can only be created using a [nested mutation](!alias-ubohch8quo) to ensure the according field will not be `null`.
+Nodes for a type that contains a required `to-one` relation field can only be created using a [nested mutation](!alias-ol0yuoz6go#nested-mutations) to ensure the according field will not be `null`.
 
 > Note that a `to-many` relation field is always set to required. For example, a field that contains many user addresses always uses the type `[Address!]!` and can never be of type `[Address!]`. The reason is that in case the field doesn't contain any nodes, `[]` will be returned, which is not `null`.
 
-### Relations in the Data Schema
+### Relations in the data model
 
-A relation is defined in the Data Schema using the [@relation directive](!alias-aeph6oyeez#relation-fields):
+A relation is defined in the data model using the `@relation` directive:
 
 ```graphql
 type User {
@@ -266,21 +289,19 @@ type Story {
 
 Here we are defining a *one-to-many* relation between the `User` and `Story` types. The relation fields are `stories: [Story!]!` and `author: User!`. Note how `[Story!]!` defines multiple stories and `User!` a single user.
 
-### Generated Operations Based On Relations
+### Generated operations based on relations
 
-The relations that are included in your schema effect the available operations in the [GraphQL API](!alias-heshoov3ai). For every relation,
+The relations that are included in your schema effect the available operations in the [GraphQL API](!alias-abogasd0go). For every relation,
 
-* [relation queries](!alias-aihaeph5ip) allow you to query data across types or aggregated for a relation
-* [relation mutations](!alias-kaozu8co6w) allow you to connect or disconnect nodes
-* [nested mutations](!alias-ubohch8quo) allow you to create and connect nodes across types
-* [relation subscriptions](!alias-riegh2oogh) allow you to get notified of changes to a relation
-
-
+* [relation queries](!alias-nia9nushae#relation-queries) allow you to query data across types or aggregated for a relation
+* [relation mutations](!alias-ol0yuoz6go#relation-mutations) allow you to connect or disconnect nodes
+* [nested mutations](!alias-ol0yuoz6go#nested-mutations) allow you to create and connect nodes across types
+* [relation subscriptions](!alias-aip7oojeiv#relation-subscriptions) allow you to get notified of changes to a relation
 
 
 ## GraphQL Directives
 
-A schema file follows the [SDL syntax](!alias-kr84dktnp0) and can contain additional **static and temporary GraphQL directives**.
+A schema file follows the SDL syntax and can contain additional **static and temporary GraphQL directives**.
 
 ### Static Directives
 
@@ -288,7 +309,7 @@ Static directives describe additional information about types or fields in the G
 
 #### Unique Scalar Fields
 
-The *static directive `@isUnique`* denotes [a unique, scalar field](!alias-teizeit5se#unique).
+The *static directive `@isUnique`* denotes [a unique, scalar field](#unique).
 
 ```graphql
 ## the `Post` type has a unique `slug` field
@@ -299,7 +320,7 @@ type Post {
 
 #### Relation Fields
 
-The *static directive `@relation(name: String!)`* denotes a [relation field](!alias-goh5uthoc1). Most of the time, the same `@relation` directive appears twice in a schema file, to denote both sides of the relation
+The *static directive `@relation(name: String!)`* denotes a [relation field](!alias-goh5uthoc1). Most of the time, the same `@relation` directive appears twice in a type definitions file, to denote both sides of the relation:
 
 ```graphql
 ## the types `Post` and `User` are connected via the `PostAuthor` relation
@@ -311,19 +332,20 @@ type User {
   posts: [Post!]! @relation(name: "PostAuthor")
 }
 ```
-#### Default Value for Scalar Fields
 
-The *static directive `@defaultValue(value: String!)`* denotes [the default value](!alias-teizeit5se#default-value) of a scalar field. Note that the `value` argument is of type String for all scalar fields
+#### Default value for scalar fields
+
+The *static directive `@defaultValue(value: String!)`* denotes [the default value](#default-value) of a scalar field. Note that the `value` argument is of type String for all scalar fields:
 
 ```graphql
-## the `title` and `published` fields have default values `New Post` and `false`
+# the `title` and `published` fields have default values `New Post` and `false`
 type Post {
   title: String! @defaultValue(value: "New Post")
   published: Boolean! @defaultValue(value: "false")
 }
 ```
 
-### Temporary Directives
+### Temporary directives (only for [non-ejected](opheidaix3#non-ejected-projects) projects)
 
 Temporary directives are used to run one-time migration operations. After a temporary directive has been pushed, it is not part of the schema anymore.
 
@@ -343,26 +365,17 @@ type Story @rename(oldName: "Post") {
 The *temporary directive `@migrationValue(value: String!)`* is used to migrate the value of a scalar field. When changing an optional field to a requried field, it's necessary to also use this directive.
 
 
-
-## System Artifacts (Deprecated)
-
-<InfoBox type=warning>
-
-The `User` and `File` system artifacts are deprecated as of October 2017. They will still be available and continue to function in all projects that have been created before that. However, in new projects they won't be available any more.
-
-Another change is that the `createdAt` and `updatedAt` fields are now _optional_ on model types. If you want your model types to expose these fields (which are still managed by the system), simply include them in the type definition.
-
-</InfoBox>
+## System Artifacts (only for [non-ejected](opheidaix3#non-ejected-projects) projects)
 
 In order to make the platform as seamless and integrated as possible, we introduced some predefined artifacts in each project. These artifacts are designed to be as minimal as possible and cannot be deleted. At the moment there are two type of artifacts: *system types* and *system fields*.
 
 ### `User` Type
 
-Every project has a system type called `User`. As the `User` type is the foundation for our [built-in authentication system](!alias-wejileech9) you cannot delete it. But of course you can still extend the `User` type to suit your needs and it behaves like every other type.
+Every project has a system type called `User`. As the `User` type is the foundation for our integration-based authentication system you cannot delete it. But of course you can still extend the `User` type to suit your needs and it behaves like every other type.
 
-Apart from the predefined system fields, the `User` type can have additional system fields depending on the configured [custom authentication](!alias-seimeish6e).
+Apart from the predefined system fields, the `User` type can have additional system fields depending on the configured custom authentication.
 
-You can add additional [fields](!alias-teizeit5se) as with any other type.
+You can add additional [fields](#fields) as with any other type.
 
 ### `File` Type
 
@@ -373,16 +386,15 @@ The `File` type is part of our [file management](!alias-eer4wiang0). Every time 
 * `size: Integer`: the file size in bytes.
 * `url: String`: the file url. Looks something like `https://files.graph.cool/__PROJECT_ID__/__SECRET__`, that is the generic location for files combined with your project id endpoint and the file secret.
 
-You can add additional [fields](!alias-teizeit5se) as with any other type, but they need to be optional.
+You can add additional [fields](#fields) as with any other type, but they need to be optional.
 
 ### `id` Field
 
-Every type has a [required](!alias-teizeit5se#required) system field with the name `id` of type [ID](!alias-teizeit5se#id). The `id` value of every node (regardless of the type) is globally unique and unambiguously identifies a node ([as required by Relay](https://facebook.github.io/relay/docs/graphql-object-identification.html)). You cannot change the value for this field.
+Every type has a [required](#required) system field with the name `id` of type [ID](#id). The `id` value of every node (regardless of the type) is globally unique and unambiguously identifies a node ([as required by Relay](https://facebook.github.io/relay/docs/graphql-object-identification.html)). You cannot change the value for this field.
 
 ### `createdAt` and `updatedAt` Fields
 
-Every type has the [DateTime](!alias-teizeit5se#datetime) fields `createdAt` and `updatedAt` that will be set automatically when a node is created or updated. You cannot change the values for these fields.
-
+Every type has the [DateTime](#datetime) fields `createdAt` and `updatedAt` that will be set automatically when a node is created or updated. You cannot change the values for these fields.
 
 
 ## Naming Conventions
