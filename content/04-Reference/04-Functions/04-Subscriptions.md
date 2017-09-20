@@ -5,11 +5,13 @@ description: Subscriptions are a simple yet powerful event-based concept on top 
 
 # Subscriptions
 
+## Overview
+
 Subscriptions are a simple yet powerful concept to handle business logic in your project. You can **subscribe to specific events** that are happening inside the GraphQL engine. All (successful) mutations are considered events.
 
 > Unlike hooks, functions for subscriptions are called **asynchronously**, _after_ a database transaction was entirely processed.
 
-## Input Type
+## Input type
 
 The input data for subscription functions is determined by the subscription query that you write for the subscription.
 
@@ -87,6 +89,6 @@ module.exports = function (event) {
 }
 ```
 
-## Current Limitations
+## Current limitations
 
-Currently, no Server-Side Subscriptions are triggered for the `File` type.
+Currently, no Subscriptions are triggered for the `File` type.

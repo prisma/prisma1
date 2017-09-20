@@ -5,6 +5,8 @@ description: Functions along the request pipeline of a GraphQL mutation allow yo
 
 # Hooks
 
+## Overview
+
 Every request that's sent to your API goes through different stages. Graphcool allows to intercept the request and invoke serverless functions when it reaches one of the dedicated _hook points_. This allows to perform data transformation and validation operations on the request payload or synchronously call out to 3rd-party APIs.
 
 Graphcool offers two of these hook points:
@@ -44,9 +46,8 @@ functions:
         src: ./code/reloadProfile.js
 ```
 
-`validateEmail` is invoked _before_ a `User` node is created and is defined as a _webhook_.
-
-`reloadProfilePicture` is invoked _after_ a `Photo` node is updated and is defined as a _managed function_.
+- `validateEmail` is invoked _before_ a `User` node is created and is defined as a _webhook_.
+- `reloadProfilePicture` is invoked _after_ a `Photo` node is updated and is defined as a _managed function_.
 
 ### Properties
 
@@ -55,7 +56,7 @@ Each function that's specified in the project configuration file needs to have t
 For hook functions, you additionally need to specify the concrete `operation` which consists of a model type and the specific database write (create, update or delete), e.g. `User.create` or `Post.delete`.
 
 
-## Input Type
+## Input type
 
 The input type for these hook functions is determined by the input arguments of the mutation that invokes the function.
 
@@ -75,7 +76,7 @@ type UpdateUserInput {
 }
 ```
 
-## Current Limitations
+## Current limitations
 
 * Callbacks need to be converted to Promises. [Here's a guide](https://egghead.io/lessons/javascript-convert-a-callback-to-a-promise).
 * Input arguments for nested mutations are *read-only* at the moment. Changes to these are ignored. This applies to all hook points.
@@ -83,9 +84,9 @@ type UpdateUserInput {
 
 ## Examples
 
-#### No Transformation
+#### No transformation
 
-> The request is not modified at all.
+The request is not modified at all.
 
 ```js
 module.exports = function (event) {
@@ -95,9 +96,9 @@ module.exports = function (event) {
 }
 ```
 
-#### Computed Fields
+#### Computed fields
 
-> Some of the input arguments are used to compute a different input argument.
+Some of the input arguments are used to compute a different input argument.
 
 ```js
 module.exports = function (event) {
@@ -108,9 +109,9 @@ module.exports = function (event) {
 }
 ```
 
-#### Input Validation
+#### Input validation
 
-> Reject further processing of the incoming GraphQL mutation by [throwing an error](!alias-quawa7aed0).
+Reject further processing of the incoming GraphQL mutation by [throwing an error](!alias-geihakoh4e).
 
 ```js
 module.exports = function (event) {
@@ -124,7 +125,7 @@ module.exports = function (event) {
 }
 ```
 
-## Current Limitations
+## Current limitations
 
 Currently, **only fields that are already part of the mutation payload can be modified**. No fields can be added or removed.
 

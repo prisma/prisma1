@@ -5,6 +5,8 @@ description: Graphcool Functions allow you to return customized error messages o
 
 # Error Handling for Functions
 
+## Overview
+
 Graphcool Functions follow a unified concept for error handling.
 
 > To return an error from a webhook function, it's important **to respond with status code 200**!
