@@ -278,7 +278,6 @@ Managing the GraphQL type definitions can still be done both in the Console (in 
 
 Ejected projects can only use CLI versions greater or equal to 1.4. Ejected projects can only be modified with the CLI, all the features that are offered for ejected projects in the Console are _read-only_.
 
-
 ### How to eject a project
 
 To eject a project, you need to navigate to the **Project Settings** in the Console, select the **General**-tab and click the **Eject Project**-button. 
@@ -289,7 +288,6 @@ Notice that a project can _not_ be ejected if:
 
 - it currently has an enabled _integration_
 - it currently has an Request Pipeline function that uses the `PRE_WRITE` step 
-
 
 <InfoBox type=warning>
 
