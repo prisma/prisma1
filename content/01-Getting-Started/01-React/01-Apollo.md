@@ -5,10 +5,13 @@ description: Get started in 5 min with React, GraphQL and Apollo Client by build
 
 # React & Apollo Quickstart
 
+## Overview
 
 * [React](https://facebook.github.io/react/): Frontend framework for building user interfaces
 * [Apollo Client](https://github.com/apollographql/apollo-client): Fully-featured, production ready caching GraphQL client
 * [Graphcool](https://www.graph.cool): Flexible backend framework combining GraphQL + AWS Lambda
+
+## Getting started
 
 <Instruction>
 

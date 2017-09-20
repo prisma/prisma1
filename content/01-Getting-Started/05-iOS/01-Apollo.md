@@ -75,16 +75,15 @@ graphcool deploy
 
 </Instruction>
 
-
 The `Post` type is now added to your data model and the corresponding CRUD operations are generated.
 
 <Instruction>
 
-*The next step is to connect the app with your GraphQL API. Copy the `Simple API` endpoint to `./src/app/client.ts` as the `uri` argument in the `createNetworkInterface` call:*
+*The next step is to connect the app with your GraphQL API. Copy the `Simple API` endpoint into `AppDelegate.swift`  to instantiate the `ApolloClient`:*
 
 ```js
 // replace `__SIMPLE_API_ENDPOINT__` with the endpoint from the previous step
-const networkInterface = createNetworkInterface({ uri: '__SIMPLE_API_ENDPOINT__' })
+let apollo = ApolloClient(url: URL(string: "__SIMPLE_API_ENDPOINT__")!)
 ```
 
 </Instruction>
@@ -103,7 +102,7 @@ You can find out more more in the [Apollo docs](http://dev.apollodata.com/ios/in
 
 <Instruction>
 
-That's it. You now install the dependencies and run the app:
+That's it. You can now install the dependencies and run the app:
 
 
 ```sh
