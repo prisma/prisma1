@@ -5,6 +5,8 @@ description: Schema migrations allow you to evolve a GraphQL schema. Sometimes, 
 
 # Migrations
 
+## Overview
+
 _Schema migrations_ need to be performed when you're updating your model type definitions with any of the following actions:
 
 - Adding, modifying or deleting a _type_ in your model type definitions
@@ -23,17 +25,17 @@ In case the migration requires additional information from your side, e.g. when 
 </InfoBox>
 
 
-## Migrating Types
+## Migrating types
 
-GraphQL types in your GraphQL schema can be controlled using the `type` keyword.
+GraphQL types in your GraphQL schema can be defined using the `type` keyword.
 
-> Read more about GraphQL [types in the schema chapter](!alias-ahwoh2fohj)
+> Read more about GraphQL types in the [Data Modelling chapter](!alias-eiroozae8u)
 
 ### Adding a new type
 
-You can add new types to your GraphQL schema by adding a new `type` section in the schema file. This will automatically **add queries, mutations and subscriptions** to your [GraphQL API](!alias-heshoov3ai).
+You can add new types to your GraphQL schema by adding a new `type` section to your type definitions file. This will automatically **add queries, mutations and subscriptions** to your [GraphQL API](!alias-abogasd0go).
 
-Consider this schema file:
+Consider this type definitions file:
 
 ```graphql
 type User implements Node {
@@ -42,7 +44,7 @@ type User implements Node {
 }
 ```
 
-To add a new `Story` type, this is the new schema file:
+To add a new `Story` type (including a [relation](!alias-eiroozae8u#relations) to the `User` type), this is the new type definitions file:
 
 ```graphql
 type User implements Node {
@@ -61,15 +63,15 @@ type Story implements Node {
 }
 ```
 
-This will automatically add the [system fields](!alias-uhieg2shio) to the type as well, you don't need to specify them yourself. Using the [`@relation` directive](!alias-aeph6oyeez#relation-fields), you can also directly create new relations to existing types as well.
+Using the `@relation` directive, you can also directly create new relations to existing types as well.
 
-Have a look at the [naming conventions for types](!alias-oe3raifamo#types) to see what names are allowed and recommended.
+Have a look at the [naming conventions for types](!alias-eiroozae8u#naming-conventions) to see what names are allowed and recommended.
 
 ### Removing an existing type
 
 To remove an existing type **including all of its data and relations**, remove the corresponding section in the schema file. You also need to remove all relation tags for relations that include the type to be deleted as well.
 
-> Removing a type potentially breaks existing queries, mutations and subscriptions in your [GraphQL API](!alias-heshoov3ai). Make sure to not rely on any operations on the type in your apps before deleting it.
+> Removing a type potentially breaks existing queries, mutations and subscriptions in your [GraphQL API](!alias-abogasd0go). Make sure to not rely on any operations on the type in your apps before deleting it.
 
 Consider this schema file:
 
@@ -101,9 +103,19 @@ type User implements Node {
 
 ### Renaming an existing type
 
+<!--
+
+The process for renaming an existing type is different depending on whether your project is [ejected or not ejected](opheidaix3#ejected-vs-non-ejected-projects).
+
+#### For ejected projects
+
+#### For non-ejected projects
+
+-->
+
 Renaming a type can be done with the `@rename(oldName: String!)` directive.
 
-> Renaming a type potentially breaks existing queries, mutations and subscriptions in your [GraphQL API](!alias-heshoov3ai). Make sure to adjust your app accordingly to the new name.
+> Renaming a type potentially breaks existing queries, mutations and subscriptions in your [GraphQL API](!alias-abogasd0go). Make sure to adjust your app accordingly to the new name.
 
 Consider this schema file:
 
@@ -128,7 +140,6 @@ To rename the `Story` type, we use the [temporary directive](!alias-aeph6oyeez#t
 
 This is how it looks like:
 
-
 ```graphql
 type User implements Node {
   id: ID!
@@ -146,7 +157,7 @@ type Post implements Node @rename(oldName: "Story") {
 }
 ```
 
-After the successful rename operation, we obtain this new schema file:
+After the successful rename operation, we obtain this new type definition file:
 
 ```graphql
 type User implements Node {
@@ -165,22 +176,20 @@ type Post implements Node {
 }
 ```
 
-Note that the temporary directive `@rename` is not in the schema file anymore.
+Note that the temporary directive `@rename` has now been removed from the file.
 
+## Migrating scalar fields
 
-
-## Migrating Scalar Fields
-
-Fields in your GraphQL schema are always part of a GraphQL type and consist of a name and a [scalar GraphQL type](!alias-teizeit5se#scalar-types).
-Different modifiers exist to mark a fields as [unique](!alias-teizeit5se#unique) or [list fields](!alias-teizeit5se#list).
+Fields in your GraphQL schema are always part of a GraphQL type and consist of a name and a [scalar GraphQL type](!alias-eiroozae8u#scalar-types).
+Different modifiers exist to mark a fields as [unique](!alias-eiroozae8u#unique) or [list fields](!alias-eiroozae8u#list).
 
 Apart from scalar fields, fields can also be used to work with [relations](!alias-goh5uthoc1).
 
-> Read more about GraphQL [fields in the schema chapter](!alias-ahwoh2fohj)
+> Read more about GraphQL [fields in the schema chapter](!alias-eiroozae8u#fields)
 
 ### Adding a new scalar field
 
-You can add new fields to your GraphQL schema by including them in an existing type. **This will modify existing queries, mutations and subscriptions** in your [GraphQL API](!alias-heshoov3ai).
+You can add new fields to your GraphQL schema by including them in an existing type. **This will modify existing queries, mutations and subscriptions** in your [GraphQL API](!alias-abogasd0go).
 
 Consider this schema file:
 
@@ -221,13 +230,13 @@ type Story implements Node {
 }
 ```
 
-Have a look at the [naming conventions for fields](!alias-oe3raifamo#scalar-and-relation-fields) to see what names are allowed and recommended.
+Have a look at the [naming conventions for fields](!alias-eiroozae8u#naming-conventions) to see what names are allowed and recommended.
 
 ### Removing an existing field
 
 To remove an existing field, you can delete the corresponding line in the schema file. This will remove **all data for this field**.
 
-> Removing a field potentially breaks existing queries, mutations and subscriptions in your [GraphQL API](!alias-heshoov3ai). Make sure to not rely on this field in your apps before deleting it.
+> Removing a field potentially breaks existing queries, mutations and subscriptions in your [GraphQL API](!alias-abogasd0go). Make sure to not rely on this field in your apps before deleting it.
 
 Consider this schema file:
 
@@ -256,7 +265,7 @@ type User implements Node {
 
 Renaming a field can be done with the `@rename(oldName: String!)` directive.
 
-> Renaming a field potentially breaks existing queries, mutations and subscriptions in your [GraphQL API](!alias-heshoov3ai). Make sure to adjust your app accordingly to the new name.
+> Renaming a field potentially breaks existing queries, mutations and subscriptions in your [GraphQL API](!alias-abogasd0go). Make sure to adjust your app accordingly to the new name.
 
 Consider this schema file:
 
@@ -271,7 +280,7 @@ type Story implements Node {
 }
 ```
 
-To rename the `description` field to `information`, we use the [temporary directive](!alias-aeph6oyeez#temporary-directives) `@rename(oldName: String!)` on the field itself:
+To rename the `description` field to `information`, we use the [temporary directive](!alias-eiroozae8u#temporary-directives-%28only-for-non-ejected-projects%29) `@rename(oldName: String!)` on the field itself:
 
 ```graphql
 type Story implements Node {
@@ -387,16 +396,17 @@ All nodes that formerly had `length: null` will now have `length: 0`. Nodes with
 > Note: migrating optional list fields to be required, for example of type `[String!]` to `[String!]!` overwrites all values, not only the non-null values.
 
 
-## Migrating Relations
+## Migrating relations
 
-The `@relation` directive can be attached to fields in your GraphQL schema to control relations.
+The `@relation` directive can be attached to fields in your GraphQL schema to control relations. 
+
 Relations consist of two fields (or, in rare cases only one), have a name and both fields can either be singular or plural. Singular relation fields can be optional, but plural relation fields are always required.
 
-> Read more about GraphQL [relations in the schema chapter](!alias-ahwoh2fohj)
+> Read more about GraphQL relations in the [Data Modelling](!alias-eiroozae8u) chapter.
 
 ### Adding a new relation
 
-You can add new relations to your GraphQL schema using the `@relation(name: String!)` tag. This will **add new mutations and modify existing queries, mutations and subscriptions** in your [GraphQL API](!alias-heshoov3ai).
+You can add new relations to your GraphQL schema using the `@relation(name: String!)` tag. This will **add new mutations and modify existing queries, mutations and subscriptions** in your [GraphQL API](!alias-abogasd0go).
 
 Consider this schema file:
 
@@ -437,17 +447,17 @@ type Story implements Node {
 Note that we added two fields:
 
 * `stories: [Story!]! @relation(name: "UserStories")` on the `User` type signifies many Stories. List relation fields are always required.
-* `user: User! @relation(name: "UserStories")` on the `Story` type signifies a [required relation field](!alias-teizeit5se#required). Singular relation fields can be optional or required.
+* `user: User! @relation(name: "UserStories")` on the `Story` type signifies a [required relation field](!alias-eiroozae8u#required-relations). Singular relation fields can be optional or required.
 
 By changing the multiplicities of the separate fields, we can create **one-to-one, one-to-many and many-to-many** relations.
 
-Have a look at the [naming conventions for relations](!alias-oe3raifamo#scalar-and-relation-fields) to see what names are allowed and recommended.
+Have a look at the [naming conventions](!alias-eiroozae8u#naming-conventions) for relations to see what names are allowed and recommended.
 
 ### Removing an existing relation
 
 To remove an existing relation, you can delete the corresponding relation fields in the schema file. This will remove **all data for this relation** as well.
 
-> Removing a relation potentially breaks existing queries, mutations and subscriptions in your [GraphQL API](!alias-heshoov3ai). Make sure to not rely on this relation in your apps before deleting it.
+> Removing a relation potentially breaks existing queries, mutations and subscriptions in your [GraphQL API](!alias-abogasd0go). Make sure to not rely on this relation in your apps before deleting it.
 
 Consider this schema file:
 
@@ -489,7 +499,7 @@ type Story implements Node {
 
 Renaming a relation can be done by updating the existing `@relation(name: String!)` directives.
 
-> Renaming a relation potentially breaks existing queries, mutations and subscriptions in your [GraphQL API](!alias-heshoov3ai). Make sure to adjust your app accordingly to the new name.
+> Renaming a relation potentially breaks existing queries, mutations and subscriptions in your [GraphQL API](!alias-abogasd0go). Make sure to adjust your app accordingly to the new name.
 
 Consider this schema file:
 
@@ -533,7 +543,7 @@ type Story implements Node {
 
 Whether changing the type of a relation field is possible might change depending on if there are already connected nodes in the relation.
 
-> Changing the type of a relation field potentially breaks existing queries, mutations and subscriptions in your [GraphQL API](!alias-heshoov3ai). Make sure to adjust your app accordingly to the changes.
+> Changing the type of a relation field potentially breaks existing queries, mutations and subscriptions in your [GraphQL API](!alias-abogasd0go). Make sure to adjust your app accordingly to the changes.
 
 Consider this schema file:
 
@@ -584,7 +594,7 @@ Changing the type of a relation field is only possible when no nodes are connect
 
 Whether changing the multiplicity of a relation field is possible might change depending on if there are already connected nodes in the relation.
 
-> Changing the multiplicity of a relation field potentially breaks existing queries, mutations and subscriptions in your [GraphQL API](!alias-heshoov3ai). Make sure to adjust your app accordingly to the changes.
+> Changing the multiplicity of a relation field potentially breaks existing queries, mutations and subscriptions in your [GraphQL API](!alias-abogasd0go). Make sure to adjust your app accordingly to the changes.
 
 #### Changing a relation field from to-many to to-one
 
