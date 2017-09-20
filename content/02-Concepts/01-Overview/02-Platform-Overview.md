@@ -1,6 +1,7 @@
 ---
 alias: eip0theipo 
 description: An overview of the Graphcool platform.
+next: There is more to come
 ---
 
 # Platform Overview

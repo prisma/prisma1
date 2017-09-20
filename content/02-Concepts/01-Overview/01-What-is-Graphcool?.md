@@ -1,6 +1,7 @@
 ---
 alias: apohpae9ju 
 description: An overview of the Graphcool platform.
+next: There is more to come
 ---
 
 # What is Graphcool
