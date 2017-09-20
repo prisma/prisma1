@@ -5,6 +5,8 @@ description: A GraphQL query is used to fetch data from a GraphQL endpoint.
 
 # Queries
 
+## Overview
+
 A *GraphQL query* is used to fetch data from a GraphQL [endpoint](!alias-yahph3foch#project-endpoints). This is an example query:
 
 ```graphql
@@ -43,26 +45,28 @@ query {
 }
 ```
 
-Here's a list of available queries. To explore them, use the [playground](!alias-oe1ier4iej) inside your project.
+> You can click the **Play**-button in the code snippet to run the query and see the server response. You can also modify the query and observe the changes in the responses that are sent by the server.
 
-* Based on the [types](!alias-ij2choozae) and [relations](!alias-goh5uthoc1) in your [GraphQL schema](!alias-ahwoh2fohj), [type queries](!alias-chuilei3ce) and [relation queries](!alias-aihaeph5ip) will be generated to fetch type and relation data.
-* Additionally, [custom queries](!alias-nae4oth9ka) can be added to your API using [Resolvers](!alias-xohbu7uf2e) that are implemented as serverless functions.
+Here's a list of available queries. To explore them, use the [playground](!alias-uh8shohxie#playground) inside your project.
 
-Some queries support [query arguments](!alias-on1yeiw7ph) to further control the query response.
+- Based on the [model types](!alias-eiroozae8u#model-types) and [relations](!alias-eiroozae8u#relations) in your type definitions, [type queries](#type-queries) and [relation queries](#relation-queries) will be generated to fetch type and relation data.
+- Additionally, [custom queries](#custom-queries) can be added to your API using [Resolvers](!alias-su6wu3yoo2) that are implemented as serverless [functions](!alias-aiw4aimie9).
 
+Some queries support [query arguments](#query-arguments) to further control the query response.
 
+## Type queries
 
 ### Fetching a single node
 
-For each [type](!alias-ij2choozae) in your project, the Simple API provides an automatically generated query to fetch one specific node of that type. To specify the node, all you need to provide is its `id` or another unique field.
+For each [model type](!alias-eiroozae8u#model-types) in your project, the Simple API provides an automatically generated query to fetch one specific node of that type. To specify the node, all you need to provide is its `id` or another unique field.
 
-For example, for the type called `Post` a top-level query `Post` will be generated.
+For example, for a type called `Post` a top-level query `Post` will be generated.
 
 #### Specifying the node by id
 
-You can always use the [system field](!alias-uhieg2shio#id-field) `id` to identify a node.
+You can always use the system-managed [`id` field](!alias-eiroozae8u#inique-ids-and-the-node-interface) to identify a node.
 
-> Query a specific post by id:
+Query a specific post by its `id`:
 
 ```graphql
 ---
@@ -90,9 +94,9 @@ query {
 
 #### Specifying the node by another unique field
 
-You can also supply any [unique field](!alias-teizeit5se#unique) as an argument to the query to identify a node. For example, if you already declared the `slug` field of the `Post` type to be unique, you could select a post by specifying its slug:
+You can also supply any [unique field](!alias-eiroozae8u#unique) as an argument to the query to identify a node. For example, if you already declared the `slug` field of the `Post` type to be unique, you could select a post by specifying its slug:
 
-> Query a specific node by slug:
+Query a specific `Post` node by its `slug`:
 
 ```graphql
 ---
@@ -120,17 +124,16 @@ query {
 }
 ```
 
-Note: You cannot specify two or more unique arguments for one query at the same time.
-
+> Note: You cannot specify two or more unique arguments for one query at the same time.
 
 
 ### Fetch multiple nodes
 
-The Simple API contains automatically generated queries to fetch all nodes of a certain [type](!alias-ij2choozae). For example, for the `Post` type the top-level query `allPosts` will be generated.
+The Simple API contains automatically generated queries to fetch all nodes of a certain [model type](!alias-eiroozae8u#model-types). For example, for the `Post` type the top-level query `allPosts` will be generated.
 
 #### Fetch all nodes of a specific type
 
-> Query all post nodes:
+Query all `Post` nodes:
 
 ```graphql
 ---
@@ -168,16 +171,17 @@ query {
 }
 ```
 
-> A few examples for query names
-* type name: `Post`, query name: `allPosts`
-* type name: `Todo`, query name: `allTodoes`
-* type name: `Hobby`, query name: `allHobbies`.
+Here are a few examples for the generated query names:
 
-Note: The query name approximate the plural rules of the English language. If you are unsure about the actual query name, explore available queries in your [playground](!alias-oe1ier4iej).
+- type name: `Post`, query name: `allPosts`
+- type name: `Todo`, query name: `allTodoes`
+- type name: `Hobby`, query name: `allHobbies`.
+
+> Note: The query name approximate the plural rules of the English language. If you are unsure about the actual query name, explore available queries in your [playground](!alias-uh8shohxie#playground).
 
 #### Fetch certain nodes of a specific type
 
-> Query all post nodes with a `title` that contains `biggest`:
+Query all `Post` nodes with a `title` that contains the string `biggest`:
 
 ```graphql
 ---
@@ -208,13 +212,13 @@ query {
 ```
 
 
-### Type Aggregation Queries
+### Type aggregation queries
 
 For every type in your GraphQL schema, different aggregation queries are available.
 
 #### Fetch the number of all nodes
 
-> Count the number of all `User` nodes:
+Count the number of all `User` nodes:
 
 ```graphql
 ---
@@ -238,7 +242,7 @@ query {
 
 #### Count the number of nodes matching a certain filter condition
 
-> Count the number of all `User` nodes with `accessRole` `ADMIN`:
+Count the number of all `User` nodes with `accessRole` `ADMIN`:
 
 ```graphql
 ---
@@ -262,17 +266,16 @@ query {
 }
 ```
 
-#### More Aggregation Options
+#### More aggregation options
 
-Currently, count is the only available aggregation. For specific use cases, you can use [functions](!alias-boo6uteemo) to precalculate certain aggregations and update them when data changes.
+Currently, `count` is the only available aggregation. For specific use cases, you can use serverless [functions](!alias-aiw4aimie9) to precalculate certain aggregations and update them when data changes.
 
 Please join the discussion on [GitHub](https://github.com/graphcool/feature-requests/issues/70) if you are interested in a specific aggregation.
 
 
+## Relation queries
 
-## Relation Queries
-
-Every available [relation](!alias-goh5uthoc1) in your [GraphQL schema](!alias-ahwoh2fohj) adds a new field to the [type queries](!alias-chuilei3ce) of the two connected types.
+Every available [relation](!alias-eiroozae8u#relations) in your type definitions adds a new field to the [type queries](#type-queries) of the two connected types.
 
 For example, with the following schema:
 
@@ -292,15 +295,15 @@ type User {
 
 the following fields will be available:
 
-* the `Post` and `allPosts` queries expose a new `author` field to [traverse one node](!alias-ian3cae2oh).
-* the `User` and `allUsers` queries expose a new `posts` field to [traverse many nodes](!alias-ohree5pu0y) and a `_postsMeta` to fetch [relation aggregation data](!alias-taesee4ua7).
+- the `Post` and `allPosts` queries expose a new `author` field to [traverse one node](#traversing-a-single-node).
+- the `User` and `allUsers` queries expose a new `posts` field to [traverse many nodes](#traversing-many-nodes) and a `_postsMeta` to fetch [relation aggregation data](#relation-aggregation).
 
 
-### Traversing One Node
+### Traversing a single node
 
 Traversing edges that connect the current node to the one side of a relation can be done by simply selecting the according field defined with the relation.
 
-> Query information on the author node connected to a specific post node:
+Query information on the `author` node connected to a specific `Post` node:
 
 ```graphql
 ---
@@ -337,12 +340,11 @@ The `author` field exposes a further selection of properties that are defined on
 > Note: You can add [filter query arguments](!alias-xookaexai0) to an inner field returning a single node.
 
 
-
-### Traversing Many Nodes
+### Traversing many nodes
 
 In the Simple API, traversing edges connecting the current node to the many side of a relation works the same as for a one side of a relation. Simply select the relation field.
 
-> Query information on all post nodes of a certain author node:
+Query information on all `Post` nodes of a certain `author` node:
 
 ```graphql
 ---
@@ -386,15 +388,14 @@ query {
 
 The `posts` field exposes a further selection of properties that are defined on the `Post` type.
 
-> Note: [Query arguments](!alias-ohrai1theo) for an inner field returning multiple nodes work similar as elsewhere.
+> Note: [Query arguments](#query-arguments) for an inner field returning multiple nodes work similar as elsewhere.
 
 
+### Relation aggregation
 
-### Relation Aggregation
+Nodes connected to multiple nodes via a one-to-many or many-to-many edge expose the `_<edge>Meta` field that can be used to query meta information of a connection rather than the actual connected nodes.
 
-Nodes connected to multiple nodes via a one-to-many or many-to-many edge expose the `_edgeMeta` field that can be used to query meta information of a connection rather than the actual connected nodes.
-
-> Query meta information on all post nodes of a certain author node:
+Query meta information on all `Post` nodes of a certain `author` node:
 
 ```graphql
 ---
@@ -424,7 +425,7 @@ query {
 }
 ```
 
-> Query meta information on certain post nodes of a certain author node:
+Query meta information on certain `Post` nodes of a certain `author` node:
 
 ```graphql
 ---
@@ -457,23 +458,22 @@ query {
 ```
 
 
-## Query Arguments
+## Query arguments
 
-All queries and fields that return many nodes accept different query arguments to further control the query response. The response can be
+All queries and fields that return many nodes accept different query arguments to further control the query response. The response can be either of the following:
 
-* [ordered by field](!alias-vequoog7hu).
-* [filtered by multiple fields](!alias-xookaexai0).
-* [paginated](!alias-ojie8dohju) into multiple pages by fixing one specific node and either seeking forwards or backwards.
+- [ordered by field](#ordering-by-field)
+- [filtered by multiple fields](#filtering-by-field)
+- [paginated](#pagination) into multiple pages by fixing one specific node and either seeking forwards or backwards
 
 These query arguments can be combined to achieve very specific query responses.
 
 
-
 ### Ordering by field
 
-When querying all nodes of a [type](!alias-ij2choozae) you can supply the `orderBy` argument for every scalar field of the type: `orderBy: <field>_ASC` or `orderBy: <field>_DESC`.
+When querying all nodes of a [model type](!alias-eiroozae8u#model-types) you can supply the `orderBy` argument for every scalar field of the type: `orderBy: <field>_ASC` or `orderBy: <field>_DESC`.
 
-> Order the list of all posts ascending by title:
+Order the list of all `Post` nodes ascending by `title`:
 
 ```graphql
 ---
@@ -511,7 +511,7 @@ query {
 }
 ```
 
-> Order the list of all posts descending by published:
+Order the list of all `Post` nodes descending by `published`:
 
 ```graphql
 ---
@@ -549,8 +549,8 @@ query {
 }
 ```
 
-Note: The field you are ordering by does not have to be selected in the actual query.
-Note: If you do not specify an ordering, the response is implicitely ordered ascending by the `id` field
+> Note: The field you are ordering by does not have to be selected in the actual query. If you do not specify an ordering, the response is implicitely ordered ascending by the `id` field
+
 
 #### Limitations
 
@@ -561,17 +561,17 @@ It's currently not possible to order responses [by multiple fields](https://gith
 
 When querying all nodes of a type you can supply different parameters to the `filter` argument to filter the query response accordingly. The available options depend on the scalar fields defined on the type in question.
 
-You can also include filters when including related fields in your queries to [traverse your data graph](!alias-aihaeph5ip).
+You can also include filters when including related fields in your queries to [traverse your data graph](#relation-queries).
 
 #### Applying single filters
 
-If you supply exactly one parameter to the `filter` argument, the query response will only contain nodes that fulfill this constraint.
+If you supply exactly one parameter to the `filter` argument, the query response will only contain nodes that adhere to this constraint.
 
 #### Filtering by value
 
 The easiest way to filter a query response is by supplying a field value to filter by.
 
-> Query all posts not yet published:
+Query all `Post` nodes that are not yet `published`:
 
 ```graphql
 ---
@@ -605,7 +605,7 @@ query {
 
 Depending on the type of the field you want to filter by, you have access to different advanced criteria you can use to filter your query response. See how to [explore available filter criteria](#explore-available-filter-criteria).
 
-> Query all posts whose title are in a given list of titles:
+Query all `Post` nodes whose `title` is in a given list of strings:
 
 ```graphql
 ---
@@ -640,13 +640,13 @@ query {
 }
 ```
 
-Note: you have to supply a *list* as the `<field>_in` argument: `title_in: ["My biggest Adventure", "My latest Hobbies"]`.
+> Note: you have to supply a *list* as the `<field>_in` argument: `title_in: ["My biggest Adventure", "My latest Hobbies"]`.
 
 #### Relation filters
 
-* For to-one relations, you can define conditions on the related node by nesting the according argument in `filter`
+For to-one relations, you can define conditions on the related node by nesting the according argument in `filter`
 
-> Query all posts of authors with the `USER` access role
+Query all `Post` nodes where the `author` has the `USER` access role:
 
 ```graphql
 ---
@@ -681,9 +681,9 @@ query {
 ```
 
 
-* For to-many relations, three additional arguments are available: `every`, `some` and `none`, to define that a condition should match every, some or none related nodes.
+For to-many relations, three additional arguments are available: `every`, `some` and `none`, to define that a condition should match every, some or none related nodes.
 
-> Query all users that have at least one published post
+Query all `User` nodes that have at least one `Post` node that's `published`:
 
 ```graphql
 ---
@@ -725,9 +725,9 @@ query {
 }
 ```
 
-* Relation filters are also available in the nested arguments for to-one or to-many relations.
+Relation filters are also available in the nested arguments for to-one or to-many relations.
 
-> Query all users that did not like a post of an author in the `ADMIN` access role
+Query all `User` nodes that did not _like_ a `Post` of an `author` in the `ADMIN` access role:
 
 ```graphql
 ---
@@ -771,7 +771,7 @@ You can use the filter combinators `OR` and `AND` to create an arbitrary logical
 
 Let's start with an easy example:
 
-> Query all published posts whose title are in a given list of titles:
+Query all `Post` nodes that are `published` _and_ whose `title` is in a given list of strings:
 
 ```graphql
 ---
@@ -805,13 +805,13 @@ query {
 }
 ```
 
-Note: `OR` and `AND` accept a *list* as input where individual list items have to be wrapped by `{}`: `AND: [{title_in: ["My biggest Adventure", "My latest Hobbies"]}, {published: true}]`
+> Note: `OR` and `AND` accept a *list* as input where individual list items have to be wrapped by `{}`: `AND: [{title_in: ["My biggest Adventure", "My latest Hobbies"]}, {published: true}]`
 
 ##### Arbitrary combination of filters with `AND` and `OR`
 
 You can combine and even nest the filter combinators `AND` and `OR` to create arbitrary logical combinations of filter conditions.
 
-> Query all posts that are either published and in a list of given titles, or have the specific id we supply:
+Query all `Post` nodes that are either `published` _and_ whose `title` is in a list of given strings, _or_ have the specific `id` we supply:
 
 ```graphql
 ---
@@ -858,7 +858,7 @@ query($published: Boolean) {
 }
 ```
 
-Note how we nested the `AND` combinator inside the `OR` combinator, on the same level with the `id` value filter.
+> Notice how we nested the `AND` combinator inside the `OR` combinator, on the same level with the `id` value filter.
 
 #### Explore available filter criteria
 
@@ -969,7 +969,7 @@ If you want to filter a list of strings `tags: [String!]!`:
 
 ```graphql
 type Item {
-  id: ID!
+  id: ID! @isUnique
   tags: [String!]!
 }
 ```
@@ -978,12 +978,12 @@ you can introduce a new type `Tag` with a single `key: String` field and connect
 
 ```graphql
 type Item {
-  id: ID!
+  id: ID! @isUnique
   tags: [Tag!]! @relation(name: "ItemTags")
 }
 
 type Tag {
-  id: ID!
+  id: ID! @isUnique
   key: String!
   item: Item @relation(name: "ItemTags")
 }
@@ -995,15 +995,16 @@ Now you can filter items based on their connected tags using the `tag_none`, `ta
 
 ### Pagination
 
-When querying all nodes of a specific [type](!alias-ij2choozae) you can supply arguments that allow you to paginate the query response.
+When querying all nodes of a specific [model type](!alias-eiroozae8u#model-types), you can supply arguments that allow you to _paginate_ the query response.
 
 Pagination allows you to request a certain amount of nodes at the same time. You can seek forwards or backwards through the nodes and supply an optional starting node:
-* to seek forwards, use `first`; specify a starting node with `after`.
-* to seek backwards, use `last`; specify a starting node with `before`.
+
+- to seek forwards, use `first`; specify a starting node with `after`.
+- to seek backwards, use `last`; specify a starting node with `before`.
 
 You can also skip an arbitrary amount of nodes in whichever direction you are seeking by supplying the `skip` argument.
 
-> Consider a blog where only 3 posts are shown at the front page. To query the first page:
+Consider a blog where only 3 `Post` nodes are shown at the front page. To query the first page:
 
 ```graphql
 ---
@@ -1037,7 +1038,7 @@ query {
 }
 ```
 
-> To query the first two posts after the first post:
+To query the first two `Post` node after the first `Post` node:
 
 ```graphql
 ---
@@ -1070,7 +1071,7 @@ query {
 }
 ```
 
-> We could reach the same result by combining `first` and `skip`:
+We could reach the same result by combining `first` and `skip`:
 
 ```graphql
 ---
@@ -1103,7 +1104,7 @@ query {
 }
 ```
 
-> Query the `last` 2 posts:
+Query the `last` 2 posts:
 
 ```graphql
 ---
@@ -1133,26 +1134,24 @@ query {
 }
 ```
 
-Note: You cannot combine `first` with `before` or `last` with `after`.
-Note: If you query more nodes than exist, your response will simply contain all nodes that actually do exist in that direction.
+> Note: You cannot combine `first` with `before` or `last` with `after`. If you query more nodes than exist, your response will simply contain all nodes that actually do exist in that direction.
 
 #### Limitations
 
-Note that *a maximum of 1000 nodes* can be returned per pagination field. If you need to query more nodes than that, you can use `first` and `skip` to seek through the different pages. You can also include [multiple versions of the same field with different pagination parameters](!alias-cahzai2eur) in one query using GraphQL Aliases.
+Note that *a maximum of 1000 nodes* can be returned per pagination field. If you need to query more nodes than that, you can use `first` and `skip` to seek through the different pages. You can also include multiple versions of the same field with different pagination parameter in one query using GraphQL Aliases.
 
 Please join [the discussion on GitHub](https://github.com/graphcool/feature-requests/issues/259) for an according feature request to lift this limitation.
 
 
+## Custom queries
 
-## Custom Queries
-
-For use cases that are not covered by the automatically generated CRUD-style API, [Resolver Functions](!alias-xohbu7uf2e) can be used to enhance your GraphQL schema with custom queries.
+For use cases that are not covered by the automatically generated CRUD API, [Resolver](!alias-xohbu7uf2e) functions can be used to enhance your GraphQL schema with custom queries.
 
 You can define the **name, input arguments and payload of the query** and **resolve it with a Graphcool Function**.
 
 ### Example
 
-> Validate the age of a user
+#### Validate the age of a user
 
 Schema Extension SDL document:
 
@@ -1201,11 +1200,10 @@ query {
 }
 ```
 
-Note that the returned object contains a `data` key, which in turn contains the `number` field that was specified in the `RandomNumberPayload` in the SDL document. [Error handling](!alias-quawa7aed0) works similarly to other Graphcool Functions, if an object containing the `error` key is returned.
+Note that the returned object contains a `data` key, which in turn contains the `number` field that was specified in the `RandomNumberPayload` in the SDL document. [Error handling](!alias-geihakoh4e) works similarly to other Graphcool Functions, if an object containing the `error` key is returned.
 
 
-
-## The Authenticated User
+## The authenticated `User` (only for [non-ejected](!alias-opheidaix3#non-ejected-projects) projects)
 
 If the request of a query contains authentication information on the [session user](!alias-geekae9gah#user-login), you can use the `user` query to query information on that user. All fields of the `User` type are available.
 
