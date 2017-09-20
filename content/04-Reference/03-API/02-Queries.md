@@ -49,7 +49,7 @@ query {
 
 Here's a list of available queries. To explore them, use the [playground](!alias-uh8shohxie#playground) inside your project.
 
-- Based on the [model types](!alias-eiroozae8u#model-types) and [relations](!alias-eiroozae8u#relations) in your type definitions, [type queries](#type-queries) and [relation queries](#relation-queries) will be generated to fetch type and relation data.
+- Based on the [model types](!alias-eiroozae8u#model-types) and [relations](!alias-eiroozae8u#relations) in your data model, [type queries](#type-queries) and [relation queries](#relation-queries) will be generated to fetch type and relation data.
 - Additionally, [custom queries](#custom-queries) can be added to your API using [Resolvers](!alias-su6wu3yoo2) that are implemented as serverless [functions](!alias-aiw4aimie9).
 
 Some queries support [query arguments](#query-arguments) to further control the query response.

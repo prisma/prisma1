@@ -5,7 +5,9 @@ description: A GraphQL mutation is used to modify data at a GraphQL endpoint.
 
 # Mutations
 
-A *GraphQL mutation* is used to modify data at a GraphQL [endpoint](!alias-yahph3foch#project-endpoints). This is an example mutation:
+## Overview
+
+A *GraphQL mutation* is used to modify data. This is an example mutation:
 
 ```graphql
 ---
@@ -34,22 +36,21 @@ mutation {
 }
 ```
 
-Here's a list of available mutations. To explore them, use the [playground](!alias-oe1ier4iej) inside your project.
+Here's a list of available mutations. To explore them, use the [playground](!alias-uh8shohxie#playground) inside your project.
 
-* Based on the [types](!alias-ij2choozae) and [relations](!alias-goh5uthoc1) in your [GraphQL schema](!alias-ahwoh2fohj), [type mutations](!alias-eamaiva5yu) and [relation mutations](!alias-kaozu8co6w) will be generated to modify nodes and edges.
-* Additionally, [custom mutations](!alias-thiele0aop) can be added to your API using [Schema Extensions](!alias-xohbu7uf2e).
+* Based on the [model types](!alias-eiroozae8u#model-types) and [relations](!alias-eiroozae8u#relations) in your data model, [type mutations](#type-mutations) and [relation mutations](#relation-mutations) will be generated to modify nodes and edges.
+* Additionally, [custom mutations](#custom-mutations) can be added to your API using [Resolvers](!alias-su6wu3yoo2) that are implemented as serverless [functions](!alias-aiw4aimie9).
 
 
+## Type mutations
 
-## Type Mutations
-
-For every available [type](!alias-ij2choozae) in your [GraphQL schema](!alias-ahwoh2fohj), certain mutations are automatically generated.
+For every available [model type](!alias-eiroozae8u#model-types) in your data model, certain mutations are automatically generated.
 
 For example, if your schema contains a `Post` type:
 
 ```graphql
 type Post {
-  id: ID!
+  id: ID! @isUnique
   title: String!
   description: String
 }
@@ -57,19 +58,19 @@ type Post {
 
 the following type mutations will be available:
 
-* the `createPost` mutation [creates a new node](!alias-wooghee1za).
-* the `updatePost` mutation [updates an existing node](!alias-cahkav7nei).
-* the `deletePost` mutation [deletes an existing node](!alias-fasie2rahv).
+* the `createPost` mutation [creates a new node](#creating-a-node).
+* the `updatePost` mutation [updates an existing node](#updating-a-node).
+* the `deletePost` mutation [deletes an existing node](#deleting-a-node).
 
 
 ### Creating a node 
 
 Creates a new node for a specific type that gets assigned a new `id`.
-All [required](!alias-teizeit5se#required) fields of the type without a [default value](!alias-teizeit5se#default-value) have to be specified, the other fields are optional arguments.
+All [required](!alias-eiroozae8u#required) fields of the type without a [default value](!alias-eiroozae8u#default-value) have to be specified, the other fields are optional arguments.
 
 The query response can contain all fields of the newly created node, including the `id` field.
 
-> Create a new post and query its id:
+Create a new `Post` node and query its `id` and `slug`:
 
 ```graphql
 ---
@@ -99,13 +100,13 @@ mutation {
 ```
 
 
-### Updating nodes with the Simple API
+### Updating a node
 
-Updates [fields](!alias-teizeit5se) of an existing node of a certain [type](!alias-ij2choozae) specified by the `id` field. The node's fields will be updated according to the additionally provided values.
+Updates [fields](!alias-eiroozae8u#fields) of an existing node of a certain [model type](!alias-eiroozae8u#model-types) specified by the `id` field. The node's fields will be updated according to the additionally provided values. 
 
 The query response can contain all fields of the updated node.
 
-> Update the text and published fields for an existing post and query its id:
+Update the `text` and `published` fields for an existing `Post` node and query its `id`:
 
 ```graphql
 ---
@@ -134,13 +135,13 @@ mutation {
 ```
 
 
-### Deleting nodes
+### Deleting a node
 
 Deletes a node specified by the `id` field.
 
 The query response can contain all fields of the deleted node.
 
-> Delete an existing post and query its id and title:
+Delete an existing `Post` node and query its (then deleted) `id` and `title`:
 
 ```graphql
 ---
@@ -163,22 +164,22 @@ mutation {
 ```
 
 
-## Relation Mutations
+## Relation mutations
 
-For every available [relation](!alias-goh5uthoc1) in your [GraphQL schema](!alias-ahwoh2fohj), certain mutations are automatically generated.
+For every available [relation](!alias-eiroozae8u#relations) in your data model, certain mutations are automatically generated.
 
 The names and arguments of the generated mutations depend on the relation name and its cardinalities. For example, with the following schema:
 
 ```graphql
 type Post {
-  id: ID!
+  id: ID! @isUnique
   title: String!
   author: User @relation(name: "WrittenPosts")
   likedBy: [User!]! @relation(name: "LikedPosts")
 }
 
 type User {
-  id: ID!
+  id: ID! @isUnique
   name : String!
   address: Address @relation(name: "UserAddress")
   writtenPosts: [Post!]! @relation(name: "WrittenPosts")
@@ -186,30 +187,30 @@ type User {
 }
 
 type Address {
-  id: ID!
+  id: ID! @isUnique
   city: String!
   user: User @relation(name: "UserAddress")
 }
 ```
 
-these relation mutations will be available
+the following relation mutations will be available:
 
-* the `setUserAddress` and `unsetUserAddress` mutations [connect and disconnect two nodes](!alias-zeich1raej) in the **one-to-one** relation `UserAddress`.
-* the `addToWrittenPosts` and `removeFromWrittenPosts` mutations [connect and disconnect two nodes](!alias-ofee7eseiy) in the **one-to-many** relation `WrittenPosts`.
-* the `addToLikedPosts` and `removeFromLikedPosts` mutations [connect and disconnect two nodes](!alias-aengu5iavo) in the a **many-to-many** relation `LikedPosts`.
+- the `setUserAddress` and `unsetUserAddress` mutations [connect and disconnect two nodes](#modifying-edges-for-one-to-one-relations) in the **one-to-one** relation `UserAddress`.
+- the `addToWrittenPosts` and `removeFromWrittenPosts` mutations [connect and disconnect two nodes](#modifying-edges-for-one-to-many-relations) in the **one-to-many** relation `WrittenPosts`.
+- the `addToLikedPosts` and `removeFromLikedPosts` mutations [connect and disconnect two nodes](#modifying-edges-for-many-to-many-relations) in the a **many-to-many** relation `LikedPosts`.
 
 
-### Modifying edges for one-to-one relations with the Simple API
+### Modifying edges for one-to-one relations
 
-A node in a one-to-one [relation](!alias-goh5uthoc1) can at most be connected to one node.
+A node in a one-to-one [relation](!alias-eiroozae8u#relations) can at most be connected to one node.
 
 #### Connect two nodes in a one-to-one relation
 
-Creates a new edge between two nodes specified by their `id`. The according types have to be in the same [relation](!alias-goh5uthoc1).
+Creates a new edge between two nodes specified by their `id`. The according types have to be in the same [relation](!alias-eiroozae8u#relations).
 
 The query response can contain both nodes of the new edge. The names of query arguments and node names depend on the field names of the relation.
 
-> Consider a blog where every post is assigned to additional meta information. Adds a new edge to the relation called `PostMetaInformation` and query the tags stored in the meta information and the post title:
+Consider a blog where every `Post` node is assigned to additional `MetaInformation`. Add a new edge to the relation called `PostMetaInformation` and query the `tags` stored in the `metaInformation` node as well as the `title`:
 
 ```graphql
 ---
@@ -246,9 +247,9 @@ mutation {
 }
 ```
 
-Note: First removes existing connections containing one of the specified nodes, then adds the edge connecting both nodes.
+> Note: First removes existing connections containing one of the specified nodes, then adds the edge connecting both nodes.
 
-You can also use the `updatePost` or `updateMetaInformation` mutations to connect a post with a meta information:
+You can also use the `updatePost` or `updateMetaInformation` mutations to connect a `Post` node with a `metaInformation` node:
 
 ```graphql
 ---
@@ -312,7 +313,7 @@ Removes an edge between two nodes speficied by their `id`.
 
 The query response can contain both nodes of the former edge. The names of query arguments and node names depend on the field names of the relation.
 
-> Removes an edge from the relation called `PostMetaInformation` and query the tags stored in the meta information and the post title:
+Remove an edge from the relation called `PostMetaInformation` and query the `tags` stored in the `metaInformation`node and the `title`:
 
 ```graphql
 ---
@@ -350,22 +351,19 @@ mutation {
 ```
 
 
+### Modifying edges for one-to-many relations
 
+One-to-many [relations](!alias-eiroozae8u#relations) relate two types to each other.
 
-### Modifying edges for one-to-many relations with the Simple API
-
-One-to-many [relations](!alias-goh5uthoc1) relate two types to each other.
-
-A node of the one side of a one-to-many relation can be connected to multiple nodes.
-A node of the many side of a one-to-many relation can at most be connected to one node.
+A node of the one side of a one-to-many relation can be connected to multiple nodes. A node of the many side of a one-to-many relation can at most be connected to one node.
 
 #### Connect two nodes in a one-to-many relation
 
-Creates a new edge between two nodes specified by their `id`. The according [types](!alias-ij2choozae) have to be in the same [relation](!alias-goh5uthoc1).
+Creates a new edge between two nodes specified by their `id`. The according [model type](!alias-eiroozae8u#model-types) have to be in the same [relations](!alias-eiroozae8u#relations).
 
 The query response can contain both nodes of the new edge. The names of query arguments and node names depend on the field names of the relation.
 
-> Adds a new edge to the relation called `UserPosts` and query the user name and the post title:
+Adds a new edge to the relation called `UserPosts` and query the `name` of the `User` node as well as the `title` of the `Post` node:
 
 ```graphql
 ---
@@ -400,7 +398,7 @@ mutation {
 }
 ```
 
-Note: Adds the edge only if this node pair is not connected yet by this relation. Does not remove any edges.
+> Note: Adds the edge only if this node pair is not connected yet by this relation. Does not remove any edges.
 
 ###### Disconnect two nodes in a one-to-many relation
 
@@ -408,7 +406,7 @@ Removes one edge between two nodes specified by `id`
 
 The query response can contain both nodes of the former edge. The names of query arguments and node names depend on the field names of the relation.
 
-> Removes an edge for the relation called `UserPosts` and query the user id and the post slug
+Removes an edge for the relation called `UserPosts` and query the `id` of the `User` node as well as the `slug` of the `Post` node:
 
 ```graphql
 ---
@@ -444,18 +442,17 @@ mutation {
 ```
 
 
+### Modifying edges for many-to-many relations
 
-### Modifying edges for many-to-many relations with the Simple API
-
-Nodes in a many-to-many [relations](!alias-goh5uthoc1) can be connected to many nodes.
+Nodes in a many-to-many [relations](!alias-eiroozae8u#relations) can be connected to many nodes.
 
 #### Connect two nodes in a many-to-many relation
 
-Creates a new edge between two nodes specified by their `id`. The according [types](!alias-ij2choozae) have to be in the same [relation](!alias-goh5uthoc1).
+Creates a new edge between two nodes specified by their `id`. The according [model types](!alias-eiroozae8u#model-types) have to be in the same [relations](!alias-eiroozae8u#relations).
 
 The query response can contain both nodes of the new edge. The names of query arguments and node names depend on the field names of the relation.
 
-> Adds a new edge to the relation called `MovieActors` and query the movie's title and the actor's name:
+Add a new edge to the relation called `MovieActors` and query the `title` of the `Movie` node as well as the `name` of the `Actor` node:
 
 ```graphql
 ---
@@ -490,15 +487,15 @@ mutation {
 }
 ```
 
-Note: Adds the edge only if this node pair is not connected yet by this relation. Does not remove any edges.
+> Note: Adds the edge only if this node pair is not connected yet by this relation. Does not remove any edges.
 
 ###### Disconnect two nodes in a many-to-many relation
 
-Removes one edge between two nodes specified by `id`
+Removes one edge between two nodes specified by `id`.
 
 The query response can contain both nodes of the former edge. The names of query arguments and node names depend on the field names of the relation.
 
-> Removes an edge for the relation called `MovieActors` and query the movie's title and the actor's name
+Removes an edge for the relation called `MovieActors` and query the `title` of the `Movie` node as well as the `name` of the `Actor` node:
 
 ```graphql
 ---
@@ -533,14 +530,12 @@ mutation {
 }
 ```
 
-
-
-## Nested Mutations
+## Nested mutations
 
 When creating or updating nodes, you can execute _nested mutations_ to interact with connected parts of your type schema.
 
-* to **create and connect to a new node** on the other side of a relation, you can use [nested create mutations](!alias-vaet3eengo).
-* to **connect to an existing node** on the other side of a relation, you can use [nested connect mutations](!alias-tu9ohwa1ui).
+- to **create and connect to a new node** on the other side of a relation, you can use [nested create mutations](#nested-create-mutations).
+- to **connect to an existing node** on the other side of a relation, you can use [nested connect mutations](#nested-connect-mutations).
 
 ### Limitations
 
@@ -552,27 +547,28 @@ Different limitations and improvement suggestions are available. Please join the
 Many other [suggestions and improvements](https://github.com/graphcool/feature-requests/issues/127) are currently being discussed.
 
 
-### Nested Create Mutations
+### Nested create mutations
 
-Nested create mutations connect the created node to a new node in the related type.
-Let's assume the following schema:
+_Nested create mutations_ connect the created node to a new node in the related type.
 
-```idl
+Consider the following data model:
+
+```graphql
 type Author {
-  id: ID!
+  id: ID! @isUnique
   contactDetails: ContactDetails @relation(name: "AuthorContactDetails")
   posts: [Post!]! @relation(name: "AuthorPosts")
   description: String!
 }
 
 type ContactDetails {
-  id: ID!
+  id: ID! @isUnique
   author: Author @relation(name: "AuthorContactDetails")
   email: String!
 }
 
 type Post {
-  id: ID!
+  id: ID! @isUnique
   text: String!
   author: Author @relation(name: "AuthorPosts")
 }
@@ -580,11 +576,11 @@ type Post {
 
 We're considering the `createAuthor` and `updateAuthor` mutation to see how to create nested nodes for the *to-one* relation `AuthorContactDetails` and the *to-many* relation `AuthorPosts`.
 
-#### Nested Create Mutations for to-one Relations
+#### Nested create mutations for to-one relations
 
 Let's explore the available nested create mutations for the `one-to-one` relation `AuthorContactDetails`.
 
-###### Creating a new Author node and connect it to new ContactDetails
+###### Creating a new `Author` node and connect it to new `ContactDetails`
 
 ```graphql
 ---
@@ -618,7 +614,7 @@ mutation createAuthorAndContactDetails {
 
 ```
 
-Note the nested `contactDetails` object that takes the same input arguments as the `createContactDetails` mutation. After running this mutation, new author and contact detail node have been created that are now connected via the `AuthorContactDetails` relation.
+Notice that the nested `contactDetails` object that takes the same input arguments as the `createContactDetails` mutation. After running this mutation, a new `Author` and `ContactDetail` node have been created that are connected via the `AuthorContactDetails` relation.
 
 Here's the same mutation using GraphQL variables:
 
@@ -658,19 +654,19 @@ mutation createAuthorAndContactDetails($contactDetails: AuthorcontactDetailsCont
 
 ```
 
-Note the variable type `AuthorcontactDetailsContactDetails` that follows a consistent naming schema:
+Notice the variable type `AuthorcontactDetailsContactDetails` that follows a consistent naming schema:
 
-* The original type name `Author`
-* The related field name `contactDetails`
-* The related type name `ContactDetails`
+- The original type name `Author`
+- The related field name `contactDetails`
+- The related type name `ContactDetails`
 
 You can also find the type name in the documentation in the Playground:
 
 ![](./graphql-variables-type-name.png?width=351)
 
-###### Updating an existing Author and connect it to new ContactDetails
+###### Updating an existing `Author` node and connect it to new `ContactDetails`
 
-Similarly, we can update an author and simultaneously create new contact details for that author:
+Similarly, we can update an `Author` node and simultaneously create new `ContactDetails` for it:
 
 ```graphql
 ---
@@ -709,11 +705,11 @@ mutation updateAuthorAndCreateContactDetails($contactDetails: AuthorcontactDetai
 }
 ```
 
-#### Nested Create Mutations for to-many Relations
+#### Nested create mutations for to-many relations
 
 Let's explore the available nested create mutations for the `one-to-many` relation `AuthorPosts`.
 
-###### Creating a new Author node and connect it to multiple new Posts
+###### Creating a new `Author` node and connect it to multiple new `Post` nodes
 
 ```graphql
 ---
@@ -753,7 +749,7 @@ mutation createAuthorAndPosts {
 }
 ```
 
-Note the nested `posts` object that takes a list of arguments needed for the `createPost` mutation. After running this mutation, new author and post nodes have been created that are now connected via the `AuthorPosts` relation.
+Note that the nested `posts` object that takes a list of arguments needed for the `createPost` mutation. After running this mutation, a new `Author` and two `Post` nodes have been created that are now connected via the `AuthorPosts` relation.
 
 Here's the same mutation using GraphQL variables:
 
@@ -801,15 +797,15 @@ mutation createAuthorAndPosts($posts: [AuthorpostsPost!]) {
 
 Note the variable type `[AuthorpostsPost!]` that follows a consistent naming schema:
 
-* The original type name `Author`
-* The related field name `posts`
-* The related type name `Post`
+- The original type name `Author`
+- The related field name `posts`
+- The related type name `Post`
 
 You can also find the type name in the documentation in the Playground:
 
 ![](./graphql-variables-type-name.png)
 
-###### Updating an existing Author and Connecting it to multiple new Posts
+###### Updating an existing `Author` node and connecting it to multiple new `Post` nodes
 
 Similarly, we can update an author and simultaneously assign it to a new list of new posts:
 
@@ -856,31 +852,31 @@ mutation updateAuthorAndConnectToPosts($posts: [AuthorpostsPost!]) {
 }
 ```
 
-> Note: This mutation will *replace* the existing list of posts assigned to the author. If instead you want to *append* more posts to the list, you can [modify the edge](!alias-ofee7eseiy) directly instead.
+> Note: This mutation will *replace* the existing list of posts assigned to the author. If instead you want to *append* more posts to the list, you can [modify the edge](#modifying-edges-for-one-to-many-relations) directly instead.
 
 
+### Nested connect mutations
 
-### Nested Connect Mutations
+_Nested connect mutations_ connect the original node to an existing node in the related type.
 
-Nested connect mutations connect the original node to an existing node in the related type.
-Let's assume the following schema:
+Consider the following data model:
 
 ```idl
 type Author {
-  id: ID!
+  id: ID! @isUnique
   contactDetails: ContactDetails @relation(name: "AuthorContactDetails")
   posts: [Post!]! @relation(name: "AuthorPosts")
   description: String!
 }
 
 type ContactDetails {
-  id: ID!
+  id: ID! @isUnique
   author: Author @relation(name: "AuthorContactDetails")
   email: String!
 }
 
 type Post {
-  id: ID!
+  id: ID! @isUnique
   text: String!
   author: Author @relation(name: "AuthorPosts")
 }
@@ -888,11 +884,11 @@ type Post {
 
 We're considering the `createAuthor` and `updateAuthor` mutation to see how to connect nested nodes for the *to-one* relation `AuthorContactDetails` and the *to-many* relation `AuthorPosts`.
 
-#### Nested Connect Mutations for to-one Relations
+#### Nested connect mutations for to-one relations
 
 Let's explore the available nested connect mutations for the `one-to-one` relation `AuthorContactDetails`.
 
-###### Creating a new Author node and connect it to existing ContactDetails
+###### Creating a new `Author` node and connecting it to an existing `ContactDetails` node
 
 ```graphql
 ---
@@ -923,11 +919,11 @@ mutation createAuthorAndConnectContactDetails {
 }
 ```
 
-Note the nested `contactDetailsId` argument that we pass the id of an existing `ContactDetails` node. After running this mutation, the new author node and the existing contact detail node are connected via the `AuthorContactDetails` relation.
+Notice the nested `contactDetailsId` argument that gets passed the `id` of an existing `ContactDetails` node. After running this mutation, the new `Author` node and the existing `ContactDetails` node are connected via the `AuthorContactDetails` relation.
 
-###### Updating an existing Author and connect it to existing ContactDetails
+###### Updating an existing `Author` node and connecting it to an existing `ContactDetails` node
 
-Similarly, we can update an author and simultaneously connect it to existing contact details:
+Similarly, we can update an `Author` node and simultaneously connect it to an existing `ContactDetails` node:
 
 ```graphql
 ---
@@ -960,11 +956,11 @@ mutation updateAuthorAndConnectContactDetails {
 }
 ```
 
-#### Nested Connect Mutations for to-many Relations
+#### Nested connect mutations for to-many relations
 
 Let's explore the available nested connect mutations for the `one-to-many` relation `AuthorPosts`.
 
-###### Creating a new Author node and connect it to multiple existing Posts
+###### Creating a new `Author` node and connecting it to multiple existing `Post` nodes
 
 ```graphql
 ---
@@ -1004,11 +1000,11 @@ mutation createAuthorAndConnectPosts($postsIds: [ID!]) {
 }
 ```
 
-Note the nested `postsIds` list of `Post` ids. After running this mutation, the new author node and the existing post nodes are now connected via the `AuthorPosts` relation.
+Notice the nested `postsIds` list of `Post` ids. After running this mutation, the new `Author` node and the existing `Post` nodes are now connected via the `AuthorPosts` relation.
 
-###### Updating an existing Author and Connecting it to multiple new Posts
+###### Updating an existing `Author` node and connecting it to multiple new `Post` nodes
 
-Similarly, we can update an author and simultaneously assign it to a new list of existing posts:
+Similarly, we can update an `Author` node and simultaneously assign it to a new list of existing `Post` nodes:
 
 ```graphql
 ---
@@ -1049,18 +1045,18 @@ mutation updateAuthorAndConnectPosts($postsIds: [ID!]) {
 }
 ```
 
-> Note: This mutation will *replace* the existing list of posts assigned to the author. If instead you want to *append* more posts to the list, you can [modify the edge](!alias-ofee7eseiy) directly instead.
+> Note: This mutation will *replace* the existing list of `Post` nodes assigned to the `Author` node. If instead you want to *append* more posts to the list, you can [modify the edge](#modifying-edges-for-one-to-many-relations) directly.
 
 
-## Custom Mutations
+## Custom mutations
 
-Custom mutations can be added to your GraphQL API using [Schema Extensions](!alias-xohbu7uf2e).
+Custom mutations can be added to your GraphQL API using [Resolver](!alias-xohbu7uf2e) functions.
 
 You can define the **name, input arguments and payload of the mutation** and **resolve it with a Graphcool Function**.
 
 ### Example
 
-> Return a random number in a specified range
+#### Return a random number in a specified range
 
 Schema Extension SDL document:
 
@@ -1111,10 +1107,9 @@ mutation {
 Note that the returned object contains a `data` key, which in turn contains the `number` field that was specified in the `RandomNumberPayload` in the SDL document. [Error handling](!alias-quawa7aed0) works similarly to other Graphcool Functions, if an object containing the `error` key is returned.
 
 
+## Working with files
 
-## Working with Files
-
-To interact with the [file management](!alias-eer4wiang0) of the platform, you can create, rename or delete files through queries and mutations exposed in the Simple API.
+To interact with the [file API](!alias-eer4wiang0) of the platform, you can create, rename or delete files through queries and mutations that are exposed in the Simple API.
 
 ### Uploading files
 
@@ -1124,7 +1119,7 @@ Uploading files with a GraphQL mutation is not supported yet. For now, use [the 
 
 To query the meta information stored for a file, use the `allFiles` or `File` queries.
 
-To query a specific file use one of the unique fields `id`, `secret` or `url` fields to [specify the file node](!alias-ua6eer7shu):
+To query a specific file use one of the unique fields `id`, `secret` or `url` fields to specify the file node:
 
 ```graphql
 query {
@@ -1135,7 +1130,7 @@ query {
 }
 ```
 
-Similarly, the `allFiles` query can be used to query for [multiple file nodes](!alias-pa2aothaec).
+Similarly, the `allFiles` query can be used to query for multiple file nodes.
 
 ### Renaming files
 
