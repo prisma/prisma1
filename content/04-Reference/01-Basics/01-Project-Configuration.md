@@ -258,7 +258,7 @@ For this purpose, you can simply use the `graphcool deploy` like with any other 
 When a module is deployed, the CLI simply _merges_ your current project definition with the one from the module and applies all changes that are introduced by the module.
 
 
-## Ejecting a project
+## Ejected vs non-ejected projects
 
 A remote Graphcool project (i.e. a project in your Graphcool account) can be in either of two modes:
 
@@ -267,7 +267,29 @@ A remote Graphcool project (i.e. a project in your Graphcool account) can be in 
 
 > These two modes exist due to the recent changes to the Graphcool platform and its new focus towards managing projects through the CLI rather than using the web-based Console. 
 
-To eject a project, you can use the `graphcool eject` command of the CLI. If you want to manage your project locally with a CLI version greater or equal to 1.4, it needs to be ejected.
+### Non-ejected projects
+
+Non-ejected projects can only use CLI versions lower than 1.4 and are primarily managed through the Console. Particularly, managing _functions_ and _permissions_ can only be done in the Console with non-ejected projects.
+
+Managing the GraphQL type definitions can still be done both in the Console (in the _Schema Editor_) and the CLI (using `graphcool pull` and `graphcool push`).
+
+
+### Ejected projects
+
+Ejected projects can only use CLI versions greater or equal to 1.4. Ejected projects can only be modified with the CLI, all the features that are offered for ejected projects in the Console are _read-only_.
+
+
+### How to eject a project
+
+To eject a project, you need to navigate to the **Project Settings** in the Console, select the **General**-tab and click the **Eject Project**-button. 
+
+![](https://imgur.com/R9yNznK.png)
+
+Notice that a project can _not_ be ejected if:
+
+- it currently has an enabled _integration_
+- it currently has an Request Pipeline function that uses the `PRE_WRITE` step 
+
 
 <InfoBox type=warning>
 
@@ -275,15 +297,9 @@ Once a project was ejected, it can't be converted back to the non-ejected state 
 
 </InfoBox>
 
-### Non-ejected projects
 
-Non-ejected projects can only use CLI versions lower than 1.4 and are primarily managed through the Console. Particularly, managing _functions_ and _permissions_ can only be done in the Console with non-ejected projects.
 
-Managing the GraphQL type definitions can still be done both in the Console (in the _Schema Editor_) and the CLI (using `graphcool pull` and `graphcool push`).
 
-### Ejected projects
-
-Ejected projects can only use CLI versions greater or equal to 1.4. Non-ejected projects can only be modified with the CLI, all the features that are offered for non-ejected projects in the Console are _read-only_.
 
 
 
