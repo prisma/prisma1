@@ -21,6 +21,68 @@ To manage each of these components in a coherent way, Graphcool uses a custom co
 
 ### Example
 
+Here is what a simple example of a project definition file looks like:
+
+```yml
+# Type Definitions
+types: ./types.graphql
+
+
+# Serverless Functions
+functions:
+  authenticateCustomer:
+    handler:
+      code:
+        src: ./code/authenticate.js
+    type: resolver
+    schema: ./code/authenticate.graphql
+  sendSlackMessage:
+    handler:
+      webhook:
+        url: http://example.org/sendSlackMessage
+        headers:
+            Content-Type: application/json
+            Authorization: Bearer saiquiegh1wohb7shie9phai
+    type: subscription
+    query: ./code/sendSlackMessage/newMessage.graphql
+
+
+# Permission Rules
+permissions:
+- operation: Message.read
+- operation: Message.create
+  authenticated: true
+  query: ./permissions/message.graphql
+
+
+# Modules
+modules:
+- ./modules/facebookLogin/fb.yml
+
+
+# Root tokens
+rootTokens:
+- authenticate
+```
+
+This project definition expects the following project structure:
+
+```
+.
+├── code
+│   ├── authenticate.graphql
+│   └── authenticate.js
+│   └── sendSlackMessage
+│       └── newMessage.graphql
+├── modules
+│   └── facebookLogin
+│       ├── ...
+│       └── fb.yml
+└── permissions
+    └── message.graphql
+```
+
+
 ### YAML structure
 
 The YAML configuration file has the following _root properties_:
