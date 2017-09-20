@@ -61,7 +61,7 @@ Here is a sample query to ask for all the `Person` objects that are currently st
 
 When processing this request, the server will only respond with the information that's specified in the query. So, here it will return an array of `Person` objects which could look like this:
 
-```graphql
+```json
 {
   "data": {
     "allPersons": [
@@ -119,7 +119,7 @@ Similar to a query, a mutation also allows to specify a selection set to ask for
 
 The corresponding server response could look like this: 
 
-```graphql
+```json
 {
   "createPerson": {
     "id": "aih0liehogeewiec"
