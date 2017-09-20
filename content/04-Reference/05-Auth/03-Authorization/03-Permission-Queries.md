@@ -11,7 +11,7 @@ Permission queries allow you to **express permissions by leveraging the power of
 
 <!-- PERMISSION_EXAMPLES -->
 
-All available queries in the **GraphQL permission schema** are derived from the available types and relations in your data model. The permisson schema leverages the familiar and powerful [filter system](!alias-xookaexai0) that allows you to define very specific permissions.
+All available queries in the **GraphQL permission schema** are derived from the available types and relations in your data model. The permisson schema leverages the familiar and powerful [filter system](!alias-nia9nushae#filtering-by-field) that allows you to define very specific permissions.
 
 For every type `Type` in your data model, the field `SomeTypeExists(filter: TypeFilter): Boolean!` is part of the permission schema. `SomeTypeExists` returns `true` only if the given filters match at least one existing `Type` node.
 
