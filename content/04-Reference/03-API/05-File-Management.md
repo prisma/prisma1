@@ -5,30 +5,32 @@ description: The file management system allows you to upload, modify and delete 
 
 # File Management
 
+## Overview
+
 As part of our file management system you are able to
 
-* [upload files](!alias-xai9quoo0i) that are up to 200 MB as shown in [the examples](!alias-zaif4eing1)
-* [download files](!alias-beim3teevi)
-* [download and transform image files](!alias-atiede8ata)
+* [upload files](#uploading-files) that are up to 200 MB as shown in [the examples](#file-upload-examples)
+* [download files](#file-download)
+* [download and transform image files](#image-api)
 
-Each project contains a [file type](!alias-uhieg2shio#file-type) by default that provides the possibility to add and modify files.
+Each project contains a [file type](!alias-eiroozae8u#file-type) by default that provides the possibility to add and modify files.
 
-### File Management with the Client APIs
+### File management with the client APIs
 
-Currently, files cannot be uploaded from the [Simple API](!alias-heshoov3ai) or the [Relay API](!alias-aizoong9ah). Read [this issue on GitHub](https://github.com/apollographql/apollo/issues/65) for more information.
+Currently, files cannot be uploaded from the [Simple API](!alias-heshoov3ai) or the [Relay API](!alias-aizoong9ah) directly. Read [this issue on GitHub](https://github.com/apollographql/apollo/issues/65) for more information.
 
 
-## Uploading Files
+## Uploading files
 
 You can upload files with a size of up to 200MB to a project by doing a `multipart/form-data` HTTP request to the File API `https://api.graph.cool/file/v1/__PROJECT_ID__`.
 
 It's important to use the form parameter `data` as seen in the examples below.
 
-### Uploading Workflow
+### Uploading workflow
 
 Everytime you upload a file to Graphcool, a new `File` node is created that contains information about that file:
 
-* `id`: the [familiar system field](!alias-uhieg2shio#id-field)
+* `id`: the [familiar system field](!alias-eiroozae8u#id-field)
 * `secret`: a unique, unguessable secret that allows access to the file
 * `name`: the file name
 * `url`: the url of the file where it can be accessed. The url contains of the project id and the file `secret`, so is unguessable as well.
@@ -57,27 +59,26 @@ This updates the local file `example.png` with the new name `myname.png`. The re
 }
 ```
 
-### File Upload and Permissions
+### File upload and permissions
 
 File uploads using the File API are not governed by the permissions on the `File` type. As such, everyone can upload files to your project. Please reach out in the [Forum](https://graph.cool/forum) or [Slack](https://slack.graph.cool) if you have any questions about this.
 
-### Current Limitations
+### Current limitations
 
-* You can't upload files when you defined a required field on the `File` type.
+You can't upload files when you defined a required field on the `File` type.
 
 
+## File upload examples
 
-## File Upload Examples
-
-Uploading a file will result in a response containing the new file id and the url. Let's upload our first file now. Pick a funny picture or similar and upload it! You can then go to the url in the response to verify that the image file was correctly uploaded.
+Uploading a file will result in a response containing the new file id and the url. Let's upload our first file now. Pick a funny picture or similar and upload it! You can then go to the URL in the response to verify that the image file was correctly uploaded.
 
 Remember to replace the file endpoint. You can copy your file endpoint from inside your project.
 
-> Regardless of your http library, make sure to **set the header `Content-Type` to `multipart/form-data`** and **use the file key `data`**.
+> Regardless of your HTTP library, make sure to **set the header `Content-Type` to `multipart/form-data`** and **use the file key `data`**.
 
-### fetch
+### Javascript `fetch`
 
-Using fetch, this is how we can upload a file
+Using `fetch`, this is how we can upload a file
 
 ```js
 uploadFile = (files) => {
@@ -126,7 +127,7 @@ $( 'form' ).submit(function ( e ) {
 })
 ```
 
-### Python with request
+### Python with `requests`
 
 An example using the Python module `requests` would look like:
 
@@ -140,9 +141,9 @@ file = {'data': open('example.png', 'rb')}
 r = requests.post(url, files=file)
 ```
 
-### 2.1.4 curl
+### 2.1.4 `curl`
 
-With curl, first navigate to the folder containing the file:
+With `curl`, first navigate to the folder containing the file:
 
 ```sh
 cd ~/Downloads
@@ -170,7 +171,7 @@ The response could look something like this:
 ```
 
 
-### Other Methods
+### Other methods
 
 * `react-native-image-picker` on React Native - [example](https://github.com/graphcool/content/issues/90)
 * remote file upload - [version 1](https://github.com/graphcool/content/issues/30) and [version 2](https://github.com/graphcool/content/issues/59)
@@ -181,7 +182,7 @@ The response could look something like this:
 
 
 
-## File Download
+## File download
 
 Downloading a file can be done by querying the `url` of the `File` node that needs to be accessed.
 
@@ -193,7 +194,7 @@ To download a file, all you need to know is its url. If you have the id of the f
 curl -O -J <your-file-url>
 ```
 
-### File Download and Permissions
+### File download and permissions
 
 Files are secured using a unique and unguessable `secret`. You can protect this secret by using the read permissions on the `File` type as with any other type. For example, you can restrict access to a file's `secret` to authenticated users.
 
@@ -240,7 +241,7 @@ Supported extensions:
 * bmp
 * webp
 
-#### Resizing, Cropping and Naming
+#### Resizing, cropping and naming
 
 `https://images.graph.cool/v1/__PROJECT_ID__/__FILE_SECRET__/0x0:400x400/250x250/Graphcool.jpg`: Crops the image taking the first 400x400 square and fit into 250px x 250px rectangle and rename it to Graphcool.jpg
 
