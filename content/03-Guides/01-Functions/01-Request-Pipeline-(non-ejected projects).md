@@ -29,7 +29,7 @@ These are precisely the features that you can implement with serverless function
 
 You generally have the choice between two different kinds of functions that serve slightly different purposes:
 
-- [**Server-side Subscriptions**](!alias-ahlohd8ohn): Execute a serverless function _after_ a mutation happened in the backend
+- [**Server-side Subscriptions**](!alias-bboghez0go): Execute a serverless function _after_ a mutation happened in the backend
 - [**Request Pipeline**](!alias-pa6guruhaf): Allows for transformation and validation of mutation input and response payload at various stages
 
 The use case of sending a validating and transforming an email address is best implemented with the request pipeline, so that's what we'll discuss in the remainder of this article.
@@ -179,7 +179,7 @@ You can test a function in two different ways:
    
 ## Conclusion
 
-In this article you learned how to setup a function in the [request pipeline](!-ahlohd8ohn) directly in the Graphcool Console. The function is called every time right before a new customer is created and ensures that the email address that was provided is actually valid and further transforms it to only have lowercase characters.
+In this article you learned how to setup a function in the [request pipeline](!-bboghez0go) directly in the Graphcool Console. The function is called every time right before a new customer is created and ensures that the email address that was provided is actually valid and further transforms it to only have lowercase characters.
 
 
 

@@ -7,7 +7,7 @@ description: Use Zapier to create a Slack integration for your GraphQL server an
 
 [Slack](https://slack.com/) is very popular to handle the internal communication for teams. Slack notifications help to easily stay uptodate with things like successful or failing builds. In this guide we will focus on another use case: tracking business related events like when a new user signs up or a purchase is made.
 
-We will use a [Server-Side Subscription](!alias-ahlohd8ohn) to trigger the Slack plugin offered by [Zapier](https://zapier.com/)'s webhook feature.
+We will use a [Server-Side Subscription](!alias-bboghez0go) to trigger the Slack plugin offered by [Zapier](https://zapier.com/)'s webhook feature.
 
 ## 1. Preparation
 
@@ -37,7 +37,7 @@ Head over to your Zapier account and create a new Zap. Choose `Webhooks by Zapie
 
 ### 2.2 Setup the Function
 
-* Create a new [Server-Side Subscription](!alias-ahlohd8ohn)
+* Create a new [Server-Side Subscription](!alias-bboghez0go)
 * Choose `User is created` as the trigger
 * For the payload, enter this query:
 

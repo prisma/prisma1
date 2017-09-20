@@ -27,7 +27,7 @@ These are precisely the features that you can implement with serverless function
 
 You generally have the choice between two different kinds of functions that serve slightly different purposes:
 
-- [**Server-side Subscriptions**](!alias-ahlohd8ohn): Execute a serverless function _after_ a mutation happened in the backend
+- [**Server-side Subscriptions**](!alias-bboghez0go): Execute a serverless function _after_ a mutation happened in the backend
 - [**Request Pipeline**](!alias-pa6guruhaf): Allows for transformation and validation of mutation input and response payload at various stages
 
 The use case of sending a welcome email to new users is best implemented with a Server-side Subscription, so that's what we'll discuss in the remainder of this article.
@@ -221,7 +221,7 @@ You can test a server-side subscriptions in two different ways:
    
 ## Conclusion
 
-In this article you learned how to setup a [server-side subscription](!-ahlohd8ohn) directly in the Graphcool Console. The subscription fires every time a new `Customer` is created and triggers a _function_ that will send a welcome email to that new `Customer` using the Mailgun API.
+In this article you learned how to setup a [server-side subscription](!-bboghez0go) directly in the Graphcool Console. The subscription fires every time a new `Customer` is created and triggers a _function_ that will send a welcome email to that new `Customer` using the Mailgun API.
 
 
 
