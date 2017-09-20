@@ -84,4 +84,4 @@ At this point you are good to go - if you want, you can run the mutation from ab
 
 You just setup a function that eventually notifies you whenever a new user signs up, neat!
 
-If you want to read more about functions, head over to the [reference documentation](!alias-boo6uteemo).
+If you want to read more about functions, head over to the [reference documentation](!alias-aiw4aimie9).

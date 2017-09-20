@@ -37,7 +37,7 @@ In this chapter, we'll only cover the first two use cases since these are the pa
 
 ## Using Functions with Graphcool
 
-[Functions](!alias-boo6uteemo) are a Graphcool feature that allow the developer to implement custom business logic in the backend. Generally, that can be done by either specifying a _webhook_ (e.g. to call a custom microservice or another API) or by writing the function directly _inline_ in the Graphcool console.
+[Functions](!alias-aiw4aimie9) are a Graphcool feature that allow the developer to implement custom business logic in the backend. Generally, that can be done by either specifying a _webhook_ (e.g. to call a custom microservice or another API) or by writing the function directly _inline_ in the Graphcool console.
 
 There are two types of functions available on the Graphcool platform:
 
