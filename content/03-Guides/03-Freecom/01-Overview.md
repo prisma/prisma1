@@ -17,7 +17,7 @@ The final project not only can be used in production, it also is a great referen
 
 ## The "Stack"
 
-As already mentioned, on the backend we are going to use a GraphQL API by Graphcool, connecting to its [Simple API](!alias-heshoov3ai/).
+As already mentioned, on the backend we are going to use a GraphQL API by Graphcool, connecting to its [Simple API](!alias-abogasd0go/).
 
 For the frontend, we are choosing a modern and easy-to-get-started set of technologies!
 

@@ -5,7 +5,7 @@ description: GraphQL requests are authenticated using an authentication token. F
 
 # Authentication Tokens
 
-Requests to your [API](!alias-heshoov3ai) are authenticated using **authentication tokens** that are typically [JWT (JSON Web Tokens)](https://jwt.io/).
+Requests to your [API](!alias-abogasd0go) are authenticated using **authentication tokens** that are typically [JWT (JSON Web Tokens)](https://jwt.io/).
 
 There generally are two types of authentication tokens:
 

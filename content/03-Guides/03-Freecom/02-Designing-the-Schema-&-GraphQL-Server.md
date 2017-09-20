@@ -155,7 +155,7 @@ Note that this will require you to authenticate with Graphcool by opening a brow
 
 Once the project was created, you can interact with it via two different endpoints:
 
-- [`Simple API`](!alias-heshoov3ai/): This endpoint creates an intuitive GraphQL API based on the provided data model and is optimized for usage with Apollo - _it's the one we'll be using in this tutorial!_
+- [`Simple API`](!alias-abogasd0go/): This endpoint creates an intuitive GraphQL API based on the provided data model and is optimized for usage with Apollo - _it's the one we'll be using in this tutorial!_
 - [`Relay API`](!alias-aizoong9ah/): This endpoint can be used in applications that use [Relay](https://facebook.github.io/relay/), a GraphQL client developed by Facebook and with some specific requirements for the GraphQL API
 
 ![](./fc1-graphcool-init.png?width=800)
