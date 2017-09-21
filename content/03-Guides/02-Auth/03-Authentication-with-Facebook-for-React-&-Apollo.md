@@ -482,7 +482,7 @@ export default compose(
 To make this work you now need to also import the `compose` function from the `react-apollo` package:
 
 ```js{}(path="src/components/App.js")
-import { gql, graphqlm compose } from 'react-apollo'
+import { gql, graphql, compose } from 'react-apollo'
 ```
 
 </Instruction>
