@@ -9,6 +9,12 @@ description: Graphcool Functions can run either inline or using a remote webhook
 
 **Managed functions** can be specified using the functions editor in the Console. They run on a node runtime and **all npm modules are available for import**.
 
+<InfoBox type=warning>
+
+Notice that the **maximum execution time of a managed function is 15 seconds**.
+
+</InfoBox>
+
 ### Node runtime
 
 Currently, node version `4.8.4` is the runtime environment, but we're looking [to upgrade that to version 8 soon](https://github.com/graphcool/feature-requests/issues/237). By default, ES5 is supported. By starting a function with the line `'use latest'` however, you get access to ES6 features.
@@ -27,6 +33,5 @@ Functions can also be deployed as **webhooks** using Function-as-a-service provi
 
 ## About callbacks and promises
 
-All functions should return a promise, that will be resolved by the Graphcool Functions Engine. Callbacks are not supported and need to be converted to Promises, as shown [in this  guide](https://egghead.io/lessons/javascript-convert-a-callback-to-a-promise), for example.
+All functions should return a promise, that will be resolved by the Graphcool Functions Engine. Callbacks are not supported and need to be converted to Promises (as shown [in this  guide](https://egghead.io/lessons/javascript-convert-a-callback-to-a-promise)).
 
-Function execution **times out after 15 seconds**.

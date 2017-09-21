@@ -7,16 +7,19 @@ description: Frequently asked questions about Graphcool as a company, the platfo
 
 ### In what programming language is Graphcool implemented?
 
-* Graphcool is implemented in Scala and based on the Sangria library
-* *compelling reasons why Scala is used?*
+The core of Graphcool is implemented in [Scala](https://www.scala-lang.org/) and based on the [sangria-graphql](https://github.com/sangria-graphql/sangria) library.
 
-### Where can I see performance metrics  for my backend?
+The frontend tools (Graphcool [CLI](!alias-zboghez5go) & [Console](!alias-uh8shohxie)) are implemented in [Typescript](https://www.typescriptlang.org/).
 
-* when using the hosted version of Graphcool, performance metrics will be visible in the Console's dashboard
+
+### Where can I see performance metrics for my backend?
+
+When using the _hosted version_ of Graphcool, performance metrics will be visible in the [Console](!alias-uh8shohxie).
+
+<!--
 
 ### What if Graphcool gets acquired or shuts down for some reason?
 
-* Graphcool is an open-source framework and can always be used as a self-hosted version
+Graphcool is an open-source framework and can always be used as a self-hosted version.
 
-
-
+-->
