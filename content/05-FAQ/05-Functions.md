@@ -35,8 +35,9 @@ Here's some functionality it offers:
 
 If you want to use it inside a managed function, you can simply `require` it (similar to [here](https://github.com/graphcool/modules/blob/master/authentication/email-password/code/loggedInUser.js#L1)). In a webhook, you can install it as a dependency with npm. 
 
+<!--
 
 ### How can I test my serverless functions?
 
-
+-->
 
