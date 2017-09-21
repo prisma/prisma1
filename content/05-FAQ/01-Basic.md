@@ -29,14 +29,14 @@ If you're using webhooks to implement your business logic and other functionalit
 
 Graphcool is a _backend development framework_ and as such a lot more powerful and flexible than conventional BaaS. On the other hand, the _hosted version_ of Graphcool comes close to what's commonly understood under the term BaaS and offers the same level of convenience for frontend and mobile developers! 
 
-The main differences between Graphcool and conventional BaaS are the following:
+The **main differences** between Graphcool and conventional BaaS are the following:
 
 - You can host Graphcool yourself
 - Graphcool makes use of GraphQL instead of REST (or other proprietary ways to access your data using e.g. an SDK like Firebase)
 - When using the hosted version of Graphcool, there is first-class support for implementing custom business logic
 - The permission system of Graphcool is a lot more expressive and powerful than the ones of other BaaS since it lets you define your permission rules with GraphQL queries that can access your whole data graph
 
-The main commonalities with conventional BaaS and the hosted version of Graphcool are the following:
+The **main commonalities** with conventional BaaS and the hosted version of Graphcool are the following:
 
 - Convenience of an auto-generated, hosted API and a managed database
 - Built-in authentication mechanisms
