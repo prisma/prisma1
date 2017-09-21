@@ -15,19 +15,20 @@ You're going to build a simple Instagram clone that fulfills the following requi
 - Only authenticated users are able to create new posts
 - Only the author of a post can update or delete it
  
-> You can find the complete example on [GitHub](https://github.com/graphcool-examples/react-graphql/tree/master/authentication-with-email-and-apollo).
+> You can find the complete example on [GitHub](https://github.com/graphcool-examples/react-graphql/tree/master/authentication-with-facebook-and-apollo).
 
 
 ## Getting started
 
-The first thing you need to do is download the started project for this guide.
+The first thing you need to do is download the starter project for this guide.
 
 <Instruction>
 
 *Open a terminal and download the starter project:*
 
 ```sh
-git clone ...
+curl https://codeload.github.com/graphcool-examples/react-graphql/tar.gz/starters | tar -xz --strip=1 react-graphql-starters/authentication-with-facebook-and-apollo
+cd authentication-with-facebook-and-apollo
 ```
 
 </Instruction>
