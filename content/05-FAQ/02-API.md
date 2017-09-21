@@ -7,7 +7,7 @@ description: Frequently asked questions about the API that's provided by Graphco
 
 ### What is the difference between the Simple API and the Relay API?
 
-Every Graphcool project comes with two different GraphQL APIs. Note that both APIs access the same underlying database though!
+Every Graphcool project comes with two different GraphQL APIs. Note that both APIs still access the same underlying database!
 
 - The **Simple API** exposes simple and intuitive CRUD operations and supports realtime functionality based on GraphQL subscriptions. This should be the default for any consumer of the API that's not using Facebook's homegrown GraphQL client [Relay](https://github.com/facebook/relay).
 - The **Relay API** also exposes CRUD operations while adhering to the [specific requirements](https://facebook.github.io/relay/docs/graphql-relay-specification.html) of Relay.
@@ -21,14 +21,14 @@ If a requested fails, the JSON payload of the server's response will contain a r
 
 Since GraphQL allows for multiple operations to be sent in the same request, it's well possible that a request only _partially fails_ and returns actual data _and_ errors.
 
-> Notice that HTTP status codes are not relevant when using GraphQL! A GraphQL server will always respond with code 200 (unless an internal server occured, then it might be code 500). Any further information needs to be parsed from the JSON payload of the response.
+> Notice that HTTP status codes are _not_ relevant when using GraphQL! A GraphQL server will always respond with code 200 (unless an internal server occured, then it might be code 500). Any further information needs to be parsed from the JSON payload of the response.
 
 
 ### Does Graphcool support realtime functionality?
 
-Yes. Graphcool offers a realtime API based on GraphQL subscriptions. It allows you to subscribe to specific events that are happening in the backend, e.g. when database records are created, updated or deleted.
+Yes. Graphcool offers a realtime API based on [GraphQL subscriptions](!alias-aip7oojeiv). It allows you to subscribe to specific events that are happening in the backend, for example when database records are created, updated or deleted.
 
-GraphQL subscriptions are extremely powerful. They not only allow to react to events, subscribers can also specify the data they want to receive upon the event using GraphQL queries.
+GraphQL subscriptions are extremely powerful. They not only allow to react to events, subscribers can also specify exactly the data they want to receive when the event occurs. This is done using regular GraphQL queries.
 
 
 ### Does Graphcool support offline apps?
