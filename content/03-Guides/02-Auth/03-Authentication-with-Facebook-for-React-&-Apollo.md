@@ -311,7 +311,7 @@ The first thing you need to is add the dependencies for Apollo Client.
 *In the root directory of your project, add the following dependencies using [yarn](https://yarnpkg.com/en/):*
 
 ```bash(path="")
-yarn add react-apollo apollo-client@alpha apollo-cache-inmemory@alpha apollo-link
+yarn add react-apollo
 ```
 
 </Instruction>
@@ -322,27 +322,20 @@ Next you need to instantiate the `ApolloClient` and configure it with the endpoi
 
 *Open `index.js` and add the following import statements to its top:*
 
-```js(path="index.js")
-import ApolloClient from 'apollo-client'
-import Link from 'apollo-link-http'
-import Cache from 'apollo-cache-inmemory'
-import { ApolloProvider } from 'react-apollo'
+```js(path="src/index.js")
+import { ApolloClient, ApolloProvider, createNetworkInterface } from 'react-apollo'
 ```
 
 Having the imports available, you can now instantiate the `ApolloClient`. Add the following code right below the import statements:
 
-```js(path="index.js")
-const client = new ApolloClient({
-  link: new Link({ uri: 'https://api.graph.cool/simple/v1/__PROJECT_ID__' }),
-  cache: new Cache(window.__APOLLO_STATE__),
-})
-
-client.initStore = () => {}
+```js(path="src/index.js")
+const networkInterface = createNetworkInterface({ uri: 'https://api.graph.cool/simple/v1/__PROJECT_ID__' })
+const client = new ApolloClient({ networkInterface })
 ```
 
 Finally, wrap the `BrowserRouter` which is currently the root of your component hierarchy inside an `ApolloProvider` which receives the `client` in its props:
 
-```js(path="index.js")
+```js(path="src/index.js")
 ReactDOM.render((
     <ApolloProvider client={client}>
       <BrowserRouter>
@@ -360,7 +353,7 @@ ReactDOM.render((
 
 </Instruction>
 
-The `ApolloClient` is your main interface to the GraphQL server and will take care of sending all queries and mutations for you. The last thing you need to do is replace the `__PROJECT_ID__` placeholder when instantiating the `Link`. 
+The `ApolloClient` is your main interface to the GraphQL server and will take care of sending all queries and mutations for you. The last thing you need to do is replace the `__PROJECT_ID__` placeholder when calling `createNetworkInterface`. 
 
 <Instruction>
 
@@ -569,10 +562,22 @@ To attach the token to the request's header, you need to configure your `ApolloC
 
 <Instruction>
 
-*Open `index.js` and update the configuration of the `ApolloClient` as follows:*
+*Open `index.js` and add the following configuration right before you're instantiating the `ApolloClient`:*
 
 ```js(path="src/index.js")
-¯\_(ツ)_/¯
+networkInterface.use([{
+  applyMiddleware (req, next) {
+    if (!req.options.headers) {
+      req.options.headers = {}
+    }
+
+    // get the authentication token from local storage if it exists
+    if (localStorage.getItem('graphcoolToken')) {
+      req.options.headers.authorization = `Bearer ${localStorage.getItem('graphcoolToken')}`
+    }
+    next()
+  },
+}])
 ```
 
 </Instruction>
