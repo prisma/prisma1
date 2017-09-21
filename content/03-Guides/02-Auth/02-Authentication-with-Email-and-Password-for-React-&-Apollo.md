@@ -65,7 +65,7 @@ You're using the `--template blank` option which just creates an empty project f
 
 Here is an overview of the generated files and the project structure which the CLI now created:
 
-```sh(nocopy)
+```(nocopy)
 ├─ .graphcoolrc
 ├─ code
 │  ├─ hello.graphql
@@ -103,7 +103,7 @@ graphcool module add graphcool/modules/authentication/email-password
 
 Let's also quickly understand what the module actually contains, here is it's file structure:
 
-```bash(nocopy)
+```(nocopy)
 .
 └── email-password
     ├── README.md
@@ -121,7 +121,7 @@ The most important parts for now are the project and type definitions.
 
 ##### Project definition: `graphcool.yml` 
 
-```yml(nocopy)
+```yml(path="graphcool/graphcool.yml"&nocopy)
 # GraphQL types
 types: ./types.graphql
 
@@ -154,7 +154,7 @@ rootTokens:
 
 ##### Type definitions: `types.graphql` 
 
-```graphql(nocopy)
+```graphql(path="graphcool/types.graphql"nocopy)
 type EmailUser implements Node {
   id: ID! @isUnique
   createdAt: DateTime!
@@ -505,8 +505,8 @@ export default graphql(SIGNUP_EMAIL_USER, {name: 'signupEmailUserMutation'})(wit
 
 For this code to work, you also need to import `graphql` and `gql`, so add the following import statement to the top of the file:
 
-```js{}(path="src/components/CreateUser.js")
-
+```js(path="src/components/CreateUser.js")
+import { graphql, gql } from 'react-apollo'
 ```
 
 </Instruction>
@@ -519,7 +519,7 @@ Finally, you actually need to call the mutation and provide the arguments that y
 
 *Still in `CreateUser.js`, implement the `createUser` function like so:*
 
-```js{}(path="src/components/CreateUser.js")
+```js(path="src/components/CreateUser.js")
 createUser = async () => {
   const { email, password, name } = this.state
 
@@ -554,7 +554,7 @@ Now that the signup flow is out of the way, you can implement the actual login. 
 
 *Open `LoginUser.js` and add the `authenticateEmailUser` mutation to its bottom, again also replacing the current export statement:*
 
-```js{}(path="src/components/LoginUser.js")
+```js(path="src/components/LoginUser.js")
 const AUTHENTICATE_EMAIL_USER = gql`
   mutation AuthenticateEmailUser($email: String!, $password: String!) {
     authenticateEmailUser(email: $email, password: $password) {
@@ -568,7 +568,7 @@ export default graphql(AUTHENTICATE_EMAIL_USER, {name: 'authenticateEmailUserMut
 
 For this work, don't forget to add the required import statements to the top of the file:
 
-```js{}(path="src/components/LoginUser.js")
+```js(path="src/components/LoginUser.js")
 import { graphql, gql } from 'react-apollo'
 ```
 
@@ -582,7 +582,7 @@ Lastly, you need to actually call the mutation.
 
 *Still in `LoginUser.js`, implement the `loginUser` function as follows:*
 
-```js{}(path="src/components/LoginUser.js")
+```js(path="src/components/LoginUser.js")
 loginUser = async () => {
   const { email, password } = this.state
 
@@ -630,7 +630,7 @@ You want this information to be available in the root of your application, that'
 
 *Open `App.js` and add the `loggedInUser` query to the `App` component, again by also replacing the current export statement:*
 
-```js{}(path="src/components/App.js")
+```js(path="src/components/App.js")
 const LOGGED_IN_USER = gql`
   query LoggedInUser {
     loggedInUser {
@@ -644,7 +644,7 @@ export default graphql(LOGGED_IN_USER, { options: {fetchPolicy: 'network-only'}}
 
 Again, make sure to import `gql` and `graphql` on top of the file to make this code work:
 
-```js{}(path="src/components/App.js")
+```js(path="src/components/App.js")
 import { gql, graphql } from 'react-apollo'
 ```
 
@@ -658,7 +658,7 @@ Notice you're specifying the `fetchPolicy` when you're adding the `loggedInUser`
 
 *To properly render the login-state of the user, first implement the `_isLoggedIn` function inside `App.js` function properly:*
 
-```js{}(path="src/components/App.js")
+```js(path="src/components/App.js")
 _isLoggedIn = () => {
   return this.props.data.authenticatedEmailUser && this.props.data.authenticatedEmailUser.id !== ''
 }
@@ -697,7 +697,7 @@ Lastly, to also account for the ongoing network request, you should make sure to
 
 *Still in `App.js`, update `render` to look as follows:*
 
-```js{5}(path="src/components/App.js")
+```js{3-5}(path="src/components/App.js")
 render () {
 
   if (this.props.data.loading) {
@@ -729,7 +729,7 @@ To attach the token to the request's header, you need to configure your `ApolloC
 networkInterface.use([{
   applyMiddleware (req, next) {
     if (!req.options.headers) {
-      req.options.headers = {}
+      req.options.headers = 
     }
 
     // get the authentication token from local storage if it exists
@@ -917,7 +917,7 @@ The reason why the `allPosts` query and `createPost` mutation were already worki
 
 All permission rules need to be defined in the project definition, the `graphcool.yml`-file. If you check this file now, you'll only see one permission that's currently part of your project and that was initially added by the Graphcool CLI:
 
-```
+```yml(path="graphcool/graphcool.yml&nocopy")
 permissions:
   - operation: '*'
 ```

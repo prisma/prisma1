@@ -67,7 +67,7 @@ You're using the `--template blank` option which just creates an empty Graphcool
 
 Here is an overview of the generated files and the project structure which the CLI now created:
 
-```sh(nocopy)
+```(nocopy)
 ├─ .graphcoolrc
 ├─ code
 │  ├─ hello.graphql
@@ -105,7 +105,7 @@ graphcool modules add graphcool/modules/authentication/facebook
 
 Let's also quickly understand what the module actually contains, here is it's file structure:
 
-```bash(nocopy)
+```(nocopy)
 .
 ├── README.md
 ├── code
@@ -125,7 +125,7 @@ The most important parts for now are the project and type definitions.
 
 ##### Project definition: `graphcool.yml` 
 
-```yml(nocopy)
+```yml(path="graphcool/graphcool.yml"&nocopy)
 types: ./types.graphql
 
 functions:
@@ -142,7 +142,7 @@ rootTokens:
 
 ##### Type definitions: `types.graphql` 
 
-```graphql(nocopy)
+```graphql(path="graphcool/types.graphql"nocopy)
 type FacebookUser implements Node {
   id: ID! @isUnique
   createdAt: DateTime!
@@ -536,7 +536,7 @@ Lastly, to also account for the ongoing network request, you should make sure to
 
 *Still in `App.js`, update `render` to look as follows:*
 
-```js{5}(path="src/components/App.js")
+```js{3-5}(path="src/components/App.js")
 render () {
 
   if (this.props.data.loading) {
@@ -756,7 +756,7 @@ The reason why the `allPosts` query and `createPost` mutation were already worki
 
 All permission rules need to be defined in the project definition, the `graphcool.yml`-file. If you check this file now, you'll only see one permission that's currently part of your project and that was initially added by the Graphcool CLI:
 
-```
+```yml(path="graphcool/graphcool.yml&nocopy")
 permissions:
   - operation: '*'
 ```
