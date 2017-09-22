@@ -26,7 +26,7 @@ Feel free to get familiar with the code. The project contains the following Reac
 - `CreatePage`: Allows to create a new post item
 - `DetailPage`: Renders the details of a post item and allows to update and delete it
 
-Graphcool projects are managed with the [Graphcool CLI](!alias-zboghez5go). So, before moving on, you'll first have to install it.
+Graphcool projects are managed with the [Graphcool CLI](!alias-zboghez5go). So before moving on, you first need to install it.
 
 <Instruction>
 
