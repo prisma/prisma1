@@ -150,7 +150,7 @@ The next step is to connect the React application with the GraphQL API from your
 
 *Copy the endpoint for the GraphQL API endpoint (from Step 3)  to `./src/index.js` as the `uri` argument in the `createNetworkInterface` call:*
 
-```js
+```js(path="src/index.js")
 // replace `__SIMPLE_API_ENDPOINT__` with the endpoint from the previous step
 const networkInterface = createNetworkInterface({ uri: '__SIMPLE_API_ENDPOINT__' })
 ```
@@ -165,7 +165,7 @@ That's it. The last thing to do is actually launching the application 🚀
 
 Install dependencies and run the app:
 
-```sh
+```sh(path="")
 yarn install
 yarn start # open http://localhost:3000 in your browser
 ```
