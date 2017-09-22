@@ -1,6 +1,6 @@
 ---
 alias: su6wu3yoo2
-description: Resolvers allow you to extend your GraphQL API with custom queries and mutations that are resolved by a serverless function.
+description: Resolvers allow you to extend your GraphQL API with custom queries and mutations that are resolved by a function.
 ---
 
 
@@ -8,7 +8,7 @@ description: Resolvers allow you to extend your GraphQL API with custom queries 
 
 ## Overview
 
-Resolvers allow you to extend your GraphQL API with custom queries and mutations that are resolved by a serverless function (the _resolver_).
+Resolvers allow you to extend your GraphQL API with custom queries and mutations that are resolved by a function (the _resolver_).
 
 Resolver functions are called when the corresponding query or mutation is executed. Similiar to hooks, resolvers are executed _synchronously_.
 
