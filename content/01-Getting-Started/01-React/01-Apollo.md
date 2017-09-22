@@ -6,7 +6,7 @@ github: https://github.com/graphcool-examples/react-graphql/tree/master/quicksta
 
 # React & Apollo Quickstart
 
-For this quickstart tutorial, we have prepared a [repository](https://github.com/graphcool-examples/react-graphql/tree/master/quickstart-with-apollo) that contains the full React code for the Instagram clone. All you need to do is create the Graphcool project that will expose the GraphQL API and connect it to the React application. Let's get started! 
+For this quickstart tutorial, we have prepared a [repository](https://github.com/graphcool-examples/react-graphql/tree/master/quickstart-with-apollo) that contains the full React code for the Instagram clone. All you need to do is create the Graphcool project that will expose the GraphQL API and connect it with the React application. Let's get started! 
 
 <Instruction>
 
@@ -19,7 +19,7 @@ cd react-graphql/quickstart-with-apollo
 
 </Instruction>
 
-Feel free to get familiar with the code. The repo contains the following React [`components`](https://github.com/graphcool-examples/react-graphql/tree/master/quickstart-with-apollo/src/components):
+Feel free to get familiar with the code. The project contains the following React [`components`](https://github.com/graphcool-examples/react-graphql/tree/master/quickstart-with-apollo/src/components):
 
 - `Post`: Renders a single post item
 - `ListPage`: Renders a list of post items
