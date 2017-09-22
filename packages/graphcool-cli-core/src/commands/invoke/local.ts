@@ -116,24 +116,22 @@ export default class InvokeLocal extends Command {
       while (fs.pathExistsSync(path.join(examplesDir, `${count}.json`))) {
         count++
       }
+      const lastEventPath = path.join(examplesDir, `${count - 1}.json`)
+      const lastSavedEvent = fs.readJsonSync(lastEventPath)
 
       let relativeLastEventPath
-      if (count > 1) {
-        const lastEventPath = path.join(examplesDir, `${count - 1}.json`)
-        const lastSavedEvent = fs.readJsonSync(lastEventPath)
-        if (isEqual(lastEventJson, lastSavedEvent)) {
-          relativeLastEventPath = `examples/${fnName}/${count - 1}.json`
-          this.out.log(
-            chalk.blue(
-              `Using last event of ${chalk.bold(
-                fnName,
-              )} which is already written to ${chalk.bold(
-                relativeLastEventPath,
-              )}\n`,
-            ),
-          )
-          event = lastEventJson
-        }
+      if (count > 1 && isEqual(lastEventJson, lastSavedEvent)) {
+        relativeLastEventPath = `examples/${fnName}/${count - 1}.json`
+        this.out.log(
+          chalk.blue(
+            `Using last event of ${chalk.bold(
+              fnName,
+            )} which is already written to ${chalk.bold(
+              relativeLastEventPath,
+            )}\n`,
+          ),
+        )
+        event = lastEventJson
       } else {
         const examplePath = path.join(examplesDir, `${count}.json`)
         fs.writeFileSync(examplePath, JSON.stringify(lastEventJson, null, 2))
