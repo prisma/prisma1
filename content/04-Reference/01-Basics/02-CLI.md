@@ -58,6 +58,8 @@ graphcool console [flags]
 ```
 -e, --env ENV    Environment name
 ```
+
+#### Examples
       
 ##### Open the console for the current project.
 
@@ -98,6 +100,8 @@ graphcool deploy [flags]
  -p, --project PROJECT    ID or alias of  project to deploy
 ```
       
+#### Examples
+
 ##### Deploy local changes from graphcool.yml to the default project environment.
 
 ```sh
@@ -203,7 +207,7 @@ graphcool env default [flags]
 
 ```
 -e, --env ENV    (required) Env to set as default
-```
+```e
 
 ##### `graphcool env remove`
 
