@@ -6,7 +6,7 @@ github: https://github.com/graphcool-examples/react-graphql/tree/master/quicksta
 
 # React & Apollo Quickstart
 
-For this quickstart tutorial, we have prepared a [repository](https://github.com/graphcool-examples/react-graphql/tree/master/quickstart-with-apollo) that contains the full React code for the Instagram clone. All you need to do is create the Graphcool project that will expose the GraphQL API and connect it to the React application. Let's get started! 
+For this quickstart tutorial, we have prepared a [repository](https://github.com/graphcool-examples/react-graphql/tree/master/quickstart-with-apollo) that contains the full React code for the Instagram clone. All you need to do is create the Graphcool project that will expose the GraphQL API and connect it with the React application. Let's get started! 
 
 <Instruction>
 
@@ -19,14 +19,14 @@ cd react-graphql/quickstart-with-apollo
 
 </Instruction>
 
-Feel free to get familiar with the code. The repo contains the following React [`components`](https://github.com/graphcool-examples/react-graphql/tree/master/quickstart-with-apollo/src/components):
+Feel free to get familiar with the code. The project contains the following React [`components`](https://github.com/graphcool-examples/react-graphql/tree/master/quickstart-with-apollo/src/components):
 
 - `Post`: Renders a single post item
 - `ListPage`: Renders a list of post items
 - `CreatePage`: Allows to create a new post item
 - `DetailPage`: Renders the details of a post item and allows to update and delete it
 
-Graphcool projects are managed with the [Graphcool CLI](!alias-zboghez5go). So, before moving on, you'll first have to install it.
+Graphcool projects are managed with the [Graphcool CLI](!alias-zboghez5go). So before moving on, you first need to install it.
 
 <Instruction>
 
@@ -144,7 +144,7 @@ The next step is to connect the React application with the GraphQL API from your
 
 *Copy the endpoint for the GraphQL API endpoint (from Step 3)  to `./src/index.js` as the `uri` argument in the `createNetworkInterface` call:*
 
-```js
+```js(path="src/index.js")
 // replace `__SIMPLE_API_ENDPOINT__` with the endpoint from the previous step
 const networkInterface = createNetworkInterface({ uri: '__SIMPLE_API_ENDPOINT__' })
 ```
@@ -159,7 +159,7 @@ That's it. The last thing to do is actually launching the application 🚀
 
 Install dependencies and run the app:
 
-```sh
+```sh(path="")
 yarn install
 yarn start # open http://localhost:3000 in your browser
 ```
