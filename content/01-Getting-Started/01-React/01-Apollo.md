@@ -59,20 +59,20 @@ From the output in the console, copy the endpoint for the GraphQL API and save i
 ```(nocopy)
 .
 └── graphcool
-    ├── .graphcoolrc
-    ├── code
-    │   ├── hello.graphql
-    │   └── hello.js
     ├── graphcool.yml
-    └── types.graphql
-```
+    ├── types.graphql
+    ├── .graphcoolrc
+    └── code
+        ├── hello.graphql
+        └── hello.js
+  ```
 
 Each of the created files and directories have a dedicated purpose inside your Graphcool project:
 
-- `.graphcoolrc`: Contains information about the [environments](!alias-opheidaix3#environments) that you have configured for your project.
-- `code`: Contains the source code (and if necessary GraphQL queries) for the [functions](!alias-aiw4aimie9) you've configured for your project. Notice that a _blank_ project comes with a default "Hello World"-function which you can delete if you don't want to use it.
 - `graphcool.yml`: Contains your [project definition](opheidaix3#project-definition).
 - `types.graphql`: Contains all the type definitions for your project, written in the GraphQL [Schema Definitiona Language](https://medium.com/@graphcool/graphql-sdl-schema-definition-language-6755bcb9ce51) (SDL).
+- `.graphcoolrc`: Contains information about the [environments](!alias-opheidaix3#environments) that you have configured for your project.
+- `code`: Contains the source code (and if necessary GraphQL queries) for the [functions](!alias-aiw4aimie9) you've configured for your project. Notice that a _blank_ project comes with a default "Hello World"-function which you can delete if you don't want to use it.
 
 Next you need to configure the [data model](!alias-eiroozae8u) for your project.
 
@@ -108,28 +108,21 @@ graphcool deploy
 
 The `Post` type is now added to your data model and the corresponding CRUD operations are generated and exposed by the GraphQL API.
 
-<InfoBox type=info>
+You can test the API inside a [GraphQL Playground](!alias-uh8shohxie#playground) which you can open with the `graphcool playground` command. Try out the following query and mutation.
 
-You can test the API inside a [GraphQL Playground](!alias-uh8shohxie#playground) which you can open with the `graphcool playground` command. 
-
-
-Try out the following query and mutation:
-
-<br>
-
-_Fetching all posts_
+**Fetching all posts:**
 
 ```graphql
 query {
   allPosts {
     id
-    title
     description
+    imageUrl
   }
 }
 ```
 
-_Creating a new post_
+**Creating a new post:**
 
 ```graphql
 mutation {
@@ -142,7 +135,8 @@ mutation {
 }
 ```
 
-</InfoBox>
+![](https://imgur.com/w95UEi9.gif)
+
 
 The next step is to connect the React application with the GraphQL API from your Graphcool project.
 
@@ -173,16 +167,8 @@ yarn start # open http://localhost:3000 in your browser
 </Instruction>
 
 
-### Next steps
+### Learn more
 
 * [Advanced GraphQL features](https://blog.graph.cool/advanced-graphql-features-of-the-graphcool-api-5b8db3b0a71)
 * [Authentication & Permissions](https://www.graph.cool/docs/reference/auth/overview-ohs4aek0pe/)
 * [Implementing business logic with serverless functions](https://www.graph.cool/docs/reference/functions/overview-aiw4aimie9/)
-* [Dive deeper into GraphQL on How to GraphQL](https://www.howtographql.com)
-
-
-### Help & Community [![Slack Status](https://slack.graph.cool/badge.svg)](https://slack.graph.cool)
-
-Say hello in our [Slack](http://slack.graph.cool/) or visit the [Graphcool Forum](https://www.graph.cool/forum) if you run into issues or have questions. We love talking to you!
-
-![](http://i.imgur.com/5RHR6Ku.png)
