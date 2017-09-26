@@ -6,7 +6,6 @@
 
 ## Changes
 
-* [Permission queries are now validated upon creation](https://github.com/graphcool/graphcool/issues/456).
 * [Valid function names are now restricted](https://github.com/graphcool/graphcool/issues/538).
 > Valid function names only use up to 64 alphanumeric letters, dashes and underscores. This is only checked when creating a new or updating an existing function and does *not* affect existing functions before updating them.
 * Renamed Permanent Authentication Tokens (PATs) to Root Tokens.
