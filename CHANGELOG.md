@@ -21,6 +21,8 @@
 
 ## CLI Beta
 
+> Note: The CLI version 1.4 will be released at a later stage.
+
 ### Features
 
 * [Wildcard permissions have been introduced that can be used to match all operations](https://github.com/graphcool/graphcool/issues/521). The project configuration of a new project created with the CLI includes the wildcard permission by default.
@@ -40,4 +42,6 @@
 * [Scalar List Field are no longer updated unnecessarily during Deploy](https://github.com/graphcool/graphcool/issues/463).
 * [Deploy is correctly aborted when errors occur](https://github.com/graphcool/graphcool/issues/540).
 * [diff command works correctly for breaking changes](https://github.com/graphcool/graphcool/issues/557).
+
+
 
