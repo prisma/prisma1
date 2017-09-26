@@ -1,19 +1,12 @@
-# feature-requests 🏁
-Request new features and check our roadmap for the next few months
+# graphcool
 
-## Roadmap
+Feature and issue tracker for Graphcool.
 
-Your feedback is **very helpful**, please share your opinion and thoughts! 🤔 Feature requests are organized in different stages:
+Your feedback is **very helpful**, please share your opinion and thoughts! 🤔
 
-* `stage/discussing`: Open for discussion 💬
-* `stage/waiting`: Waiting to be implemented ⏲
-* `stage/wip`: Work in progress ⚙️
-* `stage/beta`: Already available in the beta program. Reach out in [Slack](https://slack.graph.cool) to learn more! 👩‍🎓
-* `stage/completed`: Done :muscle:
+## +1 an issue
 
-## +1 a feature request
-
-If an existing feature request is very important for you, please go ahead and :+1: it or leave a comment. We're always open to reprioritize our roadmap to make sure you're having the best possible DX.
+If an existing feature request or bug report is very important for you, please go ahead and :+1: it or leave a comment. We're always open to reprioritize our roadmap to make sure you're having the best possible DX.
 
 ## Requesting a new feature
 
