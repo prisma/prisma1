@@ -11,6 +11,7 @@
 > Valid function names only use up to 64 alphanumeric letters, dashes and underscores. This is only checked when creating a new or updating an existing function and does *not* affect existing functions before updating them.
 * Renamed Permanent Authentication Tokens (PATs) to Root Tokens.
 * [Schema Extensions are renamed to (Custom) Resolvers](https://github.com/graphcool/graphcool/issues/461).
+* [Renaming relations requires usage of @rename directive with oldName parameter](https://github.com/graphcool/graphcool/issues/534).
 
 ## Bug Fixes
 
@@ -37,7 +38,6 @@
 
 * [504 and 502 error message](https://github.com/graphcool/graphcool/issues/458) and [other errors](https://github.com/graphcool/graphcool/issues/520) are now rendered correctly.
 * [Scalar List Field are no longer updated unnecessarily during Deploy](https://github.com/graphcool/graphcool/issues/463).
-* [Renaming relations ](https://github.com/graphcool/graphcool/issues/534).
 * [Deploy is correctly aborted when errors occur](https://github.com/graphcool/graphcool/issues/540).
 * [diff command works correctly for breaking changes](https://github.com/graphcool/graphcool/issues/557).
 
