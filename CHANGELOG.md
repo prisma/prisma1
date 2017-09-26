@@ -1,4 +1,4 @@
-# General
+# 1.4 (25.09.2017)
 
 ## Features
 
@@ -19,22 +19,22 @@
 * [Fixed a bug where using an invalid type in a resolver schema resulted in an internal server error](https://github.com/graphcool/graphcool/issues/413).
 * [Fixed a bug when returning null for a string in a resolver](https://github.com/graphcool/graphcool/issues/559).
 
-# CLI Beta
+## CLI Beta
 
-## Features
+### Features
 
 * [Wildcard permissions have been introduced that can be used to match all operations](https://github.com/graphcool/graphcool/issues/521). The project configuration of a new project created with the CLI includes the wildcard permission by default.
 * [Added support for Modules in the project configuration](https://github.com/graphcool/graphcool/issues/523).
 * [Environment variables can now be used for Graphcool Functions using the CLI](https://github.com/graphcool/graphcool/issues/548).
 * [Added Root Token support in project configuration](https://github.com/graphcool/graphcool/issues/536).
 
-## Changes
+### Changes
 
 * [Ejected projects will not receive default public permissions for new fields/models](https://github.com/graphcool/graphcool/issues/459).
 * [When deploying, subscription queries are now validated first](https://github.com/graphcool/graphcool/issues/464). Also see [here](https://github.com/graphcool/graphcool/issues/465).
 * [User and File system types not included by default in projects created with the CLI](https://github.com/graphcool/graphcool/issues/151).
 
-## Bug Fixes
+### Bug Fixes
 
 * [504 and 502 error message](https://github.com/graphcool/graphcool/issues/458) and [other errors](https://github.com/graphcool/graphcool/issues/520) are now rendered correctly.
 * [Scalar List Field are no longer updated unnecessarily during Deploy](https://github.com/graphcool/graphcool/issues/463).
