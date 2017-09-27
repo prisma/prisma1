@@ -5,7 +5,7 @@ import * as cuid from 'cuid'
 import * as opn from 'opn'
 import { AuthTrigger } from './types'
 import { Client } from './Client/Client'
-import {GraphQLClient} from 'graphql-request'
+import { GraphQLClient } from 'graphql-request'
 
 export class Auth {
   out: Output
@@ -24,11 +24,15 @@ export class Auth {
   }
 
   async ensureAuth() {
-    const token = this.config.token || await this.requestAuthToken()
+    const token = this.config.token || (await this.requestAuthToken())
 
     const valid = await this.validateAuthToken(token)
     if (!valid) {
-      this.out.error(`Received invalid token. Please try ${this.out.color.bold('graphcool auth')} again to get a valid token.`)
+      this.out.error(
+        `Received invalid token. Please try ${this.out.color.bold(
+          'graphcool auth',
+        )} again to get a valid token.`,
+      )
       this.out.exit(1)
     }
 
@@ -36,7 +40,8 @@ export class Auth {
     this.config.saveToken()
     this.client.updateClient()
 
-    return true
+    // return if we already had a token
+    return !!this.config.token
   }
 
   async setToken(token: string) {
@@ -46,7 +51,11 @@ export class Auth {
     } else {
       this.config.setToken(null)
       this.config.saveToken()
-      this.out.error(`You provided an invalid token. You can run ${this.out.color.bold('graphcool auth')} to receive a valid auth token`)
+      this.out.error(
+        `You provided an invalid token. You can run ${this.out.color.bold(
+          'graphcool auth',
+        )} to receive a valid auth token`,
+      )
       this.out.exit(1)
     }
   }
@@ -60,17 +69,20 @@ export class Auth {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({cliToken}),
+      body: JSON.stringify({ cliToken }),
     })
 
-    opn(`${this.config.authUIEndpoint}?cliToken=${cliToken}&authTrigger=${this.authTrigger}`)
+    opn(
+      `${this.config.authUIEndpoint}?cliToken=${cliToken}&authTrigger=${this
+        .authTrigger}`,
+    )
 
     while (true) {
       const url = `${this.config.authEndpoint}/${cliToken}`
       const result = await fetch(url)
 
       const json = await result.json()
-      const {authToken} = json
+      const { authToken } = json
       if (authToken) {
         this.out.action.stop()
         return authToken as string
@@ -82,7 +94,7 @@ export class Auth {
     const client = new GraphQLClient(this.config.systemAPIEndpoint, {
       headers: {
         Authorization: `Bearer ${token}`,
-      }
+      },
     })
 
     const authQuery = `{
@@ -94,7 +106,9 @@ export class Auth {
       }
     }`
 
-    const result = await client.request<{viewer: {user: {email: string}}}>(authQuery)
+    const result = await client.request<{
+      viewer: { user: { email: string } }
+    }>(authQuery)
 
     if (!result.viewer.user || !result.viewer.user.email) {
       return null

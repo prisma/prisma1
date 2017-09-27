@@ -20,18 +20,26 @@ export default class Auth extends Command {
   static flags: Flags = {
     token: flags.string({
       char: 't',
-      description: 'System token'
+      description: 'System token',
     }),
   }
 
   async run() {
-    const {token} = this.flags
+    const { token } = this.flags
 
     if (token) {
       this.out.log('Using token from --token flag')
       this.auth.setToken(token)
     }
 
-    await this.auth.ensureAuth()
+    const alreadyAuthenticated = await this.auth.ensureAuth()
+
+    if (alreadyAuthenticated) {
+      this.out.log(
+        `You are already authenticated. Your local token is saved at ${chalk.bold(
+          this.config.dotGraphcoolFilePath,
+        )}`,
+      )
+    }
   }
 }
