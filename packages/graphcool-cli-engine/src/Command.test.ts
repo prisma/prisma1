@@ -2,7 +2,7 @@
 import 'source-map-support/register'
 
 import {Command as Base} from './Command'
-import {flags as Flags} from './flags'
+import {flags as Flags} from './Flags'
 import nock from 'nock'
 import { Config } from './Config'
 

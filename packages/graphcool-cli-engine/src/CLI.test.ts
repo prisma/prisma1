@@ -1,4 +1,4 @@
-import {CLI} from './Cli'
+import {CLI} from './CLI'
 
 jest.unmock('fs-extra')
 

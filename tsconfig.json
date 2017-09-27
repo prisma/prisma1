@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "forceConsistentCasingInFileNames": true,
     "preserveConstEnums": true,
     "strictNullChecks": true,
     "moduleResolution": "node",
