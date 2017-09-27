@@ -34,7 +34,14 @@ export default class Auth extends Command {
 
     const alreadyAuthenticated = await this.auth.ensureAuth()
 
-    if (alreadyAuthenticated) {
+    // if there is a new token, save it
+    if (token) {
+      this.config.setToken(token)
+      this.config.saveToken()
+      this.out.log(
+        `Saved new token to ${chalk.bold(this.config.dotGraphcoolFilePath)}`,
+      )
+    } else if (alreadyAuthenticated) {
       this.out.log(
         `You are already authenticated. Your local token is saved at ${chalk.bold(
           this.config.dotGraphcoolFilePath,
