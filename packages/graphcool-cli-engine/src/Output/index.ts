@@ -174,6 +174,9 @@ export class Output {
         this.stderr.log(
           bangify(wrap(getErrorMessage(err)), this.color.red(arrow)),
         )
+        this.stderr.log(
+          '\nGet in touch if you need help: https://www.graph.cool/forum',
+        )
       }
     } catch (e) {
       console.error('error displaying error')

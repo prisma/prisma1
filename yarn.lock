@@ -1356,9 +1356,9 @@ graceful-fs@~3.0.2:
   dependencies:
     natives "^1.1.0"
 
-graphcool-cli-engine@0.0.34:
-  version "0.0.34"
-  resolved "https://registry.yarnpkg.com/graphcool-cli-engine/-/graphcool-cli-engine-0.0.34.tgz#92f69a12783b513cc4d3b1933932deb85e72c001"
+graphcool-cli-engine@0.0.36:
+  version "0.0.36"
+  resolved "https://registry.yarnpkg.com/graphcool-cli-engine/-/graphcool-cli-engine-0.0.36.tgz#41c3656f215de38d876d019831bdf962a36e5926"
   dependencies:
     "@heroku/linewrap" "^1.0.0"
     ajv "^5.2.2"

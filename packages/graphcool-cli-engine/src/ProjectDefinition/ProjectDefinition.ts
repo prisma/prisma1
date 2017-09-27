@@ -17,7 +17,10 @@ export class ProjectDefinitionClass {
   static sanitizeDefinition(definition: ProjectDefinition) {
     const modules = definition.modules.map(module => {
       const { name, files } = module
-      const content = yaml.safeDump(module.definition)
+      let content = module.content
+      if (module.definition && typeof module.definition === 'object') {
+        content = yaml.safeDump(module.definition)
+      }
       return { name, content, files }
     })
 

@@ -1,6 +1,6 @@
 {
   "name": "graphcool-cli-engine",
-  "version": "0.0.35",
+  "version": "0.0.37",
   "main": "dist/index.js",
   "files": [
     "dist"
