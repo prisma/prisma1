@@ -1,5 +1,5 @@
 ---
-alias: yi9jeuwohl
+alias: uh5atohthu
 description: Learn how to secure data access in your GraphQL backend and an Firebase-based user authentication to your users with React and Apollo Client.
 github: "https://github.com/graphcool-examples/react-graphql/tree/master/authentication-with-firebase-and-apollo"
 ---
