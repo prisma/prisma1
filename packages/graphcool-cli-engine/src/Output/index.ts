@@ -216,8 +216,8 @@ export class Output {
 
   getPrettyModule(moduleName: string, type: 'error' | 'warning' = 'error') {
     const method = type === 'error' ? 'red' : 'yellow'
-    return chalk.bold[method](
-      `[${type.toUpperCase()} in module: ${moduleName}] `,
+    return chalk[method](
+      `[${type.toUpperCase()} in module: ${chalk.bold(moduleName)}] `,
     )
   }
 
