@@ -454,8 +454,8 @@ environments:
 
 Creates a new Graphcool project from scratch or based on an existing project. This command will create a new project in your Graphcool account as well as the local project definition and file structure, including:
 
-- `.graphcoolrc` to manage environments
 - `graphcool.yml` which contains the project definition
+- `.graphcoolrc` to manage environments
 - `types.graphql` for your type definitions
 - `code` (directory) with a default "Hello World" function
 
@@ -471,7 +471,6 @@ graphcool init [DIRNAME] [flags]
 
 ```
 -a, --alias ALIAS          Project alias
--c, --copy PROJECT         ID or alias of the project to be copied
 -e, --env ENV              Local environment name for the new project
 -n, --name NAME            Project name
 -r, --region REGION        AWS Region of the project (options: US_WEST_2 (default), EU_WEST_1, AP_NORTHEAST_1)
