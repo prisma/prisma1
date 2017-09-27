@@ -6,6 +6,7 @@ import * as opn from 'opn'
 import { AuthTrigger } from './types'
 import { Client } from './Client/Client'
 import { GraphQLClient } from 'graphql-request'
+import * as chalk from 'chalk'
 
 export class Auth {
   out: Output
@@ -61,8 +62,11 @@ export class Auth {
   }
 
   async requestAuthToken(): Promise<string> {
-    this.out.action.start('Authenticating')
     const cliToken = cuid()
+    const url = `${this.config
+      .authUIEndpoint}?cliToken=${cliToken}&authTrigger=${this.authTrigger}`
+    this.out.log(`Auth URL: ${chalk.underline(url)}`)
+    this.out.action.start(`Authenticating`)
 
     await fetch(`${this.config.authEndpoint}/create`, {
       method: 'post',
@@ -72,14 +76,11 @@ export class Auth {
       body: JSON.stringify({ cliToken }),
     })
 
-    opn(
-      `${this.config.authUIEndpoint}?cliToken=${cliToken}&authTrigger=${this
-        .authTrigger}`,
-    )
+    opn(url)
 
     while (true) {
-      const url = `${this.config.authEndpoint}/${cliToken}`
-      const result = await fetch(url)
+      const endpointUrl = `${this.config.authEndpoint}/${cliToken}`
+      const result = await fetch(endpointUrl)
 
       const json = await result.json()
       const { authToken } = json
