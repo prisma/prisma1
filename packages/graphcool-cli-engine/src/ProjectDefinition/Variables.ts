@@ -145,8 +145,8 @@ export default class Variables {
             ` a string for variable ${matchedString}.`,
             ' Please make sure the value of the property is a string.',
           ].join('')
-          this.out.error(
-            this.out.getPrettyModule(this.moduleName) + errorMessage,
+          this.out.warn(
+            this.out.getPrettyModule(this.moduleName, 'warning') + errorMessage,
           )
         }
         return BbPromise.resolve(property)
@@ -198,7 +198,9 @@ export default class Variables {
       ' You can only reference env vars, options, & files.',
       ' You can check our docs for more info.',
     ].join('')
-    this.out.error(this.out.getPrettyModule(this.moduleName) + errorMessage)
+    this.out.warn(
+      this.out.getPrettyModule(this.moduleName, 'warning') + errorMessage,
+    )
   }
 
   getValueFromEnv(variableString) {
@@ -430,8 +432,8 @@ export default class Variables {
         // } else if (variableString.match(this.ssmRefSyntax)) {
         //   varType = 'SSM parameter';
       }
-      this.out.error(
-        this.out.getPrettyModule(this.moduleName) +
+      this.out.warn(
+        this.out.getPrettyModule(this.moduleName, 'warning') +
           `A valid ${varType} to satisfy the declaration '${variableString}' could not be found.`,
       )
     }

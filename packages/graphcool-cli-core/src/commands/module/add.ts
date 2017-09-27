@@ -11,7 +11,7 @@ import * as chalk from 'chalk'
 import * as figures from 'figures'
 
 export default class ModuleAdd extends Command {
-  static topic = 'module'
+  static topic = 'modules'
   static command = 'add'
   static description = 'Add a new module'
   static args = [

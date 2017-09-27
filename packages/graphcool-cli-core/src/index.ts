@@ -34,7 +34,7 @@ export const topics = [
     description: 'Opens the playground for the current project',
   },
   { name: 'projects', description: 'List all projects' },
-  { name: 'module', description: 'Manage modules' },
+  { name: 'modules', description: 'Manage modules' },
   { name: 'get-root-token', description: 'Get the project root tokens' },
   { name: 'functions', description: 'List all functions of a project' },
   { name: 'logs', description: 'Get logs of functions' },

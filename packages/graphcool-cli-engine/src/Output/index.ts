@@ -214,8 +214,11 @@ export class Output {
     }, this.color.bold.yellow('!'))
   }
 
-  getPrettyModule(moduleName: string) {
-    return chalk.bold.red(`[Error in module: ${moduleName}] `)
+  getPrettyModule(moduleName: string, type: 'error' | 'warning' = 'error') {
+    const method = type === 'error' ? 'red' : 'yellow'
+    return chalk.bold[method](
+      `[${type.toUpperCase()} in module: ${moduleName}] `,
+    )
   }
 
   logError(err: Error | string) {

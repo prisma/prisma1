@@ -178,5 +178,7 @@ export class ProjectDefinitionClass {
     if (modulesMapping.value && valueEnd - valueStart < 4) {
       return newFile.slice(0, valueStart) + newFile.slice(valueEnd)
     }
+
+    return file
   }
 }
