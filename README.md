@@ -1,6 +1,6 @@
-# graphcool
+![](https://imgur.com/3gDYvzz.png)
 
-[![CircleCI](https://circleci.com/gh/graphcool/graphcool.svg?style=svg)](https://circleci.com/gh/graphcool/graphcool)
+[![CircleCI](https://circleci.com/gh/graphcool/graphcool.svg?style=shield)](https://circleci.com/gh/graphcool/graphcool) [![Slack Status](https://slack.graph.cool/badge.svg)](https://slack.graph.cool)
 
 Feature and issue tracker for Graphcool.
 
