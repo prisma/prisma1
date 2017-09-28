@@ -6,5 +6,6 @@ jobs:
     steps:
       - run: ls
       - run: ls $HOME
+      - run: ls -la $HOME/project
       - run: yarn
       - run: yarn test
