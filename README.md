@@ -4,6 +4,8 @@
 
 ## Quickstart
 
+[Watch this 5min tutorial]() or follow the steps below to get started:
+
 1. **Install via NPM:**
 
   ```sh
@@ -18,7 +20,7 @@
   
 3. **Configure data model & project:**
 
-  Edit the generated `types.graphql` file to implement your data model and setup functions & permissions in your `graphcool.yml` file.
+  Edit `types.graphql` to define your data model and setup functions & permissions in  `graphcool.yml`.
   
 4. **Deploy your changes:**
 
@@ -30,7 +32,7 @@
   
 5. **Connect to your GraphQL endpoint:**
 
-  You can use your new GraphQL endpoint in your frontend (or backend) applications to connect to your Graphcool API.
+  Use the endpoint from step (2) in your frontend (or backend) applications to connect to your GraphQL API.
 
 ## Features
 
