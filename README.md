@@ -1,4 +1,4 @@
-<p align="center"><img src="https://imgur.com/l92SDYf.png" width="314"></p>
+<p align="center"><a href="https://www.graph.cool"><img src="https://imgur.com/vXOT4eF.png" width="314"></a></p>
 
 [![CircleCI](https://circleci.com/gh/graphcool/graphcool.svg?style=shield)](https://circleci.com/gh/graphcool/graphcool) [![Slack Status](https://slack.graph.cool/badge.svg)](https://slack.graph.cool)
 
