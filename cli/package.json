@@ -1,0 +1,14 @@
+{
+  "private": true,
+  "name": "graphcool-cli",
+  "workspaces": [
+    "packages/*"
+  ],
+  "dependencies": {
+    "graphql-request": "^1.3.6",
+    "semver": "^5.4.1"
+  },
+  "scripts": {
+    "test": "./test.sh"
+  }
+}

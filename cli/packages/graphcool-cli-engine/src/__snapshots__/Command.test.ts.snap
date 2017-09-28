@@ -1,0 +1,17 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`buildHelp 1`] = `
+"Usage: graphcool config get
+
+this is
+
+some multiline help
+"
+`;
+
+exports[`buildHelpLine 1`] = `
+Array [
+  "config get",
+  null,
+]
+`;
