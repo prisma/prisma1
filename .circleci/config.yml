@@ -4,6 +4,5 @@ jobs:
       - image: circleci/node:8
     steps:
       - checkout
-      - run: cd cli
-      - run: yarn
-      - run: yarn test
+      - run: cd cli && yarn
+      - run: cd cli && yarn test
