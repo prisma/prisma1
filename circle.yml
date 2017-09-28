@@ -1,13 +1,14 @@
 machine:
   node:
-    version: 7.10.0
-    
+    version: 8
+
 dependencies:
   override:
     - npm install -g yarn
-    - rm -rf node_modules
-    - yarn install
+    - rm -rf node_modules && yarn
+        pwd: cli
 
 test:
   override:
     - npm test
+        pwd: cli
