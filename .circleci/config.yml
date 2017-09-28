@@ -2,7 +2,7 @@ jobs:
   build:
     docker:
       - image: circleci/node:8
-    working_directory: ~/project/cli
+    #working_directory: ~/project/cli
     steps:
       - run: ls
       - run: ls $HOME
