@@ -64,13 +64,14 @@ export default class InvokeLocal extends Command {
         // gather event
         const json = await this.getEvent(projectId, fnName)
 
+        // TODO rm any
         const invoker = new LocalInvoker(
           this.config,
           this.env,
           this.out,
           module,
           fnName,
-          fn,
+          fn as any,
         )
 
         const invocationResult = await invoker.invoke(json)

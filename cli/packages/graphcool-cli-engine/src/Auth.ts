@@ -7,6 +7,7 @@ import { AuthTrigger } from './types'
 import { Client } from './Client/Client'
 import { GraphQLClient } from 'graphql-request'
 import * as chalk from 'chalk'
+const debug = require('debug')('auth')
 
 export class Auth {
   out: Output
@@ -88,10 +89,13 @@ export class Auth {
         this.out.action.stop()
         return authToken as string
       }
+      await new Promise(r => setTimeout(r, 500))
     }
   }
 
   async validateAuthToken(token: string): Promise<string | null> {
+    debug('requesting', this.config.systemAPIEndpoint)
+    debug('token', token)
     const client = new GraphQLClient(this.config.systemAPIEndpoint, {
       headers: {
         Authorization: `Bearer ${token}`,

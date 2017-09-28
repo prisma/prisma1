@@ -6,7 +6,6 @@ import { RunOptions } from './types'
 import Lock from './Plugin/Lock'
 import { Dispatcher } from './Dispatcher/Dispatcher'
 import { NotFound } from './NotFound'
-import * as nock from 'nock'
 import fs from './fs'
 
 const debug = require('debug')('cli')
@@ -102,15 +101,15 @@ export class CLI {
         await lock.unread()
         debug('running cmd')
         // TODO remove this
-        if (process.env.NOCK_WRITE_RESPONSE_CLI) {
+        if (process.env.NOCK_WRITE_RESPONSE_CLI === 'true') {
           debug('RECORDING')
-          nock.recorder.rec({
+          require('nock').recorder.rec({
             dont_print: true,
           })
         }
         this.cmd = await foundCommand.run(this.config)
-        if (process.env.NOCK_WRITE_RESPONSE_CLI) {
-          const requests = nock.recorder.play()
+        if (process.env.NOCK_WRITE_RESPONSE_CLI === 'true') {
+          const requests = require('nock').recorder.play()
           const requestsPath = path.join(process.cwd(), 'requests.js')
           debug('WRITING', requestsPath)
           fs.writeFileSync(requestsPath, requests.join('\n'))
@@ -165,6 +164,9 @@ export class CLI {
   }
 
   private getCommandId(argv: string[]) {
+    if (argv.length === 1 && ['-v', '--version'].includes(argv[0])) {
+      return 'version'
+    }
     if (argv.includes('help') || argv.includes('init')) {
       return argv[0]
     }

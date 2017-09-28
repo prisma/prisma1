@@ -11,10 +11,9 @@ import { Auth } from './Auth'
 import { Environment } from './Environment'
 import packagejson = require('../package.json')
 import * as mock from './mock'
-const debug = require('debug')('command')
-import * as nock from 'nock'
 import * as fs from 'fs-extra'
 import * as path from 'path'
+const debug = require('debug')('command')
 
 const pjson = packagejson as any
 
@@ -57,7 +56,7 @@ export class Command {
   static async run(config?: RunOptions): Promise<Command> {
     if (process.env.NOCK_WRITE_RESPONSE_CMD === 'true') {
       debug('RECORDING')
-      nock.recorder.rec({
+      require('nock').recorder.rec({
         dont_print: true,
       })
     }
@@ -72,7 +71,7 @@ export class Command {
     }
 
     if (process.env.NOCK_WRITE_RESPONSE_CMD === 'true') {
-      const requests = nock.recorder.play()
+      const requests = require('nock').recorder.play()
       const requestsPath = path.join(process.cwd(), 'requests.js')
       debug('WRITING', requestsPath)
       fs.writeFileSync(requestsPath, requests.join('\n'))
