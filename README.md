@@ -4,7 +4,7 @@
 
 ## Quickstart
 
-[Watch this 5min tutorial]() or follow the steps below to get started:
+[Watch this 2 min tutorial](https://www.youtube.com/watch?v=gg_SJ8a5xpA) or follow the steps below to get started with the Graphcool framework:
 
 1. **Install via NPM:**
 
@@ -21,6 +21,29 @@
 3. **Configure data model & project:**
 
   Edit `types.graphql` to define your data model and setup functions & permissions in  `graphcool.yml`.
+  
+  The `graphcool.yml` file is the core of your application and should look like this:
+  
+  ```yml
+  # Define your data model here
+  types: types.graphql
+
+  # Configure the permissions for your data model
+  permissions:
+  - operation: "*"
+
+  # tokens granting root level access to your API
+  rootTokens: []
+
+  # You can implement your business logic using functions
+  functions:
+    hello:
+      handler:
+        code:
+          src: ./code/hello.js
+      type: resolver
+      schema: ./code/hello.graphql
+  ```
   
 4. **Deploy your changes:**
 
