@@ -1,5 +1,7 @@
 # graphcool
 
+[![CircleCI](https://circleci.com/gh/graphcool/graphcool.svg?style=svg)](https://circleci.com/gh/graphcool/graphcool)
+
 Feature and issue tracker for Graphcool.
 
 Your feedback is **very helpful**, please share your opinion and thoughts! 🤔
