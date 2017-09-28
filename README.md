@@ -1,16 +1,18 @@
-![](https://imgur.com/3gDYvzz.png)
+[![](https://imgur.com/vrHt037.png)](https://www.graph.cool)
 
 [![CircleCI](https://circleci.com/gh/graphcool/graphcool.svg?style=shield)](https://circleci.com/gh/graphcool/graphcool) [![Slack Status](https://slack.graph.cool/badge.svg)](https://slack.graph.cool)
 
-Feature and issue tracker for Graphcool.
+
+
+## Feedback
 
 Your feedback is **very helpful**, please share your opinion and thoughts! 🤔
 
-## +1 an issue
+### +1 an issue
 
 If an existing feature request or bug report is very important for you, please go ahead and :+1: it or leave a comment. We're always open to reprioritize our roadmap to make sure you're having the best possible DX.
 
-## Requesting a new feature
+### Requesting a new feature
 
 We love your ideas for new features. If you're missing a certain feature, please feel free to [request a new feature here](https://github.com/graphcool/feature-requests/issues/new). (Please make sure to check first if somebody else already requested it.)
 
