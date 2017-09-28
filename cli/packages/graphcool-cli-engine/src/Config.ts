@@ -3,11 +3,13 @@ import * as path from 'path'
 import * as os from 'os'
 import * as fs from 'fs-extra'
 import * as cuid from 'cuid'
+const debug = require('debug')('config')
 
 let cwd = process.cwd()
 if (process.env.NODE_ENV === 'test') {
   cwd = path.join(os.tmpdir(), `${cuid()}/`)
   fs.mkdirpSync(cwd)
+  debug('cwd', cwd)
 }
 
 let home = os.homedir() || os.tmpdir()
@@ -15,6 +17,7 @@ let home = os.homedir() || os.tmpdir()
 if (process.env.NODE_ENV === 'test') {
   home = path.join(os.tmpdir(), `${cuid()}/`)
   fs.mkdirpSync(home)
+  debug('home', home)
 }
 
 export class Config {
@@ -78,7 +81,8 @@ export class Config {
   constructor(options?: RunOptions) {
     // noop
     if (process.env.NODE_ENV === 'test') {
-      this.token = 'test token'
+      debug('taking graphcool test token')
+      this.token = process.env.GRAPHCOOL_TEST_TOKEN!
     } else {
       if (fs.existsSync(this.dotGraphcoolFilePath)) {
         const configContent = fs.readFileSync(

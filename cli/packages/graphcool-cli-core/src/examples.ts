@@ -99,56 +99,94 @@ export const changedDefaultDefinition: ProjectDefinition = {
   modules: [
     {
       name: '',
-      content: `
+      content: `\
+# This is the changed default definition, used in tests
+#
+# This file is the main config file for your Graphcool Project.
+# It's very minimal at this point and uses default values.
+# We've included a hello world function here.
+# Just uncomment it and run \`graphcool deploy\`
+#
+# Check out some examples:
+#    github.com/graphcool/examples
+#
+# Happy Coding!
+
+
+# GraphQL types
 types: ./types.graphql
-functions: {}
+
+
+# uncomment this:
+
+# functions:
+#   hello:
+#     handler:
+#       code:
+#         src: ./code/hello.js
+#     type: resolver
+#     schema: ./code/hello.graphql
+
+ 
+# Graphcool modules
+modules: {}
+
+
+# Model/Relation permissions
 permissions:
-- isEnabled: true
-  operation: File.read
-  authenticated: false
-- isEnabled: true
-  operation: File.create
-  authenticated: false
-- isEnabled: true
-  operation: File.update
-  authenticated: false
-- isEnabled: true
-  operation: File.delete
-  authenticated: false
-- isEnabled: true
-  operation: User.read
-  authenticated: false
-- isEnabled: true
-  operation: User.create
-  authenticated: false
-- isEnabled: true
-  operation: User.update
-  authenticated: false
-- isEnabled: true
-  operation: User.delete
-  authenticated: false
+- operation: "*"
+
+  
+# Permanent Auth Token / Root Tokens
 rootTokens: []
+
 `,
       files: {
-        './types.graphql': `type File implements Node {
-  contentType: String!
-  createdAt: DateTime!
-  id: ID! @isUnique
-  name: String!
-  secret: String! @isUnique
-  size: Int!
-  updatedAt: DateTime!
-  url: String! @isUnique
-}
+        './types.graphql': `\
+# This file contains the GraphQL Types
+
+# All types need to have the three fields id, updatedAt and createdAt like this:
 
 type User implements Node {
-  createdAt: DateTime!
   id: ID! @isUnique
+  createdAt: DateTime!
   updatedAt: DateTime!
 }
 
-type Post {
-  imageUrl: String!
+
+# Graphcool has one special type, the File type:
+
+# type File implements Node {
+#   contentType: String!
+#   createdAt: DateTime!
+#   id: ID! @isUnique
+#   name: String!
+#   secret: String! @isUnique
+#   size: Int!
+#   updatedAt: DateTime!
+#   url: String! @isUnique
+# }
+
+type Post implements Node {
+  id: ID! @isUnique
+  title: String
+}
+`,
+        './code/hello.js': `\
+module.exports = event => {
+  return {
+    data: {
+      message: \`Hello $\{event.data.name || 'World'\}\`
+    }
+  }
+}`,
+        './code/hello.graphql': `\
+type HelloPayload {
+  message: String!
+}
+
+extend type Query {
+  hello(name: String): HelloPayload
 }
 `,
       },

@@ -98,7 +98,7 @@ export async function fsToModule(
 
   if (definition.functions) {
     Object.keys(definition.functions).forEach(funcName => {
-      const func: FunctionDefinition = definition.functions[funcName]
+      const func: FunctionDefinition = definition.functions![funcName]
       if (func.handler.code && func.handler.code.src) {
         if (!isFunctionFile(func.handler.code.src)) {
           errors.push({

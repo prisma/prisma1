@@ -4,7 +4,7 @@ import fs from './fs'
 import { Output } from './Output/index'
 import { EnvironmentConfig } from './types'
 import { Client } from './Client/Client'
-import { Config } from './Config';
+import { Config } from './Config'
 import { EnvDoesntExistError } from './errors/EnvDoesntExistError'
 
 export class Environment {
@@ -22,7 +22,7 @@ export class Environment {
   public initEmptyEnvironment() {
     this.env = {
       default: null,
-      environments: {}
+      environments: {},
     }
   }
 
@@ -57,7 +57,7 @@ export class Environment {
     this.env.environments[name] = projectId
   }
 
-  public set (name: string, projectId: string) {
+  public set(name: string, projectId: string) {
     this.env.environments[name] = projectId
   }
 
@@ -94,7 +94,9 @@ export class Environment {
 
   public deleteIfExist(projectIds: string[]) {
     projectIds.forEach(projectId => {
-      const envName = Object.keys(this.env.environments).find(envName => this.env.environments[envName] === projectId)
+      const envName = Object.keys(this.env.environments).find(
+        name => this.env.environments[name] === projectId,
+      )
       if (envName) {
         delete this.env.environments[envName]
       }
@@ -104,25 +106,37 @@ export class Environment {
     })
   }
 
-  public async getEnvironment({project, env, skipDefault}: { project?: string, env?: string, skipDefault?: boolean }): Promise<{ projectId: string | null, envName: string | null }> {
+  public async getEnvironment({
+    project,
+    env,
+    skipDefault,
+  }: {
+    project?: string
+    env?: string
+    skipDefault?: boolean
+  }): Promise<{ projectId: string | null; envName: string | null }> {
     let projectId: null | string = null
 
     if (env) {
       projectId = this.env.environments[env] || null
       return {
-        envName: env, projectId,
+        envName: env,
+        projectId,
       }
     }
 
     if (project) {
       const projects = await this.client.fetchProjects()
-      const foundProject = projects.find(p => p.id === project || p.alias === project)
+      const foundProject = projects.find(
+        p => p.id === project || p.alias === project,
+      )
       projectId = foundProject ? foundProject.id : null
       if (projectId) {
         const resultEnv = this.getEnvironmentName(projectId)
 
         return {
-          projectId, envName: resultEnv,
+          projectId,
+          envName: resultEnv,
         }
       }
     }
@@ -141,10 +155,11 @@ export class Environment {
   }
 
   private getEnvironmentName(projectId: string): string | null {
-    return Object.keys(this.env.environments).find(key => {
-      const projectEnv = this.env.environments[key]
-      return projectEnv === projectId
-    }) || null
+    return (
+      Object.keys(this.env.environments).find(key => {
+        const projectEnv = this.env.environments[key]
+        return projectEnv === projectId
+      }) || null
+    )
   }
-
 }

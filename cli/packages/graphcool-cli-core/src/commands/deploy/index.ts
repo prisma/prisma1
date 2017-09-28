@@ -44,17 +44,9 @@ ${chalk.gray(
       description: 'Accept data loss caused by schema changes',
     }),
   }
-  static mockDefinition: ProjectDefinition
-  static mockEnv: EnvironmentConfig
   async run() {
     const { env, project, force } = this.flags
 
-    if (Deploy.mockDefinition) {
-      this.definition.set(Deploy.mockDefinition)
-    }
-    if (Deploy.mockEnv) {
-      this.env.env = Deploy.mockEnv
-    }
     await this.auth.ensureAuth()
     await this.definition.load()
     // temporary ugly solution
@@ -74,6 +66,7 @@ ${chalk.gray(
         this.out.error(new EnvDoesntExistError(env))
       }
 
+      console.log(projectId, envName, env, project, force)
       this.out.error(
         `Please provide either a default environment, a project or an environment you want to deploy to.`,
       )

@@ -8,10 +8,10 @@ import fs from '../fs'
 import { Output } from '../Output/index'
 import { Config } from '../Config'
 import { GraphcoolDefinition, FunctionDefinition } from 'graphcool-json-schema'
-const debug = require('debug')('project-definition')
 import { flatMap } from 'lodash'
 import * as yamlParser from 'yaml-ast-parser'
 import * as yaml from 'js-yaml'
+const debug = require('debug')('project-definition')
 
 export class ProjectDefinitionClass {
   static sanitizeDefinition(definition: ProjectDefinition) {
@@ -19,7 +19,8 @@ export class ProjectDefinitionClass {
       const { name, files } = module
       let content = module.content
       if (module.definition && typeof module.definition === 'object') {
-        content = yaml.safeDump(module.definition)
+        // parse + stringify trims away `undefined` values, which are not accepted by the yaml parser
+        content = yaml.safeDump(JSON.parse(JSON.stringify(module.definition)))
       }
       return { name, content, files }
     })
@@ -39,10 +40,10 @@ export class ProjectDefinitionClass {
   public async load() {
     if (fs.existsSync(path.join(this.config.definitionDir, 'graphcool.yml'))) {
       this.definition = await fsToProject(this.config.definitionDir, this.out)
-      // if (process.env.DEBUG && process.env.DEBUG!.includes('*')) {
-      //   const definitionJsonPath = path.join(this.config.definitionDir, 'definition.json')
-      //   fs.writeFileSync(definitionJsonPath, JSON.stringify(this.definition, null, 2))
-      // }
+      if (process.env.GRAPHCOOL_DUMP_LOADED_DEFINITION) {
+        const definitionJsonPath = path.join(this.config.definitionDir, 'loaded-definition.json')
+        fs.writeFileSync(definitionJsonPath, JSON.stringify(this.definition, null, 2))
+      }
     }
   }
 
@@ -55,10 +56,10 @@ export class ProjectDefinitionClass {
       silent,
     )
 
-    // if (process.env.DEBUG && process.env.DEBUG!.includes('*')) {
-    //   const definitionJsonPath = path.join(this.config.definitionDir, 'definition.json')
-    //   fs.writeFileSync(definitionJsonPath, JSON.stringify(this.definition, null, 2))
-    // }
+    if (process.env.GRAPHCOOL_DUMP_SAVED_DEFINITION) {
+      const definitionJsonPath = path.join(this.config.definitionDir, 'definition.json')
+      fs.writeFileSync(definitionJsonPath, JSON.stringify(this.definition, null, 2))
+    }
   }
 
   public async saveTypes() {
@@ -86,9 +87,9 @@ export class ProjectDefinitionClass {
             this.out,
             moduleName,
           )
-          if (ymlDefinitinon.functions && ymlDefinitinon.functions) {
+          if (ymlDefinitinon.functions) {
             Object.keys(ymlDefinitinon.functions).forEach(fnName => {
-              const fn = ymlDefinitinon.functions[fnName]
+              const fn = ymlDefinitinon.functions![fnName]
               if (fn.handler.code) {
                 let newFile = module.files[fn.handler.code.src]
                 if (fn.handler.code.environment) {
@@ -104,7 +105,7 @@ export class ProjectDefinitionClass {
                 module.files[fn.handler.code.src] = newFile
               }
 
-              ymlDefinitinon.functions[fnName] = fn
+              ymlDefinitinon.functions![fnName] = fn
             })
           }
 
@@ -146,7 +147,7 @@ export class ProjectDefinitionClass {
       if (module) {
         return {
           module,
-          fn: module.definition!.functions[name],
+          fn: module.definition!.functions![name],
         }
       }
     }

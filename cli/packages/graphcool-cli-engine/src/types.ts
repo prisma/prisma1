@@ -1,10 +1,14 @@
 import { GraphcoolDefinition } from 'graphcool-json-schema'
+import { Config } from './Config'
 
 export interface RunOptions {
   argv?: string[]
   mock: boolean
   initPath?: string
   root?: string
+  mockDefinition?: ProjectDefinition
+  mockEnv?: EnvironmentConfig
+  mockConfig?: Config
 }
 
 export type Region = 'EU_WEST_1' | 'AP_NORTHEAST_1' | 'US_WEST_2'

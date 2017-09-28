@@ -13,6 +13,7 @@
     "no-object-literal-type-assertion": false,
     "no-console": [false],
     "no-var-requires": null,
-    "no-submodule-imports": null
+    "no-submodule-imports": null,
+    "no-invalid-template-strings": null
   }
 }

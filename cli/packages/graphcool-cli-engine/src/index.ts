@@ -34,3 +34,5 @@ export {
 } from './types'
 
 export { flags, Flag, Arg, Flags } from './Flags'
+
+export { mockDefinition, mockEnv } from './mock'

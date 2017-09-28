@@ -1,27 +1,30 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`deploy fake 1`] = `
+exports[`init test project 1`] = `
 "
 
-
-
-Written to graphcool.yml
-
-Written to ./types.graphql
-
-
-
- ✔ Created project Shellcrest Cub (ID: cj7elbt9z0a3z011214m21uwn) successfully.
-
+   Written files:
+   └─ .graphcoolrc
+   
    Here is what you can do next:
 
    1) Open graphcool.yml or types.graphql in your editor to update your project definition.
       You can deploy your changes using \`graphcool deploy\`.
+   
+   2) Install a graphcool module to your project:
+   
+      Github Authentication
+      $ graphcool module add graphcool/modules/authentication/github
+   
+      Facebook Authentication
+      $ graphcool module add graphcool/modules/authentication/facebook
+      
+      Algolia Syncing
+      $ graphcool module add graphcool/modules/syncing/algolia
 
-   2) Use one of the following endpoints to connect to your GraphQL API:
+   3) Use the following endpoint to connect to your GraphQL API:
 
-        Simple API:   https://api.graph.cool/simple/v1/cj7elbt9z0a3z011214m21uwn
-        Relay API:    https://api.graph.cool/relay/v1/cj7elbt9z0a3z011214m21uwn
+      https://api.graph.cool/simple/v1/cj84lcwd004gc0150aci9s8ow
 
 "
 `;
