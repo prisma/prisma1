@@ -4,7 +4,6 @@ exports[`init from project test project 1`] = `
 "
 
    Written files:
-   ├─ .DS_Store
    ├─ .graphcoolrc
    ├─ code
    │  └─ hello.js
