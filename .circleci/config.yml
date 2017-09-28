@@ -4,5 +4,6 @@ jobs:
       - image: circleci/node:8
     working_directory: ~/cli
     steps:
+      - run: ls
       - run: yarn
       - run: yarn test
