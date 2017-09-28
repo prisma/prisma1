@@ -2,7 +2,7 @@ jobs:
   build:
     docker:
       - image: circleci/node:8
-    working_directory: cli
+    working_directory: ~/cli
     steps:
       - run: yarn
       - run: yarn test
