@@ -2,9 +2,41 @@
 
 [![CircleCI](https://circleci.com/gh/graphcool/graphcool.svg?style=shield)](https://circleci.com/gh/graphcool/graphcool) [![Slack Status](https://slack.graph.cool/badge.svg)](https://slack.graph.cool)
 
+## Quickstart
 
+1. **Install via NPM:**
 
-## Feedback
+  ```sh
+  npm install -g graphcool
+  ```
+
+2. **Init new project:**
+
+  ```sh
+  graphcool init
+  ```
+  
+3. **Configure data model & project:**
+
+  Edit the generated `types.graphql` file to implement your data model and setup functions & permissions in your `graphcool.yml` file.
+  
+4. **Deploy your changes:**
+
+  You can deploy your changes and migrate your database by running the following command:
+  
+  ```sh
+  graphcool deploy
+  ```
+  
+5. **Connect to your GraphQL endpoint:**
+
+  You can use your new GraphQL endpoint in your frontend (or backend) applications to connect to your Graphcool API.
+
+## Features
+
+## Examples
+
+## Contributing
 
 Your feedback is **very helpful**, please share your opinion and thoughts! 🤔
 
