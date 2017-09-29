@@ -1,4 +1,4 @@
-# Graphcool Webshop :moneybag:
+# Full Example: Webshop :moneybag:
 
 ## What it includes
 - Anonymous + Email Authentication
@@ -19,6 +19,21 @@ $ npm install -g graphcool@beta
 $ git clone git@github.com:graphcool-examples/graphcool-examples.git
 $ cd graphcool-examples/webshop
 $ graphcool init
+```
+
+## Setup
+
+Download the example or [clone the repo](https://github.com/graphcool/graphcool):
+
+```sh
+curl https://codeload.github.com/graphcool/graphcool/tar.gz/master | tar -xz --strip=2 graphcool-master/examples/full-example
+cd full-example
+```
+
+Install the CLI (if you haven't already):
+
+```sh
+npm install -g graphcool
 ```
 
 ## Data Setup
