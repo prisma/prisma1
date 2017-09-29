@@ -25,13 +25,12 @@ module.exports = handler(event => {
   // const email = event.data.User.node.email
   // const firstName = event.data.User.node.firstName
   // const lastName = event.data.User.node.lastName
-  // const stripeToken = event.data.User.node.stripeToken
+  const stripeToken = event.data.stripeToken
 
   const getOrder = (orderId) => {
     return api.request(`query getOrder($orderId: ID!) {
       Order(id: $orderId) {
         id
-        stripeToken
         paymentDate
         basket {
           items {
@@ -51,7 +50,7 @@ module.exports = handler(event => {
     }`, {orderId})
   }
 
-  const getOrCreateStripeCustomer = (user, stripeToken) => {
+  const getOrCreateStripeCustomer = (user) => {
     if (user.stripeCustomerId) {
       console.log(`Stripe customer for email ${user.email} already exists`)
       return Promise.resolve(user.stripeCustomerId)
@@ -83,7 +82,7 @@ module.exports = handler(event => {
   const createStripeCharge = (email, stripeCustomerId, amount, description) => {
     console.log(`Creating stripe charge for ${email}`)
     return new Promise((resolve, reject) => {
-      stripeCharge = stripe.charges.create(
+      const stripeCharge = stripe.charges.create(
         {
           amount,
           description,
@@ -138,7 +137,7 @@ module.exports = handler(event => {
         throw new Error(`Invalid orderId ${event.data.orderId}`)
       }
 
-      const {user, stripeToken} = Order
+      const {user} = Order
 
       const amount = calcAmount(Order)
       const description = getDescription(Order)
@@ -147,7 +146,7 @@ module.exports = handler(event => {
         throw new Error(`Order ${Order.id} has already been payed on the ${Order.paymentDate}`)
       }
 
-      return getOrCreateStripeCustomer(user, stripeToken)
+      return getOrCreateStripeCustomer(user)
         .then(stripeCustomerId => createStripeCharge(user.email, stripeCustomerId, amount, description))
         .then(stripeCustomerId => updateUserAndOrder(user.id, stripeCustomerId, Order.id))
         .then(responseJson => {

@@ -4,5 +4,5 @@ type PaymentPayload {
 }
 
 extend type Mutation {
-  pay(orderId: String!): PaymentPayload
+  pay(stripeToken: String! orderId: String!): PaymentPayload
 }
