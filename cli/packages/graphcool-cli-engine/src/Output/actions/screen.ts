@@ -12,5 +12,5 @@ function termWidth (stream: any): number {
   return width
 }
 
-export const stdtermwidth = global.columns || termWidth(process.stdout)
-export const errtermwidth = global.columns || termWidth(process.stderr)
+export const stdtermwidth = (global as any).columns || termWidth(process.stdout)
+export const errtermwidth = (global as any).columns || termWidth(process.stderr)

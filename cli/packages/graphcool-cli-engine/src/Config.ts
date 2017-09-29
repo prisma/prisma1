@@ -4,26 +4,14 @@ import * as os from 'os'
 import * as fs from 'fs-extra'
 import * as cuid from 'cuid'
 const debug = require('debug')('config')
-
-let cwd = process.cwd()
-if (process.env.NODE_ENV === 'test') {
-  cwd = path.join(os.tmpdir(), `${cuid()}/`)
-  fs.mkdirpSync(cwd)
-  debug('cwd', cwd)
-}
-
-let home = os.homedir() || os.tmpdir()
-
-if (process.env.NODE_ENV === 'test') {
-  home = path.join(os.tmpdir(), `${cuid()}/`)
-  fs.mkdirpSync(home)
-  debug('home', home)
-}
+import * as findUp from 'find-up'
+import { Output } from './Output/index'
 
 export class Config {
   /**
    * Local settings
    */
+  out: Output
   debug: boolean = Boolean(
     process.env.DEBUG && process.env.DEBUG!.includes('*'),
   )
@@ -48,11 +36,14 @@ export class Config {
   /**
    * Paths
    */
+  cwd: string
+  home: string
   root = path.join(__dirname, '..')
-  envPath = path.join(cwd, '.graphcoolrc')
-  definitionDir = cwd
-  home = home
-  dotGraphcoolFilePath = path.join(home, '.graphcool')
+
+  envPath: string | null
+  definitionDir: string
+  definitionPath: string | null
+  dotGraphcoolFilePath: string | null
 
   /**
    * Urls
@@ -79,33 +70,19 @@ export class Config {
   __cache = {}
 
   constructor(options?: RunOptions) {
-    // noop
-    if (process.env.NODE_ENV === 'test') {
-      debug('taking graphcool test token')
-      this.token = process.env.GRAPHCOOL_TEST_TOKEN!
-    } else {
-      if (fs.existsSync(this.dotGraphcoolFilePath)) {
-        const configContent = fs.readFileSync(
-          this.dotGraphcoolFilePath,
-          'utf-8',
-        )
-        this.token = JSON.parse(configContent).token
-      }
-    }
-
+    this.cwd = this.getCwd()
+    this.home = this.getHome()
+    this.setEnvPath()
+    this.setDefinitionPaths()
+    this.setDotGraphcoolPath()
+    debug(`dotGraphcoolPath after setting it`, this.dotGraphcoolFilePath)
+    this.setTokenIfExists()
     if (options) {
-      this.mock = options.mock
-      this.argv = options.argv || this.argv
-      if (options.root) {
-        this.root = options.root
-        const pjsonPath = path.join(options.root, 'package.json')
-        const pjson = fs.readJSONSync(pjsonPath)
-        if (pjson && pjson['cli-engine']) {
-          this.pjson = pjson
-          this.version = pjson.version
-        }
-      }
+      this.readPackageJson(options)
     }
+  }
+  setOutput(out: Output) {
+    this.out = out
   }
   setToken(token: string | null) {
     this.token = token
@@ -135,6 +112,83 @@ export class Config {
         ? path.join(this.home, 'Library', 'Caches')
         : null,
     )
+  }
+  private readPackageJson(options: RunOptions) {
+    this.mock = options.mock
+    this.argv = options.argv || this.argv
+    if (options.root) {
+      this.root = options.root
+      const pjsonPath = path.join(options.root, 'package.json')
+      const pjson = fs.readJSONSync(pjsonPath)
+      if (pjson && pjson['cli-engine']) {
+        this.pjson = pjson
+        this.version = pjson.version
+      }
+    }
+  }
+  private setEnvPath() {
+    this.envPath = path.join(this.cwd, '.graphcoolrc')
+    if (!fs.pathExistsSync(this.envPath)) {
+      const found = findUp.sync('.graphcoolrc', {cwd: this.cwd})
+      this.envPath = found ? path.dirname(found) : this.envPath
+    }
+  }
+  private setDefinitionPaths() {
+    const definitionPath = path.join(this.cwd, 'graphcool.yml')
+    if (fs.pathExistsSync(definitionPath)) {
+      this.definitionDir = this.cwd
+      this.definitionPath = definitionPath
+    } else {
+      const found = findUp.sync('graphcool.yml', {cwd: this.cwd})
+      this.definitionDir = found ? path.dirname(found) : this.cwd
+      this.definitionPath = found || null
+    }
+  }
+  private setDotGraphcoolPath() {
+    const dotGraphcoolCwd = path.join(this.cwd, '.graphcool')
+    if (fs.pathExistsSync(dotGraphcoolCwd)) {
+      this.dotGraphcoolFilePath = dotGraphcoolCwd
+    } else {
+      const found = findUp.sync('.graphcool', {cwd: this.cwd})
+      const dotGraphcoolHome = path.join(this.home, '.graphcool')
+
+      // only take the find-up file, if it's "deeper" than the home dir
+      this.dotGraphcoolFilePath = (found && (found.split('/').length > dotGraphcoolHome.split('/'))) ? found : dotGraphcoolHome
+    }
+  }
+  private setTokenIfExists() {
+    if (process.env.NODE_ENV === 'test') {
+      debug('taking graphcool test token')
+      this.token = process.env.GRAPHCOOL_TEST_TOKEN!
+    } else {
+      if (fs.existsSync(this.dotGraphcoolFilePath)) {
+        const configContent = fs.readFileSync(
+          this.dotGraphcoolFilePath,
+          'utf-8',
+        )
+        this.token = JSON.parse(configContent).token
+      }
+    }
+  }
+  private getCwd() {
+    // get cwd
+    let cwd = process.cwd()
+    if (process.env.NODE_ENV === 'test') {
+      cwd = path.join(os.tmpdir(), `${cuid()}/`)
+      fs.mkdirpSync(cwd)
+      debug('cwd', cwd)
+    }
+    return cwd
+  }
+  private getHome() {
+    // get home
+    let home = os.homedir() || os.tmpdir()
+    if (process.env.NODE_ENV === 'test') {
+      home = path.join(os.tmpdir(), `${cuid()}/`)
+      fs.mkdirpSync(home)
+      debug('home', home)
+    }
+    return home
   }
 }
 
