@@ -83,15 +83,15 @@ describe('cli help', () => {
 describe('cli version', () => {
   test('-v', async () => {
     const cli = await run('-v')
-    expect(cli.cmd.out.stdout.output).toMatchSnapshot()
+    expect(cli.cmd.out.stdout.output).toContain('graphcool/')
   })
   test('--version', async () => {
     const cli = await run('--version')
-    expect(cli.cmd.out.stdout.output).toMatchSnapshot()
+    expect(cli.cmd.out.stdout.output).toContain('graphcool/')
   })
   test('version', async () => {
     const cli = await run('version')
-    expect(cli.cmd.out.stdout.output).toMatchSnapshot()
+    expect(cli.cmd.out.stdout.output).toContain('graphcool/')
   })
 })
 
