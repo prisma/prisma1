@@ -102,8 +102,9 @@ export class Command {
   argv: string[]
 
   constructor(options: { config?: RunOptions } = { config: { mock: true } }) {
-    this.config = options.config && options.config.mockConfig || new Config(options.config)
+    this.config = options.config && options.config.mockConfig || options.config instanceof Config ? (options.config as any) : new Config(options.config)
     this.out = new Output(this.config)
+    this.config.setOutput(this.out)
     this.argv = options.config && options.config.argv ? options.config.argv : []
     this.definition = new ProjectDefinitionClass(this.out, this.config)
     this.client = new Client(this.config)

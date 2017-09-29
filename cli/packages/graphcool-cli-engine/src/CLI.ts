@@ -73,6 +73,8 @@ export class CLI {
 
     out = new Output(this.config)
 
+    this.config.setOutput(out)
+
     if (this.cmdAskingForHelp) {
       debug('running help command')
       this.cmd = await this.Help.run(this.config)

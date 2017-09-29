@@ -44,6 +44,7 @@ export class Config {
   definitionDir: string
   definitionPath: string | null
   dotGraphcoolFilePath: string | null
+  warnings: string[] = []
 
   /**
    * Urls
@@ -72,9 +73,9 @@ export class Config {
   constructor(options?: RunOptions) {
     this.cwd = this.getCwd()
     this.home = this.getHome()
+    this.setDotGraphcoolPath()
     this.setEnvPath()
     this.setDefinitionPaths()
-    this.setDotGraphcoolPath()
     debug(`dotGraphcoolPath after setting it`, this.dotGraphcoolFilePath)
     this.setTokenIfExists()
     if (options) {
@@ -83,6 +84,8 @@ export class Config {
   }
   setOutput(out: Output) {
     this.out = out
+    this.warnings.forEach(warning  => out.warn(warning))
+    this.warnings = []
   }
   setToken(token: string | null) {
     this.token = token
@@ -130,8 +133,43 @@ export class Config {
     this.envPath = path.join(this.cwd, '.graphcoolrc')
     if (!fs.pathExistsSync(this.envPath)) {
       const found = findUp.sync('.graphcoolrc', {cwd: this.cwd})
-      this.envPath = found ? found : this.envPath
+      if (found) {
+
+        // only use this if 1. it's not in the home dir (people of old cli versions may have this)
+        // and 2. there MUST be a graphcool.yml file in the same folder, otherwise this makes no sense to use!
+        const foundDir = path.dirname(found)
+
+        if (foundDir === this.home) {
+          const file = fs.readFileSync(found)
+          let json: any = null
+          try {
+            json = JSON.parse(file)
+          } catch (e) {
+            //
+          }
+
+          if (json && json.token && (!this.dotGraphcoolFilePath || !fs.pathExistsSync(this.dotGraphcoolFilePath))) {
+            const newDotPath = path.join(this.home, '.graphcool')
+            fs.moveSync(found, newDotPath)
+            this.dotGraphcoolFilePath = newDotPath
+          } else {
+            this.warn(`There is a .graphcoolrc file in your home directory (${this.envPath}).
+This can still be an artifact of the old CLI version.
+To prevent unwanted side effects, please remove it.`)
+          }
+
+          return
+        }
+
+        const ymlPath = path.join(foundDir, 'graphcool.yml')
+        if (fs.pathExistsSync(ymlPath)) {
+          this.envPath = (found && path.dirname(found) !== this.home) ? found : this.envPath
+        }
+      }
     }
+  }
+  private warn(msg: string) {
+    this.warnings.push(msg)
   }
   private setDefinitionPaths() {
     const definitionPath = path.join(this.cwd, 'graphcool.yml')

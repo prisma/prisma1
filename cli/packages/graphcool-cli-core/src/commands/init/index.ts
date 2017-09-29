@@ -152,20 +152,20 @@ export default class Init extends Command {
       )} in your editor to update your project definition.
       You can deploy your changes using ${chalk.cyan('`graphcool deploy`')}.
    
-   2) Install a graphcool module to your project:
+   2) Install a graphcool modules to your project:
    
       ${chalk.bold('Github Authentication')}
       $ ${chalk.cyan(
-        'graphcool module add graphcool/modules/authentication/github',
+        'graphcool modules add graphcool/modules/authentication/github',
       )}
    
       ${chalk.bold('Facebook Authentication')}
       $ ${chalk.cyan(
-        'graphcool module add graphcool/modules/authentication/facebook',
+        'graphcool modules add graphcool/modules/authentication/facebook',
       )}
       
       ${chalk.bold('Algolia Syncing')}
-      $ ${chalk.cyan('graphcool module add graphcool/modules/syncing/algolia')}
+      $ ${chalk.cyan('graphcool modules add graphcool/modules/syncing/algolia')}
 
    3) Use the following endpoint to connect to your GraphQL API:
 

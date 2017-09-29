@@ -16,10 +16,13 @@ export const defaultDefinition: ProjectDefinition = {
 # Check out some examples:
 #    github.com/graphcool/examples
 #
+# Here are the reference docs of this definition format:
+# https://docs-next.graph.cool/reference/basics/project-configuration-opheidaix3
+#
 # Happy Coding!
 
 
-# GraphQL types
+# In the types.graphql you define your data schema
 types: ./types.graphql
 
 
@@ -29,27 +32,36 @@ types: ./types.graphql
 #   hello:
 #     handler:
 #       code:
-#         src: ./code/hello.js
+#         src: ./src/hello.js
 #     type: resolver
-#     schema: ./code/hello.graphql
-
- 
-# Graphcool modules
-modules: {}
+#     schema: ./src/hello.graphql
 
 
-# Model/Relation permissions
+# Model/Relation permissions are used to limit the API access
+# To take the burden of thinking about those while development, we 
+# preconfigured the wildcard ("*") permission that allows everything
+# Read more here:
+# https://docs-next.graph.cool/reference/auth/authorization/overview-iegoo0heez
 permissions:
 - operation: "*"
 
   
-# Permanent Auth Token / Root Tokens
+# Your root tokens used for functions to get full access to the API
+# Read more here:
+# https://docs-next.graph.cool/reference/auth/authentication/authentication-tokens-eip7ahqu5o
 rootTokens: []
+
+ 
+# Organize your code into modules
+# You can find modules from the community here:
+# https://github.com/graphcool/modules
+modules: {}
 
 `,
       files: {
         './types.graphql': `\
-# This file contains the GraphQL Types
+# The following types define the data model of the example app
+# based on which the GraphQL API is generated
 
 # All types need to have the three fields id, updatedAt and createdAt like this:
 
@@ -61,6 +73,9 @@ type User implements Node {
 
 
 # Graphcool has one special type, the File type:
+# Uncommenting this type will automatically enable the File API
+# Read more here:
+# https://docs-next.graph.cool/reference/api/file-management-eer4wiang0
 
 # type File implements Node {
 #   contentType: String!
@@ -73,7 +88,7 @@ type User implements Node {
 #   url: String! @isUnique
 # }
 `,
-        './code/hello.js': `\
+        './src/hello.js': `\
 module.exports = event => {
   return {
     data: {
@@ -81,7 +96,7 @@ module.exports = event => {
     }
   }
 }`,
-        './code/hello.graphql': `\
+        './src/hello.graphql': `\
 type HelloPayload {
   message: String!
 }

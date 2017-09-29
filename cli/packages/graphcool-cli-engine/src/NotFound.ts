@@ -54,7 +54,7 @@ export class NotFound {
       closest = this.closest(id)
     }
 
-    const perhaps = closest ? `Perhaps you meant ${this.out.color.yellow(closest)}\n` : ''
+    const perhaps = closest ? `Perhaps you meant ${this.out.color.yellow(closest.split(':').join(' '))}\n` : ''
     this.out.error(`${this.out.color.yellow(this.argv[1])} is not a ${this.config.bin} command.
 ${perhaps}Run ${this.out.color.cmd(binHelp)} for a list of available commands.`, 127)
   }

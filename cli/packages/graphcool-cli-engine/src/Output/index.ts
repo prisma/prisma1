@@ -201,9 +201,9 @@ export class Output {
         } else {
           this.stderr.log(
             bangify(
-              wrap(prefix + getErrorMessage(err)),
+              wrap(prefix + this.color.yellow(getErrorMessage(err))),
               this.color.yellow(arrow),
-            ),
+            ) + '\n',
           )
         }
       } catch (e) {
