@@ -38,7 +38,7 @@ export class ProjectDefinitionClass {
   }
 
   public async load() {
-    if (this.config.definitionPath) {
+    if (this.config.definitionPath && fs.pathExistsSync(this.config.definitionPath)) {
       this.definition = await fsToProject(this.config.definitionDir, this.out)
       if (process.env.GRAPHCOOL_DUMP_LOADED_DEFINITION) {
         const definitionJsonPath = path.join(this.config.definitionDir, 'loaded-definition.json')

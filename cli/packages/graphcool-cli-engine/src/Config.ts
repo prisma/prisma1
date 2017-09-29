@@ -130,19 +130,19 @@ export class Config {
     this.envPath = path.join(this.cwd, '.graphcoolrc')
     if (!fs.pathExistsSync(this.envPath)) {
       const found = findUp.sync('.graphcoolrc', {cwd: this.cwd})
-      this.envPath = found ? path.dirname(found) : this.envPath
+      this.envPath = found ? found : this.envPath
     }
   }
   private setDefinitionPaths() {
     const definitionPath = path.join(this.cwd, 'graphcool.yml')
-    if (fs.pathExistsSync(definitionPath)) {
-      this.definitionDir = this.cwd
-      this.definitionPath = definitionPath
-    } else {
-      const found = findUp.sync('graphcool.yml', {cwd: this.cwd})
-      this.definitionDir = found ? path.dirname(found) : this.cwd
-      this.definitionPath = found || null
-    }
+    this.definitionDir = this.cwd
+    this.definitionPath = definitionPath
+    // if (fs.pathExistsSync(definitionPath)) {
+    // } else {
+    //   const found = findUp.sync('graphcool.yml', {cwd: this.cwd})
+    //   this.definitionDir = found ? path.dirname(found) : this.cwd
+    //   this.definitionPath = found || null
+    // }
   }
   private setDotGraphcoolPath() {
     const dotGraphcoolCwd = path.join(this.cwd, '.graphcool')

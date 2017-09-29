@@ -36,11 +36,11 @@ export class Environment {
 
   public load() {
     if (fs.existsSync(this.config.envPath)) {
+      // this.out.log(`Loading .graphcoolrc from ${this.config.envPath}`)
       try {
         this.env = yaml.safeLoad(fs.readFileSync(this.config.envPath, 'utf-8'))
       } catch (e) {
-        this.out.error(`Error in .graphcoolrc: `)
-        this.out.error(e.message)
+        this.out.error(`Error in .graphcoolrc (${this.config.envPath}): ${e.message}`)
         process.exit(1)
       }
     } else {
