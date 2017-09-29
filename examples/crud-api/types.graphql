@@ -1,0 +1,24 @@
+type User implements Node {
+  id: ID! @isUnique
+  firstName: String!
+  lastName: String!
+  posts: [Post!]! @relation(name: "UserPosts")
+  comments: [Comment!]! @relation(name: "UserComments")
+}
+
+type Post implements Node {
+  id: ID! @isUnique
+  title: String!
+  description: String!
+  author: User! @relation(name: "UserPosts")
+  comments: [Comment!]! @relation(name: "PostComments")
+
+}
+
+type Comment implements Node {
+  id: ID! @isUnique
+  text: String!
+  isPublished: Boolean!
+  author: User! @relation(name: "UserComments")
+  post: Post! @relation(name: "PostComments")
+}

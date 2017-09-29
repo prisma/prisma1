@@ -1,7 +1,0 @@
-type AuthenticatedEmailUserPayload {
-  id: ID
-}
-
-extend type Query {
-  authenticatedEmailUser: AuthenticatedEmailUserPayload!
-}
