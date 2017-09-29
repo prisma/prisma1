@@ -79,5 +79,5 @@ You can run the following query to get all `Post` nodes including the releated `
       lastName
     }
   }
-  }
+}
 ```
