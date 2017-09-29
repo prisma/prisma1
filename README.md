@@ -1,6 +1,10 @@
 <p align="center"><a href="https://www.graph.cool"><img src="https://imgur.com/vXOT4eF.png" width="314"></a></p>
 
-[![CircleCI](https://circleci.com/gh/graphcool/graphcool.svg?style=shield)](https://circleci.com/gh/graphcool/graphcool) [![Slack Status](https://slack.graph.cool/badge.svg)](https://slack.graph.cool)
+[![CircleCI](https://circleci.com/gh/graphcool/graphcool.svg?style=shield)](https://circleci.com/gh/graphcool/graphcool) [![Slack Status](https://slack.graph.cool/badge.svg)](https://slack.graph.cool) [![npm version](https://badge.fury.io/js/graphcool.svg)](https://badge.fury.io/js/graphcool)
+
+[Website](https://www.graph.cool/) • [Docs](https://docs-next.graph.cool/) • [Forum](https://www.graph.cool/forum) • [Chat](https://slack.graph.cool/) • [Twitter](https://twitter.com/graphcool) 
+
+> **Note:** This repository refers to a newer version of Graphcool (previously a [BaaS](https://www.graph.cool/)). More information in the [forum](https://www.graph.cool/forum/t/feedback-new-cli-beta/949).
 
 ## Quickstart
 
@@ -9,7 +13,7 @@
 1. **Install via NPM:**
 
   ```sh
-  npm install -g graphcool
+  npm install -g graphcool@beta
   ```
 
 2. **Init new project:**
@@ -58,6 +62,8 @@
   Use the endpoint from step (2) in your frontend (or backend) applications to connect to your GraphQL API.
 
 ## Features
+
+* GraphQL API 
 
 ## Examples
 
