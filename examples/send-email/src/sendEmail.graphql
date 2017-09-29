@@ -1,0 +1,16 @@
+# first we define the payload of the mutation
+type SendEmailPayload {
+  success: Boolean!
+}
+
+# then we extend the available mutations
+extend type Mutation {
+  sendEmail(
+    tag: String!
+    from: String!
+    to: [String!]!
+    subject: String!
+    text: String!
+    recipientVariables: Json
+  ): SendEmailPayload
+}

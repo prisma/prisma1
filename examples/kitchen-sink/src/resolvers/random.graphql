@@ -1,7 +1,0 @@
-type RandomPayload {
-  v: Float!
-}
-
-extend type Mutation {
-  random: RandomPayload
-}

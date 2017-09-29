@@ -1,6 +1,0 @@
-type GithubUser {
-  id: ID! @isUnique
-  githubUserId: String @isUnique
-  posts: [Post!]! @relation(name: "AuthorPosts")
-  likes: [Like!]! @relation(name: "LikeOnGithubUser")
-}

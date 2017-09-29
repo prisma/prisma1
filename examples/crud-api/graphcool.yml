@@ -1,0 +1,7 @@
+# References the data model
+types: ./types.graphql
+
+# Allow everything for the sake of the demo
+permissions:
+- operation: "*"
+
