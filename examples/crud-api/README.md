@@ -2,7 +2,7 @@
 
 Basic example demonstrating the generation of the CRUD-style GraphQL API based on your data model.
 
-You can use the **[read-only demo endpoint](https://graphqlbin.com/LgqiP)** to explore the generated GraphQL API.
+> You can use the **[read-only demo endpoint](https://graphqlbin.com/LgqiP)** to explore the generated GraphQL API.
 
 ## Setup
 
