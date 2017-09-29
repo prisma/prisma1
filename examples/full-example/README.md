@@ -33,7 +33,13 @@ cd full-example
 Install the CLI (if you haven't already):
 
 ```sh
-npm install -g graphcool
+npm install -g graphcool@beta
+```
+
+Create the Graphcool backend
+
+```sh
+graphcool init
 ```
 
 ## Data Setup
