@@ -2,9 +2,33 @@
 
 Basic example demonstrating the generation of the CRUD-style GraphQL API based on your data model.
 
-[Demo (read-only)](https://api.graph.cool/simple/v1/cj86c7ph908850131tcpyy572)
+[Demo (read-only)](https://graphqlbin.com/LgqiP)
 
-## Add initial data
+## Setup
+
+Download the example or [clone the repo](https://github.com/graphcool/graphcool):
+
+```sh
+curl https://codeload.github.com/graphcool/graphcool/tar.gz/master | tar -xz --strip=2 graphcool-master/examples/crud-api
+cd crud-api
+```
+
+Install the CLI (if you haven't already):
+
+```sh
+npm install -g graphcool
+```
+
+Deploy the Graphcool backend and open the GraphQL API endpoint in your browser
+
+```sh
+graphcool deploy
+# open `https://api.graph.cool/simple/v1/xxx` in your browser
+```
+
+## Usage
+
+### Add initial data
 
 Run the following mutation to add some initial data. (Feel free to change this as you want.)
 
