@@ -45,10 +45,9 @@ Graphcool is a GraphQL backend development framework
   functions:
     hello:
       handler:
-        code:
-          src: ./src/hello.js
+        code: src/hello.js
       type: resolver
-      schema: ./src/hello.graphql
+      schema: src/hello.graphql
   ```
   
 4. **Deploy your changes:**
