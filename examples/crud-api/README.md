@@ -1,4 +1,4 @@
-# crud-api
+# CRUD API
 
 Basic example demonstrating the generation of the CRUD-style GraphQL API based on your data model.
 
@@ -28,7 +28,7 @@ graphcool deploy
 
 ## Usage
 
-### Add initial data
+### Add initial data via `create` mutation
 
 Run the following mutation to add some initial data. (Feel free to change this as you want.)
 
@@ -59,4 +59,25 @@ mutation {
     id
   }
 }
+```
+
+### Query & filter data
+
+You can run the following query to get all `Post` nodes including the releated `User` node which satisfy the `filter` condition:
+
+```graphql
+{
+  allPosts(filter: {
+    author: {
+      firstName: "Elon"
+    }
+  }) {
+    title
+    description
+    author {
+      firstName
+      lastName
+    }
+  }
+  }
 ```
