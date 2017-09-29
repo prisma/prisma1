@@ -1,0 +1,12 @@
+# only the `author` of a `Post` can update it
+
+query ($user_id: ID!, $node_id: ID!) {
+  SomePostExists(
+    filter: {
+      id: $node_id,
+      author: {
+        id: $user_id
+      }
+    }
+  )
+}

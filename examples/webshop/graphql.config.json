@@ -1,0 +1,9 @@
+{
+  "schema": {
+    "request": {
+      "url" : "https://7q4j04x0j.lp.gql.zone/graphql",
+      "method" : "POST",
+      "postIntrospectionQuery" : true
+    }
+  }
+}

@@ -1,0 +1,22 @@
+# GraphQL types
+types: ./types.graphql
+
+# functions
+functions:
+  signup:
+    handler:
+      code:
+        src: ./src/signup.js
+    type: resolver
+    schema: ./src/signup.graphql
+  authenticate:
+    handler:
+      code:
+        src: ./src/authenticate.js
+    type: resolver
+    schema: ./src/authenticate.graphql
+
+# Permanent Auth Token / Root Tokens
+rootTokens:
+  - signup
+  - authenticate

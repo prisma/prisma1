@@ -1,0 +1,8 @@
+{
+  SomeOrderExists(filter:{
+    id: $node_id
+    user: {
+      id: $user_id
+    }
+  })
+}

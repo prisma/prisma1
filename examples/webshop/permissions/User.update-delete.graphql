@@ -1,0 +1,11 @@
+{
+  SomeUserExists(
+    filter: {
+      AND: [{
+        id: $node_id
+      }, {
+        id: $user_id
+      }]
+    }
+  )
+}

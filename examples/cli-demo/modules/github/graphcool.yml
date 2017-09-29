@@ -1,0 +1,18 @@
+# GraphQL types
+types: ./types.graphql
+
+# functions
+functions:
+  github-authentication:
+    handler:
+      code:
+        src: ./src/github-authentication.js
+        environment:
+          CLIENT_ID: ${env:CLIENT_ID}
+          CLIENT_SECRET: ${env:CLIENT_SECRET}
+    type: resolver
+    schema: ./src/github-authentication.graphql
+
+# Permanent Auth Token / Root Tokens
+rootTokens:
+- github-authentication

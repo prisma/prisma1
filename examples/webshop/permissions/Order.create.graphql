@@ -1,0 +1,17 @@
+{
+  SomeUserExists(
+    filter: {
+      AND: [{
+      	id: $user_id  
+      }, {
+        id: $input_userId
+      }]
+    }
+  )
+  SomeBasketExists(filter: {
+    id: $input_basketId
+    user: {
+      id: $user_id
+    }
+  })
+}

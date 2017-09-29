@@ -1,0 +1,15 @@
+# This file contains the GraphQL Types
+
+type Post {
+  id: ID! @isUnique
+  description: String!
+  imageUrl: String!
+  author: GithubUser @relation(name: "AuthorPosts")
+  likes: [Like!]! @relation(name: "LikeOnPost")
+}
+
+type Like {
+  id: ID! @isUnique
+  post: Post @relation(name: "LikeOnPost")
+  likedBy: GithubUser @relation(name: "LikeOnGithubUser")
+}

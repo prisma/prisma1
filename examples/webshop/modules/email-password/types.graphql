@@ -1,0 +1,10 @@
+#type User implements Node {
+#  id: ID! @isUnique
+#  createdAt: DateTime!
+#  updatedAt: DateTime!
+#
+#  # Must be unique
+#  # Make it required if email is the only authorization method in your app
+#  email: String @isUnique
+#  password: String
+#}

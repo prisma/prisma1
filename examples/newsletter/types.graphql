@@ -1,0 +1,9 @@
+# This file contains the GraphQL Types
+
+type Subscriber implements Node {
+  id: ID! @isUnique
+  firstName: String!
+  lastName: String!
+  email: String!
+  isSubscribed: Boolean!
+}

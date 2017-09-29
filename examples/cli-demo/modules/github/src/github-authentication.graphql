@@ -1,0 +1,7 @@
+type AuthenticateGithubUserPayload {
+  token: String!
+}
+
+extend type Mutation {
+  authenticateGithubUser(githubCode: String!): AuthenticateGithubUserPayload
+}

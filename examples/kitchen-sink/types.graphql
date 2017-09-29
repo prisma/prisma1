@@ -1,0 +1,16 @@
+# This file contains the GraphQL Types
+
+type Contact implements Node {
+  # required system field
+  id: ID! @isUnique
+
+  # optional system fields - include them, or leave them out!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+
+  # custom fields
+  email: String! @isUnique
+  firstName: String!
+  lastName: String!
+  fullName: String
+}

@@ -1,0 +1,43 @@
+type User implements Node {
+  id: ID! @isUnique
+  email: String @isUnique
+  firstName: String
+  lastName: String
+  address: String
+  stripeCustomerId: String
+  stripeToken: String
+  baskets: [Basket!]! @relation(name: "Baskets")
+  orders: [Order!]! @relation(name: "Orders")
+  password: String
+  role: Role @defaultValue(value: "USER")
+}
+
+type Basket {
+  id: ID! @isUnique
+  user: User @relation(name: "Baskets")
+  items: [Item!]! @relation(name: "BasketOnItem")
+  order: Order @relation(name: "BasketOnOrder")
+}
+
+type Order {
+  id: ID! @isUnique
+  deliveryDate: DateTime
+  paymentDate: DateTime
+  stripeToken: String
+  basket: Basket @relation(name: "BasketOnOrder")
+  user: User @relation(name: "Orders")
+}
+
+type Item {
+  id: ID! @isUnique
+  baskets: [Basket!]! @relation(name: "BasketOnItem")
+  name: String!
+  description: String
+  imageUrl: String
+  price: Int!
+}
+
+enum Role {
+  ADMIN
+  USER
+}

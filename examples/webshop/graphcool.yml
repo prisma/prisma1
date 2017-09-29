@@ -1,0 +1,74 @@
+types: ./types.graphql
+
+functions:
+  pay:
+    handler:
+      code:
+        src: ./src/pay.js
+        environment:
+          STRIPE_KEY: sk_test_4pxnogVkaRiNeWe5U5P838Zf
+    type: resolver
+    schema: ./src/pay.graphql
+
+modules:
+  email-password: modules/email-password/graphcool.yml
+
+permissions:
+# Basket permissions
+  - operation: Basket.create
+    authenticated: true
+  - operation: Basket.read
+    authenticated: true
+    query: permissions/Basket.graphql
+  - operation: Basket.update
+    authenticated: true
+    query: permissions/Basket.graphql
+  - operation: Basket.delete
+    authenticated: true
+    query: permissions/Basket.graphql
+
+# Item permissions
+  - operation: Item.read
+  - operation: Item.create
+    authenticated: true
+    query: permissions/Item.graphql
+  - operation: Item.update
+    authenticated: true
+    query: permissions/Item.graphql
+  - operation: Item.delete
+    authenticated: true
+    query: permissions/Item.graphql
+
+# Order permissions
+  - operation: Order.read
+    authenticated: true
+    query: permissions/Order.read.graphql
+  - operation: Order.create
+    authenticated: true
+    query: permissions/Order.create.graphql
+  - operation: Order.update
+    authenticated: true
+    query: permissions/Order.update-delete.graphql
+  - operation: Order.delete
+    authenticated: true
+    query: permissions/Order.update-delete.graphql
+
+# User permissions
+  - operation: User.read
+    authenticated: true
+  - operation: User.create
+  - operation: User.update
+    authenticated: true
+    query: permissions/User.update-delete.graphql
+  - operation: User.delete
+    authenticated: true
+    query: permissions/User.update-delete.graphql
+
+# Relation Permissions
+  - operation: BasketOnItem.*
+  - operation: BasketOnOrder.*
+  - operation: Baskets.*
+  - operation: Orders.*
+
+rootTokens:
+  - defaultToken

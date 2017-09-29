@@ -1,0 +1,7 @@
+type HelloPayload {
+  message: String!
+}
+
+extend type Query {
+  hello(name: String): HelloPayload
+}
