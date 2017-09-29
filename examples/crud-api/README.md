@@ -1,7 +1,8 @@
 # crud-api
 
-[Demo](https://api.graph.cool/simple/v1/cj86c7ph908850131tcpyy572)
+Basic example demonstrating the generation of the CRUD-style GraphQL API based on your data model.
 
+[Demo (read-only)](https://api.graph.cool/simple/v1/cj86c7ph908850131tcpyy572)
 
 ## Add initial data
 
