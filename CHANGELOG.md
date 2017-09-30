@@ -29,7 +29,7 @@ Read more information about the [Resolver Beta in the Forum](https://www.graph.c
 
 ### Changes
 
-* [Schema Extensions are renamed to (Custom) Resolvers](https://github.com/graphcool/graphcool/issues/461).
+* [Schema Extensions are renamed to Resolvers](https://github.com/graphcool/graphcool/issues/461).
 
 ### Bug Fixes
 
