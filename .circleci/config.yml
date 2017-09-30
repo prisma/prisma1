@@ -15,7 +15,7 @@ jobs:
       - image: circleci/node:8
     steps:
       - checkout
-      - run: sudo npm i -g docs-cli
+      - run: sudo npm i -g @graphcool/docs-cli
       - run:
           command: .circleci/deploy-docs.sh
           environment:
