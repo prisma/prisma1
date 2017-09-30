@@ -1,8 +1,30 @@
 jobs:
-  build:
+
+  # CLI testing
+  cli:
     docker:
       - image: circleci/node:8
     steps:
       - checkout
       - run: cd cli && yarn
       - run: cd cli && yarn test
+
+  # content deployment
+  content:
+    docker:
+      - image: circleci/node:8
+    steps:
+      - checkout
+      - run: sudo npm i -g docs-cli
+      - run:
+          command: .circleci/deploy-docs.sh
+          environment:
+            BLUE_ID: cj67nv8do36px0187fa6i2n6z
+            GREEN_ID: cj6glidms1ego0162chqa3al4
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - cli
+      - content
