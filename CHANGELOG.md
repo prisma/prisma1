@@ -1,3 +1,5 @@
+# v0.4(29.09.17)
+
 ## Changes
 
 * [Valid function names are now restricted](https://github.com/graphcool/graphcool/issues/538).
@@ -23,6 +25,8 @@
 * [Fixed a bug when creating two types of same name a resolver](https://github.com/graphcool/graphcool/issues/420).
 
 ## Framework Preview
+
+Also see the Forum for more information on the [Framework Preview](https://www.graph.cool/forum/t/feedback-new-cli-beta/949/2?u=nilan).
 
 > **Note:** The latest CLI version of the Framework Preview is currently available in version 1.4. This will soon be corrected to version 0.4 instead.
 
