@@ -1,0 +1,44 @@
+<html>
+<head>
+  <title>Pusher Test</title>
+  <script src="https://js.pusher.com/4.1/pusher.min.js"></script>
+  <script>
+    // replace this with your app key
+    var APP_KEY = '__APP_KEY__'
+
+    // replace if you run on another cluster
+    var CLUSTER = 'us'
+
+    // need to match values we use in subscription function
+    var CHANNEL = 'posts'
+    var EVENT = 'created'
+
+    // Enable pusher logging - don't include this in production
+    Pusher.logToConsole = true;
+
+    var pusher = new Pusher(APP_KEY, {
+      cluster: CLUSTER,
+      encrypted: true
+    });
+
+    var channel = pusher.subscribe(CHANNEL);
+    channel.bind(EVENT, function(data) {
+      var li = document.createElement('li');
+      var node = document.createTextNode(data.message);
+      li.appendChild(node);
+
+      var element = document.getElementById('notifications');
+      element.appendChild(li);
+    });
+  </script>
+</head>
+
+<body>
+Received Notifications:
+
+<ul id='notifications'>
+
+</ul>
+</body>
+
+</html>
