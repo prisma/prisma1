@@ -11,7 +11,7 @@ import Console from './commands/console'
 import Projects from './commands/projects/index'
 import ModuleAdd from './commands/module/add'
 import Delete from './commands/delete/index'
-import GetRootToken from './commands/get-root-token/index'
+import RootTokens from './commands/root-tokens/index'
 import FunctionsOverview from './commands/functions/index'
 import FunctionLogs from './commands/logs/function'
 import Diff from './commands/diff/index'
@@ -66,7 +66,7 @@ export const commands = [
   Projects,
   ModuleAdd,
   Delete,
-  GetRootToken,
+  RootTokens,
   FunctionsOverview,
   FunctionLogs,
   Diff,

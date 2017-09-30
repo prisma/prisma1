@@ -1,4 +1,4 @@
-import { Region } from 'graphcool-cli-engine/src/types'
+import { Region } from 'graphcool-cli-engine'
 import { padEnd, repeat } from 'lodash'
 
 const devPrefix = process.env.ENV === 'DEV' ? 'dev.' : ''

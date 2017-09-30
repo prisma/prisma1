@@ -10,7 +10,7 @@ import * as chalk from 'chalk'
 import { table, getBorderCharacters } from 'table'
 
 export default class GetRootToken extends Command {
-  static topic = 'get-root-token'
+  static topic = 'root-tokens'
   static description = 'Get the root tokens of a specific prject'
   static flags: Flags = {
     env: flags.string({
