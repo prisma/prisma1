@@ -1,19 +1,14 @@
 import { Command, flags, Flags } from 'graphcool-cli-engine'
 
-export default class Info extends Command {
-  static topic = 'info'
+export default class Account extends Command {
+  static topic = 'account'
   static description = 'Get info about the current account'
-  static flags: Flags = {
-    env: flags.string({
-      char: 'e',
-      description: 'Environment name to set',
-    }),
-    project: flags.string({
-      char: 'p',
-      description: 'Project Id to set',
-    }),
-  }
   async run() {
     await this.auth.ensureAuth()
+    const account = await this.client.getAccount()
+
+    this.out.log(`\
+Email: ${account.email}
+Name: ${account.name}`)
   }
 }

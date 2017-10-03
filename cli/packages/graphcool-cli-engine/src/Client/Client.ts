@@ -1,4 +1,5 @@
 import {
+  AccountInfo,
   AuthenticateCustomerPayload,
   FunctionInfo,
   FunctionLog,
@@ -71,6 +72,19 @@ export class Client {
         })
       },
     } as any
+  }
+
+  async getAccount(): Promise<AccountInfo> {
+    const {viewer: {user}} = await this.client.request<{viewer: {user: AccountInfo}}>(`{
+      viewer {
+        user {
+          email
+          name
+        }
+      }
+    }`)
+
+    return user
   }
 
   async createProject(

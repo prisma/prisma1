@@ -23,6 +23,7 @@ import Start from './commands/local/start'
 import Stop from './commands/local/stop'
 import Up from './commands/local/up'
 import Restart from './commands/local/restart'
+import Account from './commands/account'
 
 export const topics = [
   { name: 'deploy', description: 'Deploy local project definition' },
@@ -59,6 +60,10 @@ export const topics = [
     name: 'invoke',
     description: 'Invokes a function locally',
   },
+  {
+    name: 'account',
+    description: 'Information about the current authenticated account'
+  }
   // {
   //   name: 'local',
   //   description: 'Manage the local Graphcool version'
@@ -91,4 +96,5 @@ export const commands = [
   Stop,
   Up,
   Restart,
+  Account,
 ]
