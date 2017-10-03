@@ -48,6 +48,10 @@ export const topics = [
     description: 'Get the diff of the local and remote project definition',
   },
   {
+    name: 'delete',
+    description: 'Delete a project',
+  },
+  {
     name: 'export',
     description: 'Export project data',
   },
