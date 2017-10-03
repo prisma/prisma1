@@ -19,10 +19,10 @@ Install the CLI (if you haven't already):
 npm install -g graphcool@beta
 ```
 
-Create the Graphcool backend and open the GraphQL API endpoint in your browser
+Deploy the Graphcool backend and open the GraphQL API endpoint in your browser
 
 ```sh
-graphcool init
+graphcool deploy
 # open `https://api.graph.cool/simple/v1/xxx` in your browser
 ```
 

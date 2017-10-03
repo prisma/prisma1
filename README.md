@@ -2,7 +2,7 @@
 
 [![CircleCI](https://circleci.com/gh/graphcool/graphcool.svg?style=shield)](https://circleci.com/gh/graphcool/graphcool) [![Slack Status](https://slack.graph.cool/badge.svg)](https://slack.graph.cool) [![npm version](https://badge.fury.io/js/graphcool.svg)](https://badge.fury.io/js/graphcool)
 
-[Website](https://www.graph.cool/) • [Docs](https://docs-next.graph.cool/) • [Forum](https://www.graph.cool/forum) • [Chat](https://slack.graph.cool/) • [Twitter](https://twitter.com/graphcool) 
+[Website](https://www.graph.cool/) • [Docs](https://docs-next.graph.cool/) • [Forum](https://www.graph.cool/forum) • [Chat](https://slack.graph.cool/) • [Twitter](https://twitter.com/graphcool)
 
 > **Note:** This repository refers to a newer version of Graphcool (previously a [BaaS](https://www.graph.cool/)). More information in the [forum](https://www.graph.cool/forum/t/feedback-new-cli-beta/949).
 
@@ -23,13 +23,13 @@ Graphcool is a GraphQL backend development framework
   ```sh
   graphcool init
   ```
-  
+
 3. **Configure data model & project:**
 
   Edit `types.graphql` to define your data model and setup functions & permissions in  `graphcool.yml`.
-  
+
   The `graphcool.yml` file is the core of your application and should look like this:
-  
+
   ```yml
   # Define your data model here
   types: types.graphql
@@ -49,15 +49,15 @@ Graphcool is a GraphQL backend development framework
       type: resolver
       schema: src/hello.graphql
   ```
-  
+
 4. **Deploy your changes:**
 
   You can deploy your changes and migrate your database by running the following command:
-  
+
   ```sh
   graphcool deploy
   ```
-  
+
 5. **Connect to your GraphQL endpoint:**
 
   Use the endpoint from step (2) in your frontend (or backend) applications to connect to your GraphQL API.
@@ -71,9 +71,9 @@ Graphcool is a GraphQL backend development framework
 ## Examples
 
 * [crud-api](examples/crud-api): Simple CRUD-style GraphQL API
-* [auth](examples/auth): Email/password-based authentication & user permissions 
+* [auth](examples/auth): Email/password-based authentication & user permissions
 * [send-email](examples/send-email): Send email via Mailgun via GraphQL mutation
-* [push-notification](examples/push-notification): Send push notification when new Post is created
+* [push-notifications](examples/push-notifications): Send push notification when new Post is created
 * [env-variables](examples/env-variables): Function accessing environment variables
 * [rest-wrapper](examples/rest-wrapper): Extend GraphQL API by wrapping existing REST endpoint
 * [full-example](examples/full-example): Full example (webshop) demoing most available features

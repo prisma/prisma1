@@ -1,0 +1,10 @@
+# listen to created posts
+subscription {
+  Post (filter: {
+    mutation_in: [CREATED]
+  }) {
+    node {
+      title
+    }
+  }
+}

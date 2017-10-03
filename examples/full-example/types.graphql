@@ -5,7 +5,6 @@ type User implements Node {
   lastName: String
   address: String
   stripeCustomerId: String
-  stripeToken: String
   baskets: [Basket!]! @relation(name: "Baskets")
   orders: [Order!]! @relation(name: "Orders")
   password: String
@@ -23,7 +22,6 @@ type Order {
   id: ID! @isUnique
   deliveryDate: DateTime
   paymentDate: DateTime
-  stripeToken: String
   basket: Basket @relation(name: "BasketOnOrder")
   user: User @relation(name: "Orders")
 }
