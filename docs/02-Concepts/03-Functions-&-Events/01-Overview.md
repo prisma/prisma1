@@ -16,7 +16,7 @@ When using Graphcool, there generally are two different ways how you can deploy 
 - Use your own FaaS provider (or any other function provisioning mechanism) to deploy a function and invoke it via an **HTTP webhook**.
 - Use the **Graphcool environment** to deploy your function.
 
-Graphcool currently uses AWS Lambda to deploy functions that you define for the Grap hcool environment. It is however planned to support other FaaS providers in the future as well so that you can choose any provider you prefer.
+Graphcool currently uses AWS Lambda to deploy functions that you define for the Graphcool environment. It is however planned to support other FaaS providers in the future as well so that you can choose any provider you prefer.
 
 
 ## Synchronous vs Asynchronous Functions
