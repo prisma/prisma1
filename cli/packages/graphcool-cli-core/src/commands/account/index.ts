@@ -9,6 +9,6 @@ export default class Account extends Command {
 
     this.out.log(`\
 Email: ${account.email}
-Name: ${account.name}`)
+Name:  ${account.name}`)
   }
 }

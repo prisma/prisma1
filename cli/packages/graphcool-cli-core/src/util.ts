@@ -1,5 +1,6 @@
 import { Region } from 'graphcool-cli-engine'
 import { padEnd, repeat } from 'lodash'
+import * as chalk from 'chalk'
 
 const devPrefix = process.env.ENV === 'DEV' ? 'dev.' : ''
 
@@ -37,16 +38,36 @@ export function sortByTimestamp(a, b) {
  */
 export function printPadded(
   arr1: string[][],
-  spaceLeft: number = 2,
-  spaceBetween: number = 2,
+  spaceLeft: number = 0,
+  spaceBetween: number = 1,
+  header?: string[]
 ) {
-  const leftCol = arr1.map(a => a[0])
+  const inputRows = arr1
+  if (header) {
+    inputRows.unshift(header)
+  }
+  const leftCol = inputRows.map(a => a[0])
+  const rightCol = inputRows.map(a => a[1])
   const maxLeftCol = leftCol.reduce(
+    (acc, curr) => Math.max(acc, curr.length),
+    -1,
+  )
+  const maxRightCol = rightCol.reduce(
     (acc, curr) => Math.max(acc, curr.length),
     -1,
   )
   const paddedLeftCol = leftCol.map(
     v => repeat(' ', spaceLeft) + padEnd(v, maxLeftCol + spaceBetween),
   )
-  return paddedLeftCol.map((l, i) => l + arr1[i][1]).join('\n')
+
+  const rows = paddedLeftCol.map((l, i) => l + arr1[i][1])
+
+  if (header) {
+    const divider = `${repeat('─', maxLeftCol)}${repeat(' ', spaceBetween)}${repeat('─', maxRightCol)}`
+    rows.splice(1, 0, divider)
+  }
+
+  return rows.join('\n')
 }
+
+export const prettyProject = p => `${chalk.bold(p.name)} (${p.id})`

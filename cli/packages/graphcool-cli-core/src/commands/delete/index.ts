@@ -8,6 +8,7 @@ import {
 import * as chalk from 'chalk'
 import * as inquirer from 'inquirer'
 import {repeat} from 'lodash'
+import { prettyProject } from '../../util'
 
 export default class Delete extends Command {
   static topic = 'delete'
@@ -100,4 +101,3 @@ export default class Delete extends Command {
   }
 }
 
-const prettyProject = p => `${chalk.bold(p.name)} (${p.id})`

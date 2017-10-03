@@ -5,9 +5,10 @@ import {
   flags,
   ProjectInfo,
   Output,
+  Project,
 } from 'graphcool-cli-engine'
 import * as chalk from 'chalk'
-import { printPadded, subscriptionURL } from '../../util'
+import { prettyProject, printPadded, subscriptionURL } from '../../util'
 
 export default class InfoCommand extends Command {
   static topic = 'info'
@@ -25,6 +26,7 @@ export default class InfoCommand extends Command {
     env = env || this.env.env.default
 
     const { projectId, envName } = await this.env.getEnvironment({ env })
+    const projects: Project[] = await this.client.fetchProjects()
 
     if (!projectId) {
       this.out.error(
@@ -32,7 +34,7 @@ export default class InfoCommand extends Command {
       )
     } else {
       const info = await this.client.fetchProjectInfo(projectId)
-      this.out.log(infoMessage(info, this.env.env, env, this.config.backendAddr, this.out))
+      this.out.log(infoMessage(info, this.env.env, env, this.config.backendAddr, this.out, projects))
     }
   }
 }
@@ -43,52 +45,45 @@ export const infoMessage = (
   envName: string,
   backendAddr: string,
   out: Output,
+  projects: Project[]
 ) => `\
 
-${chalk.bold('Environments')}
-
-${printEnvironments(env, out)}
-
-${chalk.bold(`Selected Environment (${envName})`)}
-
-  Project Name     ${chalk.bold(info.name)}
-
-  Project ID       ${chalk.bold(info.id)}
-  
-  Endpoints
-    
-    Simple         ${chalk.underline(
-      `${backendAddr}/simple/${backendAddr.includes('localhost') ? '': 'v1/'}${info.id}`,
-    )}
-  
-    Relay          ${chalk.underline(
-      `${backendAddr}/relay/${backendAddr.includes('localhost') ? '': 'v1/'}${info.id}`,
-    )}
-    
-    Subscriptions  ${chalk.underline(
-      subscriptionURL(info.region as any, info.id),
-    )}
-    
-    File           ${chalk.underline(
-      `${backendAddr}/file/${backendAddr.includes('localhost') ? '': 'v1/'}${info.id}`,
-    )}
+${printEnvironments(env, projects, out)}
+ 
+API:           Endpoint:
+────────────── ────────────────────────────────────────────────────────────
+${chalk.green('Simple')}         ${
+      `${backendAddr}/simple/${backendAddr.includes('localhost') ? '': 'v1/'}${info.id}`
+    }
+${chalk.green('Relay')}          ${
+  `${backendAddr}/relay/${backendAddr.includes('localhost') ? '': 'v1/'}${info.id}`
+}
+${chalk.green('Subscriptions')}  ${
+  subscriptionURL(info.region as any, info.id)
+}
+${chalk.green('File')}           ${
+  `${backendAddr}/file/${backendAddr.includes('localhost') ? '': 'v1/'}${info.id}`
+}
 `
 
-const printEnvironments = (env: EnvironmentConfig, out: Output) => {
+const printEnvironments = (env: EnvironmentConfig, projects: Project[], out: Output) => {
   return printPadded(
     Object.keys(env.environments).map(key => {
-      let output: any = env.environments[key]
-      if (typeof output === 'object') {
-        output = out.getStyledJSON({...env.environments[key] as any, token: 'XXX'})
-        const lines = output.split('\n')
-        output = lines.slice(0, 1).concat(lines.slice(1).map(l => `  ${l}`)).join('\n').trim()
-      } else {
-        output = `\`${output}\``
+      let projectId: any = env.environments[key]
+      if (typeof projectId === 'object') {
+        projectId = projectId.projectId
+      }
+      const project = projects.find(p => p.id === projectId)
+      let output = `${chalk.bold('local')} (${projectId})`
+      if (project) {
+        output = prettyProject(project)
       }
       return [
         key,
-        `${chalk.dim(output)}`,
+        output,
       ]
     }),
+    0, 1,
+    ['Environment:', 'Project:']
   )
 }
