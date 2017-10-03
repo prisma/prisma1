@@ -6,6 +6,8 @@ import {
   Project,
 } from 'graphcool-cli-engine'
 import * as chalk from 'chalk'
+import * as inquirer from 'inquirer'
+import {repeat} from 'lodash'
 
 export default class Delete extends Command {
   static topic = 'delete'
@@ -20,10 +22,14 @@ export default class Delete extends Command {
       char: 'p',
       description: 'Project Id to delete',
     }),
+    force: flags.boolean({
+      char: 'f',
+      description: 'Force delete, without confirmation',
+    }),
   }
   async run() {
     await this.auth.ensureAuth()
-    const { project, env } = this.flags
+    const { project, env, force } = this.flags
 
     let projectId = project
 
@@ -36,7 +42,10 @@ export default class Delete extends Command {
     }
 
     if (projectId) {
-      this.out.action.start(`Deleting project ${projectId}`)
+      if (!force) {
+        await this.askForConfirmation(projectId)
+      }
+      this.out.action.start(`${chalk.bold.red('Deleting project')} ${projectId}`)
       await this.client.deleteProjects([projectId])
       this.env.deleteIfExist([projectId])
       this.env.save()
@@ -51,7 +60,7 @@ export default class Delete extends Command {
         choices: projects.map(p => ({
           name: prettyProject(p),
           value: p,
-        })),
+        })).concat(new inquirer.Separator(chalk.bold.green(repeat('-', 50)))),
         pageSize: Math.min(process.stdout.rows!, projects.length) - 2,
       }
 
@@ -62,8 +71,11 @@ export default class Delete extends Command {
         this.out.log(`You didn't select any project to delete, so none will be deleted`)
         this.out.exit(0)
       }
-
       const prettyProjects = projectsToDelete.map(prettyProject).join(', ')
+
+      if (!force) {
+        await this.askForConfirmation(prettyProjects)
+      }
 
       this.out.log('')
       this.out.action.start(`${chalk.red.bold(`Deleting project${projectsToDelete.length > 1 ? 's': ''}`)} ${prettyProjects}`)
@@ -71,6 +83,19 @@ export default class Delete extends Command {
       this.env.deleteIfExist(projectIdsToDelete)
       this.env.save()
       this.out.action.stop()
+    }
+  }
+
+  private async askForConfirmation(projects: string) {
+    const confirmationQuestion = {
+      name: 'confirmation',
+      type: 'input',
+      message: `Are you sure that you want to delete ${projects}? y/N`,
+      default: 'n'
+    }
+    const {confirmation}: {confirmation: string} = await this.out.prompt(confirmationQuestion)
+    if (confirmation.toLowerCase().startsWith('y')) {
+      this.out.exit(0)
     }
   }
 }

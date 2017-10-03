@@ -9,8 +9,9 @@ import {
 import * as chalk from 'chalk'
 import { printPadded, subscriptionURL } from '../../util'
 
-export default class Info extends Command {
-  static topic = 'info'
+export default class ProjectInfoCommand extends Command {
+  static topic = 'projects'
+  static command = 'info'
   static description = 'Print project info (environments, endpoints, ...) '
   static flags: Flags = {
     env: flags.string({
