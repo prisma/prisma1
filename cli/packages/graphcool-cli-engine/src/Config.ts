@@ -124,6 +124,15 @@ export class Config {
         : null,
     )
   }
+  public loadToken() {
+    if (this.dotGraphcoolFilePath && fs.existsSync(this.dotGraphcoolFilePath)) {
+      const configContent = fs.readFileSync(
+        this.dotGraphcoolFilePath,
+        'utf-8',
+      )
+      this.token = JSON.parse(configContent).token
+    }
+  }
   private readPackageJson(options: RunOptions) {
     this.mock = options.mock
     this.argv = options.argv || this.argv
@@ -201,7 +210,7 @@ To prevent unwanted side effects, please remove it.`)
       const dotGraphcoolHome = path.join(this.home, '.graphcool')
 
       // only take the find-up file, if it's "deeper" than the home dir
-      this.dotGraphcoolFilePath = (found && (found.split('/').length > dotGraphcoolHome.split('/'))) ? found : dotGraphcoolHome
+      this.dotGraphcoolFilePath = (found && (found.split('/').length > dotGraphcoolHome.split('/').length)) ? found : dotGraphcoolHome
     }
   }
   private setTokenIfExists() {
@@ -209,13 +218,7 @@ To prevent unwanted side effects, please remove it.`)
       debug('taking graphcool test token')
       this.token = process.env.GRAPHCOOL_TEST_TOKEN!
     } else {
-      if (this.dotGraphcoolFilePath && fs.existsSync(this.dotGraphcoolFilePath)) {
-        const configContent = fs.readFileSync(
-          this.dotGraphcoolFilePath,
-          'utf-8',
-        )
-        this.token = JSON.parse(configContent).token
-      }
+      this.loadToken()
     }
   }
   private getCwd() {
