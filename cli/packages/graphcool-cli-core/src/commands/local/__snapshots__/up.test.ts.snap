@@ -1,0 +1,14 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`up in empty dir 1`] = `
+"
+
+Success! Added local environment \`local-dev\` to .graphcoolrc
+
+To get started, execute
+    
+  $ graphcool init
+  $ graphcool deploy
+
+"
+`;

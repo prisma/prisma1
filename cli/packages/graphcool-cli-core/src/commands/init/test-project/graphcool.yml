@@ -1,6 +1,0 @@
-types: ./types.graphql
-modules:
-  github: modules/github/graphcool.yml
-permissions:
-  - operation: '*'
-rootTokens: []

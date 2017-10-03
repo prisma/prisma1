@@ -4,6 +4,7 @@ import {
   Flags,
   flags,
   ProjectInfo,
+  Output,
 } from 'graphcool-cli-engine'
 import * as chalk from 'chalk'
 import { printPadded, subscriptionURL } from '../../util'
@@ -31,7 +32,7 @@ export default class Info extends Command {
       )
     } else {
       const info = await this.client.fetchProjectInfo(projectId)
-      this.out.log(infoMessage(info, this.env.env, env))
+      this.out.log(infoMessage(info, this.env.env, env, this.config.backendAddr, this.out))
     }
   }
 }
@@ -40,11 +41,13 @@ export const infoMessage = (
   info: ProjectInfo,
   env: EnvironmentConfig,
   envName: string,
+  backendAddr: string,
+  out: Output,
 ) => `\
 
-${chalk.bold('Local Environments')}
+${chalk.bold('Environments')}
 
-${printEnvironments(env)}
+${printEnvironments(env, out)}
 
 ${chalk.bold(`Selected Environment (${envName})`)}
 
@@ -55,11 +58,11 @@ ${chalk.bold(`Selected Environment (${envName})`)}
   Endpoints
     
     Simple         ${chalk.underline(
-      `https://api.graph.cool/simple/v1/${info.id}`,
+      `${backendAddr}/simple/${backendAddr.includes('localhost') ? '': 'v1/'}${info.id}`,
     )}
   
     Relay          ${chalk.underline(
-      `https://api.graph.cool/relay/v1/${info.id}`,
+      `${backendAddr}/relay/${backendAddr.includes('localhost') ? '': 'v1/'}${info.id}`,
     )}
     
     Subscriptions  ${chalk.underline(
@@ -67,15 +70,25 @@ ${chalk.bold(`Selected Environment (${envName})`)}
     )}
     
     File           ${chalk.underline(
-      `https://api.graph.cool/file/v1/${info.id}`,
+      `${backendAddr}/file/${backendAddr.includes('localhost') ? '': 'v1/'}${info.id}`,
     )}
 `
 
-const printEnvironments = (env: EnvironmentConfig) => {
+const printEnvironments = (env: EnvironmentConfig, out: Output) => {
   return printPadded(
-    Object.keys(env.environments).map(key => [
-      key,
-      `${chalk.dim(`\`${env.environments[key]}\``)}`,
-    ]),
+    Object.keys(env.environments).map(key => {
+      let output: any = env.environments[key]
+      if (typeof output === 'object') {
+        output = out.getStyledJSON({...env.environments[key] as any, token: 'XXX'})
+        const lines = output.split('\n')
+        output = lines.slice(0, 1).concat(lines.slice(1).map(l => `  ${l}`)).join('\n').trim()
+      } else {
+        output = `\`${output}\``
+      }
+      return [
+        key,
+        `${chalk.dim(output)}`,
+      ]
+    }),
   )
 }

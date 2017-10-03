@@ -18,6 +18,12 @@ import Diff from './commands/diff/index'
 import Pull from './commands/pull/index'
 import Export from './commands/export/index'
 import InvokeLocal from './commands/invoke/local'
+import PullLocal from './commands/local/pull'
+import Reset from './commands/local/reset'
+import Start from './commands/local/start'
+import Stop from './commands/local/stop'
+import Up from './commands/local/up'
+import Restart from './commands/local/restart'
 
 export const topics = [
   { name: 'deploy', description: 'Deploy local project definition' },
@@ -50,6 +56,10 @@ export const topics = [
     name: 'invoke',
     description: 'Invokes a function locally',
   },
+  // {
+  //   name: 'local',
+  //   description: 'Manage the local Graphcool version'
+  // }
 ]
 
 export const commands = [
@@ -73,4 +83,10 @@ export const commands = [
   Pull,
   Export,
   InvokeLocal,
+  PullLocal,
+  Reset,
+  Start,
+  Stop,
+  Up,
+  Restart,
 ]

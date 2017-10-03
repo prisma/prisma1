@@ -9,6 +9,8 @@ export interface RunOptions {
   mockDefinition?: ProjectDefinition
   mockEnv?: EnvironmentConfig
   mockConfig?: Config
+  cwd?: string
+  home?: string
 }
 
 export type Region = 'EU_WEST_1' | 'AP_NORTHEAST_1' | 'US_WEST_2'
@@ -126,5 +128,19 @@ export interface EnvironmentConfig {
 }
 
 export interface Environments {
-  [environment: string]: string
+  [environment: string]: string | DockerEnvironment
 }
+
+export interface DockerEnvironment {
+  token: string
+  host: string
+  projectId: string | null
+}
+
+export interface AuthenticateCustomerPayload {
+  token: string
+  user: {
+    id: string
+  }
+}
+

@@ -9,8 +9,12 @@ export const consoleURL = (token: string, projectName?: string) =>
     : ''}`
 // export const playgroundURL = (token: string, projectName: string) =>
 //   `https://console.graph.cool/token?token=${token}&redirect=/${encodeURIComponent(projectName)}/playground`
-export const playgroundURL = (projectId: string) =>
-  `https://${devPrefix}api.graph.cool/simple/v1/${projectId}`
+export const playgroundURL = (projectId: string, localhost?: string) => {
+  if (localhost) {
+    return `${localhost}/simple/${projectId}`
+  }
+  return `https://${devPrefix}api.graph.cool/simple/v1/${projectId}`
+}
 
 const subscriptionEndpoints = {
   EU_WEST_1: 'wss://subscriptions.graph.cool',

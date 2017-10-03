@@ -35,7 +35,7 @@ function moduleToFs(module: GraphcoolModule, outputDir: string, out: Output, fil
       // ignore if file doesn't exist yet
     }
 
-    fs.mkdirpSync(dir, {fs})
+    fs.mkdirpSync(dir)
     fs.writeFileSync(filePath, content)
     // if (!silent) {
     //   out.log(chalk.blue(`Written to ${relativePath}\n`))

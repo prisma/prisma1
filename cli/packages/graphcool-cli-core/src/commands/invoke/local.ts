@@ -96,7 +96,7 @@ export default class InvokeLocal extends Command {
       if (!fs.pathExistsSync(jsonPath)) {
         this.out.error(`Provided json path ${jsonPath} doesn't exist`)
       } else {
-        const jsonFile = fs.readFileSync(jsonPath)
+        const jsonFile = fs.readFileSync(jsonPath, 'utf-8')
         try {
           event = JSON.parse(jsonFile)
         } catch (e) {
