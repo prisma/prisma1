@@ -1,0 +1,27 @@
+# The following types define the data model of the example app
+# based on which the GraphQL API is generated
+
+# All types need to have the three fields id, updatedAt and createdAt like this:
+
+type User implements Node {
+  id: ID! @isUnique
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+
+# Graphcool has one special type, the File type:
+# Uncommenting this type will automatically enable the File API
+# Read more here:
+# https://docs-next.graph.cool/reference/api/file-management-eer4wiang0
+
+# type File implements Node {
+#   contentType: String!
+#   createdAt: DateTime!
+#   id: ID! @isUnique
+#   name: String!
+#   secret: String! @isUnique
+#   size: Int!
+#   updatedAt: DateTime!
+#   url: String! @isUnique
+# }

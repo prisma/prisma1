@@ -71,8 +71,10 @@ export class Config {
   __cache = {}
 
   constructor(options?: RunOptions) {
-    this.cwd = this.getCwd()
-    this.home = this.getHome()
+    this.cwd = (options && options.cwd) || this.getCwd()
+    this.home = (options && options.home) || this.getHome()
+    debug(`CWD`, this.cwd)
+    debug(`HOME`, this.home)
     this.setDotGraphcoolPath()
     this.setEnvPath()
     this.setDefinitionPaths()
@@ -81,6 +83,10 @@ export class Config {
     if (options) {
       this.readPackageJson(options)
     }
+  }
+  setLocal(host: string = 'http://localhost:60000') {
+    this.backendAddr = host
+    this.systemAPIEndpoint = host + '/system'
   }
   setOutput(out: Output) {
     this.out = out
@@ -91,8 +97,10 @@ export class Config {
     this.token = token
   }
   saveToken() {
-    const json = JSON.stringify({ token: this.token }, null, 2)
-    fs.writeFileSync(this.dotGraphcoolFilePath, json)
+    if (this.dotGraphcoolFilePath) {
+      const json = JSON.stringify({ token: this.token }, null, 2)
+      fs.writeFileSync(this.dotGraphcoolFilePath, json)
+    }
   }
   get arch(): string {
     return os.arch() === 'ia32' ? 'x86' : os.arch()
@@ -115,6 +123,15 @@ export class Config {
         ? path.join(this.home, 'Library', 'Caches')
         : null,
     )
+  }
+  public loadToken() {
+    if (this.dotGraphcoolFilePath && fs.existsSync(this.dotGraphcoolFilePath)) {
+      const configContent = fs.readFileSync(
+        this.dotGraphcoolFilePath,
+        'utf-8',
+      )
+      this.token = JSON.parse(configContent).token
+    }
   }
   private readPackageJson(options: RunOptions) {
     this.mock = options.mock
@@ -140,7 +157,7 @@ export class Config {
         const foundDir = path.dirname(found)
 
         if (foundDir === this.home) {
-          const file = fs.readFileSync(found)
+          const file = fs.readFileSync(found, 'utf-8')
           let json: any = null
           try {
             json = JSON.parse(file)
@@ -173,14 +190,16 @@ To prevent unwanted side effects, please remove it.`)
   }
   private setDefinitionPaths() {
     const definitionPath = path.join(this.cwd, 'graphcool.yml')
-    this.definitionDir = this.cwd
-    this.definitionPath = definitionPath
-    // if (fs.pathExistsSync(definitionPath)) {
-    // } else {
-    //   const found = findUp.sync('graphcool.yml', {cwd: this.cwd})
-    //   this.definitionDir = found ? path.dirname(found) : this.cwd
-    //   this.definitionPath = found || null
-    // }
+    if (fs.pathExistsSync(definitionPath)) {
+      this.definitionDir = this.cwd
+      this.definitionPath = definitionPath
+    } else {
+      const found = findUp.sync('graphcool.yml', {cwd: this.cwd})
+      this.definitionDir = found ? path.dirname(found) : this.cwd
+      this.definitionPath = found || null
+    }
+    debug(`definitionDir`, this.definitionDir)
+    debug(`definitionPath`, this.definitionPath)
   }
   private setDotGraphcoolPath() {
     const dotGraphcoolCwd = path.join(this.cwd, '.graphcool')
@@ -191,7 +210,7 @@ To prevent unwanted side effects, please remove it.`)
       const dotGraphcoolHome = path.join(this.home, '.graphcool')
 
       // only take the find-up file, if it's "deeper" than the home dir
-      this.dotGraphcoolFilePath = (found && (found.split('/').length > dotGraphcoolHome.split('/'))) ? found : dotGraphcoolHome
+      this.dotGraphcoolFilePath = (found && (found.split('/').length > dotGraphcoolHome.split('/').length)) ? found : dotGraphcoolHome
     }
   }
   private setTokenIfExists() {
@@ -199,13 +218,7 @@ To prevent unwanted side effects, please remove it.`)
       debug('taking graphcool test token')
       this.token = process.env.GRAPHCOOL_TEST_TOKEN!
     } else {
-      if (fs.existsSync(this.dotGraphcoolFilePath)) {
-        const configContent = fs.readFileSync(
-          this.dotGraphcoolFilePath,
-          'utf-8',
-        )
-        this.token = JSON.parse(configContent).token
-      }
+      this.loadToken()
     }
   }
   private getCwd() {

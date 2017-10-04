@@ -1,0 +1,51 @@
+# Welcome to Graphcool!
+#
+# This file is the main config file for your Graphcool Project.
+# It's very minimal at this point and uses default values.
+# We've included a hello world function here.
+# Just uncomment it and run `graphcool deploy`
+#
+# Check out some examples:
+#    github.com/graphcool/examples
+#
+# Here are the reference docs of this definition format:
+# https://docs-next.graph.cool/reference/basics/project-configuration-opheidaix3
+#
+# Happy Coding!
+
+
+# In the types.graphql you define your data schema
+types: ./types.graphql
+
+
+# uncomment this:
+
+# functions:
+#   hello:
+#     handler:
+#       code:
+#         src: ./src/hello.js
+#     type: resolver
+#     schema: ./src/hello.graphql
+
+
+# Model/Relation permissions are used to limit the API access
+# To take the burden of thinking about those while development, we 
+# preconfigured the wildcard ("*") permission that allows everything
+# Read more here:
+# https://docs-next.graph.cool/reference/auth/authorization/overview-iegoo0heez
+permissions:
+- operation: "*"
+
+  
+# Your root tokens used for functions to get full access to the API
+# Read more here:
+# https://docs-next.graph.cool/reference/auth/authentication/authentication-tokens-eip7ahqu5o
+rootTokens: []
+
+ 
+# Organize your code into modules
+# You can find modules from the community here:
+# https://github.com/graphcool/modules
+modules: {}
+

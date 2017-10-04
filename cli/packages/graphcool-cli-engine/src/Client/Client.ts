@@ -1,5 +1,6 @@
-import { GraphQLClient } from 'graphql-request'
 import {
+  AccountInfo,
+  AuthenticateCustomerPayload,
   FunctionInfo,
   FunctionLog,
   MigrateProjectPayload,
@@ -11,13 +12,10 @@ import {
   RemoteProject,
 } from '../types'
 
+import { GraphQLClient, request } from 'graphql-request'
 import { omit } from 'lodash'
 import { Config } from '../Config'
 import { getFastestRegion } from './ping'
-
-import fs from '../fs'
-import * as path from 'path'
-import * as cuid from 'cuid'
 import { ProjectDefinitionClass } from '../ProjectDefinition/ProjectDefinition'
 
 const debug = require('debug')('graphcool')
@@ -57,7 +55,7 @@ export class Client {
         debug(this.config.systemAPIEndpoint)
         debug(query)
         debug(variables)
-        const request = JSON.stringify(
+        const res = JSON.stringify(
           {
             query,
             variables: variables ? variables : undefined,
@@ -65,8 +63,8 @@ export class Client {
           null,
           2,
         )
-        if (this.mocks[request]) {
-          return Promise.resolve(this.mocks[request])
+        if (this.mocks[res]) {
+          return Promise.resolve(this.mocks[res])
         }
         return client.request(query, variables).then(data => {
           debug(data)
@@ -74,6 +72,19 @@ export class Client {
         })
       },
     } as any
+  }
+
+  async getAccount(): Promise<AccountInfo> {
+    const {viewer: {user}} = await this.client.request<{viewer: {user: AccountInfo}}>(`{
+      viewer {
+        user {
+          email
+          name
+        }
+      }
+    }`)
+
+    return user
   }
 
   async createProject(
@@ -236,6 +247,53 @@ export class Client {
     )
 
     return this.getProjectDefinition(project)
+  }
+
+  async waitForLocalDocker(): Promise<void> {
+    // dont send any auth information when running the authenticateCustomer mutation
+    let valid = false
+    while(!valid) {
+      try {
+        await request(this.config.systemAPIEndpoint,
+          `
+            {
+              viewer {
+                id
+              }
+            }
+            `
+          ,
+        )
+        valid = true
+      } catch (e) {
+        valid = false
+      }
+
+      await new Promise((r) => setTimeout(r, 500))
+    }
+  }
+
+  async authenticateCustomer(token: string): Promise<AuthenticateCustomerPayload> {
+    // dont send any auth information when running the authenticateCustomer mutation
+    const result = await request<
+      {authenticateCustomer: AuthenticateCustomerPayload}
+      >(this.config.systemAPIEndpoint,
+      `
+      mutation ($token: String!) {
+        authenticateCustomer(input: {
+          auth0IdToken: $token
+        }) {
+          token
+          user {
+            id
+          }
+        }
+      }
+      `,
+      {token},
+    )
+
+    return result.authenticateCustomer
   }
 
   async getPats(projectId: string): Promise<PAT[]> {
@@ -527,14 +585,14 @@ export class Client {
 }
 
 // only make this available in test mode
-if (process.env.NODE_ENV === 'test') {
-  Client.prototype.mock = function({ request, response }) {
-    if (!this.mocks) {
-      this.mocks = {}
-    }
-    this.mocks[JSON.stringify(request, null, 2)] = response
-  }
-}
+// if (process.env.NODE_ENV === 'test') {
+//   Client.prototype.mock = function({ request, response }) {
+//     if (!this.mocks) {
+//       this.mocks = {}
+//     }
+//     this.mocks[JSON.stringify(request, null, 2)] = response
+//   }
+// }
 
 function normalizeName(name: string) {
   return name.toLowerCase().trim()

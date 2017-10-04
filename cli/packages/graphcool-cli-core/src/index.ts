@@ -11,13 +11,19 @@ import Console from './commands/console'
 import Projects from './commands/projects/index'
 import ModuleAdd from './commands/module/add'
 import Delete from './commands/delete/index'
-import GetRootToken from './commands/get-root-token/index'
+import RootTokens from './commands/root-tokens/index'
 import FunctionsOverview from './commands/functions/index'
 import FunctionLogs from './commands/logs/function'
 import Diff from './commands/diff/index'
 import Pull from './commands/pull/index'
 import Export from './commands/export/index'
 import InvokeLocal from './commands/invoke/local'
+import PullLocal from './commands/local/pull'
+import Start from './commands/local/start'
+import Stop from './commands/local/stop'
+import Up from './commands/local/up'
+import Restart from './commands/local/restart'
+import Account from './commands/account'
 
 export const topics = [
   { name: 'deploy', description: 'Deploy local project definition' },
@@ -43,6 +49,10 @@ export const topics = [
     description: 'Get the diff of the local and remote project definition',
   },
   {
+    name: 'delete',
+    description: 'Delete a project',
+  },
+  {
     name: 'export',
     description: 'Export project data',
   },
@@ -50,6 +60,14 @@ export const topics = [
     name: 'invoke',
     description: 'Invokes a function locally',
   },
+  {
+    name: 'account',
+    description: 'Information about the current authenticated account'
+  }
+  // {
+  //   name: 'local',
+  //   description: 'Manage the local Graphcool version'
+  // }
 ]
 
 export const commands = [
@@ -66,11 +84,17 @@ export const commands = [
   Projects,
   ModuleAdd,
   Delete,
-  GetRootToken,
+  RootTokens,
   FunctionsOverview,
   FunctionLogs,
   Diff,
   Pull,
   Export,
   InvokeLocal,
+  PullLocal,
+  Start,
+  Stop,
+  Up,
+  Restart,
+  Account,
 ]

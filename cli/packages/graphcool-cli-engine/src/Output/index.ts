@@ -18,6 +18,9 @@ import * as treeify from 'treeify'
 import * as dirTree from 'directory-tree'
 import * as marked from 'marked'
 import * as TerminalRenderer from 'marked-terminal'
+import * as Charm from 'charm'
+import {set} from 'lodash'
+
 
 marked.setOptions({
   renderer: new TerminalRenderer(),
@@ -94,6 +97,7 @@ export class Output {
   prompter: Prompter
   prompt: any
   migration: MigrationPrinter
+  charm: any
 
   constructor(config: Config) {
     this.config = config
@@ -110,6 +114,8 @@ export class Output {
     this.prompter = new Prompter(this)
     this.prompt = inquirer.createPromptModule({ output: process.stdout })
     this.migration = new MigrationPrinter(this)
+    this.charm = Charm()
+    this.charm.pipe(process.stdout)
   }
 
   get color(): chalk & { graphcool: (s: string) => string } {
@@ -249,15 +255,32 @@ export class Output {
     }
   }
 
+  filesTree(files: string[]) {
+    const tree = filesToTree(files)
+    const printedTree = treeify.asTree(tree, true)
+    this.log(
+      chalk.blue(
+        printedTree.split('\n').join('\n'),
+      ),
+    )
+  }
+
   tree(dirPath: string, padding = false) {
     const tree = dirTree(dirPath)
     const convertedTree = treeConverter(tree)
     const printedTree = treeify.asTree(convertedTree, true)
     this.log(
       chalk.blue(
-        printedTree.split('\n').map(l => (padding ? '   ' : '') + l).join('\n'),
+        printedTree.split('\n').map(l => (padding ? '  ' : '') + l).join('\n'),
       ),
     )
+  }
+
+  up(y: number = 1) {
+    for (let i = 0; i < y; i++) {
+      this.charm.delete('line', 1)
+      this.charm.up(1)
+    }
   }
 }
 
@@ -271,4 +294,23 @@ function treeConverter(tree) {
     }
     return { ...acc, [curr.name]: treeConverter(curr) }
   }, {})
+}
+
+function filesToTree(files: string[]) {
+  const fileNames = files.map(l => {
+    if (l.startsWith('./')) {
+      return l.slice(2)
+    }
+
+    return l
+  })
+
+  const obj = {}
+
+  fileNames.forEach(fileName => {
+    const setPath = fileName.split('/')
+    set(obj, setPath, null)
+  })
+
+  return obj
 }
