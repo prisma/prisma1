@@ -53,16 +53,16 @@ ${printEnvironments(env, projects, out)}
 API:           Endpoint:
 ────────────── ────────────────────────────────────────────────────────────
 ${chalk.green('Simple')}         ${
-      `${backendAddr}/simple/${backendAddr.includes('localhost') ? '': 'v1/'}${info.id}`
+      `${backendAddr}/simple/v1/${info.id}`
     }
 ${chalk.green('Relay')}          ${
-  `${backendAddr}/relay/${backendAddr.includes('localhost') ? '': 'v1/'}${info.id}`
+  `${backendAddr}/relay/v1/${info.id}`
 }
 ${chalk.green('Subscriptions')}  ${
   subscriptionURL(info.region as any, info.id)
 }
 ${chalk.green('File')}           ${
-  `${backendAddr}/file/${backendAddr.includes('localhost') ? '': 'v1/'}${info.id}`
+  `${backendAddr}/file/v1/${info.id}`
 }
 `
 
