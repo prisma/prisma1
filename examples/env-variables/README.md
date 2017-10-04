@@ -167,7 +167,7 @@ greeting:
 
 Despite the fact that this service contains two function implementations, only _one_ of them will be deployed at any given time! Which one that is depends on the value of the environment variable `GREETING` when `graphcool deploy` is invoked. That's because the `greeting.handler.code.src` property refers to this environment variable: `./src/${env:GREETING}.js`. 
 
-When `graphcool deploy` is called, the CLI will read the value of the environment variable and replace `${env:GREETING}` with it. If the value of greeting is something other than `hello` or `hey`, the `graphcool deploy` will fail with the message that the referenced source file does not exist.
+When `graphcool deploy` is called, the CLI will read the value of the environment variable and replace `${env:GREETING}` with it. If the value of `GREETING` is something other than `hello` or `hey`, the `graphcool deploy` will fail with the message that the referenced source file does not exist.
 
 ### Referencing environment variables in _functions_ at runtime
 
