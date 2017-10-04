@@ -33,7 +33,7 @@ https://codeload.github.com/graphcool/graphcool/tar.gz/master | tar -xz --strip=
 cd auth
 ```
 
-Next, you need to create your GraphQL server, based on the existing service definition, using the [Graphcool CLI](https://docs-next.graph.cool/reference/graphcool-cli/overview-zboghez5go).
+Next, you need to create your GraphQL server using the [Graphcool CLI](https://docs-next.graph.cool/reference/graphcool-cli/overview-zboghez5go).
 
 ### 2. Install the Graphcool CLI
 
