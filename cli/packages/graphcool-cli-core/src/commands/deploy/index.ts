@@ -1,17 +1,12 @@
-import {
-  Command,
-  flags,
-  Flags,
-  EnvDoesntExistError,
-  EnvironmentConfig,
-  ProjectDefinition,
-} from 'graphcool-cli-engine'
+import { Command, flags, Flags } from 'graphcool-cli-engine'
 import * as chalk from 'chalk'
 import * as sillyName from 'sillyname'
 import { ProjectDoesntExistError } from '../../errors/ProjectDoesntExistError'
 import { emptyDefinition } from './emptyDefinition'
+import * as chokidar from 'chokidar'
 
 export default class Deploy extends Command {
+  private deploying: boolean = false
   static topic = 'deploy'
   static description = 'Deploy project definition changes'
   static help = `
@@ -44,6 +39,10 @@ ${chalk.gray(
       char: 'f',
       description: 'Accept data loss caused by schema changes',
     }),
+    watch: flags.boolean({
+      char: 'w',
+      description: 'Watch for changes',
+    }),
     name: flags.string({
       char: 'n',
       description: 'Project name',
@@ -54,11 +53,10 @@ ${chalk.gray(
     }),
   }
   async run() {
-    const { project, force } = this.flags
+    const { project, force, watch } = this.flags
 
-    let {env} = this.flags
+    let { env } = this.flags
     env = env || this.env.env.default
-
 
     await this.auth.ensureAuth()
     await this.definition.load()
@@ -70,7 +68,7 @@ ${chalk.gray(
       env,
     })
 
-    let {projectId, envName} = envResult
+    let { projectId, envName } = envResult
 
     let projectName = projectId
     let projectIsNew = false
@@ -88,98 +86,120 @@ ${chalk.gray(
       projectIsNew = true
     }
 
-    this.out.log('')
-    const localNote = (this.env.env && this.env.isDockerEnv(this.env.env.environments[env])) ? ' locally' : ''
+    await this.deploy(projectIsNew, envName, env, projectId, force, projectName)
+
+    if (watch) {
+      this.out.log('Watching for change...')
+      chokidar.watch(this.config.definitionDir, {ignoreInitial: true}).on('all', () => {
+        setImmediate(async () => {
+          if (!this.deploying) {
+            await this.definition.load()
+            await this.deploy(projectIsNew, envName, env, projectId!, force, projectName)
+            this.out.log('Watching for change...')
+          }
+        })
+      })
+    }
+  }
+
+  private async deploy(
+    projectIsNew: boolean,
+    envName: string | null,
+    env: string,
+    projectId: string,
+    force: boolean,
+    projectName: string | null,
+  ): Promise<void> {
+    this.deploying = true
+    const localNote =
+      this.env.env && this.env.isDockerEnv(this.env.env.environments[env])
+        ? ' locally'
+        : ''
     this.out.action.start(
-      projectIsNew ? `Deploying${localNote}` :
-      `Deploying to project ${chalk.bold(
-        projectName,
-      )} with environment ${chalk.bold(envName)}${localNote}.`,
+      projectIsNew
+        ? `Deploying${localNote}`
+        : `Deploying to ${chalk.bold(
+            projectName,
+          )} with env ${chalk.bold(envName)}${localNote}`,
     )
 
-    try {
-      const migrationResult = await this.client.push(
-        projectId,
-        force,
-        false,
-        this.definition.definition!,
+    const migrationResult = await this.client.push(
+      projectId,
+      force,
+      false,
+      this.definition.definition!,
+    )
+    this.out.action.stop()
+
+    // no action required
+    if (
+      (!migrationResult.migrationMessages ||
+        migrationResult.migrationMessages.length === 0) &&
+      (!migrationResult.errors || migrationResult.errors.length === 0)
+    ) {
+      this.out.log(
+        `Everything up-to-date.`,
       )
-      this.out.action.stop()
+      this.deploying = false
+      return
+    }
 
-      // no action required
-      if (
-        (!migrationResult.migrationMessages ||
-          migrationResult.migrationMessages.length === 0) &&
-        (!migrationResult.errors || migrationResult.errors.length === 0)
-      ) {
-        this.out.log(
-          `Identical project definition for project ${chalk.bold(
-            projectId,
-          )} in env ${chalk.bold(envName)}, no action required.\n`,
-        )
-        return
+    if (migrationResult.migrationMessages.length > 0) {
+      if (projectIsNew) {
+        this.out.log('\nSuccess! Created the following project:\n')
+      } else {
+        const updateText =
+          migrationResult.errors.length > 0
+            ? `${chalk.red('Error!')} Here are the potential changes:`
+            : `${chalk.green('Success!')} Here is what changed:`
+        this.out.log(updateText)
       }
 
-      if (migrationResult.migrationMessages.length > 0) {
-        if (projectIsNew) {
-          this.out.log('\nSuccess! Created the following project:\n')
-        } else {
-          const updateText =
-            migrationResult.errors.length > 0
-              ? ` has changes:`
-              : ` was successfully updated.\nHere are the changes:`
-          this.out.log(
-            chalk.blue(
-              `\nYour project ${chalk.bold(projectId)} of env ${chalk.bold(
-                envName,
-              )}${updateText}\n`,
-            ),
-          )
-        }
+      this.out.migration.printMessages(migrationResult.migrationMessages)
+      this.definition.set(migrationResult.projectDefinition)
+    }
 
-        this.out.migration.printMessages(migrationResult.migrationMessages)
-        this.definition.set(migrationResult.projectDefinition)
-      }
+    if (migrationResult.errors.length > 0) {
+      this.out.log(
+        chalk.rgb(244, 157, 65)(
+          `There are issues with the new project definition:`,
+        ),
+      )
+      this.out.migration.printErrors(migrationResult.errors)
+      this.out.log('')
+    }
 
-      if (migrationResult.errors.length > 0) {
-        this.out.log(
-          chalk.rgb(244, 157, 65)(
-            `\nThere are issues with the new project definition:`,
-          ),
-        )
-        this.out.migration.printErrors(migrationResult.errors)
-        this.out.log('')
-      }
-
-      if (
-        migrationResult.errors &&
-        migrationResult.errors.length > 0 &&
-        migrationResult.errors[0].description.includes(`destructive changes`)
-      ) {
-        // potentially destructive changes
-        this.out.log(
-          `Your changes might result in data loss.
+    if (
+      migrationResult.errors &&
+      migrationResult.errors.length > 0 &&
+      migrationResult.errors[0].description.includes(`destructive changes`)
+    ) {
+      // potentially destructive changes
+      this.out.log(
+        `Your changes might result in data loss.
           Use ${chalk.cyan(
             `\`graphcool deploy --force\``,
           )} if you know what you're doing!\n`,
-        )
-      }
-    } catch (e) {
-      this.out.action.stop()
-      this.out.error(e)
+      )
     }
-
+    this.deploying = false
   }
 
-  private async createProject(): Promise<{envName: string, projectId: string}> {
-    const {alias, region} = this.flags
-    let {name, env} = this.flags
+  private async createProject(): Promise<{
+    envName: string
+    projectId: string
+  }> {
+    const { alias, region } = this.flags
+    let { name, env } = this.flags
 
     env = env || this.getEnvName()
     name = name || sillyName()
 
     this.out.log('')
-    const localNote = (this.env.env && this.env.isDockerEnv(this.env.env.environments[env])) ? ' locally' : ''
+    const localNote =
+      this.env.env && this.env.isDockerEnv(this.env.env.environments[env])
+        ? ' locally'
+        : ''
     const projectMessage = `Creating project ${chalk.bold(name)}${localNote}`
     this.out.action.start(projectMessage)
 

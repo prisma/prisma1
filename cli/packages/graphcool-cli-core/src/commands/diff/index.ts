@@ -58,9 +58,9 @@ export default class Diff extends Command {
       )
     } else {
       this.out.action.start(
-        `Getting diff for project ${chalk.bold(
+        `Getting diff for ${chalk.bold(
           projectId,
-        )} with local environment ${chalk.bold(envName)}.`,
+        )} with env${chalk.bold(envName)}.`,
       )
 
       try {
@@ -89,9 +89,9 @@ export default class Diff extends Command {
         if (migrationResult.migrationMessages.length > 0) {
           this.out.log(
             chalk.blue(
-              `\nYour project ${chalk.bold(projectId)} of env ${chalk.bold(
+              `Your project ${chalk.bold(projectId)} of env ${chalk.bold(
                 envName,
-              )} has changes:`,
+              )} has the following changes:`,
             ),
           )
 
@@ -102,7 +102,7 @@ export default class Diff extends Command {
         if (migrationResult.errors.length > 0) {
           this.out.log(
             chalk.rgb(244, 157, 65)(
-              `\nThere are issues with the new project definition:`,
+              `There are issues with the new project definition:`,
             ),
           )
           this.out.migration.printErrors(migrationResult.errors)
