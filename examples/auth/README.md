@@ -83,7 +83,7 @@ mutation {
 
 ### Logging in an existing user with the `authenticateEmailUser` mutation
 
-This mutation will log in an existing user by requesting a new [temporary authentication token]((https://docs-next.graph.cool/reference/auth/authentication/authentication-tokens-eip7ahqu5o#temporary-authentication-tokens) for her:
+This mutation will log in an _existing_ user by requesting a new [temporary authentication token](https://docs-next.graph.cool/reference/auth/authentication/authentication-tokens-eip7ahqu5o#temporary-authentication-tokens) for her:
 
 ```graphql
 mutation {
