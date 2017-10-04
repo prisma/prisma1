@@ -29,7 +29,7 @@ This directory contains the service definition and file structure for a simple G
 Clone the full [graphcool](https://github.com/graphcool/graphcool) repository and navigate to this directory or download only this example with the following command:
 
 ```sh
-curl https://codeload.github.com/graphcool/graphcool/examples/tar.gz/master | tar -xz --strip=1 examples/auth
+https://codeload.github.com/graphcool/graphcool/tar.gz/master | tar -xz --strip=2 graphcool-master/examples/auth
 cd auth
 ```
 
