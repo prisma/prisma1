@@ -46,7 +46,7 @@ However, before you do so, you need to set the environment variable that is refe
 
 #### 3.1. Set environment variable `GREETING`
 
-Depending on your shell, you can set the environment variable in different ways.
+Depending on your shell, you can set the environment variable in different ways:
 
 ##### bash
 
