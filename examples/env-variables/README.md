@@ -42,7 +42,7 @@ npm install -g graphcool@beta
 
 The next step will be to [deploy](https://docs-next.graph.cool/reference/graphcool-cli/commands-aiteerae6l#graphcool-deploy) the Graphcool service that's defined in this directory. 
 
-However, before you do so, you need to set the environment variable that is referenced in [`graphcool.yml`](./graphcool.yml). This environment variable is called `GREETING` and needs to be set to either `hello` or `hey` to determine whether the function inside [`./src/hello.js`](./src/hello.js) or [`./src/hey.js`](./src/hey.js) will be invoked.
+However, before you do so, you need to set the environment variable that is referenced in [`graphcool.yml`](./graphcool.yml#L14). This environment variable is called `GREETING` and needs to be set to either `hello` or `hey` to determine whether the function inside [`./src/hello.js`](./src/hello.js) or [`./src/hey.js`](./src/hey.js) will be invoked.
 
 #### 3.1. Set environment variable `GREETING`
 
