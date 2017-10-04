@@ -1,4 +1,4 @@
-# Environment Variables (`env-variables`)
+# Environment Variables
 
 ## Overview
 

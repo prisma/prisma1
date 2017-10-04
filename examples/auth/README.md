@@ -1,4 +1,4 @@
-# Authentication (`auth`)
+# Authentication
 
 This example demonstrates how to implement an **email-password-based authentication** workflow with Graphcool. Feel free to use it as a template for your own project!
 
