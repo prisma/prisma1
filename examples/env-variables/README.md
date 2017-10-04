@@ -48,7 +48,7 @@ However, before you do so, you need to set the environment variable that is refe
 
 Depending on your shell, you can set the environment variable in different ways.
 
-###### bash
+##### bash
 
 If you're using [bash](https://en.wikipedia.org/wiki/Bash_(Unix_shell)), use either of the following commands inside this directory:
 
@@ -64,7 +64,7 @@ export GREETING=hey
 ```
 
 
-###### fish shell
+##### fish shell
 
 If you're using [fish shell](https://fishshell.com/), use either of the following commands inside this directory:
 
@@ -79,7 +79,7 @@ or
 set -x GREETING hey
 ```
 
-###### direnv
+##### direnv
 
 If you're using [direnv](https://direnv.net/), create a `.envrc`-file in this directory and add either of the following lines to it:
 
