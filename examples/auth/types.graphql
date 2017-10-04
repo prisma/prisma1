@@ -1,0 +1,9 @@
+type EmailUser implements Node {
+  id: ID! @isUnique
+  createdAt: DateTime!
+  updatedAt: DateTime!
+
+  # Must be unique
+  email: String! @isUnique
+  password: String!
+}
