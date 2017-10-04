@@ -145,6 +145,44 @@ The `message` that's returned in the payload will be: `Hello Alice`. That's beca
 
 ## What's in this example?
 
-### Functions
+This function contains implementations for two [resolver](https://docs-next.graph.cool/reference/functions/resolvers-su6wu3yoo2) functions:
 
-### Environment Variables
+- [`hello.js`](./src/hello.js): Greets the caller with `Hello`
+- [`hey.js`](./src/hey.js): Greets the caller with `Hey`
+
+Both resolvers are using the same `schema` defined in [`greeting.graphql`](./src/greeting.graphql):
+
+```yml
+greeting:
+  type: resolver
+  schema: ./src/greeting.graphql
+  handler:
+    code:
+      src: ./src/${env:GREETING}.js
+      environment:
+        NAME: Alice
+```
+
+### Referencing environment variables in `graphcool.yml` at deployment time
+
+Despite the fact that this service contains two function implementations, only _one_ of them will be deployed at any given time! Which one that is depends on the value of the environment variable `GREETING` when invoking `graphcool deploy`. That's because the `greeting.handler.code.src` property refers to this environment variable: `./src/${env:GREETING}.js`. 
+
+When `graphcool deploy` is called, the CLI will read the value of the environment variable and replace `${env:GREETING}` with it. If the value of greeting is something other than `hello` or `hey`, the `graphcool deploy` will fail with the message that the referenced source file does not exist.
+
+### Referencing environment variables in _functions_ at runtime
+
+Notice that inside the function definition of `greeting` in `graphcool.yml`, there's also the `greeting.handler.code.environment` property that let's you specify environment variables which can be accessed by your functions at runtime.
+
+In this case, we're setting the value `Alice` for the environment variable `NAME` which is accessed by [`hello.js`](./src/hello.js#L3) and [`hey.js`](./src/hey.js#L3).
+
+
+
+
+
+
+
+
+
+
+
+

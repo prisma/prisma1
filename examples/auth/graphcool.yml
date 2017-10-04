@@ -1,19 +1,21 @@
-# In the types.graphql you define your data schema
 types: ./types.graphql
 
 functions:
+
   signup:
     type: resolver
     schema: src/signup.graphql
     handler:
       code: 
         src: src/signup.js
+
   authenticate:
     type: resolver
     schema: src/authenticate.graphql
     handler:
       code: 
         src: src/authenticate.js
+
   loggedInUser:
     type: resolver
     schema: src/loggedInUser.graphql
