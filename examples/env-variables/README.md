@@ -141,7 +141,7 @@ To test the resolver function, you can send the following query:
 }
 ```
 
-The `message` that's returned in the payload will be: `Hello Alice`. That's because the `NAME` environment variable that's referenced in [`hey.js`](./src/hey.js#L3) and [`hello.js`](./src/hello.js#L3) is currently [set to `Alice` inside `graphcool.yml`](./graphcool.yml#L18) 
+The `message` that's returned in the payload will be: `Hello Alice`. That's because the `NAME` environment variable that's referenced in [`hey.js`](./src/hey.js#L3) and [`hello.js`](./src/hello.js#L3) is currently [set to `Alice` inside `graphcool.yml`](./graphcool.yml#L18). If no argument for `name` argument is passed in the query, the function will fall back to the value of the environment variable `NAME`.
 
 ## What's in this example?
 
