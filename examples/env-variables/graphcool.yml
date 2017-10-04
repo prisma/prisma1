@@ -1,0 +1,13 @@
+types: ./types.graphql
+
+functions:
+
+  # This function either invokes `hey.js` or `hello.js`, 
+  # depending on the value of the environment variable `GREETING`.
+  # If `GREETING` is not set, or set to something other than 
+  # `hello` or `hey`, then `graphcool deploy` will fail.
+  greeting:
+    handler:
+      code:
+        src: ./src/${env:GREETING}.js
+    type: resolver
