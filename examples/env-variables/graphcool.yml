@@ -7,7 +7,12 @@ functions:
   # If `GREETING` is not set, or set to something other than 
   # `hello` or `hey`, then `graphcool deploy` will fail.
   greeting:
+    type: resolver
+    schema: ./src/greeting.graphql
     handler:
       code:
         src: ./src/${env:GREETING}.js
-    type: resolver
+        # Set the `NAME` environment variable that's 
+        # referenced at runtime by `hey.js` and `hello.js`.
+        environment:
+          NAME: Alice

@@ -1,4 +1,4 @@
-# auth
+# Authentication (`auth`)
 
 This example demonstrates how to implement an **email-password-based authentication** workflow with Graphcool. Feel free to use it as a template for your own project!
 
@@ -26,7 +26,7 @@ This directory contains the service definition and file structure for a simple G
 
 ### 1. Download the example
 
-Clone the full [graphcool](https://github.com/graphcool/graphcool) repository and navigate to this directory or download only this example with the following command:
+Clone the full [graphcool](https://github.com/graphcool/graphcool) repository and navigate to this directory or download _only_ this example with the following command:
 
 ```sh
 https://codeload.github.com/graphcool/graphcool/tar.gz/master | tar -xz --strip=2 graphcool-master/examples/auth
@@ -134,18 +134,9 @@ type EmailUser @model {
 
 We further define three [resolver](https://docs-next.graph.cool/reference/functions/resolvers-su6wu3yoo2) functions in the service definition file [`graphcool.yml`](./graphcool.yml):
 
-- `signup`: Allows users to signup for the service with their email address and a password. Uses the `signupEmailUser(email: String!, password: String!)` mutation defined in [`./code/signup.graphql`](./code/signup.graphql) and is implemented in [`signup.js`](./signup.js).
+- `signup`: Allows users to signup for the service with their email address and a password. Uses the `signupEmailUser(email: String!, password: String!)` mutation defined in [`./src/signup.graphql`](./src/signup.graphql) and is implemented in [`./src/signup.js`](./src/signup.js).
 - `authenticate`: Allows already existing users to log in, i.e. requesting a new [temporary authentication token](https://docs-next.graph.cool/reference/auth/authentication/authentication-tokens-eip7ahqu5o#temporary-authentication-tokens). Uses the `authenticateEmailUser` mutation defined in [`authenticate.graphql`](./authenticate.graphql)  and is implemented in [`./src/authenticate.js`](./src/authenticate.js).
 - `loggedInUser`: Allows to check whether a user is currently logged in by sending a request with an attached authentication token. If the token is valid for a particular user, the user's `id` will be returned. It uses the `loggedInUser` query defined in [`./src/loggedInUser.graphql`](./src/loggedInUser.graphql) and is implemented in [`./src/loggedInUser.js`](./src/loggedInUser.js).
 
 The `signup` and `authenticate` resolvers each use [graphcool-lib](https://github.com/graphcool/graphcool-lib) to [generate an authentication token](https://github.com/graphcool/graphcool-lib/blob/master/src/index.ts#L370) for an existing `EmailUser` node. 
-
-
-
-
-
-
-
-
-
 
