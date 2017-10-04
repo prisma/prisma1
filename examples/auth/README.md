@@ -24,7 +24,7 @@ This directory contains the service definition and file structure for a simple G
 
 ## Get started
 
-### Download the example
+### 1. Download the example
 
 Clone the full [graphcool](https://github.com/graphcool/graphcool) repository and navigate to this directory or download only this example with the following command:
 
@@ -33,19 +33,17 @@ curl https://codeload.github.com/graphcool/graphcool/examples/tar.gz/master | ta
 cd auth
 ```
 
-### Create your GraphQL server
+Next, you need to create your GraphQL server, based on the existing service definition, using the [Graphcool CLI](https://docs-next.graph.cool/reference/graphcool-cli/overview-zboghez5go).
 
-Next, you need to create your GraphQL server using the [Graphcool CLI](https://docs-next.graph.cool/reference/graphcool-cli/overview-zboghez5go).
-
-#### Install the Graphcool CLI
+### 2. Install the Graphcool CLI
 
 If you haven't already, go ahead and install the CLI first:
 
 ```sh
-npm install -g graphcool
+npm install -g graphcool@beta
 ```
 
-#### Create the GraphQL server
+#### 3. Create the GraphQL server
 
 You can now [deploy](https://docs-next.graph.cool/reference/graphcool-cli/commands-aiteerae6l#graphcool-deploy) the Graphcool service that's defined in this directory:
 
@@ -54,6 +52,8 @@ graphcool deploy
 ```
 
 > Note: Whenever you make changes to files in this directory, you need to invoke `graphcool deploy` again to make sure your changes get applied to the "remote" service.
+
+That's it, you're now ready to offer a email-password based login to your users! 🎉
 
 
 ## Testing the service
