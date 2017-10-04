@@ -43,7 +43,7 @@ If you haven't already, go ahead and install the CLI first:
 npm install -g graphcool@beta
 ```
 
-#### 3. Create the GraphQL server
+### 3. Create the GraphQL server
 
 You can now [deploy](https://docs-next.graph.cool/reference/graphcool-cli/commands-aiteerae6l#graphcool-deploy) the Graphcool service that's defined in this directory:
 
