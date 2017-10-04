@@ -56,8 +56,7 @@ If you're using [bash](https://en.wikipedia.org/wiki/Bash_(Unix_shell)), use eit
 export GREETING=hello
 ```
 
-or
-
+_or_
 
 ```sh
 export GREETING=hey
@@ -72,8 +71,7 @@ If you're using [fish shell](https://fishshell.com/), use either of the followin
 set -x GREETING hello
 ```
 
-or
-
+_or_
 
 ```sh
 set -x GREETING hey
@@ -87,8 +85,7 @@ If you're using [direnv](https://direnv.net/), create a `.envrc`-file in this di
 export GREETING=hello
 ```
 
-or
-
+_or_
 
 ```sh
 export GREETING=hey
