@@ -1,0 +1,10 @@
+types: ./types.graphql
+
+functions:
+  
+  allBreeds:
+    handler:
+      code:
+        src: ./src/allBreeds.js
+    type: resolver
+    schema: ./src/allBreeds.graphql
