@@ -1,0 +1,7 @@
+type BreedImagesPayload {
+  url: String!
+}
+
+extend type Query {
+  breedImages(breedName: String!): [BreedImagesPayload!]!
+}

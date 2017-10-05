@@ -1,8 +1,8 @@
-type Breed {
+type AllBreedsPayload {
   name: String!
   subBreeds: [String!]!
 }
 
 extend type Query {
-  allBreeds: [Breed!]!
+  allBreeds: [AllBreedsPayload!]!
 }

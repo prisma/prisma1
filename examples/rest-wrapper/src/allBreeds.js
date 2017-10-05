@@ -1,6 +1,6 @@
 require('isomorphic-fetch')
 
-const url = 'https://dog.ceo/api/breeds/list/all'
+const url = 'https://dog.ceo/api/breeds/image/random'
 
 module.exports = () => {
   return fetch(url)
