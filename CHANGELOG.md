@@ -1,9 +1,5 @@
 # 0.6 (2017-10-06)
 
-## Changes
-
-* [Introduced a shorthand notation for function code handlers](https://github.com/graphcool/graphcool/issues/529).
-
 ## Bug Fixes
 
 * [Fixed a bug that prevented relation queries for specific schemas](https://github.com/graphcool/graphcool/issues/718).
@@ -21,6 +17,7 @@ See the Forum for more information on the [Framework Preview](https://www.graph.
 * [Allow .graphcool file in current folder](https://github.com/graphcool/graphcool/issues/622).
 * [Search project configuration in parent folders](https://github.com/graphcool/graphcool/issues/646).
 * [Deleting projects now asks for configuration in all cases](https://github.com/graphcool/graphcool/issues/631).
+* [Introduced a shorthand notation for function code handlers](https://github.com/graphcool/graphcool/issues/529).
 * [Renamed get-root-tokens to root-tokens](https://github.com/graphcool/graphcool/issues/634).
 * [Added basic account command](https://github.com/graphcool/graphcool/commit/d7c9074659889bf751c79657cde32b78d205137a).
 
