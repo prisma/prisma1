@@ -1,4 +1,4 @@
-# v0.6 (2017-10-06)
+# 0.6 (2017-10-06)
 
 ## Changes
 
@@ -27,7 +27,7 @@ See the Forum for more information on the [Framework Preview](https://www.graph.
 
 Currently, permission queries can't contain a header section, which will be changed soon. More information [here](https://github.com/graphcool/graphcool/issues/703).
 
-# v0.4 (2017-09-29)
+# 0.4 (2017-09-29)
 
 ## Changes
 
