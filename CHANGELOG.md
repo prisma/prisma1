@@ -2,7 +2,7 @@
 
 ## Features
 
-[Introducing Resolver Functions to extend your Graphcool API](https://github.com/graphcool/graphcool/issues/40) 🎉
+* [Introducing Resolver Functions to extend your Graphcool API](https://github.com/graphcool/graphcool/issues/40) 🎉
 
 ## Bug Fixes
 
