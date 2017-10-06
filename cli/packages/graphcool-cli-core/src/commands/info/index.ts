@@ -34,7 +34,7 @@ export default class InfoCommand extends Command {
       )
     } else {
       const info = await this.client.fetchProjectInfo(projectId)
-      let localPort: number | null = null
+      let localPort: number | undefined = undefined
       if (this.env.env.environments[env] && this.env.isDockerEnv(this.env.env.environments[env])) {
         localPort = parseInt((this.env.env.environments[env] as any).host.split(':').slice(-1)[0], 10) || 60000
       }
