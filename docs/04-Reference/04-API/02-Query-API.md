@@ -3,7 +3,7 @@ alias: nia9nushae
 description: A GraphQL query is used to fetch data from a GraphQL endpoint.
 ---
 
-# Queries
+# Query API
 
 ## Overview
 
