@@ -3,7 +3,7 @@ alias: ol0yuoz6go
 description: A GraphQL mutation is used to modify data at a GraphQL endpoint.
 ---
 
-# Mutations
+# Mutation API
 
 ## Overview
 
