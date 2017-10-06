@@ -26,7 +26,7 @@ export default class Up extends Command {
 
     const docker = new Docker(this.out, this.config)
 
-    const {MASTER_TOKEN, PROXY_PORT} = await docker.up()
+    const {MASTER_TOKEN, PORT} = await docker.up()
 
     this.out.log('')
     this.out.action.start('Waiting for Graphcool to initialize. This can take several minutes')
@@ -35,7 +35,7 @@ export default class Up extends Command {
     const {token}: AuthenticateCustomerPayload = await this.client.authenticateCustomer(MASTER_TOKEN)
     this.env.setDockerEnv(env, {
       token,
-      host: `http://localhost:${PROXY_PORT}`,
+      host: `http://localhost:${PORT}`,
       projectId: null
     })
     this.out.action.stop()

@@ -23,7 +23,8 @@ const subscriptionEndpoints = {
   AP_NORTHEAST_1: 'wss://subscriptions.ap-northeast-1.graph.cool',
 }
 
-export const subscriptionURL = (region: Region, projectId: string) =>
+export const subscriptionURL = (region: Region, projectId: string, localPort?: number) =>
+  localPort ? `ws://localhost:${localPort}/subscriptions/v1/${projectId}` :
   `${subscriptionEndpoints[region]}/v1/${projectId}`
 
 export function sortByTimestamp(a, b) {

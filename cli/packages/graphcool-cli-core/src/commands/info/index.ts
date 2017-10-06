@@ -34,7 +34,11 @@ export default class InfoCommand extends Command {
       )
     } else {
       const info = await this.client.fetchProjectInfo(projectId)
-      this.out.log(infoMessage(info, this.env.env, env, this.config.backendAddr, this.out, projects))
+      let localPort: number | undefined = undefined
+      if (this.env.env.environments[env] && this.env.isDockerEnv(this.env.env.environments[env])) {
+        localPort = parseInt((this.env.env.environments[env] as any).host.split(':').slice(-1)[0], 10) || 60000
+      }
+      this.out.log(infoMessage(info, this.env.env, env, this.config.backendAddr, this.out, projects, localPort))
     }
   }
 }
@@ -45,7 +49,8 @@ export const infoMessage = (
   envName: string,
   backendAddr: string,
   out: Output,
-  projects: Project[]
+  projects: Project[],
+  localPort?: number
 ) => `\
 
 ${printEnvironments(env, projects, out)}
@@ -53,16 +58,16 @@ ${printEnvironments(env, projects, out)}
 API:           Endpoint:
 ────────────── ────────────────────────────────────────────────────────────
 ${chalk.green('Simple')}         ${
-      `${backendAddr}/simple/${backendAddr.includes('localhost') ? '': 'v1/'}${info.id}`
+      `${backendAddr}/simple/v1/${info.id}`
     }
 ${chalk.green('Relay')}          ${
-  `${backendAddr}/relay/${backendAddr.includes('localhost') ? '': 'v1/'}${info.id}`
+  `${backendAddr}/relay/v1/${info.id}`
 }
 ${chalk.green('Subscriptions')}  ${
-  subscriptionURL(info.region as any, info.id)
+  subscriptionURL(info.region as any, info.id, localPort)
 }
 ${chalk.green('File')}           ${
-  `${backendAddr}/file/${backendAddr.includes('localhost') ? '': 'v1/'}${info.id}`
+  `${backendAddr}/file/v1/${info.id}`
 }
 `
 

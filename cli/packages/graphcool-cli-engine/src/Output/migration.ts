@@ -66,7 +66,7 @@ export class MigrationPrinter {
       )
       const lastLine = index2 === migrationMessage.subDescriptions!.length - 1
       const endSymbol = lastLine ? '└' : '├'
-      this.out.log(`   ${endSymbol}── ${symbol2}  ${outputMessage2}`)
+      this.out.log(`   ${endSymbol}─ ${symbol2}  ${outputMessage2}`)
     })
   }
 
