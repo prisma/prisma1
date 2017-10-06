@@ -1,4 +1,33 @@
-# v0.4(29.09.17)
+# v0.6 (2017-10-06)
+
+## Changes
+
+* [Introduced a shorthand notation for function code handlers](https://github.com/graphcool/graphcool/issues/529).
+
+## Bug Fixes
+
+* [Fixed a bug that prevented relation queries for specific schemas](https://github.com/graphcool/graphcool/issues/718).
+
+## Framework Preview
+
+See the Forum for more information on the [Framework Preview](https://www.graph.cool/forum/t/feedback-new-cli-beta/949/1?u=nilan).
+
+> **Note:** You can get the latest Framework version by running `npm install -g graphcool@next`.
+
+* [graphcool init does not deploy the service anymore](https://github.com/graphcool/graphcool/issues/706).
+* Improved usage texts [in general](https://github.com/graphcool/graphcool/issues/639) and [for delete](https://github.com/graphcool/graphcool/issues/697).
+* [Added divider for project list](https://github.com/graphcool/graphcool/issues/653).
+* [Improved output for written files](https://github.com/graphcool/graphcool/issues/664).
+* [Allow .graphcool file in current folder](https://github.com/graphcool/graphcool/issues/622).
+* [Search project configuration in parent folders](https://github.com/graphcool/graphcool/issues/646).
+* [Deleting projects now asks for configuration in all cases](https://github.com/graphcool/graphcool/issues/631).
+* [Renamed get-root-tokens to root-tokens](https://github.com/graphcool/graphcool/issues/634).
+* [Added basic account command](https://github.com/graphcool/graphcool/commit/d7c9074659889bf751c79657cde32b78d205137a).
+
+
+Currently, permission queries can't contain a header section, which will be changed soon. More information [here](https://github.com/graphcool/graphcool/issues/703).
+
+# v0.4 (2017-09-29)
 
 ## Changes
 
@@ -26,7 +55,7 @@
 
 ## Framework Preview
 
-Also see the Forum for more information on the [Framework Preview](https://www.graph.cool/forum/t/feedback-new-cli-beta/949/2?u=nilan).
+See the Forum for more information on the [Framework Preview](https://www.graph.cool/forum/t/feedback-new-cli-beta/949/1?u=nilan).
 
 > **Note:** The latest CLI version of the Framework Preview is currently available in version 1.4. This will soon be corrected to version 0.4 instead.
 
