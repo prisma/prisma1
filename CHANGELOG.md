@@ -1,5 +1,9 @@
 # 0.6 (2017-10-06)
 
+## Features
+
+[Introducing Resolver Functions to extend your Graphcool API](https://github.com/graphcool/graphcool/issues/40) 🎉
+
 ## Bug Fixes
 
 * [Fixed a bug that prevented relation queries for specific schemas](https://github.com/graphcool/graphcool/issues/718).
