@@ -3,14 +3,26 @@ alias: ioqu7arooj
 description: Learn how to synchronize your local changes with the remote Graphcool project.
 ---
 
-# Applying project changes
+# Deploying a Graphcool service
 
-After making a change to the project definition or any file inside the file structure of your local project (e.g. making changes to the implementation of a serverless function), you need to sync these changes to the remote project that lives in your Graphcool account.
+## Applying changes
 
-The only way of doing this is by running the `graphcool deploy` command. 
+After making a change to `graphcool.yml` or any file inside the your local service definition (for example adding a new type or updating the implementation of a managed function), you need to deploy these changes to a specified [_target_](!alias-zoug8seen4).
 
-In case your local changes might result in data loss, you need to add the `--force` option to the command in order to signal to the CLI that you know what you're doing: `graphcool deploy --force`.
+The only way of doing this is by running the following CLI command:
 
-Sometimes your changes require _migration values_ to be added for the deployment. For example, when a you're adding a non-nullable field to a model type for which there are already existing nodes in the database.
+```sh
+graphcool deploy
+``` 
 
-Notice that `graphcool diff` will print all changes between your local project and the remote project in your Graphcool account.
+> Notice that `graphcool diff` will print all changes between your local service definition and the already deployed service.
+
+## Using the `--force` option
+
+In case your local changes might result in data loss, for example when you're deleting model type, you need to add the `--force` option to the command in order to signal to the CLI that you know what you're doing: `graphcool deploy --force` (or `graphcool deploy -f`).
+
+
+## Providing migration values
+
+Sometimes your changes require _migration values_ to be added for the deployment. For example, when a you're adding a non-nullable field to a model type for which there are already existing nodes in the database. In these cases, you need to add the `@migrationValue` directory to the corresponding field. You can read more about migration values [here](!alias-paesahku9t).
+
