@@ -16,7 +16,7 @@ The service definition file `graphcool.yml` has the following root properties:
 
 See below for the concrete [YAML structure](#yaml-structure).
 
-## Example
+## Example `graphcool.yml` service definition file
 
 Here is a simple example of a service definition file:
 
@@ -151,9 +151,9 @@ types:
 
 #### Info
 
-The `functions` root property accepts a **map from string** (which specifies the function's _name_) **to `function`**.
+The `functions` root property accepts a **map from string** (which specifies the function's _name_) **to [function](#definition-function)**.
 
-##### Type: `function`
+##### Definition: `function`
 
 **All functions** have the following three properties:
 

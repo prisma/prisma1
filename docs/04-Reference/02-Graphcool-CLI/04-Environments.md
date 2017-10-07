@@ -3,7 +3,7 @@ alias: zoug8seen4
 description: Graphcool allows to deploy a project to multiple environments.
 ---
 
-# Environments
+# Targets
 
 When working with Graphcool, you can configure different _environments_ that you can deploy your project to. You can use this for example to separate a _development_ from a _production_ environment.
 
