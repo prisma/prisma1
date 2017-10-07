@@ -114,8 +114,6 @@ This service definition expects the following file structure:
 
 ### `types`
 
-#### Info
-
 The `types` root property accepts a **single string** or a **list of strings**. Each string references a `.graphql`-file that contains GraphQL type definitions written in the [SDL](https://medium.com/@graphcool/graphql-sdl-schema-definition-language-6755bcb9ce51). 
 
 There are two kinds of types that can be referenced:
@@ -123,16 +121,16 @@ There are two kinds of types that can be referenced:
 - **Model types**: Determine the types that are to be persisted in the database. These types need to be annotated with the `@model`-directive and typically represent entities from the application domain. Read more in the [Database](!alias-viuf8uus7o) chapter.
 - **Transient types**: These types are not persisted in the database but typically represent _input_ or _return_ types for certain API operations.
 
-#### Examples
+### Examples
 
-##### Referring to a single type definition file
+#### Referring to a single type definition file
 
 ```yml
 types: ./types.graphql
 ```
 
 
-##### Referring to multiple type definition files
+#### Referring to multiple type definition files
 
 ```yml
 types: 
@@ -143,11 +141,9 @@ types:
 
 ### `functions`
 
-#### Info
-
 The `functions` root property accepts a **map from string** (which specifies the function's _name_) **to [function](#definition-function)**.
 
-##### Definition: `function`
+#### Definition: `function`
 
 **All functions** have the following three properties:
 
@@ -186,11 +182,11 @@ Only **hook** functions have the following property:
   - **Description**: Describes an operation from the Graphcool CRUD API. The value is composed of the name of a _model type_ and the name of an operation (`read`, `create`, `update` or `delete`), separated by a dot.
   - **Possible values**: `<Model Type>.<Operation>` (e.g. `Customer.create`, `Article.create`, `Image.update`, `Movie.delete`)
 
-##### Definition: `handler`
+#### Definition: `handler`
 
 A `handler` specifies the details of _how_ to invoke the function. It can either be a _managed function_ that references a _local file_ or otherwise define a _webhook_ that'll be called when the function is invoked.
 
-###### Define managed function
+##### Define managed function
 
 **Managed function structure:**
 
@@ -226,7 +222,7 @@ A `handler` for a managed function has the following properties:
   - **Possible values**: any combination of strings that does not contain the empty string
 
 
-###### Reference webhook
+##### Reference webhook
 
 **Webhook structure:**
 
@@ -301,11 +297,9 @@ functions:
 
 ### `permissions`
 
-#### Info
-
 The `permissions` root property accepts a **list of [permissions](#definition-permission)**.
 
-##### Definition: `permission`
+#### Definition: `permission`
 
 **All permissions** have the following three properties:
 
@@ -356,8 +350,6 @@ permissions:
 ```
 
 ### `rootTokens`
-
-#### Info
 
 The `rootTokens` property accepts a **list of strings**. Each string is the name of a [root token](!alias-eip7ahqu5o#root-tokens) which will be created whenever the service deployed. 
 
