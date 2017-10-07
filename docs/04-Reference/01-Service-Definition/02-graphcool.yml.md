@@ -413,25 +413,10 @@ There are two kinds of types that can be referenced:
 
 #### Examples
 
-##### Referring to a single type definition file
-
 ```yml
-types: ./types.graphql
-```
-
-
-##### Referring to multiple type definition files
-
-```yml
-types: [./types.graphql, ./customResolver.graphql]
-```
-
-or
-
-```yml
-types: 
-  - ./types.graphql
-  - ./customResolver.graphql
+rootTokens: 
+  - rootToken1
+  - rootToken2
 ```
 
 
