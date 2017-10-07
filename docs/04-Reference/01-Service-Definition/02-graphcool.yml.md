@@ -151,59 +151,40 @@ The `functions` root property accepts a **map from string** (which specifies the
 
 **All functions** have the following three properties:
 
-- `type`
+- `type` (**required**)
   - **Type**: `string`
-  - **Description:** Determines whether this function is a [resolver](!alias-su6wu3yoo2), [subcription]() or a [hook]().
-  - **Info:**
-    - Required
-    - Default: none
-    - Possible values: `resolver`, `subscription`, `operationBefore`, `operationAfter`
+  - **Description**: Determines whether this function is a [resolver](!alias-su6wu3yoo2), [subcription](!alias-bboghez0go) or a [hook](!alias-pa6guruhaf).
+  - **Possible values:** `resolver`, `subscription`, `operationBefore`, `operationAfter`
 
-- `handler`: 
+- `handler` (**required**)
   - **Type**: [handler](#definition-handler) (described below)
-  - **Description:** Specifies the details of _how_ to invoke the function. Can either contain references to a local file that contains the implementation of the function or otherwise define a webhook that'll be called when the function is invoked.
-  - **Info:**
-    - Required
-    - Default: none
-    - Possible values: any
+  - **Description**: Specifies the details of _how_ to invoke the function. Can either contain references to a local file that contains the implementation of the function or otherwise define a webhook that'll be called when the function is invoked.
 
-- `isEnabled`: 
+- `isEnabled` (**optional**, default: `false`)
   - **Type**: `boolean`
-  - **Description:** The function will only be invoked if set to `true`.
-  - **Info:**
-    - Optional
-    - Default: `true`
-    - Possible values: `true`, `false`
+  - **Description**: The function will only be invoked if set to `true`.
+  - **Possible values**: `true` or `false`
 
-**Only functions of type `resolver`** have the following property:
+Only **resolver** have the following property:
 
-- `schema`:
+- `schema` (**optional**, if not provided, the extension of `Query` or `Mutation` has to live inside a file that's referenced from the [`types`](#root-property-types) root property)
   - **Type**: `string`
-  - **Description:** References a `.graphql`-file that contains the extension of the `Query` or `Mutation` type which defines the API of the resolver.
-  - **Info:**
-    - Optional (if not provided, the extension of `Query` or `Mutation` has to live inside a file that's referenced from the [`types`](#root-property-types) root property)
-    - Default: none
-    - Possible values: any string that references a `.graphql`-file
+  - **Description**: References a `.graphql`-file that contains the extension of the `Query` or `Mutation` type which defines the API of the resolver.
+  - **Possible values**: any string that references a `.graphql`-file
 
-**Only functions of type `subscription`** have the following property:
+Only **subscription** functions have the following property:
 
-- `query`:
+- `query` (**required**)
   - **Type**: `string`
-  - **Description:** References a `.graphql`-file that contains the _subscription query_ which determines the event upon which the function should be invoked as well as the payload for the event.
-  - **Info:**
-    - Required
-    - Default: none
-    - Possible values: any string that references a `.graphql`-file
+  - **Description**: References a `.graphql`-file that contains the _subscription query_ which determines the event upon which the function should be invoked as well as the payload for the event.
+  - **Possible values**: any string that references a `.graphql`-file
 
-**Only functions of type `operationBefore` and `operationAfter`** have the following property:
+Only **hook** functions have the following property:
 
-- `operation`:
+- `operation` (**required**)
   - **Type**: `string`
-  - **Description:** Describes an operation from the Graphcool CRUD API. The value is composed of the name of a _model type_ and the name of an operation (`read`, `create`, `update` or `delete`), separated by a dot.
-  - **Info:**
-    - Required
-    - Default: none
-    - Possible values: `<Model Type>.<Operation>` (e.g. `Customer.create`, `Article.create`, `Image.update`, `Movie.delete`)
+  - **Description**: Describes an operation from the Graphcool CRUD API. The value is composed of the name of a _model type_ and the name of an operation (`read`, `create`, `update` or `delete`), separated by a dot.
+  - **Possible values**: `<Model Type>.<Operation>` (e.g. `Customer.create`, `Article.create`, `Image.update`, `Movie.delete`)
 
 ##### Definition: `handler`
 
@@ -229,28 +210,20 @@ code: <file>
 
 A `handler` for a managed function has the following properties:
 
-- `code`:
+- `code` (**required**)
   - **Type**: `map` (see _managed function structure__ above)
-  - **Description:** Describes all the details about how to invoke the managed function and optionally provides environment variables that can be used inside the function at runtime.
-  - **Info:**
-    - Required (in the case of a managed function)
-    - Default: none
+  - **Description**: Describes all the details about how to invoke the managed function and optionally provides environment variables that can be used inside the function at runtime.
 
-- `src`: 
+- `src`: (**required**)
   - **Type**: `string`
-  - **Description:** A reference to the file that contains the implementation for the function.
-  - **Info:**
-    - Required
-    - Default: none
-    - Possible values: any string that references a valid source file
+  - **Description**: A reference to the file that contains the implementation for the function.
+  - **Possible values**: any string that references a valid source file
 
-- `environment`: 
+
+- `environment` (**optional**)
   - **Type**: `[string:string]`
-  - **Description:** Specifies a number of environment variables .
-  - **Info:**
-    - Optional
-    - Default: none
-    - Possible values: any combination of strings that does not contain the empty string
+  - **Description**: Specifies a number of environment variables .
+  - **Possible values**: any combination of strings that does not contain the empty string
 
 
 ###### Reference webhook
@@ -273,28 +246,20 @@ webhook: <url>
 
 A `handler` for a managed function has the following properties:
 
-- `webhook`:
+- `webhook` (**required**)
   - **Type**: `map` (see _webhook structure_ above)
-  - **Description:** Describes all the details about how to invoke the webhook and optionally specify HTTP headers that will be attached to the request then the webhook is called.
-  - **Info:**
-    - Required (in the case of a webhook)
-    - Default: none
+  - **Description**: Describes all the details about how to invoke the webhook and optionally specify HTTP headers that will be attached to the request then the webhook is called.
 
-- `url`: 
+- `url` (**required**)
   - **Type**: `string`
-  - **Description:** The HTTP endpoint where the webhook can be invoked.
-  - **Info:**
-    - Required
-    - Default: none
-    - Possible values: any string that's a valid HTTP URL and references a webhook
+  - **Description**: The HTTP endpoint where the webhook can be invoked.
+  - **Possible values**: any string that's a valid HTTP URL and references a webhook
 
-- `headers`: 
+
+- `headers` (**optional**) 
   - **Type**: `[string:string]`
-  - **Description:** Specifies a number of HTTP headers.
-  - **Info:**
-    - Optional
-    - Default: none
-    - Possible values: any combination of strings that does not contain the empty string
+  - **Description**: Specifies a number of HTTP headers.
+  - **Possible values**: any combination of strings that does not contain the empty string
 
 #### Examples
 
@@ -344,29 +309,22 @@ The `permissions` root property accepts a **list of [permissions](#definition-pe
 
 **All permissions** have the following three properties:
 
-- `operation`
+- `operation` (**required**)
   - **Type**: `string`
-  - **Description:** Specifies for which API operationthis permission holds. Refers to an operation from the Graphcool CRUD API. The value is composed of the name of a _model type_ and the name of an operation (`read`, `create`, `update` or `delete`), separated by a dot.
-  - **Info:**
-    - Required
-    - Default: none
-    - Possible values: `<Model Type>.<Operation>` (e.g. `Customer.create`, `Article.create`, `Image.update`, `Movie.delete`)
+  - **Description**: Specifies for which API operationthis permission holds. Refers to an operation from the Graphcool CRUD API. The value is composed of the name of a _model type_ and the name of an operation (`read`, `create`, `update` or `delete`), separated by a dot.
+  - **Possible values**: `<Model Type>.<Operation>` (e.g. `Customer.create`, `Article.create`, `Image.update`, `Movie.delete`)
 
-- `authenticate`: 
+
+- `authenticate` (**optional**, default: `false`)
   - **Type**: `boolean`
-  - **Description:** If set to `true`, only authenticated users will be able to perform the associated `operation`.
-  - **Info:**
-    - Optional
-    - Default: `false`
-    - Possible values: `true` or `false`
+  - **Description**: If set to `true`, only authenticated users will be able to perform the associated `operation`.
+  - **Possible values**: `true` or `false`
 
-- `query`: 
+
+- `query` (**optional**)
   - **Type**: `string`
-  - **Description:** References a file that contains a [permission query](!alias-iox3aqu0ee). 
-  - **Info:**
-    - Optional
-    - Default: none
-    - Possible values: any string that references a `.graphql`-file
+  - **Description**: References a file that contains a [permission query](!alias-iox3aqu0ee). 
+  - **Possible values**: any string that references a `.graphql`-file
 
 #### Examples
 
