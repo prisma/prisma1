@@ -28,24 +28,31 @@ types: ./types.graphql
 # Functions
 functions:
 
-  # Resolver function for authentication
+  # Resolver for authentication
   authenticateCustomer:
     handler:
+      # Specify a managed function as a handler
       code:
         src: ./src/authenticate.js
+        # Define environment variables for function
+        environment: 
+          SERVICE_TOKEN: aequeitahqu0iu8fae5phoh1joquiegohc9rae3ejahreeciecooz7yoowuwaph7
+          STAGE: prod
     type: resolver
 
   # Operation-before hook to validate an email address
   validateEmail:
     handler:
-      code:
-        src: ./src/validateEmail.js
+      # Specify a managed function as a handler; since no environment variables
+      # are specified, we don't need `src`
+      code: ./src/validateEmail.js        
     type: operationBefore
-    query: Customer.create
+    operation: Customer.create
 
   # Subscription to pipe a new message into Slack
   sendSlackMessage:
     handler:
+      # Specify a webhook as a handler
       webhook:
         url: http://example.org/sendSlackMessage
         headers:
@@ -57,28 +64,28 @@ functions:
 
 # Permission rules
 permissions:
-# everyone can read messages
+# Everyone can read messages
 - operation: Message.read
 
-# only authenticated users can create messages
+# Only authenticated users can create messages
 - operation: Message.create 
   authenticated: true
 
-# to update a message, users need to be authenticated and
+# To update a message, users need to be authenticated and
 # the permission query in `./permissions/updateMessage.graphql`
 # has to return `true`
 - operation: Message.update 
   authenticated: true
   query: ./permissions/updateMessage.graphql
 
-# to delete a message, users need to be authenticated and
+# To delete a message, users need to be authenticated and
 # the permission query in `./permissions/deleteMessage.graphql`
 # has to return `true`
 - operation: Message.delete
   authenticated: true
   query: ./permissions/deleteMessage.graphql
 
-# everyone can perform all CRUD operations for customers
+# Everyone can perform all CRUD operations for customers
 - operation: Customer.*
 
 
@@ -150,14 +157,6 @@ The `functions` root property accepts a **map from string** (which specifies the
 
 **All functions** have the following three properties:
 
-- `isEnabled`: 
-  - **Type**: `boolean`
-  - **Description:** The function will only be invoked if set to `true`.
-  - **Info:**
-    - Optional
-    - Default: `true`
-    - Possible values: `true`, `false`
-
 - `type`
   - **Type**: `string`
   - **Description:** Determines whether this function is a [resolver](), [subcription]() or a [hook]().
@@ -165,6 +164,7 @@ The `functions` root property accepts a **map from string** (which specifies the
     - Required
     - Default: none
     - Possible values: `resolver`, `subscription`, `operationBefore`, `operationAfter`
+
 - `handler`: 
   - **Type**: `handler` (described below)
   - **Description:** Specifies the details of _how_ to invoke the function. Can either contain references to a local file that contains the implementation of the function or otherwise define a webhook that'll be called when the function is invoked.
@@ -172,6 +172,14 @@ The `functions` root property accepts a **map from string** (which specifies the
     - Required
     - Default: none
     - Possible values: any
+
+- `isEnabled`: 
+  - **Type**: `boolean`
+  - **Description:** The function will only be invoked if set to `true`.
+  - **Info:**
+    - Optional
+    - Default: `true`
+    - Possible values: `true`, `false`
 
 **Only functions of type `resolver`** have the following property:
 
@@ -197,34 +205,238 @@ The `functions` root property accepts a **map from string** (which specifies the
 
 - `operation`:
   - **Type**: `string`
-  - **Description:** Describes an operation from the Graphcool CRUD API. A value needs to be composed of the name of a _model type_ and the name of an operation (`read`, `create`, `update` or `delete`), separated by a dot.
+  - **Description:** Describes an operation from the Graphcool CRUD API. The value is composed of the name of a _model type_ and the name of an operation (`read`, `create`, `update` or `delete`), separated by a dot.
   - **Info:**
     - Required
     - Default: none
     - Possible values: `<Model Type>.<Operation>` (e.g. `Customer.create`, `Article.create`, `Image.update`, `Movie.delete`)
 
-##### Type: `handler`
+##### Structure: `handler`
 
-A `handler` specifies the details of _how_ to invoke the function. It can either contain references to a local file that contains the implementation of the function or otherwise define a webhook that'll be called when the function is invoked.
+A `handler` specifies the details of _how_ to invoke the function. It can either be a _managed function_ that references a _local file_ or otherwise define a _webhook_ that'll be called when the function is invoked.
 
-###### Reference local file
+###### Define managed function
 
-- `operation`:
+**Managed function structure:**
+
+```yml
+code: 
+  src: <file>
+  environment: 
+    <variable1>: <value1>
+    <variable2>: <value2>
+```
+
+Notice that if no environment variables are specified, you can also use the short form without explicitly spelling out `src`:
+
+```yml
+code: <file>
+```
+
+- `code`:
+  - **Type**: `map` (see _managed function structure__ above)
+  - **Description:** Describes all the details about how to invoke the managed function and optionally provides environment variables that can be used inside the function at runtime.
+  - **Info:**
+    - Required (in the case of a managed function)
+    - Default: none
+
+- `src`: 
   - **Type**: `string`
-  - **Description:** Describes an operation from the Graphcool CRUD API. A value needs to be composed of the name of a _model type_ and the name of an _operation_ (`read`, `create`, `update` or `delete`), separated by a dot.
+  - **Description:** A reference to the file that contains the implementation for the function.
   - **Info:**
     - Required
     - Default: none
-    - Possible values: `<Model Type>.<Operation>` (e.g. `Customer.create`, `Article.create`, `Image.update`, `Movie.delete`)
+    - Possible values: any string that references a valid source file
 
+- `environment`: 
+  - **Type**: `[string:string]`
+  - **Description:** Specifies a number of environment variables .
+  - **Info:**
+    - Optional
+    - Default: none
+    - Possible values: any combination of strings that does not contain the empty string
+
+
+###### Reference webhook
+
+**Webhook structure:**
+
+```yml
+webhook: 
+  url: <file>
+  headers: 
+    <header1>: <value1>
+    <header2>: <value2>
+```
+
+Notice that if no HTTP headers are specified, you can also use the short form without explicitly spelling out `url`:
+
+```yml
+webhook: <file>
+```
+
+
+- `webhook`:
+  - **Type**: `map` (see _webhook structure_ above)
+  - **Description:** Describes all the details about how to invoke the webhook and optionally specify HTTP headers that will be attached to the request then the webhook is called.
+  - **Info:**
+    - Required (in the case of a webhook)
+    - Default: none
+
+- `url`: 
+  - **Type**: `string`
+  - **Description:** The HTTP endpoint where the webhook can be invoked.
+  - **Info:**
+    - Required
+    - Default: none
+    - Possible values: any string that's a valid HTTP URL and references a webhook
+
+- `headers`: 
+  - **Type**: `[string:string]`
+  - **Description:** Specifies a number of HTTP headers.
+  - **Info:**
+    - Optional
+    - Default: none
+    - Possible values: any combination of strings that does not contain the empty string
+
+#### Examples
+
+```yml
+functions:
+
+  authenticateCustomer:
+    handler:
+      # Specify a managed function as a handler
+      code:
+        src: ./src/authenticate.js
+        # Define environment variables for function
+        environment: 
+          SERVICE_TOKEN: aequeitahqu0iu8fae5phoh1joquiegohc9rae3ejahreeciecooz7yoowuwaph7
+          STAGE: prod
+    type: resolver
+
+  # Operation-before hook to validate an email address
+  validateEmail:
+    handler:
+      # Specify a managed function as a handler; since no environment variables
+      # are specified, we don't need `src`
+      code: ./src/validateEmail.js        
+    type: operationBefore
+    operation: Customer.create
+
+  # Subscription to pipe a new message into Slack
+  sendSlackMessage:
+    handler:
+      # Specify a webhook as a handler
+      webhook:
+        url: http://example.org/sendSlackMessage
+        headers:
+            Content-Type: application/json
+            Authorization: Bearer cha2eiheiphesash3shoofo7eceexaequeebuyaequ1reishiujuu6weisao7ohc
+    type: subscription
+    query: ./src/sendSlackMessage/newMessage.graphql
+```
 
 ### Root property: `permissions`
 
+#### Info
+
+The `permissions` root property accepts a **list of `permission`s**.
+
+##### Structure: `permission`
+
+**All permissions** have the following three properties:
+
+- `operation`
+  - **Type**: `string`
+  - **Description:** Specifies for which API operationthis permission holds. Refers to an operation from the Graphcool CRUD API. The value is composed of the name of a _model type_ and the name of an operation (`read`, `create`, `update` or `delete`), separated by a dot.
+  - **Info:**
+    - Required
+    - Default: none
+    - Possible values: `<Model Type>.<Operation>` (e.g. `Customer.create`, `Article.create`, `Image.update`, `Movie.delete`)
+
+- `authenticate`: 
+  - **Type**: `boolean`
+  - **Description:** If set to `true`, only authenticated users will be able to perform the associated `operation`.
+  - **Info:**
+    - Optional
+    - Default: `false`
+    - Possible values: `true` or `false`
+
+- `query`: 
+  - **Type**: `string`
+  - **Description:** References a file that contains a [permission query](!alias-iox3aqu0ee). 
+  - **Info:**
+    - Optional
+    - Default: none
+    - Possible values: any string that references a `.graphql`-file
+
+#### Examples
+
+```yml
+permissions:
+# Everyone can read messages
+- operation: Message.read
+
+# Only authenticated users can create messages
+- operation: Message.create 
+  authenticated: true
+
+# To update a message, users need to be authenticated and
+# the permission query in `./permissions/updateMessage.graphql`
+# has to return `true`
+- operation: Message.update 
+  authenticated: true
+  query: ./permissions/updateMessage.graphql
+
+# To delete a message, users need to be authenticated and
+# the permission query in `./permissions/deleteMessage.graphql`
+# has to return `true`
+- operation: Message.delete
+  authenticated: true
+  query: ./permissions/deleteMessage.graphql
+
+# Everyone can perform all CRUD operations for customers
+- operation: Customer.*
+```
+
 ### Root property: `rootTokens`
 
+#### Info
+
+The `rootTokens` property accepts a **list of strings**. Each string is the name of a [root token](!alias-eip7ahqu5o#root-tokens) which will be created whenever the service deployed. 
+
+There are two kinds of types that can be referenced:
+
+- **Model types**: Determine the types that are to be persisted in the database. These types need to be annotated with the `@model`-directive and typically represent entities from the application domain. Read more in the [Database](!alias-viuf8uus7o) chapter.
+- **Transient types**: These types are not persisted in the database but typically represent _input_ or _return_ types for certain API operations.
+
+#### Examples
+
+##### Referring to a single type definition file
+
+```yml
+types: ./types.graphql
+```
+
+
+##### Referring to multiple type definition files
+
+```yml
+types: [./types.graphql, ./customResolver.graphql]
+```
+
+or
+
+```yml
+types: 
+  - ./types.graphql
+  - ./customResolver.graphql
+```
+
+
+
 ### Table overview
-
-
 
 The YAML configuration file has the following _root properties_:
 
@@ -237,7 +449,7 @@ The YAML configuration file has the following _root properties_:
 
 This is what the additional YAML types look like that are used in the file:
 
-### Type: `function`
+#### Type: `function`
 
 | Property  | Type | Possible Values | Required (default value) | Description|
 | --------- | ------------------ | --------------- | --------- | ------------------ | --------------- | --------------- | 
@@ -249,7 +461,7 @@ This is what the additional YAML types look like that are used in the file:
 | `schema` | `string` | `<Model>.<operation>`<br>`<Relation>.<operation>` | Only if `type` is `resolver` | If the function is set up as a resolver, this specifies the necessary extensions on the `Query` or `Mutation` type (and potentially additional types that represent the input or return types of the new field).
 
 
-### Type: `permission`
+#### Type: `permission`
 
 | Property  | Type | Possible Values | Required (default value) | Description|
 | --------- | ------------------ | --------------- | --------- | ------------------ | --------------- | --------------- | 
@@ -259,7 +471,7 @@ This is what the additional YAML types look like that are used in the file:
 | `fields` | `[string]` | any | all fields of the model type | Specifies to which fields this permission rule should apply to.
 
  
-### Type: `webhook`
+#### Type: `webhook`
 
 | Property  | Type | Possible Values | Required (default value) | Description|
 | --------- | ------------------ | --------------- | --------- | ------------------ | --------------- | --------------- | 
