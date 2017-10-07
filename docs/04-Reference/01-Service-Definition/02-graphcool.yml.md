@@ -9,10 +9,10 @@ description: An overview of the Graphcool service definition file `graphcool.yml
 
 The service definition file `graphcool.yml` has the following root properties:
 
-- `types`: References your type definition file(s).
-- `functions`: Defines all the [functions](!alias-aiw4aimie9)  you're using in your service.
-- `permissions`: Defines all the permission rules for your service.
-- `rootTokens`: Lists all the [root token](!alias-eip7ahqu5o#root-tokens) you've configured for your service.
+- [`types`](#types): References your type definition file(s).
+- [`functions`](#functions): Defines all the [functions](!alias-aiw4aimie9)  you're using in your service.
+- [`permissions`](#permissions): Defines all the permission rules for your service.
+- [`rootTokens`](#root-tokens): Lists all the [root token](!alias-eip7ahqu5o#root-tokens) you've configured for your service.
 
 See below for the concrete [YAML structure](#yaml-structure).
 
@@ -112,7 +112,7 @@ This service definition expects the following file structure:
 
 ## YAML structure
 
-### Root property: `types`
+### `types`
 
 #### Info
 
@@ -147,7 +147,7 @@ types:
 ```
 
 
-### Root property: `functions`
+### `functions`
 
 #### Info
 
@@ -166,7 +166,7 @@ The `functions` root property accepts a **map from string** (which specifies the
     - Possible values: `resolver`, `subscription`, `operationBefore`, `operationAfter`
 
 - `handler`: 
-  - **Type**: `handler` (described below)
+  - **Type**: [handler](#definition-handler) (described below)
   - **Description:** Specifies the details of _how_ to invoke the function. Can either contain references to a local file that contains the implementation of the function or otherwise define a webhook that'll be called when the function is invoked.
   - **Info:**
     - Required
@@ -211,7 +211,7 @@ The `functions` root property accepts a **map from string** (which specifies the
     - Default: none
     - Possible values: `<Model Type>.<Operation>` (e.g. `Customer.create`, `Article.create`, `Image.update`, `Movie.delete`)
 
-##### Structure: `handler`
+##### Definition: `handler`
 
 A `handler` specifies the details of _how_ to invoke the function. It can either be a _managed function_ that references a _local file_ or otherwise define a _webhook_ that'll be called when the function is invoked.
 
@@ -232,6 +232,8 @@ Notice that if no environment variables are specified, you can also use the shor
 ```yml
 code: <file>
 ```
+
+A `handler` for a managed function has the following properties:
 
 - `code`:
   - **Type**: `map` (see _managed function structure__ above)
@@ -263,7 +265,7 @@ code: <file>
 
 ```yml
 webhook: 
-  url: <file>
+  url: <url>
   headers: 
     <header1>: <value1>
     <header2>: <value2>
@@ -272,9 +274,10 @@ webhook:
 Notice that if no HTTP headers are specified, you can also use the short form without explicitly spelling out `url`:
 
 ```yml
-webhook: <file>
+webhook: <url>
 ```
 
+A `handler` for a managed function has the following properties:
 
 - `webhook`:
   - **Type**: `map` (see _webhook structure_ above)
@@ -337,13 +340,13 @@ functions:
     query: ./src/sendSlackMessage/newMessage.graphql
 ```
 
-### Root property: `permissions`
+### `permissions`
 
 #### Info
 
-The `permissions` root property accepts a **list of `permission`s**.
+The `permissions` root property accepts a **list of [permissions](#definition-permission)**.
 
-##### Structure: `permission`
+##### Definition: `permission`
 
 **All permissions** have the following three properties:
 
@@ -400,7 +403,7 @@ permissions:
 - operation: Customer.*
 ```
 
-### Root property: `rootTokens`
+### `rootTokens`
 
 #### Info
 
