@@ -159,7 +159,7 @@ The `functions` root property accepts a **map from string** (which specifies the
 
 - `type`
   - **Type**: `string`
-  - **Description:** Determines whether this function is a [resolver](), [subcription]() or a [hook]().
+  - **Description:** Determines whether this function is a [resolver](!alias-su6wu3yoo2), [subcription]() or a [hook]().
   - **Info:**
     - Required
     - Default: none
@@ -419,7 +419,14 @@ rootTokens:
   - rootToken2
 ```
 
+or 
 
+
+```yml
+rootTokens: [rootToken1, rootToken2]
+```
+
+<!--
 
 ### Table overview
 
@@ -463,6 +470,7 @@ This is what the additional YAML types look like that are used in the file:
 | `url` | `string` | any | Yes | Specifies the URL where the function can be invoked. |
 | `headers` | `[string:string]` | any | No | Specifies any HTTP headers for the request that invokes the function. |
 
+-->
 
 ## Using variables
 
