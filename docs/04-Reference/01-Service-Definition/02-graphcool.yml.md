@@ -135,12 +135,6 @@ types: ./types.graphql
 ##### Referring to multiple type definition files
 
 ```yml
-types: [./types.graphql, ./customResolver.graphql]
-```
-
-or
-
-```yml
 types: 
   - ./types.graphql
   - ./customResolver.graphql
@@ -420,13 +414,6 @@ There are two kinds of types that can be referenced:
 rootTokens: 
   - rootToken1
   - rootToken2
-```
-
-or 
-
-
-```yml
-rootTokens: [rootToken1, rootToken2]
 ```
 
 <!--
