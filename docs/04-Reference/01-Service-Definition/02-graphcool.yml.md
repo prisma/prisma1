@@ -107,12 +107,116 @@ This service definition expects the following file structure:
 
 ### Root property: `types`
 
+#### Info
+
 The `types` root property accepts a **single string** or a **list of strings**. Each string references a `.graphql`-file that contains GraphQL type definitions written in the [SDL](https://medium.com/@graphcool/graphql-sdl-schema-definition-language-6755bcb9ce51). 
 
+There are two kinds of types that can be referenced:
 
+- **Model types**: Determine the types that are to be persisted in the database. These types need to be annotated with the `@model`-directive and typically represent entities from the application domain. Read more in the [Database](!alias-viuf8uus7o) chapter.
+- **Transient types**: These types are not persisted in the database but typically represent _input_ or _return_ types for certain API operations.
+
+#### Examples
+
+##### Referring to a single type definition file
+
+```yml
+types: ./types.graphql
+```
+
+
+##### Referring to multiple type definition files
+
+```yml
+types: [./types.graphql, ./customResolver.graphql]
+```
+
+or
+
+```yml
+types: 
+  - ./types.graphql
+  - ./customResolver.graphql
+```
 
 
 ### Root property: `functions`
+
+#### Info
+
+The `functions` root property accepts a **map from string** (which specifies the function's _name_) **to `function`**.
+
+##### Type: `function`
+
+**All functions** have the following three properties:
+
+- `isEnabled`: 
+  - **Type**: `boolean`
+  - **Description:** The function will only be invoked if set to `true`.
+  - **Info:**
+    - Optional
+    - Default: `true`
+    - Possible values: `true`, `false`
+
+- `type`
+  - **Type**: `string`
+  - **Description:** Determines whether this function is a [resolver](), [subcription]() or a [hook]().
+  - **Info:**
+    - Required
+    - Default: none
+    - Possible values: `resolver`, `subscription`, `operationBefore`, `operationAfter`
+- `handler`: 
+  - **Type**: `handler` (described below)
+  - **Description:** Specifies the details of _how_ to invoke the function. Can either contain references to a local file that contains the implementation of the function or otherwise define a webhook that'll be called when the function is invoked.
+  - **Info:**
+    - Required
+    - Default: none
+    - Possible values: any
+
+**Only functions of type `resolver`** have the following property:
+
+- `schema`:
+  - **Type**: `string`
+  - **Description:** References a `.graphql`-file that contains the extension of the `Query` or `Mutation` type which defines the API of the resolver.
+  - **Info:**
+    - Optional (if not provided, the extension of `Query` or `Mutation` has to live inside a file that's referenced from the [`types`](#root-property-types) root property)
+    - Default: none
+    - Possible values: any string that references a `.graphql`-file
+
+**Only functions of type `subscription`** have the following property:
+
+- `query`:
+  - **Type**: `string`
+  - **Description:** References a `.graphql`-file that contains the _subscription query_ which determines the event upon which the function should be invoked as well as the payload for the event.
+  - **Info:**
+    - Required
+    - Default: none
+    - Possible values: any string that references a `.graphql`-file
+
+**Only functions of type `operationBefore` and `operationAfter`** have the following property:
+
+- `operation`:
+  - **Type**: `string`
+  - **Description:** Describes an operation from the Graphcool CRUD API. A value needs to be composed of the name of a _model type_ and the name of an operation (`read`, `create`, `update` or `delete`), separated by a dot.
+  - **Info:**
+    - Required
+    - Default: none
+    - Possible values: `<Model Type>.<Operation>` (e.g. `Customer.create`, `Article.create`, `Image.update`, `Movie.delete`)
+
+##### Type: `handler`
+
+A `handler` specifies the details of _how_ to invoke the function. It can either contain references to a local file that contains the implementation of the function or otherwise define a webhook that'll be called when the function is invoked.
+
+###### Reference local file
+
+- `operation`:
+  - **Type**: `string`
+  - **Description:** Describes an operation from the Graphcool CRUD API. A value needs to be composed of the name of a _model type_ and the name of an _operation_ (`read`, `create`, `update` or `delete`), separated by a dot.
+  - **Info:**
+    - Required
+    - Default: none
+    - Possible values: `<Model Type>.<Operation>` (e.g. `Customer.create`, `Article.create`, `Image.update`, `Movie.delete`)
+
 
 ### Root property: `permissions`
 
