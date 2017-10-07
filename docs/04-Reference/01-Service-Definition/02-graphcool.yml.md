@@ -1,95 +1,135 @@
 ---
 alias: foatho8aip
-description: An overview of the Graphcool project definition file `graphcool.yml` and its YAML structure.
+description: An overview of the Graphcool service definition file `graphcool.yml` and its YAML structure.
 ---
 
-# Project Definition (YAML)
+# Service definition: `graphcool.yml`
 
 ## Overview
 
-The project definition has the following root properties:
+The service definition file `graphcool.yml` has the following root properties:
 
-- `types`: References your type definition file.
-- `functions`: Defines all the functions you're using in your project.
-- `permissions`: Defines all the permission rules for your project.
-- `rootTokens`: Lists all the [root token](!alias-eip7ahqu5o#root-tokens) you've configured for your project.
+- `types`: References your type definition file(s).
+- `functions`: Defines all the [functions](!alias-aiw4aimie9)  you're using in your service.
+- `permissions`: Defines all the permission rules for your service.
+- `rootTokens`: Lists all the [root token](!alias-eip7ahqu5o#root-tokens) you've configured for your service.
 
 See below for the concrete [YAML structure](#yaml-structure).
 
 ## Example
 
-Here is a simple example of a project definition file:
+Here is a simple example of a service definition file:
 
 ```yml
-# Type Definitions
+# Type definitions
 types: ./types.graphql
 
 
-# Serverless Functions
+# Functions
 functions:
+
+  # Resolver function for authentication
   authenticateCustomer:
     handler:
       code:
-        src: ./code/authenticate.js
+        src: ./src/authenticate.js
     type: resolver
-    schema: ./code/authenticate.graphql
+
+  # Operation-before hook to validate an email address
+  validateEmail:
+    handler:
+      code:
+        src: ./src/validateEmail.js
+    type: operationBefore
+    query: Customer.create
+
+  # Subscription to pipe a new message into Slack
   sendSlackMessage:
     handler:
       webhook:
         url: http://example.org/sendSlackMessage
         headers:
             Content-Type: application/json
-            Authorization: Bearer saiquiegh1wohb7shie9phai
+            Authorization: Bearer cha2eiheiphesash3shoofo7eceexaequeebuyaequ1reishiujuu6weisao7ohc
     type: subscription
-    query: ./code/sendSlackMessage/newMessage.graphql
+    query: ./src/sendSlackMessage/newMessage.graphql
 
 
-# Permission Rules
+# Permission rules
 permissions:
+# everyone can read messages
 - operation: Message.read
-- operation: Message.create
+
+# only authenticated users can create messages
+- operation: Message.create 
   authenticated: true
-  query: ./permissions/message.graphql
 
+# to update a message, users need to be authenticated and
+# the permission query in `./permissions/updateMessage.graphql`
+# has to return `true`
+- operation: Message.update 
+  authenticated: true
+  query: ./permissions/updateMessage.graphql
 
-# Modules
-modules:
-- ./modules/facebookLogin/fb.yml
+# to delete a message, users need to be authenticated and
+# the permission query in `./permissions/deleteMessage.graphql`
+# has to return `true`
+- operation: Message.delete
+  authenticated: true
+  query: ./permissions/deleteMessage.graphql
+
+# everyone can perform all CRUD operations for customers
+- operation: Customer.*
 
 
 # Root tokens
 rootTokens:
-- authenticate
+  - authenticate
 ```
 
-This project definition expects the following project structure:
+This service definition expects the following file structure:
 
 ```
 .
-├── code
-│   ├── authenticate.graphql
-│   └── authenticate.js
+├── graphcool.yml
+├── src
+│   ├── authenticate.js
+│   ├── validateEmail.js
 │   └── sendSlackMessage
 │       └── newMessage.graphql
-├── modules
-│   └── facebookLogin
-│       ├── ...
-│       └── fb.yml
 └── permissions
-    └── message.graphql
+    ├── updateMessage.graphql
+    └── deleteMessage.graphql
 ```
 
 
 ## YAML structure
+
+### Root property: `types`
+
+The `types` root property accepts a **single string** or a **list of strings**. Each string references a `.graphql`-file that contains GraphQL type definitions written in the [SDL](https://medium.com/@graphcool/graphql-sdl-schema-definition-language-6755bcb9ce51). 
+
+
+
+
+### Root property: `functions`
+
+### Root property: `permissions`
+
+### Root property: `rootTokens`
+
+### Table overview
+
+
 
 The YAML configuration file has the following _root properties_:
 
 | Root Property | Type | Description | 
 | --------- | ------------------ | --------------- | 
 | `types`| `string`<br>`[string]` | Type defintions ([SDL]()) for database models, relations, enums and other types. |
-| `functions` | `[string:function]` | All serverless functions that belong to the current project. The key of each element in the dictionary is a unique name for the function, the value specifies details about the function to be invoked. See the `function` type below for more info on the structure. |
-| `permissions` | `[permission]` | All permissions rules that belong to the current project. See the `permission` type below for more info on the structure. |
-| `modules` | `[string]` | A list of filenames that refer to configuration files of other Graphcool projects which are used in the current project (_modules_). |
+| `functions` | `[string:function]` | All serverless functions that belong to the current service. The key of each element in the dictionary is a unique name for the function, the value specifies details about the function to be invoked. See the `function` type below for more info on the structure. |
+| `permissions` | `[permission]` | All permissions rules that belong to the current service. See the `permission` type below for more info on the structure. |
+| `modules` | `[string]` | A list of filenames that refer to configuration files of other Graphcool services which are used in the current service (_modules_). |
 
 This is what the additional YAML types look like that are used in the file:
 
@@ -125,7 +165,7 @@ This is what the additional YAML types look like that are used in the file:
 
 ## Using variables
 
-Variables allow you to dynamically replace configuration values in your project definition file.
+Variables allow you to dynamically replace configuration values in your service definition file.
 
 They are especially useful when providing _secrets_ for your service and when you have a multi-staging developer workflow.
 
@@ -140,7 +180,7 @@ otherYamlKey: ${variableSource, defaultValue}
 
 A _variable source_ can be either of the following two options:
 
-- A _recursive self-reference_ to another value inside the same project
+- A _recursive self-reference_ to another value inside the same service
 - An _environment variable_
 - The name of the currently active [environment](!alias-zoug8seen4) from [`.graphcoolrc`](!alias-zoug8seen4#.graphcoolrc)
 
@@ -164,13 +204,13 @@ functions:
   sendWelcomeEmail:
     handler:
       code:
-        src: ./code/sendWelcomeEmail.js
+        src: ./src/sendWelcomeEmail.js
     type: subscription
-    query: ./code/newUserSubscription.graphql
+    query: ./src/newUserSubscription.graphql
   createCRMEntry:
     handler:
       code:
-        src: ./code/createCRMEntry.js
+        src: ./src/createCRMEntry.js
     type: subscription
     query: ${self:functions.sendWelcomeEmail.handler.query}
 ```
@@ -178,7 +218,7 @@ functions:
 
 ### Environment variable
 
-You can reference [environment variables](https://en.wikipedia.org/wiki/Environment_variable) inside the project definition file.
+You can reference [environment variables](https://en.wikipedia.org/wiki/Environment_variable) inside the service definition file.
 
 When using an environment variable, the value that you put into the bracket is composed of:
 
@@ -207,7 +247,7 @@ Note that you can not use the name `GRAPHCOOL_ENV` for your environment variable
 
 ### Name of currently active environment
 
-You can reference the name of the currently active [environment](!alias-zoug8seen4) inside the project definition file.
+You can reference the name of the currently active [environment](!alias-zoug8seen4) inside the service definition file.
 
 The syntax is similar to the one for referencing environment variables, except that the _name_ of the environment variable is replaced with `GRAPHCOOL_ENV`:
 
