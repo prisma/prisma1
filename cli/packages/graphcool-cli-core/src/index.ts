@@ -24,6 +24,7 @@ import Stop from './commands/local/stop'
 import Up from './commands/local/up'
 import Restart from './commands/local/restart'
 import Account from './commands/account'
+import Eject from './commands/local/eject'
 
 export const topics = [
   { name: 'deploy', description: 'Deploy local project definition' },
@@ -97,4 +98,5 @@ export const commands = [
   Up,
   Restart,
   Account,
+  Eject,
 ]

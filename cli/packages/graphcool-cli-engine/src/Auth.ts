@@ -39,7 +39,7 @@ export class Auth {
     }
 
     this.config.setToken(token)
-    this.config.saveToken()
+    this.config.saveDotGraphcool()
     this.client.updateClient()
 
     // return if we already had a token
@@ -52,7 +52,7 @@ export class Auth {
       this.config.setToken(token)
     } else {
       this.config.setToken(null)
-      this.config.saveToken()
+      this.config.saveDotGraphcool()
       this.out.error(
         `You provided an invalid token. You can run ${this.out.color.bold(
           'graphcool auth',

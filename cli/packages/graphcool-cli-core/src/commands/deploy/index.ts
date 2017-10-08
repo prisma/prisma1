@@ -31,9 +31,9 @@ ${chalk.gray(
       char: 'e',
       description: 'Project environment to be deployed',
     }),
-    project: flags.string({
-      char: 'p',
-      description: 'ID or alias of  project to deploy',
+    target: flags.string({
+      char: 't',
+      description: 'Local target, ID or alias of project to deploy',
     }),
     force: flags.boolean({
       char: 'f',
@@ -53,7 +53,7 @@ ${chalk.gray(
     }),
   }
   async run() {
-    const { project, force, watch } = this.flags
+    const { target, force, watch } = this.flags
 
     let { env } = this.flags
     env = env || this.env.env.default
@@ -63,27 +63,34 @@ ${chalk.gray(
     // temporary ugly solution
     this.definition.injectEnvironment()
 
-    const envResult = await this.env.getEnvironment({
-      project,
-      env,
-    })
-
-    let { projectId, envName } = envResult
-
-    let projectName = projectId
+    let projectId
+    let envName
     let projectIsNew = false
+    let projectName = target
 
-    if (!projectId) {
-      // if a specific project has been provided, check for its existence
-      if (project) {
-        this.out.error(new ProjectDoesntExistError(project))
+    if (this.config.targets[target]) {
+
+    } else {
+      const envResult = await this.env.getEnvironment({
+        project: target,
+        env,
+      })
+
+      projectId = envResult.projectId
+      envName = envResult.envName
+
+      if (!projectId) {
+        // if a specific project has been provided, check for its existence
+        if (target) {
+          this.out.error(new ProjectDoesntExistError(target))
+        }
+
+        // otherwise create a new project
+        const newProject = await this.createProject()
+        projectId = newProject.projectId
+        envName = newProject.envName
+        projectIsNew = true
       }
-
-      // otherwise create a new project
-      const newProject = await this.createProject()
-      projectId = newProject.projectId
-      envName = newProject.envName
-      projectIsNew = true
     }
 
     await this.deploy(projectIsNew, envName, env, projectId, force, projectName)

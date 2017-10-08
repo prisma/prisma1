@@ -148,3 +148,14 @@ export interface AccountInfo {
   email: string
   name: string
 }
+
+export interface TargetDefinitions {
+  [environment: string]: TargetDefinition
+}
+
+export interface TargetDefinition {
+  description?: string
+  host: string
+  token: string
+  projectId?: string
+}

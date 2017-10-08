@@ -1,11 +1,13 @@
-import { RunOptions } from './types'
+import { RunOptions, TargetDefinition, TargetsDefinition } from './types'
 import * as path from 'path'
 import * as os from 'os'
 import * as fs from 'fs-extra'
 import * as cuid from 'cuid'
-const debug = require('debug')('config')
 import * as findUp from 'find-up'
 import { Output } from './Output/index'
+import * as yaml from 'js-yaml'
+const debug = require('debug')('config')
+
 
 export class Config {
   /**
@@ -32,6 +34,7 @@ export class Config {
       defaultCommand: 'help',
     },
   }
+  targets: TargetsDefinition = {}
 
   /**
    * Paths
@@ -96,10 +99,13 @@ export class Config {
   setToken(token: string | null) {
     this.token = token
   }
-  saveToken() {
+  saveDotGraphcool() {
     if (this.dotGraphcoolFilePath) {
-      const json = JSON.stringify({ token: this.token }, null, 2)
-      fs.writeFileSync(this.dotGraphcoolFilePath, json)
+      const file = yaml.safeDump({
+        token: this.token,
+        targets: this.targets,
+      })
+      fs.writeFileSync(this.dotGraphcoolFilePath, file)
     }
   }
   get arch(): string {
@@ -124,14 +130,36 @@ export class Config {
         : null,
     )
   }
-  public loadToken() {
+  public loadDotGraphcool() {
     if (this.dotGraphcoolFilePath && fs.existsSync(this.dotGraphcoolFilePath)) {
       const configContent = fs.readFileSync(
         this.dotGraphcoolFilePath,
         'utf-8',
       )
-      this.token = JSON.parse(configContent).token
+      let file: any = null
+      try {
+        file = JSON.parse(configContent)
+      } catch (e) {
+        try {
+          file = yaml.safeLoad(configContent)
+        } catch (e) {
+          this.out.error(`Could not load ${this.dotGraphcoolFilePath}. It's neither valid json nor valid yaml.`)
+        }
+      }
+
+      if (file.token) {
+        debug(`loading .graphcool file: no token existing`)
+        this.token = file.token
+      }
+
+      if (file.targets) {
+        debug(`loading .graphcool file: no targets existing`)
+        this.targets = file.targets
+      }
     }
+  }
+  public setTarget(name: string, config: TargetDefinition) {
+    this.targets[name] = config
   }
   private readPackageJson(options: RunOptions) {
     this.mock = options.mock
@@ -218,7 +246,7 @@ To prevent unwanted side effects, please remove it.`)
       debug('taking graphcool test token')
       this.token = process.env.GRAPHCOOL_TEST_TOKEN!
     } else {
-      this.loadToken()
+      this.loadDotGraphcool()
     }
   }
   private getCwd() {

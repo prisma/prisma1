@@ -1,49 +1,68 @@
-import { Output, Config } from 'graphcool-cli-engine'
+import { Output, Config, TargetDefinition } from 'graphcool-cli-engine'
 import * as childProcess from 'child_process'
 import * as path from 'path'
 import * as fs from 'fs-extra'
 import * as chalk from 'chalk'
+import * as portfinder from 'portfinder'
 
 export default class Docker {
   out: Output
   config: Config
+  projectName: string
   ymlPath: string = path.join(__dirname, 'docker/docker-compose.yml')
   envPath: string = path.join(__dirname, 'docker/.envrc')
-  constructor(out: Output, config: Config) {
+  envVars: {[varName: string]: string}
+  target?: TargetDefinition
+  constructor(out: Output, config: Config, projectName: string) {
     this.out = out
     this.config = config
+    this.projectName = projectName
+    this.target = this.config.targets[projectName]
   }
 
-  async up(): Promise<any> {
-    await this.run('up', '-d', '--remove-orphans')
-    return this.getDockerEnvVars()
+  async init() {
+    // either get the ports
+    const defaultVars = this.getDockerEnvVars()
+    const port = (this.target && this.target.host) ? this.target.host.split(':').slice(-1)[0] : undefined
+    const customVars = {
+      PORT: String(port || await portfinder.getPortPromise({port: 60000})),
+    }
+    this.out.log(`Using http://localhost:${customVars.PORT} as the local Graphcool host`)
+    this.envVars = {...process.env, ...defaultVars, ...customVars}
   }
 
-  start() {
+  async up(): Promise<Docker> {
+    await this.init()
+    return this.run('up', '-d', '--remove-orphans')
+  }
+
+  async start(): Promise<Docker> {
+    await this.init()
     return this.run('start')
   }
 
-  stop() {
+  async stop(): Promise<Docker> {
+    await this.init()
     return this.run('stop')
   }
 
-  restart() {
+  async restart(): Promise<Docker> {
+    await this.init()
     return this.run('restart')
   }
 
-  pull() {
+  async pull(): Promise<Docker> {
+    await this.init()
     return this.run('pull', '--parallel')
   }
 
-  private run(...argv: string[]): Promise<number> {
+  private run(...argv: string[]): Promise<Docker> {
     return new Promise((resolve, reject) => {
-      const dockerEnv = this.getDockerEnvVars()
-      const env = { ...process.env, ...dockerEnv }
-      const defaultArgs = ['--file', this.ymlPath, '--project-directory', this.config.cwd]
+      const defaultArgs = ['-p', JSON.stringify(this.projectName), '--file', this.ymlPath, '--project-directory', this.config.cwd]
       const args = defaultArgs.concat(argv)
-      this.out.log(chalk.dim(`$ docker-compose ${argv.join(' ')}\n`))
+      this.out.log(chalk.dim(`$ docker-compose ${args.join(' ')}\n`))
       const child = childProcess.spawn('docker-compose', args, {
-        env,
+        env: this.envVars,
         cwd: this.config.cwd,
       })
       child.stdout.on('data', data => {
@@ -59,7 +78,7 @@ export default class Docker {
         if (code !== 0) {
           reject(code)
         } else {
-          resolve(code)
+          resolve(this)
         }
       })
     })

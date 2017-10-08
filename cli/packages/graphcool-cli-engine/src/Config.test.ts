@@ -35,7 +35,7 @@ describe('config', () => {
     fs.writeFileSync(dotGraphcoolPath, JSON.stringify(mockDotFile))
 
     const config = new Config({mock: true, home, cwd})
-    config.loadToken()
+    config.loadDotGraphcool()
     expect(config.dotGraphcoolFilePath).toBe(dotGraphcoolPath)
     expect(config.token).toBe(mockDotFile.token)
   })

@@ -37,7 +37,7 @@ export default class Auth extends Command {
     // if there is a new token, save it
     if (token) {
       this.config.setToken(token)
-      this.config.saveToken()
+      this.config.saveDotGraphcool()
       this.out.log(
         `Saved new token to ${chalk.bold(this.config.dotGraphcoolFilePath)}`,
       )

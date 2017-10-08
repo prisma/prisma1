@@ -7,13 +7,14 @@ export default class Stop extends Command {
   static command = 'stop'
   static description = 'Stop an already initialized local Graphcool instance'
   static flags: Flags = {
-    env: flags.string({
-      char: 'e',
-      description: 'Environment to stop',
+    name: flags.string({
+      char: 'n',
+      description: 'Name of the new instance',
+      defaultValue: 'dev'
     }),
   }
   async run() {
-    const docker = new Docker(this.out, this.config)
+    const docker = new Docker(this.out, this.config, this.flags.name)
     await docker.stop()
   }
 }

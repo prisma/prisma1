@@ -7,13 +7,14 @@ export default class Start extends Command {
   static command = 'start'
   static description = 'Start an already initialized local Graphcool instance'
   static flags: Flags = {
-    env: flags.string({
-      char: 'e',
-      description: 'Environment to start',
+    name: flags.string({
+      char: 'n',
+      description: 'Name of the new instance',
+      defaultValue: 'dev'
     }),
   }
   async run() {
-    const docker = new Docker(this.out, this.config)
+    const docker = new Docker(this.out, this.config, this.flags.name)
     await docker.start()
   }
 }

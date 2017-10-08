@@ -32,6 +32,7 @@ export {
   SchemaInfo,
   PAT,
   AuthenticateCustomerPayload,
+  TargetDefinition,
 } from './types'
 
 export { flags, Flag, Arg, Flags } from './Flags'
