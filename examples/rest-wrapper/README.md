@@ -173,7 +173,7 @@ module.exports = () => {
 }
 ```
 
-All that's happneing in there is sending an HTTP request to the specified endpoint and convert the response into the format that's define in the extension of the `Query` type above.
+All that's happening in there is sending an HTTP request to the specified endpoint and convert the response into the format that's defined in the extension of the `Query` type above.
 
 
 
