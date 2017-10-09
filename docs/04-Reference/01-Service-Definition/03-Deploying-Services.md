@@ -7,7 +7,7 @@ description: Learn how to synchronize your local changes with the remote Graphco
 
 ## Applying changes
 
-After making a change to `graphcool.yml` or any file inside the your local service definition (for example adding a new type or updating the implementation of a managed function), you need to deploy these changes to a specified [_target_](!alias-zoug8seen4).
+After making a change to `graphcool.yml` or any file inside the project structure of your local service definition (for example adding a new type or updating the implementation of a managed function), you need to deploy these changes to a specified [target](!alias-zoug8seen4).
 
 The only way of doing this is by running the following CLI command:
 

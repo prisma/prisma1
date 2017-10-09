@@ -14,8 +14,6 @@ The service definition file `graphcool.yml` has the following root properties:
 - [`permissions`](#permissions): Defines all the permission rules for your service.
 - [`rootTokens`](#root-tokens): Lists all the [root token](!alias-eip7ahqu5o#root-tokens) you've configured for your service.
 
-See below for the concrete [YAML structure](#yaml-structure).
-
 ## Example `graphcool.yml` service definition file
 
 Here is a simple example of a service definition file:
@@ -123,14 +121,14 @@ There are two kinds of types that can be referenced:
 
 ### Examples
 
-#### Referring to a single type definition file
+**Referring to a single type definition file**
 
 ```yml
 types: ./types.graphql
 ```
 
 
-#### Referring to multiple type definition files
+**Referring to multiple type definition files**
 
 ```yml
 types: 
@@ -141,7 +139,7 @@ types:
 
 ### `functions`
 
-The `functions` root property accepts a **map from string** (which specifies the function's _name_) **to [function](#definition-function)**.
+The `functions` root property accepts a **map from string** (which specifies the function's _name_) **to [function](#definition-function)**. The key represents the _name_ of the function, the value is an object that follows the [function](#definition-function) structure and defines the precise configuration of the function to be invoked.
 
 #### Definition: `function`
 
@@ -153,15 +151,15 @@ The `functions` root property accepts a **map from string** (which specifies the
   - **Possible values:** `resolver`, `subscription`, `operationBefore`, `operationAfter`
 
 - `handler` (**required**)
-  - **Type**: [handler](#definition-handler) (described below)
-  - **Description**: Specifies the details of _how_ to invoke the function. Can either contain references to a local file that contains the implementation of the function or otherwise define a webhook that'll be called when the function is invoked.
+  - **Type**: handler ([described below](#definition-handler))
+  - **Description**: Specifies the details of _how_ to invoke the function. Can either contain references to a _local file_ that contains the implementation of the function or otherwise define a _webhook_ that'll be called when the function is invoked.
 
 - `isEnabled` (**optional**, default: `false`)
   - **Type**: `boolean`
   - **Description**: The function will only be invoked if set to `true`.
   - **Possible values**: `true` or `false`
 
-Only **resolver** have the following property:
+Only **resolver** functions have the following property:
 
 - `schema` (**optional**, if not provided, the extension of `Query` or `Mutation` has to live inside a file that's referenced from the [`types`](#root-property-types) root property)
   - **Type**: `string`
@@ -192,7 +190,9 @@ A `handler` specifies the details of _how_ to invoke the function. It can either
 
 ```yml
 code: 
+  # source file that contains the implementation of the function
   src: <file>
+  # specify environment variables the function has access to
   environment: 
     <variable1>: <value1>
     <variable2>: <value2>
@@ -207,19 +207,19 @@ code: <file>
 A `handler` for a managed function has the following properties:
 
 - `code` (**required**)
-  - **Type**: `map` (see _managed function structure__ above)
+  - **Type**: `map` (see _managed function structure_ above)
   - **Description**: Describes all the details about how to invoke the managed function and optionally provides environment variables that can be used inside the function at runtime.
 
-- `src`: (**required**)
+- `src` (**required**)
   - **Type**: `string`
   - **Description**: A reference to the file that contains the implementation for the function.
-  - **Possible values**: any string that references a valid source file
+  - **Possible values**: Any string that references a valid source file.
 
 
 - `environment` (**optional**)
   - **Type**: `[string:string]`
   - **Description**: Specifies a number of environment variables .
-  - **Possible values**: any combination of strings that does not contain the empty string
+  - **Possible values**: Any combination of strings that does not contain the empty string.
 
 
 ##### Reference webhook
@@ -228,7 +228,9 @@ A `handler` for a managed function has the following properties:
 
 ```yml
 webhook: 
+  # HTTP endpoint that represents the webhook
   url: <url>
+  # HTTP headers to send along when invoking the webhook
   headers: 
     <header1>: <value1>
     <header2>: <value2>
@@ -244,18 +246,18 @@ A `handler` for a managed function has the following properties:
 
 - `webhook` (**required**)
   - **Type**: `map` (see _webhook structure_ above)
-  - **Description**: Describes all the details about how to invoke the webhook and optionally specify HTTP headers that will be attached to the request then the webhook is called.
+  - **Description**: Describes all the details about how to invoke the webhook and optionally specify HTTP headers that will be attached to the request when the webhook is called.
 
 - `url` (**required**)
   - **Type**: `string`
   - **Description**: The HTTP endpoint where the webhook can be invoked.
-  - **Possible values**: any string that's a valid HTTP URL and references a webhook
+  - **Possible values**: Any string that's a valid HTTP URL and references a webhook.
 
 
 - `headers` (**optional**) 
   - **Type**: `[string:string]`
   - **Description**: Specifies a number of HTTP headers.
-  - **Possible values**: any combination of strings that does not contain the empty string
+  - **Possible values**: Any combination of strings that does not contain the empty string.
 
 #### Examples
 
@@ -305,20 +307,20 @@ The `permissions` root property accepts a **list of [permissions](#definition-pe
 
 - `operation` (**required**)
   - **Type**: `string`
-  - **Description**: Specifies for which API operationthis permission holds. Refers to an operation from the Graphcool CRUD API. The value is composed of the name of a _model type_ and the name of an operation (`read`, `create`, `update` or `delete`), separated by a dot.
+  - **Description**: Specifies for which API operation this permission holds. Refers to an operation from the Graphcool CRUD API. The value is composed of the name of a _model type_ and the name of an operation (`read`, `create`, `update` or `delete`), separated by a dot.
   - **Possible values**: `<Model Type>.<Operation>` (e.g. `Customer.create`, `Article.create`, `Image.update`, `Movie.delete`)
 
 
-- `authenticate` (**optional**, default: `false`)
+- `authenticated` (**optional**, default: `false`)
   - **Type**: `boolean`
-  - **Description**: If set to `true`, only authenticated users will be able to perform the associated `operation`.
+  - **Description**: If set to `true`, only [authenticated](!alias-eip7ahqu5o#authenticating-a-request) users will be able to perform the associated `operation`.
   - **Possible values**: `true` or `false`
 
 
 - `query` (**optional**)
   - **Type**: `string`
   - **Description**: References a file that contains a [permission query](!alias-iox3aqu0ee). 
-  - **Possible values**: any string that references a `.graphql`-file
+  - **Possible values**: Any string that references a `.graphql`-file containing a permission query.
 
 #### Examples
 
@@ -352,11 +354,6 @@ permissions:
 ### `rootTokens`
 
 The `rootTokens` property accepts a **list of strings**. Each string is the name of a [root token](!alias-eip7ahqu5o#root-tokens) which will be created whenever the service deployed. 
-
-There are two kinds of types that can be referenced:
-
-- **Model types**: Determine the types that are to be persisted in the database. These types need to be annotated with the `@model`-directive and typically represent entities from the application domain. Read more in the [Database](!alias-viuf8uus7o) chapter.
-- **Transient types**: These types are not persisted in the database but typically represent _input_ or _return_ types for certain API operations.
 
 #### Examples
 
@@ -431,7 +428,7 @@ A _variable source_ can be either of the following two options:
 
 - A _recursive self-reference_ to another value inside the same service
 - An _environment variable_
-- The name of the currently active [environment](!alias-zoug8seen4) from [`.graphcoolrc`](!alias-zoug8seen4#.graphcoolrc)
+- An _option from the command line_
 
 > Note that you can only use variables in property **values** - not in property keys. So you can't use variables to generate dynamic logical IDs in the custom resources section for example.
 
@@ -488,23 +485,30 @@ functions:
     type: subscription
 ```
 
-<InfoBox type=warning>
 
-Note that you can not use the name `GRAPHCOOL_ENV` for your environment variables. This will automatically refer to the currently active environment (see the section below).
+### CLI options
 
-</InfoBox>
+You can reference CLI options that you passed when invoking a [`graphcool` command](!alias-aiteerae6l) inside your `graphcool.yml` service definition file.
 
-### Name of currently active environment
+When referencing a CLI option, the value that you put into the bracket is composed of:
 
-You can reference the name of the currently active [environment](!alias-zoug8seen4) inside the service definition file.
+- the _prefix_ `opt:`
+- the _name_ of the CLI option
 
-The syntax is similar to the one for referencing environment variables, except that the _name_ of the environment variable is replaced with `GRAPHCOOL_ENV`:
+> Note: It is valid to use the _empty string_ as the _name_ of the CLI option. This looks like `${opt:}` and the result of declaring this in your `graphcool.yml` is to embed the complete options object (i.e. all the command line options from your `graphcool` command).
 
-```yml
-${env:GRAPHCOOL_ENV}
+For the following example, assume the following `graphcool` command was just ran in the terminal:
+
+```sh
+graphcool deploy --stage prod
 ```
 
-> Note: Unlike you might guess from the syntax, `GRAPHCOOL_ENV` is not actually set as an environment variable. 
+To reference the value of the `stage` option inside `graphcool.yml`, you can now specify the following:
 
+```
+webhook: 
+  url: http://myapi.${opt:stage}.com/example
+```
 
+When the command is invoked, the value of `webhook.url` will de deployed as `http://myapi.prod.com/example`.
 
