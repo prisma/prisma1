@@ -1,15 +1,13 @@
 import { Environment } from './Environment'
 import { Output } from './Output'
 import { Config } from './Config'
-import { Client } from './Client/Client'
 
 // lets write some tests
 
 function makeEnvironment() {
   const config = new Config()
   const out = new Output(config)
-  const client = new Client(config)
-  return new Environment(out, config, client)
+  return new Environment(out, config)
 }
 
 const env = makeEnvironment()

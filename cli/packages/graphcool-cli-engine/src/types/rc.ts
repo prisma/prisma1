@@ -13,7 +13,10 @@ export interface Target {
   id: string
 }
 
-export interface Clusters {[name: string]: Cluster}
+export interface Clusters {
+  default?: string
+  [name: string]: Cluster | string | undefined
+}
 
 export interface Cluster {
   host: string

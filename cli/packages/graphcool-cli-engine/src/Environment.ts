@@ -5,7 +5,7 @@ import { Output } from './Output/index'
 import { Client } from './Client/Client'
 import { Config } from './Config'
 import { EnvDoesntExistError } from './errors/EnvDoesntExistError'
-import { RC, Target, Targets } from './types/rc'
+import { Cluster, RC, Target, Targets } from './types/rc'
 import { mapValues, merge } from 'lodash'
 import { Args } from './types/common'
 import Variables from './ProjectDefinition/Variables'
@@ -15,14 +15,13 @@ export class Environment {
   localRC: RC = {}
   globalRC: RC = {}
   out: Output
-  client: Client
   config: Config
   args: Args
+  activeCluster: string = 'shared-eu-west-1'
 
-  constructor(out: Output, config: Config, client: Client) {
+  constructor(out: Output, config: Config) {
     this.out = out
     this.config = config
-    this.client = client
     this.migrateOldFormat()
   }
   private setTestToken() {
@@ -34,12 +33,24 @@ export class Environment {
     return merge({}, this.globalRC, this.localRC)
   }
 
+  get token(): string {
+    if (this.config.sharedClusters.includes(this.activeCluster)) {
+      return this.rc.platformToken!
+    }
+
+    return (this.rc.clusters![this.activeCluster]! as Cluster).token
+  }
+
   get default(): Target | null {
     if (this.rc.targets && this.rc.targets.default) {
       return this.rc.targets.default
     }
 
     return null
+  }
+
+  setActiveCluster(cluster: string) {
+    this.activeCluster = cluster
   }
 
   /**
@@ -75,7 +86,7 @@ export class Environment {
   //   }
   // }
 
-  async loadYaml(file: string | null, filePath: string | null = null): any {
+  async loadYaml(file: string | null, filePath: string | null = null): Promise<any> {
     if (file) {
       let content
       try {
@@ -137,6 +148,12 @@ export class Environment {
     this.checkClusters(globalFile.targets, allClusters, globalFilePath)
     this.localRC = localFile
     this.globalRC = globalFile
+    if (this.rc.clusters && this.rc.clusters.default) {
+      if (!allClusters.includes(this.rc.clusters.default)) {
+        this.out.error(`Could not find default cluster ${this.rc.clusters.default}`)
+      }
+      this.activeCluster = this.rc.clusters.default
+    }
   }
 
   checkClusters(targets: Targets, clusters: string[], filePath: string | null) {

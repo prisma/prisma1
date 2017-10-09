@@ -29,7 +29,7 @@ export class Auth {
   }
 
   async ensureAuth() {
-    const token = this.config.token || (await this.requestAuthToken())
+    const token = this.env.rc.platformToken || (await this.requestAuthToken())
 
     const valid = await this.validateAuthToken(token)
     if (!valid) {
@@ -43,10 +43,9 @@ export class Auth {
 
     this.env.setToken(token)
     this.env.saveGlobalRC()
-    this.client.updateClient()
 
     // return if we already had a token
-    return !!this.config.token
+    return !!this.env.rc.platformToken
   }
 
   async setToken(token: string) {

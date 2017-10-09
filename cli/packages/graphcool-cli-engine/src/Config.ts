@@ -52,7 +52,6 @@ export class Config {
   /**
    * Urls
    */
-  token: string | null
   authUIEndpoint = process.env.ENV === 'DEV'
     ? 'https://dev.console.graph.cool/cli/auth'
     : 'https://console.graph.cool/cli/auth'
