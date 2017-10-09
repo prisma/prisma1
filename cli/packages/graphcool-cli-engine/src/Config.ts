@@ -34,6 +34,7 @@ export class Config {
       defaultCommand: 'help',
     },
   }
+  sharedClusters: string[] = ['shared-eu-west-1', 'shared-ap-northeast-1', 'shared-us-west-2']
 
   /**
    * Paths

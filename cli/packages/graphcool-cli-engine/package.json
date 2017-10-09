@@ -13,7 +13,7 @@
     "@types/lodash": "^4.14.77",
     "@types/node": "^8.0.22",
     "husky": "^0.14.3",
-    "jest": "^21.0.1",
+    "jest": "^21.2.1",
     "lint-staged": "^4.0.3",
     "nock": "^9.0.14",
     "prettier": "^1.5.3",

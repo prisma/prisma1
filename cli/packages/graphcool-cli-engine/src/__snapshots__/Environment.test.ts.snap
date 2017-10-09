@@ -1,10 +1,125 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`config should access targets from the global RC 1`] = `
+Object {
+  "clusters": Object {
+    "local": Object {
+      "host": "http://localhost:60000",
+      "token": "asdf",
+    },
+  },
+  "platformToken": "secret-token",
+  "targets": Object {
+    "dev": Object {
+      "cluster": "local",
+      "id": "asdasd123",
+    },
+    "test-alias": Object {
+      "cluster": "local",
+      "id": "asdasd123",
+    },
+  },
+}
+`;
+
+exports[`config should override global target 1`] = `
+Object {
+  "clusters": Object {
+    "local": Object {
+      "host": "http://localhost:60000",
+      "token": "asdf",
+    },
+  },
+  "platformToken": "secret-token",
+  "targets": Object {
+    "dev": Object {
+      "cluster": "shared-eu-west-1",
+      "id": "asdfasdf",
+    },
+  },
+}
+`;
+
+exports[`config should resolve a target alias refering after 1`] = `
+Object {
+  "clusters": Object {
+    "local": Object {
+      "host": "http://localhost:60000",
+      "token": "asdf",
+    },
+  },
+  "platformToken": "secret-token",
+  "targets": Object {
+    "dev": Object {
+      "cluster": "local",
+      "id": "asdasd123",
+    },
+    "test-alias": Object {
+      "cluster": "local",
+      "id": "asdasd123",
+    },
+  },
+}
+`;
+
+exports[`config should resolve a target alias refering before 1`] = `
+Object {
+  "clusters": Object {
+    "local": Object {
+      "host": "http://localhost:60000",
+      "token": "asdf",
+    },
+  },
+  "platformToken": "secret-token",
+  "targets": Object {
+    "dev": Object {
+      "cluster": "local",
+      "id": "asdasd123",
+    },
+    "test-alias": Object {
+      "cluster": "local",
+      "id": "asdasd123",
+    },
+  },
+}
+`;
+
+exports[`config should resolve target from the global RC 1`] = `
+Object {
+  "clusters": Object {
+    "local": Object {
+      "host": "http://localhost:60000",
+      "token": "asdf",
+    },
+  },
+  "platformToken": "secret-token",
+  "targets": Object {
+    "dev": Object {
+      "cluster": "local",
+      "id": "asdasd123",
+    },
+    "test-alias": Object {
+      "cluster": "local",
+      "id": "asdasd123",
+    },
+  },
+}
+`;
+
 exports[`config should work without global RC 1`] = `
 Object {
-  "fulfillmentValue": undefined,
-  "isFulfilled": false,
-  "isRejected": false,
-  "rejectionReason": undefined,
+  "clusters": Object {
+    "local": Object {
+      "host": "http://localhost:60000",
+      "token": "asdf",
+    },
+  },
+  "platformToken": "secret-token",
+  "targets": Object {
+    "dev": Object {
+      "cluster": "local",
+      "id": "asdasd123",
+    },
+  },
 }
 `;

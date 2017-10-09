@@ -163,7 +163,7 @@ export class Output {
   }
 
   error(err: Error | string, exitCode: number | false = 1) {
-    if (this.mock && typeof err !== 'string' && exitCode !== false) {
+    if ((this.mock && typeof err !== 'string' && exitCode !== false) || process.env.NODE_ENV === 'test') {
       throw err
     }
     try {

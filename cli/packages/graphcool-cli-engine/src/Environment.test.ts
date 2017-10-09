@@ -25,12 +25,106 @@ clusters:
     token: asdf
 `
 
-    debugger
-    env.loadRCs(localFile, null)
-    expect(env.localRC).toMatchSnapshot()
+    await env.loadRCs(localFile, null)
+    expect(env.rc).toMatchSnapshot()
   })
-  // test('should access targets from the global RC', async () => {
-  // })
-  // test('should override targets from the global RC', async () => {
-  // })
+  test('should resolve a target alias refering before', async () => {
+    const env = makeEnvironment()
+    const localFile = `
+platformToken: 'secret-token'
+targets:
+  dev: local/asdasd123
+  test-alias: dev
+clusters:
+  local:
+    host: http://localhost:60000
+    token: asdf
+`
+
+    await env.loadRCs(localFile, null)
+    expect(env.rc).toMatchSnapshot()
+  })
+  test('should resolve a target alias refering after', async () => {
+    const env = makeEnvironment()
+    const localFile = `
+platformToken: 'secret-token'
+targets:
+  test-alias: dev
+  dev: local/asdasd123
+clusters:
+  local:
+    host: http://localhost:60000
+    token: asdf
+`
+
+    await env.loadRCs(localFile, null)
+    expect(env.rc).toMatchSnapshot()
+  })
+
+  test('throws when cluster does not exist', async () => {
+    const env = makeEnvironment()
+    const localFile = `
+platformToken: 'secret-token'
+targets:
+  dev: local/asdasd123
+`
+    await expect(env.loadRCs(localFile, null)).rejects.toMatch(/Could not find cluster local defined for target dev in/)
+  })
+
+  test('should access targets from the global RC', async () => {
+    const env = makeEnvironment()
+    const localFile = `
+platformToken: 'secret-token'
+targets:
+  test-alias: dev
+  dev: local/asdasd123
+`
+    const globalFile = `
+clusters:
+  local:
+    host: http://localhost:60000
+    token: asdf
+    `
+
+    await env.loadRCs(localFile, globalFile)
+    expect(env.rc).toMatchSnapshot()
+  })
+  test('should resolve target from the global RC', async () => {
+    const env = makeEnvironment()
+    const localFile = `
+platformToken: 'secret-token'
+targets:
+  test-alias: dev
+`
+    const globalFile = `
+targets:
+  dev: local/asdasd123
+clusters:
+  local:
+    host: http://localhost:60000
+    token: asdf
+    `
+
+    await env.loadRCs(localFile, globalFile)
+    expect(env.rc).toMatchSnapshot()
+  })
+  test('should override global target', async () => {
+    const env = makeEnvironment()
+    const localFile = `
+platformToken: 'secret-token'
+targets:
+  dev: shared-eu-west-1/asdfasdf
+`
+    const globalFile = `
+targets:
+  dev: local/asdasd123
+clusters:
+  local:
+    host: http://localhost:60000
+    token: asdf
+    `
+
+    await env.loadRCs(localFile, globalFile)
+    expect(env.rc).toMatchSnapshot()
+  })
 })
