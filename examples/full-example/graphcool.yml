@@ -1,20 +1,44 @@
 types: ./types.graphql
 
+# Wilcard permission that allows all API operations for everyone
 permissions:
 - operation: "*"
 
-rootTokens:
-- defaultToken
-
 functions:
+  # Payment function using the implementation in `./src/pay.js`
   pay:
     handler:
       code:
         src: ./src/pay.js
+        # Define environment variable accessible by the function in `./src/pay.js`
         environment:
-          STRIPE_KEY: sk_test_BQokikJOvBiI2HlWgH4olfQ2
+          STRIPE_KEY: pk_test_6pRNASCoBOKtIshFeQd4XMUh
     type: resolver
     schema: ./src/pay.graphql
 
-modules:
-  email-password: modules/email-password/graphcool.yml
+  # Authentication functions from: `https://github.com/graphcool/modules/tree/master/authentication/email-password`
+  signup:
+    type: resolver
+    schema: ./email-password/signup.graphql
+    handler:
+      code:
+        src: ./email-password/signup.js
+  authenticate:
+    type: resolver
+    schema: ./email-password/authenticate.graphql
+    handler:
+      code:
+        src: ./email-password/authenticate.js
+  loggednInUser:
+    type: resolver
+    schema: ./email-password/loggedInUser.graphql
+    handler:
+      code:
+        src: ./email-password/loggedInUser.js
+
+# Permanent Auth Token / Root Tokens
+rootTokens:
+  - defaultToken
+  - signup
+  - authenticate
+  - loggedInUser
