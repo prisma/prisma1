@@ -21,7 +21,7 @@ When using the _hosted version_ of Graphcool, performance metrics will be visibl
 
 The [Graphcool CLI](!alias-zboghez5go) and the [`graphql-cli`](https://github.com/graphcool/graphql-cli) are two independent projects. 
 
-- The **[Graphcool CLI](!alias-zboghez5go)** is used to manage, configure and deploy Graphcool services. So, it's a tool that's _specific to Graphcool_!
+- The **[Graphcool CLI](!alias-zboghez5go)** is used to manage, configure and deploy Graphcool services. So, it's a tool that's _specific to the Graphcool Framework_.
 - The **[`graphql-cli`](https://github.com/graphcool/graphql-cli)** on the other hand is a _general purpose_ tool that can be used with _any_ GraphQL project. It helps to manage different GraphQL endpoints, download schemas and is flexible to offer more features using the [plugin system](https://github.com/graphcool/graphql-cli#plugins). You can read more about the ideas behind the `graphql-cli` [here](https://blog.graph.cool/new-tooling-to-improve-your-graphql-workflows-7240c81e1ba3).
 
 Note that you can definitely use both CLIs together as they offer complementary functionality!

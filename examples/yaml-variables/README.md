@@ -2,7 +2,7 @@
 
 ## Overview
 
-This directory contains the service definition and file structure for a simple Graphcool service that makes use of **environment variables inside `graphcool.yml` as well as inside _functions_**. Read the [last section](#whats-in-this-example) of this README to learn how the different components fit together.
+This directory contains the service definition and file structure for a simple Graphcool service that makes use of **environment variables inside `graphcool.yml`**. Read the [last section](#whats-in-this-example) of this README to learn how the different components fit together.
 
 ```
 .
@@ -25,7 +25,7 @@ Clone the full [graphcool](https://github.com/graphcool/graphcool) repository an
 
 ```sh
 https://codeload.github.com/graphcool/graphcool/tar.gz/master | tar -xz --strip=2 graphcool-master/examples/env-variables
-cd auth
+cd env-variables
 ```
 
 Next, you need to create your GraphQL server using the [Graphcool CLI](https://docs-next.graph.cool/reference/graphcool-cli/overview-zboghez5go).
@@ -35,7 +35,7 @@ Next, you need to create your GraphQL server using the [Graphcool CLI](https://d
 If you haven't already, go ahead and install the CLI first:
 
 ```sh
-npm install -g graphcool@beta
+npm install -g graphcool@next
 ```
 
 ### 3. Create the GraphQL server
@@ -54,14 +54,9 @@ If you're using [bash](https://en.wikipedia.org/wiki/Bash_(Unix_shell)), use eit
 
 ```sh
 export GREETING=hello
+# or 
+# export GREETING=hey
 ```
-
-_or_
-
-```sh
-export GREETING=hey
-```
-
 
 ##### fish shell
 
@@ -69,12 +64,8 @@ If you're using [fish shell](https://fishshell.com/), use either of the followin
 
 ```sh
 set -x GREETING hello
-```
-
-_or_
-
-```sh
-set -x GREETING hey
+# or
+# set -x GREETING hey
 ```
 
 ##### direnv
@@ -83,12 +74,8 @@ If you're using [direnv](https://direnv.net/), create a `.envrc`-file in this di
 
 ```sh
 export GREETING=hello
-```
-
-_or_
-
-```sh
-export GREETING=hey
+# or
+# export GREETING=hey
 ```
 
 
@@ -141,7 +128,7 @@ To test the resolver function, you can send the following query:
 }
 ```
 
-The `message` that's returned in the payload will be: `Hello Alice`. That's because the `NAME` environment variable that's referenced in [`hey.js`](./src/hey.js#L3) and [`hello.js`](./src/hello.js#L3) is currently [set to `Alice` inside `graphcool.yml`](./graphcool.yml#L18). If no `name` argument is passed in the query, the function will fall back to the value of the environment variable `NAME`.
+The `message` that's returned in the payload will be: `Hello World`. That's because no `name` argument is passed in the query. The function will thus [fall back](./src/hello.js#L5) to the value of the string `World` instead of a concrete name.
 
 ## What's in this example?
 
@@ -150,7 +137,10 @@ This function contains implementations for two [resolver](https://docs-next.grap
 - [`hello.js`](./src/hello.js): Greets the caller with `Hello`
 - [`hey.js`](./src/hey.js): Greets the caller with `Hey`
 
-Both resolvers are using the same `schema` defined in [`greeting.graphql`](./src/greeting.graphql):
+
+The `schema`s which defines the APIs of both resolver is defined in [`greeting.graphql`](./src/greeting.graphql).
+
+This schema is reference in [`graphcool.yml`](./graphcool.yml):
 
 ```yml
 greeting:
@@ -159,30 +149,11 @@ greeting:
   handler:
     code:
       src: ./src/${env:GREETING}.js
-      environment:
-        NAME: Alice
-```
+  ```
 
 ### Referencing environment variables in `graphcool.yml` at deployment time
 
 Despite the fact that this service contains two function implementations, only _one_ of them will be deployed at any given time! Which one that is depends on the value of the environment variable `GREETING` when `graphcool deploy` is invoked. That's because the `greeting.handler.code.src` property refers to this environment variable: `./src/${env:GREETING}.js`. 
 
-When `graphcool deploy` is called, the CLI will read the value of the environment variable and replace `${env:GREETING}` with it. If the value of `GREETING` is something other than `hello` or `hey`, the `graphcool deploy` will fail with the message that the referenced source file does not exist.
-
-### Referencing environment variables in _functions_ at runtime
-
-Notice that inside the function definition of `greeting` in `graphcool.yml`, there's also the `greeting.handler.code.environment` property that let's you specify environment variables which can be accessed by your functions at runtime.
-
-In this case, we're setting the value `Alice` for the environment variable `NAME` which is accessed by [`hello.js`](./src/hello.js#L3) and [`hey.js`](./src/hey.js#L3).
-
-
-
-
-
-
-
-
-
-
-
+When `graphcool deploy` is called, the CLI will read the value of the environment variable and replace `${env:GREETING}` with it. If the value of `GREETING` is something other than `hello` or `hey`, `graphcool deploy` will fail with the message that the referenced source file does not exist.
 

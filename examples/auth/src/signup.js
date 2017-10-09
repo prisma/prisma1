@@ -61,7 +61,7 @@ module.exports = function(event) {
           return bcrypt.hash(password, SALT_ROUNDS)
             .then(hash => createGraphcoolUser(api, email, hash))
         } else {
-          return Promise.reject("Email already in use")
+          return Promise.reject('Email already in use')
         }
       })
       .then(graphcoolUserId => {
@@ -76,6 +76,6 @@ module.exports = function(event) {
         return { error: 'An unexpected error occured.' }
       })
   } else {
-    return { error: "Not a valid email" }
+    return { error: 'Not a valid email' }
   }
 }

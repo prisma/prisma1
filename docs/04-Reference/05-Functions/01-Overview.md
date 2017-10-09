@@ -1,6 +1,6 @@
 ---
 alias: aiw4aimie9
-description: An overview of how to integrate serverless functions with Graphcool. 
+description: An overview of how to integrate functions with Graphcool. 
 ---
 
 # Overview

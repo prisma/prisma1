@@ -12,7 +12,3 @@ functions:
     handler:
       code:
         src: ./src/${env:GREETING}.js
-        # Set the `NAME` environment variable that's 
-        # referenced at runtime by `hey.js` and `hello.js`.
-        environment:
-          NAME: Alice

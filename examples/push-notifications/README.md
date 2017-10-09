@@ -31,7 +31,7 @@ cd push-notifications
 Install the CLI (if you haven't already):
 
 ```sh
-npm install -g graphcool@beta
+npm install -g graphcool@next
 ```
 
 Create the Graphcool backend
