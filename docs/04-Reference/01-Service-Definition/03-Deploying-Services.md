@@ -19,7 +19,7 @@ graphcool deploy
 
 ## Using the `--force` option
 
-In case your local changes might result in data loss, for example when you're deleting model type, you need to add the `--force` option to the command in order to signal to the CLI that you know what you're doing: `graphcool deploy --force` (or `graphcool deploy -f`).
+In case your local changes might result in data loss, for example when you're deleting model type, you need to add the `--force` option to the command in order to signal to the CLI that you know what you're doing: `graphcool deploy --force` (or using the short form `graphcool deploy -f`).
 
 
 ## Providing migration values
