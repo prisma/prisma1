@@ -12,6 +12,7 @@ There currently are two different kinds of Graphcool services / projects:
 
 > These two modes exist due to the recent changes to the Graphcool products and its new focus towards managing services through the CLI rather than using the web-based Console. 
 
+
 ## Managing legacy Console projects
 
 Legacy Console projects can only use CLI versions lower than 0.4 and are primarily managed through the Console. Particularly, managing _functions_ and _permissions_ can only be done in the Console.
