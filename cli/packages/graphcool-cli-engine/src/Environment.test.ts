@@ -10,7 +10,7 @@ function makeEnvironment() {
   return new Environment(out, config)
 }
 
-describe('config', () => {
+describe('environment', () => {
   test('should work without global RC', async () => {
     const env = makeEnvironment()
     const localFile = `

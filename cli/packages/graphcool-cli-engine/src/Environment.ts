@@ -11,6 +11,12 @@ import { Args } from './types/common'
 import Variables from './ProjectDefinition/Variables'
 const debug = require('debug')('environment')
 
+const defaultRC = {
+  clusters: {
+    default: 'shared-eu-west-1'
+  }
+}
+
 export class Environment {
   localRC: RC = {}
   globalRC: RC = {}
@@ -56,35 +62,53 @@ export class Environment {
   /**
    * This is used to migrate the old .graphcool and .graphcoolrc to the new format
    */
-  migrateOldFormat() {}
-  // public loadDotGraphcool() {
-  //   if (this.dotGraphcoolFilePath && fs.existsSync(this.dotGraphcoolFilePath)) {
-  //     const configContent = fs.readFileSync(
-  //       this.dotGraphcoolFilePath,
-  //       'utf-8',
-  //     )
-  //     let file: any = null
-  //     try {
-  //       file = JSON.parse(configContent)
-  //     } catch (e) {
-  //       try {
-  //         file = yaml.safeLoad(configContent)
-  //       } catch (e) {
-  //         this.out.error(`Could not load ${this.dotGraphcoolFilePath}. It's neither valid json nor valid yaml.`)
-  //       }
-  //     }
-  //
-  //     if (file.token) {
-  //       debug(`loading .graphcool file: no token existing`)
-  //       this.token = file.token
-  //     }
-  //
-  //     if (file.targets) {
-  //       debug(`loading .graphcool file: no targets existing`)
-  //       this.targets = file.targets
-  //     }
-  //   }
-  // }
+  migrateOldFormat() {
+    const dotFilePath = path.join(this.config.home, '.graphcool')
+    const dotExists = fs.pathExistsSync(dotFilePath)
+    const rcHomePath = path.join(this.config.home, '.graphoolrc')
+    const rcHomeExists = fs.pathExistsSync(rcHomePath)
+
+    const dotFile = dotExists ? fs.readFileSync(dotFilePath, 'utf-8') : null
+    const rcFile = rcHomeExists ? fs.readFileSync(rcHomePath, 'utf-8') : null
+
+    // if both legacy files exist, prefer the newer one, .graphcool
+    if (rcHomeExists) {
+      this.out.warn(`Moved deprecated file ${rcHomePath} to .graphcoolrc.old`)
+      fs.moveSync(rcHomePath, path.join(this.config.home, '.graphcoolrc.old'))
+    }
+    if (dotExists) {
+      if (dotFile) {
+        try {
+          const dotJson = JSON.parse(dotFile)
+          if (dotJson.token) {
+            const rc = {...defaultRC, platformToken: dotJson.token}
+            const rcSerialized = this.serializeRC(rc)
+            const oldPath = path.join(this.config.home, '.graphcool.old')
+            fs.moveSync(dotFile, oldPath)
+            fs.writeFileSync(rcHomePath, rcSerialized)
+            this.out.warn(`We detected the old definition format of the ${dotFilePath} file.
+It has been renamed to ${oldPath}. The new file is called ${rcHomePath}. Read more about the changes here:
+https://github.com/graphcool/graphcool/issues/714
+`)
+          }
+        } catch (e) {
+          // noop
+          console.error(e)
+        }
+      }
+    } else if (rcHomeExists && rcFile) {
+      try {
+        const rcJson = JSON.parse(rcFile)
+        const rc = {...defaultRC, platformToken: rcJson.token}
+        const rcSerialized = this.serializeRC(rc)
+        fs.writeFileSync(rcHomePath, rcSerialized)
+      } catch (e) {
+        // noop
+        console.error(e)
+      }
+    }
+
+  }
 
   async loadYaml(file: string | null, filePath: string | null = null): Promise<any> {
     if (file) {
@@ -104,6 +128,8 @@ export class Environment {
   }
 
   async load(args: Args) {
+    this.migrateOldFormat()
+
     const localFile = this.config.localRCPath && fs.pathExistsSync(this.config.localRCPath) ? fs.readFileSync(this.config.localRCPath, 'utf-8') : null
     const globalFile = this.config.globalRCPath && fs.pathExistsSync(this.config.globalRCPath) ? fs.readFileSync(this.config.globalRCPath, 'utf-8') : null
 

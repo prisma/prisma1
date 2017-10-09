@@ -21,7 +21,6 @@ clusters:
     token: asdf
 `
 
-console.log('debugga')
 env.loadRCs(localFile, null)
 console.log(env.localRC)
 console.log(env.globalRC)
