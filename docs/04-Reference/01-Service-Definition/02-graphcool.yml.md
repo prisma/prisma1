@@ -119,7 +119,7 @@ There are two kinds of types that can be referenced:
 - **Model types**: Determine the types that are to be persisted in the database. These types need to be annotated with the `@model`-directive and typically represent entities from the application domain. Read more in the [Database](!alias-viuf8uus7o) chapter.
 - **Transient types**: These types are not persisted in the database but typically represent _input_ or _return_ types for certain API operations.
 
-### Examples
+#### Examples
 
 **Referring to a single type definition file**
 
@@ -510,6 +510,6 @@ webhook:
   url: http://myapi.${opt:stage}.com/example
 ```
 
-When the command is invoked, the value of `webhook.url` will de deployed as `http://myapi.prod.com/example`.
+When the command is invoked, the value of `webhook.url` will be deployed as `http://myapi.prod.com/example`.
 
 
