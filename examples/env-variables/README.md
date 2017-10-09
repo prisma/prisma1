@@ -25,7 +25,7 @@ Clone the full [graphcool](https://github.com/graphcool/graphcool) repository an
 
 ```sh
 https://codeload.github.com/graphcool/graphcool/tar.gz/master | tar -xz --strip=2 graphcool-master/examples/env-variables
-cd auth
+cd env-variables
 ```
 
 Next, you need to create your GraphQL server using the [Graphcool CLI](https://docs-next.graph.cool/reference/graphcool-cli/overview-zboghez5go).
@@ -54,14 +54,9 @@ If you're using [bash](https://en.wikipedia.org/wiki/Bash_(Unix_shell)), use eit
 
 ```sh
 export GREETING=hello
+# or 
+# export GREETING=hey
 ```
-
-_or_
-
-```sh
-export GREETING=hey
-```
-
 
 ##### fish shell
 
@@ -69,12 +64,8 @@ If you're using [fish shell](https://fishshell.com/), use either of the followin
 
 ```sh
 set -x GREETING hello
-```
-
-_or_
-
-```sh
-set -x GREETING hey
+# or
+# set -x GREETING hey
 ```
 
 ##### direnv
@@ -83,12 +74,8 @@ If you're using [direnv](https://direnv.net/), create a `.envrc`-file in this di
 
 ```sh
 export GREETING=hello
-```
-
-_or_
-
-```sh
-export GREETING=hey
+# or
+# export GREETING=hey
 ```
 
 
