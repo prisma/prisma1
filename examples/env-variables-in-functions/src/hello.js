@@ -1,5 +1,5 @@
 module.exports = event => {
-  // access the environment variable called `NAME`
+  // access the environment variable called `NAME` defined `graphcool.yml`
   const name = event.data.name || process.env['NAME']
   return {
     data: {

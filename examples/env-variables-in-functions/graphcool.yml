@@ -1,0 +1,13 @@
+types: ./types.graphql
+
+functions:
+  greeting:
+    type: resolver
+    schema: ./src/greeting.graphql
+    handler:
+      code:
+        src: ./src/hello.js
+        # Set the `NAME` environment variable that's 
+        # referenced at runtime by `hello.js`.
+        environment:
+          NAME: Alice
