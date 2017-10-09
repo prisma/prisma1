@@ -7,7 +7,7 @@ description: An overview and explanation of all the commands of the Graphcool CL
 
 ## `graphcool auth`
 
-Sign up or login (opens your browser for authentication). The authentication token that's received after successful login will be stored in `~/.graphcool`.
+Sign up or login (opens your browser for authentication). The authentication token that's received after successful login will be stored in `~/.graphcoolrc`.
 
 #### Usage 
 
