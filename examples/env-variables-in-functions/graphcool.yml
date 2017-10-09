@@ -1,7 +1,7 @@
 types: ./types.graphql
 
 functions:
-  greeting:
+  hello:
     type: resolver
     schema: ./src/hello.graphql
     handler:
