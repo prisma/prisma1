@@ -24,5 +24,19 @@ In case your local changes might result in data loss, for example when you're de
 
 ## Providing migration values
 
-Sometimes your changes require _migration values_ to be added for the deployment. For example, when a you're adding a non-nullable field to a model type for which there are already existing nodes in the database. In these cases, you need to add the `@migrationValue` directive to the corresponding field. You can read more about migration values [here](!alias-paesahku9t).
+Sometimes your changes require _migration values_ to be added for the deployment. For example, when a you're adding a non-nullable field to a model type for which there are already existing nodes in the database. In these cases, you need to add the `@migrationValue` directive to the corresponding field. 
+
+Here is a simple example when adding a new non-nullable field `gender` to an already existing `Customer` type:
+
+```graphql
+type Customer {
+  id: ID! @isUnique
+  name: String!
+  gender: String! @migrationValue(value: "unknown")
+}
+```
+
+In this example, all existing nodes of type `Customer` will have the value `unknown` for the new `gender` field. Note that you need to _manually remove_ the `@migrationValue`-directive after running `graphcool deploy`.
+
+You can read more about migration values [here](!alias-paesahku9t).
 
