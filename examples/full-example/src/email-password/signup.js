@@ -8,12 +8,11 @@ function getGraphcoolUser(api, email) {
   }
   return api
     .request(
-      `
-    query ($email: String) {
-      User(email: $email) {
-        id
-      }
-    }`,
+      `query ($email: String) {
+        User(email: $email) {
+          id
+        }
+      }`,
       { email },
     )
     .then(userQueryResult => {
@@ -28,15 +27,14 @@ function getGraphcoolUser(api, email) {
 function createGraphcoolUser(api, email, passwordHash) {
   return api
     .request(
-      `
-    mutation ($email: String $password: String) {
-      createUser(
-        email: $email,
-        password: $password
-      ) {
-        id
-      }
-    }`,
+      `mutation ($email: String $password: String) {
+        createUser(
+          email: $email,
+          password: $password
+        ) {
+          id
+        }
+      }`,
       {
         email,
         password: passwordHash,
@@ -46,13 +44,6 @@ function createGraphcoolUser(api, email, passwordHash) {
       return userMutationResult.createUser.id
     })
 }
-//
-// class UsedEmailError extends Error {
-//   code = 100
-//   constructor(email) {
-//     super(`Email ${email} already in use`)
-//   }
-// }
 
 module.exports = function(event) {
   if (!event.context.graphcool.pat) {

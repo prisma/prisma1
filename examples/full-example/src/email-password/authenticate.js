@@ -4,13 +4,12 @@ const bcrypt = require('bcrypt')
 function getGraphcoolUser(api, email) {
   return api
     .request(
-      `
-    query {
-      User(email: "${email}"){
-        id
-        password
-      }
-    }`,
+      `query {
+        User(email: "${email}"){
+          id
+          password
+        }
+      }`,
     )
     .then(userQueryResult => {
       if (userQueryResult.error) {

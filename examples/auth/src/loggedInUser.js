@@ -23,13 +23,13 @@ const getEmailUser = (api, userId) => {
 module.exports = event => {
 
   if (!event.context.auth || !event.context.auth.nodeId) {
-    console.log(`no auth context`)
+    console.log(`No auth context`)
     return {data: {id: null}}
   }
 
   // Retrieve payload from event
   const userId = event.context.auth.nodeId
-  console.log(`nodeID: ${userId}`)
+  console.log(`Node ID: ${userId}`)
 
   // Create Graphcool API (based on https://github.com/graphcool/graphql-request)  
   const graphcool = fromEvent(event)

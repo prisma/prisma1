@@ -37,14 +37,14 @@ module.exports = event => {
   return getGraphcoolUser(api, email)
     .then(graphcoolUser => {
       if (!graphcoolUser) {
-        return Promise.reject("Invalid Credentials") //returning same generic error so user can't find out what emails are registered.
+        return Promise.reject('Invalid Credentials') //returning same generic error so user can't find out what emails are registered.
       } else {
         return bcrypt.compare(password, graphcoolUser.password)
           .then(passwordCorrect => {
             if (passwordCorrect) {
               return graphcoolUser.id
             } else {
-              return Promise.reject("Invalid Credentials")
+              return Promise.reject('Invalid Credentials')
             }
           })
       }

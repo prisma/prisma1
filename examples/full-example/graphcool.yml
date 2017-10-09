@@ -1,6 +1,9 @@
 types: ./types.graphql
 
 # Wilcard permission that allows all API operations for everyone
+# for the sake of the demo. In a real-world project, you would
+# specify permissions only for certain operations and can further constrain
+# who should be able to perform an operation using permission queries.
 permissions:
 - operation: "*"
 
@@ -19,22 +22,22 @@ functions:
   # Authentication functions from: `https://github.com/graphcool/modules/tree/master/authentication/email-password`
   signup:
     type: resolver
-    schema: ./email-password/signup.graphql
+    schema: ./src/email-password/signup.graphql
     handler:
       code:
-        src: ./email-password/signup.js
+        src: ./src/email-password/signup.js
   authenticate:
     type: resolver
-    schema: ./email-password/authenticate.graphql
+    schema: ./src/email-password/authenticate.graphql
     handler:
       code:
-        src: ./email-password/authenticate.js
+        src: ./src/email-password/authenticate.js
   loggednInUser:
     type: resolver
-    schema: ./email-password/loggedInUser.graphql
+    schema: ./src/email-password/loggedInUser.graphql
     handler:
       code:
-        src: ./email-password/loggedInUser.js
+        src: ./src/email-password/loggedInUser.js
 
 # Permanent Auth Token / Root Tokens
 rootTokens:

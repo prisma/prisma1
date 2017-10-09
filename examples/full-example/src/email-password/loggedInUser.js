@@ -3,12 +3,11 @@ const fromEvent = require('graphcool-lib').fromEvent
 function getUser(api, userId) {
   return api
     .request(
-      `
-    query {
-      User(id: "${userId}"){
-        id
-      }
-    }`,
+      `query {
+        User(id: "${userId}"){
+          id
+        }
+      }`,
     )
     .then(userQueryResult => {
       console.log(userQueryResult)
