@@ -3,7 +3,7 @@ import { projectToFs } from './projectToFs'
 import * as path from 'path'
 import { readDefinition } from './yaml'
 import * as chalk from 'chalk'
-import { GraphcoolModule, ProjectDefinition } from '../types'
+import { Args, GraphcoolModule, ProjectDefinition } from '../types/common'
 import fs from '../fs'
 import { Output } from '../Output/index'
 import { Config } from '../Config'
@@ -31,15 +31,17 @@ export class ProjectDefinitionClass {
   definition: ProjectDefinition | null
   out: Output
   config: Config
+  args: Args = {}
 
   constructor(out: Output, config: Config) {
     this.out = out
     this.config = config
   }
 
-  public async load() {
+  public async load(args: Args) {
+    this.args = args
     if (this.config.definitionPath && fs.pathExistsSync(this.config.definitionPath)) {
-      this.definition = await fsToProject(this.config.definitionDir, this.out)
+      this.definition = await fsToProject(this.config.definitionDir, this.out, args)
       if (process.env.GRAPHCOOL_DUMP_LOADED_DEFINITION) {
         const definitionJsonPath = path.join(this.config.definitionDir, 'loaded-definition.json')
         fs.writeFileSync(definitionJsonPath, JSON.stringify(this.definition, null, 2))
@@ -66,7 +68,8 @@ export class ProjectDefinitionClass {
     const definition = await readDefinition(
       this.definition!.modules[0]!.content,
       this.out,
-      'root',
+      this.config.definitionPath!,
+      this.args,
     )
     const types = this.definition!.modules[0].files[definition.types]
     this.out.log(chalk.blue(`Written ${definition.types}`))
@@ -86,6 +89,7 @@ export class ProjectDefinitionClass {
             module.content,
             this.out,
             moduleName,
+            this.args,
           )
           if (ymlDefinitinon.functions) {
             Object.keys(ymlDefinitinon.functions).forEach(fnName => {
@@ -100,7 +104,7 @@ export class ProjectDefinitionClass {
                   )
                 }
 
-                newFile = `'use latest'\n` + newFile
+                newFile = `'use latest';\n` + newFile
 
                 module.files[fn.handler.code.src] = newFile
               }

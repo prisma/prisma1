@@ -2,7 +2,7 @@ import * as path from 'path'
 import * as chalk from 'chalk'
 import { readDefinition } from './yaml'
 import fs from '../fs'
-import { GraphcoolModule, ProjectDefinition } from '../types'
+import { Args, GraphcoolModule, ProjectDefinition } from '../types/common'
 import { Output } from '../Output/index'
 import { FunctionDefinition, GraphcoolDefinition } from 'graphcool-json-schema'
 
@@ -13,21 +13,24 @@ interface ErrorMessage {
 export async function fsToProject(
   inputDir: string,
   out: Output,
+  args: Args
 ): Promise<ProjectDefinition> {
-  const rootModule = await fsToModule(path.join(inputDir, 'graphcool.yml'), out)
+  const definitionPath = path.join(inputDir, 'graphcool.yml')
+  const rootModule = await fsToModule(definitionPath, out, 'root', args)
   const modules: any[] = [rootModule]
 
   const definition: GraphcoolDefinition = await readDefinition(
     rootModule.content,
     out,
-    'root',
+    definitionPath,
+    args
   )
 
   if (definition.modules) {
     for (const moduleName of Object.keys(definition.modules)) {
       const modulePath = definition.modules[moduleName]
       const resolvedModulePath = path.join(inputDir, modulePath)
-      const module = await fsToModule(resolvedModulePath, out, moduleName)
+      const module = await fsToModule(resolvedModulePath, out, moduleName, args)
       modules.push({
         ...module,
         name: moduleName,
@@ -41,12 +44,13 @@ export async function fsToProject(
 }
 
 export async function fsToModule(
-  inputFile: string,
+  moduleDefinitionPath: string,
   out: Output,
   moduleName: string = 'root',
+  args: Args
 ): Promise<GraphcoolModule> {
-  const inputDir = path.dirname(inputFile)
-  const content = fs.readFileSync(inputFile, 'utf-8')
+  const inputDir = path.dirname(moduleDefinitionPath)
+  const content = fs.readFileSync(moduleDefinitionPath, 'utf-8')
 
   const module: GraphcoolModule = {
     name: '',
@@ -61,7 +65,8 @@ export async function fsToModule(
   const definition: GraphcoolDefinition = await readDefinition(
     content,
     out,
-    moduleName,
+    moduleDefinitionPath,
+    args
   )
   const typesPath = path.join(inputDir, definition.types)
 

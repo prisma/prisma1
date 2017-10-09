@@ -3,10 +3,11 @@ import { Output } from './Output/index'
 import 'isomorphic-fetch'
 import * as cuid from 'cuid'
 import * as opn from 'opn'
-import { AuthTrigger } from './types'
+import { AuthTrigger } from './types/common'
 import { Client } from './Client/Client'
 import { GraphQLClient } from 'graphql-request'
 import * as chalk from 'chalk'
+import { Environment } from './Environment'
 const debug = require('debug')('auth')
 
 export class Auth {
@@ -14,11 +15,13 @@ export class Auth {
   config: Config
   authTrigger: AuthTrigger = 'auth'
   client: Client
+  env: Environment
 
-  constructor(out: Output, config: Config, client: Client) {
+  constructor(out: Output, config: Config, env: Environment, client: Client) {
     this.out = out
     this.config = config
     this.client = client
+    this.env = env
   }
 
   setAuthTrigger(authTrigger: AuthTrigger) {
@@ -38,8 +41,8 @@ export class Auth {
       this.out.exit(1)
     }
 
-    this.config.setToken(token)
-    this.config.saveDotGraphcool()
+    this.env.setToken(token)
+    this.env.saveGlobalRC()
     this.client.updateClient()
 
     // return if we already had a token
@@ -49,10 +52,10 @@ export class Auth {
   async setToken(token: string) {
     const valid = await this.validateAuthToken(token)
     if (valid) {
-      this.config.setToken(token)
+      this.env.setToken(token)
     } else {
-      this.config.setToken(null)
-      this.config.saveDotGraphcool()
+      this.env.setToken(undefined)
+      this.env.saveGlobalRC()
       this.out.error(
         `You provided an invalid token. You can run ${this.out.color.bold(
           'graphcool auth',

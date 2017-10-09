@@ -2,213 +2,191 @@ import * as yaml from 'js-yaml'
 import * as path from 'path'
 import fs from './fs'
 import { Output } from './Output/index'
-import { DockerEnvironment, EnvironmentConfig } from './types'
 import { Client } from './Client/Client'
 import { Config } from './Config'
 import { EnvDoesntExistError } from './errors/EnvDoesntExistError'
+import { RC, Target, Targets } from './types/rc'
+import { mapValues } from 'lodash'
+import { Args } from './types/common'
+import Variables from './ProjectDefinition/Variables'
+const debug = require('debug')('environment')
 
 export class Environment {
-  env: EnvironmentConfig
+  localRC: RC = {}
+  globalRC: RC = {}
   out: Output
   client: Client
   config: Config
+  args: Args
 
   constructor(out: Output, config: Config, client: Client) {
     this.out = out
     this.config = config
     this.client = client
+    this.migrateOldFormat()
+  }
+  private setTestToken() {
+    debug('taking graphcool test token')
+    this.globalRC.platformToken = process.env.GRAPHCOOL_TEST_TOKEN!
   }
 
-  public initEmptyEnvironment() {
-    this.env = {
-      default: null,
-      environments: {},
-    }
+  get rc(): RC {
+    return { ...this.globalRC, ...this.localRC }
   }
 
-  get default(): string | DockerEnvironment | null {
-    if (this.env.default) {
-      return this.env.environments[this.env.default]
+  get default(): Target | null {
+    if (this.rc.targets && this.rc.targets.default) {
+      return this.rc.targets.default
     }
 
     return null
   }
 
-  public load() {
-    if (this.config.envPath && fs.existsSync(this.config.envPath)) {
+  /**
+   * This is used to migrate the old .graphcool and .graphcoolrc to the new format
+   */
+  migrateOldFormat() {}
+  // public loadDotGraphcool() {
+  //   if (this.dotGraphcoolFilePath && fs.existsSync(this.dotGraphcoolFilePath)) {
+  //     const configContent = fs.readFileSync(
+  //       this.dotGraphcoolFilePath,
+  //       'utf-8',
+  //     )
+  //     let file: any = null
+  //     try {
+  //       file = JSON.parse(configContent)
+  //     } catch (e) {
+  //       try {
+  //         file = yaml.safeLoad(configContent)
+  //       } catch (e) {
+  //         this.out.error(`Could not load ${this.dotGraphcoolFilePath}. It's neither valid json nor valid yaml.`)
+  //       }
+  //     }
+  //
+  //     if (file.token) {
+  //       debug(`loading .graphcool file: no token existing`)
+  //       this.token = file.token
+  //     }
+  //
+  //     if (file.targets) {
+  //       debug(`loading .graphcool file: no targets existing`)
+  //       this.targets = file.targets
+  //     }
+  //   }
+  // }
+
+  loadYaml(file: string | null, filePath: string | null = null): any {
+    if (file) {
+      let content
       try {
-        this.env = yaml.safeLoad(fs.readFileSync(this.config.envPath, 'utf-8'))
+        content = yaml.safeLoad(file)
       } catch (e) {
-        this.out.error(`Error in .graphcoolrc (${this.config.envPath}): ${e.message}`)
-        process.exit(1)
+        this.out.error(`Yaml parsing error in ${filePath}: ${e.message}`)
       }
+      const variables = new Variables(this.out, filePath || 'no filepath provided', this.args)
+      content = variables.populateJson(content)
 
-      if (!this.env.environments) {
-        this.out.error(`Loaded invalid .graphcoolrc from ${this.config.envPath}: Doesn't contain the 'environments' field`)
-      }
-
-      if (!this.env.default) {
-        this.out.error(`Loaded invalid .graphcoolrc from ${this.config.envPath}: Doesn't contain the 'default' field`)
-      }
-
-      if (this.default && this.isDockerEnv(this.default)) {
-        const dockerEnv = (this.default as DockerEnvironment)
-        this.config.setLocal(dockerEnv.host)
-        this.config.setToken(dockerEnv.token)
-        this.client.updateClient()
-      }
-
+      return content
     } else {
-      this.initEmptyEnvironment()
+      return {}
     }
   }
 
-  public save() {
-    if (this.config.envPath) {
-      const file = yaml.safeDump(this.env)
-      fs.writeFileSync(this.config.envPath, file)
+  load(args: Args) {
+    const localFile = this.config.localRCPath && fs.pathExistsSync(this.config.localRCPath) ? fs.readFileSync(this.config.localRCPath, 'utf-8') : null
+    const globalFile = this.config.globalRCPath && fs.pathExistsSync(this.config.globalRCPath) ? fs.readFileSync(this.config.globalRCPath, 'utf-8') : null
+
+    this.loadRCs(localFile, globalFile, args)
+
+    if (process.env.NODE_ENV === 'test') {
+      this.setTestToken()
     }
   }
 
-  public setEnv(name: string, projectId: string) {
-    this.env.environments[name] = projectId
+  loadRCs(localFile: string | null, globalFile: string | null, args: Args = {}): void {
+    debugger
+    this.args = args
+
+    const localJson = this.loadYaml(localFile, this.config.localRCPath)
+    const globalJson = this.loadYaml(globalFile, this.config.globalRCPath)
+
+    this.deserializeRCs(localJson, globalJson, this.config.localRCPath, this.config.globalRCPath)
   }
 
-  public setDockerEnv(name: string, dockerEnv: DockerEnvironment) {
-    this.env.environments[name] = dockerEnv
-  }
+  deserializeRCs(localFile: any, globalFile: any, localFilePath: string | null, globalFilePath: string | null): void {
+    let allTargets = {...localFile, ...globalFile}
 
-  public set(name: string, projectId: string) {
-    if (this.isDockerEnv(this.env.environments[name])) {
-      (this.env.environments[name] as DockerEnvironment).projectId = projectId
-    } else {
-      this.env.environments[name] = projectId
-    }
-  }
-
-  public setDefault(name: string) {
-    if (!this.env.environments[name]) {
-      this.out.error(new EnvDoesntExistError(name))
-    }
-    this.env.default = name
-  }
-
-  public rename(oldName: string, newName: string) {
-    const oldEnv = this.env.environments[oldName]
-
-    if (!oldEnv) {
-      this.out.error(new EnvDoesntExistError(oldName))
-    }
-    delete this.env.environments[oldName]
-
-    this.env.environments[newName] = oldEnv
-    if (this.env.default === oldName) {
-      this.setDefault(newName)
-    }
-  }
-
-  public remove(envName: string) {
-    const oldEnv = this.env.environments[envName]
-
-    if (!oldEnv) {
-      this.out.error(new EnvDoesntExistError(envName))
+    // 1. resolve aliases
+    // global is not allowed to access local variables
+    if (globalFile.targets) {
+      globalFile.targets = this.resolveTargetAliases(globalFile.targets, globalFile.targets)
     }
 
-    delete this.env.environments[envName]
-  }
-
-  public deleteIfExist(projectIds: string[]) {
-    projectIds.forEach(projectId => {
-      const envName = Object.keys(this.env.environments).find(
-        name => this.env.environments[name] === projectId,
-      )
-      if (envName) {
-        delete this.env.environments[envName]
+    // repeat this 2 times as potentially there could be a deeper indirection
+    for(let i = 0; i < 2; i++) {
+      if (localFile.targets) {
+        // first resolve all aliases
+        localFile.targets = this.resolveTargetAliases(localFile.targets, allTargets)
       }
-      if (this.env.default === envName) {
-        this.env.default = null
-      }
-    })
+
+      allTargets = {...localFile, ...globalFile}
+    }
+
+    // at this point there should only be targets in the form of shared-eu-west-1/cj862nxg0000um3t0z64ls08
+    // 2. convert cluster/id to Target
+    localFile.targets = this.deserializeTargets(localFile.targets, localFilePath)
+    globalFile.targets = this.deserializeTargets(globalFile.targets, globalFilePath)
+    this.localRC = localFile
+    this.globalRC = globalFile
   }
 
-  public updateDocker(env: DockerEnvironment) {
-    this.config.setToken(env.token)
-    this.config.setLocal(env.host)
-    this.client.updateClient()
+  deserializeTargets(targets: {[key: string]: string}, filePath: string | null): Targets {
+    return mapValues<string, Target>(targets, target => this.deserializeTarget(target, filePath))
   }
 
-  public async getEnvironment({
-    project,
-    env,
-    skipDefault,
-  }: {
-    project?: string
-    env?: string
-    skipDefault?: boolean
-  }): Promise<{ projectId: string | null; envName: string | null }> {
-    let projectId: null | string = null
-
-    if (env) {
-      if (typeof this.env.environments[env] === 'string') {
-        projectId = this.env.environments[env] as string
-      }
-      if (this.env.environments[env] && typeof this.env.environments[env] === 'object') {
-        projectId = (this.env.environments[env] as DockerEnvironment).projectId || null
-        this.updateDocker(this.env.environments[env] as DockerEnvironment)
-      }
-      return {
-        envName: env,
-        projectId,
-      }
+  deserializeTarget(target: string, filePath: string | null): Target {
+    const splittedTarget = target.split('/')
+    if (splittedTarget.length === 1) {
+      this.out.error(`Could not parse target ${target} in ${filePath}`)
     }
-
-    if (project) {
-      const projects = await this.client.fetchProjects()
-      const foundProject = projects.find(
-        p => p.id === project || p.alias === project,
-      )
-      projectId = foundProject ? foundProject.id : null
-      if (projectId) {
-        const resultEnv = this.getEnvironmentName(projectId)
-
-        return {
-          projectId,
-          envName: resultEnv,
-        }
-      }
-    }
-
-    if (this.default && !skipDefault) {
-      return {
-        projectId: typeof this.default === 'string' ? this.default : this.default.projectId,
-        envName: this.env.default,
-      }
-    }
-
     return {
-      projectId: null,
-      envName: null,
+      cluster: splittedTarget[0],
+      id: splittedTarget[1]
     }
   }
 
-  public isDockerEnv(suspect: any) {
-    if (!suspect) {
-      return false
-    }
+  resolveTargetAliases = (targets, allTargets) => mapValues(targets, target =>
+    this.isTargetAlias(target) ? this.resolveTarget(target, allTargets) : target
+  )
+  isTargetAlias = (target: string): boolean => target.split('/').length === 1
+  resolveTarget = (
+    target: string,
+    targets: { [key: string]: string },
+  ): string =>
+    targets[target] ? this.resolveTarget(targets[target], targets) : target
 
-    if (typeof suspect === 'object' && suspect.token && suspect.host) {
-      return true
+  serializeRC(rc: RC): string {
+    const copy: any = {...rc}
+    if (copy.targets) {
+      copy.targets = this.serializeTargets(copy.targets)
     }
-
-    return false
+    return yaml.safeDump(copy)
   }
 
-  private getEnvironmentName(projectId: string): string | null {
-    return (
-      Object.keys(this.env.environments).find(key => {
-        const projectEnv = this.env.environments[key]
-        return projectEnv === projectId
-      }) || null
-    )
+  serializeTargets(targets: Targets) {
+    return mapValues<Target, string>(targets, t => `${t.cluster}/${t.id}`)
+  }
+
+  setToken(token: string | undefined) {
+    this.globalRC.platformToken = token
+  }
+
+  saveLocalRC() {
+
+  }
+
+  saveGlobalRC() {
+    const file = this.serializeRC(this.globalRC)
+    fs.writeFileSync(this.config.globalRCPath, file)
   }
 }

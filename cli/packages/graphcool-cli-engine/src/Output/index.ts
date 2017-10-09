@@ -220,10 +220,10 @@ export class Output {
     }, this.color.bold.yellow('!'))
   }
 
-  getPrettyModule(moduleName: string, type: 'error' | 'warning' = 'error') {
+  getErrorPrefix(fileName: string, type: 'error' | 'warning' = 'error') {
     const method = type === 'error' ? 'red' : 'yellow'
     return chalk[method](
-      `[${type.toUpperCase()} in module: ${chalk.bold(moduleName)}] `,
+      `[${type.toUpperCase()}] in ${chalk.bold(fileName)}: `,
     )
   }
 

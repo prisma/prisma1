@@ -1,4 +1,4 @@
-import { ProjectDefinition } from './types'
+import { ProjectDefinition } from './types/common'
 
 export const mockDefinition: ProjectDefinition = {
   modules: [

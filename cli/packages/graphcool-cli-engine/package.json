@@ -10,7 +10,7 @@
   "license": "MIT",
   "devDependencies": {
     "@types/jest": "^20.0.8",
-    "@types/lodash": "^4.14.74",
+    "@types/lodash": "^4.14.77",
     "@types/node": "^8.0.22",
     "husky": "^0.14.3",
     "jest": "^21.0.1",
@@ -57,7 +57,12 @@
     ],
     "setupFiles": [
       "../test/init.js"
-    ]
+    ],
+    "globals": {
+      "ts-jest": {
+        "tsConfigFile": "./tsconfig.json"
+      }
+    }
   },
   "dependencies": {
     "@heroku/linewrap": "^1.0.0",

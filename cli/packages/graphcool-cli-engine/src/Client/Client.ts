@@ -10,7 +10,7 @@ import {
   ProjectDefinition,
   ProjectInfo,
   RemoteProject,
-} from '../types'
+} from '../types/common'
 
 import { GraphQLClient, request } from 'graphql-request'
 import { omit } from 'lodash'

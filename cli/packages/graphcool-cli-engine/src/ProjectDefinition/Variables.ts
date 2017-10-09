@@ -5,40 +5,43 @@ import { Output } from '../Output/index'
 import * as _ from 'lodash'
 import * as replaceall from 'replaceall'
 import * as BbPromise from 'bluebird'
+import { Args } from '../types/common'
 
 export default class Variables {
-  definition: GraphcoolDefinition
+  json: any
   overwriteSyntax: RegExp = RegExp(/,/g)
   envRefSyntax: RegExp = RegExp(/^env:/g)
   selfRefSyntax: RegExp = RegExp(/^self:/g)
   stringRefSyntax: RegExp = RegExp(/('.*')|(".*")/g)
+  optRefSyntax: RegExp = RegExp(/^opt:/g)
   variableSyntax: RegExp = RegExp(
     /* tslint:disable-next-line */
     '\\${([ ~:a-zA-Z0-9._\'",\\-\\/\\(\\)]+?)}',
     'g',
   )
   out: Output
-  moduleName: string
+  fileName: string
+  options: Args
 
   constructor(
-    graphcoolDefinition: GraphcoolDefinition,
     out: Output,
-    moduleName: string,
+    fileName: string,
+    options: Args = {}
   ) {
-    this.definition = graphcoolDefinition
     this.out = out
-    this.moduleName = moduleName
+    this.fileName = fileName
+    this.options = options
 
     // this.fileRefSyntax = RegExp(/^file\((~?[a-zA-Z0-9._\-/]+?)\)/g);
-    // this.optRefSyntax = RegExp(/^opt:/g);
     // this.cfRefSyntax = RegExp(/^cf:/g);
     // this.s3RefSyntax = RegExp(/^s3:(.+?)\/(.+)$/);
     // this.ssmRefSyntax = RegExp(/^ssm:([a-zA-Z0-9_.-/]+)[~]?(true|false)?/);
   }
 
-  populateDefinition(processedOptions): Promise<GraphcoolDefinition> {
-    return this.populateObject(this.definition).then(() => {
-      return BbPromise.resolve(this.definition)
+  populateJson(json: any): Promise<any> {
+    this.json = json
+    return this.populateObject(this.json).then(() => {
+      return BbPromise.resolve(this.json)
     })
   }
 
@@ -117,7 +120,7 @@ export default class Variables {
         allValuesToPopulate.push(singleValueToPopulate)
       })
       return BbPromise.all(allValuesToPopulate).then(() => {
-        if ((property as any) !== (this.definition as any)) {
+        if ((property as any) !== (this.json as any)) {
           return this.populateProperty(property)
         }
         return BbPromise.resolve(property)
@@ -146,7 +149,7 @@ export default class Variables {
             ' Please make sure the value of the property is a string.',
           ].join('')
           this.out.warn(
-            this.out.getPrettyModule(this.moduleName, 'warning') + errorMessage,
+            this.out.getErrorPrefix(this.fileName, 'warning') + errorMessage,
           )
         }
         return BbPromise.resolve(property)
@@ -178,8 +181,8 @@ export default class Variables {
   getValueFromSource(variableString) {
     if (variableString.match(this.envRefSyntax)) {
       return this.getValueFromEnv(variableString)
-      // } else if (variableString.match(this.optRefSyntax)) {
-      //   return this.getValueFromOptions(variableString);
+    } else if (variableString.match(this.optRefSyntax)) {
+      return this.getValueFromOptions(variableString)
     } else if (variableString.match(this.selfRefSyntax)) {
       return this.getValueFromSelf(variableString)
       // } else if (variableString.match(this.fileRefSyntax)) {
@@ -199,7 +202,7 @@ export default class Variables {
       ' You can check our docs for more info.',
     ].join('')
     this.out.warn(
-      this.out.getPrettyModule(this.moduleName, 'warning') + errorMessage,
+      this.out.getErrorPrefix(this.fileName, 'warning') + errorMessage,
     )
   }
 
@@ -216,20 +219,15 @@ export default class Variables {
     const valueToPopulate = variableString.replace(/^['"]|['"]$/g, '')
     return BbPromise.resolve(valueToPopulate)
   }
-  //
-  // getValueFromOptions(variableString) {
-  //   const requestedOption = variableString.split(':')[1];
-  //   let valueToPopulate;
-  //   if (requestedOption !== '' || '' in this.options) {
-  //     valueToPopulate = this.options[requestedOption];
-  //   } else {
-  //     valueToPopulate = this.options;
-  //   }
-  //   return BbPromise.resolve(valueToPopulate);
-  // }
+
+  getValueFromOptions(variableString) {
+    const requestedOption = variableString.split(':')[1];
+    const valueToPopulate = (requestedOption !== '' || '' in this.options) ? this.options[requestedOption] : this.options
+    return BbPromise.resolve(valueToPopulate);
+  }
 
   getValueFromSelf(variableString) {
-    const valueToPopulate = this.definition
+    const valueToPopulate = this.json
     const deepProperties = variableString.split(':')[1].split('.')
     return this.getDeepValue(deepProperties, valueToPopulate)
   }
@@ -423,8 +421,8 @@ export default class Variables {
       let varType
       if (variableString.match(this.envRefSyntax)) {
         varType = 'environment variable'
-        // } else if (variableString.match(this.optRefSyntax)) {
-        //   varType = 'option';
+      } else if (variableString.match(this.optRefSyntax)) {
+        varType = 'option'
       } else if (variableString.match(this.selfRefSyntax)) {
         varType = 'self reference'
         // } else if (variableString.match(this.fileRefSyntax)) {
@@ -433,7 +431,7 @@ export default class Variables {
         //   varType = 'SSM parameter';
       }
       this.out.warn(
-        this.out.getPrettyModule(this.moduleName, 'warning') +
+        this.out.getErrorPrefix(this.fileName, 'warning') +
           `A valid ${varType} to satisfy the declaration '${variableString}' could not be found.`,
       )
     }

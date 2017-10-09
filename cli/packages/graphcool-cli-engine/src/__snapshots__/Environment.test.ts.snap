@@ -1,0 +1,10 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`config should work without global RC 1`] = `
+Object {
+  "fulfillmentValue": undefined,
+  "isFulfilled": false,
+  "isRejected": false,
+  "rejectionReason": undefined,
+}
+`;

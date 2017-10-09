@@ -1,4 +1,4 @@
-import { RunOptions, TargetDefinition, TargetsDefinition } from './types'
+import { RunOptions } from './types/common'
 import * as path from 'path'
 import * as os from 'os'
 import * as fs from 'fs-extra'
@@ -34,7 +34,6 @@ export class Config {
       defaultCommand: 'help',
     },
   }
-  targets: TargetsDefinition = {}
 
   /**
    * Paths
@@ -43,10 +42,10 @@ export class Config {
   home: string
   root = path.join(__dirname, '..')
 
-  envPath: string | null
   definitionDir: string
   definitionPath: string | null
-  dotGraphcoolFilePath: string | null
+  localRCPath: string
+  globalRCPath: string
   warnings: string[] = []
 
   /**
@@ -78,11 +77,8 @@ export class Config {
     this.home = (options && options.home) || this.getHome()
     debug(`CWD`, this.cwd)
     debug(`HOME`, this.home)
-    this.setDotGraphcoolPath()
-    this.setEnvPath()
+    this.setRCPaths()
     this.setDefinitionPaths()
-    debug(`dotGraphcoolPath after setting it`, this.dotGraphcoolFilePath)
-    this.setTokenIfExists()
     if (options) {
       this.readPackageJson(options)
     }
@@ -95,18 +91,6 @@ export class Config {
     this.out = out
     this.warnings.forEach(warning  => out.warn(warning))
     this.warnings = []
-  }
-  setToken(token: string | null) {
-    this.token = token
-  }
-  saveDotGraphcool() {
-    if (this.dotGraphcoolFilePath) {
-      const file = yaml.safeDump({
-        token: this.token,
-        targets: this.targets,
-      })
-      fs.writeFileSync(this.dotGraphcoolFilePath, file)
-    }
   }
   get arch(): string {
     return os.arch() === 'ia32' ? 'x86' : os.arch()
@@ -130,37 +114,6 @@ export class Config {
         : null,
     )
   }
-  public loadDotGraphcool() {
-    if (this.dotGraphcoolFilePath && fs.existsSync(this.dotGraphcoolFilePath)) {
-      const configContent = fs.readFileSync(
-        this.dotGraphcoolFilePath,
-        'utf-8',
-      )
-      let file: any = null
-      try {
-        file = JSON.parse(configContent)
-      } catch (e) {
-        try {
-          file = yaml.safeLoad(configContent)
-        } catch (e) {
-          this.out.error(`Could not load ${this.dotGraphcoolFilePath}. It's neither valid json nor valid yaml.`)
-        }
-      }
-
-      if (file.token) {
-        debug(`loading .graphcool file: no token existing`)
-        this.token = file.token
-      }
-
-      if (file.targets) {
-        debug(`loading .graphcool file: no targets existing`)
-        this.targets = file.targets
-      }
-    }
-  }
-  public setTarget(name: string, config: TargetDefinition) {
-    this.targets[name] = config
-  }
   private readPackageJson(options: RunOptions) {
     this.mock = options.mock
     this.argv = options.argv || this.argv
@@ -174,44 +127,9 @@ export class Config {
       }
     }
   }
-  private setEnvPath() {
-    this.envPath = path.join(this.cwd, '.graphcoolrc')
-    if (!fs.pathExistsSync(this.envPath)) {
-      const found = findUp.sync('.graphcoolrc', {cwd: this.cwd})
-      if (found) {
-
-        // only use this if 1. it's not in the home dir (people of old cli versions may have this)
-        // and 2. there MUST be a graphcool.yml file in the same folder, otherwise this makes no sense to use!
-        const foundDir = path.dirname(found)
-
-        if (foundDir === this.home) {
-          const file = fs.readFileSync(found, 'utf-8')
-          let json: any = null
-          try {
-            json = JSON.parse(file)
-          } catch (e) {
-            //
-          }
-
-          if (json && json.token && (!this.dotGraphcoolFilePath || !fs.pathExistsSync(this.dotGraphcoolFilePath))) {
-            const newDotPath = path.join(this.home, '.graphcool')
-            fs.moveSync(found, newDotPath)
-            this.dotGraphcoolFilePath = newDotPath
-          } else {
-            this.warn(`There is a .graphcoolrc file in your home directory (${this.envPath}).
-This can still be an artifact of the old CLI version.
-To prevent unwanted side effects, please remove it.`)
-          }
-
-          return
-        }
-
-        const ymlPath = path.join(foundDir, 'graphcool.yml')
-        if (fs.pathExistsSync(ymlPath)) {
-          this.envPath = (found && path.dirname(found) !== this.home) ? found : this.envPath
-        }
-      }
-    }
+  private setRCPaths() {
+    this.localRCPath = path.join(this.cwd, '.graphcoolrc')
+    this.globalRCPath = findUp.sync('.graphcoolrc', {cwd: this.cwd}) || path.join(this.home, '.graphcoolrc')
   }
   private warn(msg: string) {
     this.warnings.push(msg)
@@ -228,26 +146,6 @@ To prevent unwanted side effects, please remove it.`)
     }
     debug(`definitionDir`, this.definitionDir)
     debug(`definitionPath`, this.definitionPath)
-  }
-  private setDotGraphcoolPath() {
-    const dotGraphcoolCwd = path.join(this.cwd, '.graphcool')
-    if (fs.pathExistsSync(dotGraphcoolCwd)) {
-      this.dotGraphcoolFilePath = dotGraphcoolCwd
-    } else {
-      const found = findUp.sync('.graphcool', {cwd: this.cwd})
-      const dotGraphcoolHome = path.join(this.home, '.graphcool')
-
-      // only take the find-up file, if it's "deeper" than the home dir
-      this.dotGraphcoolFilePath = (found && (found.split('/').length > dotGraphcoolHome.split('/').length)) ? found : dotGraphcoolHome
-    }
-  }
-  private setTokenIfExists() {
-    if (process.env.NODE_ENV === 'test') {
-      debug('taking graphcool test token')
-      this.token = process.env.GRAPHCOOL_TEST_TOKEN!
-    } else {
-      this.loadDotGraphcool()
-    }
   }
   private getCwd() {
     // get cwd

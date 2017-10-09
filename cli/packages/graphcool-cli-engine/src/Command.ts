@@ -2,7 +2,7 @@ import 'source-map-support/register'
 import { Arg, Flags } from './Flags/index'
 import { Output } from './Output'
 import { Config } from './Config'
-import { EnvironmentConfig, ProjectDefinition, RunOptions } from './types'
+import { ProjectDefinition, RunOptions } from './types/common'
 import { OutputArgs, OutputFlags, Parser } from './Parser'
 import Help from './Help'
 import { Client } from './Client/Client'
@@ -13,6 +13,7 @@ import packagejson = require('../package.json')
 import * as mock from './mock'
 import * as fs from 'fs-extra'
 import * as path from 'path'
+import { RC } from './types/rc'
 const debug = require('debug')('command')
 
 const pjson = packagejson as any
@@ -27,7 +28,7 @@ export class Command {
   static aliases: string[] = []
   static hidden: boolean = false
   static mockDefinition: ProjectDefinition
-  static mockEnv: EnvironmentConfig
+  static mockRC: RC
 
   static get id(): string {
     return this.command ? `${this.topic}:${this.command}` : this.topic
@@ -45,12 +46,12 @@ export class Command {
       customArgs && customArgs.mockDefinition
         ? customArgs.mockDefinition
         : mock.mockDefinition
-    const mockEnv = customArgs && customArgs.mockEnv ? customArgs.mockEnv : null
+    const mockRC = customArgs && customArgs.mockRC ? customArgs.mockRC : null
     const mockConfig = customArgs && customArgs.mockConfig ? customArgs.mockConfig : null
     debug(`Using mockDefinition`, mockDefinition)
-    debug(`Using mockEnv`, mockEnv)
+    debug(`Using mockRC`, mockRC)
 
-    return this.run({ argv, mock: true, mockDefinition, mockEnv, mockConfig })
+    return this.run({ argv, mock: true, mockDefinition, mockRC, mockConfig })
   }
 
   static async run(config?: RunOptions): Promise<Command> {
@@ -108,9 +109,8 @@ export class Command {
     this.argv = options.config && options.config.argv ? options.config.argv : []
     this.definition = new ProjectDefinitionClass(this.out, this.config)
     this.client = new Client(this.config)
-    this.auth = new Auth(this.out, this.config, this.client)
     this.env = new Environment(this.out, this.config, this.client)
-    this.env.load()
+    this.auth = new Auth(this.out, this.config, this.env, this.client)
   }
 
   async run(...rest: void[]): Promise<void> {
@@ -120,15 +120,12 @@ export class Command {
   async init(options?: RunOptions) {
     // parse stuff here
     const mockDefinition = options && options.mockDefinition
-    const mockEnv = options && options.mockEnv
+    const mockRC = options && options.mockRC
     if (mockDefinition) {
       this.definition.set(mockDefinition)
     }
-    if (mockEnv) {
-      this.env.env = mockEnv
-      if (mockEnv.default && this.env.isDockerEnv(mockEnv.environments[mockEnv.default])) {
-        this.config.setLocal((mockEnv.environments[mockEnv.default] as any).host)
-      }
+    if (mockRC) {
+      this.env.localRC = mockRC
     }
     const parser = new Parser({
       flags: (this.constructor as any).flags || {},
@@ -143,6 +140,7 @@ export class Command {
     this.flags = flags!
     this.argv = argv!
     this.args = args
+    this.env.load(flags!)
   }
 
   get stdout(): string {
