@@ -3,7 +3,7 @@ types: ./types.graphql
 functions:
   greeting:
     type: resolver
-    schema: ./src/greeting.graphql
+    schema: ./src/hello.graphql
     handler:
       code:
         src: ./src/hello.js
