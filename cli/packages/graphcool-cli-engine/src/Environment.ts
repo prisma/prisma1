@@ -456,7 +456,8 @@ https://github.com/graphcool/graphcool/issues/714
       return this.subscriptionURL({region, projectId})
     }
 
-    const localPort = this.clusterEndpoint.split(':')[1]
+    const match = this.clusterEndpoint.match(/.*:(\d+)\/?.*/)
+    const localPort = match ? match[1] : '60000'
     return this.subscriptionURL({localPort, projectId})
   }
 

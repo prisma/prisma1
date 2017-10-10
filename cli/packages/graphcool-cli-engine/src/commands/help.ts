@@ -6,7 +6,6 @@ import Plugins from '../Plugin/Plugins'
 import * as chalk from 'chalk'
 import {groupBy, flatten} from 'lodash'
 const debug = require('debug')('help command')
-const max = require('lodash.maxby')
 
 function trimToMaxLeft(n: number): number {
   const max = Math.floor(stdtermwidth * 0.8)
