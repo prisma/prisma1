@@ -231,12 +231,13 @@ export class Client {
     return this.getProjectDefinition(project)
   }
 
-  async waitForLocalDocker(): Promise<void> {
+  async waitForLocalDocker(endpoint: string): Promise<void> {
     // dont send any auth information when running the authenticateCustomer mutation
     let valid = false
     while(!valid) {
       try {
-        await request(this.config.systemAPIEndpoint,
+        debug('requesting', endpoint)
+        await request(endpoint,
           `
             {
               viewer {
@@ -255,11 +256,11 @@ export class Client {
     }
   }
 
-  async authenticateCustomer(token: string): Promise<AuthenticateCustomerPayload> {
+  async authenticateCustomer(endpoint: string, token: string): Promise<AuthenticateCustomerPayload> {
     // dont send any auth information when running the authenticateCustomer mutation
     const result = await request<
       {authenticateCustomer: AuthenticateCustomerPayload}
-      >(this.config.systemAPIEndpoint,
+      >(endpoint,
       `
       mutation ($token: String!) {
         authenticateCustomer(input: {

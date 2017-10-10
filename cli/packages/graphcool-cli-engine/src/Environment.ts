@@ -410,6 +410,14 @@ https://github.com/graphcool/graphcool/issues/714
     return (this.rc.clusters![this.activeCluster]! as Cluster).host + '/system'
   }
 
+  get systemEndpoint(): string {
+    if (this.isSharedCluster(this.activeCluster)) {
+      return this.config.simpleAPIEndpoint + '/system'
+    }
+
+    return (this.rc.clusters![this.activeCluster]! as Cluster).host + '/system'
+  }
+
   simpleEndpoint(projectId: string): string {
     if (this.isSharedCluster(this.activeCluster)) {
       return this.config.simpleAPIEndpoint + projectId

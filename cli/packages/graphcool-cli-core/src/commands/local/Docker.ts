@@ -32,7 +32,7 @@ export default class Docker {
     if (this.env.rc.clusters && this.env.rc.clusters[this.clusterName]) {
       this.env.setActiveCluster(this.clusterName)
       cluster = this.env.rc.clusters[this.clusterName]
-      port = cluster.hoster.split(':').slice(-1)[0]
+      port = cluster.host.split(':').slice(-1)[0]
     }
     const defaultVars = this.getDockerEnvVars()
     port = port || await portfinder.getPortPromise({ port: 60000 })
@@ -81,7 +81,7 @@ export default class Docker {
         this.config.cwd,
       ]
       const args = defaultArgs.concat(argv)
-      this.out.log(chalk.dim(`$ docker-compose ${args.join(' ')}\n`))
+      this.out.log(chalk.dim(`$ docker-compose ${argv.join(' ')}\n`))
       const child = childProcess.spawn('docker-compose', args, {
         env: this.envVars,
         cwd: this.config.cwd,

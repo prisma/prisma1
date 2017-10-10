@@ -9,7 +9,7 @@ export default class PullLocal extends Command {
     name: flags.string({
       char: 'n',
       description: 'Name of the new instance',
-      defaultValue: 'dev'
+      defaultValue: 'local'
     }),
   }
   async run() {

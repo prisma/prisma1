@@ -30,16 +30,18 @@ export class Auth {
 
   async ensureAuth() {
     const localToken = this.env.token
-    const token = localToken || (await this.requestAuthToken())
-
-    const valid = await this.validateAuthToken(token)
+    let token = localToken
+    let valid: any = true
+    if (token) {
+      valid = await this.validateAuthToken(token)
+    }
     if (!valid) {
-      this.out.error(
-        `Received invalid token. Please try ${this.out.color.bold(
-          'graphcool auth',
-        )} again to get a valid token.`,
+      this.out.warn(
+        `Received invalid token. Trying to authenticate ...`,
       )
-      this.out.exit(1)
+    }
+    if (!token || !valid) {
+      token = await this.requestAuthToken()
     }
 
     this.env.setToken(token)
@@ -114,14 +116,20 @@ export class Auth {
       }
     }`
 
-    const result = await client.request<{
-      viewer: { user: { email: string } }
-    }>(authQuery)
+    try {
+      const result = await client.request<{
+        viewer: { user: { email: string } }
+      }>(authQuery)
 
-    if (!result.viewer.user || !result.viewer.user.email) {
-      return null
+      if (!result.viewer.user || !result.viewer.user.email) {
+        return null
+      }
+
+      return result.viewer.user.email
+    } catch (e) {
+      //
     }
 
-    return result.viewer.user.email
+    return null
   }
 }

@@ -96,7 +96,7 @@ ${chalk.gray(
       const region = this.env.getRegionFromCluster(cluster)
 
       // otherwise create a new project
-      const newProject = await this.createProject(isLocal, newServiceName, alias, region)
+      const newProject = await this.createProject(isLocal, cluster, newServiceName, alias, region)
       projectId = newProject.projectId
       projectIsNew = true
 
@@ -108,6 +108,8 @@ ${chalk.gray(
       }
 
       this.env.saveLocalRC()
+    } else {
+      projectId = target.id
     }
 
     // best guess for "project name"
@@ -129,7 +131,7 @@ ${chalk.gray(
     }
   }
 
-  private async createProject(isLocal: boolean, name?: string, alias?: string, region?: string): Promise<{
+  private async createProject(isLocal: boolean, cluster: string, name?: string, alias?: string, region?: string): Promise<{
     projectId: string
   }> {
 
@@ -141,7 +143,7 @@ ${chalk.gray(
     const projectName = name || sillyName()
 
     this.out.log('')
-    const projectMessage = `Creating project ${chalk.bold(name)}${localNote}`
+    const projectMessage = `Creating service ${chalk.bold(projectName)}${localNote} in cluster ${cluster}`
     this.out.action.start(projectMessage)
 
     // create project
@@ -177,7 +179,7 @@ ${chalk.gray(
         ? `Deploying${localNote}`
         : `Deploying to ${chalk.bold(
             projectName,
-          )} with env ${chalk.bold(targetName)}${localNote}`,
+          )} with target ${chalk.bold(targetName)}${localNote}`,
     )
 
     const migrationResult = await this.client.push(
@@ -197,13 +199,14 @@ ${chalk.gray(
       this.out.log(
         `Everything up-to-date.`,
       )
+      this.out.log(`Endpoint: ${this.env.simpleEndpoint(projectId)}`)
       this.deploying = false
       return
     }
 
     if (migrationResult.migrationMessages.length > 0) {
       if (projectIsNew) {
-        this.out.log('\nSuccess! Created the following project:\n')
+        this.out.log('\nSuccess! Created the following service:')
       } else {
         const updateText =
           migrationResult.errors.length > 0
@@ -240,7 +243,9 @@ ${chalk.gray(
       )
     }
     this.deploying = false
+    this.out.log(`Endpoint: ${this.env.simpleEndpoint(projectId)}`)
   }
+
 }
 
 export function isValidProjectName(projectName: string): boolean {
