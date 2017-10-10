@@ -5,6 +5,7 @@ export default class PullLocal extends Command {
   static topic = 'local'
   static command = 'pull'
   static description = 'Pull the latest Graphcool version'
+  static group = 'local'
   static flags: Flags = {
     name: flags.string({
       char: 'n',

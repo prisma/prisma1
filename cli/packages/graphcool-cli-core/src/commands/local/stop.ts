@@ -5,6 +5,7 @@ export default class Stop extends Command {
   static topic = 'local'
   static command = 'stop'
   static description = 'Stop an already initialized local Graphcool instance'
+  static group = 'local'
   static flags: Flags = {
     name: flags.string({
       char: 'n',

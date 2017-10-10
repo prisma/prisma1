@@ -20,43 +20,70 @@ import Restart from './commands/local/restart'
 import Account from './commands/account'
 import Eject from './commands/local/eject'
 
+console.log('WAAAAAAAAAAAAA')
+
+export const groups = [
+  {
+    key: 'general',
+    title: 'General commands'
+  },
+  {
+    key: 'data',
+    title: 'Data workflows'
+  },
+  {
+    key: 'local',
+    title: 'Local development'
+  },
+  {
+    key: 'platform',
+    title: 'Platform'
+  },
+]
+
 export const topics = [
-  { name: 'deploy', description: 'Deploy local project definition' },
-  { name: 'init', description: 'Create a new project' },
-  { name: 'auth', description: 'Create account or login' },
+  { name: 'init', description: 'Create a new service', group: 'general' },
+  { name: 'deploy', description: 'Deploy local service definition', group: 'general' },
+  { name: 'login', description: 'Create account or login', group: 'platform' },
   {
     name: 'info',
-    description: 'Print project info (environments, endpoints, ...) ',
+    description: 'Print service info (endpoints, clusters, ...) ',
+    group: 'general'
   },
-  { name: 'console', description: 'Opens the console for the current project' },
+  { name: 'console', description: 'Opens the console for the current service', group: 'platform' },
   {
     name: 'playground',
-    description: 'Opens the playground for the current project',
+    description: 'Opens the playground for the current service',
+    group: 'general'
   },
-  { name: 'list', description: 'List all deployed services' },
+  { name: 'list', description: 'List all deployed services', group: 'general' },
   // { name: 'modules', description: 'Manage modules' },
-  { name: 'get-root-token', description: 'Get the project root tokens' },
-  { name: 'functions', description: 'List all functions of a project' },
-  { name: 'logs', description: 'Get logs of functions' },
+  { name: 'root-token', description: 'Get the service root tokens', group: 'general' },
+  { name: 'logs', description: 'Get logs of functions', group: 'general' },
   {
     name: 'diff',
-    description: 'Get the diff of the local and remote project definition',
+    description: 'Get the diff of the local and remote service definition',
+    group: 'general'
   },
   {
     name: 'delete',
-    description: 'Delete a project',
+    description: 'Delete a service',
+    group: 'general'
   },
   {
     name: 'export',
-    description: 'Export project data',
+    description: 'Export service data',
+    group: 'data'
   },
   {
     name: 'invoke',
     description: 'Invokes a function locally',
+    group: 'general'
   },
   {
     name: 'account',
-    description: 'Information about the current authenticated account'
+    description: 'Information about the current authenticated account',
+    group: 'platform'
   }
   // {
   //   name: 'local',

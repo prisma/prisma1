@@ -38,6 +38,12 @@ export interface CachedPlugin {
   version: string
   commands: CachedCommand[]
   topics: CachedTopic[]
+  groups: Group[]
+}
+
+export interface Group {
+  key: string
+  name: string
 }
 
 export interface CacheData {
@@ -141,7 +147,8 @@ export default class Cache {
         path: pluginPath.path,
         version: '',
         commands: [],
-        topics: []
+        topics: [],
+        groups: []
       }
     }
   }

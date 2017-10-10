@@ -6,6 +6,7 @@ import * as childProcess from 'child_process'
 export default class Playground extends Command {
   static topic = 'playground'
   static description = 'Open the playground for the current selected project'
+  static group = 'general'
   static flags: Flags = {
     target: flags.string({
       char: 't',

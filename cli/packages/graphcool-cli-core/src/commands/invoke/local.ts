@@ -10,6 +10,7 @@ export default class InvokeLocal extends Command {
   static topic = 'invoke'
   static command = 'local'
   static description = 'Invoke a function locally'
+  static group = 'general'
   static flags: Flags = {
     function: flags.string({
       char: 'f',

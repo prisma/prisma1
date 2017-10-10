@@ -8,6 +8,7 @@ const debug = require('debug')('logs')
 export default class FunctionLogs extends Command {
   static topic = 'logs'
   static description = 'Log functions'
+  static group = 'general'
   static flags: Flags = {
     target: flags.string({
       char: 't',

@@ -5,6 +5,7 @@ import {consoleURL} from '../../util'
 export default class Console extends Command {
   static topic = 'console'
   static description = 'Open the console for the current selected project'
+  static group = 'platform'
   static flags: Flags = {
     target: flags.string({
       char: 't',

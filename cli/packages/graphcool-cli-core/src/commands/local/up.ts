@@ -7,6 +7,7 @@ export default class Up extends Command {
   static topic = 'local'
   static command = 'up'
   static description = 'Pull & Start a local Graphcool instance'
+  static group = 'local'
   static flags: Flags = {
     name: flags.string({
       char: 'n',

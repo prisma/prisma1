@@ -7,6 +7,7 @@ export default class Eject extends Command {
   static topic = 'local'
   static command = 'eject'
   static description = 'Eject from the managed docker runtime'
+  static group = 'local'
   async run() {
     const newComposePath = path.join(this.config.definitionDir, 'docker-compose.yml')
     const newEnvrcPath = path.join(this.config.definitionDir, '.envrc')

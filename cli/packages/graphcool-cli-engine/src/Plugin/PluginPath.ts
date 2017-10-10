@@ -105,8 +105,10 @@ export class PluginPath {
       topics.push(topic)
     }
 
+    const groups = plugin.groups || []
+
     const {name, version} = this.pjson()
-    return {name, path: this.path, version, commands, topics}
+    return {name, path: this.path, version, commands, topics, groups}
   }
 
   // TODO rm any hack

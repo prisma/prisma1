@@ -7,7 +7,8 @@ import * as chalk from 'chalk'
 
 export default class Diff extends Command {
   static topic = 'diff'
-  static description = 'Get the diff of the local and remote project definition'
+  static description = 'Get the diff of the local and remote service definition'
+  static group = 'general'
   static flags: Flags = {
     target: flags.string({
       char: 't',

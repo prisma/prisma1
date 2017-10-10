@@ -20,6 +20,7 @@ const pjson = packagejson as any
 
 export class Command {
   static topic: string
+  static group: string
   static command?: string
   static description?: string
   static usage?: string

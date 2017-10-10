@@ -5,6 +5,7 @@ export default class Restart extends Command {
   static topic = 'local'
   static command = 'restart'
   static description = 'Restart an already initialized local Graphcool instance'
+  static group = 'local'
   static flags: Flags = {
     name: flags.string({
       char: 'n',

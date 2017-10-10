@@ -99,6 +99,7 @@ export class Config {
     if (options) {
       this.readPackageJson(options)
     }
+    console.log('TROLO')
   }
   setLocal(host: string = 'http://localhost:60000') {
     this.backendAddr = host
@@ -123,13 +124,15 @@ export class Config {
     return this.pjson['cli-engine'].dirname || this.bin
   }
   get cacheDir() {
-    return dir(
+    const x = dir(
       this,
       'cache',
       this.platform === 'darwin'
         ? path.join(this.home, 'Library', 'Caches')
         : null,
     )
+    console.log(x)
+    return x
   }
   private readPackageJson(options: RunOptions) {
     this.mock = options.mock

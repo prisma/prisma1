@@ -13,6 +13,7 @@ export default class Delete extends Command {
   static topic = 'delete'
   static description = 'example command'
   static hidden = true
+  static group = 'general'
   static flags: Flags = {
     target: flags.string({
       char: 't',

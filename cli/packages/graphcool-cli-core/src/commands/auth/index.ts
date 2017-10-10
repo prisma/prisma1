@@ -2,8 +2,9 @@ import { Command, flags, Flags } from 'graphcool-cli-engine'
 import * as chalk from 'chalk'
 
 export default class Auth extends Command {
-  static topic = 'auth'
+  static topic = 'login'
   static description = 'Sign up or login (opens your browser for authentication)'
+  static group = 'platform'
   static help = `
     
   Note: Your session token will be store at ~/.graphcool
@@ -11,10 +12,10 @@ export default class Auth extends Command {
   ${chalk.green('Examples:')}
       
   ${chalk.gray('-')} Authenticate using the browser
-    ${chalk.green('$ graphcool auth')}
+    ${chalk.green('$ graphcool login')}
   
   ${chalk.gray('-')} Authenticate using an existing token
-    ${chalk.green('$ graphcool auth -t <token>')}    
+    ${chalk.green('$ graphcool login -t <token>')}    
   
   `
   static flags: Flags = {

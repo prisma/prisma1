@@ -8,8 +8,9 @@ import * as chalk from 'chalk'
 import { table, getBorderCharacters } from 'table'
 
 export default class GetRootToken extends Command {
-  static topic = 'root-tokens'
-  static description = 'Get the root tokens of a specific prject'
+  static topic = 'root-token'
+  static description = 'Get the root tokens of a specific service'
+  static group = 'general'
   static flags: Flags = {
     token: flags.string({
       char: 't',

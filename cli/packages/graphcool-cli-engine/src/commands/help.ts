@@ -4,6 +4,7 @@ import { compare, linewrap } from '../util'
 import { Command } from '../Command'
 import Plugins from '../Plugin/Plugins'
 import * as chalk from 'chalk'
+import {groupBy} from 'lodash'
 const debug = require('debug')('help command')
 
 function trimToMaxLeft(n: number): number {
@@ -98,7 +99,7 @@ export default class Help extends Command {
   ) {
     const color = this.out.color
     this.out
-      .log(`\nServerless GraphQL backend for frontend developers (${chalk.underline(
+      .log(`\nGraphQL Backend Development Framework & Platform (${chalk.underline(
       'https://www.graph.cool',
     )})
     
@@ -116,18 +117,18 @@ ${chalk.bold('Commands:')}`)
       t.id,
       t.description ? chalk.dim(t.description) : null,
     ])
-    topics.sort()
+    const groupedTopics = groupBy(topics, topic => topic.group)
+    debugger
     this.out.log(renderList(topics))
-    this.out.log(`\nRun ${chalk.bold.green(
-      'graphcool help',
-    )} COMMAND for more information on a command.
+    this.out.log(`\nUse ${chalk.green('graphcool help [command]')} for more information about a command.
+Docs can be found here: https://docs-next.graph.cool/reference/graphcool-cli/commands-aiteerae6l
 
 ${chalk.dim('Examples:')}
 
-${chalk.gray('-')} Initialize a new Graphcool project
+${chalk.gray('-')} Initialize a new Graphcool service
   ${chalk.green('$ graphcool init')}
 
-${chalk.gray('-')} Update live project with local changes
+${chalk.gray('-')} Deploy service changes (or new service)
   ${chalk.green('$ graphcool deploy')}
 `)
   }

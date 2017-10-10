@@ -3,6 +3,7 @@ import { Command, flags, Flags } from 'graphcool-cli-engine'
 export default class Export extends Command {
   static topic = 'export'
   static description = 'Export project data'
+  static group = 'data'
   static flags: Flags = {
     target: flags.string({
       char: 't',

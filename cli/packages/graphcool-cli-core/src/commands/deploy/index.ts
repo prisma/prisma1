@@ -8,7 +8,8 @@ import * as chokidar from 'chokidar'
 export default class Deploy extends Command {
   private deploying: boolean = false
   static topic = 'deploy'
-  static description = 'Deploy project definition changes'
+  static description = 'Deploy service definition changes'
+  static group = 'general'
   static help = `
   
   ${chalk.green.bold('Examples:')}
@@ -88,7 +89,7 @@ ${chalk.gray(
     const isLocal = !this.env.isSharedCluster(cluster)
 
     if (!target) {
-      // if a specific project has been provided, check for its existence
+      // if a specific service has been provided, check for its existence
       if (target) {
         this.out.error(new ServiceDoesntExistError(target))
       }
@@ -222,7 +223,7 @@ ${chalk.gray(
     if (migrationResult.errors.length > 0) {
       this.out.log(
         chalk.rgb(244, 157, 65)(
-          `There are issues with the new project definition:`,
+          `There are issues with the new service definition:`,
         ),
       )
       this.out.migration.printErrors(migrationResult.errors)
