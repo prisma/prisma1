@@ -2,7 +2,6 @@ import {
   Command,
   flags,
   Flags,
-  EnvDoesntExistError,
   Project,
 } from 'graphcool-cli-engine'
 import * as chalk from 'chalk'
@@ -15,13 +14,9 @@ export default class Delete extends Command {
   static description = 'example command'
   static hidden = true
   static flags: Flags = {
-    env: flags.string({
-      char: 'e',
-      description: 'Environment name to delete',
-    }),
-    project: flags.string({
-      char: 'p',
-      description: 'Project Id to delete',
+    target: flags.string({
+      char: 't',
+      description: 'Target to delete'
     }),
     force: flags.boolean({
       char: 'f',
@@ -30,25 +25,18 @@ export default class Delete extends Command {
   }
   async run() {
     await this.auth.ensureAuth()
-    const { project, env, force } = this.flags
+    const { target, force } = this.flags
 
-    let projectId = project
+    const foundTarget = await this.env.getTargetSafe(target)
 
-    if (env) {
-      const projectEnv = await this.env.getEnvironment({ env })
-      if (!projectEnv.projectId) {
-        this.out.error(new EnvDoesntExistError(env))
-      }
-      projectId = projectEnv.projectId
-    }
-
-    if (projectId) {
+    if (foundTarget) {
+      const {id} = foundTarget
       if (!force) {
-        await this.askForConfirmation(projectId)
+        await this.askForConfirmation(id)
       }
-      this.out.action.start(`${chalk.bold.red('Deleting project')} ${projectId}`)
-      await this.client.deleteProjects([projectId])
-      this.env.deleteIfExist([projectId])
+      this.out.action.start(`${chalk.bold.red('Deleting project')} ${id}`)
+      await this.client.deleteProjects([id])
+      this.env.deleteIfExist([id])
       this.env.save()
       this.out.action.stop()
     } else {

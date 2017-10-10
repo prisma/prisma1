@@ -47,7 +47,8 @@ export class Client {
 
   // always create a new client which points to the latest config for each request
   get client(): GraphQLClient {
-    return new GraphQLClient(this.config.systemAPIEndpoint, {
+    debug('choosing clusterEndpoint', this.env.clusterEndpoint)
+    return new GraphQLClient(this.env.clusterEndpoint, {
       headers: {
         Authorization: `Bearer ${this.env.token}`,
       },

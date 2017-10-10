@@ -5,7 +5,7 @@ import {
   EnvDoesntExistError,
   PAT,
 } from 'graphcool-cli-engine'
-import { ProjectDoesntExistError } from '../../errors/ProjectDoesntExistError'
+import { ProjectDoesntExistError } from '../../errors/ServiceDoesntExistError'
 import * as chalk from 'chalk'
 import { table, getBorderCharacters } from 'table'
 

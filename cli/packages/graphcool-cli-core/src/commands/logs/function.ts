@@ -1,5 +1,5 @@
 import { Command, flags, Flags } from 'graphcool-cli-engine'
-import { InvalidProjectError } from '../../errors/InvalidProjectError'
+import { InvalidProjectError } from '../../errors/InvalidTargetError'
 import * as chalk from 'chalk'
 import * as differenceBy from 'lodash.differenceby'
 import { sortByTimestamp } from '../../util'

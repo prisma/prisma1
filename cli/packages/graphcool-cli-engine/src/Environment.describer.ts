@@ -24,4 +24,3 @@ clusters:
 env.loadRCs(localFile, null)
 console.log(env.localRC)
 console.log(env.globalRC)
-debugger

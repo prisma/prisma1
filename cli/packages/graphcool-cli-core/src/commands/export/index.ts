@@ -1,5 +1,5 @@
 import { Command, flags, Flags } from 'graphcool-cli-engine'
-import { InvalidProjectError } from '../../errors/InvalidProjectError'
+import { InvalidProjectError } from '../../errors/InvalidTargetError'
 
 export default class Export extends Command {
   static topic = 'export'

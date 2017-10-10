@@ -1,9 +1,10 @@
 import { Command, flags, Flags } from 'graphcool-cli-engine'
 import * as chalk from 'chalk'
 import * as sillyName from 'sillyname'
-import { ProjectDoesntExistError } from '../../errors/ProjectDoesntExistError'
+import { ProjectDoesntExistError } from '../../errors/ServiceDoesntExistError'
 import { emptyDefinition } from './emptyDefinition'
 import * as chokidar from 'chokidar'
+import { Target } from '../../../../graphcool-cli-engine/src/types/rc'
 
 export default class Deploy extends Command {
   private deploying: boolean = false
@@ -15,7 +16,7 @@ export default class Deploy extends Command {
       
 ${chalk.gray(
     '-',
-  )} Deploy local changes from graphcool.yml to the default project environment.
+  )} Deploy local changes from graphcool.yml to the default service environment.
   ${chalk.green('$ graphcool deploy')}
 
 ${chalk.gray('-')} Deploy local changes to a specific environment
@@ -23,17 +24,13 @@ ${chalk.gray('-')} Deploy local changes to a specific environment
     
 ${chalk.gray(
     '-',
-  )} Deploy local changes from default project file accepting potential data loss caused by schema changes
+  )} Deploy local changes from default service file accepting potential data loss caused by schema changes
   ${chalk.green('$ graphcool deploy --force --env production')}
   `
   static flags: Flags = {
-    env: flags.string({
-      char: 'e',
-      description: 'Project environment to be deployed',
-    }),
     target: flags.string({
       char: 't',
-      description: 'Local target, ID or alias of project to deploy',
+      description: 'Local target, ID or alias of service to deploy',
     }),
     force: flags.boolean({
       char: 'f',
@@ -43,65 +40,89 @@ ${chalk.gray(
       char: 'w',
       description: 'Watch for changes',
     }),
-    name: flags.string({
+    'new-service': flags.string({
       char: 'n',
-      description: 'Project name',
+      description: 'Name of the new Service',
+    }),
+    'new-service-cluster': flags.string({
+      char: 'c',
+      description: 'Name of the Cluster to deploy to',
     }),
     alias: flags.string({
       char: 'a',
-      description: 'Project alias',
+      description: 'Service alias',
     }),
   }
   async run() {
-    const { target, force, watch } = this.flags
-
-    let { env } = this.flags
-    env = env || this.env.env.default
+    const { force, watch, alias } = this.flags
+    const newServiceName = this.flags['new-service']
+    const newServiceCluster = this.flags['new-service-cluster']
+    // target can be both key or value of the `targets` object in the .graphcoolrc
+    // so either "my-target" or "shared-eu-west-1/asdf"
+    let targetName
+    let target
+    let cluster
+    if (newServiceName) {
+      if (newServiceCluster) {
+        this.env.setActiveCluster(newServiceCluster)
+      }
+      cluster = this.env.activeCluster
+      targetName = this.flags.target || this.env.getDefaultTargetName(cluster)
+    } else {
+      const foundTarget = await this.env.getTargetWithName(this.flags.target)
+      if (foundTarget) {
+        targetName = foundTarget.targetName
+        target = foundTarget.target
+      }
+    }
 
     await this.auth.ensureAuth()
-    await this.definition.load()
+    await this.definition.load(this.flags)
     // temporary ugly solution
     this.definition.injectEnvironment()
 
     let projectId
-    let envName
     let projectIsNew = false
-    let projectName = target
 
-    if (this.config.targets[target]) {
 
-    } else {
-      const envResult = await this.env.getEnvironment({
-        project: target,
-        env,
-      })
+    cluster = cluster ? cluster : (target ? target.cluster : this.env.activeCluster)
+    const isLocal = !this.env.isSharedCluster(cluster)
 
-      projectId = envResult.projectId
-      envName = envResult.envName
-
-      if (!projectId) {
-        // if a specific project has been provided, check for its existence
-        if (target) {
-          this.out.error(new ProjectDoesntExistError(target))
-        }
-
-        // otherwise create a new project
-        const newProject = await this.createProject()
-        projectId = newProject.projectId
-        envName = newProject.envName
-        projectIsNew = true
+    if (!target) {
+      // if a specific project has been provided, check for its existence
+      if (target) {
+        this.out.error(new ProjectDoesntExistError(target))
       }
+
+      const region = this.env.getRegionFromCluster(cluster)
+
+      // otherwise create a new project
+      const newProject = await this.createProject(isLocal, newServiceName, alias, region)
+      projectId = newProject.projectId
+      projectIsNew = true
+
+      // add environment
+      await this.env.setLocalTarget(targetName, `${cluster}/${projectId}`)
+
+      if (!this.env.default) {
+        this.env.setLocalDefaultTarget(targetName)
+      }
+
+      this.env.saveLocalRC()
     }
 
-    await this.deploy(projectIsNew, envName, env, projectId, force, projectName)
+    // best guess for "project name"
+    const projectName = newServiceName || targetName
+
+    await this.deploy(projectIsNew, targetName, projectId, isLocal, force, projectName)
 
     if (watch) {
       this.out.log('Watching for change...')
       chokidar.watch(this.config.definitionDir, {ignoreInitial: true}).on('all', () => {
         setImmediate(async () => {
           if (!this.deploying) {
-            await this.definition.load()
-            await this.deploy(projectIsNew, envName, env, projectId!, force, projectName)
+            await this.definition.load(this.flags)
+            await this.deploy(projectIsNew, targetName, projectId!, isLocal, force, projectName)
             this.out.log('Watching for change...')
           }
         })
@@ -109,17 +130,47 @@ ${chalk.gray(
     }
   }
 
+  private async createProject(isLocal: boolean, name?: string, alias?: string, region?: string): Promise<{
+    projectId: string
+  }> {
+
+    const localNote =
+      isLocal
+        ? ' locally'
+        : ''
+
+    const projectName = name || sillyName()
+
+    this.out.log('')
+    const projectMessage = `Creating project ${chalk.bold(name)}${localNote}`
+    this.out.action.start(projectMessage)
+
+    // create project
+    const createdProject = await this.client.createProject(
+      projectName,
+      emptyDefinition,
+      alias,
+      region,
+    )
+
+    this.out.action.stop()
+
+    return {
+      projectId: createdProject.id,
+    }
+  }
+
   private async deploy(
     projectIsNew: boolean,
-    envName: string | null,
-    env: string,
+    targetName: string,
     projectId: string,
+    isLocal: boolean,
     force: boolean,
     projectName: string | null,
   ): Promise<void> {
     this.deploying = true
     const localNote =
-      this.env.env && this.env.isDockerEnv(this.env.env.environments[env])
+        isLocal
         ? ' locally'
         : ''
     this.out.action.start(
@@ -127,7 +178,7 @@ ${chalk.gray(
         ? `Deploying${localNote}`
         : `Deploying to ${chalk.bold(
             projectName,
-          )} with env ${chalk.bold(envName)}${localNote}`,
+          )} with env ${chalk.bold(targetName)}${localNote}`,
     )
 
     const migrationResult = await this.client.push(
@@ -190,57 +241,6 @@ ${chalk.gray(
       )
     }
     this.deploying = false
-  }
-
-  private async createProject(): Promise<{
-    envName: string
-    projectId: string
-  }> {
-    const { alias, region } = this.flags
-    let { name, env } = this.flags
-
-    env = env || this.getEnvName()
-    name = name || sillyName()
-
-    this.out.log('')
-    const localNote =
-      this.env.env && this.env.isDockerEnv(this.env.env.environments[env])
-        ? ' locally'
-        : ''
-    const projectMessage = `Creating project ${chalk.bold(name)}${localNote}`
-    this.out.action.start(projectMessage)
-
-    // create project
-    const createdProject = await this.client.createProject(
-      name,
-      emptyDefinition,
-      alias,
-      region,
-    )
-
-    // add environment
-    await this.env.set(env, createdProject.id)
-
-    if (!this.env.default) {
-      this.env.setDefault(env)
-    }
-
-    this.env.save()
-
-    this.out.action.stop()
-
-    return {
-      projectId: createdProject.id,
-      envName: env,
-    }
-  }
-
-  private getEnvName() {
-    if (this.env.default && this.env.isDockerEnv(this.env.default)) {
-      return this.env.env.default
-    }
-
-    return 'dev'
   }
 }
 

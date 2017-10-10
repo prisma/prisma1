@@ -7,19 +7,19 @@ import {
   ProjectDefinition,
 } from 'graphcool-cli-engine'
 import * as chalk from 'chalk'
-import { ProjectDoesntExistError } from '../../errors/ProjectDoesntExistError'
+import { ProjectDoesntExistError } from '../../errors/ServiceDoesntExistError'
 
 export default class Diff extends Command {
   static topic = 'diff'
   static description = 'Get the diff of the local and remote project definition'
   static flags: Flags = {
-    env: flags.string({
-      char: 'e',
-      description: 'Project environment to be deployed',
+    target: flags.string({
+      char: 't',
+      description: 'Target to be diffed'
     }),
     project: flags.string({
       char: 'p',
-      description: 'ID or alias of  project to deploy',
+      description: 'ID or alias of  project to diff',
     }),
   }
   static mockDefinition: ProjectDefinition

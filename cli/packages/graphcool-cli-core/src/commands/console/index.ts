@@ -1,35 +1,27 @@
 import {Command, flags, Flags} from 'graphcool-cli-engine'
 import * as opn from 'opn'
 import {consoleURL} from '../../util'
-import { InvalidProjectError } from '../../errors/InvalidProjectError'
 
 export default class Console extends Command {
   static topic = 'console'
   static description = 'Open the console for the current selected project'
   static flags: Flags = {
-    env: flags.string({
-      char: 'e',
-      description: 'Environment name'
+    target: flags.string({
+      char: 't',
+      description: 'Target name'
     }),
   }
   async run() {
     await this.auth.ensureAuth()
-    let {env} = this.flags
+    let {target} = this.flags
 
-    env = env || this.env.env.default
-
-    const {projectId} = await this.env.getEnvironment({env})
-
-    if (this.env.env && this.env.isDockerEnv(this.env.env.environments[env])) {
-      this.out.error(`Can't open the console for the local environment ${env}.
+    const foundTarget = await this.env.getTarget(target)
+    if (!this.env.isSharedCluster(foundTarget.cluster)) {
+      this.out.error(`Can't open the console for the local cluster ${foundTarget.cluster}.
 The console is only available in the hosted version of Graphcool.`)
-    }
-
-    if (!projectId) {
-      this.out.error(new InvalidProjectError())
     } else {
-      const projectInfo = await this.client.fetchProjectInfo(projectId)
-      opn(consoleURL(this.config.token!, projectInfo.name))
+      const projectInfo = await this.client.fetchProjectInfo(foundTarget.id)
+      opn(consoleURL(this.env.token!, projectInfo.name))
     }
   }
 }

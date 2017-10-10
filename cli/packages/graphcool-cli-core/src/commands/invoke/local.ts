@@ -1,5 +1,5 @@
 import { Command, flags, Flags, GraphcoolModule } from 'graphcool-cli-engine'
-import { InvalidProjectError } from '../../errors/InvalidProjectError'
+import { InvalidProjectError } from '../../errors/InvalidTargetError'
 import { flatMap, isEqual } from 'lodash'
 import { FunctionDefinition } from 'graphcool-json-schema'
 import { LocalInvoker } from '../../LocalInvoker'

@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`config should access targets from the global RC 1`] = `
+exports[`environment should access targets from the global RC 1`] = `
 Object {
   "clusters": Object {
     "local": Object {
@@ -22,7 +22,7 @@ Object {
 }
 `;
 
-exports[`config should override global target 1`] = `
+exports[`environment should override global target 1`] = `
 Object {
   "clusters": Object {
     "local": Object {
@@ -40,7 +40,7 @@ Object {
 }
 `;
 
-exports[`config should resolve a target alias refering after 1`] = `
+exports[`environment should resolve a target alias refering after 1`] = `
 Object {
   "clusters": Object {
     "local": Object {
@@ -62,7 +62,7 @@ Object {
 }
 `;
 
-exports[`config should resolve a target alias refering before 1`] = `
+exports[`environment should resolve a target alias refering before 1`] = `
 Object {
   "clusters": Object {
     "local": Object {
@@ -84,7 +84,7 @@ Object {
 }
 `;
 
-exports[`config should resolve target from the global RC 1`] = `
+exports[`environment should resolve target from the global RC 1`] = `
 Object {
   "clusters": Object {
     "local": Object {
@@ -106,7 +106,7 @@ Object {
 }
 `;
 
-exports[`config should work without global RC 1`] = `
+exports[`environment should work without global RC 1`] = `
 Object {
   "clusters": Object {
     "local": Object {

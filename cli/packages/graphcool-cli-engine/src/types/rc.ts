@@ -22,3 +22,13 @@ export interface Cluster {
   host: string
   token: string
 }
+
+export interface InternalRC {
+  platformToken?: string
+  clusters?: Clusters
+  targets?: InternalTargets
+}
+
+export interface InternalTargets {
+  [name: string]: string
+}

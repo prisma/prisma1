@@ -1,7 +1,7 @@
 import { Command, flags, Flags } from 'graphcool-cli-engine'
 import * as opn from 'opn'
 import { playgroundURL } from '../../util'
-import { InvalidProjectError } from '../../errors/InvalidProjectError'
+import { InvalidProjectError } from '../../errors/InvalidTargetError'
 import * as fs from 'fs-extra'
 import * as childProcess from 'child_process'
 

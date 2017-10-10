@@ -2,10 +2,8 @@ import * as yaml from 'js-yaml'
 import * as path from 'path'
 import fs from './fs'
 import { Output } from './Output/index'
-import { Client } from './Client/Client'
 import { Config } from './Config'
-import { EnvDoesntExistError } from './errors/EnvDoesntExistError'
-import { Cluster, RC, Target, Targets } from './types/rc'
+import { Cluster, InternalRC, RC, Target, Targets } from './types/rc'
 import { mapValues, merge } from 'lodash'
 import { Args } from './types/common'
 import Variables from './ProjectDefinition/Variables'
@@ -18,8 +16,8 @@ const defaultRC = {
 }
 
 export class Environment {
-  localRC: RC = {}
-  globalRC: RC = {}
+  localRC: InternalRC = {}
+  globalRC: InternalRC = {}
   out: Output
   config: Config
   args: Args
@@ -35,12 +33,29 @@ export class Environment {
     this.globalRC.platformToken = process.env.GRAPHCOOL_TEST_TOKEN!
   }
 
+  get clusterEndpoint(): string {
+    if (this.isSharedCluster(this.activeCluster)) {
+      return this.config.systemAPIEndpoint
+    }
+
+    return (this.rc.clusters![this.activeCluster]! as Cluster).host
+  }
+
   get rc(): RC {
-    return merge({}, this.globalRC, this.localRC)
+    debug('getting rc')
+    // todo: memoizing / caching
+    const rc = this.deserializeRCs(this.localRC, this.globalRC, this.config.localRCPath, this.config.globalRCPath)
+    debug('got rc')
+    return rc
   }
 
   get token(): string {
-    if (this.config.sharedClusters.includes(this.activeCluster)) {
+    if (process.env.GRAPHCOOL_PLATFORM_TOKEN) {
+      debug('taking process.env.GRAPHCOOL_PLATFORM_TOKEN as the token')
+      return process.env.GRAPHCOOL_PLATFORM_TOKEN!
+    }
+
+    if (this.isSharedCluster(this.activeCluster)) {
       return this.rc.platformToken!
     }
 
@@ -55,14 +70,137 @@ export class Environment {
     return null
   }
 
+  get allClusters(): string[] {
+    const localClusters = this.rc.clusters ? Object.keys(this.rc.clusters) : []
+    return this.config.sharedClusters.concat(localClusters)
+  }
+
+  setLocalTarget(name: string, value: string) {
+    if (value.split('/').length !== 2) {
+      this.out.error(`Invalid target ${name} ${value}`)
+    }
+    if (!this.localRC.targets) {
+      this.localRC.targets = {}
+    }
+    this.localRC.targets[name] = value
+  }
+
+  setLocalDefaultTarget(value: string) {
+    if (!this.localRC.targets) {
+      this.localRC.targets = {}
+    }
+    this.localRC.targets.default = value
+  }
+
+  getTarget(targetName?: string, silent?: boolean): Target {
+    let target: any = null
+
+    if (targetName && targetName.split('/').length > 1) {
+      target = this.deserializeTarget(targetName)
+    }
+    target = targetName || (this.rc.targets && this.rc.targets.default)
+
+    if (typeof target === 'string' && this.rc.targets) {
+      target = this.rc.targets[target]
+    }
+
+    if (target) {
+      this.setActiveCluster(target.cluster)
+    } else if (!silent) {
+      this.out.error('Please provide a valid target that points to a valid cluster and service id')
+    }
+
+    return target
+  }
+
+  getTargetWithName(targetName?: string): {target: Target | null, targetName: string} {
+    const target = this.getTarget(targetName, true)
+    const newTargetName = targetName || 'default'
+
+    return {
+      target,
+      targetName: newTargetName,
+    }
+  }
+
+  getDefaultTargetName(cluster: string) {
+    const targetName = this.isSharedCluster(cluster) ? 'prod' : 'dev'
+    if (!this.rc.targets || !this.rc.targets[targetName]) {
+      return targetName
+    } else {
+      let count = 1
+      while (this.rc.targets[targetName + count]) {
+        count++
+      }
+      return targetName + count
+    }
+  }
+
   setActiveCluster(cluster: string) {
     this.activeCluster = cluster
+  }
+
+  isSharedCluster(cluster: string) {
+    return this.config.sharedClusters.includes(cluster)
+  }
+
+  deleteIfExist(serviceIds: string[]) {
+    serviceIds.forEach(id => {
+      const localTarget = Object.keys(this.localRC.targets).find(
+        name => this.localRC.targets![name].split('/')[1] === id,
+      )
+      if (localTarget) {
+        delete this.localRC[localTarget]
+      }
+      const globalTarget = Object.keys(this.globalRC.targets).find(
+        name => this.globalRC.targets![name].split('/')[1] === id,
+      )
+      if (globalTarget) {
+        delete this.globalRC[globalTarget]
+      }
+    })
   }
 
   /**
    * This is used to migrate the old .graphcool and .graphcoolrc to the new format
    */
   migrateOldFormat() {
+    this.migrateGlobalFiles()
+    this.migrateLocalFile()
+  }
+
+  migrateLocalFile() {
+    if (fs.pathExistsSync(this.config.localRCPath)) {
+      const file = fs.readFileSync(this.config.localRCPath, 'utf-8')
+      let content
+      try {
+        content = yaml.safeLoad(file)
+        // we got the old format here
+        if (content.environments) {
+          const newLocalRcJson = {
+            targets: mapValues(content.environments, env => {
+              return `shared-eu-west-1/${env}`
+            }),
+            clusters: {
+              default: 'shared-eu-west-1'
+            }
+          }
+          const newLocalRcYaml = yaml.safeDump(newLocalRcJson)
+          const oldPath = path.join(this.config.cwd, '.graphcoolrc.old')
+          fs.moveSync(this.config.localRCPath, oldPath)
+          fs.writeFileSync(this.config.localRCPath, newLocalRcYaml)
+          this.out.warn(`We detected the old definition format of the ${this.config.localRCPath} file.
+It has been renamed to ${oldPath}. The up-to-date format has been written to ${this.config.localRCPath}.
+Read more about the changes here:
+https://github.com/graphcool/graphcool/issues/714
+`)
+        }
+      } catch (e) {
+      }
+    }
+  }
+
+  migrateGlobalFiles() {
     const dotFilePath = path.join(this.config.home, '.graphcool')
     const dotExists = fs.pathExistsSync(dotFilePath)
     const rcHomePath = path.join(this.config.home, '.graphoolrc')
@@ -87,7 +225,8 @@ export class Environment {
             fs.moveSync(dotFile, oldPath)
             fs.writeFileSync(rcHomePath, rcSerialized)
             this.out.warn(`We detected the old definition format of the ${dotFilePath} file.
-It has been renamed to ${oldPath}. The new file is called ${rcHomePath}. Read more about the changes here:
+It has been renamed to ${oldPath}. The new file is called ${rcHomePath}.
+Read more about the changes here:
 https://github.com/graphcool/graphcool/issues/714
 `)
           }
@@ -107,7 +246,6 @@ https://github.com/graphcool/graphcool/issues/714
         console.error(e)
       }
     }
-
   }
 
   async loadYaml(file: string | null, filePath: string | null = null): Promise<any> {
@@ -143,43 +281,44 @@ https://github.com/graphcool/graphcool/issues/714
   async loadRCs(localFile: string | null, globalFile: string | null, args: Args = {}): Promise<void> {
     this.args = args
 
-    const localJson = await this.loadYaml(localFile, this.config.localRCPath)
-    const globalJson = await this.loadYaml(globalFile, this.config.globalRCPath)
+    this.localRC = await this.loadYaml(localFile, this.config.localRCPath)
+    this.globalRC = await this.loadYaml(globalFile, this.config.globalRCPath)
 
-    this.deserializeRCs(localJson, globalJson, this.config.localRCPath, this.config.globalRCPath)
-  }
-
-  deserializeRCs(localFile: any, globalFile: any, localFilePath: string | null, globalFilePath: string | null): void {
-    let allTargets = {...localFile.targets, ...globalFile.targets}
-
-    // 1. resolve aliases
-    // global is not allowed to access local variables
-    globalFile.targets = this.resolveTargetAliases(globalFile.targets, globalFile.targets)
-
-    // repeat this 2 times as potentially there could be a deeper indirection
-    for(let i = 0; i < 2; i++) {
-      // first resolve all aliases
-      localFile.targets = this.resolveTargetAliases(localFile.targets, allTargets)
-
-      allTargets = {...localFile.targets, ...globalFile.targets}
-    }
-
-    // at this point there should only be targets in the form of shared-eu-west-1/cj862nxg0000um3t0z64ls08
-    // 2. convert cluster/id to Target
-    localFile.targets = this.deserializeTargets(localFile.targets, localFilePath)
-    globalFile.targets = this.deserializeTargets(globalFile.targets, globalFilePath)
-    // check if clusters exist
-    const allClusters = [...this.config.sharedClusters, ...Object.keys(globalFile.clusters || {}), ...Object.keys(localFile.clusters || {})]
-    this.checkClusters(localFile.targets, allClusters, localFilePath)
-    this.checkClusters(globalFile.targets, allClusters, globalFilePath)
-    this.localRC = localFile
-    this.globalRC = globalFile
     if (this.rc.clusters && this.rc.clusters.default) {
-      if (!allClusters.includes(this.rc.clusters.default)) {
+      if (!this.allClusters.includes(this.rc.clusters.default)) {
         this.out.error(`Could not find default cluster ${this.rc.clusters.default}`)
       }
       this.activeCluster = this.rc.clusters.default
     }
+
+  }
+
+  deserializeRCs(localFile: any, globalFile: any, localFilePath: string | null, globalFilePath: string | null): RC {
+    let allTargets = {...localFile.targets, ...globalFile.targets}
+    const newLocalFile = {...localFile}
+    const newGlobalFile = {...globalFile}
+
+    // 1. resolve aliases
+    // global is not allowed to access local variables
+    newGlobalFile.targets = this.resolveTargetAliases(newGlobalFile.targets, newGlobalFile.targets)
+
+    // repeat this 2 times as potentially there could be a deeper indirection
+    for(let i = 0; i < 2; i++) {
+      // first resolve all aliases
+      newLocalFile.targets = this.resolveTargetAliases(newLocalFile.targets, allTargets)
+
+      allTargets = {...newLocalFile.targets, ...newGlobalFile.targets}
+    }
+
+    // at this point there should only be targets in the form of shared-eu-west-1/cj862nxg0000um3t0z64ls08
+    // 2. convert cluster/id to Target
+    newLocalFile.targets = this.deserializeTargets(newLocalFile.targets, localFilePath)
+    newGlobalFile.targets = this.deserializeTargets(newGlobalFile.targets, globalFilePath)
+    // check if clusters exist
+    const allClusters = [...this.config.sharedClusters, ...Object.keys(newGlobalFile.clusters || {}), ...Object.keys(newLocalFile.clusters || {})]
+    this.checkClusters(newLocalFile.targets, allClusters, localFilePath)
+    this.checkClusters(newGlobalFile.targets, allClusters, globalFilePath)
+    return merge({}, newGlobalFile, newLocalFile)
   }
 
   checkClusters(targets: Targets, clusters: string[], filePath: string | null) {
@@ -195,7 +334,7 @@ https://github.com/graphcool/graphcool/issues/714
     return mapValues<string, Target>(targets, target => this.deserializeTarget(target, filePath))
   }
 
-  deserializeTarget(target: string, filePath: string | null): Target {
+  deserializeTarget(target: string, filePath: string | null = null): Target {
     const splittedTarget = target.split('/')
     if (splittedTarget.length === 1) {
       this.out.error(`Could not parse target ${target} in ${filePath}`)
@@ -209,35 +348,51 @@ https://github.com/graphcool/graphcool/issues/714
   resolveTargetAliases = (targets, allTargets) => mapValues(targets, target =>
     this.isTargetAlias(target) ? this.resolveTarget(target, allTargets) : target
   )
-  isTargetAlias = (target: string): boolean => target.split('/').length === 1
+  isTargetAlias = (target: string | Target): boolean => {
+    return typeof target === 'string' && target.split('/').length === 1
+  }
   resolveTarget = (
     target: string,
     targets: { [key: string]: string },
   ): string =>
     targets[target] ? this.resolveTarget(targets[target], targets) : target
 
-  serializeRC(rc: RC): string {
-    const copy: any = {...rc}
-    if (copy.targets) {
-      copy.targets = this.serializeTargets(copy.targets)
-    }
-    return yaml.safeDump(copy)
+  serializeRC(rc: InternalRC): string {
+    // const copy: any = {...rc}
+    // if (copy.targets) {
+    //   copy.targets = this.serializeTargets(copy.targets)
+    // }
+    return yaml.safeDump(rc)
   }
-
-  serializeTargets(targets: Targets) {
-    return mapValues<Target, string>(targets, t => `${t.cluster}/${t.id}`)
-  }
+  //
+  // serializeTargets(targets: Targets) {
+  //   return mapValues<Target, string>(targets, t => `${t.cluster}/${t.id}`)
+  // }
 
   setToken(token: string | undefined) {
     this.globalRC.platformToken = token
   }
 
   saveLocalRC() {
-
+    const file = this.serializeRC(this.localRC)
+    fs.writeFileSync(this.config.localRCPath, file)
   }
 
   saveGlobalRC() {
     const file = this.serializeRC(this.globalRC)
     fs.writeFileSync(this.config.globalRCPath, file)
+  }
+
+  save() {
+    this.saveLocalRC()
+    this.saveGlobalRC()
+  }
+
+  getRegionFromCluster(cluster: string) {
+    if (this.isSharedCluster(cluster)) {
+      return cluster.slice(7).replace(/-/, '_').toUpperCase()
+    } else {
+      return 'EU_WEST_1'
+    }
   }
 }

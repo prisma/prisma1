@@ -36,15 +36,15 @@ export default class Auth extends Command {
 
     // if there is a new token, save it
     if (token) {
-      this.config.setToken(token)
-      this.config.saveDotGraphcool()
+      this.env.setToken(token)
+      this.env.saveGlobalRC()
       this.out.log(
-        `Saved new token to ${chalk.bold(this.config.dotGraphcoolFilePath)}`,
+        `Saved new token to ${chalk.bold(this.config.globalRCPath)}`,
       )
     } else if (alreadyAuthenticated) {
       this.out.log(
         `You are already authenticated. Your local token is saved at ${chalk.bold(
-          this.config.dotGraphcoolFilePath,
+          this.config.globalRCPath,
         )}`,
       )
     }

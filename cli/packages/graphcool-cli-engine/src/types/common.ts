@@ -1,6 +1,6 @@
 import { GraphcoolDefinition } from 'graphcool-json-schema'
 import { Config } from '../Config'
-import { RC } from './rc'
+import { InternalRC } from './rc'
 
 export interface RunOptions {
   argv?: string[]
@@ -8,7 +8,7 @@ export interface RunOptions {
   initPath?: string
   root?: string
   mockDefinition?: ProjectDefinition
-  mockRC?: RC
+  mockRC?: InternalRC
   mockConfig?: Config
   cwd?: string
   home?: string
