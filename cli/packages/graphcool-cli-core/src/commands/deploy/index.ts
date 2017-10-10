@@ -4,6 +4,7 @@ import * as sillyName from 'sillyname'
 import { ServiceDoesntExistError } from '../../errors/ServiceDoesntExistError'
 import { emptyDefinition } from './emptyDefinition'
 import * as chokidar from 'chokidar'
+import * as inquirer from 'inquirer'
 
 export default class Deploy extends Command {
   private deploying: boolean = false
@@ -62,6 +63,20 @@ ${chalk.gray(
     let targetName
     let target
     let cluster
+    const foundTarget = await this.env.getTargetWithName(this.flags.target)
+    if ((!newServiceCluster && !foundTarget.target) || (newServiceName && !newServiceCluster)) {
+      cluster = await this.clusterSelection()
+      this.env.saveLocalRC()
+      if (cluster === 'local' && (!this.env.rc.clusters || !this.env.rc.clusters!.local)) {
+        this.out.log(`You chose the cluster ${chalk.bold('local')}, but don't have docker initialized, yet.
+Please run ${chalk.green('$ graphcool local up')} to get a local Graphcool cluster.
+`)
+        this.out.exit(1)
+      }
+      this.env.setLocalDefaultCluster(cluster)
+    }
+
+
     if (newServiceName) {
       if (newServiceCluster) {
         this.env.setActiveCluster(newServiceCluster)
@@ -69,7 +84,6 @@ ${chalk.gray(
       cluster = this.env.activeCluster
       targetName = this.flags.target || this.env.getDefaultTargetName(cluster)
     } else {
-      const foundTarget = await this.env.getTargetWithName(this.flags.target)
       if (foundTarget) {
         targetName = foundTarget.targetName
         target = foundTarget.target
@@ -116,7 +130,7 @@ ${chalk.gray(
     // best guess for "project name"
     const projectName = newServiceName || targetName
 
-    await this.deploy(projectIsNew, targetName, projectId, isLocal, force, projectName)
+    await this.deploy(projectIsNew, targetName, projectId, isLocal, force, projectName, cluster)
 
     if (watch) {
       this.out.log('Watching for change...')
@@ -124,7 +138,7 @@ ${chalk.gray(
         setImmediate(async () => {
           if (!this.deploying) {
             await this.definition.load(this.flags)
-            await this.deploy(projectIsNew, targetName, projectId!, isLocal, force, projectName)
+            await this.deploy(projectIsNew, targetName, projectId!, isLocal, force, projectName, cluster)
             this.out.log('Watching for change...')
           }
         })
@@ -169,6 +183,7 @@ ${chalk.gray(
     isLocal: boolean,
     force: boolean,
     projectName: string | null,
+    cluster: string
   ): Promise<void> {
     this.deploying = true
     const localNote =
@@ -179,7 +194,7 @@ ${chalk.gray(
       projectIsNew
         ? `Deploying${localNote}`
         : `Deploying to ${chalk.bold(
-            projectName,
+            cluster,
           )} with target ${chalk.bold(targetName)}${localNote}`,
     )
 
@@ -245,6 +260,40 @@ ${chalk.gray(
     }
     this.deploying = false
     this.out.log(`Endpoint: ${this.env.simpleEndpoint(projectId)}`)
+  }
+
+  private async clusterSelection(): Promise<string> {
+    const question = {
+      name: 'cluster',
+      type: 'list',
+      message: 'Please choose the cluster you want to deploy to',
+      choices: [
+        new inquirer.Separator(chalk.bold('Local (docker):')),
+        {
+          value: 'local',
+          name: 'local',
+        },
+        new inquirer.Separator(chalk.bold('Cloud:')),
+        {
+          value: 'shared-eu-west-1',
+          name: 'shared-eu-west-1',
+        },
+        {
+          value: 'shared-ap-northeast-1',
+          name: 'shared-ap-northeast-1',
+        },
+        {
+          value: 'shared-us-west-2',
+          name: 'shared-us-west-2',
+        },
+      ],
+      pageSize: 8,
+    }
+
+    const { cluster } = await this.out.prompt(question)
+    this.out.up(3)
+
+    return cluster
   }
 
 }

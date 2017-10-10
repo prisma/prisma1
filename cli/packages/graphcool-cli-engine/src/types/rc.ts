@@ -1,7 +1,7 @@
 export interface RC {
   platformToken?: string
   clusters?: Clusters
-  targets?: Targets
+  targets: Targets
 }
 
 export interface Targets {

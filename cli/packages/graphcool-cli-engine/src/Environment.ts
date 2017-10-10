@@ -180,7 +180,6 @@ export class Environment {
               return `shared-eu-west-1/${env}`
             }),
             clusters: {
-              default: 'shared-eu-west-1'
             }
           }
           if (content.default) {
@@ -402,6 +401,13 @@ https://github.com/graphcool/graphcool/issues/714
       this.globalRC.clusters = {}
     }
     this.globalRC.clusters[name] = cluster
+  }
+
+  setLocalDefaultCluster(cluster: string) {
+    if (!this.globalRC.clusters) {
+      this.globalRC.clusters = {}
+    }
+    this.globalRC.clusters.default = cluster
   }
 
   getRegionFromCluster(cluster: string): Region {
