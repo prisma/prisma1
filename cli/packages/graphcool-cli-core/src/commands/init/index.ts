@@ -83,12 +83,12 @@ Read more here: https://github.com/graphcool/graphcool/issues/706
     }
 
     if (!this.definition.definition) {
-      const newDefinition = await this.interactiveInit()
+      // const newDefinition = await this.interactiveInit()
+      const newDefinition = defaultDefinition
       this.definition.set(newDefinition)
     }
 
-    this.out.log('\n')
-    this.out.action.start(`Creating a new Graphcool app in ${chalk.green(this.config.definitionDir)}`)
+    this.out.action.start(`\nCreating a new Graphcool app in ${chalk.green(this.config.definitionDir)}`)
     this.definition.save(undefined, false)
     this.out.action.stop()
 
