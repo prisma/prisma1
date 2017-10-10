@@ -6,17 +6,24 @@ import Plugins from '../Plugin/Plugins'
 import * as chalk from 'chalk'
 import {groupBy, flatten} from 'lodash'
 const debug = require('debug')('help command')
+const max = require('lodash.maxby')
 
 function trimToMaxLeft(n: number): number {
   const max = Math.floor(stdtermwidth * 0.8)
   return n > max ? max : n
 }
 
-function renderList(items: string[][]): string {
-  const S = require('string')
-  const max = require('lodash.maxby')
+function maxLength(items: string[]) {
+  return items.reduce(
+    (acc, curr) => Math.max(acc, curr.length),
+    -1,
+  )
+}
 
-  const maxLeftLength = trimToMaxLeft(max(items, '[0].length')[0].length + 2)
+function renderList(items: string[][], globalMaxLeftLength?: number): string {
+  const S = require('string')
+
+  const maxLeftLength = globalMaxLeftLength || maxLength(items.map(i => i[0])) + 2
   return items
     .map(i => {
       let left = `  ${i[0]}`
@@ -26,7 +33,7 @@ function renderList(items: string[][]): string {
       }
       left = `${S(left).padRight(maxLeftLength)}`
       right = linewrap(maxLeftLength + 2, right)
-      return `${left}    ${right}`
+      return `${left}  ${right}`
     })
     .join('\n')
 }
@@ -105,11 +112,10 @@ ${chalk.bold('Usage:')} ${chalk.bold('graphcool')} COMMAND`)
       return !t.hidden && !subtopic
     })
     const groupedTopics = groupBy(topics, topic => topic.group)
+    const jobs: any[] = []
     for (const group of this.plugins.groups) {
       // debugger
       const groupTopics = groupedTopics[group.key]
-      this.out.log('')
-      this.out.log(chalk.bold(group.name + ':'))
       // const list = groupTopics.map(t => [
       //   t.id,
       //   t.description ? chalk.dim(t.description) : null,
@@ -125,8 +131,20 @@ ${chalk.bold('Usage:')} ${chalk.bold('graphcool')} COMMAND`)
           return [t.id + cmdName, chalk.dim(cmd.description || t.description)]
         })
       })) as any
-      this.out.log(renderList(flatten(list)))
+      jobs.push({
+        group: group.name,
+        list: flatten(list),
+      })
     }
+
+    const globalMaxLeft = maxLength(flatten(jobs.map(j => j.list)).map(i => i[0])) + 2
+
+    jobs.forEach(job => {
+      this.out.log('')
+      this.out.log(chalk.bold(job.group + ':'))
+      this.out.log(renderList(job.list, globalMaxLeft))
+    })
+
     this.out.log(`\nUse ${chalk.green('graphcool help [command]')} for more information about a command.
 Docs can be found here: https://docs-next.graph.cool/reference/graphcool-cli/commands-aiteerae6l
 

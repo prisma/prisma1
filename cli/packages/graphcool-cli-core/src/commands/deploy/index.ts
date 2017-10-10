@@ -9,7 +9,7 @@ import * as inquirer from 'inquirer'
 export default class Deploy extends Command {
   private deploying: boolean = false
   static topic = 'deploy'
-  static description = 'Deploy service definition changes'
+  static description = 'Deploy service changes (or new service)'
   static group = 'general'
   static help = `
   
@@ -73,7 +73,7 @@ Please run ${chalk.green('$ graphcool local up')} to get a local Graphcool clust
 `)
         this.out.exit(1)
       }
-      this.env.setLocalDefaultCluster(cluster)
+      // this.env.setLocalDefaultCluster(cluster)
     }
 
 

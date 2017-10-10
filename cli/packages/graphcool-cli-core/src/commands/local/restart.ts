@@ -4,7 +4,7 @@ import Docker from './Docker'
 export default class Restart extends Command {
   static topic = 'local'
   static command = 'restart'
-  static description = 'Restart an already initialized local Graphcool instance'
+  static description = 'Restart local development cluster'
   static group = 'local'
   static flags: Flags = {
     name: flags.string({

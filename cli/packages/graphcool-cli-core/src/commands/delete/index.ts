@@ -11,7 +11,7 @@ import { prettyProject } from '../../util'
 
 export default class Delete extends Command {
   static topic = 'delete'
-  static description = 'example command'
+  static description = 'Delete an existing service'
   static hidden = true
   static group = 'general'
   static flags: Flags = {

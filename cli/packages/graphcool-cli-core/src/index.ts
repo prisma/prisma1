@@ -13,7 +13,6 @@ import Pull from './commands/pull/index'
 import Export from './commands/export/index'
 import InvokeLocal from './commands/invoke/local'
 import PullLocal from './commands/local/pull'
-import Start from './commands/local/start'
 import Stop from './commands/local/stop'
 import Up from './commands/local/up'
 import Restart from './commands/local/restart'
@@ -106,7 +105,6 @@ export const commands = [
   Export,
   InvokeLocal,
   PullLocal,
-  Start,
   Stop,
   Up,
   Restart,

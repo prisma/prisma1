@@ -3,7 +3,7 @@ import * as chalk from 'chalk'
 
 export default class Auth extends Command {
   static topic = 'login'
-  static description = 'Sign up or login (opens your browser for authentication)'
+  static description = 'Login or signup to the Graphcool Platform'
   static group = 'platform'
   static help = `
     

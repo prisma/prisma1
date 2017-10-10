@@ -5,7 +5,7 @@ import * as childProcess from 'child_process'
 
 export default class Playground extends Command {
   static topic = 'playground'
-  static description = 'Open the playground for the current selected project'
+  static description = 'Open service endpoints in GraphQL Playground'
   static group = 'general'
   static flags: Flags = {
     target: flags.string({

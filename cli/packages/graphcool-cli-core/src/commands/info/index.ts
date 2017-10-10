@@ -11,7 +11,7 @@ import * as chalk from 'chalk'
 
 export default class InfoCommand extends Command {
   static topic = 'info'
-  static description = 'Print project info (environments, endpoints, ...) '
+  static description = 'Display service information (endpoints, cluster, ...)'
   static group = 'general'
   static flags: Flags = {
     target: flags.string({

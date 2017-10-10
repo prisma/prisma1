@@ -8,7 +8,7 @@ import {repeat, flatten} from 'lodash'
 
 export default class Init extends Command {
   static topic = 'init'
-  static description = 'Create a new project definition and target from scratch or based on an existing Graphcool definition.'
+  static description = 'Create files for new services'
   static group = 'general'
   static help = `
   

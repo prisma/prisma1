@@ -7,16 +7,12 @@ const debug = require('debug')('logs')
 
 export default class FunctionLogs extends Command {
   static topic = 'logs'
-  static description = 'Log functions'
+  static description = 'Output service logs'
   static group = 'general'
   static flags: Flags = {
     target: flags.string({
       char: 't',
       description: 'Target to get logs from',
-    }),
-    project: flags.string({
-      char: 'p',
-      description: 'Project Id to set',
     }),
     tail: flags.boolean({
       char: 't',

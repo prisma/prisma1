@@ -6,7 +6,7 @@ const debug = require('debug')('up')
 export default class Up extends Command {
   static topic = 'local'
   static command = 'up'
-  static description = 'Pull & Start a local Graphcool instance'
+  static description = 'Start local development cluster (Docker required)'
   static group = 'local'
   static flags: Flags = {
     name: flags.string({

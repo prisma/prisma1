@@ -9,7 +9,7 @@ import { table, getBorderCharacters } from 'table'
 
 export default class GetRootToken extends Command {
   static topic = 'root-token'
-  static description = 'Get the root tokens of a specific service'
+  static description = 'Print specified root token'
   static group = 'general'
   static flags: Flags = {
     token: flags.string({

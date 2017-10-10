@@ -4,7 +4,7 @@ import Docker from './Docker'
 export default class Stop extends Command {
   static topic = 'local'
   static command = 'stop'
-  static description = 'Stop an already initialized local Graphcool instance'
+  static description = 'Stop local development cluster'
   static group = 'local'
   static flags: Flags = {
     name: flags.string({
