@@ -68,23 +68,12 @@ function bangify(msg: string, c: string): string {
   return lines.join('\n')
 }
 
-function getErrorMessage(err: any): string {
-  let message
-  if (err.body) {
-    // API error
-    if (err.body.message) {
-      message = util.inspect(err.body.message)
-    } else if (err.body.error) {
-      message = util.inspect(err.body.error)
-    }
+function extractMessage (response): string {
+  try {
+    return response.errors![0].message
+  } catch (e) {
+    return `GraphQL Error (Code: ${response.status})`
   }
-  // Unhandled error
-  if (err.message && err.code) {
-    message = `${util.inspect(err.code)}: ${err.message}`
-  } else if (err.message) {
-    message = err.message
-  }
-  return message || util.inspect(err)
 }
 
 const arrow = process.platform === 'win32' ? '!' : '▸'
@@ -134,11 +123,11 @@ export class Output {
     this.stdout.log(data, ...args)
   }
 
-  getStyledJSON(obj: any) {
+  getStyledJSON(obj: any, subtle: boolean = false) {
     const json = JSON.stringify(obj, null, 2)
     if (chalk.enabled) {
       const cardinal = require('cardinal')
-      const theme = require('cardinal/themes/jq')
+      const theme = require(subtle ? './subtle' : 'cardinal/themes/jq')
       return cardinal.highlight(json, { json: true, theme })
     } else {
       return json
@@ -182,7 +171,8 @@ export class Output {
         this.stderr.log(err.stack || util.inspect(err))
       } else {
         this.stderr.log(
-          bangify(wrap(getErrorMessage(err)), this.color.red(arrow)),
+          this.isGraphQLError(err) ? this.getGraphQLErrorMessage(err) :
+          bangify(wrap(this.getErrorMessage(err)), this.color.red(arrow)),
         )
         const instruction = (process.env.SHELL && process.env.SHELL!.endsWith('fish')) ? '$ set -x DEBUG "*"' : '$ export DEBUG="*"'
         this.stderr.log(
@@ -200,6 +190,10 @@ To get more detailed output, run ${chalk.dim(instruction)}`,
     }
   }
 
+  isGraphQLError(err) {
+    return err.message && err.request && err.response
+  }
+
   warn(err: Error | string, prefix?: string) {
     this.action.pause(() => {
       try {
@@ -213,7 +207,7 @@ To get more detailed output, run ${chalk.dim(instruction)}`,
         } else {
           this.stderr.log(
             bangify(
-              wrap(prefix + this.color.yellow(getErrorMessage(err))),
+              wrap(prefix + this.color.yellow(this.getErrorMessage(err))),
               this.color.yellow(arrow),
             ) + '\n',
           )
@@ -374,6 +368,29 @@ To get more detailed output, run ${chalk.dim(instruction)}`,
       )
     }
   }
+  getGraphQLErrorMessage(err: any) {
+    return `\n${chalk.bold.red('ERROR: ' + extractMessage(err.response))}\n\n` + this.getStyledJSON(err.response, true)
+  }
+  getErrorMessage(err: any): string {
+    let message
+
+    if (err.body) {
+      // API error
+      if (err.body.message) {
+        message = util.inspect(err.body.message)
+      } else if (err.body.error) {
+        message = util.inspect(err.body.error)
+      }
+    }
+    // Unhandled error
+    if (err.message && err.code) {
+      message = `${chalk.bold(util.inspect(err.code))}: ${err.message}`
+    } else if (err.message) {
+      message = err.message
+    }
+    return message || util.inspect(err)
+  }
+
 }
 
 function treeConverter(tree) {

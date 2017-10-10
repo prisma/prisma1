@@ -30,7 +30,6 @@ export class Auth {
 
   async ensureAuth() {
     const localToken = this.env.token
-    console.log('TOKEN', this.env.token)
     let token = localToken
     let valid: any = true
     if (token) {
@@ -100,9 +99,9 @@ export class Auth {
   }
 
   async validateAuthToken(token: string): Promise<string | null> {
-    debug('requesting', this.config.systemAPIEndpoint)
+    debug('requesting', this.env.clusterEndpoint)
     debug('token', token)
-    const client = new GraphQLClient(this.env.systemEndpoint, {
+    const client = new GraphQLClient(this.env.clusterEndpoint, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -129,6 +128,7 @@ export class Auth {
       return result.viewer.user.email
     } catch (e) {
       //
+      console.log(e)
     }
 
     return null
