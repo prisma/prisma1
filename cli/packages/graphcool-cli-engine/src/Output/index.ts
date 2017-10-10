@@ -184,9 +184,10 @@ export class Output {
         this.stderr.log(
           bangify(wrap(getErrorMessage(err)), this.color.red(arrow)),
         )
+        const instruction = (process.env.SHELL && process.env.SHELL!.endsWith('fish')) ? '$ set -x DEBUG "*"' : '$ export DEBUG="*"'
         this.stderr.log(
           `\nGet in touch if you need help: https://www.graph.cool/forum
-To get more detailed output, run ${chalk.dim('export DEBUG="*"')} in bash or ${chalk.dim('set -x DEBUG "*"')} in fish`,
+To get more detailed output, run ${chalk.dim(instruction)}`,
         )
       }
     } catch (e) {
