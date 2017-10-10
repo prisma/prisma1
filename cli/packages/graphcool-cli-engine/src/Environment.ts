@@ -8,6 +8,7 @@ import { mapValues, merge } from 'lodash'
 import { Args, Region } from './types/common'
 import Variables from './ProjectDefinition/Variables'
 const debug = require('debug')('environment')
+import * as stringSimilarity from 'string-similarity'
 
 const defaultRC = {
   clusters: {
@@ -61,6 +62,14 @@ export class Environment {
   get allClusters(): string[] {
     const localClusters = this.rc.clusters ? Object.keys(this.rc.clusters) : []
     return this.config.sharedClusters.concat(localClusters)
+  }
+
+  checkCluster(cluster: string) {
+    const allClusters = this.config.sharedClusters.concat(Object.keys(this.rc.clusters))
+    if (!allClusters.includes(cluster)) {
+      const bestMatch = stringSimilarity.findBestMatch(cluster, allClusters).bestMatch.target
+      this.out.error(`${cluster} is not a valid cluster. Did you mean ${bestMatch}?`)
+    }
   }
 
   setLocalTarget(name: string, value: string) {
@@ -125,6 +134,7 @@ export class Environment {
   }
 
   setActiveCluster(cluster: string) {
+    this.checkCluster(cluster)
     this.activeCluster = cluster
   }
 

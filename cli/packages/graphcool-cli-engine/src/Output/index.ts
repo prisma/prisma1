@@ -19,11 +19,9 @@ import * as dirTree from 'directory-tree'
 import * as marked from 'marked'
 import * as TerminalRenderer from 'marked-terminal'
 import * as Charm from 'charm'
-import {set} from 'lodash'
-import { padEnd, repeat, uniqBy } from 'lodash'
+import { padEnd, repeat, set, uniqBy } from 'lodash'
 import { Project } from '../types/common'
 import { Targets } from '../types/rc'
-
 
 marked.setOptions({
   renderer: new TerminalRenderer(),
@@ -166,7 +164,10 @@ export class Output {
   }
 
   error(err: Error | string, exitCode: number | false = 1) {
-    if ((this.mock && typeof err !== 'string' && exitCode !== false) || process.env.NODE_ENV === 'test') {
+    if (
+      (this.mock && typeof err !== 'string' && exitCode !== false) ||
+      process.env.NODE_ENV === 'test'
+    ) {
       throw err
     }
     try {
@@ -184,7 +185,8 @@ export class Output {
           bangify(wrap(getErrorMessage(err)), this.color.red(arrow)),
         )
         this.stderr.log(
-          '\nGet in touch if you need help: https://www.graph.cool/forum',
+          `\nGet in touch if you need help: https://www.graph.cool/forum
+To get more detailed output, run ${chalk.dim('export DEBUG="*"')} in bash or ${chalk.dim('set -x DEBUG "*"')} in fish`,
         )
       }
     } catch (e) {
@@ -225,9 +227,7 @@ export class Output {
 
   getErrorPrefix(fileName: string, type: 'error' | 'warning' = 'error') {
     const method = type === 'error' ? 'red' : 'yellow'
-    return chalk[method](
-      `[${type.toUpperCase()}] in ${chalk.bold(fileName)}: `,
-    )
+    return chalk[method](`[${type.toUpperCase()}] in ${chalk.bold(fileName)}: `)
   }
 
   logError(err: Error | string) {
@@ -235,7 +235,12 @@ export class Output {
   }
 
   printMarkdown(markdown: string) {
-    this.log(marked(markdown).split('\n').map(l => `   ${l}`).join('\n'))
+    this.log(
+      marked(markdown)
+        .split('\n')
+        .map(l => `   ${l}`)
+        .join('\n'),
+    )
   }
 
   oldprompt(name: string, options?: PromptOptions) {
@@ -261,11 +266,7 @@ export class Output {
   filesTree(files: string[]) {
     const tree = filesToTree(files)
     const printedTree = treeify.asTree(tree, true)
-    this.log(
-      chalk.blue(
-        printedTree.split('\n').join('\n'),
-      ),
-    )
+    this.log(chalk.blue(printedTree.split('\n').join('\n')))
   }
 
   tree(dirPath: string, padding = false) {
@@ -274,7 +275,10 @@ export class Output {
     const printedTree = treeify.asTree(convertedTree, true)
     this.log(
       chalk.blue(
-        printedTree.split('\n').map(l => (padding ? '  ' : '') + l).join('\n'),
+        printedTree
+          .split('\n')
+          .map(l => (padding ? '  ' : '') + l)
+          .join('\n'),
       ),
     )
   }
@@ -290,7 +294,7 @@ export class Output {
     arr1: string[][],
     spaceLeft: number = 0,
     spaceBetween: number = 1,
-    header?: string[]
+    header?: string[],
   ) {
     const inputRows = arr1
     if (header) {
@@ -313,14 +317,21 @@ export class Output {
     const rows = paddedLeftCol.map((l, i) => l + arr1[i][1])
 
     if (header) {
-      const divider = `${repeat('─', maxLeftCol)}${repeat(' ', spaceBetween)}${repeat('─', maxRightCol)}`
+      const divider = `${repeat('─', maxLeftCol)}${repeat(
+        ' ',
+        spaceBetween,
+      )}${repeat('─', maxRightCol)}`
       rows.splice(1, 0, divider)
     }
 
     return rows.join('\n')
   }
 
-  printServices = (targets: Targets, projects: Project[], onlyLocal: boolean = true) => {
+  printServices = (
+    targets: Targets,
+    projects: Project[],
+    onlyLocal: boolean = true,
+  ) => {
     const uniqTargetKeys = uniqBy(Object.keys(targets), key => targets[key].id)
     if (onlyLocal) {
       return this.printPadded(
@@ -336,17 +347,26 @@ export class Output {
         ['Service Name', 'Cluster / Service ID'],
       )
     } else {
-      const filteredProjects = projects.filter(p => !Object.values(targets).find( t => p.id === t.id))
+      const filteredProjects = projects.filter(
+        p => !Object.values(targets).find(t => p.id === t.id),
+      )
       return this.printPadded(
-        uniqTargetKeys.map(key => {
-          const { id, cluster } = targets[key]
-          const project = projects.find(p => p.id === id)
-          const output = `${cluster}/${id}`
-          const serviceName = project ? project.name : key
-          return [serviceName, output]
-        }).concat(filteredProjects.map(p => {
-          return [p.name, `shared-${p.region.toLowerCase().replace(/_/g, '-')}/${p.id}`]
-        })),
+        uniqTargetKeys
+          .map(key => {
+            const { id, cluster } = targets[key]
+            const project = projects.find(p => p.id === id)
+            const output = `${cluster}/${id}`
+            const serviceName = project ? project.name : key
+            return [serviceName, output]
+          })
+          .concat(
+            filteredProjects.map(p => {
+              return [
+                p.name,
+                `shared-${p.region.toLowerCase().replace(/_/g, '-')}/${p.id}`,
+              ]
+            }),
+          ),
         0,
         1,
         ['Service Name', 'Cluster / Service ID'],
