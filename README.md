@@ -61,6 +61,8 @@ Graphcool is a GraphQL backend development framework
 5. **Connect to your GraphQL endpoint:**
 
   Use the endpoint from step (2) in your frontend (or backend) applications to connect to your GraphQL API.
+  
+![](https://imgur.com/EsopgE3.gif)
 
 ## Features
 
