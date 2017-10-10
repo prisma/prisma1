@@ -23,7 +23,7 @@ Deploy the Graphcool backend and open the GraphQL API endpoint in your browser
 
 ```sh
 graphcool deploy
-# open `https://api.graph.cool/simple/v1/xxx` in your browser
+# next step: open `https://api.graph.cool/simple/v1/xxx` in your browser
 ```
 
 ## Usage
