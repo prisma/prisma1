@@ -84,18 +84,21 @@ export class Auth {
 
     opn(url)
 
-    while (true) {
+    let authToken
+    while (!authToken) {
       const endpointUrl = `${this.config.authEndpoint}/${cliToken}`
       const result = await fetch(endpointUrl)
 
       const json = await result.json()
-      const { authToken } = json
+      authToken = json.authToken
       if (authToken) {
         this.out.action.stop()
         return authToken as string
       }
       await new Promise(r => setTimeout(r, 500))
     }
+
+    return authToken
   }
 
   async validateAuthToken(token: string): Promise<string | null> {

@@ -126,19 +126,21 @@ export class CLI {
       }
     }
 
-    if (
-      (!this.config.argv.includes('logs') &&
-      !this.config.argv.includes('logs:function')) &&
-      (!this.config.argv.includes('deploy') &&
+    if (!(
+      (this.config.argv.includes('logs') ||
+      this.config.argv.includes('logs:function')) ||
+      (this.config.argv.includes('deploy') &&
         (this.config.argv.includes('-w') ||
       this.config.argv.includes('--watch')))
-    ) {
+    )) {
       debug('flushing stdout')
       const { timeout } = require('./util')
-      await timeout(this.flush(), 5000)
+      await timeout(this.flush(), 1000)
 
       debug('exiting')
       out.exit(0)
+    } else {
+      console.log('NOT FLUSHING THE TOILET')
     }
   }
 

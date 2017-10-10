@@ -1,6 +1,6 @@
 {
   "name": "graphcool",
-  "version": "0.7.0-alpha.2",
+  "version": "0.7.0-alpha.3",
   "main": "dist/index.js",
   "bin": {
     "graphcool": "dist/index.js",
@@ -50,7 +50,7 @@
   "dependencies": {
     "fs-extra": "^4.0.1",
     "graphcool-cli-core": "^1.3.65",
-    "graphcool-cli-engine": "^0.0.56",
+    "graphcool-cli-engine": "^0.0.57",
     "semver": "^5.4.1",
     "source-map-support": "^0.4.18"
   },

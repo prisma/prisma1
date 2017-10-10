@@ -90,7 +90,7 @@ Please run ${chalk.green('$ graphcool local up')} to get a local Graphcool clust
       }
     }
 
-    if (!newServiceName) {
+    if (!newServiceName && !foundTarget.target) {
       newServiceName = await this.serviceNameSelector(sillyName())
     }
 

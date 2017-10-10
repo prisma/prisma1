@@ -65,7 +65,7 @@ export class Environment {
   }
 
   checkCluster(cluster: string) {
-    const allClusters = this.config.sharedClusters.concat(Object.keys(this.rc.clusters))
+    const allClusters = this.config.sharedClusters.concat(Object.keys(this.rc.clusters || {}))
     if (!allClusters.includes(cluster)) {
       const bestMatch = stringSimilarity.findBestMatch(cluster, allClusters).bestMatch.target
       this.out.error(`${cluster} is not a valid cluster. Did you mean ${bestMatch}?`)
