@@ -1,4 +1,4 @@
----
+----
 alias: tijghei9go
 description: Get started in 5 min with [React](https://facebook.github.io/react/), [Apollo Client](https://github.com/apollographql/apollo-client) and [GraphQL](https://www.graphql.org) and learn how to build a simple Instagram clone.
 github: https://github.com/graphcool-examples/react-graphql/tree/master/quickstart-with-apollo
@@ -6,11 +6,11 @@ github: https://github.com/graphcool-examples/react-graphql/tree/master/quicksta
 
 # React & Apollo Quickstart
 
-For this quickstart tutorial, we have prepared a [repository](https://github.com/graphcool-examples/react-graphql/tree/master/quickstart-with-apollo) that contains the full React code for the Instagram clone. All you need to do is create the Graphcool project that will expose the GraphQL API and connect it with the React application. Let's get started! 
+For this quickstart tutorial, we have prepared a [repository](https://github.com/graphcool-examples/react-graphql/tree/master/quickstart-with-apollo) that contains the full React code for the Instagram clone. All you need to do is create the Graphcool service that will expose the GraphQL API and connect it with the React application. Let's get started! 
 
 <Instruction>
 
-*Clone the example repository that contains the React application:*
+Clone the example repository that contains the React application:
 
 ```sh
 git clone https://github.com/graphcool-examples/react-graphql.git
@@ -19,42 +19,41 @@ cd react-graphql/quickstart-with-apollo
 
 </Instruction>
 
-Feel free to get familiar with the code. The project contains the following React [`components`](https://github.com/graphcool-examples/react-graphql/tree/master/quickstart-with-apollo/src/components):
+Feel free to get familiar with the code. The app contains the following React [`components`](https://github.com/graphcool-examples/react-graphql/tree/master/quickstart-with-apollo/src/components):
 
 - `Post`: Renders a single post item
 - `ListPage`: Renders a list of post items
 - `CreatePage`: Allows to create a new post item
 - `DetailPage`: Renders the details of a post item and allows to update and delete it
 
-Graphcool projects are managed with the [Graphcool CLI](!alias-zboghez5go). So before moving on, you first need to install it.
+Graphcool services are managed with the [Graphcool CLI](!alias-zboghez5go). So before moving on, you first need to install it.
 
 <Instruction>
 
-*Install the Graphcool CLI:*
+Install the Graphcool CLI:
 
 ```sh
-npm install -g graphcool
+npm install -g graphcool@next
 ```
 
 </Instruction>
 
-Now that the CLI is installed, you can use it to create a new project with the [`graphcool init`](!alias-zboghez5go#graphcool-init) command.
+Now that the CLI is installed, you can use it to create a new service with the [`graphcool init`](!alias-zboghez5go#graphcool-init) command.
 
 <Instruction>
 
-Create a new _blank_ Graphcool project inside a directory called `graphcool`:
+Create a new _blank_ Graphcool service inside a directory called `graphcool`:
 
 ```sh(path="")
-graphcool init graphcool --template blank
+# Create a local service definition in a new directory called `server`
+graphcool init server
 ```
-
-From the output in the console, copy the endpoint for the GraphQL API and save it. You'll need it in _Step 6_.
 
 </Instruction>
 
-> Note: If you haven't authenticated with the Graphcool CLI before, this command is going to open up a browser window and ask you to login. Your authentication token will be stored in `~/.graphcool`.
+> Note: If you haven't authenticated with the Graphcool CLI before, this command is going to open up a browser window and ask you to login. Your authentication token will be stored in the global `~/.graphcoolrc`.
 
-`graphcool init` creates a new project inside your Graphcool account as well as the local project structure inside the specified `graphcool` directory:
+`graphcool init` creates the local service structure inside the specified `server` directory:
 
 ```(nocopy)
 .
@@ -67,18 +66,18 @@ From the output in the console, copy the endpoint for the GraphQL API and save i
         └── hello.js
   ```
 
-Each of the created files and directories have a dedicated purpose inside your Graphcool project:
+Each of the created files and directories have a dedicated purpose inside your Graphcool service:
 
-- `graphcool.yml`: Contains your [project definition](opheidaix3#project-definition).
-- `types.graphql`: Contains all the type definitions for your project, written in the GraphQL [Schema Definitiona Language](https://medium.com/@graphcool/graphql-sdl-schema-definition-language-6755bcb9ce51) (SDL).
-- `.graphcoolrc`: Contains information about the [environments](!alias-opheidaix3#environments) that you have configured for your project.
-- `code`: Contains the source code (and if necessary GraphQL queries) for the [functions](!alias-aiw4aimie9) you've configured for your project. Notice that a _blank_ project comes with a default "Hello World"-function which you can delete if you don't want to use it.
+- `graphcool.yml`: Contains your [service definition](!alias-opheidaix3).
+- `types.graphql`: Contains all the type definitions for your service, written in the GraphQL [Schema Definitiona Language](https://medium.com/@graphcool/graphql-sdl-schema-definition-language-6755bcb9ce51) (SDL).
+- `.graphcoolrc` (local): Contains information about the [targets](!alias-zoug8seen4) that you have configured for your service.
+- `code`: Contains the source code (and if necessary GraphQL queries) for the [functions](!alias-aiw4aimie9) you've configured for your service. Notice that a new service comes with a default "Hello World"-function which you can delete if you don't want to use it.
 
-Next you need to configure the [data model](!alias-eiroozae8u) for your project.
+Next you need to configure the [data model](!alias-eiroozae8u) for your service.
 
 <Instruction>
 
-*Open `./graphcool/types.graphql` and add the following type definition to it:*
+Open `./graphcool/types.graphql` and add the following type definition to it:
 
 ```graphql(path="graphcool/types.graphql")
 type Post {
@@ -92,23 +91,22 @@ type Post {
 
 </Instruction>
 
-The changes you introduced by adding the `Post` type to the data model are purely _local_ so far. So the next step is to sync these changes with the remote project that's in your Graphcool account!
+The changes you introduced by adding the `Post` type to the data model are purely _local_ so far. So the next step is to actually _deploy_ the service!
 
 <Instruction>
 
-*Navigate into the `graphcool` directory and apply your local changes to the remote project in your Graphcool account:*
+Navigate into the `server` directory and deploy your service:
 
 ```sh(path="")
-cd graphcool
+cd server
 graphcool deploy
 ```
 
 </Instruction>
 
-
 The `Post` type is now added to your data model and the corresponding CRUD operations are generated and exposed by the GraphQL API.
 
-You can test the API inside a [GraphQL Playground](!alias-uh8shohxie#playground) which you can open with the `graphcool playground` command. Try out the following query and mutation.
+You can test the API inside a [GraphQL Playground](https://github.com/graphcool/graphql-playground) which you can open with the `graphcool playground` command. Try out the following query and mutation.
 
 **Fetching all posts:**
 
@@ -137,12 +135,24 @@ mutation {
 
 ![](https://imgur.com/w95UEi9.gif)
 
-
-The next step is to connect the React application with the GraphQL API from your Graphcool project.
+The next step is to connect the React application with the GraphQL API from your Graphcool service.
 
 <Instruction>
 
-*Copy the endpoint for the GraphQL API endpoint (from Step 3)  to `./src/index.js` as the `uri` argument in the `createNetworkInterface` call:*
+You first need to get access to the endpoint of your GraphQL API. That's what you're using the `graphcool info` command for:
+
+
+```js(path="sever")
+graphcool info
+```
+
+</Instruction>
+
+From the output, you need to use the endpoint for the `Simple API`.
+
+<Instruction>
+
+Paste the endpoint for the `Simple API` into `./src/index.js` as the `uri` argument in the `createNetworkInterface` call:
 
 ```js(path="src/index.js")
 // replace `__SIMPLE_API_ENDPOINT__` with the endpoint from the previous step
@@ -150,8 +160,6 @@ const networkInterface = createNetworkInterface({ uri: '__SIMPLE_API_ENDPOINT__'
 ```
 
 </Instruction>
-
-> **Note**: If you ever lose your GraphQL endpoint, you can simply use the `graphcool info` command which will print it again.
 
 That's it. The last thing to do is actually launching the application 🚀
 
