@@ -5,6 +5,14 @@ description: Controlling Data Access with Authentication & Permissions
 
 # Freecom Tutorial: Controlling Data Access with Authentication & Permissions (4/6)
 
+<InfoBox type=warning>
+
+**Note**: This guide is only applicable to [legacy Console project](!alias-aemieb1aev). It doesn't work with the new [Graphcool Framework](https://blog.graph.cool/graphcool-framework-preview-ff42081b1333) which is based on the [`graphcool.yml`](!alias-foatho8aip) service definition file.
+
+An updated version of this guide is coming soon, stay tuned!
+
+</InfoBox>
+
 In this fourth chapter of our [Freecom tutorial series](!alias-e8a6ajt8ax) you will learn how to use the autentication and permission features of Graphcool to control data access of your users. The [last chapter](!alias-die6mewitu) was about realtime functionality using GraphQL subscriptions. The goal for today is to make sure that customers only have access to their own conversations.
 
 <iframe height="315" src="https://www.youtube.com/embed/RHI1affZAvM" frameborder="0" allowfullscreen></iframe>

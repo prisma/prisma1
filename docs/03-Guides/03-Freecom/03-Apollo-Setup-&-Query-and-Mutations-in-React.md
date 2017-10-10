@@ -5,6 +5,14 @@ description: Learn how to integrate Apollo into your React app and run GraphQL q
 
 # Freecom Tutorial: Apollo Setup & GraphQL Queries/Mutations in React (2/6)
 
+<InfoBox type=warning>
+
+**Note**: This guide is only applicable to [legacy Console project](!alias-aemieb1aev). It doesn't work with the new [Graphcool Framework](https://blog.graph.cool/graphcool-framework-preview-ff42081b1333) which is based on the [`graphcool.yml`](!alias-foatho8aip) service definition file.
+
+An updated version of this guide is coming soon, stay tuned!
+
+</InfoBox>
+
 This is the second chapter of our tutorial series where we explain how to build an Intercom clone using a Graphcool backend. In the [last chapter](!alias-xuakjj68lp), we already prepared the GraphQL server and can now start interacting with the API from our React application! 🚀
 
 <iframe height="315" src="https://www.youtube.com/embed/ZItsQWNPw1U" frameborder="0" allowfullscreen></iframe>

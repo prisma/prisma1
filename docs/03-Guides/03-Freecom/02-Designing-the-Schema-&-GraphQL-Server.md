@@ -5,6 +5,15 @@ description: Learn about Freecom's data model and how to generate a Graphcool ba
 
 # Freecom Tutorial: Designing the Schema & GraphQL Server (1/6)
 
+<InfoBox type=warning>
+
+**Note**: This guide is only applicable to [legacy Console project](!alias-aemieb1aev). It doesn't work with the new [Graphcool Framework](https://blog.graph.cool/graphcool-framework-preview-ff42081b1333) which is based on the [`graphcool.yml`](!alias-foatho8aip) service definition file.
+
+An updated version of this guide is coming soon, stay tuned!
+
+</InfoBox>
+
+
 <iframe height="315" src="https://www.youtube.com/embed/4q0fFEypacA" frameborder="0" allowfullscreen></iframe>
 
 In this first part of our tutorial series, we're focussing on generating a data model from a set of requirements that we have for the Freecom app.
