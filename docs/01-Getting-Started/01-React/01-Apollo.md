@@ -106,6 +106,12 @@ graphcool deploy
 
 The `Post` type is now added to your data model and the corresponding CRUD operations are generated and exposed by the GraphQL API.
 
+<Instruction>
+
+Save the HTTP endpoint for the `GraphQL API` from the output of the `graphcool deploy` command, you'll need it later!
+
+</Instruction>
+
 You can test the API inside a [GraphQL Playground](https://github.com/graphcool/graphql-playground) which you can open with the `graphcool playground` command. Try out the following query and mutation.
 
 **Fetching all posts:**
@@ -139,20 +145,7 @@ The next step is to connect the React application with the GraphQL API from your
 
 <Instruction>
 
-You first need to get access to the endpoint of your GraphQL API. That's what you're using the `graphcool info` command for:
-
-
-```js(path="sever")
-graphcool info
-```
-
-</Instruction>
-
-From the output, you need to use the endpoint for the `Simple API`.
-
-<Instruction>
-
-Paste the endpoint for the `Simple API` into `./src/index.js` as the `uri` argument in the `createNetworkInterface` call:
+Paste the HTTP endpoint that you saved after running `graphcool deploy` into `./src/index.js` as the `uri` argument in the `createNetworkInterface` call:
 
 ```js(path="src/index.js")
 // replace `__SIMPLE_API_ENDPOINT__` with the endpoint from the previous step
@@ -160,6 +153,8 @@ const networkInterface = createNetworkInterface({ uri: '__SIMPLE_API_ENDPOINT__'
 ```
 
 </Instruction>
+
+> **Note**: If you ever lose the endpoint for your GraphQL API, you can simply get access to it again by using the `graphcool info` command. When using Apollo, you need to use the endpoint for the `Simple API`.
 
 That's it. The last thing to do is actually launching the application 🚀
 
