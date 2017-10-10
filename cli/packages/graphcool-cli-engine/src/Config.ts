@@ -99,7 +99,6 @@ export class Config {
     if (options) {
       this.readPackageJson(options)
     }
-    console.log('TROLO')
   }
   setLocal(host: string = 'http://localhost:60000') {
     this.backendAddr = host
@@ -131,7 +130,6 @@ export class Config {
         ? path.join(this.home, 'Library', 'Caches')
         : null,
     )
-    console.log(x)
     return x
   }
   private readPackageJson(options: RunOptions) {

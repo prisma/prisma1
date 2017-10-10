@@ -84,6 +84,7 @@ export default class Plugin {
       static topic = t.id
       static description = t.description
       static hidden = t.hidden
+      static group = t.group
     }
   }
 }

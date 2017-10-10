@@ -20,24 +20,22 @@ import Restart from './commands/local/restart'
 import Account from './commands/account'
 import Eject from './commands/local/eject'
 
-console.log('WAAAAAAAAAAAAA')
-
 export const groups = [
   {
     key: 'general',
-    title: 'General commands'
+    name: 'General commands'
   },
   {
     key: 'data',
-    title: 'Data workflows'
+    name: 'Data workflows'
   },
   {
     key: 'local',
-    title: 'Local development'
+    name: 'Local development'
   },
   {
     key: 'platform',
-    title: 'Platform'
+    name: 'Platform'
   },
 ]
 
@@ -46,14 +44,13 @@ export const topics = [
   { name: 'deploy', description: 'Deploy local service definition', group: 'general' },
   { name: 'login', description: 'Create account or login', group: 'platform' },
   {
-    name: 'info',
-    description: 'Print service info (endpoints, clusters, ...) ',
-    group: 'general'
-  },
-  { name: 'console', description: 'Opens the console for the current service', group: 'platform' },
-  {
     name: 'playground',
     description: 'Opens the playground for the current service',
+    group: 'general'
+  },
+  {
+    name: 'info',
+    description: 'Print service info (endpoints, clusters, ...) ',
     group: 'general'
   },
   { name: 'list', description: 'List all deployed services', group: 'general' },
@@ -75,20 +72,22 @@ export const topics = [
     description: 'Export service data',
     group: 'data'
   },
-  {
-    name: 'invoke',
-    description: 'Invokes a function locally',
-    group: 'general'
-  },
+  // {
+  //   name: 'invoke',
+  //   description: 'Invokes a function locally',
+  //   group: 'general'
+  // },
+  { name: 'console', description: 'Opens the console for the current service', group: 'platform' },
   {
     name: 'account',
     description: 'Information about the current authenticated account',
     group: 'platform'
+  },
+  {
+    name: 'local',
+    description: 'Manage the local Graphcool version',
+    group: 'local'
   }
-  // {
-  //   name: 'local',
-  //   description: 'Manage the local Graphcool version'
-  // }
 ]
 
 export const commands = [

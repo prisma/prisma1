@@ -6,6 +6,7 @@ export class Topic {
   static topic: string
   static description?: string
   static hidden = false
+  static group: string
 
   commands: Array<typeof Command>
   out: Output

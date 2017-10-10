@@ -23,6 +23,7 @@ export interface CachedCommand {
   usage?: string
   hidden: boolean
   variableArgs?: boolean
+  group: string
 }
 
 export interface CachedTopic {
@@ -30,6 +31,7 @@ export interface CachedTopic {
   topic: string
   description?: string
   hidden: boolean
+  group: string
 }
 
 export interface CachedPlugin {
