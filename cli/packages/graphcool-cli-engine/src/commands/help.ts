@@ -97,7 +97,7 @@ export default class Help extends Command {
     )})
     
 ${chalk.bold('Usage:')} ${chalk.bold('graphcool')} COMMAND`)
-    let topics = (ptopics || this.plugins.topics).filter(t => {
+    const topics = (ptopics || this.plugins.topics).filter(t => {
       if (!t.id) {
         return
       }
