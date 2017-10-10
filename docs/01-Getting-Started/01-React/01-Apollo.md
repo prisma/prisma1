@@ -57,11 +57,11 @@ graphcool init server
 
 ```(nocopy)
 .
-└── graphcool
+└── server
     ├── graphcool.yml
     ├── types.graphql
     ├── .graphcoolrc
-    └── code
+    └── src
         ├── hello.graphql
         └── hello.js
   ```
@@ -95,7 +95,7 @@ The changes you introduced by adding the `Post` type to the data model are purel
 
 <Instruction>
 
-Navigate into the `server` directory and deploy your service:
+Navigate to the `server` directory and deploy your service:
 
 ```sh(path="")
 cd server
