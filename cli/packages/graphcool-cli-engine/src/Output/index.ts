@@ -20,7 +20,7 @@ import * as marked from 'marked'
 import * as TerminalRenderer from 'marked-terminal'
 import * as Charm from 'charm'
 import {set} from 'lodash'
-import { padEnd, repeat } from 'lodash'
+import { padEnd, repeat, uniqBy } from 'lodash'
 import { Project } from '../types/common'
 import { Targets } from '../types/rc'
 
@@ -321,9 +321,10 @@ export class Output {
   }
 
   printServices = (targets: Targets, projects: Project[], onlyLocal: boolean = true) => {
+    const uniqTargetKeys = uniqBy(Object.keys(targets), key => targets[key].id)
     if (onlyLocal) {
       return this.printPadded(
-        Object.keys(targets).map(key => {
+        uniqTargetKeys.map(key => {
           const { id, cluster } = targets[key]
           const project = projects.find(p => p.id === id)
           const output = `${cluster}/${id}`
@@ -335,15 +336,16 @@ export class Output {
         ['Service Name', 'Cluster / Service ID'],
       )
     } else {
+      const filteredProjects = projects.filter(p => !Object.values(targets).find( t => p.id === t.id))
       return this.printPadded(
-        Object.keys(targets).map(key => {
+        uniqTargetKeys.map(key => {
           const { id, cluster } = targets[key]
           const project = projects.find(p => p.id === id)
           const output = `${cluster}/${id}`
           const serviceName = project ? project.name : key
           return [serviceName, output]
-        }).concat(projects.filter(p => Object.values(targets).find( t => p.id === t.id)).map(p => {
-          return [p.name, `shared-${p.region.toLowerCase().replace(/_/, '-')}/${p.id}`]
+        }).concat(filteredProjects.map(p => {
+          return [p.name, `shared-${p.region.toLowerCase().replace(/_/g, '-')}/${p.id}`]
         })),
         0,
         1,

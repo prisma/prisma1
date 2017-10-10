@@ -108,8 +108,8 @@ export class Command {
     this.config.setOutput(this.out)
     this.argv = options.config && options.config.argv ? options.config.argv : []
     this.definition = new ProjectDefinitionClass(this.out, this.config)
-    this.client = new Client(this.config, this.env)
     this.env = new Environment(this.out, this.config)
+    this.client = new Client(this.config, this.env)
     this.auth = new Auth(this.out, this.config, this.env, this.client)
   }
 
@@ -143,7 +143,7 @@ export class Command {
     this.flags = flags!
     this.argv = argv!
     this.args = args
-    this.env.load(flags!)
+    await this.env.load(flags!)
   }
 
   get stdout(): string {

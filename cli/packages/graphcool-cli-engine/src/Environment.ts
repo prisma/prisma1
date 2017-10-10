@@ -32,48 +32,6 @@ export class Environment {
     debug('taking graphcool test token')
     this.globalRC.platformToken = process.env.GRAPHCOOL_TEST_TOKEN!
   }
-
-  get clusterEndpoint(): string {
-    if (this.isSharedCluster(this.activeCluster)) {
-      return this.config.systemAPIEndpoint
-    }
-
-    return (this.rc.clusters![this.activeCluster]! as Cluster).host + '/system'
-  }
-
-  simpleEndpoint(projectId: string): string {
-    if (this.isSharedCluster(this.activeCluster)) {
-      return this.config.simpleAPIEndpoint + projectId
-    }
-
-    return (this.rc.clusters![this.activeCluster]! as Cluster).host + '/simple/v1/' + projectId
-  }
-
-  relayEndpoint(projectId: string): string {
-    if (this.isSharedCluster(this.activeCluster)) {
-      return this.config.relayAPIEndpoint + projectId
-    }
-
-    return (this.rc.clusters![this.activeCluster]! as Cluster).host + '/relay/v1/' + projectId
-  }
-
-  fileEndpoint(projectId: string): string {
-    if (this.isSharedCluster(this.activeCluster)) {
-      return this.config.fileAPIEndpoint + projectId
-    }
-
-    return (this.rc.clusters![this.activeCluster]! as Cluster).host + '/file/v1/' + projectId
-  }
-
-  subscriptionEndpoint(projectId: string): string {
-    if (this.isSharedCluster(this.activeCluster)) {
-      return this.subscriptionURL({region: this.getRegionFromCluster(this.activeCluster), projectId})
-    }
-
-    const localPort = this.clusterEndpoint.split(':')[1]
-    return this.subscriptionURL({localPort, projectId})
-  }
-
   get rc(): RC {
     // todo: memoizing / caching
     return this.deserializeRCs(this.localRC, this.globalRC, this.config.localRCPath, this.config.globalRCPath)
@@ -215,6 +173,9 @@ export class Environment {
               default: 'shared-eu-west-1'
             }
           }
+          if (content.default) {
+            newLocalRcJson.targets.default = content.default
+          }
           const newLocalRcYaml = yaml.safeDump(newLocalRcJson)
           const oldPath = path.join(this.config.cwd, '.graphcoolrc.old')
           fs.moveSync(this.config.localRCPath, oldPath)
@@ -233,16 +194,25 @@ https://github.com/graphcool/graphcool/issues/714
   migrateGlobalFiles() {
     const dotFilePath = path.join(this.config.home, '.graphcool')
     const dotExists = fs.pathExistsSync(dotFilePath)
-    const rcHomePath = path.join(this.config.home, '.graphoolrc')
+    const rcHomePath = path.join(this.config.home, '.graphcoolrc')
     const rcHomeExists = fs.pathExistsSync(rcHomePath)
 
     const dotFile = dotExists ? fs.readFileSync(dotFilePath, 'utf-8') : null
     const rcFile = rcHomeExists ? fs.readFileSync(rcHomePath, 'utf-8') : null
 
     // if both legacy files exist, prefer the newer one, .graphcool
-    if (rcHomeExists) {
-      this.out.warn(`Moved deprecated file ${rcHomePath} to .graphcoolrc.old`)
-      fs.moveSync(rcHomePath, path.join(this.config.home, '.graphcoolrc.old'))
+    if (rcHomeExists && rcFile) {
+      // only move this file, if it is json and contains the "token" field
+      // in this case, it's the old format
+      try {
+        const rcJson = JSON.parse(rcFile)
+        if (Object.keys(rcJson).length === 1 && rcJson.token) {
+          this.out.warn(`Moved deprecated file ${rcHomePath} to .graphcoolrc.old`)
+          fs.moveSync(rcHomePath, path.join(this.config.home, '.graphcoolrc.old'))
+        }
+      } catch (e) {
+        //
+      }
     }
     if (dotExists) {
       if (dotFile) {
@@ -252,8 +222,11 @@ https://github.com/graphcool/graphcool/issues/714
             const rc = {...defaultRC, platformToken: dotJson.token}
             const rcSerialized = this.serializeRC(rc)
             const oldPath = path.join(this.config.home, '.graphcool.old')
-            fs.moveSync(dotFile, oldPath)
+            fs.moveSync(dotFilePath, oldPath)
+            debug(`Writing`, rcHomePath, rcSerialized)
             fs.writeFileSync(rcHomePath, rcSerialized)
+            const READ = fs.readFileSync(rcHomePath, 'utf-8')
+            debug('YES', READ)
             this.out.warn(`We detected the old definition format of the ${dotFilePath} file.
 It has been renamed to ${oldPath}. The new file is called ${rcHomePath}.
 Read more about the changes here:
@@ -262,7 +235,6 @@ https://github.com/graphcool/graphcool/issues/714
           }
         } catch (e) {
           // noop
-          console.error(e)
         }
       }
     } else if (rcHomeExists && rcFile) {
@@ -273,7 +245,6 @@ https://github.com/graphcool/graphcool/issues/714
         fs.writeFileSync(rcHomePath, rcSerialized)
       } catch (e) {
         // noop
-        console.error(e)
       }
     }
   }
@@ -296,8 +267,6 @@ https://github.com/graphcool/graphcool/issues/714
   }
 
   async load(args: Args) {
-    this.migrateOldFormat()
-
     const localFile = this.config.localRCPath && fs.pathExistsSync(this.config.localRCPath) ? fs.readFileSync(this.config.localRCPath, 'utf-8') : null
     const globalFile = this.config.globalRCPath && fs.pathExistsSync(this.config.globalRCPath) ? fs.readFileSync(this.config.globalRCPath, 'utf-8') : null
 
@@ -427,13 +396,56 @@ https://github.com/graphcool/graphcool/issues/714
 
   getRegionFromCluster(cluster: string): Region {
     if (this.isSharedCluster(cluster)) {
-      return cluster.slice(7).replace(/-/, '_').toUpperCase() as Region
+      return cluster.slice(7).replace(/-/g, '_').toUpperCase() as Region
     } else {
       return 'EU_WEST_1'
     }
   }
 
-  subscriptionURL = ({region, projectId, localPort}: {region?: Region, projectId: string, localPort?: number | string}) =>
+  get clusterEndpoint(): string {
+    if (this.isSharedCluster(this.activeCluster)) {
+      return this.config.systemAPIEndpoint
+    }
+
+    return (this.rc.clusters![this.activeCluster]! as Cluster).host + '/system'
+  }
+
+  simpleEndpoint(projectId: string): string {
+    if (this.isSharedCluster(this.activeCluster)) {
+      return this.config.simpleAPIEndpoint + projectId
+    }
+
+    return (this.rc.clusters![this.activeCluster]! as Cluster).host + '/simple/v1/' + projectId
+  }
+
+  relayEndpoint(projectId: string): string {
+    if (this.isSharedCluster(this.activeCluster)) {
+      return this.config.relayAPIEndpoint + projectId
+    }
+
+    return (this.rc.clusters![this.activeCluster]! as Cluster).host + '/relay/v1/' + projectId
+  }
+
+  fileEndpoint(projectId: string): string {
+    if (this.isSharedCluster(this.activeCluster)) {
+      return this.config.fileAPIEndpoint + projectId
+    }
+
+    return (this.rc.clusters![this.activeCluster]! as Cluster).host + '/file/v1/' + projectId
+  }
+
+  subscriptionEndpoint(projectId: string): string {
+    if (this.isSharedCluster(this.activeCluster)) {
+      const region = this.getRegionFromCluster(this.activeCluster)
+      return this.subscriptionURL({region, projectId})
+    }
+
+    const localPort = this.clusterEndpoint.split(':')[1]
+    return this.subscriptionURL({localPort, projectId})
+  }
+
+
+  private subscriptionURL = ({region, projectId, localPort}: {region?: Region, projectId: string, localPort?: number | string}) =>
     localPort ? `ws://localhost:${localPort}/subscriptions/v1/${projectId}` :
       `${subscriptionEndpoints[region!]}/v1/${projectId}`
 }

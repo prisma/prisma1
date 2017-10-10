@@ -146,7 +146,13 @@ export class Config {
   }
   private setRCPaths() {
     this.localRCPath = path.join(this.cwd, '.graphcoolrc')
-    this.globalRCPath = findUp.sync('.graphcoolrc', {cwd: this.cwd}) || path.join(this.home, '.graphcoolrc')
+    const foundUp = findUp.sync('.graphcoolrc', {cwd: path.join(this.cwd, '..')})
+    const homePath = path.join(this.home, '.graphcoolrc')
+    debug(`foundUp`, foundUp)
+    debug(`homepath`, homePath)
+    this.globalRCPath = foundUp || homePath
+    debug(`localRCPath`, this.localRCPath)
+    debug(`globalRCPath`, this.globalRCPath)
   }
   private warn(msg: string) {
     this.warnings.push(msg)

@@ -29,7 +29,8 @@ export class Auth {
   }
 
   async ensureAuth() {
-    const token = this.env.rc.platformToken || (await this.requestAuthToken())
+    const localToken = this.env.token
+    const token = localToken || (await this.requestAuthToken())
 
     const valid = await this.validateAuthToken(token)
     if (!valid) {
