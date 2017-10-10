@@ -56,7 +56,7 @@ ${chalk.gray(
   }
   async run() {
     const { force, watch, alias } = this.flags
-    const newServiceName = this.flags['new-service']
+    let newServiceName = this.flags['new-service']
     const newServiceCluster = this.flags['new-service-cluster']
     // target can be both key or value of the `targets` object in the .graphcoolrc
     // so either "my-target" or "shared-eu-west-1/asdf"
@@ -88,6 +88,10 @@ Please run ${chalk.green('$ graphcool local up')} to get a local Graphcool clust
         targetName = foundTarget.targetName
         target = foundTarget.target
       }
+    }
+
+    if (!newServiceName) {
+      newServiceName = await this.serviceNameSelector(sillyName())
     }
 
     await this.auth.ensureAuth()
@@ -146,7 +150,7 @@ Please run ${chalk.green('$ graphcool local up')} to get a local Graphcool clust
     }
   }
 
-  private async createProject(isLocal: boolean, cluster: string, name?: string, alias?: string, region?: string): Promise<{
+  private async createProject(isLocal: boolean, cluster: string, name: string, alias?: string, region?: string): Promise<{
     projectId: string
   }> {
 
@@ -155,15 +159,13 @@ Please run ${chalk.green('$ graphcool local up')} to get a local Graphcool clust
         ? ' locally'
         : ''
 
-    const projectName = name || sillyName()
-
     this.out.log('')
-    const projectMessage = `Creating service ${chalk.bold(projectName)}${localNote} in cluster ${cluster}`
+    const projectMessage = `Creating service ${chalk.bold(name)}${localNote} in cluster ${cluster}`
     this.out.action.start(projectMessage)
 
     // create project
     const createdProject = await this.client.createProject(
-      projectName,
+      name,
       emptyDefinition,
       alias,
       region,
@@ -294,6 +296,20 @@ Please run ${chalk.green('$ graphcool local up')} to get a local Graphcool clust
     this.out.up(3)
 
     return cluster
+  }
+
+  private async serviceNameSelector(defaultName: string): Promise<string> {
+    const question = {
+      name: 'service',
+      type: 'input',
+      message: 'Please choose the service name',
+      default: defaultName,
+    }
+
+    const { service } = await this.out.prompt(question)
+    this.out.up(3)
+
+    return service
   }
 
 }
