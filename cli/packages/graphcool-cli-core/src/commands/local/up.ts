@@ -15,12 +15,9 @@ export default class Up extends Command {
     }),
   }
   async run() {
-    this.config.setLocal()
-    this.client.updateClient()
-
     const {name} = this.flags
 
-    const docker = new Docker(this.out, this.config, name)
+    const docker = new Docker(this.out, this.config, this.env, name)
 
     const {envVars: {MASTER_TOKEN, PORT}} = await docker.up()
 
@@ -31,19 +28,18 @@ export default class Up extends Command {
     const {token}: AuthenticateCustomerPayload = await this.client.authenticateCustomer(MASTER_TOKEN)
 
 
-    if (!this.config.targets[name]) {
-      debug('Setting target')
-      this.config.setTarget(name, {
-        description: 'This is your local docker dev environment',
+    if (!this.env.rc.clusters || this.env.rc.clusters[name]) {
+      debug('Setting cluster')
+      this.env.setGlobalCluster(name, {
         host: `http://localhost:${PORT}`,
         token,
       })
-      this.config.saveDotGraphcool()
+      this.env.saveGlobalRC()
     }
 
     this.out.action.stop()
 
-    this.out.log(`\nSuccess! Added local instance ${chalk.bold(`\`${name}\``)} to ${this.config.dotGraphcoolFilePath}\n`)
+    this.out.log(`\nSuccess! Added local instance ${chalk.bold(`\`${name}\``)} to ${this.config.globalRCPath}\n`)
     this.out.log(`To get started, execute
     
   ${chalk.green('$ graphcool init')}

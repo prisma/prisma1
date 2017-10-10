@@ -1,10 +1,9 @@
 import { Command, flags, Flags } from 'graphcool-cli-engine'
 import * as chalk from 'chalk'
 import * as sillyName from 'sillyname'
-import { ProjectDoesntExistError } from '../../errors/ServiceDoesntExistError'
+import { ServiceDoesntExistError } from '../../errors/ServiceDoesntExistError'
 import { emptyDefinition } from './emptyDefinition'
 import * as chokidar from 'chokidar'
-import { Target } from '../../../../graphcool-cli-engine/src/types/rc'
 
 export default class Deploy extends Command {
   private deploying: boolean = false
@@ -91,7 +90,7 @@ ${chalk.gray(
     if (!target) {
       // if a specific project has been provided, check for its existence
       if (target) {
-        this.out.error(new ProjectDoesntExistError(target))
+        this.out.error(new ServiceDoesntExistError(target))
       }
 
       const region = this.env.getRegionFromCluster(cluster)

@@ -1,7 +1,5 @@
 import { Command, flags, Flags, GraphcoolModule } from 'graphcool-cli-engine'
-import { InvalidProjectError } from '../../errors/InvalidTargetError'
 import { flatMap, isEqual } from 'lodash'
-import { FunctionDefinition } from 'graphcool-json-schema'
 import { LocalInvoker } from '../../LocalInvoker'
 import * as path from 'path'
 import * as fs from 'fs-extra'
@@ -27,57 +25,51 @@ export default class InvokeLocal extends Command {
       description:
         'Download the input event of the last execution to events/FUNCTION/event.json and invoke the function',
     }),
-    env: flags.string({
-      char: 'e',
-      description: 'Project environment to be deployed',
+    target: flags.string({
+      char: 't',
+      description: 'Target to be deployed',
     }),
   }
   async run() {
     await this.auth.ensureAuth()
-    let { env } = this.flags
+    let { target } = this.flags
     const { project } = this.flags
     const fnName = this.flags.function
 
-    env = env || this.env.env.default
+    const { id } = await this.env.getTarget(target)
+    await this.definition.load(this.flags)
 
-    const { projectId } = await this.env.getEnvironment({ env })
-    await this.definition.load()
-
-    if (!projectId) {
-      this.out.error(new InvalidProjectError())
+    const result = this.definition.getFunctionAndModule(fnName)
+    if (!result) {
+      this.out.error(
+        `Function "${fnName}" couldn't be found in graphcool.yml or local modules`,
+      )
+    } else if (
+      !result.fn.handler ||
+      !result.fn.handler.code ||
+      !result.fn.handler.code.src
+    ) {
+      this.out.error(
+        `Function "${name}" doesn't have a code handler defined, so it can't be executed locally`,
+      )
     } else {
-      const result = this.definition.getFunctionAndModule(fnName)
-      if (!result) {
-        this.out.error(
-          `Function "${fnName}" couldn't be found in graphcool.yml or local modules`,
-        )
-      } else if (
-        !result.fn.handler ||
-        !result.fn.handler.code ||
-        !result.fn.handler.code.src
-      ) {
-        this.out.error(
-          `Function "${name}" doesn't have a code handler defined, so it can't be executed locally`,
-        )
-      } else {
-        const { fn, module } = result
-        // gather event
-        const json = await this.getEvent(projectId, fnName)
+      const { fn, module } = result
+      // gather event
+      const json = await this.getEvent(id, fnName)
 
-        // TODO rm any
-        const invoker = new LocalInvoker(
-          this.config,
-          this.env,
-          this.out,
-          module,
-          fnName,
-          fn as any,
-        )
+      // TODO rm any
+      const invoker = new LocalInvoker(
+        this.config,
+        this.env,
+        this.out,
+        module,
+        fnName,
+        fn as any,
+      )
 
-        const invocationResult = await invoker.invoke(json)
-        this.out.log(chalk.bold.magenta(`\nResult:\n`))
-        this.out.log(this.out.getStyledJSON(invocationResult))
-      }
+      const invocationResult = await invoker.invoke(json)
+      this.out.log(chalk.bold.magenta(`\nResult:\n`))
+      this.out.log(this.out.getStyledJSON(invocationResult))
     }
   }
 

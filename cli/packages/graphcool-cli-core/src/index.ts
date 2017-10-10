@@ -4,11 +4,9 @@ import Auth from './commands/auth/index'
 import Info from './commands/info/index'
 import Playground from './commands/playground/index'
 import Console from './commands/console'
-import Projects from './commands/projects/index'
-import ModuleAdd from './commands/module/add'
+import List from './commands/list/index'
 import Delete from './commands/delete/index'
 import RootTokens from './commands/root-tokens/index'
-import FunctionsOverview from './commands/functions/index'
 import FunctionLogs from './commands/logs/function'
 import Diff from './commands/diff/index'
 import Pull from './commands/pull/index'
@@ -35,8 +33,8 @@ export const topics = [
     name: 'playground',
     description: 'Opens the playground for the current project',
   },
-  { name: 'projects', description: 'List all projects' },
-  { name: 'modules', description: 'Manage modules' },
+  { name: 'list', description: 'List all deployed services' },
+  // { name: 'modules', description: 'Manage modules' },
   { name: 'get-root-token', description: 'Get the project root tokens' },
   { name: 'functions', description: 'List all functions of a project' },
   { name: 'logs', description: 'Get logs of functions' },
@@ -73,11 +71,9 @@ export const commands = [
   Info,
   Playground,
   Console,
-  Projects,
-  ModuleAdd,
+  List,
   Delete,
   RootTokens,
-  FunctionsOverview,
   FunctionLogs,
   Diff,
   Pull,

@@ -20,6 +20,9 @@ import * as marked from 'marked'
 import * as TerminalRenderer from 'marked-terminal'
 import * as Charm from 'charm'
 import {set} from 'lodash'
+import { padEnd, repeat } from 'lodash'
+import { Project } from '../types/common'
+import { Targets } from '../types/rc'
 
 
 marked.setOptions({
@@ -280,6 +283,72 @@ export class Output {
     for (let i = 0; i < y; i++) {
       this.charm.delete('line', 1)
       this.charm.up(1)
+    }
+  }
+
+  printPadded(
+    arr1: string[][],
+    spaceLeft: number = 0,
+    spaceBetween: number = 1,
+    header?: string[]
+  ) {
+    const inputRows = arr1
+    if (header) {
+      inputRows.unshift(header)
+    }
+    const leftCol = inputRows.map(a => a[0])
+    const rightCol = inputRows.map(a => a[1])
+    const maxLeftCol = leftCol.reduce(
+      (acc, curr) => Math.max(acc, curr.length),
+      -1,
+    )
+    const maxRightCol = rightCol.reduce(
+      (acc, curr) => Math.max(acc, curr.length),
+      -1,
+    )
+    const paddedLeftCol = leftCol.map(
+      v => repeat(' ', spaceLeft) + padEnd(v, maxLeftCol + spaceBetween),
+    )
+
+    const rows = paddedLeftCol.map((l, i) => l + arr1[i][1])
+
+    if (header) {
+      const divider = `${repeat('─', maxLeftCol)}${repeat(' ', spaceBetween)}${repeat('─', maxRightCol)}`
+      rows.splice(1, 0, divider)
+    }
+
+    return rows.join('\n')
+  }
+
+  printServices = (targets: Targets, projects: Project[], onlyLocal: boolean = true) => {
+    if (onlyLocal) {
+      return this.printPadded(
+        Object.keys(targets).map(key => {
+          const { id, cluster } = targets[key]
+          const project = projects.find(p => p.id === id)
+          const output = `${cluster}/${id}`
+          const serviceName = project ? project.name : key
+          return [serviceName, output]
+        }),
+        0,
+        1,
+        ['Service Name', 'Cluster / Service ID'],
+      )
+    } else {
+      return this.printPadded(
+        Object.keys(targets).map(key => {
+          const { id, cluster } = targets[key]
+          const project = projects.find(p => p.id === id)
+          const output = `${cluster}/${id}`
+          const serviceName = project ? project.name : key
+          return [serviceName, output]
+        }).concat(projects.filter(p => Object.values(targets).find( t => p.id === t.id)).map(p => {
+          return [p.name, `shared-${p.region.toLowerCase().replace(/_/, '-')}/${p.id}`]
+        })),
+        0,
+        1,
+        ['Service Name', 'Cluster / Service ID'],
+      )
     }
   }
 }

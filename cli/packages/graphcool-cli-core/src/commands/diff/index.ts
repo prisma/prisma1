@@ -2,12 +2,8 @@ import {
   Command,
   flags,
   Flags,
-  EnvDoesntExistError,
-  EnvironmentConfig,
-  ProjectDefinition,
 } from 'graphcool-cli-engine'
 import * as chalk from 'chalk'
-import { ProjectDoesntExistError } from '../../errors/ServiceDoesntExistError'
 
 export default class Diff extends Command {
   static topic = 'diff'
@@ -15,117 +11,89 @@ export default class Diff extends Command {
   static flags: Flags = {
     target: flags.string({
       char: 't',
-      description: 'Target to be diffed'
-    }),
-    project: flags.string({
-      char: 'p',
-      description: 'ID or alias of  project to diff',
+      description: 'Target to be diffed',
     }),
   }
-  static mockDefinition: ProjectDefinition
-  static mockEnv: EnvironmentConfig
 
   async run() {
-    const { env, project, force } = this.flags
+    const {target} = this.flags
 
-    if (Diff.mockDefinition) {
-      this.definition.set(Diff.mockDefinition)
-    }
-    if (Diff.mockEnv) {
-      this.env.env = Diff.mockEnv
-    }
-    await this.definition.load()
+    await this.definition.load(this.flags)
     await this.auth.ensureAuth()
     // temporary ugly solution
     this.definition.injectEnvironment()
 
-    const { projectId, envName } = await this.env.getEnvironment({
-      project,
-      env,
-    })
+    const { id } = await this.env.getTarget(target)
+    const targetName = target || 'default'
 
-    if (!projectId) {
-      if (project) {
-        this.out.error(new ProjectDoesntExistError(project))
-      }
+    this.out.action.start(
+      `Getting diff for ${chalk.bold(id)} with target ${chalk.bold(
+        targetName,
+      )}.`,
+    )
 
-      if (env) {
-        this.out.error(new EnvDoesntExistError(env))
-      }
-
-      this.out.error(
-        `Please provide either a default environment, a project or an environment you want to deploy to.`,
+    try {
+      const migrationResult = await this.client.push(
+        id,
+        false,
+        true,
+        this.definition.definition!,
       )
-    } else {
-      this.out.action.start(
-        `Getting diff for ${chalk.bold(
-          projectId,
-        )} with env${chalk.bold(envName)}.`,
-      )
+      this.out.action.stop()
 
-      try {
-        const migrationResult = await this.client.push(
-          projectId,
-          false,
-          true,
-          this.definition.definition!,
+      // no action required
+      if (
+        (!migrationResult.migrationMessages ||
+          migrationResult.migrationMessages.length === 0) &&
+        (!migrationResult.errors || migrationResult.errors.length === 0)
+      ) {
+        this.out.log(
+          `Identical project definition for project ${chalk.bold(
+            id,
+          )} in env ${chalk.bold(targetName)}, no action required.\n`,
         )
-        this.out.action.stop()
+        return
+      }
 
-        // no action required
-        if (
-          (!migrationResult.migrationMessages ||
-            migrationResult.migrationMessages.length === 0) &&
-          (!migrationResult.errors || migrationResult.errors.length === 0)
-        ) {
-          this.out.log(
-            `Identical project definition for project ${chalk.bold(
-              projectId,
-            )} in env ${chalk.bold(envName)}, no action required.\n`,
-          )
-          return
-        }
+      if (migrationResult.migrationMessages.length > 0) {
+        this.out.log(
+          chalk.blue(
+            `Your project ${chalk.bold(id)} of env ${chalk.bold(
+              targetName,
+            )} has the following changes:`,
+          ),
+        )
 
-        if (migrationResult.migrationMessages.length > 0) {
-          this.out.log(
-            chalk.blue(
-              `Your project ${chalk.bold(projectId)} of env ${chalk.bold(
-                envName,
-              )} has the following changes:`,
-            ),
-          )
+        this.out.migration.printMessages(migrationResult.migrationMessages)
+        this.definition.set(migrationResult.projectDefinition)
+      }
 
-          this.out.migration.printMessages(migrationResult.migrationMessages)
-          this.definition.set(migrationResult.projectDefinition)
-        }
+      if (migrationResult.errors.length > 0) {
+        this.out.log(
+          chalk.rgb(244, 157, 65)(
+            `There are issues with the new project definition:`,
+          ),
+        )
+        this.out.migration.printErrors(migrationResult.errors)
+        this.out.log('')
+      }
 
-        if (migrationResult.errors.length > 0) {
-          this.out.log(
-            chalk.rgb(244, 157, 65)(
-              `There are issues with the new project definition:`,
-            ),
-          )
-          this.out.migration.printErrors(migrationResult.errors)
-          this.out.log('')
-        }
-
-        if (
-          migrationResult.errors &&
-          migrationResult.errors.length > 0 &&
-          migrationResult.errors[0].description.includes(`destructive changes`)
-        ) {
-          // potentially destructive changes
-          this.out.log(
-            `Your changes might result in data loss.
+      if (
+        migrationResult.errors &&
+        migrationResult.errors.length > 0 &&
+        migrationResult.errors[0].description.includes(`destructive changes`)
+      ) {
+        // potentially destructive changes
+        this.out.log(
+          `Your changes might result in data loss.
             Use ${chalk.cyan(
               `\`graphcool deploy --force\``,
             )} if you know what you're doing!\n`,
-          )
-        }
-      } catch (e) {
-        this.out.action.stop()
-        this.out.error(e)
+        )
       }
+    } catch (e) {
+      this.out.action.stop()
+      this.out.error(e)
     }
   }
 }

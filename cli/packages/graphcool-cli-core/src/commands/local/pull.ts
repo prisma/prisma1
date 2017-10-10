@@ -13,7 +13,7 @@ export default class PullLocal extends Command {
     }),
   }
   async run() {
-    const docker = new Docker(this.out, this.config, this.flags.name)
+    const docker = new Docker(this.out, this.config, this.env, this.flags.name)
     await docker.pull()
   }
 }

@@ -5,7 +5,7 @@ import { Output } from './Output/index'
 import { Config } from './Config'
 import { Cluster, InternalRC, RC, Target, Targets } from './types/rc'
 import { mapValues, merge } from 'lodash'
-import { Args } from './types/common'
+import { Args, Region } from './types/common'
 import Variables from './ProjectDefinition/Variables'
 const debug = require('debug')('environment')
 
@@ -38,15 +38,45 @@ export class Environment {
       return this.config.systemAPIEndpoint
     }
 
-    return (this.rc.clusters![this.activeCluster]! as Cluster).host
+    return (this.rc.clusters![this.activeCluster]! as Cluster).host + '/system'
+  }
+
+  simpleEndpoint(projectId: string): string {
+    if (this.isSharedCluster(this.activeCluster)) {
+      return this.config.simpleAPIEndpoint + projectId
+    }
+
+    return (this.rc.clusters![this.activeCluster]! as Cluster).host + '/simple/v1/' + projectId
+  }
+
+  relayEndpoint(projectId: string): string {
+    if (this.isSharedCluster(this.activeCluster)) {
+      return this.config.relayAPIEndpoint + projectId
+    }
+
+    return (this.rc.clusters![this.activeCluster]! as Cluster).host + '/relay/v1/' + projectId
+  }
+
+  fileEndpoint(projectId: string): string {
+    if (this.isSharedCluster(this.activeCluster)) {
+      return this.config.fileAPIEndpoint + projectId
+    }
+
+    return (this.rc.clusters![this.activeCluster]! as Cluster).host + '/file/v1/' + projectId
+  }
+
+  subscriptionEndpoint(projectId: string): string {
+    if (this.isSharedCluster(this.activeCluster)) {
+      return this.subscriptionURL({region: this.getRegionFromCluster(this.activeCluster), projectId})
+    }
+
+    const localPort = this.clusterEndpoint.split(':')[1]
+    return this.subscriptionURL({localPort, projectId})
   }
 
   get rc(): RC {
-    debug('getting rc')
     // todo: memoizing / caching
-    const rc = this.deserializeRCs(this.localRC, this.globalRC, this.config.localRCPath, this.config.globalRCPath)
-    debug('got rc')
-    return rc
+    return this.deserializeRCs(this.localRC, this.globalRC, this.config.localRCPath, this.config.globalRCPath)
   }
 
   get token(): string {
@@ -388,11 +418,28 @@ https://github.com/graphcool/graphcool/issues/714
     this.saveGlobalRC()
   }
 
-  getRegionFromCluster(cluster: string) {
+  setGlobalCluster(name: string, cluster: Cluster) {
+    if (!this.globalRC.clusters) {
+      this.globalRC.clusters = {}
+    }
+    this.globalRC.clusters[name] = cluster
+  }
+
+  getRegionFromCluster(cluster: string): Region {
     if (this.isSharedCluster(cluster)) {
-      return cluster.slice(7).replace(/-/, '_').toUpperCase()
+      return cluster.slice(7).replace(/-/, '_').toUpperCase() as Region
     } else {
       return 'EU_WEST_1'
     }
   }
+
+  subscriptionURL = ({region, projectId, localPort}: {region?: Region, projectId: string, localPort?: number | string}) =>
+    localPort ? `ws://localhost:${localPort}/subscriptions/v1/${projectId}` :
+      `${subscriptionEndpoints[region!]}/v1/${projectId}`
+}
+
+const subscriptionEndpoints = {
+  EU_WEST_1: 'wss://subscriptions.graph.cool',
+  US_WEST_2: 'wss://subscriptions.us-west-2.graph.cool',
+  AP_NORTHEAST_1: 'wss://subscriptions.ap-northeast-1.graph.cool',
 }

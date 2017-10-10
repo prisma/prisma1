@@ -69,6 +69,23 @@ export class Config {
     : 'https://www.graph.cool/docs'
   statusEndpoint = 'https://crm.graph.cool/prod/status'
 
+  /**
+   * consumer endpoints
+   */
+  simpleAPIEndpoint = process.env.ENV === 'DEV'
+    ? 'https://dev.api.graph.cool/simple/v1/'
+    : 'https://api.graph.cool/simple/v1/'
+  relayAPIEndpoint = process.env.ENV === 'DEV'
+    ? 'https://dev.api.graph.cool/relay/v1/'
+    : 'https://api.graph.cool/relay/v1/'
+  fileAPIEndpoint = process.env.ENV === 'DEV'
+    ? 'https://dev.api.graph.cool/file/v1/'
+    : 'https://api.graph.cool/file/v1/'
+  subscriptionsEndpoint = process.env.ENV === 'DEV'
+    ? 'wss://dev.subscriptions.graph.cool'
+    : 'wss://subscriptions.graph.cool'
+
+
   /* tslint:disable-next-line */
   __cache = {}
 

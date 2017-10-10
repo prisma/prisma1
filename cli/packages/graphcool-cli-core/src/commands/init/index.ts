@@ -44,7 +44,7 @@ export default class Init extends Command {
       const newDefinitionPath = path.join(process.cwd(), dirName + '/')
       fs.mkdirpSync(newDefinitionPath)
       this.config.definitionDir = newDefinitionPath
-      this.config.envPath = path.join(newDefinitionPath, '.graphcoolrc')
+      this.config.localRCPath = path.join(newDefinitionPath, '.graphcoolrc')
     }
 
     const files = fs.readdirSync(this.config.definitionDir)

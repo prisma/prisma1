@@ -27,10 +27,10 @@ export default class Delete extends Command {
     await this.auth.ensureAuth()
     const { target, force } = this.flags
 
-    const foundTarget = await this.env.getTargetSafe(target)
+    const foundTarget = await this.env.getTargetWithName(target)
 
-    if (foundTarget) {
-      const {id} = foundTarget
+    if (foundTarget && foundTarget.target) {
+      const id = foundTarget.target.id
       if (!force) {
         await this.askForConfirmation(id)
       }

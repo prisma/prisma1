@@ -38,7 +38,7 @@ export default class ModuleAdd extends Command {
   $ ${chalk.cyan('graphcool module add graphcool/modules/syncing/algolia')}
   `
   async run() {
-    await this.definition.load()
+    await this.definition.load(this.flags)
     const moduleUrl = this.argv[1]
     const splittedModule = moduleUrl.split('/')
     const ghUser = splittedModule[0]

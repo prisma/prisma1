@@ -1,5 +1,4 @@
 import { Command, flags, Flags } from 'graphcool-cli-engine'
-import { InvalidProjectError } from '../../errors/InvalidTargetError'
 
 export default class ExampleCommand extends Command {
   static topic = 'example'
@@ -15,12 +14,8 @@ export default class ExampleCommand extends Command {
     await this.auth.ensureAuth()
     let {target} = this.flags
 
-    const foundTarget = await this.env.getTarget(target)
+    const {id} = await this.env.getTarget(target)
 
-    if (!foundTarget) {
-      this.out.error(new InvalidProjectError())
-    } else {
-      // execute the command
-    }
+    // continue
   }
 }
