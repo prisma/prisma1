@@ -5,6 +5,15 @@ description: Learn how to build secure authorization in GraphQL by defining role
 
 # Authorization for a CMS with GraphQL Permission Queries
 
+<InfoBox type=warning>
+
+**Note**: This guide teaches the concept of [permission queries](!alias-iox3aqu0ee), but doesn't yet explain how to configure permissions in the new [Graphcool Framework](https://blog.graph.cool/graphcool-framework-preview-ff42081b1333). The content however is still applicable if you just want to learn about permission queries!
+
+An updated version of this guide is coming soon, stay tuned!
+
+</InfoBox>
+
+
 Security is one of the most critical parts of an application. Combining authentication methods with authorization rules empowers developers to build secure apps in a straight-forward way.
 
 This article is a deep dive into the permission system used at Graphcool. The use case we want to explore is a *content management system* for documents.

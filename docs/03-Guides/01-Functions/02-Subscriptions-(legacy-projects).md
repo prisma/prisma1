@@ -6,6 +6,14 @@ description: Getting started with Server-side Subscriptions to integrate 3rd par
 
 # Using Server-side Subscriptions to Send a Welcome Email
 
+<InfoBox type=warning>
+
+**Note**: This guide is only applicable to [legacy Console project](!alias-aemieb1aev). It doesn't work with the new [Graphcool Framework](https://blog.graph.cool/graphcool-framework-preview-ff42081b1333) which is based on the [`graphcool.yml`](!alias-foatho8aip) service definition file.
+
+An updated version of this guide is coming soon, stay tuned!
+
+</InfoBox>
+
 In this article, you'll learn how to use serverless functions to send a welcome email to new users that are signing up with your app.
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/l-0jGOxXKGY" frameborder="0" allowfullscreen></iframe>
