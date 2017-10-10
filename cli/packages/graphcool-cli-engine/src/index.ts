@@ -31,6 +31,7 @@ export {
   Region,
   SchemaInfo,
   PAT,
+  AuthenticateCustomerPayload,
 } from './types'
 
 export { flags, Flag, Arg, Flags } from './Flags'

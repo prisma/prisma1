@@ -15,7 +15,7 @@ Graphcool is a GraphQL backend development framework
 1. **Install the CLI via NPM:**
 
   ```sh
-  npm install -g graphcool@beta
+  npm install -g graphcool@next
   ```
 
 2. **Init new project:**

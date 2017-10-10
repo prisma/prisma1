@@ -1,22 +1,40 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`deploy with change 1`] = `
-"
-Your project cj84dopd3197p01200l5sb9fs of env dev was successfully updated.
-Here are the changes:
-
+exports[`deploy from empty to default definition 1`] = `
+"Success! Here is what changed:
 
 Types
 
-  Post
-   + A new type with the name \`Post\` is created.
-   └── +  A new field with the name \`title\` and type \`String\` is created.
+  User
+   + A new type with the name \`User\` is created.
+   ├─ +  A new field with the name \`createdAt\` and type \`DateTime!\` is created.
+   └─ +  A new field with the name \`updatedAt\` and type \`DateTime!\` is created.
+
+Permissions
+
+  Wildcard Permission
+   ? The wildcard permission for all types is added.
 
 "
 `;
 
-exports[`deploy without change 1`] = `
-"Identical project definition for project cj84dopd3197p01200l5sb9fs in env dev, no action required.
+exports[`deploy to local instance 1`] = `
+"
+
+Success! Created the following project:
+
+
+Types
+
+  User
+   + A new type with the name \`User\` is created.
+   ├─ +  A new field with the name \`createdAt\` and type \`DateTime!\` is created.
+   └─ +  A new field with the name \`updatedAt\` and type \`DateTime!\` is created.
+
+Permissions
+
+  Wildcard Permission
+   ? The wildcard permission for all types is added.
 
 "
 `;

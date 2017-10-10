@@ -126,6 +126,9 @@ export class Command {
     }
     if (mockEnv) {
       this.env.env = mockEnv
+      if (mockEnv.default && this.env.isDockerEnv(mockEnv.environments[mockEnv.default])) {
+        this.config.setLocal((mockEnv.environments[mockEnv.default] as any).host)
+      }
     }
     const parser = new Parser({
       flags: (this.constructor as any).flags || {},

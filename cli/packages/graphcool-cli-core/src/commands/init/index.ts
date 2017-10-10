@@ -1,11 +1,10 @@
 import { Command, flags, Flags, ProjectDefinition } from 'graphcool-cli-engine'
 import * as chalk from 'chalk'
-import { EnvAlreadyExistsError } from '../../errors/EnvAlreadyExistsError'
-import { InvalidProjectNameError } from '../../errors/InvalidProjectNameError'
-import * as sillyName from 'sillyname'
 import { defaultDefinition, examples } from '../../examples'
 import * as fs from 'fs-extra'
 import * as path from 'path'
+import * as inquirer from 'inquirer'
+import {repeat, flatten} from 'lodash'
 
 export default class Init extends Command {
   static topic = 'init'
@@ -20,24 +19,7 @@ export default class Init extends Command {
   static flags: Flags = {
     copy: flags.string({
       char: 'c',
-      description: 'ID or alias of the project to be copied',
-    }),
-    name: flags.string({
-      char: 'n',
-      description: 'Project name',
-    }),
-    alias: flags.string({
-      char: 'a',
-      description: 'Project alias',
-    }),
-    env: flags.string({
-      char: 'e',
-      description: 'Local environment name for the new project',
-    }),
-    region: flags.string({
-      char: 'r',
-      description:
-        'AWS Region of the project (options: US_WEST_2 (default), EU_WEST_1, AP_NORTHEAST_1)',
+      description: 'ID or alias of the project, that the schema should be copied from',
     }),
     template: flags.string({
       char: 't',
@@ -54,11 +36,7 @@ export default class Init extends Command {
   ]
 
   async run() {
-    const { copy, alias, env, region, template } = this.flags
-    let { name } = this.flags
-    await this.definition.load()
-    this.auth.setAuthTrigger('init')
-    await this.auth.ensureAuth()
+    const { copy, template } = this.flags
 
     const dirName = this.args!.dirName
 
@@ -69,7 +47,26 @@ export default class Init extends Command {
       this.config.envPath = path.join(newDefinitionPath, '.graphcoolrc')
     }
 
-    const newProject = !this.definition.definition
+    const files = fs.readdirSync(this.config.definitionDir)
+    // the .graphcoolrc must be allowed for the docker version to be functioning
+    // CONTINUE: special env handling for dockaa. can't just override the host/dinges
+    if (files.length > 0 && !(files.length === 1 && files[0] === '.graphcoolrc')) {
+      this.out.log(`
+The directory ${chalk.green(this.config.definitionDir)} contains files that could conflict:
+
+${files.map(f => `  ${f}`).join('\n')}
+
+Either try using a new directory name, or remove the files listed above.
+
+${chalk.bold(
+        'NOTE:',
+      )} The behavior of the init command changed, to deploy a project, please use ${chalk.green(
+        'graphcool deploy',
+      )}
+Read more here: https://github.com/graphcool/graphcool/issues/706
+`)
+      this.out.exit(1)
+    }
 
     if (template) {
       const projectDefinition = examples[template]
@@ -89,92 +86,27 @@ export default class Init extends Command {
       this.definition.set(newDefinition)
     }
 
-    if (env && this.env.env.environments[env]) {
-      this.out.error(
-        new EnvAlreadyExistsError(Object.keys(this.env.env.environments)),
-      )
-    }
+    this.out.log('\n')
+    this.out.action.start(`Creating a new Graphcool app in ${chalk.green(this.config.definitionDir)}`)
+    this.definition.save(undefined, false)
+    this.out.action.stop()
 
-    // create new
-    if (this.env.default && !env) {
-      this.out.error(
-        new EnvAlreadyExistsError(Object.keys(this.env.env.environments)),
-      )
-    }
+    this.out.log(`${chalk.blue.bold('\nWritten files' + ':')}`)
+    const createdFiles = flatten(this.definition.definition!.modules.map(module => Object.keys(module.files))).concat('graphcool.yml')
+    this.out.filesTree(createdFiles)
 
-    if (name && !isValidProjectName(name)) {
-      this.out.error(new InvalidProjectNameError(name))
-    }
+    this.out.log(`\
+Inside that directory, you can run the following commands:
 
-    name = name || sillyName()
+  ${chalk.green('graphcool deploy')}
+    Deploys the project to Graphcool
 
-    this.out.log('')
-    const projectMessage = dirName
-      ? `   Creating project ${chalk.bold(name)} in folder ${chalk.bold(
-          dirName,
-        ) + '/'}`
-      : `   Creating project ${chalk.bold(name)}`
-    this.out.action.start(projectMessage)
+  ${chalk.green('graphcool deploy --env prod')}
+    Deploys the project to Graphcool, using the environment name \`prod\`
 
-    try {
-      // create project
-      const createdProject = await this.client.createProject(
-        name,
-        this.definition.definition!,
-        alias,
-        region,
-      )
-
-      // add environment
-      const newEnv = env || 'dev'
-      await this.env.set(newEnv, createdProject.id)
-
-      if (!this.env.default || newProject) {
-        this.env.setDefault(newEnv)
-      }
-
-      if (newProject) {
-        this.definition.save(undefined, false)
-      }
-
-      this.env.save()
-
-      this.out.action.stop()
-      const inDir = dirName ? ` in ${dirName}/` : ''
-      this.out.log(`${chalk.blue.bold('\n   Written files' + inDir + ':')}`)
-      this.out.tree(this.config.definitionDir, true)
-
-      this.out.log(`\
-   ${chalk.bold('Here is what you can do next:')}
-
-   1) Open ${chalk.bold('graphcool.yml')} or ${chalk.bold(
-        'types.graphql',
-      )} in your editor to update your project definition.
-      You can deploy your changes using ${chalk.cyan('`graphcool deploy`')}.
-   
-   2) Install a graphcool modules to your project:
-   
-      ${chalk.bold('Github Authentication')}
-      $ ${chalk.cyan(
-        'graphcool modules add graphcool/modules/authentication/github',
-      )}
-   
-      ${chalk.bold('Facebook Authentication')}
-      $ ${chalk.cyan(
-        'graphcool modules add graphcool/modules/authentication/facebook',
-      )}
-      
-      ${chalk.bold('Algolia Syncing')}
-      $ ${chalk.cyan('graphcool modules add graphcool/modules/syncing/algolia')}
-
-   3) Use the following endpoint to connect to your GraphQL API:
-
-      ${chalk.cyan(`https://api.graph.cool/simple/v1/${createdProject.id}`)}
+You can find further instructions in the ${chalk.green('graphcool.yml')} file,
+which is the central project configuration.
 `)
-    } catch (e) {
-      this.out.action.stop()
-      this.out.error(e)
-    }
   }
 
   async interactiveInit(): Promise<ProjectDefinition> {
@@ -215,9 +147,12 @@ export default class Init extends Command {
 
     switch (init) {
       case 'blank':
+        this.out.up(7)
         return defaultDefinition
       case 'copy':
+        await this.auth.ensureAuth()
         const projectId = await this.projectSelection()
+        this.out.up(4)
         const info = await this.client.fetchProjectInfo(projectId)
         return info.projectDefinition
       case 'example':
@@ -232,7 +167,7 @@ export default class Init extends Command {
     const choices = projects.map(p => ({
       name: `${p.name} (${p.id})`,
       value: p.id,
-    }))
+    })).concat(new inquirer.Separator(chalk.bold.green(repeat('-', 50))))
 
     const question = {
       name: 'project',
@@ -285,8 +220,4 @@ export default class Init extends Command {
 
     return examples[example]
   }
-}
-
-export function isValidProjectName(projectName: string): boolean {
-  return /^[A-Z](.*)/.test(projectName)
 }

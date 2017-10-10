@@ -20,6 +20,11 @@ export default class Console extends Command {
 
     const {projectId} = await this.env.getEnvironment({env})
 
+    if (this.env.env && this.env.isDockerEnv(this.env.env.environments[env])) {
+      this.out.error(`Can't open the console for the local environment ${env}.
+The console is only available in the hosted version of Graphcool.`)
+    }
+
     if (!projectId) {
       this.out.error(new InvalidProjectError())
     } else {

@@ -3,28 +3,24 @@
 exports[`init test project 1`] = `
 "
 
-   Written files:
-   └─ .graphcoolrc
-   
-   Here is what you can do next:
 
-   1) Open graphcool.yml or types.graphql in your editor to update your project definition.
-      You can deploy your changes using \`graphcool deploy\`.
-   
-   2) Install a graphcool module to your project:
-   
-      Github Authentication
-      $ graphcool module add graphcool/modules/authentication/github
-   
-      Facebook Authentication
-      $ graphcool module add graphcool/modules/authentication/facebook
-      
-      Algolia Syncing
-      $ graphcool module add graphcool/modules/syncing/algolia
+Written files:
+├─ types.graphql
+├─ src
+│  ├─ hello.js
+│  └─ hello.graphql
+└─ graphcool.yml
 
-   3) Use the following endpoint to connect to your GraphQL API:
+Inside that directory, you can run the following commands:
 
-      https://api.graph.cool/simple/v1/cj84lcwd004gc0150aci9s8ow
+  graphcool deploy
+    Deploys the project to Graphcool
+
+  graphcool deploy --env prod
+    Deploys the project to Graphcool, using the environment name \`prod\`
+
+You can find further instructions in the graphcool.yml file,
+which is the central project configuration.
 
 "
 `;

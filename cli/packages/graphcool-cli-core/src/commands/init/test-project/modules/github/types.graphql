@@ -1,6 +1,0 @@
-type GithubUser {
-  id: ID! @isUnique
-  createdAt: DateTime!
-  githubUserId: String @isUnique
-  updatedAt: DateTime!
-}

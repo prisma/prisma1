@@ -85,7 +85,7 @@ export default class Help extends Command {
       if (subtopics && subtopics.length) {
         this.topics(subtopics, topic.id, topic.id.split(':').length + 1)
       }
-      if (cmds) {
+      if (cmds && cmds.length > 0 && cmds[0].command) {
         this.listCommandsHelp(cmd, cmds)
       }
     }

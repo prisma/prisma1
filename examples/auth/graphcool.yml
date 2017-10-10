@@ -1,0 +1,39 @@
+types: ./types.graphql
+
+functions:
+
+  # This resolver allows to create a new user with the
+  # `signupEmailUser`-mutation defined in `signup.graphql`.
+  signup:
+    type: resolver
+    schema: src/signup.graphql
+    handler:
+      code: 
+        src: src/signup.js
+
+  # This resolver allows to retrieve a node token using the
+  # `authenticateEmailUser`-mutation defined in `authenticate.graphql`.
+  authenticate:
+    type: resolver
+    schema: src/authenticate.graphql
+    handler:
+      code: 
+        src: src/authenticate.js
+
+  # This resolver allows to check whether a request belongs to a
+  # currently authenticated `EmailUser` node using the 
+  # `loggedInUser` query defined in `loggedInUser.graphql`.
+  loggedInUser:
+    type: resolver
+    schema: src/loggedInUser.graphql
+    handler:
+      code: 
+        src: src/loggedInUser.js
+
+permissions: []
+
+rootTokens:
+  - signup
+  - authenticate
+  - loggedInUser
+

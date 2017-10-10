@@ -21,6 +21,11 @@ export default class Playground extends Command {
     env = env || this.env.env.default
 
     const { projectId } = await this.env.getEnvironment({ env })
+    let host = undefined
+
+    if (this.env.env && this.env.isDockerEnv(this.env.env.environments[env])) {
+      host = (this.env.env.environments[env] as any).host
+    }
 
     if (!projectId) {
       this.out.error(new InvalidProjectError())
@@ -28,14 +33,13 @@ export default class Playground extends Command {
       const localPlaygroundPath = `/Applications/GraphQL\ Playground.app/Contents/MacOS/GraphQL\ Playground`
 
       if (fs.pathExistsSync(localPlaygroundPath)) {
-        const openpath = localPlaygroundPath
         childProcess.spawn(
           localPlaygroundPath,
-          ['endpoint', playgroundURL(projectId)],
+          ['endpoint', playgroundURL(projectId, host)],
           { detached: true },
         )
       } else {
-        opn(playgroundURL(projectId))
+        opn(playgroundURL(projectId, host))
       }
     }
   }

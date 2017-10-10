@@ -2,7 +2,7 @@ import * as yaml from 'js-yaml'
 import * as path from 'path'
 import fs from './fs'
 import { Output } from './Output/index'
-import { EnvironmentConfig } from './types'
+import { DockerEnvironment, EnvironmentConfig } from './types'
 import { Client } from './Client/Client'
 import { Config } from './Config'
 import { EnvDoesntExistError } from './errors/EnvDoesntExistError'
@@ -26,7 +26,7 @@ export class Environment {
     }
   }
 
-  get default(): string | null {
+  get default(): string | DockerEnvironment | null {
     if (this.env.default) {
       return this.env.environments[this.env.default]
     }
@@ -35,7 +35,7 @@ export class Environment {
   }
 
   public load() {
-    if (fs.existsSync(this.config.envPath)) {
+    if (this.config.envPath && fs.existsSync(this.config.envPath)) {
       try {
         this.env = yaml.safeLoad(fs.readFileSync(this.config.envPath, 'utf-8'))
       } catch (e) {
@@ -51,22 +51,39 @@ export class Environment {
         this.out.error(`Loaded invalid .graphcoolrc from ${this.config.envPath}: Doesn't contain the 'default' field`)
       }
 
+      if (this.default && this.isDockerEnv(this.default)) {
+        const dockerEnv = (this.default as DockerEnvironment)
+        this.config.setLocal(dockerEnv.host)
+        this.config.setToken(dockerEnv.token)
+        this.client.updateClient()
+      }
+
     } else {
       this.initEmptyEnvironment()
     }
   }
 
   public save() {
-    const file = yaml.safeDump(this.env)
-    fs.writeFileSync(this.config.envPath, file)
+    if (this.config.envPath) {
+      const file = yaml.safeDump(this.env)
+      fs.writeFileSync(this.config.envPath, file)
+    }
   }
 
   public setEnv(name: string, projectId: string) {
     this.env.environments[name] = projectId
   }
 
+  public setDockerEnv(name: string, dockerEnv: DockerEnvironment) {
+    this.env.environments[name] = dockerEnv
+  }
+
   public set(name: string, projectId: string) {
-    this.env.environments[name] = projectId
+    if (this.isDockerEnv(this.env.environments[name])) {
+      (this.env.environments[name] as DockerEnvironment).projectId = projectId
+    } else {
+      this.env.environments[name] = projectId
+    }
   }
 
   public setDefault(name: string) {
@@ -114,6 +131,12 @@ export class Environment {
     })
   }
 
+  public updateDocker(env: DockerEnvironment) {
+    this.config.setToken(env.token)
+    this.config.setLocal(env.host)
+    this.client.updateClient()
+  }
+
   public async getEnvironment({
     project,
     env,
@@ -126,7 +149,13 @@ export class Environment {
     let projectId: null | string = null
 
     if (env) {
-      projectId = this.env.environments[env] || null
+      if (typeof this.env.environments[env] === 'string') {
+        projectId = this.env.environments[env] as string
+      }
+      if (this.env.environments[env] && typeof this.env.environments[env] === 'object') {
+        projectId = (this.env.environments[env] as DockerEnvironment).projectId || null
+        this.updateDocker(this.env.environments[env] as DockerEnvironment)
+      }
       return {
         envName: env,
         projectId,
@@ -151,7 +180,7 @@ export class Environment {
 
     if (this.default && !skipDefault) {
       return {
-        projectId: this.default,
+        projectId: typeof this.default === 'string' ? this.default : this.default.projectId,
         envName: this.env.default,
       }
     }
@@ -160,6 +189,18 @@ export class Environment {
       projectId: null,
       envName: null,
     }
+  }
+
+  public isDockerEnv(suspect: any) {
+    if (!suspect) {
+      return false
+    }
+
+    if (typeof suspect === 'object' && suspect.token && suspect.host) {
+      return true
+    }
+
+    return false
   }
 
   private getEnvironmentName(projectId: string): string | null {
