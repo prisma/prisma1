@@ -275,7 +275,7 @@ Please run ${chalk.green('$ graphcool local up')} to get a local Graphcool clust
           value: 'local',
           name: 'local',
         },
-        new inquirer.Separator(chalk.bold('Cloud:')),
+        new inquirer.Separator(chalk.bold('Backend-as-a-Service:')),
         {
           value: 'shared-eu-west-1',
           name: 'shared-eu-west-1',
