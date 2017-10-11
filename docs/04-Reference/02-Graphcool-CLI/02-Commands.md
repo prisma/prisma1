@@ -324,17 +324,71 @@ targets:
 
 Download latest (or specific) framework cluster version.
 
+#### Usage 
+
+```sh
+graphcool local pull [flags]
+```
+
+#### Flags
+
+```
+ -n, --name NAME    Name of the new instance
+```
+
+
+
 ### `graphcool local stop`
 
 Stop local development cluster.
+
+#### Usage 
+
+```sh
+graphcool local pull [flags]
+```
+
+#### Flags
+
+```
+ -n, --name NAME    Name of the new instance
+```
+
+
 
 ### `graphcool local up`
 
 Start local development cluster (Docker required).
 
+#### Usage 
+
+```sh
+graphcool local up [flags]
+```
+
+#### Flags
+
+```
+ -n, --name NAME    Name of the new instance
+```
+
+
+
 ### `graphcool local restart`
 
 Restart local development cluster.
+
+#### Usage 
+
+```sh
+graphcool local restart [flags]
+```
+
+#### Flags
+
+```
+ -n, --name NAME    Name of the new instance
+```
 
 ### `graphcool local eject`
 
