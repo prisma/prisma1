@@ -103,7 +103,7 @@ export default class AddTemplate extends Command {
     this.out.log('')
     this.out.log(
       chalk.blue(
-        `   ${chalk.bold('Added')} functions, permissions & root tokens of template ${chalk.bold(
+        `   ${chalk.bold('Added')} functions & permissions of template ${chalk.bold(
           moduleDirName,
         )} to ${chalk.bold('graphcool.yml')}`,
       ),

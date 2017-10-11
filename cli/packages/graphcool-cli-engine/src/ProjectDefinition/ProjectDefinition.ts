@@ -163,14 +163,14 @@ export class ProjectDefinitionClass {
   }
 
   addTemplateNotes(str: string, templateName: string) {
-    return `\n# added by ${templateName} template: (please uncomment)` + str + '\n\n'
+    return `\n# added by ${templateName} template: (please uncomment)\n` + str + '\n\n'
   }
 
   public mergeDefinition(newDefinitionYaml: string, templateName: string, useComments: boolean = true): string {
     let newDefinition = this.definition!.modules[0].content
     const newYaml = yamlParser.safeLoad(newDefinitionYaml)
 
-    const whiteList = ['functions', 'permissions', 'rootTokens']
+    const whiteList = ['functions', 'permissions']
 
     newYaml.mappings.filter(m => whiteList.includes(m.key.value)).forEach(mapping => {
       const key = mapping.key.value
@@ -189,7 +189,7 @@ export class ProjectDefinitionClass {
     const typesPath = this.definition!.modules[0].definition!.types
     const oldTypes = this.definition!.modules[0].files[typesPath]
 
-    return oldTypes + this.addTemplateNotes(this.comment('\n' + newTypes), templateName)
+    return oldTypes + this.addTemplateNotes(this.comment(newTypes), templateName)
   }
 
   private injectEnvironmentToFile(
