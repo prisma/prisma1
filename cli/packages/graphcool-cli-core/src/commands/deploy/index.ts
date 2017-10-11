@@ -56,10 +56,15 @@ ${chalk.gray(
     interactive: flags.boolean({
       char: 'i',
       description: 'Force interactive mode to select the cluster'
+    }),
+    default: flags.boolean({
+      char: 'd',
+      description: 'Set specified target as default'
     })
   }
   async run() {
     const { force, watch, alias, interactive } = this.flags
+    const useDefault = this.flags.default
     let newServiceName = this.flags['new-service']
     const newServiceCluster = this.flags['new-service-cluster']
     // target can be both key or value of the `targets` object in the .graphcoolrc
@@ -70,6 +75,7 @@ ${chalk.gray(
     const foundTarget = await this.env.getTargetWithName(this.flags.target)
     if (interactive || (!newServiceCluster && !foundTarget.target) || (newServiceName && !newServiceCluster)) {
       cluster = await this.clusterSelection()
+      this.env.setActiveCluster(cluster)
       this.env.saveLocalRC()
       if (cluster === 'local' && (!this.env.rc.clusters || !this.env.rc.clusters!.local)) {
         this.out.log(`You chose the cluster ${chalk.bold('local')}, but don't have docker initialized, yet.
@@ -77,7 +83,6 @@ Please run ${chalk.green('$ graphcool local up')} to get a local Graphcool clust
 `)
         this.out.exit(1)
       }
-      // this.env.setLocalDefaultCluster(cluster)
     }
 
     if (newServiceName || interactive) {
@@ -125,7 +130,7 @@ Please run ${chalk.green('$ graphcool local up')} to get a local Graphcool clust
       // add environment
       await this.env.setLocalTarget(targetName, `${cluster}/${projectId}`)
 
-      if (!this.env.default) {
+      if (!this.env.default || useDefault) {
         this.env.setLocalDefaultTarget(targetName)
       }
 
@@ -220,7 +225,7 @@ Please run ${chalk.green('$ graphcool local up')} to get a local Graphcool clust
       this.out.log(
         `Everything up-to-date.`,
       )
-      this.out.log(`Endpoint: ${this.env.simpleEndpoint(projectId)}`)
+      this.printEndpoints(projectId)
       this.deploying = false
       return
     }
@@ -264,7 +269,15 @@ Please run ${chalk.green('$ graphcool local up')} to get a local Graphcool clust
       )
     }
     this.deploying = false
-    this.out.log(`Endpoint: ${this.env.simpleEndpoint(projectId)}`)
+    this.printEndpoints(projectId)
+  }
+
+  private printEndpoints(projectId) {
+    this.out.log(`Here are your GraphQL Endpoints:
+
+  ${chalk.bold('Simple API:')}        ${this.env.simpleEndpoint(projectId)}
+  ${chalk.bold('Relay API:')}         ${this.env.relayEndpoint(projectId)}
+  ${chalk.bold('Subscriptions API:')} ${this.env.subscriptionEndpoint(projectId)}`)
   }
 
   private async clusterSelection(): Promise<string> {

@@ -19,7 +19,7 @@ import { getFastestRegion } from './ping'
 import { ProjectDefinitionClass } from '../ProjectDefinition/ProjectDefinition'
 import {Environment} from '../Environment'
 
-const debug = require('debug')('graphcool')
+const debug = require('debug')('client')
 
 const REMOTE_PROJECT_FRAGMENT = `
   fragment RemoteProject on Project {

@@ -45,7 +45,9 @@ export class Auth {
     }
 
     this.env.setToken(token)
-    this.env.saveGlobalRC()
+    if (this.env.isSharedCluster(this.env.activeCluster) && token !== localToken) {
+      this.env.saveGlobalRC()
+    }
 
     // return if we already had a token
     return !!this.env.rc.platformToken

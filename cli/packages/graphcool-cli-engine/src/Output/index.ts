@@ -370,7 +370,15 @@ To get more detailed output, run ${chalk.dim(instruction)}`,
     }
   }
   getGraphQLErrorMessage(err: any) {
-    return `\n${chalk.bold.red('ERROR: ' + extractMessage(err.response))}\n\n` + this.getStyledJSON(err.response, true)
+    if (this.mock) {
+      return `\n${chalk.bold.red('ERROR: ' + extractMessage(err.response))}\n\n`
+        + chalk.bold('Request')
+        + this.getStyledJSON(err.request, true)
+        + chalk.bold('Response')
+        + this.getStyledJSON(err.response, true)
+    } else {
+      return `\n${chalk.bold.red('ERROR: ' + extractMessage(err.response))}\n\n` + this.getStyledJSON(err.response, true)
+    }
   }
   getErrorMessage(err: any): string {
     let message
