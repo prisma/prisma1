@@ -51,12 +51,6 @@ permissions:
 # https://docs-next.graph.cool/reference/auth/authentication/authentication-tokens-eip7ahqu5o
 rootTokens: []
 
- 
-# Organize your code into modules
-# You can find modules from the community here:
-# https://github.com/graphcool/modules
-modules: {}
-
 `,
       files: {
         './types.graphql': `\

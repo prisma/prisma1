@@ -119,12 +119,6 @@ export class ProjectDefinitionClass {
     }
   }
 
-  public insertModule(moduleName: string, relativePath: string) {
-    const file = this.definition!.modules[0].content
-    const insertion = `\n  ${moduleName}: ${relativePath}`
-    return this.insertToDefinition(file, 'modules', insertion)
-  }
-
   public set(definition: ProjectDefinition | null) {
     this.definition = definition
   }
@@ -158,6 +152,46 @@ export class ProjectDefinitionClass {
     return null
   }
 
+  public insertModule(moduleName: string, relativePath: string) {
+    const file = this.definition!.modules[0].content
+    const insertion = `\n  ${moduleName}: ${relativePath}`
+    return this.insertToDefinition(file, 'modules', insertion)
+  }
+
+  comment(str: string) {
+    return str.split('\n').map(l => `# ${l}`).join('\n')
+  }
+
+  addTemplateNotes(str: string, templateName: string) {
+    return `\n# added by ${templateName} template: (please uncomment)\n` + str + '\n\n'
+  }
+
+  public mergeDefinition(newDefinitionYaml: string, templateName: string, useComments: boolean = true): string {
+    let newDefinition = this.definition!.modules[0].content
+    const newYaml = yamlParser.safeLoad(newDefinitionYaml)
+
+    const whiteList = ['functions', 'permissions']
+
+    newYaml.mappings.filter(m => whiteList.includes(m.key.value)).forEach(mapping => {
+      const key = mapping.key.value
+      let beginning = this.getBeginningPosition(newDefinition, key)
+      let values = this.extractValues(newDefinitionYaml, newYaml, key, beginning > -1)
+      values = useComments ? this.comment(values) : values
+      values = this.addTemplateNotes(values, templateName)
+      beginning = beginning === -1 ? newDefinition.length - 1 : beginning
+      newDefinition = newDefinition.slice(0, beginning + 1) + values + newDefinition.slice(beginning + 1)
+    })
+
+    return newDefinition
+  }
+
+  public mergeTypes(newTypes: string, templateName: string) {
+    const typesPath = this.definition!.modules[0].definition!.types
+    const oldTypes = this.definition!.modules[0].files[typesPath]
+
+    return oldTypes + this.addTemplateNotes(this.comment(newTypes), templateName)
+  }
+
   private injectEnvironmentToFile(
     file: string,
     environment: { [envVar: string]: string },
@@ -174,16 +208,34 @@ export class ProjectDefinitionClass {
   private insertToDefinition(file: string, key: string, insertion: string) {
     const obj = yamlParser.safeLoad(file)
 
-    const modulesMapping = obj.mappings.find(m => m.key.value === key)
-    const end = modulesMapping.endPosition
+    const mapping = obj.mappings.find(m => m.key.value === key)
+    const end = mapping.endPosition
+
 
     const newFile = file.slice(0, end) + insertion + file.slice(end)
-    const valueStart = modulesMapping.value.startPosition
-    const valueEnd = modulesMapping.value.endPosition
-    if (modulesMapping.value && valueEnd - valueStart < 4) {
+    const valueStart = mapping.value.startPosition
+    const valueEnd = mapping.value.endPosition
+    if (mapping.value && valueEnd - valueStart < 4) {
       return newFile.slice(0, valueStart) + newFile.slice(valueEnd)
     }
 
     return file
+  }
+
+  private extractValues(file: string, obj: any, key: string, valuesOnly: boolean) {
+    const mapping = obj.mappings.find(m => m.key.value === key)
+
+    if (!mapping) {
+      this.out.error(`Could not find mapping for key ${key}`)
+    }
+
+    const start = valuesOnly ? mapping.key.endPosition + 1 : mapping.startPosition
+    return file.slice(start, mapping.endPosition)
+  }
+
+  private getBeginningPosition(file: string, key: string): number {
+    const obj = yamlParser.safeLoad(file)
+    const mapping = obj.mappings.find(m => m.key.value === key)
+    return mapping ? mapping.key.endPosition + 1 : -1
   }
 }

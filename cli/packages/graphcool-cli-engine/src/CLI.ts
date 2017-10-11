@@ -92,9 +92,15 @@ export class CLI {
       }
       debug(`command id: ${id}, argv: ${this.config.argv}`)
       const dispatcher = new Dispatcher(this.config)
-      const result = await dispatcher.findCommand(
+      let result = await dispatcher.findCommand(
         id || this.config.defaultCommand || 'help',
       )
+      // if nothing is found, try again with taking what is before :
+      if (!result.Command && id && id.includes(':')) {
+        result = await dispatcher.findCommand(
+          id.split(':')[0]
+        )
+      }
       const { plugin } = result
       const foundCommand = result.Command
 

@@ -42,6 +42,7 @@ export default class Docker {
     this.out.log(
       `Using http://localhost:${customVars.PORT} as the local Graphcool host`,
     )
+    this.out.log(`This may take several minutes`)
     this.envVars = { ...process.env, ...defaultVars, ...customVars }
   }
 

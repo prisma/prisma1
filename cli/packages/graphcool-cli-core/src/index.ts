@@ -18,6 +18,7 @@ import Up from './commands/local/up'
 import Restart from './commands/local/restart'
 import Account from './commands/account'
 import Eject from './commands/local/eject'
+import AddTemplate from './commands/add-template/add-template'
 
 export const groups = [
   {
@@ -53,7 +54,6 @@ export const topics = [
     group: 'general'
   },
   { name: 'list', description: 'List all deployed services', group: 'general' },
-  // { name: 'modules', description: 'Manage modules' },
   { name: 'root-token', description: 'Get the service root tokens', group: 'general' },
   { name: 'logs', description: 'Get logs of functions', group: 'general' },
   {
@@ -66,6 +66,7 @@ export const topics = [
     description: 'Delete a service',
     group: 'general'
   },
+  { name: 'add-template', description: 'Add template a new template', group: 'general' },
   {
     name: 'export',
     description: 'Export service data',
@@ -110,4 +111,5 @@ export const commands = [
   Restart,
   Account,
   Eject,
+  AddTemplate
 ]

@@ -1,6 +1,6 @@
 {
   "name": "graphcool-cli-core",
-  "version": "1.3.68",
+  "version": "1.3.72",
   "main": "dist/index.js",
   "files": [
     "dist"

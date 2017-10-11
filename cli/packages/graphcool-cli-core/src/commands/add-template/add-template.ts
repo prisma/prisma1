@@ -10,13 +10,12 @@ const debug = require('debug')('module')
 import * as chalk from 'chalk'
 import * as figures from 'figures'
 
-export default class ModuleAdd extends Command {
-  static topic = 'modules'
-  static command = 'add'
-  static description = 'Add a new module'
+export default class AddTemplate extends Command {
+  static topic = 'add-template'
+  static description = 'Add a new template'
   static args = [
     {
-      name: 'moduleUrl',
+      name: 'templateUrl',
       required: true,
     },
   ]
@@ -26,20 +25,20 @@ export default class ModuleAdd extends Command {
       
   ${chalk.bold('Github Authentication')}
   $ ${chalk.cyan(
-    'graphcool module add graphcool/modules/authentication/github',
+    'graphcool add-template graphcool/templates/authentication/github',
   )}
 
   ${chalk.bold('Facebook Authentication')}
   $ ${chalk.cyan(
-    'graphcool module add graphcool/modules/authentication/facebook',
+    'graphcool add-template graphcool/templates/authentication/facebook',
   )}
   
   ${chalk.bold('Algolia Syncing')}
-  $ ${chalk.cyan('graphcool module add graphcool/modules/syncing/algolia')}
+  $ ${chalk.cyan('graphcool add-template graphcool/templates/syncing/algolia')}
   `
   async run() {
     await this.definition.load(this.flags)
-    const moduleUrl = this.argv[1]
+    const moduleUrl = this.argv[0]
     const splittedModule = moduleUrl.split('/')
     const ghUser = splittedModule[0]
     const ghRepo = splittedModule[1]
@@ -54,7 +53,7 @@ export default class ModuleAdd extends Command {
 
     this.out.log('')
     this.out.action.start(
-      `   Downloading module ${chalk.bold.cyan(moduleUrl)} from ${chalk.bold(
+      `   Downloading template ${chalk.bold.cyan(moduleUrl)} from ${chalk.bold(
         repoName,
       )} `,
     )
@@ -70,28 +69,50 @@ export default class ModuleAdd extends Command {
     debug(`Downloaded ${repoName} to ${tmpDir}`)
 
     const source = path.join(tmpDir, subPath)
-    const relativeModulePath = `./modules/${moduleDirName}/`
+    const relativeModulePath = `./src/${moduleDirName}/`
     const target = path.join(this.config.definitionDir, relativeModulePath)
     if (fs.pathExistsSync(target)) {
-      this.out.warn(`Path ${target} already exists. Overwriting it now.`)
+      this.out.log(`Path ${target} already exists. Overwriting it now.`)
     }
     fs.mkdirpSync(target)
-    fs.copySync(source, target)
-    fs.removeSync(source)
+    fs.copySync(path.join(source, './src'), target)
 
     // add it to local definition file
-    const newModulePath = path.join(relativeModulePath, 'graphcool.yml')
-    const file = this.definition.insertModule(moduleDirName, newModulePath)
+    const newModulePath = path.join(source, 'graphcool.yml')
+    const templateYml = fs.readFileSync(newModulePath, 'utf-8')
+    const newTemplateYml = templateYml.replace(/src\//g, `src/${moduleDirName}/`)
+
+    const templateTypesRelativePath = yaml.safeLoad(newTemplateYml).types
+    const templateTypesPath = path.join(source, templateTypesRelativePath)
+    const templateTypes = fs.readFileSync(templateTypesPath, 'utf-8')
+
+    const newDefinition = this.definition.mergeDefinition(newTemplateYml, moduleDirName)
+    const newTypes = this.definition.mergeTypes(templateTypes, moduleDirName)
+    const typesPath = this.definition.definition!.modules[0].definition!.types
+
+    fs.removeSync(source)
+
     fs.writeFileSync(
       path.join(this.config.definitionDir, 'graphcool.yml'),
-      file,
+      newDefinition,
+    )
+    fs.writeFileSync(
+      path.join(this.config.definitionDir, typesPath),
+      newTypes,
     )
     this.out.log('')
     this.out.log(
       chalk.blue(
-        `   ${chalk.bold('Added')} module ${chalk.bold(
+        `   ${chalk.bold('Added')} functions & permissions of template ${chalk.bold(
           moduleDirName,
         )} to ${chalk.bold('graphcool.yml')}`,
+      ),
+    )
+    this.out.log(
+      chalk.blue(
+        `   ${chalk.bold('Added')} types of template ${chalk.bold(
+          moduleDirName,
+        )} to ${chalk.bold(typesPath)}`,
       ),
     )
     this.out.log(chalk.blue.bold(`   Created ${relativeModulePath}:`))

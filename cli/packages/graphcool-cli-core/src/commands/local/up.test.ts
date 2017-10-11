@@ -20,6 +20,6 @@ describe('up', () => {
   test('in empty dir', async () => {
     up()
     const result = await Up.mock()
-    expect(result.out.stdout.output).toMatchSnapshot()
+    expect(result.out.stdout.output).toContain('Success! Added local cluster')
   })
 })
