@@ -4,13 +4,15 @@
 
 [Website](https://www.graph.cool/) • [Docs](https://docs-next.graph.cool/) • [Forum](https://www.graph.cool/forum) • [Chat](https://slack.graph.cool/) • [Twitter](https://twitter.com/graphcool)
 
-> **Note:** This is a preview version of the Graphcool Framework. More information in the [forum](https://www.graph.cool/forum/t/feedback-new-cli-beta/949).
 
-Graphcool is a development framework for serverless GraphQL backend applications. Think about it like Rails or Meteor but based on GraphQL and built for today's (serverless) infrastructure.
+**Graphcool is a GraphQL backend development framework.** Think about it like Rails or Meteor but based on GraphQL and designed for today's (serverless) infrastructure.
 
 * GraphQL abstraction over your database
 * Enables scalable, event-driven architectures
 * Compatible with existing tools (GraphQL.js, Apollo, Serverless)
+
+> **Note:** This is a preview version of the Graphcool Framework. More information in the [forum](https://www.graph.cool/forum/t/feedback-new-cli-beta/949).<br>
+> This readme is currently WIP and there are still some [bugs & missing features]() in the framework.
 
 ## Contents
 
@@ -20,6 +22,7 @@ Graphcool is a development framework for serverless GraphQL backend applications
 * [Features](#features)
 * [Examples](#examples)
 * [Architecture](#architecture)
+* [Deployment](#deployment)
 * [Philosophy](#philosophy)
 * [FAQ](#faq)
 * [Roadmap](#roadmap)
@@ -82,9 +85,6 @@ Graphcool is a development framework for serverless GraphQL backend applications
 
 ## Features
 
-* Flexible GraphQL API on top of your database
-* Powerful permission & authentication system
-* Event-driven
 
 ## Examples
 
@@ -98,20 +98,26 @@ Graphcool is a development framework for serverless GraphQL backend applications
 
 ## Architecture
 
-![](https://imgur.com/7uCckl3.png)
+## Deployment
 
 ## Philosophy
 
-* Abstractions & Layers
-* Composability, Modularity & Building Blocks
-* Zero configuration/Sensible defaults/Batteries included but swappable
-* Transparency
-
 ## FAQ
 
-### How does Graphcool compare to X?
-
 ## Roadmap
+
+## Community
+
+Graphcool has a community of thousands of amazing developers and contributors. Welcome, please join us! 👋
+
+- [Forum](https://www.graph.cool/forum)
+- [Slack](https://slack.graph.cool/)
+- [Stackoverflow](https://stackoverflow.com/questions/tagged/graphcool)
+- [Twitter](https://twitter.com/graphcool)
+- [Facebook](https://www.facebook.com/GraphcoolHQ)
+- [Meetup](https://www.meetup.com/graphql-berlin)
+- [Email](hello@graph.cool)
+
 
 ## Contributing
 
@@ -123,9 +129,4 @@ If an existing feature request or bug report is very important for you, please g
 
 ### Requesting a new feature
 
-We love your ideas for new features. If you're missing a certain feature, please feel free to [request a new feature here](https://github.com/graphcool/feature-requests/issues/new). (Please make sure to check first if somebody else already requested it.)
-
-## Keep up to date
-
-* Subscribe to the features you're interested in
-* Check [the changelog](https://www.graph.cool/docs/faq/graphcool-changelog-chiooo0ahn/) to see what we've recently built
+We love your ideas for new features. If you're missing a certain feature, please feel free to [request a new feature here](https://github.com/graphcool/graphcool/issues/new). (Please make sure to check first if somebody else already requested it.)
