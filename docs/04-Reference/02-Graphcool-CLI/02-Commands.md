@@ -20,7 +20,7 @@ If you provide a directory to the command, all these files will be places inside
 #### Usage
 
 ```sh
-graphcool init [DIRNAME]
+graphcool init DIRNAME
 ```
 
 #### Examples
