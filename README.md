@@ -39,17 +39,42 @@
   npm install -g graphcool@next
   ```
 
-2. **Init new project:**
+2. **Create a new service:**
+
+  The following command creates all files you need for a new [service](https://docs-next.graph.cool/reference/service-definition/overview-opheidaix3).
 
   ```sh
   graphcool init
   ```
 
-3. **Configure data model & project:**
+3. **Define your data model:**
 
-  Edit `types.graphql` to define your data model and setup functions & permissions in  `graphcool.yml`.
+  Next edit `types.graphql` to define your data model using the [GraphQL SDL notation](https://docs-next.graph.cool/reference/database/data-modelling-eiroozae8u).
+  
+  ```graphql
+  type User @model {
+    id: ID! @isUnique
+    name: String!
+    dateOfBirth: DateTime
+  
+    # You can declare relations between models like this
+    posts: [Post!]! @relation(name: "UserPosts")
+  }
+  
+  
+  type Post @model {
+    id: ID! @isUnique
+    title: String!
+  
+    # Every relation also required a back-relation (to determine 1:1, 1:n or n:m)
+    author: User! @relation(name: "UserPosts")
+  }
 
-  The `graphcool.yml` file is the core of your application and should look like this:
+  ```
+
+4. **Implement permissions & business logic:**
+
+  The `graphcool.yml` file is the core of the framework and can be used to implement any kind of authorization and business logic.
 
   ```yml
   # Define your data model here
@@ -71,17 +96,17 @@
       schema: src/hello.graphql
   ```
 
-4. **Deploy your changes:**
+5. **Deploy your service:**
 
-  You can deploy your changes and migrate your database by running the following command:
+  To deploy your service simply run the following command and select either a hosted BaaS cluster or automatically setup a local Docker-based development environment:
 
   ```sh
   graphcool deploy
   ```
 
-5. **Connect to your GraphQL endpoint:**
+6. **Connect to your GraphQL endpoint:**
 
-  Use the endpoint from step (2) in your frontend (or backend) applications to connect to your GraphQL API.
+  Use the endpoint from the previous step in your frontend (or backend) applications to connect to your GraphQL API.
 
 ## Features
 
@@ -108,11 +133,18 @@ Graphcool is a new kind of framework. We are in the process of writing technical
 
 ## FAQ
 
+### Wait a minute – isn't Graphcool a Backend-as-a-Service?
+
+While Graphcool started out as a Backend-as-a-Service (like Firebase or Parse), [we're currently in the process](https://blog.graph.cool/graphcool-framework-preview-ff42081b1333) of turning Graphcool into a backend development framework. No worries, you can still deploy your Graphcool services to the BaaS platform as before but additionally you can now also run Graphcool on your own machine.
+
 ## Roadmap
 
 Help us shape the future of the Graphcool Framework by :thumbsup: [existing Feature Requests](https://github.com/graphcool/graphcool/issues?q=is%3Aopen+is%3Aissue+label%3Akind%2Ffeature) or [creating new ones](https://github.com/graphcool/graphcool/issues/new)
 
-We are in the process of setting up a formal road map. Check back here in the coming weeks to see the new features we are planning!
+We are in the process of setting up a formal road map. Check back here in the coming weeks
+to see the new features we are planning!
+
+> **Note:** `functions` are currently not working for local cluster setups (use the BaaS deployment for now).
 
 ## Community
 
