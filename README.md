@@ -4,9 +4,27 @@
 
 [Website](https://www.graph.cool/) • [Docs](https://docs-next.graph.cool/) • [Forum](https://www.graph.cool/forum) • [Chat](https://slack.graph.cool/) • [Twitter](https://twitter.com/graphcool)
 
-> **Note:** This repository refers to a newer version of Graphcool (previously a [BaaS](https://www.graph.cool/)). More information in the [forum](https://www.graph.cool/forum/t/feedback-new-cli-beta/949).
+> **Note:** This is a preview version of the Graphcool Framework. More information in the [forum](https://www.graph.cool/forum/t/feedback-new-cli-beta/949).
 
-Graphcool is a GraphQL backend development framework
+Graphcool is a development framework for serverless GraphQL backend applications. Think about it like Rails or Meteor but based on GraphQL and built for today's (serverless) infrastructure.
+
+* GraphQL abstraction over your database
+* Enables scalable, event-driven architectures
+* Compatible with existing tools (GraphQL.js, Apollo, Serverless)
+
+## Contents
+
+<img align="right" width="400" src="https://imgur.com/EsopgE3.gif" />
+
+* [Quickstart](#quickstart)
+* [Features](#features)
+* [Examples](#examples)
+* [Architecture](#architecture)
+* [Philosophy](#philosophy)
+* [FAQ](#faq)
+* [Roadmap](#roadmap)
+* [Community](#community)
+* [Contributing](#contributing)
 
 ## Quickstart
 
@@ -61,8 +79,6 @@ Graphcool is a GraphQL backend development framework
 5. **Connect to your GraphQL endpoint:**
 
   Use the endpoint from step (2) in your frontend (or backend) applications to connect to your GraphQL API.
-  
-![](https://imgur.com/EsopgE3.gif)
 
 ## Features
 
