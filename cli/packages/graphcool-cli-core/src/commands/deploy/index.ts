@@ -53,9 +53,13 @@ ${chalk.gray(
       char: 'a',
       description: 'Service alias',
     }),
+    interactive: flags.boolean({
+      char: 'i',
+      description: 'Force interactive mode to select the cluster'
+    })
   }
   async run() {
-    const { force, watch, alias } = this.flags
+    const { force, watch, alias, interactive } = this.flags
     let newServiceName = this.flags['new-service']
     const newServiceCluster = this.flags['new-service-cluster']
     // target can be both key or value of the `targets` object in the .graphcoolrc
@@ -64,7 +68,7 @@ ${chalk.gray(
     let target
     let cluster
     const foundTarget = await this.env.getTargetWithName(this.flags.target)
-    if ((!newServiceCluster && !foundTarget.target) || (newServiceName && !newServiceCluster)) {
+    if (interactive || (!newServiceCluster && !foundTarget.target) || (newServiceName && !newServiceCluster)) {
       cluster = await this.clusterSelection()
       this.env.saveLocalRC()
       if (cluster === 'local' && (!this.env.rc.clusters || !this.env.rc.clusters!.local)) {
@@ -76,8 +80,7 @@ Please run ${chalk.green('$ graphcool local up')} to get a local Graphcool clust
       // this.env.setLocalDefaultCluster(cluster)
     }
 
-
-    if (newServiceName) {
+    if (newServiceName || interactive) {
       if (newServiceCluster) {
         this.env.setActiveCluster(newServiceCluster)
       }
@@ -90,7 +93,7 @@ Please run ${chalk.green('$ graphcool local up')} to get a local Graphcool clust
       }
     }
 
-    if (!newServiceName && !foundTarget.target) {
+    if ((!newServiceName && !foundTarget.target) || interactive) {
       newServiceName = await this.serviceNameSelector(sillyName())
     }
 
