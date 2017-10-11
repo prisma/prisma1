@@ -139,13 +139,12 @@ While Graphcool started out as a Backend-as-a-Service (like Firebase or Parse), 
 
 ## Roadmap
 
-<<<<<<< HEAD
-> **Note:** `functions` are currently not working for local cluster setups (use the BaaS deployment for now).
-=======
 Help us shape the future of the Graphcool Framework by :thumbsup: [existing Feature Requests](https://github.com/graphcool/graphcool/issues?q=is%3Aopen+is%3Aissue+label%3Akind%2Ffeature) or [creating new ones](https://github.com/graphcool/graphcool/issues/new)
 
-We are in the process of setting up a formal road map. Check back here in the coming weeks to see the new features we are planning!
->>>>>>> 4b51d49d1461149252d18e1e1c80d4d4e74af77a
+We are in the process of setting up a formal road map. Check back here in the coming weeks
+to see the new features we are planning!
+
+> **Note:** `functions` are currently not working for local cluster setups (use the BaaS deployment for now).
 
 ## Community
 
