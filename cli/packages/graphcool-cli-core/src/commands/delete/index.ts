@@ -84,7 +84,7 @@ export default class Delete extends Command {
       default: 'n'
     }
     const {confirmation}: {confirmation: string} = await this.out.prompt(confirmationQuestion)
-    if (confirmation.toLowerCase().startsWith('y')) {
+    if (confirmation.toLowerCase().startsWith('n')) {
       this.out.exit(0)
     }
   }
