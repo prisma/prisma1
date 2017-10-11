@@ -5,6 +5,33 @@ description: An overview and explanation of all the commands of the Graphcool CL
 
 # Commands
 
+## `graphcool add-template`
+
+Add new [template](!alias-zeiv8phail) to current Graphcool service.
+
+#### Usage 
+
+```sh
+graphcool add-template <template>
+```
+
+#### Examples
+      
+##### Pull in the officially supported [`email-password` authentication template](https://github.com/graphcool/templates/tree/master/auth/email-password)
+
+```sh    
+graphcool add-template email-password
+```
+
+#### Examples
+      
+##### Pull in the officially supported [`mailgun` messaging template](https://github.com/graphcool/templates/tree/master/messaging/mailgun)
+
+```sh    
+graphcool add-template mailgun
+```
+
+
 ## `graphcool auth`
 
 Sign up or login (opens your browser for authentication). The authentication token that's received after successful login will be stored in `~/.graphcoolrc`.
