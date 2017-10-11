@@ -42,7 +42,7 @@ Now that the CLI is installed, you can use it to create a new service with the [
 
 <Instruction>
 
-Create a new _blank_ Graphcool service inside a directory called `server`:
+Create the local file structure for a new Graphcool service inside a directory called `server`:
 
 ```sh(path="")
 # Create a local service definition in a new directory called `server`
@@ -51,7 +51,7 @@ graphcool init server
 
 </Instruction>
 
-> Note: If you haven't authenticated with the Graphcool CLI before, this command is going to open up a browser window and ask you to login. Your authentication token will be stored in the global `~/.graphcoolrc`.
+> **Note**: If you haven't authenticated with the Graphcool CLI before, this command is going to open up a browser window and ask you to login. Your authentication token will be stored in the global `~/.graphcoolrc`.
 
 `graphcool init` creates the local service structure inside the specified `server` directory:
 
@@ -69,21 +69,21 @@ graphcool init server
 Each of the created files and directories have a dedicated purpose inside your Graphcool service:
 
 - `graphcool.yml`: Contains your [service definition](!alias-opheidaix3).
-- `types.graphql`: Contains all the type definitions for your service, written in the GraphQL [Schema Definitiona Language](https://medium.com/@graphcool/graphql-sdl-schema-definition-language-6755bcb9ce51) (SDL).
-- `.graphcoolrc` (local): Contains information about the [targets](!alias-zoug8seen4) that you have configured for your service.
-- `src`: Contains the source code (and if necessary GraphQL queries) for the [functions](!alias-aiw4aimie9) you've configured for your service. Notice that a new service comes with a default "Hello World"-function which you can delete if you don't want to use it.
+- `types.graphql`: Contains the [data model](!alias-eiroozae8u) and any additional type definitions for your Graphcool service, written in the GraphQL [Schema Definition Language](https://medium.com/@graphcool/graphql-sdl-schema-definition-language-6755bcb9ce51) (SDL).
+- `.graphcoolrc` (_local_): Contains information about the [targets](!alias-zoug8seen4) that you have configured for your service.
+- `src`: Contains the source code (and if necessary GraphQL queries) for the [functions](!alias-aiw4aimie9) you've configured for your service. Notice that a new service comes with a default "Hello World"-function (called `hello` in `graphcool.yml`) which you can delete if you don't want to use it.
 
 Next you need to configure the [data model](!alias-eiroozae8u) for your service.
 
 <Instruction>
 
-Open `./graphcool/types.graphql` and add the following type definition to it:
+Open `./server/types.graphql` and add the following type definition to it:
 
-```graphql(path="graphcool/types.graphql")
+```graphql(path="server/types.graphql")
 type Post {
-  id: ID! @isUnique
-  createdAt: DateTime!
-  updatedAt: DateTime!
+  id: ID! @isUnique # read-only (managed by Graphcool)
+  createdAt: DateTime! # read-only (managed by Graphcool)
+  updatedAt: DateTime! # read-only (managed by Graphcool)
   description: String!
   imageUrl: String!
 }
@@ -91,7 +91,7 @@ type Post {
 
 </Instruction>
 
-The changes you introduced by adding the `Post` type to the data model are purely _local_ so far. So the next step is to actually _deploy_ the service!
+The changes you introduced by adding the `Post` type to the data model are purely _local_ so far. So the next step is to actually [deploy](!alias-aiteerae6l#graphcool-deploy) the service!
 
 <Instruction>
 
@@ -104,13 +104,15 @@ graphcool deploy
 
 </Instruction>
 
-You service is now deployed and available via the HTTP endpoint that was printed in the output of the command! The `Post` type is added to your data model and the corresponding CRUD operations are generated and exposed by the GraphQL API.
+You service is now deployed and available via the HTTP endpoints that were printed in the output of the command! The `Post` type is added to your data model and the corresponding CRUD operations are generated and exposed by the GraphQL API.
 
 <Instruction>
 
-Save the HTTP endpoint for the `GraphQL API` from the output of the `graphcool deploy` command, you'll need it later!
+Save the HTTP endpoint for the `Simple API` from the output of the `graphcool deploy` command, you'll need it later!
 
 </Instruction>
+
+> **Note**: If you ever lose the endpoint for your GraphQL API, you can simply get access to it again by using the `graphcool info` command. When using Apollo, you need to use the endpoint for the `Simple API`.
 
 You can test the API inside a [GraphQL Playground](https://github.com/graphcool/graphql-playground) which you can open with the `graphcool playground` command. Feel free to try out the following query and mutation.
 
@@ -145,7 +147,7 @@ The next step is to connect the React application with the GraphQL API from your
 
 <Instruction>
 
-Paste the HTTP endpoint that you saved after running `graphcool deploy` into `./src/index.js` as the `uri` argument in the `createNetworkInterface` call:
+Paste the HTTP endpoint for the `Simple API` that you saved after running `graphcool deploy` into `./src/index.js` as the `uri` argument in the `createNetworkInterface` call:
 
 ```js(path="src/index.js")
 // replace `__SIMPLE_API_ENDPOINT__` with the endpoint from the previous step
@@ -153,8 +155,6 @@ const networkInterface = createNetworkInterface({ uri: '__SIMPLE_API_ENDPOINT__'
 ```
 
 </Instruction>
-
-> **Note**: If you ever lose the endpoint for your GraphQL API, you can simply get access to it again by using the `graphcool info` command. When using Apollo, you need to use the endpoint for the `Simple API`.
 
 That's it. The last thing to do is actually launching the application 🚀
 
@@ -172,6 +172,6 @@ yarn start # open http://localhost:3000 in your browser
 
 ### Learn more
 
-* [Advanced GraphQL features](https://blog.graph.cool/advanced-graphql-features-of-the-graphcool-api-5b8db3b0a71)
-* [Authentication & Permissions](https://www.graph.cool/docs/reference/auth/overview-ohs4aek0pe/)
-* [Implementing business logic with serverless functions](https://www.graph.cool/docs/reference/functions/overview-aiw4aimie9/)
+* Get more practical experience with our [Guides](https://docs-next.graph.cool/guides)
+* Learn about [Authentication](!alias-bee4oodood) & [Permissions](!alias-iegoo0heez)
+* Implement business logic with [Functions](!alias-aiw4aimie9)
