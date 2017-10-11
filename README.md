@@ -4,9 +4,30 @@
 
 [Website](https://www.graph.cool/) • [Docs](https://docs-next.graph.cool/) • [Forum](https://www.graph.cool/forum) • [Chat](https://slack.graph.cool/) • [Twitter](https://twitter.com/graphcool)
 
-> **Note:** This repository refers to a newer version of Graphcool (previously a [BaaS](https://www.graph.cool/)). More information in the [forum](https://www.graph.cool/forum/t/feedback-new-cli-beta/949).
 
-Graphcool is a GraphQL backend development framework
+**Graphcool is a GraphQL backend development framework.** Think about it like Rails or Meteor but based on GraphQL and designed for today's (serverless) infrastructure.
+
+* GraphQL abstraction over your database
+* Enables scalable, event-driven architectures
+* Compatible with existing tools (GraphQL.js, Apollo, Serverless)
+
+## Contents
+
+> **Note:** This is a preview version of the Graphcool Framework. More information in the [forum](https://www.graph.cool/forum/t/feedback-new-cli-beta/949).<br>
+> This readme is currently WIP and there are still some [bugs & missing features]() in the framework.
+
+<img align="right" width="400" src="https://imgur.com/EsopgE3.gif" />
+
+* [Quickstart](#quickstart)
+* [Features](#features)
+* [Examples](#examples)
+* [Architecture](#architecture)
+* [Deployment](#deployment)
+* [Philosophy](#philosophy)
+* [FAQ](#faq)
+* [Roadmap](#roadmap)
+* [Community](#community)
+* [Contributing](#contributing)
 
 ## Quickstart
 
@@ -61,14 +82,9 @@ Graphcool is a GraphQL backend development framework
 5. **Connect to your GraphQL endpoint:**
 
   Use the endpoint from step (2) in your frontend (or backend) applications to connect to your GraphQL API.
-  
-![](https://imgur.com/EsopgE3.gif)
 
 ## Features
 
-* Flexible GraphQL API on top of your database
-* Powerful permission & authentication system
-* Event-driven
 
 ## Examples
 
@@ -82,20 +98,34 @@ Graphcool is a GraphQL backend development framework
 
 ## Architecture
 
-![](https://imgur.com/7uCckl3.png)
+Graphcool is a new kind of framework. We are in the process of writing technical articles explaining the architecture. Meanwhile you can check out this article detailing how we use the Graphcool Framework to operate a global GraphQL Backend as a Service:
+
+[Graphcool Infrastructure Deep Dive](https://blog.graph.cool/new-regions-and-improved-performance-7bbc0a35c880)
+
+## Deployment
 
 ## Philosophy
 
-* Abstractions & Layers
-* Composability, Modularity & Building Blocks
-* Zero configuration/Sensible defaults/Batteries included but swappable
-* Transparency
-
 ## FAQ
 
-### How does Graphcool compare to X?
-
 ## Roadmap
+
+Help us shape the future of the Graphcool Framework by :thumbsup: [existing Feature Requests](https://github.com/graphcool/graphcool/issues?q=is%3Aopen+is%3Aissue+label%3Akind%2Ffeature) or [creating new ones](https://github.com/graphcool/graphcool/issues/new)
+
+We are in the process of setting up a formal road map. Check back here in the coming weeks to see the new features we are planning!
+
+## Community
+
+Graphcool has a community of thousands of amazing developers and contributors. Welcome, please join us! 👋
+
+- [Forum](https://www.graph.cool/forum)
+- [Slack](https://slack.graph.cool/)
+- [Stackoverflow](https://stackoverflow.com/questions/tagged/graphcool)
+- [Twitter](https://twitter.com/graphcool)
+- [Facebook](https://www.facebook.com/GraphcoolHQ)
+- [Meetup](https://www.meetup.com/graphql-berlin)
+- [Email](hello@graph.cool)
+
 
 ## Contributing
 
@@ -107,9 +137,4 @@ If an existing feature request or bug report is very important for you, please g
 
 ### Requesting a new feature
 
-We love your ideas for new features. If you're missing a certain feature, please feel free to [request a new feature here](https://github.com/graphcool/feature-requests/issues/new). (Please make sure to check first if somebody else already requested it.)
-
-## Keep up to date
-
-* Subscribe to the features you're interested in
-* Check [the changelog](https://www.graph.cool/docs/faq/graphcool-changelog-chiooo0ahn/) to see what we've recently built
+We love your ideas for new features. If you're missing a certain feature, please feel free to [request a new feature here](https://github.com/graphcool/graphcool/issues/new). (Please make sure to check first if somebody else already requested it.)
