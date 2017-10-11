@@ -1,4 +1,4 @@
-----
+---
 alias: tijghei9go
 description: Get started in 5 min with [React](https://facebook.github.io/react/), [Apollo Client](https://github.com/apollographql/apollo-client) and [GraphQL](https://www.graphql.org) and learn how to build a simple Instagram clone.
 github: https://github.com/graphcool-examples/react-graphql/tree/master/quickstart-with-apollo
