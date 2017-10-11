@@ -25,7 +25,7 @@ export default class Up extends Command {
     this.out.log('')
     this.out.action.start('Waiting for Graphcool to initialize. This can take several minutes')
     const cluster = (this.env.rc.clusters && this.env.rc.clusters[name]) ? this.env.rc.clusters[name] : null
-    const host = (cluster && typeof cluster !== 'string') ? cluster.host : 'http://localhost:60000'
+    const host = (cluster && typeof cluster !== 'string') ? cluster.host : 'http://localhost:' + PORT
     const endpoint = host + '/system'
     await this.client.waitForLocalDocker(endpoint)
 

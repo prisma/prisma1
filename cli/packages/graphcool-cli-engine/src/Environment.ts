@@ -9,6 +9,7 @@ import { Args, Region } from './types/common'
 import Variables from './ProjectDefinition/Variables'
 const debug = require('debug')('environment')
 import * as stringSimilarity from 'string-similarity'
+import * as chalk from 'chalk'
 
 const defaultRC = {
   clusters: {
@@ -67,6 +68,12 @@ export class Environment {
   checkCluster(cluster: string) {
     const allClusters = this.config.sharedClusters.concat(Object.keys(this.rc.clusters || {}))
     if (!allClusters.includes(cluster)) {
+      if (cluster === 'local') {
+        this.out.log(`You chose the cluster ${chalk.bold('local')}, but don't have docker initialized, yet.
+Please run ${chalk.green('$ graphcool local up')} to get a local Graphcool cluster.
+`)
+        this.out.exit(1)
+      }
       const bestMatch = stringSimilarity.findBestMatch(cluster, allClusters).bestMatch.target
       this.out.error(`${cluster} is not a valid cluster. Did you mean ${bestMatch}?`)
     }

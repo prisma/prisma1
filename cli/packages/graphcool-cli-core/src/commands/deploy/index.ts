@@ -67,6 +67,9 @@ ${chalk.gray(
     const useDefault = this.flags.default
     let newServiceName = this.flags['new-service']
     const newServiceCluster = this.flags['new-service-cluster']
+    if (newServiceCluster) {
+      this.env.setActiveCluster(newServiceCluster)
+    }
     // target can be both key or value of the `targets` object in the .graphcoolrc
     // so either "my-target" or "shared-eu-west-1/asdf"
     let targetName
@@ -86,9 +89,6 @@ Please run ${chalk.green('$ graphcool local up')} to get a local Graphcool clust
     }
 
     if (newServiceName || interactive) {
-      if (newServiceCluster) {
-        this.env.setActiveCluster(newServiceCluster)
-      }
       cluster = this.env.activeCluster
       targetName = this.flags.target || this.env.getDefaultTargetName(cluster)
     } else {
