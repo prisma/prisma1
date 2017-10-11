@@ -58,7 +58,7 @@ graphcool deploy [flags]
  -i, --interactive                                Force interactive mode to select the cluster
  -n, --new-service NEW-SERVICE                    Name of the new Service
  -c, --new-service-cluster NEW-SERVICE-CLUSTER    Name of the Cluster to deploy to
- -t, --target TARGET                              Local target, ID or alias of service to deploy
+ -t, --target TARGET                              Target name
  -w, --watch                                      Watch for changes
 ```
       
@@ -70,7 +70,7 @@ graphcool deploy [flags]
 graphcool deploy
 ```
 
-##### Deploy local changes to a specific target called `prod`
+##### Deploy local changes to a specific target called `prod`.
 
 ```sh
 graphcool deploy --target prod
@@ -78,79 +78,58 @@ graphcool deploy --target prod
 
 Note that in case your `.graphcoolrc` did not yet contain a target called `prod`, a new target with that name will be created.
 
-##### Deploy local changes from default service file accepting potential data loss caused by schema changes
+##### Deploy local changes from default service file accepting potential data loss caused by schema changes.
 
 ```sh
 graphcool deploy --force
 ```
 
 
+
 ### `graphcool info`
 
 Prints meta-data about a specific service. The information contains:
 
-- Default environment (specified in `.graphcoolrc`)
-- Project ID (specified in `.graphcoolrc`)
-- API endpoints (generated based on service ID)
+- All clusters to which the service is currently deployed
+- API endpoints
 
 #### Usage
-
-```sh
-graphcool info [flags]
-```
-
-#### Flags
-
-```
--e, --env ENV    Environment name to set
-```
-
-#### Examples
-
-##### Print service info of default environment.
-
 
 ```sh
 graphcool info
 ```
 
-##### Print service of concrete environment.
+#### Examples
+
+##### Print info of current service.
 
 ```sh
-graphcool info --env prod
+graphcool info
 ```
 
-Assuming you're executing the command in a directory that contains a `.graphcoolrc` looking similar to this:
-
-```yml
-default: dev
-environments:
-  dev: cj7pyduqj0qyb0136kgf63887
-  prod: th4pydulr0vjb049lkgf63951
-``` 
 
 
 ### `graphcool playground`
 
-Open a Playground for the current service. The current service is determined by the default environment that's specified in the `.graphcoolrc` of the directory in which you're executing the command.
+Open a [Playground](https://github.com/graphcool/graphql-playground) for the current service. The current service is determined by the default environment that's specified in the `.graphcoolrc` of the directory in which you're executing the command.
 
 #### Usage
 
 ```sh
-graphcool playground --env ENV
+graphcool playground [flags]
 ```
 
 #### Flags
 
 ```
--e, --env ENV              Environment name to set
+-t, --target TARGET      Target name
 ```
 
 
 
 ### `graphcool diff`
 
-Displays all the changes between your local service definition and the remote service definition. This command essentially is a "dry-run" for the `graphcool deploy` command. 
+Displays all the changes between your local service definition and the remote service definition. This command essentially is a "dry-run" for the `graphcool deploy` command.
 
 #### Usage 
 
@@ -161,8 +140,7 @@ graphcool diff [flags]
 #### Flags
 
 ```
--e, --env ENV            Project environment to be deployed
--p, --service PROJECT    ID or alias of  service to deploy
+-t, --target TARGET      Target name
 ```
 
 #### Examples
@@ -182,17 +160,16 @@ graphcool diff --env prod
 Assuming you're executing the command in a directory that contains a `.graphcoolrc` looking similar to this:
 
 ```yml
-default: dev
-environments:
-  dev: cj7pyduqj0qyb0136kgf63887
+targets:
+  default: dev
+  dev: hah5eitauy1phoo7bahthooph
   prod: th4pydulr0vjb049lkgf63951
 ``` 
 
 
-
 ### `graphcool delete`
 
-Delete an existing service.
+Delete an existing target from the cluster its deployed to.
 
 #### Usage
 
@@ -203,20 +180,20 @@ graphcool delete [flags]
 #### Flags
 
 ```
- -f, --force            Force delete, without confirmation
- -t, --target TARGET    Target to delete
+ -f, --force               Force delete, without confirmation
+ -t, --target TARGET       Target name
 ```
 
 
 
 ### `graphcool add-template`
 
-Add new [template](!alias-zeiv8phail) to current Graphcool service.
+Add new [template](!alias-zeiv8phail) to current Graphcool service. After invoking this command, you still need to uncomment the added lines in `graphcool.yml` and `types.graphql` and then run `grphcool deploy`.
 
 #### Usage 
 
 ```sh
-graphcool add-template <template>
+graphcool add-template TEMPLATE
 ```
 
 #### Examples
@@ -239,7 +216,7 @@ graphcool add-template graphcool/templates/messaging/mailgun
 
 ### `graphcool root-token`
 
-Get the root tokens of a specific service. If no concrete token is specified as an option, the command will only list the names of the available tokens.
+Print the root tokens of a specific service. If no concrete token is specified as an option, the command will only list the names of the available tokens.
 
 #### Usage 
 
@@ -250,23 +227,22 @@ graphcool get-root-token [flags]
 #### Flags
 
 ```
--e, --env ENV            Environment name to set
--p, --service PROJECT    Project Id to set
 -t, --token TOKEN        Name of the token
+-t, --target TARGET      Target name
 ```
 
 #### Examples
 
-##### List which root tokens are setup for this service.
+##### List which root tokens are setup for the current service.
 
 ```sh
-graphcool get-root-token
+graphcool root-token
 ```
 
 ##### Fetch a concrete root token.
 
 ```sh
-graphcool get-root-token --token my-token
+graphcool root-token --token my-token
 ```
 
 Assuming the service has a root token that's called `my-token`. 
@@ -289,8 +265,7 @@ graphcool logs [flags]
 
 ```
 -f, --function FUNCTION    (required) Name of the function to get the logs from
--e, --env ENV              Environment name to set
--p, --service PROJECT      Project Id to set
+-t, --target TARGET      Target name
 -t, --tail                 Tail function logs in realtime
 ```
 
@@ -313,8 +288,7 @@ graphcool export [flags]
 #### Flags
 
 ```
--e, --env ENV            Project environment from which to export data
--p, --service PROJECT    ID or alias of service from which to export data
+-t, --target TARGET      Target name
 ```
 
 #### Examples
@@ -328,14 +302,14 @@ graphcool export
 #####  Export data from a specific service environment.
 
 ```sh
-graphcool export --env prod
+graphcool export --target prod
 ```
 
 Assuming you're executing the command in a directory that contains a `.graphcoolrc` looking similar to this:
 
 ```yml
-default: dev
-environments:
+targets:
+  default: dev
   dev: cj7pyduqj0qyb0136kgf63887
   prod: th4pydulr0vjb049lkgf63951
 ``` 
@@ -348,28 +322,37 @@ environments:
 
 ### `graphcool local pull`
 
+Download latest (or specific) framework cluster version.
+
 ### `graphcool local stop`
+
+Stop local development cluster.
 
 ### `graphcool local up`
 
+Start local development cluster (Docker required).
+
 ### `graphcool local restart`
+
+Restart local development cluster.
 
 ### `graphcool local eject`
 
+Eject from the managed docker runtime.
 
 
 
 
 ## Platform
 
-### `graphcool auth`
+### `graphcool login`
 
-Sign up or login (opens your browser for authentication). The authentication token that's received after successful login will be stored in `~/.graphcoolrc`.
+Sign up or login (opens your browser for authentication). The platform token that's received after successful login will be stored in `~/.graphcoolrc`.
 
 #### Usage 
 
 ```sh
-graphcool auth [flags]
+graphcool login [flags]
 ```
 
 #### Flags
@@ -383,9 +366,9 @@ graphcool auth [flags]
 ##### Authenticate using the browser.
 
 ```sh    
-graphcool auth
+graphcool login
 ```
-##### Authenticate using an existing (temporary) authentication token.
+##### Authenticate using an existing authentication token.
 
 ```sh
 graphcool auth -t <token>
@@ -406,7 +389,7 @@ graphcool console [flags]
 #### Flags
 
 ```
--e, --env ENV    Environment name
+-t, --target TARGET      Target name
 ```
 
 #### Examples
@@ -416,10 +399,11 @@ graphcool console [flags]
 ```sh    
 graphcool console
 ```
+
 ##### Open the console for the `prod` environment.
 
 ```sh
-graphcool console --env prod
+graphcool console [flags]
 ```
 
 Assuming you're executing the command in a directory that contains a `.graphcoolrc` looking similar to this:
@@ -434,22 +418,7 @@ environments:
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+## Other
 
 ### `graphcool help`
 
