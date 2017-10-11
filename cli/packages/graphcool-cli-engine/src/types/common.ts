@@ -119,8 +119,17 @@ export interface GraphcoolModule {
   name: string
   content: string
   files: { [fileName: string]: string }
+  externalFiles?: any // TODO: fix "cannot be named" typescript issue
   definition?: GraphcoolDefinition
   baseDir?: string
+}
+
+export interface ExternalFiles { [fileName: string]: ExternalFile }
+
+export interface ExternalFile {
+  url: string
+  lambdaHandler: string
+  devHandler: string
 }
 
 export interface AuthenticateCustomerPayload {

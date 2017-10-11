@@ -16,13 +16,13 @@ const debug = require('debug')('project-definition')
 export class ProjectDefinitionClass {
   static sanitizeDefinition(definition: ProjectDefinition) {
     const modules = definition.modules.map(module => {
-      const { name, files } = module
+      const { name, files, externalFiles } = module
       let content = module.content
       if (module.definition && typeof module.definition === 'object') {
         // parse + stringify trims away `undefined` values, which are not accepted by the yaml parser
         content = yaml.safeDump(JSON.parse(JSON.stringify(module.definition)))
       }
-      return { name, content, files }
+      return { name, content, files, externalFiles }
     })
 
     return { modules }

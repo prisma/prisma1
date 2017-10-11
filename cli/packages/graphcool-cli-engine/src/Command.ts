@@ -110,7 +110,7 @@ export class Command {
     this.argv = options.config && options.config.argv ? options.config.argv : []
     this.definition = new ProjectDefinitionClass(this.out, this.config)
     this.env = new Environment(this.out, this.config)
-    this.client = new Client(this.config, this.env)
+    this.client = new Client(this.config, this.env, this.out)
     this.auth = new Auth(this.out, this.config, this.env, this.client)
   }
 

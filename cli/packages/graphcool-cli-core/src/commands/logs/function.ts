@@ -30,11 +30,12 @@ export default class FunctionLogs extends Command {
 
     const {id} = await this.env.getTarget(target)
     debug(`function name ${functionName}`)
+    debug(`project id ${id}`)
 
     if (!functionName) {
       this.out.error(`Please provide a valid function name`)
     } else {
-      let fn = await this.client.getFunction(target, functionName)
+      let fn = await this.client.getFunction(id, functionName)
       if (!fn) {
         this.out.error(
           `There is no function with the name ${functionName}. Run ${chalk.bold(
