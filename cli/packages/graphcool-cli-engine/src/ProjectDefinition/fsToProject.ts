@@ -43,6 +43,10 @@ export async function fsToProject(
   }
 }
 
+function normalizePath(filePath: string) {
+  return filePath.split(':')[0]
+}
+
 export async function fsToModule(
   moduleDefinitionPath: string,
   out: Output,
@@ -85,12 +89,12 @@ export async function fsToModule(
   if (definition.permissions) {
     definition.permissions.forEach(permission => {
       if (permission.query && isGraphQLFile(permission.query)) {
-        const queryPath = path.join(inputDir, permission.query)
+        const queryPath = path.join(inputDir, normalizePath(permission.query))
         if (fs.existsSync(queryPath)) {
           const permissionQuery = fs.readFileSync(queryPath, 'utf-8')
           files = {
             ...files,
-            [permission.query]: permissionQuery,
+            [normalizePath(permission.query)]: permissionQuery,
           }
         } else {
           errors.push({
@@ -185,5 +189,5 @@ function isFile(type) {
   }
 }
 
-const isGraphQLFile = isFile('graphql')
+const isGraphQLFile = isFile('graphql(:.*)?')
 const isFunctionFile = isFile('js')

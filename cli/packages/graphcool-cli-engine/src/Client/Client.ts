@@ -48,11 +48,19 @@ export class Client {
   // always create a new client which points to the latest config for each request
   get client(): GraphQLClient {
     debug('choosing clusterEndpoint', this.env.clusterEndpoint)
-    return new GraphQLClient(this.env.clusterEndpoint, {
+    const localClient = new GraphQLClient(this.env.clusterEndpoint, {
       headers: {
         Authorization: `Bearer ${this.env.token}`,
       },
     })
+    return {
+      request: (query, variables) => {
+        debug('Sending query')
+        debug(query)
+        debug(variables)
+        return localClient.request(query, variables)
+      }
+    } as any
   }
 
   async getAccount(): Promise<AccountInfo> {
@@ -150,13 +158,16 @@ export class Client {
         }
       }
     `
+    debug('\n\nSending project definition:')
+    const sanitizedDefinition = ProjectDefinitionClass.sanitizeDefinition(config)
+    debug(JSON.stringify(sanitizedDefinition,null, 2) + '\n\n')
     const { push } = await this.client.request<{
       push: MigrateProjectPayload
     }>(mutation, {
       projectId,
       force,
       isDryRun,
-      config: JSON.stringify(ProjectDefinitionClass.sanitizeDefinition(config)),
+      config: JSON.stringify(sanitizedDefinition),
     })
 
     debug()

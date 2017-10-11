@@ -16,4 +16,4 @@ Most of the [CLI commands](!alias-aiteerae6l) accept specific options that you c
 For each option that you provide, you can use either of the following two forms:
 
 - **Long form**: Spell out the full name of the option prepended by _two_ dashes, e.g. `graphcool deploy --stage prod`.
-- **Short form**: Take only the first later of the option's name and prepend with only _one_ dash, e.g. `graphcool deploy -s prod`.
+- **Short form**: Take only a single letter of the option's name (most of the time, this is the very first letter) and prepend with only _one_ dash, e.g. `graphcool deploy -s prod`.
