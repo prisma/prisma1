@@ -98,6 +98,10 @@
 
 ## Architecture
 
+Graphcool is a new kind of framework. We are in the process of writing technical articles explaining the architecture. Meanwhile you can check out this article detailing how we use the Graphcool Framework to operate a global GraphQL Backend as a Service:
+
+[Graphcool Infrastructure Deep Dive](https://blog.graph.cool/new-regions-and-improved-performance-7bbc0a35c880)
+
 ## Deployment
 
 ## Philosophy
@@ -105,6 +109,10 @@
 ## FAQ
 
 ## Roadmap
+
+Help us shape the future of the Graphcool Framework by :thumbsup: [existing Feature Requests](https://github.com/graphcool/graphcool/issues?q=is%3Aopen+is%3Aissue+label%3Akind%2Ffeature) or [creating new ones](https://github.com/graphcool/graphcool/issues/new)
+
+We are in the process of setting up a formal road map. Check back here in the coming weeks to see the new features we are planning!
 
 ## Community
 
