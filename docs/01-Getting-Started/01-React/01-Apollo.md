@@ -51,7 +51,7 @@ graphcool init server
 
 </Instruction>
 
-> **Note**: If you haven't authenticated with the Graphcool CLI before, this command is going to open up a browser window and ask you to login. Your authentication token will be stored in the global `~/.graphcoolrc`.
+> **Note**: If you haven't authenticated with the Graphcool CLI before, this command is going to open up a browser window and ask you to login. Your authentication token will be stored in the global [`~/.graphcoolrc`](!alias-zoug8seen4).
 
 `graphcool init` creates the local service structure inside the specified `server` directory:
 
@@ -81,7 +81,7 @@ Open `./server/types.graphql` and add the following type definition to it:
 
 ```graphql(path="server/types.graphql")
 type Post {
-  id: ID! @isUnique # read-only (managed by Graphcool)
+  id: ID! @isUnique    # read-only (managed by Graphcool)
   createdAt: DateTime! # read-only (managed by Graphcool)
   updatedAt: DateTime! # read-only (managed by Graphcool)
   description: String!
@@ -173,5 +173,5 @@ yarn start # open http://localhost:3000 in your browser
 ### Learn more
 
 * Get more practical experience with our [Guides](https://docs-next.graph.cool/guides)
-* Learn about [Authentication](!alias-bee4oodood) & [Permissions](!alias-iegoo0heez)
+* Secure your API by learning about [Authentication](!alias-bee4oodood) & [Permissions](!alias-iegoo0heez)
 * Implement business logic with [Functions](!alias-aiw4aimie9)
