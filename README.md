@@ -11,10 +11,10 @@
 * Enables scalable, event-driven architectures
 * Compatible with existing tools (GraphQL.js, Apollo, Serverless)
 
+## Contents
+
 > **Note:** This is a preview version of the Graphcool Framework. More information in the [forum](https://www.graph.cool/forum/t/feedback-new-cli-beta/949).<br>
 > This readme is currently WIP and there are still some [bugs & missing features]() in the framework.
-
-## Contents
 
 <img align="right" width="400" src="https://imgur.com/EsopgE3.gif" />
 
