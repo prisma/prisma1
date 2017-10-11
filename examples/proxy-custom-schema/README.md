@@ -1,0 +1,1 @@
+[read-only Demo](https://graphqlbin.com/zvoHm)
