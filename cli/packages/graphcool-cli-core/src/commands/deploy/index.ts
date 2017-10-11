@@ -20,8 +20,8 @@ ${chalk.gray(
   )} Deploy local changes from graphcool.yml to the default service environment.
   ${chalk.green('$ graphcool deploy')}
 
-${chalk.gray('-')} Deploy local changes to a specific environment
-  ${chalk.green('$ graphcool deploy --env production')}
+${chalk.gray('-')} Deploy local changes to a specific target
+  ${chalk.green('$ graphcool deploy --target production')}
     
 ${chalk.gray(
     '-',

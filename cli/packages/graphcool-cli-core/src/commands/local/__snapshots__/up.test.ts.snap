@@ -3,7 +3,7 @@
 exports[`up in empty dir 1`] = `
 "
 
-Success! Added local environment \`local-dev\` to .graphcoolrc
+Success! Added local cluster \`local\` to /var/folders/lc/rzmq7fnn4_jbrcsbz_f1kyfr0000gr/T/cj8mu2b170001bkyvp1vqdpig/.graphcoolrc
 
 To get started, execute
     

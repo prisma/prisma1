@@ -59,7 +59,12 @@
     ],
     "setupFiles": [
       "../test/init.js"
-    ]
+    ],
+    "globals": {
+      "ts-jest": {
+        "tsConfigFile": "./tsconfig.json"
+      }
+    }
   },
   "dependencies": {
     "callsites": "^2.0.0",
