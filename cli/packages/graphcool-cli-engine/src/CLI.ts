@@ -140,7 +140,7 @@ export class CLI {
       debug('exiting')
       out.exit(0)
     } else {
-      console.log('NOT FLUSHING THE TOILET')
+      debug('not flushing')
     }
   }
 
