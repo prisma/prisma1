@@ -3,8 +3,15 @@ alias: wohfoa8ahz
 description: Implementing Business Logic with Serverless Functions
 ---
 
-
 # Freecom Tutorial: Business Logic with Serverless Functions (5/6)
+
+<InfoBox type=warning>
+
+**Note**: This guide is only applicable to [legacy Console project](!alias-aemieb1aev). It doesn't work with the new [Graphcool Framework](https://blog.graph.cool/graphcool-framework-preview-ff42081b1333) which is based on the [`graphcool.yml`](!alias-foatho8aip) service definition file.
+
+An updated version of this guide is coming soon, stay tuned!
+
+</InfoBox>
 
 This is the fifth chapter of our Freecom tutorial series and it's all about extending the capabilities of Graphcool by integrating with third-party services. We are going to use serverless functions in order to connect Freecom with Slack and thus enable communication between customers and support agents. In the [previous chapter](!-pei9aid6ei), you learned how to implement authentication and permission rules to ensure customers only have access to their own conversations.
 

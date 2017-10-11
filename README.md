@@ -1,6 +1,6 @@
 <p align="center"><a href="https://www.graph.cool"><img src="https://imgur.com/NNp55eL.png" width="314"></a></p>
 
-[![CircleCI](https://circleci.com/gh/graphcool/graphcool.svg?style=shield)](https://circleci.com/gh/graphcool/graphcool) [![Slack Status](https://slack.graph.cool/badge.svg)](https://slack.graph.cool) [![npm version](https://badge.fury.io/js/graphcool.svg)](https://badge.fury.io/js/graphcool)
+[![CircleCI](https://circleci.com/gh/graphcool/graphcool.svg?style=shield)](https://circleci.com/gh/graphcool/graphcool) [![Slack Status](https://slack.graph.cool/badge.svg)](https://slack.graph.cool) [![npm version](https://img.shields.io/badge/npm%20package-next-brightgreen.svg)](https://badge.fury.io/js/graphcool)
 
 [Website](https://www.graph.cool/) • [Docs](https://docs-next.graph.cool/) • [Forum](https://www.graph.cool/forum) • [Chat](https://slack.graph.cool/) • [Twitter](https://twitter.com/graphcool)
 
@@ -61,6 +61,8 @@ Graphcool is a GraphQL backend development framework
 5. **Connect to your GraphQL endpoint:**
 
   Use the endpoint from step (2) in your frontend (or backend) applications to connect to your GraphQL API.
+  
+![](https://imgur.com/EsopgE3.gif)
 
 ## Features
 

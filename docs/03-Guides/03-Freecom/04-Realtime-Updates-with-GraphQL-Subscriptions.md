@@ -5,6 +5,14 @@ description: Realtime Updates with GraphQL Subscriptions
 
 # Freecom Tutorial: Realtime Updates with GraphQL Subscriptions (3/6)
 
+<InfoBox type=warning>
+
+**Note**: This guide is only applicable to [legacy Console project](!alias-aemieb1aev). It doesn't work with the new [Graphcool Framework](https://blog.graph.cool/graphcool-framework-preview-ff42081b1333) which is based on the [`graphcool.yml`](!alias-foatho8aip) service definition file.
+
+An updated version of this guide is coming soon, stay tuned!
+
+</InfoBox>
+
 This is the third chapter of our tutorial series where we teach you how to build a fully-fledged Intercom clone using Graphcool and Apollo Client. In the [last chapter](!alias-oe8ahyo2ei), you learned how to develop the fundament for the app by configuring Apollo and setting up the required queries and mutations. Today is all about getting the realtime functionality into our app!⚡️
 
 <iframe height="315" src="https://www.youtube.com/watch?v=mJMYyniCJe4" frameborder="0" allowfullscreen></iframe>

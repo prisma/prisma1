@@ -6,6 +6,19 @@ github: "https://github.com/graphcool-examples/react-graphql/tree/master/authent
 
 # User Authentication with Firebase for React and Apollo
 
+
+<InfoBox type=warning>
+
+**Note**: This guide is outdated! It uses the deprecated concept of _modules_ to pull in the authentication functionality.
+
+_Modules_ have been replaced by _templates_. A template is a predefined Graphcool service that you can _copy_ into your project. 
+
+Read more about templates in the [documentation](!alias-zeiv8phail) or in this [GitHub issue](https://github.com/graphcool/graphcool/issues/720) that contains the proposal and discusssion for how exactly templates should work.
+
+An updated version of this guide is coming soon, stay tuned!
+
+</InfoBox>
+
 In this guide, you will learn how to use Firebase to implement authentication with Graphcool and configure permission rules to control data access among your users. For the frontend, you're going to use React & Apollo Client.
 
 You're going to build a simple Instagram clone that fulfills the following requirements:

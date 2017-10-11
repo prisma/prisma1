@@ -3,8 +3,17 @@ alias: zeez7aiph3
 description: Getting started with the Request Pipeline for data transformation & validation
 ---
 
-
 # Validating and Transforming Mutation Input
+
+<InfoBox type=warning>
+
+**Note**: This guide is only applicable to [legacy Console project](!alias-aemieb1aev). It doesn't work with the new [Graphcool Framework](https://blog.graph.cool/graphcool-framework-preview-ff42081b1333) which is based on the [`graphcool.yml`](!alias-foatho8aip) service definition file.
+
+**In the new Graphcool Framework, the Request Pipeline has been replaced with [hook](!alias-pa6guruhaf) functions.**
+
+An updated version of this guide is coming soon, stay tuned!
+
+</InfoBox>
 
 In this article, you'll learn how to use serverless functions to validate an email address and make sure it gets saved in the database in lowercase letters.
 
