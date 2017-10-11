@@ -1,5 +1,6 @@
 import { GraphcoolDefinition } from 'graphcool-json-schema'
-import { Config } from './Config'
+import { Config } from '../Config'
+import { InternalRC } from './rc'
 
 export interface RunOptions {
   argv?: string[]
@@ -7,7 +8,7 @@ export interface RunOptions {
   initPath?: string
   root?: string
   mockDefinition?: ProjectDefinition
-  mockEnv?: EnvironmentConfig
+  mockRC?: InternalRC
   mockConfig?: Config
   cwd?: string
   home?: string
@@ -122,21 +123,6 @@ export interface GraphcoolModule {
   baseDir?: string
 }
 
-export interface EnvironmentConfig {
-  default: string | null
-  environments: Environments
-}
-
-export interface Environments {
-  [environment: string]: string | DockerEnvironment
-}
-
-export interface DockerEnvironment {
-  token: string
-  host: string
-  projectId: string | null
-}
-
 export interface AuthenticateCustomerPayload {
   token: string
   user: {
@@ -147,4 +133,8 @@ export interface AuthenticateCustomerPayload {
 export interface AccountInfo {
   email: string
   name: string
+}
+
+export interface Args {
+  [name: string]: string | boolean
 }

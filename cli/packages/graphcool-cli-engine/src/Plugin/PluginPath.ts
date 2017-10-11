@@ -2,7 +2,7 @@ import 'source-map-support/register'
 import { Output } from '../Output/index'
 import { ParsedPlugin, PluginType } from './Manager'
 import { Config } from '../Config'
-import { CachedCommand, CachedPlugin, CachedTopic } from './Cache'
+import { CachedCommand, CachedPlugin, CachedTopic, Group } from './Cache'
 import { Arg, Flag } from '../Flags/index'
 import * as path from 'path'
 
@@ -21,6 +21,7 @@ export interface ParsedTopic {
   topic?: string,
   description?: string,
   hidden?: boolean
+  group: string
 }
 
 export interface ParsedCommand {
@@ -36,6 +37,7 @@ export interface ParsedCommand {
   usage?: string,
   hidden?: boolean
   default?: boolean
+  group: string
 }
 
 export class PluginPath {
@@ -83,6 +85,7 @@ export class PluginPath {
         hidden: !!c.hidden,
         aliases: getAliases(c),
         flags: c.flags,
+        group: c.group
       }))
 
     const topics: CachedTopic[] = (plugin.topics || [])
@@ -90,7 +93,8 @@ export class PluginPath {
         id: t.id || '',
         topic: t.topic || '',
         description: t.description,
-        hidden: !!t.hidden
+        hidden: !!t.hidden,
+        group: t.group
       }))
 
     for (const command of commands) {
@@ -100,13 +104,16 @@ export class PluginPath {
       const topic: CachedTopic = {
         id: command.topic,
         topic: command.topic,
+        group: command.group,
         hidden: true
       }
       topics.push(topic)
     }
 
+    const groups = plugin.groups || []
+
     const {name, version} = this.pjson()
-    return {name, path: this.path, version, commands, topics}
+    return {name, path: this.path, version, commands, topics, groups}
   }
 
   // TODO rm any hack
@@ -147,8 +154,9 @@ export class PluginPath {
     const exportedTopics: ParsedTopic[] = required.topics && required.topics.map(t => this.undefaultTopic(t))
     const topics: ParsedTopic[] = this.parsePjsonTopics().concat(exportedTopics || []).concat(exportedTopic || [])
     const commands: ParsedCommand[] = required.commands && required.commands.map(t => this.undefaultCommand(t))
+    const groups: Group[] = required.groups || []
 
-    return {topics, commands}
+    return {topics, commands, groups}
   }
 
   parsePjsonTopics() {

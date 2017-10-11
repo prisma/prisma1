@@ -1,4 +1,4 @@
-import { Region } from '../types'
+import { Region } from '../types/common'
 import * as cuid from 'cuid'
 import {sum} from 'lodash'
 

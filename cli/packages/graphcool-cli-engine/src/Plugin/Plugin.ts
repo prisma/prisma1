@@ -1,5 +1,5 @@
 import { Output } from '../Output/index'
-import { CachedCommand, CachedPlugin, CachedTopic } from './Cache'
+import { CachedCommand, CachedPlugin, CachedTopic, Group } from './Cache'
 import { Config } from '../Config'
 import { Topic } from '../Topic'
 import { PluginPath } from './PluginPath'
@@ -41,6 +41,10 @@ export default class Plugin {
     return this.cachedPlugin.commands
   }
 
+  get groups(): Group[] {
+    return this.cachedPlugin.groups
+  }
+
   get topics(): CachedTopic[] {
     return this.cachedPlugin.topics
   }
@@ -80,6 +84,7 @@ export default class Plugin {
       static topic = t.id
       static description = t.description
       static hidden = t.hidden
+      static group = t.group
     }
   }
 }

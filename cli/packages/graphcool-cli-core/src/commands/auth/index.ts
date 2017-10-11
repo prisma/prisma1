@@ -2,8 +2,9 @@ import { Command, flags, Flags } from 'graphcool-cli-engine'
 import * as chalk from 'chalk'
 
 export default class Auth extends Command {
-  static topic = 'auth'
-  static description = 'Sign up or login (opens your browser for authentication)'
+  static topic = 'login'
+  static description = 'Login or signup to the Graphcool Platform'
+  static group = 'platform'
   static help = `
     
   Note: Your session token will be store at ~/.graphcool
@@ -11,10 +12,10 @@ export default class Auth extends Command {
   ${chalk.green('Examples:')}
       
   ${chalk.gray('-')} Authenticate using the browser
-    ${chalk.green('$ graphcool auth')}
+    ${chalk.green('$ graphcool login')}
   
   ${chalk.gray('-')} Authenticate using an existing token
-    ${chalk.green('$ graphcool auth -t <token>')}    
+    ${chalk.green('$ graphcool login -t <token>')}    
   
   `
   static flags: Flags = {
@@ -36,15 +37,15 @@ export default class Auth extends Command {
 
     // if there is a new token, save it
     if (token) {
-      this.config.setToken(token)
-      this.config.saveToken()
+      this.env.setToken(token)
+      this.env.saveGlobalRC()
       this.out.log(
-        `Saved new token to ${chalk.bold(this.config.dotGraphcoolFilePath)}`,
+        `Saved new token to ${chalk.bold(this.config.globalRCPath)}`,
       )
     } else if (alreadyAuthenticated) {
       this.out.log(
         `You are already authenticated. Your local token is saved at ${chalk.bold(
-          this.config.dotGraphcoolFilePath,
+          this.config.globalRCPath,
         )}`,
       )
     }

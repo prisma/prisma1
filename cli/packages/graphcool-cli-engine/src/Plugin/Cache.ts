@@ -7,7 +7,7 @@ import { Config } from '../Config'
 import { Output } from '../Output/index'
 import { Manager } from './Manager'
 import Plugin from './Plugin'
-import { PluginPath } from './PluginPath';
+import { PluginPath } from './PluginPath'
 
 const debug = require('debug')('cli:plugincache')
 
@@ -23,6 +23,7 @@ export interface CachedCommand {
   usage?: string
   hidden: boolean
   variableArgs?: boolean
+  group: string
 }
 
 export interface CachedTopic {
@@ -30,6 +31,7 @@ export interface CachedTopic {
   topic: string
   description?: string
   hidden: boolean
+  group: string
 }
 
 export interface CachedPlugin {
@@ -38,6 +40,12 @@ export interface CachedPlugin {
   version: string
   commands: CachedCommand[]
   topics: CachedTopic[]
+  groups: Group[]
+}
+
+export interface Group {
+  key: string
+  name: string
 }
 
 export interface CacheData {
@@ -62,7 +70,7 @@ export default class Cache {
     this._cache = {
       version: this.config.version,
       plugins: {},
-      node_version: null
+      node_version: null,
     }
   }
 
@@ -70,7 +78,7 @@ export default class Cache {
     this._cache = {
       version: this.config.version,
       plugins: {},
-      node_version: this._cache.node_version
+      node_version: this._cache.node_version,
     }
   }
 
@@ -102,14 +110,14 @@ export default class Cache {
   }
 
   updatePlugin(pluginPath: string, plugin: CachedPlugin) {
-    (this.constructor as any).updated = true
+    ;(this.constructor as any).updated = true
     this.cache.plugins[pluginPath] = plugin
   }
 
   deletePlugin(...paths: string[]) {
     for (const pluginPath of paths) {
-      debug(`clearing cache for ${pluginPath}`)
-      (this.constructor as any).updated = true
+      debug(`clearing cache for ${pluginPath}`)(this
+        .constructor as any).updated = true
       delete this.cache.plugins[pluginPath]
     }
     this.save()
@@ -141,7 +149,8 @@ export default class Cache {
         path: pluginPath.path,
         version: '',
         commands: [],
-        topics: []
+        topics: [],
+        groups: [],
       }
     }
   }
@@ -158,7 +167,7 @@ export default class Cache {
       await downgrade()
 
       this.cache.node_version = process.version as string
-      (this.constructor as any).updated = true
+      ;(this.constructor as any).updated = true
     }
 
     for (const manager of managers) {

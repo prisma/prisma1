@@ -1,6 +1,6 @@
 {
   "name": "graphcool-cli-engine",
-  "version": "0.0.46",
+  "version": "0.0.60",
   "main": "dist/index.js",
   "files": [
     "dist"
@@ -10,10 +10,10 @@
   "license": "MIT",
   "devDependencies": {
     "@types/jest": "^20.0.8",
-    "@types/lodash": "^4.14.74",
+    "@types/lodash": "^4.14.77",
     "@types/node": "^8.0.22",
     "husky": "^0.14.3",
-    "jest": "^21.0.1",
+    "jest": "^21.2.1",
     "lint-staged": "^4.0.3",
     "nock": "^9.0.14",
     "prettier": "^1.5.3",
@@ -57,7 +57,12 @@
     ],
     "setupFiles": [
       "../test/init.js"
-    ]
+    ],
+    "globals": {
+      "ts-jest": {
+        "tsConfigFile": "./tsconfig.json"
+      }
+    }
   },
   "dependencies": {
     "@heroku/linewrap": "^1.0.0",

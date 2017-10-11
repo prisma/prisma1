@@ -1,51 +1,53 @@
 import { Command, flags, Flags, AuthenticateCustomerPayload } from 'graphcool-cli-engine'
 import Docker from './Docker'
 import * as chalk from 'chalk'
-import * as util from 'util'
+const debug = require('debug')('up')
 
 export default class Up extends Command {
   static topic = 'local'
   static command = 'up'
-  static description = 'Pull & Start a local Graphcool instance'
+  static description = 'Start local development cluster (Docker required)'
+  static group = 'local'
   static flags: Flags = {
-    env: flags.string({
-      char: 'e',
-      description: 'Environment name for the new instance',
+    name: flags.string({
+      char: 'n',
+      description: 'Name of the new instance',
+      defaultValue: 'local'
     }),
   }
   async run() {
-    this.config.setLocal()
-    this.client.updateClient()
+    const {name} = this.flags
 
-    let {env} = this.flags
+    const docker = new Docker(this.out, this.config, this.env, name)
 
-    env = env || 'local-dev'
-    if (this.env.env.environments[env]) {
-      this.out.error(`The environment ${chalk.bold(env)} already exists. Please provide a new one with ${chalk.green('--env NEW_NAME')}`)
-    }
-
-    const docker = new Docker(this.out, this.config)
-
-    const {MASTER_TOKEN, PORT} = await docker.up()
+    const {envVars: {MASTER_TOKEN, PORT}} = await docker.up()
 
     this.out.log('')
     this.out.action.start('Waiting for Graphcool to initialize. This can take several minutes')
-    await this.client.waitForLocalDocker()
+    const cluster = (this.env.rc.clusters && this.env.rc.clusters[name]) ? this.env.rc.clusters[name] : null
+    const host = (cluster && typeof cluster !== 'string') ? cluster.host : 'http://localhost:' + PORT
+    const endpoint = host + '/system'
+    await this.client.waitForLocalDocker(endpoint)
 
-    const {token}: AuthenticateCustomerPayload = await this.client.authenticateCustomer(MASTER_TOKEN)
-    this.env.setDockerEnv(env, {
-      token,
-      host: `http://localhost:${PORT}`,
-      projectId: null
-    })
+    const {token}: AuthenticateCustomerPayload = await this.client.authenticateCustomer(endpoint, MASTER_TOKEN)
+
+
+    if (!cluster) {
+      debug('Setting cluster')
+      this.env.setGlobalCluster(name, {
+        host,
+        token,
+      })
+      this.env.saveGlobalRC()
+    }
+
     this.out.action.stop()
 
-    if (!this.env.default) {
-      this.env.setDefault(env)
+    if (!cluster) {
+      this.out.log(`\nSuccess! Added local cluster ${chalk.bold(`\`${name}\``)} to ${this.config.globalRCPath}\n`)
+    } else {
+      this.out.log(`\nSuccess! Cluster ${name} already exists and is up-to-date.`)
     }
-    this.env.save()
-
-    this.out.log(`\nSuccess! Added local environment ${chalk.dim(`\`${env}\``)} to .graphcoolrc\n`)
     this.out.log(`To get started, execute
     
   ${chalk.green('$ graphcool init')}

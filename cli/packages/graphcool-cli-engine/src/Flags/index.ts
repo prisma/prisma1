@@ -14,6 +14,7 @@ export interface Flag<T> {
   description?: string
   hidden?: boolean
   required?: boolean
+  defaultValue?: any
 }
 
 export interface Arg {

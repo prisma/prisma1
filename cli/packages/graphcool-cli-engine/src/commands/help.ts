@@ -4,35 +4,35 @@ import { compare, linewrap } from '../util'
 import { Command } from '../Command'
 import Plugins from '../Plugin/Plugins'
 import * as chalk from 'chalk'
+import {groupBy, flatten} from 'lodash'
 const debug = require('debug')('help command')
 
 function trimToMaxLeft(n: number): number {
-  const max = Math.floor(stdtermwidth * 0.6)
+  const max = Math.floor(stdtermwidth * 0.8)
   return n > max ? max : n
 }
 
-function trimCmd(s: string, max: number): string {
-  if (s.length <= max) {
-    return s
-  }
-  return `${s.slice(0, max - 1)}\u2026`
+function maxLength(items: string[]) {
+  return items.reduce(
+    (acc, curr) => Math.max(acc, curr.length),
+    -1,
+  )
 }
 
-function renderList(items: string[][]): string {
+function renderList(items: string[][], globalMaxLeftLength?: number): string {
   const S = require('string')
-  const max = require('lodash.maxby')
 
-  const maxLeftLength = trimToMaxLeft(max(items, '[0].length')[0].length + 1)
+  const maxLeftLength = globalMaxLeftLength || maxLength(items.map(i => i[0])) + 2
   return items
     .map(i => {
-      let left = ` ${i[0]}`
+      let left = `  ${i[0]}`
       let right = i[1]
       if (!right) {
         return left
       }
-      left = `${S(trimCmd(left, maxLeftLength)).padRight(maxLeftLength)}`
+      left = `${S(left).padRight(maxLeftLength)}`
       right = linewrap(maxLeftLength + 2, right)
-      return `${left}    ${right}`
+      return `${left}  ${right}`
     })
     .join('\n')
 }
@@ -65,7 +65,7 @@ export default class Help extends Command {
     debug(`argv`, argv)
     debug(`cmd`, cmd)
     if (!cmd) {
-      return this.topics()
+      return await this.topics()
     }
 
     const topic = await this.plugins.findTopic(cmd)
@@ -83,7 +83,7 @@ export default class Help extends Command {
       const cmds = await this.plugins.commandsForTopic(topic.id)
       const subtopics = await this.plugins.subtopicsForTopic(topic.id)
       if (subtopics && subtopics.length) {
-        this.topics(subtopics, topic.id, topic.id.split(':').length + 1)
+        await this.topics(subtopics, topic.id, topic.id.split(':').length + 1)
       }
       if (cmds && cmds.length > 0 && cmds[0].command) {
         this.listCommandsHelp(cmd, cmds)
@@ -91,43 +91,68 @@ export default class Help extends Command {
     }
   }
 
-  topics(
+  async topics(
     ptopics: any[] | null = null,
     id: string | null = null,
     offset: number = 1,
   ) {
     const color = this.out.color
     this.out
-      .log(`\nServerless GraphQL backend for frontend developers (${chalk.underline(
+      .log(`\nGraphQL Backend Development Framework & Platform (${chalk.underline(
       'https://www.graph.cool',
     )})
     
-${chalk.bold('Usage:')} ${chalk.bold('graphcool')} COMMAND
-
-${chalk.bold('Commands:')}`)
-    let topics = (ptopics || this.plugins.topics).filter(t => {
+${chalk.bold('Usage:')} ${chalk.bold('graphcool')} COMMAND`)
+    const topics = (ptopics || this.plugins.topics).filter(t => {
       if (!t.id) {
         return
       }
       const subtopic = t.id.split(':')[offset]
       return !t.hidden && !subtopic
     })
-    topics = topics.map(t => [
-      t.id,
-      t.description ? chalk.dim(t.description) : null,
-    ])
-    topics.sort()
-    this.out.log(renderList(topics))
-    this.out.log(`\nRun ${chalk.bold.green(
-      'graphcool help',
-    )} COMMAND for more information on a command.
+    const groupedTopics = groupBy(topics, topic => topic.group)
+    const jobs: any[] = []
+    for (const group of this.plugins.groups) {
+      // debugger
+      const groupTopics = groupedTopics[group.key]
+      // const list = groupTopics.map(t => [
+      //   t.id,
+      //   t.description ? chalk.dim(t.description) : null,
+      // ])
+      const list: string[][][] = await Promise.all(groupTopics.map(async t => {
+        const cmds = await this.plugins.commandsForTopic(t.id)
+        // console.log(cmds)
+        // if (t.id === 'local') {
+        //   debugger
+        // }
+        return cmds.map(cmd => {
+          const cmdName = cmd.command ? ` ${cmd.command}` : ''
+          return [t.id + cmdName, chalk.dim(cmd.description || t.description)]
+        })
+      })) as any
+      jobs.push({
+        group: group.name,
+        list: flatten(list),
+      })
+    }
+
+    const globalMaxLeft = maxLength(flatten(jobs.map(j => j.list)).map(i => i[0])) + 2
+
+    jobs.forEach(job => {
+      this.out.log('')
+      this.out.log(chalk.bold(job.group + ':'))
+      this.out.log(renderList(job.list, globalMaxLeft))
+    })
+
+    this.out.log(`\nUse ${chalk.green('graphcool help [command]')} for more information about a command.
+Docs can be found here: https://docs-next.graph.cool/reference/graphcool-cli/commands-aiteerae6l
 
 ${chalk.dim('Examples:')}
 
-${chalk.gray('-')} Initialize a new Graphcool project
+${chalk.gray('-')} Initialize files for a new Graphcool service
   ${chalk.green('$ graphcool init')}
 
-${chalk.gray('-')} Update live project with local changes
+${chalk.gray('-')} Deploy service changes (or new service)
   ${chalk.green('$ graphcool deploy')}
 `)
   }

@@ -2,7 +2,7 @@ import {
   MigrationActionType,
   MigrationErrorMessage,
   MigrationMessage,
-} from '../types'
+} from '../types/common'
 import figures = require('figures')
 import * as chalk from 'chalk'
 import { Output } from './index'

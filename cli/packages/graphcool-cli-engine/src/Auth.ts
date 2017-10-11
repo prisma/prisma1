@@ -3,10 +3,11 @@ import { Output } from './Output/index'
 import 'isomorphic-fetch'
 import * as cuid from 'cuid'
 import * as opn from 'opn'
-import { AuthTrigger } from './types'
+import { AuthTrigger } from './types/common'
 import { Client } from './Client/Client'
 import { GraphQLClient } from 'graphql-request'
 import * as chalk from 'chalk'
+import { Environment } from './Environment'
 const debug = require('debug')('auth')
 
 export class Auth {
@@ -14,11 +15,13 @@ export class Auth {
   config: Config
   authTrigger: AuthTrigger = 'auth'
   client: Client
+  env: Environment
 
-  constructor(out: Output, config: Config, client: Client) {
+  constructor(out: Output, config: Config, env: Environment, client: Client) {
     this.out = out
     this.config = config
     this.client = client
+    this.env = env
   }
 
   setAuthTrigger(authTrigger: AuthTrigger) {
@@ -26,33 +29,37 @@ export class Auth {
   }
 
   async ensureAuth() {
-    const token = this.config.token || (await this.requestAuthToken())
-
-    const valid = await this.validateAuthToken(token)
+    const localToken = this.env.token
+    let token = localToken
+    let valid: any = true
+    if (token) {
+      valid = await this.validateAuthToken(token)
+    }
     if (!valid) {
-      this.out.error(
-        `Received invalid token. Please try ${this.out.color.bold(
-          'graphcool auth',
-        )} again to get a valid token.`,
+      this.out.warn(
+        `Received invalid token. Trying to authenticate ...`,
       )
-      this.out.exit(1)
+    }
+    if (!token || !valid) {
+      token = await this.requestAuthToken()
     }
 
-    this.config.setToken(token)
-    this.config.saveToken()
-    this.client.updateClient()
+    this.env.setToken(token)
+    if (this.env.isSharedCluster(this.env.activeCluster) && token !== localToken) {
+      this.env.saveGlobalRC()
+    }
 
     // return if we already had a token
-    return !!this.config.token
+    return !!this.env.rc.platformToken
   }
 
   async setToken(token: string) {
     const valid = await this.validateAuthToken(token)
     if (valid) {
-      this.config.setToken(token)
+      this.env.setToken(token)
     } else {
-      this.config.setToken(null)
-      this.config.saveToken()
+      this.env.setToken(undefined)
+      this.env.saveGlobalRC()
       this.out.error(
         `You provided an invalid token. You can run ${this.out.color.bold(
           'graphcool auth',
@@ -79,24 +86,27 @@ export class Auth {
 
     opn(url)
 
-    while (true) {
+    let authToken
+    while (!authToken) {
       const endpointUrl = `${this.config.authEndpoint}/${cliToken}`
       const result = await fetch(endpointUrl)
 
       const json = await result.json()
-      const { authToken } = json
+      authToken = json.authToken
       if (authToken) {
         this.out.action.stop()
         return authToken as string
       }
       await new Promise(r => setTimeout(r, 500))
     }
+
+    return authToken
   }
 
   async validateAuthToken(token: string): Promise<string | null> {
-    debug('requesting', this.config.systemAPIEndpoint)
+    debug('requesting', this.env.clusterEndpoint)
     debug('token', token)
-    const client = new GraphQLClient(this.config.systemAPIEndpoint, {
+    const client = new GraphQLClient(this.env.clusterEndpoint, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -111,14 +121,21 @@ export class Auth {
       }
     }`
 
-    const result = await client.request<{
-      viewer: { user: { email: string } }
-    }>(authQuery)
+    try {
+      const result = await client.request<{
+        viewer: { user: { email: string } }
+      }>(authQuery)
 
-    if (!result.viewer.user || !result.viewer.user.email) {
-      return null
+      if (!result.viewer.user || !result.viewer.user.email) {
+        return null
+      }
+
+      return result.viewer.user.email
+    } catch (e) {
+      //
+      console.log(e)
     }
 
-    return result.viewer.user.email
+    return null
   }
 }

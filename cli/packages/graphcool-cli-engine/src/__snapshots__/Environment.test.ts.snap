@@ -1,0 +1,125 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`environment should access targets from the global RC 1`] = `
+Object {
+  "clusters": Object {
+    "local": Object {
+      "host": "http://localhost:60000",
+      "token": "asdf",
+    },
+  },
+  "platformToken": "secret-token",
+  "targets": Object {
+    "dev": Object {
+      "cluster": "local",
+      "id": "asdasd123",
+    },
+    "test-alias": Object {
+      "cluster": "local",
+      "id": "asdasd123",
+    },
+  },
+}
+`;
+
+exports[`environment should override global target 1`] = `
+Object {
+  "clusters": Object {
+    "local": Object {
+      "host": "http://localhost:60000",
+      "token": "asdf",
+    },
+  },
+  "platformToken": "secret-token",
+  "targets": Object {
+    "dev": Object {
+      "cluster": "shared-eu-west-1",
+      "id": "asdfasdf",
+    },
+  },
+}
+`;
+
+exports[`environment should resolve a target alias refering after 1`] = `
+Object {
+  "clusters": Object {
+    "local": Object {
+      "host": "http://localhost:60000",
+      "token": "asdf",
+    },
+  },
+  "platformToken": "secret-token",
+  "targets": Object {
+    "dev": Object {
+      "cluster": "local",
+      "id": "asdasd123",
+    },
+    "test-alias": Object {
+      "cluster": "local",
+      "id": "asdasd123",
+    },
+  },
+}
+`;
+
+exports[`environment should resolve a target alias refering before 1`] = `
+Object {
+  "clusters": Object {
+    "local": Object {
+      "host": "http://localhost:60000",
+      "token": "asdf",
+    },
+  },
+  "platformToken": "secret-token",
+  "targets": Object {
+    "dev": Object {
+      "cluster": "local",
+      "id": "asdasd123",
+    },
+    "test-alias": Object {
+      "cluster": "local",
+      "id": "asdasd123",
+    },
+  },
+}
+`;
+
+exports[`environment should resolve target from the global RC 1`] = `
+Object {
+  "clusters": Object {
+    "local": Object {
+      "host": "http://localhost:60000",
+      "token": "asdf",
+    },
+  },
+  "platformToken": "secret-token",
+  "targets": Object {
+    "dev": Object {
+      "cluster": "local",
+      "id": "asdasd123",
+    },
+    "test-alias": Object {
+      "cluster": "local",
+      "id": "asdasd123",
+    },
+  },
+}
+`;
+
+exports[`environment should work without global RC 1`] = `
+Object {
+  "clusters": Object {
+    "local": Object {
+      "host": "http://localhost:60000",
+      "token": "asdf",
+    },
+  },
+  "platformToken": "secret-token",
+  "targets": Object {
+    "dev": Object {
+      "cluster": "local",
+      "id": "asdasd123",
+    },
+  },
+}
+`;

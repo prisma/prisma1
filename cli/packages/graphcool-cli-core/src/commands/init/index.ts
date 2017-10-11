@@ -8,7 +8,8 @@ import {repeat, flatten} from 'lodash'
 
 export default class Init extends Command {
   static topic = 'init'
-  static description = 'Create a new project definition and environment from scratch or based on an existing Graphcool definition.'
+  static description = 'Create files for new services'
+  static group = 'general'
   static help = `
   
   ${chalk.green.bold('Examples:')}
@@ -44,7 +45,7 @@ export default class Init extends Command {
       const newDefinitionPath = path.join(process.cwd(), dirName + '/')
       fs.mkdirpSync(newDefinitionPath)
       this.config.definitionDir = newDefinitionPath
-      this.config.envPath = path.join(newDefinitionPath, '.graphcoolrc')
+      this.config.localRCPath = path.join(newDefinitionPath, '.graphcoolrc')
     }
 
     const files = fs.readdirSync(this.config.definitionDir)
@@ -82,12 +83,12 @@ Read more here: https://github.com/graphcool/graphcool/issues/706
     }
 
     if (!this.definition.definition) {
-      const newDefinition = await this.interactiveInit()
+      // const newDefinition = await this.interactiveInit()
+      const newDefinition = defaultDefinition
       this.definition.set(newDefinition)
     }
 
-    this.out.log('\n')
-    this.out.action.start(`Creating a new Graphcool app in ${chalk.green(this.config.definitionDir)}`)
+    this.out.action.start(`\nCreating a new Graphcool app in ${chalk.green(this.config.definitionDir)}`)
     this.definition.save(undefined, false)
     this.out.action.stop()
 
@@ -101,8 +102,8 @@ Inside that directory, you can run the following commands:
   ${chalk.green('graphcool deploy')}
     Deploys the project to Graphcool
 
-  ${chalk.green('graphcool deploy --env prod')}
-    Deploys the project to Graphcool, using the environment name \`prod\`
+  ${chalk.green('graphcool deploy --target prod')}
+    Deploys the project to Graphcool, using the target name \`prod\`
 
 You can find further instructions in the ${chalk.green('graphcool.yml')} file,
 which is the central project configuration.

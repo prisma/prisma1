@@ -1,94 +1,65 @@
 import {
   Command,
-  EnvironmentConfig,
   Flags,
   flags,
   ProjectInfo,
   Output,
   Project,
+  Targets,
 } from 'graphcool-cli-engine'
 import * as chalk from 'chalk'
-import { prettyProject, printPadded, subscriptionURL } from '../../util'
 
 export default class InfoCommand extends Command {
   static topic = 'info'
-  static description = 'Print project info (environments, endpoints, ...) '
+  static description = 'Display service information (endpoints, cluster, ...)'
+  static group = 'general'
   static flags: Flags = {
-    env: flags.string({
-      char: 'e',
-      description: 'Environment name to set',
+    target: flags.string({
+      char: 't',
+      description: 'Target name to get the info for',
     }),
   }
   async run() {
     await this.auth.ensureAuth()
-    let { env } = this.flags
+    let { target } = this.flags
 
-    env = env || this.env.env.default
+    const { id } = await this.env.getTarget(target)
+    const targetName = target || 'default'
 
-    const { projectId, envName } = await this.env.getEnvironment({ env })
     const projects: Project[] = await this.client.fetchProjects()
 
-    if (!projectId) {
-      this.out.error(
-        `Please provide a valid environment that has a valid project id`,
+    const info = await this.client.fetchProjectInfo(id)
+    let localPort: number | undefined = parseInt(
+      this.env.clusterEndpoint.split(':')[1],
+      10,
+    )
+    if (this.env.rc.targets) {
+      this.out.log(
+        this.infoMessage(
+          info,
+          targetName,
+          projects,
+          localPort,
+        ),
       )
     } else {
-      const info = await this.client.fetchProjectInfo(projectId)
-      let localPort: number | undefined = undefined
-      if (this.env.env.environments[env] && this.env.isDockerEnv(this.env.env.environments[env])) {
-        localPort = parseInt((this.env.env.environments[env] as any).host.split(':').slice(-1)[0], 10) || 60000
-      }
-      this.out.log(infoMessage(info, this.env.env, env, this.config.backendAddr, this.out, projects, localPort))
+      this.out.log(`No local targets`)
     }
   }
-}
+  infoMessage = (
+    info: ProjectInfo,
+    envName: string,
+    projects: Project[],
+    localPort?: number,
+  ) => `\
 
-export const infoMessage = (
-  info: ProjectInfo,
-  env: EnvironmentConfig,
-  envName: string,
-  backendAddr: string,
-  out: Output,
-  projects: Project[],
-  localPort?: number
-) => `\
-
-${printEnvironments(env, projects, out)}
+${this.out.printServices(this.env.rc.targets!, projects)}
  
 API:           Endpoint:
 ────────────── ────────────────────────────────────────────────────────────
-${chalk.green('Simple')}         ${
-      `${backendAddr}/simple/v1/${info.id}`
-    }
-${chalk.green('Relay')}          ${
-  `${backendAddr}/relay/v1/${info.id}`
-}
-${chalk.green('Subscriptions')}  ${
-  subscriptionURL(info.region as any, info.id, localPort)
-}
-${chalk.green('File')}           ${
-  `${backendAddr}/file/v1/${info.id}`
-}
+${chalk.green('Simple')}         ${this.env.simpleEndpoint(info.id)}
+${chalk.green('Relay')}          ${this.env.relayEndpoint(info.id)}
+${chalk.green('Subscriptions')}  ${this.env.subscriptionEndpoint(info.id)}
+${chalk.green('File')}           ${this.env.fileEndpoint(info.id)}
 `
-
-const printEnvironments = (env: EnvironmentConfig, projects: Project[], out: Output) => {
-  return printPadded(
-    Object.keys(env.environments).map(key => {
-      let projectId: any = env.environments[key]
-      if (typeof projectId === 'object') {
-        projectId = projectId.projectId
-      }
-      const project = projects.find(p => p.id === projectId)
-      let output = `${chalk.bold('local')} (${projectId})`
-      if (project) {
-        output = prettyProject(project)
-      }
-      return [
-        key,
-        output,
-      ]
-    }),
-    0, 1,
-    ['Environment:', 'Project:']
-  )
 }

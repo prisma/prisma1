@@ -1,13 +1,14 @@
 import { Output } from '../Output/index'
 import { Config } from '../Config'
 import { ParsedCommand, ParsedTopic, PluginPath } from './PluginPath'
-import Cache from './Cache'
+import Cache, { Group } from './Cache'
 
 export type PluginType = "builtin" | "core" | "user" | "link"
 
 export interface ParsedPlugin {
   topics?: ParsedTopic[]
   commands?: ParsedCommand[]
+  groups?: Group[]
 }
 
 export class Manager {

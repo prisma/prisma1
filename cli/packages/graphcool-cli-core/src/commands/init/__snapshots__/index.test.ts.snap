@@ -2,8 +2,6 @@
 
 exports[`init test project 1`] = `
 "
-
-
 Written files:
 ├─ types.graphql
 ├─ src
@@ -16,8 +14,8 @@ Inside that directory, you can run the following commands:
   graphcool deploy
     Deploys the project to Graphcool
 
-  graphcool deploy --env prod
-    Deploys the project to Graphcool, using the environment name \`prod\`
+  graphcool deploy --target prod
+    Deploys the project to Graphcool, using the target name \`prod\`
 
 You can find further instructions in the graphcool.yml file,
 which is the central project configuration.

@@ -19,8 +19,9 @@ import * as dirTree from 'directory-tree'
 import * as marked from 'marked'
 import * as TerminalRenderer from 'marked-terminal'
 import * as Charm from 'charm'
-import {set} from 'lodash'
-
+import { padEnd, repeat, set, uniqBy } from 'lodash'
+import { Project } from '../types/common'
+import { Targets } from '../types/rc'
 
 marked.setOptions({
   renderer: new TerminalRenderer(),
@@ -67,23 +68,12 @@ function bangify(msg: string, c: string): string {
   return lines.join('\n')
 }
 
-function getErrorMessage(err: any): string {
-  let message
-  if (err.body) {
-    // API error
-    if (err.body.message) {
-      message = util.inspect(err.body.message)
-    } else if (err.body.error) {
-      message = util.inspect(err.body.error)
-    }
+function extractMessage (response): string {
+  try {
+    return response.errors![0].message
+  } catch (e) {
+    return `GraphQL Error (Code: ${response.status})`
   }
-  // Unhandled error
-  if (err.message && err.code) {
-    message = `${util.inspect(err.code)}: ${err.message}`
-  } else if (err.message) {
-    message = err.message
-  }
-  return message || util.inspect(err)
 }
 
 const arrow = process.platform === 'win32' ? '!' : '▸'
@@ -133,11 +123,11 @@ export class Output {
     this.stdout.log(data, ...args)
   }
 
-  getStyledJSON(obj: any) {
+  getStyledJSON(obj: any, subtle: boolean = false) {
     const json = JSON.stringify(obj, null, 2)
     if (chalk.enabled) {
       const cardinal = require('cardinal')
-      const theme = require('cardinal/themes/jq')
+      const theme = require(subtle ? './subtle' : 'cardinal/themes/jq')
       return cardinal.highlight(json, { json: true, theme })
     } else {
       return json
@@ -163,7 +153,10 @@ export class Output {
   }
 
   error(err: Error | string, exitCode: number | false = 1) {
-    if (this.mock && typeof err !== 'string' && exitCode !== false) {
+    if (
+      (this.mock && typeof err !== 'string' && exitCode !== false) ||
+      process.env.NODE_ENV === 'test'
+    ) {
       throw err
     }
     try {
@@ -178,10 +171,13 @@ export class Output {
         this.stderr.log(err.stack || util.inspect(err))
       } else {
         this.stderr.log(
-          bangify(wrap(getErrorMessage(err)), this.color.red(arrow)),
+          this.isGraphQLError(err) ? this.getGraphQLErrorMessage(err) :
+          bangify(wrap(this.getErrorMessage(err)), this.color.red(arrow)),
         )
+        const instruction = (process.env.SHELL && process.env.SHELL!.endsWith('fish')) ? '$ set -x DEBUG "*"' : '$ export DEBUG="*"'
         this.stderr.log(
-          '\nGet in touch if you need help: https://www.graph.cool/forum',
+          `\nGet in touch if you need help: https://www.graph.cool/forum
+To get more detailed output, run ${chalk.dim(instruction)}`,
         )
       }
     } catch (e) {
@@ -192,6 +188,10 @@ export class Output {
     if (exitCode !== false) {
       this.exit(exitCode)
     }
+  }
+
+  isGraphQLError(err) {
+    return err.message && err.request && err.response
   }
 
   warn(err: Error | string, prefix?: string) {
@@ -207,7 +207,7 @@ export class Output {
         } else {
           this.stderr.log(
             bangify(
-              wrap(prefix + this.color.yellow(getErrorMessage(err))),
+              wrap(prefix + this.color.yellow(this.getErrorMessage(err))),
               this.color.yellow(arrow),
             ) + '\n',
           )
@@ -220,11 +220,9 @@ export class Output {
     }, this.color.bold.yellow('!'))
   }
 
-  getPrettyModule(moduleName: string, type: 'error' | 'warning' = 'error') {
+  getErrorPrefix(fileName: string, type: 'error' | 'warning' = 'error') {
     const method = type === 'error' ? 'red' : 'yellow'
-    return chalk[method](
-      `[${type.toUpperCase()} in module: ${chalk.bold(moduleName)}] `,
-    )
+    return chalk[method](`[${type.toUpperCase()}] in ${chalk.bold(fileName)}: `)
   }
 
   logError(err: Error | string) {
@@ -232,7 +230,12 @@ export class Output {
   }
 
   printMarkdown(markdown: string) {
-    this.log(marked(markdown).split('\n').map(l => `   ${l}`).join('\n'))
+    this.log(
+      marked(markdown)
+        .split('\n')
+        .map(l => `   ${l}`)
+        .join('\n'),
+    )
   }
 
   oldprompt(name: string, options?: PromptOptions) {
@@ -258,11 +261,7 @@ export class Output {
   filesTree(files: string[]) {
     const tree = filesToTree(files)
     const printedTree = treeify.asTree(tree, true)
-    this.log(
-      chalk.blue(
-        printedTree.split('\n').join('\n'),
-      ),
-    )
+    this.log(chalk.blue(printedTree.split('\n').join('\n')))
   }
 
   tree(dirPath: string, padding = false) {
@@ -271,7 +270,10 @@ export class Output {
     const printedTree = treeify.asTree(convertedTree, true)
     this.log(
       chalk.blue(
-        printedTree.split('\n').map(l => (padding ? '  ' : '') + l).join('\n'),
+        printedTree
+          .split('\n')
+          .map(l => (padding ? '  ' : '') + l)
+          .join('\n'),
       ),
     )
   }
@@ -282,6 +284,122 @@ export class Output {
       this.charm.up(1)
     }
   }
+
+  printPadded(
+    arr1: string[][],
+    spaceLeft: number = 0,
+    spaceBetween: number = 1,
+    header?: string[],
+  ) {
+    const inputRows = arr1
+    if (header) {
+      inputRows.unshift(header)
+    }
+    const leftCol = inputRows.map(a => a[0])
+    const rightCol = inputRows.map(a => a[1])
+    const maxLeftCol = leftCol.reduce(
+      (acc, curr) => Math.max(acc, curr.length),
+      -1,
+    )
+    const maxRightCol = rightCol.reduce(
+      (acc, curr) => Math.max(acc, curr.length),
+      -1,
+    )
+    const paddedLeftCol = leftCol.map(
+      v => repeat(' ', spaceLeft) + padEnd(v, maxLeftCol + spaceBetween),
+    )
+
+    const rows = paddedLeftCol.map((l, i) => l + arr1[i][1])
+
+    if (header) {
+      const divider = `${repeat('─', maxLeftCol)}${repeat(
+        ' ',
+        spaceBetween,
+      )}${repeat('─', maxRightCol)}`
+      rows.splice(1, 0, divider)
+    }
+
+    return rows.join('\n')
+  }
+
+  printServices = (
+    targets: Targets,
+    projects: Project[],
+    onlyLocal: boolean = true,
+  ) => {
+    const uniqTargetKeys = uniqBy(Object.keys(targets), key => targets[key].id)
+    if (onlyLocal) {
+      return this.printPadded(
+        uniqTargetKeys.map(key => {
+          const { id, cluster } = targets[key]
+          const project = projects.find(p => p.id === id)
+          const output = `${cluster}/${id}`
+          const serviceName = project ? project.name : key
+          return [serviceName + '  ', output + '  ']
+        }),
+        0,
+        1,
+        ['Service Name', 'Cluster / Service ID'],
+      )
+    } else {
+      const filteredProjects = projects.filter(
+        p => !Object.values(targets).find(t => p.id === t.id),
+      )
+      return this.printPadded(
+        uniqTargetKeys
+          .map(key => {
+            const { id, cluster } = targets[key]
+            const project = projects.find(p => p.id === id)
+            const output = `${cluster}/${id}`
+            const serviceName = project ? project.name : key
+            return [serviceName, output]
+          })
+          .concat(
+            filteredProjects.map(p => {
+              return [
+                p.name,
+                `shared-${p.region.toLowerCase().replace(/_/g, '-')}/${p.id}`,
+              ]
+            }),
+          )
+          .map(l => [l[0] + '  ', l[1] + '  ']),
+        0,
+        1,
+        ['Service Name', 'Cluster / Service ID'],
+      )
+    }
+  }
+  getGraphQLErrorMessage(err: any) {
+    if (this.mock) {
+      return `\n${chalk.bold.red('ERROR: ' + extractMessage(err.response))}\n\n`
+        + chalk.bold('Request')
+        + this.getStyledJSON(err.request, true)
+        + chalk.bold('Response')
+        + this.getStyledJSON(err.response, true)
+    } else {
+      return `\n${chalk.bold.red('ERROR: ' + extractMessage(err.response))}\n\n` + this.getStyledJSON(err.response, true)
+    }
+  }
+  getErrorMessage(err: any): string {
+    let message
+
+    if (err.body) {
+      // API error
+      if (err.body.message) {
+        message = util.inspect(err.body.message)
+      } else if (err.body.error) {
+        message = util.inspect(err.body.error)
+      }
+    }
+    // Unhandled error
+    if (err.message && err.code) {
+      message = `${chalk.bold(util.inspect(err.code))}: ${err.message}`
+    } else if (err.message) {
+      message = err.message
+    }
+    return message || util.inspect(err)
+  }
+
 }
 
 function treeConverter(tree) {

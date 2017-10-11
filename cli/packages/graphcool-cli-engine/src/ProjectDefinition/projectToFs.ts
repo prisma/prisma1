@@ -2,7 +2,7 @@ import * as path from 'path'
 import * as chalk from 'chalk'
 import fs from '../fs'
 import { Output } from '../Output/index'
-import { GraphcoolModule, ProjectDefinition } from '../types'
+import { GraphcoolModule, ProjectDefinition } from '../types/common'
 require('source-map-support/register')
 
 export function projectToFs(project: ProjectDefinition, outputDir: string, out: Output, files?: string[], silent?: boolean): void {

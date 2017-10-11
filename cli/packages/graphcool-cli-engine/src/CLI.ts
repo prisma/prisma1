@@ -2,7 +2,7 @@ import * as path from 'path'
 import { Command } from './Command'
 import { Config } from './Config'
 import { Output } from './Output'
-import { RunOptions } from './types'
+import { RunOptions } from './types/common'
 import Lock from './Plugin/Lock'
 import { Dispatcher } from './Dispatcher/Dispatcher'
 import { NotFound } from './NotFound'
@@ -127,18 +127,22 @@ export class CLI {
     }
 
     if (
-      (!this.config.argv.includes('logs') &&
-      !this.config.argv.includes('logs:function')) &&
-      (!this.config.argv.includes('deploy') &&
-      !this.config.argv.includes('-w') &&
-      !this.config.argv.includes('--watch'))
+      !(
+        this.config.argv.includes('logs') ||
+        this.config.argv.includes('logs:function') ||
+        (this.config.argv.includes('deploy') &&
+          (this.config.argv.includes('-w') ||
+            this.config.argv.includes('--watch')))
+      )
     ) {
       debug('flushing stdout')
       const { timeout } = require('./util')
-      await timeout(this.flush(), 5000)
+      await timeout(this.flush(), 1000)
 
       debug('exiting')
       out.exit(0)
+    } else {
+      debug('not flushing')
     }
   }
 

@@ -10,15 +10,16 @@ import {
   ProjectDefinition,
   ProjectInfo,
   RemoteProject,
-} from '../types'
+} from '../types/common'
 
 import { GraphQLClient, request } from 'graphql-request'
 import { omit } from 'lodash'
 import { Config } from '../Config'
 import { getFastestRegion } from './ping'
 import { ProjectDefinitionClass } from '../ProjectDefinition/ProjectDefinition'
+import {Environment} from '../Environment'
 
-const debug = require('debug')('graphcool')
+const debug = require('debug')('client')
 
 const REMOTE_PROJECT_FRAGMENT = `
   fragment RemoteProject on Project {
@@ -32,46 +33,26 @@ const REMOTE_PROJECT_FRAGMENT = `
 `
 
 export class Client {
-  client: GraphQLClient
   config: Config
+  env: Environment
   public mock: (input: { request: any; response: any }) => void
 
   private mocks: { [request: string]: string } = {}
+  private tokenCache: string
 
-  constructor(config: Config) {
+  constructor(config: Config, environment: Environment) {
     this.config = config
-    this.updateClient()
+    this.env = environment
   }
 
-  updateClient() {
-    const client = new GraphQLClient(this.config.systemAPIEndpoint, {
+  // always create a new client which points to the latest config for each request
+  get client(): GraphQLClient {
+    debug('choosing clusterEndpoint', this.env.clusterEndpoint)
+    return new GraphQLClient(this.env.clusterEndpoint, {
       headers: {
-        Authorization: `Bearer ${this.config.token}`,
+        Authorization: `Bearer ${this.env.token}`,
       },
     })
-
-    this.client = {
-      request: (query, variables) => {
-        debug(this.config.systemAPIEndpoint)
-        debug(query)
-        debug(variables)
-        const res = JSON.stringify(
-          {
-            query,
-            variables: variables ? variables : undefined,
-          },
-          null,
-          2,
-        )
-        if (this.mocks[res]) {
-          return Promise.resolve(this.mocks[res])
-        }
-        return client.request(query, variables).then(data => {
-          debug(data)
-          return data
-        })
-      },
-    } as any
   }
 
   async getAccount(): Promise<AccountInfo> {
@@ -249,12 +230,13 @@ export class Client {
     return this.getProjectDefinition(project)
   }
 
-  async waitForLocalDocker(): Promise<void> {
+  async waitForLocalDocker(endpoint: string): Promise<void> {
     // dont send any auth information when running the authenticateCustomer mutation
     let valid = false
     while(!valid) {
       try {
-        await request(this.config.systemAPIEndpoint,
+        debug('requesting', endpoint)
+        await request(endpoint,
           `
             {
               viewer {
@@ -273,11 +255,11 @@ export class Client {
     }
   }
 
-  async authenticateCustomer(token: string): Promise<AuthenticateCustomerPayload> {
+  async authenticateCustomer(endpoint: string, token: string): Promise<AuthenticateCustomerPayload> {
     // dont send any auth information when running the authenticateCustomer mutation
     const result = await request<
       {authenticateCustomer: AuthenticateCustomerPayload}
-      >(this.config.systemAPIEndpoint,
+      >(endpoint,
       `
       mutation ($token: String!) {
         authenticateCustomer(input: {
@@ -561,7 +543,7 @@ export class Client {
       await fetch(this.config.statusEndpoint, {
         method: 'post',
         headers: {
-          Authorization: `Bearer ${this.config.token}`,
+          Authorization: `Bearer ${this.env.token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(instruction),

@@ -6,7 +6,7 @@ import { Output } from '../Output/index'
 import { Config } from '../Config'
 import BuiltinPlugins from './BuiltInPlugins'
 import CorePlugins from './CorePlugins'
-import Cache, { CachedCommand, CachedTopic } from './Cache'
+import Cache, { CachedCommand, CachedTopic, Group } from './Cache'
 import { Command } from '../Command';
 import { Topic } from '../Topic'
 
@@ -197,5 +197,9 @@ export default class Plugins {
 
   get topics(): CachedTopic[] {
     return uniqby(this.plugins.reduce((t, p) => t.concat(p.topics), [] as any), 'id')
+  }
+
+  get groups(): Group[] {
+    return this.plugins.filter(p => p.groups).reduce((t, p) => t.concat(p.groups), [] as any)
   }
 }

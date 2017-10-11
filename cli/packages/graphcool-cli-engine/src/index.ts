@@ -16,8 +16,6 @@ export {
   ProjectDefinition,
   ProjectInfo,
   GraphcoolModule,
-  EnvironmentConfig,
-  Environments,
   RemoteProject,
   APIError,
   AuthServer,
@@ -32,7 +30,9 @@ export {
   SchemaInfo,
   PAT,
   AuthenticateCustomerPayload,
-} from './types'
+} from './types/common'
+
+export {Cluster, Clusters, RC, Target, Targets} from './types/rc'
 
 export { flags, Flag, Arg, Flags } from './Flags'
 

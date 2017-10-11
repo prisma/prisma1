@@ -1,19 +1,20 @@
 import { Command, flags, Flags } from 'graphcool-cli-engine'
-import { InvalidProjectError } from '../../errors/InvalidProjectError'
 import Docker from './Docker'
 
 export default class Stop extends Command {
   static topic = 'local'
   static command = 'stop'
-  static description = 'Stop an already initialized local Graphcool instance'
+  static description = 'Stop local development cluster'
+  static group = 'local'
   static flags: Flags = {
-    env: flags.string({
-      char: 'e',
-      description: 'Environment to stop',
+    name: flags.string({
+      char: 'n',
+      description: 'Name of the new instance',
+      defaultValue: 'local'
     }),
   }
   async run() {
-    const docker = new Docker(this.out, this.config)
+    const docker = new Docker(this.out, this.config, this.env, this.flags.name)
     await docker.stop()
   }
 }

@@ -5,6 +5,7 @@ import * as chalk from 'chalk'
 import { GraphcoolDefinition } from 'graphcool-json-schema'
 import { Output } from '../Output/index'
 import Variables from './Variables'
+import { Args } from '../types/common'
 const debug = require('debug')('yaml')
 
 const ajv = new Ajv()
@@ -22,6 +23,7 @@ export async function readDefinition(
   file: string,
   out: Output,
   moduleName: string,
+  args: Args
 ): Promise<GraphcoolDefinition> {
   if (cache[file]) {
     debug(`Getting definition from cache`)
@@ -29,8 +31,8 @@ export async function readDefinition(
   }
   const json = (await anyjson.decode(file, 'yaml')) as GraphcoolDefinition
 
-  const vars = new Variables(json, out, moduleName)
-  const populatedJson = await vars.populateDefinition(json)
+  const vars = new Variables(out, moduleName, args)
+  const populatedJson = await vars.populateJson(json)
   if (populatedJson.custom) {
     delete populatedJson.custom
   }
@@ -38,7 +40,7 @@ export async function readDefinition(
   // TODO activate as soon as the backend sends valid yaml
   if (!valid) {
     out.log(
-      out.getPrettyModule(moduleName) +
+      out.getErrorPrefix(moduleName) +
         chalk.bold('Errors while validating graphcool.yml:\n'),
     )
     out.error(

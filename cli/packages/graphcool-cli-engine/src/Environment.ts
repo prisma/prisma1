@@ -2,213 +2,480 @@ import * as yaml from 'js-yaml'
 import * as path from 'path'
 import fs from './fs'
 import { Output } from './Output/index'
-import { DockerEnvironment, EnvironmentConfig } from './types'
-import { Client } from './Client/Client'
 import { Config } from './Config'
-import { EnvDoesntExistError } from './errors/EnvDoesntExistError'
+import { Cluster, InternalRC, RC, Target, Targets } from './types/rc'
+import { mapValues, merge } from 'lodash'
+import { Args, Region } from './types/common'
+import Variables from './ProjectDefinition/Variables'
+const debug = require('debug')('environment')
+import * as stringSimilarity from 'string-similarity'
+import * as chalk from 'chalk'
+
+const defaultRC = {
+  clusters: {
+    default: 'shared-eu-west-1'
+  }
+}
 
 export class Environment {
-  env: EnvironmentConfig
+  localRC: InternalRC = {}
+  globalRC: InternalRC = {}
   out: Output
-  client: Client
   config: Config
+  args: Args
+  activeCluster: string = 'shared-eu-west-1'
 
-  constructor(out: Output, config: Config, client: Client) {
+  constructor(out: Output, config: Config) {
     this.out = out
     this.config = config
-    this.client = client
+    this.migrateOldFormat()
+  }
+  private setTestToken() {
+    debug('taking graphcool test token')
+    this.globalRC.platformToken = process.env.GRAPHCOOL_TEST_TOKEN!
+  }
+  get rc(): RC {
+    // todo: memoizing / caching
+    return this.deserializeRCs(this.localRC, this.globalRC, this.config.localRCPath, this.config.globalRCPath)
   }
 
-  public initEmptyEnvironment() {
-    this.env = {
-      default: null,
-      environments: {},
+  get token(): string {
+    if (process.env.GRAPHCOOL_PLATFORM_TOKEN) {
+      debug('taking process.env.GRAPHCOOL_PLATFORM_TOKEN as the token')
+      return process.env.GRAPHCOOL_PLATFORM_TOKEN!
     }
+
+    if (this.isSharedCluster(this.activeCluster)) {
+      return this.rc.platformToken!
+    }
+
+    return (this.rc.clusters![this.activeCluster]! as Cluster).token
   }
 
-  get default(): string | DockerEnvironment | null {
-    if (this.env.default) {
-      return this.env.environments[this.env.default]
+  get default(): Target | null {
+    if (this.rc.targets && this.rc.targets.default) {
+      return this.rc.targets.default
     }
 
     return null
   }
 
-  public load() {
-    if (this.config.envPath && fs.existsSync(this.config.envPath)) {
-      try {
-        this.env = yaml.safeLoad(fs.readFileSync(this.config.envPath, 'utf-8'))
-      } catch (e) {
-        this.out.error(`Error in .graphcoolrc (${this.config.envPath}): ${e.message}`)
-        process.exit(1)
-      }
+  get allClusters(): string[] {
+    const localClusters = this.rc.clusters ? Object.keys(this.rc.clusters) : []
+    return this.config.sharedClusters.concat(localClusters)
+  }
 
-      if (!this.env.environments) {
-        this.out.error(`Loaded invalid .graphcoolrc from ${this.config.envPath}: Doesn't contain the 'environments' field`)
+  checkCluster(cluster: string) {
+    const allClusters = this.config.sharedClusters.concat(Object.keys(this.rc.clusters || {}))
+    if (!allClusters.includes(cluster)) {
+      if (cluster === 'local') {
+        this.out.log(`You chose the cluster ${chalk.bold('local')}, but don't have docker initialized, yet.
+Please run ${chalk.green('$ graphcool local up')} to get a local Graphcool cluster.
+`)
+        this.out.exit(1)
       }
+      const bestMatch = stringSimilarity.findBestMatch(cluster, allClusters).bestMatch.target
+      this.out.error(`${cluster} is not a valid cluster. Did you mean ${bestMatch}?`)
+    }
+  }
 
-      if (!this.env.default) {
-        this.out.error(`Loaded invalid .graphcoolrc from ${this.config.envPath}: Doesn't contain the 'default' field`)
-      }
+  setLocalTarget(name: string, value: string) {
+    if (value.split('/').length !== 2) {
+      this.out.error(`Invalid target ${name} ${value}`)
+    }
+    if (!this.localRC.targets) {
+      this.localRC.targets = {}
+    }
+    this.localRC.targets[name] = value
+  }
 
-      if (this.default && this.isDockerEnv(this.default)) {
-        const dockerEnv = (this.default as DockerEnvironment)
-        this.config.setLocal(dockerEnv.host)
-        this.config.setToken(dockerEnv.token)
-        this.client.updateClient()
-      }
+  setLocalDefaultTarget(value: string) {
+    if (!this.localRC.targets) {
+      this.localRC.targets = {}
+    }
+    this.localRC.targets.default = value
+  }
 
+  getTarget(targetName?: string, silent?: boolean): Target {
+    let target: any = null
+
+    if (targetName && targetName.split('/').length > 1) {
+      target = this.deserializeTarget(targetName)
+    }
+    target = targetName || (this.rc.targets && this.rc.targets.default)
+
+    if (typeof target === 'string' && this.rc.targets) {
+      target = this.rc.targets[target]
+    }
+
+    if (target) {
+      this.setActiveCluster(target.cluster)
+    } else if (!silent) {
+      this.out.error('Please provide a valid target that points to a valid cluster and service id')
+    }
+
+    return target
+  }
+
+  getTargetWithName(targetName?: string): {target: Target | null, targetName: string} {
+    const target = this.getTarget(targetName, true)
+    const newTargetName = targetName || 'default'
+
+    return {
+      target,
+      targetName: newTargetName,
+    }
+  }
+
+  getDefaultTargetName(cluster: string) {
+    const targetName = this.isSharedCluster(cluster) ? 'prod' : 'dev'
+    if (!this.rc.targets || !this.rc.targets[targetName]) {
+      return targetName
     } else {
-      this.initEmptyEnvironment()
+      let count = 1
+      while (this.rc.targets[targetName + count]) {
+        count++
+      }
+      return targetName + count
     }
   }
 
-  public save() {
-    if (this.config.envPath) {
-      const file = yaml.safeDump(this.env)
-      fs.writeFileSync(this.config.envPath, file)
-    }
+  setActiveCluster(cluster: string) {
+    this.checkCluster(cluster)
+    this.activeCluster = cluster
   }
 
-  public setEnv(name: string, projectId: string) {
-    this.env.environments[name] = projectId
+  isSharedCluster(cluster: string) {
+    return this.config.sharedClusters.includes(cluster)
   }
 
-  public setDockerEnv(name: string, dockerEnv: DockerEnvironment) {
-    this.env.environments[name] = dockerEnv
-  }
-
-  public set(name: string, projectId: string) {
-    if (this.isDockerEnv(this.env.environments[name])) {
-      (this.env.environments[name] as DockerEnvironment).projectId = projectId
-    } else {
-      this.env.environments[name] = projectId
-    }
-  }
-
-  public setDefault(name: string) {
-    if (!this.env.environments[name]) {
-      this.out.error(new EnvDoesntExistError(name))
-    }
-    this.env.default = name
-  }
-
-  public rename(oldName: string, newName: string) {
-    const oldEnv = this.env.environments[oldName]
-
-    if (!oldEnv) {
-      this.out.error(new EnvDoesntExistError(oldName))
-    }
-    delete this.env.environments[oldName]
-
-    this.env.environments[newName] = oldEnv
-    if (this.env.default === oldName) {
-      this.setDefault(newName)
-    }
-  }
-
-  public remove(envName: string) {
-    const oldEnv = this.env.environments[envName]
-
-    if (!oldEnv) {
-      this.out.error(new EnvDoesntExistError(envName))
-    }
-
-    delete this.env.environments[envName]
-  }
-
-  public deleteIfExist(projectIds: string[]) {
-    projectIds.forEach(projectId => {
-      const envName = Object.keys(this.env.environments).find(
-        name => this.env.environments[name] === projectId,
+  deleteIfExist(serviceIds: string[]) {
+    serviceIds.forEach(id => {
+      const localTarget = Object.keys(this.localRC.targets).find(
+        name => this.localRC.targets![name].split('/')[1] === id,
       )
-      if (envName) {
-        delete this.env.environments[envName]
+      if (localTarget) {
+        delete this.localRC[localTarget]
       }
-      if (this.env.default === envName) {
-        this.env.default = null
+      const globalTarget = Object.keys(this.globalRC.targets).find(
+        name => this.globalRC.targets![name].split('/')[1] === id,
+      )
+      if (globalTarget) {
+        delete this.globalRC[globalTarget]
       }
     })
   }
 
-  public updateDocker(env: DockerEnvironment) {
-    this.config.setToken(env.token)
-    this.config.setLocal(env.host)
-    this.client.updateClient()
+  /**
+   * This is used to migrate the old .graphcool and .graphcoolrc to the new format
+   */
+  migrateOldFormat() {
+    this.migrateGlobalFiles()
+    this.migrateLocalFile()
   }
 
-  public async getEnvironment({
-    project,
-    env,
-    skipDefault,
-  }: {
-    project?: string
-    env?: string
-    skipDefault?: boolean
-  }): Promise<{ projectId: string | null; envName: string | null }> {
-    let projectId: null | string = null
-
-    if (env) {
-      if (typeof this.env.environments[env] === 'string') {
-        projectId = this.env.environments[env] as string
-      }
-      if (this.env.environments[env] && typeof this.env.environments[env] === 'object') {
-        projectId = (this.env.environments[env] as DockerEnvironment).projectId || null
-        this.updateDocker(this.env.environments[env] as DockerEnvironment)
-      }
-      return {
-        envName: env,
-        projectId,
+  migrateLocalFile() {
+    if (fs.pathExistsSync(this.config.localRCPath)) {
+      const file = fs.readFileSync(this.config.localRCPath, 'utf-8')
+      let content
+      try {
+        content = yaml.safeLoad(file)
+        // we got the old format here
+        if (content.environments) {
+          const newLocalRcJson = {
+            targets: mapValues(content.environments, env => {
+              return `shared-eu-west-1/${env}`
+            }),
+            clusters: {
+            }
+          }
+          if (content.default) {
+            newLocalRcJson.targets.default = content.default
+          }
+          const newLocalRcYaml = yaml.safeDump(newLocalRcJson)
+          const oldPath = path.join(this.config.cwd, '.graphcoolrc.old')
+          fs.moveSync(this.config.localRCPath, oldPath)
+          fs.writeFileSync(this.config.localRCPath, newLocalRcYaml)
+          this.out.warn(`We detected the old definition format of the ${this.config.localRCPath} file.
+It has been renamed to ${oldPath}. The up-to-date format has been written to ${this.config.localRCPath}.
+Read more about the changes here:
+https://github.com/graphcool/graphcool/issues/714
+`)
+        }
+      } catch (e) {
       }
     }
+  }
 
-    if (project) {
-      const projects = await this.client.fetchProjects()
-      const foundProject = projects.find(
-        p => p.id === project || p.alias === project,
-      )
-      projectId = foundProject ? foundProject.id : null
-      if (projectId) {
-        const resultEnv = this.getEnvironmentName(projectId)
+  migrateGlobalFiles() {
+    const dotFilePath = path.join(this.config.home, '.graphcool')
+    const dotExists = fs.pathExistsSync(dotFilePath)
+    const rcHomePath = path.join(this.config.home, '.graphcoolrc')
+    const rcHomeExists = fs.pathExistsSync(rcHomePath)
 
-        return {
-          projectId,
-          envName: resultEnv,
+    const dotFile = dotExists ? fs.readFileSync(dotFilePath, 'utf-8') : null
+    const rcFile = rcHomeExists ? fs.readFileSync(rcHomePath, 'utf-8') : null
+
+    // if both legacy files exist, prefer the newer one, .graphcool
+    if (rcHomeExists && rcFile) {
+      // only move this file, if it is json and contains the "token" field
+      // in this case, it's the old format
+      try {
+        const rcJson = JSON.parse(rcFile)
+        if (Object.keys(rcJson).length === 1 && rcJson.token) {
+          this.out.warn(`Moved deprecated file ${rcHomePath} to .graphcoolrc.old`)
+          fs.moveSync(rcHomePath, path.join(this.config.home, '.graphcoolrc.old'))
+        }
+      } catch (e) {
+        //
+      }
+    }
+    if (dotExists) {
+      if (dotFile) {
+        try {
+          const dotJson = JSON.parse(dotFile)
+          if (dotJson.token) {
+            const rc = {...defaultRC, platformToken: dotJson.token}
+            const rcSerialized = this.serializeRC(rc)
+            const oldPath = path.join(this.config.home, '.graphcool.old')
+            fs.moveSync(dotFilePath, oldPath)
+            debug(`Writing`, rcHomePath, rcSerialized)
+            fs.writeFileSync(rcHomePath, rcSerialized)
+            const READ = fs.readFileSync(rcHomePath, 'utf-8')
+            debug('YES', READ)
+            this.out.warn(`We detected the old definition format of the ${dotFilePath} file.
+It has been renamed to ${oldPath}. The new file is called ${rcHomePath}.
+Read more about the changes here:
+https://github.com/graphcool/graphcool/issues/714
+`)
+          }
+        } catch (e) {
+          // noop
         }
       }
-    }
-
-    if (this.default && !skipDefault) {
-      return {
-        projectId: typeof this.default === 'string' ? this.default : this.default.projectId,
-        envName: this.env.default,
+    } else if (rcHomeExists && rcFile) {
+      try {
+        const rcJson = JSON.parse(rcFile)
+        const rc = {...defaultRC, platformToken: rcJson.token}
+        const rcSerialized = this.serializeRC(rc)
+        fs.writeFileSync(rcHomePath, rcSerialized)
+      } catch (e) {
+        // noop
       }
     }
+  }
 
+  async loadYaml(file: string | null, filePath: string | null = null): Promise<any> {
+    if (file) {
+      let content
+      try {
+        content = yaml.safeLoad(file)
+      } catch (e) {
+        this.out.error(`Yaml parsing error in ${filePath}: ${e.message}`)
+      }
+      const variables = new Variables(this.out, filePath || 'no filepath provided', this.args)
+      content = await variables.populateJson(content)
+
+      return content
+    } else {
+      return {}
+    }
+  }
+
+  async load(args: Args) {
+    const localFile = this.config.localRCPath && fs.pathExistsSync(this.config.localRCPath) ? fs.readFileSync(this.config.localRCPath, 'utf-8') : null
+    const globalFile = this.config.globalRCPath && fs.pathExistsSync(this.config.globalRCPath) ? fs.readFileSync(this.config.globalRCPath, 'utf-8') : null
+
+    await this.loadRCs(localFile, globalFile, args)
+
+    if (process.env.NODE_ENV === 'test') {
+      this.setTestToken()
+    }
+  }
+
+  async loadRCs(localFile: string | null, globalFile: string | null, args: Args = {}): Promise<void> {
+    this.args = args
+
+    this.localRC = await this.loadYaml(localFile, this.config.localRCPath)
+    this.globalRC = await this.loadYaml(globalFile, this.config.globalRCPath)
+
+    if (this.rc.clusters && this.rc.clusters.default) {
+      if (!this.allClusters.includes(this.rc.clusters.default)) {
+        this.out.error(`Could not find default cluster ${this.rc.clusters.default}`)
+      }
+      this.activeCluster = this.rc.clusters.default
+    }
+
+  }
+
+  deserializeRCs(localFile: any, globalFile: any, localFilePath: string | null, globalFilePath: string | null): RC {
+    let allTargets = {...localFile.targets, ...globalFile.targets}
+    const newLocalFile = {...localFile}
+    const newGlobalFile = {...globalFile}
+
+    // 1. resolve aliases
+    // global is not allowed to access local variables
+    newGlobalFile.targets = this.resolveTargetAliases(newGlobalFile.targets, newGlobalFile.targets)
+
+    // repeat this 2 times as potentially there could be a deeper indirection
+    for(let i = 0; i < 2; i++) {
+      // first resolve all aliases
+      newLocalFile.targets = this.resolveTargetAliases(newLocalFile.targets, allTargets)
+
+      allTargets = {...newLocalFile.targets, ...newGlobalFile.targets}
+    }
+
+    // at this point there should only be targets in the form of shared-eu-west-1/cj862nxg0000um3t0z64ls08
+    // 2. convert cluster/id to Target
+    newLocalFile.targets = this.deserializeTargets(newLocalFile.targets, localFilePath)
+    newGlobalFile.targets = this.deserializeTargets(newGlobalFile.targets, globalFilePath)
+    // check if clusters exist
+    const allClusters = [...this.config.sharedClusters, ...Object.keys(newGlobalFile.clusters || {}), ...Object.keys(newLocalFile.clusters || {})]
+    this.checkClusters(newLocalFile.targets, allClusters, localFilePath)
+    this.checkClusters(newGlobalFile.targets, allClusters, globalFilePath)
+    return merge({}, newGlobalFile, newLocalFile)
+  }
+
+  checkClusters(targets: Targets, clusters: string[], filePath: string | null) {
+    Object.keys(targets).forEach(key => {
+      const target = targets[key]
+      if (!clusters.includes(target.cluster)) {
+        this.out.error(`Could not find cluster ${target.cluster} defined for target ${key} in ${filePath}`)
+      }
+    })
+  }
+
+  deserializeTargets(targets: {[key: string]: string}, filePath: string | null): Targets {
+    return mapValues<string, Target>(targets, target => this.deserializeTarget(target, filePath))
+  }
+
+  deserializeTarget(target: string, filePath: string | null = null): Target {
+    const splittedTarget = target.split('/')
+    if (splittedTarget.length === 1) {
+      this.out.error(`Could not parse target ${target} in ${filePath}`)
+    }
     return {
-      projectId: null,
-      envName: null,
+      cluster: splittedTarget[0],
+      id: splittedTarget[1]
     }
   }
 
-  public isDockerEnv(suspect: any) {
-    if (!suspect) {
-      return false
-    }
+  resolveTargetAliases = (targets, allTargets) => mapValues(targets, target =>
+    this.isTargetAlias(target) ? this.resolveTarget(target, allTargets) : target
+  )
+  isTargetAlias = (target: string | Target): boolean => {
+    return typeof target === 'string' && target.split('/').length === 1
+  }
+  resolveTarget = (
+    target: string,
+    targets: { [key: string]: string },
+  ): string =>
+    targets[target] ? this.resolveTarget(targets[target], targets) : target
 
-    if (typeof suspect === 'object' && suspect.token && suspect.host) {
-      return true
-    }
+  serializeRC(rc: InternalRC): string {
+    // const copy: any = {...rc}
+    // if (copy.targets) {
+    //   copy.targets = this.serializeTargets(copy.targets)
+    // }
+    return yaml.safeDump(rc)
+  }
+  //
+  // serializeTargets(targets: Targets) {
+  //   return mapValues<Target, string>(targets, t => `${t.cluster}/${t.id}`)
+  // }
 
-    return false
+  setToken(token: string | undefined) {
+    this.globalRC.platformToken = token
   }
 
-  private getEnvironmentName(projectId: string): string | null {
-    return (
-      Object.keys(this.env.environments).find(key => {
-        const projectEnv = this.env.environments[key]
-        return projectEnv === projectId
-      }) || null
-    )
+  saveLocalRC() {
+    const file = this.serializeRC(this.localRC)
+    fs.writeFileSync(this.config.localRCPath, file)
   }
+
+  saveGlobalRC() {
+    const file = this.serializeRC(this.globalRC)
+    fs.writeFileSync(this.config.globalRCPath, file)
+  }
+
+  save() {
+    this.saveLocalRC()
+    this.saveGlobalRC()
+  }
+
+  setGlobalCluster(name: string, cluster: Cluster) {
+    if (!this.globalRC.clusters) {
+      this.globalRC.clusters = {}
+    }
+    this.globalRC.clusters[name] = cluster
+  }
+
+  setLocalDefaultCluster(cluster: string) {
+    if (!this.globalRC.clusters) {
+      this.globalRC.clusters = {}
+    }
+    this.globalRC.clusters.default = cluster
+  }
+
+  getRegionFromCluster(cluster: string): Region {
+    if (this.isSharedCluster(cluster)) {
+      return cluster.slice(7).replace(/-/g, '_').toUpperCase() as Region
+    } else {
+      return 'EU_WEST_1'
+    }
+  }
+
+  get clusterEndpoint(): string {
+    if (this.isSharedCluster(this.activeCluster)) {
+      return this.config.systemAPIEndpoint
+    }
+
+    return (this.rc.clusters![this.activeCluster]! as Cluster).host + '/system'
+  }
+
+  simpleEndpoint(projectId: string): string {
+    if (this.isSharedCluster(this.activeCluster)) {
+      return this.config.simpleAPIEndpoint + projectId
+    }
+
+    return (this.rc.clusters![this.activeCluster]! as Cluster).host + '/simple/v1/' + projectId
+  }
+
+  relayEndpoint(projectId: string): string {
+    if (this.isSharedCluster(this.activeCluster)) {
+      return this.config.relayAPIEndpoint + projectId
+    }
+
+    return (this.rc.clusters![this.activeCluster]! as Cluster).host + '/relay/v1/' + projectId
+  }
+
+  fileEndpoint(projectId: string): string {
+    if (this.isSharedCluster(this.activeCluster)) {
+      return this.config.fileAPIEndpoint + projectId
+    }
+
+    return (this.rc.clusters![this.activeCluster]! as Cluster).host + '/file/v1/' + projectId
+  }
+
+  subscriptionEndpoint(projectId: string): string {
+    if (this.isSharedCluster(this.activeCluster)) {
+      const region = this.getRegionFromCluster(this.activeCluster)
+      return this.subscriptionURL({region, projectId})
+    }
+
+    const match = this.clusterEndpoint.match(/.*:(\d+)\/?.*/)
+    const localPort = match ? match[1] : '60000'
+    return this.subscriptionURL({localPort, projectId})
+  }
+
+
+  private subscriptionURL = ({region, projectId, localPort}: {region?: Region, projectId: string, localPort?: number | string}) =>
+    localPort ? `ws://localhost:${localPort}/subscriptions/v1/${projectId}` :
+      `${subscriptionEndpoints[region!]}/v1/${projectId}`
+}
+
+const subscriptionEndpoints = {
+  EU_WEST_1: 'wss://subscriptions.graph.cool',
+  US_WEST_2: 'wss://subscriptions.us-west-2.graph.cool',
+  AP_NORTHEAST_1: 'wss://subscriptions.ap-northeast-1.graph.cool',
 }

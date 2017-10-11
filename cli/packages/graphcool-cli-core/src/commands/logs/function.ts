@@ -1,5 +1,4 @@
 import { Command, flags, Flags } from 'graphcool-cli-engine'
-import { InvalidProjectError } from '../../errors/InvalidProjectError'
 import * as chalk from 'chalk'
 import * as differenceBy from 'lodash.differenceby'
 import { sortByTimestamp } from '../../util'
@@ -8,15 +7,12 @@ const debug = require('debug')('logs')
 
 export default class FunctionLogs extends Command {
   static topic = 'logs'
-  static description = 'Log functions'
+  static description = 'Output service logs'
+  static group = 'general'
   static flags: Flags = {
-    env: flags.string({
-      char: 'e',
-      description: 'Environment name to set',
-    }),
-    project: flags.string({
-      char: 'p',
-      description: 'Project Id to set',
+    target: flags.string({
+      char: 't',
+      description: 'Target to get logs from',
     }),
     tail: flags.boolean({
       char: 't',
@@ -29,21 +25,16 @@ export default class FunctionLogs extends Command {
   }
   async run() {
     await this.auth.ensureAuth()
-    const { tail } = this.flags
-    let { env } = this.flags
+    const { tail, target } = this.flags
     const functionName = this.flags.function
 
-    env = env || this.env.env.default
-
-    const { projectId } = await this.env.getEnvironment({ env })
+    const {id} = await this.env.getTarget(target)
     debug(`function name ${functionName}`)
 
-    if (!projectId) {
-      this.out.error(new InvalidProjectError())
-    } else if (!functionName) {
+    if (!functionName) {
       this.out.error(`Please provide a valid function name`)
     } else {
-      let fn = await this.client.getFunction(projectId, functionName)
+      let fn = await this.client.getFunction(target, functionName)
       if (!fn) {
         this.out.error(
           `There is no function with the name ${functionName}. Run ${chalk.bold(
@@ -67,7 +58,7 @@ export default class FunctionLogs extends Command {
           setInterval(async () => {
             const tailLogs = await this.client.getFunctionLogs(fn!.id, 50)
             if (tailLogs === null) {
-              fn = await this.client.getFunction(projectId, functionName)
+              fn = await this.client.getFunction(id, functionName)
             } else {
               if (tailLogs.length > 0) {
                 const newLogs = differenceBy(tailLogs, logs, l => l.id)
