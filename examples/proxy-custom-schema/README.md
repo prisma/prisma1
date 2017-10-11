@@ -1,1 +1,1 @@
-[read-only Demo](https://graphqlbin.com/GvrS0)
+[read-only Demo](https://graphqlbin.com/lx9I1)
