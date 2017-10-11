@@ -42,7 +42,7 @@ Now that the CLI is installed, you can use it to create a new service with the [
 
 <Instruction>
 
-Create a new _blank_ Graphcool service inside a directory called `graphcool`:
+Create a new _blank_ Graphcool service inside a directory called `server`:
 
 ```sh(path="")
 # Create a local service definition in a new directory called `server`
@@ -64,14 +64,14 @@ graphcool init server
     └── src
         ├── hello.graphql
         └── hello.js
-  ```
+```
 
 Each of the created files and directories have a dedicated purpose inside your Graphcool service:
 
 - `graphcool.yml`: Contains your [service definition](!alias-opheidaix3).
 - `types.graphql`: Contains all the type definitions for your service, written in the GraphQL [Schema Definitiona Language](https://medium.com/@graphcool/graphql-sdl-schema-definition-language-6755bcb9ce51) (SDL).
 - `.graphcoolrc` (local): Contains information about the [targets](!alias-zoug8seen4) that you have configured for your service.
-- `code`: Contains the source code (and if necessary GraphQL queries) for the [functions](!alias-aiw4aimie9) you've configured for your service. Notice that a new service comes with a default "Hello World"-function which you can delete if you don't want to use it.
+- `src`: Contains the source code (and if necessary GraphQL queries) for the [functions](!alias-aiw4aimie9) you've configured for your service. Notice that a new service comes with a default "Hello World"-function which you can delete if you don't want to use it.
 
 Next you need to configure the [data model](!alias-eiroozae8u) for your service.
 
@@ -104,7 +104,7 @@ graphcool deploy
 
 </Instruction>
 
-The `Post` type is now added to your data model and the corresponding CRUD operations are generated and exposed by the GraphQL API.
+You service is now deployed and available via the HTTP endpoint that was printed in the output of the command! The `Post` type is added to your data model and the corresponding CRUD operations are generated and exposed by the GraphQL API.
 
 <Instruction>
 
@@ -112,7 +112,7 @@ Save the HTTP endpoint for the `GraphQL API` from the output of the `graphcool d
 
 </Instruction>
 
-You can test the API inside a [GraphQL Playground](https://github.com/graphcool/graphql-playground) which you can open with the `graphcool playground` command. Try out the following query and mutation.
+You can test the API inside a [GraphQL Playground](https://github.com/graphcool/graphql-playground) which you can open with the `graphcool playground` command. Feel free to try out the following query and mutation.
 
 **Fetching all posts:**
 
