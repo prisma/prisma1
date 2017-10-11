@@ -335,7 +335,7 @@ To get more detailed output, run ${chalk.dim(instruction)}`,
           const project = projects.find(p => p.id === id)
           const output = `${cluster}/${id}`
           const serviceName = project ? project.name : key
-          return [serviceName, output]
+          return [serviceName + '  ', output + '  ']
         }),
         0,
         1,
@@ -361,7 +361,8 @@ To get more detailed output, run ${chalk.dim(instruction)}`,
                 `shared-${p.region.toLowerCase().replace(/_/g, '-')}/${p.id}`,
               ]
             }),
-          ),
+          )
+          .map(l => [l[0] + '  ', l[1] + '  ']),
         0,
         1,
         ['Service Name', 'Cluster / Service ID'],
