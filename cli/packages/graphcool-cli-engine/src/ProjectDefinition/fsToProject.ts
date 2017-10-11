@@ -43,6 +43,10 @@ export async function fsToProject(
   }
 }
 
+function normalizePath(filePath: string) {
+  return filePath.split(':')[0]
+}
+
 export async function fsToModule(
   moduleDefinitionPath: string,
   out: Output,
@@ -87,7 +91,7 @@ export async function fsToModule(
       if (permission.query && isGraphQLFile(permission.query)) {
         const queryPath = path.join(inputDir, permission.query)
         if (fs.existsSync(queryPath)) {
-          const permissionQuery = fs.readFileSync(queryPath, 'utf-8')
+          const permissionQuery = fs.readFileSync(normalizePath(queryPath), 'utf-8')
           files = {
             ...files,
             [permission.query]: permissionQuery,
