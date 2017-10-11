@@ -81,7 +81,7 @@ export default class Bundler {
     return this.functions.reduce((acc, fn) => {
       const src = fn.fn.handler.code!.src
       const buildFileName = this.getBuildFileName(src)
-      const lambdaHandler = this.getLambdaHandlerPath(buildFileName)
+      const lambdaHandler = this.getLambdaHandler(buildFileName)
       const devHandler = this.getDevHandlerPath(buildFileName)
 
       const externalFile = {
@@ -165,8 +165,9 @@ export default class Bundler {
   }
 
   getBuildFileName = (src: string) => path.join('_dist', src.replace(/\.ts$/, '.js'))
-  getLambdaHandlerPath = (fileName: string) => fileName.slice(0, fileName.length - 3) + '.lambda.js'
-  getDevHandlerPath = (fileName: string) => fileName.slice(0, fileName.length - 3) + '.dev.js'
+  getLambdaHandlerPath = (fileName: string) => fileName.slice(0, fileName.length - 3) + '-lambda.js'
+  getLambdaHandler = (fileName: string) => fileName.slice(0, fileName.length - 3) + '-lambda.handle'
+  getDevHandlerPath = (fileName: string) => fileName.slice(0, fileName.length - 3) + '-dev.js'
   getEnvPath = (fileName: string) => fileName.slice(0, fileName.length - 3) + '.env.json'
 
 }

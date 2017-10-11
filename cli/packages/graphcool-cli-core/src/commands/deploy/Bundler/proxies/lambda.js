@@ -1,20 +1,23 @@
 var fs = require('fs')
 injectEnvironment()
 
-module.exports = function (event, context, callback) {
+exports.handle = function(event, ctx, cb) {
   var fn = require(getTargetFileName())
+  console.log('getting event', JSON.stringify(event))
+  console.log('requiring', fn)
   fn = fn.default || fn
   var promise = fn(event)
   if (typeof promise.then === 'function') {
     promise.then(function (data) {
-      callback(null, data)
+      cb(null, data)
     }).catch(function (error) {
-      callback(error)
+      cb(error)
     })
   } else {
-    return promise
+    cb(null, promise)
   }
 }
+
 
 function getTargetFileName() {
   return __filename.slice(0, __filename.length - 10) + '.js'
