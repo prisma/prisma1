@@ -38,7 +38,7 @@ The example is based on the free [Dog API](https://dog.ceo/dog-api/) which allow
 Clone the full [graphcool](https://github.com/graphcool/graphcool) repository and navigate to this directory or download _only_ this example with the following command:
 
 ```sh
-https://codeload.github.com/graphcool/graphcool/tar.gz/master | tar -xz --strip=2 graphcool-master/examples/rest-wrapper
+curl https://codeload.github.com/graphcool/graphcool/tar.gz/master | tar -xz --strip=2 graphcool-master/examples/rest-wrapper
 cd rest-wrapper
 ```
 

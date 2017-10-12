@@ -1,6 +1,6 @@
 ---
 alias: eip7ahqu5o
-description: GraphQL requests are authenticated using an authentication token. For server-side reqeusts, permanent authentication tokens can be used.
+description: GraphQL requests are authenticated using an authentication token. For server-side requests, permanent authentication tokens can be used.
 ---
 
 # Authentication Tokens
