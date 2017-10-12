@@ -1,5 +1,5 @@
 import Deploy from '../index'
-import {ProjectDefinitionClass, ExternalFiles, ExternalFile, Config, Client} from 'graphcool-cli-engine'
+import {ProjectDefinitionClass, ExternalFiles, ExternalFile, Config, Client, Output} from 'graphcool-cli-engine'
 import * as archiver from 'archiver'
 import * as fs from 'fs-extra'
 import * as path from 'path'
@@ -22,10 +22,12 @@ export default class Bundler {
   definition: ProjectDefinitionClass
   config: Config
   client: Client
+  out: Output
   projectId: string
   buildDir: string
   zipPath: string
   constructor(cmd: Deploy, projectId: string) {
+    this.out = cmd.out
     this.definition = cmd.definition
     this.config = cmd.config
     this.client = cmd.client
@@ -55,6 +57,7 @@ export default class Bundler {
     debug('generated handler files')
     await this.zip()
     debug('zipped')
+    this.out.exit(0)
     const url = await this.upload()
 
     return this.getExternalFiles(url)
@@ -111,8 +114,10 @@ export default class Bundler {
       const buildFileName = path.join(this.buildDir, this.getBuildFileName(src))
       const lambdaHandlerPath = this.getLambdaHandlerPath(buildFileName)
       const devHandlerPath = this.getDevHandlerPath(buildFileName)
+      const bylinePath = this.getBylinePath(buildFileName)
       fs.copySync(path.join(__dirname, './proxies/lambda.js'), lambdaHandlerPath)
       fs.copySync(path.join(__dirname, './proxies/dev.js'), devHandlerPath)
+      fs.copySync(path.join(__dirname, './proxies/byline.js'), bylinePath)
     })
   }
 
@@ -168,6 +173,7 @@ export default class Bundler {
   getLambdaHandlerPath = (fileName: string) => fileName.slice(0, fileName.length - 3) + '-lambda.js'
   getLambdaHandler = (fileName: string) => fileName.slice(0, fileName.length - 3) + '-lambda.handle'
   getDevHandlerPath = (fileName: string) => fileName.slice(0, fileName.length - 3) + '-dev.js'
+  getBylinePath = (fileName: string) => path.dirname(fileName) + '/byline.js'
   getEnvPath = (fileName: string) => fileName.slice(0, fileName.length - 3) + '.env.json'
 
 }

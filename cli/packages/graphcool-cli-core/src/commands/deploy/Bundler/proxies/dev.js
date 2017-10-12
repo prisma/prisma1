@@ -3,33 +3,59 @@ var byline = require('./byline')
 var fs = require('fs')
 injectEnvironment()
 
-var out = byline(process.stdin)
-var old_stdout_write
+var input = byline(process.stdin)
+var old_stdout_write = process.stdout.write
 var stdout = ''
 var stderr = ''
 
-intercept(function(data) {
-	stdout += data
-}, function(data) {
-	stderr += data
-})
+function localLog(useStderr) {
+  return function() {
+    [].forEach.call(arguments, function(arg) {
+      if (useStderr) {
+        stderr += arg + ' '
+      } else {
+        stdout += arg + ' '
+      }
+    })
+    if (useStderr) {
+      stderr += '\n'
+    } else {
+      stdout += '\n'
+    }
+  }
+}
+
+process.stdout.write = localLog()
+process.stderr.write = localLog(true)
+console.log = localLog()
+console.info = localLog()
+console.error = localLog(true)
+console.warn = localLog(true)
 
 var fn = require(getTargetFileName())
 fn = fn.default || fn
 
-out.on('data', function(line){
+input.on('data', function(line){
   const event = JSON.parse(line)
   executeFunction(fn, event, cb)
 })
 
+// prevent process from exiting
+function infinite() {
+  setTimeout(infinite, 100000)
+}
+infinite()
+
 function cb(error, value) {
-	const result = {
-		error: error,
-		value: value,
-		stdout: stdout,
-		stderr: stderr
-	}
-  old_stdout_write(JSON.stringify(result))
+  const result = {
+    error: error,
+    value: value,
+    stdout: stdout,
+    stderr: stderr
+  }
+  old_stdout_write.call(process.stdout, JSON.stringify(result) + '\n')
+  stdout = ''
+  stderr = ''
 }
 
 function executeFunction(fn, event, cb) {
@@ -70,43 +96,4 @@ function injectEnvironment() {
       // noop
     }
   }
-}
-
-function intercept (stdoutIntercept, stderrIntercept) {
-	stderrIntercept = stderrIntercept || stdoutIntercept;
-
-	old_stdout_write = process.stdout.write;
-	var old_stderr_write = process.stderr.write;
-
-	process.stdout.write = (function(write) {
-		return function(string, encoding, fd) {
-			var args = toArray(arguments);
-			args[0] = interceptor( string, stdoutIntercept );
-			write.apply(process.stdout, args);
-		};
-	}(process.stdout.write));
-
-	process.stderr.write = (function(write) {
-		return function(string, encoding, fd) {
-			var args = toArray(arguments);
-			args[0] = interceptor( string, stderrIntercept );
-			write.apply(process.stderr, args);
-		};
-	}(process.stderr.write));
-
-	function interceptor(string, callback) {
-		// only intercept the string
-		var result = callback(string);
-		if (typeof result == 'string') {
-			string = result.replace( /\n$/ , '' ) + (result && (/\n$/).test( string ) ? '\n' : '');
-		}
-		return string;
-	}
-
-	// puts back to original
-	return function unhook() {
-		process.stdout.write = old_stdout_write;
-		process.stderr.write = old_stderr_write;
-	};
-
 }

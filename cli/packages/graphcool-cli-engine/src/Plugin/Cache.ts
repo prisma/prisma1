@@ -126,8 +126,8 @@ export default class Cache {
   async fetch(pluginPath: PluginPath): Promise<CachedPlugin> {
     const c = this.plugin(pluginPath.path)
     if (c) {
-      console.log(`Got plugin from cache`)
-      console.log(this.file)
+      debug(`Got plugin from cache`)
+      debug(this.file)
       return c
     }
     try {
@@ -187,13 +187,13 @@ export default class Cache {
   }
 
   save() {
-    // if (!(this.constructor as any).updated) {
-    //   return
-    // }
-    // try {
-    //   fs.writeJSONSync(this.file, this.cache)
-    // } catch (err) {
-    //   this.out.warn(err)
-    // }
+    if (!(this.constructor as any).updated) {
+      return
+    }
+    try {
+      fs.writeJSONSync(this.file, this.cache)
+    } catch (err) {
+      this.out.warn(err)
+    }
   }
 }
