@@ -30,6 +30,8 @@ export {
   SchemaInfo,
   PAT,
   AuthenticateCustomerPayload,
+  ExternalFiles,
+  ExternalFile
 } from './types/common'
 
 export {Cluster, Clusters, RC, Target, Targets} from './types/rc'
@@ -37,3 +39,5 @@ export {Cluster, Clusters, RC, Target, Targets} from './types/rc'
 export { flags, Flag, Arg, Flags } from './Flags'
 
 export { mockDefinition, mockEnv } from './mock'
+
+export {Client} from './Client/Client'

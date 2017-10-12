@@ -5,6 +5,8 @@ import { ServiceDoesntExistError } from '../../errors/ServiceDoesntExistError'
 import { emptyDefinition } from './emptyDefinition'
 import * as chokidar from 'chokidar'
 import * as inquirer from 'inquirer'
+import * as path from 'path'
+import Bundler from './Bundler/Bundler'
 
 export default class Deploy extends Command {
   private deploying: boolean = false
@@ -99,7 +101,7 @@ Please run ${chalk.green('$ graphcool local up')} to get a local Graphcool clust
     }
 
     if ((!newServiceName && !foundTarget.target) || interactive) {
-      newServiceName = await this.serviceNameSelector(sillyName())
+      newServiceName = await this.serviceNameSelector(path.basename(this.config.definitionDir))
     }
 
     await this.auth.ensureAuth()
@@ -195,6 +197,17 @@ Please run ${chalk.green('$ graphcool local up')} to get a local Graphcool clust
     projectName: string | null,
     cluster: string
   ): Promise<void> {
+    // bundle and add externalFiles
+    if (this.definition.definition!.modules[0].definition!.functions) {
+      const bundler = new Bundler(this, projectId)
+      const externalFiles = await bundler.bundle()
+      this.definition.definition!.modules[0].externalFiles = externalFiles
+      Object.keys(externalFiles).forEach(key => delete this.definition.definition!.modules[0].files[key])
+    }
+    // this.out.exit(0)
+
+    // upload
+
     this.deploying = true
     const localNote =
         isLocal

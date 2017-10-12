@@ -112,7 +112,7 @@ export async function fsToModule(
         if (!isFunctionFile(func.handler.code.src)) {
           errors.push({
             message: `The handler ${func.handler.code
-              .src} for function ${funcName} is not a valid function path. It must end with .js and be in the current working directory.`,
+              .src} for function ${funcName} is not a valid function path. It must end with .js or .ts and be in the current working directory.`,
           })
         }
         const handlerPath = path.join(inputDir, func.handler.code.src)
@@ -190,4 +190,4 @@ function isFile(type) {
 }
 
 const isGraphQLFile = isFile('graphql(:.*)?')
-const isFunctionFile = isFile('js')
+const isFunctionFile = file => isFile('js')(file) || isFile('ts')(file)

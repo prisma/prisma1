@@ -18,6 +18,7 @@ import { Config } from '../Config'
 import { getFastestRegion } from './ping'
 import { ProjectDefinitionClass } from '../ProjectDefinition/ProjectDefinition'
 import {Environment} from '../Environment'
+import { Output } from "../index";
 
 const debug = require('debug')('client')
 
@@ -35,14 +36,16 @@ const REMOTE_PROJECT_FRAGMENT = `
 export class Client {
   config: Config
   env: Environment
+  out: Output
   public mock: (input: { request: any; response: any }) => void
 
   private mocks: { [request: string]: string } = {}
   private tokenCache: string
 
-  constructor(config: Config, environment: Environment) {
+  constructor(config: Config, environment: Environment, out: Output) {
     this.config = config
     this.env = environment
+    this.out = out
   }
 
   // always create a new client which points to the latest config for each request
@@ -117,6 +120,23 @@ export class Client {
     return this.getProjectDefinition(project)
   }
 
+  async getDeployUrl(projectId: string): Promise<string> {
+    const mutation = `
+      mutation getUrl($projectId: String!) {
+        getTemporaryDeployUrl(
+          input: {
+          projectId: $projectId
+        }
+      ) {
+          url
+        }
+      }
+    `
+
+    const {getTemporaryDeployUrl: {url}} = await this.client.request<{getTemporaryDeployUrl: {url: string}}>(mutation, {projectId})
+    return url
+  }
+
   async push(
     projectId: string,
     force: boolean,
@@ -160,7 +180,7 @@ export class Client {
     `
     debug('\n\nSending project definition:')
     const sanitizedDefinition = ProjectDefinitionClass.sanitizeDefinition(config)
-    debug(JSON.stringify(sanitizedDefinition,null, 2) + '\n\n')
+    debug(this.out.getStyledJSON(sanitizedDefinition))
     const { push } = await this.client.request<{
       push: MigrateProjectPayload
     }>(mutation, {
