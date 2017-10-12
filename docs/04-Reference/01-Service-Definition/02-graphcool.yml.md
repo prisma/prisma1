@@ -88,9 +88,7 @@ permissions:
 
 # You can edit the fields a permission is applied to
 - operation: Customer.Read
-- fields:
-  - firstName
-  - lastName
+- fields: [firstName, lastName]
 
 # Root tokens
 rootTokens:
@@ -330,7 +328,7 @@ The `permissions` root property accepts a **list of [permissions](#definition-pe
 - `fields` (**optional**)
   - **Type**: `[string]`
   - **Description**: References a list of fields the permission is applied to. Only applicable for type permissions.
-  - **Possible values**: Any string that references a field of the type the permission belongs to.
+  - **Possible values**: A list of any string that references a field of the type the permission belongs to.
 
 #### Examples
 
@@ -362,9 +360,7 @@ permissions:
 
 # You can edit the fields a permission is applied to
 - operation: Customer.Read
-- fields:
-  - firstName
-  - lastName
+- fields: [firstName, lastName]
 ```
 
 ### `rootTokens`
