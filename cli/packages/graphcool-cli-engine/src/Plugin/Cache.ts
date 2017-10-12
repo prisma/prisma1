@@ -99,7 +99,10 @@ export default class Cache {
       }
       this.initialize()
     }
-    if (this._cache.version !== this.config.version) {
+    if (this._cache.version !== this.config.version || process.env.GRAPHCOOL_CLI_CLEAR_CACHE) {
+      if (process.env.GRAPHCOOL_CLI_CLEAR_CACHE) {
+        debug('clearing cache because GRAPHCOOL_CLI_CLEAR_CACHE is set')
+      }
       this.clear()
     }
     return this._cache
