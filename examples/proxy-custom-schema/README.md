@@ -1,4 +1,4 @@
-# Custom Schema (API gateway)
+# API Gateway (Custom Schema)
 
 ## Overview
 
