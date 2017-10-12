@@ -9,6 +9,10 @@ import TypescriptBuilder from './TypescriptBuilder'
 import * as FormData from 'form-data'
 const debug = require('debug')('bundler')
 import * as fetch from 'node-fetch'
+import {PassThrough} from 'stream'
+import * as streams from 'memory-streams'
+import * as toArray from 'stream-to-array'
+import * as util from 'util'
 
 const patterns = [
   '**/*.graphql',
@@ -46,28 +50,23 @@ export default class Bundler {
     fs.removeSync(this.buildDir)
     fs.mkdirpSync(this.buildDir)
     const builder = new TypescriptBuilder(this.config.definitionDir, this.buildDir)
-    // await this.zip()
-    const stream = fs.createWriteStream(this.zipPath)
     const zip = archiver('zip')
     zip.on('error', (err) => {
       this.out.error('Error while zipping build: ' + err)
     })
+    const partspromise = toArray(zip)
     zip.directory(this.config.definitionDir, false)
     await builder.compile(this.fileNames)
-    zip.pipe(stream)
     zip.directory(this.buildDir, false)
     zip.finalize()
-    await new Promise(r => {
-      stream.on('close', () => r())
-    })
-    // const url = await promise
-    const read = fs.createReadStream(this.zipPath)
-    const url = await this.upload(read)
+    const parts = await partspromise
+    const arr = Buffer.concat(parts.map(part => util.isBuffer(part) ? part : Buffer.from(part)))
+
+    const url = await this.upload(arr)
+
     this.generateEnvFiles()
     this.generateHandlerFiles()
     debug('bundled', Date.now() - before)
-
-    this.out.exit(0)
 
     return this.getExternalFiles(url)
   }
@@ -75,13 +74,11 @@ export default class Bundler {
   cleanBuild(): Promise<void> {
     return fs.remove(this.buildDir)
   }
-  //
-  // zip(): Promise<void> {
-  // }
 
   async upload(stream: any): Promise<string> {
-    const url = await this.client.getDeployUrl(this.projectId)
-    // const url = 'http://127.0.0.1:60050/functions/files/WHATEVER/WHATEVER'
+    // const url = await this.client.getDeployUrl(this.projectId)
+    const url = 'http://127.0.0.1:60050/functions/files/WHATEVER/WHATEVER'
+    // const url = 'http://127.0.0.1:3000/upload'
     debug('uploading to', url)
     const form = new FormData()
     form.append('file', stream)
