@@ -132,6 +132,9 @@ export class Config {
     )
     return x
   }
+  get requireCachePath() {
+    return path.join(this.cacheDir, '/.require-cache.json')
+  }
   private readPackageJson(options: RunOptions) {
     this.mock = options.mock
     this.argv = options.argv || this.argv

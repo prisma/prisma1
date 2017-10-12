@@ -151,13 +151,13 @@ Please run ${chalk.green('$ graphcool local up')} to get a local Graphcool clust
 
   deleteIfExist(serviceIds: string[]) {
     serviceIds.forEach(id => {
-      const localTarget = Object.keys(this.localRC.targets).find(
+      const localTarget = Object.keys(this.localRC.targets || {}).find(
         name => this.localRC.targets![name].split('/')[1] === id,
       )
       if (localTarget) {
         delete this.localRC[localTarget]
       }
-      const globalTarget = Object.keys(this.globalRC.targets).find(
+      const globalTarget = Object.keys(this.globalRC.targets || {}).find(
         name => this.globalRC.targets![name].split('/')[1] === id,
       )
       if (globalTarget) {

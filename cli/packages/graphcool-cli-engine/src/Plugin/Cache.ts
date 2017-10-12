@@ -80,6 +80,12 @@ export default class Cache {
       plugins: {},
       node_version: this._cache.node_version,
     }
+    try {
+      debug('removing the requireCacheFile', this.config.requireCachePath)
+      fs.removeSync(this.config.requireCachePath)
+    } catch (e) {
+      //
+    }
   }
 
   get file(): string {
