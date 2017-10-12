@@ -46,34 +46,45 @@ export default class Bundler {
     fs.removeSync(this.buildDir)
     fs.mkdirpSync(this.buildDir)
     debug('emptied .build')
-    await this.cpFiles(this.config.definitionDir, this.buildDir)
+    // await this.cpFiles(this.config.definitionDir, this.buildDir)
     debug('copied files')
-    const builder = new TypescriptBuilder(this.buildDir)
+    const builder = new TypescriptBuilder(this.config.definitionDir, this.buildDir)
+    const zip = this.zip()
     await builder.compile(this.fileNames)
+    zip.directory(this.buildDir, false)
+    zip.finalize()
     debug('compiled typescript')
     this.generateEnvFiles()
     debug('generated env files')
     this.generateHandlerFiles()
-    debug('generated handler files')
-    await this.zip()
-    debug('zipped')
-    this.out.exit(0)
-    const url = await this.upload()
+    debug('zipped2')
+
+    const url = await this.upload(zip)
+    debug('uploaded', url)
 
     return this.getExternalFiles(url)
   }
 
-  async upload(): Promise<string> {
+  cleanBuild(): Promise<void> {
+    return fs.remove(this.buildDir)
+  }
+
+  zip(): any {
+    const zip = archiver('zip')
+    zip.on('error', (err) => {
+      this.out.error('Error while zipping build: ' + err)
+    })
+    zip.directory(this.config.definitionDir, false)
+    return zip
+  }
+
+  async upload(stream: any): Promise<string> {
     const url = await this.client.getDeployUrl(this.projectId)
     const form = new FormData()
-    form.append('file', fs.createReadStream(this.zipPath))
+    form.append('file', stream)
 
     debug(`submitting file to ${url}`)
 
-    // form.submit(url, function(err, res) {
-    //   if (err) throw err;
-    //   console.log('Done');
-    // });
     await fetch(url, { method: 'PUT', body: form })
     debug('uploaded')
 
@@ -121,23 +132,6 @@ export default class Bundler {
     })
   }
 
-  zip(): Promise<void> {
-    const output = fs.createWriteStream(this.zipPath)
-    const zip = archiver('zip')
-    return new Promise((resolve, reject) => {
-      output.on('close', () => {
-        resolve()
-      })
-      zip.on('error', (err) => {
-        reject(err)
-      })
-      zip.pipe(output)
-
-      zip.directory(this.buildDir, false)
-      zip.finalize()
-    })
-  }
-
   async cpFiles(src: string, dest: string) {
     await fs.copy(src, dest, {
       filter: this.validFile
@@ -166,10 +160,10 @@ export default class Bundler {
   }
 
   get fileNames(): string[] {
-    return this.functions.map(fn => path.join(this.buildDir, fn.fn.handler.code!.src))
+    return this.functions.map(fn => path.join(this.config.definitionDir, fn.fn.handler.code!.src))
   }
 
-  getBuildFileName = (src: string) => path.join('_dist', src.replace(/\.ts$/, '.js'))
+  getBuildFileName = (src: string) => path.join(src.replace(/\.ts$/, '.js'))
   getLambdaHandlerPath = (fileName: string) => fileName.slice(0, fileName.length - 3) + '-lambda.js'
   getLambdaHandler = (fileName: string) => fileName.slice(0, fileName.length - 3) + '-lambda.handle'
   getDevHandlerPath = (fileName: string) => fileName.slice(0, fileName.length - 3) + '-dev.js'

@@ -200,14 +200,15 @@ Please run ${chalk.green('$ graphcool local up')} to get a local Graphcool clust
     cluster: string
   ): Promise<void> {
     // bundle and add externalFiles
-    // if (this.definition.definition!.modules[0].definition!.functions) {
-    //   const bundler = new Bundler(this, projectId)
-    //   const externalFiles = await bundler.bundle()
-    //   this.definition.definition!.modules[0].externalFiles = externalFiles
-    //   Object.keys(externalFiles).forEach(key => delete this.definition.definition!.modules[0].files[key])
-    // }
-
-    this.out.exit(0)
+    debug('bundling')
+    if (this.definition.definition!.modules[0].definition!.functions) {
+      const bundler = new Bundler(this, projectId)
+      const externalFiles = await bundler.bundle()
+      bundler.cleanBuild()
+      this.definition.definition!.modules[0].externalFiles = externalFiles
+      Object.keys(externalFiles).forEach(key => delete this.definition.definition!.modules[0].files[key])
+    }
+    debug('bundled')
 
     this.deploying = true
     const localNote =

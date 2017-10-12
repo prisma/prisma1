@@ -5,7 +5,9 @@ const debug = require('debug')('ts-builder')
 
 export default class TypescriptBuilder {
   buildDir: string
-  constructor(buildDir: string) {
+  definitionDir: string
+  constructor(definitionDir: string, buildDir: string) {
+    this.definitionDir = definitionDir
     this.buildDir = buildDir
   }
   //
@@ -15,7 +17,7 @@ export default class TypescriptBuilder {
 
   async compile(fileNames: string[]) {
     // const fileNames = await this.getFileNames()
-    debug('starting compile')
+    debug('starting compile', fileNames)
     const program = ts.createProgram(fileNames, this.config)
     debug('created program')
 
@@ -48,10 +50,10 @@ export default class TypescriptBuilder {
       target: ts.ScriptTarget.ES5,
       moduleResolution: ts.ModuleResolutionKind.NodeJs,
       lib: ['lib.es2017.d.ts'],
-      rootDir: this.buildDir,
+      rootDir: this.definitionDir,
       allowJs: true,
       listEmittedFiles: true,
-      outDir: path.join(this.buildDir, '_dist/'),
+      outDir: this.buildDir,
       skipLibCheck: true,
       allowSyntheticDefaultImports: true
     }

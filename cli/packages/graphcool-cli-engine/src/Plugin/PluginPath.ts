@@ -54,8 +54,8 @@ export class PluginPath {
     this.tag = options.tag
 
     this.config = this.out.config
-    process.env.CACHE_REQUIRE_PATHS_FILE = this.config.requireCachePath
-    require('cache-require-paths')
+    // process.env.CACHE_REQUIRE_PATHS_FILE = this.config.requireCachePath
+    // require('cache-require-paths')
   }
 
   async convertToCached(): Promise<CachedPlugin> {
