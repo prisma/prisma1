@@ -41,26 +41,33 @@ export default class Bundler {
       return {}
     }
 
+    const before = Date.now()
     debug('bundling')
-    // clean build dir & create it
     fs.removeSync(this.buildDir)
     fs.mkdirpSync(this.buildDir)
-    debug('emptied .build')
-    // await this.cpFiles(this.config.definitionDir, this.buildDir)
-    debug('copied files')
     const builder = new TypescriptBuilder(this.config.definitionDir, this.buildDir)
-    const zip = this.zip()
+    // await this.zip()
+    const stream = fs.createWriteStream(this.zipPath)
+    const zip = archiver('zip')
+    zip.on('error', (err) => {
+      this.out.error('Error while zipping build: ' + err)
+    })
+    zip.directory(this.config.definitionDir, false)
     await builder.compile(this.fileNames)
+    zip.pipe(stream)
     zip.directory(this.buildDir, false)
     zip.finalize()
-    debug('compiled typescript')
+    await new Promise(r => {
+      stream.on('close', () => r())
+    })
+    // const url = await promise
+    const read = fs.createReadStream(this.zipPath)
+    const url = await this.upload(read)
     this.generateEnvFiles()
-    debug('generated env files')
     this.generateHandlerFiles()
-    debug('zipped2')
+    debug('bundled', Date.now() - before)
 
-    const url = await this.upload(zip)
-    debug('uploaded', url)
+    this.out.exit(0)
 
     return this.getExternalFiles(url)
   }
@@ -68,26 +75,17 @@ export default class Bundler {
   cleanBuild(): Promise<void> {
     return fs.remove(this.buildDir)
   }
-
-  zip(): any {
-    const zip = archiver('zip')
-    zip.on('error', (err) => {
-      this.out.error('Error while zipping build: ' + err)
-    })
-    zip.directory(this.config.definitionDir, false)
-    return zip
-  }
+  //
+  // zip(): Promise<void> {
+  // }
 
   async upload(stream: any): Promise<string> {
     const url = await this.client.getDeployUrl(this.projectId)
+    // const url = 'http://127.0.0.1:60050/functions/files/WHATEVER/WHATEVER'
+    debug('uploading to', url)
     const form = new FormData()
     form.append('file', stream)
-
-    debug(`submitting file to ${url}`)
-
     await fetch(url, { method: 'PUT', body: form })
-    debug('uploaded')
-
     return url
   }
 

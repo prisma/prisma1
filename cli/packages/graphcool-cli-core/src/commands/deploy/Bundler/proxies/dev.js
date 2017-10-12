@@ -41,10 +41,10 @@ input.on('data', function(line){
 })
 
 // prevent process from exiting
-function infinite() {
-  setTimeout(infinite, 100000)
-}
-infinite()
+// function infinite() {
+//   setTimeout(infinite, 100000)
+// }
+// infinite()
 
 function cb(error, value) {
   const result = {
