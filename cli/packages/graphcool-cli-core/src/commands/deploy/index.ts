@@ -207,7 +207,7 @@ Please run ${chalk.green('$ graphcool local up')} to get a local Graphcool clust
     //   Object.keys(externalFiles).forEach(key => delete this.definition.definition!.modules[0].files[key])
     // }
 
-    // this.out.exit(0)
+    this.out.exit(0)
 
     this.deploying = true
     const localNote =

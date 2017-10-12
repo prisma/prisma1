@@ -141,7 +141,9 @@ export class PluginPath {
   async require(): Promise<ParsedPlugin> {
     let required
     try {
+      debug('requiring', this.path)
       required = require(this.path)
+      debug('required')
     } catch (err) {
       if (await this.repair(err)) {
         return this.require()

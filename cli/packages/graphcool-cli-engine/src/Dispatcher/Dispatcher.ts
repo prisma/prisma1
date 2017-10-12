@@ -63,10 +63,15 @@ export class CLICommandManager extends CommandManagerBase {
 //
 class PluginCommandManager extends CommandManagerBase {
   async findCommand(id) {
+    debug('findCommand')
     let out = new Output(this.config)
     let plugins = new Plugins(out)
+    debug('loading')
     await plugins.load()
-    return plugins.findCommand(id || this.config.defaultCommand || 'help')
+    debug('loaded')
+    const foundCommand = plugins.findCommand(id || this.config.defaultCommand || 'help')
+    debug('found')
+    return foundCommand
   }
   async findTopic(id: string) {
     let out = new Output(this.config)
