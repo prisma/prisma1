@@ -4,7 +4,7 @@
 
 This directory contains an example implementation for an **API gateway on top of a Graphcool CRUD API**. The idea is to customize the API operations that are exposed to your clients by _hiding_ the original CRUD API and defining a custom schema on top of it. 
 
-The API gateway uses a dedicated syntax that allows to easily implement a mapping from the custom schema to the underlying CRUD API.
+The API gateway uses dedicated tooling that allows to easily implement a mapping from the custom schema to the underlying CRUD API.
 
 Try out the read-only [demo](https://graphqlbin.com/lx9I1).
 
@@ -40,13 +40,15 @@ The service you just deployed provides a CRUD API for the `User` and `Post` mode
 
 The goal of the proxy server is now to create a _custom_ GraphQL API that only exposes variants of the underlying CRUD API.
 
-### 4. Configure and start the API proxy server
+### 4. Configure and start the API gateway server
 
 #### 4.1. Set the endpoint for the GraphQL CRUD API
 
-You first need to connect the proxy to the CRUD API. Pase the the HTTP endpoint for the `Simple API` from the previous step into [./proxy/index.ts](./proxy/index.ts) as the value for `endpoint`, replacing the current placeholder `__SIMPLE_API_ENDPOINT__`:
+You first need to connect the gateway to the CRUD API. 
 
-```
+Paste the the HTTP endpoint for the `Simple API` from the previous step into [./proxy/index.ts](./proxy/index.ts) as the value for `endpoint`, replacing the current placeholder `__SIMPLE_API_ENDPOINT__`:
+
+```js
 const endpoint = '__SIMPLE_API_ENDPOINT__' // looks like: https://api.graph.cool/simple/v1/__SERVICE_ID__
 ```
 
@@ -68,4 +70,132 @@ yarn start
 The API that's exposed by the proxy is now available inside a GraphQL Playground under the following URL:
 
 [`http://localhost:3000/playground`](http://localhost:3000/playground)
+
+
+## Usage
+
+### 1. Create dummy data using the CRUD API
+
+Before you start running queries against the API gateway, you should create somme dummy data in your service's database. You'll do this with a GraphQL Playground that's running against the CRUD API (not the API gateway).
+
+Navigate back into the [`service`](./service) directory and open a Playground:
+
+```sh
+cd ../server
+graphcool playground
+```
+
+In the Playground, send the following mutation to create a new `User` node along with three `Post` nodes:
+
+```graphql
+mutation {
+  createUser(
+    name: "John", 
+    alias: "john", 
+    posts: [
+      { title: "GraphQL is awesome" }, 
+      { title: "Declarative data fetching with GraphQL" },
+      { title: "GraphQL& Serverless" }
+    ]
+  ) {
+    id
+  }
+}
+```
+
+> **Note**: It's important the `alias` of the `User` is set to `john`. Otherwise the API gateway won't return any data since the alias in this example is [hardcoded](./proxy/index.ts#L54).
+
+### 2. Send queries to the API gateway
+
+Now, that there's some initial data in the database, you can use the API gateway to fetch the data through the exposed API. Note that these queries have to be run in the Playground that's running on your localhost: [`http://localhost:3000/playground`](http://localhost:3000/playground).
+
+Send the following query to fetch the posts that you just created:
+
+```graphql
+{
+  viewer {
+    me {
+      id
+      name
+      posts(limit: 2) {
+        title
+      }
+    }
+  }
+}
+```
+
+
+## What's in this example?
+
+The API gateway is a thin layer on top of the Graphcool service's CRUD API. For this example, the CRUD API is based on the following data model defined in the service's [types.graphql](./service/types.graphql):
+
+```graphql
+type User implements Node {
+  id: ID! @isUnique
+  name: String!
+  alias: String! @isUnique
+  posts: [Post!]! @relation(name: "UserPosts")
+}
+
+type Post implements Node {
+  id: ID! @isUnique
+  title: String!
+  author: User! @relation(name: "UserPosts")
+}
+```
+
+Everyone who has access to the HTTP endpoint of the CRUD API can _see_ that it exposes the following operations:
+
+```graphql
+type Query {
+  # Read operations for `Post`
+  Post(id: ID): Post
+  allPosts(filter: PostFilter, orderBy: PostOrderBy, skip: Int, after: String, before: String, first: Int, last: Int): [Post!]!
+
+  # Read operations for `User`
+  User(alias: String, id: ID): User
+  allUsers(filter: UserFilter, orderBy: UserOrderBy, skip: Int, after: String, before: String, first: Int, last: Int): [User!]!
+}
+
+type Mutation {
+  # Create, update, delete operations for `Post`
+  createPost(title: String!, authorId: ID, author: PostauthorUser): Post
+  updatePost(id: ID!, title: String, authorId: ID, author: PostauthorUser): Post
+  deletePost(id: ID!): Post
+
+  # Create, update, delete operations for `User`
+  createUser(alias: String!, name: String!, postsIds: [ID!], posts: [UserpostsPost!]): User
+  updateUser(alias: String, id: ID!, name: String, postsIds: [ID!], posts: [UserpostsPost!]): User
+  deleteUser(id: ID!): User
+
+  # Set relation between `Post` and `User` node
+  addToUserPosts(postsPostId: ID!, authorUserId: ID!): AddToUserPostsPayload
+}
+```
+
+The API gateway now creates another API that will be exposed to the clients. The server that exposes this API is executing its queries against the underlying CRUD API. The magic enabling this functionality is implemented in the [`run`](./proxy/index.ts#L11) function in [index.ts](./proxy/index.ts).
+
+Here's the schema that defines the new API:
+
+```graphql
+type Query {
+  viewer: Viewer!
+}
+
+type Viewer {
+  me: User
+  topPosts(limit: Int): [Post!]!
+}
+```
+
+There are four major steps that are being performed to map the CRUD API to the new schema:
+
+1. Create local version of the CRUD API using [`makeRemoteExecutableSchema`](http://dev.apollodata.com/tools/graphql-tools/remote-schemas.html#makeRemoteExecutableSchema). [See the code](./proxy/index.ts#L13)
+2. Define schema for the new API (the one exposed by the API gateway). [See the code](./proxy/index.ts#L121)
+3. Merge remote schema with new schema using [`mergeSchemas`](http://dev.apollodata.com/tools/graphql-tools/schema-stitching.html#mergeSchemas). [See the code](./proxy/index.ts#L47)
+4. Limit exposed operations from merged schemas (hiding all root fields except `viewer`) using [`transformSchema`](https://github.com/graphcool/graphql-transform-schema). [See the code](./proxy/index.ts#L67).
+
+
+
 
