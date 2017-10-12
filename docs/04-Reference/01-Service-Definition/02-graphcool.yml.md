@@ -33,7 +33,7 @@ functions:
       code:
         src: ./src/authenticate.js
         # Define environment variables for function
-        environment: 
+        environment:
           SERVICE_TOKEN: aequeitahqu0iu8fae5phoh1joquiegohc9rae3ejahreeciecooz7yoowuwaph7
           STAGE: prod
     type: resolver
@@ -43,7 +43,7 @@ functions:
     handler:
       # Specify a managed function as a handler; since no environment variables
       # are specified, we don't need `src`
-      code: ./src/validateEmail.js        
+      code: ./src/validateEmail.js
     type: operationBefore
     operation: Customer.create
 
@@ -66,13 +66,13 @@ permissions:
 - operation: Message.read
 
 # Only authenticated users can create messages
-- operation: Message.create 
+- operation: Message.create
   authenticated: true
 
 # To update a message, users need to be authenticated and
 # the permission query in `./permissions/updateMessage.graphql`
 # has to return `true`
-- operation: Message.update 
+- operation: Message.update
   authenticated: true
   query: ./permissions/updateMessage.graphql
 
@@ -86,6 +86,11 @@ permissions:
 # Everyone can perform all CRUD operations for customers
 - operation: Customer.*
 
+# You can edit the fields a permission is applied to
+- operation: Customer.Read
+- fields:
+  - firstName
+  - lastName
 
 # Root tokens
 rootTokens:
@@ -112,7 +117,7 @@ This service definition expects the following file structure:
 
 ### `types`
 
-The `types` root property accepts a **single string** or a **list of strings**. Each string references a `.graphql`-file that contains GraphQL type definitions written in the [SDL](https://medium.com/@graphcool/graphql-sdl-schema-definition-language-6755bcb9ce51). 
+The `types` root property accepts a **single string** or a **list of strings**. Each string references a `.graphql`-file that contains GraphQL type definitions written in the [SDL](https://medium.com/@graphcool/graphql-sdl-schema-definition-language-6755bcb9ce51).
 
 There are two kinds of types that can be referenced:
 
@@ -131,7 +136,7 @@ types: ./types.graphql
 **Referring to multiple type definition files**
 
 ```yml
-types: 
+types:
   - ./types.graphql
   - ./customResolver.graphql
 ```
@@ -189,11 +194,11 @@ A `handler` specifies the details of _how_ to invoke the function. It can either
 **Managed function structure:**
 
 ```yml
-code: 
+code:
   # source file that contains the implementation of the function
   src: <file>
   # specify environment variables the function has access to
-  environment: 
+  environment:
     <variable1>: <value1>
     <variable2>: <value2>
 ```
@@ -227,11 +232,11 @@ A `handler` for a managed function has the following properties:
 **Webhook structure:**
 
 ```yml
-webhook: 
+webhook:
   # HTTP endpoint that represents the webhook
   url: <url>
   # HTTP headers to send along when invoking the webhook
-  headers: 
+  headers:
     <header1>: <value1>
     <header2>: <value2>
 ```
@@ -254,7 +259,7 @@ A `handler` for a managed function has the following properties:
   - **Possible values**: Any string that's a valid HTTP URL and references a webhook.
 
 
-- `headers` (**optional**) 
+- `headers` (**optional**)
   - **Type**: `[string:string]`
   - **Description**: Specifies a number of HTTP headers.
   - **Possible values**: Any combination of strings that does not contain the empty string.
@@ -270,7 +275,7 @@ functions:
       code:
         src: ./src/authenticate.js
         # Define environment variables for function
-        environment: 
+        environment:
           SERVICE_TOKEN: aequeitahqu0iu8fae5phoh1joquiegohc9rae3ejahreeciecooz7yoowuwaph7
           STAGE: prod
     type: resolver
@@ -280,7 +285,7 @@ functions:
     handler:
       # Specify a managed function as a handler; since no environment variables
       # are specified, we don't need `src`
-      code: ./src/validateEmail.js        
+      code: ./src/validateEmail.js
     type: operationBefore
     operation: Customer.create
 
@@ -303,7 +308,7 @@ The `permissions` root property accepts a **list of [permissions](#definition-pe
 
 #### Definition: `permission`
 
-**All permissions** have the following three properties:
+**All permissions** have the following four properties:
 
 - `operation` (**required**)
   - **Type**: `string`
@@ -319,8 +324,13 @@ The `permissions` root property accepts a **list of [permissions](#definition-pe
 
 - `query` (**optional**)
   - **Type**: `string`
-  - **Description**: References a file that contains a [permission query](!alias-iox3aqu0ee). 
+  - **Description**: References a file that contains a [permission query](!alias-iox3aqu0ee).
   - **Possible values**: Any string that references a `.graphql`-file containing a permission query.
+
+- `fields` (**optional**)
+  - **Type**: `[string]`
+  - **Description**: References a list of fields the permission is applied to. Only applicable for type permissions.
+  - **Possible values**: Any string that references a field of the type the permission belongs to.
 
 #### Examples
 
@@ -330,13 +340,13 @@ permissions:
 - operation: Message.read
 
 # Only authenticated users can create messages
-- operation: Message.create 
+- operation: Message.create
   authenticated: true
 
 # To update a message, users need to be authenticated and
 # the permission query in `./permissions/updateMessage.graphql`
 # has to return `true`
-- operation: Message.update 
+- operation: Message.update
   authenticated: true
   query: ./permissions/updateMessage.graphql
 
@@ -349,16 +359,22 @@ permissions:
 
 # Everyone can perform all CRUD operations for customers
 - operation: Customer.*
+
+# You can edit the fields a permission is applied to
+- operation: Customer.Read
+- fields:
+  - firstName
+  - lastName
 ```
 
 ### `rootTokens`
 
-The `rootTokens` property accepts a **list of strings**. Each string is the name of a [root token](!alias-eip7ahqu5o#root-tokens) which will be created whenever the service deployed. 
+The `rootTokens` property accepts a **list of strings**. Each string is the name of a [root token](!alias-eip7ahqu5o#root-tokens) which will be created whenever the service deployed.
 
 #### Examples
 
 ```yml
-rootTokens: 
+rootTokens:
   - rootToken1
   - rootToken2
 ```
@@ -369,8 +385,8 @@ rootTokens:
 
 The YAML configuration file has the following _root properties_:
 
-| Root Property | Type | Description | 
-| --------- | ------------------ | --------------- | 
+| Root Property | Type | Description |
+| --------- | ------------------ | --------------- |
 | `types`| `string`<br>`[string]` | Type defintions ([SDL]()) for database models, relations, enums and other types. |
 | `functions` | `[string:function]` | All serverless functions that belong to the current service. The key of each element in the dictionary is a unique name for the function, the value specifies details about the function to be invoked. See the `function` type below for more info on the structure. |
 | `permissions` | `[permission]` | All permissions rules that belong to the current service. See the `permission` type below for more info on the structure. |
@@ -381,9 +397,9 @@ This is what the additional YAML types look like that are used in the file:
 #### Type: `function`
 
 | Property  | Type | Possible Values | Required (default value) | Description|
-| --------- | ------------------ | --------------- | --------- | ------------------ | --------------- | --------------- | 
+| --------- | ------------------ | --------------- | --------- | ------------------ | --------------- | --------------- |
 | `isEnabled` | `boolean` | `true`<br>`false` | No (`true`) | The function will only be executed if set to true |
-| `handler` | `string`<br>`[string:string]`<br>`[string:webhook]` | any<br>`["webhook":any]`<br>`["webhook":any]` | Yes | Defines how this function should be invoked (i.e. where it lives). Either as a webhook or a local Graphcool function. | 
+| `handler` | `string`<br>`[string:string]`<br>`[string:webhook]` | any<br>`["webhook":any]`<br>`["webhook":any]` | Yes | Defines how this function should be invoked (i.e. where it lives). Either as a webhook or a local Graphcool function. |
 | `type` | `string` | `subscription`<br>`resolver`<br>`operationBefore`<br>`operationAfter` | Yes | Defines what kind of serverless function this is. |
 | `operation` | `string` | `<Model>.<operation>`<br>`<Relation>.<operation>` | Only if `type` is `operationBefore` or `operationAfter` | If the function is set up in the context of an operation, this specifies the concrete operation. |
 | `query` | `string` | `<Model>.<operation>`<br>`<Relation>.<operation>` | Only if `type` is `subscription` | If the function is set up as a subscription, this specifies the subscription query (which determines the input type of the function). |
@@ -393,17 +409,17 @@ This is what the additional YAML types look like that are used in the file:
 #### Type: `permission`
 
 | Property  | Type | Possible Values | Required (default value) | Description|
-| --------- | ------------------ | --------------- | --------- | ------------------ | --------------- | --------------- | 
+| --------- | ------------------ | --------------- | --------- | ------------------ | --------------- | --------------- |
 | `operation` | `string` | `<Model>.<operation>`<br>`<Relation>.<operation>` | Yes | Specifies the operation for which this permission rule should apply. |
 | `authenticated` | `boolean` | `true`<br>`false` | No (`false)` | Specifies any HTTP headers for the request that invokes the function. | Defines whether a request needs to be authenticated to perform the corresponding operation (if true, the `id` of the authenticated node is available as an argument inside the permission query. |
 | `query` | `string` | any | No | Specifies the permission query that belongs to this permission rule. |
 | `fields` | `[string]` | any | all fields of the model type | Specifies to which fields this permission rule should apply to.
 
- 
+
 #### Type: `webhook`
 
 | Property  | Type | Possible Values | Required (default value) | Description|
-| --------- | ------------------ | --------------- | --------- | ------------------ | --------------- | --------------- | 
+| --------- | ------------------ | --------------- | --------- | ------------------ | --------------- | --------------- |
 | `url` | `string` | any | Yes | Specifies the URL where the function can be invoked. |
 | `headers` | `[string:string]` | any | No | Specifies any HTTP headers for the request that invokes the function. |
 
@@ -506,10 +522,8 @@ graphcool deploy --stage prod
 To reference the value of the `stage` option inside `graphcool.yml`, you can now specify the following:
 
 ```
-webhook: 
+webhook:
   url: http://myapi.${opt:stage}.com/example
 ```
 
 When the command is invoked, the value of `webhook.url` will be deployed as `http://myapi.prod.com/example`.
-
-
