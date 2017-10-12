@@ -1067,7 +1067,7 @@ end-of-stream@^1.0.0:
   dependencies:
     once "^1.4.0"
 
-errno@^0.1.4:
+errno@^0.1.3, errno@^0.1.4:
   version "0.1.4"
   resolved "https://registry.yarnpkg.com/errno/-/errno-0.1.4.tgz#b896e23a9e5e8ba33871fc996abd3635fc9a1c7d"
   dependencies:
@@ -1523,6 +1523,39 @@ graceful-fs@~3.0.2:
   resolved "https://registry.yarnpkg.com/graceful-fs/-/graceful-fs-3.0.11.tgz#7613c778a1afea62f25c630a086d7f3acbbdd818"
   dependencies:
     natives "^1.1.0"
+
+graphcool-cli-core@1.3.94:
+  version "1.3.94"
+  resolved "https://registry.yarnpkg.com/graphcool-cli-core/-/graphcool-cli-core-1.3.94.tgz#2845cb468f3438fa42c9bcc449f5ef65d9795853"
+  dependencies:
+    archiver "^2.0.3"
+    callsites "^2.0.0"
+    chalk "^2.1.0"
+    chokidar "^1.7.0"
+    download-github-repo "^0.1.3"
+    figures "^2.0.0"
+    form-data "^2.3.1"
+    globby "^6.1.0"
+    graphcool-json-schema "^0.3.9"
+    inquirer "^3.3.0"
+    js-yaml "^3.9.1"
+    jwt-decode "^2.2.0"
+    lodash.differenceby "^4.8.0"
+    memfs "^2.5.6"
+    memory-fs "^0.4.1"
+    memory-streams "^0.1.2"
+    multimatch "^2.1.0"
+    node-fetch "^1.7.3"
+    pause "^0.1.0"
+    portfinder "^1.0.13"
+    request "^2.83.0"
+    sillyname "^0.1.0"
+    source-map-support "^0.4.18"
+    stream-to-array "^2.3.0"
+    table "^4.0.1"
+    through2 "^2.0.3"
+    typescript "^2.5.3"
+    validator "^8.2.0"
 
 graphcool-inquirer@beta:
   version "1.0.1"
@@ -2562,12 +2595,19 @@ mem@^1.1.0:
   dependencies:
     mimic-fn "^1.0.0"
 
-memfs@^2.5.3:
+memfs@^2.5.3, memfs@^2.5.6:
   version "2.5.6"
   resolved "https://registry.yarnpkg.com/memfs/-/memfs-2.5.6.tgz#f87de0868d6ff7f99370095eb73e6d78f94723d5"
   dependencies:
     fast-extend "0.0.2"
     fs-monkey "^0.2.1"
+
+memory-fs@^0.4.1:
+  version "0.4.1"
+  resolved "https://registry.yarnpkg.com/memory-fs/-/memory-fs-0.4.1.tgz#3a9a20b8462523e447cfbc7e8bb80ed667bfc552"
+  dependencies:
+    errno "^0.1.3"
+    readable-stream "^2.0.1"
 
 memory-streams@^0.1.2:
   version "0.1.2"
@@ -3138,7 +3178,7 @@ read-pkg@^2.0.0:
     normalize-package-data "^2.3.2"
     path-type "^2.0.0"
 
-readable-stream@^2.0.0, readable-stream@^2.0.2, readable-stream@^2.0.5, readable-stream@^2.0.6, readable-stream@^2.1.4, readable-stream@^2.1.5:
+readable-stream@^2.0.0, readable-stream@^2.0.1, readable-stream@^2.0.2, readable-stream@^2.0.5, readable-stream@^2.0.6, readable-stream@^2.1.4, readable-stream@^2.1.5:
   version "2.3.3"
   resolved "https://registry.yarnpkg.com/readable-stream/-/readable-stream-2.3.3.tgz#368f2512d79f9d46fdfc71349ae7878bbc1eb95c"
   dependencies:
@@ -3233,7 +3273,7 @@ request@2.81.0:
     tunnel-agent "^0.6.0"
     uuid "^3.0.0"
 
-request@^2.34.0, request@^2.79.0:
+request@^2.34.0, request@^2.79.0, request@^2.83.0:
   version "2.83.0"
   resolved "https://registry.yarnpkg.com/request/-/request-2.83.0.tgz#ca0b65da02ed62935887808e6f510381034e3356"
   dependencies:

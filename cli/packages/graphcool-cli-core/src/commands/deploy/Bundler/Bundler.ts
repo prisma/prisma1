@@ -10,9 +10,9 @@ import * as FormData from 'form-data'
 const debug = require('debug')('bundler')
 import * as fetch from 'node-fetch'
 import {PassThrough} from 'stream'
-import * as streams from 'memory-streams'
-import * as toArray from 'stream-to-array'
-import * as util from 'util'
+import * as request from 'request'
+import * as os from 'os'
+import * as globby from 'globby'
 
 const patterns = [
   '**/*.graphql',
@@ -38,6 +38,7 @@ export default class Bundler {
     this.projectId = projectId
     this.buildDir = path.join(this.config.definitionDir, '.build/')
     this.zipPath = path.join(this.config.definitionDir, 'build.zip')
+    debug(this.zipPath)
   }
 
   async bundle(): Promise<ExternalFiles> {
@@ -51,21 +52,25 @@ export default class Bundler {
     fs.mkdirpSync(this.buildDir)
     const builder = new TypescriptBuilder(this.config.definitionDir, this.buildDir)
     const zip = archiver('zip')
+    const write = fs.createWriteStream(this.zipPath)
+    zip.pipe(write)
     zip.on('error', (err) => {
       this.out.error('Error while zipping build: ' + err)
     })
-    const partspromise = toArray(zip)
-    zip.directory(this.config.definitionDir, false)
+    const files = await globby(['**/*', '!.build', '!*.zip', '!build'])
+    files.forEach(file => {
+      zip.file(file, {name: file})
+    })
     await builder.compile(this.fileNames)
-    zip.directory(this.buildDir, false)
-    zip.finalize()
-    const parts = await partspromise
-    const arr = Buffer.concat(parts.map(part => util.isBuffer(part) ? part : Buffer.from(part)))
-
-    const url = await this.upload(arr)
-
     this.generateEnvFiles()
     this.generateHandlerFiles()
+    zip.directory(this.buildDir, false)
+    zip.finalize()
+
+    await new Promise(r => write.on('close', () => r()))
+
+    const url = await this.upload()
+
     debug('bundled', Date.now() - before)
 
     return this.getExternalFiles(url)
@@ -75,14 +80,34 @@ export default class Bundler {
     return fs.remove(this.buildDir)
   }
 
-  async upload(stream: any): Promise<string> {
-    // const url = await this.client.getDeployUrl(this.projectId)
-    const url = 'http://127.0.0.1:60050/functions/files/WHATEVER/WHATEVER'
+  async upload(): Promise<string> {
+    const stream = fs.createReadStream(this.zipPath)
+    const stats = fs.statSync(this.zipPath)
+    const url = await this.client.getDeployUrl(this.projectId)
+    // const url = 'http://127.0.0.1:60050/functions/files/WHATEVER/WHATEVER'
     // const url = 'http://127.0.0.1:3000/upload'
+    // const url = 'https://requestb.in/rmmp7xrm'
     debug('uploading to', url)
-    const form = new FormData()
-    form.append('file', stream)
-    await fetch(url, { method: 'PUT', body: form })
+    let body = stream
+    if (url.includes('127.0.0.1') || url.includes('localhost')) {
+      const form = new FormData()
+      form.append('file', stream)
+      body = form
+    }
+    const res = await fetch(url, { method: 'PUT', body, headers: {
+      'Content-Length': stats.size
+    } })
+    const text = await res.text()
+    debug(text)
+    // await new Promise((resolve, reject) => {
+    //   stream.pipe(
+    //     request.put(url, (err, res) => {
+    //       console.log(err, res.body)
+    //       resolve(res)
+    //     })
+    //   )
+    // })
+
     return url
   }
 
