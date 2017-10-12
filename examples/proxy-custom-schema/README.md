@@ -2,7 +2,11 @@
 
 ## Overview
 
-[read-only Demo](https://graphqlbin.com/lx9I1)
+This directory contains an example implementation for an **API gateway on top of a Graphcool CRUD API**. The idea is to customize the API operations that are exposed to your clients by _hiding_ the original CRUD API and defining a custom schema on top of it. 
+
+The API gateway uses a dedicated syntax that allows to easily implement a mapping from the custom schema to the underlying CRUD API.
+
+Try out the read-only [demo](https://graphqlbin.com/lx9I1).
 
 ## Get started
 
