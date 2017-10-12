@@ -9,7 +9,7 @@ import fetch from 'node-fetch'
 import { express as playground } from 'graphql-playground/middleware'
 
 async function run() {
-  const endpoint = 'https://api.graph.cool/simple/v1/cj8n2xxau0p7o0110g61k5ix4'
+  const endpoint = '__SIMPLE_API_ENDPOINT__' // looks like: https://api.graph.cool/simple/v1/__SERVICE_ID__
   const link = new HttpLink({ uri: endpoint, fetch })
   const graphcoolSchema = makeRemoteExecutableSchema({
     schema: await introspectSchema(link),
