@@ -19,6 +19,7 @@ import { getFastestRegion } from './ping'
 import { ProjectDefinitionClass } from '../ProjectDefinition/ProjectDefinition'
 import {Environment} from '../Environment'
 import { Output } from "../index";
+import { Auth } from '../Auth'
 
 const debug = require('debug')('client')
 
@@ -37,6 +38,7 @@ export class Client {
   config: Config
   env: Environment
   out: Output
+  auth: Auth
   public mock: (input: { request: any; response: any }) => void
 
   private mocks: { [request: string]: string } = {}
@@ -48,6 +50,10 @@ export class Client {
     this.out = out
   }
 
+  setAuth(auth: Auth) {
+    this.auth = auth
+  }
+
   // always create a new client which points to the latest config for each request
   get client(): GraphQLClient {
     debug('choosing clusterEndpoint', this.env.clusterEndpoint)
@@ -57,11 +63,21 @@ export class Client {
       },
     })
     return {
-      request: (query, variables) => {
+      request: async (query, variables) => {
         debug('Sending query')
         debug(query)
         debug(variables)
-        return localClient.request(query, variables)
+        try {
+          return await localClient.request(query, variables)
+        } catch (e) {
+          if (e.message.startsWith('No valid session')) {
+            await this.auth.ensureAuth(true)
+            // try again with new token
+            return await this.client.request(query, variables)
+          } else {
+            throw e
+          }
+        }
       }
     } as any
   }
