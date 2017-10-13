@@ -1,6 +1,21 @@
 /* tslint:disable */
 import { ProjectDefinition } from 'graphcool-cli-engine'
 
+
+export const defaultPjson = {
+  "name": "",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
+
+
 export const defaultDefinition: ProjectDefinition = {
   modules: [
     {
@@ -46,7 +61,8 @@ permissions:
 # Your root tokens used for functions to get full access to the API
 # Read more here:
 # https://docs-next.graph.cool/reference/auth/authentication/authentication-tokens-eip7ahqu5o
-rootTokens: []
+rootTokens:
+- mytoken
 
 `,
       files: {

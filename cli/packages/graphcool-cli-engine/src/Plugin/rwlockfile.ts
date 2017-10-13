@@ -1,3 +1,4 @@
+/* tslint:disable */
 const fs = require('fs-extra')
 const path = require('path')
 const debug = require('debug')('rwlockfile')

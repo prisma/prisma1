@@ -11,7 +11,7 @@ import { express as playground } from 'graphql-playground/middleware'
 async function run() {
 
   // Step 1: Create local version of the CRUD API
-  const endpoint = 'https://api.graph.cool/simple/v1/cj8o8bmdo000y013326eme2q6'
+  const endpoint = '__SIMPLE_API_ENDPOINT__'  // looks like: https://api.graph.cool/simple/v1/__SERVICE_ID__
   const link = new HttpLink({ uri: endpoint, fetch })
   const graphcoolSchema = makeRemoteExecutableSchema({
     schema: await introspectSchema(link),

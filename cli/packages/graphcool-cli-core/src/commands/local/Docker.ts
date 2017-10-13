@@ -110,7 +110,7 @@ export default class Docker {
     return data
       .toString()
       .trim()
-      .split('\n')
+      .split(/\n/)
       .map(l => `${chalk.blue('docker')}   ${l}`)
       .join('\n')
   }
@@ -124,7 +124,7 @@ export default class Docker {
     const regex = /^\s*export\s*([a-zA-Z0-9\.\-_]+)\s*=(.*)?\s*/
     return src
       .toString()
-      .split('\n')
+      .split(/\r\n|\r|\n/g)
       .reduce((acc, line) => {
         if (line.trim().startsWith('#')) {
           return acc
