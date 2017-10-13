@@ -1,6 +1,6 @@
 import { Command, flags, Flags, ProjectDefinition } from 'graphcool-cli-engine'
 import * as chalk from 'chalk'
-import { defaultDefinition, examples } from '../../examples'
+import { defaultDefinition, defaultPjson, examples } from '../../examples'
 import * as fs from 'fs-extra'
 import * as path from 'path'
 import * as inquirer from 'inquirer'
@@ -48,6 +48,11 @@ export default class Init extends Command {
       this.config.localRCPath = path.join(newDefinitionPath, '.graphcoolrc')
     }
 
+    const pjson = {
+      ...defaultPjson,
+      name: path.basename(this.config.definitionDir)
+    }
+
     const files = fs.readdirSync(this.config.definitionDir)
     // the .graphcoolrc must be allowed for the docker version to be functioning
     // CONTINUE: special env handling for dockaa. can't just override the host/dinges
@@ -93,7 +98,8 @@ Read more here: https://github.com/graphcool/graphcool/issues/706
     this.out.action.stop()
 
     this.out.log(`${chalk.blue.bold('\nWritten files' + ':')}`)
-    const createdFiles = flatten(this.definition.definition!.modules.map(module => Object.keys(module.files))).concat('graphcool.yml')
+    fs.writeFileSync(path.join(this.config.definitionDir, 'package.json'), JSON.stringify(pjson, null, 2))
+    const createdFiles = flatten(this.definition.definition!.modules.map(module => Object.keys(module.files))).concat(['graphcool.yml', 'package.json'])
     this.out.filesTree(createdFiles)
 
     this.out.log(`\

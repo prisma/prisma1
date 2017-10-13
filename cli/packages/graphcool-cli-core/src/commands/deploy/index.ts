@@ -205,6 +205,16 @@ Please run ${chalk.green('$ graphcool local up')} to get a local Graphcool clust
     }
   }
 
+  private prettyTime(time: number): string {
+    let output = ''
+    if (time > 1000) {
+      output = (Math.round(time / 100) / 10).toFixed(1) + 's'
+    } else {
+      output = time + 'ms'
+    }
+    return chalk.blue(output)
+  }
+
   private async deploy(
     projectIsNew: boolean,
     targetName: string,
@@ -216,6 +226,8 @@ Please run ${chalk.green('$ graphcool local up')} to get a local Graphcool clust
   ): Promise<void> {
     // bundle and add externalFiles
     debug('bundling')
+    let before = Date.now()
+    this.out.action.start('Bundling functions')
     if (this.definition.definition!.modules[0].definition!.functions) {
       const bundler = new Bundler(this, projectId)
       const externalFiles = await bundler.bundle()
@@ -223,6 +235,7 @@ Please run ${chalk.green('$ graphcool local up')} to get a local Graphcool clust
       this.definition.definition!.modules[0].externalFiles = externalFiles
       Object.keys(externalFiles).forEach(key => delete this.definition.definition!.modules[0].files[key])
     }
+    this.out.action.stop(this.prettyTime(Date.now() - before))
     debug('bundled')
 
     this.deploying = true
@@ -230,6 +243,7 @@ Please run ${chalk.green('$ graphcool local up')} to get a local Graphcool clust
         isLocal
         ? ' locally'
         : ''
+    before = Date.now()
     this.out.action.start(
       projectIsNew
         ? `Deploying${localNote}`
@@ -244,7 +258,7 @@ Please run ${chalk.green('$ graphcool local up')} to get a local Graphcool clust
       false,
       this.definition.definition!,
     )
-    this.out.action.stop()
+    this.out.action.stop(this.prettyTime(Date.now() - before))
 
     // no action required
     if (

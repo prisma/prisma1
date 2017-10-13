@@ -25,7 +25,7 @@
     "typescript": "^2.5.3"
   },
   "engines": {
-    "node": ">=8.3.0"
+    "node": ">=6.0.0"
   },
   "scripts": {
     "build": "rimraf dist && tsc -d && cp -r src/commands/local/docker dist/commands/local/docker && cp -r src/commands/deploy/Bundler/proxies dist/commands/deploy/Bundler/proxies",
@@ -76,6 +76,7 @@
     "figures": "^2.0.0",
     "globby": "^6.1.0",
     "graphcool-json-schema": "^0.3.12",
+    "hasbin": "^1.2.3",
     "inquirer": "^3.3.0",
     "js-yaml": "^3.9.1",
     "jwt-decode": "^2.2.0",

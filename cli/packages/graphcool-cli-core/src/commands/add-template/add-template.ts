@@ -5,10 +5,14 @@ import * as path from 'path'
 import * as os from 'os'
 import * as fs from 'fs-extra'
 import * as yaml from 'js-yaml'
+import * as childProcess from 'child_process'
 /* tslint:disable-next-line */
 const debug = require('debug')('module')
 import * as chalk from 'chalk'
 import * as figures from 'figures'
+import * as hasbin from 'hasbin'
+import {intersection, difference} from 'lodash'
+
 
 export default class AddTemplate extends Command {
   static topic = 'add-template'
@@ -90,6 +94,8 @@ export default class AddTemplate extends Command {
     const newTypes = this.definition.mergeTypes(templateTypes, moduleDirName)
     const typesPath = this.definition.definition!.modules[0].definition!.types
 
+    await this.mergePackageJsons(source)
+
     fs.removeSync(source)
 
     fs.writeFileSync(
@@ -100,23 +106,25 @@ export default class AddTemplate extends Command {
       path.join(this.config.definitionDir, typesPath),
       newTypes,
     )
+
     this.out.log('')
     this.out.log(
       chalk.blue(
-        `   ${chalk.bold('Added')} functions & permissions of template ${chalk.bold(
+        `   ${chalk.bold('Added')} functions & permissions comments of template ${chalk.bold(
           moduleDirName,
         )} to ${chalk.bold('graphcool.yml')}`,
       ),
     )
     this.out.log(
       chalk.blue(
-        `   ${chalk.bold('Added')} types of template ${chalk.bold(
+        `   ${chalk.bold('Added')} type comments of template ${chalk.bold(
           moduleDirName,
         )} to ${chalk.bold(typesPath)}`,
       ),
     )
     this.out.log(chalk.blue.bold(`   Created ${relativeModulePath}:`))
     this.out.tree(relativeModulePath, true)
+
 
     const readmePath = path.join(target, 'README.md')
     if (fs.pathExistsSync(readmePath)) {
@@ -135,11 +143,88 @@ export default class AddTemplate extends Command {
       }
     }
 
-    this.out.log(
-      `   ${chalk.green(figures.tick)} You now can run ${chalk.bold(
-        'graphcool deploy',
-      )} to deploy changes`,
-    )
+    this.out.log(`  Please have a look in the ${chalk.green('graphcool.yml')} and ${chalk.green('types.graphql')} and ${chalk.bold('comment out')} the added template comments there.`)
+
+    // this.out.log(
+    //   `   ${chalk.green(figures.tick)} You now can run ${chalk.bold(
+    //     'graphcool deploy',
+    //   )} to deploy changes`,
+    // )
+  }
+
+  async mergePackageJsons(source: string) {
+    debug('going to merge packagejsons', source)
+    const sourcePjsonPath = path.join(source, 'package.json')
+    const destPjsonPath = path.join(this.config.definitionDir, 'package.json')
+    debug('source', sourcePjsonPath)
+    debug('dest', destPjsonPath)
+    debugger
+    if (fs.pathExistsSync(sourcePjsonPath)) {
+      if (fs.pathExistsSync(destPjsonPath)) {
+        try {
+          const templateJson = fs.readJSONSync(sourcePjsonPath)
+          const serviceJson = fs.readJSONSync(destPjsonPath)
+          const templateDeps: any = templateJson.dependencies || {}
+          const serviceDeps: any = serviceJson.dependencies || {}
+          const intersect = intersection(Object.keys(serviceDeps), Object.keys(templateDeps))
+          if (intersect.length > 0) {
+            const conflicts = intersect.filter(name => {
+              return templateDeps[name] !== serviceDeps[name]
+            })
+            if (conflicts.length > 0) {
+              this.out.warn(`There are conflicts in dependencies for the template package.json and package.json of the current service:`)
+              this.out.warn(conflicts.join(', '))
+              this.out.log('Please resolve them by hand. This is the templates package.json:')
+              this.out.log(this.out.getStyledJSON(templateJson))
+            }
+          }
+          const newDependencies = difference(Object.keys(templateDeps), Object.keys(serviceDeps))
+          if (newDependencies.length > 0) {
+            if (!serviceJson.dependencies) {
+              serviceJson.dependencies = {}
+            }
+            newDependencies.forEach(name => {
+              serviceJson.dependencies[name] = templateDeps[name]
+            })
+            this.out.log(chalk.bold(`The dependencies ${newDependencies.join(', ')} have been added to the main package.json`))
+            const newJson = JSON.stringify(serviceJson, null, 2)
+            fs.writeFileSync(destPjsonPath, newJson)
+            this.out.log(`Written ${chalk.bold(destPjsonPath)}\n`)
+            await this.npmInstall()
+          }
+        } catch (e) {
+          this.out.warn(e)
+        }
+      } else {
+        this.out.log(`There is no package.json yet, so the templates' package.json has been copied`)
+        fs.copySync(sourcePjsonPath, destPjsonPath)
+        await this.npmInstall()
+      }
+
+    } else {
+      this.out.log('Path does not exist')
+    }
+  }
+
+  private npmInstall(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const cmdName = hasbin.first.sync(['yarn', 'npm'])
+      const child = childProcess.spawn(cmdName, ['install'], {
+        cwd: this.config.definitionDir,
+      })
+      child.stdout.pipe(process.stdout)
+      child.stderr.pipe(process.stderr)
+      child.on('error', err => {
+        this.out.error(err)
+      })
+      child.on('close', code => {
+        if (code !== 0) {
+          reject(code)
+        } else {
+          resolve()
+        }
+      })
+    })
   }
 }
 
