@@ -108,25 +108,45 @@ export async function fsToModule(
   if (definition.functions) {
     Object.keys(definition.functions).forEach(funcName => {
       const func: FunctionDefinition = definition.functions![funcName]
-      if (func.handler.code && func.handler.code.src) {
-        if (!isFunctionFile(func.handler.code.src)) {
-          errors.push({
-            message: `The handler ${func.handler.code
-              .src} for function ${funcName} is not a valid function path. It must end with .js or .ts and be in the current working directory.`,
-          })
-        }
-        const handlerPath = path.join(inputDir, func.handler.code.src)
-        if (fs.existsSync(handlerPath)) {
-          const functionCode = fs.readFileSync(handlerPath, 'utf-8')
-          files = {
-            ...files,
-            [func.handler.code.src]: functionCode,
+      if (func.handler.code) {
+        if (typeof func.handler.code === 'string') {
+          if (!isFunctionFile(func.handler.code)) {
+            errors.push({
+              message: `The handler ${func.handler.code} for function ${funcName} is not a valid function path. It must end with .js or .ts and be in the current working directory.`,
+            })
+          }
+          const handlerPath = path.join(inputDir, func.handler.code)
+          if (fs.existsSync(handlerPath)) {
+            const functionCode = fs.readFileSync(handlerPath, 'utf-8')
+            files = {
+              ...files,
+              [func.handler.code]: functionCode,
+            }
+          } else {
+            errors.push({
+              message: `The file ${func.handler.code} for function ${funcName} does not exist`,
+            })
           }
         } else {
-          errors.push({
-            message: `The file ${func.handler.code
-              .src} for function ${funcName} does not exist`,
-          })
+          if (!isFunctionFile(func.handler.code.src)) {
+            errors.push({
+              message: `The handler ${func.handler.code
+                .src} for function ${funcName} is not a valid function path. It must end with .js or .ts and be in the current working directory.`,
+            })
+          }
+          const handlerPath = path.join(inputDir, func.handler.code.src)
+          if (fs.existsSync(handlerPath)) {
+            const functionCode = fs.readFileSync(handlerPath, 'utf-8')
+            files = {
+              ...files,
+              [func.handler.code.src]: functionCode,
+            }
+          } else {
+            errors.push({
+              message: `The file ${func.handler.code
+                .src} for function ${funcName} does not exist`,
+            })
+          }
         }
       }
 
@@ -156,9 +176,9 @@ export async function fsToModule(
             [func.schema]: file,
           }
         } else {
+          const src = typeof func.handler.code === 'string' ? func.handler.code : func.handler.code!.src
           errors.push({
-            message: `The file ${func.handler.code!
-              .src} for the schema extension of function ${funcName} does not exist`,
+            message: `The file ${src} for the schema extension of function ${funcName} does not exist`,
           })
         }
       }

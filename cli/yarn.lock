@@ -144,10 +144,6 @@ any-json@^3.1.0:
     xlsx "^0.11.3"
     xml2js "0.4.17"
 
-any-promise@^1.1.0:
-  version "1.3.0"
-  resolved "https://registry.yarnpkg.com/any-promise/-/any-promise-1.3.0.tgz#abc6afeedcea52e809cdc0376aed3ce39635d17f"
-
 anymatch@^1.3.0:
   version "1.3.2"
   resolved "https://registry.yarnpkg.com/anymatch/-/anymatch-1.3.2.tgz#553dcb8f91e3c889845dfdba34c77721b90b9d7a"
@@ -181,8 +177,8 @@ archiver-utils@^1.3.0:
     readable-stream "^2.0.0"
 
 archiver@^2.0.3:
-  version "2.0.3"
-  resolved "https://registry.yarnpkg.com/archiver/-/archiver-2.0.3.tgz#b4360bb584af1437991942716f21d7c523d1dbbd"
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/archiver/-/archiver-2.1.0.tgz#d2df2e8d5773a82c1dcce925ccc41450ea999afd"
   dependencies:
     archiver-utils "^1.3.0"
     async "^2.0.0"
@@ -191,7 +187,6 @@ archiver@^2.0.3:
     lodash "^4.8.0"
     readable-stream "^2.0.0"
     tar-stream "^1.5.0"
-    walkdir "^0.0.11"
     zip-stream "^1.2.0"
 
 are-we-there-yet@~1.1.2:
@@ -1067,7 +1062,7 @@ end-of-stream@^1.0.0:
   dependencies:
     once "^1.4.0"
 
-errno@^0.1.3, errno@^0.1.4:
+errno@^0.1.4:
   version "0.1.4"
   resolved "https://registry.yarnpkg.com/errno/-/errno-0.1.4.tgz#b896e23a9e5e8ba33871fc996abd3635fc9a1c7d"
   dependencies:
@@ -1344,17 +1339,17 @@ forever-agent@~0.6.1:
   version "0.6.1"
   resolved "https://registry.yarnpkg.com/forever-agent/-/forever-agent-0.6.1.tgz#fbc71f0c41adeb37f96c577ad1ed42d8fdacca91"
 
-form-data@^2.3.1, form-data@~2.3.1:
-  version "2.3.1"
-  resolved "https://registry.yarnpkg.com/form-data/-/form-data-2.3.1.tgz#6fb94fbd71885306d73d15cc497fe4cc4ecd44bf"
+form-data@~2.1.1:
+  version "2.1.4"
+  resolved "https://registry.yarnpkg.com/form-data/-/form-data-2.1.4.tgz#33c183acf193276ecaa98143a69e94bfee1750d1"
   dependencies:
     asynckit "^0.4.0"
     combined-stream "^1.0.5"
     mime-types "^2.1.12"
 
-form-data@~2.1.1:
-  version "2.1.4"
-  resolved "https://registry.yarnpkg.com/form-data/-/form-data-2.1.4.tgz#33c183acf193276ecaa98143a69e94bfee1750d1"
+form-data@~2.3.1:
+  version "2.3.1"
+  resolved "https://registry.yarnpkg.com/form-data/-/form-data-2.3.1.tgz#6fb94fbd71885306d73d15cc497fe4cc4ecd44bf"
   dependencies:
     asynckit "^0.4.0"
     combined-stream "^1.0.5"
@@ -1524,39 +1519,6 @@ graceful-fs@~3.0.2:
   dependencies:
     natives "^1.1.0"
 
-graphcool-cli-core@1.3.94:
-  version "1.3.94"
-  resolved "https://registry.yarnpkg.com/graphcool-cli-core/-/graphcool-cli-core-1.3.94.tgz#2845cb468f3438fa42c9bcc449f5ef65d9795853"
-  dependencies:
-    archiver "^2.0.3"
-    callsites "^2.0.0"
-    chalk "^2.1.0"
-    chokidar "^1.7.0"
-    download-github-repo "^0.1.3"
-    figures "^2.0.0"
-    form-data "^2.3.1"
-    globby "^6.1.0"
-    graphcool-json-schema "^0.3.9"
-    inquirer "^3.3.0"
-    js-yaml "^3.9.1"
-    jwt-decode "^2.2.0"
-    lodash.differenceby "^4.8.0"
-    memfs "^2.5.6"
-    memory-fs "^0.4.1"
-    memory-streams "^0.1.2"
-    multimatch "^2.1.0"
-    node-fetch "^1.7.3"
-    pause "^0.1.0"
-    portfinder "^1.0.13"
-    request "^2.83.0"
-    sillyname "^0.1.0"
-    source-map-support "^0.4.18"
-    stream-to-array "^2.3.0"
-    table "^4.0.1"
-    through2 "^2.0.3"
-    typescript "^2.5.3"
-    validator "^8.2.0"
-
 graphcool-inquirer@beta:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/graphcool-inquirer/-/graphcool-inquirer-1.0.1.tgz#ab9d85465261a063d364dae915be6f918dce8828"
@@ -1576,9 +1538,9 @@ graphcool-inquirer@beta:
     strip-ansi "^4.0.0"
     through "^2.3.6"
 
-graphcool-json-schema@^0.3.10, graphcool-json-schema@^0.3.9:
-  version "0.3.10"
-  resolved "https://registry.yarnpkg.com/graphcool-json-schema/-/graphcool-json-schema-0.3.10.tgz#883f1b7e2759f29510c316840a5668c356475938"
+graphcool-json-schema@^0.3.12:
+  version "0.3.12"
+  resolved "https://registry.yarnpkg.com/graphcool-json-schema/-/graphcool-json-schema-0.3.12.tgz#9f7a1d0c576480e494438525f1abd2c219287a85"
 
 graphql-request@^1.3.4, graphql-request@^1.3.6:
   version "1.4.0"
@@ -2595,25 +2557,12 @@ mem@^1.1.0:
   dependencies:
     mimic-fn "^1.0.0"
 
-memfs@^2.5.3, memfs@^2.5.6:
+memfs@^2.5.3:
   version "2.5.6"
   resolved "https://registry.yarnpkg.com/memfs/-/memfs-2.5.6.tgz#f87de0868d6ff7f99370095eb73e6d78f94723d5"
   dependencies:
     fast-extend "0.0.2"
     fs-monkey "^0.2.1"
-
-memory-fs@^0.4.1:
-  version "0.4.1"
-  resolved "https://registry.yarnpkg.com/memory-fs/-/memory-fs-0.4.1.tgz#3a9a20b8462523e447cfbc7e8bb80ed667bfc552"
-  dependencies:
-    errno "^0.1.3"
-    readable-stream "^2.0.1"
-
-memory-streams@^0.1.2:
-  version "0.1.2"
-  resolved "https://registry.yarnpkg.com/memory-streams/-/memory-streams-0.1.2.tgz#273ff777ab60fec599b116355255282cca2c50c2"
-  dependencies:
-    readable-stream "~1.0.2"
 
 merge@^1.1.3:
   version "1.2.0"
@@ -3095,8 +3044,8 @@ printj@~1.1.0:
   resolved "https://registry.yarnpkg.com/printj/-/printj-1.1.0.tgz#85487b5e8f96763b0b4a253613bef9dd9b387e3c"
 
 private@^0.1.7:
-  version "0.1.7"
-  resolved "https://registry.yarnpkg.com/private/-/private-0.1.7.tgz#68ce5e8a1ef0a23bb570cc28537b5332aba63ef1"
+  version "0.1.8"
+  resolved "https://registry.yarnpkg.com/private/-/private-0.1.8.tgz#2381edb3689f7a53d653190060fcf822d2f368ff"
 
 process-nextick-args@~1.0.6:
   version "1.0.7"
@@ -3178,7 +3127,7 @@ read-pkg@^2.0.0:
     normalize-package-data "^2.3.2"
     path-type "^2.0.0"
 
-readable-stream@^2.0.0, readable-stream@^2.0.1, readable-stream@^2.0.2, readable-stream@^2.0.5, readable-stream@^2.0.6, readable-stream@^2.1.4, readable-stream@^2.1.5:
+readable-stream@^2.0.0, readable-stream@^2.0.2, readable-stream@^2.0.5, readable-stream@^2.0.6, readable-stream@^2.1.4:
   version "2.3.3"
   resolved "https://registry.yarnpkg.com/readable-stream/-/readable-stream-2.3.3.tgz#368f2512d79f9d46fdfc71349ae7878bbc1eb95c"
   dependencies:
@@ -3190,7 +3139,7 @@ readable-stream@^2.0.0, readable-stream@^2.0.1, readable-stream@^2.0.2, readable
     string_decoder "~1.0.3"
     util-deprecate "~1.0.1"
 
-readable-stream@~1.0.17, readable-stream@~1.0.2:
+readable-stream@~1.0.17:
   version "1.0.34"
   resolved "https://registry.yarnpkg.com/readable-stream/-/readable-stream-1.0.34.tgz#125820e34bc842d2f2aaafafe4c2916ee32c157c"
   dependencies:
@@ -3273,7 +3222,7 @@ request@2.81.0:
     tunnel-agent "^0.6.0"
     uuid "^3.0.0"
 
-request@^2.34.0, request@^2.79.0, request@^2.83.0:
+request@^2.34.0, request@^2.79.0:
   version "2.83.0"
   resolved "https://registry.yarnpkg.com/request/-/request-2.83.0.tgz#ca0b65da02ed62935887808e6f510381034e3356"
   dependencies:
@@ -3572,12 +3521,6 @@ stream-combiner@^0.0.4:
   dependencies:
     duplexer "~0.1.1"
 
-stream-to-array@^2.3.0:
-  version "2.3.0"
-  resolved "https://registry.yarnpkg.com/stream-to-array/-/stream-to-array-2.3.0.tgz#bbf6b39f5f43ec30bc71babcb37557acecf34353"
-  dependencies:
-    any-promise "^1.1.0"
-
 stream-to-observable@^0.1.0:
   version "0.1.0"
   resolved "https://registry.yarnpkg.com/stream-to-observable/-/stream-to-observable-0.1.0.tgz#45bf1d9f2d7dc09bed81f1c307c430e68b84cffe"
@@ -3776,13 +3719,6 @@ through2@^0.4.0:
   dependencies:
     readable-stream "~1.0.17"
     xtend "~2.1.1"
-
-through2@^2.0.3:
-  version "2.0.3"
-  resolved "https://registry.yarnpkg.com/through2/-/through2-2.0.3.tgz#0004569b37c7c74ba39c43f3ced78d1ad94140be"
-  dependencies:
-    readable-stream "^2.1.5"
-    xtend "~4.0.1"
 
 through@^2.3.6:
   version "2.3.8"
@@ -3989,10 +3925,6 @@ voc@, voc@~1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/voc/-/voc-1.0.0.tgz#5465c0ce11d0881f7d8e36d8ca587043f33a25ae"
 
-walkdir@^0.0.11:
-  version "0.0.11"
-  resolved "https://registry.yarnpkg.com/walkdir/-/walkdir-0.0.11.tgz#a16d025eb931bd03b52f308caed0f40fcebe9532"
-
 walker@~1.0.5:
   version "1.0.7"
   resolved "https://registry.yarnpkg.com/walker/-/walker-1.0.7.tgz#2f7f9b8fd10d677262b18a884e28d19618e028fb"
@@ -4128,7 +4060,7 @@ xmlbuilder@^4.1.0:
   dependencies:
     lodash "^4.0.0"
 
-xtend@^4.0.0, xtend@^4.0.1, xtend@~4.0.1:
+xtend@^4.0.0, xtend@^4.0.1:
   version "4.0.1"
   resolved "https://registry.yarnpkg.com/xtend/-/xtend-4.0.1.tgz#a5c6d532be656e23db820efb943a1f04998d63af"
 

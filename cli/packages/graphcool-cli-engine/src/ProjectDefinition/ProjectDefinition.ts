@@ -79,46 +79,6 @@ export class ProjectDefinitionClass {
     )
   }
 
-  public async injectEnvironment() {
-    if (this.definition) {
-      this.definition.modules = await Promise.all(
-        this.definition.modules.map(async module => {
-          const moduleName =
-            module.name && module.name.length > 0 ? module.name : 'root'
-          const ymlDefinitinon: GraphcoolDefinition = await readDefinition(
-            module.content,
-            this.out,
-            moduleName,
-            this.args,
-          )
-          if (ymlDefinitinon.functions) {
-            Object.keys(ymlDefinitinon.functions).forEach(fnName => {
-              const fn = ymlDefinitinon.functions![fnName]
-              if (fn.handler.code) {
-                let newFile = module.files[fn.handler.code.src]
-                if (fn.handler.code.environment) {
-                  const file = module.files[fn.handler.code.src]
-                  newFile = this.injectEnvironmentToFile(
-                    file,
-                    fn.handler.code.environment,
-                  )
-                }
-
-                newFile = `'use latest';\n` + newFile
-
-                module.files[fn.handler.code.src] = newFile
-              }
-
-              ymlDefinitinon.functions![fnName] = fn
-            })
-          }
-
-          return module
-        }),
-      )
-    }
-  }
-
   public set(definition: ProjectDefinition | null) {
     this.definition = definition
   }

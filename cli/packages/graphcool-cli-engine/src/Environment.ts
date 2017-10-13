@@ -117,13 +117,34 @@ Please run ${chalk.green('$ graphcool local up')} to get a local Graphcool clust
     return target
   }
 
-  getTargetWithName(targetName?: string): {target: Target | null, targetName: string} {
-    const target = this.getTarget(targetName, true)
-    const newTargetName = targetName || 'default'
+  getTargetWithName(targetName?: string): {target: Target | null, targetName: string | null} {
+    let target: any = null
+    let name: null | string = null
+
+    if (targetName && targetName.split('/').length > 1) {
+      target = this.deserializeTarget(targetName)
+    } else {
+      if (targetName) {
+        target = targetName
+        name = targetName
+      } else if (this.rc.targets && this.rc.targets.default) {
+        target = this.rc.targets.default
+        name = (this.localRC.targets && this.localRC.targets.default) || (this.globalRC.targets && this.globalRC.targets.default) || null
+        name = (name && name.split('/').length === 1) ? name : null
+      }
+
+      if (typeof target === 'string' && this.rc.targets) {
+        target = this.rc.targets[target]
+      }
+    }
+
+    if (target) {
+      this.setActiveCluster(target.cluster)
+    }
 
     return {
       target,
-      targetName: newTargetName,
+      targetName: name,
     }
   }
 

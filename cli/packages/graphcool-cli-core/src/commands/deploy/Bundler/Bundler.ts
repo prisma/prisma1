@@ -6,12 +6,8 @@ import * as path from 'path'
 import * as multimatch from 'multimatch'
 import {FunctionDefinition} from 'graphcool-json-schema'
 import TypescriptBuilder from './TypescriptBuilder'
-import * as FormData from 'form-data'
 const debug = require('debug')('bundler')
 import * as fetch from 'node-fetch'
-import {PassThrough} from 'stream'
-import * as request from 'request'
-import * as os from 'os'
 import * as globby from 'globby'
 
 const patterns = [
@@ -84,36 +80,22 @@ export default class Bundler {
     const stream = fs.createReadStream(this.zipPath)
     const stats = fs.statSync(this.zipPath)
     const url = await this.client.getDeployUrl(this.projectId)
-    // const url = 'http://127.0.0.1:60050/functions/files/WHATEVER/WHATEVER'
-    // const url = 'http://127.0.0.1:3000/upload'
-    // const url = 'https://requestb.in/rmmp7xrm'
     debug('uploading to', url)
     let body = stream
-    if (url.includes('127.0.0.1') || url.includes('localhost')) {
-      const form = new FormData()
-      form.append('file', stream)
-      body = form
-    }
     const res = await fetch(url, { method: 'PUT', body, headers: {
-      'Content-Length': stats.size
-    } })
+      'Content-Length': stats.size,
+      'Content-Type': 'application/zip'
+    }
+    })
     const text = await res.text()
     debug(text)
-    // await new Promise((resolve, reject) => {
-    //   stream.pipe(
-    //     request.put(url, (err, res) => {
-    //       console.log(err, res.body)
-    //       resolve(res)
-    //     })
-    //   )
-    // })
 
     return url
   }
 
   getExternalFiles(url: string): ExternalFiles {
     return this.functions.reduce((acc, fn) => {
-      const src = fn.fn.handler.code!.src
+      const src = typeof fn.fn.handler.code === 'string' ? fn.fn.handler.code :  fn.fn.handler.code!.src
       const buildFileName = this.getBuildFileName(src)
       const lambdaHandler = this.getLambdaHandler(buildFileName)
       const devHandler = this.getDevHandlerPath(buildFileName)
@@ -129,19 +111,21 @@ export default class Bundler {
 
   generateEnvFiles() {
     this.functions.forEach(fn => {
-      const src = fn.fn.handler.code!.src
-      const buildFileName = this.getBuildFileName(src)
-      const envPath = path.join(this.buildDir, this.getEnvPath(buildFileName))
-      if (fn.fn.handler.code!.environment) {
-        const env = JSON.stringify(fn.fn.handler.code!.environment)
-        fs.writeFileSync(envPath, env)
+      if (typeof fn.fn.handler.code === 'object') {
+        const src = fn.fn.handler.code!.src
+        const buildFileName = this.getBuildFileName(src)
+        const envPath = path.join(this.buildDir, this.getEnvPath(buildFileName))
+        if (fn.fn.handler.code!.environment) {
+          const env = JSON.stringify(fn.fn.handler.code!.environment)
+          fs.writeFileSync(envPath, env)
+        }
       }
     })
   }
 
   generateHandlerFiles() {
     this.functions.forEach(fn => {
-      const src = fn.fn.handler.code!.src
+      const src = typeof fn.fn.handler.code === 'string' ? fn.fn.handler.code : fn.fn.handler.code!.src
       const buildFileName = path.join(this.buildDir, this.getBuildFileName(src))
       const lambdaHandlerPath = this.getLambdaHandlerPath(buildFileName)
       const devHandlerPath = this.getDevHandlerPath(buildFileName)
@@ -150,16 +134,6 @@ export default class Bundler {
       fs.copySync(path.join(__dirname, './proxies/dev.js'), devHandlerPath)
       fs.copySync(path.join(__dirname, './proxies/byline.js'), bylinePath)
     })
-  }
-
-  async cpFiles(src: string, dest: string) {
-    await fs.copy(src, dest, {
-      filter: this.validFile
-    })
-  }
-
-  validFile(filePath: string) {
-    return multimatch(filePath, patterns).length > 0
   }
 
   get functions(): Array<FunctionTuple> {
@@ -180,7 +154,7 @@ export default class Bundler {
   }
 
   get fileNames(): string[] {
-    return this.functions.map(fn => path.join(this.config.definitionDir, fn.fn.handler.code!.src))
+    return this.functions.map(fn => path.join(this.config.definitionDir, typeof fn.fn.handler.code === 'string' ? fn.fn.handler.code : fn.fn.handler.code!.src))
   }
 
   getBuildFileName = (src: string) => path.join(src.replace(/\.ts$/, '.js'))
