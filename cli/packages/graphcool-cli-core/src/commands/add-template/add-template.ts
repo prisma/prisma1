@@ -25,12 +25,12 @@ export default class AddTemplate extends Command {
       
   ${chalk.bold('Github Authentication')}
   $ ${chalk.cyan(
-    'graphcool add-template graphcool/templates/authentication/github',
+    'graphcool add-template graphcool/templates/auth/github',
   )}
 
   ${chalk.bold('Facebook Authentication')}
   $ ${chalk.cyan(
-    'graphcool add-template graphcool/templates/authentication/facebook',
+    'graphcool add-template graphcool/templates/auth/facebook',
   )}
   
   ${chalk.bold('Algolia Syncing')}
