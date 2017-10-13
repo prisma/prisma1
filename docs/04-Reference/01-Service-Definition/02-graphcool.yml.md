@@ -69,11 +69,14 @@ permissions:
 - operation: Message.create 
   authenticated: true
 
-# To update a message, users need to be authenticated and
-# the permission query in `./permissions/updateMessage.graphql`
-# has to return `true`
+# To update a message, users need to be authenticated and the
+# permission query in `./permissions/updateMessage.graphql` has
+# to return `true`; note that this permission only applies to the
+# `text` and `attachments` fields of the `Message` type, no other
+# fields may be updated
 - operation: Message.update 
   authenticated: true
+  fields: [text, attachments]
   query: ./permissions/updateMessage.graphql
 
 # To delete a message, users need to be authenticated and
@@ -333,11 +336,14 @@ permissions:
 - operation: Message.create 
   authenticated: true
 
-# To update a message, users need to be authenticated and
-# the permission query in `./permissions/updateMessage.graphql`
-# has to return `true`
+# To update a message, users need to be authenticated and the
+# permission query in `./permissions/updateMessage.graphql` has
+# to return `true`; note that this permission only applies to the
+# `text` and `attachments` fields of the `Message` type, no other
+# fields may be updated
 - operation: Message.update 
   authenticated: true
+  fields: [text, attachments]
   query: ./permissions/updateMessage.graphql
 
 # To delete a message, users need to be authenticated and
