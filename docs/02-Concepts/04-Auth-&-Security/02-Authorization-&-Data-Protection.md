@@ -64,7 +64,7 @@ Assume you had the following requirements for the blogging app:
 1. Everyone can **read** a post
 2. Only authenticated users can **create** posts
 3. Only the author of a post can **update** it
-4. Only admin users *or* the author of a post can **delete** *that post
+4. Only admin users *or* the author of a post can **delete** that post
 
 Looking at these requirements, only the third and fourth need to be expressed with permission queries. The first one simply requires a permission that entitles *everyone* to perform it, the second one requires a permission entitling only *authenticated* users - no further specification in the form of a permission query is needed. These permissions are simple one-liners in your project configuration file.
 
