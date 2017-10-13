@@ -212,7 +212,7 @@ Please run ${chalk.green('$ graphcool local up')} to get a local Graphcool clust
     } else {
       output = time + 'ms'
     }
-    return chalk.blue(output)
+    return chalk.cyan(output)
   }
 
   private async deploy(
@@ -227,7 +227,6 @@ Please run ${chalk.green('$ graphcool local up')} to get a local Graphcool clust
     // bundle and add externalFiles
     debug('bundling')
     let before = Date.now()
-    this.out.action.start('Bundling functions')
     if (this.definition.definition!.modules[0].definition!.functions) {
       const bundler = new Bundler(this, projectId)
       const externalFiles = await bundler.bundle()
