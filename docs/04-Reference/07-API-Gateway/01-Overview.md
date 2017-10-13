@@ -14,7 +14,7 @@ The API gateway is a dedicated HTTP endpoint acting as a proxy in front of the C
 
 ## Use cases
 
-The API gateway is an extremely powerful concept that has a number of very different use cases. 
+The API gateway is an extremely powerful concept that has a number of very different use cases:
 
 - **Implementing custom queries and mutations** with your own [GraphQL resolvers](http://graphql.org/learn/execution/#root-fields-resolvers), it thus has similar use cases as [resolver functions](!alias-su6wu3yoo2):
   - Wrapping an existing API
