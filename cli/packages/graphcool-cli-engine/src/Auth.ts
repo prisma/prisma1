@@ -8,6 +8,7 @@ import { Client } from './Client/Client'
 import { GraphQLClient } from 'graphql-request'
 import * as chalk from 'chalk'
 import { Environment } from './Environment'
+import * as jwtDecode from 'jwt-decode'
 const debug = require('debug')('auth')
 
 export class Auth {
@@ -33,7 +34,8 @@ export class Auth {
     let token = localToken
     let valid: any = true
     if (token) {
-      valid = await this.validateAuthToken(token)
+      // valid = await this.validateAuthToken(token)
+      valid = this.fastValidation(token)
     }
     if (!valid) {
       this.out.warn(
@@ -101,6 +103,15 @@ export class Auth {
     }
 
     return authToken
+  }
+
+  fastValidation(token: string): boolean {
+    try {
+      const decoded = jwtDecode(token)
+      return typeof decoded.iat === 'number' && typeof decoded.clientId === 'string'
+    } catch (e) {
+      return false
+    }
   }
 
   async validateAuthToken(token: string): Promise<string | null> {

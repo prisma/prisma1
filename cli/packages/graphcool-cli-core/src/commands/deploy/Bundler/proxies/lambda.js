@@ -6,15 +6,23 @@ exports.handle = function(event, ctx, cb) {
   console.log('getting event', JSON.stringify(event))
   console.log('requiring', fn)
   fn = fn.default || fn
-  var promise = fn(event)
-  if (typeof promise.then === 'function') {
-    promise.then(function (data) {
-      cb(null, data)
-    }).catch(function (error) {
-      cb(error)
-    })
-  } else {
-    cb(null, promise)
+  executeFunction(fn, event, cb)
+}
+
+function executeFunction(fn, event, cb) {
+  try {
+    var promise = fn(event)
+    if (typeof promise.then === 'function') {
+      promise.then(function (data) {
+        cb(null, data)
+      }).catch(function (error) {
+        cb(error)
+      })
+    } else {
+      cb(null, promise)
+    }
+  } catch (e) {
+    cb(e)
   }
 }
 

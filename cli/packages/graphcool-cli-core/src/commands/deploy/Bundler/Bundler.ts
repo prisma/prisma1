@@ -1,5 +1,5 @@
 import Deploy from '../index'
-import {ProjectDefinitionClass, ExternalFiles, ExternalFile, Config, Client} from 'graphcool-cli-engine'
+import {ProjectDefinitionClass, ExternalFiles, ExternalFile, Config, Client, Output} from 'graphcool-cli-engine'
 import * as archiver from 'archiver'
 import * as fs from 'fs-extra'
 import * as path from 'path'
@@ -9,6 +9,10 @@ import TypescriptBuilder from './TypescriptBuilder'
 import * as FormData from 'form-data'
 const debug = require('debug')('bundler')
 import * as fetch from 'node-fetch'
+import {PassThrough} from 'stream'
+import * as request from 'request'
+import * as os from 'os'
+import * as globby from 'globby'
 
 const patterns = [
   '**/*.graphql',
@@ -22,16 +26,19 @@ export default class Bundler {
   definition: ProjectDefinitionClass
   config: Config
   client: Client
+  out: Output
   projectId: string
   buildDir: string
   zipPath: string
   constructor(cmd: Deploy, projectId: string) {
+    this.out = cmd.out
     this.definition = cmd.definition
     this.config = cmd.config
     this.client = cmd.client
     this.projectId = projectId
     this.buildDir = path.join(this.config.definitionDir, '.build/')
     this.zipPath = path.join(this.config.definitionDir, 'build.zip')
+    debug(this.zipPath)
   }
 
   async bundle(): Promise<ExternalFiles> {
@@ -39,40 +46,67 @@ export default class Bundler {
       return {}
     }
 
+    const before = Date.now()
     debug('bundling')
-    // clean build dir & create it
     fs.removeSync(this.buildDir)
     fs.mkdirpSync(this.buildDir)
-    debug('emptied .build')
-    await this.cpFiles(this.config.definitionDir, this.buildDir)
-    debug('copied files')
-    const builder = new TypescriptBuilder(this.buildDir)
+    const builder = new TypescriptBuilder(this.config.definitionDir, this.buildDir)
+    const zip = archiver('zip')
+    const write = fs.createWriteStream(this.zipPath)
+    zip.pipe(write)
+    zip.on('error', (err) => {
+      this.out.error('Error while zipping build: ' + err)
+    })
+    const files = await globby(['**/*', '!.build', '!*.zip', '!build'])
+    files.forEach(file => {
+      zip.file(file, {name: file})
+    })
     await builder.compile(this.fileNames)
-    debug('compiled typescript')
     this.generateEnvFiles()
-    debug('generated env files')
     this.generateHandlerFiles()
-    debug('generated handler files')
-    await this.zip()
-    debug('zipped')
+    zip.directory(this.buildDir, false)
+    zip.finalize()
+
+    await new Promise(r => write.on('close', () => r()))
+
     const url = await this.upload()
+
+    debug('bundled', Date.now() - before)
 
     return this.getExternalFiles(url)
   }
 
+  cleanBuild(): Promise<void> {
+    return fs.remove(this.buildDir)
+  }
+
   async upload(): Promise<string> {
+    const stream = fs.createReadStream(this.zipPath)
+    const stats = fs.statSync(this.zipPath)
     const url = await this.client.getDeployUrl(this.projectId)
-    const form = new FormData()
-    form.append('file', fs.createReadStream(this.zipPath))
-
-    debug(`submitting file to ${url}`)
-
-    // form.submit(url, function(err, res) {
-    //   if (err) throw err;
-    //   console.log('Done');
-    // });
-    await fetch(url, { method: 'PUT', body: form })
-    debug('uploaded')
+    // const url = 'http://127.0.0.1:60050/functions/files/WHATEVER/WHATEVER'
+    // const url = 'http://127.0.0.1:3000/upload'
+    // const url = 'https://requestb.in/rmmp7xrm'
+    debug('uploading to', url)
+    let body = stream
+    if (url.includes('127.0.0.1') || url.includes('localhost')) {
+      const form = new FormData()
+      form.append('file', stream)
+      body = form
+    }
+    const res = await fetch(url, { method: 'PUT', body, headers: {
+      'Content-Length': stats.size
+    } })
+    const text = await res.text()
+    debug(text)
+    // await new Promise((resolve, reject) => {
+    //   stream.pipe(
+    //     request.put(url, (err, res) => {
+    //       console.log(err, res.body)
+    //       resolve(res)
+    //     })
+    //   )
+    // })
 
     return url
   }
@@ -111,25 +145,10 @@ export default class Bundler {
       const buildFileName = path.join(this.buildDir, this.getBuildFileName(src))
       const lambdaHandlerPath = this.getLambdaHandlerPath(buildFileName)
       const devHandlerPath = this.getDevHandlerPath(buildFileName)
+      const bylinePath = this.getBylinePath(buildFileName)
       fs.copySync(path.join(__dirname, './proxies/lambda.js'), lambdaHandlerPath)
       fs.copySync(path.join(__dirname, './proxies/dev.js'), devHandlerPath)
-    })
-  }
-
-  zip(): Promise<void> {
-    const output = fs.createWriteStream(this.zipPath)
-    const zip = archiver('zip')
-    return new Promise((resolve, reject) => {
-      output.on('close', () => {
-        resolve()
-      })
-      zip.on('error', (err) => {
-        reject(err)
-      })
-      zip.pipe(output)
-
-      zip.directory(this.buildDir, false)
-      zip.finalize()
+      fs.copySync(path.join(__dirname, './proxies/byline.js'), bylinePath)
     })
   }
 
@@ -161,13 +180,14 @@ export default class Bundler {
   }
 
   get fileNames(): string[] {
-    return this.functions.map(fn => path.join(this.buildDir, fn.fn.handler.code!.src))
+    return this.functions.map(fn => path.join(this.config.definitionDir, fn.fn.handler.code!.src))
   }
 
-  getBuildFileName = (src: string) => path.join('_dist', src.replace(/\.ts$/, '.js'))
+  getBuildFileName = (src: string) => path.join(src.replace(/\.ts$/, '.js'))
   getLambdaHandlerPath = (fileName: string) => fileName.slice(0, fileName.length - 3) + '-lambda.js'
   getLambdaHandler = (fileName: string) => fileName.slice(0, fileName.length - 3) + '-lambda.handle'
   getDevHandlerPath = (fileName: string) => fileName.slice(0, fileName.length - 3) + '-dev.js'
+  getBylinePath = (fileName: string) => path.dirname(fileName) + '/byline.js'
   getEnvPath = (fileName: string) => fileName.slice(0, fileName.length - 3) + '.env.json'
 
 }

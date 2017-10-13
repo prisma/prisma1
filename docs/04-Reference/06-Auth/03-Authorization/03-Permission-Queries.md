@@ -47,6 +47,11 @@ Depending on the pending operation, several **GraphQL variables** are available 
 
 * `$leftType_id: ID!`, `$rightType_id: ID!` the ids of the nodes to be connected or disconnected
 
+For example, a relation with the two fields `users: [User!]!` and `post: Post`, will result in these variables:
+
+* `usersUser_id: ID!`
+* `postPost_id: ID!`
+
 ## Common Authorization Patterns
 
 Permission queries can be used to express all common authorization patterns like **role-based authorization**, **access control lists** and **ownership derived access**. For more information check [the full guide](!alias-miesho4goo).

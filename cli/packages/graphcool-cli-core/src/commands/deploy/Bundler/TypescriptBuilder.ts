@@ -1,10 +1,13 @@
 import * as ts from 'typescript'
 // import * as globby from 'globby'
 import * as path from 'path'
+const debug = require('debug')('ts-builder')
 
 export default class TypescriptBuilder {
   buildDir: string
-  constructor(buildDir: string) {
+  definitionDir: string
+  constructor(definitionDir: string, buildDir: string) {
+    this.definitionDir = definitionDir
     this.buildDir = buildDir
   }
   //
@@ -14,9 +17,12 @@ export default class TypescriptBuilder {
 
   async compile(fileNames: string[]) {
     // const fileNames = await this.getFileNames()
+    debug('starting compile', fileNames)
     const program = ts.createProgram(fileNames, this.config)
+    debug('created program')
 
     const emitResult = program.emit()
+    debug('emitted')
 
     const allDiagnostics = ts.getPreEmitDiagnostics(program).concat(emitResult.diagnostics)
 
@@ -40,14 +46,16 @@ export default class TypescriptBuilder {
     return {
       preserveConstEnums: true,
       strictNullChecks: true,
-      sourceMap: true,
+      sourceMap: false,
       target: ts.ScriptTarget.ES5,
       moduleResolution: ts.ModuleResolutionKind.NodeJs,
-      lib: ['lib.es2015.d.ts'],
-      rootDir: this.buildDir,
+      lib: ['lib.es2017.d.ts'],
+      rootDir: this.definitionDir,
       allowJs: true,
       listEmittedFiles: true,
-      outDir: path.join(this.buildDir, '_dist/'),
+      outDir: this.buildDir,
+      skipLibCheck: true,
+      allowSyntheticDefaultImports: true
     }
   }
 }

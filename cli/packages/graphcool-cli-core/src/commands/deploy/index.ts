@@ -7,6 +7,7 @@ import * as chokidar from 'chokidar'
 import * as inquirer from 'inquirer'
 import * as path from 'path'
 import Bundler from './Bundler/Bundler'
+const debug = require('debug')('deploy')
 
 export default class Deploy extends Command {
   private deploying: boolean = false
@@ -65,6 +66,7 @@ ${chalk.gray(
     })
   }
   async run() {
+    debug('run')
     const { force, watch, alias, interactive } = this.flags
     const useDefault = this.flags.default
     let newServiceName = this.flags['new-service']
@@ -198,15 +200,15 @@ Please run ${chalk.green('$ graphcool local up')} to get a local Graphcool clust
     cluster: string
   ): Promise<void> {
     // bundle and add externalFiles
+    debug('bundling')
     if (this.definition.definition!.modules[0].definition!.functions) {
       const bundler = new Bundler(this, projectId)
       const externalFiles = await bundler.bundle()
+      bundler.cleanBuild()
       this.definition.definition!.modules[0].externalFiles = externalFiles
       Object.keys(externalFiles).forEach(key => delete this.definition.definition!.modules[0].files[key])
     }
-    // this.out.exit(0)
-
-    // upload
+    debug('bundled')
 
     this.deploying = true
     const localNote =

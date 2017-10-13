@@ -1,4 +1,4 @@
-# Custom Schema (API Proxy)
+# API Gateway (Custom Schema)
 
 ## Overview
 
