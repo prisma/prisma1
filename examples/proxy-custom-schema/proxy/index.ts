@@ -9,13 +9,16 @@ import fetch from 'node-fetch'
 import { express as playground } from 'graphql-playground/middleware'
 
 async function run() {
-  const endpoint = 'https://api.graph.cool/simple/v1/cj8n2xxau0p7o0110g61k5ix4'
+
+  // Step 1: Create local version of the CRUD API
+  const endpoint = 'https://api.graph.cool/simple/v1/cj8o8bmdo000y013326eme2q6'
   const link = new HttpLink({ uri: endpoint, fetch })
   const graphcoolSchema = makeRemoteExecutableSchema({
     schema: await introspectSchema(link),
     link,
   })
 
+  // Step 2: Define schema for the new API
   // TODO https://github.com/apollographql/graphql-tools/issues/427
   const tmpSchema = makeExecutableSchema({
     typeDefs: `
@@ -41,6 +44,7 @@ async function run() {
     }
   `
 
+  // Step 3: Merge remote schema with new schema
   const mergedSchemas = mergeSchemas({
     schemas: [graphcoolSchema, tmpSchema, extendTypeDefs],
     resolvers: mergeInfo => ({
@@ -60,7 +64,8 @@ async function run() {
     }),
   })
 
-  // filter every root field except `viewer`
+  // Step 4: Limit exposed operations from merged schemas 
+  // Hide every root field except `viewer`
   const schema = transformSchema(mergedSchemas, {
     '*': false,
     viewer: true,

@@ -54,6 +54,8 @@ export class PluginPath {
     this.tag = options.tag
 
     this.config = this.out.config
+    // process.env.CACHE_REQUIRE_PATHS_FILE = this.config.requireCachePath
+    // require('cache-require-paths')
   }
 
   async convertToCached(): Promise<CachedPlugin> {
@@ -141,7 +143,9 @@ export class PluginPath {
   async require(): Promise<ParsedPlugin> {
     let required
     try {
+      debug('requiring', this.path)
       required = require(this.path)
+      debug('required')
     } catch (err) {
       if (await this.repair(err)) {
         return this.require()

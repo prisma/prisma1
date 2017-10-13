@@ -95,6 +95,7 @@ export class CLI {
       let result = await dispatcher.findCommand(
         id || this.config.defaultCommand || 'help',
       )
+      debug('found command')
       // if nothing is found, try again with taking what is before :
       if (!result.Command && id && id.includes(':')) {
         result = await dispatcher.findCommand(

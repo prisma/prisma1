@@ -80,6 +80,12 @@ export default class Cache {
       plugins: {},
       node_version: this._cache.node_version,
     }
+    try {
+      debug('removing the requireCacheFile', this.config.requireCachePath)
+      fs.removeSync(this.config.requireCachePath)
+    } catch (e) {
+      //
+    }
   }
 
   get file(): string {
@@ -99,7 +105,10 @@ export default class Cache {
       }
       this.initialize()
     }
-    if (this._cache.version !== this.config.version) {
+    if (this._cache.version !== this.config.version || process.env.GRAPHCOOL_CLI_CLEAR_CACHE) {
+      if (process.env.GRAPHCOOL_CLI_CLEAR_CACHE) {
+        debug('clearing cache because GRAPHCOOL_CLI_CLEAR_CACHE is set')
+      }
       this.clear()
     }
     return this._cache
@@ -124,12 +133,12 @@ export default class Cache {
   }
 
   async fetch(pluginPath: PluginPath): Promise<CachedPlugin> {
-    const c = this.plugin(pluginPath.path)
-    if (c) {
-      console.log(`Got plugin from cache`)
-      console.log(this.file)
-      return c
-    }
+    // const c = this.plugin(pluginPath.path)
+    // if (c) {
+    //   debug(`Got plugin from cache`)
+    //   debug(this.file)
+    //   return c
+    // }
     try {
       debug('updating cache for ' + pluginPath.path)
       const cachedPlugin = await pluginPath.convertToCached()
@@ -187,13 +196,13 @@ export default class Cache {
   }
 
   save() {
-    // if (!(this.constructor as any).updated) {
-    //   return
-    // }
-    // try {
-    //   fs.writeJSONSync(this.file, this.cache)
-    // } catch (err) {
-    //   this.out.warn(err)
-    // }
+    if (!(this.constructor as any).updated) {
+      return
+    }
+    try {
+      fs.writeJSONSync(this.file, this.cache)
+    } catch (err) {
+      this.out.warn(err)
+    }
   }
 }

@@ -16,11 +16,11 @@ Resolver functions are called when the corresponding query or mutation is execut
 
 Resolvers are one of the most powerful features offered by Graphcool. As such, they cover a wide range of use cases. Here's a list of some of the most common ones:
 
-* You can build **authentication** workflows, like an integration with services like Auth0, Firebase Auth, AWS Cognito and AccountKit, Social Login providers like Facebook, Twitter and GitHub or an email-password based login. A few of these implementations are already [available as modules](https://github.com/graphcool/modules/tree/master/authentication).
-* You can **wrap an external API**, for example a weather API, geolocation API or any other REST API. You can check some examples [here](https://github.com/graphcool-examples/functions).
+* You can build **authentication** workflows, like an integration with services like Auth0, Firebase Auth, AWS Cognito and AccountKit, Social Login providers like Facebook, Twitter and GitHub or an email-password based login. A few of these implementations are already [available as templates](https://github.com/graphcool/templates/tree/master/auth).
+* You can **wrap an external API**, for example a weather API, geolocation API or any other REST API. You can check some examples [here](https://github.com/graphcool/templates).
 * You can **wrap your Graphcool API**, for example to introduce a specific mutation or return data in a different shape.
 
-The [Graphcool Functions collection](https://github.com/graphcool-examples/functions/) on GitHub contains a lot of examples that can inspire you for more use cases, see also [custom mutations](!alias-nia9nushae#custom-mutations) and [custom queries](!alias-ol0yuoz6go#custom-queries).
+The [Graphcool Functions collection](https://github.com/graphcool/templates/) on GitHub contains a lot of examples that can inspire you for more use cases, see also [custom mutations](!alias-nia9nushae#custom-mutations) and [custom queries](!alias-ol0yuoz6go#custom-queries).
 
 ## Input type
 
@@ -28,7 +28,7 @@ The input type for a resolver function is defined by the input arguments of the 
 
 ## Adding a Resolver function to the project
 
-When you want to create a resolver function in your Graphcool project, you need to add it to the [project definition file](!alias-opheidaix3#project-definition) under the `functions` section. 
+When you want to create a resolver function in your Graphcool project, you need to add it to the [project definition file](!alias-opheidaix3#project-definition) under the `functions` section.
 
 ### Example
 
@@ -79,5 +79,5 @@ See also examples for [custom mutations](!alias-nia9nushae#custom-mutations) and
 
 ## Current limitations
 
-* Input and output fields can [only be of scalar types](https://github.com/graphcool/feature-requests/issues/318) at the moment.
-* [Only one query or mutation field](https://github.com/graphcool/feature-requests/issues/326) can be added per schema extension.
+* Input and output fields can [only be of scalar types](https://github.com/graphcool/graphcool/issues/743) at the moment.
+* [Only one query or mutation field](https://github.com/graphcool/graphcool/issues/326) can be added per resolver.

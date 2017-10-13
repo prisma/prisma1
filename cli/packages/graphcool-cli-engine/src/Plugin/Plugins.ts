@@ -1,4 +1,3 @@
-
 import Plugin from './Plugin'
 import * as uniqby from 'lodash.uniqby'
 import Lock from './Lock'
@@ -9,6 +8,8 @@ import CorePlugins from './CorePlugins'
 import Cache, { CachedCommand, CachedTopic, Group } from './Cache'
 import { Command } from '../Command';
 import { Topic } from '../Topic'
+
+const debug = require('debug')('plugins')
 
 export default class Plugins {
   builtin: BuiltinPlugins
@@ -78,6 +79,7 @@ export default class Plugins {
 
   async findCommand(id: string): Promise<typeof Command | undefined> {
     for (const plugin of this.plugins) {
+      debug('findCommand', plugin.name)
       const c = await plugin.findCommand(id)
       if (c) {
         return c
