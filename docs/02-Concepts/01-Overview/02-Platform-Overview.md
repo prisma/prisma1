@@ -6,13 +6,13 @@ next: There is more to come
 
 # Platform Overview
 
-In  this chapter, we provide an overview of the Graphcool platform. We're not yet talking about too much technicalities of the architecture but rather want to provide a high-level understanding of how to work with Graphcool in general.
+In this chapter, we provide an overview of the Graphcool platform. We're not yet talking about too much technicalities of the architecture but rather want to provide a high-level understanding of how to work with Graphcool in general.
 
 ## The Frontend Perspective
 
 Frontend as well as mobile developers usually don't want to spend too much time on the server-side but rather focus on value-adding features they can bring to their users. Even more so, having to build a scalable web server with a database, authentication and data protection can be quite daunting for someone who's used to working with React, Angular, iOS, Android or any other frontend or mobile technology.
 
-Frontend developers can chose to use the hosted version of Graphcool that'll provide them with everything they need for a production-ready, scalable and secure backend.
+Frontend developers can choose to use the hosted version of Graphcool that'll provide them with everything they need for a production-ready, scalable and secure backend.
 
 All they need to do is define their data model in the GraphQL SDL and Graphcool will generated a ready-to-use GraphQL API with CRUD operations, filtering, pagination and ordering. 
 
