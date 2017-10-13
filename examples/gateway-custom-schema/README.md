@@ -36,7 +36,7 @@ graphcool deploy
 
 Copy the endpoint for the `Simple API` as you'll need it in the next step.
 
-The service you just deployed provides a CRUD API for the `User` and `Post` model types that are defined in [./service/types.graphql](./service/types.graphql).
+The service you just deployed provides a CRUD API for the `User` and `Post` model types that are defined in [`./service/types.graphql`](./service/types.graphql).
 
 The goal of the gateway server is now to create a _custom_ GraphQL API that only exposes variants of the underlying CRUD API.
 
@@ -46,7 +46,7 @@ The goal of the gateway server is now to create a _custom_ GraphQL API that only
 
 You first need to connect the gateway to the CRUD API. 
 
-Paste the the HTTP endpoint for the `Simple API` from the previous step into [./gateway/index.ts](./gateway/index.ts) as the value for `endpoint`, replacing the current placeholder `__SIMPLE_API_ENDPOINT__`:
+Paste the the HTTP endpoint for the `Simple API` from the previous step into [`./gateway/index.ts`](./gateway/index.ts) as the value for `endpoint`, replacing the current placeholder `__SIMPLE_API_ENDPOINT__`:
 
 ```js
 const endpoint = '__SIMPLE_API_ENDPOINT__' // looks like: https://api.graph.cool/simple/v1/__SERVICE_ID__
@@ -128,7 +128,7 @@ Send the following query to fetch the posts that you just created:
 
 ## What's in this example?
 
-The API gateway is a thin layer on top of the Graphcool service's CRUD API. For this example, the CRUD API is based on the following data model defined in the service's [types.graphql](./service/types.graphql):
+The API gateway is a thin layer on top of the Graphcool service's CRUD API. For this example, the CRUD API is based on the following data model defined in the service's [`types.graphql`](./service/types.graphql):
 
 ```graphql
 type User implements Node {
@@ -174,7 +174,7 @@ type Mutation {
 }
 ```
 
-The API gateway now creates another API that will be exposed to the clients. The server that exposes this API is executing its queries against the underlying CRUD API. The magic enabling this functionality is implemented in the [`run`](./gateway/index.ts#L11) function in [index.ts](./gateway/index.ts).
+The API gateway now creates another API that will be exposed to the clients. The server that exposes this API is executing its queries against the underlying CRUD API. The magic enabling this functionality is implemented in the [`run`](./gateway/index.ts#L11) function in [`index.ts`](./gateway/index.ts).
 
 Here's the schema that defines the new API:
 
