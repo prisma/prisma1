@@ -103,7 +103,7 @@ mutation {
 }
 ```
 
-> **Note**: It's important the `alias` of the `User` is set to `john`. Otherwise the API gateway won't return any data since the alias in this example is [hardcoded](./gateway/index.ts#L54).
+> **Note**: It's important the `alias` of the `User` is set to `john`. Otherwise the API gateway won't return any data since the alias in this example is [hardcoded](./gateway/index.ts#L43).
 
 ### 2. Send queries to the API gateway
 
@@ -191,10 +191,10 @@ type Viewer {
 
 There are four major steps that are being performed to map the CRUD API to the new schema:
 
-1. Create local version of the CRUD API using [`makeRemoteExecutableSchema`](http://dev.apollodata.com/tools/graphql-tools/remote-schemas.html#makeRemoteExecutableSchema). [See the code](./gateway/index.ts#L13)
-2. Define schema for the new API (the one exposed by the API gateway). [See the code](./gateway/index.ts#L121)
-3. Merge remote schema with new schema using [`mergeSchemas`](http://dev.apollodata.com/tools/graphql-tools/schema-stitching.html#mergeSchemas). [See the code](./gateway/index.ts#L47)
-4. Limit exposed operations from merged schemas (hiding all root fields except `viewer`) using [`transformSchema`](https://github.com/graphcool/graphql-transform-schema). [See the code](./gateway/index.ts#L67).
+1. Create local version of the CRUD API using [`makeRemoteExecutableSchema`](http://dev.apollodata.com/tools/graphql-tools/remote-schemas.html#makeRemoteExecutableSchema). [See the code](./gateway/index.ts#L13).
+2. Define schema for the new API (the one exposed by the API gateway). [See the code](./gateway/index.ts#L21).
+3. Merge remote schema with new schema using [`mergeSchemas`](http://dev.apollodata.com/tools/graphql-tools/schema-stitching.html#mergeSchemas). [See the code](./gateway/index.ts#L33).
+4. Limit exposed operations from merged schemas (hiding all root fields except `viewer`) using [`transformSchema`](https://github.com/graphcool/graphql-transform-schema). [See the code](./gateway/index.ts#L56).
 
 
 
