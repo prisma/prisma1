@@ -16,7 +16,7 @@ Graphcool offers an extremely expressive authorization system that allows to def
 When attaching a permission rule to an operation, there are three major options:
 
 * making the operation available to *everyone*
-* defining that only *authenticated *users are able to perform this operations
+* defining that only *authenticated* users are able to perform this operations
 * specifying a *permission query* that defines which users are able to perform an operation
 
 When choosing the second option, every request that attempts to perform the operation needs to be *authenticated* with a token, otherwise it will be rejected. The third option uses the concept of permission queries that will be covered in the next section.
@@ -25,7 +25,7 @@ When choosing the second option, every request that attempts to perform the oper
 
 With Graphcool, data access rules can be expressed by means of so-called *permission queries*. Permission queries follow the same syntax as regular GraphQL queries, however, they are notably different from conventional queries in that they only ever return `true` or `false`. 
 
-This means the* selection set *of the query is irrelevant - in fact, when writing a permission query, you only specify the input arguments but completely omit the selection set.
+This means the *selection set* of the query is irrelevant - in fact, when writing a permission query, you only specify the input arguments but completely omit the selection set.
 
 All permission queries that can be sent in Graphcool are of the form `SomeXExists` for any model type `X`. The idea of this is that you express a requirement in terms of a GraphQL query where only if that requirement is true the operation can be performed. 
 
@@ -64,7 +64,7 @@ Assume you had the following requirements for the blogging app:
 1. Everyone can **read** a post
 2. Only authenticated users can **create** posts
 3. Only the author of a post can **update** it
-4. Only admin users *or* the author of a post can **delete** *that post
+4. Only admin users *or* the author of a post can **delete** that post
 
 Looking at these requirements, only the third and fourth need to be expressed with permission queries. The first one simply requires a permission that entitles *everyone* to perform it, the second one requires a permission entitling only *authenticated* users - no further specification in the form of a permission query is needed. These permissions are simple one-liners in your project configuration file.
 
