@@ -16,7 +16,7 @@ Graphcool offers an extremely expressive authorization system that allows to def
 When attaching a permission rule to an operation, there are three major options:
 
 * making the operation available to *everyone*
-* defining that only *authenticated *users are able to perform this operations
+* defining that only *authenticated* users are able to perform this operations
 * specifying a *permission query* that defines which users are able to perform an operation
 
 When choosing the second option, every request that attempts to perform the operation needs to be *authenticated* with a token, otherwise it will be rejected. The third option uses the concept of permission queries that will be covered in the next section.
