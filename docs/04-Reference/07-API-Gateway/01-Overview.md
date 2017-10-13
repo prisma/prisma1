@@ -20,5 +20,5 @@ The API gateway is an extremely powerful concept that has a number of very diffe
   - Wrapping an existing API
   - Providing "shortcuts" to the service's CRUD API
   - Authentication workflows
--  **Validation of HTTP requests** which would allow to e.g. block requests coming from certain IP addresses or process HTTP headers
+-  **Validating HTTP requests** which would allow to e.g. block requests coming from certain IP addresses
 - **Transforming and validating** incoming data
