@@ -1519,6 +1519,33 @@ graceful-fs@~3.0.2:
   dependencies:
     natives "^1.1.0"
 
+graphcool-cli-core@1.3.101:
+  version "1.3.101"
+  resolved "https://registry.yarnpkg.com/graphcool-cli-core/-/graphcool-cli-core-1.3.101.tgz#3d69e8b70b905c75183a8456848aeec240e3b93a"
+  dependencies:
+    archiver "^2.0.3"
+    callsites "^2.0.0"
+    chalk "^2.1.0"
+    chokidar "^1.7.0"
+    download-github-repo "^0.1.3"
+    figures "^2.0.0"
+    globby "^6.1.0"
+    graphcool-json-schema "^0.3.12"
+    hasbin "^1.2.3"
+    inquirer "^3.3.0"
+    js-yaml "^3.9.1"
+    jwt-decode "^2.2.0"
+    lodash.differenceby "^4.8.0"
+    multimatch "^2.1.0"
+    node-fetch "^1.7.3"
+    pause "^0.1.0"
+    portfinder "^1.0.13"
+    sillyname "^0.1.0"
+    source-map-support "^0.4.18"
+    table "^4.0.1"
+    typescript "^2.5.3"
+    validator "^8.2.0"
+
 graphcool-inquirer@beta:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/graphcool-inquirer/-/graphcool-inquirer-1.0.1.tgz#ab9d85465261a063d364dae915be6f918dce8828"

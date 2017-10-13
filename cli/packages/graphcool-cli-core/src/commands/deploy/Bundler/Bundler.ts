@@ -50,34 +50,46 @@ export default class Bundler {
       return {}
     }
 
-    if (
-      !fs.pathExistsSync(
-        path.join(this.config.definitionDir, 'package.json'),
-      )
-    ) {
-      this.out.warn(`You have defined functions but no package.json has been found.`)
-    }
+    const hasFunctionWithRequire = this.functions.find(f => {
+      const src = typeof f.fn.handler.code === 'string' ? f.fn.handler.code : f.fn.handler.code!.src
+      const file = fs.readFileSync(src, 'utf-8')
+      if (file.includes('require(') || file.includes('import')) {
+        return true
+      } else {
+        return false
+      }
+    })
 
-    if (
-      !fs.pathExistsSync(path.join(this.config.definitionDir, 'node_modules'))
-    ) {
-      this.out.warn(`You have defined functions but no node_modules has been found. Please run ${chalk.green('npm install')}`)
-    }
+    if (hasFunctionWithRequire) {
+      if (
+        !fs.pathExistsSync(
+          path.join(this.config.definitionDir, 'package.json'),
+        )
+      ) {
+        this.out.warn(`You have defined functions but no package.json has been found.`)
+      }
 
-    if (
-      !fs.pathExistsSync(path.join(this.config.definitionDir, 'node_modules')) ||
-      !fs.pathExistsSync(
-        path.join(this.config.definitionDir, 'package.json'),
-      )
-    ) {
-      this.out.warn(`Note, that the new function runtime doesn't inject
+      if (
+        !fs.pathExistsSync(path.join(this.config.definitionDir, 'node_modules'))
+      ) {
+        this.out.warn(`You have defined functions but no node_modules has been found. Please run ${chalk.green('npm install')}`)
+      }
+
+      if (
+        !fs.pathExistsSync(path.join(this.config.definitionDir, 'node_modules')) ||
+        !fs.pathExistsSync(
+          path.join(this.config.definitionDir, 'package.json'),
+        )
+      ) {
+        this.out.error(`Note, that the new function runtime doesn't inject
 node modules automatically anymore and you need to
 install them before deploying
 Read more here: https://github.com/graphcool/graphcool/issues/800
 `)
+      }
     }
-    this.out.action.start('Bundling functions')
 
+    this.out.action.start('Bundling functions')
 
     let before = Date.now()
     fs.removeSync(this.buildDir)

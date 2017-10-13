@@ -133,12 +133,12 @@ export default class Cache {
   }
 
   async fetch(pluginPath: PluginPath): Promise<CachedPlugin> {
-    // const c = this.plugin(pluginPath.path)
-    // if (c) {
-    //   debug(`Got plugin from cache`)
-    //   debug(this.file)
-    //   return c
-    // }
+    const c = this.plugin(pluginPath.path)
+    if (c) {
+      debug(`Got plugin from cache`)
+      debug(this.file)
+      return c
+    }
     try {
       debug('updating cache for ' + pluginPath.path)
       const cachedPlugin = await pluginPath.convertToCached()
