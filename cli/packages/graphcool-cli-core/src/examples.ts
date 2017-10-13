@@ -61,7 +61,8 @@ permissions:
 # Your root tokens used for functions to get full access to the API
 # Read more here:
 # https://docs-next.graph.cool/reference/auth/authentication/authentication-tokens-eip7ahqu5o
-rootTokens: []
+rootTokens:
+- mytoken
 
 `,
       files: {

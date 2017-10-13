@@ -55,9 +55,8 @@ export default class AddTemplate extends Command {
 
     const repoName = `${ghUser}/${ghRepo}`
 
-    this.out.log('')
     this.out.action.start(
-      `   Downloading template ${chalk.bold.cyan(moduleUrl)} from ${chalk.bold(
+      `Downloading template ${chalk.bold.cyan(moduleUrl)} from ${chalk.bold(
         repoName,
       )} `,
     )
@@ -110,20 +109,20 @@ export default class AddTemplate extends Command {
     this.out.log('')
     this.out.log(
       chalk.blue(
-        `   ${chalk.bold('Added')} functions & permissions comments of template ${chalk.bold(
+        `${chalk.bold('Added')} functions & permissions comments of template ${chalk.bold(
           moduleDirName,
         )} to ${chalk.bold('graphcool.yml')}`,
       ),
     )
     this.out.log(
       chalk.blue(
-        `   ${chalk.bold('Added')} type comments of template ${chalk.bold(
+        `${chalk.bold('Added')} type comments of template ${chalk.bold(
           moduleDirName,
         )} to ${chalk.bold(typesPath)}`,
       ),
     )
-    this.out.log(chalk.blue.bold(`   Created ${relativeModulePath}:`))
-    this.out.tree(relativeModulePath, true)
+    this.out.log(chalk.blue.bold(`Created ${relativeModulePath}:`))
+    this.out.tree(relativeModulePath, false)
 
 
     const readmePath = path.join(target, 'README.md')
@@ -143,7 +142,7 @@ export default class AddTemplate extends Command {
       }
     }
 
-    this.out.log(`  Please have a look in the ${chalk.green('graphcool.yml')} and ${chalk.green('types.graphql')} and ${chalk.bold('comment out')} the added template comments there.`)
+    this.out.log(`Please have a look in the ${chalk.green('graphcool.yml')} and ${chalk.green('types.graphql')} and ${chalk.bold('comment out')} the added template comments there.`)
 
     // this.out.log(
     //   `   ${chalk.green(figures.tick)} You now can run ${chalk.bold(
@@ -167,16 +166,14 @@ export default class AddTemplate extends Command {
           const templateDeps: any = templateJson.dependencies || {}
           const serviceDeps: any = serviceJson.dependencies || {}
           const intersect = intersection(Object.keys(serviceDeps), Object.keys(templateDeps))
-          if (intersect.length > 0) {
-            const conflicts = intersect.filter(name => {
-              return templateDeps[name] !== serviceDeps[name]
-            })
-            if (conflicts.length > 0) {
-              this.out.warn(`There are conflicts in dependencies for the template package.json and package.json of the current service:`)
-              this.out.warn(conflicts.join(', '))
-              this.out.log('Please resolve them by hand. This is the templates package.json:')
-              this.out.log(this.out.getStyledJSON(templateJson))
-            }
+          const conflicts = intersect.filter(name => {
+            return templateDeps[name] !== serviceDeps[name]
+          })
+          if (conflicts.length > 0) {
+            this.out.warn(`There are conflicts in dependencies for the template package.json and package.json of the current service:`)
+            this.out.warn(conflicts.join(', '))
+            this.out.log('Please resolve them by hand. This is the templates package.json:')
+            this.out.log(this.out.getStyledJSON(templateJson))
           }
           const newDependencies = difference(Object.keys(templateDeps), Object.keys(serviceDeps))
           if (newDependencies.length > 0) {
@@ -191,6 +188,9 @@ export default class AddTemplate extends Command {
             fs.writeFileSync(destPjsonPath, newJson)
             this.out.log(`Written ${chalk.bold(destPjsonPath)}\n`)
             await this.npmInstall()
+          }
+          if (conflicts.length === 0 && newDependencies.length === 0) {
+            this.out.log(`${chalk.bold('package.json')}: No new dependencies needed.`)
           }
         } catch (e) {
           this.out.warn(e)
