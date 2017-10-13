@@ -219,7 +219,7 @@ export interface ReadLockOptions {
  * @param [options.timeout=60000] {number} - Max time to wait for lockfile to be open
  * @returns {Promise}
  */
-export const read = async function (path: string, options?: any) {
+export const read = async function (path: string, options: any = {}) {
   let timeout = options.timeout || 60000
   debug(`read ${path}`)
   await waitForWriter(path, timeout)

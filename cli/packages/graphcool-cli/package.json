@@ -33,7 +33,7 @@
   "cli-engine": {
     "bin": "graphcool",
     "dirname": "graphcool",
-    "node": "6.2.0",
+    "node": "6.0.0",
     "defaultCommand": "help",
     "plugins": [
       "graphcool-cli-core"
@@ -55,6 +55,6 @@
     "source-map-support": "^0.4.18"
   },
   "engines": {
-    "node": ">=8.3.0"
+    "node": ">=6.0.0"
   }
 }
