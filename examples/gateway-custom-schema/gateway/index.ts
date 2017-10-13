@@ -3,7 +3,7 @@ import * as cors from 'cors'
 import * as bodyParser from 'body-parser'
 import { graphqlExpress } from 'apollo-server-express'
 import { transformSchema } from 'graphql-transform-schema'
-import { makeRemoteExecutableSchema, makeExecutableSchema, mergeSchemas, introspectSchema } from 'graphql-tools'
+import { makeRemoteExecutableSchema, mergeSchemas, introspectSchema } from 'graphql-tools'
 import { HttpLink } from 'apollo-link-http'
 import fetch from 'node-fetch'
 import { express as playground } from 'graphql-playground/middleware'
@@ -19,26 +19,12 @@ async function run() {
   })
 
   // Step 2: Define schema for the new API
-  // TODO https://github.com/apollographql/graphql-tools/issues/427
-  const tmpSchema = makeExecutableSchema({
-    typeDefs: `
-      type Query {
-        viewer: Viewer!
-      }
-
-      type Viewer {
-        _tmp: String
-      }
-    `,
-    resolvers: {
-      Query: {
-        viewer: () => ({}),
-      }
-    }
-  })
-
   const extendTypeDefs = `
-    extend type Viewer {
+    extend type Query {
+      viewer: Viewer!
+    }
+
+    type Viewer {
       me: User
       topPosts(limit: Int): [Post!]!
     }
@@ -46,8 +32,11 @@ async function run() {
 
   // Step 3: Merge remote schema with new schema
   const mergedSchemas = mergeSchemas({
-    schemas: [graphcoolSchema, tmpSchema, extendTypeDefs],
+    schemas: [graphcoolSchema, extendTypeDefs],
     resolvers: mergeInfo => ({
+      Query: {
+        viewer: () => ({}),
+      },
       Viewer: {
         me: {
           resolve(parent, args, context, info) {

@@ -1177,8 +1177,8 @@ graphql-tools@^1.1.0:
     "@types/graphql" "^0.9.0"
 
 graphql-tools@^2.3.0:
-  version "2.3.0"
-  resolved "https://registry.yarnpkg.com/graphql-tools/-/graphql-tools-2.3.0.tgz#91109b4a1d5df378ecdeba6eb76b2d672e20f427"
+  version "2.5.0"
+  resolved "https://registry.yarnpkg.com/graphql-tools/-/graphql-tools-2.5.0.tgz#b072faf8e1d621550598a681c08504bae13b1904"
   dependencies:
     apollo-link "^0.7.0"
     deprecated-decorator "^0.1.6"
