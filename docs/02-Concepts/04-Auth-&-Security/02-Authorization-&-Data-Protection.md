@@ -25,7 +25,7 @@ When choosing the second option, every request that attempts to perform the oper
 
 With Graphcool, data access rules can be expressed by means of so-called *permission queries*. Permission queries follow the same syntax as regular GraphQL queries, however, they are notably different from conventional queries in that they only ever return `true` or `false`. 
 
-This means the* selection set *of the query is irrelevant - in fact, when writing a permission query, you only specify the input arguments but completely omit the selection set.
+This means the *selection set* of the query is irrelevant - in fact, when writing a permission query, you only specify the input arguments but completely omit the selection set.
 
 All permission queries that can be sent in Graphcool are of the form `SomeXExists` for any model type `X`. The idea of this is that you express a requirement in terms of a GraphQL query where only if that requirement is true the operation can be performed. 
 
