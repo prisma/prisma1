@@ -81,6 +81,10 @@ ${chalk.gray(
     let target
     let cluster
     const foundTarget = await this.env.getTargetWithName(this.flags.target)
+    if (interactive) {
+      foundTarget.targetName = null
+      foundTarget.target = null
+    }
     if (interactive || (!newServiceCluster && !foundTarget.target) || (newServiceName && !newServiceCluster)) {
       cluster = await this.clusterSelection()
       showedDialog = true
