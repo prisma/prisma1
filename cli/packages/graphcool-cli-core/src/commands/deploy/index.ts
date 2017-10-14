@@ -124,7 +124,11 @@ Please run ${chalk.green('$ graphcool local up')} to get a local Graphcool clust
     }
 
     await this.auth.ensureAuth()
-    await this.definition.load(this.flags)
+    await this.definition.load({
+      ...this.flags,
+      target: targetName,
+      cluster,
+    })
 
     let projectId
     let projectIsNew = false
