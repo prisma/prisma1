@@ -112,6 +112,7 @@ export class Command {
     this.env = new Environment(this.out, this.config)
     this.client = new Client(this.config, this.env, this.out)
     this.auth = new Auth(this.out, this.config, this.env, this.client)
+    this.client.setAuth(this.auth)
   }
 
   async run(...rest: void[]): Promise<void> {

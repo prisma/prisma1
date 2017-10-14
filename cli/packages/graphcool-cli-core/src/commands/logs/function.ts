@@ -11,7 +11,6 @@ export default class FunctionLogs extends Command {
   static group = 'general'
   static flags: Flags = {
     target: flags.string({
-      char: 't',
       description: 'Target to get logs from',
     }),
     tail: flags.boolean({

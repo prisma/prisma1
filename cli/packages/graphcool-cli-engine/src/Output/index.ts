@@ -19,7 +19,7 @@ import * as dirTree from 'directory-tree'
 import * as marked from 'marked'
 import * as TerminalRenderer from 'marked-terminal'
 import * as Charm from 'charm'
-import { padEnd, repeat, set, uniqBy } from 'lodash'
+import { padEnd, repeat, set, uniqBy, values } from 'lodash'
 import { Project } from '../types/common'
 import { Targets } from '../types/rc'
 
@@ -343,7 +343,7 @@ To get more detailed output, run ${chalk.dim(instruction)}`,
       )
     } else {
       const filteredProjects = projects.filter(
-        p => !Object.values(targets).find(t => p.id === t.id),
+        p => !values(targets).find(t => p.id === t.id),
       )
       return this.printPadded(
         uniqTargetKeys

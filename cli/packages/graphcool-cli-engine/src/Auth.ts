@@ -29,7 +29,7 @@ export class Auth {
     this.authTrigger = authTrigger
   }
 
-  async ensureAuth() {
+  async ensureAuth(force: boolean = false) {
     const localToken = this.env.token
     let token = localToken
     let valid: any = true
@@ -42,7 +42,7 @@ export class Auth {
         `Received invalid token. Trying to authenticate ...`,
       )
     }
-    if (!token || !valid) {
+    if (!token || !valid || force) {
       token = await this.requestAuthToken()
     }
 

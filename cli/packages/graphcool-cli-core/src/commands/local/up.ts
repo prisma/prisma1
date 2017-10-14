@@ -36,7 +36,7 @@ export default class Up extends Command {
       debug('Setting cluster')
       this.env.setGlobalCluster(name, {
         host,
-        token,
+        clusterSecret: token,
       })
       this.env.saveGlobalRC()
     }

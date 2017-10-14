@@ -35,9 +35,10 @@ export class LocalInvoker {
 
   public async invoke(input: any): Promise<any> {
     this.injectEnvironment()
+    const src = typeof this.fnDefinition.handler.code === 'string' ? this.fnDefinition.handler.code : this.fnDefinition.handler.code!.src
     const functionPath = path.join(
       this.module.baseDir!,
-      this.fnDefinition.handler.code!.src,
+      src,
     )
 
     let fnPointer = require(functionPath)
@@ -85,10 +86,11 @@ export class LocalInvoker {
   }
 
   private injectEnvironment() {
-    const { environment } = this.fnDefinition.handler.code!
-
-    if (environment) {
-      Object.assign(process.env, environment)
+    if (typeof this.fnDefinition.handler.code === 'object') {
+      const { environment } = this.fnDefinition.handler.code!
+      if (environment) {
+        Object.assign(process.env, environment)
+      }
     }
   }
 }

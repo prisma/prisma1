@@ -106,14 +106,14 @@ Every type you define will be available as a type in your GraphQL schema.
 A GraphQL type is defined in the data model with the keyword `type`:
 
 ```graphql
-type Story {
+type Story @model {
   id: ID! @isUnique
   text: String!
   isPublished: Boolean @defaultValue(value: "false")
   author: Author! @relation(name: "AuthorStories")
 }
 
-type Author {
+type Author @model {
   id: ID! @isUnique
   age: Int
   name: String!
@@ -275,12 +275,12 @@ Nodes for a type that contains a required `to-one` relation field can only be cr
 A relation is defined in the data model using the `@relation` directive:
 
 ```graphql
-type User {
+type User @model {
   id: ID!
   stories: [Story!]! @relation(name: "UserOnStory")
 }
 
-type Story {
+type Story @model {
   id: ID!
   text: String!
   author: User! @relation(name: "UserOnStory")
@@ -313,7 +313,7 @@ The *static directive `@isUnique`* denotes [a unique, scalar field](#unique).
 
 ```graphql
 ## the `Post` type has a unique `slug` field
-type Post {
+type Post @model {
   slug: String @isUnique
 }
 ```
@@ -324,7 +324,7 @@ The *static directive `@relation(name: String!)`* denotes a [relation field](!al
 
 ```graphql
 ## the types `Post` and `User` are connected via the `PostAuthor` relation
-type Post {
+type Post @model {
   user: User! @relation(name: "PostAuthor")
 }
 
@@ -339,7 +339,7 @@ The *static directive `@defaultValue(value: String!)`* denotes [the default valu
 
 ```graphql
 # the `title` and `published` fields have default values `New Post` and `false`
-type Post {
+type Post @model {
   title: String! @defaultValue(value: "New Post")
   published: Boolean! @defaultValue(value: "false")
 }
@@ -355,7 +355,7 @@ The *temporary directive `@rename(oldName: String!)`* is used to rename a type o
 
 ```graphql
 ## Renaming the `Post` type to `Story`, and its `text` field to `content`
-type Story @rename(oldName: "Post") {
+type Story @model @rename(oldName: "Post") {
   content: String @rename(oldName: "text")
 }
 ```
@@ -363,38 +363,6 @@ type Story @rename(oldName: "Post") {
 #### Migrating the Value of a Scalar Field
 
 The *temporary directive `@migrationValue(value: String!)`* is used to migrate the value of a scalar field. When changing an optional field to a requried field, it's necessary to also use this directive.
-
-
-## System Artifacts (only for [non-ejected](opheidaix3#non-ejected-projects) projects)
-
-In order to make the platform as seamless and integrated as possible, we introduced some predefined artifacts in each project. These artifacts are designed to be as minimal as possible and cannot be deleted. At the moment there are two type of artifacts: *system types* and *system fields*.
-
-### `User` Type
-
-Every project has a system type called `User`. As the `User` type is the foundation for our integration-based authentication system you cannot delete it. But of course you can still extend the `User` type to suit your needs and it behaves like every other type.
-
-Apart from the predefined system fields, the `User` type can have additional system fields depending on the configured custom authentication.
-
-You can add additional [fields](#fields) as with any other type.
-
-### `File` Type
-
-The `File` type is part of our [file management](!alias-eer4wiang0). Every time you upload a file, a new `File` node is created. Aside from the predefined system fields, the `File` type contains several other fields that contain meta information:
-* `contentType: `: our best guess as to what file type the file has. For example `image/png`. Can be `null`
-* `name: String`: the complete file name including the file type extension. For example `example.png`.
-* `secret: String`: the file secret. Can be combined with your project id to get the file url. Everyone with the secret has access to the file!
-* `size: Integer`: the file size in bytes.
-* `url: String`: the file url. Looks something like `https://files.graph.cool/__PROJECT_ID__/__SECRET__`, that is the generic location for files combined with your project id endpoint and the file secret.
-
-You can add additional [fields](#fields) as with any other type, but they need to be optional.
-
-### `id` Field
-
-Every type has a [required](#required) system field with the name `id` of type [ID](#id). The `id` value of every node (regardless of the type) is globally unique and unambiguously identifies a node ([as required by Relay](https://facebook.github.io/relay/docs/graphql-object-identification.html)). You cannot change the value for this field.
-
-### `createdAt` and `updatedAt` Fields
-
-Every type has the [DateTime](#datetime) fields `createdAt` and `updatedAt` that will be set automatically when a node is created or updated. You cannot change the values for these fields.
 
 
 ## Naming Conventions
@@ -452,3 +420,37 @@ The name of an enum value can be used in query filters and mutations. They can c
 * `A`
 * `ROLE_TAG`
 * `RoleTag`
+
+
+
+## System Artifacts (only for [legacy Console projects](!alias-aemieb1aev))
+
+In order to make the platform as seamless and integrated as possible, we introduced some predefined artifacts in each project. These artifacts are designed to be as minimal as possible and cannot be deleted. At the moment there are two type of artifacts: *system types* and *system fields*.
+
+### `User` Type
+
+Every project has a system type called `User`. As the `User` type is the foundation for our integration-based authentication system you cannot delete it. But of course you can still extend the `User` type to suit your needs and it behaves like every other type.
+
+Apart from the predefined system fields, the `User` type can have additional system fields depending on the configured custom authentication.
+
+You can add additional [fields](#fields) as with any other type.
+
+### `File` Type
+
+The `File` type is part of our [file management](!alias-eer4wiang0). Every time you upload a file, a new `File` node is created. Aside from the predefined system fields, the `File` type contains several other fields that contain meta information:
+* `contentType: `: our best guess as to what file type the file has. For example `image/png`. Can be `null`
+* `name: String`: the complete file name including the file type extension. For example `example.png`.
+* `secret: String`: the file secret. Can be combined with your project id to get the file url. Everyone with the secret has access to the file!
+* `size: Integer`: the file size in bytes.
+* `url: String`: the file url. Looks something like `https://files.graph.cool/__PROJECT_ID__/__SECRET__`, that is the generic location for files combined with your project id endpoint and the file secret.
+
+You can add additional [fields](#fields) as with any other type, but they need to be optional.
+
+### `id` Field
+
+Every type has a [required](#required) system field with the name `id` of type [ID](#id). The `id` value of every node (regardless of the type) is globally unique and unambiguously identifies a node ([as required by Relay](https://facebook.github.io/relay/docs/graphql-object-identification.html)). You cannot change the value for this field.
+
+### `createdAt` and `updatedAt` Fields
+
+Every type has the [DateTime](#datetime) fields `createdAt` and `updatedAt` that will be set automatically when a node is created or updated. You cannot change the values for these fields.
+

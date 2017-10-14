@@ -1,5 +1,5 @@
 import 'source-map-support/register'
-import * as lock from 'rwlockfile'
+import * as lock from './rwlockfile'
 import { Config } from '../Config'
 import * as path from 'path'
 import { Output } from '../Output/index'

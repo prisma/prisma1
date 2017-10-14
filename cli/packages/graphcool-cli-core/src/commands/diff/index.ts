@@ -22,7 +22,6 @@ export default class Diff extends Command {
     await this.definition.load(this.flags)
     await this.auth.ensureAuth()
     // temporary ugly solution
-    this.definition.injectEnvironment()
 
     const { id } = await this.env.getTarget(target)
     const targetName = target || 'default'

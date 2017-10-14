@@ -47,8 +47,7 @@ export default class InvokeLocal extends Command {
       )
     } else if (
       !result.fn.handler ||
-      !result.fn.handler.code ||
-      !result.fn.handler.code.src
+      !result.fn.handler.code
     ) {
       this.out.error(
         `Function "${name}" doesn't have a code handler defined, so it can't be executed locally`,

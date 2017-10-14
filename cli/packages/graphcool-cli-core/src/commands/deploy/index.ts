@@ -76,12 +76,18 @@ ${chalk.gray(
     }
     // target can be both key or value of the `targets` object in the .graphcoolrc
     // so either "my-target" or "shared-eu-west-1/asdf"
+    let showedDialog = false
     let targetName
     let target
     let cluster
     const foundTarget = await this.env.getTargetWithName(this.flags.target)
+    if (interactive) {
+      foundTarget.targetName = null
+      foundTarget.target = null
+    }
     if (interactive || (!newServiceCluster && !foundTarget.target) || (newServiceName && !newServiceCluster)) {
       cluster = await this.clusterSelection()
+      showedDialog = true
       this.env.setActiveCluster(cluster)
       this.env.saveLocalRC()
       if (cluster === 'local' && (!this.env.rc.clusters || !this.env.rc.clusters!.local)) {
@@ -92,24 +98,33 @@ Please run ${chalk.green('$ graphcool local up')} to get a local Graphcool clust
       }
     }
 
-    if (newServiceName || interactive) {
-      cluster = this.env.activeCluster
-      targetName = this.flags.target || this.env.getDefaultTargetName(cluster)
-    } else {
-      if (foundTarget) {
-        targetName = foundTarget.targetName
-        target = foundTarget.target
+    if (newServiceName || interactive || !foundTarget.targetName) {
+      targetName = this.flags.target
+      if (!targetName) {
+        targetName = await this.targetNameSelector(this.env.getDefaultTargetName(cluster))
+        showedDialog = true
       }
+    }
+
+    if (!targetName && foundTarget.targetName) {
+      targetName = foundTarget.targetName
+    }
+
+    if (!target && foundTarget.target) {
+      target = foundTarget.target
     }
 
     if ((!newServiceName && !foundTarget.target) || interactive) {
       newServiceName = await this.serviceNameSelector(path.basename(this.config.definitionDir))
+      showedDialog = true
+    }
+
+    if (showedDialog) {
+      this.out.up(3)
     }
 
     await this.auth.ensureAuth()
     await this.definition.load(this.flags)
-    // temporary ugly solution
-    this.definition.injectEnvironment()
 
     let projectId
     let projectIsNew = false
@@ -190,6 +205,16 @@ Please run ${chalk.green('$ graphcool local up')} to get a local Graphcool clust
     }
   }
 
+  private prettyTime(time: number): string {
+    let output = ''
+    if (time > 1000) {
+      output = (Math.round(time / 100) / 10).toFixed(1) + 's'
+    } else {
+      output = time + 'ms'
+    }
+    return chalk.cyan(output)
+  }
+
   private async deploy(
     projectIsNew: boolean,
     targetName: string,
@@ -201,6 +226,7 @@ Please run ${chalk.green('$ graphcool local up')} to get a local Graphcool clust
   ): Promise<void> {
     // bundle and add externalFiles
     debug('bundling')
+    let before = Date.now()
     if (this.definition.definition!.modules[0].definition!.functions) {
       const bundler = new Bundler(this, projectId)
       const externalFiles = await bundler.bundle()
@@ -208,6 +234,7 @@ Please run ${chalk.green('$ graphcool local up')} to get a local Graphcool clust
       this.definition.definition!.modules[0].externalFiles = externalFiles
       Object.keys(externalFiles).forEach(key => delete this.definition.definition!.modules[0].files[key])
     }
+    this.out.action.stop(this.prettyTime(Date.now() - before))
     debug('bundled')
 
     this.deploying = true
@@ -215,6 +242,7 @@ Please run ${chalk.green('$ graphcool local up')} to get a local Graphcool clust
         isLocal
         ? ' locally'
         : ''
+    before = Date.now()
     this.out.action.start(
       projectIsNew
         ? `Deploying${localNote}`
@@ -229,7 +257,7 @@ Please run ${chalk.green('$ graphcool local up')} to get a local Graphcool clust
       false,
       this.definition.definition!,
     )
-    this.out.action.stop()
+    this.out.action.stop(this.prettyTime(Date.now() - before))
 
     // no action required
     if (
@@ -301,11 +329,6 @@ Please run ${chalk.green('$ graphcool local up')} to get a local Graphcool clust
       type: 'list',
       message: 'Please choose the cluster you want to deploy to',
       choices: [
-        new inquirer.Separator(chalk.bold('Local (docker):')),
-        {
-          value: 'local',
-          name: 'local',
-        },
         new inquirer.Separator(chalk.bold('Backend-as-a-Service:')),
         {
           value: 'shared-eu-west-1',
@@ -319,12 +342,16 @@ Please run ${chalk.green('$ graphcool local up')} to get a local Graphcool clust
           value: 'shared-us-west-2',
           name: 'shared-us-west-2',
         },
+        new inquirer.Separator(chalk.bold('Local (docker):')),
+        {
+          value: 'local',
+          name: 'local',
+        },
       ],
       pageSize: 8,
     }
 
     const { cluster } = await this.out.prompt(question)
-    this.out.up(3)
 
     return cluster
   }
@@ -338,9 +365,21 @@ Please run ${chalk.green('$ graphcool local up')} to get a local Graphcool clust
     }
 
     const { service } = await this.out.prompt(question)
-    this.out.up(3)
 
     return service
+  }
+
+  private async targetNameSelector(defaultName: string): Promise<string> {
+    const question = {
+      name: 'target',
+      type: 'input',
+      message: 'Please choose the target name',
+      default: defaultName,
+    }
+
+    const { target } = await this.out.prompt(question)
+
+    return target
   }
 
 }

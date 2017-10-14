@@ -49,7 +49,7 @@ export class Environment {
       return this.rc.platformToken!
     }
 
-    return (this.rc.clusters![this.activeCluster]! as Cluster).token
+    return (this.rc.clusters![this.activeCluster]! as Cluster).clusterSecret
   }
 
   get default(): Target | null {
@@ -117,13 +117,34 @@ Please run ${chalk.green('$ graphcool local up')} to get a local Graphcool clust
     return target
   }
 
-  getTargetWithName(targetName?: string): {target: Target | null, targetName: string} {
-    const target = this.getTarget(targetName, true)
-    const newTargetName = targetName || 'default'
+  getTargetWithName(targetName?: string): {target: Target | null, targetName: string | null} {
+    let target: any = null
+    let name: null | string = null
+
+    if (targetName && targetName.split('/').length > 1) {
+      target = this.deserializeTarget(targetName)
+    } else {
+      if (targetName) {
+        target = targetName
+        name = targetName
+      } else if (this.rc.targets && this.rc.targets.default) {
+        target = this.rc.targets.default
+        name = (this.localRC.targets && this.localRC.targets.default) || (this.globalRC.targets && this.globalRC.targets.default) || null
+        name = (name && name.split('/').length === 1) ? name : null
+      }
+
+      if (typeof target === 'string' && this.rc.targets) {
+        target = this.rc.targets[target]
+      }
+    }
+
+    if (target) {
+      this.setActiveCluster(target.cluster)
+    }
 
     return {
       target,
-      targetName: newTargetName,
+      targetName: name,
     }
   }
 
@@ -172,6 +193,8 @@ Please run ${chalk.green('$ graphcool local up')} to get a local Graphcool clust
   migrateOldFormat() {
     this.migrateGlobalFiles()
     this.migrateLocalFile()
+    this.migrateClusters(this.config.localRCPath)
+    this.migrateClusters(this.config.globalRCPath)
   }
 
   migrateLocalFile() {
@@ -200,6 +223,34 @@ Please run ${chalk.green('$ graphcool local up')} to get a local Graphcool clust
 It has been renamed to ${oldPath}. The up-to-date format has been written to ${this.config.localRCPath}.
 Read more about the changes here:
 https://github.com/graphcool/graphcool/issues/714
+`)
+        }
+      } catch (e) {
+      }
+    }
+  }
+
+  migrateClusters(rcPath: string) {
+    if (fs.pathExistsSync(rcPath)) {
+      const file = fs.readFileSync(rcPath, 'utf-8')
+      let content
+      try {
+        content = yaml.safeLoad(file)
+        if (content.clusters && Object.keys(content.clusters).find(c => content.clusters[c].token)) {
+          const newRcJson = {
+            ...content,
+            clusters: mapValues(content.clusters, c => typeof c === 'string' ? c : ({
+              clusterSecret: c.token,
+              host: c.host,
+            }))
+          }
+          const newLocalRcYaml = yaml.safeDump(newRcJson)
+          const oldPath = path.join(path.dirname(rcPath), '.graphcoolrc.old')
+          fs.moveSync(rcPath, oldPath)
+          fs.writeFileSync(rcPath, newLocalRcYaml)
+          this.out.warn(`We detected the old definition format of ${chalk.bold('clusters')} in the ${rcPath} file.
+${chalk.bold('token')} has been renamed to ${chalk.bold('clusterSecret')}.
+It has been renamed to ${oldPath}. The up-to-date format has been written to ${rcPath}.
 `)
         }
       } catch (e) {

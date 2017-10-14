@@ -20,7 +20,7 @@ export interface Clusters {
 
 export interface Cluster {
   host: string
-  token: string
+  clusterSecret: string
 }
 
 export interface InternalRC {

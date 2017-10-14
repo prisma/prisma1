@@ -1,6 +1,21 @@
 /* tslint:disable */
 import { ProjectDefinition } from 'graphcool-cli-engine'
 
+
+export const defaultPjson = {
+  "name": "",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
+
+
 export const defaultDefinition: ProjectDefinition = {
   modules: [
     {
@@ -8,10 +23,10 @@ export const defaultDefinition: ProjectDefinition = {
       content: `\
 # Welcome to Graphcool!
 #
-# This file is the main config file for your Graphcool Project.
+# This file is the main config file for your Graphcool Service.
 # It's very minimal at this point and uses default values.
 # We've included a hello world function here.
-# Just uncomment it and run \`graphcool deploy\`
+# Just run \`graphcool deploy\` to have the first running Graphcool Service.
 #
 # Check out some examples:
 #    github.com/graphcool/examples
@@ -26,15 +41,12 @@ export const defaultDefinition: ProjectDefinition = {
 types: ./types.graphql
 
 
-# uncomment this:
-
-# functions:
-#   hello:
-#     handler:
-#       code:
-#         src: ./src/hello.js
-#     type: resolver
-#     schema: ./src/hello.graphql
+functions:
+  hello:
+    handler:
+      code: src/hello.js
+    type: resolver
+    schema: src/hello.graphql
 
 
 # Model/Relation permissions are used to limit the API access
@@ -49,7 +61,8 @@ permissions:
 # Your root tokens used for functions to get full access to the API
 # Read more here:
 # https://docs-next.graph.cool/reference/auth/authentication/authentication-tokens-eip7ahqu5o
-rootTokens: []
+rootTokens:
+- mytoken
 
 `,
       files: {
@@ -79,7 +92,11 @@ type User @model {
 # }
 `,
         './src/hello.js': `\
-module.exports = event => {
+export default async event => {
+  // you can use ES7 with async/await and even TypeScript in your functions :)
+ 
+  await new Promise(r => setTimeout(r, 50))
+  
   return {
     data: {
       message: \`Hello $\{event.data.name || 'World'\}\`
@@ -107,7 +124,7 @@ export const changedDefaultDefinition: ProjectDefinition = {
       content: `\
 # This is the changed default definition, used in tests
 #
-# This file is the main config file for your Graphcool Project.
+# This file is the main config file for your Graphcool Service.
 # It's very minimal at this point and uses default values.
 # We've included a hello world function here.
 # Just uncomment it and run \`graphcool deploy\`
