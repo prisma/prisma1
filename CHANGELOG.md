@@ -1,3 +1,28 @@
+# 0.7 (2017-10-13)
+
+You can download the latest Framework version by running `npm install -g graphcool@next`.
+
+See the Forum for more information on the [Framework Preview](https://www.graph.cool/forum/t/feedback-new-cli-beta/949/1?u=nilan).
+
+## Features 🎉
+
+* [A new local development workflow for functions is available](https://github.com/graphcool/graphcool/issues/714). Additionally, there is a new & improved function runtime [when deploying a service to a remote cluster](https://github.com/graphcool/graphcool/issues/800), as well as in [the local `graphcool-dev` environment](https://github.com/graphcool/graphcool/issues/797).
+* [You can now add templates to the service definition with a new add-template command](https://github.com/graphcool/graphcool/issues/720).
+
+## Changes 💡
+
+* [The initial project structure after upgrading a project to the Framework has been changed](https://github.com/graphcool/graphcool/issues/602).
+* [Added GRAPHCOOL_PLATFORM_TOKEN env var](https://github.com/graphcool/graphcool/issues/753).
+* [Removed the env command](https://github.com/graphcool/graphcool/issues/732). From now on `.graphcoolrc` is used to control deploy targets.
+* [The CLI now can be run with node 6+](https://github.com/graphcool/graphcool/issues/777).
+
+## Bug Fixes 🐛
+
+* [The CLI now reauthenticates if an invalid session is found](https://github.com/graphcool/graphcool/issues/731).
+* [Service aliases with dashes are now supported in the CLI](https://github.com/graphcool/graphcool/issues/616).
+* [Fixed a problem with the confirmation when deleting projects](https://github.com/graphcool/graphcool/issues/735).
+
+
 # 0.6 (2017-10-06)
 
 ## Features
