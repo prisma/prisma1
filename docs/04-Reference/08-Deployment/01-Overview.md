@@ -20,7 +20,7 @@ You need to configure Docker to have **at least 1 GB of RAM** available:
 
 ### Graphcool CLI
 
-You also need to have the [Graphcool CLI](https://docs-next.graph.cool/reference/graphcool-cli/overview-zboghez5go) installed:
+You also need to have the [Graphcool CLI](!alias-zboghez5go) installed:
 
 ```sh
 npm install -g graphcool@next
@@ -40,7 +40,7 @@ graphcool init
 
 ### Create a local cluster
 
-If you don't have a local cluster defined in your global [`.graphcoolrc`](https://docs-next.graph.cool/reference/graphcool-cli/.graphcoolrc-zoug8seen4#managing-clusters-in-the-global-.graphcoolrc), you first need to create one using [`graphcool local up`](https://docs-next.graph.cool/reference/graphcool-cli/commands-aiteerae6l#graphcool-local-up).
+If you don't have a local cluster defined in your global [`.graphcoolrc`](!alias-zoug8seen4#managing-clusters-in-the-global-.graphcoolrc), you first need to create one using [`graphcool local up`](!alias-aiteerae6l#graphcool-local-up).
 
 This creates a new entry in the `clusters` list in your global `.graphcoolrc` (which is located in your _home_ directory):
 
@@ -56,7 +56,7 @@ clusters:
 
 ### Deploying the service to a local cluster
 
-To [deploy](https://docs-next.graph.cool/reference/graphcool-cli/commands-aiteerae6l#graphcool-deploy) the service, first run the following command:
+To [deploy](!alias-aiteerae6l#graphcool-deploy) the service, first run the following command:
 
 ```sh
 graphcool deploy
