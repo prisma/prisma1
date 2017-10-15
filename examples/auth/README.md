@@ -68,26 +68,26 @@ You can open a Playground with the following command:
 graphcool playground
 ```
 
-### Creating a new user with the `signupEmailUser` mutation
+### Creating a new user with the `signupUser` mutation
 
-You can send the following mutation in the Playground to create a new `EmailUser` node and at the same time retrieve an authentication token for it:
+You can send the following mutation in the Playground to create a new `User` node and at the same time retrieve an authentication token for it:
 
 ```graphql
 mutation {
-  signupEmailUser(email: "alice@graph.cool" password: "graphql") {
+  signupUser(email: "alice@graph.cool" password: "graphql") {
     id
     token
   }
 }
 ```
 
-### Logging in an existing user with the `authenticateEmailUser` mutation
+### Logging in an existing user with the `authenticateUser` mutation
 
 This mutation will log in an _existing_ user by requesting a new [temporary authentication token](https://docs-next.graph.cool/reference/auth/authentication/authentication-tokens-eip7ahqu5o#temporary-authentication-tokens) for her:
 
 ```graphql
 mutation {
-  authenticateEmailUser(email: "alice@graph.cool" password: "graphql") {
+  authenticateUser(email: "alice@graph.cool" password: "graphql") {
     token
   }
 }
@@ -109,7 +109,7 @@ Once you've set the header, you can send the following query to check whether th
 }
 ```
 
-If the token is valid, the server will return the `id` of the `EmailUser` node that it belongs to.
+If the token is valid, the server will return the `id` of the `User` node that it belongs to.
 
 
 ## What's in this example?
@@ -119,12 +119,11 @@ If the token is valid, the server will return the `id` of the `EmailUser` node t
 This example demonstrates how you can implement an email-password-based authentication workflow. It defines a single type in [`types.graphql`](./types.graphql):
 
 ```graphql
-type EmailUser @model {
+type User @model {
   id: ID! @isUnique
   createdAt: DateTime!
   updatedAt: DateTime!
 
-  # Must be unique
   email: String! @isUnique
   password: String!
 }
@@ -134,9 +133,9 @@ type EmailUser @model {
 
 We further define three [resolver](https://docs-next.graph.cool/reference/functions/resolvers-su6wu3yoo2) functions in the service definition file [`graphcool.yml`](./graphcool.yml):
 
-- [`signup`](./graphcool.yml#L5): Allows users to signup for the service with their email address and a password. Uses the `signupEmailUser(email: String!, password: String!)` mutation defined in [`./src/signup.graphql`](./src/signup.graphql) and is implemented in [`./src/signup.js`](./src/signup.js).
-- [`authenticate`](./graphcool.yml#L12): Allows already existing users to log in, i.e. requesting a new [temporary authentication token](https://docs-next.graph.cool/reference/auth/authentication/authentication-tokens-eip7ahqu5o#temporary-authentication-tokens). Uses the `authenticateEmailUser` mutation defined in [`authenticate.graphql`](./authenticate.graphql)  and is implemented in [`./src/authenticate.js`](./src/authenticate.js).
+- [`signup`](./graphcool.yml#L5): Allows users to signup for the service with their email address and a password. Uses the `signupUser(email: String!, password: String!)` mutation defined in [`./src/signup.graphql`](./src/signup.graphql) and is implemented in [`./src/signup.js`](./src/signup.js).
+- [`authenticate`](./graphcool.yml#L12): Allows already existing users to log in, i.e. requesting a new [temporary authentication token](https://docs-next.graph.cool/reference/auth/authentication/authentication-tokens-eip7ahqu5o#temporary-authentication-tokens). Uses the `authenticateUser` mutation defined in [`authenticate.graphql`](./authenticate.graphql)  and is implemented in [`./src/authenticate.js`](./src/authenticate.js).
 - [`loggedInUser`](./graphcool.yml#L19): Allows to check whether a user is currently logged in by sending a request with an attached authentication token. If the token is valid for a particular user, the user's `id` will be returned. It uses the `loggedInUser` query defined in [`./src/loggedInUser.graphql`](./src/loggedInUser.graphql) and is implemented in [`./src/loggedInUser.js`](./src/loggedInUser.js).
 
-The `signup` and `authenticate` resolvers each use [graphcool-lib](https://github.com/graphcool/graphcool-lib) to [generate an authentication token](https://github.com/graphcool/graphcool-lib/blob/master/src/index.ts#L370) for an existing `EmailUser` node. 
+The `signup` and `authenticate` resolvers each use [graphcool-lib](https://github.com/graphcool/graphcool-lib) to [generate an authentication token](https://github.com/graphcool/graphcool-lib/blob/master/src/index.ts#L370) for an existing `User` node. 
 

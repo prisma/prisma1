@@ -1,10 +1,10 @@
 const fromEvent = require('graphcool-lib').fromEvent
-const bcrypt = require('bcrypt')
+const bcryptjs = require('bcryptjs')
 const validator = require('validator')
 
 const userQuery = `
 query UserQuery($email: String!) {
-  EmailUser(email: $email){
+  User(email: $email){
     id
     password
   }
@@ -12,7 +12,7 @@ query UserQuery($email: String!) {
 
 const createUserMutation = `
 mutation CreateUserMutation($email: String!, $passwordHash: String!) {
-  createEmailUser(
+  createUser(
     email: $email,
     password: $passwordHash
   ) {
@@ -26,7 +26,7 @@ const getGraphcoolUser = (api, email) => {
       if (userQueryResult.error) {
         return Promise.reject(userQueryResult.error)
       } else {
-        return userQueryResult.EmailUser
+        return userQueryResult.User
       }
     })
 }
@@ -34,7 +34,7 @@ const getGraphcoolUser = (api, email) => {
 const createGraphcoolUser = (api, email, passwordHash) => {
   return api.request(createUserMutation, { email, passwordHash })
     .then(userMutationResult => {
-      return userMutationResult.createEmailUser.id
+      return userMutationResult.createUser.id
     })
 }
 
@@ -58,14 +58,14 @@ module.exports = function(event) {
     return getGraphcoolUser(api, email)
       .then(graphcoolUser => {
         if (!graphcoolUser) {
-          return bcrypt.hash(password, SALT_ROUNDS)
+          return bcryptjs.hash(password, SALT_ROUNDS)
             .then(hash => createGraphcoolUser(api, email, hash))
         } else {
           return Promise.reject('Email already in use')
         }
       })
       .then(graphcoolUserId => {
-        return graphcool.generateAuthToken(graphcoolUserId, 'EmailUser')
+        return graphcool.generateAuthToken(graphcoolUserId, 'User')
           .then(token => {
             return { data: {id: graphcoolUserId, token}}
         })

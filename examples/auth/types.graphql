@@ -1,9 +1,8 @@
-type EmailUser implements Node {
+type User @model {
   id: ID! @isUnique
   createdAt: DateTime!
   updatedAt: DateTime!
 
-  # Must be unique
   email: String! @isUnique
   password: String!
 }

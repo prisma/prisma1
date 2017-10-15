@@ -2,16 +2,16 @@ const fromEvent = require('graphcool-lib').fromEvent
 
 const userQuery = `
 query UserQuery($userId: ID!) {
-  EmailUser(id: $userId){
+  User(id: $userId){
     id
     password
   }
 }`
 
-const getEmailUser = (api, userId) => {
+const getUser = (api, userId) => {
   return api.request(userQuery, { userId })
     .then(userQueryResult => {
-      return userQueryResult.EmailUser
+      return userQueryResult.User
     })
     .catch(error => {
       // Log error, but don't expose to caller
@@ -35,7 +35,7 @@ module.exports = event => {
   const graphcool = fromEvent(event)
   const api = graphcool.api('simple/v1')
 
-  return getEmailUser(api, userId)
+  return getUser(api, userId)
     .then(emailUser => {
       if (!emailUser) {
         return { error: `No user with id: ${userId}` }
