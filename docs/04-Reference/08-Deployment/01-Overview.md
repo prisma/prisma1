@@ -66,6 +66,8 @@ When prompted which cluster you want to deploy to, choose `local`:
 
 ![](https://imgur.com/dP8dSyS.png)
 
+> Note: If you already have a local `.graphcoolrc` file for your service that contains a target, `graphcool deploy` will not prompt you to select a cluster. You can however add the `--interactive` option to the command to enforce the prompt: `graphcool deploy --interactive`.
+
 That's it, your service is now deployed to a local Docker container . Consequently, endpoints that are printed in the output of the `graphcool deploy` command are all targetting `localhost`:
 
 ```
