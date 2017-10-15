@@ -77,7 +77,7 @@ Subscriptions API: ws://localhost:60001/subscriptions/v1/__SERVICE_ID__
 
 ## More info
 
-The Graphcool CLI commands that start with `graphcool local` commands are effectively a _proxy_ to the local Docker CLi:
+The Graphcool CLI commands that start with `graphcool local` commands are effectively a _proxy_ to the [Docker CLi](https://docs.docker.com/engine/reference/commandline/cli/):
 
 - `graphcool local up` starts the Docker containers that contain the Graphcool runtime (run `graphcool local eject` if you need access to the [Docker Compose](https://docs.docker.com/compose/) file)
 - `graphcool local stop` stops the Docker containers
