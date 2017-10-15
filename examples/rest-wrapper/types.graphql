@@ -3,7 +3,7 @@
 
 # All types need to have the three fields id, updatedAt and createdAt like this:
 
-type User implements Node {
+type User @model {
   id: ID! @isUnique
   createdAt: DateTime!
   updatedAt: DateTime!
@@ -15,7 +15,7 @@ type User implements Node {
 # Read more here:
 # https://docs-next.graph.cool/reference/api/file-management-eer4wiang0
 
-# type File implements Node {
+# type File @model {
 #   contentType: String!
 #   createdAt: DateTime!
 #   id: ID! @isUnique

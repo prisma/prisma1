@@ -26,10 +26,10 @@ Install the CLI (if you haven't already):
 npm install -g graphcool@next
 ```
 
-Create the Graphcool backend
+Create the Graphcool service:
 
 ```sh
-graphcool init
+graphcool deploy
 ```
 
 ## Data Setup

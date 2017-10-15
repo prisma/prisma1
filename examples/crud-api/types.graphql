@@ -1,7 +1,7 @@
 # The following types define the data model of the example app
 # based on which the GraphQL API is generated
 
-type User implements Node {
+type User @model {
   id: ID! @isUnique
   firstName: String!
   lastName: String!
@@ -11,7 +11,7 @@ type User implements Node {
   comments: [Comment!]! @relation(name: "UserComments")
 }
 
-type Post implements Node {
+type Post @model {
   id: ID! @isUnique
   title: String!
   description: String!
@@ -22,7 +22,7 @@ type Post implements Node {
 
 }
 
-type Comment implements Node {
+type Comment @model {
   id: ID! @isUnique
   text: String!
   isPublished: Boolean!

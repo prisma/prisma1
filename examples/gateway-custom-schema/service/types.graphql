@@ -1,4 +1,4 @@
-type User implements Node {
+type User @model {
   id: ID! @isUnique
   name: String!
   alias: String! @isUnique
@@ -7,7 +7,7 @@ type User implements Node {
   posts: [Post!]! @relation(name: "UserPosts")
 }
 
-type Post implements Node {
+type Post @model {
   id: ID! @isUnique
   title: String!
 

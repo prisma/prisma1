@@ -1,4 +1,0 @@
-type Post implements Node {
-  id: ID! @isUnique
-  title: String!
-}
