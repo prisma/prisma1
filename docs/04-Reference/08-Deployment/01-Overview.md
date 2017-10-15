@@ -74,6 +74,24 @@ Relay API:         http://localhost:60001/relay/v1/__SERVICE_ID__
 Subscriptions API: ws://localhost:60001/subscriptions/v1/__SERVICE_ID__
 ```
 
+## Debugging
+
+### Accessing function logs
+
+When deploying [functions](!alias-aiw4aimie9) in a local Docker setup, you can access the function logs directly through [`docker logs`](https://docs.docker.com/engine/reference/commandline/logs/) instead of [`graphcool logs`](!alias-aiteerae6l#graphcool-logs):
+
+```
+docker logs -f local_localfaas_1
+```
+
+### Accessing Graphcool runtime logs
+
+If your queries and mutation fails, it might be helpful to see what's happening in the Graphcool runtime. You can do so with the following command:
+
+```sh
+docker logs -f local_graphcool_1
+```
+
 
 ## More info
 

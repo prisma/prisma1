@@ -253,7 +253,7 @@ Assuming the service has a root token that's called `my-token`.
 
 ### `graphcool logs`
 
-Print the logs of the serverless functions that are setup in the current service.
+Print the logs of the [functions](!alias-aiw4aimie9) that are setup in the current service.
 
 #### Usage
 
