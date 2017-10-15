@@ -1,4 +1,4 @@
-type Post implements Node {
+type Post @model {
   id: ID! @isUnique
   title: String!
 }
