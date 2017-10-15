@@ -17,13 +17,14 @@ export default class Playground extends Command {
     // await this.auth.ensureAuth()
     const { target } = this.flags
     const {id} = await this.env.getTarget(target)
+    await this.auth.ensureAuth()
 
     const localPlaygroundPath = `/Applications/GraphQL\ Playground.app/Contents/MacOS/GraphQL\ Playground`
 
     if (fs.pathExistsSync(localPlaygroundPath)) {
       childProcess.spawn(
         localPlaygroundPath,
-        ['endpoint', this.env.simpleEndpoint(id)],
+        ['--endpoint', this.env.simpleEndpoint(id), '--platform-token', this.env.token],
         { detached: true },
       )
     } else {

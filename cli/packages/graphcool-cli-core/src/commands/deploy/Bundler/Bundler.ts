@@ -14,6 +14,7 @@ import * as multimatch from 'multimatch'
 import { FunctionDefinition } from 'graphcool-json-schema'
 import TypescriptBuilder from './TypescriptBuilder'
 const debug = require('debug')('bundler')
+import {difference, flatMap} from 'lodash'
 import * as fetch from 'node-fetch'
 import * as globby from 'globby'
 import * as chalk from 'chalk'
@@ -34,14 +35,16 @@ export default class Bundler {
   projectId: string
   buildDir: string
   zipPath: string
+  dotBuildDir: string
   constructor(cmd: Deploy, projectId: string) {
     this.out = cmd.out
     this.definition = cmd.definition
     this.config = cmd.config
     this.client = cmd.client
     this.projectId = projectId
-    this.buildDir = path.join(this.config.definitionDir, '.build/')
-    this.zipPath = path.join(this.config.definitionDir, 'build.zip')
+    this.dotBuildDir = path.join(this.config.definitionDir, '.build/')
+    this.buildDir = path.join(this.config.definitionDir, '.build/dist')
+    this.zipPath = path.join(this.dotBuildDir, 'build.zip')
     debug(this.zipPath)
   }
 
@@ -92,7 +95,7 @@ Read more here: https://github.com/graphcool/graphcool/issues/800
     this.out.action.start('Bundling functions')
 
     let before = Date.now()
-    fs.removeSync(this.buildDir)
+    fs.removeSync(this.dotBuildDir)
     fs.mkdirpSync(this.buildDir)
     const builder = new TypescriptBuilder(
       this.config.definitionDir,
@@ -105,21 +108,31 @@ Read more here: https://github.com/graphcool/graphcool/issues/800
       this.out.error('Error while zipping build: ' + err)
     })
     const files = await globby(['**/*', '!.build', '!*.zip', '!build'])
-    files.forEach(file => {
+    const filesToAdd = difference(files, this.shortFileNamesBlacklist)
+    filesToAdd.forEach(file => {
       zip.file(file, { name: file })
     })
-    await builder.compile(this.fileNames)
+    debug('added files', filesToAdd)
+    await builder.compile(this.fullFileNames)
     this.generateEnvFiles()
     this.generateHandlerFiles()
-    zip.directory(this.buildDir, false)
+    const distFiles = await globby(['**/*', '!.build', '!*.zip'], {cwd: this.buildDir})
+    distFiles.forEach(file => {
+      zip.file(file, { name: file })
+    })
+    debug('added build files', distFiles)
     zip.finalize()
 
     await new Promise(r => write.on('close', () => r()))
+    await new Promise(r => setTimeout(r, 100))
 
     const url = await this.upload()
 
     debug('bundled', Date.now() - before)
     this.out.action.stop(this.prettyTime(Date.now() - before))
+    if (!this.config.debug) {
+      fs.removeSync(this.buildDir)
+    }
 
     return this.getExternalFiles(url)
   }
@@ -228,7 +241,17 @@ Read more here: https://github.com/graphcool/graphcool/issues/800
     }
   }
 
-  get fileNames(): string[] {
+  get shortFileNamesBlacklist(): string[] {
+    return flatMap(this.functions.map(fn =>
+        typeof fn.fn.handler.code === 'string'
+          ? fn.fn.handler.code
+          : fn.fn.handler.code!.src,
+    )
+      .map(n => n.startsWith('./') ? n.slice(2) : n)
+      .map(n => n.endsWith('.ts') ? [n.slice(0, n.length - 2) + '.js', n] : n))
+  }
+
+  get fullFileNames(): string[] {
     return this.functions.map(fn =>
       path.join(
         this.config.definitionDir,
