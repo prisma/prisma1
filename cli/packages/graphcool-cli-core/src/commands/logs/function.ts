@@ -2,6 +2,7 @@ import { Command, flags, Flags } from 'graphcool-cli-engine'
 import * as chalk from 'chalk'
 import * as differenceBy from 'lodash.differenceby'
 import { sortByTimestamp } from '../../util'
+import {flatMap} from 'lodash'
 
 const debug = require('debug')('logs')
 
@@ -87,7 +88,8 @@ export default class FunctionLogs extends Command {
         }
 
         const styleLog = (l: string) => {
-          let potentialJson = l.slice(26)
+          const logs = this.lambdaToArray(l)
+          let potentialJson = l.slice(62).trim()
           try {
             potentialJson = JSON.parse(potentialJson)
           } catch (e) {
@@ -95,12 +97,12 @@ export default class FunctionLogs extends Command {
           }
 
           return {
-            [l.slice(0, 26)]: potentialJson,
+            [l.slice(0, 24)]: potentialJson,
           }
         }
 
         if (json.logs) {
-          json.logs = json.logs.map(styleLog)
+          json.logs = flatMap(json.logs.map(this.lambdaToArray)).map(styleLog)
         }
 
         const prettyMessage = this.out.getStyledJSON(json)
@@ -110,5 +112,34 @@ export default class FunctionLogs extends Command {
         )} ${chalk.bold[status](log.status)} ${prettyMessage}`
       })
       .join('\n')
+  }
+
+  private lambdaToArray(logs: string): string[] {
+    logs = logs.replace(/\t/g, '  ')
+
+    const regex = /\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d+.*/
+
+    const lines = logs.split('\n')
+      .filter(l => !l.startsWith('START') && !l.startsWith('END') && !l.startsWith('REPORT'))
+
+    const merged = lines
+      .reduce((acc, curr, index) => {
+        if (lines[index + 1] && lines[index + 1].match(regex)) {
+          return {
+            lines: acc.lines.concat(acc.currentLine + (acc.currentLine.length > 0 ? '\n' : '') + curr),
+            currentLine: ''
+          }
+        } else {
+          return {
+            lines: acc.lines,
+            currentLine: acc.currentLine + (acc.currentLine.length > 0 ? '\n' : '') + curr,
+          }
+        }
+      }, {
+        lines: [] as any,
+        currentLine: ''
+      })
+
+    return merged.lines.concat(merged.currentLine)
   }
 }
