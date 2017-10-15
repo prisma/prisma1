@@ -1,7 +1,7 @@
 {
   "name": "webshop",
   "version": "1.0.0",
-  "description": "",
+  "description": "## What it includes",
   "main": "index.js",
   "engines": {
     "node": ">=8.3.0"
@@ -13,8 +13,9 @@
   "license": "ISC",
   "dependencies": {
     "bcrypt": "^1.0.3",
+    "bcryptjs": "^2.4.3",
     "graphcool-lib": "^0.0.3",
-    "stripe": "^5.0.0",
-    "validator": "^8.2.0"
+    "stripe": "^5.1.1",
+    "validator": "^9.0.0"
   }
 }
