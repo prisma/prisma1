@@ -202,6 +202,13 @@ Here's a list of all [permission rules](./graphcool.yml#L21) that are configured
 - `UsersPosts.disconnect`: To **disconnect** a `Post` node from a `User` node in the `UserPosts` relation, a `User` must be authenticated
 
 
+### Permission queries
+
+Graphcool uses the concept of [permission queries](https://docs-next.graph.cool/reference/auth/authorization/permission-queries-iox3aqu0ee) to configure permission rules for a service.
+
+Permission queries are special GraphQL queries that only return `true` or `false` (it's thus unnecessary to specify the _selection set_ of the query when writing it).
+
+Before an operation (e.g. `Post.create`) is performed against the GraphQL API of a Graphcool service, Graphcool will check the permission rules for that operation specified in [`graphcool.yml`](./graphcool.yml). If the permission rules reference one or more permission queries, Graphcool will first execute these permission queries. The requested operation will only be performed if all permission queries return `true`.   
 
 
 
