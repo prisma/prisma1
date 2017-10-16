@@ -10,7 +10,7 @@
     "cors": "^2.8.4",
     "express": "^4.16.2",
     "graphql": "^0.11.7",
-    "graphql-playground": "^1.0.8",
+    "graphql-playground": "^1.0.15",
     "graphql-tools": "^2.3.0",
     "graphql-transform-schema": "^0.1.0",
     "node-fetch": "^1.7.3"
