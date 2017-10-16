@@ -115,8 +115,6 @@
 
 * [crud-api](examples/crud-api): Simple CRUD-style GraphQL API
 * [auth](examples/auth): Email/password-based authentication & user permissions
-* [send-email](examples/send-email): Send email via Mailgun via GraphQL mutation
-* [push-notifications](examples/push-notifications): Send push notification when new Post is created
 * [env-variables](examples/env-variables): Function accessing environment variables
 * [rest-wrapper](examples/rest-wrapper): Extend GraphQL API by wrapping existing REST endpoint
 * [full-example](examples/full-example): Full example (webshop) demoing most available features
