@@ -1,0 +1,8 @@
+query ($user_id: ID!) {
+  SomeUserExists(filter: {
+    OR: [{
+      id: $user_id,
+      role: ADMIN
+    }]
+  })
+}

@@ -82,7 +82,7 @@ Subscriptions API: ws://localhost:60001/subscriptions/v1/__SERVICE_ID__
 
 When deploying [functions](!alias-aiw4aimie9) in a local Docker setup, you can access the function logs directly through [`docker logs`](https://docs.docker.com/engine/reference/commandline/logs/) instead of [`graphcool logs`](!alias-aiteerae6l#graphcool-logs):
 
-```
+```sh
 docker logs -f local_localfaas_1
 ```
 
