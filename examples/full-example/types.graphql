@@ -1,4 +1,4 @@
-type User implements Node {
+type User @model {
   id: ID! @isUnique
   email: String @isUnique
   firstName: String
@@ -11,14 +11,14 @@ type User implements Node {
   role: Role @defaultValue(value: "USER")
 }
 
-type Basket {
+type Basket @model {
   id: ID! @isUnique
   user: User @relation(name: "Baskets")
   items: [Item!]! @relation(name: "BasketOnItem")
   order: Order @relation(name: "BasketOnOrder")
 }
 
-type Order {
+type Order @model {
   id: ID! @isUnique
   deliveryDate: DateTime
   paymentDate: DateTime
@@ -26,7 +26,7 @@ type Order {
   user: User @relation(name: "Orders")
 }
 
-type Item {
+type Item @model {
   id: ID! @isUnique
   baskets: [Basket!]! @relation(name: "BasketOnItem")
   name: String!

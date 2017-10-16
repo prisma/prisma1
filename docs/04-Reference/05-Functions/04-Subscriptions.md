@@ -41,9 +41,11 @@ subscription {
   User(filter: {
     operation_in: [CREATED]
   }) {
-    id
-    email
-    name
+    node {
+      id
+      email
+      name
+    }
   }
 }
 ```
