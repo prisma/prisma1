@@ -51,28 +51,28 @@ permissions:
       - email
       - posts
 
-  # The **update** the fields `email`, `password` and `posts` on 
+  # To **update** the fields `email`, `password` and `posts` on 
   # a node of type `User`, a `User` must be:
   # authenticated and either the "owner" of the `User` or an `ADMIN` 
-  # (see the permission query in permissions/updateUserData.graphql)
+  # (see the permission query `UpdateUserData` in permissions/updateUser.graphql)
   - operation: User.update
     authenticated: true
-    query: permissions/updateUserData.graphql  
+    query: permissions/updateUser.graphql:UpdateUserData  
     fields:
       - email
       - password
       - posts
 
-  # The **update** the fields `role` on a node of type `User`,
+  # To **update** the fields `role` on a node of type `User`,
   # a `User` must be: authenticated and an `ADMIN`
-  # (see the permission query in permissions/updateUserData.graphql)
+  # (see the permission query `UpdateUserRole` in permissions/updateUser.graphql)
   - operation: User.update
     authenticated: true
-    query: permissions/updateUserRole.graphql  
+    query: permissions/updateUser.graphql:UpdateUserRole
     fields:
-      - role
+      - role  
 
-  # The **delete** a node of type `User`, a `User` must be:
+  # To **delete** a node of type `User`, a `User` must be:
   # authenticated and either the "owner" of the `User` or an `ADMIN` 
   # (see the permission query in permissions/deleteUser.graphql)
   - operation: User.delete

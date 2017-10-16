@@ -43,8 +43,7 @@ Here is an overview of the file structure in this example:
 │   ├── deletePost.graphql
 │   ├── deleteUser.graphql
 │   ├── updatePost.graphql
-│   ├── updateUserData.graphql
-│   └── updateUserRole.graphql
+│   └── updateUser.graphql
 ├── src
 │   └── email-password
 ├── types.graphql
@@ -191,10 +190,10 @@ Here's a list of all [permission rules](./graphcool.yml#L21) that are configured
 - `User.create`: `User` nodes can only be **created** with a [root token](https://docs-next.graph.cool/reference/auth/authentication/authentication-tokens-eip7ahqu5o#root-tokens) (see the code for the [`signup`](./src/email-password/signup.js) function)
 - `User.update`: To **update** the fields `email`, `password` and `posts` on a node of type `User`, a `User` must be:
   - authenticated
-  - either the "owner" of the `User` or an `ADMIN` (see the permission query in [`permissions/updateUserData.graphql`](./permissions/updateUserData.graphql))
+  - either the "owner" of the `User` or an `ADMIN` (see the permission query `UpdateUserData` in [`permissions/.graphql`](./permissions/updateUser.graphql))
 - `User.update`: To **update** the field `role` on a node of type `User`, a `User` must be:
   - authenticated
-  - an `ADMIN` (see the permission query in [`permissions/updateUserRole.graphql`](./permissions/updateUserRole.graphql))
+  - an `ADMIN` (see the permission query `UpdateUserRole` in [`permissions/updateUser.graphql`](./permissions/updateUser.graphql))
 - `User.delete`: To **delete** a node of type `User`, a `User` must be:
   - authenticated
   - either the "owner" of the `User` or an `ADMIN` (see the permission query in [`permissions/deleteUser.graphql`](./permissions/deleteUser.graphql))
