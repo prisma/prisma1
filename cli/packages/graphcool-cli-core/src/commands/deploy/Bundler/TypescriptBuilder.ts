@@ -44,18 +44,23 @@ export default class TypescriptBuilder {
 
   get config(): ts.CompilerOptions {
     return {
-      preserveConstEnums: true,
-      strictNullChecks: true,
-      sourceMap: false,
-      target: ts.ScriptTarget.ES5,
-      moduleResolution: ts.ModuleResolutionKind.NodeJs,
+      ...baseCompilerOptions,
       lib: ['lib.es2017.d.ts'],
       rootDir: this.definitionDir,
-      allowJs: true,
-      listEmittedFiles: true,
       outDir: this.buildDir,
-      skipLibCheck: true,
-      allowSyntheticDefaultImports: true
     }
   }
+}
+
+export const baseCompilerOptions = {
+  preserveConstEnums: true,
+  strictNullChecks: true,
+  sourceMap: false,
+  target: ts.ScriptTarget.ES5,
+  moduleResolution: ts.ModuleResolutionKind.NodeJs,
+  lib: ['lib.es2017.d.ts'],
+  allowJs: true,
+  listEmittedFiles: true,
+  skipLibCheck: true,
+  allowSyntheticDefaultImports: true
 }

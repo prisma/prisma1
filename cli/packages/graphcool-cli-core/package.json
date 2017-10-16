@@ -1,6 +1,6 @@
 {
   "name": "graphcool-cli-core",
-  "version": "1.4.3",
+  "version": "1.4.4",
   "main": "dist/index.js",
   "files": [
     "dist"
@@ -88,6 +88,7 @@
     "sillyname": "^0.1.0",
     "source-map-support": "^0.4.18",
     "table": "^4.0.1",
+    "ts-node": "^3.3.0",
     "typescript": "^2.5.3",
     "validator": "^8.2.0"
   }

@@ -72,11 +72,11 @@ export const topics = [
     description: 'Export service data',
     group: 'data'
   },
-  // {
-  //   name: 'invoke',
-  //   description: 'Invokes a function locally',
-  //   group: 'general'
-  // },
+  {
+    name: 'invoke-local',
+    description: 'Invokes a function locally',
+    group: 'general'
+  },
   { name: 'console', description: 'Opens the console for the current service', group: 'platform' },
   {
     name: 'account',
