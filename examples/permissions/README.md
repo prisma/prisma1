@@ -4,6 +4,8 @@
 
 This example demonstrates how to configure **permission rules** for your application, in combination with an email-password based authentication workflow. It contains the service definition for a simple "Instagram"-app where users can share posts with their friends.
 
+> The focus of this example is explaining how the Graphcool permission system works. If you're looking for a dedicated authentication example, check out the [auth](../auth) directory.
+
 This is the data model for the application (defined in [`types.graphql`](./types.graphql)):
 
 ```graphql
@@ -22,13 +24,14 @@ type User @model {
 
 type Post @model {
   id: ID! @isUnique
-  title: String!
+  description: String!
+  imageUrl: String!
   author: User! @relation(name: "UserPosts")
 }
 
 ```
 
-> The focus of this example is explaining how the Graphcool permission system works. If you're looking for a dedicated authentication example, check out the [auth](../auth) directory.
+Here is an overview of the file structure in this example:
 
 ```
 .
@@ -40,7 +43,8 @@ type Post @model {
 │   ├── deletePost.graphql
 │   ├── deleteUser.graphql
 │   ├── updatePost.graphql
-│   └── updateUser.graphql
+│   ├── updateUserData.graphql
+│   └── updateUserRole.graphql
 ├── src
 │   └── email-password
 ├── types.graphql
@@ -185,13 +189,13 @@ Here's a list of all [permission rules](./graphcool.yml#L21) that are configured
 
 - `User.read`: Everyone can the fields `email` and `posts` **read** nodes of type `User`
 - `User.create`: `User` nodes can only be **created** with a [root token](https://docs-next.graph.cool/reference/auth/authentication/authentication-tokens-eip7ahqu5o#root-tokens) (see the code for the [`signup`](./src/email-password/signup.js) function)
-- `User.update`: The **update** the fields `email`, `password` and `posts` on a node of type `User`, a `User` must be:
+- `User.update`: To **update** the fields `email`, `password` and `posts` on a node of type `User`, a `User` must be:
   - authenticated
   - either the "owner" of the `User` or an `ADMIN` (see the permission query in [`permissions/updateUserData.graphql`](./permissions/updateUserData.graphql))
-- `User.update`: The **update** the field `role` on a node of type `User`, a `User` must be:
+- `User.update`: To **update** the field `role` on a node of type `User`, a `User` must be:
   - authenticated
   - an `ADMIN` (see the permission query in [`permissions/updateUserRole.graphql`](./permissions/updateUserRole.graphql))
-- `User.delete`: The **delete** a node of type `User`, a `User` must be:
+- `User.delete`: To **delete** a node of type `User`, a `User` must be:
   - authenticated
   - either the "owner" of the `User` or an `ADMIN` (see the permission query in [`permissions/deleteUser.graphql`](./permissions/deleteUser.graphql))
 
