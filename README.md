@@ -142,8 +142,6 @@ Help us shape the future of the Graphcool Framework by :thumbsup: [existing Feat
 We are in the process of setting up a formal road map. Check back here in the coming weeks
 to see the new features we are planning!
 
-> **Note:** `functions` are currently not working for local cluster setups (use the BaaS deployment for now).
-
 ## Community
 
 Graphcool has a community of thousands of amazing developers and contributors. Welcome, please join us! 👋
