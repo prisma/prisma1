@@ -95,7 +95,7 @@ mutation {
     posts: [
       { title: "GraphQL is awesome" }, 
       { title: "Declarative data fetching with GraphQL" },
-      { title: "GraphQL& Serverless" }
+      { title: "GraphQL & Serverless" }
     ]
   ) {
     id
