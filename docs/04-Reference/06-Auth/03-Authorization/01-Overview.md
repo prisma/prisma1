@@ -7,7 +7,9 @@ description: Graphcool features a simple yet powerful permission system that int
 
 Graphcool features a simple yet powerful permission system that integrates seamlessly with the available [authentication concept](!alias-geekae9gah).
 
-## Whitelist Permissions for Modular Authorization
+> To get a practical introduction to the Graphcool authorization system, check out the [permissions](https://github.com/graphcool/graphcool/tree/master/examples/permissions) example.
+
+## Whitelist permissions for modular authorization
 
 In general, permissions follow a **whitelist approach**:
 
@@ -83,7 +85,7 @@ query UpdateMessageQuery($node_id: ID!, $user_id: ID!) {
 }
 ```
 
-## Request Matching for Permissions
+## Request matching for permissions
 
 When does a permission match a request? This is determined by the [permission parameters](!alias-soh5hu6xah). Additional conditions can be defined using [permission queries](!alias-iox3aqu0ee).
 

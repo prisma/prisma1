@@ -2,10 +2,12 @@
 
 Collection of Graphcool example projects 💡
 
+* [auth](auth): Email/password-based authentication
 * [crud-api](crud-api): Simple CRUD-style GraphQL API
-* [auth](auth): Email/password-based authentication & user permissions
-* [send-email](send-email): Send email via Mailgun via GraphQL mutation
-* [push-notifications](push-notifications): Send push notification when new Post is created
-* [env-variables](env-variables): Function accessing environment variables
-* [rest-wrapper](rest-wrapper): Extend GraphQL API by wrapping existing REST endpoint
+* [env-variables-in-functions](env-variables-in-functions): Function accessing environment variables
 * [full-example](full-example): Full example (webshop) demoing most available features
+* [gateway-custom-schema](gateway-custom-schema): Define a custom schema using an API gateway
+* [permissions](permissions): Configure permission rules
+* [rest-wrapper](rest-wrapper): Extend GraphQL API by wrapping existing REST endpoint
+* [yaml-variables](yaml-variables): Use variables in your `graphcool.yml`
+

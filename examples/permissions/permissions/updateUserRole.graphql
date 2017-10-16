@@ -1,0 +1,8 @@
+# To update the fields email, password and posts on 
+# a node of type User, a User must be an ADMIN
+query ($user_id: ID!) {
+  SomeUserExists(filter: {
+    id: $user_id,
+    role: ADMIN
+  })
+}

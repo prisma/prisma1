@@ -6,7 +6,7 @@ This directory contains an example implementation for an **API gateway on top of
 
 The API gateway uses dedicated tooling that allows to easily implement a mapping from the custom schema to the underlying CRUD API.
 
-Try out the read-only [demo](https://graphqlbin.com/Pj1Iv).
+Try out the read-only [demo](https://graphqlbin.com/BrkcP).
 
 ## Get started
 
@@ -95,7 +95,7 @@ mutation {
     posts: [
       { title: "GraphQL is awesome" }, 
       { title: "Declarative data fetching with GraphQL" },
-      { title: "GraphQL& Serverless" }
+      { title: "GraphQL & Serverless" }
     ]
   ) {
     id
