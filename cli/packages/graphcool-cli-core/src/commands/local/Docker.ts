@@ -3,7 +3,6 @@ import * as childProcess from 'child_process'
 import * as path from 'path'
 import * as fs from 'fs-extra'
 import * as chalk from 'chalk'
-import * as portfinder from 'portfinder'
 
 export default class Docker {
   out: Output
@@ -35,6 +34,7 @@ export default class Docker {
       port = cluster.host.split(':').slice(-1)[0]
     }
     const defaultVars = this.getDockerEnvVars()
+    const portfinder = require('portfinder')
     port = port || await portfinder.getPortPromise({ port: 60000 })
     const customVars = {
       PORT: String(port),
@@ -49,6 +49,11 @@ export default class Docker {
   async up(): Promise<Docker> {
     await this.init()
     return this.run('up', '-d', '--remove-orphans')
+  }
+
+  async ps(): Promise<Docker> {
+    await this.init()
+    return this.run('ps')
   }
 
   async start(): Promise<Docker> {

@@ -19,6 +19,7 @@ import Restart from './commands/local/restart'
 import Account from './commands/account'
 import Eject from './commands/local/eject'
 import AddTemplate from './commands/add-template/add-template'
+import PsLocal from './commands/local/ps'
 
 export const groups = [
   {
@@ -111,5 +112,6 @@ export const commands = [
   Restart,
   Account,
   Eject,
-  AddTemplate
+  AddTemplate,
+  PsLocal
 ]
