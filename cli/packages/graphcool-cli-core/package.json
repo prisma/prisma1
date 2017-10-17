@@ -76,7 +76,6 @@
     "figures": "^2.0.0",
     "globby": "^6.1.0",
     "graphcool-json-schema": "^0.3.13",
-    "hasbin": "^1.2.3",
     "inquirer": "^3.3.0",
     "js-yaml": "^3.9.1",
     "jwt-decode": "^2.2.0",

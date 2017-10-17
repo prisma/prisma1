@@ -10,8 +10,8 @@ import * as childProcess from 'child_process'
 const debug = require('debug')('module')
 import * as chalk from 'chalk'
 import * as figures from 'figures'
-import * as hasbin from 'hasbin'
 import {intersection, difference} from 'lodash'
+import { getBinPath } from './getbin'
 
 
 export default class AddTemplate extends Command {
@@ -207,9 +207,9 @@ export default class AddTemplate extends Command {
   }
 
   private npmInstall(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      const cmdName = hasbin.first.sync(['yarn', 'npm'])
-      const child = childProcess.spawn(cmdName, ['install'], {
+    return new Promise(async (resolve, reject) => {
+      const cmdPath = await getBinPath('yarn') || await getBinPath('npm')
+      const child = childProcess.spawn(cmdPath!, ['install'], {
         cwd: this.config.definitionDir,
       })
       child.stdout.pipe(process.stdout)
