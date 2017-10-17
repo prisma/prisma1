@@ -5,14 +5,7 @@ import { ProjectDefinition } from 'graphcool-cli-engine'
 export const defaultPjson = {
   "name": "",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC"
+  "description": "My Graphcool Service"
 }
 
 
@@ -29,10 +22,10 @@ export const defaultDefinition: ProjectDefinition = {
 # Just run \`graphcool deploy\` to have the first running Graphcool Service.
 #
 # Check out some examples:
-#    github.com/graphcool/examples
+#    https://github.com/graphcool/graphcool/tree/master/examples
 #
 # Here are the reference docs of this definition format:
-# https://docs-next.graph.cool/reference/basics/project-configuration-opheidaix3
+# https://docs-next.graph.cool/reference/service-definition/graphcool.yml-foatho8aip
 #
 # Happy Coding!
 
@@ -130,7 +123,7 @@ export const changedDefaultDefinition: ProjectDefinition = {
 # Just uncomment it and run \`graphcool deploy\`
 #
 # Check out some examples:
-#    github.com/graphcool/examples
+#    https://github.com/graphcool/graphcool/tree/master/examples
 #
 # Happy Coding!
 

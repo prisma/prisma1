@@ -43,7 +43,7 @@ export default class Bundler {
     this.client = cmd.client
     this.projectId = projectId
     this.dotBuildDir = path.join(this.config.definitionDir, '.build/')
-    this.buildDir = path.join(this.config.definitionDir, '.build/dist')
+    this.buildDir = path.join(this.dotBuildDir, 'dist/')
     this.zipPath = path.join(this.dotBuildDir, 'build.zip')
     debug(this.zipPath)
   }
@@ -113,12 +113,16 @@ Read more here: https://github.com/graphcool/graphcool/issues/800
       zip.file(file, { name: file })
     })
     debug('added files', filesToAdd)
-    await builder.compile(this.fullFileNames)
+    const createdFiles = await builder.compile(this.fullFileNames)
+    debug('converted files', this.fullFileNames)
+    debug('createdFiles', createdFiles)
     this.generateEnvFiles()
     this.generateHandlerFiles()
     const distFiles = await globby(['**/*', '!.build', '!*.zip'], {cwd: this.buildDir})
     distFiles.forEach(file => {
-      zip.file(file, { name: file })
+      const fileName = path.join(this.buildDir, file)
+      debug('adding', fileName, file)
+      zip.file(fileName, { name: file })
     })
     debug('added build files', distFiles)
     zip.finalize()
@@ -131,7 +135,7 @@ Read more here: https://github.com/graphcool/graphcool/issues/800
     debug('bundled', Date.now() - before)
     this.out.action.stop(this.prettyTime(Date.now() - before))
     if (!this.config.debug) {
-      fs.removeSync(this.buildDir)
+      fs.removeSync(this.dotBuildDir)
     }
 
     return this.getExternalFiles(url)

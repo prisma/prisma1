@@ -20,6 +20,7 @@ export interface Clusters {
 
 export interface Cluster {
   host: string
+  faasHost: string
   clusterSecret: string
 }
 

@@ -69,17 +69,13 @@ export class CLI {
   }
 
   async run() {
-    debug('starting run')
-
     out = new Output(this.config)
 
     this.config.setOutput(out)
 
     if (this.cmdAskingForHelp) {
-      debug('running help command')
       this.cmd = await this.Help.run(this.config)
     } else {
-      debug('dispatcher')
       const id = this.getCommandId(this.config.argv.slice(1))
       // if there is a subcommand, cut the first away so the Parser still works correctly
       if (
@@ -90,12 +86,10 @@ export class CLI {
       ) {
         this.config.argv = this.config.argv.slice(1)
       }
-      debug(`command id: ${id}, argv: ${this.config.argv}`)
       const dispatcher = new Dispatcher(this.config)
       let result = await dispatcher.findCommand(
         id || this.config.defaultCommand || 'help',
       )
-      debug('found command')
       // if nothing is found, try again with taking what is before :
       if (!result.Command && id && id.includes(':')) {
         result = await dispatcher.findCommand(
@@ -108,7 +102,6 @@ export class CLI {
       if (foundCommand) {
         const lock = new Lock(out)
         await lock.unread()
-        debug('running cmd')
         // TODO remove this
         if (process.env.NOCK_WRITE_RESPONSE_CLI === 'true') {
           debug('RECORDING')
@@ -142,11 +135,9 @@ export class CLI {
             this.config.argv.includes('--watch')))
       )
     ) {
-      debug('flushing stdout')
       const { timeout } = require('./util')
       await timeout(this.flush(), 1000)
 
-      debug('exiting')
       out.exit(0)
     } else {
       debug('not flushing')

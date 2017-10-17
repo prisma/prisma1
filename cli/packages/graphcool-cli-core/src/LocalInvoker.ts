@@ -9,6 +9,8 @@ import * as path from 'path'
 import BufferedConsole from './BufferedConsole'
 import getConsoleOutput from './getConsoleOutput'
 import * as chalk from 'chalk'
+import {register} from 'ts-node'
+import { baseCompilerOptions } from './commands/deploy/Bundler/TypescriptBuilder'
 
 export class LocalInvoker {
   fnName: string
@@ -35,6 +37,16 @@ export class LocalInvoker {
 
   public async invoke(input: any): Promise<any> {
     this.injectEnvironment()
+
+    register({
+      compilerOptions: {
+        ...baseCompilerOptions,
+        target: 'es5',
+        moduleResolution: 'node',
+        lib: ['es2017', 'dom']
+      }
+    })
+
     const src = typeof this.fnDefinition.handler.code === 'string' ? this.fnDefinition.handler.code : this.fnDefinition.handler.code!.src
     const functionPath = path.join(
       this.module.baseDir!,

@@ -1,4 +1,4 @@
-<p align="center"><a href="https://www.graph.cool"><img src="https://imgur.com/NNp55eL.png" width="314"></a></p>
+<p align="center"><a href="https://www.graph.cool"><img src="https://imgur.com/he8RLRs.png"></a></p>
 
 [![CircleCI](https://circleci.com/gh/graphcool/graphcool.svg?style=shield)](https://circleci.com/gh/graphcool/graphcool) [![Slack Status](https://slack.graph.cool/badge.svg)](https://slack.graph.cool) [![npm version](https://img.shields.io/badge/npm%20package-next-brightgreen.svg)](https://badge.fury.io/js/graphcool)
 
@@ -115,8 +115,6 @@
 
 * [crud-api](examples/crud-api): Simple CRUD-style GraphQL API
 * [auth](examples/auth): Email/password-based authentication & user permissions
-* [send-email](examples/send-email): Send email via Mailgun via GraphQL mutation
-* [push-notifications](examples/push-notifications): Send push notification when new Post is created
 * [env-variables](examples/env-variables): Function accessing environment variables
 * [rest-wrapper](examples/rest-wrapper): Extend GraphQL API by wrapping existing REST endpoint
 * [full-example](examples/full-example): Full example (webshop) demoing most available features
@@ -143,8 +141,6 @@ Help us shape the future of the Graphcool Framework by :thumbsup: [existing Feat
 
 We are in the process of setting up a formal road map. Check back here in the coming weeks
 to see the new features we are planning!
-
-> **Note:** `functions` are currently not working for local cluster setups (use the BaaS deployment for now).
 
 ## Community
 

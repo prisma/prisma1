@@ -20,27 +20,25 @@ export default class Up extends Command {
 
     const docker = new Docker(this.out, this.config, this.env, name)
 
-    const {envVars: {MASTER_TOKEN, PORT}} = await docker.up()
+    const {envVars: {MASTER_TOKEN, PORT, FUNCTIONS_PORT}} = await docker.up()
 
     this.out.log('')
     this.out.action.start('Waiting for Graphcool to initialize. This can take several minutes')
     const cluster = (this.env.rc.clusters && this.env.rc.clusters[name]) ? this.env.rc.clusters[name] : null
-    const host = (cluster && typeof cluster !== 'string') ? cluster.host : 'http://localhost:' + PORT
+    const host = (cluster && typeof cluster !== 'string' && cluster.host) ? cluster.host : 'http://localhost:' + PORT
+    const faasHost = (cluster && typeof cluster !== 'string' && cluster.faasHost) ? cluster.faasHost : 'http://localhost:' + FUNCTIONS_PORT
     const endpoint = host + '/system'
     await this.client.waitForLocalDocker(endpoint)
 
     const {token}: AuthenticateCustomerPayload = await this.client.authenticateCustomer(endpoint, MASTER_TOKEN)
 
-
-    if (!cluster) {
-      debug('Setting cluster')
-      this.env.setGlobalCluster(name, {
-        host,
-        clusterSecret: token,
-      })
-      this.env.saveGlobalRC()
-    }
-
+    debug('Setting cluster')
+    this.env.setGlobalCluster(name, {
+      host,
+      faasHost,
+      clusterSecret: token,
+    })
+    this.env.saveGlobalRC()
     this.out.action.stop()
 
     if (!cluster) {
