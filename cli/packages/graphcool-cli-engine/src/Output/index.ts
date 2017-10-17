@@ -207,7 +207,7 @@ To get more detailed output, run ${chalk.dim(instruction)}`,
         } else {
           this.stderr.log(
             bangify(
-              wrap(prefix + this.color.yellow(this.getErrorMessage(err))),
+              wrap(prefix + this.getErrorMessage(err)),
               this.color.yellow(arrow),
             ) + '\n',
           )

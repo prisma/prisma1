@@ -28,20 +28,29 @@ export default class Docker {
   async init() {
     // either get the ports
     let port: any = null
+    let functionsPort: any = null
     let cluster
     if (this.env.rc.clusters && this.env.rc.clusters[this.clusterName]) {
       this.env.setActiveCluster(this.clusterName)
       cluster = this.env.rc.clusters[this.clusterName]
       port = cluster.host.split(':').slice(-1)[0]
+      if (cluster.faasHost) {
+        functionsPort = cluster.faasHost.split(':').slice(-1)[0]
+      }
     }
     const defaultVars = this.getDockerEnvVars()
     const portfinder = require('portfinder')
     port = port || await portfinder.getPortPromise({ port: 60000 })
+    functionsPort = functionsPort || await portfinder.getPortPromise({ port: 60050 })
     const customVars = {
       PORT: String(port),
+      FUNCTIONS_PORT: String(functionsPort)
     }
     this.out.log(
-      `Using http://localhost:${customVars.PORT} as the local Graphcool host`,
+      `Running local Graphcool cluster at http://localhost:${customVars.PORT}`,
+    )
+    this.out.log(
+      `Running local FaaS runtime at http://localhost:${customVars.FUNCTIONS_PORT}`,
     )
     this.out.log(`This may take several minutes`)
     this.envVars = { ...process.env, ...defaultVars, ...customVars }
