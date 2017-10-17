@@ -14,4 +14,8 @@ if (!semver.satisfies(nodeVersion, pjson.engines.node)) {
   process.stderr.write(`WARNING\nWARNING Node version must be ${pjson.engines.node} to use the Graphcool CLI\nWARNING\n`)
 }
 
+if (nodeVersion === '8.0.0' || nodeVersion === '8.1.0') {
+  process.stderr.write(`WARNING\nWARNING Node version ${nodeVersion} is not supported. Please use at least 8.1.2 \nWARNING\n`)
+}
+
 run({config: {root, mock: false}})
