@@ -1,0 +1,10 @@
+# To delete a node of type User, a User must be 
+# either the "owner" of the User OR an ADMIN
+query ($user_id: ID!) {
+  SomeUserExists(filter: {
+    OR: [{
+      id: $user_id,
+      role: ADMIN
+    }]
+  })
+}

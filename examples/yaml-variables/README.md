@@ -1,8 +1,8 @@
-# Environment Variables
+# Variables in `graphcool.yml`
 
 ## Overview
 
-This directory contains the service definition and file structure for a simple Graphcool service that makes use of **environment variables inside `graphcool.yml`**. Read the [last section](#whats-in-this-example) of this README to learn how the different components fit together.
+This directory contains the service definition and file structure for a simple Graphcool service that makes use of **variables inside `graphcool.yml`**. Read the [last section](#whats-in-this-example) of this README to learn how the different components fit together.
 
 ```
 .
