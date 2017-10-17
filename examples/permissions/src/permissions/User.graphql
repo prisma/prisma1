@@ -1,0 +1,31 @@
+# To update the fields `email`, `password` and `posts` on 
+# a node of type `User`, a `User` must be either the "owner" 
+# of the `User` _OR_ an `ADMIN`
+query UpdateUserData ($user_id: ID!) {
+  SomeUserExists(filter: {
+    OR: [{
+      id: $user_id,
+      role: ADMIN
+    }]
+  })
+}
+
+# To update the field `role` on 
+# a node of type `User`, a `User` must be an `ADMIN`
+query UpdateUserRole ($user_id: ID!) {
+  SomeUserExists(filter: {
+    id: $user_id,
+    role: ADMIN
+  })
+}
+
+# To delete a node of type `User`, a `User` must be 
+# either the "owner" of the `User` _OR_ an `ADMIN`
+query DeleteUser ($user_id: ID!) {
+  SomeUserExists(filter: {
+    OR: [{
+      id: $user_id,
+      role: ADMIN
+    }]
+  })
+}
