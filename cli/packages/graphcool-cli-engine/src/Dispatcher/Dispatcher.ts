@@ -4,7 +4,6 @@ import { undefault } from '../util'
 import { Config } from '../Config'
 import { Output } from '../Output/index'
 import Plugins from '../Plugin/Plugins'
-const debug = require('debug')('cli:dispatcher')
 
 export class CommandManagerBase {
   config: Config
@@ -50,7 +49,6 @@ export class CLICommandManager extends CommandManagerBase {
     if (!root) return
     let p
     try {
-      debug(`finding ${id} command`)
       p = require.resolve(path.join(root, ...id.split(':')))
     } catch (err) {
       if (err.code !== 'MODULE_NOT_FOUND') throw err
@@ -63,14 +61,10 @@ export class CLICommandManager extends CommandManagerBase {
 //
 class PluginCommandManager extends CommandManagerBase {
   async findCommand(id) {
-    debug('findCommand')
     let out = new Output(this.config)
     let plugins = new Plugins(out)
-    debug('loading')
     await plugins.load()
-    debug('loaded')
     const foundCommand = plugins.findCommand(id || this.config.defaultCommand || 'help')
-    debug('found')
     return foundCommand
   }
   async findTopic(id: string) {
