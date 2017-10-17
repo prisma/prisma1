@@ -12,10 +12,10 @@ The framework currently supports Node.js & Typescript and is compatible with exi
 The framework provides powerful abstractions and building blocks to develop flexible, scalable GraphQL backends:
 
 1. **Easy state management** through GraphQL-native database mapping & migrations
-* **Flexible auth workflows** using the JWT-based authentication & permission system
-* **Real-time API** using GraphQL Subscriptions
-* **Highly scalable architecture** enabling asynchronous, event-driven flows using serverless functions
-* **Works with all frontend frameworks** like React, Vue.js, Angular
+2. **Flexible auth workflows** using the JWT-based authentication & permission system
+3. **Real-time API** using GraphQL Subscriptions
+4. **Highly scalable architecture** enabling asynchronous, event-driven flows using serverless functions
+5. **Works with all frontend frameworks** like React, Vue.js, Angular
 
 ## Contents
 
