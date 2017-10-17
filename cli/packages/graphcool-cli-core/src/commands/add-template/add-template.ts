@@ -12,6 +12,7 @@ import * as chalk from 'chalk'
 import * as figures from 'figures'
 import {intersection, difference} from 'lodash'
 import { getBinPath } from './getbin'
+import 'isomorphic-fetch'
 
 
 export default class AddTemplate extends Command {
@@ -54,6 +55,14 @@ export default class AddTemplate extends Command {
     fs.mkdirpSync(tmpDir)
 
     const repoName = `${ghUser}/${ghRepo}`
+
+    const githubUrl = `https://github.com/${repoName.split('#')[0]}/tree/master/${subPath}`
+
+    debug('fetching', githubUrl)
+    const result = await fetch(githubUrl)
+    if (result.status === 404) {
+      this.out.error(`Could not find ${moduleUrl}. Please check if the github repository ${githubUrl} exists`)
+    }
 
     this.out.action.start(
       `Downloading template ${chalk.bold.cyan(moduleUrl)} from ${chalk.bold(
