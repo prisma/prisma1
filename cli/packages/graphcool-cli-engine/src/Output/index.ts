@@ -261,7 +261,7 @@ To get more detailed output, run ${chalk.dim(instruction)}`,
   filesTree(files: string[]) {
     const tree = filesToTree(files)
     const printedTree = treeify.asTree(tree, true)
-    this.log(chalk.blue(printedTree.split('\n').join('\n')))
+    this.log(chalk.dim(printedTree.split('\n').join('\n')))
   }
 
   tree(dirPath: string, padding = false) {

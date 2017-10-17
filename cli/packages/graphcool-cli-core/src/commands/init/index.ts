@@ -93,23 +93,27 @@ Read more here: https://github.com/graphcool/graphcool/issues/706
       this.definition.set(newDefinition)
     }
 
-    this.out.action.start(`\nCreating a new Graphcool app in ${chalk.green(this.config.definitionDir)}`)
+    let relativeDir = path.relative(process.cwd(), this.config.definitionDir)
+    relativeDir = relativeDir.length === 0 ? '.' : relativeDir
+    this.out.action.start(`Creating a new Graphcool service in ${chalk.green(relativeDir)}`)
     this.definition.save(undefined, false)
     this.out.action.stop()
 
-    this.out.log(`${chalk.blue.bold('\nWritten files' + ':')}`)
+    this.out.log(`${chalk.dim.bold('\nWritten files' + ':')}`)
     fs.writeFileSync(path.join(this.config.definitionDir, 'package.json'), JSON.stringify(pjson, null, 2))
     const createdFiles = flatten(this.definition.definition!.modules.map(module => Object.keys(module.files))).concat(['graphcool.yml', 'package.json'])
     this.out.filesTree(createdFiles)
 
-    this.out.log(`\
-Inside that directory, you can run the following commands:
+    const cdInstruction = relativeDir === '.' ? '' : `To get started, cd into the new directory:
+  ${chalk.green(`cd ${relativeDir}`)}
+`
 
+    this.out.log(`${cdInstruction}
+To deploy your Graphcool service:
   ${chalk.green('graphcool deploy')}
-    Deploys the project to Graphcool
 
-  ${chalk.green('graphcool deploy --target prod')}
-    Deploys the project to Graphcool, using the target name \`prod\`
+To start your local Graphcool cluster:
+  ${chalk.green('graphcool local up')}
 
 You can find further instructions in the ${chalk.green('graphcool.yml')} file,
 which is the central project configuration.
