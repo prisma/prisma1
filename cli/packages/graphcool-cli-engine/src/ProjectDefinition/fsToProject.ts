@@ -27,16 +27,21 @@ export async function fsToProject(
   )
 
   if (definition.modules) {
-    for (const moduleName of Object.keys(definition.modules)) {
-      const modulePath = definition.modules[moduleName]
-      const resolvedModulePath = path.join(inputDir, modulePath)
-      const module = await fsToModule(resolvedModulePath, out, moduleName, args)
-      modules.push({
-        ...module,
-        name: moduleName,
-      })
-    }
+    out.error(`Your graphcool.yml contains modules. Modules are deprecated and replaced by templates.
+Read more about templates here: https://github.com/graphcool/graphcool/issues/720`)
   }
+
+  // if (definition.modules) {
+  //   for (const moduleName of Object.keys(definition.modules)) {
+  //     const modulePath = definition.modules[moduleName]
+  //     const resolvedModulePath = path.join(inputDir, modulePath)
+  //     const module = await fsToModule(resolvedModulePath, out, moduleName, args)
+  //     modules.push({
+  //       ...module,
+  //       name: moduleName,
+  //     })
+  //   }
+  // }
 
   return {
     modules,
