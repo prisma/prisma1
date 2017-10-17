@@ -3,6 +3,7 @@ import * as childProcess from 'child_process'
 import * as path from 'path'
 import * as fs from 'fs-extra'
 import * as chalk from 'chalk'
+import {mapValues} from 'lodash'
 
 export default class Docker {
   out: Output
@@ -127,7 +128,8 @@ export default class Docker {
 
   private parseEnv(src: string) {
     const regex = /^\s*export\s*([a-zA-Z0-9\.\-_]+)\s*=(.*)?\s*/
-    return src
+    const variableSyntax = new RegExp('\\${([ ~:a-zA-Z0-9._\'",\\-\\/\\(\\)]+?)}', 'g')
+    const vars = src
       .toString()
       .split(/\r\n|\r|\n/g)
       .reduce((acc, line) => {
@@ -149,5 +151,19 @@ export default class Docker {
 
         return { ...acc, [key]: value }
       }, {})
+
+    return mapValues(vars, (value: string, key) => {
+      const match = variableSyntax.exec(value)
+      if (match) {
+        const varName = match[1]
+        if (vars[varName]) {
+          const newValue = value.slice(0, match.index) + vars[varName] + value.slice(match.index + match[0].length)
+          return newValue
+        } else {
+          this.out.warn(`No variable for env var ${key} and value ${match[0]} found`)
+        }
+      }
+      return value
+    })
   }
 }

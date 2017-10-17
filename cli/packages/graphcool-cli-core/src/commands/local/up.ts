@@ -32,14 +32,12 @@ export default class Up extends Command {
     const {token}: AuthenticateCustomerPayload = await this.client.authenticateCustomer(endpoint, MASTER_TOKEN)
 
 
-    if (!cluster) {
-      debug('Setting cluster')
-      this.env.setGlobalCluster(name, {
-        host,
-        clusterSecret: token,
-      })
-      this.env.saveGlobalRC()
-    }
+    debug('Setting cluster')
+    this.env.setGlobalCluster(name, {
+      host,
+      clusterSecret: token,
+    })
+    this.env.saveGlobalRC()
 
     this.out.action.stop()
 
