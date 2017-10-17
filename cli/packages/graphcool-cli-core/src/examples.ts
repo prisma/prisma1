@@ -32,7 +32,7 @@ export const defaultDefinition: ProjectDefinition = {
 #    github.com/graphcool/examples
 #
 # Here are the reference docs of this definition format:
-# https://docs-next.graph.cool/reference/basics/project-configuration-opheidaix3
+# https://docs-next.graph.cool/reference/service-definition/graphcool.yml-foatho8aip
 #
 # Happy Coding!
 
