@@ -1,0 +1,13 @@
+type User @model {
+  id: ID! @isUnique
+  
+  name: String!
+  articles: [Article!]! @relation(name: "UserArticles")
+}
+
+type Article @model {
+  id: ID! @isUnique
+
+  title: String!
+  author: User! @relation(name: "UserArticles")
+}
