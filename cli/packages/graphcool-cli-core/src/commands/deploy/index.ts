@@ -80,7 +80,7 @@ ${chalk.gray(
     let targetName
     let target
     let cluster
-    const foundTarget = await this.env.getTargetWithName(this.flags.target)
+    const foundTarget = await this.env.getTargetWithName(process.env.GRAPHCOOL_TARGET || this.flags.target)
     if (interactive) {
       foundTarget.targetName = null
       foundTarget.target = null
@@ -98,7 +98,7 @@ Please run ${chalk.green('$ graphcool local up')} to get a local Graphcool clust
       }
     }
 
-    if (newServiceName || interactive || !foundTarget.targetName) {
+    if (newServiceName || interactive || (!foundTarget.targetName && !foundTarget.target)) {
       targetName = this.flags.target
       if (!targetName) {
         targetName = await this.targetNameSelector(this.env.getDefaultTargetName(cluster))
@@ -252,7 +252,7 @@ Please run ${chalk.green('$ graphcool local up')} to get a local Graphcool clust
         ? `Deploying${localNote}`
         : `Deploying to ${chalk.bold(
             cluster,
-          )} with target ${chalk.bold(targetName)}${localNote}`,
+          )} with target ${chalk.bold(targetName || `${cluster}/${projectId}`)}${localNote}`,
     )
 
     const migrationResult = await this.client.push(
