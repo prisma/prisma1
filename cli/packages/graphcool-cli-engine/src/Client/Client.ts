@@ -20,6 +20,7 @@ import { ProjectDefinitionClass } from '../ProjectDefinition/ProjectDefinition'
 import {Environment} from '../Environment'
 import { Output } from "../index";
 import { Auth } from '../Auth'
+import * as chalk from 'chalk'
 
 const debug = require('debug')('client')
 
@@ -74,6 +75,8 @@ export class Client {
             await this.auth.ensureAuth(true)
             // try again with new token
             return await this.client.request(query, variables)
+          } else if(e.message.includes('ECONNREFUSED') && (e.message.includes('localhost') || e.message.includes('127.0.0.1'))) {
+            this.out.error(`Could not connect to local cluster. Please use ${chalk.bold.green('graphcool local up')} to start your local Graphcool cluster.`)
           } else {
             throw e
           }
