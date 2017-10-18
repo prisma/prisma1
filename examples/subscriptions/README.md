@@ -45,7 +45,7 @@ Read the [last section](#whats-in-this-example) of this README to learn how the 
 Clone the full [graphcool](https://github.com/graphcool/graphcool) repository and navigate to this directory or download _only_ this example with the following command:
 
 ```sh
-https://codeload.github.com/graphcool/graphcool/tar.gz/master | tar -xz --strip=2 graphcool-master/examples/subscriptions
+curl https://codeload.github.com/graphcool/graphcool/tar.gz/master | tar -xz --strip=2 graphcool-master/examples/subscriptions
 cd subscriptions
 ```
 
