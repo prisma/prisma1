@@ -12,16 +12,20 @@ export default class Playground extends Command {
       char: 't',
       description: 'Target name',
     }),
+    web: flags.boolean({
+      char: 'w',
+      description: 'Force open web playground',
+    }),
   }
   async run() {
     // await this.auth.ensureAuth()
-    const { target } = this.flags
+    const { target, web } = this.flags
     const {id} = await this.env.getTarget(target)
     await this.auth.ensureAuth()
 
     const localPlaygroundPath = `/Applications/GraphQL\ Playground.app/Contents/MacOS/GraphQL\ Playground`
 
-    if (fs.pathExistsSync(localPlaygroundPath)) {
+    if (fs.pathExistsSync(localPlaygroundPath) && !web) {
       childProcess.spawn(
         localPlaygroundPath,
         ['--endpoint', this.env.simpleEndpoint(id), '--platform-token', this.env.token],
