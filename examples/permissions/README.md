@@ -39,13 +39,18 @@ Here is an overview of the file structure in this example:
 ├── graphcool.yml
 ├── node_modules
 ├── package.json
-├── permissions
-│   ├── deletePost.graphql
-│   ├── deleteUser.graphql
-│   ├── updatePost.graphql
-│   └── updateUser.graphql
 ├── src
-│   └── email-password
+│   ├── email-password
+│   │   ├── authenticate.graphql
+│   │   ├── authenticate.js
+│   │   ├── loggedInUser.graphql
+│   │   ├── loggedInUser.js
+│   │   ├── signup.graphql
+│   │   ├── signup.js
+│   │   └── signup.ts
+│   └── permissions
+│       ├── Post.graphql
+│       └── User.graphql
 ├── types.graphql
 └── yarn.lock
 ```
@@ -179,10 +184,10 @@ Here's a list of all [permission rules](./graphcool.yml#L21) that are configured
 - `Post.create`: Only authenticated users can **create** nodes of type `Post`
 - `Post.update`: To **update** a node of type `Post`, a `User` must be:
   - authenticated
-  - the `author` of the `Post` (see the permission query in [`permissions/updatePost.graphql`](./permissions/updatePost.graphql))
+  - the `author` of the `Post` (see the permission query `UpdatePost` in [`src/permissions/Post.graphql`](./src/permissions/Post.graphql))
 - `Post.delete`: To **delete** a node of type `Post`, a `User` must be:
   - authenticated
-  - either the `author` of the `Post` or an `ADMIN` (see the permission query in [`permissions/deletePost.graphql`](./permissions/deletePost.graphql))
+  - either the `author` of the `Post` or an `ADMIN` (see the permission query `DeletePost` in [`src/permissions/Post.graphql`](./src/permissions/Post.graphql))
 
 ##### `User`
 
@@ -190,13 +195,13 @@ Here's a list of all [permission rules](./graphcool.yml#L21) that are configured
 - `User.create`: `User` nodes can only be **created** with a [root token](https://docs-next.graph.cool/reference/auth/authentication/authentication-tokens-eip7ahqu5o#root-tokens) (see the code for the [`signup`](./src/email-password/signup.js) function)
 - `User.update`: To **update** the fields `email`, `password` and `posts` on a node of type `User`, a `User` must be:
   - authenticated
-  - either the "owner" of the `User` or an `ADMIN` (see the permission query `UpdateUserData` in [`permissions/.graphql`](./permissions/updateUser.graphql))
+  - either the "owner" of the `User` or an `ADMIN` (see the permission query `UpdateUserData` in [`src/permissions/.graphql`](./src/permissions/User.graphql))
 - `User.update`: To **update** the field `role` on a node of type `User`, a `User` must be:
   - authenticated
-  - an `ADMIN` (see the permission query `UpdateUserRole` in [`permissions/updateUser.graphql`](./permissions/updateUser.graphql))
+  - an `ADMIN` (see the permission query `UpdateUserRole` in [`src/permissions/User.graphql`](./src/permissions/User.graphql))
 - `User.delete`: To **delete** a node of type `User`, a `User` must be:
   - authenticated
-  - either the "owner" of the `User` or an `ADMIN` (see the permission query in [`permissions/deleteUser.graphql`](./permissions/deleteUser.graphql))
+  - either the "owner" of the `User` or an `ADMIN` (see the permission query `DeleteUser` in [`src/permissions/deleteUser.graphql`](./src/permissions/deleteUser.graphql))
 
 
 ##### `UsersPosts` (relation)
