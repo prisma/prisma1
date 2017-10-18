@@ -1,4 +1,4 @@
-# graphcool-cli [![npm version](https://badge.fury.io/js/graphcool.svg)](https://badge.fury.io/js/graphcool) [![CircleCI](https://circleci.com/gh/graphcool/graphcool-cli.svg?style=svg)](https://circleci.com/gh/graphcool/graphcool-cli)
+# graphcool-cli [![npm version](https://badge.fury.io/js/graphcool.svg)](https://badge.fury.io/js/graphcool) [![CircleCI](https://circleci.com/gh/graphcool/graphcool.svg?style=svg)](https://circleci.com/gh/graphcool/graphcool)
 
 📟 Manage your GraphQL backend from your terminal
 
