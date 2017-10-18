@@ -30,39 +30,27 @@ export default class AddTemplate extends Command {
       
   ${chalk.bold('Github Authentication')}
   $ ${chalk.cyan(
-    'graphcool add-template graphcool/templates/auth/github',
+    'graphcool add-template github-auth',
   )}
 
   ${chalk.bold('Facebook Authentication')}
   $ ${chalk.cyan(
-    'graphcool add-template graphcool/templates/auth/facebook',
+    'graphcool add-template facebook-auth',
   )}
   
   ${chalk.bold('Algolia Syncing')}
-  $ ${chalk.cyan('graphcool add-template graphcool/templates/syncing/algolia')}
+  $ ${chalk.cyan('graphcool add-template algolia')}
   `
   async run() {
     await this.definition.load(this.flags)
     const moduleUrl = this.argv[0]
-    const splittedModule = moduleUrl.split('/')
-    const ghUser = splittedModule[0]
-    const ghRepo = splittedModule[1]
-    const moduleDirName = splittedModule[splittedModule.length - 1]
-    const subPath =
-      splittedModule.length > 2 ? splittedModule.slice(2).join('/') : ''
+
+    const {repoName, subPath, moduleDirName} = await this.extractInfo(moduleUrl)
 
     const tmpDir = path.join(os.tmpdir(), `${cuid()}/`)
     fs.mkdirpSync(tmpDir)
 
-    const repoName = `${ghUser}/${ghRepo}`
-
-    const githubUrl = `https://github.com/${repoName.split('#')[0]}/tree/master/${subPath}`
-
-    debug('fetching', githubUrl)
-    const result = await fetch(githubUrl)
-    if (result.status === 404) {
-      this.out.error(`Could not find ${moduleUrl}. Please check if the github repository ${githubUrl} exists`)
-    }
+    await this.checkUrl(repoName, subPath, moduleUrl)
 
     this.out.action.start(
       `Downloading template ${chalk.bold.cyan(moduleUrl)} from ${chalk.bold(
@@ -134,11 +122,10 @@ export default class AddTemplate extends Command {
     this.out.tree(relativeModulePath, false)
 
 
-    const readmePath = path.join(target, 'README.md')
+    const readmePath = path.join(target, 'USAGE.md')
     if (fs.pathExistsSync(readmePath)) {
       let readme = fs.readFileSync(readmePath, 'utf-8')
       try {
-        readme = trimReadme(readme)
         const readmeUrl = `https://github.com/${repoName}/tree/master/${subPath}`
         this.out.log(
           '   ' + chalk.bold.underline.magenta(`Setup Instructions`) + '\n',
@@ -158,6 +145,33 @@ export default class AddTemplate extends Command {
     //     'graphcool deploy',
     //   )} to deploy changes`,
     // )
+  }
+
+  async extractInfo(moduleUrl: string): Promise<{repoName: string, subPath: string, moduleDirName: string}> {
+    let splittedModule = moduleUrl.split('/')
+
+    if (splittedModule.length === 1) {
+      const res = await fetch('https://raw.githubusercontent.com/graphcool/templates/master/templates.json')
+      const templates = await res.json()
+      if (!templates[moduleUrl]) {
+        this.out.error(`Could not find template ${chalk.bold(moduleUrl)}.
+Check https://github.com/graphcool/templates for official templates.`)
+      }
+
+      splittedModule = `graphcool/templates/${templates[moduleUrl].path}`.split('/')
+    }
+
+    const ghUser = splittedModule[0]
+    const ghRepo = splittedModule[1]
+    const repoName = `${ghUser}/${ghRepo}`
+
+    const moduleDirName = splittedModule[splittedModule.length - 1]
+    const subPath =
+      splittedModule.length > 2 ? splittedModule.slice(2).join('/') : ''
+
+    return {
+      repoName, subPath, moduleDirName
+    }
   }
 
   async mergePackageJsons(source: string) {
@@ -192,7 +206,11 @@ export default class AddTemplate extends Command {
             newDependencies.forEach(name => {
               serviceJson.dependencies[name] = templateDeps[name]
             })
-            this.out.log(chalk.bold(`The dependencies ${newDependencies.join(', ')} have been added to the main package.json`))
+            if (newDependencies.length === 1) {
+              this.out.log(`The dependency ${chalk.bold(newDependencies.join(', '))} has been added to the main package.json`)
+            } else if (newDependencies.length > 1) {
+              this.out.log(`The dependencies ${chalk.bold(newDependencies.join(', '))} have been added to the main package.json`)
+            }
             const newJson = JSON.stringify(serviceJson, null, 2)
             fs.writeFileSync(destPjsonPath, newJson)
             this.out.log(`Written ${chalk.bold(destPjsonPath)}\n`)
@@ -212,6 +230,16 @@ export default class AddTemplate extends Command {
 
     } else {
       this.out.log('Path does not exist')
+    }
+  }
+
+  private async checkUrl(repoName, subPath, moduleUrl) {
+    const githubUrl = `https://github.com/${repoName.split('#')[0]}/tree/master/${subPath}`
+
+    debug('fetching', githubUrl)
+    const result = await fetch(githubUrl)
+    if (result.status === 404) {
+      this.out.error(`Could not find ${moduleUrl}. Please check if the github repository ${githubUrl} exists`)
     }
   }
 
@@ -247,24 +275,4 @@ function downloadRepo(repo: string, destination: string) {
       }
     })
   })
-}
-
-function trimReadme(readme: string) {
-  const lines = readme.split('\n')
-  const gettingStartedIndex = lines.findIndex(l =>
-    l.trim().startsWith('## Getting Started'),
-  )
-  const cutLines = lines.slice(gettingStartedIndex)
-  const configurationIndex = cutLines.findIndex(l =>
-    l.trim().startsWith('## Configuration'),
-  )
-  const configurationLines = cutLines.slice(configurationIndex)
-  const nextHeadline = configurationLines
-    .slice(1)
-    .findIndex(l => l.trim().startsWith('#'))
-  const configuration = configurationLines.slice(0, nextHeadline)
-
-  return (
-    lines.slice(1, gettingStartedIndex).join('\n') + configuration.join('\n')
-  )
 }
