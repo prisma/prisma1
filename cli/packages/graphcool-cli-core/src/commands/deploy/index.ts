@@ -317,6 +317,8 @@ https://console.graph.cool/${encodeURIComponent(info.name)}/settings/general`)
       this.definition.set(migrationResult.projectDefinition)
     }
 
+    let hasError = false
+
     if (migrationResult.errors.length > 0) {
       this.out.log(
         chalk.rgb(244, 157, 65)(
@@ -325,6 +327,7 @@ https://console.graph.cool/${encodeURIComponent(info.name)}/settings/general`)
       )
       this.out.migration.printErrors(migrationResult.errors)
       this.out.log('')
+      hasError = true
     }
 
     if (
@@ -339,9 +342,13 @@ https://console.graph.cool/${encodeURIComponent(info.name)}/settings/general`)
             `\`graphcool deploy --force\``,
           )} if you know what you're doing!\n`,
       )
+      hasError = true
     }
     this.deploying = false
     this.printEndpoints(projectId)
+    if (hasError) {
+      this.out.exit(1)
+    }
   }
 
   private printEndpoints(projectId) {
@@ -462,6 +469,8 @@ https://console.graph.cool/${encodeURIComponent(info.name)}/settings/general`)
         this.definition.set(migrationResult.projectDefinition)
       }
 
+      let hasError = false
+
       if (migrationResult.errors.length > 0) {
         this.out.log(
           chalk.rgb(244, 157, 65)(
@@ -470,6 +479,7 @@ https://console.graph.cool/${encodeURIComponent(info.name)}/settings/general`)
         )
         this.out.migration.printErrors(migrationResult.errors)
         this.out.log('')
+        hasError = true
       }
 
       if (
@@ -484,6 +494,10 @@ https://console.graph.cool/${encodeURIComponent(info.name)}/settings/general`)
             `\`graphcool deploy --force\``,
           )} if you know what you're doing!\n`,
         )
+        hasError = true
+      }
+      if (hasError) {
+        this.out.exit(1)
       }
     } catch (e) {
       this.out.action.stop()
