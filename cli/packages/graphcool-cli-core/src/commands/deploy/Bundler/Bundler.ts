@@ -22,11 +22,6 @@ import * as chalk from 'chalk'
 const patterns = ['**/*.graphql', '**/graphcool.yml'].map(i => `!${i}`)
 patterns.unshift('**/*')
 
-export interface FunctionTuple {
-  name: string
-  fn: FunctionDefinition
-}
-
 export default class Bundler {
   definition: ProjectDefinitionClass
   config: Config
@@ -49,47 +44,8 @@ export default class Bundler {
   }
 
   async bundle(): Promise<ExternalFiles> {
-    if (this.functions.length === 0) {
+    if (this.definition.functions.length === 0) {
       return {}
-    }
-
-    const hasFunctionWithRequire = this.functions.find(f => {
-      const src = typeof f.fn.handler.code === 'string' ? f.fn.handler.code : f.fn.handler.code!.src
-      const file = fs.readFileSync(src, 'utf-8')
-      if (file.includes('require(') || file.includes('import')) {
-        return true
-      } else {
-        return false
-      }
-    })
-
-    if (hasFunctionWithRequire) {
-      if (
-        !fs.pathExistsSync(
-          path.join(this.config.definitionDir, 'package.json'),
-        )
-      ) {
-        this.out.warn(`You have defined functions but no package.json has been found.`)
-      }
-
-      if (
-        !fs.pathExistsSync(path.join(this.config.definitionDir, 'node_modules'))
-      ) {
-        this.out.warn(`You have defined functions but no node_modules has been found. Please run ${chalk.green('npm install')}`)
-      }
-
-      if (
-        !fs.pathExistsSync(path.join(this.config.definitionDir, 'node_modules')) ||
-        !fs.pathExistsSync(
-          path.join(this.config.definitionDir, 'package.json'),
-        )
-      ) {
-        this.out.error(`Note, that the new function runtime doesn't inject
-node modules automatically anymore and you need to
-install them before deploying
-Read more here: https://github.com/graphcool/graphcool/issues/800
-`)
-      }
     }
 
     this.out.action.start('Bundling functions')
@@ -176,7 +132,7 @@ Read more here: https://github.com/graphcool/graphcool/issues/800
   }
 
   getExternalFiles(url: string): ExternalFiles {
-    return this.functions.reduce((acc, fn) => {
+    return this.definition.functions.reduce((acc, fn) => {
       const src =
         typeof fn.fn.handler.code === 'string'
           ? fn.fn.handler.code
@@ -195,7 +151,7 @@ Read more here: https://github.com/graphcool/graphcool/issues/800
   }
 
   generateEnvFiles() {
-    this.functions.forEach(fn => {
+    this.definition.functions.forEach(fn => {
       if (typeof fn.fn.handler.code === 'object') {
         const src = fn.fn.handler.code!.src
         const buildFileName = this.getBuildFileName(src)
@@ -209,7 +165,7 @@ Read more here: https://github.com/graphcool/graphcool/issues/800
   }
 
   generateHandlerFiles() {
-    this.functions.forEach(fn => {
+    this.definition.functions.forEach(fn => {
       const src =
         typeof fn.fn.handler.code === 'string'
           ? fn.fn.handler.code
@@ -227,26 +183,8 @@ Read more here: https://github.com/graphcool/graphcool/issues/800
     })
   }
 
-  get functions(): Array<FunctionTuple> {
-    const functions = this.definition.definition!.modules[0].definition!
-      .functions
-
-    if (!functions) {
-      return []
-    } else {
-      return Object.keys(functions)
-        .filter(name => functions[name].handler.code)
-        .map(name => {
-          return {
-            name,
-            fn: functions[name],
-          }
-        })
-    }
-  }
-
   get shortFileNamesBlacklist(): string[] {
-    return flatMap(this.functions.map(fn =>
+    return flatMap(this.definition.functions.map(fn =>
         typeof fn.fn.handler.code === 'string'
           ? fn.fn.handler.code
           : fn.fn.handler.code!.src,
@@ -256,7 +194,7 @@ Read more here: https://github.com/graphcool/graphcool/issues/800
   }
 
   get fullFileNames(): string[] {
-    return this.functions.map(fn =>
+    return this.definition.functions.map(fn =>
       path.join(
         this.config.definitionDir,
         typeof fn.fn.handler.code === 'string'

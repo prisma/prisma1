@@ -32,6 +32,7 @@ export interface Project {
   schema: string
   alias: string
   region: string
+  isEjected: boolean
 }
 
 export interface RemoteProject extends Project {
@@ -70,6 +71,7 @@ export interface ProjectInfo extends Project {
   schema: string
   alias: string
   region: string
+  isEjected: boolean
   projectDefinition: ProjectDefinition
 }
 

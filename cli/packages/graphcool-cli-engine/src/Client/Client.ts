@@ -31,6 +31,7 @@ const REMOTE_PROJECT_FRAGMENT = `
     schema
     alias
     region
+    isEjected
     projectDefinitionWithFileContent
   }
 `
