@@ -741,7 +741,7 @@ To attach the token to the request's header, you need to configure your `ApolloC
 networkInterface.use([{
   applyMiddleware (req, next) {
     if (!req.options.headers) {
-      req.options.headers = 
+      req.options.headers = {}
     }
 
     // get the authentication token from local storage if it exists

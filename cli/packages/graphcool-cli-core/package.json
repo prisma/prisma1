@@ -1,6 +1,6 @@
 {
   "name": "graphcool-cli-core",
-  "version": "1.4.3",
+  "version": "1.4.6",
   "main": "dist/index.js",
   "files": [
     "dist"
@@ -75,8 +75,7 @@
     "download-github-repo": "^0.1.3",
     "figures": "^2.0.0",
     "globby": "^6.1.0",
-    "graphcool-json-schema": "^0.3.12",
-    "hasbin": "^1.2.3",
+    "graphcool-json-schema": "^0.3.13",
     "inquirer": "^3.3.0",
     "js-yaml": "^3.9.1",
     "jwt-decode": "^2.2.0",
@@ -88,6 +87,7 @@
     "sillyname": "^0.1.0",
     "source-map-support": "^0.4.18",
     "table": "^4.0.1",
+    "ts-node": "^3.3.0",
     "typescript": "^2.5.3",
     "validator": "^8.2.0"
   }

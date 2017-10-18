@@ -30,6 +30,7 @@ export class Command {
   static hidden: boolean = false
   static mockDefinition: ProjectDefinition
   static mockRC: RC
+  static allowAnyFlags: boolean = false
 
   static get id(): string {
     return this.command ? `${this.topic}:${this.command}` : this.topic

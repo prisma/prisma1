@@ -253,6 +253,18 @@ ${chalk.bold('token')} has been renamed to ${chalk.bold('clusterSecret')}.
 It has been renamed to ${oldPath}. The up-to-date format has been written to ${rcPath}.
 `)
         }
+        if (content.clusters && Object.keys(content.clusters).find(c => !content.clusters[c].faasHost)) {
+          const newRcJson = {
+            ...content,
+            clusters: mapValues(content.clusters, c => typeof c === 'string' ? c : ({
+              ...c,
+              faasHost: 'http://localhost:60050'
+            }))
+          }
+          const newLocalRcYaml = yaml.safeDump(newRcJson)
+          fs.writeFileSync(rcPath, newLocalRcYaml)
+          this.out.warn(`We detected the old definition format of ${chalk.bold('clusters')} in the ${rcPath} file. A new field called ${chalk.bold('faasHost')} has been added, which contains the address to the new local function runtime.`)
+        }
       } catch (e) {
       }
     }

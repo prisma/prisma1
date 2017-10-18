@@ -3,7 +3,7 @@ import * as childProcess from 'child_process'
 import * as path from 'path'
 import * as fs from 'fs-extra'
 import * as chalk from 'chalk'
-import * as portfinder from 'portfinder'
+import {mapValues} from 'lodash'
 
 export default class Docker {
   out: Output
@@ -28,19 +28,29 @@ export default class Docker {
   async init() {
     // either get the ports
     let port: any = null
+    let functionsPort: any = null
     let cluster
     if (this.env.rc.clusters && this.env.rc.clusters[this.clusterName]) {
       this.env.setActiveCluster(this.clusterName)
       cluster = this.env.rc.clusters[this.clusterName]
       port = cluster.host.split(':').slice(-1)[0]
+      if (cluster.faasHost) {
+        functionsPort = cluster.faasHost.split(':').slice(-1)[0]
+      }
     }
     const defaultVars = this.getDockerEnvVars()
+    const portfinder = require('portfinder')
     port = port || await portfinder.getPortPromise({ port: 60000 })
+    functionsPort = functionsPort || await portfinder.getPortPromise({ port: 60050 })
     const customVars = {
       PORT: String(port),
+      FUNCTIONS_PORT: String(functionsPort)
     }
     this.out.log(
-      `Using http://localhost:${customVars.PORT} as the local Graphcool host`,
+      `Running local Graphcool cluster at http://localhost:${customVars.PORT}`,
+    )
+    this.out.log(
+      `Running local FaaS runtime at http://localhost:${customVars.FUNCTIONS_PORT}`,
     )
     this.out.log(`This may take several minutes`)
     this.envVars = { ...process.env, ...defaultVars, ...customVars }
@@ -49,6 +59,11 @@ export default class Docker {
   async up(): Promise<Docker> {
     await this.init()
     return this.run('up', '-d', '--remove-orphans')
+  }
+
+  async ps(): Promise<Docker> {
+    await this.init()
+    return this.run('ps')
   }
 
   async start(): Promise<Docker> {
@@ -122,7 +137,8 @@ export default class Docker {
 
   private parseEnv(src: string) {
     const regex = /^\s*export\s*([a-zA-Z0-9\.\-_]+)\s*=(.*)?\s*/
-    return src
+    const variableSyntax = new RegExp('\\${([ ~:a-zA-Z0-9._\'",\\-\\/\\(\\)]+?)}', 'g')
+    const vars = src
       .toString()
       .split(/\r\n|\r|\n/g)
       .reduce((acc, line) => {
@@ -144,5 +160,19 @@ export default class Docker {
 
         return { ...acc, [key]: value }
       }, {})
+
+    return mapValues(vars, (value: string, key) => {
+      const match = variableSyntax.exec(value)
+      if (match) {
+        const varName = match[1]
+        if (vars[varName]) {
+          const newValue = value.slice(0, match.index) + vars[varName] + value.slice(match.index + match[0].length)
+          return newValue
+        } else {
+          this.out.warn(`No variable for env var ${key} and value ${match[0]} found`)
+        }
+      }
+      return value
+    })
   }
 }

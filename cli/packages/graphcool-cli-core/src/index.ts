@@ -19,6 +19,7 @@ import Restart from './commands/local/restart'
 import Account from './commands/account'
 import Eject from './commands/local/eject'
 import AddTemplate from './commands/add-template/add-template'
+import PsLocal from './commands/local/ps'
 
 export const groups = [
   {
@@ -72,11 +73,11 @@ export const topics = [
     description: 'Export service data',
     group: 'data'
   },
-  // {
-  //   name: 'invoke',
-  //   description: 'Invokes a function locally',
-  //   group: 'general'
-  // },
+  {
+    name: 'invoke-local',
+    description: 'Invokes a function locally',
+    group: 'general'
+  },
   { name: 'console', description: 'Opens the console for the current service', group: 'platform' },
   {
     name: 'account',
@@ -111,5 +112,6 @@ export const commands = [
   Restart,
   Account,
   Eject,
-  AddTemplate
+  AddTemplate,
+  PsLocal
 ]

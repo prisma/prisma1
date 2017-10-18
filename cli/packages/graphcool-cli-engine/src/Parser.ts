@@ -37,6 +37,7 @@ export class Parser {
     const parseFlag = arg => {
       const long = arg.startsWith('--')
       const name = long ? findLongFlag(arg) : findShortFlag(arg)
+
       if (!name) {
         const i = arg.indexOf('=')
         if (i !== -1) {
@@ -48,6 +49,8 @@ export class Parser {
             argv.shift()
           }
           return equalsParsed
+        } else if (this.input.cmd && !(this.input.cmd!.constructor as any).allowAnyFlags) {
+          throw new Error(`Unknown flag ${arg}`)
         }
         return false
       }

@@ -25,8 +25,8 @@
   resolved "https://registry.yarnpkg.com/@types/lodash/-/lodash-4.14.77.tgz#0bc699413e84d6ed5d927ca30ea0f0a890b42d75"
 
 "@types/node@*":
-  version "8.0.34"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-8.0.34.tgz#55f801fa2ddb2a40dd6dfc15ecfe1dde9c129fe9"
+  version "8.0.44"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-8.0.44.tgz#5c39800fda4b76dab39a5f28fda676fc500015ac"
 
 "@types/node@^8.0.22":
   version "8.0.22"
@@ -277,7 +277,7 @@ async-each@^1.0.0:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/async-each/-/async-each-1.0.1.tgz#19d386a1d9edc6e7c1c85d388aedbcc56d33602d"
 
-async@^1.4.0, async@^1.5.2, async@~1.5:
+async@^1.4.0, async@^1.5.2:
   version "1.5.2"
   resolved "https://registry.yarnpkg.com/async/-/async-1.5.2.tgz#ec6a61ae56480c0c3cb241c95618e20892f9672a"
 
@@ -987,6 +987,10 @@ detect-indent@^4.0.0:
   dependencies:
     repeating "^2.0.0"
 
+diff@^3.1.0:
+  version "3.4.0"
+  resolved "https://registry.yarnpkg.com/diff/-/diff-3.4.0.tgz#b1d85507daf3964828de54b37d0d73ba67dda56c"
+
 diff@^3.2.0:
   version "3.3.0"
   resolved "https://registry.yarnpkg.com/diff/-/diff-3.3.0.tgz#056695150d7aa93237ca7e378ac3b1682b7963b9"
@@ -1519,33 +1523,6 @@ graceful-fs@~3.0.2:
   dependencies:
     natives "^1.1.0"
 
-graphcool-cli-core@1.4.2:
-  version "1.4.2"
-  resolved "https://registry.yarnpkg.com/graphcool-cli-core/-/graphcool-cli-core-1.4.2.tgz#f5209d37e4949b82264e061a28c31537aab623ac"
-  dependencies:
-    archiver "^2.0.3"
-    callsites "^2.0.0"
-    chalk "^2.1.0"
-    chokidar "^1.7.0"
-    download-github-repo "^0.1.3"
-    figures "^2.0.0"
-    globby "^6.1.0"
-    graphcool-json-schema "^0.3.12"
-    hasbin "^1.2.3"
-    inquirer "^3.3.0"
-    js-yaml "^3.9.1"
-    jwt-decode "^2.2.0"
-    lodash.differenceby "^4.8.0"
-    multimatch "^2.1.0"
-    node-fetch "^1.7.3"
-    pause "^0.1.0"
-    portfinder "^1.0.13"
-    sillyname "^0.1.0"
-    source-map-support "^0.4.18"
-    table "^4.0.1"
-    typescript "^2.5.3"
-    validator "^8.2.0"
-
 graphcool-inquirer@beta:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/graphcool-inquirer/-/graphcool-inquirer-1.0.1.tgz#ab9d85465261a063d364dae915be6f918dce8828"
@@ -1565,9 +1542,9 @@ graphcool-inquirer@beta:
     strip-ansi "^4.0.0"
     through "^2.3.6"
 
-graphcool-json-schema@^0.3.12:
-  version "0.3.12"
-  resolved "https://registry.yarnpkg.com/graphcool-json-schema/-/graphcool-json-schema-0.3.12.tgz#9f7a1d0c576480e494438525f1abd2c219287a85"
+graphcool-json-schema@^0.3.13:
+  version "0.3.13"
+  resolved "https://registry.yarnpkg.com/graphcool-json-schema/-/graphcool-json-schema-0.3.13.tgz#84af004610e15958d11d83ccc948e403eb617213"
 
 graphql-request@^1.3.4, graphql-request@^1.3.6:
   version "1.4.0"
@@ -1635,12 +1612,6 @@ has@^1.0.1:
   dependencies:
     function-bind "^1.0.2"
 
-hasbin@^1.2.3:
-  version "1.2.3"
-  resolved "https://registry.yarnpkg.com/hasbin/-/hasbin-1.2.3.tgz#78c5926893c80215c2b568ae1fd3fcab7a2696b0"
-  dependencies:
-    async "~1.5"
-
 hawk@3.1.3, hawk@~3.1.3:
   version "3.1.3"
   resolved "https://registry.yarnpkg.com/hawk/-/hawk-3.1.3.tgz#078444bd7c1640b0fe540d2c9b73d59678e8e1c4"
@@ -1677,6 +1648,12 @@ home-or-tmp@^2.0.0:
   dependencies:
     os-homedir "^1.0.0"
     os-tmpdir "^1.0.1"
+
+homedir-polyfill@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/homedir-polyfill/-/homedir-polyfill-1.0.1.tgz#4c2bbc8a758998feebf5ed68580f76d46768b4bc"
+  dependencies:
+    parse-passwd "^1.0.0"
 
 hosted-git-info@^2.1.4:
   version "2.5.0"
@@ -2564,6 +2541,10 @@ lru-cache@^4.0.1:
     pseudomap "^1.0.2"
     yallist "^2.1.2"
 
+make-error@^1.1.1:
+  version "1.3.0"
+  resolved "https://registry.yarnpkg.com/make-error/-/make-error-1.3.0.tgz#52ad3a339ccf10ce62b4040b708fe707244b8b96"
+
 makeerror@1.0.x:
   version "1.0.11"
   resolved "https://registry.yarnpkg.com/makeerror/-/makeerror-1.0.11.tgz#e01a5c9109f2af79660e4e8b9587790184f5a96c"
@@ -2969,6 +2950,10 @@ parse-json@^2.2.0:
   dependencies:
     error-ex "^1.2.0"
 
+parse-passwd@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/parse-passwd/-/parse-passwd-1.0.0.tgz#6d5b934a456993b23d37f40a382d6f1666a8e5c6"
+
 parse5@^1.5.1:
   version "1.5.1"
   resolved "https://registry.yarnpkg.com/parse5/-/parse5-1.5.1.tgz#9b7f3b0de32be78dc2401b17573ccaf0f6f59d94"
@@ -3122,8 +3107,8 @@ randomatic@^1.1.3:
     kind-of "^4.0.0"
 
 rc@^1.1.7:
-  version "1.2.1"
-  resolved "https://registry.yarnpkg.com/rc/-/rc-1.2.1.tgz#2e03e8e42ee450b8cb3dce65be1bf8974e1dfd95"
+  version "1.2.2"
+  resolved "https://registry.yarnpkg.com/rc/-/rc-1.2.2.tgz#d8ce9cb57e8d64d9c7badd9876c7c34cbe3c7077"
   dependencies:
     deep-extend "~0.4.0"
     ini "~1.3.0"
@@ -3462,15 +3447,15 @@ sntp@2.x.x:
   dependencies:
     hoek "4.x.x"
 
-source-map-support@^0.4.15:
-  version "0.4.15"
-  resolved "https://registry.yarnpkg.com/source-map-support/-/source-map-support-0.4.15.tgz#03202df65c06d2bd8c7ec2362a193056fef8d3b1"
+source-map-support@^0.4.0, source-map-support@^0.4.18:
+  version "0.4.18"
+  resolved "https://registry.yarnpkg.com/source-map-support/-/source-map-support-0.4.18.tgz#0286a6de8be42641338594e97ccea75f0a2c585f"
   dependencies:
     source-map "^0.5.6"
 
-source-map-support@^0.4.18:
-  version "0.4.18"
-  resolved "https://registry.yarnpkg.com/source-map-support/-/source-map-support-0.4.18.tgz#0286a6de8be42641338594e97ccea75f0a2c585f"
+source-map-support@^0.4.15:
+  version "0.4.15"
+  resolved "https://registry.yarnpkg.com/source-map-support/-/source-map-support-0.4.15.tgz#03202df65c06d2bd8c7ec2362a193056fef8d3b1"
   dependencies:
     source-map "^0.5.6"
 
@@ -3643,7 +3628,7 @@ strip-indent@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/strip-indent/-/strip-indent-2.0.0.tgz#5ef8db295d01e6ed6cbf7aab96998d7822527b68"
 
-strip-json-comments@^2.0.1, strip-json-comments@~2.0.1:
+strip-json-comments@^2.0.0, strip-json-comments@^2.0.1, strip-json-comments@~2.0.1:
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/strip-json-comments/-/strip-json-comments-2.0.1.tgz#3c531942e908c2697c0ec344858c286c7ca0a60a"
 
@@ -3798,8 +3783,8 @@ trim-right@^1.0.1:
   resolved "https://registry.yarnpkg.com/trim-right/-/trim-right-1.0.1.tgz#cb2e1203067e0c8de1f614094b9fe45704ea6003"
 
 ts-jest@^21.0.0:
-  version "21.1.2"
-  resolved "https://registry.yarnpkg.com/ts-jest/-/ts-jest-21.1.2.tgz#3f5aa88125d9f6e9ae07b745e20062d069c22ad9"
+  version "21.1.3"
+  resolved "https://registry.yarnpkg.com/ts-jest/-/ts-jest-21.1.3.tgz#cc3c552e7e8a67db9ededc28c00ae98223614ddc"
   dependencies:
     babel-core "^6.24.1"
     babel-plugin-istanbul "^4.1.4"
@@ -3811,6 +3796,28 @@ ts-jest@^21.0.0:
     pkg-dir "^2.0.0"
     source-map-support "^0.5.0"
     yargs "^9.0.1"
+
+ts-node@^3.3.0:
+  version "3.3.0"
+  resolved "https://registry.yarnpkg.com/ts-node/-/ts-node-3.3.0.tgz#c13c6a3024e30be1180dd53038fc209289d4bf69"
+  dependencies:
+    arrify "^1.0.0"
+    chalk "^2.0.0"
+    diff "^3.1.0"
+    make-error "^1.1.1"
+    minimist "^1.2.0"
+    mkdirp "^0.5.1"
+    source-map-support "^0.4.0"
+    tsconfig "^6.0.0"
+    v8flags "^3.0.0"
+    yn "^2.0.0"
+
+tsconfig@^6.0.0:
+  version "6.0.0"
+  resolved "https://registry.yarnpkg.com/tsconfig/-/tsconfig-6.0.0.tgz#6b0e8376003d7af1864f8df8f89dd0059ffcd032"
+  dependencies:
+    strip-bom "^3.0.0"
+    strip-json-comments "^2.0.0"
 
 tslib@^1.0.0, tslib@^1.7.1:
   version "1.7.1"
@@ -3934,6 +3941,12 @@ uuid@^3.0.0, uuid@^3.1.0:
 uuid@~1.4.0:
   version "1.4.2"
   resolved "https://registry.yarnpkg.com/uuid/-/uuid-1.4.2.tgz#453019f686966a6df83cdc5244e7c990ecc332fc"
+
+v8flags@^3.0.0:
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/v8flags/-/v8flags-3.0.1.tgz#dce8fc379c17d9f2c9e9ed78d89ce00052b1b76b"
+  dependencies:
+    homedir-polyfill "^1.0.1"
 
 validate-npm-package-license@^3.0.1:
   version "3.0.1"
@@ -4065,8 +4078,8 @@ xlsjs@^0.7.5:
     ssf "~0.8.1"
 
 xlsx@^0.11.3:
-  version "0.11.5"
-  resolved "https://registry.yarnpkg.com/xlsx/-/xlsx-0.11.5.tgz#8c66cd97140be072e3dd320d12baa099689ceb74"
+  version "0.11.6"
+  resolved "https://registry.yarnpkg.com/xlsx/-/xlsx-0.11.6.tgz#94cd53fc81397b5d866c8ebf1ae791d297d5f9d6"
   dependencies:
     adler-32 "~1.1.0"
     cfb "~0.13.1"
@@ -4147,6 +4160,10 @@ yargs@~3.10.0:
     cliui "^2.1.0"
     decamelize "^1.0.0"
     window-size "0.1.0"
+
+yn@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/yn/-/yn-2.0.0.tgz#e5adabc8acf408f6385fc76495684c88e6af689a"
 
 zip-stream@^1.2.0:
   version "1.2.0"

@@ -7,8 +7,8 @@ import { sortByTimestamp } from '../../util'
 import * as chalk from 'chalk'
 
 export default class InvokeLocal extends Command {
-  static topic = 'invoke'
-  static command = 'local'
+  static topic = 'invoke-local'
+  // static command = 'local'
   static description = 'Invoke a function locally'
   static group = 'general'
   static flags: Flags = {
@@ -101,7 +101,7 @@ export default class InvokeLocal extends Command {
       const lastEventJson = await this.getLastEvent(projectId, fnName)
       const examplesDir = path.join(
         this.config.definitionDir,
-        `examples/${fnName}/`,
+        `events/${fnName}/`,
       )
       fs.mkdirpSync(examplesDir)
 
@@ -110,11 +110,11 @@ export default class InvokeLocal extends Command {
         count++
       }
       const lastEventPath = path.join(examplesDir, `${count - 1}.json`)
-      const lastSavedEvent = fs.readJsonSync(lastEventPath)
+      const lastSavedEvent = fs.pathExistsSync(lastEventPath) ? fs.readJsonSync(lastEventPath) : null
 
       let relativeLastEventPath
       if (count > 1 && isEqual(lastEventJson, lastSavedEvent)) {
-        relativeLastEventPath = `examples/${fnName}/${count - 1}.json`
+        relativeLastEventPath = `events/${fnName}/${count - 1}.json`
         this.out.log(
           chalk.blue(
             `Using last event of ${chalk.bold(
@@ -128,7 +128,7 @@ export default class InvokeLocal extends Command {
       } else {
         const examplePath = path.join(examplesDir, `${count}.json`)
         fs.writeFileSync(examplePath, JSON.stringify(lastEventJson, null, 2))
-        relativeLastEventPath = `examples/${fnName}/${count}.json`
+        relativeLastEventPath = `events/${fnName}/${count}.json`
         this.out.log(
           chalk.blue(
             `Written last event of ${chalk.bold(fnName)} to ${chalk.bold(

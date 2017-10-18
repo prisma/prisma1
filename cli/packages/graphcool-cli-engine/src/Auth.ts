@@ -115,8 +115,6 @@ export class Auth {
   }
 
   async validateAuthToken(token: string): Promise<string | null> {
-    debug('requesting', this.env.clusterEndpoint)
-    debug('token', token)
     const client = new GraphQLClient(this.env.clusterEndpoint, {
       headers: {
         Authorization: `Bearer ${token}`,
