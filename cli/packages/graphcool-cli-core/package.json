@@ -44,7 +44,7 @@
     ]
   },
   "lint-staged": {
-    "gitDir": "../../"
+    "gitDir": "../../../"
   },
   "jest": {
     "moduleFileExtensions": [
