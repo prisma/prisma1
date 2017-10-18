@@ -163,8 +163,8 @@ export class ProjectDefinitionClass {
     if (!this.config.definitionPath) {
       this.out.error('Could not find graphcool.yml')
     }
-    const file = fs.readFileSync(this.config.definitionPath!, 'utf-8')
-    const json = (await anyjson.decode(file, 'yaml')) as GraphcoolDefinition
+    const definitionFile = fs.readFileSync(this.config.definitionPath!, 'utf-8')
+    const json = (await anyjson.decode(definitionFile, 'yaml')) as GraphcoolDefinition
     const functions = this.extractFunctions(json.functions)
     const functionsWithRequire = functions.reduce((acc, fn) => {
       const src = typeof fn.fn.handler.code === 'string' ? fn.fn.handler.code : fn.fn.handler.code!.src
@@ -175,11 +175,11 @@ export class ProjectDefinitionClass {
         const requireMatch = requireRegex.exec(line)
         const importMatch = importRegex.exec(line)
         if (requireMatch || importMatch) {
-          const src = requireMatch ? requireMatch[1] : importMatch![1]
+          const srcPath = requireMatch ? requireMatch[1] : importMatch![1]
 
-          if (!builtinModules.includes(src) && !src.startsWith('./')) {
+          if (!builtinModules.includes(srcPath) && !srcPath.startsWith('./')) {
             const result = {
-              line, index: index + 1, src,
+              line, index: index + 1, srcPath,
             }
 
             return racc.concat(result)
@@ -267,7 +267,7 @@ Please make sure you specified all needed dependencies in your package.json and 
   }
 
 
-  get functions(): Array<FunctionTuple> {
+  get functions(): FunctionTuple[] {
     if (!this.definition) {
       return []
     }

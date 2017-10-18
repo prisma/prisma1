@@ -10,13 +10,17 @@ Written files:
 ├─ graphcool.yml
 └─ package.json
 
-Inside that directory, you can run the following commands:
+To get started, cd into the new directory:
+  cd ../../../../../../../var/folders/lc/rzmq7fnn4_jbrcsbz_f1kyfr0000gr/T/cj8wyqbjm0000maomtkl1c2xq
 
+To deploy your Graphcool service:
   graphcool deploy
-    Deploys the project to Graphcool
 
-  graphcool deploy --target prod
-    Deploys the project to Graphcool, using the target name \`prod\`
+To start your local Graphcool cluster:
+  graphcool local up
+  
+To add facebook authentication to your service:
+  graphcool add-template facebook-auth
 
 You can find further instructions in the graphcool.yml file,
 which is the central project configuration.
