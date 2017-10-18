@@ -58,11 +58,6 @@ export const topics = [
   { name: 'root-token', description: 'Get the service root tokens', group: 'general' },
   { name: 'logs', description: 'Get logs of functions', group: 'general' },
   {
-    name: 'diff',
-    description: 'Get the diff of the local and remote service definition',
-    group: 'general'
-  },
-  {
     name: 'delete',
     description: 'Delete a service',
     group: 'general'
@@ -102,7 +97,6 @@ export const commands = [
   Delete,
   RootTokens,
   FunctionLogs,
-  Diff,
   Pull,
   Export,
   InvokeLocal,

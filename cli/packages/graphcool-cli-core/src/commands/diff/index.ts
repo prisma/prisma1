@@ -6,7 +6,6 @@ import {
 import * as chalk from 'chalk'
 
 export default class Diff extends Command {
-  static topic = 'diff'
   static description = 'Receive service changes'
   static group = 'general'
   static flags: Flags = {
@@ -21,7 +20,6 @@ export default class Diff extends Command {
 
     await this.definition.load(this.flags)
     await this.auth.ensureAuth()
-    // temporary ugly solution
 
     const { id } = await this.env.getTarget(target)
     const targetName = target || 'default'
