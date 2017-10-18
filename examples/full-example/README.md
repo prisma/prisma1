@@ -7,6 +7,7 @@
 - A custom GraphQL `resolver` function, hosted in Graphcool
 
 ## Config
+
 This example needs an environment variable called `STRIPE_KEY`.
 The `STRIPE_KEY` can be obtained by [creating a stripe account](https://dashboard.stripe.com/register)
 and getting the token from the Account Settings.
@@ -26,10 +27,11 @@ Install the CLI (if you haven't already):
 npm install -g graphcool@next
 ```
 
-Create the Graphcool service:
+You can now [deploy](https://docs-next.graph.cool/reference/graphcool-cli/commands-aiteerae6l#graphcool-deploy) the Graphcool service that's defined in this directory. Before that, you need to install the node [dependencies](package.json#L14) for the defined functions:
 
 ```sh
-graphcool deploy
+yarn install      # install dependencies
+graphcool deploy  # deploy service
 ```
 
 ## Data Setup

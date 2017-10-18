@@ -45,10 +45,11 @@ npm install -g graphcool@next
 
 ### 3. Create the GraphQL server
 
-You can now [deploy](https://docs-next.graph.cool/reference/graphcool-cli/commands-aiteerae6l#graphcool-deploy) the Graphcool service that's defined in this directory:
+You can now [deploy](https://docs-next.graph.cool/reference/graphcool-cli/commands-aiteerae6l#graphcool-deploy) the Graphcool service that's defined in this directory. Before that, you need to install the node [dependencies](package.json#L11) for the defined functions:
 
 ```sh
-graphcool deploy
+yarn install      # install dependencies
+graphcool deploy  # deploy service
 ```
 
 > Note: Whenever you make changes to files in this directory, you need to invoke `graphcool deploy` again to make sure your changes get applied to the "remote" service.
