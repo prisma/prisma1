@@ -44,7 +44,7 @@ The `add-template` command in the Graphcool CLI basically automates the process 
 The only option that can be provided to this command is the path to the template on GitHub, e.g. for the [`email-password`](https://github.com/graphcool/modules)-template:
 
 ```sh
-graphcool add-template graphcool/templates/authentication/email-password
+graphcool add-template graphcool/templates/auth/email-password
 ```
 
 When merging the template's `graphcool.yml` and `types.graphql` files with the ones from your local service definition, the CLI will only add the contents from the template files into your local files _as comments_. So you need to explicitly uncomment the parts form the template files that you actually want to use in your project.
