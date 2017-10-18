@@ -201,7 +201,7 @@ graphcool add-template TEMPLATE
 ##### Pull in the officially supported [`email-password` authentication template](https://github.com/graphcool/templates/tree/master/auth/email-password)
 
 ```sh    
-graphcool add-template graphcool/templates/messaging/email-password
+graphcool add-template graphcool/templates/auth/email-password
 ```
 
 #### Examples
