@@ -8,6 +8,7 @@ const { fromEvent } = require('graphcool-lib')
 //   "data": {
 //     "User": {
 //       "node": {
+//         "id": "cj8wscby6nl7u0133zu7c8a62"
 //         "name": "Sarah"
 //       }
 //     }
@@ -18,20 +19,20 @@ const { fromEvent } = require('graphcool-lib')
 module.exports = event => {
 
   // Retrieve payload from event
-  const { name } = event.data.User.node
+  const { id, name } = event.data.User.node
 
   // Create Graphcool API (based on https://github.com/graphcool/graphql-request)
   const graphcool = fromEvent(event)
   const api = graphcool.api('simple/v1')
 
   // Create variables for mutation
-  const title = `My name is ${name}, and this is my first article! 🙌`
-  const variables = { title }
+  const title = `My name is ${name}, and this is my first article!`
+  const variables = { authorId: id, title }
 
   // Create mutation
   const createArticleMutation = `
-    mutation ($title: String!) {
-      createArticle(title: $title) {
+    mutation ($title: String!, $authorId: ID!) {
+      createArticle(title: $title, authorId: $authorId) {
         id
       }
     }

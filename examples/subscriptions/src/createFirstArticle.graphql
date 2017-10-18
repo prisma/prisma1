@@ -7,6 +7,7 @@ subscription {
     mutation_in: [CREATED]  
   }) {
     node {
+      id
       name
     }
   }
