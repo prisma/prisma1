@@ -253,7 +253,7 @@ ${chalk.bold('token')} has been renamed to ${chalk.bold('clusterSecret')}.
 It has been renamed to ${oldPath}. The up-to-date format has been written to ${rcPath}.
 `)
         }
-        if (content.clusters && Object.keys(content.clusters).find(c => !content.clusters[c].faasHost)) {
+        if (content.clusters && Object.keys(content.clusters).find(c => typeof content.clusters[c] !== 'string' && !content.clusters[c].faasHost)) {
           const newRcJson = {
             ...content,
             clusters: mapValues(content.clusters, c => typeof c === 'string' ? c : ({
