@@ -6,6 +6,7 @@ import { emptyDefinition } from './emptyDefinition'
 import * as chokidar from 'chokidar'
 import * as inquirer from 'inquirer'
 import * as path from 'path'
+import * as fs from 'fs-extra'
 import Bundler from './Bundler/Bundler'
 const debug = require('debug')('deploy')
 
@@ -72,6 +73,7 @@ ${chalk.gray(
     const useDefault = this.flags.default
     let newServiceName = this.flags['new-service']
     const newServiceCluster = this.flags['new-service-cluster']
+
     if (newServiceCluster) {
       this.env.setActiveCluster(newServiceCluster)
     }
@@ -82,10 +84,16 @@ ${chalk.gray(
     let target
     let cluster
     const foundTarget = await this.env.getTargetWithName(process.env.GRAPHCOOL_TARGET || this.flags.target)
+    // load the definition already so we're able to detect missing package.json / node_modules
+    // if it is a existing project,
+
     if (interactive) {
       foundTarget.targetName = null
       foundTarget.target = null
     }
+
+    this.definition.checkNodeModules(Boolean(foundTarget.target))
+
     if (interactive || (!newServiceCluster && !foundTarget.target) || (newServiceName && !newServiceCluster)) {
       cluster = await this.clusterSelection()
       showedDialog = true
@@ -134,7 +142,6 @@ Please run ${chalk.green('$ graphcool local up')} to get a local Graphcool clust
     let projectId
     let projectIsNew = false
 
-
     cluster = cluster ? cluster : (target ? target.cluster : this.env.activeCluster)
     const isLocal = !this.env.isSharedCluster(cluster)
 
@@ -165,6 +172,14 @@ Please run ${chalk.green('$ graphcool local up')} to get a local Graphcool clust
 
     // best guess for "project name"
     const projectName = newServiceName || targetName
+
+    const info = await this.client.fetchProjectInfo(projectId)
+
+    if (!info.isEjected) {
+      this.out.error(`Your service ${info.name} (${info.id}) is not yet upgraded.
+Please go to the console and upgrade it:
+https://console.graph.cool/${encodeURIComponent(info.name)}/settings/general`)
+    }
 
     await this.deploy(projectIsNew, targetName, projectId, isLocal, force, projectName, cluster)
 

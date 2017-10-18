@@ -25,10 +25,6 @@ export async function readDefinition(
   moduleName: string,
   args: Args
 ): Promise<GraphcoolDefinition> {
-  if (cache[file]) {
-    debug(`Getting definition from cache`)
-    return cache[file]
-  }
   const json = (await anyjson.decode(file, 'yaml')) as GraphcoolDefinition
 
   const vars = new Variables(out, moduleName, args)

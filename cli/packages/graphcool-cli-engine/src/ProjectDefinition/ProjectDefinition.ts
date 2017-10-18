@@ -11,7 +11,14 @@ import { GraphcoolDefinition, FunctionDefinition } from 'graphcool-json-schema'
 import { flatMap } from 'lodash'
 import * as yamlParser from 'yaml-ast-parser'
 import * as yaml from 'js-yaml'
+import { builtinModules } from './builtin-modules'
 const debug = require('debug')('project-definition')
+import * as anyjson from 'any-json'
+
+export interface FunctionTuple {
+  name: string
+  fn: FunctionDefinition
+}
 
 export class ProjectDefinitionClass {
   static sanitizeDefinition(definition: ProjectDefinition) {
@@ -152,6 +159,66 @@ export class ProjectDefinitionClass {
     return oldTypes + this.addTemplateNotes(this.comment(newTypes), templateName)
   }
 
+  public async checkNodeModules(throwError: boolean) {
+    if (!this.config.definitionPath) {
+      this.out.error('Could not find graphcool.yml')
+    }
+    const file = fs.readFileSync(this.config.definitionPath!, 'utf-8')
+    const json = (await anyjson.decode(file, 'yaml')) as GraphcoolDefinition
+    const functions = this.extractFunctions(json.functions)
+    const functionsWithRequire = functions.reduce((acc, fn) => {
+      const src = typeof fn.fn.handler.code === 'string' ? fn.fn.handler.code : fn.fn.handler.code!.src
+      const file = fs.readFileSync(src, 'utf-8')
+      const requireRegex = /(?:(?:var|const)\s*(.*?)\s*=\s*)?require\(['"]([^'"]+)['"](?:, ['"]([^'"]+)['"])?\);?/
+      const importRegex = /\bimport\s+(?:.+\s+from\s+)?[\'"]([^"\']+)["\']/
+      const statements = file.split('\n').reduce((racc, line, index) => {
+        const requireMatch = requireRegex.exec(line)
+        const importMatch = importRegex.exec(line)
+        if (requireMatch || importMatch) {
+          const src = requireMatch ? requireMatch[1] : importMatch![1]
+
+          if (!builtinModules.includes(src) && !src.startsWith('./')) {
+            const result = {
+              line, index: index + 1, src,
+            }
+
+            return racc.concat(result)
+          }
+        }
+
+        return racc
+      }, [] as any)
+      if (statements.length > 0) {
+        return acc.concat({
+          statements,
+          fn,
+          src,
+        })
+      }
+
+      return acc
+    }, [] as any)
+
+    if (functionsWithRequire.length > 0) {
+      if (
+        !fs.pathExistsSync(path.join(this.config.definitionDir, 'node_modules'))
+      ) {
+        const imports = functionsWithRequire.map(fn => {
+          return `${chalk.bold(fn.fn.name)} (${fn.src}):\n` + fn.statements.map(s => `  ${s.index}: ${chalk.dim(s.line)}\n`)
+        }).join('\n')
+        const text = `You have import/require statements in your functions without a node_modules folder:
+${imports}
+
+Please make sure you specified all needed dependencies in your package.json and run npm install.`
+        if (throwError) {
+          this.out.error(text)
+        } else {
+          this.out.warn(text)
+        }
+      }
+    }
+  }
+
   private injectEnvironmentToFile(
     file: string,
     environment: { [envVar: string]: string },
@@ -198,4 +265,29 @@ export class ProjectDefinitionClass {
     const mapping = obj.mappings.find(m => m.key.value === key)
     return mapping ? mapping.key.endPosition + 1 : -1
   }
+
+
+  get functions(): Array<FunctionTuple> {
+    if (!this.definition) {
+      return []
+    }
+    return this.extractFunctions(this.definition!.modules[0].definition!.functions)
+  }
+
+  private extractFunctions(functions?: { [p: string]: FunctionDefinition }) {
+    if (!functions) {
+      return []
+    } else {
+      return Object.keys(functions)
+        .filter(name => functions[name].handler.code)
+        .map(name => {
+          return {
+            name,
+            fn: functions[name],
+          }
+        })
+    }
+  }
+
 }
+
