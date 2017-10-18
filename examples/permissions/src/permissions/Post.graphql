@@ -1,0 +1,24 @@
+# To update a node of type `Post`, a `User` must 
+# be the `author` of the `Post`
+query UpdatePost ($user_id: ID!, $node_id: ID!) {
+  SomePostExists(filter: {
+    id: $node_id,
+    author: {
+      id: $user_id
+    }
+  })
+}
+
+# To delete a node of type `Post`, a `User` must be 
+# either the `author` of the `Post` _OR_ an `ADMIN` 
+query DeletePost ($user_id: ID!, $node_id: ID!) {
+  SomeUserExists(filter: {
+    id: $user_id,
+    OR: [{
+      posts_some:{
+        id: $node_id
+      },
+      role: ADMIN
+    }]
+  })
+}

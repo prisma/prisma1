@@ -12,10 +12,10 @@ For **feature requests**, please fill in the next sections:
 
 For **bug reports**, please fill in the next sections:
 
-**What is the current behavior?**
+**Current behavior**
 
-**Please share the relevant part of your project (GraphQL schema, functions, permissions, ...) for easier reproduction**
+**Reproduction**
 
-**If applicable, share the query, mutation or subscription for reproduction**
+> If your problem can be reproduced with a certain service definition, please create a new GitHub repository with the reproduction instructions.
 
-**What is the expected behavior?**
+**Expected behavior?**

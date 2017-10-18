@@ -23,7 +23,7 @@ This directory contains the service definition and file structure for a simple G
 Clone the full [graphcool](https://github.com/graphcool/graphcool) repository and navigate to this directory or download _only_ this example with the following command:
 
 ```sh
-https://codeload.github.com/graphcool/graphcool/tar.gz/master | tar -xz --strip=2 graphcool-master/examples/env-variables
+curl https://codeload.github.com/graphcool/graphcool/tar.gz/master | tar -xz --strip=2 graphcool-master/examples/env-variables
 cd env-variables
 ```
 
@@ -46,6 +46,8 @@ To deploy the service and actually create your GraphQL server, invoke the follow
 ```sh
 graphcool deploy
 ```
+
+When prompted which cluster you'd like to deploy, chose any of `Backend-as-a-Service`-options (`shared-eu-west-1`, `shared-ap-northeast-1` or `shared-us-west-2`) rather than `local`. 
 
 > Note: Whenever you make changes to files in this directory, you need to invoke `graphcool deploy` again to make sure your changes get applied to the "remote" service.
 

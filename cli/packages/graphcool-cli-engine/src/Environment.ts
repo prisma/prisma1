@@ -9,7 +9,7 @@ import { Args, Region } from './types/common'
 import Variables from './ProjectDefinition/Variables'
 const debug = require('debug')('environment')
 import * as stringSimilarity from 'string-similarity'
-import * as chalk from 'chalk'
+import chalk from 'chalk'
 
 const defaultRC = {
   clusters: {

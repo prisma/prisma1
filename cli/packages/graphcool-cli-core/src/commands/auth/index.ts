@@ -1,5 +1,5 @@
 import { Command, flags, Flags } from 'graphcool-cli-engine'
-import * as chalk from 'chalk'
+import chalk from 'chalk'
 
 export default class Auth extends Command {
   static topic = 'login'

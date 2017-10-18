@@ -1,11 +1,12 @@
 import { Command, flags, Flags } from 'graphcool-cli-engine'
-import * as chalk from 'chalk'
+import chalk from 'chalk'
 import * as sillyName from 'sillyname'
 import { ServiceDoesntExistError } from '../../errors/ServiceDoesntExistError'
 import { emptyDefinition } from './emptyDefinition'
 import * as chokidar from 'chokidar'
 import * as inquirer from 'inquirer'
 import * as path from 'path'
+import * as fs from 'fs-extra'
 import Bundler from './Bundler/Bundler'
 const debug = require('debug')('deploy')
 
@@ -64,6 +65,10 @@ ${chalk.gray(
     default: flags.boolean({
       char: 'd',
       description: 'Set specified target as default'
+    }),
+    'dry-run': flags.boolean({
+      char: 'D',
+      description: 'Perform a dry-run of the deployment'
     })
   }
   async run() {
@@ -72,6 +77,12 @@ ${chalk.gray(
     const useDefault = this.flags.default
     let newServiceName = this.flags['new-service']
     const newServiceCluster = this.flags['new-service-cluster']
+    const dryRun = this.flags['dry-run']
+
+    if (dryRun) {
+      return this.dryRun()
+    }
+
     if (newServiceCluster) {
       this.env.setActiveCluster(newServiceCluster)
     }
@@ -82,10 +93,16 @@ ${chalk.gray(
     let target
     let cluster
     const foundTarget = await this.env.getTargetWithName(process.env.GRAPHCOOL_TARGET || this.flags.target)
+    // load the definition already so we're able to detect missing package.json / node_modules
+    // if it is a existing project,
+
     if (interactive) {
       foundTarget.targetName = null
       foundTarget.target = null
     }
+
+    this.definition.checkNodeModules(Boolean(foundTarget.target))
+
     if (interactive || (!newServiceCluster && !foundTarget.target) || (newServiceName && !newServiceCluster)) {
       cluster = await this.clusterSelection()
       showedDialog = true
@@ -134,7 +151,6 @@ Please run ${chalk.green('$ graphcool local up')} to get a local Graphcool clust
     let projectId
     let projectIsNew = false
 
-
     cluster = cluster ? cluster : (target ? target.cluster : this.env.activeCluster)
     const isLocal = !this.env.isSharedCluster(cluster)
 
@@ -165,6 +181,14 @@ Please run ${chalk.green('$ graphcool local up')} to get a local Graphcool clust
 
     // best guess for "project name"
     const projectName = newServiceName || targetName
+
+    const info = await this.client.fetchProjectInfo(projectId)
+
+    if (!info.isEjected) {
+      this.out.error(`Your service ${info.name} (${info.id}) is not yet upgraded.
+Please go to the console and upgrade it:
+https://console.graph.cool/${encodeURIComponent(info.name)}/settings/general`)
+    }
 
     await this.deploy(projectIsNew, targetName, projectId, isLocal, force, projectName, cluster)
 
@@ -385,6 +409,86 @@ Please run ${chalk.green('$ graphcool local up')} to get a local Graphcool clust
     const { target } = await this.out.prompt(question)
 
     return target
+  }
+
+  private async dryRun() {
+    const {target} = this.flags
+
+    await this.definition.load(this.flags)
+    await this.auth.ensureAuth()
+
+    const { id } = await this.env.getTarget(target)
+    const targetName = target || 'default'
+
+    this.out.action.start(
+      `Getting diff for ${chalk.bold(id)} with target ${chalk.bold(
+        targetName,
+      )}.`,
+    )
+
+    try {
+      const migrationResult = await this.client.push(
+        id,
+        false,
+        true,
+        this.definition.definition!,
+      )
+      this.out.action.stop()
+
+      // no action required
+      if (
+        (!migrationResult.migrationMessages ||
+          migrationResult.migrationMessages.length === 0) &&
+        (!migrationResult.errors || migrationResult.errors.length === 0)
+      ) {
+        this.out.log(
+          `Identical project definition for project ${chalk.bold(
+            id,
+          )} in env ${chalk.bold(targetName)}, no action required.\n`,
+        )
+        return
+      }
+
+      if (migrationResult.migrationMessages.length > 0) {
+        this.out.log(
+          chalk.blue(
+            `Your project ${chalk.bold(id)} of env ${chalk.bold(
+              targetName,
+            )} has the following changes:`,
+          ),
+        )
+
+        this.out.migration.printMessages(migrationResult.migrationMessages)
+        this.definition.set(migrationResult.projectDefinition)
+      }
+
+      if (migrationResult.errors.length > 0) {
+        this.out.log(
+          chalk.rgb(244, 157, 65)(
+            `There are issues with the new project definition:`,
+          ),
+        )
+        this.out.migration.printErrors(migrationResult.errors)
+        this.out.log('')
+      }
+
+      if (
+        migrationResult.errors &&
+        migrationResult.errors.length > 0 &&
+        migrationResult.errors[0].description.includes(`destructive changes`)
+      ) {
+        // potentially destructive changes
+        this.out.log(
+          `Your changes might result in data loss.
+            Use ${chalk.cyan(
+            `\`graphcool deploy --force\``,
+          )} if you know what you're doing!\n`,
+        )
+      }
+    } catch (e) {
+      this.out.action.stop()
+      this.out.error(e)
+    }
   }
 
 }

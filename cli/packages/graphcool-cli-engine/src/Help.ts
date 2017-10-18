@@ -3,7 +3,7 @@ import { Arg } from './Flags/index'
 import { Output } from './Output/index'
 import { Config } from './Config'
 import { linewrap } from './util'
-import * as chalk from 'chalk'
+import chalk from 'chalk'
 
 function renderList(items: string[][]): string {
   const S = require('string')
@@ -31,7 +31,7 @@ function buildUsage(command: any): string {
   }
   const cmd = command.id.replace(/:/g, ' ')
   if (!command.args) {
-    return chalk.bold(cmd.trim())
+    return chalk.bold(cmd.trim()) as any
   }
   const args = command.args.map(renderArg)
   return `${chalk.bold(cmd)} ${args.join(' ')}`.trim()

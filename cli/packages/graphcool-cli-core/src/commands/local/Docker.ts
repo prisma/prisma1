@@ -2,7 +2,7 @@ import { Output, Config, Environment } from 'graphcool-cli-engine'
 import * as childProcess from 'child_process'
 import * as path from 'path'
 import * as fs from 'fs-extra'
-import * as chalk from 'chalk'
+import chalk from 'chalk'
 import {mapValues} from 'lodash'
 
 export default class Docker {

@@ -29,7 +29,7 @@ This directory contains the service definition and file structure for a simple G
 Clone the full [graphcool](https://github.com/graphcool/graphcool) repository and navigate to this directory or download _only_ this example with the following command:
 
 ```sh
-https://codeload.github.com/graphcool/graphcool/tar.gz/master | tar -xz --strip=2 graphcool-master/examples/auth
+curl https://codeload.github.com/graphcool/graphcool/tar.gz/master | tar -xz --strip=2 graphcool-master/examples/auth
 cd auth
 ```
 
@@ -45,11 +45,14 @@ npm install -g graphcool@next
 
 ### 3. Create the GraphQL server
 
-You can now [deploy](https://docs-next.graph.cool/reference/graphcool-cli/commands-aiteerae6l#graphcool-deploy) the Graphcool service that's defined in this directory:
+You can now [deploy](https://docs-next.graph.cool/reference/graphcool-cli/commands-aiteerae6l#graphcool-deploy) the Graphcool service that's defined in this directory. Before that, you need to install the node [dependencies](package.json#L11) for the defined functions:
 
 ```sh
-graphcool deploy
+yarn install      # install dependencies
+graphcool deploy  # deploy service
 ```
+
+When prompted which cluster you'd like to deploy, chose any of `Backend-as-a-Service`-options (`shared-eu-west-1`, `shared-ap-northeast-1` or `shared-us-west-2`) rather than `local`. 
 
 > Note: Whenever you make changes to files in this directory, you need to invoke `graphcool deploy` again to make sure your changes get applied to the "remote" service.
 

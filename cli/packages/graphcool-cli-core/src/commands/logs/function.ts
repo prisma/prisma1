@@ -1,5 +1,5 @@
 import { Command, flags, Flags } from 'graphcool-cli-engine'
-import * as chalk from 'chalk'
+import chalk from 'chalk'
 import * as differenceBy from 'lodash.differenceby'
 import { sortByTimestamp } from '../../util'
 import {flatMap} from 'lodash'

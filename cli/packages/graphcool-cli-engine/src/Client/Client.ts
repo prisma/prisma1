@@ -20,7 +20,7 @@ import { ProjectDefinitionClass } from '../ProjectDefinition/ProjectDefinition'
 import {Environment} from '../Environment'
 import { Output } from "../index";
 import { Auth } from '../Auth'
-import * as chalk from 'chalk'
+import chalk from 'chalk'
 
 const debug = require('debug')('client')
 
@@ -31,6 +31,7 @@ const REMOTE_PROJECT_FRAGMENT = `
     schema
     alias
     region
+    isEjected
     projectDefinitionWithFileContent
   }
 `

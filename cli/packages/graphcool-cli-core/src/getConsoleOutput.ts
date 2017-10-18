@@ -1,4 +1,4 @@
-import * as chalk from 'chalk'
+import chalk from 'chalk'
 import * as path from 'path'
 
 export default function getConsoleOutput(

@@ -1,5 +1,5 @@
 import * as util from 'util'
-import * as chalk from 'chalk'
+import chalk from 'chalk'
 import * as path from 'path'
 import * as fs from 'fs-extra'
 import { Output } from './'

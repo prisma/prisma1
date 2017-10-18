@@ -3,8 +3,6 @@ injectEnvironment()
 
 exports.handle = function(event, ctx, cb) {
   var fn = require(getTargetFileName())
-  console.log('getting event', JSON.stringify(event))
-  console.log('requiring', fn)
   fn = fn.default || fn
   executeFunction(fn, event, cb)
 }
@@ -12,7 +10,7 @@ exports.handle = function(event, ctx, cb) {
 function executeFunction(fn, event, cb) {
   try {
     var promise = fn(event)
-    if (typeof promise.then === 'function') {
+    if (promise && typeof promise.then === 'function') {
       promise.then(function (data) {
         cb(null, data)
       }).catch(function (error) {

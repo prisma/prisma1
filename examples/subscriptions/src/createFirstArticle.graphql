@@ -1,0 +1,14 @@
+# The subscription fires when a new `User` is created with the 
+# `createUser`-mutation.
+# The _input type_ for the corresponding handler function is determined
+# by the selection set of the query.
+subscription {
+  User(filter: {
+    mutation_in: [CREATED]  
+  }) {
+    node {
+      id
+      name
+    }
+  }
+}

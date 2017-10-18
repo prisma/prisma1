@@ -4,7 +4,7 @@ import {
   MigrationMessage,
 } from '../types/common'
 import figures = require('figures')
-import * as chalk from 'chalk'
+import chalk from 'chalk'
 import { Output } from './index'
 import { makePartsEnclodesByCharacterBold } from './util'
 import * as groupBy from 'lodash.groupby'

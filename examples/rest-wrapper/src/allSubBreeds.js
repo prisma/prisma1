@@ -1,6 +1,5 @@
 require('isomorphic-fetch')
 
-
 module.exports = event => {
 
   const { breedName } = event.data

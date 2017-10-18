@@ -6,7 +6,7 @@ import * as opn from 'opn'
 import { AuthTrigger } from './types/common'
 import { Client } from './Client/Client'
 import { GraphQLClient } from 'graphql-request'
-import * as chalk from 'chalk'
+import chalk from 'chalk'
 import { Environment } from './Environment'
 import * as jwtDecode from 'jwt-decode'
 const debug = require('debug')('auth')

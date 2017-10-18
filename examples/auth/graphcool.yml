@@ -30,6 +30,8 @@ functions:
       code: 
         src: src/loggedInUser.js
 
+# To learn how to configure permission rules for your Graphcool service, 
+# check out the `permissions` example. 
 permissions: []
 
 rootTokens:

@@ -1,6 +1,6 @@
 import { Config } from '../Config'
 import StreamOutput, { logToFile } from './StreamOutput'
-import * as chalk from 'chalk'
+import chalk, { Chalk } from 'chalk'
 import * as styles from 'ansi-styles'
 import { ActionBase, shouldDisplaySpinner } from './actions/ActionBase'
 import Prompter, { PromptOptions } from './Prompter'
@@ -108,7 +108,7 @@ export class Output {
     this.charm.pipe(process.stdout)
   }
 
-  get color(): chalk & { graphcool: (s: string) => string } {
+  get color(): any {
     return new Proxy(chalk, {
       get: (chalkProxy, name) => {
         if (CustomColors[name]) {

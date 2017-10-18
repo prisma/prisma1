@@ -1,5 +1,5 @@
 import { Output } from '../'
-import * as chalk from 'chalk'
+import chalk from 'chalk'
 import * as figures from 'figures'
 
 export function shouldDisplaySpinner(out: Output) {
@@ -27,7 +27,7 @@ export class ActionBase {
     this.log(task)
   }
 
-  stop(msg: string = chalk.green(figures.tick)) {
+  stop(msg: string = chalk.green(figures.tick) as any) {
     const task = this.task
     if (!task) {
       return

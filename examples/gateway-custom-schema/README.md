@@ -34,7 +34,9 @@ cd service
 graphcool deploy
 ```
 
-Copy the endpoint for the `Simple API` as you'll need it in the next step.
+When prompted which cluster you'd like to deploy, chose any of `Backend-as-a-Service`-options (`shared-eu-west-1`, `shared-ap-northeast-1` or `shared-us-west-2`) rather than `local`. 
+
+Then copy the endpoint for the `Simple API`, you'll need it in the next step.
 
 The service you just deployed provides a CRUD API for the `User` and `Post` model types that are defined in [`./service/types.graphql`](./service/types.graphql).
 
@@ -131,14 +133,14 @@ Send the following query to fetch the posts that you just created:
 The API gateway is a thin layer on top of the Graphcool service's CRUD API. For this example, the CRUD API is based on the following data model defined in the service's [`types.graphql`](./service/types.graphql):
 
 ```graphql
-type User implements Node {
+type User @model {
   id: ID! @isUnique
   name: String!
   alias: String! @isUnique
   posts: [Post!]! @relation(name: "UserPosts")
 }
 
-type Post implements Node {
+type Post @model {
   id: ID! @isUnique
   title: String!
   author: User! @relation(name: "UserPosts")

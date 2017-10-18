@@ -1,5 +1,5 @@
 import * as path from 'path'
-import * as chalk from 'chalk'
+import chalk from 'chalk'
 import { readDefinition } from './yaml'
 import fs from '../fs'
 import { Args, GraphcoolModule, ProjectDefinition } from '../types/common'
@@ -26,7 +26,7 @@ export async function fsToProject(
     args
   )
 
-  if (definition.modules) {
+  if (definition.hasOwnProperty('modules')) {
     out.error(`Your graphcool.yml contains modules. Please remove them in order to deploy.
 Modules are deprecated and replaced by templates.
 Read more about templates here: https://github.com/graphcool/graphcool/issues/720`)
