@@ -1,5 +1,5 @@
 import { Command, flags, Flags, ProjectDefinition } from 'graphcool-cli-engine'
-import * as chalk from 'chalk'
+import chalk from 'chalk'
 import { defaultDefinition, defaultPjson, examples } from '../../examples'
 import * as fs from 'fs-extra'
 import * as path from 'path'

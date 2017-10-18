@@ -12,6 +12,6 @@ describe('init', () => {
       '-t',
       'blank',
     )
-    expect(result.out.stdout.output).toMatchSnapshot()
+    expect(result.out.stdout.output).toContain('Written files:')
   })
 })

@@ -1,5 +1,5 @@
 import * as path from 'path'
-import * as chalk from 'chalk'
+import chalk from 'chalk'
 import { readDefinition } from './yaml'
 import fs from '../fs'
 import { Args, GraphcoolModule, ProjectDefinition } from '../types/common'

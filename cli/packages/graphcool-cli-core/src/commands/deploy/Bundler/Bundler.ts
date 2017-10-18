@@ -17,7 +17,7 @@ const debug = require('debug')('bundler')
 import {difference, flatMap} from 'lodash'
 import * as fetch from 'node-fetch'
 import * as globby from 'globby'
-import * as chalk from 'chalk'
+import chalk from 'chalk'
 
 const patterns = ['**/*.graphql', '**/graphcool.yml'].map(i => `!${i}`)
 patterns.unshift('**/*')

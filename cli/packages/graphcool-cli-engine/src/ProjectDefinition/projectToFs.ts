@@ -1,5 +1,5 @@
 import * as path from 'path'
-import * as chalk from 'chalk'
+import chalk from 'chalk'
 import fs from '../fs'
 import { Output } from '../Output/index'
 import { GraphcoolModule, ProjectDefinition } from '../types/common'

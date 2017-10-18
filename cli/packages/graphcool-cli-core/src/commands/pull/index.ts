@@ -1,5 +1,5 @@
 import { Command, flags, Flags } from 'graphcool-cli-engine'
-import * as chalk from 'chalk'
+import chalk from 'chalk'
 
 export default class Pull extends Command {
   static topic = 'pull'

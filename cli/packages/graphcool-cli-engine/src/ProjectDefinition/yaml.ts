@@ -1,7 +1,7 @@
 import * as Ajv from 'ajv'
 import * as anyjson from 'any-json'
 import schema = require('graphcool-json-schema/dist/schema.json')
-import * as chalk from 'chalk'
+import chalk from 'chalk'
 import { GraphcoolDefinition } from 'graphcool-json-schema'
 import { Output } from '../Output/index'
 import Variables from './Variables'

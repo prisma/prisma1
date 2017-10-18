@@ -2,7 +2,7 @@ import { fsToProject } from './fsToProject'
 import { projectToFs } from './projectToFs'
 import * as path from 'path'
 import { readDefinition } from './yaml'
-import * as chalk from 'chalk'
+import chalk from 'chalk'
 import { Args, GraphcoolModule, ProjectDefinition } from '../types/common'
 import fs from '../fs'
 import { Output } from '../Output/index'
@@ -204,7 +204,7 @@ export class ProjectDefinitionClass {
         !fs.pathExistsSync(path.join(this.config.definitionDir, 'node_modules'))
       ) {
         const imports = functionsWithRequire.map(fn => {
-          return `${chalk.bold(fn.fn.name)} (${fn.src}):\n` + fn.statements.map(s => `  ${s.index}: ${chalk.dim(s.line)}\n`)
+          return `${chalk.bold(fn.fn.name)} (${fn.src}):\n` + fn.statements.map(s => `  ${s.index}: ${chalk.dim(s.line)}`).join('\n')
         }).join('\n')
         const text = `You have import/require statements in your functions without a node_modules folder:
 ${imports}

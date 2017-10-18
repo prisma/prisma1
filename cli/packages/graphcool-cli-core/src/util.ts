@@ -1,5 +1,5 @@
 import { Region } from 'graphcool-cli-engine'
-import * as chalk from 'chalk'
+import chalk from 'chalk'
 
 const devPrefix = process.env.ENV === 'DEV' ? 'dev.' : ''
 

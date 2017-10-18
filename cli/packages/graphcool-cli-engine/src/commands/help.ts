@@ -3,7 +3,7 @@ import { stdtermwidth } from '../Output/actions/screen'
 import { compare, linewrap } from '../util'
 import { Command } from '../Command'
 import Plugins from '../Plugin/Plugins'
-import * as chalk from 'chalk'
+import chalk from 'chalk'
 import {groupBy, flatten} from 'lodash'
 const debug = require('debug')('help command')
 

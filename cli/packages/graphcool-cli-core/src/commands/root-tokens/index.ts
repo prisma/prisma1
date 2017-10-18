@@ -4,7 +4,7 @@ import {
   Flags,
   PAT,
 } from 'graphcool-cli-engine'
-import * as chalk from 'chalk'
+import chalk from 'chalk'
 import { table, getBorderCharacters } from 'table'
 
 export default class GetRootToken extends Command {

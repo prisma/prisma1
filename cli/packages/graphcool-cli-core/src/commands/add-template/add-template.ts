@@ -8,7 +8,7 @@ import * as yaml from 'js-yaml'
 import * as childProcess from 'child_process'
 /* tslint:disable-next-line */
 const debug = require('debug')('module')
-import * as chalk from 'chalk'
+import chalk from 'chalk'
 import * as figures from 'figures'
 import {intersection, difference} from 'lodash'
 import { getBinPath } from './getbin'

@@ -14,7 +14,7 @@
     "@types/node": "^8.0.22",
     "husky": "^0.14.3",
     "jest": "^21.0.2",
-    "lint-staged": "^4.0.3",
+    "lint-staged": "^4.2.3",
     "nock": "^9.0.14",
     "prettier": "^1.5.3",
     "rimraf": "^2.6.1",
@@ -35,12 +35,15 @@
     "prepublishOnly": "npm run lint && npm run build",
     "test": "NODE_ENV=test jest"
   },
-  "lint-staged": {
+  "linters": {
     "*.ts": [
       "prettier --single-quote --no-semi --trailing-comma all --write",
       "tslint",
+      "jest --findRelatedTests",
       "git add"
-    ],
+    ]
+  },
+  "lint-staged": {
     "gitDir": "../../"
   },
   "jest": {
@@ -70,7 +73,7 @@
   "dependencies": {
     "archiver": "^2.0.3",
     "callsites": "^2.0.0",
-    "chalk": "^2.1.0",
+    "chalk": "^2.2.0",
     "chokidar": "^1.7.0",
     "download-github-repo": "^0.1.3",
     "figures": "^2.0.0",

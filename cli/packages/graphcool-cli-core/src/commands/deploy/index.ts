@@ -1,5 +1,5 @@
 import { Command, flags, Flags } from 'graphcool-cli-engine'
-import * as chalk from 'chalk'
+import chalk from 'chalk'
 import * as sillyName from 'sillyname'
 import { ServiceDoesntExistError } from '../../errors/ServiceDoesntExistError'
 import { emptyDefinition } from './emptyDefinition'

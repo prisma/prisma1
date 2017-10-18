@@ -1,6 +1,6 @@
 import { Command, flags, Flags, AuthenticateCustomerPayload } from 'graphcool-cli-engine'
 import Docker from './Docker'
-import * as chalk from 'chalk'
+import chalk from 'chalk'
 const debug = require('debug')('up')
 
 export default class Up extends Command {

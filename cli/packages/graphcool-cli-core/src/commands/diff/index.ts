@@ -3,7 +3,7 @@ import {
   flags,
   Flags,
 } from 'graphcool-cli-engine'
-import * as chalk from 'chalk'
+import chalk from 'chalk'
 
 export default class Diff extends Command {
   static description = 'Receive service changes'

@@ -7,7 +7,7 @@ import {
   Project,
   Targets,
 } from 'graphcool-cli-engine'
-import * as chalk from 'chalk'
+import chalk from 'chalk'
 
 export default class InfoCommand extends Command {
   static topic = 'info'

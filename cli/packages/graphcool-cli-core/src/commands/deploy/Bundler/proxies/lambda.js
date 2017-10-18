@@ -3,8 +3,6 @@ injectEnvironment()
 
 exports.handle = function(event, ctx, cb) {
   var fn = require(getTargetFileName())
-  console.log('getting event', JSON.stringify(event))
-  console.log('requiring', fn)
   fn = fn.default || fn
   executeFunction(fn, event, cb)
 }
