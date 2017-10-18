@@ -114,6 +114,9 @@ To deploy your Graphcool service:
 
 To start your local Graphcool cluster:
   ${chalk.green('graphcool local up')}
+  
+To add facebook authentication to your service:
+  ${chalk.green('graphcool add-template facebook-auth')}
 
 You can find further instructions in the ${chalk.green('graphcool.yml')} file,
 which is the central project configuration.
