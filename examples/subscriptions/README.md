@@ -30,6 +30,8 @@ Read the [last section](#whats-in-this-example) of this README to learn how the 
 .
 ├── README.md
 ├── graphcool.yml
+├── node_modules
+├── package.json
 ├── src
 │   ├── createFirstArticle.graphql
 │   └── createFirstArticle.js
@@ -61,10 +63,11 @@ npm install -g graphcool@next
 
 ### 3. Create the GraphQL server
 
-You can now [deploy](https://docs-next.graph.cool/reference/graphcool-cli/commands-aiteerae6l#graphcool-deploy) the Graphcool service that's defined in this directory:
+You can now [deploy](https://docs-next.graph.cool/reference/graphcool-cli/commands-aiteerae6l#graphcool-deploy) the Graphcool service that's defined in this directory. Before that, you need to install the node dependencies for the subscription function:
 
 ```sh
-graphcool deploy
+yarn install      # install dependencies
+graphcool deploy  # deploy service
 ```
 
 > Note: Whenever you make changes to files in this directory, you need to invoke `graphcool deploy` again to make sure your changes get applied to the "remote" service.
@@ -128,7 +131,7 @@ After you've sent this mutation, you can go back and send the previous `allUsers
     "allUsers": [{
       "name": "Sarah",
       "articles": [{
-        "title": "My name is Sarah, and this is my first article! 🙌"  
+        "title": "My name is Sarah, and this is my first article!"  
       }]
     }]
   }
@@ -152,6 +155,7 @@ subscription {
     mutation_in: [CREATED]  
   }) {
   node {
+    id
     name
   }
 }
@@ -167,20 +171,20 @@ const { fromEvent } = require('graphcool-lib')
 module.exports = event => {
 
   // Retrieve payload from event
-  const { name } = event.data.User.node
+  const { id, name } = event.data.User.node
 
   // Create Graphcool API (based on https://github.com/graphcool/graphql-request)
   const graphcool = fromEvent(event)
   const api = graphcool.api('simple/v1') // `api` has a connection to your service's API 
 
   // Create variables for mutation
-  const title = `My name is ${name}, and this is my first article! 🙌`
-  const variables = { title }
+  const title = `My name is ${name}, and this is my first article!`
+  const variables = { authorId: id title }
 
   // Create mutation
   const createArticleMutation = `
-    mutation ($title: String!) {
-      createArticle(title: $title) {
+    mutation ($title: String!, $authorId: ID!) {
+      createArticle(title: $title, authorId: $authorId) {
         id
       }
     }
