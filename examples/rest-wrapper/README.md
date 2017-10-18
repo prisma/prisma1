@@ -62,6 +62,9 @@ To deploy the service and actually create your GraphQL server, invoke the follow
 graphcool deploy
 ```
 
+
+When prompted which cluster you'd like to deploy, chose any of `Backend-as-a-Service`-options (`shared-eu-west-1`, `shared-ap-northeast-1` or `shared-us-west-2`) rather than `local`. 
+
 > Note: Whenever you make changes to files in this directory, you need to invoke `graphcool deploy` again to make sure your changes get applied to the "remote" service.
 
 
@@ -75,6 +78,8 @@ You can open a Playground with the following command:
 ```sh
 graphcool playground
 ```
+
+When prompted which cluster you'd like to deploy, chose any of `Backend-as-a-Service`-options (`shared-eu-west-1`, `shared-ap-northeast-1` or `shared-us-west-2`) rather than `local`. 
 
 Inside the Playground, you can send queries for all the resolver functions that are defined inside [`graphcool.yml`](./graphcool.yml):
 

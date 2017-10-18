@@ -26,6 +26,8 @@ graphcool deploy
 # next step: open `https://api.graph.cool/simple/v1/xxx` in your browser
 ```
 
+When prompted which cluster you'd like to deploy, chose any of `Backend-as-a-Service`-options (`shared-eu-west-1`, `shared-ap-northeast-1` or `shared-us-west-2`) rather than `local`. 
+
 ## Usage
 
 ### Add initial data via `create` mutation

@@ -28,7 +28,6 @@ type Post @model {
   imageUrl: String!
   author: User! @relation(name: "UserPosts")
 }
-
 ```
 
 Here is an overview of the file structure in this example:
@@ -78,10 +77,11 @@ npm install -g graphcool@next
 
 ### 3. Create the GraphQL server
 
-You can now [deploy](https://docs-next.graph.cool/reference/graphcool-cli/commands-aiteerae6l#graphcool-deploy) the Graphcool service that's defined in this directory:
+You can now [deploy](https://docs-next.graph.cool/reference/graphcool-cli/commands-aiteerae6l#graphcool-deploy) the Graphcool service that's defined in this directory. Before that, you need to install the node [dependencies](package.json#L14) for the defined functions:
 
 ```sh
-graphcool deploy
+yarn install      # install dependencies
+graphcool deploy  # deploy service
 ```
 
 When prompted which cluster you'd like to deploy, chose any of `Backend-as-a-Service`-options (`shared-eu-west-1`, `shared-ap-northeast-1` or `shared-us-west-2`) rather than `local`. 

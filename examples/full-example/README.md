@@ -34,6 +34,8 @@ yarn install      # install dependencies
 graphcool deploy  # deploy service
 ```
 
+When prompted which cluster you'd like to deploy, chose any of `Backend-as-a-Service`-options (`shared-eu-west-1`, `shared-ap-northeast-1` or `shared-us-west-2`) rather than `local`. 
+
 ## Data Setup
 
 You can open the playground with `graphcool playground` and execute the following mutation to set up some initial data.

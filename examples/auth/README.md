@@ -52,6 +52,8 @@ yarn install      # install dependencies
 graphcool deploy  # deploy service
 ```
 
+When prompted which cluster you'd like to deploy, chose any of `Backend-as-a-Service`-options (`shared-eu-west-1`, `shared-ap-northeast-1` or `shared-us-west-2`) rather than `local`. 
+
 > Note: Whenever you make changes to files in this directory, you need to invoke `graphcool deploy` again to make sure your changes get applied to the "remote" service.
 
 That's it, you're now ready to offer a email-password based login to your users! 🎉
