@@ -77,6 +77,7 @@ export class CLI {
       this.cmd = await this.Help.run(this.config)
     } else {
       const id = this.getCommandId(this.config.argv.slice(1))
+      debug('command id', id)
       // if there is a subcommand, cut the first away so the Parser still works correctly
       if (
         this.config.argv[1] &&
@@ -174,8 +175,8 @@ export class CLI {
     if (argv.length === 1 && ['-v', '--version'].includes(argv[0])) {
       return 'version'
     }
-    if (argv.includes('help') || argv.includes('init')) {
-      return argv[0]
+    if (argv.includes('help')) {
+      return 'help'
     }
     if (argv[1] && !argv[1].startsWith('-')) {
       return argv.slice(0, 2).join(':')
