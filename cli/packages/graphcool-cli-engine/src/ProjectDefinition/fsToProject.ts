@@ -183,7 +183,7 @@ export async function fsToModule(
           }
         } else {
           errors.push({
-            message: `The file ${func.schema} for the schema extension of function ${funcName} does not exist`,
+            message: `The file ${func.schema} for the resolver of function ${funcName} does not exist`,
           })
         }
       }

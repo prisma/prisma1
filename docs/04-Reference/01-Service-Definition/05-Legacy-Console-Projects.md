@@ -22,7 +22,7 @@ Managing the GraphQL type definitions can still be done both in the Console (in 
 
 ## Upgrading a legacy Console project to a Graphcool service
 
-To upgrade a legacy Console project to a Graphcool service, you need to navigate to the **Project Settings** in the Console, select the **General**-tab and click the **Eject Project**-button. 
+To upgrade a legacy Console project to a Graphcool service, you need to navigate to the **Project Settings** in the Console, select the **General**-tab and click the **Upgrade Project**-button. 
 
 ![](https://imgur.com/R9yNznK.png)
 
