@@ -216,12 +216,12 @@ graphcool add-template graphcool/templates/messaging/mailgun
 
 ### `graphcool root-token`
 
-Print the root tokens of a specific service. If no concrete token is specified as an option, the command will only list the names of the available tokens.
+Print the root token of a specific service. If no concrete token is specified as an option, the command will only list the names of the available tokens.
 
 #### Usage 
 
 ```sh
-graphcool get-root-token [flags]
+graphcool root-token [flags]
 ```
 
 #### Flags
