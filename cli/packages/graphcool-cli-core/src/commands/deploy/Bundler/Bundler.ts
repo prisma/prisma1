@@ -22,6 +22,14 @@ import chalk from 'chalk'
 const patterns = ['**/*.graphql', '**/graphcool.yml'].map(i => `!${i}`)
 patterns.unshift('**/*')
 
+const defaultGlobbyOptions = {
+  dot: true,
+  silent: true,
+  follow: true,
+  nosort: true,
+  mark: true
+}
+
 export default class Bundler {
   definition: ProjectDefinitionClass
   config: Config
@@ -41,6 +49,14 @@ export default class Bundler {
     this.buildDir = path.join(this.dotBuildDir, 'dist/')
     this.zipPath = path.join(this.dotBuildDir, 'build.zip')
     debug(this.zipPath)
+  }
+
+  async getIsDir(filePath: string): Promise<{filePath: string, isDir: boolean}> {
+    const stat = await fs.stat(filePath)
+    return {
+      filePath,
+      isDir: stat.isDirectory()
+    }
   }
 
   async bundle(): Promise<ExternalFiles> {
@@ -63,7 +79,7 @@ export default class Bundler {
     zip.on('error', err => {
       this.out.error('Error while zipping build: ' + err)
     })
-    const files = await globby(['**/*', '!.build', '!*.zip', '!build'])
+    const files = await globby(['**/*', '!.build', '!*.zip', '!build'], defaultGlobbyOptions)
     const filesToAdd = difference(files, this.shortFileNamesBlacklist)
     filesToAdd.forEach(file => {
       zip.file(file, { name: file })
@@ -74,7 +90,7 @@ export default class Bundler {
     debug('createdFiles', createdFiles)
     this.generateEnvFiles()
     this.generateHandlerFiles()
-    const distFiles = await globby(['**/*', '!.build', '!*.zip'], {cwd: this.buildDir})
+    const distFiles = await globby(['**/*', '!.build', '!*.zip'], {...defaultGlobbyOptions, cwd: this.buildDir})
     distFiles.forEach(file => {
       const fileName = path.join(this.buildDir, file)
       debug('adding', fileName, file)

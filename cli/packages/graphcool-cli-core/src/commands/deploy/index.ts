@@ -325,6 +325,7 @@ https://console.graph.cool/${encodeURIComponent(info.name)}/settings/general`)
       )
       this.out.migration.printErrors(migrationResult.errors)
       this.out.log('')
+      process.exitCode = 1
     }
 
     if (
@@ -339,6 +340,7 @@ https://console.graph.cool/${encodeURIComponent(info.name)}/settings/general`)
             `\`graphcool deploy --force\``,
           )} if you know what you're doing!\n`,
       )
+      process.exitCode = 1
     }
     this.deploying = false
     this.printEndpoints(projectId)
@@ -470,6 +472,7 @@ https://console.graph.cool/${encodeURIComponent(info.name)}/settings/general`)
         )
         this.out.migration.printErrors(migrationResult.errors)
         this.out.log('')
+        process.exitCode = 1
       }
 
       if (
@@ -484,6 +487,7 @@ https://console.graph.cool/${encodeURIComponent(info.name)}/settings/general`)
             `\`graphcool deploy --force\``,
           )} if you know what you're doing!\n`,
         )
+        process.exitCode = 1
       }
     } catch (e) {
       this.out.action.stop()

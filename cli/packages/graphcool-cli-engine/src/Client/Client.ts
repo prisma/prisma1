@@ -13,12 +13,12 @@ import {
 } from '../types/common'
 
 import { GraphQLClient, request } from 'graphql-request'
-import { omit } from 'lodash'
+import { omit, flatMap } from 'lodash'
 import { Config } from '../Config'
 import { getFastestRegion } from './ping'
 import { ProjectDefinitionClass } from '../ProjectDefinition/ProjectDefinition'
-import {Environment} from '../Environment'
-import { Output } from "../index";
+import { Environment } from '../Environment'
+import { Output } from '../index'
 import { Auth } from '../Auth'
 import chalk from 'chalk'
 
@@ -76,18 +76,27 @@ export class Client {
             await this.auth.ensureAuth(true)
             // try again with new token
             return await this.client.request(query, variables)
-          } else if(e.message.includes('ECONNREFUSED') && (e.message.includes('localhost') || e.message.includes('127.0.0.1'))) {
-            this.out.error(`Could not connect to local cluster. Please use ${chalk.bold.green('graphcool local up')} to start your local Graphcool cluster.`)
+          } else if (
+            e.message.includes('ECONNREFUSED') &&
+            (e.message.includes('localhost') || e.message.includes('127.0.0.1'))
+          ) {
+            this.out.error(
+              `Could not connect to local cluster. Please use ${chalk.bold.green(
+                'graphcool local up',
+              )} to start your local Graphcool cluster.`,
+            )
           } else {
             throw e
           }
         }
-      }
+      },
     } as any
   }
 
   async getAccount(): Promise<AccountInfo> {
-    const {viewer: {user}} = await this.client.request<{viewer: {user: AccountInfo}}>(`{
+    const { viewer: { user } } = await this.client.request<{
+      viewer: { user: AccountInfo }
+    }>(`{
       viewer {
         user {
           email
@@ -153,7 +162,9 @@ export class Client {
       }
     `
 
-    const {getTemporaryDeployUrl: {url}} = await this.client.request<{getTemporaryDeployUrl: {url: string}}>(mutation, {projectId})
+    const { getTemporaryDeployUrl: { url } } = await this.client.request<{
+      getTemporaryDeployUrl: { url: string }
+    }>(mutation, { projectId })
     return url
   }
 
@@ -199,7 +210,9 @@ export class Client {
       }
     `
     debug('\n\nSending project definition:')
-    const sanitizedDefinition = ProjectDefinitionClass.sanitizeDefinition(config)
+    const sanitizedDefinition = ProjectDefinitionClass.sanitizeDefinition(
+      config,
+    )
     debug(this.out.getStyledJSON(sanitizedDefinition))
     const { push } = await this.client.request<{
       push: MigrateProjectPayload
@@ -284,33 +297,37 @@ export class Client {
   async waitForLocalDocker(endpoint: string): Promise<void> {
     // dont send any auth information when running the authenticateCustomer mutation
     let valid = false
-    while(!valid) {
+    while (!valid) {
       try {
         debug('requesting', endpoint)
-        await request(endpoint,
+        await request(
+          endpoint,
           `
             {
               viewer {
                 id
               }
             }
-            `
-          ,
+            `,
         )
         valid = true
       } catch (e) {
         valid = false
       }
 
-      await new Promise((r) => setTimeout(r, 500))
+      await new Promise(r => setTimeout(r, 500))
     }
   }
 
-  async authenticateCustomer(endpoint: string, token: string): Promise<AuthenticateCustomerPayload> {
+  async authenticateCustomer(
+    endpoint: string,
+    token: string,
+  ): Promise<AuthenticateCustomerPayload> {
     // dont send any auth information when running the authenticateCustomer mutation
-    const result = await request<
-      {authenticateCustomer: AuthenticateCustomerPayload}
-      >(endpoint,
+    const result = await request<{
+      authenticateCustomer: AuthenticateCustomerPayload
+    }>(
+      endpoint,
       `
       mutation ($token: String!) {
         authenticateCustomer(input: {
@@ -323,7 +340,7 @@ export class Client {
         }
       }
       `,
-      {token},
+      { token },
     )
 
     return result.authenticateCustomer
@@ -471,6 +488,69 @@ export class Client {
     )
 
     return node && node.logs ? node.logs.edges.map(edge => edge.node) : null
+  }
+
+  async getAllFunctionLogs(
+    projectId: string,
+    count: number = 1000,
+  ): Promise<FunctionLog[] | null> {
+    interface AllFunctionLogsPayload {
+      viewer: {
+        project: {
+          functions: {
+            edges: Array<{
+              node: {
+                logs: {
+                  edges: Array<{
+                    node: FunctionLog
+                  }>
+                }
+              }
+            }>
+          }
+        }
+      }
+    }
+
+    const { viewer: { project } } = await this.client.request<
+      AllFunctionLogsPayload
+    >(
+      `
+        query ($id: ID!, $count: Int!) {
+          viewer {
+            project(id: $id) {
+              functions {
+                edges {
+                  node {
+                    logs(last: $count) {
+                      edges {
+                        node {
+                          id
+                          requestId
+                          duration
+                          status
+                          timestamp
+                          message
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        `,
+      { id: projectId, count },
+    )
+
+    return project && project.functions && project.functions.edges
+      ? flatMap(
+          project.functions.edges.map(functionEdge =>
+            functionEdge.node.logs.edges.map(logEdge => logEdge.node),
+          ),
+        )
+      : null
   }
 
   async getProjectName(projectId: string): Promise<string> {
