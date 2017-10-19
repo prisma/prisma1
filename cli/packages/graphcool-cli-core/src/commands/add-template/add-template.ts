@@ -1,6 +1,6 @@
 import { Command, flags, Flags, readDefinition } from 'graphcool-cli-engine'
 import * as download from 'download-github-repo'
-import * as cuid from 'cuid'
+import * as cuid from 'scuid'
 import * as path from 'path'
 import * as os from 'os'
 import * as fs from 'fs-extra'
