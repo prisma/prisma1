@@ -182,9 +182,8 @@ export async function fsToModule(
             [func.schema]: file,
           }
         } else {
-          const src = typeof func.handler.code === 'string' ? func.handler.code : func.handler.code!.src
           errors.push({
-            message: `The file ${src} for the schema extension of function ${funcName} does not exist`,
+            message: `The file ${func.schema} for the schema extension of function ${funcName} does not exist`,
           })
         }
       }
