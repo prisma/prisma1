@@ -55,7 +55,7 @@ export default class GetRootToken extends Command {
         )
         this.out.log(
           `\n Run ${chalk.green(
-            'graphcool get-root-token -t TOKEN_NAME',
+            'graphcool root-token -t TOKEN_NAME',
           )} to receive the concrete token`,
         )
       }
