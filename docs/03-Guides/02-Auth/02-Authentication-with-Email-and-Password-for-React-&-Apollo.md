@@ -6,19 +6,7 @@ github: "https://github.com/graphcool-examples/react-graphql/tree/master/authent
 
 # User Authentication with Email for React and Apollo
 
-<InfoBox type=warning>
-
-**Note**: This guide is outdated! It uses the deprecated concept of _modules_ to pull in the authentication functionality.
-
-_Modules_ have been replaced by _templates_. A template is a predefined Graphcool service that you can _copy_ into your project. 
-
-Read more about templates in the [documentation](!alias-zeiv8phail) or in this [GitHub issue](https://github.com/graphcool/graphcool/issues/720) that contains the proposal and discusssion for how exactly templates should work.
-
-An updated version of this guide is coming soon, stay tuned!
-
-</InfoBox>
-
-In this guide, you will learn how to implement an "Email & Password"-based authentication workflow with Graphcool and configure permission rules to control data access among your users. For the frontend, you're going to use React & Apollo Client.
+In this guide, you will learn how to implement an "Email & Password"-based authentication workflow with Graphcool and configure [permission rules](!alias-iegoo0heez) to control data access among your users. For the frontend, you're going to use React & Apollo Client.
 
 You're going to build a simple Instagram clone that fulfills the following requirements:
 
@@ -49,91 +37,95 @@ cd authentication-with-email-and-apollo
 
 ### Installing the Graphcool CLI 
 
-Before you can start with the actual implementation of the React app, you need to create the GraphQL server your app will run against. You'll create the server using the [Graphcool CLI](!alias-zboghez5go).
+Before you can start with the actual implementation of the React app, you need to create the GraphQL server for your project. You'll do this with the [Graphcool CLI](!alias-zboghez5go).
 
 <Instruction>
 
-*If you haven't done so yet, go ahead and install the Graphcool CLI using npm:*
+If you haven't done so yet, go ahead and install the Graphcool CLI using npm:
 
 ```bash
-npm install -g graphcool
+npm install -g graphcool@next
 ```
 
 </Instruction>
 
 ### Creating a new Graphcool project
 
-Now that the CLI is installed, you can use it to create a new project.
+Now that the CLI is installed, you can use it to create the file structure for a new [Graphcool service](!alias-opheidaix3).
 
 <Instruction>
 
-```bash(path="graphcool")
-graphcool init graphcool --template blank
+```bash(path="server")
+# Create a the file structure for a new Graphcool service in
+# a directory called `server` 
+graphcool init server
 ```
 
 </Instruction>
 
-You're using the `--template blank` option which just creates an empty project for you. Since you're passing `graphcool` as the directory name to the `init` command, the CLI will also create this directory for you and put all generated files into it.
+You're passing `server` as the directory name to the [`init`](!alias-aiteerae6l#graphcool-init) command, the CLI will also create this directory for you and put all generated files into it.
 
 Here is an overview of the generated files and the project structure which the CLI now created:
 
 ```(nocopy)
-├─ .graphcoolrc
-├─ code
-│  ├─ hello.graphql
-│  └─ hello.js
-├─ graphcool.yml
-└─ types.graphql
+.
+└── server
+    ├── graphcool.yml
+    ├── types.graphql
+    └── src
+        ├── hello.graphql
+        └── hello.js
 ```
 
-`graphcool.yml` contains the _project definition_ with all the information around your data model and other type definitions, usage of serverless functions, permission rules and more.
+[`graphcool.yml`](!alias-foatho8aip) contains the [service definition]](!alias-opheidaix3) with all the information around your [data model](!alias-eiroozae8u) and other type definitions, usage of [functions](!alias-aiw4aimie9), [permission rules](!alias-iegoo0heez) and more.
 
 
-### Adding the "Email & Password" authentication module
+### Adding the "Email & Password" authentication template
 
-When working with Graphcool, you can easily add features to your project by pulling in a _module_. 
+When working with Graphcool, you can easily add features to your service by pulling in a [template](!alias-zeiv8phail). 
 
-> A Graphcool module is nothing but another Graphcool project. When running `graphcool module add <module>`, the CLI simply downloads all the code from the corresponding GitHub directory and puts it into your project inside a directory called `modules`.
+> A Graphcool template is nothing but the definition of another Graphcool service. When running `graphcool add-template <template>`, the CLI downloads all the code from the corresponding GitHub directory and adds the functionality from the template as _comments_ to your `graphcool.ym` and `types.graphql` files.
 
-#### Installing the module
+#### Downloading the template code
 
-For this tutorial, you'll use the [`email-password`](https://github.com/graphcool/modules/tree/master/authentication/email-password) authentication module that offers simple signup and login flows.
+For this tutorial, you'll use the [`email-password`](https://github.com/graphcool/templates/tree/master/auth/email-password) authentication template that implements simple signup and login flows.
 
 <Instruction>
 
-*In the `graphcool` directory, execute the following command to add the module:*
+In the `server` directory, execute the following command to add the template:
 
-```bash(path="graphcool")
-graphcool module add graphcool/modules/authentication/email-password
+```bash(path="server")
+graphcool add-template graphcool/templates/auth/email-password
 ```
 
 </Instruction>
 
-> Notice that the [`graphcool/modules/authentication/email-password`](https://github.com/graphcool/modules/tree/master/authentication/email-password) simply corresponds to a path on GitHub. It points to the `authentication/email-password` directory in the `modules` repository in the [`graphcool`](https://github.com/graphcool/) GitHub organization. This directory contains the project definition and all additional files for the Graphcool project that is your module.
+> Notice that the [`graphcool/templates/authentication/email-password`](https://github.com/graphcool/templates/tree/master/auth/email-password) simply corresponds to a path on GitHub. It points to the `auth/email-password` directory in the `templates` repository in the [`graphcool`](https://github.com/graphcool/) GitHub organization. This directory contains the service definition and all additional files for the Graphcool service that is your template.
 
-#### A closer look at the `email-password` module
+#### A closer look at the `email-password` template
 
-Let's also quickly understand what the module actually contains, here is it's file structure:
+Let's also quickly understand what the template actually contains, here is it's file structure:
 
 ```(nocopy)
 .
-└── email-password
-    ├── README.md
-    ├── code
-    │   ├── authenticate.js
-    │   └── signup.js
-    ├── graphcool.yml
-    ├── schemas
-    │   ├── authenticate.graphql
-    │   └── signup.graphql
-    └── types.graphql
+├── README.md
+├── graphcool.yml
+├── package.json
+├── src
+│   ├── authenticate.graphql
+│   ├── authenticate.ts
+│   ├── loggedInUser.graphql
+│   ├── loggedInUser.ts
+│   ├── signup.graphql
+│   └── signup.ts
+└── types.graphql
 ```
 
-The most important parts for now are the project and type definitions. 
+The most important parts for now are the service and type definitions. 
 
-##### Project definition: `graphcool.yml` 
+##### Service definition: `graphcool.yml` 
 
-```yml(path="graphcool/graphcool.yml"&nocopy)
+```yml(path="server/graphcool.yml"&nocopy)
 # GraphQL types
 types: ./types.graphql
 
@@ -157,61 +149,148 @@ functions:
     handler:
       code:
         src: ./code/loggedInUser.js
-
-# Permanent Auth Token / Root Tokens
-rootTokens: 
-  - signup
-  - authenticate
 ```
 
 ##### Type definitions: `types.graphql` 
 
-```graphql(path="graphcool/types.graphql"nocopy)
-type EmailUser implements Node {
-  id: ID! @isUnique
-  createdAt: DateTime!
-  updatedAt: DateTime!
-  email: String @isUnique
+```graphql(path="server/types.graphql"nocopy)
+type User @model {
+  # Required system field:
+  id: ID! @isUnique # read-only (managed by Graphcool)
+
+  # Optional system fields (remove if not needed):
+  createdAt: DateTime! # read-only (managed by Graphcool)
+  updatedAt: DateTime! # read-only (managed by Graphcool)
+
+  email: String! @isUnique
   password: String
 }
 ```
 
-The project definition defines three `resolver` functions you can use for signup and login functionality as well as for querying the currently logged in user. You'll take a look at the implementations in a bit.
+The service definition defines three `resolver` functions you can use for signup and login functionality as well as for querying the currently logged in user. You'll take a look at the implementations in a bit.
 
-The type definitions simply define the `EmailUser` user type that you use to represent authenticated users.
+The type definitions simply define the `User` type that you'll use to store user data and represent authenticated users.
 
-### Configuring the data model
+#### Uncommenting the added lines
 
-In addition to the `EmailUser` that you got from the `email-password` authentication module, you also need a type to represent the posts that your users will be creating once they're authenticated. Here's what the corresponding model looks like.
+As mentioned above, the `add-template` command downloads the code from the GitHub repository and adds it as comments to your configuration files. In order to "activate" the functionality, you still need to uncomment the lines that were added by the CLI.
 
 <Instruction>
 
-*Open `./graphcool/types.graphql` and add the following definition to it:*
+Open `graphcool.yml` and uncomment the three `resolver` functions: `signup`, `login` and `loggedInUser` so the file looks as follows (you can also delete the configuration for the predefined `hello` function):
 
-```graphql(path="graphcool/types.graphql")
-type Post {
-  id: ID! @isUnique
-  createdAt: DateTime!
-  updatedAt: DateTime!
-  description: String!
-  imageUrl: String!
-  author: EmailUser @relation(name: "PostsByUser")
+```yml(path="server/graphcool.yml")
+types: ./types.graphql
+
+functions:
+  signup:
+    handler:
+      code:
+        src: ./code/signup.js
+    type: resolver
+    schema: ./schemas/signup.graphql
+  authenticate:
+    handler:
+      code:
+        src: ./code/authenticate.js
+    type: resolver
+    schema: ./schemas/authenticate.graphql
+  loggednInUser:
+    type: resolver
+    schema: ./schemas/loggedInUser.graphql
+    handler:
+      code:
+        src: ./code/loggedInUser.js
+
+permissions: 
+  - operation: "*"
+```
+
+</Instruction>
+
+Similarly, you need to uncomment the `User` type that was added to `types.graphql`.
+
+<Instruction>
+
+Open `types.graphql` and uncomment the added `User` type. You can also delete the `User` that was already predefined in that file. In the end, the file will only have one `User` type left, looking as follows:
+
+```graphql(path="server/types.graphql")
+type User @model {
+  # Required system field:
+  id: ID! @isUnique # read-only (managed by Graphcool)
+
+  # Optional system fields (remove if not needed):
+  createdAt: DateTime! # read-only (managed by Graphcool)
+  updatedAt: DateTime! # read-only (managed by Graphcool)
+
+  email: String! @isUnique
+  password: String
 }
 ```
 
 </Instruction>
 
-The `author`-field represents the one end of the one-to-many relation between the `EmailUser` and the `Post` type. This relation represents the fact that an authenticated user can be the _author_ of a post.
+#### Deploying the service
+
+It's now time to deploy your service! Once deployed it will be available via an HTTP endpoint that exposes the functionality that's defined in `graphcool.yml`. You can deploy a service using the [`graphcool deploy`](!alias-aiteerae6l#graphcool-deploy) command.
 
 <Instruction>
 
-*To add the other end of the relation, you have to update the `EmailUser` type. Open `/graphcool/modules/email-password/types.graphql` and update the `EmailUser` type as follows:*
+In your terminal, navigate to the `server` directory and deploy the service: 
 
-```graphql(path="graphcool/modules/email-password/types.graphql")
-type EmailUser implements Node {
-  id: ID! @isUnique
-  createdAt: DateTime!
-  updatedAt: DateTime!
+```bash(path="server")
+graphcool deploy
+``` 
+
+When prompted which cluster you want to deploy to, choose any of the **Backend-as-a-Service** options (`shared-eu-west-1`, `shared-ap-northeast-1` or `shared-us-west-2`).
+
+</Instruction>
+
+The command outputs the HTTP endpoints of your GraphQL API. Notice that it also created the _local_ [`.graphcoolrc`](!alias-zoug8seen4) inside the current directory. This is used to manage your _deployment targets_.
+
+> **Note**: You can already start testing your API by sending queries and mutations through a GraphQL Playground. Open a Playground either by pasting the HTTP endpoint into the address bar of your browser or by using the [`graphcool playground`](!alias-aiteerae6l#graphcool-playground) command inside the `server` directory.
+
+### Configuring the data model
+
+In addition to the `User` that you got from the `email-password` authentication template, you also need a type to represent the posts that your users will be creating once they're authenticated. Here's what the corresponding model looks like.
+
+<Instruction>
+
+Open `./server/types.graphql` and add the following definition to it:
+
+```graphql(path="server/types.graphql")
+type Post {
+  # Required system field:
+  id: ID! @isUnique # read-only (managed by Graphcool)
+
+  # Optional system fields (remove if not needed):
+  createdAt: DateTime! # read-only (managed by Graphcool)
+  updatedAt: DateTime! # read-only (managed by Graphcool)
+
+  description: String!
+  imageUrl: String!
+  author: User @relation(name: "PostsByUser")
+}
+```
+
+</Instruction>
+
+The `author`-field represents the one end of the one-to-many relation between the `User` and the `Post` type. This relation represents the fact that an authenticated user can be the _author_ of a post.
+
+<Instruction>
+
+To add the other end of the relation, you have to update the `User` type from the template. Open `types.graphql` and update the `User` type as follows:
+
+```graphql(path="server/types.graphql")
+type User @model {
+  # Required system field:
+  id: ID! @isUnique # read-only (managed by Graphcool)
+
+  # Optional system fields (remove if not needed):
+  createdAt: DateTime! # read-only (managed by Graphcool)
+  updatedAt: DateTime! # read-only (managed by Graphcool)
+
+  # other template fields
   email: String @isUnique
   password: String
   
@@ -223,21 +302,13 @@ type EmailUser implements Node {
 
 </Instruction>
 
-Notice that the CLI doesn't care about _where_ (in which files) you're putting your type definitions. When applying the changes, it'll simply merge all existing `.graphql`-files in your project and treat them as a single one.
-
-
-### Deploying your changes
-
-You made two major local changes that you now need to apply to the "remote project" in your Graphcool account before its API gets updated:
-
-1. You added a module that includes new type definitions as well as three serverless function of type `resolver`.
-2. You configured the data model with a new `Post` type and a relation to the `EmailUser` type from the module.
+After every change you're making to your service definition, you need to redeploy the service for the changes to actually take effect.
 
 <Instruction>
 
-*You can simply apply all the local changes using the following command in the terminal:*
+In the `server` directory inside a terminal, invoke the following command:
 
-```bash(path="graphcool")
+```bash(path="server")
 graphcool deploy
 ```
 
@@ -245,11 +316,11 @@ graphcool deploy
 
 Here's what the generated output looks like. 
 
-```bash(nocopy)
+```(nocopy)
 $ graphcool deploy
-Deploying to project __PROJECT_ID__ with local environment dev.... ✔
+Deploying to service __SERVICE_ID__ with local environment dev.... ✔
 
-Your project __PROJECT_ID__ of env dev was successfully updated.\nHere are the changes:
+Your service __SERVICE_ID__ of env dev was successfully updated.\nHere are the changes:
 
 Types
 
@@ -257,39 +328,14 @@ Types
    + A new type with the name `Post` is created.
     ├── +  A new field with the name `description` and type `String!` is created.
     └── +  A new field with the name `imageUrl` and type `String!` is created.
-  EmailUser
-   + A new type with the name `EmailUser` is created.
-    ├── +  A new field with the name `email` and type `String` is created.
-    ├── +  A new field with the name `password` and type `String` is created.
-    └── +  A new field with the name `name` and type `String!` is created.
 
 Relations
 
   PostsByUser
-   + The relation `PostsByUser` is created. It connects the type `Post` with the type `EmailUser`.
-
-Resolver Functions
-
-  authenticate
-   + A new resolver function with the name `authenticate` is created.
-  loggednInUser
-   + A new resolver function with the name `loggednInUser` is created.
-  signup
-   + A new resolver function with the name `signup` is created.
-
-RootTokens
-
-  signup
-   + A rootToken with the name `signup` is created.
-  authenticate
-   + A rootToken with the name `authenticate` is created.
-
+   + The relation `PostsByUser` is created. It connects the type `Post` with the type `User`.
 ```
 
 This reflects precisely the changes we mentioned above.
-
-> You can now open your project in a GraphQL Playground (using the `graphcool playground` command) and send queries and mutations. 
-
 
 ## Configuring Apollo Client
 
@@ -299,7 +345,7 @@ The first thing you need to is add the dependencies for Apollo Client.
 
 <Instruction>
 
-*In the root directory of your project, add the following dependencies using [yarn](https://yarnpkg.com/en/):*
+In the root directory of your service, add the following dependencies using [yarn](https://yarnpkg.com/en/):
 
 ```bash(path="")
 yarn add react-apollo
@@ -311,7 +357,7 @@ Next you need to instantiate the `ApolloClient` and configure it with the endpoi
 
 <Instruction>
 
-*Open `index.js` and att the following import statements to its top:*
+Open `index.js` and add the following import statements to its top:
 
 ```js(path="src/index.js")
 import { ApolloClient, ApolloProvider, createNetworkInterface } from 'react-apollo'
@@ -320,7 +366,7 @@ import { ApolloClient, ApolloProvider, createNetworkInterface } from 'react-apol
 Having the imports available, you can now instantiate the `ApolloClient`. Add the following code right below the import statements:
 
 ```js(path="src/index.js")
-const networkInterface = createNetworkInterface({ uri: 'https://api.graph.cool/simple/v1/__PROJECT_ID__' })
+const networkInterface = createNetworkInterface({ uri: 'https://api.graph.cool/simple/v1/__SERVICE_ID__' })
 const client = new ApolloClient({ networkInterface })
 ```
 
@@ -346,59 +392,59 @@ ReactDOM.render((
 
 </Instruction>
 
-The `ApolloClient` is your main interface to the GraphQL server and will take care of sending all queries and mutations for you. The last thing you need to do is replace the `__PROJECT_ID__` placeholder when calling `createNetworkInterface`. 
+The `ApolloClient` is your main interface to the GraphQL server and will take care of sending all queries and mutations for you. The last thing you need to do is replace the `__SERVICE_ID__` placeholder when calling `createNetworkInterface`. 
 
 <Instruction>
 
-*To get access to your project ID, simply use the following command in the terminal:*
+To get access to your service ID, simply use the following command in the terminal:
 
-```bash(path="graphcool")
+```bash(path="server")
 graphcool info
 ```
 
-Then copy the value for `projectId` and replace the `__PROJECT_ID__` placeholder from before.
+Then copy the value for `serviceId` and replace the `__SERVICE_ID__` placeholder from before.
 
 </Instruction>
 
 
 ## Implementing the signup flow
 
-### Adjusting the `signupEmailUser` mutation
+### Adjusting the `signupUser` mutation
 
 You'll start by implementing the signup flow in the app. Users need to provide a name, email and password to be able to create an account. 
 
 The React component that's responsible for this functionality is implemented in `CreateUser.js` and is rendered under the `/signup` route.
 
-Before diving into the code, take a quick look at your API, and in particular the `signupEmailUser` mutation that was added to the project through the `email-password` module:
+Before diving into the code, take a quick look at your API, and in particular the `signupUser` mutation that was added to the service through the `email-password` template:
 
 ```graphql(nocopy)
-signupEmailUser(email: String!, password: String!): SignupEmailUserPayload
+signupUser(email: String!, password: String!): SignupUserPayload
 ```
 
 And the corresponding type definition:
 
 ```(nocopy)
-type SignupEmailUserPayload{
+type SignupUserPayload{
   id: ID!
   token: String!
 }
 ```
 
-This mutation allows to create a new `EmailUser` by providing an email and a password. It also allows the client to directly receive an authentication token that can be used to authenticate all subsequent requests in the name of the logged in user.
+This mutation allows to create a new `User` by providing an email and a password. It also allows the client to directly receive an authentication token that can be used to authenticate all subsequent requests in the name of the logged in user.
 
 There is one minor issue with this mutation at the moment, it's lacking the possibility to also provide a name when a new user is created. So, you'll have to fix that first! 
 
-> Note: You could work around this problem by first calling the `signupEmailUser` mutation and then directlt invoking the `updateEmailUser` mutation to set the new user's `name`. For this guide however, you'll adjust the API of the `signupEmailUser` mutation and the corresponding `resolver` function in `signup.js`.
+> **Note**: You could work around this problem by first calling the `signupUser` mutation and then directly invoking the `updateUser` mutation to set the new user's `name`. For this guide however, you'll adjust the API of the `signupUser` mutation and the corresponding `resolver` function in `signup.js`.
 
 First, you need to adjust the signature of the mutation.
 
 <Instruction>
 
-*Open `signup.graphql` and adjust the extension of the `Mutation` type as follows:*
+Open `signup.graphql` and adjust the extension of the `Mutation` type as follows:
 
-```graghql(path="graphcool/modules/email-password/schemas/signup.graphql")
+```graghql(path="server/src/email-password/signup.graphql")
 extend type Mutation {
-  signupEmailUser(email: String!, password: String!, name: String!): SignupEmailUserPayload
+  signupUser(email: String!, password: String!, name: String!): SignupUserPayload
 }
 ```
 
@@ -408,13 +454,13 @@ Now, the caller of the mutation can also pass a `name` to it. To make sure that 
 
 <Instruction>
 
-*Open `signup.js` and update the `createGraphcoolUser` function to look like this:*
+Open `signup.js` and update the `createGraphcoolUser` function to look like this:
 
-```js{7}(path="graphcool/modules/email-password/code/signup.js")
+```js{7}(path="server/src/email-password/signup.js")
 function createGraphcoolUser(api, email, passwordHash, name) {
   return api.request(`
     mutation {
-      createEmailUser(
+      createUser(
         email: "${email}",
         password: "${passwordHash}",
         name: "${name}"
@@ -423,7 +469,7 @@ function createGraphcoolUser(api, email, passwordHash, name) {
       }
     }`)
     .then((userMutationResult) => {
-      return userMutationResult.createEmailUser.id
+      return userMutationResult.createUser.id
     })
 }
 ```
@@ -434,10 +480,10 @@ Finally, you also need to adjust the call to the `createGraphcoolUser` and provi
 
 <Instruction>
 
-*Still in `signup.js`, add the required changes to the exported function:*
+Still in `signup.js`, add the required changes to the exported function:
 
-```js{9,19}(path="graphcool/modules/email-password/code/signup.js")
-module.exports = function(event) {
+```js{9,19}(path="server/src/email-password/signup.js")
+template.exports = function(event) {
   if (!event.context.graphcool.pat) {
     console.log('Please provide a valid root token!')
     return { error: 'Email Signup not configured correctly.'}
@@ -461,7 +507,7 @@ module.exports = function(event) {
         }
       })
       .then(graphcoolUserId => {
-        return graphcool.generateAuthToken(graphcoolUserId, 'EmailUser')
+        return graphcool.generateAuthToken(graphcoolUserId, 'User')
           .then(token => {
             return { data: {id: graphcoolUserId, token}}
         })
@@ -480,39 +526,39 @@ module.exports = function(event) {
 
 </Instruction>
 
-Finally, these changes need to be deployed to your Graphcool project.
+Finally, these changes need to be deployed again.
 
 <Instruction>
 
-*Navigate to the `graphcool` directory in a terminal and execute the following command:*
+Navigate to the `server` directory in a terminal and execute the `deploy` command:
 
-```bash(path="graphcool")
+```bash(path="server")
 graphcool deploy
 ```
 
 </Instruction>
 
-Awesome, your `signupEmailUser` mutation now also accepts a `name` argument and assigns its value to the newly created `EmailUser` node right away. 💪
+Awesome, your `signupUser` mutation now also accepts a `name` argument and assigns its value to the newly created `User` node right away. 💪
 
-### Calling the `signupEmailUser` mutation
+### Calling the `signupUser` mutation
 
 You'll now make use of this mutation by adding it to the `CreateUser` component with Apollo's `graphql` higher-order component.
 
 <Instruction>
 
-*Open `CreateUser.js` and add the following code to the bottom of the file, also replacing the current export statement:*
+Open `CreateUser.js` and add the following code to the bottom of the file, also replacing the current export statement:
 
 ```js(path="src/components/CreateUser.js")
 const SIGNUP_EMAIL_USER = gql`
-  mutation SignupEmailUser($email: String!, $password: String!, $name: String) {
-    signupEmailUser(email: $email, password: $password, name: $name) {
+  mutation SignupUser($email: String!, $password: String!, $name: String) {
+    signupUser(email: $email, password: $password, name: $name) {
       id
       token
     }
   }
 `
 
-export default graphql(SIGNUP_EMAIL_USER, {name: 'signupEmailUserMutation'})(withRouter(CreateUser))
+export default graphql(SIGNUP_EMAIL_USER, {name: 'signupUserMutation'})(withRouter(CreateUser))
 ```
 
 For this code to work, you also need to import `graphql` and `gql`, so add the following import statement to the top of the file:
@@ -523,21 +569,21 @@ import { graphql, gql } from 'react-apollo'
 
 </Instruction>
 
-`SIGNUP_EMAIL_USER` represents the mutation. You're then adding the mutation to the component by wrapping it with a call to `graphql`. The `name` argument that you're providing determines the name of the function that Apollo now injects into the props of your component.
+`SIGNUP_EMAIL_USER` is the mutation. You're then adding the mutation to the component by wrapping it with a call to `graphql`. The `name` argument that you're providing determines the name of the function that Apollo now injects into the props of your component.
 
 Finally, you actually need to call the mutation and provide the arguments that you're extracting from the component's `state`.
 
 <Instruction>
 
-*Still in `CreateUser.js`, implement the `createUser` function like so:*
+Still in `CreateUser.js`, implement the `createUser` function like so:
 
 ```js(path="src/components/CreateUser.js")
 createUser = async () => {
   const { email, password, name } = this.state
 
   try {
-    const response = await this.props.signupEmailUserMutation({variables: {email, password, name}})
-    localStorage.setItem('graphcoolToken', response.data.signupEmailUser.token)
+    const response = await this.props.signupUserMutation({variables: {email, password, name}})
+    localStorage.setItem('graphcoolToken', response.data.signupUser.token)
     this.props.history.push('/')
   } catch (e) {
     console.error('An error occured: ', e)
@@ -549,7 +595,7 @@ createUser = async () => {
 
 </Instruction>
 
-You're simply calling the `signupEmailEmailMutation` and store the  returned authentication `token` in `localStorage`.
+You're simply calling the `signupUserMutation` and store the returned authentication `token` in `localStorage`.
 
 You can now test the authentication by running the app with `yarn start` and navigating the the `http://localhost:3000/signup` route. After having added a new user with email, password and name, you can can verify that the user actually was created by opening the Graphcool console and checking the data browser:
 
@@ -560,22 +606,22 @@ You can now test the authentication by running the app with `yarn start` and nav
 
 ## Implementing the authentication flow
 
-Now that the signup flow is out of the way, you can implement the actual login. It will work in a very similar way as the signup, except that this time you don't have to change anything about the API of the `authenticateEmailUser` mutation that you get from the `email-password` module.
+Now that the signup flow is out of the way, you can implement the actual login. It will work in a very similar way as the signup, except that this time you don't have to change anything about the API of the `authenticateUser` mutation that you get from the `email-password` template.
 
 <Instruction>
 
-*Open `LoginUser.js` and add the `authenticateEmailUser` mutation to its bottom, again also replacing the current export statement:*
+Open `LoginUser.js` and add the `authenticateUser` mutation to its bottom, again also replacing the current export statement:
 
 ```js(path="src/components/LoginUser.js")
 const AUTHENTICATE_EMAIL_USER = gql`
-  mutation AuthenticateEmailUser($email: String!, $password: String!) {
-    authenticateEmailUser(email: $email, password: $password) {
+  mutation AuthenticateUser($email: String!, $password: String!) {
+    authenticateUser(email: $email, password: $password) {
       token
     }
   }
 `
 
-export default graphql(AUTHENTICATE_EMAIL_USER, {name: 'authenticateEmailUserMutation'})(withRouter(LoginUser))
+export default graphql(AUTHENTICATE_EMAIL_USER, {name: 'authenticateUserMutation'})(withRouter(LoginUser))
 ```
 
 For this work, don't forget to add the required import statements to the top of the file:
@@ -592,15 +638,15 @@ Lastly, you need to actually call the mutation.
 
 <Instruction>
 
-*Still in `LoginUser.js`, implement the `loginUser` function as follows:*
+Still in `LoginUser.js`, implement the `loginUser` function as follows:
 
 ```js(path="src/components/LoginUser.js")
 loginUser = async () => {
   const { email, password } = this.state
 
   try {
-    const response = await this.props.authenticateEmailUserMutation({variables: { email, password }})
-    localStorage.setItem('graphcoolToken', response.data.authenticateEmailUser.token)
+    const response = await this.props.authenticateUserMutation({variables: { email, password }})
+    localStorage.setItem('graphcoolToken', response.data.authenticateUser.token)
     this.props.history.push('/')
   } catch (e) {
     console.error('An error occured: ', e)
@@ -614,14 +660,15 @@ loginUser = async () => {
 
 With this code in place, you can now test the authentication by running the app and navigating to the `http://localhost:3000/login` route.
 
-
 ## Checking the authenticated status
 
 In the app, you want to be able to detect whether a user is currently logged in. A very simple way to do so would be to simply check whether `localStorage` contains a value for the key `graphcoolToken`, since that's how you're storing the authentication tokens after having received them from your API.
 
 Notice however that these tokens are _temporary_, meaning they'll eventually expire and can't be used for authentication any more. This means that ideally you should not only check whether you currently have a token available in `localStorage`, but actually validate it _against the API_ to confirm that it's either valid or expired.
 
-For exactly this purpose, the `email-password` module provides a dedicated query that you can send to the API, with an authentication token attached to the request, and the server will return the `id` of a logged-in user or `null` if the token is not valid.
+> The default validity duration of a token is 30 days. However, when issuing a token in the `signup` or `login` resolver, you can explicitly pass in the validity duration you'd like to have for your application. Read more about this in the [docs](!alias-eip7ahqu5o#node-tokens) 
+
+For exactly this purpose, the `email-password` template provides a dedicated query that you can send to the API, with an authentication token attached to the request, and the server will return the `id` of a logged-in user or `null` if the token is not valid.
 
 Here's what the query looks like:
 
@@ -640,7 +687,7 @@ You want this information to be available in the root of your application, that'
 
 <Instruction>
 
-*Open `App.js` and add the `loggedInUser` query to the `App` component, again by also replacing the current export statement:*
+Open `App.js` and add the `loggedInUser` query to the `App` component, again by also replacing the current export statement:
 
 ```js(path="src/components/App.js")
 const LOGGED_IN_USER = gql`
@@ -662,17 +709,17 @@ import { gql, graphql } from 'react-apollo'
 
 </Instruction>
 
-Whenever the `App` component now loads, Apollo executes the `loggedInUser` query against the API. So now you need to make sure that the result of the query is used accordingly to render the UI of your app. If the query was successful and returned the `id` of a logged-in user, you want to display a logout-button as well as a button for the user to create a new post. Otherwise, you simply render the same UI as before with the login- and signup-buttons.
+Whenever the `App` component now loads, Apollo executes the `loggedInUser` query against the API of your Graphcool service. So now you need to make sure that the result of the query is used accordingly to render the UI of your app: If the query was successful and returned the `id` of a logged-in user, you want to display a logout-button as well as a button for the user to create a new post. Otherwise, you simply render the same UI as before with the login- and signup-buttons.
 
 Notice you're specifying the `fetchPolicy` when you're adding the `loggedInUser` query to the `App` component. This is to make sure that Apollo actually executes the request against the API rather than looking up a previous result in its cache.
 
 <Instruction>
 
-*To properly render the login-state of the user, first implement the `_isLoggedIn` function inside `App.js` function properly:*
+To properly render the login-state of the user, first implement the `_isLoggedIn` function inside `App.js` function properly:
 
 ```js(path="src/components/App.js")
 _isLoggedIn = () => {
-  return this.props.data.authenticatedEmailUser && this.props.data.authenticatedEmailUser.id !== ''
+  return this.props.data.authenticatedUser && this.props.data.authenticatedUser.id !== ''
 }
 ```
 
@@ -702,12 +749,11 @@ renderLoggedIn() {
 
 </Instruction>
 
-
-Lastly, to also account for the ongoing network request, you should make sure to render a loading-state for the user.
+Lastly, to also account for the ongoing network request, you should make sure to render a loading-state as long as your users are waiting for a response from the server.
 
 <Instruction>
 
-*Still in `App.js`, update `render` to look as follows:*
+Still in `App.js`, update `render` to look as follows:
 
 ```js{3-5}(path="src/components/App.js")
 render () {
@@ -727,15 +773,15 @@ render () {
 
 </Instruction>
 
-This is all the code you need to implement the logged-in status. However, when running the app you'll notice that despite the fact that you are already logged in (at least that's the case if you've create a new user before), the UI still looks as before and doesn't render neither the logout-button, nor the button for the user to create new posts.
+This is all the code you need in order to implement the logged-in status. However, when running the app you'll find that despite the fact that you are already logged in (at least that's the case if you've create a new user before), the UI still looks as before and doesn't render neither the logout-button, nor the button for the user to create new posts.
 
-That's because the token is not yet attached to the request, so your GraphQL server doesn't know in whose name the reuqest is sent! 
+That's because the token is not yet attached to the request, so your GraphQL server still doesn't actually know in whose name the reuqest is sent! 
 
 To attach the token to the request's header, you need to configure your `ApolloClient` instance accordingly, since it is responsible for sending all the HTTP requests that contain your queries and mutations.
 
 <Instruction>
 
-*Open `index.js` and add the following configuration right before you're instantiating the `ApolloClient`:*
+Open `index.js` and add the following configuration right before you're instantiating the `ApolloClient`:
 
 ```js(path="src/index.js")
 networkInterface.use([{
@@ -767,7 +813,7 @@ To display all posts, you simply need to send the `allPosts` query to the API an
 
 <Instruction>
 
-*Open `ListPage.js` and add the following query along with the export statement to the bottom of the file:*
+Open `ListPage.js` and add the following query along with the export statement to the bottom of the file:
 
 ```js(path="src/components/ListPage.js")
 const ALL_POSTS = gql`
@@ -819,7 +865,7 @@ The last bit of functionality that's needed in the app is the feature to add new
 
 <Instruction>
 
-*Open `CreatePost.js` and add the following mutation to the bottom of the file, like before also replacing the current export statement:*
+Open `CreatePost.js` and add the following mutation to the bottom of the file, like before also replacing the current export statement:
 
 ```js(path="src/components/CreatePost.js")
 const CREATE_POST = gql`
@@ -868,7 +914,7 @@ To get access to the currently logged-in user, you'll simply use the `loggedInUs
 
 <Instruction>
 
-*In `CreatePost.js`, add the `loggedInUser` query to the bottom of the file (right before the export statement):*
+In `CreatePost.js`, add the `loggedInUser` query to the bottom of the file (right before the export statement):
 
 ```js(path="src/components/CreatePost.js")
 const LOGGED_IN_USER = gql`
@@ -914,39 +960,37 @@ Great, your users are now able to create new posts once they're logged in! 🎉
 
 ## Configuring permission rules
 
-
 All the features are now implemented, but wait - didn't we have more requirements for the app?
 
-We also want to secure data access and configure permission rules such that only authenticated users can create new posts, and only the author of a post can update or delete it. Right now, _everyone_ who has access to the endpoint of your GraphQL server is able to perform these operations (despite the fact that the UI of your React app of doesn't allow this)!
+We also want to _secure_ data access and configure [permission rules](!alias-iegoo0heez) such that only authenticated users can create new posts, and only the author of a post can update or delete it. Right now, _everyone_ who has access to the endpoint of your GraphQL server is able to perform these operations (despite the fact that the UI of your React app of doesn't allow this)!
 
-> Note: Everyone who has access to the endpoint of your GraphQL server can simply access all your data, e.g. through a Playground that can be opened by pasting the endpoint into the address bar of a browser.
 
 ### Permissions in Graphcool
 
 When using Graphcool, you need to explicitly allow your clients to perform the operations that are exposed by your API. But wait! If that's the case, why were you able to create and download posts before then? Shouldn't you have had to explicitly allow these operations then?
 
-The reason why the `allPosts` query and `createPost` mutation were already working is simple. When a new Graphcool project is created, there is a _wildcard permission_ setup for you that does the job of allowing _all_ operations.
+The reason why the `allPosts` query and `createPost` mutation were already working is simple. When a new Graphcool service is created, there is a _wildcard permission_ setup for you that does the job of allowing _all_ operations.
 
-All permission rules need to be defined in the project definition, the `graphcool.yml`-file. If you check this file now, you'll only see one permission that's currently part of your project and that was initially added by the Graphcool CLI:
+All permission rules need to be defined in the service definition, the `graphcool.yml`-file. If you check this file now, you'll only see one permission that's currently part of your service and that was initially added by the Graphcool CLI:
 
-```yml(path="graphcool/graphcool.yml&nocopy")
+```yml(path="server/graphcool.yml&nocopy")
 permissions:
   - operation: '*'
 ```
 
 This simply expresses that all operations are allowed.
 
-> If you remove this one permission and run `graphcool deploy` afterwards, you'll notice that all your queries and operations will fail with a _Permission denied_ error.
+> If you remove this one permission and run `graphcool deploy` afterwards, you'll notice that all your queries and operations will fail with a _Insufficient permissions_ error.
 
-Generally, the `permissions` property in the project definition contains a list of _permissions_. A single permission has the following properties:
+Generally, the `permissions` property in the service definition contains a list of _permissions_. A single permission has the following properties:
 
-- `operation` (required): Specifies for which operation (query or mutation) this operation applies
-- `authenticated` (not required, default: `false`): Indicates whether a client who wants to perform this operation needs to be authenticated
-- `query` (not required): Points to a file that contains a permission query that defines the rules for who is allowed to perform this operation.
+- `operation` (required): Specifies for which API operation (query or mutation) this permissions applies
+- `authenticated` (optional, default: `false`): Indicates whether a client who wants to perform this operation needs to be authenticated
+- `query` (optional): Points to a file that contains a permission query defining the rules for who is allowed to perform this operation
 
 <Instruction>
 
-*To start with a clean slate, remove the `- operation: '*'` from the `graphcool.yml` file.*
+To start with a clean slate, remove the `- operation: '*'` from the `graphcool.yml` file.
 
 </Instruction>
 
@@ -956,9 +1000,9 @@ The first permission you're going to add is the one to allow everyone to see pos
 
 <Instruction>
 
-*In the `graphcool.yml`-file, add the following permission under the `permissions`-section:*
+In the `graphcool.yml`-file, add the following permission under the `permissions`-section:
 
-```yml(path="graphcool/graphcool.yml")
+```yml(path="server/graphcool.yml")
 - operation: Post.read
 ```
 
@@ -970,9 +1014,9 @@ For the next permission to allow only authenticated users to create new posts, y
 
 <Instruction>
 
-*Still in `graphcool.yml`, add the following permissions right below the previous one:*
+Still in `graphcool.yml`, add the following permissions right below the previous one:
 
-```yml(path="graphcool/graphcool.yml")
+```yml(path="server/graphcool.yml")
 - operation: Post.create
   authenticated: true
 - operation: UsersPosts.connect
@@ -985,34 +1029,34 @@ This now expresses that users who are trying to perform the `createPost` mutatio
 
 ### Allowing only the authors of a post to udpate and delete it
 
-For these permissions, you need to make use a _permission query_. Permission queries are regular GraphQL queries that only return `true` or `false`. If you specify a permission query for an operation, the permission query will be executed right before the corresponding operation is request by a client. Only if the query then returns `true`, the operation will actually be performed, otherwise it fails with a permission error.
+For these permissions, you need to make use of a [permission query](!alias-iox3aqu0ee). Permission queries are regular GraphQL queries that only return `true` or `false`. If you specify a permission query for an operation, Graphcool will run the permission query right before the corresponding operation is performed. Only if the query then returns `true`, the operation will actually be performed, otherwise it fails with a permission error.
 
 <Instruction>
 
-*First, add the permissions to the project definition:*
+First, add the permissions to the service definition:
 
-```yml(path="graphcool/graphcool.yml")
+```yml(path="server/graphcool.yml")
 - operation: Post.update
   authenticated: true
-  query: permissions/updatePosts.graphql
+  query: src/permissions/Post.graphql
 - operation: Post.delete
   authenticated: true
-  query: permissions/deletePosts.graphql
+  query: src/permissions/Post.graphql
 ```
 
 </Instruction>
 
-Both permissions require the user to be authenticated, but they also point to files that contain more concrete rules for these operations. So, you'll need to create these files next!
+Both permissions require the user to be authenticated, but they also point to a file that contain more concrete rules for these operations. So, you'll need to create these files next!
 
 <Instruction>
 
-*Create a new directory inside `graphcool` and call it `permissions`.*
+Create a new directory inside `server/src` and call it `permissions`.
 
-Then create two new files inside that new directory, call them `updatePosts.graphql` and `deletePosts.graphql`.
+Then create a new file inside that new directory, call it `Post.graphql`.
 
-Finally, add the following permission query into _both_ files:
+Finally, add the following permission query to it:
 
-```graphql(path="graphcool/permissions/updatePosts.graphql")
+```graphql(path="server/permissions/Post.graphql")
 query ($node_id: ID!, $user_id: ID!) {
   SomePostExists(
     filter: {
@@ -1027,20 +1071,20 @@ query ($node_id: ID!, $user_id: ID!) {
 
 </Instruction>
 
-Notice that the arguments `$node_id` and `$user_id` will be injected into the query automatically when it is executed. `$node_id` is the `id` of the post that is to be updated (or deleted), and `$user_id` is the `id` of the currently logged in user.
+Notice that the arguments `$node_id` and `$user_id` will be injected into the query automatically when it is executed. `$node_id` is the `id` of the `Post` node that is to be updated (or deleted), and `$user_id` is the `id` of the currently logged in user who's sending the request.
 
 With that knowledge, you can derive the meaning of the permission query. It effecticely requires two things:
 
-1. There needs to exist a post with its `id` being equal to `$node_id`
-2. The `id` of the `author` of this post, needs to be equal to `$user_id`
+1. There needs to exist a `Post` node with its `id` being equal to `$node_id`
+2. The `id` of the `author` of that `Post` node needs to be equal to `$user_id`
 
-Lastly, you only need to make sure the changes are applied to your project.
+Lastly, you need to make sure the changes are applied to your service.
 
 <Instruction>
 
-*In the `graphcool` directory, execute the following command in the terminal:*
+In the `server` directory, execute the following command in the terminal:
 
-```bash(path="graphcool")
+```bash(path="server")
 graphcool deploy
 ```
 
@@ -1052,7 +1096,7 @@ Awesome! Now the permission rules apply and all our initial requirements for the
 
 In this guide, you learned how to build a simple app using an email-password based authentication workflow.
 
-You created your GraphQL server from scratch using the Graphcool CLI and customized the [`email-password`](https://github.com/graphcool/modules/tree/master/authentication/email-password) authentication module according to your needs.
+You created your GraphQL server from scratch using the Graphcool CLI and customized the [`email-password`](https://github.com/graphcool/templates/tree/master/authentication/email-password) authentication template according to your needs.
 
 You then configured Apollo Client inside your React app and implemented all required operations. Finally you removed the wildcard permission from the project and explicitly defined permission rules for the operations that your API exposes.
 
