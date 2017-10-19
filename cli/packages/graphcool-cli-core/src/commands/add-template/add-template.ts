@@ -14,7 +14,6 @@ import {intersection, difference} from 'lodash'
 import { getBinPath } from './getbin'
 import 'isomorphic-fetch'
 
-
 export default class AddTemplate extends Command {
   static topic = 'add-template'
   static description = 'Add a new template'
