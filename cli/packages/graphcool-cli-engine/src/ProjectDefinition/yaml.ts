@@ -1,7 +1,7 @@
 import * as Ajv from 'ajv'
-import * as anyjson from 'any-json'
+import * as yaml from 'js-yaml'
 import schema = require('graphcool-json-schema/dist/schema.json')
-import * as chalk from 'chalk'
+import chalk from 'chalk'
 import { GraphcoolDefinition } from 'graphcool-json-schema'
 import { Output } from '../Output/index'
 import Variables from './Variables'
@@ -25,7 +25,7 @@ export async function readDefinition(
   moduleName: string,
   args: Args
 ): Promise<GraphcoolDefinition> {
-  const json = (await anyjson.decode(file, 'yaml')) as GraphcoolDefinition
+  const json = yaml.safeLoad(file) as GraphcoolDefinition
 
   const vars = new Variables(out, moduleName, args)
   const populatedJson = await vars.populateJson(json)

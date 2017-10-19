@@ -1,5 +1,5 @@
 import { Command, flags, Flags } from 'graphcool-cli-engine'
-import * as chalk from 'chalk'
+import chalk from 'chalk'
 import * as sillyName from 'sillyname'
 import { ServiceDoesntExistError } from '../../errors/ServiceDoesntExistError'
 import { emptyDefinition } from './emptyDefinition'
@@ -65,6 +65,10 @@ ${chalk.gray(
     default: flags.boolean({
       char: 'd',
       description: 'Set specified target as default'
+    }),
+    'dry-run': flags.boolean({
+      char: 'D',
+      description: 'Perform a dry-run of the deployment'
     })
   }
   async run() {
@@ -73,6 +77,11 @@ ${chalk.gray(
     const useDefault = this.flags.default
     let newServiceName = this.flags['new-service']
     const newServiceCluster = this.flags['new-service-cluster']
+    const dryRun = this.flags['dry-run']
+
+    if (dryRun) {
+      return this.dryRun()
+    }
 
     if (newServiceCluster) {
       this.env.setActiveCluster(newServiceCluster)
@@ -316,6 +325,7 @@ https://console.graph.cool/${encodeURIComponent(info.name)}/settings/general`)
       )
       this.out.migration.printErrors(migrationResult.errors)
       this.out.log('')
+      process.exitCode = 1
     }
 
     if (
@@ -330,6 +340,7 @@ https://console.graph.cool/${encodeURIComponent(info.name)}/settings/general`)
             `\`graphcool deploy --force\``,
           )} if you know what you're doing!\n`,
       )
+      process.exitCode = 1
     }
     this.deploying = false
     this.printEndpoints(projectId)
@@ -400,6 +411,88 @@ https://console.graph.cool/${encodeURIComponent(info.name)}/settings/general`)
     const { target } = await this.out.prompt(question)
 
     return target
+  }
+
+  private async dryRun() {
+    const {target} = this.flags
+
+    await this.definition.load(this.flags)
+    await this.auth.ensureAuth()
+
+    const { id } = await this.env.getTarget(target)
+    const targetName = target || 'default'
+
+    this.out.action.start(
+      `Getting diff for ${chalk.bold(id)} with target ${chalk.bold(
+        targetName,
+      )}.`,
+    )
+
+    try {
+      const migrationResult = await this.client.push(
+        id,
+        false,
+        true,
+        this.definition.definition!,
+      )
+      this.out.action.stop()
+
+      // no action required
+      if (
+        (!migrationResult.migrationMessages ||
+          migrationResult.migrationMessages.length === 0) &&
+        (!migrationResult.errors || migrationResult.errors.length === 0)
+      ) {
+        this.out.log(
+          `Identical project definition for project ${chalk.bold(
+            id,
+          )} in env ${chalk.bold(targetName)}, no action required.\n`,
+        )
+        return
+      }
+
+      if (migrationResult.migrationMessages.length > 0) {
+        this.out.log(
+          chalk.blue(
+            `Your project ${chalk.bold(id)} of env ${chalk.bold(
+              targetName,
+            )} has the following changes:`,
+          ),
+        )
+
+        this.out.migration.printMessages(migrationResult.migrationMessages)
+        this.definition.set(migrationResult.projectDefinition)
+      }
+
+      if (migrationResult.errors.length > 0) {
+        this.out.log(
+          chalk.rgb(244, 157, 65)(
+            `There are issues with the new project definition:`,
+          ),
+        )
+        this.out.migration.printErrors(migrationResult.errors)
+        this.out.log('')
+        process.exitCode = 1
+      }
+
+      if (
+        migrationResult.errors &&
+        migrationResult.errors.length > 0 &&
+        migrationResult.errors[0].description.includes(`destructive changes`)
+      ) {
+        // potentially destructive changes
+        this.out.log(
+          `Your changes might result in data loss.
+            Use ${chalk.cyan(
+            `\`graphcool deploy --force\``,
+          )} if you know what you're doing!\n`,
+        )
+        process.exitCode = 1
+      }
+    } catch (e) {
+      this.out.action.stop()
+      this.out.error(e)
+    }
   }
 
 }

@@ -4,7 +4,7 @@ import { LocalInvoker } from '../../LocalInvoker'
 import * as path from 'path'
 import * as fs from 'fs-extra'
 import { sortByTimestamp } from '../../util'
-import * as chalk from 'chalk'
+import chalk from 'chalk'
 
 export default class InvokeLocal extends Command {
   static topic = 'invoke-local'

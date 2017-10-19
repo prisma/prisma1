@@ -9,7 +9,7 @@ import { Args, Region } from './types/common'
 import Variables from './ProjectDefinition/Variables'
 const debug = require('debug')('environment')
 import * as stringSimilarity from 'string-similarity'
-import * as chalk from 'chalk'
+import chalk from 'chalk'
 
 const defaultRC = {
   clusters: {
@@ -24,6 +24,8 @@ export class Environment {
   config: Config
   args: Args
   activeCluster: string = 'shared-eu-west-1'
+
+  warningCache: {[key: string]: boolean} = {}
 
   constructor(out: Output, config: Config) {
     this.out = out
@@ -253,7 +255,7 @@ ${chalk.bold('token')} has been renamed to ${chalk.bold('clusterSecret')}.
 It has been renamed to ${oldPath}. The up-to-date format has been written to ${rcPath}.
 `)
         }
-        if (content.clusters && Object.keys(content.clusters).find(c => !content.clusters[c].faasHost)) {
+        if (content.clusters && Object.keys(content.clusters).find(c => typeof content.clusters[c] !== 'string' && !content.clusters[c].faasHost)) {
           const newRcJson = {
             ...content,
             clusters: mapValues(content.clusters, c => typeof c === 'string' ? c : ({
@@ -402,8 +404,14 @@ https://github.com/graphcool/graphcool/issues/714
   checkClusters(targets: Targets, clusters: string[], filePath: string | null) {
     Object.keys(targets).forEach(key => {
       const target = targets[key]
-      if (!clusters.includes(target.cluster)) {
-        this.out.error(`Could not find cluster ${target.cluster} defined for target ${key} in ${filePath}`)
+      if (!clusters.includes(target.cluster) && !this.warningCache[target.cluster]) {
+        this.warningCache[target.cluster] = true
+        if (target.cluster === 'local') {
+          this.out.warn(`Could not find cluster ${target.cluster} defined for target ${key} in ${filePath}.
+Please run ${chalk.bold('graphcool local up')} to start the local cluster.`)
+        } else {
+          this.out.error(`Could not find cluster ${target.cluster} defined for target ${key} in ${filePath}`)
+        }
       }
     })
   }

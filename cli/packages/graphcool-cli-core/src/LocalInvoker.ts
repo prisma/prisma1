@@ -8,7 +8,7 @@ import {
 import * as path from 'path'
 import BufferedConsole from './BufferedConsole'
 import getConsoleOutput from './getConsoleOutput'
-import * as chalk from 'chalk'
+import chalk from 'chalk'
 import {register} from 'ts-node'
 import { baseCompilerOptions } from './commands/deploy/Bundler/TypescriptBuilder'
 

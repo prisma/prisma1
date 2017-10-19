@@ -1,7 +1,7 @@
 import { Command } from 'graphcool-cli-engine'
 import * as fs from 'fs-extra'
 import * as path from 'path'
-import * as chalk from 'chalk'
+import chalk from 'chalk'
 
 export default class Eject extends Command {
   static topic = 'local'

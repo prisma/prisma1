@@ -1,5 +1,5 @@
 import * as path from 'path'
-import * as chalk from 'chalk'
+import chalk from 'chalk'
 import { readDefinition } from './yaml'
 import fs from '../fs'
 import { Args, GraphcoolModule, ProjectDefinition } from '../types/common'
@@ -182,9 +182,8 @@ export async function fsToModule(
             [func.schema]: file,
           }
         } else {
-          const src = typeof func.handler.code === 'string' ? func.handler.code : func.handler.code!.src
           errors.push({
-            message: `The file ${src} for the schema extension of function ${funcName} does not exist`,
+            message: `The file ${func.schema} for the schema extension of function ${funcName} does not exist`,
           })
         }
       }

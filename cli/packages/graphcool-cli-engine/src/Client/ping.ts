@@ -1,5 +1,5 @@
 import { Region } from '../types/common'
-import * as cuid from 'cuid'
+import * as cuid from 'scuid'
 import {sum} from 'lodash'
 
 async function runPing(url: string): Promise<number> {

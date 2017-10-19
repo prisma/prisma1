@@ -4,7 +4,7 @@ import {
   Flags,
   PAT,
 } from 'graphcool-cli-engine'
-import * as chalk from 'chalk'
+import chalk from 'chalk'
 import { table, getBorderCharacters } from 'table'
 
 export default class GetRootToken extends Command {
@@ -55,7 +55,7 @@ export default class GetRootToken extends Command {
         )
         this.out.log(
           `\n Run ${chalk.green(
-            'graphcool get-root-token -t TOKEN_NAME',
+            'graphcool root-token -t TOKEN_NAME',
           )} to receive the concrete token`,
         )
       }

@@ -9,6 +9,11 @@
     "semver": "^5.4.1"
   },
   "scripts": {
-    "test": "./test.sh"
+    "test": "./test.sh",
+    "precommit": "./precommit.sh"
+  },
+  "devDependencies": {
+    "husky": "^0.14.3",
+    "lint-staged": "^4.2.3"
   }
 }

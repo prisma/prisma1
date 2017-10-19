@@ -1,6 +1,6 @@
 import { Command, flags, Flags, readDefinition } from 'graphcool-cli-engine'
 import * as download from 'download-github-repo'
-import * as cuid from 'cuid'
+import * as cuid from 'scuid'
 import * as path from 'path'
 import * as os from 'os'
 import * as fs from 'fs-extra'
@@ -8,12 +8,11 @@ import * as yaml from 'js-yaml'
 import * as childProcess from 'child_process'
 /* tslint:disable-next-line */
 const debug = require('debug')('module')
-import * as chalk from 'chalk'
+import chalk from 'chalk'
 import * as figures from 'figures'
 import {intersection, difference} from 'lodash'
 import { getBinPath } from './getbin'
 import 'isomorphic-fetch'
-
 
 export default class AddTemplate extends Command {
   static topic = 'add-template'

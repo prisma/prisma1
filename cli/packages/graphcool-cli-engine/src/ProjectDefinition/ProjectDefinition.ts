@@ -2,7 +2,7 @@ import { fsToProject } from './fsToProject'
 import { projectToFs } from './projectToFs'
 import * as path from 'path'
 import { readDefinition } from './yaml'
-import * as chalk from 'chalk'
+import chalk from 'chalk'
 import { Args, GraphcoolModule, ProjectDefinition } from '../types/common'
 import fs from '../fs'
 import { Output } from '../Output/index'
@@ -13,7 +13,6 @@ import * as yamlParser from 'yaml-ast-parser'
 import * as yaml from 'js-yaml'
 import { builtinModules } from './builtin-modules'
 const debug = require('debug')('project-definition')
-import * as anyjson from 'any-json'
 
 export interface FunctionTuple {
   name: string
@@ -163,8 +162,8 @@ export class ProjectDefinitionClass {
     if (!this.config.definitionPath) {
       this.out.error('Could not find graphcool.yml')
     }
-    const file = fs.readFileSync(this.config.definitionPath!, 'utf-8')
-    const json = (await anyjson.decode(file, 'yaml')) as GraphcoolDefinition
+    const definitionFile = fs.readFileSync(this.config.definitionPath!, 'utf-8')
+    const json = yaml.safeLoad(definitionFile) as GraphcoolDefinition
     const functions = this.extractFunctions(json.functions)
     const functionsWithRequire = functions.reduce((acc, fn) => {
       const src = typeof fn.fn.handler.code === 'string' ? fn.fn.handler.code : fn.fn.handler.code!.src
@@ -175,11 +174,11 @@ export class ProjectDefinitionClass {
         const requireMatch = requireRegex.exec(line)
         const importMatch = importRegex.exec(line)
         if (requireMatch || importMatch) {
-          const src = requireMatch ? requireMatch[1] : importMatch![1]
+          const srcPath = requireMatch ? requireMatch[1] : importMatch![1]
 
-          if (!builtinModules.includes(src) && !src.startsWith('./')) {
+          if (!builtinModules.includes(srcPath) && !srcPath.startsWith('./')) {
             const result = {
-              line, index: index + 1, src,
+              line, index: index + 1, srcPath,
             }
 
             return racc.concat(result)
@@ -204,7 +203,7 @@ export class ProjectDefinitionClass {
         !fs.pathExistsSync(path.join(this.config.definitionDir, 'node_modules'))
       ) {
         const imports = functionsWithRequire.map(fn => {
-          return `${chalk.bold(fn.fn.name)} (${fn.src}):\n` + fn.statements.map(s => `  ${s.index}: ${chalk.dim(s.line)}\n`)
+          return `${chalk.bold(fn.fn.name)} (${fn.src}):\n` + fn.statements.map(s => `  ${s.index}: ${chalk.dim(s.line)}`).join('\n')
         }).join('\n')
         const text = `You have import/require statements in your functions without a node_modules folder:
 ${imports}
@@ -267,7 +266,7 @@ Please make sure you specified all needed dependencies in your package.json and 
   }
 
 
-  get functions(): Array<FunctionTuple> {
+  get functions(): FunctionTuple[] {
     if (!this.definition) {
       return []
     }

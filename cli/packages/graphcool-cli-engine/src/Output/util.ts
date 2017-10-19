@@ -1,4 +1,4 @@
-import * as chalk from 'chalk'
+import chalk from 'chalk'
 
 export function makePartsEnclodesByCharacterBold(str: string, character: string): string {
   const components = str.split(character)
