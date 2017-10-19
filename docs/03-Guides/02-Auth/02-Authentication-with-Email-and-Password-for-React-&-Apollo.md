@@ -24,7 +24,7 @@ The first thing you need to do is download the starter project for this guide.
 
 <Instruction>
 
-*Open a terminal and download the starter project:*
+Open a terminal and download the starter project:
 
 ```sh
 curl https://codeload.github.com/graphcool-examples/react-graphql/tar.gz/starters | tar -xz --strip=1 react-graphql-starters/authentication-with-email-and-apollo
@@ -49,7 +49,7 @@ npm install -g graphcool@next
 
 </Instruction>
 
-### Creating a new Graphcool project
+### Creating a new Graphcool service
 
 Now that the CLI is installed, you can use it to create the file structure for a new [Graphcool service](!alias-opheidaix3).
 
@@ -80,7 +80,7 @@ Here is an overview of the generated files and the project structure which the C
 [`graphcool.yml`](!alias-foatho8aip) contains the [service definition]](!alias-opheidaix3) with all the information around your [data model](!alias-eiroozae8u) and other type definitions, usage of [functions](!alias-aiw4aimie9), [permission rules](!alias-iegoo0heez) and more.
 
 
-### Adding the "Email & Password" authentication template
+### Adding the `email-password` authentication template
 
 When working with Graphcool, you can easily add features to your service by pulling in a [template](!alias-zeiv8phail). 
 
@@ -100,7 +100,7 @@ graphcool add-template graphcool/templates/auth/email-password
 
 </Instruction>
 
-> Notice that the [`graphcool/templates/authentication/email-password`](https://github.com/graphcool/templates/tree/master/auth/email-password) simply corresponds to a path on GitHub. It points to the `auth/email-password` directory in the `templates` repository in the [`graphcool`](https://github.com/graphcool/) GitHub organization. This directory contains the service definition and all additional files for the Graphcool service that is your template.
+> Notice that [`graphcool/templates/authentication/email-password`](https://github.com/graphcool/templates/tree/master/auth/email-password) simply corresponds to a path on GitHub. It points to the `auth/email-password` directory in the `templates` repository in the [`graphcool`](https://github.com/graphcool/) GitHub organization. This directory contains the service definition and all additional files for the Graphcool service that is your template.
 
 #### A closer look at the `email-password` template
 
@@ -232,13 +232,16 @@ type User @model {
 
 #### Deploying the service
 
-It's now time to deploy your service! Once deployed it will be available via an HTTP endpoint that exposes the functionality that's defined in `graphcool.yml`. You can deploy a service using the [`graphcool deploy`](!alias-aiteerae6l#graphcool-deploy) command.
+It's now time to deploy your service! Once deployed it will be available via an HTTP endpoint that exposes the functionality defined in `graphcool.yml`. You can deploy a service using the [`graphcool deploy`](!alias-aiteerae6l#graphcool-deploy) command.
+
+Before deployment, you still need to install the node dependencies for your `resolver` functions. These are specified in `server/package.json`.
 
 <Instruction>
 
-In your terminal, navigate to the `server` directory and deploy the service: 
+In your terminal, navigate to the `server` directory, install the node dependencies and deploy the service: 
 
 ```bash(path="server")
+yarn install # or npm install
 graphcool deploy
 ``` 
 
@@ -246,7 +249,7 @@ When prompted which cluster you want to deploy to, choose any of the **Backend-a
 
 </Instruction>
 
-The command outputs the HTTP endpoints of your GraphQL API. Notice that it also created the _local_ [`.graphcoolrc`](!alias-zoug8seen4) inside the current directory. This is used to manage your _deployment targets_.
+The command outputs the HTTP endpoints of your GraphQL API. Notice that it also created the _local_ [`.graphcoolrc`](!alias-zoug8seen4) inside the current directory. This is used to manage your [deployment targets](!alias-zoug8seen4#managing-targets-in-a-local-graphcoolrc).
 
 > **Note**: You can already start testing your API by sending queries and mutations through a GraphQL Playground. Open a Playground either by pasting the HTTP endpoint into the address bar of your browser or by using the [`graphcool playground`](!alias-aiteerae6l#graphcool-playground) command inside the `server` directory.
 
@@ -269,7 +272,7 @@ type Post {
 
   description: String!
   imageUrl: String!
-  author: User @relation(name: "PostsByUser")
+  author: User @relation(name: "UsersPosts")
 }
 ```
 
@@ -296,7 +299,7 @@ type User @model {
   
   # custom fields
   name: String!
-  posts: [Post!]! @relation(name: "PostsByUser")
+  posts: [Post!]! @relation(name: "UsersPosts")
 }
 ```
 
@@ -331,8 +334,8 @@ Types
 
 Relations
 
-  PostsByUser
-   + The relation `PostsByUser` is created. It connects the type `Post` with the type `User`.
+  UsersPosts
+   + The relation `UsersPosts` is created. It connects the type `Post` with the type `User`.
 ```
 
 This reflects precisely the changes we mentioned above.
