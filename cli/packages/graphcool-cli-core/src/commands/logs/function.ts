@@ -33,45 +33,79 @@ export default class FunctionLogs extends Command {
     debug(`project id ${id}`)
 
     if (!functionName) {
-      this.out.error(`Please provide a valid function name`)
+      await this.provideAllFunctionLogs(id, tail)
     } else {
-      let fn = await this.client.getFunction(id, functionName)
-      if (!fn) {
-        this.out.error(
-          `There is no function with the name ${functionName}. Run ${chalk.bold(
-            'graphcool functions',
-          )} to list all functions.`,
+      await this.provideSingleFunctionLogs(id, functionName, tail)
+    }
+  }
+  private async provideAllFunctionLogs(id: string, tail?: boolean) {
+      let logs = (await this.client.getAllFunctionLogs(id)) || []
+      if (logs.length === 0) {
+        this.out.log(
+          `No messages have been logged in the last 30 min for project ${chalk.bold(
+            id,
+          )}`,
         )
       } else {
-        let logs = (await this.client.getFunctionLogs(fn.id)) || []
-        if (logs.length === 0) {
-          this.out.log(
-            `No messages have been logged in the last 30 min for function ${chalk.bold(
-              functionName,
-            )}`,
-          )
-        } else {
-          logs.sort(sortByTimestamp)
-          this.out.log(this.prettifyLogs(logs))
-        }
+        logs.sort(sortByTimestamp)
+        this.out.log(this.prettifyLogs(logs))
+      }
 
-        if (tail) {
-          setInterval(async () => {
-            const tailLogs = await this.client.getFunctionLogs(fn!.id, 50)
-            if (tailLogs === null) {
-              fn = await this.client.getFunction(id, functionName)
-            } else {
-              if (tailLogs.length > 0) {
-                const newLogs = differenceBy(tailLogs, logs, l => l.id)
-                if (newLogs.length > 0) {
-                  newLogs.sort(sortByTimestamp)
-                  this.out.log(this.prettifyLogs(newLogs))
-                  logs = logs.concat(newLogs)
-                }
+      if (tail) {
+        setInterval(async () => {
+          const tailLogs = await this.client.getAllFunctionLogs(id, 50)
+          if (tailLogs) {
+            if (tailLogs.length > 0) {
+              const newLogs = differenceBy(tailLogs, logs, l => l.id)
+              if (newLogs.length > 0) {
+                newLogs.sort(sortByTimestamp)
+                this.out.log(this.prettifyLogs(newLogs))
+                logs = logs.concat(newLogs)
               }
             }
-          }, 4000)
-        }
+          } else {
+            this.out.log(`Project ${id} can't be found anymore`)
+          }
+        }, 4000)
+      }
+  }
+  private async provideSingleFunctionLogs(id: string, functionName: string, tail?: boolean) {
+    let fn = await this.client.getFunction(id, functionName)
+    if (!fn) {
+      this.out.error(
+        `There is no function with the name ${functionName}. Run ${chalk.bold(
+          'graphcool functions',
+        )} to list all functions.`,
+      )
+    } else {
+      let logs = (await this.client.getFunctionLogs(fn.id)) || []
+      if (logs.length === 0) {
+        this.out.log(
+          `No messages have been logged in the last 30 min for function ${chalk.bold(
+            functionName,
+          )}`,
+        )
+      } else {
+        logs.sort(sortByTimestamp)
+        this.out.log(this.prettifyLogs(logs))
+      }
+
+      if (tail) {
+        setInterval(async () => {
+          const tailLogs = await this.client.getFunctionLogs(fn!.id, 50)
+          if (tailLogs === null) {
+            fn = await this.client.getFunction(id, functionName)
+          } else {
+            if (tailLogs.length > 0) {
+              const newLogs = differenceBy(tailLogs, logs, l => l.id)
+              if (newLogs.length > 0) {
+                newLogs.sort(sortByTimestamp)
+                this.out.log(this.prettifyLogs(newLogs))
+                logs = logs.concat(newLogs)
+              }
+            }
+          }
+        }, 4000)
       }
     }
   }
