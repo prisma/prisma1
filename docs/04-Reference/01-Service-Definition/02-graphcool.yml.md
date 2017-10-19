@@ -116,7 +116,8 @@ permissions:
 
 # Root tokens
 rootTokens:
-  - authenticate
+  - rootToken1
+  - RootToken2 # can also start with uppercase letters
 ```
 
 This service definition expects the following file structure:
@@ -421,7 +422,7 @@ The `rootTokens` property accepts a **list of strings**. Each string is the name
 ```yml
 rootTokens:
   - rootToken1
-  - rootToken2
+  - RootToken2 # can also start with uppercase letters
 ```
 
 <!--
