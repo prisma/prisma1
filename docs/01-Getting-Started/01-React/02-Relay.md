@@ -1,12 +1,13 @@
 ---
 alias: sot2faez6a
 description: Get started in 5 min with React, GraphQL and Relay Modern by building a simple Instagram clone.
+github: https://github.com/graphcool-examples/react-graphql/tree/master/quickstart-with-relay-modern
 ---
 
 # React & Relay Quickstart
 
 
-For this quickstart tutorial, we have prepared a [repository](https://github.com/graphcool-examples/react-graphql/tree/master/quickstart-with-relay) that contains the full React code for the Instagram clone. All you need to do is create the Graphcool service that will expose the GraphQL API and connect it with the React application. Let's get started! 
+For this quickstart tutorial, we have prepared a [repository](https://github.com/graphcool-examples/react-graphql/tree/master/quickstart-with-relay-modern) that contains the full React code for the Instagram clone. All you need to do is create the Graphcool service that will expose the GraphQL API and connect it with the React application. Let's get started! 
 
 <Instruction>
 
@@ -14,12 +15,12 @@ Clone the example repository that contains the React application:
 
 ```sh
 git clone https://github.com/graphcool-examples/react-graphql.git
-cd react-graphql/quickstart-with-relay
+cd react-graphql/quickstart-with-relay-modern
 ```
 
 </Instruction>
 
-Feel free to get familiar with the code. The app contains the following React [`components`](https://github.com/graphcool-examples/react-graphql/tree/master/quickstart-with-relay/src/components):
+Feel free to get familiar with the code. The app contains the following React [`components`](https://github.com/graphcool-examples/react-graphql/tree/master/quickstart-with-relay-modern/src/components):
 
 - `Post`: Renders a single post item
 - `ListPage`: Renders a list of post items
@@ -38,7 +39,7 @@ npm install -g graphcool@next
 
 </Instruction>
 
-Now that the CLI is installed, you can use it to create a new service with the [`graphcool init`](!alias-zboghez5go#graphcool-init) command.
+Now that the CLI is installed, you can use it to create the file structure for a new service with the [`graphcool init`](!alias-zboghez5go#graphcool-init) command.
 
 <Instruction>
 
@@ -60,7 +61,6 @@ graphcool init server
 └── server
     ├── graphcool.yml
     ├── types.graphql
-    ├── .graphcoolrc
     └── src
         ├── hello.graphql
         └── hello.js
@@ -69,20 +69,20 @@ graphcool init server
 Each of the created files and directories have a dedicated purpose inside your Graphcool service:
 - `graphcool.yml`: Contains your [service definition](!alias-opheidaix3).
 - `types.graphql`: Contains the [data model](!alias-eiroozae8u) and any additional type definitions for your Graphcool service, written in the GraphQL [Schema Definition Language](https://medium.com/@graphcool/graphql-sdl-schema-definition-language-6755bcb9ce51) (SDL).
-- `.graphcoolrc` (_local_): Contains information about the [targets](!alias-zoug8seen4) that you have configured for your service.
 - `src`: Contains the source code (and if necessary GraphQL queries) for the [functions](!alias-aiw4aimie9) you've configured for your service. Notice that a new service comes with a default "Hello World"-function (called `hello` in `graphcool.yml`) which you can delete if you don't want to use it.
 
 Next you need to configure the [data model](!alias-eiroozae8u) for your service.
 
 <Instruction>
 
-Open `./graphcool/types.graphql` and add the following type definition to it:
+Open `./server/types.graphql` and add the following type definition to it (feel free to delete the existing `User` type):
 
-```graphql(path="graphcool/types.graphql")
+```graphql(path="server/types.graphql")
 type Post {
   id: ID! @isUnique # read-only (managed by Graphcool)
   createdAt: DateTime! # read-only (managed by Graphcool)
   updatedAt: DateTime! # read-only (managed by Graphcool)
+
   description: String!
   imageUrl: String!
 }
@@ -103,7 +103,10 @@ graphcool deploy
 
 </Instruction>
 
-You service is now deployed and available via the HTTP endpoints that were printed in the output of the command! The `Post` type is added to your data model and the corresponding CRUD operations are generated and exposed by the GraphQL API.
+You service is now deployed and available via the HTTP endpoints that were printed in the output of the command! The `Post` type is added to your data model and the corresponding CRUD operations are generated and exposed by the [GraphQL API](!alias-abogasd0go).
+
+Notice that this command also created the _local_ [`.graphcoolrc`](!alias-zoug8seen4) inside the current directory. It's used to manage your _deployment targets_.
+
 
 <Instruction>
 

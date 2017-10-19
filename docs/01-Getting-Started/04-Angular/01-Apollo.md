@@ -1,15 +1,16 @@
 ---
 alias: iesi5aujau
 description: Get started in 5 min with Angular, GraphQL and Apollo Client by building a simple Instagram clone.
+github: https://github.com/graphcool-examples/angular-graphql/tree/master/quickstart-with-apollo
 ---
 
 # Angular & Apollo Quickstart
 
-For this quickstart tutorial, we have prepared a [repository](https://github.com/graphcool-examples/angular-graphql/tree/master/quickstart-with-apollo) that contains the full React code for the Instagram clone. All you need to do is create the Graphcool service that will expose the GraphQL API and connect it with the React application. Let's get started! 
+For this quickstart tutorial, we have prepared a [repository](https://github.com/graphcool-examples/angular-graphql/tree/master/quickstart-with-apollo) that contains the full Angular code for the Instagram clone. All you need to do is create the Graphcool service that will expose the GraphQL API and connect it with the Angular application. Let's get started! 
 
 <Instruction>
 
-Clone the example repository that contains the React application:
+Clone the example repository that contains the Angular application:
 
 ```sh
 git clone https://github.com/graphcool-examples/angular-graphql.git
@@ -32,7 +33,7 @@ npm install -g graphcool@next
 
 </Instruction>
 
-Now that the CLI is installed, you can use it to create a new service with the [`graphcool init`](!alias-zboghez5go#graphcool-init) command.
+Now that the CLI is installed, you can use it to create the file structure for new service with the [`graphcool init`](!alias-zboghez5go#graphcool-init) command.
 
 <Instruction>
 
@@ -54,7 +55,6 @@ graphcool init server
 └── server
     ├── graphcool.yml
     ├── types.graphql
-    ├── .graphcoolrc
     └── src
         ├── hello.graphql
         └── hello.js
@@ -64,7 +64,6 @@ Each of the created files and directories have a dedicated purpose inside your G
 
 - `graphcool.yml`: Contains your [service definition](!alias-opheidaix3).
 - `types.graphql`: Contains the [data model](!alias-eiroozae8u) and any additional type definitions for your Graphcool service, written in the GraphQL [Schema Definition Language](https://medium.com/@graphcool/graphql-sdl-schema-definition-language-6755bcb9ce51) (SDL).
-- `.graphcoolrc` (_local_): Contains information about the [targets](!alias-zoug8seen4) that you have configured for your service.
 - `src`: Contains the source code (and if necessary GraphQL queries) for the [functions](!alias-aiw4aimie9) you've configured for your service. Notice that a new service comes with a default "Hello World"-function (called `hello` in `graphcool.yml`) which you can delete if you don't want to use it.
 
 Next you need to configure the [data model](!alias-eiroozae8u) for your service.
@@ -78,6 +77,7 @@ type Post {
   id: ID! @isUnique    # read-only (managed by Graphcool)
   createdAt: DateTime! # read-only (managed by Graphcool)
   updatedAt: DateTime! # read-only (managed by Graphcool)
+  
   description: String!
   imageUrl: String!
 }
@@ -98,7 +98,9 @@ graphcool deploy
 
 </Instruction>
 
-You service is now deployed and available via the HTTP endpoints that were printed in the output of the command! The `Post` type is added to your data model and the corresponding CRUD operations are generated and exposed by the GraphQL API.
+You service is now deployed and available via the HTTP endpoints that were printed in the output of the command! The `Post` type is added to your data model and the corresponding CRUD operations are generated and exposed by the [GraphQL API](!alias-abogasd0go).
+
+Notice that this command also created the _local_ [`.graphcoolrc`](!alias-zoug8seen4) inside the current directory. It's used to manage your _deployment targets_.
 
 <Instruction>
 
@@ -137,7 +139,7 @@ mutation {
 
 ![](https://imgur.com/w95UEi9.gif)
 
-The next step is to connect the React application with the GraphQL API from your Graphcool service.
+The next step is to connect the Angular application with the GraphQL API from your Graphcool service.
 
 <Instruction>
 

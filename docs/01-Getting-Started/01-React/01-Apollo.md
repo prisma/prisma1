@@ -38,7 +38,7 @@ npm install -g graphcool@next
 
 </Instruction>
 
-Now that the CLI is installed, you can use it to create a new service with the [`graphcool init`](!alias-zboghez5go#graphcool-init) command.
+Now that the CLI is installed, you can use it to create the file structure for new service with the [`graphcool init`](!alias-zboghez5go#graphcool-init) command.
 
 <Instruction>
 
@@ -60,7 +60,6 @@ graphcool init server
 └── server
     ├── graphcool.yml
     ├── types.graphql
-    ├── .graphcoolrc
     └── src
         ├── hello.graphql
         └── hello.js
@@ -70,20 +69,20 @@ Each of the created files and directories have a dedicated purpose inside your G
 
 - `graphcool.yml`: Contains your [service definition](!alias-opheidaix3).
 - `types.graphql`: Contains the [data model](!alias-eiroozae8u) and any additional type definitions for your Graphcool service, written in the GraphQL [Schema Definition Language](https://medium.com/@graphcool/graphql-sdl-schema-definition-language-6755bcb9ce51) (SDL).
-- `.graphcoolrc` (_local_): Contains information about the [targets](!alias-zoug8seen4) that you have configured for your service.
 - `src`: Contains the source code (and if necessary GraphQL queries) for the [functions](!alias-aiw4aimie9) you've configured for your service. Notice that a new service comes with a default "Hello World"-function (called `hello` in `graphcool.yml`) which you can delete if you don't want to use it.
 
 Next you need to configure the [data model](!alias-eiroozae8u) for your service.
 
 <Instruction>
 
-Open `./server/types.graphql` and add the following type definition to it:
+Open `./server/types.graphql` and add the following type definition to it (feel free to delete the existing `User` type):
 
 ```graphql(path="server/types.graphql")
 type Post {
   id: ID! @isUnique    # read-only (managed by Graphcool)
   createdAt: DateTime! # read-only (managed by Graphcool)
   updatedAt: DateTime! # read-only (managed by Graphcool)
+
   description: String!
   imageUrl: String!
 }
@@ -104,7 +103,9 @@ graphcool deploy
 
 </Instruction>
 
-You service is now deployed and available via the HTTP endpoints that were printed in the output of the command! The `Post` type is added to your data model and the corresponding CRUD operations are generated and exposed by the GraphQL API.
+You service is now deployed and available via the HTTP endpoints that were printed in the output of the command! The `Post` type is added to your data model and the corresponding CRUD operations are generated and exposed by the [GraphQL API](!alias-abogasd0go).
+
+Notice that this command also created the _local_ [`.graphcoolrc`](!alias-zoug8seen4) inside the current directory. It's used to manage your _deployment targets_.
 
 <Instruction>
 
