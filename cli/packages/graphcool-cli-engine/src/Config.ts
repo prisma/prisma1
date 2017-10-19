@@ -94,8 +94,8 @@ export class Config {
     this.home = (options && options.home) || this.getHome()
     debug(`CWD`, this.cwd)
     debug(`HOME`, this.home)
-    this.setRCPaths()
     this.setDefinitionPaths()
+    this.setRCPaths()
     if (options) {
       this.readPackageJson(options)
     }
@@ -149,12 +149,10 @@ export class Config {
     }
   }
   private setRCPaths() {
-    this.localRCPath = path.join(this.cwd, '.graphcoolrc')
-    const foundUp = findUp.sync('.graphcoolrc', {cwd: path.join(this.cwd, '..')})
+    this.localRCPath = path.join(this.definitionDir, '.graphcoolrc')
     const homePath = path.join(this.home, '.graphcoolrc')
-    debug(`foundUp`, foundUp)
     debug(`homepath`, homePath)
-    this.globalRCPath = foundUp || homePath
+    this.globalRCPath = homePath
     debug(`localRCPath`, this.localRCPath)
     debug(`globalRCPath`, this.globalRCPath)
   }
