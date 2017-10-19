@@ -76,7 +76,9 @@ permissions:
 # fields may be updated
 - operation: Message.update 
   authenticated: true
-  fields: [text, attachments]
+  fields: 
+    - text
+    - attachments
   query: ./permissions/updateMessage.graphql
 
 # To delete a message, users need to be authenticated and
@@ -87,11 +89,30 @@ permissions:
   query: ./permissions/deleteMessage.graphql
 
 # Everyone can perform all CRUD operations for customers
-- operation: Customer.*
+- operation: Customer.read
+- operation: Customer.create
+- operation: Customer.update
+- operation: Customer.delete
+
 
 # You can edit the fields a permission is applied to
 - operation: Customer.Read
-- fields: [firstName, lastName]
+- fields: 
+  - firstName
+  - lastName
+
+# Only authenticated users can connect a `Message`
+# and `Customer` node via the `CustomerMessages`-relation
+- operation: CustomerMessages.connect
+  authenticated: true
+
+# To disconnect a `Message` from a `Customer` node in the 
+# `CustomerMessages`-relation, users need to be authenticated and the 
+# permission query in `./permissions/disconnectCustomerMessages.graphql`
+# has to return `true`
+- operation: CustomerMessages.disconnect
+  authenticated: true
+  query: ./permissions/disconnectCustomerMessages.graphql
 
 # Root tokens
 rootTokens:
@@ -103,6 +124,7 @@ This service definition expects the following file structure:
 ```
 .
 ├── graphcool.yml
+├── types.graphql
 ├── src
 │   ├── authenticate.js
 │   ├── validateEmail.js
@@ -305,7 +327,7 @@ functions:
 
 ### `permissions`
 
-The `permissions` root property accepts a **list of [permissions](#definition-permission)**.
+The `permissions` root property accepts a **list of [permissions](#definition-permission)**. To see a practical example of the Graphcool permission system, check out this [example](https://github.com/graphcool/graphcool/tree/master/examples/permissions) service.
 
 #### Definition: `permission`
 
@@ -351,7 +373,9 @@ permissions:
 # fields may be updated
 - operation: Message.update 
   authenticated: true
-  fields: [text, attachments]
+  fields: 
+    - text
+    - attachments
   query: ./permissions/updateMessage.graphql
 
 # To delete a message, users need to be authenticated and
@@ -362,11 +386,30 @@ permissions:
   query: ./permissions/deleteMessage.graphql
 
 # Everyone can perform all CRUD operations for customers
-- operation: Customer.*
+- operation: Customer.read
+- operation: Customer.create
+- operation: Customer.update
+- operation: Customer.delete
+
 
 # You can edit the fields a permission is applied to
 - operation: Customer.Read
-- fields: [firstName, lastName]
+- fields: 
+  - firstName
+  - lastName
+
+# Only authenticated users can connect a `Message`
+# and `Customer` node via the `CustomerMessages`-relation
+- operation: CustomerMessages.connect
+  authenticated: true
+
+# To disconnect a `Message` from a `Customer` node in the 
+# `CustomerMessages`-relation, users need to be authenticated and the 
+# permission query in `./permissions/disconnectCustomerMessages.graphql`
+# has to return `true`
+- operation: CustomerMessages.disconnect
+  authenticated: true
+  query: ./permissions/disconnectCustomerMessages.graphql
 ```
 
 ### `rootTokens`
