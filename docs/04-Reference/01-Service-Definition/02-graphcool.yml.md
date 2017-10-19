@@ -32,7 +32,7 @@ functions:
       # Specify a managed function as a handler
       code:
         src: ./src/authenticate.js
-        # Define environment variables for function
+        # Define environment variables to be used in function
         environment:
           SERVICE_TOKEN: aequeitahqu0iu8fae5phoh1joquiegohc9rae3ejahreeciecooz7yoowuwaph7
           STAGE: prod
