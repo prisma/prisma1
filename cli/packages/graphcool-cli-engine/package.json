@@ -73,7 +73,6 @@
     "ajv": "^5.2.2",
     "ansi-escapes": "^3.0.0",
     "ansi-styles": "^3.2.0",
-    "any-json": "^3.1.0",
     "bluebird": "^3.5.0",
     "cache-require-paths": "^0.3.0",
     "callsites": "^2.0.0",
