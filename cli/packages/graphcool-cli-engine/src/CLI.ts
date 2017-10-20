@@ -7,6 +7,7 @@ import Lock from './Plugin/Lock'
 import { Dispatcher } from './Dispatcher/Dispatcher'
 import { NotFound } from './NotFound'
 import fs from './fs'
+import { getCommandId } from './util'
 
 const debug = require('debug')('cli')
 const handleEPIPE = err => {
@@ -77,7 +78,7 @@ export class CLI {
       debug('command asking for help')
       this.cmd = await this.Help.run(this.config)
     } else {
-      const id = this.getCommandId(this.config.argv.slice(1))
+      const id = getCommandId(this.config.argv.slice(1))
       debug('command id', id)
       // if there is a subcommand, cut the first away so the Parser still works correctly
       if (
@@ -170,25 +171,6 @@ export class CLI {
   get Help() {
     const { default: Help } = require('./commands/help')
     return Help
-  }
-
-  private getCommandId(argv: string[]) {
-    if (argv.length === 1 && ['-v', '--version'].includes(argv[0])) {
-      return 'version'
-    }
-    if (argv.includes('help')) {
-      return 'help'
-    }
-    if (argv[1] && !argv[1].startsWith('-')) {
-      return argv.slice(0, 2).join(':')
-    } else {
-      const firstFlag = argv.findIndex(param => param.startsWith('-'))
-      if (firstFlag === -1) {
-        return argv.join(':')
-      } else {
-        return argv.slice(0, firstFlag).join(':')
-      }
-    }
   }
 }
 
