@@ -15,7 +15,7 @@ import { FunctionDefinition } from 'graphcool-json-schema'
 import TypescriptBuilder from './TypescriptBuilder'
 const debug = require('debug')('bundler')
 import {difference, flatMap} from 'lodash'
-import * as fetch from 'node-fetch'
+import 'isomorphic-fetch'
 import * as globby from 'globby'
 import chalk from 'chalk'
 

@@ -13,7 +13,6 @@ import * as yamlParser from 'yaml-ast-parser'
 import * as yaml from 'js-yaml'
 import { builtinModules } from './builtin-modules'
 const debug = require('debug')('project-definition')
-import * as anyjson from 'any-json'
 
 export interface FunctionTuple {
   name: string
@@ -164,7 +163,7 @@ export class ProjectDefinitionClass {
       this.out.error('Could not find graphcool.yml')
     }
     const definitionFile = fs.readFileSync(this.config.definitionPath!, 'utf-8')
-    const json = (await anyjson.decode(definitionFile, 'yaml')) as GraphcoolDefinition
+    const json = yaml.safeLoad(definitionFile) as GraphcoolDefinition
     const functions = this.extractFunctions(json.functions)
     const functionsWithRequire = functions.reduce((acc, fn) => {
       const src = typeof fn.fn.handler.code === 'string' ? fn.fn.handler.code : fn.fn.handler.code!.src

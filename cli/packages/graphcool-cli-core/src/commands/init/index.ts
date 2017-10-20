@@ -18,6 +18,10 @@ export default class Init extends Command {
     ${chalk.green('$ graphcool init')}
   `
   static flags: Flags = {
+    force: flags.boolean({
+      char: 'f',
+      description: 'Initialize even if the folder already contains graphcool files',
+    }),
     copy: flags.string({
       char: 'c',
       description: 'ID or alias of the project, that the schema should be copied from',
@@ -37,7 +41,7 @@ export default class Init extends Command {
   ]
 
   async run() {
-    const { copy, template } = this.flags
+    const { copy, template, force } = this.flags
 
     const dirName = this.args!.dirName
 
@@ -56,7 +60,7 @@ export default class Init extends Command {
     const files = fs.readdirSync(this.config.definitionDir)
     // the .graphcoolrc must be allowed for the docker version to be functioning
     // CONTINUE: special env handling for dockaa. can't just override the host/dinges
-    if (files.length > 0 && !(files.length === 1 && files[0] === '.graphcoolrc')) {
+    if (files.length > 0 && !(files.length === 1 && files[0] === '.graphcoolrc') && files.includes('graphcool.yml')) {
       this.out.log(`
 The directory ${chalk.green(this.config.definitionDir)} contains files that could conflict:
 
@@ -69,9 +73,13 @@ ${chalk.bold(
       )} The behavior of the init command changed, to deploy a project, please use ${chalk.green(
         'graphcool deploy',
       )}
-Read more here: https://github.com/graphcool/graphcool/issues/706
-`)
-      this.out.exit(1)
+
+To force the init process in this folder, use ${chalk.green('graphcool init --force')}`)
+      if (force) {
+        await this.askForConfirmation(this.config.definitionDir)
+      } else {
+        this.out.exit(1)
+      }
     }
 
     if (template) {
@@ -233,5 +241,18 @@ which is the central project configuration.
     const { example } = await this.out.prompt(question)
 
     return examples[example]
+  }
+
+  private async askForConfirmation(folder: string) {
+    const confirmationQuestion = {
+      name: 'confirmation',
+      type: 'input',
+      message: `Are you sure that you want to init a new service in ${chalk.green(folder)}? y/N`,
+      default: 'n'
+    }
+    const {confirmation}: {confirmation: string} = await this.out.prompt(confirmationQuestion)
+    if (confirmation.toLowerCase().startsWith('n')) {
+      this.out.exit(0)
+    }
   }
 }

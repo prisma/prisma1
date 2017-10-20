@@ -1,7 +1,7 @@
 import { Config } from './Config'
 import { Output } from './Output/index'
 import 'isomorphic-fetch'
-import * as cuid from 'cuid'
+import * as cuid from 'scuid'
 import * as opn from 'opn'
 import { AuthTrigger } from './types/common'
 import { Client } from './Client/Client'
