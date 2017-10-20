@@ -23,7 +23,7 @@ See the Forum for more information on the [Framework Preview](https://www.graph.
 
 Version 0.8.0 of `graphcool` has been released.
 
-* [The CLI exists with code 0 on failure](https://github.com/graphcool/graphcool/issues/662) and [1 otherwise](https://github.com/graphcool/graphcool/issues/663).
+* [The CLI exists with code 1 on failure](https://github.com/graphcool/graphcool/issues/662) and [0 otherwise](https://github.com/graphcool/graphcool/issues/663).
 * [You can now refer to single GraphQL operations in .graphql files](https://github.com/graphcool/graphcool/issues/669).
 * [The CLI now supports a `GRAPHCOOL_TARGET` environment variable to set the target independently from `.graphcoolrc`](https://github.com/graphcool/graphcool/issues/626).
 * [Docker running on port 60001 works as expected](https://github.com/graphcool/graphcool/issues/825).
@@ -76,8 +76,6 @@ Version 0.8.0 of `graphcool` has been released.
 ## Lib
 
 * Version 0.1.3 of `graphcool-lib` has been released. Read the release notes [here](https://github.com/graphcool/graphcool-lib/releases).
-
-
 
 # 0.7 (2017-10-13)
 
