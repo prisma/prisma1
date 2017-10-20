@@ -1313,9 +1313,9 @@ graceful-fs@~3.0.2:
   dependencies:
     natives "^1.1.0"
 
-graphcool-inquirer@beta:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/graphcool-inquirer/-/graphcool-inquirer-1.0.1.tgz#ab9d85465261a063d364dae915be6f918dce8828"
+graphcool-inquirer@^1.0.3:
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/graphcool-inquirer/-/graphcool-inquirer-1.0.3.tgz#4ab8e28b4b9371eabb8ad0ad3c59754a35431633"
   dependencies:
     ansi-escapes "^3.0.0"
     chalk "^2.0.0"

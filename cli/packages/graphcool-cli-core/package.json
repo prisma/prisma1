@@ -79,6 +79,7 @@
     "figures": "^2.0.0",
     "fs-extra": "^4.0.2",
     "globby": "^6.1.0",
+    "graphcool-inquirer": "^1.0.3",
     "graphcool-json-schema": "^0.3.14",
     "inquirer": "^3.3.0",
     "isomorphic-fetch": "^2.2.1",
