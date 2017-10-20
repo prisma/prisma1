@@ -8,8 +8,6 @@ import List from './commands/list/index'
 import Delete from './commands/delete/index'
 import RootTokens from './commands/root-token/index'
 import FunctionLogs from './commands/logs/function'
-import Diff from './commands/diff/index'
-import Export from './commands/export/index'
 import InvokeLocal from './commands/invoke/local'
 import PullLocal from './commands/local/pull'
 import Stop from './commands/local/stop'
@@ -96,7 +94,6 @@ export const commands = [
   Delete,
   RootTokens,
   FunctionLogs,
-  Export,
   InvokeLocal,
   PullLocal,
   Stop,
