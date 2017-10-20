@@ -12,6 +12,7 @@ See the Forum for more information on the [Framework Preview](https://www.graph.
 * [A problem with subscription functions has been fixed](https://github.com/graphcool/graphcool/issues/835).
 * [Functions are now updated instead of deleted and recreated](https://github.com/graphcool/graphcool/issues/451).
 * [Permissions are only updated if necessary](https://github.com/graphcool/graphcool/issues/773).
+* [The @model directive replaces 'implements Node'](https://github.com/graphcool/graphcool/issues/817).
 
 * General error message improvements:
 
