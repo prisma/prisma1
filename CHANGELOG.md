@@ -1,3 +1,83 @@
+# 0.8 (2017-10-20)
+
+You can download the CLI for the latest Framework version by running `npm install -g graphcool@next`.
+
+See the Forum for more information on the [Framework Preview](https://www.graph.cool/forum/t/feedback-new-cli-beta/949/1?u=nilan).
+
+## Core
+
+* [The function context has been streamlined for all function types](https://github.com/graphcool/graphcool/issues/219).
+* [Fixed deploying a renamed function file](https://github.com/graphcool/graphcool/issues/896).
+* [Fixed deploying operationBefore and operationAfter functions](https://github.com/graphcool/graphcool/issues/818).
+* [A problem with subscription functions has been fixed](https://github.com/graphcool/graphcool/issues/835).
+
+* General error message improvements:
+
+  * https://github.com/graphcool/graphcool/issues/854
+  * https://github.com/graphcool/graphcool/issues/829
+  * https://github.com/graphcool/graphcool/issues/592
+
+## CLI
+
+Version 0.8.0 of `graphcool` has been released.
+
+* [The CLI exists with code 0 on failure](https://github.com/graphcool/graphcool/issues/662) and [1 otherwise](https://github.com/graphcool/graphcool/issues/663).
+* [You can now refer to single GraphQL operations in .graphql files](https://github.com/graphcool/graphcool/issues/669).
+* [The CLI now supports a `GRAPHCOOL_TARGET` environment variable to set the target independently from `.graphcoolrc`](https://github.com/graphcool/graphcool/issues/626).
+* [Docker running on port 60001 works as expected](https://github.com/graphcool/graphcool/issues/825).
+* [Referring to modules in `graphcool.yml` is now detected, and you're asked to use templates instead](https://github.com/graphcool/graphcool/issues/841).
+* All dependencies are explicitely specified now, as described [here](https://github.com/graphcool/graphcool/issues/875), [here](https://github.com/graphcool/graphcool/issues/895) and [here](https://github.com/graphcool/graphcool/issues/889).
+
+* `graphcool init`
+  * Improved output as described [here](https://github.com/graphcool/graphcool/issues/654) and [here](https://github.com/graphcool/graphcool/issues/869).
+  * [Initial `package.json` does not refer to `index.js` anymore](https://github.com/graphcool/graphcool/issues/814).
+  * [It's now possible to initialze a service in a non-empty folder](https://github.com/graphcool/graphcool/issues/857).
+
+* `graphcool deploy`
+  * [Functions are now updated instead of deleted and recreated](https://github.com/graphcool/graphcool/issues/451).
+  * [Permissions are only updated if necessary](https://github.com/graphcool/graphcool/issues/773).
+  * [Errors are caught before showing the deploy wizard](https://github.com/graphcool/graphcool/issues/856).
+  * [Deploying to not running local cluster is handled gracefully](https://github.com/graphcool/graphcool/issues/853).
+  * [Introduced an error that detects missing node_modules when modules are required or imported in any function](https://github.com/graphcool/graphcool/issues/824). [Built-in modules are ignored](https://github.com/graphcool/graphcool/issues/831).
+  * [Deploying also works when using symlinks](https://github.com/graphcool/graphcool/issues/891).
+  * [Prevent accidental deploy](https://github.com/graphcool/graphcool/issues/660).
+  * [Improved error message for missing schema file of resolver functions](https://github.com/graphcool/graphcool/issues/840).
+  * [Updated environment variables are correctly deployed](https://github.com/graphcool/graphcool/issues/799).
+  * [Fixed a problem with deploying when the parent directory contains a .graphcoolrc file](https://github.com/graphcool/graphcool/issues/855).
+
+* `graphcool diff`
+  * [Has been renamed to `graphcool deploy --dry-run`](https://github.com/graphcool/graphcool/issues/883).
+
+
+* `graphcool add-template`
+  * Error handling has been improved as described [here](https://github.com/graphcool/graphcool/issues/813) and [here](https://github.com/graphcool/graphcool/issues/819).
+
+* `graphcool root-token`
+  * [Improved instructions for obtaining the root token](https://github.com/graphcool/graphcool/issues/844).
+  * [Fixed usage of help parameter](https://github.com/graphcool/graphcool/issues/935).
+  * [Now _only_ prints the root token](https://github.com/graphcool/graphcool/issues/933).
+
+* `graphcool invoke-local`
+  * [Now works with non-promise functions](https://github.com/graphcool/graphcool/issues/708).
+* `graphcool local`
+  * [An issue that lead to graphcool local up freezing has been fixed](https://github.com/graphcool/graphcool/issues/766).
+
+* `graphcool logs`
+  * [Added a `target` parameter to obtain logs from specific target](https://github.com/graphcool/graphcool/issues/938).
+  * [You can now obtain logs for all functions with one command](https://github.com/graphcool/graphcool/issues/645).
+
+* `graphcool console`
+  * [Added `target` parameter](https://github.com/graphcool/graphcool/issues/642).
+
+* [`graphcool pull` has been permanently removed](https://github.com/graphcool/graphcool/issues/932).
+
+* [`graphcool export` is temporarily removed](https://github.com/graphcool/graphcool/issues/957).
+
+## Lib
+
+* Version 0.1.3 of `graphcool-lib` has been released. Read the release notes [here](https://github.com/graphcool/graphcool-lib/releases).
+
+
 # 0.7 (2017-10-13)
 
 You can download the latest Framework version by running `npm install -g graphcool@next`.
