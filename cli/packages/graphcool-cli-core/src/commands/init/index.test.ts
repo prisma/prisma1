@@ -9,8 +9,8 @@ afterAll(() => {
 describe('init', () => {
   test('test project', async () => {
     const result = await Init.mock(
-      //'-t', template option temporarily disabled
-      'blank',
+      //'-t',
+      //'blank',
     )
     expect(result.out.stdout.output).toContain('Written files:')
   })
