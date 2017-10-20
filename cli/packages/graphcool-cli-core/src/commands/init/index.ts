@@ -26,11 +26,6 @@ export default class Init extends Command {
       char: 'c',
       description: 'ID or alias of the project, that the schema should be copied from',
     }),
-    template: flags.string({
-      char: 't',
-      description:
-        'The template to base the init on. (options: blank, instagram)',
-    }),
   }
 
   static args = [
@@ -41,7 +36,7 @@ export default class Init extends Command {
   ]
 
   async run() {
-    const { copy, template, force } = this.flags
+    const { copy, force } = this.flags
 
     const dirName = this.args!.dirName
 
@@ -81,14 +76,14 @@ To force the init process in this folder, use ${chalk.green('graphcool init --fo
         this.out.exit(1)
       }
     }
-
-    if (template) {
-      const projectDefinition = examples[template]
-      if (!projectDefinition) {
-        this.out.error(`${template} is not a valid template`)
-      }
-      this.definition.set(projectDefinition)
-    }
+    //
+    // if (template) {
+    //   const projectDefinition = examples[template]
+    //   if (!projectDefinition) {
+    //     this.out.error(`${template} is not a valid template`)
+    //   }
+    //   this.definition.set(projectDefinition)
+    // }
 
     if (copy) {
       const info = await this.client.fetchProjectInfo(copy)
