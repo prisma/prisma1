@@ -74,6 +74,7 @@ export class CLI {
     this.config.setOutput(out)
 
     if (this.cmdAskingForHelp) {
+      debug('command asking for help')
       this.cmd = await this.Help.run(this.config)
     } else {
       const id = this.getCommandId(this.config.argv.slice(1))
