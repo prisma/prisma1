@@ -10,8 +10,8 @@ See the Forum for more information on the [Framework Preview](https://www.graph.
 * [Fixed deploying a renamed function file](https://github.com/graphcool/graphcool/issues/896).
 * [Fixed deploying operationBefore and operationAfter functions](https://github.com/graphcool/graphcool/issues/818).
 * [A problem with subscription functions has been fixed](https://github.com/graphcool/graphcool/issues/835).
-  * [Functions are now updated instead of deleted and recreated](https://github.com/graphcool/graphcool/issues/451).
-  * [Permissions are only updated if necessary](https://github.com/graphcool/graphcool/issues/773).
+* [Functions are now updated instead of deleted and recreated](https://github.com/graphcool/graphcool/issues/451).
+* [Permissions are only updated if necessary](https://github.com/graphcool/graphcool/issues/773).
 
 * General error message improvements:
 
