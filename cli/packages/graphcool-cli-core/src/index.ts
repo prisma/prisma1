@@ -23,10 +23,10 @@ export const groups = [
     key: 'general',
     name: 'General commands'
   },
-  {
-    key: 'data',
-    name: 'Data workflows'
-  },
+  // {
+  //   key: 'data',
+  //   name: 'Data workflows'
+  // },
   {
     key: 'local',
     name: 'Local development'
@@ -60,11 +60,6 @@ export const topics = [
     group: 'general'
   },
   { name: 'add-template', description: 'Add template a new template', group: 'general' },
-  {
-    name: 'export',
-    description: 'Export service data',
-    group: 'data'
-  },
   {
     name: 'invoke-local',
     description: 'Invokes a function locally',
