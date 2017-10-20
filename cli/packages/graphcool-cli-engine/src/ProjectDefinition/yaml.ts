@@ -25,6 +25,7 @@ export async function readDefinition(
   moduleName: string,
   args: Args
 ): Promise<GraphcoolDefinition> {
+  wildcardCheck(file, out)
   const json = yaml.safeLoad(file) as GraphcoolDefinition
 
   const vars = new Variables(out, moduleName, args)
@@ -53,4 +54,14 @@ export async function readDefinition(
 
   cache[file] = populatedJson
   return populatedJson
+}
+
+function wildcardCheck(file: string, out: Output) {
+  const regex = /.*?operation:\s*\*/m
+
+  const match = file.match(regex)
+  if (match) {
+    out.error(`To use the wildcard permission, please wrap the asterisk with two double quotes:
+${chalk.green('- operation: "*"')}`)
+  }
 }
