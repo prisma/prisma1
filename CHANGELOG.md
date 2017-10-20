@@ -10,6 +10,8 @@ See the Forum for more information on the [Framework Preview](https://www.graph.
 * [Fixed deploying a renamed function file](https://github.com/graphcool/graphcool/issues/896).
 * [Fixed deploying operationBefore and operationAfter functions](https://github.com/graphcool/graphcool/issues/818).
 * [A problem with subscription functions has been fixed](https://github.com/graphcool/graphcool/issues/835).
+  * [Functions are now updated instead of deleted and recreated](https://github.com/graphcool/graphcool/issues/451).
+  * [Permissions are only updated if necessary](https://github.com/graphcool/graphcool/issues/773).
 
 * General error message improvements:
 
@@ -34,8 +36,6 @@ Version 0.8.0 of `graphcool` has been released.
   * [It's now possible to initialze a service in a non-empty folder](https://github.com/graphcool/graphcool/issues/857).
 
 * `graphcool deploy`
-  * [Functions are now updated instead of deleted and recreated](https://github.com/graphcool/graphcool/issues/451).
-  * [Permissions are only updated if necessary](https://github.com/graphcool/graphcool/issues/773).
   * [Errors are caught before showing the deploy wizard](https://github.com/graphcool/graphcool/issues/856).
   * [Deploying to not running local cluster is handled gracefully](https://github.com/graphcool/graphcool/issues/853).
   * [Introduced an error that detects missing node_modules when modules are required or imported in any function](https://github.com/graphcool/graphcool/issues/824). [Built-in modules are ignored](https://github.com/graphcool/graphcool/issues/831).
@@ -76,6 +76,7 @@ Version 0.8.0 of `graphcool` has been released.
 ## Lib
 
 * Version 0.1.3 of `graphcool-lib` has been released. Read the release notes [here](https://github.com/graphcool/graphcool-lib/releases).
+
 
 
 # 0.7 (2017-10-13)
