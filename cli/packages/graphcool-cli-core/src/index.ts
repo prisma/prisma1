@@ -6,11 +6,8 @@ import Playground from './commands/playground/index'
 import Console from './commands/console'
 import List from './commands/list/index'
 import Delete from './commands/delete/index'
-import RootTokens from './commands/root-tokens/index'
+import RootTokens from './commands/root-token/index'
 import FunctionLogs from './commands/logs/function'
-import Diff from './commands/diff/index'
-import Pull from './commands/pull/index'
-import Export from './commands/export/index'
 import InvokeLocal from './commands/invoke/local'
 import PullLocal from './commands/local/pull'
 import Stop from './commands/local/stop'
@@ -26,10 +23,10 @@ export const groups = [
     key: 'general',
     name: 'General commands'
   },
-  {
-    key: 'data',
-    name: 'Data workflows'
-  },
+  // {
+  //   key: 'data',
+  //   name: 'Data workflows'
+  // },
   {
     key: 'local',
     name: 'Local development'
@@ -64,11 +61,6 @@ export const topics = [
   },
   { name: 'add-template', description: 'Add template a new template', group: 'general' },
   {
-    name: 'export',
-    description: 'Export service data',
-    group: 'data'
-  },
-  {
     name: 'invoke-local',
     description: 'Invokes a function locally',
     group: 'general'
@@ -97,8 +89,6 @@ export const commands = [
   Delete,
   RootTokens,
   FunctionLogs,
-  Pull,
-  Export,
   InvokeLocal,
   PullLocal,
   Stop,

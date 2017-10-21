@@ -20,7 +20,7 @@ export default class Auth extends Command {
   `
   static flags: Flags = {
     token: flags.string({
-      char: 't',
+      char: 'T',
       description: 'System token',
     }),
   }

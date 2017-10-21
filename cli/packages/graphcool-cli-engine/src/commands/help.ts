@@ -41,6 +41,7 @@ export default class Help extends Command {
   static topic = 'help'
   static description = 'display help'
   static variableArgs = true
+  static allowAnyFlags = true
 
   plugins: Plugins
 

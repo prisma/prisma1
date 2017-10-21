@@ -49,3 +49,22 @@ export function linewrap(length: number, s: string): string {
     skipScheme: 'ansi-color'
   })(s).trim()
 }
+
+export function getCommandId(argv: string[]) {
+  if (argv.length === 1 && ['-v', '--version'].includes(argv[0])) {
+    return 'version'
+  }
+  if (argv.includes('help')) {
+    return 'help'
+  }
+  if (argv[1] && !argv[1].startsWith('-')) {
+    return argv.slice(0, 2).join(':')
+  } else {
+    const firstFlag = argv.findIndex(param => param.startsWith('-'))
+    if (firstFlag === -1) {
+      return argv.join(':')
+    } else {
+      return argv.slice(0, firstFlag).join(':')
+    }
+  }
+}

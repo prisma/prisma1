@@ -16,15 +16,6 @@ const mockEnv = {
   },
 }
 
-// default: local-dev
-// environments:
-//   local-dev:
-// token: >-
-//   eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE1MDcwMjM3NzMsImNsaWVudElkIjoiY2o4YTAxZHN1MDAwMDAxMjM1aWF1aTFoYiJ9.WscmbACu0HqPEDSk_U66TNOskGddmt2plJAew6XCyNw
-// host: 'http://localhost:60000'
-// projectId: cj8bjoc2w001h01830u1caec2
-//
-
 const localMockEnv = {
   clusters: {
     default: 'local',

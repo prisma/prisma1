@@ -12,24 +12,26 @@ export default class GetRootToken extends Command {
   static description = 'Print specified root token'
   static group = 'general'
   static flags: Flags = {
-    token: flags.string({
-      char: 't',
-      description: 'Name of the token',
-    }),
     target: flags.string({
       char: 't',
       description: 'Target name',
     }),
   }
 
+  static args = [
+    {
+      name: 'token',
+      description: 'Name of the token',
+    },
+  ]
+
   async run() {
     await this.auth.ensureAuth()
-    const { target, token } = this.flags
+    const { target } = this.flags
     const { id } = await this.env.getTarget(target)
+    const token = this.args!.token
 
-    this.out.action.start(`Getting root token${token ? '' : 's'}`)
     const pats = await this.client.getPats(id)
-    this.out.action.stop()
     if (token) {
       const foundPat = pats.find(pat => pat.name === token)
       if (!foundPat) {
@@ -55,7 +57,7 @@ export default class GetRootToken extends Command {
         )
         this.out.log(
           `\n Run ${chalk.green(
-            'graphcool root-token -t TOKEN_NAME',
+            'graphcool root-token TOKEN_NAME',
           )} to receive the concrete token`,
         )
       }
@@ -63,4 +65,4 @@ export default class GetRootToken extends Command {
   }
 }
 
-const prettyPat = (pat: PAT) => `${chalk.bold(pat.name)}:\n${pat.token}`
+const prettyPat = (pat: PAT) => `${pat.token}`

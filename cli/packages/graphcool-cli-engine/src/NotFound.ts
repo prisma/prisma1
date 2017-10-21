@@ -1,6 +1,7 @@
 import { Config } from './Config'
 import { Output } from './Output/index'
 import Plugins from './Plugin/Plugins'
+import { getCommandId } from './util'
 
 export class NotFound {
   argv: string[]
@@ -41,7 +42,7 @@ export class NotFound {
 
     let closest
     let binHelp = `${this.config.bin} help`
-    const id = this.argv[1]
+    const id = getCommandId(this.argv.slice(1))
     const idSplit = id.split(':')
     if (await this.isValidTopic(idSplit[0])) {
       // if valid topic, update binHelp with topic
@@ -55,7 +56,7 @@ export class NotFound {
     }
 
     const perhaps = closest ? `Perhaps you meant ${this.out.color.yellow(closest.split(':').join(' '))}\n` : ''
-    this.out.error(`${this.out.color.yellow(this.argv[1])} is not a ${this.config.bin} command.
+    this.out.error(`${this.out.color.yellow(idSplit.join(' '))} is not a ${this.config.bin} command.
 ${perhaps}Run ${this.out.color.cmd(binHelp)} for a list of available commands.`, 127)
   }
 }

@@ -4,7 +4,7 @@ import * as sillyName from 'sillyname'
 import { ServiceDoesntExistError } from '../../errors/ServiceDoesntExistError'
 import { emptyDefinition } from './emptyDefinition'
 import * as chokidar from 'chokidar'
-import * as inquirer from 'inquirer'
+import * as inquirer from 'graphcool-inquirer'
 import * as path from 'path'
 import * as fs from 'fs-extra'
 import Bundler from './Bundler/Bundler'
@@ -360,7 +360,7 @@ https://console.graph.cool/${encodeURIComponent(info.name)}/settings/general`)
       type: 'list',
       message: 'Please choose the cluster you want to deploy to',
       choices: [
-        new inquirer.Separator(chalk.bold('Backend-as-a-Service:')),
+        new inquirer.Separator(chalk.bold('Shared Clusters:')),
         {
           value: 'shared-eu-west-1',
           name: 'shared-eu-west-1',
@@ -373,6 +373,7 @@ https://console.graph.cool/${encodeURIComponent(info.name)}/settings/general`)
           value: 'shared-us-west-2',
           name: 'shared-us-west-2',
         },
+        new inquirer.Separator('                     '),
         new inquirer.Separator(chalk.bold('Local (docker):')),
         {
           value: 'local',

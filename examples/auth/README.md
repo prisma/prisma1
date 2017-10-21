@@ -10,6 +10,7 @@ This directory contains the service definition and file structure for a simple G
 .
 ├── README.md
 ├── graphcool.yml
+├── package.json
 ├── src
 │   ├── authenticate.graphql
 │   ├── authenticate.js
