@@ -1,0 +1,8 @@
+query isOwner($user_id: ID!, $basketsBasket_id: ID!) {
+  SomeBasketExists(filter: {
+    id: $basketsBasket_id
+    user: {
+      id: $user_id
+    }
+  })
+}

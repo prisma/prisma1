@@ -4,13 +4,13 @@
 
 - GraphQL type definitions
 - Stripe Checkout Flow
-- A custom GraphQL `resolver` function, hosted in Graphcool
+- A GraphQL `resolver` function
+- small seed script
 
 ## Config
 
-This example needs an environment variable called `STRIPE_KEY`.
-The `STRIPE_KEY` can be obtained by [creating a stripe account](https://dashboard.stripe.com/register)
-and getting the token from the Account Settings.
+This example needs an environment variable called `STRIPE_TEST_KEY`.
+The `STRIPE_TEST_KEY` can be obtained by [creating a stripe account](https://dashboard.stripe.com/register) and getting the token from the Account Settings.
 
 ## Setup
 
@@ -30,76 +30,150 @@ npm install -g graphcool@next
 You can now [deploy](https://docs-next.graph.cool/reference/graphcool-cli/commands-aiteerae6l#graphcool-deploy) the Graphcool service that's defined in this directory. Before that, you need to install the node [dependencies](package.json#L14) for the defined functions:
 
 ```sh
-yarn install      # install dependencies
+yarn install      # install dependencies - alternatively npm install
 graphcool deploy  # deploy service
 ```
 
-When prompted which cluster you'd like to deploy, chose any of `Backend-as-a-Service`-options (`shared-eu-west-1`, `shared-ap-northeast-1` or `shared-us-west-2`) rather than `local`. 
+When prompted which cluster you'd like to deploy, chose any of `Backend-as-a-Service`-options (`shared-eu-west-1`, `shared-ap-northeast-1` or `shared-us-west-2`) rather than `local`.
+
+Copy the _Simple API endpoint_ for the next step.
 
 ## Data Setup
 
-You can open the playground with `graphcool playground` and execute the following mutation to set up some initial data.
+You can run the seed script to get started. First, obtain the _root token_ needed for the script:
+
+```sh
+graphcool root-token seed-script
+```
+
+Replace `__ENDPOINT__` and `__ROOT_TOKEN__` with the two copied values, and run the script to create a few product items:
+
+```sh
+node src/scripts/seed.js
+```
+
+## Basic Workflow
+
+* signup as a new user
+* login by setting authorization header
+* create a new order
+* add a couple of items
+* pay the order
+
+### Authentication
+
+Signup as a new user and copy both the `id` and `token` for later use.
 
 ```graphql
-mutation init {
-  createUser(
-    firstName: "Bob"
-    lastName: "Meyer"
-    email: "bob.meyer@test.com"
-    address: "Secret Address"
-    baskets: [{
-      items: [{
-        name: "iPhone X"
-        price: 1200
-        imageUrl: "https://cdn.vox-cdn.com/uploads/chorus_image/image/56645405/iphone_x_gallery1_2017.0.jpeg"
-        description: "The new shiny iPhone"
-      }]
-    }]
+mutation signup {
+  signupUser(
+    email: "nilan@graph.cool"
+    password: "password"
   ) {
     id
-    baskets {
-      id
-    }
+    token
   }
 }
 ```
 
+If you want to login again at a later point, you can use this mutation:
 
+```graphql
+mutation login {
+  authenticateUser(
+    email: "nilan@graph.cool"
+    password: "password"
+  ) {
+    token
+  }
+}
+```
 
-## Application Flow
- 1. User is logged in or creates anonymous Account
- 2. User creates a `Cart` that he puts `Item`s into
- 3. When the User wants to Checkout, he insert his credit cart and address. We can use the stripe docs to mimic this step: Obtain a Stripe token by using the *Try Now* example in their [Docs](https://stripe.com/docs).
- 4. With the inserted data we're also updating the `User` we created in the beginning, adding the name and address of the person
- 5. Create a new Order in Graphcool with the Stripe Token, the `userId` and `basketId` you just created:
- 
- ```graphql
- mutation order {
-   createOrder(
-     userId: "cj7kn28nn6fa90117qjwnut9v"
-     basketId: "cj7kn28no6faa01175c8rsgsd"
-   ) {
-     id
-   }
- }
- ```
- 
- 3. Pay the Order that you just created by calling the custom resolver:
+When you set the `Authorization` to `Bearer <token>`, your requests are authenticated. You can use this query to obtain the authenticated user id:
 
-  ```graphql
-  mutation pay {
-    pay(
-    	orderId: "cj7knpozv7t6f01535quuud9s"
-    	stripeToken: "tok_ybnh1HWnDZKMonE6lVkHLMVt"
-    ) {
-      success
+```graphql
+query loggedInUser {
+  loggedInUser {
+    id
+  }
+}
+```
+
+### Checkout Process
+
+First, we'll create a new order for the current user. Set the id of the user you created as the `$userId: ID!` variable and run this mutation:
+
+```graphql
+mutation beginCheckout($userId: ID!) {
+  createOrder(
+    description: "Christmas Presents 2018"
+    userId: $userId
+  ) {
+    id
+  }
+}
+```
+
+This will create a new order with order status `NEW` (note the `orderStatus: OrderStatus! @defaultValue(value: NEW)` field in `types.graphql`). Copy the obtained `id` of the order.
+
+Now, we can add as many items as we want to the order. Make sure you've run the seed script from above, then first query existing products:
+
+```graphql
+query existingProducts {
+  allProducts {
+    id
+    price
+    name
+  }
+}
+```
+
+For any product you'd like to add, copy its `id` and specify an amount:
+
+```graphql
+mutation addOrderItem($orderId: ID!, $productId: ID!, amount: Int!) {
+  setOrderItem(
+    orderId: $orderId
+    productId: $productId
+    amount: $amount
+  ) {
+    itemId
+    amount
+  }
+}
+```
+
+You can run `setOrderItem` multiple times to change the amount of a specific product, or to remove it from your order entirely.
+Once you're happy with the product selection in your order, you can pay (you'll need a valid Stripe token):
+
+```graphql
+mutation pay($orderId: ID!, $stripeToken: String!) {
+  pay(
+    orderId: $orderId
+    stripeToken: $stripeToken
+  ) {
+    success
+  }
+}
+```
+
+To get all orders of a specific user, you can use this query:
+
+```graphql
+query orders($userId: ID!) {
+  allOrders(filter: {
+    user: {
+      id: $userId
+    }
+  }) {
+    description
+    orderStatus
+    items {
+      amount
+      product {
+        name
+      }
     }
   }
-  ```
-
-## Local Development
-To run the `pay.js` function locally, you can use the `scripts/run.js` file to run it.
-
-## Limitations
-
-* This example currently doesn't enforce permissions (which will be added soon)
+}
+```

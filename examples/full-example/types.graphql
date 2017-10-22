@@ -1,41 +1,37 @@
 type User @model {
   id: ID! @isUnique
-  email: String @isUnique
-  firstName: String
-  lastName: String
-  address: String
+  email: String! @isUnique
+  name: String!
   stripeCustomerId: String
-  baskets: [Basket!]! @relation(name: "Baskets")
+  password: String!
   orders: [Order!]! @relation(name: "Orders")
-  password: String
-  role: Role @defaultValue(value: "USER")
-}
-
-type Basket @model {
-  id: ID! @isUnique
-  user: User @relation(name: "Baskets")
-  items: [Item!]! @relation(name: "BasketOnItem")
-  order: Order @relation(name: "BasketOnOrder")
 }
 
 type Order @model {
   id: ID! @isUnique
-  deliveryDate: DateTime
-  paymentDate: DateTime
-  basket: Basket @relation(name: "BasketOnOrder")
+  description: String!
   user: User @relation(name: "Orders")
+  items: [Item!]! @relation(name: "Items")
+  orderStatus: OrderStatus @defaultValue(value: NEW)
 }
 
 type Item @model {
   id: ID! @isUnique
-  baskets: [Basket!]! @relation(name: "BasketOnItem")
+  product: Product @relation(name: "ProductOnItem")
+  order: Order @relation(name: "Items")
+  amount: Int! @default(value: 1)
+}
+
+type Product @model {
+  id: ID! @isUnique
+  items: [Item!]! @relation(name: "ProductOnItem")
   name: String!
   description: String
   imageUrl: String
   price: Int!
 }
 
-enum Role {
-  ADMIN
-  USER
+enum OrderStatus {
+  NEW
+  PAID
 }
