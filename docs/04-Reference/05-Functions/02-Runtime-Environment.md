@@ -5,9 +5,34 @@ description: Graphcool Functions can run either inline or using a remote webhook
 
 # Runtime Environment
 
+## Function `context` input argument
+
+All functions will be able to access meta information through the `context` field of the function's input `event`.
+
+This `context` has the following structure:
+
+```
+{
+  # authentication info
+  auth: {
+    typeName # if request is authenticated, this is the name of the corresponding type, e.g. `User`
+    nodeId # if request is authenticated, this is the `id` of the corresponding node
+    token # if request is authenticated, this is the valid authentication token
+  },
+  # project info
+  graphcool: {
+    projectId # this will be deprecated shortly, use serviceId instead
+    serviceId
+    alias
+    pat # this will be deprecated shortly, use rootToken instead
+    rootToken
+  }
+}
+```
+
 ## Runtime environment for managed functions
 
-**Managed functions** can be specified using the functions editor in the Console. They run on a node runtime and **all npm modules are available for import**.
+**Managed functions** are deployed to [AWS Lambda](https://aws.amazon.com/lambda/).
 
 <InfoBox type=warning>
 
@@ -17,21 +42,40 @@ Notice that the **maximum execution time of a managed function is 15 seconds**.
 
 ### Node runtime
 
-Currently, node version `4.8.4` is the runtime environment, but we're looking [to upgrade that to version 8 soon](https://github.com/graphcool/feature-requests/issues/237). By default, ES5 is supported. By starting a function with the line `'use latest'` however, you get access to ES6 features.
+Here is a [list](http://docs.aws.amazon.com/lambda/latest/dg/programming-model.html) of supported node versions:
 
-### Function containers
+- Node.js runtime v6.10 (runtime = nodejs6.10)
+- Node.js runtime v4.3 (runtime = nodejs4.3)
 
-Inline functions are managed in separate containers. For performance reasons, all functions within a project are executed in the same container, but there is no way for functions in different projects to interact with each other. As such, secret API Keys or other confidential information is kept secure when included in a function.
 
 ### Environment variables
 
-A centralized way to organize environment variables or secrets is planned and being discussed in [this feature request](https://github.com/graphcool/feature-requests/issues/229). Chime in to share your thoughts!
+You can provide environment variables to your functions by adding them to the function definition in [`graphcool.yml`](!alias-foatho8aip) under the `environment` property:
+
+```yml
+functions:
+  # Resolver for authentication
+  authenticateCustomer:
+    handler:
+      # Specify a managed function as a handler
+      code:
+        src: ./src/authenticate.js
+        # Define environment variables to be used in function
+        environment:
+          SERVICE_TOKEN: aequeitahqu0iu8fae5phoh1joquiegohc9rae3ejahreeciecooz7yoowuwaph7
+          STAGE: prod
+    type: resolver
+```
+
+Inside the function, you can access it them as follows:
+
+```js
+const serviceToken = provess.env['SERVICE_TOKEN']
+```
+
+> See an example for using environment variables inside functions [here](https://github.com/graphcool/graphcool/tree/master/examples/env-variables-in-functions).
 
 ## Webhooks
 
-Functions can also be deployed as **webhooks** using Function-as-a-service providers such as [Serverless](https://serverless.com/) and [AWS Lambda](https://aws.amazon.com/lambda/), [Google Cloud Functions](https://cloud.google.com/functions/), [Microsoft Azure Functions](https://azure.microsoft.com/) or by hosting the function yourself. Then you need to provide the webhook URL.
-
-## About callbacks and promises
-
-All functions should return a promise, that will be resolved by the Graphcool Functions Engine. Callbacks are not supported and need to be converted to Promises (as shown [in this  guide](https://egghead.io/lessons/javascript-convert-a-callback-to-a-promise)).
+Functions can also be deployed as **webhooks** using Function-as-a-Service (FaaS) providers such as [Serverless](https://serverless.com/) and [AWS Lambda](https://aws.amazon.com/lambda/), [Google Cloud Functions](https://cloud.google.com/functions/), [Microsoft Azure Functions](https://azure.microsoft.com/) or by hosting the function yourself. Then you need to provide the webhook URL.
 

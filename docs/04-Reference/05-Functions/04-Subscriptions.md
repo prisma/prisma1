@@ -73,7 +73,7 @@ const FormData =require('form-data')
 const apiKey = '__MAILGUN_API_KEY__'
 const url = '__MAILGUN_URL__'
 
-module.exports = function (event) {
+export default event => {
 
   const form = new FormData()
   form.append('from', 'Nilan <nilan@graph.cool>')

@@ -7,7 +7,12 @@ description: Graphcool features a simple yet powerful permission system that int
 
 Graphcool features a simple yet powerful permission system that integrates seamlessly with the available [authentication concept](!alias-geekae9gah).
 
-> To get a practical introduction to the Graphcool authorization system, check out the [permissions](https://github.com/graphcool/graphcool/tree/master/examples/permissions) example.
+<InfoBox>
+
+To get a practical introduction to the Graphcool authorization system, check out the [permissions](https://github.com/graphcool/graphcool/tree/master/examples/permissions) example.
+
+</InfoBox>
+
 
 ## Whitelist permissions for modular authorization
 
