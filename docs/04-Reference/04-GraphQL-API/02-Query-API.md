@@ -7,7 +7,7 @@ description: A GraphQL query is used to fetch data from a GraphQL endpoint.
 
 ## Overview
 
-A *GraphQL query* is used to fetch data from a GraphQL [endpoint](!alias-yahph3foch#project-endpoints). This is an example query:
+A *GraphQL query* is used to fetch data from a GraphQL endpoint. This is an example query:
 
 ```graphql
 ---
@@ -47,10 +47,10 @@ query {
 
 > You can click the **Play**-button in the code snippet to run the query and see the server response. You can also modify the query and observe the changes in the responses that are sent by the server.
 
-Here's a list of available queries. To explore them, use the [playground](!alias-uh8shohxie#playground) inside your project.
+Here's a list of available queries. To explore them, use the [playground](!alias-aiteerae6l#graphcool-playground) for your service.
 
 - Based on the [model types](!alias-eiroozae8u#model-types) and [relations](!alias-eiroozae8u#relations) in your data model, [type queries](#type-queries) and [relation queries](#relation-queries) will be generated to fetch type and relation data.
-- Additionally, [custom queries](#custom-queries) can be added to your API using [Resolvers](!alias-su6wu3yoo2) that are implemented as serverless [functions](!alias-aiw4aimie9).
+- Additionally, [custom queries](#custom-queries) can be added to your API using [resolver](!alias-su6wu3yoo2) functions.
 
 Some queries support [query arguments](#query-arguments) to further control the query response.
 
@@ -58,7 +58,7 @@ Some queries support [query arguments](#query-arguments) to further control the 
 
 ### Fetching a single node
 
-For each [model type](!alias-eiroozae8u#model-types) in your project, the Simple API provides an automatically generated query to fetch one specific node of that type. To specify the node, all you need to provide is its `id` or another unique field.
+For each [model type](!alias-eiroozae8u#model-types) in your service, the `Simple API` provides an automatically generated query to fetch one specific node of that type. To specify the node, all you need to provide is its `id` or another unique field.
 
 For example, for a type called `Post` a top-level query `Post` will be generated.
 
@@ -129,7 +129,7 @@ query {
 
 ### Fetch multiple nodes
 
-The Simple API contains automatically generated queries to fetch all nodes of a certain [model type](!alias-eiroozae8u#model-types). For example, for the `Post` type the top-level query `allPosts` will be generated.
+The `Simple API` contains automatically generated queries to fetch all nodes of a certain [model type](!alias-eiroozae8u#model-types). For example, for the `Post` type the top-level query `allPosts` will be generated.
 
 #### Fetch all nodes of a specific type
 
@@ -1203,7 +1203,7 @@ query {
 Note that the returned object contains a `data` key, which in turn contains the `number` field that was specified in the `RandomNumberPayload` in the SDL document. [Error handling](!alias-geihakoh4e) works similarly to other Graphcool Functions, if an object containing the `error` key is returned.
 
 
-## The authenticated `User` (only for [non-ejected](!alias-opheidaix3#non-ejected-projects) projects)
+## The authenticated `User` (only for [legacy Console projects](!alias-aemieb1aev))
 
 If the request of a query contains authentication information on the [session user](!alias-geekae9gah#user-login), you can use the `user` query to query information on that user. All fields of the `User` type are available.
 
