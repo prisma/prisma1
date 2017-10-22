@@ -128,46 +128,6 @@ graphcool playground [flags]
 
 
 
-### `graphcool diff`
-
-Displays all the changes between your local service definition and the remote service definition. This command essentially is a "dry-run" for the `graphcool deploy` command.
-
-#### Usage 
-
-```sh
-graphcool diff [flags]
-```
-
-#### Flags
-
-```
--t, --target TARGET      Target name
-```
-
-#### Examples
-
-##### See local changes from graphcool.yml in default service environment.
-
-```sh
-graphcool diff
-```
-
-#####  See local changes from graphcool.yml for a specific environment.
-
-```sh
-graphcool diff --env prod
-```
-
-Assuming you're executing the command in a directory that contains a `.graphcoolrc` looking similar to this:
-
-```yml
-targets:
-  default: dev
-  dev: hah5eitauy1phoo7bahthooph
-  prod: th4pydulr0vjb049lkgf63951
-``` 
-
-
 ### `graphcool delete`
 
 Delete an existing target from the cluster its deployed to.
