@@ -54,6 +54,7 @@ graphcool deploy [flags]
 ```
  -a, --alias ALIAS                                Service alias
  -d, --default                                    Set specified target as default
+ -D, --dry-run                                    Perform dry-run of deployment to view changes
  -f, --force                                      Accept data loss caused by schema changes
  -i, --interactive                                Force interactive mode to select the cluster
  -n, --new-service NEW-SERVICE                    Name of the new Service
@@ -351,10 +352,26 @@ graphcool local restart [flags]
  -n, --name NAME    Name of the new instance
 ```
 
+### `graphcool local ps`
+
+List Docker containers.
+
+#### Usage 
+
+```sh
+graphcool local ps
+```
+
+
 ### `graphcool local eject`
 
 Eject from the managed docker runtime.
 
+#### Usage 
+
+```sh
+graphcool local eject
+```
 
 
 
