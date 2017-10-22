@@ -14,7 +14,7 @@ At the core of Graphcool is an auto-generated [GraphQL API](!alias-abogasd0go) p
 
 ### From hardware servers to the cloud
 
-Backend development has undergone tremendous change in the past decades. In the early days of the web, developers, and website providers had to buy and manage their own hardware to deploy and run servers on the internet. The movement towards the cloud removed much of that burden and let developers focus on the applications they wanted to build rather than infrastructure to be managed. 
+Backend development has undergone tremendous change in the past decades. In the early days of the web, developers and website providers had to buy and manage their own hardware to deploy and run servers on the internet. The movement towards the cloud removed much of that burden and let developers focus on the applications they wanted to build rather than infrastructure to be managed. 
 
 Web frameworks like [Ruby on Rails](http://rubyonrails.org/), [Express.js](https://expressjs.com/) or [Laravel](https://laravel.com/) (PHP) bootstrap the development of a web server and further contributed to the productivity of backend developers in the past years. 
 
