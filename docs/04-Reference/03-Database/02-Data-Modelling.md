@@ -7,7 +7,7 @@ description: An overview of how to model application data in Graphcool.
 
 ## Overview
 
-Graphcool uses (a subset of) the GraphQL [Schema Definition Language] (https://www.graph.cool/docs/faq/graphql-sdl-schema-definition-language-kr84dktnp0/) for data modelling. Your data model is written in your project's `.graphql`-file, typically called `types.graphql`, which is the foundation for the actual database schema that Graphcool generates for you.
+Graphcool uses (a subset of) the GraphQL [Schema Definition Language](https://www.graph.cool/docs/faq/graphql-sdl-schema-definition-language-kr84dktnp0/) for data modelling. Your data model is written in your service's `.graphql`-file, typically called `types.graphql`, which is the foundation for the actual database schema that Graphcool generates for you.
 
 To learn more about the SDL, you can check out the [official documentation](http://graphql.org/learn/schema/#type-language).
 
@@ -20,8 +20,8 @@ type Tweet @model {
   id: ID! @isUnique
   createdAt: DateTime!
   updatedAt: DateTime!
-  owner: User! @relation(name: "UserOnTweet")
   text: String!
+  owner: User! @relation(name: "UserOnTweet")
 }
 
 type User @model {
@@ -37,7 +37,7 @@ There are several available building blocks to shape your data model.
 
 * [Types](#graphql-types) consist of multiple [fields](#fields) and are used to group similar entities together.
 * [Relations](#relations) describe interactions between types.
-* Special [Directives](#graphql-directives) that cover different use cases are available.
+* Special [directives](#graphql-directives) that cover different use cases are available.
 
 Additionally, a project can contain prepopulated types and fields, referred to as [system artifacts](#system-artifacts). Different [naming conventions](#naming-conventions) define valid names.
 
@@ -45,19 +45,15 @@ Additionally, a project can contain prepopulated types and fields, referred to a
 
 There are a few things that are special about the way a data model is written.
 
-<!--
+The data model generally defines the [model types](#model-types) that represent the entities from your application domain. The nodes of these types will be persisted in the database and further determine the operations of your CRUD [API](!alias-abogasd0go).
 
-#### Using the `@model` directive
+Each type that you want to be part of this data model needs to be defined with the `@model` directive following the type name and the required `id` field.
 
-You data model contains the _model types_ that represent the entities from your application domain. The nodes of these types will be persisted in the database and further determine the shape of your API.
+There are three system fields, all of which are managed by the Graphcool runtime and read-only for you.
 
-Each type that you want to be part of this data model, you need to define with the `@model` directive following the type name.
+#### Required system field: `id` 
 
--->
-
-#### Unique IDs and the `Node` interface
-
-Every type that you define with the `@model` directive needs to have an `id: ID!` field, otherwise `graphcool deploy` is going to fail. This `id` however is managed by Graphcool: Every new node that is created in your project will get assigned a unique ID automatically.
+Every type that you define with the `@model` directive needs to have an `id: ID! @isUnique` field, otherwise `graphcool deploy` is going to fail. This `id` however is managed by Graphcool: Every new node that is created in your project will get assigned a globally unique ID automatically.
 
 Notice that all your model types will implement the `Node` interface in the actual GraphQL schema that defines all the capabilities of your API. This is what the `Node` interface looks like:
 
@@ -67,28 +63,29 @@ interface Node {
 }
 ```
 
-> You don't have to implement the `Node` interface yourself, this will be handled by Graphcool.
+> You don't have to implement the `Node` interface yourself, this is implicitly handled by Graphcool when you're using the `@model` directive.
 
-#### System fields: `createdAt` and `updatedAt`
+#### Optional system fields: `createdAt` and `updatedAt`
 
-Graphcool offers two special fields that can add to model types:
+Graphcool offers two special fields that you can add to `@model` types:
 
 - `createdAt: DateTime!`: Stores the exact date and time for when a node of this model type was created.
 - `updatedAt: DateTime!`: Stores the exact date and time for when a node of this model type was last updated.
 
 If you want your model types to expose these fields, you can simply add them to the type definition and Graphcool will take care of actually managing them for you.
 
+
 ```graphql
 type Article @model {
-  id: ID!
-  createdAt: DateTime!
-  updatedAt: DateTime!
+  id: ID! @isUnique    # required system field
+  createdAt: DateTime! # optional system field
+  updatedAt: DateTime! # optional system field
 }
 ``` 
 
 <InfoBox type=warning>
 
-Notice that you can not have custom fields that are called `createdAt` and `updatedAt` and of type `DateTime!`. When adding these to a model type, they will automatice be managed by Graphcool and are read-only for your application.
+Notice that you can not have custom fields that are called `createdAt` and `updatedAt` and of type `DateTime!`. When adding these to a model type, they will automatically be managed by Graphcool and are read-only for your application.
 
 </InfoBox>
 
@@ -140,7 +137,7 @@ The types that are included in your schema effect the available operations in th
 
 #### String
 
-A String holds text. This is the type you would use for a username, the content of a blog post or anything else that is best represented as text.
+A `String` holds text. This is the type you would use for a username, the content of a blog post or anything else that is best represented as text.
 
 Note: String values are currently limited to 256KB in size.
 
@@ -148,33 +145,33 @@ In queries or mutations, String fields have to be specified using enclosing doub
 
 #### Integer
 
-An Integer is a number that cannot have decimals. Use this to store values such as the weight of an ingredient required for a recipe or the minimum age for an event.
+An `Int` is a number that cannot have decimals. Use this to store values such as the weight of an ingredient required for a recipe or the minimum age for an event.
 
-Note: Int values range from -2147483648 to 2147483647.
+Note: `Int` values range from -2147483648 to 2147483647.
 
-In queries or mutations, Int fields have to be specified without any enclosing characters: `int: 42`.
+In queries or mutations, `Int` fields have to be specified without any enclosing characters: `int: 42`.
 
 #### Float
 
-A Float is a number that can have decimals. Use this to store values such as the price of an item in a store or the result of complex calculations.
+A `Float` is a number that can have decimals. Use this to store values such as the price of an item in a store or the result of complex calculations.
 
-In queries or mutations, Float fields have to be specified without any enclosing characters and an optional decimal point: `float: 42`, `float: 4.2`.
+In queries or mutations, `Float` fields have to be specified without any enclosing characters and an optional decimal point: `float: 42`, `float: 4.2`.
 
 #### Boolean
 
-A Boolean can have the value `true` or `false`. This is useful to keep track of settings such as whether the user wants to receive an email newsletter or if a recipe is appropriate for vegetarians.
+A `Boolean` can have the value `true` or `false`. This is useful to keep track of settings such as whether the user wants to receive an email newsletter or if a recipe is appropriate for vegetarians.
 
-In queries or mutations, Boolean fields have to be specified without any enclosing characters: `boolean: true`, `boolean: false`.
+In queries or mutations, `Boolean` fields have to be specified without any enclosing characters: `boolean: true`, `boolean: false`.
 
 #### DateTime
 
-The DateTime type can be used to store date or time values. A good example might be a person's date of birth.
+The `DateTime` type can be used to store date or time values. A good example might be a person's date of birth.
 
-In queries or mutations, DateTime fields have to be specified in [ISO 8601 format](https://en.wikipedia.org/wiki/ISO_8601) with enclosing double quotes: `datetime: "2015-11-22T13:57:31.123Z"`.
+In queries or mutations, `DateTime` fields have to be specified in [ISO 8601 format](https://en.wikipedia.org/wiki/ISO_8601) with enclosing double quotes: `datetime: "2015-11-22T13:57:31.123Z"`.
 
 #### Enum
 
-Enums are defined on a project scope.
+Enums are defined on a service scope.
 
 Like a Boolean an Enum can have one of a predefined set of values. The difference is that you can define the possible values. For example you could specify how an article should be formatted by creating an Enum with the possible values `COMPACT`, `WIDE` and `COVER`.
 
@@ -276,12 +273,12 @@ A relation is defined in the data model using the `@relation` directive:
 
 ```graphql
 type User @model {
-  id: ID!
+  id: ID! @isUnique
   stories: [Story!]! @relation(name: "UserOnStory")
 }
 
 type Story @model {
-  id: ID!
+  id: ID! @isUnique
   text: String!
   author: User! @relation(name: "UserOnStory")
 }
@@ -345,9 +342,9 @@ type Post @model {
 }
 ```
 
-### Temporary directives (only for [non-ejected](opheidaix3#non-ejected-projects) projects)
+### Temporary directives
 
-Temporary directives are used to run one-time migration operations. After a temporary directive has been pushed, it is not part of the schema anymore.
+Temporary directives are used to run one-time migration operations. After a service whose type definitions contain a temporary directive was deployed, it **needs to be manually removed from the type definitions file**.
 
 #### Renaming a Type or Field
 
@@ -374,7 +371,7 @@ Different objects you encounter in a Graphcool project like types or relations f
 The type name determines the name of derived queries and mutations as well as the argument names for nested mutations. Type names can only contain **alphanumeric characters** and need to start with an uppercase letter. They can contain **maximally 64 characters**.
 
 *It's recommended to choose type names in the singular form.*
-*Type names are unique on a project level.*
+*Type names are unique on a service level.*
 
 ##### Examples
 
@@ -400,7 +397,7 @@ The name of relation fields follows the same conventions and determines the argu
 
 The relation name determines the name of mutations to connect or disconnect nodes in the relation. Relation names can only contain **alphanumeric characters** and need to start with an uppercase letter. They can contain **maximally 64 characters**.
 
-*Relation names are unique on a project level.*
+*Relation names are unique on a service level.*
 
 ##### Examples
 
@@ -412,7 +409,7 @@ The relation name determines the name of mutations to connect or disconnect node
 Enum values can only contain **alphanumeric characters and underscores** and need to start with an uppercase letter.
 The name of an enum value can be used in query filters and mutations. They can contain **maximally 191 characters**.
 
-*Enum names are unique on a project level.*
+*Enum names are unique on a service level.*
 *Enum value names are unique on an enum level.*
 
 ##### Examples
