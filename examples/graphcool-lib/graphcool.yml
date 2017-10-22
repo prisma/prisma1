@@ -6,10 +6,11 @@ functions:
       code: src/postRandomDogImage.js
     type: resolver
     schema: src/postRandomDogImage.graphql
-  # checkPostCount:
-  #   handler:
-  #     code: src/checkPostCount.js
-  #   type: operationBefore
+  checkPostCount:
+    handler:
+      code: src/checkPostCount.js
+    type: operationBefore
+    operation: Post.create
 
 permissions:
 - operation: "*"
