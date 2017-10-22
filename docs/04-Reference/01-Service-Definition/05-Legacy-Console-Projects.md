@@ -5,7 +5,9 @@ description: Graphcool is currently transitioning from a pure Backend as a Servi
 
 # Legacy Console Projects
 
-First a word on terminology. When you create a backend with Garphcool, we used to refer to it as a `project`. This was confusing, so in the future we will refer to this as a `service`. During the transition we will user `Legacy Console Project` to refer to old projects and `Graphcool Service` to refer to services created using the new CLI that was introduced with the [Framework Preview](https://blog.graph.cool/graphcool-framework-preview-ff42081b1333).
+## Terminology
+
+When creating a backend with Graphcool, we used to refer to it as a _project_. In the future we will refer to this as a _service_. During the transition we will use _legacy Console project_ to refer to old projects and _Graphcool Service_ to refer to services created using the new CLI that was introduced with the [Framework Preview](https://blog.graph.cool/graphcool-framework-preview-ff42081b1333).
 
 If you have recently started using Graphcool and are unsure what version you are using, this is how you can find out:
 
@@ -17,7 +19,7 @@ If you have recently started using Graphcool and are unsure what version you are
 
 Yes!
 
-While most new features added to the Graphcool Framework will require you to upgrade to a Graphcool Service, you can continue to use your `Legacy Console Project` without change. We recommend that you upgrade as soon as possible to get access to the most recent features. 
+While most new features added to the Graphcool Framework will require you to upgrade to a Graphcool _service_, you can continue to use your _legacy Console project_ without change. We recommend that you upgrade as soon as possible to get access to the most recent features. 
 
 Legacy Console projects can only use CLI versions lower than 0.4 and are primarily managed through the Console. Particularly, managing _functions_ and _permissions_ can only be done in the Console.
 
@@ -26,28 +28,25 @@ Managing the GraphQL type definitions can still be done both in the Console (in 
 
 ## Upgrading a legacy Console project to a Graphcool service
 
-In most cases upgrading a `Legacy Console Project` to a `Graphcool Service` is a simple process. We recommend that you first create a new service using the CLI to familiarize yourself with the new workflow.
+In most cases upgrading a _legacy Console project_ to a _Graphcool service_ is a simple process. 
 
-It is important to understand that once you upgrade a project, you can not go back again.
+> We recommend that you first create a new service using the [CLI](!alias-zboghez5go) to familiarize yourself with the new workflows.
 
-To upgrade a `Legacy Console Project` to a `Graphcool Service`, you need to navigate to the **Project Settings** in the Console, select the **General**-tab and click the **Upgrade Project**-button:
+It is important to understand that **once a project was upgraded to a Graphcool service, it can not be converted back to a legacy Console project again**.
+
+To upgrade a _legacy Console project_ to a _Graphcool service_, you need to navigate to the **Project Settings** in the Console, select the **General**-tab and click the **Upgrade Project**-button:
 
 ![](https://i.imgur.com/dCp8HPH.png)
 
 <InfoBox type=warning>
 
-Upgrading a project is a one way migration. If you have any concerns about the process, please ask a question in the Graphcool Forum.
+Upgrading a project is a one-way migration. If you have any concerns about the process, please ask a question in the fForum](https://www.graph.cool/forum/).
 
 </InfoBox>
 
 ## Deprecated features
 
-A few features are being deprecated as part of the Framework release. If your Legacy Console Project is currently using any of these featuers you will have to replace the functionality before you can upgrade. The following features have been deprecated:
+A few features are being deprecated as part of the Framework release. If your cegacy Console roject is currently using any of these featuers you will have to replace the functionality before you can upgrade. The following features have been deprecated:
 
-### Integrations
-
-If you are currently using the Algolia integration or any of the Auth Providers that can be configured in the console, you should transition to one of the many [templates available on Github](https://github.com/graphcool/templates). Templates use the normal functionality provided by the Graphcool Framework and are fully customizable.
-
-### Request Pipeline functions with a `PRE_WRITE` step
-
-Depending on your use case, you can either move the code to `TRANSFORM_ARGUMENT` or to a `Server-side Subscription`.
+- **Integrations**: If you are currently using the Algolia integration or any of the Auth Providers that can be configured in the console, you should transition to one of the many [templates](!alias-zeiv8phail) available on [Github](https://github.com/graphcool/templates). 
+- **Request Pipeline functions with a `PRE_WRITE` step**: Depending on your use case, you can either move the code to `TRANSFORM_ARGUMENT` or to a `Server-side Subscription`.

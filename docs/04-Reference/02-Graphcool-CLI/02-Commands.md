@@ -123,6 +123,7 @@ graphcool playground [flags]
 
 ```
 -t, --target TARGET      Target name
+-w, --web                Open browser-based Playground
 ```
 
 
