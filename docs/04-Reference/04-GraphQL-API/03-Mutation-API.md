@@ -36,7 +36,7 @@ mutation {
 }
 ```
 
-Here's a list of available mutations. To explore them, use the [playground](!alias-uh8shohxie#playground) inside your project.
+Here's a list of available mutations. To explore them, use the [playground](!alias-aiteerae6l#graphcool-playground) for your service.
 
 * Based on the [model types](!alias-eiroozae8u#model-types) and [relations](!alias-eiroozae8u#relations) in your data model, [type mutations](#type-mutations) and [relation mutations](#relation-mutations) will be generated to modify nodes and edges.
 * Additionally, [custom mutations](#custom-mutations) can be added to your API using [Resolvers](!alias-su6wu3yoo2) that are implemented as serverless [functions](!alias-aiw4aimie9).
@@ -49,7 +49,7 @@ For every available [model type](!alias-eiroozae8u#model-types) in your data mod
 For example, if your schema contains a `Post` type:
 
 ```graphql
-type Post {
+type Post @model {
   id: ID! @isUnique
   title: String!
   description: String
@@ -171,14 +171,14 @@ For every available [relation](!alias-eiroozae8u#relations) in your data model, 
 The names and arguments of the generated mutations depend on the relation name and its cardinalities. For example, with the following schema:
 
 ```graphql
-type Post {
+type Post @model {
   id: ID! @isUnique
   title: String!
   author: User @relation(name: "WrittenPosts")
   likedBy: [User!]! @relation(name: "LikedPosts")
 }
 
-type User {
+type User @model {
   id: ID! @isUnique
   name : String!
   address: Address @relation(name: "UserAddress")
@@ -186,7 +186,7 @@ type User {
   likedPosts: [Post!]! @relation(name: "LikedPosts")
 }
 
-type Address {
+type Address @model {
   id: ID! @isUnique
   city: String!
   user: User @relation(name: "UserAddress")
@@ -554,20 +554,20 @@ _Nested create mutations_ connect the created node to a new node in the related 
 Consider the following data model:
 
 ```graphql
-type Author {
+type Author @model {
   id: ID! @isUnique
   contactDetails: ContactDetails @relation(name: "AuthorContactDetails")
   posts: [Post!]! @relation(name: "AuthorPosts")
   description: String!
 }
 
-type ContactDetails {
+type ContactDetails @model {
   id: ID! @isUnique
   author: Author @relation(name: "AuthorContactDetails")
   email: String!
 }
 
-type Post {
+type Post @model {
   id: ID! @isUnique
   text: String!
   author: Author @relation(name: "AuthorPosts")
@@ -862,20 +862,20 @@ _Nested connect mutations_ connect the original node to an existing node in the 
 Consider the following data model:
 
 ```idl
-type Author {
+type Author @model {
   id: ID! @isUnique
   contactDetails: ContactDetails @relation(name: "AuthorContactDetails")
   posts: [Post!]! @relation(name: "AuthorPosts")
   description: String!
 }
 
-type ContactDetails {
+type ContactDetails @model {
   id: ID! @isUnique
   author: Author @relation(name: "AuthorContactDetails")
   email: String!
 }
 
-type Post {
+type Post @model {
   id: ID! @isUnique
   text: String!
   author: Author @relation(name: "AuthorPosts")
@@ -1107,13 +1107,13 @@ mutation {
 Note that the returned object contains a `data` key, which in turn contains the `number` field that was specified in the `RandomNumberPayload` in the SDL document. [Error handling](!alias-quawa7aed0) works similarly to other Graphcool Functions, if an object containing the `error` key is returned.
 
 
-## Working with files
+## Working with files (only for [legacy Console projects](!alias-aemieb1aev))
 
-To interact with the [file API](!alias-eer4wiang0) of the platform, you can create, rename or delete files through queries and mutations that are exposed in the Simple API.
+To interact with the [File API](!alias-eer4wiang0) of the platform, you can create, rename or delete files through queries and mutations that are exposed in the Simple API.
 
 ### Uploading files
 
-Uploading files with a GraphQL mutation is not supported yet. For now, use [the File API directly](!alias-eer4wiang0) to upload files.
+Uploading files with a GraphQL mutation is not supported yet. For now, use the [File API](!alias-eer4wiang0) directly to upload files.
 
 ### Reading meta information of files
 

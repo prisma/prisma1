@@ -197,7 +197,7 @@ In queries or mutations, JSON fields have to be specified with enclosing double 
 
 An ID value is a generated unique 25-character string based on [cuid](https://github.com/graphcool/cuid-java). Fields with ID values are system fields and just used internally, therefore it is not possible to create new fields with the ID type.
 
-### Type Modifiers
+### Type modifiers
 
 #### List
 
@@ -215,7 +215,7 @@ Required fields are usually marked using a `!` after the field type.
 
 > An example for a required field on the `User` type could look like this: `name: String!`.
 
-### Field Constraints
+### Field constraints
 
 Fields can be configured with certain field constraints to add further semantics to your data model.
 
@@ -230,7 +230,7 @@ Please note that only the first 191 characters in a String field are considered 
 To mark a field as unique, simply append the `@isUnique` directive to it:
 
 ```graphql
-type User {
+type User @model {
   email: String! @isUnique
 }
 
@@ -243,7 +243,7 @@ You can set a default value for scalar fields. The value will be taken for new n
 To specify a default value for a field, you can use the `@defaultValue` directive:
 
 ```graphql
-type Story {
+type Story @model {
   isPublished: Boolean @defaultValue(value: "false")
 }
 ```
@@ -325,7 +325,7 @@ type Post @model {
   user: User! @relation(name: "PostAuthor")
 }
 
-type User {
+type User @model {
   posts: [Post!]! @relation(name: "PostAuthor")
 }
 ```

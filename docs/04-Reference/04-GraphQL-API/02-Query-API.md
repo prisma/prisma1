@@ -50,7 +50,7 @@ query {
 Here's a list of available queries. To explore them, use the [playground](!alias-aiteerae6l#graphcool-playground) for your service.
 
 - Based on the [model types](!alias-eiroozae8u#model-types) and [relations](!alias-eiroozae8u#relations) in your data model, [type queries](#type-queries) and [relation queries](#relation-queries) will be generated to fetch type and relation data.
-- Additionally, [custom queries](#custom-queries) can be added to your API using [resolver](!alias-su6wu3yoo2) functions.
+- Additionally, [custom queries and mutations](#custom-queries) can be added to your API using [resolver](!alias-su6wu3yoo2) functions.
 
 Some queries support [query arguments](#query-arguments) to further control the query response.
 
@@ -58,13 +58,13 @@ Some queries support [query arguments](#query-arguments) to further control the 
 
 ### Fetching a single node
 
-For each [model type](!alias-eiroozae8u#model-types) in your service, the `Simple API` provides an automatically generated query to fetch one specific node of that type. To specify the node, all you need to provide is its `id` or another unique field.
+For each [model type](!alias-eiroozae8u#model-types) in your service, the `Simple API` provides an auto-generated query to fetch one specific node of that type. To specify the node, all you need to provide is its `id` or another unique field.
 
 For example, for a type called `Post` a top-level query `Post` will be generated.
 
 #### Specifying the node by id
 
-You can always use the system-managed [`id` field](!alias-eiroozae8u#inique-ids-and-the-node-interface) to identify a node.
+You can always use the system-managed [`id`](!alias-eiroozae8u#required-system-field-id) field to identify a node.
 
 Query a specific post by its `id`:
 
@@ -94,7 +94,7 @@ query {
 
 #### Specifying the node by another unique field
 
-You can also supply any [unique field](!alias-eiroozae8u#unique) as an argument to the query to identify a node. For example, if you already declared the `slug` field of the `Post` type to be unique, you could select a post by specifying its slug:
+You can also supply any [unique field](!alias-eiroozae8u#unique) as an argument to the query to identify a node. For example, if you already declared the `slug` field of the `Post` type to be unique, you could select a post by specifying its `slug`:
 
 Query a specific `Post` node by its `slug`:
 
@@ -177,7 +177,7 @@ Here are a few examples for the generated query names:
 - type name: `Todo`, query name: `allTodoes`
 - type name: `Hobby`, query name: `allHobbies`.
 
-> Note: The query name approximate the plural rules of the English language. If you are unsure about the actual query name, explore available queries in your [playground](!alias-uh8shohxie#playground).
+> Note: The query name approximate the plural rules of the English language. If you are unsure about the actual query name, explore available queries in your [playground](!alias-aiteerae6l#graphcool-playground).
 
 #### Fetch certain nodes of a specific type
 
@@ -268,7 +268,7 @@ query {
 
 #### More aggregation options
 
-Currently, `count` is the only available aggregation. For specific use cases, you can use serverless [functions](!alias-aiw4aimie9) to precalculate certain aggregations and update them when data changes.
+Currently, `count` is the only available aggregation. For specific use cases, you can use [functions](!alias-aiw4aimie9) to precalculate certain aggregations and update them when data changes.
 
 Please join the discussion on [GitHub](https://github.com/graphcool/feature-requests/issues/70) if you are interested in a specific aggregation.
 
@@ -280,14 +280,14 @@ Every available [relation](!alias-eiroozae8u#relations) in your type definitions
 For example, with the following schema:
 
 ```graphql
-type Post {
-  id: ID!
+type Post @model {
+  id: ID! @isUnique
   title: String!
   author: User @relation(name: "UserOnPost")
 }
 
-type User {
-  id: ID!
+type User @model {
+  id: ID! @isUnique
   name : String!
   posts: [Post!]! @relation(name: "UserOnPost")
 }
@@ -337,7 +337,7 @@ query {
 
 The `author` field exposes a further selection of properties that are defined on the `Author` type.
 
-> Note: You can add [filter query arguments](!alias-nia9nushae#filtering-by-field) to an inner field returning a single node.
+> Note: You can add [filter query arguments](#filtering-by-field) to an inner field returning a single node.
 
 
 ### Traversing many nodes
@@ -868,7 +868,7 @@ Let's consider the following schema:
 
 ```graphql
 type Meta {
-  id: ID!
+  id: ID! @isUnique
   text: String!
   number: Int!
   decimal: Float!
@@ -968,7 +968,7 @@ Currently, neither [**scalar list filters**](https://github.com/graphcool/featur
 If you want to filter a list of strings `tags: [String!]!`:
 
 ```graphql
-type Item {
+type Item @model {
   id: ID! @isUnique
   tags: [String!]!
 }
@@ -977,13 +977,13 @@ type Item {
 you can introduce a new type `Tag` with a single `key: String` field and connect `Item` to `Key` one-to-many or many-to-many:
 
 ```graphql
-type Item {
+type Item @model {
   id: ID! @isUnique
   tags: [Tag!]! @relation(name: "ItemTags")
 }
 
 type Tag {
-  id: ID! @isUnique
+  id: ID! @model @isUnique
   key: String!
   item: Item @relation(name: "ItemTags")
 }
@@ -1142,10 +1142,9 @@ Note that *a maximum of 1000 nodes* can be returned per pagination field. If you
 
 Please join [the discussion on GitHub](https://github.com/graphcool/feature-requests/issues/259) for an according feature request to lift this limitation.
 
-
 ## Custom queries
 
-For use cases that are not covered by the automatically generated CRUD API, [Resolver](!alias-xohbu7uf2e) functions can be used to enhance your GraphQL schema with custom queries.
+For use cases that are not covered by the automatically generated CRUD API, [resolver](!alias-xohbu7uf2e) functions can be used to extend your service's GraphQL schema with custom queries and mutations.
 
 You can define the **name, input arguments and payload of the query** and **resolve it with a Graphcool Function**.
 
