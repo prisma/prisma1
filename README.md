@@ -167,7 +167,7 @@ The framework provides powerful abstractions and building blocks to develop flex
 
 ## Architecture
 
-![](https://imgur.com/JCoUsij.png)
+![](https://imgur.com/zkN1wWT.png)
 
 
 ## Deployment
