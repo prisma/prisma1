@@ -11,9 +11,9 @@ Each Graphcool service further comes with a realtime API that's based on GraphQL
 
 Notice that every Graphcool service by default comes with two different APIs:
 
-- **Simple API**: Intuitive CRUD operations and data modelling
-- **Relay API**: Adheres to the schema requirements of [Relay](https://facebook.github.io/relay/)
+- **`Simple API`**: Intuitive CRUD operations and data modelling
+- **`Relay API`**: Adheres to the schema requirements of [Relay](https://facebook.github.io/relay/)
 
 Notice that both APIs are still accessing the same underlying database!
 
-> Unless you are using Relay for as a GraphQL client, we highly recommend you to always use the **Simple API**. 
+> Unless you are using Relay for as a GraphQL client, we highly recommend you to always use the `Simple API`. 
