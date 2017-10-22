@@ -16,20 +16,22 @@ _Schema migrations_ need to be performed when you're updating your model type de
 A schema migration includes two steps:
 
 1. Update your type definitions in `types.graphql`
-2. Run `graphcool deploy` in the CLI
+2. Run [`graphcool deploy`](!alias-aiteerae6l#graphcool-deploy) in the CLI
+
+Whenever the migration contains potentially destructive changes (e.g. when removing a type from your data model, which will delete all existing nodes of that type), you need to pass the `--force` (short: `-f`) to `graphcool deploy`.
 
 <InfoBox type=warning>
 
-In case the migration requires additional information from your side, e.g. when you're renaming a type or a field or you add a non-nullable field to an existing type, you'll need to provide a _migration file_ with the required information. Notice that the CLI will detect these cases for you and launch a wizard that supports you in creating the migration file.
+In case the migration requires additional information from your side, e.g. when you're renaming a type or a field or you add a non-nullable field to an existing type, you'll need to temporarily add special directives to `types.graphql` that you can remove after successful [deployment](!alias-aiteerae6l#graphcool-deploy).
 
 </InfoBox>
 
 
 ## Migrating types
 
-GraphQL types in your GraphQL schema can be defined using the `type` keyword.
+GraphQL types in your GraphQL schema are defined using the `type` keyword.
 
-> Read more about GraphQL types in the [Data Modelling chapter](!alias-eiroozae8u)
+> Read more about GraphQL types in the [Data Modelling](!alias-eiroozae8u) chapter.
 
 ### Adding a new type
 
@@ -38,8 +40,8 @@ You can add new types to your GraphQL schema by adding a new `type` section to y
 Consider this type definitions file:
 
 ```graphql
-type User implements Node {
-  id: ID!
+type User @model {
+  id: ID! @isUnique
   name: String!
 }
 ```
@@ -47,14 +49,14 @@ type User implements Node {
 To add a new `Story` type (including a [relation](!alias-eiroozae8u#relations) to the `User` type), this is the new type definitions file:
 
 ```graphql
-type User implements Node {
-  id: ID!
+type User @model {
+  id: ID! @isUnique
   name: String!
   stories: [Story!]! @relation(name: "UserStories")
 }
 
-type Story implements Node {
-  id: ID!
+type Story @model {
+  id: ID! @isUnique
   isPublished: Boolean!
   text: String!
   slug: String! @isUnique
@@ -69,21 +71,21 @@ Have a look at the [naming conventions for types](!alias-eiroozae8u#naming-conve
 
 ### Removing an existing type
 
-To remove an existing type **including all of its data and relations**, remove the corresponding section in the schema file. You also need to remove all relation tags for relations that include the type to be deleted as well.
+To remove an existing type **including all of its data and relations**, simply remove it from the type definitions file. You also need to remove all relation tags for relations that include that type as well.
 
 > Removing a type potentially breaks existing queries, mutations and subscriptions in your [GraphQL API](!alias-abogasd0go). Make sure to not rely on any operations on the type in your apps before deleting it.
 
-Consider this schema file:
+Consider this type definitions file:
 
 ```graphql
-type User implements Node {
-  id: ID!
+type User @model {
+  id: ID! @isUnique
   name: String!
   stories: [Story!]! @relation(name: "UserStories")
 }
 
-type Story implements Node {
-  id: ID!
+type Story @model {
+  id: ID! @isUnique
   isPublished: Boolean!
   text: String!
   slug: String! @isUnique
@@ -95,39 +97,29 @@ type Story implements Node {
 To remove the `Story` type again, we need to remove the `type Story` section as well as the relation field `stories` on `User`:
 
 ```graphql
-type User implements Node {
-  id: ID!
+type User @model {
+  id: ID! @isUnique
   name: String!
 }
 ```
 
 ### Renaming an existing type
 
-<!--
-
-The process for renaming an existing type is different depending on whether your project is [ejected or not ejected](opheidaix3#ejected-vs-non-ejected-projects).
-
-#### For ejected projects
-
-#### For non-ejected projects
-
--->
-
 Renaming a type can be done with the `@rename(oldName: String!)` directive.
 
 > Renaming a type potentially breaks existing queries, mutations and subscriptions in your [GraphQL API](!alias-abogasd0go). Make sure to adjust your app accordingly to the new name.
 
-Consider this schema file:
+Consider this type definitions file:
 
 ```graphql
-type User implements Node {
-  id: ID!
+type User @model {
+  id: ID! @isUnique
   name: String!
   stories: [Story!]! @relation(name: "UserStories")
 }
 
-type Story implements Node {
-  id: ID!
+type Story @model {
+  id: ID! @isUnique
   isPublished: Boolean!
   text: String!
   slug: String! @isUnique
@@ -136,19 +128,19 @@ type Story implements Node {
 }
 ```
 
-To rename the `Story` type, we use the [temporary directive](!alias-aeph6oyeez#temporary-directives) `@rename(oldName: String!)` on the type itself. We also need to update the type name for all relation fields that use the old type name. In this case, that's the `stories: [Story!]!` field.
+To rename the `Story` type, you need to use the [temporary directive](!alias-eiroozae8u#temporary-directives) `@rename(oldName: String!)` on the type itself. We also need to update the type name for all relation fields that use the old type name. In this case, that's the `stories: [Story!]!` field.
 
 This is how it looks like:
 
 ```graphql
-type User implements Node {
-  id: ID!
+type User @model {
+  id: ID! @isUnique
   name: String!
   stories: [Post!]! @relation(name: "UserStories")
 }
 
-type Post implements Node @rename(oldName: "Story") {
-  id: ID!
+type Post @model @rename(oldName: "Story") {
+  id: ID! @isUnique
   isPublished: Boolean!
   text: String!
   slug: String! @isUnique
@@ -157,17 +149,17 @@ type Post implements Node @rename(oldName: "Story") {
 }
 ```
 
-After the successful rename operation, we obtain this new type definition file:
+**After you successfully [deployed](!alias-aiteerae6l#graphcool-deploy) the service, you need to remove the temporary directive `@rename` from the file:**
 
 ```graphql
-type User implements Node {
-  id: ID!
+type User @model {
+  id: ID! @isUnique
   name: String!
   stories: [Post!]! @relation(name: "UserStories")
 }
 
-type Post implements Node {
-  id: ID!
+type Post @model {
+  id: ID! @isUnique
   isPublished: Boolean!
   text: String!
   slug: String! @isUnique
@@ -176,7 +168,6 @@ type Post implements Node {
 }
 ```
 
-Note that the temporary directive `@rename` has now been removed from the file.
 
 ## Migrating scalar fields
 
@@ -191,11 +182,11 @@ Apart from scalar fields, fields can also be used to work with [relations](!alia
 
 You can add new fields to your GraphQL schema by including them in an existing type. **This will modify existing queries, mutations and subscriptions** in your [GraphQL API](!alias-abogasd0go).
 
-Consider this schema file:
+Consider this type definitions file:
 
 ```graphql
-type Story implements Node {
-  id: ID!
+type Story @model {
+  id: ID! @isUnique
   name: String!
 }
 ```
@@ -203,8 +194,8 @@ type Story implements Node {
 Let's add a few fields to the `Story` type:
 
 ```graphql
-type Story implements Node {
-  id: ID!
+type Story @model {
+  id: ID! @isUnique
   name: String!
   description: String! @migrationValue(value: "No description yet")
   isPublished: Boolean @migrationValue(value: "true") @defaultValue(value: "false")
@@ -218,11 +209,11 @@ We added three fields `description: String!`, `isPublished: Boolean` and `length
 * for the optional `isPublished` field of type Boolean, we don't have to supply a migration value, but we do so nonetheless. Additionally we set the default value to `false` using the `@defaultValue(value: String!)` directive.
 * for the optional field `length`, we did not supply a migration or default value.
 
-Because the directive `@migrationValue(value: String!)` is temporary, we receive an updated schema file after the migration was successful:
+**After you successfully [deployed](!alias-aiteerae6l#graphcool-deploy) the service, you need to remove the temporary `@migrationValue` directives from the file:**
 
 ```graphql
-type Story implements Node {
-  id: ID!
+type Story @model {
+  id: ID! @isUnique
   name: String!
   description: String!
   isPublished: Boolean @defaultValue(value: "false")
@@ -234,15 +225,15 @@ Have a look at the [naming conventions for fields](!alias-eiroozae8u#naming-conv
 
 ### Removing an existing field
 
-To remove an existing field, you can delete the corresponding line in the schema file. This will remove **all data for this field**.
+To remove an existing field, you can delete the corresponding line in the type definitions file. This will remove **all data for this field**.
 
 > Removing a field potentially breaks existing queries, mutations and subscriptions in your [GraphQL API](!alias-abogasd0go). Make sure to not rely on this field in your apps before deleting it.
 
-Consider this schema file:
+Consider this type definitions file:
 
 ```graphql
-type Story implements Node {
-  id: ID!
+type Story @model {
+  id: ID! @isUnique
   name: String!
   isPublished: Boolean!
   description: String!
@@ -254,8 +245,8 @@ type Story implements Node {
 Let's remove some of the fields of the `Story` type:
 
 ```graphql
-type User implements Node {
-  id: ID!
+type User @model {
+  id: ID! @isUnique
   name: String!
   isPublished: Boolean @defaultValue(value: "false")
 }
@@ -267,11 +258,11 @@ Renaming a field can be done with the `@rename(oldName: String!)` directive.
 
 > Renaming a field potentially breaks existing queries, mutations and subscriptions in your [GraphQL API](!alias-abogasd0go). Make sure to adjust your app accordingly to the new name.
 
-Consider this schema file:
+Consider this type definitions file:
 
 ```graphql
-type Story implements Node {
-  id: ID!
+type Story @model {
+  id: ID! @isUnique
   name: String!
   isPublished: Boolean!
   description: String!
@@ -283,8 +274,8 @@ type Story implements Node {
 To rename the `description` field to `information`, we use the [temporary directive](!alias-eiroozae8u#temporary-directives-%28only-for-non-ejected-projects%29) `@rename(oldName: String!)` on the field itself:
 
 ```graphql
-type Story implements Node {
-  id: ID!
+type Story @model {
+  id: ID! @isUnique
   name: String!
   isPublished: Boolean!
   information: String! @rename(oldName: "description")
@@ -293,11 +284,11 @@ type Story implements Node {
 }
 ```
 
-After the successful rename operation, we obtain this new schema file:
+**After you successfully [deployed](!alias-aiteerae6l#graphcool-deploy) the service, you need to remove the temporary directive `@rename` from the file:**
 
 ```graphql
-type Story implements Node {
-  id: ID!
+type Story @model {
+  id: ID! @isUnique
   name: String!
   isPublished: Boolean!
   information: String!
@@ -306,13 +297,11 @@ type Story implements Node {
 }
 ```
 
-Note that the temporary directive `@rename` is not in the schema file anymore.
-
 ### Changing the type of an existing field
 
-If no data exists on a given model type, changing the type of an existing field can always be achieved.
+If no data exists on a given model type, changing the type of an existing field is possible.
 
-If there is already data, some field type migrations require the `@migrationValue` directive, while others don't. The following examples can be summarized with these rules:
+If there already is data, some field type migrations require the `@migrationValue` directive, while others don't. The following examples can be summarized with these rules:
 
 * When only the raw type changes, but the required flag for the field stays the same (for example from `Int!` to `String!` or from `Int` to `String`):
   * When updating a field type **to String, no migration value needs to be provided**, the raw value will simply be casted to a String. If you provide a migration value however, all nodes will be migrated to that value.
@@ -326,8 +315,8 @@ If there is already data, some field type migrations require the `@migrationValu
 Consider this schema:
 
 ```graphql
-type Story implements Node {
-  id: ID!
+type Story @model {
+  id: ID! @isUnique
   name: String!
   length: Int
 }
@@ -336,8 +325,8 @@ type Story implements Node {
 Whether or not there is already data, `length` can be updated to a `String` without providing a migration value:
 
 ```graphql
-type Story implements Node {
-  id: ID!
+type Story @model {
+  id: ID! @isUnique
   name: String!
   length: String
 }
@@ -347,11 +336,11 @@ If a node formerly had `length: 3`, it is now `length: "3"`.
 
 #### Changing a field to another type
 
-Consider this schema:
+Consider this model type:
 
 ```graphql
-type Story implements Node {
-  id: ID!
+type Story @model {
+  id: ID! @isUnique
   name: String!
   length: Int
 }
@@ -360,8 +349,8 @@ type Story implements Node {
 If there is already data, `name` can only be updated to an `Boolean!` when a migration value is provided:
 
 ```graphql
-type Story implements Node {
-  id: ID!
+type Story @model {
+  id: ID! @isUnique
   name: Boolean! @migrationValue(value: "true")
   length: String!
 }
@@ -371,11 +360,11 @@ All nodes will have `name: true`.
 
 #### Changing a field from optional to required
 
-Consider this schema:
+Consider this model type:
 
 ```graphql
-type Story implements Node {
-  id: ID!
+type Story @model {
+  id: ID! @isUnique
   name: String!
   length: Int
 }
@@ -384,8 +373,8 @@ type Story implements Node {
 Whether or not there is already data, `length` can only be updated to an `Int!` when providing a migration value:
 
 ```graphql
-type Story implements Node {
-  id: ID!
+type Story @model {
+  id: ID! @isUnique
   name: Boolean! @migrationValue(value: "true")
   length: Int! @migrationValue(value: "0")
 }
@@ -402,22 +391,22 @@ The `@relation` directive can be attached to fields in your GraphQL schema to co
 
 Relations consist of two fields (or, in rare cases only one), have a name and both fields can either be singular or plural. Singular relation fields can be optional, but plural relation fields are always required.
 
-> Read more about GraphQL relations in the [Data Modelling](!alias-eiroozae8u) chapter.
+> Read more about relations in the [Data Modelling](!alias-eiroozae8u) chapter.
 
 ### Adding a new relation
 
 You can add new relations to your GraphQL schema using the `@relation(name: String!)` tag. This will **add new mutations and modify existing queries, mutations and subscriptions** in your [GraphQL API](!alias-abogasd0go).
 
-Consider this schema file:
+Consider this type definitions file:
 
 ```graphql
-type User implements Node {
-  id: ID!
+type User @model {
+  id: ID! @isUnique
   name: String!
 }
 
-type Story implements Node {
-  id: ID!
+type Story @model {
+  id: ID! @isUnique
   isPublished: Boolean!
   text: String!
   slug: String! @isUnique
@@ -428,14 +417,14 @@ type Story implements Node {
 Let's add a new relation `UserStories` to the schema:
 
 ```graphql
-type User implements Node {
-  id: ID!
+type User @model {
+  id: ID! @isUnique
   name: String!
   stories: [Story!]! @relation(name: "UserStories")
 }
 
-type Story implements Node {
-  id: ID!
+type Story @model {
+  id: ID! @isUnique
   isPublished: Boolean!
   text: String!
   slug: String! @isUnique
@@ -449,27 +438,27 @@ Note that we added two fields:
 * `stories: [Story!]! @relation(name: "UserStories")` on the `User` type signifies many Stories. List relation fields are always required.
 * `user: User! @relation(name: "UserStories")` on the `Story` type signifies a [required relation field](!alias-eiroozae8u#required-relations). Singular relation fields can be optional or required.
 
-By changing the multiplicities of the separate fields, we can create **one-to-one, one-to-many and many-to-many** relations.
+By changing the cardinalities of the separate fields, we can create **one-to-one, one-to-many and many-to-many** relations.
 
 Have a look at the [naming conventions](!alias-eiroozae8u#naming-conventions) for relations to see what names are allowed and recommended.
 
 ### Removing an existing relation
 
-To remove an existing relation, you can delete the corresponding relation fields in the schema file. This will remove **all data for this relation** as well.
+To remove an existing relation, you can delete the corresponding relation fields in the type definitions file. This will remove **all data for this relation** as well.
 
 > Removing a relation potentially breaks existing queries, mutations and subscriptions in your [GraphQL API](!alias-abogasd0go). Make sure to not rely on this relation in your apps before deleting it.
 
-Consider this schema file:
+Consider this type definitions file:
 
 ```graphql
-type User implements Node {
-  id: ID!
+type User @model {
+  id: ID! @isUnique
   name: String!
   stories: [Story!]! @relation(name: "UserStories")
 }
 
-type Story implements Node {
-  id: ID!
+type Story @model {
+  id: ID! @isUnique
   isPublished: Boolean!
   text: String!
   slug: String! @isUnique
@@ -481,13 +470,13 @@ type Story implements Node {
 Let's remove the `UserStories` relation again:
 
 ```graphql
-type User implements Node {
-  id: ID!
+type User @model {
+  id: ID! @isUnique
   name: String!
 }
 
-type Story implements Node {
-  id: ID!
+type Story @model {
+  id: ID! @isUnique
   isPublished: Boolean!
   text: String!
   slug: String! @isUnique
@@ -497,21 +486,21 @@ type Story implements Node {
 
 ### Renaming an existing relation
 
-Renaming a relation can be done by updating the existing `@relation(name: String!)` directives.
+Renaming a relation can be done by updating the existing `@relation` directives and adding a second argument `oldName` to them: `@relation(name: String!, oldName: String!)`.
 
 > Renaming a relation potentially breaks existing queries, mutations and subscriptions in your [GraphQL API](!alias-abogasd0go). Make sure to adjust your app accordingly to the new name.
 
-Consider this schema file:
+Consider this type definitions file:
 
 ```graphql
-type User implements Node {
-  id: ID!
+type User @model {
+  id: ID! @isUnique
   name: String!
   stories: [Story!]! @relation(name: "UserStories")
 }
 
-type Story implements Node {
-  id: ID!
+type Story @model {
+  id: ID! @isUnique
   isPublished: Boolean!
   text: String!
   slug: String! @isUnique
@@ -523,14 +512,33 @@ type Story implements Node {
 To rename the `UserStories` relation to `UserOnStory`, we adjust the corresponding `@relation` tags:
 
 ```graphql
-type User implements Node {
-  id: ID!
+type User @model {
+  id: ID! @isUnique
+  name: String!
+  stories: [Story!]! @relation(name: "UserOnStory", oldName: "UserStories")
+}
+
+type Story @model {
+  id: ID! @isUnique
+  isPublished: Boolean!
+  text: String!
+  slug: String! @isUnique
+  tags: [String!]
+  user: User! @relation(name: "UserOnStory", oldName: "UserStories")
+}
+```
+
+**After you successfully [deployed](!alias-aiteerae6l#graphcool-deploy) the service, you need to remove the temporary directive argument `oldName` from the `@relation` directive in the file:**
+
+```
+type User @model {
+  id: ID! @isUnique
   name: String!
   stories: [Story!]! @relation(name: "UserOnStory")
 }
 
-type Story implements Node {
-  id: ID!
+type Story @model {
+  id: ID! @isUnique
   isPublished: Boolean!
   text: String!
   slug: String! @isUnique
@@ -541,21 +549,21 @@ type Story implements Node {
 
 ### Changing the type of a relation field
 
-Whether changing the type of a relation field is possible might change depending on if there are already connected nodes in the relation.
+Whether changing the type of a relation field is actually possible might change depending on if there are already connected nodes in the relation.
 
 > Changing the type of a relation field potentially breaks existing queries, mutations and subscriptions in your [GraphQL API](!alias-abogasd0go). Make sure to adjust your app accordingly to the changes.
 
-Consider this schema file:
+Consider this type definitions file:
 
 ```graphql
-type User implements Node {
-  id: ID!
+type User @model {
+  id: ID! @isUnique
   name: String!
   stories: [Story!]! @relation(name: "UserStories")
 }
 
-type Story implements Node {
-  id: ID!
+type Story @model {
+  id: ID! @isUnique
   isPublished: Boolean!
   text: String!
   slug: String! @isUnique
@@ -567,19 +575,19 @@ type Story implements Node {
 To change the type of the `user` field from `User!` to `Author`, modify the according type in the schema (here, we're also adding a new `Author` type) and transfer the `stories` field from the `User` to the `Author` type:
 
 ```graphql
-type User implements Node {
-  id: ID!
+type User @model {
+  id: ID! @isUnique
   name: String!
 }
 
-type Author implements Node {
-  id: ID!
+type Author @model {
+  id: ID! @isUnique
   name: String!
   stories: [Story!]! @relation(name: "UserOnStory")
 }
 
-type Story implements Node {
-  id: ID!
+type Story @model {
+  id: ID! @isUnique
   isPublished: Boolean!
   text: String!
   slug: String! @isUnique
@@ -590,25 +598,25 @@ type Story implements Node {
 
 Changing the type of a relation field is only possible when no nodes are connected in the relation.
 
-### Changing the multiplicity of a relation field
+### Changing the cardinality of a relation field
 
-Whether changing the multiplicity of a relation field is possible might change depending on if there are already connected nodes in the relation.
+Whether changing the cardinality of a relation field is possible might change depending on if there are already connected nodes in the relation.
 
-> Changing the multiplicity of a relation field potentially breaks existing queries, mutations and subscriptions in your [GraphQL API](!alias-abogasd0go). Make sure to adjust your app accordingly to the changes.
+> Changing the cardinality of a relation field potentially breaks existing queries, mutations and subscriptions in your [GraphQL API](!alias-abogasd0go). Make sure to adjust your app accordingly to the changes.
 
 #### Changing a relation field from to-many to to-one
 
-Consider this schema file:
+Consider this type definitions file:
 
 ```graphql
-type User implements Node {
-  id: ID!
+type User @model {
+  id: ID! @isUnique
   name: String!
   stories: [Story!]! @relation(name: "UserStories")
 }
 
-type Story implements Node {
-  id: ID!
+type Story @model {
+  id: ID! @isUnique
   isPublished: Boolean!
   text: String!
   slug: String! @isUnique
@@ -617,17 +625,17 @@ type Story implements Node {
 }
 ```
 
-To change the multiplicity of the `stories` field from `to-many` to `to-one`, simply change the type from `[Story!]!` to `Story`.
+To change the cardinality of the `stories` field from `to-many` to `to-one`, simply change the type from `[Story!]!` to `Story`.
 
 ```graphql
-type User implements Node {
-  id: ID!
+type User @model {
+  id: ID! @isUnique
   name: String!
   stories: Story @relation(name: "UserOnStory")
 }
 
-type Story implements Node {
-  id: ID!
+type Story @model {
+  id: ID! @isUnique
   isPublished: Boolean!
   text: String!
   slug: String! @isUnique
@@ -640,17 +648,17 @@ Changing a `to-many` to a `to-one` field is only possible when no nodes are conn
 
 #### Changing a relation field from to-one to to-many
 
-Consider this schema file:
+Consider this type definitions file:
 
 ```graphql
-type User implements Node {
-  id: ID!
+type User @model {
+  id: ID! @isUnique
   name: String!
   stories: [Story!]! @relation(name: "UserStories")
 }
 
-type Story implements Node {
-  id: ID!
+type Story @model {
+  id: ID! @isUnique
   isPublished: Boolean!
   text: String!
   slug: String! @isUnique
@@ -659,17 +667,17 @@ type Story implements Node {
 }
 ```
 
-To change the multiplicity of the `user` field from `to-one` to `to-many`, simply change the type from `User!` to `[User!]!]`.
+To change the cardinality of the `user` field from `to-one` to `to-many`, simply change the type from `User!` to `[User!]!]`.
 
 ```graphql
-type User implements Node {
-  id: ID!
+type User @model {
+  id: ID! @isUnique
   name: String!
   stories: [Story!]! @relation(name: "UserOnStory")
 }
 
-type Story implements Node {
-  id: ID!
+type Story @model {
+  id: ID! @isUnique
   isPublished: Boolean!
   text: String!
   slug: String! @isUnique

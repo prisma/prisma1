@@ -7,7 +7,7 @@ description: Graphcool Functions allow you to return customized error messages o
 
 ## Overview
 
-Graphcool Functions follow a unified concept for error handling.
+Functions follow a unified concept for error handling.
 
 > To return an error from a webhook function, it's important **to respond with status code 200**!
 
@@ -20,7 +20,7 @@ By returning an object that contains an `error` property, you can populate error
 To return an error message, returns an object with the key `error` that is a String:
 
 ```js
-module.exports = function (event) {
+export default event => {
   return {
     error: "Invalid email!"
   }
@@ -47,7 +47,7 @@ Then the response to the request that resulted in that error will include the su
 For debugging or user-facing errors or other situations where more custom behaviour is needed you can return a JSON object instead of a string as the `error` property in your function:
 
 ```js
-module.exports = function (event) {
+export default event => {
   return {
     error: {
       code: 42,

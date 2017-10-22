@@ -5,17 +5,17 @@ description: An overview of how to integrate functions with Graphcool.
 
 # Overview
 
-Graphcool lets you seamlessly integrate serverless functions inside your project to react to events, execute business logic and hook into the GraphQL engine.
+The Graphcool Frameworks lets you integrate (serverless) functions with your service to react to events, execute business logic, extend your [GraphQL API](!alias-abogasd0go) and hook into the operations of your CRUD API.
 
 There generally are three kinds of functions that you can implement
 
 - [Hooks](!alias-pa6guruhaf) allow you to synchronously invoke a function right before or after a database operation (commonly used for data transformation and validation).
-- [Subscriptions](!alias-bboghez0go) allow you to asynchronously invoke a function when an specific event occurs in the [GraphQL engine](!alias-thei2kephu#graphql-engine).
-- [Resolvers](!alias-su6wu3yoo2) allow you to extend your GraphQL schema with more functionality that goes beyond the auto-generated CRUD capabilities. Resolvers are also commonly used to implement authentication mechanisms.
+- [Subscriptions](!alias-bboghez0go) allow you to asynchronously invoke a function when a specific event occurs in the [GraphQL API](!alias-abogasd0go).
+- [Resolvers](!alias-su6wu3yoo2) allow you to extend your GraphQL schema with more functionality that goes beyond the auto-generated CRUD capabilities. Resolvers are also commonly used to implement [authentication](!alias-bee4oodood) mechanisms.
 
-## Adding a function to your Graphcool project
+## Adding a function to your Graphcool service
 
-To add a function to your Graphcool project, you need to add it to the [project definition file](!alias-opheidaix3#project-definition) under the `functions` section and apply the changes using `graphcool deploy`.
+To add a function to your Graphcool service, you need to add it to the [service definition file](!alias-opheidaix3#service-definition) under the `functions` section and apply the changes using `graphcool deploy`.
 
 When being added, a function needs the following information:
 
@@ -40,18 +40,18 @@ The `handler` of a function can either refer to a _managed function_ or a _webho
 
 ### Managed functions
 
-With a managed function, you don't have to worry about explicit deployment of your function since it will get deployed along with your Graphcool project when you're running `graphcool deploy`.
+With a managed function, you don't have to worry about explicit deployment of your function since it will get deployed along with your Graphcool service when you're running `graphcool deploy`.
 
-The code for a managed function needs to be located in your project directory, typically in a folder called `code`.
+The source code for a managed function needs to be located in your service directory, typically in a folder called `src`.
 
-Here is an example of a managed function in the project configuration file:
+Here is an example of a managed function in the service configuration file:
 
 ```yaml 
 functions:
   hello:
     handler:
       code:
-        src: ./code/hello.js
+        src: ./src/hello.js
 ```
 
 For conciseness, you can also refer to the file as the value for `code` or directly for `handler`. The following two notations are equivalent to the previous one:
@@ -60,13 +60,13 @@ For conciseness, you can also refer to the file as the value for `code` or direc
 functions:
   hello:
     handler:
-      code: ./code/hello.js
+      code: ./src/hello.js
 ```
 
 ```yaml 
 functions:
   hello:
-    handler: ./code/hello.js
+    handler: ./src/hello.js
 ```
 
 

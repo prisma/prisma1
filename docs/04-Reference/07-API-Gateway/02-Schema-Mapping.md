@@ -13,14 +13,14 @@ Every Graphcool service comes with an auto-generated [CRUD API](!alias-abogasd0g
 Consider the following data model that's defined for a Graphcool service:
 
 ```graphql
-type User implements Node {
+type User @model {
   id: ID! @isUnique
   name: String!
   alias: String! @isUnique
   posts: [Post!]! @relation(name: "UserPosts")
 }
 
-type Post implements Node {
+type Post @model {
   id: ID! @isUnique
   title: String!
   author: User! @relation(name: "UserPosts")
@@ -55,4 +55,26 @@ type Mutation {
   addToUserPosts(postsPostId: ID!, authorUserId: ID!): AddToUserPostsPayload
 }
 ```
+
+Now assume you actually want to the expose the following operations in your service:
+
+```graphql
+type Query {
+  viewer: Viewer!
+}
+
+type Viewer {
+  me: User
+  topPosts(limit: Int): [Post!]!
+}
+```
+
+You can now use the utilities from `graphql-tools` to implement the mapping in 4 major steps:
+
+1. Create local version of the CRUD API using [`makeRemoteExecutableSchema`](http://dev.apollodata.com/tools/graphql-tools/remote-schemas.html#makeRemoteExecutableSchema).
+2. Define schema for the new API (the one exposed by the API gateway).
+3. Merge remote schema with new schema using [`mergeSchemas`](http://dev.apollodata.com/tools/graphql-tools/schema-stitching.html#mergeSchemas).
+4. Limit exposed operations from merged schemas (hiding all root fields except `viewer`) using [`transformSchema`](https://github.com/graphcool/graphql-transform-schema).
+
+Check the actual [example](../../../examples/gateway-custom-schema)) to learn how this works in practice.
 

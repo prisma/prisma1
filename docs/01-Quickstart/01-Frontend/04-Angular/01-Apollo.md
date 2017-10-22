@@ -1,29 +1,25 @@
 ---
-alias: nohcao8loo
-description: Get started in 5 min with iOS, GraphQL and Apollo Client by building a simple Instagram clone.
-github: https://github.com/graphcool-examples/ios-graphql/tree/master/quickstart-with-apollo
+alias: iesi5aujau
+description: Get started in 5 min with Angular, GraphQL and Apollo Client by building a simple Instagram clone.
+github: https://github.com/graphcool-examples/angular-graphql/tree/master/quickstart-with-apollo
 ---
 
-# iOS & Apollo Quickstart
+# Angular & Apollo Quickstart
 
-For this quickstart tutorial, we have prepared a [repository](https://github.com/graphcool-examples/ios-graphql/tree/master/quickstart-with-apollo) that contains the full Swift code for the Instagram clone. All you need to do is create the Graphcool service that will expose the GraphQL API and connect it with the iOS application. Let's get started! 
+For this quickstart tutorial, we have prepared a [repository](https://github.com/graphcool-examples/angular-graphql/tree/master/quickstart-with-apollo) that contains the full Angular code for the Instagram clone. All you need to do is create the Graphcool service that will expose the GraphQL API and connect it with the Angular application. Let's get started! 
 
 <Instruction>
 
-Clone the example repository that contains the iOS application:
+Clone the example repository that contains the Angular application:
 
 ```sh
-git clone https://github.com/graphcool-examples/ios-graphql.git
-cd ios-graphql/quickstart-with-apollo
+git clone https://github.com/graphcool-examples/angular-graphql.git
+cd angular-graphql/quickstart-with-apollo
 ```
 
 </Instruction>
 
-Feel free to get familiar with the code. The app contains the following [`view controllers`](https://github.com/graphcool-examples/ios-graphql/tree/master/quickstart-with-apollo/Instagram/Instagram):
-
-- `PostCell`: Renders a single post item
-- `PostTableViewController`: Renders a list of post items
-- `AddPostViewController`: Allows to create a new post item
+Feel free to take a look around the project and get familiar with the code.
 
 Graphcool services are managed with the [Graphcool CLI](!alias-zboghez5go). So before moving on, you first need to install it.
 
@@ -49,8 +45,6 @@ graphcool init server
 ```
 
 </Instruction>
-
-> **Note**: If you haven't authenticated with the Graphcool CLI before, this command is going to open up a browser window and ask you to login. Your authentication token will be stored in the global [`~/.graphcoolrc`](!alias-zoug8seen4).
 
 `graphcool init` creates the local service structure inside the specified `server` directory:
 
@@ -81,7 +75,7 @@ type Post {
   id: ID! @isUnique    # read-only (managed by Graphcool)
   createdAt: DateTime! # read-only (managed by Graphcool)
   updatedAt: DateTime! # read-only (managed by Graphcool)
-
+  
   description: String!
   imageUrl: String!
 }
@@ -103,6 +97,8 @@ graphcool deploy
 When prompted which cluster you want to deploy to, choose any of the **Backend-as-a-Service** options (`shared-eu-west-1`, `shared-ap-northeast-1` or `shared-us-west-2`).
 
 </Instruction>
+
+> **Note**: If you haven't authenticated with the Graphcool CLI before, this command is going to open up a browser window and ask you to login. Your authentication token will be stored in the global [`~/.graphcoolrc`]](!alias-zoug8seen4).
 
 You service is now deployed and available via the HTTP endpoints that were printed in the output of the command! The `Post` type is added to your data model and the corresponding CRUD operations are generated and exposed by the [GraphQL API](!alias-abogasd0go).
 
@@ -145,43 +141,28 @@ mutation {
 
 ![](https://imgur.com/w95UEi9.gif)
 
-The next step is to connect the iOS application with the GraphQL API from your Graphcool service.
+The next step is to connect the Angular application with the GraphQL API from your Graphcool service.
 
 <Instruction>
 
-Paste the HTTP endpoint for the `Simple API` that you saved after running `graphcool deploy` into `AppDelegate.swift` as the `uri` argument in the `createNetworkInterface` call:
+Paste the HTTP endpoint for the `Simple API` that you saved after running `graphcool deploy` into `./src/app/client.ts` as the `uri` argument in the `createNetworkInterface` call:
 
-```js(path="Instagram/AppDelegate.swift")
+```js(path="src/app/client.ts")
 // replace `__SIMPLE_API_ENDPOINT__` with the endpoint from the previous step
-let apollo = ApolloClient(url: URL(string: "__SIMPLE_API_ENDPOINT__")!)
+const networkInterface = createNetworkInterface({ uri: '__SIMPLE_API_ENDPOINT__' })
 ```
 
 </Instruction>
-
-To use the Apollo iOS Client, you need to install [`apollo-codegen`](https://github.com/apollographql/apollo-codegen), a command line tool that will generate Swift types from your GraphQL queries & mutations at build-time.
-
-<Instruction>
-
-Install `apollo-codegen` with the following command in your terminal:
-
-```sh
-npm install -g apollo-codegen
-```
-
-</Instruction>
-
-You can find more info the installation process in the [Apollo docs](http://dev.apollodata.com/ios/installation.html).
-
-
 
 That's it. The last thing to do is actually launching the application 🚀
 
 <Instruction>
 
-Install dependencies and run the app in Xcode:
+Install dependencies and run the app:
 
 ```sh(path="")
-carthage update
+yarn install
+yarn start # open http://localhost:3000 in your browser
 ```
 
 </Instruction>

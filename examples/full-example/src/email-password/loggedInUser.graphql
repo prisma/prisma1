@@ -1,8 +1,8 @@
 type LoggedInUserPayload {
-  # if `id` is `null`, it means there is not logged in user
-  id: ID
+  id: ID!
 }
 
 extend type Query {
-  loggedInUser: LoggedInUserPayload!
+  # return user data if request contains valid authentication token
+  loggedInUser: LoggedInUserPayload
 }

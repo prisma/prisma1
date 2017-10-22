@@ -1,0 +1,9 @@
+query isOwner($user_id: ID!, $userUser_id: ID!) {
+  SomeUserExists(filter: {
+    AND: [{
+      id: $user_id
+    }, {
+      id: $userUser_id
+    }]
+  })
+}

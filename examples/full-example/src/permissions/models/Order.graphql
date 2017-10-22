@@ -1,0 +1,18 @@
+query isOwner($user_id: ID!, $node_id: ID!) {
+  SomeUserExists(filter: {
+    id: $user_id
+    orders_some: {
+      id: $node_id
+    }
+  })
+}
+
+query isOwnerCreate($user_id: ID!, $input_userId: ID!) {
+  SomeUserExists(filter: {
+    AND: [{
+      id: $user_id
+    }, {
+      id: $input_userId
+    }]
+  })
+}

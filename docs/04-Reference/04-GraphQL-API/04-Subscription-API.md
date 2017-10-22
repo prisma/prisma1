@@ -55,13 +55,13 @@ You can [combine multiple subscription triggers](#combining-subscriptions) into 
 
 When using [Apollo Client](http://dev.apollodata.com/), you can use [`subscription-transport-ws`](https://github.com/apollographql/subscriptions-transport-ws) to combine it with a WebSocket client. [Here's an example](https://github.com/graphcool-examples/react-graphql/tree/master/subscriptions-with-apollo-instagram).
 
-You can also use the GraphQL [Playground](!alias-uh8shohxie#playground) or any WebSocket client as described below.
+You can also use the GraphQL [Playground](!alias-aiteerae6l#graphcool-playground) or any WebSocket client as described below.
 
 ### Playground
 
-A GraphQL [Playground](!alias-uh8shohxie#playground) can be used to explore and run GraphQL subscriptions.
+A GraphQL [Playground](https://github.com/graphcool/graphql-playground) can be used to explore and run GraphQL subscriptions.
 
-> Before diving into a specific implementation, **it's often better to get familiar with the available operations in the playground first**.
+> Before diving into a specific implementation, it's often better to get familiar with the available operations in the playground first.
 
 ### Plain WebSockets
 
@@ -69,14 +69,14 @@ A GraphQL [Playground](!alias-uh8shohxie#playground) can be used to explore and 
 
 Subscriptions are managed through WebSockets. First establish a WebSocket connection and specify the `graphql-subscriptions` protocol:
 
-```javascript
+```js
 let webSocket = new WebSocket('wss://subscriptions.graph.cool/v1/__PROJECT_ID__', 'graphql-subscriptions');
 ```
 #### Initiate handshake
 
 Next you need to initiate a handshake with the WebSocket server. You do this by listening to the `open` event and then sending a JSON message to the server with the `type` property set to `init`:
 
-```javascript
+```js
 webSocket.onopen = (event) => {
   const message = {
       type: 'init'
@@ -90,7 +90,7 @@ webSocket.onopen = (event) => {
 
 The server may respond with a variety of messages distinguished by their `type` property. You can react to each message as appropriate for your application:
 
-```javascript
+```js
 webSocket.onmessage = (event) => {
   const data = JSON.parse(event.data)
 
@@ -127,7 +127,7 @@ webSocket.onmessage = (event) => {
 
 To subscribe to data changes, send a message with the `type` property set to `subscription_start`:
 
-```javascript
+```js
 const message = {
   id: '1',
   type: 'subscription_start',
@@ -155,7 +155,7 @@ You should receive a message with `type` set to `subscription_success`. When dat
 
 To unsubscribe from data changes, send a message with the `type` property set to `subscription_end`:
 
-```javascript
+```js
 const message = {
   id: '1',
   type: 'subscription_end'
@@ -172,7 +172,7 @@ For every available [model type](!alias-eiroozae8u#model-types) mutation in your
 For example, if your schema contains a `Post` type:
 
 ```graphql
-type Post {
+type Post @model {
   id: ID! @isUnique
   title: String!
   description: String
@@ -491,7 +491,7 @@ Similarily to `updatedFields_contains`, more filter conditions exist:
 
 ## Relation subscriptions
 
-Currently, subscriptions for relation updates are only available with a workaround using [update subscriptions](!alias-ohmeta3pi4).
+Currently, subscriptions for relation updates are only available with a workaround using update subscriptions.
 
 ### Subscribing to relation changes
 

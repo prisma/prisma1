@@ -7,7 +7,7 @@ description: Functions along the request pipeline of a GraphQL mutation allow yo
 
 ## Overview
 
-Every request that's sent to your API goes through different stages. Graphcool allows to intercept the request and invoke serverless functions when it reaches one of the dedicated _hook points_. This allows to perform data transformation and validation operations on the request payload or synchronously call out to 3rd-party APIs.
+Graphcool allows to intercept the requests that are sent to your [GraphQL API](!alias-abogasd0go) and invoke functions when it reaches one of the dedicated _hook points_. This allows to perform data transformation and validation operations on the request payload or synchronously call out to 3rd-party APIs.
 
 Graphcool offers two of these hook points:
 
@@ -16,16 +16,15 @@ Graphcool offers two of these hook points:
 
 Functions invoked through these hooks are executed _synchronously_. 
 
-<InfoBox type=warning>
+<InfoBox type=info>
 
 Notice that for [nested mutations](!alias-ol0yuoz6go#nested-mutations), the `operationBefore` and `operationAfter` hooks are invoked for each _individual_ write operation. If you're creating a `User` and a new `Post` in the same (nested) mutation, this means `operationBefore` and `operationAfter` are each invoked twice. 
 
 </InfoBox>
 
+## Adding a Hook function to a service
 
-## Adding a Hook function to the project
-
-When you want to create a hook function in your Graphcool project, you need to add it to the project configuration file under the `functions` section. 
+When you want to create a hook function in your Graphcool service, you need to add it to the service configuration file under the `functions` section. 
 
 ### Example
 
@@ -51,7 +50,7 @@ functions:
 
 ### Properties
 
-Each function that's specified in the project configuration file needs to have the `type` and `handler` properties.
+Each function that's specified in the service definition file needs to have the `type` and `handler` properties.
 
 For hook functions, you additionally need to specify the concrete `operation` which consists of a model type and the specific database write (create, update or delete), e.g. `User.create` or `Post.delete`.
 
@@ -78,7 +77,6 @@ type UpdateUserInput {
 
 ## Current limitations
 
-* Callbacks need to be converted to Promises. [Here's a guide](https://egghead.io/lessons/javascript-convert-a-callback-to-a-promise).
 * Input arguments for nested mutations are *read-only* at the moment. Changes to these are ignored. This applies to all hook points.
 
 
@@ -89,7 +87,7 @@ type UpdateUserInput {
 The request is not modified at all.
 
 ```js
-module.exports = function (event) {
+export default event => {
   console.log(`event: ${event}`)
 
   return {data: event.data}
@@ -101,7 +99,7 @@ module.exports = function (event) {
 Some of the input arguments are used to compute a different input argument.
 
 ```js
-module.exports = function (event) {
+export default event => {
   console.log('Compute area')
   event.data.area = event.data.width * event.data.length
 
@@ -114,7 +112,7 @@ module.exports = function (event) {
 Reject further processing of the incoming GraphQL mutation by [throwing an error](!alias-geihakoh4e).
 
 ```js
-module.exports = function (event) {
+export default event => {
   if (event.data.length < 0 || event.data.width < 0) {
     return {
       error: 'Length and width must be greater than 0!'

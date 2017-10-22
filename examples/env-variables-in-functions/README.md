@@ -117,7 +117,7 @@ hello:
 
 Notice that inside the function definition of `hello` in `graphcool.yml`, there's the `hello.handler.code.environment` property that let's you specify environment variables which can be accessed by your functions at runtime.
 
-In this case, we're setting the value `Alice` for the environment variable `NAME` which is accessed by [`hello.js`](./src/hello.js#L3).
+In this case, we're setting the value `Alice` for the environment variable `NAME` which is accessed by [`hello.js`](./src/hello.js#L4).
 
 
 
