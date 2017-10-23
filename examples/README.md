@@ -7,6 +7,7 @@ Collection of Graphcool example projects 💡
 * [env-variables-in-functions](env-variables-in-functions): Function accessing environment variables
 * [full-example](full-example): Full example (webshop) demoing most available features
 * [gateway-custom-schema](gateway-custom-schema): Define a custom schema using an API gateway
+* [graphcool-lib](graphcool-lib): Use `graphcool-lib` in functions to send queries and mutations to your service
 * [permissions](permissions): Configure permission rules
 * [rest-wrapper](rest-wrapper): Extend GraphQL API by wrapping existing REST endpoint
 * [subscriptions](subscriptions): Use subscription functions to react to asynchronous events

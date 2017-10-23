@@ -1,15 +1,16 @@
-import validator from 'validator'
 import { fromEvent } from 'graphcool-lib'
+
+const MAX_POSTS = 3
 
 export default async event => {
 
   const graphcool = fromEvent(event)
   const api = graphcool.api('simple/v1')
 
-  const { id } = event.data.createUser
+  const { authorId } = event.data
 
   const query = `
-    query ($authorId: String!){
+    query ($authorId: ID!){
       _allPostsMeta(filter: {
         author: {
           id: $authorId
@@ -20,12 +21,13 @@ export default async event => {
     }
   `
 
-  const variables = { authorId: id }
+  const variables = { authorId }
   const queryResponse = await api.request(query, variables)
+  console.log(`Query response: ${JSON.stringify(queryResponse)}`)
 
-  if (queryResponse.data._allPostsMeta.count > 100) {
+  if (queryResponse._allPostsMeta.count > MAX_POSTS) {
     return {
-      error: 'You can at most have 100 posts'
+      error: `You can at most have ${MAX_POSTS} posts`
     }
   }
 

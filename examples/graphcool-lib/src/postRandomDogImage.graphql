@@ -3,5 +3,5 @@ type RandomDogImagePayload {
 }
 
 extend type Mutation {
-  postRandomDogImage(authorId: String!): RandomDogImagePayload!
+  postRandomDogImage(authorId: String!): RandomDogImagePayload
 }

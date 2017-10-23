@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "My Graphcool Service",
   "dependencies": {
+    "apollo-link": "^0.8.0",
     "graphcool-lib": "^0.1.3",
     "isomorphic-fetch": "^2.2.1"
   }

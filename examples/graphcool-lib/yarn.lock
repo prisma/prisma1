@@ -15,9 +15,20 @@ apollo-link-http@^0.7.0:
     apollo-fetch "^0.6.0"
     graphql "^0.11.0"
 
+apollo-link@^0.8.0:
+  version "0.8.0"
+  resolved "https://registry.yarnpkg.com/apollo-link/-/apollo-link-0.8.0.tgz#efce6b35ae9ea5f6966a87054ba4893a5b6d960a"
+  dependencies:
+    apollo-utilities "^0.2.0-beta.0"
+    zen-observable "^0.6.0"
+
 apollo-utilities@^0.1.1-0:
   version "0.1.1-1"
   resolved "https://registry.yarnpkg.com/apollo-utilities/-/apollo-utilities-0.1.1-1.tgz#a637c2a5b49e06f20dd9adf7c55ec1ff69a97592"
+
+apollo-utilities@^0.2.0-beta.0:
+  version "0.2.0-rc.2"
+  resolved "https://registry.yarnpkg.com/apollo-utilities/-/apollo-utilities-0.2.0-rc.2.tgz#aff2d0c5b88084e08cf9de6e78ca715126ec4f07"
 
 cross-fetch@0.0.8:
   version "0.0.8"
@@ -110,3 +121,7 @@ uuid@^3.1.0:
 whatwg-fetch@2.0.3, whatwg-fetch@>=0.10.0:
   version "2.0.3"
   resolved "https://registry.yarnpkg.com/whatwg-fetch/-/whatwg-fetch-2.0.3.tgz#9c84ec2dcf68187ff00bc64e1274b442176e1c84"
+
+zen-observable@^0.6.0:
+  version "0.6.0"
+  resolved "https://registry.yarnpkg.com/zen-observable/-/zen-observable-0.6.0.tgz#8a6157ed15348d185d948cfc4a59d90a2c0f70ee"
