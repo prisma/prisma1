@@ -168,8 +168,8 @@ export class ProjectDefinitionClass {
     const functionsWithRequire = functions.reduce((acc, fn) => {
       const src = typeof fn.fn.handler.code === 'string' ? fn.fn.handler.code : fn.fn.handler.code!.src
       const file = fs.readFileSync(src, 'utf-8')
-      const requireRegex = /(?:(?:var|const)\s*(.*?)\s*=\s*)?require\(['"]([^'"]+)['"](?:, ['"]([^'"]+)['"])?\);?/
-      const importRegex = /\bimport\s+(?:.+\s+from\s+)?[\'"]([^"\']+)["\']/
+      const requireRegex = /(?:(?:var|const)\s*([\s\S]*?)\s*=\s*)?require\(['"]([^'"]+)['"](?:, ['"]([^'"]+)['"])?\);?/
+      const importRegex = /\bimport\s+(?:[\s\S]+\s+from\s+)?[\'"]([^"\']+)["\']/
       const statements = file.split('\n').reduce((racc, line, index) => {
         const requireMatch = requireRegex.exec(line)
         const importMatch = importRegex.exec(line)
