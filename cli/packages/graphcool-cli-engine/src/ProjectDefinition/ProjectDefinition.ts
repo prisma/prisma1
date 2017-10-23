@@ -176,12 +176,14 @@ export class ProjectDefinitionClass {
         if (requireMatch || importMatch) {
           const srcPath = requireMatch ? requireMatch[1] : importMatch![1]
 
-          if (!builtinModules.includes(srcPath) && !srcPath.startsWith('./')) {
-            const result = {
-              line, index: index + 1, srcPath,
-            }
+          if (srcPath) {
+            if (!builtinModules.includes(srcPath) && !srcPath.startsWith('./')) {
+              const result = {
+                line, index: index + 1, srcPath,
+              }
 
-            return racc.concat(result)
+              return racc.concat(result)
+            }
           }
         }
 
