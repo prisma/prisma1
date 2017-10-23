@@ -79,8 +79,6 @@ You can open a Playground with the following command:
 graphcool playground
 ```
 
-When prompted which cluster you'd like to deploy, chose any of `Backend-as-a-Service`-options (`shared-eu-west-1`, `shared-ap-northeast-1` or `shared-us-west-2`) rather than `local`. 
-
 Inside the Playground, you can send queries for all the resolver functions that are defined inside [`graphcool.yml`](./graphcool.yml):
 
 - `allBreeds`
