@@ -13,8 +13,8 @@ Try out the read-only [demo](https://graphqlbin.com/BrkcP).
 ### 1. Download the example
 
 ```sh
-curl https://codeload.github.com/graphcool/graphcool/tar.gz/master | tar -xz --strip=2 graphcool-master/examples/gateway-custom-schema
-cd gateway-custom-schema
+curl https://codeload.github.com/graphcool/graphcool/tar.gz/master | tar -xz --strip=2 graphcool-master/examples/typescript-gateway-custom-schema
+cd typescript-gateway-custom-schema
 ```
 
 ### 2. Install the Graphcool CLI

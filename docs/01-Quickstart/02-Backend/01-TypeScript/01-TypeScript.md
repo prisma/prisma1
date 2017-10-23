@@ -8,7 +8,7 @@ github: https://github.com/graphcool-examples/react-graphql/tree/master/quicksta
 
 In this quickstart tutorial, you will learn how to build a GraphQL backend and deploy it locally with [Docker](https://docker.com/). The goal is to deploy a new Graphcool service that exposes a CRUD API for a simple data model. You will also add an API gateway that customizes the exposed operations using schema [stitching](https://dev.apollodata.com/tools/graphql-tools/schema-stitching.html) and [transformation](https://github.com/graphcool/graphql-transform-schema). Let's get started!
 
-> The code for this project can be found on [GitHub](https://github.com/graphcool/graphcool/tree/master/examples/gateway-custom-schema). 
+> The code for this project can be found on [GitHub](https://github.com/graphcool/graphcool/tree/master/examples/typescript-gateway-custom-schema). 
 
 
 <Instruction>
@@ -16,8 +16,8 @@ In this quickstart tutorial, you will learn how to build a GraphQL backend and d
 Clone the example repository that contains the server code:
 
 ```sh
-curl https://codeload.github.com/graphcool/graphcool/tar.gz/master | tar -xz --strip=2 graphcool-master/examples/gateway-custom-schema
-cd gateway-custom-schema
+curl https://codeload.github.com/graphcool/graphcool/tar.gz/master | tar -xz --strip=2 graphcool-master/examples/typescript-gateway-custom-schema
+cd typescript-gateway-custom-schema
 ```
 
 </Instruction>
@@ -163,7 +163,7 @@ mutation {
 
 </Instruction>
 
-> **Note**: It is important the `alias` of the User is set to `john`. Otherwise the API gateway won't return any data since the `alias` in this example is [hardcoded](https://github.com/graphcool/graphcool/blob/master/examples/gateway-custom-schema/gateway/index.ts#L43).
+> **Note**: It is important the `alias` of the User is set to `john`. Otherwise the API gateway won't return any data since the `alias` in this example is [hardcoded](https://github.com/graphcool/graphcool/blob/master/examples/typescript-gateway-custom-schema/gateway/index.ts#L43).
 
 The next step is to setup and start the [API gateway](!alias-ucoohic9zu). In this example, the API gateway creates a custom schema on top of the CRUD API of the Graphcool service. 
 
@@ -182,7 +182,7 @@ type Viewer {
 
 When requests are sent to the API gateway, it will simply forward them to the underlying CRUD API where they will be resolved.
 
-The `run` function in [`index.ts`](https://github.com/graphcool/graphcool/blob/master/examples/gateway-custom-schema/gateway/index.ts) performs four major steps in order to map CRUD API to the new schema:
+The `run` function in [`index.ts`](https://github.com/graphcool/graphcool/blob/master/examples/typescript-gateway-custom-schema/gateway/index.ts) performs four major steps in order to map CRUD API to the new schema:
 
 1. Create local version of the CRUD API using [`makeRemoteExecutableSchema`](http://dev.apollodata.com/tools/graphql-tools/remote-schemas.html#makeRemoteExecutableSchema). [See the code](./gateway/index.ts#L13).
 2. Define schema for the new API (the one exposed by the API gateway). [See the code](./gateway/index.ts#L21).
@@ -190,7 +190,7 @@ The `run` function in [`index.ts`](https://github.com/graphcool/graphcool/blob/m
 4. Limit exposed operations from merged schemas (hiding all root fields except `viewer`) using [`transformSchema`](https://github.com/graphcool/graphql-transform-schema). [See the code](./gateway/index.ts#L56).
 
 
-To get the API gateway up and running the first thing you need to do is connect it with the CRUD API. You can do this by pasting the endpoint of the CRUD API into [`index.ts`](https://github.com/graphcool/graphcool/blob/master/examples/gateway-custom-schema/gateway/index.ts).
+To get the API gateway up and running the first thing you need to do is connect it with the CRUD API. You can do this by pasting the endpoint of the CRUD API into [`index.ts`](https://github.com/graphcool/graphcool/blob/master/examples/typescript-gateway-custom-schema/gateway/index.ts).
 
 <Instruction>
 

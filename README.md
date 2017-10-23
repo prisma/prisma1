@@ -152,7 +152,7 @@ The framework provides powerful abstractions and building blocks to develop flex
 * [crud-api](examples/crud-api): Simple CRUD-style GraphQL API
 * [env-variables-in-functions](examples/env-variables-in-functions): Function accessing environment variables
 * [full-example](examples/full-example): Full example (webshop) demoing most available features
-* [gateway-custom-schema](examples/gateway-custom-schema): Define a custom schema using an API gateway
+* [typescript-gateway-custom-schema](examples/typescript-gateway-custom-schema): Define a custom schema using an API gateway
 * [permissions](examples/permissions): Configure permission rules
 * [rest-wrapper](examples/rest-wrapper): Extend GraphQL API by wrapping existing REST endpoint
 * [yaml-variables](examples/yaml-variables): Use variables in your `graphcool.yml`
