@@ -38,14 +38,16 @@ The use case of sending a validating and transforming an email address is best i
 A hook function consists of three elements that are specified in the `graphcool.yml` file:
 
 1. The _operation_ the hook should be called for
-2. Select a _step_ in the request pipeline
-3. Write the actual _function_ that will be executed
+2. Whether the hook should be called _before_ or _after_ the operation
+3. The actual _function handler_ that will be executed
 
-In the following, we'll walk through each step in detail with the goal of using the request pipeline to validate and transform the email address of a new user.
+In the following, we'll walk through each step in detail with the goal of using a hook to validate and transform the email address of a new user.
 
 ### 0. Preparation
 
-We're going to use the [Graphcool CLI](https://www.npmjs.com/package/graphcool) to initialize our project:
+<Instruction>
+
+We're going to use the [Graphcool CLI](https://www.npmjs.com/package/graphcool) to initialize our project.
 
 ```sh
 # Install the Graphcool CLI
@@ -55,7 +57,12 @@ npm install -g graphcool@next
 graphcool init
 ```
 
-Add a new `Customer` by modifying the generated file `types.graphql` like so:
+</Instruction>
+
+Next, we'll add a new `Customer` model type to our service definition.
+
+<Instruction>
+Update the `types.graphql` file like so:
 
 ```graphql
 type Customer @model {
@@ -64,10 +71,14 @@ type Customer @model {
   email: String!
 }
 ```
+</Instruction>
 
 ### 1. Setup the Hook Function
 
-To create a new hook function for the service, we'll add a new entry to the `functions` list in `graphcool.yml`:
+Now we're adding the hook function to the service definition.
+
+<Instruction>
+Add a new entry to the `functions` list in `graphcool.yml` like so:
 
 ```yaml
 functions:
@@ -75,8 +86,10 @@ functions:
     type: operationBefore
     operation: Customer.create
     handler:
-      code: src/validateEmail.js
+      code: src/validateEmail.ts
 ```
+</Instruction>
+
 
 As mentioned above, this new hook function `validateEmail` consists of three parts:
 
@@ -84,7 +97,7 @@ As mentioned above, this new hook function `validateEmail` consists of three par
 * the `Customer.create` operation signifies that this hook will be called when a customer is about to be created
 * the `code` handler is used for managed Graphcool functions in contrast to `webhook` handlers
 
-### 2. Write the Function
+### 2. Write the Code
 
 For hooks, it's important to note that we have an _input_ and an _output_. The _input_ is determined by the _operation_ that we chose, so in our case it's a JSON object that follows the structure of the `Customer`:
 
@@ -101,7 +114,10 @@ The _output_ has to be another JSON object and has either one of two fields:
 - `data`: When returning the `data` field we're communicating that the validation and transformation were successful and the data can "proceed".
 - `error`: If the validation fails, we can return an `error` in the JSON object along with a string that represents the error message.
 
-With that knowledge, let's go and implement our function:
+With that knowledge, let's go and implement our function.
+
+<Instruction>
+Create a new file `src/validateEmail.ts` like so:
 
 ```js
 // 1. Import npm modules
@@ -129,6 +145,8 @@ export default async (event: FunctionEvent<EventData>) => {
 }
 ```
 
+</Instruction>
+
 Let's try to understand the different parts of that function:
 
 1. We're importing a Javascript module that we'll use to validate the email address. Additionally, we're importing `FunctionEvent` from `graphcool-lib` for its type information.
@@ -137,15 +155,28 @@ Let's try to understand the different parts of that function:
 3. Next we validate the email address and return a custom `error` if the validation fails.
 5. If we got to this point, we simply return the `data` that now contains the lowercase email address.
 
+Next, we'll make sure the required modules are installed.
+
+
+<Instruction>
+We need to install `validator` and `graphcool-lib`:
+
+```sh
+npm install --save validator graphcool-lib
+```
+
+This adds the dependencies to the `package.json` file.
+</Instruction>
+
+### 3. Deployment & Testing
+
 Once you're done writing the function, you can deploy the changes to a new service:
 
 ```sh
 graphcool deploy # select any shared-cluster
 ```
 
-## Testing
-
-First, let's open the GraphQL Playground:
+Afterwards, let's open the GraphQL Playground:
 
 ```sh
 graphcool playground
