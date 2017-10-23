@@ -109,7 +109,7 @@ The framework provides powerful abstractions and building blocks to develop flex
 5. **Implement API Gateway layer (optional):**
 -->
 
-6. **Deploy your service:**
+5. **Deploy your service:**
 
   To deploy your service simply run the following command and select either a hosted BaaS [cluster](https://docs-next.graph.cool/reference/graphcool-cli/.graphcoolrc-zoug8seen4) or automatically setup a local Docker-based development environment:
 
@@ -117,7 +117,7 @@ The framework provides powerful abstractions and building blocks to develop flex
   graphcool deploy
   ```
 
-7. **Connect to your GraphQL endpoint:**
+6. **Connect to your GraphQL endpoint:**
 
   Use the endpoint from the previous step in your frontend (or backend) applications to connect to your GraphQL API.
 
