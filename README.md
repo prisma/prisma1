@@ -210,7 +210,7 @@ The Graphcool Cloud currently supports three [regions](https://blog.graph.cool/n
 
 > The Graphcool Framework is heavily inspired by the [12-Factor App](https://12factor.net/) manifesto for modern application development.
 
-**Declarative programming** allows for highly expressive and concise code by _describing_ the functionality of a program in dedicated terms (rather than providing step-by-step instructions for the machine to execute). Graphcool provides you with powerful, declarative building blocks while giving you the flexibility to deal with custom application requirements.
+**Declarative programming** allows for highly expressive and concise code by _describing_ the functionality of an application in dedicated terms. Graphcool provides you with powerful, declarative building blocks while giving you the flexibility to deal with custom application requirements.
 
 A key principle from the above mentioned [12-Factor App](https://12factor.net/) manifesto is a **clear separation between _configuration_ and actual _code_**. The Graphcool Framework is strongly based on this idea:
 
