@@ -10,7 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "bcryptjs": "^2.4.3",
-    "graphcool-lib": "^0.0.3",
+    "graphcool-lib": "^0.1.4",
     "validator": "^9.0.0"
   }
 }
