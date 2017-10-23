@@ -23,9 +23,8 @@ export default async event => {
 
   const variables = { authorId }
   const queryResponse = await api.request(query, variables)
-  console.log(`Query response: ${JSON.stringify(queryResponse)}`)
 
-  if (queryResponse._allPostsMeta.count > MAX_POSTS) {
+  if (queryResponse._allPostsMeta.count >= MAX_POSTS) {
     return {
       error: `You can at most have ${MAX_POSTS} posts`
     }
