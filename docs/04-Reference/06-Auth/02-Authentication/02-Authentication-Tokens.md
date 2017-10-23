@@ -5,6 +5,8 @@ description: GraphQL requests are authenticated using an authentication token. F
 
 # Authentication Tokens
 
+## Overview
+
 Requests to your [CRUD API](!alias-abogasd0go) (or the System API) are authenticated using **authentication tokens** that are attached to the `Authorization` header of the request. Graphcool uses [JWT](https://jwt.io/) (JSON Web Tokens) as a token format.
 
 Grpahcool offers several types of authentication tokens:
