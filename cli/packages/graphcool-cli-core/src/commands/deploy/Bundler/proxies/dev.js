@@ -48,7 +48,7 @@ input.on('data', function(line){
 
 function cb(error, value) {
   const result = {
-    error: error,
+    error: JSON.stringify(error),
     value: value,
     stdout: stdout,
     stderr: stderr
