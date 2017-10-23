@@ -48,10 +48,12 @@ input.on('data', function(line){
 
 function cb(error, value) {
   const result = {
-    error: JSON.stringify(error),
     value: value,
     stdout: stdout,
     stderr: stderr
+  }
+  if (error) {
+    result.error = JSON.stringify(error)
   }
   old_stdout_write.call(process.stdout, JSON.stringify(result) + '\n')
   stdout = ''
