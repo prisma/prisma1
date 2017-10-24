@@ -1,6 +1,6 @@
 ---
 alias: aemieb1aev
-description: Graphcool is currently transitioning from a pure Backend as a Service to a general Application Development Framework. If you are an existing Graphcool customer this document explains everything you need to know about the transition. If you are new to Graphcool or about to craete a new application, you should use the new CLI as described in the [readme](https://github.com/graphcool/graphcool).
+description: Graphcool is currently transitioning from a pure Backend as a Service to a general Application Development Framework. If you are an existing Graphcool customer this document explains everything you need to know about the transition. If you are new to Graphcool or about to create a new application, you should use the new CLI as described in the [readme](https://github.com/graphcool/graphcool).
 ---
 
 # Legacy Console Projects
@@ -40,13 +40,13 @@ To upgrade a _legacy Console project_ to a _Graphcool service_, you need to navi
 
 <InfoBox type=warning>
 
-Upgrading a project is a one-way migration. If you have any concerns about the process, please ask a question in the fForum](https://www.graph.cool/forum/).
+Upgrading a project is a one-way migration. If you have any concerns about the process, please ask a question in the Forum](https://www.graph.cool/forum/).
 
 </InfoBox>
 
 ## Deprecated features
 
-A few features are being deprecated as part of the Framework release. If your cegacy Console roject is currently using any of these featuers you will have to replace the functionality before you can upgrade. The following features have been deprecated:
+A few features are being deprecated as part of the Framework release. If your legacy Console project is currently using any of these features you will have to replace the functionality before you can upgrade. The following features have been deprecated:
 
 - **Integrations**: If you are currently using the Algolia integration or any of the Auth Providers that can be configured in the console, you should transition to one of the many [templates](!alias-zeiv8phail) available on [Github](https://github.com/graphcool/templates). 
 - **Request Pipeline functions with a `PRE_WRITE` step**: Depending on your use case, you can either move the code to `TRANSFORM_ARGUMENT` or to a `Server-side Subscription`.
