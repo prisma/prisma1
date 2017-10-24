@@ -65,7 +65,7 @@ permissions:
 
 type User @model {
   id: ID! @isUnique
-  name: String!
+  name: String
   dateOfBirth: DateTime
 
   # Uncomment below - you can declare relations between models like this
