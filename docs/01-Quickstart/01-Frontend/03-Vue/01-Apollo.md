@@ -24,7 +24,7 @@ Feel free to get familiar with the code. The app contains the following Vue [`co
 
 - `Post`: Renders a single post item
 - `ListPage`: Renders a list of post items
-- `CreatePage`: Allows to create a new post item
+- `CreatePost`: Allows to create a new post item
 
 Graphcool services are managed with the [Graphcool CLI](!alias-zboghez5go). So before moving on, you first need to install it.
 
