@@ -1,8 +1,30 @@
-# 0.8 (2017-10-20)
-
 You can download the CLI for the latest Framework version by running `npm install -g graphcool@next`.
 
 See the Forum for more information on the [Framework Preview](https://www.graph.cool/forum/t/feedback-new-cli-beta/949/1?u=nilan).
+
+# 0.8.1 (2017-10-22)
+
+## CLI
+
+* Improved importing npm modules:
+  * https://github.com/graphcool/graphcool/issues/962
+  * https://github.com/graphcool/graphcool/issues/997
+* Improved error message and cosmetics:
+  * https://github.com/graphcool/graphcool/issues/931
+  * https://github.com/graphcool/graphcool/issues/921
+  * https://github.com/graphcool/graphcool/issues/941
+  * https://github.com/graphcool/graphcool/issues/917
+  * https://github.com/graphcool/graphcool/issues/980
+* The service definition for upgraded projects has been improved: https://github.com/graphcool/graphcool/issues/873
+
+* `graphcool init`
+  * Temporarily removed `--template` parameter https://github.com/graphcool/graphcool/issues/950
+
+## Lib
+
+* Version 0.1.4 of `graphcool-lib` has been released. Read the release notes [here](https://github.com/graphcool/graphcool-lib/releases).
+
+# 0.8 (2017-10-20)
 
 ## Core
 
@@ -21,8 +43,6 @@ See the Forum for more information on the [Framework Preview](https://www.graph.
   * https://github.com/graphcool/graphcool/issues/592
 
 ## CLI
-
-Version 0.8.0 of `graphcool` has been released.
 
 * [The CLI exists with code 1 on failure](https://github.com/graphcool/graphcool/issues/662) and [0 otherwise](https://github.com/graphcool/graphcool/issues/663).
 * [You can now refer to single GraphQL operations in .graphql files](https://github.com/graphcool/graphcool/issues/669).
@@ -80,10 +100,6 @@ Version 0.8.0 of `graphcool` has been released.
 
 # 0.7 (2017-10-13)
 
-You can download the latest Framework version by running `npm install -g graphcool@next`.
-
-See the Forum for more information on the [Framework Preview](https://www.graph.cool/forum/t/feedback-new-cli-beta/949/1?u=nilan).
-
 ## Features 🎉
 
 * [A new local development workflow for functions is available](https://github.com/graphcool/graphcool/issues/714). Additionally, there is a new & improved function runtime [when deploying a service to a remote cluster](https://github.com/graphcool/graphcool/issues/800), as well as in [the local `graphcool-dev` environment](https://github.com/graphcool/graphcool/issues/797).
@@ -114,10 +130,6 @@ See the Forum for more information on the [Framework Preview](https://www.graph.
 * [Fixed a bug that prevented relation queries for specific schemas](https://github.com/graphcool/graphcool/issues/718).
 
 ## Framework Preview
-
-See the Forum for more information on the [Framework Preview](https://www.graph.cool/forum/t/feedback-new-cli-beta/949/1?u=nilan).
-
-> **Note:** You can get the latest Framework version by running `npm install -g graphcool@next`.
 
 * [graphcool init does not deploy the service anymore](https://github.com/graphcool/graphcool/issues/706).
 * Improved usage texts [in general](https://github.com/graphcool/graphcool/issues/639) and [for delete](https://github.com/graphcool/graphcool/issues/697).

@@ -29,16 +29,26 @@ export default class AddTemplate extends Command {
       
   ${chalk.bold('Github Authentication')}
   $ ${chalk.cyan(
-    'graphcool add-template github-auth',
+    'graphcool add-template auth/github',
   )}
 
   ${chalk.bold('Facebook Authentication')}
   $ ${chalk.cyan(
-    'graphcool add-template facebook-auth',
+    'graphcool add-template auth/facebook',
+  )}
+
+  ${chalk.bold('Send mails with Mailgun')}
+  $ ${chalk.cyan(
+    'graphcool add-template messaging/mailgun',
+  )}
+
+  ${chalk.bold('Send SMS with Twilio')}
+  $ ${chalk.cyan(
+    'graphcool add-template messaging/twilio',
   )}
   
-  ${chalk.bold('Algolia Syncing')}
-  $ ${chalk.cyan('graphcool add-template algolia')}
+  All templates:
+  https://github.com/graphcool/templates
   `
   async run() {
     await this.definition.load(this.flags)
@@ -149,7 +159,9 @@ export default class AddTemplate extends Command {
   async extractInfo(moduleUrl: string): Promise<{repoName: string, subPath: string, moduleDirName: string}> {
     let splittedModule = moduleUrl.split('/')
 
-    if (splittedModule.length === 1) {
+    const whiteList = ['auth', 'misc', 'messaging']
+
+    if (splittedModule.length === 1 || whiteList.includes(splittedModule[0])) {
       const res = await fetch('https://raw.githubusercontent.com/graphcool/templates/master/templates.json')
       const templates = await res.json()
       if (!templates[moduleUrl]) {

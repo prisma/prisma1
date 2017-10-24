@@ -76,5 +76,5 @@ You can now use the utilities from `graphql-tools` to implement the mapping in 4
 3. Merge remote schema with new schema using [`mergeSchemas`](http://dev.apollodata.com/tools/graphql-tools/schema-stitching.html#mergeSchemas).
 4. Limit exposed operations from merged schemas (hiding all root fields except `viewer`) using [`transformSchema`](https://github.com/graphcool/graphql-transform-schema).
 
-Check the actual [example](../../../examples/gateway-custom-schema)) to learn how this works in practice.
+Check the actual [example](../../../examples/typescript-gateway-custom-schema)) to learn how this works in practice.
 

@@ -12,16 +12,15 @@ export default async event => {
     .then(response => response.json())
     .then(responseData => {
       const randomDogImageData = responseData.message
-      const saveRandomDogImage = { url: randomDogImageData }
-      return { data: saveRandomDogImage }
+      const postRandomDogImage = { url: randomDogImageData }
+      return { data: postRandomDogImage }
     })
-  console.log(`Result: ${JSON.stringify(result)}`)
 
   const mutation = `
-    mutation ($imageUrl: String!, $authorId: String!) {
+    mutation ($imageURL: String!, $authorId: ID!) {
       createPost(
         authorId: $authorId 
-        imageUrl: $imageUrl
+        imageURL: $imageURL
       ) {
         id
       }
@@ -29,11 +28,18 @@ export default async event => {
   `
 
   const variables = { 
-    imageUrl: result.data.url,
+    imageURL: result.data.url,
     authorId: event.data.authorId
   } 
-  const mutationResponse = await api.request(mutation, variables)
-  console.log(`Mutation response: ${JSON.stringify(mutationResponse)}`)
+
+  try {
+    await api.request(mutation, variables)  
+  } catch (error) {
+    console.log(`Mutation failed: ${JSON.stringify(error)}`)
+    return {
+      error: error.response.errors[0].functionError
+    }
+  }
 
   return result
 }
