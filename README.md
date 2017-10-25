@@ -174,6 +174,8 @@ The framework provides powerful abstractions and building blocks to develop flex
 
 ## Architecture
 
+Graphcool is a new kind of framework that introduces clear boundaries between your business logic and stateful components. This separation allows the framework to take advantage of modern cloud infrastructure to scale the stateful components without restricting your choice of programming language and development workflow.
+
 ![](https://imgur.com/zkN1wWT.png)
 
 ## Deployment
