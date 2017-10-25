@@ -1,0 +1,1 @@
+name := "backend-api-subscriptions-websocket"
