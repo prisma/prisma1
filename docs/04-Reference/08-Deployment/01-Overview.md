@@ -113,7 +113,7 @@ Subscriptions API: ws://localhost:60001/subscriptions/v1/__SERVICE_ID__
 
 With `docker ps` and `docker images` it is possible for you to inspect Graphcool's Docker setup.
 
-You will see three images in your local docker image repository, where `VERSION` will be something like `0.8.1`: 
+You will see four images in your local docker image repository, where `VERSION` will be something like `0.8.1`: 
 
 - `graphcool/graphcool-dev:<VERSION>`: The core apis.
 - `graphcool/localfaas:<VERSION>`: The local funtion runtime.
