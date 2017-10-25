@@ -19,7 +19,7 @@ Services can be deployed to _shared_ clusters in the Graphcool Cloud. When deplo
 The Graphcool Cloud currently supports three [regions](https://blog.graph.cool/new-regions-and-improved-performance-7bbc0a35c880):
 
 - `eu-west-1` (EU, Ireland)
-- `asia-northeast-1` (Asia Pacific, Tokyo)
+- `ap-northeast-1` (Asia Pacific, Tokyo)
 - `us-west-1` (US, Oregon)
 
 ### Private Clusters (coming soon)
