@@ -32,7 +32,7 @@ With Graphcool, different authentication mechanisms can be implemented using res
 Consider the following model type:
 
 ```graphql
-type Person {
+type PersonQueryPayload {
   name: String!
   age: Int!
 }
@@ -54,12 +54,13 @@ This is just a simple example and already rather verbose. With a resolver, you c
 
 ```graphql
 extend type Query {
-  allPersonsUnder18: [Person!]!
+  allPersonsUnder18: [PersonQueryPayload!]!
 }
 ```
 
 Notice that inside your serverless function, you can use the [`graphcool-lib`](https://github.com/graphcool/graphcool-lib) which provides you with a lot of convenience when accessing the GraphQL Engine.  
 
+> **Note**: It's currently not possible to return `@model` types from resolver functions. See [this](https://github.com/graphcool/framework/issues/743) GitHub issue for more info.
 
 ## Integrating external systems
 
