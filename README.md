@@ -1,6 +1,6 @@
 <p align="center"><a href="https://www.graph.cool"><img src="https://imgur.com/he8RLRs.png"></a></p>
 
-[Website](https://www.graph.cool/) • [Docs](https://docs-next.graph.cool/) • [Blog](https://blogs.graph.cool/) • [Forum](https://www.graph.cool/forum) • [Slack](https://slack.graph.cool/) • [Twitter](https://twitter.com/graphcool)
+[Website](https://www.graph.cool/) • [Docs](https://graph.cool/docs/) • [Blog](https://blogs.graph.cool/) • [Forum](https://www.graph.cool/forum) • [Slack](https://slack.graph.cool/) • [Twitter](https://twitter.com/graphcool)
 
 [![CircleCI](https://circleci.com/gh/graphcool/graphcool.svg?style=shield)](https://circleci.com/gh/graphcool/graphcool) [![Slack Status](https://slack.graph.cool/badge.svg)](https://slack.graph.cool) [![npm version](https://img.shields.io/badge/npm%20package-next-brightgreen.svg)](https://badge.fury.io/js/graphcool)
 
@@ -57,7 +57,7 @@ The framework provides powerful abstractions and building blocks to develop flex
 
 3. **Define your data model:**
 
-  Edit `types.graphql` to define your data model using the [GraphQL SDL notation](https://docs-next.graph.cool/reference/database/data-modelling-eiroozae8u). `@model` types map to the database.
+  Edit `types.graphql` to define your data model using the [GraphQL SDL notation](https://graph.cool/docs/reference/database/data-modelling-eiroozae8u). `@model` types map to the database.
   
   ```graphql
   type User @model {
@@ -82,7 +82,7 @@ The framework provides powerful abstractions and building blocks to develop flex
 
 4. **Define permissions and functions:**
 
-  [`graphcool.yml`](https://docs-next.graph.cool/reference/service-definition/graphcool.yml-foatho8aip) is the root definition of a service where `types`, `permissions` and `functions` are referenced.
+  [`graphcool.yml`](https://graph.cool/docs/reference/service-definition/graphcool.yml-foatho8aip) is the root definition of a service where `types`, `permissions` and `functions` are referenced.
 
   ```yml
   # Define your data model here
@@ -110,7 +110,7 @@ The framework provides powerful abstractions and building blocks to develop flex
 
 5. **Deploy your service:**
 
-  To deploy your service simply run the following command and select either a hosted BaaS [cluster](https://docs-next.graph.cool/reference/graphcool-cli/.graphcoolrc-zoug8seen4) or setup a local Docker-based development environment:
+  To deploy your service simply run the following command and select either a hosted BaaS [cluster](https://graph.cool/docs/reference/graphcool-cli/.graphcoolrc-zoug8seen4) or setup a local Docker-based development environment:
 
   ```sh
   graphcool deploy

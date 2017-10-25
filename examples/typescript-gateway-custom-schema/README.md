@@ -19,7 +19,7 @@ cd typescript-gateway-custom-schema
 
 ### 2. Install the Graphcool CLI
 
-If you haven't already, go ahead and install the [Graphcool CLI](https://docs-next.graph.cool/reference/graphcool-cli/overview-zboghez5go):
+If you haven't already, go ahead and install the [Graphcool CLI](https://graph.cool/docs/reference/graphcool-cli/overview-zboghez5go):
 
 ```sh
 npm install -g graphcool@next
@@ -27,7 +27,7 @@ npm install -g graphcool@next
 
 ### 3. Deploy the Graphcool service
 
-The next step is to [deploy](https://docs-next.graph.cool/reference/graphcool-cli/commands-aiteerae6l#graphcool-deploy) the Graphcool service that's defined inside the [`service`](./service) directory:
+The next step is to [deploy](https://graph.cool/docs/reference/graphcool-cli/commands-aiteerae6l#graphcool-deploy) the Graphcool service that's defined inside the [`service`](./service) directory:
 
 ```sh
 cd service

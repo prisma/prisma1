@@ -65,7 +65,7 @@ curl https://codeload.github.com/graphcool/graphcool/tar.gz/master | tar -xz --s
 cd permissions
 ```
 
-Next, you need to create your GraphQL server using the [Graphcool CLI](https://docs-next.graph.cool/reference/graphcool-cli/overview-zboghez5go).
+Next, you need to create your GraphQL server using the [Graphcool CLI](https://graph.cool/docs/reference/graphcool-cli/overview-zboghez5go).
 
 ### 2. Install the Graphcool CLI
 
@@ -77,7 +77,7 @@ npm install -g graphcool@next
 
 ### 3. Create the GraphQL server
 
-You can now [deploy](https://docs-next.graph.cool/reference/graphcool-cli/commands-aiteerae6l#graphcool-deploy) the Graphcool service that's defined in this directory. Before that, you need to install the node [dependencies](package.json#L14) for the defined functions:
+You can now [deploy](https://graph.cool/docs/reference/graphcool-cli/commands-aiteerae6l#graphcool-deploy) the Graphcool service that's defined in this directory. Before that, you need to install the node [dependencies](package.json#L14) for the defined functions:
 
 ```sh
 yarn install      # install dependencies
@@ -192,7 +192,7 @@ Here's a list of all [permission rules](./graphcool.yml#L21) that are configured
 ##### `User`
 
 - `User.read`: Everyone can the fields `email` and `posts` **read** nodes of type `User`
-- `User.create`: `User` nodes can only be **created** with a [root token](https://docs-next.graph.cool/reference/auth/authentication/authentication-tokens-eip7ahqu5o#root-tokens) (see the code for the [`signup`](./src/email-password/signup.js) function)
+- `User.create`: `User` nodes can only be **created** with a [root token](https://graph.cool/docs/reference/auth/authentication/authentication-tokens-eip7ahqu5o#root-tokens) (see the code for the [`signup`](./src/email-password/signup.js) function)
 - `User.update`: To **update** the fields `email`, `password` and `posts` on a node of type `User`, a `User` must be:
   - authenticated
   - either the "owner" of the `User` or an `ADMIN` (see the permission query `UpdateUserData` in [`src/permissions/.graphql`](./src/permissions/User.graphql))
@@ -212,7 +212,7 @@ Here's a list of all [permission rules](./graphcool.yml#L21) that are configured
 
 ### Permission queries
 
-Graphcool uses the concept of [permission queries](https://docs-next.graph.cool/reference/auth/authorization/permission-queries-iox3aqu0ee) to configure permission rules for a service.
+Graphcool uses the concept of [permission queries](https://graph.cool/docs/reference/auth/authorization/permission-queries-iox3aqu0ee) to configure permission rules for a service.
 
 Permission queries are special GraphQL queries that only return `true` or `false` (it's thus unnecessary to specify the _selection set_ of the query when writing it).
 
