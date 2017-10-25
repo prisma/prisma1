@@ -29,7 +29,6 @@ The framework provides powerful abstractions and building blocks to develop flex
 * [Examples](#examples)
 * [Architecture](#architecture)
 * [Deployment](#deployment)
-* [Philosophy](#philosophy)
 * [FAQ](#faq)
 * [Roadmap](#roadmap)
 * [Community](#community)
