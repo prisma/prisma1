@@ -4,10 +4,9 @@
 
 [![CircleCI](https://circleci.com/gh/graphcool/graphcool.svg?style=shield)](https://circleci.com/gh/graphcool/graphcool) [![Slack Status](https://slack.graph.cool/badge.svg)](https://slack.graph.cool) [![npm version](https://img.shields.io/badge/npm%20package-next-brightgreen.svg)](https://badge.fury.io/js/graphcool)
 
-**Graphcool is a GraphQL backend framework** to develop and deploy production-ready GraphQL microservices.</br>
-Think about it like Rails, Django or Meteor but based on [GraphQL](https://www.howtographql.com/) and designed for today's cloud infrastructure.
+**The Graphcool backend development framework** is designed to help you develop and deploy production-ready GraphQL microservices. With Graphcool you can design your data model and have a production ready [GraphQL](https://www.howtographql.com/) API online in minutes.
 
-The framework currently supports Node.js & Typescript and is compatible with existing libraries and tools like [GraphQL.js](https://github.com/graphql/graphql-js) and [Apollo Server](https://github.com/apollographql/apollo-server). Graphcool comes with a CLI and a Docker-based runtime which can be deployed to any server or cloud.
+The framework integrates with cloud-native serverless functions and is compatible with existing libraries and tools like [GraphQL.js](https://github.com/graphql/graphql-js) and [Apollo Server](https://github.com/apollographql/apollo-server). Graphcool comes with a CLI and a Docker-based runtime which can be deployed to any server or cloud.
 
 <!-- 
 Add note that Graphcool can still be used with other langs via webhooks??
@@ -15,11 +14,11 @@ Add note that Graphcool can still be used with other langs via webhooks??
 
 The framework provides powerful abstractions and building blocks to develop flexible, scalable GraphQL backends:
     
-1. **GraphQL-native [database](https://docs-next.graph.cool/reference/database/overview-viuf8uus7o) mapping** to easily evolve your data schema & migrate your database
-2. **Flexible [auth](https://docs-next.graph.cool/reference/auth/overview-ohs4aek0pe) workflows** using the JWT-based authentication & permission system
-3. **Realtime API** using GraphQL [Subscriptions](https://docs-next.graph.cool/reference/graphql-api/subscription-api-aip7oojeiv)
-4. **Highly scalable architecture** enabling asynchronous, event-driven flows using serverless [functions](https://docs-next.graph.cool/reference/functions/overview-aiw4aimie9)
-5. **Works with all frontend frameworks** like React, Vue.js, Angular ([Quickstart Examples](https://docs-next.graph.cool/quickstart/))
+1. **[GraphQL Database](https://graph.cool/docs/reference/database/overview-viuf8uus7o)** to easily evolve your data schema & migrate your database
+2. **Flexible [auth](https://graph.cool/docs/reference/auth/overview-ohs4aek0pe) workflows** using the JWT-based authentication & permission system
+3. **Realtime API** using GraphQL [Subscriptions](https://graph.cool/docs/reference/graphql-api/subscription-api-aip7oojeiv)
+4. **Highly scalable architecture** enabling asynchronous, event-driven flows using serverless [functions](https://graph.cool/docs/reference/functions/overview-aiw4aimie9)
+5. **Works with all frontend frameworks** like React, Vue.js, Angular ([Quickstart Examples](https://graph.cool/docs/quickstart/))
 
 ## Contents
 
@@ -38,7 +37,7 @@ The framework provides powerful abstractions and building blocks to develop flex
 
 ## Quickstart
 
-> **Note:** This is a preview version of the Graphcool Framework (latest `0.7`). More information in the [forum](https://www.graph.cool/forum/t/feedback-new-cli-beta/949).
+> **Note:** This is a preview version of the Graphcool Framework (latest `0.8`). More information in the [forum](https://www.graph.cool/forum/t/feedback-new-cli-beta/949).
 
 [Watch this 2 min tutorial](https://www.youtube.com/watch?v=gg_SJ8a5xpA) or follow the steps below to get started with the Graphcool framework:
 
@@ -50,7 +49,7 @@ The framework provides powerful abstractions and building blocks to develop flex
 
 2. **Create a new service:**
 
-  The following command creates all files you need for a new [service](https://docs-next.graph.cool/reference/service-definition/overview-opheidaix3).
+  The following command creates all files you need for a new [service](https://graph.cool/docs/reference/service-definition/overview-opheidaix3).
 
   ```sh
   graphcool init
@@ -75,7 +74,7 @@ The framework provides powerful abstractions and building blocks to develop flex
     id: ID! @isUnique
     title: String!
   
-    # Every relation also required a back-relation (to determine 1:1, 1:n or n:m)
+    # Relations always have two fields
     author: User! @relation(name: "UserPosts")
   }
 
@@ -111,7 +110,7 @@ The framework provides powerful abstractions and building blocks to develop flex
 
 5. **Deploy your service:**
 
-  To deploy your service simply run the following command and select either a hosted BaaS [cluster](https://docs-next.graph.cool/reference/graphcool-cli/.graphcoolrc-zoug8seen4) or automatically setup a local Docker-based development environment:
+  To deploy your service simply run the following command and select either a hosted BaaS [cluster](https://docs-next.graph.cool/reference/graphcool-cli/.graphcoolrc-zoug8seen4) or setup a local Docker-based development environment:
 
   ```sh
   graphcool deploy
@@ -131,7 +130,7 @@ The framework provides powerful abstractions and building blocks to develop flex
 
 #### Includes everything needed for a GraphQL backend
 
-* GraphQL-native database mapping & migrations
+* GraphQL Database with automatic migrations
 * JWT-based authentication & flexible permission system
 * Realtime GraphQL Subscription API
 * GraphQL specfication compliant
@@ -141,7 +140,7 @@ The framework provides powerful abstractions and building blocks to develop flex
 
 * Docker-based cluster runtime deployable to AWS, Google Cloud, Azure or any other cloud
 * Enables asynchronous, event-driven workflows using serverless functions
-* Easy function deployment to AWS Lambda and other FaaS providers
+* Http based database connections optimised for serverless functions
 
 #### Integrated developer experience from zero to production
 
@@ -184,7 +183,7 @@ Graphcool services can be deployed with [Docker](https://docker.com/) or the [Gr
 
 ### Docker
 
-You can deploy a Graphcool service to a local environment using Docker. The CLI offers the `graphcool local` commands with a number of _subcommands_ for that.
+You can deploy a Graphcool service to a local environment using Docker. To run a graphcool service locally, use the `graphcool local` sub commands.
 
 This is what a typical workflow looks like:
 
@@ -204,22 +203,6 @@ The Graphcool Cloud currently supports three [regions](https://blog.graph.cool/n
 - `asia-northeast-1` (Asia Pacific, Tokyo)
 - `us-west-1` (US, Oregon)
 
-## Philosophy
-
-**Building applications should be as easy as composing Lego bricks** - enabling this modularity is what the Graphcool Framework is striving for. Simple yet powerful abstractions and well-defined interfaces are key for this mission.
-
-> The Graphcool Framework is heavily inspired by the [12-Factor App](https://12factor.net/) manifesto for modern application development.
-
-**Declarative programming** allows for highly expressive and concise code by _describing_ the functionality of an application in dedicated terms. Graphcool provides you with powerful, declarative building blocks while giving you the flexibility to deal with custom application requirements.
-
-A key principle from the above mentioned [12-Factor App](https://12factor.net/) manifesto is a **clear separation between _configuration_ and actual _code_**. The Graphcool Framework is strongly based on this idea:
-
-- The `graphcool.yml` serves as the root configuration file for your Graphcool service, it describes all major components in your backend. Further configuration can be done with environment variables that can be accessed inside `graphcool.yml` or to be used in functions.
-- The data model is specified in a declarative manner using the GraphQL SDL. The database mapping and generation of CRUD is performed by the framework.
-
-**Separating stateful from stateless infrastructure is key in order to enable high scalability for your application**. In the Graphcool Framework, the database (_stateful_) is decoupled from the functions that implement business logic (_stateless_). The communication happens via an _event gateway_, thus enabling you to architect your applications in an event-driven manner. Despite the loose coupling of application components, all communication is typesafe thanks to the GraphQL schema.
-
-**Graphcool services are designed from the ground up to run in cloud environments.** The Graphcool Framework supports automated CI/CD workflows for rapid deployment cycles. 
 
 <!--
 
@@ -253,20 +236,20 @@ The API gateway is another tool that provides the power and flexibility needed t
 
 ### Wait a minute – isn't Graphcool a Backend-as-a-Service?
 
-While Graphcool started out as a Backend-as-a-Service (like Firebase or Parse), [we're currently in the process](https://blog.graph.cool/graphcool-framework-preview-ff42081b1333) of turning Graphcool into a backend development framework. No worries, you can still deploy your Graphcool services to the BaaS platform as before but additionally you can now also run Graphcool on your own machine.
+While Graphcool started out as a Backend-as-a-Service (like Firebase or Parse), [we're currently in the process](https://blog.graph.cool/graphcool-framework-preview-ff42081b1333) of turning Graphcool into a backend development framework. You can still deploy your Graphcool services to the [Graphcool Cloud](https://graph.cool/cloud), and additionally you can run Graphcool locally or deploy to your own infrastructure.
 
 ### Why is Graphcool Core written in Scala?
 
-Graphcool is an extremely complex and ambitious framework. We started out building Graphcool with Node but soon realized that it wasn't the right choice for the complexity Graphcool needed to deal with.
+At the core of the Graphcool Framework is the GraphQL Database, an extremely complex peiece of software. We developed the initial prototype with Node but soon realized that it wasn't the right choice for the complexity Graphcool needed to deal with.
 
-To be able to develop safely while iterating quickly, a powerful type system is an indispensable tool - neither TypeScript nor Flow were appropriate options here. Scala's support for functional programming techniques and its strong overall performance are further language/runtime properties that made Scala a great fir for our use case. 
+We found that to be able to develop safely while iterating quickly, we needed a powerful typesystem. Scala's support for functional programming techniques coupled with the strong performance of the JVM made it the obvious choice for Graphcool. 
 
-Another important consideration was that Scala had one of the most mature GraphQL reference implementations ([Sangria](https://github.com/sangria-graphql)) when we started building Graphcool. 
+Another important consideration is that the most mature GraphQL implementation - [Sangria](https://github.com/sangria-graphql) - is written in Scala. 
 
 
 ### Is the API Gateway layer needed?
 
-The API gateway is an _optional_ layer for your API, adding it to your service is not required. It is however an extremely powerful tool catering many real-world use cases, for example:
+The API gateway is an _optional_ layer for your API, adding it to your service is not required. It is however an extremely powerful tool suited for many real-world use cases, for example:
 
 - Tailor your GraphQL schema and expose custom operations (based on the underlying CRUD API)
 - Intercept HTTP requests before they reach the CRUD API; adjust the HTTP response before it's returned
@@ -278,13 +261,10 @@ Also realize that when you're not using an API gateway, _your service endpoint a
 
 ## Roadmap
 
-### Latest release
-
-### Open feature proposals
 
 Help us shape the future of the Graphcool Framework by :thumbsup: [existing Feature Requests](https://github.com/graphcool/graphcool/issues?q=is%3Aopen+is%3Aissue+label%3Akind%2Ffeature) or [creating new ones](https://github.com/graphcool/graphcool/issues/new)
 
-We are in the process of setting up a formal road map. Check back here in the coming weeks
+We are in the process of setting up a formal roadmap. Check back here in the coming weeks
 to see the new features we are planning!
 
 ## Community
