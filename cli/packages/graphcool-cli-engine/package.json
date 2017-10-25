@@ -7,7 +7,7 @@
   ],
   "typings": "dist/index.d.ts",
   "author": "Tim Suchanek <tim@graph.cool>",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "devDependencies": {
     "@types/jest": "^20.0.8",
     "@types/lodash": "^4.14.77",
