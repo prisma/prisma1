@@ -39,7 +39,7 @@ The framework provides powerful abstractions and building blocks to develop flex
 
 > **Note:** This is a preview version of the Graphcool Framework (latest `0.8`). More information in the [forum](https://www.graph.cool/forum/t/feedback-new-cli-beta/949).
 
-[Watch this 2 min tutorial](https://www.youtube.com/watch?v=gg_SJ8a5xpA) or follow the steps below to get started with the Graphcool framework:
+[Watch this 5 min tutorial](https://www.youtube.com/watch?v=xmri5pNR9-Y) or follow the steps below to get started with the Graphcool framework:
 
 1. **Install the CLI via NPM:**
 
