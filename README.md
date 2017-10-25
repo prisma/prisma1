@@ -240,7 +240,7 @@ While Graphcool started out as a Backend-as-a-Service (like Firebase or Parse), 
 
 ### Why is Graphcool Core written in Scala?
 
-At the core of the Graphcool Framework is the GraphQL Database, an extremely complex peiece of software. We developed the initial prototype with Node but soon realized that it wasn't the right choice for the complexity Graphcool needed to deal with.
+At the core of the Graphcool Framework is the GraphQL Database, an extremely complex piece of software. We developed the initial prototype with Node but soon realized that it wasn't the right choice for the complexity Graphcool needed to deal with.
 
 We found that to be able to develop safely while iterating quickly, we needed a powerful typesystem. Scala's support for functional programming techniques coupled with the strong performance of the JVM made it the obvious choice for Graphcool. 
 
