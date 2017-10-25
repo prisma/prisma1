@@ -42,9 +42,9 @@ The framework provides powerful abstractions and building blocks to develop flex
 
 1. **Install the CLI via NPM:**
 
-    ```sh
-    npm install -g graphcool@next
-    ```
+  ```sh
+  npm install -g graphcool@next
+  ```
 
 2. **Create a new service:**
 
@@ -176,7 +176,7 @@ The framework provides powerful abstractions and building blocks to develop flex
 
 Graphcool is a new kind of framework that introduces clear boundaries between your business logic and stateful components. This separation allows the framework to take advantage of modern cloud infrastructure to scale the stateful components without restricting your choice of programming language and development workflow.
 
-![](https://imgur.com/zkN1wWT.png)
+![](https://imgur.com/zaaFVnF.png)
 
 ## GraphQL Database
 
