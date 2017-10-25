@@ -14,10 +14,10 @@ Add note that Graphcool can still be used with other langs via webhooks??
 
 The framework provides powerful abstractions and building blocks to develop flexible, scalable GraphQL backends:
     
-1. **[GraphQL Database](https://graph.cool/docs/reference/database/overview-viuf8uus7o)** to easily evolve your data schema & migrate your database
-2. **Flexible [auth](https://graph.cool/docs/reference/auth/overview-ohs4aek0pe) workflows** using the JWT-based authentication & permission system
-3. **Realtime API** using GraphQL [Subscriptions](https://graph.cool/docs/reference/graphql-api/subscription-api-aip7oojeiv)
-4. **Highly scalable architecture** enabling asynchronous, event-driven flows using serverless [functions](https://graph.cool/docs/reference/functions/overview-aiw4aimie9)
+1. **GraphQL database** to easily evolve your data schema & migrate your database
+2. **Flexible auth** using the JWT-based authentication & permission system
+3. **Realtime API** using GraphQL Subscriptions
+4. **Highly scalable architecture** enabling asynchronous, event-driven flows using serverless functions
 5. **Works with all frontend frameworks** like React, Vue.js, Angular ([Quickstart Examples](https://graph.cool/docs/quickstart/))
 
 ## Contents
