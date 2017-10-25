@@ -178,9 +178,21 @@ Graphcool is a new kind of framework that introduces clear boundaries between yo
 
 ![](https://imgur.com/zkN1wWT.png)
 
+## GraphQL Database
+
+The most important component in the Graphcool Framework is the GraphQL Database:
+
+ - Query, mutate & stream data via GraphQL CRUD API
+ - Define and evolve your data model using GraphQL SDL
+
+ If you have used the Graphcool Backend as a Service before, you are already familiar with the benefits of the GraphQL Database.
+ 
+The CRUD API comes out of the box with advanced features such as pagination, expressive filters and nested mutations. These features are implemented within an effecient data-loader engine, to ensure the best possible performance.
+ 
+
 ## Deployment
 
-Graphcool services can be deployed with [Docker](https://docker.com/) or the [Graphcool Cloud](http://graphcool-v3.netlify.com/cloud).
+Graphcool services can be deployed with [Docker](https://docker.com/) or the [Graphcool Cloud](http://graph.cool/cloud).
 
 ### Docker
 
