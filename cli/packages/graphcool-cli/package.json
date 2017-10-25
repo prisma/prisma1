@@ -11,7 +11,7 @@
   ],
   "typings": "dist/index.d.ts",
   "author": "Tim Suchanek <tim@graph.cool>",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "devDependencies": {
     "@types/node": "^8.0.22",
     "husky": "^0.14.3",

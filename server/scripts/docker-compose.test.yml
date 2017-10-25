@@ -1,0 +1,97 @@
+version: "2"
+services:
+
+  app:
+    image: schickling/scala-sbt-docker
+    links:
+    - client-db
+    - internal-db
+    - redis
+    - rabbit
+    environment:
+      TEST_SQL_CLIENT_HOST: "client-db"
+      TEST_SQL_CLIENT_PORT: "3306"
+      TEST_SQL_CLIENT_USER: "root"
+      TEST_SQL_CLIENT_PASSWORD: "graphcool"
+      TEST_SQL_CLIENT_CONNECTION_LIMIT: 10
+      TEST_SQL_INTERNAL_HOST: "internal-db"
+      TEST_SQL_INTERNAL_PORT: "3306"
+      TEST_SQL_INTERNAL_USER: "root"
+      TEST_SQL_INTERNAL_PASSWORD: "graphcool"
+      TEST_SQL_INTERNAL_DATABASE: "graphcool"
+      TEST_SQL_INTERNAL_CONNECTION_LIMIT: 10
+      TEST_SQL_LOGS_HOST: "internal-db"
+      TEST_SQL_LOGS_PORT: "3306"
+      TEST_SQL_LOGS_USER: "root"
+      TEST_SQL_LOGS_PASSWORD: "graphcool"
+      TEST_SQL_LOGS_DATABASE: "logs"
+      SQL_LOGS_HOST: "internal-db"
+      SQL_LOGS_PORT: "3306"
+      SQL_LOGS_USER: "root"
+      SQL_LOGS_PASSWORD: "graphcool"
+      SQL_LOGS_DATABASE: "logs"
+      JWT_SECRET: "abbaabbaabbaabbaabbaabba"
+      AUTH0_CLIENT_SECRET: "ZXVmNmFoa29oZzdJZGFlNVF1YWg0b2NoZWVwaG9oY2hhaGdoaWk2ZQ=="
+      SYSTEM_API_SECRET: "systemApiSecret"
+      TEST_REDIS_HOST: "redis"
+      TEST_REDIS_PORT: "6379"
+      RABBITMQ_URI: "amqp://rabbit"
+      GLOBAL_RABBIT_URI: "amqp://rabbit"
+      INITIAL_PRICING_PLAN: "initial-plan"
+      BUGSNAG_API_KEY: ""
+      SCHEMA_MANAGER_ENDPOINT: "empty"
+      SCHEMA_MANAGER_SECRET: "empty"
+      AWS_ACCESS_KEY_ID: "empty"
+      AWS_SECRET_ACCESS_KEY: "empty"
+      AWS_REGION: "eu-west-1"
+      CLIENT_API_ADDRESS: "http://localhost:8888/"
+      PRIVATE_CLIENT_API_SECRET: "empty"
+      PACKAGECLOUD_PW: "${PACKAGECLOUD_PW}"
+    volumes:
+      - ..:/root/build
+      - ~/.ivy2:/root/.ivy2
+      - ~/.coursier:/root/.coursier
+    working_dir: /root/build
+
+  client-db:
+    image: mysql:5.7
+    command: mysqld --max-connections=1000 --sql-mode="ANSI,ALLOW_INVALID_DATES,ANSI_QUOTES,ERROR_FOR_DIVISION_BY_ZERO,HIGH_NOT_PRECEDENCE,IGNORE_SPACE,NO_AUTO_CREATE_USER,NO_AUTO_VALUE_ON_ZERO,NO_BACKSLASH_ESCAPES,NO_ENGINE_SUBSTITUTION,NO_KEY_OPTIONS,NO_UNSIGNED_SUBTRACTION,NO_ZERO_DATE,NO_ZERO_IN_DATE,ONLY_FULL_GROUP_BY,PIPES_AS_CONCAT,REAL_AS_FLOAT,STRICT_ALL_TABLES,STRICT_TRANS_TABLES,TRADITIONAL"
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: graphcool
+      MYSQL_USER: root
+      MYSQL_PASSWORD: graphcool
+    ports:
+      - "3306"
+
+  internal-db:
+    image: mysql:5.7
+    command: mysqld --max-connections=1000 --sql-mode="ANSI,ALLOW_INVALID_DATES,ANSI_QUOTES,ERROR_FOR_DIVISION_BY_ZERO,HIGH_NOT_PRECEDENCE,IGNORE_SPACE,NO_AUTO_CREATE_USER,NO_AUTO_VALUE_ON_ZERO,NO_BACKSLASH_ESCAPES,NO_ENGINE_SUBSTITUTION,NO_KEY_OPTIONS,NO_UNSIGNED_SUBTRACTION,NO_ZERO_DATE,NO_ZERO_IN_DATE,ONLY_FULL_GROUP_BY,PIPES_AS_CONCAT,REAL_AS_FLOAT,STRICT_ALL_TABLES,STRICT_TRANS_TABLES,TRADITIONAL"
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: graphcool
+      MYSQL_DATABASE: graphcool
+      MYSQL_USER: root
+      MYSQL_PASSWORD: graphcool
+    ports:
+      - "3306"
+
+  rabbit:
+    image: rabbitmq:3-management
+    restart: always
+    hostname: rabbit-host
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  ping-db:
+    image: mysql:5.7
+    command: echo "Just used from test.sh"
+    links:
+    - client-db
+    - internal-db
+    environment:
+      MYSQL_PWD: graphcool
+
+  redis:
+    image: redis

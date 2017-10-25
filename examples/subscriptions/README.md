@@ -38,7 +38,7 @@ Read the [last section](#whats-in-this-example) of this README to learn how the 
 └── types.graphql
 ```
 
-> Read more about [service configuration](https://docs-next.graph.cool/reference/project-configuration/overview-opheidaix3) in the docs.
+> Read more about [service configuration](https://graph.cool/docs/reference/project-configuration/overview-opheidaix3) in the docs.
 
 ## Get started
 
@@ -51,7 +51,7 @@ curl https://codeload.github.com/graphcool/graphcool/tar.gz/master | tar -xz --s
 cd subscriptions
 ```
 
-Next, you need to create your GraphQL server using the [Graphcool CLI](https://docs-next.graph.cool/reference/graphcool-cli/overview-zboghez5go).
+Next, you need to create your GraphQL server using the [Graphcool CLI](https://graph.cool/docs/reference/graphcool-cli/overview-zboghez5go).
 
 ### 2. Install the Graphcool CLI
 
@@ -63,7 +63,7 @@ npm install -g graphcool@next
 
 ### 3. Create the GraphQL server
 
-You can now [deploy](https://docs-next.graph.cool/reference/graphcool-cli/commands-aiteerae6l#graphcool-deploy) the Graphcool service that's defined in this directory. Before that, you need to install the node dependencies for the subscription function:
+You can now [deploy](https://graph.cool/docs/reference/graphcool-cli/commands-aiteerae6l#graphcool-deploy) the Graphcool service that's defined in this directory. Before that, you need to install the node dependencies for the subscription function:
 
 ```sh
 yarn install      # install dependencies
