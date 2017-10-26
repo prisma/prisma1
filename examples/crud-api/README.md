@@ -16,7 +16,7 @@ cd crud-api
 Install the CLI (if you haven't already):
 
 ```sh
-npm install -g graphcool@next
+npm install -g graphcool
 ```
 
 Deploy the Graphcool backend and open the GraphQL API endpoint in your browser

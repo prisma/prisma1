@@ -44,7 +44,7 @@ Before you can start with the actual implementation of the React app, you need t
 If you haven't done so yet, go ahead and install the Graphcool CLI using npm:
 
 ```bash
-npm install -g graphcool@next
+npm install -g graphcool
 ```
 
 </Instruction>

@@ -56,7 +56,7 @@ You need to configure Docker to have **at least 1 GB of RAM** available:
 You also need to have the [Graphcool CLI](!alias-zboghez5go) installed:
 
 ```sh
-npm install -g graphcool@next
+npm install -g graphcool
 ```
 
 

@@ -43,7 +43,7 @@ The framework provides powerful abstractions and building blocks to develop flex
 1. **Install the CLI via NPM:**
 
     ```sh
-    npm install -g graphcool@next
+    npm install -g graphcool
     ```
 
 2. **Create a new service:**
