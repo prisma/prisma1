@@ -76,7 +76,7 @@ Next you need to configure the [data model](!alias-eiroozae8u) for your service.
 Open `./server/types.graphql` and add the following type definition to it (feel free to delete the existing `User` type):
 
 ```graphql(path="server/types.graphql")
-type Post {
+type Post @model {
   id: ID! @isUnique    # read-only (managed by Graphcool)
   createdAt: DateTime! # read-only (managed by Graphcool)
   updatedAt: DateTime! # read-only (managed by Graphcool)
