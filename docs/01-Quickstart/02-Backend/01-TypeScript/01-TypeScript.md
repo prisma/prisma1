@@ -39,7 +39,7 @@ Here's the file structure of the project:
 
 The `service` directory contains the [definition](!alias-opheidaix3) of your Graphcool service. [`graphcool.yml`](!alias-foatho8aip) is the main configuration file, it contains information about your [GraphQL types](!alias-eiroozae8u), [permission](!alias-iegoo0heez) setup, integrated [functions](!alias-aiw4aimie9) and more. The actual type definitions are specifed in `types.graphql` and referenced from inside `graphcool.yml`.
 
-This service defition is based on the following data model:
+This service definition is based on the following data model:
 
 ```graphql
 type User @model {
