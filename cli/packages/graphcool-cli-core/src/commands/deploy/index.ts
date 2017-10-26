@@ -69,6 +69,10 @@ ${chalk.gray(
     'dry-run': flags.boolean({
       char: 'D',
       description: 'Perform a dry-run of the deployment'
+    }),
+    json: flags.boolean({
+      char: 'j',
+      description: 'Json Output'
     })
   }
   async run() {

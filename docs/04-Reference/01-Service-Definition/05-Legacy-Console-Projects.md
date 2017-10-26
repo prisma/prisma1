@@ -3,7 +3,7 @@ alias: aemieb1aev
 description: Graphcool is currently transitioning from a pure Backend as a Service to a general Application Development Framework. If you are an existing Graphcool customer this document explains everything you need to know about the transition. If you are new to Graphcool or about to craete a new application, you should use the new CLI as described in the [readme](https://github.com/graphcool/graphcool).
 ---
 
-# Legacy Console Projects
+# Migration Guide for Legacy Console Projects
 
 ## Terminology
 
@@ -19,7 +19,7 @@ If you have recently started using Graphcool and are unsure what version you are
 
 Yes!
 
-While most new features added to the Graphcool Framework will require you to upgrade to a Graphcool _service_, you can continue to use your _legacy Console project_ without change. We recommend that you upgrade as soon as possible to get access to the most recent features. 
+While most new features added to the Graphcool Framework will require you to upgrade to a Graphcool _service_, you can continue to use your _legacy Console project_ without change. 
 
 Legacy Console projects can only use CLI versions lower than 0.4 and are primarily managed through the Console. Particularly, managing _functions_ and _permissions_ can only be done in the Console.
 
@@ -32,7 +32,7 @@ In most cases upgrading a _legacy Console project_ to a _Graphcool service_ is a
 
 > We recommend that you first create a new service using the [CLI](!alias-zboghez5go) to familiarize yourself with the new workflows.
 
-It is important to understand that **once a project was upgraded to a Graphcool service, it can not be converted back to a legacy Console project again**.
+It is important to understand that **once a project is upgraded to a Graphcool service, it can not be converted back to a legacy Console project again**.
 
 To upgrade a _legacy Console project_ to a _Graphcool service_, you need to navigate to the **Project Settings** in the Console, select the **General**-tab and click the **Upgrade Project**-button:
 

@@ -21,7 +21,7 @@ This directory contains the service definition and file structure for a simple G
 └── types.graphql
 ```
 
-> Read more about [service configuration](https://docs-next.graph.cool/reference/project-configuration/overview-opheidaix3) in the docs.
+> Read more about [service configuration](https://graph.cool/docs/reference/project-configuration/overview-opheidaix3) in the docs.
 
 ## Get started
 
@@ -34,7 +34,7 @@ curl https://codeload.github.com/graphcool/graphcool/tar.gz/master | tar -xz --s
 cd auth
 ```
 
-Next, you need to create your GraphQL server using the [Graphcool CLI](https://docs-next.graph.cool/reference/graphcool-cli/overview-zboghez5go).
+Next, you need to create your GraphQL server using the [Graphcool CLI](https://graph.cool/docs/reference/graphcool-cli/overview-zboghez5go).
 
 ### 2. Install the Graphcool CLI
 
@@ -46,7 +46,7 @@ npm install -g graphcool@next
 
 ### 3. Create the GraphQL server
 
-You can now [deploy](https://docs-next.graph.cool/reference/graphcool-cli/commands-aiteerae6l#graphcool-deploy) the Graphcool service that's defined in this directory. Before that, you need to install the node [dependencies](package.json#L11) for the defined functions:
+You can now [deploy](https://graph.cool/docs/reference/graphcool-cli/commands-aiteerae6l#graphcool-deploy) the Graphcool service that's defined in this directory. Before that, you need to install the node [dependencies](package.json#L11) for the defined functions:
 
 ```sh
 yarn install      # install dependencies
@@ -87,7 +87,7 @@ mutation {
 
 ### Logging in an existing user with the `authenticateUser` mutation
 
-This mutation will log in an _existing_ user by requesting a new [temporary authentication token](https://docs-next.graph.cool/reference/auth/authentication/authentication-tokens-eip7ahqu5o#temporary-authentication-tokens) for her:
+This mutation will log in an _existing_ user by requesting a new [temporary authentication token](https://graph.cool/docs/reference/auth/authentication/authentication-tokens-eip7ahqu5o#temporary-authentication-tokens) for her:
 
 ```graphql
 mutation {
@@ -135,10 +135,10 @@ type User @model {
 
 ### Functions
 
-We further define three [resolver](https://docs-next.graph.cool/reference/functions/resolvers-su6wu3yoo2) functions in the service definition file [`graphcool.yml`](./graphcool.yml):
+We further define three [resolver](https://graph.cool/docs/reference/functions/resolvers-su6wu3yoo2) functions in the service definition file [`graphcool.yml`](./graphcool.yml):
 
 - [`signup`](./graphcool.yml#L5): Allows users to signup for the service with their email address and a password. Uses the `signupUser(email: String!, password: String!)` mutation defined in [`./src/signup.graphql`](./src/signup.graphql) and is implemented in [`./src/signup.js`](./src/signup.js).
-- [`authenticate`](./graphcool.yml#L12): Allows already existing users to log in, i.e. requesting a new [temporary authentication token](https://docs-next.graph.cool/reference/auth/authentication/authentication-tokens-eip7ahqu5o#temporary-authentication-tokens). Uses the `authenticateUser` mutation defined in [`authenticate.graphql`](./authenticate.graphql)  and is implemented in [`./src/authenticate.js`](./src/authenticate.js).
+- [`authenticate`](./graphcool.yml#L12): Allows already existing users to log in, i.e. requesting a new [temporary authentication token](https://graph.cool/docs/reference/auth/authentication/authentication-tokens-eip7ahqu5o#temporary-authentication-tokens). Uses the `authenticateUser` mutation defined in [`authenticate.graphql`](./authenticate.graphql)  and is implemented in [`./src/authenticate.js`](./src/authenticate.js).
 - [`loggedInUser`](./graphcool.yml#L19): Allows to check whether a user is currently logged in by sending a request with an attached authentication token. If the token is valid for a particular user, the user's `id` will be returned. It uses the `loggedInUser` query defined in [`./src/loggedInUser.graphql`](./src/loggedInUser.graphql) and is implemented in [`./src/loggedInUser.js`](./src/loggedInUser.js).
 
 The `signup` and `authenticate` resolvers each use [graphcool-lib](https://github.com/graphcool/graphcool-lib) to [generate an authentication token](https://github.com/graphcool/graphcool-lib/blob/master/src/index.ts#L37) for an existing `User` node. 

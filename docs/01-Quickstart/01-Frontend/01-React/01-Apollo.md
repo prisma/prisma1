@@ -175,6 +175,6 @@ yarn start # open http://localhost:3000 in your browser
 
 ### Learn more
 
-* Get more practical experience with our [Guides](https://docs-next.graph.cool/guides)
+* Get more practical experience with our [Guides](https://graph.cool/docs/tutorials)
 * Secure your API by learning about [Authentication](!alias-bee4oodood) & [Permissions](!alias-iegoo0heez)
 * Implement business logic with [Functions](!alias-aiw4aimie9)

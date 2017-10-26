@@ -99,3 +99,25 @@ export const commands = [
   AddTemplate,
   PsLocal
 ]
+
+export {
+  Deploy,
+  Init,
+  Auth,
+  Info,
+  Playground,
+  Console,
+  List,
+  Delete,
+  RootTokens,
+  FunctionLogs,
+  InvokeLocal,
+  PullLocal,
+  Stop,
+  Up,
+  Restart,
+  Account,
+  Eject,
+  AddTemplate,
+  PsLocal
+}
