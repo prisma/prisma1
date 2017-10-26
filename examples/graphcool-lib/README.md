@@ -1,6 +1,6 @@
 # Sending queries and mutations with `graphcool-lib`
 
-This example demonstrates how to **send queries and mutations against your service's API using [`graphcool-lib`](https://github.com/graphcool/graphcool-lib)** from inside a Graphcool [function](https://docs-next.graph.cool/reference/functions/overview-aiw4aimie9).
+This example demonstrates how to **send queries and mutations against your service's API using [`graphcool-lib`](https://github.com/graphcool/graphcool-lib)** from inside a Graphcool [function](https://graph.cool/docs/reference/functions/overview-aiw4aimie9).
 
 ## Get started
 
@@ -13,19 +13,19 @@ curl https://codeload.github.com/graphcool/graphcool/tar.gz/master | tar -xz --s
 cd graphcool-lib
 ```
 
-Next, you need to create your GraphQL server using the [Graphcool CLI](https://docs-next.graph.cool/reference/graphcool-cli/overview-zboghez5go).
+Next, you need to create your GraphQL server using the [Graphcool CLI](https://graph.cool/docs/reference/graphcool-cli/overview-zboghez5go).
 
 ### 2. Install the Graphcool CLI
 
 If you haven't already, go ahead and install the CLI first:
 
 ```sh
-npm install -g graphcool@next
+npm install -g graphcool
 ```
 
 ### 3. Create the GraphQL server
 
-The next step will be to [deploy](https://docs-next.graph.cool/reference/graphcool-cli/commands-aiteerae6l#graphcool-deploy) the Graphcool service that's defined in this directory. 
+The next step will be to [deploy](https://graph.cool/docs/reference/graphcool-cli/commands-aiteerae6l#graphcool-deploy) the Graphcool service that's defined in this directory. 
 
 To deploy the service and actually create your GraphQL server, invoke the following command:
 

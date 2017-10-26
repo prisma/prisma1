@@ -120,24 +120,24 @@ export default class FunctionLogs extends Command {
             // noop
           }
         }
+        //
+        // const styleLog = (l: string) => {
+        //   const logs = this.lambdaToArray(l)
+        //   let potentialJson = l.slice(62).trim()
+        //   try {
+        //     potentialJson = JSON.parse(potentialJson)
+        //   } catch (e) {
+        //     // noop
+        //   }
+        //
+        //   return {
+        //     [l.slice(0, 24)]: potentialJson,
+        //   }
+        // }
 
-        const styleLog = (l: string) => {
-          const logs = this.lambdaToArray(l)
-          let potentialJson = l.slice(62).trim()
-          try {
-            potentialJson = JSON.parse(potentialJson)
-          } catch (e) {
-            // noop
-          }
-
-          return {
-            [l.slice(0, 24)]: potentialJson,
-          }
-        }
-
-        if (json.logs) {
-          json.logs = flatMap(json.logs.map(this.lambdaToArray)).map(styleLog)
-        }
+        // if (json.logs) {
+        //   json.logs = flatMap(json.logs.map(this.lambdaToArray)).map(styleLog)
+        // }
 
         const prettyMessage = this.out.getStyledJSON(json)
         const status = log.status === 'SUCCESS' ? 'green' : 'red'

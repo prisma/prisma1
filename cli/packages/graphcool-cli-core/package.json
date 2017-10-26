@@ -1,13 +1,13 @@
 {
   "name": "graphcool-cli-core",
-  "version": "1.4.10",
+  "version": "1.4.19",
   "main": "dist/index.js",
   "files": [
     "dist"
   ],
   "typings": "dist/index.d.ts",
   "author": "Tim Suchanek <tim@graph.cool>",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "devDependencies": {
     "@types/aws-lambda": "^0.0.17",
     "@types/fs-extra": "^4.0.2",

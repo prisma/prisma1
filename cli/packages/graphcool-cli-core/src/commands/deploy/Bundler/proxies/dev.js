@@ -48,10 +48,12 @@ input.on('data', function(line){
 
 function cb(error, value) {
   const result = {
-    error: error,
     value: value,
     stdout: stdout,
     stderr: stderr
+  }
+  if (error) {
+    result.error = JSON.stringify(destroyCircular(error, []))
   }
   old_stdout_write.call(process.stdout, JSON.stringify(result) + '\n')
   stdout = ''
@@ -96,4 +98,44 @@ function injectEnvironment() {
       // noop
     }
   }
+}
+
+function destroyCircular(from, seen) {
+  const to = Array.isArray(from) ? [] : {};
+
+  seen.push(from);
+
+  for (const key of Object.keys(from)) {
+    const value = from[key];
+
+    if (typeof value === 'function') {
+      continue;
+    }
+
+    if (!value || typeof value !== 'object') {
+      to[key] = value;
+      continue;
+    }
+
+    if (seen.indexOf(from[key]) === -1) {
+      to[key] = destroyCircular(from[key], seen.slice(0));
+      continue;
+    }
+
+    to[key] = '[Circular]';
+  }
+
+  if (typeof from.name === 'string') {
+    to.name = from.name;
+  }
+
+  if (typeof from.message === 'string') {
+    to.message = from.message;
+  }
+
+  if (typeof from.stack === 'string') {
+    to.stack = from.stack;
+  }
+
+  return to;
 }

@@ -63,7 +63,7 @@ Graphcool services are managed with the [Graphcool CLI](!alias-zboghez5go). So b
 Install the Graphcool CLI:
 
 ```sh
-npm install -g graphcool@next
+npm install -g graphcool
 ```
 
 </Instruction>
@@ -247,7 +247,7 @@ This will return two of of the info about the `User` and two of the three associ
 
 ### Learn more
 
-* Get more practical experience with our [Guides](https://docs-next.graph.cool/guides)
+* Get more practical experience with our [Guides](https://graph.cool/docs/tutorials)
 * Secure your API by learning about [Authentication](!alias-bee4oodood) & [Permissions](!alias-iegoo0heez)
 * Implement business logic with [Functions](!alias-aiw4aimie9)
 
