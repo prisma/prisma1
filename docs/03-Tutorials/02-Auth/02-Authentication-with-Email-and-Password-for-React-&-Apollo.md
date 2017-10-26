@@ -262,7 +262,7 @@ In addition to the `User` that you got from the `email-password` authentication 
 Open `./server/types.graphql` and add the following definition to it:
 
 ```graphql(path="server/types.graphql")
-type Post {
+type Post @model {
   # Required system field:
   id: ID! @isUnique # read-only (managed by Graphcool)
 
