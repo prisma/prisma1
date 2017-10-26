@@ -4,7 +4,7 @@
 
 [![CircleCI](https://circleci.com/gh/graphcool/graphcool.svg?style=shield)](https://circleci.com/gh/graphcool/graphcool) [![Slack Status](https://slack.graph.cool/badge.svg)](https://slack.graph.cool) [![npm version](https://img.shields.io/badge/npm%20package-next-brightgreen.svg)](https://badge.fury.io/js/graphcool)
 
-**The Graphcool backend development framework** is designed to help you develop and deploy production-ready GraphQL microservices. With Graphcool you can design your data model and have a production ready [GraphQL](https://www.howtographql.com/) API online in minutes.
+**Graphcool is a backend development framework** to develop and deploy production-ready GraphQL microservices. With Graphcool you can design your data model and have a production ready [GraphQL](https://www.howtographql.com/) API online in minutes.
 
 The framework integrates with cloud-native serverless functions and is compatible with existing libraries and tools like [GraphQL.js](https://github.com/graphql/graphql-js) and [Apollo Server](https://github.com/apollographql/apollo-server). Graphcool comes with a CLI and a Docker-based runtime which can be deployed to any server or cloud.
 
