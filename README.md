@@ -152,16 +152,16 @@ The framework provides powerful abstractions and building blocks to develop flex
 
 ### Service examples
 
-* [auth](auth): Email/password-based authentication
-* [crud-api](crud-api): Simple CRUD-style GraphQL API
-* [env-variables-in-functions](env-variables-in-functions): Function accessing environment variables
-* [full-example](full-example): Full example (webshop) demoing most available features
-* [typescript-gateway-custom-schema](typescript-gateway-custom-schema): Define a custom schema using an API gateway
-* [graphcool-lib](graphcool-lib): Use `graphcool-lib` in functions to send queries and mutations to your service
-* [permissions](permissions): Configure permission rules
-* [rest-wrapper](rest-wrapper): Extend GraphQL API by wrapping existing REST endpoint
-* [subscriptions](subscriptions): Use subscription functions to react to asynchronous events
-* [yaml-variables](yaml-variables): Use variables in your `graphcool.yml`
+* [auth](https://github.com/graphcool/framework/tree/master/examples/auth): Email/password-based authentication
+* [crud-api](https://github.com/graphcool/framework/tree/master/examples/crud-api): Simple CRUD-style GraphQL API
+* [env-variables-in-functions](https://github.com/graphcool/framework/tree/master/examples/env-variables-in-functions): Function accessing environment variables
+* [full-example](https://github.com/graphcool/framework/tree/master/examples/full-example): Full example (webshop) demoing most available features
+* [typescript-gateway-custom-schema](https://github.com/graphcool/framework/tree/master/examples/typescript-gateway-custom-schema): Define a custom schema using an API gateway
+* [graphcool-lib](https://github.com/graphcool/framework/tree/master/examples/graphcool-lib): Use `graphcool-lib` in functions to send queries and mutations to your service
+* [permissions](https://github.com/graphcool/framework/tree/master/examples/permissions): Configure permission rules
+* [rest-wrapper](https://github.com/graphcool/framework/tree/master/examples/rest-wrapper): Extend GraphQL API by wrapping existing REST endpoint
+* [subscriptions](https://github.com/graphcool/framework/tree/master/examples/subscriptions): Use subscription functions to react to asynchronous events
+* [yaml-variables](https://github.com/graphcool/framework/tree/master/examples/yaml-variables): Use variables in your `graphcool.yml`
 
 
 ### Frontend examples
