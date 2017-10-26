@@ -1,0 +1,42 @@
+steps:
+  - label: ":scala: libs"
+    command: ./scripts/test.sh libs
+
+  - label: ":scala: backend-api-relay"
+    command: ./scripts/test.sh backend-api-relay
+
+  - label: ":scala: backend-api-simple"
+    command: ./scripts/test.sh backend-api-simple
+
+  - label: ":scala: backend-api-system"
+    command: ./scripts/test.sh backend-api-system
+
+  - label: ":scala: backend-api-simple-subscriptions"
+    command: ./scripts/test.sh backend-api-simple-subscriptions
+
+  - label: ":scala: backend-api-subscriptions-websocket"
+    command: ./scripts/test.sh backend-api-subscriptions-websocket
+
+  - label: ":scala: backend-api-fileupload"
+    command: ./scripts/test.sh backend-api-fileupload
+
+  - label: ":scala: backend-api-schema-manager"
+    command: ./scripts/test.sh backend-api-schema-manager
+
+  - label: ":scala: backend-shared"
+    command: ./scripts/test.sh backend-shared
+
+  - label: ":scala: client-shared"
+    command: ./scripts/test.sh client-shared
+
+  - label: ":scala: backend-workers"
+    command: ./scripts/test.sh backend-workers
+
+  - wait
+
+  - label: ":sbt: Publish JARs"
+    command: ./scripts/publish-jars.sh
+
+  - label: ":docker: Build"
+    command: ./scripts/docker-build.sh
+    branches: master

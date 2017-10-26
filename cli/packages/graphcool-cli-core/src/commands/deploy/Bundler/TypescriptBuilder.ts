@@ -48,6 +48,13 @@ export default class TypescriptBuilder {
       lib: ['lib.es2017.d.ts'],
       rootDir: this.definitionDir,
       outDir: this.buildDir,
+      typeRoots: [
+        path.join('this-folder', 'does-not-exist'),
+        path.join(__dirname, '../../../../node_modules/@types'),
+        path.join(__dirname, '../../../../../../node_modules/@types'),
+        path.join(this.definitionDir,  'typings'),
+        path.join(this.definitionDir,  'node_modules/@types'),
+      ]
     }
   }
 }

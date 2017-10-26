@@ -7,12 +7,12 @@ description: Information about local deployment workflows with Docker.
 
 Graphcool services can be deployed in two ways:
 
-- to the Graphcool Cloud
-- locally with Docker
+- to the [Graphcool Cloud](https://www.graph.cool/cloud)
+- locally with [Docker](https://www.docker.com)
 
-### Graphcool Cloud 
+## Graphcool Cloud 
 
-#### Shared Clusters (Backend-as-a-Service)
+### Shared Clusters (Backend-as-a-Service)
 
 Services can be deployed to _shared_ clusters in the Graphcool Cloud. When deploying to a shared cluster, there is a **free developer plan** as well as a convienent and efficient **pay-as-you-go pricing** model for production applications. 
 
@@ -22,7 +22,7 @@ The Graphcool Cloud currently supports three [regions](https://blog.graph.cool/n
 - `asia-northeast-1` (Asia Pacific, Tokyo)
 - `us-west-1` (US, Oregon)
 
-#### Private Clusters (coming soon)
+### Private Clusters (coming soon)
 
 The other option when deploying to the Graphcool Cloud is a private cluster that runs on your own AWS account.
 
