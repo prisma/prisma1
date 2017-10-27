@@ -1,4 +1,4 @@
-You can download the CLI for the latest Framework version by running `npm install -g graphcool@next`.
+You can download the CLI for the latest Framework version by running `npm install -g graphcool`.
 
 See the Forum for more information on the [Framework Preview](https://www.graph.cool/forum/t/feedback-new-cli-beta/949/1?u=nilan).
 
