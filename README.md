@@ -2,9 +2,9 @@
 
 [Website](https://www.graph.cool/) • [Docs](https://graph.cool/docs/) • [Blog](https://blogs.graph.cool/) • [Forum](https://www.graph.cool/forum) • [Slack](https://slack.graph.cool/) • [Twitter](https://twitter.com/graphcool)
 
-[![CircleCI](https://circleci.com/gh/graphcool/graphcool.svg?style=shield)](https://circleci.com/gh/graphcool/graphcool) [![Slack Status](https://slack.graph.cool/badge.svg)](https://slack.graph.cool) [![npm version](https://img.shields.io/badge/npm%20package-next-brightgreen.svg)](https://badge.fury.io/js/graphcool)
+[![CircleCI](https://circleci.com/gh/graphcool/framework.svg?style=shield)](https://circleci.com/gh/graphcool/framework) [![Slack Status](https://slack.graph.cool/badge.svg)](https://slack.graph.cool) [![npm version](https://img.shields.io/badge/npm%20package-next-brightgreen.svg)](https://badge.fury.io/js/graphcool)
 
-**The Graphcool backend development framework** is designed to help you develop and deploy production-ready GraphQL microservices. With Graphcool you can design your data model and have a production ready [GraphQL](https://www.howtographql.com/) API online in minutes.
+**Graphcool is an open-source backend development framework** to develop and deploy production-ready GraphQL microservices. With Graphcool you can design your data model and have a production ready [GraphQL](https://www.howtographql.com/) API online in minutes.
 
 The framework integrates with cloud-native serverless functions and is compatible with existing libraries and tools like [GraphQL.js](https://github.com/graphql/graphql-js) and [Apollo Server](https://github.com/apollographql/apollo-server). Graphcool comes with a CLI and a Docker-based runtime which can be deployed to any server or cloud.
 
@@ -152,16 +152,16 @@ The framework provides powerful abstractions and building blocks to develop flex
 
 ### Service examples
 
-* [auth](auth): Email/password-based authentication
-* [crud-api](crud-api): Simple CRUD-style GraphQL API
-* [env-variables-in-functions](env-variables-in-functions): Function accessing environment variables
-* [full-example](full-example): Full example (webshop) demoing most available features
-* [typescript-gateway-custom-schema](typescript-gateway-custom-schema): Define a custom schema using an API gateway
-* [graphcool-lib](graphcool-lib): Use `graphcool-lib` in functions to send queries and mutations to your service
-* [permissions](permissions): Configure permission rules
-* [rest-wrapper](rest-wrapper): Extend GraphQL API by wrapping existing REST endpoint
-* [subscriptions](subscriptions): Use subscription functions to react to asynchronous events
-* [yaml-variables](yaml-variables): Use variables in your `graphcool.yml`
+* [auth](examples/auth): Email/password-based authentication
+* [crud-api](examples/crud-api): Simple CRUD-style GraphQL API
+* [env-variables-in-functions](examples/env-variables-in-functions): Function accessing environment variables
+* [full-example](examples/full-example): Full example (webshop) demoing most available features
+* [typescript-gateway-custom-schema](examples/typescript-gateway-custom-schema): Define a custom schema using an API gateway
+* [graphcool-lib](examples/graphcool-lib): Use `graphcool-lib` in functions to send queries and mutations to your service
+* [permissions](examples/permissions): Configure permission rules
+* [rest-wrapper](examples/rest-wrapper): Extend GraphQL API by wrapping existing REST endpoint
+* [subscriptions](examples/subscriptions): Use subscription functions to react to asynchronous events
+* [yaml-variables](examples/yaml-variables): Use variables in your `graphcool.yml`
 
 
 ### Frontend examples
@@ -174,11 +174,25 @@ The framework provides powerful abstractions and building blocks to develop flex
 
 ## Architecture
 
-![](https://imgur.com/zkN1wWT.png)
+Graphcool is a new kind of framework that introduces clear boundaries between your business logic and stateful components. This separation allows the framework to take advantage of modern cloud infrastructure to scale the stateful components without restricting your choice of programming language and development workflow.
+
+![](https://imgur.com/zaaFVnF.png)
+
+## GraphQL Database
+
+The most important component in the Graphcool Framework is the GraphQL Database:
+
+ - Query, mutate & stream data via GraphQL CRUD API
+ - Define and evolve your data model using GraphQL SDL
+
+ If you have used the Graphcool Backend as a Service before, you are already familiar with the benefits of the GraphQL Database.
+ 
+The CRUD API comes out of the box with advanced features such as pagination, expressive filters and nested mutations. These features are implemented within an effecient data-loader engine, to ensure the best possible performance.
+ 
 
 ## Deployment
 
-Graphcool services can be deployed with [Docker](https://docker.com/) or the [Graphcool Cloud](http://graphcool-v3.netlify.com/cloud).
+Graphcool services can be deployed with [Docker](https://docker.com/) or the [Graphcool Cloud](http://graph.cool/cloud).
 
 ### Docker
 
