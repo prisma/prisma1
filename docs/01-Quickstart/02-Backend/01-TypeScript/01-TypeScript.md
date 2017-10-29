@@ -233,7 +233,7 @@ To validate it works, you can now send the following query:
       id
       name
     }
-    topPosts (limit:2) {
+    topPosts (limit: 2) {
       title
     }
   }
