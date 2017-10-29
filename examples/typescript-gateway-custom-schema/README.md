@@ -119,9 +119,9 @@ Send the following query to fetch the posts that you just created:
     me {
       id
       name
-      posts(limit: 2) {
-        title
-      }
+    }
+    topPosts (limit: 2) {
+      title
     }
   }
 }
