@@ -34,7 +34,7 @@ yarn install      # install dependencies - alternatively npm install
 graphcool deploy  # deploy service
 ```
 
-When prompted which cluster you'd like to deploy, chose any of `Backend-as-a-Service`-options (`shared-eu-west-1`, `shared-ap-northeast-1` or `shared-us-west-2`) rather than `local`.
+When prompted which cluster you'd like to deploy, chose any of the `Shared Clusters` (`shared-eu-west-1`, `shared-ap-northeast-1` or `shared-us-west-2`) rather than `local`.
 
 Copy the _Simple API endpoint_ for the next step.
 

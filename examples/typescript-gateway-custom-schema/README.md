@@ -34,7 +34,7 @@ cd service
 graphcool deploy
 ```
 
-When prompted which cluster you'd like to deploy, chose any of `Backend-as-a-Service`-options (`shared-eu-west-1`, `shared-ap-northeast-1` or `shared-us-west-2`) rather than `local`. 
+When prompted which cluster you'd like to deploy, chose any of the `Shared Clusters` (`shared-eu-west-1`, `shared-ap-northeast-1` or `shared-us-west-2`) rather than `local`. 
 
 Then copy the endpoint for the `Simple API`, you'll need it in the next step.
 
