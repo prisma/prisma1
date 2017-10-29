@@ -36,7 +36,7 @@ export default class GetRootToken extends Command {
       const foundPat = pats.find(pat => pat.name === token)
       if (!foundPat) {
         this.out.error(
-          `There is no root token with the name ${token} in project ${id}`,
+          `There is no root token with the name ${token} in service ${id}`,
         )
       } else {
         this.out.log(prettyPat(foundPat))
@@ -44,13 +44,13 @@ export default class GetRootToken extends Command {
     } else {
       if (pats.length === 0) {
         this.out.log(
-          `There are no root tokens defined for project ${chalk.bold(
+          `There are no root tokens defined for service ${chalk.bold(
             id,
           )}`,
         )
       } else {
         this.out.log(
-          chalk.blue(`\nRoot Tokens for project ${chalk.bold(id)}:`),
+          chalk.blue(`\nRoot Tokens for service ${chalk.bold(id)}:`),
         )
         this.out.log(
           pats.map(p => chalk.gray('- ') + chalk.bold(p.name)).join('\n'),
