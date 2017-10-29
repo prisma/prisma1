@@ -9,7 +9,7 @@ Basic example demonstrating the generation of the CRUD-style GraphQL API based o
 Download the example or [clone the repo](https://github.com/graphcool/graphcool):
 
 ```sh
-curl https://codeload.github.com/graphcool/graphcool/tar.gz/master | tar -xz --strip=2 graphcool-master/examples/crud-api
+curl https://codeload.github.com/graphcool/framework/tar.gz/master | tar -xz --strip=2 framework-master/examples/crud-api
 cd crud-api
 ```
 

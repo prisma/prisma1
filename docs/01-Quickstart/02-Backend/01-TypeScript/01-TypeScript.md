@@ -16,7 +16,7 @@ In this quickstart tutorial, you will learn how to build a GraphQL backend and d
 Clone the example repository that contains the server code:
 
 ```sh
-curl https://codeload.github.com/graphcool/graphcool/tar.gz/master | tar -xz --strip=2 graphcool-master/examples/typescript-gateway-custom-schema
+curl https://codeload.github.com/graphcool/framework/tar.gz/master | tar -xz --strip=2 framework-master/examples/typescript-gateway-custom-schema
 cd typescript-gateway-custom-schema
 ```
 

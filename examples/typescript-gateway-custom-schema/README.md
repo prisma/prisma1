@@ -13,7 +13,7 @@ Try out the read-only [demo](https://graphqlbin.com/BrkcP).
 ### 1. Download the example
 
 ```sh
-curl https://codeload.github.com/graphcool/graphcool/tar.gz/master | tar -xz --strip=2 graphcool-master/examples/typescript-gateway-custom-schema
+curl https://codeload.github.com/graphcool/framework/tar.gz/master | tar -xz --strip=2 framework-master/examples/typescript-gateway-custom-schema
 cd typescript-gateway-custom-schema
 ```
 

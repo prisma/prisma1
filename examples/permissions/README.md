@@ -58,10 +58,10 @@ Here is an overview of the file structure in this example:
 
 ### 1. Download the example
 
-Clone the full [graphcool](https://github.com/graphcool/graphcool) repository and navigate to this directory or download _only_ this example with the following command:
+Clone the full [framework](https://github.com/graphcool/framework) repository and navigate to this directory or download _only_ this example with the following command:
 
 ```sh
-curl https://codeload.github.com/graphcool/graphcool/tar.gz/master | tar -xz --strip=2 graphcool-master/examples/permissions
+curl https://codeload.github.com/graphcool/framework/tar.gz/master | tar -xz --strip=2 framework-master/examples/permissions
 cd permissions
 ```
 
