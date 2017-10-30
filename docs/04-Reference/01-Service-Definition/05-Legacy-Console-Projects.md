@@ -40,7 +40,7 @@ To upgrade a _legacy Console project_ to a _Graphcool service_, you need to navi
 
 <InfoBox type=warning>
 
-Upgrading a project is a one-way migration. If you have any concerns about the process, please ask a question in the fForum](https://www.graph.cool/forum/).
+Upgrading a project is a one-way migration. If you have any concerns about the process, please ask a question in the [Forum](https://www.graph.cool/forum/).
 
 </InfoBox>
 
