@@ -1,5 +1,5 @@
 ---
-alias: nohcao8loo
+alias: moong1eeji
 description: Get started in 5 min with Android, GraphQL and Apollo Client by building a simple Instagram clone.
 github: https://github.com/graphcool-examples/android-graphql/tree/master/quickstart-with-apollo/ApolloDemo
 ---
