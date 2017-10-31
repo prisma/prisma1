@@ -8,12 +8,12 @@
 
 The framework integrates with cloud-native serverless functions and is compatible with existing libraries and tools like [GraphQL.js](https://github.com/graphql/graphql-js) and [Apollo Server](https://github.com/apollographql/apollo-server). Graphcool comes with a CLI and a Docker-based runtime which can be deployed to any server or cloud.
 
-<!-- 
+<!--
 Add note that Graphcool can still be used with other langs via webhooks??
 -->
 
 The framework provides powerful abstractions and building blocks to develop flexible, scalable GraphQL backends:
-    
+
 1. **GraphQL database** to easily evolve your data schema & migrate your database
 2. **Flexible auth** using the JWT-based authentication & permission system
 3. **Realtime API** using GraphQL Subscriptions
@@ -57,22 +57,22 @@ The framework provides powerful abstractions and building blocks to develop flex
 3. **Define your data model:**
 
   Edit `types.graphql` to define your data model using the [GraphQL SDL notation](https://graph.cool/docs/reference/database/data-modelling-eiroozae8u). `@model` types map to the database.
-  
+
   ```graphql
   type User @model {
     id: ID! @isUnique
     name: String!
     dateOfBirth: DateTime
-  
+
     # You can declare relations between models like this
     posts: [Post!]! @relation(name: "UserPosts")
   }
-  
-  
+
+
   type Post @model {
     id: ID! @isUnique
     title: String!
-  
+
     # Relations always have two fields
     author: User! @relation(name: "UserPosts")
   }
@@ -132,7 +132,7 @@ The framework provides powerful abstractions and building blocks to develop flex
 * GraphQL Database with automatic migrations
 * JWT-based authentication & flexible permission system
 * Realtime GraphQL Subscription API
-* GraphQL specfication compliant
+* GraphQL specification compliant
 * Compatible with existing libraries and tools (such as GraphQL.js & Apollo)
 
 #### Scalable serverless architecture designed for the cloud
@@ -186,9 +186,9 @@ The most important component in the Graphcool Framework is the GraphQL Database:
  - Define and evolve your data model using GraphQL SDL
 
  If you have used the Graphcool Backend as a Service before, you are already familiar with the benefits of the GraphQL Database.
- 
-The CRUD API comes out of the box with advanced features such as pagination, expressive filters and nested mutations. These features are implemented within an effecient data-loader engine, to ensure the best possible performance.
- 
+
+The CRUD API comes out of the box with advanced features such as pagination, expressive filters and nested mutations. These features are implemented within an efficient data-loader engine, to ensure the best possible performance.
+
 
 ## Deployment
 
@@ -208,7 +208,7 @@ graphcool deploy   # deploy to local cluster
 
 ### Graphcool Cloud (Backend-as-a-Service)
 
-Services can also be deployed to _shared_ clusters in the Graphcool Cloud. When deploying to a shared cluster, there is a **free developer plan** as well as a convienent and efficient **pay-as-you-go pricing** model for production applications. 
+Services can also be deployed to _shared_ clusters in the Graphcool Cloud. When deploying to a shared cluster, there is a **free developer plan** as well as a convenient and efficient **pay-as-you-go pricing** model for production applications.
 
 The Graphcool Cloud currently supports three [regions](https://blog.graph.cool/new-regions-and-improved-performance-7bbc0a35c880):
 
@@ -225,7 +225,7 @@ The Graphcool Cloud currently supports three [regions](https://blog.graph.cool/n
 
 ### Open source & Community
 
-The Graphcool Framework is completely open-source and based on open standards. We highly value 
+The Graphcool Framework is completely open-source and based on open standards. We highly value
 
 - Open Source & Based on open standards
 
@@ -255,9 +255,9 @@ While Graphcool started out as a Backend-as-a-Service (like Firebase or Parse), 
 
 At the core of the Graphcool Framework is the GraphQL Database, an extremely complex piece of software. We developed the initial prototype with Node but soon realized that it wasn't the right choice for the complexity Graphcool needed to deal with.
 
-We found that to be able to develop safely while iterating quickly, we needed a powerful typesystem. Scala's support for functional programming techniques coupled with the strong performance of the JVM made it the obvious choice for Graphcool. 
+We found that to be able to develop safely while iterating quickly, we needed a powerful typesystem. Scala's support for functional programming techniques coupled with the strong performance of the JVM made it the obvious choice for Graphcool.
 
-Another important consideration is that the most mature GraphQL implementation - [Sangria](https://github.com/sangria-graphql) - is written in Scala. 
+Another important consideration is that the most mature GraphQL implementation - [Sangria](https://github.com/sangria-graphql) - is written in Scala.
 
 
 ### Is the API Gateway layer needed?
