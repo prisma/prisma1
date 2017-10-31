@@ -17,7 +17,7 @@ The `STRIPE_TEST_KEY` can be obtained by [creating a stripe account](https://das
 Download the example or [clone the repo](https://github.com/graphcool/graphcool):
 
 ```sh
-curl https://codeload.github.com/graphcool/graphcool/tar.gz/master | tar -xz --strip=2 graphcool-master/examples/full-example
+curl https://codeload.github.com/graphcool/framework/tar.gz/master | tar -xz --strip=2 framework-master/examples/full-example
 cd full-example
 ```
 
@@ -34,7 +34,7 @@ yarn install      # install dependencies - alternatively npm install
 graphcool deploy  # deploy service
 ```
 
-When prompted which cluster you'd like to deploy, chose any of `Backend-as-a-Service`-options (`shared-eu-west-1`, `shared-ap-northeast-1` or `shared-us-west-2`) rather than `local`.
+When prompted which cluster you'd like to deploy, chose any of the `Shared Clusters` (`shared-eu-west-1`, `shared-ap-northeast-1` or `shared-us-west-2`) rather than `local`.
 
 Copy the _Simple API endpoint_ for the next step.
 
