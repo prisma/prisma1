@@ -35,7 +35,7 @@ steps:
   - wait
 
   - label: ":sbt: Publish JARs"
-    command: ./scripts/publish-jars.sh
+    command: ./server/scripts/publish-jars.sh
 
   - label: ":docker: Build"
     command: cd server && ./scripts/docker-build.sh
