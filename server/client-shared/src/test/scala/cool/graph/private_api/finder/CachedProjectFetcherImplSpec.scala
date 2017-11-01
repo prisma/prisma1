@@ -19,8 +19,8 @@ class CachedProjectFetcherImplSpec extends FlatSpec with Matchers with ScalaFutu
   implicit val unmarshaller               = Conversions.Unmarshallers.ToString
   implicit val marshaller                 = Conversions.Marshallers.FromString
 
-  val database = ProjectDatabase(id = "test", region = Region.EU_WEST_1, name = "client1", isDefaultForRegion = true)
-  val project = Project(id = "", ownerId = "", name = s"Test Project", alias = None, projectDatabase = database)
+  val database                         = ProjectDatabase(id = "test", region = Region.EU_WEST_1, name = "client1", isDefaultForRegion = true)
+  val project                          = Project(id = "", ownerId = "", name = s"Test Project", alias = None, projectDatabase = database)
   val rabbitUri                        = sys.env.getOrElse("RABBITMQ_URI", sys.error("RABBITMQ_URI env var required but not found"))
   val projectFetcher                   = new ProjectFetcherMock(project)
   val pubSub: RabbitAkkaPubSub[String] = RabbitAkkaPubSub[String](rabbitUri, "project-schema-invalidation", durable = true)
@@ -56,7 +56,7 @@ class CachedProjectFetcherImplSpec extends FlatSpec with Matchers with ScalaFutu
     projectFetcher.setAlias(firstAlias = None, secondAlias = None)
     pubSub.publish(Only("FirstOne"), "FirstOne")
 
-    Thread.sleep(2000)
+    Thread.sleep(3000)
 
     //fetch second time with alias -> this should not find anything now
     cachedProjectFetcher.fetch("FirstAlias").futureValue should be(None)
@@ -78,18 +78,18 @@ class CachedProjectFetcherImplSpec extends FlatSpec with Matchers with ScalaFutu
     pubSub.publish(Only("FirstOne"), "FirstOne")
     pubSub.publish(Only("SecondOne"), "SecondOne")
 
-    Thread.sleep(1000)
+    Thread.sleep(2000)
 
     //fetch second time with alias -> this should not find anything now since project needs to be found once by id first
     val fetchByAlias = cachedProjectFetcher.fetch("FirstAlias").futureValue
     fetchByAlias should be(None)
 
-    Thread.sleep(1000)
+    Thread.sleep(2000)
     //load alias cache by loading by id first once
     val fetchById = cachedProjectFetcher.fetch("SecondOne").futureValue
     fetchById.get.project.id should be("SecondOne")
 
-    Thread.sleep(1000)
+    Thread.sleep(2000)
     // this should now find the SecondOne
     val fetchByAliasAgain = cachedProjectFetcher.fetch("FirstAlias").futureValue
     fetchByAliasAgain.get.project.id should be("SecondOne")
