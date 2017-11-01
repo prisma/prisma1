@@ -81,7 +81,6 @@ trait CommonClientDependencies extends Module with LazyLogging {
   binding identifiedBy "s3" toNonLazy createS3()
   binding identifiedBy "s3-fileupload" toNonLazy createS3Fileupload()
   binding identifiedBy "config" toNonLazy config
-  binding identifiedBy "sns" toNonLazy createSystemSns()
   binding identifiedBy "actorSystem" toNonLazy system destroyWith (_.terminate())
   binding identifiedBy "dispatcher" toNonLazy system.dispatcher
   binding identifiedBy "actorMaterializer" toNonLazy materializer
@@ -134,16 +133,6 @@ trait CommonClientDependencies extends Module with LazyLogging {
     AmazonS3ClientBuilder.standard
       .withCredentials(new AWSStaticCredentialsProvider(credentials))
       .withEndpointConfiguration(new EndpointConfiguration(sys.env("FILEUPLOAD_S3_ENDPOINT"), sys.env("AWS_REGION")))
-      .build
-  }
-
-  private def createSystemSns(): AmazonSNS = {
-    val credentials =
-      new BasicAWSCredentials(sys.env("AWS_ACCESS_KEY_ID"), sys.env("AWS_SECRET_ACCESS_KEY"))
-
-    AmazonSNSAsyncClientBuilder.standard
-      .withCredentials(new AWSStaticCredentialsProvider(credentials))
-      .withEndpointConfiguration(new EndpointConfiguration(sys.env("SNS_ENDPOINT_SYSTEM"), sys.env("AWS_REGION")))
       .build
   }
 }

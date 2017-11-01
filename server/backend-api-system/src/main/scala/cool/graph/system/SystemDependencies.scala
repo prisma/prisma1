@@ -42,6 +42,7 @@ trait SystemApiDependencies extends Module {
   val internalDb: MySQLProfile.backend.Database
   val logsDb: MySQLProfile.backend.Database
   val globalDatabaseManager: GlobalDatabaseManager
+  val snsPublisher: SnsPublisher
 
   lazy val clientResolver      = ClientResolver(internalDb, cachedProjectResolver)(system.dispatcher)
   lazy val kinesis             = createKinesis()
@@ -51,7 +52,6 @@ trait SystemApiDependencies extends Module {
   binding identifiedBy "internal-db" toNonLazy internalDb
   binding identifiedBy "logs-db" toNonLazy logsDb
   binding identifiedBy "kinesis" toNonLazy kinesis
-  binding identifiedBy "sns" toNonLazy createSns()
   binding identifiedBy "export-data-s3" toNonLazy createExportDataS3()
   binding identifiedBy "config" toNonLazy config
   binding identifiedBy "actorSystem" toNonLazy system destroyWith (_.terminate())
@@ -67,7 +67,6 @@ trait SystemApiDependencies extends Module {
   bind[Auth0Api] toNonLazy new Auth0ApiImplementation
   bind[Auth0Extend] toNonLazy new Auth0ExtendImplementation()
   bind[BugSnagger] toNonLazy bugsnagger
-  bind[SnsPublisher] identifiedBy "seatSnsPublisher" toNonLazy new SnsPublisherImplementation(topic = sys.env("SNS_SEAT"))
   bind[TestableTime] toNonLazy new TestableTimeImplementation
   bind[KinesisPublisher] identifiedBy "kinesisAlgoliaSyncQueriesPublisher" toNonLazy new KinesisPublisherImplementation(
     streamName = sys.env("KINESIS_STREAM_ALGOLIA_SYNC_QUERY"),
@@ -82,16 +81,6 @@ trait SystemApiDependencies extends Module {
       .withCredentials(new AWSStaticCredentialsProvider(credentials))
       .withEndpointConfiguration(new EndpointConfiguration(sys.env("KINESIS_ENDPOINT"), sys.env("AWS_REGION")))
       .build()
-  }
-
-  protected def createSns(): AmazonSNS = {
-    val credentials =
-      new BasicAWSCredentials(sys.env("AWS_ACCESS_KEY_ID"), sys.env("AWS_SECRET_ACCESS_KEY"))
-
-    AmazonSNSAsyncClientBuilder.standard
-      .withCredentials(new AWSStaticCredentialsProvider(credentials))
-      .withEndpointConfiguration(new EndpointConfiguration(sys.env("SNS_ENDPOINT"), sys.env("AWS_REGION")))
-      .build
   }
 
   protected def createExportDataS3(): AmazonS3 = {
@@ -139,6 +128,7 @@ case class SystemDependencies()(implicit val system: ActorSystem, val materializ
   val apiMatrixFactory: ApiMatrixFactory           = ApiMatrixFactory(DefaultApiMatrix)
   val requestPrefix                                = sys.env.getOrElse("AWS_REGION", sys.error("AWS Region not found."))
   val cloudwatch                                   = CloudwatchImpl()
+  val snsPublisher                                 = new SnsPublisherImplementation(topic = sys.env("SNS_SEAT"))
 
   val functionEnvironment = LambdaFunctionEnvironment(
     sys.env.getOrElse("LAMBDA_AWS_ACCESS_KEY_ID", "whatever"),
@@ -150,9 +140,21 @@ case class SystemDependencies()(implicit val system: ActorSystem, val materializ
   bind[FunctionEnvironment] toNonLazy functionEnvironment
   bind[ApiMatrixFactory] toNonLazy apiMatrixFactory
   bind[GlobalDatabaseManager] toNonLazy globalDatabaseManager
+  bind[AmazonSNS] identifiedBy "sns" toNonLazy createSns()
+  bind[SnsPublisher] identifiedBy "seatSnsPublisher" toNonLazy snsPublisher
 
   binding identifiedBy "cloudwatch" toNonLazy cloudwatch
   binding identifiedBy "projectResolver" toNonLazy cachedProjectResolver
   binding identifiedBy "cachedProjectResolver" toNonLazy cachedProjectResolver
   binding identifiedBy "uncachedProjectResolver" toNonLazy uncachedProjectResolver
+
+  protected def createSns(): AmazonSNS = {
+    val credentials =
+      new BasicAWSCredentials(sys.env("AWS_ACCESS_KEY_ID"), sys.env("AWS_SECRET_ACCESS_KEY"))
+
+    AmazonSNSAsyncClientBuilder.standard
+      .withCredentials(new AWSStaticCredentialsProvider(credentials))
+      .withEndpointConfiguration(new EndpointConfiguration(sys.env("SNS_ENDPOINT"), sys.env("AWS_REGION")))
+      .build
+  }
 }

@@ -18,7 +18,7 @@ import cool.graph.messagebus.queue.inmemory.InMemoryAkkaQueue
 import cool.graph.relay.RelayApiClientDependencies
 import cool.graph.schemamanager.SchemaManagerApiDependencies
 import cool.graph.shared.database.GlobalDatabaseManager
-import cool.graph.shared.externalServices.{KinesisPublisherImplementation, TestableTimeImplementation}
+import cool.graph.shared.externalServices.{DummySnsPublisher, KinesisPublisherImplementation, SnsPublisher, TestableTimeImplementation}
 import cool.graph.shared.functions.dev.DevFunctionEnvironment
 import cool.graph.shared.functions.{EndpointResolver, FunctionEnvironment, LocalEndpointResolver}
 import cool.graph.subscriptions.SimpleSubscriptionApiDependencies
@@ -69,7 +69,6 @@ trait SingleServerApiDependencies
 
 case class SingleServerDependencies(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends SingleServerApiDependencies {
   import system.dispatcher
-
   import scala.concurrent.duration._
 
   val (globalDatabaseManager, internalDb, logsDb) = {
@@ -102,6 +101,7 @@ case class SingleServerDependencies(implicit val system: ActorSystem, val materi
   val sssEventsPublisher: PubSubPublisher[String]                        = sssEventsPubSub
   val sssEventsSubscriber: PubSubSubscriber[String]                      = sssEventsPubSub
   val cloudwatch                                                         = CloudwatchMock
+  val snsPublisher                                                       = DummySnsPublisher()
 
   // API webhooks -> worker webhooks
   val webhooksQueue: Queue[Webhook] = InMemoryAkkaQueue[Webhook]()
@@ -160,6 +160,7 @@ case class SingleServerDependencies(implicit val system: ActorSystem, val materi
   bind[PubSubSubscriber[String]] identifiedBy "sss-events-subscriber" toNonLazy sssEventsSubscriber
   bind[String] identifiedBy "request-prefix" toNonLazy requestPrefix
   bind[GlobalDatabaseManager] toNonLazy globalDatabaseManager
+  bind[SnsPublisher] identifiedBy "seatSnsPublisher" toNonLazy snsPublisher
 
   binding identifiedBy "cloudwatch" toNonLazy cloudwatch
   binding identifiedBy "project-schema-fetcher" toNonLazy projectSchemaFetcher

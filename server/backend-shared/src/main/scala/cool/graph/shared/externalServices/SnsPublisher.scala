@@ -10,6 +10,10 @@ trait SnsPublisher {
   def putRecord(payload: String): PublishResult
 }
 
+case class DummySnsPublisher() extends SnsPublisher {
+  override def putRecord(payload: String): PublishResult = new PublishResult().withMessageId("0")
+}
+
 class SnsPublisherMock extends SnsPublisher {
   val messages = scala.collection.parallel.mutable.ParTrieMap[String, String]()
 
