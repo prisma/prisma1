@@ -115,8 +115,9 @@ lazy val akkaUtils = Project(id = "akka-utils", base = file("./libs/akka-utils")
     "ch.megard"           %% "akka-http-cors"       % "0.2.1"
   ))
 
-lazy val cloudwatch = Project(id = "cloudwatch", base = file("./libs/cloudwatch"))
+lazy val aws = Project(id = "aws", base = file("./libs/aws"))
   .settings(commonSettings: _*)
+  .settings(libraryDependencies ++= awsDependencies)
 
 lazy val metrics = Project(id = "metrics", base = file("./libs/metrics"))
   .settings(commonSettings: _*)
@@ -171,7 +172,7 @@ lazy val backendShared =
     .settings(unmanagedBase := baseDirectory.value / "self_built_libs")
     .dependsOn(bugsnag % "compile")
     .dependsOn(akkaUtils % "compile")
-    .dependsOn(cloudwatch % "compile")
+    .dependsOn(aws % "compile")
     .dependsOn(metrics % "compile")
     .dependsOn(jvmProfiler % "compile")
     .dependsOn(rabbitProcessor % "compile")
@@ -219,7 +220,7 @@ lazy val backendApiSubscriptionsWebsocket =
         ExclusionRule(organization = "com.typesafe.play")
       )
     ))
-    .dependsOn(cloudwatch % "compile")
+    .dependsOn(aws % "compile")
     .dependsOn(metrics % "compile")
     .dependsOn(jvmProfiler % "compile")
     .dependsOn(akkaUtils % "compile")
@@ -369,7 +370,7 @@ lazy val localFaas = Project(id = "localfaas", base = file("./localfaas"))
 val allProjects = List(
   bugsnag,
   akkaUtils,
-  cloudwatch,
+  aws,
   metrics,
   rabbitProcessor,
   messageBus,

@@ -3,13 +3,13 @@ package cool.graph.singleserver
 import akka.actor.{ActorSystem, Props}
 import akka.stream.ActorMaterializer
 import com.typesafe.config.ConfigFactory
+import cool.graph.aws.cloudwatch.CloudwatchMock
 import cool.graph.bugsnag.BugSnaggerImpl
 import cool.graph.client.FeatureMetricActor
 import cool.graph.client.authorization.ClientAuthImpl
 import cool.graph.client.finder.{CachedProjectFetcherImpl, ProjectFetcherImpl, RefreshableProjectFetcher}
 import cool.graph.client.metrics.ApiMetricsMiddleware
 import cool.graph.client.schema.simple.SimpleApiClientDependencies
-import cool.graph.cloudwatch.CloudwatchMock
 import cool.graph.messagebus._
 import cool.graph.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
 import cool.graph.messagebus.queue.inmemory.InMemoryAkkaQueue

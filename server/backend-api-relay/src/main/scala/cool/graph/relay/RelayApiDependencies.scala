@@ -5,12 +5,13 @@ import akka.stream.ActorMaterializer
 import com.amazonaws.auth.{AWSStaticCredentialsProvider, BasicAWSCredentials}
 import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration
 import com.amazonaws.services.kinesis.{AmazonKinesis, AmazonKinesisClientBuilder}
+import cool.graph.aws.AwsInitializers
+import cool.graph.aws.cloudwatch.CloudwatchImpl
 import cool.graph.client.database.{DeferredResolverProvider, RelayManyModelDeferredResolver, RelayToManyDeferredResolver}
 import cool.graph.client.finder.{CachedProjectFetcherImpl, ProjectFetcherImpl, RefreshableProjectFetcher}
 import cool.graph.client.metrics.ApiMetricsMiddleware
 import cool.graph.client.server.{GraphQlRequestHandler, GraphQlRequestHandlerImpl, ProjectSchemaBuilder}
 import cool.graph.client.{CommonClientDependencies, FeatureMetric, FeatureMetricActor, UserContext}
-import cool.graph.cloudwatch.CloudwatchImpl
 import cool.graph.messagebus.Conversions.{ByteUnmarshaller, Unmarshallers}
 import cool.graph.messagebus.pubsub.rabbit.{RabbitAkkaPubSub, RabbitAkkaPubSubSubscriber}
 import cool.graph.messagebus.queue.rabbit.RabbitQueue
@@ -95,6 +96,8 @@ case class RelayApiDependencies(implicit val system: ActorSystem, val materializ
   binding identifiedBy "kinesis" toNonLazy kinesis
   binding identifiedBy "api-metrics-middleware" toNonLazy new ApiMetricsMiddleware(testableTime, featureMetricActor)
   binding identifiedBy "featureMetricActor" to featureMetricActor
+  binding identifiedBy "s3" toNonLazy AwsInitializers.createS3()
+  binding identifiedBy "s3-fileupload" toNonLazy AwsInitializers.createS3Fileupload()
 
   bind[GlobalDatabaseManager] toNonLazy globalDatabaseManager
   bind[FunctionEnvironment] toNonLazy functionEnvironment
@@ -105,4 +108,5 @@ case class RelayApiDependencies(implicit val system: ActorSystem, val materializ
   bind[String] identifiedBy "request-prefix" toNonLazy requestPrefix
   bind[KinesisPublisher] identifiedBy "kinesisAlgoliaSyncQueriesPublisher" toNonLazy kinesisAlgoliaSyncQueriesPublisher
   bind[KinesisPublisher] identifiedBy "kinesisApiMetricsPublisher" toNonLazy kinesisApiMetricsPublisher
+
 }

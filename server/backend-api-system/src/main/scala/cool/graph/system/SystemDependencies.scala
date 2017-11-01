@@ -2,14 +2,11 @@ package cool.graph.system
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import com.amazonaws.auth.{AWSStaticCredentialsProvider, BasicAWSCredentials}
-import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration
-import com.amazonaws.services.kinesis.{AmazonKinesis, AmazonKinesisClientBuilder}
-import com.amazonaws.services.s3.{AmazonS3, AmazonS3ClientBuilder}
-import com.amazonaws.services.sns.{AmazonSNS, AmazonSNSAsyncClientBuilder}
+import com.amazonaws.services.sns.AmazonSNS
 import com.typesafe.config.ConfigFactory
+import cool.graph.aws.AwsInitializers
+import cool.graph.aws.cloudwatch.{Cloudwatch, CloudwatchImpl}
 import cool.graph.bugsnag.{BugSnagger, BugSnaggerImpl}
-import cool.graph.cloudwatch.{Cloudwatch, CloudwatchImpl}
 import cool.graph.messagebus.pubsub.rabbit.RabbitAkkaPubSub
 import cool.graph.messagebus.{Conversions, PubSubPublisher}
 import cool.graph.shared.database.{GlobalDatabaseManager, InternalDatabase}
@@ -51,7 +48,7 @@ trait SystemApiDependencies extends Module {
 
   binding identifiedBy "internal-db" toNonLazy internalDb
   binding identifiedBy "logs-db" toNonLazy logsDb
-  binding identifiedBy "export-data-s3" toNonLazy createExportDataS3()
+  binding identifiedBy "export-data-s3" toNonLazy AwsInitializers.createExportDataS3()
   binding identifiedBy "config" toNonLazy config
   binding identifiedBy "actorSystem" toNonLazy system destroyWith (_.terminate())
   binding identifiedBy "dispatcher" toNonLazy system.dispatcher
@@ -67,22 +64,11 @@ trait SystemApiDependencies extends Module {
   bind[Auth0Extend] toNonLazy new Auth0ExtendImplementation()
   bind[BugSnagger] toNonLazy bugsnagger
   bind[TestableTime] toNonLazy new TestableTimeImplementation
-
-  protected def createExportDataS3(): AmazonS3 = {
-    val credentials = new BasicAWSCredentials(
-      sys.env.getOrElse("AWS_ACCESS_KEY_ID", ""),
-      sys.env.getOrElse("AWS_SECRET_ACCESS_KEY", "")
-    )
-
-    AmazonS3ClientBuilder.standard
-      .withCredentials(new AWSStaticCredentialsProvider(credentials))
-      .withEndpointConfiguration(new EndpointConfiguration(sys.env("DATA_EXPORT_S3_ENDPOINT"), sys.env("AWS_REGION")))
-      .build
-  }
 }
 
 case class SystemDependencies()(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends SystemApiDependencies {
   import system.dispatcher
+
   import scala.concurrent.duration._
 
   SystemMetrics.init()
@@ -114,7 +100,7 @@ case class SystemDependencies()(implicit val system: ActorSystem, val materializ
   val requestPrefix                                = sys.env.getOrElse("AWS_REGION", sys.error("AWS Region not found."))
   val cloudwatch                                   = CloudwatchImpl()
   val snsPublisher                                 = new SnsPublisherImplementation(topic = sys.env("SNS_SEAT"))
-  val kinesis                                      = createKinesis()
+  val kinesis                                      = AwsInitializers.createKinesis()
   val kinesisAlgoliaSyncQueriesPublisher           = new KinesisPublisherImplementation(streamName = sys.env("KINESIS_STREAM_ALGOLIA_SYNC_QUERY"), kinesis)
 
   val functionEnvironment = LambdaFunctionEnvironment(
@@ -127,7 +113,7 @@ case class SystemDependencies()(implicit val system: ActorSystem, val materializ
   bind[FunctionEnvironment] toNonLazy functionEnvironment
   bind[ApiMatrixFactory] toNonLazy apiMatrixFactory
   bind[GlobalDatabaseManager] toNonLazy globalDatabaseManager
-  bind[AmazonSNS] identifiedBy "sns" toNonLazy createSns()
+  bind[AmazonSNS] identifiedBy "sns" toNonLazy AwsInitializers.createSns()
   bind[SnsPublisher] identifiedBy "seatSnsPublisher" toNonLazy snsPublisher
   bind[KinesisPublisher] identifiedBy "kinesisAlgoliaSyncQueriesPublisher" toNonLazy kinesisAlgoliaSyncQueriesPublisher
 
@@ -136,24 +122,4 @@ case class SystemDependencies()(implicit val system: ActorSystem, val materializ
   binding identifiedBy "projectResolver" toNonLazy cachedProjectResolver
   binding identifiedBy "cachedProjectResolver" toNonLazy cachedProjectResolver
   binding identifiedBy "uncachedProjectResolver" toNonLazy uncachedProjectResolver
-
-  protected def createSns(): AmazonSNS = {
-    val credentials =
-      new BasicAWSCredentials(sys.env("AWS_ACCESS_KEY_ID"), sys.env("AWS_SECRET_ACCESS_KEY"))
-
-    AmazonSNSAsyncClientBuilder.standard
-      .withCredentials(new AWSStaticCredentialsProvider(credentials))
-      .withEndpointConfiguration(new EndpointConfiguration(sys.env("SNS_ENDPOINT"), sys.env("AWS_REGION")))
-      .build
-  }
-
-  protected def createKinesis(): AmazonKinesis = {
-    val credentials = new BasicAWSCredentials(sys.env("AWS_ACCESS_KEY_ID"), sys.env("AWS_SECRET_ACCESS_KEY"))
-
-    AmazonKinesisClientBuilder
-      .standard()
-      .withCredentials(new AWSStaticCredentialsProvider(credentials))
-      .withEndpointConfiguration(new EndpointConfiguration(sys.env("KINESIS_ENDPOINT"), sys.env("AWS_REGION")))
-      .build()
-  }
 }

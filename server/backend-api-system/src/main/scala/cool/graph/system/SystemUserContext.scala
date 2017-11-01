@@ -3,8 +3,8 @@ package cool.graph.system
 import java.util.concurrent.TimeUnit
 
 import cool.graph.SystemRequestContextTrait
+import cool.graph.aws.cloudwatch.Cloudwatch
 import cool.graph.client.database.ProjectDataresolver
-import cool.graph.cloudwatch.Cloudwatch
 import cool.graph.shared.errors.SystemErrors
 import cool.graph.shared.errors.UserInputErrors.InvalidSession
 import cool.graph.shared.models.ModelOperation.ModelOperation

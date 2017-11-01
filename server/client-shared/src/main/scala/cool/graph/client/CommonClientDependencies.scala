@@ -2,16 +2,13 @@ package cool.graph.client
 
 import akka.actor.{ActorRef, ActorSystem}
 import akka.stream.ActorMaterializer
-import com.amazonaws.auth.{AWSStaticCredentialsProvider, BasicAWSCredentials}
-import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration
-import com.amazonaws.services.s3.{AmazonS3, AmazonS3ClientBuilder}
 import com.typesafe.config.{Config, ConfigFactory}
 import com.typesafe.scalalogging.LazyLogging
+import cool.graph.aws.cloudwatch.Cloudwatch
 import cool.graph.bugsnag.{BugSnagger, BugSnaggerImpl}
 import cool.graph.client.authorization.{ClientAuth, ClientAuthImpl}
 import cool.graph.client.finder.ProjectFetcher
 import cool.graph.client.metrics.ApiMetricsMiddleware
-import cool.graph.cloudwatch.Cloudwatch
 import cool.graph.messagebus.{PubSubPublisher, PubSubSubscriber, QueuePublisher}
 import cool.graph.shared.database.GlobalDatabaseManager
 import cool.graph.shared.externalServices.{KinesisPublisher, TestableTime, TestableTimeImplementation}
@@ -68,8 +65,6 @@ trait CommonClientDependencies extends Module with LazyLogging {
   bind[WebhookCaller] toNonLazy new WebhookCallerImplementation()
   bind[BugSnagger] toNonLazy bugSnagger
 
-  binding identifiedBy "s3" toNonLazy createS3()
-  binding identifiedBy "s3-fileupload" toNonLazy createS3Fileupload()
   binding identifiedBy "config" toNonLazy config
   binding identifiedBy "actorSystem" toNonLazy system destroyWith (_.terminate())
   binding identifiedBy "dispatcher" toNonLazy system.dispatcher
@@ -80,29 +75,4 @@ trait CommonClientDependencies extends Module with LazyLogging {
   private lazy val blockedProjectIds: Vector[String] = Try {
     sys.env("BLOCKED_PROJECT_IDS").split(",").toVector
   }.getOrElse(Vector.empty)
-
-  private def createS3(): AmazonS3 = {
-    val credentials = new BasicAWSCredentials(
-      sys.env("AWS_ACCESS_KEY_ID"),
-      sys.env("AWS_SECRET_ACCESS_KEY")
-    )
-
-    AmazonS3ClientBuilder.standard
-      .withCredentials(new AWSStaticCredentialsProvider(credentials))
-      .withEndpointConfiguration(new EndpointConfiguration(sys.env("FILEUPLOAD_S3_ENDPOINT"), sys.env("AWS_REGION")))
-      .build
-  }
-
-  // this is still in old SBS AWS account
-  private def createS3Fileupload(): AmazonS3 = {
-    val credentials = new BasicAWSCredentials(
-      sys.env("FILEUPLOAD_S3_AWS_ACCESS_KEY_ID"),
-      sys.env("FILEUPLOAD_S3_AWS_SECRET_ACCESS_KEY")
-    )
-
-    AmazonS3ClientBuilder.standard
-      .withCredentials(new AWSStaticCredentialsProvider(credentials))
-      .withEndpointConfiguration(new EndpointConfiguration(sys.env("FILEUPLOAD_S3_ENDPOINT"), sys.env("AWS_REGION")))
-      .build
-  }
 }

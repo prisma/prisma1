@@ -3,11 +3,11 @@ package cool.graph.client
 import akka.http.scaladsl.model.StatusCode
 import akka.http.scaladsl.model.StatusCodes.OK
 import cool.graph.DataItem
+import cool.graph.aws.cloudwatch.CloudwatchMock
 import cool.graph.bugsnag.BugSnaggerMock
 import cool.graph.client.authorization.ClientAuth
 import cool.graph.client.finder.ProjectFetcher
 import cool.graph.client.server._
-import cool.graph.cloudwatch.CloudwatchMock
 import cool.graph.shared.{ApiMatrixFactory, DefaultApiMatrix}
 import cool.graph.shared.logging.RequestLogger
 import cool.graph.shared.models._

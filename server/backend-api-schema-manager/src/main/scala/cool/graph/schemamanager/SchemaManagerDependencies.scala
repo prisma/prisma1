@@ -3,8 +3,9 @@ package cool.graph.schemamanager
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.typesafe.config.ConfigFactory
+import cool.graph.aws.cloudwatch.{Cloudwatch, CloudwatchImpl}
 import cool.graph.bugsnag.{BugSnagger, BugSnaggerImpl}
-import cool.graph.cloudwatch.{Cloudwatch, CloudwatchImpl}
+import cool.graph.cloudwatch.CloudwatchImpl
 import cool.graph.system.database.finder._
 import cool.graph.system.metrics.SystemMetrics
 import scaldi.Module
