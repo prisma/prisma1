@@ -48,10 +48,8 @@ services:
       PRIVATE_CLIENT_API_SECRET: "empty"
       PACKAGECLOUD_PW: "${PACKAGECLOUD_PW}"
     volumes:
-      - ..:/root/build
-      - ~/.ivy2:/root/.ivy2
-      - ~/.coursier:/root/.coursier
-    working_dir: /root/build
+      - ../..:/root
+    working_dir: /root/server
 
   client-db:
     image: mysql:5.7

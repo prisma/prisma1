@@ -7,14 +7,14 @@ description: An overview of the Graphcool Framework.
 
 The Graphcool Framework is an open-source backend development framework that builds on modern web techologies. Its powerful abstractions allow for rapid development of event-driven, highly scalable and production-ready GraphQL microservices as well as full-blown backend systems.
 
-At the core of Graphcool is an auto-generated [GraphQL API](!alias-abogasd0go) providing a convenient abstraction layer for your [database](!alias-viuf8uus7o). The API comes with CRUD operations and [realtime](!alias-aip7oojeiv) capabilities, it can eb easily customized with an [API gateway](!alias-ucoohic9zu). Business logic and integrations of existing systems are implemented with serverless [functions](!alias-aiw4aimie9). Out-of-the-box [authentication](!alias-bee4oodood) mechanisms and an expressive [permission](!alias-iegoo0heez) system ensure absolute security for your data.
+At the core of Graphcool is an auto-generated [GraphQL API](!alias-abogasd0go) providing a convenient abstraction layer for your [database](!alias-viuf8uus7o). The API comes with CRUD operations and [realtime](!alias-aip7oojeiv) capabilities, it can be easily customized with an [API gateway](!alias-ucoohic9zu). Business logic and integrations of existing systems are implemented with serverless [functions](!alias-aiw4aimie9). Out-of-the-box [authentication](!alias-bee4oodood) mechanisms and an expressive [permission](!alias-iegoo0heez) system ensure absolute security for your data.
 
 
 ## A quick history of backend development
 
 ### From hardware servers to the cloud
 
-Backend development has undergone tremendous change in the past decades. In the early days of the web, developers and and website providers had to buy and manage their own hardware to deploy and run servers on the internet. The movement towards the cloud removed much of that burden and let developers focus on the applications they wanted to build rather than infrastructure to be managed. 
+Backend development has undergone tremendous change in the past decades. In the early days of the web, developers and website providers had to buy and manage their own hardware to deploy and run servers on the internet. The movement towards the cloud removed much of that burden and let developers focus on the applications they wanted to build rather than infrastructure to be managed. 
 
 Web frameworks like [Ruby on Rails](http://rubyonrails.org/), [Express.js](https://expressjs.com/) or [Laravel](https://laravel.com/) (PHP) bootstrap the development of a web server and further contributed to the productivity of backend developers in the past years. 
 
@@ -53,7 +53,7 @@ Graphcool backends, called _services_, are managed with the [Graphcool CLI](!ali
 
 Standard web frameworks like [Ruby on Rails](http://rubyonrails.org/), [Express.js](https://expressjs.com/) or [Laravel](https://laravel.com/) allow you to bootstrap a web server based on a specific programming language. When building a backend application with any of these frameworks, you additionally need to setup and configure a database, integrate an ORM (or implement a custom data layer) and make sure the data is properly returned by the API.
 
-With Graphcool, the aut-generated CRUD API will be the foundation for your backend. This API can also be tailored and easily extended by using an [API gateway](!alias-ucoohic9zu).
+With Graphcool, the auto-generated CRUD API will be the foundation for your backend. This API can also be tailored and easily extended by using an [API gateway](!alias-ucoohic9zu).
 
 Graphcool itself is programming language agnostic. Functions can be implemented in any language that's supported by your function runtime. The API proxy layer effectively is a simple web server that can also be implemented in the language of your choice. You could thus use any of the afore mentioned frameworks to build the proxy layer.
 

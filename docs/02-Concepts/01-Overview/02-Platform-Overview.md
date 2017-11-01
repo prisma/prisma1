@@ -54,7 +54,7 @@ The Graphcool CLI also has the concept of _environments_. The same project confi
 
 ### Console
 
-The Graphcool Console gives you magor insights into your project internals. You can use it for monitoring performance, accessing logs and managing collaboration. 
+The Graphcool Console gives you major insights into your project internals. You can use it for monitoring performance, accessing logs and managing collaboration. 
 
 
 
