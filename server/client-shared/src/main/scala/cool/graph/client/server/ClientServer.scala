@@ -16,6 +16,7 @@ import cool.graph.client.finder.ProjectFetcher
 import cool.graph.private_api.PrivateClientApi
 import cool.graph.shared.errors.CommonErrors.TimeoutExceeded
 import cool.graph.shared.errors.UserAPIErrors.ProjectNotFound
+import cool.graph.shared.externalServices.KinesisPublisher
 import cool.graph.shared.logging.RequestLogger
 import cool.graph.util.ErrorHandlerFactory
 import scaldi.{Injectable, Injector}
@@ -34,7 +35,6 @@ case class ClientServer(prefix: String)(
   import system.dispatcher
 
   val log                   = (x: String) => logger.info(x)
-  val kinesis               = inject[AmazonKinesis](identified by "kinesis")
   val errorHandlerFactory   = ErrorHandlerFactory(log)
   val projectSchemaFetcher  = inject[ProjectFetcher](identified by "project-schema-fetcher")
   val graphQlRequestHandler = inject[GraphQlRequestHandler](identified by s"$prefix-gql-request-handler")
@@ -43,16 +43,15 @@ case class ClientServer(prefix: String)(
   val requestPrefix         = inject[String](identified by "request-prefix")
   val requestIdPrefix       = s"$requestPrefix:$prefix"
 
+  // For health checks. Only one publisher inject required (as multiple should share the same client).
+  val kinesis = inject[KinesisPublisher](identified by "kinesisAlgoliaSyncQueriesPublisher")
+
   private val requestHandler = RequestHandler(errorHandlerFactory, projectSchemaFetcher, projectSchemaBuilder, graphQlRequestHandler, clientAuth, log)
 
   override def healthCheck: Future[_] =
     for {
       _ <- graphQlRequestHandler.healthCheck
-      _ <- Future {
-            try { kinesis.listStreams() } catch {
-              case e: com.amazonaws.services.kinesis.model.LimitExceededException => true
-            }
-          }
+      _ <- kinesis.healthCheck
     } yield ()
 
   val innerRoutes: Route = extractRequest { _ =>

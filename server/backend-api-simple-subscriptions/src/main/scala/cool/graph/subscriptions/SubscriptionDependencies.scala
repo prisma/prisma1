@@ -1,6 +1,6 @@
 package cool.graph.subscriptions
 
-import akka.actor.{ActorSystem, Props}
+import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.stream.ActorMaterializer
 import com.amazonaws.auth.{AWSStaticCredentialsProvider, BasicAWSCredentials}
 import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration
@@ -34,43 +34,26 @@ trait SimpleSubscriptionApiDependencies extends Module {
   val responsePubSubPublisherV07: PubSubPublisher[SubscriptionSessionResponse]
   val requestsQueueConsumer: QueueConsumer[SubscriptionRequest]
   val globalDatabaseManager: GlobalDatabaseManager
+  val kinesisApiMetricsPublisher: KinesisPublisher
+  val featureMetricActor: ActorRef
+  val apiMetricsMiddleware: ApiMetricsMiddleware
 
   lazy val config                  = ConfigFactory.load()
   lazy val testableTime            = new TestableTimeImplementation
   lazy val apiMetricsFlushInterval = 10
-  lazy val kinesis                 = createKinesis()
-  lazy val apiMetricsPublisher     = new KinesisPublisherImplementation(streamName = sys.env("KINESIS_STREAM_API_METRICS"), kinesis)
   lazy val clientAuth              = ClientAuthImpl()
-  lazy val featureMetricActor      = system.actorOf(Props(new FeatureMetricActor(apiMetricsPublisher, apiMetricsFlushInterval)))
   implicit lazy val bugsnagger     = BugSnaggerImpl(sys.env.getOrElse("BUGSNAG_API_KEY", ""))
 
   bind[BugSnagger] toNonLazy bugsnagger
-  bind[TestableTime] toNonLazy new TestableTimeImplementation
+  bind[TestableTime] toNonLazy testableTime
   bind[ClientAuth] toNonLazy clientAuth
-  bind[KinesisPublisher] identifiedBy "kinesisApiMetricsPublisher" toNonLazy new KinesisPublisherImplementation(
-    streamName = sys.env("KINESIS_STREAM_API_METRICS"),
-    kinesis
-  )
 
-  binding identifiedBy "kinesis" toNonLazy kinesis
-  binding identifiedBy "config" toNonLazy ConfigFactory.load()
+  binding identifiedBy "config" toNonLazy config
   binding identifiedBy "actorSystem" toNonLazy system destroyWith (_.terminate())
   binding identifiedBy "dispatcher" toNonLazy system.dispatcher
   binding identifiedBy "actorMaterializer" toNonLazy materializer
-  binding identifiedBy "featureMetricActor" to featureMetricActor
-  binding identifiedBy "api-metrics-middleware" toNonLazy new ApiMetricsMiddleware(testableTime, featureMetricActor)
   binding identifiedBy "environment" toNonLazy sys.env.getOrElse("ENVIRONMENT", "local")
   binding identifiedBy "service-name" toNonLazy sys.env.getOrElse("SERVICE_NAME", "local")
-
-  protected def createKinesis(): AmazonKinesis = {
-    val credentials = new BasicAWSCredentials(sys.env("AWS_ACCESS_KEY_ID"), sys.env("AWS_SECRET_ACCESS_KEY"))
-
-    AmazonKinesisClientBuilder
-      .standard()
-      .withCredentials(new AWSStaticCredentialsProvider(credentials))
-      .withEndpointConfiguration(new EndpointConfiguration(sys.env("KINESIS_ENDPOINT"), sys.env("AWS_REGION")))
-      .build()
-  }
 }
 
 case class SimpleSubscriptionDependencies()(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends SimpleSubscriptionApiDependencies {
@@ -104,7 +87,12 @@ case class SimpleSubscriptionDependencies()(implicit val system: ActorSystem, va
   val requestsQueueConsumer      = RabbitQueue.consumer[SubscriptionRequest](clusterLocalRabbitUri, "subscription-requests")
   val cloudwatch                 = CloudwatchImpl()
   val globalDatabaseManager      = GlobalDatabaseManager.initializeForSingleRegion(config)
+  val kinesis                    = createKinesis()
+  val kinesisApiMetricsPublisher = new KinesisPublisherImplementation(streamName = sys.env("KINESIS_STREAM_API_METRICS"), kinesis)
+  val featureMetricActor         = system.actorOf(Props(new FeatureMetricActor(kinesisApiMetricsPublisher, apiMetricsFlushInterval)))
+  val apiMetricsMiddleware       = new ApiMetricsMiddleware(testableTime, featureMetricActor)
 
+  bind[KinesisPublisher] identifiedBy "kinesisApiMetricsPublisher" toNonLazy kinesisApiMetricsPublisher
   bind[QueueConsumer[SubscriptionRequest]] identifiedBy "subscription-requests-consumer" toNonLazy requestsQueueConsumer
   bind[PubSubPublisher[SubscriptionSessionResponseV05]] identifiedBy "subscription-responses-publisher-05" toNonLazy responsePubSubPublisherV05
   bind[PubSubPublisher[SubscriptionSessionResponse]] identifiedBy "subscription-responses-publisher-07" toNonLazy responsePubSubPublisherV07
@@ -115,4 +103,17 @@ case class SimpleSubscriptionDependencies()(implicit val system: ActorSystem, va
 
   binding identifiedBy "cloudwatch" toNonLazy cloudwatch
   binding identifiedBy "project-schema-fetcher" toNonLazy ProjectFetcherImpl(blockedProjectIds = Vector.empty, config)
+  binding identifiedBy "kinesis" toNonLazy kinesis
+  binding identifiedBy "featureMetricActor" to featureMetricActor
+  binding identifiedBy "api-metrics-middleware" toNonLazy apiMetricsMiddleware
+
+  protected def createKinesis(): AmazonKinesis = {
+    val credentials = new BasicAWSCredentials(sys.env("AWS_ACCESS_KEY_ID"), sys.env("AWS_SECRET_ACCESS_KEY"))
+
+    AmazonKinesisClientBuilder
+      .standard()
+      .withCredentials(new AWSStaticCredentialsProvider(credentials))
+      .withEndpointConfiguration(new EndpointConfiguration(sys.env("KINESIS_ENDPOINT"), sys.env("AWS_REGION")))
+      .build()
+  }
 }

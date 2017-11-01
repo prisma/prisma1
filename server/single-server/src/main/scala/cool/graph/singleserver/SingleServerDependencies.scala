@@ -2,14 +2,12 @@ package cool.graph.singleserver
 
 import akka.actor.{ActorSystem, Props}
 import akka.stream.ActorMaterializer
-import com.amazonaws.auth.{AWSStaticCredentialsProvider, BasicAWSCredentials}
-import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration
-import com.amazonaws.services.kinesis.{AmazonKinesis, AmazonKinesisClientBuilder}
 import com.typesafe.config.ConfigFactory
 import cool.graph.bugsnag.BugSnaggerImpl
 import cool.graph.client.FeatureMetricActor
 import cool.graph.client.authorization.ClientAuthImpl
 import cool.graph.client.finder.{CachedProjectFetcherImpl, ProjectFetcherImpl, RefreshableProjectFetcher}
+import cool.graph.client.metrics.ApiMetricsMiddleware
 import cool.graph.client.schema.simple.SimpleApiClientDependencies
 import cool.graph.cloudwatch.CloudwatchMock
 import cool.graph.messagebus._
@@ -18,7 +16,7 @@ import cool.graph.messagebus.queue.inmemory.InMemoryAkkaQueue
 import cool.graph.relay.RelayApiClientDependencies
 import cool.graph.schemamanager.SchemaManagerApiDependencies
 import cool.graph.shared.database.GlobalDatabaseManager
-import cool.graph.shared.externalServices.{DummySnsPublisher, KinesisPublisherImplementation, SnsPublisher, TestableTimeImplementation}
+import cool.graph.shared.externalServices._
 import cool.graph.shared.functions.dev.DevFunctionEnvironment
 import cool.graph.shared.functions.{EndpointResolver, FunctionEnvironment, LocalEndpointResolver}
 import cool.graph.subscriptions.SimpleSubscriptionApiDependencies
@@ -45,30 +43,16 @@ trait SingleServerApiDependencies
     with RelayApiClientDependencies
     with SchemaManagerApiDependencies
     with SimpleSubscriptionApiDependencies {
-
-  override lazy val kinesis                 = createKinesis()
   override lazy val config                  = ConfigFactory.load()
   override lazy val testableTime            = new TestableTimeImplementation
   override lazy val apiMetricsFlushInterval = 10
-  override lazy val apiMetricsPublisher     = new KinesisPublisherImplementation(streamName = sys.env("KINESIS_STREAM_API_METRICS"), kinesis)
-  override lazy val featureMetricActor      = system.actorOf(Props(new FeatureMetricActor(apiMetricsPublisher, apiMetricsFlushInterval)))
   override lazy val clientAuth              = ClientAuthImpl()
-
-  override implicit lazy val bugsnagger = BugSnaggerImpl("")
-
-  override protected def createKinesis(): AmazonKinesis = {
-    val credentials = new BasicAWSCredentials(sys.env("AWS_ACCESS_KEY_ID"), sys.env("AWS_SECRET_ACCESS_KEY"))
-
-    AmazonKinesisClientBuilder
-      .standard()
-      .withCredentials(new AWSStaticCredentialsProvider(credentials))
-      .withEndpointConfiguration(new EndpointConfiguration(sys.env("KINESIS_ENDPOINT"), sys.env("AWS_REGION")))
-      .build()
-  }
+  override implicit lazy val bugsnagger     = BugSnaggerImpl("")
 }
 
 case class SingleServerDependencies(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends SingleServerApiDependencies {
   import system.dispatcher
+
   import scala.concurrent.duration._
 
   val (globalDatabaseManager, internalDb, logsDb) = {
@@ -102,6 +86,10 @@ case class SingleServerDependencies(implicit val system: ActorSystem, val materi
   val sssEventsSubscriber: PubSubSubscriber[String]                      = sssEventsPubSub
   val cloudwatch                                                         = CloudwatchMock
   val snsPublisher                                                       = DummySnsPublisher()
+  val kinesisAlgoliaSyncQueriesPublisher                                 = DummyKinesisPublisher()
+  val kinesisApiMetricsPublisher                                         = DummyKinesisPublisher()
+  val featureMetricActor                                                 = system.actorOf(Props(new FeatureMetricActor(kinesisApiMetricsPublisher, apiMetricsFlushInterval)))
+  val apiMetricsMiddleware                                               = new ApiMetricsMiddleware(testableTime, featureMetricActor)
 
   // API webhooks -> worker webhooks
   val webhooksQueue: Queue[Webhook] = InMemoryAkkaQueue[Webhook]()
@@ -161,7 +149,11 @@ case class SingleServerDependencies(implicit val system: ActorSystem, val materi
   bind[String] identifiedBy "request-prefix" toNonLazy requestPrefix
   bind[GlobalDatabaseManager] toNonLazy globalDatabaseManager
   bind[SnsPublisher] identifiedBy "seatSnsPublisher" toNonLazy snsPublisher
+  bind[KinesisPublisher] identifiedBy "kinesisAlgoliaSyncQueriesPublisher" toNonLazy kinesisAlgoliaSyncQueriesPublisher
+  bind[KinesisPublisher] identifiedBy "kinesisApiMetricsPublisher" toNonLazy kinesisApiMetricsPublisher
 
+  binding identifiedBy "api-metrics-middleware" toNonLazy new ApiMetricsMiddleware(testableTime, featureMetricActor)
+  binding identifiedBy "featureMetricActor" to featureMetricActor
   binding identifiedBy "cloudwatch" toNonLazy cloudwatch
   binding identifiedBy "project-schema-fetcher" toNonLazy projectSchemaFetcher
   binding identifiedBy "projectResolver" toNonLazy cachedProjectResolver

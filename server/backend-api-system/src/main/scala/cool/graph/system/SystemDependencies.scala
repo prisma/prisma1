@@ -43,15 +43,14 @@ trait SystemApiDependencies extends Module {
   val logsDb: MySQLProfile.backend.Database
   val globalDatabaseManager: GlobalDatabaseManager
   val snsPublisher: SnsPublisher
+  val kinesisAlgoliaSyncQueriesPublisher: KinesisPublisher
 
   lazy val clientResolver      = ClientResolver(internalDb, cachedProjectResolver)(system.dispatcher)
-  lazy val kinesis             = createKinesis()
   lazy val schemaBuilder       = SchemaBuilder(userCtx => new SchemaBuilderImpl(userCtx, globalDatabaseManager, InternalDatabase(internalDb)).build())
   implicit lazy val bugsnagger = BugSnaggerImpl(sys.env("BUGSNAG_API_KEY"))
 
   binding identifiedBy "internal-db" toNonLazy internalDb
   binding identifiedBy "logs-db" toNonLazy logsDb
-  binding identifiedBy "kinesis" toNonLazy kinesis
   binding identifiedBy "export-data-s3" toNonLazy createExportDataS3()
   binding identifiedBy "config" toNonLazy config
   binding identifiedBy "actorSystem" toNonLazy system destroyWith (_.terminate())
@@ -68,20 +67,6 @@ trait SystemApiDependencies extends Module {
   bind[Auth0Extend] toNonLazy new Auth0ExtendImplementation()
   bind[BugSnagger] toNonLazy bugsnagger
   bind[TestableTime] toNonLazy new TestableTimeImplementation
-  bind[KinesisPublisher] identifiedBy "kinesisAlgoliaSyncQueriesPublisher" toNonLazy new KinesisPublisherImplementation(
-    streamName = sys.env("KINESIS_STREAM_ALGOLIA_SYNC_QUERY"),
-    kinesis)
-
-  protected def createKinesis(): AmazonKinesis = {
-    val credentials =
-      new BasicAWSCredentials(sys.env("AWS_ACCESS_KEY_ID"), sys.env("AWS_SECRET_ACCESS_KEY"))
-
-    AmazonKinesisClientBuilder
-      .standard()
-      .withCredentials(new AWSStaticCredentialsProvider(credentials))
-      .withEndpointConfiguration(new EndpointConfiguration(sys.env("KINESIS_ENDPOINT"), sys.env("AWS_REGION")))
-      .build()
-  }
 
   protected def createExportDataS3(): AmazonS3 = {
     val credentials = new BasicAWSCredentials(
@@ -129,6 +114,8 @@ case class SystemDependencies()(implicit val system: ActorSystem, val materializ
   val requestPrefix                                = sys.env.getOrElse("AWS_REGION", sys.error("AWS Region not found."))
   val cloudwatch                                   = CloudwatchImpl()
   val snsPublisher                                 = new SnsPublisherImplementation(topic = sys.env("SNS_SEAT"))
+  val kinesis                                      = createKinesis()
+  val kinesisAlgoliaSyncQueriesPublisher           = new KinesisPublisherImplementation(streamName = sys.env("KINESIS_STREAM_ALGOLIA_SYNC_QUERY"), kinesis)
 
   val functionEnvironment = LambdaFunctionEnvironment(
     sys.env.getOrElse("LAMBDA_AWS_ACCESS_KEY_ID", "whatever"),
@@ -142,7 +129,9 @@ case class SystemDependencies()(implicit val system: ActorSystem, val materializ
   bind[GlobalDatabaseManager] toNonLazy globalDatabaseManager
   bind[AmazonSNS] identifiedBy "sns" toNonLazy createSns()
   bind[SnsPublisher] identifiedBy "seatSnsPublisher" toNonLazy snsPublisher
+  bind[KinesisPublisher] identifiedBy "kinesisAlgoliaSyncQueriesPublisher" toNonLazy kinesisAlgoliaSyncQueriesPublisher
 
+  binding identifiedBy "kinesis" toNonLazy kinesis
   binding identifiedBy "cloudwatch" toNonLazy cloudwatch
   binding identifiedBy "projectResolver" toNonLazy cachedProjectResolver
   binding identifiedBy "cachedProjectResolver" toNonLazy cachedProjectResolver
@@ -156,5 +145,15 @@ case class SystemDependencies()(implicit val system: ActorSystem, val materializ
       .withCredentials(new AWSStaticCredentialsProvider(credentials))
       .withEndpointConfiguration(new EndpointConfiguration(sys.env("SNS_ENDPOINT"), sys.env("AWS_REGION")))
       .build
+  }
+
+  protected def createKinesis(): AmazonKinesis = {
+    val credentials = new BasicAWSCredentials(sys.env("AWS_ACCESS_KEY_ID"), sys.env("AWS_SECRET_ACCESS_KEY"))
+
+    AmazonKinesisClientBuilder
+      .standard()
+      .withCredentials(new AWSStaticCredentialsProvider(credentials))
+      .withEndpointConfiguration(new EndpointConfiguration(sys.env("KINESIS_ENDPOINT"), sys.env("AWS_REGION")))
+      .build()
   }
 }

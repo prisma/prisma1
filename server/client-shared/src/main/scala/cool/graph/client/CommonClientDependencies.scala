@@ -1,12 +1,10 @@
 package cool.graph.client
 
-import akka.actor.{ActorSystem, Props}
+import akka.actor.{ActorRef, ActorSystem}
 import akka.stream.ActorMaterializer
 import com.amazonaws.auth.{AWSStaticCredentialsProvider, BasicAWSCredentials}
 import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration
-import com.amazonaws.services.kinesis.{AmazonKinesis, AmazonKinesisClientBuilder}
 import com.amazonaws.services.s3.{AmazonS3, AmazonS3ClientBuilder}
-import com.amazonaws.services.sns.{AmazonSNS, AmazonSNSAsyncClientBuilder}
 import com.typesafe.config.{Config, ConfigFactory}
 import com.typesafe.scalalogging.LazyLogging
 import cool.graph.bugsnag.{BugSnagger, BugSnaggerImpl}
@@ -16,7 +14,7 @@ import cool.graph.client.metrics.ApiMetricsMiddleware
 import cool.graph.cloudwatch.Cloudwatch
 import cool.graph.messagebus.{PubSubPublisher, PubSubSubscriber, QueuePublisher}
 import cool.graph.shared.database.GlobalDatabaseManager
-import cool.graph.shared.externalServices.{KinesisPublisher, KinesisPublisherImplementation, TestableTime, TestableTimeImplementation}
+import cool.graph.shared.externalServices.{KinesisPublisher, TestableTime, TestableTimeImplementation}
 import cool.graph.shared.functions.{EndpointResolver, FunctionEnvironment}
 import cool.graph.shared.{ApiMatrixFactory, DefaultApiMatrix}
 import cool.graph.util.ErrorHandlerFactory
@@ -30,20 +28,6 @@ trait CommonClientDependencies extends Module with LazyLogging {
   implicit val materializer: ActorMaterializer
   implicit val bugSnagger = BugSnaggerImpl(sys.env("BUGSNAG_API_KEY"))
 
-  lazy val config: Config          = ConfigFactory.load()
-  lazy val testableTime            = new TestableTimeImplementation
-  lazy val apiMetricsFlushInterval = 10
-
-  lazy val kinesis: AmazonKinesis = {
-    val credentials =
-      new BasicAWSCredentials(sys.env("AWS_ACCESS_KEY_ID"), sys.env("AWS_SECRET_ACCESS_KEY"))
-
-    AmazonKinesisClientBuilder.standard
-      .withCredentials(new AWSStaticCredentialsProvider(credentials))
-      .withEndpointConfiguration(new EndpointConfiguration(sys.env("KINESIS_ENDPOINT"), sys.env("AWS_REGION")))
-      .build
-  }
-
   val projectSchemaInvalidationSubscriber: PubSubSubscriber[String]
   val projectSchemaFetcher: ProjectFetcher
   val functionEnvironment: FunctionEnvironment
@@ -54,14 +38,18 @@ trait CommonClientDependencies extends Module with LazyLogging {
   val requestPrefix: String
   val cloudwatch: Cloudwatch
   val globalDatabaseManager: GlobalDatabaseManager
+  val kinesisAlgoliaSyncQueriesPublisher: KinesisPublisher
+  val kinesisApiMetricsPublisher: KinesisPublisher
+  val featureMetricActor: ActorRef
+  val apiMetricsMiddleware: ApiMetricsMiddleware
 
-  lazy val clientAuth           = ClientAuthImpl()
-  lazy val apiMetricsPublisher  = new KinesisPublisherImplementation(streamName = sys.env("KINESIS_STREAM_API_METRICS"), kinesis)
-  lazy val featureMetricActor   = system.actorOf(Props(new FeatureMetricActor(apiMetricsPublisher, apiMetricsFlushInterval)))
-  lazy val apiMetricsMiddleware = new ApiMetricsMiddleware(testableTime, featureMetricActor)
-  lazy val log                  = (x: String) => logger.info(x)
-  lazy val errorHandlerFactory  = ErrorHandlerFactory(log, cloudwatch, bugSnagger)
-  lazy val apiMatrixFactory     = ApiMatrixFactory(DefaultApiMatrix)
+  lazy val config: Config          = ConfigFactory.load()
+  lazy val testableTime            = new TestableTimeImplementation
+  lazy val apiMetricsFlushInterval = 10
+  lazy val clientAuth              = ClientAuthImpl()
+  lazy val log                     = (x: String) => logger.info(x)
+  lazy val errorHandlerFactory     = ErrorHandlerFactory(log, cloudwatch, bugSnagger)
+  lazy val apiMatrixFactory        = ApiMatrixFactory(DefaultApiMatrix)
 
   lazy val globalApiEndpointManager = GlobalApiEndpointManager(
     euWest1 = sys.env("API_ENDPOINT_EU_WEST_1"),
@@ -69,47 +57,29 @@ trait CommonClientDependencies extends Module with LazyLogging {
     apNortheast1 = sys.env("API_ENDPOINT_AP_NORTHEAST_1")
   )
 
+  bind[ClientAuth] toNonLazy clientAuth
+  bind[TestableTime] toNonLazy testableTime
   bind[GlobalApiEndpointManager] toNonLazy globalApiEndpointManager
-  bind[KinesisPublisher] identifiedBy "kinesisApiMetricsPublisher" toNonLazy apiMetricsPublisher
   bind[WebhookCaller] toNonLazy new WebhookCallerImplementation()
   bind[BugSnagger] toNonLazy bugSnagger
   bind[ClientAuth] toNonLazy clientAuth
   bind[TestableTime] toNonLazy testableTime
   bind[ApiMatrixFactory] toNonLazy apiMatrixFactory
+  bind[WebhookCaller] toNonLazy new WebhookCallerImplementation()
+  bind[BugSnagger] toNonLazy bugSnagger
 
-  binding identifiedBy "kinesis" toNonLazy kinesis
   binding identifiedBy "s3" toNonLazy createS3()
   binding identifiedBy "s3-fileupload" toNonLazy createS3Fileupload()
   binding identifiedBy "config" toNonLazy config
   binding identifiedBy "actorSystem" toNonLazy system destroyWith (_.terminate())
   binding identifiedBy "dispatcher" toNonLazy system.dispatcher
   binding identifiedBy "actorMaterializer" toNonLazy materializer
-  binding identifiedBy "featureMetricActor" to featureMetricActor
-  binding identifiedBy "api-metrics-middleware" toNonLazy new ApiMetricsMiddleware(testableTime, featureMetricActor)
   binding identifiedBy "environment" toNonLazy sys.env.getOrElse("ENVIRONMENT", "local")
   binding identifiedBy "service-name" toNonLazy sys.env.getOrElse("SERVICE_NAME", "local")
-
-  bind[KinesisPublisher] identifiedBy "kinesisAlgoliaSyncQueriesPublisher" toNonLazy new KinesisPublisherImplementation(
-    streamName = sys.env("KINESIS_STREAM_ALGOLIA_SYNC_QUERY"),
-    kinesis
-  )
-
-  bind[KinesisPublisher] identifiedBy "kinesisApiMetricsPublisher" toNonLazy apiMetricsPublisher
-  bind[WebhookCaller] toNonLazy new WebhookCallerImplementation()
-  bind[BugSnagger] toNonLazy bugSnagger
-
-  binding identifiedBy "featureMetricActor" to featureMetricActor
-  binding identifiedBy "api-metrics-middleware" toNonLazy new ApiMetricsMiddleware(testableTime, featureMetricActor)
 
   private lazy val blockedProjectIds: Vector[String] = Try {
     sys.env("BLOCKED_PROJECT_IDS").split(",").toVector
   }.getOrElse(Vector.empty)
-
-  bind[ClientAuth] toNonLazy clientAuth
-  bind[TestableTime] toNonLazy testableTime
-
-  binding identifiedBy "environment" toNonLazy sys.env.getOrElse("ENVIRONMENT", "local")
-  binding identifiedBy "service-name" toNonLazy sys.env.getOrElse("SERVICE_NAME", "local")
 
   private def createS3(): AmazonS3 = {
     val credentials = new BasicAWSCredentials(
