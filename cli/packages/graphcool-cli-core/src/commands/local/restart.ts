@@ -9,7 +9,7 @@ export default class Restart extends Command {
   static flags: Flags = {
     name: flags.string({
       char: 'n',
-      description: 'Name of the new instance',
+      description: 'Name of the cluster instance',
       defaultValue: 'local'
     }),
   }
