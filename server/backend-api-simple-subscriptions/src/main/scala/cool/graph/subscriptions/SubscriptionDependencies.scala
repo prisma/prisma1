@@ -15,9 +15,9 @@ import cool.graph.cloudwatch.CloudwatchImpl
 import cool.graph.messagebus.pubsub.rabbit.RabbitAkkaPubSub
 import cool.graph.messagebus.queue.rabbit.RabbitQueue
 import cool.graph.messagebus.{Conversions, PubSubPublisher, PubSubSubscriber, QueueConsumer}
-import cool.graph.shared.{ApiMatrixFactory, DefaultApiMatrix}
 import cool.graph.shared.database.GlobalDatabaseManager
 import cool.graph.shared.externalServices.{KinesisPublisher, KinesisPublisherImplementation, TestableTime, TestableTimeImplementation}
+import cool.graph.shared.{ApiMatrixFactory, DefaultApiMatrix}
 import cool.graph.subscriptions.protocol.SubscriptionProtocolV05.Responses.SubscriptionSessionResponseV05
 import cool.graph.subscriptions.protocol.SubscriptionProtocolV07.Responses.SubscriptionSessionResponse
 import cool.graph.subscriptions.protocol.SubscriptionRequest
@@ -33,6 +33,7 @@ trait SimpleSubscriptionApiDependencies extends Module {
   val responsePubSubPublisherV05: PubSubPublisher[SubscriptionSessionResponseV05]
   val responsePubSubPublisherV07: PubSubPublisher[SubscriptionSessionResponse]
   val requestsQueueConsumer: QueueConsumer[SubscriptionRequest]
+  val globalDatabaseManager: GlobalDatabaseManager
 
   lazy val config                  = ConfigFactory.load()
   lazy val testableTime            = new TestableTimeImplementation
@@ -41,10 +42,8 @@ trait SimpleSubscriptionApiDependencies extends Module {
   lazy val apiMetricsPublisher     = new KinesisPublisherImplementation(streamName = sys.env("KINESIS_STREAM_API_METRICS"), kinesis)
   lazy val clientAuth              = ClientAuthImpl()
   lazy val featureMetricActor      = system.actorOf(Props(new FeatureMetricActor(apiMetricsPublisher, apiMetricsFlushInterval)))
+  implicit lazy val bugsnagger     = BugSnaggerImpl(sys.env.getOrElse("BUGSNAG_API_KEY", ""))
 
-  implicit lazy val bugsnagger = BugSnaggerImpl(sys.env.getOrElse("BUGSNAG_API_KEY", ""))
-
-  bind[GlobalDatabaseManager] toNonLazy GlobalDatabaseManager.initializeForSingleRegion(config)
   bind[BugSnagger] toNonLazy bugsnagger
   bind[TestableTime] toNonLazy new TestableTimeImplementation
   bind[ClientAuth] toNonLazy clientAuth
@@ -54,7 +53,6 @@ trait SimpleSubscriptionApiDependencies extends Module {
   )
 
   binding identifiedBy "kinesis" toNonLazy kinesis
-  binding identifiedBy "cloudwatch" toNonLazy CloudwatchImpl()
   binding identifiedBy "config" toNonLazy ConfigFactory.load()
   binding identifiedBy "actorSystem" toNonLazy system destroyWith (_.terminate())
   binding identifiedBy "dispatcher" toNonLazy system.dispatcher
@@ -76,27 +74,36 @@ trait SimpleSubscriptionApiDependencies extends Module {
 }
 
 case class SimpleSubscriptionDependencies()(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends SimpleSubscriptionApiDependencies {
-  import SubscriptionRequest._
   import cool.graph.subscriptions.protocol.Converters._
 
-  val globalRabbitUri       = sys.env("GLOBAL_RABBIT_URI")
-  implicit val unmarshaller = (_: Array[Byte]) => SchemaInvalidated
-  val apiMatrixFactory: ApiMatrixFactory = ApiMatrixFactory(DefaultApiMatrix(_))
+  implicit val unmarshaller              = (_: Array[Byte]) => SchemaInvalidated
+  val globalRabbitUri                    = sys.env("GLOBAL_RABBIT_URI")
+  val clusterLocalRabbitUri              = sys.env("RABBITMQ_URI")
+  val apiMatrixFactory: ApiMatrixFactory = ApiMatrixFactory(DefaultApiMatrix)
 
-  val invalidationSubscriber: PubSubSubscriber[SchemaInvalidatedMessage] =
-    RabbitAkkaPubSub.subscriber[SchemaInvalidatedMessage](globalRabbitUri, "project-schema-invalidation", durable = true)
+  val invalidationSubscriber: PubSubSubscriber[SchemaInvalidatedMessage] = RabbitAkkaPubSub.subscriber[SchemaInvalidatedMessage](
+    globalRabbitUri,
+    "project-schema-invalidation",
+    durable = true
+  )
 
-  val clusterLocalRabbitUri = sys.env("RABBITMQ_URI")
+  val sssEventsSubscriber = RabbitAkkaPubSub.subscriber[String](
+    clusterLocalRabbitUri,
+    "sss-events",
+    durable = true
+  )(bugsnagger, system, Conversions.Unmarshallers.ToString)
 
-  val sssEventsSubscriber =
-    RabbitAkkaPubSub.subscriber[String](clusterLocalRabbitUri, "sss-events", durable = true)(bugsnagger, system, Conversions.Unmarshallers.ToString)
-
-  val responsePubSubPublisher: PubSubPublisher[String] =
-    RabbitAkkaPubSub.publisher[String](clusterLocalRabbitUri, "subscription-responses", durable = false)(bugsnagger, Conversions.Marshallers.FromString)
+  val responsePubSubPublisher: PubSubPublisher[String] = RabbitAkkaPubSub.publisher[String](
+    clusterLocalRabbitUri,
+    "subscription-responses",
+    durable = false
+  )(bugsnagger, Conversions.Marshallers.FromString)
 
   val responsePubSubPublisherV05 = responsePubSubPublisher.map[SubscriptionSessionResponseV05](converterResponse05ToString)
   val responsePubSubPublisherV07 = responsePubSubPublisher.map[SubscriptionSessionResponse](converterResponse07ToString)
   val requestsQueueConsumer      = RabbitQueue.consumer[SubscriptionRequest](clusterLocalRabbitUri, "subscription-requests")
+  val cloudwatch                 = CloudwatchImpl()
+  val globalDatabaseManager      = GlobalDatabaseManager.initializeForSingleRegion(config)
 
   bind[QueueConsumer[SubscriptionRequest]] identifiedBy "subscription-requests-consumer" toNonLazy requestsQueueConsumer
   bind[PubSubPublisher[SubscriptionSessionResponseV05]] identifiedBy "subscription-responses-publisher-05" toNonLazy responsePubSubPublisherV05
@@ -104,6 +111,8 @@ case class SimpleSubscriptionDependencies()(implicit val system: ActorSystem, va
   bind[PubSubSubscriber[SchemaInvalidatedMessage]] identifiedBy "schema-invalidation-subscriber" toNonLazy invalidationSubscriber
   bind[PubSubSubscriber[String]] identifiedBy "sss-events-subscriber" toNonLazy sssEventsSubscriber
   bind[ApiMatrixFactory] toNonLazy apiMatrixFactory
+  bind[GlobalDatabaseManager] toNonLazy globalDatabaseManager
 
+  binding identifiedBy "cloudwatch" toNonLazy cloudwatch
   binding identifiedBy "project-schema-fetcher" toNonLazy ProjectFetcherImpl(blockedProjectIds = Vector.empty, config)
 }

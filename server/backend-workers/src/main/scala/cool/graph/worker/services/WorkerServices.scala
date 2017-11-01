@@ -9,7 +9,6 @@ import cool.graph.worker.payloads.{LogItem, Webhook}
 import cool.graph.worker.utils.Env
 import play.api.libs.ws.ahc.StandaloneAhcWSClient
 import slick.jdbc.MySQLProfile
-
 import scala.concurrent.duration._
 
 trait WorkerServices {
@@ -43,14 +42,13 @@ case class WorkerCloudServices()(implicit materializer: ActorMaterializer, bugsn
 }
 
 // In the dev version the queueing impls are created / injected above the services.
-case class WorkerDevServices(webhooksConsumer: QueueConsumer[Webhook], logsQueue: Queue[LogItem])(implicit materializer: ActorMaterializer)
+case class WorkerDevServices(
+    webhooksConsumer: QueueConsumer[Webhook],
+    logsQueue: Queue[LogItem],
+    logsDb: MySQLProfile.backend.Database
+)(implicit materializer: ActorMaterializer)
     extends WorkerServices {
   lazy val httpClient = StandaloneAhcWSClient()
-
-  lazy val logsDb: MySQLProfile.backend.Database = {
-    import slick.jdbc.MySQLProfile.api._
-    Database.forConfig("logs")
-  }
 
   def shutdown: Unit = {
     httpClient.close()

@@ -9,33 +9,27 @@ import com.amazonaws.services.s3.{AmazonS3, AmazonS3ClientBuilder}
 import com.amazonaws.services.sns.{AmazonSNS, AmazonSNSAsyncClientBuilder}
 import com.typesafe.config.ConfigFactory
 import cool.graph.bugsnag.{BugSnagger, BugSnaggerImpl}
-import cool.graph.cloudwatch.CloudwatchImpl
+import cool.graph.cloudwatch.{Cloudwatch, CloudwatchImpl}
 import cool.graph.messagebus.pubsub.rabbit.RabbitAkkaPubSub
 import cool.graph.messagebus.{Conversions, PubSubPublisher}
 import cool.graph.shared.database.{GlobalDatabaseManager, InternalDatabase}
-import cool.graph.shared.{ApiMatrixFactory, DefaultApiMatrix}
 import cool.graph.shared.externalServices._
 import cool.graph.shared.functions.FunctionEnvironment
 import cool.graph.shared.functions.lambda.LambdaFunctionEnvironment
+import cool.graph.shared.{ApiMatrixFactory, DefaultApiMatrix}
+import cool.graph.system.database.Initializers
 import cool.graph.system.database.finder.client.ClientResolver
 import cool.graph.system.database.finder.{CachedProjectResolver, CachedProjectResolverImpl, ProjectQueries, UncachedProjectResolver}
-import cool.graph.system.database.schema.{InternalDatabaseSchema, LogDatabaseSchema}
-import cool.graph.system.database.seed.InternalDatabaseSeedActions
 import cool.graph.system.externalServices._
 import cool.graph.system.metrics.SystemMetrics
 import scaldi.Module
 import slick.jdbc.MySQLProfile
-import slick.jdbc.MySQLProfile.api._
 
-import scala.concurrent.Await
-import scala.concurrent.duration._
-import scala.util.{Failure, Success, Try}
+import scala.concurrent.{Await, Future}
 
 trait SystemApiDependencies extends Module {
   implicit val system: ActorSystem
   implicit val materializer: ActorMaterializer
-
-  SystemMetrics.init()
 
   def config = ConfigFactory.load()
 
@@ -44,21 +38,20 @@ trait SystemApiDependencies extends Module {
   val cachedProjectResolver: CachedProjectResolver
   val invalidationPublisher: PubSubPublisher[String]
   val requestPrefix: String
+  val cloudwatch: Cloudwatch
+  val internalDb: MySQLProfile.backend.Database
+  val logsDb: MySQLProfile.backend.Database
+  val globalDatabaseManager: GlobalDatabaseManager
 
-  lazy val internalDb            = setupAndGetInternalDatabase()
-  lazy val logsDb                = setupAndGetLogsDatabase()
-  lazy val clientResolver        = ClientResolver(internalDb, cachedProjectResolver)(system.dispatcher)
-  lazy val kinesis               = createKinesis()
-  lazy val globalDatabaseManager = GlobalDatabaseManager.initializeForMultipleRegions(config)
-  lazy val schemaBuilder         = SchemaBuilder(userCtx => new SchemaBuilderImpl(userCtx, globalDatabaseManager, InternalDatabase(internalDb)).build())
-  implicit lazy val bugsnagger   = BugSnaggerImpl(sys.env("BUGSNAG_API_KEY"))
+  lazy val clientResolver      = ClientResolver(internalDb, cachedProjectResolver)(system.dispatcher)
+  lazy val kinesis             = createKinesis()
+  lazy val schemaBuilder       = SchemaBuilder(userCtx => new SchemaBuilderImpl(userCtx, globalDatabaseManager, InternalDatabase(internalDb)).build())
+  implicit lazy val bugsnagger = BugSnaggerImpl(sys.env("BUGSNAG_API_KEY"))
 
-  bind[GlobalDatabaseManager] toNonLazy globalDatabaseManager
   binding identifiedBy "internal-db" toNonLazy internalDb
   binding identifiedBy "logs-db" toNonLazy logsDb
   binding identifiedBy "kinesis" toNonLazy kinesis
   binding identifiedBy "sns" toNonLazy createSns()
-  binding identifiedBy "cloudwatch" toNonLazy CloudwatchImpl()
   binding identifiedBy "export-data-s3" toNonLazy createExportDataS3()
   binding identifiedBy "config" toNonLazy config
   binding identifiedBy "actorSystem" toNonLazy system destroyWith (_.terminate())
@@ -70,7 +63,6 @@ trait SystemApiDependencies extends Module {
   binding identifiedBy "environment" toNonLazy sys.env.getOrElse("ENVIRONMENT", "local")
   binding identifiedBy "service-name" toNonLazy sys.env.getOrElse("SERVICE_NAME", "local")
 
-  bind[GlobalDatabaseManager] toNonLazy GlobalDatabaseManager.initializeForMultipleRegions(config)
   bind[AlgoliaKeyChecker] identifiedBy "algoliaKeyChecker" toNonLazy new AlgoliaKeyCheckerImplementation()
   bind[Auth0Api] toNonLazy new Auth0ApiImplementation
   bind[Auth0Extend] toNonLazy new Auth0ExtendImplementation()
@@ -113,45 +105,40 @@ trait SystemApiDependencies extends Module {
       .withEndpointConfiguration(new EndpointConfiguration(sys.env("DATA_EXPORT_S3_ENDPOINT"), sys.env("AWS_REGION")))
       .build
   }
-
-  protected def setupAndGetInternalDatabase(): MySQLProfile.backend.Database = {
-    Try {
-      val rootDb = Database.forConfig(s"internalRoot")
-      Await.result(rootDb.run(InternalDatabaseSchema.createSchemaActions(recreate = false)), 30.seconds)
-      rootDb.close()
-
-      val db = Database.forConfig("internal")
-      Await.result(db.run(InternalDatabaseSeedActions.seedActions(sys.env.get("MASTER_TOKEN"))), 5.seconds)
-      db
-    } match {
-      case Success(database) => database
-      case Failure(e)        => println(s"[FATAL] Unable to init database: $e"); sys.exit(-1)
-    }
-  }
-
-  protected def setupAndGetLogsDatabase(): MySQLProfile.backend.Database = {
-    Try {
-      val rootDb = Database.forConfig(s"logsRoot")
-      Await.result(rootDb.run(LogDatabaseSchema.createSchemaActions(recreate = false)), 30.seconds)
-      rootDb.close()
-
-      Database.forConfig("logs")
-    } match {
-      case Success(database) => database
-      case Failure(e)        => println(s"[FATAL] Unable to init logs database: $e"); sys.exit(-1)
-    }
-  }
 }
 
 case class SystemDependencies()(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends SystemApiDependencies {
+  import system.dispatcher
+  import scala.concurrent.duration._
+
+  SystemMetrics.init()
+
   implicit val marshaller = Conversions.Marshallers.FromString
 
+  val dbs = {
+    val internal = Initializers.setupAndGetInternalDatabase()
+    val logs     = Initializers.setupAndGetLogsDatabase()
+    val dbs      = Future.sequence(Seq(internal, logs))
+
+    try {
+      Await.result(dbs, 15.seconds)
+    } catch {
+      case e: Throwable =>
+        println(s"Unable to initialize databases: $e")
+        sys.exit(-1)
+    }
+  }
+
+  val internalDb                                   = dbs.head
+  val logsDb                                       = dbs.last
+  val globalDatabaseManager                        = GlobalDatabaseManager.initializeForMultipleRegions(config)
   val globalRabbitUri                              = sys.env.getOrElse("GLOBAL_RABBIT_URI", sys.error("GLOBAL_RABBIT_URI required for schema invalidation"))
   val invalidationPublisher                        = RabbitAkkaPubSub.publisher[String](globalRabbitUri, "project-schema-invalidation", durable = true)
   val uncachedProjectResolver                      = UncachedProjectResolver(internalDb)
   val cachedProjectResolver: CachedProjectResolver = CachedProjectResolverImpl(uncachedProjectResolver)(system.dispatcher)
-  val apiMatrixFactory: ApiMatrixFactory           = ApiMatrixFactory(DefaultApiMatrix(_))
+  val apiMatrixFactory: ApiMatrixFactory           = ApiMatrixFactory(DefaultApiMatrix)
   val requestPrefix                                = sys.env.getOrElse("AWS_REGION", sys.error("AWS Region not found."))
+  val cloudwatch                                   = CloudwatchImpl()
 
   val functionEnvironment = LambdaFunctionEnvironment(
     sys.env.getOrElse("LAMBDA_AWS_ACCESS_KEY_ID", "whatever"),
@@ -162,7 +149,9 @@ case class SystemDependencies()(implicit val system: ActorSystem, val materializ
   bind[String] identifiedBy "request-prefix" toNonLazy requestPrefix
   bind[FunctionEnvironment] toNonLazy functionEnvironment
   bind[ApiMatrixFactory] toNonLazy apiMatrixFactory
+  bind[GlobalDatabaseManager] toNonLazy globalDatabaseManager
 
+  binding identifiedBy "cloudwatch" toNonLazy cloudwatch
   binding identifiedBy "projectResolver" toNonLazy cachedProjectResolver
   binding identifiedBy "cachedProjectResolver" toNonLazy cachedProjectResolver
   binding identifiedBy "uncachedProjectResolver" toNonLazy uncachedProjectResolver

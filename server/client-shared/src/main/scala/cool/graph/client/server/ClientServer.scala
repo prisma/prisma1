@@ -50,8 +50,7 @@ case class ClientServer(prefix: String)(
       _ <- graphQlRequestHandler.healthCheck
       _ <- Future {
             try { kinesis.listStreams() } catch {
-              case e: com.amazonaws.services.kinesis.model.LimitExceededException =>
-                true
+              case e: com.amazonaws.services.kinesis.model.LimitExceededException => true
             }
           }
     } yield ()

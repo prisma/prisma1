@@ -12,8 +12,7 @@ object SubscriptionMetrics extends MetricsManager {
   val activeSubcriptionSessions                     = defineGauge("activeSubscriptionSessions")
   val activeSubscriptionsManagerForProject          = defineGauge("activeSubscriptionsManagerForProject")
   val activeSubscriptionsManagerForModelAndMutation = defineGauge("activeSubscriptionsManagerForModelAndMutation")
-
-  val activeSubscriptions = defineGauge("activeSubscriptions")
+  val activeSubscriptions                           = defineGauge("activeSubscriptions")
 
   val projectIdTag             = CustomTag("projectId")
   val databaseEventRate        = defineCounter("databaseEventRate", projectIdTag)

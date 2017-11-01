@@ -13,13 +13,12 @@ import cool.graph.bugsnag.{BugSnagger, BugSnaggerImpl}
 import cool.graph.client.authorization.{ClientAuth, ClientAuthImpl}
 import cool.graph.client.finder.ProjectFetcher
 import cool.graph.client.metrics.ApiMetricsMiddleware
-import cool.graph.cloudwatch.CloudwatchImpl
-import cool.graph.messagebus.PubSubPublisher
-import cool.graph.messagebus.{PubSubSubscriber, QueuePublisher}
-import cool.graph.shared.{ApiMatrixFactory, DefaultApiMatrix}
+import cool.graph.cloudwatch.Cloudwatch
+import cool.graph.messagebus.{PubSubPublisher, PubSubSubscriber, QueuePublisher}
 import cool.graph.shared.database.GlobalDatabaseManager
 import cool.graph.shared.externalServices.{KinesisPublisher, KinesisPublisherImplementation, TestableTime, TestableTimeImplementation}
 import cool.graph.shared.functions.{EndpointResolver, FunctionEnvironment}
+import cool.graph.shared.{ApiMatrixFactory, DefaultApiMatrix}
 import cool.graph.util.ErrorHandlerFactory
 import cool.graph.webhook.{Webhook, WebhookCaller, WebhookCallerImplementation}
 import scaldi.Module
@@ -53,23 +52,23 @@ trait CommonClientDependencies extends Module with LazyLogging {
   val webhooksPublisher: QueuePublisher[Webhook]
   val sssEventsPublisher: PubSubPublisher[String]
   val requestPrefix: String
+  val cloudwatch: Cloudwatch
+  val globalDatabaseManager: GlobalDatabaseManager
 
-  lazy val clientAuth            = ClientAuthImpl()
-  lazy val apiMetricsPublisher   = new KinesisPublisherImplementation(streamName = sys.env("KINESIS_STREAM_API_METRICS"), kinesis)
-  lazy val featureMetricActor    = system.actorOf(Props(new FeatureMetricActor(apiMetricsPublisher, apiMetricsFlushInterval)))
-  lazy val apiMetricsMiddleware  = new ApiMetricsMiddleware(testableTime, featureMetricActor)
-  lazy val log                   = (x: String) => logger.info(x)
-  lazy val cloudWatch            = CloudwatchImpl()
-  lazy val errorHandlerFactory   = ErrorHandlerFactory(log, cloudWatch, bugSnagger)
-  lazy val globalDatabaseManager = GlobalDatabaseManager.initializeForSingleRegion(config)
+  lazy val clientAuth           = ClientAuthImpl()
+  lazy val apiMetricsPublisher  = new KinesisPublisherImplementation(streamName = sys.env("KINESIS_STREAM_API_METRICS"), kinesis)
+  lazy val featureMetricActor   = system.actorOf(Props(new FeatureMetricActor(apiMetricsPublisher, apiMetricsFlushInterval)))
+  lazy val apiMetricsMiddleware = new ApiMetricsMiddleware(testableTime, featureMetricActor)
+  lazy val log                  = (x: String) => logger.info(x)
+  lazy val errorHandlerFactory  = ErrorHandlerFactory(log, cloudwatch, bugSnagger)
+  lazy val apiMatrixFactory     = ApiMatrixFactory(DefaultApiMatrix)
+
   lazy val globalApiEndpointManager = GlobalApiEndpointManager(
     euWest1 = sys.env("API_ENDPOINT_EU_WEST_1"),
     usWest2 = sys.env("API_ENDPOINT_US_WEST_2"),
     apNortheast1 = sys.env("API_ENDPOINT_AP_NORTHEAST_1")
   )
-  lazy val apiMatrixFactory = ApiMatrixFactory(DefaultApiMatrix(_))
 
-  bind[GlobalDatabaseManager] toNonLazy globalDatabaseManager
   bind[GlobalApiEndpointManager] toNonLazy globalApiEndpointManager
   bind[KinesisPublisher] identifiedBy "kinesisApiMetricsPublisher" toNonLazy apiMetricsPublisher
   bind[WebhookCaller] toNonLazy new WebhookCallerImplementation()
@@ -79,7 +78,6 @@ trait CommonClientDependencies extends Module with LazyLogging {
   bind[ApiMatrixFactory] toNonLazy apiMatrixFactory
 
   binding identifiedBy "kinesis" toNonLazy kinesis
-  binding identifiedBy "cloudwatch" toNonLazy cloudWatch
   binding identifiedBy "s3" toNonLazy createS3()
   binding identifiedBy "s3-fileupload" toNonLazy createS3Fileupload()
   binding identifiedBy "config" toNonLazy config
@@ -98,7 +96,6 @@ trait CommonClientDependencies extends Module with LazyLogging {
   )
 
   bind[KinesisPublisher] identifiedBy "kinesisApiMetricsPublisher" toNonLazy apiMetricsPublisher
-
   bind[WebhookCaller] toNonLazy new WebhookCallerImplementation()
   bind[BugSnagger] toNonLazy bugSnagger
 

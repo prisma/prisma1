@@ -11,12 +11,13 @@ import cool.graph.client.FeatureMetricActor
 import cool.graph.client.authorization.ClientAuthImpl
 import cool.graph.client.finder.{CachedProjectFetcherImpl, ProjectFetcherImpl, RefreshableProjectFetcher}
 import cool.graph.client.schema.simple.SimpleApiClientDependencies
+import cool.graph.cloudwatch.CloudwatchMock
 import cool.graph.messagebus._
 import cool.graph.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
 import cool.graph.messagebus.queue.inmemory.InMemoryAkkaQueue
 import cool.graph.relay.RelayApiClientDependencies
-import cool.graph.shared.database.GlobalDatabaseManager
 import cool.graph.schemamanager.SchemaManagerApiDependencies
+import cool.graph.shared.database.GlobalDatabaseManager
 import cool.graph.shared.externalServices.{KinesisPublisherImplementation, TestableTimeImplementation}
 import cool.graph.shared.functions.dev.DevFunctionEnvironment
 import cool.graph.shared.functions.{EndpointResolver, FunctionEnvironment, LocalEndpointResolver}
@@ -27,12 +28,16 @@ import cool.graph.subscriptions.protocol.SubscriptionRequest
 import cool.graph.subscriptions.resolving.SubscriptionsManagerForProject.{SchemaInvalidated, SchemaInvalidatedMessage}
 import cool.graph.subscriptions.websockets.services.{WebsocketDevDependencies, WebsocketServices}
 import cool.graph.system.SystemApiDependencies
+import cool.graph.system.database.Initializers
 import cool.graph.system.database.finder.{CachedProjectResolver, CachedProjectResolverImpl, UncachedProjectResolver}
 import cool.graph.webhook.Webhook
 import cool.graph.websockets.protocol.{Request => WebsocketRequest}
 import cool.graph.worker.payloads.{LogItem, Webhook => WorkerWebhook}
 import cool.graph.worker.services.{WorkerDevServices, WorkerServices}
 import play.api.libs.json.Json
+import slick.jdbc.MySQLProfile
+
+import scala.concurrent.{Await, Future}
 
 trait SingleServerApiDependencies
     extends SystemApiDependencies
@@ -41,14 +46,12 @@ trait SingleServerApiDependencies
     with SchemaManagerApiDependencies
     with SimpleSubscriptionApiDependencies {
 
-  override lazy val internalDb              = setupAndGetInternalDatabase()
   override lazy val kinesis                 = createKinesis()
   override lazy val config                  = ConfigFactory.load()
   override lazy val testableTime            = new TestableTimeImplementation
   override lazy val apiMetricsFlushInterval = 10
   override lazy val apiMetricsPublisher     = new KinesisPublisherImplementation(streamName = sys.env("KINESIS_STREAM_API_METRICS"), kinesis)
   override lazy val featureMetricActor      = system.actorOf(Props(new FeatureMetricActor(apiMetricsPublisher, apiMetricsFlushInterval)))
-  override lazy val globalDatabaseManager   = GlobalDatabaseManager.initializeForSingleRegion(config)
   override lazy val clientAuth              = ClientAuthImpl()
 
   override implicit lazy val bugsnagger = BugSnaggerImpl("")
@@ -65,6 +68,26 @@ trait SingleServerApiDependencies
 }
 
 case class SingleServerDependencies(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends SingleServerApiDependencies {
+  import system.dispatcher
+
+  import scala.concurrent.duration._
+
+  val (globalDatabaseManager, internalDb, logsDb) = {
+    val internal = Initializers.setupAndGetInternalDatabase()
+    val logs     = Initializers.setupAndGetLogsDatabase()
+    val client   = Future { GlobalDatabaseManager.initializeForSingleRegion(config) }
+    val dbs      = Future.sequence(Seq(client, internal, logs))
+
+    try {
+      val res = Await.result(dbs, 15.seconds)
+      (res(0).asInstanceOf[GlobalDatabaseManager], res(1).asInstanceOf[MySQLProfile.backend.Database], res(2).asInstanceOf[MySQLProfile.backend.Database])
+    } catch {
+      case e: Throwable =>
+        println(s"Unable to initialize databases: $e")
+        sys.exit(-1)
+    }
+  }
+
   val pubSub: InMemoryAkkaPubSub[String]                                 = InMemoryAkkaPubSub[String]()
   val projectSchemaInvalidationSubscriber: PubSubSubscriber[String]      = pubSub
   val invalidationSubscriber: PubSubSubscriber[SchemaInvalidatedMessage] = pubSub.map[SchemaInvalidatedMessage]((str: String) => SchemaInvalidated)
@@ -78,6 +101,7 @@ case class SingleServerDependencies(implicit val system: ActorSystem, val materi
   val sssEventsPubSub                                                    = InMemoryAkkaPubSub[String]()
   val sssEventsPublisher: PubSubPublisher[String]                        = sssEventsPubSub
   val sssEventsSubscriber: PubSubSubscriber[String]                      = sssEventsPubSub
+  val cloudwatch                                                         = CloudwatchMock
 
   // API webhooks -> worker webhooks
   val webhooksQueue: Queue[Webhook] = InMemoryAkkaQueue[Webhook]()
@@ -94,7 +118,7 @@ case class SingleServerDependencies(implicit val system: ActorSystem, val materi
   // Webhooks publisher for the APIs
   val webhooksPublisher: Queue[Webhook] = webhooksQueue
 
-  val workerServices: WorkerServices = WorkerDevServices(webhooksWorkerConsumer, logsQueue)
+  val workerServices: WorkerServices = WorkerDevServices(webhooksWorkerConsumer, logsQueue, logsDb)
 
   val projectSchemaFetcher: RefreshableProjectFetcher = CachedProjectFetcherImpl(
     projectFetcher = ProjectFetcherImpl(blockedProjectIds, config),
@@ -105,8 +129,7 @@ case class SingleServerDependencies(implicit val system: ActorSystem, val materi
   val requestsQueue         = InMemoryAkkaQueue[WebsocketRequest]()
   val requestsQueueConsumer = requestsQueue.map[SubscriptionRequest](Converters.websocketRequest2SubscriptionRequest)
   val responsePubSub        = InMemoryAkkaPubSub[String]()
-
-  val websocketServices = WebsocketDevDependencies(requestsQueue, responsePubSub)
+  val websocketServices     = WebsocketDevDependencies(requestsQueue, responsePubSub)
 
   // Simple subscription deps
   val converterResponse07ToString = (response: SubscriptionSessionResponse) => {
@@ -136,7 +159,9 @@ case class SingleServerDependencies(implicit val system: ActorSystem, val materi
   bind[PubSubPublisher[String]] identifiedBy "sss-events-publisher" toNonLazy sssEventsPublisher
   bind[PubSubSubscriber[String]] identifiedBy "sss-events-subscriber" toNonLazy sssEventsSubscriber
   bind[String] identifiedBy "request-prefix" toNonLazy requestPrefix
-  
+  bind[GlobalDatabaseManager] toNonLazy globalDatabaseManager
+
+  binding identifiedBy "cloudwatch" toNonLazy cloudwatch
   binding identifiedBy "project-schema-fetcher" toNonLazy projectSchemaFetcher
   binding identifiedBy "projectResolver" toNonLazy cachedProjectResolver
   binding identifiedBy "cachedProjectResolver" toNonLazy cachedProjectResolver

@@ -13,5 +13,4 @@ object SimpleMain extends App with Injectable {
   implicit val bugsnagger   = inject[BugSnagger]
 
   ServerExecutor(port = 8080, ClientServer("simple")).startBlocking()
-  
 }
