@@ -115,16 +115,16 @@ export default class AddTemplate extends Command {
     this.out.log('')
     this.out.log(
       chalk.blue(
-        `${chalk.bold('Added')} functions & permissions comments of template ${chalk.bold(
+        `${chalk.bold('Added')} all functions & permissions of template ${chalk.bold(
           moduleDirName,
-        )} to ${chalk.bold('graphcool.yml')}`,
+        )} to ${chalk.bold('graphcool.yml')} as comments`,
       ),
     )
     this.out.log(
       chalk.blue(
-        `${chalk.bold('Added')} type comments of template ${chalk.bold(
+        `${chalk.bold('Added')} all types of template ${chalk.bold(
           moduleDirName,
-        )} to ${chalk.bold(typesPath)}`,
+        )} to ${chalk.bold(typesPath)} as comments`,
       ),
     )
     this.out.log(chalk.blue.bold(`Created ${relativeModulePath}:`))
@@ -147,7 +147,7 @@ export default class AddTemplate extends Command {
       }
     }
 
-    this.out.log(`Please have a look in the ${chalk.green('graphcool.yml')} and ${chalk.green('types.graphql')} and ${chalk.bold('comment out')} the added template comments there.`)
+    this.out.log(`Please have a look in the ${chalk.green('graphcool.yml')} and ${chalk.green('types.graphql')} and ${chalk.bold('uncomment')} the added template comments there.`)
 
     // this.out.log(
     //   `   ${chalk.green(figures.tick)} You now can run ${chalk.bold(
