@@ -295,7 +295,7 @@ graphcool local pull [flags]
 #### Flags
 
 ```
- -n, --name NAME    Name of the new instance
+ -n, --name NAME    Name of the cluster instance
 ```
 
 
@@ -313,7 +313,7 @@ graphcool local pull [flags]
 #### Flags
 
 ```
- -n, --name NAME    Name of the new instance
+ -n, --name NAME    Name of the cluster instance
 ```
 
 
@@ -331,7 +331,7 @@ graphcool local up [flags]
 #### Flags
 
 ```
- -n, --name NAME    Name of the new instance
+ -n, --name NAME    Name of the cluster instance
 ```
 
 
@@ -349,7 +349,7 @@ graphcool local restart [flags]
 #### Flags
 
 ```
- -n, --name NAME    Name of the new instance
+ -n, --name NAME    Name of the cluster instance
 ```
 
 ### `graphcool local ps`
