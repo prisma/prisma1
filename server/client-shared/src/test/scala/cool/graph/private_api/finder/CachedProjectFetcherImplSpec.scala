@@ -58,7 +58,7 @@ class CachedProjectFetcherImplSpec extends FlatSpec with Matchers with ScalaFutu
     projectFetcher.setAlias(firstAlias = None, secondAlias = None)
     pubSub.publish(Only("FirstOne"), "FirstOne")
 
-    Thread.sleep(2000)
+    Thread.sleep(3000)
 
     //fetch second time with alias -> this should not find anything now
     cachedProjectFetcher.fetch("FirstAlias").futureValue should be(None)
