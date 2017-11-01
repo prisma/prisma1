@@ -13,7 +13,7 @@ Types
 Permissions
 
   Wildcard Permission
-   ? The wildcard permission for all types is added.
+   ? The wildcard permission for all operations is added.
 
 "
 `;
@@ -34,7 +34,7 @@ Types
 Permissions
 
   Wildcard Permission
-   ? The wildcard permission for all types is added.
+   ? The wildcard permission for all operations is added.
 
 "
 `;
