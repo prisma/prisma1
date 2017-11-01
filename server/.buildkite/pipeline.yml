@@ -38,5 +38,5 @@ steps:
     command: ./server/scripts/publish-jars.sh
 
   - label: ":docker: Build"
-    command: cd server && ./scripts/docker-build.sh
+    command: ./server/scripts/docker-build.sh
     branches: master
