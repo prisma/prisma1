@@ -1,6 +1,6 @@
 ---
 alias: aemieb1aev
-description: Graphcool is currently transitioning from a pure Backend as a Service to a general Application Development Framework. If you are an existing Graphcool customer this document explains everything you need to know about the transition. If you are new to Graphcool or about to craete a new application, you should use the new CLI as described in the [readme](https://github.com/graphcool/graphcool).
+description: Graphcool is currently transitioning from a pure Backend as a Service to a general Application Development Framework. If you are an existing Graphcool customer this document explains everything you need to know about the transition. If you are new to Graphcool or about to create a new application, you should use the new CLI as described in the [readme](https://github.com/graphcool/graphcool).
 ---
 
 # Migration Guide for Legacy Console Projects

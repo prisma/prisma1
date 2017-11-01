@@ -2,13 +2,13 @@
 
 [Website](https://www.graph.cool/) • [Docs](https://graph.cool/docs/) • [Blog](https://blogs.graph.cool/) • [Forum](https://www.graph.cool/forum) • [Slack](https://slack.graph.cool/) • [Twitter](https://twitter.com/graphcool)
 
-[![CircleCI](https://circleci.com/gh/graphcool/framework.svg?style=shield)](https://circleci.com/gh/graphcool/framework) [![Slack Status](https://slack.graph.cool/badge.svg)](https://slack.graph.cool) [![npm version](https://img.shields.io/badge/npm%20package-next-brightgreen.svg)](https://badge.fury.io/js/graphcool)
+[![CircleCI](https://circleci.com/gh/graphcool/framework.svg?style=shield)](https://circleci.com/gh/graphcool/framework) [![Slack Status](https://slack.graph.cool/badge.svg)](https://slack.graph.cool) [![npm version](https://img.shields.io/badge/npm%20package-latest-brightgreen.svg)](https://badge.fury.io/js/graphcool)
 
 **Graphcool is an open-source backend development framework** to develop and deploy production-ready GraphQL microservices. With Graphcool you can design your data model and have a production ready [GraphQL](https://www.howtographql.com/) API online in minutes.
 
 The framework integrates with cloud-native serverless functions and is compatible with existing libraries and tools like [GraphQL.js](https://github.com/graphql/graphql-js) and [Apollo Server](https://github.com/apollographql/apollo-server). Graphcool comes with a CLI and a Docker-based runtime which can be deployed to any server or cloud.
 
-<!-- 
+<!--
 Add note that Graphcool can still be used with other langs via webhooks??
 -->
 
@@ -209,7 +209,7 @@ Services can also be deployed to _shared_ clusters in the Graphcool Cloud. When 
 The Graphcool Cloud currently supports three [regions](https://blog.graph.cool/new-regions-and-improved-performance-7bbc0a35c880):
 
 * `eu-west-1` (EU, Ireland)
-* `asia-northeast-1` (Asia Pacific, Tokyo)
+* `ap-northeast-1` (Asia Pacific, Tokyo)
 * `us-west-1` (US, Oregon)
 
 <!--
@@ -220,7 +220,7 @@ The Graphcool Cloud currently supports three [regions](https://blog.graph.cool/n
 
 ### Open source & Community
 
-The Graphcool Framework is completely open-source and based on open standards. We highly value 
+The Graphcool Framework is completely open-source and based on open standards. We highly value
 
 - Open Source & Based on open standards
 

@@ -1,11 +1,19 @@
 #! /bin/bash
 
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+$DIR/check-if-tests-must-execute.sh
+if [ $? -eq 0 ]; then
+  exit 0;
+fi
+
+$DIR/kill-all-docker-containers.sh
+
 # Kill entire script on Ctrl+C
 trap "exit" INT
 
 SERVICE="${1:?Provide the service you want to test as a parameter}"
-TEST_PACKAGE=${@:2}
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+TEST_PACKAGE=$2
 PROJECT_NAME=${BUILDKITE_JOB_ID:-TEST}
 
 

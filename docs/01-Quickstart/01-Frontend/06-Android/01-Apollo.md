@@ -1,30 +1,29 @@
 ---
-alias: shae2aighe
-description: Get started in 5 min with Vue, GraphQL and Apollo Client by building a simple Instagram clone.
-github: https://github.com/graphcool-examples/vue-graphql/tree/master/quickstart-with-apollo
+alias: moong1eeji
+description: Get started in 5 min with Android, GraphQL and Apollo Client by building a simple Instagram clone.
+github: https://github.com/graphcool-examples/android-graphql/tree/master/quickstart-with-apollo/ApolloDemo
 ---
 
-# Vue & Apollo Quickstart
+# Android & Apollo Quickstart
 
-
-For this quickstart tutorial, we have prepared a [repository](https://github.com/graphcool-examples/vue-graphql/tree/master/quickstart-with-apollo) that contains the full Vue code for the Instagram clone. All you need to do is create the Graphcool service that will expose the GraphQL API and connect it with the Vue application. Let's get started! 
+For this quickstart tutorial, we have prepared a [repository](https://github.com/graphcool-examples/android-graphql/tree/master/quickstart-with-apollo) that contains the full Java code for the Instagram clone. All you need to do is create the Graphcool service that will expose the GraphQL API and connect it with the Android application. Let's get started! 
 
 <Instruction>
 
-Clone the example repository that contains the Vue application:
+Clone the example repository that contains the Android application:
 
 ```sh
-git clone https://github.com/graphcool-examples/vue-graphql.git
-cd vue-graphql/quickstart-with-apollo
+git clone https://github.com/graphcool-examples/android-graphql.git
+cd android-graphql/quickstart-with-apollo
 ```
 
 </Instruction>
 
-Feel free to get familiar with the code. The app contains the following Vue [`components`](https://github.com/graphcool-examples/vue-graphql/tree/master/quickstart-with-apollo/src/components):
+Feel free to get familiar with the code. The app contains the following [classes](https://github.com/graphcool-examples/android-graphql/tree/master/quickstart-with-apollo/ApolloDemo/app/src/main/java/com/example/nburk/apollodemo):
 
-- `Post`: Renders a single post item
-- `ListPage`: Renders a list of post items
-- `CreatePage`: Allows to create a new post item
+- `ApolloDemoApplication.java`: Root application class for global configurations
+- `MainActicity.java`: Displays the list of post items
+- `MainRecyclerViewAdapter.java`: Acts as the data source for the list item
 
 Graphcool services are managed with the [Graphcool CLI](!alias-zboghez5go). So before moving on, you first need to install it.
 
@@ -75,8 +74,8 @@ Next you need to configure the [data model](!alias-eiroozae8u) for your service.
 
 Open `./server/types.graphql` and add the following type definition to it:
 
-```graphql(path="server/types.graphql")
-type Post @model {
+```graphql(path="")
+type Post {
   id: ID! @isUnique    # read-only (managed by Graphcool)
   createdAt: DateTime! # read-only (managed by Graphcool)
   updatedAt: DateTime! # read-only (managed by Graphcool)
@@ -103,7 +102,7 @@ When prompted which cluster you want to deploy to, choose any of the **Backend-a
 
 </Instruction>
 
-> **Note**: If you haven't authenticated with the Graphcool CLI before, this command is going to open up a browser window and ask you to login. Your authentication token will be stored in the global `~/.graphcoolrc`.
+> **Note**: If you haven't authenticated with the Graphcool CLI before, this command is going to open up a browser window and ask you to login. Your authentication token will be stored in the global [`~/.graphcoolrc`](!alias-zoug8seen4).
 
 You service is now deployed and available via the HTTP endpoints that were printed in the output of the command! The `Post` type is added to your data model and the corresponding CRUD operations are generated and exposed by the [GraphQL API](!alias-abogasd0go).
 
@@ -146,31 +145,34 @@ mutation {
 
 ![](https://imgur.com/w95UEi9.gif)
 
-The next step is to connect the Vue application with the GraphQL API from your Graphcool service.
+The next step is to connect the Android application with the GraphQL API from your Graphcool service.
 
 <Instruction>
 
-Paste the HTTP endpoint for the `Simple API` that you saved after running `graphcool deploy` into `./src/main.js` as the `uri` argument in the `createNetworkInterface` call:
+Paste the `Simple API` endpoint into `ApolloDemoApplication.java` as the value for the `final` variable `BASE_URL` that's used to instantiate the `ApolloClient`:
 
-```js(path="src/main.js")
+```java
 // replace `__SIMPLE_API_ENDPOINT__` with the endpoint from the previous step
-const networkInterface = createNetworkInterface({ uri: '__SIMPLE_API_ENDPOINT__' })
+private static final String BASE_URL = "__SIMPLE_API_ENDPOINT__";
 ```
 
 </Instruction>
 
-That's it. The last thing to do is actually launching the application 🚀
+To use the Apollo Android Client, you need to install [`apollo-codegen`](https://github.com/apollographql/apollo-codegen), a command line tool that will generate Java classes from your GraphQL queries & mutations at build-time.
 
 <Instruction>
 
-Install dependencies and run the app:
+Install `apollo-codegen` with the following command in your terminal:
 
-```sh(path="")
-yarn install
-yarn start # open http://localhost:3000 in your browser
+```sh
+npm install -g apollo-codegen
 ```
 
 </Instruction>
+
+You can find more info the installation process in the [Apollo docs](http://dev.apollodata.com/android/installation.html).
+
+That's it. The last thing to do is actually launching the application in Android Studio 🚀
 
 
 ### Learn more
