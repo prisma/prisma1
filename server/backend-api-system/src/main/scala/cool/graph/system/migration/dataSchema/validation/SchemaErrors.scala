@@ -49,14 +49,14 @@ object SchemaErrors {
   def missingAtModelDirective(fieldAndType: FieldAndType) = {
     error(
       fieldAndType,
-      s"The model `${fieldAndType.objectType.name}` is missing the @model directive. Please add it. See: https://github.com/graphcool/graphcool/issues/817"
+      s"The model `${fieldAndType.objectType.name}` is missing the @model directive. Please add it. See: https://github.com/graphcool/framework/issues/817"
     )
   }
 
   def atNodeIsDeprecated(fieldAndType: FieldAndType) = {
     error(
       fieldAndType,
-      s"The model `${fieldAndType.objectType.name}` has the implements Node annotation. This is deprecated. Please use '@model' instead. See: https://github.com/graphcool/graphcool/issues/817"
+      s"The model `${fieldAndType.objectType.name}` has the implements Node annotation. This is deprecated. Please use '@model' instead. See: https://github.com/graphcool/framework/issues/817"
     )
   }
 
