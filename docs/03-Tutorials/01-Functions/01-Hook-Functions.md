@@ -47,13 +47,13 @@ In the following, we'll walk through each step in detail with the goal of using 
 
 <Instruction>
 
-We're going to use the [Graphcool CLI](https://www.npmjs.com/package/graphcool) to initialize our project.
+We're going to use the [Graphcool CLI](https://www.npmjs.com/package/graphcool) to initialize our service.
 
 ```sh
 # Install the Graphcool CLI
 npm install -g graphcool
 
-# Create project
+# Create service
 graphcool init
 ```
 

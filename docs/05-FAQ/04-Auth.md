@@ -7,7 +7,7 @@ description: Frequently asked questions everything about Graphcool's authenticat
 
 ### How can I define permission rules with Graphcool? Is there something similar to ACL?
 
-With Graphcool, you can specify permission rules per API operation. By default, no API operation is allowed, so you'll explicitly have to create permissions for all of them. Permissions are specfied inside the [project definition file](!alias-opheidaix3#project-definition) under the `permissions` section.
+With Graphcool, you can specify permission rules per API operation. By default, no API operation is allowed, so you'll explicitly have to create permissions for all of them. Permissions are specfied inside the [service definition file](!alias-opheidaix3#service-definition) under the `permissions` section.
 
 A single permission that's attached to an operation can express either of three things:
 

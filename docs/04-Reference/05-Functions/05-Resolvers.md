@@ -26,9 +26,9 @@ The [Graphcool Functions collection](https://github.com/graphcool/templates/) on
 
 The input type for a resolver function is defined by the input arguments of the field that's added to the GraphQL schema.
 
-## Adding a Resolver function to the project
+## Adding a Resolver function to the service
 
-When you want to create a resolver function in your Graphcool project, you need to add it to the [project definition file](!alias-opheidaix3#project-definition) under the `functions` section.
+When you want to create a resolver function in your Graphcool service, you need to add it to the [service definition file](!alias-opheidaix3#service-definition) under the `functions` section.
 
 ### Example
 

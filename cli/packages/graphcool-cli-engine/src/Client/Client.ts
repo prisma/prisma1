@@ -213,7 +213,7 @@ export class Client {
         }
       }
     `
-    debug('\n\nSending project definition:')
+    debug('\n\nSending service definition:')
     const sanitizedDefinition = ProjectDefinitionClass.sanitizeDefinition(
       config,
     )
