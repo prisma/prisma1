@@ -9,7 +9,7 @@ Graphcool features a simple yet powerful permission system that integrates seaml
 
 <InfoBox>
 
-To get a practical introduction to the Graphcool authorization system, check out the [permissions](https://github.com/graphcool/graphcool/tree/master/examples/permissions) example.
+To get a practical introduction to the Graphcool authorization system, check out the [permissions](https://github.com/graphcool/framework/tree/master/examples/permissions) example.
 
 </InfoBox>
 

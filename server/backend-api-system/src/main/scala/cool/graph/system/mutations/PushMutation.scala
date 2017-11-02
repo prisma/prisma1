@@ -224,7 +224,7 @@ object DeployMutactions {
               `type` = "permission",
               action = "Create",
               name = "Wildcard Permission",
-              description = s"The wildcard permission for all types is added."
+              description = s"The wildcard permission for all operations is added."
             ))
         } else {
           verbalDescriptions ++= Vector(
@@ -232,7 +232,7 @@ object DeployMutactions {
               `type` = "permission",
               action = "Delete",
               name = "Wildcard Permission",
-              description = s"The wildcard permission for all types is removed."
+              description = s"The wildcard permission for all operations is removed."
             ))
         }
       }

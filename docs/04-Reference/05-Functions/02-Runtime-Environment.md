@@ -19,7 +19,7 @@ This `context` has the following structure:
     nodeId # if request is authenticated, this is the `id` of the corresponding node
     token # if request is authenticated, this is the valid authentication token
   },
-  # project info
+  # service info
   graphcool: {
     projectId # this will be deprecated shortly, use serviceId instead
     serviceId
@@ -73,7 +73,7 @@ Inside the function, you can access it them as follows:
 const serviceToken = provess.env['SERVICE_TOKEN']
 ```
 
-> See an example for using environment variables inside functions [here](https://github.com/graphcool/graphcool/tree/master/examples/env-variables-in-functions).
+> See an example for using environment variables inside functions [here](https://github.com/graphcool/framework/tree/master/examples/env-variables-in-functions).
 
 ## Webhooks
 

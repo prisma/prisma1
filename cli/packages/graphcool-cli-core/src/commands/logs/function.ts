@@ -30,7 +30,7 @@ export default class FunctionLogs extends Command {
 
     const {id} = await this.env.getTarget(target)
     debug(`function name ${functionName}`)
-    debug(`project id ${id}`)
+    debug(`service id ${id}`)
 
     if (!functionName) {
       await this.provideAllFunctionLogs(id, tail)
@@ -42,7 +42,7 @@ export default class FunctionLogs extends Command {
       let logs = (await this.client.getAllFunctionLogs(id)) || []
       if (logs.length === 0) {
         this.out.log(
-          `No messages have been logged in the last 30 min for project ${chalk.bold(
+          `No messages have been logged in the last 30 min for service ${chalk.bold(
             id,
           )}`,
         )
@@ -64,7 +64,7 @@ export default class FunctionLogs extends Command {
               }
             }
           } else {
-            this.out.log(`Project ${id} can't be found anymore`)
+            this.out.log(`Service ${id} can't be found anymore`)
           }
         }, 4000)
       }

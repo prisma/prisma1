@@ -449,7 +449,7 @@ https://console.graph.cool/${encodeURIComponent(info.name)}/settings/general`)
         (!migrationResult.errors || migrationResult.errors.length === 0)
       ) {
         this.out.log(
-          `Identical project definition for project ${chalk.bold(
+          `Identical service definition for service ${chalk.bold(
             id,
           )} in env ${chalk.bold(targetName)}, no action required.\n`,
         )
@@ -459,7 +459,7 @@ https://console.graph.cool/${encodeURIComponent(info.name)}/settings/general`)
       if (migrationResult.migrationMessages.length > 0) {
         this.out.log(
           chalk.blue(
-            `Your project ${chalk.bold(id)} of env ${chalk.bold(
+            `Your service ${chalk.bold(id)} of env ${chalk.bold(
               targetName,
             )} has the following changes:`,
           ),
@@ -472,7 +472,7 @@ https://console.graph.cool/${encodeURIComponent(info.name)}/settings/general`)
       if (migrationResult.errors.length > 0) {
         this.out.log(
           chalk.rgb(244, 157, 65)(
-            `There are issues with the new project definition:`,
+            `There are issues with the new service definition:`,
           ),
         )
         this.out.migration.printErrors(migrationResult.errors)
