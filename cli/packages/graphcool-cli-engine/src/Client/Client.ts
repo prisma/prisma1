@@ -72,7 +72,7 @@ export class Client {
         try {
           return await localClient.request(query, variables)
         } catch (e) {
-          if (e.message.includes('No project with id')) {
+          if (e.message.includes('No service with id')) {
             const user = await this.getAccount()
             const message = e.response.errors[0].message
             this.out.error(message + ` in account ${user.email}. Please check if you are logged in to the right account.`)

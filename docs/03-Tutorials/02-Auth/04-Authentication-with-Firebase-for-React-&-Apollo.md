@@ -13,7 +13,7 @@ github: "https://github.com/graphcool-examples/react-graphql/tree/master/authent
 
 _Modules_ have been replaced by _templates_. A template is a predefined Graphcool service that you can _copy_ into your project. 
 
-Read more about templates in the [documentation](!alias-zeiv8phail) or in this [GitHub issue](https://github.com/graphcool/graphcool/issues/720) that contains the proposal and discusssion for how exactly templates should work.
+Read more about templates in the [documentation](!alias-zeiv8phail) or in this [GitHub issue](https://github.com/graphcool/framework/issues/720) that contains the proposal and discusssion for how exactly templates should work.
 
 An updated version of this guide is coming soon, stay tuned!
 

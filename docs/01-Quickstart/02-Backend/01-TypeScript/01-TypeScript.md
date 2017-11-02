@@ -6,9 +6,9 @@ github: https://github.com/graphcool-examples/react-graphql/tree/master/quicksta
 
 # TypeScript
 
-In this quickstart tutorial, you will learn how to build a GraphQL backend and deploy it locally with [Docker](https://docker.com/). The goal is to deploy a new Graphcool service that exposes a CRUD API for a simple data model. You will also add an API gateway that customizes the exposed operations using schema [stitching](https://dev.apollodata.com/tools/graphql-tools/schema-stitching.html) and [transformation](https://github.com/graphcool/graphql-transform-schema). Let's get started!
+In this quickstart tutorial, you will learn how to build a GraphQL backend and deploy it locally with [Docker](https://docker.com/). The goal is to deploy a new Graphcool service that exposes a CRUD API for a simple data model. You will also add an API gateway that customizes the exposed operations using schema [stitching](http://dev.apollodata.com/tools/graphql-tools/schema-stitching.html) and [transformation](https://github.com/graphcool/graphql-transform-schema). Let's get started!
 
-> The code for this project can be found on [GitHub](https://github.com/graphcool/graphcool/tree/master/examples/typescript-gateway-custom-schema). 
+> The code for this project can be found on [GitHub](https://github.com/graphcool/framework/tree/master/examples/typescript-gateway-custom-schema). 
 
 
 <Instruction>
@@ -37,7 +37,7 @@ Here's the file structure of the project:
     └── types.graphql
 ```
 
-The `service` directory contains the [definition](!alias-opheidaix3) of your Graphcool service. [`graphcool.yml`](!alias-foatho8aip) is the main configuration file, it contains information about your [GraphQL types](!alias-eiroozae8u), [permission](!alias-iegoo0heez) setup, integrated [functions](!alias-aiw4aimie9) and more. The actual type definitions are specifed in `types.graphql` and referenced from inside `graphcool.yml`.
+The `service` directory contains the [definition](!alias-opheidaix3) of your Graphcool service. [`graphcool.yml`](!alias-foatho8aip) is the main configuration file, it contains information about your [GraphQL types](!alias-eiroozae8u), [permission](!alias-iegoo0heez) setup, integrated [functions](!alias-aiw4aimie9) and more. The actual type definitions are specified in `types.graphql` and referenced from inside `graphcool.yml`.
 
 This service definition is based on the following data model:
 
@@ -163,7 +163,7 @@ mutation {
 
 </Instruction>
 
-> **Note**: It is important the `alias` of the User is set to `john`. Otherwise the API gateway won't return any data since the `alias` in this example is [hardcoded](https://github.com/graphcool/graphcool/blob/master/examples/typescript-gateway-custom-schema/gateway/index.ts#L43).
+> **Note**: It is important the `alias` of the User is set to `john`. Otherwise the API gateway won't return any data since the `alias` in this example is [hardcoded](https://github.com/graphcool/framework/blob/master/examples/typescript-gateway-custom-schema/gateway/index.ts#L43).
 
 The next step is to setup and start the [API gateway](!alias-ucoohic9zu). In this example, the API gateway creates a custom schema on top of the CRUD API of the Graphcool service. 
 
@@ -182,15 +182,15 @@ type Viewer {
 
 When requests are sent to the API gateway, it will simply forward them to the underlying CRUD API where they will be resolved.
 
-The `run` function in [`index.ts`](https://github.com/graphcool/graphcool/blob/master/examples/typescript-gateway-custom-schema/gateway/index.ts) performs four major steps in order to map CRUD API to the new schema:
+The `run` function in [`index.ts`](https://github.com/graphcool/framework/blob/master/examples/typescript-gateway-custom-schema/gateway/index.ts) performs four major steps in order to map CRUD API to the new schema:
 
-1. Create local version of the CRUD API using [`makeRemoteExecutableSchema`](http://dev.apollodata.com/tools/graphql-tools/remote-schemas.html#makeRemoteExecutableSchema). [See the code](./gateway/index.ts#L13).
-2. Define schema for the new API (the one exposed by the API gateway). [See the code](./gateway/index.ts#L21).
-3. Merge remote schema with new schema using [`mergeSchemas`](http://dev.apollodata.com/tools/graphql-tools/schema-stitching.html#mergeSchemas). [See the code](./gateway/index.ts#L33).
-4. Limit exposed operations from merged schemas (hiding all root fields except `viewer`) using [`transformSchema`](https://github.com/graphcool/graphql-transform-schema). [See the code](./gateway/index.ts#L56).
+1. Create local version of the CRUD API using [`makeRemoteExecutableSchema`](http://dev.apollodata.com/tools/graphql-tools/remote-schemas.html#makeRemoteExecutableSchema). [See the code](https://github.com/graphcool/framework/blob/master/examples/typescript-gateway-custom-schema/gateway/index.ts#L13).
+2. Define schema for the new API (the one exposed by the API gateway). [See the code](https://github.com/graphcool/framework/blob/master/examples/typescript-gateway-custom-schema/gateway/index.ts#L21).
+3. Merge remote schema with new schema using [`mergeSchemas`](http://dev.apollodata.com/tools/graphql-tools/schema-stitching.html#mergeSchemas). [See the code](https://github.com/graphcool/framework/blob/master/examples/typescript-gateway-custom-schema/gateway/index.ts#L33).
+4. Limit exposed operations from merged schemas (hiding all root fields except `viewer`) using [`transformSchema`](https://github.com/graphcool/graphql-transform-schema). [See the code](https://github.com/graphcool/framework/blob/master/examples/typescript-gateway-custom-schema/gateway/index.ts#L56).
 
 
-To get the API gateway up and running the first thing you need to do is connect it with the CRUD API. You can do this by pasting the endpoint of the CRUD API into [`index.ts`](https://github.com/graphcool/graphcool/blob/master/examples/typescript-gateway-custom-schema/gateway/index.ts).
+To get the API gateway up and running the first thing you need to do is connect it with the CRUD API. You can do this by pasting the endpoint of the CRUD API into [`index.ts`](https://github.com/graphcool/framework/blob/master/examples/typescript-gateway-custom-schema/gateway/index.ts).
 
 <Instruction>
 
@@ -222,7 +222,7 @@ Now that the API gateway is deployed, you can send the exposed queries to it.
 
 <Instruction> 
 
-Open a Playground for the API gateway by navigatint to [`http://localhost:3000/playground`](http://localhost:3000/playground) inside your browser.
+Open a Playground for the API gateway by navigating to [`http://localhost:3000/playground`](http://localhost:3000/playground) inside your browser.
 
 To validate it works, you can now send the following query:
 
@@ -232,9 +232,9 @@ To validate it works, you can now send the following query:
     me {
       id
       name
-      posts(limit: 2) {
-        title
-      }
+    }
+    topPosts (limit: 2) {
+      title
     }
   }
 }
@@ -242,7 +242,7 @@ To validate it works, you can now send the following query:
 
 </Instruction> 
 
-This will return two of of the info about the `User` and two of the three associated `Post` nodes.
+This will return info about the `User` and two of the three associated `Post` nodes.
 
 
 ### Learn more

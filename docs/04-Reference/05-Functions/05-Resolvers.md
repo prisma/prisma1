@@ -73,11 +73,11 @@ For resolver functions, you additionally need to specify the `schema ` property 
 
 Each resolver can only add a single query field or a single mutation field to the GraphQL API. This field can receive several scalar input arguments and has to return a payload that is also specified in the same SDL document.
 
-See also examples for [custom mutations](!alias-nia9nushae#custom-mutations) and [custom queries](!alias-ol0yuoz6go#custom-queries).
+See also examples for [custom mutations](!alias-ol0yuoz6go#custom-mutations) and [custom queries](!alias-nia9nushae#custom-queries).
 
 [Error handling](!alias-geihakoh4e) works similarly to other Graphcool Functions, if an object containing the `error` key is returned.
 
 ## Current limitations
 
-* Input and output fields can [only be of scalar types](https://github.com/graphcool/graphcool/issues/743) at the moment.
-* [Only one query or mutation field](https://github.com/graphcool/graphcool/issues/326) can be added per resolver.
+* Input and output fields can [only be of scalar types](https://github.com/graphcool/framework/issues/743) at the moment.
+* [Only one query or mutation field](https://github.com/graphcool/framework/issues/326) can be added per resolver.
