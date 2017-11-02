@@ -139,7 +139,7 @@ object SchemaErrors {
 
   // note: the cli relies on the string "destructive changes" being present in this error message. Ugly but effective
   def forceArgumentRequired: SchemaError = {
-    SchemaError.global("Your migration includes potentially destructive changes. Review using `graphcool diff` and continue using `graphcool deploy --force`.")
+    SchemaError.global("Your migration includes potentially destructive changes. Review using `graphcool deploy --dry-run` and continue using `graphcool deploy --force`.")
   }
 
   def invalidEnv(message: String) = {
