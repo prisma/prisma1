@@ -30,7 +30,7 @@ The [`graphcool-lib`](https://github.com/graphcool/graphcool-lib) provides a con
 
 Here's some functionality it offers:
 
-- convenience API for sending queries and mutations to a Graphcool project (based on [`graphql-request`](https://github.com/graphcool/graphql-request))
+- convenience API for sending queries and mutations to a Graphcool service (based on [`graphql-request`](https://github.com/graphcool/graphql-request))
 - generating a temporary authentication token for a node in your database
 
 If you want to use it inside a managed function, you can simply `require` it (similar to [here](https://github.com/graphcool/modules/blob/master/authentication/email-password/code/loggedInUser.js#L1)). In a webhook, you can install it as a dependency with npm. 

@@ -34,4 +34,4 @@ If you don't have custom requirements for your authentication, you can convenien
 There generally are two different kinds of tokens that you can use to authenticate requests:
 
 - [Temporary authentication tokens](!alias-eip7ahqu5o#temporary-authentication-tokens): These are the tokens you are issuing to your users. They are generated using [graphcool-lib](https://github.com/graphcool/graphcool-lib) and each token is always associated with one particular _node_ (usually represting a _user_) in your database. Temporary authentication tokens will expire and your users have to acquire a new one.
-- [Root tokens](!alias-eip7ahqu5o#root-tokens): Root tokens are tokens that are valid indefinitely. Each root token is associated with exactly one Graphcool project and can be used to perform any operation in the API of that project.
+- [Root tokens](!alias-eip7ahqu5o#root-tokens): Root tokens are tokens that are valid indefinitely. Each root token is associated with exactly one Graphcool service and can be used to perform any operation in the API of that service.

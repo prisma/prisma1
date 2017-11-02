@@ -43,7 +43,7 @@ subscription newPosts {
 
 Subscriptions use a special websocket endpoint.
 
-Here's a list of available subscriptions. To explore them, use the [playground](!alias-oe1ier4iej) inside your project.
+Here's a list of available subscriptions. To explore them, use the [playground](!alias-oe1ier4iej) inside your service.
 
 - For every [model type](!alias-eiroozae8u#model-types) in your data model, a [type subscription](#type-subscriptions) query is available to listen for changes to nodes of this.
 - Currently, connecting or disconnecting nodes in a [relation](!alias-eiroozae8u#relations) does not trigger a subscription! Read more about [available workaround](#relation-subscriptions) for this limitation.
@@ -70,7 +70,7 @@ A GraphQL [Playground](https://github.com/graphcool/graphql-playground) can be u
 Subscriptions are managed through WebSockets. First establish a WebSocket connection and specify the `graphql-subscriptions` protocol:
 
 ```js
-let webSocket = new WebSocket('wss://subscriptions.graph.cool/v1/__PROJECT_ID__', 'graphql-subscriptions');
+let webSocket = new WebSocket('wss://subscriptions.graph.cool/v1/__SERVICE_ID__', 'graphql-subscriptions');
 ```
 #### Initiate handshake
 
