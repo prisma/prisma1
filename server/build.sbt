@@ -271,7 +271,6 @@ lazy val backendWorkers =
       "com.typesafe.akka"                %% "akka-http"              % "10.0.5",
       "com.typesafe.slick"               %% "slick"                  % "3.2.0",
       "com.typesafe.slick"               %% "slick-hikaricp"         % "3.2.0",
-      "com.typesafe.play"                %% "play-ahc-ws-standalone" % "1.0.7",
       "org.mariadb.jdbc"                 %  "mariadb-java-client"    % "1.5.8",
       "cool.graph"                       %  "cuid-java"              % "0.1.1",
       "org.scalatest"                    %% "scalatest"              % "2.2.6" % "test"

@@ -78,6 +78,8 @@ case class SimpleHttpClient()(implicit val system: ActorSystem, materializer: Ac
           }
         }
         .recoverWith {
+          case e: FailedRequestError => Future.failed(e)
+
           case _: RejectionError =>
             val resp = SimpleHttpResponse(response.status.intValue(), None, Seq.empty, response)
             Future.failed(FailedRequestError(s"Unable to unmarshal response body", resp))
@@ -97,6 +99,8 @@ case class SimpleHttpClient()(implicit val system: ActorSystem, materializer: Ac
       }
     }
   }
+
+  def shutdown: Future[Unit] = akkaClient.shutdownAllConnectionPools()
 }
 
 case class SimpleHttpResponse(status: Int, body: Option[String], headers: Seq[(String, String)], underlying: HttpResponse) {
