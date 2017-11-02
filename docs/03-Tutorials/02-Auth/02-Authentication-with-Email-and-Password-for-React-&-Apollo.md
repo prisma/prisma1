@@ -262,7 +262,7 @@ In addition to the `User` that you got from the `email-password` authentication 
 Open `./server/types.graphql` and add the following definition to it:
 
 ```graphql(path="server/types.graphql")
-type Post {
+type Post @model {
   # Required system field:
   id: ID! @isUnique # read-only (managed by Graphcool)
 
@@ -462,15 +462,15 @@ Open `signup.js` and update the `createGraphcoolUser` function to look like this
 ```js{7}(path="server/src/email-password/signup.js")
 function createGraphcoolUser(api, email, passwordHash, name) {
   return api.request(`
-    mutation {
+    mutation($email: String, $passwordHash: String, $name: String) {
       createUser(
-        email: "${email}",
-        password: "${passwordHash}",
-        name: "${name}"
+        email: $email,
+        password: $passwordHash,
+        name: $name
       ) {
         id
       }
-    }`)
+    }`, { email, passwordHash, name })
     .then((userMutationResult) => {
       return userMutationResult.createUser.id
     })

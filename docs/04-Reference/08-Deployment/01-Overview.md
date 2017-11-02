@@ -19,7 +19,7 @@ Services can be deployed to _shared_ clusters in the Graphcool Cloud. When deplo
 The Graphcool Cloud currently supports three [regions](https://blog.graph.cool/new-regions-and-improved-performance-7bbc0a35c880):
 
 - `eu-west-1` (EU, Ireland)
-- `asia-northeast-1` (Asia Pacific, Tokyo)
+- `ap-northeast-1` (Asia Pacific, Tokyo)
 - `us-west-1` (US, Oregon)
 
 ### Private Clusters (coming soon)
@@ -113,7 +113,7 @@ Subscriptions API: ws://localhost:60001/subscriptions/v1/__SERVICE_ID__
 
 With `docker ps` and `docker images` it is possible for you to inspect Graphcool's Docker setup.
 
-You will see three images in your local docker image repository, where `VERSION` will be something like `0.8.1`: 
+You will see four images in your local docker image repository, where `VERSION` will be something like `0.8.1`: 
 
 - `graphcool/graphcool-dev:<VERSION>`: The core apis.
 - `graphcool/localfaas:<VERSION>`: The local funtion runtime.

@@ -74,7 +74,7 @@ Next you need to configure the [data model](!alias-eiroozae8u) for your service.
 
 Open `./server/types.graphql` and add the following type definition to it:
 
-```graphql(path="server/types.graphql")
+```graphql(path="")
 type Post {
   id: ID! @isUnique    # read-only (managed by Graphcool)
   createdAt: DateTime! # read-only (managed by Graphcool)
@@ -148,7 +148,6 @@ mutation {
 The next step is to connect the Android application with the GraphQL API from your Graphcool service.
 
 <Instruction>
-
 
 Paste the `Simple API` endpoint into `ApolloDemoApplication.java` as the value for the `final` variable `BASE_URL` that's used to instantiate the `ApolloClient`:
 

@@ -150,7 +150,7 @@ graphcool delete [flags]
 
 ### `graphcool add-template`
 
-Add new [template](!alias-zeiv8phail) to current Graphcool service. After invoking this command, you still need to uncomment the added lines in `graphcool.yml` and `types.graphql` and then run `grphcool deploy`.
+Add new [template](!alias-zeiv8phail) to current Graphcool service. After invoking this command, you still need to uncomment the added lines in `graphcool.yml` and `types.graphql` and then run `graphcool deploy`.
 
 #### Usage 
 

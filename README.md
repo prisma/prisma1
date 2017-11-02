@@ -1,19 +1,19 @@
 <p align="center"><a href="https://www.graph.cool"><img src="https://imgur.com/he8RLRs.png"></a></p>
 
-[Website](https://www.graph.cool/) • [Docs](https://graph.cool/docs/) • [Blog](https://blogs.graph.cool/) • [Forum](https://www.graph.cool/forum) • [Slack](https://slack.graph.cool/) • [Twitter](https://twitter.com/graphcool)
+[Website](https://www.graph.cool/) • [Docs](https://graph.cool/docs/) • [Blog](https://blog.graph.cool/) • [Forum](https://www.graph.cool/forum) • [Slack](https://slack.graph.cool/) • [Twitter](https://twitter.com/graphcool)
 
-[![CircleCI](https://circleci.com/gh/graphcool/framework.svg?style=shield)](https://circleci.com/gh/graphcool/framework) [![Slack Status](https://slack.graph.cool/badge.svg)](https://slack.graph.cool) [![npm version](https://img.shields.io/badge/npm%20package-next-brightgreen.svg)](https://badge.fury.io/js/graphcool)
+[![CircleCI](https://circleci.com/gh/graphcool/framework.svg?style=shield)](https://circleci.com/gh/graphcool/framework) [![Slack Status](https://slack.graph.cool/badge.svg)](https://slack.graph.cool) [![npm version](https://img.shields.io/badge/npm%20package-latest-brightgreen.svg)](https://badge.fury.io/js/graphcool)
 
 **Graphcool is an open-source backend development framework** to develop and deploy production-ready GraphQL microservices. With Graphcool you can design your data model and have a production ready [GraphQL](https://www.howtographql.com/) API online in minutes.
 
 The framework integrates with cloud-native serverless functions and is compatible with existing libraries and tools like [GraphQL.js](https://github.com/graphql/graphql-js) and [Apollo Server](https://github.com/apollographql/apollo-server). Graphcool comes with a CLI and a Docker-based runtime which can be deployed to any server or cloud.
 
-<!-- 
+<!--
 Add note that Graphcool can still be used with other langs via webhooks??
 -->
 
 The framework provides powerful abstractions and building blocks to develop flexible, scalable GraphQL backends:
-    
+
 1. **GraphQL database** to easily evolve your data schema & migrate your database
 2. **Flexible auth** using the JWT-based authentication & permission system
 3. **Realtime API** using GraphQL Subscriptions
@@ -57,26 +57,24 @@ The framework provides powerful abstractions and building blocks to develop flex
 3. **Define your data model:**
 
   Edit `types.graphql` to define your data model using the [GraphQL SDL notation](https://graph.cool/docs/reference/database/data-modelling-eiroozae8u). `@model` types map to the database.
-  
+
   ```graphql
   type User @model {
     id: ID! @isUnique
     name: String!
     dateOfBirth: DateTime
-  
+
     # You can declare relations between models like this
     posts: [Post!]! @relation(name: "UserPosts")
   }
-  
-  
+
   type Post @model {
     id: ID! @isUnique
     title: String!
-  
+
     # Relations always have two fields
     author: User! @relation(name: "UserPosts")
   }
-
   ```
 
 4. **Define permissions and functions:**
@@ -132,7 +130,7 @@ The framework provides powerful abstractions and building blocks to develop flex
 * GraphQL Database with automatic migrations
 * JWT-based authentication & flexible permission system
 * Realtime GraphQL Subscription API
-* GraphQL specfication compliant
+* GraphQL specification compliant
 * Compatible with existing libraries and tools (such as GraphQL.js & Apollo)
 
 #### Scalable serverless architecture designed for the cloud
@@ -163,7 +161,6 @@ The framework provides powerful abstractions and building blocks to develop flex
 * [subscriptions](examples/subscriptions): Use subscription functions to react to asynchronous events
 * [yaml-variables](examples/yaml-variables): Use variables in your `graphcool.yml`
 
-
 ### Frontend examples
 
 * [react-graphql](https://github.com/graphcool-examples/react-graphql): React code examples with GraphQL, Apollo, Relay, Auth0 & more
@@ -182,13 +179,12 @@ Graphcool is a new kind of framework that introduces clear boundaries between yo
 
 The most important component in the Graphcool Framework is the GraphQL Database:
 
- - Query, mutate & stream data via GraphQL CRUD API
- - Define and evolve your data model using GraphQL SDL
+* Query, mutate & stream data via GraphQL CRUD API
+* Define and evolve your data model using GraphQL SDL
 
- If you have used the Graphcool Backend as a Service before, you are already familiar with the benefits of the GraphQL Database.
- 
-The CRUD API comes out of the box with advanced features such as pagination, expressive filters and nested mutations. These features are implemented within an effecient data-loader engine, to ensure the best possible performance.
- 
+If you have used the Graphcool Backend as a Service before, you are already familiar with the benefits of the GraphQL Database.
+
+The CRUD API comes out of the box with advanced features such as pagination, expressive filters and nested mutations. These features are implemented within an efficient data-loader engine, to ensure the best possible performance.
 
 ## Deployment
 
@@ -208,14 +204,13 @@ graphcool deploy   # deploy to local cluster
 
 ### Graphcool Cloud (Backend-as-a-Service)
 
-Services can also be deployed to _shared_ clusters in the Graphcool Cloud. When deploying to a shared cluster, there is a **free developer plan** as well as a convienent and efficient **pay-as-you-go pricing** model for production applications. 
+Services can also be deployed to _shared_ clusters in the Graphcool Cloud. When deploying to a shared cluster, there is a **free developer plan** as well as a convenient and efficient **pay-as-you-go pricing** model for production applications.
 
 The Graphcool Cloud currently supports three [regions](https://blog.graph.cool/new-regions-and-improved-performance-7bbc0a35c880):
 
-- `eu-west-1` (EU, Ireland)
-- `asia-northeast-1` (Asia Pacific, Tokyo)
-- `us-west-1` (US, Oregon)
-
+* `eu-west-1` (EU, Ireland)
+* `ap-northeast-1` (Asia Pacific, Tokyo)
+* `us-west-1` (US, Oregon)
 
 <!--
 
@@ -225,7 +220,7 @@ The Graphcool Cloud currently supports three [regions](https://blog.graph.cool/n
 
 ### Open source & Community
 
-The Graphcool Framework is completely open-source and based on open standards. We highly value 
+The Graphcool Framework is completely open-source and based on open standards. We highly value
 
 - Open Source & Based on open standards
 
@@ -239,7 +234,7 @@ At the core of every Graphcool service is the auto-generated CRUD API that offer
 
 #### Flexible shell
 
-Business logic, authentication and permissions are implemented with serverless functions that seamlessly integrate with the CRUD API. All communication between different parts of the framework is typesafe thanks to the GraphQL schema.
+Business logic, authentication and permissions are implemented with serverless functions that seamlessly integrate with the CRUD API. All communication between different parts of the framework is type-safe thanks to the GraphQL schema.
 
 The API gateway is another tool that provides the power and flexibility needed to build modern applications.
 
@@ -255,25 +250,23 @@ While Graphcool started out as a Backend-as-a-Service (like Firebase or Parse), 
 
 At the core of the Graphcool Framework is the GraphQL Database, an extremely complex piece of software. We developed the initial prototype with Node but soon realized that it wasn't the right choice for the complexity Graphcool needed to deal with.
 
-We found that to be able to develop safely while iterating quickly, we needed a powerful typesystem. Scala's support for functional programming techniques coupled with the strong performance of the JVM made it the obvious choice for Graphcool. 
+We found that to be able to develop safely while iterating quickly, we needed a powerful type system. Scala's support for functional programming techniques coupled with the strong performance of the JVM made it the obvious choice for Graphcool.
 
-Another important consideration is that the most mature GraphQL implementation - [Sangria](https://github.com/sangria-graphql) - is written in Scala. 
-
+Another important consideration is that the most mature GraphQL implementation - [Sangria](https://github.com/sangria-graphql) - is written in Scala.
 
 ### Is the API Gateway layer needed?
 
 The API gateway is an _optional_ layer for your API, adding it to your service is not required. It is however an extremely powerful tool suited for many real-world use cases, for example:
 
-- Tailor your GraphQL schema and expose custom operations (based on the underlying CRUD API)
-- Intercept HTTP requests before they reach the CRUD API; adjust the HTTP response before it's returned
-- Implement persisted queries
-- Integrate existing systems into your service's GraphQL API
-- File management
+* Tailor your GraphQL schema and expose custom operations (based on the underlying CRUD API)
+* Intercept HTTP requests before they reach the CRUD API; adjust the HTTP response before it's returned
+* Implement persisted queries
+* Integrate existing systems into your service's GraphQL API
+* File management
 
 Also realize that when you're not using an API gateway, _your service endpoint allows everyone to view all the operations of your CRUD API_. The entire data model can be deduced from the exposed CRUD operations.
 
 ## Roadmap
-
 
 Help us shape the future of the Graphcool Framework by :thumbsup: [existing Feature Requests](https://github.com/graphcool/graphcool/issues?q=is%3Aopen+is%3Aissue+label%3Akind%2Ffeature) or [creating new ones](https://github.com/graphcool/graphcool/issues/new)
 
@@ -284,14 +277,13 @@ to see the new features we are planning!
 
 Graphcool has a community of thousands of amazing developers and contributors. Welcome, please join us! 👋
 
-- [Forum](https://www.graph.cool/forum)
-- [Slack](https://slack.graph.cool/)
-- [Stackoverflow](https://stackoverflow.com/questions/tagged/graphcool)
-- [Twitter](https://twitter.com/graphcool)
-- [Facebook](https://www.facebook.com/GraphcoolHQ)
-- [Meetup](https://www.meetup.com/graphql-berlin)
-- [Email](hello@graph.cool)
-
+* [Forum](https://www.graph.cool/forum)
+* [Slack](https://slack.graph.cool/)
+* [Stackoverflow](https://stackoverflow.com/questions/tagged/graphcool)
+* [Twitter](https://twitter.com/graphcool)
+* [Facebook](https://www.facebook.com/GraphcoolHQ)
+* [Meetup](https://www.meetup.com/graphql-berlin)
+* [Email](hello@graph.cool)
 
 ## Contributing
 

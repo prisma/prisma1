@@ -39,7 +39,7 @@ Here's the file structure of the project:
 
 The `service` directory contains the [definition](!alias-opheidaix3) of your Graphcool service. [`graphcool.yml`](!alias-foatho8aip) is the main configuration file, it contains information about your [GraphQL types](!alias-eiroozae8u), [permission](!alias-iegoo0heez) setup, integrated [functions](!alias-aiw4aimie9) and more. The actual type definitions are specifed in `types.graphql` and referenced from inside `graphcool.yml`.
 
-This service defition is based on the following data model:
+This service definition is based on the following data model:
 
 ```graphql
 type User @model {
@@ -222,7 +222,7 @@ Now that the API gateway is deployed, you can send the exposed queries to it.
 
 <Instruction> 
 
-Open a Playground for the API gateway by navigatint to [`http://localhost:3000/playground`](http://localhost:3000/playground) inside your browser.
+Open a Playground for the API gateway by navigating to [`http://localhost:3000/playground`](http://localhost:3000/playground) inside your browser.
 
 To validate it works, you can now send the following query:
 
@@ -232,9 +232,9 @@ To validate it works, you can now send the following query:
     me {
       id
       name
-      posts(limit: 2) {
-        title
-      }
+    }
+    topPosts (limit: 2) {
+      title
     }
   }
 }
