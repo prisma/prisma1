@@ -79,5 +79,5 @@ See also examples for [custom mutations](!alias-ol0yuoz6go#custom-mutations) and
 
 ## Current limitations
 
-* Input and output fields can [only be of scalar types](https://github.com/graphcool/graphcool/issues/743) at the moment.
-* [Only one query or mutation field](https://github.com/graphcool/graphcool/issues/326) can be added per resolver.
+* Input and output fields can [only be of scalar types](https://github.com/graphcool/framework/issues/743) at the moment.
+* [Only one query or mutation field](https://github.com/graphcool/framework/issues/326) can be added per resolver.

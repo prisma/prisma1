@@ -13,7 +13,7 @@ There's a number of templates that are officially supported. You can find them [
 
 A template is nothing but the definition of another Graphcool service, including a service definition file [`graphcool.yml`](!alias-foatho8aip) and potentially more files for functions or permissions. 
 
-It is important to understand that templates are only a [lightweight and temporary solution](https://github.com/graphcool/graphcool/issues/720) for you to be able to quickly integrate predefined functionality into your Graphcool service. They are not meant to provide an elaborate package/module system like [npm](https://www.npmjs.com/) or other dependency management tools.
+It is important to understand that templates are only a [lightweight and temporary solution](https://github.com/graphcool/framework/issues/720) for you to be able to quickly integrate predefined functionality into your Graphcool service. They are not meant to provide an elaborate package/module system like [npm](https://www.npmjs.com/) or other dependency management tools.
 
 
 ## Using a template

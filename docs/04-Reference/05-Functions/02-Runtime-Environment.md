@@ -73,7 +73,7 @@ Inside the function, you can access it them as follows:
 const serviceToken = provess.env['SERVICE_TOKEN']
 ```
 
-> See an example for using environment variables inside functions [here](https://github.com/graphcool/graphcool/tree/master/examples/env-variables-in-functions).
+> See an example for using environment variables inside functions [here](https://github.com/graphcool/framework/tree/master/examples/env-variables-in-functions).
 
 ## Webhooks
 

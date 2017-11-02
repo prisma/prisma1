@@ -330,7 +330,7 @@ functions:
 
 ### `permissions`
 
-The `permissions` root property accepts a **list of [permissions](#definition-permission)**. To see a practical example of the Graphcool permission system, check out this [example](https://github.com/graphcool/graphcool/tree/master/examples/permissions) service.
+The `permissions` root property accepts a **list of [permissions](#definition-permission)**. To see a practical example of the Graphcool permission system, check out this [example](https://github.com/graphcool/framework/tree/master/examples/permissions) service.
 
 #### Definition: `permission`
 
