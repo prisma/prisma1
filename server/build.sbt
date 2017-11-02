@@ -13,16 +13,17 @@ lazy val actualBranch = settingKey[String]("the current branch of the git repo")
 
 actualBranch := {
   val branch = sys.env.getOrElse("BRANCH", git.gitCurrentBranch.value)
-  if(branch != "master"){
+
+  if (branch != "master"){
     sys.props += "project.version" -> s"$branch-SNAPSHOT"
   }
   branch
 }
 
-
 propagateVersionToOtherRepo := {
   val branch = actualBranch.value
   println(s"Will try to propagate the version to branch $branch in other repo.")
+
   val githubClient = GithubClient()
   githubClient.updateFile(
     owner = Env.read("OTHER_REPO_OWNER"),
@@ -33,15 +34,13 @@ propagateVersionToOtherRepo := {
   )
 }
 
-
-
 // determine the version of our artifacts with sbt-git
 lazy val versionSettings = SbtGit.versionWithGit ++ Seq(
   git.baseVersion := "0.8.0",
   git.gitUncommittedChanges := { // the default implementation of sbt-git uses JGit which somehow always returns true here, so we roll our own impl
     import sys.process._
     val gitStatusResult = "git status --porcelain".!!
-    if(gitStatusResult.nonEmpty){
+    if (gitStatusResult.nonEmpty){
       println("Git has uncommitted changes!")
       println(gitStatusResult)
     }
@@ -111,8 +110,11 @@ lazy val akkaUtils = Project(id = "akka-utils", base = file("./libs/akka-utils")
   .settings(commonSettings: _*)
   .dependsOn(bugsnag % "compile")
   .dependsOn(scalaUtils % "compile")
+  .dependsOn(stubServer % "test")
   .settings(libraryDependencies ++= Seq(
-    "ch.megard"           %% "akka-http-cors"       % "0.2.1"
+    Dependencies.scalaTest,
+    "ch.megard"         %% "akka-http-cors" % "0.2.1",
+    "com.typesafe.play" %% "play-json"      % "2.5.12"
   ))
 
 lazy val aws = Project(id = "aws", base = file("./libs/aws"))

@@ -1,4 +1,5 @@
 package cool.graph.worker.workers
+
 import cool.graph.bugsnag.BugSnagger
 import cool.graph.cuid.Cuid
 import cool.graph.messagebus.{QueueConsumer, QueuePublisher}
