@@ -288,7 +288,7 @@ case class AddModelPermissionAction(input: AddModelPermissionInput, modelPermiss
     `type` = "model permission",
     action = "Create",
     name = modelPermissionName,
-    description = s"A permission for the operation `${input.operation}` is created."
+    description = s"A permission for the operation `${input.operation.toString.toLowerCase}` is created."
   )
 }
 
@@ -297,7 +297,7 @@ case class AddRelationPermissionAction(input: AddRelationPermissionInput, relati
     `type` = "model permission",
     action = "Create",
     name = relationPermissionName,
-    description = s"A permission for the operation `$operation` is created."
+    description = s"A permission for the operation `${operation.toLowerCase}` is created."
   )
 }
 
@@ -306,7 +306,7 @@ case class RemoveModelPermissionAction(input: DeleteModelPermissionInput, modelP
     `type` = "model permission",
     action = "Delete",
     name = modelPermissionName,
-    description = s"A permission for the operation `$operation` is deleted."
+    description = s"A permission for the operation `${operation.toLowerCase}` is deleted."
   )
 }
 
@@ -315,7 +315,7 @@ case class RemoveRelationPermissionAction(input: DeleteRelationPermissionInput, 
     `type` = "model permission",
     action = "Delete",
     name = relationPermissionName,
-    description = s"A permission for the operation `$operation` is deleted."
+    description = s"A permission for the operation `${operation.toLowerCase}` is deleted."
   )
 }
 
