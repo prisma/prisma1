@@ -380,7 +380,7 @@ case class ModuleMigrator(functionDiff: FunctionDiff,
       description = astPermission.description,
       isActive = true
     )
-    val modelPermissionName = s"$modelName.$modelOperation"
+    val modelPermissionName = s"$modelName.${modelOperation.toString.toLowerCase}"
     AddModelPermissionAction(input, modelPermissionName)
   })
 
@@ -416,8 +416,8 @@ case class ModuleMigrator(functionDiff: FunctionDiff,
       isActive = true
     )
 
-    val relationPermissionName = s"$relationName.$operation"
-    AddRelationPermissionAction(input, relationPermissionName, operation)
+    val relationPermissionName = s"$relationName.${operation.toLowerCase}"
+    AddRelationPermissionAction(input, relationPermissionName, operation.toString)
   })
 
   lazy val modelPermissionsToRemove: Vector[RemoveModelPermissionAction] = permissionDiff.removedPermissionIds
@@ -425,7 +425,8 @@ case class ModuleMigrator(functionDiff: FunctionDiff,
     .map(permission => {
       val input               = DeleteModelPermissionInput(clientMutationId = None, modelPermissionId = permission.id)
       val operation           = permission.operation
-      val modelPermissionName = project.getModelByModelPermissionId_!(permission.id).name + "." + operation
+      val modelName = project.getModelByModelPermissionId_!(permission.id).name
+      val modelPermissionName =  s"$modelName.${operation.toString.toLowerCase}"
 
       RemoveModelPermissionAction(input, modelPermissionName, operation.toString)
     })
@@ -435,7 +436,9 @@ case class ModuleMigrator(functionDiff: FunctionDiff,
     .map(permission => {
       val input                  = DeleteRelationPermissionInput(clientMutationId = None, relationPermissionId = permission.id)
       val operation              = if (permission.connect && permission.disconnect) "*" else if (permission.connect) "connect" else "disconnect"
-      val relationPermissionName = project.getRelationByRelationPermissionId_!(permission.id).name + "." + operation
+      val relationName = project.getRelationByRelationPermissionId_!(permission.id).name
+
+      val relationPermissionName = s"$relationName.${operation.toLowerCase}"
       RemoveRelationPermissionAction(input, relationPermissionName, operation)
     })
 
