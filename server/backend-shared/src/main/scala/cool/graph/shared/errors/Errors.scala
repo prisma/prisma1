@@ -51,7 +51,7 @@ object SystemErrors {
     override def schemaError: Option[SchemaError] = Some(SchemaError("Global", description = description))
   }
 
-  case class InvalidProjectId(projectId: String) extends SystemApiError(s"No project with id '$projectId'", 4000)
+  case class InvalidProjectId(projectId: String) extends SystemApiError(s"No service with id '$projectId'", 4000)
 
   case class InvalidModelId(modelId: String) extends SystemApiError(s"No model with id '$modelId'", 4001)
 

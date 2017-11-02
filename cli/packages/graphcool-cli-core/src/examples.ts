@@ -43,19 +43,19 @@ functions:
 
 
 # Model/Relation permissions are used to limit the API access
-# To take the burden of thinking about those while development, we 
+# To take the burden of thinking about those while development, we
 # preconfigured the wildcard ("*") permission that allows everything
 # Read more here:
 # https://docs-next.graph.cool/reference/auth/authorization/overview-iegoo0heez
 permissions:
-- operation: "*"
+  - operation: "*"
 
-  
+
 # Your root tokens used for functions to get full access to the API
 # Read more here:
 # https://docs-next.graph.cool/reference/auth/authentication/authentication-tokens-eip7ahqu5o
 # rootTokens:
-# - mytoken
+#   - mytoken
 
 `,
       files: {
@@ -79,7 +79,7 @@ type User @model {
 # type Post @model {
 #   id: ID! @isUnique
 #   title: String!
-# 
+#
 #   # Every relation also required a back-relation (to determine 1:1, 1:n or n:m)
 #   author: User! @relation(name: "UserPosts")
 # }
@@ -87,9 +87,9 @@ type User @model {
         './src/hello.js': `\
 export default async event => {
   // you can use ES7 with async/await and even TypeScript in your functions :)
- 
+
   await new Promise(r => setTimeout(r, 50))
-  
+
   return {
     data: {
       message: \`Hello $\{event.data.name || 'World'\}\`
@@ -142,7 +142,7 @@ types: ./types.graphql
 #     type: resolver
 #     schema: ./code/hello.graphql
 
- 
+
 # Graphcool modules
 modules: {}
 
@@ -151,7 +151,7 @@ modules: {}
 permissions:
 - operation: "*"
 
-  
+
 # Permanent Auth Token / Root Tokens
 rootTokens: []
 

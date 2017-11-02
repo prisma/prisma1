@@ -222,7 +222,7 @@ Now that the API gateway is deployed, you can send the exposed queries to it.
 
 <Instruction> 
 
-Open a Playground for the API gateway by navigatint to [`http://localhost:3000/playground`](http://localhost:3000/playground) inside your browser.
+Open a Playground for the API gateway by navigating to [`http://localhost:3000/playground`](http://localhost:3000/playground) inside your browser.
 
 To validate it works, you can now send the following query:
 
@@ -232,9 +232,9 @@ To validate it works, you can now send the following query:
     me {
       id
       name
-      posts(limit: 2) {
-        title
-      }
+    }
+    topPosts (limit: 2) {
+      title
     }
   }
 }
