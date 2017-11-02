@@ -28,7 +28,7 @@ case class ExportData(project: Project, resolver: DataResolver)(implicit inj: In
   def getUrl                                   = s"https://s3-eu-west-1.amazonaws.com/${sys.env.getOrElse("DATA_EXPORT_S3_BUCKET", "")}/$key"
 
   def generateJsonForModel(model: Model): Future[String] = {
-    val relationIds = model.fields.filter(_.isRelation).map(_.relation.get.id)
+    val relationIds = model.relationFields.map(_.relation.get.id)
 
     Future
       .sequence(relationIds.map(relationId => {
@@ -41,8 +41,7 @@ case class ExportData(project: Project, resolver: DataResolver)(implicit inj: In
           .resolveByModel(model)
           .map(resolverResult => {
             resolverResult.items.map(dataItem => {
-              val relationValues = model.fields
-                .filter(_.isRelation)
+              val relationValues = model.relationFields
                 .map(relationField => {
                   relationField.name -> relations
                     .find(_._1 == relationField.relation.get.id)
