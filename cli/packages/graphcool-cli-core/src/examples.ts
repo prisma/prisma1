@@ -22,7 +22,7 @@ export const defaultDefinition: ProjectDefinition = {
 # Just run \`graphcool deploy\` to have the first running Graphcool Service.
 #
 # Check out some examples:
-#    https://github.com/graphcool/graphcool/tree/master/examples
+#    https://github.com/graphcool/framework/tree/master/examples
 #
 # Here are the reference docs of this definition format:
 # https://docs-next.graph.cool/reference/service-definition/graphcool.yml-foatho8aip
@@ -123,7 +123,7 @@ export const changedDefaultDefinition: ProjectDefinition = {
 # Just uncomment it and run \`graphcool deploy\`
 #
 # Check out some examples:
-#    https://github.com/graphcool/graphcool/tree/master/examples
+#    https://github.com/graphcool/framework/tree/master/examples
 #
 # Happy Coding!
 

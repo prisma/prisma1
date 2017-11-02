@@ -29,7 +29,7 @@ export async function fsToProject(
   if (definition.hasOwnProperty('modules')) {
     out.error(`Your graphcool.yml contains modules. Please remove them in order to deploy.
 Modules are deprecated and replaced by templates.
-Read more about templates here: https://github.com/graphcool/graphcool/issues/720`)
+Read more about templates here: https://github.com/graphcool/framework/issues/720`)
   }
 
   // if (definition.modules) {

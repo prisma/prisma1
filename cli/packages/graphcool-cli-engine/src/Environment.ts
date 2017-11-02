@@ -224,7 +224,7 @@ Please run ${chalk.green('$ graphcool local up')} to get a local Graphcool clust
           this.out.warn(`We detected the old definition format of the ${this.config.localRCPath} file.
 It has been renamed to ${oldPath}. The up-to-date format has been written to ${this.config.localRCPath}.
 Read more about the changes here:
-https://github.com/graphcool/graphcool/issues/714
+https://github.com/graphcool/framework/issues/714
 `)
         }
       } catch (e) {
@@ -311,7 +311,7 @@ It has been renamed to ${oldPath}. The up-to-date format has been written to ${r
             this.out.warn(`We detected the old definition format of the ${dotFilePath} file.
 It has been renamed to ${oldPath}. The new file is called ${rcHomePath}.
 Read more about the changes here:
-https://github.com/graphcool/graphcool/issues/714
+https://github.com/graphcool/framework/issues/714
 `)
           }
         } catch (e) {
