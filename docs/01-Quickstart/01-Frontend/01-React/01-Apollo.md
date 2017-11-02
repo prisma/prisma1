@@ -150,11 +150,11 @@ The next step is to connect the React application with the GraphQL API from your
 
 <Instruction>
 
-Paste the HTTP endpoint for the `Simple API` that you saved after running `graphcool deploy` into `./src/index.js` as the `uri` argument in the `createNetworkInterface` call:
+Paste the HTTP endpoint for the `Simple API` that you saved after running `graphcool deploy` into `./src/index.js` as the `uri` argument in the `HttpLink` constructor call:
 
 ```js(path="src/index.js")
 // replace `__SIMPLE_API_ENDPOINT__` with the endpoint from the previous step
-const networkInterface = createNetworkInterface({ uri: '__SIMPLE_API_ENDPOINT__' })
+const httpLink = new HttpLink({ uri: '__SIMPLE_API_ENDPOINT__' })
 ```
 
 </Instruction>
