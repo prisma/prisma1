@@ -193,7 +193,7 @@ export async function fsToModule(
   if (errors.length > 0) {
     out.log(
       chalk.bold(
-        'The following errors occured while reading the graphcool.yml project definition:',
+        'The following errors occured while reading the graphcool.yml service definition:',
       ),
     )
     const messages = errors.map(e => `  ${chalk.red(e.message)}`).join('\n')

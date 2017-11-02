@@ -17,7 +17,7 @@ When using Graphcool, the database layer is abstracted away:
 
 ![](https://imgur.com/XkyqWYg.png)
 
-> Every Graphcool project comes with an [AWS Aurora](https://aws.amazon.com/rds/aurora/) instance that is backing the GraphQL server.
+> Every Graphcool service comes with an [AWS Aurora](https://aws.amazon.com/rds/aurora/) instance that is backing the GraphQL server.
 
 
 ## Using GraphQL SDL to Define Your Data Model

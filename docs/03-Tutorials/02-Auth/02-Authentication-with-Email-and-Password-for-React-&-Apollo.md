@@ -1101,6 +1101,6 @@ In this guide, you learned how to build a simple app using an email-password bas
 
 You created your GraphQL server from scratch using the Graphcool CLI and customized the [`email-password`](https://github.com/graphcool/templates/tree/master/authentication/email-password) authentication template according to your needs.
 
-You then configured Apollo Client inside your React app and implemented all required operations. Finally you removed the wildcard permission from the project and explicitly defined permission rules for the operations that your API exposes.
+You then configured Apollo Client inside your React app and implemented all required operations. Finally you removed the wildcard permission from the service and explicitly defined permission rules for the operations that your API exposes.
 
 

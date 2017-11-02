@@ -7,7 +7,7 @@ description: An overview of how Graphcool leverages serverless functions.
 
 ## Combining GraphQL and Serverless Functions
 
-In the previous chapter, we discussed the CRUD GraphQL API that's generated for you based on the model types you specify in your project. In this chapter, we take a closer look at how you can extend the functionality of your backend using *serverless functions*. 
+In the previous chapter, we discussed the CRUD GraphQL API that's generated for you based on the model types you specify in your service. In this chapter, we take a closer look at how you can extend the functionality of your backend using *serverless functions*. 
 
 ## Runtime Environment
 

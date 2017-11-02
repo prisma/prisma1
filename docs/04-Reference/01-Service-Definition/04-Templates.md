@@ -1,6 +1,6 @@
 ---
 alias: zeiv8phail
-description: Graphcool templates allow to easily add functionality to your project.
+description: Graphcool templates allow to easily add functionality to your service.
 ---
 
 # Templates

@@ -7,7 +7,7 @@ description: Frequently asked questions everything about the integration of serv
 
 ### What is a managed function?
 
-A managed function is a function that's managed and deployed by Graphcool (think of Graphcool as your [FaaS](https://en.wikipedia.org/wiki/Function_as_a_Service) provider for managed functions). If you're using a managed function in your Graphcool project, all you need to do is write the code for it, add it to your [project definition file](!alias-opheidaix3#project-definition) and run `graphcool deploy`. Graphcool will then make sure the function is deployed for you 
+A managed function is a function that's managed and deployed by Graphcool (think of Graphcool as your [FaaS](https://en.wikipedia.org/wiki/Function_as_a_Service) provider for managed functions). If you're using a managed function in your Graphcool project, all you need to do is write the code for it, add it to your [service definition file](!alias-opheidaix3#service-definition) and run `graphcool deploy`. Graphcool will then make sure the function is deployed for you 
 
 
 ### In what environment are managed functions executed with Graphcool? Can I use ES6 for my JS code?
