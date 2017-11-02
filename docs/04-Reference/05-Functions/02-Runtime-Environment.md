@@ -19,7 +19,7 @@ This `context` has the following structure:
     nodeId # if request is authenticated, this is the `id` of the corresponding node
     token # if request is authenticated, this is the valid authentication token
   },
-  # project info
+  # service info
   graphcool: {
     projectId # this will be deprecated shortly, use serviceId instead
     serviceId

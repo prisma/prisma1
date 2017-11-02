@@ -39,7 +39,7 @@ There are several available building blocks to shape your data model.
 * [Relations](#relations) describe interactions between types.
 * Special [directives](#graphql-directives) that cover different use cases are available.
 
-Additionally, a project can contain prepopulated types and fields, referred to as [system artifacts](#system-artifacts). Different [naming conventions](#naming-conventions) define valid names.
+Additionally, a service can contain prepopulated types and fields, referred to as [system artifacts](#system-artifacts). Different [naming conventions](#naming-conventions) define valid names.
 
 ### Writing a data model
 
@@ -53,7 +53,7 @@ There are three system fields, all of which are managed by the Graphcool runtime
 
 #### Required system field: `id` 
 
-Every type that you define with the `@model` directive needs to have an `id: ID! @isUnique` field, otherwise `graphcool deploy` is going to fail. This `id` however is managed by Graphcool: Every new node that is created in your project will get assigned a globally unique ID automatically.
+Every type that you define with the `@model` directive needs to have an `id: ID! @isUnique` field, otherwise `graphcool deploy` is going to fail. This `id` however is managed by Graphcool: Every new node that is created in your service will get assigned a globally unique ID automatically.
 
 Notice that all your model types will implement the `Node` interface in the actual GraphQL schema that defines all the capabilities of your API. This is what the `Node` interface looks like:
 
@@ -364,7 +364,7 @@ The *temporary directive `@migrationValue(value: String!)`* is used to migrate t
 
 ## Naming Conventions
 
-Different objects you encounter in a Graphcool project like types or relations follow separate naming conventions to help you distinguish them.
+Different objects you encounter in a Graphcool service like types or relations follow separate naming conventions to help you distinguish them.
 
 ### Types
 

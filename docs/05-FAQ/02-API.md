@@ -7,7 +7,7 @@ description: Frequently asked questions about the API that's provided by Graphco
 
 ### What is the difference between the Simple API and the Relay API?
 
-Every Graphcool project comes with two different GraphQL APIs. Note that both APIs still access the same underlying database!
+Every Graphcool service comes with two different GraphQL APIs. Note that both APIs still access the same underlying database!
 
 - The **Simple API** exposes simple and intuitive CRUD operations and supports realtime functionality based on GraphQL subscriptions. This should be the default for any consumer of the API that's not using Facebook's homegrown GraphQL client [Relay](https://github.com/facebook/relay).
 - The **Relay API** also exposes CRUD operations while adhering to the [specific requirements](https://facebook.github.io/relay/docs/graphql-relay-specification.html) of Relay.

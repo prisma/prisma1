@@ -60,11 +60,11 @@ enum TemperatureUnit {
 }
 ```
 
-`loadWeather ` is invoked _after_ a `User` node was created and is defined as a _webhook_. It receives as input the requested `TemnperatureUnit` (as this is the only argument for the `weather` field on the `Query` type) and returns a new type called `Weather`.
+`loadWeather ` is invoked _after_ a `User` node was created and is defined as a _webhook_. It receives as input the requested `TemperatureUnit` (as this is the only argument for the `weather` field on the `Query` type) and returns a new type called `Weather`.
 
 ### Properties
 
-Each function that's specified in the project configuration file needs to have the `type` and `handler` properties.
+Each function that's specified in the service configuration file needs to have the `type` and `handler` properties.
 
 For resolver functions, you additionally need to specify the `schema ` property which points to a file containing your extension of the `Query` or `Mutation` type as well as any additional types that you're defining for this operation.
 
