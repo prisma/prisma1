@@ -14,7 +14,7 @@ The `STRIPE_TEST_KEY` can be obtained by [creating a stripe account](https://das
 
 ## Setup
 
-Download the example or [clone the repo](https://github.com/graphcool/graphcool):
+Download the example or [clone the repo](https://github.com/graphcool/framework):
 
 ```sh
 curl https://codeload.github.com/graphcool/framework/tar.gz/master | tar -xz --strip=2 framework-master/examples/full-example
