@@ -43,8 +43,14 @@ case class ServerExecutor(port: Int, servers: Server*)(implicit system: ActorSys
     binding
   }
 
-  def start: Future[_]                                     = Future.sequence[Any, Seq](servers.map(_.onStart) :+ serverBinding)
-  def stop: Future[_]                                      = Future.sequence[Any, Seq](servers.map(_.onStop) :+ serverBinding.map(_.unbind))
-  def startBlocking(duration: Duration = 15.seconds): Unit = Await.result(start, duration)
-  def stopBlocking(duration: Duration = 15.seconds): Unit  = Await.result(stop, duration)
+  def start: Future[_] = Future.sequence[Any, Seq](servers.map(_.onStart) :+ serverBinding)
+  def stop: Future[_]  = Future.sequence[Any, Seq](servers.map(_.onStop) :+ serverBinding.map(_.unbind))
+
+  // Starts the server and blocks the calling thread until the underlying actor system terminates.
+  def startBlocking(duration: Duration = 15.seconds): Unit = {
+    start
+    Await.result(system.whenTerminated, Duration.Inf)
+  }
+
+  def stopBlocking(duration: Duration = 15.seconds): Unit = Await.result(stop, duration)
 }

@@ -21,6 +21,6 @@ In order to get started quickly with authentication, you can use one of the pred
 
 To learn how to implement authentication with React & Apollo on the frontend, check out the corresponding guides: [email-password-authentication](!alias-cu3jah9ech) and [facebook-login](!alias-yi9jeuwohl).
 
-To only learn how authentication is implemented in the backend, you can refer to [this](ttps://github.com/graphcool/framework/tree/master/examples/auth) example.
+To only learn how authentication is implemented in the backend, you can refer to [this](https://github.com/graphcool/framework/tree/master/examples/auth) example.
 
 </InfoBox>

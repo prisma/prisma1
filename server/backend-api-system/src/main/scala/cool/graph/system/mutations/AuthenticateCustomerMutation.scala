@@ -201,9 +201,7 @@ object AuthenticateCustomerMutation {
     List(CreateClientDatabaseForProject(projectId = project.id)) ++
       project.models.map(model => CreateModelTable(projectId = project.id, model = model)) ++
       project.models.flatMap(model => {
-        model.fields
-          .filter(f => !DatabaseMutationBuilder.implicitlyCreatedColumns.contains(f.name))
-          .filter(_.isScalar)
+        model.scalarFields.filter(f => !DatabaseMutationBuilder.implicitlyCreatedColumns.contains(f.name))
           .map(field => CreateColumn(projectId = project.id, model = model, field = field))
       }) ++
       project.relations.map(relation => CreateRelationTable(project = project, relation = relation))

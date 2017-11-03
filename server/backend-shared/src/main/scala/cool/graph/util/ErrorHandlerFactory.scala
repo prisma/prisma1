@@ -4,9 +4,9 @@ import akka.http.scaladsl.model.StatusCode
 import akka.http.scaladsl.model.StatusCodes._
 import akka.http.scaladsl.server.Directives.complete
 import akka.http.scaladsl.server.{ExceptionHandler => AkkaHttpExceptionHandler}
+import cool.graph.aws.cloudwatch.Cloudwatch
 import cool.graph.bugsnag.{BugSnagger, GraphCoolRequest}
 import cool.graph.client.{HandledError, UnhandledError}
-import cool.graph.cloudwatch.Cloudwatch
 import cool.graph.shared.errors.UserFacingError
 import cool.graph.shared.logging.{LogData, LogKey}
 import sangria.execution.Executor.{ExceptionHandler => SangriaExceptionHandler}

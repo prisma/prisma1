@@ -4,7 +4,7 @@ import java.util.concurrent.TimeUnit
 
 import akka.actor.Actor
 import com.amazonaws.services.cloudwatch.model._
-import cool.graph.cloudwatch.CloudwatchMetric
+import cool.graph.aws.cloudwatch.CloudwatchMetric
 import cool.graph.cuid.Cuid
 import cool.graph.shared.errors.UserFacingError
 import cool.graph.shared.externalServices.KinesisPublisher
