@@ -35,7 +35,7 @@ type User @model {
 
 The `Query` type from generated permission schema will look as follows:
 
-```
+```graphql
 type Query {
   SomePostExists(filter: PostFilter, orderBy: PostOrderBy, skip: Int, after: String, before: String, first: Int, last: Int): Boolean!
   SomeUserExists(filter: UserFilter, orderBy: UserOrderBy, skip: Int, after: String, before: String, first: Int, last: Int): Boolean!
@@ -54,7 +54,7 @@ https://api.graph.cool/simple/v1/__SERVICE_ID__/permissions
 
 To access it, you need to set the `Authorization` header in the request. Here is a sample request against the example schema above:
 
-```
+```sh
 curl 'https://api.graph.cool/simple/v1/__SERVICE_ID__/permissions' \
 -H 'Authorization: Bearer __PLATFORM_TOKEN__' \
 -H 'Content-Type: application/json' \
