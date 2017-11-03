@@ -10,7 +10,7 @@ description: An overview of the Graphcool platform.
 
 Graphcool is available as a full-blown and production-ready hosted solution.
 
-When you're choosing this option, the regular pricing plans apply and you get all benefits of a highly-scalable infrastructure. You can manage your project through the Graphcool CLI and get additional monitoring, collaboration and other features through the Graphcool console.
+When you're choosing this option, the regular pricing plans apply and you get all benefits of a highly-scalable infrastructure. You can manage your services through the Graphcool CLI and get additional monitoring, collaboration and other features through the Graphcool console.
 
 
 ## Self-Hosting & On-Premise

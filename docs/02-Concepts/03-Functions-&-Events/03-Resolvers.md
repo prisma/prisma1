@@ -5,7 +5,7 @@ description: An overview of the three different function types that can be used 
 
 # Resolvers
 
-As was discussed in the [Database & API]() chapter, Graphcool generates a GraphQL schema based on the data model that you define for your project. It also generates the resolvers that implement the functionality defined in the schema. However, the auto-generated functionality is limited to CRUD operations along with filtering, ordering and pagination capabilities.  
+As was discussed in the [Database & API]() chapter, Graphcool generates a GraphQL schema based on the data model that you define for your service. It also generates the resolvers that implement the functionality defined in the schema. However, the auto-generated functionality is limited to CRUD operations along with filtering, ordering and pagination capabilities.  
 
 Sometimes you might want to add more functionality to your API that's not covered by the above mentioned CRUD capabilities. In these cases, you can extend your GraphQL schema (meaning you can add new fields to existing types) manually and implement the corresponding resolver functions yourself.
 

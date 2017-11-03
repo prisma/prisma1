@@ -29,7 +29,7 @@ export async function fsToProject(
   if (definition.hasOwnProperty('modules')) {
     out.error(`Your graphcool.yml contains modules. Please remove them in order to deploy.
 Modules are deprecated and replaced by templates.
-Read more about templates here: https://github.com/graphcool/graphcool/issues/720`)
+Read more about templates here: https://github.com/graphcool/framework/issues/720`)
   }
 
   // if (definition.modules) {
@@ -193,7 +193,7 @@ export async function fsToModule(
   if (errors.length > 0) {
     out.log(
       chalk.bold(
-        'The following errors occured while reading the graphcool.yml project definition:',
+        'The following errors occured while reading the graphcool.yml service definition:',
       ),
     )
     const messages = errors.map(e => `  ${chalk.red(e.message)}`).join('\n')

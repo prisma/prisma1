@@ -6,7 +6,7 @@ Basic example demonstrating the generation of the CRUD-style GraphQL API based o
 
 ## Setup
 
-Download the example or [clone the repo](https://github.com/graphcool/graphcool):
+Download the example or [clone the repo](https://github.com/graphcool/framework):
 
 ```sh
 curl https://codeload.github.com/graphcool/framework/tar.gz/master | tar -xz --strip=2 framework-master/examples/crud-api

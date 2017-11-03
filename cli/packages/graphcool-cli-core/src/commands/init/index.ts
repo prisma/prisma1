@@ -14,7 +14,7 @@ export default class Init extends Command {
   
   ${chalk.green.bold('Examples:')}
   
-  ${chalk.gray('-')} Initialize a new Graphcool project
+  ${chalk.gray('-')} Initialize a new Graphcool service
     ${chalk.green('$ graphcool init')}
   `
   static flags: Flags = {
@@ -24,7 +24,7 @@ export default class Init extends Command {
     }),
     copy: flags.string({
       char: 'c',
-      description: 'ID or alias of the project, that the schema should be copied from',
+      description: 'ID or alias of the service, that the schema should be copied from',
     }),
   }
 
@@ -135,16 +135,16 @@ which is the central project configuration.
         {
           value: 'blank',
           name: [
-            `${chalk.bold('New blank project')}`,
-            `  Creates a new Graphcool project from scratch.`,
+            `${chalk.bold('New blank service')}`,
+            `  Creates a new Graphcool service from scratch.`,
             '',
           ].join('\n'),
         },
         {
           value: 'copy',
           name: [
-            `${chalk.bold('Copying an existing project')}`,
-            `  Copies a project from your account`,
+            `${chalk.bold('Copying an existing service')}`,
+            `  Copies a service from your account`,
             '',
           ].join('\n'),
         },
@@ -152,7 +152,7 @@ which is the central project configuration.
         //   value: 'example',
         //   name: [
         //     `${chalk.bold('Based on example')}`,
-        //     `  Creates a new Graphcool project based on an example`,
+        //     `  Creates a new Graphcool service based on an example`,
         //     '',
         //   ].join('\n'),
         // },

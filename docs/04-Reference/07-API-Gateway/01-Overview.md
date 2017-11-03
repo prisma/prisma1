@@ -9,7 +9,7 @@ Every Graphcool service comes with an auto-generated [CRUD API](!alias-abogasd0g
 
 The API gateway is a dedicated HTTP endpoint acting as a proxy in front of the CRUD API. It can be implemented as a regular web server, e.g. using node.js and express, or even as a serverless function that can be deployed with AWS Lambda or another Functions-as-a-Service provider.
 
-[Here](https://github.com/graphcool/graphcool/tree/master/examples/typescript-gateway-custom-schema) is an example that demonstrates how to implement a simple API gateway on top of a Graphcool service, using node.js and express.
+[Here](https://github.com/graphcool/framework/tree/master/examples/typescript-gateway-custom-schema) is an example that demonstrates how to implement a simple API gateway on top of a Graphcool service, using node.js and express.
 
 
 ## Use cases

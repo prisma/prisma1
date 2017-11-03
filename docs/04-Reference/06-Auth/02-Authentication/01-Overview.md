@@ -7,7 +7,7 @@ description: An overview of Graphcool's authentication system.
 
 Graphcool offers a very flexible authentication system that's based on [functions](!alias-aiw4aimie9).
 
-In general, Graphcool allows you to specify that some of your available [API](!alias-abogasd0go) operations require authentication. This effectively that means the HTTP request that's carrying the operation needs to have a valid [authentication token](!alias-eip7ahqu5o) in its `Authorization` header. If that's not the case, the request will fail with a permission error.
+In general, Graphcool allows you to specify that some of your available [API](!alias-abogasd0go) operations require authentication. This effectively means that the HTTP request that's carrying the operation needs to have a valid [authentication token](!alias-eip7ahqu5o) in its `Authorization` header. If that's not the case, the request will fail with a permission error.
 
 To authenticate requests from your users, you need to generate a [node token](!alias-eip7ahqu5o#node-tokens) for them. A node token always needs to be associated with one particular node from your database.
 
@@ -19,8 +19,8 @@ In order to get started quickly with authentication, you can use one of the pred
 
 <InfoBox>
 
-To learn how to implement authentication with React & Apollo on the frontend, check out the corresponding guides: [email-password-authencation](!alias-cu3jah9ech) and [facebook-login](!alias-yi9jeuwohl).
+To learn how to implement authentication with React & Apollo on the frontend, check out the corresponding guides: [email-password-authentication](!alias-cu3jah9ech) and [facebook-login](!alias-yi9jeuwohl).
 
-To only learn how authentication is implemented in the backend, you can refer to [this](ttps://github.com/graphcool/graphcool/tree/master/examples/auth) example.
+To only learn how authentication is implemented in the backend, you can refer to [this](ttps://github.com/graphcool/framework/tree/master/examples/auth) example.
 
 </InfoBox>
