@@ -22,7 +22,7 @@ case class WebsocketCloudServives()(implicit val bugsnagger: BugSnagger, system:
 
   val responsePubSubSubscriber: PubSubSubscriber[String] =
     RabbitAkkaPubSub
-      .subscriber[String](clusterLocalRabbitUri, "subscription-responses", durable = false)(bugsnagger, system, Conversions.Unmarshallers.ToString)
+      .subscriber[String](clusterLocalRabbitUri, "subscription-responses", durable = true)(bugsnagger, system, Conversions.Unmarshallers.ToString)
 }
 
 case class WebsocketDevDependencies(
