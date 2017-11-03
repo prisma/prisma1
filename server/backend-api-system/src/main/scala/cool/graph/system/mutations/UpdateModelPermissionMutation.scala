@@ -1,7 +1,6 @@
 package cool.graph.system.mutations
 
 import _root_.akka.actor.ActorSystem
-import _root_.akka.stream.ActorMaterializer
 import cool.graph._
 import cool.graph.shared.database.InternalAndProjectDbs
 import cool.graph.shared.errors.UserInputErrors.PermissionQueryIsInvalid
