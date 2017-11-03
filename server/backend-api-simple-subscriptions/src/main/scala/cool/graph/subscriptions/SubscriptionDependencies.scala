@@ -77,7 +77,7 @@ case class SimpleSubscriptionDependencies()(implicit val system: ActorSystem, va
   val responsePubSubPublisher: PubSubPublisher[String] = RabbitAkkaPubSub.publisher[String](
     clusterLocalRabbitUri,
     "subscription-responses",
-    durable = false
+    durable = true
   )(bugsnagger, Conversions.Marshallers.FromString)
 
   val responsePubSubPublisherV05 = responsePubSubPublisher.map[SubscriptionSessionResponseV05](converterResponse05ToString)
