@@ -10,7 +10,7 @@ import * as childProcess from 'child_process'
 const debug = require('debug')('module')
 import chalk from 'chalk'
 import * as figures from 'figures'
-import {intersection, difference} from 'lodash'
+import { intersection, difference } from 'lodash'
 import { getBinPath } from './getbin'
 import 'isomorphic-fetch'
 
@@ -28,24 +28,16 @@ export default class AddTemplate extends Command {
  ${chalk.green.bold('Examples:')}
       
   ${chalk.bold('Github Authentication')}
-  $ ${chalk.cyan(
-    'graphcool add-template auth/github',
-  )}
+  $ ${chalk.cyan('graphcool add-template auth/github')}
 
   ${chalk.bold('Facebook Authentication')}
-  $ ${chalk.cyan(
-    'graphcool add-template auth/facebook',
-  )}
+  $ ${chalk.cyan('graphcool add-template auth/facebook')}
 
   ${chalk.bold('Send mails with Mailgun')}
-  $ ${chalk.cyan(
-    'graphcool add-template messaging/mailgun',
-  )}
+  $ ${chalk.cyan('graphcool add-template messaging/mailgun')}
 
   ${chalk.bold('Send SMS with Twilio')}
-  $ ${chalk.cyan(
-    'graphcool add-template messaging/twilio',
-  )}
+  $ ${chalk.cyan('graphcool add-template messaging/twilio')}
   
   All templates:
   https://github.com/graphcool/templates
@@ -54,7 +46,9 @@ export default class AddTemplate extends Command {
     await this.definition.load(this.flags)
     const moduleUrl = this.argv[0]
 
-    const {repoName, subPath, moduleDirName} = await this.extractInfo(moduleUrl)
+    const { repoName, subPath, moduleDirName } = await this.extractInfo(
+      moduleUrl,
+    )
 
     const tmpDir = path.join(os.tmpdir(), `${cuid()}/`)
     fs.mkdirpSync(tmpDir)
@@ -89,33 +83,36 @@ export default class AddTemplate extends Command {
     // add it to local definition file
     const newModulePath = path.join(source, 'graphcool.yml')
     const templateYml = fs.readFileSync(newModulePath, 'utf-8')
-    const newTemplateYml = templateYml.replace(/src\//g, `src/${moduleDirName}/`)
+    const newTemplateYml = templateYml.replace(
+      /src\//g,
+      `src/${moduleDirName}/`,
+    )
 
     const templateTypesRelativePath = yaml.safeLoad(newTemplateYml).types
     const templateTypesPath = path.join(source, templateTypesRelativePath)
     const templateTypes = fs.readFileSync(templateTypesPath, 'utf-8')
 
-    const newDefinition = this.definition.mergeDefinition(newTemplateYml, moduleDirName)
+    const newDefinition = this.definition.mergeDefinition(
+      newTemplateYml,
+      moduleDirName,
+    )
     const newTypes = this.definition.mergeTypes(templateTypes, moduleDirName)
     const typesPath = this.definition.definition!.modules[0].definition!.types
 
     await this.mergePackageJsons(source)
 
-    fs.removeSync(source)
-
     fs.writeFileSync(
       path.join(this.config.definitionDir, 'graphcool.yml'),
       newDefinition,
     )
-    fs.writeFileSync(
-      path.join(this.config.definitionDir, typesPath),
-      newTypes,
-    )
+    fs.writeFileSync(path.join(this.config.definitionDir, typesPath), newTypes)
 
     this.out.log('')
     this.out.log(
       chalk.blue(
-        `${chalk.bold('Added')} all functions & permissions of template ${chalk.bold(
+        `${chalk.bold(
+          'Added',
+        )} all functions & permissions of template ${chalk.bold(
           moduleDirName,
         )} to ${chalk.bold('graphcool.yml')} as comments`,
       ),
@@ -130,15 +127,12 @@ export default class AddTemplate extends Command {
     this.out.log(chalk.blue.bold(`Created ${relativeModulePath}:`))
     this.out.tree(relativeModulePath, false)
 
-
-    const readmePath = path.join(target, 'USAGE.md')
+    const readmePath = path.join(source, 'USAGE.md')
     if (fs.pathExistsSync(readmePath)) {
-      let readme = fs.readFileSync(readmePath, 'utf-8')
+      const readme = fs.readFileSync(readmePath, 'utf-8')
       try {
         const readmeUrl = `https://github.com/${repoName}/tree/master/${subPath}`
-        this.out.log(
-          '   ' + chalk.bold.underline.magenta(`Setup Instructions`) + '\n',
-        )
+        this.out.log(chalk.bold.underline.magenta(`Setup Instructions`) + '\n')
         this.out.printMarkdown(
           readme + `\n\n[Further Instructions](${readmeUrl})`,
         )
@@ -147,7 +141,15 @@ export default class AddTemplate extends Command {
       }
     }
 
-    this.out.log(`Please have a look in the ${chalk.green('graphcool.yml')} and ${chalk.green('types.graphql')} and ${chalk.bold('uncomment')} the added template comments there.`)
+    fs.removeSync(source)
+
+    this.out.log(
+      `Please have a look in the ${chalk.green(
+        'graphcool.yml',
+      )} and ${chalk.green('types.graphql')} and ${chalk.bold(
+        'uncomment',
+      )} the added template comments there.`,
+    )
 
     // this.out.log(
     //   `   ${chalk.green(figures.tick)} You now can run ${chalk.bold(
@@ -156,20 +158,31 @@ export default class AddTemplate extends Command {
     // )
   }
 
-  async extractInfo(moduleUrl: string): Promise<{repoName: string, subPath: string, moduleDirName: string}> {
+  async extractInfo(
+    moduleUrl: string,
+  ): Promise<{ repoName: string; subPath: string; moduleDirName: string }> {
     let splittedModule = moduleUrl.split('/')
 
     const whiteList = ['auth', 'misc', 'messaging']
 
-    if (splittedModule.length === 1 || whiteList.includes(splittedModule[0])) {
-      const res = await fetch('https://raw.githubusercontent.com/graphcool/templates/master/templates.json')
+    if (splittedModule.length === 1) {
+      const res = await fetch(
+        'https://raw.githubusercontent.com/graphcool/templates/master/templates.json',
+      )
       const templates = await res.json()
       if (!templates[moduleUrl]) {
         this.out.error(`Could not find template ${chalk.bold(moduleUrl)}.
 Check https://github.com/graphcool/templates for official templates.`)
       }
 
-      splittedModule = `graphcool/templates/${templates[moduleUrl].path}`.split('/')
+      splittedModule = `graphcool/templates/${templates[moduleUrl].path}`.split(
+        '/',
+      )
+    } else if (
+      splittedModule.length === 2 &&
+      whiteList.includes(splittedModule[0])
+    ) {
+      splittedModule = ['graphcool', 'templates'].concat(splittedModule)
     }
 
     const ghUser = splittedModule[0]
@@ -181,7 +194,9 @@ Check https://github.com/graphcool/templates for official templates.`)
       splittedModule.length > 2 ? splittedModule.slice(2).join('/') : ''
 
     return {
-      repoName, subPath, moduleDirName
+      repoName,
+      subPath,
+      moduleDirName,
     }
   }
 
@@ -191,7 +206,6 @@ Check https://github.com/graphcool/templates for official templates.`)
     const destPjsonPath = path.join(this.config.definitionDir, 'package.json')
     debug('source', sourcePjsonPath)
     debug('dest', destPjsonPath)
-    debugger
     if (fs.pathExistsSync(sourcePjsonPath)) {
       if (fs.pathExistsSync(destPjsonPath)) {
         try {
@@ -199,17 +213,27 @@ Check https://github.com/graphcool/templates for official templates.`)
           const serviceJson = fs.readJSONSync(destPjsonPath)
           const templateDeps: any = templateJson.dependencies || {}
           const serviceDeps: any = serviceJson.dependencies || {}
-          const intersect = intersection(Object.keys(serviceDeps), Object.keys(templateDeps))
+          const intersect = intersection(
+            Object.keys(serviceDeps),
+            Object.keys(templateDeps),
+          )
           const conflicts = intersect.filter(name => {
             return templateDeps[name] !== serviceDeps[name]
           })
           if (conflicts.length > 0) {
-            this.out.warn(`There are conflicts in dependencies for the template package.json and package.json of the current service:`)
+            this.out.warn(
+              `There are conflicts in dependencies for the template package.json and package.json of the current service:`,
+            )
             this.out.warn(conflicts.join(', '))
-            this.out.log('Please resolve them by hand. This is the templates package.json:')
+            this.out.log(
+              'Please resolve them by hand. This is the templates package.json:',
+            )
             this.out.log(this.out.getStyledJSON(templateJson))
           }
-          const newDependencies = difference(Object.keys(templateDeps), Object.keys(serviceDeps))
+          const newDependencies = difference(
+            Object.keys(templateDeps),
+            Object.keys(serviceDeps),
+          )
           if (newDependencies.length > 0) {
             if (!serviceJson.dependencies) {
               serviceJson.dependencies = {}
@@ -218,9 +242,17 @@ Check https://github.com/graphcool/templates for official templates.`)
               serviceJson.dependencies[name] = templateDeps[name]
             })
             if (newDependencies.length === 1) {
-              this.out.log(`The dependency ${chalk.bold(newDependencies.join(', '))} has been added to the main package.json`)
+              this.out.log(
+                `The dependency ${chalk.bold(
+                  newDependencies.join(', '),
+                )} has been added to the main package.json`,
+              )
             } else if (newDependencies.length > 1) {
-              this.out.log(`The dependencies ${chalk.bold(newDependencies.join(', '))} have been added to the main package.json`)
+              this.out.log(
+                `The dependencies ${chalk.bold(
+                  newDependencies.join(', '),
+                )} have been added to the main package.json`,
+              )
             }
             const newJson = JSON.stringify(serviceJson, null, 2)
             fs.writeFileSync(destPjsonPath, newJson)
@@ -228,35 +260,42 @@ Check https://github.com/graphcool/templates for official templates.`)
             await this.npmInstall()
           }
           if (conflicts.length === 0 && newDependencies.length === 0) {
-            this.out.log(`${chalk.bold('package.json')}: No new dependencies needed.`)
+            this.out.log(
+              `${chalk.bold('package.json')}: No new dependencies needed.`,
+            )
           }
         } catch (e) {
           this.out.warn(e)
         }
       } else {
-        this.out.log(`There is no package.json yet, so the templates' package.json has been copied`)
+        this.out.log(
+          `There is no package.json yet, so the templates' package.json has been copied`,
+        )
         fs.copySync(sourcePjsonPath, destPjsonPath)
         await this.npmInstall()
       }
-
     } else {
       this.out.log('Path does not exist')
     }
   }
 
   private async checkUrl(repoName, subPath, moduleUrl) {
-    const githubUrl = `https://github.com/${repoName.split('#')[0]}/tree/master/${subPath}`
+    const githubUrl = `https://github.com/${repoName.split(
+      '#',
+    )[0]}/tree/master/${subPath}`
 
     debug('fetching', githubUrl)
     const result = await fetch(githubUrl)
     if (result.status === 404) {
-      this.out.error(`Could not find ${moduleUrl}. Please check if the github repository ${githubUrl} exists`)
+      this.out.error(
+        `Could not find ${moduleUrl}. Please check if the github repository ${githubUrl} exists`,
+      )
     }
   }
 
   private npmInstall(): Promise<void> {
     return new Promise(async (resolve, reject) => {
-      const cmdPath = await getBinPath('yarn') || await getBinPath('npm')
+      const cmdPath = (await getBinPath('yarn')) || (await getBinPath('npm'))
       const child = childProcess.spawn(cmdPath!, ['install'], {
         cwd: this.config.definitionDir,
       })

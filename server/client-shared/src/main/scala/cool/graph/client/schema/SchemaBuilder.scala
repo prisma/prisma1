@@ -15,10 +15,11 @@ import cool.graph.shared.errors.UserAPIErrors
 import cool.graph.shared.errors.UserInputErrors.InvalidSchema
 import cool.graph.shared.functions.EndpointResolver
 import cool.graph.shared.models.{Field => GCField, _}
-import cool.graph.shared.{DefaultApiMatrix, ApiMatrixFactory, models}
+import cool.graph.shared.{ApiMatrixFactory, DefaultApiMatrix, models}
 import cool.graph.util.coolSangria.FromInputImplicit
 import cool.graph.util.performance.TimeHelper
 import org.atteo.evo.inflector.English
+import sangria.ast.Definition
 import sangria.relay._
 import sangria.schema.{Field, _}
 import scaldi.{Injectable, Injector}
@@ -66,16 +67,7 @@ abstract class SchemaBuilder(project: models.Project, modelPrefix: String = "")(
   val pluralsCache           = new PluralsCache
 
   def ifFeatureFlag(predicate: Boolean, fields: => List[Field[UserContext, Unit]], measurementName: String = ""): List[Field[UserContext, Unit]] = {
-    if (predicate) {
-//      if(measurementName != ""){
-//        time(measurementName)(fields)
-//      } else {
-//        fields
-//      }
-      fields
-    } else {
-      List.empty
-    }
+    if (predicate) fields else List.empty
   }
 
   def build(): Schema[UserContext, Unit] = ClientSharedMetrics.schemaBuilderBuildTimerMetric.time(project.id) {
@@ -300,7 +292,7 @@ abstract class SchemaBuilder(project: models.Project, modelPrefix: String = "")(
       .batchResolveByUnique(model, arg.name, List(ctx.arg(arg).asInstanceOf[Option[_]].get))
       .map(_.headOption)
     // todo: Make OneDeferredResolver.dataItemsToToOneDeferredResultType work with Timestamps
-//    OneDeferred(model, arg.name, ctx.arg(arg).asInstanceOf[Option[_]].get)
+    //    OneDeferred(model, arg.name, ctx.arg(arg).asInstanceOf[Option[_]].get)
   }
 
   def createSingleFieldTypeForModel(model: models.Model) =

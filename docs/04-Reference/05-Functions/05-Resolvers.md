@@ -26,9 +26,9 @@ The [Graphcool Functions collection](https://github.com/graphcool/templates/) on
 
 The input type for a resolver function is defined by the input arguments of the field that's added to the GraphQL schema.
 
-## Adding a Resolver function to the project
+## Adding a Resolver function to the service
 
-When you want to create a resolver function in your Graphcool project, you need to add it to the [project definition file](!alias-opheidaix3#project-definition) under the `functions` section.
+When you want to create a resolver function in your Graphcool service, you need to add it to the [service definition file](!alias-opheidaix3#service-definition) under the `functions` section.
 
 ### Example
 
@@ -60,11 +60,11 @@ enum TemperatureUnit {
 }
 ```
 
-`loadWeather ` is invoked _after_ a `User` node was created and is defined as a _webhook_. It receives as input the requested `TemnperatureUnit` (as this is the only argument for the `weather` field on the `Query` type) and returns a new type called `Weather`.
+`loadWeather ` is invoked _after_ a `User` node was created and is defined as a _webhook_. It receives as input the requested `TemperatureUnit` (as this is the only argument for the `weather` field on the `Query` type) and returns a new type called `Weather`.
 
 ### Properties
 
-Each function that's specified in the project configuration file needs to have the `type` and `handler` properties.
+Each function that's specified in the service configuration file needs to have the `type` and `handler` properties.
 
 For resolver functions, you additionally need to specify the `schema ` property which points to a file containing your extension of the `Query` or `Mutation` type as well as any additional types that you're defining for this operation.
 
@@ -79,5 +79,5 @@ See also examples for [custom mutations](!alias-ol0yuoz6go#custom-mutations) and
 
 ## Current limitations
 
-* Input and output fields can [only be of scalar types](https://github.com/graphcool/graphcool/issues/743) at the moment.
-* [Only one query or mutation field](https://github.com/graphcool/graphcool/issues/326) can be added per resolver.
+* Input and output fields can [only be of scalar types](https://github.com/graphcool/framework/issues/743) at the moment.
+* [Only one query or mutation field](https://github.com/graphcool/framework/issues/326) can be added per resolver.

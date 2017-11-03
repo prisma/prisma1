@@ -14,7 +14,7 @@ The foundation for the GraphQL API are CRUD operations for your model types. For
 
 ## Schema Extensions
 
-Graphcool further allows you to *extend *the root types in your project's GraphQL schema and thus write custom queries and mutations. Each field that you're adding to the `Query` or `Mutation` type needs to backed by a serverless function that implements the expected functionality for that field (i.e. it needs to perform the actual query or mutation). You can read more about schema extensions in the [functions](http://#) chapter.
+Graphcool further allows you to *extend *the root types in your service's GraphQL schema and thus write custom queries and mutations. Each field that you're adding to the `Query` or `Mutation` type needs to backed by a serverless function that implements the expected functionality for that field (i.e. it needs to perform the actual query or mutation). You can read more about schema extensions in the [functions](http://#) chapter.
 
 
 ## Realtime Subscriptions API
@@ -201,11 +201,11 @@ If the `filter` is specified, the client can add the operations it's interested 
 
 ### API Endpoints: Simple vs Relay
 
-In general, every Graphcool project will expose two different APIs:
+In general, every Graphcool service will expose two different APIs:
 
 * Simple API: Intuitive CRUD operations and data modelling
 * Relay API: Corresponds to the schema requirements of [Relay](https://facebook.github.io/relay/)
 
-Effectively, this means that there are *two* GraphQL Schemas that are backing one Graphcool project.
+Effectively, this means that there are *two* GraphQL Schemas that are backing one Graphcool service.
 
 Relay is Facebook's homegrown GraphQL client that can be used in Javascript applications. The reason why Graphcool creates a dedicated API for it is that Relay makes a couple of assumptions about *how* the GraphQL schema is structured. The Relay API adheres to these assumptions and thus allows you to build a frontend application with Relay. For all other use cases, the Simple API will be the better choice. 

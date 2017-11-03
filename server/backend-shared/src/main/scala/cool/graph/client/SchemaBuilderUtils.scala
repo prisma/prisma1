@@ -81,11 +81,7 @@ class FilterObjectTypeBuilder(model: Model, project: Project) {
         List(
           InputField("AND", OptionInputType(ListInputType(filterObjectType)), description = FilterArguments.ANDFilter.description),
           InputField("OR", OptionInputType(ListInputType(filterObjectType)), description = FilterArguments.ORFilter.description)
-        ) ++ model.fields
-          .filter(_.isScalar)
-          .flatMap(SchemaBuilderUtils.mapToInputField) ++ model.fields
-          .filter(!_.isScalar)
-          .flatMap(mapToRelationFilterInputField)
+        ) ++ model.scalarFields.flatMap(SchemaBuilderUtils.mapToInputField) ++ model.relationFields.flatMap(mapToRelationFilterInputField)
       }
     )
 
@@ -123,11 +119,7 @@ class FilterObjectTypeBuilder(model: Model, project: Project) {
               InputObjectType[Any](
                 s"${model.name}SubscriptionFilterNode",
                 () => {
-                  model.fields
-                    .filter(_.isScalar)
-                    .flatMap(SchemaBuilderUtils.mapToInputField) ++ model.fields
-                    .filter(!_.isScalar)
-                    .flatMap(mapToRelationFilterInputField)
+                  model.scalarFields.flatMap(SchemaBuilderUtils.mapToInputField) ++ model.relationFields.flatMap(mapToRelationFilterInputField)
                 }
               )
             )
@@ -152,11 +144,7 @@ class FilterObjectTypeBuilder(model: Model, project: Project) {
               InputObjectType[Any](
                 s"${model.name}SubscriptionFilterNode",
                 () => {
-                  model.fields
-                    .filter(_.isScalar)
-                    .flatMap(SchemaBuilderUtils.mapToInputField) ++ model.fields
-                    .filter(!_.isScalar)
-                    .flatMap(mapToRelationFilterInputField)
+                  model.scalarFields.flatMap(SchemaBuilderUtils.mapToInputField) ++ model.relationFields.flatMap(mapToRelationFilterInputField)
                 }
               )
             )

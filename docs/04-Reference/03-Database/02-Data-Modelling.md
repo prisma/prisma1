@@ -39,7 +39,7 @@ There are several available building blocks to shape your data model.
 * [Relations](#relations) describe interactions between types.
 * Special [directives](#graphql-directives) that cover different use cases are available.
 
-Additionally, a project can contain prepopulated types and fields, referred to as [system artifacts](#system-artifacts). Different [naming conventions](#naming-conventions) define valid names.
+Additionally, a service can contain prepopulated types and fields, referred to as [system artifacts](#system-artifacts-(only-for-legacy-console-projects)). Different [naming conventions](#naming-conventions) define valid names.
 
 ### Writing a data model
 
@@ -53,7 +53,7 @@ There are three system fields, all of which are managed by the Graphcool runtime
 
 #### Required system field: `id` 
 
-Every type that you define with the `@model` directive needs to have an `id: ID! @isUnique` field, otherwise `graphcool deploy` is going to fail. This `id` however is managed by Graphcool: Every new node that is created in your project will get assigned a globally unique ID automatically.
+Every type that you define with the `@model` directive needs to have an `id: ID! @isUnique` field, otherwise `graphcool deploy` is going to fail. This `id` however is managed by Graphcool: Every new node that is created in your service will get assigned a globally unique ID automatically.
 
 Notice that all your model types will implement the `Node` interface in the actual GraphQL schema that defines all the capabilities of your API. This is what the `Node` interface looks like:
 
@@ -91,7 +91,7 @@ Notice that you can not have custom fields that are called `createdAt` and `upda
 
 ## Model types
 
-A *model type* defines the structure for a certain type of your data. If you are familiar with SQL databases you can think of a type as the schema for a table. A type has a name, an optional description and one or multiple [fields](!alias-teizeit5se).
+A *model type* defines the structure for a certain type of your data. If you are familiar with SQL databases you can think of a type as the schema for a table. A type has a name, an optional description and one or multiple [fields](#fields).
 
 An instantiation of a type is called a *node*. The collection of all nodes is what you would refer to as your "application data". The term node refers to a node inside your data graph.
 
@@ -129,7 +129,7 @@ The types that are included in your schema effect the available operations in th
 
 ## Fields
 
-*Fields* are the building blocks of a [types](#model-types) giving a node its shape. Every field is referenced by its name and is either [scalar](#scalar-types) or a [relation](#relations) field.
+*Fields* are the building blocks of a [type](#model-types), giving a node its shape. Every field is referenced by its name and is either [scalar](#scalar-types) or a [relation](#relations) field.
 
 > The `Post` type might have a `title` and a `text` field both of type String and an `id` field of type `ID`.
 
@@ -317,7 +317,7 @@ type Post @model {
 
 #### Relation Fields
 
-The *static directive `@relation(name: String!)`* denotes a [relation field](!alias-goh5uthoc1). Most of the time, the same `@relation` directive appears twice in a type definitions file, to denote both sides of the relation:
+The *static directive `@relation(name: String!)`* denotes a [relation field](#scalar-and-relation-fields). Most of the time, the same `@relation` directive appears twice in a type definitions file, to denote both sides of the relation:
 
 ```graphql
 ## the types `Post` and `User` are connected via the `PostAuthor` relation
@@ -364,7 +364,7 @@ The *temporary directive `@migrationValue(value: String!)`* is used to migrate t
 
 ## Naming Conventions
 
-Different objects you encounter in a Graphcool project like types or relations follow separate naming conventions to help you distinguish them.
+Different objects you encounter in a Graphcool service like types or relations follow separate naming conventions to help you distinguish them.
 
 ### Types
 

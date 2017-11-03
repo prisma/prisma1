@@ -30,9 +30,9 @@ trait MetricsManager {
   def serviceName: String
 
   // System used to periodically flush the state of individual gauges
-  implicit val gaugeFlushSystem: ActorSystem = SingleThreadedActorSystem(s"$serviceName-gauges")
+  implicit lazy val gaugeFlushSystem: ActorSystem = SingleThreadedActorSystem(s"$serviceName-gauges")
 
-  val errorHandler = CustomErrorHandler()
+  lazy val errorHandler = CustomErrorHandler()
 
   protected val baseTagsString: String = {
     if (sys.env.isDefinedAt("METRICS_PREFIX")) {

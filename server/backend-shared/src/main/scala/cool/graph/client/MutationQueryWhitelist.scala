@@ -16,16 +16,25 @@ class MutationQueryWhitelist {
       case None          => ctx.args.raw.keys.toSet
     }
 
-    this.paths = pathsToNode.map(mutationName +: _)
+    val mutationNamePaths: List[List[String]] = pathsToNode.map(mutationName +: _)
+    val alias: Option[String]                 = ctx.astFields.find(_.name == mutationName).flatMap(_.alias)
+
+    val aliasPath: List[List[String]] = alias match {
+      case Some(a) => pathsToNode.map(a +: _)
+      case None    => List(List.empty)
+    }
+
+    this.paths = mutationNamePaths ++ aliasPath
   }
 
   def isMutationQuery = _isMutationQuery
 
-  def isWhitelisted(path: Vector[Any]) = {
-    path.reverse.toList match {
-      case (field: String) :: pathToNode if paths.contains(pathToNode.reverse) =>
-        fields.contains(field) || field == "id"
-      case _ => false
-    }
+  def isWhitelisted(path: Vector[Any]) = path.reverse.toList match {
+    case (field: String) :: pathToNode if paths.contains(pathToNode.reverse) =>
+      fields.contains(field) || field == "id"
+
+    case _ =>
+      false
   }
+
 }

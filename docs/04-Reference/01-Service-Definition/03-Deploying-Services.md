@@ -1,6 +1,6 @@
 ---
 alias: ioqu7arooj
-description: Learn how to synchronize your local changes with the remote Graphcool project.
+description: Learn how to synchronize your local changes with the remote Graphcool service.
 ---
 
 # Deploying a Graphcool service

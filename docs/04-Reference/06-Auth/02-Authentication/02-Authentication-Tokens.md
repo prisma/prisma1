@@ -101,7 +101,7 @@ Be **very** careful where you use the root tokens. Everyone with a root token ha
 
 _Regular_ root tokens are created with the Graphcool [CLI](!alias-aiteerae6l#graphcool-root-token) and the [service definition](!alias-foatho8aip#roottokens).
 
-To create a new root token, you need to add a new entry to the `rootTokens` list in your [`graphcool.yml`](!alias-foatho8aip). The entry defines the _name_ of the root token. Here is an example where a project has two root tokens, called `myToken1` and `myToken2`:
+To create a new root token, you need to add a new entry to the `rootTokens` list in your [`graphcool.yml`](!alias-foatho8aip). The entry defines the _name_ of the root token. Here is an example where a service has two root tokens, called `myToken1` and `myToken2`:
 
 ```yml
 rootTokens:

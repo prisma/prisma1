@@ -7,7 +7,7 @@ description: Frequently asked questions everything about the integration of serv
 
 ### What is a managed function?
 
-A managed function is a function that's managed and deployed by Graphcool (think of Graphcool as your [FaaS](https://en.wikipedia.org/wiki/Function_as_a_Service) provider for managed functions). If you're using a managed function in your Graphcool project, all you need to do is write the code for it, add it to your [project definition file](!alias-opheidaix3#project-definition) and run `graphcool deploy`. Graphcool will then make sure the function is deployed for you 
+A managed function is a function that's managed and deployed by Graphcool (think of Graphcool as your [FaaS](https://en.wikipedia.org/wiki/Function_as_a_Service) provider for managed functions). If you're using a managed function in your Graphcool project, all you need to do is write the code for it, add it to your [service definition file](!alias-opheidaix3#service-definition) and run `graphcool deploy`. Graphcool will then make sure the function is deployed for you 
 
 
 ### In what environment are managed functions executed with Graphcool? Can I use ES6 for my JS code?
@@ -30,7 +30,7 @@ The [`graphcool-lib`](https://github.com/graphcool/graphcool-lib) provides a con
 
 Here's some functionality it offers:
 
-- convenience API for sending queries and mutations to a Graphcool project (based on [`graphql-request`](https://github.com/graphcool/graphql-request))
+- convenience API for sending queries and mutations to a Graphcool service (based on [`graphql-request`](https://github.com/graphcool/graphql-request))
 - generating a temporary authentication token for a node in your database
 
 If you want to use it inside a managed function, you can simply `require` it (similar to [here](https://github.com/graphcool/modules/blob/master/authentication/email-password/code/loggedInUser.js#L1)). In a webhook, you can install it as a dependency with npm. 

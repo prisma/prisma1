@@ -68,7 +68,7 @@ function bangify(msg: string, c: string): string {
   return lines.join('\n')
 }
 
-function extractMessage (response): string {
+function extractMessage(response): string {
   try {
     return response.errors![0].message
   } catch (e) {
@@ -171,10 +171,14 @@ export class Output {
         this.stderr.log(err.stack || util.inspect(err))
       } else {
         this.stderr.log(
-          this.isGraphQLError(err) ? this.getGraphQLErrorMessage(err) :
-          bangify(wrap(this.getErrorMessage(err)), this.color.red(arrow)),
+          this.isGraphQLError(err)
+            ? this.getGraphQLErrorMessage(err)
+            : bangify(wrap(this.getErrorMessage(err)), this.color.red(arrow)),
         )
-        const instruction = (process.env.SHELL && process.env.SHELL!.endsWith('fish')) ? '$ set -x DEBUG "*"' : '$ export DEBUG="*"'
+        const instruction =
+          process.env.SHELL && process.env.SHELL!.endsWith('fish')
+            ? '$ set -x DEBUG "*"'
+            : '$ export DEBUG="*"'
         this.stderr.log(
           `\nGet in touch if you need help: https://www.graph.cool/forum
 To get more detailed output, run ${chalk.dim(instruction)}`,
@@ -230,12 +234,7 @@ To get more detailed output, run ${chalk.dim(instruction)}`,
   }
 
   printMarkdown(markdown: string) {
-    this.log(
-      marked(markdown)
-        .split('\n')
-        .map(l => `   ${l}`)
-        .join('\n'),
-    )
+    this.log(marked(markdown))
   }
 
   oldprompt(name: string, options?: PromptOptions) {
@@ -371,13 +370,18 @@ To get more detailed output, run ${chalk.dim(instruction)}`,
   }
   getGraphQLErrorMessage(err: any) {
     if (this.mock) {
-      return `\n${chalk.bold.red('ERROR: ' + extractMessage(err.response))}\n\n`
-        + chalk.bold('Request')
-        + this.getStyledJSON(err.request, true)
-        + chalk.bold('Response')
-        + this.getStyledJSON(err.response, true)
+      return (
+        `\n${chalk.bold.red('ERROR: ' + extractMessage(err.response))}\n\n` +
+        chalk.bold('Request') +
+        this.getStyledJSON(err.request, true) +
+        chalk.bold('Response') +
+        this.getStyledJSON(err.response, true)
+      )
     } else {
-      return `\n${chalk.bold.red('ERROR: ' + extractMessage(err.response))}\n\n` + this.getStyledJSON(err.response, true)
+      return (
+        `\n${chalk.bold.red('ERROR: ' + extractMessage(err.response))}\n\n` +
+        this.getStyledJSON(err.response, true)
+      )
     }
   }
   getErrorMessage(err: any): string {
@@ -399,7 +403,6 @@ To get more detailed output, run ${chalk.dim(instruction)}`,
     }
     return message || util.inspect(err)
   }
-
 }
 
 function treeConverter(tree) {
