@@ -4,7 +4,10 @@ import _root_.akka.actor.ActorSystem
 import _root_.akka.stream.ActorMaterializer
 import cool.graph._
 import cool.graph.shared.database.InternalAndProjectDbs
+import cool.graph.shared.errors.UserInputErrors.PermissionQueryIsInvalid
 import cool.graph.shared.models
+import cool.graph.shared.mutactions.InvalidInput
+import cool.graph.system.migration.permissions.QueryPermissionHelper
 import cool.graph.system.mutactions.internal._
 import sangria.relay.Mutation
 import scaldi.Injector
@@ -51,21 +54,21 @@ case class UpdateModelPermissionMutation(
 
   override def prepareActions(): List[Mutaction] = {
 
-//    updatedModelPermission.ruleGraphQuery.foreach { query =>
-//      val queriesWithSameOpCount = model.permissions.count(_.operation == updatedModelPermission.operation) // Todo this count may be wrong
-//
-//      val queryName = updatedModelPermission.ruleName match {
-//        case Some(nameForRule) => nameForRule
-//        case None              => QueryPermissionHelper.alternativeNameFromOperationAndInt(updatedModelPermission.operationString, queriesWithSameOpCount)
-//      }
-//
-//      val args         = QueryPermissionHelper.permissionQueryArgsFromModel(model)
-//      val treatedQuery = QueryPermissionHelper.prependNameAndRenderQuery(query, queryName: String, args: List[(String, String)])
-//
-//      val violations = QueryPermissionHelper.validatePermissionQuery(treatedQuery, project)
-//      if (violations.nonEmpty)
-//        actions ++= List(InvalidInput(PermissionQueryIsInvalid(violations.mkString(""), updatedModelPermission.ruleName.getOrElse(updatedModelPermission.id))))
-//    }
+    updatedModelPermission.ruleGraphQuery.foreach { query =>
+      val queriesWithSameOpCount = model.permissions.count(_.operation == updatedModelPermission.operation) // Todo this count may be wrong
+
+      val queryName = updatedModelPermission.ruleName match {
+        case Some(nameForRule) => nameForRule
+        case None              => QueryPermissionHelper.alternativeNameFromOperationAndInt(updatedModelPermission.operationString, queriesWithSameOpCount)
+      }
+
+      val args         = QueryPermissionHelper.permissionQueryArgsFromModel(model)
+      val treatedQuery = QueryPermissionHelper.prependNameAndRenderQuery(query, queryName: String, args: List[(String, String)])
+
+      val violations = QueryPermissionHelper.validatePermissionQuery(treatedQuery, project)
+      if (violations.nonEmpty)
+        actions ++= List(InvalidInput(PermissionQueryIsInvalid(violations.mkString(""), updatedModelPermission.ruleName.getOrElse(updatedModelPermission.id))))
+    }
 
     actions :+= UpdateModelPermission(model = model, oldPermisison = modelPermission, permission = updatedModelPermission)
 
