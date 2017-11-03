@@ -44,7 +44,6 @@ object GlobalDatabaseManager {
 
   def initializeForSingleRegion(config: Config): GlobalDatabaseManager = {
     import scala.collection.JavaConversions._
-
     config.resolve()
     val currentRegion = Region.withName(config.getString(awsRegionConfigProp))
 

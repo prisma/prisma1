@@ -3,8 +3,8 @@ package cool.graph.schemamanager
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.typesafe.config.ConfigFactory
+import cool.graph.aws.cloudwatch.{Cloudwatch, CloudwatchImpl}
 import cool.graph.bugsnag.{BugSnagger, BugSnaggerImpl}
-import cool.graph.cloudwatch.CloudwatchImpl
 import cool.graph.system.database.finder._
 import cool.graph.system.metrics.SystemMetrics
 import scaldi.Module
@@ -21,10 +21,8 @@ trait SchemaManagerApiDependencies extends Module {
   val uncachedProjectResolver: UncachedProjectResolver
   val cachedProjectResolver: CachedProjectResolver
   val requestPrefix: String
+  val cloudwatch: Cloudwatch
 
-  SystemMetrics.init()
-
-  binding identifiedBy "cloudwatch" toNonLazy CloudwatchImpl()
   binding identifiedBy "config" toNonLazy config
   binding identifiedBy "environment" toNonLazy sys.env.getOrElse("ENVIRONMENT", "local")
   binding identifiedBy "service-name" toNonLazy sys.env.getOrElse("SERVICE_NAME", "local")
@@ -38,13 +36,17 @@ trait SchemaManagerApiDependencies extends Module {
 case class SchemaManagerDependencies()(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends SchemaManagerApiDependencies {
   import system.dispatcher
 
+  SystemMetrics.init()
+
   lazy val internalDb                                   = Database.forConfig("internal", config)
   lazy val uncachedProjectResolver                      = UncachedProjectResolver(internalDb)
   lazy val cachedProjectResolver: CachedProjectResolver = CachedProjectResolverImpl(uncachedProjectResolver)
   lazy val requestPrefix                                = sys.env.getOrElse("AWS_REGION", sys.error("AWS Region not found."))
+  lazy val cloudwatch                                   = CloudwatchImpl()
 
   bind[String] identifiedBy "request-prefix" toNonLazy requestPrefix
 
+  binding identifiedBy "cloudwatch" toNonLazy cloudwatch
   binding identifiedBy "internal-db" toNonLazy internalDb
   binding identifiedBy "cachedProjectResolver" toNonLazy cachedProjectResolver
   binding identifiedBy "uncachedProjectResolver" toNonLazy uncachedProjectResolver

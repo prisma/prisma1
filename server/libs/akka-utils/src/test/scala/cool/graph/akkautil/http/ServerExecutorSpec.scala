@@ -38,7 +38,7 @@ class ServerExecutorSpec extends AcceptanceSpecification with AfterAll {
     val server = ServerExecutor(port = 8000 + new scala.util.Random().nextInt(50000), servers: _*)
 
     try {
-      server.startBlocking()
+      Await.result(server.start, 2.seconds)
       checkFn(server)
     } finally {
       server.stopBlocking()

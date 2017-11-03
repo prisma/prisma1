@@ -1,11 +1,11 @@
-package cool.graph.cloudwatch
+package cool.graph.aws.cloudwatch
 
 import java.util.concurrent.TimeUnit
 
 import akka.actor.{Actor, ActorSystem, Props}
 import com.amazonaws.auth.{AWSStaticCredentialsProvider, BasicAWSCredentials}
 import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration
-import com.amazonaws.services.cloudwatch.{AmazonCloudWatchAsyncClient, AmazonCloudWatchAsyncClientBuilder}
+import com.amazonaws.services.cloudwatch.AmazonCloudWatchAsyncClientBuilder
 import com.amazonaws.services.cloudwatch.model._
 
 import scala.collection.mutable
