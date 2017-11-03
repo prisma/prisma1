@@ -153,8 +153,8 @@ class FunctionExecutor(implicit val inj: Injector) extends Injectable {
   }
 
   private def handleSuccessfulResponse(project: Project, response: HttpResponse, function: models.Function, acceptEmptyResponse: Boolean)(
-    implicit actorSystem: ActorSystem,
-    materializer: ActorMaterializer): Future[FunctionSuccess Or FunctionError] = {
+      implicit actorSystem: ActorSystem,
+      materializer: ActorMaterializer): Future[FunctionSuccess Or FunctionError] = {
 
     Unmarshal(response).to[String].flatMap { bodyString =>
       handleSuccessfulResponse(project, bodyString, function, acceptEmptyResponse)
@@ -162,8 +162,8 @@ class FunctionExecutor(implicit val inj: Injector) extends Injectable {
   }
 
   private def handleSuccessfulResponse(project: Project, bodyString: String, function: models.Function, acceptEmptyResponse: Boolean)(
-    implicit actorSystem: ActorSystem,
-    materializer: ActorMaterializer): Future[FunctionSuccess Or FunctionError] = {
+      implicit actorSystem: ActorSystem,
+      materializer: ActorMaterializer): Future[FunctionSuccess Or FunctionError] = {
 
     import cool.graph.util.json.Json._
     import shapeless._
@@ -203,7 +203,9 @@ class FunctionExecutor(implicit val inj: Injector) extends Injectable {
                 case Some(Bad(err)) => Bad(err)
                 case _              => Bad(FunctionReturnValueParsingError(function.name))
               }
-            case Bad(err: FunctionError) => Bad(err)
+
+            case Bad(err: FunctionError) =>
+              Bad(err)
           }
       }
     }
@@ -230,14 +232,17 @@ class FunctionExecutor(implicit val inj: Injector) extends Injectable {
               FunctionExecutionResult(Vector.empty, parsed)
           }
 
-          def getResult(data: Any): FunctionDataValue Or FunctionError = function match {
-            case f: CustomQueryFunction    => parseResolverResponse(data, f.payloadType)
-            case f: CustomMutationFunction => parseResolverResponse(data, f.payloadType)
-            case _ =>
-              parseDataToJsObject(data) match {
-                case Good(x: JsObject)     => Good(FunctionDataValue(isNull = false, Vector(x)))
-                case Bad(x: FunctionError) => Bad(x)
-              }
+          def getResult(data: Any): FunctionDataValue Or FunctionError = {
+            def handleParsedJsObject(data: Any) = parseDataToJsObject(data) match {
+              case Good(x: JsObject)     => Good(FunctionDataValue(isNull = false, Vector(x)))
+              case Bad(x: FunctionError) => Bad(x)
+            }
+
+            function match {
+              case f: CustomQueryFunction    => parseResolverResponse(data, f.payloadType)
+              case f: CustomMutationFunction => parseResolverResponse(data, f.payloadType)
+              case _                         => handleParsedJsObject(data)
+            }
           }
 
           def resolverPayloadIsRequired: Boolean = function match {
@@ -316,12 +321,12 @@ object FunctionExecutor {
   val defaultRootTokenExpiration = Some(5.minutes.toSeconds)
 
   def createEventContext(
-                          project: Project,
-                          sourceIp: String,
-                          headers: Map[String, String],
-                          authenticatedRequest: Option[AuthenticatedRequest],
-                          endpointResolver: EndpointResolver
-                        )(implicit inj: Injector): Map[String, Any] = {
+      project: Project,
+      sourceIp: String,
+      headers: Map[String, String],
+      authenticatedRequest: Option[AuthenticatedRequest],
+      endpointResolver: EndpointResolver
+  )(implicit inj: Injector): Map[String, Any] = {
     val endpoints = endpointResolver.endpoints(project.id)
     val request = Map(
       "sourceIp"   -> sourceIp,
