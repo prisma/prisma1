@@ -75,7 +75,10 @@ export class Client {
           if (e.message.includes('No service with id')) {
             const user = await this.getAccount()
             const message = e.response.errors[0].message
-            this.out.error(message + ` in account ${user.email}. Please check if you are logged in to the right account.`)
+            this.out.error(
+              message +
+                ` in account ${user.email}. Please check if you are logged in to the right account.`,
+            )
           } else if (e.message.startsWith('No valid session')) {
             await this.auth.ensureAuth(true)
             // try again with new token
@@ -296,6 +299,21 @@ export class Client {
     )
 
     return this.getProjectDefinition(project)
+  }
+
+  async resetServiceData(id: string): Promise<void> {
+    // dont send any auth information when running the authenticateCustomer mutation
+    await this.client.request(
+      `mutation ($id: String!) {
+          resetProjectData(input: {
+            projectId: $id
+          }) {
+            clientMutationId
+          }
+        }
+      `,
+      { id },
+    )
   }
 
   async waitForLocalDocker(endpoint: string): Promise<void> {
