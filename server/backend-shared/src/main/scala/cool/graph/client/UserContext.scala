@@ -1,9 +1,9 @@
 package cool.graph.client
 
 import cool.graph.client.database.ProjectDataresolver
-import cool.graph.cloudwatch.Cloudwatch
 import cool.graph.shared.models.{AuthenticatedRequest, AuthenticatedUser, Project, ProjectWithClientId}
 import cool.graph.RequestContextTrait
+import cool.graph.aws.cloudwatch.Cloudwatch
 import sangria.ast.Document
 import scaldi.{Injectable, Injector}
 

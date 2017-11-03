@@ -1,8 +1,8 @@
 package cool.graph.shared.algolia
 
 import cool.graph.RequestContextTrait
+import cool.graph.aws.cloudwatch.Cloudwatch
 import cool.graph.client.database.ProjectDataresolver
-import cool.graph.cloudwatch.Cloudwatch
 import cool.graph.shared.models.Project
 import scaldi.{Injectable, Injector}
 

@@ -400,7 +400,8 @@ object UserInputErrors {
 
   case class InvalidRootTokenName(name: String) extends SystemApiError(s"No RootToken with the name: $name", 2062)
 
-  case class ResolverPayloadIsRequired() extends SystemApiError(s"The payloadType for the resolver is not nullable.", 2063)
+  case class ResolverPayloadIsRequired(resolverName: String)
+      extends SystemApiError(s"The payloadType for the resolver `$resolverName` is not nullable, but the resolver returned null.", 2063)
 
   case class ResolverFunctionHasDuplicateSchemaFilePath(name: String, path: String)
       extends SystemApiError(s"The Resolver Function with name '$name' has the path: '$path'. This schemaFilePath is already in use.", 2064)
@@ -549,6 +550,7 @@ object RequestPipelineErrors {
 
   case class ReturnedDataWasNotAnObject() extends RequestPipelineError(s"""The return value should include a 'data' field of type object""", 5006)
 
-  case class DataDoesNotMatchPayloadType() extends RequestPipelineError(s"""The value of the data object did not match the specified payloadType.""", 5007)
+  case class DataDoesNotMatchPayloadType(functionName: String)
+      extends RequestPipelineError(s"""The value of the data object did not match the specified payloadType for function: $functionName""", 5007)
 
 }

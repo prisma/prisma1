@@ -126,7 +126,9 @@ export interface GraphcoolModule {
   baseDir?: string
 }
 
-export interface ExternalFiles { [fileName: string]: ExternalFile }
+export interface ExternalFiles {
+  [fileName: string]: ExternalFile
+}
 
 export interface ExternalFile {
   url: string

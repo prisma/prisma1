@@ -13,9 +13,12 @@ import cool.graph.shared.models.ModelMutationType.ModelMutationType
 import cool.graph.shared.models.RequestPipelineOperation.RequestPipelineOperation
 import cool.graph.subscriptions.schemas.QueryTransformer
 import sangria.ast
+import sangria.ast.{Document, TypeExtensionDefinition}
 import sangria.schema
 import sangria.schema.{ListType, ObjectType, OptionType, OutputType}
-import sangria.parser.QueryParser
+import sangria.parser.{QueryParser, SyntaxError}
+
+import scala.util.{Failure, Success, Try}
 
 object FunctionBinding extends Enumeration {
   type FunctionBinding = Value
@@ -323,7 +326,7 @@ protected case class ParsedSchema(name: String, args: List[Field], payloadType: 
 
 object FunctionSchemaParser {
   def parse(functionName: String, schema: String, definitionName: String, extendError: String, extendContentError: String): ParsedSchema = {
-    val doc = sangria.parser.QueryParser.parse(schema).getOrElse(throw SchemaExtensionParseError(functionName, s"""Could not parse schema: $schema"""))
+    val doc: Document = parseToDocument(functionName, schema)
 
     val extensionDefinition = (doc.definitions collect {
       case x: ast.TypeExtensionDefinition if x.definition.name == definitionName => x.definition
@@ -382,8 +385,9 @@ object FunctionSchemaParser {
   }
 
   def determineBinding(functionName: String, schema: String): FunctionBinding = {
-    val doc                      = sangria.parser.QueryParser.parse(schema).getOrElse(throw SchemaExtensionParseError(functionName, s"""Could not parse schema: $schema"""))
-    val typeExtensionDefinitions = doc.definitions collect { case x: ast.TypeExtensionDefinition => x }
+    val doc: Document = parseToDocument(functionName, schema)
+
+    val typeExtensionDefinitions = doc.definitions collect { case x: TypeExtensionDefinition => x }
 
     if (typeExtensionDefinitions.length > 1) throw SchemaExtensionParseError(functionName, "Schema must not contain more than one type extension")
 
@@ -398,6 +402,22 @@ object FunctionSchemaParser {
       case x          => throw SchemaExtensionParseError(functionName, s"Must extend either Query or Mutation. Not '$x'")
 
     }
+  }
+
+  private def parseToDocument(functionName: String, schema: String) = {
+    val docTry: Try[Document] = sangria.parser.QueryParser.parse(schema)
+
+    val doc: Document = docTry match {
+      case Success(x) =>
+        x
+
+      case Failure(x: SyntaxError) if x.formattedError.contains("Invalid input") && (x.formattedError.contains("()\"") || x.formattedError.contains("( )\"")) =>
+        throw SchemaExtensionParseError(functionName, s"""Could not parse schema. Do not use empty brackets for resolvers without input arguments: $schema""")
+
+      case Failure(_) =>
+        throw SchemaExtensionParseError(functionName, s"""Could not parse schema: $schema""")
+    }
+    doc
   }
 
   private def mapInputValueDefinitionToField(functionName: String, ivd: ast.InputValueDefinition): Field =

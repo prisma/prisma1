@@ -5,13 +5,6 @@ description: The file management system allows you to upload, modify and delete 
 
 # File Management
 
-<InfoBox type=warning>
-
-The File API only works with [legacy Console projects](!alias-aemieb1aev) and is **disabled for [Graphcool services](!alias-opheidaix3)**.
-
-</InfoBox>
-
-
 ## Overview
 
 As part of our file management system you are able to
