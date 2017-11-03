@@ -9,6 +9,8 @@ class CaffeineImplForAsyncCacheSpec extends FlatSpec with Matchers with AwaitUti
 
   def newCache = CaffeineImplForAsyncCache.lfu[String, String](initialCapacity = 100, maxCapacity = 100)
 
+  //this test is flaky
+
   "it" should "handle None results correctly" in {
     val cache  = newCache
     val result = await(cache.getOrUpdateOpt("key", () => Future.successful(None)))

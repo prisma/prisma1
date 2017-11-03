@@ -16,16 +16,16 @@ import org.scalatest.{FlatSpec, Matchers}
 import scala.concurrent.{Await, Awaitable, Future}
 
 class CachedProjectFetcherImplSpec extends FlatSpec with Matchers with ScalaFutures {
-  implicit val system: ActorSystem = SingleThreadedActorSystem("cacheSpec")
-  implicit val bugsnagger: BugSnaggerImpl = BugSnaggerImpl("")
+  implicit val system: ActorSystem                    = SingleThreadedActorSystem("cacheSpec")
+  implicit val bugsnagger: BugSnaggerImpl             = BugSnaggerImpl("")
   implicit val unmarshaller: ByteUnmarshaller[String] = Conversions.Unmarshallers.ToString
-  implicit val marshaller: ByteMarshaller[String] = Conversions.Marshallers.FromString
+  implicit val marshaller: ByteMarshaller[String]     = Conversions.Marshallers.FromString
 
-  val database = ProjectDatabase(id = "test", region = Region.EU_WEST_1, name = "client1", isDefaultForRegion = true)
-  val project = Project(id = "", ownerId = "", name = s"Test Project", alias = None, projectDatabase = database)
-  val rabbitUri: String = sys.env.getOrElse("RABBITMQ_URI", sys.error("RABBITMQ_URI env var required but not found"))
+  val database                           = ProjectDatabase(id = "test", region = Region.EU_WEST_1, name = "client1", isDefaultForRegion = true)
+  val project                            = Project(id = "", ownerId = "", name = s"Test Project", alias = None, projectDatabase = database)
+  val rabbitUri: String                  = sys.env.getOrElse("RABBITMQ_URI", sys.error("RABBITMQ_URI env var required but not found"))
   val projectFetcher: ProjectFetcherMock = new ProjectFetcherMock(project)
-  val pubSub: RabbitAkkaPubSub[String] = RabbitAkkaPubSub[String](rabbitUri, "project-schema-invalidation", durable = true)
+  val pubSub: RabbitAkkaPubSub[String]   = RabbitAkkaPubSub[String](rabbitUri, "project-schema-invalidation", durable = true)
 
   "it" should "work" in {
 
