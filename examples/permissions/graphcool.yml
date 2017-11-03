@@ -62,12 +62,16 @@ permissions:
     authenticated: true
     query: src/permissions/User.graphql:DeleteUser
 
-  # To connect and disconnect a `Post` node with a `User` node via the 
-  # `UserPosts` relation, a `User` must be authenticated
+  # To **connect** and **disconnect** a `Post` node with a `User`
+  # node via the `UserPosts` relation, the `User` node must be 
+  # the `author` of the corresponding `Post` node
+  # (see the permission query `UpdateUsersPosts` in src/permissions/UserPosts.graphql)
   - operation: UserPosts.connect
     authenticated: true
+    query: src/permissions/UsersPosts.graphql:UpdateUsersPosts
   - operation: UserPosts.disconnect
     authenticated: true
+    query: src/permissions/UsersPosts.graphql:UpdateUsersPosts
 
 
 # Serverless functions implementing "email-password"-based authentication
