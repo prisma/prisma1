@@ -36,9 +36,8 @@ object InputValueValidation {
   }
 
   def validateRequiredScalarFieldsHaveValues(model: Model, input: List[ArgumentValue]) = {
-    val requiredFieldNames = model.fields
+    val requiredFieldNames = model.scalarFields
       .filter(_.isRequired)
-      .filter(_.isScalar)
       .filter(_.defaultValue.isEmpty)
       .map(_.name)
       .filter(name => name != "createdAt" && name != "updatedAt")
