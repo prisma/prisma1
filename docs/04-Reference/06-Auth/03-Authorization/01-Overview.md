@@ -5,7 +5,9 @@ description: Graphcool features a simple yet powerful permission system that int
 
 # Authorization
 
+<!--
 Graphcool features a simple yet powerful permission system that integrates seamlessly with the available [authentication concept](!alias-geekae9gah).
+--> 
 
 <InfoBox>
 

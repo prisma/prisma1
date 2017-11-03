@@ -81,7 +81,7 @@ object SystemFields {
     if (field.name == idFieldName) {
       Failure(new Exception(s"$idFieldName is reserved and can't be created manually."))
     } else if (!field.isRequired || field.isUnique || field.isList || field.typeIdentifier != TypeIdentifier.DateTime) {
-      Failure(new Exception(s"Type is predefined and must be non-unique, required, a scalar field (a datetime) to be exposed."))
+      Failure(new Exception(s"You can only add the type 'DateTime!' for this field and the field cannot be unique."))
     } else {
       Try { generateSystemFieldFor(field.name) }
     }

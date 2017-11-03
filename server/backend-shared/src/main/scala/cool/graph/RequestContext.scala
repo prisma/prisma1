@@ -1,8 +1,8 @@
 package cool.graph
 
+import cool.graph.aws.cloudwatch.Cloudwatch
 import cool.graph.client.FeatureMetric.FeatureMetric
 import cool.graph.client.{MutactionMetric, MutationQueryWhitelist, SqlQueryMetric}
-import cool.graph.cloudwatch.Cloudwatch
 import cool.graph.shared.models.Client
 import cool.graph.shared.logging.{LogData, LogKey}
 import scaldi.{Injectable, Injector}

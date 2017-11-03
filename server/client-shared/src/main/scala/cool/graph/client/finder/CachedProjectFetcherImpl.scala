@@ -11,12 +11,13 @@ import scala.concurrent.Future
 import scala.util.Success
 
 case class CachedProjectFetcherImpl(
-                                     projectFetcher: RefreshableProjectFetcher,
-                                     projectSchemaInvalidationSubscriber: PubSubSubscriber[String]
-                                   ) extends RefreshableProjectFetcher {
+    projectFetcher: RefreshableProjectFetcher,
+    projectSchemaInvalidationSubscriber: PubSubSubscriber[String]
+) extends RefreshableProjectFetcher {
   import scala.concurrent.ExecutionContext.Implicits.global
 
   private val cache = Cache.lfuAsync[String, ProjectWithClientId](initialCapacity = 16, maxCapacity = 100)
+
   // ideally i would like to install a callback on cache for evictions. Whenever a project gets evicted i would remove it from the mapping cache as well.
   // This would make sure the mapping is always up-to-date and does not grow unbounded and causes memory problems.
   // So instead i am constraining the capacity to at least prohibit unbounded growth.

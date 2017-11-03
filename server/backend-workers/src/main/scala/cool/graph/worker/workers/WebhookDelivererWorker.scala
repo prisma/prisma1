@@ -1,19 +1,19 @@
 package cool.graph.worker.workers
+
+import akka.http.scaladsl.model.ContentTypes
+import cool.graph.akkautil.http.{FailedRequestError, SimpleHttpClient}
 import cool.graph.bugsnag.BugSnagger
 import cool.graph.cuid.Cuid
 import cool.graph.messagebus.{QueueConsumer, QueuePublisher}
-import cool.graph.utils.future.FutureUtils._
 import cool.graph.worker.payloads.{LogItem, Webhook}
 import cool.graph.worker.utils.Utils
 import play.api.libs.json.{JsArray, JsObject, Json}
-import play.api.libs.ws.ahc.StandaloneAhcWSClient
 
-import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
 case class WebhookDelivererWorker(
-    httpClient: StandaloneAhcWSClient,
+    httpClient: SimpleHttpClient,
     webhooksConsumer: QueueConsumer[Webhook],
     logsPublisher: QueuePublisher[LogItem]
 )(implicit bugsnagger: BugSnagger, ec: ExecutionContext)
@@ -22,38 +22,37 @@ case class WebhookDelivererWorker(
 
   // Current decision: Do not retry delivery, treat all return codes as work item "success" (== ack).
   val consumeFn = (wh: Webhook) => {
-    val req       = httpClient.url(wh.url).withHttpHeaders(wh.headers.toList :+ ("Content-Type", "application/json"): _*).withRequestTimeout(5.seconds)
     val startTime = System.currentTimeMillis()
-    val response  = req.post(wh.payload)
 
-    response.toFutureTry.flatMap {
-      case Success(resp) =>
-        val timing    = System.currentTimeMillis() - startTime
-        val body      = resp.body[String]
-        val timestamp = Utils.msqlDateTime3Timestamp()
+    def handleError(msg: String) = {
+      val timing    = System.currentTimeMillis() - startTime
+      val timestamp = Utils.msqlDateTime3Timestamp()
+      val logItem   = LogItem(Cuid.createCuid(), wh.projectId, wh.functionId, wh.requestId, "FAILURE", timing, timestamp, formatFunctionErrorMessage(msg))
 
-        val logItem = resp.status match {
-          case x if x >= 200 && x < 300 =>
-            val functionReturnValue = formatFunctionSuccessMessage(wh.payload, body)
-            LogItem(Cuid.createCuid(), wh.projectId, wh.functionId, wh.requestId, "SUCCESS", timing, timestamp, functionReturnValue)
-
-          case x =>
-            val message = s"Call to ${wh.url} failed with status $x, response body $body and headers [${formatHeaders(resp.headers)}]"
-            LogItem(Cuid.createCuid(), wh.projectId, wh.functionId, wh.requestId, "FAILURE", timing, timestamp, formatFunctionErrorMessage(message))
-        }
-
-        logsPublisher.publish(logItem)
-        Future.successful(())
-
-      case Failure(err) =>
-        val timing    = System.currentTimeMillis() - startTime
-        val message   = s"Call to ${wh.url} failed with: ${err.getMessage}"
-        val timestamp = Utils.msqlDateTime3Timestamp()
-        val logItem   = LogItem(Cuid.createCuid(), wh.projectId, wh.functionId, wh.requestId, "FAILURE", timing, timestamp, formatFunctionErrorMessage(message))
-
-        logsPublisher.publish(logItem)
-        Future.successful(())
+      logsPublisher.publish(logItem)
     }
+
+    httpClient
+      .post(wh.url, wh.payload, ContentTypes.`application/json`, wh.headers.toList)
+      .map { response =>
+        val timing              = System.currentTimeMillis() - startTime
+        val body                = response.body
+        val timestamp           = Utils.msqlDateTime3Timestamp()
+        val functionReturnValue = formatFunctionSuccessMessage(wh.payload, body.getOrElse(""))
+        val logItem             = LogItem(Cuid.createCuid(), wh.projectId, wh.functionId, wh.requestId, "SUCCESS", timing, timestamp, functionReturnValue)
+
+        logsPublisher.publish(logItem)
+      }
+      .recover {
+        case e: FailedRequestError =>
+          val message =
+            s"Call to ${wh.url} failed with status ${e.response.status}, response body '${e.response.body.getOrElse("")}' and headers [${formatHeaders(e.response.headers)}]"
+          handleError(message)
+
+        case e: Throwable =>
+          val message = s"Call to ${wh.url} failed with: ${e.getMessage}"
+          handleError(message)
+      }
   }
 
   lazy val consumerRef = webhooksConsumer.withConsumer(consumeFn)
@@ -63,12 +62,8 @@ case class WebhookDelivererWorker(
     *
     * @param headers The headers to format
     * @return A single-line string in the format "header: value | nextHeader: value ...".
-    *         If multiple values per header are given, they are treated as separate instances of the same header.
-    *         E.g. X-Test-Header: 1 | X-Test-Header: 2 | Content-Type: appliation/json
     */
-  def formatHeaders(headers: Map[String, Seq[String]]): String = {
-    headers.flatMap(header => header._2.map(headerValue => s"${header._1}: $headerValue")).mkString(" | ")
-  }
+  def formatHeaders(headers: Seq[(String, String)]): String = headers.map(header => s"${header._1}: ${header._2}").mkString(" | ")
 
   /**
     * Formats a function log message according to our schema.
