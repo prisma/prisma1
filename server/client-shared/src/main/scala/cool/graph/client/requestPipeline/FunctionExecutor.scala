@@ -1,11 +1,10 @@
 package cool.graph.client.requestPipeline
 
 import akka.actor.ActorSystem
-import akka.http.scaladsl.Http
-import akka.http.scaladsl.model.headers.RawHeader
 import akka.http.scaladsl.model.{DateTime => _, _}
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.{ActorMaterializer, StreamTcpException}
+import cool.graph.akkautil.http.{FailedResponseCodeError, SimpleHttpClient, SimpleHttpResponse}
 import cool.graph.bugsnag.BugSnaggerImpl
 import cool.graph.client.authorization.ClientAuthImpl
 import cool.graph.cuid.Cuid
@@ -50,12 +49,11 @@ class FunctionExecutor(implicit val inj: Injector) extends Injectable {
 
   val functionEnvironment: FunctionEnvironment = inject[FunctionEnvironment]
   val logsPublisher: QueuePublisher[String]    = inject[QueuePublisher[String]](identified by "logsPublisher")
+  val httpClient                               = SimpleHttpClient()
 
   def sync(project: Project, function: models.Function, event: String): Future[FunctionSuccess Or FunctionError] = {
     function.delivery match {
-
       // Lambda and Dev function environment
-
       case delivery: models.ManagedFunction =>
         functionEnvironment.invoke(project, function.name, event) flatMap {
           case InvokeSuccess(response)  => handleSuccessfulResponse(project, response, function, acceptEmptyResponse = false)
@@ -63,34 +61,28 @@ class FunctionExecutor(implicit val inj: Injector) extends Injectable {
         }
 
       // Auth0Extend and Webhooks
-
       case delivery: models.HttpFunction =>
-        val headers = delivery.headers.map { case (name, value) => RawHeader(name, value) }.toImmutable
+        val headers = delivery.headers.toImmutable
+        val uri     = function.delivery.asInstanceOf[HttpFunction].url
 
-        val httpExt = Http(actorSystem)
-        val request = HttpRequest(
-          method = HttpMethods.POST,
-          uri = function.delivery.asInstanceOf[HttpFunction].url,
-          headers = headers,
-          entity = HttpEntity(ContentTypes.`application/json`, event)
-        )
-
-        val response: Future[HttpResponse] = httpExt.singleRequest(request)
-
-        response.flatMap { serverlessResult =>
-          val statusCode = serverlessResult.status.intValue
-          if (statusCode >= 200 && statusCode < 300) {
-            handleSuccessfulResponse(project, serverlessResult, function, acceptEmptyResponse = statusCode == 204)
-          } else {
-            Unmarshal(serverlessResult)
-              .to[String]
-              .map(bodyString => Bad(FunctionReturnedBadStatus(statusCode, bodyString)))
+        httpClient
+          .post(
+            uri,
+            event,
+            ContentTypes.`application/json`,
+            headers
+          )
+          .flatMap { (response: SimpleHttpResponse) =>
+            handleSuccessfulResponse(project, response.underlying, function, acceptEmptyResponse = response.status == 204)
           }
-        } recover {
-          // https://[INVALID].algolia.net/1/keys/[VALID] times out, so we simply report a timeout as a wrong appId
-          case _: StreamTcpException => Bad(FunctionWebhookURLNotValid(request.uri.toString()))
-        }
-      case _ => sys.error("only knows how to execute HttpFunctions")
+          .recover {
+            case e: FailedResponseCodeError => Bad(FunctionReturnedBadStatus(e.response.status, e.response.body.getOrElse("")))
+            // https://[INVALID].algolia.net/1/keys/[VALID] times out, so we simply report a timeout as a wrong appId
+            case _: StreamTcpException => Bad(FunctionWebhookURLNotValid(uri))
+          }
+
+      case _ =>
+        sys.error("only knows how to execute HttpFunctions")
     }
   }
 

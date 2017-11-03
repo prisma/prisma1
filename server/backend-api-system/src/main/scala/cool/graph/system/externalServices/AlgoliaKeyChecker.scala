@@ -2,7 +2,7 @@ package cool.graph.system.externalServices
 
 import akka.actor.ActorSystem
 import akka.stream.{ActorMaterializer, StreamTcpException}
-import cool.graph.akkautil.http.{FailedRequestError, SimpleHttpClient}
+import cool.graph.akkautil.http.{RequestFailedError, SimpleHttpClient}
 import scaldi.{Injectable, Injector}
 import spray.json.DefaultJsonProtocol
 
@@ -51,7 +51,7 @@ class AlgoliaKeyCheckerImplementation(implicit inj: Injector) extends AlgoliaKey
         .recover {
           // https://[INVALID].algolia.net/1/keys/[VALID] times out, so we simply report a timeout as a wrong appId
           case _: StreamTcpException => false
-          case _: FailedRequestError => false
+          case _: RequestFailedError => false
         }
     }
   }
