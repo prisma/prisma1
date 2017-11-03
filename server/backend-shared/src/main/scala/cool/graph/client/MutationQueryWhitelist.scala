@@ -1,7 +1,5 @@
 package cool.graph.client
 
-import java.io
-
 import cool.graph.RequestContextTrait
 import sangria.schema.Context
 
@@ -19,12 +17,11 @@ class MutationQueryWhitelist {
     }
 
     val mutationNamePaths: List[List[String]] = pathsToNode.map(mutationName +: _)
-
-    val alias: Option[String] = ctx.astFields.find(_.name == mutationName).flatMap(_.alias)
+    val alias: Option[String]                 = ctx.astFields.find(_.name == mutationName).flatMap(_.alias)
 
     val aliasPath: List[List[String]] = alias match {
       case Some(a) => pathsToNode.map(a +: _)
-      case None => List(List.empty)
+      case None    => List(List.empty)
     }
 
     this.paths = mutationNamePaths ++ aliasPath
@@ -35,7 +32,9 @@ class MutationQueryWhitelist {
   def isWhitelisted(path: Vector[Any]) = path.reverse.toList match {
     case (field: String) :: pathToNode if paths.contains(pathToNode.reverse) =>
       fields.contains(field) || field == "id"
-    case _ => false
+
+    case _ =>
+      false
   }
 
 }

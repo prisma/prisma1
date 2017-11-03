@@ -32,7 +32,7 @@ import scala.concurrent.Future
 abstract class SchemaBuilder(project: models.Project, modelPrefix: String = "")(implicit inj: Injector,
                                                                                 actorSystem: ActorSystem,
                                                                                 materializer: ActorMaterializer)
-  extends Injectable
+    extends Injectable
     with TimeHelper {
 
   type ManyDataItemType
@@ -67,16 +67,7 @@ abstract class SchemaBuilder(project: models.Project, modelPrefix: String = "")(
   val pluralsCache           = new PluralsCache
 
   def ifFeatureFlag(predicate: Boolean, fields: => List[Field[UserContext, Unit]], measurementName: String = ""): List[Field[UserContext, Unit]] = {
-    if (predicate) {
-      //      if(measurementName != ""){
-      //        time(measurementName)(fields)
-      //      } else {
-      //        fields
-      //      }
-      fields
-    } else {
-      List.empty
-    }
+    if (predicate) fields else List.empty
   }
 
   def build(): Schema[UserContext, Unit] = ClientSharedMetrics.schemaBuilderBuildTimerMetric.time(project.id) {
@@ -364,11 +355,11 @@ abstract class SchemaBuilder(project: models.Project, modelPrefix: String = "")(
       arguments = arguments,
       resolve = (ctx) =>
         new SetRelation(relation = relation,
-          fromModel = fromModel,
-          project = project,
-          args = ctx.args,
-          dataResolver = ctx.ctx.dataResolver,
-          argumentSchema = argumentSchema)
+                        fromModel = fromModel,
+                        project = project,
+                        args = ctx.args,
+                        dataResolver = ctx.ctx.dataResolver,
+                        argumentSchema = argumentSchema)
           .run(ctx.ctx.authenticatedRequest, ctx.ctx)
           .map(outputMapper.mapResolve(_, ctx.args))
     )
@@ -389,11 +380,11 @@ abstract class SchemaBuilder(project: models.Project, modelPrefix: String = "")(
       arguments = arguments,
       resolve = (ctx) =>
         new AddToRelation(relation = relation,
-          fromModel = fromModel,
-          project = project,
-          args = ctx.args,
-          dataResolver = ctx.ctx.dataResolver,
-          argumentSchema = argumentSchema)
+                          fromModel = fromModel,
+                          project = project,
+                          args = ctx.args,
+                          dataResolver = ctx.ctx.dataResolver,
+                          argumentSchema = argumentSchema)
           .run(ctx.ctx.authenticatedRequest, ctx.ctx)
           .map(outputMapper.mapResolve(_, ctx.args))
     )
@@ -416,11 +407,11 @@ abstract class SchemaBuilder(project: models.Project, modelPrefix: String = "")(
       arguments = arguments,
       resolve = (ctx) =>
         new RemoveFromRelation(relation = relation,
-          fromModel = fromModel,
-          project = project,
-          args = ctx.args,
-          dataResolver = ctx.ctx.dataResolver,
-          argumentSchema = argumentSchema)
+                               fromModel = fromModel,
+                               project = project,
+                               args = ctx.args,
+                               dataResolver = ctx.ctx.dataResolver,
+                               argumentSchema = argumentSchema)
           .run(ctx.ctx.authenticatedRequest, ctx.ctx)
           .map(outputMapper.mapResolve(_, ctx.args))
     )
@@ -442,11 +433,11 @@ abstract class SchemaBuilder(project: models.Project, modelPrefix: String = "")(
       arguments = arguments,
       resolve = (ctx) =>
         new UnsetRelation(relation = relation,
-          fromModel = fromModel,
-          project = project,
-          args = ctx.args,
-          dataResolver = ctx.ctx.dataResolver,
-          argumentSchema = argumentSchema)
+                          fromModel = fromModel,
+                          project = project,
+                          args = ctx.args,
+                          dataResolver = ctx.ctx.dataResolver,
+                          argumentSchema = argumentSchema)
           .run(ctx.ctx.authenticatedRequest, ctx.ctx)
           .map(outputMapper.mapResolve(_, ctx.args))
     )
@@ -500,11 +491,11 @@ abstract class SchemaBuilder(project: models.Project, modelPrefix: String = "")(
       resolve = (ctx) => {
         ctx.ctx.mutationQueryWhitelist.registerWhitelist(s"delete${model.name}", outputMapper.nodePaths(model), argumentSchema.inputWrapper, ctx)
         new Delete(model = model,
-          modelObjectTypes = modelObjectTypesBuilder,
-          project = project,
-          args = ctx.args,
-          dataResolver = ctx.ctx.dataResolver,
-          argumentSchema = argumentSchema)
+                   modelObjectTypes = modelObjectTypesBuilder,
+                   project = project,
+                   args = ctx.args,
+                   dataResolver = ctx.ctx.dataResolver,
+                   argumentSchema = argumentSchema)
           .run(ctx.ctx.authenticatedRequest, ctx.ctx)
           .map(outputMapper.mapResolve(_, ctx.args))
       }
