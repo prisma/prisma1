@@ -52,21 +52,21 @@ case class AddModelPermissionMutation(
 
   override def prepareActions(): List[Mutaction] = {
 
-//    newModelPermission.ruleGraphQuery.foreach { query =>
-//      val queriesWithSameOpCount = model.permissions.count(_.operation == newModelPermission.operation)
-//
-//      val queryName = newModelPermission.ruleName match {
-//        case Some(nameForRule) => nameForRule
-//        case None              => QueryPermissionHelper.alternativeNameFromOperationAndInt(newModelPermission.operationString, queriesWithSameOpCount)
-//      }
-//
-//      val args         = QueryPermissionHelper.permissionQueryArgsFromModel(model)
-//      val treatedQuery = QueryPermissionHelper.prependNameAndRenderQuery(query, queryName: String, args: List[(String, String)])
-//
-//      val violations = QueryPermissionHelper.validatePermissionQuery(treatedQuery, project)
-//      if (violations.nonEmpty)
-//        actions ++= List(InvalidInput(PermissionQueryIsInvalid(violations.mkString(""), newModelPermission.ruleName.getOrElse(newModelPermission.id))))
-//    }
+    newModelPermission.ruleGraphQuery.foreach { query =>
+      val queriesWithSameOpCount = model.permissions.count(_.operation == newModelPermission.operation)
+
+      val queryName = newModelPermission.ruleName match {
+        case Some(nameForRule) => nameForRule
+        case None              => QueryPermissionHelper.alternativeNameFromOperationAndInt(newModelPermission.operationString, queriesWithSameOpCount)
+      }
+
+      val args         = QueryPermissionHelper.permissionQueryArgsFromModel(model)
+      val treatedQuery = QueryPermissionHelper.prependNameAndRenderQuery(query, queryName: String, args: List[(String, String)])
+
+      val violations = QueryPermissionHelper.validatePermissionQuery(treatedQuery, project)
+      if (violations.nonEmpty)
+        actions ++= List(InvalidInput(PermissionQueryIsInvalid(violations.mkString(""), newModelPermission.ruleName.getOrElse(newModelPermission.id))))
+    }
 
     actions :+= CreateModelPermission(project = project, model = model, permission = newModelPermission)
 
