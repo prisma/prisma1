@@ -159,15 +159,6 @@ types: ./types.graphql
 ```
 
 
-**Referring to multiple type definition files**
-
-```yml
-types:
-  - ./types.graphql
-  - ./customResolver.graphql
-```
-
-
 ### `functions`
 
 The `functions` root property accepts a **map from string** (which specifies the function's _name_) **to [function](#definition-function)**. The key represents the _name_ of the function, the value is an object that follows the [function](#definition-function) structure and defines the precise configuration of the function to be invoked.

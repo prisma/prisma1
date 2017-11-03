@@ -18,9 +18,5 @@ object LocalFaasMain extends App {
   val executor = ServerExecutor(
     port = port,
     FunctionRuntimeServer("functions", workingDir)
-  )
-
-  executor.start
-  Await.result(system.whenTerminated, Duration.Inf)
-  executor.stop
+  ).startBlocking()
 }

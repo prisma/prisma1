@@ -151,13 +151,12 @@ docker logs -f local_graphcool_1
 
 ##### I'm getting a client ID does not exist error
 
-You need a new token in you global `.graphcoolrc` file, which is located in your homefolder by default. 
+You need a new token in you global `.graphcoolrc` file, which is located in your home directory by default. 
 
-Locate the `clusterSecret` entry under `local` and replace it with a new token that you can, for example, retrieve via curl: `curl 'http://127.0.0.1:60000/system' -H 'Content-Type: application/json' -d '{"query":"mutation {authenticateCustomer(input:{auth0IdToken:\"MuchTokenSuchMasterWow\"}){token, user{id}}}"}' -sS`
+Locate the `clusterSecret` entry under `local` and replace it with a new token that you can retrieve with the `authenticateCustomer` mutation, e.g. with curl: 
 
-## I'm getting a client ID does not exist error
-
-You need a new token in you global `.graphcoolrc` file, which is located in your homefolder by default.
-Locate the `clusterSecret` entry under `local` and replace it with a new token that you can, for example, retrieve via curl: `curl 'http://127.0.0.1:60000/system' -H 'Content-Type: application/json' -d '{"query":"mutation {authenticateCustomer(input:{auth0IdToken:\"MuchTokenSuchMasterWow\"}){token, user{id}}}"}' -sS`
+```sh
+curl 'http://127.0.0.1:60000/system' -H 'Content-Type: application/json' -d '{"query":"mutation {authenticateCustomer(input:{auth0IdToken:\"MuchTokenSuchMasterWow\"}){token, user{id}}}"}' -sS
+```
 
 

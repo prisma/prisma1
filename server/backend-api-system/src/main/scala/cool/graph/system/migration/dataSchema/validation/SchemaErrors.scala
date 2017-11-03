@@ -25,11 +25,13 @@ object SchemaErrors {
   }
 
   def relationNameMustAppear2Times(fieldAndType: FieldAndType): SchemaError = {
-    error(fieldAndType, "A relation directive with a name must appear exactly 2 times.")
+    val relationName = fieldAndType.fieldDef.oldRelationName.get
+    error(fieldAndType, s"A relation directive with a name must appear exactly 2 times. Relation name: '$relationName'")
   }
 
   def selfRelationMustAppearOneOrTwoTimes(fieldAndType: FieldAndType): SchemaError = {
-    error(fieldAndType, "A relation directive for a many to many or one to one self relation must appear either 1 or 2 times.")
+    val relationName = fieldAndType.fieldDef.oldRelationName.get
+    error(fieldAndType, s"A relation directive for a self relation must appear either 1 or 2 times. Relation name: '$relationName'")
   }
 
   def typesForOppositeRelationFieldsDoNotMatch(fieldAndType: FieldAndType, other: FieldAndType): SchemaError = {

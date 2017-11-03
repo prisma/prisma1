@@ -4,7 +4,7 @@ import { defaultDefinition, defaultPjson, examples } from '../../examples'
 import * as fs from 'fs-extra'
 import * as path from 'path'
 import * as inquirer from 'inquirer'
-import {repeat, flatten} from 'lodash'
+import { repeat, flatten } from 'lodash'
 
 export default class Init extends Command {
   static topic = 'init'
@@ -20,11 +20,13 @@ export default class Init extends Command {
   static flags: Flags = {
     force: flags.boolean({
       char: 'f',
-      description: 'Initialize even if the folder already contains graphcool files',
+      description:
+        'Initialize even if the folder already contains graphcool files',
     }),
     copy: flags.string({
       char: 'c',
-      description: 'ID or alias of the service, that the schema should be copied from',
+      description:
+        'ID or alias of the service, that the schema should be copied from',
     }),
   }
 
@@ -49,15 +51,21 @@ export default class Init extends Command {
 
     const pjson = {
       ...defaultPjson,
-      name: path.basename(this.config.definitionDir)
+      name: path.basename(this.config.definitionDir),
     }
 
     const files = fs.readdirSync(this.config.definitionDir)
     // the .graphcoolrc must be allowed for the docker version to be functioning
     // CONTINUE: special env handling for dockaa. can't just override the host/dinges
-    if (files.length > 0 && !(files.length === 1 && files[0] === '.graphcoolrc') && files.includes('graphcool.yml')) {
+    if (
+      files.length > 0 &&
+      !(files.length === 1 && files[0] === '.graphcoolrc') &&
+      files.includes('graphcool.yml')
+    ) {
       this.out.log(`
-The directory ${chalk.green(this.config.definitionDir)} contains files that could conflict:
+The directory ${chalk.green(
+        this.config.definitionDir,
+      )} contains files that could conflict:
 
 ${files.map(f => `  ${f}`).join('\n')}
 
@@ -69,7 +77,9 @@ ${chalk.bold(
         'graphcool deploy',
       )}
 
-To force the init process in this folder, use ${chalk.green('graphcool init --force')}`)
+To force the init process in this folder, use ${chalk.green(
+        'graphcool init --force',
+      )}`)
       if (force) {
         await this.askForConfirmation(this.config.definitionDir)
       } else {
@@ -98,16 +108,28 @@ To force the init process in this folder, use ${chalk.green('graphcool init --fo
 
     let relativeDir = path.relative(process.cwd(), this.config.definitionDir)
     relativeDir = relativeDir.length === 0 ? '.' : relativeDir
-    this.out.action.start(`Creating a new Graphcool service in ${chalk.green(relativeDir)}`)
+    this.out.action.start(
+      `Creating a new Graphcool service in ${chalk.green(relativeDir)}`,
+    )
     this.definition.save(undefined, false)
     this.out.action.stop()
 
     this.out.log(`${chalk.dim.bold('\nWritten files' + ':')}`)
-    fs.writeFileSync(path.join(this.config.definitionDir, 'package.json'), JSON.stringify(pjson, null, 2))
-    const createdFiles = flatten(this.definition.definition!.modules.map(module => Object.keys(module.files))).concat(['graphcool.yml', 'package.json'])
+    fs.writeFileSync(
+      path.join(this.config.definitionDir, 'package.json'),
+      JSON.stringify(pjson, null, 2),
+    )
+    const createdFiles = flatten(
+      this.definition.definition!.modules.map(module =>
+        Object.keys(module.files),
+      ),
+    ).concat(['graphcool.yml', 'package.json'])
     this.out.filesTree(createdFiles)
 
-    const cdInstruction = relativeDir === '.' ? '' : `To get started, cd into the new directory:
+    const cdInstruction =
+      relativeDir === '.'
+        ? ''
+        : `To get started, cd into the new directory:
   ${chalk.green(`cd ${relativeDir}`)}
 `
 
@@ -119,7 +141,7 @@ To start your local Graphcool cluster:
   ${chalk.green('graphcool local up')}
   
 To add facebook authentication to your service:
-  ${chalk.green('graphcool add-template facebook-auth')}
+  ${chalk.green('graphcool add-template auth/facebook')}
 
 You can find further instructions in the ${chalk.green('graphcool.yml')} file,
 which is the central project configuration.
@@ -181,10 +203,12 @@ which is the central project configuration.
 
   private async projectSelection() {
     const projects = await this.client.fetchProjects()
-    const choices = projects.map(p => ({
-      name: `${p.name} (${p.id})`,
-      value: p.id,
-    })).concat(new inquirer.Separator(chalk.bold.green(repeat('-', 50))))
+    const choices = projects
+      .map(p => ({
+        name: `${p.name} (${p.id})`,
+        value: p.id,
+      }))
+      .concat(new inquirer.Separator(chalk.bold.green(repeat('-', 50))))
 
     const question = {
       name: 'project',
@@ -242,10 +266,14 @@ which is the central project configuration.
     const confirmationQuestion = {
       name: 'confirmation',
       type: 'input',
-      message: `Are you sure that you want to init a new service in ${chalk.green(folder)}? y/N`,
-      default: 'n'
+      message: `Are you sure that you want to init a new service in ${chalk.green(
+        folder,
+      )}? y/N`,
+      default: 'n',
     }
-    const {confirmation}: {confirmation: string} = await this.out.prompt(confirmationQuestion)
+    const { confirmation }: { confirmation: string } = await this.out.prompt(
+      confirmationQuestion,
+    )
     if (confirmation.toLowerCase().startsWith('n')) {
       this.out.exit(0)
     }

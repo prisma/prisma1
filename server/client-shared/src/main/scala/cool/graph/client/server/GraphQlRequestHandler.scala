@@ -51,6 +51,7 @@ case class GraphQlRequestHandlerImpl[ConnectionOutputType](
       clientId = Some(request.projectWithClientId.clientId),
       projectId = Some(request.projectWithClientId.id)
     )
+
     request.logger.query(query.queryString, query.variables.prettyPrint)
 
     val context = UserContext.fetchUserProjectWithClientId(
@@ -61,6 +62,7 @@ case class GraphQlRequestHandlerImpl[ConnectionOutputType](
       log = log,
       queryAst = Some(query.query)
     )
+
     context.addFeatureMetric(apiVersionMetric)
     context.graphcoolHeader = request.sourceHeader
 
@@ -78,12 +80,13 @@ case class GraphQlRequestHandlerImpl[ConnectionOutputType](
     result.recover {
       case error: QueryAnalysisError =>
         error.resolveError
+
       case error: ErrorWithResolver =>
         unhandledErrorLogger(error)
         error.resolveError
+
       case error: Throwable ⇒
         unhandledErrorLogger(error)._2
-
     }
   }
 

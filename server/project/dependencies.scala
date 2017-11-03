@@ -25,10 +25,6 @@ object Dependencies {
     "com.typesafe.scala-logging" %% "scala-logging"           % "3.4.0",
     "ch.qos.logback"             % "logback-classic"          % "1.1.7",
     "org.atteo"                  % "evo-inflector"            % "1.2",
-    "com.amazonaws"              % "aws-java-sdk-kinesis"     % "1.11.171",
-    "com.amazonaws"              % "aws-java-sdk-s3"          % "1.11.171",
-    "com.amazonaws"              % "aws-java-sdk-cloudwatch"  % "1.11.171",
-    "com.amazonaws"              % "aws-java-sdk-sns"         % "1.11.171",
     "software.amazon.awssdk"     % "lambda"                   % "2.0.0-preview-4",
     "org.scala-lang.modules"     % "scala-java8-compat_2.11"  % "0.8.0",
     "software.amazon.awssdk"     % "s3"                       % "2.0.0-preview-4",
@@ -60,4 +56,11 @@ object Dependencies {
   val caffeine    = "com.github.ben-manes.caffeine" % "caffeine"            % "2.5.5"
   val java8Compat = "org.scala-lang.modules"        %% "scala-java8-compat" % "0.7.0"
   val jsr305      = "com.google.code.findbugs"      % "jsr305"              % "3.0.0"
+
+  val awsDependencies = Seq(
+    "com.amazonaws" % "aws-java-sdk-kinesis"    % "1.11.171",
+    "com.amazonaws" % "aws-java-sdk-s3"         % "1.11.171",
+    "com.amazonaws" % "aws-java-sdk-cloudwatch" % "1.11.171",
+    "com.amazonaws" % "aws-java-sdk-sns"        % "1.11.171"
+  )
 }

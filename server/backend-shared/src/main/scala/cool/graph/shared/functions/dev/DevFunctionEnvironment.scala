@@ -1,17 +1,12 @@
 package cool.graph.shared.functions.dev
 
 import akka.actor.ActorSystem
-import akka.http.scaladsl.Http
-import akka.http.scaladsl.model._
-import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.ActorMaterializer
+import cool.graph.akkautil.http.SimpleHttpClient
 import cool.graph.cuid.Cuid
 import cool.graph.shared.functions._
 import cool.graph.shared.models.Project
-import cool.graph.utils.future.FutureUtils._
-import play.api.libs.json.{JsError, JsSuccess, Json}
-import spray.json.{JsArray, JsObject, JsString}
-import spray.json._
+import spray.json.{JsArray, JsObject, JsString, _}
 
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
@@ -20,7 +15,7 @@ case class DevFunctionEnvironment()(implicit system: ActorSystem, materializer: 
   import Conversions._
   import system.dispatcher
 
-  private val akkaHttp = Http()(system)
+  private val httpClient = SimpleHttpClient()
 
   val functionEndpointInternal: String =
     sys.env.getOrElse("FUNCTION_ENDPOINT_INTERNAL", sys.error("FUNCTION_ENDPOINT_INTERNAL env var required for dev function deployment.")).stripSuffix("/")
@@ -34,46 +29,31 @@ case class DevFunctionEnvironment()(implicit system: ActorSystem, materializer: 
   }
 
   override def deploy(project: Project, externalFile: ExternalFile, name: String): Future[DeployResponse] = {
-    val body = Json.toJson(DeploymentInput(externalFile.url, externalFile.devHandler, name)).toString()
-
-    val akkaRequest = HttpRequest(
-      uri = s"$functionEndpointInternal/functions/deploy/${project.id}",
-      method = HttpMethods.POST,
-      entity = HttpEntity(ContentTypes.`application/json`, body.toString)
-    )
-
-    akkaHttp.singleRequest(akkaRequest).flatMap(Unmarshal(_).to[String]).toFutureTry.flatMap {
-      case Success(responseBody) =>
-        Json.parse(responseBody).validate[StatusResponse] match {
-          case JsSuccess(status, _) =>
+    httpClient
+      .postJson(s"$functionEndpointInternal/functions/deploy/${project.id}", DeploymentInput(externalFile.url, externalFile.devHandler, name))
+      .map { response =>
+        response.bodyAs[StatusResponse] match {
+          case Success(status) =>
             if (status.success) {
-              Future.successful(DeploySuccess())
+              DeploySuccess()
             } else {
-              Future.successful(DeployFailure(new Exception(status.error.getOrElse(""))))
+              DeployFailure(new Exception(status.error.getOrElse("")))
             }
 
-          case JsError(e) =>
-            Future.successful(DeployFailure(new Exception(e.toString)))
+          case Failure(e) => DeployFailure(e)
         }
-
-      case Failure(e) =>
-        Future.successful(DeployFailure(e))
-    }
+      }
+      .recover {
+        case e: Throwable => DeployFailure(e)
+      }
   }
 
   override def invoke(project: Project, name: String, event: String): Future[InvokeResponse] = {
-    val body = Json.toJson(FunctionInvocation(name, event)).toString()
-
-    val akkaRequest = HttpRequest(
-      uri = s"$functionEndpointInternal/functions/invoke/${project.id}",
-      method = HttpMethods.POST,
-      entity = HttpEntity(ContentTypes.`application/json`, body.toString)
-    )
-
-    akkaHttp.singleRequest(akkaRequest).flatMap(Unmarshal(_).to[String]).toFutureTry.flatMap {
-      case Success(responseBody) =>
-        Json.parse(responseBody).validate[FunctionInvocationResult] match {
-          case JsSuccess(result, _) =>
+    httpClient
+      .postJson(s"$functionEndpointInternal/functions/deploy/${project.id}", FunctionInvocation(name, event))
+      .map { response =>
+        response.bodyAs[FunctionInvocationResult] match {
+          case Success(result) =>
             val returnValue = Try { result.value.map(_.toString).getOrElse("").parseJson } match {
               case Success(parsedJson) => parsedJson
               case Failure(_)          => JsObject("error" -> JsString("Function did not return a valid response. Check your function code / logs."))
@@ -89,19 +69,16 @@ case class DevFunctionEnvironment()(implicit system: ActorSystem, materializer: 
             ).compactPrint
 
             if (result.success) {
-              Future.successful(InvokeSuccess(output))
+              InvokeSuccess(output)
             } else {
-              Future.successful(InvokeFailure(new Exception(output)))
+              InvokeFailure(new Exception(output))
             }
 
-          case JsError(e) =>
-            Future.successful(InvokeFailure(new Exception(e.toString)))
+          case Failure(e) => InvokeFailure(e)
         }
-
-      case Failure(e) =>
-        Future.successful(InvokeFailure(e))
-    }
+      }
+      .recover {
+        case e: Throwable => InvokeFailure(e)
+      }
   }
-
-  private def convertResponse(akkaResponse: HttpResponse): Future[String] = Unmarshal(akkaResponse).to[String]
 }
