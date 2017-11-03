@@ -13,7 +13,7 @@ Types
 Permissions
 
   Wildcard Permission
-   ? The wildcard permission for all types is added.
+   ? The wildcard permission for all operations is added.
 
 "
 `;
@@ -21,7 +21,7 @@ Permissions
 exports[`deploy to local instance 1`] = `
 "
 
-Success! Created the following project:
+Success! Created the following service:
 
 
 Types
@@ -34,7 +34,7 @@ Types
 Permissions
 
   Wildcard Permission
-   ? The wildcard permission for all types is added.
+   ? The wildcard permission for all operations is added.
 
 "
 `;

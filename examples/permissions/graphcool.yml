@@ -2,7 +2,7 @@ types: ./types.graphql
 
 # Permission rules
 permissions:
-  # Everyone can **read** the fields `description` and `imageUrl` 
+  # Everyone can **read** only the fields `description` and `imageUrl` 
   # on nodes of type `Post`
   - operation: Post.read
     fields:
@@ -27,7 +27,7 @@ permissions:
     authenticated: true
     query: src/permissions/Post.graphql:DeletePost
 
-  # Everyone can **read** the fields `email` and `posts` on
+  # Everyone can **read** only the fields `email` and `posts` on
   # nodes of type `User`
   - operation: User.read
     fields: 

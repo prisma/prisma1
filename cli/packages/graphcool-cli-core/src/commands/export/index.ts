@@ -16,11 +16,11 @@ export default class Export extends Command {
 
     const { id } = await this.env.getTarget(target)
 
-    this.out.action.start('Exporting project')
+    this.out.action.start('Exporting service')
     const url = await this.client.exportProjectData(id)
     this.out.action.stop()
     this.out
-      .log(`You can download your project data by pasting this URL in a browser:
+      .log(`You can download your service data by pasting this URL in a browser:
  ${url}
 `)
   }

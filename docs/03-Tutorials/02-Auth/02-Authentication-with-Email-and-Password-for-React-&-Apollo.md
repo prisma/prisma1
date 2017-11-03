@@ -262,7 +262,7 @@ In addition to the `User` that you got from the `email-password` authentication 
 Open `./server/types.graphql` and add the following definition to it:
 
 ```graphql(path="server/types.graphql")
-type Post {
+type Post @model {
   # Required system field:
   id: ID! @isUnique # read-only (managed by Graphcool)
 
@@ -462,15 +462,15 @@ Open `signup.js` and update the `createGraphcoolUser` function to look like this
 ```js{7}(path="server/src/email-password/signup.js")
 function createGraphcoolUser(api, email, passwordHash, name) {
   return api.request(`
-    mutation {
+    mutation($email: String, $passwordHash: String, $name: String) {
       createUser(
-        email: "${email}",
-        password: "${passwordHash}",
-        name: "${name}"
+        email: $email,
+        password: $passwordHash,
+        name: $name
       ) {
         id
       }
-    }`)
+    }`, { email, passwordHash, name })
     .then((userMutationResult) => {
       return userMutationResult.createUser.id
     })
@@ -1101,6 +1101,6 @@ In this guide, you learned how to build a simple app using an email-password bas
 
 You created your GraphQL server from scratch using the Graphcool CLI and customized the [`email-password`](https://github.com/graphcool/templates/tree/master/authentication/email-password) authentication template according to your needs.
 
-You then configured Apollo Client inside your React app and implemented all required operations. Finally you removed the wildcard permission from the project and explicitly defined permission rules for the operations that your API exposes.
+You then configured Apollo Client inside your React app and implemented all required operations. Finally you removed the wildcard permission from the service and explicitly defined permission rules for the operations that your API exposes.
 
 

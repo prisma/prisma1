@@ -46,7 +46,7 @@ export default class Delete extends Command {
       const question = {
         name: 'projectsToDelete',
         type: 'checkbox',
-        message: 'Select projects to delete',
+        message: 'Select services to delete',
         choices: projects.map(p => ({
           name: prettyProject(p),
           value: p,
@@ -58,7 +58,7 @@ export default class Delete extends Command {
       const projectIdsToDelete = projectsToDelete.map(p => p.id)
 
       if (projectsToDelete.length === 0) {
-        this.out.log(`You didn't select any project to delete, so none will be deleted`)
+        this.out.log(`You didn't select any services to delete, so none will be deleted`)
         this.out.exit(0)
       }
       const prettyProjects = projectsToDelete.map(prettyProject).join(', ')
@@ -68,7 +68,7 @@ export default class Delete extends Command {
       }
 
       this.out.log('')
-      this.out.action.start(`${chalk.red.bold(`Deleting project${projectsToDelete.length > 1 ? 's': ''}`)} ${prettyProjects}`)
+      this.out.action.start(`${chalk.red.bold(`Deleting service${projectsToDelete.length > 1 ? 's': ''}`)} ${prettyProjects}`)
       await this.client.deleteProjects(projectIdsToDelete)
       this.env.deleteIfExist(projectIdsToDelete)
       this.env.save()

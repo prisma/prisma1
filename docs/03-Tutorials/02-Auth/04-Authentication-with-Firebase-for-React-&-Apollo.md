@@ -13,7 +13,7 @@ github: "https://github.com/graphcool-examples/react-graphql/tree/master/authent
 
 _Modules_ have been replaced by _templates_. A template is a predefined Graphcool service that you can _copy_ into your project. 
 
-Read more about templates in the [documentation](!alias-zeiv8phail) or in this [GitHub issue](https://github.com/graphcool/graphcool/issues/720) that contains the proposal and discusssion for how exactly templates should work.
+Read more about templates in the [documentation](!alias-zeiv8phail) or in this [GitHub issue](https://github.com/graphcool/framework/issues/720) that contains the proposal and discusssion for how exactly templates should work.
 
 An updated version of this guide is coming soon, stay tuned!
 
@@ -63,12 +63,12 @@ npm install -g graphcool
 
 </Instruction>
 
-### Creating a new Graphcool project
+### Creating a new Graphcool service
 
 
 <Instruction>
 
-Now that the CLI is installed, you can use it to create a new project.
+Now that the CLI is installed, you can use it to create a new service.
 
 ```bash(path="graphcool")
 graphcool init graphcool --template blank
@@ -76,7 +76,7 @@ graphcool init graphcool --template blank
 
 </Instruction>
 
-You're using the `--template blank` option which just creates an empty Graphcool project for you. Since you're passing `graphcool` as the directory name to the `init` command, the CLI will also create this directory for you and put all generated files into it.
+You're using the `--template blank` option which just creates an empty Graphcool service for you. Since you're passing `graphcool` as the directory name to the `init` command, the CLI will also create this directory for you and put all generated files into it.
 
 Here is an overview of the generated files and the project structure which the CLI now created:
 
@@ -89,14 +89,14 @@ Here is an overview of the generated files and the project structure which the C
 └─ types.graphql
 ```
 
-`graphcool.yml` contains the _project definition_ with all the information around your data model and other type definitions, usage of serverless functions, permission rules and more.
+`graphcool.yml` contains the _service definition_ with all the information around your data model and other type definitions, usage of serverless functions, permission rules and more.
 
 
 ### Adding the `firebase` authentication module
 
-When working with Graphcool, you can easily add features to your project by pulling in a _module_. 
+When working with Graphcool, you can easily add features to your service by pulling in a _module_. 
 
-> A Graphcool module is nothing but another Graphcool project. When running `graphcool modules add <module>`, the CLI simply downloads all the code from the corresponding GitHub directory and puts it into your project inside a directory called `modules`.
+> A Graphcool module is nothing but another Graphcool service. When running `graphcool modules add <module>`, the CLI simply downloads all the code from the corresponding GitHub directory and puts it into your project inside a directory called `modules`.
 
 #### Installing the module
 
@@ -112,7 +112,7 @@ graphcool modules add graphcool/modules/authentication/firebase
 
 </Instruction>
 
-> Notice that [`graphcool/modules/authentication/firebase`](https://github.com/graphcool/modules/tree/master/authentication/firebase) simply corresponds to a path on GitHub. It points to the `authentication/firebase` directory in the `modules` repository in the [`graphcool`](https://github.com/graphcool/) GitHub organization. This directory contains the project definition and all additional files for the Graphcool project that is your module.
+> Notice that [`graphcool/modules/authentication/firebase`](https://github.com/graphcool/modules/tree/master/authentication/firebase) simply corresponds to a path on GitHub. It points to the `authentication/firebase` directory in the `modules` repository in the [`graphcool`](https://github.com/graphcool/) GitHub organization. This directory contains the service definition and all additional files for the Graphcool service that is your module.
 
 #### A closer look at the `firebase` module
 
@@ -130,9 +130,9 @@ Let's also quickly understand what the module actually contains, here is it's fi
 └── types.graphql
 ```
 
-The most important parts for now are the project and type definitions. 
+The most important parts for now are the service and type definitions. 
 
-##### Project definition: `graphcool.yml` 
+##### Service definition: `graphcool.yml` 
 
 ```yml(path="graphcool/graphcool.yml"&nocopy)
 types: ./types.graphql
@@ -165,7 +165,7 @@ type FirebaseUser {
 }
 ```
 
-The project definition defines two `resolver` functions. The first one, `authenticateFirebaseUser` is used for the signup and login functionality. The second one, `loggedInUser` allows to validate whether an authentication token belongs to a currently logged in user in the Graphcool API. You'll take a look at the implementations in a bit.
+The service definition defines two `resolver` functions. The first one, `authenticateFirebaseUser` is used for the signup and login functionality. The second one, `loggedInUser` allows to validate whether an authentication token belongs to a currently logged in user in the Graphcool API. You'll take a look at the implementations in a bit.
 
 The type definitions simply define the `FirebaseUser` user type that you're going to use to represent authenticated users.
 
@@ -215,7 +215,7 @@ Notice that the CLI doesn't care about _where_ (in which files) you're putting y
 
 ### Deploying your changes
 
-You made two major local changes that you now need to apply to the "remote project" in your Graphcool account before its API gets updated:
+You made two major local changes that you now need to apply to the "remote service" in your Graphcool account before its API gets updated:
 
 1. You added a module that includes new type definitions as well as two serverless functions of type `resolver`.
 2. You configured the data model with a new `Post` type and a relation to the `FirebaseUser` type from the module.
@@ -234,9 +234,9 @@ Here's what the generated output looks like.
 
 ```(nocopy)
 $ graphcool deploy
-Deploying to project __PROJECT_ID__ with local environment dev.... ✔
+Deploying to service __SERVICE_ID__ with local environment dev.... ✔
 
-Your project __PROJECT_ID__ of env dev was successfully updated.
+Your service __SERVICE_ID__ of env dev was successfully updated.
 Here are the changes:
 
 
@@ -270,7 +270,7 @@ RootTokens
 
 This reflects precisely the changes we mentioned above.
 
-> You can now open your project in a GraphQL Playground (using the `graphcool playground` command) and send queries and mutations. 
+> You can now open your service in a GraphQL Playground (using the `graphcool playground` command) and send queries and mutations. 
 
 ## Connecting the App with Firebase
 
@@ -357,7 +357,7 @@ import { ApolloClient, ApolloProvider, createNetworkInterface } from 'react-apol
 Having the imports available, you can now instantiate the `ApolloClient`. Add the following code right below the import statements:
 
 ```js(path="src/index.js")
-const networkInterface = createNetworkInterface({ uri: 'https://api.graph.cool/simple/v1/__PROJECT_ID__' })
+const networkInterface = createNetworkInterface({ uri: 'https://api.graph.cool/simple/v1/__SERVICE_ID__' })
 const client = new ApolloClient({ networkInterface })
 ```
 
@@ -381,17 +381,17 @@ ReactDOM.render((
 
 </Instruction>
 
-The `ApolloClient` is your main interface to the GraphQL server and will take care of sending all queries and mutations for you. The last thing you need to do is replace the `__PROJECT_ID__` placeholder when calling `createNetworkInterface`. 
+The `ApolloClient` is your main interface to the GraphQL server and will take care of sending all queries and mutations for you. The last thing you need to do is replace the `__SERVICE_ID__` placeholder when calling `createNetworkInterface`. 
 
 <Instruction>
 
-*To get access to your project ID, simply use the following command in the terminal:*
+*To get access to your service ID, simply use the following command in the terminal:*
 
 ```bash(path="graphcool")
 graphcool info
 ```
 
-Then copy the value for `projectId` and replace the `__PROJECT_ID__` placeholder from before.
+Then copy the value for `serviceId` and replace the `__SERVICE_ID__` placeholder from before.
 
 </Instruction>
 
@@ -783,9 +783,9 @@ We also want to secure data access and configure permission rules such that only
 
 When using Graphcool, you need to explicitly allow your clients to perform the operations that are exposed by your API. But wait! If that's the case, why were you able to create and download posts before then? Shouldn't you have had to explicitly allow these operations then?
 
-The reason why the `allPosts` query and `createPost` mutation were already working is simple. When a new Graphcool project is created, there is a _wildcard permission_ setup for you that does the job of allowing _all_ operations.
+The reason why the `allPosts` query and `createPost` mutation were already working is simple. When a new Graphcool service is created, there is a _wildcard permission_ setup for you that does the job of allowing _all_ operations.
 
-All permission rules need to be defined in the project definition, the `graphcool.yml`-file. If you check this file now, you'll only see one permission that's currently part of your project and that was initially added by the Graphcool CLI:
+All permission rules need to be defined in the service definition, the `graphcool.yml`-file. If you check this file now, you'll only see one permission that's currently part of your service and that was initially added by the Graphcool CLI:
 
 ```yml(path="graphcool/graphcool.yml&nocopy")
 permissions:
@@ -796,7 +796,7 @@ This simply expresses that all operations are allowed.
 
 > If you remove this one permission and run `graphcool deploy` afterwards, you'll notice that all your queries and operations will fail with a _Permission denied_ error.
 
-Generally, the `permissions` property in the project definition contains a list of _permissions_. A single permission has the following properties:
+Generally, the `permissions` property in the service definition contains a list of _permissions_. A single permission has the following properties:
 
 - `operation` (required): Specifies for which operation (query or mutation) this operation applies
 - `authenticated` (not required, default: `false`): Indicates whether a client who wants to perform this operation needs to be authenticated
@@ -847,7 +847,7 @@ For these permissions, you need to make use a _permission query_. Permission que
 
 <Instruction>
 
-*First, add the permissions to the project definition:*
+*First, add the permissions to the service definition:*
 
 ```yml(path="graphcool/graphcool.yml")
 - operation: Post.update
@@ -892,7 +892,7 @@ With that knowledge, you can derive the meaning of the permission query. It effe
 1. There needs to exist a post with its `id` being equal to `$node_id`
 2. The `id` of the `author` of this post, needs to be equal to `$user_id`
 
-Lastly, you only need to make sure the changes are applied to your project.
+Lastly, you only need to make sure the changes are applied to your service.
 
 <Instruction>
 
@@ -912,6 +912,6 @@ In this guide, you learned how to build a simple app using an Firebase-based aut
 
 You created your GraphQL server from scratch using the Graphcool CLI and customized the [`firebase`](https://github.com/graphcool/modules/tree/master/authentication/firebase) authentication module according to your needs by adding a relation to the `Post` type.
 
-You then configured Apollo Client inside your React app and implemented all required operations. Finally you removed the wildcard permission from the project and explicitly defined permission rules for the operations that your API exposes.
+You then configured Apollo Client inside your React app and implemented all required operations. Finally you removed the wildcard permission from the service and explicitly defined permission rules for the operations that your API exposes.
 
 

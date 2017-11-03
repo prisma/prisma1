@@ -7,10 +7,10 @@ description: An overview of how authorization works in Graphcool.
 
 ## All CRUD Operations are Whitelisted by Default
 
-Graphcool offers an extremely expressive authorization system that allows to define powerful permission rules for data protection. By default, all operations that can be performed in a Graphcool project are *whitelisted*, this means that no one is authorized to perform any operation unless explicitly being entitled to do so.
+Graphcool offers an extremely expressive authorization system that allows to define powerful permission rules for data protection. By default, all operations that can be performed in a Graphcool service are *whitelisted*, this means that no one is authorized to perform any operation unless explicitly being entitled to do so.
 
 
-> Despite the whitelist approach, you'll find that it is possible to perform all CRUD operations on your model types after you created them. This is because the necessary permissions are created for you whenever you define a new Model Type. This is just convenience to help you get going with your project - you should definitely revisit your permission rules before a project goes into production!
+> Despite the whitelist approach, you'll find that it is possible to perform all CRUD operations on your model types after you created them. This is because the necessary permissions are created for you whenever you define a new Model Type. This is just convenience to help you get going with your service - you should definitely revisit your permission rules before a service goes into production!
 
 
 When attaching a permission rule to an operation, there are three major options:
@@ -66,7 +66,7 @@ Assume you had the following requirements for the blogging app:
 3. Only the author of a post can **update** it
 4. Only admin users *or* the author of a post can **delete** that post
 
-Looking at these requirements, only the third and fourth need to be expressed with permission queries. The first one simply requires a permission that entitles *everyone* to perform it, the second one requires a permission entitling only *authenticated* users - no further specification in the form of a permission query is needed. These permissions are simple one-liners in your project configuration file.
+Looking at these requirements, only the third and fourth need to be expressed with permission queries. The first one simply requires a permission that entitles *everyone* to perform it, the second one requires a permission entitling only *authenticated* users - no further specification in the form of a permission query is needed. These permissions are simple one-liners in your service configuration file.
 
 Now let's consider the last two requirements and think about how they can be expressed with a permission query. 
 

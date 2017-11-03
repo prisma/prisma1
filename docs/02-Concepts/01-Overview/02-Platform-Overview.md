@@ -34,27 +34,27 @@ By implementing the API proxy layer, you retain full control over what your API 
 
 ## Tools 
 
-Graphcool provides two major tools for managing your projects and accessing the platform:
+Graphcool provides two major tools for managing your services and accessing the platform:
 
-- Graphcool CLI: Allows to create, manage and deploy your Graphcool projects.
-- Web Console: Provides a project dashboard with helpful metrics, monitoring and collaboration options as well as a straight view into the database.
+- Graphcool CLI: Allows to create, manage and deploy your Graphcool services.
+- Web Console: Provides a service dashboard with helpful metrics, monitoring and collaboration options as well as a straight view into the database.
 
-### CLI & Project Configuration
+### CLI & Service Configuration
 
 The Graphcool CLI enables a fully local developer workflow. Here's a few of its core features:
 
-- Creating a new Graphcool project
-- Deploying a Graphcool project (and schema migration)
-- Adding modules to a Graphcool project
+- Creating a new Graphcool service
+- Deploying a Graphcool service (and schema migration)
+- Adding templates to a Graphcool service
 - Local testing of functions and permissions
 
-Every Graphcool project comes with a project configuration file (written in [YAML](https://en.wikipedia.org/wiki/YAML)) that defines the main project structure and its internal components, like your data model, serverless functions and permission rules.
+Every Graphcool service comes with a service configuration file (written in [YAML](https://en.wikipedia.org/wiki/YAML)) that defines the main service structure and its internal components, like your data model, serverless functions and permission rules.
 
-The Graphcool CLI also has the concept of _environments_. The same project configuration can be deployed to multiple environments, enabling you to have a clear separation between, e.g. development, staging and production environments.
+The Graphcool CLI also has the concept of _environments_. The same service configuration can be deployed to multiple environments, enabling you to have a clear separation between, e.g. development, staging and production environments.
 
 ### Console
 
-The Graphcool Console gives you magor insights into your project internals. You can use it for monitoring performance, accessing logs and managing collaboration. 
+The Graphcool Console gives you major insights into your service internals. You can use it for monitoring performance, accessing logs and managing collaboration. 
 
 
 
