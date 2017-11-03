@@ -54,12 +54,11 @@ class FunctionExecutor(implicit val inj: Injector) extends Injectable {
 
       // Lambda and Dev function environment
 
-      case delivery: models.ManagedFunction => {
+      case delivery: models.ManagedFunction =>
         functionEnvironment.invoke(project, function.name, event) flatMap {
           case InvokeSuccess(response)  => handleSuccessfulResponse(project, response, function, acceptEmptyResponse = false)
           case InvokeFailure(exception) => Future.successful(Bad(FunctionReturnedBadStatus(0, exception.getMessage)))
         }
-      }
 
       // Auth0Extend and Webhooks
 
@@ -89,7 +88,9 @@ class FunctionExecutor(implicit val inj: Injector) extends Injectable {
           // https://[INVALID].algolia.net/1/keys/[VALID] times out, so we simply report a timeout as a wrong appId
           case _: StreamTcpException => Bad(FunctionWebhookURLNotValid(request.uri.toString()))
         }
-      case _ => sys.error("only knows how to execute HttpFunctions")
+
+      case _ =>
+        sys.error("only knows how to execute HttpFunctions")
     }
   }
 
