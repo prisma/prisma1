@@ -77,12 +77,12 @@ case class SimpleSubscriptionDependencies()(implicit val system: ActorSystem, va
   val responsePubSubPublisher: PubSubPublisher[String] = RabbitAkkaPubSub.publisher[String](
     clusterLocalRabbitUri,
     "subscription-responses",
-    durable = false
+    durable = true
   )(bugsnagger, Conversions.Marshallers.FromString)
 
   val responsePubSubPublisherV05 = responsePubSubPublisher.map[SubscriptionSessionResponseV05](converterResponse05ToString)
   val responsePubSubPublisherV07 = responsePubSubPublisher.map[SubscriptionSessionResponse](converterResponse07ToString)
-  val requestsQueueConsumer      = RabbitQueue.consumer[SubscriptionRequest](clusterLocalRabbitUri, "subscription-requests")
+  val requestsQueueConsumer      = RabbitQueue.consumer[SubscriptionRequest](clusterLocalRabbitUri, "subscription-requests", durableExchange = true)
   val cloudwatch                 = CloudwatchImpl()
   val globalDatabaseManager      = GlobalDatabaseManager.initializeForSingleRegion(config)
   val kinesis                    = AwsInitializers.createKinesis()

@@ -7,13 +7,59 @@ description: GraphQL permission queries allow you to express permissions by leve
 
 Permission queries allow you to **express permissions by leveraging the power of GraphQL queries**. This combination is a powerful concept and provides a great tool to express even complex permission scenarios in a simple form.
 
-## The GraphQL permission schema
+## The Graphcool permission schema
 
 <!-- PERMISSION_EXAMPLES -->
+
+### Overview
 
 All available queries in the **GraphQL permission schema** are derived from the available types and relations in your data model. The permisson schema leverages the familiar and powerful [filter system](!alias-nia9nushae#filtering-by-field) that allows you to define very specific permissions.
 
 For every type `Type` in your data model, the field `SomeTypeExists(filter: TypeFilter): Boolean!` is part of the permission schema. `SomeTypeExists` returns `true` only if the given filters match at least one existing `Type` node.
+
+As an example, consider the following type definitions:
+
+```graphql
+type Post @model {
+  id: ID! @isUnique # read-only (managed by Graphcool)
+  title: String!
+  author: User! @relation(name: "UsersPosts") 
+}
+
+type User @model {
+  id: ID! @isUnique # read-only (managed by Graphcool)
+  name: String!
+  posts: [Post!]! @relation(name: "UsersPosts") 
+}
+```
+
+The `Query` type from generated permission schema will look as follows:
+
+```graphql
+type Query {
+  SomePostExists(filter: PostFilter, orderBy: PostOrderBy, skip: Int, after: String, before: String, first: Int, last: Int): Boolean!
+  SomeUserExists(filter: UserFilter, orderBy: UserOrderBy, skip: Int, after: String, before: String, first: Int, last: Int): Boolean!
+}
+```
+
+The `PostFiiler` and `UserFilter` as well as `PostOrderBy` and `UserOrderBy` types are [similar to the ones in the regular GraphQL API](!alias-nia9nushae#explore-available-filter-criteria).
+
+### Accessing the permission schema
+
+Every Graphcool service comes with a dedicated endpoint for the permission schema. This endpoint is of the following form:
+
+```
+https://api.graph.cool/simple/v1/__SERVICE_ID__/permissions
+```
+
+To access it, you need to set the `Authorization` header in the request. Here is a sample request against the example schema above:
+
+```sh
+curl 'https://api.graph.cool/simple/v1/__SERVICE_ID__/permissions' \
+-H 'Authorization: Bearer __PLATFORM_TOKEN__' \
+-H 'Content-Type: application/json' \
+-d '{"query":"{\n  SomePostExists\n}"}' 
+```
 
 ## The execution and evaluation of permission queries
 

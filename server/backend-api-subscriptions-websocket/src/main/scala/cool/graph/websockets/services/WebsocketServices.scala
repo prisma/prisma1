@@ -18,11 +18,11 @@ case class WebsocketCloudServives()(implicit val bugsnagger: BugSnagger, system:
   val clusterLocalRabbitUri = sys.env("RABBITMQ_URI")
 
   val requestsQueuePublisher: QueuePublisher[Request] =
-    RabbitQueue.publisher[Request](clusterLocalRabbitUri, "subscription-requests")
+    RabbitQueue.publisher[Request](clusterLocalRabbitUri, "subscription-requests", durable = true)
 
   val responsePubSubSubscriber: PubSubSubscriber[String] =
     RabbitAkkaPubSub
-      .subscriber[String](clusterLocalRabbitUri, "subscription-responses", durable = false)(bugsnagger, system, Conversions.Unmarshallers.ToString)
+      .subscriber[String](clusterLocalRabbitUri, "subscription-responses", durable = true)(bugsnagger, system, Conversions.Unmarshallers.ToString)
 }
 
 case class WebsocketDevDependencies(

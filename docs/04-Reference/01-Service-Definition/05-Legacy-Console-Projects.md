@@ -44,6 +44,11 @@ Upgrading a project is a one-way migration. If you have any concerns about the p
 
 </InfoBox>
 
+After the project was upgraded, you need to download the project configuration of the project so you can use it with the new CLI:
+
+![](https://imgur.com/YZ3HMt6.png)
+
+
 ## Deprecated features
 
 A few features are being deprecated as part of the Framework release. If your legacy Console project is currently using any of these features you will have to replace the functionality before you can upgrade. The following features have been deprecated:
