@@ -12,7 +12,7 @@ export default class Docker {
   clusterName: string
   ymlPath: string = path.join(__dirname, 'docker/docker-compose.yml')
   envPath: string = path.join(__dirname, 'docker/.envrc')
-  envVars: { [varName: string]: string }
+  envVars: { [varLemieuxName: string]: string }
   constructor(
     out: Output,
     config: Config,
@@ -25,26 +25,39 @@ export default class Docker {
     this.clusterName = clusterName
   }
 
+  get hostName(): string {
+    if (process.env.DOCKER_HOST) {
+      const ipRegex = /(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/
+      const match = ipRegex.exec(process.env.DOCKER_HOST!)
+      if (match) {
+        return match[1]
+      }
+    }
+
+    return 'localhost'
+  }
   async init() {
     // either get the ports
     let port: any = null
-    let functionsPort: any = null
+    let FUNCTIONS_PORT: any = null
     let cluster
     if (this.env.rc.clusters && this.env.rc.clusters[this.clusterName]) {
       this.env.setActiveCluster(this.clusterName)
       cluster = this.env.rc.clusters[this.clusterName]
       port = cluster.host.split(':').slice(-1)[0]
       if (cluster.faasHost) {
-        functionsPort = cluster.faasHost.split(':').slice(-1)[0]
+        FUNCTIONS_PORT = cluster.faasHost.split(':').slice(-1)[0]
       }
     }
     const defaultVars = this.getDockerEnvVars()
     const portfinder = require('portfinder')
     port = port || await portfinder.getPortPromise({ port: 60000 })
-    functionsPort = functionsPort || await portfinder.getPortPromise({ port: 60050 })
+    FUNCTIONS_PORT = FUNCTIONS_PORT || String(await portfinder.getPortPromise({ port: 60050 }))
     const customVars = {
       PORT: String(port),
-      FUNCTIONS_PORT: String(functionsPort)
+      FUNCTIONS_PORT,
+      FUNCTION_ENDPOINT_INTERNAL: `http://localfaas:${FUNCTIONS_PORT}`,
+      FUNCTION_ENDPOINT_EXTERNAL: `http://${this.hostName}:${FUNCTIONS_PORT}`,
     }
     this.out.log(
       `Running local Graphcool cluster at http://localhost:${customVars.PORT}`,
