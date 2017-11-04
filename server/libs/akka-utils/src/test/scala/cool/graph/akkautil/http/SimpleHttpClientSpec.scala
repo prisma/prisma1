@@ -9,7 +9,7 @@ import org.scalatest.time.{Millis, Seconds, Span}
 import org.scalatest.{Matchers, WordSpecLike}
 import play.api.libs.json.Json
 
-import scala.util.Success
+import scala.util.{Failure, Success}
 
 class SimpleHttpClientSpec extends WordSpecLike with Matchers with ScalaFutures {
   implicit val system                  = SingleThreadedActorSystem("server-spec")
@@ -22,10 +22,11 @@ class SimpleHttpClientSpec extends WordSpecLike with Matchers with ScalaFutures 
   case class PostTestClass(data: String)
   implicit val postTestClassFormat = Json.format[PostTestClass]
 
-  val client         = SimpleHttpClient()
-  val getStub        = Request("GET", "/some/path").stub(200, """{"field1": "value1", "field2": ["value2.1", "value2.2"]}""").ignoreBody
-  val failingGetStub = Request("GET", "/some/path").stub(500, "Do the panic").ignoreBody
-  val getStubInt     = Request("GET", "/some/path").stub(200, "123").ignoreBody
+  val client             = SimpleHttpClient()
+  val getStub            = Request("GET", "/some/path").stub(200, """{"field1": "value1", "field2": ["value2.1", "value2.2"]}""").ignoreBody
+  val invalidBodyGetStub = Request("GET", "/some/path").stub(200, """{"nope": "invalid"}""").ignoreBody
+  val failingGetStub     = Request("GET", "/some/path").stub(500, "Do the panic").ignoreBody
+  val getStubInt         = Request("GET", "/some/path").stub(200, "123").ignoreBody
   val getStubWithHeader = Request("GET", "/some/path")
     .stub(200, """{"field1": "value1", "field2": ["value2.1", "value2.2"]}""", Map("x-my-header" -> "someValue"))
     .ignoreBody
@@ -71,8 +72,8 @@ class SimpleHttpClientSpec extends WordSpecLike with Matchers with ScalaFutures 
           val uri = s"http://localhost:${server.port}/some/path"
 
           whenReady(client.get(uri).failed) { err: Throwable =>
-            err shouldBe an[FailedRequestError]
-            err.asInstanceOf[FailedRequestError].response.status shouldEqual 500
+            err shouldBe an[FailedResponseCodeError]
+            err.asInstanceOf[FailedResponseCodeError].response.status shouldEqual 500
           }
         }
       }
@@ -84,6 +85,17 @@ class SimpleHttpClientSpec extends WordSpecLike with Matchers with ScalaFutures 
           whenReady(client.get(uri)) { (response: SimpleHttpResponse) =>
             response.status shouldEqual 200
             response.bodyAs[Int] shouldEqual Success(123)
+          }
+        }
+      }
+
+      "that are unable to unmarshal successfully" in {
+        withStubServer(List(invalidBodyGetStub)).withArg { server =>
+          val uri = s"http://localhost:${server.port}/some/path"
+
+          whenReady(client.get(uri)) { (response: SimpleHttpResponse) =>
+            response.status shouldEqual 200
+            response.bodyAs[TestResponseClass] shouldBe an[Failure[_]]
           }
         }
       }
@@ -122,8 +134,8 @@ class SimpleHttpClientSpec extends WordSpecLike with Matchers with ScalaFutures 
           val body = PostTestClass("testData")
 
           whenReady(client.postJson(uri, body).failed) { err: Throwable =>
-            err shouldBe an[FailedRequestError]
-            err.asInstanceOf[FailedRequestError].response.status shouldEqual 500
+            err shouldBe an[FailedResponseCodeError]
+            err.asInstanceOf[FailedResponseCodeError].response.status shouldEqual 500
           }
         }
       }
