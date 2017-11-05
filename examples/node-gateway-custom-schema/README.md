@@ -6,15 +6,13 @@ This directory contains an example implementation for an **API gateway on top of
 
 The API gateway uses dedicated tooling that allows to easily implement a mapping from the custom schema to the underlying CRUD API.
 
-Try out the read-only [demo](https://graphqlbin.com/BrkcP).
-
 ## Get started
 
 ### 1. Download the example
 
 ```sh
-curl https://codeload.github.com/graphcool/graphcool/tar.gz/master | tar -xz --strip=2 graphcool-master/examples/typescript-gateway-custom-schema
-cd typescript-gateway-custom-schema
+curl https://codeload.github.com/graphcool/graphcool/tar.gz/master | tar -xz --strip=2 graphcool-master/examples/node-gateway-custom-schema
+cd node-gateway-custom-schema
 ```
 
 ### 2. Install the Graphcool CLI
@@ -22,7 +20,7 @@ cd typescript-gateway-custom-schema
 If you haven't already, go ahead and install the [Graphcool CLI](https://docs-next.graph.cool/reference/graphcool-cli/overview-zboghez5go):
 
 ```sh
-npm install -g graphcool@next
+npm install -g graphcool
 ```
 
 ### 3. Deploy the Graphcool service
@@ -34,13 +32,13 @@ cd service
 graphcool deploy
 ```
 
-When prompted which cluster you'd like to deploy, chose any of `Backend-as-a-Service`-options (`shared-eu-west-1`, `shared-ap-northeast-1` or `shared-us-west-2`) rather than `local`. 
+When prompted which cluster you'd like to deploy, choose any of **Shared Clusters**-options (`shared-eu-west-1`, `shared-ap-northeast-1` or `shared-us-west-2`) rather than `local`. 
 
 Then copy the endpoint for the `Simple API`, you'll need it in the next step.
 
 The service you just deployed provides a CRUD API for the `User` and `Post` model types that are defined in [`./service/types.graphql`](./service/types.graphql).
 
-The goal of the gateway server is now to create a _custom_ GraphQL API that only exposes variants of the underlying CRUD API.
+The goal of the gateway server now is to create a _custom_ GraphQL API that only exposes variants (e.g. a subset or other more tailored operations) of the underlying CRUD API.
 
 ### 4. Configure and start the API gateway server
 
@@ -48,14 +46,13 @@ The goal of the gateway server is now to create a _custom_ GraphQL API that only
 
 You first need to connect the gateway to the CRUD API. 
 
-Paste the the HTTP endpoint for the `Simple API` from the previous step into [`./gateway/index.ts`](./gateway/index.ts) as the value for `endpoint`, replacing the current placeholder `__SIMPLE_API_ENDPOINT__`:
+Paste the the HTTP endpoint for the `Simple API` from the previous step into [`./gateway/index.js`](./gateway/index.js) as the value for `endpoint`, replacing the current placeholder `__SIMPLE_API_ENDPOINT__`:
 
 ```js
-const endpoint = '__SIMPLE_API_ENDPOINT__' // looks like: https://api.graph.cool/simple/v1/__SERVICE_ID__
+const endpoint = '__SIMPLE_API_ENDPOINT__' // looks like: https://api.graph.cool/simple/v1/__SERVICE_ID__ where __SERVICE_ID__ is a placeholder consisting of 25 alphanumeric characters
 ```
 
 > **Note**: If you ever lose your API endpoint, you can get access to it again by running `graphcool info` in the root directory of your service (where [`graphcool.yml`](./service/graphcool.yml) is located).
-
 
 #### 4.2. Start the server
 
@@ -105,7 +102,7 @@ mutation {
 }
 ```
 
-> **Note**: It's important the `alias` of the `User` is set to `john`. Otherwise the API gateway won't return any data since the alias in this example is [hardcoded](./gateway/index.ts#L43).
+> **Note**: It's important the `alias` of the `User` is set to `john`. Otherwise the API gateway won't return any data since the alias in this example is [hardcoded](./gateway/index.js#L46).
 
 ### 2. Send queries to the API gateway
 
@@ -176,7 +173,7 @@ type Mutation {
 }
 ```
 
-The API gateway now creates another API that will be exposed to the clients. The server that exposes this API is executing its queries against the underlying CRUD API. The magic enabling this functionality is implemented in the [`run`](./gateway/index.ts#L11) function in [`index.ts`](./gateway/index.ts).
+The API gateway now creates another API that will be exposed to the clients. The server that exposes this API is executing its queries against the underlying CRUD API. The magic enabling this functionality is implemented in the [`run`](./gateway/index.js#L13) function in [`index.js`](./gateway/index.js).
 
 Here's the schema that defines the new API:
 
@@ -193,10 +190,10 @@ type Viewer {
 
 There are four major steps that are being performed to map the CRUD API to the new schema:
 
-1. Create local version of the CRUD API using [`makeRemoteExecutableSchema`](http://dev.apollodata.com/tools/graphql-tools/remote-schemas.html#makeRemoteExecutableSchema). [See the code](./gateway/index.ts#L13).
-2. Define schema for the new API (the one exposed by the API gateway). [See the code](./gateway/index.ts#L21).
-3. Merge remote schema with new schema using [`mergeSchemas`](http://dev.apollodata.com/tools/graphql-tools/schema-stitching.html#mergeSchemas). [See the code](./gateway/index.ts#L33).
-4. Limit exposed operations from merged schemas (hiding all root fields except `viewer`) using [`transformSchema`](https://github.com/graphcool/graphql-transform-schema). [See the code](./gateway/index.ts#L56).
+1. Create local version of the CRUD API using [`makeRemoteExecutableSchema`](http://dev.apollodata.com/tools/graphql-tools/remote-schemas.html#makeRemoteExecutableSchema). [See the code](./gateway/index.js#L15).
+2. Define schema for the new API (the one exposed by the API gateway). [See the code](./gateway/index.js#L24).
+3. Merge remote schema with new schema using [`mergeSchemas`](http://dev.apollodata.com/tools/graphql-tools/schema-stitching.html#mergeSchemas). [See the code](./gateway/index.js#L36).
+4. Limit exposed operations from merged schemas (hiding all root fields except `viewer`) using [`transformSchema`](https://github.com/graphcool/graphql-transform-schema). [See the code](./gateway/index.js#L59).
 
 
 
