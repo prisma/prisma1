@@ -69,6 +69,7 @@ mutation signup {
   signupUser(
     email: "nilan@graph.cool"
     password: "password"
+    name: "nilan"
   ) {
     id
     token
