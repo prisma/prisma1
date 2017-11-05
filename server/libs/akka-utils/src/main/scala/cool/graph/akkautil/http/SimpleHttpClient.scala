@@ -74,19 +74,19 @@ case class SimpleHttpClient()(implicit val system: ActorSystem, materializer: Ac
           if (response.status.isSuccess()) {
             Future.successful(simpleResponse)
           } else {
-            Future.failed(FailedRequestError(s"Server responded with ${response.status.intValue()}", simpleResponse))
+            Future.failed(FailedResponseCodeError(s"Server responded with ${response.status.intValue()}", simpleResponse))
           }
         }
         .recoverWith {
-          case e: FailedRequestError => Future.failed(e)
+          case e: RequestFailedError => Future.failed(e)
 
           case _: RejectionError =>
             val resp = SimpleHttpResponse(response.status.intValue(), None, Seq.empty, response)
-            Future.failed(FailedRequestError(s"Unable to unmarshal response body", resp))
+            Future.failed(InvalidBodyError(s"Unable to unmarshal response body", resp))
 
           case e: Throwable =>
             val resp = SimpleHttpResponse(response.status.intValue(), None, Seq.empty, response)
-            Future.failed(FailedRequestError(s"Request failed with: $e", resp))
+            Future.failed(new RequestFailedError(s"Request failed with: $e", resp))
         }
     }
   }
@@ -110,14 +110,16 @@ case class SimpleHttpResponse(status: Int, body: Option[String], headers: Seq[(S
         case Some(bodyString) =>
           Json.parse(bodyString).asOpt[T] match {
             case Some(value) => value
-            case None        => sys.error(s"Invalid body: $bodyString")
+            case None        => throw InvalidBodyError(s"Invalid body: $bodyString", this)
           }
 
         case None =>
-          sys.error("Body is None")
+          throw InvalidBodyError(s"Body is None", this)
       }
     }
   }
 }
 
-case class FailedRequestError(reason: String, response: SimpleHttpResponse) extends Exception(reason)
+class RequestFailedError(val reason: String, val response: SimpleHttpResponse)                             extends Exception(reason)
+case class FailedResponseCodeError(override val reason: String, override val response: SimpleHttpResponse) extends RequestFailedError(reason, response)
+case class InvalidBodyError(override val reason: String, override val response: SimpleHttpResponse)        extends RequestFailedError(reason, response)

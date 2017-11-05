@@ -2,11 +2,6 @@
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-$DIR/check-if-tests-must-execute.sh
-if [ $? -eq 0 ]; then
-  exit 0;
-fi
-
 $DIR/kill-all-docker-containers.sh
 
 # Kill entire script on Ctrl+C
