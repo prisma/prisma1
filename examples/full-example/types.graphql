@@ -1,7 +1,6 @@
 type User @model {
   id: ID! @isUnique
   email: String! @isUnique
-  name: String!
   stripeCustomerId: String
   password: String!
   orders: [Order!]! @relation(name: "Orders")
