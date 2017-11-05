@@ -4,7 +4,7 @@ description: Get started with in 5 min Graphcool and Node.js by building a Graph
 github: https://github.com/graphcool-examples/react-graphql/tree/master/quickstart-with-apollo
 ---
 
-# JavaScript
+# Node.js
 
 In this quickstart tutorial, you will learn how to build a GraphQL backend and deploy it locally with [Docker](https://docker.com/). The goal is to deploy a new Graphcool service that exposes a CRUD API for a simple data model. You will also add an API gateway that customizes the exposed operations using schema [stitching](http://dev.apollodata.com/tools/graphql-tools/schema-stitching.html) and [transformation](https://github.com/graphcool/graphql-transform-schema). Let's get started!
 
