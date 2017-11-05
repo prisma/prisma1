@@ -47,7 +47,7 @@ To deploy the service and actually create your GraphQL server, invoke the follow
 graphcool deploy
 ```
 
-When prompted which cluster you'd like to deploy, chose any of the `Shared Clusters` (`shared-eu-west-1`, `shared-ap-northeast-1` or `shared-us-west-2`) rather than `local`. 
+When prompted which cluster you'd like to deploy, choose any of the **Shared Clusters** (`shared-eu-west-1`, `shared-ap-northeast-1` or `shared-us-west-2`) rather than `local`. 
 
 > Note: Whenever you make changes to files in this directory, you need to invoke `graphcool deploy` again to make sure your changes get applied to the "remote" service.
 
