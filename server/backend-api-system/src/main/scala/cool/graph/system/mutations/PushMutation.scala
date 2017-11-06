@@ -53,7 +53,7 @@ case class PushMutation(
         errors = List(
           SchemaError(
             "Global",
-            "Only projects that have been ejected can make use of the CLI's deploy function. More details: https://docs-next.graph.cool/reference/service-definition/legacy-console-projects-aemieb1aev"
+            "Only projects that have been ejected can make use of the CLI's deploy function. More details: https://www.graph.cool/docs/reference/service-definition/legacy-console-projects-aemieb1aev/"
           ))
         actions
 
