@@ -27,6 +27,9 @@ export default class Docker {
   }
 
   get hostName(): string {
+    if (process.env.GRAPHCOOL_HOST) {
+      return process.env.GRAPHCOOL_HOST!
+    }
     if (process.env.DOCKER_HOST) {
       const ipRegex = /(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/
       const match = ipRegex.exec(process.env.DOCKER_HOST!)
@@ -146,12 +149,12 @@ export default class Docker {
       .join('\n')
   }
 
-  private getDockerEnvVars() {
+  getDockerEnvVars() {
     const file = fs.readFileSync(this.envPath, 'utf-8')
     return this.parseEnv(file)
   }
 
-  private parseEnv(src: string) {
+  parseEnv(src: string) {
     const regex = /^\s*export\s*([a-zA-Z0-9\.\-_]+)\s*=(.*)?\s*/
     const variableSyntax = new RegExp('\\${([ ~:a-zA-Z0-9._\'",\\-\\/\\(\\)]+?)}', 'g')
     const vars = src
