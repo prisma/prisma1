@@ -28,9 +28,10 @@ case class UpdateRelation(oldRelation: Relation, relation: Relation, project: Pr
       project.relations.exists(existing => existing.name.toLowerCase == relation.name.toLowerCase && existing.id != relation.id)
 
     () match {
-      case _ if !NameConstraints.isValidRelationName(relation.name) => Future.successful(Failure(UserInputErrors.InvalidName(name = relation.name)))
-      case _ if otherRelationWithNameExists                         => Future.successful(Failure(UserInputErrors.RelationNameAlreadyExists(relation.name)))
-      case _                                                        => Future.successful(Success(MutactionVerificationSuccess()))
+      case _ if !NameConstraints.isValidRelationName(relation.name) =>
+        Future.successful(Failure(UserInputErrors.InvalidName(name = relation.name, entityType = " relation")))
+      case _ if otherRelationWithNameExists => Future.successful(Failure(UserInputErrors.RelationNameAlreadyExists(relation.name)))
+      case _                                => Future.successful(Success(MutactionVerificationSuccess()))
     }
   }
 }

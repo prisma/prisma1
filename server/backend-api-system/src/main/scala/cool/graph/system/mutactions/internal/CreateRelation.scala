@@ -52,7 +52,7 @@ case class CreateRelation(project: Project,
   override def verify(): Future[Try[MutactionVerificationSuccess]] = {
     () match {
       case _ if !NameConstraints.isValidRelationName(relation.name) =>
-        Future.successful(Failure(UserInputErrors.InvalidName(name = relation.name)))
+        Future.successful(Failure(UserInputErrors.InvalidName(name = relation.name, entityType = " relation")))
 
       case _ if project.relations.exists(x => x.name.toLowerCase == relation.name.toLowerCase && x.id != relation.id) =>
         Future.successful(Failure(UserInputErrors.RelationNameAlreadyExists(relation.name)))

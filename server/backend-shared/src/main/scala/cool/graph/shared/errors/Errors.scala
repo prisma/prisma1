@@ -219,11 +219,12 @@ object UserInputErrors {
     }
   }
 
-  case class InvalidName(name: String)                   extends SystemApiError(InvalidNames.default(name), 2008)
-  case class InvalidNameMustStartUppercase(name: String) extends SystemApiError(InvalidNames.mustStartUppercase(name), 2008)
+  case class InvalidName(name: String, entityType: String)                   extends SystemApiError(InvalidNames.default(name, entityType), 2008)
+  case class InvalidNameMustStartUppercase(name: String, entityType: String) extends SystemApiError(InvalidNames.mustStartUppercase(name, entityType), 2008)
   object InvalidNames {
-    def mustStartUppercase(name: String): String = s"'${default(name)} It must begin with an uppercase letter. It may contain letters and numbers."
-    def default(name: String): String            = s"'$name' is not a valid name."
+    def mustStartUppercase(name: String, entityType: String): String =
+      s"'${default(name, entityType)} It must begin with an uppercase letter. It may contain letters and numbers."
+    def default(name: String, entityType: String): String = s"'$name' is not a valid name for a$entityType."
   }
 
   case class FieldAreadyExists(name: String) extends SystemApiError(s"A field with the name '$name' already exists", 2009)

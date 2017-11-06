@@ -173,7 +173,7 @@ object UpdateField {
     lazy val isRequiredManyRelation             = field.relation.isDefined && field.isList && field.isRequired
 
     () match {
-      case _ if isInvalidFieldName                           => Failure(UserInputErrors.InvalidName(name = field.name))
+      case _ if isInvalidFieldName                           => Failure(UserInputErrors.InvalidName(name = field.name, entityType = " field"))
       case _ if enumValueValidation.isFailure                => enumValueValidation
       case _ if defaultAndMigrationValueValidation.isFailure => defaultAndMigrationValueValidation
       case _ if isRequiredManyRelation                       => Failure(UserInputErrors.ListRelationsCannotBeRequired(field.name))

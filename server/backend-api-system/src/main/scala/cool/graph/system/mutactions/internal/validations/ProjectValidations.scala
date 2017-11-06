@@ -17,7 +17,7 @@ case class ProjectValidations(client: Client, project: Project, projectQueries: 
   def verify(): Future[Try[MutactionVerificationSuccess]] = {
     () match {
       case _ if !NameConstraints.isValidProjectName(project.name) =>
-        Future.successful(Failure[MutactionVerificationSuccess](UserInputErrors.InvalidName(name = project.name)))
+        Future.successful(Failure[MutactionVerificationSuccess](UserInputErrors.InvalidName(name = project.name, entityType = " project")))
 
       case _ if project.alias.isDefined && !NameConstraints.isValidProjectAlias(project.alias.get) =>
         Future.successful(Failure(UserInputErrors.InvalidProjectAlias(alias = project.alias.get)))
