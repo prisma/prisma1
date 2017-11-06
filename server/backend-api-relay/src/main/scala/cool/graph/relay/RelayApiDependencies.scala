@@ -46,7 +46,7 @@ trait RelayApiClientDependencies extends CommonClientDependencies {
 }
 
 case class RelayApiDependencies(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends RelayApiClientDependencies {
-  val projectSchemaInvalidationSubscriber: RabbitAkkaPubSubSubscriber[String] = {
+  lazy val projectSchemaInvalidationSubscriber: RabbitAkkaPubSubSubscriber[String] = {
     val globalRabbitUri                                 = sys.env("GLOBAL_RABBIT_URI")
     implicit val unmarshaller: ByteUnmarshaller[String] = Unmarshallers.ToString
 
@@ -57,17 +57,17 @@ case class RelayApiDependencies(implicit val system: ActorSystem, val materializ
     sys.env("BLOCKED_PROJECT_IDS").split(",").toVector
   }.getOrElse(Vector.empty)
 
-  val projectSchemaFetcher: RefreshableProjectFetcher = CachedProjectFetcherImpl(
+  lazy val projectSchemaFetcher: RefreshableProjectFetcher = CachedProjectFetcherImpl(
     projectFetcher = ProjectFetcherImpl(blockedProjectIds, config),
     projectSchemaInvalidationSubscriber = projectSchemaInvalidationSubscriber
   )
 
-  val functionEnvironment = LambdaFunctionEnvironment(
+  lazy val functionEnvironment = LambdaFunctionEnvironment(
     sys.env.getOrElse("LAMBDA_AWS_ACCESS_KEY_ID", "whatever"),
     sys.env.getOrElse("LAMBDA_AWS_SECRET_ACCESS_KEY", "whatever")
   )
 
-  val kinesis: AmazonKinesis = {
+  lazy val kinesis: AmazonKinesis = {
     val credentials =
       new BasicAWSCredentials(sys.env("AWS_ACCESS_KEY_ID"), sys.env("AWS_SECRET_ACCESS_KEY"))
 
@@ -77,19 +77,19 @@ case class RelayApiDependencies(implicit val system: ActorSystem, val materializ
       .build
   }
 
-  val clusterLocalRabbitUri              = sys.env("RABBITMQ_URI")
-  val globalDatabaseManager              = GlobalDatabaseManager.initializeForSingleRegion(config)
-  val fromStringMarshaller               = Conversions.Marshallers.FromString
-  val endpointResolver                   = LiveEndpointResolver()
-  val logsPublisher                      = RabbitQueue.publisher[String](clusterLocalRabbitUri, "function-logs")(bugSnagger, fromStringMarshaller)
-  val webhooksPublisher                  = RabbitQueue.publisher(clusterLocalRabbitUri, "webhooks")(bugSnagger, Webhook.marshaller)
-  val sssEventsPublisher                 = RabbitAkkaPubSub.publisher[String](clusterLocalRabbitUri, "sss-events", durable = true)(bugSnagger, fromStringMarshaller)
-  val requestPrefix                      = sys.env.getOrElse("AWS_REGION", sys.error("AWS Region not found."))
-  val cloudwatch                         = CloudwatchImpl()
-  val kinesisAlgoliaSyncQueriesPublisher = new KinesisPublisherImplementation(streamName = sys.env("KINESIS_STREAM_ALGOLIA_SYNC_QUERY"), kinesis)
-  val kinesisApiMetricsPublisher         = new KinesisPublisherImplementation(streamName = sys.env("KINESIS_STREAM_API_METRICS"), kinesis)
-  val featureMetricActor                 = system.actorOf(Props(new FeatureMetricActor(kinesisApiMetricsPublisher, apiMetricsFlushInterval)))
-  val apiMetricsMiddleware               = new ApiMetricsMiddleware(testableTime, featureMetricActor)
+  lazy val clusterLocalRabbitUri              = sys.env("RABBITMQ_URI")
+  lazy val globalDatabaseManager              = GlobalDatabaseManager.initializeForSingleRegion(config)
+  lazy val fromStringMarshaller               = Conversions.Marshallers.FromString
+  lazy val endpointResolver                   = LiveEndpointResolver()
+  lazy val logsPublisher                      = RabbitQueue.publisher[String](clusterLocalRabbitUri, "function-logs")(bugSnagger, fromStringMarshaller)
+  lazy val webhooksPublisher                  = RabbitQueue.publisher(clusterLocalRabbitUri, "webhooks")(bugSnagger, Webhook.marshaller)
+  lazy val sssEventsPublisher                 = RabbitAkkaPubSub.publisher[String](clusterLocalRabbitUri, "sss-events", durable = true)(bugSnagger, fromStringMarshaller)
+  lazy val requestPrefix                      = sys.env.getOrElse("AWS_REGION", sys.error("AWS Region not found."))
+  lazy val cloudwatch                         = CloudwatchImpl()
+  lazy val kinesisAlgoliaSyncQueriesPublisher = new KinesisPublisherImplementation(streamName = sys.env("KINESIS_STREAM_ALGOLIA_SYNC_QUERY"), kinesis)
+  lazy val kinesisApiMetricsPublisher         = new KinesisPublisherImplementation(streamName = sys.env("KINESIS_STREAM_API_METRICS"), kinesis)
+  lazy val featureMetricActor                 = system.actorOf(Props(new FeatureMetricActor(kinesisApiMetricsPublisher, apiMetricsFlushInterval)))
+  lazy val apiMetricsMiddleware               = new ApiMetricsMiddleware(testableTime, featureMetricActor)
 
   binding identifiedBy "project-schema-fetcher" toNonLazy projectSchemaFetcher
   binding identifiedBy "cloudwatch" toNonLazy cloudwatch

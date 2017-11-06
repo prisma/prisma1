@@ -23,11 +23,7 @@ export default class Variables {
   fileName: string
   options: Args
 
-  constructor(
-    out: Output,
-    fileName: string,
-    options: Args = {}
-  ) {
+  constructor(out: Output, fileName: string, options: Args = {}) {
     this.out = out
     this.fileName = fileName
     this.options = options
@@ -84,6 +80,7 @@ export default class Variables {
   populateProperty(propertyParam, populateInPlace?: boolean) {
     let property = populateInPlace ? propertyParam : _.cloneDeep(propertyParam)
     const allValuesToPopulate: any[] = []
+    let warned = false
 
     if (typeof property === 'string' && property.match(this.variableSyntax)) {
       property.match(this.variableSyntax)!.forEach(matchedString => {
@@ -106,7 +103,9 @@ export default class Variables {
         }
 
         singleValueToPopulate = singleValueToPopulate!.then(valueToPopulate => {
-          this.warnIfNotFound(variableString, valueToPopulate)
+          if (this.warnIfNotFound(variableString, valueToPopulate)) {
+            warned = true
+          }
           return this.populateVariable(
             property,
             matchedString,
@@ -120,7 +119,7 @@ export default class Variables {
         allValuesToPopulate.push(singleValueToPopulate)
       })
       return BbPromise.all(allValuesToPopulate).then(() => {
-        if ((property as any) !== (this.json as any)) {
+        if ((property as any) !== (this.json as any) && !warned) {
           return this.populateProperty(property)
         }
         return BbPromise.resolve(property)
@@ -221,9 +220,12 @@ export default class Variables {
   }
 
   getValueFromOptions(variableString) {
-    const requestedOption = variableString.split(':')[1];
-    const valueToPopulate = (requestedOption !== '' || '' in this.options) ? this.options[requestedOption] : this.options
-    return BbPromise.resolve(valueToPopulate);
+    const requestedOption = variableString.split(':')[1]
+    const valueToPopulate =
+      requestedOption !== '' || '' in this.options
+        ? this.options[requestedOption]
+        : this.options
+    return BbPromise.resolve(valueToPopulate)
   }
 
   getValueFromSelf(variableString) {
@@ -412,7 +414,7 @@ export default class Variables {
     )
   }
 
-  warnIfNotFound(variableString, valueToPopulate) {
+  warnIfNotFound(variableString, valueToPopulate): boolean {
     if (
       valueToPopulate === null ||
       typeof valueToPopulate === 'undefined' ||
@@ -434,6 +436,9 @@ export default class Variables {
         this.out.getErrorPrefix(this.fileName, 'warning') +
           `A valid ${varType} to satisfy the declaration '${variableString}' could not be found.`,
       )
+      return true
     }
+
+    return false
   }
 }

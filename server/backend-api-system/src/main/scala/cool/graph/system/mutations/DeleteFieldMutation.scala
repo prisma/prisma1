@@ -2,7 +2,7 @@ package cool.graph.system.mutations
 
 import cool.graph.shared.database.InternalAndProjectDbs
 import cool.graph.shared.models
-import cool.graph.shared.models.{Client, Field, Model, Project}
+import cool.graph.shared.models._
 import cool.graph.system.database.SystemFields
 import cool.graph.system.database.client.ClientDbQueries
 import cool.graph.system.mutactions.client.{DeleteColumn, DeleteRelationTable}
@@ -20,9 +20,16 @@ case class DeleteFieldMutation(
 )(implicit inj: Injector)
     extends InternalProjectMutation[DeleteFieldMutationPayload] {
 
-  val field: Field        = project.getFieldById_!(args.fieldId)
-  val model: Model        = project.getModelByFieldId_!(args.fieldId)
-  val updatedModel: Model = model.copy(fields = model.fields.filter(_.id != field.id))
+  val field: Field = project.getFieldById_!(args.fieldId)
+  val model: Model = project.getModelByFieldId_!(args.fieldId)
+  //remove the fieldId from the fieldIds of all permissions, remove permission altogether if it only concerns this one field
+  val modelPermissions: List[ModelPermission]                               = model.permissions
+  val affectedModelPermissions: List[ModelPermission]                       = modelPermissions.filter(permission => permission.fieldIds.contains(args.fieldId))
+  val unaffectedModelPermissions: List[ModelPermission]                     = modelPermissions.filter(permission => !permission.fieldIds.contains(args.fieldId))
+  val affectedModelPermissionsWithMoreThanOneFieldId: List[ModelPermission] = affectedModelPermissions.filter(permission => permission.fieldIds.length == 1)
+  val modifiedModelPermissions: List[ModelPermission] =
+    affectedModelPermissionsWithMoreThanOneFieldId.map(permission => permission.copy(fieldIds = permission.fieldIds.filter(_ != args.fieldId)))
+  val updatedModel: Model = model.copy(fields = model.fields.filter(_.id != field.id), permissions = unaffectedModelPermissions ++ modifiedModelPermissions)
   val updatedProject: Project = project.copy(models = project.models.map {
     case model if model.id == updatedModel.id => updatedModel
     case model                                => model

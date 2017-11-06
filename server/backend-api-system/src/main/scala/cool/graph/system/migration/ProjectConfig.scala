@@ -425,6 +425,9 @@ object ProjectConfig {
 
           val handler = if (fields(YamlString("handler")).asYamlObject.fields.get(YamlString("code")).exists(_.isInstanceOf[YamlString])) {
             FunctionHandler(code = Some(FunctionHandlerCode(src = fields(YamlString("handler")).asYamlObject.fields(YamlString("code")).convertTo[String])))
+          } else if (fields(YamlString("handler")).asYamlObject.fields.get(YamlString("webhook")).exists(_.isInstanceOf[YamlString])) {
+            FunctionHandler(
+              webhook = Some(FunctionHandlerWebhook(url = fields(YamlString("handler")).asYamlObject.fields(YamlString("webhook")).convertTo[String])))
           } else {
             fields(YamlString("handler")).convertTo[FunctionHandler]
           }

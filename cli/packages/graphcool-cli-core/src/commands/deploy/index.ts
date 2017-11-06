@@ -63,11 +63,11 @@ ${chalk.gray(
       description: 'Force interactive mode to select the cluster'
     }),
     default: flags.boolean({
-      char: 'd',
+      char: 'D',
       description: 'Set specified target as default'
     }),
     'dry-run': flags.boolean({
-      char: 'D',
+      char: 'd',
       description: 'Perform a dry-run of the deployment'
     }),
     json: flags.boolean({
