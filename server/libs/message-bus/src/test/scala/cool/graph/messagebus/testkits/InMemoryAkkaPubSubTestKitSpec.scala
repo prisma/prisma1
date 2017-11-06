@@ -3,6 +3,7 @@ package cool.graph.messagebus.testkits
 import akka.stream.ActorMaterializer
 import akka.testkit.TestKit
 import cool.graph.akkautil.SingleThreadedActorSystem
+import cool.graph.messagebus.pubsub.{Message, Only}
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Matchers, WordSpecLike}
 import org.scalatest.concurrent.ScalaFutures
 
@@ -16,10 +17,11 @@ class InMemoryAkkaPubSubTestKitSpec
 
   case class TestMessage(id: String, testOpt: Option[Int], testSeq: Seq[String])
 
-  var testKit: InMemoryQueueTestKit[TestMessage] = _
-  implicit val materializer: ActorMaterializer   = ActorMaterializer()
+  var testKit: InMemoryPubSubTestKit[TestMessage] = _
+  val testRK: Only                                = Only("test")
+  implicit val materializer: ActorMaterializer    = ActorMaterializer()
 
-  override def beforeEach = testKit = InMemoryQueueTestKit[TestMessage]()
+  override def beforeEach = testKit = InMemoryPubSubTestKit[TestMessage]()
   override def afterEach  = testKit.shutdown()
 
   override def afterAll = {
@@ -27,24 +29,24 @@ class InMemoryAkkaPubSubTestKitSpec
     shutdown(verifySystemShutdown = true)
   }
 
-  "The in-memory queue testing kit" should {
+  "The in-memory pubsub testing kit" should {
 
     /**
       * Incoming messages expectation tests
       */
     "should expect an incoming message correctly" in {
-      val testMsg = TestMessage("someId1", None, Seq("1", "2"))
+      val testMsg = Message[TestMessage](testRK.topic, TestMessage("someId1", None, Seq("1", "2")))
 
-      testKit.withTestConsumer()
-      testKit.publish(testMsg)
+      testKit.withTestSubscriber
+      testKit.publish(testRK, testMsg.payload)
       testKit.expectMsg(testMsg)
       testKit.messagesReceived.length shouldEqual 1
     }
 
     "should blow up it expects a message and none arrives" in {
-      val testMsg = TestMessage("someId2", None, Seq("1", "2"))
+      val testMsg = Message[TestMessage](testRK.topic, TestMessage("someId2", None, Seq("1", "2")))
 
-      testKit.withTestConsumer()
+      testKit.withTestSubscriber
 
       an[AssertionError] should be thrownBy {
         testKit.expectMsg(testMsg)
@@ -52,15 +54,15 @@ class InMemoryAkkaPubSubTestKitSpec
     }
 
     "should expect no message correctly" in {
-      testKit.withTestConsumer()
+      testKit.withTestSubscriber
       testKit.expectNoMsg()
     }
 
     "should blow up if no message was expected but one arrives" in {
       val testMsg = TestMessage("someId3", None, Seq("1", "2"))
 
-      testKit.withTestConsumer()
-      testKit.publish(testMsg)
+      testKit.withTestSubscriber
+      testKit.publish(testRK, testMsg)
 
       an[AssertionError] should be thrownBy {
         testKit.expectNoMsg()
@@ -71,18 +73,20 @@ class InMemoryAkkaPubSubTestKitSpec
       val testMsg  = TestMessage("someId4", None, Seq("1", "2"))
       val testMsg2 = TestMessage("someId5", Some(123), Seq("2", "1"))
 
-      testKit.withTestConsumer()
-      testKit.publish(testMsg)
-      testKit.publish(testMsg2)
+      testKit.withTestSubscriber
+      testKit.publish(testRK, testMsg)
+      testKit.publish(testRK, testMsg2)
       testKit.expectMsgCount(2)
       testKit.messagesReceived.length shouldEqual 2
     }
 
+    "should expect a message count correctly with multiple subscribers" in {}
+
     "should blow up if it expects a message count and less arrive" in {
       val testMsg = TestMessage("someId6", None, Seq("1", "2"))
 
-      testKit.withTestConsumer()
-      testKit.publish(testMsg)
+      testKit.withTestSubscriber
+      testKit.publish(testRK, testMsg)
 
       an[AssertionError] should be thrownBy {
         testKit.expectMsgCount(2)
@@ -93,78 +97,78 @@ class InMemoryAkkaPubSubTestKitSpec
       val testMsg  = TestMessage("someId7", None, Seq("1", "2"))
       val testMsg2 = TestMessage("someId8", Some(123), Seq("2", "1"))
 
-      testKit.withTestConsumer()
-      testKit.publish(testMsg)
-      testKit.publish(testMsg2)
+      testKit.withTestSubscriber
+      testKit.publish(testRK, testMsg)
+      testKit.publish(testRK, testMsg2)
 
       an[AssertionError] should be thrownBy {
         testKit.expectMsgCount(1)
       }
     }
 
-    /**
-      * Published messages expectation tests
-      */
-    "should expect a published message correctly" in {
-      val testMsg = TestMessage("someId1", None, Seq("1", "2"))
-
-      testKit.publish(testMsg)
-      testKit.expectPublishedMsg(testMsg)
-      testKit.messagesPublished.length shouldEqual 1
-    }
-
-    "should blow up it expects a published message and none arrives" in {
-      val testMsg = TestMessage("someId2", None, Seq("1", "2"))
-
-      an[AssertionError] should be thrownBy {
-        testKit.expectPublishedMsg(testMsg)
-      }
-    }
-
-    "should expect no published message correctly" in {
-      testKit.expectNoPublishedMsg()
-    }
-
-    "should blow up if no published message was expected but one arrives" in {
-      val testMsg = TestMessage("someId3", None, Seq("1", "2"))
-
-      testKit.publish(testMsg)
-
-      an[AssertionError] should be thrownBy {
-        testKit.expectNoPublishedMsg()
-      }
-    }
-
-    "should expect a published message count correctly" in {
-      val testMsg  = TestMessage("someId4", None, Seq("1", "2"))
-      val testMsg2 = TestMessage("someId5", Some(123), Seq("2", "1"))
-
-      testKit.publish(testMsg)
-      testKit.publish(testMsg2)
-      testKit.expectPublishCount(2)
-      testKit.messagesPublished.length shouldEqual 2
-    }
-
-    "should blow up if it expects a published message count and less arrive" in {
-      val testMsg = TestMessage("someId6", None, Seq("1", "2"))
-
-      testKit.publish(testMsg)
-
-      an[AssertionError] should be thrownBy {
-        testKit.expectPublishCount(2)
-      }
-    }
-
-    "should blow up if it expects a published message count and more arrive" in {
-      val testMsg  = TestMessage("someId7", None, Seq("1", "2"))
-      val testMsg2 = TestMessage("someId8", Some(123), Seq("2", "1"))
-
-      testKit.publish(testMsg)
-      testKit.publish(testMsg2)
-
-      an[AssertionError] should be thrownBy {
-        testKit.expectPublishCount(1)
-      }
-    }
+//    /**
+//      * Published messages expectation tests
+//      */
+//    "should expect a published message correctly" in {
+//      val testMsg = TestMessage("someId1", None, Seq("1", "2"))
+//
+//      testKit.publish(testMsg)
+//      testKit.expectPublishedMsg(testMsg)
+//      testKit.messagesPublished.length shouldEqual 1
+//    }
+//
+//    "should blow up it expects a published message and none arrives" in {
+//      val testMsg = TestMessage("someId2", None, Seq("1", "2"))
+//
+//      an[AssertionError] should be thrownBy {
+//        testKit.expectPublishedMsg(testMsg)
+//      }
+//    }
+//
+//    "should expect no published message correctly" in {
+//      testKit.expectNoPublishedMsg()
+//    }
+//
+//    "should blow up if no published message was expected but one arrives" in {
+//      val testMsg = TestMessage("someId3", None, Seq("1", "2"))
+//
+//      testKit.publish(testMsg)
+//
+//      an[AssertionError] should be thrownBy {
+//        testKit.expectNoPublishedMsg()
+//      }
+//    }
+//
+//    "should expect a published message count correctly" in {
+//      val testMsg  = TestMessage("someId4", None, Seq("1", "2"))
+//      val testMsg2 = TestMessage("someId5", Some(123), Seq("2", "1"))
+//
+//      testKit.publish(testMsg)
+//      testKit.publish(testMsg2)
+//      testKit.expectPublishCount(2)
+//      testKit.messagesPublished.length shouldEqual 2
+//    }
+//
+//    "should blow up if it expects a published message count and less arrive" in {
+//      val testMsg = TestMessage("someId6", None, Seq("1", "2"))
+//
+//      testKit.publish(testMsg)
+//
+//      an[AssertionError] should be thrownBy {
+//        testKit.expectPublishCount(2)
+//      }
+//    }
+//
+//    "should blow up if it expects a published message count and more arrive" in {
+//      val testMsg  = TestMessage("someId7", None, Seq("1", "2"))
+//      val testMsg2 = TestMessage("someId8", Some(123), Seq("2", "1"))
+//
+//      testKit.publish(testMsg)
+//      testKit.publish(testMsg2)
+//
+//      an[AssertionError] should be thrownBy {
+//        testKit.expectPublishCount(1)
+//      }
+//    }
   }
 }

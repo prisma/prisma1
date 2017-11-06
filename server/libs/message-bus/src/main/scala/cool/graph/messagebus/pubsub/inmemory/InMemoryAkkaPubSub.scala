@@ -12,7 +12,7 @@ import cool.graph.messagebus.pubsub._
   * Useful for the single server solution and tests.
   */
 case class InMemoryAkkaPubSub[T](implicit val system: ActorSystem) extends PubSub[T] {
-  lazy val mediator = DistributedPubSub(system).mediator
+  val mediator = DistributedPubSub(system).mediator
 
   def subscribe(topic: Topic, onReceive: Message[T] => Unit): Subscription =
     Subscription(system.actorOf(Props(IntermediateCallbackActor[T, T](topic.topic, mediator, onReceive)(identity))))
@@ -31,4 +31,6 @@ case class InMemoryAkkaPubSub[T](implicit val system: ActorSystem) extends PubSu
     mediator ! Publish(topic.topic, message)
     mediator ! Publish(Everything.topic, message)
   }
+
+  override def shutdown: Unit = system.stop(mediator)
 }

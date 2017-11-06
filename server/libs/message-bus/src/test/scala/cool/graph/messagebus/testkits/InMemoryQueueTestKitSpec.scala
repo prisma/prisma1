@@ -41,7 +41,7 @@ class InMemoryQueueTestKitSpec
       testKit.messagesReceived.length shouldEqual 1
     }
 
-    "should blow up it expects a message and none arrives" in {
+    "should blow up if it expects a message and none arrives" in {
       val testMsg = TestMessage("someId2", None, Seq("1", "2"))
 
       testKit.withTestConsumer()

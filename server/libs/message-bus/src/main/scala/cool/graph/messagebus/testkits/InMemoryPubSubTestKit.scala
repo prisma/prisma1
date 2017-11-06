@@ -22,6 +22,9 @@ import scala.reflect.ClassTag
   * Messages published to the pubsub and received by the subscribers are stored in separate collections
   * messagesReceived and messagesPublished. Each expect call on this testkit has a version for
   * for published messages and for received messages.
+  *
+  * Subscribing requires a minimal delay for the actors to set up or else messages might slip through before subscriptions
+  * are fully set up - hence the Thread.sleep calls.
   */
 case class InMemoryPubSubTestKit[T]()(
     implicit tag: ClassTag[T],
@@ -43,7 +46,11 @@ case class InMemoryPubSubTestKit[T]()(
     * Subscribes a dummy test subscriber that listens to all messages on the PubSub, stores them
     * in the messagesReceived, and notifies the probe.
     */
-  def withTestSubscriber: Unit = subscribe(Everything, msg => /* noop */ ())
+  def withTestSubscriber: Subscription = {
+    val sub = subscribe(Everything, msg => println(s"WAT $msg") /* noop */ )
+    Thread.sleep(50)
+    sub
+  }
 
   /**
     * Subscribes a custom callback that will be invoked when a message arrives for the given topic.
@@ -55,7 +62,7 @@ case class InMemoryPubSubTestKit[T]()(
     * processing messages in tests.
     */
   override def subscribe(topic: Topic, onReceive: (Message[T]) => Unit): Subscription = {
-    _underlying.subscribe(
+    val sub = _underlying.subscribe(
       topic, { msg: Message[T] =>
         println(s"[TestKit][$logId] Received $msg")
 
@@ -67,6 +74,9 @@ case class InMemoryPubSubTestKit[T]()(
         onReceive(msg)
       }
     )
+
+    Thread.sleep(50)
+    sub
   }
 
   /**
@@ -79,7 +89,7 @@ case class InMemoryPubSubTestKit[T]()(
     * processing messages in tests.
     */
   override def subscribe(topic: Topic, subscriber: ActorRef): Subscription = {
-    _underlying.subscribe(
+    val sub = _underlying.subscribe(
       topic, { msg: Message[T] =>
         println(s"[TestKit][$logId] Received $msg")
 
@@ -91,6 +101,9 @@ case class InMemoryPubSubTestKit[T]()(
         subscriber ! msg
       }
     )
+
+    Thread.sleep(50)
+    sub
   }
 
   /**
@@ -109,9 +122,7 @@ case class InMemoryPubSubTestKit[T]()(
     * For expecting that no message arrived _at any subscriber_ in the given time frame.
     * Requires at least one subscriber to be meaningful.
     */
-  def expectNoMsg(maxWait: FiniteDuration = 6.seconds): Unit = {
-    probe.expectNoMsg(maxWait)
-  }
+  def expectNoMsg(maxWait: FiniteDuration = 6.seconds): Unit = probe.expectNoMsg(maxWait)
 
   /**
     * For expecting that no message was published to the PubSub in the given time frame.
