@@ -35,14 +35,14 @@ case class PermissionDiff(project: Project, newPermissions: Vector[AstPermission
     }
   }
 
-  val modelNames    = project.models.map(_.name)
-  val relationNames = project.relations.map(_.name)
+  val modelNames: List[String]    = project.models.map(_.name)
+  val relationNames: List[String] = project.relations.map(_.name)
 
-  val superflousPermissions = addedPermissions
+  val superflousPermissions: Vector[AstPermissionWithAllInfos] = addedPermissions
     .filter(p => !modelNames.contains(nameFromOperation(p)) && !relationNames.contains(nameFromOperation(p)))
     .filter(_.astPermission.operation != "*")
 
-  val superflousPermissionOperations = superflousPermissions.map(_.astPermission).map(_.operation)
+  val superflousPermissionOperations: Vector[String] = superflousPermissions.map(_.astPermission).map(_.operation)
 
   if (superflousPermissionOperations.nonEmpty && afterSchemaMigration)
     throw ModelOrRelationForPermissionDoesNotExist(superflousPermissionOperations.mkString(", "))
@@ -283,7 +283,7 @@ object QueryPermissionHelper {
           case (None, Some(pathPart)) =>
             isQueryValidGraphQL(files(pathPart)) match {
               case None      => throw QueryPermissionParseError("noName", s"Query could not be parsed. Please ensure it is valid GraphQL. ${files(pathPart)}")
-              case Some(doc) => Some(FileContainer(pathPart, QueryRenderer.render(doc))) // todo take out comments too here
+              case Some(doc) => Some(FileContainer(pathPart, QueryRenderer.render(doc)))
             }
           case _ => sys.error("This should not happen.")
         }
