@@ -55,7 +55,7 @@ case class SingleServerDependencies(implicit val system: ActorSystem, val materi
 
   import scala.concurrent.duration._
 
-  val (globalDatabaseManager, internalDb, logsDb) = {
+  lazy val (globalDatabaseManager, internalDb, logsDb) = {
     val internal = Initializers.setupAndGetInternalDatabase()
     val logs     = Initializers.setupAndGetLogsDatabase()
     val client   = Future { GlobalDatabaseManager.initializeForSingleRegion(config) }
@@ -71,67 +71,67 @@ case class SingleServerDependencies(implicit val system: ActorSystem, val materi
     }
   }
 
-  val pubSub: InMemoryAkkaPubSub[String]                                 = InMemoryAkkaPubSub[String]()
-  val projectSchemaInvalidationSubscriber: PubSubSubscriber[String]      = pubSub
-  val invalidationSubscriber: PubSubSubscriber[SchemaInvalidatedMessage] = pubSub.map[SchemaInvalidatedMessage]((str: String) => SchemaInvalidated)
-  val invalidationPublisher: PubSubPublisher[String]                     = pubSub
-  val functionEnvironment                                                = DevFunctionEnvironment()
-  val blockedProjectIds: Vector[String]                                  = Vector.empty
-  val endpointResolver                                                   = LocalEndpointResolver()
-  val uncachedProjectResolver                                            = UncachedProjectResolver(internalDb)
-  val cachedProjectResolver: CachedProjectResolver                       = CachedProjectResolverImpl(uncachedProjectResolver)(system.dispatcher)
-  val requestPrefix                                                      = "local"
-  val sssEventsPubSub                                                    = InMemoryAkkaPubSub[String]()
-  val sssEventsPublisher: PubSubPublisher[String]                        = sssEventsPubSub
-  val sssEventsSubscriber: PubSubSubscriber[String]                      = sssEventsPubSub
-  val cloudwatch                                                         = CloudwatchMock
-  val snsPublisher                                                       = DummySnsPublisher()
-  val kinesisAlgoliaSyncQueriesPublisher                                 = DummyKinesisPublisher()
-  val kinesisApiMetricsPublisher                                         = DummyKinesisPublisher()
-  val featureMetricActor                                                 = system.actorOf(Props(new FeatureMetricActor(kinesisApiMetricsPublisher, apiMetricsFlushInterval)))
-  val apiMetricsMiddleware                                               = new ApiMetricsMiddleware(testableTime, featureMetricActor)
+  lazy val pubSub: InMemoryAkkaPubSub[String]                                 = InMemoryAkkaPubSub[String]()
+  lazy val projectSchemaInvalidationSubscriber: PubSubSubscriber[String]      = pubSub
+  lazy val invalidationSubscriber: PubSubSubscriber[SchemaInvalidatedMessage] = pubSub.map[SchemaInvalidatedMessage]((str: String) => SchemaInvalidated)
+  lazy val invalidationPublisher: PubSubPublisher[String]                     = pubSub
+  lazy val functionEnvironment                                                = DevFunctionEnvironment()
+  lazy val blockedProjectIds: Vector[String]                                  = Vector.empty
+  lazy val endpointResolver                                                   = LocalEndpointResolver()
+  lazy val uncachedProjectResolver                                            = UncachedProjectResolver(internalDb)
+  lazy val cachedProjectResolver: CachedProjectResolver                       = CachedProjectResolverImpl(uncachedProjectResolver)(system.dispatcher)
+  lazy val requestPrefix                                                      = "local"
+  lazy val sssEventsPubSub                                                    = InMemoryAkkaPubSub[String]()
+  lazy val sssEventsPublisher: PubSubPublisher[String]                        = sssEventsPubSub
+  lazy val sssEventsSubscriber: PubSubSubscriber[String]                      = sssEventsPubSub
+  lazy val cloudwatch                                                         = CloudwatchMock
+  lazy val snsPublisher                                                       = DummySnsPublisher()
+  lazy val kinesisAlgoliaSyncQueriesPublisher                                 = DummyKinesisPublisher()
+  lazy val kinesisApiMetricsPublisher                                         = DummyKinesisPublisher()
+  lazy val featureMetricActor                                                 = system.actorOf(Props(new FeatureMetricActor(kinesisApiMetricsPublisher, apiMetricsFlushInterval)))
+  lazy val apiMetricsMiddleware                                               = new ApiMetricsMiddleware(testableTime, featureMetricActor)
 
   // API webhooks -> worker webhooks
-  val webhooksQueue: Queue[Webhook] = InMemoryAkkaQueue[Webhook]()
+  lazy val webhooksQueue: Queue[Webhook] = InMemoryAkkaQueue[Webhook]()
 
   // Worker LogItems -> String (API "LogItems" - easier in this direction)
-  val logsQueue: Queue[LogItem] = InMemoryAkkaQueue[LogItem]()
+  lazy val logsQueue: Queue[LogItem] = InMemoryAkkaQueue[LogItem]()
 
   // Consumer for worker webhook
-  val webhooksWorkerConsumer: QueueConsumer[WorkerWebhook] = webhooksQueue.map[WorkerWebhook](Converters.apiWebhook2WorkerWebhook)
+  lazy val webhooksWorkerConsumer: QueueConsumer[WorkerWebhook] = webhooksQueue.map[WorkerWebhook](Converters.apiWebhook2WorkerWebhook)
 
   // Log item publisher for APIs (they use strings at the moment)
-  val logsPublisher: QueuePublisher[String] = logsQueue.map[String](Converters.string2LogItem)
+  lazy val logsPublisher: QueuePublisher[String] = logsQueue.map[String](Converters.string2LogItem)
 
   // Webhooks publisher for the APIs
-  val webhooksPublisher: Queue[Webhook] = webhooksQueue
+  lazy val webhooksPublisher: Queue[Webhook] = webhooksQueue
 
-  val workerServices: WorkerServices = WorkerDevServices(webhooksWorkerConsumer, logsQueue, logsDb)
+  lazy val workerServices: WorkerServices = WorkerDevServices(webhooksWorkerConsumer, logsQueue, logsDb)
 
-  val projectSchemaFetcher: RefreshableProjectFetcher = CachedProjectFetcherImpl(
+  lazy val projectSchemaFetcher: RefreshableProjectFetcher = CachedProjectFetcherImpl(
     projectFetcher = ProjectFetcherImpl(blockedProjectIds, config),
     projectSchemaInvalidationSubscriber = projectSchemaInvalidationSubscriber
   )
 
   // Websocket deps
-  val requestsQueue         = InMemoryAkkaQueue[WebsocketRequest]()
-  val requestsQueueConsumer = requestsQueue.map[SubscriptionRequest](Converters.websocketRequest2SubscriptionRequest)
-  val responsePubSub        = InMemoryAkkaPubSub[String]()
-  val websocketServices     = WebsocketDevDependencies(requestsQueue, responsePubSub)
+  lazy val requestsQueue         = InMemoryAkkaQueue[WebsocketRequest]()
+  lazy val requestsQueueConsumer = requestsQueue.map[SubscriptionRequest](Converters.websocketRequest2SubscriptionRequest)
+  lazy val responsePubSub        = InMemoryAkkaPubSub[String]()
+  lazy val websocketServices     = WebsocketDevDependencies(requestsQueue, responsePubSub)
 
   // Simple subscription deps
-  val converterResponse07ToString = (response: SubscriptionSessionResponse) => {
+  lazy val converterResponse07ToString = (response: SubscriptionSessionResponse) => {
     import cool.graph.subscriptions.protocol.ProtocolV07.SubscriptionResponseWriters._
     Json.toJson(response).toString
   }
 
-  val converterResponse05ToString = (response: SubscriptionSessionResponseV05) => {
+  lazy val converterResponse05ToString = (response: SubscriptionSessionResponseV05) => {
     import cool.graph.subscriptions.protocol.ProtocolV05.SubscriptionResponseWriters._
     Json.toJson(response).toString
   }
 
-  val responsePubSubPublisherV05 = responsePubSub.map[SubscriptionSessionResponseV05](converterResponse05ToString)
-  val responsePubSubPublisherV07 = responsePubSub.map[SubscriptionSessionResponse](converterResponse07ToString)
+  lazy val responsePubSubPublisherV05 = responsePubSub.map[SubscriptionSessionResponseV05](converterResponse05ToString)
+  lazy val responsePubSubPublisherV07 = responsePubSub.map[SubscriptionSessionResponse](converterResponse07ToString)
 
   bind[QueueConsumer[SubscriptionRequest]] identifiedBy "subscription-requests-consumer" toNonLazy requestsQueueConsumer
   bind[PubSubPublisher[SubscriptionSessionResponseV05]] identifiedBy "subscription-responses-publisher-05" toNonLazy responsePubSubPublisherV05
