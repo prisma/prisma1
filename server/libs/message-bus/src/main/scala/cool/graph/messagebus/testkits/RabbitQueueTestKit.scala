@@ -49,7 +49,7 @@ case class RabbitQueueTestKit[T](
 
   val probe                    = TestProbe()
   val errorProbe               = TestProbe()
-  val logId                    = new java.util.Random().nextInt() // For log output correlation
+  val logId                    = new java.util.Random().nextInt(Integer.MAX_VALUE) // For log output correlation
   var messages: Vector[T]      = Vector.empty
   var errorMessages: Vector[T] = Vector.empty
   val exchange                 = RabbitUtils.declareExchange(amqpUri, exchangeName, 1, durable = exchangeDurable)

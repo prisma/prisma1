@@ -46,7 +46,7 @@ case class RabbitAkkaPubSubTestKit[T](
   implicit val bugSnagger: BugSnagger = null
 
   val probe                        = TestProbe()
-  val logId                        = new java.util.Random().nextInt() // For log output correlation
+  val logId                        = new java.util.Random().nextInt(Integer.MAX_VALUE) // For log output correlation
   var messages: Vector[Message[T]] = Vector.empty
   var queueDef: rabbit.Queue       = _
   val exchange                     = RabbitUtils.declareExchange(amqpUri, exchangeName, 1, durable = exchangeDurable)
