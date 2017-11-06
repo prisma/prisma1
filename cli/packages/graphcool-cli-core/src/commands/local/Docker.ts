@@ -4,6 +4,7 @@ import * as path from 'path'
 import * as fs from 'fs-extra'
 import chalk from 'chalk'
 import {mapValues} from 'lodash'
+const debug = require('debug')('Docker')
 
 export default class Docker {
   out: Output
@@ -59,6 +60,8 @@ export default class Docker {
       FUNCTION_ENDPOINT_INTERNAL: `http://localfaas:${FUNCTIONS_PORT}`,
       FUNCTION_ENDPOINT_EXTERNAL: `http://${this.hostName}:${FUNCTIONS_PORT}`,
     }
+    debug(`customVars`)
+    debug(customVars)
     this.out.log(
       `Running local Graphcool cluster at http://localhost:${customVars.PORT}`,
     )
@@ -96,7 +99,7 @@ export default class Docker {
 
   async pull(): Promise<Docker> {
     await this.init()
-    return this.run('pull', '--parallel')
+    return this.run('pull')
   }
 
   private run(...argv: string[]): Promise<Docker> {
