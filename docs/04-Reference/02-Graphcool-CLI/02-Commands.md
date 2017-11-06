@@ -228,7 +228,7 @@ graphcool logs [flags]
 ```
 -f, --function FUNCTION    (required) Name of the function to get the logs from
 -t, --target TARGET      Target name
--t, --tail                 Tail function logs in realtime
+--tail                   Tail function logs in realtime
 ```
 
 
