@@ -7,7 +7,7 @@ const Docker = require('./Docker').default
 Docker.mockImplementation(() => {
   return {
     up: () => {
-      return Promise.resolve({envVars: {MASTER_TOKEN: 'token', PORT: '60000', FUNCTIONS_PORT: '60050'}})
+      return Promise.resolve({envVars: {MASTER_TOKEN: 'token', PORT: '60000', FUNCTIONS_PORT: '60050'}, hostName: 'localhost'})
     }
   }
 })

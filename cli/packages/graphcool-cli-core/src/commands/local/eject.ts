@@ -14,8 +14,8 @@ export default class Eject extends Command {
     fs.copySync(path.join(__dirname, 'docker/docker-compose.yml'), newComposePath)
     let newEnvrcPath
 
-    // const isWin = /^win/.test(process.platform)
-    const isWin = true
+    const isWin = /^win/.test(process.platform)
+    // const isWin = true
     if (isWin) {
       newEnvrcPath = path.join(process.cwd(), 'env.bat')
       fs.writeFileSync(newEnvrcPath, this.getWindowsBat())

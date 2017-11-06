@@ -39,7 +39,7 @@ This is what the referred `newUser.graphql ` contains:
 ```graphql
 subscription {
   User(filter: {
-    operation_in: [CREATED]
+    mutation_in: [CREATED]
   }) {
     node {
       id
