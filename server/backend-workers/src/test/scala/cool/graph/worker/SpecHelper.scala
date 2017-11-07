@@ -34,4 +34,6 @@ object SpecHelper {
     Await.result(logsRoot.run(SpecHelper.recreateLogSchemaActions()), 30.seconds)
     logsRoot.close()
   }
+
+  def getLogsDb = Database.forConfig("logs")
 }
