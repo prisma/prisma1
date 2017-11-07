@@ -1,17 +1,13 @@
 package cool.graph.messagebus.testkits
 
-import akka.stream.ActorMaterializer
-import akka.testkit.TestKit
 import cool.graph.akkautil.SingleThreadedActorSystem
 import cool.graph.messagebus.pubsub.{Message, Only}
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Matchers, WordSpecLike}
+import cool.graph.messagebus.testkits.spechelpers.InMemoryMessageBusTestKits
 import org.scalatest.concurrent.ScalaFutures
-
-import scala.reflect.ClassTag
-import scala.util.{Failure, Success, Try}
+import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Matchers, WordSpecLike}
 
 class InMemoryAkkaPubSubTestKitSpec
-    extends TestKit(SingleThreadedActorSystem("pubsub-spec"))
+    extends InMemoryMessageBusTestKits(SingleThreadedActorSystem("pubsub-spec"))
     with WordSpecLike
     with Matchers
     with BeforeAndAfterAll
@@ -20,22 +16,9 @@ class InMemoryAkkaPubSubTestKitSpec
 
   case class TestMessage(id: String, testOpt: Option[Int], testSeq: Seq[String])
 
-  val testRK: Only                             = Only("test")
-  implicit val materializer: ActorMaterializer = ActorMaterializer()
+  val testRK: Only = Only("test")
 
-  override def afterAll = {
-    materializer.shutdown()
-    shutdown(verifySystemShutdown = true)
-  }
-
-  def withPubSubTestKit[T](checkFn: (InMemoryPubSubTestKit[T]) => Unit)(implicit tag: ClassTag[T]): Unit = {
-    val testKit = InMemoryPubSubTestKit[T]()
-
-    Try { checkFn(testKit) } match {
-      case Success(_) => testKit.shutdown()
-      case Failure(e) => testKit.shutdown(); throw e
-    }
-  }
+  override def afterAll = shutdownTestKit
 
   "The in-memory pubsub testing kit" should {
 
