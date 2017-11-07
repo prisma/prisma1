@@ -24,8 +24,6 @@ import scala.util.{Failure, Success, Try}
 case class SimpleHttpClient()(implicit val system: ActorSystem, materializer: ActorMaterializer) {
   import system.dispatcher
 
-  type ResponseUnmarshaller[T] = (HttpResponse) => Future[T]
-
   private val akkaClient = Http()(system)
 
   def get(uri: String, headers: Seq[(String, String)] = Seq.empty): Future[SimpleHttpResponse] = {
