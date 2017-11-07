@@ -33,7 +33,6 @@ import cool.graph.websockets.protocol.{Request => WebsocketRequest}
 import cool.graph.worker.payloads.{LogItem, Webhook => WorkerWebhook}
 import cool.graph.worker.services.{WorkerDevServices, WorkerServices}
 import play.api.libs.json.Json
-import slick.jdbc.MySQLProfile
 
 import scala.concurrent.{Await, Future}
 
@@ -58,12 +57,12 @@ case class SingleServerDependencies(implicit val system: ActorSystem, val materi
   lazy val (globalDatabaseManager, internalDb, logsDb) = {
     val internal = Initializers.setupAndGetInternalDatabase()
     val logs     = Initializers.setupAndGetLogsDatabase()
-    val client   = Future { GlobalDatabaseManager.initializeForSingleRegion(config) }
-    val dbs      = Future.sequence(Seq(client, internal, logs))
+    val client   = GlobalDatabaseManager.initializeForSingleRegion(config)
+    val dbs      = Future.sequence(Seq(internal, logs))
 
     try {
-      val res = Await.result(dbs, 15.seconds)
-      (res(0).asInstanceOf[GlobalDatabaseManager], res(1).asInstanceOf[MySQLProfile.backend.Database], res(2).asInstanceOf[MySQLProfile.backend.Database])
+      val res = Await.result(dbs, 1.minute)
+      (client, res.head, res.last)
     } catch {
       case e: Throwable =>
         println(s"Unable to initialize databases: $e")
