@@ -1,11 +1,10 @@
 package cool.graph.client.requestPipeline
 
 import akka.actor.ActorSystem
-import akka.http.scaladsl.Http
-import akka.http.scaladsl.model.headers.RawHeader
 import akka.http.scaladsl.model.{DateTime => _, _}
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.{ActorMaterializer, StreamTcpException}
+import cool.graph.akkautil.http.{FailedResponseCodeError, SimpleHttpClient, SimpleHttpResponse}
 import cool.graph.bugsnag.BugSnaggerImpl
 import cool.graph.client.authorization.ClientAuthImpl
 import cool.graph.cuid.Cuid
@@ -35,6 +34,8 @@ sealed trait FunctionError                                                 exten
 case class FunctionReturnedBadStatus(statusCode: Int, rawResponse: String) extends FunctionError
 case class FunctionReturnedBadBody(badBody: String, parseError: String)    extends FunctionError
 case class FunctionWebhookURLNotValid(url: String)                         extends FunctionError
+case class FunctionReturnValueParsingError(functionName: String)           extends FunctionError
+case class FunctionReturnValueNotNullable(resolverName: String)            extends FunctionError
 
 sealed trait FunctionReturnedError                                                     extends FunctionError
 case class FunctionReturnedStringError(error: String, result: FunctionExecutionResult) extends FunctionReturnedError
@@ -47,11 +48,11 @@ class FunctionExecutor(implicit val inj: Injector) extends Injectable {
   implicit val materializer: ActorMaterializer = inject[_root_.akka.stream.ActorMaterializer](identified by "actorMaterializer")
 
   val functionEnvironment: FunctionEnvironment = inject[FunctionEnvironment]
-  val logsPublisher                            = inject[QueuePublisher[String]](identified by "logsPublisher")
+  val logsPublisher: QueuePublisher[String]    = inject[QueuePublisher[String]](identified by "logsPublisher")
+  val httpClient                               = SimpleHttpClient()
 
   def sync(project: Project, function: models.Function, event: String): Future[FunctionSuccess Or FunctionError] = {
     function.delivery match {
-
       // Lambda and Dev function environment
 
       case delivery: models.ManagedFunction =>
@@ -61,34 +62,25 @@ class FunctionExecutor(implicit val inj: Injector) extends Injectable {
         }
 
       // Auth0Extend and Webhooks
-
       case delivery: models.HttpFunction =>
-        val headers = delivery.headers.map { case (name, value) => RawHeader(name, value) }.toImmutable
+        val headers = delivery.headers.toImmutable
+        val uri     = function.delivery.asInstanceOf[HttpFunction].url
 
-        val httpExt = Http(actorSystem)
-        val request = HttpRequest(
-          method = HttpMethods.POST,
-          uri = function.delivery.asInstanceOf[HttpFunction].url,
-          headers = headers,
-          entity = HttpEntity(ContentTypes.`application/json`, event)
-        )
-
-        val response: Future[HttpResponse] = httpExt.singleRequest(request)
-
-        response.flatMap { serverlessResult =>
-          val statusCode = serverlessResult.status.intValue
-          if (statusCode >= 200 && statusCode < 300) {
-            handleSuccessfulResponse(project, serverlessResult, function, acceptEmptyResponse = statusCode == 204)
-          } else {
-            Unmarshal(serverlessResult)
-              .to[String]
-              .map(bodyString => Bad(FunctionReturnedBadStatus(statusCode, bodyString)))
+        httpClient
+          .post(
+            uri,
+            event,
+            ContentTypes.`application/json`,
+            headers
+          )
+          .flatMap { (response: SimpleHttpResponse) =>
+            handleSuccessfulResponse(project, response.underlying, function, acceptEmptyResponse = response.status == 204)
           }
-        } recover {
-          // https://[INVALID].algolia.net/1/keys/[VALID] times out, so we simply report a timeout as a wrong appId
-          case _: StreamTcpException => Bad(FunctionWebhookURLNotValid(request.uri.toString()))
-        }
-
+          .recover {
+            case e: FailedResponseCodeError => Bad(FunctionReturnedBadStatus(e.response.status, e.response.body.getOrElse("")))
+            // https://[INVALID].algolia.net/1/keys/[VALID] times out, so we simply report a timeout as a wrong appId
+            case _: StreamTcpException => Bad(FunctionWebhookURLNotValid(uri))
+          }
       case _ =>
         sys.error("only knows how to execute HttpFunctions")
     }
@@ -112,6 +104,13 @@ class FunctionExecutor(implicit val inj: Injector) extends Injectable {
 
     sync(project, function, event)
       .andThen({
+        case Success(Bad(FunctionReturnValueNotNullable(resolverName))) =>
+          logsPublisher.publish(
+            renderLogPayload("FAILURE", Map("error" -> s"The resolver function `$resolverName` is not nullable, but the function returned null.")))
+
+        case Success(Bad(FunctionReturnValueParsingError(functionName))) =>
+          logsPublisher.publish(renderLogPayload("FAILURE", Map("error" -> s"There was a problem parsing the function response. Function name: $functionName")))
+
         case Success(Bad(FunctionReturnedStringError(error, result))) =>
           logsPublisher.publish(renderLogPayload("FAILURE", Map("event" -> event, "logs" -> result.logs, "returnValue" -> result.returnValue)))
 
@@ -122,7 +121,7 @@ class FunctionExecutor(implicit val inj: Injector) extends Injectable {
           logsPublisher.publish(renderLogPayload("FAILURE", Map("error" -> s"Couldn't parse response: $badBody. Error message: $parseError")))
 
         case Success(Bad(FunctionReturnedBadStatus(statusCode, rawResponse))) =>
-          logsPublisher.publish(renderLogPayload("FAILURE", Map("error" -> rawResponse))) //Function returned invalid status code: $statusCode. Raw body:
+          logsPublisher.publish(renderLogPayload("FAILURE", Map("error" -> s"Function returned invalid status code: $statusCode. Raw body: $rawResponse")))
 
         case Success(Bad(FunctionWebhookURLNotValid(url))) =>
           logsPublisher.publish(renderLogPayload("FAILURE", Map("error" -> s"Function called an invalid url: $url")))
@@ -135,6 +134,8 @@ class FunctionExecutor(implicit val inj: Injector) extends Injectable {
   def syncWithLoggingAndErrorHandling_!(function: models.Function, event: String, project: Project, requestId: String): Future[FunctionSuccess] = {
     syncWithLogging(function, event, project, requestId) map {
       case Good(x)                                       => x
+      case Bad(err: FunctionReturnValueNotNullable)      => throw ResolverPayloadIsRequired(err.resolverName)
+      case Bad(err: FunctionReturnValueParsingError)     => throw DataDoesNotMatchPayloadType(err.functionName)
       case Bad(_: FunctionWebhookURLNotValid)            => throw FunctionWebhookURLWasNotValid(executionId = requestId)
       case Bad(_: FunctionReturnedBadStatus)             => throw UnhandledFunctionError(executionId = requestId)
       case Bad(_: FunctionReturnedBadBody)               => throw FunctionReturnedInvalidBody(executionId = requestId)
@@ -160,13 +161,44 @@ class FunctionExecutor(implicit val inj: Injector) extends Injectable {
     import shapeless._
     import syntax.typeable._
 
-    def parseResolverResponse(data: Any, f: FreeType): FunctionDataValue = {
-      def tryParsingAsList = Try { data.asInstanceOf[List[Any]].toVector }.getOrElse(throw DataDoesNotMatchPayloadType())
+    def parseDataToJsObject(data: Any): JsObject Or FunctionError = {
+      Try(data.asInstanceOf[Map[String, Any]].toJson.asJsObject) match {
+        case Success(x) => Good(x)
+        case Failure(_) => Bad(FunctionReturnValueParsingError(function.name))
+      }
+    }
+
+    def parseResolverResponse(data: Any, f: FreeType): FunctionDataValue Or FunctionError = {
+      def tryParsingAsList(data: Any): Vector[Any] Or FunctionError = Try { data.asInstanceOf[List[Any]].toVector } match {
+        case Success(x: Vector[Any]) => Good(x)
+        case Failure(_)              => Bad(FunctionReturnValueParsingError(function.name))
+      }
 
       f.isList match {
-        case _ if data == null => FunctionDataValue(isNull = true, Vector.empty)
-        case false             => FunctionDataValue(isNull = false, Vector(parseDataToJsObject(data)))
-        case true              => FunctionDataValue(isNull = false, tryParsingAsList.map(parseDataToJsObject))
+        case _ if data == null =>
+          Good(FunctionDataValue(isNull = true, Vector.empty))
+
+        case false =>
+          parseDataToJsObject(data) match {
+            case Good(x) => Good(FunctionDataValue(isNull = false, Vector(x)))
+            case Bad(x)  => Bad(x)
+          }
+
+        case true =>
+          tryParsingAsList(data) match {
+            case Good(vector: Vector[Any]) =>
+              val parsed: Vector[Or[JsObject, FunctionError]] = vector.map(parseDataToJsObject)
+              val error                                       = parsed.find(_.isBad)
+
+              error match {
+                case None           => Good(FunctionDataValue(isNull = false, parsed.collect { case Good(jsObject) => jsObject }))
+                case Some(Bad(err)) => Bad(err)
+                case _              => Bad(FunctionReturnValueParsingError(function.name))
+              }
+
+            case Bad(err: FunctionError) =>
+              Bad(err)
+          }
       }
     }
 
@@ -192,10 +224,17 @@ class FunctionExecutor(implicit val inj: Injector) extends Injectable {
               FunctionExecutionResult(Vector.empty, parsed)
           }
 
-          def getResult(data: Any): FunctionDataValue = function match {
-            case f: CustomQueryFunction    => parseResolverResponse(data, f.payloadType)
-            case f: CustomMutationFunction => parseResolverResponse(data, f.payloadType)
-            case _                         => FunctionDataValue(isNull = false, Vector(parseDataToJsObject(data)))
+          def getResult(data: Any): FunctionDataValue Or FunctionError = {
+            def handleParsedJsObject(data: Any) = parseDataToJsObject(data) match {
+              case Good(x: JsObject)     => Good(FunctionDataValue(isNull = false, Vector(x)))
+              case Bad(x: FunctionError) => Bad(x)
+            }
+
+            function match {
+              case f: CustomQueryFunction    => parseResolverResponse(data, f.payloadType)
+              case f: CustomMutationFunction => parseResolverResponse(data, f.payloadType)
+              case _                         => handleParsedJsObject(data)
+            }
           }
 
           def resolverPayloadIsRequired: Boolean = function match {
@@ -209,23 +248,21 @@ class FunctionExecutor(implicit val inj: Injector) extends Injectable {
           val jsonError: Option[Map[String, Any]] = returnedError.flatMap(e => e.cast[Map[String, Any]])
 
           (returnedError, functionExecutionResult.returnValue.get("data")) match {
-            case (None, None) if resolverPayloadIsRequired => throw ResolverPayloadIsRequired()
-            case (None, None)                              => Good(FunctionSuccess(FunctionDataValue(isNull = true, Vector.empty), functionExecutionResult))
-            case (Some(null), Some(data))                  => Good(FunctionSuccess(getResult(data), functionExecutionResult))
-            case (None, Some(data))                        => Good(FunctionSuccess(getResult(data), functionExecutionResult))
-            case (Some(_), _) if stringError.isDefined     => Bad(FunctionReturnedStringError(stringError.get, functionExecutionResult))
-            case (Some(_), _) if jsonError.isDefined       => Bad(FunctionReturnedJsonError(myMapFormat.write(jsonError.get).asJsObject, functionExecutionResult))
-            case (Some(error), _)                          => Bad(FunctionReturnedBadBody(bodyString, error.toString))
+            case (None, None) if resolverPayloadIsRequired         => Bad(FunctionReturnValueNotNullable(s"${function.name}"))
+            case (None, None)                                      => Good(FunctionSuccess(FunctionDataValue(isNull = true, Vector.empty), functionExecutionResult))
+            case (Some(null), Some(data)) if getResult(data).isBad => Bad(FunctionReturnValueParsingError(function.name))
+            case (Some(null), Some(data))                          => Good(FunctionSuccess(getResult(data).get, functionExecutionResult))
+            case (None, Some(data)) if getResult(data).isBad       => Bad(FunctionReturnValueParsingError(function.name))
+            case (None, Some(data))                                => Good(FunctionSuccess(getResult(data).get, functionExecutionResult))
+            case (Some(_), _) if stringError.isDefined             => Bad(FunctionReturnedStringError(stringError.get, functionExecutionResult))
+            case (Some(_), _) if jsonError.isDefined               => Bad(FunctionReturnedJsonError(myMapFormat.write(jsonError.get).asJsObject, functionExecutionResult))
+            case (Some(error), _)                                  => Bad(FunctionReturnedBadBody(bodyString, error.toString))
           }
 
         case Failure(e) =>
           Bad(FunctionReturnedBadBody(bodyString, e.getMessage))
       }
     }
-  }
-
-  private def parseDataToJsObject(data: Any) = {
-    Try(data.asInstanceOf[Map[String, Any]].toJson.asJsObject).getOrElse(throw DataDoesNotMatchPayloadType())
   }
 
   implicit object AnyJsonFormat extends JsonFormat[Any] {

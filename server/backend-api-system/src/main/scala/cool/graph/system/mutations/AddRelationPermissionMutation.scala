@@ -50,21 +50,21 @@ case class AddRelationPermissionMutation(
 
   override def prepareActions(): List[Mutaction] = {
 
-    newRelationPermission.ruleGraphQuery.foreach { query =>
-      val queriesWithSameOpCount = relation.permissions.count(_.operation == newRelationPermission.operation)
-
-      val queryName = newRelationPermission.ruleName match {
-        case Some(nameForRule) => nameForRule
-        case None              => QueryPermissionHelper.alternativeNameFromOperationAndInt(newRelationPermission.operation, queriesWithSameOpCount)
-      }
-
-      val args         = QueryPermissionHelper.permissionQueryArgsFromRelation(relation, project)
-      val treatedQuery = QueryPermissionHelper.prependNameAndRenderQuery(query, queryName: String, args: List[(String, String)])
-
-      val violations = QueryPermissionHelper.validatePermissionQuery(treatedQuery, project)
-      if (violations.nonEmpty)
-        actions ++= List(InvalidInput(PermissionQueryIsInvalid(violations.mkString(""), newRelationPermission.ruleName.getOrElse(newRelationPermission.id))))
-    }
+//    newRelationPermission.ruleGraphQuery.foreach { query =>
+//      val queriesWithSameOpCount = relation.permissions.count(_.operation == newRelationPermission.operation)
+//
+//      val queryName = newRelationPermission.ruleName match {
+//        case Some(nameForRule) => nameForRule
+//        case None              => QueryPermissionHelper.alternativeNameFromOperationAndInt(newRelationPermission.operation, queriesWithSameOpCount)
+//      }
+//
+//      val args         = QueryPermissionHelper.permissionQueryArgsFromRelation(relation, project)
+//      val treatedQuery = QueryPermissionHelper.prependNameAndRenderQuery(query, queryName: String, args: List[(String, String)])
+//
+//      val violations = QueryPermissionHelper.validatePermissionQuery(treatedQuery, project)
+//      if (violations.nonEmpty)
+//        actions ++= List(InvalidInput(PermissionQueryIsInvalid(violations.mkString(""), newRelationPermission.ruleName.getOrElse(newRelationPermission.id))))
+//    }
 
     actions :+= CreateRelationPermission(project = project, relation = relation, permission = newRelationPermission)
 

@@ -53,21 +53,21 @@ case class UpdateModelPermissionMutation(
 
   override def prepareActions(): List[Mutaction] = {
 
-    updatedModelPermission.ruleGraphQuery.foreach { query =>
-      val queriesWithSameOpCount = model.permissions.count(_.operation == updatedModelPermission.operation) // Todo this count may be wrong
-
-      val queryName = updatedModelPermission.ruleName match {
-        case Some(nameForRule) => nameForRule
-        case None              => QueryPermissionHelper.alternativeNameFromOperationAndInt(updatedModelPermission.operationString, queriesWithSameOpCount)
-      }
-
-      val args         = QueryPermissionHelper.permissionQueryArgsFromModel(model)
-      val treatedQuery = QueryPermissionHelper.prependNameAndRenderQuery(query, queryName: String, args: List[(String, String)])
-
-      val violations = QueryPermissionHelper.validatePermissionQuery(treatedQuery, project)
-      if (violations.nonEmpty)
-        actions ++= List(InvalidInput(PermissionQueryIsInvalid(violations.mkString(""), updatedModelPermission.ruleName.getOrElse(updatedModelPermission.id))))
-    }
+//    updatedModelPermission.ruleGraphQuery.foreach { query =>
+//      val queriesWithSameOpCount = model.permissions.count(_.operation == updatedModelPermission.operation) // Todo this count may be wrong
+//
+//      val queryName = updatedModelPermission.ruleName match {
+//        case Some(nameForRule) => nameForRule
+//        case None              => QueryPermissionHelper.alternativeNameFromOperationAndInt(updatedModelPermission.operationString, queriesWithSameOpCount)
+//      }
+//
+//      val args         = QueryPermissionHelper.permissionQueryArgsFromModel(model)
+//      val treatedQuery = QueryPermissionHelper.prependNameAndRenderQuery(query, queryName: String, args: List[(String, String)])
+//
+//      val violations = QueryPermissionHelper.validatePermissionQuery(treatedQuery, project)
+//      if (violations.nonEmpty)
+//        actions ++= List(InvalidInput(PermissionQueryIsInvalid(violations.mkString(""), updatedModelPermission.ruleName.getOrElse(updatedModelPermission.id))))
+//    }
 
     actions :+= UpdateModelPermission(model = model, oldPermisison = modelPermission, permission = updatedModelPermission)
 

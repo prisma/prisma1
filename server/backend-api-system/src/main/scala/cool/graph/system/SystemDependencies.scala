@@ -68,7 +68,6 @@ trait SystemApiDependencies extends Module {
 
 case class SystemDependencies()(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends SystemApiDependencies {
   import system.dispatcher
-
   import scala.concurrent.duration._
 
   SystemMetrics.init()
@@ -89,21 +88,21 @@ case class SystemDependencies()(implicit val system: ActorSystem, val materializ
     }
   }
 
-  val internalDb                                   = dbs.head
-  val logsDb                                       = dbs.last
-  val globalDatabaseManager                        = GlobalDatabaseManager.initializeForMultipleRegions(config)
-  val globalRabbitUri                              = sys.env.getOrElse("GLOBAL_RABBIT_URI", sys.error("GLOBAL_RABBIT_URI required for schema invalidation"))
-  val invalidationPublisher                        = RabbitAkkaPubSub.publisher[String](globalRabbitUri, "project-schema-invalidation", durable = true)
-  val uncachedProjectResolver                      = UncachedProjectResolver(internalDb)
-  val cachedProjectResolver: CachedProjectResolver = CachedProjectResolverImpl(uncachedProjectResolver)(system.dispatcher)
-  val apiMatrixFactory: ApiMatrixFactory           = ApiMatrixFactory(DefaultApiMatrix)
-  val requestPrefix                                = sys.env.getOrElse("AWS_REGION", sys.error("AWS Region not found."))
-  val cloudwatch                                   = CloudwatchImpl()
-  val snsPublisher                                 = new SnsPublisherImplementation(topic = sys.env("SNS_SEAT"))
-  val kinesis                                      = AwsInitializers.createKinesis()
-  val kinesisAlgoliaSyncQueriesPublisher           = new KinesisPublisherImplementation(streamName = sys.env("KINESIS_STREAM_ALGOLIA_SYNC_QUERY"), kinesis)
+  lazy val internalDb                                   = dbs.head
+  lazy val logsDb                                       = dbs.last
+  lazy val globalDatabaseManager                        = GlobalDatabaseManager.initializeForMultipleRegions(config)
+  lazy val globalRabbitUri                              = sys.env.getOrElse("GLOBAL_RABBIT_URI", sys.error("GLOBAL_RABBIT_URI required for schema invalidation"))
+  lazy val invalidationPublisher                        = RabbitAkkaPubSub.publisher[String](globalRabbitUri, "project-schema-invalidation", durable = true)
+  lazy val uncachedProjectResolver                      = UncachedProjectResolver(internalDb)
+  lazy val cachedProjectResolver: CachedProjectResolver = CachedProjectResolverImpl(uncachedProjectResolver)(system.dispatcher)
+  lazy val apiMatrixFactory: ApiMatrixFactory           = ApiMatrixFactory(DefaultApiMatrix)
+  lazy val requestPrefix                                = sys.env.getOrElse("AWS_REGION", sys.error("AWS Region not found."))
+  lazy val cloudwatch                                   = CloudwatchImpl()
+  lazy val snsPublisher                                 = new SnsPublisherImplementation(topic = sys.env("SNS_SEAT"))
+  lazy val kinesis                                      = AwsInitializers.createKinesis()
+  lazy val kinesisAlgoliaSyncQueriesPublisher           = new KinesisPublisherImplementation(streamName = sys.env("KINESIS_STREAM_ALGOLIA_SYNC_QUERY"), kinesis)
 
-  val functionEnvironment = LambdaFunctionEnvironment(
+  lazy val functionEnvironment = LambdaFunctionEnvironment(
     sys.env.getOrElse("LAMBDA_AWS_ACCESS_KEY_ID", "whatever"),
     sys.env.getOrElse("LAMBDA_AWS_SECRET_ACCESS_KEY", "whatever")
   )

@@ -1,7 +1,7 @@
 package cool.graph.worker.workers
 
 import akka.http.scaladsl.model.ContentTypes
-import cool.graph.akkautil.http.{FailedRequestError, SimpleHttpClient}
+import cool.graph.akkautil.http.{RequestFailedError, SimpleHttpClient}
 import cool.graph.bugsnag.BugSnagger
 import cool.graph.cuid.Cuid
 import cool.graph.messagebus.{QueueConsumer, QueuePublisher}
@@ -44,7 +44,7 @@ case class WebhookDelivererWorker(
         logsPublisher.publish(logItem)
       }
       .recover {
-        case e: FailedRequestError =>
+        case e: RequestFailedError =>
           val message =
             s"Call to ${wh.url} failed with status ${e.response.status}, response body '${e.response.body.getOrElse("")}' and headers [${formatHeaders(e.response.headers)}]"
           handleError(message)

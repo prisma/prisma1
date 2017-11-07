@@ -12,14 +12,8 @@ services:
     volumes:
       - db-persistence:/var/lib/mysql
 
-  graphcool-rabbit-host:
-    image: rabbitmq:3-management
-    networks:
-      - graphcool
-    restart: always
-
   localfaas:
-      image: graphcool/localfaas:0.8.1
+      image: graphcool/localfaas:latest
       networks:
         - graphcool
       restart: always
@@ -31,7 +25,7 @@ services:
         - faas-persistence:/var/faas
 
   graphcool:
-    image: graphcool/graphcool-dev:0.8.1
+    image: graphcool/graphcool-dev:latest
     restart: always
     ports:
       - "0.0.0.0:${PORT}:${PORT}"
@@ -39,7 +33,6 @@ services:
       - graphcool
     depends_on:
       - graphcool-db
-      - graphcool-rabbit-host
     environment:
       FILEUPLOAD_S3_AWS_ACCESS_KEY_ID: $FILEUPLOAD_S3_AWS_ACCESS_KEY_ID
       FILEUPLOAD_S3_AWS_SECRET_ACCESS_KEY: $FILEUPLOAD_S3_AWS_SECRET_ACCESS_KEY
@@ -91,8 +84,6 @@ services:
       SQL_CLIENT_PASSWORD_AP_NORTHEAST_1: $SQL_CLIENT_PASSWORD_AP_NORTHEAST_1
       SNS_ENDPOINT_SYSTEM: $SNS_ENDPOINT_SYSTEM
       SNS_FUNCTION_LOGS: $SNS_FUNCTION_LOGS
-      RABBITMQ_URI: $RABBITMQ_URI
-      GLOBAL_RABBIT_URI: $RABBITMQ_URI
       SQL_LOGS_HOST: $SQL_LOGS_HOST
       SQL_LOGS_PORT: $SQL_LOGS_PORT
       SQL_LOGS_USER: $SQL_LOGS_USER

@@ -20,8 +20,8 @@ To get a practical introduction to the Graphcool authorization system, check out
 
 In general, permissions follow a **whitelist approach**:
 
-* *no operation is permitted unless explicitely allowed*
-* *a permission cannot be nullified by other permissions*
+- _no operation is permitted unless explicitely allowed_
+- _a permission cannot be nullified by other permissions_
 
 Essentially this means that a request is only executed if and only if it *matches* at least one specified permission. This allows us to specify permissions in a modular way and to focus on a specific use case in a single permission which leads to many simple permissions instead of fewer complex ones.
 
