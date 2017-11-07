@@ -21,8 +21,6 @@ class InMemoryAkkaPubSubSpec
     val testProbe = TestProbe()
     val pubSub    = InMemoryAkkaPubSub[String]()
 
-    pubSub.mediator
-
     checkFn(pubSub, testProbe)
   }
 

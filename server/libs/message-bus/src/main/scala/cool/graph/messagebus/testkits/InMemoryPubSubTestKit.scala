@@ -23,6 +23,9 @@ import scala.reflect.ClassTag
   * messagesReceived and messagesPublished. Each expect call on this testkit has a version for
   * for published messages and for received messages.
   *
+  * Important: Messages received by multiple subscribers (e.g. they have the same topic subscription) will intentionally
+  * have multiple copies in the messages list - no message dedup is taking place.
+  *
   * Subscribing requires a minimal delay for the actors to set up or else messages might slip through before subscriptions
   * are fully set up - hence the Thread.sleep calls.
   */
@@ -40,14 +43,12 @@ case class InMemoryPubSubTestKit[T]()(
   var messagesPublished = Vector.empty[Message[T]]
   val _underlying       = InMemoryAkkaPubSub[T]()
 
-  // todo: Set semantics required for the messages! If multiple subscribers receive the same message,
-
   /**
     * Subscribes a dummy test subscriber that listens to all messages on the PubSub, stores them
     * in the messagesReceived, and notifies the probe.
     */
   def withTestSubscriber: Subscription = {
-    val sub = subscribe(Everything, msg => println(s"WAT $msg") /* noop */ )
+    val sub = subscribe(Everything, msg => /* noop */ ())
     Thread.sleep(50)
     sub
   }
@@ -63,7 +64,8 @@ case class InMemoryPubSubTestKit[T]()(
     */
   override def subscribe(topic: Topic, onReceive: (Message[T]) => Unit): Subscription = {
     val sub = _underlying.subscribe(
-      topic, { msg: Message[T] =>
+      topic,
+      (msg: Message[T]) => {
         println(s"[TestKit][$logId] Received $msg")
 
         messagesReceived.synchronized {
