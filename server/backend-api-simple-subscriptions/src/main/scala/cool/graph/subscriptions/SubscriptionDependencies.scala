@@ -57,38 +57,38 @@ trait SimpleSubscriptionApiDependencies extends Module {
 case class SimpleSubscriptionDependencies()(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends SimpleSubscriptionApiDependencies {
   import cool.graph.subscriptions.protocol.Converters._
 
-  implicit val unmarshaller              = (_: Array[Byte]) => SchemaInvalidated
-  val globalRabbitUri                    = sys.env("GLOBAL_RABBIT_URI")
-  val clusterLocalRabbitUri              = sys.env("RABBITMQ_URI")
-  val apiMatrixFactory: ApiMatrixFactory = ApiMatrixFactory(DefaultApiMatrix)
+  implicit val unmarshaller                   = (_: Array[Byte]) => SchemaInvalidated
+  lazy val globalRabbitUri                    = sys.env("GLOBAL_RABBIT_URI")
+  lazy val clusterLocalRabbitUri              = sys.env("RABBITMQ_URI")
+  lazy val apiMatrixFactory: ApiMatrixFactory = ApiMatrixFactory(DefaultApiMatrix)
 
-  val invalidationSubscriber: PubSubSubscriber[SchemaInvalidatedMessage] = RabbitAkkaPubSub.subscriber[SchemaInvalidatedMessage](
+  lazy val invalidationSubscriber: PubSubSubscriber[SchemaInvalidatedMessage] = RabbitAkkaPubSub.subscriber[SchemaInvalidatedMessage](
     globalRabbitUri,
     "project-schema-invalidation",
     durable = true
   )
 
-  val sssEventsSubscriber = RabbitAkkaPubSub.subscriber[String](
+  lazy val sssEventsSubscriber = RabbitAkkaPubSub.subscriber[String](
     clusterLocalRabbitUri,
     "sss-events",
     durable = true
   )(bugsnagger, system, Conversions.Unmarshallers.ToString)
 
-  val responsePubSubPublisher: PubSubPublisher[String] = RabbitAkkaPubSub.publisher[String](
+  lazy val responsePubSubPublisher: PubSubPublisher[String] = RabbitAkkaPubSub.publisher[String](
     clusterLocalRabbitUri,
     "subscription-responses",
     durable = true
   )(bugsnagger, Conversions.Marshallers.FromString)
 
-  val responsePubSubPublisherV05 = responsePubSubPublisher.map[SubscriptionSessionResponseV05](converterResponse05ToString)
-  val responsePubSubPublisherV07 = responsePubSubPublisher.map[SubscriptionSessionResponse](converterResponse07ToString)
-  val requestsQueueConsumer      = RabbitQueue.consumer[SubscriptionRequest](clusterLocalRabbitUri, "subscription-requests", durableExchange = true)
-  val cloudwatch                 = CloudwatchImpl()
-  val globalDatabaseManager      = GlobalDatabaseManager.initializeForSingleRegion(config)
-  val kinesis                    = AwsInitializers.createKinesis()
-  val kinesisApiMetricsPublisher = new KinesisPublisherImplementation(streamName = sys.env("KINESIS_STREAM_API_METRICS"), kinesis)
-  val featureMetricActor         = system.actorOf(Props(new FeatureMetricActor(kinesisApiMetricsPublisher, apiMetricsFlushInterval)))
-  val apiMetricsMiddleware       = new ApiMetricsMiddleware(testableTime, featureMetricActor)
+  lazy val responsePubSubPublisherV05 = responsePubSubPublisher.map[SubscriptionSessionResponseV05](converterResponse05ToString)
+  lazy val responsePubSubPublisherV07 = responsePubSubPublisher.map[SubscriptionSessionResponse](converterResponse07ToString)
+  lazy val requestsQueueConsumer      = RabbitQueue.consumer[SubscriptionRequest](clusterLocalRabbitUri, "subscription-requests", durableExchange = true)
+  lazy val cloudwatch                 = CloudwatchImpl()
+  lazy val globalDatabaseManager      = GlobalDatabaseManager.initializeForSingleRegion(config)
+  lazy val kinesis                    = AwsInitializers.createKinesis()
+  lazy val kinesisApiMetricsPublisher = new KinesisPublisherImplementation(streamName = sys.env("KINESIS_STREAM_API_METRICS"), kinesis)
+  lazy val featureMetricActor         = system.actorOf(Props(new FeatureMetricActor(kinesisApiMetricsPublisher, apiMetricsFlushInterval)))
+  lazy val apiMetricsMiddleware       = new ApiMetricsMiddleware(testableTime, featureMetricActor)
 
   bind[KinesisPublisher] identifiedBy "kinesisApiMetricsPublisher" toNonLazy kinesisApiMetricsPublisher
   bind[QueueConsumer[SubscriptionRequest]] identifiedBy "subscription-requests-consumer" toNonLazy requestsQueueConsumer
