@@ -181,7 +181,7 @@ Next, we'll make sure the required modules are installed.
 We need to install `isomorphic-fetch` and `form-data`:
 
 ```sh
-npm install --save isomorphic-fetch form-dat
+npm install --save isomorphic-fetch form-data
 ```
 
 This adds the dependencies to the `package.json` file.

@@ -24,9 +24,8 @@ import scala.util.{Failure, Success, Try}
 case class SimpleHttpClient()(implicit val system: ActorSystem, materializer: ActorMaterializer) {
   import system.dispatcher
 
-  type ResponseUnmarshaller[T] = (HttpResponse) => Future[T]
   type StatusCodeValidator     = (Int) => Boolean
-
+  
   private val akkaClient = Http()(system)
 
   def get(
