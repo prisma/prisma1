@@ -16,6 +16,7 @@ import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
 
 abstract class DataResolver(val project: Project, val requestContext: Option[RequestContextTrait])(implicit inj: Injector) extends Injectable with Cloneable {
+  import cool.graph.shared.BackendSharedMetrics._
 
   def this(project: Project, requestContext: RequestContextTrait)(implicit inj: Injector) =
     this(project: Project, Some(requestContext))
@@ -35,12 +36,14 @@ abstract class DataResolver(val project: Project, val requestContext: Option[Req
     if (useMasterDatabaseOnly) globalDatabaseManager.getDbForProject(project).master
     else globalDatabaseManager.getDbForProject(project).readOnly
 
-  protected def performWithTiming[A](name: String, f: Future[A]): Future[A] = {
+  protected def performWithTiming[A](name: String, f: => Future[A]): Future[A] = {
     val begin = System.currentTimeMillis()
-    f andThen {
-      case x =>
-        requestContext.foreach(_.logSqlTiming(Timing(name, System.currentTimeMillis() - begin)))
-        x
+    sqlQueryTimer.time(project.id, name) {
+      f andThen {
+        case x =>
+          requestContext.foreach(_.logSqlTiming(Timing(name, System.currentTimeMillis() - begin)))
+          x
+      }
     }
   }
   def resolveByModel(model: Model, args: Option[QueryArguments] = None): Future[ResolverResult]

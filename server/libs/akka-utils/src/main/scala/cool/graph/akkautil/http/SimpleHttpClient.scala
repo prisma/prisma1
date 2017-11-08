@@ -24,8 +24,8 @@ import scala.util.{Failure, Success, Try}
 case class SimpleHttpClient()(implicit val system: ActorSystem, materializer: ActorMaterializer) {
   import system.dispatcher
 
-  type StatusCodeValidator     = (Int) => Boolean
-  
+  type StatusCodeValidator = (Int) => Boolean
+
   private val akkaClient = Http()(system)
 
   def get(
@@ -78,7 +78,7 @@ case class SimpleHttpClient()(implicit val system: ActorSystem, materializer: Ac
     * @param statusCode The status code to validate
     * @return true if the status code is considered valid, false otherwise.
     */
-  def defaultStatusCodeValidator(statusCode: Int): Boolean = 200 >= statusCode && statusCode < 300
+  def defaultStatusCodeValidator(statusCode: Int): Boolean = statusCode >= 200 && statusCode < 300
 
   protected def execute(req: HttpRequest, isValidStatusCode: StatusCodeValidator): Future[SimpleHttpResponse] = {
     akkaClient.singleRequest(req).flatMap { response =>
