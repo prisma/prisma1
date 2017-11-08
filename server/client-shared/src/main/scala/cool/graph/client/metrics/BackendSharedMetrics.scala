@@ -13,7 +13,4 @@ object BackendSharedMetrics extends MetricsManager {
         x.head.toUpper + x.tail
       }
       .mkString
-
-  val projectCacheGetCount  = defineCounter("projectCacheGetCount")
-  val projectCacheMissCount = defineCounter("projectCacheMissCount")
 }
