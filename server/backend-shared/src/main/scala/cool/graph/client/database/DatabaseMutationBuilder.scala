@@ -153,7 +153,7 @@ object DatabaseMutationBuilder {
     DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"""
   }
 
-  def dangerouslyTruncateTable(tableNames: List[String]): DBIOAction[Unit, NoStream, Effect] = {
+  def dangerouslyTruncateTable(tableNames: Vector[String]): DBIOAction[Unit, NoStream, Effect] = {
     DBIO.seq(
       List(sqlu"""SET FOREIGN_KEY_CHECKS=0""") ++
         tableNames.map(name => sqlu"TRUNCATE TABLE `#$name`") ++

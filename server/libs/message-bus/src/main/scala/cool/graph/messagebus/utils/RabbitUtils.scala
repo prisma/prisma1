@@ -15,7 +15,7 @@ object RabbitUtils {
     exchangeTry match {
       case Success(ex) => ex
       case Failure(err) =>
-        throw new Exception(s"Unable to declare rabbit exchange: $err")
+        throw new Exception(s"Unable to declare rabbit exchange: $err", err)
     }
   }
 }

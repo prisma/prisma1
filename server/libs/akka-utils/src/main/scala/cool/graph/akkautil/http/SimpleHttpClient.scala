@@ -24,11 +24,15 @@ import scala.util.{Failure, Success, Try}
 case class SimpleHttpClient()(implicit val system: ActorSystem, materializer: ActorMaterializer) {
   import system.dispatcher
 
-  type ResponseUnmarshaller[T] = (HttpResponse) => Future[T]
+  type StatusCodeValidator = (Int) => Boolean
 
   private val akkaClient = Http()(system)
 
-  def get(uri: String, headers: Seq[(String, String)] = Seq.empty): Future[SimpleHttpResponse] = {
+  def get(
+      uri: String,
+      headers: Seq[(String, String)] = Seq.empty,
+      statusCodeValidator: StatusCodeValidator = defaultStatusCodeValidator
+  ): Future[SimpleHttpResponse] = {
     parseHeaders(headers).flatMap { akkaHeaders =>
       val akkaRequest = HttpRequest(
         uri = uri,
@@ -36,15 +40,26 @@ case class SimpleHttpClient()(implicit val system: ActorSystem, materializer: Ac
         headers = akkaHeaders
       )
 
-      execute(akkaRequest)
+      execute(akkaRequest, statusCodeValidator)
     }
   }
 
-  def postJson[T](uri: String, body: T, headers: Seq[(String, String)] = Seq.empty)(implicit bodyWrites: Writes[T]) = {
-    post(uri, Json.toJson(body).toString(), ContentTypes.`application/json`, headers)
+  def postJson[T](
+      uri: String,
+      body: T,
+      headers: Seq[(String, String)] = Seq.empty,
+      statusCodeValidator: StatusCodeValidator = defaultStatusCodeValidator
+  )(implicit bodyWrites: Writes[T]) = {
+    post(uri, Json.toJson(body).toString(), ContentTypes.`application/json`, headers, statusCodeValidator)
   }
 
-  def post(uri: String, body: String, contentType: ContentType.NonBinary = ContentTypes.`text/plain(UTF-8)`, headers: Seq[(String, String)] = Seq.empty) = {
+  def post(
+      uri: String,
+      body: String,
+      contentType: ContentType.NonBinary = ContentTypes.`text/plain(UTF-8)`,
+      headers: Seq[(String, String)] = Seq.empty,
+      statusCodeValidator: StatusCodeValidator = defaultStatusCodeValidator
+  ) = {
     parseHeaders(headers).flatMap { akkaHeaders =>
       val akkaRequest = HttpRequest(
         uri = uri,
@@ -53,11 +68,19 @@ case class SimpleHttpClient()(implicit val system: ActorSystem, materializer: Ac
         entity = HttpEntity(contentType, body)
       )
 
-      execute(akkaRequest)
+      execute(akkaRequest, statusCodeValidator)
     }
   }
 
-  protected def execute(req: HttpRequest): Future[SimpleHttpResponse] = {
+  /**
+    * Standard validator for status codes. Checks if the code is from 200 - 299.
+    *
+    * @param statusCode The status code to validate
+    * @return true if the status code is considered valid, false otherwise.
+    */
+  def defaultStatusCodeValidator(statusCode: Int): Boolean = statusCode >= 200 && statusCode < 300
+
+  protected def execute(req: HttpRequest, isValidStatusCode: StatusCodeValidator): Future[SimpleHttpResponse] = {
     akkaClient.singleRequest(req).flatMap { response =>
       Unmarshal(response)
         .to[String]
@@ -71,7 +94,7 @@ case class SimpleHttpClient()(implicit val system: ActorSystem, materializer: Ac
             Future.failed(e)
         }
         .flatMap { simpleResponse =>
-          if (response.status.isSuccess()) {
+          if (isValidStatusCode(response.status.intValue())) {
             Future.successful(simpleResponse)
           } else {
             Future.failed(FailedResponseCodeError(s"Server responded with ${response.status.intValue()}", simpleResponse))
@@ -91,6 +114,12 @@ case class SimpleHttpClient()(implicit val system: ActorSystem, materializer: Ac
     }
   }
 
+  /**
+    * Parses a collection of headers to akka http headers.
+    *
+    * @param headers Sequence of tuples representing the headers.
+    * @return A future containing a collection of the akka http headers.
+    */
   def parseHeaders(headers: Seq[(String, String)]): Future[Seq[HttpHeader]] = Future {
     headers.map { (h: (String, String)) =>
       HttpHeader.parse(h._1, h._2) match {
