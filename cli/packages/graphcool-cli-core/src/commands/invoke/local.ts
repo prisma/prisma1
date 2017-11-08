@@ -37,7 +37,7 @@ export default class InvokeLocal extends Command {
     const { project } = this.flags
     const fnName = this.flags.function
 
-    const { id } = await this.env.getTarget(target)
+    const { id } = await this.env.getTarget(process.env.GRAPHCOOL_TARGET || target)
     await this.definition.load(this.flags)
 
     const result = this.definition.getFunctionAndModule(fnName)

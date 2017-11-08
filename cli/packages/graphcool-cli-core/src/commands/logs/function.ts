@@ -28,7 +28,7 @@ export default class FunctionLogs extends Command {
     const { tail, target } = this.flags
     const functionName = this.flags.function
 
-    const {id} = await this.env.getTarget(target)
+    const {id} = await this.env.getTarget(process.env.GRAPHCOOL_TARGET || target)
     debug(`function name ${functionName}`)
     debug(`service id ${id}`)
 

@@ -16,7 +16,7 @@ export default class Console extends Command {
     await this.auth.ensureAuth()
     let {target} = this.flags
 
-    const foundTarget = await this.env.getTarget(target)
+    const foundTarget = await this.env.getTarget(process.env.GRAPHCOOL_TARGET || target)
     if (!this.env.isSharedCluster(foundTarget.cluster)) {
       this.out.error(`Can't open the console for the local cluster ${foundTarget.cluster}.
 The console is only available in the hosted version of Graphcool.`)

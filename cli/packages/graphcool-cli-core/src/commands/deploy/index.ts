@@ -424,7 +424,7 @@ https://console.graph.cool/${encodeURIComponent(info.name)}/settings/general`)
     await this.definition.load(this.flags)
     await this.auth.ensureAuth()
 
-    const { id } = await this.env.getTarget(target)
+    const { id } = await this.env.getTarget(process.env.GRAPHCOOL_TARGET || target)
     const targetName = target || 'default'
 
     this.out.action.start(
