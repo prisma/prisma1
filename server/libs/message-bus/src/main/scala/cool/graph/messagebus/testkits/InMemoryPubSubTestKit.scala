@@ -190,10 +190,13 @@ case class InMemoryPubSubTestKit[T]()(
     _underlying.publish(topic, msg)
   }
 
-  override def shutdown(): Unit = {
+  def reset: Unit = {
     messagesReceived = Vector.empty[Message[T]]
     messagesPublished = Vector.empty[Message[T]]
+  }
 
+  override def shutdown(): Unit = {
+    reset
     _underlying.shutdown
   }
 

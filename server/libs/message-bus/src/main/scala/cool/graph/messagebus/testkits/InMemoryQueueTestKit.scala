@@ -161,10 +161,13 @@ case class InMemoryQueueTestKit[T](backoff: BackoffStrategy = ConstantBackoff(1.
     _underlying.publish(msg)
   }
 
-  override def shutdown(): Unit = {
+  def reset: Unit = {
     messagesReceived = Vector.empty[T]
     messagesPublished = Vector.empty[T]
+  }
 
+  override def shutdown(): Unit = {
+    reset
     _underlying.shutdown
   }
 }
