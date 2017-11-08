@@ -30,7 +30,7 @@ Only if `type` is `operationBefore` or `operationAfter`:
 
 - `operation `: Specifies for which operation on which model type this function should be invoked, e.g. `User.update` or `Article.delete`.
 
-Only if `subscription` is `operationBefore`:
+Only if `type` is `resolver`:
 
 - `schema`: Defines the necessary extensions on the `Query` or `Mutation` type (and potentially additional types that represent the input or return types of the new field).
 
