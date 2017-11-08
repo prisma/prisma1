@@ -54,6 +54,7 @@ class FunctionExecutor(implicit val inj: Injector) extends Injectable {
   def sync(project: Project, function: models.Function, event: String): Future[FunctionSuccess Or FunctionError] = {
     function.delivery match {
       // Lambda and Dev function environment
+
       case delivery: models.ManagedFunction =>
         functionEnvironment.invoke(project, function.name, event) flatMap {
           case InvokeSuccess(response)  => handleSuccessfulResponse(project, response, function, acceptEmptyResponse = false)
@@ -80,7 +81,6 @@ class FunctionExecutor(implicit val inj: Injector) extends Injectable {
             // https://[INVALID].algolia.net/1/keys/[VALID] times out, so we simply report a timeout as a wrong appId
             case _: StreamTcpException => Bad(FunctionWebhookURLNotValid(uri))
           }
-
       case _ =>
         sys.error("only knows how to execute HttpFunctions")
     }

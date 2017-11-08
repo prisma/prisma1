@@ -1,12 +1,14 @@
 package cool.graph.system.mutations
 
 import _root_.akka.actor.ActorSystem
-import _root_.akka.stream.ActorMaterializer
 import cool.graph._
 import cool.graph.cuid.Cuid
 import cool.graph.shared.database.InternalAndProjectDbs
+import cool.graph.shared.errors.UserInputErrors.PermissionQueryIsInvalid
 import cool.graph.shared.models
 import cool.graph.shared.models.{Project, Relation}
+import cool.graph.shared.mutactions.InvalidInput
+import cool.graph.system.migration.permissions.QueryPermissionHelper
 import cool.graph.system.mutactions.internal.{BumpProjectRevision, CreateRelationPermission, InvalidateSchema}
 import sangria.relay.Mutation
 import scaldi.Injector
