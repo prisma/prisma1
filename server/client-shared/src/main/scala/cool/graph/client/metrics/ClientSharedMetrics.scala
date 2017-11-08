@@ -17,7 +17,7 @@ object ClientSharedMetrics extends MetricsManager {
   MemoryProfiler.schedule(this)
 
   val schemaBuilderBuildTimerMetric = defineTimer("schemaBuilderBuildTimer", CustomTag("projectId", recordingThreshold = 600))
-  val sqlDataChangeMutactionTimer   = defineTimer("sqlMutactionMetric", CustomTag("projectId", recordingThreshold = 1000))
   val projectCacheGetCount          = defineCounter("projectCacheGetCount")
   val projectCacheMissCount         = defineCounter("projectCacheMissCount")
+  val sqlDataChangeMutactionTimer   = defineTimer("sqlDataChangeMutactionTimer", CustomTag("projectId", recordingThreshold = 1000))
 }
