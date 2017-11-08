@@ -78,33 +78,27 @@ object QueryPermissionHelper {
   def nameFromOperation(permission: AstPermissionWithAllInfos): String = permission.astPermission.operation.split("\\.").head
 
   def renderQueryForName(queryName: String, path: String, files: Map[String, String]): String = {
-    val (queries: String, operationDefinitions: Vector[OperationDefinition]) = operationDefinitionsAndQueriesFromPath(path, files)
-
     val queryToRender: OperationDefinition =
-      operationDefinitions.filter(operationDefinition => operationDefinition.name.contains(queryName)) match {
+      operationDefinitionsFromPath(path, files).filter(operationDefinition => operationDefinition.name.contains(queryName)) match {
         case x if x.length == 1 => x.head
-        case x if x.length > 1  => throw QueryPermissionParseError(queryName, s"There was more than one query with the name $queryName in the file. $queries")
-        case x if x.isEmpty     => throw QueryPermissionParseError(queryName, s"There was no query with the name $queryName in the file. $queries")
+        case x if x.length > 1  => throw QueryPermissionParseError(queryName, s"There was more than one query with the name $queryName in the file: $path")
+        case x if x.isEmpty     => throw QueryPermissionParseError(queryName, s"There was no query with the name $queryName in the file: $path")
       }
-    val query = renderQueryWithoutComments(queryToRender)
-    query
+    renderQueryWithoutComments(queryToRender)
   }
 
   def renderQuery(path: String, files: Map[String, String]): String = {
-    val (queries: String, operationDefinitions: Vector[OperationDefinition]) = operationDefinitionsAndQueriesFromPath(path, files)
-
-    val queryToRender: OperationDefinition = operationDefinitions match {
+    val queryToRender: OperationDefinition = operationDefinitionsFromPath(path, files) match {
       case x if x.length == 1 => x.head
-      case x if x.length > 1  => throw QueryPermissionParseError("NoName", s"There was more than one query and you did not provide a query name. $queries")
-      case x if x.isEmpty     => throw QueryPermissionParseError("NoName", s"There was no query in the file. $queries")
+      case x if x.length > 1  => throw QueryPermissionParseError("NoName", s"There was more than one query and you did not provide a query name. $path")
+      case x if x.isEmpty     => throw QueryPermissionParseError("NoName", s"There was no query in the file. $path")
     }
-    val query = renderQueryWithoutComments(queryToRender)
-    query
+    renderQueryWithoutComments(queryToRender)
   }
 
   def renderQueryWithoutComments(input: OperationDefinition): String = QueryRenderer.render(input.copy(comments = Vector.empty))
 
-  def operationDefinitionsAndQueriesFromPath(path: String, files: Map[String, String]): (String, Vector[OperationDefinition]) = {
+  def operationDefinitionsFromPath(path: String, files: Map[String, String]): Vector[OperationDefinition] = {
     val queries = files.get(path) match {
       case Some(string) => string
       case None         => throw QueryPermissionParseError("", s"There was no file for the path: $path provided")
@@ -115,8 +109,7 @@ object QueryPermissionHelper {
       case None           => throw QueryPermissionParseError("", s"Query could not be parsed. Please ensure it is valid GraphQL. $queries")
     }
 
-    val operationDefinitions = doc.definitions.collect { case x: OperationDefinition => x }
-    (queries, operationDefinitions)
+    doc.definitions.collect { case x: OperationDefinition => x }
   }
 
   def splitPathInRuleNameAndPath(path: String): (Option[String], Option[String]) = {
