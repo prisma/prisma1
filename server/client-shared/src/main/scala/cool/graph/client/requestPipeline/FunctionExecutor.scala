@@ -74,7 +74,7 @@ class FunctionExecutor(implicit val inj: Injector) extends Injectable {
             headers
           )
           .flatMap { (response: SimpleHttpResponse) =>
-            handleSuccessfulResponse(project, response.underlying, function, acceptEmptyResponse = response.status == 204)
+            handleSuccessfulResponse(project, response.body.getOrElse(""), function, acceptEmptyResponse = response.status == 204)
           }
           .recover {
             case e: FailedResponseCodeError => Bad(FunctionReturnedBadStatus(e.response.status, e.response.body.getOrElse("")))
@@ -141,15 +141,6 @@ class FunctionExecutor(implicit val inj: Injector) extends Injectable {
       case Bad(_: FunctionReturnedBadBody)               => throw FunctionReturnedInvalidBody(executionId = requestId)
       case Bad(FunctionReturnedStringError(errorMsg, _)) => throw FunctionReturnedErrorMessage(errorMsg)
       case Bad(FunctionReturnedJsonError(json, _))       => throw FunctionReturnedErrorObject(json)
-    }
-  }
-
-  private def handleSuccessfulResponse(project: Project, response: HttpResponse, function: models.Function, acceptEmptyResponse: Boolean)(
-      implicit actorSystem: ActorSystem,
-      materializer: ActorMaterializer): Future[FunctionSuccess Or FunctionError] = {
-
-    Unmarshal(response).to[String].flatMap { bodyString =>
-      handleSuccessfulResponse(project, bodyString, function, acceptEmptyResponse)
     }
   }
 

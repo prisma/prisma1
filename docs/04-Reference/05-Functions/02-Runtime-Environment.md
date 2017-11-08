@@ -70,7 +70,7 @@ functions:
 Inside the function, you can access it them as follows:
 
 ```js
-const serviceToken = provess.env['SERVICE_TOKEN']
+const serviceToken = process.env['SERVICE_TOKEN']
 ```
 
 > See an example for using environment variables inside functions [here](https://github.com/graphcool/framework/tree/master/examples/env-variables-in-functions).
