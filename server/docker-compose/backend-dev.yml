@@ -9,6 +9,8 @@ services:
       MYSQL_DATABASE: $SQL_INTERNAL_DATABASE
     ports:
       - "127.0.0.1:3306:3306"
+    volumes:
+      - /Volumes/ramdisk/mysqldata:/var/lib/mysql
 
   kinesis:
     image: dlsniper/kinesalite

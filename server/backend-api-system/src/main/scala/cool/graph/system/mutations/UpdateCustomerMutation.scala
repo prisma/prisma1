@@ -41,7 +41,7 @@ case class UpdateCustomerMutation(
   }
 
   override def getReturnValue(): Option[UpdateClientMutationPayload] = {
-    Some(new UpdateClientMutationPayload(clientMutationId = args.clientMutationId, client = updatedClient.get))
+    Some(UpdateClientMutationPayload(clientMutationId = args.clientMutationId, client = updatedClient.get))
   }
 }
 
