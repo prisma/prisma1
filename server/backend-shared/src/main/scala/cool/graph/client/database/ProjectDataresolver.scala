@@ -18,8 +18,7 @@ class ProjectDataresolver(override val project: Project, override val requestCon
     extends DataResolver(project = project, requestContext = requestContext)
     with Injectable {
 
-  def this(project: Project, requestContext: RequestContextTrait)(implicit inj: Injector) =
-    this(project, Some(requestContext))
+  def this(project: Project, requestContext: RequestContextTrait)(implicit inj: Injector) = this(project, Some(requestContext))
 
   def resolveByModel(model: Model, args: Option[QueryArguments] = None): Future[ResolverResult] = {
     val (query, resultTransform) = DatabaseQueryBuilder.selectAllFromModel(project.id, model.name, args)
@@ -36,7 +35,6 @@ class ProjectDataresolver(override val project: Project, override val requestCon
 
   def existsByModelAndId(model: Model, id: String): Future[Boolean] = {
     val query = DatabaseQueryBuilder.existsByModelAndId(project.id, model.name, id)
-
     performWithTiming("existsByModelAndId", readonlyClientDatabase.run(readOnlyBoolean(query))).map(_.head)
   }
 

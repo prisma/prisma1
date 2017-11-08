@@ -1,9 +1,9 @@
 package cool.graph.client.finder
 
 import cool.graph.cache.Cache
-import cool.graph.client.metrics.BackendSharedMetrics
 import cool.graph.messagebus.PubSubSubscriber
 import cool.graph.messagebus.pubsub.{Everything, Message}
+import cool.graph.metrics.ClientSharedMetrics
 import cool.graph.shared.models.ProjectWithClientId
 import cool.graph.utils.future.FutureUtils._
 
@@ -44,13 +44,13 @@ case class CachedProjectFetcherImpl(
   )
 
   override def fetch(projectIdOrAlias: String): Future[Option[ProjectWithClientId]] = {
-    BackendSharedMetrics.projectCacheGetCount.inc()
+    ClientSharedMetrics.projectCacheGetCount.inc()
     val potentialId = aliasToIdMapping.get(projectIdOrAlias).getOrElse(projectIdOrAlias)
 
     cache.getOrUpdateOpt(
       potentialId,
       () => {
-        BackendSharedMetrics.projectCacheMissCount.inc()
+        ClientSharedMetrics.projectCacheMissCount.inc()
         fetchProjectAndUpdateMapping(potentialId)(projectFetcher.fetch)
       }
     )

@@ -97,7 +97,6 @@ class SchemaBuilderImpl(
                 client = ctx.ctx.getClient,
                 project = project.project,
                 args = input,
-                dataResolver = ctx.ctx.dataResolver(project.project),
                 projectDbsFn = internalAndProjectDbsForProject,
                 clientDbQueries = clientDbQueries(project.project)
               )
