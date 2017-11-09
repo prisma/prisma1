@@ -656,9 +656,10 @@ Please run ${chalk.bold('graphcool local up')} to start the local cluster.`)
       return this.subscriptionURL({ region, projectId })
     }
 
-    const match = this.clusterEndpoint.match(/.*:(\d+)\/?.*/)
-    const localPort = match ? match[1] : '60000'
-    return this.subscriptionURL({ localPort, projectId })
+    const match = this.clusterEndpoint.match(/https?:\/\/(.*):(\d+)\/?.*/)
+    const localAddr = match ? match[1] : 'localhost'
+    const localPort = match ? match[2] : '60000'
+    return this.subscriptionURL({ localAddr, localPort, projectId })
   }
 
   private setTestToken() {
@@ -669,14 +670,16 @@ Please run ${chalk.bold('graphcool local up')} to start the local cluster.`)
   private subscriptionURL = ({
     region,
     projectId,
+    localAddr,
     localPort,
   }: {
     region?: Region
     projectId: string
+    localAddr?: string
     localPort?: number | string
   }) =>
     localPort
-      ? `ws://localhost:${localPort}/subscriptions/v1/${projectId}`
+      ? `ws://${localAddr}:${localPort}/subscriptions/v1/${projectId}`
       : `${subscriptionEndpoints[region!]}/v1/${projectId}`
 }
 
