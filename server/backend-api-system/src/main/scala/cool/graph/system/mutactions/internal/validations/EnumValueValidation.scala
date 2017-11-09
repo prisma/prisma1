@@ -48,9 +48,10 @@ object EnumValueValidation extends SprayJsonExtensions {
     lazy val invalidEnumValueNames = enumValues.filter(!NameConstraints.isValidEnumValueName(_))
 
     () match {
-      case _ if enumValues.isEmpty             => Failure(UserInputErrors.MissingEnumValues())
-      case _ if invalidEnumValueNames.nonEmpty => Failure(UserInputErrors.InvalidNameMustStartUppercase(invalidEnumValueNames.mkString(",")))
-      case _                                   => Success(MutactionVerificationSuccess())
+      case _ if enumValues.isEmpty => Failure(UserInputErrors.MissingEnumValues())
+      case _ if invalidEnumValueNames.nonEmpty =>
+        Failure(UserInputErrors.InvalidNameMustStartUppercase(invalidEnumValueNames.mkString(","), entityType = "n enum"))
+      case _ => Success(MutactionVerificationSuccess())
     }
   }
 

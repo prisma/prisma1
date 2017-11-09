@@ -35,8 +35,8 @@ case class CreateModelWithoutSystemFields(project: Project, model: Model) extend
   override def verify(): Future[Try[MutactionVerificationSuccess]] = {
     Future.successful(
       () match {
-        case _ if !NameConstraints.isValidModelName(model.name)               => Failure(UserInputErrors.InvalidName(name = model.name))
-        case _ if CustomScalarTypes.isScalar(model.name)                      => Failure(UserInputErrors.InvalidName(name = model.name))
+        case _ if !NameConstraints.isValidModelName(model.name)               => Failure(UserInputErrors.InvalidName(name = model.name, entityType = " model"))
+        case _ if CustomScalarTypes.isScalar(model.name)                      => Failure(UserInputErrors.InvalidName(name = model.name, entityType = " model"))
         case _ if project.getModelByName(model.name).exists(_.id != model.id) => Failure(UserInputErrors.ModelWithNameAlreadyExists(name = model.name))
         case _                                                                => Success(MutactionVerificationSuccess())
 
