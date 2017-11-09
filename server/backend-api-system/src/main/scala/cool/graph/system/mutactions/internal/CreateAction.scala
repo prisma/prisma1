@@ -28,7 +28,7 @@ case class CreateAction(project: Project, action: Action) extends SystemSqlMutac
 }
 
 object CreateAction {
-  def generateAddActionMutactions(action: Action, project: Project): List[Mutaction] = {
+  def generateAddActionMutactions(action: Action, project: Project): List[SystemSqlMutaction] = {
     def createAction = CreateAction(project = project, action = action)
 
     def createHandlerWebhook: Option[CreateActionHandlerWebhook] =

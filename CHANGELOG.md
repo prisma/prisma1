@@ -1,6 +1,47 @@
-You can download the CLI for the latest Framework version by running `npm install -g graphcool`.
+Download the latest CLI version with `npm install -g graphcool`.
 
-See the Forum for more information on the [Framework Preview](https://www.graph.cool/forum/t/feedback-new-cli-beta/949/1?u=nilan).
+# 0.9 (2017-11-08)
+
+## Server
+
+* Fixed a bug when removing a field that was referenced by a permission https://github.com/graphcool/framework/issues/993
+
+* Improved logging for local and shared cluster
+  * https://github.com/graphcool/framework/issues/1108 https://github.com/graphcool/framework/issues/881 https://github.com/graphcool/framework/issues/947 https://github.com/graphcool/framework/issues/982
+
+* General wording improvements, and better error messages
+  * https://github.com/graphcool/framework/issues/952 https://github.com/graphcool/framework/issues/846 https://github.com/graphcool/framework/issues/922 https://github.com/graphcool/framework/issues/926 https://github.com/graphcool/framework/issues/929 https://github.com/graphcool/framework/issues/778 https://github.com/graphcool/framework/issues/951
+
+* Implemented Webhook shorthand notation  https://github.com/graphcool/framework/issues/978
+
+* Changing a service alias now invalidates the old one https://github.com/graphcool/framework/issues/741
+
+* Local docker and dependency injection binding clean up
+  * https://github.com/graphcool/framework/pull/1098
+  * Removed RabbitMQ dependency for local clusters
+
+
+* *Experimental* support for Docker Toolbox
+  * https://github.com/graphcool/framework/issues/1074  https://github.com/graphcool/framework/issues/864
+  * Please let us know [in the Forum](https://www.graph.cool/forum/c/feedback) if you still experience any issues with Docker Toolbox, so we can fully support it in a coming release.
+
+## CLI
+
+* General wording improvements
+  * https://github.com/graphcool/framework/issues/936 https://github.com/graphcool/framework/issues/972 https://github.com/graphcool/framework/issues/924
+
+* Unified usage when adding templates https://github.com/graphcool/framework/issues/754
+  * Individual templates will receive better explanations shortly.
+
+* Fixed endless deploy loop when environment variables are missing https://github.com/graphcool/framework/issues/966
+
+## Playground
+
+Version `1.1.1` has been [released](https://github.com/graphcool/graphql-playground/releases/tag/v1.1.1)
+
+* Added middleware support
+* Expose component for React 16
+* Added serverless handler
 
 # 0.8.1 (2017-10-22)
 

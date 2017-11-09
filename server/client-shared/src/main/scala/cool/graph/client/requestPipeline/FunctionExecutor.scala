@@ -54,6 +54,7 @@ class FunctionExecutor(implicit val inj: Injector) extends Injectable {
   def sync(project: Project, function: models.Function, event: String): Future[FunctionSuccess Or FunctionError] = {
     function.delivery match {
       // Lambda and Dev function environment
+
       case delivery: models.ManagedFunction =>
         functionEnvironment.invoke(project, function.name, event) flatMap {
           case InvokeSuccess(response)  => handleSuccessfulResponse(project, response, function, acceptEmptyResponse = false)
@@ -73,14 +74,13 @@ class FunctionExecutor(implicit val inj: Injector) extends Injectable {
             headers
           )
           .flatMap { (response: SimpleHttpResponse) =>
-            handleSuccessfulResponse(project, response.underlying, function, acceptEmptyResponse = response.status == 204)
+            handleSuccessfulResponse(project, response.body.getOrElse(""), function, acceptEmptyResponse = response.status == 204)
           }
           .recover {
             case e: FailedResponseCodeError => Bad(FunctionReturnedBadStatus(e.response.status, e.response.body.getOrElse("")))
             // https://[INVALID].algolia.net/1/keys/[VALID] times out, so we simply report a timeout as a wrong appId
             case _: StreamTcpException => Bad(FunctionWebhookURLNotValid(uri))
           }
-
       case _ =>
         sys.error("only knows how to execute HttpFunctions")
     }
@@ -141,15 +141,6 @@ class FunctionExecutor(implicit val inj: Injector) extends Injectable {
       case Bad(_: FunctionReturnedBadBody)               => throw FunctionReturnedInvalidBody(executionId = requestId)
       case Bad(FunctionReturnedStringError(errorMsg, _)) => throw FunctionReturnedErrorMessage(errorMsg)
       case Bad(FunctionReturnedJsonError(json, _))       => throw FunctionReturnedErrorObject(json)
-    }
-  }
-
-  private def handleSuccessfulResponse(project: Project, response: HttpResponse, function: models.Function, acceptEmptyResponse: Boolean)(
-      implicit actorSystem: ActorSystem,
-      materializer: ActorMaterializer): Future[FunctionSuccess Or FunctionError] = {
-
-    Unmarshal(response).to[String].flatMap { bodyString =>
-      handleSuccessfulResponse(project, bodyString, function, acceptEmptyResponse)
     }
   }
 

@@ -3,7 +3,6 @@ package cool.graph.system.mutations
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import cool.graph._
-import cool.graph.client.database.DataResolver
 import cool.graph.metrics.CounterMetric
 import cool.graph.shared.database.{InternalAndProjectDbs, InternalDatabase}
 import cool.graph.shared.errors.SystemErrors.{SchemaError, WithSchemaError}
@@ -30,7 +29,6 @@ case class PushMutation(
     client: Client,
     project: Project,
     args: PushInput,
-    dataResolver: DataResolver,
     projectDbsFn: models.Project => InternalAndProjectDbs,
     clientDbQueries: ClientDbQueries
 )(implicit inj: Injector)

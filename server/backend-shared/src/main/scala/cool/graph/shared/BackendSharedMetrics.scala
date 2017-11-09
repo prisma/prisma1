@@ -1,6 +1,6 @@
-package cool.graph.client.metrics
+package cool.graph.shared
 
-import cool.graph.metrics.MetricsManager
+import cool.graph.metrics.{CustomTag, MetricsManager}
 
 object BackendSharedMetrics extends MetricsManager {
 
@@ -14,6 +14,5 @@ object BackendSharedMetrics extends MetricsManager {
       }
       .mkString
 
-  val projectCacheGetCount  = defineCounter("projectCacheGetCount")
-  val projectCacheMissCount = defineCounter("projectCacheMissCount")
+  val sqlQueryTimer = defineTimer("sqlQueryTimer", CustomTag("projectId", recordingThreshold = 1000), CustomTag("queryName", recordingThreshold = 1000))
 }

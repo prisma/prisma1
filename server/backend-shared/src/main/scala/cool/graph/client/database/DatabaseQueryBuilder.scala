@@ -244,7 +244,7 @@ object DatabaseQueryBuilder {
     } yield metaTables.map(table => table.name.name)
   }
 
-  def getSchemas = {
+  def getSchemas: DBIOAction[Vector[String], NoStream, Read] = {
     for {
       catalogs <- DatabaseMeta.getCatalogs
     } yield catalogs

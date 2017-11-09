@@ -68,7 +68,6 @@ trait SystemApiDependencies extends Module {
 
 case class SystemDependencies()(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends SystemApiDependencies {
   import system.dispatcher
-
   import scala.concurrent.duration._
 
   SystemMetrics.init()
