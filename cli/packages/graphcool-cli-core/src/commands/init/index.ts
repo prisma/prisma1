@@ -59,8 +59,7 @@ export default class Init extends Command {
     // CONTINUE: special env handling for dockaa. can't just override the host/dinges
     if (
       files.length > 0 &&
-      !(files.length === 1 && files[0] === '.graphcoolrc') &&
-      files.includes('graphcool.yml')
+      !(files.length === 1 && files[0] === '.graphcoolrc')
     ) {
       this.out.log(`
 The directory ${chalk.green(
