@@ -32,7 +32,7 @@ When you want to create a resolver function in your Graphcool service, you need 
 
 ### Example
 
-Here is an example of a subscription function:
+Here is an example of a resolver function:
 
 ```yaml
 functions:
