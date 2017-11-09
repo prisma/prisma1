@@ -55,7 +55,7 @@ type Weather {
 }
 
 enum TemperatureUnit {
-  CELCIUS
+  CELSIUS
   FAHRENHEIT
 }
 ```
