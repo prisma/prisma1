@@ -36,11 +36,11 @@ case class CreateModel(project: Project, model: Model) extends SystemSqlMutactio
 
   override def verify(): Future[Try[MutactionVerificationSuccess]] = {
     if (!NameConstraints.isValidModelName(model.name)) {
-      return Future.successful(Failure(UserInputErrors.InvalidName(name = model.name)))
+      return Future.successful(Failure(UserInputErrors.InvalidName(name = model.name, entityType = " model")))
     }
 
     if (CustomScalarTypes.isScalar(model.name)) {
-      return Future.successful(Failure(UserInputErrors.InvalidName(name = model.name)))
+      return Future.successful(Failure(UserInputErrors.InvalidName(name = model.name, entityType = " model")))
     }
 
     if (project.getModelByName(model.name).exists(_.id != model.id)) {
