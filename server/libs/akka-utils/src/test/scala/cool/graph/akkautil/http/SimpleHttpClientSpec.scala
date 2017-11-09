@@ -99,6 +99,16 @@ class SimpleHttpClientSpec extends WordSpecLike with Matchers with ScalaFutures 
           }
         }
       }
+
+      "that use a custom status code validator and return a 500 should not fail if the validator passes" in {
+        withStubServer(List(failingGetStub)).withArg { server =>
+          val uri = s"http://localhost:${server.port}/some/path"
+
+          whenReady(client.get(uri, statusCodeValidator = (_) => true)) { (response: SimpleHttpResponse) =>
+            response.status shouldEqual 500
+          }
+        }
+      }
     }
 
     "handle POST requests" which {
@@ -160,6 +170,17 @@ class SimpleHttpClientSpec extends WordSpecLike with Matchers with ScalaFutures 
           whenReady(client.post(uri, body)) { (response: SimpleHttpResponse) =>
             response.status shouldEqual 200
             response.bodyAs[Int] shouldEqual Success(2)
+          }
+        }
+      }
+
+      "that use a custom status code validator and return a 500 should not fail if the validator passes" in {
+        withStubServer(List(failingPostStub)).withArg { server =>
+          val uri  = s"http://localhost:${server.port}/some/path"
+          val body = PostTestClass("testData")
+
+          whenReady(client.postJson(uri, body, statusCodeValidator = (_) => true)) { (response: SimpleHttpResponse) =>
+            response.status shouldEqual 500
           }
         }
       }

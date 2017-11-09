@@ -29,6 +29,7 @@ case class NoReturnValue(id: Id)           extends ReturnValueResult
 
 abstract class ClientMutation(model: Model, args: Args, dataResolver: DataResolver, val argumentSchema: ArgumentSchema)(implicit inj: Injector)
     extends ClientMutationNew {
+  import cool.graph.metrics.ClientSharedMetrics._
 
   dataResolver.enableMasterDatabaseOnlyMode
 
@@ -104,26 +105,41 @@ abstract class ClientMutation(model: Model, args: Args, dataResolver: DataResolv
   }
 
   def performMutactions(mutactionGroups: List[MutactionGroup]): Future[List[MutactionExecutionResult]] = {
-
-    def runWithErrorHandler(mutaction: Mutaction): Future[MutactionExecutionResult] = {
-      mutaction.handleErrors match {
-        case Some(errorHandler) => mutaction.execute.recover(errorHandler)
-        case None               => mutaction.execute
-      }
-    }
-
-    def performGroup(group: MutactionGroup): Future[List[MutactionExecutionResult]] = {
-      group match {
-        case MutactionGroup(mutactions, true) =>
-          Future.sequence(mutactions.map(mutaction => performWithTiming(s"execute ${mutaction.getClass.getSimpleName}", runWithErrorHandler(mutaction))))
-        case MutactionGroup(mutactions: List[Mutaction], false) =>
-          mutactions.map(m => () => performWithTiming(s"execute ${m.getClass.getSimpleName}", runWithErrorHandler(m))).runSequentially
-      }
-    }
-
     // Cancel further Mutactions and MutactionGroups when a Mutaction fails
     // Failures in async MutactionGroups don't stop other Mutactions in same group
     mutactionGroups.map(group => () => performGroup(group)).runSequentially.map(_.flatten)
+  }
+
+  private def performGroup(group: MutactionGroup): Future[List[MutactionExecutionResult]] = {
+    group match {
+      case MutactionGroup(mutactions, true) =>
+        Future.sequence(mutactions.map(runWithTiming))
+
+      case MutactionGroup(mutactions: List[Mutaction], false) =>
+        mutactions.map(m => () => runWithTiming(m)).runSequentially
+    }
+  }
+
+  private def runWithTiming(mutaction: Mutaction): Future[MutactionExecutionResult] = {
+    performWithTiming(
+      s"execute ${mutaction.getClass.getSimpleName}", {
+        mutaction match {
+          case mut: ClientSqlDataChangeMutaction =>
+            sqlDataChangeMutactionTimer.timeFuture(dataResolver.project.id) {
+              runWithErrorHandler(mut)
+            }
+          case mut =>
+            runWithErrorHandler(mut)
+        }
+      }
+    )
+  }
+
+  private def runWithErrorHandler(mutaction: Mutaction): Future[MutactionExecutionResult] = {
+    mutaction.handleErrors match {
+      case Some(errorHandler) => mutaction.execute.recover(errorHandler)
+      case None               => mutaction.execute
+    }
   }
 
   def performPostExecutions(mutactionGroups: List[MutactionGroup]): Future[Boolean] = {

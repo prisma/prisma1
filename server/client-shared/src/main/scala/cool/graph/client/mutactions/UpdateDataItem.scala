@@ -4,7 +4,7 @@ import java.sql.SQLIntegrityConstraintViolationException
 
 import cool.graph.Types.Id
 import cool.graph._
-import cool.graph.client.database.DatabaseMutationBuilder
+import cool.graph.client.database.{DataResolver, DatabaseMutationBuilder}
 import cool.graph.client.database.GetFieldFromSQLUniqueException.getField
 import cool.graph.client.mutactions.validation.InputValueValidation
 import cool.graph.client.mutations.CoolArgs
@@ -28,7 +28,7 @@ case class UpdateDataItem(project: Project,
                           requestId: Option[String] = None,
                           originalArgs: Option[CoolArgs] = None,
                           itemExists: Boolean)(implicit val inj: Injector)
-    extends ClientSqlMutaction {
+    extends ClientSqlDataChangeMutaction {
 
   val pipelineRunner = new RequestPipelineRunner(requestId.getOrElse(""))
 
@@ -97,7 +97,7 @@ case class UpdateDataItem(project: Project,
     })
   }
 
-  override def verify: Future[Try[MutactionVerificationSuccess]] = {
+  override def verify(resolver: DataResolver): Future[Try[MutactionVerificationSuccess]] = {
     lazy val (dataItemInputValidation, fieldsWithValues) = InputValueValidation.validateDataItemInputs(model, id, values)
 
     def isReadonly(field: Field): Boolean = {

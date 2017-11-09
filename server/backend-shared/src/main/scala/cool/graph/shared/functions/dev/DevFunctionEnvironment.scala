@@ -50,7 +50,7 @@ case class DevFunctionEnvironment()(implicit system: ActorSystem, materializer: 
 
   override def invoke(project: Project, name: String, event: String): Future[InvokeResponse] = {
     httpClient
-      .postJson(s"$functionEndpointInternal/functions/deploy/${project.id}", FunctionInvocation(name, event))
+      .postJson(s"$functionEndpointInternal/functions/invoke/${project.id}", FunctionInvocation(name, event))
       .map { response =>
         response.bodyAs[FunctionInvocationResult] match {
           case Success(result) =>

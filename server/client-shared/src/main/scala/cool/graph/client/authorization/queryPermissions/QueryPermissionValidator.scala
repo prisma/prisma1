@@ -76,7 +76,7 @@ class QueryPermissionValidator(project: Project)(implicit inj: Injector, system:
       case ObjectValue(fields, _, _)   => fields.forall(field => traverseAndCheckForLeafs(field))
       case ObjectField(_, value, _, _) => traverseAndCheckForLeafs(value)
       case x: BooleanValue             => x.value
-      case _                           => sys.error(s"Received unknown type of AstNode. Could not handle: $root")
+      case _                           => sys.error(s"Received unknown type of AstNode. Could not handle: $root") //triggered by NullValue(Vector(),None)
     }
   }
 }
