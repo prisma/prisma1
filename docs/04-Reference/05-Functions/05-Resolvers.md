@@ -60,7 +60,7 @@ enum TemperatureUnit {
 }
 ```
 
-`loadWeather ` is invoked _after_ a `User` node was created and is defined as a _webhook_. It receives as input the requested `TemperatureUnit` (as this is the only argument for the `weather` field on the `Query` type) and returns a new type called `Weather`.
+`loadWeather ` is invoked when a `weather` query is run and is defined as a _webhook_. It receives as input the requested `TemperatureUnit` (as this is the only argument for the `weather` field on the `Query` type) and returns a new type called `Weather`.
 
 ### Properties
 
