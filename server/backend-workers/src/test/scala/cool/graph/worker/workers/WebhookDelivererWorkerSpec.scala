@@ -23,7 +23,6 @@ class WebhookDelivererWorkerSpec
   import scala.concurrent.ExecutionContext.Implicits.global
 
   override def afterAll = shutdownTestKit
-//  override def beforeEach() = SpecHelper.recreateLogsDatabase()
 
   def withWebhookWorker(checkFn: (WebhookDelivererWorker, InMemoryQueueTestKit[Webhook], InMemoryQueueTestKit[LogItem]) => Unit): Unit = {
     withQueueTestKit[LogItem] { logsTestKit =>
@@ -42,7 +41,6 @@ class WebhookDelivererWorkerSpec
           case Success(_) => teardown
           case Failure(e) => teardown; throw e
         }
-
       }
     }
   }

@@ -31,12 +31,19 @@ case class InMemoryQueueTestKit[T](backoff: BackoffStrategy = ConstantBackoff(1.
 ) extends Queue[T] {
   import system.dispatcher
 
-  val probe             = TestProbe() // Receives messages
-  val publishProbe      = TestProbe() // Receives published messages
+  /**
+    * Why that much mutable state?
+    * This is a simple workaround for our issue that scaldi dependencies are create once _per test file_
+    * and message state is bleeding over in between tests (i.e. we need to reset the testkit), which requires us
+    * to either build more sophisticated dependency tooling or a more complex implementation to encapsulate this
+    * state separately. Both solutions require more time than is currently available.
+    */
+  var probe             = TestProbe() // Receives messages
+  var publishProbe      = TestProbe() // Receives published messages
   val logId             = new java.util.Random().nextInt(Integer.MAX_VALUE) // For log output correlation
+  var _underlying       = InMemoryAkkaQueue[T]()
   var messagesReceived  = Vector.empty[T]
   var messagesPublished = Vector.empty[T]
-  val _underlying       = InMemoryAkkaQueue[T]()
 
   /**
     * Registers the standard test consumer that just stores the incoming messages in messagesReceived and notifies the
@@ -48,7 +55,7 @@ case class InMemoryQueueTestKit[T](backoff: BackoffStrategy = ConstantBackoff(1.
     _underlying
       .withConsumer { msg: T =>
         Future {
-          println(s"[TestKit][$logId] Received $msg")
+          println(s"[QTestKit][$logId] Test consumer received $msg")
 
           probe.ref ! msg
 
@@ -70,6 +77,7 @@ case class InMemoryQueueTestKit[T](backoff: BackoffStrategy = ConstantBackoff(1.
     */
   override def withConsumer(fn: ConsumeFn[T]): ConsumerRef = {
     _underlying.withConsumer { msg: T =>
+      println(s"[QTestKit][$logId] Custom consumer received $msg")
       probe.ref ! msg
 
       messagesReceived.synchronized {
@@ -156,6 +164,7 @@ case class InMemoryQueueTestKit[T](backoff: BackoffStrategy = ConstantBackoff(1.
     * Publish a message to this queue.
     */
   def publish(msg: T): Unit = {
+    println(s"[QTestKit][$logId] Published: $msg")
     synchronized { messagesPublished = messagesPublished :+ msg }
     publishProbe.ref ! msg
     _underlying.publish(msg)
@@ -164,6 +173,10 @@ case class InMemoryQueueTestKit[T](backoff: BackoffStrategy = ConstantBackoff(1.
   def reset: Unit = {
     messagesReceived = Vector.empty[T]
     messagesPublished = Vector.empty[T]
+    _underlying.shutdown
+    _underlying = InMemoryAkkaQueue[T]()
+    probe = TestProbe()
+    publishProbe = TestProbe()
   }
 
   override def shutdown(): Unit = {
