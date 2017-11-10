@@ -28,9 +28,50 @@ Managing the GraphQL type definitions can still be done both in the Console (in 
 
 ## Upgrading a legacy Console project to a Graphcool service
 
-In most cases upgrading a _legacy Console project_ to a _Graphcool service_ is a simple process. 
+### "Dry-run" migration to gain familiarity with new CLI
 
-> We recommend that you first create a new service using the [CLI](!alias-zboghez5go) to familiarize yourself with the new workflows.
+Before upgrading your legacy Console project to a Graphcool service, we recommend that you're doing a "dry-run" of the upgrade process to get familiar with the new workflows. 
+
+> You can find more info in [this](https://github.com/graphcool/framework/issues/1186) GitHub issue.
+
+#### 1. Obtain your service definition
+
+The first thing you need to do is get access to the [service definition](!alias-opheidaix3) of your legacy project. This can be done with the new Graphcool CLI and the following command:
+
+```sh
+graphcool init --copy <legacyProjectId>
+```
+
+This will download all the files that represent the functionality of your Graphcool project into the current directory. You can also download all files into a new directory, e.g. called `service`, by adding the directory name as an argument to the CLI command:
+
+```sh
+graphcool init service --copy <legacyProjectId>
+```
+
+#### 2. Install node dependencies for [functions](!alias-aiw4aimie9) (if necessary)
+
+If your legacy Console project makes use of any serverless functions that you've previously configured through the Graphcool Console, the service definition created in the previous step will now contain the source files for these functions.
+
+When deploying functions using the new CLI, you explicitly need to add the node dependencies to your service by adding them to your `package.json` file (using `npm install --save <package>` or `yarn add <package>`). For example, if a function in your projects uses the `graphcool-lib` package, you need to add it to your service's `package.json` like so:
+
+```sh
+npm install --save graphcool-lib # or yarn add graphcool-lib
+```
+
+#### 3. Deploy and test
+
+You can now [deploy](!alias-aiteerae6l#graphcool-deploy) your service with the following command:
+
+```sh
+graphcool deploy
+```
+
+You can either deploy to a **Shared Cluster** or **locally with Docker**. Once you deployed the service, you can add some test data using a Playground.
+
+
+### Actual upgrade process
+
+In most cases upgrading a _legacy Console project_ to a _Graphcool service_ is a simple process. 
 
 It is important to understand that **once a project is upgraded to a Graphcool service, it can not be converted back to a legacy Console project again**.
 
