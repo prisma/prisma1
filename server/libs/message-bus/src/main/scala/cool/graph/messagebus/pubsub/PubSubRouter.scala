@@ -4,7 +4,7 @@ import akka.actor.{Actor, ActorRef, Terminated}
 import akka.routing._
 import cool.graph.messagebus.pubsub.PubSubProtocol.{Envelope, Publish, Subscribe, Unsubscribe}
 
-import scala.collection.immutable
+import scala.collection.{immutable, mutable}
 
 object PubSubProtocol {
   case class Subscribe(topic: String, actorRef: ActorRef)
@@ -13,7 +13,7 @@ object PubSubProtocol {
   case class Envelope(actualTopic: String, message: Any)
 }
 
-case class PubSubRouter() extends Actor {
+case class PubSubRouterAlt() extends Actor {
   val pubSubLogic = PubSubRoutingLogic()
   var router      = Router(pubSubLogic, Vector.empty)
 
@@ -32,6 +32,25 @@ case class PubSubRouter() extends Actor {
       router = router.withRoutees(router.routees.collect {
         case routee @ PubSubRoutee(_, ref) if ref != a => routee
       })
+  }
+}
+
+case class PubSubRouter() extends Actor {
+  val subscribers = mutable.HashMap[String, mutable.Set[ActorRef]]()
+
+  override def receive: Receive = {
+    case Subscribe(topic, ref) =>
+      context.watch(ref)
+      subscribers.getOrElseUpdate(topic, mutable.Set.empty) += ref
+
+    case Publish(topic, message) =>
+      subscribers.getOrElse(topic, mutable.Set.empty).foreach(_.tell(message, sender()))
+
+    case Unsubscribe(topic, ref) =>
+      subscribers.getOrElse(topic, mutable.Set.empty).remove(ref)
+
+    case Terminated(a) =>
+      subscribers.values.foreach(_.remove(a))
   }
 }
 
