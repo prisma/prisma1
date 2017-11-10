@@ -270,7 +270,7 @@ case class Project(
   def getRootTokenByName(name: String): Option[RootToken] = rootTokens.find(_.name == name)
   def getRootTokenByName_!(name: String): RootToken       = getRootTokenById(name).getOrElse(throw UserInputErrors.InvalidRootTokenName(name))
 
-  // note: mysql columns are case insensitive, so we have to be as well
+  // note: mysql columns are case insensitive, so we have to be as well. But we could make them case sensitive https://dev.mysql.com/doc/refman/5.6/en/case-sensitivity.html
   def getModelByName(name: String): Option[Model] = models.find(_.name.toLowerCase() == name.toLowerCase())
   def getModelByName_!(name: String): Model       = getModelByName(name).getOrElse(throw SystemErrors.InvalidModel(s"No model with name: $name found."))
 
