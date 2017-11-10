@@ -30,7 +30,7 @@ object TypeNameValidation {
     val enumWithNameExists = project.getEnumByName(typeName).isDefined
     val isValidTypeName    = validateName(typeName)
     if (!isValidTypeName) {
-      Failure(InvalidName(typeName))
+      Failure(InvalidName(typeName, entityType = "n enum"))
     } else if (enumWithNameExists) {
       Failure(TypeAlreadyExists(typeName))
     } else {

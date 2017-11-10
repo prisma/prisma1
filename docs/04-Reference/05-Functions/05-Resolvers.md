@@ -32,7 +32,7 @@ When you want to create a resolver function in your Graphcool service, you need 
 
 ### Example
 
-Here is an example of a subscription function:
+Here is an example of a resolver function:
 
 ```yaml
 functions:
@@ -55,12 +55,12 @@ type Weather {
 }
 
 enum TemperatureUnit {
-  CELCIUS
+  CELSIUS
   FAHRENHEIT
 }
 ```
 
-`loadWeather ` is invoked _after_ a `User` node was created and is defined as a _webhook_. It receives as input the requested `TemperatureUnit` (as this is the only argument for the `weather` field on the `Query` type) and returns a new type called `Weather`.
+`loadWeather ` is invoked when a `weather` query is run and is defined as a _webhook_. It receives as input the requested `TemperatureUnit` (as this is the only argument for the `weather` field on the `Query` type) and returns a new type called `Weather`.
 
 ### Properties
 
