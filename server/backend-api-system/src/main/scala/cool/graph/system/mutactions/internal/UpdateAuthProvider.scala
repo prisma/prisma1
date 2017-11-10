@@ -19,7 +19,7 @@ case class UpdateAuthProvider(project: Project,
     val integrationAuth0s = TableQuery[IntegrationAuth0Table]
 
     val updateIntegration = {
-      val q = for { a <- authProviders if a.id === authProvider.id } yield (a.isEnabled)
+      val q = for { a <- authProviders if a.id === authProvider.id } yield a.isEnabled
       q.update(authProvider.isEnabled)
     }
 

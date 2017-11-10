@@ -7,6 +7,7 @@ import cool.graph.shared.models.{Client, Project}
 import cool.graph.system.database.finder.CachedProjectResolver
 import cool.graph.system.database.tables.{SeatTable, Tables}
 import scaldi.{Injectable, Injector}
+import slick.dbio.DBIOAction
 import slick.jdbc.MySQLProfile.backend.DatabaseDef
 
 import scala.collection.immutable.Seq
@@ -66,23 +67,23 @@ case class InvalidateSchemaForAllProjects(client: Client)(implicit inj: Injector
   }
 }
 
-abstract class InvalidateSchemaBase()(implicit inj: Injector) extends Mutaction with Injectable {
+abstract class InvalidateSchemaBase()(implicit inj: Injector) extends SystemSqlMutaction with Injectable {
   val internalDatabase: DatabaseDef = inject[DatabaseDef](identified by "internal-db")
   val cachedProjectResolver         = inject[CachedProjectResolver](identified by "cachedProjectResolver")
   val invalidationPublisher         = inject[PubSubPublisher[String]](identified by "schema-invalidation-publisher")
 
-  override def execute: Future[MutactionExecutionResult] = {
+  override def execute: Future[SystemSqlStatementResult[Any]] = {
     projectIds.flatMap { projectIdsOrAliases =>
       val invalidationFutures: Seq[Future[Unit]] = projectIdsOrAliases.map(cachedProjectResolver.invalidate)
 
       Future.sequence(invalidationFutures).map { _ =>
         invalidate(projectIds = projectIdsOrAliases)
-        MutactionExecutionSuccess()
+        SystemSqlStatementResult(sqlAction = DBIOAction.sequenceOption(None))
       }
     }
   }
 
   private def invalidate(projectIds: Seq[String]): Unit = projectIds.foreach(pid => invalidationPublisher.publish(Only(pid), pid))
   protected def projectIds: Future[Vector[String]]
-  override def rollback = Some(ClientMutactionNoop().execute)
+  override def rollback = Some(SystemMutactionNoop().execute)
 }

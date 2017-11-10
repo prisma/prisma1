@@ -6,11 +6,11 @@ import cool.graph.shared.models.{Field, Model}
 
 import scala.concurrent.Future
 
-case class DeleteColumn(projectId: String, model: Model, field: Field) extends ClientSqlSchemaChangeMutaction {
+case class DeleteColumn(projectId: String, model: Model, field: Field) extends SystemSqlMutaction {
 
-  override def execute: Future[ClientSqlStatementResult[Any]] = {
+  override def execute: Future[SystemSqlStatementResult[Any]] = {
     Future.successful(
-      ClientSqlStatementResult(sqlAction = DatabaseMutationBuilder.deleteColumn(projectId = projectId, tableName = model.name, columnName = field.name)))
+      SystemSqlStatementResult(sqlAction = DatabaseMutationBuilder.deleteColumn(projectId = projectId, tableName = model.name, columnName = field.name)))
   }
 
   override def rollback = Some(CreateColumn(projectId, model, field).execute)

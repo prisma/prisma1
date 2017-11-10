@@ -68,16 +68,15 @@ object EnableAuthProviderMutation {
       integrationName: IntegrationName.IntegrationName,
       metaInformation: Option[AuthProviderMetaInformation],
       isEnabled: Boolean
-  )(implicit inj: Injector): List[Mutaction] = {
+  )(implicit inj: Injector): List[SystemSqlMutaction] = {
 
     val managedFields = ManagedFields(integrationName)
 
     project.getModelByName("User") match {
       case Some(user) =>
-        val existingAuthProvider =
-          project.authProviders.find(_.name == integrationName).get
+        val existingAuthProvider = project.authProviders.find(_.name == integrationName).get
 
-        def createManagedFields: List[Mutaction] = {
+        def createManagedFields: List[SystemSqlMutaction] = {
           managedFields.flatMap(createFieldMutactions(_, userModel = user, client, project))
         }
 
@@ -136,7 +135,7 @@ object EnableAuthProviderMutation {
   private def getMakeFieldsUnmanagedMutactions(
       project: Project,
       managedFields: List[ManagedField]
-  )(implicit inj: Injector): List[Mutaction] = {
+  )(implicit inj: Injector): List[SystemSqlMutaction] = {
     // We no longer remove managed fields
     // Instead we change them to be non-managed
     project.getModelByName("User") match {

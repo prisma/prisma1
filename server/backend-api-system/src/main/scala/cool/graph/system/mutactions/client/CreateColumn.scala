@@ -9,11 +9,11 @@ import cool.graph.shared.models.{Field, Model}
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
 
-case class CreateColumn(projectId: String, model: Model, field: Field) extends ClientSqlSchemaChangeMutaction {
+case class CreateColumn(projectId: String, model: Model, field: Field) extends SystemSqlMutaction {
 
-  override def execute: Future[ClientSqlStatementResult[Any]] = {
+  override def execute: Future[SystemSqlStatementResult[Any]] = {
     Future.successful(
-      ClientSqlStatementResult(
+      SystemSqlStatementResult(
         sqlAction = DatabaseMutationBuilder.createColumn(
           projectId = projectId,
           tableName = model.name,
