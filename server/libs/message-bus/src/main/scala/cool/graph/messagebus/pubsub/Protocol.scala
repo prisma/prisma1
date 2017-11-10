@@ -34,7 +34,7 @@ case class Only(topic: String) extends Topic
   * @param intermediatePubSubActor The intermediate actor used to parse messages and forward messages to an actor or
   *                                invoke callbacks.
   */
-case class Subscription(intermediatePubSubActor: ActorRef) {
+case class Subscription(topic: String, intermediatePubSubActor: ActorRef) {
   def unsubscribe: Unit = intermediatePubSubActor ! Unsubscribe
 }
 

@@ -3,6 +3,7 @@ package cool.graph.messagebus.pubsub
 import akka.actor.{Actor, ActorRef, Terminated}
 import akka.cluster.pubsub.DistributedPubSubMediator.Unsubscribe
 import cool.graph.messagebus.Conversions.Converter
+import cool.graph.messagebus.pubsub.PubSubProtocol.Subscribe
 
 /**
   * Actor receiving all messages that are published to the specified  topic.
@@ -16,6 +17,7 @@ case class IntermediateForwardActor[T, U](topic: String, mediator: ActorRef, tar
   context.watch(targetActor)
 
   mediator ! akka.cluster.pubsub.DistributedPubSubMediator.Subscribe(topic, self)
+  mediator ! Subscribe(topic, self) // todo temporary for wiring up the new router
 
   override def receive: Receive = {
     case Message(t, msg) => targetActor ! Message(t, converter(msg.asInstanceOf[T]))
@@ -32,6 +34,7 @@ case class IntermediateForwardActor[T, U](topic: String, mediator: ActorRef, tar
   */
 case class IntermediateCallbackActor[T, U](topic: String, mediator: ActorRef, callback: Message[U] => Unit)(implicit converter: Converter[T, U]) extends Actor {
   mediator ! akka.cluster.pubsub.DistributedPubSubMediator.Subscribe(topic, self)
+  mediator ! Subscribe(topic, self) // todo temporary for wiring up the new router
 
   override def receive: Receive = {
     case Message(t, msg) =>

@@ -26,7 +26,7 @@ import scala.util.{Failure, Success, Try}
   * The API is similar to akka testkit, which it uses internally.
   *
   * >>> PLEASE NOTE: <<<
-  * If queues are randomized (default false), it won't ack messages off off queues (doesn't interfere with regular
+  * If queues are randomized (default false), they won't ack messages off off queues (doesn't interfere with regular
   * processing, meaning it only 'observes' messages on the queue). Use randomization for fanout scenarios.
   *
   * However, a testkit doesn't start ack'ing off messages unless 'start' is called.

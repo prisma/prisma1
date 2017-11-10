@@ -62,13 +62,16 @@ case class RabbitAkkaPubSubSubscriber[T](
   }
 
   def subscribe(topic: Topic, onReceive: Message[T] => Unit): Subscription =
-    Subscription(system.actorOf(Props(IntermediateCallbackActor[Array[Byte], T](topic.topic, mediator, onReceive)(unmarshaller))))
+    Subscription(topic.topic, system.actorOf(Props(IntermediateCallbackActor[Array[Byte], T](topic.topic, mediator, onReceive)(unmarshaller))))
 
   def subscribe(topic: Topic, subscriber: ActorRef): Subscription =
-    Subscription(system.actorOf(Props(IntermediateForwardActor[Array[Byte], T](topic.topic, mediator, subscriber)(unmarshaller))))
+    Subscription(topic.topic, system.actorOf(Props(IntermediateForwardActor[Array[Byte], T](topic.topic, mediator, subscriber)(unmarshaller))))
 
   def subscribe[U](topic: Topic, subscriber: ActorRef, converter: Converter[T, U]): Subscription =
-    Subscription(system.actorOf(Props(IntermediateForwardActor[Array[Byte], U](topic.topic, mediator, subscriber)(unmarshaller.andThen(converter)))))
+    Subscription(
+      topic.topic,
+      system.actorOf(Props(IntermediateForwardActor[Array[Byte], U](topic.topic, mediator, subscriber)(unmarshaller.andThen(converter))))
+    )
 
   def unsubscribe(subscription: Subscription): Unit = subscription.unsubscribe
 
