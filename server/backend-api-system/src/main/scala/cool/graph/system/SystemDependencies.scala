@@ -2,6 +2,7 @@ package cool.graph.system
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
+import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.sns.AmazonSNS
 import com.typesafe.config.ConfigFactory
 import cool.graph.aws.AwsInitializers
@@ -19,10 +20,70 @@ import cool.graph.system.database.finder.client.ClientResolver
 import cool.graph.system.database.finder.{CachedProjectResolver, CachedProjectResolverImpl, ProjectQueries, UncachedProjectResolver}
 import cool.graph.system.externalServices._
 import cool.graph.system.metrics.SystemMetrics
-import scaldi.Module
+import scaldi.{Injector, Module}
 import slick.jdbc.MySQLProfile
 
 import scala.concurrent.{Await, Future}
+
+trait SystemInjector {
+
+  def config = ConfigFactory.load()
+
+  def uncachedProjectResolver: UncachedProjectResolver
+  def cachedProjectResolver: CachedProjectResolver
+  def requestPrefix: String
+  def globalDatabaseManager: GlobalDatabaseManager
+  def clientResolver: ClientResolver
+
+  def internalDb: MySQLProfile.backend.Database
+  def logsDB: MySQLProfile.backend.Database
+  def exportDataS3: AmazonS3
+  def schemaBuilder: SchemaBuilder
+
+  //temporarily be able to pass old injector
+  implicit def toScaldi: Injector
+}
+
+class SystemInjectorImpl(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends SystemInjector {
+  import system.dispatcher
+
+  import scala.concurrent.duration._
+
+  SystemMetrics.init()
+
+  implicit val marshaller = Conversions.Marshallers.FromString
+
+  val dbs = {
+    val internal = Initializers.setupAndGetInternalDatabase()
+    val logs     = Initializers.setupAndGetLogsDatabase()
+    val dbs      = Future.sequence(Seq(internal, logs))
+
+    try {
+      Await.result(dbs, 15.seconds)
+    } catch {
+      case e: Throwable =>
+        println(s"Unable to initialize databases: $e")
+        sys.exit(-1)
+    }
+  }
+
+  lazy val uncachedProjectResolver: UncachedProjectResolver = UncachedProjectResolver(internalDb)
+  lazy val cachedProjectResolver: CachedProjectResolver     = CachedProjectResolverImpl(uncachedProjectResolver)(system.dispatcher)
+  lazy val requestPrefix                                    = sys.env.getOrElse("AWS_REGION", sys.error("AWS Region not found."))
+
+  lazy val globalDatabaseManager = GlobalDatabaseManager.initializeForMultipleRegions(config)
+  lazy val clientResolver        = ClientResolver(internalDb, cachedProjectResolver)(system.dispatcher)
+
+  override def internalDb = dbs.head
+
+  override def logsDB = dbs.last
+
+  override def exportDataS3 = AwsInitializers.createExportDataS3()
+
+  lazy val schemaBuilder = SchemaBuilder(userCtx => new SchemaBuilderImpl(userCtx, globalDatabaseManager, InternalDatabase(internalDb)).build())
+
+  implicit override val toScaldi = SystemDependencies()
+}
 
 trait SystemApiDependencies extends Module {
   implicit val system: ActorSystem
@@ -68,6 +129,7 @@ trait SystemApiDependencies extends Module {
 
 case class SystemDependencies()(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends SystemApiDependencies {
   import system.dispatcher
+
   import scala.concurrent.duration._
 
   SystemMetrics.init()

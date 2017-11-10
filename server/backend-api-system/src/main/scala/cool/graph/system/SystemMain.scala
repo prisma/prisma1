@@ -9,7 +9,7 @@ import scala.language.postfixOps
 object SystemMain extends App {
   implicit val system       = ActorSystem("sangria-server")
   implicit val materializer = ActorMaterializer()
-  implicit val inj          = SystemDependencies()
+  implicit val inj          = new SystemInjectorImpl
 
   ServerExecutor(8081, SystemServer(inj.schemaBuilder, "system")).startBlocking()
 }

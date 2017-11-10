@@ -34,20 +34,21 @@ import scala.util.{Failure, Success}
 case class SystemServer(
     schemaBuilder: SchemaBuilder,
     prefix: String = ""
-)(implicit inj: Injector, system: ActorSystem, materializer: ActorMaterializer)
+)(implicit inj: SystemInjector, system: ActorSystem, materializer: ActorMaterializer)
     extends Server
-    with Injectable
     with LazyLogging {
   import system.dispatcher
 
-  implicit val internalDatabaseDef: DatabaseDef = inject[DatabaseDef](identified by "internal-db")
-  implicit val clientResolver                   = inject[ClientResolver](identified by "clientResolver")
+  import inj.toScaldi
 
-  val globalDatabaseManager = inject[GlobalDatabaseManager]
+  implicit val internalDatabaseDef: DatabaseDef = inj.internalDb
+  implicit val clientResolver: ClientResolver   = inj.clientResolver
+
+  val globalDatabaseManager = inj.globalDatabaseManager
   val internalDatabase      = InternalDatabase(internalDatabaseDef)
   val log: String => Unit   = (msg: String) => logger.info(msg)
   val errorHandlerFactory   = ErrorHandlerFactory(log)
-  val requestPrefix         = inject[String](identified by "request-prefix")
+  val requestPrefix         = inj.requestPrefix
 
   val innerRoutes = extractRequest { _ =>
     val requestId            = requestPrefix + ":system:" + createCuid()
