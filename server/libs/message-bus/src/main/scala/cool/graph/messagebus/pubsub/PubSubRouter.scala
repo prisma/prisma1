@@ -21,7 +21,6 @@ case class PubSubRouter() extends Actor {
     case Subscribe(topic, ref) =>
       context.watch(ref)
       router = router.addRoutee(PubSubRoutee(topic, ref))
-      println(router)
 
     case Publish(topic, message) =>
       router.route(Envelope(topic, message), sender())
