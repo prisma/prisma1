@@ -120,10 +120,8 @@ When your service is deployed, the corresponding [target](!alias-zoug8seen4#mana
 You can obtain the value of the root token using the [`graphcool root-token`](!alias-aiteerae6l#graphcool-root-token) command:
 
 ```sh
-graphcool root-token --token myToken1
+graphcool root-token myToken1
 ```
-
-If you don't pass the `--token` option to the command, it will simply print the names of all the root tokens associated with this target.
 
 
 ### Using a _temporary_ root token inside functions
