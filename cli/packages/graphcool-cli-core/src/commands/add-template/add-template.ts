@@ -141,7 +141,7 @@ export default class AddTemplate extends Command {
       }
     }
 
-    fs.removeSync(source)
+    fs.removeSync(tmpDir)
 
     this.out.log(
       `Please have a look in the ${chalk.green(
