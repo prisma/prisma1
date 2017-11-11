@@ -17,16 +17,17 @@ import Account from './commands/account'
 import Eject from './commands/local/eject'
 import AddTemplate from './commands/add-template/add-template'
 import PsLocal from './commands/local/ps'
+import Reset from './commands/reset/reset'
 
 export const groups = [
   {
     key: 'general',
     name: 'General commands'
   },
-  // {
-  //   key: 'data',
-  //   name: 'Data workflows'
-  // },
+  {
+    key: 'data',
+    name: 'Data workflows'
+  },
   {
     key: 'local',
     name: 'Local development'
@@ -41,6 +42,7 @@ export const topics = [
   { name: 'init', description: 'Create a new service', group: 'general' },
   { name: 'deploy', description: 'Deploy local service definition', group: 'general' },
   { name: 'login', description: 'Create account or login', group: 'platform' },
+  { name: 'reset', description: 'Reset data of a service', group: 'data' },
   {
     name: 'playground',
     description: 'Opens the playground for the current service',
@@ -97,5 +99,29 @@ export const commands = [
   Account,
   Eject,
   AddTemplate,
-  PsLocal
+  PsLocal,
+  Reset,
 ]
+
+export {
+  Deploy,
+  Init,
+  Auth,
+  Info,
+  Playground,
+  Console,
+  List,
+  Delete,
+  RootTokens,
+  FunctionLogs,
+  InvokeLocal,
+  PullLocal,
+  Stop,
+  Up,
+  Restart,
+  Account,
+  Eject,
+  AddTemplate,
+  PsLocal,
+  Reset,
+}

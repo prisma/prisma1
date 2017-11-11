@@ -191,7 +191,7 @@ export default class InvokeLocal extends Command {
           return foundLog.event
         } else {
           this.out.error(
-            `Could not find a valid event for function ${fnName} in the logs of project ${projectId}`,
+            `Could not find a valid event for function ${fnName} in the logs of service ${projectId}`,
           )
         }
       }

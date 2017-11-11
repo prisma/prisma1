@@ -167,6 +167,9 @@ export class ProjectDefinitionClass {
     const functions = this.extractFunctions(json.functions)
     const functionsWithRequire = functions.reduce((acc, fn) => {
       const src = typeof fn.fn.handler.code === 'string' ? fn.fn.handler.code : fn.fn.handler.code!.src
+      if (!fs.pathExistsSync(src)) {
+        this.out.error(`Error for function handler ${chalk.bold(fn.name)}: File ${chalk.bold(src)} doesn't exist.`)
+      }
       const file = fs.readFileSync(src, 'utf-8')
       const requireRegex = /(?:(?:var|const)\s*([\s\S]*?)\s*=\s*)?require\(['"]([^'"]+)['"](?:, ['"]([^'"]+)['"])?\);?/
       const importRegex = /\bimport\s+(?:[\s\S]+\s+from\s+)?[\'"]([^"\']+)["\']/

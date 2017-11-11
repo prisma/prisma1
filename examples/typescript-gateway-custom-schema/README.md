@@ -6,35 +6,33 @@ This directory contains an example implementation for an **API gateway on top of
 
 The API gateway uses dedicated tooling that allows to easily implement a mapping from the custom schema to the underlying CRUD API.
 
-Try out the read-only [demo](https://graphqlbin.com/BrkcP).
-
 ## Get started
 
 ### 1. Download the example
 
 ```sh
-curl https://codeload.github.com/graphcool/graphcool/tar.gz/master | tar -xz --strip=2 graphcool-master/examples/typescript-gateway-custom-schema
+curl https://codeload.github.com/graphcool/framework/tar.gz/master | tar -xz --strip=2 framework-master/examples/typescript-gateway-custom-schema
 cd typescript-gateway-custom-schema
 ```
 
 ### 2. Install the Graphcool CLI
 
-If you haven't already, go ahead and install the [Graphcool CLI](https://docs-next.graph.cool/reference/graphcool-cli/overview-zboghez5go):
+If you haven't already, go ahead and install the [Graphcool CLI](https://graph.cool/docs/reference/graphcool-cli/overview-zboghez5go):
 
 ```sh
-npm install -g graphcool@next
+npm install -g graphcool
 ```
 
 ### 3. Deploy the Graphcool service
 
-The next step is to [deploy](https://docs-next.graph.cool/reference/graphcool-cli/commands-aiteerae6l#graphcool-deploy) the Graphcool service that's defined inside the [`service`](./service) directory:
+The next step is to [deploy](https://graph.cool/docs/reference/graphcool-cli/commands-aiteerae6l#graphcool-deploy) the Graphcool service that's defined inside the [`service`](./service) directory:
 
 ```sh
 cd service
 graphcool deploy
 ```
 
-When prompted which cluster you'd like to deploy, chose any of `Backend-as-a-Service`-options (`shared-eu-west-1`, `shared-ap-northeast-1` or `shared-us-west-2`) rather than `local`. 
+When prompted which cluster you'd like to deploy, choose any of the **Shared Clusters** (`shared-eu-west-1`, `shared-ap-northeast-1` or `shared-us-west-2`) rather than `local`. 
 
 Then copy the endpoint for the `Simple API`, you'll need it in the next step.
 
@@ -119,9 +117,9 @@ Send the following query to fetch the posts that you just created:
     me {
       id
       name
-      posts(limit: 2) {
-        title
-      }
+    }
+    topPosts (limit: 2) {
+      title
     }
   }
 }

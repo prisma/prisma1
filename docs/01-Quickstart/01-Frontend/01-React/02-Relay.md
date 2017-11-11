@@ -34,7 +34,7 @@ Graphcool services are managed with the [Graphcool CLI](!alias-zboghez5go). So b
 Install the Graphcool CLI:
 
 ```sh
-npm install -g graphcool@next
+npm install -g graphcool
 ```
 
 </Instruction>
@@ -76,7 +76,7 @@ Next you need to configure the [data model](!alias-eiroozae8u) for your service.
 Open `./server/types.graphql` and add the following type definition to it (feel free to delete the existing `User` type):
 
 ```graphql(path="server/types.graphql")
-type Post {
+type Post @model {
   id: ID! @isUnique # read-only (managed by Graphcool)
   createdAt: DateTime! # read-only (managed by Graphcool)
   updatedAt: DateTime! # read-only (managed by Graphcool)
@@ -99,7 +99,7 @@ cd server
 graphcool deploy
 ```
 
-When prompted which cluster you want to deploy to, choose any of the **Backend-as-a-Service** options (`shared-eu-west-1`, `shared-ap-northeast-1` or `shared-us-west-2`).
+When prompted which cluster you want to deploy to, choose any of the **Shared Clusters** options (`shared-eu-west-1`, `shared-ap-northeast-1` or `shared-us-west-2`).
 
 </Instruction>
 

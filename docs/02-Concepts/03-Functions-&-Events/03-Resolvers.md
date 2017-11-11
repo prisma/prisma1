@@ -5,7 +5,7 @@ description: An overview of the three different function types that can be used 
 
 # Resolvers
 
-As was discussed in the [Database & API]() chapter, Graphcool generates a GraphQL schema based on the data model that you define for your project. It also generates the resolvers that implement the functionality defined in the schema. However, the auto-generated functionality is limited to CRUD operations along with filtering, ordering and pagination capabilities.  
+As was discussed in the [Database & API]() chapter, Graphcool generates a GraphQL schema based on the data model that you define for your service. It also generates the resolvers that implement the functionality defined in the schema. However, the auto-generated functionality is limited to CRUD operations along with filtering, ordering and pagination capabilities.  
 
 Sometimes you might want to add more functionality to your API that's not covered by the above mentioned CRUD capabilities. In these cases, you can extend your GraphQL schema (meaning you can add new fields to existing types) manually and implement the corresponding resolver functions yourself.
 
@@ -32,7 +32,7 @@ With Graphcool, different authentication mechanisms can be implemented using res
 Consider the following model type:
 
 ```graphql
-type Person {
+type PersonQueryPayload {
   name: String!
   age: Int!
 }
@@ -54,12 +54,13 @@ This is just a simple example and already rather verbose. With a resolver, you c
 
 ```graphql
 extend type Query {
-  allPersonsUnder18: [Person!]!
+  allPersonsUnder18: [PersonQueryPayload!]!
 }
 ```
 
 Notice that inside your serverless function, you can use the [`graphcool-lib`](https://github.com/graphcool/graphcool-lib) which provides you with a lot of convenience when accessing the GraphQL Engine.  
 
+> **Note**: It's currently not possible to return `@model` types from resolver functions. See [this](https://github.com/graphcool/framework/issues/743) GitHub issue for more info.
 
 ## Integrating external systems
 

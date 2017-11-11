@@ -1,6 +1,6 @@
 # Welcome to Graphcool!
 #
-# This file is the main config file for your Graphcool Project.
+# This file is the main config file for your Graphcool Service.
 # It's very minimal at this point and uses default values.
 # We've included a hello world function here.
 # Just uncomment it and run `graphcool deploy`
@@ -9,7 +9,7 @@
 #    github.com/graphcool/examples
 #
 # Here are the reference docs of this definition format:
-# https://docs-next.graph.cool/reference/basics/project-configuration-opheidaix3
+# https://www.graph.cool/docs/reference/basics/project-configuration-opheidaix3
 #
 # Happy Coding!
 
@@ -33,14 +33,14 @@ types: ./types.graphql
 # To take the burden of thinking about those while development, we 
 # preconfigured the wildcard ("*") permission that allows everything
 # Read more here:
-# https://docs-next.graph.cool/reference/auth/authorization/overview-iegoo0heez
+# https://www.graph.cool/docs/reference/auth/authorization/overview-iegoo0heez
 permissions:
 - operation: "*"
 
   
 # Your root tokens used for functions to get full access to the API
 # Read more here:
-# https://docs-next.graph.cool/reference/auth/authentication/authentication-tokens-eip7ahqu5o
+# https://www.graph.cool/docs/reference/auth/authentication/authentication-tokens-eip7ahqu5o
 rootTokens: []
 
  

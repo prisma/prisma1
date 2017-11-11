@@ -46,13 +46,13 @@ In the following, we'll walk through each step in detail with the goal of using 
 
 <Instruction>
 
-We're going to use the [Graphcool CLI](https://www.npmjs.com/package/graphcool) to initialize our project:
+We're going to use the [Graphcool CLI](https://www.npmjs.com/package/graphcool) to initialize our service:
 
 ```sh
 # Install the Graphcool CLI
-npm install -g graphcool@next
+npm install -g graphcool
 
-# Create project
+# Create service
 graphcool init
 ```
 
@@ -181,7 +181,7 @@ Next, we'll make sure the required modules are installed.
 We need to install `isomorphic-fetch` and `form-data`:
 
 ```sh
-npm install --save isomorphic-fetch form-dat
+npm install --save isomorphic-fetch form-data
 ```
 
 This adds the dependencies to the `package.json` file.

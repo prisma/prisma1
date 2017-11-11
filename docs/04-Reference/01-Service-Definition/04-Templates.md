@@ -1,6 +1,6 @@
 ---
 alias: zeiv8phail
-description: Graphcool templates allow to easily add functionality to your project.
+description: Graphcool templates allow to easily add functionality to your service.
 ---
 
 # Templates
@@ -13,7 +13,7 @@ There's a number of templates that are officially supported. You can find them [
 
 A template is nothing but the definition of another Graphcool service, including a service definition file [`graphcool.yml`](!alias-foatho8aip) and potentially more files for functions or permissions. 
 
-It is important to understand that templates are only a [lightweight and temporary solution](https://github.com/graphcool/graphcool/issues/720) for you to be able to quickly integrate predefined functionality into your Graphcool service. They are not meant to provide an elaborate package/module system like [npm](https://www.npmjs.com/) or other dependency management tools.
+It is important to understand that templates are only a [lightweight and temporary solution](https://github.com/graphcool/framework/issues/720) for you to be able to quickly integrate predefined functionality into your Graphcool service. They are not meant to provide an elaborate package/module system like [npm](https://www.npmjs.com/) or other dependency management tools.
 
 
 ## Using a template
@@ -44,7 +44,7 @@ The `add-template` command in the Graphcool CLI basically automates the process 
 The only option that can be provided to this command is the path to the template on GitHub, e.g. for the [`email-password`](https://github.com/graphcool/modules)-template:
 
 ```sh
-graphcool add-template graphcool/templates/authentication/email-password
+graphcool add-template graphcool/templates/auth/email-password
 ```
 
 When merging the template's `graphcool.yml` and `types.graphql` files with the ones from your local service definition, the CLI will only add the contents from the template files into your local files _as comments_. So you need to explicitly uncomment the parts form the template files that you actually want to use in your project.

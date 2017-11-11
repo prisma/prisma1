@@ -6,17 +6,17 @@ Basic example demonstrating the generation of the CRUD-style GraphQL API based o
 
 ## Setup
 
-Download the example or [clone the repo](https://github.com/graphcool/graphcool):
+Download the example or [clone the repo](https://github.com/graphcool/framework):
 
 ```sh
-curl https://codeload.github.com/graphcool/graphcool/tar.gz/master | tar -xz --strip=2 graphcool-master/examples/crud-api
+curl https://codeload.github.com/graphcool/framework/tar.gz/master | tar -xz --strip=2 framework-master/examples/crud-api
 cd crud-api
 ```
 
 Install the CLI (if you haven't already):
 
 ```sh
-npm install -g graphcool@next
+npm install -g graphcool
 ```
 
 Deploy the Graphcool backend and open the GraphQL API endpoint in your browser
@@ -26,7 +26,7 @@ graphcool deploy
 # next step: open `https://api.graph.cool/simple/v1/xxx` in your browser
 ```
 
-When prompted which cluster you'd like to deploy, chose any of `Backend-as-a-Service`-options (`shared-eu-west-1`, `shared-ap-northeast-1` or `shared-us-west-2`) rather than `local`. 
+When prompted which cluster you'd like to deploy, choose any of the **Shared Clusters** (`shared-eu-west-1`, `shared-ap-northeast-1` or `shared-us-west-2`) rather than `local`. 
 
 ## Usage
 

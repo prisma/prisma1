@@ -150,7 +150,7 @@ graphcool delete [flags]
 
 ### `graphcool add-template`
 
-Add new [template](!alias-zeiv8phail) to current Graphcool service. After invoking this command, you still need to uncomment the added lines in `graphcool.yml` and `types.graphql` and then run `grphcool deploy`.
+Add new [template](!alias-zeiv8phail) to current Graphcool service. After invoking this command, you still need to uncomment the added lines in `graphcool.yml` and `types.graphql` and then run `graphcool deploy`.
 
 #### Usage 
 
@@ -228,7 +228,7 @@ graphcool logs [flags]
 ```
 -f, --function FUNCTION    (required) Name of the function to get the logs from
 -t, --target TARGET      Target name
--t, --tail                 Tail function logs in realtime
+--tail                   Tail function logs in realtime
 ```
 
 
@@ -295,7 +295,7 @@ graphcool local pull [flags]
 #### Flags
 
 ```
- -n, --name NAME    Name of the new instance
+ -n, --name NAME    Name of the cluster instance
 ```
 
 
@@ -313,7 +313,7 @@ graphcool local pull [flags]
 #### Flags
 
 ```
- -n, --name NAME    Name of the new instance
+ -n, --name NAME    Name of the cluster instance
 ```
 
 
@@ -331,7 +331,7 @@ graphcool local up [flags]
 #### Flags
 
 ```
- -n, --name NAME    Name of the new instance
+ -n, --name NAME    Name of the cluster instance
 ```
 
 
@@ -349,7 +349,7 @@ graphcool local restart [flags]
 #### Flags
 
 ```
- -n, --name NAME    Name of the new instance
+ -n, --name NAME    Name of the cluster instance
 ```
 
 ### `graphcool local ps`
