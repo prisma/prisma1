@@ -4,12 +4,12 @@ import akka.actor.Props
 import akka.testkit.{TestActorRef, TestKit, TestProbe}
 import cool.graph.akkautil.SingleThreadedActorSystem
 import cool.graph.messagebus.pubsub.PubSubProtocol.{Publish, Subscribe, Unsubscribe}
-import cool.graph.messagebus.pubsub.{PubSubRouter, PubSubRouterAlt}
+import cool.graph.messagebus.pubsub.PubSubRouterAlt
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Matchers, WordSpecLike}
 
 import scala.concurrent.duration._
 
-class PubSubRouterSpec
+class PubSubRouterAltSpec
     extends TestKit(SingleThreadedActorSystem("pubsub-router-spec"))
     with WordSpecLike
     with Matchers
@@ -19,13 +19,13 @@ class PubSubRouterSpec
 
   "The PubSubRouter implementation" should {
     "subscribe subscribers correctly and route messages" in {
-      val routerActor = TestActorRef(Props[PubSubRouter])
-      val router      = routerActor.underlyingActor.asInstanceOf[PubSubRouter]
+      val routerActor = TestActorRef(Props[PubSubRouterAlt])
+      val router      = routerActor.underlyingActor.asInstanceOf[PubSubRouterAlt]
       val probe       = TestProbe()
       val topic       = "testTopic"
 
       routerActor ! Subscribe(topic, probe.ref)
-      router.subscribers.values.map(_.size).sum shouldEqual 1
+      router.router.routees.length shouldEqual 1
 
       routerActor ! Publish(topic, "test")
       probe.expectMsg("test")
@@ -36,33 +36,33 @@ class PubSubRouterSpec
     }
 
     "unsubscribe subscribers correctly" in {
-      val routerActor = TestActorRef(Props[PubSubRouter])
-      val router      = routerActor.underlyingActor.asInstanceOf[PubSubRouter]
+      val routerActor = TestActorRef(Props[PubSubRouterAlt])
+      val router      = routerActor.underlyingActor.asInstanceOf[PubSubRouterAlt]
       val probe       = TestProbe()
       val topic       = "testTopic"
 
       routerActor ! Subscribe(topic, probe.ref)
-      router.subscribers.values.map(_.size).sum shouldEqual 1
+      router.router.routees.length shouldEqual 1
 
       routerActor ! Unsubscribe(topic, probe.ref)
-      router.subscribers.values.map(_.size).sum shouldEqual 0
+      router.router.routees.length shouldEqual 0
 
       routerActor ! Publish(topic, "test")
       probe.expectNoMsg(max = 1.second)
     }
 
     "handle actor terminations" in {
-      val routerActor = TestActorRef(Props[PubSubRouter])
-      val router      = routerActor.underlyingActor.asInstanceOf[PubSubRouter]
+      val routerActor = TestActorRef(Props[PubSubRouterAlt])
+      val router      = routerActor.underlyingActor.asInstanceOf[PubSubRouterAlt]
       val probe       = TestProbe()
       val topic       = "testTopic"
 
       routerActor ! Subscribe(topic, probe.ref)
-      router.subscribers.values.map(_.size).sum shouldEqual 1
+      router.router.routees.length shouldEqual 1
 
       system.stop(probe.ref)
       Thread.sleep(50)
-      router.subscribers.values.map(_.size).sum shouldEqual 0
+      router.router.routees.length shouldEqual 0
     }
   }
 }
