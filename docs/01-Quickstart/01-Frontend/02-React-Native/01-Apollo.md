@@ -57,6 +57,7 @@ graphcool init server
 └── server
     ├── graphcool.yml
     ├── types.graphql
+    ├── package.json
     └── src
         ├── hello.graphql
         └── hello.js
