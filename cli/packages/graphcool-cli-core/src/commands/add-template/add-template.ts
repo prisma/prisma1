@@ -1,5 +1,5 @@
 import { Command, flags, Flags, readDefinition } from 'graphcool-cli-engine'
-import * as download from 'download-github-repo'
+import * as download from 'download'
 import * as cuid from 'scuid'
 import * as path from 'path'
 import * as os from 'os'
@@ -320,14 +320,32 @@ Check https://github.com/graphcool/templates for official templates.`)
   }
 }
 
-function downloadRepo(repo: string, destination: string) {
-  return new Promise((resolve, reject) => {
-    download(repo, destination, err => {
-      if (err) {
-        reject(err)
-      } else {
-        resolve()
-      }
-    })
-  })
+// Github repo download functionality
+async function downloadRepo(repo: string, destination: string){
+  var url = github(normalize(repo));
+  return await download(url, destination, { 
+    extract: true, 
+    strip: 1,
+    proxy: process.env.HTTPS_PROXY });
+}
+
+function github(repo){
+  return `https://github.com/${repo.owner}/${repo.name}/archive/${repo.branch}.zip`
+}
+
+function normalize(string){
+  var owner = string.split('/')[0];
+  var name = string.split('/')[1];
+  var branch = 'master';
+
+  if (~name.indexOf('#')) {
+    branch = name.split('#')[1];
+    name = name.split('#')[0];
+  }
+
+  return {
+    owner: owner,
+    name: name,
+    branch: branch
+  };
 }
