@@ -1313,38 +1313,6 @@ graceful-fs@~3.0.2:
   dependencies:
     natives "^1.1.0"
 
-graphcool-cli-core@1.7.3:
-  version "1.7.3"
-  resolved "https://registry.yarnpkg.com/graphcool-cli-core/-/graphcool-cli-core-1.7.3.tgz#22198c007505af8ed64e653813b839756872f9ee"
-  dependencies:
-    archiver "^2.0.3"
-    callsites "^2.0.0"
-    chalk "^2.2.0"
-    chokidar "^1.7.0"
-    download-github-repo "^0.1.3"
-    figures "^2.0.0"
-    fs-extra "^4.0.2"
-    globby "^6.1.0"
-    graphcool-inquirer "^1.0.3"
-    graphcool-json-schema "^0.3.14"
-    inquirer "^3.3.0"
-    isomorphic-fetch "^2.2.1"
-    js-yaml "^3.9.1"
-    jwt-decode "^2.2.0"
-    lodash "^4.17.4"
-    lodash.differenceby "^4.8.0"
-    multimatch "^2.1.0"
-    opn "^5.1.0"
-    pause "^0.1.0"
-    portfinder "^1.0.13"
-    scuid "^1.0.2"
-    sillyname "^0.1.0"
-    source-map-support "^0.4.18"
-    table "^4.0.1"
-    ts-node "^3.3.0"
-    typescript "^2.5.3"
-    validator "^8.2.0"
-
 graphcool-inquirer@^1.0.3:
   version "1.0.3"
   resolved "https://registry.yarnpkg.com/graphcool-inquirer/-/graphcool-inquirer-1.0.3.tgz#4ab8e28b4b9371eabb8ad0ad3c59754a35431633"
@@ -1708,13 +1676,6 @@ isobject@^2.0.0:
   resolved "https://registry.yarnpkg.com/isobject/-/isobject-2.1.0.tgz#f065561096a3f1da2ef46272f815c840d87e0c89"
   dependencies:
     isarray "1.0.0"
-
-isomorphic-fetch@^2.2.1:
-  version "2.2.1"
-  resolved "https://registry.yarnpkg.com/isomorphic-fetch/-/isomorphic-fetch-2.2.1.tgz#611ae1acf14f5e81f729507472819fe9733558a9"
-  dependencies:
-    node-fetch "^1.0.1"
-    whatwg-fetch ">=0.10.0"
 
 isstream@~0.1.2:
   version "0.1.2"
@@ -2523,7 +2484,7 @@ node-emoji@^1.4.1:
   dependencies:
     lodash.toarray "^4.4.0"
 
-node-fetch@1.7.3, node-fetch@^1.0.1:
+node-fetch@1.7.3, node-fetch@^1.7.3:
   version "1.7.3"
   resolved "https://registry.yarnpkg.com/node-fetch/-/node-fetch-1.7.3.tgz#980f6f72d85211a5347c6b2bc18c5b84c3eb47ef"
   dependencies:
@@ -3760,7 +3721,7 @@ whatwg-encoding@^1.0.1:
   dependencies:
     iconv-lite "0.4.13"
 
-whatwg-fetch@2.0.3, whatwg-fetch@>=0.10.0:
+whatwg-fetch@2.0.3:
   version "2.0.3"
   resolved "https://registry.yarnpkg.com/whatwg-fetch/-/whatwg-fetch-2.0.3.tgz#9c84ec2dcf68187ff00bc64e1274b442176e1c84"
 

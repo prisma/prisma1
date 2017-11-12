@@ -1,6 +1,6 @@
 import { Config } from './Config'
 import { Output } from './Output/index'
-import 'isomorphic-fetch'
+import fetch from 'node-fetch'
 import * as cuid from 'scuid'
 import * as opn from 'opn'
 import { AuthTrigger } from './types/common'

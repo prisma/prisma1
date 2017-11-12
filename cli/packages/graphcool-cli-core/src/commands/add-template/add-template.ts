@@ -12,7 +12,7 @@ import chalk from 'chalk'
 import * as figures from 'figures'
 import { intersection, difference } from 'lodash'
 import { getBinPath } from './getbin'
-import 'isomorphic-fetch'
+import fetch from 'node-fetch'
 
 export default class AddTemplate extends Command {
   static topic = 'add-template'
