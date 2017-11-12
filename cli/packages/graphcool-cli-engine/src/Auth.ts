@@ -6,6 +6,7 @@ import * as opn from 'opn'
 import { AuthTrigger } from './types/common'
 import { Client } from './Client/Client'
 import { GraphQLClient } from 'graphql-request'
+import * as HttpsProxyAgent from 'https-proxy-agent'
 import chalk from 'chalk'
 import { Environment } from './Environment'
 import * as jwtDecode from 'jwt-decode'
@@ -84,6 +85,7 @@ export class Auth {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ cliToken }),
+      agent: process.env.HTTPS_PROXY ? new HttpsProxyAgent(process.env.HTTPS_PROXY) : null
     })
 
     opn(url)
@@ -91,7 +93,8 @@ export class Auth {
     let authToken
     while (!authToken) {
       const endpointUrl = `${this.config.authEndpoint}/${cliToken}`
-      const result = await fetch(endpointUrl)
+      const result = await fetch(endpointUrl, { 
+        agent: process.env.HTTPS_PROXY ? new HttpsProxyAgent(process.env.HTTPS_PROXY) : null })
 
       const json = await result.json()
       authToken = json.authToken

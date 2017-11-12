@@ -16,6 +16,7 @@ import TypescriptBuilder from './TypescriptBuilder'
 const debug = require('debug')('bundler')
 import {difference, flatMap} from 'lodash'
 import fetch from 'node-fetch'
+import * as HttpsProxyAgent from 'https-proxy-agent'
 import * as globby from 'globby'
 import chalk from 'chalk'
 
@@ -140,6 +141,7 @@ export default class Bundler {
         'Content-Length': stats.size,
         'Content-Type': 'application/zip',
       },
+      agent: process.env.HTTPS_PROXY ? new HttpsProxyAgent(process.env.HTTPS_PROXY) : null
     })
     const text = await res.text()
     debug(text)

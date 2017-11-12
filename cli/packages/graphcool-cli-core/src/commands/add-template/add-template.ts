@@ -13,6 +13,7 @@ import * as figures from 'figures'
 import { intersection, difference } from 'lodash'
 import { getBinPath } from './getbin'
 import fetch from 'node-fetch'
+import * as HttpsProxyAgent from 'https-proxy-agent'
 
 export default class AddTemplate extends Command {
   static topic = 'add-template'
@@ -167,7 +168,9 @@ export default class AddTemplate extends Command {
 
     if (splittedModule.length === 1) {
       const res = await fetch(
-        'https://raw.githubusercontent.com/graphcool/templates/master/templates.json',
+        'https://raw.githubusercontent.com/graphcool/templates/master/templates.json', { 
+          agent: process.env.HTTPS_PROXY ? new HttpsProxyAgent(process.env.HTTPS_PROXY) : null 
+        }
       )
       const templates = await res.json()
       if (!templates[moduleUrl]) {
@@ -285,7 +288,9 @@ Check https://github.com/graphcool/templates for official templates.`)
     )[0]}/tree/master/${subPath}`
 
     debug('fetching', githubUrl)
-    const result = await fetch(githubUrl)
+    const result = await fetch(githubUrl, {
+      agent: process.env.HTTPS_PROXY ? new HttpsProxyAgent(process.env.HTTPS_PROXY) : null
+    })
     if (result.status === 404) {
       this.out.error(
         `Could not find ${moduleUrl}. Please check if the github repository ${githubUrl} exists`,

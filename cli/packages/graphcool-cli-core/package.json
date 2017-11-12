@@ -81,6 +81,7 @@
     "globby": "^6.1.0",
     "graphcool-inquirer": "^1.0.3",
     "graphcool-json-schema": "^0.3.14",
+    "https-proxy-agent": "^2.1.0",
     "inquirer": "^3.3.0",
     "js-yaml": "^3.9.1",
     "jwt-decode": "^2.2.0",
