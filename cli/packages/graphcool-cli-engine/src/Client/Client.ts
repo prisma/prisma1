@@ -65,6 +65,7 @@ export class Client {
       headers: {
         Authorization: `Bearer ${this.env.token}`,
       },
+      agent: process.env.HTTPS_PROXY ? new HttpsProxyAgent(process.env.HTTPS_PROXY) : null
     })
     return {
       request: async (query, variables) => {
@@ -348,10 +349,11 @@ export class Client {
     token: string,
   ): Promise<AuthenticateCustomerPayload> {
     // dont send any auth information when running the authenticateCustomer mutation
-    const result = await request<{
+    const result = await new GraphQLClient(endpoint, {
+      agent: process.env.HTTPS_PROXY ? new HttpsProxyAgent(process.env.HTTPS_PROXY) : null
+    }).request<{
       authenticateCustomer: AuthenticateCustomerPayload
     }>(
-      endpoint,
       `
       mutation ($token: String!) {
         authenticateCustomer(input: {

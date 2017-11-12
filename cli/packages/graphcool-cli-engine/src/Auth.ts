@@ -122,6 +122,7 @@ export class Auth {
       headers: {
         Authorization: `Bearer ${token}`,
       },
+      agent: process.env.HTTPS_PROXY ? new HttpsProxyAgent(process.env.HTTPS_PROXY) : null
     })
 
     const authQuery = `{
