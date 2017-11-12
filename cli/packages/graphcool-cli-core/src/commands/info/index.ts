@@ -20,11 +20,12 @@ export default class InfoCommand extends Command {
     }),
   }
   async run() {
-    await this.auth.ensureAuth()
     let { target } = this.flags
 
     const { id } = await this.env.getTarget(target)
     const targetName = target || 'default'
+
+    await this.auth.ensureAuth()    
 
     const projects: Project[] = await this.client.fetchProjects()
 
