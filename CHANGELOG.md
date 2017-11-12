@@ -1,5 +1,13 @@
 Download the latest CLI version with `npm install -g graphcool`.
 
+# 0.9.2 (2017-11-10)
+
+## CLI
+The CLI now works with Windows.
+* ced3ae7cb7cdde23d965ca17a3abdf7b623201b0 Fixed local IP address https://github.com/graphcool/framework/issues/1092 
+* 2a3e45b639bc904c30e0423908fbb3a6681568bb Fixed function return type
+* 8605b0db7e85e7262396a38fb43272ceb5619739 Fix Windows deployment paths https://github.com/graphcool/framework/issues/1031 https://github.com/graphcool/framework/issues/836 https://github.com/graphcool/framework/issues/885
+
 # 0.9 (2017-11-08)
 
 ## Server
