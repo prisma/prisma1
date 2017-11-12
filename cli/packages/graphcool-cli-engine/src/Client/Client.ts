@@ -21,6 +21,8 @@ import { Environment } from '../Environment'
 import { Output } from '../index'
 import { Auth } from '../Auth'
 import chalk from 'chalk'
+import fetch from 'node-fetch'
+import * as HttpsProxyAgent from 'https-proxy-agent'
 
 const debug = require('debug')('client')
 
@@ -700,6 +702,7 @@ export class Client {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(instruction),
+        agent: process.env.HTTPS_PROXY ? new HttpsProxyAgent(process.env.HTTPS_PROXY) : null
       })
     } catch (e) {
       // noop
