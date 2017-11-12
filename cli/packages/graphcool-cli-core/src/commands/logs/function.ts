@@ -24,7 +24,6 @@ export default class FunctionLogs extends Command {
     }),
   }
   async run() {
-    await this.auth.ensureAuth()
     const { tail, target } = this.flags
     const functionName = this.flags.function
 
@@ -32,6 +31,8 @@ export default class FunctionLogs extends Command {
     debug(`function name ${functionName}`)
     debug(`service id ${id}`)
 
+    await this.auth.ensureAuth()
+    
     if (!functionName) {
       await this.provideAllFunctionLogs(id, tail)
     } else {
