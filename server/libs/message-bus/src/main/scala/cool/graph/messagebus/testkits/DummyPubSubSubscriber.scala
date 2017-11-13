@@ -18,10 +18,10 @@ object DummyPubSubSubscriber {
 case class DummyPubSubSubscriber[T]()(implicit system: ActorSystem) extends PubSubSubscriber[T] {
   val testProbe = TestProbe()
 
-  override def subscribe(topic: Topic, onReceive: Message[T] => Unit): Subscription         = Subscription(testProbe.ref)
-  override def subscribe(topic: Topic, subscriber: ActorRef): Subscription                  = Subscription(testProbe.ref)
+  override def subscribe(topic: Topic, onReceive: Message[T] => Unit): Subscription         = Subscription(topic.topic, testProbe.ref)
+  override def subscribe(topic: Topic, subscriber: ActorRef): Subscription                  = Subscription(topic.topic, testProbe.ref)
   override def unsubscribe(subscription: Subscription): Unit                                = {}
-  override def subscribe[U](topic: Topic, subscriber: ActorRef, converter: Converter[T, U]) = Subscription(testProbe.ref)
+  override def subscribe[U](topic: Topic, subscriber: ActorRef, converter: Converter[T, U]) = Subscription(topic.topic, testProbe.ref)
 }
 
 case class DummyPubSubPublisher[T]() extends PubSubPublisher[T] {

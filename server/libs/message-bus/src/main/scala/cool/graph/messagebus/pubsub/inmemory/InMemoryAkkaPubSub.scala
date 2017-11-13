@@ -1,10 +1,9 @@
 package cool.graph.messagebus.pubsub.inmemory
 
 import akka.actor.{ActorRef, ActorSystem, Props}
-import akka.cluster.pubsub.DistributedPubSub
-import akka.cluster.pubsub.DistributedPubSubMediator.Publish
 import cool.graph.messagebus.Conversions.Converter
 import cool.graph.messagebus.PubSub
+import cool.graph.messagebus.pubsub.PubSubProtocol.Publish
 import cool.graph.messagebus.pubsub._
 
 /**
@@ -12,23 +11,25 @@ import cool.graph.messagebus.pubsub._
   * Useful for the single server solution and tests.
   */
 case class InMemoryAkkaPubSub[T](implicit val system: ActorSystem) extends PubSub[T] {
-  lazy val mediator = DistributedPubSub(system).mediator
+  val router = system.actorOf(Props(PubSubRouter()))
 
   def subscribe(topic: Topic, onReceive: Message[T] => Unit): Subscription =
-    Subscription(system.actorOf(Props(IntermediateCallbackActor[T, T](topic.topic, mediator, onReceive)(identity))))
+    Subscription(topic.topic, system.actorOf(Props(IntermediateCallbackActor[T, T](topic.topic, router, onReceive)(identity))))
 
   def subscribe(topic: Topic, subscriber: ActorRef): Subscription =
-    Subscription(system.actorOf(Props(IntermediateForwardActor[T, T](topic.topic, mediator, subscriber)(identity))))
+    Subscription(topic.topic, system.actorOf(Props(IntermediateForwardActor[T, T](topic.topic, router, subscriber)(identity))))
 
   def unsubscribe(subscription: Subscription): Unit = subscription.unsubscribe
 
   def subscribe[U](topic: Topic, subscriber: ActorRef, converter: Converter[T, U]): Subscription =
-    Subscription(system.actorOf(Props(IntermediateForwardActor(topic.topic, mediator, subscriber)(converter))))
+    Subscription(topic.topic, system.actorOf(Props(IntermediateForwardActor(topic.topic, router, subscriber)(converter))))
 
   def publish(topic: Only, msg: T): Unit = {
     val message = Message[T](topic.topic, msg)
 
-    mediator ! Publish(topic.topic, message)
-    mediator ! Publish(Everything.topic, message)
+    router ! Publish(topic.topic, message)
+    router ! Publish(Everything.topic, message)
   }
+
+  override def shutdown: Unit = system.stop(router)
 }

@@ -6,6 +6,8 @@ import akka.actor.{Actor, ActorRef, PoisonPill, Props, ReceiveTimeout, Stash, Te
 import cool.graph.akkautil.{LogUnhandled, LogUnhandledExceptions}
 import cool.graph.bugsnag.BugSnagger
 import cool.graph.messagebus.QueuePublisher
+import cool.graph.messagebus.queue.MappingQueuePublisher
+import cool.graph.messagebus.testkits.InMemoryQueueTestKit
 import cool.graph.websockets.protocol.Request
 
 import scala.collection.mutable
@@ -78,7 +80,6 @@ case class WebsocketSession(
   import metrics.SubscriptionWebsocketMetrics._
 
   activeWsConnections.inc
-
   context.setReceiveTimeout(FiniteDuration(60, TimeUnit.MINUTES))
 
   def receive: Receive = logUnhandled {

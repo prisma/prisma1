@@ -1,11 +1,10 @@
 package cool.graph.messagebus.pubsub.rabbit
 
 import akka.actor.{ActorRef, ActorSystem, Props}
-import akka.cluster.pubsub.DistributedPubSub
-import akka.cluster.pubsub.DistributedPubSubMediator.Publish
 import cool.graph.bugsnag.BugSnagger
 import cool.graph.messagebus.Conversions.{ByteUnmarshaller, Converter}
 import cool.graph.messagebus._
+import cool.graph.messagebus.pubsub.PubSubProtocol.Publish
 import cool.graph.messagebus.pubsub._
 import cool.graph.messagebus.utils.Utils
 import cool.graph.rabbit.Bindings.FanOut
@@ -37,7 +36,7 @@ case class RabbitAkkaPubSubSubscriber[T](
     val system: ActorSystem,
     unmarshaller: ByteUnmarshaller[T]
 ) extends PubSubSubscriber[T] {
-  lazy val mediator = DistributedPubSub(system).mediator
+  lazy val router = system.actorOf(Props(PubSubRouter()))
 
   val consumer = {
     val queueNamePrefix = (exchange.name, Utils.dockerContainerID) match {
@@ -53,8 +52,8 @@ case class RabbitAkkaPubSubSubscriber[T](
                    val topic   = delivery.envelope.getRoutingKey
                    val message = Message[Array[Byte]](topic, delivery.body)
 
-                   mediator ! Publish(topic, message)
-                   mediator ! Publish(Everything.topic, message)
+                   router ! Publish(topic, message)
+                   router ! Publish(Everything.topic, message)
 
                    queue.ack(delivery)
                  }
@@ -62,13 +61,16 @@ case class RabbitAkkaPubSubSubscriber[T](
   }
 
   def subscribe(topic: Topic, onReceive: Message[T] => Unit): Subscription =
-    Subscription(system.actorOf(Props(IntermediateCallbackActor[Array[Byte], T](topic.topic, mediator, onReceive)(unmarshaller))))
+    Subscription(topic.topic, system.actorOf(Props(IntermediateCallbackActor[Array[Byte], T](topic.topic, router, onReceive)(unmarshaller))))
 
   def subscribe(topic: Topic, subscriber: ActorRef): Subscription =
-    Subscription(system.actorOf(Props(IntermediateForwardActor[Array[Byte], T](topic.topic, mediator, subscriber)(unmarshaller))))
+    Subscription(topic.topic, system.actorOf(Props(IntermediateForwardActor[Array[Byte], T](topic.topic, router, subscriber)(unmarshaller))))
 
   def subscribe[U](topic: Topic, subscriber: ActorRef, converter: Converter[T, U]): Subscription =
-    Subscription(system.actorOf(Props(IntermediateForwardActor[Array[Byte], U](topic.topic, mediator, subscriber)(unmarshaller.andThen(converter)))))
+    Subscription(
+      topic.topic,
+      system.actorOf(Props(IntermediateForwardActor[Array[Byte], U](topic.topic, router, subscriber)(unmarshaller.andThen(converter))))
+    )
 
   def unsubscribe(subscription: Subscription): Unit = subscription.unsubscribe
 
@@ -78,6 +80,7 @@ case class RabbitAkkaPubSubSubscriber[T](
       case Failure(_) =>
     }
 
+    system.stop(router)
     onShutdown()
   }
 }
