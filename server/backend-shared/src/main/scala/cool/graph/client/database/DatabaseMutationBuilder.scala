@@ -211,9 +211,8 @@ object DatabaseMutationBuilder {
                    newIsUnique: Boolean,
                    newIsList: Boolean,
                    newTypeIdentifier: TypeIdentifier) = {
-    val nulls = if (newIsRequired) { "NOT NULL" } else { "NULL" }
-    val sqlType =
-      sqlTypeForScalarTypeIdentifier(newIsList, newTypeIdentifier)
+    val nulls   = if (newIsRequired) { "NOT NULL" } else { "NULL" }
+    val sqlType = sqlTypeForScalarTypeIdentifier(newIsList, newTypeIdentifier)
 
     sqlu"ALTER TABLE `#$projectId`.`#$tableName` CHANGE COLUMN `#$oldColumnName` `#$newColumnName` #$sqlType #$nulls"
   }
