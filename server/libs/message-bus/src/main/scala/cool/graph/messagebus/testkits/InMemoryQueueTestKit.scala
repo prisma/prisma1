@@ -173,8 +173,6 @@ case class InMemoryQueueTestKit[T](backoff: BackoffStrategy = ConstantBackoff(1.
   def reset: Unit = {
     messagesReceived = Vector.empty[T]
     messagesPublished = Vector.empty[T]
-    _underlying.shutdown
-    _underlying = InMemoryAkkaQueue[T]()
     probe = TestProbe()
     publishProbe = TestProbe()
   }

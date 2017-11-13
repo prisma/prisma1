@@ -4,7 +4,7 @@ import akka.actor.Props
 import akka.testkit.{TestActorRef, TestKit, TestProbe}
 import cool.graph.akkautil.SingleThreadedActorSystem
 import cool.graph.messagebus.pubsub.PubSubProtocol.{Publish, Subscribe, Unsubscribe}
-import cool.graph.messagebus.pubsub.{PubSubRouter, PubSubRouterAlt}
+import cool.graph.messagebus.pubsub.PubSubRouter
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Matchers, WordSpecLike}
 
 import scala.concurrent.duration._

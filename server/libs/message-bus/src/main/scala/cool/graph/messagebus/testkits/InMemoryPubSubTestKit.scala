@@ -36,8 +36,8 @@ case class InMemoryPubSubTestKit[T]()(
     materializer: ActorMaterializer
 ) extends PubSub[T] {
 
-  val probe             = TestProbe() // Received messages
-  val publishProbe      = TestProbe() // Published messages
+  var probe             = TestProbe() // Received messages
+  var publishProbe      = TestProbe() // Published messages
   val logId             = new java.util.Random().nextInt(Integer.MAX_VALUE) // For log output correlation
   var messagesReceived  = Vector.empty[Message[T]]
   var messagesPublished = Vector.empty[Message[T]]
@@ -193,6 +193,8 @@ case class InMemoryPubSubTestKit[T]()(
   def reset: Unit = {
     messagesReceived = Vector.empty[Message[T]]
     messagesPublished = Vector.empty[Message[T]]
+    probe = TestProbe()
+    publishProbe = TestProbe()
   }
 
   override def shutdown(): Unit = {
@@ -200,6 +202,25 @@ case class InMemoryPubSubTestKit[T]()(
     _underlying.shutdown
   }
 
-  override def subscribe[U](topic: Topic, subscriber: ActorRef, converter: Converter[T, U]): Subscription = ???
-  override def unsubscribe(subscription: Subscription): Unit                                              = subscription.unsubscribe
+  override def subscribe[U](topic: Topic, subscriber: ActorRef, converter: Converter[T, U]): Subscription = {
+    val sub = _underlying.subscribe(
+      topic, { msg: Message[T] =>
+        println(s"[TestKit][$logId] Received $msg")
+
+        messagesReceived.synchronized {
+          messagesReceived = messagesReceived :+ msg
+        }
+
+        val convertedMsg = Message[U](msg.topic, converter(msg.payload))
+
+        probe.ref ! msg
+        subscriber ! convertedMsg
+      }
+    )
+
+    Thread.sleep(50)
+    sub
+  }
+
+  override def unsubscribe(subscription: Subscription): Unit = subscription.unsubscribe
 }
