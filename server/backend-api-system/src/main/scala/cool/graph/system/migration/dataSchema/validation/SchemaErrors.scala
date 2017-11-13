@@ -55,6 +55,27 @@ object SchemaErrors {
     )
   }
 
+  def invalidDirectiveOnModel(fieldAndType: FieldAndType, directive: String) = {
+    error(
+      fieldAndType,
+      s"The model `${fieldAndType.objectType.name}` has an invalid directive: '$directive'. Valid directives for this position are '@model' and '@rename'."
+    )
+  }
+
+  def invalidDirectiveOnScalarField(fieldAndType: FieldAndType, directive: String) = {
+    error(
+      fieldAndType,
+      s"The scalar field `${fieldAndType.fieldDef.name}` on `${fieldAndType.objectType.name}` has an invalid directive: '$directive'. Valid directives for this position are '@isUnique', '@migrationValue', '@defaultValue' and '@rename'."
+    )
+  }
+
+  def invalidDirectiveOnRelationField(fieldAndType: FieldAndType, directive: String) = {
+    error(
+      fieldAndType,
+      s"The relation field `${fieldAndType.fieldDef.name}` on `${fieldAndType.objectType.name}` has an invalid directive: '$directive'. Valid directives for this position are '@relation' and '@rename'."
+    )
+  }
+
   def atNodeIsDeprecated(fieldAndType: FieldAndType) = {
     error(
       fieldAndType,
@@ -93,12 +114,18 @@ object SchemaErrors {
 
   def relationFieldTypeWrong(fieldAndType: FieldAndType): SchemaError = {
     val oppositeType = fieldAndType.fieldDef.fieldType.namedType.name
-    error(fieldAndType, s"""The relation field `${fieldAndType.fieldDef.name}` has the wrong format: `${fieldAndType.fieldDef.typeString}` Possible Formats: `$oppositeType`, `$oppositeType!`, `[$oppositeType!]!`""")    //todo
+    error(
+      fieldAndType,
+      s"""The relation field `${fieldAndType.fieldDef.name}` has the wrong format: `${fieldAndType.fieldDef.typeString}` Possible Formats: `$oppositeType`, `$oppositeType!`, `[$oppositeType!]!`"""
+    ) //todo
   }
 
   def scalarFieldTypeWrong(fieldAndType: FieldAndType): SchemaError = {
     val scalarType = fieldAndType.fieldDef.fieldType.namedType.name
-    error(fieldAndType, s"""The scalar field `${fieldAndType.fieldDef.name}` has the wrong format: `${fieldAndType.fieldDef.typeString}` Possible Formats: `$scalarType`, `$scalarType!`, `[$scalarType!]` or `[$scalarType!]!`""")
+    error(
+      fieldAndType,
+      s"""The scalar field `${fieldAndType.fieldDef.name}` has the wrong format: `${fieldAndType.fieldDef.typeString}` Possible Formats: `$scalarType`, `$scalarType!`, `[$scalarType!]` or `[$scalarType!]!`"""
+    )
   }
 
   def enumValuesMustBeginUppercase(enumType: EnumTypeDefinition) = {
