@@ -3,14 +3,13 @@ package cool.graph.system.schema.types
 import cool.graph.shared.errors.UserInputErrors
 import cool.graph.shared.models
 import cool.graph.shared.models.{Client, ModelParser}
-import cool.graph.system.SystemUserContext
 import cool.graph.system.database.finder.{ProjectFinder, ProjectResolver}
 import cool.graph.system.schema.types.Model.ModelContext
 import cool.graph.system.schema.types.Relation.RelationContext
 import cool.graph.system.schema.types._Field.FieldContext
+import cool.graph.system.{SystemInjector, SystemUserContext}
 import sangria.relay.Node
 import sangria.schema._
-import scaldi.Injector
 
 import scala.concurrent.Future
 
@@ -26,7 +25,7 @@ object Viewer {
   import scala.concurrent.ExecutionContext.Implicits.global
 
   def getType(clientType: ObjectType[SystemUserContext, Client], projectResolver: ProjectResolver)(
-      implicit inj: Injector): ObjectType[SystemUserContext, ViewerModel] = {
+      implicit inj: SystemInjector): ObjectType[SystemUserContext, ViewerModel] = {
 
     val idArgument           = Argument("id", IDType)
     val projectNameArgument  = Argument("projectName", StringType)

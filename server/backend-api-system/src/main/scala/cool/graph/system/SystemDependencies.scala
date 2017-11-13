@@ -70,6 +70,7 @@ trait SystemInjector {
 
 class SystemInjectorImpl(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends SystemInjector {
   import scala.concurrent.duration._
+  import scala.concurrent.ExecutionContext.Implicits.global
 
   SystemMetrics.init()
 
