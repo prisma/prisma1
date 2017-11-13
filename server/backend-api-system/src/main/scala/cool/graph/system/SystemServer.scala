@@ -6,6 +6,7 @@ import akka.http.scaladsl.model.StatusCodes._
 import akka.http.scaladsl.model.headers.RawHeader
 import akka.http.scaladsl.model.{HttpResponse, StatusCode}
 import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.Route
 import akka.stream.ActorMaterializer
 import com.typesafe.scalalogging.LazyLogging
 import cool.graph._
@@ -22,7 +23,6 @@ import cool.graph.system.metrics.SystemMetrics
 import cool.graph.util.ErrorHandlerFactory
 import sangria.execution.{ErrorWithResolver, Executor, QueryAnalysisError}
 import sangria.parser.QueryParser
-import scaldi._
 import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.MySQLProfile.backend.DatabaseDef
 import spray.json._
@@ -37,24 +37,23 @@ case class SystemServer(
 )(implicit inj: SystemInjector, system: ActorSystem, materializer: ActorMaterializer)
     extends Server
     with LazyLogging {
+  import inj.toScaldi
   import system.dispatcher
 
-  import inj.toScaldi
-
-  implicit val internalDatabaseDef: DatabaseDef = inj.internalDb
+  implicit val internalDatabaseDef: DatabaseDef = inj.internalDB
   implicit val clientResolver: ClientResolver   = inj.clientResolver
 
-  val globalDatabaseManager = inj.globalDatabaseManager
-  val internalDatabase      = InternalDatabase(internalDatabaseDef)
-  val log: String => Unit   = (msg: String) => logger.info(msg)
-  val errorHandlerFactory   = ErrorHandlerFactory(log)
-  val requestPrefix         = inj.requestPrefix
+  val globalDatabaseManager: GlobalDatabaseManager = inj.globalDatabaseManager
+  val internalDatabase                             = InternalDatabase(internalDatabaseDef)
+  val log: String => Unit                          = (msg: String) => logger.info(msg)
+  val errorHandlerFactory                          = ErrorHandlerFactory(log)
+  val requestPrefix: String                        = inj.requestPrefix
 
-  val innerRoutes = extractRequest { _ =>
+  val innerRoutes: Route = extractRequest { _ =>
     val requestId            = requestPrefix + ":system:" + createCuid()
     val requestBeginningTime = System.currentTimeMillis()
 
-    def logRequestEnd(projectId: Option[String] = None, clientId: Option[String] = None) = {
+    def logRequestEnd(projectId: Option[String] = None, clientId: Option[String] = None): Unit = {
       logger.info(
         LogData(
           key = LogKey.RequestComplete,

@@ -2,6 +2,7 @@ package cool.graph.system.database.finder
 
 import cool.graph.shared.externalServices.TestableTime
 import cool.graph.shared.models.Log
+import cool.graph.system.SystemInjector
 import cool.graph.system.database.finder.HistogramPeriod.HistogramPeriod
 import cool.graph.system.database.tables.Tables
 import scaldi.{Injectable, Injector}
@@ -20,10 +21,10 @@ object HistogramPeriod extends Enumeration {
   val HALF_HOUR = Value("HALF_HOUR")
 }
 
-class LogsDataResolver(implicit inj: Injector) extends Injectable {
+class LogsDataResolver(implicit inj: SystemInjector) {
 
-  val logsDatabase = inject[DatabaseDef](identified by "logs-db")
-  val testableTime = inject[TestableTime]
+  val logsDatabase = inj.logsDB
+  val testableTime = inj.testableTime
 
   def load(functionId: String, count: Int = 1000, before: Option[String] = None): Future[Seq[Log]] = {
 
