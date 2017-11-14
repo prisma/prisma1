@@ -7,11 +7,11 @@ import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration
 import com.amazonaws.services.kinesis.{AmazonKinesis, AmazonKinesisClientBuilder}
 import cool.graph.aws.AwsInitializers
 import cool.graph.aws.cloudwatch.CloudwatchImpl
+import cool.graph.client._
 import cool.graph.client.database.{DeferredResolverProvider, RelayManyModelDeferredResolver, RelayToManyDeferredResolver}
 import cool.graph.client.finder.{CachedProjectFetcherImpl, ProjectFetcherImpl, RefreshableProjectFetcher}
 import cool.graph.client.metrics.ApiMetricsMiddleware
 import cool.graph.client.server.{GraphQlRequestHandler, GraphQlRequestHandlerImpl, ProjectSchemaBuilder}
-import cool.graph.client.{CommonClientDependencies, FeatureMetric, FeatureMetricActor, UserContext}
 import cool.graph.messagebus.Conversions.{ByteUnmarshaller, Unmarshallers}
 import cool.graph.messagebus.pubsub.rabbit.{RabbitAkkaPubSub, RabbitAkkaPubSubSubscriber}
 import cool.graph.messagebus.queue.rabbit.RabbitQueue
@@ -24,6 +24,26 @@ import cool.graph.shared.functions.{EndpointResolver, FunctionEnvironment, LiveE
 import cool.graph.webhook.Webhook
 
 import scala.util.Try
+
+class RelayInjector(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends ClientInjectorImpl {
+  import system.dispatcher
+
+  def toScaldi: CommonClientDependencies                       = RelayApiDependencies()
+  override implicit val commonModule: CommonClientDependencies = this.toScaldi
+
+  val relayDeferredResolver: DeferredResolverProvider[_, UserContext] =
+    new DeferredResolverProvider(new RelayToManyDeferredResolver, new RelayManyModelDeferredResolver)
+
+  val relayProjectSchemaBuilder = ProjectSchemaBuilder(project => new RelaySchemaBuilder(project).build())
+
+  val relayGraphQlRequestHandler = GraphQlRequestHandlerImpl(
+    errorHandlerFactory = errorHandlerFactory,
+    log = log,
+    apiVersionMetric = FeatureMetric.ApiRelay,
+    apiMetricsMiddleware = apiMetricsMiddleware,
+    deferredResolver = relayDeferredResolver
+  )
+}
 
 trait RelayApiClientDependencies extends CommonClientDependencies {
   import system.dispatcher
@@ -46,6 +66,7 @@ trait RelayApiClientDependencies extends CommonClientDependencies {
 }
 
 case class RelayApiDependencies(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends RelayApiClientDependencies {
+
   lazy val projectSchemaInvalidationSubscriber: RabbitAkkaPubSubSubscriber[String] = {
     val globalRabbitUri                                 = sys.env("GLOBAL_RABBIT_URI")
     implicit val unmarshaller: ByteUnmarshaller[String] = Unmarshallers.ToString

@@ -11,7 +11,7 @@ import cool.graph.client.database.{DeferredResolverProvider, SimpleManyModelDefe
 import cool.graph.client.finder.{CachedProjectFetcherImpl, ProjectFetcherImpl, RefreshableProjectFetcher}
 import cool.graph.client.metrics.ApiMetricsMiddleware
 import cool.graph.client.server.{GraphQlRequestHandler, GraphQlRequestHandlerImpl, ProjectSchemaBuilder}
-import cool.graph.client.{CommonClientDependencies, FeatureMetric, FeatureMetricActor, UserContext}
+import cool.graph.client._
 import cool.graph.messagebus.Conversions.{ByteUnmarshaller, Unmarshallers}
 import cool.graph.messagebus.pubsub.rabbit.{RabbitAkkaPubSub, RabbitAkkaPubSubSubscriber}
 import cool.graph.messagebus.queue.rabbit.RabbitQueue
@@ -23,6 +23,27 @@ import cool.graph.shared.functions.{EndpointResolver, FunctionEnvironment, LiveE
 import cool.graph.webhook.Webhook
 
 import scala.util.Try
+
+class SimpleInjector(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends ClientInjectorImpl {
+
+  import system.dispatcher
+
+  def toScaldi: CommonClientDependencies                       = SimpleApiDependencies()
+  override implicit val commonModule: CommonClientDependencies = this.toScaldi
+
+  val simpleDeferredResolver: DeferredResolverProvider[_, UserContext] =
+    new DeferredResolverProvider(new SimpleToManyDeferredResolver, new SimpleManyModelDeferredResolver)
+
+  val simpleProjectSchemaBuilder = ProjectSchemaBuilder(project => new SimpleSchemaBuilder(project).build())
+
+  val simpleGraphQlRequestHandler = GraphQlRequestHandlerImpl(
+    errorHandlerFactory = errorHandlerFactory,
+    log = log,
+    apiVersionMetric = FeatureMetric.ApiSimple,
+    apiMetricsMiddleware = apiMetricsMiddleware,
+    deferredResolver = simpleDeferredResolver
+  )
+}
 
 trait SimpleApiClientDependencies extends CommonClientDependencies {
   import system.dispatcher
