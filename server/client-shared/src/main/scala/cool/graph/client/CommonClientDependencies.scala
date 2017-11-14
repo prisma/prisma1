@@ -71,8 +71,8 @@ trait ClientInjector {
 trait ClientInjectorImpl extends ClientInjector with LazyLogging {
   implicit val system: ActorSystem
   implicit val materializer: ActorMaterializer
-  implicit val dispatcher             = system.dispatcher
-  implicit val bugSnagger: BugSnagger = BugSnaggerImpl(sys.env("BUGSNAG_API_KEY"))
+  implicit val dispatcher: ExecutionContext = system.dispatcher
+  implicit val bugSnagger: BugSnagger       = BugSnaggerImpl(sys.env("BUGSNAG_API_KEY"))
 
   implicit val commonModule: CommonClientDependencies
 
@@ -190,7 +190,5 @@ trait CommonClientDependencies extends Module with LazyLogging {
   binding identifiedBy "environment" toNonLazy sys.env.getOrElse("ENVIRONMENT", "local")
   binding identifiedBy "service-name" toNonLazy sys.env.getOrElse("SERVICE_NAME", "local")
 
-  private lazy val blockedProjectIds: Vector[String] = Try {
-    sys.env("BLOCKED_PROJECT_IDS").split(",").toVector
-  }.getOrElse(Vector.empty)
+  private lazy val blockedProjectIds: Vector[String] = Try { sys.env("BLOCKED_PROJECT_IDS").split(",").toVector }.getOrElse(Vector.empty)
 }

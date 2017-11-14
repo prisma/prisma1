@@ -2,11 +2,11 @@ package cool.graph.client.schema.simple
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
+import cool.graph.client.ClientInjector
 import cool.graph.shared.models
-import scaldi.Injector
 
-class SimplePermissionSchemaBuilder(project: models.Project)(implicit inj: Injector, actorSystem: ActorSystem, materializer: ActorMaterializer)
-    extends SimpleSchemaBuilder(project)(inj, actorSystem, materializer) {
+class SimplePermissionSchemaBuilder(project: models.Project)(implicit injector: ClientInjector, actorSystem: ActorSystem, materializer: ActorMaterializer)
+    extends SimpleSchemaBuilder(project)(injector, actorSystem, materializer) {
 
   override val generateCreate             = false
   override val generateUpdate             = false

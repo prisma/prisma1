@@ -29,13 +29,14 @@ import scala.collection.mutable
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-abstract class SchemaBuilder(project: models.Project, modelPrefix: String = "")(implicit inj: Injector,
+abstract class SchemaBuilder(project: models.Project, modelPrefix: String = "")(implicit injector: ClientInjector,
                                                                                 actorSystem: ActorSystem,
                                                                                 materializer: ActorMaterializer)
-    extends Injectable
-    with TimeHelper {
+    extends TimeHelper {
 
   type ManyDataItemType
+
+  implicit val inj = injector.commonModule
 
   // TODO - Don't use inheritance here. Maybe we can inject the params from the outside?
   val generateGetAll               = true
@@ -60,7 +61,7 @@ abstract class SchemaBuilder(project: models.Project, modelPrefix: String = "")(
   val modelObjectTypes: Map[String, ObjectType[UserContext, DataItem]]
   val deferredResolverProvider: DeferredResolverProvider[_, UserContext]
 
-  val apiMatrix: DefaultApiMatrix = inject[ApiMatrixFactory].create(project)
+  val apiMatrix: DefaultApiMatrix = injector.apiMatrixFactory.create(project)
   val includedModels: List[Model] = project.models.filter(model => apiMatrix.includeModel(model.name))
 
   lazy val inputTypesBuilder = InputTypesBuilder(project, argumentSchema)
@@ -167,7 +168,7 @@ abstract class SchemaBuilder(project: models.Project, modelPrefix: String = "")(
                    expPackageMutation: Option[AppliedFunction] = None): Future[FunctionDataItems] = {
 
       val args             = GraphcoolDataTypes.convertToJson(GraphcoolDataTypes.wrapSomes(raw))
-      val endpointResolver = inject[EndpointResolver](identified by "endpointResolver")
+      val endpointResolver = injector.endpointResolver
       val context          = FunctionExecutor.createEventContext(project, ctx.requestIp, headers = Map.empty, ctx.authenticatedRequest, endpointResolver)
 
       val argsAndContext = expPackageMutation match {

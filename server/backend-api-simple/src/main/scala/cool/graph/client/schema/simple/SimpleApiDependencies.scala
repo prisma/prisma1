@@ -26,6 +26,7 @@ import scala.util.Try
 
 case class SimpleInjector(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends ClientInjectorImpl {
 
+  implicit val injector                                        = this
   def toScaldi: CommonClientDependencies                       = SimpleApiDependencies()
   override implicit val commonModule: CommonClientDependencies = this.toScaldi
 
@@ -45,6 +46,8 @@ case class SimpleInjector(implicit val system: ActorSystem, val materializer: Ac
 
 trait SimpleApiClientDependencies extends CommonClientDependencies {
   import system.dispatcher
+
+  implicit val newInjector: ClientInjector = SimpleInjector()
 
   val simpleDeferredResolver: DeferredResolverProvider[_, UserContext] =
     new DeferredResolverProvider(new SimpleToManyDeferredResolver, new SimpleManyModelDeferredResolver)

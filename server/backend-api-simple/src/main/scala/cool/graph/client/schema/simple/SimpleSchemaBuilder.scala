@@ -12,11 +12,12 @@ import cool.graph.shared.models
 import sangria.schema._
 import scaldi._
 
-class SimpleSchemaBuilder(project: models.Project)(implicit inj: Injector, actorSystem: ActorSystem, materializer: ActorMaterializer)
-    extends SchemaBuilder(project)(inj, actorSystem, materializer) {
+class SimpleSchemaBuilder(project: models.Project)(implicit injector: ClientInjector, actorSystem: ActorSystem, materializer: ActorMaterializer)
+    extends SchemaBuilder(project)(injector, actorSystem, materializer) {
 
   type ManyDataItemType = SimpleConnectionOutputType
 
+  override implicit val inj            = injector.commonModule
   override val includeSubscription     = true
   override val modelObjectTypesBuilder = new SimpleSchemaModelObjectTypeBuilder(project, Some(nodeInterface))
   override val modelObjectTypes        = modelObjectTypesBuilder.modelObjectTypes
