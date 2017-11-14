@@ -3,9 +3,9 @@ package cool.graph.client.server
 import akka.http.scaladsl.model.StatusCodes.OK
 import akka.http.scaladsl.model._
 import cool.graph.bugsnag.{BugSnagger, GraphCoolRequest}
-import cool.graph.client.UserContext
 import cool.graph.client.authorization.ClientAuth
 import cool.graph.client.finder.ProjectFetcher
+import cool.graph.client.{ClientInjector, UserContext}
 import cool.graph.shared.errors.UserAPIErrors
 import cool.graph.shared.errors.UserAPIErrors.InsufficientPermissions
 import cool.graph.shared.logging.RequestLogger
@@ -15,7 +15,6 @@ import cool.graph.util.ErrorHandlerFactory
 import cool.graph.utils.`try`.TryExtensions._
 import cool.graph.utils.future.FutureUtils.FutureExtensions
 import sangria.schema.Schema
-import scaldi.Injector
 import spray.json.{JsObject, JsString, JsValue}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -29,9 +28,11 @@ case class RequestHandler(
     clientAuth: ClientAuth,
     log: Function[String, Unit]
 )(implicit
+  injector: ClientInjector,
   bugsnagger: BugSnagger,
-  inj: Injector,
   ec: ExecutionContext) {
+
+  implicit val inj = injector.commonModule
 
   def handleIntrospectionQuery(projectId: String, requestLogger: RequestLogger): Future[JsValue] = {
     for {

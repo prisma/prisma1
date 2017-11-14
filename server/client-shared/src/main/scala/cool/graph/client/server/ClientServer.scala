@@ -8,18 +8,14 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.PathMatchers.Segment
 import akka.http.scaladsl.server._
 import akka.stream.ActorMaterializer
-import com.amazonaws.services.kinesis.AmazonKinesis
 import com.typesafe.scalalogging.LazyLogging
 import cool.graph.bugsnag.{BugSnagger, GraphCoolRequest}
-import cool.graph.client.authorization.ClientAuth
-import cool.graph.client.finder.ProjectFetcher
+import cool.graph.client.ClientInjector
 import cool.graph.private_api.PrivateClientApi
 import cool.graph.shared.errors.CommonErrors.TimeoutExceeded
 import cool.graph.shared.errors.UserAPIErrors.ProjectNotFound
-import cool.graph.shared.externalServices.KinesisPublisher
 import cool.graph.shared.logging.RequestLogger
 import cool.graph.util.ErrorHandlerFactory
-import scaldi.{Injectable, Injector}
 import spray.json.JsValue
 
 import scala.concurrent.Future
@@ -27,24 +23,25 @@ import scala.concurrent.Future
 case class ClientServer(prefix: String)(
     implicit system: ActorSystem,
     materializer: ActorMaterializer,
-    inj: Injector,
+    injector: ClientInjector,
     bugsnagger: BugSnagger
 ) extends cool.graph.akkautil.http.Server
-    with Injectable
     with LazyLogging {
   import system.dispatcher
 
+//  implicit val oldInjectorModule = injector.commonModule
   val log                   = (x: String) => logger.info(x)
-  val errorHandlerFactory   = ErrorHandlerFactory(log)
-  val projectSchemaFetcher  = inject[ProjectFetcher](identified by "project-schema-fetcher")
-  val graphQlRequestHandler = inject[GraphQlRequestHandler](identified by s"$prefix-gql-request-handler")
-  val projectSchemaBuilder  = inject[ProjectSchemaBuilder](identified by s"$prefix-schema-builder")
-  val clientAuth            = inject[ClientAuth]
-  val requestPrefix         = inject[String](identified by "request-prefix")
+  val cloudWatch            = injector.cloudwatch
+  val errorHandlerFactory   = ErrorHandlerFactory(log, cloudWatch, bugsnagger)
+  val projectSchemaFetcher  = injector.projectSchemaFetcher
+  val graphQlRequestHandler = injector.graphQlRequestHandler
+  val projectSchemaBuilder  = injector.projectSchemaBuilder
+  val clientAuth            = injector.clientAuth
+  val requestPrefix         = injector.requestPrefix
   val requestIdPrefix       = s"$requestPrefix:$prefix"
 
   // For health checks. Only one publisher inject required (as multiple should share the same client).
-  val kinesis = inject[KinesisPublisher](identified by "kinesisAlgoliaSyncQueriesPublisher")
+  val kinesis = injector.kinesisAlgoliaSyncQueriesPublisher
 
   private val requestHandler = RequestHandler(errorHandlerFactory, projectSchemaFetcher, projectSchemaBuilder, graphQlRequestHandler, clientAuth, log)
 

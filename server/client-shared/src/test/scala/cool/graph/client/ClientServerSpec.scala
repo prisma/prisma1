@@ -109,9 +109,7 @@ class ClientServerSpec extends FlatSpec with Matchers {
       override def healthCheck = Future.successful(())
     }
 
-    val injector = new Module {
-      bind[ApiMatrixFactory] toNonLazy ApiMatrixFactory(DefaultApiMatrix(_))
-    }
+    val injector = ???
 
     RequestHandler(
       errorHandlerFactory = errorHandlerFactory,
@@ -120,7 +118,7 @@ class ClientServerSpec extends FlatSpec with Matchers {
       graphQlRequestHandler = graphQlRequestHandler,
       clientAuth = clientAuth,
       log = println
-    )(BugSnaggerMock, injector, ec)
+    )(injector, BugSnaggerMock, ec)
   }
 
   implicit class ResultAssertions(json: JsValue) {

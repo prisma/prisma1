@@ -1,6 +1,6 @@
 package cool.graph.client.server
 
-import cool.graph.client.UserContext
+import cool.graph.client.{ClientInjector, UserContext}
 import cool.graph.shared.models.Project
 import sangria.execution.Executor
 import sangria.introspection.introspectionQuery
@@ -15,8 +15,9 @@ case class IntrospectionQueryHandler(
     schema: Schema[UserContext, Unit],
     onFailureCallback: PartialFunction[Throwable, Any],
     log: String => Unit
-)(implicit inj: Injector, ec: ExecutionContext) {
+)(implicit injector: ClientInjector, ec: ExecutionContext) {
 
+  implicit val inj = injector.commonModule
   def handle(requestId: String, requestIp: String, clientId: String): Future[JsValue] = {
     import cool.graph.shared.schema.JsonMarshalling._
     val context = UserContext.load(

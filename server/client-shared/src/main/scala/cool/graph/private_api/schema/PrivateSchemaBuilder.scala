@@ -1,15 +1,18 @@
 package cool.graph.private_api.schema
 
+import cool.graph.client.ClientInjector
 import cool.graph.client.database.{DataResolver, ProjectDataresolver}
 import cool.graph.private_api.mutations.{SyncModelToAlgoliaInput, SyncModelToAlgoliaMutation, SyncModelToAlgoliaPayload}
 import cool.graph.shared.models.Project
 import sangria.relay.Mutation
 import sangria.schema._
-import scaldi.{Injectable, Injector}
+import scaldi.Injector
 
 import scala.concurrent.ExecutionContext
 
-class PrivateSchemaBuilder(project: Project)(implicit inj: Injector, ec: ExecutionContext) extends Injectable {
+class PrivateSchemaBuilder(project: Project)(implicit injector: ClientInjector, ec: ExecutionContext) {
+
+  val inj: Injector = injector.commonModule
 
   def build(): Schema[Unit, Unit] = {
     val query = ObjectType[Unit, Unit]("Query", List(dummyField))
@@ -33,7 +36,7 @@ class PrivateSchemaBuilder(project: Project)(implicit inj: Injector, ec: Executi
       ),
       mutateAndGetPayload = (input, _) => {
         for {
-          payload <- SyncModelToAlgoliaMutation(project, input, dataResolver(project)).execute()
+          payload <- SyncModelToAlgoliaMutation(project, input, dataResolver(project)(inj)).execute()
         } yield payload
       }
     )

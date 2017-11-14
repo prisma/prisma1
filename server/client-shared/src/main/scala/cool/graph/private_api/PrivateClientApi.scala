@@ -3,10 +3,10 @@ package cool.graph.private_api
 import akka.http.scaladsl.model.StatusCode
 import akka.http.scaladsl.model.StatusCodes._
 import akka.http.scaladsl.server.Directives._
-import com.typesafe.config.Config
+import cool.graph.client.ClientInjector
 import cool.graph.client.finder.RefreshableProjectFetcher
-import cool.graph.private_api.schema.PrivateSchemaBuilder
 import cool.graph.cuid.Cuid
+import cool.graph.private_api.schema.PrivateSchemaBuilder
 import cool.graph.shared.errors.UserAPIErrors
 import cool.graph.shared.models.Project
 import cool.graph.util.ErrorHandlerFactory
@@ -16,7 +16,6 @@ import play.api.libs.json.{JsObject, JsValue, Json}
 import sangria.ast.Document
 import sangria.execution.{ErrorWithResolver, Executor, QueryAnalysisError}
 import sangria.parser.QueryParser
-import scaldi.{Injectable, Injector}
 
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
@@ -27,26 +26,27 @@ object GraphQlRequest {
   implicit lazy val reads = Json.reads[GraphQlRequest]
 }
 
-object PrivateClientApi extends Injectable {
-  def apply()(implicit inj: Injector): PrivateClientApi = {
-    val projectSchemaFetcher = inject[RefreshableProjectFetcher](identified by "project-schema-fetcher")
-    val config               = inject[Config](identified by "config")
+object PrivateClientApi extends {
+  def apply()(implicit injector: ClientInjector): PrivateClientApi = {
+    val projectSchemaFetcher = injector.projectSchemaFetcher
+    val config               = injector.config
     val secret               = config.getString("privateClientApiSecret")
 
     new PrivateClientApi(projectSchemaFetcher, secret)
   }
 }
 
-class PrivateClientApi(projectSchemaFetcher: RefreshableProjectFetcher, secret: String)(implicit inj: Injector)
+class PrivateClientApi(projectSchemaFetcher: RefreshableProjectFetcher, secret: String)(implicit injector: ClientInjector)
     extends PlayJsonSupport
-    with Injectable
     with PlaySprayConversions {
   import GraphQlRequest.reads
   import sangria.marshalling.playJson._
 
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  val errorHandlerFactory = ErrorHandlerFactory(println)
+  val bugsnagger          = injector.bugSnagger
+  val cloudwatch          = injector.cloudwatch
+  val errorHandlerFactory = ErrorHandlerFactory(println, cloudwatch, bugsnagger)
 
   def privateRoute = {
     pathPrefix("private") {

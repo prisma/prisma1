@@ -24,24 +24,22 @@ import cool.graph.webhook.Webhook
 
 import scala.util.Try
 
-class SimpleInjector(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends ClientInjectorImpl {
-
-  import system.dispatcher
+case class SimpleInjector(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends ClientInjectorImpl {
 
   def toScaldi: CommonClientDependencies                       = SimpleApiDependencies()
   override implicit val commonModule: CommonClientDependencies = this.toScaldi
 
-  val simpleDeferredResolver: DeferredResolverProvider[_, UserContext] =
+  val deferredResolver: DeferredResolverProvider[_, UserContext] =
     new DeferredResolverProvider(new SimpleToManyDeferredResolver, new SimpleManyModelDeferredResolver)
 
-  val simpleProjectSchemaBuilder = ProjectSchemaBuilder(project => new SimpleSchemaBuilder(project).build())
+  val projectSchemaBuilder = ProjectSchemaBuilder(project => new SimpleSchemaBuilder(project).build())
 
-  val simpleGraphQlRequestHandler = GraphQlRequestHandlerImpl(
+  val graphQlRequestHandler = GraphQlRequestHandlerImpl(
     errorHandlerFactory = errorHandlerFactory,
     log = log,
     apiVersionMetric = FeatureMetric.ApiSimple,
     apiMetricsMiddleware = apiMetricsMiddleware,
-    deferredResolver = simpleDeferredResolver
+    deferredResolver = deferredResolver
   )
 }
 

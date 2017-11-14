@@ -12,8 +12,10 @@ import cool.graph.aws.AwsInitializers
 import cool.graph.aws.cloudwatch.{Cloudwatch, CloudwatchImpl}
 import cool.graph.bugsnag.{BugSnagger, BugSnaggerImpl}
 import cool.graph.client.authorization.{ClientAuth, ClientAuthImpl}
+import cool.graph.client.database.DeferredResolverProvider
 import cool.graph.client.finder.{CachedProjectFetcherImpl, ProjectFetcher, ProjectFetcherImpl, RefreshableProjectFetcher}
 import cool.graph.client.metrics.ApiMetricsMiddleware
+import cool.graph.client.server.{GraphQlRequestHandler, ProjectSchemaBuilder}
 import cool.graph.messagebus.Conversions.{ByteMarshaller, ByteUnmarshaller, Unmarshallers}
 import cool.graph.messagebus.pubsub.rabbit.{RabbitAkkaPubSub, RabbitAkkaPubSubPublisher, RabbitAkkaPubSubSubscriber}
 import cool.graph.messagebus.queue.rabbit.{RabbitQueue, RabbitQueuePublisher}
@@ -25,17 +27,20 @@ import cool.graph.shared.functions.{EndpointResolver, FunctionEnvironment, LiveE
 import cool.graph.shared.{ApiMatrixFactory, DefaultApiMatrix}
 import cool.graph.util.ErrorHandlerFactory
 import cool.graph.webhook.{Webhook, WebhookCaller, WebhookCallerImplementation}
-import scaldi.Module
+import scaldi.{Injector, Module}
 
+import scala.concurrent.ExecutionContext
 import scala.util.Try
 
 trait ClientInjector {
   implicit val system: ActorSystem
   implicit val materializer: ActorMaterializer
   implicit val bugSnagger: BugSnagger
+  implicit val commonModule: Injector
+  implicit val dispatcher: ExecutionContext
 
   val projectSchemaInvalidationSubscriber: PubSubSubscriber[String]
-  val projectSchemaFetcher: ProjectFetcher
+  val projectSchemaFetcher: RefreshableProjectFetcher
   val functionEnvironment: FunctionEnvironment
   val endpointResolver: EndpointResolver
   val logsPublisher: QueuePublisher[String]
@@ -56,6 +61,9 @@ trait ClientInjector {
   val errorHandlerFactory: ErrorHandlerFactory
   val apiMatrixFactory: ApiMatrixFactory
   val globalApiEndpointManager: GlobalApiEndpointManager
+  val deferredResolver: DeferredResolverProvider[_, UserContext]
+  val projectSchemaBuilder: ProjectSchemaBuilder
+  val graphQlRequestHandler: GraphQlRequestHandler
 
   def toScaldi: Module
 }
@@ -63,6 +71,7 @@ trait ClientInjector {
 trait ClientInjectorImpl extends ClientInjector with LazyLogging {
   implicit val system: ActorSystem
   implicit val materializer: ActorMaterializer
+  implicit val dispatcher             = system.dispatcher
   implicit val bugSnagger: BugSnagger = BugSnaggerImpl(sys.env("BUGSNAG_API_KEY"))
 
   implicit val commonModule: CommonClientDependencies
