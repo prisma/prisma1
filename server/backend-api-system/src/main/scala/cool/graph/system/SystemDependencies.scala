@@ -65,7 +65,7 @@ trait SystemInjector {
   def testableTime: TestableTime
 
   //temporarily be able to pass old injector
-  implicit def toScaldi: Module
+  def toScaldi: Module
 }
 
 class SystemInjectorImpl(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends SystemInjector {
@@ -74,10 +74,10 @@ class SystemInjectorImpl(implicit val system: ActorSystem, val materializer: Act
 
   SystemMetrics.init()
 
-  implicit val marshaller: ByteMarshaller[String]    = Conversions.Marshallers.FromString
-  implicit val systemInjector                        = this
-  implicit override val toScaldi: SystemDependencies = SystemDependencies()
-  implicit val bugsnaggerImp: BugSnaggerImpl         = BugSnaggerImpl(sys.env("BUGSNAG_API_KEY"))
+  implicit val marshaller: ByteMarshaller[String]     = Conversions.Marshallers.FromString
+  implicit val systemInjectorImpl: SystemInjectorImpl = this
+  override val toScaldi: SystemDependencies           = SystemDependencies()
+  implicit val bugsnaggerImp: BugSnaggerImpl          = BugSnaggerImpl(sys.env("BUGSNAG_API_KEY"))
 
   lazy val schemaBuilder = SchemaBuilder(userCtx => new SchemaBuilderImpl(userCtx, globalDatabaseManager, InternalDatabase(internalDB)).build())
 
@@ -104,7 +104,7 @@ class SystemInjectorImpl(implicit val system: ActorSystem, val materializer: Act
   lazy val apiMatrixFactory: ApiMatrixFactory           = ApiMatrixFactory(DefaultApiMatrix)
   lazy val requestPrefix: String                        = sys.env.getOrElse("AWS_REGION", sys.error("AWS Region not found."))
   lazy val cloudwatch                                   = CloudwatchImpl()
-  lazy val snsPublisher                                 = new SnsPublisherImplementation(topic = sys.env("SNS_SEAT"))
+  lazy val snsPublisher                                 = new SnsPublisherImplementation(topic = sys.env("SNS_SEAT"))(toScaldi)
   lazy val kinesis: AmazonKinesis                       = AwsInitializers.createKinesis()
   lazy val kinesisAlgoliaSyncQueriesPublisher           = new KinesisPublisherImplementation(streamName = sys.env("KINESIS_STREAM_ALGOLIA_SYNC_QUERY"), kinesis)
   lazy val invalidationPublisher: RabbitAkkaPubSubPublisher[String] =
@@ -126,9 +126,9 @@ class SystemInjectorImpl(implicit val system: ActorSystem, val materializer: Act
   def projectQueries                            = ProjectQueries()(internalDb, cachedProjectResolver)
   def environment: String                       = sys.env.getOrElse("ENVIRONMENT", "local")
   def serviceName: String                       = sys.env.getOrElse("SERVICE_NAME", "local")
-  def algoliaKeyChecker: AlgoliaKeyChecker      = new AlgoliaKeyCheckerImplementation()
-  def auth0Api: Auth0Api                        = new Auth0ApiImplementation
-  def auth0Extend: Auth0Extend                  = new Auth0ExtendImplementation
+  def algoliaKeyChecker: AlgoliaKeyChecker      = new AlgoliaKeyCheckerImplementation()(toScaldi)
+  def auth0Api: Auth0Api                        = new Auth0ApiImplementation()(toScaldi)
+  def auth0Extend: Auth0Extend                  = new Auth0ExtendImplementation()(toScaldi)
   def bugsnagger: BugSnaggerImpl                = bugsnaggerImp
   override def testableTime: TestableTime       = new TestableTimeImplementation
 }
