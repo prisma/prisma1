@@ -1,101 +1,70 @@
 package cool.graph.worker.workers
 
-import akka.actor.ActorSystem
-import akka.stream.ActorMaterializer
-import akka.testkit.TestKit
-import cool.graph.bugsnag.BugSnaggerImpl
-import cool.graph.messagebus.testkits.RabbitQueueTestKit
-import cool.graph.worker.payloads.{JsonConversions, LogItem}
-import cool.graph.worker.services.{WorkerCloudServices, WorkerServices}
+import cool.graph.akkautil.SingleThreadedActorSystem
+import cool.graph.messagebus.testkits.InMemoryQueueTestKit
+import cool.graph.messagebus.testkits.spechelpers.InMemoryMessageBusTestKits
 import cool.graph.worker.SpecHelper
-import cool.graph.worker.utils.Env
+import cool.graph.worker.payloads.LogItem
 import org.joda.time.DateTime
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Matchers, WordSpecLike}
 import play.api.libs.json.Json
+import slick.jdbc.MySQLProfile
 
 import scala.concurrent.Await
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 class FunctionLogsWorkerSpec
-    extends TestKit(ActorSystem("queueing-spec"))
+    extends InMemoryMessageBusTestKits(SingleThreadedActorSystem("queueing-spec"))
     with WordSpecLike
     with Matchers
-    with BeforeAndAfterEach
     with BeforeAndAfterAll
+    with BeforeAndAfterEach
     with ScalaFutures {
   import slick.jdbc.MySQLProfile.api._
-  import JsonConversions._
-  import scala.concurrent.duration._
+
   import scala.concurrent.ExecutionContext.Implicits.global
+  import scala.concurrent.duration._
 
-  var services: WorkerServices                      = _
-  var logItemPublisher: RabbitQueueTestKit[LogItem] = _
-  var worker: FunctionLogsWorker                    = _
+  override def afterAll     = shutdownTestKit
+  override def beforeEach() = SpecHelper.recreateLogsDatabase()
 
-  implicit val materializer = ActorMaterializer()
-  implicit val bugSnagger   = BugSnaggerImpl("")
+  def withLogsWorker(checkFn: (FunctionLogsWorker, InMemoryQueueTestKit[LogItem]) => Unit): Unit = {
+    withQueueTestKit[LogItem] { testKit =>
+      val logsDb                     = SpecHelper.getLogsDb
+      val worker: FunctionLogsWorker = FunctionLogsWorker(logsDb, testKit)
 
-  override def beforeEach(): Unit = {
-    SpecHelper.recreateLogsDatabase()
+      worker.start.futureValue
 
-    services = WorkerCloudServices()
-    worker = FunctionLogsWorker(services.logsDb, services.logsQueue)
-    worker.start.futureValue
+      def teardown = {
+        testKit.shutdown()
+        logsDb.close()
+        worker.stop.futureValue
+      }
 
-    logItemPublisher = RabbitQueueTestKit[LogItem](Env.clusterLocalRabbitUri, "function-logs")
+      Try { checkFn(worker, testKit) } match {
+        case Success(_) => teardown
+        case Failure(e) => teardown; throw e
+      }
+    }
   }
 
-  override def afterEach(): Unit = {
-    services.shutdown
-
-    Try { worker.stop.futureValue }
-    Try { logItemPublisher.shutdown() }
-  }
-
-  override def afterAll = shutdown(verifySystemShutdown = true)
-
-  def getAllLogItemsCount() = Await.result(services.logsDb.run(sql"SELECT count(*) FROM Log".as[(Int)]), 2.seconds)
+  def getAllLogItemsCount(logsDb: MySQLProfile.api.Database) = Await.result(logsDb.run(sql"SELECT count(*) FROM Log".as[(Int)]), 2.seconds)
 
   "The FunctionLogsWorker" should {
     "work off valid items" in {
-      val item1 = LogItem("id1", "pId1", "fId1", "reqId1", "SUCCESS", 123, DateTime.now.toLocalDateTime.toString(), Json.obj("test" -> "Testmessage1 😂"))
-      val item2 =
-        s"""
-          {
-            "id": "id2",
-            "projectId": "pId2",
-            "functionId": "fId2",
-            "requestId": "reqId2",
-            "status": "FAILURE",
-            "duration": 321,
-            "timestamp": "${DateTime.now.toLocalDateTime.toString()}",
-            "message": {
-              "test": "Testmessage2 😂😂😂"
-            }
-          }
-        """.stripMargin
+      withLogsWorker { (worker, testKit) =>
+        val item1 = LogItem("id1", "pId1", "fId1", "reqId1", "SUCCESS", 123, DateTime.now.toLocalDateTime.toString(), Json.obj("test" -> "Testmessage1 😂"))
+        val item2 = LogItem("id2", "pId2", "fId2", "reqId2", "FAILURE", 321, DateTime.now.toLocalDateTime.toString(), Json.obj("test" -> "Testmessage2 😂"))
 
-      logItemPublisher.publish(item1)
-      logItemPublisher.publishPlain("msg.0", item2)
+        testKit.publish(item1)
+        testKit.publish(item2)
 
-      // Give the worker a bit of time to do the thing
-      Thread.sleep(2000)
+        // Give the worker a bit of time to do the thing
+        Thread.sleep(50)
 
-      getAllLogItemsCount().head shouldBe 2
-    }
-
-    "ignore invalid items and work off valid ones regardless" in {
-      val item1 = LogItem("id1", "pId1", "fId1", "reqId1", "SUCCESS", 123, DateTime.now.toLocalDateTime.toString(), Json.obj("test" -> "Testmessage 😂"))
-
-      // Publish an invalid log item
-      logItemPublisher.publishPlain("msg.0", "Invalid (should be a full json)")
-      logItemPublisher.publish(item1)
-
-      // Give the worker a bit of time to do the thing. Why is the latency so gigantic?
-      Thread.sleep(10000)
-
-      getAllLogItemsCount().head shouldBe 1
+        getAllLogItemsCount(worker.logsDb).head shouldBe 2
+      }
     }
   }
 }

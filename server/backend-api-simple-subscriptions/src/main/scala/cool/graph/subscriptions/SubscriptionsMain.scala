@@ -5,6 +5,8 @@ import akka.stream.ActorMaterializer
 import cool.graph.akkautil.http.{Routes, Server, ServerExecutor}
 import cool.graph.bugsnag.BugSnagger
 import cool.graph.messagebus.pubsub.Only
+import cool.graph.messagebus.queue.inmemory.InMemoryAkkaQueue
+import cool.graph.messagebus.testkits.InMemoryQueueTestKit
 import cool.graph.messagebus.{PubSubPublisher, PubSubSubscriber, QueueConsumer}
 import cool.graph.subscriptions.protocol.SubscriptionProtocolV05.Requests.SubscriptionSessionRequestV05
 import cool.graph.subscriptions.protocol.SubscriptionProtocolV05.Responses.SubscriptionSessionResponseV05

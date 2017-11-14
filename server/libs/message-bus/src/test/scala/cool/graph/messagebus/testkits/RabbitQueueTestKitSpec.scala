@@ -1,8 +1,7 @@
-package cool.graph.messagebus.queue.rabbit
+package cool.graph.messagebus.testkits
 
 import cool.graph.bugsnag.BugSnagger
 import cool.graph.messagebus.Conversions
-import cool.graph.messagebus.testkits.RabbitQueueTestKit
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Matchers, WordSpecLike}
 import play.api.libs.json.Json
@@ -27,14 +26,12 @@ class RabbitQueueTestKitSpec extends WordSpecLike with Matchers with BeforeAndAf
 
   override def afterEach(): Unit = testKit.shutdown()
 
-  // Note: Publish logic is tested implicitly within the tests.
-  "The queue testing kit" should {
+  "The rabbit queue testing kit" should {
 
     /**
       * Message expectation tests
       */
     "should expect a message correctly" in {
-      println(s"[TestKit][${testKit.logId}] Starting 'should expect a message correctly' test...")
       val testMsg = TestMessage("someId1", None, Seq("1", "2"))
 
       testKit.publish(testMsg)
@@ -42,7 +39,6 @@ class RabbitQueueTestKitSpec extends WordSpecLike with Matchers with BeforeAndAf
     }
 
     "should blow up it expects a message and none arrives" in {
-      println(s"[TestKit][${testKit.logId}] Starting 'should blow up it expects a message and none arrives' test...")
       val testMsg = TestMessage("someId2", None, Seq("1", "2"))
 
       an[AssertionError] should be thrownBy {
@@ -55,7 +51,6 @@ class RabbitQueueTestKitSpec extends WordSpecLike with Matchers with BeforeAndAf
     }
 
     "should blow up if no message was expected but one arrives" in {
-      println(s"[TestKit][${testKit.logId}] Starting 'should blow up if no message was expected but one arrives' test...")
       val testMsg = TestMessage("someId3", None, Seq("1", "2"))
 
       testKit.publish(testMsg)
@@ -66,7 +61,6 @@ class RabbitQueueTestKitSpec extends WordSpecLike with Matchers with BeforeAndAf
     }
 
     "should expect a message count correctly" in {
-      println(s"[TestKit][${testKit.logId}] Starting 'should expect a message count correctly' test...")
       val testMsg  = TestMessage("someId4", None, Seq("1", "2"))
       val testMsg2 = TestMessage("someId5", Some(123), Seq("2", "1"))
 
@@ -77,7 +71,6 @@ class RabbitQueueTestKitSpec extends WordSpecLike with Matchers with BeforeAndAf
     }
 
     "should blow up if it expects a message count and less arrive" in {
-      println(s"[TestKit][${testKit.logId}] Starting 'should blow up if it expects a message count and less arrive' test...")
       val testMsg = TestMessage("someId6", None, Seq("1", "2"))
 
       testKit.publish(testMsg)
@@ -88,7 +81,6 @@ class RabbitQueueTestKitSpec extends WordSpecLike with Matchers with BeforeAndAf
     }
 
     "should blow up if it expects a message count and more arrive" in {
-      println(s"[TestKit][${testKit.logId}] Starting 'should blow up if it expects a message count and more arrive' test...")
       val testMsg  = TestMessage("someId7", None, Seq("1", "2"))
       val testMsg2 = TestMessage("someId8", Some(123), Seq("2", "1"))
 
@@ -104,7 +96,6 @@ class RabbitQueueTestKitSpec extends WordSpecLike with Matchers with BeforeAndAf
       * Error msg expectation tests
       */
     "should expect an error message correctly" in {
-      println(s"[TestKit][${testKit.logId}] Starting 'should expect an error message correctly' test...")
       val testMsg = TestMessage("someId9", None, Seq("1", "2"))
 
       testKit.publishError(testMsg)
@@ -112,7 +103,6 @@ class RabbitQueueTestKitSpec extends WordSpecLike with Matchers with BeforeAndAf
     }
 
     "should blow up it expects an error message and none arrives" in {
-      println(s"[TestKit][${testKit.logId}] Starting 'should blow up it expects an error message and none arrives' test...")
       val testMsg = TestMessage("someId10", None, Seq("1", "2"))
 
       an[AssertionError] should be thrownBy {
@@ -121,12 +111,10 @@ class RabbitQueueTestKitSpec extends WordSpecLike with Matchers with BeforeAndAf
     }
 
     "should expect no error message correctly" in {
-      println(s"[TestKit][${testKit.logId}] Starting 'should expect no error message correctly' test...")
       testKit.expectNoErrorMsg()
     }
 
     "should blow up if no error message was expected but one arrives" in {
-      println(s"[TestKit][${testKit.logId}] Starting 'should blow up if no error message was expected but one arrives' test...")
       val testMsg = TestMessage("someId11", None, Seq("1", "2"))
 
       testKit.publishError(testMsg)
@@ -137,7 +125,6 @@ class RabbitQueueTestKitSpec extends WordSpecLike with Matchers with BeforeAndAf
     }
 
     "should expect an error message count correctly" in {
-      println(s"[TestKit][${testKit.logId}] Starting 'should expect an error message count correctly' test...")
       val testMsg  = TestMessage("someId12", None, Seq("1", "2"))
       val testMsg2 = TestMessage("someId13", Some(123), Seq("2", "1"))
 
@@ -148,7 +135,6 @@ class RabbitQueueTestKitSpec extends WordSpecLike with Matchers with BeforeAndAf
     }
 
     "should blow up if it expects an error message count and less arrive" in {
-      println(s"[TestKit][${testKit.logId}] Starting 'should blow up if it expects an error message count and less arrive' test...")
       val testMsg = TestMessage("someId14", None, Seq("1", "2"))
 
       testKit.publishError(testMsg)
@@ -159,7 +145,6 @@ class RabbitQueueTestKitSpec extends WordSpecLike with Matchers with BeforeAndAf
     }
 
     "should blow up if it expects an error message count and more arrive" in {
-      println(s"[TestKit][${testKit.logId}] Starting 'should blow up if it expects an error message count and more arrive' test...")
       val testMsg  = TestMessage("someId15", None, Seq("1", "2"))
       val testMsg2 = TestMessage("someId16", Some(123), Seq("2", "1"))
 
