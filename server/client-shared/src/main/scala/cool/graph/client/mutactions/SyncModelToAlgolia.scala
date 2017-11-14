@@ -39,7 +39,7 @@ case class SyncModelToAlgolia(
 
   val algoliaSyncPublisher: KinesisPublisher = injector.kinesisAlgoliaSyncQueriesPublisher
   implicit val dispatcher: ExecutionContext  = injector.dispatcher
-  implicit val inj                           = injector.commonModule
+  implicit val inj                           = injector.toScaldi
 
   override def execute: Future[MutactionExecutionResult] = {
     if (!searchProviderAlgolia.isEnabled) {

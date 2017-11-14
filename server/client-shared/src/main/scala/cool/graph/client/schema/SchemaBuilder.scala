@@ -36,7 +36,7 @@ abstract class SchemaBuilder(project: models.Project, modelPrefix: String = "")(
 
   type ManyDataItemType
 
-  implicit val inj = injector.commonModule
+  implicit val inj = injector.toScaldi
 
   // TODO - Don't use inheritance here. Maybe we can inject the params from the outside?
   val generateGetAll               = true

@@ -32,7 +32,7 @@ case class RequestHandler(
   bugsnagger: BugSnagger,
   ec: ExecutionContext) {
 
-  implicit val inj = injector.commonModule
+  implicit val inj = injector.toScaldi
 
   def handleIntrospectionQuery(projectId: String, requestLogger: RequestLogger): Future[JsValue] = {
     for {

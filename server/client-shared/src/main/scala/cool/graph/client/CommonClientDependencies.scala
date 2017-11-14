@@ -27,7 +27,7 @@ import cool.graph.shared.functions.{EndpointResolver, FunctionEnvironment, LiveE
 import cool.graph.shared.{ApiMatrixFactory, DefaultApiMatrix}
 import cool.graph.util.ErrorHandlerFactory
 import cool.graph.webhook.{Webhook, WebhookCaller, WebhookCallerImplementation}
-import scaldi.{Injector, Module}
+import scaldi.Module
 
 import scala.concurrent.ExecutionContext
 import scala.util.Try
@@ -36,7 +36,6 @@ trait ClientInjector {
   implicit val system: ActorSystem
   implicit val materializer: ActorMaterializer
   implicit val bugSnagger: BugSnagger
-  implicit val commonModule: Injector
   implicit val dispatcher: ExecutionContext
 
   val projectSchemaInvalidationSubscriber: PubSubSubscriber[String]
@@ -65,7 +64,7 @@ trait ClientInjector {
   val projectSchemaBuilder: ProjectSchemaBuilder
   val graphQlRequestHandler: GraphQlRequestHandler
 
-  def toScaldi: Module
+  implicit val toScaldi: Module
 }
 
 trait ClientInjectorImpl extends ClientInjector with LazyLogging {
@@ -74,7 +73,7 @@ trait ClientInjectorImpl extends ClientInjector with LazyLogging {
   implicit val dispatcher: ExecutionContext = system.dispatcher
   implicit val bugSnagger: BugSnagger       = BugSnaggerImpl(sys.env("BUGSNAG_API_KEY"))
 
-  implicit val commonModule: CommonClientDependencies
+  implicit val toScaldi: Module
 
   override lazy val projectSchemaInvalidationSubscriber: RabbitAkkaPubSubSubscriber[String] = {
     val globalRabbitUri                                 = sys.env("GLOBAL_RABBIT_URI")

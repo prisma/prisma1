@@ -12,7 +12,7 @@ import scala.concurrent.ExecutionContext
 
 class PrivateSchemaBuilder(project: Project)(implicit injector: ClientInjector, ec: ExecutionContext) {
 
-  val inj: Injector = injector.commonModule
+  val inj: Injector = injector.toScaldi
 
   def build(): Schema[Unit, Unit] = {
     val query = ObjectType[Unit, Unit]("Query", List(dummyField))

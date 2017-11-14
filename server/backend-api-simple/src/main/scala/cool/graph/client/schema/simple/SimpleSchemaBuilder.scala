@@ -17,7 +17,7 @@ class SimpleSchemaBuilder(project: models.Project)(implicit injector: ClientInje
 
   type ManyDataItemType = SimpleConnectionOutputType
 
-  override implicit val inj            = injector.commonModule
+  override implicit val inj            = injector.toScaldi
   override val includeSubscription     = true
   override val modelObjectTypesBuilder = new SimpleSchemaModelObjectTypeBuilder(project, Some(nodeInterface))
   override val modelObjectTypes        = modelObjectTypesBuilder.modelObjectTypes

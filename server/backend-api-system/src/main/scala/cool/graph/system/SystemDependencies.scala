@@ -31,41 +31,36 @@ import scala.concurrent.{Await, ExecutionContextExecutor, Future}
 trait SystemInjector {
   implicit val system: ActorSystem
   implicit val materializer: ActorMaterializer
+  implicit val toScaldi: Module
 
   val functionEnvironment: FunctionEnvironment
   val uncachedProjectResolver: UncachedProjectResolver
   val cachedProjectResolver: CachedProjectResolver
   val invalidationPublisher: PubSubPublisher[String]
   val cloudwatch: Cloudwatch
-  val internalDb: MySQLProfile.backend.Database
-  val logsDb: MySQLProfile.backend.Database
   val globalDatabaseManager: GlobalDatabaseManager
   val snsPublisher: SnsPublisher
   val kinesisAlgoliaSyncQueriesPublisher: KinesisPublisher
   val schemaBuilder: SchemaBuilder
-
-  def requestPrefix: String
-  def projectResolver: UncachedProjectResolver
-  def internalDB: MySQLProfile.backend.Database
-  def logsDB: MySQLProfile.backend.Database
-  def exportDataS3: AmazonS3
-  def config: Config = ConfigFactory.load()
-  def actorSystem: ActorSystem
-  def dispatcher: ExecutionContextExecutor
-  def actorMaterializer: ActorMaterializer
-  def masterToken: Option[String]
-  def clientResolver: ClientResolver
-  def projectQueries: ProjectQueries
-  def environment: String
-  def serviceName: String
-  def algoliaKeyChecker: AlgoliaKeyChecker
-  def auth0Api: Auth0Api
-  def auth0Extend: Auth0Extend
-  def bugsnagger: BugSnaggerImpl
-  def testableTime: TestableTime
-
-  //temporarily be able to pass old injector
-  def toScaldi: Module
+  val requestPrefix: String
+  val projectResolver: UncachedProjectResolver
+  val internalDB: MySQLProfile.backend.Database
+  val logsDB: MySQLProfile.backend.Database
+  val exportDataS3: AmazonS3
+  val config: Config = ConfigFactory.load()
+  val actorSystem: ActorSystem
+  val dispatcher: ExecutionContextExecutor
+  val actorMaterializer: ActorMaterializer
+  val masterToken: Option[String]
+  val clientResolver: ClientResolver
+  val projectQueries: ProjectQueries
+  val environment: String
+  val serviceName: String
+  val algoliaKeyChecker: AlgoliaKeyChecker
+  val auth0Api: Auth0Api
+  val auth0Extend: Auth0Extend
+  val bugsnagger: BugSnaggerImpl
+  val testableTime: TestableTime
 }
 
 class SystemInjectorImpl(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends SystemInjector {
@@ -76,8 +71,45 @@ class SystemInjectorImpl(implicit val system: ActorSystem, val materializer: Act
 
   implicit val marshaller: ByteMarshaller[String]     = Conversions.Marshallers.FromString
   implicit val systemInjectorImpl: SystemInjectorImpl = this
-  override val toScaldi: SystemDependencies           = SystemDependencies()
-  implicit val bugsnaggerImp: BugSnaggerImpl          = BugSnaggerImpl(sys.env("BUGSNAG_API_KEY"))
+  implicit val toScaldi: Module = {
+    val outer = this
+    new Module {
+      binding identifiedBy "internal-db" toNonLazy outer.internalDb
+      binding identifiedBy "logs-db" toNonLazy outer.logsDb
+      binding identifiedBy "export-data-s3" toNonLazy outer.exportDataS3
+      binding identifiedBy "config" toNonLazy outer.config
+      binding identifiedBy "actorSystem" toNonLazy outer.system destroyWith (_.terminate())
+      binding identifiedBy "dispatcher" toNonLazy outer.system.dispatcher
+      binding identifiedBy "actorMaterializer" toNonLazy outer.materializer
+      binding identifiedBy "master-token" toNonLazy outer.masterToken
+      binding identifiedBy "clientResolver" toNonLazy outer.clientResolver
+      binding identifiedBy "projectQueries" toNonLazy outer.projectQueries
+      binding identifiedBy "environment" toNonLazy outer.environment
+      binding identifiedBy "service-name" toNonLazy outer.serviceName
+
+      bind[AlgoliaKeyChecker] identifiedBy "algoliaKeyChecker" toNonLazy outer.algoliaKeyChecker
+      bind[Auth0Api] toNonLazy outer.auth0Api
+      bind[Auth0Extend] toNonLazy outer.auth0Extend
+      bind[BugSnagger] toNonLazy outer.bugsnagger
+      bind[TestableTime] toNonLazy outer.testableTime
+
+      bind[PubSubPublisher[String]] identifiedBy "schema-invalidation-publisher" toNonLazy outer.invalidationPublisher
+      bind[String] identifiedBy "request-prefix" toNonLazy outer.requestPrefix
+      bind[FunctionEnvironment] toNonLazy outer.functionEnvironment
+      bind[ApiMatrixFactory] toNonLazy outer.apiMatrixFactory
+      bind[GlobalDatabaseManager] toNonLazy outer.globalDatabaseManager
+      bind[AmazonSNS] identifiedBy "sns" toNonLazy outer.sns
+      bind[SnsPublisher] identifiedBy "seatSnsPublisher" toNonLazy outer.snsPublisher
+      bind[KinesisPublisher] identifiedBy "kinesisAlgoliaSyncQueriesPublisher" toNonLazy outer.kinesisAlgoliaSyncQueriesPublisher
+
+      binding identifiedBy "kinesis" toNonLazy outer.kinesis
+      binding identifiedBy "cloudwatch" toNonLazy outer.cloudwatch
+      binding identifiedBy "projectResolver" toNonLazy outer.cachedProjectResolver
+      binding identifiedBy "cachedProjectResolver" toNonLazy outer.cachedProjectResolver
+      binding identifiedBy "uncachedProjectResolver" toNonLazy outer.uncachedProjectResolver
+    }
+  }
+  implicit val bugsnaggerImp: BugSnaggerImpl = BugSnaggerImpl(sys.env("BUGSNAG_API_KEY"))
 
   lazy val schemaBuilder = SchemaBuilder(userCtx => new SchemaBuilderImpl(userCtx, globalDatabaseManager, InternalDatabase(internalDB)).build())
 
@@ -94,7 +126,7 @@ class SystemInjectorImpl(implicit val system: ActorSystem, val materializer: Act
         sys.exit(-1)
     }
   }
-
+  lazy val sns                                          = AwsInitializers.createSns()
   lazy val internalDb                                   = dbs.head
   lazy val logsDb                                       = dbs.last
   lazy val globalDatabaseManager: GlobalDatabaseManager = GlobalDatabaseManager.initializeForMultipleRegions(config)
@@ -113,24 +145,23 @@ class SystemInjectorImpl(implicit val system: ActorSystem, val materializer: Act
     sys.env.getOrElse("LAMBDA_AWS_ACCESS_KEY_ID", "whatever"),
     sys.env.getOrElse("LAMBDA_AWS_SECRET_ACCESS_KEY", "whatever")
   )
-
-  def projectResolver: UncachedProjectResolver  = uncachedProjectResolver
-  def internalDB: MySQLProfile.backend.Database = internalDb
-  def logsDB: MySQLProfile.backend.Database     = logsDb
-  def exportDataS3: AmazonS3                    = AwsInitializers.createExportDataS3()
-  def actorSystem: ActorSystem                  = system
-  def dispatcher: ExecutionContextExecutor      = system.dispatcher
-  def actorMaterializer: ActorMaterializer      = materializer
-  def masterToken: Option[String]               = sys.env.get("MASTER_TOKEN")
-  def clientResolver: ClientResolver            = ClientResolver(internalDb, cachedProjectResolver)(system.dispatcher)
-  def projectQueries                            = ProjectQueries()(internalDb, cachedProjectResolver)
-  def environment: String                       = sys.env.getOrElse("ENVIRONMENT", "local")
-  def serviceName: String                       = sys.env.getOrElse("SERVICE_NAME", "local")
-  def algoliaKeyChecker: AlgoliaKeyChecker      = new AlgoliaKeyCheckerImplementation()(toScaldi)
-  def auth0Api: Auth0Api                        = new Auth0ApiImplementation()(toScaldi)
-  def auth0Extend: Auth0Extend                  = new Auth0ExtendImplementation()(toScaldi)
-  def bugsnagger: BugSnaggerImpl                = bugsnaggerImp
-  override def testableTime: TestableTime       = new TestableTimeImplementation
+  lazy val projectResolver: UncachedProjectResolver  = uncachedProjectResolver
+  lazy val internalDB: MySQLProfile.backend.Database = internalDb
+  lazy val logsDB: MySQLProfile.backend.Database     = logsDb
+  lazy val exportDataS3: AmazonS3                    = AwsInitializers.createExportDataS3()
+  lazy val actorSystem: ActorSystem                  = system
+  lazy val dispatcher: ExecutionContextExecutor      = system.dispatcher
+  lazy val actorMaterializer: ActorMaterializer      = materializer
+  lazy val masterToken: Option[String]               = sys.env.get("MASTER_TOKEN")
+  lazy val clientResolver: ClientResolver            = ClientResolver(internalDb, cachedProjectResolver)(system.dispatcher)
+  lazy val projectQueries                            = ProjectQueries()(internalDb, cachedProjectResolver)
+  lazy val environment: String                       = sys.env.getOrElse("ENVIRONMENT", "local")
+  lazy val serviceName: String                       = sys.env.getOrElse("SERVICE_NAME", "local")
+  lazy val algoliaKeyChecker: AlgoliaKeyChecker      = new AlgoliaKeyCheckerImplementation()(toScaldi)
+  lazy val auth0Api: Auth0Api                        = new Auth0ApiImplementation()(toScaldi)
+  lazy val auth0Extend: Auth0Extend                  = new Auth0ExtendImplementation()(toScaldi)
+  lazy val bugsnagger: BugSnaggerImpl                = bugsnaggerImp
+  lazy val testableTime: TestableTime                = new TestableTimeImplementation
 }
 
 trait SystemApiDependencies extends Module {

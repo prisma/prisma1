@@ -17,7 +17,7 @@ case class IntrospectionQueryHandler(
     log: String => Unit
 )(implicit injector: ClientInjector, ec: ExecutionContext) {
 
-  implicit val inj = injector.commonModule
+  implicit val inj = injector.toScaldi
   def handle(requestId: String, requestIp: String, clientId: String): Future[JsValue] = {
     import cool.graph.shared.schema.JsonMarshalling._
     val context = UserContext.load(

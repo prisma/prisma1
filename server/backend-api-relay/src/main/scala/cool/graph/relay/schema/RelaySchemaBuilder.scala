@@ -16,8 +16,10 @@ import scaldi._
 
 // Todo: Decide if we really need UserContext instead of SimpleUserContext here.
 // Or if we could use UserContext in the superclass.
-class RelaySchemaBuilder(project: models.Project, modelPrefix: String = "")(implicit inj: Injector, actorSystem: ActorSystem, materializer: ActorMaterializer)
-    extends SchemaBuilder(project, modelPrefix)(inj, actorSystem, materializer) {
+class RelaySchemaBuilder(project: models.Project, modelPrefix: String = "")(implicit injector: ClientInjector,
+                                                                            actorSystem: ActorSystem,
+                                                                            materializer: ActorMaterializer)
+    extends SchemaBuilder(project, modelPrefix)(injector, actorSystem, materializer) {
 
   type ManyDataItemType = RelayConnectionOutputType
 

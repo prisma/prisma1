@@ -22,29 +22,57 @@ import cool.graph.shared.externalServices.{KinesisPublisher, KinesisPublisherImp
 import cool.graph.shared.functions.lambda.LambdaFunctionEnvironment
 import cool.graph.shared.functions.{EndpointResolver, FunctionEnvironment, LiveEndpointResolver}
 import cool.graph.webhook.Webhook
+import scaldi.Module
 
 import scala.util.Try
 
 case class RelayInjector(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends ClientInjectorImpl {
-  def toScaldi: CommonClientDependencies                       = RelayApiDependencies()
-  override implicit val commonModule: CommonClientDependencies = this.toScaldi
 
-  val deferredResolver: DeferredResolverProvider[_, UserContext] =
+  lazy val deferredResolver: DeferredResolverProvider[_, UserContext] =
     new DeferredResolverProvider(new RelayToManyDeferredResolver, new RelayManyModelDeferredResolver)
 
-  val projectSchemaBuilder = ProjectSchemaBuilder(project => new RelaySchemaBuilder(project).build())
+  lazy val projectSchemaBuilder = ProjectSchemaBuilder(project => new RelaySchemaBuilder(project).build())
 
-  val graphQlRequestHandler = GraphQlRequestHandlerImpl(
+  lazy val graphQlRequestHandler = GraphQlRequestHandlerImpl(
     errorHandlerFactory = errorHandlerFactory,
     log = log,
     apiVersionMetric = FeatureMetric.ApiRelay,
     apiMetricsMiddleware = apiMetricsMiddleware,
     deferredResolver = deferredResolver
   )
+  implicit val toScaldi: Module = {
+    val outer = this
+    new Module {
+      bind[GraphQlRequestHandler] identifiedBy "simple-gql-request-handler" toNonLazy outer.graphQlRequestHandler
+      bind[ProjectSchemaBuilder] identifiedBy "simple-schema-builder" toNonLazy outer.projectSchemaBuilder
+      binding identifiedBy "project-schema-fetcher" toNonLazy outer.projectSchemaFetcher
+      binding identifiedBy "cloudwatch" toNonLazy outer.cloudwatch
+      binding identifiedBy "kinesis" toNonLazy outer.kinesis
+      binding identifiedBy "api-metrics-middleware" toNonLazy outer.apiMetricsMiddleware
+      binding identifiedBy "featureMetricActor" to outer.featureMetricActor
+      binding identifiedBy "s3" toNonLazy outer.s3
+      binding identifiedBy "s3-fileupload" toNonLazy outer.s3Fileupload
+
+      bind[FunctionEnvironment] toNonLazy outer.functionEnvironment
+      bind[EndpointResolver] identifiedBy "endpointResolver" toNonLazy outer.endpointResolver
+      bind[QueuePublisher[String]] identifiedBy "logsPublisher" toNonLazy outer.logsPublisher
+      bind[QueuePublisher[Webhook]] identifiedBy "webhookPublisher" toNonLazy outer.webhooksPublisher
+      bind[PubSubPublisher[String]] identifiedBy "sss-events-publisher" toNonLazy outer.sssEventsPublisher
+      bind[String] identifiedBy "request-prefix" toNonLazy outer.requestPrefix
+      bind[GlobalDatabaseManager] toNonLazy outer.globalDatabaseManager
+      bind[KinesisPublisher] identifiedBy "kinesisAlgoliaSyncQueriesPublisher" toNonLazy outer.kinesisAlgoliaSyncQueriesPublisher
+      bind[KinesisPublisher] identifiedBy "kinesisApiMetricsPublisher" toNonLazy outer.kinesisApiMetricsPublisher
+    }
+  }
+  implicit val injector: ClientInjector = this
+
 }
 
 trait RelayApiClientDependencies extends CommonClientDependencies {
   import system.dispatcher
+
+  implicit val clientInjector: ClientInjector = RelayInjector()
+  implicit val inj                            = clientInjector.toScaldi
 
   val relayDeferredResolver: DeferredResolverProvider[_, UserContext] =
     new DeferredResolverProvider(new RelayToManyDeferredResolver, new RelayManyModelDeferredResolver)
