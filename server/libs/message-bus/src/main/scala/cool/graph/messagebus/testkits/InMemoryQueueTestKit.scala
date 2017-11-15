@@ -8,6 +8,7 @@ import cool.graph.messagebus.queue.inmemory.InMemoryAkkaQueue
 import cool.graph.messagebus.queue.{BackoffStrategy, ConstantBackoff}
 import cool.graph.messagebus.{ConsumerRef, Queue}
 
+import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.language.existentials
@@ -42,8 +43,8 @@ case class InMemoryQueueTestKit[T](backoff: BackoffStrategy = ConstantBackoff(1.
   var publishProbe      = TestProbe() // Receives published messages
   val logId             = new java.util.Random().nextInt(Integer.MAX_VALUE) // For log output correlation
   var _underlying       = InMemoryAkkaQueue[T]()
-  var messagesReceived  = Vector.empty[T]
-  var messagesPublished = Vector.empty[T]
+  val messagesReceived  = new ArrayBuffer[T]()
+  val messagesPublished = new ArrayBuffer[T]()
 
   /**
     * Registers the standard test consumer that just stores the incoming messages in messagesReceived and notifies the
@@ -52,18 +53,9 @@ case class InMemoryQueueTestKit[T](backoff: BackoffStrategy = ConstantBackoff(1.
     * This is usually used in test cases that test code without consumer registration.
     */
   def withTestConsumer(): Unit = {
-    _underlying
-      .withConsumer { msg: T =>
-        Future {
-          println(s"[QTestKit][$logId] Test consumer received $msg")
-
-          probe.ref ! msg
-
-          messagesReceived.synchronized {
-            messagesReceived = messagesReceived :+ msg
-          }
-        }
-      }
+    withConsumer { _ =>
+      Future.successful(())
+    }
   }
 
   /**
@@ -77,11 +69,11 @@ case class InMemoryQueueTestKit[T](backoff: BackoffStrategy = ConstantBackoff(1.
     */
   override def withConsumer(fn: ConsumeFn[T]): ConsumerRef = {
     _underlying.withConsumer { msg: T =>
-      println(s"[QTestKit][$logId] Custom consumer received $msg")
+      println(s"[QTestKit][$logId] Received message: $msg")
       probe.ref ! msg
 
       messagesReceived.synchronized {
-        messagesReceived = messagesReceived :+ msg
+        messagesReceived += msg
       }
 
       fn(msg)
@@ -165,14 +157,14 @@ case class InMemoryQueueTestKit[T](backoff: BackoffStrategy = ConstantBackoff(1.
     */
   def publish(msg: T): Unit = {
     println(s"[QTestKit][$logId] Published: $msg")
-    synchronized { messagesPublished = messagesPublished :+ msg }
+    messagesPublished.synchronized { messagesPublished += msg }
     publishProbe.ref ! msg
     _underlying.publish(msg)
   }
 
   def reset: Unit = {
-    messagesReceived = Vector.empty[T]
-    messagesPublished = Vector.empty[T]
+    messagesReceived.clear()
+    messagesPublished.clear()
     probe = TestProbe()
     publishProbe = TestProbe()
   }
