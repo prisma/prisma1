@@ -31,7 +31,7 @@ Note that this command expects a target named `prod` to be configured in your [`
 
 ## Previewing changes
 
-The `graphcool diff` will print all changes between your local service definition and the already deployed service without actually applying them.
+Using the `--dry-run` option will print all changes between your local service definition and the already deployed service without actually applying them: `graphcool deploy --dry-run` (or using the short form `graphcool deploy -D`).
 
 
 ## Using the `--force` option
