@@ -6,6 +6,7 @@ import cool.graph.client._
 import cool.graph.client.database.{DeferredResolverProvider, SimpleManyModelDeferredResolver, SimpleToManyDeferredResolver}
 import cool.graph.client.server.{GraphQlRequestHandler, GraphQlRequestHandlerImpl, ProjectSchemaBuilder}
 import cool.graph.messagebus.{PubSubPublisher, QueuePublisher}
+import cool.graph.shared.ApiMatrixFactory
 import cool.graph.shared.database.GlobalDatabaseManager
 import cool.graph.shared.externalServices.KinesisPublisher
 import cool.graph.shared.functions.{EndpointResolver, FunctionEnvironment}
@@ -14,10 +15,14 @@ import scaldi.Module
 
 case class SimpleInjector(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends ClientInjectorImpl {
 
-  implicit val injector = this
+  implicit val injector: SimpleInjector = this
   implicit val toScaldi: Module = {
     val outer = this
     new Module {
+      binding identifiedBy "config" toNonLazy outer.config
+      binding identifiedBy "actorSystem" toNonLazy outer.system
+      binding identifiedBy "dispatcher" toNonLazy outer.system.dispatcher
+      binding identifiedBy "actorMaterializer" toNonLazy outer.materializer
       bind[GraphQlRequestHandler] identifiedBy "simple-gql-request-handler" toNonLazy outer.graphQlRequestHandler
       bind[ProjectSchemaBuilder] identifiedBy "simple-schema-builder" toNonLazy outer.projectSchemaBuilder
       binding identifiedBy "project-schema-fetcher" toNonLazy outer.projectSchemaFetcher
@@ -27,16 +32,16 @@ case class SimpleInjector(implicit val system: ActorSystem, val materializer: Ac
       binding identifiedBy "featureMetricActor" to outer.featureMetricActor
       binding identifiedBy "s3" toNonLazy outer.s3
       binding identifiedBy "s3-fileupload" toNonLazy outer.s3Fileupload
-
-      bind[FunctionEnvironment] toNonLazy outer.functionEnvironment
       bind[EndpointResolver] identifiedBy "endpointResolver" toNonLazy outer.endpointResolver
       bind[QueuePublisher[String]] identifiedBy "logsPublisher" toNonLazy outer.logsPublisher
       bind[QueuePublisher[Webhook]] identifiedBy "webhookPublisher" toNonLazy outer.webhooksPublisher
       bind[PubSubPublisher[String]] identifiedBy "sss-events-publisher" toNonLazy outer.sssEventsPublisher
       bind[String] identifiedBy "request-prefix" toNonLazy outer.requestPrefix
-      bind[GlobalDatabaseManager] toNonLazy outer.globalDatabaseManager
       bind[KinesisPublisher] identifiedBy "kinesisAlgoliaSyncQueriesPublisher" toNonLazy outer.kinesisAlgoliaSyncQueriesPublisher
       bind[KinesisPublisher] identifiedBy "kinesisApiMetricsPublisher" toNonLazy outer.kinesisApiMetricsPublisher
+      bind[GlobalDatabaseManager] toNonLazy outer.globalDatabaseManager
+      bind[ApiMatrixFactory] toNonLazy outer.apiMatrixFactory
+      bind[FunctionEnvironment] toNonLazy outer.functionEnvironment
     }
   }
 
