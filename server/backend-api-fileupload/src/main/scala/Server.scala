@@ -1,5 +1,5 @@
 import akka.NotUsed
-import akka.actor.{ActorRef, ActorSystem}
+import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import akka.http.scaladsl.model.Multipart.FormData
@@ -10,22 +10,17 @@ import akka.http.scaladsl.server.directives.FileInfo
 import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, Merge, Sink, Source}
 import akka.stream.{ActorMaterializer, FlowShape}
 import akka.util.ByteString
-import com.amazonaws.services.kinesis.AmazonKinesis
 import com.typesafe.scalalogging.LazyLogging
 import cool.graph.Types._
-import cool.graph.bugsnag.{BugSnagger, GraphCoolRequest}
+import cool.graph.bugsnag.GraphCoolRequest
 import cool.graph.client._
-import cool.graph.client.authorization.ClientAuth
 import cool.graph.client.database.DatabaseMutationBuilder
 import cool.graph.client.files.{FileUploadResponse, FileUploader}
-import cool.graph.client.finder.ProjectFetcher
 import cool.graph.client.server.HealthChecks
 import cool.graph.cuid.Cuid
 import cool.graph.fileupload.FileUploadInjector
 import cool.graph.metrics.ClientSharedMetrics
-import cool.graph.shared.database.GlobalDatabaseManager
 import cool.graph.shared.errors.UserAPIErrors
-import cool.graph.shared.externalServices.TestableTime
 import cool.graph.shared.logging.RequestLogger
 import cool.graph.shared.models.{AuthenticatedRequest, Project, ProjectWithClientId}
 import cool.graph.util.ErrorHandlerFactory
@@ -41,20 +36,21 @@ object Server extends App with AkkaInjectable with LazyLogging {
 
   implicit val system       = ActorSystem("sangria-server")
   implicit val materializer = ActorMaterializer()
-  implicit val injector     = FileUploadInjector
+  implicit val injector     = FileUploadInjector()
+  implicit val inj          = injector.toScaldi
 
   import system.dispatcher
 
-  val globalDatabaseManager    = inject[GlobalDatabaseManager]
-  val kinesis                  = inject[AmazonKinesis](identified by "kinesis")
+  val globalDatabaseManager    = injector.globalDatabaseManager
+  val kinesis                  = injector.kinesis
   val log: String => Unit      = (msg: String) => logger.info(msg)
   val errorHandlerFactory      = ErrorHandlerFactory(log)
-  val projectSchemaFetcher     = inject[ProjectFetcher](identified by "project-schema-fetcher")
-  val globalApiEndpointManager = inject[GlobalApiEndpointManager]
-  val bugsnagger               = inject[BugSnagger]
-  val auth                     = inject[ClientAuth]
-  val apiMetricActor           = inject[ActorRef](identified by "featureMetricActor")
-  val testableTime             = inject[TestableTime]
+  val projectSchemaFetcher     = injector.projectSchemaFetcher
+  val globalApiEndpointManager = injector.globalApiEndpointManager
+  val bugsnagger               = injector.bugsnagger
+  val auth                     = injector.clientAuth
+  val apiMetricActor           = injector.featureMetricActor
+  val testableTime             = injector.testableTime
 
   val requestHandler: Flow[HttpRequest, HttpResponse, NotUsed] = {
 
