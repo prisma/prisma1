@@ -15,13 +15,13 @@ import com.typesafe.scalalogging.LazyLogging
 import cool.graph.Types._
 import cool.graph.bugsnag.{BugSnagger, GraphCoolRequest}
 import cool.graph.client._
-import cool.graph.client.authorization.{ClientAuth, ClientAuthImpl}
+import cool.graph.client.authorization.ClientAuth
 import cool.graph.client.database.DatabaseMutationBuilder
 import cool.graph.client.files.{FileUploadResponse, FileUploader}
 import cool.graph.client.finder.ProjectFetcher
 import cool.graph.client.server.HealthChecks
 import cool.graph.cuid.Cuid
-import cool.graph.fileupload.FileuploadServices
+import cool.graph.fileupload.FileUploadInjector
 import cool.graph.metrics.ClientSharedMetrics
 import cool.graph.shared.database.GlobalDatabaseManager
 import cool.graph.shared.errors.UserAPIErrors
@@ -31,6 +31,7 @@ import cool.graph.shared.models.{AuthenticatedRequest, Project, ProjectWithClien
 import cool.graph.util.ErrorHandlerFactory
 import scaldi.akka.AkkaInjectable
 import spray.json.{JsNumber, JsObject, JsString, JsValue}
+
 import scala.collection.immutable._
 import scala.concurrent.Future
 import scala.concurrent.duration._
@@ -40,7 +41,7 @@ object Server extends App with AkkaInjectable with LazyLogging {
 
   implicit val system       = ActorSystem("sangria-server")
   implicit val materializer = ActorMaterializer()
-  implicit val inj          = new FileuploadServices
+  implicit val injector     = FileUploadInjector
 
   import system.dispatcher
 
