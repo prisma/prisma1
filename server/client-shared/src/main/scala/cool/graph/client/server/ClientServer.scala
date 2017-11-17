@@ -29,7 +29,6 @@ case class ClientServer(prefix: String)(
     with LazyLogging {
   import system.dispatcher
 
-//  implicit val oldInjectorModule = injector.commonModule
   val log                   = (x: String) => logger.info(x)
   val cloudWatch            = injector.cloudwatch
   val errorHandlerFactory   = ErrorHandlerFactory(log, cloudWatch, bugsnagger)
