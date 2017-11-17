@@ -15,7 +15,6 @@ import cool.graph.client.schema.InputTypesBuilder
 import cool.graph.shared.errors.UserAPIErrors
 import cool.graph.shared.models.{Action => ActionModel, _}
 import sangria.schema
-import scaldi.{Injectable, Injector}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future

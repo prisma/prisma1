@@ -8,7 +8,6 @@ import cool.graph.client.authorization.queryPermissions.QueryPermissionValidator
 import cool.graph.shared.models.TypeIdentifier.TypeIdentifier
 import cool.graph.shared.models._
 import sangria.ast.Document
-import scaldi.Injector
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future

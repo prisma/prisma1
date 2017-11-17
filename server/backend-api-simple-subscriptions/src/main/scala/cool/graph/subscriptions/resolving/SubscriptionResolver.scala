@@ -12,7 +12,6 @@ import cool.graph.subscriptions.metrics.SubscriptionMetrics.handleDatabaseEventT
 import cool.graph.subscriptions.resolving.SubscriptionsManagerForModel.Requests.StartSubscription
 import cool.graph.subscriptions.util.PlayJson
 import play.api.libs.json._
-import scaldi.Injector
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ExecutionContext, Future}

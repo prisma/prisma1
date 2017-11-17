@@ -9,7 +9,6 @@ import cool.graph.shared.models.{AuthenticatedRequest, Model}
 import cool.graph.shared.mutactions.MutationTypes.ArgumentValue
 import cool.graph.utils.future.FutureUtils._
 import sangria.schema.Args
-import scaldi.Injector
 
 import scala.collection.immutable.Seq
 import scala.concurrent.ExecutionContext.Implicits.global

@@ -5,7 +5,6 @@ import cool.graph.shared.models.Project
 import sangria.execution.Executor
 import sangria.introspection.introspectionQuery
 import sangria.schema.Schema
-import scaldi.Injector
 import spray.json.JsValue
 
 import scala.concurrent.{ExecutionContext, Future}

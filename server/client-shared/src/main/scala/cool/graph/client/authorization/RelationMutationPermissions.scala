@@ -1,14 +1,13 @@
 package cool.graph.client.authorization
 
-import cool.graph.client.mutactions._
-import cool.graph.shared.models._
 import cool.graph.Mutaction
 import cool.graph.client.ClientInjector
+import cool.graph.client.mutactions._
 import cool.graph.shared.errors.UserAPIErrors
-import scaldi.Injector
+import cool.graph.shared.models._
 
-import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 object RelationMutationPermissions {
 

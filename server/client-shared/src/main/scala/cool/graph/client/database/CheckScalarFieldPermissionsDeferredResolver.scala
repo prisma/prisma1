@@ -8,7 +8,6 @@ import cool.graph.client.authorization.{ModelPermissions, PermissionQueryArg, Pe
 import cool.graph.client.database.DeferredTypes._
 import cool.graph.shared.errors.UserAPIErrors
 import cool.graph.shared.models._
-import scaldi.{Injectable, Injector}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future

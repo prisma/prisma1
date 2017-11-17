@@ -1,12 +1,12 @@
 package cool.graph.authProviders
 
 import cool.graph._
-import cool.graph.client.{ClientInjector, UserContext}
 import cool.graph.client.database.DeferredResolverProvider
 import cool.graph.client.mutations.Create
 import cool.graph.client.mutations.definitions.CreateDefinition
 import cool.graph.client.schema.simple.SimpleArgumentSchema
 import cool.graph.client.schema.{InputTypesBuilder, SchemaModelObjectTypesBuilder}
+import cool.graph.client.{ClientInjector, UserContext}
 import cool.graph.relay.schema.RelayArgumentSchema
 import cool.graph.shared.errors.UserAPIErrors.InvalidAuthProviderData
 import cool.graph.shared.models.IntegrationName.IntegrationName
@@ -14,7 +14,6 @@ import cool.graph.shared.models.TypeIdentifier.TypeIdentifier
 import cool.graph.shared.models._
 import sangria.schema.InputObjectType.DefaultInput
 import sangria.schema.{Argument, Context, InputField, InputObjectType, InputValue, ObjectType, OptionInputType, OptionType, UpdateCtx}
-import scaldi.{Injectable, Injector}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future

@@ -12,7 +12,7 @@ import scala.concurrent.ExecutionContext
 
 class PrivateSchemaBuilder(project: Project)(implicit injector: ClientInjector, ec: ExecutionContext) {
 
-  val inj: Injector = injector.toScaldi
+//  val inj: Injector = injector.toScaldi
 
   def build(): Schema[Unit, Unit] = {
     val query = ObjectType[Unit, Unit]("Query", List(dummyField))
@@ -36,7 +36,7 @@ class PrivateSchemaBuilder(project: Project)(implicit injector: ClientInjector, 
       ),
       mutateAndGetPayload = (input, _) => {
         for {
-          payload <- SyncModelToAlgoliaMutation(project, input, dataResolver(project)(inj)).execute()
+          payload <- SyncModelToAlgoliaMutation(project, input, dataResolver(project)).execute()
         } yield payload
       }
     )
@@ -49,5 +49,6 @@ class PrivateSchemaBuilder(project: Project)(implicit injector: ClientInjector, 
     resolve = _ => ""
   )
 
-  def dataResolver(project: Project)(implicit inj: Injector): DataResolver = new ProjectDataresolver(project = project, requestContext = None)
+  def dataResolver(project: Project)(implicit injector: ClientInjector): DataResolver =
+    new ProjectDataresolver(project = project, requestContext = None)(injector.toScaldi)
 }

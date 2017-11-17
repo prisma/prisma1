@@ -3,22 +3,16 @@ package cool.graph.subscriptions
 import akka.actor.{ActorSystem, Props}
 import akka.stream.ActorMaterializer
 import cool.graph.akkautil.http.{Routes, Server, ServerExecutor}
-import cool.graph.bugsnag.BugSnagger
 import cool.graph.messagebus.pubsub.Only
-import cool.graph.messagebus.{PubSubPublisher, PubSubSubscriber, QueueConsumer}
 import cool.graph.subscriptions.protocol.SubscriptionProtocolV05.Requests.SubscriptionSessionRequestV05
-import cool.graph.subscriptions.protocol.SubscriptionProtocolV05.Responses.SubscriptionSessionResponseV05
 import cool.graph.subscriptions.protocol.SubscriptionProtocolV07.Requests.SubscriptionSessionRequest
-import cool.graph.subscriptions.protocol.SubscriptionProtocolV07.Responses.{GqlError, SubscriptionSessionResponse}
+import cool.graph.subscriptions.protocol.SubscriptionProtocolV07.Responses.GqlError
 import cool.graph.subscriptions.protocol.SubscriptionSessionManager.Requests.{EnrichedSubscriptionRequest, EnrichedSubscriptionRequestV05, StopSession}
 import cool.graph.subscriptions.protocol.{StringOrInt, SubscriptionRequest, SubscriptionSessionManager}
 import cool.graph.subscriptions.resolving.SubscriptionsManager
-import cool.graph.subscriptions.resolving.SubscriptionsManagerForProject.SchemaInvalidatedMessage
 import cool.graph.subscriptions.util.PlayJson
 import de.heikoseeberger.akkahttpplayjson.PlayJsonSupport
 import play.api.libs.json.{JsError, JsSuccess}
-import scaldi.akka.AkkaInjectable
-import scaldi.{Injectable, Injector}
 
 import scala.concurrent.Future
 

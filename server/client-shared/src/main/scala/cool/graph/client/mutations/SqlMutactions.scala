@@ -12,7 +12,6 @@ import cool.graph.shared.models.{Field, Model, Project}
 import cool.graph.shared.mutactions.InvalidInputClientSqlMutaction
 import cool.graph.shared.mutactions.MutationTypes.ArgumentValue
 import cool.graph.{ClientSqlMutaction, DataItem}
-import scaldi.Injector
 
 import scala.collection.immutable.Seq
 import scala.concurrent.ExecutionContext.Implicits.global

@@ -4,7 +4,6 @@ import cool.graph.client.ClientInjector
 import cool.graph.client.database.DataResolver
 import cool.graph.client.mutactions.SyncDataItemToAlgolia
 import cool.graph.shared.models._
-import scaldi.Injector
 
 object AlgoliaSyncQueries {
   def extract(dataResolver: DataResolver, project: Project, model: Model, nodeId: String, operation: String)(

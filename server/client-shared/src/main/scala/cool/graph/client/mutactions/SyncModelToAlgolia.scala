@@ -17,7 +17,6 @@ import cool.graph.util.json.SprayJsonExtensions
 import sangria.ast._
 import sangria.execution.Executor
 import sangria.parser.QueryParser
-import scaldi.{Injectable, Injector}
 import spray.json.{JsString, _}
 
 import scala.concurrent.{ExecutionContext, Future}

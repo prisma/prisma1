@@ -2,7 +2,6 @@ package cool.graph.client.requestPipeline
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model.{DateTime => _, _}
-import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.{ActorMaterializer, StreamTcpException}
 import cool.graph.akkautil.http.{FailedResponseCodeError, SimpleHttpClient, SimpleHttpResponse}
 import cool.graph.bugsnag.BugSnaggerImpl
@@ -19,7 +18,6 @@ import cool.graph.util.collection.ToImmutable._
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 import org.scalactic.{Bad, Good, Or}
-import scaldi.{Injectable, Injector}
 import spray.json._
 
 import scala.concurrent.ExecutionContext.Implicits.global

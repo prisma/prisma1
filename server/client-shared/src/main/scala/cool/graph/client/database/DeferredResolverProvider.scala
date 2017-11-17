@@ -3,7 +3,6 @@ package cool.graph.client.database
 import cool.graph.client.ClientInjector
 import cool.graph.client.database.DeferredTypes._
 import sangria.execution.deferred.{Deferred, DeferredResolver}
-import scaldi.Injector
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.reflectiveCalls

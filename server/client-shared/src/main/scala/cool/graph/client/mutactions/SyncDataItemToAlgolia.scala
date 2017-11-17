@@ -11,17 +11,15 @@ import cool.graph.shared.algolia.AlgoliaEventJsonProtocol._
 import cool.graph.shared.algolia.schemas.AlgoliaSchema
 import cool.graph.shared.algolia.{AlgoliaContext, AlgoliaEvent}
 import cool.graph.shared.errors.SystemErrors
-import cool.graph.shared.externalServices.KinesisPublisher
 import cool.graph.shared.logging.{LogData, LogKey}
 import cool.graph.shared.models.{AlgoliaSyncQuery, Model, Project, SearchProviderAlgolia}
 import cool.graph.shared.schema.JsonMarshalling._
 import sangria.ast.Document
 import sangria.execution.Executor
 import sangria.parser.QueryParser
-import scaldi.{Injectable, Injector}
 import spray.json.{JsString, _}
 
-import scala.concurrent.{ExecutionContext, ExecutionContextExecutor, Future}
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
 case class SyncDataItemToAlgolia(

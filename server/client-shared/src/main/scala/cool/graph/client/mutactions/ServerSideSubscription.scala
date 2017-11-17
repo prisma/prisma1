@@ -4,13 +4,10 @@ import cool.graph.Types.Id
 import cool.graph._
 import cool.graph.client.ClientInjector
 import cool.graph.client.requestPipeline.FunctionExecutor
-import cool.graph.messagebus.QueuePublisher
-import cool.graph.shared.functions.EndpointResolver
 import cool.graph.shared.models.ModelMutationType.ModelMutationType
 import cool.graph.shared.models._
 import cool.graph.subscriptions.SubscriptionExecutor
 import cool.graph.webhook.Webhook
-import scaldi.{Injectable, Injector}
 import spray.json.{JsValue, _}
 
 import scala.concurrent.Future

@@ -9,7 +9,6 @@ import cool.graph.client.schema.InputTypesBuilder
 import cool.graph.shared.models.{AuthenticatedRequest, Model, Project}
 import cool.graph.util.coolSangria.Sangria
 import sangria.schema
-import scaldi.{Injectable, Injector}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future

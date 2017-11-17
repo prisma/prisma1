@@ -6,7 +6,6 @@ import cool.graph.client.database.DataResolver
 import cool.graph.client.mutactions.SyncModelToAlgolia
 import cool.graph.shared.models.Project
 import sangria.relay.Mutation
-import scaldi.Injector
 
 import scala.concurrent.Future
 

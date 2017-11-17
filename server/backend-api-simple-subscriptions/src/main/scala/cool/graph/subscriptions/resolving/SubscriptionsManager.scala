@@ -7,14 +7,11 @@ import akka.util.Timeout
 import cool.graph.akkautil.{LogUnhandled, LogUnhandledExceptions}
 import cool.graph.bugsnag.BugSnagger
 import cool.graph.client.ClientInjector
-import cool.graph.messagebus.PubSubSubscriber
 import cool.graph.messagebus.pubsub.Only
 import cool.graph.shared.models.ModelMutationType.ModelMutationType
 import cool.graph.subscriptions.protocol.StringOrInt
 import cool.graph.subscriptions.resolving.SubscriptionsManager.Requests.CreateSubscription
-import cool.graph.subscriptions.resolving.SubscriptionsManagerForProject.SchemaInvalidatedMessage
 import play.api.libs.json._
-import scaldi.{Injectable, Injector}
 
 import scala.collection.mutable
 

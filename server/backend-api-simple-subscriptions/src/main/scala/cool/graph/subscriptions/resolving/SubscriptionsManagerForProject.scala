@@ -4,23 +4,21 @@ import akka.actor.{Actor, ActorRef, Props, Stash, Terminated}
 import cool.graph.akkautil.{LogUnhandled, LogUnhandledExceptions}
 import cool.graph.bugsnag.BugSnagger
 import cool.graph.client.ClientInjector
-import cool.graph.messagebus.PubSubSubscriber
 import cool.graph.messagebus.pubsub.Message
 import cool.graph.shared.models._
 import cool.graph.subscriptions.helpers.{Auth, ProjectHelper}
+import cool.graph.subscriptions.metrics.SubscriptionMetrics
 import cool.graph.subscriptions.protocol.StringOrInt
 import cool.graph.subscriptions.resolving.SubscriptionsManager.Responses.{CreateSubscriptionFailed, CreateSubscriptionResponse, CreateSubscriptionSucceeded}
 import cool.graph.subscriptions.resolving.SubscriptionsManagerForModel.Requests.StartSubscription
 import cool.graph.subscriptions.resolving.SubscriptionsManagerForProject.{SchemaInvalidated, SchemaInvalidatedMessage}
 import cool.graph.subscriptions.schemas.{QueryTransformer, SubscriptionQueryValidator}
-import cool.graph.subscriptions.metrics.SubscriptionMetrics
-import org.scalactic.{Bad, Good}
-import scaldi.Injector
-import scaldi.akka.AkkaInjectable
 import cool.graph.utils.future.FutureUtils._
+import org.scalactic.{Bad, Good}
+import scaldi.akka.AkkaInjectable
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.collection.mutable
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
 
@@ -39,9 +37,9 @@ case class SubscriptionsManagerForProject(
     with LogUnhandled
     with LogUnhandledExceptions {
 
+  import SubscriptionMetrics._
   import SubscriptionsManager.Requests._
   import akka.pattern.pipe
-  import SubscriptionMetrics._
 
   val resolversByModel          = mutable.Map.empty[Model, ActorRef]
   val resolversBySubscriptionId = mutable.Map.empty[StringOrInt, mutable.Set[ActorRef]]

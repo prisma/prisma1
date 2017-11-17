@@ -1,10 +1,9 @@
 package cool.graph
 
-import cool.graph.client.{ClientInjector, FeatureMetric}
 import cool.graph.client.mutactions._
+import cool.graph.client.{ClientInjector, FeatureMetric}
 import cool.graph.shared.errors.{GeneralError, UserAPIErrors}
 import cool.graph.shared.models.{AuthenticatedRequest, Project}
-import scaldi.Injector
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future

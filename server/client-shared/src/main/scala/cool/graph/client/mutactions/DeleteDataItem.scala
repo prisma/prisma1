@@ -1,6 +1,5 @@
 package cool.graph.client.mutactions
 
-import cool.graph.shared.mutactions.MutationTypes.ArgumentValue
 import cool.graph.Types.Id
 import cool.graph._
 import cool.graph.client.ClientInjector
@@ -9,7 +8,7 @@ import cool.graph.client.requestPipeline.RequestPipelineRunner
 import cool.graph.shared.NameConstraints
 import cool.graph.shared.errors.UserAPIErrors
 import cool.graph.shared.models.{Model, Project, RequestPipelineOperation}
-import scaldi.{Injectable, Injector}
+import cool.graph.shared.mutactions.MutationTypes.ArgumentValue
 import slick.jdbc.MySQLProfile.api._
 import slick.lifted.TableQuery
 

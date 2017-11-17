@@ -6,7 +6,6 @@ import cool.graph.client.ClientInjector
 import cool.graph.client.adapters.GraphcoolDataTypes
 import cool.graph.client.mutactions._
 import cool.graph.shared.models.Project
-import scaldi.Injector
 
 import scala.collection.immutable.Seq
 

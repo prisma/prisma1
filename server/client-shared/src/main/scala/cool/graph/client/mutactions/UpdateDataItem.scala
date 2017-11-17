@@ -5,8 +5,8 @@ import java.sql.SQLIntegrityConstraintViolationException
 import cool.graph.Types.Id
 import cool.graph._
 import cool.graph.client.ClientInjector
-import cool.graph.client.database.{DataResolver, DatabaseMutationBuilder}
 import cool.graph.client.database.GetFieldFromSQLUniqueException.getField
+import cool.graph.client.database.{DataResolver, DatabaseMutationBuilder}
 import cool.graph.client.mutactions.validation.InputValueValidation
 import cool.graph.client.mutations.CoolArgs
 import cool.graph.client.requestPipeline.RequestPipelineRunner
@@ -14,7 +14,6 @@ import cool.graph.shared.RelationFieldMirrorColumn
 import cool.graph.shared.errors.UserAPIErrors
 import cool.graph.shared.models.{Field, Model, Project, RequestPipelineOperation}
 import cool.graph.shared.mutactions.MutationTypes.ArgumentValue
-import scaldi.Injector
 import slick.jdbc.MySQLProfile.api._
 
 import scala.concurrent.ExecutionContext.Implicits.global

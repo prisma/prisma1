@@ -19,7 +19,6 @@ import cool.graph.subscriptions.resolving.SubscriptionsManagerForProject.SchemaI
 import play.api.libs.json._
 import sangria.ast.Document
 import sangria.renderer.QueryRenderer
-import scaldi.Injector
 import scaldi.akka.AkkaInjectable
 
 import scala.collection.mutable

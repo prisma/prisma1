@@ -7,28 +7,31 @@ import com.typesafe.config.{Config, ConfigFactory}
 import cool.graph.aws.AwsInitializers
 import cool.graph.aws.cloudwatch.CloudwatchImpl
 import cool.graph.bugsnag.{BugSnagger, BugSnaggerImpl}
-import cool.graph.client.{ClientInjector, FeatureMetricActor, GlobalApiEndpointManager, UserContext}
+import cool.graph.client._
 import cool.graph.client.authorization.{ClientAuth, ClientAuthImpl}
-import cool.graph.client.database.DeferredResolverProvider
+import cool.graph.client.database.{DeferredResolverProvider, SimpleManyModelDeferredResolver, SimpleToManyDeferredResolver}
 import cool.graph.client.finder.ProjectFetcherImpl
 import cool.graph.client.metrics.ApiMetricsMiddleware
-import cool.graph.client.server.{GraphQlRequestHandler, ProjectSchemaBuilder}
-import cool.graph.messagebus.pubsub.rabbit.RabbitAkkaPubSub
-import cool.graph.messagebus.queue.rabbit.RabbitQueue
+import cool.graph.client.server.GraphQlRequestHandlerImpl
+import cool.graph.messagebus.Conversions.{ByteMarshaller, ByteUnmarshaller, Unmarshallers}
 import cool.graph.messagebus._
+import cool.graph.messagebus.pubsub.rabbit.{RabbitAkkaPubSub, RabbitAkkaPubSubPublisher, RabbitAkkaPubSubSubscriber}
+import cool.graph.messagebus.queue.rabbit.{RabbitQueue, RabbitQueuePublisher}
 import cool.graph.shared.database.GlobalDatabaseManager
 import cool.graph.shared.externalServices.{KinesisPublisher, KinesisPublisherImplementation, TestableTime, TestableTimeImplementation}
-import cool.graph.shared.functions.{EndpointResolver, FunctionEnvironment}
+import cool.graph.shared.functions.LiveEndpointResolver
+import cool.graph.shared.functions.lambda.LambdaFunctionEnvironment
 import cool.graph.shared.{ApiMatrixFactory, DefaultApiMatrix}
 import cool.graph.subscriptions.protocol.SubscriptionProtocolV05.Responses.SubscriptionSessionResponseV05
 import cool.graph.subscriptions.protocol.SubscriptionProtocolV07.Responses.SubscriptionSessionResponse
 import cool.graph.subscriptions.protocol.SubscriptionRequest
 import cool.graph.subscriptions.resolving.SubscriptionsManagerForProject.{SchemaInvalidated, SchemaInvalidatedMessage}
 import cool.graph.util.ErrorHandlerFactory
-import cool.graph.webhook.{Webhook, WebhookCaller}
+import cool.graph.webhook.{Webhook, WebhookCallerImplementation}
 import scaldi._
 
 import scala.concurrent.ExecutionContext
+import scala.util.Try
 
 //subscriptionsdependencies
 
@@ -58,10 +61,10 @@ trait SimpleSubscriptionInjector extends ClientInjector {
 class SimpleSubscriptionInjectorImpl(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends SimpleSubscriptionInjector {
   import cool.graph.subscriptions.protocol.Converters._
 
-  implicit val injector              = this
+  implicit lazy val injector         = this
   implicit lazy val toScaldi: Module = new Module {}
 
-  implicit val unmarshaller                   = (_: Array[Byte]) => SchemaInvalidated
+  implicit lazy val unmarshaller              = (_: Array[Byte]) => SchemaInvalidated
   lazy val globalRabbitUri                    = sys.env("GLOBAL_RABBIT_URI")
   lazy val clusterLocalRabbitUri              = sys.env("RABBITMQ_URI")
   lazy val apiMatrixFactory: ApiMatrixFactory = ApiMatrixFactory(DefaultApiMatrix)
@@ -72,24 +75,55 @@ class SimpleSubscriptionInjectorImpl(implicit val system: ActorSystem, val mater
     durable = true
   )
 
-  override implicit val dispatcher: ExecutionContext                         = ???
-  override val projectSchemaInvalidationSubscriber: PubSubSubscriber[String] = ???
-  override val functionEnvironment: FunctionEnvironment                      = ???
-  override val endpointResolver: EndpointResolver                            = ???
-  override val logsPublisher: QueuePublisher[String]                         = ???
-  override val webhookPublisher: QueuePublisher[Webhook]                     = ???
-  override val webhookCaller: WebhookCaller                                  = ???
-  override val sssEventsPublisher: PubSubPublisher[String]                   = ???
-  override val requestPrefix: String                                         = ???
-  override val kinesisAlgoliaSyncQueriesPublisher: KinesisPublisher          = ???
-  override val log: String => Unit                                           = ???
-  override val errorHandlerFactory: ErrorHandlerFactory                      = ???
-  override val globalApiEndpointManager: GlobalApiEndpointManager            = ???
-  override val deferredResolver: DeferredResolverProvider[_, UserContext]    = ???
-  override val projectSchemaBuilder: ProjectSchemaBuilder                    = ???
-  override val graphQlRequestHandler: GraphQlRequestHandler                  = ???
-  override val s3: AmazonS3                                                  = ???
-  override val s3Fileupload: AmazonS3                                        = ???
+  override lazy val projectSchemaInvalidationSubscriber: RabbitAkkaPubSubSubscriber[String] = {
+    val globalRabbitUri                                 = sys.env("GLOBAL_RABBIT_URI")
+    implicit val unmarshaller: ByteUnmarshaller[String] = Unmarshallers.ToString
+
+    RabbitAkkaPubSub.subscriber[String](globalRabbitUri, "project-schema-invalidation", durable = true)
+  }
+
+  lazy val blockedProjectIds: Vector[String] = Try { sys.env("BLOCKED_PROJECT_IDS").split(",").toVector }.getOrElse(Vector.empty)
+
+  override lazy val functionEnvironment = LambdaFunctionEnvironment(
+    sys.env.getOrElse("LAMBDA_AWS_ACCESS_KEY_ID", "whatever"),
+    sys.env.getOrElse("LAMBDA_AWS_SECRET_ACCESS_KEY", "whatever")
+  )
+
+  override implicit lazy val dispatcher: ExecutionContext = system.dispatcher
+  lazy val webhookCaller                                  = new WebhookCallerImplementation()
+
+  lazy val webhookPublisher: RabbitQueuePublisher[cool.graph.webhook.Webhook] =
+    RabbitQueue.publisher(clusterLocalRabbitUri, "webhooks")(bugsnagger, Webhook.marshaller)
+  lazy val sssEventsPublisher: RabbitAkkaPubSubPublisher[String] =
+    RabbitAkkaPubSub.publisher[String](clusterLocalRabbitUri, "sss-events", durable = true)(bugsnagger, fromStringMarshaller)
+
+  lazy val globalApiEndpointManager = GlobalApiEndpointManager(
+    euWest1 = sys.env("API_ENDPOINT_EU_WEST_1"),
+    usWest2 = sys.env("API_ENDPOINT_US_WEST_2"),
+    apNortheast1 = sys.env("API_ENDPOINT_AP_NORTHEAST_1")
+  )
+
+  lazy val deferredResolver: DeferredResolverProvider[_, UserContext] =
+    new DeferredResolverProvider(new SimpleToManyDeferredResolver, new SimpleManyModelDeferredResolver)
+
+  lazy val projectSchemaBuilder = ???
+  lazy val graphQlRequestHandler = GraphQlRequestHandlerImpl(
+    errorHandlerFactory = errorHandlerFactory,
+    log = log,
+    apiVersionMetric = FeatureMetric.ApiSimple,
+    apiMetricsMiddleware = apiMetricsMiddleware,
+    deferredResolver = deferredResolver
+  )
+
+  lazy val fromStringMarshaller: ByteMarshaller[String] = Conversions.Marshallers.FromString
+  lazy val endpointResolver                             = LiveEndpointResolver()
+  lazy val logsPublisher: RabbitQueuePublisher[String]  = RabbitQueue.publisher[String](clusterLocalRabbitUri, "function-logs")(bugsnagger, fromStringMarshaller)
+  lazy val requestPrefix: String                        = sys.env.getOrElse("AWS_REGION", sys.error("AWS Region not found."))
+  lazy val kinesisAlgoliaSyncQueriesPublisher           = new KinesisPublisherImplementation(streamName = sys.env("KINESIS_STREAM_ALGOLIA_SYNC_QUERY"), kinesis)
+  lazy val log: String => Unit                          = println
+  lazy val errorHandlerFactory                          = ErrorHandlerFactory(log, cloudwatch, bugsnagger)
+  lazy val s3: AmazonS3                                 = AwsInitializers.createS3()
+  lazy val s3Fileupload: AmazonS3                       = AwsInitializers.createS3Fileupload()
 
   lazy val sssEventsSubscriber = RabbitAkkaPubSub.subscriber[String](
     clusterLocalRabbitUri,
@@ -119,11 +153,11 @@ class SimpleSubscriptionInjectorImpl(implicit val system: ActorSystem, val mater
   lazy val apiMetricsFlushInterval = 10
   lazy val clientAuth              = ClientAuthImpl()
   implicit lazy val bugsnagger     = BugSnaggerImpl(sys.env.getOrElse("BUGSNAG_API_KEY", ""))
-  val environment: String          = sys.env.getOrElse("ENVIRONMENT", "local")
-  val serviceName: String          = sys.env.getOrElse("SERVICE_NAME", "local")
+  lazy val environment: String     = sys.env.getOrElse("ENVIRONMENT", "local")
+  lazy val serviceName: String     = sys.env.getOrElse("SERVICE_NAME", "local")
 
 }
-
+//
 //trait SimpleSubscriptionApiDependencies extends Module {
 //  implicit val system: ActorSystem
 //  implicit val materializer: ActorMaterializer

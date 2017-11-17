@@ -6,7 +6,6 @@ import akka.http.scaladsl.model._
 import akka.stream.ActorMaterializer
 import cool.graph.client.ClientInjector
 import cool.graph.cuid.Cuid
-import scaldi.{Injectable, Injector}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -18,11 +17,11 @@ trait WebhookCaller {
 class WebhookCallerMock extends WebhookCaller {
   private val _calls = scala.collection.parallel.mutable.ParTrieMap[String, (String, String)]()
 
-  def calls = _calls.values.toList
+  def calls: List[(String, String)] = _calls.values.toList
 
   var nextCallShouldFail = false
 
-  def clearCalls = _calls.clear
+  def clearCalls: Unit = _calls.clear
 
   override def call(url: String, payload: String): Future[Boolean] = {
     _calls.put(Cuid.createCuid(), (url, payload))
@@ -35,8 +34,8 @@ class WebhookCallerImplementation(implicit injector: ClientInjector) extends Web
 
   override def call(url: String, payload: String): Future[Boolean] = {
 
-    implicit val system       = injector.system
-    implicit val materializer = injector.materializer
+    implicit val system: ActorSystem             = injector.system
+    implicit val materializer: ActorMaterializer = injector.materializer
 
     println("calling " + url)
 

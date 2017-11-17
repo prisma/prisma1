@@ -7,19 +7,17 @@ import akka.http.scaladsl.model.{HttpMethods, HttpRequest, HttpResponse, StatusC
 import akka.stream.ActorMaterializer
 import akka.util.ByteString
 import cool.graph.ArgumentSchema
-import cool.graph.shared.errors.UserAPIErrors.{CannotSignInCredentialsInvalid, CannotSignUpUserWithCredentialsExist, UniqueConstraintViolation}
-import cool.graph.client.authorization.{ClientAuth, ClientAuthImpl}
 import cool.graph.client.database.DeferredResolverProvider
 import cool.graph.client.mutations.Create
+import cool.graph.client.schema.SchemaModelObjectTypesBuilder
 import cool.graph.client.schema.simple.SimpleArgumentSchema
 import cool.graph.client.{ClientInjector, UserContext}
-import cool.graph.client.schema.SchemaModelObjectTypesBuilder
+import cool.graph.shared.errors.UserAPIErrors.{CannotSignInCredentialsInvalid, CannotSignUpUserWithCredentialsExist, UniqueConstraintViolation}
 import cool.graph.shared.models.IntegrationName._
 import cool.graph.shared.models.{AuthProviderMetaInformation, IntegrationName, TypeIdentifier}
 import cool.graph.util.coolSangria.Sangria
 import org.apache.http.auth.InvalidCredentialsException
 import sangria.schema.Context
-import scaldi.Injector
 import spray.json.{DefaultJsonProtocol, _}
 
 import scala.concurrent.ExecutionContext.Implicits.global
