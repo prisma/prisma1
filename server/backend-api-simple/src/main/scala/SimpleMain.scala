@@ -8,7 +8,7 @@ object SimpleMain extends App {
   implicit val system       = ActorSystem("sangria-server")
   implicit val materializer = ActorMaterializer()
   implicit val injector     = SimpleInjector()
-  implicit val bugsnagger   = injector.bugSnagger
+  implicit val bugsnagger   = injector.bugsnagger
 
   ServerExecutor(port = 8080, ClientServer("simple")).startBlocking()
 }

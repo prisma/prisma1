@@ -1,7 +1,8 @@
 package cool.graph.subscriptions
 
-import cool.graph.deprecated.actions.schemas.MutationMetaData
+import cool.graph.client.ClientInjector
 import cool.graph.client.database.{DeferredResolverProvider, SimpleManyModelDeferredResolver, SimpleToManyDeferredResolver}
+import cool.graph.deprecated.actions.schemas.MutationMetaData
 import cool.graph.shared.models.ModelMutationType.ModelMutationType
 import cool.graph.shared.models._
 import cool.graph.subscriptions.schemas.{QueryTransformer, SubscriptionSchema}
@@ -11,7 +12,6 @@ import sangria.ast.Document
 import sangria.execution.{Executor, Middleware}
 import sangria.parser.QueryParser
 import sangria.renderer.QueryRenderer
-import scaldi.Injector
 import spray.json._
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -30,7 +30,7 @@ object SubscriptionExecutor {
               requestId: String,
               operationName: Option[String],
               skipPermissionCheck: Boolean,
-              alwaysQueryMasterDatabase: Boolean)(implicit inj: Injector, ec: ExecutionContext): Future[Option[JsValue]] = {
+              alwaysQueryMasterDatabase: Boolean)(implicit injector: ClientInjector, ec: ExecutionContext): Future[Option[JsValue]] = {
 
     val queryAst = QueryParser.parse(query).get
 
@@ -65,10 +65,11 @@ object SubscriptionExecutor {
               requestId: String,
               operationName: Option[String],
               skipPermissionCheck: Boolean,
-              alwaysQueryMasterDatabase: Boolean)(implicit inj: Injector, ec: ExecutionContext): Future[Option[JsValue]] = {
+              alwaysQueryMasterDatabase: Boolean)(implicit injector: ClientInjector, ec: ExecutionContext): Future[Option[JsValue]] = {
     import cool.graph.shared.schema.JsonMarshalling._
     import cool.graph.util.json.Json._
 
+    implicit val inj = injector.toScaldi
     val schema       = SubscriptionSchema(model, project, updatedFields, mutationType, previousValues).build()
     val errorHandler = ErrorHandlerFactory(println)
     val unhandledErrorLogger = errorHandler.unhandledErrorHandler(

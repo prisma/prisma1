@@ -12,7 +12,7 @@ import cool.graph.client.authorization.{ClientAuth, ClientAuthImpl}
 import cool.graph.client.database.DeferredResolverProvider
 import cool.graph.client.mutations.Create
 import cool.graph.client.schema.simple.SimpleArgumentSchema
-import cool.graph.client.UserContext
+import cool.graph.client.{ClientInjector, UserContext}
 import cool.graph.client.schema.SchemaModelObjectTypesBuilder
 import cool.graph.shared.models.IntegrationName._
 import cool.graph.shared.models.{AuthProviderMetaInformation, IntegrationName, TypeIdentifier}
@@ -36,11 +36,11 @@ object DigitsAuthJsonProtocol extends DefaultJsonProtocol {
   implicit val authDataFormat: RootJsonFormat[JwtDigitsAuthData]          = jsonFormat2(JwtDigitsAuthData)
 }
 
-class DigitsAuthProviderManager(implicit inj: Injector) extends AuthProviderManager[Unit]()(inj) {
+class DigitsAuthProviderManager(implicit injector: ClientInjector) extends AuthProviderManager[Unit]() {
 
-  implicit val system: ActorSystem             = inject[ActorSystem](identified by "actorSystem")
-  implicit val materializer: ActorMaterializer = inject[ActorMaterializer](identified by "actorMaterializer")
-  val clientAuth                               = inject[ClientAuth]
+  implicit val system: ActorSystem             = injector.system
+  implicit val materializer: ActorMaterializer = injector.materializer
+  val clientAuth                               = injector.clientAuth
 
   val digitsIdField = ManagedField(defaultName = "digitsId", typeIdentifier = TypeIdentifier.String, isUnique = true)
 

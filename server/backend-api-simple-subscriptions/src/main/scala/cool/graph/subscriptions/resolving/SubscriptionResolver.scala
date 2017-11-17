@@ -3,6 +3,7 @@ package cool.graph.subscriptions.resolving
 import java.util.concurrent.TimeUnit
 
 import cool.graph.DataItem
+import cool.graph.client.ClientInjector
 import cool.graph.client.adapters.GraphcoolDataTypes
 import cool.graph.shared.models.ModelMutationType.ModelMutationType
 import cool.graph.shared.models.{Model, ModelMutationType, ProjectWithClientId}
@@ -22,7 +23,7 @@ case class SubscriptionResolver(
     mutationType: ModelMutationType,
     subscription: StartSubscription,
     scheduler: akka.actor.Scheduler
-)(implicit inj: Injector, ec: ExecutionContext) {
+)(implicit injector: ClientInjector, ec: ExecutionContext) {
   import DatabaseEvents._
 
   def handleDatabaseMessage(event: String): Future[Option[JsValue]] = {

@@ -13,7 +13,7 @@ import cool.graph.aws.cloudwatch.{Cloudwatch, CloudwatchImpl}
 import cool.graph.bugsnag.{BugSnagger, BugSnaggerImpl}
 import cool.graph.client.authorization.{ClientAuth, ClientAuthImpl}
 import cool.graph.client.database.DeferredResolverProvider
-import cool.graph.client.finder.{CachedProjectFetcherImpl, ProjectFetcher, ProjectFetcherImpl, RefreshableProjectFetcher}
+import cool.graph.client.finder.{CachedProjectFetcherImpl, ProjectFetcherImpl, RefreshableProjectFetcher}
 import cool.graph.client.metrics.ApiMetricsMiddleware
 import cool.graph.client.server.{GraphQlRequestHandler, ProjectSchemaBuilder}
 import cool.graph.messagebus.Conversions.{ByteMarshaller, ByteUnmarshaller, Unmarshallers}
@@ -35,7 +35,7 @@ import scala.util.Try
 trait ClientInjector {
   implicit val system: ActorSystem
   implicit val materializer: ActorMaterializer
-  implicit val bugSnagger: BugSnagger
+  implicit val bugsnagger: BugSnagger
   implicit val dispatcher: ExecutionContext
 
   val projectSchemaInvalidationSubscriber: PubSubSubscriber[String]
@@ -43,7 +43,8 @@ trait ClientInjector {
   val functionEnvironment: FunctionEnvironment
   val endpointResolver: EndpointResolver
   val logsPublisher: QueuePublisher[String]
-  val webhooksPublisher: QueuePublisher[Webhook]
+  val webhookPublisher: QueuePublisher[Webhook]
+  val webhookCaller: WebhookCaller
   val sssEventsPublisher: PubSubPublisher[String]
   val requestPrefix: String
   val cloudwatch: Cloudwatch
@@ -63,6 +64,8 @@ trait ClientInjector {
   val deferredResolver: DeferredResolverProvider[_, UserContext]
   val projectSchemaBuilder: ProjectSchemaBuilder
   val graphQlRequestHandler: GraphQlRequestHandler
+  val s3: AmazonS3
+  val s3Fileupload: AmazonS3
 
   implicit val toScaldi: Module
 }
@@ -71,9 +74,10 @@ trait ClientInjectorImpl extends ClientInjector with LazyLogging {
   implicit val system: ActorSystem
   implicit val materializer: ActorMaterializer
   implicit val dispatcher: ExecutionContext = system.dispatcher
-  implicit val bugSnagger: BugSnagger       = BugSnaggerImpl(sys.env("BUGSNAG_API_KEY"))
+  implicit val bugsnagger: BugSnagger       = BugSnaggerImpl(sys.env("BUGSNAG_API_KEY"))
 
   implicit val toScaldi: Module
+  implicit val injector: ClientInjectorImpl = this
 
   override lazy val projectSchemaInvalidationSubscriber: RabbitAkkaPubSubSubscriber[String] = {
     val globalRabbitUri                                 = sys.env("GLOBAL_RABBIT_URI")
@@ -104,16 +108,18 @@ trait ClientInjectorImpl extends ClientInjector with LazyLogging {
       .build
   }
 
-  lazy val webhooksPublisher: RabbitQueuePublisher[cool.graph.webhook.Webhook] =
-    RabbitQueue.publisher(clusterLocalRabbitUri, "webhooks")(bugSnagger, Webhook.marshaller)
+  lazy val webhookCaller = new WebhookCallerImplementation()
+
+  lazy val webhookPublisher: RabbitQueuePublisher[cool.graph.webhook.Webhook] =
+    RabbitQueue.publisher(clusterLocalRabbitUri, "webhooks")(bugsnagger, Webhook.marshaller)
   lazy val sssEventsPublisher: RabbitAkkaPubSubPublisher[String] =
-    RabbitAkkaPubSub.publisher[String](clusterLocalRabbitUri, "sss-events", durable = true)(bugSnagger, fromStringMarshaller)
+    RabbitAkkaPubSub.publisher[String](clusterLocalRabbitUri, "sss-events", durable = true)(bugsnagger, fromStringMarshaller)
 
   lazy val clusterLocalRabbitUri                        = sys.env("RABBITMQ_URI")
   lazy val fromStringMarshaller: ByteMarshaller[String] = Conversions.Marshallers.FromString
   lazy val globalDatabaseManager: GlobalDatabaseManager = GlobalDatabaseManager.initializeForSingleRegion(config)
   lazy val endpointResolver                             = LiveEndpointResolver()
-  lazy val logsPublisher: RabbitQueuePublisher[String]  = RabbitQueue.publisher[String](clusterLocalRabbitUri, "function-logs")(bugSnagger, fromStringMarshaller)
+  lazy val logsPublisher: RabbitQueuePublisher[String]  = RabbitQueue.publisher[String](clusterLocalRabbitUri, "function-logs")(bugsnagger, fromStringMarshaller)
   lazy val requestPrefix: String                        = sys.env.getOrElse("AWS_REGION", sys.error("AWS Region not found."))
   lazy val cloudwatch                                   = CloudwatchImpl()
   lazy val kinesisAlgoliaSyncQueriesPublisher           = new KinesisPublisherImplementation(streamName = sys.env("KINESIS_STREAM_ALGOLIA_SYNC_QUERY"), kinesis)
@@ -125,7 +131,7 @@ trait ClientInjectorImpl extends ClientInjector with LazyLogging {
   lazy val apiMetricsFlushInterval                      = 10
   lazy val clientAuth                                   = ClientAuthImpl()
   lazy val log: String => Unit                          = (x: String) => logger.info(x)
-  lazy val errorHandlerFactory                          = ErrorHandlerFactory(log, cloudwatch, bugSnagger)
+  lazy val errorHandlerFactory                          = ErrorHandlerFactory(log, cloudwatch, bugsnagger)
   lazy val apiMatrixFactory                             = ApiMatrixFactory(DefaultApiMatrix)
   lazy val s3: AmazonS3                                 = AwsInitializers.createS3()
   lazy val s3Fileupload: AmazonS3                       = AwsInitializers.createS3Fileupload()
@@ -137,57 +143,56 @@ trait ClientInjectorImpl extends ClientInjector with LazyLogging {
   )
 }
 
-trait CommonClientDependencies extends Module with LazyLogging {
-  implicit val system: ActorSystem
-  implicit val materializer: ActorMaterializer
-  implicit val bugSnagger: BugSnaggerImpl = BugSnaggerImpl(sys.env("BUGSNAG_API_KEY"))
-
-  val projectSchemaInvalidationSubscriber: PubSubSubscriber[String]
-  val projectSchemaFetcher: ProjectFetcher
-  val functionEnvironment: FunctionEnvironment
-  val endpointResolver: EndpointResolver
-  val logsPublisher: QueuePublisher[String]
-  val webhooksPublisher: QueuePublisher[Webhook]
-  val sssEventsPublisher: PubSubPublisher[String]
-  val requestPrefix: String
-  val cloudwatch: Cloudwatch
-  val globalDatabaseManager: GlobalDatabaseManager
-  val kinesisAlgoliaSyncQueriesPublisher: KinesisPublisher
-  val kinesisApiMetricsPublisher: KinesisPublisher
-  val featureMetricActor: ActorRef
-  val apiMetricsMiddleware: ApiMetricsMiddleware
-
-  lazy val config: Config          = ConfigFactory.load()
-  lazy val testableTime            = new TestableTimeImplementation
-  lazy val apiMetricsFlushInterval = 10
-  lazy val clientAuth              = ClientAuthImpl()
-  lazy val log: String => Unit     = (x: String) => logger.info(x)
-  lazy val errorHandlerFactory     = ErrorHandlerFactory(log, cloudwatch, bugSnagger)
-  lazy val apiMatrixFactory        = ApiMatrixFactory(DefaultApiMatrix)
-
-  lazy val globalApiEndpointManager = GlobalApiEndpointManager(
-    euWest1 = sys.env("API_ENDPOINT_EU_WEST_1"),
-    usWest2 = sys.env("API_ENDPOINT_US_WEST_2"),
-    apNortheast1 = sys.env("API_ENDPOINT_AP_NORTHEAST_1")
-  )
-
-  bind[ClientAuth] toNonLazy clientAuth
-  bind[TestableTime] toNonLazy testableTime
-  bind[GlobalApiEndpointManager] toNonLazy globalApiEndpointManager
-  bind[WebhookCaller] toNonLazy new WebhookCallerImplementation()
-  bind[BugSnagger] toNonLazy bugSnagger
-  bind[ClientAuth] toNonLazy clientAuth
-  bind[TestableTime] toNonLazy testableTime
-  bind[ApiMatrixFactory] toNonLazy apiMatrixFactory
-  bind[WebhookCaller] toNonLazy new WebhookCallerImplementation()
-  bind[BugSnagger] toNonLazy bugSnagger
-
-  binding identifiedBy "config" toNonLazy config
-  binding identifiedBy "actorSystem" toNonLazy system destroyWith (_.terminate())
-  binding identifiedBy "dispatcher" toNonLazy system.dispatcher
-  binding identifiedBy "actorMaterializer" toNonLazy materializer
-  binding identifiedBy "environment" toNonLazy sys.env.getOrElse("ENVIRONMENT", "local")
-  binding identifiedBy "service-name" toNonLazy sys.env.getOrElse("SERVICE_NAME", "local")
-
-  private lazy val blockedProjectIds: Vector[String] = Try { sys.env("BLOCKED_PROJECT_IDS").split(",").toVector }.getOrElse(Vector.empty)
-}
+//trait CommonClientDependencies extends Module with LazyLogging {
+//  implicit val system: ActorSystem
+//  implicit val materializer: ActorMaterializer
+//  implicit val bugSnagger: BugSnaggerImpl = BugSnaggerImpl(sys.env("BUGSNAG_API_KEY"))
+//
+//  val projectSchemaInvalidationSubscriber: PubSubSubscriber[String]
+//  val projectSchemaFetcher: ProjectFetcher
+//  val functionEnvironment: FunctionEnvironment
+//  val endpointResolver: EndpointResolver
+//  val logsPublisher: QueuePublisher[String]
+//  val webhooksPublisher: QueuePublisher[Webhook]
+//  val sssEventsPublisher: PubSubPublisher[String]
+//  val requestPrefix: String
+//  val cloudwatch: Cloudwatch
+//  val globalDatabaseManager: GlobalDatabaseManager
+//  val kinesisAlgoliaSyncQueriesPublisher: KinesisPublisher
+//  val kinesisApiMetricsPublisher: KinesisPublisher
+//  val featureMetricActor: ActorRef
+//  val apiMetricsMiddleware: ApiMetricsMiddleware
+//
+//  lazy val config: Config          = ConfigFactory.load()
+//  lazy val testableTime            = new TestableTimeImplementation
+//  lazy val apiMetricsFlushInterval = 10
+//  lazy val clientAuth              = ClientAuthImpl()
+//  lazy val log: String => Unit     = (x: String) => logger.info(x)
+//  lazy val errorHandlerFactory     = ErrorHandlerFactory(log, cloudwatch, bugSnagger)
+//  lazy val apiMatrixFactory        = ApiMatrixFactory(DefaultApiMatrix)
+//
+//  lazy val globalApiEndpointManager = GlobalApiEndpointManager(
+//    euWest1 = sys.env("API_ENDPOINT_EU_WEST_1"),
+//    usWest2 = sys.env("API_ENDPOINT_US_WEST_2"),
+//    apNortheast1 = sys.env("API_ENDPOINT_AP_NORTHEAST_1")
+//  )
+//
+//  bind[ClientAuth] toNonLazy clientAuth
+//  bind[TestableTime] toNonLazy testableTime
+//  bind[GlobalApiEndpointManager] toNonLazy globalApiEndpointManager
+//  bind[WebhookCaller] toNonLazy new WebhookCallerImplementation()
+//  bind[BugSnagger] toNonLazy bugSnagger
+//  bind[ClientAuth] toNonLazy clientAuth
+//  bind[TestableTime] toNonLazy testableTime
+//  bind[ApiMatrixFactory] toNonLazy apiMatrixFactory
+//  bind[BugSnagger] toNonLazy bugSnagger
+//
+//  binding identifiedBy "config" toNonLazy config
+//  binding identifiedBy "actorSystem" toNonLazy system destroyWith (_.terminate())
+//  binding identifiedBy "dispatcher" toNonLazy system.dispatcher
+//  binding identifiedBy "actorMaterializer" toNonLazy materializer
+//  binding identifiedBy "environment" toNonLazy sys.env.getOrElse("ENVIRONMENT", "local")
+//  binding identifiedBy "service-name" toNonLazy sys.env.getOrElse("SERVICE_NAME", "local")
+//
+//  private lazy val blockedProjectIds: Vector[String] = Try { sys.env("BLOCKED_PROJECT_IDS").split(",").toVector }.getOrElse(Vector.empty)
+//}

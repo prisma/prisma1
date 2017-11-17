@@ -126,7 +126,7 @@ class SystemInjectorImpl(implicit val system: ActorSystem, val materializer: Act
         sys.exit(-1)
     }
   }
-  lazy val sns                                          = AwsInitializers.createSns()
+  lazy val sns: AmazonSNS                               = AwsInitializers.createSns()
   lazy val internalDb                                   = dbs.head
   lazy val logsDb                                       = dbs.last
   lazy val globalDatabaseManager: GlobalDatabaseManager = GlobalDatabaseManager.initializeForMultipleRegions(config)

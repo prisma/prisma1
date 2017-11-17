@@ -8,7 +8,7 @@ object RelayMain extends App {
   implicit val system       = ActorSystem("sangria-server")
   implicit val materializer = ActorMaterializer()
   implicit val injector     = RelayInjector()
-  implicit val bugsnagger   = injector.bugSnagger
+  implicit val bugsnagger   = injector.bugsnagger
 
   ServerExecutor(port = 8083, ClientServer("relay")).startBlocking()
 }

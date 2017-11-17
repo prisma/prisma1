@@ -1,5 +1,6 @@
 package cool.graph.client.mutations
 
+import cool.graph.client.ClientInjector
 import cool.graph.client.database.DataResolver
 import cool.graph.client.mutactions.SyncDataItemToAlgolia
 import cool.graph.shared.models._
@@ -7,7 +8,7 @@ import scaldi.Injector
 
 object AlgoliaSyncQueries {
   def extract(dataResolver: DataResolver, project: Project, model: Model, nodeId: String, operation: String)(
-      implicit inj: Injector): List[SyncDataItemToAlgolia] = {
+      implicit injector: ClientInjector): List[SyncDataItemToAlgolia] = {
     project.integrations
       .filter(_.isEnabled)
       .filter(_.integrationType == IntegrationType.SearchProvider)

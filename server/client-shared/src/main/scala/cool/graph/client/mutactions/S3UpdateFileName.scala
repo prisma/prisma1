@@ -1,20 +1,19 @@
 package cool.graph.client.mutactions
 
 import com.typesafe.scalalogging.LazyLogging
-import cool.graph.shared.errors.UserAPIErrors.DataItemDoesNotExist
 import cool.graph._
+import cool.graph.client.ClientInjector
 import cool.graph.client.database.DataResolver
 import cool.graph.client.files.FileUploader
+import cool.graph.shared.errors.UserAPIErrors.DataItemDoesNotExist
 import cool.graph.shared.models.{Model, Project}
-import scaldi._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
 
-case class S3UpdateFileName(model: Model, project: Project, fileId: String, newName: String, resolver: DataResolver)(implicit inj: Injector)
+case class S3UpdateFileName(model: Model, project: Project, fileId: String, newName: String, resolver: DataResolver)(implicit injector: ClientInjector)
     extends Mutaction
-    with Injectable
     with LazyLogging {
 
   var fileSecret: Option[String] = None

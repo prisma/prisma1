@@ -15,7 +15,7 @@ import scaldi.Module
 
 case class SimpleInjector(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends ClientInjectorImpl {
 
-  implicit val injector: SimpleInjector = this
+  override implicit val injector: SimpleInjector = this
   implicit val toScaldi: Module = {
     val outer = this
     new Module {
@@ -34,7 +34,7 @@ case class SimpleInjector(implicit val system: ActorSystem, val materializer: Ac
       binding identifiedBy "s3-fileupload" toNonLazy outer.s3Fileupload
       bind[EndpointResolver] identifiedBy "endpointResolver" toNonLazy outer.endpointResolver
       bind[QueuePublisher[String]] identifiedBy "logsPublisher" toNonLazy outer.logsPublisher
-      bind[QueuePublisher[Webhook]] identifiedBy "webhookPublisher" toNonLazy outer.webhooksPublisher
+      bind[QueuePublisher[Webhook]] identifiedBy "webhookPublisher" toNonLazy outer.webhookPublisher
       bind[PubSubPublisher[String]] identifiedBy "sss-events-publisher" toNonLazy outer.sssEventsPublisher
       bind[String] identifiedBy "request-prefix" toNonLazy outer.requestPrefix
       bind[KinesisPublisher] identifiedBy "kinesisAlgoliaSyncQueriesPublisher" toNonLazy outer.kinesisAlgoliaSyncQueriesPublisher
@@ -80,7 +80,7 @@ case class SimpleInjector(implicit val system: ActorSystem, val materializer: Ac
 //  bind[GraphQlRequestHandler] identifiedBy "simple-gql-request-handler" toNonLazy simpleGraphQlRequestHandler
 //  bind[ProjectSchemaBuilder] identifiedBy "simple-schema-builder" toNonLazy simpleProjectSchemaBuilder
 //}
-
+//
 //case class SimpleApiDependencies(implicit val system: ActorSystem, val materializer: ActorMaterializer, override val injector: ClientInjector)
 //    extends SimpleApiClientDependencies {
 //  lazy val projectSchemaInvalidationSubscriber: RabbitAkkaPubSubSubscriber[String] = {

@@ -44,7 +44,7 @@ class PrivateClientApi(projectSchemaFetcher: RefreshableProjectFetcher, secret: 
 
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  val bugsnagger          = injector.bugSnagger
+  val bugsnagger          = injector.bugsnagger
   val cloudwatch          = injector.cloudwatch
   val errorHandlerFactory = ErrorHandlerFactory(println, cloudwatch, bugsnagger)
 

@@ -3,6 +3,7 @@ package cool.graph.client.database
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import cool.graph.DataItem
+import cool.graph.client.ClientInjector
 import cool.graph.client.authorization.{ModelPermissions, PermissionQueryArg, PermissionValidator}
 import cool.graph.client.database.DeferredTypes._
 import cool.graph.shared.errors.UserAPIErrors
@@ -12,12 +13,11 @@ import scaldi.{Injectable, Injector}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class CheckScalarFieldPermissionsDeferredResolver(skipPermissionCheck: Boolean, project: Project)(implicit inj: Injector) extends Injectable {
+class CheckScalarFieldPermissionsDeferredResolver(skipPermissionCheck: Boolean, project: Project)(implicit injector: ClientInjector) {
 
-  implicit val system = inject[ActorSystem](identified by "actorSystem")
-  implicit val materializer =
-    inject[ActorMaterializer](identified by "actorMaterializer")
-  val permissionValidator = new PermissionValidator(project)
+  implicit val system: ActorSystem             = injector.system
+  implicit val materializer: ActorMaterializer = injector.materializer
+  val permissionValidator                      = new PermissionValidator(project)
 
   def resolve(orderedDefereds: Vector[OrderedDeferred[CheckPermissionDeferred]], ctx: DataResolver): Vector[OrderedDeferredFutureResult[Any]] = {
     val deferreds = orderedDefereds.map(_.deferred)

@@ -1,6 +1,6 @@
 package cool.graph
 
-import cool.graph.client.FeatureMetric
+import cool.graph.client.{ClientInjector, FeatureMetric}
 import cool.graph.client.mutactions._
 import cool.graph.shared.errors.{GeneralError, UserAPIErrors}
 import cool.graph.shared.models.{AuthenticatedRequest, Project}
@@ -11,14 +11,14 @@ import scala.concurrent.Future
 
 object ClientMutationRunner {
   def run(clientMutation: ClientMutation, authenticatedRequest: Option[AuthenticatedRequest], requestContext: RequestContextTrait, project: Project)(
-      implicit inj: Injector): Future[DataItem] = {
+      implicit injector: ClientInjector): Future[DataItem] = {
     run(clientMutation, authenticatedRequest, Some(requestContext), project)
   }
 
   def run(clientMutation: ClientMutation,
           authenticatedRequest: Option[AuthenticatedRequest] = None,
           requestContext: Option[RequestContextTrait] = None,
-          project: Project)(implicit inj: Injector): Future[DataItem] = {
+          project: Project)(implicit injector: ClientInjector): Future[DataItem] = {
 
     clientMutation.checkPermissions(authenticatedRequest) flatMap {
       case false => throw UserAPIErrors.InsufficientPermissions("Insufficient permissions for this mutation")
@@ -55,7 +55,8 @@ object ClientMutationRunner {
     }
   }
 
-  private def trackApiMetrics(context: Option[RequestContextTrait], mutactionGroups: List[MutactionGroup], project: Project)(implicit inj: Injector): Unit = {
+  private def trackApiMetrics(context: Option[RequestContextTrait], mutactionGroups: List[MutactionGroup], project: Project)(
+      implicit injector: ClientInjector): Unit = {
 
     def containsNestedMutation: Boolean = {
       val sqlMutactions = mutactionGroups.flatMap(_.mutactions collect { case Transaction(mutactions, _) => mutactions }).flatten

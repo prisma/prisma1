@@ -1,7 +1,7 @@
 package cool.graph.authProviders
 
 import cool.graph._
-import cool.graph.client.UserContext
+import cool.graph.client.{ClientInjector, UserContext}
 import cool.graph.client.database.DeferredResolverProvider
 import cool.graph.client.mutations.Create
 import cool.graph.client.mutations.definitions.CreateDefinition
@@ -21,7 +21,7 @@ import scala.concurrent.Future
 
 case class IntegrationSigninData(token: String, user: DataItem)
 
-abstract class AuthProviderManager[MetaInfoType](implicit inj: Injector) extends Injectable {
+abstract class AuthProviderManager[MetaInfoType](implicit injector: ClientInjector) {
 
   case class ManagedField(defaultName: String,
                           typeIdentifier: TypeIdentifier,
@@ -80,7 +80,7 @@ object AuthProviderManager {
       userFieldType: ObjectType[UserContext, DataItem],
       modelObjectTypesBuilder: SchemaModelObjectTypesBuilder[T],
       argumentSchema: ArgumentSchema,
-      deferredResolverProvider: DeferredResolverProvider[_, UserContext])(implicit inj: Injector): List[sangria.schema.Field[UserContext, Unit]] = {
+      deferredResolverProvider: DeferredResolverProvider[_, UserContext])(implicit injector: ClientInjector): List[sangria.schema.Field[UserContext, Unit]] = {
     val activeAuthProviders = project.authProviders
       .filter(_.integrationType == IntegrationType.AuthProvider)
       .filter(_.isEnabled)
@@ -131,8 +131,8 @@ object AuthProviderManager {
 
       // fall back to normal create mutation when no auth providers
 
-      if (!activeAuthProviders.isEmpty && !hasExperimentalServerlessAuthProvider) {
-        throw new InvalidAuthProviderData("You must include at least one Auth Provider when creating user")
+      if (activeAuthProviders.nonEmpty && !hasExperimentalServerlessAuthProvider) {
+        throw InvalidAuthProviderData("You must include at least one Auth Provider when creating user")
       }
 
       new Create(model = userModel, project = project, args = ctx.args, dataResolver = ctx.ctx.dataResolver, argumentSchema = argumentSchema)
@@ -149,7 +149,7 @@ object AuthProviderManager {
     )
 
     val customFields =
-      new CreateDefinition(SimpleArgumentSchema, project, InputTypesBuilder(project, SimpleArgumentSchema))
+      CreateDefinition(SimpleArgumentSchema, project, InputTypesBuilder(project, SimpleArgumentSchema))
         .getSangriaArguments(model = userModel)
         .filter(removeEmailAndPassword(activeAuthProviders))
 
@@ -161,14 +161,9 @@ object AuthProviderManager {
       )
 
     val createArguments = (activeAuthProviders.isEmpty, hasExperimentalServerlessAuthProvider) match {
-      case (true, _) => customFields
-      case (false, false) => {
-        customFields ++ List(sangria.schema.Argument("authProvider", authProviderType))
-      }
-      case (false, true) => {
-
-        customFields ++ List(sangria.schema.Argument("authProvider", OptionInputType(authProviderType)))
-      }
+      case (true, _)      => customFields
+      case (false, false) => customFields ++ List(sangria.schema.Argument("authProvider", authProviderType))
+      case (false, true)  => customFields ++ List(sangria.schema.Argument("authProvider", OptionInputType(authProviderType)))
     }
 
     val createField = sangria.schema.Field(
@@ -191,7 +186,7 @@ object AuthProviderManager {
       userFieldType: ObjectType[UserContext, DataItem],
       modelObjectTypesBuilder: SchemaModelObjectTypesBuilder[T],
       argumentSchema: ArgumentSchema,
-      deferredResolverProvider: DeferredResolverProvider[_, UserContext])(implicit inj: Injector): List[sangria.schema.Field[UserContext, Unit]] = {
+      deferredResolverProvider: DeferredResolverProvider[_, UserContext])(implicit injector: ClientInjector): List[sangria.schema.Field[UserContext, Unit]] = {
     val activeAuthProviders = project.authProviders
       .filter(_.integrationType == IntegrationType.AuthProvider)
       .filter(_.isEnabled)
@@ -248,7 +243,7 @@ object AuthProviderManager {
       // fall back to normal create mutation when no auth providers
 
       if (!activeAuthProviders.isEmpty) {
-        throw new InvalidAuthProviderData("You must include at least one Auth Provider when creating user")
+        throw InvalidAuthProviderData("You must include at least one Auth Provider when creating user")
       }
 
       new Create(model = userModel, project = project, args = ctx.args, dataResolver = ctx.ctx.dataResolver, argumentSchema = argumentSchema)
@@ -286,12 +281,13 @@ object AuthProviderManager {
                       .get("clientMutationId")
                       .map(_.asInstanceOf[String]))))
         }) { payload =>
+          implicit val inj = injector.toScaldi
           ctx.ctx.copy(authenticatedRequest = payload.map(_.user).map(x => AuthenticatedUser(id = x.id, typeName = "User", originalToken = "")))
       }
     )
 
     val customFields =
-      new CreateDefinition(RelayArgumentSchema, project, InputTypesBuilder(project, RelayArgumentSchema))
+      CreateDefinition(RelayArgumentSchema, project, InputTypesBuilder(project, RelayArgumentSchema))
         .getSangriaArguments(model = userModel)
         .find(_.name == "input")
         .get
@@ -300,9 +296,9 @@ object AuthProviderManager {
         .fields
         .filter(removeEmailAndPassword(activeAuthProviders))
 
-    val createArguments = (activeAuthProviders.isEmpty match {
+    val createArguments = activeAuthProviders.isEmpty match {
       case true => customFields
-      case false => {
+      case false =>
         val authProviderType: InputObjectType[DefaultInput] = InputObjectType(
           name = "AuthProviderSignupData",
           fields = activeAuthProviders.map(auth =>
@@ -310,8 +306,7 @@ object AuthProviderManager {
         )
 
         customFields ++ List(sangria.schema.InputField("authProvider", authProviderType))
-      }
-    })
+    }
 
     val createInput = InputObjectType(
       name = "SignupUserInput",
@@ -331,7 +326,7 @@ object AuthProviderManager {
     }
   }
 
-  private def withName(name: IntegrationName)(implicit inj: Injector): AuthProviderManager[Unit] = name match {
+  private def withName(name: IntegrationName)(implicit injector: ClientInjector): AuthProviderManager[Unit] = name match {
     case IntegrationName.AuthProviderEmail  => new EmailAuthProviderManager()
     case IntegrationName.AuthProviderDigits => new DigitsAuthProviderManager()
     case IntegrationName.AuthProviderAuth0  => new Auth0AuthProviderManager()
@@ -341,12 +336,10 @@ object AuthProviderManager {
   private def extractAuthProviderField(args: Map[String, Any]): Option[Map[String, Any]] = {
     args.get("authProvider") match {
       case None => None
-      case Some(x) if x.isInstanceOf[Some[_]] => {
+      case Some(x) if x.isInstanceOf[Some[_]] =>
         x.asInstanceOf[Some[Map[String, Any]]]
-      }
-      case Some(authProvider: Map[_, _]) => {
+      case Some(authProvider: Map[_, _]) =>
         Some(authProvider.asInstanceOf[Map[String, Any]])
-      }
     }
   }
 

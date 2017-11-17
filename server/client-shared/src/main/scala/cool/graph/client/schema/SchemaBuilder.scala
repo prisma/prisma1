@@ -13,16 +13,13 @@ import cool.graph.deprecated.packageMocks.AppliedFunction
 import cool.graph.metrics.ClientSharedMetrics
 import cool.graph.shared.errors.UserAPIErrors
 import cool.graph.shared.errors.UserInputErrors.InvalidSchema
-import cool.graph.shared.functions.EndpointResolver
 import cool.graph.shared.models.{Field => GCField, _}
-import cool.graph.shared.{ApiMatrixFactory, DefaultApiMatrix, models}
+import cool.graph.shared.{DefaultApiMatrix, models}
 import cool.graph.util.coolSangria.FromInputImplicit
 import cool.graph.util.performance.TimeHelper
 import org.atteo.evo.inflector.English
-import sangria.ast.Definition
 import sangria.relay._
 import sangria.schema.{Field, _}
-import scaldi.{Injectable, Injector}
 import spray.json.{DefaultJsonProtocol, JsArray, JsBoolean, JsFalse, JsNull, JsNumber, JsObject, JsString, JsTrue, JsValue, JsonFormat}
 
 import scala.collection.mutable
@@ -36,7 +33,7 @@ abstract class SchemaBuilder(project: models.Project, modelPrefix: String = "")(
 
   type ManyDataItemType
 
-  implicit val inj = injector.toScaldi
+//  implicit val inj = injector.toScaldi
 
   // TODO - Don't use inheritance here. Maybe we can inject the params from the outside?
   val generateGetAll               = true

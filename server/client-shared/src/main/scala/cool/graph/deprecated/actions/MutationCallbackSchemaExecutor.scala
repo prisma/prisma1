@@ -1,6 +1,7 @@
 package cool.graph.deprecated.actions
 
 import com.typesafe.scalalogging.LazyLogging
+import cool.graph.client.ClientInjector
 import cool.graph.client.database.{DeferredResolverProvider, SimpleManyModelDeferredResolver, SimpleToManyDeferredResolver}
 import cool.graph.cuid.Cuid.createCuid
 import cool.graph.deprecated.actions.schemas.{ActionUserContext, MutationMetaData}
@@ -9,7 +10,6 @@ import cool.graph.shared.schema.JsonMarshalling._
 import sangria.execution.Executor
 import sangria.parser.QueryParser
 import sangria.schema.Schema
-import scaldi.{Injectable, Injector}
 import spray.json.{JsObject, JsString}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -24,10 +24,11 @@ class MutationCallbackSchemaExecutor(project: Project,
                                      nodeId: String,
                                      fragment: String,
                                      url: String,
-                                     mutationId: String)(implicit inj: Injector)
-    extends Injectable
-    with LazyLogging {
+                                     mutationId: String)(implicit injector: ClientInjector)
+    extends LazyLogging {
   def execute: Future[Event] = {
+    implicit val inj = injector.toScaldi
+
     val dataFut = QueryParser.parse(fragment) match {
       case Success(queryAst) =>
         Executor.execute(
@@ -52,10 +53,8 @@ class MutationCallbackSchemaExecutor(project: Project,
 
     dataFut
       .map {
-        case JsObject(dataMap) =>
-          Event(id = createCuid(), url = url, payload = Some(dataMap("data").asJsObject))
-        case json =>
-          sys.error(s"Must only receive JsObjects here. But got instead: ${json.compactPrint}")
+        case JsObject(dataMap) => Event(id = createCuid(), url = url, payload = Some(dataMap("data").asJsObject))
+        case json              => sys.error(s"Must only receive JsObjects here. But got instead: ${json.compactPrint}")
       }
 
   }

@@ -22,39 +22,32 @@ import scaldi.{Injectable, Injector}
 
 import scala.concurrent.Future
 
-object SubscriptionsMain extends App with Injectable {
+object SubscriptionsMain extends App {
   implicit val system       = ActorSystem("graphql-subscriptions")
   implicit val materializer = ActorMaterializer()
-  implicit val inj          = SimpleSubscriptionDependencies()
+  implicit val injector     = new SimpleSubscriptionInjectorImpl()
 
   ServerExecutor(port = 8086, SimpleSubscriptionsServer()).startBlocking()
 }
 
 case class SimpleSubscriptionsServer(prefix: String = "")(
-    implicit inj: Injector,
+    implicit subscriptionInjector: SimpleSubscriptionInjectorImpl,
     system: ActorSystem,
     materializer: ActorMaterializer
 ) extends Server
-    with AkkaInjectable
     with PlayJsonSupport {
   import system.dispatcher
 
-  implicit val bugSnag             = inject[BugSnagger]
-  implicit val response05Publisher = inject[PubSubPublisher[SubscriptionSessionResponseV05]](identified by "subscription-responses-publisher-05")
-  implicit val response07Publisher = inject[PubSubPublisher[SubscriptionSessionResponse]](identified by "subscription-responses-publisher-07")
+  implicit val bugSnag             = subscriptionInjector.bugsnagger
+  implicit val response05Publisher = subscriptionInjector.responsePubSubPublisherV05
+  implicit val response07Publisher = subscriptionInjector.responsePubSubPublisherV07
 
   val innerRoutes          = Routes.emptyRoute
   val subscriptionsManager = system.actorOf(Props(new SubscriptionsManager(bugSnag)), "subscriptions-manager")
-  val requestsConsumer     = inject[QueueConsumer[SubscriptionRequest]](identified by "subscription-requests-consumer")
+  val requestsConsumer     = subscriptionInjector.requestsQueueConsumer
 
   val consumerRef = requestsConsumer.withConsumer { req: SubscriptionRequest =>
-    Future {
-      if (req.body == "STOP") {
-        subscriptionSessionManager ! StopSession(req.sessionId)
-      } else {
-        handleProtocolMessage(req.projectId, req.sessionId, req.body)
-      }
-    }
+    Future(if (req.body == "STOP") subscriptionSessionManager ! StopSession(req.sessionId) else handleProtocolMessage(req.projectId, req.sessionId, req.body))
   }
 
   val subscriptionSessionManager = system.actorOf(
@@ -88,6 +81,6 @@ case class SimpleSubscriptionsServer(prefix: String = "")(
 
   override def onStop = Future {
     consumerRef.stop
-    inject[PubSubSubscriber[SchemaInvalidatedMessage]](identified by "schema-invalidation-subscriber").shutdown
+    subscriptionInjector.projectSchemaInvalidationSubscriber.shutdown
   }
 }

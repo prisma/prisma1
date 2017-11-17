@@ -37,7 +37,7 @@ class RelaySchemaBuilder(project: models.Project, modelPrefix: String = "")(impl
       )
     )
   }
-
+  implicit val inj                     = injector.toScaldi
   override val includeSubscription     = false
   override val modelObjectTypesBuilder = new RelaySchemaModelObjectTypeBuilder(project, Some(nodeInterface), modelPrefix)
   override val modelObjectTypes        = modelObjectTypesBuilder.modelObjectTypes

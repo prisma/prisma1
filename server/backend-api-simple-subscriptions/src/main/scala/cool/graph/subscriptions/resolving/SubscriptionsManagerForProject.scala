@@ -3,6 +3,7 @@ package cool.graph.subscriptions.resolving
 import akka.actor.{Actor, ActorRef, Props, Stash, Terminated}
 import cool.graph.akkautil.{LogUnhandled, LogUnhandledExceptions}
 import cool.graph.bugsnag.BugSnagger
+import cool.graph.client.ClientInjector
 import cool.graph.messagebus.PubSubSubscriber
 import cool.graph.messagebus.pubsub.Message
 import cool.graph.shared.models._
@@ -31,7 +32,7 @@ object SubscriptionsManagerForProject {
 case class SubscriptionsManagerForProject(
     projectId: String,
     bugsnag: BugSnagger
-)(implicit inj: Injector)
+)(implicit injector: ClientInjector)
     extends Actor
     with Stash
     with AkkaInjectable
@@ -44,11 +45,12 @@ case class SubscriptionsManagerForProject(
 
   val resolversByModel          = mutable.Map.empty[Model, ActorRef]
   val resolversBySubscriptionId = mutable.Map.empty[StringOrInt, mutable.Set[ActorRef]]
+  implicit val inj              = injector.toScaldi
 
   override def preStart() = {
     super.preStart()
     activeSubscriptionsManagerForProject.inc
-    pipe(ProjectHelper.resolveProject(projectId)(inj, context.system, context.dispatcher)) to self
+    pipe(ProjectHelper.resolveProject(projectId)(injector, context.system, context.dispatcher)) to self
   }
 
   override def postStop(): Unit = {

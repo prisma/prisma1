@@ -2,29 +2,40 @@ package cool.graph.subscriptions
 
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.stream.ActorMaterializer
-import com.typesafe.config.ConfigFactory
+import com.amazonaws.services.s3.AmazonS3
+import com.typesafe.config.{Config, ConfigFactory}
 import cool.graph.aws.AwsInitializers
 import cool.graph.aws.cloudwatch.CloudwatchImpl
 import cool.graph.bugsnag.{BugSnagger, BugSnaggerImpl}
-import cool.graph.client.FeatureMetricActor
+import cool.graph.client.{ClientInjector, FeatureMetricActor, GlobalApiEndpointManager, UserContext}
 import cool.graph.client.authorization.{ClientAuth, ClientAuthImpl}
+import cool.graph.client.database.DeferredResolverProvider
 import cool.graph.client.finder.ProjectFetcherImpl
 import cool.graph.client.metrics.ApiMetricsMiddleware
+import cool.graph.client.server.{GraphQlRequestHandler, ProjectSchemaBuilder}
 import cool.graph.messagebus.pubsub.rabbit.RabbitAkkaPubSub
 import cool.graph.messagebus.queue.rabbit.RabbitQueue
-import cool.graph.messagebus.{Conversions, PubSubPublisher, PubSubSubscriber, QueueConsumer}
+import cool.graph.messagebus._
 import cool.graph.shared.database.GlobalDatabaseManager
 import cool.graph.shared.externalServices.{KinesisPublisher, KinesisPublisherImplementation, TestableTime, TestableTimeImplementation}
+import cool.graph.shared.functions.{EndpointResolver, FunctionEnvironment}
 import cool.graph.shared.{ApiMatrixFactory, DefaultApiMatrix}
 import cool.graph.subscriptions.protocol.SubscriptionProtocolV05.Responses.SubscriptionSessionResponseV05
 import cool.graph.subscriptions.protocol.SubscriptionProtocolV07.Responses.SubscriptionSessionResponse
 import cool.graph.subscriptions.protocol.SubscriptionRequest
 import cool.graph.subscriptions.resolving.SubscriptionsManagerForProject.{SchemaInvalidated, SchemaInvalidatedMessage}
+import cool.graph.util.ErrorHandlerFactory
+import cool.graph.webhook.{Webhook, WebhookCaller}
 import scaldi._
 
-trait SimpleSubscriptionApiDependencies extends Module {
+import scala.concurrent.ExecutionContext
+
+//subscriptionsdependencies
+
+trait SimpleSubscriptionInjector extends ClientInjector {
   implicit val system: ActorSystem
   implicit val materializer: ActorMaterializer
+  implicit val bugsnagger: BugSnagger
 
   val invalidationSubscriber: PubSubSubscriber[SchemaInvalidatedMessage]
   val sssEventsSubscriber: PubSubSubscriber[String]
@@ -36,26 +47,19 @@ trait SimpleSubscriptionApiDependencies extends Module {
   val featureMetricActor: ActorRef
   val apiMetricsMiddleware: ApiMetricsMiddleware
 
-  lazy val config                  = ConfigFactory.load()
-  lazy val testableTime            = new TestableTimeImplementation
-  lazy val apiMetricsFlushInterval = 10
-  lazy val clientAuth              = ClientAuthImpl()
-  implicit lazy val bugsnagger     = BugSnaggerImpl(sys.env.getOrElse("BUGSNAG_API_KEY", ""))
-
-  bind[BugSnagger] toNonLazy bugsnagger
-  bind[TestableTime] toNonLazy testableTime
-  bind[ClientAuth] toNonLazy clientAuth
-
-  binding identifiedBy "config" toNonLazy config
-  binding identifiedBy "actorSystem" toNonLazy system destroyWith (_.terminate())
-  binding identifiedBy "dispatcher" toNonLazy system.dispatcher
-  binding identifiedBy "actorMaterializer" toNonLazy materializer
-  binding identifiedBy "environment" toNonLazy sys.env.getOrElse("ENVIRONMENT", "local")
-  binding identifiedBy "service-name" toNonLazy sys.env.getOrElse("SERVICE_NAME", "local")
+  val config: Config
+  val testableTime: TestableTime
+  val apiMetricsFlushInterval: Int
+  val clientAuth: ClientAuth
+  val environment: String
+  val serviceName: String
 }
 
-case class SimpleSubscriptionDependencies()(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends SimpleSubscriptionApiDependencies {
+class SimpleSubscriptionInjectorImpl(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends SimpleSubscriptionInjector {
   import cool.graph.subscriptions.protocol.Converters._
+
+  implicit val injector              = this
+  implicit lazy val toScaldi: Module = new Module {}
 
   implicit val unmarshaller                   = (_: Array[Byte]) => SchemaInvalidated
   lazy val globalRabbitUri                    = sys.env("GLOBAL_RABBIT_URI")
@@ -67,6 +71,25 @@ case class SimpleSubscriptionDependencies()(implicit val system: ActorSystem, va
     "project-schema-invalidation",
     durable = true
   )
+
+  override implicit val dispatcher: ExecutionContext                         = ???
+  override val projectSchemaInvalidationSubscriber: PubSubSubscriber[String] = ???
+  override val functionEnvironment: FunctionEnvironment                      = ???
+  override val endpointResolver: EndpointResolver                            = ???
+  override val logsPublisher: QueuePublisher[String]                         = ???
+  override val webhookPublisher: QueuePublisher[Webhook]                     = ???
+  override val webhookCaller: WebhookCaller                                  = ???
+  override val sssEventsPublisher: PubSubPublisher[String]                   = ???
+  override val requestPrefix: String                                         = ???
+  override val kinesisAlgoliaSyncQueriesPublisher: KinesisPublisher          = ???
+  override val log: String => Unit                                           = ???
+  override val errorHandlerFactory: ErrorHandlerFactory                      = ???
+  override val globalApiEndpointManager: GlobalApiEndpointManager            = ???
+  override val deferredResolver: DeferredResolverProvider[_, UserContext]    = ???
+  override val projectSchemaBuilder: ProjectSchemaBuilder                    = ???
+  override val graphQlRequestHandler: GraphQlRequestHandler                  = ???
+  override val s3: AmazonS3                                                  = ???
+  override val s3Fileupload: AmazonS3                                        = ???
 
   lazy val sssEventsSubscriber = RabbitAkkaPubSub.subscriber[String](
     clusterLocalRabbitUri,
@@ -89,19 +112,98 @@ case class SimpleSubscriptionDependencies()(implicit val system: ActorSystem, va
   lazy val kinesisApiMetricsPublisher = new KinesisPublisherImplementation(streamName = sys.env("KINESIS_STREAM_API_METRICS"), kinesis)
   lazy val featureMetricActor         = system.actorOf(Props(new FeatureMetricActor(kinesisApiMetricsPublisher, apiMetricsFlushInterval)))
   lazy val apiMetricsMiddleware       = new ApiMetricsMiddleware(testableTime, featureMetricActor)
+  lazy val projectSchemaFetcher       = ProjectFetcherImpl(blockedProjectIds = Vector.empty, config)
 
-  bind[KinesisPublisher] identifiedBy "kinesisApiMetricsPublisher" toNonLazy kinesisApiMetricsPublisher
-  bind[QueueConsumer[SubscriptionRequest]] identifiedBy "subscription-requests-consumer" toNonLazy requestsQueueConsumer
-  bind[PubSubPublisher[SubscriptionSessionResponseV05]] identifiedBy "subscription-responses-publisher-05" toNonLazy responsePubSubPublisherV05
-  bind[PubSubPublisher[SubscriptionSessionResponse]] identifiedBy "subscription-responses-publisher-07" toNonLazy responsePubSubPublisherV07
-  bind[PubSubSubscriber[SchemaInvalidatedMessage]] identifiedBy "schema-invalidation-subscriber" toNonLazy invalidationSubscriber
-  bind[PubSubSubscriber[String]] identifiedBy "sss-events-subscriber" toNonLazy sssEventsSubscriber
-  bind[ApiMatrixFactory] toNonLazy apiMatrixFactory
-  bind[GlobalDatabaseManager] toNonLazy globalDatabaseManager
+  lazy val config: Config          = ConfigFactory.load()
+  lazy val testableTime            = new TestableTimeImplementation
+  lazy val apiMetricsFlushInterval = 10
+  lazy val clientAuth              = ClientAuthImpl()
+  implicit lazy val bugsnagger     = BugSnaggerImpl(sys.env.getOrElse("BUGSNAG_API_KEY", ""))
+  val environment: String          = sys.env.getOrElse("ENVIRONMENT", "local")
+  val serviceName: String          = sys.env.getOrElse("SERVICE_NAME", "local")
 
-  binding identifiedBy "cloudwatch" toNonLazy cloudwatch
-  binding identifiedBy "project-schema-fetcher" toNonLazy ProjectFetcherImpl(blockedProjectIds = Vector.empty, config)
-  binding identifiedBy "kinesis" toNonLazy kinesis
-  binding identifiedBy "featureMetricActor" to featureMetricActor
-  binding identifiedBy "api-metrics-middleware" toNonLazy apiMetricsMiddleware
 }
+
+//trait SimpleSubscriptionApiDependencies extends Module {
+//  implicit val system: ActorSystem
+//  implicit val materializer: ActorMaterializer
+//
+//  val invalidationSubscriber: PubSubSubscriber[SchemaInvalidatedMessage]
+//  val sssEventsSubscriber: PubSubSubscriber[String]
+//  val responsePubSubPublisherV05: PubSubPublisher[SubscriptionSessionResponseV05]
+//  val responsePubSubPublisherV07: PubSubPublisher[SubscriptionSessionResponse]
+//  val requestsQueueConsumer: QueueConsumer[SubscriptionRequest]
+//  val globalDatabaseManager: GlobalDatabaseManager
+//  val kinesisApiMetricsPublisher: KinesisPublisher
+//  val featureMetricActor: ActorRef
+//  val apiMetricsMiddleware: ApiMetricsMiddleware
+//
+//  lazy val config                  = ConfigFactory.load()
+//  lazy val testableTime            = new TestableTimeImplementation
+//  lazy val apiMetricsFlushInterval = 10
+//  lazy val clientAuth              = ClientAuthImpl()
+//  implicit lazy val bugsnagger     = BugSnaggerImpl(sys.env.getOrElse("BUGSNAG_API_KEY", ""))
+//
+//  bind[BugSnagger] toNonLazy bugsnagger
+//  bind[TestableTime] toNonLazy testableTime
+//  bind[ClientAuth] toNonLazy clientAuth
+//
+//  binding identifiedBy "config" toNonLazy config
+//  binding identifiedBy "actorSystem" toNonLazy system destroyWith (_.terminate())
+//  binding identifiedBy "dispatcher" toNonLazy system.dispatcher
+//  binding identifiedBy "actorMaterializer" toNonLazy materializer
+//  binding identifiedBy "environment" toNonLazy sys.env.getOrElse("ENVIRONMENT", "local")
+//  binding identifiedBy "service-name" toNonLazy sys.env.getOrElse("SERVICE_NAME", "local")
+//}
+//
+//case class SimpleSubscriptionDependencies()(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends SimpleSubscriptionApiDependencies {
+//  import cool.graph.subscriptions.protocol.Converters._
+//
+//  implicit val unmarshaller                   = (_: Array[Byte]) => SchemaInvalidated
+//  lazy val globalRabbitUri                    = sys.env("GLOBAL_RABBIT_URI")
+//  lazy val clusterLocalRabbitUri              = sys.env("RABBITMQ_URI")
+//  lazy val apiMatrixFactory: ApiMatrixFactory = ApiMatrixFactory(DefaultApiMatrix)
+//
+//  lazy val invalidationSubscriber: PubSubSubscriber[SchemaInvalidatedMessage] = RabbitAkkaPubSub.subscriber[SchemaInvalidatedMessage](
+//    globalRabbitUri,
+//    "project-schema-invalidation",
+//    durable = true
+//  )
+//
+//  lazy val sssEventsSubscriber = RabbitAkkaPubSub.subscriber[String](
+//    clusterLocalRabbitUri,
+//    "sss-events",
+//    durable = true
+//  )(bugsnagger, system, Conversions.Unmarshallers.ToString)
+//
+//  lazy val responsePubSubPublisher: PubSubPublisher[String] = RabbitAkkaPubSub.publisher[String](
+//    clusterLocalRabbitUri,
+//    "subscription-responses",
+//    durable = true
+//  )(bugsnagger, Conversions.Marshallers.FromString)
+//
+//  lazy val responsePubSubPublisherV05 = responsePubSubPublisher.map[SubscriptionSessionResponseV05](converterResponse05ToString)
+//  lazy val responsePubSubPublisherV07 = responsePubSubPublisher.map[SubscriptionSessionResponse](converterResponse07ToString)
+//  lazy val requestsQueueConsumer      = RabbitQueue.consumer[SubscriptionRequest](clusterLocalRabbitUri, "subscription-requests", durableExchange = true)
+//  lazy val cloudwatch                 = CloudwatchImpl()
+//  lazy val globalDatabaseManager      = GlobalDatabaseManager.initializeForSingleRegion(config)
+//  lazy val kinesis                    = AwsInitializers.createKinesis()
+//  lazy val kinesisApiMetricsPublisher = new KinesisPublisherImplementation(streamName = sys.env("KINESIS_STREAM_API_METRICS"), kinesis)
+//  lazy val featureMetricActor         = system.actorOf(Props(new FeatureMetricActor(kinesisApiMetricsPublisher, apiMetricsFlushInterval)))
+//  lazy val apiMetricsMiddleware       = new ApiMetricsMiddleware(testableTime, featureMetricActor)
+//
+//  bind[KinesisPublisher] identifiedBy "kinesisApiMetricsPublisher" toNonLazy kinesisApiMetricsPublisher
+//  bind[QueueConsumer[SubscriptionRequest]] identifiedBy "subscription-requests-consumer" toNonLazy requestsQueueConsumer
+//  bind[PubSubPublisher[SubscriptionSessionResponseV05]] identifiedBy "subscription-responses-publisher-05" toNonLazy responsePubSubPublisherV05
+//  bind[PubSubPublisher[SubscriptionSessionResponse]] identifiedBy "subscription-responses-publisher-07" toNonLazy responsePubSubPublisherV07
+//  bind[PubSubSubscriber[SchemaInvalidatedMessage]] identifiedBy "schema-invalidation-subscriber" toNonLazy invalidationSubscriber
+//  bind[PubSubSubscriber[String]] identifiedBy "sss-events-subscriber" toNonLazy sssEventsSubscriber
+//  bind[ApiMatrixFactory] toNonLazy apiMatrixFactory
+//  bind[GlobalDatabaseManager] toNonLazy globalDatabaseManager
+//
+//  binding identifiedBy "cloudwatch" toNonLazy cloudwatch
+//  binding identifiedBy "project-schema-fetcher" toNonLazy ProjectFetcherImpl(blockedProjectIds = Vector.empty, config)
+//  binding identifiedBy "kinesis" toNonLazy kinesis
+//  binding identifiedBy "featureMetricActor" to featureMetricActor
+//  binding identifiedBy "api-metrics-middleware" toNonLazy apiMetricsMiddleware
+//}

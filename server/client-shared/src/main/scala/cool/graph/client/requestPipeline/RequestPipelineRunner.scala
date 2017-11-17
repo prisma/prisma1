@@ -3,26 +3,25 @@ package cool.graph.client.requestPipeline
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import cool.graph.DataItem
+import cool.graph.client.ClientInjector
 import cool.graph.client.adapters.GraphcoolDataTypes
 import cool.graph.client.mutactions.validation.InputValueValidation
 import cool.graph.client.mutations.CoolArgs
 import cool.graph.client.schema.SchemaModelObjectTypesBuilder
 import cool.graph.shared.errors.UserAPIErrors.FieldCannotBeNull
-import cool.graph.shared.functions.EndpointResolver
 import cool.graph.shared.models.RequestPipelineOperation.RequestPipelineOperation
 import cool.graph.shared.models._
 import cool.graph.shared.mutactions.MutationTypes.{ArgumentValue, ArgumentValueList}
 import org.joda.time.{DateTime, DateTimeZone}
-import scaldi.{Injectable, Injector}
 import spray.json.{DefaultJsonProtocol, JsArray, JsBoolean, JsFalse, JsNull, JsNumber, JsObject, JsString, JsTrue, JsValue, JsonFormat}
 
 import scala.collection.immutable.ListMap
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-case class RequestPipelineRunner(requestId: String)(implicit val inj: Injector) extends Injectable {
-  implicit val system: ActorSystem             = inject[_root_.akka.actor.ActorSystem](identified by "actorSystem")
-  implicit val materializer: ActorMaterializer = inject[_root_.akka.stream.ActorMaterializer](identified by "actorMaterializer")
+case class RequestPipelineRunner(requestId: String)(implicit val injector: ClientInjector) {
+  implicit val system: ActorSystem             = injector.system
+  implicit val materializer: ActorMaterializer = injector.materializer
 
   // Transform arguments by executing function
   // original values are returned if no data returned by function
@@ -122,7 +121,7 @@ case class RequestPipelineRunner(requestId: String)(implicit val inj: Injector) 
   }
 }
 
-case class RpFunctionExecutor(requestId: String)(implicit val inj: Injector) extends Injectable {
+case class RpFunctionExecutor(requestId: String)(implicit injector: ClientInjector) {
 
   // GraphQL differentiates between null and undefined
   // null means explicit null, in our case it sets the value to null in the database
@@ -156,7 +155,7 @@ case class RpFunctionExecutor(requestId: String)(implicit val inj: Injector) ext
   }
 
   def execute_!(project: Project, model: Model, function: RequestPipelineFunction, values: List[ArgumentValue], originalArgs: Option[CoolArgs] = None)(
-      implicit inj: Injector): Future[FunctionSuccess] = {
+      implicit injector: ClientInjector): Future[FunctionSuccess] = {
     val functionExecutor = new FunctionExecutor()
 
     val originalArgsWithId = originalArgs.map { args =>
@@ -166,7 +165,7 @@ case class RpFunctionExecutor(requestId: String)(implicit val inj: Injector) ext
       }
     }
 
-    val endpointResolver          = inject[EndpointResolver](identified by "endpointResolver")
+    val endpointResolver          = injector.endpointResolver
     val context: Map[String, Any] = FunctionExecutor.createEventContext(project, "", headers = Map.empty, None, endpointResolver)
 
     val argsAndContext = Map(

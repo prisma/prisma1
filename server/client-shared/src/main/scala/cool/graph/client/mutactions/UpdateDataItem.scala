@@ -4,6 +4,7 @@ import java.sql.SQLIntegrityConstraintViolationException
 
 import cool.graph.Types.Id
 import cool.graph._
+import cool.graph.client.ClientInjector
 import cool.graph.client.database.{DataResolver, DatabaseMutationBuilder}
 import cool.graph.client.database.GetFieldFromSQLUniqueException.getField
 import cool.graph.client.mutactions.validation.InputValueValidation
@@ -27,7 +28,7 @@ case class UpdateDataItem(project: Project,
                           previousValues: DataItem,
                           requestId: Option[String] = None,
                           originalArgs: Option[CoolArgs] = None,
-                          itemExists: Boolean)(implicit val inj: Injector)
+                          itemExists: Boolean)(implicit injector: ClientInjector)
     extends ClientSqlDataChangeMutaction {
 
   val pipelineRunner = new RequestPipelineRunner(requestId.getOrElse(""))
