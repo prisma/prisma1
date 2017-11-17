@@ -1,6 +1,7 @@
 package cool.graph.fileupload
 
 import akka.actor.{ActorRefFactory, ActorSystem, Props}
+import akka.stream.ActorMaterializer
 import com.amazonaws.auth.{AWSStaticCredentialsProvider, BasicAWSCredentials}
 import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration
 import com.amazonaws.services.kinesis.{AmazonKinesis, AmazonKinesisClientBuilder}
@@ -12,11 +13,56 @@ import cool.graph.client._
 import cool.graph.client.authorization.{ClientAuth, ClientAuthImpl}
 import cool.graph.client.finder.ProjectFetcherImpl
 import cool.graph.client.metrics.ApiMetricsMiddleware
+import cool.graph.client.server.{GraphQlRequestHandler, ProjectSchemaBuilder}
+import cool.graph.messagebus.{PubSubPublisher, QueuePublisher}
+import cool.graph.shared.ApiMatrixFactory
 import cool.graph.shared.database.GlobalDatabaseManager
 import cool.graph.shared.externalServices.{KinesisPublisher, KinesisPublisherImplementation, TestableTime, TestableTimeImplementation}
+import cool.graph.shared.functions.{EndpointResolver, FunctionEnvironment}
+import cool.graph.webhook.Webhook
 import scaldi.Module
 
+case class FileUploadInjector(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends ClientInjectorImpl {
+
+  override implicit lazy val injector: FileUploadInjector = this
+  implicit lazy val toScaldi: Module = {
+    val outer = this
+    new Module {
+      binding identifiedBy "config" toNonLazy outer.config
+      binding identifiedBy "actorSystem" toNonLazy outer.system
+      binding identifiedBy "dispatcher" toNonLazy outer.system.dispatcher
+      binding identifiedBy "actorMaterializer" toNonLazy outer.materializer
+      bind[GraphQlRequestHandler] identifiedBy "simple-gql-request-handler" toNonLazy outer.graphQlRequestHandler
+      bind[ProjectSchemaBuilder] identifiedBy "simple-schema-builder" toNonLazy outer.projectSchemaBuilder
+      binding identifiedBy "project-schema-fetcher" toNonLazy outer.projectSchemaFetcher
+      binding identifiedBy "cloudwatch" toNonLazy outer.cloudwatch
+      binding identifiedBy "kinesis" toNonLazy outer.kinesis
+      binding identifiedBy "api-metrics-middleware" toNonLazy outer.apiMetricsMiddleware
+      binding identifiedBy "featureMetricActor" to outer.featureMetricActor
+      binding identifiedBy "s3" toNonLazy outer.s3
+      binding identifiedBy "s3-fileupload" toNonLazy outer.s3Fileupload
+      bind[EndpointResolver] identifiedBy "endpointResolver" toNonLazy outer.endpointResolver
+      bind[QueuePublisher[String]] identifiedBy "logsPublisher" toNonLazy outer.logsPublisher
+      bind[QueuePublisher[Webhook]] identifiedBy "webhookPublisher" toNonLazy outer.webhookPublisher
+      bind[PubSubPublisher[String]] identifiedBy "sss-events-publisher" toNonLazy outer.sssEventsPublisher
+      bind[String] identifiedBy "request-prefix" toNonLazy outer.requestPrefix
+      bind[KinesisPublisher] identifiedBy "kinesisAlgoliaSyncQueriesPublisher" toNonLazy outer.kinesisAlgoliaSyncQueriesPublisher
+      bind[KinesisPublisher] identifiedBy "kinesisApiMetricsPublisher" toNonLazy outer.kinesisApiMetricsPublisher
+      bind[GlobalDatabaseManager] toNonLazy outer.globalDatabaseManager
+      bind[ApiMatrixFactory] toNonLazy outer.apiMatrixFactory
+      bind[FunctionEnvironment] toNonLazy outer.functionEnvironment
+    }
+  }
+
+  lazy val deferredResolver      = ???
+  lazy val projectSchemaBuilder  = ???
+  lazy val graphQlRequestHandler = ???
+}
+
 class FileuploadServices(implicit _system: ActorRefFactory, system: ActorSystem, implicit val materializer: akka.stream.ActorMaterializer) extends Module {
+
+  override lazy val injector = FileUploadInjector
+
   lazy val config                  = ConfigFactory.load()
   lazy val testableTime            = new TestableTimeImplementation
   lazy val apiMetricsFlushInterval = 10

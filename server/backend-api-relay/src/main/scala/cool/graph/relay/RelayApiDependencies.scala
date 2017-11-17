@@ -1,32 +1,44 @@
 package cool.graph.relay
 
-import akka.actor.{ActorSystem, Props}
+import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import com.amazonaws.auth.{AWSStaticCredentialsProvider, BasicAWSCredentials}
-import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration
-import com.amazonaws.services.kinesis.{AmazonKinesis, AmazonKinesisClientBuilder}
-import cool.graph.aws.AwsInitializers
-import cool.graph.aws.cloudwatch.CloudwatchImpl
 import cool.graph.client._
 import cool.graph.client.database.{DeferredResolverProvider, RelayManyModelDeferredResolver, RelayToManyDeferredResolver}
-import cool.graph.client.finder.{CachedProjectFetcherImpl, ProjectFetcherImpl, RefreshableProjectFetcher}
-import cool.graph.client.metrics.ApiMetricsMiddleware
 import cool.graph.client.server.{GraphQlRequestHandler, GraphQlRequestHandlerImpl, ProjectSchemaBuilder}
-import cool.graph.messagebus.Conversions.{ByteUnmarshaller, Unmarshallers}
-import cool.graph.messagebus.pubsub.rabbit.{RabbitAkkaPubSub, RabbitAkkaPubSubSubscriber}
-import cool.graph.messagebus.queue.rabbit.RabbitQueue
-import cool.graph.messagebus.{Conversions, PubSubPublisher, QueuePublisher}
+import cool.graph.messagebus.{PubSubPublisher, QueuePublisher}
 import cool.graph.relay.schema.RelaySchemaBuilder
 import cool.graph.shared.database.GlobalDatabaseManager
-import cool.graph.shared.externalServices.{KinesisPublisher, KinesisPublisherImplementation}
-import cool.graph.shared.functions.lambda.LambdaFunctionEnvironment
-import cool.graph.shared.functions.{EndpointResolver, FunctionEnvironment, LiveEndpointResolver}
+import cool.graph.shared.externalServices.KinesisPublisher
+import cool.graph.shared.functions.{EndpointResolver, FunctionEnvironment}
 import cool.graph.webhook.Webhook
 import scaldi.Module
 
-import scala.util.Try
-
 case class RelayInjector(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends ClientInjectorImpl {
+  override implicit lazy val injector: RelayInjector = this
+
+  implicit lazy val toScaldi: Module = {
+    val outer = this
+    new Module {
+      bind[GraphQlRequestHandler] identifiedBy "simple-gql-request-handler" toNonLazy outer.graphQlRequestHandler
+      bind[ProjectSchemaBuilder] identifiedBy "simple-schema-builder" toNonLazy outer.projectSchemaBuilder
+      binding identifiedBy "project-schema-fetcher" toNonLazy outer.projectSchemaFetcher
+      binding identifiedBy "cloudwatch" toNonLazy outer.cloudwatch
+      binding identifiedBy "kinesis" toNonLazy outer.kinesis
+      binding identifiedBy "api-metrics-middleware" toNonLazy outer.apiMetricsMiddleware
+      binding identifiedBy "featureMetricActor" to outer.featureMetricActor
+      binding identifiedBy "s3" toNonLazy outer.s3
+      binding identifiedBy "s3-fileupload" toNonLazy outer.s3Fileupload
+      bind[EndpointResolver] identifiedBy "endpointResolver" toNonLazy outer.endpointResolver
+      bind[QueuePublisher[String]] identifiedBy "logsPublisher" toNonLazy outer.logsPublisher
+      bind[QueuePublisher[Webhook]] identifiedBy "webhookPublisher" toNonLazy outer.webhookPublisher
+      bind[PubSubPublisher[String]] identifiedBy "sss-events-publisher" toNonLazy outer.sssEventsPublisher
+      bind[String] identifiedBy "request-prefix" toNonLazy outer.requestPrefix
+      bind[KinesisPublisher] identifiedBy "kinesisAlgoliaSyncQueriesPublisher" toNonLazy outer.kinesisAlgoliaSyncQueriesPublisher
+      bind[KinesisPublisher] identifiedBy "kinesisApiMetricsPublisher" toNonLazy outer.kinesisApiMetricsPublisher
+      bind[FunctionEnvironment] toNonLazy outer.functionEnvironment
+      bind[GlobalDatabaseManager] toNonLazy outer.globalDatabaseManager
+    }
+  }
 
   lazy val deferredResolver: DeferredResolverProvider[_, UserContext] =
     new DeferredResolverProvider(new RelayToManyDeferredResolver, new RelayManyModelDeferredResolver)
@@ -40,32 +52,6 @@ case class RelayInjector(implicit val system: ActorSystem, val materializer: Act
     apiMetricsMiddleware = apiMetricsMiddleware,
     deferredResolver = deferredResolver
   )
-  implicit val toScaldi: Module = {
-    val outer = this
-    new Module {
-      bind[GraphQlRequestHandler] identifiedBy "simple-gql-request-handler" toNonLazy outer.graphQlRequestHandler
-      bind[ProjectSchemaBuilder] identifiedBy "simple-schema-builder" toNonLazy outer.projectSchemaBuilder
-      binding identifiedBy "project-schema-fetcher" toNonLazy outer.projectSchemaFetcher
-      binding identifiedBy "cloudwatch" toNonLazy outer.cloudwatch
-      binding identifiedBy "kinesis" toNonLazy outer.kinesis
-      binding identifiedBy "api-metrics-middleware" toNonLazy outer.apiMetricsMiddleware
-      binding identifiedBy "featureMetricActor" to outer.featureMetricActor
-      binding identifiedBy "s3" toNonLazy outer.s3
-      binding identifiedBy "s3-fileupload" toNonLazy outer.s3Fileupload
-
-      bind[FunctionEnvironment] toNonLazy outer.functionEnvironment
-      bind[EndpointResolver] identifiedBy "endpointResolver" toNonLazy outer.endpointResolver
-      bind[QueuePublisher[String]] identifiedBy "logsPublisher" toNonLazy outer.logsPublisher
-      bind[QueuePublisher[Webhook]] identifiedBy "webhookPublisher" toNonLazy outer.webhookPublisher
-      bind[PubSubPublisher[String]] identifiedBy "sss-events-publisher" toNonLazy outer.sssEventsPublisher
-      bind[String] identifiedBy "request-prefix" toNonLazy outer.requestPrefix
-      bind[GlobalDatabaseManager] toNonLazy outer.globalDatabaseManager
-      bind[KinesisPublisher] identifiedBy "kinesisAlgoliaSyncQueriesPublisher" toNonLazy outer.kinesisAlgoliaSyncQueriesPublisher
-      bind[KinesisPublisher] identifiedBy "kinesisApiMetricsPublisher" toNonLazy outer.kinesisApiMetricsPublisher
-    }
-  }
-  override implicit val injector: RelayInjector = this
-
 }
 
 //trait RelayApiClientDependencies extends CommonClientDependencies {

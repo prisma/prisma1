@@ -15,8 +15,8 @@ import scaldi.Module
 
 case class SimpleInjector(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends ClientInjectorImpl {
 
-  override implicit val injector: SimpleInjector = this
-  implicit val toScaldi: Module = {
+  override implicit lazy val injector: SimpleInjector = this
+  implicit lazy val toScaldi: Module = {
     val outer = this
     new Module {
       binding identifiedBy "config" toNonLazy outer.config
@@ -45,12 +45,12 @@ case class SimpleInjector(implicit val system: ActorSystem, val materializer: Ac
     }
   }
 
-  val deferredResolver: DeferredResolverProvider[_, UserContext] =
+  lazy val deferredResolver: DeferredResolverProvider[_, UserContext] =
     new DeferredResolverProvider(new SimpleToManyDeferredResolver, new SimpleManyModelDeferredResolver)
 
-  val projectSchemaBuilder = ProjectSchemaBuilder(project => new SimpleSchemaBuilder(project).build())
+  lazy val projectSchemaBuilder = ProjectSchemaBuilder(project => new SimpleSchemaBuilder(project).build())
 
-  val graphQlRequestHandler = GraphQlRequestHandlerImpl(
+  lazy val graphQlRequestHandler = GraphQlRequestHandlerImpl(
     errorHandlerFactory = errorHandlerFactory,
     log = log,
     apiVersionMetric = FeatureMetric.ApiSimple,

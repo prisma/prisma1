@@ -77,7 +77,7 @@ trait ClientInjectorImpl extends ClientInjector with LazyLogging {
   implicit val bugsnagger: BugSnagger       = BugSnaggerImpl(sys.env("BUGSNAG_API_KEY"))
 
   implicit val toScaldi: Module
-  implicit val injector: ClientInjectorImpl = this
+  implicit lazy val injector: ClientInjectorImpl = this
 
   override lazy val projectSchemaInvalidationSubscriber: RabbitAkkaPubSubSubscriber[String] = {
     val globalRabbitUri                                 = sys.env("GLOBAL_RABBIT_URI")
