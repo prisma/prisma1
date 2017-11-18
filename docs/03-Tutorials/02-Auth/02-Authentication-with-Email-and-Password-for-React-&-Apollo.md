@@ -722,7 +722,7 @@ To properly render the login-state of the user, first implement the `_isLoggedIn
 
 ```js(path="src/components/App.js")
 _isLoggedIn = () => {
-  return this.props.data.authenticatedUser && this.props.data.authenticatedUser.id !== ''
+  return this.props.data.loggedInUser && this.props.data.loggedInUser.id !== ''
 }
 ```
 
