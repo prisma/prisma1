@@ -33,6 +33,7 @@ Everytime you upload a file to Graphcool, a new `File` node is created that cont
 * `id`: the [familiar system field](!alias-eiroozae8u#id-field)
 * `secret`: a unique, unguessable secret that allows access to the file
 * `name`: the file name
+* `size`: the file size
 * `url`: the url of the file where it can be accessed. The url contains of the project id and the file `secret`, so is unguessable as well.
 * `contentType`: the contentType of the file. It is determined based on the file name.
 
