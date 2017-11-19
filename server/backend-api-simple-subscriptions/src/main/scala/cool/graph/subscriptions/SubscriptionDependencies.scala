@@ -2,6 +2,7 @@ package cool.graph.subscriptions
 
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.stream.ActorMaterializer
+import com.amazonaws.services.kinesis.AmazonKinesis
 import com.amazonaws.services.s3.AmazonS3
 import com.typesafe.config.{Config, ConfigFactory}
 import cool.graph.aws.AwsInitializers
@@ -16,7 +17,7 @@ import cool.graph.client.server.GraphQlRequestHandlerImpl
 import cool.graph.messagebus.Conversions.{ByteMarshaller, ByteUnmarshaller, Unmarshallers}
 import cool.graph.messagebus._
 import cool.graph.messagebus.pubsub.rabbit.{RabbitAkkaPubSub, RabbitAkkaPubSubPublisher, RabbitAkkaPubSubSubscriber}
-import cool.graph.messagebus.queue.rabbit.{RabbitQueue, RabbitQueuePublisher}
+import cool.graph.messagebus.queue.rabbit.{RabbitQueue, RabbitQueueConsumer, RabbitQueuePublisher}
 import cool.graph.shared.database.GlobalDatabaseManager
 import cool.graph.shared.externalServices.{KinesisPublisher, KinesisPublisherImplementation, TestableTime, TestableTimeImplementation}
 import cool.graph.shared.functions.LiveEndpointResolver
@@ -25,6 +26,7 @@ import cool.graph.shared.{ApiMatrixFactory, DefaultApiMatrix}
 import cool.graph.subscriptions.protocol.SubscriptionProtocolV05.Responses.SubscriptionSessionResponseV05
 import cool.graph.subscriptions.protocol.SubscriptionProtocolV07.Responses.SubscriptionSessionResponse
 import cool.graph.subscriptions.protocol.SubscriptionRequest
+import cool.graph.subscriptions.resolving.SubscriptionsManagerForProject
 import cool.graph.subscriptions.resolving.SubscriptionsManagerForProject.{SchemaInvalidated, SchemaInvalidatedMessage}
 import cool.graph.util.ErrorHandlerFactory
 import cool.graph.webhook.{Webhook, WebhookCallerImplementation}
@@ -61,13 +63,13 @@ trait SimpleSubscriptionInjector extends ClientInjector {
 class SimpleSubscriptionInjectorImpl(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends SimpleSubscriptionInjector {
   import cool.graph.subscriptions.protocol.Converters._
 
-  implicit lazy val injector         = this
-  implicit lazy val toScaldi: Module = new Module {}
+  implicit lazy val injector: SimpleSubscriptionInjectorImpl = this
+  implicit lazy val toScaldi: Module                         = new Module {}
 
-  implicit lazy val unmarshaller              = (_: Array[Byte]) => SchemaInvalidated
-  lazy val globalRabbitUri                    = sys.env("GLOBAL_RABBIT_URI")
-  lazy val clusterLocalRabbitUri              = sys.env("RABBITMQ_URI")
-  lazy val apiMatrixFactory: ApiMatrixFactory = ApiMatrixFactory(DefaultApiMatrix)
+  implicit lazy val unmarshaller: Array[Byte] => SubscriptionsManagerForProject.SchemaInvalidated.type = (_: Array[Byte]) => SchemaInvalidated
+  lazy val globalRabbitUri                                                                             = sys.env("GLOBAL_RABBIT_URI")
+  lazy val clusterLocalRabbitUri                                                                       = sys.env("RABBITMQ_URI")
+  lazy val apiMatrixFactory: ApiMatrixFactory                                                          = ApiMatrixFactory(DefaultApiMatrix)
 
   lazy val invalidationSubscriber: PubSubSubscriber[SchemaInvalidatedMessage] = RabbitAkkaPubSub.subscriber[SchemaInvalidatedMessage](
     globalRabbitUri,
@@ -106,7 +108,7 @@ class SimpleSubscriptionInjectorImpl(implicit val system: ActorSystem, val mater
   lazy val deferredResolver: DeferredResolverProvider[_, UserContext] =
     new DeferredResolverProvider(new SimpleToManyDeferredResolver, new SimpleManyModelDeferredResolver)
 
-  lazy val projectSchemaBuilder = ???
+  lazy val projectSchemaBuilder: Nothing = ???
   lazy val graphQlRequestHandler = GraphQlRequestHandlerImpl(
     errorHandlerFactory = errorHandlerFactory,
     log = log,
@@ -125,7 +127,7 @@ class SimpleSubscriptionInjectorImpl(implicit val system: ActorSystem, val mater
   lazy val s3: AmazonS3                                 = AwsInitializers.createS3()
   lazy val s3Fileupload: AmazonS3                       = AwsInitializers.createS3Fileupload()
 
-  lazy val sssEventsSubscriber = RabbitAkkaPubSub.subscriber[String](
+  lazy val sssEventsSubscriber: RabbitAkkaPubSubSubscriber[String] = RabbitAkkaPubSub.subscriber[String](
     clusterLocalRabbitUri,
     "sss-events",
     durable = true
@@ -137,24 +139,27 @@ class SimpleSubscriptionInjectorImpl(implicit val system: ActorSystem, val mater
     durable = true
   )(bugsnagger, Conversions.Marshallers.FromString)
 
-  lazy val responsePubSubPublisherV05 = responsePubSubPublisher.map[SubscriptionSessionResponseV05](converterResponse05ToString)
-  lazy val responsePubSubPublisherV07 = responsePubSubPublisher.map[SubscriptionSessionResponse](converterResponse07ToString)
-  lazy val requestsQueueConsumer      = RabbitQueue.consumer[SubscriptionRequest](clusterLocalRabbitUri, "subscription-requests", durableExchange = true)
-  lazy val cloudwatch                 = CloudwatchImpl()
-  lazy val globalDatabaseManager      = GlobalDatabaseManager.initializeForSingleRegion(config)
-  lazy val kinesis                    = AwsInitializers.createKinesis()
-  lazy val kinesisApiMetricsPublisher = new KinesisPublisherImplementation(streamName = sys.env("KINESIS_STREAM_API_METRICS"), kinesis)
-  lazy val featureMetricActor         = system.actorOf(Props(new FeatureMetricActor(kinesisApiMetricsPublisher, apiMetricsFlushInterval)))
-  lazy val apiMetricsMiddleware       = new ApiMetricsMiddleware(testableTime, featureMetricActor)
-  lazy val projectSchemaFetcher       = ProjectFetcherImpl(blockedProjectIds = Vector.empty, config)
+  lazy val responsePubSubPublisherV05: PubSubPublisher[SubscriptionSessionResponseV05] =
+    responsePubSubPublisher.map[SubscriptionSessionResponseV05](converterResponse05ToString)
+  lazy val responsePubSubPublisherV07: PubSubPublisher[SubscriptionSessionResponse] =
+    responsePubSubPublisher.map[SubscriptionSessionResponse](converterResponse07ToString)
+  lazy val requestsQueueConsumer: RabbitQueueConsumer[SubscriptionRequest] =
+    RabbitQueue.consumer[SubscriptionRequest](clusterLocalRabbitUri, "subscription-requests", durableExchange = true)
+  lazy val cloudwatch                                   = CloudwatchImpl()
+  lazy val globalDatabaseManager: GlobalDatabaseManager = GlobalDatabaseManager.initializeForSingleRegion(config)
+  lazy val kinesis: AmazonKinesis                       = AwsInitializers.createKinesis()
+  lazy val kinesisApiMetricsPublisher: KinesisPublisher = new KinesisPublisherImplementation(streamName = sys.env("KINESIS_STREAM_API_METRICS"), kinesis)
+  lazy val featureMetricActor: ActorRef                 = system.actorOf(Props(new FeatureMetricActor(kinesisApiMetricsPublisher, apiMetricsFlushInterval)))
+  lazy val apiMetricsMiddleware                         = new ApiMetricsMiddleware(testableTime, featureMetricActor)
+  lazy val projectSchemaFetcher                         = ProjectFetcherImpl(blockedProjectIds = Vector.empty, config)
 
-  lazy val config: Config          = ConfigFactory.load()
-  lazy val testableTime            = new TestableTimeImplementation
-  lazy val apiMetricsFlushInterval = 10
-  lazy val clientAuth              = ClientAuthImpl()
-  implicit lazy val bugsnagger     = BugSnaggerImpl(sys.env.getOrElse("BUGSNAG_API_KEY", ""))
-  lazy val environment: String     = sys.env.getOrElse("ENVIRONMENT", "local")
-  lazy val serviceName: String     = sys.env.getOrElse("SERVICE_NAME", "local")
+  lazy val config: Config                      = ConfigFactory.load()
+  lazy val testableTime                        = new TestableTimeImplementation
+  lazy val apiMetricsFlushInterval             = 10
+  lazy val clientAuth                          = ClientAuthImpl()
+  implicit lazy val bugsnagger: BugSnaggerImpl = BugSnaggerImpl(sys.env.getOrElse("BUGSNAG_API_KEY", ""))
+  lazy val environment: String                 = sys.env.getOrElse("ENVIRONMENT", "local")
+  lazy val serviceName: String                 = sys.env.getOrElse("SERVICE_NAME", "local")
 
   def destroy: Unit = {
     materializer.shutdown()

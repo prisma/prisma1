@@ -37,6 +37,8 @@ trait ClientInjector {
   implicit val materializer: ActorMaterializer
   implicit val bugsnagger: BugSnagger
   implicit val dispatcher: ExecutionContext
+  implicit val injector: ClientInjector
+  implicit val toScaldi: Module
 
   val projectSchemaInvalidationSubscriber: PubSubSubscriber[String]
   val projectSchemaFetcher: RefreshableProjectFetcher
@@ -67,20 +69,15 @@ trait ClientInjector {
   val s3: AmazonS3
   val s3Fileupload: AmazonS3
 
-  implicit val toScaldi: Module
 }
 
 trait ClientInjectorImpl extends ClientInjector with LazyLogging {
-  implicit val system: ActorSystem
-  implicit val materializer: ActorMaterializer
-  implicit val dispatcher: ExecutionContext = system.dispatcher
-  implicit val bugsnagger: BugSnagger       = BugSnaggerImpl(sys.env("BUGSNAG_API_KEY"))
+  implicit lazy val bugsnagger: BugSnagger       = BugSnaggerImpl(sys.env("BUGSNAG_API_KEY"))
+  implicit lazy val dispatcher: ExecutionContext = system.dispatcher
 
-  implicit val toScaldi: Module
-  implicit lazy val injector: ClientInjectorImpl = this
+  val globalRabbitUri: String = sys.env.getOrElse("GLOBAL_RABBIT_URI", sys.error("GLOBAL_RABBIT_URI required for schema invalidation"))
 
-  override lazy val projectSchemaInvalidationSubscriber: RabbitAkkaPubSubSubscriber[String] = {
-    val globalRabbitUri                                 = sys.env("GLOBAL_RABBIT_URI")
+  override lazy val projectSchemaInvalidationSubscriber: PubSubSubscriber[String] = {
     implicit val unmarshaller: ByteUnmarshaller[String] = Unmarshallers.ToString
 
     RabbitAkkaPubSub.subscriber[String](globalRabbitUri, "project-schema-invalidation", durable = true)
@@ -93,7 +90,7 @@ trait ClientInjectorImpl extends ClientInjector with LazyLogging {
     projectSchemaInvalidationSubscriber = projectSchemaInvalidationSubscriber
   )
 
-  override lazy val functionEnvironment = LambdaFunctionEnvironment(
+  override lazy val functionEnvironment: FunctionEnvironment = LambdaFunctionEnvironment(
     sys.env.getOrElse("LAMBDA_AWS_ACCESS_KEY_ID", "whatever"),
     sys.env.getOrElse("LAMBDA_AWS_SECRET_ACCESS_KEY", "whatever")
   )
@@ -108,28 +105,29 @@ trait ClientInjectorImpl extends ClientInjector with LazyLogging {
       .build
   }
 
-  lazy val webhookCaller = new WebhookCallerImplementation()
+  lazy val webhookCaller: WebhookCaller = new WebhookCallerImplementation()
 
-  lazy val webhookPublisher: RabbitQueuePublisher[cool.graph.webhook.Webhook] =
-    RabbitQueue.publisher(clusterLocalRabbitUri, "webhooks")(bugsnagger, Webhook.marshaller)
-  lazy val sssEventsPublisher: RabbitAkkaPubSubPublisher[String] =
-    RabbitAkkaPubSub.publisher[String](clusterLocalRabbitUri, "sss-events", durable = true)(bugsnagger, fromStringMarshaller)
+  lazy val webhookPublisher: QueuePublisher[Webhook] =
+    RabbitQueue.publisher(rabbitMQUri, "webhooks")(bugsnagger, Webhook.marshaller)
+  lazy val sssEventsPublisher: PubSubPublisher[String] =
+    RabbitAkkaPubSub.publisher[String](rabbitMQUri, "sss-events", durable = true)(bugsnagger, fromStringMarshaller)
+  lazy val kinesisAlgoliaSyncQueriesPublisher: KinesisPublisher =
+    new KinesisPublisherImplementation(streamName = sys.env("KINESIS_STREAM_ALGOLIA_SYNC_QUERY"), kinesis)
+  lazy val kinesisApiMetricsPublisher: KinesisPublisher = new KinesisPublisherImplementation(streamName = sys.env("KINESIS_STREAM_API_METRICS"), kinesis)
 
-  lazy val clusterLocalRabbitUri                        = sys.env("RABBITMQ_URI")
+  lazy val rabbitMQUri: String                          = sys.env("RABBITMQ_URI")
   lazy val fromStringMarshaller: ByteMarshaller[String] = Conversions.Marshallers.FromString
   lazy val globalDatabaseManager: GlobalDatabaseManager = GlobalDatabaseManager.initializeForSingleRegion(config)
-  lazy val endpointResolver                             = LiveEndpointResolver()
-  lazy val logsPublisher: RabbitQueuePublisher[String]  = RabbitQueue.publisher[String](clusterLocalRabbitUri, "function-logs")(bugsnagger, fromStringMarshaller)
+  lazy val endpointResolver: EndpointResolver           = LiveEndpointResolver()
+  lazy val logsPublisher: QueuePublisher[String]        = RabbitQueue.publisher[String](rabbitMQUri, "function-logs")(bugsnagger, fromStringMarshaller)
   lazy val requestPrefix: String                        = sys.env.getOrElse("AWS_REGION", sys.error("AWS Region not found."))
-  lazy val cloudwatch                                   = CloudwatchImpl()
-  lazy val kinesisAlgoliaSyncQueriesPublisher           = new KinesisPublisherImplementation(streamName = sys.env("KINESIS_STREAM_ALGOLIA_SYNC_QUERY"), kinesis)
-  lazy val kinesisApiMetricsPublisher                   = new KinesisPublisherImplementation(streamName = sys.env("KINESIS_STREAM_API_METRICS"), kinesis)
+  lazy val cloudwatch: Cloudwatch                       = CloudwatchImpl()
   lazy val featureMetricActor: ActorRef                 = system.actorOf(Props(new FeatureMetricActor(kinesisApiMetricsPublisher, apiMetricsFlushInterval)))
-  lazy val apiMetricsMiddleware                         = new ApiMetricsMiddleware(testableTime, featureMetricActor)
+  lazy val apiMetricsMiddleware: ApiMetricsMiddleware   = new ApiMetricsMiddleware(testableTime, featureMetricActor)
   lazy val config: Config                               = ConfigFactory.load()
-  lazy val testableTime                                 = new TestableTimeImplementation
-  lazy val apiMetricsFlushInterval                      = 10
-  lazy val clientAuth                                   = ClientAuthImpl()
+  lazy val testableTime: TestableTime                   = new TestableTimeImplementation
+  lazy val apiMetricsFlushInterval: Int                 = 10
+  lazy val clientAuth: ClientAuth                       = ClientAuthImpl()
   lazy val log: String => Unit                          = (x: String) => logger.info(x)
   lazy val errorHandlerFactory                          = ErrorHandlerFactory(log, cloudwatch, bugsnagger)
   lazy val apiMatrixFactory                             = ApiMatrixFactory(DefaultApiMatrix)
