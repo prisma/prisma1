@@ -156,6 +156,11 @@ class SimpleSubscriptionInjectorImpl(implicit val system: ActorSystem, val mater
   lazy val environment: String     = sys.env.getOrElse("ENVIRONMENT", "local")
   lazy val serviceName: String     = sys.env.getOrElse("SERVICE_NAME", "local")
 
+  def destroy: Unit = {
+    materializer.shutdown()
+    system.terminate()
+  }
+
 }
 //
 //trait SimpleSubscriptionApiDependencies extends Module {
