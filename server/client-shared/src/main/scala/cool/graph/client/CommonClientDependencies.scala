@@ -17,8 +17,8 @@ import cool.graph.client.finder.{CachedProjectFetcherImpl, ProjectFetcherImpl, R
 import cool.graph.client.metrics.ApiMetricsMiddleware
 import cool.graph.client.server.{GraphQlRequestHandler, ProjectSchemaBuilder}
 import cool.graph.messagebus.Conversions.{ByteMarshaller, ByteUnmarshaller, Unmarshallers}
-import cool.graph.messagebus.pubsub.rabbit.{RabbitAkkaPubSub, RabbitAkkaPubSubPublisher, RabbitAkkaPubSubSubscriber}
-import cool.graph.messagebus.queue.rabbit.{RabbitQueue, RabbitQueuePublisher}
+import cool.graph.messagebus.pubsub.rabbit.RabbitAkkaPubSub
+import cool.graph.messagebus.queue.rabbit.RabbitQueue
 import cool.graph.messagebus.{Conversions, PubSubPublisher, PubSubSubscriber, QueuePublisher}
 import cool.graph.shared.database.GlobalDatabaseManager
 import cool.graph.shared.externalServices.{KinesisPublisher, KinesisPublisherImplementation, TestableTime, TestableTimeImplementation}
@@ -68,53 +68,14 @@ trait ClientInjector {
   val graphQlRequestHandler: GraphQlRequestHandler
   val s3: AmazonS3
   val s3Fileupload: AmazonS3
-
 }
 
 trait ClientInjectorImpl extends ClientInjector with LazyLogging {
   implicit lazy val bugsnagger: BugSnagger       = BugSnaggerImpl(sys.env("BUGSNAG_API_KEY"))
   implicit lazy val dispatcher: ExecutionContext = system.dispatcher
 
-  val globalRabbitUri: String = sys.env.getOrElse("GLOBAL_RABBIT_URI", sys.error("GLOBAL_RABBIT_URI required for schema invalidation"))
-
-  override lazy val projectSchemaInvalidationSubscriber: PubSubSubscriber[String] = {
-    implicit val unmarshaller: ByteUnmarshaller[String] = Unmarshallers.ToString
-
-    RabbitAkkaPubSub.subscriber[String](globalRabbitUri, "project-schema-invalidation", durable = true)
-  }
-
-  lazy val blockedProjectIds: Vector[String] = Try { sys.env("BLOCKED_PROJECT_IDS").split(",").toVector }.getOrElse(Vector.empty)
-
-  override lazy val projectSchemaFetcher: RefreshableProjectFetcher = CachedProjectFetcherImpl(
-    projectFetcher = ProjectFetcherImpl(blockedProjectIds, config),
-    projectSchemaInvalidationSubscriber = projectSchemaInvalidationSubscriber
-  )
-
-  override lazy val functionEnvironment: FunctionEnvironment = LambdaFunctionEnvironment(
-    sys.env.getOrElse("LAMBDA_AWS_ACCESS_KEY_ID", "whatever"),
-    sys.env.getOrElse("LAMBDA_AWS_SECRET_ACCESS_KEY", "whatever")
-  )
-
-  lazy val kinesis: AmazonKinesis = {
-    val credentials =
-      new BasicAWSCredentials(sys.env("AWS_ACCESS_KEY_ID"), sys.env("AWS_SECRET_ACCESS_KEY"))
-
-    AmazonKinesisClientBuilder.standard
-      .withCredentials(new AWSStaticCredentialsProvider(credentials))
-      .withEndpointConfiguration(new EndpointConfiguration(sys.env("KINESIS_ENDPOINT"), sys.env("AWS_REGION")))
-      .build
-  }
-
-  lazy val webhookCaller: WebhookCaller = new WebhookCallerImplementation()
-
-  lazy val webhookPublisher: QueuePublisher[Webhook] =
-    RabbitQueue.publisher(rabbitMQUri, "webhooks")(bugsnagger, Webhook.marshaller)
-  lazy val sssEventsPublisher: PubSubPublisher[String] =
-    RabbitAkkaPubSub.publisher[String](rabbitMQUri, "sss-events", durable = true)(bugsnagger, fromStringMarshaller)
-  lazy val kinesisAlgoliaSyncQueriesPublisher: KinesisPublisher =
-    new KinesisPublisherImplementation(streamName = sys.env("KINESIS_STREAM_ALGOLIA_SYNC_QUERY"), kinesis)
-  lazy val kinesisApiMetricsPublisher: KinesisPublisher = new KinesisPublisherImplementation(streamName = sys.env("KINESIS_STREAM_API_METRICS"), kinesis)
-
+  val globalRabbitUri: String                           = sys.env.getOrElse("GLOBAL_RABBIT_URI", sys.error("GLOBAL_RABBIT_URI required for schema invalidation"))
+  lazy val blockedProjectIds: Vector[String]            = Try { sys.env("BLOCKED_PROJECT_IDS").split(",").toVector }.getOrElse(Vector.empty)
   lazy val rabbitMQUri: String                          = sys.env("RABBITMQ_URI")
   lazy val fromStringMarshaller: ByteMarshaller[String] = Conversions.Marshallers.FromString
   lazy val globalDatabaseManager: GlobalDatabaseManager = GlobalDatabaseManager.initializeForSingleRegion(config)
@@ -133,6 +94,36 @@ trait ClientInjectorImpl extends ClientInjector with LazyLogging {
   lazy val apiMatrixFactory                             = ApiMatrixFactory(DefaultApiMatrix)
   lazy val s3: AmazonS3                                 = AwsInitializers.createS3()
   lazy val s3Fileupload: AmazonS3                       = AwsInitializers.createS3Fileupload()
+  lazy val webhookCaller: WebhookCaller                 = new WebhookCallerImplementation()
+  lazy val webhookPublisher: QueuePublisher[Webhook]    = RabbitQueue.publisher(rabbitMQUri, "webhooks")(bugsnagger, Webhook.marshaller)
+
+  override lazy val projectSchemaInvalidationSubscriber: PubSubSubscriber[String] = {
+    implicit val unmarshaller: ByteUnmarshaller[String] = Unmarshallers.ToString
+    RabbitAkkaPubSub.subscriber[String](globalRabbitUri, "project-schema-invalidation", durable = true)
+  }
+  override lazy val projectSchemaFetcher: RefreshableProjectFetcher = CachedProjectFetcherImpl(
+    projectFetcher = ProjectFetcherImpl(blockedProjectIds, config),
+    projectSchemaInvalidationSubscriber = projectSchemaInvalidationSubscriber
+  )
+
+  override lazy val functionEnvironment: FunctionEnvironment = LambdaFunctionEnvironment(
+    sys.env.getOrElse("LAMBDA_AWS_ACCESS_KEY_ID", "whatever"),
+    sys.env.getOrElse("LAMBDA_AWS_SECRET_ACCESS_KEY", "whatever")
+  )
+
+  lazy val kinesis: AmazonKinesis = {
+    val credentials = new BasicAWSCredentials(sys.env("AWS_ACCESS_KEY_ID"), sys.env("AWS_SECRET_ACCESS_KEY"))
+    AmazonKinesisClientBuilder.standard
+      .withCredentials(new AWSStaticCredentialsProvider(credentials))
+      .withEndpointConfiguration(new EndpointConfiguration(sys.env("KINESIS_ENDPOINT"), sys.env("AWS_REGION")))
+      .build
+  }
+
+  lazy val sssEventsPublisher: PubSubPublisher[String] =
+    RabbitAkkaPubSub.publisher[String](rabbitMQUri, "sss-events", durable = true)(bugsnagger, fromStringMarshaller)
+  lazy val kinesisAlgoliaSyncQueriesPublisher: KinesisPublisher =
+    new KinesisPublisherImplementation(streamName = sys.env("KINESIS_STREAM_ALGOLIA_SYNC_QUERY"), kinesis)
+  lazy val kinesisApiMetricsPublisher: KinesisPublisher = new KinesisPublisherImplementation(streamName = sys.env("KINESIS_STREAM_API_METRICS"), kinesis)
 
   lazy val globalApiEndpointManager = GlobalApiEndpointManager(
     euWest1 = sys.env("API_ENDPOINT_EU_WEST_1"),
