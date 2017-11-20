@@ -2,7 +2,7 @@ package cool.graph.messagebus.pubsub.rabbit
 
 import akka.testkit.{TestKit, TestProbe}
 import cool.graph.akkautil.SingleThreadedActorSystem
-import cool.graph.bugsnag.BugSnagger
+import cool.graph.bugsnag.BugSnaggerMock
 import cool.graph.messagebus.Conversions
 import cool.graph.messagebus.pubsub.{Everything, Message, Only}
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Matchers, WordSpecLike}
@@ -15,8 +15,8 @@ class RabbitAkkaPubSubSpec
     with BeforeAndAfterEach {
   override def afterAll = shutdown(verifySystemShutdown = true)
 
-  val amqpUri                         = sys.env.getOrElse("RABBITMQ_URI", sys.error("RABBITMQ_URI required for testing"))
-  implicit val bugSnagger: BugSnagger = null
+  val amqpUri             = sys.env.getOrElse("RABBITMQ_URI", sys.error("RABBITMQ_URI required for testing"))
+  implicit val bugSnagger = BugSnaggerMock
 
   val testTopic = Only("testTopic")
   val testMsg   = "testMsg"
@@ -40,7 +40,7 @@ class RabbitAkkaPubSubSpec
   // Wait for the consumer to bind and the mediator to init
   def waitForInit[T](pubSub: RabbitAkkaPubSub[T]): Unit = {
     pubSub.subscriber.consumer.isSuccess
-    pubSub.subscriber.mediator
+    pubSub.subscriber.router
   }
 
   // Note: Publish logic is tested implicitly within the subscribe tests.

@@ -4,6 +4,12 @@ import akka.actor.{ActorSystem, Props}
 import akka.stream.ActorMaterializer
 import cool.graph.akkautil.http.{Routes, Server, ServerExecutor}
 import cool.graph.messagebus.pubsub.Only
+<<<<<<< HEAD
+=======
+import cool.graph.messagebus.queue.inmemory.InMemoryAkkaQueue
+import cool.graph.messagebus.testkits.InMemoryQueueTestKit
+import cool.graph.messagebus.{PubSubPublisher, PubSubSubscriber, QueueConsumer}
+>>>>>>> master
 import cool.graph.subscriptions.protocol.SubscriptionProtocolV05.Requests.SubscriptionSessionRequestV05
 import cool.graph.subscriptions.protocol.SubscriptionProtocolV07.Requests.SubscriptionSessionRequest
 import cool.graph.subscriptions.protocol.SubscriptionProtocolV07.Responses.GqlError

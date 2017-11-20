@@ -1,13 +1,12 @@
 package cool.graph.worker.workers
 
-import cool.graph.bugsnag.BugSnagger
 import cool.graph.messagebus.QueueConsumer
 import cool.graph.worker.payloads.LogItem
 import slick.jdbc.MySQLProfile.api._
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class FunctionLogsWorker(logsDb: Database, logsConsumer: QueueConsumer[LogItem])(implicit bugsnagger: BugSnagger, ec: ExecutionContext) extends Worker {
+case class FunctionLogsWorker(logsDb: Database, logsConsumer: QueueConsumer[LogItem])(implicit ec: ExecutionContext) extends Worker {
   lazy val consumerRef = logsConsumer.withConsumer(consumeFn)
 
   private val consumeFn = (i: LogItem) => {

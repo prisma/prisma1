@@ -2,7 +2,6 @@ package cool.graph.worker.workers
 
 import akka.http.scaladsl.model.ContentTypes
 import cool.graph.akkautil.http.{RequestFailedError, SimpleHttpClient}
-import cool.graph.bugsnag.BugSnagger
 import cool.graph.cuid.Cuid
 import cool.graph.messagebus.{QueueConsumer, QueuePublisher}
 import cool.graph.worker.payloads.{LogItem, Webhook}
@@ -16,7 +15,7 @@ case class WebhookDelivererWorker(
     httpClient: SimpleHttpClient,
     webhooksConsumer: QueueConsumer[Webhook],
     logsPublisher: QueuePublisher[LogItem]
-)(implicit bugsnagger: BugSnagger, ec: ExecutionContext)
+)(implicit ec: ExecutionContext)
     extends Worker {
   import scala.concurrent.ExecutionContext.Implicits.global
 

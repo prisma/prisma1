@@ -26,7 +26,7 @@ import scala.util.{Failure, Success, Try}
   * The API is similar to akka testkit, which it uses internally.
   *
   * >>> PLEASE NOTE: <<<
-  * If queues are randomized (default false), it won't ack messages off off queues (doesn't interfere with regular
+  * If queues are randomized (default false), they won't ack messages off off queues (doesn't interfere with regular
   * processing, meaning it only 'observes' messages on the queue). Use randomization for fanout scenarios.
   *
   * However, a testkit doesn't start ack'ing off messages unless 'start' is called.
@@ -46,7 +46,7 @@ case class RabbitAkkaPubSubTestKit[T](
   implicit val bugSnagger: BugSnagger = null
 
   val probe                        = TestProbe()
-  val logId                        = new java.util.Random().nextInt() // For log output correlation
+  val logId                        = new java.util.Random().nextInt(Integer.MAX_VALUE) // For log output correlation
   var messages: Vector[Message[T]] = Vector.empty
   var queueDef: rabbit.Queue       = _
   val exchange                     = RabbitUtils.declareExchange(amqpUri, exchangeName, 1, durable = exchangeDurable)
