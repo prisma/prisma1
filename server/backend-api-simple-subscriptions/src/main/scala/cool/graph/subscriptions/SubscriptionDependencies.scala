@@ -164,9 +164,11 @@ class SimpleSubscriptionInjectorImpl(implicit val system: ActorSystem, val mater
   def destroy: Unit = {
     materializer.shutdown()
     system.terminate()
+
   }
 
 }
+
 //
 //trait SimpleSubscriptionApiDependencies extends Module {
 //  implicit val system: ActorSystem

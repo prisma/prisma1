@@ -25,7 +25,7 @@ object SubscriptionsMain extends App {
 }
 
 case class SimpleSubscriptionsServer(prefix: String = "")(
-    implicit subscriptionInjector: SimpleSubscriptionInjectorImpl,
+    implicit subscriptionInjector: SimpleSubscriptionInjector,
     system: ActorSystem,
     materializer: ActorMaterializer
 ) extends Server
