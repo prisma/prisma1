@@ -80,7 +80,7 @@ trait ClientInjectorImpl extends ClientInjector with LazyLogging {
   lazy val fromStringMarshaller: ByteMarshaller[String] = Conversions.Marshallers.FromString
   lazy val globalDatabaseManager: GlobalDatabaseManager = GlobalDatabaseManager.initializeForSingleRegion(config)
   lazy val endpointResolver: EndpointResolver           = LiveEndpointResolver()
-  lazy val logsPublisher: QueuePublisher[String]        = RabbitQueue.publisher[String](rabbitMQUri, "function-logs")(bugsnagger, fromStringMarshaller)
+  val logsPublisher: QueuePublisher[String]             = RabbitQueue.publisher[String](rabbitMQUri, "function-logs")(bugsnagger, fromStringMarshaller)
   lazy val requestPrefix: String                        = sys.env.getOrElse("AWS_REGION", sys.error("AWS Region not found."))
   lazy val cloudwatch: Cloudwatch                       = CloudwatchImpl()
   lazy val featureMetricActor: ActorRef                 = system.actorOf(Props(new FeatureMetricActor(kinesisApiMetricsPublisher, apiMetricsFlushInterval)))
@@ -95,7 +95,7 @@ trait ClientInjectorImpl extends ClientInjector with LazyLogging {
   lazy val s3: AmazonS3                                 = AwsInitializers.createS3()
   lazy val s3Fileupload: AmazonS3                       = AwsInitializers.createS3Fileupload()
   lazy val webhookCaller: WebhookCaller                 = new WebhookCallerImplementation()
-  lazy val webhookPublisher: QueuePublisher[Webhook]    = RabbitQueue.publisher(rabbitMQUri, "webhooks")(bugsnagger, Webhook.marshaller)
+  val webhookPublisher: QueuePublisher[Webhook]         = RabbitQueue.publisher(rabbitMQUri, "webhooks")(bugsnagger, Webhook.marshaller)
 
   override lazy val projectSchemaInvalidationSubscriber: PubSubSubscriber[String] = {
     implicit val unmarshaller: ByteUnmarshaller[String] = Unmarshallers.ToString
@@ -119,7 +119,7 @@ trait ClientInjectorImpl extends ClientInjector with LazyLogging {
       .build
   }
 
-  lazy val sssEventsPublisher: PubSubPublisher[String] =
+  val sssEventsPublisher: PubSubPublisher[String] =
     RabbitAkkaPubSub.publisher[String](rabbitMQUri, "sss-events", durable = true)(bugsnagger, fromStringMarshaller)
   lazy val kinesisAlgoliaSyncQueriesPublisher: KinesisPublisher =
     new KinesisPublisherImplementation(streamName = sys.env("KINESIS_STREAM_ALGOLIA_SYNC_QUERY"), kinesis)
