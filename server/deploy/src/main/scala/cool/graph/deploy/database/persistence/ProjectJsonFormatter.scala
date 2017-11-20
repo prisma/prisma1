@@ -1,17 +1,21 @@
 package cool.graph.deploy.database.persistence
 
+import cool.graph.shared.models.FieldConstraintType.FieldConstraintType
 import cool.graph.shared.models.{
   ActionTriggerMutationModelMutationType,
+  BooleanConstraint,
   FieldConstraint,
   FieldConstraintType,
   IntegrationType,
   ModelPermission,
+  NumberConstraint,
   RequestPipelineOperation,
+  StringConstraint,
   TypeIdentifier,
   UserType,
   _
 }
-import play.api.libs.json.{Format, JsValue, Json}
+import play.api.libs.json.{Format, JsObject, JsValue, Json}
 
 object ProjectJsonFormatter {
   import cool.graph.util.json.JsonUtils.{enumFormat, DateTimeFormat}
@@ -36,11 +40,43 @@ object ProjectJsonFormatter {
   implicit lazy val actionTriggerMutationRelationMutationType = enumFormat(ActionTriggerMutationRelationMutationType)
 
   // FAILING STUBS
-  implicit lazy val fieldConstraint = failingFormat[FieldConstraint]
-  implicit lazy val function        = failingFormat[Function]
-  implicit lazy val integration     = failingFormat[Integration]
+  implicit lazy val function    = failingFormat[Function]
+  implicit lazy val integration = failingFormat[Integration]
 
   // MODELS
+  implicit lazy val numberConstraint  = Json.format[NumberConstraint]
+  implicit lazy val booleanConstraint = Json.format[BooleanConstraint]
+  implicit lazy val stringConstraint  = Json.format[StringConstraint]
+  implicit lazy val listConstraint    = Json.format[ListConstraint]
+  implicit lazy val fieldConstraint = new Format[FieldConstraint] {
+    val discriminatorField = "constraintType"
+
+    override def reads(json: JsValue) = {
+      for {
+        constraintType <- (json \ discriminatorField).validate[FieldConstraintType]
+      } yield {
+        constraintType match {
+          case FieldConstraintType.STRING  => json.as[StringConstraint]
+          case FieldConstraintType.NUMBER  => json.as[NumberConstraint]
+          case FieldConstraintType.BOOLEAN => json.as[BooleanConstraint]
+          case FieldConstraintType.LIST    => json.as[ListConstraint]
+          case unknown @ _                 => sys.error(s"Unmarshalling issue for FieldConstraintType with $unknown")
+        }
+      }
+    }
+
+    override def writes(o: FieldConstraint) = o match {
+      case constraint: NumberConstraint  => addTypeDiscriminator(numberConstraint.writes(constraint), FieldConstraintType.NUMBER)
+      case constraint: BooleanConstraint => addTypeDiscriminator(booleanConstraint.writes(constraint), FieldConstraintType.BOOLEAN)
+      case constraint: StringConstraint  => addTypeDiscriminator(stringConstraint.writes(constraint), FieldConstraintType.STRING)
+      case constraint: ListConstraint    => addTypeDiscriminator(listConstraint.writes(constraint), FieldConstraintType.LIST)
+    }
+
+    private def addTypeDiscriminator(jsObject: JsObject, constraintType: FieldConstraintType): JsValue = {
+      jsObject + (discriminatorField -> fieldConstraintType.writes(constraintType))
+    }
+  }
+
   implicit lazy val projectDatabase               = Json.format[ProjectDatabase]
   implicit lazy val modelPermission               = Json.format[ModelPermission]
   implicit lazy val relationFieldMirror           = Json.format[RelationFieldMirror]
