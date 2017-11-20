@@ -38,12 +38,10 @@ class SetRelation(relation: Relation, fromModel: Model, project: Project, args: 
     val relatedModel = field.relatedModel_!(project)
 
     val checkFrom =
-      InvalidInput(RelationIsRequired(fieldName = relatedField.name, typeName = relatedModel.name),
-                   requiredOneRelationCheck(field, relatedField, fromId, toId))(injector.toScaldi)
+      InvalidInput(RelationIsRequired(fieldName = relatedField.name, typeName = relatedModel.name), requiredOneRelationCheck(field, relatedField, fromId, toId))
 
     val checkTo =
-      InvalidInput(RelationIsRequired(fieldName = field.name, typeName = fromModel.name), requiredOneRelationCheck(relatedField, field, toId, fromId))(
-        injector.toScaldi)
+      InvalidInput(RelationIsRequired(fieldName = field.name, typeName = fromModel.name), requiredOneRelationCheck(relatedField, field, toId, fromId))
 
     val transactionMutaction = Transaction(sqlMutactions, dataResolver)
 

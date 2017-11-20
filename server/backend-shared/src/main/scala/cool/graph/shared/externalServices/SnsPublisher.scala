@@ -38,10 +38,9 @@ class SnsPublisherImplementation(topic: String)(implicit inj: Injector) extends 
     try {
       sns.publish(new PublishRequest(topic, payload))
     } catch {
-      case e: SdkClientException => {
+      case e: SdkClientException =>
         println(e.getMessage)
         new PublishResult().withMessageId("999")
-      }
     }
   }
 }

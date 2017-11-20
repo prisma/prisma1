@@ -2,10 +2,6 @@ package cool.graph.system.migration
 
 import cool.graph.shared.errors.SystemErrors
 import cool.graph.shared.errors.SystemErrors.ProjectPushError
-import cool.graph.shared.functions.{DeployFailure, DeployResponse, ExternalFile, FunctionEnvironment}
-import cool.graph.shared.errors.SystemErrors.{ProjectPushError, SchemaError}
-import cool.graph.shared.errors.UserInputErrors.SchemaExtensionParseError
-import cool.graph.shared.functions._
 import cool.graph.shared.functions.{DeployFailure, DeployResponse, ExternalFile, FunctionEnvironment, _}
 import cool.graph.shared.models._
 import cool.graph.system.externalServices.{Auth0Extend, Auth0FunctionData}
@@ -425,8 +421,8 @@ case class ModuleMigrator(functionDiff: FunctionDiff,
     .map(permission => {
       val input               = DeleteModelPermissionInput(clientMutationId = None, modelPermissionId = permission.id)
       val operation           = permission.operation
-      val modelName = project.getModelByModelPermissionId_!(permission.id).name
-      val modelPermissionName =  s"$modelName.${operation.toString.toLowerCase}"
+      val modelName           = project.getModelByModelPermissionId_!(permission.id).name
+      val modelPermissionName = s"$modelName.${operation.toString.toLowerCase}"
 
       RemoveModelPermissionAction(input, modelPermissionName, operation.toString)
     })
@@ -434,8 +430,8 @@ case class ModuleMigrator(functionDiff: FunctionDiff,
   lazy val relationPermissionsToRemove: Vector[RemoveRelationPermissionAction] = permissionDiff.removedPermissionIds
     .flatMap(project.getRelationPermissionById)
     .map(permission => {
-      val input                  = DeleteRelationPermissionInput(clientMutationId = None, relationPermissionId = permission.id)
-      val operation              = if (permission.connect && permission.disconnect) "*" else if (permission.connect) "connect" else "disconnect"
+      val input        = DeleteRelationPermissionInput(clientMutationId = None, relationPermissionId = permission.id)
+      val operation    = if (permission.connect && permission.disconnect) "*" else if (permission.connect) "connect" else "disconnect"
       val relationName = project.getRelationByRelationPermissionId_!(permission.id).name
 
       val relationPermissionName = s"$relationName.${operation.toLowerCase}"

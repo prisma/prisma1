@@ -2,8 +2,8 @@ package cool.graph.subscriptions.websockets.services
 
 import akka.actor.ActorSystem
 import cool.graph.bugsnag.BugSnagger
-import cool.graph.messagebus.pubsub.rabbit.RabbitAkkaPubSub
 import cool.graph.messagebus._
+import cool.graph.messagebus.pubsub.rabbit.RabbitAkkaPubSub
 import cool.graph.messagebus.queue.rabbit.RabbitQueue
 import cool.graph.websockets.protocol.Request
 
@@ -13,7 +13,6 @@ trait WebsocketServices {
 }
 
 case class WebsocketCloudServives()(implicit val bugsnagger: BugSnagger, system: ActorSystem) extends WebsocketServices {
-  import Request._
 
   val clusterLocalRabbitUri = sys.env("RABBITMQ_URI")
 
