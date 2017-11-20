@@ -6,6 +6,7 @@ name := "server"
 Revolver.settings
 
 import Dependencies._
+import DependenciesNew._
 import com.typesafe.sbt.SbtGit
 
 lazy val propagateVersionToOtherRepo = taskKey[Unit]("Propagates the version of this project to another github repo.")
@@ -102,6 +103,30 @@ lazy val commonBackendSettings = commonSettings ++ Seq(
     "-J-Xmx2560m"
   )
 )
+
+def serverProject(name: String): Project = {
+  normalProject(name)
+    .enablePlugins(sbtdocker.DockerPlugin, JavaAppPackaging)
+    .settings(commonBackendSettings: _*)
+}
+
+def normalProject(name: String): Project = Project(id = name, base = file(s"./$name")).settings(commonSettings: _*)
+def libProject(name: String): Project =  Project(id = name, base = file(s"./libs/$name")).settings(commonSettings: _*)
+
+lazy val sharedModels = normalProject("shared-models").settings(
+  libraryDependencies ++= Seq(
+    cuid
+  ) ++ joda
+)
+lazy val deploy = serverProject("deploy")
+                    .dependsOn(sharedModels % "compile")
+                    .settings(
+                      libraryDependencies ++= Seq(
+                        playJson
+                      )
+                    )
+
+lazy val gcValues = libProject("gc-values")
 
 lazy val bugsnag = Project(id = "bugsnag", base = file("./libs/bugsnag"))
   .settings(commonSettings: _*)
@@ -392,7 +417,9 @@ val allProjects = List(
   scalaUtils,
   cache,
   singleServer,
-  localFaas
+  localFaas,
+  deploy,
+  sharedModels
 )
 
 val allLibProjects = allProjects.filter(_.base.getPath.startsWith("./libs/")).map(Project.projectToRef)

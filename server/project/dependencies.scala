@@ -63,3 +63,18 @@ object Dependencies {
     "com.amazonaws" % "aws-java-sdk-sns"        % "1.11.171"
   )
 }
+
+object DependenciesNew {
+  object v {
+    val joda        = "2.9.4"
+    val jodaConvert = "1.7"
+    val cuid        = "0.1.1"
+    val play        = "2.5.12"
+  }
+
+  val jodaTime    = "joda-time" % "joda-time" % v.joda
+  val jodaConvert = "org.joda" % "joda-convert" % v.jodaConvert
+  val joda        = Seq(jodaTime, jodaConvert)
+  val cuid        = "cool.graph" % "cuid-java" % v.cuid
+  val playJson    = "com.typesafe.play" %% "play-json" % v.play
+}
