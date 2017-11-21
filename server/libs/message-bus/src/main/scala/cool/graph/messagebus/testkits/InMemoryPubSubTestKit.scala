@@ -11,6 +11,7 @@ import cool.graph.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
 import scala.concurrent.duration._
 import scala.language.existentials
 import scala.reflect.ClassTag
+import scala.util.Try
 
 /**
   * InMemory testkit for simple test cases that requires reasoning over published or received messages for a PubSub.
@@ -191,10 +192,12 @@ case class InMemoryPubSubTestKit[T]()(
   }
 
   def reset: Unit = {
-    messagesReceived = Vector.empty[Message[T]]
-    messagesPublished = Vector.empty[Message[T]]
-    probe = TestProbe()
-    publishProbe = TestProbe()
+    Try {
+      messagesReceived = Vector.empty[Message[T]]
+      messagesPublished = Vector.empty[Message[T]]
+      probe = TestProbe()
+      publishProbe = TestProbe()
+    }
   }
 
   override def shutdown(): Unit = {
