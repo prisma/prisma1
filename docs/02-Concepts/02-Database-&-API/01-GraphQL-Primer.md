@@ -19,7 +19,7 @@ GraphQL can be used to either complement or even entirely replace REST APIs. If 
 
 ## The GraphQL Schema Definition Language
 
-GraphQL has its own syntax to define data types and express relationships between them, it's called the GraphQL [Schema Definition Language](https://www.graph.cool/docs/faq/graphql-sdl-schema-definition-language-kr84dktnp0/) (SDL). As an example, let's consider a simple blogging application where we might define two simple model types using the SDL:
+GraphQL has its own syntax to define data types and express relationships between them, it's called the GraphQL [Schema Definition Language](https://blog.graph.cool/graphql-sdl-schema-definition-language-6755bcb9ce51) (SDL). As an example, let's consider a simple blogging application where we might define two simple model types using the SDL:
 
 ```graphql
 type Person {
