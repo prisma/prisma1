@@ -148,6 +148,7 @@ class SystemInjectorImpl(implicit val system: ActorSystem, val materializer: Act
       bind[AmazonSNS] identifiedBy "sns" toNonLazy outer.sns
       bind[SnsPublisher] identifiedBy "seatSnsPublisher" toNonLazy outer.snsPublisher
       bind[KinesisPublisher] identifiedBy "kinesisAlgoliaSyncQueriesPublisher" toNonLazy outer.kinesisAlgoliaSyncQueriesPublisher
+      bind[ApiMatrixFactory] toNonLazy outer.apiMatrixFactory
 
       binding identifiedBy "kinesis" toNonLazy outer.kinesis
       binding identifiedBy "cloudwatch" toNonLazy outer.cloudwatch

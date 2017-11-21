@@ -28,20 +28,21 @@ case class ClientServer(prefix: String)(
     implicit system: ActorSystem,
     materializer: ActorMaterializer,
     injector: ClientInjector,
-    bugsnagger: BugSnagger
+    bugsnagger: BugSnagger,
+    projectSchemaBuilder: ProjectSchemaBuilder,
+    graphQlRequestHandler: GraphQlRequestHandler
 ) extends cool.graph.akkautil.http.Server
     with LazyLogging {
   import system.dispatcher
 
   val log: String => Unit                             = (x: String) => logger.info(x)
   val cloudWatch: Cloudwatch                          = injector.cloudwatch
-  val errorHandlerFactory                             = ErrorHandlerFactory(log, cloudWatch, bugsnagger)
+  val errorHandlerFactory: ErrorHandlerFactory        = injector.errorHandlerFactory
   val projectSchemaFetcher: RefreshableProjectFetcher = injector.projectSchemaFetcher
-  val graphQlRequestHandler: GraphQlRequestHandler    = injector.graphQlRequestHandler
-  val projectSchemaBuilder: ProjectSchemaBuilder      = injector.projectSchemaBuilder
-  val clientAuth: ClientAuth                          = injector.clientAuth
-  val requestPrefix: String                           = injector.requestPrefix
-  val requestIdPrefix                                 = s"$requestPrefix:$prefix"
+
+  val clientAuth: ClientAuth = injector.clientAuth
+  val requestPrefix: String  = injector.requestPrefix
+  val requestIdPrefix        = s"$requestPrefix:$prefix"
 
   // For health checks. Only one publisher inject required (as multiple should share the same client).
   val kinesis: KinesisPublisher = injector.kinesisAlgoliaSyncQueriesPublisher

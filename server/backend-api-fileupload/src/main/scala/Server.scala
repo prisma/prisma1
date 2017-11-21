@@ -24,14 +24,13 @@ import cool.graph.shared.errors.UserAPIErrors
 import cool.graph.shared.logging.RequestLogger
 import cool.graph.shared.models.{AuthenticatedRequest, Project, ProjectWithClientId}
 import cool.graph.util.ErrorHandlerFactory
-import scaldi.akka.AkkaInjectable
 import spray.json.{JsNumber, JsObject, JsString, JsValue}
 
 import scala.collection.immutable._
 import scala.concurrent.Future
 import scala.concurrent.duration._
 
-object Server extends App with AkkaInjectable with LazyLogging {
+object Server extends App with LazyLogging {
   ClientSharedMetrics // this is just here to kick off the profiler
 
   implicit val system       = ActorSystem("sangria-server")

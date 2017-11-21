@@ -141,14 +141,13 @@ class SimpleSubscriptionInjectorImpl(implicit val system: ActorSystem, val mater
   lazy val featureMetricActor: ActorRef                 = system.actorOf(Props(new FeatureMetricActor(kinesisApiMetricsPublisher, apiMetricsFlushInterval)))
   lazy val apiMetricsMiddleware                         = new ApiMetricsMiddleware(testableTime, featureMetricActor)
   lazy val projectSchemaFetcher                         = ProjectFetcherImpl(blockedProjectIds = Vector.empty, config)
-
-  lazy val config: Config                      = ConfigFactory.load()
-  lazy val testableTime                        = new TestableTimeImplementation
-  lazy val apiMetricsFlushInterval             = 10
-  lazy val clientAuth                          = ClientAuthImpl()
-  implicit lazy val bugsnagger: BugSnaggerImpl = BugSnaggerImpl(sys.env.getOrElse("BUGSNAG_API_KEY", ""))
-  lazy val environment: String                 = sys.env.getOrElse("ENVIRONMENT", "local")
-  lazy val serviceName: String                 = sys.env.getOrElse("SERVICE_NAME", "local")
+  lazy val config: Config                               = ConfigFactory.load()
+  lazy val testableTime                                 = new TestableTimeImplementation
+  lazy val apiMetricsFlushInterval                      = 10
+  lazy val clientAuth                                   = ClientAuthImpl()
+  implicit lazy val bugsnagger: BugSnaggerImpl          = BugSnaggerImpl(sys.env.getOrElse("BUGSNAG_API_KEY", ""))
+  lazy val environment: String                          = sys.env.getOrElse("ENVIRONMENT", "local")
+  lazy val serviceName: String                          = sys.env.getOrElse("SERVICE_NAME", "local")
 }
 
 //

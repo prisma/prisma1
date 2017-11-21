@@ -12,10 +12,8 @@ import cool.graph.aws.AwsInitializers
 import cool.graph.aws.cloudwatch.{Cloudwatch, CloudwatchImpl}
 import cool.graph.bugsnag.{BugSnagger, BugSnaggerImpl}
 import cool.graph.client.authorization.{ClientAuth, ClientAuthImpl}
-import cool.graph.client.database.DeferredResolverProvider
 import cool.graph.client.finder.{CachedProjectFetcherImpl, ProjectFetcherImpl, RefreshableProjectFetcher}
 import cool.graph.client.metrics.ApiMetricsMiddleware
-import cool.graph.client.server.{GraphQlRequestHandler, ProjectSchemaBuilder}
 import cool.graph.messagebus.Conversions.{ByteMarshaller, ByteUnmarshaller, Unmarshallers}
 import cool.graph.messagebus.pubsub.rabbit.RabbitAkkaPubSub
 import cool.graph.messagebus.queue.rabbit.RabbitQueue
@@ -63,9 +61,6 @@ trait ClientInjector {
   val errorHandlerFactory: ErrorHandlerFactory
   val apiMatrixFactory: ApiMatrixFactory
   val globalApiEndpointManager: GlobalApiEndpointManager
-  val deferredResolver: DeferredResolverProvider[_, UserContext]
-  val projectSchemaBuilder: ProjectSchemaBuilder
-  val graphQlRequestHandler: GraphQlRequestHandler
   val s3: AmazonS3
   val s3Fileupload: AmazonS3
 }
@@ -130,6 +125,32 @@ trait ClientInjectorImpl extends ClientInjector with LazyLogging {
     usWest2 = sys.env("API_ENDPOINT_US_WEST_2"),
     apNortheast1 = sys.env("API_ENDPOINT_AP_NORTHEAST_1")
   )
+
+  implicit lazy val injector: ClientInjector = this
+
+  implicit lazy val toScaldi: Module = {
+    val outer = this
+    new Module {
+      binding identifiedBy "project-schema-fetcher" toNonLazy outer.projectSchemaFetcher
+      binding identifiedBy "cloudwatch" toNonLazy outer.cloudwatch
+      binding identifiedBy "kinesis" toNonLazy outer.kinesis
+      binding identifiedBy "api-metrics-middleware" toNonLazy outer.apiMetricsMiddleware
+      binding identifiedBy "featureMetricActor" to outer.featureMetricActor
+      binding identifiedBy "s3" toNonLazy outer.s3
+      binding identifiedBy "s3-fileupload" toNonLazy outer.s3Fileupload
+      bind[EndpointResolver] identifiedBy "endpointResolver" toNonLazy outer.endpointResolver
+      bind[QueuePublisher[String]] identifiedBy "logsPublisher" toNonLazy outer.logsPublisher
+      bind[QueuePublisher[Webhook]] identifiedBy "webhookPublisher" toNonLazy outer.webhookPublisher
+      bind[PubSubPublisher[String]] identifiedBy "sss-events-publisher" toNonLazy outer.sssEventsPublisher
+      bind[String] identifiedBy "request-prefix" toNonLazy outer.requestPrefix
+      bind[KinesisPublisher] identifiedBy "kinesisAlgoliaSyncQueriesPublisher" toNonLazy outer.kinesisAlgoliaSyncQueriesPublisher
+      bind[KinesisPublisher] identifiedBy "kinesisApiMetricsPublisher" toNonLazy outer.kinesisApiMetricsPublisher
+      bind[FunctionEnvironment] toNonLazy outer.functionEnvironment
+      bind[GlobalDatabaseManager] toNonLazy outer.globalDatabaseManager
+      bind[ApiMatrixFactory] toNonLazy outer.apiMatrixFactory
+
+    }
+  }
 }
 
 //trait CommonClientDependencies extends Module with LazyLogging {

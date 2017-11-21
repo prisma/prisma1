@@ -13,51 +13,7 @@ import cool.graph.shared.functions.{EndpointResolver, FunctionEnvironment}
 import cool.graph.webhook.Webhook
 import scaldi.Module
 
-case class SimpleInjector(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends ClientInjectorImpl {
-
-  override implicit lazy val injector: SimpleInjector = this
-  implicit lazy val toScaldi: Module = {
-    val outer = this
-    new Module {
-      binding identifiedBy "config" toNonLazy outer.config
-      binding identifiedBy "actorSystem" toNonLazy outer.system
-      binding identifiedBy "dispatcher" toNonLazy outer.system.dispatcher
-      binding identifiedBy "actorMaterializer" toNonLazy outer.materializer
-      binding identifiedBy "project-schema-fetcher" toNonLazy outer.projectSchemaFetcher
-      binding identifiedBy "cloudwatch" toNonLazy outer.cloudwatch
-      binding identifiedBy "kinesis" toNonLazy outer.kinesis
-      binding identifiedBy "api-metrics-middleware" toNonLazy outer.apiMetricsMiddleware
-      binding identifiedBy "featureMetricActor" to outer.featureMetricActor
-      binding identifiedBy "s3" toNonLazy outer.s3
-      binding identifiedBy "s3-fileupload" toNonLazy outer.s3Fileupload
-      bind[GraphQlRequestHandler] identifiedBy "simple-gql-request-handler" toNonLazy outer.graphQlRequestHandler
-      bind[ProjectSchemaBuilder] identifiedBy "simple-schema-builder" toNonLazy outer.projectSchemaBuilder
-      bind[EndpointResolver] identifiedBy "endpointResolver" toNonLazy outer.endpointResolver
-      bind[QueuePublisher[String]] identifiedBy "logsPublisher" toNonLazy outer.logsPublisher
-      bind[QueuePublisher[Webhook]] identifiedBy "webhookPublisher" toNonLazy outer.webhookPublisher
-      bind[PubSubPublisher[String]] identifiedBy "sss-events-publisher" toNonLazy outer.sssEventsPublisher
-      bind[String] identifiedBy "request-prefix" toNonLazy outer.requestPrefix
-      bind[KinesisPublisher] identifiedBy "kinesisAlgoliaSyncQueriesPublisher" toNonLazy outer.kinesisAlgoliaSyncQueriesPublisher
-      bind[KinesisPublisher] identifiedBy "kinesisApiMetricsPublisher" toNonLazy outer.kinesisApiMetricsPublisher
-      bind[GlobalDatabaseManager] toNonLazy outer.globalDatabaseManager
-      bind[ApiMatrixFactory] toNonLazy outer.apiMatrixFactory
-      bind[FunctionEnvironment] toNonLazy outer.functionEnvironment
-    }
-  }
-
-  lazy val deferredResolver: DeferredResolverProvider[_, UserContext] =
-    new DeferredResolverProvider(new SimpleToManyDeferredResolver, new SimpleManyModelDeferredResolver)
-
-  lazy val projectSchemaBuilder = ProjectSchemaBuilder(project => new SimpleSchemaBuilder(project).build())
-
-  lazy val graphQlRequestHandler = GraphQlRequestHandlerImpl(
-    errorHandlerFactory = errorHandlerFactory,
-    log = log,
-    apiVersionMetric = FeatureMetric.ApiSimple,
-    apiMetricsMiddleware = apiMetricsMiddleware,
-    deferredResolver = deferredResolver
-  )
-}
+case class SimpleInjector(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends ClientInjectorImpl
 
 //trait SimpleApiClientDependencies extends CommonClientDependencies {
 //  import system.dispatcher
