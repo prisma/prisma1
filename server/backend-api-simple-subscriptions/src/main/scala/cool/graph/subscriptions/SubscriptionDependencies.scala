@@ -7,7 +7,7 @@ import com.amazonaws.services.s3.AmazonS3
 import com.typesafe.config.{Config, ConfigFactory}
 import cool.graph.aws.AwsInitializers
 import cool.graph.aws.cloudwatch.CloudwatchImpl
-import cool.graph.bugsnag.{BugSnagger, BugSnaggerImpl}
+import cool.graph.bugsnag.BugSnaggerImpl
 import cool.graph.client._
 import cool.graph.client.authorization.{ClientAuth, ClientAuthImpl}
 import cool.graph.client.database.{DeferredResolverProvider, SimpleManyModelDeferredResolver, SimpleToManyDeferredResolver}
@@ -19,7 +19,7 @@ import cool.graph.messagebus._
 import cool.graph.messagebus.pubsub.rabbit.{RabbitAkkaPubSub, RabbitAkkaPubSubPublisher, RabbitAkkaPubSubSubscriber}
 import cool.graph.messagebus.queue.rabbit.{RabbitQueue, RabbitQueueConsumer, RabbitQueuePublisher}
 import cool.graph.shared.database.GlobalDatabaseManager
-import cool.graph.shared.externalServices.{KinesisPublisher, KinesisPublisherImplementation, TestableTime, TestableTimeImplementation}
+import cool.graph.shared.externalServices.{KinesisPublisher, KinesisPublisherImplementation, TestableTimeImplementation}
 import cool.graph.shared.functions.LiveEndpointResolver
 import cool.graph.shared.functions.lambda.LambdaFunctionEnvironment
 import cool.graph.shared.{ApiMatrixFactory, DefaultApiMatrix}
@@ -38,23 +38,12 @@ import scala.util.Try
 //subscriptionsdependencies
 
 trait SimpleSubscriptionInjector extends ClientInjector {
-  implicit val system: ActorSystem
-  implicit val materializer: ActorMaterializer
-  implicit val bugsnagger: BugSnagger
 
   val invalidationSubscriber: PubSubSubscriber[SchemaInvalidatedMessage]
   val sssEventsSubscriber: PubSubSubscriber[String]
   val responsePubSubPublisherV05: PubSubPublisher[SubscriptionSessionResponseV05]
   val responsePubSubPublisherV07: PubSubPublisher[SubscriptionSessionResponse]
   val requestsQueueConsumer: QueueConsumer[SubscriptionRequest]
-  val globalDatabaseManager: GlobalDatabaseManager
-  val kinesisApiMetricsPublisher: KinesisPublisher
-  val featureMetricActor: ActorRef
-  val apiMetricsMiddleware: ApiMetricsMiddleware
-
-  val config: Config
-  val testableTime: TestableTime
-  val apiMetricsFlushInterval: Int
   val clientAuth: ClientAuth
   val environment: String
   val serviceName: String
@@ -160,13 +149,6 @@ class SimpleSubscriptionInjectorImpl(implicit val system: ActorSystem, val mater
   implicit lazy val bugsnagger: BugSnaggerImpl = BugSnaggerImpl(sys.env.getOrElse("BUGSNAG_API_KEY", ""))
   lazy val environment: String                 = sys.env.getOrElse("ENVIRONMENT", "local")
   lazy val serviceName: String                 = sys.env.getOrElse("SERVICE_NAME", "local")
-
-  def destroy: Unit = {
-    materializer.shutdown()
-    system.terminate()
-
-  }
-
 }
 
 //

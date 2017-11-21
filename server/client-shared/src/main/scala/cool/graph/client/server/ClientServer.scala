@@ -9,11 +9,15 @@ import akka.http.scaladsl.server.PathMatchers.Segment
 import akka.http.scaladsl.server._
 import akka.stream.ActorMaterializer
 import com.typesafe.scalalogging.LazyLogging
+import cool.graph.aws.cloudwatch.Cloudwatch
 import cool.graph.bugsnag.{BugSnagger, GraphCoolRequest}
 import cool.graph.client.ClientInjector
+import cool.graph.client.authorization.ClientAuth
+import cool.graph.client.finder.RefreshableProjectFetcher
 import cool.graph.private_api.PrivateClientApi
 import cool.graph.shared.errors.CommonErrors.TimeoutExceeded
 import cool.graph.shared.errors.UserAPIErrors.ProjectNotFound
+import cool.graph.shared.externalServices.KinesisPublisher
 import cool.graph.shared.logging.RequestLogger
 import cool.graph.util.ErrorHandlerFactory
 import spray.json.JsValue
@@ -29,18 +33,18 @@ case class ClientServer(prefix: String)(
     with LazyLogging {
   import system.dispatcher
 
-  val log                   = (x: String) => logger.info(x)
-  val cloudWatch            = injector.cloudwatch
-  val errorHandlerFactory   = ErrorHandlerFactory(log, cloudWatch, bugsnagger)
-  val projectSchemaFetcher  = injector.projectSchemaFetcher
-  val graphQlRequestHandler = injector.graphQlRequestHandler
-  val projectSchemaBuilder  = injector.projectSchemaBuilder
-  val clientAuth            = injector.clientAuth
-  val requestPrefix         = injector.requestPrefix
-  val requestIdPrefix       = s"$requestPrefix:$prefix"
+  val log: String => Unit                             = (x: String) => logger.info(x)
+  val cloudWatch: Cloudwatch                          = injector.cloudwatch
+  val errorHandlerFactory                             = ErrorHandlerFactory(log, cloudWatch, bugsnagger)
+  val projectSchemaFetcher: RefreshableProjectFetcher = injector.projectSchemaFetcher
+  val graphQlRequestHandler: GraphQlRequestHandler    = injector.graphQlRequestHandler
+  val projectSchemaBuilder: ProjectSchemaBuilder      = injector.projectSchemaBuilder
+  val clientAuth: ClientAuth                          = injector.clientAuth
+  val requestPrefix: String                           = injector.requestPrefix
+  val requestIdPrefix                                 = s"$requestPrefix:$prefix"
 
   // For health checks. Only one publisher inject required (as multiple should share the same client).
-  val kinesis = injector.kinesisAlgoliaSyncQueriesPublisher
+  val kinesis: KinesisPublisher = injector.kinesisAlgoliaSyncQueriesPublisher
 
   private val requestHandler = RequestHandler(errorHandlerFactory, projectSchemaFetcher, projectSchemaBuilder, graphQlRequestHandler, clientAuth, log)
 
