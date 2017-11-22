@@ -53,7 +53,7 @@ object ProjectTable {
       project <- Tables.Projects
       if project.id === id
     } yield project
-    val query = baseQuery.sortBy(_.revision).take(1)
+    val query = baseQuery.sortBy(_.revision * -1).take(1)
 
     query.result.headOption
   }
