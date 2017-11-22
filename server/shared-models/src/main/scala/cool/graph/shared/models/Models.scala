@@ -19,7 +19,20 @@ import org.joda.time.DateTime
   * BEGIN NEW STUFF
   * --------------------------------------------------------
   */
-trait MigrationSteps
+case class MigrationSteps(
+    steps: Vector[MigrationStep]
+)
+
+trait MigrationStep
+trait ModelMigrationStep                              extends MigrationStep
+case class CreateModel(name: String)                  extends ModelMigrationStep
+case class UpdateModel(name: String, newName: String) extends ModelMigrationStep
+case class DeleteModel(name: String)                  extends ModelMigrationStep
+
+trait FieldMigrationStep                                                         extends MigrationStep
+case class CreateField(model: String, name: String)                              extends FieldMigrationStep
+case class UpdateField(model: String, name: String, isRequired: Option[Boolean]) extends FieldMigrationStep
+case class DeleteField(model: String, name: String)                              extends FieldMigrationStep
 
 /**
   * END NEW STUFF

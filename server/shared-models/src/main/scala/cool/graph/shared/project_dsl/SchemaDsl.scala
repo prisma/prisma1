@@ -31,7 +31,7 @@ object SchemaDsl {
     }
 
     def build(): (Set[Model], Set[Relation]) = {
-      val models = modelBuilders.map(_.build()) :+ ModelBuilder("User", isSystem = true).build()
+      val models = modelBuilders.map(_.build())
       val relations = for {
         model <- models
         field <- model.fields if field.isRelation
@@ -41,9 +41,15 @@ object SchemaDsl {
     }
 
     def buildClientAndProject(id: String = TestIds.testProjectId, isEjected: Boolean = false): (Client, Project) = {
+      val project = buildProject(id)
+      val client  = TestClient(project)
+      (client, project.copy(isEjected = isEjected))
+    }
+
+    def buildProject(id: String = TestIds.testProjectId): Project = {
       val (models, relations) = build()
       val projectAlias        = if (id == TestIds.testProjectId) Some(TestIds.testProjectAlias) else None
-      val project = TestProject().copy(
+      TestProject().copy(
         id = id,
         alias = projectAlias,
         models = models.toList,
@@ -51,8 +57,6 @@ object SchemaDsl {
         enums = enums.toList,
         functions = functions.toList
       )
-      val client = TestClient(project)
-      (client, project.copy(isEjected = isEjected))
     }
 
     def buildEmptyClientAndProject(isEjected: Boolean = false): (Client, Project) = {
@@ -70,7 +74,7 @@ object SchemaDsl {
       var withPermissions: Boolean = true,
       var isSystem: Boolean = false
   ) {
-    val id = name.toLowerCase
+    val id = name
 
     def field(name: String,
               theType: TypeIdentifier.type => TypeIdentifier.Value,
@@ -305,17 +309,13 @@ object SchemaDsl {
     }
 
     def build(): Model = {
-      val thePermissions = if (withPermissions) {
-        if (permissions.isEmpty) {
-          ModelPermission.publicPermissions
-        } else {
-          this.permissions.toList
-        }
-      } else {
-        List.empty
-      }
-
-      Model(name = name, id = id, isSystem = isSystem, fields = fields.toList, permissions = thePermissions)
+      Model(
+        name = name,
+        id = id,
+        isSystem = isSystem,
+        fields = fields.toList,
+        permissions = this.permissions.toList
+      )
     }
   }
 
@@ -332,7 +332,7 @@ object SchemaDsl {
 
     Field(
       name = name,
-      id = s"${model.id}.$name",
+      id = name,
       typeIdentifier = theType,
       isRequired = isRequired,
       enum = enum,
@@ -376,8 +376,8 @@ object SchemaDsl {
 
   def newId(): Id = Cuid.createCuid()
 
-  private def idField = Field(
-    id = Cuid.createCuid(),
+  private val idField = Field(
+    id = "id",
     name = "id",
     typeIdentifier = TypeIdentifier.GraphQLID,
     isRequired = true,
@@ -387,8 +387,8 @@ object SchemaDsl {
     isReadonly = true
   )
 
-  private def updatedAtField = Field(
-    id = Cuid.createCuid(),
+  private val updatedAtField = Field(
+    id = "updatedAt",
     name = "updatedAt",
     typeIdentifier = TypeIdentifier.DateTime,
     isRequired = true,
@@ -398,8 +398,8 @@ object SchemaDsl {
     isReadonly = true
   )
 
-  private def createdAtField = Field(
-    id = Cuid.createCuid(),
+  private val createdAtField = Field(
+    id = "createdAt",
     name = "createdAt",
     typeIdentifier = TypeIdentifier.DateTime,
     isRequired = true,
