@@ -1,6 +1,7 @@
 package cool.graph.shared.models
 
 import cool.graph.cuid.Cuid
+import cool.graph.shared.gc_values.GCValue
 import cool.graph.shared.models.ActionTriggerMutationModelMutationType.ActionTriggerMutationModelMutationType
 import cool.graph.shared.models.CustomRule.CustomRule
 import cool.graph.shared.models.FieldConstraintType.FieldConstraintType
@@ -13,8 +14,6 @@ import cool.graph.shared.models.Region.Region
 import cool.graph.shared.models.SeatStatus.SeatStatus
 import cool.graph.shared.models.UserType.UserType
 import org.joda.time.DateTime
-
-import scala.util.control.NonFatal
 
 /**
   * BEGIN NEW STUFF
@@ -30,7 +29,7 @@ object IdType {
   type Id = String
 }
 
-import IdType._
+import cool.graph.shared.models.IdType._
 
 object CustomerSource extends Enumeration {
   type CustomerSource = Value
@@ -625,7 +624,7 @@ case class Field(
     isSystem: Boolean,
     isReadonly: Boolean,
     enum: Option[Enum] = None,
-    //defaultValue: Option[GCValue] = None,
+    defaultValue: Option[GCValue] = None,
     relation: Option[Relation] = None,
     relationSide: Option[RelationSide.Value] = None,
     constraints: List[FieldConstraint] = List.empty

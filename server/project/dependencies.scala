@@ -1,6 +1,8 @@
 import sbt._
 
 object Dependencies {
+  import DependenciesNew._
+
   lazy val common = Seq(
     "org.sangria-graphql"        %% "sangria"                 % "1.2.3-SNAPSHOT",
     "org.sangria-graphql"        %% "sangria"                 % "1.2.2",
@@ -45,9 +47,8 @@ object Dependencies {
     scalaTest
   )
 
-  val akka      = "com.typesafe.akka" %% "akka-actor"   % "2.4.8"
-  val finagle   = "com.twitter"       %% "finagle-http" % "6.44.0"
-  val scalaTest = "org.scalatest"     %% "scalatest"    % "2.2.6" % Test
+  val akka    = "com.typesafe.akka" %% "akka-actor"   % "2.4.8"
+  val finagle = "com.twitter"       %% "finagle-http" % "6.44.0"
 
   val apiServer    = Seq.empty
   val clientShared = Seq(scalaTest)
@@ -70,6 +71,8 @@ object DependenciesNew {
     val jodaConvert = "1.7"
     val cuid        = "0.1.1"
     val play        = "2.5.12"
+    val scalactic   = "2.2.6"
+    val scalaTest   = "2.2.6"
   }
 
   val jodaTime    = "joda-time" % "joda-time" % v.joda
@@ -77,4 +80,6 @@ object DependenciesNew {
   val joda        = Seq(jodaTime, jodaConvert)
   val cuid        = "cool.graph" % "cuid-java" % v.cuid
   val playJson    = "com.typesafe.play" %% "play-json" % v.play
+  val scalactic   = "org.scalactic" %% "scalactic" % v.scalactic
+  val scalaTest   = "org.scalatest" %% "scalatest" % v.scalaTest % Test
 }

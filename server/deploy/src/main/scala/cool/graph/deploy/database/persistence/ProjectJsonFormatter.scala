@@ -1,5 +1,6 @@
 package cool.graph.deploy.database.persistence
 
+import cool.graph.shared.gc_values._
 import cool.graph.shared.models.FieldConstraintType.FieldConstraintType
 import cool.graph.shared.models.{
   ActionTriggerMutationModelMutationType,
@@ -15,7 +16,9 @@ import cool.graph.shared.models.{
   UserType,
   _
 }
-import play.api.libs.json.{Format, JsObject, JsValue, Json}
+import org.joda.time.{DateTime, DateTimeZone}
+import org.joda.time.format.ISODateTimeFormat
+import play.api.libs.json._
 
 object ProjectJsonFormatter {
   import cool.graph.util.json.JsonUtils.{enumFormat, DateTimeFormat}
@@ -77,6 +80,81 @@ object ProjectJsonFormatter {
     }
   }
 
+  implicit lazy val gcValueFormat = new Format[GCValue] {
+    val discriminatorField = "gcValueType"
+    val isListField        = "isList"
+    val valueField         = "value"
+
+    val nullType      = "null"
+    val stringType    = "string"
+    val passwordType  = "password"
+    val enumType      = "enum"
+    val graphQlIdType = "graphQlId"
+    val dateTimeType  = "datetime"
+    val intType       = "int"
+    val floatType     = "float"
+    val booleanType   = "bool"
+    val jsonType      = "json"
+    val listType      = "list"
+    val rootType      = "root"
+
+    override def reads(json: JsValue): JsResult[GCValue] = {
+      for {
+        discriminator <- (json \ discriminatorField).validate[String]
+        value         <- (json \ valueField).validate[JsValue]
+        isList        <- (json \ isListField).validate[Boolean]
+        converted     <- createGcValue(discriminator, value, isList)
+      } yield converted
+    }
+
+    private def createGcValue(discriminator: String, value: JsValue, isList: Boolean): JsResult[GCValue] = (discriminator, value) match {
+      case (`nullType`, _)                  => JsSuccess(NullGCValue)
+      case (`stringType`, JsString(str))    => JsSuccess(StringGCValue(str))
+      case (`passwordType`, JsString(str))  => JsSuccess(PasswordGCValue(str))
+      case (`enumType`, JsString(str))      => JsSuccess(EnumGCValue(str))
+      case (`graphQlIdType`, JsString(str)) => JsSuccess(GraphQLIdGCValue(str))
+      case (`dateTimeType`, JsString(str))  => JsSuccess(DateTimeGCValue(new DateTime(str, DateTimeZone.UTC)))
+      case (`intType`, JsNumber(x))         => JsSuccess(IntGCValue(x.toInt))
+      case (`floatType`, JsNumber(x))       => JsSuccess(FloatGCValue(x.toDouble))
+      case (`booleanType`, JsBoolean(x))    => JsSuccess(BooleanGCValue(x))
+      case (`jsonType`, json)               => JsSuccess(JsonGCValue(json))
+      case (_, JsArray(elements)) if isList =>
+        val gcValues = elements.map(element => this.createGcValue(discriminator, element, isList = false))
+        gcValues.find(_.isError) match {
+          case Some(error) => error
+          case None        => JsSuccess(ListGCValue(gcValues.map(_.get).toVector))
+        }
+      case _ => JsError(s"invalid discriminator and value combination: $discriminator and value $value")
+    }
+
+    override def writes(gcValue: GCValue): JsValue = {
+      val formatter = ISODateTimeFormat.dateHourMinuteSecondFraction()
+
+      gcValue match {
+        case NullGCValue         => json(nullType, JsNull)
+        case x: StringGCValue    => json(stringType, JsString(x.value))
+        case x: PasswordGCValue  => json(passwordType, JsString(x.value))
+        case x: EnumGCValue      => json(enumType, JsString(x.value))
+        case x: GraphQLIdGCValue => json(graphQlIdType, JsString(x.value))
+        case x: DateTimeGCValue  => json(dateTimeType, JsString(formatter.print(x.value)))
+        case x: IntGCValue       => json(intType, JsNumber(x.value))
+        case x: FloatGCValue     => json(floatType, JsNumber(x.value))
+        case x: BooleanGCValue   => json(booleanType, JsBoolean(x.value))
+        case x: JsonGCValue      => json(jsonType, x.value)
+        case x: ListGCValue      => json(listType, JsArray(x.values.map(this.writes)), isList = true)
+        case x: RootGCValue      => json(rootType, JsObject(x.map.mapValues(this.writes)))
+      }
+    }
+
+    private def json(discriminator: String, valueAsJson: JsValue, isList: Boolean = false): JsObject = {
+      Json.obj(
+        discriminatorField -> discriminator,
+        isListField        -> isList,
+        valueField         -> valueAsJson
+      )
+    }
+  }
+
   implicit lazy val projectDatabase               = Json.format[ProjectDatabase]
   implicit lazy val modelPermission               = Json.format[ModelPermission]
   implicit lazy val relationFieldMirror           = Json.format[RelationFieldMirror]
@@ -102,4 +180,5 @@ object ProjectJsonFormatter {
 
     def fail = sys.error("This JSON Formatter always fails.")
   }
+
 }
