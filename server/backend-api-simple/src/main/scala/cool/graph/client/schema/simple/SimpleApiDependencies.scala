@@ -13,7 +13,7 @@ import cool.graph.shared.functions.{EndpointResolver, FunctionEnvironment}
 import cool.graph.webhook.Webhook
 import scaldi.Module
 
-case class SimpleInjector(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends ClientInjectorImpl
+//case class SimpleInjector(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends ClientInjectorImpl
 
 //trait SimpleApiClientDependencies extends CommonClientDependencies {
 //  import system.dispatcher

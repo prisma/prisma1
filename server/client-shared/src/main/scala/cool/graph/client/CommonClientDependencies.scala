@@ -53,7 +53,7 @@ trait ClientInjector {
   val kinesisApiMetricsPublisher: KinesisPublisher
   val featureMetricActor: ActorRef
   val apiMetricsMiddleware: ApiMetricsMiddleware
-  val config: Config
+  val config: Config = ConfigFactory.load()
   val testableTime: TestableTime
   val apiMetricsFlushInterval: Int
   val clientAuth: ClientAuth
@@ -65,22 +65,21 @@ trait ClientInjector {
   val s3Fileupload: AmazonS3
 }
 
-trait ClientInjectorImpl extends ClientInjector with LazyLogging {
+class ClientInjectorImpl(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends ClientInjector with LazyLogging {
   implicit lazy val bugsnagger: BugSnagger       = BugSnaggerImpl(sys.env("BUGSNAG_API_KEY"))
   implicit lazy val dispatcher: ExecutionContext = system.dispatcher
 
-  val globalRabbitUri: String                           = sys.env.getOrElse("GLOBAL_RABBIT_URI", sys.error("GLOBAL_RABBIT_URI required for schema invalidation"))
+  lazy val globalRabbitUri: String                      = sys.env.getOrElse("GLOBAL_RABBIT_URI", sys.error("GLOBAL_RABBIT_URI required for schema invalidation"))
   lazy val blockedProjectIds: Vector[String]            = Try { sys.env("BLOCKED_PROJECT_IDS").split(",").toVector }.getOrElse(Vector.empty)
   lazy val rabbitMQUri: String                          = sys.env("RABBITMQ_URI")
   lazy val fromStringMarshaller: ByteMarshaller[String] = Conversions.Marshallers.FromString
   lazy val globalDatabaseManager: GlobalDatabaseManager = GlobalDatabaseManager.initializeForSingleRegion(config)
   lazy val endpointResolver: EndpointResolver           = LiveEndpointResolver()
-  val logsPublisher: QueuePublisher[String]             = RabbitQueue.publisher[String](rabbitMQUri, "function-logs")(bugsnagger, fromStringMarshaller)
+  lazy val logsPublisher: QueuePublisher[String]        = RabbitQueue.publisher[String](rabbitMQUri, "function-logs")(bugsnagger, fromStringMarshaller)
   lazy val requestPrefix: String                        = sys.env.getOrElse("AWS_REGION", sys.error("AWS Region not found."))
   lazy val cloudwatch: Cloudwatch                       = CloudwatchImpl()
   lazy val featureMetricActor: ActorRef                 = system.actorOf(Props(new FeatureMetricActor(kinesisApiMetricsPublisher, apiMetricsFlushInterval)))
   lazy val apiMetricsMiddleware: ApiMetricsMiddleware   = new ApiMetricsMiddleware(testableTime, featureMetricActor)
-  lazy val config: Config                               = ConfigFactory.load()
   lazy val testableTime: TestableTime                   = new TestableTimeImplementation
   lazy val apiMetricsFlushInterval: Int                 = 10
   lazy val clientAuth: ClientAuth                       = ClientAuthImpl()
@@ -90,18 +89,18 @@ trait ClientInjectorImpl extends ClientInjector with LazyLogging {
   lazy val s3: AmazonS3                                 = AwsInitializers.createS3()
   lazy val s3Fileupload: AmazonS3                       = AwsInitializers.createS3Fileupload()
   lazy val webhookCaller: WebhookCaller                 = new WebhookCallerImplementation()
-  val webhookPublisher: QueuePublisher[Webhook]         = RabbitQueue.publisher(rabbitMQUri, "webhooks")(bugsnagger, Webhook.marshaller)
+  lazy val webhookPublisher: QueuePublisher[Webhook]    = RabbitQueue.publisher(rabbitMQUri, "webhooks")(bugsnagger, Webhook.marshaller)
 
-  override lazy val projectSchemaInvalidationSubscriber: PubSubSubscriber[String] = {
+  lazy val projectSchemaInvalidationSubscriber: PubSubSubscriber[String] = {
     implicit val unmarshaller: ByteUnmarshaller[String] = Unmarshallers.ToString
     RabbitAkkaPubSub.subscriber[String](globalRabbitUri, "project-schema-invalidation", durable = true)
   }
-  override lazy val projectSchemaFetcher: RefreshableProjectFetcher = CachedProjectFetcherImpl(
+  lazy val projectSchemaFetcher: RefreshableProjectFetcher = CachedProjectFetcherImpl(
     projectFetcher = ProjectFetcherImpl(blockedProjectIds, config),
     projectSchemaInvalidationSubscriber = projectSchemaInvalidationSubscriber
   )
 
-  override lazy val functionEnvironment: FunctionEnvironment = LambdaFunctionEnvironment(
+  lazy val functionEnvironment: FunctionEnvironment = LambdaFunctionEnvironment(
     sys.env.getOrElse("LAMBDA_AWS_ACCESS_KEY_ID", "whatever"),
     sys.env.getOrElse("LAMBDA_AWS_SECRET_ACCESS_KEY", "whatever")
   )
@@ -114,7 +113,7 @@ trait ClientInjectorImpl extends ClientInjector with LazyLogging {
       .build
   }
 
-  val sssEventsPublisher: PubSubPublisher[String] =
+  lazy val sssEventsPublisher: PubSubPublisher[String] =
     RabbitAkkaPubSub.publisher[String](rabbitMQUri, "sss-events", durable = true)(bugsnagger, fromStringMarshaller)
   lazy val kinesisAlgoliaSyncQueriesPublisher: KinesisPublisher =
     new KinesisPublisherImplementation(streamName = sys.env("KINESIS_STREAM_ALGOLIA_SYNC_QUERY"), kinesis)

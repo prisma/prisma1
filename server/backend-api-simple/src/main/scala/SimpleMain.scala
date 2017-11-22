@@ -2,15 +2,15 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import cool.graph.akkautil.http.ServerExecutor
 import cool.graph.bugsnag.BugSnagger
-import cool.graph.client.{FeatureMetric, UserContext}
 import cool.graph.client.database.{DeferredResolverProvider, SimpleManyModelDeferredResolver, SimpleToManyDeferredResolver}
-import cool.graph.client.schema.simple.{SimpleInjector, SimpleSchemaBuilder}
+import cool.graph.client.schema.simple.SimpleSchemaBuilder
 import cool.graph.client.server.{ClientServer, GraphQlRequestHandlerImpl, ProjectSchemaBuilder}
+import cool.graph.client.{ClientInjector, ClientInjectorImpl, FeatureMetric, UserContext}
 
 object SimpleMain extends App {
   implicit val system: ActorSystem             = ActorSystem("sangria-server")
   implicit val materializer: ActorMaterializer = ActorMaterializer()
-  implicit val injector: SimpleInjector        = SimpleInjector()
+  implicit val injector: ClientInjector        = new ClientInjectorImpl()
   implicit val bugsnagger: BugSnagger          = injector.bugsnagger
   import system.dispatcher
 

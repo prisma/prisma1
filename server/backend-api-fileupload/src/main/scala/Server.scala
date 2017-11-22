@@ -18,7 +18,6 @@ import cool.graph.client.database.DatabaseMutationBuilder
 import cool.graph.client.files.{FileUploadResponse, FileUploader}
 import cool.graph.client.server.HealthChecks
 import cool.graph.cuid.Cuid
-import cool.graph.fileupload.FileUploadInjector
 import cool.graph.metrics.ClientSharedMetrics
 import cool.graph.shared.errors.UserAPIErrors
 import cool.graph.shared.logging.RequestLogger
@@ -35,7 +34,7 @@ object Server extends App with LazyLogging {
 
   implicit val system       = ActorSystem("sangria-server")
   implicit val materializer = ActorMaterializer()
-  implicit val injector     = FileUploadInjector()
+  implicit val injector     = new ClientInjectorImpl()
   implicit val inj          = injector.toScaldi
 
   import system.dispatcher

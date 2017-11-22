@@ -12,7 +12,7 @@ import cool.graph.shared.functions.{EndpointResolver, FunctionEnvironment}
 import cool.graph.webhook.Webhook
 import scaldi.Module
 
-case class FileUploadInjector(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends ClientInjectorImpl
+//case class FileUploadInjector(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends ClientInjectorImpl
 //
 //class FileuploadServices(implicit _system: ActorRefFactory, system: ActorSystem, implicit val materializer: akka.stream.ActorMaterializer) extends Module {
 //

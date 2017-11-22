@@ -64,15 +64,14 @@ trait SystemInjector {
 class SystemInjectorImpl(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends SystemInjector {
   import scala.concurrent.duration._
   import scala.concurrent.ExecutionContext.Implicits.global
+  implicit val systemInjectorImpl: SystemInjectorImpl = this
+  implicit val marshaller: ByteMarshaller[String]     = Conversions.Marshallers.FromString
+  implicit val bugsnagger: BugSnaggerImpl             = BugSnaggerImpl(sys.env("BUGSNAG_API_KEY"))
 
   SystemMetrics.init()
 
-  implicit val marshaller: ByteMarshaller[String]       = Conversions.Marshallers.FromString
-  implicit val systemInjectorImpl: SystemInjectorImpl   = this
-  implicit val bugsnagger: BugSnaggerImpl               = BugSnaggerImpl(sys.env("BUGSNAG_API_KEY"))
   lazy val dispatcher: ExecutionContextExecutor         = system.dispatcher
   lazy val schemaBuilder                                = SchemaBuilder(userCtx => new SchemaBuilderImpl(userCtx, globalDatabaseManager, InternalDatabase(internalDB)).build())
-  lazy val sns: AmazonSNS                               = AwsInitializers.createSns()
   lazy val internalDB: MySQLProfile.backend.Database    = dbs.head
   lazy val logsDB: MySQLProfile.backend.Database        = dbs.last
   lazy val globalDatabaseManager: GlobalDatabaseManager = GlobalDatabaseManager.initializeForMultipleRegions(config)
@@ -86,6 +85,7 @@ class SystemInjectorImpl(implicit val system: ActorSystem, val materializer: Act
   lazy val kinesis: AmazonKinesis                       = AwsInitializers.createKinesis()
   lazy val kinesisAlgoliaSyncQueriesPublisher           = new KinesisPublisherImplementation(streamName = sys.env("KINESIS_STREAM_ALGOLIA_SYNC_QUERY"), kinesis)
   lazy val projectResolver: UncachedProjectResolver     = uncachedProjectResolver
+  lazy val sns: AmazonSNS                               = AwsInitializers.createSns()
   lazy val exportDataS3: AmazonS3                       = AwsInitializers.createExportDataS3()
   lazy val masterToken: Option[String]                  = sys.env.get("MASTER_TOKEN")
   lazy val clientResolver: ClientResolver               = ClientResolver(internalDB, cachedProjectResolver)(system.dispatcher)
