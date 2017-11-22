@@ -68,11 +68,11 @@ class SchemaBuilderImpl(
 
   def getFields: Vector[Field[SystemUserContext, Unit]] = Vector(
     getPushField,
-    getTemporaryDeployUrl,
+    getTemporaryDeployUrl, // remove
     getAddProjectField,
-    getAuthenticateCustomerField,
-    getExportDataField,
-    getGenerateNodeTokenMutationField
+    getAuthenticateCustomerField, // remove
+    getExportDataField, // remove
+    getGenerateNodeTokenMutationField // remove
   )
 
   def getPushField: Field[SystemUserContext, Unit] = {
