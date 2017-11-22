@@ -50,8 +50,8 @@ object InternalDatabaseSchema {
         `model` mediumtext COLLATE utf8_unicode_ci DEFAULT NULL,
         `migrationSteps` mediumtext COLLATE utf8_unicode_ci DEFAULT NULL,
         PRIMARY KEY (`id`, `revision`),
-        UNIQUE KEY `project_clientid_projectname_uniq` (`clientId`,`name`),
-        UNIQUE KEY `project_alias_uniq` (`alias`),
+        UNIQUE KEY `project_clientid_projectname_uniq` (`clientId`,`name`, `revision`),
+        UNIQUE KEY `project_alias_uniq` (`alias`, `revision`),
         CONSTRAINT `project_clientid_foreign` FOREIGN KEY (`clientId`) REFERENCES `Client` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;""",
     // SEAT
