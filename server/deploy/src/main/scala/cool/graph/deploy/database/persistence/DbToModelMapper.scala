@@ -8,6 +8,6 @@ object DbToModelMapper {
 
   def convert(project: Project): models.Project = {
     val projectModel = project.model.as[models.Project]
-    projectModel
+    projectModel.copy(revision = project.revision)
   }
 }

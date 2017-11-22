@@ -45,8 +45,6 @@ object InternalDatabaseSchema {
         `name` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
         `revision` int(11) NOT NULL DEFAULT '1',
         `clientId` varchar(25) COLLATE utf8_unicode_ci DEFAULT NULL,
-        `allowQueries` tinyint(1) NOT NULL DEFAULT '1',
-        `allowMutations` tinyint(1) NOT NULL DEFAULT '1',
         `model` mediumtext COLLATE utf8_unicode_ci DEFAULT NULL,
         `migrationSteps` mediumtext COLLATE utf8_unicode_ci DEFAULT NULL,
         PRIMARY KEY (`id`, `revision`),

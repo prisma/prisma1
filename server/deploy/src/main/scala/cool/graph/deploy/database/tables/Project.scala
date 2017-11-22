@@ -5,7 +5,6 @@ import cool.graph.shared.models.Region.Region
 import play.api.libs.json.JsValue
 import slick.dbio.Effect.Read
 import slick.jdbc.MySQLProfile.api._
-import slick.lifted.QueryBase
 import slick.sql.SqlAction
 
 case class Project(
@@ -14,8 +13,6 @@ case class Project(
     name: String,
     revision: Int,
     clientId: String,
-    allowQueries: Boolean,
-    allowMutations: Boolean,
     model: JsValue,
     migrationSteps: JsValue
 )
@@ -29,8 +26,6 @@ class ProjectTable(tag: Tag) extends Table[Project](tag, "Project") {
   def alias          = column[Option[String]]("alias")
   def name           = column[String]("name")
   def revision       = column[Int]("revision")
-  def allowQueries   = column[Boolean]("allowQueries")
-  def allowMutations = column[Boolean]("allowMutations")
   def model          = column[JsValue]("model")
   def migrationSteps = column[JsValue]("migrationSteps")
 
@@ -38,7 +33,7 @@ class ProjectTable(tag: Tag) extends Table[Project](tag, "Project") {
   def client   = foreignKey("project_clientid_foreign", clientId, Tables.Clients)(_.id)
 
   def * =
-    (id, alias, name, revision, clientId, allowQueries, allowMutations, model, migrationSteps) <>
+    (id, alias, name, revision, clientId, model, migrationSteps) <>
       ((Project.apply _).tupled, Project.unapply)
 }
 

@@ -30,8 +30,6 @@ object ModelToDbMapper {
       name = project.name,
       revision = project.revision,
       clientId = project.ownerId,
-      allowQueries = project.allowQueries,
-      allowMutations = project.allowMutations,
       model = modelJson,
       migrationSteps = JsObject.empty
     )

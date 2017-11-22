@@ -16,7 +16,7 @@ case class ProjectPersistenceImpl(
     internalDatabase
       .run(ProjectTable.currentProjectById(id))
       .map(_.map { projectRow =>
-        DbToModelMapper.convert(projectRow).copy(revision = projectRow.revision)
+        DbToModelMapper.convert(projectRow)
       })
   }
 
