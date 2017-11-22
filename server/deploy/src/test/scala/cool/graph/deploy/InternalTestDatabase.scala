@@ -11,11 +11,14 @@ import slick.dbio.Effect.Read
 import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.meta.MTable
 
+import scala.concurrent.Future
+
 trait InternalTestDatabase extends BeforeAndAfterAll with BeforeAndAfterEach with AwaitUtils { this: Suite =>
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  val internalDatabaseRoot = Database.forConfig("internalRoot")
-  val internalDatabase     = Database.forConfig("internal")
+  val dbDriver             = new org.mariadb.jdbc.Driver
+  val internalDatabaseRoot = Database.forConfig("internalRoot", driver = dbDriver)
+  val internalDatabase     = Database.forConfig("internal", driver = dbDriver)
 
   override protected def beforeAll(): Unit = {
     super.beforeAll()
@@ -28,7 +31,13 @@ trait InternalTestDatabase extends BeforeAndAfterAll with BeforeAndAfterEach wit
     createTestClient
   }
 
-  private def createInternalDatabaseSchema = internalDatabaseRoot.run(InternalDatabaseSchema.createSchemaActions(recreate = true)).await()
+  override protected def afterAll(): Unit = {
+    super.afterAll()
+    val shutdowns = Vector(internalDatabase.shutdown, internalDatabaseRoot.shutdown)
+    Future.sequence(shutdowns).await()
+  }
+
+  private def createInternalDatabaseSchema = internalDatabaseRoot.run(InternalDatabaseSchema.createSchemaActions(recreate = true)).await(10)
   private def createTestClient             = internalDatabase.run { Tables.Clients += ModelToDbMapper.convert(TestClient()) }
 
   protected def truncateTables(): Unit = {
@@ -36,7 +45,7 @@ trait InternalTestDatabase extends BeforeAndAfterAll with BeforeAndAfterEach wit
     internalDatabase.run(dangerouslyTruncateTable(schemas)).await()
   }
 
-  def dangerouslyTruncateTable(tableNames: Vector[String]): DBIOAction[Unit, NoStream, Effect] = {
+  private def dangerouslyTruncateTable(tableNames: Vector[String]): DBIOAction[Unit, NoStream, Effect] = {
     DBIO.seq(
       List(sqlu"""SET FOREIGN_KEY_CHECKS=0""") ++
         tableNames.map(name => sqlu"TRUNCATE TABLE `#$name`") ++
@@ -44,7 +53,7 @@ trait InternalTestDatabase extends BeforeAndAfterAll with BeforeAndAfterEach wit
     )
   }
 
-  def getTables(projectId: String): DBIOAction[Vector[String], NoStream, Read] = {
+  private def getTables(projectId: String): DBIOAction[Vector[String], NoStream, Read] = {
     for {
       metaTables <- MTable.getTables(cat = Some(projectId), schemaPattern = None, namePattern = None, types = None)
     } yield metaTables.map(table => table.name.name)
