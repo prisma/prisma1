@@ -35,8 +35,6 @@ import scaldi._
 import scala.concurrent.ExecutionContext
 import scala.util.Try
 
-//subscriptionsdependencies
-
 trait SimpleSubscriptionInjector extends ClientInjector {
 
   val invalidationSubscriber: PubSubSubscriber[SchemaInvalidatedMessage]
@@ -148,88 +146,3 @@ class SimpleSubscriptionInjectorImpl(implicit val system: ActorSystem, val mater
   lazy val environment: String                          = sys.env.getOrElse("ENVIRONMENT", "local")
   lazy val serviceName: String                          = sys.env.getOrElse("SERVICE_NAME", "local")
 }
-
-//
-//trait SimpleSubscriptionApiDependencies extends Module {
-//  implicit val system: ActorSystem
-//  implicit val materializer: ActorMaterializer
-//
-//  val invalidationSubscriber: PubSubSubscriber[SchemaInvalidatedMessage]
-//  val sssEventsSubscriber: PubSubSubscriber[String]
-//  val responsePubSubPublisherV05: PubSubPublisher[SubscriptionSessionResponseV05]
-//  val responsePubSubPublisherV07: PubSubPublisher[SubscriptionSessionResponse]
-//  val requestsQueueConsumer: QueueConsumer[SubscriptionRequest]
-//  val globalDatabaseManager: GlobalDatabaseManager
-//  val kinesisApiMetricsPublisher: KinesisPublisher
-//  val featureMetricActor: ActorRef
-//  val apiMetricsMiddleware: ApiMetricsMiddleware
-//
-//  lazy val config                  = ConfigFactory.load()
-//  lazy val testableTime            = new TestableTimeImplementation
-//  lazy val apiMetricsFlushInterval = 10
-//  lazy val clientAuth              = ClientAuthImpl()
-//  implicit lazy val bugsnagger     = BugSnaggerImpl(sys.env.getOrElse("BUGSNAG_API_KEY", ""))
-//
-//  bind[BugSnagger] toNonLazy bugsnagger
-//  bind[TestableTime] toNonLazy testableTime
-//  bind[ClientAuth] toNonLazy clientAuth
-//
-//  binding identifiedBy "config" toNonLazy config
-//  binding identifiedBy "actorSystem" toNonLazy system destroyWith (_.terminate())
-//  binding identifiedBy "dispatcher" toNonLazy system.dispatcher
-//  binding identifiedBy "actorMaterializer" toNonLazy materializer
-//  binding identifiedBy "environment" toNonLazy sys.env.getOrElse("ENVIRONMENT", "local")
-//  binding identifiedBy "service-name" toNonLazy sys.env.getOrElse("SERVICE_NAME", "local")
-//}
-//
-//case class SimpleSubscriptionDependencies()(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends SimpleSubscriptionApiDependencies {
-//  import cool.graph.subscriptions.protocol.Converters._
-//
-//  implicit val unmarshaller                   = (_: Array[Byte]) => SchemaInvalidated
-//  lazy val globalRabbitUri                    = sys.env("GLOBAL_RABBIT_URI")
-//  lazy val clusterLocalRabbitUri              = sys.env("RABBITMQ_URI")
-//  lazy val apiMatrixFactory: ApiMatrixFactory = ApiMatrixFactory(DefaultApiMatrix)
-//
-//  lazy val invalidationSubscriber: PubSubSubscriber[SchemaInvalidatedMessage] = RabbitAkkaPubSub.subscriber[SchemaInvalidatedMessage](
-//    globalRabbitUri,
-//    "project-schema-invalidation",
-//    durable = true
-//  )
-//
-//  lazy val sssEventsSubscriber = RabbitAkkaPubSub.subscriber[String](
-//    clusterLocalRabbitUri,
-//    "sss-events",
-//    durable = true
-//  )(bugsnagger, system, Conversions.Unmarshallers.ToString)
-//
-//  lazy val responsePubSubPublisher: PubSubPublisher[String] = RabbitAkkaPubSub.publisher[String](
-//    clusterLocalRabbitUri,
-//    "subscription-responses",
-//    durable = true
-//  )(bugsnagger, Conversions.Marshallers.FromString)
-//
-//  lazy val responsePubSubPublisherV05 = responsePubSubPublisher.map[SubscriptionSessionResponseV05](converterResponse05ToString)
-//  lazy val responsePubSubPublisherV07 = responsePubSubPublisher.map[SubscriptionSessionResponse](converterResponse07ToString)
-//  lazy val requestsQueueConsumer      = RabbitQueue.consumer[SubscriptionRequest](clusterLocalRabbitUri, "subscription-requests", durableExchange = true)
-//  lazy val cloudwatch                 = CloudwatchImpl()
-//  lazy val globalDatabaseManager      = GlobalDatabaseManager.initializeForSingleRegion(config)
-//  lazy val kinesis                    = AwsInitializers.createKinesis()
-//  lazy val kinesisApiMetricsPublisher = new KinesisPublisherImplementation(streamName = sys.env("KINESIS_STREAM_API_METRICS"), kinesis)
-//  lazy val featureMetricActor         = system.actorOf(Props(new FeatureMetricActor(kinesisApiMetricsPublisher, apiMetricsFlushInterval)))
-//  lazy val apiMetricsMiddleware       = new ApiMetricsMiddleware(testableTime, featureMetricActor)
-//
-//  bind[KinesisPublisher] identifiedBy "kinesisApiMetricsPublisher" toNonLazy kinesisApiMetricsPublisher
-//  bind[QueueConsumer[SubscriptionRequest]] identifiedBy "subscription-requests-consumer" toNonLazy requestsQueueConsumer
-//  bind[PubSubPublisher[SubscriptionSessionResponseV05]] identifiedBy "subscription-responses-publisher-05" toNonLazy responsePubSubPublisherV05
-//  bind[PubSubPublisher[SubscriptionSessionResponse]] identifiedBy "subscription-responses-publisher-07" toNonLazy responsePubSubPublisherV07
-//  bind[PubSubSubscriber[SchemaInvalidatedMessage]] identifiedBy "schema-invalidation-subscriber" toNonLazy invalidationSubscriber
-//  bind[PubSubSubscriber[String]] identifiedBy "sss-events-subscriber" toNonLazy sssEventsSubscriber
-//  bind[ApiMatrixFactory] toNonLazy apiMatrixFactory
-//  bind[GlobalDatabaseManager] toNonLazy globalDatabaseManager
-//
-//  binding identifiedBy "cloudwatch" toNonLazy cloudwatch
-//  binding identifiedBy "project-schema-fetcher" toNonLazy ProjectFetcherImpl(blockedProjectIds = Vector.empty, config)
-//  binding identifiedBy "kinesis" toNonLazy kinesis
-//  binding identifiedBy "featureMetricActor" to featureMetricActor
-//  binding identifiedBy "api-metrics-middleware" toNonLazy apiMetricsMiddleware
-//}

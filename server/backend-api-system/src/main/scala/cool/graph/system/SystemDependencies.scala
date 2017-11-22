@@ -143,7 +143,6 @@ class SystemInjectorImpl(implicit val system: ActorSystem, val materializer: Act
       bind[PubSubPublisher[String]] identifiedBy "schema-invalidation-publisher" toNonLazy outer.invalidationPublisher
       bind[String] identifiedBy "request-prefix" toNonLazy outer.requestPrefix
       bind[FunctionEnvironment] toNonLazy outer.functionEnvironment
-      bind[ApiMatrixFactory] toNonLazy outer.apiMatrixFactory
       bind[GlobalDatabaseManager] toNonLazy outer.globalDatabaseManager
       bind[AmazonSNS] identifiedBy "sns" toNonLazy outer.sns
       bind[SnsPublisher] identifiedBy "seatSnsPublisher" toNonLazy outer.snsPublisher
