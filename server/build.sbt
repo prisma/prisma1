@@ -108,6 +108,7 @@ def serverProject(name: String): Project = {
   normalProject(name)
     .enablePlugins(sbtdocker.DockerPlugin, JavaAppPackaging)
     .settings(commonBackendSettings: _*)
+    .dependsOn(scalaUtils)
 }
 
 def normalProject(name: String): Project = Project(id = name, base = file(s"./$name")).settings(commonSettings: _*)
