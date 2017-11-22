@@ -115,14 +115,17 @@ def libProject(name: String): Project =  Project(id = name, base = file(s"./libs
 
 lazy val sharedModels = normalProject("shared-models").settings(
   libraryDependencies ++= Seq(
-    cuid
+    cuid,
+    playJson,
+    scalactic
   ) ++ joda
 )
 lazy val deploy = serverProject("deploy")
                     .dependsOn(sharedModels % "compile")
                     .settings(
                       libraryDependencies ++= Seq(
-                        playJson
+                        playJson,
+                        scalaTest
                       )
                     )
 
@@ -137,7 +140,7 @@ lazy val akkaUtils = Project(id = "akka-utils", base = file("./libs/akka-utils")
   .dependsOn(scalaUtils % "compile")
   .dependsOn(stubServer % "test")
   .settings(libraryDependencies ++= Seq(
-    Dependencies.scalaTest,
+    scalaTest,
     "ch.megard"         %% "akka-http-cors" % "0.2.1",
     "com.typesafe.play" %% "play-json"      % "2.5.12"
   ))
@@ -156,7 +159,7 @@ lazy val metrics = Project(id = "metrics", base = file("./libs/metrics"))
       "com.typesafe.akka" %% "akka-http"          % "10.0.5",
       Dependencies.finagle,
       Dependencies.akka,
-      Dependencies.scalaTest
+      scalaTest
     )
   )
 
@@ -170,7 +173,7 @@ lazy val messageBus = Project(id = "message-bus", base = file("./libs/message-bu
   .dependsOn(akkaUtils % "compile")
   .dependsOn(rabbitProcessor % "compile")
   .settings(libraryDependencies ++= Seq(
-    Dependencies.scalaTest,
+    scalaTest,
     "com.typesafe.akka"   %% "akka-testkit" % "2.4.17" % "compile",
     "com.typesafe.play" %% "play-json" % "2.5.12"
   ))
@@ -178,11 +181,11 @@ lazy val messageBus = Project(id = "message-bus", base = file("./libs/message-bu
 lazy val jvmProfiler = Project(id = "jvm-profiler", base = file("./libs/jvm-profiler"))
   .settings(commonSettings: _*)
   .dependsOn(metrics % "compile")
-  .settings(libraryDependencies += Dependencies.scalaTest)
+  .settings(libraryDependencies += scalaTest)
 
 lazy val graphQlClient = Project(id = "graphql-client", base = file("./libs/graphql-client"))
   .settings(commonSettings: _*)
-  .settings(libraryDependencies += Dependencies.scalaTest)
+  .settings(libraryDependencies += scalaTest)
   .dependsOn(stubServer % "test")
   .dependsOn(akkaUtils % "compile")
 
