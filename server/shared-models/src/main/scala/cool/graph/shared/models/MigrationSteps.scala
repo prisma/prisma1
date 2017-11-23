@@ -1,7 +1,5 @@
 package cool.graph.shared.models
 
-import cool.graph.shared.models.TypeIdentifier.TypeIdentifier
-
 case class MigrationSteps(
     steps: Vector[MigrationStep]
 )
