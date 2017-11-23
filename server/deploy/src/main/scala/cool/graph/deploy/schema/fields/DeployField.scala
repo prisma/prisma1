@@ -8,15 +8,14 @@ object DeployField {
   import ManualMarshallerHelpers._
 
   val inputFields = List(
-    InputField("projectId", StringType, description = ""),
-    InputField("config", StringType, description = "")
+    InputField("projectId", StringType),
+    InputField("config", StringType)
   )
 
   implicit val fromInput = new FromInput[DeployMutationInput] {
     val marshaller = CoercedScalaResultMarshaller.default
 
     def fromResult(node: marshaller.Node) = {
-
       DeployMutationInput(
         clientMutationId = node.clientMutationId,
         projectId = node.requiredArgAsString("projectId"),
