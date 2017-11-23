@@ -29,9 +29,10 @@ class SchemaBuilderImpl(
 )(implicit system: ActorSystem) {
   import system.dispatcher
 
-  val projectPersistence: ProjectPersistence         = ???
-  val migrationStepsProposer: MigrationStepsProposer = ???
+  val migrationStepsExecutor: MigrationStepsExecutor = MigrationStepsExecutor
   val desiredProjectInferer: DesiredProjectInferer   = ???
+  val migrationStepsProposer: MigrationStepsProposer = ???
+  val projectPersistence: ProjectPersistence         = ???
 
   def build(): Schema[SystemUserContext, Unit] = {
     val Query = ObjectType(
@@ -77,7 +78,7 @@ class SchemaBuilderImpl(
             result <- DeployMutation(
                        args = args,
                        project = project,
-                       migrationStepsExecutor = MigrationStepsExecutor,
+                       migrationStepsExecutor = migrationStepsExecutor,
                        desiredProjectInferer = desiredProjectInferer,
                        migrationStepsProposer = migrationStepsProposer,
                        projectPersistence = projectPersistence

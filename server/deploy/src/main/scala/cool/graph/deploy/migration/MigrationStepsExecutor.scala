@@ -3,15 +3,15 @@ package cool.graph.deploy.migration
 import cool.graph.shared.models._
 import org.scalactic.{Bad, Good, Or}
 
+trait MigrationStepsExecutor {
+  def execute(project: Project, migrationSteps: MigrationSteps): Project Or MigrationStepError
+}
+
 trait MigrationStepError
 case class ModelAlreadyExists(name: String)                extends MigrationStepError
 case class ModelDoesNotExist(name: String)                 extends MigrationStepError
 case class FieldDoesNotExist(model: String, name: String)  extends MigrationStepError
 case class FieldAlreadyExists(model: String, name: String) extends MigrationStepError
-
-trait MigrationStepsExecutor {
-  def execute(project: Project, migrationSteps: MigrationSteps): Project Or MigrationStepError
-}
 
 object MigrationStepsExecutor extends MigrationStepsExecutor {
   override def execute(project: Project, migrationSteps: MigrationSteps): Project Or MigrationStepError = {
