@@ -22,6 +22,9 @@ import org.joda.time.DateTime
 case class MigrationSteps(
     steps: Vector[MigrationStep]
 )
+object MigrationSteps {
+  val empty = MigrationSteps(steps = Vector.empty)
+}
 
 trait MigrationStep
 trait ModelMigrationStep                              extends MigrationStep

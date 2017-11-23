@@ -3,8 +3,8 @@ package cool.graph.deploy.schema
 import akka.actor.ActorSystem
 import cool.graph.deploy.database.persistence.ProjectPersistence
 import cool.graph.deploy.migration.MigrationStepsExecutor
-import cool.graph.deploy.schema.fields.DeployField
-import cool.graph.deploy.schema.mutations.{DeployMutation, DeployMutationInput, DeployMutationPayload, MutationSuccess}
+import cool.graph.deploy.schema.fields.{AddProjectField, DeployField}
+import cool.graph.deploy.schema.mutations._
 import cool.graph.deploy.schema.types.ProjectType
 import cool.graph.shared.models.Project
 import sangria.relay.Mutation
@@ -55,10 +55,11 @@ class SchemaBuilderImpl(
   }
 
   def getFields: Vector[Field[SystemUserContext, Unit]] = Vector(
-    getDeployField
+    deployField,
+    addProjectField
   )
 
-  def getDeployField: Field[SystemUserContext, Unit] = {
+  def deployField: Field[SystemUserContext, Unit] = {
     import DeployField.fromInput
     Mutation.fieldWithClientMutationId[SystemUserContext, Unit, DeployMutationPayload, DeployMutationInput](
       fieldName = "deploy",
@@ -67,27 +68,49 @@ class SchemaBuilderImpl(
       outputFields = sangria.schema.fields[SystemUserContext, DeployMutationPayload](
         Field("project", OptionType(ProjectType.Type), resolve = (ctx: Context[SystemUserContext, DeployMutationPayload]) => ctx.value.project)
       ),
-      mutateAndGetPayload = (args, ctx) => {
-        for {
-          project <- getProjectOrThrow(args.projectId)
-          mutation = DeployMutation(
-            args = args,
-            project = project,
-            migrationStepsExecutor = MigrationStepsExecutor,
-            projectPersistence = projectPersistence
-          )
-          result <- mutation.execute
-        } yield {
-          result match {
-            case MutationSuccess(result) => result
-            case _                       => ???
-          }
-        }
+      mutateAndGetPayload = (args, ctx) =>
+        handleMutationResult {
+          for {
+            project <- getProjectOrThrow(args.projectId)
+            result <- DeployMutation(
+                       args = args,
+                       project = project,
+                       migrationStepsExecutor = MigrationStepsExecutor,
+                       projectPersistence = projectPersistence
+                     ).execute
+          } yield result
       }
     )
   }
 
-  def getProjectOrThrow(projectId: String): Future[Project] = {
+  def addProjectField: Field[SystemUserContext, Unit] = {
+    import AddProjectField.fromInput
+    Mutation.fieldWithClientMutationId[SystemUserContext, Unit, AddProjectMutationPayload, AddProjectInput](
+      fieldName = "addProject",
+      typeName = "AddProject",
+      inputFields = AddProjectField.inputFields,
+      outputFields = sangria.schema.fields[SystemUserContext, AddProjectMutationPayload](
+        Field("project", OptionType(ProjectType.Type), resolve = (ctx: Context[SystemUserContext, AddProjectMutationPayload]) => ctx.value.project)
+      ),
+      mutateAndGetPayload = (args, ctx) =>
+        handleMutationResult {
+          AddProjectMutation(
+            args = args,
+            client = ???,
+            projectPersistence = projectPersistence
+          ).execute
+      }
+    )
+  }
+
+  private def handleMutationResult[T](result: Future[MutationResult[T]]): Future[T] = {
+    result.map {
+      case MutationSuccess(x) => x
+      case error              => sys.error(s"The mutation failed with the error: $error")
+    }
+  }
+
+  private def getProjectOrThrow(projectId: String): Future[Project] = {
     projectPersistence.load(projectId).map { projectOpt =>
       projectOpt.getOrElse(throw InvalidProjectId(projectId))
     }
