@@ -15,32 +15,6 @@ import cool.graph.shared.models.SeatStatus.SeatStatus
 import cool.graph.shared.models.UserType.UserType
 import org.joda.time.DateTime
 
-/**
-  * BEGIN NEW STUFF
-  * --------------------------------------------------------
-  */
-case class MigrationSteps(
-    steps: Vector[MigrationStep]
-)
-object MigrationSteps {
-  val empty = MigrationSteps(steps = Vector.empty)
-}
-
-trait MigrationStep
-trait ModelMigrationStep                              extends MigrationStep
-case class CreateModel(name: String)                  extends ModelMigrationStep
-case class UpdateModel(name: String, newName: String) extends ModelMigrationStep
-case class DeleteModel(name: String)                  extends ModelMigrationStep
-
-trait FieldMigrationStep                                                         extends MigrationStep
-case class CreateField(model: String, name: String)                              extends FieldMigrationStep
-case class UpdateField(model: String, name: String, isRequired: Option[Boolean]) extends FieldMigrationStep
-case class DeleteField(model: String, name: String)                              extends FieldMigrationStep
-
-/**
-  * END NEW STUFF
-  * --------------------------------------------------------
-  */
 object IdType {
   type Id = String
 }
@@ -209,8 +183,9 @@ case class Project(
   def getModelByFieldId(id: Id): Option[Model] = models.find(_.fields.exists(_.id == id))
   def getModelByFieldId_!(id: Id): Model       = ???
 
-  def getFieldById(id: Id): Option[Field] = models.flatMap(_.fields).find(_.id == id)
-  def getFieldById_!(id: Id): Field       = ???
+  def getFieldById(id: Id): Option[Field]                        = models.flatMap(_.fields).find(_.id == id)
+  def getFieldById_!(id: Id): Field                              = ???
+  def getFieldByName(model: String, name: String): Option[Field] = getModelByName(model).flatMap(_.getFieldByName(name))
 
   def getFieldConstraintById(id: Id): Option[FieldConstraint] = {
     val fields      = models.flatMap(_.fields)
