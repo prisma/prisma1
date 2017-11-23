@@ -9,7 +9,8 @@ object DeployField {
 
   val inputFields = List(
     InputField("projectId", StringType),
-    InputField("config", StringType)
+    InputField("config", StringType),
+    InputField("types", StringType)
   )
 
   implicit val fromInput = new FromInput[DeployMutationInput] {
@@ -19,7 +20,8 @@ object DeployField {
       DeployMutationInput(
         clientMutationId = node.clientMutationId,
         projectId = node.requiredArgAsString("projectId"),
-        config = node.requiredArgAsString("config")
+        config = node.requiredArgAsString("config"),
+        types = node.requiredArgAsString("types")
       )
     }
   }

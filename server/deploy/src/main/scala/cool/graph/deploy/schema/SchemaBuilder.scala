@@ -2,7 +2,7 @@ package cool.graph.deploy.schema
 
 import akka.actor.ActorSystem
 import cool.graph.deploy.database.persistence.ProjectPersistence
-import cool.graph.deploy.migration.MigrationStepsExecutor
+import cool.graph.deploy.migration.{DesiredProjectInferer, MigrationStepsExecutor, MigrationStepsProposer}
 import cool.graph.deploy.schema.fields.{AddProjectField, DeployField}
 import cool.graph.deploy.schema.mutations._
 import cool.graph.deploy.schema.types.ProjectType
@@ -29,7 +29,9 @@ class SchemaBuilderImpl(
 )(implicit system: ActorSystem) {
   import system.dispatcher
 
-  val projectPersistence: ProjectPersistence = ???
+  val projectPersistence: ProjectPersistence         = ???
+  val migrationStepsProposer: MigrationStepsProposer = ???
+  val desiredProjectInferer: DesiredProjectInferer   = ???
 
   def build(): Schema[SystemUserContext, Unit] = {
     val Query = ObjectType(
@@ -76,6 +78,8 @@ class SchemaBuilderImpl(
                        args = args,
                        project = project,
                        migrationStepsExecutor = MigrationStepsExecutor,
+                       desiredProjectInferer = desiredProjectInferer,
+                       migrationStepsProposer = migrationStepsProposer,
                        projectPersistence = projectPersistence
                      ).execute
           } yield result
