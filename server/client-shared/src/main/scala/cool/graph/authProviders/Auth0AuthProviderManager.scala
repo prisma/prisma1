@@ -2,29 +2,28 @@ package cool.graph.authProviders
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import cool.graph.shared.errors.UserAPIErrors.{CannotSignUpUserWithCredentialsExist, UniqueConstraintViolation}
-import cool.graph.client.authorization.{Auth0Jwt, ClientAuth, ClientAuthImpl}
+import cool.graph.client.authorization.Auth0Jwt
 import cool.graph.client.database.{DataResolver, DeferredResolverProvider}
 import cool.graph.client.mutations.Create
-import cool.graph.client.schema.simple.SimpleArgumentSchema
-import cool.graph.client.UserContext
 import cool.graph.client.schema.SchemaModelObjectTypesBuilder
+import cool.graph.client.schema.simple.SimpleArgumentSchema
+import cool.graph.client.{ClientInjector, UserContext}
 import cool.graph.shared.errors.UserAPIErrors
+import cool.graph.shared.errors.UserAPIErrors.{CannotSignUpUserWithCredentialsExist, UniqueConstraintViolation}
 import cool.graph.shared.models.IntegrationName._
 import cool.graph.shared.models.{IntegrationName, _}
 import cool.graph.util.coolSangria.Sangria
 import cool.graph.{ArgumentSchema, DataItem}
 import sangria.schema.Context
-import scaldi.Injector
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class Auth0AuthProviderManager(implicit inj: Injector) extends AuthProviderManager[Unit]()(inj) {
+class Auth0AuthProviderManager(implicit injector: ClientInjector) extends AuthProviderManager[Unit] {
 
-  implicit val system: ActorSystem             = inject[ActorSystem](identified by "actorSystem")
-  implicit val materializer: ActorMaterializer = inject[ActorMaterializer](identified by "actorMaterializer")
-  val clientAuth                               = inject[ClientAuth]
+  implicit val system: ActorSystem             = injector.system
+  implicit val materializer: ActorMaterializer = injector.materializer
+  val clientAuth                               = injector.clientAuth
 
   val auth0UserIdField = ManagedField(defaultName = "auth0UserId", typeIdentifier = TypeIdentifier.String, isUnique = true)
 

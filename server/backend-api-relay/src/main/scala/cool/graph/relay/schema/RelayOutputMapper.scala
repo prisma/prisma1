@@ -4,12 +4,10 @@ import cool.graph.DataItem
 import cool.graph.client.database.{DefaultEdge, Edge}
 import cool.graph.client.schema.OutputMapper
 import cool.graph.client.schema.relay.RelayResolveOutput
-import cool.graph.client.UserContext
-import cool.graph.shared.{ApiMatrixFactory}
+import cool.graph.client.{ClientInjector, UserContext}
 import cool.graph.shared.models.ModelMutationType.ModelMutationType
 import cool.graph.shared.models.{Model, Project, Relation}
 import sangria.schema.{Args, Field, ObjectType, OptionType, fields}
-import scaldi.{Injectable, Injector}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -18,14 +16,13 @@ class RelayOutputMapper(
     edgeObjectTypes: => Map[String, ObjectType[UserContext, Edge[DataItem]]],
     modelObjectTypes: Map[String, ObjectType[UserContext, DataItem]],
     project: Project
-)(implicit inj: Injector)
-    extends OutputMapper
-    with Injectable {
+)(implicit injector: ClientInjector)
+    extends OutputMapper {
 
   type R = RelayResolveOutput
   type C = UserContext
 
-  val apiMatrix = inject[ApiMatrixFactory].create(project)
+  val apiMatrix = injector.apiMatrixFactory.create(project)
 
   def nodePaths(model: Model) = List(List(model.getCamelCasedName))
 

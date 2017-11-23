@@ -6,14 +6,12 @@ import akka.actor.{Actor, ActorRef, Props, Terminated}
 import akka.util.Timeout
 import cool.graph.akkautil.{LogUnhandled, LogUnhandledExceptions}
 import cool.graph.bugsnag.BugSnagger
-import cool.graph.messagebus.PubSubSubscriber
+import cool.graph.client.ClientInjector
 import cool.graph.messagebus.pubsub.Only
 import cool.graph.shared.models.ModelMutationType.ModelMutationType
 import cool.graph.subscriptions.protocol.StringOrInt
 import cool.graph.subscriptions.resolving.SubscriptionsManager.Requests.CreateSubscription
-import cool.graph.subscriptions.resolving.SubscriptionsManagerForProject.SchemaInvalidatedMessage
 import play.api.libs.json._
-import scaldi.{Injectable, Injector}
 
 import scala.collection.mutable
 
@@ -52,11 +50,11 @@ object SubscriptionsManager {
   }
 }
 
-case class SubscriptionsManager(bugsnag: BugSnagger)(implicit inj: Injector) extends Actor with Injectable with LogUnhandled with LogUnhandledExceptions {
+case class SubscriptionsManager(bugsnag: BugSnagger)(implicit injector: ClientInjector) extends Actor with LogUnhandled with LogUnhandledExceptions {
 
   import SubscriptionsManager.Requests._
 
-  val invalidationSubscriber  = inject[PubSubSubscriber[SchemaInvalidatedMessage]](identified by "schema-invalidation-subscriber")
+  val invalidationSubscriber  = injector.projectSchemaInvalidationSubscriber
   implicit val timeout        = Timeout(10, TimeUnit.SECONDS)
   private val projectManagers = mutable.HashMap.empty[String, ActorRef]
 

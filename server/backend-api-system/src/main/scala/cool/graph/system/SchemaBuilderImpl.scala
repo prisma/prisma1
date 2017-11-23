@@ -25,7 +25,10 @@ trait SchemaBuilder {
 }
 
 object SchemaBuilder {
-  def apply(fn: SystemUserContext => Schema[SystemUserContext, Unit]): SchemaBuilder = new SchemaBuilder {
+  def apply(fn: SystemUserContext => Schema[SystemUserContext, Unit])(
+      implicit inj: SystemInjector,
+      system: ActorSystem
+  ): SchemaBuilder = new SchemaBuilder {
     override def apply(userContext: SystemUserContext) = fn(userContext)
   }
 }
@@ -35,13 +38,14 @@ class SchemaBuilderImpl(
     globalDatabaseManager: GlobalDatabaseManager,
     internalDatabase: InternalDatabase
 )(
-    implicit inj: Injector,
+    implicit inj: SystemInjector,
     system: ActorSystem
-) extends Injectable {
+) {
   import system.dispatcher
 
-  implicit val projectResolver: ProjectResolver                   = inject[ProjectResolver](identified by "projectResolver")
-  val functionEnvironment                                         = inject[FunctionEnvironment]
+  implicit val injector: Injector                                 = inj.toScaldi
+  implicit val projectResolver: ProjectResolver                   = inj.projectResolver
+  val functionEnvironment: FunctionEnvironment                    = inj.functionEnvironment
   lazy val clientType: ObjectType[SystemUserContext, Client]      = Customer.getType(userContext.clientId)
   lazy val viewerType: ObjectType[SystemUserContext, ViewerModel] = Viewer.getType(clientType, projectResolver)
   lazy val ConnectionDefinition(clientEdge, _)                    = Connection.definition[SystemUserContext, Connection, models.Client]("Client", clientType)

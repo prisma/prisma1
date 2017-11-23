@@ -1,21 +1,19 @@
 package cool.graph.authProviders
 
 import com.github.t3hnar.bcrypt._
-import cool.graph.shared.errors.UserAPIErrors.{CannotSignUpUserWithCredentialsExist, UniqueConstraintViolation}
-import cool.graph.client.authorization.{ClientAuth, ClientAuthImpl}
+import cool.graph.ArgumentSchema
 import cool.graph.client.database.DeferredResolverProvider
 import cool.graph.client.mutations.Create
+import cool.graph.client.schema.SchemaModelObjectTypesBuilder
 import cool.graph.client.schema.simple.SimpleArgumentSchema
-import cool.graph.client.UserContext
+import cool.graph.client.{ClientInjector, UserContext}
+import cool.graph.shared.errors.UserAPIErrors
+import cool.graph.shared.errors.UserAPIErrors.{CannotSignUpUserWithCredentialsExist, UniqueConstraintViolation}
 import cool.graph.shared.models.IntegrationName._
 import cool.graph.shared.models.{AuthProviderMetaInformation, IntegrationName, TypeIdentifier}
 import cool.graph.util.coolSangria.Sangria
 import cool.graph.util.crypto.Crypto
-import cool.graph.ArgumentSchema
-import cool.graph.client.schema.SchemaModelObjectTypesBuilder
-import cool.graph.shared.errors.UserAPIErrors
 import sangria.schema.Context
-import scaldi.Injector
 import spray.json.{DefaultJsonProtocol, RootJsonFormat}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -27,8 +25,8 @@ object EmailAuthJsonProtocol extends DefaultJsonProtocol {
   implicit val authDataFormat: RootJsonFormat[JwtEmailAuthData] = jsonFormat1(JwtEmailAuthData)
 }
 
-class EmailAuthProviderManager()(implicit inj: Injector) extends AuthProviderManager[Unit]()(inj) {
-  val clientAuth = inject[ClientAuth]
+class EmailAuthProviderManager()(implicit injector: ClientInjector) extends AuthProviderManager[Unit]() {
+  val clientAuth = injector.clientAuth
 
   val emailField    = ManagedField(defaultName = "email", typeIdentifier = TypeIdentifier.String, isUnique = true, isReadonly = true)
   val passwordField = ManagedField(defaultName = "password", typeIdentifier = TypeIdentifier.String, isReadonly = true)

@@ -2,8 +2,8 @@ package cool.graph.client.authorization.queryPermissions
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import cool.graph.client.UserContext
 import cool.graph.client.database.{DeferredResolverProvider, SimpleManyModelDeferredResolver, SimpleToManyDeferredResolver}
+import cool.graph.client.{ClientInjector, UserContext}
 import cool.graph.shared.errors.UserAPIErrors.InsufficientPermissions
 import cool.graph.shared.models.{AuthenticatedRequest, Project}
 import cool.graph.shared.queryPermissions.PermissionSchemaResolver
@@ -15,15 +15,14 @@ import sangria.marshalling.{InputUnmarshaller, QueryAstResultMarshaller}
 import sangria.parser.QueryParser
 import sangria.schema.Schema
 import sangria.validation.QueryValidator
-import scaldi.{Injectable, Injector}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
 
-class QueryPermissionValidator(project: Project)(implicit inj: Injector, system: ActorSystem, materializer: ActorMaterializer) extends Injectable {
+class QueryPermissionValidator(project: Project)(implicit injector: ClientInjector, system: ActorSystem, materializer: ActorMaterializer) {
 
-  lazy val schema: Schema[UserContext, Unit] = PermissionSchemaResolver.permissionSchema(project)
+  lazy val schema: Schema[UserContext, Unit] = PermissionSchemaResolver.permissionSchema(project)(injector.toScaldi)
 
   lazy val deferredResolverProvider: DeferredResolver[Any] =
     new DeferredResolverProvider(new SimpleToManyDeferredResolver, new SimpleManyModelDeferredResolver, skipPermissionCheck = true)
@@ -54,7 +53,7 @@ class QueryPermissionValidator(project: Project)(implicit inj: Injector, system:
       project.ownerId,
       (x: String) => Unit,
       alwaysQueryMasterDatabase = alwaysQueryMasterDatabase
-    )
+    )(injector.toScaldi)
 
     val dataFut: Future[QueryAstResultMarshaller#Node] =
       QueryParser.parse(query) match {

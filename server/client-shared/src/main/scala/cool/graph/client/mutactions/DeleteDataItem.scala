@@ -1,14 +1,14 @@
 package cool.graph.client.mutactions
 
-import cool.graph.shared.mutactions.MutationTypes.ArgumentValue
 import cool.graph.Types.Id
 import cool.graph._
+import cool.graph.client.ClientInjector
 import cool.graph.client.database.{DataResolver, DatabaseMutationBuilder, ProjectRelayIdTable}
 import cool.graph.client.requestPipeline.RequestPipelineRunner
 import cool.graph.shared.NameConstraints
 import cool.graph.shared.errors.UserAPIErrors
 import cool.graph.shared.models.{Model, Project, RequestPipelineOperation}
-import scaldi.{Injectable, Injector}
+import cool.graph.shared.mutactions.MutationTypes.ArgumentValue
 import slick.jdbc.MySQLProfile.api._
 import slick.lifted.TableQuery
 
@@ -16,9 +16,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
 
-case class DeleteDataItem(project: Project, model: Model, id: Id, previousValues: DataItem, requestId: Option[String] = None)(implicit val inj: Injector)
-    extends ClientSqlDataChangeMutaction
-    with Injectable {
+case class DeleteDataItem(project: Project, model: Model, id: Id, previousValues: DataItem, requestId: Option[String] = None)(implicit injector: ClientInjector)
+    extends ClientSqlDataChangeMutaction {
 
   val pipelineRunner = new RequestPipelineRunner(requestId.getOrElse(""))
 

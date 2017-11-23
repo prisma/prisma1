@@ -3,6 +3,7 @@ package cool.graph.client.mutactions
 import com.amazonaws.services.kinesis.model.PutRecordResult
 import com.typesafe.scalalogging.LazyLogging
 import cool.graph._
+import cool.graph.client.ClientInjector
 import cool.graph.client.database.{DeferredResolverProvider, SimpleManyModelDeferredResolver, SimpleToManyDeferredResolver}
 import cool.graph.client.schema.simple.SimpleSchemaModelObjectTypeBuilder
 import cool.graph.shared.algolia.schemas.AlgoliaFullModelSchema
@@ -16,8 +17,8 @@ import cool.graph.util.json.SprayJsonExtensions
 import sangria.ast._
 import sangria.execution.Executor
 import sangria.parser.QueryParser
-import scaldi.{Injectable, Injector}
 import spray.json.{JsString, _}
+
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 
@@ -27,17 +28,17 @@ case class SyncModelToAlgolia(
     syncQuery: AlgoliaSyncQuery,
     searchProviderAlgolia: SearchProviderAlgolia,
     requestId: String
-)(implicit inj: Injector)
+)(implicit injector: ClientInjector)
     extends Mutaction
-    with Injectable
     with LazyLogging
     with SprayJsonExtensions {
 
   import cool.graph.shared.algolia.AlgoliaEventJsonProtocol._
   import cool.graph.utils.`try`.TryExtensions._
 
-  val algoliaSyncPublisher: KinesisPublisher = inject[KinesisPublisher](identified by "kinesisAlgoliaSyncQueriesPublisher")
-  implicit val dispatcher: ExecutionContext  = inject[ExecutionContext](identified by "dispatcher")
+  val algoliaSyncPublisher: KinesisPublisher = injector.kinesisAlgoliaSyncQueriesPublisher
+  implicit val dispatcher: ExecutionContext  = injector.dispatcher
+  implicit val inj                           = injector.toScaldi
 
   override def execute: Future[MutactionExecutionResult] = {
     if (!searchProviderAlgolia.isEnabled) {

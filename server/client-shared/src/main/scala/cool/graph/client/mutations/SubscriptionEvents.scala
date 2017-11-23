@@ -2,15 +2,16 @@ package cool.graph.client.mutations
 
 import cool.graph.ClientSqlMutaction
 import cool.graph.Types.Id
+import cool.graph.client.ClientInjector
 import cool.graph.client.adapters.GraphcoolDataTypes
 import cool.graph.client.mutactions._
 import cool.graph.shared.models.Project
-import scaldi.Injector
 
 import scala.collection.immutable.Seq
 
 object SubscriptionEvents {
-  def extractFromSqlMutactions(project: Project, mutationId: Id, mutactions: Seq[ClientSqlMutaction])(implicit inj: Injector): Seq[PublishSubscriptionEvent] = {
+  def extractFromSqlMutactions(project: Project, mutationId: Id, mutactions: Seq[ClientSqlMutaction])(
+      implicit injector: ClientInjector): Seq[PublishSubscriptionEvent] = {
     mutactions.collect {
       case x: UpdateDataItem => fromUpdateMutaction(project, mutationId, x)
       case x: CreateDataItem => fromCreateMutaction(project, mutationId, x)
@@ -18,7 +19,7 @@ object SubscriptionEvents {
     }
   }
 
-  def fromDeleteMutaction(project: Project, mutationId: Id, mutaction: DeleteDataItem)(implicit inj: Injector): PublishSubscriptionEvent = {
+  def fromDeleteMutaction(project: Project, mutationId: Id, mutaction: DeleteDataItem)(implicit injector: ClientInjector): PublishSubscriptionEvent = {
     val nodeData: Map[String, Any] = mutaction.previousValues.userData
       .collect {
         case (key, Some(value)) =>
@@ -35,7 +36,7 @@ object SubscriptionEvents {
     )
   }
 
-  def fromCreateMutaction(project: Project, mutationId: Id, mutaction: CreateDataItem)(implicit inj: Injector): PublishSubscriptionEvent = {
+  def fromCreateMutaction(project: Project, mutationId: Id, mutaction: CreateDataItem)(implicit injector: ClientInjector): PublishSubscriptionEvent = {
     PublishSubscriptionEvent(
       project = project,
       value = Map("nodeId" -> mutaction.id, "modelId" -> mutaction.model.id, "mutationType" -> "CreateNode"),
@@ -43,7 +44,7 @@ object SubscriptionEvents {
     )
   }
 
-  def fromUpdateMutaction(project: Project, mutationId: Id, mutaction: UpdateDataItem)(implicit inj: Injector): PublishSubscriptionEvent = {
+  def fromUpdateMutaction(project: Project, mutationId: Id, mutaction: UpdateDataItem)(implicit injector: ClientInjector): PublishSubscriptionEvent = {
     PublishSubscriptionEvent(
       project = project,
       value = Map(

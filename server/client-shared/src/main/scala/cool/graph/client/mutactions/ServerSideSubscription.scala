@@ -2,22 +2,19 @@ package cool.graph.client.mutactions
 
 import cool.graph.Types.Id
 import cool.graph._
+import cool.graph.client.ClientInjector
 import cool.graph.client.requestPipeline.FunctionExecutor
-import cool.graph.messagebus.QueuePublisher
-import cool.graph.shared.functions.EndpointResolver
 import cool.graph.shared.models.ModelMutationType.ModelMutationType
 import cool.graph.shared.models._
 import cool.graph.subscriptions.SubscriptionExecutor
 import cool.graph.webhook.Webhook
-import scaldi.{Injectable, Injector}
 import spray.json.{JsValue, _}
-import cool.graph.utils.future.FutureUtils._
 
 import scala.concurrent.Future
-import scala.util.{Failure, Success}
 
 object ServerSideSubscription {
-  def extractFromMutactions(project: Project, mutactions: Seq[ClientSqlMutaction], requestId: Id)(implicit inj: Injector): Seq[ServerSideSubscription] = {
+  def extractFromMutactions(project: Project, mutactions: Seq[ClientSqlMutaction], requestId: Id)(
+      implicit injector: ClientInjector): Seq[ServerSideSubscription] = {
     val createMutactions = mutactions.collect { case x: CreateDataItem => x }
     val updateMutactions = mutactions.collect { case x: UpdateDataItem => x }
     val deleteMutactions = mutactions.collect { case x: DeleteDataItem => x }
@@ -27,7 +24,8 @@ object ServerSideSubscription {
       extractFromDeleteMutactions(project, deleteMutactions, requestId)
   }
 
-  def extractFromCreateMutactions(project: Project, mutactions: Seq[CreateDataItem], requestId: Id)(implicit inj: Injector): Seq[ServerSideSubscription] = {
+  def extractFromCreateMutactions(project: Project, mutactions: Seq[CreateDataItem], requestId: Id)(
+      implicit injector: ClientInjector): Seq[ServerSideSubscription] = {
     for {
       mutaction <- mutactions
       sssFn     <- project.serverSideSubscriptionFunctionsFor(mutaction.model, ModelMutationType.Created)
@@ -43,7 +41,8 @@ object ServerSideSubscription {
     }
   }
 
-  def extractFromUpdateMutactions(project: Project, mutactions: Seq[UpdateDataItem], requestId: Id)(implicit inj: Injector): Seq[ServerSideSubscription] = {
+  def extractFromUpdateMutactions(project: Project, mutactions: Seq[UpdateDataItem], requestId: Id)(
+      implicit injector: ClientInjector): Seq[ServerSideSubscription] = {
     for {
       mutaction <- mutactions
       sssFn     <- project.serverSideSubscriptionFunctionsFor(mutaction.model, ModelMutationType.Updated)
@@ -62,7 +61,8 @@ object ServerSideSubscription {
 
   }
 
-  def extractFromDeleteMutactions(project: Project, mutactions: Seq[DeleteDataItem], requestId: Id)(implicit inj: Injector): Seq[ServerSideSubscription] = {
+  def extractFromDeleteMutactions(project: Project, mutactions: Seq[DeleteDataItem], requestId: Id)(
+      implicit injector: ClientInjector): Seq[ServerSideSubscription] = {
     for {
       mutaction <- mutactions
       sssFn     <- project.serverSideSubscriptionFunctionsFor(mutaction.model, ModelMutationType.Deleted)
@@ -89,12 +89,11 @@ case class ServerSideSubscription(
     requestId: String,
     updatedFields: Option[List[String]] = None,
     previousValues: Option[DataItem] = None
-)(implicit inj: Injector)
-    extends Mutaction
-    with Injectable {
+)(implicit injector: ClientInjector)
+    extends Mutaction {
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  val webhookPublisher = inject[QueuePublisher[Webhook]](identified by "webhookPublisher")
+  val webhookPublisher = injector.webhookPublisher
 
   override def execute: Future[MutactionExecutionResult] = {
     for {
@@ -102,7 +101,7 @@ case class ServerSideSubscription(
     } yield {
       result match {
         case Some(JsObject(fields)) if fields.contains("data") =>
-          val endpointResolver          = inject[EndpointResolver](identified by "endpointResolver")
+          val endpointResolver          = injector.endpointResolver
           val context: Map[String, Any] = FunctionExecutor.createEventContext(project, "", headers = Map.empty, None, endpointResolver)
           val event                     = JsObject(fields + ("context" -> AnyJsonFormat.write(context)))
           val json                      = event.compactPrint

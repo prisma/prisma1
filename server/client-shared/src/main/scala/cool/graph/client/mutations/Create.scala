@@ -4,6 +4,7 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import cool.graph.Types.Id
 import cool.graph._
+import cool.graph.client.ClientInjector
 import cool.graph.client.authorization.{ModelPermissions, PermissionValidator, RelationMutationPermissions}
 import cool.graph.client.database.DataResolver
 import cool.graph.client.mutactions._
@@ -13,22 +14,20 @@ import cool.graph.client.schema.InputTypesBuilder
 import cool.graph.cuid.Cuid
 import cool.graph.shared.models._
 import sangria.schema
-import scaldi.{Injectable, Injector}
 
-import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 class Create(model: Model,
              project: Project,
              args: schema.Args,
              dataResolver: DataResolver,
              argumentSchema: ArgumentSchema,
-             allowSettingManagedFields: Boolean = false)(implicit inj: Injector)
-    extends ClientMutation(model, args, dataResolver, argumentSchema)
-    with Injectable {
+             allowSettingManagedFields: Boolean = false)(implicit injector: ClientInjector)
+    extends ClientMutation(model, args, dataResolver, argumentSchema) {
 
-  implicit val system: ActorSystem             = inject[ActorSystem](identified by "actorSystem")
-  implicit val materializer: ActorMaterializer = inject[ActorMaterializer](identified by "actorMaterializer")
+  implicit val system: ActorSystem             = injector.system
+  implicit val materializer: ActorMaterializer = injector.materializer
 
   override val mutationDefinition = CreateDefinition(argumentSchema, project, InputTypesBuilder(project, argumentSchema))
 
