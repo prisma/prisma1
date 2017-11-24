@@ -3,16 +3,16 @@ package cool.graph.deploy.migration
 import cool.graph.shared.models._
 
 trait MigrationStepsProposer {
-  def propose(current: Project, desired: Project): MigrationSteps
+  def propose(current: Project, desired: Project, renames: Renames): MigrationSteps
 }
 
 object MigrationStepsProposer {
   def apply(): MigrationStepsProposer = {
-    apply((current, desired) => MigrationStepsProposerImpl(current, desired).evaluate())
+    apply((current, desired, renames) => MigrationStepsProposerImpl(current, desired, renames).evaluate())
   }
 
-  def apply(fn: (Project, Project) => MigrationSteps): MigrationStepsProposer = new MigrationStepsProposer {
-    override def propose(current: Project, desired: Project): MigrationSteps = fn(current, desired)
+  def apply(fn: (Project, Project, Renames) => MigrationSteps): MigrationStepsProposer = new MigrationStepsProposer {
+    override def propose(current: Project, desired: Project, renames: Renames): MigrationSteps = fn(current, desired, renames)
   }
 }
 
@@ -74,9 +74,10 @@ case class MigrationStepsProposerImpl(current: Project, desired: Project, rename
         isRequired = fieldOfDesiredModel.isRequired,
         isList = fieldOfDesiredModel.isList,
         isUnique = fieldOfDesiredModel.isUnique,
-        defaultValue = fieldOfDesiredModel.defaultValue
+        defaultValue = fieldOfDesiredModel.defaultValue.map(_.toString),
+        relation = None,
+        enum = None
       )
-      ???
     }
 
   }

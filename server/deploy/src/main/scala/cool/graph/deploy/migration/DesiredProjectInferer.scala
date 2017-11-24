@@ -11,6 +11,16 @@ trait DesiredProjectInferer {
 sealed trait ProjectSyntaxError
 case class RelationDirectiveNeeded(type1: String, type1Fields: Vector[String], type2: String, type2Fields: Vector[String]) extends ProjectSyntaxError
 
-object DesiredProjectInferer extends DesiredProjectInferer {
-  override def infer(graphQlSdl: Document): Project Or ProjectSyntaxError = ???
+object DesiredProjectInferer {
+  def apply() = new DesiredProjectInferer {
+    override def infer(graphQlSdl: Document) = DesiredProjectInfererImpl(graphQlSdl).infer()
+  }
+}
+
+case class DesiredProjectInfererImpl(
+    graphQlSdl: Document
+) {
+  def infer(): Project Or ProjectSyntaxError = {
+    ???
+  }
 }
