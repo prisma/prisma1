@@ -62,6 +62,7 @@ case class DesiredProjectInfererImpl(
           }
         )
       }
+
       Model(
         id = objectType.name,
         name = objectType.name,

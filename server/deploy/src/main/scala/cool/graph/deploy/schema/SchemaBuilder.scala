@@ -5,10 +5,10 @@ import cool.graph.deploy.database.persistence.{ProjectPersistence, ProjectPersis
 import cool.graph.deploy.migration.{DesiredProjectInferer, MigrationStepsProposer, RenameInferer}
 import cool.graph.deploy.schema.fields.{AddProjectField, DeployField}
 import cool.graph.deploy.schema.mutations._
-import cool.graph.deploy.schema.types.ProjectType
+import cool.graph.deploy.schema.types.{MigrationStepType, ProjectType}
 import cool.graph.shared.models.{Client, Project}
 import sangria.relay.Mutation
-import sangria.schema._
+import sangria.schema.{Field, _}
 import slick.jdbc.MySQLProfile.backend.DatabaseDef
 
 import scala.concurrent.Future
@@ -78,7 +78,8 @@ case class SchemaBuilderImpl(
       typeName = "Deploy",
       inputFields = DeployField.inputFields,
       outputFields = sangria.schema.fields[SystemUserContext, DeployMutationPayload](
-        Field("project", OptionType(ProjectType.Type), resolve = (ctx: Context[SystemUserContext, DeployMutationPayload]) => ctx.value.project)
+        Field("project", OptionType(ProjectType.Type), resolve = (ctx: Context[SystemUserContext, DeployMutationPayload]) => ctx.value.project),
+        Field("steps", ListType(MigrationStepType.Type), resolve = (ctx: Context[SystemUserContext, DeployMutationPayload]) => ctx.value.steps.steps.toList)
       ),
       mutateAndGetPayload = (args, ctx) =>
         handleMutationResult {

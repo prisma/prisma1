@@ -29,7 +29,7 @@ case class DeployMutation(
       migrationSteps = migrationStepsProposer.propose(project, desiredProject, renames)
       _              <- projectPersistence.save(desiredProject, migrationSteps)
     } yield {
-      MutationSuccess(DeployMutationPayload(args.clientMutationId, desiredProject))
+      MutationSuccess(DeployMutationPayload(args.clientMutationId, desiredProject, migrationSteps))
     }
   }
 }
@@ -43,7 +43,8 @@ case class DeployMutationInput(
 
 case class DeployMutationPayload(
     clientMutationId: Option[String],
-    project: Project
+    project: Project,
+    steps: MigrationSteps
 ) extends sangria.relay.Mutation
 
 /**
