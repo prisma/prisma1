@@ -147,7 +147,7 @@ class ClientInjectorImpl(implicit val system: ActorSystem, val materializer: Act
       bind[FunctionEnvironment] toNonLazy outer.functionEnvironment
       bind[GlobalDatabaseManager] toNonLazy outer.globalDatabaseManager
       bind[ApiMatrixFactory] toNonLazy outer.apiMatrixFactory
-
+      bind[BugSnagger] toNonLazy outer.bugsnagger
     }
   }
 }
