@@ -1,26 +1,22 @@
 package cool.graph.subscriptions.helpers
 
-import akka.actor.{ActorRef, ActorSystem}
-import cool.graph.client.finder.ProjectFetcher
-import cool.graph.client.{ApiFeatureMetric, FeatureMetric}
+import akka.actor.ActorSystem
+import cool.graph.client.{ApiFeatureMetric, ClientInjector, FeatureMetric}
 import cool.graph.shared.models.ProjectWithClientId
-import cool.graph.shared.externalServices.TestableTime
-import scaldi.Injector
-import scaldi.akka.AkkaInjectable
 
 import scala.concurrent.{ExecutionContext, Future}
 
-object ProjectHelper extends AkkaInjectable {
-  def resolveProject(projectId: String)(implicit inj: Injector, as: ActorSystem, ec: ExecutionContext): Future[ProjectWithClientId] = {
-    val schemaFetcher = inject[ProjectFetcher](identified by "project-schema-fetcher")
+object ProjectHelper {
+  def resolveProject(projectId: String)(implicit injector: ClientInjector, as: ActorSystem, ec: ExecutionContext): Future[ProjectWithClientId] = {
+    val schemaFetcher = injector.projectSchemaFetcher
 
     schemaFetcher.fetch(projectId).map {
       case None =>
         sys.error(s"ProjectHelper: Could not resolve project with id: $projectId")
 
-      case Some(project: ProjectWithClientId) => {
-        val apiMetricActor = inject[ActorRef](identified by "featureMetricActor")
-        val testableTime   = inject[TestableTime]
+      case Some(project: ProjectWithClientId) =>
+        val apiMetricActor = injector.featureMetricActor
+        val testableTime   = injector.testableTime
 
         apiMetricActor ! ApiFeatureMetric(
           "",
@@ -32,7 +28,6 @@ object ProjectHelper extends AkkaInjectable {
         )
 
         project
-      }
     }
   }
 }

@@ -1,8 +1,8 @@
 package cool.graph.client.database
 
+import cool.graph.client.ClientInjector
 import cool.graph.client.database.DeferredTypes._
 import sangria.execution.deferred.{Deferred, DeferredResolver}
-import scaldi.Injector
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.reflectiveCalls
@@ -10,7 +10,7 @@ import scala.language.reflectiveCalls
 class DeferredResolverProvider[ConnectionOutputType, Context <: { def dataResolver: DataResolver }](
     toManyDeferredResolver: ToManyDeferredResolver[ConnectionOutputType],
     manyModelDeferredResolver: ManyModelDeferredResolver[ConnectionOutputType],
-    skipPermissionCheck: Boolean = false)(implicit inj: Injector)
+    skipPermissionCheck: Boolean = false)(implicit injector: ClientInjector)
     extends DeferredResolver[Context] {
 
   override def resolve(deferred: Vector[Deferred[Any]], ctx: Context, queryState: Any)(implicit ec: ExecutionContext): Vector[Future[Any]] = {

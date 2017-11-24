@@ -13,7 +13,7 @@ type User implements Node {
 # Graphcool has one special type, the File type:
 # Uncommenting this type will automatically enable the File API
 # Read more here:
-# https://docs-next.graph.cool/reference/api/file-management-eer4wiang0
+# https://www.graph.cool/docs/reference/api/file-management-eer4wiang0
 
 # type File implements Node {
 #   contentType: String!

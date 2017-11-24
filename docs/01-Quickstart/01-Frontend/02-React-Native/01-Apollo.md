@@ -57,6 +57,7 @@ graphcool init server
 └── server
     ├── graphcool.yml
     ├── types.graphql
+    ├── package.json
     └── src
         ├── hello.graphql
         └── hello.js
@@ -67,6 +68,7 @@ Each of the created files and directories have a dedicated purpose inside your G
 - `graphcool.yml`: Contains your [service definition](!alias-opheidaix3).
 - `types.graphql`: Contains the [data model](!alias-eiroozae8u) and any additional type definitions for your Graphcool service, written in the GraphQL [Schema Definition Language](https://medium.com/@graphcool/graphql-sdl-schema-definition-language-6755bcb9ce51) (SDL).
 - `src`: Contains the source code (and if necessary GraphQL queries) for the [functions](!alias-aiw4aimie9) you've configured for your service. Notice that a new service comes with a default "Hello World"-function (called `hello` in `graphcool.yml`) which you can delete if you don't want to use it.
+- `package.json`: Specifies the dependendies for your functions (if needed). 
 
 Next you need to configure the [data model](!alias-eiroozae8u) for your service.
 
@@ -149,11 +151,11 @@ The next step is to connect the React application with the GraphQL API from your
 
 <Instruction>
 
-Paste the HTTP endpoint for the `Simple API` that you saved after running `graphcool deploy` into `./src/root.js` as the `uri` argument in the `createNetworkInterface` call:
+Paste the HTTP endpoint for the `Simple API` that you saved after running `graphcool deploy` into `./App.js` as the `uri` argument in the `HttpLink` constructor call:
 
-```js(path="src/root.js")
+```js(path="App.js")
 // replace `__SIMPLE_API_ENDPOINT__` with the endpoint from the previous step
-const networkInterface = createNetworkInterface({ uri: '__SIMPLE_API_ENDPOINT__' })
+const httpLink = new HttpLink({ uri: '__SIMPLE_API_ENDPOINT__' })
 ```
 
 </Instruction>
@@ -165,10 +167,11 @@ That's it. The last thing to do is actually launching the application 🚀
 Install dependencies and run the app:
 
 ```sh(path="")
+cd ..
 yarn install
-yarn start # starts the packager
-react-native run-ios # opens the simulator
-# or react-native run-android
+yarn start          # open using the Expo app on your phone
+# yarn run ios      # open with iOS simulator
+# yarn run android  # open with Android emulator
 ```
 
 </Instruction>

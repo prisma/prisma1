@@ -2,10 +2,10 @@ package cool.graph.client.requestPipeline
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model.{DateTime => _, _}
-import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.{ActorMaterializer, StreamTcpException}
 import cool.graph.akkautil.http.{FailedResponseCodeError, SimpleHttpClient, SimpleHttpResponse}
 import cool.graph.bugsnag.BugSnaggerImpl
+import cool.graph.client.ClientInjector
 import cool.graph.client.authorization.ClientAuthImpl
 import cool.graph.cuid.Cuid
 import cool.graph.messagebus.{Conversions, QueuePublisher}
@@ -18,7 +18,6 @@ import cool.graph.util.collection.ToImmutable._
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 import org.scalactic.{Bad, Good, Or}
-import scaldi.{Injectable, Injector}
 import spray.json._
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -43,12 +42,12 @@ case class FunctionReturnedJsonError(json: JsObject, result: FunctionExecutionRe
 
 case class FunctionExecutionResult(logs: Vector[String], returnValue: Map[String, Any])
 
-class FunctionExecutor(implicit val inj: Injector) extends Injectable {
-  implicit val actorSystem: ActorSystem        = inject[_root_.akka.actor.ActorSystem](identified by "actorSystem")
-  implicit val materializer: ActorMaterializer = inject[_root_.akka.stream.ActorMaterializer](identified by "actorMaterializer")
+class FunctionExecutor(implicit val injector: ClientInjector) {
+  implicit val actorSystem: ActorSystem        = injector.system
+  implicit val materializer: ActorMaterializer = injector.materializer
 
-  val functionEnvironment: FunctionEnvironment = inject[FunctionEnvironment]
-  val logsPublisher: QueuePublisher[String]    = inject[QueuePublisher[String]](identified by "logsPublisher")
+  val functionEnvironment: FunctionEnvironment = injector.functionEnvironment
+  val logsPublisher: QueuePublisher[String]    = injector.logsPublisher
   val httpClient                               = SimpleHttpClient()
 
   def sync(project: Project, function: models.Function, event: String): Future[FunctionSuccess Or FunctionError] = {
@@ -309,7 +308,7 @@ object FunctionExecutor {
       headers: Map[String, String],
       authenticatedRequest: Option[AuthenticatedRequest],
       endpointResolver: EndpointResolver
-  )(implicit inj: Injector): Map[String, Any] = {
+  )(implicit injector: ClientInjector): Map[String, Any] = {
     val endpoints = endpointResolver.endpoints(project.id)
     val request = Map(
       "sourceIp"   -> sourceIp,

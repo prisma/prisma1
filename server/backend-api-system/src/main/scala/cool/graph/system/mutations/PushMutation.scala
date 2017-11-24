@@ -51,7 +51,7 @@ case class PushMutation(
         errors = List(
           SchemaError(
             "Global",
-            "Only projects that have been ejected can make use of the CLI's deploy function. More details: https://docs-next.graph.cool/reference/service-definition/legacy-console-projects-aemieb1aev"
+            "Only projects that have been ejected can make use of the CLI's deploy function. More details: https://www.graph.cool/docs/reference/service-definition/legacy-console-projects-aemieb1aev/"
           ))
         actions
 
@@ -74,7 +74,7 @@ case class PushMutation(
 
   override def verifyActions(): Future[List[Try[MutactionVerificationSuccess]]] = {
     super.verifyActions().map { verifications =>
-      verifications.map {
+      val verificationResult = verifications.map {
         case Failure(error: Throwable) =>
           errors = errors :+ extractErrors(error)
           verbalDescriptions = List.empty
@@ -84,6 +84,8 @@ case class PushMutation(
         case verification =>
           verification
       }
+      errors = errors.distinct
+      verificationResult
     }
   }
 
@@ -91,15 +93,15 @@ case class PushMutation(
     case sysError: WithSchemaError =>
       val fallbackError = SchemaError.global(sysError.getMessage)
       sysError.schemaError.getOrElse(fallbackError)
+
     case e: Throwable =>
       SchemaError.global(e.getMessage)
   }
 
   override def performActions(requestContext: Option[SystemRequestContextTrait]): Future[List[MutactionExecutionResult]] = {
-    if (args.isDryRun) {
-      Future.successful(List(MutactionExecutionSuccess()))
-    } else {
-      super.performActions(requestContext)
+    args.isDryRun match {
+      case true  => Future.successful(List(MutactionExecutionSuccess()))
+      case false => super.performActions(requestContext)
     }
   }
 

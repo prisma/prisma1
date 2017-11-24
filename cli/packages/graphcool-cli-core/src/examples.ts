@@ -25,7 +25,7 @@ export const defaultDefinition: ProjectDefinition = {
 #    https://github.com/graphcool/framework/tree/master/examples
 #
 # Here are the reference docs of this definition format:
-# https://docs-next.graph.cool/reference/service-definition/graphcool.yml-foatho8aip
+# https://www.graph.cool/docs/reference/service-definition/graphcool.yml-foatho8aip
 #
 # Happy Coding!
 
@@ -46,14 +46,14 @@ functions:
 # To take the burden of thinking about those while development, we
 # preconfigured the wildcard ("*") permission that allows everything
 # Read more here:
-# https://docs-next.graph.cool/reference/auth/authorization/overview-iegoo0heez
+# https://www.graph.cool/docs/reference/auth/authorization/overview-iegoo0heez
 permissions:
   - operation: "*"
 
 
 # Your root tokens used for functions to get full access to the API
 # Read more here:
-# https://docs-next.graph.cool/reference/auth/authentication/authentication-tokens-eip7ahqu5o
+# https://www.graph.cool/docs/reference/auth/authentication/authentication-tokens-eip7ahqu5o
 # rootTokens:
 #   - mytoken
 

@@ -1,6 +1,7 @@
 package cool.graph.client.mutations
 
 import cool.graph._
+import cool.graph.client.ClientInjector
 import cool.graph.client.authorization.RelationMutationPermissions
 import cool.graph.client.database.DataResolver
 import cool.graph.client.mutations.definitions.UpdateOrCreateDefinition
@@ -8,7 +9,6 @@ import cool.graph.client.schema.InputTypesBuilder
 import cool.graph.shared.models.{AuthenticatedRequest, Model, Project}
 import cool.graph.util.coolSangria.Sangria
 import sangria.schema
-import scaldi.{Injectable, Injector}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -18,9 +18,8 @@ class UpdateOrCreate(model: Model,
                      args: schema.Args,
                      dataResolver: DataResolver,
                      argumentSchema: ArgumentSchema,
-                     allowSettingManagedFields: Boolean = false)(implicit inj: Injector)
-    extends ClientMutation(model, args, dataResolver, argumentSchema)
-    with Injectable {
+                     allowSettingManagedFields: Boolean = false)(implicit injector: ClientInjector)
+    extends ClientMutation(model, args, dataResolver, argumentSchema) {
 
   override val mutationDefinition = UpdateOrCreateDefinition(argumentSchema, project, InputTypesBuilder(project, argumentSchema))
 

@@ -29,7 +29,7 @@ case class CreateColumn(projectId: String, model: Model, field: Field) extends S
 
   override def verify(): Future[Try[MutactionVerificationSuccess]] = {
     NameConstraints.isValidFieldName(field.name) match {
-      case false => Future.successful(Failure(UserInputErrors.InvalidName(name = field.name)))
+      case false => Future.successful(Failure(UserInputErrors.InvalidName(name = field.name, entityType = " field")))
       case true  => Future.successful(Success(MutactionVerificationSuccess()))
     }
   }

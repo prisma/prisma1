@@ -20,7 +20,7 @@ case class CreateModelTable(projectId: String, model: Model) extends ClientSqlSc
     val validationResult = if (NameConstraints.isValidModelName(model.name)) {
       Success(MutactionVerificationSuccess())
     } else {
-      Failure(UserInputErrors.InvalidName(name = model.name))
+      Failure(UserInputErrors.InvalidName(name = model.name, entityType = " model"))
     }
 
     Future.successful(validationResult)

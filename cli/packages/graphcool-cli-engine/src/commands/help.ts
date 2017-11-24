@@ -147,7 +147,7 @@ ${chalk.bold('Usage:')} ${chalk.bold('graphcool')} COMMAND`)
 
     this.out.log(`\nUse ${chalk.green('graphcool help [command]')} for more information about a command.
 Docs can be found here:
-https://docs-next.graph.cool/reference/graphcool-cli/commands-aiteerae6l
+https://www.graph.cool/docs/reference/graphcool-cli/commands-aiteerae6l
 
 ${chalk.dim('Examples:')}
 

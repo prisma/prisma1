@@ -3,6 +3,7 @@ package cool.graph.client.mutactions
 import com.typesafe.scalalogging.LazyLogging
 import cool.graph.Types.Id
 import cool.graph._
+import cool.graph.client.ClientInjector
 import cool.graph.client.schema.simple.SimpleSchemaModelObjectTypeBuilder
 import cool.graph.deprecated.actions.schemas.CreateSchema
 import cool.graph.deprecated.actions.{Event, MutationCallbackSchemaExecutor}
@@ -16,14 +17,14 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 case class ActionWebhookForCreateDataItemAsync(model: Model, project: Project, nodeId: Id, action: Action, mutationId: Id, requestId: String)(
-    implicit inj: Injector)
+    implicit injector: ClientInjector)
     extends ActionWebhookMutaction
-    with Injectable
     with LazyLogging {
 
   override def execute: Future[MutactionExecutionResult] = {
 
-    val webhookPublisher = inject[QueuePublisher[Webhook]](identified by "webhookPublisher")
+    val webhookPublisher = injector.webhookPublisher
+    implicit val inj     = injector.toScaldi
 
     val payload: Future[Event] =
       new MutationCallbackSchemaExecutor(

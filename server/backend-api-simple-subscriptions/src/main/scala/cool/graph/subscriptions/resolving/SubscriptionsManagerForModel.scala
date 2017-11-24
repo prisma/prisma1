@@ -5,6 +5,7 @@ import java.util.concurrent.atomic.AtomicLong
 import akka.actor.{Actor, ActorRef, Stash, Terminated}
 import cool.graph.akkautil.{LogUnhandled, LogUnhandledExceptions}
 import cool.graph.bugsnag.BugSnagger
+import cool.graph.client.ClientInjector
 import cool.graph.messagebus.PubSubSubscriber
 import cool.graph.messagebus.pubsub.{Message, Only, Subscription}
 import cool.graph.metrics.GaugeMetric
@@ -18,7 +19,6 @@ import cool.graph.subscriptions.resolving.SubscriptionsManagerForProject.SchemaI
 import play.api.libs.json._
 import sangria.ast.Document
 import sangria.renderer.QueryRenderer
-import scaldi.Injector
 import scaldi.akka.AkkaInjectable
 
 import scala.collection.mutable
@@ -54,7 +54,7 @@ case class SubscriptionsManagerForModel(
     project: ProjectWithClientId,
     model: Model,
     bugsnag: BugSnagger
-)(implicit inj: Injector)
+)(implicit injector: ClientInjector)
     extends Actor
     with Stash
     with AkkaInjectable
@@ -66,6 +66,8 @@ case class SubscriptionsManagerForModel(
   import SubscriptionsManagerForModel.Internal._
   import SubscriptionsManagerForModel.Requests._
   import context.dispatcher
+
+  implicit val inj = injector.toScaldi
 
   val projectId                = project.project.id
   val subscriptions            = mutable.Map.empty[SubscriptionId, StartSubscription]

@@ -6,8 +6,6 @@ This directory contains an example implementation for an **API gateway on top of
 
 The API gateway uses dedicated tooling that allows to easily implement a mapping from the custom schema to the underlying CRUD API.
 
-Try out the read-only [demo](https://graphqlbin.com/BrkcP).
-
 ## Get started
 
 ### 1. Download the example

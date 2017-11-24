@@ -1,7 +1,7 @@
 package cool.graph.messagebus.pubsub
 
 import akka.actor.ActorRef
-import akka.cluster.pubsub.DistributedPubSubMediator.Unsubscribe
+import cool.graph.messagebus.pubsub.PubSubProtocol.Unsubscribe
 
 /**
   * A topic describes the messages a subscriber is interested in or a publisher wants to publish to.
@@ -34,7 +34,7 @@ case class Only(topic: String) extends Topic
   * @param intermediatePubSubActor The intermediate actor used to parse messages and forward messages to an actor or
   *                                invoke callbacks.
   */
-case class Subscription(intermediatePubSubActor: ActorRef) {
+case class Subscription(topic: String, intermediatePubSubActor: ActorRef) {
   def unsubscribe: Unit = intermediatePubSubActor ! Unsubscribe
 }
 

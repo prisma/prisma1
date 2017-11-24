@@ -1,9 +1,8 @@
-package cool.graph.messagebus.pubsub.rabbit
+package cool.graph.messagebus.testkits
 
 import cool.graph.bugsnag.BugSnagger
 import cool.graph.messagebus.Conversions
 import cool.graph.messagebus.pubsub.{Message, Only}
-import cool.graph.messagebus.testkits.RabbitAkkaPubSubTestKit
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Matchers, WordSpecLike}
 import play.api.libs.json.Json
@@ -29,14 +28,12 @@ class RabbitAkkaPubSubTestKitSpec extends WordSpecLike with Matchers with Before
 
   override def afterEach(): Unit = testKit.stop.futureValue
 
-  // Note: Publish logic is tested implicitly within the tests.
-  "The queue testing kit" should {
+  "The rabbit pubsub testing kit" should {
 
     /**
       * Message expectation tests
       */
     "should expect a message correctly" in {
-      println(s"[PubSubTestKit][${testKit.logId}] Starting 'should expect a message correctly' test...")
       val testMsg = TestMessage("someId1", None, Seq("1", "2"))
 
       testKit.publish(testRK, testMsg)
@@ -44,7 +41,6 @@ class RabbitAkkaPubSubTestKitSpec extends WordSpecLike with Matchers with Before
     }
 
     "should blow up it expects a message and none arrives" in {
-      println(s"[PubSubTestKit][${testKit.logId}] Starting 'should blow up it expects a message and none arrives' test...")
       val testMsg = TestMessage("someId2", None, Seq("1", "2"))
 
       an[AssertionError] should be thrownBy {
@@ -57,7 +53,6 @@ class RabbitAkkaPubSubTestKitSpec extends WordSpecLike with Matchers with Before
     }
 
     "should blow up if no message was expected but one arrives" in {
-      println(s"[PubSubTestKit][${testKit.logId}] Starting 'should blow up if no message was expected but one arrives' test...")
       val testMsg = TestMessage("someId3", None, Seq("1", "2"))
 
       testKit.publish(testRK, testMsg)
@@ -68,8 +63,6 @@ class RabbitAkkaPubSubTestKitSpec extends WordSpecLike with Matchers with Before
     }
 
     "should expect a message count correctly" in {
-      println(s"[PubSubTestKit][${testKit.logId}] Starting 'should expect a message count correctly' test...")
-
       val testMsg  = TestMessage("someId4", None, Seq("1", "2"))
       val testMsg2 = TestMessage("someId5", Some(123), Seq("2", "1"))
 
@@ -80,7 +73,6 @@ class RabbitAkkaPubSubTestKitSpec extends WordSpecLike with Matchers with Before
     }
 
     "should blow up if it expects a message count and less arrive" in {
-      println(s"[PubSubTestKit][${testKit.logId}] Starting 'should blow up if it expects a message count and less arrive' test...")
       val testMsg = TestMessage("someId6", None, Seq("1", "2"))
 
       testKit.publish(testRK, testMsg)
@@ -91,7 +83,6 @@ class RabbitAkkaPubSubTestKitSpec extends WordSpecLike with Matchers with Before
     }
 
     "should blow up if it expects a message count and more arrive" in {
-      println(s"[PubSubTestKit][${testKit.logId}] Starting 'should blow up if it expects a message count and more arrive' test...")
       val testMsg  = TestMessage("someId7", None, Seq("1", "2"))
       val testMsg2 = TestMessage("someId8", Some(123), Seq("2", "1"))
 

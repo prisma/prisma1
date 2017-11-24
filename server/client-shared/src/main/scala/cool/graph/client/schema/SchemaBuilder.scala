@@ -13,29 +13,27 @@ import cool.graph.deprecated.packageMocks.AppliedFunction
 import cool.graph.metrics.ClientSharedMetrics
 import cool.graph.shared.errors.UserAPIErrors
 import cool.graph.shared.errors.UserInputErrors.InvalidSchema
-import cool.graph.shared.functions.EndpointResolver
 import cool.graph.shared.models.{Field => GCField, _}
-import cool.graph.shared.{ApiMatrixFactory, DefaultApiMatrix, models}
+import cool.graph.shared.{DefaultApiMatrix, models}
 import cool.graph.util.coolSangria.FromInputImplicit
 import cool.graph.util.performance.TimeHelper
 import org.atteo.evo.inflector.English
-import sangria.ast.Definition
 import sangria.relay._
 import sangria.schema.{Field, _}
-import scaldi.{Injectable, Injector}
 import spray.json.{DefaultJsonProtocol, JsArray, JsBoolean, JsFalse, JsNull, JsNumber, JsObject, JsString, JsTrue, JsValue, JsonFormat}
 
 import scala.collection.mutable
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-abstract class SchemaBuilder(project: models.Project, modelPrefix: String = "")(implicit inj: Injector,
+abstract class SchemaBuilder(project: models.Project, modelPrefix: String = "")(implicit injector: ClientInjector,
                                                                                 actorSystem: ActorSystem,
                                                                                 materializer: ActorMaterializer)
-    extends Injectable
-    with TimeHelper {
+    extends TimeHelper {
 
   type ManyDataItemType
+
+//  implicit val inj = injector.toScaldi
 
   // TODO - Don't use inheritance here. Maybe we can inject the params from the outside?
   val generateGetAll               = true
@@ -60,7 +58,7 @@ abstract class SchemaBuilder(project: models.Project, modelPrefix: String = "")(
   val modelObjectTypes: Map[String, ObjectType[UserContext, DataItem]]
   val deferredResolverProvider: DeferredResolverProvider[_, UserContext]
 
-  val apiMatrix: DefaultApiMatrix = inject[ApiMatrixFactory].create(project)
+  val apiMatrix: DefaultApiMatrix = injector.apiMatrixFactory.create(project)
   val includedModels: List[Model] = project.models.filter(model => apiMatrix.includeModel(model.name))
 
   lazy val inputTypesBuilder = InputTypesBuilder(project, argumentSchema)
@@ -167,7 +165,7 @@ abstract class SchemaBuilder(project: models.Project, modelPrefix: String = "")(
                    expPackageMutation: Option[AppliedFunction] = None): Future[FunctionDataItems] = {
 
       val args             = GraphcoolDataTypes.convertToJson(GraphcoolDataTypes.wrapSomes(raw))
-      val endpointResolver = inject[EndpointResolver](identified by "endpointResolver")
+      val endpointResolver = injector.endpointResolver
       val context          = FunctionExecutor.createEventContext(project, ctx.requestIp, headers = Map.empty, ctx.authenticatedRequest, endpointResolver)
 
       val argsAndContext = expPackageMutation match {

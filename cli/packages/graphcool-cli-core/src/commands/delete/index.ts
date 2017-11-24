@@ -31,15 +31,20 @@ export default class Delete extends Command {
     const foundTarget = await this.env.getTargetWithName(target)
 
     if (foundTarget && foundTarget.target) {
-      const id = foundTarget.target.id
-      if (!force) {
-        await this.askForConfirmation(id)
+      if (!this.env.isSharedCluster(foundTarget.target.cluster)) {
+        this.out.error(`Can't delete service in local cluster ${foundTarget.target.cluster}.
+This command is only available in the hosted version of Graphcool.`)
+      } else {
+        const id = foundTarget.target.id
+        if (!force) {
+          await this.askForConfirmation(id)
+        }
+        this.out.action.start(`${chalk.bold.red('Deleting project')} ${id}`)
+        await this.client.deleteProjects([id])
+        this.env.deleteIfExist([id])
+        this.env.save()
+        this.out.action.stop()
       }
-      this.out.action.start(`${chalk.bold.red('Deleting project')} ${id}`)
-      await this.client.deleteProjects([id])
-      this.env.deleteIfExist([id])
-      this.env.save()
-      this.out.action.stop()
     } else {
       const projects = await this.client.fetchProjects()
 

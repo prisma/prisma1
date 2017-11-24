@@ -186,7 +186,7 @@ export default class Bundler {
         typeof fn.fn.handler.code === 'string'
           ? fn.fn.handler.code
           : fn.fn.handler.code!.src
-      const buildFileName = path.join(this.buildDir, this.getBuildFileName(src))
+      const buildFileName = path.posix.join(this.buildDir, this.getBuildFileName(src))
       const lambdaHandlerPath = this.getLambdaHandlerPath(buildFileName)
       const devHandlerPath = this.getDevHandlerPath(buildFileName)
       const bylinePath = this.getBylinePath(buildFileName)
@@ -220,7 +220,7 @@ export default class Bundler {
     )
   }
 
-  getBuildFileName = (src: string) => path.join(src.replace(/\.ts$/, '.js'))
+  getBuildFileName = (src: string) => path.posix.join(src.replace(/\.ts$/, '.js'))
   getLambdaHandlerPath = (fileName: string) =>
     fileName.slice(0, fileName.length - 3) + '-lambda.js'
   getLambdaHandler = (fileName: string) =>

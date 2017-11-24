@@ -63,7 +63,7 @@ function cb(error, value) {
 function executeFunction(fn, event, cb) {
   try {
     var promise = fn(event)
-    if (typeof promise.then === 'function') {
+    if (promise && typeof promise.then === 'function') {
       promise.then(function (data) {
         cb(null, data)
       }).catch(function (error) {

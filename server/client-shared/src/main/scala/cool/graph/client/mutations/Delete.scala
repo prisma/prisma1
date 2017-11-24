@@ -4,6 +4,7 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import cool.graph.Types.Id
 import cool.graph._
+import cool.graph.client.ClientInjector
 import cool.graph.client.adapters.GraphcoolDataTypes
 import cool.graph.client.authorization.{ModelPermissions, PermissionQueryArg, PermissionValidator, RelationMutationPermissions}
 import cool.graph.client.database.DataResolver
@@ -13,7 +14,6 @@ import cool.graph.client.requestPipeline.RequestPipelineRunner
 import cool.graph.client.schema.SchemaModelObjectTypesBuilder
 import cool.graph.shared.models.{Action => ModelAction, _}
 import sangria.schema
-import scaldi.{Injectable, Injector}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -24,14 +24,13 @@ class Delete[ManyDataItemType](model: Model,
                                project: Project,
                                args: schema.Args,
                                dataResolver: DataResolver,
-                               argumentSchema: ArgumentSchema)(implicit inj: Injector)
-    extends ClientMutation(model, args, dataResolver, argumentSchema)
-    with Injectable {
+                               argumentSchema: ArgumentSchema)(implicit injector: ClientInjector)
+    extends ClientMutation(model, args, dataResolver, argumentSchema) {
 
   override val mutationDefinition = DeleteDefinition(argumentSchema, project)
 
-  implicit val system: ActorSystem             = inject[ActorSystem](identified by "actorSystem")
-  implicit val materializer: ActorMaterializer = inject[ActorMaterializer](identified by "actorMaterializer")
+  implicit val system: ActorSystem             = injector.system
+  implicit val materializer: ActorMaterializer = injector.materializer
   val permissionValidator                      = new PermissionValidator(project)
 
   val id: Id = extractIdFromScalarArgumentValues_!(args, "id")
@@ -71,8 +70,8 @@ class Delete[ManyDataItemType](model: Model,
 
             val sssActions = ServerSideSubscription.extractFromMutactions(project, sqlMutactions, requestId)
 
-            val fileMutaction: List[S3DeleteFIle] = model.name match {
-              case "File" => List(S3DeleteFIle(model, project, nodeData("secret").asInstanceOf[String]))
+            val fileMutaction: List[S3DeleteFile] = model.name match {
+              case "File" => List(S3DeleteFile(model, project, nodeData("secret").asInstanceOf[String]))
               case _      => List()
             }
 

@@ -18,14 +18,14 @@ case class GraphcoolEndpoints(simple: String, relay: String, system: String, sub
 case class LocalEndpointResolver() extends EndpointResolver {
   val port                   = sys.env.getOrElse("PORT", sys.error("PORT env var required but not found."))
   val dockerContainerDNSName = "graphcool"
-  val dockerContainerBase    = s"http://$dockerContainerDNSName:$port"
+  val dockerContainerBase    = s"$dockerContainerDNSName:$port"
 
   override def endpoints(projectId: String) = {
     GraphcoolEndpoints(
-      simple = s"$dockerContainerBase/simple/v1/$projectId",
-      relay = s"$dockerContainerBase/relay/v1/$projectId",
-      system = s"$dockerContainerBase/system",
-      subscriptions = s"$dockerContainerBase/subscriptions/v1/$projectId"
+      simple = s"http://$dockerContainerBase/simple/v1/$projectId",
+      relay = s"http://$dockerContainerBase/relay/v1/$projectId",
+      system = s"http://$dockerContainerBase/system",
+      subscriptions = s"ws://$dockerContainerBase/subscriptions/v1/$projectId"
     )
   }
 }

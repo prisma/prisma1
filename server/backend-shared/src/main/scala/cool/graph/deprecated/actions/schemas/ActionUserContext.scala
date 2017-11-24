@@ -1,6 +1,5 @@
 package cool.graph.deprecated.actions.schemas
 
-import akka.actor.ActorRef
 import cool.graph.RequestContextTrait
 import cool.graph.aws.cloudwatch.Cloudwatch
 import cool.graph.client.database.ProjectDataresolver
@@ -16,8 +15,7 @@ case class ActionUserContext(project: Project, requestId: String, nodeId: String
   override val clientId                  = project.ownerId
   override val requestIp                 = "mutation-callback-ip"
 
-  val cloudwatch =
-    inject[Cloudwatch]("cloudwatch")
+  val cloudwatch = inject[Cloudwatch]("cloudwatch")
 
   val dataResolver = {
     val resolver = new ProjectDataresolver(project = project, requestContext = this)

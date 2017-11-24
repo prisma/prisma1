@@ -7,7 +7,7 @@ description: An overview of how to model application data in Graphcool.
 
 ## Overview
 
-Graphcool uses (a subset of) the GraphQL [Schema Definition Language](https://www.graph.cool/docs/faq/graphql-sdl-schema-definition-language-kr84dktnp0/) for data modelling. Your data model is written in your service's `.graphql`-file, typically called `types.graphql`, which is the foundation for the actual database schema that Graphcool generates for you.
+Graphcool uses (a subset of) the GraphQL [Schema Definition Language](https://blog.graph.cool/graphql-sdl-schema-definition-language-6755bcb9ce51) for data modelling. Your data model is written in your service's `.graphql`-file, typically called `types.graphql`, which is the foundation for the actual database schema that Graphcool generates for you.
 
 To learn more about the SDL, you can check out the [official documentation](http://graphql.org/learn/schema/#type-language).
 

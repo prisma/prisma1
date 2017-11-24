@@ -5,7 +5,7 @@ import cool.graph.client.schema.SchemaModelObjectTypesBuilder
 import cool.graph.client.schema.simple.SimpleSchemaModelObjectTypeBuilder
 import cool.graph.shared.models.{Model, Project}
 import sangria.schema._
-import scaldi.{Injectable, Injector}
+import scaldi.Injector
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -13,8 +13,7 @@ class UpdateSchema[ManyDataItemType](model: Model,
                                      project: Project,
                                      modelObjectTypes: SchemaModelObjectTypesBuilder[ManyDataItemType],
                                      updatedFields: List[String],
-                                     previousValues: DataItem)(implicit inj: Injector)
-    extends Injectable {
+                                     previousValues: DataItem)(implicit inj: Injector) {
 
   val updatedModelField: Field[ActionUserContext, Unit] = Field(
     "updatedNode",

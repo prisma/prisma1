@@ -26,10 +26,11 @@ export default class GetRootToken extends Command {
   ]
 
   async run() {
-    await this.auth.ensureAuth()
     const { target } = this.flags
     const { id } = await this.env.getTarget(target)
     const token = this.args!.token
+
+    await this.auth.ensureAuth()
 
     const pats = await this.client.getPats(id)
     if (token) {

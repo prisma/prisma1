@@ -11,7 +11,6 @@ object Dependencies {
     "com.typesafe.akka"          %% "akka-testkit"            % "2.4.17",
     "com.typesafe.akka"          %% "akka-http-testkit"       % "10.0.5",
     "com.typesafe.akka"          %% "akka-http-spray-json"    % "10.0.5",
-    "com.typesafe.akka"          %% "akka-contrib"            % "2.4.17",
     "ch.megard"                  %% "akka-http-cors"          % "0.2.1",
     "com.typesafe.slick"         %% "slick"                   % "3.2.0",
     "com.typesafe.slick"         %% "slick-hikaricp"          % "3.2.0",

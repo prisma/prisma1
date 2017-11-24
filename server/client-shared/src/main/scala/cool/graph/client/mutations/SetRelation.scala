@@ -3,6 +3,7 @@ package cool.graph.client.mutations
 import cool.graph.Types.Id
 import cool.graph.shared.errors.UserAPIErrors.RelationIsRequired
 import cool.graph._
+import cool.graph.client.ClientInjector
 import cool.graph.client.authorization.RelationMutationPermissions
 import cool.graph.client.database.DataResolver
 import cool.graph.client.mutactions._
@@ -16,7 +17,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class SetRelation(relation: Relation, fromModel: Model, project: Project, args: schema.Args, dataResolver: DataResolver, argumentSchema: ArgumentSchema)(
-    implicit inj: Injector)
+    implicit injector: ClientInjector)
     extends ClientMutation(fromModel, args, dataResolver, argumentSchema) {
 
   override val mutationDefinition = SetRelationDefinition(relation, project, argumentSchema)

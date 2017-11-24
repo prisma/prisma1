@@ -18,7 +18,7 @@ Security is one of the most critical parts of an application. Combining authenti
 
 This article is a deep dive into the permission system used at Graphcool. The use case we want to explore is a *content management system* for documents.
 
-Let's consider the following GraphQL schema in [IDL syntax](!alias-kr84dktnp0):
+Let's consider the following GraphQL schema in [IDL syntax](https://blog.graph.cool/graphql-sdl-schema-definition-language-6755bcb9ce51):
 
 ```graphql
 type User {

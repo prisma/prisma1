@@ -1,15 +1,15 @@
 package cool.graph.private_api.mutations
 
 import cool.graph._
+import cool.graph.client.ClientInjector
 import cool.graph.client.database.DataResolver
 import cool.graph.client.mutactions.SyncModelToAlgolia
 import cool.graph.shared.models.Project
 import sangria.relay.Mutation
-import scaldi.Injector
 
 import scala.concurrent.Future
 
-case class SyncModelToAlgoliaMutation(project: Project, input: SyncModelToAlgoliaInput, dataResolver: DataResolver)(implicit inj: Injector)
+case class SyncModelToAlgoliaMutation(project: Project, input: SyncModelToAlgoliaInput, dataResolver: DataResolver)(implicit injector: ClientInjector)
     extends PrivateMutation[SyncModelToAlgoliaPayload] {
 
   val model = project.getModelById_!(input.modelId)

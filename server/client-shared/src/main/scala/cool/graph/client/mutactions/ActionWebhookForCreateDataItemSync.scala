@@ -2,30 +2,27 @@ package cool.graph.client.mutactions
 
 import com.typesafe.scalalogging.LazyLogging
 import cool.graph.Types.Id
-import cool.graph.shared.errors.UserAPIErrors.UnsuccessfulSynchronousMutationCallback
 import cool.graph._
-import cool.graph.deprecated.actions.schemas.CreateSchema
-import cool.graph.client.database.DataResolver
+import cool.graph.client.ClientInjector
 import cool.graph.client.schema.simple.SimpleSchemaModelObjectTypeBuilder
+import cool.graph.deprecated.actions.schemas.CreateSchema
 import cool.graph.deprecated.actions.{Event, MutationCallbackSchemaExecutor}
-import cool.graph.shared.models.{Action, Model, Project}
+import cool.graph.shared.errors.UserAPIErrors.UnsuccessfulSynchronousMutationCallback
 import cool.graph.shared.errors.{SystemErrors, UserFacingError}
-import cool.graph.webhook.WebhookCaller
-import scaldi._
+import cool.graph.shared.models.{Action, Model, Project}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.util.Success
 
 case class ActionWebhookForCreateDataItemSync(model: Model, project: Project, nodeId: Id, action: Action, mutationId: Id, requestId: String)(
-    implicit inj: Injector)
+    implicit injector: ClientInjector)
     extends ActionWebhookMutaction
-    with Injectable
     with LazyLogging {
 
   override def execute: Future[MutactionExecutionResult] = {
 
-    val webhookCaller = inject[WebhookCaller]
+    val webhookCaller = injector.webhookCaller
+    implicit val inj  = injector.toScaldi
 
     val payload: Future[Event] =
       new MutationCallbackSchemaExecutor(
@@ -43,12 +40,10 @@ case class ActionWebhookForCreateDataItemSync(model: Model, project: Project, no
         payload =>
           webhookCaller
             .call(payload.url, payload.payload.map(_.compactPrint).getOrElse(""))
-            .map(wasSuccess =>
-              wasSuccess match {
-                case true => MutactionExecutionSuccess()
-                case false =>
-                  throw new UnsuccessfulSynchronousMutationCallback()
-            }))
+            .map {
+              case true  => MutactionExecutionSuccess()
+              case false => throw UnsuccessfulSynchronousMutationCallback()
+          })
       .recover {
         case x: UserFacingError => throw x
         case x =>
