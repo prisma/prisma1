@@ -10,30 +10,6 @@ object MigrationStepsJsonFormatter extends DefaultReads {
 
   implicit val createFieldFormat = Json.format[CreateField]
   implicit val deleteFieldFormat = Json.format[DeleteField]
-//  implicit val updateFieldFormat = Json.format[UpdateField]
-
-  implicit val createEnumFormat = Json.format[CreateEnum]
-  implicit val deleteEnumFormat = Json.format[DeleteEnum]
-  implicit val updateEnumFormat = Json.format[UpdateEnum]
-
-  implicit val migrationStepFormat: Format[MigrationStep] = new Format[MigrationStep] {
-    override def reads(json: JsValue): JsResult[MigrationStep] = ???
-
-    override def writes(step: MigrationStep): JsValue = step match {
-      case x: CreateModel => createModelFormat.writes(x)
-      case x: DeleteModel => deleteModelFormat.writes(x)
-      case x: UpdateModel => updateModelFormat.writes(x)
-      case x: CreateField => createFieldFormat.writes(x)
-      case x: DeleteField => deleteFieldFormat.writes(x)
-      case x: UpdateField => updateFieldFormat.writes(x)
-      case x: CreateEnum  => createEnumFormat.writes(x)
-      case x: DeleteEnum  => deleteEnumFormat.writes(x)
-      case x: UpdateEnum  => updateEnumFormat.writes(x)
-    }
-  }
-
-  implicit val migrationStepsFormat: Format[MigrationSteps] = Json.format[MigrationSteps]
-
   implicit val updateFieldFormat = new OFormat[UpdateField] {
     val modelField        = "model"
     val nameField         = "name"
@@ -55,9 +31,9 @@ object MigrationStepsJsonFormatter extends DefaultReads {
         isRequired   <- (json \ isRequiredField).validateOpt[Boolean]
         isList       <- (json \ isListField).validateOpt[Boolean]
         isUnique     <- (json \ isUniqueField).validateOpt[Boolean]
-        relation     <- doubleOptReads[String](relationField)
-        defaultValue <- doubleOptReads[String](defaultValueField)
-        enum         <- doubleOptReads[String](enumField)
+        relation     <- doubleOptReads[String](relationField).reads(json)
+        defaultValue <- doubleOptReads[String](defaultValueField).reads(json)
+        enum         <- doubleOptReads[String](enumField).reads(json)
       } yield {
         UpdateField(
           model = model,
@@ -87,13 +63,35 @@ object MigrationStepsJsonFormatter extends DefaultReads {
     }
   }
 
-  implicit def doubleOptReads[T](field: String)(implicit optReads: Reads[Option[T]]): Reads[Option[Option[T]]] = new Reads[Option[Option[T]]] {
+  implicit val createEnumFormat = Json.format[CreateEnum]
+  implicit val deleteEnumFormat = Json.format[DeleteEnum]
+  implicit val updateEnumFormat = Json.format[UpdateEnum]
+
+  implicit val migrationStepFormat: Format[MigrationStep] = new Format[MigrationStep] {
+    override def reads(json: JsValue): JsResult[MigrationStep] = ???
+
+    override def writes(step: MigrationStep): JsValue = step match {
+      case x: CreateModel => createModelFormat.writes(x)
+      case x: DeleteModel => deleteModelFormat.writes(x)
+      case x: UpdateModel => updateModelFormat.writes(x)
+      case x: CreateField => createFieldFormat.writes(x)
+      case x: DeleteField => deleteFieldFormat.writes(x)
+      case x: UpdateField => updateFieldFormat.writes(x)
+      case x: CreateEnum  => createEnumFormat.writes(x)
+      case x: DeleteEnum  => deleteEnumFormat.writes(x)
+      case x: UpdateEnum  => updateEnumFormat.writes(x)
+    }
+  }
+
+  implicit val migrationStepsFormat: Format[MigrationSteps] = Json.format[MigrationSteps]
+
+  def doubleOptReads[T](field: String)(implicit rds: Reads[T]): Reads[Option[Option[T]]] = new Reads[Option[Option[T]]] {
     override def reads(json: JsValue): JsResult[Option[Option[T]]] = {
       json.validate[JsObject].flatMap { jsObject =>
         jsObject.value.get(field) match {
           case None          => JsSuccess(None)
           case Some(JsNull)  => JsSuccess(Some(None))
-          case Some(jsValue) => jsValue.validate[T].map(v => Some(Some(v)))
+          case Some(jsValue) => rds.reads(jsValue).map(v => Some(Some(v)))
         }
       }
     }
