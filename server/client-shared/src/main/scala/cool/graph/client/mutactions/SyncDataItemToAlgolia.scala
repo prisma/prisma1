@@ -4,23 +4,22 @@ import com.amazonaws.services.kinesis.model.PutRecordResult
 import com.typesafe.scalalogging.LazyLogging
 import cool.graph.Types.Id
 import cool.graph._
+import cool.graph.client.ClientInjector
 import cool.graph.client.database.{DeferredResolverProvider, SimpleManyModelDeferredResolver, SimpleToManyDeferredResolver}
 import cool.graph.client.schema.simple.SimpleSchemaModelObjectTypeBuilder
 import cool.graph.shared.algolia.AlgoliaEventJsonProtocol._
 import cool.graph.shared.algolia.schemas.AlgoliaSchema
 import cool.graph.shared.algolia.{AlgoliaContext, AlgoliaEvent}
 import cool.graph.shared.errors.SystemErrors
-import cool.graph.shared.externalServices.KinesisPublisher
 import cool.graph.shared.logging.{LogData, LogKey}
 import cool.graph.shared.models.{AlgoliaSyncQuery, Model, Project, SearchProviderAlgolia}
 import cool.graph.shared.schema.JsonMarshalling._
 import sangria.ast.Document
 import sangria.execution.Executor
 import sangria.parser.QueryParser
-import scaldi.{Injectable, Injector}
 import spray.json.{JsString, _}
 
-import scala.concurrent.{ExecutionContext, ExecutionContextExecutor, Future}
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
 case class SyncDataItemToAlgolia(
@@ -31,9 +30,8 @@ case class SyncDataItemToAlgolia(
     searchProviderAlgolia: SearchProviderAlgolia,
     requestId: String,
     operation: String
-)(implicit inj: Injector)
+)(implicit injector: ClientInjector)
     extends Mutaction
-    with Injectable
     with LazyLogging {
 
   override def execute: Future[MutactionExecutionResult] = {
@@ -41,8 +39,8 @@ case class SyncDataItemToAlgolia(
       case false =>
         Future.successful(MutactionExecutionSuccess())
       case true =>
-        val algoliaSyncPublisher = inject[KinesisPublisher](identified by "kinesisAlgoliaSyncQueriesPublisher")
-        implicit val dispatcher  = inject[ExecutionContextExecutor](identified by "dispatcher")
+        val algoliaSyncPublisher = injector.kinesisAlgoliaSyncQueriesPublisher
+        implicit val dispatcher  = injector.dispatcher
 
         val parsedGraphQLQuery = QueryParser.parse(syncQuery.fragment)
         val queryResultFuture: Future[Option[JsValue]] =
@@ -86,12 +84,14 @@ case class SyncDataItemToAlgolia(
   private def stringifyAndListifyPayload(value: JsValue): String = s"[${value.compactPrint}]"
 
   private def performQueryWith(queryAst: Document)(implicit ec: ExecutionContext): Future[Option[JsValue]] = {
+    implicit val inj = injector.toScaldi
+
     Executor
       .execute(
         schema = new AlgoliaSchema(
           project = project,
           model = model,
-          modelObjectTypes = new SimpleSchemaModelObjectTypeBuilder(project = project)
+          modelObjectTypes = new SimpleSchemaModelObjectTypeBuilder(project = project)(injector.toScaldi)
         ).build(),
         queryAst = queryAst,
         userContext = AlgoliaContext(

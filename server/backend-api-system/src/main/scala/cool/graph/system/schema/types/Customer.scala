@@ -2,15 +2,14 @@ package cool.graph.system.schema.types
 
 import cool.graph.shared.models
 import cool.graph.shared.schema.CustomScalarTypes
-import cool.graph.system.SystemUserContext
+import cool.graph.system.{SystemInjector, SystemUserContext}
 import sangria.relay._
 import sangria.schema.{ObjectType, _}
-import scaldi.Injector
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
 object Customer {
-  def getType(customerId: String)(implicit inj: Injector): ObjectType[SystemUserContext, models.Client] = ObjectType(
+  def getType(customerId: String)(implicit inj: SystemInjector): ObjectType[SystemUserContext, models.Client] = ObjectType(
     "Customer",
     "This is a Customer",
     interfaces[SystemUserContext, models.Client](nodeInterface),

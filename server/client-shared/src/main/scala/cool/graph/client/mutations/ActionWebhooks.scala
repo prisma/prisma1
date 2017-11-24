@@ -1,16 +1,16 @@
 package cool.graph.client.mutations
 
 import cool.graph.Types.Id
+import cool.graph.client.ClientInjector
 import cool.graph.client.mutactions._
 import cool.graph.shared.models.{ActionTriggerMutationModelMutationType, Project}
 import cool.graph.{DataItem, Mutaction}
-import scaldi.Injector
 
 import scala.collection.immutable.Seq
 
 object ActionWebhooks {
   def extractFromCreateMutactions(project: Project, mutactions: Seq[CreateDataItem], mutationId: Id, requestId: String)(
-      implicit inj: Injector): Seq[Mutaction] = {
+      implicit injector: ClientInjector): Seq[Mutaction] = {
     for {
       newItem <- mutactions
       action  <- project.actionsFor(newItem.model.id, ActionTriggerMutationModelMutationType.Create)
@@ -38,7 +38,7 @@ object ActionWebhooks {
   }
 
   def extractFromUpdateMutactions(project: Project, mutactions: Seq[UpdateDataItem], mutationId: Id, requestId: String, previousValues: DataItem)(
-      implicit inj: Injector): Seq[Mutaction] = {
+      implicit injector: ClientInjector): Seq[Mutaction] = {
     for {
       updatedItem <- mutactions
       action      <- project.actionsFor(updatedItem.model.id, ActionTriggerMutationModelMutationType.Update)

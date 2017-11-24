@@ -27,19 +27,18 @@ case class SystemUserContext(
     client: Option[Client],
     requestId: String,
     log: scala.Predef.Function[String, Unit]
-)(implicit inj: Injector, val clientResolver: ClientResolver)
-    extends Injectable
-    with SystemRequestContextTrait {
+)(implicit inj: SystemInjector, val clientResolver: ClientResolver)
+    extends SystemRequestContextTrait {
 
   override val projectId: Option[String] = None
   override val clientId                  = client.map(_.id).getOrElse("")
   override val requestIp                 = "fake-ip"
 
-  val cloudwatch       = inject[Cloudwatch]("cloudwatch")
-  val internalDatabase = inject[DatabaseDef](identified by "internal-db")
-  val logsDatabase     = inject[DatabaseDef](identified by "logs-db")
-  val projectResolver  = inject[ProjectResolver](identified by "projectResolver")
-  val injector         = inj
+  val cloudwatch        = inj.cloudwatch
+  val internalDatabase  = inj.internalDB
+  val logsDatabase      = inj.logsDB
+  val projectResolver   = inj.projectResolver
+  implicit val injector = inj.toScaldi
 
   val logsDataResolver = new LogsDataResolver()
 
@@ -85,7 +84,7 @@ case class SystemUserContext(
   def refresh(clientId: String): SystemUserContext = refresh(Some(clientId))
 
   def refresh(clientId: Option[String] = None): SystemUserContext = {
-    implicit val internalDatabase: DatabaseDef = inject[DatabaseDef](identified by "internal-db")
+    implicit val internalDatabase: DatabaseDef = inj.internalDB
 
     (clientId match {
       case Some(clientId) => Some(clientId)
@@ -104,13 +103,11 @@ case class SystemUserContext(
 
 object SystemUserContext {
 
-  def fetchClient(clientId: String, requestId: String, log: scala.Predef.Function[String, Unit])(implicit inj: Injector,
+  def fetchClient(clientId: String, requestId: String, log: scala.Predef.Function[String, Unit])(implicit inj: SystemInjector,
                                                                                                  clientResolver: ClientResolver): Future[SystemUserContext] = {
     clientResolver.resolve(clientId = clientId) map {
-      case Some(client) =>
-        SystemUserContext(client = Some(client), requestId = requestId, log = log)
-      case None =>
-        throw SystemErrors.InvalidClientId(clientId)
+      case Some(client) => SystemUserContext(client = Some(client), requestId = requestId, log = log)
+      case None         => throw SystemErrors.InvalidClientId(clientId)
     }
   }
 }

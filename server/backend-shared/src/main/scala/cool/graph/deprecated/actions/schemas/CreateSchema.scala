@@ -3,12 +3,10 @@ package cool.graph.deprecated.actions.schemas
 import cool.graph.client.schema.SchemaModelObjectTypesBuilder
 import cool.graph.shared.models.{Model, Project}
 import sangria.schema._
-import scaldi.{Injectable, Injector}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class CreateSchema[ManyDataItemType](model: Model, project: Project, modelObjectTypes: SchemaModelObjectTypesBuilder[ManyDataItemType])(implicit inj: Injector)
-    extends Injectable {
+class CreateSchema[ManyDataItemType](model: Model, project: Project, modelObjectTypes: SchemaModelObjectTypesBuilder[ManyDataItemType]) {
 
   val createdModelField: Field[ActionUserContext, Unit] = Field(
     "createdNode",

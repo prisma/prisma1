@@ -2,14 +2,13 @@ package cool.graph.shared.mutactions
 
 import cool.graph._
 import cool.graph.shared.errors.GeneralError
-import scaldi.{Injectable, Injector}
 import slick.jdbc.MySQLProfile.api._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
 
-case class InvalidInput(error: GeneralError, isInvalid: Future[Boolean] = Future.successful(true))(implicit inj: Injector) extends Mutaction with Injectable {
+case class InvalidInput(error: GeneralError, isInvalid: Future[Boolean] = Future.successful(true)) extends Mutaction {
 
   override def execute: Future[MutactionExecutionResult] = Future.successful(MutactionExecutionSuccess())
 

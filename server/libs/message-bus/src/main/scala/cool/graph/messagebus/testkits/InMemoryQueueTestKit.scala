@@ -13,6 +13,7 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.language.existentials
 import scala.reflect.ClassTag
+import scala.util.Try
 
 /**
   * InMemory testkit for simple test cases that requires reasoning over published or received messages for a Queue.
@@ -30,7 +31,6 @@ case class InMemoryQueueTestKit[T](backoff: BackoffStrategy = ConstantBackoff(1.
     system: ActorSystem,
     materializer: ActorMaterializer
 ) extends Queue[T] {
-  import system.dispatcher
 
   /**
     * Why that much mutable state?
@@ -162,7 +162,7 @@ case class InMemoryQueueTestKit[T](backoff: BackoffStrategy = ConstantBackoff(1.
     _underlying.publish(msg)
   }
 
-  def reset: Unit = {
+  def reset: Unit = Try {
     messagesReceived.clear()
     messagesPublished.clear()
     probe = TestProbe()

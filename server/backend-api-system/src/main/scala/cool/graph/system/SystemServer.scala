@@ -6,6 +6,7 @@ import akka.http.scaladsl.model.StatusCodes._
 import akka.http.scaladsl.model.headers.RawHeader
 import akka.http.scaladsl.model.{HttpResponse, StatusCode}
 import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.Route
 import akka.stream.ActorMaterializer
 import com.typesafe.scalalogging.LazyLogging
 import cool.graph._
@@ -22,7 +23,6 @@ import cool.graph.system.metrics.SystemMetrics
 import cool.graph.util.ErrorHandlerFactory
 import sangria.execution.{ErrorWithResolver, Executor, QueryAnalysisError}
 import sangria.parser.QueryParser
-import scaldi._
 import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.MySQLProfile.backend.DatabaseDef
 import spray.json._
@@ -34,26 +34,26 @@ import scala.util.{Failure, Success}
 case class SystemServer(
     schemaBuilder: SchemaBuilder,
     prefix: String = ""
-)(implicit inj: Injector, system: ActorSystem, materializer: ActorMaterializer)
+)(implicit injector: SystemInjector, system: ActorSystem, materializer: ActorMaterializer)
     extends Server
-    with Injectable
     with LazyLogging {
   import system.dispatcher
 
-  implicit val internalDatabaseDef: DatabaseDef = inject[DatabaseDef](identified by "internal-db")
-  implicit val clientResolver                   = inject[ClientResolver](identified by "clientResolver")
+  implicit val internalDatabaseDef: DatabaseDef = injector.internalDB
+  implicit val clientResolver: ClientResolver   = injector.clientResolver
+  implicit val inj                              = injector.toScaldi
 
-  val globalDatabaseManager = inject[GlobalDatabaseManager]
-  val internalDatabase      = InternalDatabase(internalDatabaseDef)
-  val log: String => Unit   = (msg: String) => logger.info(msg)
-  val errorHandlerFactory   = ErrorHandlerFactory(log)
-  val requestPrefix         = inject[String](identified by "request-prefix")
+  val globalDatabaseManager: GlobalDatabaseManager = injector.globalDatabaseManager
+  val internalDatabase                             = InternalDatabase(internalDatabaseDef)
+  val log: String => Unit                          = (msg: String) => logger.info(msg)
+  val errorHandlerFactory                          = ErrorHandlerFactory(log)
+  val requestPrefix: String                        = injector.requestPrefix
 
-  val innerRoutes = extractRequest { _ =>
+  val innerRoutes: Route = extractRequest { _ =>
     val requestId            = requestPrefix + ":system:" + createCuid()
     val requestBeginningTime = System.currentTimeMillis()
 
-    def logRequestEnd(projectId: Option[String] = None, clientId: Option[String] = None) = {
+    def logRequestEnd(projectId: Option[String] = None, clientId: Option[String] = None): Unit = {
       logger.info(
         LogData(
           key = LogKey.RequestComplete,

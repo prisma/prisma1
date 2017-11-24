@@ -1,13 +1,12 @@
 package cool.graph.client.authorization
 
-import com.typesafe.config.Config
 import cool.graph.DataItem
+import cool.graph.client.ClientInjector
 import cool.graph.client.database.ProjectDataresolver
 import cool.graph.shared.authorization.{JwtCustomerData, JwtPermanentAuthTokenData, JwtUserData, SharedAuth}
 import cool.graph.shared.models._
 import cool.graph.utils.future.FutureUtils._
 import pdi.jwt.{Jwt, JwtAlgorithm}
-import scaldi.{Injectable, Injector}
 import spray.json.JsonFormat
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -20,11 +19,11 @@ trait ClientAuth {
   def loginUser[T: JsonFormat](project: Project, user: DataItem, authData: Option[T]): Future[String]
 }
 
-case class ClientAuthImpl()(implicit inj: Injector) extends ClientAuth with SharedAuth with Injectable {
+case class ClientAuthImpl()(implicit injector: ClientInjector) extends ClientAuth with SharedAuth {
   import cool.graph.shared.authorization.JwtClaimJsonProtocol._
   import spray.json._
 
-  val config = inject[Config](identified by "config")
+  val config = injector.config
 
   /**
     * Input: userToken, clientToken, permanentAuthToken
@@ -109,7 +108,7 @@ case class ClientAuthImpl()(implicit inj: Injector) extends ClientAuth with Shar
   }
 
   private def userFromDb(userId: String, typeName: String, project: Project): Future[DataItem] = {
-    val dataResolver = new ProjectDataresolver(project = project, requestContext = None)
+    val dataResolver = new ProjectDataresolver(project = project, requestContext = None)(injector.toScaldi)
 
     for {
       user <- dataResolver.resolveByUnique(
@@ -132,7 +131,7 @@ case class ClientAuthImpl()(implicit inj: Injector) extends ClientAuth with Shar
   private def tokenFromTemporaryRootToken(id: String, token: String): Future[AuthenticatedRequest] = Future.successful(AuthenticatedRootToken(id, token))
 
   private def getUserIdForAuth0User(auth0Id: String, project: Project): Future[Option[String]] = {
-    val dataResolver = new ProjectDataresolver(project = project, requestContext = None)
+    val dataResolver = new ProjectDataresolver(project = project, requestContext = None)(injector.toScaldi)
     dataResolver.resolveByUnique(dataResolver.project.getModelByName_!("User"), ManagedFields.auth0UserId.defaultName, auth0Id).map(_.map(_.id))
   }
 }

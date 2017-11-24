@@ -3,21 +3,21 @@ package cool.graph.client.authorization
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import cool.graph.Types
+import cool.graph.client.ClientInjector
 import cool.graph.client.authorization.queryPermissions.QueryPermissionValidator
 import cool.graph.shared.models.TypeIdentifier.TypeIdentifier
 import cool.graph.shared.models._
 import sangria.ast.Document
-import scaldi.{Injectable, Injector}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 case class PermissionQueryArg(name: String, value: Any, typeIdentifier: TypeIdentifier)
 
-class PermissionValidator(project: Project)(implicit inj: Injector) extends Injectable {
+class PermissionValidator(project: Project)(implicit injector: ClientInjector) {
 
-  implicit val system: ActorSystem             = inject[ActorSystem](identified by "actorSystem")
-  implicit val materializer: ActorMaterializer = inject[ActorMaterializer](identified by "actorMaterializer")
+  implicit val system: ActorSystem             = injector.system
+  implicit val materializer: ActorMaterializer = injector.materializer
 
   val validator = new QueryPermissionValidator(project)
 
@@ -28,7 +28,7 @@ class PermissionValidator(project: Project)(implicit inj: Injector) extends Inje
       nodeId: Types.Id,
       permissionQueryArgs: Seq[PermissionQueryArg],
       alwaysQueryMasterDatabase: Boolean
-  )(implicit inj: Injector, system: ActorSystem, materializer: ActorMaterializer): Future[Boolean] = {
+  )(implicit injector: ClientInjector, system: ActorSystem, materializer: ActorMaterializer): Future[Boolean] = {
     if (project.hasGlobalStarPermission) {
       return Future.successful(true)
     }

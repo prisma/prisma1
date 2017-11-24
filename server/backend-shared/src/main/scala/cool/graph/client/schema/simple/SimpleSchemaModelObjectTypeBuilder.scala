@@ -27,17 +27,14 @@ class SimpleSchemaModelObjectTypeBuilder(project: models.Project,
     "_QueryMeta",
     description = "Meta information about the query.",
     fields = sangria.schema.fields[UserContext, DataItem](
-      sangria.schema
-        .Field(name = "count", fieldType = sangria.schema.IntType, resolve = _.value.get[CountToManyDeferred]("count"))
+      sangria.schema.Field(name = "count", fieldType = sangria.schema.IntType, resolve = _.value.get[CountToManyDeferred]("count"))
     )
   )
 
   override def resolveConnection(field: Field): OutputType[Any] = {
     field.isList match {
-      case true =>
-        ListType(modelObjectTypes.get(field.relatedModel(project).get.name).get)
-      case false =>
-        modelObjectTypes.get(field.relatedModel(project).get.name).get
+      case true  => ListType(modelObjectTypes(field.relatedModel(project).get.name))
+      case false => modelObjectTypes(field.relatedModel(project).get.name)
     }
   }
 
