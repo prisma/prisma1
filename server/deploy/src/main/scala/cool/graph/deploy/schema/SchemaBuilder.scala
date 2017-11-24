@@ -1,7 +1,7 @@
 package cool.graph.deploy.schema
 
 import akka.actor.ActorSystem
-import cool.graph.deploy.database.persistence.ProjectPersistence
+import cool.graph.deploy.database.persistence.{ProjectPersistence, ProjectPersistenceImpl}
 import cool.graph.deploy.migration.{DesiredProjectInferer, MigrationStepsExecutor, MigrationStepsProposer, RenameInferer}
 import cool.graph.deploy.schema.fields.{AddProjectField, DeployField}
 import cool.graph.deploy.schema.mutations._
@@ -9,6 +9,7 @@ import cool.graph.deploy.schema.types.ProjectType
 import cool.graph.shared.models.Project
 import sangria.relay.Mutation
 import sangria.schema._
+import slick.jdbc.MySQLProfile.api._
 
 import scala.concurrent.Future
 
@@ -30,10 +31,11 @@ class SchemaBuilderImpl(
   import system.dispatcher
 
   val migrationStepsExecutor: MigrationStepsExecutor = ???
-  val desiredProjectInferer: DesiredProjectInferer   = ???
-  val migrationStepsProposer: MigrationStepsProposer = ???
-  val renameInferer: RenameInferer                   = ???
-  val projectPersistence: ProjectPersistence         = ???
+  val internalDb                                     = Database.forConfig("internal")
+  val desiredProjectInferer: DesiredProjectInferer   = DesiredProjectInferer()
+  val migrationStepsProposer: MigrationStepsProposer = MigrationStepsProposer()
+  val renameInferer: RenameInferer                   = RenameInferer
+  val projectPersistence: ProjectPersistence         = ProjectPersistenceImpl(internalDb)
 
   def build(): Schema[SystemUserContext, Unit] = {
     val Query = ObjectType(
@@ -79,7 +81,6 @@ class SchemaBuilderImpl(
             result <- DeployMutation(
                        args = args,
                        project = project,
-                       migrationStepsExecutor = migrationStepsExecutor,
                        desiredProjectInferer = desiredProjectInferer,
                        migrationStepsProposer = migrationStepsProposer,
                        renameInferer = renameInferer,

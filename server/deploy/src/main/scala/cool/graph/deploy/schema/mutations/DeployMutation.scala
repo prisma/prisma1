@@ -11,7 +11,6 @@ import scala.concurrent.{ExecutionContext, Future}
 case class DeployMutation(
     args: DeployMutationInput,
     project: Project,
-    migrationStepsExecutor: MigrationStepsExecutor,
     desiredProjectInferer: DesiredProjectInferer,
     migrationStepsProposer: MigrationStepsProposer,
     renameInferer: RenameInferer,
