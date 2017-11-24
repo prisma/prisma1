@@ -7,7 +7,7 @@ import com.amazonaws.services.s3.AmazonS3
 import com.typesafe.config.{Config, ConfigFactory}
 import cool.graph.aws.AwsInitializers
 import cool.graph.aws.cloudwatch.CloudwatchImpl
-import cool.graph.bugsnag.BugSnaggerImpl
+import cool.graph.bugsnag.{BugSnagger, BugSnaggerImpl}
 import cool.graph.client._
 import cool.graph.client.authorization.{ClientAuth, ClientAuthImpl}
 import cool.graph.client.database.{DeferredResolverProvider, SimpleManyModelDeferredResolver, SimpleToManyDeferredResolver}
@@ -20,7 +20,7 @@ import cool.graph.messagebus.pubsub.rabbit.{RabbitAkkaPubSub, RabbitAkkaPubSubPu
 import cool.graph.messagebus.queue.rabbit.{RabbitQueue, RabbitQueueConsumer, RabbitQueuePublisher}
 import cool.graph.shared.database.GlobalDatabaseManager
 import cool.graph.shared.externalServices.{KinesisPublisher, KinesisPublisherImplementation, TestableTimeImplementation}
-import cool.graph.shared.functions.LiveEndpointResolver
+import cool.graph.shared.functions.{EndpointResolver, FunctionEnvironment, LiveEndpointResolver}
 import cool.graph.shared.functions.lambda.LambdaFunctionEnvironment
 import cool.graph.shared.{ApiMatrixFactory, DefaultApiMatrix}
 import cool.graph.subscriptions.protocol.SubscriptionProtocolV05.Responses.SubscriptionSessionResponseV05
@@ -51,7 +51,29 @@ class SimpleSubscriptionInjectorImpl(implicit val system: ActorSystem, val mater
   import cool.graph.subscriptions.protocol.Converters._
 
   implicit lazy val injector: SimpleSubscriptionInjectorImpl = this
-  implicit lazy val toScaldi: Module                         = new Module {}
+  implicit lazy val toScaldi: Module = {
+    val outer = this
+    new Module {
+      binding identifiedBy "project-schema-fetcher" toNonLazy outer.projectSchemaFetcher
+      binding identifiedBy "cloudwatch" toNonLazy outer.cloudwatch
+      binding identifiedBy "kinesis" toNonLazy outer.kinesis
+      binding identifiedBy "api-metrics-middleware" toNonLazy outer.apiMetricsMiddleware
+      binding identifiedBy "featureMetricActor" to outer.featureMetricActor
+      binding identifiedBy "s3" toNonLazy outer.s3
+      binding identifiedBy "s3-fileupload" toNonLazy outer.s3Fileupload
+      bind[EndpointResolver] identifiedBy "endpointResolver" toNonLazy outer.endpointResolver
+      bind[QueuePublisher[String]] identifiedBy "logsPublisher" toNonLazy outer.logsPublisher
+      bind[QueuePublisher[Webhook]] identifiedBy "webhookPublisher" toNonLazy outer.webhookPublisher
+      bind[PubSubPublisher[String]] identifiedBy "sss-events-publisher" toNonLazy outer.sssEventsPublisher
+      bind[String] identifiedBy "request-prefix" toNonLazy outer.requestPrefix
+      bind[KinesisPublisher] identifiedBy "kinesisAlgoliaSyncQueriesPublisher" toNonLazy outer.kinesisAlgoliaSyncQueriesPublisher
+      bind[KinesisPublisher] identifiedBy "kinesisApiMetricsPublisher" toNonLazy outer.kinesisApiMetricsPublisher
+      bind[FunctionEnvironment] toNonLazy outer.functionEnvironment
+      bind[GlobalDatabaseManager] toNonLazy outer.globalDatabaseManager
+      bind[ApiMatrixFactory] toNonLazy outer.apiMatrixFactory
+      bind[BugSnagger] toNonLazy outer.bugsnagger
+    }
+  }
 
   implicit lazy val unmarshaller: Array[Byte] => SubscriptionsManagerForProject.SchemaInvalidated.type = (_: Array[Byte]) => SchemaInvalidated
   lazy val globalRabbitUri                                                                             = sys.env("GLOBAL_RABBIT_URI")

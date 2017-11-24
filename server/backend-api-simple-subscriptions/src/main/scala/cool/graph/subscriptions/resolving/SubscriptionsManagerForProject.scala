@@ -15,7 +15,7 @@ import cool.graph.subscriptions.resolving.SubscriptionsManagerForProject.{Schema
 import cool.graph.subscriptions.schemas.{QueryTransformer, SubscriptionQueryValidator}
 import cool.graph.utils.future.FutureUtils._
 import org.scalactic.{Bad, Good}
-import scaldi.akka.AkkaInjectable
+import scaldi.Module
 
 import scala.collection.mutable
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -33,7 +33,6 @@ case class SubscriptionsManagerForProject(
 )(implicit injector: ClientInjector)
     extends Actor
     with Stash
-    with AkkaInjectable
     with LogUnhandled
     with LogUnhandledExceptions {
 
@@ -43,9 +42,9 @@ case class SubscriptionsManagerForProject(
 
   val resolversByModel          = mutable.Map.empty[Model, ActorRef]
   val resolversBySubscriptionId = mutable.Map.empty[StringOrInt, mutable.Set[ActorRef]]
-  implicit val inj              = injector.toScaldi
+  implicit val inj: Module      = injector.toScaldi
 
-  override def preStart() = {
+  override def preStart(): Unit = {
     super.preStart()
     activeSubscriptionsManagerForProject.inc
     pipe(ProjectHelper.resolveProject(projectId)(injector, context.system, context.dispatcher)) to self
@@ -142,7 +141,7 @@ case class SubscriptionsManagerForProject(
     resolver
   }
 
-  def removeManagerForModel(ref: ActorRef) = {
+  def removeManagerForModel(ref: ActorRef): resolversBySubscriptionId.type = {
     resolversByModel.retain {
       case (_, resolver) => resolver != ref
     }
