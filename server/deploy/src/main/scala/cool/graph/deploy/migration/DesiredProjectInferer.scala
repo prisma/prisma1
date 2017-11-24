@@ -101,7 +101,7 @@ case class DesiredProjectInfererImpl(
     } else if (sdl.enumType(typeName).isDefined) {
       TypeIdentifier.Enum
     } else {
-      TypeIdentifier.withName(typeName)
+      TypeIdentifier.withNameHacked(typeName)
     }
   }
 }

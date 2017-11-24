@@ -590,6 +590,11 @@ object TypeIdentifier extends Enumeration {
   val Relation  = Value("Relation")
 
   def withNameOpt(name: String): Option[TypeIdentifier.Value] = this.values.find(_.toString == name)
+
+  def withNameHacked(name: String) = name match {
+    case "ID" => GraphQLID
+    case _    => withName(name)
+  }
 }
 
 case class Enum(
