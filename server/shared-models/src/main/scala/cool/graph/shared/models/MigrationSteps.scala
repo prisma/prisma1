@@ -43,7 +43,7 @@ case class UpdateField(
 ) extends FieldMigrationStep
 
 sealed trait EnumMigrationStep                                                               extends MigrationStep
-case class CreateEnum(model: String, values: Seq[String])                                    extends EnumMigrationStep
+case class CreateEnum(name: String, values: Seq[String])                                     extends EnumMigrationStep
 case class DeleteEnum(name: String)                                                          extends EnumMigrationStep
 case class UpdateEnum(name: String, newName: Option[String], values: Option[Vector[String]]) extends EnumMigrationStep
 

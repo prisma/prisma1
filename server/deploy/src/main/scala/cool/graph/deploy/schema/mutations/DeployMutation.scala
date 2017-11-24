@@ -1,9 +1,8 @@
 package cool.graph.deploy.schema.mutations
 
 import cool.graph.deploy.database.persistence.ProjectPersistence
-import cool.graph.deploy.migration.{DesiredProjectInferer, MigrationStepsExecutor, MigrationStepsProposer, RenameInferer}
+import cool.graph.deploy.migration.{DesiredProjectInferer, MigrationStepsProposer, RenameInferer}
 import cool.graph.shared.models.{MigrationSteps, Project}
-import org.scalactic.Or
 import sangria.parser.QueryParser
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -27,7 +26,11 @@ case class DeployMutation(
       desiredProject <- desiredProjectInferer.infer(baseProject = project, graphQlSdl).toFuture
       renames        = renameInferer.infer(graphQlSdl)
       migrationSteps = migrationStepsProposer.propose(project, desiredProject, renames)
-      _              <- projectPersistence.save(desiredProject, migrationSteps)
+      _ <- if (migrationSteps.steps.nonEmpty) {
+            projectPersistence.save(desiredProject, migrationSteps)
+          } else {
+            Future.successful(())
+          }
     } yield {
       MutationSuccess(DeployMutationPayload(args.clientMutationId, desiredProject, migrationSteps))
     }

@@ -47,7 +47,7 @@ case class SchemaBuilderImpl(
       getFields.toList
     )
 
-    Schema(Query, Some(Mutation))
+    Schema(Query, Some(Mutation), additionalTypes = MigrationStepType.allTypes)
   }
 
   val dummyField: Field[SystemUserContext, Unit] = Field(
