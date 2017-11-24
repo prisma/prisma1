@@ -26,7 +26,7 @@ case class DeployMutation(
     for {
       steps          <- migrationSteps.toFuture
       updatedProject <- migrationStepsExecutor.execute(project, steps).toFuture
-      desiredProject = desiredProjectInferer.infer(graphQlSdl)
+      desiredProject <- desiredProjectInferer.infer(graphQlSdl).toFuture
       _ = if (updatedProject != desiredProject) {
         val proposal = migrationStepsProposer.propose(project, desiredProject)
         sys.error(s"the desired project does not line up with the project created by the migrations. The following steps are a proposal: $proposal")
