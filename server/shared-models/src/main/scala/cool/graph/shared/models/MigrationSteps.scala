@@ -13,16 +13,8 @@ case class CreateModel(name: String)                  extends ModelMigrationStep
 case class DeleteModel(name: String)                  extends ModelMigrationStep
 case class UpdateModel(name: String, newName: String) extends ModelMigrationStep
 
-trait FieldMigrationStep extends MigrationStep
-case class CreateField(
-    model: String,
-    name: String,
-    typeName: String,
-    isRequired: Boolean,
-    isList: Boolean,
-    isUnique: Boolean,
-    defaultValue: Option[String]
-) extends FieldMigrationStep
+trait FieldMigrationStep                                                         extends MigrationStep
+case class CreateField(model: String, name: String)                              extends FieldMigrationStep
 case class DeleteField(model: String, name: String)                              extends FieldMigrationStep
 case class UpdateField(model: String, name: String, isRequired: Option[Boolean]) extends FieldMigrationStep
 
