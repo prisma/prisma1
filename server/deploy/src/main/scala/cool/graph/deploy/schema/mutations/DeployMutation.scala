@@ -25,7 +25,7 @@ case class DeployMutation(
 
   override def execute: Future[MutationResult[DeployMutationPayload]] = {
     for {
-      desiredProject <- desiredProjectInferer.infer(graphQlSdl).toFuture
+      desiredProject <- desiredProjectInferer.infer(baseProject = project, graphQlSdl).toFuture
       renames        = renameInferer.infer(graphQlSdl)
       migrationSteps = migrationStepsProposer.propose(project, desiredProject, renames)
       _              <- projectPersistence.save(desiredProject, migrationSteps)
