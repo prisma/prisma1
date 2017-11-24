@@ -11,9 +11,9 @@ import slick.jdbc.MySQLProfile.api._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-case class UpdateColumn(projectId: String, model: Model, oldField: Field, newField: Field) extends ClientSqlSchemaChangeMutaction {
+case class UpdateColumn(projectId: String, model: Model, oldField: Field, newField: Field) extends SystemSqlMutaction {
 
-  override def execute: Future[ClientSqlStatementResult[Any]] = {
+  override def execute: Future[SystemSqlStatementResult[Any]] = {
 
     // when type changes to/from String we need to change the subpart
     // when fieldName changes we need to update index name
@@ -21,7 +21,7 @@ case class UpdateColumn(projectId: String, model: Model, oldField: Field, newFie
     updateFromBeforeStateToAfterState(before = oldField, after = newField)
   }
 
-  override def rollback: Some[Future[ClientSqlStatementResult[Any]]] = Some(updateFromBeforeStateToAfterState(before = newField, after = oldField))
+  override def rollback: Some[Future[SystemSqlStatementResult[Any]]] = Some(updateFromBeforeStateToAfterState(before = newField, after = oldField))
 
   override def handleErrors =
     Some({
@@ -30,7 +30,7 @@ case class UpdateColumn(projectId: String, model: Model, oldField: Field, newFie
         ExistingDuplicateDataPreventsUniqueIndex(newField.name)
     })
 
-  def updateFromBeforeStateToAfterState(before: Field, after: Field): Future[ClientSqlStatementResult[Any]] = {
+  def updateFromBeforeStateToAfterState(before: Field, after: Field): Future[SystemSqlStatementResult[Any]] = {
 
     val hasIndex     = before.isUnique
     val indexIsDirty = before.isRequired != after.isRequired || before.name != after.name || before.typeIdentifier != after.typeIdentifier
@@ -66,7 +66,7 @@ case class UpdateColumn(projectId: String, model: Model, oldField: Field, newFie
       case (false, _, true)    => List(updateColumn, addUniqueConstraint)
     }
 
-    Future.sequence(updateColumnActions).map(sqlActions => ClientSqlStatementResult(sqlAction = DBIO.seq(sqlActions: _*)))
+    Future.sequence(updateColumnActions).map(sqlActions => SystemSqlStatementResult(sqlAction = DBIO.seq(sqlActions: _*)))
 
   }
 }
