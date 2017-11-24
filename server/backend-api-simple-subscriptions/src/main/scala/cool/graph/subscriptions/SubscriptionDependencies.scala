@@ -4,7 +4,6 @@ import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.stream.ActorMaterializer
 import com.amazonaws.services.kinesis.AmazonKinesis
 import com.amazonaws.services.s3.AmazonS3
-import com.typesafe.config.{Config, ConfigFactory}
 import cool.graph.aws.AwsInitializers
 import cool.graph.aws.cloudwatch.CloudwatchImpl
 import cool.graph.bugsnag.{BugSnagger, BugSnaggerImpl}
@@ -19,8 +18,8 @@ import cool.graph.messagebus._
 import cool.graph.messagebus.pubsub.rabbit.{RabbitAkkaPubSub, RabbitAkkaPubSubPublisher, RabbitAkkaPubSubSubscriber}
 import cool.graph.messagebus.queue.rabbit.{RabbitQueue, RabbitQueueConsumer, RabbitQueuePublisher}
 import cool.graph.shared.database.GlobalDatabaseManager
-import cool.graph.shared.externalServices.{KinesisPublisher, KinesisPublisherImplementation, KinesisPublisherMock, TestableTimeImplementation}
-import cool.graph.shared.functions.{EndpointResolver, FunctionEnvironment, LiveEndpointResolver}
+import cool.graph.shared.externalServices._
+import cool.graph.shared.functions.LiveEndpointResolver
 import cool.graph.shared.functions.lambda.LambdaFunctionEnvironment
 import cool.graph.shared.{ApiMatrixFactory, DefaultApiMatrix}
 import cool.graph.subscriptions.protocol.SubscriptionProtocolV05.Responses.SubscriptionSessionResponseV05
@@ -54,24 +53,32 @@ class SimpleSubscriptionInjectorImpl(implicit val system: ActorSystem, val mater
   implicit lazy val toScaldi: Module = {
     val outer = this
     new Module {
-      binding identifiedBy "project-schema-fetcher" toNonLazy outer.projectSchemaFetcher
-      binding identifiedBy "cloudwatch" toNonLazy outer.cloudwatch
-      binding identifiedBy "kinesis" toNonLazy outer.kinesis
-      binding identifiedBy "api-metrics-middleware" toNonLazy outer.apiMetricsMiddleware
-      binding identifiedBy "featureMetricActor" to outer.featureMetricActor
-      binding identifiedBy "s3" toNonLazy outer.s3
-      binding identifiedBy "s3-fileupload" toNonLazy outer.s3Fileupload
-      bind[EndpointResolver] identifiedBy "endpointResolver" toNonLazy outer.endpointResolver
-      bind[QueuePublisher[String]] identifiedBy "logsPublisher" toNonLazy outer.logsPublisher
-      bind[QueuePublisher[Webhook]] identifiedBy "webhookPublisher" toNonLazy outer.webhookPublisher
-      bind[PubSubPublisher[String]] identifiedBy "sss-events-publisher" toNonLazy outer.sssEventsPublisher
-      bind[String] identifiedBy "request-prefix" toNonLazy outer.requestPrefix
-      bind[KinesisPublisher] identifiedBy "kinesisAlgoliaSyncQueriesPublisher" toNonLazy outer.kinesisAlgoliaSyncQueriesPublisher
-      bind[KinesisPublisher] identifiedBy "kinesisApiMetricsPublisher" toNonLazy outer.kinesisApiMetricsPublisher
-      bind[FunctionEnvironment] toNonLazy outer.functionEnvironment
-      bind[GlobalDatabaseManager] toNonLazy outer.globalDatabaseManager
-      bind[ApiMatrixFactory] toNonLazy outer.apiMatrixFactory
+
       bind[BugSnagger] toNonLazy outer.bugsnagger
+      bind[TestableTime] toNonLazy outer.testableTime
+      bind[ClientAuth] toNonLazy outer.clientAuth
+
+      binding identifiedBy "config" toNonLazy outer.config
+      binding identifiedBy "actorSystem" toNonLazy outer.system
+      binding identifiedBy "dispatcher" toNonLazy outer.dispatcher
+      binding identifiedBy "actorMaterializer" toNonLazy outer.materializer
+      binding identifiedBy "environment" toNonLazy outer.environment
+      binding identifiedBy "service-name" toNonLazy outer.serviceName
+
+      bind[KinesisPublisher] identifiedBy "kinesisApiMetricsPublisher" toNonLazy outer.kinesisApiMetricsPublisher
+      bind[QueueConsumer[SubscriptionRequest]] identifiedBy "subscription-requests-consumer" toNonLazy outer.requestsQueueConsumer
+      bind[PubSubPublisher[SubscriptionSessionResponseV05]] identifiedBy "subscription-responses-publisher-05" toNonLazy outer.responsePubSubPublisherV05
+      bind[PubSubPublisher[SubscriptionSessionResponse]] identifiedBy "subscription-responses-publisher-07" toNonLazy outer.responsePubSubPublisherV07
+      bind[PubSubSubscriber[SchemaInvalidatedMessage]] identifiedBy "schema-invalidation-subscriber" toNonLazy outer.invalidationSubscriber
+      bind[PubSubSubscriber[String]] identifiedBy "sss-events-subscriber" toNonLazy outer.sssEventsSubscriber
+      bind[ApiMatrixFactory] toNonLazy outer.apiMatrixFactory
+      bind[GlobalDatabaseManager] toNonLazy outer.globalDatabaseManager
+
+      binding identifiedBy "cloudwatch" toNonLazy outer.cloudwatch
+      binding identifiedBy "project-schema-fetcher" toNonLazy outer.projectSchemaFetcher
+      binding identifiedBy "kinesis" toNonLazy outer.kinesis
+      binding identifiedBy "featureMetricActor" to outer.featureMetricActor
+      binding identifiedBy "api-metrics-middleware" toNonLazy outer.apiMetricsMiddleware
     }
   }
 
