@@ -57,14 +57,12 @@ class SimpleSubscriptionInjectorImpl(implicit val system: ActorSystem, val mater
       bind[BugSnagger] toNonLazy outer.bugsnagger
       bind[TestableTime] toNonLazy outer.testableTime
       bind[ClientAuth] toNonLazy outer.clientAuth
-
       binding identifiedBy "config" toNonLazy outer.config
       binding identifiedBy "actorSystem" toNonLazy outer.system
       binding identifiedBy "dispatcher" toNonLazy outer.dispatcher
       binding identifiedBy "actorMaterializer" toNonLazy outer.materializer
       binding identifiedBy "environment" toNonLazy outer.environment
       binding identifiedBy "service-name" toNonLazy outer.serviceName
-
       bind[KinesisPublisher] identifiedBy "kinesisApiMetricsPublisher" toNonLazy outer.kinesisApiMetricsPublisher
       bind[QueueConsumer[SubscriptionRequest]] identifiedBy "subscription-requests-consumer" toNonLazy outer.requestsQueueConsumer
       bind[PubSubPublisher[SubscriptionSessionResponseV05]] identifiedBy "subscription-responses-publisher-05" toNonLazy outer.responsePubSubPublisherV05
@@ -73,7 +71,6 @@ class SimpleSubscriptionInjectorImpl(implicit val system: ActorSystem, val mater
       bind[PubSubSubscriber[String]] identifiedBy "sss-events-subscriber" toNonLazy outer.sssEventsSubscriber
       bind[ApiMatrixFactory] toNonLazy outer.apiMatrixFactory
       bind[GlobalDatabaseManager] toNonLazy outer.globalDatabaseManager
-
       binding identifiedBy "cloudwatch" toNonLazy outer.cloudwatch
       binding identifiedBy "project-schema-fetcher" toNonLazy outer.projectSchemaFetcher
       binding identifiedBy "kinesis" toNonLazy outer.kinesis
