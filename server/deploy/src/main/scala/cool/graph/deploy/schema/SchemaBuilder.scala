@@ -2,18 +2,18 @@ package cool.graph.deploy.schema
 
 import akka.actor.ActorSystem
 import cool.graph.deploy.database.persistence.{ProjectPersistence, ProjectPersistenceImpl}
-import cool.graph.deploy.migration.{DesiredProjectInferer, MigrationStepsExecutor, MigrationStepsProposer, RenameInferer}
+import cool.graph.deploy.migration.{DesiredProjectInferer, MigrationStepsProposer, RenameInferer}
 import cool.graph.deploy.schema.fields.{AddProjectField, DeployField}
 import cool.graph.deploy.schema.mutations._
 import cool.graph.deploy.schema.types.ProjectType
-import cool.graph.shared.models.Project
+import cool.graph.shared.models.{Client, Project}
 import sangria.relay.Mutation
 import sangria.schema._
 import slick.jdbc.MySQLProfile.backend.DatabaseDef
 
 import scala.concurrent.Future
 
-case class SystemUserContext(clientId: String)
+case class SystemUserContext(client: Client)
 
 trait SchemaBuilder {
   def apply(userContext: SystemUserContext): Schema[SystemUserContext, Unit]
@@ -31,17 +31,15 @@ case class SchemaBuilderImpl(
 )(implicit system: ActorSystem) {
   import system.dispatcher
 
-  val migrationStepsExecutor: MigrationStepsExecutor = ???
-
   val desiredProjectInferer: DesiredProjectInferer   = DesiredProjectInferer()
   val migrationStepsProposer: MigrationStepsProposer = MigrationStepsProposer()
   val renameInferer: RenameInferer                   = RenameInferer
   val projectPersistence: ProjectPersistence         = ProjectPersistenceImpl(internalDb)
 
   def build(): Schema[SystemUserContext, Unit] = {
-    val Query = ObjectType(
+    val Query = ObjectType[SystemUserContext, Unit](
       "Query",
-      viewerField() :: Nil
+      List(dummyField)
     )
 
     val Mutation = ObjectType(
@@ -51,6 +49,13 @@ case class SchemaBuilderImpl(
 
     Schema(Query, Some(Mutation))
   }
+
+  val dummyField: Field[SystemUserContext, Unit] = Field(
+    "dummy",
+    description = Some("This is only a dummy field due to the API of Schema of Sangria, as Query is not optional"),
+    fieldType = StringType,
+    resolve = (ctx) => "this is dumb"
+  )
 
   def viewerField(): Field[SystemUserContext, Unit] = {
 //    Field(
@@ -105,7 +110,7 @@ case class SchemaBuilderImpl(
         handleMutationResult {
           AddProjectMutation(
             args = args,
-            client = ???,
+            client = ctx.ctx.client,
             projectPersistence = projectPersistence
           ).execute
       }

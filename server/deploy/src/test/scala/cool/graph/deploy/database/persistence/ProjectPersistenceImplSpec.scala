@@ -14,7 +14,7 @@ class ProjectPersistenceImplSpec extends FlatSpec with Matchers with AwaitUtils 
   val projectPersistence = ProjectPersistenceImpl(internalDatabase = internalDatabase)
 
   val project                        = TestProject()
-  val migrationSteps: MigrationSteps = null
+  val migrationSteps: MigrationSteps = MigrationSteps.empty
 
   ".load()" should "return None if there's no project yet in the database" in {
     val result = projectPersistence.load("non-existent-id").await()
