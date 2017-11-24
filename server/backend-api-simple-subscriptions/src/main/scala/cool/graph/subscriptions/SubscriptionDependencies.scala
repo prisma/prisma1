@@ -19,7 +19,7 @@ import cool.graph.messagebus._
 import cool.graph.messagebus.pubsub.rabbit.{RabbitAkkaPubSub, RabbitAkkaPubSubPublisher, RabbitAkkaPubSubSubscriber}
 import cool.graph.messagebus.queue.rabbit.{RabbitQueue, RabbitQueueConsumer, RabbitQueuePublisher}
 import cool.graph.shared.database.GlobalDatabaseManager
-import cool.graph.shared.externalServices.{KinesisPublisher, KinesisPublisherImplementation, TestableTimeImplementation}
+import cool.graph.shared.externalServices.{KinesisPublisher, KinesisPublisherImplementation, KinesisPublisherMock, TestableTimeImplementation}
 import cool.graph.shared.functions.{EndpointResolver, FunctionEnvironment, LiveEndpointResolver}
 import cool.graph.shared.functions.lambda.LambdaFunctionEnvironment
 import cool.graph.shared.{ApiMatrixFactory, DefaultApiMatrix}
@@ -130,7 +130,7 @@ class SimpleSubscriptionInjectorImpl(implicit val system: ActorSystem, val mater
   lazy val endpointResolver                             = LiveEndpointResolver()
   lazy val logsPublisher: RabbitQueuePublisher[String]  = RabbitQueue.publisher[String](clusterLocalRabbitUri, "function-logs")(bugsnagger, fromStringMarshaller)
   lazy val requestPrefix: String                        = sys.env.getOrElse("AWS_REGION", sys.error("AWS Region not found."))
-  lazy val kinesisAlgoliaSyncQueriesPublisher           = new KinesisPublisherImplementation(streamName = sys.env("KINESIS_STREAM_ALGOLIA_SYNC_QUERY"), kinesis)
+  lazy val kinesisAlgoliaSyncQueriesPublisher           = new KinesisPublisherMock
   lazy val log: String => Unit                          = println
   lazy val errorHandlerFactory                          = ErrorHandlerFactory(log, cloudwatch, bugsnagger)
   lazy val s3: AmazonS3                                 = AwsInitializers.createS3()
