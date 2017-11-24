@@ -125,6 +125,9 @@ lazy val sharedModels = normalProject("shared-models")
 )
 lazy val deploy = serverProject("deploy")
                     .dependsOn(sharedModels % "compile")
+                    .dependsOn(akkaUtils % "compile")
+                    .dependsOn(metrics % "compile")
+                    .dependsOn(jvmProfiler % "compile")
                     .settings(
                       libraryDependencies ++= Seq(
                         playJson,

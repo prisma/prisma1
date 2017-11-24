@@ -9,29 +9,30 @@ import cool.graph.deploy.schema.types.ProjectType
 import cool.graph.shared.models.Project
 import sangria.relay.Mutation
 import sangria.schema._
-import slick.jdbc.MySQLProfile.api._
+import slick.jdbc.MySQLProfile.backend.DatabaseDef
 
 import scala.concurrent.Future
 
-trait SystemUserContext
+case class SystemUserContext(clientId: String)
 
 trait SchemaBuilder {
   def apply(userContext: SystemUserContext): Schema[SystemUserContext, Unit]
 }
 
 object SchemaBuilder {
-  def apply(fn: SystemUserContext => Schema[SystemUserContext, Unit]): SchemaBuilder = new SchemaBuilder {
-    override def apply(userContext: SystemUserContext) = fn(userContext)
+  def apply(internalDb: DatabaseDef)(implicit system: ActorSystem): SchemaBuilder = new SchemaBuilder {
+    override def apply(userContext: SystemUserContext) = SchemaBuilderImpl(userContext, internalDb).build()
   }
 }
 
-class SchemaBuilderImpl(
-    userContext: SystemUserContext
+case class SchemaBuilderImpl(
+    userContext: SystemUserContext,
+    internalDb: DatabaseDef
 )(implicit system: ActorSystem) {
   import system.dispatcher
 
   val migrationStepsExecutor: MigrationStepsExecutor = ???
-  val internalDb                                     = Database.forConfig("internal")
+
   val desiredProjectInferer: DesiredProjectInferer   = DesiredProjectInferer()
   val migrationStepsProposer: MigrationStepsProposer = MigrationStepsProposer()
   val renameInferer: RenameInferer                   = RenameInferer
