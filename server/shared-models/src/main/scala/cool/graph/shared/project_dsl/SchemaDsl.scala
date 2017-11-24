@@ -1,6 +1,6 @@
 package cool.graph.shared.project_dsl
 
-import cool.graph.shared.gc_values.GCValue
+import cool.graph.gc_values.GCValue
 import cool.graph.cuid.Cuid
 import cool.graph.shared.models.IdType.Id
 import cool.graph.shared.models._
@@ -370,7 +370,8 @@ object SchemaDsl {
       isUnique = false,
       isSystem = false,
       isReadonly = false,
-      defaultValue = None
+      defaultValue = None,
+      enum = None
     )
   }
 
@@ -384,7 +385,11 @@ object SchemaDsl {
     isList = false,
     isUnique = true,
     isSystem = true,
-    isReadonly = true
+    isReadonly = true,
+    enum = None,
+    defaultValue = None,
+    relation = None,
+    relationSide = None
   )
 
   private val updatedAtField = Field(
@@ -395,7 +400,11 @@ object SchemaDsl {
     isList = false,
     isUnique = false,
     isSystem = true,
-    isReadonly = true
+    isReadonly = true,
+    enum = None,
+    defaultValue = None,
+    relation = None,
+    relationSide = None
   )
 
   private val createdAtField = Field(
@@ -406,6 +415,10 @@ object SchemaDsl {
     isList = false,
     isUnique = true,
     isSystem = true,
-    isReadonly = true
+    isReadonly = true,
+    enum = None,
+    defaultValue = None,
+    relation = None,
+    relationSide = None
   )
 }

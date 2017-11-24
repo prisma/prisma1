@@ -1,9 +1,7 @@
-package cool.graph.shared.gc_values
+package cool.graph.gc_values
 
 import org.joda.time.DateTime
-import org.scalactic.Or
 import play.api.libs.json.JsValue
-import _root_.cool.graph.shared.models.TypeIdentifier
 
 /**
   * GCValues should be the sole way to represent data within our system.
@@ -33,20 +31,3 @@ case class GraphQLIdGCValue(value: String)  extends LeafGCValue
 case class DateTimeGCValue(value: DateTime) extends LeafGCValue
 case class EnumGCValue(value: String)       extends LeafGCValue
 case class JsonGCValue(value: JsValue)      extends LeafGCValue
-
-/**
-  * We need a bunch of different converters from / to GC values
-  *
-  * 1.  DBValue       <->  GCValue     for writing into typed value fields in the Client-DB
-  * 2.  SangriaValue  <->  GCValue     for transforming the Any we get from Sangria per field back and forth
-  * 3.  DBString      <->  GCValue     for writing defaultValues in the System-DB since they are always a String, and JSArray for Lists
-  * 4.  Json          <->  GCValue     for SchemaSerialization
-  * 5.  SangriaValue  <->  String      for reading and writing default and migrationValues
-  * 6.  InputString   <->  GCValue     chains String -> SangriaValue -> GCValue and back
-  */
-trait GCConverter[T] {
-  def toGCValue(t: T): Or[GCValue, InvalidValueForScalarType]
-  def fromGCValue(gcValue: GCValue): T
-}
-
-case class InvalidValueForScalarType(value: String, typeIdentifier: TypeIdentifier.Value)

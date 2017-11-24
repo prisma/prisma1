@@ -114,7 +114,9 @@ def serverProject(name: String): Project = {
 def normalProject(name: String): Project = Project(id = name, base = file(s"./$name")).settings(commonSettings: _*)
 def libProject(name: String): Project =  Project(id = name, base = file(s"./libs/$name")).settings(commonSettings: _*)
 
-lazy val sharedModels = normalProject("shared-models").settings(
+lazy val sharedModels = normalProject("shared-models")
+  .dependsOn(gcValues % "compile")
+  .settings(
   libraryDependencies ++= Seq(
     cuid,
     playJson,
@@ -131,6 +133,10 @@ lazy val deploy = serverProject("deploy")
                     )
 
 lazy val gcValues = libProject("gc-values")
+  .settings(libraryDependencies ++= Seq(
+    playJson,
+    scalactic
+  ) ++ joda)
 
 lazy val bugsnag = Project(id = "bugsnag", base = file("./libs/bugsnag"))
   .settings(commonSettings: _*)
