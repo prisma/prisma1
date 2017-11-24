@@ -22,11 +22,11 @@ case class ProjectPersistenceImpl(
 
   override def save(project: Project, migrationSteps: MigrationSteps): Future[Unit] = {
     for {
-      currentProject      <- load(project.id)
-      dbProject           = ModelToDbMapper.convert(project)
-      withRevisionBunmped = dbProject.copy(revision = currentProject.map(_.revision).getOrElse(0) + 1)
-      addProject          = Tables.Projects += withRevisionBunmped
-      _                   <- internalDatabase.run(addProject).map(_ => ())
+      currentProject     <- load(project.id)
+      dbProject          = ModelToDbMapper.convert(project, migrationSteps)
+      withRevisionBumped = dbProject.copy(revision = currentProject.map(_.revision).getOrElse(0) + 1)
+      addProject         = Tables.Projects += withRevisionBumped
+      _                  <- internalDatabase.run(addProject).map(_ => ())
     } yield ()
   }
 }
