@@ -1,7 +1,7 @@
 package cool.graph.shared.models
 
 import cool.graph.cuid.Cuid
-import cool.graph.shared.gc_values.GCValue
+import cool.graph.gc_values.GCValue
 import cool.graph.shared.models.ActionTriggerMutationModelMutationType.ActionTriggerMutationModelMutationType
 import cool.graph.shared.models.CustomRule.CustomRule
 import cool.graph.shared.models.FieldConstraintType.FieldConstraintType
@@ -520,9 +520,9 @@ object RelationPermission {
 case class Model(
     id: Id,
     name: String,
+    fields: List[Field],
     description: Option[String] = None,
-    isSystem: Boolean,
-    fields: List[Field] = List.empty,
+    isSystem: Boolean = false,
     permissions: List[ModelPermission] = List.empty,
     fieldPositions: List[Id] = List.empty
 ) {
@@ -612,12 +612,12 @@ case class Field(
     isRequired: Boolean,
     isList: Boolean,
     isUnique: Boolean,
-    isSystem: Boolean,
-    isReadonly: Boolean,
-    enum: Option[Enum] = None,
-    defaultValue: Option[GCValue] = None,
-    relation: Option[Relation] = None,
-    relationSide: Option[RelationSide.Value] = None,
+    isSystem: Boolean = false,
+    isReadonly: Boolean = false,
+    enum: Option[Enum],
+    defaultValue: Option[GCValue],
+    relation: Option[Relation],
+    relationSide: Option[RelationSide.Value],
     constraints: List[FieldConstraint] = List.empty
 ) {
 

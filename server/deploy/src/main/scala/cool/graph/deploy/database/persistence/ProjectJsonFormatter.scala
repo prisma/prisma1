@@ -1,6 +1,6 @@
 package cool.graph.deploy.database.persistence
 
-import cool.graph.shared.gc_values._
+import cool.graph.gc_values._
 import cool.graph.shared.models.FieldConstraintType.FieldConstraintType
 import cool.graph.shared.models.{
   ActionTriggerMutationModelMutationType,
