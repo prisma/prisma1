@@ -135,6 +135,18 @@ lazy val deploy = serverProject("deploy")
                       )
                     )
 
+lazy val api = serverProject("api")
+  .dependsOn(sharedModels % "compile")
+  .dependsOn(akkaUtils % "compile")
+  .dependsOn(metrics % "compile")
+  .dependsOn(jvmProfiler % "compile")
+  .settings(
+    libraryDependencies ++= Seq(
+      playJson,
+      scalaTest
+    )
+  )
+
 lazy val gcValues = libProject("gc-values")
   .settings(libraryDependencies ++= Seq(
     playJson,
