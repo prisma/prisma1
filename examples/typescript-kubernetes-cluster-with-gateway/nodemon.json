@@ -1,0 +1,5 @@
+{
+  "watch": ["gateway"],
+  "ext": "ts",
+  "exec": "ts-node ./gateway/index.ts"
+}

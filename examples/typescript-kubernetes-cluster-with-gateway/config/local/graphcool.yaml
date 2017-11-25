@@ -1,0 +1,409 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: graphcool
+  labels:
+    app: local-graphcool-app
+    tier: graphcool
+spec:
+  type: NodePort
+  ports:
+    - port: 31000
+      nodePort: 31000
+  selector:
+    app: local-graphcool-app
+    tier: graphcool
+---
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: graphcool
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: local-graphcool-app
+      tier: graphcool
+  template:
+    metadata:
+      labels:
+        app: local-graphcool-app
+        tier: graphcool
+    spec:
+      restartPolicy: Always
+      containers:
+        - image: graphcool/graphcool-dev:0.9.0
+          name: graphcool
+          ports:
+            - containerPort: 31000
+          env:
+            - name: API_ENDPOINT_AP_NORTHEAST_1
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: API_ENDPOINT_AP_NORTHEAST_1
+            - name: API_ENDPOINT_EU_WEST_1
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: API_ENDPOINT_EU_WEST_1
+            - name: API_ENDPOINT_US_WEST_2
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: API_ENDPOINT_US_WEST_2
+            - name: AUTH0_API_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: AUTH0_API_TOKEN
+            - name: AUTH0_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: AUTH0_CLIENT_SECRET
+            - name: AUTH0_DOMAIN
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: AUTH0_DOMAIN
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: AWS_ACCESS_KEY_ID
+            - name: AWS_REGION
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: AWS_REGION
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: AWS_SECRET_ACCESS_KEY
+            - name: BACKEND_API_SIMPLE_V1_ADDR
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: BACKEND_API_SIMPLE_V1_ADDR
+            - name: BLOCKED_PROJECT_IDS
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: BLOCKED_PROJECT_IDS
+            - name: BUGSNAG_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: BUGSNAG_API_KEY
+            - name: CLIENT_API_ADDRESS
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: CLIENT_API_ADDRESS
+            - name: CLOUDWATCH_ENDPOINT
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: CLOUDWATCH_ENDPOINT
+            - name: CRM_PROJECT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: CRM_PROJECT_ID
+            - name: DATA_EXPORT_S3_BUCKET
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: DATA_EXPORT_S3_BUCKET
+            - name: DATA_EXPORT_S3_ENDPOINT
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: DATA_EXPORT_S3_ENDPOINT
+            - name: ENABLED_SERVICES
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: ENABLED_SERVICES
+            - name: ENVIRONMENT
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: ENVIRONMENT
+            - name: FILEUPLOAD_AWS_REGION
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: FILEUPLOAD_AWS_REGION
+            - name: FILEUPLOAD_S3_AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: FILEUPLOAD_S3_AWS_ACCESS_KEY_ID
+            - name: FILEUPLOAD_S3_AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: FILEUPLOAD_S3_AWS_SECRET_ACCESS_KEY
+            - name: FILEUPLOAD_S3_BUCKET
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: FILEUPLOAD_S3_BUCKET
+            - name: FILEUPLOAD_S3_ENDPOINT
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: FILEUPLOAD_S3_ENDPOINT
+            - name: FUNCTION_ENDPOINT_EXTERNAL
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: FUNCTION_ENDPOINT_EXTERNAL
+            - name: FUNCTION_ENDPOINT_INTERNAL
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: FUNCTION_ENDPOINT_INTERNAL
+            - name: INITIAL_PRICING_PLAN
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: INITIAL_PRICING_PLAN
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: JWT_SECRET
+            - name: KINESIS_ENDPOINT
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: KINESIS_ENDPOINT
+            - name: KINESIS_STREAM_ALGOLIA_SYNC_QUERY
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: KINESIS_STREAM_ALGOLIA_SYNC_QUERY
+            - name: KINESIS_STREAM_API_METRICS
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: KINESIS_STREAM_API_METRICS
+            - name: MASTER_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: MASTER_TOKEN
+            - name: PORT
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: PORT
+            - name: PRIVATE_CLIENT_API_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: PRIVATE_CLIENT_API_SECRET
+            - name: REDIS_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: REDIS_HOST
+            - name: REDIS_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: REDIS_PORT
+            - name: SCHEMA_MANAGER_ENDPOINT
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: SCHEMA_MANAGER_ENDPOINT
+            - name: SCHEMA_MANAGER_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: SCHEMA_MANAGER_SECRET
+            - name: SNS_ENDPOINT
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: SNS_ENDPOINT
+            - name: SNS_ENDPOINT_SYSTEM
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: SNS_ENDPOINT_SYSTEM
+            - name: SNS_FUNCTION_LOGS
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: SNS_FUNCTION_LOGS
+            - name: SNS_SEAT
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: SNS_SEAT
+            - name: SQL_CLIENT_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: SQL_CLIENT_HOST
+            - name: SQL_CLIENT_HOST_AP_NORTHEAST_1_CLIENT1
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: SQL_CLIENT_HOST_AP_NORTHEAST_1_CLIENT1
+            - name: SQL_CLIENT_HOST_CLIENT1
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: SQL_CLIENT_HOST_CLIENT1
+            - name: SQL_CLIENT_HOST_EU_WEST_1_CLIENT1
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: SQL_CLIENT_HOST_EU_WEST_1_CLIENT1
+            - name: SQL_CLIENT_HOST_READONLY_CLIENT1
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: SQL_CLIENT_HOST_READONLY_CLIENT1
+            - name: SQL_CLIENT_HOST_US_WEST_2_CLIENT1
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: SQL_CLIENT_HOST_US_WEST_2_CLIENT1
+            - name: SQL_CLIENT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: SQL_CLIENT_PASSWORD
+            - name: SQL_CLIENT_PASSWORD_AP_NORTHEAST_1
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: SQL_CLIENT_PASSWORD_AP_NORTHEAST_1
+            - name: SQL_CLIENT_PASSWORD_EU_WEST_1
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: SQL_CLIENT_PASSWORD_EU_WEST_1
+            - name: SQL_CLIENT_PASSWORD_US_WEST_2
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: SQL_CLIENT_PASSWORD_US_WEST_2
+            - name: SQL_CLIENT_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: SQL_CLIENT_PORT
+            - name: SQL_CLIENT_PORT_AP_NORTHEAST_1
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: SQL_CLIENT_PORT_AP_NORTHEAST_1
+            - name: SQL_CLIENT_PORT_EU_WEST_1
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: SQL_CLIENT_PORT_EU_WEST_1
+            - name: SQL_CLIENT_PORT_US_WEST_2
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: SQL_CLIENT_PORT_US_WEST_2
+            - name: SQL_CLIENT_USER
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: SQL_CLIENT_USER
+            - name: SQL_CLIENT_USER_AP_NORTHEAST_1
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: SQL_CLIENT_USER_AP_NORTHEAST_1
+            - name: SQL_CLIENT_USER_EU_WEST_1
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: SQL_CLIENT_USER_EU_WEST_1
+            - name: SQL_CLIENT_USER_US_WEST_2
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: SQL_CLIENT_USER_US_WEST_2
+            - name: SQL_INTERNAL_CONNECTION_LIMIT
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: SQL_INTERNAL_CONNECTION_LIMIT
+            - name: SQL_INTERNAL_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: SQL_INTERNAL_DATABASE
+            - name: SQL_INTERNAL_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: SQL_INTERNAL_HOST
+            - name: SQL_INTERNAL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: SQL_INTERNAL_PASSWORD
+            - name: SQL_INTERNAL_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: SQL_INTERNAL_PORT
+            - name: SQL_INTERNAL_USER
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: SQL_INTERNAL_USER
+            - name: SQL_LOGS_CONNECTION_LIMIT
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: SQL_LOGS_CONNECTION_LIMIT
+            - name: SQL_LOGS_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: SQL_LOGS_DATABASE
+            - name: SQL_LOGS_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: SQL_LOGS_HOST
+            - name: SQL_LOGS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: SQL_LOGS_PASSWORD
+            - name: SQL_LOGS_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: SQL_LOGS_PORT
+            - name: SQL_LOGS_USER
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: SQL_LOGS_USER
+            - name: STRIPE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: STRIPE_API_KEY
+            - name: SYSTEM_API_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: SYSTEM_API_SECRET
