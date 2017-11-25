@@ -29,4 +29,18 @@ case class ProjectPersistenceImpl(
       _                  <- internalDatabase.run(addProject).map(_ => ())
     } yield ()
   }
+
+  override def getUnappliedMigration(): Future[Option[(Project, MigrationSteps)]] = {
+    internalDatabase.run(ProjectTable.unappliedMigrations()).map { dbProjects =>
+      dbProjects.headOption.map { dbProject =>
+        val project        = DbToModelMapper.convert(dbProject)
+        val migrationSteps = DbToModelMapper.convertSteps(dbProject)
+        (project, migrationSteps)
+      }
+    }
+  }
+
+  override def markMigrationAsApplied(project: Project, migrationSteps: MigrationSteps): Future[Unit] = {
+    internalDatabase.run(ProjectTable.markAsApplied(project.id, project.revision)).map(_ => ())
+  }
 }

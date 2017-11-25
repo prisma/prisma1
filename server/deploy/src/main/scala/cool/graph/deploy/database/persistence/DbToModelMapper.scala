@@ -5,10 +5,15 @@ import cool.graph.shared.models
 
 object DbToModelMapper {
   import ProjectJsonFormatter._
+  import MigrationStepsJsonFormatter._
 
   def convert(project: Project): models.Project = {
     val projectModel = project.model.as[models.Project]
     projectModel.copy(revision = project.revision)
+  }
+
+  def convertSteps(project: Project): models.MigrationSteps = {
+    project.migrationSteps.as[models.MigrationSteps]
   }
 
   def convert(client: Client): models.Client = {
