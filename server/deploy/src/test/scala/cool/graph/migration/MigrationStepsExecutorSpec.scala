@@ -7,7 +7,7 @@ import org.scalactic.{Bad, Good, Or}
 import org.scalatest.{FlatSpec, Matchers}
 
 class MigrationStepsExecutorSpec extends FlatSpec with Matchers {
-  val executor: MigrationStepsExecutor = MigrationStepsExecutor
+  val executor: MigrationStepsExecutor = ???
 
   val emptyProject = SchemaDsl().buildProject()
 
@@ -68,7 +68,9 @@ class MigrationStepsExecutorSpec extends FlatSpec with Matchers {
       isRequired = false,
       isList = false,
       isUnique = false,
-      defaultValue = None
+      defaultValue = None,
+      relation = None,
+      enum = None
     )
     val result = executeStep(project, migrationStep)
     result should equal(Good(expectedProject))
@@ -82,7 +84,9 @@ class MigrationStepsExecutorSpec extends FlatSpec with Matchers {
       isRequired = false,
       isList = false,
       isUnique = false,
-      defaultValue = None
+      defaultValue = None,
+      relation = None,
+      enum = None
     )
     val result = executeStep(emptyProject, migrationStep)
     result should equal(Bad(ModelDoesNotExist(modelName)))
