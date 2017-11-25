@@ -62,7 +62,7 @@ graphcool deploy [flags]
  -t, --target TARGET                              Target name
  -w, --watch                                      Watch for changes
 ```
-      
+
 #### Examples
 
 ##### Deploy local service definition changes to the `default` target.
@@ -355,6 +355,7 @@ graphcool login [flags]
 ```sh    
 graphcool login
 ```
+
 ##### Authenticate using an existing authentication token.
 
 ```sh

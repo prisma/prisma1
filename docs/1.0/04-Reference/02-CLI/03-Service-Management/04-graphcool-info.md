@@ -3,7 +3,6 @@ alias:
 description: Prints meta-data about a specific service
 ---
 
-
 ### `graphcool info`
 
 Prints meta-data about a specific service. The information contains:
