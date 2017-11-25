@@ -7,13 +7,11 @@ import cool.graph.shared.models.ModelMutationType.ModelMutationType
 import cool.graph.shared.models.{Field, Model, Project, Relation}
 import sangria.schema
 import sangria.schema._
-import scaldi.{Injectable, Injector}
+import scaldi.Injector
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-case class SimpleOutputMapper(project: Project, modelObjectTypes: Map[String, ObjectType[UserContext, DataItem]])(implicit inj: Injector)
-    extends OutputMapper
-    with Injectable {
+case class SimpleOutputMapper(project: Project, modelObjectTypes: Map[String, ObjectType[UserContext, DataItem]])(implicit inj: Injector) extends OutputMapper {
 
   def nodePaths(model: Model) = List(List())
 

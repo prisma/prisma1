@@ -1,17 +1,17 @@
 package cool.graph.client.mutations
 
-import cool.graph.shared.mutactions.MutationTypes.ArgumentValue
 import cool.graph.Types.Id
-import cool.graph.shared.errors.UserAPIErrors.RelationIsRequired
+import cool.graph.client.ClientInjector
 import cool.graph.client.database.DataResolver
 import cool.graph.client.mutactions._
 import cool.graph.client.schema.SchemaBuilderConstants
 import cool.graph.cuid.Cuid.createCuid
 import cool.graph.shared.errors.UserAPIErrors
+import cool.graph.shared.errors.UserAPIErrors.RelationIsRequired
 import cool.graph.shared.models.{Field, Model, Project}
 import cool.graph.shared.mutactions.InvalidInputClientSqlMutaction
+import cool.graph.shared.mutactions.MutationTypes.ArgumentValue
 import cool.graph.{ClientSqlMutaction, DataItem}
-import scaldi.Injector
 
 import scala.collection.immutable.Seq
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -23,7 +23,7 @@ case class SqlMutactions(dataResolver: DataResolver) {
     def allMutactions: List[ClientSqlMutaction] = List(createMutaction) ++ nestedMutactions
   }
 
-  def getMutactionsForDelete(model: Model, project: Project, id: Id, previousValues: DataItem)(implicit inj: Injector): List[ClientSqlMutaction] = {
+  def getMutactionsForDelete(model: Model, project: Project, id: Id, previousValues: DataItem)(implicit injector: ClientInjector): List[ClientSqlMutaction] = {
 
     val requiredRelationViolations     = model.relationFields.flatMap(field => { checkIfRemovalWouldFailARequiredRelation(field, id, project) })
     val removeFromConnectionMutactions = model.relationFields.map(field => RemoveDataItemFromManyRelationByToId(project.id, field, id))
@@ -33,7 +33,7 @@ case class SqlMutactions(dataResolver: DataResolver) {
   }
 
   def getMutactionsForUpdate(project: Project, model: Model, args: CoolArgs, id: Id, previousValues: DataItem, requestId: String)(
-      implicit inj: Injector): List[ClientSqlMutaction] = {
+      implicit injector: ClientInjector): List[ClientSqlMutaction] = {
 
     val updateMutaction      = getUpdateMutaction(project, model, args, id, previousValues)
     val forFlatManyRelations = getAddToRelationMutactionsForIdListsForUpdate(project, model, args, fromId = id)
@@ -49,7 +49,7 @@ case class SqlMutactions(dataResolver: DataResolver) {
                              allowSettingManagedFields: Boolean,
                              id: Id = createCuid(),
                              parentInfo: Option[ParentInfo] = None,
-                             requestId: String)(implicit inj: Injector): CreateMutactionsResult = {
+                             requestId: String)(implicit injector: ClientInjector): CreateMutactionsResult = {
 
     val createMutaction      = getCreateMutaction(project, model, args, id, allowSettingManagedFields, requestId)
     val forFlatManyRelations = getAddToRelationMutactionsForIdListsForCreate(project, model, args, fromId = createMutaction.id)
@@ -84,7 +84,7 @@ case class SqlMutactions(dataResolver: DataResolver) {
   }
 
   def getCreateMutaction(project: Project, model: Model, args: CoolArgs, id: Id, allowSettingManagedFields: Boolean, requestId: String)(
-      implicit inj: Injector): CreateDataItem = {
+      implicit injector: ClientInjector): CreateDataItem = {
     val scalarArguments = for {
       field      <- model.scalarFields
       fieldValue <- args.getFieldValueAs[Any](field)
@@ -106,7 +106,8 @@ case class SqlMutactions(dataResolver: DataResolver) {
     )
   }
 
-  def getUpdateMutaction(project: Project, model: Model, args: CoolArgs, id: Id, previousValues: DataItem)(implicit inj: Injector): Option[UpdateDataItem] = {
+  def getUpdateMutaction(project: Project, model: Model, args: CoolArgs, id: Id, previousValues: DataItem)(
+      implicit injector: ClientInjector): Option[UpdateDataItem] = {
     val scalarArguments = for {
       field      <- model.scalarFields.filter(_.name != "id")
       fieldValue <- args.getFieldValueAs[Any](field)
@@ -259,7 +260,8 @@ case class SqlMutactions(dataResolver: DataResolver) {
     } else None
   }
 
-  def getComplexMutactions(project: Project, model: Model, args: CoolArgs, fromId: Id, requestId: String)(implicit inj: Injector): Seq[ClientSqlMutaction] = {
+  def getComplexMutactions(project: Project, model: Model, args: CoolArgs, fromId: Id, requestId: String)(
+      implicit injector: ClientInjector): Seq[ClientSqlMutaction] = {
     val x: Seq[List[ClientSqlMutaction]] = for {
       field    <- model.relationFields
       subArgs  <- args.subArgsList(field)

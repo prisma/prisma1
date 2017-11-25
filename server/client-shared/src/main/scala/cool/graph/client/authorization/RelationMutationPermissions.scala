@@ -1,13 +1,13 @@
 package cool.graph.client.authorization
 
-import cool.graph.client.mutactions._
-import cool.graph.shared.models._
 import cool.graph.Mutaction
+import cool.graph.client.ClientInjector
+import cool.graph.client.mutactions._
 import cool.graph.shared.errors.UserAPIErrors
-import scaldi.Injector
+import cool.graph.shared.models._
 
-import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 object RelationMutationPermissions {
 
@@ -23,7 +23,7 @@ object RelationMutationPermissions {
       project: Project,
       mutactions: List[Mutaction],
       authenticatedRequest: Option[AuthenticatedRequest]
-  )(implicit inj: Injector): Future[Unit] = {
+  )(implicit injector: ClientInjector): Future[Unit] = {
     if (authenticatedRequest.exists(_.isAdmin) || project.hasGlobalStarPermission) {
       Future.successful(())
     } else {
@@ -104,7 +104,7 @@ object RelationMutationPermissions {
       bId: String,
       checkConnect: Boolean,
       checkDisconnect: Boolean
-  )(implicit inj: Injector): Future[Boolean] = {
+  )(implicit injector: ClientInjector): Future[Boolean] = {
 
     val filteredPermissions = relation.permissions
       .filter(_.isActive)

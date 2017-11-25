@@ -10,11 +10,6 @@ const debug = require('debug')('yaml')
 
 const ajv = new Ajv()
 
-try {
-  ajv.addMetaSchema(require('ajv/lib/refs/json-schema-draft-04.json'))
-} catch (e) {
-  // noop
-}
 const validate = ajv.compile(schema)
 
 const cache = {}

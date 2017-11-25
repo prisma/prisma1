@@ -27,7 +27,8 @@ abstract class SchemaModelObjectTypesBuilder[ManyDataItemType](project: models.P
                                                                onlyId: Boolean = false)(implicit inj: Injector)
     extends Injectable {
 
-  val apiMatrix                   = inject[ApiMatrixFactory].create(project)
+  val apiMatrixFactory            = inject[ApiMatrixFactory]
+  val apiMatrix                   = apiMatrixFactory.create(project)
   val includedModels: List[Model] = apiMatrix.filterModels(project.models)
 
   val interfaces: Map[String, InterfaceType[UserContext, DataItem]] =

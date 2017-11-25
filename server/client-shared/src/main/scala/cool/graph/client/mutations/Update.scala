@@ -4,6 +4,7 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import cool.graph.Types.Id
 import cool.graph._
+import cool.graph.client.ClientInjector
 import cool.graph.client.adapters.GraphcoolDataTypes
 import cool.graph.client.authorization.{ModelPermissions, PermissionValidator, RelationMutationPermissions}
 import cool.graph.client.database.DataResolver
@@ -14,19 +15,17 @@ import cool.graph.client.schema.InputTypesBuilder
 import cool.graph.shared.errors.UserAPIErrors
 import cool.graph.shared.models.{Action => ActionModel, _}
 import sangria.schema
-import scaldi.{Injectable, Injector}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class Update(model: Model, project: Project, args: schema.Args, dataResolver: DataResolver, argumentSchema: ArgumentSchema)(implicit inj: Injector)
-    extends ClientMutation(model, args, dataResolver, argumentSchema)
-    with Injectable {
+class Update(model: Model, project: Project, args: schema.Args, dataResolver: DataResolver, argumentSchema: ArgumentSchema)(implicit injector: ClientInjector)
+    extends ClientMutation(model, args, dataResolver, argumentSchema) {
 
   override val mutationDefinition = UpdateDefinition(argumentSchema, project, InputTypesBuilder(project, argumentSchema))
 
-  implicit val system: ActorSystem             = inject[ActorSystem](identified by "actorSystem")
-  implicit val materializer: ActorMaterializer = inject[ActorMaterializer](identified by "actorMaterializer")
+  implicit val system: ActorSystem             = injector.system
+  implicit val materializer: ActorMaterializer = injector.materializer
   val permissionValidator                      = new PermissionValidator(project)
 
   val coolArgs: CoolArgs = {

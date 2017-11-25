@@ -1,14 +1,13 @@
 package cool.graph.client.server
 
-import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.StatusCodes.OK
+import akka.http.scaladsl.model._
 import cool.graph.client.FeatureMetric.FeatureMetric
 import cool.graph.client.database.DeferredResolverProvider
 import cool.graph.client.metrics.ApiMetricsMiddleware
-import cool.graph.client.{ProjectLockdownMiddleware, UserContext}
+import cool.graph.client.{ClientInjector, ProjectLockdownMiddleware, UserContext}
 import cool.graph.util.ErrorHandlerFactory
 import sangria.execution.{ErrorWithResolver, Executor, QueryAnalysisError}
-import scaldi.Injector
 import spray.json.{JsArray, JsValue}
 
 import scala.collection.immutable.Seq
@@ -26,7 +25,7 @@ case class GraphQlRequestHandlerImpl[ConnectionOutputType](
     apiVersionMetric: FeatureMetric,
     apiMetricsMiddleware: ApiMetricsMiddleware,
     deferredResolver: DeferredResolverProvider[ConnectionOutputType, UserContext]
-)(implicit ec: ExecutionContext, inj: Injector)
+)(implicit ec: ExecutionContext, injector: ClientInjector)
     extends GraphQlRequestHandler {
   import cool.graph.shared.schema.JsonMarshalling._
 
@@ -61,7 +60,7 @@ case class GraphQlRequestHandlerImpl[ConnectionOutputType](
       project = request.projectWithClientId,
       log = log,
       queryAst = Some(query.query)
-    )
+    )(injector.toScaldi)
 
     context.addFeatureMetric(apiVersionMetric)
     context.graphcoolHeader = request.sourceHeader

@@ -16,8 +16,7 @@ case class SubscriptionSchema[ManyDataItemType](model: Model,
                                                 updatedFields: Option[List[String]],
                                                 mutation: ModelMutationType,
                                                 previousValues: Option[DataItem],
-                                                externalSchema: Boolean = false)(implicit inj: Injector)
-    extends Injectable {
+                                                externalSchema: Boolean = false)(implicit inj: Injector) {
   val isDelete: Boolean = mutation == ModelMutationType.Deleted
 
   val schemaBuilder                                                    = new SimpleSchemaModelObjectTypeBuilder(project)

@@ -1,6 +1,7 @@
 package cool.graph
 
 import cool.graph.Types.Id
+import cool.graph.client.ClientInjector
 import cool.graph.client.database.DataResolver
 import cool.graph.cuid.Cuid
 import cool.graph.shared.errors.{GeneralError, UserAPIErrors}
@@ -8,7 +9,6 @@ import cool.graph.shared.models.{AuthenticatedRequest, Model}
 import cool.graph.shared.mutactions.MutationTypes.ArgumentValue
 import cool.graph.utils.future.FutureUtils._
 import sangria.schema.Args
-import scaldi.Injector
 
 import scala.collection.immutable.Seq
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -27,7 +27,7 @@ sealed trait ReturnValueResult
 case class ReturnValue(dataItem: DataItem) extends ReturnValueResult
 case class NoReturnValue(id: Id)           extends ReturnValueResult
 
-abstract class ClientMutation(model: Model, args: Args, dataResolver: DataResolver, val argumentSchema: ArgumentSchema)(implicit inj: Injector)
+abstract class ClientMutation(model: Model, args: Args, dataResolver: DataResolver, val argumentSchema: ArgumentSchema)(implicit injector: ClientInjector)
     extends ClientMutationNew {
   import cool.graph.metrics.ClientSharedMetrics._
 

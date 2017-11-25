@@ -4,6 +4,7 @@ import com.typesafe.scalalogging.LazyLogging
 import cool.graph.Types.Id
 import cool.graph.shared.errors.UserAPIErrors.UnsuccessfulSynchronousMutationCallback
 import cool.graph._
+import cool.graph.client.ClientInjector
 import cool.graph.deprecated.actions.schemas._
 import cool.graph.client.database.DataResolver
 import cool.graph.client.schema.simple.SimpleSchemaModelObjectTypeBuilder
@@ -22,15 +23,15 @@ abstract class ActionWebhookForDeleteDataItem extends ActionWebhookMutaction {
 }
 
 case class ActionWebhookForDeleteDataItemSync(model: Model, project: Project, nodeId: Id, action: Action, mutationId: Id, requestId: String)(
-    implicit inj: Injector)
+    implicit injector: ClientInjector)
     extends ActionWebhookForDeleteDataItem
-    with Injectable
     with LazyLogging {
 
   // note: as the node is being deleted we need to resolve the query before executing this mutaction.
   // This is different than the normal execution flow for mutactions, so please be careful!
   def prepareData: Future[Event] = {
 
+    implicit val inj = injector.toScaldi
     val payload: Future[Event] =
       new MutationCallbackSchemaExecutor(
         project,
@@ -61,7 +62,7 @@ case class ActionWebhookForDeleteDataItemSync(model: Model, project: Project, no
             sys.error("prepareData should be invoked and awaited before executing this mutaction")
 
           case Some(event) =>
-            val webhookCaller = inject[WebhookCaller]
+            val webhookCaller = injector.webhookCaller
 
             webhookCaller
               .call(event.url, event.payload.map(_.compactPrint).getOrElse(""))

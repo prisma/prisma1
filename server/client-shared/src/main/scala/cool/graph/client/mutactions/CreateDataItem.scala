@@ -4,6 +4,7 @@ import java.sql.SQLIntegrityConstraintViolationException
 
 import cool.graph.GCDataTypes._
 import cool.graph.Types.Id
+import cool.graph.client.ClientInjector
 import cool.graph.client.database.GetFieldFromSQLUniqueException.getField
 import cool.graph.client.database.{DataResolver, DatabaseMutationBuilder, ProjectRelayId, ProjectRelayIdTable}
 import cool.graph.client.mutactions.validation.InputValueValidation.{transformStringifiedJson, validateDataItemInputs}
@@ -13,7 +14,6 @@ import cool.graph.shared.errors.UserAPIErrors
 import cool.graph.shared.models._
 import cool.graph.shared.mutactions.MutationTypes.{ArgumentValue, ArgumentValueList}
 import cool.graph.{ClientSqlStatementResult, MutactionVerificationSuccess, _}
-import scaldi.{Injectable, Injector}
 import slick.jdbc.MySQLProfile.api._
 import slick.lifted.TableQuery
 
@@ -28,9 +28,8 @@ case class CreateDataItem(
     allowSettingManagedFields: Boolean = false,
     requestId: Option[String] = None,
     originalArgs: Option[CoolArgs] = None
-)(implicit val inj: Injector)
-    extends ClientSqlDataChangeMutaction
-    with Injectable {
+)(implicit injector: ClientInjector)
+    extends ClientSqlDataChangeMutaction {
 
   val pipelineRunner = new RequestPipelineRunner(requestId.getOrElse(""))
 

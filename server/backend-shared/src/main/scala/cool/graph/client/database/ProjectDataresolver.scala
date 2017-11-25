@@ -14,9 +14,8 @@ import scala.collection.immutable.Seq
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class ProjectDataresolver(override val project: Project, override val requestContext: Option[RequestContextTrait])(implicit inj: Injector)
-    extends DataResolver(project = project, requestContext = requestContext)
-    with Injectable {
+class ProjectDataresolver(override val project: Project, override val requestContext: Option[RequestContextTrait])(implicit injector: Injector)
+    extends DataResolver(project = project, requestContext = requestContext) {
 
   def this(project: Project, requestContext: RequestContextTrait)(implicit inj: Injector) = this(project, Some(requestContext))
 
