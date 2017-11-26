@@ -1,8 +1,7 @@
 package cool.graph.system.mutactions.client
 
 import cool.graph._
-import cool.graph.client.database.{DataResolver, DatabaseMutationBuilder}
-import cool.graph.ClientMutactionNoop
+import cool.graph.client.database.DatabaseMutationBuilder
 import cool.graph.shared.errors.UserAPIErrors
 import cool.graph.shared.models.{Field, Model}
 
