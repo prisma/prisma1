@@ -11,7 +11,7 @@ import slick.jdbc.MySQLProfile.api._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-case class UpdateColumn(projectId: String, model: Model, oldField: Field, newField: Field) extends ClientSqlMutaction {
+case class UpdateColumn(projectId: String, model: Model, oldField: Field, newField: Field) extends ClientSqlSchemaChangeMutaction {
 
   override def execute: Future[ClientSqlStatementResult[Any]] = {
 
