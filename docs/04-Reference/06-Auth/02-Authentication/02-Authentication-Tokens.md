@@ -74,7 +74,7 @@ Another option to generate node tokens is by directly talking to the Graphcool [
 Here is a sample mutation to generate a node token for a `User` model type:
 
 ```graphql
-mutation GenerateRootToken($rootToken: String!, $serviceId: ID!, $nodeId: ID!) {
+mutation GenerateNodeToken($rootToken: String!, $serviceId: ID!, $nodeId: ID!) {
   generateNodeToken(input: {
     rootToken: $rootToken,
     serviceId: $serviceId,
