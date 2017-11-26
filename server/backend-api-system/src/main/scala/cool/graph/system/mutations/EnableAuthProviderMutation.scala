@@ -135,7 +135,7 @@ object EnableAuthProviderMutation {
   private def getMakeFieldsUnmanagedMutactions(
       project: Project,
       managedFields: List[ManagedField]
-  )(implicit inj: Injector): List[SystemSqlMutaction] = {
+  )(implicit inj: Injector): List[Mutaction] = {
     // We no longer remove managed fields
     // Instead we change them to be non-managed
     project.getModelByName("User") match {

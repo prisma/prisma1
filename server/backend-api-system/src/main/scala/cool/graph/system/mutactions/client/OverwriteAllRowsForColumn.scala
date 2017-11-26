@@ -8,7 +8,7 @@ import cool.graph.shared.models.{Field, Model}
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
 
-case class OverwriteAllRowsForColumn(projectId: String, model: Model, field: Field, value: Option[Any]) extends ClientSqlMutaction {
+case class OverwriteAllRowsForColumn(projectId: String, model: Model, field: Field, value: Option[Any]) extends ClientSqlSchemaChangeMutaction {
 
   override def execute: Future[ClientSqlStatementResult[Any]] = {
     Future.successful(ClientSqlStatementResult(

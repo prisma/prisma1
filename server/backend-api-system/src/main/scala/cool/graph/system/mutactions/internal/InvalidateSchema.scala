@@ -67,23 +67,23 @@ case class InvalidateSchemaForAllProjects(client: Client)(implicit inj: Injector
   }
 }
 
-abstract class InvalidateSchemaBase()(implicit inj: Injector) extends SystemSqlMutaction with Injectable {
+abstract class InvalidateSchemaBase()(implicit inj: Injector) extends Mutaction with Injectable {
   val internalDatabase: DatabaseDef = inject[DatabaseDef](identified by "internal-db")
   val cachedProjectResolver         = inject[CachedProjectResolver](identified by "cachedProjectResolver")
   val invalidationPublisher         = inject[PubSubPublisher[String]](identified by "schema-invalidation-publisher")
 
-  override def execute: Future[SystemSqlStatementResult[Any]] = {
+  override def execute: Future[MutactionExecutionResult] = {
     projectIds.flatMap { projectIdsOrAliases =>
       val invalidationFutures: Seq[Future[Unit]] = projectIdsOrAliases.map(cachedProjectResolver.invalidate)
 
       Future.sequence(invalidationFutures).map { _ =>
         invalidate(projectIds = projectIdsOrAliases)
-        SystemSqlStatementResult(sqlAction = DBIOAction.sequenceOption(None))
+        MutactionExecutionSuccess()
       }
     }
   }
 
   private def invalidate(projectIds: Seq[String]): Unit = projectIds.foreach(pid => invalidationPublisher.publish(Only(pid), pid))
   protected def projectIds: Future[Vector[String]]
-  override def rollback = Some(SystemMutactionNoop().execute)
+  override def rollback = Some(ClientMutactionNoop().execute)
 }
