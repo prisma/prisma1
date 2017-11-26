@@ -149,13 +149,11 @@ class ClientInjectorImpl(implicit val system: ActorSystem, val materializer: Act
       bind[FunctionEnvironment] toNonLazy outer.functionEnvironment
       bind[GlobalDatabaseManager] toNonLazy outer.globalDatabaseManager
       bind[BugSnagger] toNonLazy outer.bugsnagger
-
       bind[ClientAuth] toNonLazy outer.clientAuth
       bind[TestableTime] toNonLazy outer.testableTime
       bind[GlobalApiEndpointManager] toNonLazy outer.globalApiEndpointManager
       bind[WebhookCaller] toNonLazy outer.webhookCaller
       bind[ApiMatrixFactory] toNonLazy apiMatrixFactory
-
       binding identifiedBy "config" toNonLazy outer.config
       binding identifiedBy "actorSystem" toNonLazy outer.system
       binding identifiedBy "dispatcher" toNonLazy outer.dispatcher
