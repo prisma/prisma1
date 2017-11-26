@@ -27,7 +27,7 @@ import cool.graph.util.ErrorHandlerFactory
 import cool.graph.webhook.{Webhook, WebhookCaller, WebhookCallerImplementation}
 import scaldi.Module
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
 import scala.util.Try
 
 trait ClientInjector {
@@ -66,8 +66,8 @@ trait ClientInjector {
 }
 
 class ClientInjectorImpl(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends ClientInjector with LazyLogging {
-  implicit lazy val bugsnagger: BugSnagger       = BugSnaggerImpl(sys.env("BUGSNAG_API_KEY"))
-  implicit lazy val dispatcher: ExecutionContext = system.dispatcher
+  implicit lazy val bugsnagger: BugSnagger               = BugSnaggerImpl(sys.env("BUGSNAG_API_KEY"))
+  implicit lazy val dispatcher: ExecutionContextExecutor = system.dispatcher
 
   lazy val globalRabbitUri: String                      = sys.env.getOrElse("GLOBAL_RABBIT_URI", sys.error("GLOBAL_RABBIT_URI required for schema invalidation"))
   lazy val blockedProjectIds: Vector[String]            = Try { sys.env("BLOCKED_PROJECT_IDS").split(",").toVector }.getOrElse(Vector.empty)
@@ -90,6 +90,8 @@ class ClientInjectorImpl(implicit val system: ActorSystem, val materializer: Act
   lazy val s3Fileupload: AmazonS3                       = AwsInitializers.createS3Fileupload()
   lazy val webhookCaller: WebhookCaller                 = new WebhookCallerImplementation()
   lazy val webhookPublisher: QueuePublisher[Webhook]    = RabbitQueue.publisher(rabbitMQUri, "webhooks")(bugsnagger, Webhook.marshaller)
+  lazy val serviceName: String                          = sys.env.getOrElse("SERVICE_NAME", "local")
+  lazy val environment: String                          = sys.env.getOrElse("ENVIRONMENT", "local")
 
   lazy val projectSchemaInvalidationSubscriber: PubSubSubscriber[String] = {
     implicit val unmarshaller: ByteUnmarshaller[String] = Unmarshallers.ToString
@@ -146,8 +148,20 @@ class ClientInjectorImpl(implicit val system: ActorSystem, val materializer: Act
       bind[KinesisPublisher] identifiedBy "kinesisApiMetricsPublisher" toNonLazy outer.kinesisApiMetricsPublisher
       bind[FunctionEnvironment] toNonLazy outer.functionEnvironment
       bind[GlobalDatabaseManager] toNonLazy outer.globalDatabaseManager
-      bind[ApiMatrixFactory] toNonLazy outer.apiMatrixFactory
       bind[BugSnagger] toNonLazy outer.bugsnagger
+
+      bind[ClientAuth] toNonLazy outer.clientAuth
+      bind[TestableTime] toNonLazy outer.testableTime
+      bind[GlobalApiEndpointManager] toNonLazy outer.globalApiEndpointManager
+      bind[WebhookCaller] toNonLazy outer.webhookCaller
+      bind[ApiMatrixFactory] toNonLazy apiMatrixFactory
+
+      binding identifiedBy "config" toNonLazy outer.config
+      binding identifiedBy "actorSystem" toNonLazy outer.system
+      binding identifiedBy "dispatcher" toNonLazy outer.dispatcher
+      binding identifiedBy "actorMaterializer" toNonLazy outer.materializer
+      binding identifiedBy "environment" toNonLazy outer.serviceName
+      binding identifiedBy "service-name" toNonLazy outer.environment
     }
   }
 }

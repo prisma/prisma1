@@ -126,7 +126,7 @@ class SystemInjectorImpl(implicit val system: ActorSystem, val materializer: Act
       binding identifiedBy "export-data-s3" toNonLazy outer.exportDataS3
       binding identifiedBy "config" toNonLazy outer.config
       binding identifiedBy "actorSystem" toNonLazy outer.system destroyWith (_.terminate())
-      binding identifiedBy "dispatcher" toNonLazy outer.system.dispatcher
+      binding identifiedBy "dispatcher" toNonLazy outer.dispatcher
       binding identifiedBy "actorMaterializer" toNonLazy outer.materializer
       binding identifiedBy "master-token" toNonLazy outer.masterToken
       binding identifiedBy "clientResolver" toNonLazy outer.clientResolver
