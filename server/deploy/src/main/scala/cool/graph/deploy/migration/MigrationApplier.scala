@@ -4,7 +4,7 @@ import akka.actor.Actor
 import akka.actor.Actor.Receive
 import cool.graph.deploy.database.persistence.ProjectPersistence
 import cool.graph.deploy.migration.MigrationApplierJob.ScanForUnappliedMigrations
-import cool.graph.deploy.migration.mutactions.CreateModelTable
+import cool.graph.deploy.migration.mutactions.{ClientSqlMutaction, CreateClientDatabaseForProject, CreateModelTable}
 import cool.graph.shared.models._
 import slick.jdbc.MySQLProfile.backend.DatabaseDef
 
@@ -21,25 +21,33 @@ case class MigrationApplierImpl(
   override def applyMigration(project: Project, migration: MigrationSteps): Future[Unit] = {
     val initialResult = Future.successful(())
 
-    migration.steps.foldLeft(initialResult) { (previous, step) =>
-      for {
-        _ <- previous
-        _ <- applyStep(project, step)
-      } yield ()
+    if (project.revision == 1) {
+      executeClientMutation(CreateClientDatabaseForProject(project.id))
+    } else {
+      migration.steps.foldLeft(initialResult) { (previous, step) =>
+        for {
+          _ <- previous
+          _ <- applyStep(project, step)
+        } yield ()
+      }
     }
   }
 
   def applyStep(project: Project, step: MigrationStep): Future[Unit] = {
     step match {
       case x: CreateModel =>
-        for {
-          statements <- CreateModelTable(project.id, x.name).execute
-          _          <- clientDatabase.run(statements.sqlAction)
-        } yield ()
+        executeClientMutation(CreateModelTable(project.id, x.name))
       case x =>
         println(s"migration step of type ${x.getClass.getSimpleName} is not implemented yet. Will ignore it.")
         Future.successful(())
     }
+  }
+
+  def executeClientMutation(mutaction: ClientSqlMutaction): Future[Unit] = {
+    for {
+      statements <- mutaction.execute
+      _          <- clientDatabase.run(statements.sqlAction)
+    } yield ()
   }
 }
 

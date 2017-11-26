@@ -5,6 +5,17 @@ import cool.graph.shared.models.TypeIdentifier.TypeIdentifier
 import slick.jdbc.MySQLProfile.api._
 
 object DatabaseMutationBuilder {
+  def createClientDatabaseForProject(projectId: String) = {
+    val idCharset =
+      charsetTypeForScalarTypeIdentifier(isList = false, TypeIdentifier.GraphQLID)
+
+    DBIO.seq(
+      sqlu"""CREATE SCHEMA `#$projectId` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci; """,
+      sqlu"""CREATE TABLE `#$projectId`.`_RelayId` (`id` CHAR(25) #$idCharset NOT NULL, `modelId` CHAR(25) #$idCharset NOT NULL, PRIMARY KEY (`id`), UNIQUE INDEX `id_UNIQUE` (`id` ASC)) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"""
+    )
+  }
+
+  def deleteProjectDatabase(projectId: String) = sqlu"DROP DATABASE IF EXISTS `#$projectId`"
 
   def dropTable(projectId: String, tableName: String) = sqlu"DROP TABLE `#$projectId`.`#$tableName`"
 
