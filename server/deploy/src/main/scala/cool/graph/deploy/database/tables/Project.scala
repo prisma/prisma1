@@ -49,7 +49,7 @@ object ProjectTable {
     val baseQuery = for {
       project <- Tables.Projects
       if project.id === id
-      if project.hasBeenApplied
+      //if project.hasBeenApplied
     } yield project
     val query = baseQuery.sortBy(_.revision * -1).take(1)
 
@@ -62,9 +62,8 @@ object ProjectTable {
       if project.id === id
       if project.revision === revision
     } yield project
-    val sorted = baseQuery.sortBy(_.revision * -1).take(1)
 
-    sorted.map(_.hasBeenApplied).update(true)
+    baseQuery.map(_.hasBeenApplied).update(true)
   }
 
   def unappliedMigrations(): FixedSqlStreamingAction[Seq[Project], Project, Read] = {

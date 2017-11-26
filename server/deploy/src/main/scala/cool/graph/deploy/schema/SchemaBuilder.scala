@@ -20,21 +20,23 @@ trait SchemaBuilder {
 }
 
 object SchemaBuilder {
-  def apply(internalDb: DatabaseDef)(implicit system: ActorSystem): SchemaBuilder = new SchemaBuilder {
-    override def apply(userContext: SystemUserContext) = SchemaBuilderImpl(userContext, internalDb).build()
+  def apply(internalDb: DatabaseDef, projectPersistence: ProjectPersistence)(implicit system: ActorSystem): SchemaBuilder = new SchemaBuilder {
+    override def apply(userContext: SystemUserContext) = {
+      SchemaBuilderImpl(userContext, internalDb, projectPersistence).build()
+    }
   }
 }
 
 case class SchemaBuilderImpl(
     userContext: SystemUserContext,
-    internalDb: DatabaseDef
+    internalDb: DatabaseDef,
+    projectPersistence: ProjectPersistence
 )(implicit system: ActorSystem) {
   import system.dispatcher
 
   val desiredProjectInferer: DesiredProjectInferer   = DesiredProjectInferer()
   val migrationStepsProposer: MigrationStepsProposer = MigrationStepsProposer()
   val renameInferer: RenameInferer                   = RenameInferer
-  val projectPersistence: ProjectPersistence         = ProjectPersistenceImpl(internalDb)
 
   def build(): Schema[SystemUserContext, Unit] = {
     val Query = ObjectType[SystemUserContext, Unit](

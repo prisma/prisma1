@@ -23,6 +23,8 @@ class ProjectPersistenceImplSpec extends FlatSpec with Matchers with AwaitUtils 
 
   ".load()" should "return the project with the highest revision" in {
     projectPersistence.save(project, migrationSteps).await()
+    projectPersistence.markMigrationAsApplied(project, migrationSteps).await()
+
     projectPersistence.load(project.id).await() should equal(Some(project))
     assertNumberOfRowsInProjectTable(1)
 
@@ -30,6 +32,8 @@ class ProjectPersistenceImplSpec extends FlatSpec with Matchers with AwaitUtils 
     val newProjectRevision = project.copy(enums = List(newEnum))
 
     projectPersistence.save(newProjectRevision, migrationSteps).await()
+    projectPersistence.markMigrationAsApplied(project, migrationSteps).await()
+
     assertNumberOfRowsInProjectTable(2)
     val expectedProject = newProjectRevision.copy(revision = 2)
     projectPersistence.load(project.id).await() should equal(Some(expectedProject))

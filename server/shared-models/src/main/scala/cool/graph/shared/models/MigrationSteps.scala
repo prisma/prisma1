@@ -3,6 +3,11 @@ package cool.graph.shared.models
 import cool.graph.cuid.Cuid
 import cool.graph.shared.models.TypeIdentifier.TypeIdentifier
 
+case class UnappliedMigration(
+    project: Project,
+    migration: MigrationSteps
+)
+
 case class MigrationSteps(
     steps: Vector[MigrationStep]
 )
