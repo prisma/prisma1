@@ -1,5 +1,5 @@
 import { Command, flags, Flags, readDefinition } from 'graphcool-cli-engine'
-import * as download from 'download-github-repo'
+import * as download from 'download'
 import * as cuid from 'scuid'
 import * as path from 'path'
 import * as os from 'os'
@@ -12,7 +12,8 @@ import chalk from 'chalk'
 import * as figures from 'figures'
 import { intersection, difference } from 'lodash'
 import { getBinPath } from './getbin'
-import 'isomorphic-fetch'
+import fetch from 'node-fetch'
+import * as HttpsProxyAgent from 'https-proxy-agent'
 
 export default class AddTemplate extends Command {
   static topic = 'add-template'
@@ -167,7 +168,9 @@ export default class AddTemplate extends Command {
 
     if (splittedModule.length === 1) {
       const res = await fetch(
-        'https://raw.githubusercontent.com/graphcool/templates/master/templates.json',
+        'https://raw.githubusercontent.com/graphcool/templates/master/templates.json', { 
+          agent: process.env.HTTPS_PROXY ? new HttpsProxyAgent(process.env.HTTPS_PROXY) : null 
+        }
       )
       const templates = await res.json()
       if (!templates[moduleUrl]) {
@@ -285,7 +288,9 @@ Check https://github.com/graphcool/templates for official templates.`)
     )[0]}/tree/master/${subPath}`
 
     debug('fetching', githubUrl)
-    const result = await fetch(githubUrl)
+    const result = await fetch(githubUrl, {
+      agent: process.env.HTTPS_PROXY ? new HttpsProxyAgent(process.env.HTTPS_PROXY) : null
+    })
     if (result.status === 404) {
       this.out.error(
         `Could not find ${moduleUrl}. Please check if the github repository ${githubUrl} exists`,
@@ -315,14 +320,32 @@ Check https://github.com/graphcool/templates for official templates.`)
   }
 }
 
-function downloadRepo(repo: string, destination: string) {
-  return new Promise((resolve, reject) => {
-    download(repo, destination, err => {
-      if (err) {
-        reject(err)
-      } else {
-        resolve()
-      }
-    })
-  })
+// Github repo download functionality
+async function downloadRepo(repo: string, destination: string){
+  var url = github(normalize(repo));
+  return await download(url, destination, { 
+    extract: true, 
+    strip: 1,
+    proxy: process.env.HTTPS_PROXY });
+}
+
+function github(repo){
+  return `https://github.com/${repo.owner}/${repo.name}/archive/${repo.branch}.zip`
+}
+
+function normalize(string){
+  var owner = string.split('/')[0];
+  var name = string.split('/')[1];
+  var branch = 'master';
+
+  if (~name.indexOf('#')) {
+    branch = name.split('#')[1];
+    name = name.split('#')[0];
+  }
+
+  return {
+    owner: owner,
+    name: name,
+    branch: branch
+  };
 }

@@ -21,6 +21,8 @@ import { Environment } from '../Environment'
 import { Output } from '../index'
 import { Auth } from '../Auth'
 import chalk from 'chalk'
+import fetch from 'node-fetch'
+import * as HttpsProxyAgent from 'https-proxy-agent'
 
 const debug = require('debug')('client')
 
@@ -63,6 +65,7 @@ export class Client {
       headers: {
         Authorization: `Bearer ${this.env.token}`,
       },
+      agent: process.env.HTTPS_PROXY ? new HttpsProxyAgent(process.env.HTTPS_PROXY) : null
     })
     return {
       request: async (query, variables) => {
@@ -346,10 +349,11 @@ export class Client {
     token: string,
   ): Promise<AuthenticateCustomerPayload> {
     // dont send any auth information when running the authenticateCustomer mutation
-    const result = await request<{
+    const result = await new GraphQLClient(endpoint, {
+      agent: process.env.HTTPS_PROXY ? new HttpsProxyAgent(process.env.HTTPS_PROXY) : null
+    }).request<{
       authenticateCustomer: AuthenticateCustomerPayload
     }>(
-      endpoint,
       `
       mutation ($token: String!) {
         authenticateCustomer(input: {
@@ -700,6 +704,7 @@ export class Client {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(instruction),
+        agent: process.env.HTTPS_PROXY ? new HttpsProxyAgent(process.env.HTTPS_PROXY) : null
       })
     } catch (e) {
       // noop

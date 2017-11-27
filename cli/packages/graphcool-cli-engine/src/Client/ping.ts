@@ -1,13 +1,16 @@
 import { Region } from '../types/common'
 import * as cuid from 'scuid'
 import {sum} from 'lodash'
+import fetch from 'node-fetch'
+import * as HttpsProxyAgent from 'https-proxy-agent'
 
 async function runPing(url: string): Promise<number> {
   const pingUrl = async () => {
     const start = Date.now()
 
     if (process.env.NODE_ENV !== 'test') {
-      await fetch(url)
+      await fetch(url, { 
+        agent: process.env.HTTPS_PROXY ? new HttpsProxyAgent(process.env.HTTPS_PROXY) : null })
     }
 
     return Date.now() - start
