@@ -3,14 +3,14 @@ alias: bai9yeitoa
 description: Stop local development cluster
 ---
 
-### `graphcool local stop`
+# `graphcool local stop`
 
 Stop local development cluster.
 
 #### Usage
 
 ```sh
-graphcool local pull [flags]
+graphcool local stop [flags]
 ```
 
 #### Flags

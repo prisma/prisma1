@@ -3,9 +3,9 @@ alias: kee1iedaov
 description: Deploys service definition changes
 ---
 
-### `graphcool deploy`
+# `graphcool deploy`
 
-Deploys service definition changes. Every time you're making a local change to any file in the service definition on your machine, you need to synchronize these changes with the remote service with this command. 
+Deploys service definition changes. Every time you're making a local change to any file in the service definition on your machine, you need to synchronize these changes with the remote service using this command.
 
 #### Usage
 

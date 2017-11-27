@@ -3,7 +3,7 @@ alias: uz0phae1ph
 description: Sign up or login
 ---
 
-### `graphcool login`
+# `graphcool login`
 
 Sign up or login (opens your browser for authentication). The platform token that's received after successful login will be stored in `~/.graphcoolrc`.
 

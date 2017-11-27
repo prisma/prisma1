@@ -3,7 +3,7 @@ alias: voh6pa5teo
 description: Restart local development cluster
 ---
 
-### `graphcool local restart`
+# `graphcool local restart`
 
 Restart local development cluster.
 

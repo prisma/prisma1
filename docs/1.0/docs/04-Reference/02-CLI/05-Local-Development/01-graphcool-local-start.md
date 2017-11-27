@@ -3,14 +3,14 @@ alias: woh9sheith
 description: Start local development cluster (Docker required)
 ---
 
-### `graphcool local up`
+# `graphcool local start`
 
 Start local development cluster (Docker required).
 
 #### Usage
 
 ```sh
-graphcool local up [flags]
+graphcool local start [flags]
 ```
 
 #### Flags

@@ -3,7 +3,7 @@ alias: de0eer2quu
 description: Open a GraphQL Playground
 ---
 
-### `graphcool console`
+# `graphcool console`
 
 Open the console for the current service. The current service is determined by the default environment that's specified in the `.graphcoolrc` of the directory in which you're executing the command.
 

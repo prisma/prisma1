@@ -3,7 +3,7 @@ alias: anaif5iez3
 description: Open a GraphQL Playground
 ---
 
-### `graphcool playground`
+# `graphcool playground`
 
 Open a [Playground](https://github.com/graphcool/graphql-playground) for the current service. The current service is determined by the default environment that's specified in the `.graphcoolrc` of the directory in which you're executing the command.
 

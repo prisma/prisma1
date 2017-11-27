@@ -3,6 +3,6 @@ alias: fep5uasee1
 description: Print account info
 ---
 
-### `graphcool account`
+# `graphcool account`
 
 Print account info
