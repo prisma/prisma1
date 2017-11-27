@@ -72,7 +72,7 @@ request('https://api.graph.cool/simple/v1/movies', query).then(data => console.l
 
 ### Plain HTTP
 
-You can also communicate with the Simple API by using plain HTTP POST requests. For example, to query `allUsers`, do a POST request to your endpoint `https://api.graph.cool/simple/v1/__PROJECT_ID__`.
+You can also communicate with the Simple API by using plain HTTP POST requests. For example, to query `allUsers`, do a POST request to your endpoint `https://api.graph.cool/simple/v1/__SERVICE_ID__`.
 
 With `curl` you can query like this:
 
@@ -116,7 +116,7 @@ curl 'https://api.graph.cool/simple/v1/movies' -H 'content-type: application/jso
 With `fetch` you could do:
 
 ```javascript
-const response = await fetch('https://api.graph.cool/simple/v1/__PROJECT_ID__', {
+const response = await fetch('https://api.graph.cool/simple/v1/__SERVICE_ID__', {
   method: 'post',
   headers: {
     'content-type': 'application/json'
