@@ -1,4 +1,4 @@
-package cool.graph.util
+package cool.graph.utils.await
 
 import scala.concurrent.{Await, Awaitable}
 

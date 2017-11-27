@@ -4,7 +4,7 @@ import cool.graph.deploy.database.persistence.ModelToDbMapper
 import cool.graph.deploy.database.schema.InternalDatabaseSchema
 import cool.graph.deploy.database.tables.Tables
 import cool.graph.shared.project_dsl.TestClient
-import cool.graph.util.AwaitUtils
+import cool.graph.utils.await.AwaitUtils
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
 import slick.dbio.DBIOAction
 import slick.dbio.Effect.Read
