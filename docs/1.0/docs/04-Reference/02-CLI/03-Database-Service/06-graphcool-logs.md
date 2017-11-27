@@ -3,9 +3,9 @@ alias: aenael2eek
 description: Delete an existing target from the cluster its deployed to
 ---
 
-### `graphcool logs`
+# `graphcool logs`
 
-Print the access logs of your Graphcool service
+Prints the access logs of your Graphcool service.
 
 #### Usage
 

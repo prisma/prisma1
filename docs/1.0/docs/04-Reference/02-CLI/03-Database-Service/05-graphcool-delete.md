@@ -3,7 +3,7 @@ alias: eizai4ahno
 description: Delete an existing target from the cluster its deployed to
 ---
 
-### `graphcool delete`
+# `graphcool delete`
 
 Delete an existing target from the cluster its deployed to.
 
