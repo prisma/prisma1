@@ -27,7 +27,7 @@ export default class GetRootToken extends Command {
 
   async run() {
     const { target } = this.flags
-    const { id } = await this.env.getTarget(target)
+    const { id } = await this.env.getTarget(process.env.GRAPHCOOL_TARGET || target)
     const token = this.args!.token
 
     await this.auth.ensureAuth()

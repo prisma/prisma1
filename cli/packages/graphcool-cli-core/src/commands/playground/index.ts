@@ -20,7 +20,7 @@ export default class Playground extends Command {
   async run() {
     // await this.auth.ensureAuth()
     const { target, web } = this.flags
-    const {id} = await this.env.getTarget(target)
+    const {id} = await this.env.getTarget(process.env.GRAPHCOOL_TARGET || target)
     await this.auth.ensureAuth()
 
     const localPlaygroundPath = `/Applications/GraphQL\ Playground.app/Contents/MacOS/GraphQL\ Playground`

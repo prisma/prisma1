@@ -14,7 +14,7 @@ export default class ExampleCommand extends Command {
     await this.auth.ensureAuth()
     let {target} = this.flags
 
-    const {id} = await this.env.getTarget(target)
+    const {id} = await this.env.getTarget(process.env.GRAPHCOOL_TARGET || target)
 
     // continue
   }

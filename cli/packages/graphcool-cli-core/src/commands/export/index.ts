@@ -14,7 +14,7 @@ export default class Export extends Command {
     const { target } = this.flags
     await this.auth.ensureAuth()
 
-    const { id } = await this.env.getTarget(target)
+    const { id } = await this.env.getTarget(process.env.GRAPHCOOL_TARGET || target)
 
     this.out.action.start('Exporting service')
     const url = await this.client.exportProjectData(id)

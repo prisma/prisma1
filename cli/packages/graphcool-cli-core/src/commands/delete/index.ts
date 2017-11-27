@@ -28,7 +28,7 @@ export default class Delete extends Command {
     await this.auth.ensureAuth()
     const { target, force } = this.flags
 
-    const foundTarget = await this.env.getTargetWithName(target)
+    const foundTarget = await this.env.getTargetWithName(process.env.GRAPHCOOL_TARGET || target)
 
     if (foundTarget && foundTarget.target) {
       if (!this.env.isSharedCluster(foundTarget.target.cluster)) {

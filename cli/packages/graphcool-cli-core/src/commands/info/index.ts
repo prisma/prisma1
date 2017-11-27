@@ -22,7 +22,7 @@ export default class InfoCommand extends Command {
   async run() {
     let { target } = this.flags
 
-    const { id } = await this.env.getTarget(target)
+    const { id } = await this.env.getTarget(process.env.GRAPHCOOL_TARGET || target)
     const targetName = target || 'default'
 
     await this.auth.ensureAuth()    
