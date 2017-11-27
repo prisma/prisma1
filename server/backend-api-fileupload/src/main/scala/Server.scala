@@ -24,7 +24,6 @@ import cool.graph.shared.logging.RequestLogger
 import cool.graph.shared.models.{AuthenticatedRequest, Project, ProjectWithClientId}
 import cool.graph.util.ErrorHandlerFactory
 import spray.json.{JsNumber, JsObject, JsString, JsValue}
-
 import scala.collection.immutable._
 import scala.concurrent.Future
 import scala.concurrent.duration._
@@ -34,7 +33,7 @@ object Server extends App with LazyLogging {
 
   implicit val system       = ActorSystem("sangria-server")
   implicit val materializer = ActorMaterializer()
-  implicit val injector     = new ClientInjectorImpl()
+  implicit val injector     = new FileUploadInjector()
   implicit val inj          = injector.toScaldi
 
   import system.dispatcher

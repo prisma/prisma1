@@ -5,7 +5,7 @@ import akka.stream.ActorMaterializer
 import com.amazonaws.auth.{AWSStaticCredentialsProvider, BasicAWSCredentials}
 import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration
 import com.amazonaws.services.kinesis.{AmazonKinesis, AmazonKinesisClientBuilder}
-import com.amazonaws.services.s3.AmazonS3
+import com.amazonaws.services.s3.{AmazonS3, AmazonS3ClientBuilder}
 import com.typesafe.config.{Config, ConfigFactory}
 import com.typesafe.scalalogging.LazyLogging
 import cool.graph.aws.AwsInitializers
@@ -161,5 +161,22 @@ class ClientInjectorImpl(implicit val system: ActorSystem, val materializer: Act
       binding identifiedBy "environment" toNonLazy outer.serviceName
       binding identifiedBy "service-name" toNonLazy outer.environment
     }
+  }
+}
+
+class FileUploadInjector(implicit system: ActorSystem, materializer: ActorMaterializer) extends ClientInjectorImpl {
+
+  override lazy val s3Fileupload: AmazonS3                          = createS3Fileupload()
+  override lazy val projectSchemaFetcher: RefreshableProjectFetcher = ProjectFetcherImpl(blockedProjectIds = Vector.empty, config)
+
+  private def createS3Fileupload(): AmazonS3 = {
+    val credentials = new BasicAWSCredentials(
+      sys.env("FILEUPLOAD_S3_AWS_ACCESS_KEY_ID"),
+      sys.env("FILEUPLOAD_S3_AWS_SECRET_ACCESS_KEY")
+    )
+    AmazonS3ClientBuilder.standard
+      .withCredentials(new AWSStaticCredentialsProvider(credentials))
+      .withEndpointConfiguration(new EndpointConfiguration(sys.env("FILEUPLOAD_S3_ENDPOINT"), sys.env("FILEUPLOAD_AWS_REGION")))
+      .build
   }
 }
