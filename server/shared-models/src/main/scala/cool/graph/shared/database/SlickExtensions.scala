@@ -1,4 +1,4 @@
-package cool.graph.api.database
+package cool.graph.shared.database
 
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat

@@ -120,7 +120,10 @@ lazy val sharedModels = normalProject("shared-models")
   libraryDependencies ++= Seq(
     cuid,
     playJson,
-    scalactic
+    scalactic,
+    slick,
+    slickHikari,
+    spray
   ) ++ joda
 )
 lazy val deploy = serverProject("deploy")

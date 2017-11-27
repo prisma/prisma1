@@ -1,4 +1,4 @@
-package cool.graph.api.database
+package cool.graph.shared.database
 
 import cool.graph.shared.models.RelationSide.RelationSide
 import cool.graph.shared.models.TypeIdentifier.TypeIdentifier
@@ -7,60 +7,11 @@ import slick.dbio.DBIOAction
 import slick.jdbc.MySQLProfile.api._
 import slick.sql.SqlStreamingAction
 
-object DatabaseMutationBuilder {
+object SqlDDL {
 
-  import cool.graph.shared.database.SlickExtensions._
+  import SlickExtensions._
 
   val implicitlyCreatedColumns = List("id", "createdAt", "updatedAt")
-
-  def createDataItem(projectId: String,
-                     modelName: String,
-                     values: Map[String, Any]): SqlStreamingAction[Vector[Int], Int, Effect]#ResultAction[Int, NoStream, Effect] = {
-
-    val escapedKeyValueTuples = values.toList.map(x => (escapeKey(x._1), escapeUnsafeParam(x._2)))
-    val escapedKeys           = combineByComma(escapedKeyValueTuples.map(_._1))
-    val escapedValues         = combineByComma(escapedKeyValueTuples.map(_._2))
-
-    // Concat query as sql, but then convert it to Update, since is an insert query.
-    (sql"insert into `#$projectId`.`#$modelName` (" concat escapedKeys concat sql") values (" concat escapedValues concat sql")").asUpdate
-  }
-
-  case class MirrorFieldDbValues(relationColumnName: String, modelColumnName: String, modelTableName: String, modelId: String)
-
-  def createRelationRow(projectId: String,
-                        relationTableName: String,
-                        id: String,
-                        a: String,
-                        b: String,
-                        fieldMirrors: List[MirrorFieldDbValues]): SqlStreamingAction[Vector[Int], Int, Effect]#ResultAction[Int, NoStream, Effect] = {
-
-    val fieldMirrorColumns = fieldMirrors.map(_.relationColumnName).map(escapeKey)
-
-    val fieldMirrorValues =
-      fieldMirrors.map(mirror => sql"(SELECT `#${mirror.modelColumnName}` FROM `#$projectId`.`#${mirror.modelTableName}` WHERE id = ${mirror.modelId})")
-
-    // Concat query as sql, but then convert it to Update, since is an insert query.
-    (sql"insert into `#$projectId`.`#$relationTableName` (" concat combineByComma(List(sql"`id`, `A`, `B`") ++ fieldMirrorColumns) concat sql") values (" concat combineByComma(
-      List(sql"$id, $a, $b") ++ fieldMirrorValues) concat sql") on duplicate key update id=id").asUpdate
-  }
-
-  def updateDataItem(projectId: String, modelName: String, id: String, values: Map[String, Any]) = {
-    val escapedValues = combineByComma(values.map {
-      case (k, v) =>
-        escapeKey(k) concat sql" = " concat escapeUnsafeParam(v)
-    })
-
-    (sql"update `#$projectId`.`#$modelName` set" concat escapedValues concat sql"where id = $id").asUpdate
-  }
-
-  def updateRelationRow(projectId: String, relationTable: String, relationSide: String, nodeId: String, values: Map[String, Any]) = {
-    val escapedValues = combineByComma(values.map {
-      case (k, v) =>
-        escapeKey(k) concat sql" = " concat escapeUnsafeParam(v)
-    })
-
-    (sql"update `#$projectId`.`#$relationTable` set" concat escapedValues concat sql"where `#$relationSide` = $nodeId").asUpdate
-  }
 
   def populateNullRowsForColumn(projectId: String, modelName: String, fieldName: String, value: Any) = {
     val escapedValues =
@@ -83,45 +34,6 @@ object DatabaseMutationBuilder {
       escapeKey(fieldName) concat sql" = " concat escapeUnsafeParam(value)
 
     (sql"update `#$projectId`.`#$modelName` set" concat escapedValues).asUpdate
-  }
-
-  def deleteDataItemById(projectId: String, modelName: String, id: String) = sqlu"delete from `#$projectId`.`#$modelName` where id = $id"
-
-  def deleteRelationRowById(projectId: String, relationId: String, id: String) = sqlu"delete from `#$projectId`.`#$relationId` where A = $id or B = $id"
-
-  def deleteRelationRowBySideAndId(projectId: String, relationId: String, relationSide: RelationSide, id: String) = {
-    sqlu"delete from `#$projectId`.`#$relationId` where `#${relationSide.toString}` = $id"
-  }
-
-  def deleteRelationRowByToAndFromSideAndId(projectId: String,
-                                            relationId: String,
-                                            aRelationSide: RelationSide,
-                                            aId: String,
-                                            bRelationSide: RelationSide,
-                                            bId: String) = {
-    sqlu"delete from `#$projectId`.`#$relationId` where `#${aRelationSide.toString}` = $aId and `#${bRelationSide.toString}` = $bId"
-  }
-
-  def deleteAllDataItems(projectId: String, modelName: String) = sqlu"delete from `#$projectId`.`#$modelName`"
-
-  def deleteDataItemByValues(projectId: String, modelName: String, values: Map[String, Any]) = {
-    val whereClause =
-      if (values.isEmpty) {
-        None
-      } else {
-        val escapedKeys   = values.keys.map(escapeKey)
-        val escapedValues = values.values.map(escapeUnsafeParam)
-
-        val keyValueTuples = escapedKeys zip escapedValues
-        combineByAnd(keyValueTuples.map({
-          case (k, v) => k concat sql" = " concat v
-        }))
-      }
-
-    val whereClauseWithWhere =
-      if (whereClause.isEmpty) None else Some(sql"where " concat whereClause)
-
-    (sql"delete from `#$projectId`.`#$modelName`" concat whereClauseWithWhere).asUpdate
   }
 
   def createClientDatabaseForProject(projectId: String) = {
@@ -289,7 +201,7 @@ object DatabaseMutationBuilder {
       DBIO.seq(createTable(projectId, model.name)),
       DBIO.seq(
         model.scalarFields
-          .filter(f => !DatabaseMutationBuilder.implicitlyCreatedColumns.contains(f.name))
+          .filter(f => !SqlDDL.implicitlyCreatedColumns.contains(f.name))
           .map { (field) =>
             createColumn(
               projectId = projectId,

@@ -8,7 +8,7 @@ import scala.util.Try
 
 object JsonUtils {
   implicit class JsonStringExtension(val str: String) extends AnyVal {
-    def tryParseJson(): Try[JsValue] = Try { Json.parse(str) }
+    def tryParseJson(): Try[JsValue] = Try { play.api.libs.json.Json.parse(str) }
   }
 
   def enumFormat[T <: scala.Enumeration](enu: T): Format[T#Value] = new EnumJsonConverter[T](enu)
