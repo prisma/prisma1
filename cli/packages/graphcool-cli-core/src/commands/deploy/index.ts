@@ -359,6 +359,9 @@ https://console.graph.cool/${encodeURIComponent(info.name)}/settings/general`)
   }
 
   private async clusterSelection(): Promise<string> {
+    let localClusters = Object.keys((this.env.rc || {}).clusters as {} || {})
+    if (!localClusters.length) localClusters = ['local']
+
     const question = {
       name: 'cluster',
       type: 'list',
@@ -379,12 +382,14 @@ https://console.graph.cool/${encodeURIComponent(info.name)}/settings/general`)
         },
         new inquirer.Separator('                     '),
         new inquirer.Separator(chalk.bold('Local (docker):')),
-        {
-          value: 'local',
-          name: 'local',
-        },
+        ...localClusters.map(cluster => ({
+          value: cluster,
+          name: cluster,
+        })),
+        new inquirer.Separator('                     '),
+        
       ],
-      pageSize: 8,
+      pageSize: 10,
     }
 
     const { cluster } = await this.out.prompt(question)
