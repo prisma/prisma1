@@ -4,7 +4,7 @@ import cool.graph.deploy.InternalTestDatabase
 import cool.graph.deploy.database.tables.Tables
 import cool.graph.shared.models.{Enum, MigrationSteps, Project}
 import cool.graph.shared.project_dsl.TestProject
-import cool.graph.util.AwaitUtils
+import cool.graph.utils.await.AwaitUtils
 import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers}
 import slick.jdbc.MySQLProfile.api._
 

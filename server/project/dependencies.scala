@@ -73,6 +73,8 @@ object DependenciesNew {
     val play        = "2.5.12"
     val scalactic   = "2.2.6"
     val scalaTest   = "2.2.6"
+    val slick       = "3.2.0"
+    val spray       = "1.3.3"
   }
 
   val jodaTime    = "joda-time" % "joda-time" % v.joda
@@ -82,4 +84,7 @@ object DependenciesNew {
   val playJson    = "com.typesafe.play" %% "play-json" % v.play
   val scalactic   = "org.scalactic" %% "scalactic" % v.scalactic
   val scalaTest   = "org.scalatest" %% "scalatest" % v.scalaTest % Test
+  val slick       = "com.typesafe.slick" %% "slick" % v.slick
+  val slickHikari = "com.typesafe.slick" %% "slick-hikaricp" % v.slick
+  val spray       = "io.spray" %% "spray-json" % v.spray
 }

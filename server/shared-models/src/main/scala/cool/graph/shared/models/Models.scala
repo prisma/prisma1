@@ -626,7 +626,7 @@ case class Field(
     constraints: List[FieldConstraint] = List.empty
 ) {
 
-  def isScalar: Boolean                             = ???
+  def isScalar: Boolean                             = typeIdentifier != TypeIdentifier.Relation
   def isRelation: Boolean                           = typeIdentifier == TypeIdentifier.Relation
   def isRelationWithId(relationId: String): Boolean = relation.exists(_.id == relationId)
 

@@ -120,7 +120,10 @@ lazy val sharedModels = normalProject("shared-models")
   libraryDependencies ++= Seq(
     cuid,
     playJson,
-    scalactic
+    scalactic,
+    slick,
+    slickHikari,
+    spray
   ) ++ joda
 )
 lazy val deploy = serverProject("deploy")
@@ -134,6 +137,18 @@ lazy val deploy = serverProject("deploy")
                         scalaTest
                       )
                     )
+
+lazy val api = serverProject("api")
+  .dependsOn(sharedModels % "compile")
+  .dependsOn(akkaUtils % "compile")
+  .dependsOn(metrics % "compile")
+  .dependsOn(jvmProfiler % "compile")
+  .settings(
+    libraryDependencies ++= Seq(
+      playJson,
+      scalaTest
+    )
+  )
 
 lazy val gcValues = libProject("gc-values")
   .settings(libraryDependencies ++= Seq(
