@@ -13,6 +13,7 @@ import cool.graph.cuid.Cuid.createCuid
 import cool.graph.deploy.DeployMetrics
 import cool.graph.deploy.schema.{SchemaBuilder, SystemUserContext}
 import cool.graph.metrics.extensions.TimeResponseDirectiveImpl
+import cool.graph.shared.models.Client
 import cool.graph.util.logging.{LogData, LogKey}
 import sangria.execution.Executor
 import sangria.parser.QueryParser
@@ -25,6 +26,7 @@ import scala.util.{Failure, Success}
 
 case class DeployServer(
     schemaBuilder: SchemaBuilder,
+    dummyClient: Client,
     prefix: String = ""
 )(implicit system: ActorSystem, materializer: ActorMaterializer)
     extends Server
@@ -78,7 +80,8 @@ case class DeployServer(
                   Future.successful(BadRequest -> JsObject("error" -> JsString(error.getMessage)))
 
                 case Success(queryAst) =>
-                  val userContext = SystemUserContext(clientId = "clientId")
+                  val userContext = SystemUserContext(dummyClient)
+
                   val result: Future[(StatusCode with Product with Serializable, JsValue)] =
                     Executor
                       .execute(
@@ -91,7 +94,7 @@ case class DeployServer(
                       )
                       .map(node => OK -> node)
 
-                  result.onComplete(_ => logRequestEnd(None, Some(userContext.clientId)))
+                  result.onComplete(_ => logRequestEnd(None, Some(userContext.client.id)))
                   result
               }
             }
