@@ -64,7 +64,7 @@ Additionally to the different user roles, access groups can be defined to grant 
 
 ## Authorization Design Patterns
 
-Before diving into the different **authorization design patterns**, let's start this off with a simple example to get used to the used terminology.
+Before diving into the different **authorization design patterns**, let's start this off with a simple example to get used to the terminology.
 
 For more background information, the reference documentation offers a general [overview of the permission system](!alias-iegoo0heez) as well as a detailed list of available [permission queries, parameters and variables](!alias-iox3aqu0ee).
 
