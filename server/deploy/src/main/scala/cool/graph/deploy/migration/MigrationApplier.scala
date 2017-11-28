@@ -22,7 +22,7 @@ case class MigrationApplierImpl(
     val initialResult = Future.successful(())
 
     if (project.revision == 1) {
-      executeClientMutation(CreateClientDatabaseForProject(project.id))
+      executeClientMutaction(CreateClientDatabaseForProject(project.id))
     } else {
       migration.steps.foldLeft(initialResult) { (previous, step) =>
         for {
@@ -36,14 +36,15 @@ case class MigrationApplierImpl(
   def applyStep(project: Project, step: MigrationStep): Future[Unit] = {
     step match {
       case x: CreateModel =>
-        executeClientMutation(CreateModelTable(project.id, x.name))
+        executeClientMutaction(CreateModelTable(project.id, x.name))
+
       case x =>
         println(s"migration step of type ${x.getClass.getSimpleName} is not implemented yet. Will ignore it.")
         Future.successful(())
     }
   }
 
-  def executeClientMutation(mutaction: ClientSqlMutaction): Future[Unit] = {
+  def executeClientMutaction(mutaction: ClientSqlMutaction): Future[Unit] = {
     for {
       statements <- mutaction.execute
       _          <- clientDatabase.run(statements.sqlAction)
@@ -54,6 +55,7 @@ case class MigrationApplierImpl(
 object MigrationApplierJob {
   object ScanForUnappliedMigrations
 }
+
 case class MigrationApplierJob(
     clientDatabase: DatabaseDef,
     projectPersistence: ProjectPersistence
@@ -87,7 +89,5 @@ case class MigrationApplierJob(
       scheduleScanMessage
   }
 
-  def scheduleScanMessage = {
-    context.system.scheduler.scheduleOnce(10.seconds, self, ScanForUnappliedMigrations)
-  }
+  def scheduleScanMessage = context.system.scheduler.scheduleOnce(10.seconds, self, ScanForUnappliedMigrations)
 }

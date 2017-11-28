@@ -56,6 +56,17 @@ object ProjectTable {
     query.result.headOption
   }
 
+  def currentProjectByIdOrAlias(idOrAlias: String): SqlAction[Option[Project], NoStream, Read] = {
+    val baseQuery = for {
+      project <- Tables.Projects
+      if project.id === idOrAlias || project.alias === idOrAlias
+      //if project.hasBeenApplied
+    } yield project
+    val query = baseQuery.sortBy(_.revision * -1).take(1)
+
+    query.result.headOption
+  }
+
   def markAsApplied(id: String, revision: Int): FixedSqlAction[Int, NoStream, Write] = {
     val baseQuery = for {
       project <- Tables.Projects

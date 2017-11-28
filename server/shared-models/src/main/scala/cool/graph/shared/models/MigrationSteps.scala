@@ -1,8 +1,5 @@
 package cool.graph.shared.models
 
-import cool.graph.cuid.Cuid
-import cool.graph.shared.models.TypeIdentifier.TypeIdentifier
-
 case class UnappliedMigration(
     project: Project,
     migration: MigrationSteps
@@ -16,7 +13,8 @@ object MigrationSteps {
 }
 
 sealed trait MigrationStep
-sealed trait ModelMigrationStep                       extends MigrationStep
+sealed trait ModelMigrationStep extends MigrationStep
+
 case class CreateModel(name: String)                  extends ModelMigrationStep
 case class DeleteModel(name: String)                  extends ModelMigrationStep
 case class UpdateModel(name: String, newName: String) extends ModelMigrationStep
@@ -33,7 +31,9 @@ case class CreateField(
     defaultValue: Option[String],
     enum: Option[String]
 ) extends FieldMigrationStep
+
 case class DeleteField(model: String, name: String) extends FieldMigrationStep
+
 case class UpdateField(
     model: String,
     name: String,

@@ -4,7 +4,6 @@ import cool.graph.cuid.Cuid
 import cool.graph.deploy.database.persistence.ProjectPersistence
 import cool.graph.shared.models._
 import cool.graph.shared.project_dsl.TestProject
-
 import scala.concurrent.{ExecutionContext, Future}
 
 case class AddProjectMutation(

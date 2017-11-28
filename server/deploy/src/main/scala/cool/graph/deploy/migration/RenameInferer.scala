@@ -31,5 +31,4 @@ object RenameInferer extends RenameInferer {
       fields = fieldNameMapping
     )
   }
-
 }

@@ -20,13 +20,21 @@ case class ProjectPersistenceImpl(
       })
   }
 
+  override def loadByIdOrAlias(idOrAlias: String): Future[Option[Project]] = {
+    internalDatabase
+      .run(ProjectTable.currentProjectByIdOrAlias(idOrAlias))
+      .map(_.map { projectRow =>
+        DbToModelMapper.convert(projectRow)
+      })
+  }
+
   override def save(project: Project, migrationSteps: MigrationSteps): Future[Unit] = {
     for {
       currentProject     <- load(project.id)
       dbProject          = ModelToDbMapper.convert(project, migrationSteps)
       withRevisionBumped = dbProject.copy(revision = currentProject.map(_.revision).getOrElse(0) + 1)
       addProject         = Tables.Projects += withRevisionBumped
-      _                  <- internalDatabase.run(addProject).map(_ => ())
+      _                  <- internalDatabase.run(addProject)
     } yield ()
   }
 

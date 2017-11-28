@@ -16,8 +16,8 @@ import cool.graph.shared.models.{
   UserType,
   _
 }
-import org.joda.time.{DateTime, DateTimeZone}
 import org.joda.time.format.ISODateTimeFormat
+import org.joda.time.{DateTime, DateTimeZone}
 import play.api.libs.json._
 
 object ProjectJsonFormatter {
@@ -84,19 +84,18 @@ object ProjectJsonFormatter {
     val discriminatorField = "gcValueType"
     val isListField        = "isList"
     val valueField         = "value"
-
-    val nullType      = "null"
-    val stringType    = "string"
-    val passwordType  = "password"
-    val enumType      = "enum"
-    val graphQlIdType = "graphQlId"
-    val dateTimeType  = "datetime"
-    val intType       = "int"
-    val floatType     = "float"
-    val booleanType   = "bool"
-    val jsonType      = "json"
-    val listType      = "list"
-    val rootType      = "root"
+    val nullType           = "null"
+    val stringType         = "string"
+    val passwordType       = "password"
+    val enumType           = "enum"
+    val graphQlIdType      = "graphQlId"
+    val dateTimeType       = "datetime"
+    val intType            = "int"
+    val floatType          = "float"
+    val booleanType        = "bool"
+    val jsonType           = "json"
+    val listType           = "list"
+    val rootType           = "root"
 
     override def reads(json: JsValue): JsResult[GCValue] = {
       for {
@@ -172,6 +171,7 @@ object ProjectJsonFormatter {
   implicit lazy val packageDefinition             = Json.format[PackageDefinition]
   implicit lazy val featureToggle                 = Json.format[FeatureToggle]
   implicit lazy val projectFormat                 = Json.format[Project]
+  implicit lazy val projectWithClientIdFormat     = Json.format[ProjectWithClientId]
 
   def failingFormat[T] = new Format[T] {
 
