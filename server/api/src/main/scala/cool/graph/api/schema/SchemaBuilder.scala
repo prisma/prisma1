@@ -3,8 +3,11 @@ package cool.graph.api.schema
 import java.util.concurrent.TimeUnit
 
 import akka.actor.ActorSystem
+import cool.graph.api.ApiDependencies
 import cool.graph.api.database.{DataItem, DataResolver}
 import cool.graph.api.database.DeferredTypes.{ManyModelDeferred, RelayConnectionOutputType, SimpleConnectionOutputType}
+import cool.graph.api.mutations.definitions.CreateDefinition
+import cool.graph.api.mutations.mutations.Create
 import cool.graph.shared.models.{Model, Project}
 import org.atteo.evo.inflector.English
 import sangria.schema._
@@ -17,24 +20,29 @@ import scala.concurrent.duration.FiniteDuration
 case class ApiUserContext(clientId: String)
 
 trait SchemaBuilder {
-  def apply(userContext: ApiUserContext, project: Project): Schema[ApiUserContext, Unit]
+  def apply(userContext: ApiUserContext, project: Project, dataResolver: DataResolver, masterDataResolver: DataResolver): Schema[ApiUserContext, Unit]
 }
 
 object SchemaBuilder {
-  def apply()(implicit system: ActorSystem): SchemaBuilder = new SchemaBuilder {
-    override def apply(userContext: ApiUserContext, project: Project) = SchemaBuilderImpl(userContext, project).build()
+  def apply()(implicit system: ActorSystem, apiDependencies: ApiDependencies): SchemaBuilder = new SchemaBuilder {
+    override def apply(userContext: ApiUserContext, project: Project, dataResolver: DataResolver, masterDataResolver: DataResolver) =
+      SchemaBuilderImpl(userContext, project, dataResolver = dataResolver, masterDataResolver = masterDataResolver).build()
   }
 }
 
 case class SchemaBuilderImpl(
     userContext: ApiUserContext,
-    project: Project
-)(implicit system: ActorSystem) {
+    project: Project,
+    dataResolver: DataResolver,
+    masterDataResolver: DataResolver
+)(implicit apiDependencies: ApiDependencies, system: ActorSystem) {
   import system.dispatcher
 
-  val objectTypeBuilder = new ObjectTypeBuilder(project = project)
-  val objectTypes       = objectTypeBuilder.modelObjectTypes
-  val pluralsCache      = new PluralsCache
+  val objectTypeBuilder  = new ObjectTypeBuilder(project = project)
+  val objectTypes        = objectTypeBuilder.modelObjectTypes
+  val inputTypesBuilder  = InputTypesBuilder(project = project)
+  val outputTypesBuilder = OutputTypesBuilder(project, objectTypes, dataResolver)
+  val pluralsCache       = new PluralsCache
 
   def build(): Schema[ApiUserContext, Unit] = {
     val query        = buildQuery()
@@ -88,7 +96,11 @@ case class SchemaBuilderImpl(
 //    if (mutationFields.isEmpty) None
 //    else Some(ObjectType("Mutation", mutationFields))
 
-    None
+    val fields = project.models.map(getCreateItemField)
+
+    Some(ObjectType("Mutation", fields))
+
+//    None
   }
 
   def buildSubscription(): Option[ObjectType[ApiUserContext, Unit]] = {
@@ -109,6 +121,24 @@ case class SchemaBuilderImpl(
         val arguments = objectTypeBuilder.extractQueryArgumentsFromContext(model, ctx)
 
         DeferredValue(ManyModelDeferred(model, arguments)).map(_.toNodes)
+      }
+    )
+  }
+
+  def getCreateItemField(model: Model): Field[ApiUserContext, Unit] = {
+
+    val definition = CreateDefinition(project, inputTypesBuilder)
+    val arguments  = definition.getSangriaArguments(model = model)
+
+    Field(
+      s"create${model.name}",
+      fieldType = OptionType(outputTypesBuilder.mapCreateOutputType(model, objectTypes(model.name))),
+      arguments = arguments,
+      resolve = (ctx) => {
+        val mutation = new Create(model = model, project = project, args = ctx.args, dataResolver = masterDataResolver)
+        mutation
+          .run(ctx.ctx)
+          .map(outputTypesBuilder.mapResolve(_, ctx.args))
       }
     )
   }

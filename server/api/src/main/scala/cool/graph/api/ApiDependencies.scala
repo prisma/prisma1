@@ -9,13 +9,16 @@ trait ApiDependencies {
   val config: Config = ConfigFactory.load()
   def destroy        = println("ApiDependencies [DESTROY]")
 
+  val system: ActorSystem
+  val materializer: ActorMaterializer
+
   val databaseManager: DatabaseConnectionManager
 }
 
-class ApiDependenciesImpl(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends ApiDependencies {
+case class ApiDependenciesImpl(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends ApiDependencies {
   override val databaseManager = DatabaseConnectionManager.initializeForSingleRegion(config)
 }
 
-class ApiDependenciesForTest(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends ApiDependencies {
+case class ApiDependenciesForTest(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends ApiDependencies {
   override val databaseManager = DatabaseConnectionManager.initializeForSingleRegion(config)
 }

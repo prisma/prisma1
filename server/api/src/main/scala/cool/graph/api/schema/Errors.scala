@@ -9,12 +9,10 @@ abstract class AbstractApiError(val message: String, val errorCode: Int) extends
 
 case class InvalidProjectId(projectId: String) extends AbstractApiError(s"No service with id '$projectId'", 4000)
 
-//import cool.graph.MutactionExecutionResult
-//import cool.graph.shared.errors.SystemErrors.SchemaError
-import cool.graph.shared.models.TypeIdentifier.TypeIdentifier
-import spray.json.{JsObject, JsString, JsValue}
+import cool.graph.api.database.mutactions.MutactionExecutionResult
+import spray.json.{JsValue}
 
-abstract class GeneralError(message: String) extends Exception {
+abstract class GeneralError(message: String) extends Exception with MutactionExecutionResult {
   override def getMessage: String = message
 }
 

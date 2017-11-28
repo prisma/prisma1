@@ -555,10 +555,10 @@ case class Model(
 
   def filterFields(fn: Field => Boolean): Model = copy(fields = this.fields.filter(fn))
 
-  def getFieldById_!(id: Id): Field       = ???
+  def getFieldById_!(id: Id): Field       = getFieldById(id).get
   def getFieldById(id: Id): Option[Field] = fields.find(_.id == id)
 
-  def getFieldByName_!(name: String): Field       = ??? //getFieldByName(name).getOrElse(throw FieldNotInModel(fieldName = name, modelName = this.name))
+  def getFieldByName_!(name: String): Field       = getFieldByName(name).get // .getOrElse(throw FieldNotInModel(fieldName = name, modelName = this.name))
   def getFieldByName(name: String): Option[Field] = fields.find(_.name == name)
 
   def getPermissionById(id: Id): Option[ModelPermission] = permissions.find(_.id == id)

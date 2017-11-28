@@ -154,7 +154,7 @@ trait ApiTestServer extends BeforeAndAfterEach with ApiTestDatabase with SprayJs
 //    val projectLockdownMiddleware = ProjectLockdownMiddleware(project)
     val schemaBuilder  = SchemaBuilder()
     val userContext    = ApiUserContext(clientId = "clientId")
-    val schema         = schemaBuilder(userContext, project)
+    val schema         = schemaBuilder(userContext, project, dataResolver, dataResolver)
     val renderedSchema = SchemaRenderer.renderSchema(schema)
 
     if (printSchema) println(renderedSchema)
