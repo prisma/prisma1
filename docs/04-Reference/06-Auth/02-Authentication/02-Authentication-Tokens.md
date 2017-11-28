@@ -9,7 +9,7 @@ description: GraphQL requests are authenticated using an authentication token. F
 
 Requests to your [CRUD API](!alias-abogasd0go) (or the System API) are authenticated using **authentication tokens** that are attached to the `Authorization` header of the request. Graphcool uses [JWT](https://jwt.io/) (JSON Web Tokens) as a token format.
 
-Grpahcool offers several types of authentication tokens:
+Graphcool offers several types of authentication tokens:
 
 - **Node tokens**: A node token is associated with a specific node in your database (no matter which [type](!alias-eiroozae8u#model-types)) and has a certain validity duration (the default is 30 days). They can be issued using the [`generateNodeToken(nodeId: string, typeName: string, payload?: ScalarObject)`](https://github.com/graphcool/graphcool-lib/blob/master/src/index.ts#L58) function in [`graphcool-lib`](!alias-kaegh4oomu) or by directly calling the `generateNodeToken`-mutation of the Graphcool [System API](https://api.graph.cool/system) for which different validity durations can be specified.
 - **Root tokens** (previously called permanent access tokens (PATs)): A root token grants full access to all API operations. There are two kinds of root tokens:
