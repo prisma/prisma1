@@ -1,7 +1,7 @@
 package cool.graph.deploy.database.persistence
 
 import cool.graph.deploy.database.tables.{ProjectTable, Tables}
-import cool.graph.shared.models.{MigrationSteps, Project}
+import cool.graph.shared.models.{MigrationSteps, Project, UnappliedMigration}
 import slick.jdbc.MySQLProfile.backend.DatabaseDef
 import slick.jdbc.MySQLProfile.api._
 
@@ -28,5 +28,19 @@ case class ProjectPersistenceImpl(
       addProject         = Tables.Projects += withRevisionBumped
       _                  <- internalDatabase.run(addProject).map(_ => ())
     } yield ()
+  }
+
+  override def getUnappliedMigration(): Future[Option[UnappliedMigration]] = {
+    internalDatabase.run(ProjectTable.unappliedMigrations()).map { dbProjects =>
+      dbProjects.headOption.map { dbProject =>
+        val project        = DbToModelMapper.convert(dbProject)
+        val migrationSteps = DbToModelMapper.convertSteps(dbProject)
+        UnappliedMigration(project, migrationSteps)
+      }
+    }
+  }
+
+  override def markMigrationAsApplied(project: Project, migrationSteps: MigrationSteps): Future[Unit] = {
+    internalDatabase.run(ProjectTable.markAsApplied(project.id, project.revision)).map(_ => ())
   }
 }

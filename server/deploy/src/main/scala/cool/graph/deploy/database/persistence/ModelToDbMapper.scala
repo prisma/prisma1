@@ -3,11 +3,11 @@ package cool.graph.deploy.database.persistence
 import cool.graph.deploy.database.tables.{Client, Project}
 import cool.graph.shared.models
 import cool.graph.shared.models.MigrationSteps
-import play.api.libs.json.{JsObject, Json}
+import play.api.libs.json.Json
 
 object ModelToDbMapper {
-  import ProjectJsonFormatter._
   import MigrationStepsJsonFormatter._
+  import ProjectJsonFormatter._
 
   def convert(client: models.Client): Client = {
     Client(
@@ -34,7 +34,8 @@ object ModelToDbMapper {
       revision = project.revision,
       clientId = project.ownerId,
       model = modelJson,
-      migrationSteps = migrationStepsJson
+      migrationSteps = migrationStepsJson,
+      hasBeenApplied = false
     )
   }
 }

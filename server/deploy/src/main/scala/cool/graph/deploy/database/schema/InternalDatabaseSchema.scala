@@ -47,6 +47,7 @@ object InternalDatabaseSchema {
         `clientId` varchar(25) COLLATE utf8_unicode_ci DEFAULT NULL,
         `model` mediumtext COLLATE utf8_unicode_ci DEFAULT NULL,
         `migrationSteps` mediumtext COLLATE utf8_unicode_ci DEFAULT NULL,
+        `hasBeenApplied` tinyint(1) NOT NULL DEFAULT '0',
         PRIMARY KEY (`id`, `revision`),
         UNIQUE KEY `project_clientid_projectname_uniq` (`clientId`,`name`, `revision`),
         UNIQUE KEY `project_alias_uniq` (`alias`, `revision`),

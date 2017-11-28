@@ -3,6 +3,11 @@ package cool.graph.shared.models
 import cool.graph.cuid.Cuid
 import cool.graph.shared.models.TypeIdentifier.TypeIdentifier
 
+case class UnappliedMigration(
+    project: Project,
+    migration: MigrationSteps
+)
+
 case class MigrationSteps(
     steps: Vector[MigrationStep]
 )
@@ -43,7 +48,7 @@ case class UpdateField(
 ) extends FieldMigrationStep
 
 sealed trait EnumMigrationStep                                                               extends MigrationStep
-case class CreateEnum(model: String, values: Seq[String])                                    extends EnumMigrationStep
+case class CreateEnum(name: String, values: Seq[String])                                     extends EnumMigrationStep
 case class DeleteEnum(name: String)                                                          extends EnumMigrationStep
 case class UpdateEnum(name: String, newName: Option[String], values: Option[Vector[String]]) extends EnumMigrationStep
 

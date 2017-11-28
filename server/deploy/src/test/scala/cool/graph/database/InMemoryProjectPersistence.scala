@@ -1,7 +1,7 @@
 package cool.graph.database
 
 import cool.graph.deploy.database.persistence.ProjectPersistence
-import cool.graph.shared.models.{MigrationSteps, Project}
+import cool.graph.shared.models.{MigrationSteps, Project, UnappliedMigration}
 
 import scala.collection.mutable
 import scala.concurrent.Future
@@ -29,4 +29,8 @@ class InMemoryProjectPersistence extends ProjectPersistence {
 
     projects.append(withRevisionBumped)
   }
+
+  override def getUnappliedMigration(): Future[Option[UnappliedMigration]] = ???
+
+  override def markMigrationAsApplied(project: Project, migrationSteps: MigrationSteps): Future[Unit] = ???
 }
