@@ -82,7 +82,7 @@ object ProjectTable {
       project <- Tables.Projects
       if !project.hasBeenApplied
     } yield project
-    val sorted = baseQuery.sortBy(_.revision * -1).take(1)
+    val sorted = baseQuery.sortBy(_.revision * -1).take(1) // bug: use lowest unapplied
     sorted.result
   }
 }

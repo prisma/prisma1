@@ -3,80 +3,86 @@ package cool.graph.deploy.migration
 import cool.graph.shared.models._
 
 trait MigrationStepsProposer {
-  def propose(current: Project, desired: Project, renames: Renames): MigrationSteps
+  def propose(currentProject: Project, nextProject: Project, renames: Renames): MigrationSteps
 }
 
 object MigrationStepsProposer {
   def apply(): MigrationStepsProposer = {
-    apply((current, desired, renames) => MigrationStepsProposerImpl(current, desired, renames).evaluate())
+    apply((current, next, renames) => MigrationStepsProposerImpl(current, next, renames).evaluate())
   }
 
   def apply(fn: (Project, Project, Renames) => MigrationSteps): MigrationStepsProposer = new MigrationStepsProposer {
-    override def propose(current: Project, desired: Project, renames: Renames): MigrationSteps = fn(current, desired, renames)
+    override def propose(currentProject: Project, nextProject: Project, renames: Renames): MigrationSteps = fn(currentProject, nextProject, renames)
   }
 }
 
+//todo This is not really tracking renames. Renames can be deducted from this mapping, but all it does is mapping previous to current values.
+// TransitionMapping?
 case class Renames(
     models: Map[String, String],
     enums: Map[String, String],
-    fields: Map[String, String]
+    fields: Map[(String, String), String]
 ) {
-  def getOldModelName(model: String): String = models.getOrElse(model, model)
-
-  def getOldEnumNames(enum: String): String = enums.getOrElse(enum, enum)
-
-  def getOldFieldName(model: String, field: String) = fields.getOrElse(s"$model.$field", field)
+  def getPreviousModelName(model: String): String        = models.getOrElse(model, model)
+  def getPreviousEnumNames(enum: String): String         = enums.getOrElse(enum, enum)
+  def getPreviousFieldName(model: String, field: String) = fields.getOrElse((model, field), field)
 }
 
-case class MigrationStepsProposerImpl(current: Project, desired: Project, renames: Renames) {
+// todo Doesnt propose a thing. It generates the steps, but they cant be rejected or approved. Naming is off.
+case class MigrationStepsProposerImpl(previousProject: Project, nextProject: Project, renames: Renames) {
   import cool.graph.util.Diff._
 
   def evaluate(): MigrationSteps = {
-    MigrationSteps(modelsToCreate ++ modelsToDelete ++ modelsToUpdate ++ fieldsToCreate ++ fieldsToDelete ++ fieldsToUpdate)
+    MigrationSteps(modelsToCreate ++ modelsToUpdate ++ modelsToDelete ++ fieldsToCreate ++ fieldsToDelete ++ fieldsToUpdate)
   }
 
   lazy val modelsToCreate: Vector[CreateModel] = {
     for {
-      model   <- desired.models.toVector
-      oldName = renames.getOldModelName(model.name)
-      if current.getModelByName(oldName).isEmpty
-    } yield CreateModel(model.name)
-  }
-
-  lazy val modelsToDelete: Vector[DeleteModel] = {
-    for {
-      currentModel <- current.models.toVector
-      oldName      = renames.getOldModelName(currentModel.name)
-      if desired.getModelByName(oldName).isEmpty
-    } yield DeleteModel(currentModel.name)
+      nextModel         <- nextProject.models.toVector
+      previousModelName = renames.getPreviousModelName(nextModel.name)
+      if previousProject.getModelByName(previousModelName).isEmpty
+    } yield CreateModel(nextModel.name)
   }
 
   lazy val modelsToUpdate: Vector[UpdateModel] = {
     for {
-      model   <- desired.models.toVector
-      oldName = renames.getOldModelName(model.name)
-      if current.getModelByName(oldName).isDefined
-      if model.name != oldName
-    } yield UpdateModel(name = oldName, newName = model.name)
+      nextModel         <- nextProject.models.toVector
+      previousModelName = renames.getPreviousModelName(nextModel.name)
+      if previousProject.getModelByName(previousModelName).isDefined
+      if nextModel.name != previousModelName
+    } yield UpdateModel(name = previousModelName, newName = nextModel.name)
+  }
+
+  /*
+   * Check all previous models if they are present on on the new one, ignore renames (== updated models).
+   * Use the _previous_ model name to check presence, and as updates are ignored this has to yield a result,
+   * or else the model is deleted.
+   */
+  lazy val modelsToDelete: Vector[DeleteModel] = {
+    val updatedModels = modelsToUpdate.map(_.name)
+    for {
+      previousModel <- previousProject.models.toVector.filterNot(m => updatedModels.contains(m.name))
+      if nextProject.getModelByName(previousModel.name).isEmpty
+    } yield DeleteModel(previousModel.name)
   }
 
   lazy val fieldsToCreate: Vector[CreateField] = {
     for {
-      desiredModel        <- desired.models.toVector
-      oldName             = renames.getOldModelName(desiredModel.name)
-      currentModel        = current.getModelByName(oldName).getOrElse(emptyModel)
-      fieldOfDesiredModel <- desiredModel.fields.toVector
-      oldFieldName        = renames.getOldFieldName(desiredModel.name, fieldOfDesiredModel.name)
-      if currentModel.getFieldByName(oldFieldName).isEmpty
+      nextModel         <- nextProject.models.toVector
+      previousModelName = renames.getPreviousModelName(nextModel.name)
+      previousModel     = previousProject.getModelByName(previousModelName).getOrElse(emptyModel)
+      fieldOfNextModel  <- nextModel.fields.toVector
+      previousFieldName = renames.getPreviousFieldName(nextModel.name, fieldOfNextModel.name)
+      if previousModel.getFieldByName(previousFieldName).isEmpty
     } yield {
       CreateField(
-        model = desiredModel.name,
-        name = fieldOfDesiredModel.name,
-        typeName = fieldOfDesiredModel.typeIdentifier.toString,
-        isRequired = fieldOfDesiredModel.isRequired,
-        isList = fieldOfDesiredModel.isList,
-        isUnique = fieldOfDesiredModel.isUnique,
-        defaultValue = fieldOfDesiredModel.defaultValue.map(_.toString),
+        model = nextModel.name,
+        name = fieldOfNextModel.name,
+        typeName = fieldOfNextModel.typeIdentifier.toString,
+        isRequired = fieldOfNextModel.isRequired,
+        isList = fieldOfNextModel.isList,
+        isUnique = fieldOfNextModel.isUnique,
+        defaultValue = fieldOfNextModel.defaultValue.map(_.toString),
         relation = None,
         enum = None
       )
@@ -85,38 +91,39 @@ case class MigrationStepsProposerImpl(current: Project, desired: Project, rename
 
   lazy val fieldsToUpdate: Vector[UpdateField] = {
     val tmp = for {
-      desiredModel        <- desired.models.toVector
-      oldName             = renames.getOldModelName(desiredModel.name)
-      currentModel        = current.getModelByName(oldName).getOrElse(emptyModel)
-      fieldOfDesiredModel <- desiredModel.fields.toVector
-      oldFieldName        = renames.getOldFieldName(desiredModel.name, fieldOfDesiredModel.name)
-      currentField        <- currentModel.getFieldByName(oldFieldName)
+      nextModel         <- nextProject.models.toVector
+      previousModelName = renames.getPreviousModelName(nextModel.name)
+      previousModel     = previousProject.getModelByName(previousModelName).getOrElse(emptyModel)
+      fieldOfNextModel  <- nextModel.fields.toVector
+      previousFieldName = renames.getPreviousFieldName(nextModel.name, fieldOfNextModel.name)
+      previousField     <- previousModel.getFieldByName(previousFieldName)
     } yield {
       UpdateField(
-        model = oldName,
-        name = oldFieldName,
-        newName = diff(oldName, desiredModel.name),
-        typeName = diff(currentField.typeIdentifier.toString, fieldOfDesiredModel.typeIdentifier.toString),
-        isRequired = diff(currentField.isRequired, fieldOfDesiredModel.isRequired),
-        isList = diff(currentField.isList, fieldOfDesiredModel.isList),
-        isUnique = diff(currentField.isUnique, fieldOfDesiredModel.isUnique),
-        relation = diff(currentField.relation.map(_.id), fieldOfDesiredModel.relation.map(_.id)),
-        defaultValue = diff(currentField.defaultValue, fieldOfDesiredModel.defaultValue).map(_.map(_.toString)),
-        enum = diff(currentField.enum, fieldOfDesiredModel.enum).map(_.map(_.id))
+        model = previousModelName,
+        name = previousFieldName,
+        newName = diff(previousFieldName, previousFieldName),
+        typeName = diff(previousField.typeIdentifier.toString, fieldOfNextModel.typeIdentifier.toString),
+        isRequired = diff(previousField.isRequired, fieldOfNextModel.isRequired),
+        isList = diff(previousField.isList, fieldOfNextModel.isList),
+        isUnique = diff(previousField.isUnique, fieldOfNextModel.isUnique),
+        relation = diff(previousField.relation.map(_.id), fieldOfNextModel.relation.map(_.id)),
+        defaultValue = diff(previousField.defaultValue, fieldOfNextModel.defaultValue).map(_.map(_.toString)),
+        enum = diff(previousField.enum, fieldOfNextModel.enum).map(_.map(_.id))
       )
     }
+
     tmp.filter(isAnyOptionSet)
   }
 
   lazy val fieldsToDelete: Vector[DeleteField] = {
     for {
-      newModel            <- desired.models.toVector
-      oldName             = renames.getOldModelName(newModel.name)
-      currentModel        <- current.getModelByName(oldName).toVector
-      fieldOfCurrentModel <- currentModel.fields.toVector
-      oldFieldName        = renames.getOldFieldName(oldName, fieldOfCurrentModel.name)
-      if newModel.getFieldByName(oldFieldName).isEmpty
-    } yield DeleteField(model = newModel.name, name = fieldOfCurrentModel.name)
+      nextModel            <- nextProject.models.toVector
+      previousModelName    = renames.getPreviousModelName(nextModel.name)
+      previousModel        <- previousProject.getModelByName(previousModelName).toVector
+      fieldOfPreviousModel <- previousModel.fields.toVector
+      previousFieldName    = renames.getPreviousFieldName(previousModelName, fieldOfPreviousModel.name)
+      if nextModel.getFieldByName(previousFieldName).isEmpty
+    } yield DeleteField(model = nextModel.name, name = fieldOfPreviousModel.name)
   }
 
   lazy val emptyModel = Model(

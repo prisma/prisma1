@@ -6,15 +6,15 @@ import scala.collection.Seq
 
 object DataSchemaAstExtensions {
   implicit class CoolDocument(val doc: Document) extends AnyVal {
-    def typeNames: Vector[String]    = objectTypes.map(_.name)
-    def oldTypeNames: Vector[String] = objectTypes.map(_.oldName)
+    def typeNames: Vector[String]         = objectTypes.map(_.name)
+    def previousTypeNames: Vector[String] = objectTypes.map(_.previousName)
 
-    def enumNames: Vector[String]    = enumTypes.map(_.name)
-    def oldEnumNames: Vector[String] = enumTypes.map(_.oldName)
+    def enumNames: Vector[String]         = enumTypes.map(_.name)
+    def previousEnumNames: Vector[String] = enumTypes.map(_.previousName)
 
     def containsRelation(relationName: String): Boolean = {
       val allFields = objectTypes.flatMap(_.fields)
-      allFields.exists(fieldDef => fieldDef.oldRelationName.contains(relationName))
+      allFields.exists(fieldDef => fieldDef.previousRelationName.contains(relationName))
     }
 
     def isObjectOrEnumType(name: String): Boolean = objectType(name).isDefined || enumType(name).isDefined
@@ -30,7 +30,7 @@ object DataSchemaAstExtensions {
   implicit class CoolObjectType(val objectType: ObjectTypeDefinition) extends AnyVal {
     def hasNoIdField: Boolean = field("id").isEmpty
 
-    def oldName: String = {
+    def previousName: String = {
       val nameBeforeRename = for {
         directive <- objectType.directive("rename")
         argument  <- directive.arguments.headOption
@@ -50,7 +50,7 @@ object DataSchemaAstExtensions {
 
   implicit class CoolField(val fieldDefinition: FieldDefinition) extends AnyVal {
 
-    def oldName: String = {
+    def previousName: String = {
       val nameBeforeRename = fieldDefinition.directiveArgumentAsString("rename", "oldName")
       nameBeforeRename.getOrElse(fieldDefinition.name)
     }
@@ -91,18 +91,18 @@ object DataSchemaAstExtensions {
       case _                                                            => false
     }
 
-    def isOneRelationField: Boolean     = hasRelationDirective && !isList
-    def hasRelationDirective: Boolean   = relationName.isDefined
-    def isNoRelation: Boolean           = !hasRelationDirective
-    def description: Option[String]     = fieldDefinition.directiveArgumentAsString("description", "text")
-    def defaultValue: Option[String]    = fieldDefinition.directiveArgumentAsString("defaultValue", "value")
-    def migrationValue: Option[String]  = fieldDefinition.directiveArgumentAsString("migrationValue", "value")
-    def relationName: Option[String]    = fieldDefinition.directiveArgumentAsString("relation", "name")
-    def oldRelationName: Option[String] = fieldDefinition.directiveArgumentAsString("relation", "oldName").orElse(relationName)
+    def isOneRelationField: Boolean          = hasRelationDirective && !isList
+    def hasRelationDirective: Boolean        = relationName.isDefined
+    def isNoRelation: Boolean                = !hasRelationDirective
+    def description: Option[String]          = fieldDefinition.directiveArgumentAsString("description", "text")
+    def defaultValue: Option[String]         = fieldDefinition.directiveArgumentAsString("defaultValue", "value")
+    def migrationValue: Option[String]       = fieldDefinition.directiveArgumentAsString("migrationValue", "value")
+    def relationName: Option[String]         = fieldDefinition.directiveArgumentAsString("relation", "name")
+    def previousRelationName: Option[String] = fieldDefinition.directiveArgumentAsString("relation", "oldName").orElse(relationName)
   }
 
   implicit class CoolEnumType(val enumType: EnumTypeDefinition) extends AnyVal {
-    def oldName: String = {
+    def previousName: String = {
       val nameBeforeRename = enumType.directiveArgumentAsString("rename", "oldName")
       nameBeforeRename.getOrElse(enumType.name)
     }

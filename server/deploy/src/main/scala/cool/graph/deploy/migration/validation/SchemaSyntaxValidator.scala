@@ -146,7 +146,7 @@ case class SchemaSyntaxValidator(schema: String, directiveRequirements: Seq[Dire
     }
 
     val relationFieldsWithNonMatchingTypes = validRelationFields
-      .groupBy(_.fieldDef.oldRelationName.get)
+      .groupBy(_.fieldDef.previousRelationName.get)
       .flatMap {
         case (_, fieldAndTypes) =>
           val first  = fieldAndTypes.head
@@ -222,12 +222,12 @@ case class SchemaSyntaxValidator(schema: String, directiveRequirements: Seq[Dire
     }
   }
 
-  def relationCount(fieldAndType: FieldAndType): Int = relationCount(fieldAndType.fieldDef.oldRelationName.get)
+  def relationCount(fieldAndType: FieldAndType): Int = relationCount(fieldAndType.fieldDef.previousRelationName.get)
   def relationCount(relationName: String): Int = {
     val tmp = for {
       objectType <- doc.objectTypes
       field      <- objectType.relationFields
-      if field.oldRelationName.contains(relationName)
+      if field.previousRelationName.contains(relationName)
     } yield field
     tmp.size
   }
