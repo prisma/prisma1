@@ -504,7 +504,7 @@ object TypeIdentifier extends Enumeration {
 case class Enum(
     id: Id,
     name: String,
-    values: Seq[String] = Seq.empty
+    values: Vector[String] = Vector.empty
 )
 
 case class FeatureToggle(

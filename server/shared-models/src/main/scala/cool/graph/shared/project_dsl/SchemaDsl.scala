@@ -29,8 +29,8 @@ object SchemaDsl {
       }
     }
 
-    def enum(name: String, values: Seq[String]): Enum = {
-      val id      = name.toLowerCase
+    def enum(name: String, values: Vector[String]): Enum = {
+      val id      = name
       val newEnum = Enum(id, name, values)
       enums += newEnum
       newEnum
