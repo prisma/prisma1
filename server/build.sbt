@@ -139,6 +139,7 @@ lazy val deploy = serverProject("deploy")
                     )
 
 lazy val api = serverProject("api")
+  .dependsOn(messageBus % "compile")
   .dependsOn(sharedModels % "compile")
   .dependsOn(akkaUtils % "compile")
   .dependsOn(metrics % "compile")

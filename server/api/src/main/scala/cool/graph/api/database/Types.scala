@@ -1,12 +1,12 @@
 package cool.graph.api.database
 
 import cool.graph.api.database.Types.{DataItemFilterCollection, UserData}
+import cool.graph.shared.models.IdType.Id
 import cool.graph.shared.models.{Field, Model, Relation}
 import sangria.relay.Node
 
 object Types {
   type DataItemFilterCollection = Seq[_ >: Seq[Any] <: Any]
-  type Id                       = String
   type UserData                 = Map[String, Option[Any]]
 }
 
@@ -18,7 +18,7 @@ case class FilterElement(key: String,
 
 case class FilterElementRelation(fromModel: Model, toModel: Model, relation: Relation, filter: DataItemFilterCollection)
 
-case class DataItem(id: Types.Id, userData: UserData = Map.empty, typeName: Option[String] = None) extends Node {
+case class DataItem(id: Id, userData: UserData = Map.empty, typeName: Option[String] = None) extends Node {
   def apply(key: String): Option[Any]      = userData(key)
   def get[T](key: String): T               = userData(key).get.asInstanceOf[T]
   def getOption[T](key: String): Option[T] = userData.get(key).flatten.map(_.asInstanceOf[T])

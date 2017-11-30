@@ -42,6 +42,7 @@ case class ApiServer(
 
   val dataResolver                                       = new DataResolver(project = ApiServer.project)
   val deferredResolverProvider: DeferredResolverProvider = new DeferredResolverProvider(dataResolver)
+  val masterDataResolver                                 = new DataResolver(project = ApiServer.project, useMasterDatabaseOnly = true)
 
   val innerRoutes = extractRequest { _ =>
     val requestId            = requestPrefix + ":api:" + createCuid()
@@ -90,7 +91,7 @@ case class ApiServer(
                   val result: Future[(StatusCode with Product with Serializable, JsValue)] =
                     Executor
                       .execute(
-                        schema = schemaBuilder(userContext, project),
+                        schema = schemaBuilder(userContext, project, dataResolver, masterDataResolver),
                         queryAst = queryAst,
                         userContext = userContext,
                         variables = variables,

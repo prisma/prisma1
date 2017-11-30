@@ -1,40 +1,45 @@
 package cool.graph.api.schema
 
-import java.util.concurrent.TimeUnit
-
 import akka.actor.ActorSystem
+import cool.graph.api.ApiDependencies
+import cool.graph.api.database.DeferredTypes.{ManyModelDeferred, OneDeferred}
 import cool.graph.api.database.{DataItem, DataResolver}
-import cool.graph.api.database.DeferredTypes.{ManyModelDeferred, RelayConnectionOutputType, SimpleConnectionOutputType}
+import cool.graph.api.mutations.definitions.{CreateDefinition, DeleteDefinition, UpdateDefinition, UpdateOrCreateDefinition}
+import cool.graph.api.mutations.mutations._
 import cool.graph.shared.models.{Model, Project}
 import org.atteo.evo.inflector.English
+import sangria.relay.{Node, NodeDefinition, PossibleNodeObject}
 import sangria.schema._
-import slick.jdbc.MySQLProfile.backend.DatabaseDef
 
 import scala.collection.mutable
-import scala.concurrent.Future
-import scala.concurrent.duration.FiniteDuration
 
 case class ApiUserContext(clientId: String)
 
 trait SchemaBuilder {
-  def apply(userContext: ApiUserContext, project: Project): Schema[ApiUserContext, Unit]
+  def apply(userContext: ApiUserContext, project: Project, dataResolver: DataResolver, masterDataResolver: DataResolver): Schema[ApiUserContext, Unit]
 }
 
 object SchemaBuilder {
-  def apply()(implicit system: ActorSystem): SchemaBuilder = new SchemaBuilder {
-    override def apply(userContext: ApiUserContext, project: Project) = SchemaBuilderImpl(userContext, project).build()
+  def apply()(implicit system: ActorSystem, apiDependencies: ApiDependencies): SchemaBuilder = new SchemaBuilder {
+    override def apply(userContext: ApiUserContext, project: Project, dataResolver: DataResolver, masterDataResolver: DataResolver) =
+      SchemaBuilderImpl(userContext, project, dataResolver = dataResolver, masterDataResolver = masterDataResolver).build()
   }
 }
 
 case class SchemaBuilderImpl(
     userContext: ApiUserContext,
-    project: Project
-)(implicit system: ActorSystem) {
+    project: Project,
+    dataResolver: DataResolver,
+    masterDataResolver: DataResolver
+)(implicit apiDependencies: ApiDependencies, system: ActorSystem) {
   import system.dispatcher
 
-  val objectTypeBuilder = new ObjectTypeBuilder(project = project)
-  val objectTypes       = objectTypeBuilder.modelObjectTypes
-  val pluralsCache      = new PluralsCache
+  val objectTypeBuilder  = new ObjectTypeBuilder(project = project, nodeInterface = Some(nodeInterface))
+  val objectTypes        = objectTypeBuilder.modelObjectTypes
+  val conectionTypes     = objectTypeBuilder.modelConnectionTypes
+  val inputTypesBuilder  = InputTypesBuilder(project = project)
+  val outputTypesBuilder = OutputTypesBuilder(project, objectTypes, dataResolver)
+  val pluralsCache       = new PluralsCache
 
   def build(): Schema[ApiUserContext, Unit] = {
     val query        = buildQuery()
@@ -50,59 +55,36 @@ case class SchemaBuilderImpl(
   }
 
   def buildQuery(): ObjectType[ApiUserContext, Unit] = {
-//    val fields = {
-//      ifFeatureFlag(generateGetAll, includedModels.map(getAllItemsField)) ++
-//        ifFeatureFlag(generateGetAllMeta, includedModels.flatMap(getAllItemsMetaField)) ++
-//        ifFeatureFlag(generateGetSingle, includedModels.map(getSingleItemField)) ++
-//        ifFeatureFlag(generateCustomQueryFields, project.activeCustomQueryFunctions.map(getCustomResolverField)) ++
-//        userField.toList :+ nodeField
-//    }
-//
-//    ObjectType("Query", fields)
 
-    val fields = project.models.map(getAllItemsField)
+    val fields = project.models.map(getAllItemsField) ++
+      project.models.map(getSingleItemField) ++
+      project.models.map(getAllItemsConenctionField) :+
+      nodeField
 
     ObjectType("Query", fields)
   }
 
   def buildMutation(): Option[ObjectType[ApiUserContext, Unit]] = {
-//    val oneRelations                     = apiMatrix.filterRelations(project.getOneRelations)
-//    val oneRelationsWithoutRequiredField = apiMatrix.filterNonRequiredRelations(oneRelations)
-//
-//    val manyRelations                     = apiMatrix.filterRelations(project.getManyRelations)
-//    val manyRelationsWithoutRequiredField = apiMatrix.filterNonRequiredRelations(manyRelations)
-//
-//    val mutationFields: List[Field[UserContext, Unit]] = {
-//      ifFeatureFlag(generateCreate, includedModels.filter(_.name != "User").map(getCreateItemField), measurementName = "CREATE") ++
-//        ifFeatureFlag(generateUpdate, includedModels.map(getUpdateItemField), measurementName = "UPDATE") ++
-//        ifFeatureFlag(generateUpdateOrCreate, includedModels.map(getUpdateOrCreateItemField), measurementName = "UPDATE_OR_CREATE") ++
-//        ifFeatureFlag(generateDelete, includedModels.map(getDeleteItemField)) ++
-//        ifFeatureFlag(generateSetRelation, oneRelations.map(getSetRelationField)) ++
-//        ifFeatureFlag(generateUnsetRelation, oneRelationsWithoutRequiredField.map(getUnsetRelationField)) ++
-//        ifFeatureFlag(generateAddToRelation, manyRelations.map(getAddToRelationField)) ++
-//        ifFeatureFlag(generateRemoveFromRelation, manyRelationsWithoutRequiredField.map(getRemoveFromRelationField)) ++
-//        ifFeatureFlag(generateIntegrationFields, getIntegrationFields) ++
-//        ifFeatureFlag(generateCustomMutationFields, project.activeCustomMutationFunctions.map(getCustomResolverField))
-//    }
-//
-//    if (mutationFields.isEmpty) None
-//    else Some(ObjectType("Mutation", mutationFields))
 
-    None
+    val fields = project.models.map(createItemField) ++
+      project.models.map(updateItemField) ++
+      project.models.map(updateOrCreateItemField) ++
+      project.models.map(deleteItemField)
+
+    Some(ObjectType("Mutation", fields))
+
   }
 
   def buildSubscription(): Option[ObjectType[ApiUserContext, Unit]] = {
-//    val subscriptionFields = { ifFeatureFlag(generateCreate, includedModels.map(getSubscriptionField)) }
-//
-//    if (subscriptionFields.isEmpty) None
-//    else Some(ObjectType("Subscription", subscriptionFields))
+    val subscriptionFields = project.models.map(getSubscriptionField)
 
-    None
+    if (subscriptionFields.isEmpty) None
+    else Some(ObjectType("Subscription", subscriptionFields))
   }
 
   def getAllItemsField(model: Model): Field[ApiUserContext, Unit] = {
     Field(
-      s"all${pluralsCache.pluralName(model)}",
+      camelCase(pluralsCache.pluralName(model)),
       fieldType = ListType(objectTypes(model.name)),
       arguments = objectTypeBuilder.mapToListConnectionArguments(model),
       resolve = (ctx) => {
@@ -113,14 +95,144 @@ case class SchemaBuilderImpl(
     )
   }
 
-  def testField(): Field[ApiUserContext, Unit] = {
+  def getAllItemsConenctionField(model: Model): Field[ApiUserContext, Unit] = {
     Field(
-      "viewer",
-      fieldType = StringType,
-      resolve = _ => akka.pattern.after(FiniteDuration(500, TimeUnit.MILLISECONDS), system.scheduler)(Future.successful("YES")) // "test"
+      s"${camelCase(pluralsCache.pluralName(model))}Connection",
+      fieldType = conectionTypes(model.name),
+      arguments = objectTypeBuilder.mapToListConnectionArguments(model),
+      resolve = (ctx) => {
+        val arguments = objectTypeBuilder.extractQueryArgumentsFromContext(model, ctx)
+
+        DeferredValue(ManyModelDeferred(model, arguments))
+      }
     )
   }
 
+  def getSingleItemField(model: Model): Field[ApiUserContext, Unit] = {
+    val arguments = objectTypeBuilder.mapToUniqueArguments(model)
+
+    Field(
+      camelCase(model.name),
+      fieldType = OptionType(objectTypes(model.name)),
+      arguments = arguments,
+      resolve = (ctx) => {
+
+        val arg = arguments.find(a => ctx.args.argOpt(a.name).isDefined) match {
+          case Some(value) => value
+          case None =>
+            ??? //throw UserAPIErrors.GraphQLArgumentsException(s"None of the following arguments provided: ${arguments.map(_.name)}")
+        }
+
+//        dataResolver
+//          .batchResolveByUnique(model, arg.name, List(ctx.arg(arg).asInstanceOf[Option[_]].get))
+//          .map(_.headOption)
+        // todo: Make OneDeferredResolver.dataItemsToToOneDeferredResultType work with Timestamps
+        OneDeferred(model, arg.name, ctx.arg(arg).asInstanceOf[Option[_]].get)
+      }
+    )
+  }
+
+  def createItemField(model: Model): Field[ApiUserContext, Unit] = {
+
+    val definition = CreateDefinition(project, inputTypesBuilder)
+    val arguments  = definition.getSangriaArguments(model = model)
+
+    Field(
+      s"create${model.name}",
+      fieldType = OptionType(outputTypesBuilder.mapCreateOutputType(model, objectTypes(model.name))),
+      arguments = arguments,
+      resolve = (ctx) => {
+        val mutation = new Create(model = model, project = project, args = ctx.args, dataResolver = masterDataResolver)
+        mutation
+          .run(ctx.ctx)
+          .map(outputTypesBuilder.mapResolve(_, ctx.args))
+      }
+    )
+  }
+
+  def updateItemField(model: Model): Field[ApiUserContext, Unit] = {
+    val definition = UpdateDefinition(project, inputTypesBuilder)
+    val arguments  = definition.getSangriaArguments(model = model) :+ definition.getByArgument(model)
+
+    Field(
+      s"update${model.name}",
+      fieldType = OptionType(
+        outputTypesBuilder
+          .mapUpdateOutputType(model, objectTypes(model.name))),
+      arguments = arguments,
+      resolve = (ctx) => {
+
+        val nodeSelector = definition.extractNodeSelectorFromByArg(model, ctx.args.arg[Map[String, Option[Any]]]("by"))
+
+        new Update(model = model, project = project, args = ctx.args, dataResolver = masterDataResolver, by = nodeSelector)
+          .run(ctx.ctx)
+          .map(outputTypesBuilder.mapResolve(_, ctx.args))
+      }
+    )
+  }
+
+  def updateOrCreateItemField(model: Model): Field[ApiUserContext, Unit] = {
+    val arguments = UpdateOrCreateDefinition(project, inputTypesBuilder).getSangriaArguments(model = model)
+
+    Field(
+      s"updateOrCreate${model.name}",
+      fieldType = OptionType(outputTypesBuilder.mapUpdateOrCreateOutputType(model, objectTypes(model.name))),
+      arguments = arguments,
+      resolve = (ctx) => {
+        new UpdateOrCreate(model = model, project = project, args = ctx.args, dataResolver = masterDataResolver)
+          .run(ctx.ctx)
+          .map(outputTypesBuilder.mapResolve(_, ctx.args))
+      }
+    )
+  }
+
+  def deleteItemField(model: Model): Field[ApiUserContext, Unit] = {
+    val definition = DeleteDefinition(project)
+
+    val arguments = List(definition.getByArgument(model))
+
+    Field(
+      s"delete${model.name}",
+      fieldType = OptionType(outputTypesBuilder.mapDeleteOutputType(model, objectTypes(model.name), onlyId = false)),
+      arguments = arguments,
+      resolve = (ctx) => {
+
+        val nodeSelector = definition.extractNodeSelectorFromByArg(model, ctx.args.arg[Map[String, Option[Any]]]("by"))
+
+        new Delete(model = model,
+                   modelObjectTypes = objectTypeBuilder,
+                   project = project,
+                   args = ctx.args,
+                   dataResolver = masterDataResolver,
+                   by = nodeSelector)
+          .run(ctx.ctx)
+          .map(outputTypesBuilder.mapResolve(_, ctx.args))
+      }
+    )
+  }
+
+  def getSubscriptionField(model: Model): Field[ApiUserContext, Unit] = {
+
+    val objectType = objectTypes(model.name)
+    Field(
+      s"${model.name}",
+      fieldType = OptionType(outputTypesBuilder.mapSubscriptionOutputType(model, objectType)),
+      arguments = List(SangriaQueryArguments.filterSubscriptionArgument(model = model, project = project)),
+      resolve = _ => None
+    )
+
+  }
+
+  lazy val NodeDefinition(nodeInterface: InterfaceType[ApiUserContext, DataItem], nodeField, nodeRes) = Node.definitionById(
+    resolve = (id: String, ctx: Context[ApiUserContext, Unit]) => {
+      dataResolver.resolveByGlobalId(id)
+    },
+    possibleTypes = {
+      objectTypes.values.map(o => PossibleNodeObject(o)).toList
+    }
+  )
+
+  def camelCase(string: String): String = Character.toLowerCase(string.charAt(0)) + string.substring(1)
 }
 
 class PluralsCache {
