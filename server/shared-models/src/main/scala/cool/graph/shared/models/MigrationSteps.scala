@@ -53,3 +53,8 @@ case class DeleteEnum(name: String)                                             
 case class UpdateEnum(name: String, newName: Option[String], values: Option[Vector[String]]) extends EnumMigrationStep
 
 sealed trait RelationMigrationStep extends MigrationStep
+case class CreateRelation(
+    name: String,
+    leftModelName: String,
+    rightModelName: String
+) extends RelationMigrationStep

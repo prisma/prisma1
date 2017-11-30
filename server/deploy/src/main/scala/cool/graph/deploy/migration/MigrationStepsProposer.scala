@@ -28,6 +28,10 @@ case class Renames(
   def getPreviousFieldName(model: String, field: String) = fields.getOrElse((model, field), field)
 }
 
+object Renames {
+  val empty = Renames(Map.empty, Map.empty, Map.empty)
+}
+
 // todo Doesnt propose a thing. It generates the steps, but they cant be rejected or approved. Naming is off.
 case class MigrationStepsProposerImpl(previousProject: Project, nextProject: Project, renames: Renames) {
   import cool.graph.util.Diff._
