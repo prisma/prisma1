@@ -1,15 +1,17 @@
 package cool.graph.deploy.schema
 
-trait SystemApiError extends Exception {
+trait DeployApiError extends Exception {
   def message: String
   def errorCode: Int
+
+  override def getMessage: String = message
 }
 
-abstract class AbstractSystemApiError(val message: String, val errorCode: Int) extends SystemApiError
+abstract class AbstractDeployApiError(val message: String, val errorCode: Int) extends DeployApiError
 
-case class InvalidProjectId(projectId: String) extends AbstractSystemApiError(s"No service with id '$projectId'", 4000)
+case class InvalidProjectId(projectId: String) extends AbstractDeployApiError(s"No service with id '$projectId'", 4000)
 
-case class InvalidName(name: String, entityType: String) extends AbstractSystemApiError(InvalidNames.default(name, entityType), 2008)
+case class InvalidName(name: String, entityType: String) extends AbstractDeployApiError(InvalidNames.default(name, entityType), 2008)
 
 object InvalidNames {
   def mustStartUppercase(name: String, entityType: String): String =
