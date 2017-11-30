@@ -60,3 +60,7 @@ case class CreateRelation(
     leftModelName: String,
     rightModelName: String
 ) extends RelationMigrationStep
+
+case class DeleteRelation(
+    name: String
+) extends MigrationStep
