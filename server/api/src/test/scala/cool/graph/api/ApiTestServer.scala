@@ -154,7 +154,7 @@ trait ApiTestServer extends BeforeAndAfterEach with ApiTestDatabase with SprayJs
 //    val projectLockdownMiddleware = ProjectLockdownMiddleware(project)
     val schemaBuilder  = SchemaBuilder()
     val userContext    = ApiUserContext(clientId = "clientId")
-    val schema         = schemaBuilder(userContext, project, dataResolver, dataResolver)
+    val schema         = schemaBuilder(userContext, project, dataResolver(project), dataResolver(project))
     val renderedSchema = SchemaRenderer.renderSchema(schema)
 
     if (printSchema) println(renderedSchema)
@@ -184,7 +184,7 @@ trait ApiTestServer extends BeforeAndAfterEach with ApiTestDatabase with SprayJs
           userContext = context,
           variables = variables,
 //          exceptionHandler = sangriaErrorHandler,
-          deferredResolver = new DeferredResolverProvider(dataResolver = dataResolver)
+          deferredResolver = new DeferredResolverProvider(dataResolver = dataResolver(project))
 //          middleware = List(apiMetricMiddleware, projectLockdownMiddleware)
         )
         .recover {

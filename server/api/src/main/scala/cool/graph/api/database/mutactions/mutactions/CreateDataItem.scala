@@ -44,7 +44,7 @@ case class CreateDataItem(
     transformedValues
       .find(_.name == field.name)
       .map(v => Some(v.value))
-      .getOrElse(field.defaultValue.map(GCDBValueConverter(field.typeIdentifier, field.isList).fromGCValue))
+      .getOrElse(field.defaultValue.map(GCDBValueConverter().fromGCValue))
   }
 
   override def execute: Future[ClientSqlStatementResult[Any]] = {

@@ -43,7 +43,7 @@ object SchemaDsl {
     def buildClientAndProject(id: String = TestIds.testProjectId, isEjected: Boolean = false): (Client, Project) = {
       val project = buildProject(id)
       val client  = TestClient(project)
-      (client, project.copy(isEjected = isEjected))
+      (client, project)
     }
 
     def buildProject(id: String = TestIds.testProjectId): Project = {
@@ -63,7 +63,7 @@ object SchemaDsl {
       val (models, relations) = build()
       val project             = TestProject.empty
       val client              = TestClient(project)
-      (client, project.copy(isEjected = isEjected))
+      (client, project)
     }
   }
 

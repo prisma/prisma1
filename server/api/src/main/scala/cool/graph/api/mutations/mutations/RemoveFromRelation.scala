@@ -51,10 +51,4 @@ class RemoveFromRelation(relation: Relation, fromModel: Model, project: Project,
 
   override def getReturnValue: Future[ReturnValueResult] = returnValueById(fromModel, aId)
 
-  private def extractActions: List[Action] = {
-    project.actions
-      .filter(_.isActive)
-      .filter(_.triggerMutationModel.exists(_.modelId == fromModel.id))
-      .filter(_.triggerMutationModel.exists(_.mutationType == ActionTriggerMutationModelMutationType.Create))
-  }
 }

@@ -98,15 +98,11 @@ trait ApiTestDatabase extends BeforeAndAfterEach with BeforeAndAfterAll with Awa
                    project: Project,
                    models: List[Model],
                    relations: List[Relation] = List.empty,
-                   rootTokens: List[RootToken] = List.empty,
-                   actions: List[cool.graph.shared.models.Action] = List.empty,
-                   integrations: List[Integration] = List.empty): Unit = {
+                   rootTokens: List[RootToken] = List.empty): Unit = {
     val actualProject = project.copy(
       models = models,
       relations = relations,
-      rootTokens = rootTokens,
-      actions = actions,
-      integrations = integrations
+      rootTokens = rootTokens
     )
 
     setupProject(client, actualProject)

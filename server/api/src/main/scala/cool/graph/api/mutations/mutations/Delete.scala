@@ -6,20 +6,25 @@ import cool.graph.api.ApiDependencies
 import cool.graph.api.database.mutactions.mutactions.ServerSideSubscription
 import cool.graph.api.database.mutactions.{MutactionGroup, Transaction}
 import cool.graph.api.database.{DataItem, DataResolver}
+import cool.graph.api.mutations.MutationTypes.ArgumentValue
 import cool.graph.api.mutations._
-import cool.graph.api.mutations.definitions.DeleteDefinition
+import cool.graph.api.mutations.definitions.{DeleteDefinition, NodeSelector}
 import cool.graph.api.schema.ObjectTypeBuilder
+import cool.graph.gc_values.GCValue
 import cool.graph.shared.models.IdType.Id
 import cool.graph.shared.models.{Model, Project}
 import sangria.schema
-import scaldi.{Injectable, Injector}
 
 import scala.concurrent.Future
 import scala.util.Success
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class Delete[ManyDataItemType](model: Model, modelObjectTypes: ObjectTypeBuilder, project: Project, args: schema.Args, dataResolver: DataResolver)(
-    implicit apiDependencies: ApiDependencies)
+class Delete[ManyDataItemType](model: Model,
+                               modelObjectTypes: ObjectTypeBuilder,
+                               project: Project,
+                               args: schema.Args,
+                               dataResolver: DataResolver,
+                               by: NodeSelector)(implicit apiDependencies: ApiDependencies)
     extends ClientMutation(model, args, dataResolver) {
 
   override val mutationDefinition = DeleteDefinition(project)
@@ -27,30 +32,29 @@ class Delete[ManyDataItemType](model: Model, modelObjectTypes: ObjectTypeBuilder
   implicit val system: ActorSystem             = apiDependencies.system
   implicit val materializer: ActorMaterializer = apiDependencies.materializer
 
-  val id: Id = extractIdFromScalarArgumentValues_!(args, "id")
-
-  var deletedItem: Option[DataItem] = None
-  val requestId: Id                 = "" // dataResolver.requestContext.map(_.requestId).getOrElse("")
+  var deletedItemOpt: Option[DataItem] = None
+  val requestId: Id                    = "" // dataResolver.requestContext.map(_.requestId).getOrElse("")
 
   override def prepareMutactions(): Future[List[MutactionGroup]] = {
     dataResolver
-      .resolveByModelAndIdWithoutValidation(model, id)
+      .resolveByUnique(model, by.fieldName, by.fieldValue)
       .andThen {
-        case Success(x) => deletedItem = x.map(dataItem => dataItem) // todo: replace with GC Values
+        case Success(x) => deletedItemOpt = x.map(dataItem => dataItem) // todo: replace with GC Values
+        // todo: do we need the fromSql stuff?
         //GraphcoolDataTypes.fromSql(dataItem.userData, model.fields)
 
       }
       .map(_ => {
 
-        val sqlMutactions        = SqlMutactions(dataResolver).getMutactionsForDelete(model, project, id, deletedItem.getOrElse(DataItem(id)))
+        val itemToDelete = deletedItemOpt.getOrElse(sys.error("Than node does not exist"))
+
+        val sqlMutactions        = SqlMutactions(dataResolver).getMutactionsForDelete(model, project, itemToDelete.id, itemToDelete)
         val transactionMutaction = Transaction(sqlMutactions, dataResolver)
 
-        val nodeData: Map[String, Any] = deletedItem
-          .map(_.userData)
-          .getOrElse(Map.empty[String, Option[Any]])
+        val nodeData: Map[String, Any] = itemToDelete.userData
           .collect {
             case (key, Some(value)) => (key, value)
-          } + ("id" -> id)
+          } + ("id" -> itemToDelete.id)
 
         val subscriptionMutactions = SubscriptionEvents.extractFromSqlMutactions(project, mutationId, sqlMutactions).toList
 
@@ -64,7 +68,7 @@ class Delete[ManyDataItemType](model: Model, modelObjectTypes: ObjectTypeBuilder
   }
 
   override def getReturnValue: Future[ReturnValueResult] = {
-    val dataItem = deletedItem.get
+    val dataItem = deletedItemOpt.get
     Future.successful(ReturnValue(dataItem))
   }
 }

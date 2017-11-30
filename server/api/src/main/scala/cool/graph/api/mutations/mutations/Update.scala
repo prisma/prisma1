@@ -7,17 +7,17 @@ import cool.graph.api.database.mutactions.mutactions.{ServerSideSubscription, Up
 import cool.graph.api.database.{DataItem, DataResolver}
 import cool.graph.api.database.mutactions.{ClientSqlMutaction, MutactionGroup, Transaction}
 import cool.graph.api.mutations._
-import cool.graph.api.mutations.definitions.UpdateDefinition
+import cool.graph.api.mutations.definitions.{NodeSelector, UpdateDefinition}
 import cool.graph.api.schema.{APIErrors, InputTypesBuilder}
+import cool.graph.gc_values.{GraphQLIdGCValue, StringGCValue}
 import cool.graph.shared.models.IdType.Id
-import cool.graph.shared.models.{Action => ActionModel, _}
+import cool.graph.shared.models.{Model, Project}
 import sangria.schema
-import scaldi.{Injectable, Injector}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class Update(model: Model, project: Project, args: schema.Args, dataResolver: DataResolver)(implicit apiDependencies: ApiDependencies)
+class Update(model: Model, project: Project, args: schema.Args, dataResolver: DataResolver, by: NodeSelector)(implicit apiDependencies: ApiDependencies)
     extends ClientMutation(model, args, dataResolver) {
 
   override val mutationDefinition = UpdateDefinition(project, InputTypesBuilder(project))
@@ -33,11 +33,11 @@ class Update(model: Model, project: Project, args: schema.Args, dataResolver: Da
     CoolArgs(argsPointer, model, project)
   }
 
-  val id: Id            = coolArgs.getFieldValueAs[Id]("id").get.get
+  val id                = by.fieldValue.asInstanceOf[GraphQLIdGCValue].value // todo: pass NodeSelector all the way down
   val requestId: String = "" // dataResolver.requestContext.map(_.requestId).getOrElse("")
 
   def prepareMutactions(): Future[List[MutactionGroup]] = {
-    dataResolver.resolveByModelAndIdWithoutValidation(model, id) map {
+    dataResolver.resolveByUnique(model, by.fieldName, by.fieldValue) map {
       case Some(dataItem) =>
         val validatedDataItem = dataItem // todo: use GC Values
         // = dataItem.copy(userData = GraphcoolDataTypes.fromSql(dataItem.userData, model.fields))

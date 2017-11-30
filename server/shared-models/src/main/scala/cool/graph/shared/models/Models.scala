@@ -2,11 +2,8 @@ package cool.graph.shared.models
 
 import cool.graph.cuid.Cuid
 import cool.graph.gc_values.GCValue
-import cool.graph.shared.models.ActionTriggerMutationModelMutationType.ActionTriggerMutationModelMutationType
 import cool.graph.shared.models.CustomRule.CustomRule
 import cool.graph.shared.models.FieldConstraintType.FieldConstraintType
-import cool.graph.shared.models.IntegrationName.IntegrationName
-import cool.graph.shared.models.IntegrationType.IntegrationType
 import cool.graph.shared.models.LogStatus.LogStatus
 import cool.graph.shared.models.ModelMutationType.ModelMutationType
 import cool.graph.shared.models.ModelOperation.ModelOperation
@@ -97,8 +94,31 @@ case class Log(
     message: String
 )
 
-sealed trait Function
-sealed trait ServerSideSubscriptionFunction extends Function
+sealed trait Function {
+  def id: Id
+  def name: String
+  def isActive: Boolean
+//  def delivery: FunctionDelivery
+//  def binding: FunctionBinding
+}
+
+case class ServerSideSubscriptionFunction(
+    id: Id,
+    name: String,
+    isActive: Boolean,
+    query: String,
+    queryFilePath: Option[String] = None //,
+//                                           delivery: FunctionDelivery
+) extends Function {
+//  def isServerSideSubscriptionFor(model: Model, mutationType: ModelMutationType): Boolean = {
+//    val queryDoc             = QueryParser.parse(query).get
+//    val modelNameInQuery     = QueryTransformer.getModelNameFromSubscription(queryDoc).get
+//    val mutationTypesInQuery = QueryTransformer.getMutationTypesFromSubscription(queryDoc)
+//    model.name == modelNameInQuery && mutationTypesInQuery.contains(mutationType)
+//  }
+//
+//  def binding = FunctionBinding.SERVERSIDE_SUBSCRIPTION
+}
 
 case class Project(
     id: Id,
@@ -111,136 +131,86 @@ case class Project(
     models: List[Model] = List.empty,
     relations: List[Relation] = List.empty,
     enums: List[Enum] = List.empty,
-    actions: List[Action] = List.empty,
     rootTokens: List[RootToken] = List.empty,
-    integrations: List[Integration] = List.empty,
     seats: List[Seat] = List.empty,
     allowQueries: Boolean = true,
     allowMutations: Boolean = true,
-    packageDefinitions: List[PackageDefinition] = List.empty,
     functions: List[Function] = List.empty,
     featureToggles: List[FeatureToggle] = List.empty,
-    typePositions: List[Id] = List.empty,
-    isEjected: Boolean = false,
-    hasGlobalStarPermission: Boolean = false
+    typePositions: List[Id] = List.empty
 ) {
 
-  def actionsFor(modelId: Id, trigger: ActionTriggerMutationModelMutationType): List[Action] = {
-    this.actions.filter { action =>
-      action.isActive &&
-      action.triggerMutationModel.exists(_.modelId == modelId) &&
-      action.triggerMutationModel.exists(_.mutationType == trigger)
-    }
-  }
+  val serverSideSubscriptionFunctions: List[ServerSideSubscriptionFunction] = functions.collect { case x: ServerSideSubscriptionFunction => x }
 
   def serverSideSubscriptionFunctionsFor(model: Model, mutationType: ModelMutationType): Seq[ServerSideSubscriptionFunction] = {
-    ???
+    serverSideSubscriptionFunctions
+      .filter(_.isActive)
+//      .filter(_.isServerSideSubscriptionFor(model, mutationType))
   }
 
-  def hasEnabledAuthProvider: Boolean   = authProviders.exists(_.isEnabled)
-  def authProviders: List[AuthProvider] = integrations.collect { case authProvider: AuthProvider => authProvider }
+  def getServerSideSubscriptionFunction(id: Id): Option[ServerSideSubscriptionFunction] = serverSideSubscriptionFunctions.find(_.id == id)
+  def getServerSideSubscriptionFunction_!(id: Id): ServerSideSubscriptionFunction =
+    getServerSideSubscriptionFunction(id).get //OrElse(throw SystemErrors.InvalidFunctionId(id))
 
-  def searchProviderAlgolia: Option[SearchProviderAlgolia] = {
-    integrations
-      .collect { case searchProviderAlgolia: SearchProviderAlgolia => searchProviderAlgolia }
-      .find(_.name == IntegrationName.SearchProviderAlgolia)
-  }
+  def getFunctionById(id: Id): Option[Function] = functions.find(_.id == id)
+  def getFunctionById_!(id: Id): Function       = getFunctionById(id).get //OrElse(throw SystemErrors.InvalidFunctionId(id))
 
-  def getAuthProviderById(id: Id): Option[AuthProvider] = authProviders.find(_.id == id)
-  def getAuthProviderById_!(id: Id): AuthProvider       = ???
-
-  def getServerSideSubscriptionFunction(id: Id): Option[ServerSideSubscriptionFunction] = ???
-  def getServerSideSubscriptionFunction_!(id: Id): ServerSideSubscriptionFunction       = ???
-
-  def getFunctionById(id: Id): Option[Function] = ???
-  def getFunctionById_!(id: Id): Function       = ???
-
-  def getFunctionByName(name: String): Option[Function] = ???
-  def getFunctionByName_!(name: String): Function       = ???
+  def getFunctionByName(name: String): Option[Function] = functions.find(_.name == name)
+  def getFunctionByName_!(name: String): Function       = getFunctionByName(name).get //OrElse(throw SystemErrors.InvalidFunctionName(name))
 
   def getModelById(id: Id): Option[Model] = models.find(_.id == id)
-  def getModelById_!(id: Id): Model       = ???
+  def getModelById_!(id: Id): Model       = getModelById(id).get //OrElse(throw SystemErrors.InvalidModelId(id))
 
   def getModelByModelPermissionId(id: Id): Option[Model] = models.find(_.permissions.exists(_.id == id))
-  def getModelByModelPermissionId_!(id: Id): Model       = ???
+  def getModelByModelPermissionId_!(id: Id): Model       = getModelByModelPermissionId(id).get //OrElse(throw SystemErrors.InvalidModelPermissionId(id))
 
   def getRelationByRelationPermissionId(id: Id): Option[Relation] = relations.find(_.permissions.exists(_.id == id))
-  def getRelationByRelationPermissionId_!(id: Id): Relation       = ???
-
-  def getActionById(id: Id): Option[Action] = actions.find(_.id == id)
-  def getActionById_!(id: Id): Action       = ???
+  def getRelationByRelationPermissionId_!(id: Id): Relation =
+    relations.find(_.permissions.exists(_.id == id)).get //OrElse(throw SystemErrors.InvalidRelationPermissionId(id))
 
   def getRootTokenById(id: String): Option[RootToken] = rootTokens.find(_.id == id)
-  def getRootTokenById_!(id: String): RootToken       = ???
+  def getRootTokenById_!(id: String): RootToken       = getRootTokenById(id).get //OrElse(throw UserInputErrors.InvalidRootTokenId(id))
 
   def getRootTokenByName(name: String): Option[RootToken] = rootTokens.find(_.name == name)
-  def getRootTokenByName_!(name: String): RootToken       = ???
+  def getRootTokenByName_!(name: String): RootToken       = getRootTokenById(name).get //OrElse(throw UserInputErrors.InvalidRootTokenName(name))
 
   // note: mysql columns are case insensitive, so we have to be as well. But we could make them case sensitive https://dev.mysql.com/doc/refman/5.6/en/case-sensitivity.html
   def getModelByName(name: String): Option[Model] = models.find(_.name.toLowerCase() == name.toLowerCase())
-  def getModelByName_!(name: String): Model       = ???
+  def getModelByName_!(name: String): Model       = getModelByName(name).get //OrElse(throw SystemErrors.InvalidModel(s"No model with name: $name found."))
 
   def getModelByFieldId(id: Id): Option[Model] = models.find(_.fields.exists(_.id == id))
-  def getModelByFieldId_!(id: Id): Model       = ???
+  def getModelByFieldId_!(id: Id): Model       = getModelByFieldId(id).get //OrElse(throw SystemErrors.InvalidModel(s"No model with a field with id: $id found."))
 
-  def getFieldById(id: Id): Option[Field]                        = models.flatMap(_.fields).find(_.id == id)
-  def getFieldById_!(id: Id): Field                              = ???
-  def getFieldByName(model: String, name: String): Option[Field] = getModelByName(model).flatMap(_.getFieldByName(name))
+  def getFieldById(id: Id): Option[Field] = models.flatMap(_.fields).find(_.id == id)
+  def getFieldById_!(id: Id): Field       = getFieldById(id).get //OrElse(throw SystemErrors.InvalidFieldId(id))
 
   def getFieldConstraintById(id: Id): Option[FieldConstraint] = {
     val fields      = models.flatMap(_.fields)
     val constraints = fields.flatMap(_.constraints)
     constraints.find(_.id == id)
   }
-  def getFieldConstraintById_!(id: Id): FieldConstraint = ???
+  def getFieldConstraintById_!(id: Id): FieldConstraint = getFieldConstraintById(id).get //OrElse(throw SystemErrors.InvalidFieldConstraintId(id))
 
   def getEnumById(enumId: String): Option[Enum] = enums.find(_.id == enumId)
-  def getEnumById_!(enumId: String): Enum       = ???
+  def getEnumById_!(enumId: String): Enum       = getEnumById(enumId).get //OrElse(throw SystemErrors.InvalidEnumId(id = enumId))
 
   // note: mysql columns are case insensitive, so we have to be as well
   def getEnumByName(name: String): Option[Enum] = enums.find(_.name.toLowerCase == name.toLowerCase)
 
   def getRelationById(id: Id): Option[Relation] = relations.find(_.id == id)
-  def getRelationById_!(id: Id): Relation       = ???
+  def getRelationById_!(id: Id): Relation       = getRelationById(id).get //OrElse(throw SystemErrors.InvalidRelationId(id))
 
   def getRelationByName(name: String): Option[Relation] = relations.find(_.name == name)
-  def getRelationByName_!(name: String): Relation       = ???
+  def getRelationByName_!(name: String): Relation =
+    getRelationByName(name).get //OrElse(throw SystemErrors.InvalidRelation("There is no relation with name: " + name))
 
   def getRelationFieldMirrorById(id: Id): Option[RelationFieldMirror] = relations.flatMap(_.fieldMirrors).find(_.id == id)
 
   def getFieldByRelationFieldMirrorId(id: Id): Option[Field] = getRelationFieldMirrorById(id).flatMap(mirror => getFieldById(mirror.fieldId))
-  def getFieldByRelationFieldMirrorId_!(id: Id): Field       = ???
+  def getFieldByRelationFieldMirrorId_!(id: Id): Field       = getFieldByRelationFieldMirrorId(id).get //OrElse(throw SystemErrors.InvalidRelationFieldMirrorId(id))
 
   def getRelationByFieldMirrorId(id: Id): Option[Relation] = relations.find(_.fieldMirrors.exists(_.id == id))
-  def getRelationByFieldMirrorId_!(id: Id): Relation       = ???
-
-  def getIntegrationByTypeAndName(integrationType: IntegrationType, name: IntegrationName): Option[Integration] = {
-    integrations.filter(_.integrationType == integrationType).find(_.name == name)
-  }
-
-  def getSearchProviderAlgoliaById(id: Id): Option[SearchProviderAlgolia] = {
-    authProviders
-      .map(_.metaInformation)
-      .collect { case Some(metaInfo: SearchProviderAlgolia) => metaInfo }
-      .find(_.id == id)
-  }
-
-  def getSearchProviderAlgoliaByAlgoliaSyncQueryId_!(id: Id): SearchProviderAlgolia = ???
-
-  def getSearchProviderAlgoliaByAlgoliaSyncQueryId(id: Id): Option[SearchProviderAlgolia] = {
-    integrations
-      .collect { case searchProviderAlgolia: SearchProviderAlgolia => searchProviderAlgolia }
-      .find(_.algoliaSyncQueries.exists(_.id == id))
-  }
-
-  def getAlgoliaSyncQueryById_!(id: Id): AlgoliaSyncQuery = ???
-
-  def getAlgoliaSyncQueryById(id: Id): Option[AlgoliaSyncQuery] = {
-    integrations
-      .collect { case searchProviderAlgolia: SearchProviderAlgolia => searchProviderAlgolia }
-      .flatMap(_.algoliaSyncQueries)
-      .find(_.id == id)
-  }
+  def getRelationByFieldMirrorId_!(id: Id): Relation       = getRelationByFieldMirrorId(id).get //OrElse(throw SystemErrors.InvalidRelationFieldMirrorId(id))
 
   def getFieldsByRelationId(id: Id): List[Field] = models.flatMap(_.fields).filter(f => f.relation.isDefined && f.relation.get.id == id)
 
@@ -291,29 +261,33 @@ case class Project(
   }
 
   def seatByEmail(email: String): Option[Seat] = seats.find(_.email == email)
-  def seatByEmail_!(email: String): Seat       = ???
+  def seatByEmail_!(email: String): Seat       = seatByEmail(email).get //OrElse(throw SystemErrors.InvalidSeatEmail(email))
 
   def seatByClientId(clientId: Id): Option[Seat] = seats.find(_.clientId.contains(clientId))
-  def seatByClientId_!(clientId: Id): Seat       = ???
+  def seatByClientId_!(clientId: Id): Seat       = seatByClientId(clientId).get //OrElse(throw SystemErrors.InvalidSeatClientId(clientId))
 
   def getModelPermissionById(id: Id): Option[ModelPermission] = models.flatMap(_.permissions).find(_.id == id)
-  def getModelPermissionById_!(id: Id): ModelPermission       = ???
+  def getModelPermissionById_!(id: Id): ModelPermission       = getModelPermissionById(id).get //OrElse(throw SystemErrors.InvalidModelPermissionId(id))
 
   def getRelationPermissionById(id: Id): Option[RelationPermission] = relations.flatMap(_.permissions).find(_.id == id)
-  def getRelationPermissionById_!(id: Id): RelationPermission       = ???
+  def getRelationPermissionById_!(id: Id): RelationPermission       = getRelationPermissionById(id).get //OrElse(throw SystemErrors.InvalidRelationPermissionId(id))
 
   def modelPermissions: List[ModelPermission]      = models.flatMap(_.permissions)
   def relationPermissions: Seq[RelationPermission] = relations.flatMap(_.permissions)
 
   def relationPermissionByRelationPermissionId(id: Id): Option[RelationPermission] = relations.flatMap(_.permissions).find(_.id == id)
-  def relationPermissionByRelationPermissionId_!(id: Id): RelationPermission       = ???
+  def relationPermissionByRelationPermissionId_!(id: Id): RelationPermission =
+    relationPermissionByRelationPermissionId(id).get //OrElse(throw SystemErrors.InvalidRelationPermissionId(id))
 
   def relationByRelationPermissionId(id: Id): Option[Relation] = relations.find(_.permissions.exists(_.id == id))
-  def relationByRelationPermissionId_!(id: Id): Relation       = ???
+  def relationByRelationPermissionId_!(id: Id): Relation       = relationByRelationPermissionId(id).get //OrElse(throw SystemErrors.InvalidRelationPermissionId(id))
 
   def allFields: Seq[Field] = models.flatMap(_.fields)
 
-  def hasSchemaNameConflict(name: String, id: String): Boolean = ???
+  def hasSchemaNameConflict(name: String, id: String): Boolean = {
+    val conflictingType = this.models.exists(model => List(s"create${model.name}", s"update${model.name}", s"delete${model.name}").contains(name))
+    conflictingType
+  }
 }
 
 case class ProjectWithClientId(project: Project, clientId: Id) {
@@ -322,43 +296,6 @@ case class ProjectWithClientId(project: Project, clientId: Id) {
 case class ProjectWithClient(project: Project, client: Client)
 
 case class ProjectDatabase(id: Id, region: Region, name: String, isDefaultForRegion: Boolean = false)
-
-trait AuthProviderMetaInformation {
-  val id: String
-}
-
-case class AuthProviderDigits(
-    id: String,
-    consumerKey: String,
-    consumerSecret: String
-) extends AuthProviderMetaInformation
-
-case class AuthProviderAuth0(
-    id: String,
-    domain: String,
-    clientId: String,
-    clientSecret: String
-) extends AuthProviderMetaInformation
-
-case class SearchProviderAlgolia(
-    id: String,
-    subTableId: String,
-    applicationId: String,
-    apiKey: String,
-    algoliaSyncQueries: List[AlgoliaSyncQuery] = List(),
-    isEnabled: Boolean,
-    name: IntegrationName
-) extends Integration {
-  override val integrationType: IntegrationType = IntegrationType.SearchProvider
-}
-
-case class AlgoliaSyncQuery(
-    id: String,
-    indexName: String,
-    fragment: String,
-    isEnabled: Boolean,
-    model: Model
-)
 
 sealed trait AuthenticatedRequest {
   def id: String
@@ -373,38 +310,6 @@ sealed trait AuthenticatedRequest {
 case class AuthenticatedUser(id: String, typeName: String, originalToken: String) extends AuthenticatedRequest
 case class AuthenticatedCustomer(id: String, originalToken: String)               extends AuthenticatedRequest
 case class AuthenticatedRootToken(id: String, originalToken: String)              extends AuthenticatedRequest
-
-object IntegrationType extends Enumeration {
-  type IntegrationType = Value
-  val AuthProvider   = Value("AUTH_PROVIDER")
-  val SearchProvider = Value("SEARCH_PROVIDER")
-}
-
-object IntegrationName extends Enumeration {
-  type IntegrationName = Value
-  val AuthProviderAuth0     = Value("AUTH_PROVIDER_AUTH0")
-  val AuthProviderDigits    = Value("AUTH_PROVIDER_DIGITS")
-  val AuthProviderEmail     = Value("AUTH_PROVIDER_EMAIL")
-  val SearchProviderAlgolia = Value("SEARCH_PROVIDER_ALGOLIA")
-}
-
-case class AuthProvider(
-    id: String,
-    subTableId: String = "this-should-be-set-explicitly",
-    isEnabled: Boolean,
-    name: IntegrationName.IntegrationName, // note: this defines the meta table name
-    metaInformation: Option[AuthProviderMetaInformation]
-) extends Integration {
-  override val integrationType = IntegrationType.AuthProvider
-}
-
-trait Integration {
-  val id: String
-  val subTableId: String
-  val isEnabled: Boolean
-  val integrationType: IntegrationType.IntegrationType
-  val name: IntegrationName.IntegrationName
-}
 
 case class ModelPermission(
     id: Id,
@@ -562,9 +467,6 @@ case class Model(
   def getFieldByName(name: String): Option[Field] = fields.find(_.name == name)
 
   def getPermissionById(id: Id): Option[ModelPermission] = permissions.find(_.id == id)
-
-  lazy val getCamelCasedName: String = Character.toLowerCase(name.charAt(0)) + name.substring(1)
-  lazy val isUserModel: Boolean      = name == "User"
 
   lazy val hasQueryPermissions: Boolean = permissions.exists(permission => permission.isCustom && permission.isActive)
 }
@@ -779,10 +681,10 @@ case class Relation(
   def isSameFieldSameModelRelation(project: Project): Boolean = getModelAField(project) == getModelBField(project)
 
   def getModelA(project: Project): Option[Model] = project.getModelById(modelAId)
-  def getModelA_!(project: Project): Model       = ??? //getModelA(project).getOrElse(throw SystemErrors.InvalidRelation("A relation should have a valid Model A."))
+  def getModelA_!(project: Project): Model       = getModelA(project).get //OrElse(throw SystemErrors.InvalidRelation("A relation should have a valid Model A."))
 
   def getModelB(project: Project): Option[Model] = project.getModelById(modelBId)
-  def getModelB_!(project: Project): Model       = ??? //getModelB(project).getOrElse(throw SystemErrors.InvalidRelation("A relation should have a valid Model B."))
+  def getModelB_!(project: Project): Model       = getModelB(project).get //OrElse(throw SystemErrors.InvalidRelation("A relation should have a valid Model B."))
 
   def getOtherModel_!(project: Project, model: Model): Model = {
     model.id match {
@@ -804,14 +706,14 @@ case class Relation(
 
   def getModelAField(project: Project): Option[Field] = modelFieldFor(project, modelAId, RelationSide.A)
   def getModelAField_!(project: Project): Field =
-    ??? //getModelAField(project).getOrElse(throw SystemErrors.InvalidRelation("A relation must have a field on model A."))
+    getModelAField(project).get //OrElse(throw SystemErrors.InvalidRelation("A relation must have a field on model A."))
 
   def getModelBField(project: Project): Option[Field] = {
     // note: defaults to modelAField to handle same model, same field relations
     modelFieldFor(project, modelBId, RelationSide.B).orElse(getModelAField(project))
   }
   def getModelBField_!(project: Project): Field =
-    ??? //getModelBField(project).getOrElse(throw SystemErrors.InvalidRelation("This must return a Model, if not Model B then Model A."))
+    getModelBField(project).get //OrElse(throw SystemErrors.InvalidRelation("This must return a Model, if not Model B then Model A."))
 
   private def modelFieldFor(project: Project, modelId: String, relationSide: RelationSide.Value): Option[Field] = {
     for {
@@ -883,58 +785,3 @@ object ModelOperation extends Enumeration {
 }
 
 case class RootToken(id: Id, token: String, name: String, created: DateTime)
-
-object ActionTriggerType extends Enumeration {
-  type ActionTriggerType = Value
-  val MutationModel    = Value("MUTATION_MODEL")
-  val MutationRelation = Value("MUTATION_RELATION")
-}
-
-object ActionHandlerType extends Enumeration {
-  type ActionHandlerType = Value
-  val Webhook = Value("WEBHOOK")
-}
-
-case class Action(
-    id: Id,
-    isActive: Boolean,
-    triggerType: ActionTriggerType.Value,
-    handlerType: ActionHandlerType.Value,
-    description: Option[String] = None,
-    handlerWebhook: Option[ActionHandlerWebhook] = None,
-    triggerMutationModel: Option[ActionTriggerMutationModel] = None,
-    triggerMutationRelation: Option[ActionTriggerMutationRelation] = None
-)
-
-case class ActionHandlerWebhook(
-    id: Id,
-    url: String,
-    isAsync: Boolean
-)
-
-object ActionTriggerMutationModelMutationType extends Enumeration {
-  type ActionTriggerMutationModelMutationType = Value
-  val Create = Value("CREATE")
-  val Update = Value("UPDATE")
-  val Delete = Value("DELETE")
-}
-
-case class ActionTriggerMutationModel(
-    id: Id,
-    modelId: String,
-    mutationType: ActionTriggerMutationModelMutationType.Value,
-    fragment: String
-)
-
-object ActionTriggerMutationRelationMutationType extends Enumeration {
-  type ActionTriggerMutationRelationMutationType = Value
-  val Add    = Value("ADD")
-  val Remove = Value("REMOVE")
-}
-
-case class ActionTriggerMutationRelation(
-    id: Id,
-    relationId: String,
-    mutationType: ActionTriggerMutationRelationMutationType.Value,
-    fragment: String
-)

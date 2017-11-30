@@ -157,13 +157,19 @@ case class InputTypesBuilder(project: Project) {
 
   // COMPUTE METHODS
 
+  def computeByArguments(model: Model): List[SchemaArgument] = {
+    model.fields.filter(_.isUnique).map { field =>
+      SchemaArgument(field.name, SchemaBuilderUtils.mapToOptionalInputType(field), field.description, field)
+    }
+  }
+
   def computeScalarSchemaArgumentsForCreate(model: Model): List[SchemaArgument] = {
     val filteredModel = model.filterFields(_.isWritable)
     computeScalarSchemaArguments(filteredModel, FieldToInputTypeMapper.mapForCreateCase)
   }
 
   def computeScalarSchemaArgumentsForUpdate(model: Model): List[SchemaArgument] = {
-    val filteredModel = model.filterFields(f => f.isWritable || f.name == "id")
+    val filteredModel = model.filterFields(f => f.isWritable)
     computeScalarSchemaArguments(filteredModel, FieldToInputTypeMapper.mapForUpdateCase)
   }
 
@@ -187,8 +193,6 @@ case class InputTypesBuilder(project: Project) {
 
       if (relationMustBeOmitted) {
         List.empty
-      } else if (project.hasEnabledAuthProvider && subModel.isUserModel) {
-        List(idArg)
       } else if (!subModel.fields.exists(f => f.isWritable && !f.relation.exists(_ => !f.isList && f.isRelationWithId(relation.id)))) {
         List(idArg)
       } else {
@@ -207,9 +211,7 @@ case class InputTypesBuilder(project: Project) {
         inputType = manyRelationIdsFieldType
       )
 
-      if (project.hasEnabledAuthProvider && subModel.isUserModel) {
-        List(idsArg)
-      } else if (!subModel.fields.exists(f => f.isWritable && !f.relation.exists(rel => !f.isList && f.isRelationWithId(relation.id)))) {
+      if (!subModel.fields.exists(f => f.isWritable && !f.relation.exists(rel => !f.isList && f.isRelationWithId(relation.id)))) {
         List(idsArg)
       } else {
         val inputObjectType = cachedInputObjectTypeForCreate(subModel, omitRelation = Some(relation))

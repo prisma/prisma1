@@ -3,9 +3,11 @@ package cool.graph.api.database
 import cool.graph.api.ApiDependencies
 import cool.graph.api.database.DatabaseQueryBuilder._
 import cool.graph.api.schema.APIErrors
+import cool.graph.gc_values.{GCValue, LeafGCValue}
 import cool.graph.shared.models.IdType.Id
 import cool.graph.shared.models.TypeIdentifier.TypeIdentifier
 import cool.graph.shared.models._
+import cool.graph.util.gc_value.GCDBValueConverter
 import slick.dbio.Effect.Read
 import slick.dbio.{DBIOAction, Effect, NoStream}
 import slick.jdbc.MySQLProfile.api._
@@ -64,7 +66,7 @@ case class DataResolver(project: Project, useMasterDatabaseOnly: Boolean = false
   }
 
   def resolveByUnique(model: Model, key: String, value: Any): Future[Option[DataItem]] = {
-    batchResolveByUnique(model, key, List(value)).map(_.headOption)
+    batchResolveByUnique(model, key, List(unwrapGcValue(value))).map(_.headOption)
   }
 
   def resolveByUniqueWithoutValidation(model: Model, key: String, value: Any): Future[Option[DataItem]] = {
@@ -269,6 +271,13 @@ case class DataResolver(project: Project, useMasterDatabaseOnly: Boolean = false
     })
 
     res
+  }
+
+  private def unwrapGcValue(value: Any): Any = {
+    value match {
+      case x: GCValue => GCDBValueConverter().fromGCValue(x)
+      case x          => x
+    }
   }
 }
 

@@ -28,7 +28,7 @@ import scala.util.control.NonFatal
 /**
   * 1. DBValue <-> GCValue - This is used write and read GCValues to typed Db fields in the ClientDB
   */
-case class GCDBValueConverter(typeIdentifier: TypeIdentifier, isList: Boolean) extends GCConverter[Any] {
+case class GCDBValueConverter() extends GCConverter[Any] {
 
   override def toGCValue(t: Any): Or[GCValue, InvalidValueForScalarType] = {
     ???
@@ -286,6 +286,40 @@ case class GCStringConverter(typeIdentifier: TypeIdentifier, isList: Boolean) ex
       case value       => Some(fromGCValue(value))
     }
   }
+}
+
+/**
+  * 7. Any <-> GCValue - This is used to transform Sangria arguments
+  */
+case class GCAnyConverter(typeIdentifier: TypeIdentifier, isList: Boolean) extends GCConverter[Any] {
+  import OtherGCStuff._
+
+  override def toGCValue(t: Any): Or[GCValue, InvalidValueForScalarType] = {
+    try {
+      val result = (t, typeIdentifier) match {
+        case (_: NullValue, _)                                                        => NullGCValue
+        case (x: String, _) if x == "null" && typeIdentifier != TypeIdentifier.String => NullGCValue
+        case (x: String, TypeIdentifier.String)                                       => StringGCValue(x)
+        case (x: BigInt, TypeIdentifier.Int)                                          => IntGCValue(x.toInt)
+        case (x: BigInt, TypeIdentifier.Float)                                        => FloatGCValue(x.toDouble)
+        case (x: BigDecimal, TypeIdentifier.Float)                                    => FloatGCValue(x.toDouble)
+        case (x: Float, TypeIdentifier.Float)                                         => FloatGCValue(x)
+        case (x: Boolean, TypeIdentifier.Boolean)                                     => BooleanGCValue(x)
+        case (x: String, TypeIdentifier.DateTime)                                     => DateTimeGCValue(new DateTime(x, DateTimeZone.UTC))
+        case (x: String, TypeIdentifier.GraphQLID)                                    => GraphQLIdGCValue(x)
+        case (x: String, TypeIdentifier.Enum)                                         => EnumGCValue(x)
+        case (x: String, TypeIdentifier.Json)                                         => JsonGCValue(Json.parse(x))
+        case (x: List[Any], _) if isList                                              => sequence(x.map(this.toGCValue).toVector).map(seq => ListGCValue(seq)).get
+        case _                                                                        => sys.error("Error in toGCValue. Value: " + t)
+      }
+
+      Good(result)
+    } catch {
+      case NonFatal(_) => Bad(InvalidValueForScalarType(t.toString, typeIdentifier.toString))
+    }
+  }
+
+  override def fromGCValue(t: GCValue): Any = ???
 }
 
 /**

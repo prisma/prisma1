@@ -1,24 +1,19 @@
 package cool.graph.api.schema
 
-//import cool.graph.DataItem
-//import cool.graph.client.database.DeferredTypes.{CountToManyDeferred, SimpleConnectionOutputType}
-//import cool.graph.client.database.QueryArguments
-//import cool.graph.client.schema.SchemaModelObjectTypesBuilder
-//import cool.graph.client.{SangriaQueryArguments, UserContext}
 import cool.graph.api.schema.CustomScalarTypes.{DateTimeType, JsonType}
 import cool.graph.api.database._
-import cool.graph.api.database.DeferredTypes.{CountToManyDeferred, ToManyDeferred, ToOneDeferred}
+import cool.graph.api.database.DeferredTypes.{CountManyModelDeferred, CountToManyDeferred, ToManyDeferred, ToOneDeferred}
 import cool.graph.api.database.Types.DataItemFilterCollection
 import cool.graph.shared.models
 import cool.graph.shared.models.{Field, Model, TypeIdentifier}
 import org.joda.time.{DateTime, DateTimeZone}
 import org.joda.time.format.DateTimeFormat
 import sangria.schema.{Field => SangriaField, _}
-import scaldi.Injector
 import spray.json.DefaultJsonProtocol._
 import spray.json.{JsValue, _}
 
 import scala.util.{Failure, Success, Try}
+import scala.concurrent.ExecutionContext.Implicits.global
 
 class ObjectTypeBuilder(project: models.Project,
                         nodeInterface: Option[InterfaceType[ApiUserContext, DataItem]] = None,
@@ -39,6 +34,33 @@ class ObjectTypeBuilder(project: models.Project,
     project.models
       .map(model => (model.name, modelToObjectType(model)))
       .toMap
+
+  val modelConnectionTypes = project.models
+    .map(model => (model.name, modelToConnectionType(model).connectionType))
+    .toMap
+
+  def modelToConnectionType(model: Model): IdBasedConnectionDefinition[ApiUserContext, IdBasedConnection[DataItem], DataItem] = {
+    IdBasedConnection.definition[ApiUserContext, IdBasedConnection, DataItem](
+      name = modelPrefix + model.name,
+      nodeType = modelObjectTypes(model.name),
+      connectionFields = List(
+        sangria.schema.Field(
+          "count",
+          IntType,
+          Some("Count of filtered result set without considering pagination arguments"),
+          resolve = ctx => {
+            val countArgs = ctx.value.parent.args.map(args => SangriaQueryArguments.createSimpleQueryArguments(None, None, None, None, None, args.filter, None))
+
+            ctx.value.parent match {
+              case ConnectionParentElement(Some(nodeId), Some(field), _) =>
+                CountToManyDeferred(field, nodeId, countArgs)
+              case _ =>
+                CountManyModelDeferred(model, countArgs)
+            }
+          }
+        ))
+    )
+  }
 
   protected def modelToObjectType(model: models.Model): ObjectType[ApiUserContext, DataItem] = {
 
@@ -67,20 +89,6 @@ class ObjectTypeBuilder(project: models.Project,
           case _                              => valClass.isAssignableFrom(value.getClass)
       },
       astDirectives = Vector.empty
-    )
-  }
-
-  def mapCustomMutationField(field: models.Field): SangriaField[ApiUserContext, DataItem] = {
-
-    SangriaField(
-      field.name,
-      fieldType = mapToOutputType(None, field),
-      description = field.description,
-      arguments = List(),
-      resolve = (ctx: Context[ApiUserContext, DataItem]) => {
-        mapToOutputResolve(None, field)(ctx)
-      },
-      tags = List()
     )
   }
 
@@ -187,6 +195,16 @@ class ObjectTypeBuilder(project: models.Project,
     )
   }
 
+  def mapToUniqueArguments(model: models.Model): List[Argument[_]] = {
+
+    import cool.graph.util.coolSangria.FromInputImplicit.DefaultScalaResultMarshaller
+
+    model.fields
+      .filter(!_.isList)
+      .filter(_.isUnique)
+      .map(field => Argument(field.name, SchemaBuilderUtils.mapToOptionalInputType(field), description = field.description.getOrElse("")))
+  }
+
   def mapToSingleConnectionArguments(model: Model): List[Argument[Option[Any]]] = {
     import SangriaQueryArguments._
 
@@ -237,7 +255,7 @@ class ObjectTypeBuilder(project: models.Project,
       .asInstanceOf[DataItemFilterCollection]
   }
 
-  def extractQueryArgumentsFromContext[C <: ApiUserContext](model: Model, ctx: Context[C, Unit]): Option[QueryArguments] = {
+  def extractQueryArgumentsFromContext(model: Model, ctx: Context[ApiUserContext, Unit]): Option[QueryArguments] = {
     val skipOpt = ctx.argOpt[Int]("skip")
 
     val rawFilterOpt: Option[Map[String, Any]] = ctx.argOpt[Map[String, Any]]("filter")
@@ -262,6 +280,24 @@ class ObjectTypeBuilder(project: models.Project,
         .createSimpleQueryArguments(skipOpt, afterOpt, firstOpt, beforeOpt, lastOpt, filterOpt, orderByOpt))
   }
 
+  def extractUniqueArgument(model: models.Model, ctx: Context[ApiUserContext, Unit]): Argument[_] = {
+
+    import cool.graph.util.coolSangria.FromInputImplicit.DefaultScalaResultMarshaller
+
+    val args = model.fields
+      .filter(!_.isList)
+      .filter(_.isUnique)
+      .map(field => Argument(field.name, SchemaBuilderUtils.mapToOptionalInputType(field), description = field.description.getOrElse("")))
+
+    val arg = args.find(a => ctx.args.argOpt(a.name).isDefined) match {
+      case Some(value) => value
+      case None =>
+        ??? //throw UserAPIErrors.GraphQLArgumentsException(s"None of the following arguments provided: ${args.map(_.name)}")
+    }
+
+    arg
+  }
+
   def mapToOutputResolve[C <: ApiUserContext](model: Option[models.Model], field: models.Field)(
       ctx: Context[C, DataItem]): sangria.schema.Action[ApiUserContext, _] = {
 
@@ -271,11 +307,12 @@ class ObjectTypeBuilder(project: models.Project,
       val arguments = extractQueryArgumentsFromContext(field.relatedModel(project).get, ctx.asInstanceOf[Context[ApiUserContext, Unit]])
 
       if (field.isList) {
-        return ToManyDeferred(
-          field,
-          item.id,
-          arguments
-        )
+        return DeferredValue(
+          ToManyDeferred(
+            field,
+            item.id,
+            arguments
+          )).map(_.toNodes)
       }
       return ToOneDeferred(field, item.id, arguments)
     }
