@@ -1,10 +1,12 @@
 package cool.graph.deploy.schema.mutations
 
 import cool.graph.deploy.database.persistence.ProjectPersistence
+import cool.graph.deploy.migration.validation.{SchemaError, SchemaSyntaxValidator}
 import cool.graph.deploy.migration.{DesiredProjectInferer, MigrationStepsProposer, RenameInferer}
 import cool.graph.shared.models.{MigrationSteps, Project}
 import sangria.parser.QueryParser
 
+import scala.collection.Seq
 import scala.concurrent.{ExecutionContext, Future}
 
 case class DeployMutation(
@@ -21,7 +23,26 @@ case class DeployMutation(
 
   val graphQlSdl = QueryParser.parse(args.types).get
 
+  val validator    = SchemaSyntaxValidator(args.types)
+  val schemaErrors = validator.validate()
+
   override def execute: Future[MutationResult[DeployMutationPayload]] = {
+    if (schemaErrors.nonEmpty) {
+      Future.successful {
+        MutationSuccess(
+          DeployMutationPayload(
+            clientMutationId = args.clientMutationId,
+            project = project,
+            steps = MigrationSteps.empty,
+            errors = schemaErrors
+          ))
+      }
+    } else {
+      performDeployment
+    }
+  }
+
+  private def performDeployment: Future[MutationSuccess[DeployMutationPayload]] = {
     for {
       desiredProject <- desiredProjectInferer.infer(baseProject = project, graphQlSdl).toFuture
       renames        = renameInferer.infer(graphQlSdl)
@@ -32,7 +53,7 @@ case class DeployMutation(
             Future.successful(())
           }
     } yield {
-      MutationSuccess(DeployMutationPayload(args.clientMutationId, desiredProject, migrationSteps))
+      MutationSuccess(DeployMutationPayload(args.clientMutationId, desiredProject, migrationSteps, schemaErrors))
     }
   }
 }
@@ -47,7 +68,8 @@ case class DeployMutationInput(
 case class DeployMutationPayload(
     clientMutationId: Option[String],
     project: Project,
-    steps: MigrationSteps
+    steps: MigrationSteps,
+    errors: Seq[SchemaError]
 ) extends sangria.relay.Mutation
 
 /**
