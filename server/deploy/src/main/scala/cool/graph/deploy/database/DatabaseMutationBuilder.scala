@@ -109,6 +109,19 @@ object DatabaseMutationBuilder {
     sqlu"ALTER TABLE  `#$projectId`.`#$tableName` DROP INDEX `#${columnName}_UNIQUE`"
   }
 
+  def createRelationTable(projectId: String, tableName: String, aTableName: String, bTableName: String) = {
+    val idCharset = charsetTypeForScalarTypeIdentifier(isList = false, TypeIdentifier.GraphQLID)
+
+    sqlu"""CREATE TABLE `#$projectId`.`#$tableName` (`id` CHAR(25) #$idCharset NOT NULL,
+           PRIMARY KEY (`id`), UNIQUE INDEX `id_UNIQUE` (`id` ASC),
+    `A` CHAR(25) #$idCharset NOT NULL, INDEX `A` (`A` ASC),
+    `B` CHAR(25) #$idCharset NOT NULL, INDEX `B` (`B` ASC),
+    UNIQUE INDEX `AB_unique` (`A` ASC, `B` ASC),
+    FOREIGN KEY (A) REFERENCES `#$projectId`.`#$aTableName`(id) ON DELETE CASCADE,
+    FOREIGN KEY (B) REFERENCES `#$projectId`.`#$bTableName`(id) ON DELETE CASCADE)
+    DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"""
+  }
+
   // note: utf8mb4 requires up to 4 bytes per character and includes full utf8 support, including emoticons
   // utf8 requires up to 3 bytes per character and does not have full utf8 support.
   // mysql indexes have a max size of 767 bytes or 191 utf8mb4 characters.

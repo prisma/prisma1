@@ -44,10 +44,6 @@ case class MigrationApplierImpl(
       case x: UpdateModel =>
         executeClientMutaction(RenameModelTable(projectId = project.id, oldName = x.name, newName = x.newName))
 
-      case x: EnumMigrationStep =>
-        println(s"migration step of type ${x.getClass.getSimpleName} does not need to be applied to the client database. Will do nothing.")
-        Future.successful(())
-
       case x: CreateField =>
         val model = project.getModelByName_!(x.name)
         val field = model.getFieldByName_!(x.name)
@@ -65,9 +61,20 @@ case class MigrationApplierImpl(
         val oldField   = oldProject.getFieldByName_!(x.model, x.name)
         executeClientMutaction(UpdateColumn(project.id, model, oldField, newField))
 
-      case x =>
-        println(s"migration step of type ${x.getClass.getSimpleName} is not implemented yet. Will ignore it.")
+      case x: EnumMigrationStep =>
+        println(s"migration step of type ${x.getClass.getSimpleName} does not need to be applied to the client database. Will do nothing.")
         Future.successful(())
+
+      case x: CreateRelation =>
+        val relation = project.getRelationByName_!(x.name)
+        executeClientMutaction(CreateRelationTable(project, relation))
+
+      case x: DeleteRelation =>
+        val relation = project.getRelationByName_!(x.name)
+        executeClientMutaction(DeleteRelationTable(project, relation))
+//      case x =>
+//        println(s"migration step of type ${x.getClass.getSimpleName} is not implemented yet. Will ignore it.")
+//        Future.successful(())
     }
   }
 
