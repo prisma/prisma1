@@ -15,6 +15,12 @@ object SchemaDsl {
   case class SchemaBuilder(modelBuilders: Buffer[ModelBuilder] = Buffer.empty,
                            enums: Buffer[Enum] = Buffer.empty,
                            functions: Buffer[cool.graph.shared.models.Function] = Buffer.empty) {
+
+    def apply(fn: SchemaBuilder => Unit): Project = {
+      fn(this)
+      this.buildProject()
+    }
+
     def model(name: String): ModelBuilder = {
       modelBuilders.find(_.name == name).getOrElse {
         val newModelBuilder = ModelBuilder(name)
