@@ -130,13 +130,13 @@ case class MigrationStepsProposerImpl(previousProject: Project, nextProject: Pro
 
   lazy val fieldsToDelete: Vector[DeleteField] = {
     for {
-      nextModel            <- nextProject.models.toVector
-      previousModelName    = renames.getPreviousModelName(nextModel.name)
-      previousModel        <- previousProject.getModelByName(previousModelName).toVector
-      fieldOfPreviousModel <- previousModel.fields.toVector
-      previousFieldName    = renames.getPreviousFieldName(previousModelName, fieldOfPreviousModel.name)
-      if nextModel.getFieldByName(previousFieldName).isEmpty
-    } yield DeleteField(model = nextModel.name, name = fieldOfPreviousModel.name)
+      previousModel <- previousProject.models.toVector
+      previousField <- previousModel.fields
+      nextModelName = renames.getNextModelName(previousModel.name)
+      nextFieldName = renames.getNextFieldName(previousModel.name, previousField.name)
+      nextModel     <- nextProject.getModelByName(nextModelName)
+      if nextProject.getFieldByName(nextModelName, nextFieldName).isEmpty
+    } yield DeleteField(model = nextModel.name, name = previousField.name)
   }
 
   lazy val relationsToCreate: Vector[CreateRelation] = {
