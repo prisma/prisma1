@@ -258,4 +258,55 @@ class MigrationStepsProposerSpec extends FlatSpec with Matchers with AwaitUtils 
       UpdateField("Test", "e", None, None, None, None, Some(true), None, None, None)
     )
   }
+
+  "Creating Relations" should "create CreateRelation and CreateField migration steps" in {
+    val previousProject = SchemaBuilder() { schema =>
+      schema.model("Comment").field("text", _.String)
+      schema
+        .model("Todo")
+        .field("title", _.String)
+    }
+
+    val nextProject = SchemaBuilder() { schema =>
+      val comment = schema.model("Comment").field("text", _.String)
+      schema
+        .model("Todo")
+        .field("title", _.String)
+        .oneToManyRelation_!("comments", "todo", comment)
+    }
+
+    val proposer               = MigrationStepsProposerImpl(previousProject, nextProject, Renames.empty)
+    val result: MigrationSteps = proposer.evaluate()
+
+    result.steps.length shouldBe 3
+    result.steps should contain allOf (
+      CreateField(
+        model = "Todo",
+        name = "comments",
+        typeName = "Relation",
+        isRequired = false,
+        isList = true,
+        isUnique = false,
+        relation = Some("TodoToComment"),
+        defaultValue = None,
+        enum = None
+      ),
+      CreateField(
+        model = "Comment",
+        name = "todo",
+        typeName = "Relation",
+        isRequired = true,
+        isList = false,
+        isUnique = false,
+        relation = Some("TodoToComment"),
+        defaultValue = None,
+        enum = None
+      ),
+      CreateRelation(
+        name = "TodoToComment",
+        leftModelName = "Todo",
+        rightModelName = "Comment"
+      )
+    )
+  }
 }

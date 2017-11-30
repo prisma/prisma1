@@ -37,7 +37,7 @@ case class MigrationStepsProposerImpl(previousProject: Project, nextProject: Pro
   import cool.graph.util.Diff._
 
   def evaluate(): MigrationSteps = {
-    MigrationSteps(modelsToCreate ++ modelsToUpdate ++ modelsToDelete ++ fieldsToCreate ++ fieldsToDelete ++ fieldsToUpdate)
+    MigrationSteps(modelsToCreate ++ modelsToUpdate ++ modelsToDelete ++ fieldsToCreate ++ fieldsToDelete ++ fieldsToUpdate ++ relationsToCreate)
   }
 
   lazy val modelsToCreate: Vector[CreateModel] = {
@@ -87,8 +87,8 @@ case class MigrationStepsProposerImpl(previousProject: Project, nextProject: Pro
         isList = fieldOfNextModel.isList,
         isUnique = fieldOfNextModel.isUnique,
         defaultValue = fieldOfNextModel.defaultValue.map(_.toString),
-        relation = None,
-        enum = None
+        relation = fieldOfNextModel.relation.map(_.name),
+        enum = fieldOfNextModel.enum.map(_.name)
       )
     }
   }
@@ -128,6 +128,24 @@ case class MigrationStepsProposerImpl(previousProject: Project, nextProject: Pro
       previousFieldName    = renames.getPreviousFieldName(previousModelName, fieldOfPreviousModel.name)
       if nextModel.getFieldByName(previousFieldName).isEmpty
     } yield DeleteField(model = nextModel.name, name = fieldOfPreviousModel.name)
+  }
+
+  lazy val relationsToCreate: Vector[CreateRelation] = {
+    def containsRelation(project: Project, relation: Relation): Boolean = {
+      project.relations.exists { rel =>
+        rel.name == relation.name && rel.modelAId == relation.modelAId && rel.modelBId == relation.modelBId
+      }
+    }
+    for {
+      nextRelation <- nextProject.relations.toVector
+      if !containsRelation(previousProject, nextRelation)
+    } yield {
+      CreateRelation(
+        name = nextRelation.name,
+        leftModelName = nextRelation.modelAId,
+        rightModelName = nextRelation.modelBId
+      )
+    }
   }
 
   lazy val emptyModel = Model(
