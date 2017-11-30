@@ -3,7 +3,6 @@ package cool.graph.deploy.migration
 import cool.graph.deploy.InternalTestDatabase
 import cool.graph.shared.models._
 import cool.graph.shared.project_dsl.SchemaDsl.SchemaBuilder
-import cool.graph.shared.project_dsl.TestProject
 import cool.graph.utils.await.AwaitUtils
 import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers}
 
@@ -15,17 +14,12 @@ class MigrationStepsProposerSpec extends FlatSpec with Matchers with AwaitUtils 
   "No changes" should "create no migration steps" in {
     val renames = Renames.empty
 
-    val schemaA = SchemaBuilder()
-    schemaA.model("Test").field("a", _.String).field("b", _.Int)
-
-    val schemaB = SchemaBuilder()
-    schemaB.model("Test").field("a", _.String).field("b", _.Int)
-
-    val (modelsA, _) = schemaA.build()
-    val (modelsB, _) = schemaB.build()
-
-    val previousProject: Project = TestProject().copy(models = modelsA.toList)
-    val nextProject              = TestProject().copy(models = modelsB.toList)
+    val previousProject = SchemaBuilder() { schema =>
+      schema.model("Test").field("a", _.String).field("b", _.Int)
+    }
+    val nextProject = SchemaBuilder() { schema =>
+      schema.model("Test").field("a", _.String).field("b", _.Int)
+    }
 
     val proposer               = MigrationStepsProposerImpl(previousProject, nextProject, renames)
     val result: MigrationSteps = proposer.evaluate()
@@ -36,23 +30,17 @@ class MigrationStepsProposerSpec extends FlatSpec with Matchers with AwaitUtils 
   "Creating models" should "create CreateModel and CreateField migration steps" in {
     val renames = Renames.empty
 
-    val schemaA = SchemaBuilder()
-    schemaA.model("Test").field("a", _.String).field("b", _.Int)
-
-    val schemaB = SchemaBuilder()
-    schemaB.model("Test").field("a", _.String).field("b", _.Int)
-    schemaB.model("Test2").field("c", _.String).field("d", _.Int)
-
-    val (modelsA, _) = schemaA.build()
-    val (modelsB, _) = schemaB.build()
-
-    val previousProject: Project = TestProject().copy(models = modelsA.toList)
-    val nextProject              = TestProject().copy(models = modelsB.toList)
+    val previousProject = SchemaBuilder() { schema =>
+      schema.model("Test").field("a", _.String).field("b", _.Int)
+    }
+    val nextProject = SchemaBuilder() { schema =>
+      schema.model("Test").field("a", _.String).field("b", _.Int)
+      schema.model("Test2").field("c", _.String).field("d", _.Int)
+    }
 
     val proposer               = MigrationStepsProposerImpl(previousProject, nextProject, renames)
     val result: MigrationSteps = proposer.evaluate()
 
-    println(result.steps)
     result.steps.length shouldBe 4
     result.steps should contain allOf (
       CreateModel("Test2"),
@@ -65,23 +53,18 @@ class MigrationStepsProposerSpec extends FlatSpec with Matchers with AwaitUtils 
   "Deleting models" should "create DeleteModel migration steps" in {
     val renames = Renames.empty
 
-    val schemaA = SchemaBuilder()
-    schemaA.model("Test").field("a", _.String).field("b", _.Int)
-    schemaA.model("Test2").field("c", _.String).field("d", _.Int)
+    val previousProject = SchemaBuilder() { schema =>
+      schema.model("Test").field("a", _.String).field("b", _.Int)
+      schema.model("Test2").field("c", _.String).field("d", _.Int)
+    }
 
-    val schemaB = SchemaBuilder()
-    schemaB.model("Test").field("a", _.String).field("b", _.Int)
-
-    val (modelsA, _) = schemaA.build()
-    val (modelsB, _) = schemaB.build()
-
-    val previousProject: Project = TestProject().copy(models = modelsA.toList)
-    val nextProject              = TestProject().copy(models = modelsB.toList)
+    val nextProject = SchemaBuilder() { schema =>
+      schema.model("Test").field("a", _.String).field("b", _.Int)
+    }
 
     val proposer               = MigrationStepsProposerImpl(previousProject, nextProject, renames)
     val result: MigrationSteps = proposer.evaluate()
 
-    println(result.steps)
     result.steps.length shouldBe 1
     result.steps.last shouldBe DeleteModel("Test2")
   }
@@ -91,22 +74,16 @@ class MigrationStepsProposerSpec extends FlatSpec with Matchers with AwaitUtils 
       models = Vector(Rename(previous = "Test", next = "Test2"))
     )
 
-    val schemaA = SchemaBuilder()
-    schemaA.model("Test").field("a", _.String).field("b", _.Int)
-
-    val schemaB = SchemaBuilder()
-    schemaB.model("Test2").field("a", _.String).field("b", _.Int)
-
-    val (modelsA, _) = schemaA.build()
-    val (modelsB, _) = schemaB.build()
-
-    val previousProject: Project = TestProject().copy(models = modelsA.toList)
-    val nextProject              = TestProject().copy(models = modelsB.toList)
+    val previousProject = SchemaBuilder() { schema =>
+      schema.model("Test").field("a", _.String).field("b", _.Int)
+    }
+    val nextProject = SchemaBuilder() { schema =>
+      schema.model("Test2").field("a", _.String).field("b", _.Int)
+    }
 
     val proposer               = MigrationStepsProposerImpl(previousProject, nextProject, renames)
     val result: MigrationSteps = proposer.evaluate()
 
-    println(result.steps)
     result.steps.length shouldBe 1
     result.steps.last shouldBe UpdateModel("Test", "Test2")
   }
@@ -114,17 +91,12 @@ class MigrationStepsProposerSpec extends FlatSpec with Matchers with AwaitUtils 
   "Creating fields" should "create CreateField migration steps" in {
     val renames = Renames.empty
 
-    val schemaA = SchemaBuilder()
-    schemaA.model("Test").field("a", _.String)
-
-    val schemaB = SchemaBuilder()
-    schemaB.model("Test").field("a", _.String).field("b", _.Int)
-
-    val (modelsA, _) = schemaA.build()
-    val (modelsB, _) = schemaB.build()
-
-    val previousProject: Project = TestProject().copy(models = modelsA.toList)
-    val nextProject              = TestProject().copy(models = modelsB.toList)
+    val previousProject = SchemaBuilder() { schema =>
+      schema.model("Test").field("a", _.String)
+    }
+    val nextProject = SchemaBuilder() { schema =>
+      schema.model("Test").field("a", _.String).field("b", _.Int)
+    }
 
     val proposer               = MigrationStepsProposerImpl(previousProject, nextProject, renames)
     val result: MigrationSteps = proposer.evaluate()
@@ -137,17 +109,12 @@ class MigrationStepsProposerSpec extends FlatSpec with Matchers with AwaitUtils 
   "Deleting fields" should "create DeleteField migration steps" in {
     val renames = Renames.empty
 
-    val schemaA = SchemaBuilder()
-    schemaA.model("Test").field("a", _.String).field("b", _.Int)
-
-    val schemaB = SchemaBuilder()
-    schemaB.model("Test").field("a", _.String)
-
-    val (modelsA, _) = schemaA.build()
-    val (modelsB, _) = schemaB.build()
-
-    val previousProject: Project = TestProject().copy(models = modelsA.toList)
-    val nextProject              = TestProject().copy(models = modelsB.toList)
+    val previousProject = SchemaBuilder() { schema =>
+      schema.model("Test").field("a", _.String).field("b", _.Int)
+    }
+    val nextProject = SchemaBuilder() { schema =>
+      schema.model("Test").field("a", _.String)
+    }
 
     val proposer               = MigrationStepsProposerImpl(previousProject, nextProject, renames)
     val result: MigrationSteps = proposer.evaluate()
