@@ -61,7 +61,6 @@ case class DeployMutation(
 case class DeployMutationInput(
     clientMutationId: Option[String],
     projectId: String,
-    config: String,
     types: String
 ) extends sangria.relay.Mutation
 
