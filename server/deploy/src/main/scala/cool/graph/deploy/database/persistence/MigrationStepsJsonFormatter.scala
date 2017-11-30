@@ -75,15 +75,17 @@ object MigrationStepsJsonFormatter extends DefaultReads {
 
     override def reads(json: JsValue): JsResult[MigrationStep] = {
       (json \ discriminatorField).validate[String].flatMap {
-        case "CreateModel" => createModelFormat.reads(json)
-        case "DeleteModel" => deleteModelFormat.reads(json)
-        case "UpdateModel" => updateModelFormat.reads(json)
-        case "CreateField" => createFieldFormat.reads(json)
-        case "DeleteField" => deleteFieldFormat.reads(json)
-        case "UpdateField" => updateFieldFormat.reads(json)
-        case "CreateEnum"  => createEnumFormat.reads(json)
-        case "DeleteEnum"  => deleteEnumFormat.reads(json)
-        case "UpdateEnum"  => updateEnumFormat.reads(json)
+        case "CreateModel"    => createModelFormat.reads(json)
+        case "DeleteModel"    => deleteModelFormat.reads(json)
+        case "UpdateModel"    => updateModelFormat.reads(json)
+        case "CreateField"    => createFieldFormat.reads(json)
+        case "DeleteField"    => deleteFieldFormat.reads(json)
+        case "UpdateField"    => updateFieldFormat.reads(json)
+        case "CreateEnum"     => createEnumFormat.reads(json)
+        case "DeleteEnum"     => deleteEnumFormat.reads(json)
+        case "UpdateEnum"     => updateEnumFormat.reads(json)
+        case "CreateRelation" => createRelationFormat.reads(json)
+        case "DeleteRelation" => deleteRelationFormat.reads(json)
       }
     }
 

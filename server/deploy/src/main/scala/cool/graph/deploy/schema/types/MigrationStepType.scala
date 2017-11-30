@@ -18,7 +18,9 @@ object MigrationStepType {
     UpdateEnumType,
     CreateFieldType,
     UpdateFieldType,
-    DeleteFieldType
+    DeleteFieldType,
+    CreateRelationType,
+    DeleteRelationType
   )
 
   lazy val Type: InterfaceType[SystemUserContext, MigrationStep] = InterfaceType(
@@ -85,6 +87,16 @@ object MigrationStepType {
     Field("relation", OptionType(OptionType(StringType)), resolve = _.value.relation),
     Field("defaultValue", OptionType(OptionType(StringType)), resolve = _.value.defaultValue),
     Field("enum", OptionType(OptionType(StringType)), resolve = _.value.enum)
+  )
+
+  lazy val CreateRelationType = fieldsHelper[CreateRelation](
+    Field("name", StringType, resolve = _.value.name),
+    Field("leftModel", StringType, resolve = _.value.leftModelName),
+    Field("rightModel", StringType, resolve = _.value.rightModelName)
+  )
+
+  lazy val DeleteRelationType = fieldsHelper[DeleteRelation](
+    Field("name", StringType, resolve = _.value.name)
   )
 
   def fieldsHelper[T <: MigrationStep](fields: schema.Field[SystemUserContext, T]*)(implicit ct: ClassTag[T]) = {
