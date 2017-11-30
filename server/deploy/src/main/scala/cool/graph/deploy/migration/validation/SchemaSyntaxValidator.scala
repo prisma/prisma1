@@ -50,7 +50,6 @@ case class SchemaSyntaxValidator(schema: String, directiveRequirements: Seq[Dire
       field      <- objectType.fields
     } yield FieldAndType(objectType, field)
 
-    val missingModelDirectiveValidations    = validateModelDirectiveOnTypes(doc.objectTypes, allFieldAndTypes)
     val deprecatedImplementsNodeValidations = validateNodeInterfaceOnTypes(doc.objectTypes, allFieldAndTypes)
     val duplicateTypeValidations            = validateDuplicateTypes(doc.objectTypes, allFieldAndTypes)
     val duplicateFieldValidations           = validateDuplicateFields(allFieldAndTypes)
@@ -59,7 +58,7 @@ case class SchemaSyntaxValidator(schema: String, directiveRequirements: Seq[Dire
     val scalarFieldValidations              = validateScalarFields(nonSystemFieldAndTypes)
     val fieldDirectiveValidations           = nonSystemFieldAndTypes.flatMap(validateFieldDirectives)
 
-    missingModelDirectiveValidations ++ deprecatedImplementsNodeValidations ++ validateIdFields ++ duplicateTypeValidations ++ duplicateFieldValidations ++ missingTypeValidations ++ relationFieldValidations ++ scalarFieldValidations ++ fieldDirectiveValidations ++ validateEnumTypes
+    deprecatedImplementsNodeValidations ++ validateIdFields ++ duplicateTypeValidations ++ duplicateFieldValidations ++ missingTypeValidations ++ relationFieldValidations ++ scalarFieldValidations ++ fieldDirectiveValidations ++ validateEnumTypes
   }
 
   def validateIdFields(): Seq[SchemaError] = {
@@ -85,12 +84,6 @@ case class SchemaSyntaxValidator(schema: String, directiveRequirements: Seq[Dire
     val typeNames          = objectTypes.map(_.name)
     val duplicateTypeNames = typeNames.filter(name => typeNames.count(_ == name) > 1)
     duplicateTypeNames.map(name => SchemaErrors.duplicateTypeName(fieldAndTypes.find(_.objectType.name == name).head)).distinct
-  }
-
-  def validateModelDirectiveOnTypes(objectTypes: Seq[ObjectTypeDefinition], fieldAndTypes: Seq[FieldAndType]): Seq[SchemaError] = {
-    objectTypes.collect {
-      case x if !x.directives.exists(_.name == "model") => SchemaErrors.missingAtModelDirective(fieldAndTypes.find(_.objectType.name == x.name).get)
-    }
   }
 
   def validateNodeInterfaceOnTypes(objectTypes: Seq[ObjectTypeDefinition], fieldAndTypes: Seq[FieldAndType]): Seq[SchemaError] = {
