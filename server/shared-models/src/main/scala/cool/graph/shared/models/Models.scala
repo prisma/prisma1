@@ -2,6 +2,7 @@ package cool.graph.shared.models
 
 import cool.graph.cuid.Cuid
 import cool.graph.gc_values.GCValue
+import cool.graph.shared.errors.SharedErrors
 import cool.graph.shared.models.CustomRule.CustomRule
 import cool.graph.shared.models.FieldConstraintType.FieldConstraintType
 import cool.graph.shared.models.LogStatus.LogStatus
@@ -176,7 +177,7 @@ case class Project(
 
   // note: mysql columns are case insensitive, so we have to be as well. But we could make them case sensitive https://dev.mysql.com/doc/refman/5.6/en/case-sensitivity.html
   def getModelByName(name: String): Option[Model] = models.find(_.name.toLowerCase() == name.toLowerCase())
-  def getModelByName_!(name: String): Model       = getModelByName(name).get //OrElse(throw SystemErrors.InvalidModel(s"No model with name: $name found."))
+  def getModelByName_!(name: String): Model       = getModelByName(name).getOrElse(throw SharedErrors.InvalidModel(s"No model with name: $name found."))
 
   def getModelByFieldId(id: Id): Option[Model] = models.find(_.fields.exists(_.id == id))
   def getModelByFieldId_!(id: Id): Model       = getModelByFieldId(id).get //OrElse(throw SystemErrors.InvalidModel(s"No model with a field with id: $id found."))
