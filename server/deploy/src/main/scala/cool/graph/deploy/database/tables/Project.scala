@@ -11,78 +11,100 @@ case class Project(
     id: String,
     alias: Option[String],
     name: String,
-    revision: Int,
-    clientId: String,
-    model: JsValue,
-    migrationSteps: JsValue,
-    hasBeenApplied: Boolean
+    clientId: String
+//    revision: Int,
+//    model: JsValue, // schema
+//    migrationSteps: JsValue,
+//    hasBeenApplied: Boolean
 )
 
 class ProjectTable(tag: Tag) extends Table[Project](tag, "Project") {
-  implicit val RegionMapper     = ProjectTable.regionMapper
-  implicit val stringListMapper = MappedColumns.stringListMapper
-  implicit val jsonMapper       = MappedColumns.jsonMapper
+//  implicit val RegionMapper     = ProjectTable.regionMapper
+//  implicit val stringListMapper = MappedColumns.stringListMapper
+//  implicit val jsonMapper = MappedColumns.jsonMapper
 
-  def id             = column[String]("id", O.PrimaryKey)
-  def alias          = column[Option[String]]("alias")
-  def name           = column[String]("name")
-  def revision       = column[Int]("revision")
-  def model          = column[JsValue]("model")
-  def migrationSteps = column[JsValue]("migrationSteps")
-  def hasBeenApplied = column[Boolean]("hasBeenApplied")
-
+  def id       = column[String]("id", O.PrimaryKey)
+  def alias    = column[Option[String]]("alias")
+  def name     = column[String]("name")
   def clientId = column[String]("clientId")
-  def client   = foreignKey("project_clientid_foreign", clientId, Tables.Clients)(_.id)
+//  def revision       = column[Int]("revision")
+//  def model          = column[JsValue]("model")
+//  def migrationSteps = column[JsValue]("migrationSteps")
+//  def hasBeenApplied = column[Boolean]("hasBeenApplied")
 
-  def * =
-    (id, alias, name, revision, clientId, model, migrationSteps, hasBeenApplied) <>
-      ((Project.apply _).tupled, Project.unapply)
+  def client = foreignKey("project_clientid_foreign", clientId, Tables.Clients)(_.id)
+  def *      = (id, alias, name, clientId) <> ((Project.apply _).tupled, Project.unapply)
 }
-
+//
 object ProjectTable {
-  implicit val regionMapper = MappedColumnType.base[Region, String](
-    e => e.toString,
-    s => Region.withName(s)
-  )
+////  implicit val regionMapper = MappedColumnType.base[Region, String](
+////    e => e.toString,
+////    s => Region.withName(s)
+////  )
+//
 
-  def currentProjectById(id: String): SqlAction[Option[Project], NoStream, Read] = {
-    val baseQuery = for {
-      project <- Tables.Projects
-      if project.id === id
-      //if project.hasBeenApplied
-    } yield project
-    val query = baseQuery.sortBy(_.revision * -1).take(1)
-
-    query.result.headOption
+  def byId(id: String): SqlAction[Option[Project], NoStream, Read] = {
+    Tables.Projects.filter { _.id === id }.take(1).result.headOption
   }
 
-  def currentProjectByIdOrAlias(idOrAlias: String): SqlAction[Option[Project], NoStream, Read] = {
-    val baseQuery = for {
-      project <- Tables.Projects
-      if project.id === idOrAlias || project.alias === idOrAlias
-      //if project.hasBeenApplied
-    } yield project
-    val query = baseQuery.sortBy(_.revision * -1).take(1)
-
-    query.result.headOption
+  def byIdOrAlias(idOrAlias: String): SqlAction[Option[Project], NoStream, Read] = {
+    Tables.Projects
+      .filter { t =>
+        t.id === idOrAlias || t.alias === idOrAlias
+      }
+      .take(1)
+      .result
+      .headOption
   }
 
-  def markAsApplied(id: String, revision: Int): FixedSqlAction[Int, NoStream, Write] = {
+  def byIdWithMigration(id: String): SqlAction[Option[(Project, Migration)], NoStream, Read] = {
     val baseQuery = for {
-      project <- Tables.Projects
-      if project.id === id
-      if project.revision === revision
-    } yield project
+      project   <- Tables.Projects
+      migration <- Tables.Migrations
+      if migration.projectId === project.id && migration.hasBeenApplied
+    } yield (project, migration)
 
-    baseQuery.map(_.hasBeenApplied).update(true)
+    baseQuery.sortBy(_._2.revision.desc).take(1).result.headOption
   }
 
-  def unappliedMigrations(): FixedSqlStreamingAction[Seq[Project], Project, Read] = {
+  def byIdWithNextMigration(id: String): SqlAction[Option[(Project, Migration)], NoStream, Read] = {
     val baseQuery = for {
-      project <- Tables.Projects
-      if !project.hasBeenApplied
-    } yield project
-    val sorted = baseQuery.sortBy(_.revision * -1).take(1) // bug: use lowest unapplied
-    sorted.result
+      project   <- Tables.Projects
+      migration <- Tables.Migrations
+      if migration.projectId === project.id && !migration.hasBeenApplied
+    } yield (project, migration)
+
+    baseQuery.sortBy(_._2.revision.asc).take(1).result.headOption
   }
 }
+//
+//  def currentProjectByIdOrAlias(idOrAlias: String): SqlAction[Option[Project], NoStream, Read] = {
+//    val baseQuery = for {
+//      project <- Tables.Projects
+//      if project.id === idOrAlias || project.alias === idOrAlias
+//      //if project.hasBeenApplied
+//    } yield project
+//    val query = baseQuery.sortBy(_.revision * -1).take(1)
+//
+//    query.result.headOption
+//  }
+//
+//  def markAsApplied(id: String, revision: Int): FixedSqlAction[Int, NoStream, Write] = {
+//    val baseQuery = for {
+//      project <- Tables.Projects
+//      if project.id === id
+//      if project.revision === revision
+//    } yield project
+//
+//    baseQuery.map(_.hasBeenApplied).update(true)
+//  }
+//
+//  def unappliedMigrations(): FixedSqlStreamingAction[Seq[Project], Project, Read] = {
+//    val baseQuery = for {
+//      project <- Tables.Projects
+//      if !project.hasBeenApplied
+//    } yield project
+//    val sorted = baseQuery.sortBy(_.revision * -1).take(1) // bug: use lowest unapplied
+//    sorted.result
+//  }
+//}

@@ -81,7 +81,7 @@ case class SchemaBuilderImpl(
       inputFields = DeployField.inputFields,
       outputFields = sangria.schema.fields[SystemUserContext, DeployMutationPayload](
         Field("project", OptionType(ProjectType.Type), resolve = (ctx: Context[SystemUserContext, DeployMutationPayload]) => ctx.value.project),
-        Field("steps", ListType(MigrationStepType.Type), resolve = (ctx: Context[SystemUserContext, DeployMutationPayload]) => ctx.value.steps.steps.toList)
+        Field("migration", ListType(MigrationType.Type), resolve = (ctx: Context[SystemUserContext, DeployMutationPayload]) => ctx.value.migration)
       ),
       mutateAndGetPayload = (args, ctx) =>
         handleMutationResult {

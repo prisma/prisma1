@@ -43,15 +43,22 @@ object InternalDatabaseSchema {
         `id` varchar(25) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',
         `alias` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
         `name` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
-        `revision` int(11) NOT NULL DEFAULT '1',
         `clientId` varchar(25) COLLATE utf8_unicode_ci DEFAULT NULL,
-        `model` mediumtext COLLATE utf8_unicode_ci DEFAULT NULL,
-        `migrationSteps` mediumtext COLLATE utf8_unicode_ci DEFAULT NULL,
-        `hasBeenApplied` tinyint(1) NOT NULL DEFAULT '0',
-        PRIMARY KEY (`id`, `revision`),
-        UNIQUE KEY `project_clientid_projectname_uniq` (`clientId`,`name`, `revision`),
-        UNIQUE KEY `project_alias_uniq` (`alias`, `revision`),
+        PRIMARY KEY (`id`),
+        UNIQUE KEY `project_clientid_projectname_uniq` (`clientId`,`name`),
+        UNIQUE KEY `project_alias_uniq` (`alias`),
         CONSTRAINT `project_clientid_foreign` FOREIGN KEY (`clientId`) REFERENCES `Client` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;""",
+    // Migrations
+    sqlu"""
+      CREATE TABLE IF NOT EXISTS `Migration` (
+        `projectId` varchar(25) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',
+        `revision` int(11) NOT NULL DEFAULT '1',
+        `schema` mediumtext COLLATE utf8_unicode_ci DEFAULT NULL,
+        `steps` mediumtext COLLATE utf8_unicode_ci DEFAULT NULL,
+        `hasBeenApplied` tinyint(1) NOT NULL DEFAULT '0',
+        PRIMARY KEY (`projectId`, `revision`),
+        CONSTRAINT `migrations_projectid_foreign` FOREIGN KEY (`projectId`) REFERENCES `Project` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;""",
     // SEAT
     sqlu"""

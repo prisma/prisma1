@@ -1,8 +1,7 @@
 package cool.graph.deploy.database.persistence
 
-import cool.graph.deploy.database.tables.{Client, Project}
+import cool.graph.deploy.database.tables.{Client, Migration, Project}
 import cool.graph.shared.models
-import cool.graph.shared.models.MigrationSteps
 import play.api.libs.json.Json
 
 object ModelToDbMapper {
@@ -24,18 +23,25 @@ object ModelToDbMapper {
     )
   }
 
-  def convert(project: models.Project, migrationSteps: MigrationSteps): Project = {
-    val modelJson          = Json.toJson(project)
-    val migrationStepsJson = Json.toJson(migrationSteps)
+  def convert(project: models.Project): Project = {
     Project(
       id = project.id,
       alias = project.alias,
       name = project.name,
-      revision = project.revision,
-      clientId = project.ownerId,
-      model = modelJson,
-      migrationSteps = migrationStepsJson,
-      hasBeenApplied = false
+      clientId = project.ownerId
+    )
+  }
+
+  def convert(project: models.Project, migration: models.Migration): Migration = {
+    val schemaJson         = Json.toJson(project)
+    val migrationStepsJson = Json.toJson(migration.steps)
+
+    Migration(
+      projectId = migration.projectId,
+      revision = migration.revision,
+      schema = schemaJson,
+      steps = migrationStepsJson,
+      hasBeenApplied = migration.hasBeenApplied
     )
   }
 }

@@ -3,7 +3,7 @@ package cool.graph.deploy.schema.mutations
 import cool.graph.deploy.database.persistence.ProjectPersistence
 import cool.graph.deploy.migration.validation.{SchemaError, SchemaSyntaxValidator}
 import cool.graph.deploy.migration.{DesiredProjectInferer, MigrationStepsProposer, RenameInferer}
-import cool.graph.shared.models.{MigrationSteps, Project}
+import cool.graph.shared.models.{Migration, Project}
 import sangria.parser.QueryParser
 
 import scala.collection.Seq
@@ -33,7 +33,7 @@ case class DeployMutation(
           DeployMutationPayload(
             clientMutationId = args.clientMutationId,
             project = project,
-            steps = MigrationSteps.empty,
+            migration = Migration.empty,
             errors = schemaErrors
           ))
       }
@@ -44,16 +44,17 @@ case class DeployMutation(
 
   private def performDeployment: Future[MutationSuccess[DeployMutationPayload]] = {
     for {
-      desiredProject <- desiredProjectInferer.infer(baseProject = project, graphQlSdl).toFuture
+      nextProject    <- desiredProjectInferer.infer(baseProject = project, graphQlSdl).toFuture
       renames        = renameInferer.infer(graphQlSdl)
-      migrationSteps = migrationStepsProposer.propose(project, desiredProject, renames)
-      _ <- if (migrationSteps.steps.nonEmpty) {
-            projectPersistence.save(desiredProject, migrationSteps)
-          } else {
-            Future.successful(())
-          }
+      migrationSteps = migrationStepsProposer.propose(project, nextProject, renames)
+      migration      = Migration(nextProject.id, 0, hasBeenApplied = false, migrationSteps) // how to get to the revision...?
+      savedMigration <- if (migrationSteps.nonEmpty) {
+                         projectPersistence.save(nextProject, migration)
+                       } else {
+                         Future.successful(Migration.empty)
+                       }
     } yield {
-      MutationSuccess(DeployMutationPayload(args.clientMutationId, desiredProject, migrationSteps, schemaErrors))
+      MutationSuccess(DeployMutationPayload(args.clientMutationId, nextProject, savedMigration, schemaErrors))
     }
   }
 }
@@ -68,7 +69,7 @@ case class DeployMutationInput(
 case class DeployMutationPayload(
     clientMutationId: Option[String],
     project: Project,
-    steps: MigrationSteps,
+    migration: Migration,
     errors: Seq[SchemaError]
 ) extends sangria.relay.Mutation
 
@@ -76,12 +77,12 @@ case class DeployMutationPayload(
   * SKETCH
   */
 trait DeployMutationSketch {
-  def deploy(desiredProject: Project, migrationSteps: MigrationSteps): DeployResultSketch
+  def deploy(desiredProject: Project, migrationSteps: Migration): DeployResultSketch
 }
 
 sealed trait DeployResultSketch
 case class DeploySucceeded(project: Project, descriptions: Vector[VerbalDescription]) extends DeployResultSketch
-case class MigrationsDontSuffice(proposal: MigrationSteps)                            extends DeployResultSketch
+case class MigrationsDontSuffice(proposal: Migration)                                 extends DeployResultSketch
 
 trait VerbalDescription {
   def description: String

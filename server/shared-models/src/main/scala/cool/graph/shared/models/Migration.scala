@@ -1,19 +1,28 @@
 package cool.graph.shared.models
 
 case class UnappliedMigration(
-    project: Project,
-    migration: MigrationSteps
+    previousProject: Project,
+    nextProject: Project,
+    migration: Migration
 )
 
-case class MigrationSteps(
+case class Migration(
+    projectId: String,
+    revision: Int,
+    hasBeenApplied: Boolean,
     steps: Vector[MigrationStep]
 )
-object MigrationSteps {
-  val empty = MigrationSteps(steps = Vector.empty)
+
+object Migration {
+  val empty = Migration("", 0, hasBeenApplied = false, steps = Vector.empty)
 }
 
 sealed trait MigrationStep
-sealed trait ModelMigrationStep extends MigrationStep
+
+sealed trait ProjectMigrationStep extends MigrationStep
+sealed trait ModelMigrationStep   extends MigrationStep
+
+case class SetupProject() extends ProjectMigrationStep
 
 case class CreateModel(name: String)                  extends ModelMigrationStep
 case class DeleteModel(name: String)                  extends ModelMigrationStep

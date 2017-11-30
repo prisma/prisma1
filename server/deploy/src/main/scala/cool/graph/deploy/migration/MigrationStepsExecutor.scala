@@ -4,7 +4,7 @@ import cool.graph.shared.models._
 import org.scalactic.{Bad, Good, Or}
 
 trait MigrationStepsExecutor {
-  def execute(project: Project, migrationSteps: MigrationSteps): Project Or MigrationStepError
+  def execute(project: Project, migrationSteps: Migration): Project Or MigrationStepError
 }
 
 trait MigrationStepError

@@ -105,7 +105,7 @@ object MigrationStepsJsonFormatter extends DefaultReads {
     }
   }
 
-  implicit val migrationStepsFormat: Format[MigrationSteps] = Json.format[MigrationSteps]
+  implicit val migrationStepsFormat: Format[Migration] = Json.format[Migration]
 
   def writeDoubleOpt[T](field: String, opt: Option[Option[T]])(implicit writes: Writes[T]): JsObject = {
     opt match {
