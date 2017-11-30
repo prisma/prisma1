@@ -244,6 +244,26 @@ class MigrationStepsProposerSpec extends FlatSpec with Matchers with AwaitUtils 
     )
   }
 
+  "Switching modelA and modelB in a Relation" should "not generate any migration step" in {
+    val relationName = "TodoToComments"
+    val previousProject = SchemaBuilder() { schema =>
+      val comment = schema.model("Comment")
+      val todo    = schema.model("Todo")
+      todo.oneToManyRelation("comments", "todo", comment, relationName = Some(relationName))
+    }
+
+    val nextProject = SchemaBuilder() { schema =>
+      val comment = schema.model("Comment")
+      val todo    = schema.model("Todo")
+      comment.manyToOneRelation("todo", "comments", todo, relationName = Some(relationName))
+    }
+
+    val proposer               = MigrationStepsProposerImpl(previousProject, nextProject, Renames.empty)
+    val result: MigrationSteps = proposer.evaluate()
+
+    result.steps should have(size(0))
+  }
+
   "Creating and using Enums" should "create CreateEnum and CreateField migration steps" in {
     val previousProject = SchemaBuilder() { schema =>
       schema

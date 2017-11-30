@@ -206,7 +206,9 @@ case class MigrationStepsProposerImpl(previousProject: Project, nextProject: Pro
 
   def containsRelation(project: Project, relation: Relation): Boolean = {
     project.relations.exists { rel =>
-      rel.name == relation.name && rel.modelAId == relation.modelAId && rel.modelBId == relation.modelBId
+      val refersToModelsExactlyRight = rel.modelAId == relation.modelAId && rel.modelBId == relation.modelBId
+      val refersToModelsSwitched     = rel.modelAId == relation.modelBId && rel.modelBId == relation.modelAId
+      rel.name == relation.name && (refersToModelsExactlyRight || refersToModelsSwitched)
     }
   }
 
