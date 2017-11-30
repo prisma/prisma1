@@ -13,7 +13,7 @@ interface ErrorMessage {
 export async function fsToProject(
   inputDir: string,
   out: Output,
-  args: Args
+  args: Args,
 ): Promise<ProjectDefinition> {
   const definitionPath = path.join(inputDir, 'graphcool.yml')
   const rootModule = await fsToModule(definitionPath, out, 'root', args)
@@ -23,7 +23,7 @@ export async function fsToProject(
     rootModule.content,
     out,
     definitionPath,
-    args
+    args,
   )
 
   if (definition.hasOwnProperty('modules')) {
@@ -57,7 +57,7 @@ export async function fsToModule(
   moduleDefinitionPath: string,
   out: Output,
   moduleName: string = 'root',
-  args: Args
+  args: Args,
 ): Promise<GraphcoolModule> {
   const inputDir = path.dirname(moduleDefinitionPath)
   const content = fs.readFileSync(moduleDefinitionPath, 'utf-8')
@@ -76,21 +76,24 @@ export async function fsToModule(
     content,
     out,
     moduleDefinitionPath,
-    args
+    args,
   )
-  const typesPath = path.join(inputDir, definition.types)
-
-  if (fs.existsSync(typesPath)) {
-    const types = fs.readFileSync(typesPath, 'utf-8')
-    files = {
-      ...files,
-      [definition.types]: types,
+  const typesPaths = Array.isArray(definition.types)
+    ? definition.types
+    : [definition.types]
+  typesPaths.forEach(typesPath => {
+    if (fs.existsSync(typesPath)) {
+      const types = fs.readFileSync(typesPath, 'utf-8')
+      files = {
+        ...files,
+        [typesPath]: types,
+      }
+    } else {
+      errors.push({
+        message: `The types definition file "${typesPath}" could not be found.`,
+      })
     }
-  } else {
-    errors.push({
-      message: `The types definition file "${typesPath}" could not be found.`,
-    })
-  }
+  })
 
   if (definition.permissions) {
     definition.permissions.forEach(permission => {
@@ -104,7 +107,9 @@ export async function fsToModule(
           }
         } else {
           errors.push({
-            message: `The file ${permission.query} for permission query ${permission.operation} does not exist`,
+            message: `The file ${permission.query} for permission query ${
+              permission.operation
+            } does not exist`,
           })
         }
       }
@@ -118,7 +123,9 @@ export async function fsToModule(
         if (typeof func.handler.code === 'string') {
           if (!isFunctionFile(func.handler.code)) {
             errors.push({
-              message: `The handler ${func.handler.code} for function ${funcName} is not a valid function path. It must end with .js or .ts and be in the current working directory.`,
+              message: `The handler ${func.handler.code} for function ${
+                funcName
+              } is not a valid function path. It must end with .js or .ts and be in the current working directory.`,
             })
           }
           const handlerPath = path.join(inputDir, func.handler.code)
@@ -130,14 +137,17 @@ export async function fsToModule(
             }
           } else {
             errors.push({
-              message: `The file ${func.handler.code} for function ${funcName} does not exist`,
+              message: `The file ${func.handler.code} for function ${
+                funcName
+              } does not exist`,
             })
           }
         } else {
           if (!isFunctionFile(func.handler.code.src)) {
             errors.push({
-              message: `The handler ${func.handler.code
-                .src} for function ${funcName} is not a valid function path. It must end with .js or .ts and be in the current working directory.`,
+              message: `The handler ${func.handler.code.src} for function ${
+                funcName
+              } is not a valid function path. It must end with .js or .ts and be in the current working directory.`,
             })
           }
           const handlerPath = path.join(inputDir, func.handler.code.src)
@@ -149,8 +159,9 @@ export async function fsToModule(
             }
           } else {
             errors.push({
-              message: `The file ${func.handler.code
-                .src} for function ${funcName} does not exist`,
+              message: `The file ${func.handler.code.src} for function ${
+                funcName
+              } does not exist`,
             })
           }
         }
@@ -167,7 +178,11 @@ export async function fsToModule(
           }
         } else {
           errors.push({
-            message: `The file ${func.query} for the subscription query of function ${funcName} does not exist`,
+            message: `The file ${
+              func.query
+            } for the subscription query of function ${
+              funcName
+            } does not exist`,
           })
         }
       }
@@ -183,7 +198,9 @@ export async function fsToModule(
           }
         } else {
           errors.push({
-            message: `The file ${func.schema} for the resolver of function ${funcName} does not exist`,
+            message: `The file ${func.schema} for the resolver of function ${
+              funcName
+            } does not exist`,
           })
         }
       }
