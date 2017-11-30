@@ -83,7 +83,8 @@ case class DesiredProjectInfererImpl(
         modelBId = relationField.typeName
       )
     }
-    tmp.toSet
+    val grouped: Map[String, Vector[Relation]] = tmp.groupBy(_.name)
+    grouped.values.flatMap(_.headOption).toSet
   }
 
   lazy val desiredEnums: Vector[Enum] = {
