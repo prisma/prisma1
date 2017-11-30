@@ -124,7 +124,6 @@ class MigrationStepsProposerSpec extends FlatSpec with Matchers with AwaitUtils 
     result.steps.last shouldBe DeleteField("Test", "b")
   }
 
-  // Todo: enums, relations
   "Updating fields" should "create UpdateField migration steps" in {
     val renames = Renames(
       fields = Vector(
