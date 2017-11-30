@@ -345,4 +345,26 @@ class MigrationStepsProposerSpec extends FlatSpec with Matchers with AwaitUtils 
       )
     )
   }
+
+  "Removing Enums" should "create an DeleteEnum step" in {
+    val renames = Renames.empty
+    val previousProject = SchemaBuilder() { schema =>
+      val enum = schema.enum("TodoStatus", Vector("Active", "Done"))
+      schema
+        .model("Todo")
+    }
+    val nextProject = SchemaBuilder() { schema =>
+      schema
+        .model("Todo")
+    }
+
+    val result = MigrationStepsProposerImpl(previousProject, nextProject, renames).evaluate()
+
+    result.steps should have(size(1))
+    result.steps should contain(
+      DeleteEnum(
+        name = "TodoStatus"
+      )
+    )
+  }
 }

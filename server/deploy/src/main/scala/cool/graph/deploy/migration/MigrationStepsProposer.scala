@@ -50,7 +50,7 @@ case class MigrationStepsProposerImpl(previousProject: Project, nextProject: Pro
       modelsToCreate ++ modelsToUpdate ++ modelsToDelete ++
         fieldsToCreate ++ fieldsToDelete ++ fieldsToUpdate ++
         relationsToCreate ++ relationsToDelete ++
-        enumsToCreate ++ enumsToUpdate
+        enumsToCreate ++ enumsToDelete ++ enumsToUpdate
     )
   }
 
@@ -170,6 +170,14 @@ case class MigrationStepsProposerImpl(previousProject: Project, nextProject: Pro
       previousEnumName = renames.getPreviousEnumName(nextEnum.name)
       if !containsEnum(previousProject, previousEnumName)
     } yield CreateEnum(nextEnum.name, nextEnum.values)
+  }
+
+  lazy val enumsToDelete: Vector[DeleteEnum] = {
+    for {
+      previousEnum <- previousProject.enums.toVector
+      nextEnumName = renames.getNextEnumName(previousEnum.name)
+      if nextProject.getEnumByName(nextEnumName).isEmpty
+    } yield DeleteEnum(previousEnum.name)
   }
 
   lazy val enumsToUpdate: Vector[UpdateEnum] = {
