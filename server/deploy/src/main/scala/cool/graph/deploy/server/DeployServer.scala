@@ -146,12 +146,10 @@ case class DeployServer(
     import cool.graph.deploy.database.persistence.ProjectJsonFormatter._
     projectPersistence
       .loadByIdOrAlias(projectIdOrAlias)
-      .flatMap((project: Option[Project]) => {
-        project match {
-          case None    => Future.failed(InvalidProjectId(projectIdOrAlias))
-          case Some(p) => Future.successful(Json.toJson(ProjectWithClientId(p, p.ownerId)).toString)
-        }
-      })
+      .flatMap {
+        case None    => Future.failed(InvalidProjectId(projectIdOrAlias))
+        case Some(p) => Future.successful(Json.toJson(ProjectWithClientId(p, p.ownerId)).toString)
+      }
   }
 
   def healthCheck: Future[_] = Future.successful(())
