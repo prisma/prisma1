@@ -12,12 +12,13 @@ import cool.graph.akkautil.http.Server
 import cool.graph.cuid.Cuid.createCuid
 import cool.graph.deploy.DeployMetrics
 import cool.graph.deploy.database.persistence.ProjectPersistence
-import cool.graph.deploy.schema.{InvalidProjectId, SchemaBuilder, SystemUserContext}
+import cool.graph.deploy.schema.{DeployApiError, InvalidProjectId, SchemaBuilder, SystemUserContext}
 import cool.graph.metrics.extensions.TimeResponseDirectiveImpl
-import cool.graph.shared.models.{Client, Project, ProjectWithClientId}
+import cool.graph.shared.models.{Client, ProjectWithClientId}
 import cool.graph.util.logging.{LogData, LogKey}
 import play.api.libs.json.Json
-import sangria.execution.Executor
+import sangria.execution.{Executor, HandledException}
+import sangria.marshalling.ResultMarshaller
 import sangria.parser.QueryParser
 import scaldi._
 import spray.json._
@@ -36,7 +37,6 @@ case class DeployServer(
     with Injectable
     with LazyLogging {
   import cool.graph.deploy.server.JsonMarshalling._
-
   import system.dispatcher
 
   val log: String => Unit = (msg: String) => logger.info(msg)
@@ -46,6 +46,7 @@ case class DeployServer(
   val innerRoutes = extractRequest { _ =>
     val requestId            = requestPrefix + ":system:" + createCuid()
     val requestBeginningTime = System.currentTimeMillis()
+    val errorHandler         = ErrorHandler(requestId)
 
     def logRequestEnd(projectId: Option[String] = None, clientId: Option[String] = None) = {
       log(
@@ -94,7 +95,8 @@ case class DeployServer(
                         userContext = userContext,
                         variables = variables,
                         operationName = operationName,
-                        middleware = List.empty
+                        middleware = List.empty,
+                        exceptionHandler = errorHandler.sangriaExceptionHandler
                       )
                       .map(node => OK -> node)
 
@@ -153,4 +155,35 @@ case class DeployServer(
   }
 
   def healthCheck: Future[_] = Future.successful(())
+
+  def sangriaErrorHandler(requestId: String): Executor.ExceptionHandler = {
+    case (marshaller: ResultMarshaller, e: DeployApiError) =>
+      val additionalFields = Map(
+        "code"      -> marshaller.scalarNode(e.errorCode, "Int", Set.empty),
+        "requestId" -> marshaller.scalarNode(requestId, "Int", Set.empty)
+      )
+
+      HandledException(e.getMessage, additionalFields)
+  }
+}
+
+case class ErrorHandler(
+    requestId: String
+) {
+  private val internalErrorMessage =
+    s"Whoops. Looks like an internal server error. Please contact us from the Console (https://console.graph.cool) or via email (support@graph.cool) and include your Request ID: $requestId"
+
+  lazy val sangriaExceptionHandler: Executor.ExceptionHandler = {
+    case (marshaller: ResultMarshaller, error: DeployApiError) =>
+      val additionalFields = Map("code" -> marshaller.scalarNode(error.errorCode, "Int", Set.empty))
+      HandledException(error.getMessage, additionalFields ++ commonFields(marshaller))
+
+    case (marshaller, error) =>
+      error.printStackTrace()
+      HandledException(internalErrorMessage, commonFields(marshaller))
+  }
+
+  private def commonFields(marshaller: ResultMarshaller) = Map(
+    "requestId" -> marshaller.scalarNode(requestId, "Int", Set.empty)
+  )
 }
