@@ -365,18 +365,13 @@ lazy val cache =
 
 lazy val singleServer = Project(id = "single-server", base = file("./single-server"))
   .settings(commonSettings: _*)
-  .dependsOn(backendApiSystem % "compile")
-  .dependsOn(backendWorkers % "compile")
-  .dependsOn(backendApiSimple % "compile")
-  .dependsOn(backendApiRelay % "compile")
-  .dependsOn(backendApiSimpleSubscriptions % "compile")
-  .dependsOn(backendApiSubscriptionsWebsocket % "compile")
-  .dependsOn(backendApiFileupload % "compile")
-  .dependsOn(backendApiSchemaManager % "compile")
+  .dependsOn(api% "compile")
+  .dependsOn(deploy % "compile")
+  .dependsOn(graphQlClient % "compile")
   .enablePlugins(sbtdocker.DockerPlugin, JavaAppPackaging)
   .settings(
     imageNames in docker := Seq(
-      ImageName(s"graphcool/graphcool-dev:latest")
+      ImageName(s"graphcool/graphcool-database:latest")
     ),
     dockerfile in docker := {
       val appDir    = stage.value
@@ -423,6 +418,7 @@ lazy val localFaas = Project(id = "localfaas", base = file("./localfaas"))
   )
 
 val allProjects = List(
+  api,
   bugsnag,
   akkaUtils,
   aws,
