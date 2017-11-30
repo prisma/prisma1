@@ -2,8 +2,14 @@ package cool.graph.singleserver
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
+import cool.graph.api.ApiDependencies
+import cool.graph.api.database.DatabaseConnectionManager
+import cool.graph.api.schema.SchemaBuilder
 import cool.graph.deploy.DeployDependencies
 
-trait SingleServerApiDependencies extends DeployDependencies {}
+trait SingleServerApiDependencies extends DeployDependencies with ApiDependencies {}
 
-case class SingleServerDependencies(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends SingleServerApiDependencies {}
+case class SingleServerDependencies(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends SingleServerApiDependencies {
+  val databaseManager  = DatabaseConnectionManager.initializeForSingleRegion(config)
+  val apiSchemaBuilder = SchemaBuilder()
+}

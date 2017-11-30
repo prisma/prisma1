@@ -25,7 +25,7 @@ trait DeployDependencies {
   val projectPersistence  = ProjectPersistenceImpl(internalDb)
   val client              = defaultClient()
   val migrationApplierJob = system.actorOf(Props(MigrationApplierJob(clientDb, projectPersistence)))
-  val schemaBuilder       = SchemaBuilder(internalDb, projectPersistence)
+  val deploySchemaBuilder = SchemaBuilder(internalDb, projectPersistence)
 
   def setupAndGetInternalDatabase()(implicit ec: ExecutionContext): MySQLProfile.backend.Database = {
     val rootDb = Database.forConfig(s"internalRoot")
