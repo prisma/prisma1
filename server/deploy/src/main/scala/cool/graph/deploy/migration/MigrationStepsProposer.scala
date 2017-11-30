@@ -19,17 +19,26 @@ object MigrationStepsProposer {
 //todo This is not really tracking renames. Renames can be deducted from this mapping, but all it does is mapping previous to current values.
 // TransitionMapping?
 case class Renames(
-    models: Map[String, String],
-    enums: Map[String, String],
-    fields: Map[(String, String), String]
+    models: Vector[Rename] = Vector.empty,
+    enums: Vector[Rename] = Vector.empty,
+    fields: Vector[FieldRename] = Vector.empty
 ) {
-  def getPreviousModelName(model: String): String        = models.getOrElse(model, model)
-  def getPreviousEnumNames(enum: String): String         = enums.getOrElse(enum, enum)
-  def getPreviousFieldName(model: String, field: String) = fields.getOrElse((model, field), field)
+  def getPreviousModelName(nextModel: String): String = models.find(_.next == nextModel).map(_.previous).getOrElse(nextModel)
+  def getPreviousEnumNames(nextEnum: String): String  = enums.find(_.next == nextEnum).map(_.previous).getOrElse(nextEnum)
+  def getPreviousFieldName(nextModel: String, nextField: String): String =
+    fields.find(r => r.nextModel == nextModel && r.nextField == nextField).map(_.previousField).getOrElse(nextField)
+
+  def getNextModelName(previousModel: String): String = models.find(_.previous == previousModel).map(_.next).getOrElse(previousModel)
+  def getNextEnumName(previousEnum: String): String   = enums.find(_.previous == previousEnum).map(_.next).getOrElse(previousEnum)
+  def getNextFieldName(previousModel: String, previousField: String) =
+    fields.find(r => r.previousModel == previousModel && r.previousField == previousField).map(_.nextField).getOrElse(previousField)
 }
 
+case class Rename(previous: String, next: String)
+case class FieldRename(previousModel: String, previousField: String, nextModel: String, nextField: String)
+
 object Renames {
-  val empty = Renames(Map.empty, Map.empty, Map.empty)
+  val empty = Renames()
 }
 
 // todo Doesnt propose a thing. It generates the steps, but they cant be rejected or approved. Naming is off.

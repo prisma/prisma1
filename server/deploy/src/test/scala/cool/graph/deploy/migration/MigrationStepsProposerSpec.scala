@@ -13,16 +13,7 @@ class MigrationStepsProposerSpec extends FlatSpec with Matchers with AwaitUtils 
     * Basic tests
     */
   "No changes" should "create no migration steps" in {
-    val renames = Renames(
-      models = Map(
-        "Test" -> "Test"
-      ),
-      enums = Map.empty,
-      fields = Map(
-        ("Test", "a") -> "a",
-        ("Test", "b") -> "b"
-      )
-    )
+    val renames = Renames.empty
 
     val schemaA = SchemaBuilder()
     schemaA.model("Test").field("a", _.String).field("b", _.Int)
@@ -43,19 +34,7 @@ class MigrationStepsProposerSpec extends FlatSpec with Matchers with AwaitUtils 
   }
 
   "Creating models" should "create CreateModel and CreateField migration steps" in {
-    val renames = Renames(
-      models = Map(
-        "Test"  -> "Test",
-        "Test2" -> "Test2"
-      ),
-      enums = Map.empty,
-      fields = Map(
-        ("Test", "a")  -> "a",
-        ("Test", "b")  -> "b",
-        ("Test2", "c") -> "c",
-        ("Test2", "d") -> "d"
-      )
-    )
+    val renames = Renames.empty
 
     val schemaA = SchemaBuilder()
     schemaA.model("Test").field("a", _.String).field("b", _.Int)
@@ -84,18 +63,7 @@ class MigrationStepsProposerSpec extends FlatSpec with Matchers with AwaitUtils 
   }
 
   "Deleting models" should "create DeleteModel migration steps" in {
-    val renames = Renames(
-      models = Map(
-        "Test" -> "Test"
-      ),
-      enums = Map.empty,
-      fields = Map(
-        ("Test", "a")  -> "a",
-        ("Test", "b")  -> "b",
-        ("Test2", "c") -> "c",
-        ("Test2", "d") -> "d"
-      )
-    )
+    val renames = Renames.empty
 
     val schemaA = SchemaBuilder()
     schemaA.model("Test").field("a", _.String).field("b", _.Int)
@@ -120,12 +88,7 @@ class MigrationStepsProposerSpec extends FlatSpec with Matchers with AwaitUtils 
 
   "Updating models" should "create UpdateModel migration steps" in {
     val renames = Renames(
-      models = Map("Test2" -> "Test"),
-      enums = Map.empty,
-      fields = Map(
-        ("Test2", "a") -> "a",
-        ("Test2", "b") -> "b"
-      )
+      models = Vector(Rename(previous = "Test", next = "Test2"))
     )
 
     val schemaA = SchemaBuilder()
@@ -149,14 +112,7 @@ class MigrationStepsProposerSpec extends FlatSpec with Matchers with AwaitUtils 
   }
 
   "Creating fields" should "create CreateField migration steps" in {
-    val renames = Renames(
-      models = Map("Test" -> "Test"),
-      enums = Map.empty,
-      fields = Map(
-        ("Test", "a") -> "a",
-        ("Test", "b") -> "b"
-      )
-    )
+    val renames = Renames.empty
 
     val schemaA = SchemaBuilder()
     schemaA.model("Test").field("a", _.String)
@@ -179,13 +135,7 @@ class MigrationStepsProposerSpec extends FlatSpec with Matchers with AwaitUtils 
   }
 
   "Deleting fields" should "create DeleteField migration steps" in {
-    val renames = Renames(
-      models = Map("Test" -> "Test"),
-      enums = Map.empty,
-      fields = Map(
-        ("Test", "a") -> "a"
-      )
-    )
+    val renames = Renames.empty
 
     val schemaA = SchemaBuilder()
     schemaA.model("Test").field("a", _.String).field("b", _.Int)
@@ -210,40 +160,30 @@ class MigrationStepsProposerSpec extends FlatSpec with Matchers with AwaitUtils 
   // Todo: enums, relations
   "Updating fields" should "create UpdateField migration steps" in {
     val renames = Renames(
-      models = Map("Test" -> "Test"),
-      enums = Map.empty,
-      fields = Map(
-        ("Test", "a2") -> "a",
-        ("Test", "b")  -> "b",
-        ("Test", "c")  -> "c",
-        ("Test", "d")  -> "d",
-        ("Test", "e")  -> "e"
+      fields = Vector(
+        FieldRename("Test", "a", "Test", "a2")
       )
     )
 
-    val schemaA = SchemaBuilder()
-    schemaA
-      .model("Test")
-      .field("a", _.String)
-      .field("b", _.Int)
-      .field("c", _.String)
-      .field("d", _.String)
-      .field("e", _.String)
+    val previousProject = SchemaBuilder() { schema =>
+      schema
+        .model("Test")
+        .field("a", _.String)
+        .field("b", _.String)
+        .field("c", _.String)
+        .field("d", _.String)
+        .field("e", _.String)
+    }
 
-    val schemaB = SchemaBuilder()
-    schemaB
-      .model("Test")
-      .field("a2", _.String) // Rename
-      .field("b", _.Int) // Type change
-      .field_!("c", _.String) // Now required
-      .field("d", _.String, isList = true) // Now a list
-      .field("e", _.String, isUnique = true) // Now unique
-
-    val (modelsA, _) = schemaA.build()
-    val (modelsB, _) = schemaB.build()
-
-    val previousProject: Project = TestProject().copy(models = modelsA.toList)
-    val nextProject              = TestProject().copy(models = modelsB.toList)
+    val nextProject = SchemaBuilder() { schema =>
+      schema
+        .model("Test")
+        .field("a2", _.String) // Rename
+        .field("b", _.Int) // Type change
+        .field_!("c", _.String) // Now required
+        .field("d", _.String, isList = true) // Now a list
+        .field("e", _.String, isUnique = true) // Now unique
+    }
 
     val proposer               = MigrationStepsProposerImpl(previousProject, nextProject, renames)
     val result: MigrationSteps = proposer.evaluate()

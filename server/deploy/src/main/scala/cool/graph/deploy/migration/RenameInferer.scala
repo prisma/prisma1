@@ -13,25 +13,31 @@ object RenameInferer extends RenameInferer {
 
   // Mapping is from the next (== new) name to the previous name. The name can only be different if there is an @rename directive present.
   override def infer(graphQlSdl: Document): Renames = {
-    val modelNameMapping: Map[String, String] = graphQlSdl.objectTypes.map { objectType =>
-      objectType.name -> objectType.previousName
-    }.toMap
+    val modelRenames: Vector[Rename] = graphQlSdl.objectTypes.map { objectType =>
+      Rename(previous = objectType.previousName, next = objectType.name)
+    }
 
-    val enumNameMapping: Map[String, String] = graphQlSdl.enumTypes.map { enumType =>
-      enumType.name -> enumType.previousName
-    }.toMap
+    val enumRenames: Vector[Rename] = graphQlSdl.enumTypes.map { enumType =>
+      Rename(previous = enumType.previousName, next = enumType.name)
+    }
 
-    val fieldNameMapping: Map[(String, String), String] = {
+    val fieldRenames: Vector[FieldRename] =
       for {
         objectType <- graphQlSdl.objectTypes
         fieldDef   <- objectType.fields
-      } yield (objectType.previousName, fieldDef.previousName) -> fieldDef.name
-    }.toMap
+      } yield {
+        FieldRename(
+          previousModel = objectType.previousName,
+          previousField = fieldDef.previousName,
+          nextModel = objectType.name,
+          nextField = fieldDef.name
+        )
+      }
 
     Renames(
-      models = modelNameMapping,
-      enums = enumNameMapping,
-      fields = fieldNameMapping
+      models = modelRenames,
+      enums = enumRenames,
+      fields = fieldRenames
     )
   }
 }
