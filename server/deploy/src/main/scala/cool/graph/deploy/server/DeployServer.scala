@@ -106,6 +106,11 @@ case class DeployServer(
         }
       }
     } ~
+      get {
+        path("graphiql.html") {
+          getFromResource("graphiql.html")
+        }
+      } ~
       pathPrefix(Segment) { projectId =>
         get {
           optionalHeaderValueByName("Authorization") {
@@ -123,9 +128,6 @@ case class DeployServer(
               complete(Unauthorized -> "No Authorization Header supplied")
           }
         }
-      } ~
-      get {
-        getFromResource("graphiql.html")
       }
   }
 
