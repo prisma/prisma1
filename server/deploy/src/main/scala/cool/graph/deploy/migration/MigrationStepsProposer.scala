@@ -105,7 +105,7 @@ case class MigrationStepsProposerImpl(previousProject: Project, nextProject: Pro
       UpdateField(
         model = previousModelName,
         name = previousFieldName,
-        newName = diff(previousFieldName, previousFieldName),
+        newName = diff(previousField.name, fieldOfNextModel.name),
         typeName = diff(previousField.typeIdentifier.toString, fieldOfNextModel.typeIdentifier.toString),
         isRequired = diff(previousField.isRequired, fieldOfNextModel.isRequired),
         isList = diff(previousField.isList, fieldOfNextModel.isList),
