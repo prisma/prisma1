@@ -24,7 +24,7 @@ case class Renames(
     fields: Vector[FieldRename] = Vector.empty
 ) {
   def getPreviousModelName(nextModel: String): String = models.find(_.next == nextModel).map(_.previous).getOrElse(nextModel)
-  def getPreviousEnumNames(nextEnum: String): String  = enums.find(_.next == nextEnum).map(_.previous).getOrElse(nextEnum)
+  def getPreviousEnumName(nextEnum: String): String   = enums.find(_.next == nextEnum).map(_.previous).getOrElse(nextEnum)
   def getPreviousFieldName(nextModel: String, nextField: String): String =
     fields.find(r => r.nextModel == nextModel && r.nextField == nextField).map(_.previousField).getOrElse(nextField)
 
@@ -46,7 +46,12 @@ case class MigrationStepsProposerImpl(previousProject: Project, nextProject: Pro
   import cool.graph.util.Diff._
 
   def evaluate(): MigrationSteps = {
-    MigrationSteps(modelsToCreate ++ modelsToUpdate ++ modelsToDelete ++ fieldsToCreate ++ fieldsToDelete ++ fieldsToUpdate ++ relationsToCreate)
+    MigrationSteps(
+      modelsToCreate ++ modelsToUpdate ++ modelsToDelete ++
+        fieldsToCreate ++ fieldsToDelete ++ fieldsToUpdate ++
+        relationsToCreate ++ relationsToDelete ++
+        enumsToCreate ++ enumsToUpdate
+    )
   }
 
   lazy val modelsToCreate: Vector[CreateModel] = {
@@ -121,7 +126,7 @@ case class MigrationStepsProposerImpl(previousProject: Project, nextProject: Pro
         isUnique = diff(previousField.isUnique, fieldOfNextModel.isUnique),
         relation = diff(previousField.relation.map(_.id), fieldOfNextModel.relation.map(_.id)),
         defaultValue = diff(previousField.defaultValue, fieldOfNextModel.defaultValue).map(_.map(_.toString)),
-        enum = diff(previousField.enum, fieldOfNextModel.enum).map(_.map(_.id))
+        enum = diff(previousField.enum.map(_.name), fieldOfNextModel.enum.map(_.name))
       )
     }
 
@@ -140,11 +145,6 @@ case class MigrationStepsProposerImpl(previousProject: Project, nextProject: Pro
   }
 
   lazy val relationsToCreate: Vector[CreateRelation] = {
-    def containsRelation(project: Project, relation: Relation): Boolean = {
-      project.relations.exists { rel =>
-        rel.name == relation.name && rel.modelAId == relation.modelAId && rel.modelBId == relation.modelBId
-      }
-    }
     for {
       nextRelation <- nextProject.relations.toVector
       if !containsRelation(previousProject, nextRelation)
@@ -153,6 +153,35 @@ case class MigrationStepsProposerImpl(previousProject: Project, nextProject: Pro
         name = nextRelation.name,
         leftModelName = nextRelation.modelAId,
         rightModelName = nextRelation.modelBId
+      )
+    }
+  }
+
+  lazy val relationsToDelete: Vector[DeleteRelation] = {
+    for {
+      previousRelation <- previousProject.relations.toVector
+      if !containsRelation(nextProject, previousRelation)
+    } yield DeleteRelation(previousRelation.name)
+  }
+
+  lazy val enumsToCreate: Vector[CreateEnum] = {
+    for {
+      nextEnum         <- nextProject.enums.toVector
+      previousEnumName = renames.getPreviousEnumName(nextEnum.name)
+      if !containsEnum(previousProject, previousEnumName)
+    } yield CreateEnum(nextEnum.name, nextEnum.values)
+  }
+
+  lazy val enumsToUpdate: Vector[UpdateEnum] = {
+    for {
+      previousEnum <- previousProject.enums.toVector
+      nextEnumName = renames.getNextEnumName(previousEnum.name)
+      nextEnum     <- nextProject.getEnumByName(nextEnumName)
+    } yield {
+      UpdateEnum(
+        name = previousEnum.name,
+        newName = diff(previousEnum.name, nextEnum.name),
+        values = diff(previousEnum.values, nextEnum.values)
       )
     }
   }
@@ -166,6 +195,14 @@ case class MigrationStepsProposerImpl(previousProject: Project, nextProject: Pro
     permissions = List.empty,
     fieldPositions = List.empty
   )
+
+  def containsRelation(project: Project, relation: Relation): Boolean = {
+    project.relations.exists { rel =>
+      rel.name == relation.name && rel.modelAId == relation.modelAId && rel.modelBId == relation.modelBId
+    }
+  }
+
+  def containsEnum(project: Project, enumName: String): Boolean = project.enums.exists(_.name == enumName)
 
   def isAnyOptionSet(product: Product): Boolean = {
     import shapeless._
