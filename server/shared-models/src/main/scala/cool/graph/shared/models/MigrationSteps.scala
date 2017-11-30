@@ -45,7 +45,9 @@ case class UpdateField(
     relation: Option[Option[String]],
     defaultValue: Option[Option[String]],
     enum: Option[Option[String]]
-) extends FieldMigrationStep
+) extends FieldMigrationStep {
+  def finalName = newName.getOrElse(name)
+}
 
 sealed trait EnumMigrationStep                                                               extends MigrationStep
 case class CreateEnum(name: String, values: Seq[String])                                     extends EnumMigrationStep

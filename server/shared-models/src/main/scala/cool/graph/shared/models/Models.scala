@@ -186,6 +186,7 @@ case class Project(
   def getFieldById(id: Id): Option[Field]                        = models.flatMap(_.fields).find(_.id == id)
   def getFieldById_!(id: Id): Field                              = ???
   def getFieldByName(model: String, name: String): Option[Field] = getModelByName(model).flatMap(_.getFieldByName(name))
+  def getFieldByName_!(model: String, name: String): Field       = getModelByName_!(model).getFieldByName_!(name)
 
   def getFieldConstraintById(id: Id): Option[FieldConstraint] = {
     val fields      = models.flatMap(_.fields)
