@@ -9,6 +9,7 @@ import cool.graph.shared.models._
 import slick.jdbc.MySQLProfile.backend.DatabaseDef
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success}
 
 trait MigrationApplier {
   def applyMigration(project: Project, migration: MigrationSteps): Future[Unit]
@@ -45,9 +46,13 @@ case class MigrationApplierImpl(
         executeClientMutaction(RenameModelTable(projectId = project.id, oldName = x.name, newName = x.newName))
 
       case x: CreateField =>
-        val model = project.getModelByName_!(x.name)
+        val model = project.getModelByName_!(x.model)
         val field = model.getFieldByName_!(x.name)
-        executeClientMutaction(CreateColumn(project.id, model, field))
+        if (field.isSystemField || !field.isScalar) {
+          Future.successful(())
+        } else {
+          executeClientMutaction(CreateColumn(project.id, model, field))
+        }
 
       case x: DeleteField =>
         val model = project.getModelByName_!(x.name)
@@ -113,13 +118,24 @@ case class MigrationApplierJob(
         _ <- applier.applyMigration(project, migration)
         _ <- projectPersistence.markMigrationAsApplied(project, migration)
       } yield ()
-      doit.onComplete { result =>
-        println(s"applying migration resulted in:: $result")
-        scheduleScanMessage
+      doit.onComplete {
+        case Success(_) =>
+          println("applying migration succeeded")
+          scheduleScanMessage
+
+        case Failure(e) =>
+          println("applying migration failed with:")
+          e.printStackTrace()
+          scheduleScanMessage
       }
 
     case None =>
       println("found no unapplied migration")
+      scheduleScanMessage
+
+    case akka.actor.Status.Failure(throwable) =>
+      println("piping failed with:")
+      throwable.printStackTrace()
       scheduleScanMessage
   }
 
