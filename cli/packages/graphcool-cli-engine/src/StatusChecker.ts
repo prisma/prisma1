@@ -102,8 +102,6 @@ export async function doJobs(cachePath: string, request: any) {
   let linesToDelete = 0
   try {
     for (const job of pendingRequests) {
-      console.log('wanting to send job')
-      console.log(job)
       await requestWithTimeout(job)
       linesToDelete++
     }
