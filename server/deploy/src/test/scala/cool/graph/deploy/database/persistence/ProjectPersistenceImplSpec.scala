@@ -2,7 +2,7 @@ package cool.graph.deploy.database.persistence
 
 import cool.graph.deploy.InternalTestDatabase
 import cool.graph.deploy.database.tables.Tables
-import cool.graph.shared.models.{Enum, MigrationSteps, Project}
+import cool.graph.shared.models.{Enum, Migration, Project}
 import cool.graph.shared.project_dsl.TestProject
 import cool.graph.utils.await.AwaitUtils
 import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers}
@@ -13,8 +13,8 @@ class ProjectPersistenceImplSpec extends FlatSpec with Matchers with AwaitUtils 
 
   val projectPersistence = ProjectPersistenceImpl(internalDatabase = internalDatabase)
 
-  val project                        = TestProject()
-  val migrationSteps: MigrationSteps = MigrationSteps.empty
+  val project                   = TestProject()
+  val migrationSteps: Migration = Migration.empty
 
   ".load()" should "return None if there's no project yet in the database" in {
     val result = projectPersistence.load("non-existent-id").await()

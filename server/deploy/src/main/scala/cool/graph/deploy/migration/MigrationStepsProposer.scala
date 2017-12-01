@@ -3,7 +3,7 @@ package cool.graph.deploy.migration
 import cool.graph.shared.models._
 
 trait MigrationStepsProposer {
-  def propose(currentProject: Project, nextProject: Project, renames: Renames): MigrationSteps
+  def propose(currentProject: Project, nextProject: Project, renames: Renames): Vector[MigrationStep]
 }
 
 object MigrationStepsProposer {
@@ -11,8 +11,8 @@ object MigrationStepsProposer {
     apply((current, next, renames) => MigrationStepsProposerImpl(current, next, renames).evaluate())
   }
 
-  def apply(fn: (Project, Project, Renames) => MigrationSteps): MigrationStepsProposer = new MigrationStepsProposer {
-    override def propose(currentProject: Project, nextProject: Project, renames: Renames): MigrationSteps = fn(currentProject, nextProject, renames)
+  def apply(fn: (Project, Project, Renames) => Vector[MigrationStep]): MigrationStepsProposer = new MigrationStepsProposer {
+    override def propose(currentProject: Project, nextProject: Project, renames: Renames): Vector[MigrationStep] = fn(currentProject, nextProject, renames)
   }
 }
 
@@ -45,13 +45,11 @@ object Renames {
 case class MigrationStepsProposerImpl(previousProject: Project, nextProject: Project, renames: Renames) {
   import cool.graph.util.Diff._
 
-  def evaluate(): MigrationSteps = {
-    MigrationSteps(
-      modelsToCreate ++ modelsToUpdate ++ modelsToDelete ++
-        fieldsToCreate ++ fieldsToDelete ++ fieldsToUpdate ++
-        relationsToCreate ++ relationsToDelete ++
-        enumsToCreate ++ enumsToDelete ++ enumsToUpdate
-    )
+  def evaluate(): Vector[MigrationStep] = {
+    modelsToCreate ++ modelsToUpdate ++ modelsToDelete ++
+      fieldsToCreate ++ fieldsToDelete ++ fieldsToUpdate ++
+      relationsToCreate ++ relationsToDelete ++
+      enumsToCreate ++ enumsToDelete ++ enumsToUpdate
   }
 
   lazy val modelsToCreate: Vector[CreateModel] = {

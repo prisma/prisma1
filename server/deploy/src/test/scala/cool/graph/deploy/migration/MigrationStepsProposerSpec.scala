@@ -21,8 +21,8 @@ class MigrationStepsProposerSpec extends FlatSpec with Matchers with AwaitUtils 
       schema.model("Test").field("a", _.String).field("b", _.Int)
     }
 
-    val proposer               = MigrationStepsProposerImpl(previousProject, nextProject, renames)
-    val result: MigrationSteps = proposer.evaluate()
+    val proposer          = MigrationStepsProposerImpl(previousProject, nextProject, renames)
+    val result: Migration = proposer.evaluate()
 
     result.steps shouldBe empty
   }
@@ -38,8 +38,8 @@ class MigrationStepsProposerSpec extends FlatSpec with Matchers with AwaitUtils 
       schema.model("Test2").field("c", _.String).field("d", _.Int)
     }
 
-    val proposer               = MigrationStepsProposerImpl(previousProject, nextProject, renames)
-    val result: MigrationSteps = proposer.evaluate()
+    val proposer          = MigrationStepsProposerImpl(previousProject, nextProject, renames)
+    val result: Migration = proposer.evaluate()
 
     result.steps.length shouldBe 4
     result.steps should contain allOf (
@@ -62,8 +62,8 @@ class MigrationStepsProposerSpec extends FlatSpec with Matchers with AwaitUtils 
       schema.model("Test").field("a", _.String).field("b", _.Int)
     }
 
-    val proposer               = MigrationStepsProposerImpl(previousProject, nextProject, renames)
-    val result: MigrationSteps = proposer.evaluate()
+    val proposer          = MigrationStepsProposerImpl(previousProject, nextProject, renames)
+    val result: Migration = proposer.evaluate()
 
     result.steps.length shouldBe 1
     result.steps.last shouldBe DeleteModel("Test2")
@@ -81,8 +81,8 @@ class MigrationStepsProposerSpec extends FlatSpec with Matchers with AwaitUtils 
       schema.model("Test2").field("a", _.String).field("b", _.Int)
     }
 
-    val proposer               = MigrationStepsProposerImpl(previousProject, nextProject, renames)
-    val result: MigrationSteps = proposer.evaluate()
+    val proposer          = MigrationStepsProposerImpl(previousProject, nextProject, renames)
+    val result: Migration = proposer.evaluate()
 
     result.steps.length shouldBe 1
     result.steps.last shouldBe UpdateModel("Test", "Test2")
@@ -98,8 +98,8 @@ class MigrationStepsProposerSpec extends FlatSpec with Matchers with AwaitUtils 
       schema.model("Test").field("a", _.String).field("b", _.Int)
     }
 
-    val proposer               = MigrationStepsProposerImpl(previousProject, nextProject, renames)
-    val result: MigrationSteps = proposer.evaluate()
+    val proposer          = MigrationStepsProposerImpl(previousProject, nextProject, renames)
+    val result: Migration = proposer.evaluate()
 
     println(result.steps)
     result.steps.length shouldBe 1
@@ -116,8 +116,8 @@ class MigrationStepsProposerSpec extends FlatSpec with Matchers with AwaitUtils 
       schema.model("Test").field("a", _.String)
     }
 
-    val proposer               = MigrationStepsProposerImpl(previousProject, nextProject, renames)
-    val result: MigrationSteps = proposer.evaluate()
+    val proposer          = MigrationStepsProposerImpl(previousProject, nextProject, renames)
+    val result: Migration = proposer.evaluate()
 
     println(result.steps)
     result.steps.length shouldBe 1
@@ -151,8 +151,8 @@ class MigrationStepsProposerSpec extends FlatSpec with Matchers with AwaitUtils 
         .field("e", _.String, isUnique = true) // Now unique
     }
 
-    val proposer               = MigrationStepsProposerImpl(previousProject, nextProject, renames)
-    val result: MigrationSteps = proposer.evaluate()
+    val proposer          = MigrationStepsProposerImpl(previousProject, nextProject, renames)
+    val result: Migration = proposer.evaluate()
 
     println(result.steps)
     result.steps.length shouldBe 5
@@ -181,8 +181,8 @@ class MigrationStepsProposerSpec extends FlatSpec with Matchers with AwaitUtils 
         .oneToManyRelation_!("comments", "todo", comment)
     }
 
-    val proposer               = MigrationStepsProposerImpl(previousProject, nextProject, Renames.empty)
-    val result: MigrationSteps = proposer.evaluate()
+    val proposer          = MigrationStepsProposerImpl(previousProject, nextProject, Renames.empty)
+    val result: Migration = proposer.evaluate()
 
     result.steps.length shouldBe 3
     val relationName = nextProject.relations.head.name

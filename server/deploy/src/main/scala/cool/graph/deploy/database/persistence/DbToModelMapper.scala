@@ -1,19 +1,25 @@
 package cool.graph.deploy.database.persistence
 
-import cool.graph.deploy.database.tables.{Client, Project}
+import cool.graph.deploy.database.tables.{Client, Migration, Project}
 import cool.graph.shared.models
+import cool.graph.shared.models.MigrationStep
 
 object DbToModelMapper {
   import ProjectJsonFormatter._
   import MigrationStepsJsonFormatter._
 
-  def convert(project: Project): models.Project = {
-    val projectModel = project.model.as[models.Project]
-    projectModel.copy(revision = project.revision)
+  def convert(project: Project, migration: Migration): models.Project = {
+    val projectModel = migration.schema.as[models.Project]
+    projectModel.copy(revision = migration.revision)
   }
 
-  def convertSteps(project: Project): models.MigrationSteps = {
-    project.migrationSteps.as[models.MigrationSteps]
+  def convert(migration: Migration): models.Migration = {
+    models.Migration(
+      migration.projectId,
+      migration.revision,
+      migration.hasBeenApplied,
+      migration.steps.as[Vector[MigrationStep]]
+    )
   }
 
   def convert(client: Client): models.Client = {

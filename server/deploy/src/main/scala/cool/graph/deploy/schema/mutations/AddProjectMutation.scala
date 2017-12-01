@@ -22,9 +22,22 @@ case class AddProjectMutation(
       projectDatabase = TestProject.database,
       ownerId = client.id
     )
-    projectPersistence.save(newProject, MigrationSteps.empty).map { _ =>
-      MutationSuccess(AddProjectMutationPayload(args.clientMutationId, newProject))
-    }
+
+    val migration = Migration(
+      projectId = newProject.id,
+      revision = 0,
+      hasBeenApplied = false,
+      steps = Vector(SetupProject())
+    )
+
+    projectPersistence
+      .save(newProject)
+      .flatMap { _ =>
+        projectPersistence.save(newProject, migration)
+      }
+      .map { _ =>
+        MutationSuccess(AddProjectMutationPayload(args.clientMutationId, newProject))
+      }
   }
 }
 
