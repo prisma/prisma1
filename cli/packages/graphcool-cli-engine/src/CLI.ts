@@ -8,6 +8,7 @@ import { Dispatcher } from './Dispatcher/Dispatcher'
 import { NotFound } from './NotFound'
 import fs from './fs'
 import { getCommandId } from './util'
+import { StatusChecker } from './StatusChecker'
 
 const debug = require('debug')('cli')
 const handleEPIPE = err => {
@@ -95,9 +96,7 @@ export class CLI {
       )
       // if nothing is found, try again with taking what is before :
       if (!result.Command && id && id.includes(':')) {
-        result = await dispatcher.findCommand(
-          id.split(':')[0]
-        )
+        result = await dispatcher.findCommand(id.split(':')[0])
       }
       const { plugin } = result
       const foundCommand = result.Command
@@ -112,7 +111,11 @@ export class CLI {
             dont_print: true,
           })
         }
+
         this.cmd = await foundCommand.run(this.config)
+        const checker = new StatusChecker(this.config, this.cmd.env)
+        checker.checkStatus(id, this.cmd.args, this.cmd.flags, this.cmd.argv)
+
         if (process.env.NOCK_WRITE_RESPONSE_CLI === 'true') {
           const requests = require('nock').recorder.play()
           const requestsPath = path.join(process.cwd(), 'requests.js')
