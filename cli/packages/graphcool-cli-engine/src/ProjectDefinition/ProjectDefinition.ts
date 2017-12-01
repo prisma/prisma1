@@ -46,11 +46,24 @@ export class ProjectDefinitionClass {
 
   public async load(args: Args) {
     this.args = args
-    if (this.config.definitionPath && fs.pathExistsSync(this.config.definitionPath)) {
-      this.definition = await fsToProject(this.config.definitionDir, this.out, args)
+    if (
+      this.config.definitionPath &&
+      fs.pathExistsSync(this.config.definitionPath)
+    ) {
+      this.definition = await fsToProject(
+        this.config.definitionDir,
+        this.out,
+        args,
+      )
       if (process.env.GRAPHCOOL_DUMP_LOADED_DEFINITION) {
-        const definitionJsonPath = path.join(this.config.definitionDir, 'loaded-definition.json')
-        fs.writeFileSync(definitionJsonPath, JSON.stringify(this.definition, null, 2))
+        const definitionJsonPath = path.join(
+          this.config.definitionDir,
+          'loaded-definition.json',
+        )
+        fs.writeFileSync(
+          definitionJsonPath,
+          JSON.stringify(this.definition, null, 2),
+        )
       }
     }
   }
@@ -65,8 +78,14 @@ export class ProjectDefinitionClass {
     )
 
     if (process.env.GRAPHCOOL_DUMP_SAVED_DEFINITION) {
-      const definitionJsonPath = path.join(this.config.definitionDir, 'definition.json')
-      fs.writeFileSync(definitionJsonPath, JSON.stringify(this.definition, null, 2))
+      const definitionJsonPath = path.join(
+        this.config.definitionDir,
+        'definition.json',
+      )
+      fs.writeFileSync(
+        definitionJsonPath,
+        JSON.stringify(this.definition, null, 2),
+      )
     }
   }
 
@@ -77,10 +96,10 @@ export class ProjectDefinitionClass {
       this.config.definitionPath!,
       this.args,
     )
-    const types = this.definition!.modules[0].files[definition.types]
+    const types = this.definition!.modules[0].files[definition.types[0]]
     this.out.log(chalk.blue(`Written ${definition.types}`))
     fs.writeFileSync(
-      path.join(this.config.definitionDir, definition.types),
+      path.join(this.config.definitionDir, definition.types[0]),
       types,
     )
   }
@@ -125,37 +144,61 @@ export class ProjectDefinitionClass {
   }
 
   comment(str: string) {
-    return str.split('\n').map(l => `# ${l}`).join('\n')
+    return str
+      .split('\n')
+      .map(l => `# ${l}`)
+      .join('\n')
   }
 
   addTemplateNotes(str: string, templateName: string) {
-    return `\n# added by ${templateName} template: (please uncomment)\n` + str + '\n\n'
+    return (
+      `\n# added by ${templateName} template: (please uncomment)\n` +
+      str +
+      '\n\n'
+    )
   }
 
-  public mergeDefinition(newDefinitionYaml: string, templateName: string, useComments: boolean = true): string {
+  public mergeDefinition(
+    newDefinitionYaml: string,
+    templateName: string,
+    useComments: boolean = true,
+  ): string {
     let newDefinition = this.definition!.modules[0].content
     const newYaml = yamlParser.safeLoad(newDefinitionYaml)
 
     const whiteList = ['functions', 'permissions']
 
-    newYaml.mappings.filter(m => whiteList.includes(m.key.value)).forEach(mapping => {
-      const key = mapping.key.value
-      let beginning = this.getBeginningPosition(newDefinition, key)
-      let values = this.extractValues(newDefinitionYaml, newYaml, key, beginning > -1)
-      values = useComments ? this.comment(values) : values
-      values = this.addTemplateNotes(values, templateName)
-      beginning = beginning === -1 ? newDefinition.length - 1 : beginning
-      newDefinition = newDefinition.slice(0, beginning + 1) + values + newDefinition.slice(beginning + 1)
-    })
+    newYaml.mappings
+      .filter(m => whiteList.includes(m.key.value))
+      .forEach(mapping => {
+        const key = mapping.key.value
+        let beginning = this.getBeginningPosition(newDefinition, key)
+        let values = this.extractValues(
+          newDefinitionYaml,
+          newYaml,
+          key,
+          beginning > -1,
+        )
+        values = useComments ? this.comment(values) : values
+        values = this.addTemplateNotes(values, templateName)
+        beginning = beginning === -1 ? newDefinition.length - 1 : beginning
+        newDefinition =
+          newDefinition.slice(0, beginning + 1) +
+          values +
+          newDefinition.slice(beginning + 1)
+      })
 
     return newDefinition
   }
 
   public mergeTypes(newTypes: string, templateName: string) {
-    const typesPath = this.definition!.modules[0].definition!.types
+    let typesPath = this.definition!.modules[0].definition!.types
+    typesPath = Array.isArray(typesPath) ? typesPath[0] : typesPath
     const oldTypes = this.definition!.modules[0].files[typesPath]
 
-    return oldTypes + this.addTemplateNotes(this.comment(newTypes), templateName)
+    return (
+      oldTypes + this.addTemplateNotes(this.comment(newTypes), templateName)
+    )
   }
 
   public async checkNodeModules(throwError: boolean) {
@@ -165,51 +208,76 @@ export class ProjectDefinitionClass {
     const definitionFile = fs.readFileSync(this.config.definitionPath!, 'utf-8')
     const json = yaml.safeLoad(definitionFile) as GraphcoolDefinition
     const functions = this.extractFunctions(json.functions)
-    const functionsWithRequire = functions.reduce((acc, fn) => {
-      const src = typeof fn.fn.handler.code === 'string' ? fn.fn.handler.code : fn.fn.handler.code!.src
-      if (!fs.pathExistsSync(src)) {
-        this.out.error(`Error for function handler ${chalk.bold(fn.name)}: File ${chalk.bold(src)} doesn't exist.`)
-      }
-      const file = fs.readFileSync(src, 'utf-8')
-      const requireRegex = /(?:(?:var|const)\s*([\s\S]*?)\s*=\s*)?require\(['"]([^'"]+)['"](?:, ['"]([^'"]+)['"])?\);?/
-      const importRegex = /\bimport\s+(?:[\s\S]+\s+from\s+)?[\'"]([^"\']+)["\']/
-      const statements = file.split('\n').reduce((racc, line, index) => {
-        const requireMatch = requireRegex.exec(line)
-        const importMatch = importRegex.exec(line)
-        if (requireMatch || importMatch) {
-          const srcPath = requireMatch ? requireMatch[1] : importMatch![1]
+    const functionsWithRequire = functions.reduce(
+      (acc, fn) => {
+        const src =
+          typeof fn.fn.handler.code === 'string'
+            ? fn.fn.handler.code
+            : fn.fn.handler.code!.src
+        if (!fs.pathExistsSync(src)) {
+          this.out.error(
+            `Error for function handler ${chalk.bold(
+              fn.name,
+            )}: File ${chalk.bold(src)} doesn't exist.`,
+          )
+        }
+        const file = fs.readFileSync(src, 'utf-8')
+        const requireRegex = /(?:(?:var|const)\s*([\s\S]*?)\s*=\s*)?require\(['"]([^'"]+)['"](?:, ['"]([^'"]+)['"])?\);?/
+        const importRegex = /\bimport\s+(?:[\s\S]+\s+from\s+)?[\'"]([^"\']+)["\']/
+        const statements = file.split('\n').reduce(
+          (racc, line, index) => {
+            const requireMatch = requireRegex.exec(line)
+            const importMatch = importRegex.exec(line)
+            if (requireMatch || importMatch) {
+              const srcPath = requireMatch ? requireMatch[1] : importMatch![1]
 
-          if (srcPath) {
-            if (!builtinModules.includes(srcPath) && !srcPath.startsWith('./')) {
-              const result = {
-                line, index: index + 1, srcPath,
+              if (srcPath) {
+                if (
+                  !builtinModules.includes(srcPath) &&
+                  !srcPath.startsWith('./')
+                ) {
+                  const result = {
+                    line,
+                    index: index + 1,
+                    srcPath,
+                  }
+
+                  return racc.concat(result)
+                }
               }
-
-              return racc.concat(result)
             }
-          }
+
+            return racc
+          },
+          [] as any
+        )
+        if (statements.length > 0) {
+          return acc.concat({
+            statements,
+            fn,
+            src,
+          })
         }
 
-        return racc
-      }, [] as any)
-      if (statements.length > 0) {
-        return acc.concat({
-          statements,
-          fn,
-          src,
-        })
-      }
-
-      return acc
-    }, [] as any)
+        return acc
+      },
+      [] as any,
+    )
 
     if (functionsWithRequire.length > 0) {
       if (
         !fs.pathExistsSync(path.join(this.config.definitionDir, 'node_modules'))
       ) {
-        const imports = functionsWithRequire.map(fn => {
-          return `${chalk.bold(fn.fn.name)} (${fn.src}):\n` + fn.statements.map(s => `  ${s.index}: ${chalk.dim(s.line)}`).join('\n')
-        }).join('\n')
+        const imports = functionsWithRequire
+          .map(fn => {
+            return (
+              `${chalk.bold(fn.fn.name)} (${fn.src}):\n` +
+              fn.statements
+                .map(s => `  ${s.index}: ${chalk.dim(s.line)}`)
+                .join('\n')
+            )
+          })
+          .join('\n')
         const text = `You have import/require statements in your functions without a node_modules folder:
 ${imports}
 
@@ -242,7 +310,6 @@ Please make sure you specified all needed dependencies in your package.json and 
     const mapping = obj.mappings.find(m => m.key.value === key)
     const end = mapping.endPosition
 
-
     const newFile = file.slice(0, end) + insertion + file.slice(end)
     const valueStart = mapping.value.startPosition
     const valueEnd = mapping.value.endPosition
@@ -253,14 +320,21 @@ Please make sure you specified all needed dependencies in your package.json and 
     return file
   }
 
-  private extractValues(file: string, obj: any, key: string, valuesOnly: boolean) {
+  private extractValues(
+    file: string,
+    obj: any,
+    key: string,
+    valuesOnly: boolean,
+  ) {
     const mapping = obj.mappings.find(m => m.key.value === key)
 
     if (!mapping) {
       this.out.error(`Could not find mapping for key ${key}`)
     }
 
-    const start = valuesOnly ? mapping.key.endPosition + 1 : mapping.startPosition
+    const start = valuesOnly
+      ? mapping.key.endPosition + 1
+      : mapping.startPosition
     return file.slice(start, mapping.endPosition)
   }
 
@@ -270,12 +344,13 @@ Please make sure you specified all needed dependencies in your package.json and 
     return mapping ? mapping.key.endPosition + 1 : -1
   }
 
-
   get functions(): FunctionTuple[] {
     if (!this.definition) {
       return []
     }
-    return this.extractFunctions(this.definition!.modules[0].definition!.functions)
+    return this.extractFunctions(
+      this.definition!.modules[0].definition!.functions,
+    )
   }
 
   private extractFunctions(functions?: { [p: string]: FunctionDefinition }) {
@@ -292,6 +367,4 @@ Please make sure you specified all needed dependencies in your package.json and 
         })
     }
   }
-
 }
-

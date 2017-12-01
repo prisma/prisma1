@@ -121,8 +121,8 @@ class SingleServerInjectorImpl(implicit val actorSystem: ActorSystem, actorMater
   lazy val algoliaKeyChecker: AlgoliaKeyChecker                                   = new AlgoliaKeyCheckerImplementation()(toScaldi)
   lazy val auth0Api: Auth0Api                                                     = new Auth0ApiImplementation()(toScaldi)
   lazy val auth0Extend: Auth0Extend                                               = new Auth0ExtendImplementation()(toScaldi)
-  lazy val environment: String                                                    = sys.env.getOrElse("ENVIRONMENT", "local")
-  lazy val serviceName: String                                                    = sys.env.getOrElse("SERVICE_NAME", "local")
+  override lazy val environment: String                                           = sys.env.getOrElse("ENVIRONMENT", "local")
+  override lazy val serviceName: String                                           = sys.env.getOrElse("SERVICE_NAME", "local")
   lazy val pubSub: InMemoryAkkaPubSub[String]                                     = InMemoryAkkaPubSub[String]()
   override lazy val projectSchemaInvalidationSubscriber: PubSubSubscriber[String] = pubSub
   lazy val invalidationSubscriber: PubSubSubscriber[SchemaInvalidatedMessage]     = pubSub.map[SchemaInvalidatedMessage]((str: String) => SchemaInvalidated)
