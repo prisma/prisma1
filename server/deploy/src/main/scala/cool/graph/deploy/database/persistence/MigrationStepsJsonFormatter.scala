@@ -75,7 +75,6 @@ object MigrationStepsJsonFormatter extends DefaultReads {
 
     override def reads(json: JsValue): JsResult[MigrationStep] = {
       (json \ discriminatorField).validate[String].flatMap {
-        case "SetupProject"   => JsSuccess(SetupProject())
         case "CreateModel"    => createModelFormat.reads(json)
         case "DeleteModel"    => deleteModelFormat.reads(json)
         case "UpdateModel"    => updateModelFormat.reads(json)
@@ -92,7 +91,6 @@ object MigrationStepsJsonFormatter extends DefaultReads {
 
     override def writes(step: MigrationStep): JsValue = {
       val withOutDiscriminator = step match {
-        case x: SetupProject   => Json.obj()
         case x: CreateModel    => createModelFormat.writes(x)
         case x: DeleteModel    => deleteModelFormat.writes(x)
         case x: UpdateModel    => updateModelFormat.writes(x)

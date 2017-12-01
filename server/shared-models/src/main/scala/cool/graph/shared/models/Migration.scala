@@ -18,11 +18,7 @@ object Migration {
 }
 
 sealed trait MigrationStep
-
-sealed trait ProjectMigrationStep extends MigrationStep
-sealed trait ModelMigrationStep   extends MigrationStep
-
-case class SetupProject() extends ProjectMigrationStep
+sealed trait ModelMigrationStep extends MigrationStep
 
 case class CreateModel(name: String)                  extends ModelMigrationStep
 case class DeleteModel(name: String)                  extends ModelMigrationStep
