@@ -26,7 +26,7 @@ object SlickExtensions {
 
   def listToJson(param: List[Any]): String = {
     param
-      .map(_ match {
+      .map {
         case v: String     => v.toJson
         case v: JsValue    => v.toJson
         case v: Boolean    => v.toJson
@@ -37,7 +37,7 @@ object SlickExtensions {
         case v: BigInt     => v.toJson
         case v: BigDecimal => v.toJson
         case v: DateTime   => v.toString.toJson
-      })
+      }
       .toJson
       .toString
   }
@@ -59,15 +59,20 @@ object SlickExtensions {
       case param: Double     => sql"$param"
       case param: BigInt     => sql"#${param.toString}"
       case param: BigDecimal => sql"#${param.toString}"
-      case param: DateTime =>
-        sql"${param.toString(DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSS").withZoneUTC())}"
-      case param: Vector[_] => sql"${listToJson(param.toList)}"
-      case None             => sql"NULL"
-      case null             => sql"NULL"
-      case _ =>
-        throw new IllegalArgumentException("Unsupported scalar value in SlickExtensions: " + param.toString)
+      case param: DateTime   => sql"${param.toString(DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSS").withZoneUTC())}"
+      case param: Vector[_]  => sql"${listToJson(param.toList)}"
+      case None              => sql"NULL"
+      case null              => sql"NULL"
+      case _                 => throw new IllegalArgumentException("Unsupported scalar value in SlickExtensions: " + param.toString)
     }
   }
+
+  def listToJsonList(param: List[Any]): String = {
+    val x = listToJson(param)
+    x.substring(1, x.length - 1)
+  }
+
+  def escapeUnsafeParamListValue(param: Vector[Any]) = sql"${listToJsonList(param.toList)}"
 
   def escapeKey(key: String) = sql"`#$key`"
 
@@ -80,11 +85,8 @@ object SlickExtensions {
 
   def generateParentheses(sql: Option[SQLActionBuilder]) = {
     sql match {
-      case None => None
-      case Some(sql) =>
-        Some(
-          sql"(" concat sql concat sql")"
-        )
+      case None      => None
+      case Some(sql) => Some(sql"(" concat sql concat sql")")
     }
   }
 
