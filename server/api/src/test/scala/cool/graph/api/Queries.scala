@@ -6,7 +6,7 @@ import org.scalatest.{FlatSpec, Matchers}
 class Queries extends FlatSpec with Matchers with ApiTestServer {
   "schema" should "include simple API features" in {
     val schema = SchemaDsl()
-    schema.model("Car").field("wheelCount", _.Int).field_!("name", _.String)
+    schema.model("Car").field("wheelCount", _.Int).field_!("name", _.String).field_!("createdAt", _.DateTime).field_!("updatedAt", _.DateTime)
     val (client, project) = schema.buildClientAndProject()
 
     setupProject(client, project)
@@ -29,8 +29,8 @@ class Queries extends FlatSpec with Matchers with ApiTestServer {
 
   "schema" should "include old nested mutations" in {
     val schema = SchemaDsl()
-    val car    = schema.model("Car").field("wheelCount", _.Int).field_!("name", _.String)
-    schema.model("Wheel").manyToOneRelation("car", "wheels", car).field_!("size", _.Int)
+    val car    = schema.model("Car").field("wheelCount", _.Int).field_!("name", _.String).field_!("createdAt", _.DateTime).field_!("updatedAt", _.DateTime)
+    schema.model("Wheel").manyToOneRelation("car", "wheels", car).field_!("size", _.Int).field_!("createdAt", _.DateTime).field_!("updatedAt", _.DateTime)
     val (client, project) = schema.buildClientAndProject()
 
     setupProject(client, project)
