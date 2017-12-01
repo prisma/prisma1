@@ -5,7 +5,7 @@ import cool.graph.deploy.database.persistence.{ProjectPersistence, ProjectPersis
 import cool.graph.deploy.migration.{DesiredProjectInferer, MigrationStepsProposer, RenameInferer}
 import cool.graph.deploy.schema.fields.{AddProjectField, DeployField}
 import cool.graph.deploy.schema.mutations._
-import cool.graph.deploy.schema.types.{MigrationStepType, ProjectType, SchemaErrorType}
+import cool.graph.deploy.schema.types.{MigrationStepType, MigrationType, ProjectType, SchemaErrorType}
 import cool.graph.shared.models.{Client, Project}
 import sangria.relay.Mutation
 import sangria.schema.{Field, _}
@@ -82,7 +82,7 @@ case class SchemaBuilderImpl(
       outputFields = sangria.schema.fields[SystemUserContext, DeployMutationPayload](
         Field("project", OptionType(ProjectType.Type), resolve = (ctx: Context[SystemUserContext, DeployMutationPayload]) => ctx.value.project),
         Field("errors", ListType(SchemaErrorType.Type), resolve = (ctx: Context[SystemUserContext, DeployMutationPayload]) => ctx.value.errors),
-        Field("migration", ListType(MigrationType.Type), resolve = (ctx: Context[SystemUserContext, DeployMutationPayload]) => ctx.value.migration)
+        Field("migration", MigrationType.Type, resolve = (ctx: Context[SystemUserContext, DeployMutationPayload]) => ctx.value.migration)
       ),
       mutateAndGetPayload = (args, ctx) =>
         handleMutationResult {
