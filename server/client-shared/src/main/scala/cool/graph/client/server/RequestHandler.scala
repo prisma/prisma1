@@ -82,6 +82,22 @@ case class RequestHandler(
     )
   }
 
+  def handleRawRequestForImport(projectId: String, rawRequest: RawRequest): Future[(StatusCode, JsValue)] = {
+    def checkForAdmin(auth: Option[AuthenticatedRequest]): Unit =
+      if (!auth.exists(_.isAdmin)) throw InsufficientPermissions("Insufficient permissions for this query")
+
+    import cool.graph.client.mutactions.DataImport._
+
+    val graphQlRequestFuture = for {
+      projectWithClientId  <- fetchProject(projectId)
+      authenticatedRequest <- getAuthContext(projectWithClientId, rawRequest.authorizationHeader)
+      _                    = checkForAdmin(authenticatedRequest)
+      res                  = executeGeneric(projectWithClientId.project, rawRequest.json)
+    } yield res
+
+    Future.successful((200, JsObject.empty))
+  }
+
   def handleRawRequestForProjectSchema(
       projectId: String,
       rawRequest: RawRequest
