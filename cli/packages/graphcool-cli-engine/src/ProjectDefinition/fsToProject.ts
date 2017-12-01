@@ -81,19 +81,23 @@ export async function fsToModule(
   const typesPaths = Array.isArray(definition.types)
     ? definition.types
     : [definition.types]
+
+  let allTypes = ''
   typesPaths.forEach(typesPath => {
     if (fs.existsSync(typesPath)) {
       const types = fs.readFileSync(typesPath, 'utf-8')
-      files = {
-        ...files,
-        [typesPath]: types,
-      }
+      allTypes += types + '\n'
     } else {
       errors.push({
         message: `The types definition file "${typesPath}" could not be found.`,
       })
     }
   })
+
+  files = {
+    ...files,
+    [typesPaths[0]]: allTypes,
+  }
 
   if (definition.permissions) {
     definition.permissions.forEach(permission => {

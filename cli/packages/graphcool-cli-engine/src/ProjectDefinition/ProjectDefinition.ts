@@ -26,6 +26,9 @@ export class ProjectDefinitionClass {
       let content = module.content
       if (module.definition && typeof module.definition === 'object') {
         // parse + stringify trims away `undefined` values, which are not accepted by the yaml parser
+        if (Array.isArray(module.definition.types)) {
+          module.definition.types = module.definition.types[0]
+        }
         content = yaml.safeDump(JSON.parse(JSON.stringify(module.definition)))
       }
       return { name, content, files, externalFiles }
