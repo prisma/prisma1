@@ -1,6 +1,6 @@
 package cool.graph.deploy.schema.mutations
 
-import cool.graph.deploy.database.persistence.ProjectPersistence
+import cool.graph.deploy.database.persistence.MigrationPersistence
 import cool.graph.deploy.migration.validation.{SchemaError, SchemaSyntaxValidator}
 import cool.graph.deploy.migration.{DesiredProjectInferer, MigrationStepsProposer, RenameInferer}
 import cool.graph.shared.models.{Migration, Project}
@@ -15,7 +15,7 @@ case class DeployMutation(
     desiredProjectInferer: DesiredProjectInferer,
     migrationStepsProposer: MigrationStepsProposer,
     renameInferer: RenameInferer,
-    projectPersistence: ProjectPersistence
+    migrationPersistence: MigrationPersistence
 )(
     implicit ec: ExecutionContext
 ) extends Mutation[DeployMutationPayload] {
@@ -49,7 +49,7 @@ case class DeployMutation(
       migrationSteps = migrationStepsProposer.propose(project, nextProject, renames)
       migration      = Migration(nextProject.id, 0, hasBeenApplied = false, migrationSteps) // how to get to the revision...?
       savedMigration <- if (migrationSteps.nonEmpty) {
-                         projectPersistence.save(nextProject, migration)
+                         migrationPersistence.create(nextProject, migration)
                        } else {
                          Future.successful(Migration.empty)
                        }

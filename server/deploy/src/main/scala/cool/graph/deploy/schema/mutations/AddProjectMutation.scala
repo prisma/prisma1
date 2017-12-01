@@ -1,17 +1,19 @@
 package cool.graph.deploy.schema.mutations
 
 import cool.graph.cuid.Cuid
-import cool.graph.deploy.database.persistence.ProjectPersistence
+import cool.graph.deploy.database.persistence.{MigrationPersistence, ProjectPersistence}
 import cool.graph.deploy.migration.mutactions.CreateClientDatabaseForProject
 import cool.graph.shared.models._
 import cool.graph.shared.project_dsl.TestProject
 import slick.jdbc.MySQLProfile.backend.DatabaseDef
+
 import scala.concurrent.{ExecutionContext, Future}
 
 case class AddProjectMutation(
     args: AddProjectInput,
     client: Client,
     projectPersistence: ProjectPersistence,
+    migrationPersistence: MigrationPersistence,
     clientDb: DatabaseDef
 )(
     implicit ec: ExecutionContext
@@ -34,10 +36,10 @@ case class AddProjectMutation(
     )
 
     for {
-      _    <- projectPersistence.save(newProject)
+      _    <- projectPersistence.create(newProject)
       stmt <- CreateClientDatabaseForProject(newProject.id).execute
       _    <- clientDb.run(stmt.sqlAction)
-      _    <- projectPersistence.save(newProject, migration)
+      _    <- migrationPersistence.create(newProject, migration)
     } yield MutationSuccess(AddProjectMutationPayload(args.clientMutationId, newProject))
   }
 }

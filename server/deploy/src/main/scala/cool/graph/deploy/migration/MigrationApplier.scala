@@ -2,7 +2,7 @@ package cool.graph.deploy.migration
 
 import akka.actor.Actor
 import akka.actor.Actor.Receive
-import cool.graph.deploy.database.persistence.ProjectPersistence
+import cool.graph.deploy.database.persistence.{MigrationPersistence, ProjectPersistence}
 import cool.graph.deploy.migration.MigrationApplierJob.ScanForUnappliedMigrations
 import cool.graph.deploy.migration.mutactions._
 import cool.graph.shared.models._
@@ -164,7 +164,7 @@ object MigrationApplierJob {
 
 case class MigrationApplierJob(
     clientDatabase: DatabaseDef,
-    projectPersistence: ProjectPersistence
+    migrationPersistence: MigrationPersistence
 ) extends Actor {
   import scala.concurrent.duration._
   import akka.pattern.pipe
@@ -177,14 +177,14 @@ case class MigrationApplierJob(
   override def receive: Receive = {
     case ScanForUnappliedMigrations =>
       println("scanning for migrations")
-      pipe(projectPersistence.getUnappliedMigration()) to self
+      pipe(migrationPersistence.getUnappliedMigration()) to self
 
     case Some(UnappliedMigration(prevProject, nextProject, migration)) =>
       println(s"found the unapplied migration in project ${prevProject.id}: $migration")
       val doit = for {
         result <- applier.applyMigration(prevProject, nextProject, migration)
         _ <- if (result.succeeded) {
-              projectPersistence.markMigrationAsApplied(migration)
+              migrationPersistence.markMigrationAsApplied(migration)
             } else {
               Future.successful(())
             }

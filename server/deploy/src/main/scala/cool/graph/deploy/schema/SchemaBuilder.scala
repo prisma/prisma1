@@ -2,7 +2,7 @@ package cool.graph.deploy.schema
 
 import akka.actor.ActorSystem
 import cool.graph.deploy.DeployDependencies
-import cool.graph.deploy.database.persistence.{ProjectPersistence, ProjectPersistenceImpl}
+import cool.graph.deploy.database.persistence.{MigrationPersistence, ProjectPersistence, ProjectPersistenceImpl}
 import cool.graph.deploy.migration.{DesiredProjectInferer, MigrationStepsProposer, RenameInferer}
 import cool.graph.deploy.schema.fields.{AddProjectField, DeployField}
 import cool.graph.deploy.schema.mutations._
@@ -37,6 +37,7 @@ case class SchemaBuilderImpl(
   val internalDb: DatabaseDef                        = dependencies.internalDb
   val clientDb: DatabaseDef                          = dependencies.clientDb
   val projectPersistence: ProjectPersistence         = dependencies.projectPersistence
+  val migrationPersistence: MigrationPersistence     = dependencies.migrationPersistence
   val desiredProjectInferer: DesiredProjectInferer   = DesiredProjectInferer()
   val migrationStepsProposer: MigrationStepsProposer = MigrationStepsProposer()
   val renameInferer: RenameInferer                   = RenameInferer
@@ -97,7 +98,7 @@ case class SchemaBuilderImpl(
                        desiredProjectInferer = desiredProjectInferer,
                        migrationStepsProposer = migrationStepsProposer,
                        renameInferer = renameInferer,
-                       projectPersistence = projectPersistence
+                       migrationPersistence = migrationPersistence
                      ).execute
           } yield result
       }
@@ -119,6 +120,7 @@ case class SchemaBuilderImpl(
             args = args,
             client = ctx.ctx.client,
             projectPersistence = projectPersistence,
+            migrationPersistence = migrationPersistence,
             clientDb = clientDb
           ).execute
       }

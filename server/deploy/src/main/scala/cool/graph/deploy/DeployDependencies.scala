@@ -2,7 +2,7 @@ package cool.graph.deploy
 
 import akka.actor.{ActorSystem, Props}
 import akka.stream.ActorMaterializer
-import cool.graph.deploy.database.persistence.{DbToModelMapper, ProjectPersistenceImpl}
+import cool.graph.deploy.database.persistence.{DbToModelMapper, MigrationPersistenceImpl, ProjectPersistenceImpl}
 import cool.graph.deploy.database.schema.InternalDatabaseSchema
 import cool.graph.deploy.database.tables.Tables
 import cool.graph.deploy.migration.MigrationApplierJob
@@ -22,12 +22,13 @@ trait DeployDependencies {
 
   implicit def self: DeployDependencies
 
-  val internalDb          = setupAndGetInternalDatabase()
-  val clientDb            = Database.forConfig("client")
-  val projectPersistence  = ProjectPersistenceImpl(internalDb)
-  val client              = defaultClient()
-  val migrationApplierJob = system.actorOf(Props(MigrationApplierJob(clientDb, projectPersistence)))
-  val deploySchemaBuilder = SchemaBuilder()
+  val internalDb           = setupAndGetInternalDatabase()
+  val clientDb             = Database.forConfig("client")
+  val projectPersistence   = ProjectPersistenceImpl(internalDb)
+  val migrationPersistence = MigrationPersistenceImpl(internalDb)
+  val client               = defaultClient()
+  val migrationApplierJob  = system.actorOf(Props(MigrationApplierJob(clientDb, migrationPersistence)))
+  val deploySchemaBuilder  = SchemaBuilder()
 
   def setupAndGetInternalDatabase()(implicit ec: ExecutionContext): MySQLProfile.backend.Database = {
     val rootDb = Database.forConfig(s"internalRoot")

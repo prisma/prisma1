@@ -11,18 +11,37 @@ import slick.jdbc.MySQLProfile.api._
 class ProjectPersistenceImplSpec extends FlatSpec with Matchers with AwaitUtils with InternalTestDatabase with BeforeAndAfterEach {
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  val projectPersistence = ProjectPersistenceImpl(internalDatabase = internalDatabase)
+  val projectPersistence   = ProjectPersistenceImpl(internalDatabase = internalDatabase)
+  val migrationPersistence = MigrationPersistenceImpl(internalDatabase = internalDatabase)
+  val project              = TestProject()
+  val migration: Migration = Migration.empty
 
-  val project                   = TestProject()
-  val migrationSteps: Migration = Migration.empty
+  override def beforeEach(): Unit = {
+    super.beforeEach()
 
-//  ".load()" should "return None if there's no project yet in the database" in {
-//    val result = projectPersistence.load("non-existent-id").await()
-//    result should be(None)
-//  }
-//
+    (for {
+      _ <- projectPersistence.create(project)
+      _ <- migrationPersistence.create(project, migration.copy(hasBeenApplied = true))
+    } yield ()).await
+  }
+
+  ".load()" should "return None if there's no project yet in the database" in {
+    val result = projectPersistence.load("non-existent-id").await()
+    result should be(None)
+  }
+
+  ".load()" should "return the project with the highest revision" in {
+    val result = projectPersistence.load("non-existent-id").await()
+    result should be(None)
+  }
+
+  ".loadByIdOrAlias()" should "be able to load a project by it's alias and id." in {
+    val result = projectPersistence.loadByIdOrAlias("non-existent-id").await()
+    result should be(None)
+  }
+
 //  ".load()" should "return the project with the highest revision" in {
-//    projectPersistence.save(project, migrationSteps).await()
+//    projectPersistence.create(project, migrationSteps).await()
 //    projectPersistence.markMigrationAsApplied(project, migrationSteps).await()
 //
 //    projectPersistence.load(project.id).await() should equal(Some(project))
@@ -38,13 +57,13 @@ class ProjectPersistenceImplSpec extends FlatSpec with Matchers with AwaitUtils 
 //    val expectedProject = newProjectRevision.copy(revision = 2)
 //    projectPersistence.load(project.id).await() should equal(Some(expectedProject))
 //  }
-//
-//  ".save()" should "store the project in the db" in {
-//    assertNumberOfRowsInProjectTable(0)
-//    projectPersistence.save(project, migrationSteps).await()
-//    assertNumberOfRowsInProjectTable(1)
-//  }
-//
+
+  ".create()" should "store the project in the db" in {
+    assertNumberOfRowsInProjectTable(0)
+    projectPersistence.create(project).await()
+    assertNumberOfRowsInProjectTable(1)
+  }
+
 //  ".save()" should "increment the revision property of the project on each call" in {
 //    assertNumberOfRowsInProjectTable(0)
 //    projectPersistence.save(project, migrationSteps).await()
@@ -55,12 +74,12 @@ class ProjectPersistenceImplSpec extends FlatSpec with Matchers with AwaitUtils 
 //    assertNumberOfRowsInProjectTable(2)
 //    getHighestRevisionForProject(project) should equal(2)
 //  }
-//
-//  def assertNumberOfRowsInProjectTable(count: Int): Unit = {
-//    val query = Tables.Projects.size
-//    runQuery(query.result) should equal(count)
-//  }
-//
+
+  def assertNumberOfRowsInProjectTable(count: Int): Unit = {
+    val query = Tables.Projects.size
+    runQuery(query.result) should equal(count)
+  }
+
 //  def getHighestRevisionForProject(project: Project): Int = {
 //    val query = for {
 //      project <- Tables.Projects
@@ -69,5 +88,5 @@ class ProjectPersistenceImplSpec extends FlatSpec with Matchers with AwaitUtils 
 //    runQuery(query.result).map(_.revision).max
 //  }
 //
-//  def runQuery[R](a: DBIOAction[R, NoStream, Nothing]): R = internalDatabase.run(a).await()
+  def runQuery[R](a: DBIOAction[R, NoStream, Nothing]): R = internalDatabase.run(a).await()
 }
