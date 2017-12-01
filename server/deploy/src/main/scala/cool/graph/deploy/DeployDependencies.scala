@@ -22,13 +22,13 @@ trait DeployDependencies {
 
   implicit def self: DeployDependencies
 
-  val internalDb           = setupAndGetInternalDatabase()
-  val clientDb             = Database.forConfig("client")
-  val projectPersistence   = ProjectPersistenceImpl(internalDb)
-  val migrationPersistence = MigrationPersistenceImpl(internalDb)
-  val client               = defaultClient()
-  val migrationApplierJob  = system.actorOf(Props(MigrationApplierJob(clientDb, migrationPersistence)))
-  val deploySchemaBuilder  = SchemaBuilder()
+  lazy val internalDb           = setupAndGetInternalDatabase()
+  lazy val clientDb             = Database.forConfig("client")
+  lazy val projectPersistence   = ProjectPersistenceImpl(internalDb)
+  lazy val migrationPersistence = MigrationPersistenceImpl(internalDb)
+  lazy val client               = defaultClient()
+  lazy val migrationApplierJob  = system.actorOf(Props(MigrationApplierJob(clientDb, migrationPersistence)))
+  lazy val deploySchemaBuilder  = SchemaBuilder()
 
   def setupAndGetInternalDatabase()(implicit ec: ExecutionContext): MySQLProfile.backend.Database = {
     val rootDb = Database.forConfig(s"internalRoot")
@@ -51,8 +51,14 @@ trait DeployDependencies {
   }
 
   private def await[T](awaitable: Awaitable[T]): T = Await.result(awaitable, Duration.Inf)
+
+  def init: Unit
 }
 
 case class DeployDependenciesImpl()(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends DeployDependencies {
-  implicit val self: DeployDependencies = this
+  override implicit def self: DeployDependencies = this
+
+  def init: Unit = {
+    migrationApplierJob
+  }
 }

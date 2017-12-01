@@ -45,22 +45,31 @@ case class SchemaBuilderImpl(
   def build(): Schema[SystemUserContext, Unit] = {
     val Query = ObjectType[SystemUserContext, Unit](
       "Query",
-      List(dummyField)
+      getQueryFields.toList
     )
 
     val Mutation = ObjectType(
       "Mutation",
-      getFields.toList
+      getMutationFields.toList
     )
 
     Schema(Query, Some(Mutation), additionalTypes = MigrationStepType.allTypes)
   }
 
-  val dummyField: Field[SystemUserContext, Unit] = Field(
-    "dummy",
-    description = Some("This is only a dummy field due to the API of Schema of Sangria, as Query is not optional"),
-    fieldType = StringType,
-    resolve = (ctx) => "this is dumb"
+  def getQueryFields: Vector[Field[SystemUserContext, Unit]] = Vector(
+    migrationStatusField
+  )
+
+  def getMutationFields: Vector[Field[SystemUserContext, Unit]] = Vector(
+    deployField,
+    addProjectField
+  )
+
+  val migrationStatusField: Field[SystemUserContext, Unit] = Field(
+    "migrationStatus",
+    description = Some("Shows the status of the next migration in line to be applied to the project."),
+    fieldType = MigrationType.Type,
+    resolve = (ctx) => ctx.ctx.
   )
 
   def viewerField(): Field[SystemUserContext, Unit] = {
@@ -71,11 +80,6 @@ case class SchemaBuilderImpl(
 //    )
     ???
   }
-
-  def getFields: Vector[Field[SystemUserContext, Unit]] = Vector(
-    deployField,
-    addProjectField
-  )
 
   def deployField: Field[SystemUserContext, Unit] = {
     import DeployField.fromInput

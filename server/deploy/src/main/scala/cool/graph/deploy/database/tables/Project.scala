@@ -71,23 +71,25 @@ object ProjectTable {
     val baseQuery = for {
       project   <- Tables.Projects
       migration <- Tables.Migrations
-      if migration.projectId === project.id && migration.hasBeenApplied
+      if project.id === id || project.alias === id
+      if migration.projectId === project.id
+      if migration.hasBeenApplied
     } yield (project, migration)
 
     baseQuery.sortBy(_._2.revision.desc).take(1).result.headOption
   }
 
-  def byIdWithsNextMigration(id: String): SqlAction[Option[(Project, Migration)], NoStream, Read] = {
-    val baseQuery = for {
-      project   <- Tables.Projects
-      migration <- Tables.Migrations
-      if migration.projectId === project.id && !migration.hasBeenApplied
-    } yield (project, migration)
-
-    baseQuery.sortBy(_._2.revision.asc).take(1).result.headOption
-  }
-}
+//  def byIdWithsNextMigration(id: String): SqlAction[Option[(Project, Migration)], NoStream, Read] = {
+//    val baseQuery = for {
+//      project   <- Tables.Projects
+//      migration <- Tables.Migrations
+//      if migration.projectId === project.id && !migration.hasBeenApplied
+//    } yield (project, migration)
 //
+//    baseQuery.sortBy(_._2.revision.asc).take(1).result.headOption
+//  }
+}
+
 //  def currentProjectByIdOrAlias(idOrAlias: String): SqlAction[Option[Project], NoStream, Read] = {
 //    val baseQuery = for {
 //      project <- Tables.Projects
@@ -98,7 +100,7 @@ object ProjectTable {
 //
 //    query.result.headOption
 //  }
-//
+
 //  def markAsApplied(id: String, revision: Int): FixedSqlAction[Int, NoStream, Write] = {
 //    val baseQuery = for {
 //      project <- Tables.Projects

@@ -89,7 +89,7 @@ case class DeployServer(
                   case Success(queryAst) =>
                     val userContext = SystemUserContext(dummyClient)
 
-                    val result: Future[(StatusCode with Product with Serializable, JsValue)] =
+                    val result: Future[(StatusCode, JsValue)] =
                       Executor
                         .execute(
                           schema = schemaBuilder(userContext),

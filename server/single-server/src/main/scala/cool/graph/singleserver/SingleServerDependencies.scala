@@ -11,7 +11,11 @@ import cool.graph.deploy.DeployDependencies
 trait SingleServerApiDependencies extends DeployDependencies with ApiDependencies {}
 
 case class SingleServerDependencies(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends SingleServerApiDependencies {
-  implicit val self = this
+  override implicit def self = this
+
+  def init: Unit = {
+    migrationApplierJob
+  }
 
   val databaseManager                = DatabaseConnectionManager.initializeForSingleRegion(config)
   val apiSchemaBuilder               = SchemaBuilder()

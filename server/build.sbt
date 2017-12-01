@@ -371,7 +371,7 @@ lazy val singleServer = Project(id = "single-server", base = file("./single-serv
   .enablePlugins(sbtdocker.DockerPlugin, JavaAppPackaging)
   .settings(
     imageNames in docker := Seq(
-      ImageName(s"graphcool/graphcool-database:latest")
+      ImageName(s"graphcool/graphcool-dev:database-1.0-beta1")
     ),
     dockerfile in docker := {
       val appDir    = stage.value
