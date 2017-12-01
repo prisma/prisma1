@@ -3,7 +3,7 @@ import chalk from 'chalk'
 
 export default class Clusters extends Command {
   static topic = 'clusters'
-  static description = 'Mange'
+  static description = 'Manage your private clusters'
   static flags: Flags = {
     connect: flags.boolean({
       char: 'c',

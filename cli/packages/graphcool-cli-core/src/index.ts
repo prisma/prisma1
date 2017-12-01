@@ -97,7 +97,7 @@ export const topics = [
   },
   {
     name: 'clusters',
-    description: 'Manage your private clussters',
+    description: 'Manage your private clusters',
     group: 'general',
   },
 ]
