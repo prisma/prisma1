@@ -2,6 +2,7 @@ package cool.graph.deploy.database.persistence
 
 import cool.graph.deploy.database.tables.{MigrationTable, ProjectTable, Tables}
 import cool.graph.shared.models.{Migration, Project, UnappliedMigration}
+import cool.graph.utils.future.FutureUtils.FutureOpt
 import slick.jdbc.MySQLProfile.backend.DatabaseDef
 import slick.jdbc.MySQLProfile.api._
 
@@ -49,20 +50,17 @@ case class ProjectPersistenceImpl(
   }
 
   override def getUnappliedMigration(): Future[Option[UnappliedMigration]] = {
-    for {
-      unappliedMigrationOpt   <- internalDatabase.run(MigrationTable.getUnappliedMigration)
-      projectWithMigrationOpt <- unappliedMigrationOpt.map(m => internalDatabase.run(ProjectTable.byIdWithMigration(m.projectId)))
+    val x = for {
+      unappliedMigration   <- FutureOpt(internalDatabase.run(MigrationTable.getUnappliedMigration))
+      projectWithMigration <- FutureOpt(internalDatabase.run(ProjectTable.byIdWithMigration(unappliedMigration.projectId)))
     } yield {
-      projectWithMigrationOpt.map(_.map { projectWithMigration =>
-        unappliedMigrationOpt.map { migration =>
-          val previousProject = DbToModelMapper.convert(projectWithMigration._1, projectWithMigration._2)
-          val nextProject     = DbToModelMapper.convert(projectWithMigration._1, migration)
-          val _migration      = DbToModelMapper.convert(migration)
+      val previousProject = DbToModelMapper.convert(projectWithMigration._1, projectWithMigration._2)
+      val nextProject     = DbToModelMapper.convert(projectWithMigration._1, unappliedMigration)
+      val _migration      = DbToModelMapper.convert(unappliedMigration)
 
-          UnappliedMigration(previousProject, nextProject, _migration)
-        }
-      })
+      UnappliedMigration(previousProject, nextProject, _migration)
     }
+    x.future
   }
 
   override def markMigrationAsApplied(migration: Migration): Future[Unit] = {

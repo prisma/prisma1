@@ -76,4 +76,21 @@ object FutureUtils {
       promise.future
     }
   }
+
+  /**
+    * A monad transformer to work with ease with Future[Option[T]]
+    */
+  case class FutureOpt[+A](future: Future[Option[A]]) extends AnyVal {
+    def flatMap[B](f: A => FutureOpt[B])(implicit ec: ExecutionContext): FutureOpt[B] = {
+      val newFuture = future.flatMap {
+        case Some(a) => f(a).future
+        case None    => Future.successful(None)
+      }
+      FutureOpt(newFuture)
+    }
+
+    def map[B](f: A => B)(implicit ec: ExecutionContext): FutureOpt[B] = {
+      FutureOpt(future.map(option => option map f))
+    }
+  }
 }
