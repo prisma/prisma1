@@ -1,64 +1,19 @@
 package cool.graph.client.mutactions
 
-import java.sql.SQLIntegrityConstraintViolationException
-
 import cool.graph.client.ClientInjector
 import cool.graph.client.database.DatabaseMutationBuilder.MirrorFieldDbValues
-import cool.graph.client.database.{DataResolver, DatabaseMutationBuilder, ProjectRelayId, ProjectRelayIdTable}
-import cool.graph.client.mutactions.DataImport._
+import cool.graph.client.database.{DatabaseMutationBuilder, ProjectRelayId, ProjectRelayIdTable}
 import cool.graph.cuid.Cuid
 import cool.graph.shared.RelationFieldMirrorColumn
 import cool.graph.shared.database.Databases
-import cool.graph.shared.errors.UserAPIErrors
 import cool.graph.shared.models._
-import cool.graph.{ClientSqlStatementResult, MutactionVerificationSuccess, _}
 import slick.jdbc.MySQLProfile.api._
 import slick.lifted.TableQuery
 import slick.sql.SqlAction
 import spray.json.{DefaultJsonProtocol, JsArray, JsFalse, JsNull, JsNumber, JsObject, JsString, JsTrue, JsValue, JsonFormat, RootJsonFormat}
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{Await, Future}
-import scala.util.{Success, Try}
-
-case class ImportNodesInBulk(
-    project: Project,
-    bulk: Vector[ImportNodeValue]
-)(implicit injector: ClientInjector)
-    extends ClientSqlDataChangeMutaction {
-
-  override def execute: Future[ClientSqlStatementResult[Any]] = {
-    val relayIds = TableQuery(new ProjectRelayIdTable(_, project.id))
-
-    val dbActions = bulk.flatMap { element =>
-      val id        = element.identifier.id
-      val modelName = element.identifier.typeName
-      List(
-        DatabaseMutationBuilder.createDataItem(project.id, element.identifier.typeName, element.values + ("id" -> id)),
-        relayIds += ProjectRelayId(id = id, project.getModelByName_!(modelName).id)
-      )
-    }
-
-    Future(
-      ClientSqlStatementResult(
-        sqlAction = DBIO.sequence(dbActions)
-      ))
-  }
-
-  override def handleErrors = {
-    implicit val anyFormat = JsonFormats.AnyJsonFormat
-    Some({
-      //https://dev.mysql.com/doc/refman/5.5/en/error-messages-server.html#error_er_dup_entry
-      case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1062 =>
-        UserAPIErrors.UniqueConstraintViolation("", "")
-      case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1452 =>
-        UserAPIErrors.NodeDoesNotExist("")
-    })
-  }
-
-  override def verify(resolver: DataResolver): Future[Try[MutactionVerificationSuccess]] = Future.successful(Success(MutactionVerificationSuccess()))
-
-}
+import scala.concurrent.Future
 
 object DataImport {
 
@@ -97,21 +52,6 @@ object DataImport {
     implicit val importRelation: RootJsonFormat[ImportRelation]         = jsonFormat4(ImportRelation)
   }
 
-  def parseNodes(json: JsValue) = {
-    import MyJsonProtocol._
-    json.convertTo[JsArray].elements.map(_.convertTo[ImportNodeValue])
-  }
-
-  def parseLists(json: JsValue) = {
-    import MyJsonProtocol._
-    json.convertTo[JsArray].elements.map(_.convertTo[ImportListValue])
-  }
-
-  def parseRelations(json: JsValue) = {
-    import MyJsonProtocol._
-    json.convertTo[JsArray].elements.map(_.convertTo[ImportRelation])
-  }
-
   def executeGeneric(project: Project, json: JsValue)(implicit injector: ClientInjector) = {
     import MyJsonProtocol._
     val bundle = json.convertTo[ImportBundle]
@@ -121,6 +61,7 @@ object DataImport {
       case "relations"  => generateImportRelationsDBActions(project, bundle.values.elements.map(_.convertTo[ImportRelation]))
       case "listvalues" => generateImportListsDBActions(project, bundle.values.elements.map(_.convertTo[ImportListValue]))
     }
+
     runDBActions(project, actions)
   }
 
@@ -182,21 +123,9 @@ object DataImport {
     x
   }
 
-  def runDBActions(project: Project, actions: DBIOAction[Vector[Int], NoStream, Effect.Write])(implicit injector: ClientInjector) = {
-    import scala.concurrent.duration._
-    val db: Databases            = injector.globalDatabaseManager.getDbForProject(project)
-    val res: Future[Vector[Int]] = db.master.run(actions)
-    Await.result(res, 500.seconds)
-  }
-
-  def executeImport(project: Project, json: JsValue)(implicit injector: ClientInjector) = {
-
-    val begin: Long = System.currentTimeMillis
-    val parsed      = parseNodes(json)
-    val actions     = generateImportNodesDBActions(project, parsed)
-    runDBActions(project, actions)
-    val end: Long = System.currentTimeMillis
-    println("Importing: " + (end - begin))
+  def runDBActions(project: Project, actions: DBIOAction[Vector[Int], NoStream, Effect.Write])(implicit injector: ClientInjector): Future[Unit] = {
+    val db: Databases = injector.globalDatabaseManager.getDbForProject(project)
+    db.master.run(actions).map(_ => ())
   }
 
 }
@@ -211,49 +140,4 @@ object teststuff {
       .mkString
     json_string.parseJson
   }
-
-  def parseNodesTest(fileName: String) = {
-    import MyJsonProtocol._
-    import spray.json._
-    val begin: Long = System.currentTimeMillis
-
-    val jsonAstFile                  = readFile(fileName)
-    val array                        = jsonAstFile.convertTo[JsArray]
-    val res: Vector[ImportNodeValue] = array.elements.map(_.convertTo[ImportNodeValue])
-
-    val end: Long = System.currentTimeMillis
-    println("Parsing Nodes: " + (end - begin))
-    res
-  }
-
-  def parseListsTest(fileName: String) = {
-    import MyJsonProtocol._
-    import spray.json._
-    val begin: Long = System.currentTimeMillis
-
-    val jsonAstFile                  = readFile(fileName)
-    val array                        = jsonAstFile.convertTo[JsArray]
-    val res: Vector[ImportListValue] = array.elements.map(_.convertTo[ImportListValue])
-
-    val end: Long = System.currentTimeMillis
-    println("Parsing Lists: " + (end - begin))
-    res
-  }
-
-  def parseRelationsTest(fileName: String) = {
-    import MyJsonProtocol._
-    import spray.json._
-    val begin: Long = System.currentTimeMillis
-
-    val jsonAstFile = readFile(fileName)
-
-    ///
-    val array                       = jsonAstFile.convertTo[JsArray]
-    val res: Vector[ImportRelation] = array.elements.map(_.convertTo[ImportRelation])
-
-    val end: Long = System.currentTimeMillis
-    println("Parsing Relations: " + (end - begin))
-    res
-  }
-
 }
