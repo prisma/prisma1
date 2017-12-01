@@ -18,66 +18,88 @@ import Eject from './commands/local/eject'
 import AddTemplate from './commands/add-template/add-template'
 import PsLocal from './commands/local/ps'
 import Reset from './commands/reset/reset'
+import Clusters from './commands/clusters/index'
 
 export const groups = [
   {
     key: 'general',
-    name: 'General commands'
+    name: 'General commands',
   },
   {
     key: 'data',
-    name: 'Data workflows'
+    name: 'Data workflows',
   },
   {
     key: 'local',
-    name: 'Local development'
+    name: 'Local development',
   },
   {
     key: 'platform',
-    name: 'Platform'
+    name: 'Platform',
   },
 ]
 
 export const topics = [
   { name: 'init', description: 'Create a new service', group: 'general' },
-  { name: 'deploy', description: 'Deploy local service definition', group: 'general' },
+  {
+    name: 'deploy',
+    description: 'Deploy local service definition',
+    group: 'general',
+  },
   { name: 'login', description: 'Create account or login', group: 'platform' },
   { name: 'reset', description: 'Reset data of a service', group: 'data' },
   {
     name: 'playground',
     description: 'Opens the playground for the current service',
-    group: 'general'
+    group: 'general',
   },
   {
     name: 'info',
     description: 'Print service info (endpoints, clusters, ...) ',
-    group: 'general'
+    group: 'general',
   },
   { name: 'list', description: 'List all deployed services', group: 'general' },
-  { name: 'root-token', description: 'Get the service root tokens', group: 'general' },
+  {
+    name: 'root-token',
+    description: 'Get the service root tokens',
+    group: 'general',
+  },
   { name: 'logs', description: 'Get logs of functions', group: 'general' },
   {
     name: 'delete',
     description: 'Delete a service',
-    group: 'general'
+    group: 'general',
   },
-  { name: 'add-template', description: 'Add template a new template', group: 'general' },
+  {
+    name: 'add-template',
+    description: 'Add template a new template',
+    group: 'general',
+  },
   {
     name: 'invoke-local',
     description: 'Invokes a function locally',
-    group: 'general'
+    group: 'general',
   },
-  { name: 'console', description: 'Opens the console for the current service', group: 'platform' },
+  {
+    name: 'console',
+    description: 'Opens the console for the current service',
+    group: 'platform',
+  },
   {
     name: 'account',
     description: 'Information about the current authenticated account',
-    group: 'platform'
+    group: 'platform',
   },
   {
     name: 'local',
     description: 'Manage the local Graphcool version',
-    group: 'local'
-  }
+    group: 'local',
+  },
+  {
+    name: 'clusters',
+    description: 'Manage your private clussters',
+    group: 'general',
+  },
 ]
 
 export const commands = [
@@ -101,6 +123,7 @@ export const commands = [
   AddTemplate,
   PsLocal,
   Reset,
+  Clusters,
 ]
 
 export {
@@ -124,4 +147,5 @@ export {
   AddTemplate,
   PsLocal,
   Reset,
+  Clusters,
 }
