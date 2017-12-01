@@ -16,7 +16,7 @@ services:
       - db-persistence:/var/lib/mysql
 
   graphcool-database:
-    image: graphcool/graphcool-database:latest
+    image: graphcool/graphcool-database:kaputt
     restart: always
     ports:
       - "0.0.0.0:${PORT}:${PORT}"

@@ -30,7 +30,7 @@ case class AddProjectMutation(
       projectId = newProject.id,
       revision = 0,
       hasBeenApplied = true,
-      steps = Vector(SetupProject())
+      steps = Vector()
     )
 
     for {
