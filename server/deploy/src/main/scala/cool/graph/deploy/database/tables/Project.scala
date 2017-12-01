@@ -61,13 +61,23 @@ object ProjectTable {
     val baseQuery = for {
       project   <- Tables.Projects
       migration <- Tables.Migrations
+      if migration.projectId === id && project.id === id && migration.hasBeenApplied
+    } yield (project, migration)
+
+    baseQuery.sortBy(_._2.revision.desc).take(1).result.headOption
+  }
+
+  def byIdOrAliasWithMigration(id: String): SqlAction[Option[(Project, Migration)], NoStream, Read] = {
+    val baseQuery = for {
+      project   <- Tables.Projects
+      migration <- Tables.Migrations
       if migration.projectId === project.id && migration.hasBeenApplied
     } yield (project, migration)
 
     baseQuery.sortBy(_._2.revision.desc).take(1).result.headOption
   }
 
-  def byIdWithNextMigration(id: String): SqlAction[Option[(Project, Migration)], NoStream, Read] = {
+  def byIdWithsNextMigration(id: String): SqlAction[Option[(Project, Migration)], NoStream, Read] = {
     val baseQuery = for {
       project   <- Tables.Projects
       migration <- Tables.Migrations

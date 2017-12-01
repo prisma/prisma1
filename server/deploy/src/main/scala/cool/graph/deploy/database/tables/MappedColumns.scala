@@ -7,7 +7,7 @@ import spray.json.{JsArray, JsString}
 import scala.util.Success
 
 object MappedColumns {
-  import cool.graph.util.json.JsonUtils._
+  import cool.graph.shared.util.json.JsonUtils._
 
   implicit val stringListMapper = MappedColumnType.base[Seq[String], String](
     list => JsArray(list.map(JsString.apply).toVector).toString,

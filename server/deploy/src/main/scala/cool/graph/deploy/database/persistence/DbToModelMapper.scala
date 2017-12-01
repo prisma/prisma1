@@ -5,7 +5,7 @@ import cool.graph.shared.models
 import cool.graph.shared.models.MigrationStep
 
 object DbToModelMapper {
-  import ProjectJsonFormatter._
+  import cool.graph.shared.models.ProjectJsonFormatter._
   import MigrationStepsJsonFormatter._
 
   def convert(project: Project, migration: Migration): models.Project = {

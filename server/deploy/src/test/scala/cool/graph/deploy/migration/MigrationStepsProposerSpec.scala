@@ -21,10 +21,10 @@ class MigrationStepsProposerSpec extends FlatSpec with Matchers with AwaitUtils 
       schema.model("Test").field("a", _.String).field("b", _.Int)
     }
 
-    val proposer          = MigrationStepsProposerImpl(previousProject, nextProject, renames)
-    val result: Migration = proposer.evaluate()
+    val proposer = MigrationStepsProposerImpl(previousProject, nextProject, renames)
+    val steps    = proposer.evaluate()
 
-    result.steps shouldBe empty
+    steps shouldBe empty
   }
 
   "Creating models" should "create CreateModel and CreateField migration steps" in {
@@ -38,11 +38,11 @@ class MigrationStepsProposerSpec extends FlatSpec with Matchers with AwaitUtils 
       schema.model("Test2").field("c", _.String).field("d", _.Int)
     }
 
-    val proposer          = MigrationStepsProposerImpl(previousProject, nextProject, renames)
-    val result: Migration = proposer.evaluate()
+    val proposer = MigrationStepsProposerImpl(previousProject, nextProject, renames)
+    val steps    = proposer.evaluate()
 
-    result.steps.length shouldBe 4
-    result.steps should contain allOf (
+    steps.length shouldBe 4
+    steps should contain allOf (
       CreateModel("Test2"),
       CreateField("Test2", "id", "GraphQLID", isRequired = true, isList = false, isUnique = true, None, None, None),
       CreateField("Test2", "c", "String", isRequired = false, isList = false, isUnique = false, None, None, None),
@@ -62,11 +62,11 @@ class MigrationStepsProposerSpec extends FlatSpec with Matchers with AwaitUtils 
       schema.model("Test").field("a", _.String).field("b", _.Int)
     }
 
-    val proposer          = MigrationStepsProposerImpl(previousProject, nextProject, renames)
-    val result: Migration = proposer.evaluate()
+    val proposer = MigrationStepsProposerImpl(previousProject, nextProject, renames)
+    val steps    = proposer.evaluate()
 
-    result.steps.length shouldBe 1
-    result.steps.last shouldBe DeleteModel("Test2")
+    steps.length shouldBe 1
+    steps.last shouldBe DeleteModel("Test2")
   }
 
   "Updating models" should "create UpdateModel migration steps" in {
@@ -81,11 +81,11 @@ class MigrationStepsProposerSpec extends FlatSpec with Matchers with AwaitUtils 
       schema.model("Test2").field("a", _.String).field("b", _.Int)
     }
 
-    val proposer          = MigrationStepsProposerImpl(previousProject, nextProject, renames)
-    val result: Migration = proposer.evaluate()
+    val proposer = MigrationStepsProposerImpl(previousProject, nextProject, renames)
+    val steps    = proposer.evaluate()
 
-    result.steps.length shouldBe 1
-    result.steps.last shouldBe UpdateModel("Test", "Test2")
+    steps.length shouldBe 1
+    steps.last shouldBe UpdateModel("Test", "Test2")
   }
 
   "Creating fields" should "create CreateField migration steps" in {
@@ -98,12 +98,11 @@ class MigrationStepsProposerSpec extends FlatSpec with Matchers with AwaitUtils 
       schema.model("Test").field("a", _.String).field("b", _.Int)
     }
 
-    val proposer          = MigrationStepsProposerImpl(previousProject, nextProject, renames)
-    val result: Migration = proposer.evaluate()
+    val proposer = MigrationStepsProposerImpl(previousProject, nextProject, renames)
+    val steps    = proposer.evaluate()
 
-    println(result.steps)
-    result.steps.length shouldBe 1
-    result.steps.last shouldBe CreateField("Test", "b", "Int", isRequired = false, isList = false, isUnique = false, None, None, None)
+    steps.length shouldBe 1
+    steps.last shouldBe CreateField("Test", "b", "Int", isRequired = false, isList = false, isUnique = false, None, None, None)
   }
 
   "Deleting fields" should "create DeleteField migration steps" in {
@@ -116,12 +115,11 @@ class MigrationStepsProposerSpec extends FlatSpec with Matchers with AwaitUtils 
       schema.model("Test").field("a", _.String)
     }
 
-    val proposer          = MigrationStepsProposerImpl(previousProject, nextProject, renames)
-    val result: Migration = proposer.evaluate()
+    val proposer = MigrationStepsProposerImpl(previousProject, nextProject, renames)
+    val steps    = proposer.evaluate()
 
-    println(result.steps)
-    result.steps.length shouldBe 1
-    result.steps.last shouldBe DeleteField("Test", "b")
+    steps.length shouldBe 1
+    steps.last shouldBe DeleteField("Test", "b")
   }
 
   "Updating fields" should "create UpdateField migration steps" in {
@@ -151,12 +149,11 @@ class MigrationStepsProposerSpec extends FlatSpec with Matchers with AwaitUtils 
         .field("e", _.String, isUnique = true) // Now unique
     }
 
-    val proposer          = MigrationStepsProposerImpl(previousProject, nextProject, renames)
-    val result: Migration = proposer.evaluate()
+    val proposer = MigrationStepsProposerImpl(previousProject, nextProject, renames)
+    val steps    = proposer.evaluate()
 
-    println(result.steps)
-    result.steps.length shouldBe 5
-    result.steps should contain allOf (
+    steps.length shouldBe 5
+    steps should contain allOf (
       UpdateField("Test", "a", Some("a2"), None, None, None, None, None, None, None),
       UpdateField("Test", "b", None, Some("Int"), None, None, None, None, None, None),
       UpdateField("Test", "c", None, None, Some(true), None, None, None, None, None),
@@ -181,12 +178,12 @@ class MigrationStepsProposerSpec extends FlatSpec with Matchers with AwaitUtils 
         .oneToManyRelation_!("comments", "todo", comment)
     }
 
-    val proposer          = MigrationStepsProposerImpl(previousProject, nextProject, Renames.empty)
-    val result: Migration = proposer.evaluate()
+    val proposer = MigrationStepsProposerImpl(previousProject, nextProject, Renames.empty)
+    val steps    = proposer.evaluate()
 
-    result.steps.length shouldBe 3
+    steps.length shouldBe 3
     val relationName = nextProject.relations.head.name
-    result.steps should contain allOf (
+    steps should contain allOf (
       CreateField(
         model = "Todo",
         name = "comments",
@@ -233,11 +230,11 @@ class MigrationStepsProposerSpec extends FlatSpec with Matchers with AwaitUtils 
         .field("title", _.String)
     }
 
-    val proposer               = MigrationStepsProposerImpl(previousProject, nextProject, Renames.empty)
-    val result: MigrationSteps = proposer.evaluate()
+    val proposer = MigrationStepsProposerImpl(previousProject, nextProject, Renames.empty)
+    val steps    = proposer.evaluate()
 
-    result.steps should have(size(3))
-    result.steps should contain allOf (
+    steps should have(size(3))
+    steps should contain allOf (
       DeleteField("Todo", "comments"),
       DeleteField("Comment", "todo"),
       DeleteRelation(previousProject.relations.head.name)
@@ -258,10 +255,10 @@ class MigrationStepsProposerSpec extends FlatSpec with Matchers with AwaitUtils 
       comment.manyToOneRelation("todo", "comments", todo, relationName = Some(relationName))
     }
 
-    val proposer               = MigrationStepsProposerImpl(previousProject, nextProject, Renames.empty)
-    val result: MigrationSteps = proposer.evaluate()
+    val proposer = MigrationStepsProposerImpl(previousProject, nextProject, Renames.empty)
+    val steps    = proposer.evaluate()
 
-    result.steps should have(size(0))
+    steps should have(size(0))
   }
 
   "Creating and using Enums" should "create CreateEnum and CreateField migration steps" in {
@@ -277,11 +274,11 @@ class MigrationStepsProposerSpec extends FlatSpec with Matchers with AwaitUtils 
         .field("status", _.Enum, enum = Some(enum))
     }
 
-    val proposer               = MigrationStepsProposerImpl(previousProject, nextProject, Renames.empty)
-    val result: MigrationSteps = proposer.evaluate()
+    val proposer = MigrationStepsProposerImpl(previousProject, nextProject, Renames.empty)
+    val steps    = proposer.evaluate()
 
-    result.steps should have(size(2))
-    result.steps should contain allOf (
+    steps should have(size(2))
+    steps should contain allOf (
       CreateEnum("TodoStatus", Seq("Active", "Done")),
       CreateField(
         model = "Todo",
@@ -314,10 +311,10 @@ class MigrationStepsProposerSpec extends FlatSpec with Matchers with AwaitUtils 
         .field("status", _.Enum, enum = Some(enum))
     }
 
-    val result = MigrationStepsProposerImpl(previousProject, nextProject, renames).evaluate()
+    val steps = MigrationStepsProposerImpl(previousProject, nextProject, renames).evaluate()
 
-    result.steps should have(size(2))
-    result.steps should contain allOf (
+    steps should have(size(2))
+    steps should contain allOf (
       UpdateEnum(
         name = "TodoStatus",
         newName = Some("TodoStatusNew"),
@@ -353,10 +350,10 @@ class MigrationStepsProposerSpec extends FlatSpec with Matchers with AwaitUtils 
         .field("status", _.Enum, enum = Some(enum))
     }
 
-    val result = MigrationStepsProposerImpl(previousProject, nextProject, renames).evaluate()
+    val steps = MigrationStepsProposerImpl(previousProject, nextProject, renames).evaluate()
 
-    result.steps should have(size(1))
-    result.steps should contain(
+    steps should have(size(1))
+    steps should contain(
       UpdateEnum(
         name = "TodoStatus",
         newName = None,
@@ -377,10 +374,10 @@ class MigrationStepsProposerSpec extends FlatSpec with Matchers with AwaitUtils 
         .model("Todo")
     }
 
-    val result = MigrationStepsProposerImpl(previousProject, nextProject, renames).evaluate()
+    val steps = MigrationStepsProposerImpl(previousProject, nextProject, renames).evaluate()
 
-    result.steps should have(size(1))
-    result.steps should contain(
+    steps should have(size(1))
+    steps should contain(
       DeleteEnum(
         name = "TodoStatus"
       )

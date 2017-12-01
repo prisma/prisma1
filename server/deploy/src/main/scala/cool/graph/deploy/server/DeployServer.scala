@@ -6,6 +6,7 @@ import akka.http.scaladsl.model.StatusCode
 import akka.http.scaladsl.model.StatusCodes._
 import akka.http.scaladsl.model.headers.RawHeader
 import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.ExceptionHandler
 import akka.stream.ActorMaterializer
 import com.typesafe.scalalogging.LazyLogging
 import cool.graph.akkautil.http.Server
@@ -62,46 +63,48 @@ case class DeployServer(
     logger.info(LogData(LogKey.RequestNew, requestId).json)
 
     post {
-      TimeResponseDirectiveImpl(DeployMetrics).timeResponse {
-        respondWithHeader(RawHeader("Request-Id", requestId)) {
-          entity(as[JsValue]) { requestJson =>
-            complete {
-              val JsObject(fields) = requestJson
-              val JsString(query)  = fields("query")
+      handleExceptions(toplevelExceptionHandler(requestId)) {
+        TimeResponseDirectiveImpl(DeployMetrics).timeResponse {
+          respondWithHeader(RawHeader("Request-Id", requestId)) {
+            entity(as[JsValue]) { requestJson =>
+              complete {
+                val JsObject(fields) = requestJson
+                val JsString(query)  = fields("query")
 
-              val operationName =
-                fields.get("operationName") collect {
-                  case JsString(op) if !op.isEmpty ⇒ op
+                val operationName =
+                  fields.get("operationName") collect {
+                    case JsString(op) if !op.isEmpty ⇒ op
+                  }
+
+                val variables = fields.get("variables") match {
+                  case Some(obj: JsObject)                  => obj
+                  case Some(JsString(s)) if s.trim.nonEmpty => s.parseJson
+                  case _                                    => JsObject.empty
                 }
 
-              val variables = fields.get("variables") match {
-                case Some(obj: JsObject)                  => obj
-                case Some(JsString(s)) if s.trim.nonEmpty => s.parseJson
-                case _                                    => JsObject.empty
-              }
+                QueryParser.parse(query) match {
+                  case Failure(error) =>
+                    Future.successful(BadRequest -> JsObject("error" -> JsString(error.getMessage)))
 
-              QueryParser.parse(query) match {
-                case Failure(error) =>
-                  Future.successful(BadRequest -> JsObject("error" -> JsString(error.getMessage)))
+                  case Success(queryAst) =>
+                    val userContext = SystemUserContext(dummyClient)
 
-                case Success(queryAst) =>
-                  val userContext = SystemUserContext(dummyClient)
+                    val result: Future[(StatusCode with Product with Serializable, JsValue)] =
+                      Executor
+                        .execute(
+                          schema = schemaBuilder(userContext),
+                          queryAst = queryAst,
+                          userContext = userContext,
+                          variables = variables,
+                          operationName = operationName,
+                          middleware = List.empty,
+                          exceptionHandler = errorHandler.sangriaExceptionHandler
+                        )
+                        .map(node => OK -> node)
 
-                  val result: Future[(StatusCode with Product with Serializable, JsValue)] =
-                    Executor
-                      .execute(
-                        schema = schemaBuilder(userContext),
-                        queryAst = queryAst,
-                        userContext = userContext,
-                        variables = variables,
-                        operationName = operationName,
-                        middleware = List.empty,
-                        exceptionHandler = errorHandler.sangriaExceptionHandler
-                      )
-                      .map(node => OK -> node)
-
-                  result.onComplete(_ => logRequestEnd(None, Some(userContext.client.id)))
-                  result
+                    result.onComplete(_ => logRequestEnd(None, Some(userContext.client.id)))
+                    result
+                }
               }
             }
           }
@@ -145,7 +148,7 @@ case class DeployServer(
   }
 
   def getSchema(projectIdOrAlias: String, forceRefresh: Boolean): Future[String] = {
-    import cool.graph.deploy.database.persistence.ProjectJsonFormatter._
+    import cool.graph.shared.models.ProjectJsonFormatter._
     projectPersistence
       .loadByIdOrAlias(projectIdOrAlias)
       .flatMap {
@@ -156,14 +159,11 @@ case class DeployServer(
 
   def healthCheck: Future[_] = Future.successful(())
 
-  def sangriaErrorHandler(requestId: String): Executor.ExceptionHandler = {
-    case (marshaller: ResultMarshaller, e: DeployApiError) =>
-      val additionalFields = Map(
-        "code"      -> marshaller.scalarNode(e.errorCode, "Int", Set.empty),
-        "requestId" -> marshaller.scalarNode(requestId, "Int", Set.empty)
-      )
-
-      HandledException(e.getMessage, additionalFields)
+  def toplevelExceptionHandler(requestId: String) = ExceptionHandler {
+    case e: Throwable =>
+      println(e.getMessage)
+      e.printStackTrace()
+      complete(500 -> "kaputt")
   }
 }
 

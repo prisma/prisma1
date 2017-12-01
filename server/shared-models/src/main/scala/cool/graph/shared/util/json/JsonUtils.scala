@@ -1,4 +1,4 @@
-package cool.graph.util.json
+package cool.graph.shared.util.json
 
 import org.joda.time.DateTime
 import org.joda.time.format.ISODateTimeFormat

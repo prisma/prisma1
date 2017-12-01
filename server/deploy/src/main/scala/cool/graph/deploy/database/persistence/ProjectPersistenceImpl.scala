@@ -21,18 +21,13 @@ case class ProjectPersistenceImpl(
       })
   }
 
-//  override def loadByIdOrAlias(idOrAlias: String): Future[Option[Project]] = {
-//    internalDatabase
-//      .run(ProjectTable.byIdOrAliasWithMigration(id))
-//      .map(_.map { projectWithMigration =>
-//        DbToModelMapper.convert(projectWithMigration._1, projectWithMigration._2)
-//      })
-//    internalDatabase
-//      .run(ProjectTable.currentProjectByIdOrAlias(idOrAlias))
-//      .map(_.map { projectRow =>
-//        DbToModelMapper.convert(projectRow)
-//      })
-//  }
+  override def loadByIdOrAlias(idOrAlias: String): Future[Option[Project]] = {
+    internalDatabase
+      .run(ProjectTable.byIdOrAliasWithMigration(idOrAlias))
+      .map(_.map { projectWithMigration =>
+        DbToModelMapper.convert(projectWithMigration._1, projectWithMigration._2)
+      })
+  }
 
   override def save(project: Project): Future[Unit] = {
     val addProject = Tables.Projects += ModelToDbMapper.convert(project)
@@ -51,11 +46,11 @@ case class ProjectPersistenceImpl(
 
   override def getUnappliedMigration(): Future[Option[UnappliedMigration]] = {
     val x = for {
-      unappliedMigration   <- FutureOpt(internalDatabase.run(MigrationTable.getUnappliedMigration))
-      projectWithMigration <- FutureOpt(internalDatabase.run(ProjectTable.byIdWithMigration(unappliedMigration.projectId)))
+      unappliedMigration           <- FutureOpt(internalDatabase.run(MigrationTable.getUnappliedMigration))
+      previousProjectWithMigration <- FutureOpt(internalDatabase.run(ProjectTable.byIdWithMigration(unappliedMigration.projectId)))
     } yield {
-      val previousProject = DbToModelMapper.convert(projectWithMigration._1, projectWithMigration._2)
-      val nextProject     = DbToModelMapper.convert(projectWithMigration._1, unappliedMigration)
+      val previousProject = DbToModelMapper.convert(previousProjectWithMigration._1, previousProjectWithMigration._2)
+      val nextProject     = DbToModelMapper.convert(previousProjectWithMigration._1, unappliedMigration)
       val _migration      = DbToModelMapper.convert(unappliedMigration)
 
       UnappliedMigration(previousProject, nextProject, _migration)

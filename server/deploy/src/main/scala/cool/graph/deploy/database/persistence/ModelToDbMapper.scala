@@ -6,7 +6,7 @@ import play.api.libs.json.Json
 
 object ModelToDbMapper {
   import MigrationStepsJsonFormatter._
-  import ProjectJsonFormatter._
+  import cool.graph.shared.models.ProjectJsonFormatter._
 
   def convert(client: models.Client): Client = {
     Client(

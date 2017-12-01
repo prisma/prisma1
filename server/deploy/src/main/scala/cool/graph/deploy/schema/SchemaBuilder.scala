@@ -1,6 +1,7 @@
 package cool.graph.deploy.schema
 
 import akka.actor.ActorSystem
+import cool.graph.deploy.DeployDependencies
 import cool.graph.deploy.database.persistence.{ProjectPersistence, ProjectPersistenceImpl}
 import cool.graph.deploy.migration.{DesiredProjectInferer, MigrationStepsProposer, RenameInferer}
 import cool.graph.deploy.schema.fields.{AddProjectField, DeployField}
@@ -20,20 +21,22 @@ trait SchemaBuilder {
 }
 
 object SchemaBuilder {
-  def apply(internalDb: DatabaseDef, projectPersistence: ProjectPersistence)(implicit system: ActorSystem): SchemaBuilder = new SchemaBuilder {
-    override def apply(userContext: SystemUserContext) = {
-      SchemaBuilderImpl(userContext, internalDb, projectPersistence).build()
+  def apply()(implicit system: ActorSystem, dependencies: DeployDependencies): SchemaBuilder =
+    new SchemaBuilder {
+      override def apply(userContext: SystemUserContext) = {
+        SchemaBuilderImpl(userContext).build()
+      }
     }
-  }
 }
 
 case class SchemaBuilderImpl(
-    userContext: SystemUserContext,
-    internalDb: DatabaseDef,
-    projectPersistence: ProjectPersistence
-)(implicit system: ActorSystem) {
+    userContext: SystemUserContext
+)(implicit system: ActorSystem, dependencies: DeployDependencies) {
   import system.dispatcher
 
+  val internalDb: DatabaseDef                        = dependencies.internalDb
+  val clientDb: DatabaseDef                          = dependencies.clientDb
+  val projectPersistence: ProjectPersistence         = dependencies.projectPersistence
   val desiredProjectInferer: DesiredProjectInferer   = DesiredProjectInferer()
   val migrationStepsProposer: MigrationStepsProposer = MigrationStepsProposer()
   val renameInferer: RenameInferer                   = RenameInferer
@@ -115,7 +118,8 @@ case class SchemaBuilderImpl(
           AddProjectMutation(
             args = args,
             client = ctx.ctx.client,
-            projectPersistence = projectPersistence
+            projectPersistence = projectPersistence,
+            clientDb = clientDb
           ).execute
       }
     )

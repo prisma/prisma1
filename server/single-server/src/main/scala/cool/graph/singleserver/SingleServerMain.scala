@@ -19,7 +19,7 @@ object SingleServerMain extends App {
 
   ServerExecutor(
     port = port,
-    ApiServer(singleServerDependencies.apiSchemaBuilder),
+    ApiServer(singleServerDependencies.apiSchemaBuilder, prefix = "api"),
     DeployServer(singleServerDependencies.deploySchemaBuilder, singleServerDependencies.projectPersistence, singleServerDependencies.client, "system")
   ).startBlocking()
 }

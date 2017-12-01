@@ -1,25 +1,13 @@
-package cool.graph.deploy.database.persistence
+package cool.graph.shared.models
 
 import cool.graph.gc_values._
 import cool.graph.shared.models.FieldConstraintType.FieldConstraintType
-import cool.graph.shared.models.{
-  BooleanConstraint,
-  FieldConstraint,
-  FieldConstraintType,
-  ModelPermission,
-  NumberConstraint,
-  RequestPipelineOperation,
-  StringConstraint,
-  TypeIdentifier,
-  UserType,
-  _
-}
 import org.joda.time.format.ISODateTimeFormat
 import org.joda.time.{DateTime, DateTimeZone}
 import play.api.libs.json._
+import cool.graph.shared.util.json.JsonUtils._
 
 object ProjectJsonFormatter {
-  import cool.graph.util.json.JsonUtils.{enumFormat, DateTimeFormat}
 
   // ENUMS
   implicit lazy val seatStatus               = enumFormat(SeatStatus)

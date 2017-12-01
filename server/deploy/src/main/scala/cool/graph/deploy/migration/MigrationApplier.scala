@@ -75,7 +75,7 @@ case class MigrationApplierImpl(clientDatabase: DatabaseDef)(implicit ec: Execut
 
   def migrationStepToMutaction(previousProject: Project, nextProject: Project, step: MigrationStep): Option[ClientSqlMutaction] = step match {
     case x: SetupProject =>
-      Some(CreateClientDatabaseForProject(nextProject.id))
+      None
 
     case x: CreateModel =>
       Some(CreateModelTable(nextProject.id, x.name))
