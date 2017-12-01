@@ -237,10 +237,12 @@ Please run ${chalk.green(
           const oldPath = path.join(this.config.cwd, '.graphcoolrc.old')
           fs.moveSync(this.config.localRCPath, oldPath)
           fs.writeFileSync(this.config.localRCPath, newLocalRcYaml)
-          this.out.warn(`We detected the old definition format of the ${this
-            .config.localRCPath} file.
-It has been renamed to ${oldPath}. The up-to-date format has been written to ${this
-            .config.localRCPath}.
+          this.out.warn(`We detected the old definition format of the ${
+            this.config.localRCPath
+          } file.
+It has been renamed to ${oldPath}. The up-to-date format has been written to ${
+            this.config.localRCPath
+          }.
 Read more about the changes here:
 https://github.com/graphcool/framework/issues/714
 `)
@@ -280,7 +282,9 @@ https://github.com/graphcool/framework/issues/714
             'clusters',
           )} in the ${rcPath} file.
 ${chalk.bold('token')} has been renamed to ${chalk.bold('clusterSecret')}.
-It has been renamed to ${oldPath}. The up-to-date format has been written to ${rcPath}.
+It has been renamed to ${oldPath}. The up-to-date format has been written to ${
+            rcPath
+          }.
 `)
         }
         if (
@@ -359,8 +363,9 @@ It has been renamed to ${oldPath}. The up-to-date format has been written to ${r
             fs.writeFileSync(rcHomePath, rcSerialized)
             const READ = fs.readFileSync(rcHomePath, 'utf-8')
             debug('YES', READ)
-            this.out
-              .warn(`We detected the old definition format of the ${dotFilePath} file.
+            this.out.warn(`We detected the old definition format of the ${
+              dotFilePath
+            } file.
 It has been renamed to ${oldPath}. The new file is called ${rcHomePath}.
 Read more about the changes here:
 https://github.com/graphcool/framework/issues/714
@@ -501,12 +506,15 @@ https://github.com/graphcool/framework/issues/714
       ) {
         this.warningCache[target.cluster] = true
         if (target.cluster === 'local') {
-          this.out
-            .warn(`Could not find cluster ${target.cluster} defined for target ${key} in ${filePath}.
+          this.out.warn(`Could not find cluster ${
+            target.cluster
+          } defined for target ${key} in ${filePath}.
 Please run ${chalk.bold('graphcool local up')} to start the local cluster.`)
         } else {
           this.out.error(
-            `Could not find cluster ${target.cluster} defined for target ${key} in ${filePath}`,
+            `Could not find cluster ${target.cluster} defined for target ${
+              key
+            } in ${filePath}`,
           )
         }
       }
@@ -621,7 +629,7 @@ Please run ${chalk.bold('graphcool local up')} to start the local cluster.`)
 
     return (
       (this.rc.clusters![this.activeCluster]! as Cluster).host +
-      '/simple/v1/' +
+      '/api/' +
       projectId
     )
   }

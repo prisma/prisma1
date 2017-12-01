@@ -75,6 +75,13 @@ export interface ProjectInfo extends Project {
   projectDefinition: ProjectDefinition
 }
 
+export interface SimpleProjectInfo {
+  id: string
+  name: string
+  alias: string
+  revision: string
+}
+
 export interface MigrationMessage {
   type: string
   action: string

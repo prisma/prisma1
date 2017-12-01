@@ -3,7 +3,7 @@ import * as childProcess from 'child_process'
 import * as path from 'path'
 import * as fs from 'fs-extra'
 import chalk from 'chalk'
-import {mapValues} from 'lodash'
+import { mapValues } from 'lodash'
 const debug = require('debug')('Docker')
 
 export default class Docker {
@@ -43,33 +43,22 @@ export default class Docker {
   async init() {
     // either get the ports
     let port: any = null
-    let FUNCTIONS_PORT: any = null
     let cluster
     if (this.env.rc.clusters && this.env.rc.clusters[this.clusterName]) {
       this.env.setActiveCluster(this.clusterName)
       cluster = this.env.rc.clusters[this.clusterName]
       port = cluster.host.split(':').slice(-1)[0]
-      if (cluster.faasHost) {
-        FUNCTIONS_PORT = cluster.faasHost.split(':').slice(-1)[0]
-      }
     }
     const defaultVars = this.getDockerEnvVars()
     const portfinder = require('portfinder')
-    port = port || await portfinder.getPortPromise({ port: 60000 })
-    FUNCTIONS_PORT = FUNCTIONS_PORT || String(await portfinder.getPortPromise({ port: 60050 }))
+    port = port || (await portfinder.getPortPromise({ port: 60000 }))
     const customVars = {
       PORT: String(port),
-      FUNCTIONS_PORT,
-      FUNCTION_ENDPOINT_INTERNAL: `http://localfaas:${FUNCTIONS_PORT}`,
-      FUNCTION_ENDPOINT_EXTERNAL: `http://${this.hostName}:${FUNCTIONS_PORT}`,
     }
     debug(`customVars`)
     debug(customVars)
     this.out.log(
       `Running local Graphcool cluster at http://localhost:${customVars.PORT}`,
-    )
-    this.out.log(
-      `Running local FaaS runtime at http://localhost:${customVars.FUNCTIONS_PORT}`,
     )
     this.out.log(`This may take several minutes`)
     this.envVars = { ...process.env, ...defaultVars, ...customVars }
@@ -103,6 +92,60 @@ export default class Docker {
   async pull(): Promise<Docker> {
     await this.init()
     return this.run('pull')
+  }
+
+  getDockerEnvVars() {
+    const file = fs.readFileSync(this.envPath, 'utf-8')
+    return this.parseEnv(file)
+  }
+
+  parseEnv(src: string) {
+    const regex = /^\s*export\s*([a-zA-Z0-9\.\-_]+)\s*=(.*)?\s*/
+    const variableSyntax = new RegExp(
+      '\\${([ ~:a-zA-Z0-9._\'",\\-\\/\\(\\)]+?)}',
+      'g',
+    )
+    const vars = src
+      .toString()
+      .split(/\r\n|\r|\n/g)
+      .reduce((acc, line) => {
+        if (line.trim().startsWith('#')) {
+          return acc
+        }
+        const match = line.match(regex)
+        if (!match) {
+          return acc
+        }
+
+        const key = match[1]
+        let value = match[2] || ''
+        const length = value ? value.length : 0
+        if (length > 0 && value.startsWith('"') && value.endsWith('"')) {
+          value = value.replace(/\\n/gm, '\n')
+        }
+        value = value.replace(/(^['"]|['"]$)/g, '').trim()
+
+        return { ...acc, [key]: value }
+      }, {})
+
+    return mapValues(vars, (value: string, key) => {
+      const match = variableSyntax.exec(value)
+      if (match) {
+        const varName = match[1]
+        if (vars[varName]) {
+          const newValue =
+            value.slice(0, match.index) +
+            vars[varName] +
+            value.slice(match.index + match[0].length)
+          return newValue
+        } else {
+          this.out.warn(
+            `No variable for env var ${key} and value ${match[0]} found`,
+          )
+        }
+      }
+      return value
+    })
   }
 
   private run(...argv: string[]): Promise<Docker> {
@@ -147,51 +190,5 @@ export default class Docker {
       .split(/\n/)
       .map(l => `${chalk.blue('docker')}   ${l}`)
       .join('\n')
-  }
-
-  getDockerEnvVars() {
-    const file = fs.readFileSync(this.envPath, 'utf-8')
-    return this.parseEnv(file)
-  }
-
-  parseEnv(src: string) {
-    const regex = /^\s*export\s*([a-zA-Z0-9\.\-_]+)\s*=(.*)?\s*/
-    const variableSyntax = new RegExp('\\${([ ~:a-zA-Z0-9._\'",\\-\\/\\(\\)]+?)}', 'g')
-    const vars = src
-      .toString()
-      .split(/\r\n|\r|\n/g)
-      .reduce((acc, line) => {
-        if (line.trim().startsWith('#')) {
-          return acc
-        }
-        const match = line.match(regex)
-        if (!match) {
-          return acc
-        }
-
-        const key = match[1]
-        let value = match[2] || ''
-        const length = value ? value.length : 0
-        if (length > 0 && value.startsWith('"') && value.endsWith('"')) {
-          value = value.replace(/\\n/gm, '\n')
-        }
-        value = value.replace(/(^['"]|['"]$)/g, '').trim()
-
-        return { ...acc, [key]: value }
-      }, {})
-
-    return mapValues(vars, (value: string, key) => {
-      const match = variableSyntax.exec(value)
-      if (match) {
-        const varName = match[1]
-        if (vars[varName]) {
-          const newValue = value.slice(0, match.index) + vars[varName] + value.slice(match.index + match[0].length)
-          return newValue
-        } else {
-          this.out.warn(`No variable for env var ${key} and value ${match[0]} found`)
-        }
-      }
-      return value
-    })
   }
 }

@@ -166,7 +166,7 @@ Please run ${chalk.green(
       this.out.up(3)
     }
 
-    await this.auth.ensureAuth()
+    // await this.auth.ensureAuth()
     await this.definition.load({
       ...this.flags,
       target: targetName,
@@ -190,13 +190,7 @@ Please run ${chalk.green(
       const region = this.env.getRegionFromCluster(cluster)
 
       // otherwise create a new project
-      const newProject = await this.createProject(
-        isLocal,
-        cluster,
-        newServiceName,
-        alias,
-        region,
-      )
+      const newProject = await this.createProject(newServiceName)
       projectId = newProject.projectId
       projectIsNew = true
 
@@ -215,15 +209,15 @@ Please run ${chalk.green(
     // best guess for "project name"
     const projectName = newServiceName || targetName
 
-    const info = await this.client.fetchProjectInfo(projectId)
+    //     const info = await this.client.fetchProjectInfo(projectId)
 
-    if (!info.isEjected) {
-      this.out.error(`Your service ${info.name} (${
-        info.id
-      }) is not yet upgraded.
-Please go to the console and upgrade it:
-https://console.graph.cool/${encodeURIComponent(info.name)}/settings/general`)
-    }
+    //     if (!info.isEjected) {
+    //       this.out.error(`Your service ${info.name} (${
+    //         info.id
+    //       }) is not yet upgraded.
+    // Please go to the console and upgrade it:
+    // https://console.graph.cool/${encodeURIComponent(info.name)}/settings/general`)
+    //     }
 
     await this.deploy(
       projectIsNew,
@@ -260,29 +254,12 @@ https://console.graph.cool/${encodeURIComponent(info.name)}/settings/general`)
   }
 
   private async createProject(
-    isLocal: boolean,
-    cluster: string,
     name: string,
-    alias?: string,
-    region?: string,
   ): Promise<{
     projectId: string
   }> {
-    const localNote = isLocal ? ' locally' : ''
-
-    this.out.log('')
-    const projectMessage = `Creating service ${chalk.bold(name)}${
-      localNote
-    } in cluster ${cluster}`
-    this.out.action.start(projectMessage)
-
     // create project
-    const createdProject = await this.client.createProject(
-      name,
-      emptyDefinition,
-      alias,
-      region,
-    )
+    const createdProject = await this.client.createProject(name)
 
     this.out.action.stop()
 
@@ -311,23 +288,23 @@ https://console.graph.cool/${encodeURIComponent(info.name)}/settings/general`)
     cluster: string,
   ): Promise<void> {
     // bundle and add externalFiles
-    debug('bundling')
-    let before = Date.now()
-    if (this.definition.definition!.modules[0].definition!.functions) {
-      const bundler = new Bundler(this, projectId)
-      const externalFiles = await bundler.bundle()
-      bundler.cleanBuild()
-      this.definition.definition!.modules[0].externalFiles = externalFiles
-      Object.keys(externalFiles).forEach(
-        key => delete this.definition.definition!.modules[0].files[key],
-      )
-    }
-    this.out.action.stop(this.prettyTime(Date.now() - before))
-    debug('bundled')
+    // debug('bundling')
+    // let before = Date.now()
+    // if (this.definition.definition!.modules[0].definition!.functions) {
+    //   const bundler = new Bundler(this, projectId)
+    //   const externalFiles = await bundler.bundle()
+    //   bundler.cleanBuild()
+    //   this.definition.definition!.modules[0].externalFiles = externalFiles
+    //   Object.keys(externalFiles).forEach(
+    //     key => delete this.definition.definition!.modules[0].files[key],
+    //   )
+    // }
+    // this.out.action.stop(this.prettyTime(Date.now() - before))
+    // debug('bundled')
 
     this.deploying = true
     const localNote = isLocal ? ' locally' : ''
-    before = Date.now()
+    const before = Date.now()
     this.out.action.start(
       projectIsNew
         ? `Deploying${localNote}`
@@ -336,66 +313,13 @@ https://console.graph.cool/${encodeURIComponent(info.name)}/settings/general`)
           )}${localNote}`,
     )
 
-    const migrationResult = await this.client.push(
+    const migrationResult = await this.client.deploy(
       projectId,
-      force,
-      false,
-      this.definition.definition!,
+      this.definition.getTypes(),
     )
     this.out.action.stop(this.prettyTime(Date.now() - before))
 
     // no action required
-    if (
-      (!migrationResult.migrationMessages ||
-        migrationResult.migrationMessages.length === 0) &&
-      (!migrationResult.errors || migrationResult.errors.length === 0)
-    ) {
-      this.out.log(`Everything up-to-date.`)
-      this.printEndpoints(projectId)
-      this.deploying = false
-      return
-    }
-
-    if (migrationResult.migrationMessages.length > 0) {
-      if (projectIsNew) {
-        this.out.log('\nSuccess! Created the following service:')
-      } else {
-        const updateText =
-          migrationResult.errors.length > 0
-            ? `${chalk.red('Error!')} Here are the potential changes:`
-            : `${chalk.green('Success!')} Here is what changed:`
-        this.out.log(updateText)
-      }
-
-      this.out.migration.printMessages(migrationResult.migrationMessages)
-      this.definition.set(migrationResult.projectDefinition)
-    }
-
-    if (migrationResult.errors.length > 0) {
-      this.out.log(
-        chalk.rgb(244, 157, 65)(
-          `There are issues with the new service definition:`,
-        ),
-      )
-      this.out.migration.printErrors(migrationResult.errors)
-      this.out.log('')
-      process.exitCode = 1
-    }
-
-    if (
-      migrationResult.errors &&
-      migrationResult.errors.length > 0 &&
-      migrationResult.errors[0].description.includes(`destructive changes`)
-    ) {
-      // potentially destructive changes
-      this.out.log(
-        `Your changes might result in data loss.
-          Use ${chalk.cyan(
-            `\`graphcool deploy --force\``,
-          )} if you know what you're doing!\n`,
-      )
-      process.exitCode = 1
-    }
     this.deploying = false
     this.printEndpoints(projectId)
   }
@@ -403,11 +327,11 @@ https://console.graph.cool/${encodeURIComponent(info.name)}/settings/general`)
   private printEndpoints(projectId) {
     this.out.log(`Here are your GraphQL Endpoints:
 
-  ${chalk.bold('Simple API:')}        ${this.env.simpleEndpoint(projectId)}
-  ${chalk.bold('Relay API:')}         ${this.env.relayEndpoint(projectId)}
-  ${chalk.bold('Subscriptions API:')} ${this.env.subscriptionEndpoint(
-      projectId,
-    )}`)
+  ${chalk.bold('API:')}        ${this.env.simpleEndpoint(projectId)}`)
+    // ${chalk.bold('Relay API:')}         ${this.env.relayEndpoint(projectId)}
+    //   ${chalk.bold('Subscriptions API:')} ${this.env.subscriptionEndpoint(
+    //       projectId,
+    //     )}
   }
 
   private async clusterSelection(): Promise<string> {

@@ -111,6 +111,18 @@ export class ProjectDefinitionClass {
     this.definition = definition
   }
 
+  public getTypes(): string {
+    let typesPaths = this.definition!.modules[0].definition!.types
+    typesPaths = Array.isArray(typesPaths) ? typesPaths : [typesPaths]
+
+    let typesString = ''
+    typesPaths.forEach(typesPath => {
+      typesString += fs.readFileSync(typesPath, 'utf-8')
+    })
+
+    return typesString
+  }
+
   public getFunctionAndModule(
     name: string,
   ): { fn: FunctionDefinition; module: GraphcoolModule } | null {

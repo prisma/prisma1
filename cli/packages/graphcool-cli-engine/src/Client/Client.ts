@@ -10,6 +10,7 @@ import {
   ProjectDefinition,
   ProjectInfo,
   RemoteProject,
+  SimpleProjectInfo,
 } from '../types/common'
 
 import { GraphQLClient, request } from 'graphql-request'
@@ -77,7 +78,9 @@ export class Client {
             const message = e.response.errors[0].message
             this.out.error(
               message +
-                ` in account ${user.email}. Please check if you are logged in to the right account.`,
+                ` in account ${
+                  user.email
+                }. Please check if you are logged in to the right account.`,
             )
           } else if (e.message.startsWith('No valid session')) {
             await this.auth.ensureAuth(true)
@@ -115,45 +118,31 @@ export class Client {
     return user
   }
 
-  async createProject(
-    name: string,
-    projectDefinition: ProjectDefinition,
-    alias?: string,
-    region?: string,
-  ): Promise<ProjectInfo> {
+  async createProject(name: string): Promise<SimpleProjectInfo> {
     const mutation = `\
-      mutation addProject($name: String!, $alias: String, $region: Region, $config: String) {
+      mutation addProject($name: String!) {
         addProject(input: {
           name: $name,
-          alias: $alias,
-          region: $region,
-          clientMutationId: "static"
-          config: $config
         }) {
           project {
-            ...RemoteProject
+            id
+            name
+            alias
+            revision
           }
         }
       }
-      ${REMOTE_PROJECT_FRAGMENT}
       `
 
-    const newRegion = region || (await getFastestRegion())
-
     const { addProject: { project } } = await this.client.request<{
-      addProject: { project: RemoteProject }
+      addProject: { project: SimpleProjectInfo }
     }>(mutation, {
       name,
-      alias,
-      region: newRegion,
-      config: JSON.stringify(
-        ProjectDefinitionClass.sanitizeDefinition(projectDefinition),
-      ),
     })
 
     // TODO set project definition, should be possibility in the addProject mutation
 
-    return this.getProjectDefinition(project)
+    return project
   }
 
   async getDeployUrl(projectId: string): Promise<string> {
@@ -173,6 +162,42 @@ export class Client {
       getTemporaryDeployUrl: { url: string }
     }>(mutation, { projectId })
     return url
+  }
+
+  async deploy(projectId: string, types: string): Promise<any> {
+    const mutation = `\
+      mutation($projectId: String!, $types: String!) {
+        deploy(input: {
+          projectId: $projectId
+          types: $types
+        }) {
+          project {
+            id
+          }
+          errors {
+            type
+            field
+            description
+          }
+          migration {
+            revision
+            steps {
+              type
+            }
+          }
+        }
+      }
+    `
+    const { deploy } = await this.client.request<{
+      deploy: any
+    }>(mutation, {
+      projectId,
+      types,
+    })
+
+    debug()
+
+    return deploy
   }
 
   async push(
@@ -326,9 +351,7 @@ export class Client {
           endpoint,
           `
             {
-              viewer {
-                id
-              }
+              migrationStatus
             }
             `,
         )
@@ -482,9 +505,7 @@ export class Client {
       }
     }
 
-    const { node } = await this.client.request<
-      FunctionLogsPayload
-    >(
+    const { node } = await this.client.request<FunctionLogsPayload>(
       `query ($id: ID!, $count: Int!) {
       node(id: $id) {
         ... on Function {
@@ -604,9 +625,9 @@ export class Client {
 
   async deleteProjects(projectIds: string[]): Promise<string[]> {
     const inputArguments = projectIds.reduce((prev, current, index) => {
-      return `${prev}$projectId${index}: String!${index < projectIds.length - 1
-        ? ', '
-        : ''}`
+      return `${prev}$projectId${index}: String!${
+        index < projectIds.length - 1 ? ', ' : ''
+      }`
     }, '')
     const singleMutations = projectIds.map(
       (projectId, index) => `
