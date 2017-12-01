@@ -105,7 +105,7 @@ case class DataResolver(project: Project, useMasterDatabaseOnly: Boolean = false
       .run(query)
       .map {
         case Some(modelId) =>
-          val model = project.getModelById_!(modelId)
+          val model = project.getModelById_!(modelId.trim)
           resolveByUnique(model, "id", globalId).map(_.map(mapDataItem(model)).map(_.copy(typeName = Some(model.name))))
         case _ => Future.successful(None)
       }

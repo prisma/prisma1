@@ -539,7 +539,8 @@ case class Field(
     isRelationWithId(relationId) && this.relationSide.contains(relationSide)
   }
 
-  def isWritable: Boolean = !isReadonly
+  private val excludedFromMutations = Vector("updatedAt", "createdAt", "id")
+  def isWritable: Boolean           = !isReadonly && !excludedFromMutations.contains(name)
 
   def isOneToOneRelation(project: Project): Boolean = {
     val otherField = relatedFieldEager(project)
