@@ -12,6 +12,17 @@ case class MigrationPersistenceImpl(
     internalDatabase: DatabaseDef
 )(implicit ec: ExecutionContext)
     extends MigrationPersistence {
+
+  override def loadAll(projectId: String): Future[Seq[Migration]] = {
+    val baseQuery = for {
+      migration <- Tables.Migrations
+      if migration.projectId === projectId
+    } yield migration
+
+    val query = baseQuery.sortBy(_.revision.desc)
+    internalDatabase.run(query.result).map(_.map(DbToModelMapper.convert))
+  }
+
   override def create(project: Project, migration: Migration): Future[Migration] = {
     for {
       latestMigration    <- internalDatabase.run(MigrationTable.lastMigrationForProject(migration.projectId))
@@ -33,10 +44,19 @@ case class MigrationPersistenceImpl(
 
       UnappliedMigration(previousProject, nextProject, _migration)
     }
+
     x.future
   }
 
   override def markMigrationAsApplied(migration: Migration): Future[Unit] = {
     internalDatabase.run(MigrationTable.markAsApplied(migration.projectId, migration.revision)).map(_ => ())
+  }
+
+  override def getLastMigration(projectId: String): Future[Option[Migration]] = {
+    FutureOpt(internalDatabase.run(MigrationTable.lastAppliedMigrationForProject(projectId))).map(DbToModelMapper.convert).future
+  }
+
+  override def getNextMigration(projectId: String): Future[Option[Migration]] = {
+    FutureOpt(internalDatabase.run(MigrationTable.nextUnappliedMigrationForProject(projectId))).map(DbToModelMapper.convert).future
   }
 }

@@ -9,7 +9,8 @@ object DeployMain extends App {
   implicit val materializer = ActorMaterializer()
 
   val dependencies = DeployDependenciesImpl()
-  val server       = DeployServer(dependencies.deploySchemaBuilder, dependencies.projectPersistence, dependencies.client)
+  dependencies.init
 
+  val server = DeployServer(dependencies.deploySchemaBuilder, dependencies.projectPersistence, dependencies.client)
   ServerExecutor(8081, server).startBlocking()
 }

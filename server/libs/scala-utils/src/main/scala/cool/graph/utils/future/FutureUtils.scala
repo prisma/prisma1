@@ -92,5 +92,14 @@ object FutureUtils {
     def map[B](f: A => B)(implicit ec: ExecutionContext): FutureOpt[B] = {
       FutureOpt(future.map(option => option map f))
     }
+
+    def fallbackTo[B >: A](other: Future[Option[B]])(implicit ec: ExecutionContext): Future[Option[B]] = {
+      future
+        .flatMap {
+          case None        => other
+          case x @ Some(_) => Future.successful(x)
+        }
+        .recoverWith { case _ => other }
+    }
   }
 }

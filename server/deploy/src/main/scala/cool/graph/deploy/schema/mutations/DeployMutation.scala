@@ -21,8 +21,7 @@ case class DeployMutation(
 ) extends Mutation[DeployMutationPayload] {
   import cool.graph.util.or.OrExtensions._
 
-  val graphQlSdl = QueryParser.parse(args.types).get
-
+  val graphQlSdl   = QueryParser.parse(args.types).get
   val validator    = SchemaSyntaxValidator(args.types)
   val schemaErrors = validator.validate()
 

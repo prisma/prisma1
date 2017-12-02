@@ -2,14 +2,15 @@ package cool.graph.deploy.schema
 
 import akka.actor.ActorSystem
 import cool.graph.deploy.DeployDependencies
-import cool.graph.deploy.database.persistence.{MigrationPersistence, ProjectPersistence, ProjectPersistenceImpl}
+import cool.graph.deploy.database.persistence.{MigrationPersistence, ProjectPersistence}
 import cool.graph.deploy.migration.{DesiredProjectInferer, MigrationStepsProposer, RenameInferer}
 import cool.graph.deploy.schema.fields.{AddProjectField, DeployField}
 import cool.graph.deploy.schema.mutations._
 import cool.graph.deploy.schema.types.{MigrationStepType, MigrationType, ProjectType, SchemaErrorType}
-import cool.graph.shared.models.{Client, Project}
+import cool.graph.shared.models.{Client, Migration, Project}
+import cool.graph.utils.future.FutureUtils.FutureOpt
 import sangria.relay.Mutation
-import sangria.schema.{Field, _}
+import sangria.schema._
 import slick.jdbc.MySQLProfile.backend.DatabaseDef
 
 import scala.concurrent.Future
@@ -57,7 +58,9 @@ case class SchemaBuilderImpl(
   }
 
   def getQueryFields: Vector[Field[SystemUserContext, Unit]] = Vector(
-    migrationStatusField
+    migrationStatusField,
+    listProjectsField,
+    listMigrationsField
   )
 
   def getMutationFields: Vector[Field[SystemUserContext, Unit]] = Vector(
@@ -67,9 +70,40 @@ case class SchemaBuilderImpl(
 
   val migrationStatusField: Field[SystemUserContext, Unit] = Field(
     "migrationStatus",
-    description = Some("Shows the status of the next migration in line to be applied to the project."),
-    fieldType = MigrationType.Type,
-    resolve = (ctx) => ctx.ctx.
+    MigrationType.Type,
+    arguments = List(Argument("projectId", StringType, description = "The project id.")),
+    description =
+      Some("Shows the status of the next migration in line to be applied to the project. If no such migration exists, it shows the last applied migration."),
+    resolve = (ctx) => {
+      val projectId = ctx.args.arg[String]("projectId")
+      for {
+        migration <- FutureOpt(migrationPersistence.getNextMigration(projectId)).fallbackTo(migrationPersistence.getLastMigration(projectId))
+      } yield {
+        migration.get
+      }
+    }
+  )
+
+  // todo revision is not loaded at the moment, always 0
+  val listProjectsField: Field[SystemUserContext, Unit] = Field(
+    "listProjects",
+    ListType(ProjectType.Type),
+    description = Some("Shows all projects the caller has access to."),
+    resolve = (ctx) => {
+      projectPersistence.loadAll()
+    }
+  )
+
+  // todo remove if not used anymore
+  val listMigrationsField: Field[SystemUserContext, Unit] = Field(
+    "listMigrations",
+    ListType(MigrationType.Type),
+    arguments = List(Argument("projectId", StringType, description = "The project id.")),
+    description = Some("Shows all migrations for the project. Debug query, will likely be removed in the future."),
+    resolve = (ctx) => {
+      val projectId = ctx.args.arg[String]("projectId")
+      migrationPersistence.loadAll(projectId)
+    }
   )
 
   def viewerField(): Field[SystemUserContext, Unit] = {

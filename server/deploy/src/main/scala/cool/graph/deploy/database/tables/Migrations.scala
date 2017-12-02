@@ -36,6 +36,7 @@ class MigrationTable(tag: Tag) extends Table[Migration](tag, "Migration") {
 
 object MigrationTable {
 
+  // Retrieves the last migration for the project, regardless of it being applied or unapplied
   def lastMigrationForProject(id: String): SqlAction[Option[Migration], NoStream, Read] = {
     val baseQuery = for {
       migration <- Tables.Migrations
@@ -59,7 +60,8 @@ object MigrationTable {
   def nextUnappliedMigrationForProject(id: String): SqlAction[Option[Migration], NoStream, Read] = {
     val baseQuery = for {
       migration <- Tables.Migrations
-      if migration.projectId === id && !migration.hasBeenApplied
+      if migration.projectId === id
+      if !migration.hasBeenApplied
     } yield migration
 
     val query = baseQuery.sortBy(_.revision.asc).take(1)

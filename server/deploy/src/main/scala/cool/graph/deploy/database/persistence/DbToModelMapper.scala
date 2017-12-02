@@ -13,6 +13,11 @@ object DbToModelMapper {
     projectModel.copy(revision = migration.revision)
   }
 
+  def convert(project: Project): models.Project = {
+    // todo fix shared project model
+    models.Project(project.id, project.name, null, null, alias = project.alias)
+  }
+
   def convert(migration: Migration): models.Migration = {
     models.Migration(
       migration.projectId,
