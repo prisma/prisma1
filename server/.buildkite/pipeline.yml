@@ -2,35 +2,14 @@ steps:
   - label: ":scala: libs"
     command: cd server && ./scripts/test.sh libs
 
-  - label: ":scala: backend-api-relay"
-    command: cd server && ./scripts/test.sh backend-api-relay
+  - label: ":scala: deploy"
+    command: cd server && ./scripts/test.sh deploy
 
-  - label: ":scala: backend-api-simple"
-    command: cd server && ./scripts/test.sh backend-api-simple
+  - label: ":scala: api"
+    command: cd server && ./scripts/test.sh api
 
-  - label: ":scala: backend-api-system"
-    command: cd server && ./scripts/test.sh backend-api-system
-
-  - label: ":scala: backend-api-simple-subscriptions"
-    command: cd server && ./scripts/test.sh backend-api-simple-subscriptions
-
-  - label: ":scala: backend-api-subscriptions-websocket"
-    command: cd server && ./scripts/test.sh backend-api-subscriptions-websocket
-
-  - label: ":scala: backend-api-fileupload"
-    command: cd server && ./scripts/test.sh backend-api-fileupload
-
-  - label: ":scala: backend-api-schema-manager"
-    command: cd server && ./scripts/test.sh backend-api-schema-manager
-
-  - label: ":scala: backend-shared"
-    command: cd server && ./scripts/test.sh backend-shared
-
-  - label: ":scala: client-shared"
-    command: cd server && ./scripts/test.sh client-shared
-
-  - label: ":scala: backend-workers"
-    command: cd server && ./scripts/test.sh backend-workers
+  - label: ":scala: single-server"
+    command: cd server && ./scripts/test.sh single-server
 
   - wait
 
