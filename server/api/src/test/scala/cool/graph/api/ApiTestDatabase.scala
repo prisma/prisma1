@@ -2,22 +2,17 @@ package cool.graph.api
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import cool.graph.api.database.DatabaseQueryBuilder.{ResultTransform, _}
-import cool.graph.api.database.mutactions.Transaction
-import cool.graph.api.database.{DataItem, DataResolver, DatabaseMutationBuilder, DatabaseQueryBuilder}
-import cool.graph.shared.database.mutations.{CreateRelationFieldMirrorColumn, CreateRelationTable}
-import cool.graph.shared.database.{SqlDDLMutaction}
+import cool.graph.api.database.{DataResolver, DatabaseMutationBuilder, DatabaseQueryBuilder}
+import cool.graph.deploy.migration.mutactions.{ClientSqlMutaction, CreateRelationTable}
 import cool.graph.shared.models._
 import cool.graph.shared.project_dsl.TestProject
 import cool.graph.utils.await.AwaitUtils
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
 import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.MySQLProfile.backend.DatabaseDef
-import slick.jdbc.{MySQLProfile, SQLActionBuilder}
 
-import scala.concurrent.duration._
 import scala.concurrent.Await
-import scala.util.Try
+import scala.concurrent.duration._
 
 trait ApiTestDatabase extends BeforeAndAfterEach with BeforeAndAfterAll with AwaitUtils { self: Suite =>
 
@@ -86,64 +81,24 @@ trait ApiTestDatabase extends BeforeAndAfterEach with BeforeAndAfterAll with Awa
 
   def setupProject(client: Client, project: Project): Unit = {
     deleteProjectDatabase(project)
-    loadProject(project, client)
+    loadProject(project)
 
     // The order here is very important or foreign key constraints will fail
     project.models.foreach(loadModel(project, _))
     project.relations.foreach(loadRelation(project, _))
-    project.relations.foreach(loadRelationFieldMirrors(project, _))
+    //project.relations.foreach(loadRelationFieldMirrors(project, _))
   }
 
-  def setupProject(client: Client,
-                   project: Project,
-                   models: List[Model],
-                   relations: List[Relation] = List.empty,
-                   rootTokens: List[RootToken] = List.empty): Unit = {
-    val actualProject = project.copy(
-      models = models,
-      relations = relations,
-      rootTokens = rootTokens
-    )
-
-    setupProject(client, actualProject)
-  }
-
-  private def loadProject(project: Project, client: Client): Unit =
-    clientDatabase.run(DatabaseMutationBuilder.createClientDatabaseForProject(project.id)).await()
-
-  private def loadModel(project: Project, model: Model): Unit = {
-    // For simplicity and for circumventing foreign key constraint violations, load only system fields first
-    val plainModel = model.copy(fields = model.fields.filter(_.isSystem))
-    clientDatabase.run(DatabaseMutationBuilder.createTableForModel(projectId = project.id, model = model)).await()
-  }
-
+  private def loadProject(project: Project): Unit                      = runDbActionOnClientDb(DatabaseMutationBuilder.createClientDatabaseForProject(project.id))
+  private def loadModel(project: Project, model: Model): Unit          = runDbActionOnClientDb(DatabaseMutationBuilder.createTableForModel(project.id, model))
   private def loadRelation(project: Project, relation: Relation): Unit = runMutaction(CreateRelationTable(project = project, relation = relation))
 
-  private def loadRelationFieldMirrors(project: Project, relation: Relation): Unit = {
-    relation.fieldMirrors.foreach { mirror =>
-      runMutaction(CreateRelationFieldMirrorColumn(project, relation, project.getFieldById_!(mirror.fieldId)))
-    }
-  }
-
-//  def verifyClientMutaction(mutaction: ClientSqlMutaction): Try[MutactionVerificationSuccess] = {
-//    val verifyCall = mutaction match {
-//      case mutaction: ClientSqlDataChangeMutaction => mutaction.verify(dataResolver)
-//      case mutaction                               => mutaction.verify()
+//  private def loadRelationFieldMirrors(project: Project, relation: Relation): Unit = {
+//    relation.fieldMirrors.foreach { mirror =>
+//      runMutaction(CreateRelationFieldMirrorColumn(project, relation, project.getFieldById_!(mirror.fieldId)))
 //    }
-//    verifyCall.await()
 //  }
 
-  def runMutaction(mutaction: Transaction): Unit                                = mutaction.execute.await()
+  def runMutaction(mutaction: ClientSqlMutaction): Unit                         = runDbActionOnClientDb(mutaction.execute.await().sqlAction)
   def runDbActionOnClientDb(action: DBIOAction[Any, NoStream, Effect.All]): Any = clientDatabase.run(action).await()
-
-  def runDbActionOnClientDb(pair: (SQLActionBuilder, ResultTransform)): List[DataItem] = {
-    val (_, resultTransform) = pair
-    val result               = clientDatabase.run(pair._1.as[DataItem]).await().toList
-    resultTransform(result).items.toList
-  }
-
-  def runMutaction(mutaction: SqlDDLMutaction): Unit = {
-    val sqlAction: DBIOAction[Any, NoStream, Effect.All] = mutaction.execute.get
-    clientDatabase.run(sqlAction).await()
-  }
 }
