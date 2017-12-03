@@ -84,7 +84,7 @@ case class RequestHandler(
 
   def handleRawRequestForImport(projectId: String, rawRequest: RawRequest): Future[(StatusCode, JsValue)] = {
     def checkForAdmin(auth: Option[AuthenticatedRequest]): Unit =
-      if (!auth.exists(_.isAdmin)) throw InsufficientPermissions("Insufficient permissions for this query")
+      if (!auth.exists(_.isAdmin)) throw InsufficientPermissions("Insufficient permissions for bulk import")
 
     import cool.graph.client.mutactions.DataImport._
     val graphQlRequestFuture: Future[Future[Vector[String]]] = for {
@@ -96,7 +96,7 @@ case class RequestHandler(
 
     val response: Future[Vector[String]] = graphQlRequestFuture.flatMap(identity)
 
-    response.map(x => (200, JsString("Failures: " + x.mkString((",")))))
+    response.map(x => (200, JsString("Failures: " + x.mkString(","))))
   }
 
   def handleRawRequestForProjectSchema(

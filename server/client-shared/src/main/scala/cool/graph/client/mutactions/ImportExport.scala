@@ -2,7 +2,7 @@ package cool.graph.client.mutactions
 
 import cool.graph.client.ClientInjector
 import cool.graph.client.database.DatabaseMutationBuilder.MirrorFieldDbValues
-import cool.graph.client.database.{DatabaseMutationBuilder, ProjectRelayId, ProjectRelayIdTable}
+import cool.graph.client.database._
 import cool.graph.cuid.Cuid
 import cool.graph.shared.RelationFieldMirrorColumn
 import cool.graph.shared.database.Databases
@@ -70,7 +70,7 @@ object DataImport {
     res.map(vector =>
       vector.zipWithIndex.collect {
         case (elem, idx) if elem.isFailure && idx < cnt  => s"Index: $idx Message: ${elem.failed.get.getMessage.substring(13)}"
-        case (elem, idx) if elem.isFailure && idx >= cnt => s"Index: ${idx - cnt + 1} Message: Relay Id Failure ${elem.failed.get.getMessage.substring(13)}"
+        case (elem, idx) if elem.isFailure && idx >= cnt => s"Index: ${idx - cnt} Message: Relay Id Failure ${elem.failed.get.getMessage.substring(13)}"
     })
   }
 
@@ -139,6 +139,8 @@ object DataImport {
     Future.sequence(actions.map(db.master.run))
   }
 }
+
+object DataExport {}
 
 object teststuff {
 
