@@ -9,22 +9,17 @@ services:
     - redis
     - rabbit
     environment:
-      TEST_SQL_CLIENT_HOST: "client-db"
-      TEST_SQL_CLIENT_PORT: "3306"
-      TEST_SQL_CLIENT_USER: "root"
-      TEST_SQL_CLIENT_PASSWORD: "graphcool"
-      TEST_SQL_CLIENT_CONNECTION_LIMIT: 10
-      TEST_SQL_INTERNAL_HOST: "internal-db"
-      TEST_SQL_INTERNAL_PORT: "3306"
-      TEST_SQL_INTERNAL_USER: "root"
-      TEST_SQL_INTERNAL_PASSWORD: "graphcool"
-      TEST_SQL_INTERNAL_DATABASE: "graphcool"
-      TEST_SQL_INTERNAL_CONNECTION_LIMIT: 10
-      TEST_SQL_LOGS_HOST: "internal-db"
-      TEST_SQL_LOGS_PORT: "3306"
-      TEST_SQL_LOGS_USER: "root"
-      TEST_SQL_LOGS_PASSWORD: "graphcool"
-      TEST_SQL_LOGS_DATABASE: "logs"
+      SQL_CLIENT_HOST: "client-db"
+      SQL_CLIENT_PORT: "3306"
+      SQL_CLIENT_USER: "root"
+      SQL_CLIENT_PASSWORD: "graphcool"
+      SQL_CLIENT_CONNECTION_LIMIT: 10
+      SQL_INTERNAL_HOST: "internal-db"
+      SQL_INTERNAL_PORT: "3306"
+      SQL_INTERNAL_USER: "root"
+      SQL_INTERNAL_PASSWORD: "graphcool"
+      SQL_INTERNAL_DATABASE: "graphcool"
+      SQL_INTERNAL_CONNECTION_LIMIT: 10
       SQL_LOGS_HOST: "internal-db"
       SQL_LOGS_PORT: "3306"
       SQL_LOGS_USER: "root"
