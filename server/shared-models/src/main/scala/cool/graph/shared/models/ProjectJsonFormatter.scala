@@ -5,7 +5,7 @@ import cool.graph.shared.models.FieldConstraintType.FieldConstraintType
 import org.joda.time.format.ISODateTimeFormat
 import org.joda.time.{DateTime, DateTimeZone}
 import play.api.libs.json._
-import cool.graph.shared.util.json.JsonUtils._
+import cool.graph.utils.json.JsonUtils._
 
 object ProjectJsonFormatter {
 

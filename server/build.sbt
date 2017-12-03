@@ -116,10 +116,10 @@ def libProject(name: String): Project =  Project(id = name, base = file(s"./libs
 
 lazy val sharedModels = normalProject("shared-models")
   .dependsOn(gcValues % "compile")
+  .dependsOn(jsonUtils % "compile")
   .settings(
   libraryDependencies ++= Seq(
-    cuid,
-    playJson
+    cuid
   ) ++ joda
 )
 lazy val deploy = serverProject("deploy")
@@ -350,6 +350,14 @@ lazy val scalaUtils =
       scalaTest
     ))
 
+lazy val jsonUtils =
+  Project(id = "json-utils", base = file("./libs/json-utils"))
+    .settings(commonSettings: _*)
+    .settings(libraryDependencies ++= Seq(
+      playJson,
+      scalaTest
+    ))
+
 lazy val cache =
   Project(id = "cache", base = file("./libs/cache"))
     .settings(commonSettings: _*)
@@ -437,6 +445,7 @@ val allProjects = List(
   backendApiSchemaManager,
   backendWorkers,
   scalaUtils,
+  jsonUtils,
   cache,
   singleServer,
   localFaas,
