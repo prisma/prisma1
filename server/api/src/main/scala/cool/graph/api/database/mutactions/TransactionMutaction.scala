@@ -1,7 +1,6 @@
 package cool.graph.api.database.mutactions
 
 import cool.graph.api.database.DataResolver
-import cool.graph.shared.database._
 import slick.dbio.DBIO
 
 import scala.concurrent.ExecutionContext.Implicits.global
