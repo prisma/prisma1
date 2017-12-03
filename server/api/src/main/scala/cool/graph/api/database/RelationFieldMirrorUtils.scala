@@ -1,4 +1,4 @@
-package cool.graph.shared.database
+package cool.graph.api.database
 
 import cool.graph.shared.models.{Field, Project, Relation}
 

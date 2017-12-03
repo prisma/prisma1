@@ -17,7 +17,7 @@ case class QueryArguments(skip: Option[Int],
 
   val MAX_NODE_COUNT = 1000
 
-  import cool.graph.shared.database.SlickExtensions._
+  import SlickExtensions._
   import slick.jdbc.MySQLProfile.api._
 
   val isReverseOrder = last.isDefined

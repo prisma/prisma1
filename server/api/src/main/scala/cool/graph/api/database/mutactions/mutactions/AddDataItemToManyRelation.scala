@@ -2,13 +2,13 @@ package cool.graph.api.database.mutactions.mutactions
 
 import java.sql.SQLIntegrityConstraintViolationException
 
-import cool.graph.api.database.{DataResolver, DatabaseMutationBuilder}
+import cool.graph.api.database.{DataResolver, DatabaseMutationBuilder, NameConstraints, RelationFieldMirrorUtils}
 import cool.graph.api.database.DatabaseMutationBuilder.MirrorFieldDbValues
 import cool.graph.api.database.mutactions.{ClientSqlDataChangeMutaction, ClientSqlStatementResult, MutactionVerificationSuccess}
 import cool.graph.api.schema.APIErrors
 import cool.graph.cuid.Cuid
-import cool.graph.shared.database.{NameConstraints, RelationFieldMirrorUtils}
 import cool.graph.shared.models._
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}

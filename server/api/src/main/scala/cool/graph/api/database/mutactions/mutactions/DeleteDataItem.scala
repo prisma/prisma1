@@ -1,9 +1,8 @@
 package cool.graph.api.database.mutactions.mutactions
 
 import cool.graph.api.database.mutactions.{ClientSqlDataChangeMutaction, ClientSqlStatementResult, MutactionVerificationSuccess}
-import cool.graph.api.database.{DataItem, DataResolver, DatabaseMutationBuilder, ProjectRelayIdTable}
+import cool.graph.api.database._
 import cool.graph.api.schema.APIErrors
-import cool.graph.shared.database.NameConstraints
 import cool.graph.shared.models.IdType.Id
 import cool.graph.shared.models.{Model, Project}
 import slick.jdbc.MySQLProfile.api._

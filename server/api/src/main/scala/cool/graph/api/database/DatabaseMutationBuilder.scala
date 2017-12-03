@@ -9,7 +9,7 @@ import slick.sql.SqlStreamingAction
 
 object DatabaseMutationBuilder {
 
-  import cool.graph.shared.database.SlickExtensions._
+  import SlickExtensions._
 
   val implicitlyCreatedColumns = List("id", "createdAt", "updatedAt")
 

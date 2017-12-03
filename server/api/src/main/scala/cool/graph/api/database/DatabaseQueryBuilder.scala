@@ -11,7 +11,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 object DatabaseQueryBuilder {
 
-  import cool.graph.shared.database.SlickExtensions._
+  import SlickExtensions._
 
   implicit object GetDataItem extends GetResult[DataItem] {
     def apply(ps: PositionedResult): DataItem = {

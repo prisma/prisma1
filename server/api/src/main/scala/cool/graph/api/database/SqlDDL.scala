@@ -1,11 +1,9 @@
-package cool.graph.shared.database
+package cool.graph.api.database
 
-import cool.graph.shared.models.RelationSide.RelationSide
 import cool.graph.shared.models.TypeIdentifier.TypeIdentifier
 import cool.graph.shared.models.{Model, TypeIdentifier}
 import slick.dbio.DBIOAction
 import slick.jdbc.MySQLProfile.api._
-import slick.sql.SqlStreamingAction
 
 object SqlDDL {
 
