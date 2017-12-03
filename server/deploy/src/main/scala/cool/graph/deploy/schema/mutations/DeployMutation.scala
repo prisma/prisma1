@@ -32,7 +32,7 @@ case class DeployMutation(
           DeployMutationPayload(
             clientMutationId = args.clientMutationId,
             project = project,
-            migration = Migration.empty,
+            migration = Migration.empty(project),
             errors = schemaErrors
           ))
       }
@@ -50,7 +50,7 @@ case class DeployMutation(
       savedMigration <- if (migrationSteps.nonEmpty) {
                          migrationPersistence.create(nextProject, migration)
                        } else {
-                         Future.successful(Migration.empty)
+                         Future.successful(Migration.empty(project))
                        }
     } yield {
       MutationSuccess(DeployMutationPayload(args.clientMutationId, nextProject, savedMigration, schemaErrors))

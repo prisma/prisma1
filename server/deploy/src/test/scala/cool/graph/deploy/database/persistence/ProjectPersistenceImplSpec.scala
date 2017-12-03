@@ -14,7 +14,7 @@ class ProjectPersistenceImplSpec extends FlatSpec with Matchers with AwaitUtils 
   val projectPersistence   = ProjectPersistenceImpl(internalDatabase = internalDatabase)
   val migrationPersistence = MigrationPersistenceImpl(internalDatabase = internalDatabase)
   val project              = TestProject()
-  val migration: Migration = Migration.empty
+  val migration: Migration = Migration.empty(project)
 
   override def beforeEach(): Unit = {
     super.beforeEach()

@@ -14,7 +14,7 @@ case class Migration(
 )
 
 object Migration {
-  val empty = Migration("", 0, hasBeenApplied = false, steps = Vector.empty)
+  def empty(project: Project) = Migration(project.id, 0, hasBeenApplied = false, steps = Vector.empty)
 }
 
 sealed trait MigrationStep
