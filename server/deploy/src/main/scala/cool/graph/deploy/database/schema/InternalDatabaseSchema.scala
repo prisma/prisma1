@@ -17,14 +17,14 @@ object InternalDatabaseSchema {
   lazy val setupActions = DBIO.seq(
     sqlu"CREATE SCHEMA IF NOT EXISTS `graphcool` DEFAULT CHARACTER SET latin1;",
     sqlu"USE `graphcool`;",
-    // PROJECT
+    // Project
     sqlu"""
       CREATE TABLE IF NOT EXISTS `Project` (
         `id` varchar(25) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',
         `ownerId` varchar(25) COLLATE utf8_unicode_ci DEFAULT NULL,
         PRIMARY KEY (`id`),
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;""",
-    // Migrations
+    // Migration
     sqlu"""
       CREATE TABLE IF NOT EXISTS `Migration` (
         `projectId` varchar(25) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',
