@@ -46,6 +46,18 @@ object DatabaseQueryBuilder {
     (query, resultTransform)
   }
 
+  def selectAllFromModelExport(projectId: String,
+                               modelName: String,
+                               args: Option[QueryArguments],
+                               overrideMaxNodeCount: Option[Int] = None): (SQLActionBuilder, ResultTransform) = {
+
+    val (_, _, limitCommand, resultTransform) = extractQueryArgs(projectId, modelName, args, overrideMaxNodeCount = overrideMaxNodeCount)
+
+    val query = sql"select * from `#$projectId`.`#$modelName`" concat prefixIfNotNone("limit", limitCommand)
+
+    (query, resultTransform)
+  }
+
   def selectAllFromModels(projectId: String, modelName: String, args: Option[QueryArguments]): (SQLActionBuilder, ResultTransform) = {
 
     val (conditionCommand, orderByCommand, limitCommand, resultTransform) =
@@ -78,14 +90,14 @@ object DatabaseQueryBuilder {
       overrideMaxNodeCount: Option[Int] = None): (Option[SQLActionBuilder], Option[SQLActionBuilder], Option[SQLActionBuilder], ResultTransform) = {
     args match {
       case None => (None, None, None, x => ResolverResult(x))
+
       case Some(givenArgs: QueryArguments) =>
         (
           givenArgs.extractWhereConditionCommand(projectId, modelName),
           givenArgs.extractOrderByCommand(projectId, modelName, defaultOrderShortcut),
           overrideMaxNodeCount match {
-            case None => givenArgs.extractLimitCommand(projectId, modelName)
-            case Some(maxCount: Int) =>
-              givenArgs.extractLimitCommand(projectId, modelName, maxCount)
+            case None                => givenArgs.extractLimitCommand(projectId, modelName)
+            case Some(maxCount: Int) => givenArgs.extractLimitCommand(projectId, modelName, maxCount)
           },
           givenArgs.extractResultTransform(projectId, modelName)
         )

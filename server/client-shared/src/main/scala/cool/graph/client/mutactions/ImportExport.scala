@@ -1,5 +1,7 @@
 package cool.graph.client.mutactions
 
+import cool.graph.DataItem
+import cool.graph.Types.UserData
 import cool.graph.client.ClientInjector
 import cool.graph.client.database.DatabaseMutationBuilder.MirrorFieldDbValues
 import cool.graph.client.database._
@@ -10,12 +12,13 @@ import cool.graph.shared.models._
 import slick.dbio.Effect
 import slick.jdbc.MySQLProfile.api._
 import slick.lifted.TableQuery
-import spray.json.{DefaultJsonProtocol, JsArray, JsFalse, JsNull, JsNumber, JsObject, JsString, JsTrue, JsValue, JsonFormat, RootJsonFormat}
+import spray.json.{DefaultJsonProtocol, JsArray, JsBoolean, JsFalse, JsNull, JsNumber, JsObject, JsString, JsTrue, JsValue, JsonFormat, RootJsonFormat}
 
 import scala.concurrent.Future
 import scala.util.Try
 
-object DataImport {
+object ImportExportFormat {
+  case class StringWithCursor(string: String, modelIndex: Int, start: Int)
 
   case class ImportBundle(valueType: String, values: JsArray)
   case class ImportIdentifier(typeName: String, id: String)
@@ -26,21 +29,35 @@ object DataImport {
 
   object MyJsonProtocol extends DefaultJsonProtocol {
 
+    //from requestpipelinerunner -> there's 10 different versions of this all over the place -.-
     implicit object AnyJsonFormat extends JsonFormat[Any] {
-      def write(x: Any) = x match {
-        case n: Int                   => JsNumber(n)
-        case s: String                => JsString(s)
-        case b: Boolean if b == true  => JsTrue
-        case b: Boolean if b == false => JsFalse
+      def write(x: Any): JsValue = x match {
+        case m: Map[_, _]   => JsObject(m.asInstanceOf[Map[String, Any]].mapValues(write))
+        case l: List[Any]   => JsArray(l.map(write).toVector)
+        case l: Vector[Any] => JsArray(l.map(write))
+        case l: Seq[Any]    => JsArray(l.map(write).toVector)
+        case n: Int         => JsNumber(n)
+        case n: Long        => JsNumber(n)
+        case n: BigDecimal  => JsNumber(n)
+        case n: Double      => JsNumber(n)
+        case s: String      => JsString(s)
+        case true           => JsTrue
+        case false          => JsFalse
+        case v: JsValue     => v
+        case null           => JsNull
+        case r              => JsString(r.toString)
       }
-      def read(value: JsValue) = value match {
-        case JsNumber(n) => n.intValue()
-        case JsString(s) => s
-        case JsTrue      => true
-        case JsFalse     => false
-        case x: JsArray  => x.elements.map(read)
-        case JsNull      => sys.error("null shouldnt happen")
-        case JsObject(_) => sys.error("object shouldnt happen")
+
+      def read(x: JsValue): Any = {
+        x match {
+          case l: JsArray   => l.elements.map(read).toList
+          case m: JsObject  => m.fields.mapValues(read)
+          case s: JsString  => s.value
+          case n: JsNumber  => n.value
+          case b: JsBoolean => b.value
+          case JsNull       => null
+          case _            => sys.error("implement all scalar types!")
+        }
       }
     }
 
@@ -51,6 +68,10 @@ object DataImport {
     implicit val importListValue: RootJsonFormat[ImportListValue]       = jsonFormat3(ImportListValue)
     implicit val importRelation: RootJsonFormat[ImportRelation]         = jsonFormat4(ImportRelation)
   }
+}
+
+object DataImport {
+  import cool.graph.client.mutactions.ImportExportFormat._
 
   def executeGeneric(project: Project, json: JsValue)(implicit injector: ClientInjector): Future[Vector[String]] = {
     import MyJsonProtocol._
@@ -141,7 +162,99 @@ object DataImport {
   }
 }
 
-object DataExport {}
+object DataExport {
+
+  import cool.graph.client.mutactions.ImportExportFormat._
+
+  //missing:
+  // return cursor for resume
+  // exponential backoff
+
+  def exportData(project: Project, dataResolver: DataResolver)(implicit injector: ClientInjector): Future[StringWithCursor] = {
+    import scala.concurrent.ExecutionContext.Implicits.global
+    val modelsWithIndex: List[(Model, Int)]  = project.models.zipWithIndex
+    def isLimitReached(str: String): Boolean = str.length > 1500
+
+    def createStringStartingFromCursor(index: Int, modelIndex: Int, start: Int, amount: Int, combinedString: String): Future[StringWithCursor] = {
+      val model = modelsWithIndex.find(_._2 == modelIndex).get._1
+      for {
+        exportForModel <- getExportStringForModel(index, model, start, amount, combinedString)
+        x <- if (isLimitReached(exportForModel.export)) { // we have to start next file from this cursor
+              Future.successful(StringWithCursor(combinedString, modelIndex, start))
+            } else if (modelIndex < project.models.length - 1) {
+              val newIndex = exportForModel.lastIndex + 1
+              createStringStartingFromCursor(newIndex, modelIndex + 1, 0, amount, exportForModel.export)
+            } else { // we're done
+              Future.successful(StringWithCursor(exportForModel.export, -1, -1))
+            }
+      } yield x
+    }
+
+    case class ExportForModel(export: String, lastIndex: Int)
+
+    def getExportStringForModel(index: Int, model: Model, start: Int, amount: Int, startingString: String): Future[ExportForModel] = {
+      val dataItemsPage: Future[DataItemsPage] = fetchDataItemsPage(model, start, amount)
+      dataItemsPage.flatMap { page =>
+        val serialized     = serializePage(page, model, index)
+        val combinedString = startingString + serialized.serializedString
+        val limitReached   = isLimitReached(combinedString)
+
+        if (!limitReached && page.hasMore) {
+          getExportStringForModel(serialized.nextIndex, model, start + amount, amount, combinedString)
+        } else if (!limitReached) {
+          Future.successful(ExportForModel(export = combinedString, lastIndex = serialized.nextIndex - 1))
+        } else {
+          Future.successful(ExportForModel(export = startingString, lastIndex = index - 1))
+        }
+      }
+    }
+
+    case class DataItemsPage(items: Seq[DataItem], hasMore: Boolean)
+// we could use the id as cursor for nodes
+    def fetchDataItemsPage(model: Model, start: Int, amount: Int): Future[DataItemsPage] = {
+      val queryArguments = QueryArguments(skip = Some(start), after = None, first = Some(amount + 1), None, None, None, None)
+      for {
+        resolverResult <- dataResolver.resolveByModel(model, Some(queryArguments))
+      } yield {
+        DataItemsPage(resolverResult.items.take(amount), hasMore = resolverResult.items.length > amount)
+      }
+    }
+
+    case class SerializeResult(serializedString: String, nextIndex: Int)
+
+    def serializePage(page: DataItemsPage, model: Model, startIndex: Int): SerializeResult = {
+      var index = startIndex
+      val serializedItems = for {
+        item <- page.items
+      } yield {
+        val tmp = dataItemToExportLine(index, model, item)
+        index = index + 1
+        tmp
+      }
+      SerializeResult(serializedString = serializedItems.mkString(","), nextIndex = index)
+    }
+
+    def dataItemToExportLine(index: Int, model: Model, item: DataItem): String = {
+      import MyJsonProtocol._
+      import spray.json._
+
+      val dataValueMap: UserData                              = item.userData
+      val createdAtUpdatedAtMap                               = dataValueMap.collect { case (k, Some(v)) if k == "createdAt" || k == "updatedAt" => (k, v) }
+      val withoutCreatedAtUpdatedAt: Map[String, Option[Any]] = dataValueMap.collect { case (k, v) if k != "createdAt" && k != "updatedAt" => (k, v) }
+      val nonListFieldsWithValues: Map[String, Any]           = withoutCreatedAtUpdatedAt.collect { case (k, Some(v)) if !model.getFieldByName_!(k).isList => (k, v) }
+      val outputMap: Map[String, Any]                         = nonListFieldsWithValues ++ createdAtUpdatedAtMap
+
+      val importIdentifier: ImportIdentifier = ImportIdentifier(model.name, item.id)
+      val nodeValue: ImportNodeValue         = ImportNodeValue(index = index, identifier = importIdentifier, values = outputMap)
+      nodeValue.toJson.toString
+    }
+
+    val res = createStringStartingFromCursor(0, 0, 0, 3, "")
+
+    res
+  }
+
+}
 
 object teststuff {
 
