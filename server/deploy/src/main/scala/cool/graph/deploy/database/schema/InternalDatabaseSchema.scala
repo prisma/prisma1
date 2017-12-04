@@ -40,7 +40,7 @@ object InternalDatabaseSchema {
     // PROJECT
     sqlu"""
       CREATE TABLE IF NOT EXISTS `Project` (
-        `id` varchar(25) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',
+        `id` varchar(200) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',
         `clientId` varchar(25) COLLATE utf8_unicode_ci DEFAULT NULL,
         PRIMARY KEY (`id`),
         CONSTRAINT `project_clientid_foreign` FOREIGN KEY (`clientId`) REFERENCES `Client` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
