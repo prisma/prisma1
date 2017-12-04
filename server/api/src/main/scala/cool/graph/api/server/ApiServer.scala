@@ -63,9 +63,10 @@ case class ApiServer(
     post {
       TimeResponseDirectiveImpl(ApiMetrics).timeResponse {
         respondWithHeader(RawHeader("Request-Id", requestId)) {
-          pathPrefix(Segment) { projectId =>
+          pathPrefix(Segments) { segments =>
             entity(as[JsValue]) { requestJson =>
               complete {
+                val projectId = segments.mkString("-")
                 fetchProject(projectId).flatMap { project =>
                   val JsObject(fields) = requestJson
                   val JsString(query)  = fields("query")

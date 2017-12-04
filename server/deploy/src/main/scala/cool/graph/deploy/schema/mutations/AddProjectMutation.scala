@@ -1,6 +1,5 @@
 package cool.graph.deploy.schema.mutations
 
-import cool.graph.cuid.Cuid
 import cool.graph.deploy.database.persistence.{MigrationPersistence, ProjectPersistence}
 import cool.graph.deploy.migration.mutactions.CreateClientDatabaseForProject
 import cool.graph.shared.models._
@@ -21,10 +20,7 @@ case class AddProjectMutation(
 
   override def execute: Future[MutationResult[AddProjectMutationPayload]] = {
     val newProject = Project(
-      id = Cuid.createCuid(),
-      name = args.name,
-      alias = args.alias,
-      projectDatabase = TestProject.database,
+      id = args.projectId,
       ownerId = client.id
     )
 
@@ -51,6 +47,5 @@ case class AddProjectMutationPayload(
 
 case class AddProjectInput(
     clientMutationId: Option[String],
-    name: String,
-    alias: Option[String]
+    projectId: String
 ) extends sangria.relay.Mutation
