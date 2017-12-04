@@ -96,7 +96,7 @@ object DataImport {
     })
   }
 
-  def generateImportNodesDBActions(project: Project, nodes: Vector[ImportNodeValue]): Vector[DBIOAction[Try[Int], NoStream, Effect.Write]] = {
+  def generateImportNodesDBActions(project: Project, nodes: Vector[ImportNodeValue]): DBIOAction[Vector[Try[Int]], NoStream, Effect.Write] = {
     val items = nodes.map { element =>
       val id                              = element.identifier.id
       val model                           = project.getModelByName_!(element.identifier.typeName)
@@ -111,11 +111,11 @@ object DataImport {
       val x     = relayIds += ProjectRelayId(id = id, model.id)
       x.asTry
     }
-    items ++ relay
+    DBIO.sequence(items ++ relay)
   }
 
-  def generateImportRelationsDBActions(project: Project, relations: Vector[ImportRelation]): Vector[DBIOAction[Try[Int], NoStream, Effect.Write]] = {
-    relations.map { element =>
+  def generateImportRelationsDBActions(project: Project, relations: Vector[ImportRelation]): DBIOAction[Vector[Try[Int]], NoStream, Effect.Write] = {
+    val x = relations.map { element =>
       val fromModel                                                 = project.getModelByName_!(element.left.identifier.typeName)
       val fromField                                                 = fromModel.getFieldByName_!(element.left.fieldName)
       val relationSide: cool.graph.shared.models.RelationSide.Value = fromField.relationSide.get
@@ -144,21 +144,22 @@ object DataImport {
 
       DatabaseMutationBuilder.createRelationRow(project.id, relation.id, Cuid.createCuid(), aValue, bValue, fieldMirrors).asTry
     }
+    DBIO.sequence(x)
   }
 
-  def generateImportListsDBActions(project: Project, lists: Vector[ImportListValue]): Vector[DBIOAction[Try[Int], NoStream, Effect.Write]] = {
-    lists.map { element =>
+  def generateImportListsDBActions(project: Project, lists: Vector[ImportListValue]): DBIOAction[Vector[Try[Int]], NoStream, Effect.Write] = {
+    val x = lists.map { element =>
       val id    = element.identifier.id
       val model = project.getModelByName_!(element.identifier.typeName)
       DatabaseMutationBuilder.updateDataItemListValue(project.id, model.name, id, element.values).asTry
     }
+    DBIO.sequence(x)
   }
 
-  def runDBActions(project: Project, actions: Vector[DBIOAction[Try[Int], NoStream, Effect.Write]])(
+  def runDBActions(project: Project, actions: DBIOAction[Vector[Try[Int]], NoStream, Effect.Write])(
       implicit injector: ClientInjector): Future[Vector[Try[Int]]] = {
-    import scala.concurrent.ExecutionContext.Implicits.global
     val db: Databases = injector.globalDatabaseManager.getDbForProject(project)
-    Future.sequence(actions.map(db.master.run))
+    db.master.run(actions)
   }
 }
 
@@ -169,30 +170,33 @@ object DataExport {
   //missing:
   // return cursor for resume
   // exponential backoff
+  // work on returntypes to get cursors
 
   def exportData(project: Project, dataResolver: DataResolver)(implicit injector: ClientInjector): Future[StringWithCursor] = {
     import scala.concurrent.ExecutionContext.Implicits.global
     val modelsWithIndex: List[(Model, Int)]  = project.models.zipWithIndex
-    def isLimitReached(str: String): Boolean = str.length > 1500
+    def isLimitReached(str: String): Boolean = str.length > 100000
 
-    def createStringStartingFromCursor(index: Int, modelIndex: Int, start: Int, amount: Int, combinedString: String): Future[StringWithCursor] = {
+    def createStringStartingFromCursor(index: Int, modelIndex: Int, start: Int, startingString: String): Future[StringWithCursor] = {
       val model = modelsWithIndex.find(_._2 == modelIndex).get._1
       for {
-        exportForModel <- getExportStringForModel(index, model, start, amount, combinedString)
-        x <- if (isLimitReached(exportForModel.export)) { // we have to start next file from this cursor
-              Future.successful(StringWithCursor(combinedString, modelIndex, start))
+        exportForModel <- getExportStringForModel(index, model, start, startingString)
+        x <- if (exportForModel.isFull) {
+              Future.successful(StringWithCursor(exportForModel.export, modelIndex, exportForModel.end))
             } else if (modelIndex < project.models.length - 1) {
               val newIndex = exportForModel.lastIndex + 1
-              createStringStartingFromCursor(newIndex, modelIndex + 1, 0, amount, exportForModel.export)
+              createStringStartingFromCursor(newIndex, modelIndex + 1, 0, exportForModel.export)
             } else { // we're done
-              Future.successful(StringWithCursor(exportForModel.export, -1, -1))
+              Future.successful(StringWithCursor(exportForModel.export, -5, -5))
             }
       } yield x
     }
 
-    case class ExportForModel(export: String, lastIndex: Int)
-
-    def getExportStringForModel(index: Int, model: Model, start: Int, amount: Int, startingString: String): Future[ExportForModel] = {
+    case class ExportForModel(export: String, lastIndex: Int, isFull: Boolean, end: Int)
+    //this grabs as many nodes from a model as will fit the file limit
+    //backoff should be implemented in here
+    def getExportStringForModel(index: Int, model: Model, start: Int, startingString: String): Future[ExportForModel] = {
+      val amount                               = 1
       val dataItemsPage: Future[DataItemsPage] = fetchDataItemsPage(model, start, amount)
       dataItemsPage.flatMap { page =>
         val serialized     = serializePage(page, model, index)
@@ -200,17 +204,17 @@ object DataExport {
         val limitReached   = isLimitReached(combinedString)
 
         if (!limitReached && page.hasMore) {
-          getExportStringForModel(serialized.nextIndex, model, start + amount, amount, combinedString)
+          getExportStringForModel(serialized.nextIndex, model, start + amount, combinedString)
         } else if (!limitReached) {
-          Future.successful(ExportForModel(export = combinedString, lastIndex = serialized.nextIndex - 1))
+          Future.successful(ExportForModel(export = combinedString, lastIndex = serialized.nextIndex - 1, isFull = false, end = start + page.items.length))
         } else {
-          Future.successful(ExportForModel(export = startingString, lastIndex = index - 1))
+          Future.successful(ExportForModel(export = startingString, lastIndex = index - 1, isFull = true, end = start))
         }
       }
     }
 
     case class DataItemsPage(items: Seq[DataItem], hasMore: Boolean)
-// we could use the id as cursor for nodes
+    // we could use the id as cursor for nodes
     def fetchDataItemsPage(model: Model, start: Int, amount: Int): Future[DataItemsPage] = {
       val queryArguments = QueryArguments(skip = Some(start), after = None, first = Some(amount + 1), None, None, None, None)
       for {
@@ -249,7 +253,7 @@ object DataExport {
       nodeValue.toJson.toString
     }
 
-    val res = createStringStartingFromCursor(0, 0, 0, 3, "")
+    val res = createStringStartingFromCursor(0, 0, 0, "")
 
     res
   }
