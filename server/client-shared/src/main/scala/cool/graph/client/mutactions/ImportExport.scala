@@ -2,18 +2,18 @@ package cool.graph.client.mutactions
 
 import cool.graph.client.ClientInjector
 import cool.graph.client.database.DatabaseMutationBuilder.MirrorFieldDbValues
-import cool.graph.client.database.{DatabaseMutationBuilder, ProjectRelayId, ProjectRelayIdTable}
+import cool.graph.client.database._
 import cool.graph.cuid.Cuid
 import cool.graph.shared.RelationFieldMirrorColumn
 import cool.graph.shared.database.Databases
 import cool.graph.shared.models._
+import slick.dbio.Effect
 import slick.jdbc.MySQLProfile.api._
 import slick.lifted.TableQuery
-import slick.sql.SqlAction
 import spray.json.{DefaultJsonProtocol, JsArray, JsFalse, JsNull, JsNumber, JsObject, JsString, JsTrue, JsValue, JsonFormat, RootJsonFormat}
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.util.Try
 
 object DataImport {
 
@@ -52,9 +52,12 @@ object DataImport {
     implicit val importRelation: RootJsonFormat[ImportRelation]         = jsonFormat4(ImportRelation)
   }
 
-  def executeGeneric(project: Project, json: JsValue)(implicit injector: ClientInjector) = {
+  def executeGeneric(project: Project, json: JsValue)(implicit injector: ClientInjector): Future[Vector[String]] = {
     import MyJsonProtocol._
+
+    import scala.concurrent.ExecutionContext.Implicits.global
     val bundle = json.convertTo[ImportBundle]
+    val cnt    = bundle.values.elements.length
 
     val actions = bundle.valueType match {
       case "nodes"      => generateImportNodesDBActions(project, bundle.values.elements.map(_.convertTo[ImportNodeValue]))
@@ -62,25 +65,36 @@ object DataImport {
       case "listvalues" => generateImportListsDBActions(project, bundle.values.elements.map(_.convertTo[ImportListValue]))
     }
 
-    runDBActions(project, actions)
+    val res: Future[Vector[Try[Int]]]                       = runDBActions(project, actions)
+    def messageWithOutConnection(tryelem: Try[Any]): String = tryelem.failed.get.getMessage.substring(tryelem.failed.get.getMessage.indexOf(")") + 1)
+
+    res.map(vector =>
+      vector.zipWithIndex.collect {
+        case (elem, idx) if elem.isFailure && idx < cnt  => s"Index: $idx Message: ${messageWithOutConnection(elem)}"
+        case (elem, idx) if elem.isFailure && idx >= cnt => s"Index: ${idx - cnt} Message: Relay Id Failure ${messageWithOutConnection(elem)}"
+    })
   }
 
-  def generateImportNodesDBActions(project: Project, nodes: Vector[ImportNodeValue]) = {
-    val relayIds = TableQuery(new ProjectRelayIdTable(_, project.id))
-    val dbActions: Vector[SqlAction[Int, NoStream, Effect.Write]] = nodes.flatMap { element =>
+  def generateImportNodesDBActions(project: Project, nodes: Vector[ImportNodeValue]): Vector[DBIOAction[Try[Int], NoStream, Effect.Write]] = {
+    val items = nodes.map { element =>
       val id                              = element.identifier.id
       val model                           = project.getModelByName_!(element.identifier.typeName)
       val listFields: Map[String, String] = model.scalarFields.filter(_.isList).map(field => field.name -> "[]").toMap
       val values: Map[String, Any]        = element.values ++ listFields + ("id" -> id)
-
-      List(DatabaseMutationBuilder.createDataItem(project.id, model.name, values), relayIds += ProjectRelayId(id = id, model.id))
+      DatabaseMutationBuilder.createDataItem(project.id, model.name, values).asTry
     }
-    val x: DBIOAction[Vector[Int], NoStream, Effect.Write] = DBIO.sequence(dbActions)
-    x
+    val relayIds: TableQuery[ProjectRelayIdTable] = TableQuery(new ProjectRelayIdTable(_, project.id))
+    val relay = nodes.map { element =>
+      val id    = element.identifier.id
+      val model = project.getModelByName_!(element.identifier.typeName)
+      val x     = relayIds += ProjectRelayId(id = id, model.id)
+      x.asTry
+    }
+    items ++ relay
   }
 
-  def generateImportRelationsDBActions(project: Project, relations: Vector[ImportRelation]) = {
-    val dbActions = relations.map { element =>
+  def generateImportRelationsDBActions(project: Project, relations: Vector[ImportRelation]): Vector[DBIOAction[Try[Int], NoStream, Effect.Write]] = {
+    relations.map { element =>
       val fromModel                                                 = project.getModelByName_!(element.left.identifier.typeName)
       val fromField                                                 = fromModel.getFieldByName_!(element.left.fieldName)
       val relationSide: cool.graph.shared.models.RelationSide.Value = fromField.relationSide.get
@@ -107,28 +121,27 @@ object DataImport {
 
       val fieldMirrors: List[MirrorFieldDbValues] = getFieldMirrors(aModel, aValue) ++ getFieldMirrors(bModel, bValue)
 
-      DatabaseMutationBuilder.createRelationRow(project.id, relation.id, Cuid.createCuid(), aValue, bValue, fieldMirrors)
+      DatabaseMutationBuilder.createRelationRow(project.id, relation.id, Cuid.createCuid(), aValue, bValue, fieldMirrors).asTry
     }
-    val x: DBIOAction[Vector[Int], NoStream, Effect.Write] = DBIO.sequence(dbActions)
-    x
   }
 
-  def generateImportListsDBActions(project: Project, lists: Vector[ImportListValue]) = {
-    val dbActions: Vector[SqlAction[Int, NoStream, Effect.Write]] = lists.map { element =>
+  def generateImportListsDBActions(project: Project, lists: Vector[ImportListValue]): Vector[DBIOAction[Try[Int], NoStream, Effect.Write]] = {
+    lists.map { element =>
       val id    = element.identifier.id
       val model = project.getModelByName_!(element.identifier.typeName)
-      DatabaseMutationBuilder.updateDataItemListValue(project.id, model.name, id, element.values)
+      DatabaseMutationBuilder.updateDataItemListValue(project.id, model.name, id, element.values).asTry
     }
-    val x: DBIOAction[Vector[Int], NoStream, Effect.Write] = DBIO.sequence(dbActions)
-    x
   }
 
-  def runDBActions(project: Project, actions: DBIOAction[Vector[Int], NoStream, Effect.Write])(implicit injector: ClientInjector): Future[Unit] = {
+  def runDBActions(project: Project, actions: Vector[DBIOAction[Try[Int], NoStream, Effect.Write]])(
+      implicit injector: ClientInjector): Future[Vector[Try[Int]]] = {
+    import scala.concurrent.ExecutionContext.Implicits.global
     val db: Databases = injector.globalDatabaseManager.getDbForProject(project)
-    db.master.run(actions).map(_ => ())
+    Future.sequence(actions.map(db.master.run))
   }
-
 }
+
+object DataExport {}
 
 object teststuff {
 
