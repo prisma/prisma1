@@ -9,7 +9,6 @@ import com.amazonaws.services.s3.{AmazonS3, AmazonS3ClientBuilder}
 import com.typesafe.config.{Config, ConfigFactory}
 import com.typesafe.scalalogging.LazyLogging
 import cool.graph.aws.AwsInitializers
-import cool.graph.aws.cloudwatch.{Cloudwatch, CloudwatchImpl}
 import cool.graph.bugsnag.{BugSnagger, BugSnaggerImpl}
 import cool.graph.client.authorization.{ClientAuth, ClientAuthImpl}
 import cool.graph.client.finder.{CachedProjectFetcherImpl, ProjectFetcherImpl, RefreshableProjectFetcher}
@@ -47,7 +46,6 @@ trait ClientInjector {
   val webhookCaller: WebhookCaller
   val sssEventsPublisher: PubSubPublisher[String]
   val requestPrefix: String
-  val cloudwatch: Cloudwatch
   val globalDatabaseManager: GlobalDatabaseManager
   val kinesisAlgoliaSyncQueriesPublisher: KinesisPublisher
   val kinesisApiMetricsPublisher: KinesisPublisher
@@ -77,14 +75,13 @@ class ClientInjectorImpl(implicit val system: ActorSystem, val materializer: Act
   lazy val endpointResolver: EndpointResolver           = LiveEndpointResolver()
   lazy val logsPublisher: QueuePublisher[String]        = RabbitQueue.publisher[String](rabbitMQUri, "function-logs")(bugsnagger, fromStringMarshaller)
   lazy val requestPrefix: String                        = sys.env.getOrElse("AWS_REGION", sys.error("AWS Region not found."))
-  lazy val cloudwatch: Cloudwatch                       = CloudwatchImpl()
   lazy val featureMetricActor: ActorRef                 = system.actorOf(Props(new FeatureMetricActor(kinesisApiMetricsPublisher, apiMetricsFlushInterval)))
   lazy val apiMetricsMiddleware: ApiMetricsMiddleware   = new ApiMetricsMiddleware(testableTime, featureMetricActor)
   lazy val testableTime: TestableTime                   = new TestableTimeImplementation
   lazy val apiMetricsFlushInterval: Int                 = 10
   lazy val clientAuth: ClientAuth                       = ClientAuthImpl()
   lazy val log: String => Unit                          = (x: String) => logger.info(x)
-  lazy val errorHandlerFactory                          = ErrorHandlerFactory(log, cloudwatch, bugsnagger)
+  lazy val errorHandlerFactory                          = ErrorHandlerFactory(log, bugsnagger)
   lazy val apiMatrixFactory                             = ApiMatrixFactory(DefaultApiMatrix)
   lazy val s3: AmazonS3                                 = AwsInitializers.createS3()
   lazy val s3Fileupload: AmazonS3                       = AwsInitializers.createS3Fileupload()
@@ -133,7 +130,6 @@ class ClientInjectorImpl(implicit val system: ActorSystem, val materializer: Act
     val outer = this
     new Module {
       binding identifiedBy "project-schema-fetcher" toNonLazy outer.projectSchemaFetcher
-      binding identifiedBy "cloudwatch" toNonLazy outer.cloudwatch
       binding identifiedBy "kinesis" toNonLazy outer.kinesis
       binding identifiedBy "api-metrics-middleware" toNonLazy outer.apiMetricsMiddleware
       binding identifiedBy "featureMetricActor" to outer.featureMetricActor

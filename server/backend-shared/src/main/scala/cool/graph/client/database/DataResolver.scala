@@ -39,11 +39,7 @@ abstract class DataResolver(val project: Project, val requestContext: Option[Req
   protected def performWithTiming[A](name: String, f: => Future[A]): Future[A] = {
     val begin = System.currentTimeMillis()
     sqlQueryTimer.time(project.id, name) {
-      f andThen {
-        case x =>
-          requestContext.foreach(_.logSqlTiming(Timing(name, System.currentTimeMillis() - begin)))
-          x
-      }
+      f
     }
   }
   def resolveByModel(model: Model, args: Option[QueryArguments] = None): Future[ResolverResult]

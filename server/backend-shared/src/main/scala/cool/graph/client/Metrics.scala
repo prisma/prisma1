@@ -3,14 +3,10 @@ package cool.graph.client
 import java.util.concurrent.TimeUnit
 
 import akka.actor.Actor
-import com.amazonaws.services.cloudwatch.model._
-import cool.graph.aws.cloudwatch.CloudwatchMetric
 import cool.graph.cuid.Cuid
-import cool.graph.shared.errors.UserFacingError
 import cool.graph.shared.externalServices.KinesisPublisher
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
-import scaldi.Injector
 import spray.json.{JsArray, JsBoolean, JsNumber, JsObject, JsString}
 
 import scala.collection.mutable
@@ -91,37 +87,4 @@ class FeatureMetricActor(
     }
     metrics.clear()
   }
-}
-case class SqlQueryMetric(value: Double, dimensionValue: String) extends CloudwatchMetric() {
-  override val name: String       = "Duration"
-  override val namespacePostfix   = "SqlQueries"
-  override val unit: StandardUnit = StandardUnit.Milliseconds
-  override val dimensionName      = "By Query Name"
-}
-
-case class MutactionMetric(value: Double, dimensionValue: String) extends CloudwatchMetric() {
-  override val name: String       = "Duration"
-  override val namespacePostfix   = "Mutactions"
-  override val unit: StandardUnit = StandardUnit.Milliseconds
-  override val dimensionName      = "By Mutaction Name"
-}
-
-case class HandledError(error: UserFacingError) extends CloudwatchMetric() {
-  override val name: String       = "Count"
-  override val namespacePostfix   = "HandledError"
-  override val unit: StandardUnit = StandardUnit.Count
-  override val dimensionName      = "By Error"
-  override val dimensionValue =
-    s"${error.code} - ${error.getClass.getSimpleName}"
-  override val value = 1.0
-}
-
-case class UnhandledError(error: Throwable) extends CloudwatchMetric() {
-  override val name: String       = "Count"
-  override val namespacePostfix   = "UnhandledError"
-  override val unit: StandardUnit = StandardUnit.Count
-  override val dimensionName      = "By Error"
-  override val dimensionValue =
-    s"${error.getClass.getSimpleName}"
-  override val value = 1.0
 }

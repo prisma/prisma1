@@ -57,9 +57,8 @@ object Dependencies {
   val jsr305      = "com.google.code.findbugs"      % "jsr305"              % "3.0.0"
 
   val awsDependencies = Seq(
-    "com.amazonaws" % "aws-java-sdk-kinesis"    % "1.11.171",
-    "com.amazonaws" % "aws-java-sdk-s3"         % "1.11.171",
-    "com.amazonaws" % "aws-java-sdk-cloudwatch" % "1.11.171",
-    "com.amazonaws" % "aws-java-sdk-sns"        % "1.11.171"
+    "com.amazonaws" % "aws-java-sdk-kinesis" % "1.11.171",
+    "com.amazonaws" % "aws-java-sdk-s3"      % "1.11.171",
+    "com.amazonaws" % "aws-java-sdk-sns"     % "1.11.171"
   )
 }

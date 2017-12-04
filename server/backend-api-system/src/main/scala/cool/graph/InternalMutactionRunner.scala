@@ -220,7 +220,7 @@ class InternalMutactionRunner(requestContext: Option[SystemRequestContextTrait],
           action._2,
           InternalMutation.performWithTiming(
             s"execute ${action.getClass.getSimpleName}",
-            performWithTiming("clientSqlAction", executeAction),
+            executeAction,
             logTiming
           )
         ).map(_ => MutactionExecutionSuccess())
@@ -274,14 +274,5 @@ class InternalMutactionRunner(requestContext: Option[SystemRequestContextTrait],
   private def await[T](awaitable: Awaitable[T]): T = {
     import scala.concurrent.duration._
     Await.result(awaitable, 15.seconds)
-  }
-
-  private def performWithTiming[A](name: String, f: Future[A]): Future[A] = {
-    val begin = System.currentTimeMillis()
-    f andThen {
-      case x =>
-        requestContext.foreach(_.logSqlTiming(Timing(name, System.currentTimeMillis() - begin)))
-        x
-    }
   }
 }
