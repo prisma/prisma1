@@ -147,12 +147,12 @@ case class DeployServer(
       }
   }
 
-  def getSchema(projectIdOrAlias: String, forceRefresh: Boolean): Future[String] = {
+  def getSchema(projectId: String, forceRefresh: Boolean): Future[String] = {
     import cool.graph.shared.models.ProjectJsonFormatter._
     projectPersistence
-      .loadByIdOrAlias(projectIdOrAlias)
+      .load(projectId)
       .flatMap {
-        case None    => Future.failed(InvalidProjectId(projectIdOrAlias))
+        case None    => Future.failed(InvalidProjectId(projectId))
         case Some(p) => Future.successful(Json.toJson(ProjectWithClientId(p, p.ownerId)).toString)
       }
   }

@@ -1,7 +1,7 @@
 package cool.graph.deploy.database.persistence
 
 import cool.graph.deploy.database.tables.{ProjectTable, Tables}
-import cool.graph.shared.models.{Migration, Project}
+import cool.graph.shared.models.Project
 import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.MySQLProfile.backend.DatabaseDef
 
@@ -15,14 +15,6 @@ case class ProjectPersistenceImpl(
   override def load(id: String): Future[Option[Project]] = {
     internalDatabase
       .run(ProjectTable.byIdWithMigration(id))
-      .map(_.map { projectWithMigration =>
-        DbToModelMapper.convert(projectWithMigration._1, projectWithMigration._2)
-      })
-  }
-
-  override def loadByIdOrAlias(idOrAlias: String): Future[Option[Project]] = {
-    internalDatabase
-      .run(ProjectTable.byIdOrAliasWithMigration(idOrAlias))
       .map(_.map { projectWithMigration =>
         DbToModelMapper.convert(projectWithMigration._1, projectWithMigration._2)
       })

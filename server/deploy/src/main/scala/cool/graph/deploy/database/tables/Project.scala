@@ -1,11 +1,8 @@
 package cool.graph.deploy.database.tables
 
-import cool.graph.shared.models.Region
-import cool.graph.shared.models.Region.Region
-import play.api.libs.json.JsValue
-import slick.dbio.Effect.{Read, Write}
+import slick.dbio.Effect.Read
 import slick.jdbc.MySQLProfile.api._
-import slick.sql.{FixedSqlAction, FixedSqlStreamingAction, SqlAction}
+import slick.sql.SqlAction
 
 case class Project(
     id: String,
@@ -13,7 +10,6 @@ case class Project(
 )
 
 class ProjectTable(tag: Tag) extends Table[Project](tag, "Project") {
-
   def id       = column[String]("id", O.PrimaryKey)
   def clientId = column[String]("clientId")
 
@@ -26,10 +22,6 @@ object ProjectTable {
     Tables.Projects.filter { _.id === id }.take(1).result.headOption
   }
 
-  def byIdOrAlias(idOrAlias: String): SqlAction[Option[Project], NoStream, Read] = {
-    ???
-  }
-
   def byIdWithMigration(id: String): SqlAction[Option[(Project, Migration)], NoStream, Read] = {
     val baseQuery = for {
       project   <- Tables.Projects
@@ -38,11 +30,6 @@ object ProjectTable {
     } yield (project, migration)
 
     baseQuery.sortBy(_._2.revision.desc).take(1).result.headOption
-  }
-
-  def byIdOrAliasWithMigration(id: String): SqlAction[Option[(Project, Migration)], NoStream, Read] = {
-
-    ???
   }
 
 //  def byIdWithsNextMigration(id: String): SqlAction[Option[(Project, Migration)], NoStream, Read] = {

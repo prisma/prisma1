@@ -35,11 +35,6 @@ class ProjectPersistenceImplSpec extends FlatSpec with Matchers with AwaitUtils 
     result should be(None)
   }
 
-  ".loadByIdOrAlias()" should "be able to load a project by it's alias and id." in {
-    val result = projectPersistence.loadByIdOrAlias("non-existent-id").await()
-    result should be(None)
-  }
-
 //  ".load()" should "return the project with the highest revision" in {
 //    projectPersistence.create(project, migrationSteps).await()
 //    projectPersistence.markMigrationAsApplied(project, migrationSteps).await()
