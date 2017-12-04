@@ -82,7 +82,6 @@ case class SchemaBuilderImpl(
     }
   )
 
-  // todo revision is not loaded at the moment, always 0
   val listProjectsField: Field[SystemUserContext, Unit] = Field(
     "listProjects",
     ListType(ProjectType.Type),
@@ -102,15 +101,6 @@ case class SchemaBuilderImpl(
       migrationPersistence.loadAll(ctx.projectId)
     }
   )
-
-  def viewerField(): Field[SystemUserContext, Unit] = {
-//    Field(
-//      "viewer",
-//      fieldType = viewerType,
-//      resolve = _ => ViewerModel()
-//    )
-    ???
-  }
 
   def deployField: Field[SystemUserContext, Unit] = {
     import DeployField.fromInput
