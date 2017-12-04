@@ -139,7 +139,7 @@ object DatabaseMutationBuilder {
     (sql"INSERT INTO `#$targetProjectId`.`#$targetTableName` (" concat columnString concat sql") SELECT " concat columnString concat sql" FROM `#$sourceProjectId`.`#$sourceTableName`").asUpdate
   }
 
-  def deleteProjectDatabase(projectId: String) = sqlu"DROP DATABASE IF EXISTS `#$projectId`"
+  def dropDatabaseIfExists(database: String) = sqlu"DROP DATABASE IF EXISTS `#$database`"
 
   def createTable(projectId: String, name: String) = {
     val idCharset = charsetTypeForScalarTypeIdentifier(isList = false, TypeIdentifier.GraphQLID)

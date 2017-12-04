@@ -7,9 +7,9 @@ class Queries extends FlatSpec with Matchers with ApiTestServer {
   "schema" should "include simple API features" in {
     val schema = SchemaDsl()
     schema.model("Car").field("wheelCount", _.Int).field_!("name", _.String).field_!("createdAt", _.DateTime).field_!("updatedAt", _.DateTime)
-    val (client, project) = schema.buildClientAndProject()
+    val project = schema.buildProject()
 
-    setupProject(client, project)
+    setupProject(project)
 
     // MUTATIONS
 
@@ -31,9 +31,9 @@ class Queries extends FlatSpec with Matchers with ApiTestServer {
     val schema = SchemaDsl()
     val car    = schema.model("Car").field("wheelCount", _.Int).field_!("name", _.String).field_!("createdAt", _.DateTime).field_!("updatedAt", _.DateTime)
     schema.model("Wheel").manyToOneRelation("car", "wheels", car).field_!("size", _.Int).field_!("createdAt", _.DateTime).field_!("updatedAt", _.DateTime)
-    val (client, project) = schema.buildClientAndProject()
+    val project = schema.buildProject()
 
-    setupProject(client, project)
+    setupProject(project)
 
     // MUTATIONS
 

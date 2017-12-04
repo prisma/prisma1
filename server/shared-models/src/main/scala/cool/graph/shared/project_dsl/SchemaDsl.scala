@@ -36,7 +36,7 @@ object SchemaDsl {
       newEnum
     }
 
-    def build(): (Set[Model], Set[Relation]) = {
+    private def build(): (Set[Model], Set[Relation]) = {
       val models = modelBuilders.map(_.build())
       val relations = for {
         model <- models
@@ -44,12 +44,6 @@ object SchemaDsl {
       } yield field.relation.get
 
       (models.toSet, relations.toSet)
-    }
-
-    def buildClientAndProject(id: String = TestIds.testProjectId, isEjected: Boolean = false): (Client, Project) = {
-      val project = buildProject(id)
-      val client  = TestClient(project)
-      (client, project)
     }
 
     def buildProject(id: String = TestIds.testProjectId): Project = {
@@ -61,13 +55,6 @@ object SchemaDsl {
         enums = enums.toList,
         functions = functions.toList
       )
-    }
-
-    def buildEmptyClientAndProject(isEjected: Boolean = false): (Client, Project) = {
-      val (models, relations) = build()
-      val project             = TestProject.empty
-      val client              = TestClient(project)
-      (client, project)
     }
   }
 

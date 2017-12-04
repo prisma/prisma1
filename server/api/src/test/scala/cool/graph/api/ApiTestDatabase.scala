@@ -5,7 +5,6 @@ import akka.stream.ActorMaterializer
 import cool.graph.api.database.{DataResolver, DatabaseMutationBuilder, DatabaseQueryBuilder}
 import cool.graph.deploy.migration.mutactions.{ClientSqlMutaction, CreateRelationTable}
 import cool.graph.shared.models._
-import cool.graph.shared.project_dsl.TestProject
 import cool.graph.utils.await.AwaitUtils
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
 import slick.jdbc.MySQLProfile.api._
@@ -19,15 +18,7 @@ trait ApiTestDatabase extends BeforeAndAfterEach with BeforeAndAfterAll with Awa
   implicit lazy val system: ActorSystem             = ActorSystem()
   implicit lazy val materializer: ActorMaterializer = ActorMaterializer()
   implicit lazy val testDependencies                = new ApiDependenciesForTest
-  lazy val clientDatabase: DatabaseDef              = testDependencies.databases.master
-
-  override protected def beforeAll(): Unit = {
-    super.beforeAll()
-  }
-
-  override protected def beforeEach(): Unit = {
-    super.beforeEach()
-  }
+  private lazy val clientDatabase: DatabaseDef      = testDependencies.databases.master
 
   override protected def afterAll(): Unit = {
     super.afterAll()
@@ -36,25 +27,17 @@ trait ApiTestDatabase extends BeforeAndAfterEach with BeforeAndAfterAll with Awa
     Await.result(system.terminate(), 5.seconds)
   }
 
-  def dataResolver: DataResolver                   = dataResolver(TestProject())
-  def dataResolver(project: Project): DataResolver = new DataResolver(project = project)
+  def setupProject(project: Project): Unit = {
+    val databaseOperations = TestDatabaseOperations(clientDatabase)
+    databaseOperations.deleteProjectDatabase(project)
+    databaseOperations.createProjectDatabase(project)
 
-  def deleteProjectDatabase(project: Project): Unit = deleteExistingDatabases(Vector(project.id))
-
-  def deleteExistingDatabases: Unit = {
-    val schemas = {
-      clientDatabase
-        .run(DatabaseQueryBuilder.getSchemas)
-        .await
-        .filter(db => !Vector("information_schema", "mysql", "performance_schema", "sys", "innodb", "graphcool").contains(db))
-    }
-    deleteExistingDatabases(schemas)
+    // The order here is very important or foreign key constraints will fail
+    project.models.foreach(databaseOperations.createModelTable(project, _))
+    project.relations.foreach(databaseOperations.createRelationTable(project, _))
   }
 
-  def deleteExistingDatabases(dbs: Vector[String]): Unit = {
-    val dbAction = DBIO.seq(dbs.map(db => DatabaseMutationBuilder.deleteProjectDatabase(projectId = db)): _*)
-    clientDatabase.run(dbAction).await(60)
-  }
+  def dataResolver(project: Project): DataResolver = DataResolver(project = project)
 
   def truncateProjectDatabase(project: Project): Unit = {
     val tables = clientDatabase.run(DatabaseQueryBuilder.getTables(project.id)).await
@@ -64,40 +47,39 @@ trait ApiTestDatabase extends BeforeAndAfterEach with BeforeAndAfterAll with Awa
     }
     clientDatabase.run(dbAction).await()
   }
+}
 
-  def setupProject(client: Client, project: Project, model: Model): Unit = {
-    val actualProject = project.copy(models = List(model))
-    setupProject(client, actualProject)
-  }
+case class TestDatabaseOperations(
+    clientDatabase: DatabaseDef
+) extends AwaitUtils {
 
-  def setupProject(client: Client, project: Project, model: Model, relations: List[Relation]): Unit = {
-    val actualProject = project.copy(
-      models = List(model),
-      relations = relations
-    )
-    setupProject(client, actualProject)
-  }
+  def createProjectDatabase(project: Project): Unit                   = runDbActionOnClientDb(DatabaseMutationBuilder.createClientDatabaseForProject(project.id))
+  def createModelTable(project: Project, model: Model): Unit          = runDbActionOnClientDb(DatabaseMutationBuilder.createTableForModel(project.id, model))
+  def createRelationTable(project: Project, relation: Relation): Unit = runMutaction(CreateRelationTable(project = project, relation = relation))
 
-  def setupProject(client: Client, project: Project): Unit = {
-    deleteProjectDatabase(project)
-    loadProject(project)
+  def deleteProjectDatabase(project: Project): Unit = dropDatabases(Vector(project.id))
 
-    // The order here is very important or foreign key constraints will fail
-    project.models.foreach(loadModel(project, _))
-    project.relations.foreach(loadRelation(project, _))
-    //project.relations.foreach(loadRelationFieldMirrors(project, _))
-  }
-
-  private def loadProject(project: Project): Unit                      = runDbActionOnClientDb(DatabaseMutationBuilder.createClientDatabaseForProject(project.id))
-  private def loadModel(project: Project, model: Model): Unit          = runDbActionOnClientDb(DatabaseMutationBuilder.createTableForModel(project.id, model))
-  private def loadRelation(project: Project, relation: Relation): Unit = runMutaction(CreateRelationTable(project = project, relation = relation))
-
-//  private def loadRelationFieldMirrors(project: Project, relation: Relation): Unit = {
+  //  def loadRelationFieldMirrors(project: Project, relation: Relation): Unit = {
 //    relation.fieldMirrors.foreach { mirror =>
 //      runMutaction(CreateRelationFieldMirrorColumn(project, relation, project.getFieldById_!(mirror.fieldId)))
 //    }
 //  }
 
-  def runMutaction(mutaction: ClientSqlMutaction): Unit                         = runDbActionOnClientDb(mutaction.execute.await().sqlAction)
-  def runDbActionOnClientDb(action: DBIOAction[Any, NoStream, Effect.All]): Any = clientDatabase.run(action).await()
+  def deleteExistingDatabases(): Unit = {
+    val schemas = {
+      clientDatabase
+        .run(DatabaseQueryBuilder.getSchemas)
+        .await
+        .filter(db => !Vector("information_schema", "mysql", "performance_schema", "sys", "innodb", "graphcool").contains(db))
+    }
+    dropDatabases(schemas)
+  }
+
+  private def dropDatabases(dbs: Vector[String]): Unit = {
+    val dbAction = DBIO.seq(dbs.map(db => DatabaseMutationBuilder.dropDatabaseIfExists(database = db)): _*)
+    clientDatabase.run(dbAction).await(60)
+  }
+
+  private def runMutaction(mutaction: ClientSqlMutaction): Unit                         = runDbActionOnClientDb(mutaction.execute.await().sqlAction)
+  private def runDbActionOnClientDb(action: DBIOAction[Any, NoStream, Effect.All]): Any = clientDatabase.run(action).await()
 }
