@@ -212,6 +212,7 @@ Navigate to the `gateway` directory and start the server:
 
 ```bash(path="gateway")
 cd ../gateway
+yarn add graphql
 yarn install
 yarn start
 ```
