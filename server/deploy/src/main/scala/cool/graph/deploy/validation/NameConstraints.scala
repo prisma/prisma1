@@ -13,10 +13,11 @@ object NameConstraints {
 
   def isValidRelationName(name: String): Boolean = name.length <= 64 && name.matches("^[A-Z][a-zA-Z0-9]*$")
 
-  def isValidProjectName(name: String): Boolean = name.length <= 64 && name.matches("^[a-zA-Z][a-zA-Z0-9\\-_ ]*$")
+  def isValidServiceName(name: String): Boolean = name.length <= 140 && isValidName(name)
 
-  def isValidProjectAlias(alias: String): Boolean =
-    alias.length <= 64 && alias.matches("^[a-zA-Z0-9\\-_]*$") // we are abusing "" in UpdateProject as replacement for null
+  def isValidServiceStage(stage: String): Boolean = stage.length <= 30 && isValidName(stage)
+
+  private def isValidName(str: String): Boolean = str.matches("^[a-zA-Z][a-zA-Z0-9\\-_]*$")
 
   def isValidFunctionName(name: String): Boolean = 1 <= name.length && name.length <= 64 && name.matches("^[a-zA-Z0-9\\-_]*$")
 }

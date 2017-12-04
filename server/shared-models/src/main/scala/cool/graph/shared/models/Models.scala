@@ -138,6 +138,8 @@ case class Project(
     typePositions: List[Id] = List.empty
 ) {
 
+  lazy val projectId: ProjectId = ProjectId.fromEncodedString(id)
+
   val serverSideSubscriptionFunctions: List[ServerSideSubscriptionFunction] = functions.collect { case x: ServerSideSubscriptionFunction => x }
 
   def serverSideSubscriptionFunctionsFor(model: Model, mutationType: ModelMutationType): Seq[ServerSideSubscriptionFunction] = {

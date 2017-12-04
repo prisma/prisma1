@@ -15,7 +15,8 @@ object AddProjectField {
       AddProjectInput(
         clientMutationId = node.clientMutationId,
         ownerId = node.optionalArgAsString("ownerId"),
-        projectId = node.projectId
+        name = node.requiredArgAsString("name"),
+        stage = node.requiredArgAsString("stage")
       )
     }
   }

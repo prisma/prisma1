@@ -1,5 +1,6 @@
 package cool.graph.deploy.schema.fields
 
+import cool.graph.shared.models.ProjectId
 import sangria.schema.{Argument, InputField, StringType}
 
 object ManualMarshallerHelpers {
@@ -14,7 +15,7 @@ object ManualMarshallerHelpers {
     def projectId: String = {
       val name  = requiredArgAsString("name")
       val stage = requiredArgAsString("stage")
-      s"$name-$stage"
+      ProjectId.toEncodedString(name, stage)
     }
 
     def requiredArgAsString(name: String): String         = requiredArgAs[String](name)
