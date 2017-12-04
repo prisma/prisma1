@@ -43,10 +43,10 @@ case class AddProjectMutation(
   }
 
   private def validate(): Unit = {
-    if (NameConstraints.isValidServiceName(args.name)) {
+    if (!NameConstraints.isValidServiceName(args.name)) {
       throw InvalidServiceName(args.name)
     }
-    if (NameConstraints.isValidServiceStage(args.stage)) {
+    if (!NameConstraints.isValidServiceStage(args.stage)) {
       throw InvalidServiceStage(args.stage)
     }
   }
