@@ -21,11 +21,8 @@ object InternalDatabaseSchema {
     sqlu"""
       CREATE TABLE IF NOT EXISTS `Project` (
         `id` varchar(25) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',
-        `alias` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-        `name` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
         `ownerId` varchar(25) COLLATE utf8_unicode_ci DEFAULT NULL,
         PRIMARY KEY (`id`),
-        UNIQUE KEY `project_alias_uniq` (`alias`),
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;""",
     // Migrations
     sqlu"""

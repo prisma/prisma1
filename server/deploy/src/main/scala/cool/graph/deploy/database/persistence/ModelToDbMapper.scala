@@ -11,9 +11,7 @@ object ModelToDbMapper {
   def convert(project: models.Project): Project = {
     Project(
       id = project.id,
-      alias = project.alias,
-      name = project.name,
-      ownerId = project.ownerId
+      ownerId = Some(project.ownerId) // todo ideally, owner id is not optional or it is optional on models.Project as well
     )
   }
 

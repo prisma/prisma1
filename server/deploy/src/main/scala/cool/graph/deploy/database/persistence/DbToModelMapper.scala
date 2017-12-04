@@ -15,7 +15,7 @@ object DbToModelMapper {
 
   def convert(project: Project): models.Project = {
     // todo fix shared project model
-    models.Project(project.id, project.name, null, project.ownerId, alias = project.alias)
+    models.Project(id = project.id, ownerId = project.ownerId.getOrElse(""))
   }
 
   def convert(migration: Migration): models.Migration = {

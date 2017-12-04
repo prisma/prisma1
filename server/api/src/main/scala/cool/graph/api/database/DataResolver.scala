@@ -23,11 +23,10 @@ import spray.json._
 
 case class DataResolver(project: Project, useMasterDatabaseOnly: Boolean = false)(implicit apiDependencies: ApiDependencies) {
 
-  val databaseManager                                        = apiDependencies.databaseManager /// inject[GlobalDatabaseManager]
-  def masterClientDatabase: MySQLProfile.backend.DatabaseDef = databaseManager.getDbForProject(project).master
+  def masterClientDatabase: MySQLProfile.backend.DatabaseDef = apiDependencies.databases.master
   def readonlyClientDatabase: MySQLProfile.backend.DatabaseDef =
-    if (useMasterDatabaseOnly) databaseManager.getDbForProject(project).master
-    else databaseManager.getDbForProject(project).readOnly
+    if (useMasterDatabaseOnly) apiDependencies.databases.master
+    else apiDependencies.databases.readOnly
 
   protected def performWithTiming[A](name: String, f: => Future[A]): Future[A] = {
     f

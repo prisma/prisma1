@@ -1,10 +1,21 @@
 package cool.graph.deploy.schema.fields
 
+import sangria.schema.{Argument, InputField, StringType}
+
 object ManualMarshallerHelpers {
+  val projectIdInputFields = List(InputField("name", StringType), InputField("stage", StringType))
+  val projectIdArguments   = List(Argument("name", StringType), Argument("stage", StringType))
+
   implicit class ManualMarshallerHelper(args: Any) {
     val asMap: Map[String, Any] = args.asInstanceOf[Map[String, Any]]
 
     def clientMutationId: Option[String] = optionalArgAsString("clientMutationId")
+
+    def projectId: String = {
+      val name  = requiredArgAsString("name")
+      val stage = requiredArgAsString("stage")
+      s"$name-$stage"
+    }
 
     def requiredArgAsString(name: String): String         = requiredArgAs[String](name)
     def optionalArgAsString(name: String): Option[String] = optionalArgAs[String](name)

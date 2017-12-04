@@ -123,10 +123,7 @@ case class ServerSideSubscriptionFunction(
 
 case class Project(
     id: Id,
-    name: String,
-    projectDatabase: ProjectDatabase,
     ownerId: Id,
-    alias: Option[String] = None,
     revision: Int = 1,
     webhookUrl: Option[String] = None,
     models: List[Model] = List.empty,

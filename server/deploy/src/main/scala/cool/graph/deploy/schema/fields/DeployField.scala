@@ -7,8 +7,7 @@ import sangria.schema._
 object DeployField {
   import ManualMarshallerHelpers._
 
-  val inputFields = List(
-    InputField("projectId", StringType),
+  val inputFields = projectIdInputFields ++ List(
     InputField("types", StringType)
   )
 
@@ -18,7 +17,7 @@ object DeployField {
     def fromResult(node: marshaller.Node) = {
       DeployMutationInput(
         clientMutationId = node.clientMutationId,
-        projectId = node.requiredArgAsString("projectId"),
+        projectId = node.projectId,
         types = node.requiredArgAsString("types")
       )
     }
