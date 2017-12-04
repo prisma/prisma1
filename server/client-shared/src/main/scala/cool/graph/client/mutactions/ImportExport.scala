@@ -65,12 +65,13 @@ object DataImport {
       case "listvalues" => generateImportListsDBActions(project, bundle.values.elements.map(_.convertTo[ImportListValue]))
     }
 
-    val res: Future[Vector[Try[Int]]] = runDBActions(project, actions)
+    val res: Future[Vector[Try[Int]]]                       = runDBActions(project, actions)
+    def messageWithOutConnection(tryelem: Try[Any]): String = tryelem.failed.get.getMessage.substring(tryelem.failed.get.getMessage.indexOf(")") + 1)
 
     res.map(vector =>
       vector.zipWithIndex.collect {
-        case (elem, idx) if elem.isFailure && idx < cnt  => s"Index: $idx Message: ${elem.failed.get.getMessage.substring(13)}"
-        case (elem, idx) if elem.isFailure && idx >= cnt => s"Index: ${idx - cnt} Message: Relay Id Failure ${elem.failed.get.getMessage.substring(13)}"
+        case (elem, idx) if elem.isFailure && idx < cnt  => s"Index: $idx Message: ${messageWithOutConnection(elem)}"
+        case (elem, idx) if elem.isFailure && idx >= cnt => s"Index: ${idx - cnt} Message: Relay Id Failure ${messageWithOutConnection(elem)}"
     })
   }
 
