@@ -114,6 +114,8 @@ def serverProject(name: String): Project = {
 def normalProject(name: String): Project = Project(id = name, base = file(s"./$name")).settings(commonSettings: _*)
 def libProject(name: String): Project =  Project(id = name, base = file(s"./libs/$name")).settings(commonSettings: _*)
 
+lazy val betaImageTag = "database-1.0-beta2"
+
 lazy val sharedModels = normalProject("shared-models")
   .dependsOn(gcValues % "compile")
   .dependsOn(jsonUtils % "compile")
@@ -133,6 +135,22 @@ lazy val deploy = serverProject("deploy")
                         scalaTest
                       )
                     )
+                    .enablePlugins(sbtdocker.DockerPlugin, JavaAppPackaging)
+                    .settings(
+                      imageNames in docker := Seq(
+                        ImageName(s"graphcool/graphcool-deploy:$betaImageTag")
+                      ),
+                      dockerfile in docker := {
+                        val appDir    = stage.value
+                        val targetDir = "/app"
+
+                        new Dockerfile {
+                          from("anapsix/alpine-java")
+                          entryPoint(s"$targetDir/bin/${executableScriptName.value}")
+                          copy(appDir, targetDir)
+                        }
+                      }
+                    )
 
 lazy val api = serverProject("api")
   .dependsOn(sharedModels % "compile")
@@ -146,6 +164,22 @@ lazy val api = serverProject("api")
       playJson,
       scalaTest
     )
+  )
+  .enablePlugins(sbtdocker.DockerPlugin, JavaAppPackaging)
+  .settings(
+    imageNames in docker := Seq(
+      ImageName(s"graphcool/graphcool-database:$betaImageTag")
+    ),
+    dockerfile in docker := {
+      val appDir    = stage.value
+      val targetDir = "/app"
+
+      new Dockerfile {
+        from("anapsix/alpine-java")
+        entryPoint(s"$targetDir/bin/${executableScriptName.value}")
+        copy(appDir, targetDir)
+      }
+    }
   )
 
 lazy val gcValues = libProject("gc-values")
@@ -376,7 +410,7 @@ lazy val singleServer = Project(id = "single-server", base = file("./single-serv
   .enablePlugins(sbtdocker.DockerPlugin, JavaAppPackaging)
   .settings(
     imageNames in docker := Seq(
-      ImageName(s"graphcool/graphcool-dev:database-1.0-beta1")
+      ImageName(s"graphcool/graphcool-dev:$betaImageTag")
     ),
     dockerfile in docker := {
       val appDir    = stage.value
