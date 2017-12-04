@@ -11,6 +11,6 @@ object DeployMain extends App {
   val dependencies = DeployDependenciesImpl()
   dependencies.init
 
-  val server = DeployServer(dependencies.deploySchemaBuilder, dependencies.projectPersistence, dependencies.client)
+  val server = DeployServer(dependencies.deploySchemaBuilder, dependencies.projectPersistence)
   ServerExecutor(8081, server).startBlocking()
 }

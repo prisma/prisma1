@@ -31,7 +31,6 @@ import scala.util.{Failure, Success}
 case class DeployServer(
     schemaBuilder: SchemaBuilder,
     projectPersistence: ProjectPersistence,
-    dummyClient: Client,
     prefix: String = ""
 )(implicit system: ActorSystem, materializer: ActorMaterializer)
     extends Server
@@ -87,7 +86,7 @@ case class DeployServer(
                     Future.successful(BadRequest -> JsObject("error" -> JsString(error.getMessage)))
 
                   case Success(queryAst) =>
-                    val userContext = SystemUserContext(dummyClient)
+                    val userContext = SystemUserContext()
 
                     val result: Future[(StatusCode, JsValue)] =
                       Executor
@@ -102,7 +101,7 @@ case class DeployServer(
                         )
                         .map(node => OK -> node)
 
-                    result.onComplete(_ => logRequestEnd(None, Some(userContext.client.id)))
+                    result.onComplete(_ => logRequestEnd(None, None))
                     result
                 }
               }

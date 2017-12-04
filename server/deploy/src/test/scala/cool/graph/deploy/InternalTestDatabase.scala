@@ -1,9 +1,6 @@
 package cool.graph.deploy
 
-import cool.graph.deploy.database.persistence.ModelToDbMapper
 import cool.graph.deploy.database.schema.InternalDatabaseSchema
-import cool.graph.deploy.database.tables.Tables
-import cool.graph.shared.project_dsl.TestClient
 import cool.graph.utils.await.AwaitUtils
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
 import slick.dbio.DBIOAction
@@ -28,7 +25,6 @@ trait InternalTestDatabase extends BeforeAndAfterAll with BeforeAndAfterEach wit
   override protected def beforeEach(): Unit = {
     super.beforeEach()
     truncateTables()
-    createTestClient
   }
 
   override protected def afterAll(): Unit = {
@@ -38,14 +34,13 @@ trait InternalTestDatabase extends BeforeAndAfterAll with BeforeAndAfterEach wit
   }
 
   private def createInternalDatabaseSchema = internalDatabaseRoot.run(InternalDatabaseSchema.createSchemaActions(recreate = true)).await(10)
-  private def createTestClient             = internalDatabase.run { Tables.Clients += ModelToDbMapper.convert(TestClient()) }
 
   protected def truncateTables(): Unit = {
     val schemas = internalDatabase.run(getTables("graphcool")).await()
-    internalDatabase.run(dangerouslyTruncateTable(schemas)).await()
+    internalDatabase.run(dangerouslyTruncateTables(schemas)).await()
   }
 
-  private def dangerouslyTruncateTable(tableNames: Vector[String]): DBIOAction[Unit, NoStream, Effect] = {
+  private def dangerouslyTruncateTables(tableNames: Vector[String]): DBIOAction[Unit, NoStream, Effect] = {
     DBIO.seq(
       List(sqlu"""SET FOREIGN_KEY_CHECKS=0""") ++
         tableNames.map(name => sqlu"TRUNCATE TABLE `#$name`") ++

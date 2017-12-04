@@ -7,7 +7,7 @@ import cool.graph.deploy.migration.{DesiredProjectInferer, MigrationStepsPropose
 import cool.graph.deploy.schema.fields.{AddProjectField, DeployField}
 import cool.graph.deploy.schema.mutations._
 import cool.graph.deploy.schema.types.{MigrationStepType, MigrationType, ProjectType, SchemaErrorType}
-import cool.graph.shared.models.{Client, Migration, Project}
+import cool.graph.shared.models.Project
 import cool.graph.utils.future.FutureUtils.FutureOpt
 import sangria.relay.Mutation
 import sangria.schema._
@@ -15,7 +15,7 @@ import slick.jdbc.MySQLProfile.backend.DatabaseDef
 
 import scala.concurrent.Future
 
-case class SystemUserContext(client: Client)
+case class SystemUserContext()
 
 trait SchemaBuilder {
   def apply(userContext: SystemUserContext): Schema[SystemUserContext, Unit]
@@ -156,7 +156,6 @@ case class SchemaBuilderImpl(
         handleMutationResult {
           AddProjectMutation(
             args = args,
-            client = ctx.ctx.client,
             projectPersistence = projectPersistence,
             migrationPersistence = migrationPersistence,
             clientDb = clientDb

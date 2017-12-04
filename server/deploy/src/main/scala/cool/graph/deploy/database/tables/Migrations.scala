@@ -1,11 +1,9 @@
 package cool.graph.deploy.database.tables
 
-import cool.graph.shared.models.Region
-import cool.graph.shared.models.Region.Region
 import play.api.libs.json.JsValue
 import slick.dbio.Effect.{Read, Write}
 import slick.jdbc.MySQLProfile.api._
-import slick.sql.{FixedSqlAction, FixedSqlStreamingAction, SqlAction}
+import slick.sql.{FixedSqlAction, SqlAction}
 
 case class Migration(
     projectId: String,
@@ -16,8 +14,6 @@ case class Migration(
 )
 
 class MigrationTable(tag: Tag) extends Table[Migration](tag, "Migration") {
-//  implicit val RegionMapper     = ProjectTable.regionMapper
-//  implicit val stringListMapper = MappedColumns.stringListMapper
   implicit val jsonMapper = MappedColumns.jsonMapper
 
   def projectId      = column[String]("projectId")
@@ -25,13 +21,8 @@ class MigrationTable(tag: Tag) extends Table[Migration](tag, "Migration") {
   def schema         = column[JsValue]("schema")
   def steps          = column[JsValue]("steps")
   def hasBeenApplied = column[Boolean]("hasBeenApplied")
-  //  def id       = column[String]("id", O.PrimaryKey)
-  //  def alias    = column[Option[String]]("alias")
-  //  def name     = column[String]("name")
-  //  def clientId = column[String]("clientId")
-//  def pk        = primaryKey("pk_migrations", (projectId, revision))
-  def migration = foreignKey("migrations_projectid_foreign", projectId, Tables.Projects)(_.id)
-  def *         = (projectId, revision, schema, steps, hasBeenApplied) <> ((Migration.apply _).tupled, Migration.unapply)
+  def migration      = foreignKey("migrations_projectid_foreign", projectId, Tables.Projects)(_.id)
+  def *              = (projectId, revision, schema, steps, hasBeenApplied) <> ((Migration.apply _).tupled, Migration.unapply)
 }
 
 object MigrationTable {

@@ -11,7 +11,6 @@ import scala.concurrent.{ExecutionContext, Future}
 
 case class AddProjectMutation(
     args: AddProjectInput,
-    client: Client,
     projectPersistence: ProjectPersistence,
     migrationPersistence: MigrationPersistence,
     clientDb: DatabaseDef
@@ -25,7 +24,7 @@ case class AddProjectMutation(
       name = args.name,
       alias = args.alias,
       projectDatabase = TestProject.database,
-      ownerId = client.id
+      ownerId = args.ownerId.getOrElse("")
     )
 
     val migration = Migration(
@@ -52,5 +51,6 @@ case class AddProjectMutationPayload(
 case class AddProjectInput(
     clientMutationId: Option[String],
     name: String,
+    ownerId: Option[String],
     alias: Option[String]
 ) extends sangria.relay.Mutation

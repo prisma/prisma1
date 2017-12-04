@@ -9,7 +9,8 @@ object AddProjectField {
 
   val inputFields = List(
     InputField("name", StringType),
-    InputField("alias", OptionInputType(StringType))
+    InputField("alias", OptionInputType(StringType)),
+    InputField("ownerId", OptionInputType(StringType))
   )
 
   implicit val fromInput = new FromInput[AddProjectInput] {
@@ -19,7 +20,8 @@ object AddProjectField {
       AddProjectInput(
         clientMutationId = node.clientMutationId,
         name = node.requiredArgAsString("name"),
-        alias = node.optionalArgAsString("alias")
+        alias = node.optionalArgAsString("alias"),
+        ownerId = node.optionalArgAsString("ownerId")
       )
     }
   }
