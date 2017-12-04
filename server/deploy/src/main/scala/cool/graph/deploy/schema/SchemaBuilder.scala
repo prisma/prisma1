@@ -76,7 +76,8 @@ case class SchemaBuilderImpl(
     description =
       Some("Shows the status of the next migration in line to be applied to the project. If no such migration exists, it shows the last applied migration."),
     resolve = (ctx) => {
-      FutureOpt(migrationPersistence.getNextMigration(ctx.projectId)).fallbackTo(migrationPersistence.getLastMigration(ctx.projectId)).map { migrationOpt =>
+      val projectId = ctx.args.raw.projectId
+      FutureOpt(migrationPersistence.getNextMigration(projectId)).fallbackTo(migrationPersistence.getLastMigration(projectId)).map { migrationOpt =>
         migrationOpt.get
       }
     }
@@ -98,7 +99,7 @@ case class SchemaBuilderImpl(
     arguments = projectIdArguments,
     description = Some("Shows all migrations for the project. Debug query, will likely be removed in the future."),
     resolve = (ctx) => {
-      migrationPersistence.loadAll(ctx.projectId)
+      migrationPersistence.loadAll(ctx.args.raw.projectId)
     }
   )
 
