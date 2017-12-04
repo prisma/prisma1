@@ -1,7 +1,6 @@
 package cool.graph.subscriptions
 
 import cool.graph.RequestContextTrait
-import cool.graph.aws.cloudwatch.Cloudwatch
 import cool.graph.client.UserContextTrait
 import cool.graph.deprecated.actions.schemas.MutationMetaData
 import cool.graph.client.database.ProjectDataresolver
@@ -23,8 +22,6 @@ case class SubscriptionUserContext(nodeId: String,
 
   override val isSubscription: Boolean   = true
   override val projectId: Option[String] = Some(project.id)
-
-  val cloudwatch = inject[Cloudwatch]("cloudwatch")
 
   val dataResolver =
     new ProjectDataresolver(project = project, requestContext = this)

@@ -9,7 +9,6 @@ import akka.http.scaladsl.server.PathMatchers.Segment
 import akka.http.scaladsl.server._
 import akka.stream.ActorMaterializer
 import com.typesafe.scalalogging.LazyLogging
-import cool.graph.aws.cloudwatch.Cloudwatch
 import cool.graph.bugsnag.{BugSnagger, GraphCoolRequest}
 import cool.graph.client.ClientInjector
 import cool.graph.client.authorization.ClientAuth
@@ -36,7 +35,6 @@ case class ClientServer(prefix: String)(
   import system.dispatcher
 
   val log: String => Unit                             = (x: String) => logger.info(x)
-  val cloudWatch: Cloudwatch                          = injector.cloudwatch
   val errorHandlerFactory: ErrorHandlerFactory        = injector.errorHandlerFactory
   val projectSchemaFetcher: RefreshableProjectFetcher = injector.projectSchemaFetcher
 

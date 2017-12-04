@@ -3,7 +3,6 @@ package cool.graph.system
 import java.util.concurrent.TimeUnit
 
 import cool.graph.SystemRequestContextTrait
-import cool.graph.aws.cloudwatch.Cloudwatch
 import cool.graph.client.database.ProjectDataresolver
 import cool.graph.shared.errors.SystemErrors
 import cool.graph.shared.errors.UserInputErrors.InvalidSession
@@ -11,11 +10,10 @@ import cool.graph.shared.models.ModelOperation.ModelOperation
 import cool.graph.shared.models._
 import cool.graph.shared.queryPermissions.PermissionSchemaResolver
 import cool.graph.system.authorization.SystemAuth
+import cool.graph.system.database.finder.LogsDataResolver
 import cool.graph.system.database.finder.client.ClientResolver
-import cool.graph.system.database.finder.{CachedProjectResolver, LogsDataResolver, ProjectResolver}
 import cool.graph.system.database.tables.Tables.RelayIds
 import cool.graph.system.schema.types.{SearchProviderAlgoliaSchemaResolver, ViewerModel}
-import scaldi.{Injectable, Injector}
 import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.MySQLProfile.backend.DatabaseDef
 
@@ -34,7 +32,6 @@ case class SystemUserContext(
   override val clientId                  = client.map(_.id).getOrElse("")
   override val requestIp                 = "fake-ip"
 
-  val cloudwatch        = inj.cloudwatch
   val internalDatabase  = inj.internalDB
   val logsDatabase      = inj.logsDB
   val projectResolver   = inj.projectResolver

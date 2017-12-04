@@ -7,7 +7,6 @@ import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.sns.AmazonSNS
 import com.typesafe.config.{Config, ConfigFactory}
 import cool.graph.aws.AwsInitializers
-import cool.graph.aws.cloudwatch.{Cloudwatch, CloudwatchImpl}
 import cool.graph.bugsnag.{BugSnagger, BugSnaggerImpl}
 import cool.graph.messagebus.Conversions.ByteMarshaller
 import cool.graph.messagebus.pubsub.rabbit.{RabbitAkkaPubSub, RabbitAkkaPubSubPublisher}
@@ -38,7 +37,6 @@ trait SystemInjector {
   val uncachedProjectResolver: UncachedProjectResolver
   val cachedProjectResolver: CachedProjectResolver
   val invalidationPublisher: PubSubPublisher[String]
-  val cloudwatch: Cloudwatch
   val globalDatabaseManager: GlobalDatabaseManager
   val snsPublisher: SnsPublisher
   val kinesisAlgoliaSyncQueriesPublisher: KinesisPublisher
@@ -80,7 +78,6 @@ class SystemInjectorImpl(implicit val system: ActorSystem, val materializer: Act
   lazy val cachedProjectResolver: CachedProjectResolver = CachedProjectResolverImpl(uncachedProjectResolver)(system.dispatcher)
   lazy val apiMatrixFactory: ApiMatrixFactory           = ApiMatrixFactory(DefaultApiMatrix)
   lazy val requestPrefix: String                        = sys.env.getOrElse("AWS_REGION", sys.error("AWS Region not found."))
-  lazy val cloudwatch                                   = CloudwatchImpl()
   lazy val snsPublisher                                 = new SnsPublisherImplementation(topic = sys.env("SNS_SEAT"))(toScaldi)
   lazy val kinesis: AmazonKinesis                       = AwsInitializers.createKinesis()
   lazy val kinesisAlgoliaSyncQueriesPublisher           = new KinesisPublisherImplementation(streamName = sys.env("KINESIS_STREAM_ALGOLIA_SYNC_QUERY"), kinesis)
@@ -150,7 +147,6 @@ class SystemInjectorImpl(implicit val system: ActorSystem, val materializer: Act
       bind[ApiMatrixFactory] toNonLazy outer.apiMatrixFactory
 
       binding identifiedBy "kinesis" toNonLazy outer.kinesis
-      binding identifiedBy "cloudwatch" toNonLazy outer.cloudwatch
       binding identifiedBy "projectResolver" toNonLazy outer.cachedProjectResolver
       binding identifiedBy "cachedProjectResolver" toNonLazy outer.cachedProjectResolver
       binding identifiedBy "uncachedProjectResolver" toNonLazy outer.uncachedProjectResolver
@@ -170,7 +166,6 @@ trait SystemApiDependencies extends Module {
   val cachedProjectResolver: CachedProjectResolver
   val invalidationPublisher: PubSubPublisher[String]
   val requestPrefix: String
-  val cloudwatch: Cloudwatch
   val internalDb: MySQLProfile.backend.Database
   val logsDb: MySQLProfile.backend.Database
   val globalDatabaseManager: GlobalDatabaseManager
@@ -235,7 +230,6 @@ case class SystemDependencies()(implicit val system: ActorSystem, val materializ
   lazy val cachedProjectResolver: CachedProjectResolver = CachedProjectResolverImpl(uncachedProjectResolver)(system.dispatcher)
   lazy val apiMatrixFactory: ApiMatrixFactory           = ApiMatrixFactory(DefaultApiMatrix)
   lazy val requestPrefix: String                        = sys.env.getOrElse("AWS_REGION", sys.error("AWS Region not found."))
-  lazy val cloudwatch                                   = CloudwatchImpl()
   lazy val snsPublisher                                 = new SnsPublisherImplementation(topic = sys.env("SNS_SEAT"))
   lazy val kinesis: AmazonKinesis                       = AwsInitializers.createKinesis()
   lazy val kinesisAlgoliaSyncQueriesPublisher           = new KinesisPublisherImplementation(streamName = sys.env("KINESIS_STREAM_ALGOLIA_SYNC_QUERY"), kinesis)
@@ -255,7 +249,6 @@ case class SystemDependencies()(implicit val system: ActorSystem, val materializ
   bind[KinesisPublisher] identifiedBy "kinesisAlgoliaSyncQueriesPublisher" toNonLazy kinesisAlgoliaSyncQueriesPublisher
 
   binding identifiedBy "kinesis" toNonLazy kinesis
-  binding identifiedBy "cloudwatch" toNonLazy cloudwatch
   binding identifiedBy "projectResolver" toNonLazy cachedProjectResolver
   binding identifiedBy "cachedProjectResolver" toNonLazy cachedProjectResolver
   binding identifiedBy "uncachedProjectResolver" toNonLazy uncachedProjectResolver
