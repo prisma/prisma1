@@ -1,6 +1,7 @@
 package cool.graph.deploy.validation
 
 object NameConstraints {
+  // TODO: a few of those won't be needed in the long run. Remove them when we are sure what we need.
   def isValidEnumValueName(name: String): Boolean = name.length <= 191 && name.matches("^[A-Z][a-zA-Z0-9_]*$")
 
   def isValidDataItemId(id: String): Boolean = id.length <= 25 && id.matches("^[a-zA-Z0-9\\-_]*$")
