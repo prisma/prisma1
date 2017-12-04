@@ -4,7 +4,7 @@ import akka.actor.ActorSystem
 import cool.graph.deploy.DeployDependencies
 import cool.graph.deploy.database.persistence.{MigrationPersistence, ProjectPersistence}
 import cool.graph.deploy.migration.{DesiredProjectInferer, MigrationStepsProposer, RenameInferer}
-import cool.graph.deploy.schema.fields.{AddProjectField, DeployField}
+import cool.graph.deploy.schema.fields.{AddProjectField, DeployField, ManualMarshallerHelpers}
 import cool.graph.deploy.schema.mutations._
 import cool.graph.deploy.schema.types.{MigrationStepType, MigrationType, ProjectType, SchemaErrorType}
 import cool.graph.shared.models.{Client, Migration, Project}
@@ -34,6 +34,7 @@ case class SchemaBuilderImpl(
     userContext: SystemUserContext
 )(implicit system: ActorSystem, dependencies: DeployDependencies) {
   import system.dispatcher
+  import ManualMarshallerHelpers._
 
   val internalDb: DatabaseDef                        = dependencies.internalDb
   val clientDb: DatabaseDef                          = dependencies.clientDb
@@ -71,15 +72,12 @@ case class SchemaBuilderImpl(
   val migrationStatusField: Field[SystemUserContext, Unit] = Field(
     "migrationStatus",
     MigrationType.Type,
-    arguments = List(Argument("projectId", StringType, description = "The project id.")),
+    arguments = projectIdArguments,
     description =
       Some("Shows the status of the next migration in line to be applied to the project. If no such migration exists, it shows the last applied migration."),
     resolve = (ctx) => {
-      val projectId = ctx.args.arg[String]("projectId")
-      for {
-        migration <- FutureOpt(migrationPersistence.getNextMigration(projectId)).fallbackTo(migrationPersistence.getLastMigration(projectId))
-      } yield {
-        migration.get
+      FutureOpt(migrationPersistence.getNextMigration(ctx.projectId)).fallbackTo(migrationPersistence.getLastMigration(ctx.projectId)).map { migrationOpt =>
+        migrationOpt.get
       }
     }
   )
@@ -98,11 +96,10 @@ case class SchemaBuilderImpl(
   val listMigrationsField: Field[SystemUserContext, Unit] = Field(
     "listMigrations",
     ListType(MigrationType.Type),
-    arguments = List(Argument("projectId", StringType, description = "The project id.")),
+    arguments = projectIdArguments,
     description = Some("Shows all migrations for the project. Debug query, will likely be removed in the future."),
     resolve = (ctx) => {
-      val projectId = ctx.args.arg[String]("projectId")
-      migrationPersistence.loadAll(projectId)
+      migrationPersistence.loadAll(ctx.projectId)
     }
   )
 

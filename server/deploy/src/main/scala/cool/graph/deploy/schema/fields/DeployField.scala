@@ -7,7 +7,7 @@ import sangria.schema._
 object DeployField {
   import ManualMarshallerHelpers._
 
-  val inputFields = projectIdFields ++ List(
+  val inputFields = projectIdInputFields ++ List(
     InputField("types", StringType)
   )
 

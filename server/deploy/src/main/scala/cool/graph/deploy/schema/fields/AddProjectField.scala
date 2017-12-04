@@ -6,7 +6,7 @@ import sangria.marshalling.{CoercedScalaResultMarshaller, FromInput}
 object AddProjectField {
   import ManualMarshallerHelpers._
 
-  val inputFields = projectIdFields
+  val inputFields = projectIdInputFields
 
   implicit val fromInput = new FromInput[AddProjectInput] {
     val marshaller = CoercedScalaResultMarshaller.default
