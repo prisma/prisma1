@@ -9,52 +9,25 @@ import slick.sql.{FixedSqlAction, FixedSqlStreamingAction, SqlAction}
 
 case class Project(
     id: String,
-    alias: Option[String],
-    name: String,
     clientId: String
-//    revision: Int,
-//    model: JsValue, // schema
-//    migrationSteps: JsValue,
-//    hasBeenApplied: Boolean
 )
 
 class ProjectTable(tag: Tag) extends Table[Project](tag, "Project") {
-//  implicit val RegionMapper     = ProjectTable.regionMapper
-//  implicit val stringListMapper = MappedColumns.stringListMapper
-//  implicit val jsonMapper = MappedColumns.jsonMapper
 
   def id       = column[String]("id", O.PrimaryKey)
-  def alias    = column[Option[String]]("alias")
-  def name     = column[String]("name")
   def clientId = column[String]("clientId")
-//  def revision       = column[Int]("revision")
-//  def model          = column[JsValue]("model")
-//  def migrationSteps = column[JsValue]("migrationSteps")
-//  def hasBeenApplied = column[Boolean]("hasBeenApplied")
 
   def client = foreignKey("project_clientid_foreign", clientId, Tables.Clients)(_.id)
-  def *      = (id, alias, name, clientId) <> ((Project.apply _).tupled, Project.unapply)
+  def *      = (id, clientId) <> ((Project.apply _).tupled, Project.unapply)
 }
-//
-object ProjectTable {
-////  implicit val regionMapper = MappedColumnType.base[Region, String](
-////    e => e.toString,
-////    s => Region.withName(s)
-////  )
-//
 
+object ProjectTable {
   def byId(id: String): SqlAction[Option[Project], NoStream, Read] = {
     Tables.Projects.filter { _.id === id }.take(1).result.headOption
   }
 
   def byIdOrAlias(idOrAlias: String): SqlAction[Option[Project], NoStream, Read] = {
-    Tables.Projects
-      .filter { t =>
-        t.id === idOrAlias || t.alias === idOrAlias
-      }
-      .take(1)
-      .result
-      .headOption
+    ???
   }
 
   def byIdWithMigration(id: String): SqlAction[Option[(Project, Migration)], NoStream, Read] = {
@@ -68,15 +41,8 @@ object ProjectTable {
   }
 
   def byIdOrAliasWithMigration(id: String): SqlAction[Option[(Project, Migration)], NoStream, Read] = {
-    val baseQuery = for {
-      project   <- Tables.Projects
-      migration <- Tables.Migrations
-      if project.id === id || project.alias === id
-      if migration.projectId === project.id
-      if migration.hasBeenApplied
-    } yield (project, migration)
 
-    baseQuery.sortBy(_._2.revision.desc).take(1).result.headOption
+    ???
   }
 
 //  def byIdWithsNextMigration(id: String): SqlAction[Option[(Project, Migration)], NoStream, Read] = {

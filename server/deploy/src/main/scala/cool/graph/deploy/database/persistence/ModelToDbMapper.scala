@@ -26,8 +26,6 @@ object ModelToDbMapper {
   def convert(project: models.Project): Project = {
     Project(
       id = project.id,
-      alias = project.alias,
-      name = project.name,
       clientId = project.ownerId
     )
   }

@@ -27,9 +27,6 @@ case class DesiredProjectInfererImpl(
   def infer(): Project Or ProjectSyntaxError = {
     val newProject = Project(
       id = baseProject.id,
-      name = baseProject.name,
-      alias = baseProject.alias,
-      projectDatabase = baseProject.projectDatabase,
       ownerId = baseProject.ownerId,
       models = desiredModels.toList,
       relations = desiredRelations.toList,

@@ -19,8 +19,7 @@ trait ApiTestDatabase extends BeforeAndAfterEach with BeforeAndAfterAll with Awa
   implicit lazy val system: ActorSystem             = ActorSystem()
   implicit lazy val materializer: ActorMaterializer = ActorMaterializer()
   implicit lazy val testDependencies                = new ApiDependenciesForTest
-  private lazy val databaseManager                  = testDependencies.databaseManager
-  lazy val clientDatabase: DatabaseDef              = databaseManager.databases.values.head.master // FIXME: is this ok here?
+  lazy val clientDatabase: DatabaseDef              = testDependencies.databases.master
 
   override protected def beforeAll(): Unit = {
     super.beforeAll()

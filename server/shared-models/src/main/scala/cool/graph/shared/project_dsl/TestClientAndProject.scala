@@ -31,8 +31,6 @@ object TestProject {
   val empty = this.apply()
 
   def apply(): Project = {
-    Project(id = testProjectId, ownerId = testClientId, name = s"Test Project", alias = Some(testProjectAlias), projectDatabase = database)
+    Project(id = testProjectId, ownerId = testClientId)
   }
-
-  def database = ProjectDatabase(id = testProjectDatabaseId, region = Region.EU_WEST_1, name = "client1", isDefaultForRegion = true)
 }

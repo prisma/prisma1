@@ -54,10 +54,8 @@ object SchemaDsl {
 
     def buildProject(id: String = TestIds.testProjectId): Project = {
       val (models, relations) = build()
-      val projectAlias        = if (id == TestIds.testProjectId) Some(TestIds.testProjectAlias) else None
       TestProject().copy(
         id = id,
-        alias = projectAlias,
         models = models.toList,
         relations = relations.toList,
         enums = enums.toList,

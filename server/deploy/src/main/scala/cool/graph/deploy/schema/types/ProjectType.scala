@@ -10,8 +10,6 @@ object ProjectType {
     "This is a project",
     fields[SystemUserContext, models.Project](
       Field("id", StringType, resolve = _.value.id),
-      Field("name", StringType, resolve = _.value.name),
-      Field("alias", OptionType(StringType), resolve = _.value.alias),
       Field("revision", OptionType(IntType), resolve = _.value.revision)
     )
   )
