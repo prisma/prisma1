@@ -27,8 +27,8 @@ class ProjectDataresolver(override val project: Project, override val requestCon
       .map(resultTransform(_))
   }
 
-  def resolveByModelExport(model: Model, args: Option[QueryArguments] = None, row: Int): Future[ResolverResult] = {
-    val (query, resultTransform) = DatabaseQueryBuilder.selectAllFromModel(project.id, model.name, args)
+  def resolveByModelExport(model: Model, args: Option[QueryArguments] = None): Future[ResolverResult] = {
+    val (query, resultTransform) = DatabaseQueryBuilder.selectAllFromModel(project.id, model.name, args, overrideMaxNodeCount = Some(1001))
 
     performWithTiming("resolveByModel", readonlyClientDatabase.run(readOnlyDataItem(query)))
       .map(_.toList.map(mapDataItem(model)(_)))
