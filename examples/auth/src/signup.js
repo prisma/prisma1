@@ -53,12 +53,13 @@ module.exports = function(event) {
   const api = graphcool.api('simple/v1')
 
   const SALT_ROUNDS = 10
+  const salt = bcryptjs.genSaltSync(SALT_ROUNDS);
 
   if (validator.isEmail(email)) {
     return getGraphcoolUser(api, email)
       .then(graphcoolUser => {
         if (!graphcoolUser) {
-          return bcryptjs.hash(password, SALT_ROUNDS)
+          return bcryptjs.hash(password, salt)
             .then(hash => createGraphcoolUser(api, email, hash))
         } else {
           return Promise.reject('Email already in use')
