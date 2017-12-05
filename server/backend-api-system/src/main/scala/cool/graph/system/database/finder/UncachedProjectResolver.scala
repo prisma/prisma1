@@ -50,7 +50,7 @@ case class UncachedProjectResolver(
     asModel
   }
 
-  private def gatherAllDataForProject(project: Project): Future[AllDataForProject] = performWithTiming("resolveProjectWithClientId.gatherAllDataForProject") {
+  private def gatherAllDataForProject(project: Project): Future[AllDataForProject] =
     readFromDatabaseTimer.timeFuture() {
       for {
         _ <- Future.successful(())
@@ -131,19 +131,8 @@ case class UncachedProjectResolver(
         )
       }
     }
-  }
 
   private def runQuery[T](query: QueryBase[T]): Future[T] = internalDatabase.run(query.result)
-
-  private def performWithTiming[A](name: String)(f: => Future[A]): Future[A] = {
-    val begin  = System.currentTimeMillis()
-    val result = f
-    result onComplete { _ =>
-      val timing = Timing(name, System.currentTimeMillis() - begin)
-      requestContext.foreach(_.logTimingWithoutCloudwatch(timing, _.RequestMetricsSql))
-    }
-    result
-  }
 }
 
 object DbQueriesForUncachedProjectResolver {

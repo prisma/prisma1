@@ -4,9 +4,7 @@ import akka.http.scaladsl.model.StatusCode
 import akka.http.scaladsl.model.StatusCodes._
 import akka.http.scaladsl.server.Directives.complete
 import akka.http.scaladsl.server.{ExceptionHandler => AkkaHttpExceptionHandler}
-import cool.graph.aws.cloudwatch.Cloudwatch
 import cool.graph.bugsnag.{BugSnagger, GraphCoolRequest}
-import cool.graph.client.{HandledError, UnhandledError}
 import cool.graph.shared.errors.UserFacingError
 import cool.graph.shared.logging.{LogData, LogKey}
 import sangria.execution.Executor.{ExceptionHandler => SangriaExceptionHandler}
@@ -28,15 +26,13 @@ object ErrorHandlerFactory extends Injectable {
     s"Whoops. Looks like an internal server error. Please contact us from the Console (https://console.graph.cool) or via email (support@graph.cool) and include your Request ID: $requestId"
 
   def apply(log: Function[String, Unit])(implicit inj: Injector): ErrorHandlerFactory = {
-    val cloudwatch: Cloudwatch = inject[Cloudwatch]("cloudwatch")
     val bugsnagger: BugSnagger = inject[BugSnagger]
-    ErrorHandlerFactory(log, cloudwatch, bugsnagger)
+    ErrorHandlerFactory(log, bugsnagger)
   }
 }
 
 case class ErrorHandlerFactory(
     log: Function[String, Unit],
-    cloudwatch: Cloudwatch,
     bugsnagger: BugSnagger
 ) {
 
@@ -150,11 +146,6 @@ case class ErrorHandlerFactory(
             .mkString(", ")
         )
     }
-
-    cloudwatch.measure(error match {
-      case e: UserFacingError => HandledError(e)
-      case e                  => UnhandledError(e)
-    })
 
     log(LogData(logKey, requestId, clientId, projectId, payload = Some(payload)).json)
   }

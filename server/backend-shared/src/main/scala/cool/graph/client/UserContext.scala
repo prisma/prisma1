@@ -3,7 +3,6 @@ package cool.graph.client
 import cool.graph.client.database.ProjectDataresolver
 import cool.graph.shared.models.{AuthenticatedRequest, AuthenticatedUser, Project, ProjectWithClientId}
 import cool.graph.RequestContextTrait
-import cool.graph.aws.cloudwatch.Cloudwatch
 import sangria.ast.Document
 import scaldi.{Injectable, Injector}
 
@@ -21,8 +20,6 @@ case class UserContext(project: Project,
   override val projectId: Option[String] = Some(project.id)
 
   val userId = authenticatedRequest.map(_.id)
-
-  val cloudwatch = inject[Cloudwatch]("cloudwatch")
 
   val queryDataResolver =
     new ProjectDataresolver(project = project, requestContext = this)

@@ -5,7 +5,6 @@ import akka.stream.ActorMaterializer
 import com.amazonaws.services.kinesis.AmazonKinesis
 import com.amazonaws.services.s3.AmazonS3
 import cool.graph.aws.AwsInitializers
-import cool.graph.aws.cloudwatch.CloudwatchImpl
 import cool.graph.bugsnag.{BugSnagger, BugSnaggerImpl}
 import cool.graph.client._
 import cool.graph.client.authorization.{ClientAuth, ClientAuthImpl}
@@ -71,7 +70,6 @@ class SimpleSubscriptionInjectorImpl(implicit val system: ActorSystem, val mater
       bind[PubSubSubscriber[String]] identifiedBy "sss-events-subscriber" toNonLazy outer.sssEventsSubscriber
       bind[ApiMatrixFactory] toNonLazy outer.apiMatrixFactory
       bind[GlobalDatabaseManager] toNonLazy outer.globalDatabaseManager
-      binding identifiedBy "cloudwatch" toNonLazy outer.cloudwatch
       binding identifiedBy "project-schema-fetcher" toNonLazy outer.projectSchemaFetcher
       binding identifiedBy "kinesis" toNonLazy outer.kinesis
       binding identifiedBy "featureMetricActor" to outer.featureMetricActor
@@ -136,7 +134,7 @@ class SimpleSubscriptionInjectorImpl(implicit val system: ActorSystem, val mater
   lazy val requestPrefix: String                        = sys.env.getOrElse("AWS_REGION", sys.error("AWS Region not found."))
   lazy val kinesisAlgoliaSyncQueriesPublisher           = new KinesisPublisherMock
   lazy val log: String => Unit                          = println
-  lazy val errorHandlerFactory                          = ErrorHandlerFactory(log, cloudwatch, bugsnagger)
+  lazy val errorHandlerFactory                          = ErrorHandlerFactory(log, bugsnagger)
   lazy val s3: AmazonS3                                 = AwsInitializers.createS3()
   lazy val s3Fileupload: AmazonS3                       = AwsInitializers.createS3Fileupload()
 
@@ -158,7 +156,6 @@ class SimpleSubscriptionInjectorImpl(implicit val system: ActorSystem, val mater
     responsePubSubPublisher.map[SubscriptionSessionResponse](converterResponse07ToString)
   lazy val requestsQueueConsumer: RabbitQueueConsumer[SubscriptionRequest] =
     RabbitQueue.consumer[SubscriptionRequest](clusterLocalRabbitUri, "subscription-requests", durableExchange = true)
-  lazy val cloudwatch                                   = CloudwatchImpl()
   lazy val globalDatabaseManager: GlobalDatabaseManager = GlobalDatabaseManager.initializeForSingleRegion(config)
   lazy val kinesis: AmazonKinesis                       = AwsInitializers.createKinesis()
   lazy val kinesisApiMetricsPublisher: KinesisPublisher = new KinesisPublisherImplementation(streamName = sys.env("KINESIS_STREAM_API_METRICS"), kinesis)
