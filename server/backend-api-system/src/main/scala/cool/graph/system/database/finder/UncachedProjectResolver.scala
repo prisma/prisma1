@@ -132,7 +132,7 @@ case class UncachedProjectResolver(
       }
     }
 
-  private def runQuery[T](query: QueryBase[T]): Future[T] = internalDatabase.run(query.result)
+  private def runQuery[T, Y](query: Query[T, Y, Seq]): Future[Seq[Y]] = internalDatabase.run(query.result)
 }
 
 object DbQueriesForUncachedProjectResolver {
@@ -158,108 +158,107 @@ object DbQueriesForUncachedProjectResolver {
     } yield field
   }
 
-  def relationAndFieldMirrorQuery(projectId: String): QueryBase[Seq[(Relation, Option[RelationFieldMirror])]] = {
+  def relationAndFieldMirrorQuery(projectId: String) = {
     for {
       ((r: RelationTable), frm) <- Relations joinLeft RelationFieldMirrors on (_.id === _.relationId)
       if r.projectId === projectId
     } yield (r, frm)
   }
 
-  def patQuery(projectId: String): QueryBase[Seq[RootToken]] = {
+  def patQuery(projectId: String): Query[RootTokenTable, RootToken, Seq] = {
     for {
       pat <- RootTokens if pat.projectId === projectId
     } yield pat
   }
 
-  def actionQuery(
-      projectId: String): QueryBase[Seq[(Action, Option[ActionTriggerMutationModel], Option[ActionTriggerMutationRelation], Option[ActionHandlerWebhook])]] = {
+  def actionQuery(projectId: String) = {
     for {
       ((((a: ActionTable), atmm), atrm), atwh) <- Actions joinLeft ActionTriggerMutationModels on (_.id === _.actionId) joinLeft ActionTriggerMutationRelations on (_._1.id === _.actionId) joinLeft ActionHandlerWebhooks on (_._1._1.id === _.actionId)
       if a.projectId === projectId
     } yield (a, atmm, atrm, atwh)
   }
 
-  def integrationQuery(projectId: String): QueryBase[Seq[Integration]] = {
+  def integrationQuery(projectId: String) = {
     for {
       integration <- Integrations
       if integration.projectId === projectId
     } yield integration
   }
 
-  def modelAndPermissionQuery(modelIds: Seq[String]): QueryBase[Seq[(ModelPermission, Option[ModelPermissionField])]] = {
+  def modelAndPermissionQuery(modelIds: Seq[String]) = {
     for {
       ((mp: ModelPermissionTable), mpf) <- ModelPermissions joinLeft ModelPermissionFields on (_.id === _.modelPermissionId)
       if mp.modelId.inSet(modelIds)
     } yield (mp, mpf)
   }
 
-  def auth0IntegrationQuery(integrationIds: Seq[String]): QueryBase[Seq[IntegrationAuth0]] = {
+  def auth0IntegrationQuery(integrationIds: Seq[String]) = {
     for {
       a <- IntegrationAuth0s if a.integrationId.inSet(integrationIds)
     } yield a
   }
 
-  def digitsIntegrationQuery(integrationIds: Seq[String]): QueryBase[Seq[IntegrationDigits]] = {
+  def digitsIntegrationQuery(integrationIds: Seq[String]) = {
     for {
       d <- IntegrationDigits if d.integrationId.inSet(integrationIds)
     } yield d
   }
 
-  def algoliaIntegrationQuery(integrationIds: Seq[String]): QueryBase[Seq[(SearchProviderAlgolia, Option[AlgoliaSyncQuery])]] = {
+  def algoliaIntegrationQuery(integrationIds: Seq[String]) = {
     for {
       ((a: SearchProviderAlgoliaTable), as) <- SearchProviderAlgolias joinLeft AlgoliaSyncQueries on (_.id === _.searchProviderAlgoliaId)
       if a.integrationId.inSet(integrationIds)
     } yield (a, as)
   }
 
-  def seatQuery(projectId: String): QueryBase[Seq[(Seat, Option[Client])]] = {
+  def seatQuery(projectId: String) = {
     for {
       (s: SeatTable, c) <- Seats joinLeft Clients on (_.clientId === _.id)
       if s.projectId === projectId
     } yield (s, c)
   }
 
-  def fieldConstraintsQuery(projectId: String): QueryBase[Seq[FieldConstraint]] = {
+  def fieldConstraintsQuery(projectId: String) = {
     for {
       field      <- fieldsForProjectQuery(projectId)
       constraint <- FieldConstraints if constraint.fieldId === field.id
     } yield constraint
   }
 
-  def relationPermissionQuery(relationIds: Seq[String]): QueryBase[Seq[RelationPermission]] = {
+  def relationPermissionQuery(relationIds: Seq[String]) = {
     for {
       relationPermission <- RelationPermissions if relationPermission.relationId.inSet(relationIds)
     } yield relationPermission
   }
 
-  def packageDefinitionQuery(projectId: String): QueryBase[Seq[PackageDefinition]] = {
+  def packageDefinitionQuery(projectId: String) = {
     for {
       packageDefinition <- PackageDefinitions if packageDefinition.projectId === projectId
     } yield packageDefinition
   }
 
-  def enumQuery(projectId: String): QueryBase[Seq[Enum]] = {
+  def enumQuery(projectId: String) = {
     for {
       enum <- Enums
       if enum.projectId === projectId
     } yield enum
   }
 
-  def featureTogglesQuery(projectId: String): QueryBase[Seq[FeatureToggle]] = {
+  def featureTogglesQuery(projectId: String) = {
     for {
       featureToggle <- FeatureToggles
       if featureToggle.projectId === projectId
     } yield featureToggle
   }
 
-  def functionsQuery(projectId: String): QueryBase[Seq[Function]] = {
+  def functionsQuery(projectId: String) = {
     for {
       function <- Functions
       if function.projectId === projectId
     } yield function
   }
 
-  def projectDatabasesQuery(projectDatabaseId: String): QueryBase[Seq[ProjectDatabase]] = {
+  def projectDatabasesQuery(projectDatabaseId: String) = {
     for {
       projectDatabase <- ProjectDatabases
       if projectDatabase.id === projectDatabaseId
