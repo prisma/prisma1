@@ -12,12 +12,6 @@ services:
     volumes:
       - /Volumes/ramdisk/mysqldata:/var/lib/mysql
 
-  kinesis:
-    image: dlsniper/kinesalite
-    command: kinesalite --port 7661
-    ports:
-      - "127.0.0.1:7661:7661"
-
   rabbit:
     image: rabbitmq:3-management
     restart: always
