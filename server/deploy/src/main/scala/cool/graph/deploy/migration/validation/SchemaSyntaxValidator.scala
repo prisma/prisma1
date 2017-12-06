@@ -1,6 +1,6 @@
 package cool.graph.deploy.migration.validation
 
-import cool.graph.deploy.validation.NameConstraints
+import cool.graph.deploy.validation._
 import cool.graph.shared.models.TypeIdentifier
 import sangria.ast.{Directive, FieldDefinition, ObjectTypeDefinition}
 

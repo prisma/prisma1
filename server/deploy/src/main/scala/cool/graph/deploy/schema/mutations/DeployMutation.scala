@@ -47,13 +47,19 @@ case class DeployMutation(
       renames        = renameInferer.infer(graphQlSdl)
       migrationSteps = migrationStepsProposer.propose(project, nextProject, renames)
       migration      = Migration(nextProject.id, 0, hasBeenApplied = false, migrationSteps) // how to get to the revision...?
-      savedMigration <- if (migrationSteps.nonEmpty) {
-                         migrationPersistence.create(nextProject, migration)
-                       } else {
-                         Future.successful(Migration.empty(project))
-                       }
+      savedMigration <- handleMigration(nextProject, migration)
     } yield {
       MutationSuccess(DeployMutationPayload(args.clientMutationId, nextProject, savedMigration, schemaErrors))
+    }
+  }
+
+  private def handleMigration(nextProject: Project, migration: Migration): Future[Migration] = {
+    println(migration)
+    if (migration.steps.nonEmpty && !args.dryRun.getOrElse(false)) {
+      println("CREATE YO")
+      migrationPersistence.create(nextProject, migration)
+    } else {
+      Future.successful(migration)
     }
   }
 }
@@ -61,7 +67,8 @@ case class DeployMutation(
 case class DeployMutationInput(
     clientMutationId: Option[String],
     projectId: String,
-    types: String
+    types: String,
+    dryRun: Option[Boolean]
 ) extends sangria.relay.Mutation
 
 case class DeployMutationPayload(

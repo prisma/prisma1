@@ -11,7 +11,7 @@ services:
       MYSQL_ROOT_PASSWORD: $SQL_INTERNAL_PASSWORD
       MYSQL_DATABASE: $SQL_INTERNAL_DATABASE
     ports:
-      - "7777:3306" # Temporary/debug mapping to the host
+      - "3306:3306" # Temporary/debug mapping to the host
     volumes:
       - db-persistence:/var/lib/mysql
 

@@ -8,7 +8,8 @@ object DeployField {
   import ManualMarshallerHelpers._
 
   val inputFields = projectIdInputFields ++ List(
-    InputField("types", StringType)
+    InputField("types", StringType),
+    InputField("dryRun", OptionInputType(BooleanType))
   )
 
   implicit val fromInput = new FromInput[DeployMutationInput] {
@@ -18,7 +19,8 @@ object DeployField {
       DeployMutationInput(
         clientMutationId = node.clientMutationId,
         projectId = node.projectId,
-        types = node.requiredArgAsString("types")
+        types = node.requiredArgAsString("types"),
+        dryRun = node.optionalArgAsBoolean("dryRun")
       )
     }
   }
