@@ -20,8 +20,7 @@ import * as marked from 'marked'
 import * as TerminalRenderer from 'marked-terminal'
 import * as Charm from 'charm'
 import { padEnd, repeat, set, uniqBy, values } from 'lodash'
-import { Project } from '../types/common'
-import { Targets } from '../types/rc'
+import { Project, Stages } from '../types/common'
 
 marked.setOptions({
   renderer: new TerminalRenderer(),
@@ -321,53 +320,46 @@ To get more detailed output, run ${chalk.dim(instruction)}`,
     return rows.join('\n')
   }
 
-  printServices = (
-    targets: Targets,
-    projects: Project[],
-    onlyLocal: boolean = true,
-  ) => {
-    const uniqTargetKeys = uniqBy(Object.keys(targets), key => targets[key].id)
-    if (onlyLocal) {
-      return this.printPadded(
-        uniqTargetKeys.map(key => {
-          const { id, cluster } = targets[key]
-          const project = projects.find(p => p.id === id)
-          const output = `${cluster}/${id}`
-          const serviceName = project ? project.name : key
-          return [serviceName + '  ', output + '  ']
-        }),
-        0,
-        1,
-        ['Service Name', 'Cluster / Service ID'],
-      )
-    } else {
-      const filteredProjects = projects.filter(
-        p => !values(targets).find(t => p.id === t.id),
-      )
-      return this.printPadded(
-        uniqTargetKeys
-          .map(key => {
-            const { id, cluster } = targets[key]
-            const project = projects.find(p => p.id === id)
-            const output = `${cluster}/${id}`
-            const serviceName = project ? project.name : key
-            return [serviceName, output]
-          })
-          .concat(
-            filteredProjects.map(p => {
-              return [
-                p.name,
-                `shared-${p.region.toLowerCase().replace(/_/g, '-')}/${p.id}`,
-              ]
-            }),
-          )
-          .map(l => [l[0] + '  ', l[1] + '  ']),
-        0,
-        1,
-        ['Service Name', 'Cluster / Service ID'],
-      )
-    }
-  }
+  // printServices = (
+  //   stages: Stages,
+  //   projects: Project[],
+  //   onlyLocal: boolean = true,
+  // ) => {
+  //   const uniqTargetKeys = uniqBy(Object.keys(stages), key => stages[key])
+  //   if (onlyLocal) {
+  //     return this.printPadded(
+  //       uniqTargetKeys.map(key => {
+  //         const project = projects.find(p => p.id === id)
+  //         const serviceName = project ? project.name : key
+  //         return [serviceName + '  ', uniqTargetKeys[key] + '  ']
+  //       }),
+  //       0,
+  //       1,
+  //       ['Service Name', 'Cluster / Service ID'],
+  //     )
+  //   } else {
+  //     return this.printPadded(
+  //       uniqTargetKeys
+  //         .map(key => {
+  //           const stage = stages[key]
+  //           const serviceName = project ? project.name : key
+  //           return [serviceName, stage]
+  //         })
+  //         .concat(
+  //           projects.map(p => {
+  //             return [
+  //               p.name,
+  //               `shared-${p.region.toLowerCase().replace(/_/g, '-')}/${p.id}`,
+  //             ]
+  //           }),
+  //         )
+  //         .map(l => [l[0] + '  ', l[1] + '  ']),
+  //       0,
+  //       1,
+  //       ['Service Name', 'Cluster / Service ID'],
+  //     )
+  //   }
+  // }
   getGraphQLErrorMessage(err: any) {
     if (this.mock) {
       return (

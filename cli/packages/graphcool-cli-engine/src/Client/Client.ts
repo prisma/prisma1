@@ -17,11 +17,10 @@ import { GraphQLClient, request } from 'graphql-request'
 import { omit, flatMap } from 'lodash'
 import { Config } from '../Config'
 import { getFastestRegion } from './ping'
-import { ProjectDefinitionClass } from '../ProjectDefinition/ProjectDefinition'
 import { Environment } from '../Environment'
 import { Output } from '../index'
-import { Auth } from '../Auth'
 import chalk from 'chalk'
+import { Cluster } from '../Cluster'
 
 const debug = require('debug')('client')
 
@@ -41,7 +40,6 @@ export class Client {
   config: Config
   env: Environment
   out: Output
-  auth: Auth
   public mock: (input: { request: any; response: any }) => void
 
   private mocks: { [request: string]: string } = {}
@@ -53,18 +51,20 @@ export class Client {
     this.out = out
   }
 
-  setAuth(auth: Auth) {
-    this.auth = auth
-  }
-
   // always create a new client which points to the latest config for each request
   get client(): GraphQLClient {
-    debug('choosing clusterEndpoint', this.env.clusterEndpoint)
-    const localClient = new GraphQLClient(this.env.clusterEndpoint, {
-      headers: {
-        Authorization: `Bearer ${this.env.token}`,
+    debug(
+      'choosing clusterEndpoint',
+      this.env.activeCluster.getDeployEndpoint(),
+    )
+    const localClient = new GraphQLClient(
+      this.env.activeCluster.getDeployEndpoint(),
+      {
+        headers: {
+          Authorization: `Bearer ${this.env.activeCluster.token}`,
+        },
       },
-    })
+    )
     return {
       request: async (query, variables) => {
         debug('Sending query')
@@ -83,7 +83,7 @@ export class Client {
                 }. Please check if you are logged in to the right account.`,
             )
           } else if (e.message.startsWith('No valid session')) {
-            await this.auth.ensureAuth(true)
+            // await this.auth.ensureAuth(true)
             // try again with new token
             return await this.client.request(query, variables)
           } else if (
@@ -198,72 +198,6 @@ export class Client {
     debug()
 
     return deploy
-  }
-
-  async push(
-    projectId: string,
-    force: boolean,
-    isDryRun: boolean,
-    config: ProjectDefinition,
-  ): Promise<MigrationResult> {
-    const mutation = `\
-      mutation($projectId: String!, $force: Boolean, $isDryRun: Boolean!, $config: String!) {
-        push(input: {
-          projectId: $projectId
-          force: $force
-          isDryRun: $isDryRun
-          config: $config
-          version: 1
-        }) {
-          migrationMessages {
-            type
-            action
-            name
-            description
-            subDescriptions {
-              type
-              action
-              name
-              description
-            }
-          }
-          errors {
-            description
-            type
-            field
-          }
-          project {
-            id
-            name
-            alias
-            projectDefinitionWithFileContent
-          }
-        }
-      }
-    `
-    debug('\n\nSending service definition:')
-    const sanitizedDefinition = ProjectDefinitionClass.sanitizeDefinition(
-      config,
-    )
-    debug(this.out.getStyledJSON(sanitizedDefinition))
-    const { push } = await this.client.request<{
-      push: MigrateProjectPayload
-    }>(mutation, {
-      projectId,
-      force,
-      isDryRun,
-      config: JSON.stringify(sanitizedDefinition),
-    })
-
-    debug()
-
-    return {
-      migrationMessages: push.migrationMessages,
-      errors: push.errors,
-      newSchema: push.project.schema,
-      projectDefinition: this.getProjectDefinition(push.project as any)
-        .projectDefinition,
-    }
   }
 
   async fetchProjects(): Promise<Project[]> {
@@ -710,21 +644,6 @@ export class Client {
     `)
 
     return this.getProjectDefinition(project)
-  }
-
-  async checkStatus(instruction: any): Promise<any> {
-    try {
-      await fetch(this.config.statusEndpoint, {
-        method: 'post',
-        headers: {
-          Authorization: `Bearer ${this.env.token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(instruction),
-      })
-    } catch (e) {
-      // noop
-    }
   }
 
   private getProjectDefinition(project: RemoteProject): ProjectInfo {

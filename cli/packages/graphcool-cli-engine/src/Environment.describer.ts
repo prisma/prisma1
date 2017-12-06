@@ -13,14 +13,11 @@ function makeEnvironment() {
 const env = makeEnvironment()
 const localFile = `
 platformToken: 'secret-token'
-targets:
-  dev: local/asdasd123
 clusters:
   local:
     host: http://localhost:60000
     token: asdf
 `
 
-env.loadRCs(localFile, null)
-console.log(env.localRC)
+env.load({})
 console.log(env.globalRC)

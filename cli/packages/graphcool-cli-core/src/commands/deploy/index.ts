@@ -7,7 +7,6 @@ import * as chokidar from 'chokidar'
 import * as inquirer from 'graphcool-inquirer'
 import * as path from 'path'
 import * as fs from 'fs-extra'
-import Bundler from './Bundler/Bundler'
 const debug = require('debug')('deploy')
 
 export default class Deploy extends Command {
@@ -287,21 +286,6 @@ Please run ${chalk.green(
     projectName: string | null,
     cluster: string,
   ): Promise<void> {
-    // bundle and add externalFiles
-    // debug('bundling')
-    // let before = Date.now()
-    // if (this.definition.definition!.modules[0].definition!.functions) {
-    //   const bundler = new Bundler(this, projectId)
-    //   const externalFiles = await bundler.bundle()
-    //   bundler.cleanBuild()
-    //   this.definition.definition!.modules[0].externalFiles = externalFiles
-    //   Object.keys(externalFiles).forEach(
-    //     key => delete this.definition.definition!.modules[0].files[key],
-    //   )
-    // }
-    // this.out.action.stop(this.prettyTime(Date.now() - before))
-    // debug('bundled')
-
     this.deploying = true
     const localNote = isLocal ? ' locally' : ''
     const before = Date.now()

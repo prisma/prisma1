@@ -8,14 +8,12 @@ import List from './commands/list/index'
 import Delete from './commands/delete/index'
 import RootTokens from './commands/root-token/index'
 import FunctionLogs from './commands/logs/function'
-import InvokeLocal from './commands/invoke/local'
 import PullLocal from './commands/local/pull'
 import Stop from './commands/local/stop'
 import Up from './commands/local/up'
 import Restart from './commands/local/restart'
 import Account from './commands/account'
 import Eject from './commands/local/eject'
-import AddTemplate from './commands/add-template/add-template'
 import PsLocal from './commands/local/ps'
 import Reset from './commands/reset/reset'
 import Clusters from './commands/clusters/index'
@@ -71,16 +69,6 @@ export const topics = [
     group: 'general',
   },
   {
-    name: 'add-template',
-    description: 'Add template a new template',
-    group: 'general',
-  },
-  {
-    name: 'invoke-local',
-    description: 'Invokes a function locally',
-    group: 'general',
-  },
-  {
     name: 'console',
     description: 'Opens the console for the current service',
     group: 'platform',
@@ -113,14 +101,12 @@ export const commands = [
   Delete,
   RootTokens,
   FunctionLogs,
-  InvokeLocal,
   PullLocal,
   Stop,
   Up,
   Restart,
   Account,
   Eject,
-  AddTemplate,
   PsLocal,
   Reset,
   Clusters,
@@ -137,14 +123,12 @@ export {
   Delete,
   RootTokens,
   FunctionLogs,
-  InvokeLocal,
   PullLocal,
   Stop,
   Up,
   Restart,
   Account,
   Eject,
-  AddTemplate,
   PsLocal,
   Reset,
   Clusters,

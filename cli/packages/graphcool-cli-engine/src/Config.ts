@@ -33,11 +33,7 @@ export class Config {
       defaultCommand: 'help',
     },
   }
-  sharedClusters: string[] = [
-    'shared-eu-west-1',
-    'shared-ap-northeast-1',
-    'shared-us-west-2',
-  ]
+  sharedClusters: string[] = ['shared-eu-west-1']
 
   /**
    * Paths
@@ -48,45 +44,14 @@ export class Config {
 
   definitionDir: string
   definitionPath: string | null
-  localRCPath: string
   globalRCPath: string
   warnings: string[] = []
 
   /**
    * Urls
    */
-  authUIEndpoint = process.env.ENV === 'DEV'
-    ? 'https://dev.console.graph.cool/cli/auth'
-    : 'https://console.graph.cool/cli/auth'
-  backendAddr = process.env.ENV === 'DEV'
-    ? 'https://dev.api.graph.cool'
-    : 'https://api.graph.cool'
-  systemAPIEndpoint = process.env.ENV === 'DEV'
-    ? 'https://dev.api.graph.cool/system'
-    : 'https://api.graph.cool/system'
-  authEndpoint = process.env.ENV === 'DEV'
-    ? 'https://cli-auth-api.graph.cool/dev'
-    : 'https://cli-auth-api.graph.cool/prod'
-  docsEndpoint = process.env.ENV === 'DEV'
-    ? 'https://dev.graph.cool/docs'
-    : 'https://www.graph.cool/docs'
+  sharedEndpoint = 'https://database-beta.graph.cool'
   statusEndpoint = 'https://crm.graph.cool/prod/status'
-
-  /**
-   * consumer endpoints
-   */
-  simpleAPIEndpoint = process.env.ENV === 'DEV'
-    ? 'https://dev.api.graph.cool/simple/v1/'
-    : 'https://api.graph.cool/simple/v1/'
-  relayAPIEndpoint = process.env.ENV === 'DEV'
-    ? 'https://dev.api.graph.cool/relay/v1/'
-    : 'https://api.graph.cool/relay/v1/'
-  fileAPIEndpoint = process.env.ENV === 'DEV'
-    ? 'https://dev.api.graph.cool/file/v1/'
-    : 'https://api.graph.cool/file/v1/'
-  subscriptionsEndpoint = process.env.ENV === 'DEV'
-    ? 'wss://dev.subscriptions.graph.cool'
-    : 'wss://subscriptions.graph.cool'
 
   /* tslint:disable-next-line */
   __cache = {}
@@ -101,10 +66,6 @@ export class Config {
     if (options) {
       this.readPackageJson(options)
     }
-  }
-  setLocal(host: string = 'http://localhost:60000') {
-    this.backendAddr = host
-    this.systemAPIEndpoint = host + '/system'
   }
   setOutput(out: Output) {
     this.out = out
@@ -155,11 +116,9 @@ export class Config {
     }
   }
   private setRCPaths() {
-    this.localRCPath = path.join(this.definitionDir, '.graphcoolrc')
     const homePath = path.join(this.home, '.graphcoolrc')
     debug(`homepath`, homePath)
     this.globalRCPath = homePath
-    debug(`localRCPath`, this.localRCPath)
     debug(`globalRCPath`, this.globalRCPath)
   }
   private warn(msg: string) {

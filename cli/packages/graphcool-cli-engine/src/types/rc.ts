@@ -1,26 +1,14 @@
 export interface RC {
   platformToken?: string
   clusters?: Clusters
-  targets: Targets
-}
-
-export interface Targets {
-  [name: string]: Target
-}
-
-export interface Target {
-  cluster: string
-  id: string
 }
 
 export interface Clusters {
-  default?: string
-  [name: string]: Cluster | string | undefined
+  [name: string]: ClusterConfig
 }
 
-export interface Cluster {
+export interface ClusterConfig {
   host: string
-  faasHost: string
   clusterSecret: string
 }
 

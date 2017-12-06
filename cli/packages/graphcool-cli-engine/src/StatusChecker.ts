@@ -23,7 +23,7 @@ export class StatusChecker {
       flags,
       argv,
     })
-    const platformToken = this.env.token
+    const platformToken = this.env.platformToken
     const hashDate = new Date().toUTCString()
     const message = JSON.stringify({
       source,

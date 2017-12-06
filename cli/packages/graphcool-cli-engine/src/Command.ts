@@ -6,14 +6,15 @@ import { ProjectDefinition, RunOptions } from './types/common'
 import { OutputArgs, OutputFlags, Parser } from './Parser'
 import Help from './Help'
 import { Client } from './Client/Client'
-import { ProjectDefinitionClass } from './ProjectDefinition/ProjectDefinition'
-import { Auth } from './Auth'
+// import { Auth } from './Auth'
 import { Environment } from './Environment'
 import packagejson = require('../package.json')
 import * as mock from './mock'
 import * as fs from 'fs-extra'
 import * as path from 'path'
 import { RC } from './types/rc'
+import { GraphcoolDefinition } from 'graphcool-json-schema'
+import { GraphcoolDefinitionClass } from './GraphcoolDefinition/GraphcoolDefinition'
 const debug = require('debug')('command')
 
 const pjson = packagejson as any
@@ -49,7 +50,8 @@ export class Command {
         ? customArgs.mockDefinition
         : mock.mockDefinition
     const mockRC = customArgs && customArgs.mockRC ? customArgs.mockRC : null
-    const mockConfig = customArgs && customArgs.mockConfig ? customArgs.mockConfig : null
+    const mockConfig =
+      customArgs && customArgs.mockConfig ? customArgs.mockConfig : null
     debug(`Using mockDefinition`, mockDefinition)
     debug(`Using mockRC`, mockRC)
 
@@ -97,23 +99,27 @@ export class Command {
   client: Client
   out: Output
   config: Config
-  definition: ProjectDefinitionClass
-  auth: Auth
+  definition: GraphcoolDefinitionClass
+  // auth: Auth
   env: Environment
   flags: OutputFlags
   args?: OutputArgs
   argv: string[]
 
   constructor(options: { config?: RunOptions } = { config: { mock: true } }) {
-    this.config = options.config && options.config.mockConfig || options.config instanceof Config ? (options.config as any) : new Config(options.config)
+    this.config =
+      (options.config && options.config.mockConfig) ||
+      options.config instanceof Config
+        ? (options.config as any)
+        : new Config(options.config)
     this.out = new Output(this.config)
     this.config.setOutput(this.out)
     this.argv = options.config && options.config.argv ? options.config.argv : []
-    this.definition = new ProjectDefinitionClass(this.out, this.config)
+    this.definition = new GraphcoolDefinitionClass(this.out, this.config)
     this.env = new Environment(this.out, this.config)
     this.client = new Client(this.config, this.env, this.out)
-    this.auth = new Auth(this.out, this.config, this.env, this.client)
-    this.client.setAuth(this.auth)
+    // this.auth = new Auth(this.out, this.config, this.env, this.client)
+    // this.client.setAuth(this.auth)
   }
 
   async run(...rest: void[]): Promise<void> {
@@ -124,20 +130,25 @@ export class Command {
     // parse stuff here
     const mockDefinition = options && options.mockDefinition
     const mockRC = options && options.mockRC
-    if (mockDefinition) {
-      this.definition.set(mockDefinition)
-    }
-    if (mockRC) {
-      this.env.localRC = mockRC
-    }
+    // if (mockDefinition) {
+    //   this.definition.set(mockDefinition)
+    // }
+    // if (mockRC) {
+    //   this.env.localRC = mockRC
+    // }
     const parser = new Parser({
       flags: (this.constructor as any).flags || {},
       args: (this.constructor as any).args || [],
       variableArgs: (this.constructor as any).variableArgs,
       cmd: this,
     })
-    if (this.argv && (this.argv.includes('-e') || this.argv.includes('--env'))) {
-      this.out.warn('The usage of -e or --env is deprecated. Please use --target instead.')
+    if (
+      this.argv &&
+      (this.argv.includes('-e') || this.argv.includes('--env'))
+    ) {
+      this.out.warn(
+        'The usage of -e or --env is deprecated. Please use --target instead.',
+      )
     }
     const { argv, flags, args } = await parser.parse({
       flags: this.flags,
