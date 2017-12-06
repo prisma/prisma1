@@ -1,0 +1,4 @@
+type User @model {
+  id: ID! @isUnique
+  name: String!
+}

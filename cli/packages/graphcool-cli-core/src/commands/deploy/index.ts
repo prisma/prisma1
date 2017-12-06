@@ -1,4 +1,4 @@
-import { Command, flags, Flags } from 'graphcool-cli-engine'
+import { Command, flags, Flags, Cluster } from 'graphcool-cli-engine'
 import chalk from 'chalk'
 import * as sillyName from 'sillyname'
 import { ServiceDoesntExistError } from '../../errors/ServiceDoesntExistError'
@@ -34,7 +34,8 @@ ${chalk.gray(
   static flags: Flags = {
     stage: flags.string({
       char: 't',
-      description: 'Local stage, ID or alias of service to deploy',
+      description: 'Local stage to deploy to',
+      defaultValue: 'dev',
     }),
     force: flags.boolean({
       char: 'f',
@@ -44,18 +45,14 @@ ${chalk.gray(
       char: 'w',
       description: 'Watch for changes',
     }),
-    'new-service': flags.string({
-      char: 'n',
-      description: 'Name of the new Service',
-    }),
     'new-service-cluster': flags.string({
       char: 'c',
       description: 'Name of the Cluster to deploy to',
     }),
-    alias: flags.string({
-      char: 'a',
-      description: 'Service alias',
-    }),
+    // alias: flags.string({
+    //   char: 'a',
+    //   description: 'Service alias',
+    // }),
     interactive: flags.boolean({
       char: 'i',
       description: 'Force interactive mode to select the cluster',
@@ -76,154 +73,46 @@ ${chalk.gray(
   private deploying: boolean = false
   async run() {
     debug('run')
-    const { force, watch, alias, interactive } = this.flags
-    const useDefault = this.flags.default
-    let newServiceName = this.flags['new-service']
-    const newServiceCluster = this.flags['new-service-cluster']
-    const dryRun = this.flags['dry-run']
+    const { force, watch, interactive } = this.flags
+    const newServiceClusterName = this.flags['new-service-cluster']
+    // const dryRun = this.flags['dry-run']
+    const stageName = this.flags.stage
 
-    if (dryRun) {
-      return this.dryRun()
-    }
+    // if (dryRun) {
+    //   return this.dryRun()
+    // }
 
-    if (newServiceCluster) {
-      this.env.setActiveCluster(newServiceCluster)
-    }
-    // stage can be both key or value of the `stages` object in the .graphcoolrc
-    // so either "my-stage" or "shared-eu-west-1/asdf"
-    let showedDialog = false
-    let stageName
-    let stage
-    let cluster
-    const foundTarget = await this.env.getTargetWithName(
-      process.env.GRAPHCOOL_TARGET || this.flags.stage,
-    )
-    // load the definition already so we're able to detect missing package.json / node_modules
-    // if it is a existing project,
-
-    if (interactive) {
-      foundTarget.stageName = null
-      foundTarget.stage = null
-    }
-
-    this.definition.checkNodeModules(Boolean(foundTarget.stage))
-
-    if (
-      interactive ||
-      (!newServiceCluster && !foundTarget.stage) ||
-      (newServiceName && !newServiceCluster)
-    ) {
-      cluster = await this.clusterSelection()
-      showedDialog = true
-      this.env.setActiveCluster(cluster)
-      this.env.saveLocalRC()
-      if (
-        cluster === 'local' &&
-        (!this.env.rc.clusters || !this.env.rc.clusters!.local)
-      ) {
-        this.out.log(`You chose the cluster ${chalk.bold(
-          'local',
-        )}, but don't have docker initialized, yet.
-Please run ${chalk.green(
-          '$ graphcool local up',
-        )} to get a local Graphcool cluster.
-`)
-        this.out.exit(1)
-      }
-    }
-
-    if (
-      newServiceName ||
-      interactive ||
-      (!foundTarget.stageName && !foundTarget.stage)
-    ) {
-      stageName = this.flags.stage
-      if (!stageName) {
-        stageName = await this.stageNameSelector(
-          this.env.getDefaultTargetName(cluster),
+    if (newServiceClusterName) {
+      const newServiceCluster = this.env.clusterByName(newServiceClusterName)
+      if (!newServiceCluster) {
+        this.out.error(
+          `You provided 'new-service-cluster' ${chalk.bold(
+            newServiceClusterName,
+          )}, but it doesn't exist. Please check your global ~/.graphcoolrc`,
         )
-        showedDialog = true
+      } else {
+        this.env.setActiveCluster(newServiceCluster)
       }
     }
 
-    if (!stageName && foundTarget.stageName) {
-      stageName = foundTarget.stageName
+    await this.definition.load(this.env, this.flags)
+    let clusterName = this.definition.getStage(stageName)
+    const serviceIsNew = !!clusterName
+    if (!clusterName) {
+      clusterName = newServiceClusterName || (await this.clusterSelection())
     }
 
-    if (!stage && foundTarget.stage) {
-      stage = foundTarget.stage
+    const cluster = this.env.clusterByName(clusterName!)
+    if (!cluster) {
+      this.out.error(`Cluster ${clusterName} could not be found.`)
     }
-
-    if ((!newServiceName && !foundTarget.stage) || interactive) {
-      newServiceName = await this.serviceNameSelector(
-        path.basename(this.config.definitionDir),
-      )
-      showedDialog = true
-    }
-
-    if (showedDialog) {
-      this.out.up(3)
-    }
-
-    // await this.auth.ensureAuth()
-    await this.definition.load({
-      ...this.flags,
-      stage: stageName,
-      cluster,
-    })
-
-    let projectId
-    let projectIsNew = false
-
-    cluster = cluster ? cluster : stage ? stage.cluster : this.env.activeCluster
-    const isLocal = !this.env.isSharedCluster(cluster)
-
-    if (!stage) {
-      // if a specific service has been provided, check for its existence
-      if (stage) {
-        this.out.error(new ServiceDoesntExistError(stage))
-      }
-
-      const region = this.env.getRegionFromCluster(cluster)
-
-      // otherwise create a new project
-      const newProject = await this.createProject(newServiceName)
-      projectId = newProject.projectId
-      projectIsNew = true
-
-      // add environment
-      await this.env.setLocalTarget(stageName, `${cluster}/${projectId}`)
-
-      if (!this.env.default || useDefault) {
-        this.env.setLocalDefaultTarget(stageName)
-      }
-
-      this.env.saveLocalRC()
-    } else {
-      projectId = stage.id
-    }
-
-    // best guess for "project name"
-    const projectName = newServiceName || stageName
-
-    //     const info = await this.client.fetchProjectInfo(projectId)
-
-    //     if (!info.isEjected) {
-    //       this.out.error(`Your service ${info.name} (${
-    //         info.id
-    //       }) is not yet upgraded.
-    // Please go to the console and upgrade it:
-    // https://console.graph.cool/${encodeURIComponent(info.name)}/settings/general`)
-    //     }
 
     await this.deploy(
-      projectIsNew,
+      serviceIsNew,
       stageName,
-      projectId,
-      isLocal,
+      this.definition.definition!.service,
+      cluster!,
       force,
-      projectName,
-      cluster,
     )
 
     if (watch) {
@@ -233,20 +122,24 @@ Please run ${chalk.green(
         .on('all', () => {
           setImmediate(async () => {
             if (!this.deploying) {
-              await this.definition.load(this.flags)
+              await this.definition.load(this.env, this.flags)
               await this.deploy(
-                projectIsNew,
+                serviceIsNew,
                 stageName,
-                projectId!,
-                isLocal,
+                this.definition.definition!.service,
+                cluster!,
                 force,
-                projectName,
-                cluster,
               )
               this.out.log('Watching for change...')
             }
           })
         })
+    }
+
+    if (serviceIsNew) {
+      this.definition.setStage(stageName, cluster!.name)
+      this.definition.save()
+      this.out.log(`Added stage ${stageName} to graphcool.yml`)
     }
   }
 
@@ -266,83 +159,82 @@ Please run ${chalk.green(
   }
 
   private prettyTime(time: number): string {
-    let output = ''
-    if (time > 1000) {
-      output = (Math.round(time / 100) / 10).toFixed(1) + 's'
-    } else {
-      output = time + 'ms'
-    }
+    const output =
+      time > 1000 ? (Math.round(time / 100) / 10).toFixed(1) + 's' : time + 'ms'
     return chalk.cyan(output)
   }
 
   private async deploy(
-    projectIsNew: boolean,
+    serviceIsNew: boolean,
     stageName: string,
-    projectId: string,
-    isLocal: boolean,
+    serviceName: string,
+    cluster: Cluster,
     force: boolean,
-    projectName: string | null,
-    cluster: string,
   ): Promise<void> {
     this.deploying = true
-    const localNote = isLocal ? ' locally' : ''
+    const localNote = cluster.local ? ' locally' : ''
     const before = Date.now()
     this.out.action.start(
-      projectIsNew
+      serviceIsNew
         ? `Deploying${localNote}`
-        : `Deploying to ${chalk.bold(cluster)} with stage ${chalk.bold(
-            stageName || `${cluster}/${projectId}`,
+        : `Deploying to ${chalk.bold(cluster.name)} with stage ${chalk.bold(
+            stageName,
           )}${localNote}`,
     )
 
     const migrationResult = await this.client.deploy(
-      projectId,
-      this.definition.getTypes(),
+      serviceName,
+      stageName,
+      this.definition.typesString!,
     )
     this.out.action.stop(this.prettyTime(Date.now() - before))
 
     // no action required
     this.deploying = false
-    this.printEndpoints(projectId)
+    this.printEndpoints(cluster, serviceName, stageName)
   }
 
-  private printEndpoints(projectId) {
+  private printEndpoints(
+    cluster: Cluster,
+    serviceName: string,
+    stageName: string,
+  ) {
     this.out.log(`Here are your GraphQL Endpoints:
 
-  ${chalk.bold('API:')}        ${this.env.simpleEndpoint(projectId)}`)
-    // ${chalk.bold('Relay API:')}         ${this.env.relayEndpoint(projectId)}
-    //   ${chalk.bold('Subscriptions API:')} ${this.env.subscriptionEndpoint(
-    //       projectId,
-    //     )}
+  ${chalk.bold('API:')}        ${cluster.getApiEndpoint(
+      serviceName,
+      stageName,
+    )}`)
   }
 
   private async clusterSelection(): Promise<string> {
-    const localClusters = Object.keys(this.env.rc.clusters || {}).map(
-      clusterName => {
+    const localClusters = this.env.clusters
+      .filter(c => c.local)
+      .map(clusterName => {
         return {
           value: clusterName,
           name: clusterName,
         }
-      },
-    )
+      })
     const question = {
       name: 'cluster',
       type: 'list',
       message: 'Please choose the cluster you want to deploy to',
       choices: [
         new inquirer.Separator(chalk.bold('Shared Clusters:')),
+        new inquirer.Separator('shared-eu-west-1 (coming soon)'),
         {
           value: 'shared-eu-west-1',
           name: 'shared-eu-west-1',
         },
-        {
-          value: 'shared-ap-northeast-1',
-          name: 'shared-ap-northeast-1',
-        },
-        {
-          value: 'shared-us-west-2',
-          name: 'shared-us-west-2',
-        },
+        // {
+        //   value: 'shared-ap-northeast-1',
+        //   name: 'shared-ap-northeast-1',
+        // },
+        // {
+        //   value: 'shared-us-west-2',
+        //   name: 'shared-us-west-2',
+        // },
         new inquirer.Separator('                     '),
         new inquirer.Separator(chalk.bold('Custom clusters (local/private):')),
       ].concat(localClusters),
@@ -380,85 +272,84 @@ Please run ${chalk.green(
     return stage
   }
 
-  private async dryRun() {
-    const { stage } = this.flags
+  // private async dryRun() {
+  //   const { stage } = this.flags
 
-    await this.definition.load(this.flags)
-    await this.auth.ensureAuth()
+  //   await this.definition.load(this.env, this.flags)
+  //   // await this.auth.ensureAuth()
 
-    const { id } = await this.env.getTarget(stage)
-    const stageName = stage || 'default'
+  //   const stageName = stage || 'default'
 
-    this.out.action.start(
-      `Getting diff for ${chalk.bold(id)} with stage ${chalk.bold(stageName)}.`,
-    )
+  //   this.out.action.start(
+  //     `Getting diff for ${chalk.bold(id)} with stage ${chalk.bold(stageName)}.`,
+  //   )
 
-    try {
-      const migrationResult = await this.client.push(
-        id,
-        false,
-        true,
-        this.definition.definition!,
-      )
-      this.out.action.stop()
+  //   try {
+  //     const migrationResult = await this.client.push(
+  //       id,
+  //       false,
+  //       true,
+  //       this.definition.definition!,
+  //     )
+  //     this.out.action.stop()
 
-      // no action required
-      if (
-        (!migrationResult.migrationMessages ||
-          migrationResult.migrationMessages.length === 0) &&
-        (!migrationResult.errors || migrationResult.errors.length === 0)
-      ) {
-        this.out.log(
-          `Identical service definition for service ${chalk.bold(
-            id,
-          )} in env ${chalk.bold(stageName)}, no action required.\n`,
-        )
-        return
-      }
+  //     // no action required
+  //     if (
+  //       (!migrationResult.migrationMessages ||
+  //         migrationResult.migrationMessages.length === 0) &&
+  //       (!migrationResult.errors || migrationResult.errors.length === 0)
+  //     ) {
+  //       this.out.log(
+  //         `Identical service definition for service ${chalk.bold(
+  //           id,
+  //         )} in env ${chalk.bold(stageName)}, no action required.\n`,
+  //       )
+  //       return
+  //     }
 
-      if (migrationResult.migrationMessages.length > 0) {
-        this.out.log(
-          chalk.blue(
-            `Your service ${chalk.bold(id)} of env ${chalk.bold(
-              stageName,
-            )} has the following changes:`,
-          ),
-        )
+  //     if (migrationResult.migrationMessages.length > 0) {
+  //       this.out.log(
+  //         chalk.blue(
+  //           `Your service ${chalk.bold(id)} of env ${chalk.bold(
+  //             stageName,
+  //           )} has the following changes:`,
+  //         ),
+  //       )
 
-        this.out.migration.printMessages(migrationResult.migrationMessages)
-        this.definition.set(migrationResult.projectDefinition)
-      }
+  //       this.out.migration.printMessages(migrationResult.migrationMessages)
+  //       this.definition.set(migrationResult.projectDefinition)
+  //     }
 
-      if (migrationResult.errors.length > 0) {
-        this.out.log(
-          chalk.rgb(244, 157, 65)(
-            `There are issues with the new service definition:`,
-          ),
-        )
-        this.out.migration.printErrors(migrationResult.errors)
-        this.out.log('')
-        process.exitCode = 1
-      }
+  //     if (migrationResult.errors.length > 0) {
+  //       this.out.log(
+  //         chalk.rgb(244, 157, 65)(
+  //           `There are issues with the new service definition:`,
+  //         ),
+  //       )
+  //       this.out.migration.printErrors(migrationResult.errors)
+  //       this.out.log('')
+  //       process.exitCode = 1
+  //     }
 
-      if (
-        migrationResult.errors &&
-        migrationResult.errors.length > 0 &&
-        migrationResult.errors[0].description.includes(`destructive changes`)
-      ) {
-        // potentially destructive changes
-        this.out.log(
-          `Your changes might result in data loss.
-            Use ${chalk.cyan(
-              `\`graphcool deploy --force\``,
-            )} if you know what you're doing!\n`,
-        )
-        process.exitCode = 1
-      }
-    } catch (e) {
-      this.out.action.stop()
-      this.out.error(e)
-    }
-  }
+  //     if (
+  //       migrationResult.errors &&
+  //       migrationResult.errors.length > 0 &&
+  //       migrationResult.errors[0].description.includes(`destructive changes`)
+  //     ) {
+  //       // potentially destructive changes
+  //       this.out.log(
+  //         `Your changes might result in data loss.
+  //           Use ${chalk.cyan(
+  //             `\`graphcool deploy --force\``,
+  //           )} if you know what you're doing!\n`,
+  //       )
+  //       process.exitCode = 1
+  //     }
+  //   } catch (e) {
+  //     this.out.action.stop()
+  //     this.out.error(e)
+  //   }
+  // }
 }
 
 export function isValidProjectName(projectName: string): boolean {

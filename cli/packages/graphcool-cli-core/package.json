@@ -27,7 +27,7 @@
   },
   "scripts": {
     "build":
-      "rimraf dist && tsc -d && cp -r src/commands/local/docker dist/commands/local/docker",
+      "rimraf dist && tsc -d && cp -r src/commands/local/docker dist/commands/local/docker && cp -r src/commands/init/boilerplate dist/commands/init/boilerplate",
     "lint": "tslint src/**/*.ts",
     "precommit": "lint-staged",
     "prettier":

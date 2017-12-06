@@ -21,6 +21,7 @@ import { Environment } from '../Environment'
 import { Output } from '../index'
 import chalk from 'chalk'
 import { Cluster } from '../Cluster'
+import { DeployPayload } from './clientTypes'
 
 const debug = require('debug')('client')
 
@@ -34,6 +35,75 @@ const REMOTE_PROJECT_FRAGMENT = `
     isEjected
     projectDefinitionWithFileContent
   }
+`
+
+const MIGRATION_FRAGMENT = `
+fragment MigrationFragment on Migration {
+  revision
+  steps {
+    type
+    __typename
+    ... on CreateEnum {
+      name
+      ce_values: values
+    }
+    ... on CreateField {
+      model
+      name
+      cf_typeName: typeName
+      cf_isRequired: isRequired
+      cf_isList: isList
+      cf_isUnique: isUnique
+      cf_relation: relation
+      cf_defaultValue: defaultValue
+      cf_enum: enum
+    }
+    ... on CreateModel {
+      name
+    }
+    ... on CreateRelation {
+      name
+      leftModel
+      rightModel
+    }
+    ... on DeleteEnum {
+      name
+    }
+    ... on DeleteField {
+      model
+      name
+    }
+    ... on DeleteModel {
+      name
+    }
+    ... on DeleteRelation {
+      name
+    }
+    ... on UpdateEnum {
+      name
+      newName
+      values
+    }
+    ... on UpdateField {
+      model
+      name
+      newName
+      typeName
+      isRequired
+      isList
+      isUnique
+      isRequired
+      relation
+      defaultValue
+      enum
+    }
+    ... on UpdateModel {
+      name
+      um_newName: newName
+    }
+  }
+  hasBeenApplied
+}
 `
 
 export class Client {
@@ -164,11 +234,12 @@ export class Client {
     return url
   }
 
-  async deploy(projectId: string, types: string): Promise<any> {
+  async deploy(name: string, stage: string, types: string): Promise<any> {
     const mutation = `\
-      mutation($projectId: String!, $types: String!) {
+      mutation($name: String!, $stage: String! $types: String!) {
         deploy(input: {
-          projectId: $projectId
+          name: $name
+          stage: $stage
           types: $types
         }) {
           project {
@@ -180,22 +251,19 @@ export class Client {
             description
           }
           migration {
-            revision
-            steps {
-              type
-            }
+            ...MigrationFragment
           }
         }
       }
+      ${MIGRATION_FRAGMENT}
     `
     const { deploy } = await this.client.request<{
-      deploy: any
+      deploy: DeployPayload
     }>(mutation, {
-      projectId,
+      name,
+      stage,
       types,
     })
-
-    debug()
 
     return deploy
   }

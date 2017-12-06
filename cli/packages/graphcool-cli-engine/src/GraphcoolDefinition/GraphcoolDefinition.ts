@@ -7,6 +7,7 @@ import * as fs from 'fs-extra'
 import chalk from 'chalk'
 import { Environment } from '../Environment'
 import { mapValues } from 'lodash'
+import * as yamlParser from 'yaml-ast-parser'
 
 interface ErrorMessage {
   message: string
@@ -17,6 +18,7 @@ export class GraphcoolDefinitionClass {
   config: Config
   definition?: GraphcoolDefinition
   typesString?: string
+  private definitionString: string
   constructor(out: Output, config: Config) {
     this.out = out
     this.config = config
@@ -34,6 +36,42 @@ export class GraphcoolDefinitionClass {
     } else {
       throw new Error(`Please create a graphcool.yml`)
     }
+  }
+
+  getStage(name: string): string | undefined {
+    return this.definition && this.definition.stages[name]
+  }
+
+  setStage(name: string, clusterName: string) {
+    this.definitionString = this.insertToDefinition(
+      this.definitionString,
+      'stages',
+      `\n  ${name}: ${clusterName}`,
+    )
+  }
+
+  insertToDefinition(file: string, key: string, insertion: string) {
+    const obj = yamlParser.safeLoad(file)
+
+    const mapping = obj.mappings.find(m => m.key.value === key)
+    if (mapping) {
+      const end = mapping.endPosition
+
+      const newFile = file.slice(0, end) + insertion + file.slice(end)
+      const valueStart = mapping.value.startPosition
+      const valueEnd = mapping.value.endPosition
+      if (mapping.value && valueEnd - valueStart < 4) {
+        return newFile.slice(0, valueStart) + newFile.slice(valueEnd)
+      }
+
+      return file
+    } else {
+      return file + `\n${key}: ` + insertion
+    }
+  }
+
+  save() {
+    fs.writeFileSync(this.config.definitionPath!, this.definitionString)
   }
 
   private getTypesString(definition: GraphcoolDefinition) {

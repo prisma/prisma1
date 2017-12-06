@@ -1,0 +1,9 @@
+service: app
+
+# stages:
+#   default: dev
+
+datamodel:
+- datamodel.graphql
+
+schema: schemas/database.graphql
