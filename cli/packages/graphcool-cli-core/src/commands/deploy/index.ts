@@ -145,7 +145,7 @@ ${chalk.gray(
     if (serviceIsNew) {
       this.definition.setStage(stageName, cluster!.name)
       this.definition.save()
-      this.out.log(`Added stage ${stageName} to graphcool.yml`)
+      this.out.log(`\nAdded stage ${stageName} to graphcool.yml`)
     }
   }
 
