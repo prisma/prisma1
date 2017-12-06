@@ -5,7 +5,7 @@ export default class ExampleCommand extends Command {
   static command = 'command'
   static description = 'example command'
   static flags: Flags = {
-    target: flags.string({
+    stage: flags.string({
       char: 't',
       description: 'Target name',
     }),
@@ -13,7 +13,7 @@ export default class ExampleCommand extends Command {
   async run() {
     let {} = this.flags
 
-    const { id } = await this.env.getTarget(target)
+    // const { id } = await this.env.getTarget(stage)
 
     // continue
   }

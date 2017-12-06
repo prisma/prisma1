@@ -23,8 +23,8 @@ ${chalk.gray(
   )} Deploy local changes from graphcool.yml to the default service environment.
   ${chalk.green('$ graphcool deploy')}
 
-${chalk.gray('-')} Deploy local changes to a specific target
-  ${chalk.green('$ graphcool deploy --target production')}
+${chalk.gray('-')} Deploy local changes to a specific stage
+  ${chalk.green('$ graphcool deploy --stage production')}
     
 ${chalk.gray(
     '-',
@@ -32,9 +32,9 @@ ${chalk.gray(
   ${chalk.green('$ graphcool deploy --force --env production')}
   `
   static flags: Flags = {
-    target: flags.string({
+    stage: flags.string({
       char: 't',
-      description: 'Local target, ID or alias of service to deploy',
+      description: 'Local stage, ID or alias of service to deploy',
     }),
     force: flags.boolean({
       char: 'f',
@@ -62,7 +62,7 @@ ${chalk.gray(
     }),
     default: flags.boolean({
       char: 'D',
-      description: 'Set specified target as default',
+      description: 'Set specified stage as default',
     }),
     'dry-run': flags.boolean({
       char: 'd',
@@ -89,28 +89,28 @@ ${chalk.gray(
     if (newServiceCluster) {
       this.env.setActiveCluster(newServiceCluster)
     }
-    // target can be both key or value of the `targets` object in the .graphcoolrc
-    // so either "my-target" or "shared-eu-west-1/asdf"
+    // stage can be both key or value of the `stages` object in the .graphcoolrc
+    // so either "my-stage" or "shared-eu-west-1/asdf"
     let showedDialog = false
-    let targetName
-    let target
+    let stageName
+    let stage
     let cluster
     const foundTarget = await this.env.getTargetWithName(
-      process.env.GRAPHCOOL_TARGET || this.flags.target,
+      process.env.GRAPHCOOL_TARGET || this.flags.stage,
     )
     // load the definition already so we're able to detect missing package.json / node_modules
     // if it is a existing project,
 
     if (interactive) {
-      foundTarget.targetName = null
-      foundTarget.target = null
+      foundTarget.stageName = null
+      foundTarget.stage = null
     }
 
-    this.definition.checkNodeModules(Boolean(foundTarget.target))
+    this.definition.checkNodeModules(Boolean(foundTarget.stage))
 
     if (
       interactive ||
-      (!newServiceCluster && !foundTarget.target) ||
+      (!newServiceCluster && !foundTarget.stage) ||
       (newServiceName && !newServiceCluster)
     ) {
       cluster = await this.clusterSelection()
@@ -135,26 +135,26 @@ Please run ${chalk.green(
     if (
       newServiceName ||
       interactive ||
-      (!foundTarget.targetName && !foundTarget.target)
+      (!foundTarget.stageName && !foundTarget.stage)
     ) {
-      targetName = this.flags.target
-      if (!targetName) {
-        targetName = await this.targetNameSelector(
+      stageName = this.flags.stage
+      if (!stageName) {
+        stageName = await this.stageNameSelector(
           this.env.getDefaultTargetName(cluster),
         )
         showedDialog = true
       }
     }
 
-    if (!targetName && foundTarget.targetName) {
-      targetName = foundTarget.targetName
+    if (!stageName && foundTarget.stageName) {
+      stageName = foundTarget.stageName
     }
 
-    if (!target && foundTarget.target) {
-      target = foundTarget.target
+    if (!stage && foundTarget.stage) {
+      stage = foundTarget.stage
     }
 
-    if ((!newServiceName && !foundTarget.target) || interactive) {
+    if ((!newServiceName && !foundTarget.stage) || interactive) {
       newServiceName = await this.serviceNameSelector(
         path.basename(this.config.definitionDir),
       )
@@ -168,22 +168,20 @@ Please run ${chalk.green(
     // await this.auth.ensureAuth()
     await this.definition.load({
       ...this.flags,
-      target: targetName,
+      stage: stageName,
       cluster,
     })
 
     let projectId
     let projectIsNew = false
 
-    cluster = cluster
-      ? cluster
-      : target ? target.cluster : this.env.activeCluster
+    cluster = cluster ? cluster : stage ? stage.cluster : this.env.activeCluster
     const isLocal = !this.env.isSharedCluster(cluster)
 
-    if (!target) {
+    if (!stage) {
       // if a specific service has been provided, check for its existence
-      if (target) {
-        this.out.error(new ServiceDoesntExistError(target))
+      if (stage) {
+        this.out.error(new ServiceDoesntExistError(stage))
       }
 
       const region = this.env.getRegionFromCluster(cluster)
@@ -194,19 +192,19 @@ Please run ${chalk.green(
       projectIsNew = true
 
       // add environment
-      await this.env.setLocalTarget(targetName, `${cluster}/${projectId}`)
+      await this.env.setLocalTarget(stageName, `${cluster}/${projectId}`)
 
       if (!this.env.default || useDefault) {
-        this.env.setLocalDefaultTarget(targetName)
+        this.env.setLocalDefaultTarget(stageName)
       }
 
       this.env.saveLocalRC()
     } else {
-      projectId = target.id
+      projectId = stage.id
     }
 
     // best guess for "project name"
-    const projectName = newServiceName || targetName
+    const projectName = newServiceName || stageName
 
     //     const info = await this.client.fetchProjectInfo(projectId)
 
@@ -220,7 +218,7 @@ Please run ${chalk.green(
 
     await this.deploy(
       projectIsNew,
-      targetName,
+      stageName,
       projectId,
       isLocal,
       force,
@@ -238,7 +236,7 @@ Please run ${chalk.green(
               await this.definition.load(this.flags)
               await this.deploy(
                 projectIsNew,
-                targetName,
+                stageName,
                 projectId!,
                 isLocal,
                 force,
@@ -279,7 +277,7 @@ Please run ${chalk.green(
 
   private async deploy(
     projectIsNew: boolean,
-    targetName: string,
+    stageName: string,
     projectId: string,
     isLocal: boolean,
     force: boolean,
@@ -292,8 +290,8 @@ Please run ${chalk.green(
     this.out.action.start(
       projectIsNew
         ? `Deploying${localNote}`
-        : `Deploying to ${chalk.bold(cluster)} with target ${chalk.bold(
-            targetName || `${cluster}/${projectId}`,
+        : `Deploying to ${chalk.bold(cluster)} with stage ${chalk.bold(
+            stageName || `${cluster}/${projectId}`,
           )}${localNote}`,
     )
 
@@ -369,32 +367,30 @@ Please run ${chalk.green(
     return service
   }
 
-  private async targetNameSelector(defaultName: string): Promise<string> {
+  private async stageNameSelector(defaultName: string): Promise<string> {
     const question = {
-      name: 'target',
+      name: 'stage',
       type: 'input',
-      message: 'Please choose the target name',
+      message: 'Please choose the stage name',
       default: defaultName,
     }
 
-    const { target } = await this.out.prompt(question)
+    const { stage } = await this.out.prompt(question)
 
-    return target
+    return stage
   }
 
   private async dryRun() {
-    const { target } = this.flags
+    const { stage } = this.flags
 
     await this.definition.load(this.flags)
     await this.auth.ensureAuth()
 
-    const { id } = await this.env.getTarget(target)
-    const targetName = target || 'default'
+    const { id } = await this.env.getTarget(stage)
+    const stageName = stage || 'default'
 
     this.out.action.start(
-      `Getting diff for ${chalk.bold(id)} with target ${chalk.bold(
-        targetName,
-      )}.`,
+      `Getting diff for ${chalk.bold(id)} with stage ${chalk.bold(stageName)}.`,
     )
 
     try {
@@ -415,7 +411,7 @@ Please run ${chalk.green(
         this.out.log(
           `Identical service definition for service ${chalk.bold(
             id,
-          )} in env ${chalk.bold(targetName)}, no action required.\n`,
+          )} in env ${chalk.bold(stageName)}, no action required.\n`,
         )
         return
       }
@@ -424,7 +420,7 @@ Please run ${chalk.green(
         this.out.log(
           chalk.blue(
             `Your service ${chalk.bold(id)} of env ${chalk.bold(
-              targetName,
+              stageName,
             )} has the following changes:`,
           ),
         )

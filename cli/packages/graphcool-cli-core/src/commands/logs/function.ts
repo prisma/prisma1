@@ -11,7 +11,7 @@
 //   static description = 'Output service logs'
 //   static group = 'general'
 //   static flags: Flags = {
-//     target: flags.string({
+//     stage: flags.string({
 //       char: 't',
 //       description: 'Target to get logs from',
 //     }),
@@ -24,10 +24,10 @@
 //     }),
 //   }
 //   async run() {
-//     const { tail, target } = this.flags
+//     const { tail, stage } = this.flags
 //     const functionName = this.flags.function
 
-//     const {id} = await this.env.getTarget(target)
+//     const {id} = await this.env.getTarget(stage)
 //     debug(`function name ${functionName}`)
 //     debug(`service id ${id}`)
 

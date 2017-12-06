@@ -12,7 +12,7 @@
 //   static description = 'Print specified root token'
 //   static group = 'general'
 //   static flags: Flags = {
-//     target: flags.string({
+//     stage: flags.string({
 //       char: 't',
 //       description: 'Target name',
 //     }),
@@ -26,8 +26,8 @@
 //   ]
 
 //   async run() {
-//     const { target } = this.flags
-//     const { id } = await this.env.getTarget(target)
+//     const { stage } = this.flags
+//     const { id } = await this.env.getTarget(stage)
 //     const token = this.args!.token
 
 //     await this.auth.ensureAuth()

@@ -24,6 +24,10 @@ export class Environment {
     await this.loadGlobalRC()
   }
 
+  clusterByName(name: string): Cluster | undefined {
+    return this.clusters.find(c => c.name === name)
+  }
+
   setToken(token: string | undefined) {
     this.globalRC.platformToken = token
   }
@@ -39,6 +43,10 @@ export class Environment {
     }
     const rcString = yaml.safeDump(rc)
     fs.writeFileSync(this.config.globalRCPath, rcString)
+  }
+
+  setActiveCluster(cluster: Cluster) {
+    this.activeCluster = cluster
   }
 
   private async loadGlobalRC(): Promise<void> {

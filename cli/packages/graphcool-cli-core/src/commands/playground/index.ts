@@ -8,7 +8,7 @@
 //   static description = 'Open service endpoints in GraphQL Playground'
 //   static group = 'general'
 //   static flags: Flags = {
-//     target: flags.string({
+//     stage: flags.string({
 //       char: 't',
 //       description: 'Target name',
 //     }),
@@ -19,8 +19,8 @@
 //   }
 //   async run() {
 //     // await this.auth.ensureAuth()
-//     const { target, web } = this.flags
-//     const { id } = await this.env.getTarget(target)
+//     const { stage, web } = this.flags
+//     const { id } = await this.env.getTarget(stage)
 //     await this.auth.ensureAuth()
 
 //     const localPlaygroundPath = `/Applications/GraphQL\ Playground.app/Contents/MacOS/GraphQL\ Playground`

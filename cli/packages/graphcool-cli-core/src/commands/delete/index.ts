@@ -15,7 +15,7 @@
 //   static hidden = true
 //   static group = 'general'
 //   static flags: Flags = {
-//     target: flags.string({
+//     stage: flags.string({
 //       char: 't',
 //       description: 'Target to delete'
 //     }),
@@ -26,16 +26,16 @@
 //   }
 //   async run() {
 //     await this.auth.ensureAuth()
-//     const { target, force } = this.flags
+//     const { stage, force } = this.flags
 
-//     const foundTarget = await this.env.getTargetWithName(target)
+//     const foundTarget = await this.env.getTargetWithName(stage)
 
-//     if (foundTarget && foundTarget.target) {
-//       if (!this.env.isSharedCluster(foundTarget.target.cluster)) {
-//         this.out.error(`Can't delete service in local cluster ${foundTarget.target.cluster}.
+//     if (foundTarget && foundTarget.stage) {
+//       if (!this.env.isSharedCluster(foundTarget.stage.cluster)) {
+//         this.out.error(`Can't delete service in local cluster ${foundTarget.stage.cluster}.
 // This command is only available in the hosted version of Graphcool.`)
 //       } else {
-//         const id = foundTarget.target.id
+//         const id = foundTarget.stage.id
 //         if (!force) {
 //           await this.askForConfirmation(id)
 //         }

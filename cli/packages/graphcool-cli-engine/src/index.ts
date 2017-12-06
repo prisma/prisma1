@@ -1,3 +1,5 @@
+export { Cluster } from './Cluster'
+
 export { readDefinition } from './GraphcoolDefinition/yaml'
 export {
   GraphcoolDefinitionClass,

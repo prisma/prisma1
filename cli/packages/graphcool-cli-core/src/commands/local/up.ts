@@ -3,6 +3,7 @@ import {
   flags,
   Flags,
   AuthenticateCustomerPayload,
+  Cluster,
 } from 'graphcool-cli-engine'
 import Docker from './Docker'
 import chalk from 'chalk'
@@ -35,30 +36,16 @@ export default class Up extends Command {
       'Waiting for Graphcool to initialize. This can take several minutes',
     )
     const cluster =
-      this.env.rc.clusters && this.env.rc.clusters[name]
-        ? this.env.rc.clusters[name]
-        : null
-    const host =
-      cluster && typeof cluster !== 'string' && cluster.host
-        ? cluster.host
-        : `http://${hostName}:${PORT}`
-    const faasHost =
-      cluster && typeof cluster !== 'string' && cluster.faasHost
-        ? cluster.faasHost
-        : `http://${hostName}:${FUNCTIONS_PORT}`
-    const endpoint = host + '/system'
-    await this.client.waitForLocalDocker(endpoint)
+      this.env.clusterByName(name) ||
+      new Cluster(name, `http://${hostName}:${PORT}`, '')
+    await this.client.waitForLocalDocker(cluster.getDeployEndpoint())
 
-    debug('Setting cluster')
-    this.env.setGlobalCluster(name, {
-      host,
-      faasHost,
-      clusterSecret: '',
-    })
-    this.env.saveGlobalRC()
     this.out.action.stop()
 
-    if (!cluster) {
+    if (!this.env.clusterByName(name)) {
+      debug('Setting cluster')
+      this.env.addCluster(cluster)
+      this.env.saveGlobalRC()
       this.out.log(
         `\nSuccess! Added local cluster ${chalk.bold(`\`${name}\``)} to ${
           this.config.globalRCPath
@@ -69,10 +56,13 @@ export default class Up extends Command {
         `\nSuccess! Cluster ${name} already exists and is up-to-date.`,
       )
     }
+
+    const showInit = !this.definition.definition
     this.out.log(`To get started, execute
-    
-  ${chalk.green('$ graphcool init')}
-  ${chalk.green('$ graphcool deploy')}
+
+${showInit && `  ${chalk.green('$ graphcool init')}\n`}  ${chalk.green(
+      '$ graphcool deploy',
+    )}
 `)
   }
 }

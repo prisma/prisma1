@@ -5,16 +5,16 @@
 //   static description = 'Export service data to local file'
 //   static group = 'data'
 //   static flags: Flags = {
-//     target: flags.string({
+//     stage: flags.string({
 //       char: 't',
 //       description: 'Target name',
 //     }),
 //   }
 //   async run() {
-//     const { target } = this.flags
+//     const { stage } = this.flags
 //     await this.auth.ensureAuth()
 
-//     const { id } = await this.env.getTarget(target)
+//     const { id } = await this.env.getTarget(stage)
 
 //     this.out.action.start('Exporting service')
 //     const url = await this.client.exportProjectData(id)

@@ -7,16 +7,16 @@
 //   static description = 'Open Graphcool Console in browser'
 //   static group = 'platform'
 //   static flags: Flags = {
-//     target: flags.string({
+//     stage: flags.string({
 //       char: 't',
 //       description: 'Target name'
 //     }),
 //   }
 //   async run() {
 //     await this.auth.ensureAuth()
-//     let {target} = this.flags
+//     let {stage} = this.flags
 
-//     const foundTarget = await this.env.getTarget(target)
+//     const foundTarget = await this.env.getTarget(stage)
 //     if (!this.env.isSharedCluster(foundTarget.cluster)) {
 //       this.out.error(`Can't open the console for the local cluster ${foundTarget.cluster}.
 // The console is only available in the hosted version of Graphcool.`)

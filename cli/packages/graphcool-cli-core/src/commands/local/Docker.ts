@@ -1,19 +1,21 @@
-import { Output, Config, Environment } from 'graphcool-cli-engine'
+import { Output, Config, Environment, Cluster } from 'graphcool-cli-engine'
 import * as childProcess from 'child_process'
 import * as path from 'path'
 import * as fs from 'fs-extra'
 import chalk from 'chalk'
 import { mapValues } from 'lodash'
+import { getProcessForPort } from './getProcessForPort'
 const debug = require('debug')('Docker')
 
 export default class Docker {
   out: Output
   env: Environment
   config: Config
-  clusterName: string
+  cluster?: Cluster
   ymlPath: string = path.join(__dirname, 'docker/docker-compose.yml')
   envPath: string = path.join(__dirname, 'docker/.envrc')
   envVars: { [varLemieuxName: string]: string }
+  clusterName: string
   constructor(
     out: Output,
     config: Config,
@@ -23,7 +25,11 @@ export default class Docker {
     this.out = out
     this.config = config
     this.env = env
+    this.cluster = env.clusterByName(clusterName)
     this.clusterName = clusterName
+    if (this.cluster) {
+      env.setActiveCluster(this.cluster)
+    }
   }
 
   get hostName(): string {
@@ -43,15 +49,18 @@ export default class Docker {
   async init() {
     // either get the ports
     let port: any = null
-    let cluster
-    if (this.env.rc.clusters && this.env.rc.clusters[this.clusterName]) {
-      this.env.setActiveCluster(this.clusterName)
-      cluster = this.env.rc.clusters[this.clusterName]
-      port = cluster.host.split(':').slice(-1)[0]
+    if (this.cluster) {
+      port = this.cluster
+        .getDeployEndpoint()
+        .split(':')
+        .slice(-1)[0]
     }
     const defaultVars = this.getDockerEnvVars()
     const portfinder = require('portfinder')
     port = port || (await portfinder.getPortPromise({ port: 60000 }))
+    if (port > 60000) {
+      await this.askForHigherPort(port)
+    }
     const customVars = {
       PORT: String(port),
     }
@@ -62,6 +71,23 @@ export default class Docker {
     )
     this.out.log(`This may take several minutes`)
     this.envVars = { ...process.env, ...defaultVars, ...customVars }
+  }
+  async askForHigherPort(port: string) {
+    const processForPort = getProcessForPort(port)
+    const confirmationQuestion = {
+      name: 'confirmation',
+      type: 'input',
+      message: `Port 60000 is already used by ${
+        processForPort
+      }. Do you want to use the next free port (${port})?`,
+      default: 'n',
+    }
+    const { confirmation }: { confirmation: string } = await this.out.prompt(
+      confirmationQuestion,
+    )
+    if (confirmation.toLowerCase().startsWith('n')) {
+      this.out.exit(0)
+    }
   }
 
   async up(): Promise<Docker> {

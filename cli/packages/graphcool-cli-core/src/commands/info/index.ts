@@ -14,16 +14,16 @@
 //   static description = 'Display service information (endpoints, cluster, ...)'
 //   static group = 'general'
 //   static flags: Flags = {
-//     target: flags.string({
+//     stage: flags.string({
 //       char: 't',
 //       description: 'Target name to get the info for',
 //     }),
 //   }
 //   async run() {
-//     let { target } = this.flags
+//     let { stage } = this.flags
 
-//     const { id } = await this.env.getTarget(target)
-//     const targetName = target || 'default'
+//     const { id } = await this.env.getTarget(stage)
+//     const stageName = stage || 'default'
 
 //     await this.auth.ensureAuth()
 
@@ -34,17 +34,17 @@
 //       this.env.clusterEndpoint.split(':')[1],
 //       10,
 //     )
-//     if (this.env.rc.targets) {
+//     if (this.env.rc.stages) {
 //       this.out.log(
 //         this.infoMessage(
 //           info,
-//           targetName,
+//           stageName,
 //           projects,
 //           localPort,
 //         ),
 //       )
 //     } else {
-//       this.out.log(`No local targets`)
+//       this.out.log(`No local stages`)
 //     }
 //   }
 //   infoMessage = (
@@ -54,7 +54,7 @@
 //     localPort?: number,
 //   ) => `\
 
-// ${this.out.printServices(this.env.rc.targets!, projects)}
+// ${this.out.printServices(this.env.rc.stages!, projects)}
 
 // API:           Endpoint:
 // ────────────── ────────────────────────────────────────────────────────────

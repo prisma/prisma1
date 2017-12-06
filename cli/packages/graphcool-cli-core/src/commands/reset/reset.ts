@@ -5,16 +5,16 @@
 //   static topic = 'reset'
 //   static description = 'Reset the data of a deployed service'
 //   static flags: Flags = {
-//     target: flags.string({
+//     stage: flags.string({
 //       char: 't',
 //       description: 'Target name'
 //     }),
 //   }
 //   async run() {
 //     await this.auth.ensureAuth()
-//     let {target} = this.flags
+//     let {stage} = this.flags
 
-//     const {id} = await this.env.getTarget(target)
+//     const {id} = await this.env.getTarget(stage)
 
 //     const info = await this.client.fetchProjectInfo(id)
 //     const projectName = prettyProject(info)

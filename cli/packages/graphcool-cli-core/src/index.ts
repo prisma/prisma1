@@ -1,5 +1,5 @@
 import Deploy from './commands/deploy'
-import Init from './commands/init'
+// import Init from './commands/init'
 // import Auth from './commands/auth/index'
 // import Info from './commands/info/index'
 // import Playground from './commands/playground/index'
@@ -92,7 +92,7 @@ export const topics = [
 
 export const commands = [
   Deploy,
-  Init,
+  // Init,
   // Auth,
   // Info,
   // Playground,
@@ -114,7 +114,7 @@ export const commands = [
 
 export {
   Deploy,
-  Init,
+  // Init,
   // Auth,
   // Info,
   // Playground,
