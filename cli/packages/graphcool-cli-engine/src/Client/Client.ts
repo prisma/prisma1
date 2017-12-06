@@ -3,8 +3,6 @@ import {
   AuthenticateCustomerPayload,
   FunctionInfo,
   FunctionLog,
-  MigrateProjectPayload,
-  MigrationResult,
   PAT,
   Project,
   ProjectDefinition,
@@ -144,13 +142,11 @@ export class Client {
           return await localClient.request(query, variables)
         } catch (e) {
           if (e.message.includes('No service with id')) {
-            const user = await this.getAccount()
+            // const user = await this.getAccount()
             const message = e.response.errors[0].message
             this.out.error(
               message +
-                ` in account ${
-                  user.email
-                }. Please check if you are logged in to the right account.`,
+                ` Please check if you are logged in to the right account.`,
             )
           } else if (e.message.startsWith('No valid session')) {
             // await this.auth.ensureAuth(true)
@@ -173,32 +169,30 @@ export class Client {
     } as any
   }
 
-  async getAccount(): Promise<AccountInfo> {
-    const { viewer: { user } } = await this.client.request<{
-      viewer: { user: AccountInfo }
-    }>(`{
-      viewer {
-        user {
-          email
-          name
-        }
-      }
-    }`)
+  // async getAccount(): Promise<AccountInfo> {
+  //   const { viewer: { user } } = await this.client.request<{
+  //     viewer: { user: AccountInfo }
+  //   }>(`{
+  //     viewer {
+  //       user {
+  //         email
+  //         name
+  //       }
+  //     }
+  //   }`)
 
-    return user
-  }
+  //   return user
+  // }
 
-  async createProject(name: string): Promise<SimpleProjectInfo> {
+  async addProject(name: string, stage: string): Promise<SimpleProjectInfo> {
     const mutation = `\
-      mutation addProject($name: String!) {
+      mutation addProject($name: String! $stage: String!) {
         addProject(input: {
           name: $name,
+          stage: $stage
         }) {
           project {
-            id
             name
-            alias
-            revision
           }
         }
       }
@@ -208,6 +202,7 @@ export class Client {
       addProject: { project: SimpleProjectInfo }
     }>(mutation, {
       name,
+      stage,
     })
 
     // TODO set project definition, should be possibility in the addProject mutation
@@ -242,9 +237,6 @@ export class Client {
           stage: $stage
           types: $types
         }) {
-          project {
-            id
-          }
           errors {
             type
             field

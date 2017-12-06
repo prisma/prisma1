@@ -1,17 +1,12 @@
 export interface DeployPayload {
-  project: SimpleProject
   errors: SchemaError[]
-  migration: Migration[]
+  migration: Migration
 }
 
 export interface SchemaError {
   type: string
   field?: string
   description: string
-}
-
-export interface SimpleProject {
-  id: string
 }
 
 export interface Migration {

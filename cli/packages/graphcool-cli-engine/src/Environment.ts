@@ -108,6 +108,7 @@ export class Environment {
         clusterName,
         this.config.sharedEndpoint,
         rc.platformToken!,
+        false,
       )
     })
   }

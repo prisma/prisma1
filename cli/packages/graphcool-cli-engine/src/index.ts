@@ -22,10 +22,7 @@ export {
   AuthServer,
   AuthTrigger,
   CheckAuth,
-  MigrateProjectPayload,
   MigrationActionType,
-  MigrationErrorMessage,
-  MigrationResult,
   Project,
   Region,
   SchemaInfo,
@@ -42,3 +39,5 @@ export { flags, Flag, Arg, Flags } from './Flags'
 export { mockDefinition, mockEnv } from './mock'
 
 export { Client } from './Client/Client'
+
+export { DeployPayload } from './Client/clientTypes'

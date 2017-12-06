@@ -1,4 +1,4 @@
-service: app
+service: SERVICE_NAME
 
 # stages:
 #   default: dev

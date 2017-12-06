@@ -114,7 +114,8 @@ export class GraphcoolDefinitionClass {
   private resolveStage = (
     stage: string,
     stages: { [key: string]: string },
-  ): string => (stage[stage] ? this.resolveStage(stages[stage], stages) : stage)
+  ): string =>
+    stages[stage] ? this.resolveStage(stages[stage], stages) : stage
 
   get default(): string | null {
     if (

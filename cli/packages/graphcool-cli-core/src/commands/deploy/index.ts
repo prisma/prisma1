@@ -1,4 +1,10 @@
-import { Command, flags, Flags, Cluster } from 'graphcool-cli-engine'
+import {
+  Command,
+  flags,
+  Flags,
+  Cluster,
+  DeployPayload,
+} from 'graphcool-cli-engine'
 import chalk from 'chalk'
 import * as sillyName from 'sillyname'
 import { ServiceDoesntExistError } from '../../errors/ServiceDoesntExistError'
@@ -97,23 +103,24 @@ ${chalk.gray(
 
     await this.definition.load(this.env, this.flags)
     let clusterName = this.definition.getStage(stageName)
-    const serviceIsNew = !!clusterName
+    const serviceIsNew = !clusterName
     if (!clusterName) {
       clusterName = newServiceClusterName || (await this.clusterSelection())
     }
+
+    const serviceName = this.definition.definition!.service
 
     const cluster = this.env.clusterByName(clusterName!)
     if (!cluster) {
       this.out.error(`Cluster ${clusterName} could not be found.`)
     }
+    this.env.setActiveCluster(cluster!)
 
-    await this.deploy(
-      serviceIsNew,
-      stageName,
-      this.definition.definition!.service,
-      cluster!,
-      force,
-    )
+    if (serviceIsNew) {
+      await this.addProject(serviceName, stageName)
+    }
+
+    await this.deploy(stageName, serviceName, cluster!, force)
 
     if (watch) {
       this.out.log('Watching for change...')
@@ -124,7 +131,6 @@ ${chalk.gray(
             if (!this.deploying) {
               await this.definition.load(this.env, this.flags)
               await this.deploy(
-                serviceIsNew,
                 stageName,
                 this.definition.definition!.service,
                 cluster!,
@@ -143,19 +149,10 @@ ${chalk.gray(
     }
   }
 
-  private async createProject(
-    name: string,
-  ): Promise<{
-    projectId: string
-  }> {
-    // create project
-    const createdProject = await this.client.createProject(name)
-
+  private async addProject(name: string, stage: string): Promise<void> {
+    this.out.action.start(`Creating stage ${stage} for service ${name}`)
+    const createdProject = await this.client.addProject(name, stage)
     this.out.action.stop()
-
-    return {
-      projectId: createdProject.id,
-    }
   }
 
   private prettyTime(time: number): string {
@@ -165,7 +162,6 @@ ${chalk.gray(
   }
 
   private async deploy(
-    serviceIsNew: boolean,
     stageName: string,
     serviceName: string,
     cluster: Cluster,
@@ -174,12 +170,13 @@ ${chalk.gray(
     this.deploying = true
     const localNote = cluster.local ? ' locally' : ''
     const before = Date.now()
+
+    const b = s => `\`${chalk.bold(s)}\``
+
     this.out.action.start(
-      serviceIsNew
-        ? `Deploying${localNote}`
-        : `Deploying to ${chalk.bold(cluster.name)} with stage ${chalk.bold(
-            stageName,
-          )}${localNote}`,
+      `Deploying service ${b(serviceName)} to stage ${b(
+        stageName,
+      )} on cluster ${b(cluster.name)}`,
     )
 
     const migrationResult = await this.client.deploy(
@@ -188,10 +185,27 @@ ${chalk.gray(
       this.definition.typesString!,
     )
     this.out.action.stop(this.prettyTime(Date.now() - before))
+    console.log(JSON.stringify(migrationResult, null, 2))
+    this.printResult(migrationResult)
 
     // no action required
     this.deploying = false
-    this.printEndpoints(cluster, serviceName, stageName)
+    if (migrationResult.migration.steps.length > 0) {
+      this.printEndpoints(cluster, serviceName, stageName)
+    }
+  }
+
+  private printResult(payload: DeployPayload) {
+    if (payload.errors && payload.errors.length > 0) {
+      this.out.log(`${chalk.bold.red('Errors:')}`)
+      this.out.migration.printErrors(payload.errors)
+      this.out.log('')
+      return
+    }
+
+    if (payload.migration.steps.length === 0) {
+      this.out.log('Service is already up to date.')
+    }
   }
 
   private printEndpoints(
@@ -199,7 +213,7 @@ ${chalk.gray(
     serviceName: string,
     stageName: string,
   ) {
-    this.out.log(`Here are your GraphQL Endpoints:
+    this.out.log(`\nHere are your GraphQL Endpoints:
 
   ${chalk.bold('API:')}        ${cluster.getApiEndpoint(
       serviceName,
@@ -208,21 +222,18 @@ ${chalk.gray(
   }
 
   private async clusterSelection(): Promise<string> {
-    const localClusters = this.env.clusters
-      .filter(c => c.local)
-      .map(clusterName => {
-        return {
-          value: clusterName,
-          name: clusterName,
-        }
-      })
+    const localClusters = this.env.clusters.filter(c => c.local).map(c => {
+      return {
+        value: c.name,
+        name: c.name,
+      }
+    })
     const question = {
       name: 'cluster',
       type: 'list',
       message: 'Please choose the cluster you want to deploy to',
       choices: [
         new inquirer.Separator(chalk.bold('Shared Clusters:')),
-        new inquirer.Separator('shared-eu-west-1 (coming soon)'),
         {
           value: 'shared-eu-west-1',
           name: 'shared-eu-west-1',

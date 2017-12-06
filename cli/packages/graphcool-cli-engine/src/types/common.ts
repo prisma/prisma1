@@ -76,10 +76,7 @@ export interface ProjectInfo extends Project {
 }
 
 export interface SimpleProjectInfo {
-  id: string
   name: string
-  alias: string
-  revision: string
 }
 
 export interface MigrationMessage {
@@ -91,25 +88,6 @@ export interface MigrationMessage {
 }
 
 export type MigrationActionType = 'create' | 'delete' | 'update' | 'unknown'
-
-export interface MigrationErrorMessage {
-  type: string
-  description: string
-  field: string
-}
-
-export interface MigrateProjectPayload {
-  migrationMessages: MigrationMessage[]
-  errors: MigrationErrorMessage[]
-  project: Project
-}
-
-export interface MigrationResult {
-  migrationMessages: MigrationMessage[]
-  errors: MigrationErrorMessage[]
-  newSchema: string
-  projectDefinition: ProjectDefinition
-}
 
 export interface APIError {
   message: string

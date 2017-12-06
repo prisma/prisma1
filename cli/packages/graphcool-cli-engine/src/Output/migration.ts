@@ -1,13 +1,10 @@
-import {
-  MigrationActionType,
-  MigrationErrorMessage,
-  MigrationMessage,
-} from '../types/common'
+import { MigrationActionType, MigrationMessage } from '../types/common'
 import figures = require('figures')
 import chalk from 'chalk'
 import { Output } from './index'
 import { makePartsEnclodesByCharacterBold } from './util'
 import * as groupBy from 'lodash.groupby'
+import { SchemaError } from '../Client/clientTypes'
 
 export class MigrationPrinter {
   out: Output
@@ -29,7 +26,7 @@ export class MigrationPrinter {
     })
     this.out.log('')
   }
-  printErrors(errors: MigrationErrorMessage[]) {
+  printErrors(errors: SchemaError[]) {
     const groupedByType = groupBy(errors, e => e.type)
     Object.keys(groupedByType).forEach(type => {
       const typeErrors = groupedByType[type]

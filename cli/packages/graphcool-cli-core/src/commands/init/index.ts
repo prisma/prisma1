@@ -45,6 +45,14 @@ Either try using a new directory name, or remove the files listed above.
     let relativeDir = path.relative(process.cwd(), this.config.definitionDir)
     relativeDir = relativeDir.length === 0 ? '.' : relativeDir
 
+    const definitionPath = path.join(this.config.definitionDir, 'graphcool.yml')
+    const graphcoolYml = fs.readFileSync(definitionPath, 'utf-8')
+    const newGraphcoolYml = graphcoolYml.replace(
+      'SERVICE_NAME',
+      path.basename(this.config.definitionDir),
+    )
+    fs.writeFileSync(definitionPath, newGraphcoolYml)
+
     const cdInstruction =
       relativeDir === '.'
         ? ''
