@@ -30,6 +30,10 @@ export class GraphcoolDefinitionClass {
         this.out,
         args,
       )
+      this.definitionString = fs.readFileSync(
+        this.config.definitionPath,
+        'utf-8',
+      )
       this.definition.stages = this.resolveStageAliases(this.definition.stages)
       this.ensureOfClusters(this.definition, env)
       this.typesString = this.getTypesString(this.definition)
@@ -64,7 +68,7 @@ export class GraphcoolDefinitionClass {
         return newFile.slice(0, valueStart) + newFile.slice(valueEnd)
       }
 
-      return file
+      return newFile
     } else {
       return file + `\n${key}: ` + insertion
     }

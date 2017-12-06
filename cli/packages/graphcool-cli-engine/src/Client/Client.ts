@@ -358,6 +358,38 @@ export class Client {
     }
   }
 
+  async waitForMigration(
+    name: string,
+    stage: string,
+    revision: number,
+  ): Promise<void> {
+    while (true) {
+      const { migrationStatus } = await this.client.request<any>(
+        `query ($name: String! $stage: String!) {
+              migrationStatus(name: $name stage: $stage) {
+                revision
+                hasBeenApplied
+              }
+            }
+        `,
+
+        {
+          stage,
+          name,
+        },
+      )
+
+      if (
+        migrationStatus.revision >= revision &&
+        migrationStatus.hasBeenApplied
+      ) {
+        return
+      }
+
+      await new Promise(r => setTimeout(r, 500))
+    }
+  }
+
   async authenticateCustomer(
     endpoint: string,
     token: string,

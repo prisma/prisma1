@@ -39,7 +39,7 @@ ${chalk.gray(
   `
   static flags: Flags = {
     stage: flags.string({
-      char: 't',
+      char: 's',
       description: 'Local stage to deploy to',
       defaultValue: 'dev',
     }),
@@ -169,7 +169,7 @@ ${chalk.gray(
   ): Promise<void> {
     this.deploying = true
     const localNote = cluster.local ? ' locally' : ''
-    const before = Date.now()
+    let before = Date.now()
 
     const b = s => `\`${chalk.bold(s)}\``
 
@@ -179,7 +179,7 @@ ${chalk.gray(
       )} on cluster ${b(cluster.name)}`,
     )
 
-    const migrationResult = await this.client.deploy(
+    const migrationResult: DeployPayload = await this.client.deploy(
       serviceName,
       stageName,
       this.definition.typesString!,
@@ -187,6 +187,17 @@ ${chalk.gray(
     this.out.action.stop(this.prettyTime(Date.now() - before))
     console.log(JSON.stringify(migrationResult, null, 2))
     this.printResult(migrationResult)
+
+    if (migrationResult.migration.steps.length > 0) {
+      before = Date.now()
+      this.out.action.start(`Applying changes`)
+      await this.client.waitForMigration(
+        serviceName,
+        stageName,
+        migrationResult.migration.revision,
+      )
+      this.out.action.stop(this.prettyTime(Date.now() - before))
+    }
 
     // no action required
     this.deploying = false
@@ -205,6 +216,12 @@ ${chalk.gray(
 
     if (payload.migration.steps.length === 0) {
       this.out.log('Service is already up to date.')
+      return
+    }
+
+    if (payload.migration.steps.length > 0) {
+      // this.out.migrati
+      this.out.log(chalk.bold('Changes:'))
     }
   }
 
