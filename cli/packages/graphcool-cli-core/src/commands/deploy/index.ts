@@ -41,7 +41,6 @@ ${chalk.gray(
     stage: flags.string({
       char: 's',
       description: 'Local stage to deploy to',
-      defaultValue: 'dev',
     }),
     force: flags.boolean({
       char: 'f',
@@ -82,7 +81,7 @@ ${chalk.gray(
     const { force, watch, interactive } = this.flags
     const newServiceClusterName = this.flags['new-service-cluster']
     // const dryRun = this.flags['dry-run']
-    const stageName = this.flags.stage
+    let stageName = this.flags.stage
 
     // if (dryRun) {
     //   return this.dryRun()
@@ -102,6 +101,13 @@ ${chalk.gray(
     }
 
     await this.definition.load(this.env, this.flags)
+
+    if (!stageName) {
+      stageName =
+        this.definition.rawStages.default ||
+        (await this.stageNameSelector('dev'))
+    }
+
     let clusterName = this.definition.getStage(stageName)
     const serviceIsNew = !clusterName
     if (!clusterName) {
@@ -185,7 +191,6 @@ ${chalk.gray(
       this.definition.typesString!,
     )
     this.out.action.stop(this.prettyTime(Date.now() - before))
-    console.log(JSON.stringify(migrationResult, null, 2))
     this.printResult(migrationResult)
 
     if (migrationResult.migration.steps.length > 0) {
@@ -221,7 +226,9 @@ ${chalk.gray(
 
     if (payload.migration.steps.length > 0) {
       // this.out.migrati
-      this.out.log(chalk.bold('Changes:'))
+      this.out.log('\n' + chalk.bold('Changes:'))
+      this.out.migration.printMessages(payload.migration.steps)
+      this.out.log('')
     }
   }
 

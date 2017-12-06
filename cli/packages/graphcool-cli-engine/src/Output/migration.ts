@@ -4,28 +4,199 @@ import chalk from 'chalk'
 import { Output } from './index'
 import { makePartsEnclodesByCharacterBold } from './util'
 import * as groupBy from 'lodash.groupby'
-import { SchemaError } from '../Client/clientTypes'
+import { SchemaError, MigrationStep } from '../Client/clientTypes'
+
+const b = s => `\`${chalk.bold(s)}\``
 
 export class MigrationPrinter {
   out: Output
   constructor(out: Output) {
     this.out = out
   }
-  printMessages(migrationMessages: MigrationMessage[]) {
+  printMessages(steps: MigrationStep[]) {
     // group types,
-    const groupedByType = groupBy(migrationMessages, m => m.type)
-    Object.keys(groupedByType).forEach(type => {
-      const typeMessages = groupedByType[type]
-      this.out.log('\n' + printType(type) + '\n')
-      const groupedByName = groupBy(typeMessages, m => m.name.split('.')[0])
-      Object.keys(groupedByName).forEach(name => {
-        this.out.log(`  ${chalk.bold(name)}`)
-        const nameMessages = groupedByName[name]
-        nameMessages.forEach(this.printMigrationMessage, this)
-      })
-    })
-    this.out.log('')
+    // const groupedByType = groupBy(steps, m => m.type)
+    // Object.keys(groupedByType).forEach(type => {
+    //   const typeMessages = groupedByType[type]
+    //   this.out.log('\n' + printType(type) + '\n')
+    //   const groupedByName = groupBy(typeMessages, m => m.name.split('.')[0])
+    //   Object.keys(groupedByName).forEach(name => {
+    //     this.out.log(`  ${chalk.bold(name)}`)
+    //     const nameMessages = groupedByName[name]
+    //     nameMessages.forEach(this.printMigrationMessage, this)
+    //   })
+    // })
+    // this.out.log('')
+    this.printTypes(steps)
+    this.printEnums(steps)
+    this.printRelations(steps)
   }
+  printTypes(allSteps: MigrationStep[]) {
+    const steps = allSteps.filter(s => s.model || s.type === 'CreateModel')
+    const groupedByModel = groupBy(steps, s => s.model || s.name)
+    Object.keys(groupedByModel).forEach(model => {
+      this.out.log(`\n  ${chalk.bold(model)} (Type)`)
+      const modelSteps = groupedByModel[model]
+      modelSteps.forEach(this.printStep)
+    })
+  }
+
+  printStep = (step: MigrationStep) => {
+    const pad = '  '
+    switch (step.type) {
+      case 'CreateModel': {
+        this.out.log(
+          `${pad}${this.getSymbol('create')} Created type ${b(step.name)}`,
+        )
+        break
+      }
+      case 'DeleteModel': {
+        this.out.log(
+          `${pad}${this.getSymbol('delete')} Deleted type ${b(step.name)}`,
+        )
+        break
+      }
+      case 'CreateField': {
+        const typeString = this.printType(
+          step.cf_typeName!,
+          step.cf_isRequired!,
+          step.cf_isList!,
+        )
+        this.out.log(
+          `${pad}${this.getSymbol('create')} Created field ${b(
+            step.name,
+          )} of type ${b(typeString)}`,
+        )
+        break
+      }
+      case 'DeleteField': {
+        this.out.log(
+          `${pad}${this.getSymbol('delete')} Deleted field ${b(step.name)}`,
+        )
+        break
+      }
+      case 'UpdateField': {
+        const typeString = this.printType(
+          step.cf_typeName!,
+          step.cf_isRequired!,
+          step.cf_isList!,
+        )
+        this.out.log(
+          `${pad}${this.getSymbol('update')} Updated field ${b(
+            step.name,
+          )}${this.getUpdateFieldActions(step)}`,
+        )
+        break
+      }
+    }
+  }
+
+  getUpdateFieldActions(step: MigrationStep) {
+    const messages: string[] = []
+    if (step.isRequired) {
+      messages.push(`got required`)
+    }
+
+    if (step.isRequired === false) {
+      messages.push(`is not required anymore`)
+    }
+
+    if (step.isList) {
+      messages.push(`became a list`)
+    }
+
+    if (step.isList === false) {
+      messages.push(`is not a list anymore`)
+    }
+
+    if (step.isUnique) {
+      messages.push(`got unique`)
+    }
+
+    if (step.enum) {
+      messages.push(`now uses enum ${step.enum}`)
+    }
+
+    if (step.defaultValue) {
+      messages.push(`got default value ${step.defaultValue}`)
+    }
+
+    if (messages.length === 0) {
+      return ''
+    }
+
+    return '. It ' + messages.join(', ') + '.'
+  }
+
+  printType(typeName: string, isRequired: boolean, isList?: boolean) {
+    if (isList) {
+      return `[${typeName}!]!`
+    }
+
+    return `${typeName}${isRequired ? '!' : ''}`
+  }
+
+  printEnums(steps: MigrationStep[]) {
+    const pad = '  '
+    steps.forEach(step => {
+      switch (step.type) {
+        case 'CreateEnum':
+          this.printEnumName(step)
+          this.out.log(
+            `${pad}${this.getSymbol('create')} Created enum ${
+              step.name
+            } with values ${step.ce_values &&
+              step.ce_values.map(b).join(', ')}`,
+          )
+          break
+        case 'UpdateEnum':
+          this.printEnumName(step)
+          this.out.log(
+            `${pad}${this.getSymbol('update')} Updated enum ${step.name}`,
+          )
+          break
+        case 'DeleteEnum':
+          this.printEnumName(step)
+          this.out.log(
+            `${pad}${this.getSymbol('delete')} Deleted enum ${step.name}`,
+          )
+          break
+      }
+    })
+  }
+
+  printRelations(steps: MigrationStep[]) {
+    const pad = '  '
+    steps.forEach(step => {
+      switch (step.type) {
+        case 'CreateRelation':
+          this.printRelationName(step)
+          this.out.log(
+            `${pad}${this.getSymbol('create')} Created relation between ${
+              step.leftModel
+            } and ${step.rightModel}`,
+          )
+          break
+        case 'DeleteRelation':
+          this.printRelationName(step)
+          this.out.log(
+            `${pad}${this.getSymbol('delete')} Deleted relation between ${
+              step.leftModel
+            } and ${step.rightModel}`,
+          )
+          break
+      }
+    })
+  }
+
+  printRelationName(step: MigrationStep) {
+    this.out.log(`\n  ${chalk.bold(step.name)} (Relation)`)
+  }
+
+  printEnumName(step: MigrationStep) {
+    this.out.log(`\n  ${chalk.bold(step.name)} (Enum)`)
+  }
+
   printErrors(errors: SchemaError[]) {
     const groupedByType = groupBy(errors, e => e.type)
     Object.keys(groupedByType).forEach(type => {
@@ -88,7 +259,7 @@ export class MigrationPrinter {
       case 'delete':
         return chalk.red('-')
       case 'update':
-        return chalk.blue('*')
+        return chalk.yellow('~')
       case 'unknown':
         return chalk.cyan('?')
     }

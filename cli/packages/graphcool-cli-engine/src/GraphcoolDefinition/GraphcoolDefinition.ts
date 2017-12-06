@@ -1,7 +1,7 @@
 import { Config } from '../Config'
 import { Output } from '../index'
 import { readDefinition } from './yaml'
-import { Args } from '../types/common'
+import { Args, Stages } from '../types/common'
 import { GraphcoolDefinition } from 'graphcool-json-schema'
 import * as fs from 'fs-extra'
 import chalk from 'chalk'
@@ -18,6 +18,7 @@ export class GraphcoolDefinitionClass {
   config: Config
   definition?: GraphcoolDefinition
   typesString?: string
+  rawStages: Stages
   private definitionString: string
   constructor(out: Output, config: Config) {
     this.out = out
@@ -34,6 +35,7 @@ export class GraphcoolDefinitionClass {
         this.config.definitionPath,
         'utf-8',
       )
+      this.rawStages = this.definition.stages
       this.definition.stages = this.resolveStageAliases(this.definition.stages)
       this.ensureOfClusters(this.definition, env)
       this.typesString = this.getTypesString(this.definition)
