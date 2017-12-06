@@ -7,14 +7,13 @@ export default class ExampleCommand extends Command {
   static flags: Flags = {
     target: flags.string({
       char: 't',
-      description: 'Target name'
+      description: 'Target name',
     }),
   }
   async run() {
-    await this.auth.ensureAuth()
-    let {target} = this.flags
+    let {} = this.flags
 
-    const {id} = await this.env.getTarget(target)
+    const { id } = await this.env.getTarget(target)
 
     // continue
   }
