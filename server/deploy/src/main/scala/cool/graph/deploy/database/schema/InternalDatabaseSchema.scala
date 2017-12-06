@@ -27,7 +27,7 @@ object InternalDatabaseSchema {
     // Migration
     sqlu"""
       CREATE TABLE IF NOT EXISTS `Migration` (
-        `projectId` varchar(25) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',
+        `projectId` varchar(200) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',
         `revision` int(11) NOT NULL DEFAULT '1',
         `schema` mediumtext COLLATE utf8_unicode_ci DEFAULT NULL,
         `steps` mediumtext COLLATE utf8_unicode_ci DEFAULT NULL,

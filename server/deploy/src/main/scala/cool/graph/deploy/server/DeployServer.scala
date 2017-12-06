@@ -61,9 +61,9 @@ case class DeployServer(
 
     logger.info(LogData(LogKey.RequestNew, requestId).json)
 
-    post {
-      handleExceptions(toplevelExceptionHandler(requestId)) {
-        TimeResponseDirectiveImpl(DeployMetrics).timeResponse {
+    handleExceptions(toplevelExceptionHandler(requestId)) {
+      TimeResponseDirectiveImpl(DeployMetrics).timeResponse {
+        post {
           respondWithHeader(RawHeader("Request-Id", requestId)) {
             entity(as[JsValue]) { requestJson =>
               complete {
@@ -72,7 +72,7 @@ case class DeployServer(
 
                 val operationName =
                   fields.get("operationName") collect {
-                    case JsString(op) if !op.isEmpty ⇒ op
+                    case JsString(op) if !op.isEmpty => op
                   }
 
                 val variables = fields.get("variables") match {
@@ -107,32 +107,32 @@ case class DeployServer(
               }
             }
           }
-        }
-      }
-    } ~
-      get {
-        path("graphiql.html") {
-          getFromResource("graphiql.html")
-        }
-      } ~
-      pathPrefix(Segment) { projectId =>
-        get {
-          optionalHeaderValueByName("Authorization") {
-            case Some(authorizationHeader) if authorizationHeader == s"Bearer $server2serverSecret" =>
-              parameters('forceRefresh ? false) { forceRefresh =>
-                complete(performRequest(projectId, forceRefresh, logRequestEnd))
+        } ~
+          get {
+            path("playground") {
+              getFromResource("graphiql.html")
+            } ~
+              pathPrefix("schema") {
+                pathPrefix(Segment) { projectId =>
+                  optionalHeaderValueByName("Authorization") {
+                    case Some(authorizationHeader) if authorizationHeader == s"Bearer $server2serverSecret" =>
+                      parameters('forceRefresh ? false) { forceRefresh =>
+                        complete(performRequest(projectId, forceRefresh, logRequestEnd))
+                      }
+
+                    case Some(h) =>
+                      println(s"Wrong Authorization Header supplied: '$h'")
+                      complete(Unauthorized -> "Wrong Authorization Header supplied")
+
+                    case None =>
+                      println("No Authorization Header supplied")
+                      complete(Unauthorized -> "No Authorization Header supplied")
+                  }
+                }
               }
-
-            case Some(h) =>
-              println(s"Wrong Authorization Header supplied: '$h'")
-              complete(Unauthorized -> "Wrong Authorization Header supplied")
-
-            case None =>
-              println("No Authorization Header supplied")
-              complete(Unauthorized -> "No Authorization Header supplied")
           }
-        }
       }
+    }
   }
 
   def performRequest(projectId: String, forceRefresh: Boolean, requestEnd: (Option[String], Option[String]) => Unit) = {
@@ -162,7 +162,7 @@ case class DeployServer(
     case e: Throwable =>
       println(e.getMessage)
       e.printStackTrace()
-      complete(500 -> "kaputt")
+      complete(500 -> e)
   }
 }
 

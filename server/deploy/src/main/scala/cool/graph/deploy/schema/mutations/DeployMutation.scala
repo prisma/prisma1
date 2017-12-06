@@ -54,9 +54,7 @@ case class DeployMutation(
   }
 
   private def handleMigration(nextProject: Project, migration: Migration): Future[Migration] = {
-    println(migration)
     if (migration.steps.nonEmpty && !args.dryRun.getOrElse(false)) {
-      println("CREATE YO")
       migrationPersistence.create(nextProject, migration)
     } else {
       Future.successful(migration)
