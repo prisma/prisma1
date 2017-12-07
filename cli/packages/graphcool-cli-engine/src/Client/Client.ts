@@ -260,64 +260,19 @@ export class Client {
     return deploy
   }
 
-  async fetchProjects(): Promise<Project[]> {
-    interface ProjectsPayload {
-      viewer: {
-        user: {
-          projects: {
-            edges: Array<{
-              node: ProjectInfo
-            }>
-          }
-        }
-      }
-    }
-
-    const result = await this.client.request<ProjectsPayload>(`
+  async listProjects(): Promise<Project[]> {
+    const { listProjects } = await this.client.request<{
+      listProjects: Project[]
+    }>(`
       {
-        viewer {
-          user {
-            projects {
-              edges {
-                node {
-                  id
-                  name
-                  alias
-                  region
-                }
-              }
-            }
-          }
-        }
-      }`)
-
-    return result.viewer.user.projects.edges.map(edge => edge.node)
-  }
-
-  async fetchProjectInfo(projectId: string): Promise<ProjectInfo> {
-    interface ProjectInfoPayload {
-      viewer: {
-        project: RemoteProject
-      }
-    }
-
-    const { viewer: { project } } = await this.client.request<
-      ProjectInfoPayload
-    >(
-      `
-      query ($projectId: ID!){
-        viewer {
-          project(id: $projectId) {
-            ...RemoteProject
-          }
+        listProjects {
+          name
+          stage
         }
       }
-      ${REMOTE_PROJECT_FRAGMENT}
-      `,
-      { projectId },
-    )
+    `)
 
-    return this.getProjectDefinition(project)
+    return listProjects
   }
 
   async resetServiceData(id: string): Promise<void> {
@@ -706,48 +661,6 @@ export class Client {
     )
 
     return exportData.url
-  }
-
-  async cloneProject(variables: {
-    projectId: string
-    name: string
-    includeMutationCallbacks: boolean
-    includeData: boolean
-  }): Promise<ProjectInfo> {
-    interface CloneProjectPayload {
-      project: RemoteProject
-    }
-
-    const { project } = await this.client.request<CloneProjectPayload>(`
-      mutation ($projectId: String!, $name: String!, $includeMutationCallbacks: Boolean!, $includeData: Boolean!){
-        cloneProject(input:{
-          name: $name,
-          projectId: $projectId,
-          includeData: $includeData,
-          includeMutationCallbacks: $includeMutationCallbacks,
-          clientMutationId: "asd"
-        }) {
-          project {
-            ...RemoteProject
-          }
-        }
-      }
-      ${REMOTE_PROJECT_FRAGMENT}
-    `)
-
-    return this.getProjectDefinition(project)
-  }
-
-  private getProjectDefinition(project: RemoteProject): ProjectInfo {
-    return {
-      ...omit<Project, RemoteProject>(
-        project,
-        'projectDefinitionWithFileContent',
-      ),
-      projectDefinition: JSON.parse(
-        project.projectDefinitionWithFileContent,
-      ) as ProjectDefinition,
-    }
   }
 }
 

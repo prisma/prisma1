@@ -27,12 +27,8 @@ export interface SchemaInfo {
 }
 
 export interface Project {
-  id: string
   name: string
-  schema: string
-  alias: string
-  region: string
-  isEjected: boolean
+  stage: string
 }
 
 export interface RemoteProject extends Project {

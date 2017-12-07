@@ -122,7 +122,7 @@ ${chalk.gray(
     }
     this.env.setActiveCluster(cluster!)
 
-    if (serviceIsNew) {
+    if (!await this.projectExists(serviceName, stageName)) {
       await this.addProject(serviceName, stageName)
     }
 
@@ -153,6 +153,11 @@ ${chalk.gray(
       this.definition.save()
       this.out.log(`\nAdded stage ${stageName} to graphcool.yml`)
     }
+  }
+
+  private async projectExists(name: string, stage: string): Promise<boolean> {
+    const projects = await this.client.listProjects()
+    return Boolean(projects.find(p => p.name === name && p.stage === stage))
   }
 
   private async addProject(name: string, stage: string): Promise<void> {
@@ -237,12 +242,9 @@ ${chalk.gray(
     serviceName: string,
     stageName: string,
   ) {
-    this.out.log(`\nHere are your GraphQL Endpoints:
+    this.out.log(`\n${chalk.bold('Your GraphQL database endpoint is live:')}
 
-  ${chalk.bold('API:')}        ${cluster.getApiEndpoint(
-      serviceName,
-      stageName,
-    )}`)
+  ${chalk.bold('HTTP:')}  ${cluster.getApiEndpoint(serviceName, stageName)}\n`)
   }
 
   private async clusterSelection(): Promise<string> {
