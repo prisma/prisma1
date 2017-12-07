@@ -51,7 +51,7 @@ export default class Docker {
     let port: any = null
     if (this.cluster) {
       const endpoint = this.cluster.getDeployEndpoint()
-      const sliced = endpoint.slice(endpoint.lastIndexOf(':'))
+      const sliced = endpoint.slice(endpoint.lastIndexOf(':') + 1)
       port = sliced.slice(0, sliced.indexOf('/'))
     }
     const defaultVars = this.getDockerEnvVars()

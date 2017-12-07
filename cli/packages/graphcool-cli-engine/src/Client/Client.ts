@@ -300,12 +300,17 @@ export class Client {
           endpoint,
           `
             {
-              migrationStatus
+              __schema {
+                directives {
+                  description
+                }
+              }
             }
             `,
         )
         valid = true
       } catch (e) {
+        debug(e)
         valid = false
       }
 
