@@ -6,7 +6,6 @@ import {
   DeployPayload,
 } from 'graphcool-cli-engine'
 import chalk from 'chalk'
-import * as sillyName from 'sillyname'
 import { ServiceDoesntExistError } from '../../errors/ServiceDoesntExistError'
 import { emptyDefinition } from './emptyDefinition'
 import * as chokidar from 'chokidar'
@@ -281,14 +280,6 @@ ${chalk.gray(
           value: 'shared-eu-west-1',
           name: 'shared-eu-west-1',
         },
-        // {
-        //   value: 'shared-ap-northeast-1',
-        //   name: 'shared-ap-northeast-1',
-        // },
-        // {
-        //   value: 'shared-us-west-2',
-        //   name: 'shared-us-west-2',
-        // },
         new inquirer.Separator('                     '),
         new inquirer.Separator(chalk.bold('Custom clusters (local/private):')),
       ].concat(localClusters),
@@ -315,85 +306,6 @@ ${chalk.gray(
 
     return stage
   }
-
-  // private async dryRun() {
-  //   const { stage } = this.flags
-
-  //   await this.definition.load(this.env, this.flags)
-  //   // await this.auth.ensureAuth()
-
-  //   const stageName = stage || 'default'
-
-  //   this.out.action.start(
-  //     `Getting diff for ${chalk.bold(id)} with stage ${chalk.bold(stageName)}.`,
-  //   )
-
-  //   try {
-  //     const migrationResult = await this.client.push(
-  //       id,
-  //       false,
-  //       true,
-  //       this.definition.definition!,
-  //     )
-  //     this.out.action.stop()
-
-  //     // no action required
-  //     if (
-  //       (!migrationResult.migrationMessages ||
-  //         migrationResult.migrationMessages.length === 0) &&
-  //       (!migrationResult.errors || migrationResult.errors.length === 0)
-  //     ) {
-  //       this.out.log(
-  //         `Identical service definition for service ${chalk.bold(
-  //           id,
-  //         )} in env ${chalk.bold(stageName)}, no action required.\n`,
-  //       )
-  //       return
-  //     }
-
-  //     if (migrationResult.migrationMessages.length > 0) {
-  //       this.out.log(
-  //         chalk.blue(
-  //           `Your service ${chalk.bold(id)} of env ${chalk.bold(
-  //             stageName,
-  //           )} has the following changes:`,
-  //         ),
-  //       )
-
-  //       this.out.migration.printMessages(migrationResult.migrationMessages)
-  //       this.definition.set(migrationResult.projectDefinition)
-  //     }
-
-  //     if (migrationResult.errors.length > 0) {
-  //       this.out.log(
-  //         chalk.rgb(244, 157, 65)(
-  //           `There are issues with the new service definition:`,
-  //         ),
-  //       )
-  //       this.out.migration.printErrors(migrationResult.errors)
-  //       this.out.log('')
-  //       process.exitCode = 1
-  //     }
-
-  //     if (
-  //       migrationResult.errors &&
-  //       migrationResult.errors.length > 0 &&
-  //       migrationResult.errors[0].description.includes(`destructive changes`)
-  //     ) {
-  //       // potentially destructive changes
-  //       this.out.log(
-  //         `Your changes might result in data loss.
-  //           Use ${chalk.cyan(
-  //             `\`graphcool deploy --force\``,
-  //           )} if you know what you're doing!\n`,
-  //       )
-  //       process.exitCode = 1
-  //     }
-  //   } catch (e) {
-  //     this.out.action.stop()
-  //     this.out.error(e)
-  //   }
-  // }
 }
 
 export function isValidProjectName(projectName: string): boolean {
