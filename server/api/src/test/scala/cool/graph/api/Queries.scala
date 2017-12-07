@@ -3,7 +3,11 @@ package cool.graph.api
 import cool.graph.shared.project_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
-class Queries extends FlatSpec with Matchers with ApiTestServer {
+class Queries extends FlatSpec with Matchers with ApiTestDatabase {
+
+  val server = ApiTestServer()
+  import server._
+
   "schema" should "include simple API features" in {
     val schema = SchemaDsl()
     schema.model("Car").field("wheelCount", _.Int).field_!("name", _.String).field_!("createdAt", _.DateTime).field_!("updatedAt", _.DateTime)

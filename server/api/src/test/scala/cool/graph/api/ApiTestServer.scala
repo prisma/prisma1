@@ -1,5 +1,6 @@
 package cool.graph.api
 
+import cool.graph.api.database.DataResolver
 import cool.graph.api.database.deferreds.DeferredResolverProvider
 import cool.graph.api.schema.{ApiUserContext, SchemaBuilder}
 import cool.graph.shared.models.{AuthenticatedRequest, AuthenticatedUser, Project}
@@ -17,8 +18,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 import scala.reflect.io.File
 
-trait ApiTestServer extends BeforeAndAfterEach with ApiTestDatabase with SprayJsonExtensions with GraphQLResponseAssertions {
-  this: Suite =>
+case class ApiTestServer()(implicit dependencies: ApiDependencies) extends SprayJsonExtensions with GraphQLResponseAssertions {
 
 //  private lazy val errorHandlerFactory = ErrorHandlerFactory(println, injector.cloudwatch, injector.bugsnagger)
 
@@ -132,9 +132,9 @@ trait ApiTestServer extends BeforeAndAfterEach with ApiTestDatabase with SprayJs
 //    )
 
 //    val projectLockdownMiddleware = ProjectLockdownMiddleware(project)
-    val schemaBuilder  = SchemaBuilder()
+    val schemaBuilder  = SchemaBuilder()(dependencies.system, dependencies)
     val userContext    = ApiUserContext(clientId = "clientId")
-    val schema         = schemaBuilder(userContext, project, dataResolver(project), dataResolver(project))
+    val schema         = schemaBuilder(userContext, project, DataResolver(project), DataResolver(project))
     val renderedSchema = SchemaRenderer.renderSchema(schema)
 
     if (printSchema) println(renderedSchema)
@@ -164,7 +164,7 @@ trait ApiTestServer extends BeforeAndAfterEach with ApiTestDatabase with SprayJs
           userContext = context,
           variables = variables,
 //          exceptionHandler = sangriaErrorHandler,
-          deferredResolver = new DeferredResolverProvider(dataResolver = dataResolver(project))
+          deferredResolver = new DeferredResolverProvider(dataResolver = DataResolver(project))
 //          middleware = List(apiMetricMiddleware, projectLockdownMiddleware)
         )
         .recover {
