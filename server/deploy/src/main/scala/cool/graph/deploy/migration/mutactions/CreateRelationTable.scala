@@ -18,5 +18,4 @@ case class CreateRelationTable(project: Project, relation: Relation) extends Cli
   }
 
   override def rollback = Some(DeleteRelationTable(project, relation).execute)
-
 }
