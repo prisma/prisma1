@@ -2,13 +2,16 @@
   "name": "graphcool-cli-core",
   "version": "1.9.0-alpha.3",
   "main": "dist/index.js",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "typings": "dist/index.d.ts",
   "author": "Tim Suchanek <tim@graph.cool>",
   "license": "Apache-2.0",
   "devDependencies": {
     "@types/aws-lambda": "^0.0.17",
     "@types/fs-extra": "^4.0.2",
+    "@types/graphql": "^0.11.7",
     "@types/node": "^8.0.22",
     "husky": "^0.14.3",
     "jest": "^21.0.2",
@@ -26,12 +29,10 @@
     "node": ">=6.0.0"
   },
   "scripts": {
-    "build":
-      "rimraf dist && tsc -d && cp -r src/commands/local/docker dist/commands/local/docker && cp -r src/commands/init/boilerplate dist/commands/init/boilerplate",
+    "build": "rimraf dist && tsc -d && cp -r src/commands/local/docker dist/commands/local/docker && cp -r src/commands/init/boilerplate dist/commands/init/boilerplate",
     "lint": "tslint src/**/*.ts",
     "precommit": "lint-staged",
-    "prettier":
-      "prettier --single-quote --no-semi --trailing-comma all --write '*.ts' 'src/**/*.ts'",
+    "prettier": "prettier --single-quote --no-semi --trailing-comma all --write '*.ts' 'src/**/*.ts'",
     "prepublishOnly": "npm run lint && npm run build",
     "test": "NODE_ENV=test jest"
   },
@@ -47,13 +48,23 @@
     "gitDir": "../../../"
   },
   "jest": {
-    "moduleFileExtensions": ["ts", "tsx", "js", "jsx", "json"],
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "jsx",
+      "json"
+    ],
     "rootDir": "./src",
     "transform": {
       "^.+\\.(ts|tsx)$": "../../../node_modules/ts-jest/preprocessor.js"
     },
-    "testMatch": ["**/*.test.(ts|js)"],
-    "setupFiles": ["../test/init.js"],
+    "testMatch": [
+      "**/*.test.(ts|js)"
+    ],
+    "setupFiles": [
+      "../test/init.js"
+    ],
     "globals": {
       "ts-jest": {
         "tsConfigFile": "./tsconfig.json"
@@ -71,6 +82,8 @@
     "globby": "^6.1.0",
     "graphcool-inquirer": "^1.0.3",
     "graphcool-json-schema": "^1.0.0-alpha.1",
+    "graphql": "^0.11.7",
+    "graphql-config": "^1.0.9",
     "inquirer": "^3.3.0",
     "isomorphic-fetch": "^2.2.1",
     "js-yaml": "^3.9.1",

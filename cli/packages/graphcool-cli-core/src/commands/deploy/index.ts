@@ -12,6 +12,8 @@ import * as chokidar from 'chokidar'
 import * as inquirer from 'graphcool-inquirer'
 import * as path from 'path'
 import * as fs from 'fs-extra'
+import { getGraphQLConfig } from 'graphql-config'
+import { fetchAndPrintSchema } from './printSchema'
 const debug = require('debug')('deploy')
 
 export default class Deploy extends Command {
@@ -224,12 +226,43 @@ ${chalk.gray(
       )
       this.out.action.stop(this.prettyTime(Date.now() - before))
     }
+    // TODO move up to if statement after testing done
+    await this.generateSchema(serviceName, stageName)
 
     // no action required
     this.deploying = false
     if (migrationResult.migration.steps.length > 0) {
       this.printEndpoints(cluster, serviceName, stageName)
     }
+  }
+
+  private async generateSchema(serviceName: string, stageName: string) {
+    const schemaPath =
+      this.definition.definition!.schema || this.getSchemaPathFromConfig()
+    if (schemaPath) {
+      const schemaDir = path.dirname(schemaPath)
+      fs.mkdirpSync(schemaDir)
+      const schemaString = await fetchAndPrintSchema(
+        this.client,
+        serviceName,
+        stageName,
+      )
+      console.log('Got schema', schemaString.length)
+      fs.writeFileSync(path.join(this.config.cwd, schemaPath), schemaString)
+    }
+  }
+
+  private getSchemaPathFromConfig(): string | null {
+    try {
+      const config = getGraphQLConfig()
+      if (config) {
+        return config.config.schemaPath
+      }
+    } catch (e) {
+      //
+    }
+
+    return null
   }
 
   private printResult(payload: DeployPayload) {

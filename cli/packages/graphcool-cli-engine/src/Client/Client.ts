@@ -20,6 +20,7 @@ import { Output } from '../index'
 import chalk from 'chalk'
 import { Cluster } from '../Cluster'
 import { DeployPayload } from './clientTypes'
+import { introspectionQuery } from './introspectionQuery'
 
 const debug = require('debug')('client')
 
@@ -183,6 +184,13 @@ export class Client {
 
   //   return user
   // }
+
+  async introspect(serviceName: string, stageName: string): Promise<any> {
+    return request(
+      this.env.activeCluster.getApiEndpoint(serviceName, stageName),
+      introspectionQuery,
+    )
+  }
 
   async addProject(name: string, stage: string): Promise<SimpleProjectInfo> {
     const mutation = `\
