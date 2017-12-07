@@ -403,7 +403,7 @@ graphcool login
 ##### Authenticate using an existing authentication token.
 
 ```sh
-graphcool auth -t <token>
+graphcool login -t <token>
 ```
 
 
