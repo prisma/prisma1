@@ -129,7 +129,7 @@ case class Project(
     models: List[Model] = List.empty,
     relations: List[Relation] = List.empty,
     enums: List[Enum] = List.empty,
-    rootTokens: List[RootToken] = List.empty,
+    secrets: Vector[String] = Vector.empty,
     seats: List[Seat] = List.empty,
     allowQueries: Boolean = true,
     allowMutations: Boolean = true,
@@ -167,12 +167,6 @@ case class Project(
   def getRelationByRelationPermissionId(id: Id): Option[Relation] = relations.find(_.permissions.exists(_.id == id))
   def getRelationByRelationPermissionId_!(id: Id): Relation =
     relations.find(_.permissions.exists(_.id == id)).get //OrElse(throw SystemErrors.InvalidRelationPermissionId(id))
-
-  def getRootTokenById(id: String): Option[RootToken] = rootTokens.find(_.id == id)
-  def getRootTokenById_!(id: String): RootToken       = getRootTokenById(id).get //OrElse(throw UserInputErrors.InvalidRootTokenId(id))
-
-  def getRootTokenByName(name: String): Option[RootToken] = rootTokens.find(_.name == name)
-  def getRootTokenByName_!(name: String): RootToken       = getRootTokenById(name).get //OrElse(throw UserInputErrors.InvalidRootTokenName(name))
 
   // note: mysql columns are case insensitive, so we have to be as well. But we could make them case sensitive https://dev.mysql.com/doc/refman/5.6/en/case-sensitivity.html
   def getModelByName(name: String): Option[Model] = models.find(_.name.toLowerCase() == name.toLowerCase())
@@ -788,5 +782,3 @@ object ModelOperation extends Enumeration {
   val Update = Value("UPDATE")
   val Delete = Value("DELETE")
 }
-
-case class RootToken(id: Id, token: String, name: String, created: DateTime)
