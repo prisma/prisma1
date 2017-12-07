@@ -44,7 +44,7 @@ A node token always needs to be associated with a particular node (often of type
 ### Generating a node token with `graphcool-lib`
 
 
-You can use the [`generateAuthToken`](https://github.com/graphcool/graphcool-lib#generatenodetokennodeid-modelname) function in [`graphcool-lib`](https://github.com/graphcool/graphcool-lib) to generate a new node token.
+You can use the [`generateNodeToken`](https://github.com/graphcool/graphcool-lib#generatenodetokennodeid-modelname) function in [`graphcool-lib`](https://github.com/graphcool/graphcool-lib) to generate a new node token.
 
 Here is how it works:
 
