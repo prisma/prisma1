@@ -8,6 +8,7 @@ import chalk from 'chalk'
 import { Environment } from '../Environment'
 import { mapValues } from 'lodash'
 import * as yamlParser from 'yaml-ast-parser'
+import { StageNotFound } from '../errors/StageNotFound'
 
 interface ErrorMessage {
   message: string
@@ -44,8 +45,19 @@ export class GraphcoolDefinitionClass {
     }
   }
 
-  getStage(name: string): string | undefined {
-    return this.definition && this.definition.stages[name]
+  getStage(name: string, throws: boolean = false): string | undefined {
+    const stage =
+      this.definition &&
+      (this.definition.stages[name] || this.definition.stages.default)
+    if (!throws) {
+      return stage
+    }
+
+    if (!stage) {
+      throw new StageNotFound(name)
+    }
+
+    return stage
   }
 
   setStage(name: string, clusterName: string) {

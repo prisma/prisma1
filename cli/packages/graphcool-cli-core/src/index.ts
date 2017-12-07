@@ -2,7 +2,7 @@ import Deploy from './commands/deploy'
 import Init from './commands/init'
 // import Auth from './commands/auth/index'
 // import Info from './commands/info/index'
-// import Playground from './commands/playground/index'
+import Playground from './commands/playground/index'
 // import Console from './commands/console'
 // import List from './commands/list/index'
 // import Delete from './commands/delete/index'
@@ -50,11 +50,11 @@ export const topics = [
   },
   // { name: 'login', description: 'Create account or login', group: 'platform' },
   // { name: 'reset', description: 'Reset data of a service', group: 'data' },
-  // {
-  //   name: 'playground',
-  //   description: 'Opens the playground for the current service',
-  //   group: 'general',
-  // },
+  {
+    name: 'playground',
+    description: 'Opens the playground for the current service',
+    group: 'general',
+  },
   // {
   //   name: 'info',
   //   description: 'Print service info (endpoints, clusters, ...) ',
@@ -99,7 +99,7 @@ export const commands = [
   Init,
   // Auth,
   // Info,
-  // Playground,
+  Playground,
   // Console,
   // List,
   // Delete,
@@ -121,7 +121,7 @@ export {
   Init,
   // Auth,
   // Info,
-  // Playground,
+  Playground,
   // Console,
   // List,
   // Delete,

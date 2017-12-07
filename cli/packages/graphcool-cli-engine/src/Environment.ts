@@ -6,6 +6,7 @@ import * as fs from 'fs-extra'
 import * as yaml from 'js-yaml'
 import Variables from './GraphcoolDefinition/Variables'
 import { InternalRC } from './types/rc'
+import { ClusterNotFound } from './errors/ClusterNotFound'
 
 export class Environment {
   out: Output
@@ -24,8 +25,17 @@ export class Environment {
     await this.loadGlobalRC()
   }
 
-  clusterByName(name: string): Cluster | undefined {
-    return this.clusters.find(c => c.name === name)
+  clusterByName(name: string, throws: boolean = false): Cluster | undefined {
+    const cluster = this.clusters.find(c => c.name === name)
+    if (!throws) {
+      return cluster
+    }
+
+    if (!cluster) {
+      throw new ClusterNotFound(name)
+    }
+
+    return cluster
   }
 
   setToken(token: string | undefined) {
