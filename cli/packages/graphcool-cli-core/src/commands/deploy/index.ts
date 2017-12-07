@@ -76,6 +76,7 @@ ${chalk.gray(
     }),
   }
   private deploying: boolean = false
+  private showedLines: number = 0
   async run() {
     debug('run')
     const { force, watch, interactive } = this.flags
@@ -104,14 +105,22 @@ ${chalk.gray(
 
     if (!stageName) {
       stageName =
-        (this.definition.rawStages && this.definition.rawStages.default) ||
+        (!interactive &&
+          this.definition.rawStages &&
+          this.definition.rawStages.default) ||
         (await this.stageNameSelector('dev'))
     }
 
     let clusterName = this.definition.getStage(stageName)
     const serviceIsNew = !clusterName
     if (!clusterName) {
-      clusterName = newServiceClusterName || (await this.clusterSelection())
+      clusterName =
+        (!interactive && newServiceClusterName) ||
+        (await this.clusterSelection())
+    }
+
+    if (this.showedLines > 0) {
+      this.out.up(this.showedLines)
     }
 
     const serviceName = this.definition.definition!.service
@@ -151,7 +160,7 @@ ${chalk.gray(
     if (serviceIsNew) {
       this.definition.setStage(stageName, cluster!.name)
       this.definition.save()
-      this.out.log(`\nAdded stage ${stageName} to graphcool.yml`)
+      this.out.log(`Added stage ${stageName} to graphcool.yml\n`)
     }
   }
 
@@ -279,21 +288,9 @@ ${chalk.gray(
     }
 
     const { cluster } = await this.out.prompt(question)
+    this.showedLines += 2
 
     return cluster
-  }
-
-  private async serviceNameSelector(defaultName: string): Promise<string> {
-    const question = {
-      name: 'service',
-      type: 'input',
-      message: 'Please choose the service name',
-      default: defaultName,
-    }
-
-    const { service } = await this.out.prompt(question)
-
-    return service
   }
 
   private async stageNameSelector(defaultName: string): Promise<string> {
@@ -305,6 +302,8 @@ ${chalk.gray(
     }
 
     const { stage } = await this.out.prompt(question)
+
+    this.showedLines += 1
 
     return stage
   }
