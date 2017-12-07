@@ -24,8 +24,6 @@ trait ApiTestServer extends BeforeAndAfterEach with ApiTestDatabase with SprayJs
 
   def writeSchemaIntoFile(schema: String): Unit = File("schema").writeAll(schema)
 
-//  val apiMetricMiddleware: ApiMetricsMiddleware = injector.apiMetricsMiddleware
-  // configs that can be overridden by tests
   def printSchema: Boolean = false
   def writeSchemaToFile    = false
   def logSimple: Boolean   = false
@@ -45,36 +43,18 @@ trait ApiTestServer extends BeforeAndAfterEach with ApiTestDatabase with SprayJs
   def querySimple(query: String)(implicit project: Project): JsValue                       = executeQuerySimple(query, project)
   def querySimple(query: String, dataContains: String)(implicit project: Project): JsValue = executeQuerySimple(query, project, dataContains)
 
-  def executeQuerySimple(query: String, project: Project, userId: String): JsValue = {
-    executeQuerySimple(query, project, Some(AuthenticatedUser(userId, "User", "test-token")))
-  }
-
-  def executeQuerySimple(query: String, project: Project, userId: String, dataContains: String): JsValue = {
-    executeQuerySimple(query, project, Some(AuthenticatedUser(userId, "User", "test-token")), dataContains)
-  }
-
-  def executeQuerySimple(query: String, project: Project, authenticatedRequest: AuthenticatedRequest): JsValue = {
-    executeQuerySimple(query, project, Some(authenticatedRequest))
-  }
-
-  def executeQuerySimple(query: String, project: Project, authenticatedRequest: AuthenticatedRequest, dataContains: String): JsValue = {
-    executeQuerySimple(query, project, Some(authenticatedRequest), dataContains)
-  }
-
-  def executeQuerySimple(query: String,
-                         project: Project,
-                         authenticatedRequest: Option[AuthenticatedRequest] = None,
-                         dataContains: String = "",
-                         variables: JsValue = JsObject(),
-                         requestId: String = "CombinedTestDatabase.requestId",
-                         graphcoolHeader: Option[String] = None): JsValue = {
+  def executeQuerySimple(
+      query: String,
+      project: Project,
+      dataContains: String = "",
+      variables: JsValue = JsObject.empty,
+      requestId: String = "CombinedTestDatabase.requestId"
+  ): JsValue = {
     val result = executeQuerySimpleWithAuthentication(
       query = query,
       project = project,
-      authenticatedRequest = authenticatedRequest,
       variables = variables,
-      requestId = requestId,
-      graphcoolHeader = graphcoolHeader
+      requestId = requestId
     )
 
     result.assertSuccessfulResponse(dataContains)
