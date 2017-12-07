@@ -50,10 +50,9 @@ export default class Docker {
     // either get the ports
     let port: any = null
     if (this.cluster) {
-      port = this.cluster
-        .getDeployEndpoint()
-        .split(':')
-        .slice(-1)[0]
+      const endpoint = this.cluster.getDeployEndpoint()
+      const sliced = endpoint.slice(endpoint.lastIndexOf(':'))
+      port = sliced.slice(0, sliced.indexOf('/'))
     }
     const defaultVars = this.getDockerEnvVars()
     const portfinder = require('portfinder')

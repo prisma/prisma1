@@ -8,29 +8,29 @@ import Init from './commands/init'
 // import Delete from './commands/delete/index'
 // import RootTokens from './commands/root-token/index'
 // import FunctionLogs from './commands/logs/function'
-// import PullLocal from './commands/local/pull'
-// import Stop from './commands/local/stop'
-// import Up from './commands/local/up'
-// import Restart from './commands/local/restart'
+import PullLocal from './commands/local/pull'
+import Stop from './commands/local/stop'
+import Up from './commands/local/up'
+import Restart from './commands/local/restart'
+import Eject from './commands/local/eject'
+import PsLocal from './commands/local/ps'
 // import Account from './commands/account'
-// import Eject from './commands/local/eject'
-// import PsLocal from './commands/local/ps'
 // import Reset from './commands/reset/reset'
 // import Clusters from './commands/clusters/index'
 
 export const groups = [
   {
     key: 'general',
-    name: 'General commands',
+    name: 'Database service',
   },
   // {
   //   key: 'data',
   //   name: 'Data workflows',
   // },
-  // {
-  //   key: 'local',
-  //   name: 'Local development',
-  // },
+  {
+    key: 'local',
+    name: 'Local development',
+  },
   // {
   //   key: 'platform',
   //   name: 'Platform',
@@ -38,7 +38,11 @@ export const groups = [
 ]
 
 export const topics = [
-  { name: 'init', description: 'Create a new service', group: 'general' },
+  {
+    name: 'init',
+    description: 'Create files for new services',
+    group: 'general',
+  },
   {
     name: 'deploy',
     description: 'Deploy local service definition',
@@ -78,11 +82,11 @@ export const topics = [
   //   description: 'Information about the current authenticated account',
   //   group: 'platform',
   // },
-  // {
-  //   name: 'local',
-  //   description: 'Manage the local Graphcool version',
-  //   group: 'local',
-  // },
+  {
+    name: 'local',
+    description: 'Manage the local Graphcool version',
+    group: 'local',
+  },
   // {
   //   name: 'clusters',
   //   description: 'Manage your private clusters',
@@ -101,13 +105,13 @@ export const commands = [
   // Delete,
   // RootTokens,
   // FunctionLogs,
-  // PullLocal,
-  // Stop,
-  // Up,
-  // Restart,
+  PullLocal,
+  Stop,
+  Up,
+  Restart,
+  Eject,
+  PsLocal,
   // Account,
-  // Eject,
-  // PsLocal,
   // Reset,
   // Clusters,
 ]
@@ -123,13 +127,13 @@ export {
   // Delete,
   // RootTokens,
   // FunctionLogs,
-  // PullLocal,
-  // Stop,
-  // Up,
-  // Restart,
-  // Account,
-  // Eject,
-  // PsLocal,
+  PullLocal,
+  Stop,
+  Up,
+  Restart,
+  Eject,
+  PsLocal,
   // Reset,
   // Clusters,
+  // Account,
 }
