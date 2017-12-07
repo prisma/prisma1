@@ -263,8 +263,7 @@ class MigrationStepsProposerSpec extends FlatSpec with Matchers with AwaitUtils 
 
   "Creating and using Enums" should "create CreateEnum and CreateField migration steps" in {
     val previousProject = SchemaBuilder() { schema =>
-      schema
-        .model("Todo")
+      schema.model("Todo")
     }
 
     val nextProject = SchemaBuilder() { schema =>
@@ -298,12 +297,14 @@ class MigrationStepsProposerSpec extends FlatSpec with Matchers with AwaitUtils 
     val renames = Renames(
       enums = Vector(Rename(previous = "TodoStatus", next = "TodoStatusNew"))
     )
+
     val previousProject = SchemaBuilder() { schema =>
       val enum = schema.enum("TodoStatus", Vector("Active", "Done"))
       schema
         .model("Todo")
         .field("status", _.Enum, enum = Some(enum))
     }
+
     val nextProject = SchemaBuilder() { schema =>
       val enum = schema.enum("TodoStatusNew", Vector("Active", "Done"))
       schema
@@ -343,6 +344,7 @@ class MigrationStepsProposerSpec extends FlatSpec with Matchers with AwaitUtils 
         .model("Todo")
         .field("status", _.Enum, enum = Some(enum))
     }
+
     val nextProject = SchemaBuilder() { schema =>
       val enum = schema.enum("TodoStatus", Vector("Active", "AbsolutelyDone"))
       schema
@@ -362,6 +364,44 @@ class MigrationStepsProposerSpec extends FlatSpec with Matchers with AwaitUtils 
     )
   }
 
+  // Regression
+  "Enums" should "not be displayed as updated if they haven't been touched in a deploy" in {
+    val renames = Renames(
+      enums = Vector()
+    )
+
+    val previousProject = SchemaBuilder() { schema =>
+      val enum = schema.enum("TodoStatus", Vector("Active", "Done"))
+      schema
+        .model("Todo")
+        .field("status", _.Enum, enum = Some(enum))
+    }
+
+    val nextProject = SchemaBuilder() { schema =>
+      val enum = schema.enum("TodoStatus", Vector("Active", "Done"))
+      schema
+        .model("Todo")
+        .field("someField", _.String)
+        .field("status", _.Enum, enum = Some(enum))
+    }
+
+    val steps = MigrationStepsProposerImpl(previousProject, nextProject, renames).evaluate()
+    steps should have(size(1))
+    steps should contain(
+      CreateField(
+        model = "Todo",
+        name = "someField",
+        typeName = "String",
+        isRequired = false,
+        isList = false,
+        isUnique = false,
+        relation = None,
+        defaultValue = None,
+        enum = None
+      )
+    )
+  }
+
   "Removing Enums" should "create an DeleteEnum step" in {
     val renames = Renames.empty
     val previousProject = SchemaBuilder() { schema =>
@@ -369,9 +409,9 @@ class MigrationStepsProposerSpec extends FlatSpec with Matchers with AwaitUtils 
       schema
         .model("Todo")
     }
+
     val nextProject = SchemaBuilder() { schema =>
-      schema
-        .model("Todo")
+      schema.model("Todo")
     }
 
     val steps = MigrationStepsProposerImpl(previousProject, nextProject, renames).evaluate()

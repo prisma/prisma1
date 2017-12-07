@@ -45,11 +45,38 @@ object Renames {
 case class MigrationStepsProposerImpl(previousProject: Project, nextProject: Project, renames: Renames) {
   import cool.graph.util.Diff._
 
+  /**
+    * The following evaluation order considers all interdependencies:
+    * - Delete Relation
+    * - Delete Field
+    * - Delete Model
+    * - Delete Enum
+    * - Create Enum
+    * - Create Model
+    * - Create Field
+    * - Create Relation
+    * - Update Enum
+    * - Update Field
+    * - Update Model
+    *
+    * Note that all actions can be performed on the database level without the knowledge of previous or next migration steps.
+    * This would not be true if, for example, the order would be reversed, as field updates and deletes would need to know the new
+    * table name instead of the old one to successfully execute their SQL statements, increasing implementation complexity
+    * and having more surface area for bugs. The model shown allows to _just look at the previous project_ and apply
+    * all steps, instead of knowing the next project state as well.
+    */
   def evaluate(): Vector[MigrationStep] = {
-    modelsToCreate ++ modelsToUpdate ++ modelsToDelete ++
-      fieldsToCreate ++ fieldsToDelete ++ fieldsToUpdate ++
-      relationsToCreate ++ relationsToDelete ++
-      enumsToCreate ++ enumsToDelete ++ enumsToUpdate
+    relationsToDelete ++
+      fieldsToDelete ++
+      modelsToDelete ++
+      enumsToDelete ++
+      enumsToCreate ++
+      modelsToCreate ++
+      fieldsToCreate ++
+      relationsToCreate ++
+      enumsToUpdate ++
+      fieldsToUpdate ++
+      modelsToUpdate
   }
 
   lazy val modelsToCreate: Vector[CreateModel] = {
@@ -179,7 +206,7 @@ case class MigrationStepsProposerImpl(previousProject: Project, nextProject: Pro
   }
 
   lazy val enumsToUpdate: Vector[UpdateEnum] = {
-    for {
+    (for {
       previousEnum <- previousProject.enums.toVector
       nextEnumName = renames.getNextEnumName(previousEnum.name)
       nextEnum     <- nextProject.getEnumByName(nextEnumName)
@@ -189,7 +216,7 @@ case class MigrationStepsProposerImpl(previousProject: Project, nextProject: Pro
         newName = diff(previousEnum.name, nextEnum.name),
         values = diff(previousEnum.values, nextEnum.values)
       )
-    }
+    }).filter(isAnyOptionSet)
   }
 
   lazy val emptyModel = Model(

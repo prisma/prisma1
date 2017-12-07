@@ -1,5 +1,7 @@
 package cool.graph.deploy.schema
 
+import cool.graph.shared.models.ProjectId
+
 trait DeployApiError extends Exception {
   def message: String
   def errorCode: Int
@@ -9,7 +11,11 @@ trait DeployApiError extends Exception {
 
 abstract class AbstractDeployApiError(val message: String, val errorCode: Int) extends DeployApiError
 
-case class InvalidProjectId(projectId: String) extends AbstractDeployApiError(s"No service with id '$projectId'", 4000)
+case class InvalidProjectId(projectId: String)
+    extends AbstractDeployApiError({
+      val nameAndStage = ProjectId.fromEncodedString(projectId)
+      s"No service with name '${nameAndStage.name}' and stage '${nameAndStage.stage}' found"
+    }, 4000)
 
 case class InvalidServiceName(name: String) extends AbstractDeployApiError(InvalidNames.forService(name, "service name"), 4001)
 
