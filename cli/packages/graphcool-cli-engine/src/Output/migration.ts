@@ -157,6 +157,7 @@ export class MigrationPrinter {
           break
         case 'DeleteEnum':
           this.printEnumName(step)
+
           this.out.log(
             `${pad}${this.getSymbol('delete')} Deleted enum ${step.name}`,
           )

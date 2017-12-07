@@ -104,7 +104,7 @@ ${chalk.gray(
 
     if (!stageName) {
       stageName =
-        this.definition.rawStages.default ||
+        (this.definition.rawStages && this.definition.rawStages.default) ||
         (await this.stageNameSelector('dev'))
     }
 
