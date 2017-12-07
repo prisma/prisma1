@@ -58,6 +58,18 @@ object DatabaseQueryBuilder {
     (query, resultTransform)
   }
 
+  def selectAllFromRelationExport(projectId: String,
+                                  relationId: String,
+                                  args: Option[QueryArguments],
+                                  overrideMaxNodeCount: Option[Int] = None): (SQLActionBuilder, ResultTransform) = {
+
+    val (_, _, limitCommand, resultTransform) = extractQueryArgs(projectId, relationId, args, overrideMaxNodeCount = overrideMaxNodeCount)
+
+    val query = sql"select * from `#$projectId`.`#$relationId`" concat prefixIfNotNone("limit", limitCommand)
+
+    (query, resultTransform)
+  }
+
   def selectAllFromModels(projectId: String, modelName: String, args: Option[QueryArguments]): (SQLActionBuilder, ResultTransform) = {
 
     val (conditionCommand, orderByCommand, limitCommand, resultTransform) =

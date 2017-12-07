@@ -166,103 +166,90 @@ object DataImport {
 object DataExport {
   import cool.graph.client.mutactions.ImportExportFormat._
 
-  //pass down case class to methods that encapsulates info that is now in implicits
-  //can also signify the type of exportitem that needs to be created
   trait ExportInfo { def length: Int; def index: Int }
   case class NodeInfo(dataResolver: DataResolver, models: List[(Model, Int)], index: Int, current: Model) extends ExportInfo { def length = models.length }
   case class ListInfo(dataResolver: DataResolver, models: List[(Model, Int)], index: Int, current: Model) extends ExportInfo { def length = models.length }
-//  case class RelationInfo(dataResolver: DataResolver, relations: List[(Relation, Int)], index: Int, current: Relation) extends ExportInfo {
-//    def length = relations.length
-//  }
-
-  def isLimitReached(str: String): Boolean = str.length > 10000000 // only for testing purposes variable in here
-
-  // exports nodes returns a string and a nodecursor where to resume or  -1,-1 if no more nodes exist
-
-  def exportNodes(project: Project, dataResolver2: DataResolver, modelIndex: Int, startNodeRow: Int)(
-      implicit injector: ClientInjector): Future[StringWithCursor] = {
-    val modelsWithIndex: List[(Model, Int)] = project.models.zipWithIndex
-    resultForCursor(in = "",
-                    fileIndex = 0,
-                    startRow = startNodeRow,
-                    project,
-                    NodeInfo(dataResolver2, modelsWithIndex, modelIndex, modelsWithIndex.find(_._2 == modelIndex).get._1))
+  case class RelationInfo(dataResolver: DataResolver, relations: List[(Relation, Int)], index: Int, current: RelationData) extends ExportInfo {
+    def length = relations.length
   }
 
-  // exports nodes returns a string and a nodecursor (only counting models with list values) where to resume or  -1,-1 if no more nodes exist
-  def exportListValues(project: Project, dataResolver2: DataResolver, modelIndex: Int, startNodeRow: Int)(
-      implicit injector: ClientInjector): Future[StringWithCursor] = {
-    val modelsWithIndex: List[(Model, Int)] = project.models.filter(m => m.fields.exists(f => f.isList)).zipWithIndex
-    resultForCursor(in = "",
-                    fileIndex = 0,
-                    startRow = startNodeRow,
-                    project,
-                    ListInfo(dataResolver2, modelsWithIndex, modelIndex, modelsWithIndex.find(_._2 == modelIndex).get._1))
+  def isLimitReached(str: String): Boolean = str.length > 1000 // only for testing purposes variable in here
+
+  def exportNodes(project: Project, dataResolver: DataResolver, tableIndex: Int, startRow: Int): Future[StringWithCursor] = {
+    val tablesWithIndex: List[(Model, Int)] = project.models.zipWithIndex
+    val currentModel: Model                 = tablesWithIndex.find(_._2 == tableIndex).get._1
+
+    resultForCursor(in = "", startRow, project, NodeInfo(dataResolver, tablesWithIndex, tableIndex, currentModel))
   }
 
-//  // exports relations returns a string and a relationcursor where to resume or  -1,-1 if no more nodes exist
-//  def exportRelations(project: Project, dataResolver2: DataResolver, relationIndex: Int, startRelationRow: Int)(
-//      implicit injector: ClientInjector): Future[StringWithCursor] = {
-//    implicit val dataResolver = dataResolver2
-//    val relationsWithIndex: List[(Relation, Int)] = project.relations.zipWithIndex
-//    relationResultForCursor(in = "", fileIndex = 0, relationIndex, startRelationRow, project, RelationInfo(dataResolver2, relationsWithIndex))
-//  }
+  def exportLists(project: Project, dataResolver: DataResolver, tableIndex: Int, startRow: Int): Future[StringWithCursor] = {
+    val tablesWithIndex: List[(Model, Int)] = project.models.filter(m => m.fields.exists(f => f.isList)).zipWithIndex
+    val currentModel: Model                 = tablesWithIndex.find(_._2 == tableIndex).get._1
 
-  def resultForCursor(in: String, fileIndex: Int, startRow: Int, project: Project, info: ExportInfo): Future[StringWithCursor] = {
+    resultForCursor(in = "", startRow, project, ListInfo(dataResolver, tablesWithIndex, tableIndex, currentModel))
+  }
+
+  def exportRelations(project: Project, dataResolver: DataResolver, tableIndex: Int, startRow: Int): Future[StringWithCursor] = {
+    val tablesWithIndex: List[(Relation, Int)] = project.relations.zipWithIndex
+    val currentModel: Relation                 = tablesWithIndex.find(_._2 == tableIndex).get._1
+
+    resultForCursor(in = "", startRow, project, RelationInfo(dataResolver, tablesWithIndex, tableIndex, extractRelationInfo(currentModel, project)))
+  }
+
+  def resultForCursor(in: String, startRow: Int, project: Project, info: ExportInfo, fileIndex: Int = 0): Future[StringWithCursor] = {
     import scala.concurrent.ExecutionContext.Implicits.global
     val tablesLeft = info.index < info.length - 1
 
-    //model and relation could be locked down here
+    def generateNextInfo: ExportInfo = info match {
+      case x: NodeInfo     => NodeInfo(x.dataResolver, x.models, x.index + 1, x.models.find(_._2 == x.index + 1).get._1)
+      case x: ListInfo     => ListInfo(x.dataResolver, x.models, x.index + 1, x.models.find(_._2 == x.index + 1).get._1)
+      case x: RelationInfo => RelationInfo(x.dataResolver, x.relations, x.index + 1, extractRelationInfo(x.relations.find(_._2 == x.index + 1).get._1, project))
+    }
 
     for {
-      modelResult <- resultForModel(in, fileIndex, startRow, info)
-      x <- modelResult.isFull match {
-            case false if tablesLeft =>
-              val nextInfo = info match {
-                case x: NodeInfo => NodeInfo(x.dataResolver, x.models, x.index + 1, x.models.find(_._2 == x.index + 1).get._1)
-                case x: ListInfo => ListInfo(x.dataResolver, x.models, x.index + 1, x.models.find(_._2 == x.index + 1).get._1)
-//                case x: RelationInfo =>
-              }
-              resultForCursor(modelResult.out, modelResult.nextFileIndex, startRow = 0, project, nextInfo)
-            case false if !tablesLeft => Future.successful(StringWithCursor(modelResult.out, -1, -1))
-            case true                 => Future.successful(StringWithCursor(modelResult.out, info.index, modelResult.endNodeRow))
+      tableResult <- resultForTable(in, fileIndex, startRow, info)
+      x <- tableResult.isFull match {
+            case false if tablesLeft  => resultForCursor(tableResult.out, startRow = 0, project, generateNextInfo, tableResult.nextFileIndex)
+            case false if !tablesLeft => Future.successful(StringWithCursor(tableResult.out, -1, -1))
+            case true                 => Future.successful(StringWithCursor(tableResult.out, info.index, tableResult.endRow))
           }
     } yield x
   }
 
-  case class ModelResult(out: String, nextFileIndex: Int, endNodeRow: Int, isFull: Boolean)
-  def resultForModel(in: String, fileIndex: Int, startNodeRow: Int, info: ExportInfo): Future[ModelResult] = {
+  case class TableResult(out: String, nextFileIndex: Int, endRow: Int, isFull: Boolean)
+  def resultForTable(in: String, fileIndex: Int, startRow: Int, info: ExportInfo): Future[TableResult] = {
     import scala.concurrent.ExecutionContext.Implicits.global
 
-    fetchDataItemsPage(info.index, startNodeRow, info).flatMap { page =>
-      val pageResult = serializePage(in, page, fileIndex, startOnPage = 0, amount = 1000, info)
+    fetchDataItemsPage(startRow, info).flatMap { page =>
+      val pageResult = serializePage(in, page, fileIndex, info)
 
       (pageResult.isFull, page.hasMore) match {
-        case (false, true)  => resultForModel(in = pageResult.out, pageResult.nextFileIndex, startNodeRow + 1000, info)
-        case (false, false) => Future.successful(ModelResult(pageResult.out, pageResult.nextFileIndex, endNodeRow = -1, false))
-        case (true, _)      => Future.successful(ModelResult(pageResult.out, pageResult.nextFileIndex, startNodeRow + pageResult.used, true))
+        case (false, true)  => resultForTable(in = pageResult.out, pageResult.nextFileIndex, startRow + 1000, info)
+        case (false, false) => Future.successful(TableResult(pageResult.out, pageResult.nextFileIndex, endRow = -1, false))
+        case (true, _)      => Future.successful(TableResult(pageResult.out, pageResult.nextFileIndex, startRow + pageResult.used, true))
       }
     }
   }
 
   case class DataItemsPage(items: Seq[DataItem], hasMore: Boolean) { def itemCount: Int = items.length }
-  def fetchDataItemsPage(tableIndex: Int, startOnModel: Int, info: ExportInfo): Future[DataItemsPage] = {
+  def fetchDataItemsPage(startOnModel: Int, info: ExportInfo): Future[DataItemsPage] = {
     import scala.concurrent.ExecutionContext.Implicits.global
 
     val queryArguments = QueryArguments(skip = Some(startOnModel), after = None, first = Some(1001), None, None, None, None)
     for {
       resolverResult <- info match {
-                         case x: NodeInfo => x.dataResolver.resolveByModelExport(x.models.find(_._2 == tableIndex).get._1, Some(queryArguments))
-                         case x: ListInfo => x.dataResolver.resolveByModelExport(x.models.find(_._2 == tableIndex).get._1, Some(queryArguments))
-//                         case x: RelationInfo => x.dataResolver.resolveByModelExport(x.tableMap.find(_._2 == tableIndex).get._1, Some(queryArguments))
+                         case x: NodeInfo     => x.dataResolver.loadModelRowsForExport(x.current, Some(queryArguments))
+                         case x: ListInfo     => x.dataResolver.loadModelRowsForExport(x.current, Some(queryArguments))
+                         case x: RelationInfo => x.dataResolver.loadRelationRowsForExport(x.current.relationId, Some(queryArguments))
                        }
     } yield {
-      DataItemsPage(resolverResult.items.take(1000), hasMore = resolverResult.items.length > 1000)
+      println(resolverResult.items.head)
+      DataItemsPage(resolverResult.items.take(1000), hasMore = resolverResult.items.length > 1000) // use hasNextPage on ResolverResult itself?
     }
   }
 
   case class PageResult(out: String, nextFileIndex: Int, used: Int, isFull: Boolean)
-  def serializePage(in: String, page: DataItemsPage, fileIndex: Int, startOnPage: Int, amount: Int, info: ExportInfo): PageResult = {
+  def serializePage(in: String, page: DataItemsPage, fileIndex: Int, info: ExportInfo, startOnPage: Int = 0, amount: Int = 1000): PageResult = {
 
     val dataItems           = page.items.slice(startOnPage, startOnPage + amount)
     val serializationResult = serializeDataItems(dataItems, fileIndex, info)
@@ -272,15 +259,13 @@ object DataExport {
     val fullPageUsed        = startOnPage + amount < page.itemCount
 
     isLimitReachedTemp match {
-      case true if amount != 1 => serializePage(in = in, page = page, fileIndex = fileIndex, startOnPage = startOnPage, amount / 10, info)
-      case false if fullPageUsed =>
-        serializePage(in = combinedString, page, fileIndex + numberSerialized, startOnPage + numberSerialized, amount, info)
+      case true if amount != 1    => serializePage(in = in, page = page, fileIndex = fileIndex, info, startOnPage = startOnPage, amount / 10)
+      case false if fullPageUsed  => serializePage(in = combinedString, page, fileIndex + numberSerialized, info, startOnPage + numberSerialized, amount)
       case true if amount == 1    => PageResult(out = in, nextFileIndex = fileIndex, used = startOnPage, isFull = true)
       case false if !fullPageUsed => PageResult(out = combinedString, nextFileIndex = fileIndex + numberSerialized, startOnPage + numberSerialized + 1, false)
     }
   }
 
-  //move tableindex in the exportinfo
   case class SerializeResult(out: String, nextIndex: Int)
   def serializeDataItems(dataItems: Seq[DataItem], startIndex: Int, info: ExportInfo): SerializeResult = {
     var index = startIndex
@@ -288,9 +273,9 @@ object DataExport {
       item <- dataItems
     } yield {
       val tmp = info match {
-        case x: NodeInfo => dataItemToExportNode(index, item, x)
-        case x: ListInfo => dataItemToExportList(index, item, x)
-//        case x: RelationInfo => dataItemToExportRelation(index, item, tableIndex, x)
+        case info: NodeInfo     => dataItemToExportNode(index, item, info)
+        case info: ListInfo     => dataItemToExportList(index, item, info)
+        case info: RelationInfo => dataItemToExportRelation(index, item, info)
       }
       index = index + 1
       tmp
@@ -330,40 +315,24 @@ object DataExport {
     nodeValue.toJson.toString
   }
 
-//  case class RelationInformation(relationName: String, leftModel: String, leftField: String, rightModel: String, rightField: String)
-//  def dataItemToExportRelation(index: Int, item: DataItem, tableIndex: Int, info: RelationInfo): String = {
-//    import MyJsonProtocol._
-//    import spray.json._
-//
-//    val relation = info.tableMap.find(_._2 == tableIndex).get._1
-//    val idA      = item.userData("A").get.toString
-//    val idB      = item.userData("B").get.toString
-//
-////    val leftIdentifier    = ImportIdentifier(relation.leftModel, idA)
-////    val leftRelationSide  = ImportRelationSide(leftIdentifier, info.leftField)
-////    val rightIdentifier   = ImportIdentifier(info.rightModel, idB)
-////    val rightRelationSide = ImportRelationSide(rightIdentifier, info.rightField)
-////    val exportRelation    = ImportRelation(index, info.relationName, leftRelationSide, rightRelationSide)
-////    exportRelation.toJson.toString
-//
-//    ""
-//  }
-//  //result types can probably be shared
-//  case class RelationResult(out: String, nextFileIndex: Int, endRelationRow: Int, isFull: Boolean)
-//  def resultForRelation(in: String, fileIndex: Int, startRelationRow: Int)(implicit dataResolver: DataResolver, relation: Relation): Future[RelationResult] = {
-//    import scala.concurrent.ExecutionContext.Implicits.global
-//
-//    fetchDataItemsPage(startNodeRow).flatMap { page =>
-//      val pageResult = serializePage(in, page, fileIndex, startOnPage = 0, amount = 1000)
-//
-//      (pageResult.isFull, page.hasMore) match {
-//        case (false, true)  => resultForModel(in = pageResult.out, pageResult.nextFileIndex, startNodeRow + 1000)
-//        case (false, false) => Future.successful(ModelResult(pageResult.out, pageResult.nextFileIndex, endNodeRow = -1, false))
-//        case (true, _)      => Future.successful(ModelResult(pageResult.out, pageResult.nextFileIndex, startNodeRow + pageResult.used, true))
-//      }
-//    }
-//  }
+  case class RelationData(relationId: String, relationName: String, leftModel: String, leftField: String, rightModel: String, rightField: String)
+  def extractRelationInfo(r: Relation, project: Project): RelationData = {
+    RelationData(r.id, r.name, r.getModelA_!(project).name, r.aName(project), r.getModelB_!(project).name, r.bName(project))
+  }
 
+  //this seems to switch relationSides and appendthe opposing Model to the fieldName
+  def dataItemToExportRelation(index: Int, item: DataItem, info: RelationInfo): String = {
+    import MyJsonProtocol._
+    import spray.json._
+    val idA               = item.userData("A").get.toString
+    val idB               = item.userData("B").get.toString
+    val leftIdentifier    = ImportIdentifier(info.current.leftModel, idA)
+    val leftRelationSide  = ImportRelationSide(leftIdentifier, info.current.leftField)
+    val rightIdentifier   = ImportIdentifier(info.current.rightModel, idB)
+    val rightRelationSide = ImportRelationSide(rightIdentifier, info.current.rightField)
+    val exportRelation    = ImportRelation(index, info.current.relationName, leftRelationSide, rightRelationSide)
+    exportRelation.toJson.toString
+  }
 }
 
 object teststuff {
