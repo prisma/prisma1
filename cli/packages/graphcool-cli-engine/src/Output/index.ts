@@ -240,7 +240,7 @@ To get more detailed output, run ${chalk.dim(instruction)}`,
     return this.prompter.prompt(name, options)
   }
 
-  table<T = { height?: number }>(data: T[], options: TableOptions<T>) {
+  table<T = { height?: number }>(data: T[], options?: TableOptions<T>) {
     const table = require('./table')
     return table(this, data, options)
   }

@@ -2,17 +2,17 @@ import { Output } from './index'
 import * as stripAnsi from 'strip-ansi'
 
 export interface TableColumn<T> {
-  key: string,
-  label?: string,
-  format: (value: string, row: string) => string,
-  get: (row: T) => string,
+  key: string
+  label?: string
+  format: (value: string, row: string) => string
+  get: (row: T) => string
   width: number
 }
 
 export interface TableOptions<T> {
-  columns?: Array<TableColumn<T>>,
-  after: (row: T, options: TableOptions<T>) => void,
-  printRow: (row: any[]) => void,
+  columns?: Array<TableColumn<T>>
+  after?: (row: T, options: TableOptions<T>) => void
+  printRow?: (row: any[]) => void
   printHeader?: (row: any[]) => void
 }
 
@@ -38,7 +38,11 @@ export interface TableOptions<T> {
  * @arg {function(row)} [options.columns[].get] - Function to return a value to be presented in cell without formatting.
  *
  */
-function table<T = { height?: number }>(out: Output, data: any[], options: TableOptions<T>) {
+function table<T = { height?: number }>(
+  out: Output,
+  data: any[],
+  options?: TableOptions<T>,
+) {
   const ary = require('lodash.ary')
   const defaults = require('lodash.defaults')
   const get = require('lodash.get')
@@ -60,21 +64,21 @@ function table<T = { height?: number }>(out: Output, data: any[], options: Table
     printHeader(cells) {
       this.printRow(cells.map(ary(this.headerAnsi, 1)))
       this.printRow(cells.map(hdr => hdr.replace(/./g, '─')))
-    }
+    },
   }
 
   const colDefaults = {
-    format: value => value ? value.toString() : '',
+    format: value => (value ? value.toString() : ''),
     width: 0,
     label() {
       return this.key.toString()
     },
 
-    get (row) {
+    get(row) {
       const path = result(this, 'key')
       const value = !path ? row : get(row, path)
       return this.format(value, row)
-    }
+    },
   }
 
   function calcWidth(cell) {
@@ -91,10 +95,11 @@ function table<T = { height?: number }>(out: Output, data: any[], options: Table
   }
 
   function render() {
-    let columns: Array<TableColumn<T>> = options.columns || Object.keys((data[0] as any) || {}) as any
+    let columns: Array<TableColumn<T>> =
+      options!.columns || (Object.keys((data[0] as any) || {}) as any)
 
     if (typeof columns[0] === 'string') {
-      columns = (columns as any).map(key => ({key}))
+      columns = (columns as any).map(key => ({ key }))
     }
 
     let defaultsApplied = false
@@ -110,22 +115,21 @@ function table<T = { height?: number }>(out: Output, data: any[], options: Table
         col.width = Math.max(
           result(col, 'label').length,
           col.width || 0,
-          calcWidth(cell)
+          calcWidth(cell),
         )
 
-        row.height = Math.max(
-          row.height || 0,
-          cell.split(/[\r\n]+/).length
-        )
+        row.height = Math.max(row.height || 0, cell.split(/[\r\n]+/).length)
       }
       defaultsApplied = true
     }
 
-    if (options.printHeader) {
-      options.printHeader(columns.map((col) => {
-        const label = result(col, 'label')
-        return pad(label, col.width || label.length)
-      }))
+    if (options!.printHeader) {
+      options!.printHeader!(
+        columns.map(col => {
+          const label = result(col, 'label')
+          return pad(label, col.width || label.length)
+        }),
+      )
     }
 
     function getNthLineOfCell(n, row, col) {
@@ -137,9 +141,9 @@ function table<T = { height?: number }>(out: Output, data: any[], options: Table
     for (const row of data) {
       for (let i = 0; i < (row.height || 0); i++) {
         const cells = columns.map(partial(getNthLineOfCell, i, row))
-        options.printRow(cells)
+        options!.printRow!(cells)
       }
-      options.after(row, options)
+      options!.after!(row, options!)
     }
   }
 

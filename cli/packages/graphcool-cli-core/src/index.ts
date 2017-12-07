@@ -1,10 +1,10 @@
 import Deploy from './commands/deploy'
 import Init from './commands/init'
 // import Auth from './commands/auth/index'
-// import Info from './commands/info/index'
+import Info from './commands/info/index'
 import Playground from './commands/playground/index'
 // import Console from './commands/console'
-// import List from './commands/list/index'
+import List from './commands/list/index'
 // import Delete from './commands/delete/index'
 // import RootTokens from './commands/root-token/index'
 // import FunctionLogs from './commands/logs/function'
@@ -55,12 +55,12 @@ export const topics = [
     description: 'Opens the playground for the current service',
     group: 'general',
   },
-  // {
-  //   name: 'info',
-  //   description: 'Print service info (endpoints, clusters, ...) ',
-  //   group: 'general',
-  // },
-  // { name: 'list', description: 'List all deployed services', group: 'general' },
+  {
+    name: 'info',
+    description: 'Print service info (endpoints, clusters, ...) ',
+    group: 'general',
+  },
+  { name: 'list', description: 'List all deployed services', group: 'general' },
   // {
   //   name: 'root-token',
   //   description: 'Get the service root tokens',
@@ -98,10 +98,10 @@ export const commands = [
   Deploy,
   Init,
   // Auth,
-  // Info,
+  Info,
   Playground,
   // Console,
-  // List,
+  List,
   // Delete,
   // RootTokens,
   // FunctionLogs,
@@ -120,10 +120,10 @@ export {
   Deploy,
   Init,
   // Auth,
-  // Info,
+  Info,
   Playground,
   // Console,
-  // List,
+  List,
   // Delete,
   // RootTokens,
   // FunctionLogs,
