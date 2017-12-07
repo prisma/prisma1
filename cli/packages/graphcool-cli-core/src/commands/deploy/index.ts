@@ -81,12 +81,8 @@ ${chalk.gray(
     debug('run')
     const { force, watch, interactive } = this.flags
     const newServiceClusterName = this.flags['new-service-cluster']
-    // const dryRun = this.flags['dry-run']
+    const dryRun = this.flags['dry-run']
     let stageName = this.flags.stage
-
-    // if (dryRun) {
-    //   return this.dryRun()
-    // }
 
     if (newServiceClusterName) {
       const newServiceCluster = this.env.clusterByName(newServiceClusterName)
@@ -135,7 +131,7 @@ ${chalk.gray(
       await this.addProject(serviceName, stageName)
     }
 
-    await this.deploy(stageName, serviceName, cluster!, force)
+    await this.deploy(stageName, serviceName, cluster!, force, dryRun)
 
     if (watch) {
       this.out.log('Watching for change...')
@@ -150,6 +146,7 @@ ${chalk.gray(
                 this.definition.definition!.service,
                 cluster!,
                 force,
+                dryRun,
               )
               this.out.log('Watching for change...')
             }
@@ -186,6 +183,7 @@ ${chalk.gray(
     serviceName: string,
     cluster: Cluster,
     force: boolean,
+    dryRun: boolean,
   ): Promise<void> {
     this.deploying = true
     const localNote = cluster.local ? ' locally' : ''
@@ -193,8 +191,10 @@ ${chalk.gray(
 
     const b = s => `\`${chalk.bold(s)}\``
 
+    const verb = dryRun ? 'Performing dry run for' : 'Deploying'
+
     this.out.action.start(
-      `Deploying service ${b(serviceName)} to stage ${b(
+      `${verb} service ${b(serviceName)} to stage ${b(
         stageName,
       )} on cluster ${b(cluster.name)}`,
     )
@@ -203,11 +203,12 @@ ${chalk.gray(
       serviceName,
       stageName,
       this.definition.typesString!,
+      dryRun,
     )
     this.out.action.stop(this.prettyTime(Date.now() - before))
     this.printResult(migrationResult)
 
-    if (migrationResult.migration.steps.length > 0) {
+    if (migrationResult.migration.steps.length > 0 && !dryRun) {
       before = Date.now()
       this.out.action.start(`Applying changes`)
       await this.client.waitForMigration(

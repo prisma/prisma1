@@ -229,7 +229,13 @@ export class Client {
     return url
   }
 
-  async deploy(name: string, stage: string, types: string): Promise<any> {
+  async deploy(
+    name: string,
+    stage: string,
+    types: string,
+    dryRun: boolean,
+  ): Promise<any> {
+    // TODO add dryRun to query as soon as the backend is ready
     const mutation = `\
       mutation($name: String!, $stage: String! $types: String!) {
         deploy(input: {
