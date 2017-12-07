@@ -9,6 +9,7 @@ import { Environment } from '../Environment'
 import { mapValues } from 'lodash'
 import * as yamlParser from 'yaml-ast-parser'
 import { StageNotFound } from '../errors/StageNotFound'
+import * as dotenv from 'dotenv'
 
 interface ErrorMessage {
   message: string
@@ -25,8 +26,9 @@ export class GraphcoolDefinitionClass {
     this.out = out
     this.config = config
   }
-  async load(env: Environment, args: Args) {
+  async load(env: Environment, args: Args, envPath?: string) {
     if (this.config.definitionPath) {
+      dotenv.config({ path: envPath })
       this.definition = await readDefinition(
         this.config.definitionPath,
         this.out,

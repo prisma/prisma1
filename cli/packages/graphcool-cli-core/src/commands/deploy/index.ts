@@ -35,7 +35,7 @@ ${chalk.gray('-')} Deploy local changes to a specific stage
 ${chalk.gray(
     '-',
   )} Deploy local changes from default service file accepting potential data loss caused by schema changes
-  ${chalk.green('$ graphcool deploy --force --env production')}
+  ${chalk.green('$ graphcool deploy --force --stage production')}
   `
   static flags: Flags = {
     stage: flags.string({
@@ -74,12 +74,15 @@ ${chalk.gray(
       char: 'j',
       description: 'Json Output',
     }),
+    dotenv: flags.string({
+      description: 'Path to .env file to inject env vars',
+    }),
   }
   private deploying: boolean = false
   private showedLines: number = 0
   async run() {
     debug('run')
-    const { force, watch, interactive } = this.flags
+    const { force, watch, interactive, dotenv } = this.flags
     const newServiceClusterName = this.flags['new-service-cluster']
     const dryRun = this.flags['dry-run']
     let stageName = this.flags.stage
@@ -97,7 +100,11 @@ ${chalk.gray(
       }
     }
 
-    await this.definition.load(this.env, this.flags)
+    if (dotenv && !fs.pathExistsSync(path.join(this.config.cwd, dotenv))) {
+      this.out.error(`--dotenv path '${dotenv}' does not exist`)
+    }
+
+    await this.definition.load(this.env, this.flags, dotenv)
 
     if (!stageName) {
       stageName =
