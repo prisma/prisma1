@@ -10,7 +10,7 @@ class Queries extends FlatSpec with Matchers with ApiBaseSpec {
     schema.model("Car").field("wheelCount", _.Int).field_!("name", _.String).field_!("createdAt", _.DateTime).field_!("updatedAt", _.DateTime)
     val project = schema.buildProject()
 
-    database.setupProject(project)
+    database.setup(project)
 
     // MUTATIONS
 
@@ -36,7 +36,7 @@ class Queries extends FlatSpec with Matchers with ApiBaseSpec {
     schema.model("Wheel").manyToOneRelation("car", "wheels", car).field_!("size", _.Int).field_!("createdAt", _.DateTime).field_!("updatedAt", _.DateTime)
     val project = schema.buildProject()
 
-    database.setupProject(project)
+    database.setup(project)
 
     // MUTATIONS
 
