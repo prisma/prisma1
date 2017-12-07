@@ -6,26 +6,14 @@ import cool.graph.api.database.{DataResolver, DatabaseMutationBuilder, DatabaseQ
 import cool.graph.deploy.migration.mutactions.{ClientSqlMutaction, CreateRelationTable}
 import cool.graph.shared.models._
 import cool.graph.utils.await.AwaitUtils
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
 import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.MySQLProfile.backend.DatabaseDef
 
-import scala.concurrent.Await
-import scala.concurrent.duration._
+case class ApiTestDatabase()(implicit dependencies: ApiDependencies) extends AwaitUtils {
 
-trait ApiTestDatabase extends BeforeAndAfterEach with BeforeAndAfterAll with AwaitUtils { self: Suite =>
-
-  implicit lazy val system: ActorSystem             = ActorSystem()
-  implicit lazy val materializer: ActorMaterializer = ActorMaterializer()
-  implicit lazy val testDependencies                = new ApiDependenciesForTest
-  private lazy val clientDatabase: DatabaseDef      = testDependencies.databases.master
-
-  override protected def afterAll(): Unit = {
-    super.afterAll()
-    testDependencies.destroy
-    materializer.shutdown()
-    Await.result(system.terminate(), 5.seconds)
-  }
+  implicit lazy val system: ActorSystem             = dependencies.system
+  implicit lazy val materializer: ActorMaterializer = dependencies.materializer
+  private lazy val clientDatabase: DatabaseDef      = dependencies.databases.master
 
   def setupProject(project: Project): Unit = {
     val databaseOperations = TestDatabaseOperations(clientDatabase)
@@ -36,8 +24,6 @@ trait ApiTestDatabase extends BeforeAndAfterEach with BeforeAndAfterAll with Awa
     project.models.foreach(databaseOperations.createModelTable(project, _))
     project.relations.foreach(databaseOperations.createRelationTable(project, _))
   }
-
-  def dataResolver(project: Project): DataResolver = DataResolver(project = project)
 
   def truncateProjectDatabase(project: Project): Unit = {
     val tables = clientDatabase.run(DatabaseQueryBuilder.getTables(project.id)).await
