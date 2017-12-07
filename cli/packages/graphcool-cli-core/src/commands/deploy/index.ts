@@ -247,7 +247,6 @@ ${chalk.gray(
         serviceName,
         stageName,
       )
-      console.log('Got schema', schemaString.length)
       fs.writeFileSync(path.join(this.config.cwd, schemaPath), schemaString)
     }
   }
