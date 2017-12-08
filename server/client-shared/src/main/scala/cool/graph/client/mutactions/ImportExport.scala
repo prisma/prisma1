@@ -170,8 +170,6 @@ object DataExport {
   //use info classes as in and output? and then use .copy would probably be good to have the custom .copy then
   //{"type": "nodes", "cursor": {"table": INT, "row": INT, "field": INT, "array": INT}}
 
-  case class Cursor(table: Int, row: Int, field: Int, array: Int) //use different kinds of cursors?
-
   sealed trait ExportInfo { val cursor: Cursor; val hasNext: Boolean }
   case class NodeInfo(dataResolver: DataResolver, models: List[(Model, Int)], cursor: Cursor) extends ExportInfo {
     val length: Int      = models.length
@@ -197,20 +195,22 @@ object DataExport {
     def nextRelation: RelationData = relations.find(_._2 == cursor.table + 1).get._1
   }
 
-  def isLimitReached(str: String): Boolean = str.length > 10000000 // only for testing purposes variable in here
+  case class Cursor(table: Int, row: Int, field: Int, array: Int) //use different kinds of cursors?
+  case class Result(out: String, cursor: Cursor, isFull: Boolean)
 
-  def exportNodes(project: Project, dataResolver: DataResolver, tableIndex: Int, startRow: Int): Future[StringWithCursor] = {
+  def isLimitReached(str: String): Boolean = str.length > 1000 // only for testing purposes variable in here
+
+  def exportNodes(project: Project, dataResolver: DataResolver, tableIndex: Int, startRow: Int): Future[Result] = {
     resultForCursor(in = "", NodeInfo(dataResolver, project.models.zipWithIndex, Cursor(tableIndex, startRow, -5, -5)))
   }
 
-  def exportRelations(project: Project, dataResolver: DataResolver, tableIndex: Int, startRow: Int): Future[StringWithCursor] = {
+  def exportRelations(project: Project, dataResolver: DataResolver, tableIndex: Int, startRow: Int): Future[Result] = {
     val relationInfos = project.relations.map(r => generateRelationData(r, project))
 
     resultForCursor(in = "", RelationInfo(dataResolver, relationInfos.zipWithIndex, Cursor(tableIndex, startRow, -5, -5)))
   }
 
-  //this needs to return a cursor with way more information -.- model, node, field, position in field
-  def exportLists(project: Project, dataResolver: DataResolver, tableIndex: Int, startRow: Int, fieldIndex: Int, arrayIndex: Int): Future[StringWithCursor] = {
+  def exportLists(project: Project, dataResolver: DataResolver, tableIndex: Int, startRow: Int, fieldIndex: Int, arrayIndex: Int): Future[Result] = {
     val tablesWithIndex: List[(Model, Int)]  = project.models.filter(m => m.fields.exists(f => f.isList)).zipWithIndex
     val currentModel: Model                  = tablesWithIndex.find(_._2 == tableIndex).get._1
     val fieldsWithIndex: List[(String, Int)] = currentModel.scalarListFields.map(_.name).zipWithIndex
@@ -218,7 +218,7 @@ object DataExport {
     resultForCursor(in = "", ListInfo(dataResolver, tablesWithIndex, fieldsWithIndex, Cursor(tableIndex, startRow, fieldIndex, arrayIndex)))
   }
 
-  def resultForCursor(in: String, info: ExportInfo): Future[StringWithCursor] = {
+  def resultForCursor(in: String, info: ExportInfo): Future[Result] = {
     import scala.concurrent.ExecutionContext.Implicits.global
 
     def updateCursor: ExportInfo = info match { // dumb trait can't just be copied -.-
@@ -228,17 +228,16 @@ object DataExport {
     }
 
     for {
-      tableResult <- resultForTable(in, info)
-      x <- tableResult.isFull match {
-            case false if info.hasNext  => resultForCursor(tableResult.out, updateCursor)
-            case false if !info.hasNext => Future.successful(StringWithCursor(tableResult.out, -1, -1))
-            case true                   => Future.successful(StringWithCursor(tableResult.out, info.cursor.table, tableResult.endRow))
+      result <- resultForTable(in, info)
+      x <- result.isFull match {
+            case false if info.hasNext  => resultForCursor(result.out, updateCursor)
+            case false if !info.hasNext => Future.successful(result.copy(cursor = Cursor(-1, -1, -1, -1)))
+            case true                   => Future.successful(result)
           }
     } yield x
   }
 
-  case class TableResult(out: String, endRow: Int, isFull: Boolean)
-  def resultForTable(in: String, info: ExportInfo): Future[TableResult] = {
+  def resultForTable(in: String, info: ExportInfo): Future[Result] = {
     import scala.concurrent.ExecutionContext.Implicits.global
 
     def generateNextInfo: ExportInfo = info match { // dumb trait can't just be copied -.-
@@ -248,12 +247,12 @@ object DataExport {
     }
 
     fetchDataItemsPage(info).flatMap { page =>
-      val pageResult = serializePage(in, page, info)
+      val result = serializePage(in, page, info)
 
-      (pageResult.isFull, page.hasMore) match {
-        case (false, true)  => resultForTable(in = pageResult.out, generateNextInfo)
-        case (false, false) => Future.successful(TableResult(pageResult.out, endRow = -1, false))
-        case (true, _)      => Future.successful(TableResult(pageResult.out, info.cursor.row + pageResult.used, true))
+      (result.isFull, page.hasMore) match {
+        case (false, true)  => resultForTable(in = result.out, generateNextInfo)
+        case (false, false) => Future.successful(result)
+        case (true, _)      => Future.successful(result)
       }
     }
   }
@@ -264,18 +263,17 @@ object DataExport {
 
     val queryArguments = QueryArguments(skip = Some(info.cursor.row), after = None, first = Some(1000), None, None, None, None)
     for {
-      resolverResult <- info match {
-                         case x: NodeInfo     => x.dataResolver.loadModelRowsForExport(x.current, Some(queryArguments))
-                         case x: ListInfo     => x.dataResolver.loadModelRowsForExport(x.currentModel, Some(queryArguments)) //own select only for list fields?
-                         case x: RelationInfo => x.dataResolver.loadRelationRowsForExport(x.current.relationId, Some(queryArguments))
-                       }
+      result <- info match {
+                 case x: NodeInfo     => x.dataResolver.loadModelRowsForExport(x.current, Some(queryArguments))
+                 case x: ListInfo     => x.dataResolver.loadModelRowsForExport(x.currentModel, Some(queryArguments)) //own select only for list fields?
+                 case x: RelationInfo => x.dataResolver.loadRelationRowsForExport(x.current.relationId, Some(queryArguments))
+               }
     } yield {
-      DataItemsPage(resolverResult.items, hasMore = resolverResult.hasNextPage)
+      DataItemsPage(result.items, hasMore = result.hasNextPage)
     }
   }
 
-  case class PageResult(out: String, used: Int, isFull: Boolean)
-  def serializePage(in: String, page: DataItemsPage, info: ExportInfo, startOnPage: Int = 0, amount: Int = 1000): PageResult = {
+  def serializePage(in: String, page: DataItemsPage, info: ExportInfo, startOnPage: Int = 0, amount: Int = 1000): Result = {
 
     val dataItems           = page.items.slice(startOnPage, startOnPage + amount)
     val serializationResult = serializeDataItems(in, dataItems, info)
@@ -285,26 +283,36 @@ object DataExport {
     val noneLeft            = startOnPage + amount >= page.itemCount
 
     isLimitReachedTemp match {
-      case true if amount == 1 => PageResult(out = in, used = startOnPage, isFull = true)
-      case false if noneLeft   => PageResult(out = combinedString, startOnPage + numberSerialized + 1, false)
+      case true if amount == 1 => Result(in, info.cursor.copy(row = info.cursor.row + startOnPage), isFull = true)
+      case false if noneLeft   => Result(combinedString, info.cursor.copy(row = info.cursor.row + startOnPage + numberSerialized + 1), isFull = false)
       case true                => serializePage(in = in, page = page, info, startOnPage = startOnPage, amount / 10)
       case false               => serializePage(in = combinedString, page, info, startOnPage + numberSerialized, amount)
     }
   }
 
-  case class SerializeResult(out: String)
-  def serializeDataItems(in: String, dataItems: Seq[DataItem], info: ExportInfo): SerializeResult = {
-    val serializedItems: Seq[String] = for {
-      item <- dataItems
-    } yield {
-      info match {
-        case info: NodeInfo     => dataItemToExportNode(item, info)
-        case info: ListInfo     => dataItemToExportList(in, item, info).out /// this needs to return it's cursor and update the fileindex
-        case info: RelationInfo => dataItemToExportRelation(item, info)
-      }
+  def serializeDataItems(in: String, dataItems: Seq[DataItem], info: ExportInfo): Result = {
+    info match {
+      case info: NodeInfo =>
+        val string = dataItems.map(item => dataItemToExportNode(item, info)).mkString(",")
+        Result(string, Cursor(0, 0, 0, 0), false)
 
+      case info: RelationInfo =>
+        val string = dataItems.map(item => dataItemToExportRelation(item, info)).mkString(",")
+        Result(string, Cursor(0, 0, 0, 0), false)
+      case info: ListInfo =>
+        // this is only for list values
+//        val results: Seq[Result] = for {
+//          item <- dataItems
+//        } yield {
+//          info match {
+//            case info: NodeInfo     => dataItemToExportNode(item, info)
+//            case info: ListInfo     => dataItemToExportList(in, item, info)
+//            case info: RelationInfo => dataItemToExportRelation(item, info)
+//          }
+//
+//        }
+        Result("", Cursor(0, 0, 0, 0), true)
     }
-    SerializeResult(out = serializedItems.mkString(","))
   }
 
   def dataItemToExportNode(item: DataItem, info: NodeInfo): String = {
@@ -349,7 +357,6 @@ object DataExport {
     nodeResults
   }
 
-  case class FieldResult(out: String, usedFields: Int, usedArrayItems: Int, isFull: Boolean)
   def serializeFields(in: String, identifier: ImportIdentifier, fieldValues: Map[String, Vector[Any]], info: ListInfo): Result = {
     val result = serializeArray(in, identifier, fieldValues(info.currentField), info)
 
@@ -360,8 +367,6 @@ object DataExport {
       case true  => result
     }
   }
-
-  case class Result(out: String, cursor: Cursor, isFull: Boolean)
 
   //this should have the ability to scale up again, but doing it within one field probably adds too much complexity for now
   def serializeArray(in: String, identifier: ImportIdentifier, arrayValues: Vector[Any], info: ListInfo, amount: Int = 1000000): Result = {
