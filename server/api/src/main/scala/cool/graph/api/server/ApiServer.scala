@@ -12,8 +12,8 @@ import com.typesafe.scalalogging.LazyLogging
 import cool.graph.akkautil.http.Server
 import cool.graph.api.database.DataResolver
 import cool.graph.api.database.deferreds._
-import cool.graph.api.schema.APIErrors.ProjectNotFound
-import cool.graph.api.schema.{ApiUserContext, SchemaBuilder}
+import cool.graph.api.schema.APIErrors.{InvalidToken, ProjectNotFound}
+import cool.graph.api.schema.{ApiUserContext, SchemaBuilder, UserFacingError}
 import cool.graph.api.{ApiDependencies, ApiMetrics}
 import cool.graph.cuid.Cuid.createCuid
 import cool.graph.metrics.extensions.TimeResponseDirectiveImpl
@@ -147,7 +147,7 @@ case class ApiServer(
           val isValid = project.secrets.exists(secret => {
             val jwtOptions = JwtOptions(signature = true, expiration = false)
             val algorithms = Seq(JwtAlgorithm.HS256)
-            val claims     = Jwt.decodeRaw(token = authHeader, key = secret, algorithms = algorithms, options = jwtOptions)
+            val claims     = Jwt.decodeRaw(token = authHeader.stripPrefix("Bearer "), key = secret, algorithms = algorithms, options = jwtOptions)
 
             // todo: also verify claims in accordance with https://github.com/graphcool/framework/issues/1365
 
@@ -155,10 +155,10 @@ case class ApiServer(
           })
 
           if (!isValid) {
-            sys.error("Auth header not valid")
+            throw InvalidToken()
           }
         }
-        case None => sys.error("Must provide auth header")
+        case None => throw InvalidToken()
       }
     }
   }
@@ -166,10 +166,12 @@ case class ApiServer(
   def healthCheck: Future[_] = Future.successful(())
 
   def toplevelExceptionHandler(requestId: String) = ExceptionHandler {
+    case e: UserFacingError => complete(OK -> JsObject("code" -> JsNumber(e.code), "requestId" -> JsString(requestId), "error" -> JsString(e.getMessage)))
+
     case e: Throwable =>
       println(e.getMessage)
       e.printStackTrace()
-      complete(500 -> "kaputt")
+      complete(500 -> s"kaputt: ${e.getMessage}")
   }
 }
 
