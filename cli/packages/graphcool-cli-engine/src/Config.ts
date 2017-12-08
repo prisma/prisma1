@@ -8,7 +8,6 @@ import { Output } from './Output/index'
 import * as yaml from 'js-yaml'
 const debug = require('debug')('config')
 
-
 export class Config {
   /**
    * Local settings
@@ -34,7 +33,11 @@ export class Config {
       defaultCommand: 'help',
     },
   }
-  sharedClusters: string[] = ['shared-eu-west-1', 'shared-ap-northeast-1', 'shared-us-west-2']
+  sharedClusters: string[] = [
+    'shared-eu-west-1',
+    'shared-ap-northeast-1',
+    'shared-us-west-2',
+  ]
 
   /**
    * Paths
@@ -85,7 +88,6 @@ export class Config {
     ? 'wss://dev.subscriptions.graph.cool'
     : 'wss://subscriptions.graph.cool'
 
-
   /* tslint:disable-next-line */
   __cache = {}
 
@@ -106,7 +108,7 @@ export class Config {
   }
   setOutput(out: Output) {
     this.out = out
-    this.warnings.forEach(warning  => out.warn(warning))
+    this.warnings.forEach(warning => out.warn(warning))
     this.warnings = []
   }
   get arch(): string {
@@ -116,8 +118,9 @@ export class Config {
     return os.platform() === 'win32' ? 'windows' : os.platform()
   }
   get userAgent(): string {
-    return `${this.name}/${this.version} (${this.platform}-${this
-      .arch}) node-${process.version}`
+    return `${this.name}/${this.version} (${this.platform}-${this.arch}) node-${
+      process.version
+    }`
   }
   get dirname() {
     return this.pjson['cli-engine'].dirname || this.bin
@@ -134,6 +137,9 @@ export class Config {
   }
   get requireCachePath() {
     return path.join(this.cacheDir, '/.require-cache.json')
+  }
+  get requestsCachePath() {
+    return path.join(this.cacheDir, '/.requests.json')
   }
   private readPackageJson(options: RunOptions) {
     this.mock = options.mock
@@ -165,7 +171,7 @@ export class Config {
       this.definitionDir = this.cwd
       this.definitionPath = definitionPath
     } else {
-      const found = findUp.sync('graphcool.yml', {cwd: this.cwd})
+      const found = findUp.sync('graphcool.yml', { cwd: this.cwd })
       this.definitionDir = found ? path.dirname(found) : this.cwd
       this.definitionPath = found || null
     }

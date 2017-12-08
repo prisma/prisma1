@@ -97,7 +97,8 @@ export default class AddTemplate extends Command {
       moduleDirName,
     )
     const newTypes = this.definition.mergeTypes(templateTypes, moduleDirName)
-    const typesPath = this.definition.definition!.modules[0].definition!.types
+    let typesPath = this.definition.definition!.modules[0].definition!.types
+    typesPath = Array.isArray(typesPath) ? typesPath[0] : typesPath
 
     await this.mergePackageJsons(source)
 
@@ -131,7 +132,9 @@ export default class AddTemplate extends Command {
     if (fs.pathExistsSync(readmePath)) {
       const readme = fs.readFileSync(readmePath, 'utf-8')
       try {
-        const readmeUrl = `https://github.com/${repoName}/tree/master/${subPath}`
+        const readmeUrl = `https://github.com/${repoName}/tree/master/${
+          subPath
+        }`
         this.out.log(chalk.bold.underline.magenta(`Setup Instructions`) + '\n')
         this.out.printMarkdown(
           readme + `\n\n[Further Instructions](${readmeUrl})`,
@@ -280,15 +283,17 @@ Check https://github.com/graphcool/templates for official templates.`)
   }
 
   private async checkUrl(repoName, subPath, moduleUrl) {
-    const githubUrl = `https://github.com/${repoName.split(
-      '#',
-    )[0]}/tree/master/${subPath}`
+    const githubUrl = `https://github.com/${
+      repoName.split('#')[0]
+    }/tree/master/${subPath}`
 
     debug('fetching', githubUrl)
     const result = await fetch(githubUrl)
     if (result.status === 404) {
       this.out.error(
-        `Could not find ${moduleUrl}. Please check if the github repository ${githubUrl} exists`,
+        `Could not find ${moduleUrl}. Please check if the github repository ${
+          githubUrl
+        } exists`,
       )
     }
   }

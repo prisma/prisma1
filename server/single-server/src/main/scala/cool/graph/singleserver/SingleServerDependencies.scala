@@ -5,7 +5,6 @@ import akka.stream.ActorMaterializer
 import com.amazonaws.services.s3.AmazonS3
 import com.typesafe.config.{Config, ConfigFactory}
 import cool.graph.aws.AwsInitializers
-import cool.graph.aws.cloudwatch.CloudwatchMock
 import cool.graph.bugsnag.{BugSnagger, BugSnaggerImpl}
 import cool.graph.client.authorization.ClientAuthImpl
 import cool.graph.client.finder.{CachedProjectFetcherImpl, ProjectFetcherImpl, RefreshableProjectFetcher}
@@ -65,14 +64,12 @@ class SingleServerInjectorImpl(implicit val actorSystem: ActorSystem, actorMater
       binding identifiedBy "environment" toNonLazy outer.environment
       binding identifiedBy "service-name" toNonLazy outer.serviceName
       binding identifiedBy "project-schema-fetcher" toNonLazy outer.projectSchemaFetcher
-      binding identifiedBy "cloudwatch" toNonLazy outer.cloudwatch
       binding identifiedBy "api-metrics-middleware" toNonLazy outer.apiMetricsMiddleware
       binding identifiedBy "featureMetricActor" to outer.featureMetricActor
       binding identifiedBy "s3" toNonLazy outer.s3
       binding identifiedBy "s3-fileupload" toNonLazy outer.s3Fileupload
       binding identifiedBy "api-metrics-middleware" toNonLazy new ApiMetricsMiddleware(testableTime, featureMetricActor)
       binding identifiedBy "featureMetricActor" to featureMetricActor
-      binding identifiedBy "cloudwatch" toNonLazy cloudwatch
       binding identifiedBy "project-schema-fetcher" toNonLazy projectSchemaFetcher
       binding identifiedBy "projectResolver" toNonLazy cachedProjectResolver
       binding identifiedBy "cachedProjectResolver" toNonLazy cachedProjectResolver
@@ -121,8 +118,8 @@ class SingleServerInjectorImpl(implicit val actorSystem: ActorSystem, actorMater
   lazy val algoliaKeyChecker: AlgoliaKeyChecker                                   = new AlgoliaKeyCheckerImplementation()(toScaldi)
   lazy val auth0Api: Auth0Api                                                     = new Auth0ApiImplementation()(toScaldi)
   lazy val auth0Extend: Auth0Extend                                               = new Auth0ExtendImplementation()(toScaldi)
-  lazy val environment: String                                                    = sys.env.getOrElse("ENVIRONMENT", "local")
-  lazy val serviceName: String                                                    = sys.env.getOrElse("SERVICE_NAME", "local")
+  override lazy val environment: String                                           = sys.env.getOrElse("ENVIRONMENT", "local")
+  override lazy val serviceName: String                                           = sys.env.getOrElse("SERVICE_NAME", "local")
   lazy val pubSub: InMemoryAkkaPubSub[String]                                     = InMemoryAkkaPubSub[String]()
   override lazy val projectSchemaInvalidationSubscriber: PubSubSubscriber[String] = pubSub
   lazy val invalidationSubscriber: PubSubSubscriber[SchemaInvalidatedMessage]     = pubSub.map[SchemaInvalidatedMessage]((str: String) => SchemaInvalidated)
@@ -136,7 +133,6 @@ class SingleServerInjectorImpl(implicit val actorSystem: ActorSystem, actorMater
   lazy val sssEventsPubSub: InMemoryAkkaPubSub[String]                            = InMemoryAkkaPubSub[String]()
   override lazy val sssEventsPublisher: PubSubPublisher[String]                   = sssEventsPubSub
   lazy val sssEventsSubscriber: PubSubSubscriber[String]                          = sssEventsPubSub
-  override lazy val cloudwatch: CloudwatchMock.type                               = CloudwatchMock
   lazy val snsPublisher                                                           = DummySnsPublisher()
   override lazy val kinesisAlgoliaSyncQueriesPublisher                            = DummyKinesisPublisher()
   override lazy val kinesisApiMetricsPublisher                                    = DummyKinesisPublisher()

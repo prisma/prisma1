@@ -9,7 +9,7 @@ description: GraphQL requests are authenticated using an authentication token. F
 
 Requests to your [CRUD API](!alias-abogasd0go) (or the System API) are authenticated using **authentication tokens** that are attached to the `Authorization` header of the request. Graphcool uses [JWT](https://jwt.io/) (JSON Web Tokens) as a token format.
 
-Grpahcool offers several types of authentication tokens:
+Graphcool offers several types of authentication tokens:
 
 - **Node tokens**: A node token is associated with a specific node in your database (no matter which [type](!alias-eiroozae8u#model-types)) and has a certain validity duration (the default is 30 days). They can be issued using the [`generateNodeToken(nodeId: string, typeName: string, payload?: ScalarObject)`](https://github.com/graphcool/graphcool-lib/blob/master/src/index.ts#L58) function in [`graphcool-lib`](!alias-kaegh4oomu) or by directly calling the `generateNodeToken`-mutation of the Graphcool [System API](https://api.graph.cool/system) for which different validity durations can be specified.
 - **Root tokens** (previously called permanent access tokens (PATs)): A root token grants full access to all API operations. There are two kinds of root tokens:
@@ -44,7 +44,7 @@ A node token always needs to be associated with a particular node (often of type
 ### Generating a node token with `graphcool-lib`
 
 
-You can use the [`generateAuthToken`](https://github.com/graphcool/graphcool-lib#generatenodetokennodeid-modelname) function in [`graphcool-lib`](https://github.com/graphcool/graphcool-lib) to generate a new node token.
+You can use the [`generateNodeToken`](https://github.com/graphcool/graphcool-lib#generatenodetokennodeid-modelname) function in [`graphcool-lib`](https://github.com/graphcool/graphcool-lib) to generate a new node token.
 
 Here is how it works:
 
@@ -74,7 +74,7 @@ Another option to generate node tokens is by directly talking to the Graphcool [
 Here is a sample mutation to generate a node token for a `User` model type:
 
 ```graphql
-mutation GenerateRootToken($rootToken: String!, $serviceId: ID!, $nodeId: ID!) {
+mutation GenerateNodeToken($rootToken: String!, $serviceId: ID!, $nodeId: ID!) {
   generateNodeToken(input: {
     rootToken: $rootToken,
     serviceId: $serviceId,
@@ -120,11 +120,10 @@ When your service is deployed, the corresponding [target](!alias-zoug8seen4#mana
 You can obtain the value of the root token using the [`graphcool root-token`](!alias-aiteerae6l#graphcool-root-token) command:
 
 ```sh
-graphcool root-token --token myToken1
+graphcool root-token myToken1
 ```
 
-If you don't pass the `--token` option to the command, it will simply print the names of all the root tokens associated with this target.
-
+If you don't pass the token name to the command, it will simply print the names of all the root tokens associated with this target.
 
 ### Using a _temporary_ root token inside functions
 

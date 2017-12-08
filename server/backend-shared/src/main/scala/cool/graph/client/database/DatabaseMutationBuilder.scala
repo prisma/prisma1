@@ -46,11 +46,21 @@ object DatabaseMutationBuilder {
 
   def updateDataItem(projectId: String, modelName: String, id: String, values: Map[String, Any]) = {
     val escapedValues = combineByComma(values.map {
-      case (k, v) =>
-        escapeKey(k) concat sql" = " concat escapeUnsafeParam(v)
+      case (k, v) => escapeKey(k) concat sql" = " concat escapeUnsafeParam(v)
     })
 
     (sql"update `#$projectId`.`#$modelName` set" concat escapedValues concat sql"where id = $id").asUpdate
+  }
+
+  def updateDataItemListValue(projectId: String, modelName: String, id: String, values: Map[String, Vector[Any]]) = {
+
+    val (fieldName, commaSeparatedValues) = values.map { case (k, v) => (k, escapeUnsafeParamListValue(v)) }.head
+
+    (sql"update `#$projectId`.`#$modelName`" concat
+      sql"set`#$fieldName` = CASE WHEN `#$fieldName` like '[]'" concat
+      sql"THEN Concat(LEFT(`#$fieldName`,LENGTH(`#$fieldName`)-1)," concat commaSeparatedValues concat sql",']')" concat
+      sql"ELSE Concat(LEFT(`#$fieldName`,LENGTH(`#$fieldName`)-1),','," concat commaSeparatedValues concat sql",']') END " concat
+      sql"where id = $id").asUpdate
   }
 
   def updateRelationRow(projectId: String, relationTable: String, relationSide: String, nodeId: String, values: Map[String, Any]) = {
@@ -211,9 +221,8 @@ object DatabaseMutationBuilder {
                    newIsUnique: Boolean,
                    newIsList: Boolean,
                    newTypeIdentifier: TypeIdentifier) = {
-    val nulls = if (newIsRequired) { "NOT NULL" } else { "NULL" }
-    val sqlType =
-      sqlTypeForScalarTypeIdentifier(newIsList, newTypeIdentifier)
+    val nulls   = if (newIsRequired) { "NOT NULL" } else { "NULL" }
+    val sqlType = sqlTypeForScalarTypeIdentifier(newIsList, newTypeIdentifier)
 
     sqlu"ALTER TABLE `#$projectId`.`#$tableName` CHANGE COLUMN `#$oldColumnName` `#$newColumnName` #$sqlType #$nulls"
   }

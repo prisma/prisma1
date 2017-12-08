@@ -15,7 +15,7 @@ import cool.graph.util.ErrorHandlerFactory
 import cool.graph.utils.`try`.TryExtensions._
 import cool.graph.utils.future.FutureUtils.FutureExtensions
 import sangria.schema.Schema
-import spray.json.{JsObject, JsString, JsValue}
+import spray.json.{JsArray, JsObject, JsString, JsValue}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
@@ -80,6 +80,23 @@ case class RequestHandler(
       schemaFn = PermissionSchemaResolver.permissionSchema,
       checkAuthFn = checkIfUserMayQueryPermissionSchema
     )
+  }
+
+  def handleRawRequestForImport(projectId: String, rawRequest: RawRequest): Future[(StatusCode, JsValue)] = {
+    def checkForAdmin(auth: Option[AuthenticatedRequest]): Unit =
+      if (!auth.exists(_.isAdmin)) throw InsufficientPermissions("Insufficient permissions for bulk import")
+
+    import cool.graph.client.mutactions.DataImport._
+    val graphQlRequestFuture: Future[Future[Vector[String]]] = for {
+      projectWithClientId  <- fetchProject(projectId)
+      authenticatedRequest <- getAuthContext(projectWithClientId, rawRequest.authorizationHeader)
+      _                    = checkForAdmin(authenticatedRequest)
+      res                  = executeGeneric(projectWithClientId.project, rawRequest.json)
+    } yield res
+
+    val response: Future[Vector[String]] = graphQlRequestFuture.flatMap(identity)
+
+    response.map(x => (200, JsString("Failures: " + x.mkString(","))))
   }
 
   def handleRawRequestForProjectSchema(

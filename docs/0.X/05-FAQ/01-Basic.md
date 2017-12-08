@@ -46,7 +46,7 @@ The **main commonalities** with conventional BaaS and the hosted version of Grap
 When using Graphcool, you can choose either of two versions:
 
 - The _hosted version_ gives you much of the convenience that you also get from conventional BaaS.
-- The _self-hosted version_ allows you to run Graphcool in your own server evnrinment.
+- The _self-hosted version_ allows you to run Graphcool in your own server environment.
 
 When choosing the _self-hosted version_, you need to take care of the backend infrastructure and deployment (using [Docker](https://www.docker.com/)) yourself. In the future, it is planned to make Graphcool more flexible so you can also plug-in your own database - right now only [AWS Aurora](https://aws.amazon.com/rds/aurora/) and [MySQL](https://www.mysql.com/) are supported.
 

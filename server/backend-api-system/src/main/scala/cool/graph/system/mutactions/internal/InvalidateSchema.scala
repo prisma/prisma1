@@ -7,6 +7,7 @@ import cool.graph.shared.models.{Client, Project}
 import cool.graph.system.database.finder.CachedProjectResolver
 import cool.graph.system.database.tables.{SeatTable, Tables}
 import scaldi.{Injectable, Injector}
+import slick.dbio.DBIOAction
 import slick.jdbc.MySQLProfile.backend.DatabaseDef
 
 import scala.collection.immutable.Seq

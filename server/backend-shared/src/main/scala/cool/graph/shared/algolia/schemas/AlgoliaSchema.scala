@@ -14,8 +14,7 @@ class AlgoliaSchema[ManyDataItemType](project: Project, model: Model, modelObjec
     implicit injector: Injector)
     extends Injectable {
 
-  implicit val dispatcher =
-    inject[ExecutionContextExecutor](identified by "dispatcher")
+  implicit val dispatcher = inject[ExecutionContextExecutor](identified by "dispatcher")
 
   def resolve[ManyDataItemType](ctx: Context[AlgoliaContext, Unit]): Future[Option[DataItem]] = {
     FilteredResolver.resolve(modelObjectTypes, model, ctx.ctx.nodeId, ctx, ctx.ctx.dataResolver)
@@ -25,7 +24,7 @@ class AlgoliaSchema[ManyDataItemType](project: Project, model: Model, modelObjec
     "node",
     description = Some("The model to synchronize with Algolia."),
     arguments = List(SangriaQueryArguments.filterArgument(model = model, project = project)),
-    fieldType = OptionType(modelObjectTypes.modelObjectTypes.get(model.name).get),
+    fieldType = OptionType(modelObjectTypes.modelObjectTypes(model.name)),
     resolve = (ctx) => resolve(ctx)
   )
 

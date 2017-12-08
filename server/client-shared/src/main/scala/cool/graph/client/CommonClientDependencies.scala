@@ -5,11 +5,10 @@ import akka.stream.ActorMaterializer
 import com.amazonaws.auth.{AWSStaticCredentialsProvider, BasicAWSCredentials}
 import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration
 import com.amazonaws.services.kinesis.{AmazonKinesis, AmazonKinesisClientBuilder}
-import com.amazonaws.services.s3.AmazonS3
+import com.amazonaws.services.s3.{AmazonS3, AmazonS3ClientBuilder}
 import com.typesafe.config.{Config, ConfigFactory}
 import com.typesafe.scalalogging.LazyLogging
 import cool.graph.aws.AwsInitializers
-import cool.graph.aws.cloudwatch.{Cloudwatch, CloudwatchImpl}
 import cool.graph.bugsnag.{BugSnagger, BugSnaggerImpl}
 import cool.graph.client.authorization.{ClientAuth, ClientAuthImpl}
 import cool.graph.client.finder.{CachedProjectFetcherImpl, ProjectFetcherImpl, RefreshableProjectFetcher}
@@ -27,7 +26,7 @@ import cool.graph.util.ErrorHandlerFactory
 import cool.graph.webhook.{Webhook, WebhookCaller, WebhookCallerImplementation}
 import scaldi.Module
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
 import scala.util.Try
 
 trait ClientInjector {
@@ -47,7 +46,6 @@ trait ClientInjector {
   val webhookCaller: WebhookCaller
   val sssEventsPublisher: PubSubPublisher[String]
   val requestPrefix: String
-  val cloudwatch: Cloudwatch
   val globalDatabaseManager: GlobalDatabaseManager
   val kinesisAlgoliaSyncQueriesPublisher: KinesisPublisher
   val kinesisApiMetricsPublisher: KinesisPublisher
@@ -66,8 +64,8 @@ trait ClientInjector {
 }
 
 class ClientInjectorImpl(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends ClientInjector with LazyLogging {
-  implicit lazy val bugsnagger: BugSnagger       = BugSnaggerImpl(sys.env("BUGSNAG_API_KEY"))
-  implicit lazy val dispatcher: ExecutionContext = system.dispatcher
+  implicit lazy val bugsnagger: BugSnagger               = BugSnaggerImpl(sys.env("BUGSNAG_API_KEY"))
+  implicit lazy val dispatcher: ExecutionContextExecutor = system.dispatcher
 
   lazy val globalRabbitUri: String                      = sys.env.getOrElse("GLOBAL_RABBIT_URI", sys.error("GLOBAL_RABBIT_URI required for schema invalidation"))
   lazy val blockedProjectIds: Vector[String]            = Try { sys.env("BLOCKED_PROJECT_IDS").split(",").toVector }.getOrElse(Vector.empty)
@@ -77,19 +75,20 @@ class ClientInjectorImpl(implicit val system: ActorSystem, val materializer: Act
   lazy val endpointResolver: EndpointResolver           = LiveEndpointResolver()
   lazy val logsPublisher: QueuePublisher[String]        = RabbitQueue.publisher[String](rabbitMQUri, "function-logs")(bugsnagger, fromStringMarshaller)
   lazy val requestPrefix: String                        = sys.env.getOrElse("AWS_REGION", sys.error("AWS Region not found."))
-  lazy val cloudwatch: Cloudwatch                       = CloudwatchImpl()
   lazy val featureMetricActor: ActorRef                 = system.actorOf(Props(new FeatureMetricActor(kinesisApiMetricsPublisher, apiMetricsFlushInterval)))
   lazy val apiMetricsMiddleware: ApiMetricsMiddleware   = new ApiMetricsMiddleware(testableTime, featureMetricActor)
   lazy val testableTime: TestableTime                   = new TestableTimeImplementation
   lazy val apiMetricsFlushInterval: Int                 = 10
   lazy val clientAuth: ClientAuth                       = ClientAuthImpl()
   lazy val log: String => Unit                          = (x: String) => logger.info(x)
-  lazy val errorHandlerFactory                          = ErrorHandlerFactory(log, cloudwatch, bugsnagger)
+  lazy val errorHandlerFactory                          = ErrorHandlerFactory(log, bugsnagger)
   lazy val apiMatrixFactory                             = ApiMatrixFactory(DefaultApiMatrix)
   lazy val s3: AmazonS3                                 = AwsInitializers.createS3()
   lazy val s3Fileupload: AmazonS3                       = AwsInitializers.createS3Fileupload()
   lazy val webhookCaller: WebhookCaller                 = new WebhookCallerImplementation()
   lazy val webhookPublisher: QueuePublisher[Webhook]    = RabbitQueue.publisher(rabbitMQUri, "webhooks")(bugsnagger, Webhook.marshaller)
+  lazy val serviceName: String                          = sys.env.getOrElse("SERVICE_NAME", "local")
+  lazy val environment: String                          = sys.env.getOrElse("ENVIRONMENT", "local")
 
   lazy val projectSchemaInvalidationSubscriber: PubSubSubscriber[String] = {
     implicit val unmarshaller: ByteUnmarshaller[String] = Unmarshallers.ToString
@@ -131,7 +130,6 @@ class ClientInjectorImpl(implicit val system: ActorSystem, val materializer: Act
     val outer = this
     new Module {
       binding identifiedBy "project-schema-fetcher" toNonLazy outer.projectSchemaFetcher
-      binding identifiedBy "cloudwatch" toNonLazy outer.cloudwatch
       binding identifiedBy "kinesis" toNonLazy outer.kinesis
       binding identifiedBy "api-metrics-middleware" toNonLazy outer.apiMetricsMiddleware
       binding identifiedBy "featureMetricActor" to outer.featureMetricActor
@@ -146,8 +144,35 @@ class ClientInjectorImpl(implicit val system: ActorSystem, val materializer: Act
       bind[KinesisPublisher] identifiedBy "kinesisApiMetricsPublisher" toNonLazy outer.kinesisApiMetricsPublisher
       bind[FunctionEnvironment] toNonLazy outer.functionEnvironment
       bind[GlobalDatabaseManager] toNonLazy outer.globalDatabaseManager
-      bind[ApiMatrixFactory] toNonLazy outer.apiMatrixFactory
       bind[BugSnagger] toNonLazy outer.bugsnagger
+      bind[ClientAuth] toNonLazy outer.clientAuth
+      bind[TestableTime] toNonLazy outer.testableTime
+      bind[GlobalApiEndpointManager] toNonLazy outer.globalApiEndpointManager
+      bind[WebhookCaller] toNonLazy outer.webhookCaller
+      bind[ApiMatrixFactory] toNonLazy apiMatrixFactory
+      binding identifiedBy "config" toNonLazy outer.config
+      binding identifiedBy "actorSystem" toNonLazy outer.system
+      binding identifiedBy "dispatcher" toNonLazy outer.dispatcher
+      binding identifiedBy "actorMaterializer" toNonLazy outer.materializer
+      binding identifiedBy "environment" toNonLazy outer.serviceName
+      binding identifiedBy "service-name" toNonLazy outer.environment
     }
+  }
+}
+
+class FileUploadInjector(implicit system: ActorSystem, materializer: ActorMaterializer) extends ClientInjectorImpl {
+
+  override lazy val s3Fileupload: AmazonS3                          = createS3Fileupload()
+  override lazy val projectSchemaFetcher: RefreshableProjectFetcher = ProjectFetcherImpl(blockedProjectIds = Vector.empty, config)
+
+  private def createS3Fileupload(): AmazonS3 = {
+    val credentials = new BasicAWSCredentials(
+      sys.env("FILEUPLOAD_S3_AWS_ACCESS_KEY_ID"),
+      sys.env("FILEUPLOAD_S3_AWS_SECRET_ACCESS_KEY")
+    )
+    AmazonS3ClientBuilder.standard
+      .withCredentials(new AWSStaticCredentialsProvider(credentials))
+      .withEndpointConfiguration(new EndpointConfiguration(sys.env("FILEUPLOAD_S3_ENDPOINT"), sys.env("FILEUPLOAD_AWS_REGION")))
+      .build
   }
 }

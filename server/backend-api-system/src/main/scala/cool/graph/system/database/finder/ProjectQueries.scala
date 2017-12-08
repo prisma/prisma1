@@ -161,7 +161,7 @@ case class ProjectQueries(implicit internalDatabase: DatabaseDef, projectResolve
     } yield integration.projectId
   }
 
-  private def resolveProjectByProjectIdsQuery(projectIdsQuery: QueryBase[Seq[String]]): Future[Option[Project]] = {
+  private def resolveProjectByProjectIdsQuery(projectIdsQuery: Query[Rep[String], String, Seq]): Future[Option[Project]] = {
     for {
       projectIds <- internalDatabase.run(projectIdsQuery.result)
       project    <- resolveProject(projectIds.headOption)

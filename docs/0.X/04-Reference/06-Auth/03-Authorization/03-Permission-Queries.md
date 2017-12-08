@@ -42,7 +42,7 @@ type Query {
 }
 ```
 
-The `PostFiiler` and `UserFilter` as well as `PostOrderBy` and `UserOrderBy` types are [similar to the ones in the regular GraphQL API](!alias-nia9nushae#explore-available-filter-criteria).
+The `PostFilter` and `UserFilter` as well as `PostOrderBy` and `UserOrderBy` types are [similar to the ones in the regular GraphQL API](!alias-nia9nushae#explore-available-filter-criteria).
 
 ### Accessing the permission schema
 

@@ -78,14 +78,12 @@ import scaldi.Module
 //  lazy val webhooksPublisher                  = RabbitQueue.publisher(clusterLocalRabbitUri, "webhooks")(bugSnagger, Webhook.marshaller)
 //  lazy val sssEventsPublisher                 = RabbitAkkaPubSub.publisher[String](sys.env("RABBITMQ_URI"), "sss-events", durable = true)(bugSnagger, fromStringMarshaller)
 //  lazy val requestPrefix                      = sys.env.getOrElse("AWS_REGION", sys.error("AWS Region not found."))
-//  lazy val cloudwatch                         = CloudwatchImpl()
 //  lazy val kinesisAlgoliaSyncQueriesPublisher = new KinesisPublisherImplementation(streamName = sys.env("KINESIS_STREAM_ALGOLIA_SYNC_QUERY"), kinesis)
 //  lazy val kinesisApiMetricsPublisher         = new KinesisPublisherImplementation(streamName = sys.env("KINESIS_STREAM_API_METRICS"), kinesis)
 //  lazy val featureMetricActor                 = system.actorOf(Props(new FeatureMetricActor(kinesisApiMetricsPublisher, apiMetricsFlushInterval)))
 //  lazy val apiMetricsMiddleware               = new ApiMetricsMiddleware(testableTime, featureMetricActor)
 //
 //  binding identifiedBy "project-schema-fetcher" toNonLazy projectSchemaFetcher
-//  binding identifiedBy "cloudwatch" toNonLazy cloudwatch
 //  binding identifiedBy "kinesis" toNonLazy kinesis
 //  binding identifiedBy "api-metrics-middleware" toNonLazy new ApiMetricsMiddleware(testableTime, featureMetricActor)
 //  binding identifiedBy "featureMetricActor" to featureMetricActor

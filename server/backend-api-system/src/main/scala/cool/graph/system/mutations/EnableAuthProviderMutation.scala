@@ -74,8 +74,7 @@ object EnableAuthProviderMutation {
 
     project.getModelByName("User") match {
       case Some(user) =>
-        val existingAuthProvider =
-          project.authProviders.find(_.name == integrationName).get
+        val existingAuthProvider = project.authProviders.find(_.name == integrationName).get
 
         def createManagedFields: List[Mutaction] = {
           managedFields.flatMap(createFieldMutactions(_, userModel = user, client, project))
