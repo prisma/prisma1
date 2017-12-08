@@ -46,9 +46,12 @@ case class RawRequest(
     queries
       .map { queries =>
         GraphQlRequest(
-          rawRequest = this,
+          id = id,
+          ip = ip,
+          json = json,
+          sourceHeader = sourceHeader,
           authorization = authorization,
-          projectWithClientId = project,
+          project = project.project,
           schema = schema,
           queries = queries,
           isBatch = isBatch
@@ -67,19 +70,16 @@ case class InvalidGraphQlRequest(underlying: Throwable) extends Exception
 // https://github.com/apollostack/graphql-server/blob/master/packages/graphql-server-core/src/runHttpQuery.ts#L69
 
 case class GraphQlRequest(
-    rawRequest: RawRequest,
+    id: String,
+    json: JsValue,
+    ip: String,
+    sourceHeader: Option[String],
     authorization: Option[AuthenticatedRequest],
-    projectWithClientId: ProjectWithClientId,
+    project: Project,
     schema: Schema[ApiUserContext, Unit],
     queries: Vector[GraphQlQuery],
     isBatch: Boolean
-) extends RawRequestAttributes {
-  override val json: JsValue                = rawRequest.json
-  override val ip: String                   = rawRequest.ip
-  override val sourceHeader: Option[String] = rawRequest.sourceHeader
-  val project: Project                      = projectWithClientId.project
-  override val id                           = rawRequest.id
-}
+) extends RawRequestAttributes
 
 case class GraphQlQuery(
     query: sangria.ast.Document,

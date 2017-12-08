@@ -1,41 +1,24 @@
 package cool.graph.api
 
-import cool.graph.api.database.DataResolver
-import cool.graph.api.database.deferreds.DeferredResolverProvider
-import cool.graph.api.schema.{ApiUserContext, SchemaBuilder}
+import cool.graph.api.schema.SchemaBuilder
+import cool.graph.api.server.{GraphQlQuery, GraphQlRequest}
 import cool.graph.shared.models.{AuthenticatedRequest, AuthenticatedUser, Project}
 import cool.graph.util.json.SprayJsonExtensions
-import cool.graph.api.server.JsonMarshalling._
-//import cool.graph.util.ErrorHandlerFactory
-import org.scalatest.{BeforeAndAfterEach, Suite}
-import sangria.execution.{ErrorWithResolver, Executor, QueryAnalysisError}
 import sangria.parser.QueryParser
 import sangria.renderer.SchemaRenderer
 import spray.json._
 
 import scala.concurrent.Await
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 import scala.reflect.io.File
 
 case class ApiTestServer()(implicit dependencies: ApiDependencies) extends SprayJsonExtensions with GraphQLResponseAssertions {
-
-//  private lazy val errorHandlerFactory = ErrorHandlerFactory(println, injector.cloudwatch, injector.bugsnagger)
 
   def writeSchemaIntoFile(schema: String): Unit = File("schema").writeAll(schema)
 
   def printSchema: Boolean = false
   def writeSchemaToFile    = false
   def logSimple: Boolean   = false
-
-//  def requestContext =
-//    RequestContext(
-//      CombinedTestDatabase.testClientId,
-//      requestId = CombinedTestDatabase.requestId,
-//      requestIp = CombinedTestDatabase.requestIp,
-//      println(_),
-//      projectId = Some(CombinedTestDatabase.testProjectId)
-//    )
 
   /**
     * Execute a Query that must succeed.
@@ -117,66 +100,29 @@ case class ApiTestServer()(implicit dependencies: ApiDependencies) extends Spray
                                            requestId: String = "CombinedTestDatabase.requestId",
                                            graphcoolHeader: Option[String] = None): JsValue = {
 
-//    val unhandledErrorLogger = errorHandlerFactory.unhandledErrorHandler(
-//      requestId = requestId,
-//      query = query,
-//      projectId = Some(project.id)
-//    )
-//
-//    val sangriaErrorHandler = errorHandlerFactory.sangriaHandler(
-//      requestId = requestId,
-//      query = query,
-//      variables = JsObject.empty,
-//      clientId = None,
-//      projectId = Some(project.id)
-//    )
+    val schemaBuilder = SchemaBuilder()(dependencies.system, dependencies)
+    val schema        = schemaBuilder(project)
+    val queryAst      = QueryParser.parse(query).get
 
-//    val projectLockdownMiddleware = ProjectLockdownMiddleware(project)
-    val schemaBuilder  = SchemaBuilder()(dependencies.system, dependencies)
-    val userContext    = ApiUserContext(clientId = "clientId")
-    val schema         = schemaBuilder(project)
-    val renderedSchema = SchemaRenderer.renderSchema(schema)
-
+    lazy val renderedSchema = SchemaRenderer.renderSchema(schema)
     if (printSchema) println(renderedSchema)
     if (writeSchemaToFile) writeSchemaIntoFile(renderedSchema)
 
-    val queryAst = QueryParser.parse(query).get
-
-    val context = userContext
-//      UserContext
-//      .fetchUser(
-//        authenticatedRequest = authenticatedRequest,
-//        requestId = requestId,
-//        requestIp = CombinedTestDatabase.requestIp,
-//        clientId = CombinedTestDatabase.testClientId,
-//        project = project,
-//        log = x => if (logSimple) println(x),
-//        queryAst = Some(queryAst)
-//      )
-//    context.addFeatureMetric(FeatureMetric.ApiSimple)
-//    context.graphcoolHeader = graphcoolHeader
-
-    val result = Await.result(
-      Executor
-        .execute(
-          schema = schema,
-          queryAst = queryAst,
-          userContext = context,
-          variables = variables,
-//          exceptionHandler = sangriaErrorHandler,
-          deferredResolver = new DeferredResolverProvider(dataResolver = DataResolver(project))
-//          middleware = List(apiMetricMiddleware, projectLockdownMiddleware)
-        )
-        .recover {
-          case error: QueryAnalysisError => error.resolveError
-          case error: ErrorWithResolver  =>
-//            unhandledErrorLogger(error)
-            error.resolveError
-//          case error: Throwable ⇒ unhandledErrorLogger(error)._2
-
-        },
-      Duration.Inf
+    val graphqlQuery = GraphQlQuery(query = queryAst, operationName = None, variables = variables, queryString = query)
+    val graphQlRequest = GraphQlRequest(
+      id = requestId,
+      ip = "test.ip",
+      json = JsObject.empty,
+      sourceHeader = graphcoolHeader,
+      authorization = authenticatedRequest,
+      project = project,
+      schema = schema,
+      queries = Vector(graphqlQuery),
+      isBatch = false
     )
+
+    val result = Await.result(dependencies.graphQlRequestHandler.handle(graphQlRequest), Duration.Inf)._2
+
     println("Request Result: " + result)
     result
   }
