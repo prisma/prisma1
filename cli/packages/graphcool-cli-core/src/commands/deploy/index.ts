@@ -221,7 +221,7 @@ ${chalk.gray(
     this.out.action.stop(this.prettyTime(Date.now() - before))
     this.printResult(migrationResult)
 
-    if (migrationResult.migration.steps.length > 0 && !dryRun) {
+    if (migrationResult.migration.revision > 0 && !dryRun) {
       before = Date.now()
       this.out.action.start(`Applying changes`)
       await this.client.waitForMigration(

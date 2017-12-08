@@ -67,9 +67,8 @@ export class GraphcoolDefinitionClass {
           roles: ['admin'],
         },
       }
-      console.log(data, this.secrets[0])
       return jwt.sign(data, this.secrets[0], {
-        expiresIn: '1h',
+        expiresIn: '7d',
       })
     }
 

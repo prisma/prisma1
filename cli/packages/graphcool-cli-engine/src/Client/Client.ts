@@ -190,7 +190,7 @@ export class Client {
     stageName: string,
     token?: string,
   ): Promise<any> {
-    console.log('introspecting', serviceName, stageName, token)
+    debug('introspecting', serviceName, stageName, token)
     const headers: any = {}
     if (token) {
       headers.Authorization = `Bearer ${token}`

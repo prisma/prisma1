@@ -41,7 +41,7 @@ export interface TableOptions<T> {
 function table<T = { height?: number }>(
   out: Output,
   data: any[],
-  options?: TableOptions<T>,
+  options: TableOptions<T> = {},
 ) {
   const ary = require('lodash.ary')
   const defaults = require('lodash.defaults')

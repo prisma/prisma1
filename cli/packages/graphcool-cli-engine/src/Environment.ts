@@ -64,7 +64,7 @@ export class Environment {
       this.config.globalRCPath && fs.pathExistsSync(this.config.globalRCPath)
         ? fs.readFileSync(this.config.globalRCPath, 'utf-8')
         : undefined
-    this.parseGlobalRC(globalFile)
+    await this.parseGlobalRC(globalFile)
   }
 
   async parseGlobalRC(globalFile?: string): Promise<void> {
