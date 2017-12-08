@@ -22,6 +22,7 @@ export class GraphcoolDefinitionClass {
   definition?: GraphcoolDefinition
   typesString?: string
   rawStages: Stages
+  secrets?: string[]
   private definitionString: string
   constructor(out: Output, config: Config) {
     this.out = out
@@ -43,6 +44,9 @@ export class GraphcoolDefinitionClass {
       this.definition.stages = this.resolveStageAliases(this.definition.stages)
       this.ensureOfClusters(this.definition, env)
       this.typesString = this.getTypesString(this.definition)
+      this.secrets = this.definition.secret
+        ? this.definition.secret.replace(/\s/g, '').split(',')
+        : []
     } else {
       throw new Error(`Please create a graphcool.yml`)
     }

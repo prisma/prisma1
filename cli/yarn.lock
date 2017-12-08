@@ -1340,9 +1340,9 @@ graphcool-inquirer@^1.0.3:
     strip-ansi "^4.0.0"
     through "^2.3.6"
 
-graphcool-json-schema@^1.0.0-alpha.1:
-  version "1.0.0-alpha.1"
-  resolved "https://registry.yarnpkg.com/graphcool-json-schema/-/graphcool-json-schema-1.0.0-alpha.1.tgz#f185d5f0c8494302a69fa5606136c54ac40f6094"
+graphcool-json-schema@^1.0.1-alpha.2:
+  version "1.0.1-alpha.2"
+  resolved "https://registry.yarnpkg.com/graphcool-json-schema/-/graphcool-json-schema-1.0.1-alpha.2.tgz#14dd7c880d9df9045b8e658896948522c89f4f49"
 
 graphql-config@^1.0.9:
   version "1.0.9"

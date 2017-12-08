@@ -13,3 +13,41 @@ Object {
   },
 }
 `;
+
+exports[`graphcool definition load yml with secret and env var 1`] = `
+Object {
+  "datamodel": Array [
+    "datamodel.graphql",
+  ],
+  "schema": "schemas/database.graphql",
+  "secret": "this-is-a-long-secret",
+  "service": "jj",
+  "stages": Object {
+    "default": "shared-eu-west-1",
+    "dev": "shared-eu-west-1",
+  },
+}
+`;
+
+exports[`graphcool definition load yml with secret and env var in .env 1`] = `
+Object {
+  "datamodel": Array [
+    "datamodel.graphql",
+  ],
+  "schema": "schemas/database.graphql",
+  "secret": "this-is-very-secret,and-comma,seperated",
+  "service": "jj",
+  "stages": Object {
+    "default": "shared-eu-west-1",
+    "dev": "shared-eu-west-1",
+  },
+}
+`;
+
+exports[`graphcool definition load yml with secret and env var in .env 2`] = `
+Array [
+  "this-is-very-secret",
+  "and-comma",
+  "seperated",
+]
+`;
