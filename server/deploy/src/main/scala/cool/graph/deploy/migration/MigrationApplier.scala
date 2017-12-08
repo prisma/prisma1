@@ -13,10 +13,10 @@ import scala.util.{Failure, Success}
 trait MigrationApplier {
   def applyMigration(previousProject: Project, nextProject: Project, migration: Migration): Future[MigrationApplierResult]
 }
+
 case class MigrationApplierResult(succeeded: Boolean)
 
 case class MigrationApplierImpl(clientDatabase: DatabaseDef)(implicit ec: ExecutionContext) extends MigrationApplier {
-
   override def applyMigration(previousProject: Project, nextProject: Project, migration: Migration): Future[MigrationApplierResult] = {
     val initialProgress = MigrationProgress(pendingSteps = migration.steps, appliedSteps = Vector.empty, isRollingback = false)
     recurse(previousProject, nextProject, initialProgress)
@@ -168,7 +168,6 @@ case class MigrationApplierJob(
 ) extends Actor {
   import akka.pattern.pipe
   import context.dispatcher
-
   import scala.concurrent.duration._
 
   val applier = MigrationApplierImpl(clientDatabase)
