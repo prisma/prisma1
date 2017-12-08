@@ -10,6 +10,7 @@ import { mapValues } from 'lodash'
 import * as yamlParser from 'yaml-ast-parser'
 import { StageNotFound } from '../errors/StageNotFound'
 import * as dotenv from 'dotenv'
+import * as path from 'path'
 
 interface ErrorMessage {
   message: string
@@ -101,7 +102,11 @@ export class GraphcoolDefinitionClass {
 
     const errors: ErrorMessage[] = []
     let allTypes = ''
-    typesPaths.forEach(typesPath => {
+    typesPaths.forEach(unresolvedTypesPath => {
+      const typesPath = path.join(
+        this.config.definitionDir,
+        unresolvedTypesPath,
+      )
       if (fs.existsSync(typesPath)) {
         const types = fs.readFileSync(typesPath, 'utf-8')
         allTypes += types + '\n'

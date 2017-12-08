@@ -1,0 +1,15 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`graphcool definition load basic yml 1`] = `
+Object {
+  "datamodel": Array [
+    "datamodel.graphql",
+  ],
+  "schema": "schemas/database.graphql",
+  "service": "jj",
+  "stages": Object {
+    "default": "shared-eu-west-1",
+    "dev": "shared-eu-west-1",
+  },
+}
+`;

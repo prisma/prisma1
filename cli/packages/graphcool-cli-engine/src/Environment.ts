@@ -63,14 +63,14 @@ export class Environment {
     const globalFile =
       this.config.globalRCPath && fs.pathExistsSync(this.config.globalRCPath)
         ? fs.readFileSync(this.config.globalRCPath, 'utf-8')
-        : null
-    if (globalFile) {
-      this.parseGlobalRC(globalFile)
-    }
+        : undefined
+    this.parseGlobalRC(globalFile)
   }
 
-  async parseGlobalRC(globalFile: string): Promise<void> {
-    this.globalRC = await this.loadYaml(globalFile, this.config.globalRCPath)
+  async parseGlobalRC(globalFile?: string): Promise<void> {
+    if (globalFile) {
+      this.globalRC = await this.loadYaml(globalFile, this.config.globalRCPath)
+    }
     this.clusters = this.initClusters(this.globalRC)
     this.platformToken =
       this.globalRC.platformToken || process.env.GRAPHCOOL_PLATFORM_TOKEN
@@ -121,7 +121,7 @@ export class Environment {
       return new Cluster(
         clusterName,
         this.config.sharedEndpoint,
-        rc.platformToken!,
+        rc && rc.platformToken,
         false,
       )
     })

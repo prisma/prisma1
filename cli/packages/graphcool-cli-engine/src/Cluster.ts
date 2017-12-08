@@ -4,11 +4,11 @@ export class Cluster {
   name: string
   baseUrl: string
   local: boolean
-  private clusterToken: string
+  private clusterToken?: string
   constructor(
     name: string,
     baseUrl: string,
-    token: string,
+    token?: string,
     local: boolean = true,
   ) {
     this.name = name
@@ -17,7 +17,7 @@ export class Cluster {
     this.local = local
   }
 
-  get token(): string {
+  get token(): string | undefined {
     return this.clusterToken
   }
 
