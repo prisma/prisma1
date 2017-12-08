@@ -24,7 +24,8 @@ case class AddProjectMutation(
     val projectId = ProjectId.toEncodedString(name = args.name, stage = args.stage)
     val newProject = Project(
       id = projectId,
-      ownerId = args.ownerId.getOrElse("")
+      ownerId = args.ownerId.getOrElse(""),
+      secrets = args.secrets
     )
 
     val migration = Migration(
@@ -61,5 +62,6 @@ case class AddProjectInput(
     clientMutationId: Option[String],
     ownerId: Option[String],
     name: String,
-    stage: String
+    stage: String,
+    secrets: Vector[String]
 ) extends sangria.relay.Mutation

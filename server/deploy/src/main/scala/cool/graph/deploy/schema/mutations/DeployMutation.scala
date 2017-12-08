@@ -43,7 +43,8 @@ case class DeployMutation(
 
   private def performDeployment: Future[MutationSuccess[DeployMutationPayload]] = {
     for {
-      nextProject    <- desiredProjectInferer.infer(baseProject = project, graphQlSdl).toFuture
+      inferedProject <- desiredProjectInferer.infer(baseProject = project, graphQlSdl).toFuture
+      nextProject    = inferedProject.copy(secrets = args.secrets)
       renames        = renameInferer.infer(graphQlSdl)
       migrationSteps = migrationStepsProposer.propose(project, nextProject, renames)
       migration      = Migration(nextProject.id, 0, hasBeenApplied = false, migrationSteps) // how to get to the revision...?
@@ -66,7 +67,8 @@ case class DeployMutationInput(
     clientMutationId: Option[String],
     projectId: String,
     types: String,
-    dryRun: Option[Boolean]
+    dryRun: Option[Boolean],
+    secrets: Vector[String]
 ) extends sangria.relay.Mutation
 
 case class DeployMutationPayload(

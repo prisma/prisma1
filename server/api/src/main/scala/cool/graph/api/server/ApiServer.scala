@@ -17,7 +17,7 @@ import cool.graph.api.schema.{ApiUserContext, SchemaBuilder}
 import cool.graph.api.{ApiDependencies, ApiMetrics}
 import cool.graph.cuid.Cuid.createCuid
 import cool.graph.metrics.extensions.TimeResponseDirectiveImpl
-import cool.graph.shared.models.{ProjectId, ProjectWithClientId}
+import cool.graph.shared.models.{Project, ProjectId, ProjectWithClientId}
 import cool.graph.util.logging.{LogData, LogKey}
 import sangria.execution.Executor
 import sangria.parser.QueryParser
@@ -65,50 +65,53 @@ case class ApiServer(
           respondWithHeader(RawHeader("Request-Id", requestId)) {
             pathPrefix(Segment) { name =>
               pathPrefix(Segment) { stage =>
-                entity(as[JsValue]) { requestJson =>
-                  complete {
-                    val projectId = ProjectId.toEncodedString(name = name, stage = stage)
-                    fetchProject(projectId).flatMap { project =>
-                      val JsObject(fields) = requestJson
-                      val JsString(query)  = fields("query")
+                optionalHeaderValueByName("Authorization") { authorizationHeader =>
+                  entity(as[JsValue]) { requestJson =>
+                    complete {
+                      val projectId = ProjectId.toEncodedString(name = name, stage = stage)
+                      fetchProject(projectId).flatMap { project =>
+                        verifyAuth(project = project.project, authHeaderOpt = authorizationHeader)
+                        val JsObject(fields) = requestJson
+                        val JsString(query)  = fields("query")
 
-                      val operationName =
-                        fields.get("operationName") collect {
-                          case JsString(op) if !op.isEmpty ⇒ op
+                        val operationName =
+                          fields.get("operationName") collect {
+                            case JsString(op) if !op.isEmpty ⇒ op
+                          }
+
+                        val variables = fields.get("variables") match {
+                          case Some(obj: JsObject)                  => obj
+                          case Some(JsString(s)) if s.trim.nonEmpty => s.parseJson
+                          case _                                    => JsObject.empty
                         }
 
-                      val variables = fields.get("variables") match {
-                        case Some(obj: JsObject)                  => obj
-                        case Some(JsString(s)) if s.trim.nonEmpty => s.parseJson
-                        case _                                    => JsObject.empty
-                      }
+                        val dataResolver                                       = DataResolver(project.project)
+                        val deferredResolverProvider: DeferredResolverProvider = new DeferredResolverProvider(dataResolver)
+                        val masterDataResolver                                 = DataResolver(project.project, useMasterDatabaseOnly = true)
 
-                      val dataResolver                                       = DataResolver(project.project)
-                      val deferredResolverProvider: DeferredResolverProvider = new DeferredResolverProvider(dataResolver)
-                      val masterDataResolver                                 = DataResolver(project.project, useMasterDatabaseOnly = true)
+                        QueryParser.parse(query) match {
+                          case Failure(error) =>
+                            Future.successful(BadRequest -> JsObject("error" -> JsString(error.getMessage)))
 
-                      QueryParser.parse(query) match {
-                        case Failure(error) =>
-                          Future.successful(BadRequest -> JsObject("error" -> JsString(error.getMessage)))
+                          case Success(queryAst) =>
+                            val userContext = ApiUserContext(clientId = "clientId")
+                            val result: Future[(StatusCode, JsValue)] =
+                              Executor
+                                .execute(
+                                  schema = schemaBuilder(userContext, project.project, dataResolver, masterDataResolver),
+                                  queryAst = queryAst,
+                                  userContext = userContext,
+                                  variables = variables,
+                                  //                        exceptionHandler = ???,
+                                  operationName = operationName,
+                                  middleware = List.empty,
+                                  deferredResolver = deferredResolverProvider
+                                )
+                                .map(node => OK -> node)
 
-                        case Success(queryAst) =>
-                          val userContext = ApiUserContext(clientId = "clientId")
-                          val result: Future[(StatusCode, JsValue)] =
-                            Executor
-                              .execute(
-                                schema = schemaBuilder(userContext, project.project, dataResolver, masterDataResolver),
-                                queryAst = queryAst,
-                                userContext = userContext,
-                                variables = variables,
-                                //                        exceptionHandler = ???,
-                                operationName = operationName,
-                                middleware = List.empty,
-                                deferredResolver = deferredResolverProvider
-                              )
-                              .map(node => OK -> node)
-
-                          result.onComplete(_ => logRequestEnd(None, Some(userContext.clientId)))
-                          result
+                            result.onComplete(_ => logRequestEnd(None, Some(userContext.clientId)))
+                            result
+                        }
                       }
                     }
                   }
@@ -130,6 +133,33 @@ case class ApiServer(
     result map {
       case None         => throw ProjectNotFound(projectId)
       case Some(schema) => schema
+    }
+  }
+
+  def verifyAuth(project: Project, authHeaderOpt: Option[String]) = {
+    if (project.secrets.isEmpty) {
+      ()
+    } else {
+      authHeaderOpt match {
+        case Some(authHeader) => {
+          import pdi.jwt.{Jwt, JwtAlgorithm, JwtOptions}
+
+          val isValid = project.secrets.exists(secret => {
+            val jwtOptions = JwtOptions(signature = true, expiration = false)
+            val algorithms = Seq(JwtAlgorithm.HS256)
+            val claims     = Jwt.decodeRaw(token = authHeader, key = secret, algorithms = algorithms, options = jwtOptions)
+
+            // todo: also verify claims in accordance with https://github.com/graphcool/framework/issues/1365
+
+            claims.isSuccess
+          })
+
+          if (!isValid) {
+            sys.error("Auth header not valid")
+          }
+        }
+        case None => sys.error("Must provide auth header")
+      }
     }
   }
 

@@ -9,7 +9,8 @@ object DeployField {
 
   val inputFields = projectIdInputFields ++ List(
     InputField("types", StringType),
-    InputField("dryRun", OptionInputType(BooleanType))
+    InputField("dryRun", OptionInputType(BooleanType)),
+    InputField("secrets", OptionInputType(ListInputType(StringType)))
   )
 
   implicit val fromInput = new FromInput[DeployMutationInput] {
@@ -20,7 +21,8 @@ object DeployField {
         clientMutationId = node.clientMutationId,
         projectId = node.projectId,
         types = node.requiredArgAsString("types"),
-        dryRun = node.optionalArgAsBoolean("dryRun")
+        dryRun = node.optionalArgAsBoolean("dryRun"),
+        secrets = node.optionalArgAs[Vector[String]]("secrets").getOrElse(Vector.empty)
       )
     }
   }

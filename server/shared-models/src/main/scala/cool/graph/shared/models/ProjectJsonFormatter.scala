@@ -141,7 +141,6 @@ object ProjectJsonFormatter {
   implicit lazy val enum                      = Json.format[Enum]
   implicit lazy val field                     = Json.format[Field]
   implicit lazy val model                     = Json.format[Model]
-  implicit lazy val rootToken                 = Json.format[RootToken]
   implicit lazy val seat                      = Json.format[Seat]
   implicit lazy val packageDefinition         = Json.format[PackageDefinition]
   implicit lazy val featureToggle             = Json.format[FeatureToggle]
