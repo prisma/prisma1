@@ -22,11 +22,12 @@ export class GraphcoolDefinitionClass {
   definition?: GraphcoolDefinition
   typesString?: string
   rawStages: Stages
-  secrets?: string[]
+  secrets: string[] | null
   private definitionString: string
   constructor(out: Output, config: Config) {
     this.out = out
     this.config = config
+    this.secrets = null
   }
   async load(env: Environment, args: Args, envPath?: string) {
     if (this.config.definitionPath) {
@@ -46,7 +47,12 @@ export class GraphcoolDefinitionClass {
       this.typesString = this.getTypesString(this.definition)
       this.secrets = this.definition.secret
         ? this.definition.secret.replace(/\s/g, '').split(',')
-        : []
+        : null
+      if (this.secrets === null && !this.definition.disableAuth) {
+        throw new Error(
+          'Please either provide a secret in your graphcool.yml or disableAuth: true',
+        )
+      }
     } else {
       throw new Error(`Please create a graphcool.yml`)
     }

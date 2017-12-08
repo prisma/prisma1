@@ -6,6 +6,7 @@ Object {
     "datamodel.graphql",
   ],
   "schema": "schemas/database.graphql",
+  "secret": "some-secret",
   "service": "jj",
   "stages": Object {
     "default": "shared-eu-west-1",
@@ -13,6 +14,23 @@ Object {
   },
 }
 `;
+
+exports[`graphcool definition load yml with disableAuth: true 1`] = `
+Object {
+  "datamodel": Array [
+    "datamodel.graphql",
+  ],
+  "disableAuth": true,
+  "schema": "schemas/database.graphql",
+  "service": "jj",
+  "stages": Object {
+    "default": "shared-eu-west-1",
+    "dev": "shared-eu-west-1",
+  },
+}
+`;
+
+exports[`graphcool definition load yml with disableAuth: true 2`] = `null`;
 
 exports[`graphcool definition load yml with secret and env var 1`] = `
 Object {
@@ -51,3 +69,21 @@ Array [
   "seperated",
 ]
 `;
+
+exports[`graphcool definition load yml without secret and expect it to throw 1`] = `[Error: Please either provide a secret in your graphcool.yml or disableAuth: true]`;
+
+exports[`graphcool definition load yml without secret and expect it to throw 2`] = `
+Object {
+  "datamodel": Array [
+    "datamodel.graphql",
+  ],
+  "schema": "schemas/database.graphql",
+  "service": "jj",
+  "stages": Object {
+    "default": "shared-eu-west-1",
+    "dev": "shared-eu-west-1",
+  },
+}
+`;
+
+exports[`graphcool definition load yml without secret and expect it to throw 3`] = `null`;

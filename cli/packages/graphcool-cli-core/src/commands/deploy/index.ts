@@ -176,7 +176,11 @@ ${chalk.gray(
 
   private async addProject(name: string, stage: string): Promise<void> {
     this.out.action.start(`Creating stage ${stage} for service ${name}`)
-    const createdProject = await this.client.addProject(name, stage)
+    const createdProject = await this.client.addProject(
+      name,
+      stage,
+      this.definition.secrets,
+    )
     this.out.action.stop()
   }
 
@@ -212,6 +216,7 @@ ${chalk.gray(
       stageName,
       this.definition.typesString!,
       dryRun,
+      this.definition.secrets,
     )
     this.out.action.stop(this.prettyTime(Date.now() - before))
     this.printResult(migrationResult)

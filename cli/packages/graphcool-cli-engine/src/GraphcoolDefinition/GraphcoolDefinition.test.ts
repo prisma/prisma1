@@ -19,6 +19,8 @@ service: jj
 datamodel:
 - datamodel.graphql
 
+secret: some-secret
+
 schema: schemas/database.graphql
 stages: 
   default: dev
@@ -142,6 +144,109 @@ type User @model {
 
     await definition.load(env, {}, envPath)
 
+    expect(definition.definition).toMatchSnapshot()
+    expect(definition.secrets).toMatchSnapshot()
+  })
+  test('load yml with disableAuth: true', async () => {
+    const secret = 'this-is-a-long-secret'
+    const yml = `\
+service: jj
+
+datamodel:
+- datamodel.graphql
+
+disableAuth: true
+
+schema: schemas/database.graphql
+stages: 
+  default: dev
+  dev: shared-eu-west-1
+    `
+    const datamodel = `
+type User @model {
+  id: ID! @isUnique
+  name: String!
+  lol: Int
+  what: String
+}
+`
+    const config = new Config()
+    const out = new Output(config)
+    const definition = new GraphcoolDefinitionClass(out, config)
+    const env = new Environment(out, config)
+    // config.definitionPath =
+
+    const envPath = path.join(config.definitionDir, '.env')
+    fs.writeFileSync(
+      envPath,
+      `MY_DOT_ENV_SECRET=this-is-very-secret,and-comma,seperated`,
+    )
+    fs.writeFileSync(
+      path.join(config.definitionDir, 'datamodel.graphql'),
+      datamodel,
+    )
+    const definitionPath = path.join(config.definitionDir, 'graphcool.yml')
+    fs.writeFileSync(definitionPath, yml)
+    await env.load({})
+
+    config.definitionPath = definitionPath
+
+    await definition.load(env, {}, envPath)
+
+    expect(definition.definition).toMatchSnapshot()
+    expect(definition.secrets).toMatchSnapshot()
+  })
+  test('load yml without secret and expect it to throw', async () => {
+    const secret = 'this-is-a-long-secret'
+    const yml = `\
+service: jj
+
+datamodel:
+- datamodel.graphql
+
+schema: schemas/database.graphql
+stages: 
+  default: dev
+  dev: shared-eu-west-1
+    `
+    const datamodel = `
+type User @model {
+  id: ID! @isUnique
+  name: String!
+  lol: Int
+  what: String
+}
+`
+    const config = new Config()
+    const out = new Output(config)
+    const definition = new GraphcoolDefinitionClass(out, config)
+    const env = new Environment(out, config)
+    // config.definitionPath =
+
+    const envPath = path.join(config.definitionDir, '.env')
+    fs.writeFileSync(
+      envPath,
+      `MY_DOT_ENV_SECRET=this-is-very-secret,and-comma,seperated`,
+    )
+    fs.writeFileSync(
+      path.join(config.definitionDir, 'datamodel.graphql'),
+      datamodel,
+    )
+    const definitionPath = path.join(config.definitionDir, 'graphcool.yml')
+    fs.writeFileSync(definitionPath, yml)
+    await env.load({})
+
+    config.definitionPath = definitionPath
+
+    let error
+
+    try {
+      await definition.load(env, {}, envPath)
+    } catch (e) {
+      error = e
+    }
+
+    expect(error).toMatchSnapshot()
     expect(definition.definition).toMatchSnapshot()
     expect(definition.secrets).toMatchSnapshot()
   })

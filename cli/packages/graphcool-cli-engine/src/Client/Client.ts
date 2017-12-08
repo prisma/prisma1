@@ -192,12 +192,17 @@ export class Client {
     )
   }
 
-  async addProject(name: string, stage: string): Promise<SimpleProjectInfo> {
+  async addProject(
+    name: string,
+    stage: string,
+    secrets: string[] | null,
+  ): Promise<SimpleProjectInfo> {
     const mutation = `\
       mutation addProject($name: String! $stage: String!) {
         addProject(input: {
           name: $name,
           stage: $stage
+          secrets: $secrets
         }) {
           project {
             name
@@ -211,6 +216,7 @@ export class Client {
     }>(mutation, {
       name,
       stage,
+      secrets,
     })
 
     // TODO set project definition, should be possibility in the addProject mutation
@@ -242,14 +248,17 @@ export class Client {
     stage: string,
     types: string,
     dryRun: boolean,
+    secrets: string[] | null,
   ): Promise<any> {
     // TODO add dryRun to query as soon as the backend is ready
     const mutation = `\
-      mutation($name: String!, $stage: String! $types: String!) {
+      mutation($name: String!, $stage: String! $types: String! $dryRun: Boolean $secrets: [String!]) {
         deploy(input: {
           name: $name
           stage: $stage
           types: $types
+          dryRun: $dryTun
+          secrets: $secrets
         }) {
           errors {
             type
@@ -269,6 +278,8 @@ export class Client {
       name,
       stage,
       types,
+      dryRun,
+      secrets,
     })
 
     return deploy
