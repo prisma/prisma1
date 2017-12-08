@@ -7,7 +7,7 @@ import cool.graph.api.database.deferreds.DeferredResolverProvider
 import cool.graph.api.database.{DataResolver, Databases}
 import cool.graph.api.project.{ProjectFetcher, ProjectFetcherImpl}
 import cool.graph.api.schema.SchemaBuilder
-import cool.graph.api.server.RequestHandler
+import cool.graph.api.server.{Auth, AuthImpl, RequestHandler}
 import cool.graph.bugsnag.BugSnaggerImpl
 import cool.graph.client.server.{GraphQlRequestHandler, GraphQlRequestHandlerImpl}
 import cool.graph.shared.models.Project
@@ -30,7 +30,8 @@ trait ApiDependencies extends AwaitUtils {
   implicit lazy val bugSnagger                          = BugSnaggerImpl(sys.env("BUGSNAG_API_KEY"))
   lazy val log: String => Unit                          = println
   lazy val graphQlRequestHandler: GraphQlRequestHandler = GraphQlRequestHandlerImpl(log)
-  lazy val requestHandler: RequestHandler               = RequestHandler(projectFetcher, apiSchemaBuilder, graphQlRequestHandler, log)
+  lazy val auth: Auth                                   = AuthImpl
+  lazy val requestHandler: RequestHandler               = RequestHandler(projectFetcher, apiSchemaBuilder, graphQlRequestHandler, auth, log)
 
   def dataResolver(project: Project): DataResolver       = DataResolver(project)
   def masterDataResolver(project: Project): DataResolver = DataResolver(project, useMasterDatabaseOnly = true)

@@ -18,6 +18,7 @@ case class RequestHandler(
     projectFetcher: ProjectFetcher,
     schemaBuilder: SchemaBuilder,
     graphQlRequestHandler: GraphQlRequestHandler,
+    auth: Auth,
     log: Function[String, Unit]
 )(implicit bugsnagger: BugSnagger, ec: ExecutionContext) {
 
@@ -28,6 +29,7 @@ case class RequestHandler(
     val graphQlRequestFuture = for {
       projectWithClientId <- fetchProject(projectId)
       schema              = schemaBuilder(projectWithClientId.project)
+      auth                <- auth.verify(projectWithClientId.project, rawRequest.authorizationHeader).toFuture
       graphQlRequest      <- rawRequest.toGraphQlRequest(authorization = None, projectWithClientId, schema).toFuture
     } yield graphQlRequest
 
