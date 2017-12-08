@@ -2,7 +2,7 @@ package cool.graph.deploy.schema.mutations
 
 import cool.graph.deploy.database.persistence.MigrationPersistence
 import cool.graph.deploy.migration.validation.{SchemaError, SchemaSyntaxValidator}
-import cool.graph.deploy.migration.{DesiredProjectInferer, MigrationStepsProposer, RenameInferer}
+import cool.graph.deploy.migration.{DesiredProjectInferer, MigrationStepsProposer, Migrator, RenameInferer}
 import cool.graph.shared.models.{Migration, Project}
 import sangria.parser.QueryParser
 
@@ -15,7 +15,8 @@ case class DeployMutation(
     desiredProjectInferer: DesiredProjectInferer,
     migrationStepsProposer: MigrationStepsProposer,
     renameInferer: RenameInferer,
-    migrationPersistence: MigrationPersistence
+    migrationPersistence: MigrationPersistence,
+    migrator: Migrator
 )(
     implicit ec: ExecutionContext
 ) extends Mutation[DeployMutationPayload] {
@@ -58,7 +59,12 @@ case class DeployMutation(
     val changesDetected = migration.steps.nonEmpty || project.secrets != args.secrets
 
     if (changesDetected && !args.dryRun.getOrElse(false)) {
-      migrationPersistence.create(nextProject, migration)
+      for {
+        savedMigration <- migrationPersistence.create(nextProject, migration)
+      } yield {
+        migrator.schedule(savedMigration)
+        savedMigration
+      }
     } else {
       Future.successful(migration)
     }

@@ -1,6 +1,6 @@
 package cool.graph.deploy.migration
 
-import cool.graph.deploy.InternalTestDatabase
+import cool.graph.deploy.specutils.InternalTestDatabase
 import cool.graph.shared.models._
 import cool.graph.shared.project_dsl.SchemaDsl.SchemaBuilder
 import cool.graph.utils.await.AwaitUtils

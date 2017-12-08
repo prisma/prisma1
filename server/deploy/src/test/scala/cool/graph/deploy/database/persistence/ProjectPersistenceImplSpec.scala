@@ -1,7 +1,7 @@
 package cool.graph.deploy.database.persistence
 
-import cool.graph.deploy.InternalTestDatabase
 import cool.graph.deploy.database.tables.Tables
+import cool.graph.deploy.specutils.InternalTestDatabase
 import cool.graph.shared.models.Migration
 import cool.graph.shared.project_dsl.TestProject
 import cool.graph.utils.await.AwaitUtils

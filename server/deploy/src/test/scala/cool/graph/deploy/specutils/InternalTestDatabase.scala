@@ -1,41 +1,25 @@
-package cool.graph.deploy
+package cool.graph.deploy.specutils
 
 import cool.graph.deploy.database.schema.InternalDatabaseSchema
 import cool.graph.utils.await.AwaitUtils
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
 import slick.dbio.DBIOAction
-import slick.dbio.Effect.Read
 import slick.jdbc.MySQLProfile.api._
+import slick.dbio.Effect.Read
 import slick.jdbc.meta.MTable
 
 import scala.concurrent.Future
 
-trait InternalTestDatabase extends BeforeAndAfterAll with BeforeAndAfterEach with AwaitUtils { this: Suite =>
+class InternalTestDatabase extends AwaitUtils { //this: Suite =>
   import scala.concurrent.ExecutionContext.Implicits.global
 
   val dbDriver             = new org.mariadb.jdbc.Driver
   val internalDatabaseRoot = Database.forConfig("internalRoot", driver = dbDriver)
   val internalDatabase     = Database.forConfig("internal", driver = dbDriver)
 
-  override protected def beforeAll(): Unit = {
-    super.beforeAll()
-    createInternalDatabaseSchema
-  }
+  def createInternalDatabaseSchema() = internalDatabaseRoot.run(InternalDatabaseSchema.createSchemaActions(recreate = true)).await(10)
 
-  override protected def beforeEach(): Unit = {
-    super.beforeEach()
-    truncateTables()
-  }
-
-  override protected def afterAll(): Unit = {
-    super.afterAll()
-    val shutdowns = Vector(internalDatabase.shutdown, internalDatabaseRoot.shutdown)
-    Future.sequence(shutdowns).await()
-  }
-
-  private def createInternalDatabaseSchema = internalDatabaseRoot.run(InternalDatabaseSchema.createSchemaActions(recreate = true)).await(10)
-
-  protected def truncateTables(): Unit = {
+  def truncateTables(): Unit = {
     val schemas = internalDatabase.run(getTables("graphcool")).await()
     internalDatabase.run(dangerouslyTruncateTables(schemas)).await()
   }
@@ -52,5 +36,10 @@ trait InternalTestDatabase extends BeforeAndAfterAll with BeforeAndAfterEach wit
     for {
       metaTables <- MTable.getTables(cat = Some(projectId), schemaPattern = None, namePattern = None, types = None)
     } yield metaTables.map(table => table.name.name)
+  }
+
+  def shutdown() = {
+    internalDatabaseRoot.close()
+    internalDatabase.close()
   }
 }
