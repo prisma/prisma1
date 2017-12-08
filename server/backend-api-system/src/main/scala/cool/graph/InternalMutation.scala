@@ -73,12 +73,7 @@ abstract class InternalMutation[+ReturnValue <: Mutation] {
     def performAndLog = {
       for {
         mutactionResults <- performActions(requestContext)
-        _                = logTimings(mutactionResults)
       } yield getReturnValue.get
-    }
-
-    def logTimings(results: List[MutactionExecutionResult]): Unit = {
-      requestContext.foreach(ctx => mutactionTimings.foreach(ctx.logMutactionTiming))
     }
 
     prepareActions()

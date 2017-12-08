@@ -183,7 +183,7 @@ In queries or mutations, Enum fields have to be specified without any enclosing 
 
 Sometimes you need to store arbitrary JSON values for loosely structured data. The JSON type makes sure that it is actually valid JSON and returns the value as a parsed JSON object/array instead of a string.
 
-Note: JSON values are currently limited to 64KB in size.
+Note: JSON values are currently limited to 256KB in size.
 
 In queries or mutations, JSON fields have to be specified with enclosing double quotes. Special characters have to be escaped: `json: "{\"int\": 1, \"string\": \"value\"}"`.
 

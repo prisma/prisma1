@@ -37,8 +37,6 @@ object ClientMutationRunner {
           dataItem <- {
             trackApiMetrics(requestContext, mutactionGroups, project)
 
-            requestContext.foreach(ctx => clientMutation.mutactionTimings.foreach(ctx.logMutactionTiming))
-
             executionResults
               .filter(_.isInstanceOf[GeneralError])
               .map(_.asInstanceOf[GeneralError]) match {
