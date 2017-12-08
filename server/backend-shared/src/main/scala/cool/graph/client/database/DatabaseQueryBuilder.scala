@@ -46,6 +46,7 @@ object DatabaseQueryBuilder {
     (query, resultTransform)
   }
 
+  // we could also split this into one Select only on Non-list Fields and one on ListFields
   def selectAllFromModelExport(projectId: String,
                                modelName: String,
                                args: Option[QueryArguments],
