@@ -123,6 +123,7 @@ You can obtain the value of the root token using the [`graphcool root-token`](!a
 graphcool root-token myToken1
 ```
 
+If you don't pass the token name to the command, it will simply print the names of all the root tokens associated with this target.
 
 ### Using a _temporary_ root token inside functions
 
