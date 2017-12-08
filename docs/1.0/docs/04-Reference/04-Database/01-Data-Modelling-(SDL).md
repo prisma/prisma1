@@ -7,107 +7,130 @@ description: An overview of how to model application data in Graphcool.
 
 ## Overview
 
-Graphcool uses (a subset of) the GraphQL [Schema Definition Language](https://blog.graph.cool/graphql-sdl-schema-definition-language-6755bcb9ce51) for data modelling. Your data model is written in your service's `.graphql`-file(s), typically called `types.graphql`, which is the foundation for the actual database schema that Graphcool generates for you.
+Graphcool uses (a subset of) the GraphQL [Schema Definition Language](https://blog.graph.cool/graphql-sdl-schema-definition-language-6755bcb9ce51) for data modelling. Your data model is written in your service's `.graphql`-file(s) and is the foundation for the actual database schema that Graphcool generates for you under the hood.
 
-To learn more about the SDL, you can check out the [official documentation](http://graphql.org/learn/schema/#type-language).
+If you're using just a single file for your type definitions, this file is typically called `types.graphql`.
+
+> To learn more about the SDL, you can check out the [official documentation](http://graphql.org/learn/schema/#type-language).
 
 ### Example
 
 This is an example for what a simple `types.graphql` with two simple types could look like:
 
 ```graphql
-type Tweet @model {
-  id: ID! @isUnique    # id is a required system field
-  createdAt: DateTime! # createdAt is an optional system field
-  updatedAt: DateTime! # updatedAt is an optional system field
+type Tweet {
+  id: ID! @unique       # read-only system field (optional)
+  createdAt: DateTime!  # read-only system field (optional)
   text: String!
-  owner: User! @relation(name: "UserOnTweet")
+  owner: User!
+  location: Location! @relation(onDelete: CASCADE)
 }
 
-type User @model {
-  id: ID! @isUnique
-  name: String!
-  tweets: [Tweet!]! @relation(name: "UserOnTweet")
+type User {
+  id: ID! @unique       # read-only system field (optional)
+  createdAt: DateTime!  # read-only system field (optional)
+  updatedAt: DateTime!  # read-only system field (optional)
+  handle: String! @unique
+  name: String
+  tweets: [Tweet!]!
+}
+
+type Location {
+  latitude: Float!
+  longitude: Float!
 }
 ```
+
+Here are a few things to note about these type definitions:
+
+- Three types are created which are all mapped to the database.
+- `id`, `createdAt` and `updatedAt` are read-only system fields you can add to your types.
+- There is a bidirectional relation between `User` and `Tweet` (the `@relation` directive is optional here).
+- There is a unidirectional relation from `Tweet` to `Location`. The `onDelete` argument specifies the behaviour when a `Tweet` gets deleted: The related `Location` will also be deleted.
+- Except for the `name` field on `User`, all fields are required in the data model (as indicated by the `!` following the type).
 
 ### Building blocks of the data model
 
 There are several available building blocks to shape your data model.
 
-* [Types](#graphql-types) consist of multiple [fields](#fields) and are used to group similar entities together. There are two major kinds of types you can use to define your data model:
-  * Model types: Each model type needs to be annotated with the `@model` directive and have the `id` field. With every model type added to your data model, corresponding CRUD operations are added to the service's GraphQL API (e.g. `allUsers`, `createUser`, `updateUser` and `deleteUser` for a type called `User`).
-  * Embedded types: An embedded type is a "helper" type that doesn't need the `@model` directive or the `id` field. When an embedded type is used in a relation, the relation doesn't need to be annotated with the `@relation` directive.
-* [Relations](#relations) describe interactions between types.
+* [Types](#graphql-types) consist of multiple [fields](#fields) and are used to group similar entities together. Each type in your data model is mapped to the database and CRUD operations for it are added to your GraphQL API.
+* [Relations](#relations) describe _relationships_ between types.
 * [Interfaces](http://graphql.org/learn/schema/#interfaces) are abstract types that include a certain set of fields which a type must include to _implement_ the interface.
-* Special [directives](#graphql-directives) that cover different use cases are available.
+* Special [directives](#graphql-directives) covering different use cases are available.
 
 ### System fields
 
-When writing type definitions for your Graphcool database service, you need to be aware of three "system fields" which are managed for you by Graphcool: `id`, `createdAt` and `updatedAt`. The values of these fields are read-only for you. The concrete behaviour of these fields is explained in the following.
+When writing type definitions for your Graphcool database service, you need to be aware of three _system fields_ which are managed for you by Graphcool: `id`, `createdAt` and `updatedAt`. The values of these fields are read-only.
 
-> The `id` field is required for model types, but not for embedded types. `createdAt` and `updatedAt` are always optional.
+In general, Graphcool will always maintain these fields in the actual database. It's up to you to decide whether they will also be exposed in the GraphQL API by adding them explicitly to the SDL type definition.
 
-#### Required system field: `id`
+<InfoBox type=warning>
 
-Every model type you define with the `@model` directive needs to have an `id: ID! @isUnique` field, otherwise `graphcool deploy` is going to fail. For embedded types, it is optional. In any case, the `id` field is managed by Graphcool: Every new node that is created in your service will get assigned a globally unique ID automatically.
+Notice that you can not have custom fields that are called `id`, `createdAt` and `updatedAt` since these field names are reserved for the system fields.
 
-Notice that all your model types will implement the `Node` interface in the actual GraphQL schema that defines all the capabilities of your API. This is what the `Node` interface looks like:
+</InfoBox>
+
+#### System field: `id`
+
+Every record in your Graphcool database (also called _node_) will get assigned a globally unique identifier when it's created.
+
+Whenever you add the `id` field to a type definition to expose it in the GraphQL API, you must annotate it with the `@unique` directive.
+
+The `id` has the following properties:
+
+- Consists of 25 alphanumeric characters (letters are always lowercase)
+- Always starts with a (lowercase) letter
+- Follows [CUID](https://github.com/ericelliott/cuid) (_collision resistant unique identifiers_) scheme
 
 >>>TODO<<<
 do we still want to document the `Node` interface
 >>>TODO<<<
 
+Notice that all your model types will implement the `Node` interface in the actual GraphQL schema that defines all the capabilities of your API. This is what the `Node` interface looks like:
+
 ```graphql
 interface Node {
-  id: ID! @isUnique
+  id: ID! @unique
 }
 ```
 
-> You don't have to implement the `Node` interface yourself, this is implicitly handled by Graphcool when you're using the `@model` directive.
+#### System fields: `createdAt` and `updatedAt`
 
-#### Optional system fields: `createdAt` and `updatedAt`
+Graphcool further has two special fields which you can add to your types:
 
-Graphcool further has two special fields which you can add to model and embedded types:
+- `createdAt: DateTime!`: Stores the exact date and time for when a node of this model type was _created_.
+- `updatedAt: DateTime!`: Stores the exact date and time for when a node of this model type was _last updated_.
 
-- `createdAt: DateTime!`: Stores the exact date and time for when a node of this model type was created.
-- `updatedAt: DateTime!`: Stores the exact date and time for when a node of this model type was last updated.
+If you want your types to expose these fields, you can simply add them to the type definition and Graphcool will take care of actually managing them for you. Similar to the `id` field, both fields will be maintained in the database anyways, and it's up to you whether they will be exposed.
 
-If you want your types to expose these fields, you can simply add them to the type definition and Graphcool will take care of actually managing them for you.
+## Object types
 
-<InfoBox type=warning>
+An _object type_ (or short just _type_) defines the structure for one concrete part of your data model. If you are familiar with SQL databases you can think of an object type as the schema for a table. A type has a _name_, an _optional description_ and one or multiple _[fields](#fields)_.
 
-Notice that you can not have custom fields that are called `createdAt` and `updatedAt` and of type `DateTime!`. When adding these to a type, they will automatically be managed by Graphcool and are read-only for your application.
+An instantiation of a type is called a _node_. The collection of all nodes is what you would refer to as your "application data". The term node refers to a node inside your data graph.
 
-</InfoBox>
+Every type you define will be available as a type in your generated GraphQL schema.
 
-## Model types
+### Defining an object type
 
-A *model type* defines the structure for a certain type of your data. If you are familiar with SQL databases you can think of a type as the schema for a table. A type has a name, an optional description and one or multiple [fields](#fields).
-
-An instantiation of a type is called a *node*. The collection of all nodes is what you would refer to as your "application data". The term node refers to a node inside your data graph.
-
-Every type you define will be available as a type in your GraphQL schema.
-
-### Defining a model type
-
-A GraphQL type is defined in the data model with the keyword `type`:
+A GraphQL object type is defined in the data model with the keyword `type`:
 
 ```graphql
-type Story @model {
-  id: ID! @isUnique
+# This is the description for the `Article` type
+type Article {
+  id: ID! @unique
   text: String!
   isPublished: Boolean @defaultValue(value: "false")
-  author: Author! @relation(name: "AuthorStories")
-}
-
-type Author @model {
-  id: ID! @isUnique
-  age: Int
-  name: String!
-  stories: [Story!]! @relation(name: "AuthorStories")
 }
 ```
+
+The type defined above has the following properties:
+
+- Name: `Story`
+- Fields: `id`, `text` and `isPublished`
+- Description: `This is the description for the `Article` type`
+
+As you can see, a description can be added to a type by simply adding a comment right before its definition.
 
 ### Generated operations based on types
 
@@ -119,11 +142,9 @@ The types that are included in your schema effect the available operations in th
 
 ## Fields
 
-*Fields* are the building blocks of a [type](#model-types), giving a node its shape. Every field is referenced by its name and is either [scalar](#scalar-types) or a [relation](#relations) field.
+*Fields* are the building blocks of a [type](#object-types), giving a node its shape. Every field is referenced by its name and is either [scalar](#scalar-types) or a [relation](#relations) field.
 
-> The `Post` type might have a `title` and a `text` field both of type String and an `id` field of type `ID`.
-
-### Scalar Types
+### Scalar types
 
 #### String
 
@@ -177,12 +198,6 @@ Note: JSON values are currently limited to 64KB in size.
 
 In queries or mutations, JSON fields have to be specified with enclosing double quotes. Special characters have to be escaped: `json: "{\"int\": 1, \"string\": \"value\"}"`.
 
-<!--
-#### GeoPoint
-
-*Coming soon...*
--->
-
 #### ID
 
 An ID value is a generated unique 25-character string based on [cuid](https://github.com/graphcool/cuid-java). Fields with ID values are system fields and just used internally, therefore it is not possible to create new fields with the ID type.
@@ -193,17 +208,15 @@ An ID value is a generated unique 25-character string based on [cuid](https://gi
 
 Scalar fields can be marked with the list field type. A field of a relation that has the many multiplicity will also be marked as a list.
 
-Note: List values are currently limited to 256KB in size, independently of the [scalar type](#scalar-types) of the field.
-
 In queries or mutations, list fields have to be enclosed by square brackets, while the separate entries of the list adhere to the same formatting rules as lined out above: `listString: ["a string", "another string"]`, `listInt: [12, 24]`.
 
 #### Required
 
-Scalar fields can be marked as required (sometimes also referred to as "non-null"). When creating a new node, you need to supply a value for fields which are required and don't have a [default value](#default-value).
+Fields can be marked as required (sometimes also referred to as "non-null"). When creating a new node, you need to supply a value for fields which are required and don't have a [default value](#default-value).
 
-Required fields are usually marked using a `!` after the field type.
+Required fields are marked using a `!` after the field type.
 
-> An example for a required field on the `User` type could look like this: `name: String!`.
+An example for a required field on the `User` type could look like this: `name: String!`.
 
 ### Field constraints
 
@@ -213,17 +226,20 @@ Fields can be configured with certain field constraints to add further semantics
 
 Setting the *unique* constraint makes sure that two nodes of the type in question cannot have the same value for a certain field. The only exception is the `null` value, meaning that multiple nodes can have the value `null` without violating the constraint.
 
-> A typical example is the `email` field on the `User` type.
+> A typical example would be an `email` field on the `User` type where the assumption is that every `User` should have a unique email address.
+
+>>>TODO<<<
+needs update about specifics?
+>>>TODO<<<
 
 Please note that only the first 191 characters in a String field are considered for uniqueness and the unique check is **case insensitive**. Storing two different strings is not possible if the first 191 characters are the same or if they only differ in casing.
 
-To mark a field as unique, simply append the `@isUnique` directive to it:
+To mark a field as unique, simply append the `@unique` directive to it:
 
 ```graphql
-type User @model {
-  email: String! @isUnique
+type User {
+  email: String! @unique
 }
-
 ```
 
 ### Default value
@@ -233,7 +249,7 @@ You can set a default value for scalar fields. The value will be taken for new n
 To specify a default value for a field, you can use the `@defaultValue` directive:
 
 ```graphql
-type Story @model {
+type Story {
   isPublished: Boolean @defaultValue(value: "false")
 }
 ```
@@ -242,10 +258,9 @@ type Story @model {
 
 Fields in the data schema affect the available [query arguments](!alias-nia9nushae#query-arguments). Unique fields in the data schema add a new query argument to [queries for fetching one node](!alias-nia9nushae#fetching-a-single-node).
 
-
 ## Relations
 
-A *relation* defines the semantics of a connection between two [types](#model-types). Two types in a relation are connected via a [relation field](#scalar-and-relation-fields) on each type.
+A *relation* defines the semantics of a connection between two [types](#object-types). Two types in a relation are connected via a [relation field](#scalar-and-relation-fields).
 
 A relation can also connect a type with itself. It is then referred to as a *self-relation*.
 
@@ -262,13 +277,13 @@ Nodes for a type that contains a required `to-one` relation field can only be cr
 A relation is defined in the data model using the `@relation` directive:
 
 ```graphql
-type User @model {
-  id: ID! @isUnique
+type User {
+  id: ID! @unique
   stories: [Story!]! @relation(name: "UserOnStory")
 }
 
-type Story @model {
-  id: ID! @isUnique
+type Story {
+  id: ID! @unique
   text: String!
   author: User! @relation(name: "UserOnStory")
 }
@@ -285,7 +300,6 @@ The relations that are included in your schema effect the available operations i
 * [nested mutations](!alias-ol0yuoz6go#nested-mutations) allow you to create and connect nodes across types
 * [relation subscriptions](!alias-aip7oojeiv#relation-subscriptions) allow you to get notified of changes to a relation
 
-
 ## GraphQL Directives
 
 A schema file follows the SDL syntax and can contain additional **static and temporary GraphQL directives**.
@@ -296,12 +310,12 @@ Static directives describe additional information about types or fields in the G
 
 #### Unique Scalar Fields
 
-The *static directive `@isUnique`* denotes [a unique, scalar field](#unique).
+The *static directive `@unique`* denotes [a unique, scalar field](#unique).
 
 ```graphql
 ## the `Post` type has a unique `slug` field
-type Post @model {
-  slug: String @isUnique
+type Post {
+  slug: String @unique
 }
 ```
 
@@ -311,11 +325,11 @@ The *static directive `@relation(name: String!)`* denotes a [relation field](#sc
 
 ```graphql
 ## the types `Post` and `User` are connected via the `PostAuthor` relation
-type Post @model {
+type Post {
   user: User! @relation(name: "PostAuthor")
 }
 
-type User @model {
+type User {
   posts: [Post!]! @relation(name: "PostAuthor")
 }
 ```
@@ -326,7 +340,7 @@ The *static directive `@defaultValue(value: String!)`* denotes [the default valu
 
 ```graphql
 # the `title` and `published` fields have default values `New Post` and `false`
-type Post @model {
+type Post {
   title: String! @defaultValue(value: "New Post")
   published: Boolean! @defaultValue(value: "false")
 }
@@ -407,36 +421,3 @@ The name of an enum value can be used in query filters and mutations. They can c
 * `A`
 * `ROLE_TAG`
 * `RoleTag`
-
-
-## System Artifacts (only for [legacy Console projects](!alias-aemieb1aev))
-
-In order to make the platform as seamless and integrated as possible, we introduced some predefined artifacts in each project. These artifacts are designed to be as minimal as possible and cannot be deleted. At the moment there are two type of artifacts: *system types* and *system fields*.
-
-### `User` Type
-
-Every project has a system type called `User`. As the `User` type is the foundation for our integration-based authentication system you cannot delete it. But of course you can still extend the `User` type to suit your needs and it behaves like every other type.
-
-Apart from the predefined system fields, the `User` type can have additional system fields depending on the configured custom authentication.
-
-You can add additional [fields](#fields) as with any other type.
-
-### `File` Type
-
-The `File` type is part of our [file management](!alias-eer4wiang0). Every time you upload a file, a new `File` node is created. Aside from the predefined system fields, the `File` type contains several other fields that contain meta information:
-* `contentType: `: our best guess as to what file type the file has. For example `image/png`. Can be `null`
-* `name: String`: the complete file name including the file type extension. For example `example.png`.
-* `secret: String`: the file secret. Can be combined with your project id to get the file url. Everyone with the secret has access to the file!
-* `size: Integer`: the file size in bytes.
-* `url: String`: the file url. Looks something like `https://files.graph.cool/__PROJECT_ID__/__SECRET__`, that is the generic location for files combined with your project id endpoint and the file secret.
-
-You can add additional [fields](#fields) as with any other type, but they need to be optional.
-
-### `id` Field
-
-Every type has a [required](#required) system field with the name `id` of type [ID](#id). The `id` value of every node (regardless of the type) is globally unique and unambiguously identifies a node ([as required by Relay](https://facebook.github.io/relay/docs/graphql-object-identification.html)). You cannot change the value for this field.
-
-### `createdAt` and `updatedAt` Fields
-
-Every type has the [DateTime](#datetime) fields `createdAt` and `updatedAt` that will be set automatically when a node is created or updated. You cannot change the values for these fields.
-
