@@ -8,6 +8,7 @@ import cool.graph.client.database._
 import cool.graph.cuid.Cuid
 import cool.graph.shared.RelationFieldMirrorColumn
 import cool.graph.shared.database.Databases
+import cool.graph.shared.models.TypeIdentifier.TypeIdentifier
 import cool.graph.shared.models._
 import slick.dbio.Effect
 import slick.jdbc.MySQLProfile.api._
@@ -178,15 +179,17 @@ object DataExport {
     def nextModel: Model = models.find(_._2 == cursor.table + 1).get._1
 
   }
-  case class ListInfo(dataResolver: DataResolver, models: List[(Model, Int)], listFields: List[(String, Int)], cursor: Cursor) extends ExportInfo {
-    val length: Int           = models.length
-    val fieldLength: Int      = listFields.length
-    val currentModel: Model   = models.find(_._2 == cursor.table).get._1
-    val currentField: String  = listFields.find(_._2 == cursor.table).get._1
-    val hasNext: Boolean      = cursor.table < length - 1
-    val hasNextField: Boolean = cursor.field < fieldLength - 1
-    def nextModel: Model      = models.find(_._2 == cursor.table + 1).get._1
-    def nextField: String     = listFields.find(_._2 == cursor.table + 1).get._1
+  case class ListInfo(dataResolver: DataResolver, models: List[(Model, Int)], cursor: Cursor) extends ExportInfo {
+    val length: Int                                     = models.length
+    val currentModel: Model                             = models.find(_._2 == cursor.table).get._1
+    val listFields: List[(String, TypeIdentifier, Int)] = currentModel.scalarListFields.zipWithIndex.map { case (f, i) => (f.name, f.typeIdentifier, i) }
+    val fieldLength: Int                                = listFields.length
+    val currentField: String                            = listFields.find(_._3 == cursor.table).get._1
+    val currentTypeIdentifier: TypeIdentifier           = listFields.find(_._3 == cursor.table).get._2
+    val hasNext: Boolean                                = cursor.table < length - 1
+    val hasNextField: Boolean                           = cursor.field < fieldLength - 1
+    def nextModel: Model                                = models.find(_._2 == cursor.table + 1).get._1
+    def nextField: String                               = listFields.find(_._3 == cursor.table + 1).get._1
   }
   case class RelationInfo(dataResolver: DataResolver, relations: List[(RelationData, Int)], cursor: Cursor) extends ExportInfo {
     val length: Int                = relations.length
@@ -195,7 +198,7 @@ object DataExport {
     def nextRelation: RelationData = relations.find(_._2 == cursor.table + 1).get._1
   }
 
-  case class Cursor(table: Int, row: Int, field: Int, array: Int) //use different kinds of cursors?
+  case class Cursor(table: Int, row: Int, field: Int, array: Int)
   case class Result(out: String, cursor: Cursor, isFull: Boolean)
 
   def isLimitReached(str: String): Boolean = str.length > 1000 // only for testing purposes variable in here
@@ -205,17 +208,13 @@ object DataExport {
   }
 
   def exportRelations(project: Project, dataResolver: DataResolver, tableIndex: Int, startRow: Int): Future[Result] = {
-    val relationInfos = project.relations.map(r => generateRelationData(r, project))
-
-    resultForCursor(in = "", RelationInfo(dataResolver, relationInfos.zipWithIndex, Cursor(tableIndex, startRow, -5, -5)))
+    val relationInfos = project.relations.map(r => generateRelationData(r, project)).zipWithIndex
+    resultForCursor(in = "", RelationInfo(dataResolver, relationInfos, Cursor(tableIndex, startRow, -5, -5)))
   }
 
   def exportLists(project: Project, dataResolver: DataResolver, tableIndex: Int, startRow: Int, fieldIndex: Int, arrayIndex: Int): Future[Result] = {
-    val tablesWithIndex: List[(Model, Int)]  = project.models.filter(m => m.fields.exists(f => f.isList)).zipWithIndex
-    val currentModel: Model                  = tablesWithIndex.find(_._2 == tableIndex).get._1
-    val fieldsWithIndex: List[(String, Int)] = currentModel.scalarListFields.map(_.name).zipWithIndex
-
-    resultForCursor(in = "", ListInfo(dataResolver, tablesWithIndex, fieldsWithIndex, Cursor(tableIndex, startRow, fieldIndex, arrayIndex)))
+    val modelsWithListFields: List[(Model, Int)] = project.models.filter(m => m.fields.exists(f => f.isList)).zipWithIndex
+    resultForCursor(in = "", ListInfo(dataResolver, modelsWithListFields, Cursor(tableIndex, startRow, fieldIndex, arrayIndex)))
   }
 
   def resultForCursor(in: String, info: ExportInfo): Future[Result] = {
@@ -275,30 +274,43 @@ object DataExport {
 
   def serializePage(in: String, page: DataItemsPage, info: ExportInfo, startOnPage: Int = 0, amount: Int = 1000): Result = {
 
-    val dataItems           = page.items.slice(startOnPage, startOnPage + amount)
-    val serializationResult = serializeDataItems(in, dataItems, info)
-    val combinedString      = if (in.nonEmpty) in + "," + serializationResult.out else serializationResult.out
-    val numberSerialized    = dataItems.length
-    val isLimitReachedTemp  = isLimitReached(combinedString)
-    val noneLeft            = startOnPage + amount >= page.itemCount
+    val dataItems = page.items.slice(startOnPage, startOnPage + amount)
+    val result    = serializeDataItems(in, dataItems, info)
+//    val combinedString      = if (in.nonEmpty) in + "," + result.out else result.out
+//    val numberSerialized    = dataItems.length
+//    val isLimitReachedTemp  = isLimitReached(combinedString)
+    val noneLeft = startOnPage + amount >= page.itemCount
 
-    isLimitReachedTemp match {
-      case true if amount == 1 => Result(in, info.cursor.copy(row = info.cursor.row + startOnPage), isFull = true)
-      case false if noneLeft   => Result(combinedString, info.cursor.copy(row = info.cursor.row + startOnPage + numberSerialized + 1), isFull = false)
-      case true                => serializePage(in = in, page = page, info, startOnPage = startOnPage, amount / 10)
-      case false               => serializePage(in = combinedString, page, info, startOnPage + numberSerialized, amount)
+    result.isFull match {
+      case true if amount == 1 => result
+      case false if noneLeft   => result
+      case true                => serializePage(in = in, page = page, info, startOnPage, amount / 10)
+      case false               => serializePage(in = result.out, page, info, result.cursor.row, amount)
     }
   }
 
   def serializeDataItems(in: String, dataItems: Seq[DataItem], info: ExportInfo): Result = {
+
     info match {
       case info: NodeInfo =>
-        val string = dataItems.map(item => dataItemToExportNode(item, info)).mkString(",")
-        Result(string, Cursor(0, 0, 0, 0), false)
+        val string           = dataItems.map(item => dataItemToExportNode(item, info)).mkString(",")
+        val combinedString   = if (in.nonEmpty) in + "," + string else string
+        val numberSerialized = dataItems.length
+
+        isLimitReached(combinedString) match {
+          case true  => Result(in, info.cursor, isFull = true)
+          case false => Result(combinedString, info.cursor.copy(row = info.cursor.row + numberSerialized), isFull = false)
+        }
 
       case info: RelationInfo =>
-        val string = dataItems.map(item => dataItemToExportRelation(item, info)).mkString(",")
-        Result(string, Cursor(0, 0, 0, 0), false)
+        val string           = dataItems.map(item => dataItemToExportRelation(item, info)).mkString(",")
+        val combinedString   = if (in.nonEmpty) in + "," + string else string
+        val numberSerialized = dataItems.length
+
+        isLimitReached(combinedString) match {
+          case true  => Result(in, info.cursor, isFull = true)
+          case false => Result(combinedString, info.cursor.copy(row = info.cursor.row + numberSerialized), isFull = false)
+        }
       case info: ListInfo =>
         // this is only for list values
 //        val results: Seq[Result] = for {
@@ -331,17 +343,12 @@ object DataExport {
 
   // needs to be able to communicate back up the chain if and where it stopped also needs to return an index
   def dataItemToExportList(in: String, item: DataItem, info: ListInfo): Result = {
-    val listFieldsWithValues: Map[String, Any] = item.userData.collect { case (k, Some(v)) if info.listFields.map(p => p._1).contains(k) => (k, v) }
-    //the any is a string that is a json
-
-    // this is super hacky at the moment
-
     import cool.graph.shared.schema.CustomScalarTypes.parseValueFromString
+    val listFieldsWithValues: Map[String, Any] = item.userData.collect { case (k, Some(v)) if info.listFields.map(p => p._1).contains(k) => (k, v) }
 
     val convertedListFieldsWithValues = listFieldsWithValues.map {
       case (k, v) =>
-        val typeIdentifier = info.currentModel.fields.find(_.name == k).get.typeIdentifier
-        val any            = parseValueFromString(v.toString, typeIdentifier, true)
+        val any = parseValueFromString(v.toString, info.currentTypeIdentifier, true)
         println(any)
 
         val vector = any match {
