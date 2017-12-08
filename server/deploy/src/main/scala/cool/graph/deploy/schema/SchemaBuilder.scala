@@ -33,8 +33,8 @@ object SchemaBuilder {
 case class SchemaBuilderImpl(
     userContext: SystemUserContext
 )(implicit system: ActorSystem, dependencies: DeployDependencies) {
-  import system.dispatcher
   import ManualMarshallerHelpers._
+  import system.dispatcher
 
   val internalDb: DatabaseDef                        = dependencies.internalDb
   val clientDb: DatabaseDef                          = dependencies.clientDb
@@ -61,7 +61,8 @@ case class SchemaBuilderImpl(
   def getQueryFields: Vector[Field[SystemUserContext, Unit]] = Vector(
     migrationStatusField,
     listProjectsField,
-    listMigrationsField
+    listMigrationsField,
+    projectField
   )
 
   def getMutationFields: Vector[Field[SystemUserContext, Unit]] = Vector(
@@ -77,8 +78,9 @@ case class SchemaBuilderImpl(
       Some("Shows the status of the next migration in line to be applied to the project. If no such migration exists, it shows the last applied migration."),
     resolve = (ctx) => {
       val projectId = ctx.args.raw.projectId
-      FutureOpt(migrationPersistence.getNextMigration(projectId)).fallbackTo(migrationPersistence.getLastMigration(projectId)).map { migrationOpt =>
-        migrationOpt.get
+      FutureOpt(migrationPersistence.getNextMigration(projectId)).fallbackTo(migrationPersistence.getLastMigration(projectId)).map {
+        case Some(migration) => migration
+        case None            => throw InvalidProjectId(projectId)
       }
     }
   )
@@ -100,6 +102,21 @@ case class SchemaBuilderImpl(
     description = Some("Shows all migrations for the project. Debug query, will likely be removed in the future."),
     resolve = (ctx) => {
       migrationPersistence.loadAll(ctx.args.raw.projectId)
+    }
+  )
+
+  val projectField: Field[SystemUserContext, Unit] = Field(
+    "project",
+    ProjectType.Type,
+    arguments = projectIdArguments,
+    description = Some("Gets a project by name and stage."),
+    resolve = (ctx) => {
+      val projectId = ctx.args.raw.projectId
+      for {
+        projectOpt <- projectPersistence.load(projectId)
+      } yield {
+        projectOpt.getOrElse(throw InvalidProjectId(projectId))
+      }
     }
   )
 

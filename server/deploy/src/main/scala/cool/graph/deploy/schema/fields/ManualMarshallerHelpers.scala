@@ -28,7 +28,6 @@ object ManualMarshallerHelpers {
     def optionalArgAs[T](name: String): Option[T] = asMap.get(name).flatMap(x => x.asInstanceOf[Option[T]])
 
     def optionalOptionalArgAsString(name: String): Option[Option[String]] = {
-
       asMap.get(name) match {
         case None                  => None
         case Some(None)            => Some(None)

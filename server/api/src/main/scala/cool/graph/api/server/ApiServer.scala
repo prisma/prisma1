@@ -3,17 +3,18 @@ package cool.graph.api.server
 import akka.actor.ActorSystem
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import akka.http.scaladsl.model.headers.RawHeader
+import akka.http.scaladsl.model.StatusCodes._
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{ExceptionHandler, Route}
 import akka.stream.ActorMaterializer
 import com.typesafe.scalalogging.LazyLogging
 import cool.graph.akkautil.http.Server
-import cool.graph.api.schema.APIErrors.ProjectNotFound
-import cool.graph.api.schema.SchemaBuilder
+import cool.graph.api.schema.APIErrors.{InvalidToken, ProjectNotFound}
+import cool.graph.api.schema.{SchemaBuilder, UserFacingError}
 import cool.graph.api.{ApiDependencies, ApiMetrics}
 import cool.graph.cuid.Cuid.createCuid
 import cool.graph.metrics.extensions.TimeResponseDirectiveImpl
-import cool.graph.shared.models.{ProjectId, ProjectWithClientId}
+import cool.graph.shared.models.{Project, ProjectId, ProjectWithClientId}
 import cool.graph.util.logging.{LogData, LogKey}
 import scaldi._
 import spray.json._
@@ -103,12 +104,41 @@ case class ApiServer(
     }
   }
 
+  def verifyAuth(project: Project, authHeaderOpt: Option[String]) = {
+    if (project.secrets.isEmpty) {
+      ()
+    } else {
+      authHeaderOpt match {
+        case Some(authHeader) => {
+          import pdi.jwt.{Jwt, JwtAlgorithm, JwtOptions}
+
+          val isValid = project.secrets.exists(secret => {
+            val jwtOptions = JwtOptions(signature = true, expiration = false)
+            val algorithms = Seq(JwtAlgorithm.HS256)
+            val claims     = Jwt.decodeRaw(token = authHeader.stripPrefix("Bearer "), key = secret, algorithms = algorithms, options = jwtOptions)
+
+            // todo: also verify claims in accordance with https://github.com/graphcool/framework/issues/1365
+
+            claims.isSuccess
+          })
+
+          if (!isValid) {
+            throw InvalidToken()
+          }
+        }
+        case None => throw InvalidToken()
+      }
+    }
+  }
+
   def healthCheck: Future[_] = Future.successful(())
 
   def toplevelExceptionHandler(requestId: String) = ExceptionHandler {
+    case e: UserFacingError => complete(OK -> JsObject("code" -> JsNumber(e.code), "requestId" -> JsString(requestId), "error" -> JsString(e.getMessage)))
+
     case e: Throwable =>
       println(e.getMessage)
       e.printStackTrace()
-      complete(500 -> "kaputt")
+      complete(500 -> s"kaputt: ${e.getMessage}")
   }
 }
