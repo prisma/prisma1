@@ -16,24 +16,22 @@ import scala.collection.mutable
 case class ApiUserContext(clientId: String)
 
 trait SchemaBuilder {
-  def apply(userContext: ApiUserContext, project: Project, dataResolver: DataResolver, masterDataResolver: DataResolver): Schema[ApiUserContext, Unit]
+  def apply(project: Project): Schema[ApiUserContext, Unit]
 }
 
 object SchemaBuilder {
   def apply()(implicit system: ActorSystem, apiDependencies: ApiDependencies): SchemaBuilder = new SchemaBuilder {
-    override def apply(userContext: ApiUserContext, project: Project, dataResolver: DataResolver, masterDataResolver: DataResolver) =
-      SchemaBuilderImpl(userContext, project, dataResolver = dataResolver, masterDataResolver = masterDataResolver).build()
+    override def apply(project: Project) = SchemaBuilderImpl(project).build()
   }
 }
 
 case class SchemaBuilderImpl(
-    userContext: ApiUserContext,
-    project: Project,
-    dataResolver: DataResolver,
-    masterDataResolver: DataResolver
+    project: Project
 )(implicit apiDependencies: ApiDependencies, system: ActorSystem) {
   import system.dispatcher
 
+  val dataResolver       = apiDependencies.dataResolver(project)
+  val masterDataResolver = apiDependencies.masterDataResolver(project)
   val objectTypeBuilder  = new ObjectTypeBuilder(project = project, nodeInterface = Some(nodeInterface))
   val objectTypes        = objectTypeBuilder.modelObjectTypes
   val conectionTypes     = objectTypeBuilder.modelConnectionTypes

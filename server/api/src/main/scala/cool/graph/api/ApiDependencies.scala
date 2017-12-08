@@ -3,14 +3,21 @@ package cool.graph.api
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.typesafe.config.{Config, ConfigFactory}
-import cool.graph.api.database.Databases
+import cool.graph.api.database.deferreds.DeferredResolverProvider
+import cool.graph.api.database.{DataResolver, Databases}
 import cool.graph.api.project.{ProjectFetcher, ProjectFetcherImpl}
 import cool.graph.api.schema.SchemaBuilder
+import cool.graph.api.server.RequestHandler
+import cool.graph.bugsnag.BugSnaggerImpl
+import cool.graph.client.server.{GraphQlRequestHandler, GraphQlRequestHandlerImpl}
+import cool.graph.shared.models.Project
 import cool.graph.utils.await.AwaitUtils
 
-import scala.concurrent.Await
+import scala.concurrent.ExecutionContext
 
 trait ApiDependencies extends AwaitUtils {
+  implicit def self: ApiDependencies
+
   val config: Config = ConfigFactory.load()
 
   val system: ActorSystem
@@ -18,6 +25,16 @@ trait ApiDependencies extends AwaitUtils {
   val projectFetcher: ProjectFetcher
   val apiSchemaBuilder: SchemaBuilder
   val databases: Databases
+
+  implicit lazy val executionContext: ExecutionContext  = system.dispatcher
+  implicit lazy val bugSnagger                          = BugSnaggerImpl(sys.env("BUGSNAG_API_KEY"))
+  lazy val log: String => Unit                          = println
+  lazy val graphQlRequestHandler: GraphQlRequestHandler = GraphQlRequestHandlerImpl(log)
+  lazy val requestHandler: RequestHandler               = RequestHandler(projectFetcher, apiSchemaBuilder, graphQlRequestHandler, log)
+
+  def dataResolver(project: Project): DataResolver       = DataResolver(project)
+  def masterDataResolver(project: Project): DataResolver = DataResolver(project, useMasterDatabaseOnly = true)
+  def deferredResolverProvider(project: Project)         = new DeferredResolverProvider(dataResolver(project))
 
   def destroy = {
     println("ApiDependencies [DESTROY]")
@@ -29,12 +46,16 @@ trait ApiDependencies extends AwaitUtils {
 }
 
 case class ApiDependenciesImpl(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends ApiDependencies {
+  override implicit def self: ApiDependencies = this
+
   val databases                      = Databases.initialize(config)
   val apiSchemaBuilder               = SchemaBuilder()(system, this)
   val projectFetcher: ProjectFetcher = ProjectFetcherImpl(Vector.empty, config)
 }
 
 case class ApiDependenciesForTest(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends ApiDependencies {
+  override implicit def self: ApiDependencies = this
+
   val databases                      = Databases.initialize(config)
   val apiSchemaBuilder               = SchemaBuilder()(system, this)
   val projectFetcher: ProjectFetcher = ProjectFetcherImpl(Vector.empty, config)

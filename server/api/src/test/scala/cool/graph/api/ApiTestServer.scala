@@ -134,7 +134,7 @@ case class ApiTestServer()(implicit dependencies: ApiDependencies) extends Spray
 //    val projectLockdownMiddleware = ProjectLockdownMiddleware(project)
     val schemaBuilder  = SchemaBuilder()(dependencies.system, dependencies)
     val userContext    = ApiUserContext(clientId = "clientId")
-    val schema         = schemaBuilder(userContext, project, DataResolver(project), DataResolver(project))
+    val schema         = schemaBuilder(project)
     val renderedSchema = SchemaRenderer.renderSchema(schema)
 
     if (printSchema) println(renderedSchema)

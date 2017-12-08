@@ -13,18 +13,18 @@ import spray.json.{JsArray, JsObject, JsValue}
 import scala.util.{Failure, Try}
 
 trait RawRequestAttributes {
+  val id: String
   val json: JsValue
   val ip: String
   val sourceHeader: Option[String]
-  val id: String
 }
 
 case class RawRequest(
+    id: String,
     json: JsValue,
     ip: String,
     sourceHeader: Option[String],
-    authorizationHeader: Option[String],
-    id: String
+    authorizationHeader: Option[String]
 ) extends RawRequestAttributes {
 
   def toGraphQlRequest(

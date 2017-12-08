@@ -2,15 +2,14 @@ package cool.graph.client.server
 
 import akka.http.scaladsl.model.StatusCodes.OK
 import akka.http.scaladsl.model._
-import cool.graph.api.database.deferreds.DeferredResolverProvider
+import cool.graph.api.ApiDependencies
 import cool.graph.api.schema.ApiUserContext
 import cool.graph.api.server.{ErrorHandler, GraphQlQuery, GraphQlRequest}
 import sangria.execution.{Executor, QueryAnalysisError}
-import scaldi.Injector
 import spray.json.{JsArray, JsValue}
 
 import scala.collection.immutable.Seq
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 trait GraphQlRequestHandler {
   def handle(graphQlRequest: GraphQlRequest): Future[(StatusCode, JsValue)]
@@ -18,12 +17,12 @@ trait GraphQlRequestHandler {
   def healthCheck: Future[Unit]
 }
 
-case class GraphQlRequestHandlerImpl[ConnectionOutputType](
-    log: String => Unit,
-    deferredResolver: DeferredResolverProvider
-)(implicit ec: ExecutionContext, inj: Injector)
+case class GraphQlRequestHandlerImpl(
+    log: String => Unit
+)(implicit apiDependencies: ApiDependencies)
     extends GraphQlRequestHandler {
 
+  import apiDependencies.system.dispatcher
   import cool.graph.api.server.JsonMarshalling._
 
   override def handle(graphQlRequest: GraphQlRequest): Future[(StatusCode, JsValue)] = {
@@ -50,7 +49,7 @@ case class GraphQlRequestHandlerImpl[ConnectionOutputType](
       variables = query.variables,
       exceptionHandler = errorHandler.sangriaExceptionHandler,
       operationName = query.operationName,
-      deferredResolver = deferredResolver
+      deferredResolver = apiDependencies.deferredResolverProvider(request.project)
     )
 
     result.recover {
