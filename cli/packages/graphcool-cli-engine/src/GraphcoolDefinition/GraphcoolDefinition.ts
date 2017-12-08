@@ -11,6 +11,7 @@ import * as yamlParser from 'yaml-ast-parser'
 import { StageNotFound } from '../errors/StageNotFound'
 import * as dotenv from 'dotenv'
 import * as path from 'path'
+import * as jwt from 'jsonwebtoken'
 
 interface ErrorMessage {
   message: string
@@ -56,6 +57,23 @@ export class GraphcoolDefinitionClass {
     } else {
       throw new Error(`Please create a graphcool.yml`)
     }
+  }
+
+  getToken(serviceName: string, stageName: string): string | undefined {
+    if (this.secrets) {
+      const data = {
+        data: {
+          service: `${serviceName}@${stageName}`,
+          roles: ['admin'],
+        },
+      }
+      console.log(data, this.secrets[0])
+      return jwt.sign(data, this.secrets[0], {
+        expiresIn: '1h',
+      })
+    }
+
+    return undefined
   }
 
   getStage(name: string, throws: boolean = false): string | undefined {

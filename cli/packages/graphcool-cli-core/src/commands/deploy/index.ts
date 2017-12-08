@@ -247,10 +247,12 @@ ${chalk.gray(
     if (schemaPath) {
       const schemaDir = path.dirname(schemaPath)
       fs.mkdirpSync(schemaDir)
+      const token = this.definition.getToken(serviceName, stageName)
       const schemaString = await fetchAndPrintSchema(
         this.client,
         serviceName,
         stageName,
+        token,
       )
       fs.writeFileSync(path.join(this.config.cwd, schemaPath), schemaString)
     }

@@ -185,11 +185,23 @@ export class Client {
   //   return user
   // }
 
-  async introspect(serviceName: string, stageName: string): Promise<any> {
-    return request(
+  async introspect(
+    serviceName: string,
+    stageName: string,
+    token?: string,
+  ): Promise<any> {
+    console.log('introspecting', serviceName, stageName, token)
+    const headers: any = {}
+    if (token) {
+      headers.Authorization = `Bearer ${token}`
+    }
+    const client = new GraphQLClient(
       this.env.activeCluster.getApiEndpoint(serviceName, stageName),
-      introspectionQuery,
+      {
+        headers,
+      },
     )
+    return client.request(introspectionQuery)
   }
 
   async addProject(
@@ -198,7 +210,7 @@ export class Client {
     secrets: string[] | null,
   ): Promise<SimpleProjectInfo> {
     const mutation = `\
-      mutation addProject($name: String! $stage: String!) {
+      mutation addProject($name: String! $stage: String! $secrets: [String!]) {
         addProject(input: {
           name: $name,
           stage: $stage
@@ -257,7 +269,7 @@ export class Client {
           name: $name
           stage: $stage
           types: $types
-          dryRun: $dryTun
+          dryRun: $dryRun
           secrets: $secrets
         }) {
           errors {
