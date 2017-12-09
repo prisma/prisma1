@@ -94,6 +94,7 @@ class ClientInjectorImpl(implicit val system: ActorSystem, val materializer: Act
     implicit val unmarshaller: ByteUnmarshaller[String] = Unmarshallers.ToString
     RabbitAkkaPubSub.subscriber[String](globalRabbitUri, "project-schema-invalidation", durable = true)
   }
+
   lazy val projectSchemaFetcher: RefreshableProjectFetcher = CachedProjectFetcherImpl(
     projectFetcher = ProjectFetcherImpl(blockedProjectIds, config),
     projectSchemaInvalidationSubscriber = projectSchemaInvalidationSubscriber

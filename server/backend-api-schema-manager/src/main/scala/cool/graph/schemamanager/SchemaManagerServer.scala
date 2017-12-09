@@ -9,6 +9,8 @@ import com.typesafe.config.Config
 import com.typesafe.scalalogging.LazyLogging
 import cool.graph.akkautil.http.Server
 import cool.graph.bugsnag.BugSnagger
+import cool.graph.messagebus.PubSubSubscriber
+import cool.graph.messagebus.pubsub.{Everything, Message}
 import cool.graph.shared.SchemaSerializer
 import cool.graph.shared.errors.SystemErrors.InvalidProjectId
 import cool.graph.shared.logging.RequestLogger
@@ -39,6 +41,11 @@ case class SchemaManagerServer(prefix: String = "")(
   val log: (String) => Unit   = (x: String) => logger.info(x)
   val errorHandlerFactory     = ErrorHandlerFactory(log)
   val requestPrefix           = inject[String](identified by "request-prefix")
+  val invalidationSubscriber  = inject[PubSubSubscriber[String]](identified by "schema-manager-invalidation-subscriber")
+
+  invalidationSubscriber.subscribe(Everything, { msg: Message[String] =>
+    cachedProjectResolver.invalidate(msg.payload)
+  })
 
   val innerRoutes = extractRequest { _ =>
     val requestLogger = new RequestLogger(requestPrefix + ":schema-manager", log = log)
