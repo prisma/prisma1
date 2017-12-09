@@ -1,5 +1,5 @@
 ---
-alias: bai9yeitoa
+alias: bai9yeitra
 description: Print cluster logs
 ---
 
