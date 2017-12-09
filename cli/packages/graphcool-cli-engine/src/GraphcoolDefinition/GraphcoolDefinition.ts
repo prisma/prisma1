@@ -46,10 +46,13 @@ export class GraphcoolDefinitionClass {
       this.definition.stages = this.resolveStageAliases(this.definition.stages)
       this.ensureOfClusters(this.definition, env)
       this.typesString = this.getTypesString(this.definition)
-      this.secrets = this.definition.secret
-        ? this.definition.secret.replace(/\s/g, '').split(',')
-        : null
-      if (this.secrets === null && !this.definition.disableAuth) {
+      const secrets = process.env.GRAPHCOOL_SECRET || this.definition.secret
+      this.secrets = secrets ? secrets.replace(/\s/g, '').split(',') : null
+      const disableAuth =
+        typeof process.env.DISABLE_GRAPHCOOL_AUTH !== 'undefined'
+          ? this.readBool(process.env.DISABLE_GRAPHCOOL_AUTH)
+          : this.definition.disableAuth
+      if (this.secrets === null && !disableAuth) {
         throw new Error(
           'Please either provide a secret in your graphcool.yml or disableAuth: true',
         )
@@ -58,7 +61,19 @@ export class GraphcoolDefinitionClass {
       throw new Error(`Please create a graphcool.yml`)
     }
   }
+  readBool(value?: string) {
+    if (value) {
+      const trimmed = value.trim()
+      if (trimmed === 'true') {
+        return true
+      }
+      if (trimmed === 'false') {
+        return false
+      }
+    }
 
+    return false
+  }
   getToken(serviceName: string, stageName: string): string | undefined {
     if (this.secrets) {
       const data = {
@@ -91,10 +106,14 @@ export class GraphcoolDefinitionClass {
   }
 
   setStage(name: string, clusterName: string) {
+    let defaultString = ''
+    if (Object.keys(this.rawStages).length === 0) {
+      defaultString = `\n  default: ${name}`
+    }
     this.definitionString = this.insertToDefinition(
       this.definitionString,
       'stages',
-      `\n  ${name}: ${clusterName}`,
+      `${defaultString}\n  ${name}: ${clusterName}`,
     )
   }
 

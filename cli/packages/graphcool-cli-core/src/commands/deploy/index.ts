@@ -254,7 +254,7 @@ ${chalk.gray(
         stageName,
         token,
       )
-      fs.writeFileSync(path.join(this.config.cwd, schemaPath), schemaString)
+      fs.writeFileSync(schemaPath, schemaString)
     }
   }
 
@@ -262,7 +262,27 @@ ${chalk.gray(
     try {
       const config = getGraphQLConfig()
       if (config) {
-        return config.config.schemaPath
+        const schemaPath = config.config.schemaPath
+        if (schemaPath) {
+          return schemaPath
+        }
+        const projects = config.getProjects()
+        if (projects) {
+          const foundProjectName = Object.keys(projects).find(projectName => {
+            const project = projects[projectName]
+            if (
+              ['graphcool', 'database', 'db'].includes(projectName) &&
+              project.schemaPath
+            ) {
+              return true
+            }
+            return false
+          })
+          if (foundProjectName) {
+            const foundProject = projects[foundProjectName]
+            return foundProject.schemaPath
+          }
+        }
       }
     } catch (e) {
       //
