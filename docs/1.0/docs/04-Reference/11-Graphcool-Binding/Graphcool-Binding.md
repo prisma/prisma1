@@ -15,7 +15,7 @@ Here is how it works:
 1. Download generated database schema definition `database.graphql` (contains the full CRUD API)
 1. Define your application schema, typically called `app.graphql`
 1. Instantiate `Graphcool` with information about your Graphcool service (such as its endpoint and the path to the database schema definition)
-1. Implement resolvers for application schema by delegating to underlying Graphcool service using the generated _binding functions_
+1. Implement the resolvers for your application schema by delegating to the underlying Graphcool service using the generated _binding functions_
 
 ## Installation
 
@@ -27,15 +27,15 @@ yarn add graphcool-binding
 npm install --save graphcool-binding
 ```
 
-## Binding functions
+## Generated delegate resolvers
 
-The core idea of GraphQL bindings is to create dedicated functions mirroring the _root fields_ of your GraphQL schema. These functions are called _binding functions_.
+The core idea of GraphQL bindings is to auto-generate dedicated resolver functions for the (root) fields of your GraphQL schema. These functions are called delegate resolvers.
 
-Rather than having to construct a full GraphQL query/mutation and sending it to the API manually (e.g. with `fetch` or `graphql-request`), this allows to simply invoke functions for sending specific queries/mutations.
+Rather than having to construct a full GraphQL query/mutation and sending it to the API manually (e.g. with `fetch` or `graphql-request`), this allows to simply invoke functions for sending specific queries/mutations. GraphQL bindings in essence provide a convenience API for sending GraphQL requests!
 
-Additionally, if the binding functions are generated in a build step and based on a strongly type language (like TypeScript or Flow), you also get compile-time safety for all interactions with your GraphQL API.
+Additionally, if the binding functions are generated in a build step and based on a strongly typed language (like TypeScript or Flow), you also get compile-time safety for all interactions with your GraphQL API!
 
-## Examples
+## Example
 
 Assume you specify the following data model for your Graphcool service:
 
@@ -63,26 +63,26 @@ type Mutation {
 
 > Note: This is a simplified version of the schema that's actually generated. This one only serves as a simple CRUD example and for example doesn't contain any filter or pagination arguments for the `users` list.
 
-If you instantiate `Graphcool` based on this service, the resulting object exposes a number of _binding functions_ named after the root fields in the database schema. Here's an overview of the binding functions you can now invoke on your `Graphcool` instance:
+If you instantiate `Graphcool` based on this service, the resulting object exposes a number of _binding functions_ which are named after the root fields in the database schema. Here's an overview of the binding functions you can now invoke on your `Graphcool` instance:
 
 ```js
 // Instantiate `Graphcool` based on concrete service
 const graphcool = Graphcool({ ... })
 
 // Retrieve `name` of a specific user
-graphcool.user({ id: 'abc' }, '{ name }')
+graphcool.query.user({ id: 'abc' }, '{ name }')
 
 // Retrieve `id` and `name` of all users
-graphcool.users(null, '{ id name }')
+graphcool.query.users(null, '{ id name }')
 
 // Create new user called `Sarah` and retrieve the `id`
-graphcool.createUser({ name: 'Sarah' }, '{ id }')
+graphcool.mutation.createUser({ name: 'Sarah' }, '{ id }')
 
 // Update name of a specific user and retrieve the `id`
-graphcool.updateUser({ id: 'abc', name: 'Sarah' }, '{ id }')
+graphcool.mutation.updateUser({ id: 'abc', name: 'John' }, '{ id }')
 
 // Delete a specific user and retrieve the `name`
-graphcool.deleteUser({ id: 'abc' }, '{ id }')
+graphcool.mutation.deleteUser({ id: 'abc' }, '{ id }')
 ```
 
 Under the hood, each of these function calls is simply translated into an actual HTTP request against your Graphcool service (using [`graphql-request`](https://github.com/graphcool/graphql-request)). So, for example, the call to `graphcool.user({ id: 'abc' }, '{ name }')` is translated to the following:
@@ -121,10 +121,11 @@ When implementing the resolver for `usersCalledSarah`, you can write the followi
 const resolvers = {
   Query: {
     usersCalledSarah: async (parent, args, context, info) => {
-      context.db.users(
+      const usersCalledSarah = await context.db.query.users(
         { filter: { name: 'Sarah' } },
         info
       )
+      return usersCalledSarah
     }
   }
 }
@@ -156,15 +157,13 @@ const server = new GraphQLServer({
 
 ## API
 
-### `Graphcool`
-
 Instances of `Graphcool` allow you to interact with your Graphcool service, this includes:
 
-- delegating execution of queries and mutations to the Graphcool service with binding functions
+- delegating execution of queries and mutations to the Graphcool service with auto-generated delegate resolvers
 - checking if a certain node exists in the Graphcool database
 - sending standard queries and mutations to the Graphcool service
 
-#### `constructor(options: GraphcoolOptions): Graphcool`
+### `constructor(options: GraphcoolOptions): Graphcool`
 
 The `GraphcoolOptions` type has the following fields:
 
@@ -175,13 +174,33 @@ The `GraphcoolOptions` type has the following fields:
 | `secret` | Yes | `string` |  - | The secret of your Graphcool service |
 | `fragmentReplacements` | No | `FragmentReplacements` |  `null` | A list of GraphQL fragment definitions, specifying fields that are required for the resolver to function correctly |
 
-#### `query` and `mutation`
+Here is an example for you can use the constructor to create your `Graphcool` instance:
 
-`query` and `mutation` are public properties on your `Graphcool` instance. They both are of type `Query` and expose a number of binding functions that are named after the fields on the `Query` and `Mutation` types in your Graphcool database schema.
+```js
+const graphcool = new Graphcool({
+  schemaPath: 'schemas/database.graphql',
+  endpoint: 'https://api.graph.cool/simple/v1/my-graphcool-service'
+  secret: 'my-super-secret-secret'
+})
+```
 
-Each of these binding functions in essence provides a convenience API for sending a queries/mutations to your Graphcool service, so you don't have to spell out the full query/mutation from scratch and worry about sending an HTTP request.
+> Note that you have to add the values of your own Graphcool service for `endpoint` and `secret`.
 
-Binding functions have the following API:
+### `query` and `mutation`
+
+`query` and `mutation` are public properties on your `Graphcool` instance. They both are of type `Query` and expose a number of auto-generated delegate resolver functions that are named after the fields on the `Query` and `Mutation` types in your Graphcool database schema, for example:
+
+```js
+// Retrieve `name` of a single user by `id`
+graphcool.query.user({ id: 'abc', '{ name }' })
+
+// Update name of a specific user and retrieve the `id`
+graphcool.mutation.updateUser({ id: 'abc', name: 'John' }, '{ id }')
+```
+
+Each of these delegate resolvers in essence provides a convenience API for sending queries/mutations to your Graphcool service, so you don't have to spell out the full query/mutation from scratch and worry about sending it over HTTP. This is all handled by the delegate resolver function under the hood.
+
+Delegate resolver have the following interface:
 
 ```js
 (args: any, info: GraphQLResolveInfo | string): Promise<T>
@@ -189,11 +208,67 @@ Binding functions have the following API:
 
 The input arguments are used as follows:
 
-- `args`: An object that carries potential arguments for the query/mutation
-- `info`: Represents the selection set of the query/mutation
+- `args`: An object carrying potential arguments for the query/mutation
+- `info`: An object representing the selection set of the query/mutation, either expressed directly as a string or in the form of `GraphQLResolveInfo` (you can find more info about the `GraphQLResolveInfo` type [here](http://graphql.org/graphql-js/type/#graphqlobjecttype))
 
-#### `exists`
+The generic type `T` corresponds to the type of the respective field. For the two examples above `graphcool.query.user` and `graphcool.mutation.updateUser`, this would be the `User` type.
 
-## Usage
+### `exists`
 
-See [graphql-boilerplate](https://github.com/graphcool/graphql-boilerplate).
+`exists` also is a public property on your `Graphcool` instance. Similar to `query` and `mutation`, it also exposes a number of auto-generated functions. However, it exposes only a single function per type. This function is named according to the root field that allows to retrieve a single node of that type (e.g. `user` for a type called `User`). It takes a `filter` object as an input argument and returns a `boolean` value indicating whether the condition expressed with `filter` is met.
+
+This function enables you to easily check whether a node of a specific type exists in your Graphcool database. Here is how it can be used:
+
+```js
+graphcool.exists.post({
+  id: 'abc',
+  author: {
+    name: 'Sarah'
+  }
+})
+```
+
+In this example, the filter object passed to the function expresses two things:
+
+- There must be a node of type `Post` with `abc` as its `id`
+- There must be a node of type `Post` whose `author` has the `name` `Sarah`
+
+> Note that these conditions are connected with a logical `AND`.
+
+This example is based on the following data model:
+
+```graphql
+type User {
+  id: ID! @unique
+  name: String
+}
+
+type Post {
+  id: ID! @unique
+  author: User!
+}
+```
+
+### `request`
+
+The `request` method allows send GraphQL queries/mutations to your Graphcool service. The functionality is identical to the auto-generated delegate resolves, but the API is more verbose as you need to spell out the full query/mutation. `request` uses [`graphql-request](https://github.com/graphcool/graphql-request) under the hood.
+
+Here is an example of how it can be used:
+
+```js
+const query = `
+  query ($userId: ID!){
+    user(id: $userId) {
+      id
+      name
+    }
+  }
+`
+
+const variables = { userId: 'abc' }
+
+graphcool.request(query, variables)
+  .then(result => console.log(result))
+// sample result:
+// {"data": { "user": { "id": "abc", "name": "Sarah" } } }
+```
