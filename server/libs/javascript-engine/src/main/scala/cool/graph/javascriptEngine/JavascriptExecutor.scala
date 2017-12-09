@@ -33,8 +33,7 @@ object JavascriptExecutor {
     // todo: copied from shared.Utils. Extract to own module
     implicit object AnyJsonFormat extends JsonFormat[Any] {
       def write(x: Any) = x match {
-        case m: Map[_, _] =>
-          JsObject(m.asInstanceOf[Map[String, Any]].mapValues(write))
+        case m: Map[_, _] => JsObject(m.asInstanceOf[Map[String, Any]].mapValues(write))
         case l: List[Any] => JsArray(l.map(write).toVector)
         case n: Int       => JsNumber(n)
         case n: Long      => JsNumber(n)

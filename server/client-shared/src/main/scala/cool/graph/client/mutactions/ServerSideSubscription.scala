@@ -145,8 +145,7 @@ case class ServerSideSubscription(
 
   implicit object AnyJsonFormat extends JsonFormat[Any] {
     def write(x: Any): JsValue = x match {
-      case m: Map[_, _] =>
-        JsObject(m.asInstanceOf[Map[String, Any]].mapValues(write))
+      case m: Map[_, _]   => JsObject(m.asInstanceOf[Map[String, Any]].mapValues(write))
       case l: List[Any]   => JsArray(l.map(write).toVector)
       case l: Vector[Any] => JsArray(l.map(write))
       case l: Seq[Any]    => JsArray(l.map(write).toVector)
