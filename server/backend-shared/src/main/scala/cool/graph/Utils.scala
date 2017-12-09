@@ -50,8 +50,7 @@ object JsonFormats {
 
   implicit object AnyJsonFormat extends JsonFormat[Any] {
     def write(x: Any): JsValue = x match {
-      case m: Map[_, _] =>
-        JsObject(m.asInstanceOf[Map[String, Any]].mapValues(write))
+      case m: Map[_, _] => JsObject(m.asInstanceOf[Map[String, Any]].mapValues(write))
       case l: List[Any] => JsArray(l.map(write).toVector)
       case n: Int       => JsNumber(n)
       case n: Long      => JsNumber(n)
@@ -73,13 +72,7 @@ object JsonFormats {
   }
 
   class SeqAnyJsonWriter[T <: Any] extends JsonWriter[Seq[Map[String, T]]] {
-    override def write(objs: Seq[Map[String, T]]): JsValue =
-      new JsArray(
-        objs
-          .map(obj => {
-            AnyJsonFormat.write(obj)
-          })
-          .toVector)
+    override def write(objs: Seq[Map[String, T]]): JsValue = new JsArray(objs.map(obj => AnyJsonFormat.write(obj)).toVector)
   }
 
 }

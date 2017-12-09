@@ -27,6 +27,20 @@ class ProjectDataresolver(override val project: Project, override val requestCon
       .map(resultTransform(_))
   }
 
+  def loadModelRowsForExport(model: Model, args: Option[QueryArguments] = None): Future[ResolverResult] = {
+    val (query, resultTransform) = DatabaseQueryBuilder.selectAllFromModel(project.id, model.name, args, overrideMaxNodeCount = Some(1001))
+
+    performWithTiming("loadModelRowsForExport", readonlyClientDatabase.run(readOnlyDataItem(query)))
+      .map(_.toList.map(mapDataItem(model)(_)))
+      .map(resultTransform(_))
+  }
+
+  def loadRelationRowsForExport(relationId: String, args: Option[QueryArguments] = None): Future[ResolverResult] = {
+    val (query, resultTransform) = DatabaseQueryBuilder.selectAllFromModel(project.id, relationId, args, overrideMaxNodeCount = Some(1001))
+
+    performWithTiming("loadRelationRowsForExport", readonlyClientDatabase.run(readOnlyDataItem(query))).map(_.toList).map(resultTransform(_))
+  }
+
   def countByModel(model: Model, args: Option[QueryArguments] = None): Future[Int] = {
     val query = DatabaseQueryBuilder.countAllFromModel(project.id, model.name, args)
     performWithTiming("countByModel", readonlyClientDatabase.run(readOnlyInt(query))).map(_.head)

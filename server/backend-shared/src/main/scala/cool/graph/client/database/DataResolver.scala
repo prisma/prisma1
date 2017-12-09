@@ -43,6 +43,8 @@ abstract class DataResolver(val project: Project, val requestContext: Option[Req
     }
   }
   def resolveByModel(model: Model, args: Option[QueryArguments] = None): Future[ResolverResult]
+  def loadModelRowsForExport(model: Model, args: Option[QueryArguments] = None): Future[ResolverResult]
+  def loadRelationRowsForExport(relationId: String, args: Option[QueryArguments] = None): Future[ResolverResult]
 
   def countByModel(model: Model, args: Option[QueryArguments] = None): Future[Int]
 
@@ -96,6 +98,7 @@ abstract class DataResolver(val project: Project, val requestContext: Option[Req
   protected def mapDataItem(model: Model)(dataItem: DataItem): DataItem = {
     mapDataItemHelper(model, dataItem)
   }
+
   protected def mapDataItemWithoutValidation(model: Model)(dataItem: DataItem): DataItem = {
     mapDataItemHelper(model, dataItem, validate = false)
   }
