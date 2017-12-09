@@ -49,8 +49,8 @@ export class GraphcoolDefinitionClass {
       const secrets = process.env.GRAPHCOOL_SECRET || this.definition.secret
       this.secrets = secrets ? secrets.replace(/\s/g, '').split(',') : null
       const disableAuth =
-        typeof process.env.DISABLE_GRAPHCOOL_AUTH !== 'undefined'
-          ? this.readBool(process.env.DISABLE_GRAPHCOOL_AUTH)
+        typeof process.env.GRAPHCOOL_DISABLE_AUTH !== 'undefined'
+          ? this.readBool(process.env.GRAPHCOOL_DISABLE_AUTH)
           : this.definition.disableAuth
       if (this.secrets === null && !disableAuth) {
         throw new Error(

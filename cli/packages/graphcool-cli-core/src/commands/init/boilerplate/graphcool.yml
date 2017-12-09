@@ -1,12 +1,8 @@
 service: SERVICE_NAME
 
-# stages:
-#   default: dev
+stages: {}
+
+datamodel: datamodel.graphql
 
 # secret: so-secret
 disableAuth: true
-
-datamodel:
-- datamodel.graphql
-
-schema: schemas/database.graphql
