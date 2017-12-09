@@ -19,14 +19,16 @@ import scala.concurrent.Future
 import scala.util.Try
 
 object ImportExportFormat {
-  case class StringWithCursor(string: String, modelIndex: Int, nodeRow: Int)
 
+  case class ExportRequest(fileType: String, cursor: Cursor)      //{"fileType":"nodes","cursor":{"table":INT,"row":INT,"field":INT,"array":INT}}
+  case class Cursor(table: Int, row: Int, field: Int, array: Int) //{"table":INT,"row":INT,"field":INT,"array":INT}
+  case class ResultFormat(out: String, cursor: Cursor, isFull: Boolean)
   case class ImportBundle(valueType: String, values: JsArray)
   case class ImportIdentifier(typeName: String, id: String)
   case class ImportRelationSide(identifier: ImportIdentifier, fieldName: String)
-  case class ImportNodeValue(identifier: ImportIdentifier, values: Map[String, Any])
-  case class ImportRelation(relationName: String, left: ImportRelationSide, right: ImportRelationSide)
-  case class ImportListValue(identifier: ImportIdentifier, values: Map[String, Vector[Any]])
+  case class ImportNode(identifier: ImportIdentifier, values: Map[String, Any])
+  case class ImportRelation(left: ImportRelationSide, right: ImportRelationSide) // import does not need the relationName
+  case class ImportList(identifier: ImportIdentifier, values: Map[String, Vector[Any]])
 
   object MyJsonProtocol extends DefaultJsonProtocol {
 
@@ -65,16 +67,50 @@ object ImportExportFormat {
     implicit val importBundle: RootJsonFormat[ImportBundle]             = jsonFormat2(ImportBundle)
     implicit val importIdentifier: RootJsonFormat[ImportIdentifier]     = jsonFormat2(ImportIdentifier)
     implicit val importRelationSide: RootJsonFormat[ImportRelationSide] = jsonFormat2(ImportRelationSide)
-    implicit val importNodeValue: RootJsonFormat[ImportNodeValue]       = jsonFormat2(ImportNodeValue)
-    implicit val importListValue: RootJsonFormat[ImportListValue]       = jsonFormat2(ImportListValue)
-    implicit val importRelation: RootJsonFormat[ImportRelation]         = jsonFormat3(ImportRelation)
+    implicit val importNodeValue: RootJsonFormat[ImportNode]            = jsonFormat2(ImportNode)
+    implicit val importListValue: RootJsonFormat[ImportList]            = jsonFormat2(ImportList)
+    implicit val importRelation: RootJsonFormat[ImportRelation]         = jsonFormat2(ImportRelation)
+    implicit val cursor: RootJsonFormat[Cursor]                         = jsonFormat4(Cursor)
+    implicit val exportRequest: RootJsonFormat[ExportRequest]           = jsonFormat2(ExportRequest)
+    implicit val resultFormat: RootJsonFormat[ResultFormat]             = jsonFormat3(ResultFormat)
   }
 }
 
 object DataImport {
   import cool.graph.client.mutactions.ImportExportFormat._
 
-  def executeGeneric(project: Project, json: JsValue)(implicit injector: ClientInjector): Future[Vector[String]] = {
+  def convertToImportNode(json: JsValue): ImportNode = {
+    import MyJsonProtocol._
+    val map              = json.convertTo[Map[String, Any]]
+    val typeName: String = map("_typeName").asInstanceOf[String]
+    val id: String       = map("id").asInstanceOf[String]
+    val valueMap         = map.collect { case (k, v) if k != "_typeName" && k != "id" => (k, v) }
+
+    ImportNode(ImportIdentifier(typeName, id), valueMap)
+  }
+
+  def convertToImportList(json: JsValue): ImportList = {
+    import MyJsonProtocol._
+    val map              = json.convertTo[Map[String, Any]]
+    val typeName: String = map("_typeName").asInstanceOf[String]
+    val id: String       = map("id").asInstanceOf[String]
+    val valueMap         = map.collect { case (k, v) if k != "_typeName" && k != "id" => (k, v.asInstanceOf[List[Any]].toVector) }
+
+    ImportList(ImportIdentifier(typeName, id), valueMap)
+  }
+
+  def convertToImportRelation(json: JsValue): ImportRelation = {
+    import MyJsonProtocol._
+    val array    = json.convertTo[JsArray]
+    val leftMap  = array.elements.head.convertTo[Map[String, String]]
+    val rightMap = array.elements.reverse.head.convertTo[Map[String, String]]
+    val left     = ImportRelationSide(ImportIdentifier(leftMap("_typeName"), leftMap("id")), leftMap("fieldName"))
+    val right    = ImportRelationSide(ImportIdentifier(rightMap("_typeName"), rightMap("id")), rightMap("fieldName"))
+
+    ImportRelation(left, right)
+  }
+
+  def executeImport(project: Project, json: JsValue)(implicit injector: ClientInjector): Future[Vector[String]] = {
     import MyJsonProtocol._
 
     import scala.concurrent.ExecutionContext.Implicits.global
@@ -82,9 +118,9 @@ object DataImport {
     val cnt    = bundle.values.elements.length
 
     val actions = bundle.valueType match {
-      case "nodes"      => generateImportNodesDBActions(project, bundle.values.elements.map(_.convertTo[ImportNodeValue]))
-      case "relations"  => generateImportRelationsDBActions(project, bundle.values.elements.map(_.convertTo[ImportRelation]))
-      case "listvalues" => generateImportListsDBActions(project, bundle.values.elements.map(_.convertTo[ImportListValue]))
+      case "nodes"     => generateImportNodesDBActions(project, bundle.values.elements.map(convertToImportNode))
+      case "relations" => generateImportRelationsDBActions(project, bundle.values.elements.map(convertToImportRelation))
+      case "lists"     => generateImportListsDBActions(project, bundle.values.elements.map(convertToImportList))
     }
 
     val res: Future[Vector[Try[Int]]]                       = runDBActions(project, actions)
@@ -97,7 +133,7 @@ object DataImport {
     })
   }
 
-  def generateImportNodesDBActions(project: Project, nodes: Vector[ImportNodeValue]): DBIOAction[Vector[Try[Int]], NoStream, Effect.Write] = {
+  def generateImportNodesDBActions(project: Project, nodes: Vector[ImportNode]): DBIOAction[Vector[Try[Int]], NoStream, Effect.Write] = {
     val items = nodes.map { element =>
       val id                              = element.identifier.id
       val model                           = project.getModelByName_!(element.identifier.typeName)
@@ -148,7 +184,7 @@ object DataImport {
     DBIO.sequence(x)
   }
 
-  def generateImportListsDBActions(project: Project, lists: Vector[ImportListValue]): DBIOAction[Vector[Try[Int]], NoStream, Effect.Write] = {
+  def generateImportListsDBActions(project: Project, lists: Vector[ImportList]): DBIOAction[Vector[Try[Int]], NoStream, Effect.Write] = {
     val x = lists.map { element =>
       val id    = element.identifier.id
       val model = project.getModelByName_!(element.identifier.typeName)
@@ -168,88 +204,88 @@ object DataExport {
   import cool.graph.client.mutactions.ImportExportFormat._
 
   //hand down stringbuilder with max capacity already?
-  //use info classes as in and output? and then use .copy would probably be good to have the custom .copy then
-  //{"type": "nodes", "cursor": {"table": INT, "row": INT, "field": INT, "array": INT}}
 
-  sealed trait ExportInfo { val cursor: Cursor; val hasNext: Boolean }
-  case class NodeInfo(dataResolver: DataResolver, models: List[(Model, Int)], cursor: Cursor) extends ExportInfo {
-    val length: Int      = models.length
-    val current: Model   = models.find(_._2 == cursor.table).get._1
-    val hasNext: Boolean = cursor.table < length - 1
-    def nextModel: Model = models.find(_._2 == cursor.table + 1).get._1
+  sealed trait ExportInfo {
+    val cursor: Cursor
+    val hasNext: Boolean
+    def rowPlus(increase: Int): ExportInfo = this match {
+      case info: NodeInfo     => info.copy(cursor = info.cursor.copy(row = info.cursor.row + increase))
+      case info: ListInfo     => info.copy(cursor = info.cursor.copy(row = info.cursor.row + increase))
+      case info: RelationInfo => info.copy(cursor = info.cursor.copy(row = info.cursor.row + increase))
+    }
 
-  }
-  case class ListInfo(dataResolver: DataResolver, models: List[(Model, Int)], cursor: Cursor) extends ExportInfo {
-    val length: Int                                     = models.length
-    val currentModel: Model                             = models.find(_._2 == cursor.table).get._1
-    val listFields: List[(String, TypeIdentifier, Int)] = currentModel.scalarListFields.zipWithIndex.map { case (f, i) => (f.name, f.typeIdentifier, i) }
-    val fieldLength: Int                                = listFields.length
-    val currentField: String                            = listFields.find(_._3 == cursor.table).get._1
-    val currentTypeIdentifier: TypeIdentifier           = listFields.find(_._3 == cursor.table).get._2
-    val hasNext: Boolean                                = cursor.table < length - 1
-    val hasNextField: Boolean                           = cursor.field < fieldLength - 1
-    def nextModel: Model                                = models.find(_._2 == cursor.table + 1).get._1
-    def nextField: String                               = listFields.find(_._3 == cursor.table + 1).get._1
-  }
-  case class RelationInfo(dataResolver: DataResolver, relations: List[(RelationData, Int)], cursor: Cursor) extends ExportInfo {
-    val length: Int                = relations.length
-    val current: RelationData      = relations.find(_._2 == cursor.table).get._1
-    val hasNext: Boolean           = cursor.table < length - 1
-    def nextRelation: RelationData = relations.find(_._2 == cursor.table + 1).get._1
-  }
-
-  case class Cursor(table: Int, row: Int, field: Int, array: Int)
-  case class Result(out: String, cursor: Cursor, isFull: Boolean)
-
-  def isLimitReached(str: String): Boolean = str.length > 1000 // only for testing purposes variable in here
-
-  def exportNodes(project: Project, dataResolver: DataResolver, tableIndex: Int, startRow: Int): Future[Result] = {
-    resultForCursor(in = "", NodeInfo(dataResolver, project.models.zipWithIndex, Cursor(tableIndex, startRow, -5, -5)))
-  }
-
-  def exportRelations(project: Project, dataResolver: DataResolver, tableIndex: Int, startRow: Int): Future[Result] = {
-    val relationInfos = project.relations.map(r => generateRelationData(r, project)).zipWithIndex
-    resultForCursor(in = "", RelationInfo(dataResolver, relationInfos, Cursor(tableIndex, startRow, -5, -5)))
-  }
-
-  def exportLists(project: Project, dataResolver: DataResolver, tableIndex: Int, startRow: Int, fieldIndex: Int, arrayIndex: Int): Future[Result] = {
-    val modelsWithListFields: List[(Model, Int)] = project.models.filter(m => m.fields.exists(f => f.isList)).zipWithIndex
-    resultForCursor(in = "", ListInfo(dataResolver, modelsWithListFields, Cursor(tableIndex, startRow, fieldIndex, arrayIndex)))
-  }
-
-  def resultForCursor(in: String, info: ExportInfo): Future[Result] = {
-    import scala.concurrent.ExecutionContext.Implicits.global
-
-    def updateCursor: ExportInfo = info match { // dumb trait can't just be copied -.-
+    def cursorAtNextModel: ExportInfo = this match {
       case info: NodeInfo     => info.copy(cursor = info.cursor.copy(table = info.cursor.table + 1, row = 0))
       case info: ListInfo     => info.copy(cursor = info.cursor.copy(table = info.cursor.table + 1, row = 0))
       case info: RelationInfo => info.copy(cursor = info.cursor.copy(table = info.cursor.table + 1, row = 0))
     }
+  }
+  case class NodeInfo(dataResolver: DataResolver, models: List[(Model, Int)], cursor: Cursor) extends ExportInfo {
+    val length: Int           = models.length
+    val hasNext: Boolean      = cursor.table < length - 1
+    lazy val current: Model   = models.find(_._2 == cursor.table).get._1
+    lazy val nextModel: Model = models.find(_._2 == cursor.table + 1).get._1
+  }
+  case class ListInfo(dataResolver: DataResolver, models: List[(Model, Int)], cursor: Cursor) extends ExportInfo {
+    val length: Int                                     = models.length
+    val listFields: List[(String, TypeIdentifier, Int)] = currentModel.scalarListFields.zipWithIndex.map { case (f, i) => (f.name, f.typeIdentifier, i) }
+    val fieldLength: Int                                = listFields.length
+    val hasNext: Boolean                                = cursor.table < length - 1
+    val hasNextField: Boolean                           = cursor.field < fieldLength - 1
+    lazy val currentModel: Model                        = models.find(_._2 == cursor.table).get._1
+    lazy val nextModel: Model                           = models.find(_._2 == cursor.table + 1).get._1
+    lazy val currentField: String                       = listFields.find(_._3 == cursor.table).get._1
+    lazy val nextField: String                          = listFields.find(_._3 == cursor.table + 1).get._1
+    lazy val currentTypeIdentifier: TypeIdentifier      = listFields.find(_._3 == cursor.table).get._2
+    def arrayPlus(increase: Int): ListInfo              = this.copy(cursor = this.cursor.copy(array = this.cursor.array + increase))
+    def cursorAtNextField: ListInfo                     = this.copy(cursor = this.cursor.copy(field = this.cursor.field + 1, array = 0))
+
+  }
+  case class RelationInfo(dataResolver: DataResolver, relations: List[(RelationData, Int)], cursor: Cursor) extends ExportInfo {
+    val length: Int                     = relations.length
+    val hasNext: Boolean                = cursor.table < length - 1
+    lazy val current: RelationData      = relations.find(_._2 == cursor.table).get._1
+    lazy val nextRelation: RelationData = relations.find(_._2 == cursor.table + 1).get._1
+  }
+
+  def isLimitReached(str: String): Boolean = str.length > 100 // only for testing purposes variable in here
+
+  def executeExport(project: Project, dataResolver: DataResolver, json: JsValue): Future[ResultFormat] = {
+    import MyJsonProtocol._
+    import scala.concurrent.ExecutionContext.Implicits.global
+
+    val request = json.convertTo[ExportRequest]
+    val result: Future[ResultFormat] = request.fileType match {
+      case "nodes" => resForCursor(in = "", NodeInfo(dataResolver, project.models.zipWithIndex, request.cursor))
+      case "lists" =>
+        resForCursor(in = "", ListInfo(dataResolver, project.models.filter(m => m.scalarFields.exists(f => f.isList)).zipWithIndex, request.cursor)) // there are fields in here without list fields???
+      case "relations" => resForCursor(in = "", RelationInfo(dataResolver, project.relations.map(r => toRelationData(r, project)).zipWithIndex, request.cursor))
+    }
+
+    result.map(res => res.copy(out = "[" + res.out + "]"))
+  }
+
+  def resForCursor(in: String, info: ExportInfo): Future[ResultFormat] = {
+    import scala.concurrent.ExecutionContext.Implicits.global
 
     for {
       result <- resultForTable(in, info)
       x <- result.isFull match {
-            case false if info.hasNext  => resultForCursor(result.out, updateCursor)
+            case false if info.hasNext  => resForCursor(result.out, info.cursorAtNextModel)
             case false if !info.hasNext => Future.successful(result.copy(cursor = Cursor(-1, -1, -1, -1)))
             case true                   => Future.successful(result)
           }
     } yield x
   }
 
-  def resultForTable(in: String, info: ExportInfo): Future[Result] = {
+  def resultForTable(in: String, info: ExportInfo): Future[ResultFormat] = {
     import scala.concurrent.ExecutionContext.Implicits.global
-
-    def generateNextInfo: ExportInfo = info match { // dumb trait can't just be copied -.-
-      case info: NodeInfo     => info.copy(cursor = info.cursor.copy(row = info.cursor.row + 1000))
-      case info: ListInfo     => info.copy(cursor = info.cursor.copy(row = info.cursor.row + 1000))
-      case info: RelationInfo => info.copy(cursor = info.cursor.copy(row = info.cursor.row + 1000))
-    }
 
     fetchDataItemsPage(info).flatMap { page =>
       val result = serializePage(in, page, info)
 
       (result.isFull, page.hasMore) match {
-        case (false, true)  => resultForTable(in = result.out, generateNextInfo)
+        case (false, true)  => resultForTable(in = result.out, info.rowPlus(1000))
         case (false, false) => Future.successful(result)
         case (true, _)      => Future.successful(result)
       }
@@ -272,90 +308,85 @@ object DataExport {
     }
   }
 
-  def serializePage(in: String, page: DataItemsPage, info: ExportInfo, startOnPage: Int = 0, amount: Int = 1000): Result = {
+  def serializePage(in: String, page: DataItemsPage, info: ExportInfo, startOnPage: Int = 0, amount: Int = 1000): ResultFormat = {
+    //we are wasting some serialization efforts here when we convert stuff again upon backtracking
 
     val dataItems = page.items.slice(startOnPage, startOnPage + amount)
     val result    = serializeDataItems(in, dataItems, info)
-//    val combinedString      = if (in.nonEmpty) in + "," + result.out else result.out
-//    val numberSerialized    = dataItems.length
-//    val isLimitReachedTemp  = isLimitReached(combinedString)
-    val noneLeft = startOnPage + amount >= page.itemCount
+    val noneLeft  = startOnPage + amount >= page.itemCount
 
     result.isFull match {
       case true if amount == 1 => result
       case false if noneLeft   => result
       case true                => serializePage(in = in, page = page, info, startOnPage, amount / 10)
-      case false               => serializePage(in = result.out, page, info, result.cursor.row, amount)
+      case false               => serializePage(in = result.out, page, info.rowPlus(dataItems.length), startOnPage + dataItems.length, amount)
     }
   }
 
-  def serializeDataItems(in: String, dataItems: Seq[DataItem], info: ExportInfo): Result = {
+  def serializeDataItems(in: String, dataItems: Seq[DataItem], info: ExportInfo): ResultFormat = {
 
     info match {
       case info: NodeInfo =>
         val string           = dataItems.map(item => dataItemToExportNode(item, info)).mkString(",")
-        val combinedString   = if (in.nonEmpty) in + "," + string else string
+        val out              = if (in.nonEmpty) in + "," + string else string
         val numberSerialized = dataItems.length
 
-        isLimitReached(combinedString) match {
-          case true  => Result(in, info.cursor, isFull = true)
-          case false => Result(combinedString, info.cursor.copy(row = info.cursor.row + numberSerialized), isFull = false)
+        isLimitReached(out) match {
+          case true  => ResultFormat(in, info.cursor, isFull = true)
+          case false => ResultFormat(out, info.cursor.copy(row = info.cursor.row + numberSerialized), isFull = false)
         }
 
       case info: RelationInfo =>
         val string           = dataItems.map(item => dataItemToExportRelation(item, info)).mkString(",")
-        val combinedString   = if (in.nonEmpty) in + "," + string else string
+        val out              = if (in.nonEmpty) in + "," + string else string
         val numberSerialized = dataItems.length
 
-        isLimitReached(combinedString) match {
-          case true  => Result(in, info.cursor, isFull = true)
-          case false => Result(combinedString, info.cursor.copy(row = info.cursor.row + numberSerialized), isFull = false)
+        isLimitReached(out) match {
+          case true  => ResultFormat(in, info.cursor, isFull = true)
+          case false => ResultFormat(out, info.cursor.copy(row = info.cursor.row + numberSerialized), isFull = false)
         }
-      case info: ListInfo =>
-        // this is only for list values
-//        val results: Seq[Result] = for {
-//          item <- dataItems
-//        } yield {
-//          info match {
-//            case info: NodeInfo     => dataItemToExportNode(item, info)
-//            case info: ListInfo     => dataItemToExportList(in, item, info)
-//            case info: RelationInfo => dataItemToExportRelation(item, info)
-//          }
-//
-//        }
-        Result("", Cursor(0, 0, 0, 0), true)
+      case info: ListInfo => dataItemsForLists(in, dataItems, info)
+    }
+  }
+
+  def dataItemsForLists(in: String, items: Seq[DataItem], info: ListInfo): ResultFormat = {
+    if (items.isEmpty) {
+      ResultFormat(in, info.cursor, isFull = false)
+    } else {
+      val res = dataItemToExportList(in, items.head, info)
+      res.isFull match {
+        case true  => res
+        case false => dataItemsForLists(res.out, items.tail, info)
+      }
     }
   }
 
   def dataItemToExportNode(item: DataItem, info: NodeInfo): String = {
-    import MyJsonProtocol._
     import spray.json._
+    import MyJsonProtocol._
 
     val dataValueMap: UserData                          = item.userData
     val createdAtUpdatedAtMap                           = dataValueMap.collect { case (k, Some(v)) if k == "createdAt" || k == "updatedAt" => (k, v) }
     val withoutImplicitFields: Map[String, Option[Any]] = dataValueMap.collect { case (k, v) if k != "createdAt" && k != "updatedAt" => (k, v) }
     val nonListFieldsWithValues: Map[String, Any]       = withoutImplicitFields.collect { case (k, Some(v)) if !info.current.getFieldByName_!(k).isList => (k, v) }
     val outputMap: Map[String, Any]                     = nonListFieldsWithValues ++ createdAtUpdatedAtMap
-    val importIdentifier: ImportIdentifier              = ImportIdentifier(info.current.name, item.id)
-    val nodeValue: ImportNodeValue                      = ImportNodeValue(identifier = importIdentifier, values = outputMap)
-    nodeValue.toJson.toString
+    val result: Map[String, Any]                        = Map("_typeName" -> info.current.name, "id" -> item.id) ++ outputMap
+
+    result.toJson.toString
   }
 
-  // needs to be able to communicate back up the chain if and where it stopped also needs to return an index
-  def dataItemToExportList(in: String, item: DataItem, info: ListInfo): Result = {
+  def dataItemToExportList(in: String, item: DataItem, info: ListInfo): ResultFormat = {
     import cool.graph.shared.schema.CustomScalarTypes.parseValueFromString
     val listFieldsWithValues: Map[String, Any] = item.userData.collect { case (k, Some(v)) if info.listFields.map(p => p._1).contains(k) => (k, v) }
 
     val convertedListFieldsWithValues = listFieldsWithValues.map {
       case (k, v) =>
-        val any = parseValueFromString(v.toString, info.currentTypeIdentifier, true)
-        println(any)
+        val any = parseValueFromString(v.toString, info.currentTypeIdentifier, isList = true)
 
         val vector = any match {
           case Some(Some(x)) => x.asInstanceOf[Vector[Any]]
           case _             => Vector.empty
         }
-
         (k, vector)
     }
 
@@ -364,56 +395,50 @@ object DataExport {
     nodeResults
   }
 
-  def serializeFields(in: String, identifier: ImportIdentifier, fieldValues: Map[String, Vector[Any]], info: ListInfo): Result = {
+  def serializeFields(in: String, identifier: ImportIdentifier, fieldValues: Map[String, Vector[Any]], info: ListInfo): ResultFormat = {
     val result = serializeArray(in, identifier, fieldValues(info.currentField), info)
 
     result.isFull match {
-      case false if info.hasNextField =>
-        serializeFields(result.out, identifier, fieldValues, info.copy(cursor = info.cursor.copy(field = info.cursor.field + 1, array = 0)))
-      case false => result
-      case true  => result
+      case false if info.hasNextField => serializeFields(result.out, identifier, fieldValues, info.cursorAtNextField)
+      case false                      => result
+      case true                       => result
     }
   }
 
   //this should have the ability to scale up again, but doing it within one field probably adds too much complexity for now
-  def serializeArray(in: String, identifier: ImportIdentifier, arrayValues: Vector[Any], info: ListInfo, amount: Int = 1000000): Result = {
+  def serializeArray(in: String, identifier: ImportIdentifier, arrayValues: Vector[Any], info: ListInfo, amount: Int = 1000000): ResultFormat = {
     import MyJsonProtocol._
     import spray.json._
 
-    val values                     = arrayValues.slice(info.cursor.array, info.cursor.array + amount)
-    val nodeValue: ImportListValue = ImportListValue(identifier = identifier, values = Map(info.currentField -> values))
-    val string                     = nodeValue.toJson.toString
-    val combinedString             = if (in.nonEmpty) in + "," + string else string
-    val numberSerialized           = values.length
-    val noneLeft                   = info.cursor.array + amount >= arrayValues.length
+    val values                = arrayValues.slice(info.cursor.array, info.cursor.array + amount)
+    val nodeValue: ImportList = ImportList(identifier = identifier, values = Map(info.currentField -> values))
+    val string                = nodeValue.toJson.toString
+    val out                   = if (in.nonEmpty) in + "," + string else string
+    val numberSerialized      = values.length
+    val noneLeft              = info.cursor.array + amount >= arrayValues.length
 
-    isLimitReached(combinedString) match {
-      case true if amount == 1 => Result(in, info.cursor, isFull = true)
-      case false if noneLeft   => Result(combinedString, info.cursor.copy(array = -5), isFull = false)
-      case false =>
-        serializeArray(combinedString, identifier, arrayValues, info.copy(cursor = info.cursor.copy(array = info.cursor.array + numberSerialized)), amount)
-      case true => serializeArray(in, identifier, arrayValues, info, amount / 10)
+    isLimitReached(out) match {
+      case true if amount == 1 => ResultFormat(in, info.cursor, isFull = true)
+      case false if noneLeft   => ResultFormat(out, info.cursor.copy(array = -5), isFull = false)
+      case false               => serializeArray(out, identifier, arrayValues, info.arrayPlus(numberSerialized), amount)
+      case true                => serializeArray(in, identifier, arrayValues, info, amount / 10)
     }
-
   }
 
-  case class RelationData(relationId: String, relationName: String, leftModel: String, leftField: String, rightModel: String, rightField: String)
-  def generateRelationData(r: Relation, project: Project): RelationData = {
-    RelationData(r.id, r.name, r.getModelB_!(project).name, r.getModelBField_!(project).name, r.getModelA_!(project).name, r.getModelAField_!(project).name)
+  case class RelationData(relationId: String, leftModel: String, leftField: String, rightModel: String, rightField: String)
+  def toRelationData(r: Relation, project: Project): RelationData = {
+    RelationData(r.id, r.getModelB_!(project).name, r.getModelBField_!(project).name, r.getModelA_!(project).name, r.getModelAField_!(project).name)
   }
 
-  //this seems to switch relationfields around on self relations on the same node
   def dataItemToExportRelation(item: DataItem, info: RelationInfo): String = {
     import MyJsonProtocol._
     import spray.json._
-    val idA               = item.userData("A").get.toString
-    val idB               = item.userData("B").get.toString
-    val leftIdentifier    = ImportIdentifier(info.current.leftModel, idB)
-    val leftRelationSide  = ImportRelationSide(leftIdentifier, info.current.leftField)
-    val rightIdentifier   = ImportIdentifier(info.current.rightModel, idA)
-    val rightRelationSide = ImportRelationSide(rightIdentifier, info.current.rightField)
-    val exportRelation    = ImportRelation(info.current.relationName, leftRelationSide, rightRelationSide)
-    exportRelation.toJson.toString
+    val idA      = item.userData("A").get.toString
+    val idB      = item.userData("B").get.toString
+    val leftMap  = Map("_typeName" -> info.current.leftModel, "id" -> idB, "fieldName" -> info.current.leftField)
+    val rightMap = Map("_typeName" -> info.current.rightModel, "id" -> idA, "fieldName" -> info.current.rightField)
+
+    JsArray(leftMap.toJson, rightMap.toJson).toString
   }
 }
 
