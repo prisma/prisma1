@@ -224,9 +224,7 @@ case class MigrationStepsProposerImpl(previousProject: Project, nextProject: Pro
     name = "",
     fields = List.empty,
     description = None,
-    isSystem = false,
-    permissions = List.empty,
-    fieldPositions = List.empty
+    isSystem = false
   )
 
   def containsRelation(project: Project, relation: Relation): Boolean = {

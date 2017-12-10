@@ -8,7 +8,6 @@ import cool.graph.shared.models.FieldConstraintType.FieldConstraintType
 import cool.graph.shared.models.LogStatus.LogStatus
 import cool.graph.shared.models.ModelMutationType.ModelMutationType
 import cool.graph.shared.models.ModelOperation.ModelOperation
-import cool.graph.shared.models.Region.Region
 import cool.graph.shared.models.SeatStatus.SeatStatus
 import cool.graph.shared.models.UserType.UserType
 import org.joda.time.DateTime
@@ -18,15 +17,6 @@ object IdType {
 }
 
 import cool.graph.shared.models.IdType._
-
-object CustomerSource extends Enumeration {
-  type CustomerSource = Value
-  val LEARN_RELAY  = Value("LEARN_RELAY")
-  val LEARN_APOLLO = Value("LEARN_APOLLO")
-  val DOCS         = Value("DOCS")
-  val WAIT_LIST    = Value("WAIT_LIST")
-  val HOMEPAGE     = Value("HOMEPAGE")
-}
 
 object MutationLogStatus extends Enumeration {
   type MutationLogStatus = Value
@@ -44,8 +34,7 @@ case class Client(
     email: String,
     hashedPassword: String,
     resetPasswordSecret: Option[String] = None,
-    source: CustomerSource.Value,
-    projects: List[Project] = List(),
+    projects: List[Project] = List.empty,
     createdAt: DateTime,
     updatedAt: DateTime
 )
@@ -57,21 +46,7 @@ object SeatStatus extends Enumeration {
   val INVITED_TO_GRAPHCOOL = Value("INVITED_TO_GRAPHCOOL")
 }
 
-object Region extends Enumeration {
-  type Region = Value
-  val EU_WEST_1      = Value("eu-west-1")
-  val US_WEST_2      = Value("us-west-2")
-  val AP_NORTHEAST_1 = Value("ap-northeast-1")
-}
-
 case class Seat(id: String, status: SeatStatus, isOwner: Boolean, email: String, clientId: Option[String], name: Option[String])
-
-case class PackageDefinition(
-    id: Id,
-    name: String,
-    definition: String,
-    formatVersion: Int
-)
 
 object LogStatus extends Enumeration {
   type LogStatus = Value
@@ -134,8 +109,7 @@ case class Project(
     allowQueries: Boolean = true,
     allowMutations: Boolean = true,
     functions: List[Function] = List.empty,
-    featureToggles: List[FeatureToggle] = List.empty,
-    typePositions: List[Id] = List.empty
+    featureToggles: List[FeatureToggle] = List.empty
 ) {
 
   lazy val projectId: ProjectId = ProjectId.fromEncodedString(id)
@@ -160,13 +134,6 @@ case class Project(
 
   def getModelById(id: Id): Option[Model] = models.find(_.id == id)
   def getModelById_!(id: Id): Model       = getModelById(id).get //OrElse(throw SystemErrors.InvalidModelId(id))
-
-  def getModelByModelPermissionId(id: Id): Option[Model] = models.find(_.permissions.exists(_.id == id))
-  def getModelByModelPermissionId_!(id: Id): Model       = getModelByModelPermissionId(id).get //OrElse(throw SystemErrors.InvalidModelPermissionId(id))
-
-  def getRelationByRelationPermissionId(id: Id): Option[Relation] = relations.find(_.permissions.exists(_.id == id))
-  def getRelationByRelationPermissionId_!(id: Id): Relation =
-    relations.find(_.permissions.exists(_.id == id)).get //OrElse(throw SystemErrors.InvalidRelationPermissionId(id))
 
   // note: mysql columns are case insensitive, so we have to be as well. But we could make them case sensitive https://dev.mysql.com/doc/refman/5.6/en/case-sensitivity.html
   def getModelByName(name: String): Option[Model] = models.find(_.name.toLowerCase() == name.toLowerCase())
@@ -262,22 +229,6 @@ case class Project(
   def seatByClientId(clientId: Id): Option[Seat] = seats.find(_.clientId.contains(clientId))
   def seatByClientId_!(clientId: Id): Seat       = seatByClientId(clientId).get //OrElse(throw SystemErrors.InvalidSeatClientId(clientId))
 
-  def getModelPermissionById(id: Id): Option[ModelPermission] = models.flatMap(_.permissions).find(_.id == id)
-  def getModelPermissionById_!(id: Id): ModelPermission       = getModelPermissionById(id).get //OrElse(throw SystemErrors.InvalidModelPermissionId(id))
-
-  def getRelationPermissionById(id: Id): Option[RelationPermission] = relations.flatMap(_.permissions).find(_.id == id)
-  def getRelationPermissionById_!(id: Id): RelationPermission       = getRelationPermissionById(id).get //OrElse(throw SystemErrors.InvalidRelationPermissionId(id))
-
-  def modelPermissions: List[ModelPermission]      = models.flatMap(_.permissions)
-  def relationPermissions: Seq[RelationPermission] = relations.flatMap(_.permissions)
-
-  def relationPermissionByRelationPermissionId(id: Id): Option[RelationPermission] = relations.flatMap(_.permissions).find(_.id == id)
-  def relationPermissionByRelationPermissionId_!(id: Id): RelationPermission =
-    relationPermissionByRelationPermissionId(id).get //OrElse(throw SystemErrors.InvalidRelationPermissionId(id))
-
-  def relationByRelationPermissionId(id: Id): Option[Relation] = relations.find(_.permissions.exists(_.id == id))
-  def relationByRelationPermissionId_!(id: Id): Relation       = relationByRelationPermissionId(id).get //OrElse(throw SystemErrors.InvalidRelationPermissionId(id))
-
   def allFields: Seq[Field] = models.flatMap(_.fields)
 
   def hasSchemaNameConflict(name: String, id: String): Boolean = {
@@ -290,8 +241,6 @@ case class ProjectWithClientId(project: Project, clientId: Id) {
   val id: Id = project.id
 }
 case class ProjectWithClient(project: Project, client: Client)
-
-case class ProjectDatabase(id: Id, region: Region, name: String, isDefaultForRegion: Boolean = false)
 
 sealed trait AuthenticatedRequest {
   def id: String
@@ -307,125 +256,12 @@ case class AuthenticatedUser(id: String, typeName: String, originalToken: String
 case class AuthenticatedCustomer(id: String, originalToken: String)               extends AuthenticatedRequest
 case class AuthenticatedRootToken(id: String, originalToken: String)              extends AuthenticatedRequest
 
-case class ModelPermission(
-    id: Id,
-    operation: ModelOperation,
-    userType: UserType,
-    rule: CustomRule = CustomRule.None,
-    ruleName: Option[String] = None,
-    ruleGraphQuery: Option[String] = None,
-    ruleGraphQueryFilePath: Option[String] = None,
-    ruleWebhookUrl: Option[String] = None,
-    fieldIds: List[String] = List(),
-    applyToWholeModel: Boolean,
-    description: Option[String] = None,
-    isActive: Boolean
-) {
-  def isCustom: Boolean = rule != CustomRule.None
-
-  def isNotCustom: Boolean = !isCustom
-
-  def operationString = operation match {
-    case ModelOperation.Create => "create"
-    case ModelOperation.Read   => "read"
-    case ModelOperation.Update => "update"
-    case ModelOperation.Delete => "delete"
-  }
-}
-
-object ModelPermission {
-  def publicPermissions: List[ModelPermission] =
-    List(ModelOperation.Read, ModelOperation.Create, ModelOperation.Update, ModelOperation.Delete)
-      .map(
-        operation =>
-          ModelPermission(
-            id = Cuid.createCuid(),
-            operation = operation,
-            userType = UserType.Everyone,
-            rule = CustomRule.None,
-            ruleName = None,
-            ruleGraphQuery = None,
-            ruleWebhookUrl = None,
-            isActive = true,
-            fieldIds = List.empty,
-            applyToWholeModel = true
-        ))
-
-  def authenticatedPermissions: List[ModelPermission] =
-    List(ModelOperation.Read, ModelOperation.Create, ModelOperation.Update, ModelOperation.Delete)
-      .map(
-        operation =>
-          ModelPermission(
-            id = Cuid.createCuid(),
-            operation = operation,
-            userType = UserType.Authenticated,
-            rule = CustomRule.None,
-            ruleName = None,
-            ruleGraphQuery = None,
-            ruleWebhookUrl = None,
-            isActive = true,
-            fieldIds = List.empty,
-            applyToWholeModel = true
-        ))
-}
-
-case class RelationPermission(
-    id: Id,
-    connect: Boolean,
-    disconnect: Boolean,
-    userType: UserType,
-    rule: CustomRule = CustomRule.None,
-    ruleName: Option[String] = None,
-    ruleGraphQuery: Option[String] = None,
-    ruleGraphQueryFilePath: Option[String] = None,
-    ruleWebhookUrl: Option[String] = None,
-    description: Option[String] = None,
-    isActive: Boolean
-) {
-  def isCustom: Boolean = rule != CustomRule.None
-
-  def isNotCustom: Boolean = !isCustom
-
-  def operation = (connect, disconnect) match {
-    case (true, false)  => "connect"
-    case (false, true)  => "disconnect"
-    case (true, true)   => "*"
-    case (false, false) => "none"
-  }
-
-  def operationString = (connect, disconnect) match {
-    case (true, false)  => "connect"
-    case (false, true)  => "disconnect"
-    case (true, true)   => "connectAndDisconnect"
-    case (false, false) => "none"
-  }
-
-}
-
-object RelationPermission {
-  def publicPermissions =
-    List(
-      RelationPermission(
-        id = Cuid.createCuid(),
-        connect = true,
-        disconnect = true,
-        userType = UserType.Everyone,
-        rule = CustomRule.None,
-        ruleName = None,
-        ruleGraphQuery = None,
-        ruleWebhookUrl = None,
-        isActive = true
-      ))
-}
-
 case class Model(
     id: Id,
     name: String,
     fields: List[Field],
     description: Option[String] = None,
-    isSystem: Boolean = false,
-    permissions: List[ModelPermission] = List.empty,
-    fieldPositions: List[Id] = List.empty
+    isSystem: Boolean = false
 ) {
 
   lazy val scalarFields: List[Field]         = fields.filter(_.isScalar)
@@ -461,10 +297,6 @@ case class Model(
 
   def getFieldByName_!(name: String): Field       = getFieldByName(name).get // .getOrElse(throw FieldNotInModel(fieldName = name, modelName = this.name))
   def getFieldByName(name: String): Option[Field] = fields.find(_.name == name)
-
-  def getPermissionById(id: Id): Option[ModelPermission] = permissions.find(_.id == id)
-
-  lazy val hasQueryPermissions: Boolean = permissions.exists(permission => permission.isCustom && permission.isActive)
 }
 
 object RelationSide extends Enumeration {
@@ -668,8 +500,7 @@ case class Relation(
     // val todoField = Field(..., relation = Some(relation), relationSide = Some(RelationSide.A)
     modelAId: Id,
     modelBId: Id,
-    fieldMirrors: List[RelationFieldMirror] = List(),
-    permissions: List[RelationPermission] = List()
+    fieldMirrors: List[RelationFieldMirror] = List.empty
 ) {
   def connectsTheModels(model1: Model, model2: Model): Boolean = {
     (modelAId == model1.id && modelBId == model2.id) || (modelAId == model2.id && modelBId == model1.id)
@@ -739,8 +570,6 @@ case class Relation(
       case `modelBId` => RelationSide.B
     }
   }
-
-  def getPermissionById(id: String): Option[RelationPermission] = permissions.find(_.id == id)
 
   def getRelationFieldMirrorById(id: String): Option[RelationFieldMirror] = fieldMirrors.find(_.id == id)
   def getRelationFieldMirrorById_!(id: String): RelationFieldMirror =

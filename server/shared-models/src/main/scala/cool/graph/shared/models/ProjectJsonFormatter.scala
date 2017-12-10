@@ -11,7 +11,6 @@ object ProjectJsonFormatter {
 
   // ENUMS
   implicit lazy val seatStatus               = enumFormat(SeatStatus)
-  implicit lazy val regionFormat             = enumFormat(Region)
   implicit lazy val logStatus                = enumFormat(LogStatus)
   implicit lazy val requestPipelineOperation = enumFormat(RequestPipelineOperation)
   implicit lazy val relationSide             = enumFormat(RelationSide)
@@ -131,16 +130,12 @@ object ProjectJsonFormatter {
     }
   }
 
-  implicit lazy val projectDatabase           = Json.format[ProjectDatabase]
-  implicit lazy val modelPermission           = Json.format[ModelPermission]
   implicit lazy val relationFieldMirror       = Json.format[RelationFieldMirror]
-  implicit lazy val relationPermission        = Json.format[RelationPermission]
   implicit lazy val relation                  = Json.format[Relation]
   implicit lazy val enum                      = Json.format[Enum]
   implicit lazy val field                     = Json.format[Field]
   implicit lazy val model                     = Json.format[Model]
   implicit lazy val seat                      = Json.format[Seat]
-  implicit lazy val packageDefinition         = Json.format[PackageDefinition]
   implicit lazy val featureToggle             = Json.format[FeatureToggle]
   implicit lazy val projectFormat             = Json.format[Project]
   implicit lazy val projectWithClientIdFormat = Json.format[ProjectWithClientId]
