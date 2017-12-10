@@ -53,11 +53,3 @@ case class ApiDependenciesImpl(implicit val system: ActorSystem, val materialize
   val apiSchemaBuilder               = SchemaBuilder()(system, this)
   val projectFetcher: ProjectFetcher = ProjectFetcherImpl(Vector.empty, config)
 }
-
-case class ApiDependenciesForTest(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends ApiDependencies {
-  override implicit def self: ApiDependencies = this
-
-  val databases                      = Databases.initialize(config)
-  val apiSchemaBuilder               = SchemaBuilder()(system, this)
-  val projectFetcher: ProjectFetcher = ProjectFetcherImpl(Vector.empty, config)
-}
