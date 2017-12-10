@@ -137,7 +137,7 @@ case class SchemaBuilderImpl(
 
     Field(
       s"create${model.name}",
-      fieldType = OptionType(outputTypesBuilder.mapCreateOutputType(model, objectTypes(model.name))),
+      fieldType = outputTypesBuilder.mapCreateOutputType(model, objectTypes(model.name)),
       arguments = arguments,
       resolve = (ctx) => {
         val mutation = new Create(model = model, project = project, args = ctx.args, dataResolver = masterDataResolver)

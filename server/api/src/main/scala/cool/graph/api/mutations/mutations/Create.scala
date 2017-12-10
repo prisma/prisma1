@@ -31,7 +31,7 @@ class Create(model: Model, project: Project, args: schema.Args, dataResolver: Da
   val requestId: String = "" //                        = dataResolver.requestContext.map(_.requestId).getOrElse("")
 
   val coolArgs: CoolArgs = {
-    val argsPointer: Map[String, Any] = args.raw.get("input") match { // TODO: input token is probably relay specific?
+    val argsPointer: Map[String, Any] = args.raw.get("data") match { // TODO: input token is probably relay specific?
       case Some(value) => value.asInstanceOf[Map[String, Any]]
       case None        => args.raw
     }

@@ -30,8 +30,12 @@ case class InputTypesBuilder(project: Project) {
   private val oneRelationIdFieldType       = OptionInputType(IDType)
   private val manyRelationIdsFieldType     = OptionInputType(ListInputType(IDType))
 
+  implicit val anyFromInput = FromInputImplicit.CoercedResultMarshaller
+
   def getSangriaArgumentsForCreate(model: Model): List[Argument[Any]] = {
-    getSangriaArguments(inputObjectType = cachedInputObjectTypeForCreate(model), arguments = cachedSchemaArgumentsForCreate(model))
+    //getSangriaArguments(inputObjectType = cachedInputObjectTypeForCreate(model), arguments = cachedSchemaArgumentsForCreate(model))
+    val inputObjectType = cachedInputObjectTypeForCreate(model)
+    List(Argument[Any]("data", inputObjectType))
   }
 
   def getSangriaArgumentsForUpdate(model: Model): List[Argument[Any]] = {
@@ -86,7 +90,7 @@ case class InputTypesBuilder(project: Project) {
     caffeineCache.getOrElseUpdate(cacheKey("cachedInputObjectTypeForCreate", model, omitRelation)) {
       val inputObjectTypeName = omitRelation match {
         case None =>
-          s"Create${model.name}"
+          s"${model.name}CreateInput"
 
         case Some(relation) =>
           val otherModel = relation.getOtherModel_!(project, model)

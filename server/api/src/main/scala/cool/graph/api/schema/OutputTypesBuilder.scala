@@ -54,15 +54,15 @@ case class OutputTypesBuilder(project: Project, objectTypes: Map[String, ObjectT
   }
 
   def mapCreateOutputType[C](model: Model, objectType: ObjectType[C, DataItem]): ObjectType[C, SimpleResolveOutput] = {
-    mapOutputType(model, objectType, false)
+    mapOutputType(model, objectType, onlyId = false)
   }
 
   def mapUpdateOutputType[C](model: Model, objectType: ObjectType[C, DataItem]): ObjectType[C, SimpleResolveOutput] = {
-    mapOutputType(model, objectType, false)
+    mapOutputType(model, objectType, onlyId = false)
   }
 
   def mapUpdateOrCreateOutputType[C](model: Model, objectType: ObjectType[C, DataItem]): ObjectType[C, SimpleResolveOutput] = {
-    mapOutputType(model, objectType, false)
+    mapOutputType(model, objectType, onlyId = false)
   }
 
   def mapSubscriptionOutputType[C](
