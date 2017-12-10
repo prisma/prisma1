@@ -92,14 +92,12 @@ class SingleServerInjectorImpl(implicit val actorSystem: ActorSystem, actorMater
       bind[SnsPublisher] identifiedBy "seatSnsPublisher" toNonLazy snsPublisher
       bind[KinesisPublisher] identifiedBy "kinesisAlgoliaSyncQueriesPublisher" toNonLazy kinesisAlgoliaSyncQueriesPublisher
       bind[KinesisPublisher] identifiedBy "kinesisApiMetricsPublisher" toNonLazy kinesisApiMetricsPublisher
-
       bind[AlgoliaKeyChecker] identifiedBy "algoliaKeyChecker" toNonLazy outer.algoliaKeyChecker
       bind[Auth0Api] toNonLazy outer.auth0Api
       bind[Auth0Extend] toNonLazy outer.auth0Extend
       bind[BugSnagger] toNonLazy outer.bugsnagger
       bind[TestableTime] toNonLazy outer.testableTime
       bind[ApiMatrixFactory] toNonLazy outer.apiMatrixFactory
-
     }
   }
 
