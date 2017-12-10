@@ -54,7 +54,6 @@ object InputValueValidation {
         case (TypeIdentifier.Float, _: Double)     => true
         case (TypeIdentifier.Float, _: Float)      => true
         case (TypeIdentifier.Boolean, _: Boolean)  => true
-        case (TypeIdentifier.Password, _: String)  => true
         case (TypeIdentifier.DateTime, x)          => CustomScalarTypes.parseDate(x.toString).isRight
         case (TypeIdentifier.GraphQLID, x: String) => NameConstraints.isValidDataItemId(x)
         case (TypeIdentifier.Enum, x: String)      => NameConstraints.isValidEnumValueName(x)

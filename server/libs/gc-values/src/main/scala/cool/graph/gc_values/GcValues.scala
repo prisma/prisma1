@@ -26,7 +26,6 @@ case class StringGCValue(value: String)     extends LeafGCValue
 case class IntGCValue(value: Int)           extends LeafGCValue
 case class FloatGCValue(value: Double)      extends LeafGCValue
 case class BooleanGCValue(value: Boolean)   extends LeafGCValue
-case class PasswordGCValue(value: String)   extends LeafGCValue
 case class GraphQLIdGCValue(value: String)  extends LeafGCValue
 case class DateTimeGCValue(value: DateTime) extends LeafGCValue
 case class EnumGCValue(value: String)       extends LeafGCValue

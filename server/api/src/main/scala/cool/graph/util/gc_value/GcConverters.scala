@@ -38,7 +38,6 @@ case class GCDBValueConverter() extends GCConverter[Any] {
     t match {
       case NullGCValue         => None
       case x: StringGCValue    => x.value
-      case x: PasswordGCValue  => x.value
       case x: EnumGCValue      => x.value
       case x: GraphQLIdGCValue => x.value
       case x: DateTimeGCValue  => x.value
@@ -69,7 +68,6 @@ case class GCSangriaValueConverter(typeIdentifier: TypeIdentifier, isList: Boole
         case (x: BigDecimalValue, TypeIdentifier.Float)                                          => FloatGCValue(x.value.toDouble)
         case (x: FloatValue, TypeIdentifier.Float)                                               => FloatGCValue(x.value)
         case (x: BooleanValue, TypeIdentifier.Boolean)                                           => BooleanGCValue(x.value)
-        case (x: StringValue, TypeIdentifier.Password)                                           => PasswordGCValue(x.value)
         case (x: StringValue, TypeIdentifier.DateTime)                                           => DateTimeGCValue(new DateTime(x.value, DateTimeZone.UTC))
         case (x: StringValue, TypeIdentifier.GraphQLID)                                          => GraphQLIdGCValue(x.value)
         case (x: EnumValue, TypeIdentifier.Enum)                                                 => EnumGCValue(x.value)
@@ -94,7 +92,6 @@ case class GCSangriaValueConverter(typeIdentifier: TypeIdentifier, isList: Boole
       case x: IntGCValue       => BigIntValue(x.value)
       case x: FloatGCValue     => FloatValue(x.value)
       case x: BooleanGCValue   => BooleanValue(x.value)
-      case x: PasswordGCValue  => StringValue(x.value)
       case x: GraphQLIdGCValue => StringValue(x.value)
       case x: DateTimeGCValue  => StringValue(formatter.print(x.value))
       case x: EnumGCValue      => EnumValue(x.value)
@@ -117,7 +114,6 @@ case class GCStringDBConverter(typeIdentifier: TypeIdentifier, isList: Boolean) 
         case (TypeIdentifier.Int, false)       => IntGCValue(Integer.parseInt(t))
         case (TypeIdentifier.Float, false)     => FloatGCValue(t.toDouble)
         case (TypeIdentifier.Boolean, false)   => BooleanGCValue(t.toBoolean)
-        case (TypeIdentifier.Password, false)  => PasswordGCValue(t)
         case (TypeIdentifier.DateTime, false)  => DateTimeGCValue(new DateTime(t, DateTimeZone.UTC))
         case (TypeIdentifier.GraphQLID, false) => GraphQLIdGCValue(t)
         case (TypeIdentifier.Enum, false)      => EnumGCValue(t)
@@ -149,7 +145,6 @@ case class GCStringDBConverter(typeIdentifier: TypeIdentifier, isList: Boolean) 
       case x: IntGCValue       => x.value.toString
       case x: FloatGCValue     => x.value.toString
       case x: BooleanGCValue   => x.value.toString
-      case x: PasswordGCValue  => x.value
       case x: GraphQLIdGCValue => x.value
       case x: DateTimeGCValue  => formatter.print(x.value)
       case x: EnumGCValue      => x.value
@@ -174,7 +169,6 @@ case class GCJsonConverter(typeIdentifier: TypeIdentifier, isList: Boolean) exte
       case (x: JsNumber, TypeIdentifier.Int)       => Good(IntGCValue(x.value.toInt))
       case (x: JsNumber, TypeIdentifier.Float)     => Good(FloatGCValue(x.value.toDouble))
       case (x: JsBoolean, TypeIdentifier.Boolean)  => Good(BooleanGCValue(x.value))
-      case (x: JsString, TypeIdentifier.Password)  => Good(PasswordGCValue(x.value))
       case (x: JsString, TypeIdentifier.DateTime)  => Good(DateTimeGCValue(new DateTime(x.value, DateTimeZone.UTC)))
       case (x: JsString, TypeIdentifier.GraphQLID) => Good(GraphQLIdGCValue(x.value))
       case (x: JsString, TypeIdentifier.Enum)      => Good(EnumGCValue(x.value))
@@ -190,7 +184,6 @@ case class GCJsonConverter(typeIdentifier: TypeIdentifier, isList: Boolean) exte
     gcValue match {
       case NullGCValue         => JsNull
       case x: StringGCValue    => JsString(x.value)
-      case x: PasswordGCValue  => JsString(x.value)
       case x: EnumGCValue      => JsString(x.value)
       case x: GraphQLIdGCValue => JsString(x.value)
       case x: DateTimeGCValue  => JsString(formatter.print(x.value))
@@ -218,7 +211,6 @@ case class StringSangriaValueConverter(typeIdentifier: TypeIdentifier, isList: B
       case _ if string == "null"               => string
       case TypeIdentifier.DateTime if !isList  => escape(string)
       case TypeIdentifier.String if !isList    => escape(string)
-      case TypeIdentifier.Password if !isList  => escape(string)
       case TypeIdentifier.GraphQLID if !isList => escape(string)
       case TypeIdentifier.Json                 => escape(string)
       case _                                   => string
@@ -330,7 +322,6 @@ object OtherGCStuff {
     (value, field.typeIdentifier) match {
       case (NullGCValue, _)                                => true
       case (_: StringGCValue, TypeIdentifier.String)       => true
-      case (_: PasswordGCValue, TypeIdentifier.Password)   => true
       case (_: GraphQLIdGCValue, TypeIdentifier.GraphQLID) => true
       case (_: EnumGCValue, TypeIdentifier.Enum)           => true
       case (_: JsonGCValue, TypeIdentifier.Json)           => true

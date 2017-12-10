@@ -88,7 +88,6 @@ object ProjectJsonFormatter {
     private def createGcValue(discriminator: String, value: JsValue, isList: Boolean): JsResult[GCValue] = (discriminator, value) match {
       case (`nullType`, _)                  => JsSuccess(NullGCValue)
       case (`stringType`, JsString(str))    => JsSuccess(StringGCValue(str))
-      case (`passwordType`, JsString(str))  => JsSuccess(PasswordGCValue(str))
       case (`enumType`, JsString(str))      => JsSuccess(EnumGCValue(str))
       case (`graphQlIdType`, JsString(str)) => JsSuccess(GraphQLIdGCValue(str))
       case (`dateTimeType`, JsString(str))  => JsSuccess(DateTimeGCValue(new DateTime(str, DateTimeZone.UTC)))
@@ -111,7 +110,6 @@ object ProjectJsonFormatter {
       gcValue match {
         case NullGCValue         => json(nullType, JsNull)
         case x: StringGCValue    => json(stringType, JsString(x.value))
-        case x: PasswordGCValue  => json(passwordType, JsString(x.value))
         case x: EnumGCValue      => json(enumType, JsString(x.value))
         case x: GraphQLIdGCValue => json(graphQlIdType, JsString(x.value))
         case x: DateTimeGCValue  => json(dateTimeType, JsString(formatter.print(x.value)))

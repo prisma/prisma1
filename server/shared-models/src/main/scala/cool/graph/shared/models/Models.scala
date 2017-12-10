@@ -480,7 +480,6 @@ object TypeIdentifier extends Enumeration {
   val Int       = Value("Int")
   val Float     = Value("Float")
   val Boolean   = Value("Boolean")
-  val Password  = Value("Password")
   val DateTime  = Value("DateTime")
   val GraphQLID = Value("GraphQLID")
   val Enum      = Value("Enum")
