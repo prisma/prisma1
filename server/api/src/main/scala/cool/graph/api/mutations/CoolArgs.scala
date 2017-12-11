@@ -1,17 +1,15 @@
 package cool.graph.api.mutations
 
 import cool.graph.shared.models._
-import cool.graph.util.coolSangria.Sangria
+
 import scala.collection.immutable.Seq
 
 /**
   * It's called CoolArgs to easily differentiate from Sangrias Args class.
   */
-case class CoolArgs(raw: Map[String, Any], model: Model, project: Project) {
-  private val sangriaArgs = Sangria.rawArgs(raw)
+case class CoolArgs(raw: Map[String, Any]) {
 
   def subArgsList(field: Field): Option[Seq[CoolArgs]] = {
-    val subModel = field.relatedModel(project).get
     val fieldValues: Option[Seq[Map[String, Any]]] = field.isList match {
       case true  => getFieldValuesAs[Map[String, Any]](field)
       case false => getFieldValueAsSeq[Map[String, Any]](field.name)
@@ -19,22 +17,22 @@ case class CoolArgs(raw: Map[String, Any], model: Model, project: Project) {
 
     fieldValues match {
       case None    => None
-      case Some(x) => Some(x.map(CoolArgs(_, subModel, project)))
+      case Some(x) => Some(x.map(CoolArgs(_)))
+    }
+  }
+
+  def subArgs(field: Field): Option[Option[CoolArgs]] = subArgs(field.name)
+
+  def subArgs(name: String): Option[Option[CoolArgs]] = {
+    val fieldValue: Option[Option[Map[String, Any]]] = getFieldValueAs[Map[String, Any]](name)
+    fieldValue match {
+      case None          => None
+      case Some(None)    => Some(None)
+      case Some(Some(x)) => Some(Some(CoolArgs(x)))
     }
   }
 
   def hasArgFor(field: Field) = raw.get(field.name).isDefined
-
-  def fields: Seq[Field] = {
-    for {
-      field <- model.fields
-      if hasArgFor(field)
-    } yield field
-  }
-
-  def fieldsThatRequirePermissionCheckingInMutations = {
-    fields.filter(_.name != "id")
-  }
 
   /**
     * The outer option is defined if the field key was specified in the arguments at all.

@@ -4,13 +4,12 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import cool.graph.api.ApiDependencies
 import cool.graph.api.database.mutactions.mutactions.{ServerSideSubscription, UpdateDataItem}
-import cool.graph.api.database.{DataItem, DataResolver}
 import cool.graph.api.database.mutactions.{ClientSqlMutaction, MutactionGroup, Transaction}
+import cool.graph.api.database.{DataItem, DataResolver}
 import cool.graph.api.mutations._
 import cool.graph.api.mutations.definitions.{NodeSelector, UpdateDefinition}
 import cool.graph.api.schema.{APIErrors, InputTypesBuilder}
-import cool.graph.gc_values.{GraphQLIdGCValue, StringGCValue}
-import cool.graph.shared.models.IdType.Id
+import cool.graph.gc_values.GraphQLIdGCValue
 import cool.graph.shared.models.{Model, Project}
 import sangria.schema
 
@@ -30,7 +29,7 @@ class Update(model: Model, project: Project, args: schema.Args, dataResolver: Da
       case Some(value) => value.asInstanceOf[Map[String, Any]]
       case None        => args.raw
     }
-    CoolArgs(argsPointer, model, project)
+    CoolArgs(argsPointer)
   }
 
   val id                = by.fieldValue.asInstanceOf[GraphQLIdGCValue].value // todo: pass NodeSelector all the way down

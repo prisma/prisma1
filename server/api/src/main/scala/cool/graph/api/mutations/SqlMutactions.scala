@@ -244,7 +244,9 @@ case class SqlMutactions(dataResolver: DataResolver) {
     runRequiredRelationCheckWithInvalidFunction(field, project, isInvalid)
   }
 
-  private def runRequiredRelationCheckWithInvalidFunction(field: Field, project: Project, isInvalid: () => Future[Boolean]) = {
+  private def runRequiredRelationCheckWithInvalidFunction(field: Field,
+                                                          project: Project,
+                                                          isInvalid: () => Future[Boolean]): Option[InvalidInputClientSqlMutaction] = {
     val relatedField = field.relatedFieldEager(project)
     val relatedModel = field.relatedModel_!(project)
     if (relatedField.isRequired && !relatedField.isList) {
@@ -254,18 +256,17 @@ case class SqlMutactions(dataResolver: DataResolver) {
 
   def getComplexMutactions(project: Project, model: Model, args: CoolArgs, fromId: Id, requestId: String): Seq[ClientSqlMutaction] = {
     val x: Seq[List[ClientSqlMutaction]] = for {
-      field    <- model.relationFields
-      subArgs  <- args.subArgsList(field)
-      subModel = field.relatedModel(project).get
+      field     <- model.relationFields
+      nestedArg <- args.subArgs(field).flatten
+      subArgs   <- nestedArg.subArgs("create")
+      subModel  = field.relatedModel(project).get
     } yield {
 
       val removeOldFromRelation =
         List(checkIfRemovalWouldFailARequiredRelation(field, fromId, project), Some(RemoveDataItemFromManyRelationByFromId(project.id, field, fromId))).flatten
 
-      val allowSettingManagedFields = false
-
-      val itemsToCreate = subArgs.flatMap { subArg =>
-        getMutactionsForCreate(project, subModel, subArg, allowSettingManagedFields, parentInfo = Some(ParentInfo(model, field, fromId)), requestId = requestId).allMutactions
+      val itemsToCreate = subArgs.toVector.flatMap { subArg =>
+        getMutactionsForCreate(project, subModel, subArg, parentInfo = Some(ParentInfo(model, field, fromId)), requestId = requestId).allMutactions
       }
 
       removeOldFromRelation ++ itemsToCreate
