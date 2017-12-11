@@ -52,7 +52,6 @@ class SimpleSubscriptionInjectorImpl(implicit val system: ActorSystem, val mater
   implicit lazy val toScaldi: Module = {
     val outer = this
     new Module {
-
       bind[BugSnagger] toNonLazy outer.bugsnagger
       bind[TestableTime] toNonLazy outer.testableTime
       bind[ClientAuth] toNonLazy outer.clientAuth
