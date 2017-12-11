@@ -1,7 +1,6 @@
 package cool.graph.client.mutactions
 
 import cool.graph.DataItem
-import cool.graph.GCDataTypes.GCStringDBConverter
 import cool.graph.Types.UserData
 import cool.graph.client.ClientInjector
 import cool.graph.client.database.DatabaseMutationBuilder.MirrorFieldDbValues
@@ -204,8 +203,10 @@ object DataImport {
 object DataExport {
   import cool.graph.client.mutactions.ImportExportFormat._
 
-  //hand down stringbuilder with max capacity already?
+  //use json all the way up
   //use GCValues for the conversions?
+
+  case class JsonBundle(jsonArray: JsArray, size: Int)
 
   sealed trait ExportInfo {
     val cursor: Cursor
@@ -254,6 +255,7 @@ object DataExport {
 
   def executeExport(project: Project, dataResolver: DataResolver, json: JsValue): Future[ResultFormat] = {
     import MyJsonProtocol._
+
     import scala.concurrent.ExecutionContext.Implicits.global
 
     val req = json.convertTo[ExportRequest]
@@ -281,7 +283,6 @@ object DataExport {
 
   def resultForTable(in: String, info: ExportInfo): Future[ResultFormat] = {
     import scala.concurrent.ExecutionContext.Implicits.global
-
     fetchDataItemsPage(info).flatMap { page =>
       val result = serializePage(in, page, info)
 
@@ -381,8 +382,8 @@ object DataExport {
   }
 
   def dataItemToExportNode(item: DataItem, info: NodeInfo): String = {
-    import spray.json._
     import MyJsonProtocol._
+    import spray.json._
 
     val dataValueMap: UserData                          = item.userData
     val createdAtUpdatedAtMap                           = dataValueMap.collect { case (k, Some(v)) if k == "createdAt" || k == "updatedAt" => (k, v) }
@@ -392,6 +393,7 @@ object DataExport {
     val result: Map[String, Any]                        = Map("_typeName" -> info.current.name, "id" -> item.id) ++ outputMap
 
     result.toJson.toString
+
   }
 
   def dataItemToExportList(in: String, item: DataItem, info: ListInfo): ResultFormat = {

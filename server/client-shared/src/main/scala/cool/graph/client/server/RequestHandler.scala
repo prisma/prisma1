@@ -119,7 +119,7 @@ case class RequestHandler(
 
     val response: Future[ResultFormat] = graphQlRequestFuture.flatMap(identity)
 
-    response.map(x => (200, x.out.toJson)) //this goes from single jsons to bigstring to bigJson -.-
+    response.map(x => (200, Map("out" -> x.out.toJson, "cursor" -> x.cursor.toJson, "isFull" -> x.isFull).toJson))
   }
 
   def handleRawRequestForProjectSchema(
