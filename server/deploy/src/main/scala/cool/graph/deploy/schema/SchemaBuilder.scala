@@ -75,8 +75,9 @@ case class SchemaBuilderImpl(
     "migrationStatus",
     MigrationType.Type,
     arguments = projectIdArguments,
-    description =
-      Some("Shows the status of the next migration in line to be applied to the project. If no such migration exists, it shows the last applied migration."),
+    description = Some(
+      "Shows the status of the next migration in line to be applied to the project. If no such migration exists, it shows the last applied migration."
+    ),
     resolve = (ctx) => {
       val projectId = ctx.args.raw.projectId
       FutureOpt(migrationPersistence.getNextMigration(projectId)).fallbackTo(migrationPersistence.getLastMigration(projectId)).map {
