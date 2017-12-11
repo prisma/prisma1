@@ -5,19 +5,19 @@ description: How to use the API
 
 # How to use the API
 
-The GraphQL API of your Graphcool database service API is consumed via HTTP. Depending on your environment, can either use plain HTTP to communicate with the API or use a [GraphQL client](!alias-chig6ahxeo) library to facilitate the process.
+The GraphQL API of your Graphcool database service API is consumed via HTTP. Depending on your environment, can either use plain HTTP to communicate with the API or a [GraphQL client](!alias-chig6ahxeo) library to facilitate the process.
 
 In the following, we'll provide an overview of the different ways you can interface with the API.
 
-### GraphQL Playground
+## GraphQL Playground
 
 The [GraphQL Playground](https://github.com/graphcool/graphql-playground) can be used to explore and run GraphQL mutations, queries and subscriptions.
 
-To open up a Playground for your database service, simply run the `graphcool playground` command in the root directory of your service or paste your service's HTTP endpoint into the address bar of your browser. 
+To open up a Playground for your database service, simply run the `graphcool playground` command in the root directory of your service or paste your service's HTTP endpoint into the address bar of your browser.
 
-### Apollo Client
+## Apollo Client
 
-#### Usage
+### Usage
 
 To set up the client with your endpoint:
 
@@ -34,19 +34,20 @@ const client = new ApolloClient({
 
 Now you can use the `ApolloClient` instance to perform queries and mutations. If you are unsure about the setup, check the [quickstart](https://www.graph.cool/docs/quickstart/).
 
-### graphql-request
+## graphql-request
 
 [`graphql-request`](https://github.com/graphcool/graphql-request) is a minimal GraphQL client supporting Node and browsers for server-side scripts or simple applications.
 
-#### Usage
+### Usage
 
 To set up the client with your endpoint and use the `request` method to send a GraphQL query or mutation:
 
 ```javascript
 const { request } = require('graphql-request')
 
-const query = `{
-  Movie(title: "Inception") {
+const query = `
+query {
+  movies {
     releaseDate
     actors {
       name
@@ -57,22 +58,22 @@ const query = `{
 request('https://api.graph.cool/simple/v1/movies', query).then(data => console.log(data))
 ```
 
-### Plain HTTP
+## Plain HTTP
 
-You can also communicate with the Simple API by using plain HTTP POST requests. For example, to query `allUsers`, do a POST request to your endpoint `https://api.graph.cool/simple/v1/__SERVICE_ID__`.
+You can also communicate with the Simple API by using plain HTTP POST requests. For example, to query `movies`, do a POST request to your endpoint `https://api.graph.cool/simple/v1/__SERVICE_ID__`.
 
 With `curl` you can query like this:
 
 ```bash
-curl 'https://api.graph.cool/simple/v1/movies' -H 'content-type: application/json' --data-binary '{"query":"query {allMovies {id title}}"}' --compressed
+curl 'https://api.graph.cool/simple/v1/movies' -H 'content-type: application/json' --data-binary '{"query":"query {movies {id title}}"}' --compressed
 ```
 
-returning
+This returns the following response:
 
 ```json
 {
   "data": {
-    "allMovies": [
+    "movies": [
       {
         "id": "cixos5gtq0ogi0126tvekxo27",
         "title": "Inception"
@@ -111,7 +112,7 @@ const response = await fetch('https://api.graph.cool/simple/v1/__SERVICE_ID__', 
   body: JSON.stringify({
     query: `
       query {
-        allMovies {
+        movies {
           id
           title
         }
