@@ -1,5 +1,5 @@
 ---
-alias: uz0pmaf1ph
+alias: uz0phae1ph
 description: Switch between organizations
 ---
 
