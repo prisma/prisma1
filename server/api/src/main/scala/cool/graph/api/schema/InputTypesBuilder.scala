@@ -184,47 +184,89 @@ case class InputTypesBuilder(project: Project) {
   }
 
   private def computeRelationalSchemaArguments(model: Model, omitRelation: Option[Relation]): List[SchemaArgument] = {
-    val oneRelationArguments = model.singleRelationFields.flatMap { field =>
+    val manyRelationArguments = model.listRelationFields.flatMap { field =>
       val subModel              = field.relatedModel_!(project)
       val relation              = field.relation.get
       val relationMustBeOmitted = omitRelation.exists(rel => field.isRelationWithId(rel.id))
 
-      val idArg = schemaArgumentWithName(
-        field = field,
-        name = field.name + SchemaBuilderConstants.idSuffix,
-        inputType = oneRelationIdFieldType
-      )
+      if (relationMustBeOmitted) {
+        None
+      } else {
+        val inputObjectType = InputObjectType[Any](
+          name = s"${subModel.name}CreateManyInput",
+          fieldsFn = () => {
+            List(
+              schemaArgumentWithName(field, "create", OptionInputType(ListInputType(cachedInputObjectTypeForCreate(subModel, Some(relation))))).asSangriaInputField
+            )
+          }
+        )
+        Some(schemaArgument(field, inputType = OptionInputType(inputObjectType)))
+      }
+    }
+    val singleRelationArguments = model.singleRelationFields.flatMap { field =>
+      val subModel              = field.relatedModel_!(project)
+      val relation              = field.relation.get
+      val relationMustBeOmitted = omitRelation.exists(rel => field.isRelationWithId(rel.id))
 
       if (relationMustBeOmitted) {
-        List.empty
-      } else if (!subModel.fields.exists(f => f.isWritable && !f.relation.exists(_ => !f.isList && f.isRelationWithId(relation.id)))) {
-        List(idArg)
+        None
       } else {
-        val inputObjectType = OptionInputType(cachedInputObjectTypeForCreate(subModel, omitRelation = Some(relation)))
-        val complexArg      = schemaArgument(field = field, inputType = inputObjectType)
-        List(idArg, complexArg)
+        val inputObjectType = InputObjectType[Any](
+          name = s"${subModel.name}CreateOneInput",
+          fieldsFn = () => {
+            List(
+              schemaArgumentWithName(field, "create", OptionInputType(cachedInputObjectTypeForCreate(subModel, Some(relation)))).asSangriaInputField
+            )
+          }
+        )
+        Some(schemaArgument(field, inputType = OptionInputType(inputObjectType)))
       }
     }
-
-    val manyRelationArguments = model.listRelationFields.flatMap { field =>
-      val subModel = field.relatedModel_!(project)
-      val relation = field.relation.get
-      val idsArg = schemaArgumentWithName(
-        field = field,
-        name = field.name + SchemaBuilderConstants.idListSuffix,
-        inputType = manyRelationIdsFieldType
-      )
-
-      if (!subModel.fields.exists(f => f.isWritable && !f.relation.exists(rel => !f.isList && f.isRelationWithId(relation.id)))) {
-        List(idsArg)
-      } else {
-        val inputObjectType = cachedInputObjectTypeForCreate(subModel, omitRelation = Some(relation))
-        val complexArg      = schemaArgument(field, inputType = OptionInputType(ListInputType(inputObjectType)))
-        List(idsArg, complexArg)
-      }
-    }
-    oneRelationArguments ++ manyRelationArguments
+    manyRelationArguments ++ singleRelationArguments
   }
+
+//  private def computeNestedSchemaArgumentsForCreate(model: Model, omitRelation: Option[Relation]): List[SchemaArgument] = {
+//    val oneRelationArguments = model.singleRelationFields.flatMap { field =>
+//      val subModel              = field.relatedModel_!(project)
+//      val relation              = field.relation.get
+//      val relationMustBeOmitted = omitRelation.exists(rel => field.isRelationWithId(rel.id))
+//
+//      val idArg = schemaArgumentWithName(
+//        field = field,
+//        name = field.name + SchemaBuilderConstants.idSuffix,
+//        inputType = oneRelationIdFieldType
+//      )
+//
+//      if (relationMustBeOmitted) {
+//        List.empty
+//      } else if (!subModel.fields.exists(f => f.isWritable && !f.isList && !f.relation.exists(_ => f.isRelationWithId(relation.id)))) {
+//        List(idArg)
+//      } else {
+//        val inputObjectType = OptionInputType(cachedInputObjectTypeForCreate(subModel, omitRelation = Some(relation)))
+//        val complexArg      = schemaArgument(field = field, inputType = inputObjectType)
+//        List(idArg, complexArg)
+//      }
+//    }
+//
+//    val manyRelationArguments = model.listRelationFields.flatMap { field =>
+//      val subModel = field.relatedModel_!(project)
+//      val relation = field.relation.get
+//      val idsArg = schemaArgumentWithName(
+//        field = field,
+//        name = field.name + SchemaBuilderConstants.idListSuffix,
+//        inputType = manyRelationIdsFieldType
+//      )
+//
+//      if (!subModel.fields.exists(f => f.isWritable && !f.isList && !f.relation.exists(rel => f.isRelationWithId(relation.id)))) {
+//        List(idsArg)
+//      } else {
+//        val inputObjectType = cachedInputObjectTypeForCreate(subModel, omitRelation = Some(relation))
+//        val complexArg      = schemaArgument(field, inputType = OptionInputType(ListInputType(inputObjectType)))
+//        List(idsArg, complexArg)
+//      }
+//    }
+//    oneRelationArguments ++ manyRelationArguments
+//  }
 
   private def schemaArgument(field: Field, inputType: InputType[Any]): SchemaArgument = {
     schemaArgumentWithName(field = field, name = field.name, inputType = inputType)
