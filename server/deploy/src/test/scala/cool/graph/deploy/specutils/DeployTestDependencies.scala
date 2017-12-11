@@ -9,8 +9,9 @@ case class DeployTestDependencies()(implicit val system: ActorSystem, val materi
 
   val internalTestDb = new InternalTestDatabase()
   val clientTestDb   = new ClientTestDatabase()
-  val migrator       = TestMigrator()
 
-  override val internalDb = internalTestDb.internalDatabase
-  override val clientDb   = clientTestDb.clientDatabase
+  override lazy val internalDb = internalTestDb.internalDatabase
+  override lazy val clientDb   = clientTestDb.clientDatabase
+
+  val migrator = TestMigrator(clientDb, internalDb, migrationPersistence)
 }

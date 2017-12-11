@@ -86,17 +86,17 @@ case class DeployMutationPayload(
     errors: Seq[SchemaError]
 ) extends sangria.relay.Mutation
 
-/**
-  * SKETCH
-  */
-trait DeployMutationSketch {
-  def deploy(desiredProject: Project, migrationSteps: Migration): DeployResultSketch
-}
-
-sealed trait DeployResultSketch
-case class DeploySucceeded(project: Project, descriptions: Vector[VerbalDescription]) extends DeployResultSketch
-case class MigrationsDontSuffice(proposal: Migration)                                 extends DeployResultSketch
-
-trait VerbalDescription {
-  def description: String
-}
+///**
+//  * SKETCH
+//  */
+//trait DeployMutationSketch {
+//  def deploy(desiredProject: Project, migrationSteps: Migration): DeployResultSketch
+//}
+//
+//sealed trait DeployResultSketch
+//case class DeploySucceeded(project: Project, descriptions: Vector[VerbalDescription]) extends DeployResultSketch
+//case class MigrationsDontSuffice(proposal: Migration)                                 extends DeployResultSketch
+//
+//trait VerbalDescription {
+//  def description: String
+//}

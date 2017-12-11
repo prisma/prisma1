@@ -14,6 +14,7 @@ object DatabaseMutationBuilder {
   }
 
   def dropClientDatabaseForProject(projectId: String) = {
+    println(s"Dropping $projectId")
     DBIO.seq(sqlu"""DROP SCHEMA IF EXISTS `#$projectId`;""")
   }
 

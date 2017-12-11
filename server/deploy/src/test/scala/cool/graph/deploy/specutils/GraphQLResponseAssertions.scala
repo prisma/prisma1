@@ -1,6 +1,5 @@
 package cool.graph.deploy.specutils
 
-import cool.graph.util.json.SprayJsonExtensions
 import cool.graph.util.json.PlaySprayConversions
 import spray.json._
 import play.api.libs.json.{JsValue => PJsValue}

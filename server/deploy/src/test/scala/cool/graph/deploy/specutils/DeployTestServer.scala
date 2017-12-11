@@ -1,8 +1,9 @@
 package cool.graph.deploy.specutils
 
-import cool.graph.deploy.{DeployDependencies, GraphQLResponseAssertions}
+import cool.graph.deploy.DeployDependencies
+import cool.graph.deploy.schema.{SchemaBuilder, SystemUserContext}
 import cool.graph.shared.models.{AuthenticatedRequest, AuthenticatedUser, Project}
-import sangria.execution.{ErrorWithResolver, Executor, QueryAnalysisError}
+import sangria.execution.Executor
 import sangria.parser.QueryParser
 import sangria.renderer.SchemaRenderer
 import spray.json._
@@ -13,8 +14,7 @@ import scala.concurrent.duration.Duration
 import scala.reflect.io.File
 
 case class DeployTestServer()(implicit dependencies: DeployDependencies) extends SprayJsonExtensions with GraphQLResponseAssertions {
-
-  //  private lazy val errorHandlerFactory = ErrorHandlerFactory(println, injector.cloudwatch, injector.bugsnagger)
+  import cool.graph.deploy.server.JsonMarshalling._
 
   def writeSchemaIntoFile(schema: String): Unit = File("schema").writeAll(schema)
 
@@ -22,31 +22,21 @@ case class DeployTestServer()(implicit dependencies: DeployDependencies) extends
   def writeSchemaToFile    = false
   def logSimple: Boolean   = false
 
-  //  def requestContext =
-  //    RequestContext(
-  //      CombinedTestDatabase.testClientId,
-  //      requestId = CombinedTestDatabase.requestId,
-  //      requestIp = CombinedTestDatabase.requestIp,
-  //      println(_),
-  //      projectId = Some(CombinedTestDatabase.testProjectId)
-  //    )
-
   /**
     * Execute a Query that must succeed.
     */
-  def querySimple(query: String)(implicit project: Project): JsValue                       = executeQuerySimple(query, project)
-  def querySimple(query: String, dataContains: String)(implicit project: Project): JsValue = executeQuerySimple(query, project, dataContains)
+  def querySimple(query: String): JsValue                       = executeQuerySimple(query)
+  def querySimple(query: String, dataContains: String): JsValue = executeQuerySimple(query, dataContains)
 
+  // todo remove all the "simple" naming
   def executeQuerySimple(
       query: String,
-      project: Project,
       dataContains: String = "",
       variables: JsValue = JsObject.empty,
       requestId: String = "CombinedTestDatabase.requestId"
   ): JsValue = {
     val result = executeQuerySimpleWithAuthentication(
       query = query,
-      project = project,
       variables = variables,
       requestId = requestId
     )
@@ -91,7 +81,6 @@ case class DeployTestServer()(implicit dependencies: DeployDependencies) extends
                                      graphcoolHeader: Option[String] = None): JsValue = {
     val result = executeQuerySimpleWithAuthentication(
       query = query,
-      project = project,
       authenticatedRequest = userId.map(AuthenticatedUser(_, "User", "test-token")),
       variables = variables,
       requestId = requestId,
@@ -105,70 +94,40 @@ case class DeployTestServer()(implicit dependencies: DeployDependencies) extends
     * Execute a Query without Checks.
     */
   def executeQuerySimpleWithAuthentication(query: String,
-                                           project: Project,
                                            authenticatedRequest: Option[AuthenticatedRequest] = None,
                                            variables: JsValue = JsObject(),
                                            requestId: String = "CombinedTestDatabase.requestId",
                                            graphcoolHeader: Option[String] = None): JsValue = {
 
-    //    val unhandledErrorLogger = errorHandlerFactory.unhandledErrorHandler(
-    //      requestId = requestId,
-    //      query = query,
-    //      projectId = Some(project.id)
-    //    )
-    //
-    //    val sangriaErrorHandler = errorHandlerFactory.sangriaHandler(
-    //      requestId = requestId,
-    //      query = query,
-    //      variables = JsObject.empty,
-    //      clientId = None,
-    //      projectId = Some(project.id)
-    //    )
-
-    //    val projectLockdownMiddleware = ProjectLockdownMiddleware(project)
     val schemaBuilder  = SchemaBuilder()(dependencies.system, dependencies)
-    val userContext    = ApiUserContext(clientId = "clientId")
-    val schema         = schemaBuilder(userContext, project, DataResolver(project), DataResolver(project))
+    val userContext    = SystemUserContext()
+    val schema         = schemaBuilder(userContext)
     val renderedSchema = SchemaRenderer.renderSchema(schema)
 
     if (printSchema) println(renderedSchema)
     if (writeSchemaToFile) writeSchemaIntoFile(renderedSchema)
 
     val queryAst = QueryParser.parse(query).get
-
-    val context = userContext
-    //      UserContext
-    //      .fetchUser(
-    //        authenticatedRequest = authenticatedRequest,
-    //        requestId = requestId,
-    //        requestIp = CombinedTestDatabase.requestIp,
-    //        clientId = CombinedTestDatabase.testClientId,
-    //        project = project,
-    //        log = x => if (logSimple) println(x),
-    //        queryAst = Some(queryAst)
-    //      )
-    //    context.addFeatureMetric(FeatureMetric.ApiSimple)
-    //    context.graphcoolHeader = graphcoolHeader
-
+    val context  = userContext
     val result = Await.result(
       Executor
         .execute(
           schema = schema,
           queryAst = queryAst,
           userContext = context,
-          variables = variables,
+          variables = variables
           //          exceptionHandler = sangriaErrorHandler,
-          deferredResolver = new DeferredResolverProvider(dataResolver = DataResolver(project))
           //          middleware = List(apiMetricMiddleware, projectLockdownMiddleware)
         )
-        .recover {
-          case error: QueryAnalysisError => error.resolveError
-          case error: ErrorWithResolver  =>
-            //            unhandledErrorLogger(error)
-            error.resolveError
-          //          case error: Throwable ⇒ unhandledErrorLogger(error)._2
-
-        },
+//        .recover {
+//          case error: QueryAnalysisError => error.resolveError
+//          case error: ErrorWithResolver  =>
+//            //            unhandledErrorLogger(error)
+//            error.resolveError
+//          //          case error: Throwable ⇒ unhandledErrorLogger(error)._2
+//
+//        },
+      ,
       Duration.Inf
     )
     println("Request Result: " + result)

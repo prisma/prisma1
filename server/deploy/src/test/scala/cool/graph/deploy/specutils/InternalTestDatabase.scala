@@ -2,13 +2,10 @@ package cool.graph.deploy.specutils
 
 import cool.graph.deploy.database.schema.InternalDatabaseSchema
 import cool.graph.utils.await.AwaitUtils
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
-import slick.dbio.DBIOAction
-import slick.jdbc.MySQLProfile.api._
 import slick.dbio.Effect.Read
+import slick.dbio.{DBIOAction, NoStream}
+import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.meta.MTable
-
-import scala.concurrent.Future
 
 class InternalTestDatabase extends AwaitUtils { //this: Suite =>
   import scala.concurrent.ExecutionContext.Implicits.global
@@ -37,6 +34,8 @@ class InternalTestDatabase extends AwaitUtils { //this: Suite =>
       metaTables <- MTable.getTables(cat = Some(projectId), schemaPattern = None, namePattern = None, types = None)
     } yield metaTables.map(table => table.name.name)
   }
+
+  def run[R](a: DBIOAction[R, NoStream, Nothing]) = internalDatabase.run(a).await()
 
   def shutdown() = {
     internalDatabaseRoot.close()

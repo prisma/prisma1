@@ -1,12 +1,11 @@
 package cool.graph.deploy.migration
 
-import cool.graph.deploy.specutils.InternalTestDatabase
+import cool.graph.deploy.specutils.DeploySpecBase
 import cool.graph.shared.models._
 import cool.graph.shared.project_dsl.SchemaDsl.SchemaBuilder
-import cool.graph.utils.await.AwaitUtils
-import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers}
+import org.scalatest.{FlatSpec, Matchers}
 
-class MigrationStepsProposerSpec extends FlatSpec with Matchers with AwaitUtils with InternalTestDatabase with BeforeAndAfterEach {
+class MigrationStepsProposerSpec extends FlatSpec with Matchers with DeploySpecBase {
 
   /**
     * Basic tests
