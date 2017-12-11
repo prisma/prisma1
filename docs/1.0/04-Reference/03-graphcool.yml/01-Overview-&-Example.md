@@ -60,7 +60,7 @@ subscriptions:
 # This service only defines one custom variable that's referenced in
 # the `webhook` of the `subscription`
 custom:
-  serverlessEndpoint: 'https://bcdeaxokbj.execute-api.eu-west-1.amazonaws.com/dev'
+  serverlessEndpoint: https://bcdeaxokbj.execute-api.eu-west-1.amazonaws.com/dev
 ```
 
 This service definition expects the following file structure:
