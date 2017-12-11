@@ -36,16 +36,19 @@ stages:
   dev: local
   prod: london-cluster
 
+# OPTIONAL (default: false)
 # Whether authentication is required for this service
 # is based on the value of the `GRAPHCOOL_DISABLE_AUTH`
 # environment variable.
 disableAuth: ${env:GRAPHCOOL_DISABLE_AUTH}
 
+# OPTIONAL
 # Path to the full GraphQL schema definition of your service.
 # Note that the schema definition is generated based on your
 # data model.
 schema: schemas/database.graphql
 
+# OPTIONAL
 # This service has one subscription configured. The corresponding subscription
 # query is located in `database/subscriptions/welcomeEmail.graphql`.
 # When the subscription fires, the specified `webhook` is invoked via HTTP.
@@ -57,6 +60,7 @@ subscriptions:
       headers:
         Authorization: ${env:MY_ENDPOINT_SECRET}
 
+# OPTIONAL
 # This service only defines one custom variable that's referenced in
 # the `webhook` of the `subscription`
 custom:
@@ -71,7 +75,7 @@ This service definition expects the following file structure:
 ├── database
 │   ├── subscriptions
 │   │   └── welcomeEmail.graphql
-│   ├── tpyes.graphql
+│   ├── types.graphql
 │   └── enums.graphql
 └── schemas
     └── database.graphql
