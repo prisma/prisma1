@@ -1,6 +1,7 @@
 package cool.graph.client.mutactions
 
 import cool.graph.DataItem
+import cool.graph.GCDataTypes.GCStringDBConverter
 import cool.graph.Types.UserData
 import cool.graph.client.ClientInjector
 import cool.graph.client.database.DatabaseMutationBuilder.MirrorFieldDbValues
@@ -27,7 +28,7 @@ object ImportExportFormat {
   case class ImportIdentifier(typeName: String, id: String)
   case class ImportRelationSide(identifier: ImportIdentifier, fieldName: String)
   case class ImportNode(identifier: ImportIdentifier, values: Map[String, Any])
-  case class ImportRelation(left: ImportRelationSide, right: ImportRelationSide) // import does not need the relationName
+  case class ImportRelation(left: ImportRelationSide, right: ImportRelationSide)
   case class ImportList(identifier: ImportIdentifier, values: Map[String, Vector[Any]])
 
   object MyJsonProtocol extends DefaultJsonProtocol {
@@ -204,6 +205,7 @@ object DataExport {
   import cool.graph.client.mutactions.ImportExportFormat._
 
   //hand down stringbuilder with max capacity already?
+  //use GCValues for the conversions?
 
   sealed trait ExportInfo {
     val cursor: Cursor
@@ -234,9 +236,9 @@ object DataExport {
     val hasNextField: Boolean                           = cursor.field < fieldLength - 1
     lazy val currentModel: Model                        = models.find(_._2 == cursor.table).get._1
     lazy val nextModel: Model                           = models.find(_._2 == cursor.table + 1).get._1
-    lazy val currentField: String                       = listFields.find(_._3 == cursor.table).get._1
-    lazy val nextField: String                          = listFields.find(_._3 == cursor.table + 1).get._1
-    lazy val currentTypeIdentifier: TypeIdentifier      = listFields.find(_._3 == cursor.table).get._2
+    lazy val currentField: String                       = listFields.find(_._3 == cursor.field).get._1
+    lazy val nextField: String                          = listFields.find(_._3 == cursor.field + 1).get._1
+    lazy val currentTypeIdentifier: TypeIdentifier      = listFields.find(_._3 == cursor.field).get._2
     def arrayPlus(increase: Int): ListInfo              = this.copy(cursor = this.cursor.copy(array = this.cursor.array + increase))
     def cursorAtNextField: ListInfo                     = this.copy(cursor = this.cursor.copy(field = this.cursor.field + 1, array = 0))
 
@@ -248,18 +250,17 @@ object DataExport {
     lazy val nextRelation: RelationData = relations.find(_._2 == cursor.table + 1).get._1
   }
 
-  def isLimitReached(str: String): Boolean = str.length > 100 // only for testing purposes variable in here
+  def isLimitReached(str: String): Boolean = str.length > 10000000 // only for testing purposes variable in here
 
   def executeExport(project: Project, dataResolver: DataResolver, json: JsValue): Future[ResultFormat] = {
     import MyJsonProtocol._
     import scala.concurrent.ExecutionContext.Implicits.global
 
-    val request = json.convertTo[ExportRequest]
-    val result: Future[ResultFormat] = request.fileType match {
-      case "nodes" => resForCursor(in = "", NodeInfo(dataResolver, project.models.zipWithIndex, request.cursor))
-      case "lists" =>
-        resForCursor(in = "", ListInfo(dataResolver, project.models.filter(m => m.scalarFields.exists(f => f.isList)).zipWithIndex, request.cursor)) // there are fields in here without list fields???
-      case "relations" => resForCursor(in = "", RelationInfo(dataResolver, project.relations.map(r => toRelationData(r, project)).zipWithIndex, request.cursor))
+    val req = json.convertTo[ExportRequest]
+    val result: Future[ResultFormat] = req.fileType match {
+      case "nodes"     => resForCursor(in = "", NodeInfo(dataResolver, project.models.zipWithIndex, req.cursor))
+      case "lists"     => resForCursor(in = "", ListInfo(dataResolver, project.models.filter(m => m.scalarFields.exists(f => f.isList)).zipWithIndex, req.cursor))
+      case "relations" => resForCursor(in = "", RelationInfo(dataResolver, project.relations.map(r => toRelationData(r, project)).zipWithIndex, req.cursor))
     }
 
     result.map(res => res.copy(out = "[" + res.out + "]"))
@@ -297,7 +298,7 @@ object DataExport {
     import scala.concurrent.ExecutionContext.Implicits.global
 
     val queryArguments = QueryArguments(skip = Some(info.cursor.row), after = None, first = Some(1000), None, None, None, None)
-    for {
+    val res: Future[DataItemsPage] = for {
       result <- info match {
                  case x: NodeInfo     => x.dataResolver.loadModelRowsForExport(x.current, Some(queryArguments))
                  case x: ListInfo     => x.dataResolver.loadModelRowsForExport(x.currentModel, Some(queryArguments)) //own select only for list fields?
@@ -306,6 +307,22 @@ object DataExport {
     } yield {
       DataItemsPage(result.items, hasMore = result.hasNextPage)
     }
+    res.map { page =>
+      info match {
+        case info: ListInfo => filterDataItemsPageForLists(page, info)
+        case _              => page
+      }
+    }
+  }
+
+  def filterDataItemsPageForLists(in: DataItemsPage, info: ListInfo): DataItemsPage = {
+    val items: Seq[DataItem] = in.items
+
+    val itemsWithoutEmptyListsAndNonListFields =
+      items.map(item => item.copy(userData = item.userData.collect { case (k, v) if info.listFields.map(_._1).contains(k) && !v.contains("[]") => (k, v) }))
+
+    val res = itemsWithoutEmptyListsAndNonListFields.filter(item => item.userData != Map.empty)
+    in.copy(items = res)
   }
 
   def serializePage(in: String, page: DataItemsPage, info: ExportInfo, startOnPage: Int = 0, amount: Int = 1000): ResultFormat = {
@@ -345,7 +362,9 @@ object DataExport {
           case true  => ResultFormat(in, info.cursor, isFull = true)
           case false => ResultFormat(out, info.cursor.copy(row = info.cursor.row + numberSerialized), isFull = false)
         }
-      case info: ListInfo => dataItemsForLists(in, dataItems, info)
+
+      case info: ListInfo =>
+        dataItemsForLists(in, dataItems, info)
     }
   }
 
@@ -381,8 +400,7 @@ object DataExport {
 
     val convertedListFieldsWithValues = listFieldsWithValues.map {
       case (k, v) =>
-        val any = parseValueFromString(v.toString, info.currentTypeIdentifier, isList = true)
-
+        val any = parseValueFromString(v.toString, info.listFields.find(_._1 == k).get._2, isList = true)
         val vector = any match {
           case Some(Some(x)) => x.asInstanceOf[Vector[Any]]
           case _             => Vector.empty
@@ -410,16 +428,16 @@ object DataExport {
     import MyJsonProtocol._
     import spray.json._
 
-    val values                = arrayValues.slice(info.cursor.array, info.cursor.array + amount)
-    val nodeValue: ImportList = ImportList(identifier = identifier, values = Map(info.currentField -> values))
-    val string                = nodeValue.toJson.toString
-    val out                   = if (in.nonEmpty) in + "," + string else string
-    val numberSerialized      = values.length
-    val noneLeft              = info.cursor.array + amount >= arrayValues.length
+    val values                   = arrayValues.slice(info.cursor.array, info.cursor.array + amount)
+    val result: Map[String, Any] = Map("_typeName" -> identifier.typeName, "id" -> identifier.id, info.currentField -> values)
+    val string                   = result.toJson.toString
+    val out                      = if (in.nonEmpty) in + "," + string else string
+    val numberSerialized         = values.length
+    val noneLeft                 = info.cursor.array + amount >= arrayValues.length
 
     isLimitReached(out) match {
       case true if amount == 1 => ResultFormat(in, info.cursor, isFull = true)
-      case false if noneLeft   => ResultFormat(out, info.cursor.copy(array = -5), isFull = false)
+      case false if noneLeft   => ResultFormat(out, info.cursor.copy(array = 0), isFull = false)
       case false               => serializeArray(out, identifier, arrayValues, info.arrayPlus(numberSerialized), amount)
       case true                => serializeArray(in, identifier, arrayValues, info, amount / 10)
     }

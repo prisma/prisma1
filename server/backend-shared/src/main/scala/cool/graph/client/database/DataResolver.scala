@@ -44,6 +44,7 @@ abstract class DataResolver(val project: Project, val requestContext: Option[Req
   }
   def resolveByModel(model: Model, args: Option[QueryArguments] = None): Future[ResolverResult]
   def loadModelRowsForExport(model: Model, args: Option[QueryArguments] = None): Future[ResolverResult]
+
   def loadRelationRowsForExport(relationId: String, args: Option[QueryArguments] = None): Future[ResolverResult]
 
   def countByModel(model: Model, args: Option[QueryArguments] = None): Future[Int]
