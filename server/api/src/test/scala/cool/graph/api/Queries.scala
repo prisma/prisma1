@@ -42,7 +42,20 @@ class Queries extends FlatSpec with Matchers with ApiBaseSpec {
     // MUTATIONS
 
     server
-      .executeQuerySimple("""mutation { createCar(data: {wheelCount: 7, name: "Sleven", wheels: [{size: 20}, {size: 19}]}){wheels{size}} }""", project)
+      .executeQuerySimple(
+        """mutation { 
+          |   createCar(data: {
+          |     wheelCount: 7, 
+          |     name: "Sleven", 
+          |     wheels: { 
+          |       create: [{size: 20}, {size: 19}]
+          |     }
+          |   }){
+          |     wheels { size } 
+          |     } 
+          |}""".stripMargin,
+        project
+      )
       .pathAsLong("data.createCar.wheels.[0].size") should be(20)
 
     // QUERIES
