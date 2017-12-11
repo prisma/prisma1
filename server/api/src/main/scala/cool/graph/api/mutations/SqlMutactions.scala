@@ -46,14 +46,14 @@ case class SqlMutactions(dataResolver: DataResolver) {
                              parentInfo: Option[ParentInfo] = None,
                              requestId: String): CreateMutactionsResult = {
 
-    val createMutaction      = getCreateMutaction(project, model, args, id, requestId)
-    val forFlatManyRelations = getAddToRelationMutactionsForIdListsForCreate(project, model, args, fromId = createMutaction.id)
-    val forFlatOneRelation   = getAddToRelationMutactionsForIdFieldsForCreate(project, model, args, fromId = createMutaction.id)
-    val forComplexRelations  = getComplexMutactions(project, model, args, fromId = createMutaction.id, requestId = requestId)
-
+    val createMutaction = getCreateMutaction(project, model, args, id, requestId)
     val relationToParent = parentInfo.map { parent =>
       AddDataItemToManyRelation(project = project, fromModel = parent.model, fromField = parent.field, fromId = parent.id, toId = id, toIdAlreadyInDB = false)
     }
+
+    val forFlatManyRelations = getAddToRelationMutactionsForIdListsForCreate(project, model, args, fromId = createMutaction.id)
+    val forFlatOneRelation   = getAddToRelationMutactionsForIdFieldsForCreate(project, model, args, fromId = createMutaction.id)
+    val forComplexRelations  = getComplexMutactions(project, model, args, fromId = createMutaction.id, requestId = requestId)
 
     val requiredOneRelationFields = model.relationFields.filter(f => f.isRequired && !f.isList)
     val requiredRelationViolations = requiredOneRelationFields
@@ -83,17 +83,16 @@ case class SqlMutactions(dataResolver: DataResolver) {
       field      <- model.scalarFields
       fieldValue <- args.getFieldValueAs[Any](field)
     } yield {
-      ArgumentValue(field.name, fieldValue, field)
+      if (field.isRequired && field.defaultValue.isDefined && fieldValue.isEmpty) {
+        throw APIErrors.InputInvalid("null", field.name, model.name)
+      }
+      ArgumentValue(field.name, fieldValue)
     }
-
-    def checkNullInputOnRequiredFieldWithDefaultValue(x: ArgumentValue) =
-      if (x.field.get.isRequired && x.value == None && x.field.get.defaultValue.isDefined) throw APIErrors.InputInvalid("null", x.name, model.name)
-    scalarArguments.foreach(checkNullInputOnRequiredFieldWithDefaultValue)
 
     CreateDataItem(
       project = project,
       model = model,
-      values = scalarArguments :+ ArgumentValue("id", id, model.getFieldByName("id")),
+      values = scalarArguments :+ ArgumentValue("id", id),
       requestId = Some(requestId),
       originalArgs = Some(args)
     )
@@ -104,7 +103,7 @@ case class SqlMutactions(dataResolver: DataResolver) {
       field      <- model.scalarFields.filter(_.name != "id")
       fieldValue <- args.getFieldValueAs[Any](field)
     } yield {
-      ArgumentValue(field.name, fieldValue, field)
+      ArgumentValue(field.name, fieldValue)
     }
     if (scalarArguments.nonEmpty) {
       Some(

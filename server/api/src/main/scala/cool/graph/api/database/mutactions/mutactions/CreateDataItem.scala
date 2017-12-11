@@ -47,7 +47,7 @@ case class CreateDataItem(
 
   override def execute: Future[ClientSqlStatementResult[Any]] = {
     val relayIds          = TableQuery(new ProjectRelayIdTable(_, project.id))
-    val valuesIncludingId = jsonCheckedValues :+ ArgumentValue("id", id, model.getFieldByName_!("id"))
+    val valuesIncludingId = jsonCheckedValues :+ ArgumentValue("id", id)
 
     Future.successful(
       ClientSqlStatementResult(

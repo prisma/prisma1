@@ -321,7 +321,7 @@ object SchemaArgument {
           case v             => v
         }
         val argName = a.field.map(_.name).getOrElse(a.name)
-        ArgumentValue(argName, value, a.field)
+        ArgumentValue(argName, value)
       }
   }
 }
