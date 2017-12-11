@@ -165,7 +165,7 @@ Specifying `schema` is optional. If not set, the CLI will not generate and store
 
 The `schema` property expects a **string**.
 
-### Example
+#### Example
 
 Store the database schema in the root directory of the service and call it `database.graphql`.
 
