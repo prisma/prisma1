@@ -42,12 +42,11 @@ case class SqlMutactions(dataResolver: DataResolver) {
   def getMutactionsForCreate(project: Project,
                              model: Model,
                              args: CoolArgs,
-                             allowSettingManagedFields: Boolean,
                              id: Id = createCuid(),
                              parentInfo: Option[ParentInfo] = None,
                              requestId: String): CreateMutactionsResult = {
 
-    val createMutaction      = getCreateMutaction(project, model, args, id, allowSettingManagedFields, requestId)
+    val createMutaction      = getCreateMutaction(project, model, args, id, requestId)
     val forFlatManyRelations = getAddToRelationMutactionsForIdListsForCreate(project, model, args, fromId = createMutaction.id)
     val forFlatOneRelation   = getAddToRelationMutactionsForIdFieldsForCreate(project, model, args, fromId = createMutaction.id)
     val forComplexRelations  = getComplexMutactions(project, model, args, fromId = createMutaction.id, requestId = requestId)
@@ -79,7 +78,7 @@ case class SqlMutactions(dataResolver: DataResolver) {
     result
   }
 
-  def getCreateMutaction(project: Project, model: Model, args: CoolArgs, id: Id, allowSettingManagedFields: Boolean, requestId: String): CreateDataItem = {
+  def getCreateMutaction(project: Project, model: Model, args: CoolArgs, id: Id, requestId: String): CreateDataItem = {
     val scalarArguments = for {
       field      <- model.scalarFields
       fieldValue <- args.getFieldValueAs[Any](field)
@@ -89,13 +88,12 @@ case class SqlMutactions(dataResolver: DataResolver) {
 
     def checkNullInputOnRequiredFieldWithDefaultValue(x: ArgumentValue) =
       if (x.field.get.isRequired && x.value == None && x.field.get.defaultValue.isDefined) throw APIErrors.InputInvalid("null", x.name, model.name)
-    scalarArguments.map(checkNullInputOnRequiredFieldWithDefaultValue)
+    scalarArguments.foreach(checkNullInputOnRequiredFieldWithDefaultValue)
 
     CreateDataItem(
       project = project,
       model = model,
       values = scalarArguments :+ ArgumentValue("id", id, model.getFieldByName("id")),
-      allowSettingManagedFields = allowSettingManagedFields,
       requestId = Some(requestId),
       originalArgs = Some(args)
     )

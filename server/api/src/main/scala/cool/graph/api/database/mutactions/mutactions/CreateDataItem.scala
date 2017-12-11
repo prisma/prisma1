@@ -3,8 +3,8 @@ package cool.graph.api.database.mutactions.mutactions
 import java.sql.SQLIntegrityConstraintViolationException
 
 import cool.graph.api.database.mutactions.validation.InputValueValidation
-import cool.graph.api.database.{DataResolver, DatabaseMutationBuilder, ProjectRelayId, ProjectRelayIdTable}
 import cool.graph.api.database.mutactions.{ClientSqlDataChangeMutaction, ClientSqlStatementResult, GetFieldFromSQLUniqueException, MutactionVerificationSuccess}
+import cool.graph.api.database.{DataResolver, DatabaseMutationBuilder, ProjectRelayId, ProjectRelayIdTable}
 import cool.graph.api.mutations.CoolArgs
 import cool.graph.api.mutations.MutationTypes.{ArgumentValue, ArgumentValueList}
 import cool.graph.api.schema.APIErrors
@@ -12,7 +12,6 @@ import cool.graph.shared.models.IdType.Id
 import cool.graph.shared.models._
 import cool.graph.util.gc_value.GCDBValueConverter
 import cool.graph.util.json.JsonFormats
-import scaldi.{Injectable, Injector}
 import slick.jdbc.MySQLProfile.api._
 import slick.lifted.TableQuery
 
@@ -24,7 +23,6 @@ case class CreateDataItem(
     project: Project,
     model: Model,
     values: List[ArgumentValue],
-    allowSettingManagedFields: Boolean = false,
     requestId: Option[String] = None,
     originalArgs: Option[CoolArgs] = None
 ) extends ClientSqlDataChangeMutaction {

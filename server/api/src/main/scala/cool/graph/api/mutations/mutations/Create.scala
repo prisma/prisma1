@@ -13,13 +13,11 @@ import cool.graph.cuid.Cuid
 import cool.graph.shared.models.IdType.Id
 import cool.graph.shared.models._
 import sangria.schema
-import scaldi.{Injectable, Injector}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class Create(model: Model, project: Project, args: schema.Args, dataResolver: DataResolver, allowSettingManagedFields: Boolean = false)(
-    implicit apiDependencies: ApiDependencies)
+class Create(model: Model, project: Project, args: schema.Args, dataResolver: DataResolver)(implicit apiDependencies: ApiDependencies)
     extends ClientMutation(model, args, dataResolver) {
 
   implicit val system: ActorSystem             = apiDependencies.system
@@ -36,12 +34,12 @@ class Create(model: Model, project: Project, args: schema.Args, dataResolver: Da
       case None        => args.raw
     }
 
-    CoolArgs(argsPointer, model, project)
+    CoolArgs(argsPointer)
   }
 
   def prepareMutactions(): Future[List[MutactionGroup]] = {
     val createMutactionsResult =
-      SqlMutactions(dataResolver).getMutactionsForCreate(project, model, coolArgs, allowSettingManagedFields, id, requestId = requestId)
+      SqlMutactions(dataResolver).getMutactionsForCreate(project, model, coolArgs, id, requestId = requestId)
 
     val transactionMutaction = Transaction(createMutactionsResult.allMutactions, dataResolver)
     val createMutactions     = createMutactionsResult.allMutactions.collect { case x: CreateDataItem => x }
