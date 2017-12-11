@@ -22,13 +22,14 @@ object ImportExportFormat {
 
   case class ExportRequest(fileType: String, cursor: Cursor)      //{"fileType":"nodes","cursor":{"table":INT,"row":INT,"field":INT,"array":INT}}
   case class Cursor(table: Int, row: Int, field: Int, array: Int) //{"table":INT,"row":INT,"field":INT,"array":INT}
-  case class ResultFormat(out: String, cursor: Cursor, isFull: Boolean)
+  case class ResultFormat(out: JsonBundle, cursor: Cursor, isFull: Boolean)
   case class ImportBundle(valueType: String, values: JsArray)
   case class ImportIdentifier(typeName: String, id: String)
   case class ImportRelationSide(identifier: ImportIdentifier, fieldName: String)
   case class ImportNode(identifier: ImportIdentifier, values: Map[String, Any])
   case class ImportRelation(left: ImportRelationSide, right: ImportRelationSide)
   case class ImportList(identifier: ImportIdentifier, values: Map[String, Vector[Any]])
+  case class JsonBundle(jsonElements: Vector[JsValue], size: Int)
 
   object MyJsonProtocol extends DefaultJsonProtocol {
 
@@ -64,6 +65,7 @@ object ImportExportFormat {
       }
     }
 
+    implicit val jsonBundle: RootJsonFormat[JsonBundle]                 = jsonFormat2(JsonBundle)
     implicit val importBundle: RootJsonFormat[ImportBundle]             = jsonFormat2(ImportBundle)
     implicit val importIdentifier: RootJsonFormat[ImportIdentifier]     = jsonFormat2(ImportIdentifier)
     implicit val importRelationSide: RootJsonFormat[ImportRelationSide] = jsonFormat2(ImportRelationSide)
@@ -110,8 +112,9 @@ object DataImport {
     ImportRelation(left, right)
   }
 
-  def executeImport(project: Project, json: JsValue)(implicit injector: ClientInjector): Future[Vector[String]] = {
+  def executeImport(project: Project, json: JsValue)(implicit injector: ClientInjector): Future[JsValue] = {
     import MyJsonProtocol._
+    import spray.json._
 
     import scala.concurrent.ExecutionContext.Implicits.global
     val bundle = json.convertTo[ImportBundle]
@@ -126,11 +129,13 @@ object DataImport {
     val res: Future[Vector[Try[Int]]]                       = runDBActions(project, actions)
     def messageWithOutConnection(tryelem: Try[Any]): String = tryelem.failed.get.getMessage.substring(tryelem.failed.get.getMessage.indexOf(")") + 1)
 
-    res.map(vector =>
-      vector.zipWithIndex.collect {
-        case (elem, idx) if elem.isFailure && idx < cnt  => s"Index: $idx Message: ${messageWithOutConnection(elem)}"
-        case (elem, idx) if elem.isFailure && idx >= cnt => s"Index: ${idx - cnt} Message: Relay Id Failure ${messageWithOutConnection(elem)}"
-    })
+    res
+      .map(vector =>
+        vector.zipWithIndex.collect {
+          case (elem, idx) if elem.isFailure && idx < cnt  => Map("index" -> idx, "message"         -> messageWithOutConnection(elem)).toJson
+          case (elem, idx) if elem.isFailure && idx >= cnt => Map("index" -> (idx - cnt), "message" -> messageWithOutConnection(elem)).toJson
+      })
+      .map(x => JsArray(x))
   }
 
   def generateImportNodesDBActions(project: Project, nodes: Vector[ImportNode]): DBIOAction[Vector[Try[Int]], NoStream, Effect.Write] = {
@@ -203,10 +208,9 @@ object DataImport {
 object DataExport {
   import cool.graph.client.mutactions.ImportExportFormat._
 
-  //use json all the way up
   //use GCValues for the conversions?
 
-  case class JsonBundle(jsonArray: JsArray, size: Int)
+  def isLimitReached(bundle: JsonBundle): Boolean = bundle.size > 1000 // only for testing purposes variable in here
 
   sealed trait ExportInfo {
     val cursor: Cursor
@@ -229,6 +233,7 @@ object DataExport {
     lazy val current: Model   = models.find(_._2 == cursor.table).get._1
     lazy val nextModel: Model = models.find(_._2 == cursor.table + 1).get._1
   }
+
   case class ListInfo(dataResolver: DataResolver, models: List[(Model, Int)], cursor: Cursor) extends ExportInfo {
     val length: Int                                     = models.length
     val listFields: List[(String, TypeIdentifier, Int)] = currentModel.scalarListFields.zipWithIndex.map { case (f, i) => (f.name, f.typeIdentifier, i) }
@@ -242,8 +247,8 @@ object DataExport {
     lazy val currentTypeIdentifier: TypeIdentifier      = listFields.find(_._3 == cursor.field).get._2
     def arrayPlus(increase: Int): ListInfo              = this.copy(cursor = this.cursor.copy(array = this.cursor.array + increase))
     def cursorAtNextField: ListInfo                     = this.copy(cursor = this.cursor.copy(field = this.cursor.field + 1, array = 0))
-
   }
+
   case class RelationInfo(dataResolver: DataResolver, relations: List[(RelationData, Int)], cursor: Cursor) extends ExportInfo {
     val length: Int                     = relations.length
     val hasNext: Boolean                = cursor.table < length - 1
@@ -251,24 +256,26 @@ object DataExport {
     lazy val nextRelation: RelationData = relations.find(_._2 == cursor.table + 1).get._1
   }
 
-  def isLimitReached(str: String): Boolean = str.length > 10000000 // only for testing purposes variable in here
-
-  def executeExport(project: Project, dataResolver: DataResolver, json: JsValue): Future[ResultFormat] = {
+  def executeExport(project: Project, dataResolver: DataResolver, json: JsValue): Future[JsValue] = {
+    import scala.concurrent.ExecutionContext.Implicits.global
+    import spray.json._
     import MyJsonProtocol._
 
-    import scala.concurrent.ExecutionContext.Implicits.global
-
-    val req = json.convertTo[ExportRequest]
-    val result: Future[ResultFormat] = req.fileType match {
-      case "nodes"     => resForCursor(in = "", NodeInfo(dataResolver, project.models.zipWithIndex, req.cursor))
-      case "lists"     => resForCursor(in = "", ListInfo(dataResolver, project.models.filter(m => m.scalarFields.exists(f => f.isList)).zipWithIndex, req.cursor))
-      case "relations" => resForCursor(in = "", RelationInfo(dataResolver, project.relations.map(r => toRelationData(r, project)).zipWithIndex, req.cursor))
+    val start   = JsonBundle(Vector.empty, 0)
+    val request = json.convertTo[ExportRequest]
+    val response = request.fileType match {
+      case "nodes"     => resForCursor(start, NodeInfo(dataResolver, project.models.zipWithIndex, request.cursor))
+      case "lists"     => resForCursor(start, ListInfo(dataResolver, project.models.filter(m => m.scalarFields.exists(f => f.isList)).zipWithIndex, request.cursor))
+      case "relations" => resForCursor(start, RelationInfo(dataResolver, project.relations.map(r => toRelationData(r, project)).zipWithIndex, request.cursor))
     }
+    response.map { x =>
+      println(x.toJson)
+      x.toJson
 
-    result.map(res => res.copy(out = "[" + res.out + "]"))
+    }
   }
 
-  def resForCursor(in: String, info: ExportInfo): Future[ResultFormat] = {
+  def resForCursor(in: JsonBundle, info: ExportInfo): Future[ResultFormat] = {
     import scala.concurrent.ExecutionContext.Implicits.global
 
     for {
@@ -281,7 +288,7 @@ object DataExport {
     } yield x
   }
 
-  def resultForTable(in: String, info: ExportInfo): Future[ResultFormat] = {
+  def resultForTable(in: JsonBundle, info: ExportInfo): Future[ResultFormat] = {
     import scala.concurrent.ExecutionContext.Implicits.global
     fetchDataItemsPage(info).flatMap { page =>
       val result = serializePage(in, page, info)
@@ -326,8 +333,8 @@ object DataExport {
     in.copy(items = res)
   }
 
-  def serializePage(in: String, page: DataItemsPage, info: ExportInfo, startOnPage: Int = 0, amount: Int = 1000): ResultFormat = {
-    //we are wasting some serialization efforts here when we convert stuff again upon backtracking
+  def serializePage(in: JsonBundle, page: DataItemsPage, info: ExportInfo, startOnPage: Int = 0, amount: Int = 1000): ResultFormat = {
+    //we are wasting some serialization efforts here when we convert stuff again after backtracking
 
     val dataItems = page.items.slice(startOnPage, startOnPage + amount)
     val result    = serializeDataItems(in, dataItems, info)
@@ -341,12 +348,16 @@ object DataExport {
     }
   }
 
-  def serializeDataItems(in: String, dataItems: Seq[DataItem], info: ExportInfo): ResultFormat = {
+  def serializeDataItems(in: JsonBundle, dataItems: Seq[DataItem], info: ExportInfo): ResultFormat = {
 
     info match {
       case info: NodeInfo =>
-        val string           = dataItems.map(item => dataItemToExportNode(item, info)).mkString(",")
-        val out              = if (in.nonEmpty) in + "," + string else string
+        val bundles          = dataItems.map(item => dataItemToExportNode(item, info))
+        val combinedElements = in.jsonElements ++ bundles.flatMap(_.jsonElements).toVector
+        val combinedSize = bundles.map(_.size).fold(in.size) { (a, b) =>
+          a + b
+        }
+        val out              = JsonBundle(combinedElements, combinedSize)
         val numberSerialized = dataItems.length
 
         isLimitReached(out) match {
@@ -355,8 +366,12 @@ object DataExport {
         }
 
       case info: RelationInfo =>
-        val string           = dataItems.map(item => dataItemToExportRelation(item, info)).mkString(",")
-        val out              = if (in.nonEmpty) in + "," + string else string
+        val bundles          = dataItems.map(item => dataItemToExportRelation(item, info))
+        val combinedElements = in.jsonElements ++ bundles.flatMap(_.jsonElements).toVector
+        val combinedSize = bundles.map(_.size).fold(in.size) { (a, b) =>
+          a + b
+        }
+        val out              = JsonBundle(combinedElements, combinedSize)
         val numberSerialized = dataItems.length
 
         isLimitReached(out) match {
@@ -369,7 +384,7 @@ object DataExport {
     }
   }
 
-  def dataItemsForLists(in: String, items: Seq[DataItem], info: ListInfo): ResultFormat = {
+  def dataItemsForLists(in: JsonBundle, items: Seq[DataItem], info: ListInfo): ResultFormat = {
     if (items.isEmpty) {
       ResultFormat(in, info.cursor, isFull = false)
     } else {
@@ -381,7 +396,7 @@ object DataExport {
     }
   }
 
-  def dataItemToExportNode(item: DataItem, info: NodeInfo): String = {
+  def dataItemToExportNode(item: DataItem, info: NodeInfo): JsonBundle = {
     import MyJsonProtocol._
     import spray.json._
 
@@ -392,11 +407,11 @@ object DataExport {
     val outputMap: Map[String, Any]                     = nonListFieldsWithValues ++ createdAtUpdatedAtMap
     val result: Map[String, Any]                        = Map("_typeName" -> info.current.name, "id" -> item.id) ++ outputMap
 
-    result.toJson.toString
-
+    val json = result.toJson
+    JsonBundle(jsonElements = Vector(json), size = json.toString.length)
   }
 
-  def dataItemToExportList(in: String, item: DataItem, info: ListInfo): ResultFormat = {
+  def dataItemToExportList(in: JsonBundle, item: DataItem, info: ListInfo): ResultFormat = {
     import cool.graph.shared.schema.CustomScalarTypes.parseValueFromString
     val listFieldsWithValues: Map[String, Any] = item.userData.collect { case (k, Some(v)) if info.listFields.map(p => p._1).contains(k) => (k, v) }
 
@@ -415,7 +430,7 @@ object DataExport {
     nodeResults
   }
 
-  def serializeFields(in: String, identifier: ImportIdentifier, fieldValues: Map[String, Vector[Any]], info: ListInfo): ResultFormat = {
+  def serializeFields(in: JsonBundle, identifier: ImportIdentifier, fieldValues: Map[String, Vector[Any]], info: ListInfo): ResultFormat = {
     val result = serializeArray(in, identifier, fieldValues(info.currentField), info)
 
     result.isFull match {
@@ -425,15 +440,17 @@ object DataExport {
     }
   }
 
-  //this should have the ability to scale up again, but doing it within one field probably adds too much complexity for now
-  def serializeArray(in: String, identifier: ImportIdentifier, arrayValues: Vector[Any], info: ListInfo, amount: Int = 1000000): ResultFormat = {
+//  this should have the ability to scale up again, but doing it within one field probably adds too much complexity for now
+  def serializeArray(in: JsonBundle, identifier: ImportIdentifier, arrayValues: Vector[Any], info: ListInfo, amount: Int = 1000000): ResultFormat = {
     import MyJsonProtocol._
     import spray.json._
 
     val values                   = arrayValues.slice(info.cursor.array, info.cursor.array + amount)
     val result: Map[String, Any] = Map("_typeName" -> identifier.typeName, "id" -> identifier.id, info.currentField -> values)
-    val string                   = result.toJson.toString
-    val out                      = if (in.nonEmpty) in + "," + string else string
+    val json                     = result.toJson
+    val combinedElements         = in.jsonElements :+ json
+    val combinedSize             = in.size + json.toString.length
+    val out                      = JsonBundle(combinedElements, combinedSize)
     val numberSerialized         = values.length
     val noneLeft                 = info.cursor.array + amount >= arrayValues.length
 
@@ -450,7 +467,7 @@ object DataExport {
     RelationData(r.id, r.getModelB_!(project).name, r.getModelBField_!(project).name, r.getModelA_!(project).name, r.getModelAField_!(project).name)
   }
 
-  def dataItemToExportRelation(item: DataItem, info: RelationInfo): String = {
+  def dataItemToExportRelation(item: DataItem, info: RelationInfo): JsonBundle = {
     import MyJsonProtocol._
     import spray.json._
     val idA      = item.userData("A").get.toString
@@ -458,7 +475,8 @@ object DataExport {
     val leftMap  = Map("_typeName" -> info.current.leftModel, "id" -> idB, "fieldName" -> info.current.leftField)
     val rightMap = Map("_typeName" -> info.current.rightModel, "id" -> idA, "fieldName" -> info.current.rightField)
 
-    JsArray(leftMap.toJson, rightMap.toJson).toString
+    val json = JsArray(leftMap.toJson, rightMap.toJson)
+    JsonBundle(jsonElements = Vector(json), size = json.toString.length)
   }
 }
 
@@ -467,7 +485,7 @@ object teststuff {
   def readFile(fileName: String): JsValue = {
     import spray.json._
     val json_string = scala.io.Source
-      .fromFile(s"/Users/matthias/repos/github.com/graphcool/closed-source/integration-testing/src/test/scala/cool/graph/importData/$fileName")
+      .fromFile(s"/Users/matthias/repos/github.com/graphcool/closed-source/integration-testing/src/test/scala/cool/graph/bulkimportandexport/$fileName")
       .getLines
       .mkString
     json_string.parseJson

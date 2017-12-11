@@ -90,16 +90,16 @@ case class RequestHandler(
       if (!auth.exists(_.isAdmin)) throw InsufficientPermissions("Insufficient permissions for bulk import")
 
     import cool.graph.client.mutactions.DataImport._
-    val graphQlRequestFuture: Future[Future[Vector[String]]] = for {
+    val graphQlRequestFuture: Future[Future[JsValue]] = for {
       projectWithClientId  <- fetchProject(projectId)
       authenticatedRequest <- getAuthContext(projectWithClientId, rawRequest.authorizationHeader)
       _                    = checkForAdmin(authenticatedRequest)
       res                  = executeImport(projectWithClientId.project, rawRequest.json)
     } yield res
 
-    val response: Future[Vector[String]] = graphQlRequestFuture.flatMap(identity)
+    val response: Future[JsValue] = graphQlRequestFuture.flatMap(identity)
 
-    response.map(x => (200, JsString("Failures: " + x.mkString(","))))
+    response.map(x => (200, x))
   }
 
   def handleRawRequestForExport(projectId: String, rawRequest: RawRequest): Future[(StatusCode, JsValue)] = {
@@ -107,19 +107,18 @@ case class RequestHandler(
       if (!auth.exists(_.isAdmin)) throw InsufficientPermissions("Insufficient permissions for bulk export")
 
     import cool.graph.client.mutactions.DataExport._
-    val graphQlRequestFuture: Future[Future[ImportExportFormat.ResultFormat]] = for {
+    val graphQlRequestFuture: Future[Future[JsValue]] = for {
       projectWithClientId  <- fetchProject(projectId)
       authenticatedRequest <- getAuthContext(projectWithClientId, rawRequest.authorizationHeader)
       _                    = checkForAdmin(authenticatedRequest)
       resolver             = new ProjectDataresolver(project = projectWithClientId.project, requestContext = None)
       res                  = executeExport(projectWithClientId.project, resolver, rawRequest.json)
     } yield res
-    import MyJsonProtocol._
     import spray.json._
 
-    val response: Future[ResultFormat] = graphQlRequestFuture.flatMap(identity)
+    val response: Future[JsValue] = graphQlRequestFuture.flatMap(identity)
 
-    response.map(x => (200, Map("out" -> x.out.toJson, "cursor" -> x.cursor.toJson, "isFull" -> x.isFull).toJson))
+    response.map(x => (200, x))
   }
 
   def handleRawRequestForProjectSchema(
