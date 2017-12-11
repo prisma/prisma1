@@ -14,11 +14,12 @@ class Queries extends FlatSpec with Matchers with ApiBaseSpec {
 
     // MUTATIONS
 
-    val newId = server.executeQuerySimple("""mutation { createCar(wheelCount: 7, name: "Sleven"){id} }""", project).pathAsString("data.createCar.id")
+    val newId = server.executeQuerySimple("""mutation { createCar(data: {wheelCount: 7, name: "Sleven"}){id} }""", project).pathAsString("data.createCar.id")
     server
       .executeQuerySimple(s"""mutation { updateCar(by: {id: "${newId}"} wheelCount: 8){wheelCount} }""", project)
       .pathAsLong("data.updateCar.wheelCount") should be(8)
-    val idToDelete = server.executeQuerySimple("""mutation { createCar(wheelCount: 7, name: "Sleven"){id} }""", project).pathAsString("data.createCar.id")
+    val idToDelete =
+      server.executeQuerySimple("""mutation { createCar(data: {wheelCount: 7, name: "Sleven"}){id} }""", project).pathAsString("data.createCar.id")
     server.executeQuerySimple(s"""mutation { deleteCar(by: {id: "${idToDelete}"}){wheelCount} }""", project).pathAsLong("data.deleteCar.wheelCount") should be(
       7)
 
@@ -41,7 +42,7 @@ class Queries extends FlatSpec with Matchers with ApiBaseSpec {
     // MUTATIONS
 
     server
-      .executeQuerySimple("""mutation { createCar(wheelCount: 7, name: "Sleven", wheels: [{size: 20}, {size: 19}]){wheels{size}} }""", project)
+      .executeQuerySimple("""mutation { createCar(data: {wheelCount: 7, name: "Sleven", wheels: [{size: 20}, {size: 19}]}){wheels{size}} }""", project)
       .pathAsLong("data.createCar.wheels.[0].size") should be(20)
 
     // QUERIES
