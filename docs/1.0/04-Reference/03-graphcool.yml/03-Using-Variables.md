@@ -9,16 +9,16 @@ Variables allow you to dynamically replace configuration values in your service 
 
 > Variables are especially useful when providing _secrets_ for your service and when you have a multi-staging developer workflow.
 
-To use variables inside `graphcool.yml`, you need to reference the values enclosed in `${}` brackets:
+To use variables inside `graphcool.yml`, you need to reference the values enclosed in `${}` brackets. Inside the brackes, you first need to specify the _variable source_ and the _variable name_, separated by a colon.
 
 ```yml
 # graphcool.yml file
-yamlKeyXYZ: ${myVariable} # see list of current variable sources below
+yamlKeyXYZ: ${src:myVariable} # see list of current variable sources below
 # this is an example of providing a default value as the second parameter
-otherYamlKey: ${myVariable, defaultValue}
+otherYamlKey: ${src:myVariable, defaultValue}
 ```
 
-A _variable source_ can be either of the following two options:
+A _variable source_ can be either of the following three options:
 
 - A _recursive self-reference_ to another value inside the same service
 - An _environment variable_
@@ -40,21 +40,23 @@ When using a recursive self-reference as a variable, the value that you put into
 In the following example, the `createCRMEntry` function uses the same subscription query as the `sendWelcomeEmail` function:
 
 ```yml
-functions:
+subscriptions:
   sendWelcomeEmail:
-    handler:
-      code:
-        src: ./src/sendWelcomeEmail.js
-    type: subscription
-    query: ./src/newUserSubscription.graphql
+    query: database/subscriptions/createUserSubscription.graphql
+    webhook:
+      url: ${self.custom.severlessEndpoint}/sendWelcomeEmail
+      headers: ${self.custom.headers}
   createCRMEntry:
-    handler:
-      code:
-        src: ./src/createCRMEntry.js
-    type: subscription
-    query: ${self:functions.sendWelcomeEmail.handler.query}
-```
+    query: ${self:functions.subscriptions.sendWelcomeEmail.query}
+    webhook:
+      url: ${self.custom.severlessEndpoint}/createCRMEntry
+      headers: ${self.custom.headers}
 
+custom:
+  serverlessEndpoint: 'https://bcdeaxokbj.execute-api.eu-west-1.amazonaws.com/dev'
+  headers:
+    Authorization: Bearer wohngaeveishuomeiphohph1ls
+```
 
 ### Environment variable
 
@@ -68,21 +70,24 @@ When using an environment variable, the value that you put into the bracket is c
 In the following example, an environment variable is referenced to specify the URL and the authentication token for a webhook:
 
 ```yml
-functions:
+subscriptions:
   initiatePayment:
-    handler:
-      webhook:
-        url: ${env:PAYMENT_URL}
-        headers:
-            Content-Type: application/json
-            Authorization: Bearer ${env:AUTH_TOKEN}
-    type: subscription
+    webhook:
+      url: ${env:PAYMENT_URL}
+      headers:
+        Content-Type: application/json
+        Authorization: Bearer ${env:AUTH_TOKEN}
 ```
 
+Note that the CLI will load environment variables from 3 different locations and in the following order:
+
+1. The local environment
+1. A `.env` file specified with the `--dotenv` parameter
+1. A file called `.env` in the same directory, if no `--dotenv` parameter is specified
 
 ### CLI options
 
-You can reference CLI options that you passed when invoking a [`graphcool` command](!alias-aiteerae6l) inside your `graphcool.yml` service definition file.
+You can reference CLI options that are passed when invoking a `graphcool` command.
 
 When referencing a CLI option, the value that you put into the bracket is composed of:
 
@@ -99,7 +104,7 @@ graphcool deploy --stage prod
 
 To reference the value of the `stage` option inside `graphcool.yml`, you can now specify the following:
 
-```
+```yml
 webhook:
   url: http://myapi.${opt:stage}.com/example
 ```

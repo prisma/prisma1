@@ -7,15 +7,23 @@ description: An overview of how to model application data in Graphcool.
 
 ## Overview
 
-Graphcool uses (a subset of) the GraphQL [Schema Definition Language](https://blog.graph.cool/graphql-sdl-schema-definition-language-6755bcb9ce51) for data modelling. Your data model is written in your service's `.graphql`-file(s) and is the foundation for the actual database schema that Graphcool generates for you under the hood.
-
-If you're using just a single file for your type definitions, this file is typically called `types.graphql`.
+Graphcool uses the GraphQL [Schema Definition Language](https://blog.graph.cool/graphql-sdl-schema-definition-language-6755bcb9ce51) (SDL) for data modelling. Your data model is written in one or more `.graphql`-file(s) and is the foundation for the actual database schema that Graphcool generates under the hood. If you're using just a single file for your type definitions, this file is typically called `types.graphql`.
 
 > To learn more about the SDL, you can check out the [official documentation](http://graphql.org/learn/schema/#type-language).
 
+The `.graphql`-file(s) containing the data model need to be specified in `graphcool.yml` under the `datamodel` property. For example:
+
+```yml
+datamodel:
+  - types.graphql
+  - enums.graphql
+```
+
+Based on the type definitions in your data model, Graphcool will generate the _database schema_. The database schema contains the definitions for CRUD operations for the types in your data model.
+
 ### Example
 
-This is an example for what a simple `types.graphql` with two simple types could look like:
+This is an example for what `types.graphql` with three simple types could look like:
 
 ```graphql
 type Tweet {
@@ -43,9 +51,9 @@ type Location {
 
 Here are a few things to note about these type definitions:
 
-- Three types are created which are all mapped to the database.
-- `id`, `createdAt` and `updatedAt` are read-only system fields you can add to your types.
-- There is a bidirectional relation between `User` and `Tweet` (the `@relation` directive is optional here).
+- Three types are created which are all mapped to the database (meaning each type is reflected by one dedicated table).
+- `id`, `createdAt` and `updatedAt` are read-only system fields you can but don't have to add to your types.
+- There is a bidirectional relation between `User` and `Tweet` (the `@relation` directive is optional here, so it's left out).
 - There is a unidirectional relation from `Tweet` to `Location`. The `onDelete` argument specifies the behaviour when a `Tweet` gets deleted: The related `Location` will also be deleted.
 - Except for the `name` field on `User`, all fields are required in the data model (as indicated by the `!` following the type).
 
@@ -60,9 +68,11 @@ There are several available building blocks to shape your data model.
 
 ### System fields
 
-When writing type definitions for your Graphcool database service, you need to be aware of three _system fields_ which are managed for you by Graphcool: `id`, `createdAt` and `updatedAt`. The values of these fields are read-only.
+When writing type definitions for your Graphcool service, you need to be aware of three _system fields_ which are managed for you by Graphcool: `id`, `createdAt` and `updatedAt`. 
 
-In general, Graphcool will always maintain these fields in the actual database. It's up to you to decide whether they will also be exposed in the GraphQL API by adding them explicitly to the SDL type definition.
+> The values of these fields are currently read-only in the GraphQL API (unless in _import mode_) but will be made configurable in the future. See this [proposal](https://github.com/graphcool/framework/issues/1278) for more info.
+
+In general, Graphcool will _always_ maintain these fields in the actual database. It's up to you to decide whether they will also be exposed in the GraphQL API by adding them explicitly to the SDL type definition.
 
 <InfoBox type=warning>
 
@@ -82,17 +92,14 @@ The `id` has the following properties:
 - Always starts with a (lowercase) letter
 - Follows [CUID](https://github.com/ericelliott/cuid) (_collision resistant unique identifiers_) scheme
 
->>>TODO<<<
-do we still want to document the `Node` interface
->>>TODO<<<
-
-Notice that all your model types will implement the `Node` interface in the actual GraphQL schema that defines all the capabilities of your API. This is what the `Node` interface looks like:
+Notice that all your model types will implement the `Node` interface in the database schema. This is what the `Node` interface looks like:
 
 ```graphql
 interface Node {
   id: ID! @unique
 }
 ```
+
 
 #### System fields: `createdAt` and `updatedAt`
 
@@ -101,22 +108,21 @@ Graphcool further has two special fields which you can add to your types:
 - `createdAt: DateTime!`: Stores the exact date and time for when a node of this model type was _created_.
 - `updatedAt: DateTime!`: Stores the exact date and time for when a node of this model type was _last updated_.
 
-If you want your types to expose these fields, you can simply add them to the type definition and Graphcool will take care of actually managing them for you. Similar to the `id` field, both fields will be maintained in the database anyways, and it's up to you whether they will be exposed.
+If you want your types to expose these fields, you can simply add them to the type definition and Graphcool will take care of actually managing them for you.
 
 ## Object types
 
-An _object type_ (or short just _type_) defines the structure for one concrete part of your data model. If you are familiar with SQL databases you can think of an object type as the schema for a table. A type has a _name_, an _optional description_ and one or multiple _[fields](#fields)_.
+An _object type_ (or short _type_) defines the structure for one concrete part of your data model. If you are familiar with SQL databases you can think of an object type as the schema for a table in your relational database. A type has a _name_ and one or multiple _[fields](#fields)_. 
 
-An instantiation of a type is called a _node_. The collection of all nodes is what you would refer to as your "application data". The term node refers to a node inside your data graph.
+An instantiation of a type is called a _node_. The collection of all nodes is what you would refer to as your "application data". The term node refers to a node inside your "data graph".
 
-Every type you define will be available as a type in your generated GraphQL schema.
+Every type you define in your data model will be available as a type in the generated database schema.
 
 ### Defining an object type
 
 A GraphQL object type is defined in the data model with the keyword `type`:
 
 ```graphql
-# This is the description for the `Article` type
 type Article {
   id: ID! @unique
   text: String!
@@ -128,13 +134,10 @@ The type defined above has the following properties:
 
 - Name: `Story`
 - Fields: `id`, `text` and `isPublished`
-- Description: `This is the description for the `Article` type`
-
-As you can see, a description can be added to a type by simply adding a comment right before its definition.
 
 ### Generated operations based on types
 
-The types that are included in your schema effect the available operations in the [GraphQL API](!alias-abogasd0go). For every type,
+The types that are included in your schema affect the available operations in the [GraphQL API](!alias-abogasd0go). For every type,
 
 * [type queries](!alias-nia9nushae) allow you to fetch one or many nodes of that type
 * [type mutations](!alias-ol0yuoz6go) allow you to create, update or delete nodes of that type
@@ -142,7 +145,7 @@ The types that are included in your schema effect the available operations in th
 
 ## Fields
 
-*Fields* are the building blocks of a [type](#object-types), giving a node its shape. Every field is referenced by its name and is either [scalar](#scalar-types) or a [relation](#relations) field.
+_Fields_ are the building blocks of a [type](#object-types), giving a node its shape. Every field is referenced by its name and is either [scalar](#scalar-types) or a [relation](#relations) field.
 
 ### Scalar types
 
@@ -224,13 +227,9 @@ Fields can be configured with certain field constraints to add further semantics
 
 #### Unique
 
-Setting the *unique* constraint makes sure that two nodes of the type in question cannot have the same value for a certain field. The only exception is the `null` value, meaning that multiple nodes can have the value `null` without violating the constraint.
+Setting the _unique_ constraint makes sure that two nodes of the type in question cannot have the same value for a certain field. The only exception is the `null` value, meaning that multiple nodes can have the value `null` without violating the constraint.
 
 > A typical example would be an `email` field on the `User` type where the assumption is that every `User` should have a unique email address.
-
->>>TODO<<<
-needs update about specifics?
->>>TODO<<<
 
 Please note that only the first 191 characters in a String field are considered for uniqueness and the unique check is **case insensitive**. Storing two different strings is not possible if the first 191 characters are the same or if they only differ in casing.
 
@@ -256,13 +255,13 @@ type Story {
 
 ### Generated operations based on fields
 
-Fields in the data schema affect the available [query arguments](!alias-nia9nushae#query-arguments). Unique fields in the data schema add a new query argument to [queries for fetching one node](!alias-nia9nushae#fetching-a-single-node).
+Fields in the data model affect the available [query arguments](!alias-nia9nushae#query-arguments). Unique fields in the data model add a new query argument to [queries for fetching one node](!alias-nia9nushae#fetching-a-single-node).
 
 ## Relations
 
-A *relation* defines the semantics of a connection between two [types](#object-types). Two types in a relation are connected via a [relation field](#scalar-and-relation-fields).
+A _relation_ defines the semantics of a connection between two [types](#object-types). Two types in a relation are connected via a [relation field](#scalar-and-relation-fields).
 
-A relation can also connect a type with itself. It is then referred to as a *self-relation*.
+A relation can also connect a type with itself. It is then referred to as a _self-relation_.
 
 ### Required relations
 
@@ -272,107 +271,168 @@ Nodes for a type that contains a required `to-one` relation field can only be cr
 
 > Note that a `to-many` relation field is always set to required. For example, a field that contains many user addresses always uses the type `[Address!]!` and can never be of type `[Address!]`. The reason is that in case the field doesn't contain any nodes, `[]` will be returned, which is not `null`.
 
-### Relations in the data model
+### The `@relation` directive
 
-A relation is defined in the data model using the `@relation` directive:
+When defining relations between types, there is the `@relation` directive which provides meta-information about the relation. It can take two arguments:
+
+- `name`: An identifier for this relation (provided as a string). This argument is only required if relations are ambiguous.
+- `onDelete`: Specifies the _deletion behaviour_. (In case a node with related nodes gets deleted, the deletion behaviour determines what should happen to the related node(s).) The input values for this argument are defined as an enum with the following possible values:
+  - `NO_ACTION` (default): Keep the related node
+  - `CASCADE`: Delete the related node
+  - `SET_NULL`: Set the related node to `null`
+
+#### Omitting the `@relation` directive
+
+In the simplest case, where a relation between two types is unambiguous and the default deletion behaviour (`NO_ACTION`) should be applied, the corresponding relation fields do not have to be annotated with the `@relation` directive:
 
 ```graphql
 type User {
   id: ID! @unique
-  stories: [Story!]! @relation(name: "UserOnStory")
+  stories: [Story!]!
 }
 
 type Story {
   id: ID! @unique
   text: String!
-  author: User! @relation(name: "UserOnStory")
+  author: User!
 }
 ```
 
-Here we are defining a *one-to-many* relation between the `User` and `Story` types. The relation fields are `stories: [Story!]!` and `author: User!`. Note how `[Story!]!` defines multiple stories and `User!` a single user.
+Here we are defining a _one-to-many_ relation between the `User` and `Story` types. Since `onDelete` has not been provided, the default deletion behaviour is used: `NO_ACTION`. The semantics of this deletion behaviour are that stories and users can exists completely independently from another: When a `User` node is deleted, the nodes from its `stories` field will remain to exist. Likewise, when a `Story` node is deleted, the corresponding `author` node will remain to exist.
+
+#### Using the `name` argument of the `@relation` directive
+
+In certain cases, your data model may contain ambiguous relations. For example, consider you not only want a relation to express the "author-relationship" between `User` and `Story`, but you also want a relation to express which `Story` nodes have been _liked_ by a `User`.
+
+In that case, you end up with two different relations between `User` and `Story`! In order to disambiguate these, you now need the `name` argument from the `@relation` directive:
+
+```graphql
+type User {
+  id: ID! @unique
+  writtenStories: [Story!]! @relation(name: "WrittenStories")
+  likedStories: [Story!]! @relation(name: "LikedStories")
+}
+
+type Story {
+  id: ID! @unique
+  text: String!
+  author: User! @relation(name: "WrittenStories")
+  likedBy: [User!]! @relation(name: "LikedStories")
+}
+```
+
+If the `name` wasn't provided in this case, there would be now way for Graphcool to know whether `writtenStories` should relate to the `author` or the `likedBy` field.
+
+#### Using the `onDelete` argument of the `@relation` directive
+
+As mentioned above, when using relations in your system, you'll want to specify a dedicated deletion behaviour for the related nodes. That's what the `onDelete` argument of the `@relation` directive is being used for.
+
+Consider the following example:
+
+```graphql
+type User {
+  id: ID! @unique
+  comments: [Comment!]! @relation(name: "CommentAuthor", onDelete: CASCADE)
+  blog: Blog @relation(name: "BlogOwner", onDelete: CASCADE)
+}
+
+type Blog {
+  id: ID! @unique
+  comments: [Comment!]! @relation(name: "Comments", onDelete: CASCADE)
+  owner: User! @relation(name: "BlogOwner", onDelete: SET_NULL)
+}
+
+type Comment {
+  id: ID! @unique
+  blog: Blog! @relation(name: "Comments", onDelete: NO_ACTION)
+  author: User @relation(name: "CommentAuthor", onDelete: NO_ACTION)
+}
+```
+
+Let's investigate the deletion behaviour for the three types:
+
+- When a `User` node gets deleted:
+  - all related `Comment` nodes will be deleted
+  - the related `Blog` node will be deleted
+- When a `Blog` node gets deleted:
+  - all related `Comment` nodes will be deleted
+  - the related `User` node will have its `blog` field set to `null`
+- When a `Comment` node gets deleted:
+  - the related `Blog` node continues to exist
+  - the related `User` node continues to exist
 
 ### Generated operations based on relations
 
-The relations that are included in your schema effect the available operations in the [GraphQL API](!alias-abogasd0go). For every relation,
+The relations that are included in your schema affect the available operations in the [GraphQL API](!alias-abogasd0go). For every relation,
 
 * [relation queries](!alias-nia9nushae#relation-queries) allow you to query data across types or aggregated for a relation
-* [relation mutations](!alias-ol0yuoz6go#relation-mutations) allow you to connect or disconnect nodes
 * [nested mutations](!alias-ol0yuoz6go#nested-mutations) allow you to create and connect nodes across types
 * [relation subscriptions](!alias-aip7oojeiv#relation-subscriptions) allow you to get notified of changes to a relation
 
-## GraphQL Directives
+## GraphQL directives
 
 A schema file follows the SDL syntax and can contain additional **static and temporary GraphQL directives**.
 
-### Static Directives
+### Static directives
 
 Static directives describe additional information about types or fields in the GraphQL schema.
 
-#### Unique Scalar Fields
+#### Unique scalar fields
 
-The *static directive `@unique`* denotes [a unique, scalar field](#unique).
-
-```graphql
-## the `Post` type has a unique `slug` field
-type Post {
-  slug: String @unique
-}
-```
-
-#### Relation Fields
-
-The *static directive `@relation(name: String!)`* denotes a [relation field](#scalar-and-relation-fields). Most of the time, the same `@relation` directive appears twice in a type definitions file, to denote both sides of the relation:
+The static directive `@unique` denotes [a unique, scalar field](#unique). It does not take any arguments.
 
 ```graphql
-## the types `Post` and `User` are connected via the `PostAuthor` relation
-type Post {
-  user: User! @relation(name: "PostAuthor")
-}
-
+# the `User` type has a unique `email` field
 type User {
-  posts: [Post!]! @relation(name: "PostAuthor")
+  email: String @unique
 }
 ```
+
+#### Relation fields
+
+The static directive `@relation(name: String, onDelete: ON_DELETE! = NO_ACTION)` can be attached to a [relation field](#scalar-and-relation-fields).
+
+[See above](#the-relation-directive) for more info.
 
 #### Default value for scalar fields
 
-The *static directive `@defaultValue(value: String!)`* denotes [the default value](#default-value) of a scalar field. Note that the `value` argument is of type String for all scalar fields:
+The static directive `@default(value: String!)` denotes [the default value](#default-value) of a scalar field. Note that the `value` argument is of type String for all scalar fields (even if the fields themselves are not strings):
 
 ```graphql
-# the `title` and `published` fields have default values `New Post` and `false`
+# the `title`, `published` and `someNumber` fields have default values `New Post`, `false` and `42`
 type Post {
-  title: String! @defaultValue(value: "New Post")
-  published: Boolean! @defaultValue(value: "false")
+  title: String! @default(value: "New Post")
+  published: Boolean! @default(value: "false")
+  someNumber: Int! @default(value: "42")
 }
 ```
 
 ### Temporary directives
 
-Temporary directives are used to run one-time migration operations. After a service whose type definitions contain a temporary directive was deployed, it **needs to be manually removed from the type definitions file**.
+Temporary directives are used to perform run one-time migration operations. After a service whose type definitions contain a temporary directive was deployed, it **needs to be manually removed from the type definitions file**.
 
-#### Renaming a Type or Field
+#### Renaming a type or field
 
-The *temporary directive `@rename(oldName: String!)`* is used to rename a type or field.
+The temporary directive `@rename(oldName: String!)` is used to rename a type or field.
 
 ```graphql
-## Renaming the `Post` type to `Story`, and its `text` field to `content`
+# renaming the `Post` type to `Story`, and its `text` field to `content`
 type Story @model @rename(oldName: "Post") {
   content: String @rename(oldName: "text")
 }
 ```
 
-#### Migrating the Value of a Scalar Field
+#### Migrating the value of a scalar field
 
-The *temporary directive `@migrationValue(value: String!)`* is used to migrate the value of a scalar field. When changing an optional field to a requried field, it's necessary to also use this directive.
+The temporary directive `@migrationValue(value: String!)` is used to migrate the value of a scalar field. When changing an optional field to a requried field, it's necessary to also use this directive.
 
-
-## Naming Conventions
+## Naming onventions
 
 Different objects you encounter in a Graphcool service like types or relations follow separate naming conventions to help you distinguish them.
 
 ### Types
 
-The type name determines the name of derived queries and mutations as well as the argument names for nested mutations. Type names can only contain **alphanumeric characters** and need to start with an uppercase letter. They can contain **maximally 64 characters**.
+The type name determines the name of derived queries and mutations as well as the argument names for nested mutations. Type names can only contain **alphanumeric characters** and need to start with an uppercase letter. They can contain **at most 64 characters**.
 
 *It's recommended to choose type names in the singular form.*
 *Type names are unique on a service level.*
@@ -382,9 +442,9 @@ The type name determines the name of derived queries and mutations as well as th
 * `Post`
 * `PostCategory`
 
-### Scalar and Relation Fields
+### Scalar and relation fields
 
-The name of a scalar field is used in queries and in query arguments of mutations. Field names can only contain **alphanumeric characters** and need to start with a lowercase letter. They can contain **maximally 64 characters**.
+The name of a scalar field is used in queries and in query arguments of mutations. Field names can only contain **alphanumeric characters** and need to start with a lowercase letter. They can contain **at most 64 characters**.
 
 The name of relation fields follows the same conventions and determines the argument names for relation mutations.
 
@@ -399,7 +459,7 @@ The name of relation fields follows the same conventions and determines the argu
 
 ### Relations
 
-The relation name determines the name of mutations to connect or disconnect nodes in the relation. Relation names can only contain **alphanumeric characters** and need to start with an uppercase letter. They can contain **maximally 64 characters**.
+Relation names can only contain **alphanumeric characters** and need to start with an uppercase letter. They can contain **at most 64 characters**.
 
 *Relation names are unique on a service level.*
 
@@ -410,8 +470,7 @@ The relation name determines the name of mutations to connect or disconnect node
 
 ### Enums
 
-Enum values can only contain **alphanumeric characters and underscores** and need to start with an uppercase letter.
-The name of an enum value can be used in query filters and mutations. They can contain **maximally 191 characters**.
+Enum values can only contain **alphanumeric characters and underscores** and need to start with an uppercase letter. The name of an enum value can be used in query filters and mutations. They can contain **at most 191 characters**.
 
 *Enum names are unique on a service level.*
 *Enum value names are unique on an enum level.*
