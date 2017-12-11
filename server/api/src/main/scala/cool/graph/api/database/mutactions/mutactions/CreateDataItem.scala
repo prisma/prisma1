@@ -23,7 +23,6 @@ case class CreateDataItem(
     project: Project,
     model: Model,
     values: List[ArgumentValue],
-    requestId: Option[String] = None,
     originalArgs: Option[CoolArgs] = None
 ) extends ClientSqlDataChangeMutaction {
 

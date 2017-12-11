@@ -17,12 +17,12 @@ import scala.concurrent.Future
 case class SqlMutactions(dataResolver: DataResolver) {
   case class ParentInfo(model: Model, field: Field, id: Id)
   case class CreateMutactionsResult(createMutaction: CreateDataItem, nestedMutactions: Seq[ClientSqlMutaction]) {
-    def allMutactions: List[ClientSqlMutaction] = List(createMutaction) ++ nestedMutactions
+    def allMutactions: Vector[ClientSqlMutaction] = Vector(createMutaction) ++ nestedMutactions
   }
 
   def getMutactionsForDelete(model: Model, project: Project, id: Id, previousValues: DataItem): List[ClientSqlMutaction] = {
 
-    val requiredRelationViolations     = model.relationFields.flatMap(field => { checkIfRemovalWouldFailARequiredRelation(field, id, project) })
+    val requiredRelationViolations     = model.relationFields.flatMap(field => checkIfRemovalWouldFailARequiredRelation(field, id, project))
     val removeFromConnectionMutactions = model.relationFields.map(field => RemoveDataItemFromManyRelationByToId(project.id, field, id))
     val deleteItemMutaction            = DeleteDataItem(project, model, id, previousValues)
 
@@ -31,54 +31,28 @@ case class SqlMutactions(dataResolver: DataResolver) {
 
   def getMutactionsForUpdate(project: Project, model: Model, args: CoolArgs, id: Id, previousValues: DataItem, requestId: String): List[ClientSqlMutaction] = {
 
-    val updateMutaction      = getUpdateMutaction(project, model, args, id, previousValues)
-    val forFlatManyRelations = getAddToRelationMutactionsForIdListsForUpdate(project, model, args, fromId = id)
-    val forFlatOneRelation   = getAddToRelationMutactionsForIdFieldsForUpdate(project, model, args, fromId = id)
-    val forComplexMutactions = getComplexMutactions(project, model, args, fromId = id, requestId = requestId)
+    val updateMutaction = getUpdateMutaction(project, model, args, id, previousValues)
 
-    updateMutaction.toList ++ forFlatManyRelations ++ forComplexMutactions ++ forFlatOneRelation
+    updateMutaction.toList
   }
 
-  def getMutactionsForCreate(project: Project,
-                             model: Model,
-                             args: CoolArgs,
-                             id: Id = createCuid(),
-                             parentInfo: Option[ParentInfo] = None,
-                             requestId: String): CreateMutactionsResult = {
+  def getMutactionsForCreate(
+      project: Project,
+      model: Model,
+      args: CoolArgs,
+      id: Id = createCuid(),
+      parentInfo: Option[ParentInfo] = None
+  ): CreateMutactionsResult = {
 
-    val createMutaction = getCreateMutaction(project, model, args, id, requestId)
+    val createMutaction = getCreateMutaction(project, model, args, id)
     val relationToParent = parentInfo.map { parent =>
       AddDataItemToManyRelation(project = project, fromModel = parent.model, fromField = parent.field, fromId = parent.id, toId = id, toIdAlreadyInDB = false)
     }
 
-    val forFlatManyRelations = getAddToRelationMutactionsForIdListsForCreate(project, model, args, fromId = createMutaction.id)
-    val forFlatOneRelation   = getAddToRelationMutactionsForIdFieldsForCreate(project, model, args, fromId = createMutaction.id)
-    val forComplexRelations  = getComplexMutactions(project, model, args, fromId = createMutaction.id, requestId = requestId)
-
-    val requiredOneRelationFields = model.relationFields.filter(f => f.isRequired && !f.isList)
-    val requiredRelationViolations = requiredOneRelationFields
-      .filter { field =>
-        val isRelatedById      = args.getFieldValueAs(field, suffix = SchemaBuilderConstants.idSuffix).flatten.isDefined
-        val isRelatedByComplex = args.getFieldValueAs(field).flatten.isDefined
-        val isRelatedToParent = parentInfo match {
-          case None         => false
-          case Some(parent) => parent.field.relation.map(_.id) == field.relation.map(_.id)
-        }
-        !isRelatedById && !isRelatedByComplex && !isRelatedToParent
-      }
-      .map(field => InvalidInputClientSqlMutaction(RelationIsRequired(field.name, model.name)))
-
-    val nestedMutactions: Seq[ClientSqlMutaction] = forFlatManyRelations ++ forComplexRelations ++ forFlatOneRelation ++ relationToParent
-
-    val correctExecutionOrder = nestedMutactions.sortWith { (x, _) =>
-      x.isInstanceOf[RemoveDataItemFromManyRelationByFromId]
-    }
-
-    val result = CreateMutactionsResult(createMutaction = createMutaction, nestedMutactions = correctExecutionOrder ++ requiredRelationViolations)
-    result
+    CreateMutactionsResult(createMutaction = createMutaction, nestedMutactions = relationToParent.toVector)
   }
 
-  def getCreateMutaction(project: Project, model: Model, args: CoolArgs, id: Id, requestId: String): CreateDataItem = {
+  def getCreateMutaction(project: Project, model: Model, args: CoolArgs, id: Id): CreateDataItem = {
     val scalarArguments = for {
       field      <- model.scalarFields
       fieldValue <- args.getFieldValueAs[Any](field)
@@ -93,7 +67,6 @@ case class SqlMutactions(dataResolver: DataResolver) {
       project = project,
       model = model,
       values = scalarArguments :+ ArgumentValue("id", id),
-      requestId = Some(requestId),
       originalArgs = Some(args)
     )
   }
@@ -107,138 +80,24 @@ case class SqlMutactions(dataResolver: DataResolver) {
     }
     if (scalarArguments.nonEmpty) {
       Some(
-        UpdateDataItem(project = project,
-                       model = model,
-                       id = id,
-                       values = scalarArguments,
-                       originalArgs = Some(args),
-                       previousValues = previousValues,
-                       itemExists = true))
+        UpdateDataItem(
+          project = project,
+          model = model,
+          id = id,
+          values = scalarArguments,
+          originalArgs = Some(args),
+          previousValues = previousValues,
+          itemExists = true
+        ))
     } else None
   }
 
-  def getAddToRelationMutactionsForIdListsForCreate(project: Project, model: Model, args: CoolArgs, fromId: Id): Seq[ClientSqlMutaction] = {
-    val x = for {
-      field <- model.relationFields if field.isList
-      toIds <- args.getFieldValuesAs[Id](field, SchemaBuilderConstants.idListSuffix)
-    } yield {
-
-      val removeOldToRelations: List[ClientSqlMutaction] = if (field.isOneToManyRelation(project)) {
-        toIds.map(toId => Some(RemoveDataItemFromManyRelationByToId(project.id, field, toId))).toList.flatten
-      } else List()
-
-      val relationsToAdd = toIds.map { toId =>
-        AddDataItemToManyRelation(project = project, fromModel = model, fromField = field, fromId = fromId, toId = toId)
-      }
-      removeOldToRelations ++ relationsToAdd
-    }
-    x.flatten
-  }
-
-  def getAddToRelationMutactionsForIdListsForUpdate(project: Project, model: Model, args: CoolArgs, fromId: Id): Seq[ClientSqlMutaction] = {
-    val x = for {
-      field <- model.relationFields if field.isList
-      toIds <- args.getFieldValuesAs[Id](field, SchemaBuilderConstants.idListSuffix)
-    } yield {
-
-      val removeOldFromRelation = List(checkIfUpdateWouldFailARequiredManyRelation(field, fromId, toIds.toList, project),
-                                       Some(RemoveDataItemFromManyRelationByFromId(project.id, field, fromId))).flatten
-
-      val removeOldToRelations: List[ClientSqlMutaction] = if (field.isOneToManyRelation(project)) {
-        toIds.map(toId => RemoveDataItemFromManyRelationByToId(project.id, field, toId)).toList
-      } else List()
-
-      val relationsToAdd = toIds.map { toId =>
-        AddDataItemToManyRelation(project = project, fromModel = model, fromField = field, fromId = fromId, toId = toId)
-      }
-      removeOldFromRelation ++ removeOldToRelations ++ relationsToAdd
-    }
-    x.flatten
-  }
-
-  def getAddToRelationMutactionsForIdFieldsForCreate(project: Project, model: Model, args: CoolArgs, fromId: Id): Seq[ClientSqlMutaction] = {
-    val x: Seq[Iterable[ClientSqlMutaction]] = for {
-      field   <- model.relationFields if !field.isList
-      toIdOpt <- args.getFieldValueAs[String](field, suffix = SchemaBuilderConstants.idSuffix)
-    } yield {
-
-      val removeOldToRelation: List[ClientSqlMutaction] = if (field.isOneToOneRelation(project)) {
-        toIdOpt
-          .map { toId =>
-            List(
-              Some(RemoveDataItemFromManyRelationByToId(project.id, field, toId)),
-              checkIfRemovalWouldFailARequiredRelation(field.relatedFieldEager(project), toId, project)
-            ).flatten
-          }
-          .getOrElse(List.empty)
-      } else List()
-
-      val addToRelation = toIdOpt.map { toId =>
-        AddDataItemToManyRelation(project = project, fromModel = model, fromField = field, fromId = fromId, toId = toId)
-      }
-      // FIXME: removes must be first here; How could we make that clearer?
-      removeOldToRelation ++ addToRelation
-    }
-    x.flatten
-  }
-
-  def getAddToRelationMutactionsForIdFieldsForUpdate(project: Project, model: Model, args: CoolArgs, fromId: Id): Seq[ClientSqlMutaction] = {
-    val x: Seq[Iterable[ClientSqlMutaction]] = for {
-      field   <- model.relationFields if !field.isList
-      toIdOpt <- args.getFieldValueAs[String](field, suffix = SchemaBuilderConstants.idSuffix)
-    } yield {
-
-      val removeOldFromRelation = List(Some(RemoveDataItemFromManyRelationByFromId(project.id, field, fromId)),
-                                       checkIfUpdateWouldFailARequiredOneRelation(field, fromId, toIdOpt, project)).flatten
-
-      val removeOldToRelation: List[ClientSqlMutaction] = if (field.isOneToOneRelation(project)) {
-        toIdOpt
-          .map { toId =>
-            List(
-              Some(RemoveDataItemFromManyRelationByToId(project.id, field, toId)),
-              checkIfUpdateWouldFailARequiredOneRelation(field.relatedFieldEager(project), toId, Some(fromId), project)
-            ).flatten
-          }
-          .getOrElse(List.empty)
-      } else List()
-
-      val addToRelation = toIdOpt.map { toId =>
-        AddDataItemToManyRelation(project = project, fromModel = model, fromField = field, fromId = fromId, toId = toId)
-      }
-      // FIXME: removes must be first here; How could we make that clearer?
-      removeOldFromRelation ++ removeOldToRelation ++ addToRelation
-    }
-    x.flatten
+  def getMutactionsForNestedMutation(project: Project, model: Model, args: CoolArgs, fromId: Id): Seq[ClientSqlMutaction] = {
+    Vector.empty
   }
 
   private def checkIfRemovalWouldFailARequiredRelation(field: Field, fromId: String, project: Project): Option[InvalidInputClientSqlMutaction] = {
     val isInvalid = () => dataResolver.resolveByRelation(fromField = field, fromModelId = fromId, args = None).map(_.items.nonEmpty)
-
-    runRequiredRelationCheckWithInvalidFunction(field, project, isInvalid)
-  }
-
-  private def checkIfUpdateWouldFailARequiredOneRelation(field: Field,
-                                                         fromId: String,
-                                                         toId: Option[String],
-                                                         project: Project): Option[InvalidInputClientSqlMutaction] = {
-    val isInvalid = () =>
-      dataResolver.resolveByRelation(fromField = field, fromModelId = fromId, args = None).map {
-        _.items match {
-          case x :: _ => x.id != toId.getOrElse("")
-          case _      => false
-        }
-    }
-    runRequiredRelationCheckWithInvalidFunction(field, project, isInvalid)
-  }
-
-  private def checkIfUpdateWouldFailARequiredManyRelation(field: Field,
-                                                          fromId: String,
-                                                          toIds: List[String],
-                                                          project: Project): Option[InvalidInputClientSqlMutaction] = {
-    val isInvalid = () =>
-      dataResolver
-        .resolveByRelation(fromField = field, fromModelId = fromId, args = None)
-        .map(_.items.exists(x => !toIds.contains(x.id)))
 
     runRequiredRelationCheckWithInvalidFunction(field, project, isInvalid)
   }
@@ -253,7 +112,7 @@ case class SqlMutactions(dataResolver: DataResolver) {
     } else None
   }
 
-  def getComplexMutactions(project: Project, model: Model, args: CoolArgs, fromId: Id, requestId: String): Seq[ClientSqlMutaction] = {
+  def getComplexMutactions(project: Project, model: Model, args: CoolArgs, fromId: Id): Seq[ClientSqlMutaction] = {
     val x: Seq[List[ClientSqlMutaction]] = for {
       field     <- model.relationFields
       nestedArg <- args.subArgs(field).flatten
@@ -265,7 +124,7 @@ case class SqlMutactions(dataResolver: DataResolver) {
         List(checkIfRemovalWouldFailARequiredRelation(field, fromId, project), Some(RemoveDataItemFromManyRelationByFromId(project.id, field, fromId))).flatten
 
       val itemsToCreate = subArgs.toVector.flatMap { subArg =>
-        getMutactionsForCreate(project, subModel, subArg, parentInfo = Some(ParentInfo(model, field, fromId)), requestId = requestId).allMutactions
+        getMutactionsForCreate(project, subModel, subArg, parentInfo = Some(ParentInfo(model, field, fromId))).allMutactions
       }
 
       removeOldFromRelation ++ itemsToCreate
