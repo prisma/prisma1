@@ -26,7 +26,7 @@ export class Cluster {
   }
 
   getDeployEndpoint() {
-    return `${this.baseUrl}/system/graphiql.html`
+    return `${this.baseUrl}/system/playground`
   }
 
   // subscriptionEndpoint(projectId: string): string {

@@ -4,5 +4,4 @@ stages: {}
 
 datamodel: datamodel.graphql
 
-# secret: so-secret
-disableAuth: true
+secret: so-secret

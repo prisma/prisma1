@@ -1,0 +1,4 @@
+projects:
+  database:
+    extensions:
+      graphcool: graphcool.yml
