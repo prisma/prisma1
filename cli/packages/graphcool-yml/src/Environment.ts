@@ -1,24 +1,25 @@
-import { Output } from './index'
-import { Config } from './Config'
 import { Args } from './types/common'
 import { Cluster } from './Cluster'
 import * as fs from 'fs-extra'
 import * as yaml from 'js-yaml'
-import Variables from './GraphcoolDefinition/Variables'
 import { InternalRC } from './types/rc'
 import { ClusterNotFound } from './errors/ClusterNotFound'
+import { Variables } from './Variables'
+import { IOutput, Output } from './Output'
 
 export class Environment {
-  out: Output
-  config: Config
+  sharedClusters: string[] = ['shared-eu-west-1']
+  sharedEndpoint = 'https://database-beta.graph.cool'
   args: Args
   activeCluster: Cluster
   globalRC: InternalRC = {}
   clusters: Cluster[]
   platformToken?: string
-  constructor(out: Output, config: Config) {
+  globalRCPath: string
+  out: IOutput
+  constructor(globalRCPath: string, out: IOutput = new Output()) {
+    this.globalRCPath = globalRCPath
     this.out = out
-    this.config = config
   }
 
   async load(args: Args) {
@@ -52,7 +53,7 @@ export class Environment {
       clusters: this.getLocalClusterConfig(),
     }
     const rcString = yaml.safeDump(rc)
-    fs.writeFileSync(this.config.globalRCPath, rcString)
+    fs.writeFileSync(this.globalRCPath, rcString)
   }
 
   setActiveCluster(cluster: Cluster) {
@@ -61,15 +62,15 @@ export class Environment {
 
   async loadGlobalRC(): Promise<void> {
     const globalFile =
-      this.config.globalRCPath && fs.pathExistsSync(this.config.globalRCPath)
-        ? fs.readFileSync(this.config.globalRCPath, 'utf-8')
+      this.globalRCPath && fs.pathExistsSync(this.globalRCPath)
+        ? fs.readFileSync(this.globalRCPath, 'utf-8')
         : undefined
     await this.parseGlobalRC(globalFile)
   }
 
   async parseGlobalRC(globalFile?: string): Promise<void> {
     if (globalFile) {
-      this.globalRC = await this.loadYaml(globalFile, this.config.globalRCPath)
+      this.globalRC = await this.loadYaml(globalFile, this.globalRCPath)
     }
     this.clusters = this.initClusters(this.globalRC)
     this.platformToken =
@@ -85,12 +86,12 @@ export class Environment {
       try {
         content = yaml.safeLoad(file)
       } catch (e) {
-        this.out.error(`Yaml parsing error in ${filePath}: ${e.message}`)
+        throw new Error(`Yaml parsing error in ${filePath}: ${e.message}`)
       }
       const variables = new Variables(
-        this.out,
         filePath || 'no filepath provided',
         this.args,
+        this.out,
       )
       content = await variables.populateJson(content)
 
@@ -117,10 +118,10 @@ export class Environment {
   }
 
   private getSharedClusters(rc: InternalRC): Cluster[] {
-    return this.config.sharedClusters.map(clusterName => {
+    return this.sharedClusters.map(clusterName => {
       return new Cluster(
         clusterName,
-        this.config.sharedEndpoint,
+        this.sharedEndpoint,
         rc && rc.platformToken,
         false,
       )

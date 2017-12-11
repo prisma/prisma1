@@ -1,10 +1,5 @@
-import {
-  Command,
-  flags,
-  Flags,
-  Cluster,
-  DeployPayload,
-} from 'graphcool-cli-engine'
+import { Command, flags, Flags, DeployPayload } from 'graphcool-cli-engine'
+import { Cluster } from 'graphcool-yml'
 import chalk from 'chalk'
 import { ServiceDoesntExistError } from '../../errors/ServiceDoesntExistError'
 import { emptyDefinition } from './emptyDefinition'
@@ -105,7 +100,7 @@ ${chalk.gray(
       this.out.error(`--dotenv path '${dotenv}' does not exist`)
     }
 
-    await this.definition.load(this.env, this.flags, dotenv)
+    await this.definition.load(this.flags, dotenv)
 
     if (!stageName) {
       stageName =
@@ -148,7 +143,7 @@ ${chalk.gray(
         .on('all', () => {
           setImmediate(async () => {
             if (!this.deploying) {
-              await this.definition.load(this.env, this.flags)
+              await this.definition.load(this.flags)
               await this.deploy(
                 stageName,
                 this.definition.definition!.service,

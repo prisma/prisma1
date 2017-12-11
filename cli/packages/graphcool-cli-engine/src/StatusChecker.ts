@@ -1,10 +1,10 @@
 import { Config } from './Config'
 import * as crypto from 'crypto'
 import * as path from 'path'
-import { Environment } from './Environment'
 import { spawn } from 'child_process'
 import * as fetch from 'isomorphic-fetch'
 import * as fs from 'fs-extra'
+import { Environment } from 'graphcool-yml'
 
 export class StatusChecker {
   config: Config

@@ -3,8 +3,8 @@ import {
   flags,
   Flags,
   AuthenticateCustomerPayload,
-  Cluster,
 } from 'graphcool-cli-engine'
+import { Cluster } from 'graphcool-yml'
 import Docker from './Docker'
 import chalk from 'chalk'
 const debug = require('debug')('up')

@@ -1,53 +1,54 @@
-import { Config } from '../Config'
-import { Output } from '../index'
 import { readDefinition } from './yaml'
-import { Args, Stages } from '../types/common'
 import { GraphcoolDefinition } from 'graphcool-json-schema'
 import * as fs from 'fs-extra'
-import chalk from 'chalk'
-import { Environment } from '../Environment'
 import { mapValues } from 'lodash'
 import * as yamlParser from 'yaml-ast-parser'
-import { StageNotFound } from '../errors/StageNotFound'
 import * as dotenv from 'dotenv'
 import * as path from 'path'
 import * as jwt from 'jsonwebtoken'
+import { Args, Stages } from './types/common'
+import { StageNotFound } from './errors/StageNotFound'
+import { Environment } from './Environment'
+import { IOutput } from './Output'
 
 interface ErrorMessage {
   message: string
 }
 
 export class GraphcoolDefinitionClass {
-  out: Output
-  config: Config
   definition?: GraphcoolDefinition
   typesString?: string
-  rawStages: Stages
   secrets: string[] | null
+  rawStages: Stages
+  definitionPath?: string | null
+  definitionDir: string
+  env: Environment
+  out?: IOutput
   private definitionString: string
-  constructor(out: Output, config: Config) {
-    this.out = out
-    this.config = config
+  constructor(env: Environment, definitionPath?: string | null, out?: IOutput) {
     this.secrets = null
+    this.definitionPath = definitionPath
+    if (definitionPath) {
+      this.definitionDir = path.dirname(definitionPath)
+    }
+    this.env = env
+    this.out = out
   }
-  async load(env: Environment, args: Args, envPath?: string) {
-    if (this.config.definitionPath) {
-      dotenv.config({ path: envPath })
+  async load(args: Args, envPath?: string) {
+    dotenv.config({ path: envPath })
+    if (this.definitionPath) {
       this.definition = await readDefinition(
-        this.config.definitionPath,
-        this.out,
+        this.definitionPath,
         args,
+        this.out,
       )
-      this.definitionString = fs.readFileSync(
-        this.config.definitionPath,
-        'utf-8',
-      )
+      this.definitionString = fs.readFileSync(this.definitionPath, 'utf-8')
       this.rawStages = this.definition.stages
       this.definition.stages = this.resolveStageAliases(this.definition.stages)
-      this.ensureOfClusters(this.definition, env)
       this.typesString = this.getTypesString(this.definition)
       const secrets = process.env.GRAPHCOOL_SECRET || this.definition.secret
       this.secrets = secrets ? secrets.replace(/\s/g, '').split(',') : null
+      this.ensureOfClusters(this.definition, this.env)
       const disableAuth =
         typeof process.env.GRAPHCOOL_DISABLE_AUTH !== 'undefined'
           ? this.readBool(process.env.GRAPHCOOL_DISABLE_AUTH)
@@ -57,10 +58,20 @@ export class GraphcoolDefinitionClass {
           'Please either provide a secret in your graphcool.yml or disableAuth: true',
         )
       }
-    } else {
-      throw new Error(`Please create a graphcool.yml`)
     }
   }
+
+  private ensureOfClusters(definition: GraphcoolDefinition, env: Environment) {
+    Object.keys(definition.stages).forEach(stageName => {
+      const referredCluster = definition.stages[stageName]
+      if (!env.clusters.find(c => c.name === referredCluster)) {
+        throw new Error(
+          `Could not find cluster '${referredCluster}', which is used in stage '${stageName}'.`,
+        )
+      }
+    })
+  }
+
   readBool(value?: string) {
     if (value) {
       const trimmed = value.trim()
@@ -138,7 +149,7 @@ export class GraphcoolDefinitionClass {
   }
 
   save() {
-    fs.writeFileSync(this.config.definitionPath!, this.definitionString)
+    fs.writeFileSync(this.definitionPath!, this.definitionString)
   }
 
   private getTypesString(definition: GraphcoolDefinition) {
@@ -149,10 +160,7 @@ export class GraphcoolDefinitionClass {
     const errors: ErrorMessage[] = []
     let allTypes = ''
     typesPaths.forEach(unresolvedTypesPath => {
-      const typesPath = path.join(
-        this.config.definitionDir,
-        unresolvedTypesPath,
-      )
+      const typesPath = path.join(this.definitionDir, unresolvedTypesPath)
       if (fs.existsSync(typesPath)) {
         const types = fs.readFileSync(typesPath, 'utf-8')
         allTypes += types + '\n'
@@ -164,19 +172,6 @@ export class GraphcoolDefinitionClass {
     })
 
     return allTypes
-  }
-
-  private ensureOfClusters(definition: GraphcoolDefinition, env: Environment) {
-    Object.keys(definition.stages).forEach(stageName => {
-      const referredCluster = definition.stages[stageName]
-      if (!env.clusters.find(c => c.name === referredCluster)) {
-        throw new Error(
-          `Could not find cluster '${
-            referredCluster
-          }', which is used in stage '${stageName}'.`,
-        )
-      }
-    })
   }
 
   private resolveStageAliases = stages =>

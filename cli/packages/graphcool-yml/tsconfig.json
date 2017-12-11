@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "forceConsistentCasingInFileNames": true,
+    "strictNullChecks": true,
+    "sourceMap": true,
+    "outDir": "dist",
+    "moduleResolution": "node",
+    "lib": ["es2017", "dom", "esnext.asynciterable"],
+    "target": "es5",
+    "rootDir": "src"
+  },
+  "exclude": ["node_modules", "dist"]
+}

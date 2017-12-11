@@ -19,7 +19,7 @@ export default class Playground extends Command {
   }
   async run() {
     const { stage, web } = this.flags
-    await this.definition.load(this.env, this.flags)
+    await this.definition.load(this.flags)
     const clusterName = this.definition.getStage(stage, true)
     const cluster = this.env.clusterByName(clusterName!, true)!
 
@@ -31,9 +31,9 @@ export default class Playground extends Command {
       stageName,
     )
     if (fs.pathExistsSync(localPlaygroundPath) && !web) {
-      const url = `graphql-playground://?endpoint=${
-        endpoint
-      }&cwd=${process.cwd()}&env=${JSON.stringify(process.env)}`
+      const url = `graphql-playground://?endpoint=${endpoint}&cwd=${process.cwd()}&env=${JSON.stringify(
+        process.env,
+      )}`
       opn(url)
     } else {
       opn(endpoint)

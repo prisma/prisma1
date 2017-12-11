@@ -7,14 +7,13 @@ import { OutputArgs, OutputFlags, Parser } from './Parser'
 import Help from './Help'
 import { Client } from './Client/Client'
 // import { Auth } from './Auth'
-import { Environment } from './Environment'
+import { Environment, GraphcoolDefinitionClass } from 'graphcool-yml'
 import packagejson = require('../package.json')
 import * as mock from './mock'
 import * as fs from 'fs-extra'
 import * as path from 'path'
 import { RC } from './types/rc'
 import { GraphcoolDefinition } from 'graphcool-json-schema'
-import { GraphcoolDefinitionClass } from './GraphcoolDefinition/GraphcoolDefinition'
 const debug = require('debug')('command')
 
 const pjson = packagejson as any
@@ -115,8 +114,8 @@ export class Command {
     this.out = new Output(this.config)
     this.config.setOutput(this.out)
     this.argv = options.config && options.config.argv ? options.config.argv : []
-    this.definition = new GraphcoolDefinitionClass(this.out, this.config)
-    this.env = new Environment(this.out, this.config)
+    this.env = new Environment(this.config.globalRCPath, this.out)
+    this.definition = new GraphcoolDefinitionClass(this.env, this.config.definitionPath)
     this.client = new Client(this.config, this.env, this.out)
     // this.auth = new Auth(this.out, this.config, this.env, this.client)
     // this.client.setAuth(this.auth)

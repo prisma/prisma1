@@ -1,15 +1,7 @@
 export { Cluster } from './Cluster'
 
-export { readDefinition } from './GraphcoolDefinition/yaml'
-export {
-  GraphcoolDefinitionClass,
-} from './GraphcoolDefinition/GraphcoolDefinition'
-
-export { EnvDoesntExistError } from './errors/EnvDoesntExistError'
-
 export { Config } from './Config'
 export { Command } from './Command'
-export { Environment } from './Environment'
 export { CLI, run } from './CLI'
 export { Output } from './Output'
 export {

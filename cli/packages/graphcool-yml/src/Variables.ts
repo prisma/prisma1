@@ -1,13 +1,13 @@
 'use strict'
 import { GraphcoolDefinition } from 'graphcool-json-schema'
-import { Output } from '../Output/index'
 
 import * as _ from 'lodash'
 import * as replaceall from 'replaceall'
 import * as BbPromise from 'bluebird'
-import { Args } from '../types/common'
+import { Args } from './types/common'
+import { Output, IOutput } from './Output'
 
-export default class Variables {
+export class Variables {
   json: any
   overwriteSyntax: RegExp = RegExp(/,/g)
   envRefSyntax: RegExp = RegExp(/^env:/g)
@@ -19,11 +19,15 @@ export default class Variables {
     '\\${([ ~:a-zA-Z0-9._\'",\\-\\/\\(\\)]+?)}',
     'g',
   )
-  out: Output
   fileName: string
   options: Args
+  out: Output
 
-  constructor(out: Output, fileName: string, options: Args = {}) {
+  constructor(
+    fileName: string,
+    options: Args = {},
+    out: IOutput = new Output(),
+  ) {
     this.out = out
     this.fileName = fileName
     this.options = options
@@ -92,14 +96,14 @@ export default class Variables {
         if (variableString.match(this.overwriteSyntax)) {
           singleValueToPopulate = this.overwrite(variableString)
         } else {
-          singleValueToPopulate = this.getValueFromSource(
-            variableString,
-          ).then(valueToPopulate => {
-            if (typeof valueToPopulate === 'object') {
-              return this.populateObject(valueToPopulate)
-            }
-            return valueToPopulate
-          })
+          singleValueToPopulate = this.getValueFromSource(variableString).then(
+            valueToPopulate => {
+              if (typeof valueToPopulate === 'object') {
+                return this.populateObject(valueToPopulate)
+              }
+              return valueToPopulate
+            },
+          )
         }
 
         singleValueToPopulate = singleValueToPopulate!.then(valueToPopulate => {

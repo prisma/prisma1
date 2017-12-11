@@ -33,7 +33,6 @@ export class Config {
       defaultCommand: 'help',
     },
   }
-  sharedClusters: string[] = ['shared-eu-west-1']
 
   /**
    * Paths
@@ -50,7 +49,6 @@ export class Config {
   /**
    * Urls
    */
-  sharedEndpoint = 'https://database-beta.graph.cool'
   statusEndpoint = 'https://crm.graph.cool/prod/status'
 
   /* tslint:disable-next-line */

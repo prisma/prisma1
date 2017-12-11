@@ -1,4 +1,5 @@
-import { Output, Config, Environment, Cluster } from 'graphcool-cli-engine'
+import { Output, Config } from 'graphcool-cli-engine'
+import { Environment, Cluster } from 'graphcool-yml'
 import * as childProcess from 'child_process'
 import * as path from 'path'
 import * as fs from 'fs-extra'
@@ -14,7 +15,7 @@ export default class Docker {
   cluster?: Cluster
   ymlPath: string = path.join(__dirname, 'docker/docker-compose.yml')
   envPath: string = path.join(__dirname, 'docker/.envrc')
-  envVars: { [varLemieuxName: string]: string }
+  envVars: { [varName: string]: string }
   clusterName: string
   constructor(
     out: Output,
@@ -76,9 +77,7 @@ export default class Docker {
     const confirmationQuestion = {
       name: 'confirmation',
       type: 'input',
-      message: `Port 60000 is already used by ${
-        processForPort
-      }. Do you want to use the next free port (${port})?`,
+      message: `Port 60000 is already used by ${processForPort}. Do you want to use the next free port (${port})?`,
       default: 'n',
     }
     const { confirmation }: { confirmation: string } = await this.out.prompt(

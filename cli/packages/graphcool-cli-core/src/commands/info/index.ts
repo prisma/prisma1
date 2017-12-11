@@ -21,7 +21,7 @@ export default class InfoCommand extends Command {
   async run() {
     const { stage } = this.flags
 
-    await this.definition.load(this.env, this.flags)
+    await this.definition.load(this.flags)
     const clusterName = this.definition.getStage(stage, true)
     const stageName = stage || this.definition.rawStages.default
     const cluster = this.env.clusterByName(clusterName!, true)!

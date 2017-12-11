@@ -1,0 +1,149 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Environment empty global graphcool rc 1`] = `
+Array [
+  Cluster {
+    "baseUrl": "https://database-beta.graph.cool",
+    "clusterToken": undefined,
+    "local": false,
+    "name": "shared-eu-west-1",
+  },
+]
+`;
+
+exports[`Environment interpolates env vars 1`] = `
+Array [
+  Cluster {
+    "baseUrl": "https://database-beta.graph.cool",
+    "clusterToken": "this-is-so-special",
+    "local": false,
+    "name": "shared-eu-west-1",
+  },
+]
+`;
+
+exports[`Environment loads multiple cluster definitions correctly + gives cluster by name 1`] = `
+Array [
+  Cluster {
+    "baseUrl": "http://localhost:60000",
+    "clusterToken": undefined,
+    "local": true,
+    "name": "local",
+  },
+  Cluster {
+    "baseUrl": "https://remote.graph.cool",
+    "clusterToken": "here-is-a-token",
+    "local": true,
+    "name": "remote",
+  },
+  Cluster {
+    "baseUrl": "https://database-beta.graph.cool",
+    "clusterToken": undefined,
+    "local": false,
+    "name": "shared-eu-west-1",
+  },
+]
+`;
+
+exports[`Environment loads multiple cluster definitions correctly + gives cluster by name 2`] = `
+Cluster {
+  "baseUrl": "https://remote.graph.cool",
+  "clusterToken": "here-is-a-token",
+  "local": true,
+  "name": "remote",
+}
+`;
+
+exports[`Environment non-existent global graphcool rc 1`] = `
+Array [
+  Cluster {
+    "baseUrl": "https://database-beta.graph.cool",
+    "clusterToken": undefined,
+    "local": false,
+    "name": "shared-eu-west-1",
+  },
+]
+`;
+
+exports[`Environment sets the platform token correctly 1`] = `
+Array [
+  Cluster {
+    "baseUrl": "https://database-beta.graph.cool",
+    "clusterToken": "asdf",
+    "local": false,
+    "name": "shared-eu-west-1",
+  },
+]
+`;
+
+exports[`graphcool definition load basic yml 1`] = `
+Object {
+  "datamodel": Array [
+    "datamodel.graphql",
+  ],
+  "schema": "schemas/database.graphql",
+  "secret": "some-secret",
+  "service": "jj",
+  "stages": Object {
+    "default": "shared-eu-west-1",
+    "dev": "shared-eu-west-1",
+  },
+}
+`;
+
+exports[`graphcool definition load basic yml 2`] = `[Error: Please either provide a secret in your graphcool.yml or disableAuth: true]`;
+
+exports[`graphcool definition load yml with disableAuth: true 1`] = `
+Object {
+  "datamodel": Array [
+    "datamodel.graphql",
+  ],
+  "disableAuth": true,
+  "schema": "schemas/database.graphql",
+  "service": "jj",
+  "stages": Object {
+    "default": "shared-eu-west-1",
+    "dev": "shared-eu-west-1",
+  },
+}
+`;
+
+exports[`graphcool definition load yml with disableAuth: true 2`] = `null`;
+
+exports[`graphcool definition load yml with secret and env var 1`] = `
+Object {
+  "datamodel": Array [
+    "datamodel.graphql",
+  ],
+  "schema": "schemas/database.graphql",
+  "secret": "this-is-a-long-secret",
+  "service": "jj",
+  "stages": Object {
+    "default": "shared-eu-west-1",
+    "dev": "shared-eu-west-1",
+  },
+}
+`;
+
+exports[`graphcool definition load yml with secret and env var in .env 1`] = `
+Object {
+  "datamodel": Array [
+    "datamodel.graphql",
+  ],
+  "schema": "schemas/database.graphql",
+  "secret": "this-is-very-secret,and-comma,seperated",
+  "service": "jj",
+  "stages": Object {
+    "default": "shared-eu-west-1",
+    "dev": "shared-eu-west-1",
+  },
+}
+`;
+
+exports[`graphcool definition load yml with secret and env var in .env 2`] = `
+Array [
+  "this-is-very-secret",
+  "and-comma",
+  "seperated",
+]
+`;
