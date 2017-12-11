@@ -210,7 +210,7 @@ object DataExport {
 
   //use GCValues for the conversions?
 
-  def isLimitReached(bundle: JsonBundle): Boolean = bundle.size > 1000 // only for testing purposes variable in here
+  def isLimitReached(bundle: JsonBundle)(implicit clientInjector: ClientInjector): Boolean = bundle.size > clientInjector.maxImportExportSize
 
   sealed trait ExportInfo {
     val cursor: Cursor
@@ -256,7 +256,7 @@ object DataExport {
     lazy val nextRelation: RelationData = relations.find(_._2 == cursor.table + 1).get._1
   }
 
-  def executeExport(project: Project, dataResolver: DataResolver, json: JsValue): Future[JsValue] = {
+  def executeExport(project: Project, dataResolver: DataResolver, json: JsValue)(implicit clientInjector: ClientInjector): Future[JsValue] = {
     import scala.concurrent.ExecutionContext.Implicits.global
     import spray.json._
     import MyJsonProtocol._
@@ -275,7 +275,7 @@ object DataExport {
     }
   }
 
-  def resForCursor(in: JsonBundle, info: ExportInfo): Future[ResultFormat] = {
+  def resForCursor(in: JsonBundle, info: ExportInfo)(implicit clientInjector: ClientInjector): Future[ResultFormat] = {
     import scala.concurrent.ExecutionContext.Implicits.global
 
     for {
@@ -288,7 +288,7 @@ object DataExport {
     } yield x
   }
 
-  def resultForTable(in: JsonBundle, info: ExportInfo): Future[ResultFormat] = {
+  def resultForTable(in: JsonBundle, info: ExportInfo)(implicit clientInjector: ClientInjector): Future[ResultFormat] = {
     import scala.concurrent.ExecutionContext.Implicits.global
     fetchDataItemsPage(info).flatMap { page =>
       val result = serializePage(in, page, info)
@@ -302,14 +302,14 @@ object DataExport {
   }
 
   case class DataItemsPage(items: Seq[DataItem], hasMore: Boolean) { def itemCount: Int = items.length }
-  def fetchDataItemsPage(info: ExportInfo): Future[DataItemsPage] = {
+  def fetchDataItemsPage(info: ExportInfo)(implicit clientInjector: ClientInjector): Future[DataItemsPage] = {
     import scala.concurrent.ExecutionContext.Implicits.global
 
     val queryArguments = QueryArguments(skip = Some(info.cursor.row), after = None, first = Some(1000), None, None, None, None)
     val res: Future[DataItemsPage] = for {
       result <- info match {
                  case x: NodeInfo     => x.dataResolver.loadModelRowsForExport(x.current, Some(queryArguments))
-                 case x: ListInfo     => x.dataResolver.loadModelRowsForExport(x.currentModel, Some(queryArguments)) //own select only for list fields?
+                 case x: ListInfo     => x.dataResolver.loadModelRowsForExport(x.currentModel, Some(queryArguments))
                  case x: RelationInfo => x.dataResolver.loadRelationRowsForExport(x.current.relationId, Some(queryArguments))
                }
     } yield {
@@ -333,9 +333,9 @@ object DataExport {
     in.copy(items = res)
   }
 
-  def serializePage(in: JsonBundle, page: DataItemsPage, info: ExportInfo, startOnPage: Int = 0, amount: Int = 1000): ResultFormat = {
+  def serializePage(in: JsonBundle, page: DataItemsPage, info: ExportInfo, startOnPage: Int = 0, amount: Int = 1000)(
+      implicit clientInjector: ClientInjector): ResultFormat = {
     //we are wasting some serialization efforts here when we convert stuff again after backtracking
-
     val dataItems = page.items.slice(startOnPage, startOnPage + amount)
     val result    = serializeDataItems(in, dataItems, info)
     val noneLeft  = startOnPage + amount >= page.itemCount
@@ -348,7 +348,7 @@ object DataExport {
     }
   }
 
-  def serializeDataItems(in: JsonBundle, dataItems: Seq[DataItem], info: ExportInfo): ResultFormat = {
+  def serializeDataItems(in: JsonBundle, dataItems: Seq[DataItem], info: ExportInfo)(implicit clientInjector: ClientInjector): ResultFormat = {
 
     info match {
       case info: NodeInfo =>
@@ -384,7 +384,7 @@ object DataExport {
     }
   }
 
-  def dataItemsForLists(in: JsonBundle, items: Seq[DataItem], info: ListInfo): ResultFormat = {
+  def dataItemsForLists(in: JsonBundle, items: Seq[DataItem], info: ListInfo)(implicit clientInjector: ClientInjector): ResultFormat = {
     if (items.isEmpty) {
       ResultFormat(in, info.cursor, isFull = false)
     } else {
@@ -411,7 +411,7 @@ object DataExport {
     JsonBundle(jsonElements = Vector(json), size = json.toString.length)
   }
 
-  def dataItemToExportList(in: JsonBundle, item: DataItem, info: ListInfo): ResultFormat = {
+  def dataItemToExportList(in: JsonBundle, item: DataItem, info: ListInfo)(implicit clientInjector: ClientInjector): ResultFormat = {
     import cool.graph.shared.schema.CustomScalarTypes.parseValueFromString
     val listFieldsWithValues: Map[String, Any] = item.userData.collect { case (k, Some(v)) if info.listFields.map(p => p._1).contains(k) => (k, v) }
 
@@ -430,7 +430,8 @@ object DataExport {
     nodeResults
   }
 
-  def serializeFields(in: JsonBundle, identifier: ImportIdentifier, fieldValues: Map[String, Vector[Any]], info: ListInfo): ResultFormat = {
+  def serializeFields(in: JsonBundle, identifier: ImportIdentifier, fieldValues: Map[String, Vector[Any]], info: ListInfo)(
+      implicit clientInjector: ClientInjector): ResultFormat = {
     val result = serializeArray(in, identifier, fieldValues(info.currentField), info)
 
     result.isFull match {
@@ -441,7 +442,8 @@ object DataExport {
   }
 
 //  this should have the ability to scale up again, but doing it within one field probably adds too much complexity for now
-  def serializeArray(in: JsonBundle, identifier: ImportIdentifier, arrayValues: Vector[Any], info: ListInfo, amount: Int = 1000000): ResultFormat = {
+  def serializeArray(in: JsonBundle, identifier: ImportIdentifier, arrayValues: Vector[Any], info: ListInfo, amount: Int = 1000000)(
+      implicit clientInjector: ClientInjector): ResultFormat = {
     import MyJsonProtocol._
     import spray.json._
 
