@@ -79,7 +79,6 @@ object CustomScalarTypes {
           case TypeIdentifier.Int       => Some(Integer.parseInt(value))
           case TypeIdentifier.Float     => Some((if (value == null) { "0" } else { value }).toDouble)
           case TypeIdentifier.Boolean   => Some(value.toBoolean)
-          case TypeIdentifier.Password  => Some(value)
           case TypeIdentifier.DateTime  => Some(new DateTime(value, DateTimeZone.UTC))
           case TypeIdentifier.GraphQLID => Some(value)
           case TypeIdentifier.Enum      => Some(value)

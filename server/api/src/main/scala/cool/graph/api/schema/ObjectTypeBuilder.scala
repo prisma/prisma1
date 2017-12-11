@@ -113,7 +113,7 @@ class ObjectTypeBuilder(project: models.Project,
       case TypeIdentifier.DateTime  => DateTimeType
       case TypeIdentifier.Json      => JsonType
       case TypeIdentifier.Enum      => SchemaBuilderUtils.mapEnumFieldToInputType(field)
-      case _                        => resolveConnection(field)
+      case TypeIdentifier.Relation  => resolveConnection(field)
     }
 
     if (field.isScalar && field.isList) {
@@ -132,7 +132,7 @@ class ObjectTypeBuilder(project: models.Project,
       case true =>
         ListType(modelObjectTypes.get(field.relatedModel(project).get.name).get)
       case false =>
-        modelObjectTypes.get(field.relatedModel(project).get.name).get
+        modelObjectTypes.get(field.relatedModel_!(project).name).get
     }
   }
 
@@ -382,10 +382,10 @@ object ObjectTypeBuilder {
               case TypeIdentifier.Float     => mapTo(value, x => x.convertTo[Double])
               case TypeIdentifier.Boolean   => mapTo(value, x => x.convertTo[Boolean])
               case TypeIdentifier.GraphQLID => mapTo(value, x => x.convertTo[String])
-              case TypeIdentifier.Password  => mapTo(value, x => x.convertTo[String])
-              case TypeIdentifier.DateTime  => mapTo(value, x => new DateTime(x.convertTo[String], DateTimeZone.UTC))
-              case TypeIdentifier.Enum      => mapTo(value, x => x.convertTo[String])
-              case TypeIdentifier.Json      => mapTo(value, x => x.convertTo[JsValue])
+
+              case TypeIdentifier.DateTime => mapTo(value, x => new DateTime(x.convertTo[String], DateTimeZone.UTC))
+              case TypeIdentifier.Enum     => mapTo(value, x => x.convertTo[String])
+              case TypeIdentifier.Json     => mapTo(value, x => x.convertTo[JsValue])
             }
           case (Some(value), false) =>
             def mapTo[T](value: Any) = value.asInstanceOf[T]
@@ -396,7 +396,6 @@ object ObjectTypeBuilder {
               case TypeIdentifier.Float     => mapTo[Double](value)
               case TypeIdentifier.Boolean   => mapTo[Boolean](value)
               case TypeIdentifier.GraphQLID => mapTo[String](value)
-              case TypeIdentifier.Password  => mapTo[String](value)
               case TypeIdentifier.DateTime =>
                 value.isInstanceOf[DateTime] match {
                   case true => value

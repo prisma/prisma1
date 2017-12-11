@@ -9,7 +9,9 @@ import cool.graph.api.schema.SchemaBuilder
 import cool.graph.deploy.DeployDependencies
 import cool.graph.deploy.migration.{AsyncMigrator, Migrator}
 
-trait SingleServerApiDependencies extends DeployDependencies with ApiDependencies {}
+trait SingleServerApiDependencies extends DeployDependencies with ApiDependencies {
+  override implicit def self: SingleServerDependencies
+}
 
 case class SingleServerDependencies(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends SingleServerApiDependencies {
   override implicit def self = this

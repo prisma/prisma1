@@ -118,7 +118,6 @@ object FilterArguments {
           case TypeIdentifier.Boolean   => List(baseFilters)
           case TypeIdentifier.Enum      => List(baseFilters, inclusionFilters)
           case TypeIdentifier.DateTime  => List(baseFilters, inclusionFilters, alphanumericFilters)
-          case TypeIdentifier.Password  => List()
           case TypeIdentifier.Json      => List()
           case TypeIdentifier.Relation  => List(oneRelationFilters)
           case _                        => List()

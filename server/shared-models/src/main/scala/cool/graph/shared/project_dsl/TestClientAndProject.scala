@@ -19,7 +19,6 @@ object TestClient {
       email = testEmail,
       hashedPassword = "",
       resetPasswordSecret = Some(testResetPasswordToken),
-      source = CustomerSource.DOCS,
       projects = projects,
       createdAt = org.joda.time.DateTime.now,
       updatedAt = org.joda.time.DateTime.now

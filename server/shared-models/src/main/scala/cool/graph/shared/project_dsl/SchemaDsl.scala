@@ -61,7 +61,6 @@ object SchemaDsl {
   case class ModelBuilder(
       name: String,
       fields: Buffer[Field] = Buffer(idField),
-      permissions: Buffer[ModelPermission] = Buffer.empty,
       var withPermissions: Boolean = true,
       var isSystem: Boolean = false
   ) {
@@ -123,19 +122,14 @@ object SchemaDsl {
       this
     }
 
-    def oneToOneRelation(fieldName: String,
-                         otherFieldName: String,
-                         other: ModelBuilder,
-                         relationName: Option[String] = None,
-                         permissions: Option[List[RelationPermission]] = None): ModelBuilder = {
+    def oneToOneRelation(fieldName: String, otherFieldName: String, other: ModelBuilder, relationName: Option[String] = None): ModelBuilder = {
       val _relationName = relationName.getOrElse(s"${this.name}To${other.name}")
       val relation =
         Relation(
           id = _relationName.toLowerCase,
           name = _relationName,
           modelAId = this.id,
-          modelBId = other.id,
-          permissions = permissions.getOrElse(RelationPermission.publicPermissions)
+          modelBId = other.id
         )
       val newField = relationField(fieldName, this, other, relation, isList = false, isBackward = false)
       fields += newField
@@ -150,16 +144,14 @@ object SchemaDsl {
                            otherFieldName: String,
                            other: ModelBuilder,
                            relationName: Option[String] = None,
-                           isRequiredOnOtherField: Boolean = true,
-                           permissions: Option[List[RelationPermission]] = None): ModelBuilder = {
+                           isRequiredOnOtherField: Boolean = true): ModelBuilder = {
       val _relationName = relationName.getOrElse(s"${this.name}To${other.name}")
 
       val relation = Relation(
         id = _relationName.toLowerCase,
         name = _relationName,
         modelAId = this.id,
-        modelBId = other.id,
-        permissions = permissions.getOrElse(RelationPermission.publicPermissions)
+        modelBId = other.id
       )
 
       val newField = relationField(fieldName, this, other, relation, isList = false, isBackward = false, isRequired = true)
@@ -171,19 +163,14 @@ object SchemaDsl {
       this
     }
 
-    def oneToManyRelation_!(fieldName: String,
-                            otherFieldName: String,
-                            other: ModelBuilder,
-                            relationName: Option[String] = None,
-                            permissions: Option[List[RelationPermission]] = None): ModelBuilder = {
+    def oneToManyRelation_!(fieldName: String, otherFieldName: String, other: ModelBuilder, relationName: Option[String] = None): ModelBuilder = {
       val _relationName = relationName.getOrElse(s"${this.name}To${other.name}")
 
       val relation = Relation(
         id = _relationName.toLowerCase,
         name = _relationName,
         modelAId = this.id,
-        modelBId = other.id,
-        permissions = permissions.getOrElse(RelationPermission.publicPermissions)
+        modelBId = other.id
       )
 
       val newField =
@@ -198,19 +185,14 @@ object SchemaDsl {
       this
     }
 
-    def oneToManyRelation(fieldName: String,
-                          otherFieldName: String,
-                          other: ModelBuilder,
-                          relationName: Option[String] = None,
-                          permissions: Option[List[RelationPermission]] = None): ModelBuilder = {
+    def oneToManyRelation(fieldName: String, otherFieldName: String, other: ModelBuilder, relationName: Option[String] = None): ModelBuilder = {
       val _relationName = relationName.getOrElse(s"${this.name}To${other.name}")
       val relation =
         Relation(
           id = _relationName.toLowerCase,
           name = _relationName,
           modelAId = this.id,
-          modelBId = other.id,
-          permissions = permissions.getOrElse(RelationPermission.publicPermissions)
+          modelBId = other.id
         )
       val newField = relationField(fieldName, this, other, relation, isList = true, isBackward = false)
       fields += newField
@@ -221,19 +203,14 @@ object SchemaDsl {
       this
     }
 
-    def manyToOneRelation(fieldName: String,
-                          otherFieldName: String,
-                          other: ModelBuilder,
-                          relationName: Option[String] = None,
-                          permissions: Option[List[RelationPermission]] = None): ModelBuilder = {
+    def manyToOneRelation(fieldName: String, otherFieldName: String, other: ModelBuilder, relationName: Option[String] = None): ModelBuilder = {
       val _relationName = relationName.getOrElse(s"${this.name}To${other.name}")
       val relation =
         Relation(
           id = _relationName.toLowerCase,
           name = _relationName,
           modelAId = this.id,
-          modelBId = other.id,
-          permissions = permissions.getOrElse(RelationPermission.publicPermissions)
+          modelBId = other.id
         )
       val newField = relationField(fieldName, this, other, relation, isList = false, isBackward = false)
       fields += newField
@@ -244,19 +221,14 @@ object SchemaDsl {
       this
     }
 
-    def manyToManyRelation(fieldName: String,
-                           otherFieldName: String,
-                           other: ModelBuilder,
-                           relationName: Option[String] = None,
-                           permissions: Option[List[RelationPermission]] = None): ModelBuilder = {
+    def manyToManyRelation(fieldName: String, otherFieldName: String, other: ModelBuilder, relationName: Option[String] = None): ModelBuilder = {
       val _relationName = relationName.getOrElse(s"${this.name}To${other.name}")
       val relation =
         Relation(
           id = _relationName.toLowerCase,
           name = _relationName,
           modelAId = this.id,
-          modelBId = other.id,
-          permissions = permissions.getOrElse(RelationPermission.publicPermissions)
+          modelBId = other.id
         )
       val newField = relationField(fieldName, from = this, to = other, relation, isList = true, isBackward = false)
       fields += newField
@@ -268,44 +240,12 @@ object SchemaDsl {
       this
     }
 
-    def permission(operation: ModelOperation.type => ModelOperation.Value,
-                   userType: UserType.type => UserType.Value,
-                   fields: List[String] = List.empty,
-                   query: Option[String] = None,
-                   queryFilePath: Option[String] = None,
-                   description: Option[String] = None,
-                   isActive: Boolean = true,
-                   ruleName: Option[String] = None): ModelBuilder = {
-      val fieldIds = fields.map(name => s"${this.id}.$name")
-
-      this.permissions += ModelPermission(
-        id = newId(),
-        operation = operation(ModelOperation),
-        userType = userType(UserType),
-        fieldIds = fieldIds,
-        applyToWholeModel = fields.isEmpty,
-        isActive = isActive,
-        rule = query.map(_ => CustomRule.Graph).getOrElse(CustomRule.None),
-        ruleGraphQuery = query,
-        ruleGraphQueryFilePath = queryFilePath,
-        description = description,
-        ruleName = ruleName
-      )
-      this
-    }
-
-    def withOutPermissions: ModelBuilder = {
-      this.withPermissions = false
-      this
-    }
-
     def build(): Model = {
       Model(
         name = name,
         id = id,
         isSystem = isSystem,
-        fields = fields.toList,
-        permissions = this.permissions.toList
+        fields = fields.toList
       )
     }
   }

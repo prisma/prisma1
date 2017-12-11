@@ -11,7 +11,6 @@ object ProjectJsonFormatter {
 
   // ENUMS
   implicit lazy val seatStatus               = enumFormat(SeatStatus)
-  implicit lazy val regionFormat             = enumFormat(Region)
   implicit lazy val logStatus                = enumFormat(LogStatus)
   implicit lazy val requestPipelineOperation = enumFormat(RequestPipelineOperation)
   implicit lazy val relationSide             = enumFormat(RelationSide)
@@ -88,7 +87,6 @@ object ProjectJsonFormatter {
     private def createGcValue(discriminator: String, value: JsValue, isList: Boolean): JsResult[GCValue] = (discriminator, value) match {
       case (`nullType`, _)                  => JsSuccess(NullGCValue)
       case (`stringType`, JsString(str))    => JsSuccess(StringGCValue(str))
-      case (`passwordType`, JsString(str))  => JsSuccess(PasswordGCValue(str))
       case (`enumType`, JsString(str))      => JsSuccess(EnumGCValue(str))
       case (`graphQlIdType`, JsString(str)) => JsSuccess(GraphQLIdGCValue(str))
       case (`dateTimeType`, JsString(str))  => JsSuccess(DateTimeGCValue(new DateTime(str, DateTimeZone.UTC)))
@@ -111,7 +109,6 @@ object ProjectJsonFormatter {
       gcValue match {
         case NullGCValue         => json(nullType, JsNull)
         case x: StringGCValue    => json(stringType, JsString(x.value))
-        case x: PasswordGCValue  => json(passwordType, JsString(x.value))
         case x: EnumGCValue      => json(enumType, JsString(x.value))
         case x: GraphQLIdGCValue => json(graphQlIdType, JsString(x.value))
         case x: DateTimeGCValue  => json(dateTimeType, JsString(formatter.print(x.value)))
@@ -133,16 +130,12 @@ object ProjectJsonFormatter {
     }
   }
 
-  implicit lazy val projectDatabase           = Json.format[ProjectDatabase]
-  implicit lazy val modelPermission           = Json.format[ModelPermission]
   implicit lazy val relationFieldMirror       = Json.format[RelationFieldMirror]
-  implicit lazy val relationPermission        = Json.format[RelationPermission]
   implicit lazy val relation                  = Json.format[Relation]
   implicit lazy val enum                      = Json.format[Enum]
   implicit lazy val field                     = Json.format[Field]
   implicit lazy val model                     = Json.format[Model]
   implicit lazy val seat                      = Json.format[Seat]
-  implicit lazy val packageDefinition         = Json.format[PackageDefinition]
   implicit lazy val featureToggle             = Json.format[FeatureToggle]
   implicit lazy val projectFormat             = Json.format[Project]
   implicit lazy val projectWithClientIdFormat = Json.format[ProjectWithClientId]
