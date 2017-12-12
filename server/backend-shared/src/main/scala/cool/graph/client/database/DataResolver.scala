@@ -43,9 +43,6 @@ abstract class DataResolver(val project: Project, val requestContext: Option[Req
     }
   }
   def resolveByModel(model: Model, args: Option[QueryArguments] = None): Future[ResolverResult]
-  def loadModelRowsForExport(model: Model, args: Option[QueryArguments] = None): Future[ResolverResult]
-
-  def loadRelationRowsForExport(relationId: String, args: Option[QueryArguments] = None): Future[ResolverResult]
 
   def countByModel(model: Model, args: Option[QueryArguments] = None): Future[Int]
 
@@ -57,6 +54,9 @@ abstract class DataResolver(val project: Project, val requestContext: Option[Req
   def resolveByUniqueWithoutValidation(model: Model, key: String, value: Any): Future[Option[DataItem]]
 
   def batchResolveByUnique(model: Model, key: String, values: List[Any]): Future[List[DataItem]]
+
+  def loadModelRowsForExport(model: Model, args: Option[QueryArguments] = None): Future[ResolverResult]
+  def loadRelationRowsForExport(relationId: String, args: Option[QueryArguments] = None): Future[ResolverResult]
 
   /**
     * Resolves a DataItem by its global id. As this method has no knowledge about which model table to query it has to do an additional
