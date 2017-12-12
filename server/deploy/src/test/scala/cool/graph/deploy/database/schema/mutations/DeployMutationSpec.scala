@@ -21,7 +21,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
         |}
       """.stripMargin
 
-    val result = server.querySimple(s"""
+    val result = server.query(s"""
        |mutation {
        |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: "${schema.replaceAll("\n", " ")}"}){
        |    project {

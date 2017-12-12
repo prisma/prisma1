@@ -40,7 +40,7 @@ trait DeploySpecBase extends BeforeAndAfterEach with BeforeAndAfterAll with Awai
   }
 
   def setupProject(schema: String, name: String = Cuid.createCuid(), stage: String = Cuid.createCuid()): Project = {
-    server.querySimple(s"""
+    server.query(s"""
         |mutation {
         | addProject(input: {
         |   name: "$name",
@@ -57,7 +57,7 @@ trait DeploySpecBase extends BeforeAndAfterEach with BeforeAndAfterAll with Awai
     val projectId = name + "@" + stage
     projectsToCleanUp :+ projectId
 
-    server.querySimple(s"""
+    server.query(s"""
         |mutation {
         |  deploy(input:{name: "$name", stage: "$stage", types: "${schema.replaceAll("\n", " ")}"}){
         |    errors {

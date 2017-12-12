@@ -14,7 +14,6 @@ object SingleServerMain extends App {
 
   val port                     = sys.env.getOrElse("PORT", sys.error("PORT env var required but not found.")).toInt
   val singleServerDependencies = SingleServerDependencies()
-  singleServerDependencies.init
 
   Version.check()
 

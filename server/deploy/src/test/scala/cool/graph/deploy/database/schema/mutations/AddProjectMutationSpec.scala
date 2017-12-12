@@ -13,7 +13,7 @@ class AddProjectMutationSpec extends FlatSpec with Matchers with DeploySpecBase 
     val name  = Cuid.createCuid()
     val stage = Cuid.createCuid()
 
-    val result = server.querySimple(s"""
+    val result = server.query(s"""
         |mutation {
         | addProject(input: {
         |   name: "$name",

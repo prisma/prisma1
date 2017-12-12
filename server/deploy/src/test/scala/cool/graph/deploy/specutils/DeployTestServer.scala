@@ -2,7 +2,8 @@ package cool.graph.deploy.specutils
 
 import cool.graph.deploy.DeployDependencies
 import cool.graph.deploy.schema.{SchemaBuilder, SystemUserContext}
-import cool.graph.shared.models.{AuthenticatedRequest, AuthenticatedUser, Project}
+import cool.graph.deploy.server.ErrorHandler
+import cool.graph.shared.models.{AuthenticatedRequest, AuthenticatedUser}
 import sangria.execution.Executor
 import sangria.parser.QueryParser
 import sangria.renderer.SchemaRenderer
@@ -25,17 +26,16 @@ case class DeployTestServer()(implicit dependencies: DeployDependencies) extends
   /**
     * Execute a Query that must succeed.
     */
-  def querySimple(query: String): JsValue                       = executeQuerySimple(query)
-  def querySimple(query: String, dataContains: String): JsValue = executeQuerySimple(query, dataContains)
+  def query(query: String): JsValue                       = executeQuery(query)
+  def query(query: String, dataContains: String): JsValue = executeQuery(query, dataContains)
 
-  // todo remove all the "simple" naming
-  def executeQuerySimple(
+  def executeQuery(
       query: String,
       dataContains: String = "",
       variables: JsValue = JsObject.empty,
       requestId: String = "CombinedTestDatabase.requestId"
   ): JsValue = {
-    val result = executeQuerySimpleWithAuthentication(
+    val result = executeQueryWithAuthentication(
       query = query,
       variables = variables,
       requestId = requestId
@@ -48,32 +48,32 @@ case class DeployTestServer()(implicit dependencies: DeployDependencies) extends
   /**
     * Execute a Query that must fail.
     */
-  def querySimpleThatMustFail(query: String, errorCode: Int): JsValue = executeQuerySimpleThatMustFail(query, errorCode)
-  def querySimpleThatMustFail(query: String, errorCode: Int, errorCount: Int): JsValue =
-    executeQuerySimpleThatMustFail(query = query, errorCode = errorCode, errorCount = errorCount)
-  def querySimpleThatMustFail(query: String, errorCode: Int, errorContains: String): JsValue =
-    executeQuerySimpleThatMustFail(query = query, errorCode = errorCode, errorContains = errorContains)
-  def querySimpleThatMustFail(query: String, errorCode: Int, errorContains: String, errorCount: Int): JsValue =
-    executeQuerySimpleThatMustFail(query = query, errorCode = errorCode, errorCount = errorCount, errorContains = errorContains)
+  def queryThatMustFail(query: String, errorCode: Int): JsValue = executeQueryThatMustFail(query, errorCode)
+  def queryThatMustFail(query: String, errorCode: Int, errorCount: Int): JsValue =
+    executeQueryThatMustFail(query = query, errorCode = errorCode, errorCount = errorCount)
+  def queryThatMustFail(query: String, errorCode: Int, errorContains: String): JsValue =
+    executeQueryThatMustFail(query = query, errorCode = errorCode, errorContains = errorContains)
+  def queryThatMustFail(query: String, errorCode: Int, errorContains: String, errorCount: Int): JsValue =
+    executeQueryThatMustFail(query = query, errorCode = errorCode, errorCount = errorCount, errorContains = errorContains)
 
-  def executeQuerySimpleThatMustFail(query: String, userId: String, errorCode: Int): JsValue =
-    executeQuerySimpleThatMustFail(query = query, userId = Some(userId), errorCode = errorCode)
-  def executeQuerySimpleThatMustFail(query: String, userId: String, errorCode: Int, errorCount: Int): JsValue =
-    executeQuerySimpleThatMustFail(query = query, userId = Some(userId), errorCode = errorCode, errorCount = errorCount)
-  def executeQuerySimpleThatMustFail(query: String, errorCode: Int, errorContains: String, userId: String): JsValue =
-    executeQuerySimpleThatMustFail(query = query, userId = Some(userId), errorCode = errorCode, errorContains = errorContains)
-  def executeQuerySimpleThatMustFail(query: String, userId: String, errorCode: Int, errorCount: Int, errorContains: String): JsValue =
-    executeQuerySimpleThatMustFail(query = query, userId = Some(userId), errorCode = errorCode, errorCount = errorCount, errorContains = errorContains)
+  def executeQueryThatMustFail(query: String, userId: String, errorCode: Int): JsValue =
+    executeQueryThatMustFail(query = query, userId = Some(userId), errorCode = errorCode)
+  def executeQueryThatMustFail(query: String, userId: String, errorCode: Int, errorCount: Int): JsValue =
+    executeQueryThatMustFail(query = query, userId = Some(userId), errorCode = errorCode, errorCount = errorCount)
+  def executeQueryThatMustFail(query: String, errorCode: Int, errorContains: String, userId: String): JsValue =
+    executeQueryThatMustFail(query = query, userId = Some(userId), errorCode = errorCode, errorContains = errorContains)
+  def executeQueryThatMustFail(query: String, userId: String, errorCode: Int, errorCount: Int, errorContains: String): JsValue =
+    executeQueryThatMustFail(query = query, userId = Some(userId), errorCode = errorCode, errorCount = errorCount, errorContains = errorContains)
 
-  def executeQuerySimpleThatMustFail(query: String,
-                                     errorCode: Int,
-                                     errorCount: Int = 1,
-                                     errorContains: String = "",
-                                     userId: Option[String] = None,
-                                     variables: JsValue = JsObject(),
-                                     requestId: String = "CombinedTestDatabase.requestId",
-                                     graphcoolHeader: Option[String] = None): JsValue = {
-    val result = executeQuerySimpleWithAuthentication(
+  def executeQueryThatMustFail(query: String,
+                               errorCode: Int,
+                               errorCount: Int = 1,
+                               errorContains: String = "",
+                               userId: Option[String] = None,
+                               variables: JsValue = JsObject(),
+                               requestId: String = "CombinedTestDatabase.requestId",
+                               graphcoolHeader: Option[String] = None): JsValue = {
+    val result = executeQueryWithAuthentication(
       query = query,
       authenticatedRequest = userId.map(AuthenticatedUser(_, "User", "test-token")),
       variables = variables,
@@ -88,16 +88,17 @@ case class DeployTestServer()(implicit dependencies: DeployDependencies) extends
   /**
     * Execute a Query without Checks.
     */
-  def executeQuerySimpleWithAuthentication(query: String,
-                                           authenticatedRequest: Option[AuthenticatedRequest] = None,
-                                           variables: JsValue = JsObject(),
-                                           requestId: String = "CombinedTestDatabase.requestId",
-                                           graphcoolHeader: Option[String] = None): JsValue = {
+  def executeQueryWithAuthentication(query: String,
+                                     authenticatedRequest: Option[AuthenticatedRequest] = None,
+                                     variables: JsValue = JsObject(),
+                                     requestId: String = "CombinedTestDatabase.requestId",
+                                     graphcoolHeader: Option[String] = None): JsValue = {
 
     val schemaBuilder  = SchemaBuilder()(dependencies.system, dependencies)
     val userContext    = SystemUserContext()
     val schema         = schemaBuilder(userContext)
     val renderedSchema = SchemaRenderer.renderSchema(schema)
+    val errorHandler   = ErrorHandler(requestId)
 
     if (printSchema) println(renderedSchema)
     if (writeSchemaToFile) writeSchemaIntoFile(renderedSchema)
@@ -110,9 +111,8 @@ case class DeployTestServer()(implicit dependencies: DeployDependencies) extends
           schema = schema,
           queryAst = queryAst,
           userContext = context,
-          variables = variables
-          //          exceptionHandler = sangriaErrorHandler,
-          //          middleware = List(apiMetricMiddleware, projectLockdownMiddleware)
+          variables = variables,
+          exceptionHandler = errorHandler.sangriaExceptionHandler
         )
 //        .recover {
 //          case error: QueryAnalysisError => error.resolveError
