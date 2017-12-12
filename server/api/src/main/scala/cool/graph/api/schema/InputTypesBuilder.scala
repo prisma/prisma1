@@ -95,10 +95,8 @@ case class InputTypesBuilder(project: Project) {
           s"${model.name}CreateInput"
 
         case Some(relation) =>
-          val otherModel = relation.getOtherModel_!(project, model)
-          val otherField = relation.getOtherField_!(project, model)
-
-          s"${otherModel.name}${otherField.name}${model.name}"
+          val field = relation.getField_!(project, model)
+          s"${model.name}CreateWithout${field.name.capitalize}Input"
       }
 
       InputObjectType[Any](
@@ -189,13 +187,14 @@ case class InputTypesBuilder(project: Project) {
     val manyRelationArguments = model.listRelationFields.flatMap { field =>
       val subModel              = field.relatedModel_!(project)
       val relation              = field.relation.get
+      val relatedField          = field.relatedFieldEager(project)
       val relationMustBeOmitted = omitRelation.exists(rel => field.isRelationWithId(rel.id))
 
       if (relationMustBeOmitted) {
         None
       } else {
         val inputObjectType = InputObjectType[Any](
-          name = s"${subModel.name}CreateManyInput",
+          name = s"${subModel.name}CreateManyWithout${relatedField.name.capitalize}Input",
           fieldsFn = () => {
             List(
               schemaArgumentWithName(field, "create", OptionInputType(ListInputType(cachedInputObjectTypeForCreate(subModel, Some(relation))))).asSangriaInputField
@@ -208,13 +207,14 @@ case class InputTypesBuilder(project: Project) {
     val singleRelationArguments = model.singleRelationFields.flatMap { field =>
       val subModel              = field.relatedModel_!(project)
       val relation              = field.relation.get
+      val relatedField          = field.relatedFieldEager(project)
       val relationMustBeOmitted = omitRelation.exists(rel => field.isRelationWithId(rel.id))
 
       if (relationMustBeOmitted) {
         None
       } else {
         val inputObjectType = InputObjectType[Any](
-          name = s"${subModel.name}CreateOneInput",
+          name = s"${subModel.name}CreateOneWithout${relatedField.name.capitalize}Input",
           fieldsFn = () => {
             List(
               schemaArgumentWithName(field, "create", OptionInputType(cachedInputObjectTypeForCreate(subModel, Some(relation)))).asSangriaInputField

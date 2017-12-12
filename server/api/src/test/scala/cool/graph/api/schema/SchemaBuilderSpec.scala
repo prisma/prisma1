@@ -46,32 +46,36 @@ class SchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec with Gra
     todoInputType should be("""input TodoCreateInput {
                           |  title: String!
                           |  tag: String
-                          |  comments: CommentCreateManyInput
+                          |  comments: CommentCreateManyWithoutTodoInput
                           |}""".stripMargin)
 
-    val nestedInputTypeForComment = schema.mustContainInputType("CommentCreateManyInput")
-    nestedInputTypeForComment should equal("""input CommentCreateManyInput {
-                                            |  create: [TodocommentsComment!]
-                                            |}""".stripMargin)
+    val nestedInputTypeForComment = schema.mustContainInputType("CommentCreateManyWithoutTodoInput")
 
-    val createInputForNestedComment = schema.mustContainInputType("TodocommentsComment")
-    createInputForNestedComment should equal("""input TodocommentsComment {
+    mustBeEqual(
+      nestedInputTypeForComment,
+      """input CommentCreateManyWithoutTodoInput {
+         |  create: [CommentCreateWithoutTodoInput!]
+         |}""".stripMargin
+    )
+
+    val createInputForNestedComment = schema.mustContainInputType("CommentCreateWithoutTodoInput")
+    createInputForNestedComment should equal("""input CommentCreateWithoutTodoInput {
                                                |  text: String!
                                                |}""".stripMargin)
 
     val commentInputType = schema.mustContainInputType("CommentCreateInput")
     commentInputType should equal("""input CommentCreateInput {
                                     |  text: String!
-                                    |  todo: TodoCreateOneInput
+                                    |  todo: TodoCreateOneWithoutCommentsInput
                                     |}""".stripMargin)
 
-    val nestedInputTypeForTodo = schema.mustContainInputType("TodoCreateOneInput")
-    nestedInputTypeForTodo should equal("""input TodoCreateOneInput {
-                                          |  create: CommenttodoTodo
+    val nestedInputTypeForTodo = schema.mustContainInputType("TodoCreateOneWithoutCommentsInput")
+    nestedInputTypeForTodo should equal("""input TodoCreateOneWithoutCommentsInput {
+                                          |  create: TodoCreateWithoutCommentsInput
                                           |}""".stripMargin)
 
-    val createInputForNestedTodo = schema.mustContainInputType("CommenttodoTodo")
-    createInputForNestedTodo should equal("""input CommenttodoTodo {
+    val createInputForNestedTodo = schema.mustContainInputType("TodoCreateWithoutCommentsInput")
+    createInputForNestedTodo should equal("""input TodoCreateWithoutCommentsInput {
                                             |  title: String!
                                             |  tag: String
                                             |}""".stripMargin)
@@ -98,5 +102,14 @@ class SchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec with Gra
                                 |  id: ID
                                 |  alias: String
                                 |}""".stripMargin)
+  }
+
+  private def mustBeEqual(actual: String, expected: String): Unit = {
+    if (actual != expected) {
+      sys.error(s"""The strings were not equal!
+          |actual:   $actual
+          |expected: $expected
+        """.stripMargin)
+    }
   }
 }
