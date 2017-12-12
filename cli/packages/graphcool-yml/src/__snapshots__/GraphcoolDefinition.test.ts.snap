@@ -147,3 +147,23 @@ Array [
   "seperated",
 ]
 `;
+
+exports[`graphcool definition load yml with secret and env var in args 1`] = `
+Object {
+  "datamodel": Array [
+    "datamodel.graphql",
+  ],
+  "schema": "schemas/database.graphql",
+  "service": "jj",
+  "stages": Object {
+    "default": "shared-eu-west-1",
+    "dev": "shared-eu-west-1",
+  },
+}
+`;
+
+exports[`graphcool definition load yml with secret and env var in args 2`] = `
+Array [
+  "this-is-secret",
+]
+`;

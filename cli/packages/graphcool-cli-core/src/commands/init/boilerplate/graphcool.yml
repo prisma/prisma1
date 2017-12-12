@@ -3,5 +3,3 @@ service: SERVICE_NAME
 stages: {}
 
 datamodel: datamodel.graphql
-
-secret: so-secret

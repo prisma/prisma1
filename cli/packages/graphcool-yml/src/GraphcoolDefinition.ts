@@ -15,6 +15,10 @@ interface ErrorMessage {
   message: string
 }
 
+export interface EnvVars {
+  [key: string]: string | undefined
+}
+
 export class GraphcoolDefinitionClass {
   definition?: GraphcoolDefinition
   typesString?: string
@@ -24,8 +28,14 @@ export class GraphcoolDefinitionClass {
   definitionDir: string
   env: Environment
   out?: IOutput
+  envVars: any
   private definitionString: string
-  constructor(env: Environment, definitionPath?: string | null, out?: IOutput) {
+  constructor(
+    env: Environment,
+    definitionPath?: string | null,
+    envVars: EnvVars = process.env,
+    out?: IOutput,
+  ) {
     this.secrets = null
     this.definitionPath = definitionPath
     if (definitionPath) {
@@ -33,6 +43,7 @@ export class GraphcoolDefinitionClass {
     }
     this.env = env
     this.out = out
+    this.envVars = envVars
   }
   async load(args: Args, envPath?: string) {
     dotenv.config({ path: envPath })
@@ -46,12 +57,12 @@ export class GraphcoolDefinitionClass {
       this.rawStages = this.definition.stages
       this.definition.stages = this.resolveStageAliases(this.definition.stages)
       this.typesString = this.getTypesString(this.definition)
-      const secrets = process.env.GRAPHCOOL_SECRET || this.definition.secret
+      const secrets = this.envVars.GRAPHCOOL_SECRET || this.definition.secret
       this.secrets = secrets ? secrets.replace(/\s/g, '').split(',') : null
       this.ensureOfClusters(this.definition, this.env)
       const disableAuth =
-        typeof process.env.GRAPHCOOL_DISABLE_AUTH !== 'undefined'
-          ? this.readBool(process.env.GRAPHCOOL_DISABLE_AUTH)
+        typeof this.envVars.GRAPHCOOL_DISABLE_AUTH !== 'undefined'
+          ? this.readBool(this.envVars.GRAPHCOOL_DISABLE_AUTH)
           : this.definition.disableAuth
       if (this.secrets === null && !disableAuth) {
         throw new Error(

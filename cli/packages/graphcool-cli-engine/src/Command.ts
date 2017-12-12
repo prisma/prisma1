@@ -115,7 +115,12 @@ export class Command {
     this.config.setOutput(this.out)
     this.argv = options.config && options.config.argv ? options.config.argv : []
     this.env = new Environment(this.config.globalRCPath, this.out)
-    this.definition = new GraphcoolDefinitionClass(this.env, this.config.definitionPath)
+    this.definition = new GraphcoolDefinitionClass(
+      this.env,
+      this.config.definitionPath,
+      process.env,
+      this.out,
+    )
     this.client = new Client(this.config, this.env, this.out)
     // this.auth = new Auth(this.out, this.config, this.env, this.client)
     // this.client.setAuth(this.auth)

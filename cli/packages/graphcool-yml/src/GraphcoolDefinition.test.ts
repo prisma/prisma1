@@ -140,6 +140,43 @@ type User @model {
     expect(definition.definition).toMatchSnapshot()
     expect(definition.secrets).toMatchSnapshot()
   })
+  test('load yml with secret and env var in args', async () => {
+    const yml = `\
+service: jj
+
+datamodel:
+- datamodel.graphql
+
+schema: schemas/database.graphql
+stages: 
+  default: dev
+  dev: shared-eu-west-1
+    `
+    const datamodel = `
+type User @model {
+  id: ID! @isUnique
+  name: String!
+  lol: Int
+  what: String
+}
+`
+
+    const definitionDir = getTmpDir()
+    const definitionPath = path.join(definitionDir, 'graphcool.yml')
+    const modelPath = path.join(definitionDir, 'datamodel.graphql')
+    const env = makeEnv(defaultGlobalRC)
+
+    const definition = new GraphcoolDefinitionClass(env, definitionPath, {GRAPHCOOL_SECRET: 'this-is-secret'})
+
+    fs.writeFileSync(modelPath, datamodel)
+    fs.writeFileSync(definitionPath, yml)
+
+    await env.load({})
+    await definition.load({})
+
+    expect(definition.definition).toMatchSnapshot()
+    expect(definition.secrets).toMatchSnapshot()
+  })
   test('load yml with disableAuth: true', async () => {
     const secret = 'this-is-a-long-secret'
     const yml = `\
