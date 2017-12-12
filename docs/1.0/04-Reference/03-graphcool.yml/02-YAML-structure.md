@@ -20,6 +20,7 @@ The service definition file `graphcool.yml` has the following root properties:
 
 > The exact structure of `graphcool.yml` is defined with [JSON schema](http://json-schema.org/). You can find the corresponding schema definition [here](https://github.com/graphcool/graphcool-json-schema/blob/master/src/schema.json).
 
+## `service` (required)
 
 The service defines the service name which will also be reflected in the endpoint for your service once it's deployed. The service name must follow these requirements:
 
@@ -165,7 +166,7 @@ Specifying `schema` is optional. If not set, the CLI will not generate and store
 
 The `schema` property expects a **string**.
 
-### Example
+#### Example
 
 Store the database schema in the root directory of the service and call it `database.graphql`.
 

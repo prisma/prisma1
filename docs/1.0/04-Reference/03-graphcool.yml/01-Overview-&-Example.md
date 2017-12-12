@@ -49,8 +49,8 @@ disableAuth: ${env:GRAPHCOOL_DISABLE_AUTH}
 schema: schemas/database.graphql
 
 # OPTIONAL
-# This service has one subscription configured. The corresponding subscription
-# query is located in `database/subscriptions/welcomeEmail.graphql`.
+# This service has one event subscription configured. The corresponding
+# subscription query is located in `database/subscriptions/welcomeEmail.graphql`.
 # When the subscription fires, the specified `webhook` is invoked via HTTP.
 subscriptions:
   sendWelcomeEmail:
