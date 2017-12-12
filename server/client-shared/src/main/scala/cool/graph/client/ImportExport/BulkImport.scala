@@ -12,14 +12,14 @@ import slick.jdbc.MySQLProfile.api._
 import slick.lifted.TableQuery
 import spray.json._
 import MyJsonProtocol._
+import scala.concurrent.ExecutionContext.Implicits.global
 
 import scala.concurrent.Future
 import scala.util.Try
 
 class BulkImport(implicit injector: ClientInjector) {
 
-  def executeImport(project: Project, json: JsValue)(implicit injector: ClientInjector): Future[JsValue] = {
-    import scala.concurrent.ExecutionContext.Implicits.global
+  def executeImport(project: Project, json: JsValue): Future[JsValue] = {
     val bundle = json.convertTo[ImportBundle]
     val count  = bundle.values.elements.length
 
@@ -41,8 +41,7 @@ class BulkImport(implicit injector: ClientInjector) {
       .map(x => JsArray(x))
   }
 
-  private def getImportIdentifier(map: Map[String, Any]): ImportIdentifier =
-    ImportIdentifier(map("_typeName").asInstanceOf[String], map("id").asInstanceOf[String])
+  private def getImportIdentifier(map: Map[String, Any]) = ImportIdentifier(map("_typeName").asInstanceOf[String], map("id").asInstanceOf[String])
 
   private def convertToImportNode(json: JsValue): ImportNode = {
     val map      = json.convertTo[Map[String, Any]]
@@ -72,7 +71,7 @@ class BulkImport(implicit injector: ClientInjector) {
     val items = nodes.map { element =>
       val id                              = element.identifier.id
       val model                           = project.getModelByName_!(element.identifier.typeName)
-      val listFields: Map[String, String] = model.scalarFields.filter(_.isList).map(field => field.name -> "[]").toMap
+      val listFields: Map[String, String] = model.scalarListFields.map(field => field.name -> "[]").toMap
       val values: Map[String, Any]        = element.values ++ listFields + ("id" -> id)
 
       DatabaseMutationBuilder.createDataItem(project.id, model.name, values).asTry
