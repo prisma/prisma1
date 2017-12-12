@@ -53,6 +53,17 @@ object DatabaseMutationBuilder {
     (sql"update `#$projectId`.`#$modelName` set" concat escapedValues concat sql"where id = $id").asUpdate
   }
 
+  def updateDataItemListValue(projectId: String, modelName: String, id: String, values: Map[String, Vector[Any]]) = {
+
+    val (fieldName, commaSeparatedValues) = values.map { case (k, v) => (k, escapeUnsafeParamListValue(v)) }.head
+
+    (sql"update `#$projectId`.`#$modelName`" concat
+      sql"set`#$fieldName` = CASE WHEN `#$fieldName` like '[]'" concat
+      sql"THEN Concat(LEFT(`#$fieldName`,LENGTH(`#$fieldName`)-1)," concat commaSeparatedValues concat sql",']')" concat
+      sql"ELSE Concat(LEFT(`#$fieldName`,LENGTH(`#$fieldName`)-1),','," concat commaSeparatedValues concat sql",']') END " concat
+      sql"where id = $id").asUpdate
+  }
+
   def updateRelationRow(projectId: String, relationTable: String, relationSide: String, nodeId: String, values: Map[String, Any]) = {
     val escapedValues = combineByComma(values.map {
       case (k, v) =>

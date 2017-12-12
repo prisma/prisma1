@@ -39,6 +39,7 @@ trait CommonClientDependencies extends Module with LazyLogging {
   val kinesisApiMetricsPublisher: KinesisPublisher
   val featureMetricActor: ActorRef
   val apiMetricsMiddleware: ApiMetricsMiddleware
+  val maxImportExportSize: Int
 
   lazy val config: Config          = ConfigFactory.load()
   lazy val testableTime            = new TestableTimeImplementation

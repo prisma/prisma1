@@ -15,7 +15,7 @@ object AuthImpl extends Auth {
       ()
     } else {
       authHeaderOpt match {
-        case Some(authHeader) => {
+        case Some(authHeader) =>
           import pdi.jwt.{Jwt, JwtAlgorithm, JwtOptions}
 
           val isValid = project.secrets.exists(secret => {
@@ -31,7 +31,7 @@ object AuthImpl extends Auth {
           if (!isValid) {
             throw InvalidToken()
           }
-        }
+
         case None => throw InvalidToken()
       }
     }

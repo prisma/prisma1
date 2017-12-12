@@ -56,11 +56,28 @@ case class ApiServer(
       handleExceptions(toplevelExceptionHandler(requestId)) {
         pathPrefix(Segment) { name =>
           pathPrefix(Segment) { stage =>
+            path("import") {
+              extractRawRequest(requestId) { rawRequest =>
+                val projectId = ProjectId.toEncodedString(name = name, stage = stage)
+                val result    = apiDependencies.requestHandler.handleRawRequestForImport(projectId = projectId, rawRequest = rawRequest)
+                result.onComplete(_ => logRequestEnd(Some(projectId)))
+                complete(result)
+              }
+            } ~
+              path("export") {
+                extractRawRequest(requestId) { rawRequest =>
+                  val projectId = ProjectId.toEncodedString(name = name, stage = stage)
+                  val result    = apiDependencies.requestHandler.handleRawRequestForExport(projectId = projectId, rawRequest = rawRequest)
+                  result.onComplete(_ => logRequestEnd(Some(projectId)))
+                  complete(result)
+                }
+              }~ {
             extractRawRequest(requestId) { rawRequest =>
               val projectId = ProjectId.toEncodedString(name = name, stage = stage)
               val result    = apiDependencies.requestHandler.handleRawRequest(projectId, rawRequest)
               result.onComplete(_ => logRequestEnd(Some(projectId)))
               complete(result)
+            }
             }
           }
         }

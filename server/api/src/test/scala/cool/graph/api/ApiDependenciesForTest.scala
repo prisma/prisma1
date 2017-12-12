@@ -12,4 +12,6 @@ case class ApiDependenciesForTest(implicit val system: ActorSystem, val material
   val databases                      = Databases.initialize(config)
   val apiSchemaBuilder               = SchemaBuilder()(system, this)
   val projectFetcher: ProjectFetcher = ProjectFetcherImpl(Vector.empty, config)
+  override lazy val maxImportExportSize: Int = 1000
+
 }

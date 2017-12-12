@@ -69,6 +69,13 @@ object SlickExtensions {
     }
   }
 
+  def listToJsonList(param: List[Any]): String = {
+    val x = listToJson(param)
+    x.substring(1, x.length - 1)
+  }
+
+  def escapeUnsafeParamListValue(param: Vector[Any]) = sql"${listToJsonList(param.toList)}"
+
   def escapeKey(key: String) = sql"`#$key`"
 
   def combineByAnd(actions: Iterable[SQLActionBuilder]) =
