@@ -13,9 +13,6 @@ steps:
 
   - wait
 
-  - label: ":sbt: Publish JARs"
-    command: ./server/scripts/publish-jars.sh
-
   - label: ":docker: Build"
     command: ./server/scripts/docker-build.sh
     branches: master
