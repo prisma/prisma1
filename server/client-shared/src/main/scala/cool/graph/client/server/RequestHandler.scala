@@ -3,11 +3,10 @@ package cool.graph.client.server
 import akka.http.scaladsl.model.StatusCodes.OK
 import akka.http.scaladsl.model._
 import cool.graph.bugsnag.{BugSnagger, GraphCoolRequest}
+import cool.graph.client.ImportExport.{BulkExport, BulkImport}
 import cool.graph.client.authorization.ClientAuth
 import cool.graph.client.database.ProjectDataresolver
 import cool.graph.client.finder.ProjectFetcher
-import cool.graph.client.mutactions.ImportExportFormat
-import cool.graph.client.mutactions.ImportExportFormat.{MyJsonProtocol, ResultFormat}
 import cool.graph.client.{ClientInjector, UserContext}
 import cool.graph.shared.errors.UserAPIErrors
 import cool.graph.shared.errors.UserAPIErrors.InsufficientPermissions
@@ -18,6 +17,7 @@ import cool.graph.util.ErrorHandlerFactory
 import cool.graph.utils.`try`.TryExtensions._
 import cool.graph.utils.future.FutureUtils.FutureExtensions
 import sangria.schema.Schema
+import scaldi.Module
 import spray.json.{JsObject, JsString, JsValue}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -35,7 +35,7 @@ case class RequestHandler(
   bugsnagger: BugSnagger,
   ec: ExecutionContext) {
 
-  implicit val inj = injector.toScaldi
+  implicit val inj: Module = injector.toScaldi
 
   def handleIntrospectionQuery(projectId: String, requestLogger: RequestLogger): Future[JsValue] = {
     for {
@@ -89,12 +89,12 @@ case class RequestHandler(
     def checkForAdmin(auth: Option[AuthenticatedRequest]): Unit =
       if (!auth.exists(_.isAdmin)) throw InsufficientPermissions("Insufficient permissions for bulk import")
 
-    import cool.graph.client.mutactions.DataImport._
     val graphQlRequestFuture: Future[Future[JsValue]] = for {
       projectWithClientId  <- fetchProject(projectId)
       authenticatedRequest <- getAuthContext(projectWithClientId, rawRequest.authorizationHeader)
       _                    = checkForAdmin(authenticatedRequest)
-      res                  = executeImport(projectWithClientId.project, rawRequest.json)
+      importer             = new BulkImport()
+      res                  = importer.executeImport(projectWithClientId.project, rawRequest.json)
     } yield res
 
     val response: Future[JsValue] = graphQlRequestFuture.flatMap(identity)
@@ -106,13 +106,13 @@ case class RequestHandler(
     def checkForAdmin(auth: Option[AuthenticatedRequest]): Unit =
       if (!auth.exists(_.isAdmin)) throw InsufficientPermissions("Insufficient permissions for bulk export")
 
-    import cool.graph.client.mutactions.DataExport._
     val graphQlRequestFuture: Future[Future[JsValue]] = for {
       projectWithClientId  <- fetchProject(projectId)
       authenticatedRequest <- getAuthContext(projectWithClientId, rawRequest.authorizationHeader)
       _                    = checkForAdmin(authenticatedRequest)
       resolver             = new ProjectDataresolver(project = projectWithClientId.project, requestContext = None)
-      res                  = executeExport(projectWithClientId.project, resolver, rawRequest.json)
+      exporter             = new BulkExport()
+      res                  = exporter.executeExport(projectWithClientId.project, resolver, rawRequest.json)
     } yield res
     import spray.json._
 
