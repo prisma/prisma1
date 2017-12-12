@@ -20,7 +20,7 @@ import scala.util.control.NonFatal
   *
   * 1.  DBValue       <->  GCValue     for writing into typed value fields in the Client-DB
   * 2.  SangriaValue  <->  GCValue     for transforming the Any we get from Sangria per field back and forth
-  * 3.  DBString      <->  GCValue     for writing defaultValues in the System-DB since they are always a String, and JSArray for Lists
+  * 3.  DBString      <->  GCValue     for writing default values in the System-DB since they are always a String, and JSArray for Lists
   * 4.  Json          <->  GCValue     for SchemaSerialization
   * 5.  SangriaValue  <->  String      for reading and writing default and migrationValues
   * 6.  InputString   <->  GCValue     chains String -> SangriaValue -> GCValue and back
@@ -103,7 +103,7 @@ case class GCSangriaValueConverter(typeIdentifier: TypeIdentifier, isList: Boole
 }
 
 /**
-  * 3. DBString <-> GCValue - This is used write the defaultValue as a String to the SystemDB and read it from there
+  * 3. DBString <-> GCValue - This is used write the default value as a String to the SystemDB and read it from there
   */
 case class GCStringDBConverter(typeIdentifier: TypeIdentifier, isList: Boolean) extends GCConverter[String] {
   override def toGCValue(t: String): Or[GCValue, InvalidValueForScalarType] = {

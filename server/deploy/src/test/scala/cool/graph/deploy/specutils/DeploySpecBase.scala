@@ -22,8 +22,8 @@ trait DeploySpecBase extends BeforeAndAfterEach with BeforeAndAfterAll with Awai
 
   val basicTypesGql =
     """
-      |type TestModel @model {
-      |  id: ID! @isUnique
+      |type TestModel {
+      |  id: ID! @unique
       |}
     """.stripMargin.trim()
 

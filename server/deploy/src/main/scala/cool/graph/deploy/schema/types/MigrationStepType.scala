@@ -65,9 +65,9 @@ object MigrationStepType {
     Field("typeName", StringType, resolve = _.value.typeName),
     Field("isRequired", BooleanType, resolve = _.value.isRequired),
     Field("isList", BooleanType, resolve = _.value.isList),
-    Field("isUnique", BooleanType, resolve = _.value.isUnique),
+    Field("unique", BooleanType, resolve = _.value.isUnique),
     Field("relation", OptionType(StringType), resolve = _.value.relation),
-    Field("defaultValue", OptionType(StringType), resolve = _.value.defaultValue),
+    Field("default", OptionType(StringType), resolve = _.value.defaultValue),
     Field("enum", OptionType(StringType), resolve = _.value.enum)
   )
 
@@ -83,9 +83,9 @@ object MigrationStepType {
     Field("typeName", OptionType(StringType), resolve = _.value.typeName),
     Field("isRequired", OptionType(BooleanType), resolve = _.value.isRequired),
     Field("isList", OptionType(BooleanType), resolve = _.value.isList),
-    Field("isUnique", OptionType(BooleanType), resolve = _.value.isUnique),
+    Field("unique", OptionType(BooleanType), resolve = _.value.isUnique),
     Field("relation", OptionType(OptionType(StringType)), resolve = _.value.relation),
-    Field("defaultValue", OptionType(OptionType(StringType)), resolve = _.value.defaultValue),
+    Field("default", OptionType(OptionType(StringType)), resolve = _.value.defaultValue),
     Field("enum", OptionType(OptionType(StringType)), resolve = _.value.enum)
   )
 

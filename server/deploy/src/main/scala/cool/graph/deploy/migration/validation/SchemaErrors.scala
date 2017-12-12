@@ -22,11 +22,11 @@ object SchemaErrors {
   import cool.graph.deploy.migration.DataSchemaAstExtensions._
 
   def missingIdField(typeDefinition: TypeDefinition): SchemaError = {
-    error(typeDefinition, "All models must specify the `id` field: `id: ID! @isUnique`")
+    error(typeDefinition, "All models must specify the `id` field: `id: ID! @unique`")
   }
 
   def missingUniqueDirective(fieldAndType: FieldAndType): SchemaError = {
-    error(fieldAndType, s"""All id fields must specify the `@isUnique` directive.""")
+    error(fieldAndType, s"""All id fields must specify the `@unique` directive.""")
   }
 
   def missingRelationDirective(fieldAndType: FieldAndType): SchemaError = {
@@ -61,17 +61,17 @@ object SchemaErrors {
     )
   }
 
-  def missingAtModelDirective(fieldAndType: FieldAndType) = {
-    error(
-      fieldAndType,
-      s"The model `${fieldAndType.objectType.name}` is missing the @model directive. Please add it. See: https://github.com/graphcool/framework/issues/817"
-    )
-  }
+//  def missingAtModelDirective(fieldAndType: FieldAndType) = {
+//    error(
+//      fieldAndType,
+//      s"The model `${fieldAndType.objectType.name}` is missing the @model directive. Please add it. See: https://github.com/graphcool/framework/issues/817"
+//    )
+//  }
 
   def atNodeIsDeprecated(fieldAndType: FieldAndType) = {
     error(
       fieldAndType,
-      s"The model `${fieldAndType.objectType.name}` has the implements Node annotation. This is deprecated. Please use '@model' instead. See: https://github.com/graphcool/framework/issues/817"
+      s"The model `${fieldAndType.objectType.name}` has the implements Node annotation. This is deprecated, please do not use an annotation."
     )
   }
 

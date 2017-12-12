@@ -13,18 +13,17 @@ case class RequiredArg(name: String, mustBeAString: Boolean)
 case class FieldAndType(objectType: ObjectTypeDefinition, fieldDef: FieldDefinition)
 
 object SchemaSyntaxValidator {
+  val directiveRequirements = Seq(
+    DirectiveRequirement("relation", Seq(RequiredArg("name", mustBeAString = true))),
+    DirectiveRequirement("rename", Seq(RequiredArg("oldName", mustBeAString = true))),
+    DirectiveRequirement("default", Seq(RequiredArg("value", mustBeAString = false))),
+    DirectiveRequirement("migrationValue", Seq(RequiredArg("value", mustBeAString = false))),
+    DirectiveRequirement("unique", Seq.empty)
+  )
+
   def apply(schema: String): SchemaSyntaxValidator = {
     SchemaSyntaxValidator(schema, directiveRequirements)
   }
-
-  val directiveRequirements = Seq(
-    DirectiveRequirement("model", Seq.empty),
-    DirectiveRequirement("relation", Seq(RequiredArg("name", mustBeAString = true))),
-    DirectiveRequirement("rename", Seq(RequiredArg("oldName", mustBeAString = true))),
-    DirectiveRequirement("defaultValue", Seq(RequiredArg("value", mustBeAString = false))),
-    DirectiveRequirement("migrationValue", Seq(RequiredArg("value", mustBeAString = false))),
-    DirectiveRequirement("isUnique", Seq.empty)
-  )
 }
 
 case class SchemaSyntaxValidator(schema: String, directiveRequirements: Seq[DirectiveRequirement]) {
@@ -96,14 +95,17 @@ case class SchemaSyntaxValidator(schema: String, directiveRequirements: Seq[Dire
   def validateDuplicateFields(fieldAndTypes: Seq[FieldAndType]): Seq[SchemaError] = {
     val objectTypes         = fieldAndTypes.map(_.objectType)
     val distinctObjectTypes = objectTypes.distinct
+
     distinctObjectTypes
       .flatMap(objectType => {
         val fieldNames = objectType.fields.map(_.name)
-        fieldNames.map(
-          name =>
-            if (fieldNames.count(_ == name) > 1)
-              Seq(SchemaErrors.duplicateFieldName(fieldAndTypes.find(ft => ft.objectType == objectType & ft.fieldDef.name == name).get))
-            else Seq.empty)
+        fieldNames.map {
+          case name: String if fieldNames.count(_ == name) > 1 =>
+            Seq(SchemaErrors.duplicateFieldName(fieldAndTypes.find(ft => ft.objectType == objectType & ft.fieldDef.name == name).get))
+
+          case _ =>
+            Seq.empty
+        }
       })
       .flatten
       .distinct
@@ -235,8 +237,8 @@ case class SchemaSyntaxValidator(schema: String, directiveRequirements: Seq[Dire
 
   def isEnumField(fieldDef: FieldDefinition): Boolean = doc.enumType(fieldDef.typeName).isDefined
 
-  def partition[A, B, C](seq: Seq[A])(parititionFn: A => Either[B, C]): (Seq[B], Seq[C]) = {
-    val mapped = seq.map(parititionFn)
+  def partition[A, B, C](seq: Seq[A])(partitionFn: A => Either[B, C]): (Seq[B], Seq[C]) = {
+    val mapped = seq.map(partitionFn)
     val lefts  = mapped.collect { case Left(x) => x }
     val rights = mapped.collect { case Right(x) => x }
     (lefts, rights)

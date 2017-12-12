@@ -17,9 +17,9 @@ object MigrationStepsJsonFormatter extends DefaultReads {
     val typeNameField     = "typeName"
     val isRequiredField   = "isRequired"
     val isListField       = "isList"
-    val isUniqueField     = "isUnique"
+    val isUniqueField     = "unique"
     val relationField     = "relation"
-    val defaultValueField = "defaultValue"
+    val defaultValueField = "default"
     val enumField         = "enum"
 
     override def reads(json: JsValue): JsResult[UpdateField] = {

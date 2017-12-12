@@ -66,7 +66,7 @@ object DataSchemaAstExtensions {
 
     def typeName: String = fieldDefinition.fieldType.namedType.name
 
-    def isUnique: Boolean = fieldDefinition.directive("isUnique").isDefined
+    def isUnique: Boolean = fieldDefinition.directive("unique").isDefined
 
     def isRequired: Boolean = fieldDefinition.fieldType.isRequired
 
@@ -95,7 +95,7 @@ object DataSchemaAstExtensions {
     def hasRelationDirective: Boolean        = relationName.isDefined
     def isNoRelation: Boolean                = !hasRelationDirective
     def description: Option[String]          = fieldDefinition.directiveArgumentAsString("description", "text")
-    def defaultValue: Option[String]         = fieldDefinition.directiveArgumentAsString("defaultValue", "value")
+    def defaultValue: Option[String]         = fieldDefinition.directiveArgumentAsString("default", "value")
     def migrationValue: Option[String]       = fieldDefinition.directiveArgumentAsString("migrationValue", "value")
     def relationName: Option[String]         = fieldDefinition.directiveArgumentAsString("relation", "name")
     def previousRelationName: Option[String] = fieldDefinition.directiveArgumentAsString("relation", "oldName").orElse(relationName)
