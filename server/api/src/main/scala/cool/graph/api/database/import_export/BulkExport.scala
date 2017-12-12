@@ -147,8 +147,7 @@ class BulkExport(project: Project)(implicit apiDependencies: ApiDependencies){
 
     val convertedListFieldsWithValues = listFieldsWithValues.map {
       case (k, v) =>
-//        val any = parseValueFromString(v.toString, info.listFields.find(_._1 == k).get._2, isList = true)
-        val any = Some(Some(Vector(1,2,3))) // todo
+        val any = parseValueFromString(v.toString, info.listFields.find(_._1 == k).get._2, isList = true)
         val vector = any match {
           case Some(Some(x)) => x.asInstanceOf[Vector[Any]]
           case x             => sys.error("Failure reading a Listvalue from DB: " + x)
