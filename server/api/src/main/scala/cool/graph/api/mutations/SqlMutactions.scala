@@ -29,8 +29,7 @@ case class SqlMutactions(dataResolver: DataResolver) {
     requiredRelationViolations ++ removeFromConnectionMutactions ++ List(deleteItemMutaction)
   }
 
-  def getMutactionsForUpdate(project: Project, model: Model, args: CoolArgs, id: Id, previousValues: DataItem, requestId: String): List[ClientSqlMutaction] = {
-
+  def getMutactionsForUpdate(project: Project, model: Model, args: CoolArgs, id: Id, previousValues: DataItem): List[ClientSqlMutaction] = {
     val updateMutaction = getUpdateMutaction(project, model, args, id, previousValues)
 
     updateMutaction.toList

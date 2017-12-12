@@ -29,10 +29,13 @@ trait ClientMutationDefinition {
     )
   }
 
-  def extractNodeSelectorFromByArg(model: Model, by: Map[String, Option[Any]]): NodeSelector = {
-    by.toList collectFirst {
-      case (fieldName, Some(value)) => NodeSelector(fieldName, GCAnyConverter(model.getFieldByName_!(fieldName).typeIdentifier, false).toGCValue(value).get)
-    } getOrElse (sys.error("You must specify a unique selector"))
+  def extractNodeSelectorFromWhereArg(model: Model, where: Map[String, Option[Any]]): NodeSelector = {
+    where.collectFirst {
+      case (fieldName, Some(value)) =>
+        NodeSelector(fieldName, GCAnyConverter(model.getFieldByName_!(fieldName).typeIdentifier, isList = false).toGCValue(value).get)
+    } getOrElse {
+      sys.error("You must specify a unique selector")
+    }
   }
 }
 

@@ -158,9 +158,9 @@ case class SchemaBuilderImpl(
       arguments = arguments,
       resolve = (ctx) => {
 
-        val nodeSelector = definition.extractNodeSelectorFromByArg(model, ctx.args.arg[Map[String, Option[Any]]]("by"))
+        val nodeSelector = definition.extractNodeSelectorFromWhereArg(model, ctx.args.arg[Map[String, Option[Any]]]("where"))
 
-        new Update(model = model, project = project, args = ctx.args, dataResolver = masterDataResolver, by = nodeSelector)
+        new Update(model = model, project = project, args = ctx.args, dataResolver = masterDataResolver, where = nodeSelector)
           .run(ctx.ctx)
           .map(outputTypesBuilder.mapResolve(_, ctx.args))
       }
@@ -193,7 +193,7 @@ case class SchemaBuilderImpl(
       arguments = arguments,
       resolve = (ctx) => {
 
-        val nodeSelector = definition.extractNodeSelectorFromByArg(model, ctx.args.arg[Map[String, Option[Any]]]("by"))
+        val nodeSelector = definition.extractNodeSelectorFromWhereArg(model, ctx.args.arg[Map[String, Option[Any]]]("by"))
 
         new Delete(model = model,
                    modelObjectTypes = objectTypeBuilder,

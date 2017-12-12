@@ -41,7 +41,12 @@ object APIErrors {
 
   case class IdIsInvalid(id: String) extends ClientApiError(s"The given id '$id' is invalid.", 3001)
 
-  case class DataItemDoesNotExist(modelId: String, id: String) extends ClientApiError(s"'$modelId' has no item with id '$id'", 3002)
+  case class DataItemDoesNotExist(model: String, uniqueField: String, value: String)
+      extends ClientApiError(s"'$model' has no item with $uniqueField '$value'", 3002)
+
+  object DataItemDoesNotExist {
+    def apply(model: String, id: String): DataItemDoesNotExist = DataItemDoesNotExist(model, "id", id)
+  }
 
   case class IdIsMissing() extends ClientApiError(s"An Id argument was expected, but not found.", 3003)
 

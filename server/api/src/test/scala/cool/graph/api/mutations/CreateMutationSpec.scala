@@ -1,6 +1,7 @@
 package cool.graph.api.mutations
 
 import cool.graph.api.ApiBaseSpec
+import cool.graph.api.util.TroubleCharacters
 import cool.graph.shared.project_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 import spray.json.JsValue
@@ -37,27 +38,22 @@ class CreateMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
 
   "A Create Mutation" should "create and return item" in {
 
-    def segment(start: Int, end: Int) = (start to end).map(Character.toChars(_).mkString)
-
-    val troubleCharacters = "¥฿" + segment(0x1F600, 0x1F64F) + segment(0x0900, 0x0930) + segment(0x20AC, 0x20C0)
-
     val res = server.executeQuerySimple(
       s"""mutation {
          |  createScalarModel(data: {
-         |    optString: "lala$troubleCharacters", optInt: 1337, optFloat: 1.234, optBoolean: true, optEnum: A, optDateTime: "2016-07-31T23:59:01.000Z", optJson: "[1,2,3]"
+         |    optString: "lala${TroubleCharacters.value}", optInt: 1337, optFloat: 1.234, optBoolean: true, optEnum: A, optDateTime: "2016-07-31T23:59:01.000Z", optJson: "[1,2,3]"
          |  }){optString, optInt, optFloat, optBoolean, optEnum, optDateTime, optJson}
          |}""".stripMargin,
       project = project
     )
 
     res.toString should be(
-      s"""{"data":{"createScalarModel":{"optJson":[1,2,3],"optInt":1337,"optBoolean":true,"optDateTime":"2016-07-31T23:59:01.000Z","optString":"lala$troubleCharacters","optEnum":"A","optFloat":1.234}}}""")
+      s"""{"data":{"createScalarModel":{"optJson":[1,2,3],"optInt":1337,"optBoolean":true,"optDateTime":"2016-07-31T23:59:01.000Z","optString":"lala${TroubleCharacters.value}","optEnum":"A","optFloat":1.234}}}""")
 
-    val queryRes =
-      server.executeQuerySimple("""{ scalarModels{optString, optInt, optFloat, optBoolean, optEnum, optDateTime, optJson}}""", project = project)
+    val queryRes = server.executeQuerySimple("""{ scalarModels{optString, optInt, optFloat, optBoolean, optEnum, optDateTime, optJson}}""", project = project)
 
     queryRes.toString should be(
-      s"""{"data":{"scalarModels":[{"optJson":[1,2,3],"optInt":1337,"optBoolean":true,"optDateTime":"2016-07-31T23:59:01.000Z","optString":"lala$troubleCharacters","optEnum":"A","optFloat":1.234}]}}""")
+      s"""{"data":{"scalarModels":[{"optJson":[1,2,3],"optInt":1337,"optBoolean":true,"optDateTime":"2016-07-31T23:59:01.000Z","optString":"lala${TroubleCharacters.value}","optEnum":"A","optFloat":1.234}]}}""")
   }
 
   "A Create Mutation" should "create and return item with empty string" in {
