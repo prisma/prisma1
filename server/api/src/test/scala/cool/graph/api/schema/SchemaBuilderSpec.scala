@@ -39,15 +39,19 @@ class SchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec with Gra
 
     val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
 
+    // from Todo to Comment
     val mutation = schema.mustContainMutation("createTodo")
-    mutation should be("createTodo(data: TodoCreateInput!): Todo!")
+    mustBeEqual(mutation, "createTodo(data: TodoCreateInput!): Todo!")
 
     val todoInputType = schema.mustContainInputType("TodoCreateInput")
-    todoInputType should be("""input TodoCreateInput {
-                          |  title: String!
-                          |  tag: String
-                          |  comments: CommentCreateManyWithoutTodoInput
-                          |}""".stripMargin)
+    mustBeEqual(
+      todoInputType,
+      """input TodoCreateInput {
+        |  title: String!
+        |  tag: String
+        |  comments: CommentCreateManyWithoutTodoInput
+        |}""".stripMargin
+    )
 
     val nestedInputTypeForComment = schema.mustContainInputType("CommentCreateManyWithoutTodoInput")
 
@@ -59,26 +63,39 @@ class SchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec with Gra
     )
 
     val createInputForNestedComment = schema.mustContainInputType("CommentCreateWithoutTodoInput")
-    createInputForNestedComment should equal("""input CommentCreateWithoutTodoInput {
-                                               |  text: String!
-                                               |}""".stripMargin)
+    mustBeEqual(
+      createInputForNestedComment,
+      """input CommentCreateWithoutTodoInput {
+        |  text: String!
+        |}""".stripMargin
+    )
 
+    // from Comment to Todo
     val commentInputType = schema.mustContainInputType("CommentCreateInput")
-    commentInputType should equal("""input CommentCreateInput {
-                                    |  text: String!
-                                    |  todo: TodoCreateOneWithoutCommentsInput
-                                    |}""".stripMargin)
+    mustBeEqual(
+      commentInputType,
+      """input CommentCreateInput {
+       |  text: String!
+       |  todo: TodoCreateOneWithoutCommentsInput
+       |}""".stripMargin
+    )
 
     val nestedInputTypeForTodo = schema.mustContainInputType("TodoCreateOneWithoutCommentsInput")
-    nestedInputTypeForTodo should equal("""input TodoCreateOneWithoutCommentsInput {
-                                          |  create: TodoCreateWithoutCommentsInput
-                                          |}""".stripMargin)
+    mustBeEqual(
+      nestedInputTypeForTodo,
+      """input TodoCreateOneWithoutCommentsInput {
+       |  create: TodoCreateWithoutCommentsInput
+       |}""".stripMargin
+    )
 
     val createInputForNestedTodo = schema.mustContainInputType("TodoCreateWithoutCommentsInput")
-    createInputForNestedTodo should equal("""input TodoCreateWithoutCommentsInput {
-                                            |  title: String!
-                                            |  tag: String
-                                            |}""".stripMargin)
+    mustBeEqual(
+      createInputForNestedTodo,
+      """input TodoCreateWithoutCommentsInput {
+        |  title: String!
+        |  tag: String
+        |}""".stripMargin
+    )
   }
 
   "the update Mutation for a model" should "be generated correctly" in {
@@ -102,6 +119,76 @@ class SchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec with Gra
                                 |  id: ID
                                 |  alias: String
                                 |}""".stripMargin)
+  }
+
+  "the update Mutation for a model with relations" should "be generated correctly" in {
+    val project = SchemaDsl() { schema =>
+      val comment = schema.model("Comment").field_!("text", _.String)
+      schema
+        .model("Todo")
+        .field_!("title", _.String)
+        .field("tag", _.String)
+        .oneToManyRelation("comments", "todo", comment)
+    }
+
+    val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
+
+    // from Todo to Comment
+    val mutation = schema.mustContainMutation("updateTodo")
+    mustBeEqual(mutation, "updateTodo(data: TodoUpdateInput!, where: TodoWhereUniqueInput!): Todo")
+
+    val todoInputType = schema.mustContainInputType("TodoUpdateInput")
+    mustBeEqual(
+      todoInputType,
+      """input TodoUpdateInput {
+        |  title: String!
+        |  tag: String
+        |  comments: CommentUpdateManyWithoutTodoInput
+        |}""".stripMargin
+    )
+
+    val nestedInputTypeForComment = schema.mustContainInputType("CommentUpdateManyWithoutTodoInput")
+    mustBeEqual(
+      nestedInputTypeForComment,
+      """input CommentUpdateManyWithoutTodoInput {
+        |  create: [CommentUpdateWithoutTodoInput!]
+        |}""".stripMargin
+    )
+
+    val createInputForNestedComment = schema.mustContainInputType("CommentUpdateWithoutTodoInput")
+    mustBeEqual(
+      createInputForNestedComment,
+      """input CommentUpdateWithoutTodoInput {
+        |  text: String!
+        |}""".stripMargin
+    )
+
+    // from Comment to Todo
+    val commentInputType = schema.mustContainInputType("CommentUpdateInput")
+    mustBeEqual(
+      commentInputType,
+      """input CommentUpdateInput {
+        |  text: String!
+        |  todo: TodoUpdateOneWithoutCommentsInput
+        |}""".stripMargin
+    )
+
+    val nestedInputTypeForTodo = schema.mustContainInputType("TodoUpdateOneWithoutCommentsInput")
+    mustBeEqual(
+      nestedInputTypeForTodo,
+      """input TodoUpdateOneWithoutCommentsInput {
+        |  create: TodoUpdateWithoutCommentsInput
+        |}""".stripMargin
+    )
+
+    val createInputForNestedTodo = schema.mustContainInputType("TodoUpdateWithoutCommentsInput")
+    mustBeEqual(
+      createInputForNestedTodo,
+      """input TodoUpdateWithoutCommentsInput {
+        |  title: String!
+        |  tag: String
+        |}""".stripMargin
+    )
   }
 
   private def mustBeEqual(actual: String, expected: String): Unit = {
