@@ -83,6 +83,7 @@ class SingleServerInjectorImpl(implicit val actorSystem: ActorSystem, actorMater
       bind[PubSubPublisher[String]] identifiedBy "schema-invalidation-publisher" toNonLazy invalidationPublisher
       bind[QueuePublisher[String]] identifiedBy "logsPublisher" toNonLazy logsPublisher
       bind[PubSubSubscriber[SchemaInvalidatedMessage]] identifiedBy "schema-invalidation-subscriber" toNonLazy invalidationSubscriber
+      bind[PubSubSubscriber[String]] identifiedBy "schema-manager-invalidation-subscriber" toNonLazy schemaManagerInvalidationSubscriber
       bind[FunctionEnvironment] toNonLazy functionEnvironment
       bind[EndpointResolver] identifiedBy "endpointResolver" toNonLazy endpointResolver
       bind[QueuePublisher[Webhook]] identifiedBy "webhookPublisher" toNonLazy webhookPublisher
@@ -122,6 +123,7 @@ class SingleServerInjectorImpl(implicit val actorSystem: ActorSystem, actorMater
   override lazy val projectSchemaInvalidationSubscriber: PubSubSubscriber[String] = pubSub
   lazy val invalidationSubscriber: PubSubSubscriber[SchemaInvalidatedMessage]     = pubSub.map[SchemaInvalidatedMessage]((str: String) => SchemaInvalidated)
   lazy val invalidationPublisher: PubSubPublisher[String]                         = pubSub
+  lazy val schemaManagerInvalidationSubscriber: PubSubSubscriber[String]          = pubSub
   override lazy val functionEnvironment                                           = DevFunctionEnvironment()
   override lazy val blockedProjectIds: Vector[String]                             = Vector.empty
   override lazy val endpointResolver                                              = LocalEndpointResolver()
