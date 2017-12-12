@@ -12,7 +12,7 @@ object SingleServerMain extends App {
   implicit val materializer    = ActorMaterializer()
   implicit val apiDependencies = new ApiDependenciesImpl
 
-  val port                     = sys.env.getOrElse("PORT", sys.error("PORT env var required but not found.")).toInt
+  val port                     = sys.env.getOrElse("PORT", "9000").toInt
   val singleServerDependencies = SingleServerDependencies()
 
   Version.check()

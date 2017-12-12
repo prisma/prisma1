@@ -3,7 +3,7 @@ package cool.graph.api.database
 import cool.graph.api.ApiDependencies
 import cool.graph.api.database.DatabaseQueryBuilder._
 import cool.graph.api.schema.APIErrors
-import cool.graph.gc_values.{GCValue, LeafGCValue}
+import cool.graph.gc_values.GCValue
 import cool.graph.shared.models.IdType.Id
 import cool.graph.shared.models.TypeIdentifier.TypeIdentifier
 import cool.graph.shared.models._
@@ -14,12 +14,12 @@ import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.{MySQLProfile, SQLActionBuilder}
 import slick.lifted.TableQuery
 import slick.sql.{SqlAction, SqlStreamingAction}
+import spray.json._
 
 import scala.collection.immutable.Seq
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
-import spray.json._
 
 case class DataResolver(project: Project, useMasterDatabaseOnly: Boolean = false)(implicit apiDependencies: ApiDependencies) {
 
@@ -71,6 +71,21 @@ case class DataResolver(project: Project, useMasterDatabaseOnly: Boolean = false
   def resolveByUniqueWithoutValidation(model: Model, key: String, value: Any): Future[Option[DataItem]] = {
     batchResolveByUniqueWithoutValidation(model, key, List(value)).map(_.headOption)
   }
+
+  def loadModelRowsForExport(model: Model, args: Option[QueryArguments] = None): Future[ResolverResult] = {
+    val (query, resultTransform) = DatabaseQueryBuilder.selectAllFromModel(project.id, model.name, args, overrideMaxNodeCount = Some(1001))
+
+    performWithTiming("loadModelRowsForExport", readonlyClientDatabase.run(readOnlyDataItem(query)))
+      .map(_.toList.map(mapDataItem(model)(_)))
+      .map(resultTransform(_))
+  }
+
+  def loadRelationRowsForExport(relationId: String, args: Option[QueryArguments] = None): Future[ResolverResult] = {
+    val (query, resultTransform) = DatabaseQueryBuilder.selectAllFromModel(project.id, relationId, args, overrideMaxNodeCount = Some(1001))
+
+    performWithTiming("loadRelationRowsForExport", readonlyClientDatabase.run(readOnlyDataItem(query))).map(_.toList).map(resultTransform(_))
+  }
+
 
   def batchResolveByUnique(model: Model, key: String, values: List[Any]): Future[List[DataItem]] = {
     val query = DatabaseQueryBuilder.batchSelectFromModelByUnique(project.id, model.name, key, values)

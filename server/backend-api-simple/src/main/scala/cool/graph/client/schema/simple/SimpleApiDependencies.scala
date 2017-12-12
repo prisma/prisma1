@@ -91,6 +91,7 @@ case class SimpleApiDependencies(implicit val system: ActorSystem, val materiali
   lazy val apiMetricsMiddleware               = new ApiMetricsMiddleware(testableTime, featureMetricActor)
   lazy val maxImportExportSize                = 10000000
 
+  binding identifiedBy "maxImportExportSize" toNonLazy maxImportExportSize
   binding identifiedBy "project-schema-fetcher" toNonLazy projectSchemaFetcher
   binding identifiedBy "cloudwatch" toNonLazy cloudwatch
   binding identifiedBy "kinesis" toNonLazy kinesis

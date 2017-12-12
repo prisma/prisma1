@@ -1,22 +1,21 @@
-package cool.graph.client.ImportExport
+package cool.graph.api.database.import_export
 
-import cool.graph.DataItem
-import cool.graph.Types.UserData
-import cool.graph.client.database.{DataResolver, QueryArguments}
+import cool.graph.api.database.Types.UserData
+import cool.graph.api.database.{DataItem, DataResolver, QueryArguments}
+import cool.graph.api.database.import_export.ImportExport._
 import cool.graph.shared.models.Project
-import spray.json.JsValue
-import spray.json._
-import scala.concurrent.ExecutionContext.Implicits.global
+import spray.json.{JsValue, _}
 import MyJsonProtocol._
-import scaldi.Injector
+import cool.graph.api.ApiDependencies
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class BulkExport(implicit val inj: Injector) {
+class BulkExport(project: Project)(implicit apiDependencies: ApiDependencies){
 
-  val maxImportExportSize = inject[Int](identified by "maxImportExportSize")
+  val maxImportExportSize = apiDependencies.maxImportExportSize
 
-  def executeExport(project: Project, dataResolver: DataResolver, json: JsValue): Future[JsValue] = {
+  def executeExport( dataResolver: DataResolver, json: JsValue): Future[JsValue] = {
     val start   = JsonBundle(Vector.empty, 0)
     val request = json.convertTo[ExportRequest]
     val response = request.fileType match {
@@ -144,12 +143,12 @@ class BulkExport(implicit val inj: Injector) {
   }
 
   private def dataItemToExportList(in: JsonBundle, item: DataItem, info: ListInfo): ResultFormat = {
-    import cool.graph.shared.schema.CustomScalarTypes.parseValueFromString
     val listFieldsWithValues: Map[String, Any] = item.userData.collect { case (k, Some(v)) if info.listFields.map(p => p._1).contains(k) => (k, v) }
 
     val convertedListFieldsWithValues = listFieldsWithValues.map {
       case (k, v) =>
-        val any = parseValueFromString(v.toString, info.listFields.find(_._1 == k).get._2, isList = true)
+//        val any = parseValueFromString(v.toString, info.listFields.find(_._1 == k).get._2, isList = true)
+        val any = Some(Some(Vector(1,2,3))) // todo
         val vector = any match {
           case Some(Some(x)) => x.asInstanceOf[Vector[Any]]
           case x             => sys.error("Failure reading a Listvalue from DB: " + x)

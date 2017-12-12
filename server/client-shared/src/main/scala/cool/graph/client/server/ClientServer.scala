@@ -8,7 +8,6 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.PathMatchers.Segment
 import akka.http.scaladsl.server._
 import akka.stream.ActorMaterializer
-import com.amazonaws.services.kinesis.AmazonKinesis
 import com.typesafe.scalalogging.LazyLogging
 import cool.graph.bugsnag.{BugSnagger, GraphCoolRequest}
 import cool.graph.client.authorization.ClientAuth
@@ -73,17 +72,7 @@ case class ClientServer(prefix: String)(
                 extractRawRequest(requestLogger) { rawRequest =>
                   complete(requestHandler.handleRawRequestForPermissionSchema(projectId = projectId, rawRequest = rawRequest))
                 }
-              } ~
-                path("import") {
-                  extractRawRequest(requestLogger) { rawRequest =>
-                    complete(requestHandler.handleRawRequestForImport(projectId = projectId, rawRequest = rawRequest))
-                  }
-                } ~
-                path("export") {
-                  extractRawRequest(requestLogger) { rawRequest =>
-                    complete(requestHandler.handleRawRequestForExport(projectId = projectId, rawRequest = rawRequest))
-                  }
-                } ~ {
+              }  ~ {
                 extractRawRequest(requestLogger) { rawRequest =>
                   timeoutHandler(requestId = rawRequest.id, projectId = projectId) {
                     complete(requestHandler.handleRawRequestForProjectSchema(projectId = projectId, rawRequest = rawRequest))
