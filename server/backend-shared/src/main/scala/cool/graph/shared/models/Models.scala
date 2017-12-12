@@ -633,6 +633,7 @@ case class Model(
 ) extends Node {
 
   lazy val scalarFields: List[Field]         = fields.filter(_.isScalar)
+  lazy val scalarListFields: List[Field]     = scalarFields.filter(_.isList)
   lazy val relationFields: List[Field]       = fields.filter(_.isRelation)
   lazy val singleRelationFields: List[Field] = relationFields.filter(!_.isList)
   lazy val listRelationFields: List[Field]   = relationFields.filter(_.isList)
