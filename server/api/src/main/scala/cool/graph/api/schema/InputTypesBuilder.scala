@@ -39,7 +39,9 @@ case class InputTypesBuilder(project: Project) {
   }
 
   def getSangriaArgumentsForUpdate(model: Model): List[Argument[Any]] = {
-    getSangriaArguments(inputObjectType = cachedInputObjectTypeForUpdate(model), arguments = cachedSchemaArgumentsForUpdate(model))
+    //getSangriaArguments(inputObjectType = cachedInputObjectTypeForUpdate(model), arguments = cachedSchemaArgumentsForUpdate(model))
+    val inputObjectType = cachedInputObjectTypeForUpdate(model)
+    List(Argument[Any]("data", inputObjectType))
   }
 
   def getSangriaArgumentsForUpdateOrCreate(model: Model): List[Argument[Any]] = {
@@ -119,7 +121,7 @@ case class InputTypesBuilder(project: Project) {
   private def cachedInputObjectTypeForUpdate(model: Model): InputObjectType[Any] = {
     caffeineCache.getOrElseUpdate(cacheKey("cachedInputObjectTypeForUpdate", model)) {
       InputObjectType[Any](
-        name = s"Update${model.name}",
+        name = s"${model.name}UpdateInput",
         fieldsFn = () => {
           val schemaArguments = cachedSchemaArgumentsForUpdate(model)
           schemaArguments.map(_.asSangriaInputField)

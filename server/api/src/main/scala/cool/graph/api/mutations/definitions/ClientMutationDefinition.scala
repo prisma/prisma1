@@ -19,11 +19,11 @@ trait ClientMutationDefinition {
 
   def getSchemaArguments(model: Model): List[SchemaArgument]
 
-  def getByArgument(model: Model) = {
+  def getWhereArgument(model: Model) = {
     Argument(
-      name = "by",
+      name = "where",
       argumentType = InputObjectType(
-        name = s"${model.name}Selector",
+        name = s"${model.name}WhereUniqueInput",
         fields = model.fields.filter(_.isUnique).map(field => InputField(name = field.name, fieldType = SchemaBuilderUtils.mapToOptionalInputType(field)))
       )
     )

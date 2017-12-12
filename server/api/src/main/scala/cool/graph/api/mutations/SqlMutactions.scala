@@ -97,7 +97,7 @@ case class SqlMutactions(dataResolver: DataResolver) {
   def getMutactionsForNestedMutation(project: Project, model: Model, args: CoolArgs, fromId: Id): Seq[ClientSqlMutaction] = {
     val x = for {
       field    <- model.relationFields
-      args     <- args.subArgs(field) // this is the hash input object containing the stuff
+      args     <- args.subArgs(field) // this is the input object containing the nested mutation
       subModel = field.relatedModel_!(project)
     } yield {
       args match {

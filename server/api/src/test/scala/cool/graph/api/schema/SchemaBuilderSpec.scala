@@ -76,4 +76,27 @@ class SchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec with Gra
                                             |  tag: String
                                             |}""".stripMargin)
   }
+
+  "the update Mutation for a model" should "be generated correctly" in {
+    val project = SchemaDsl() { schema =>
+      schema.model("Todo").field_!("title", _.String).field("alias", _.String, isUnique = true)
+    }
+
+    val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
+
+    val mutation = schema.mustContainMutation("updateTodo")
+    mutation should be("updateTodo(data: TodoUpdateInput!, where: TodoWhereUniqueInput!): Todo")
+
+    val inputType = schema.mustContainInputType("TodoUpdateInput")
+    inputType should be("""input TodoUpdateInput {
+                          |  title: String
+                          |  alias: String
+                          |}""".stripMargin)
+
+    val whereInputType = schema.mustContainInputType("TodoWhereUniqueInput")
+    whereInputType should be("""input TodoWhereUniqueInput {
+                                |  id: ID
+                                |  alias: String
+                                |}""".stripMargin)
+  }
 }

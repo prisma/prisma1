@@ -150,13 +150,11 @@ case class SchemaBuilderImpl(
 
   def updateItemField(model: Model): Field[ApiUserContext, Unit] = {
     val definition = UpdateDefinition(project, inputTypesBuilder)
-    val arguments  = definition.getSangriaArguments(model = model) :+ definition.getByArgument(model)
+    val arguments  = definition.getSangriaArguments(model = model) :+ definition.getWhereArgument(model)
 
     Field(
       s"update${model.name}",
-      fieldType = OptionType(
-        outputTypesBuilder
-          .mapUpdateOutputType(model, objectTypes(model.name))),
+      fieldType = OptionType(outputTypesBuilder.mapUpdateOutputType(model, objectTypes(model.name))),
       arguments = arguments,
       resolve = (ctx) => {
 
@@ -187,7 +185,7 @@ case class SchemaBuilderImpl(
   def deleteItemField(model: Model): Field[ApiUserContext, Unit] = {
     val definition = DeleteDefinition(project)
 
-    val arguments = List(definition.getByArgument(model))
+    val arguments = List(definition.getWhereArgument(model))
 
     Field(
       s"delete${model.name}",
