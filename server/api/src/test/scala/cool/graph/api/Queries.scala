@@ -16,12 +16,13 @@ class Queries extends FlatSpec with Matchers with ApiBaseSpec {
 
     val newId = server.executeQuerySimple("""mutation { createCar(data: {wheelCount: 7, name: "Sleven"}){id} }""", project).pathAsString("data.createCar.id")
     server
-      .executeQuerySimple(s"""mutation { updateCar(by: {id: "${newId}"} wheelCount: 8){wheelCount} }""", project)
+      .executeQuerySimple(s"""mutation { updateCar(where: {id: "${newId}"} data:{ wheelCount: 8} ){wheelCount} }""", project)
       .pathAsLong("data.updateCar.wheelCount") should be(8)
     val idToDelete =
       server.executeQuerySimple("""mutation { createCar(data: {wheelCount: 7, name: "Sleven"}){id} }""", project).pathAsString("data.createCar.id")
-    server.executeQuerySimple(s"""mutation { deleteCar(by: {id: "${idToDelete}"}){wheelCount} }""", project).pathAsLong("data.deleteCar.wheelCount") should be(
-      7)
+    server
+      .executeQuerySimple(s"""mutation { deleteCar(where: {id: "${idToDelete}"}){wheelCount} }""", project)
+      .pathAsLong("data.deleteCar.wheelCount") should be(7)
 
     // QUERIES
 
