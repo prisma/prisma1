@@ -15,7 +15,7 @@ Here is how it works:
 1. Download generated database schema definition `database.graphql` (contains the full CRUD API)
 1. Define your application schema, typically called `app.graphql`
 1. Instantiate `Graphcool` with information about your Graphcool service (such as its endpoint and the path to the database schema definition)
-1. Implement the resolvers for your application schema by delegating to the underlying Graphcool service using the generated _binding functions_
+1. Implement the resolvers for your application schema by delegating to the underlying Graphcool service using the generated delegate resolver functions
 
 ## Installation
 
@@ -33,7 +33,7 @@ The core idea of GraphQL bindings is to auto-generate dedicated resolver functio
 
 Rather than having to construct a full GraphQL query/mutation and sending it to the API manually (e.g. with `fetch` or `graphql-request`), this allows to simply invoke functions for sending specific queries/mutations. GraphQL bindings in essence provide a convenience API for sending GraphQL requests!
 
-Additionally, if the binding functions are generated in a build step and based on a strongly typed language (like TypeScript or Flow), you also get compile-time safety for all interactions with your GraphQL API!
+Additionally, if the delegate resolvers are generated in a build step and based on a strongly typed language (like TypeScript or Flow), you also get compile-time safety for all interactions with your GraphQL API!
 
 ## Example
 
@@ -63,7 +63,7 @@ type Mutation {
 
 > Note: This is a simplified version of the schema that's actually generated. This one only serves as a simple CRUD example and for example doesn't contain any filter or pagination arguments for the `users` list.
 
-If you instantiate `Graphcool` based on this service, the resulting object exposes a number of _binding functions_ which are named after the root fields in the database schema. Here's an overview of the binding functions you can now invoke on your `Graphcool` instance:
+If you instantiate `Graphcool` based on this service, the resulting object exposes a number of auto-generated delegate resolver functions which are named after the root fields in the database schema. Here's an overview of the delegate resolvers you can now invoke on your `Graphcool` instance:
 
 ```js
 // Instantiate `Graphcool` based on concrete service
@@ -91,14 +91,14 @@ Under the hood, each of these function calls is simply translated into an actual
 const { request } = require('graphql-request')
 
 const query = `
-{
-  user {
+query ($userId: ID!) {
+  user(id: $userID) {
     name
   }
 }
 `
 
-const variables = { id: 'abc' }
+const variables = { userId: 'abc' }
 
 request(
   __GRAPHCOOL_ENDPOINT__,
@@ -131,7 +131,7 @@ const resolvers = {
 }
 ```
 
-The second argument for any of the generated binding functions is either a string to specify the selection set for the query/mutation or an object of type [`GraphQLResolveInfo`](http://graphql.org/graphql-js/type/#graphqlobjecttype) (thus effectively also a represenation of a selection set). Here, you're simply passing on the `info` object that's already passed into the resolver.
+The second argument for any of the generated delegate resolvers is either a string to specify the selection set for the query/mutation or an object of type [`GraphQLResolveInfo`](http://graphql.org/graphql-js/type/#graphqlobjecttype) (thus effectively also a represenation of a selection set). Here, you're simply passing on the `info` object that's already passed into the resolver.
 
 Note that the above setup requires that your `Graphcool` instance is added to the `context` object which is passed down the resolver chain. If you're using `graphql-yoga` for your GraphQL server implementation, the setup might look similar to this:
 

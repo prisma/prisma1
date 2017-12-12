@@ -7,119 +7,64 @@ description: Overview
 
 ## Overview
 
-Every Graphcool service consists of several components that developers can provide:
+Every Graphcool service consists of several components that developers can provide, such as the service name, the data model for the service, information about deployment targets and authentication or the configuration of subscription functions.
 
-- **Type definitions (including database model)**: Defines types for the [GraphQL schema](http://graphql.org/learn/schema/). There are two kinds of types:
-  - **Model types**: Determines the types that are to be persisted in the database. These types need to be annotated with the `@model`-directive and typically represent entities from the application domain. Read more in the [Database](!alias-viuf8uus7o) chapter.
-  - **Transient types**: These types are not persisted in the database. They typically represent _input_ or _return_ types for certain API operations.
-- **Event Subscriptions**: Used to implement asynchronous business logic reacting to events in the Graphcool database. Read more in the [Event Subscriptions](!alias-aiw4aimie9) chapter.
-
-To manage these components in a coherent way, Graphcool uses a custom configuration format written in [YAML](https://en.wikipedia.org/wiki/YAML). The file can be altered manually or through dedicated commands of the [CLI](!alias-zboghez5go).
+All of these components are configured your service's root configuration file: `graphcool.yml`.
 
 ## Example
 
 Here is a simple example of a service definition file:
 
 ```yml
-# Type definitions
-types: ./types.graphql
+# REQUIRED
+# `my-demo-app` is the name of this Graphool service.
+service: my-demo-app
 
+# REQUIRED
+# This service is based on the type definitions in the two files
+# `database/types.graphql` and `database/enums.graphql`
+datamodel:
+  - database/types.graphql
+  - database/enums.graphql
 
-# Functions
-functions:
+# REQUIRED
+# This service has two stages: `dev` and `prod`. The
+# default stage is `dev` (meaning it will be used by
+# the CLI unless explicitly stated otherwise).
+stages:
+  default: dev
+  dev: local
+  prod: london-cluster
 
-  # Resolver for authentication
-  authenticateCustomer:
-    handler:
-      # Specify a managed function as a handler
-      code:
-        src: ./src/authenticate.js
-        # Define environment variables to be used in function
-        environment:
-          SERVICE_TOKEN: aequeitahqu0iu8fae5phoh1joquiegohc9rae3ejahreeciecooz7yoowuwaph7
-          STAGE: prod
-    type: resolver
+# OPTIONAL (default: false)
+# Whether authentication is required for this service
+# is based on the value of the `GRAPHCOOL_DISABLE_AUTH`
+# environment variable.
+disableAuth: ${env:GRAPHCOOL_DISABLE_AUTH}
 
-  # Operation-before hook to validate an email address
-  validateEmail:
-    handler:
-      # Specify a managed function as a handler; since no environment variables
-      # are specified, we don't need `src`
-      code: ./src/validateEmail.js
-    type: operationBefore
-    operation: Customer.create
+# OPTIONAL
+# Path to the full GraphQL schema definition of your service.
+# Note that the schema definition is generated based on your
+# data model.
+schema: schemas/database.graphql
 
-  # Subscription to pipe a new message into Slack
-  sendSlackMessage:
-    handler:
-      # Specify a webhook as a handler
-      webhook:
-        url: http://example.org/sendSlackMessage
-        headers:
-            Content-Type: application/json
-            Authorization: Bearer cha2eiheiphesash3shoofo7eceexaequeebuyaequ1reishiujuu6weisao7ohc
-    type: subscription
-    query: ./src/sendSlackMessage/newMessage.graphql
+# OPTIONAL
+# This service has one event subscription configured. The corresponding
+# subscription query is located in `database/subscriptions/welcomeEmail.graphql`.
+# When the subscription fires, the specified `webhook` is invoked via HTTP.
+subscriptions:
+  sendWelcomeEmail:
+    query: database/subscriptions/sendWelcomeEmail.graphql
+    webhook:
+      url: https://${self.custom:serverlessEndpoint}/sendWelcomeEmail
+      headers:
+        Authorization: ${env:MY_ENDPOINT_SECRET}
 
-
-# Permission rules
-permissions:
-# Everyone can read messages
-- operation: Message.read
-
-# Only authenticated users can create messages
-- operation: Message.create
-  authenticated: true
-
-# To update a message, users need to be authenticated and the
-# permission query in `./permissions/updateMessage.graphql` has
-# to return `true`; note that this permission only applies to the
-# `text` and `attachments` fields of the `Message` type, no other
-# fields may be updated
-- operation: Message.update 
-  authenticated: true
-  fields: 
-    - text
-    - attachments
-  query: ./permissions/updateMessage.graphql
-
-# To delete a message, users need to be authenticated and
-# the permission query in `./permissions/deleteMessage.graphql`
-# has to return `true`
-- operation: Message.delete
-  authenticated: true
-  query: ./permissions/deleteMessage.graphql
-
-# Everyone can perform all CRUD operations for customers
-- operation: Customer.read
-- operation: Customer.create
-- operation: Customer.update
-- operation: Customer.delete
-
-
-# You can edit the fields a permission is applied to
-- operation: Customer.Read
-- fields: 
-  - firstName
-  - lastName
-
-# Only authenticated users can connect a `Message`
-# and `Customer` node via the `CustomerMessages`-relation
-- operation: CustomerMessages.connect
-  authenticated: true
-
-# To disconnect a `Message` from a `Customer` node in the 
-# `CustomerMessages`-relation, users need to be authenticated and the 
-# permission query in `./permissions/disconnectCustomerMessages.graphql`
-# has to return `true`
-- operation: CustomerMessages.disconnect
-  authenticated: true
-  query: ./permissions/disconnectCustomerMessages.graphql
-
-# Root tokens
-rootTokens:
-  - rootToken1
-  - RootToken2 # can also start with uppercase letters
+# OPTIONAL
+# This service only defines one custom variable that's referenced in
+# the `webhook` of the `subscription`
+custom:
+  serverlessEndpoint: https://bcdeaxokbj.execute-api.eu-west-1.amazonaws.com/dev
 ```
 
 This service definition expects the following file structure:
@@ -127,13 +72,11 @@ This service definition expects the following file structure:
 ```
 .
 ├── graphcool.yml
-├── types.graphql
-├── src
-│   ├── authenticate.js
-│   ├── validateEmail.js
-│   └── sendSlackMessage
-│       └── newMessage.graphql
-└── permissions
-    ├── updateMessage.graphql
-    └── deleteMessage.graphql
+├── database
+│   ├── subscriptions
+│   │   └── welcomeEmail.graphql
+│   ├── types.graphql
+│   └── enums.graphql
+└── schemas
+    └── database.graphql
 ```
