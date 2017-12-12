@@ -78,12 +78,12 @@ object MigrationTable {
     baseQuery.sortBy(_.revision.asc).take(1).result.headOption
   }
 
-//  def unappliedMigrations(): FixedSqlStreamingAction[Seq[Project], Project, Read] = {
-//    val baseQuery = for {
-//      project <- Tables.Projects
-//      if !project.hasBeenApplied
-//    } yield project
-//    val sorted = baseQuery.sortBy(_.revision * -1).take(1) // bug: use lowest unapplied
-//    sorted.result
-//  }
+  def forRevision(projectId: String, revision: Int): SqlAction[Option[Migration], NoStream, Read] = {
+    val baseQuery = for {
+      migration <- Tables.Migrations
+      if migration.projectId === projectId && migration.revision === revision
+    } yield migration
+
+    baseQuery.take(1).result.headOption
+  }
 }

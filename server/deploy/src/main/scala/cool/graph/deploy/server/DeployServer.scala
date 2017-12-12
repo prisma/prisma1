@@ -159,6 +159,9 @@ case class DeployServer(
   def healthCheck: Future[_] = Future.successful(())
 
   def toplevelExceptionHandler(requestId: String) = ExceptionHandler {
+    case e: DeployApiError =>
+      complete(OK -> JsObject("code" -> JsNumber(e.errorCode), "requestId" -> JsString(requestId), "error" -> JsString(e.getMessage)))
+
     case e: Throwable =>
       println(e.getMessage)
       e.printStackTrace()

@@ -3,7 +3,7 @@ package cool.graph.deploy.schema
 import akka.actor.ActorSystem
 import cool.graph.deploy.DeployDependencies
 import cool.graph.deploy.database.persistence.{MigrationPersistence, ProjectPersistence}
-import cool.graph.deploy.migration.{DesiredProjectInferer, MigrationStepsProposer, RenameInferer}
+import cool.graph.deploy.migration.{DesiredProjectInferer, MigrationStepsProposer, Migrator, RenameInferer}
 import cool.graph.deploy.schema.fields.{AddProjectField, DeployField, ManualMarshallerHelpers}
 import cool.graph.deploy.schema.mutations._
 import cool.graph.deploy.schema.types.{MigrationStepType, MigrationType, ProjectType, SchemaErrorType}
@@ -40,6 +40,7 @@ case class SchemaBuilderImpl(
   val clientDb: DatabaseDef                          = dependencies.clientDb
   val projectPersistence: ProjectPersistence         = dependencies.projectPersistence
   val migrationPersistence: MigrationPersistence     = dependencies.migrationPersistence
+  val migrator: Migrator                             = dependencies.migrator
   val desiredProjectInferer: DesiredProjectInferer   = DesiredProjectInferer()
   val migrationStepsProposer: MigrationStepsProposer = MigrationStepsProposer()
   val renameInferer: RenameInferer                   = RenameInferer
@@ -74,8 +75,9 @@ case class SchemaBuilderImpl(
     "migrationStatus",
     MigrationType.Type,
     arguments = projectIdArguments,
-    description =
-      Some("Shows the status of the next migration in line to be applied to the project. If no such migration exists, it shows the last applied migration."),
+    description = Some(
+      "Shows the status of the next migration in line to be applied to the project. If no such migration exists, it shows the last applied migration."
+    ),
     resolve = (ctx) => {
       val projectId = ctx.args.raw.projectId
       FutureOpt(migrationPersistence.getNextMigration(projectId)).fallbackTo(migrationPersistence.getLastMigration(projectId)).map {
@@ -141,7 +143,8 @@ case class SchemaBuilderImpl(
                        desiredProjectInferer = desiredProjectInferer,
                        migrationStepsProposer = migrationStepsProposer,
                        renameInferer = renameInferer,
-                       migrationPersistence = migrationPersistence
+                       migrationPersistence = migrationPersistence,
+                       migrator = migrator
                      ).execute
           } yield result
       }
