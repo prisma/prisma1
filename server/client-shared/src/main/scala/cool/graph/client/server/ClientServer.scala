@@ -34,17 +34,17 @@ case class ClientServer(prefix: String)(
     with LazyLogging {
   import system.dispatcher
 
-  val log                   = (x: String) => logger.info(x)
-  val errorHandlerFactory   = ErrorHandlerFactory(log)
-  val projectSchemaFetcher  = inject[ProjectFetcher](identified by "project-schema-fetcher")
-  val graphQlRequestHandler = inject[GraphQlRequestHandler](identified by s"$prefix-gql-request-handler")
-  val projectSchemaBuilder  = inject[ProjectSchemaBuilder](identified by s"$prefix-schema-builder")
-  val clientAuth            = inject[ClientAuth]
-  val requestPrefix         = inject[String](identified by "request-prefix")
-  val requestIdPrefix       = s"$requestPrefix:$prefix"
+  val log: String => Unit                          = (x: String) => logger.info(x)
+  val errorHandlerFactory                          = ErrorHandlerFactory(log)
+  val projectSchemaFetcher: ProjectFetcher         = inject[ProjectFetcher](identified by "project-schema-fetcher")
+  val graphQlRequestHandler: GraphQlRequestHandler = inject[GraphQlRequestHandler](identified by s"$prefix-gql-request-handler")
+  val projectSchemaBuilder: ProjectSchemaBuilder   = inject[ProjectSchemaBuilder](identified by s"$prefix-schema-builder")
+  val clientAuth: ClientAuth                       = inject[ClientAuth]
+  val requestPrefix: String                        = inject[String](identified by "request-prefix")
+  val requestIdPrefix                              = s"$requestPrefix:$prefix"
 
   // For health checks. Only one publisher inject required (as multiple should share the same client).
-  val kinesis = inject[KinesisPublisher](identified by "kinesisAlgoliaSyncQueriesPublisher")
+  val kinesis: KinesisPublisher = inject[KinesisPublisher](identified by "kinesisAlgoliaSyncQueriesPublisher")
 
   private val requestHandler = RequestHandler(errorHandlerFactory, projectSchemaFetcher, projectSchemaBuilder, graphQlRequestHandler, clientAuth, log)
 
@@ -73,7 +73,17 @@ case class ClientServer(prefix: String)(
                 extractRawRequest(requestLogger) { rawRequest =>
                   complete(requestHandler.handleRawRequestForPermissionSchema(projectId = projectId, rawRequest = rawRequest))
                 }
-              } ~ {
+              } ~
+                path("import") {
+                  extractRawRequest(requestLogger) { rawRequest =>
+                    complete(requestHandler.handleRawRequestForImport(projectId = projectId, rawRequest = rawRequest))
+                  }
+                } ~
+                path("export") {
+                  extractRawRequest(requestLogger) { rawRequest =>
+                    complete(requestHandler.handleRawRequestForExport(projectId = projectId, rawRequest = rawRequest))
+                  }
+                } ~ {
                 extractRawRequest(requestLogger) { rawRequest =>
                   timeoutHandler(requestId = rawRequest.id, projectId = projectId) {
                     complete(requestHandler.handleRawRequestForProjectSchema(projectId = projectId, rawRequest = rawRequest))

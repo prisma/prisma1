@@ -89,6 +89,7 @@ case class SimpleApiDependencies(implicit val system: ActorSystem, val materiali
   lazy val kinesisApiMetricsPublisher         = new KinesisPublisherImplementation(streamName = sys.env("KINESIS_STREAM_API_METRICS"), kinesis)
   lazy val featureMetricActor                 = system.actorOf(Props(new FeatureMetricActor(kinesisApiMetricsPublisher, apiMetricsFlushInterval)))
   lazy val apiMetricsMiddleware               = new ApiMetricsMiddleware(testableTime, featureMetricActor)
+  lazy val maxImportExportSize                = 10000000
 
   binding identifiedBy "project-schema-fetcher" toNonLazy projectSchemaFetcher
   binding identifiedBy "cloudwatch" toNonLazy cloudwatch

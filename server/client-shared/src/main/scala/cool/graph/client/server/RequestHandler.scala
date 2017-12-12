@@ -3,8 +3,10 @@ package cool.graph.client.server
 import akka.http.scaladsl.model.StatusCodes.OK
 import akka.http.scaladsl.model._
 import cool.graph.bugsnag.{BugSnagger, GraphCoolRequest}
+import cool.graph.client.ImportExport.{BulkExport, BulkImport}
 import cool.graph.client.UserContext
 import cool.graph.client.authorization.ClientAuth
+import cool.graph.client.database.ProjectDataresolver
 import cool.graph.client.finder.ProjectFetcher
 import cool.graph.shared.errors.UserAPIErrors
 import cool.graph.shared.errors.UserAPIErrors.InsufficientPermissions
@@ -115,6 +117,42 @@ case class RequestHandler(
         )
         Future.successful(unhandledErrorLogger(e))
     }
+  }
+
+  def handleRawRequestForImport(projectId: String, rawRequest: RawRequest): Future[(StatusCode, JsValue)] = {
+    def checkForAdmin(auth: Option[AuthenticatedRequest]): Unit =
+      if (!auth.exists(_.isAdmin)) throw InsufficientPermissions("Insufficient permissions for bulk import")
+
+    val graphQlRequestFuture: Future[Future[JsValue]] = for {
+      projectWithClientId  <- fetchProject(projectId)
+      authenticatedRequest <- getAuthContext(projectWithClientId, rawRequest.authorizationHeader)
+      _                    = checkForAdmin(authenticatedRequest)
+      importer             = new BulkImport()
+      res                  = importer.executeImport(projectWithClientId.project, rawRequest.json)
+    } yield res
+
+    val response: Future[JsValue] = graphQlRequestFuture.flatMap(identity)
+
+    response.map(x => (200, x))
+  }
+
+  def handleRawRequestForExport(projectId: String, rawRequest: RawRequest): Future[(StatusCode, JsValue)] = {
+    def checkForAdmin(auth: Option[AuthenticatedRequest]): Unit =
+      if (!auth.exists(_.isAdmin)) throw InsufficientPermissions("Insufficient permissions for bulk export")
+
+    val graphQlRequestFuture: Future[Future[JsValue]] = for {
+      projectWithClientId  <- fetchProject(projectId)
+      authenticatedRequest <- getAuthContext(projectWithClientId, rawRequest.authorizationHeader)
+      _                    = checkForAdmin(authenticatedRequest)
+      resolver             = new ProjectDataresolver(project = projectWithClientId.project, requestContext = None)
+      exporter             = new BulkExport()
+      res                  = exporter.executeExport(projectWithClientId.project, resolver, rawRequest.json)
+    } yield res
+    import spray.json._
+
+    val response: Future[JsValue] = graphQlRequestFuture.flatMap(identity)
+
+    response.map(x => (200, x))
   }
 
   def handleGraphQlRequest(graphQlRequest: GraphQlRequest): Future[(StatusCode, JsValue)] = {

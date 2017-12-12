@@ -1,11 +1,14 @@
 package cool.graph.client.ImportExport
 
+import cool.graph.client.ImportExport.MyJsonProtocol._
 import cool.graph.client.database.DatabaseMutationBuilder.MirrorFieldDbValues
 import cool.graph.client.database.{DatabaseMutationBuilder, ProjectRelayId, ProjectRelayIdTable}
 import cool.graph.cuid.Cuid
+import cool.graph.private_api.PrivateClientApi.inject
 import cool.graph.shared.RelationFieldMirrorColumn
-import cool.graph.shared.database.Databases
+import cool.graph.shared.database.{Databases, GlobalDatabaseManager}
 import cool.graph.shared.models.{Model, Project, Relation, RelationSide}
+import scaldi.Injector
 import slick.dbio.{DBIOAction, Effect, NoStream}
 import slick.jdbc.MySQLProfile.api._
 import slick.lifted.TableQuery
@@ -14,7 +17,10 @@ import spray.json._
 import scala.concurrent.Future
 import scala.util.Try
 
-class BulkImport(implicit injector: ClientInjector) {
+class BulkImport(project: Project)(implicit val inj: Injector) {
+
+  val dbManager     = inject[GlobalDatabaseManager]
+  val db: Databases = dbManager.getDbForProject(project)
 
   def executeImport(project: Project, json: JsValue): Future[JsValue] = {
     import scala.concurrent.ExecutionContext.Implicits.global
@@ -126,8 +132,5 @@ class BulkImport(implicit injector: ClientInjector) {
     DBIO.sequence(updateListValueActions)
   }
 
-  private def runDBActions(project: Project, actions: DBIOAction[Vector[Try[Int]], NoStream, Effect.Write]): Future[Vector[Try[Int]]] = {
-    val db: Databases = injector.globalDatabaseManager.getDbForProject(project)
-    db.master.run(actions)
-  }
+  private def runDBActions(project: Project, actions: DBIOAction[Vector[Try[Int]], NoStream, Effect.Write]): Future[Vector[Try[Int]]] = db.master.run(actions)
 }

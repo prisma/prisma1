@@ -8,22 +8,26 @@ import spray.json.JsValue
 import spray.json._
 import scala.concurrent.ExecutionContext.Implicits.global
 import MyJsonProtocol._
+import scaldi.Injector
+
 import scala.concurrent.Future
 
-class BulkExport(implicit clientInjector: ClientInjector) {
+class BulkExport(implicit val inj: Injector) {
+
+  val maxImportExportSize = inject[Int](identified by "maxImportExportSize")
 
   def executeExport(project: Project, dataResolver: DataResolver, json: JsValue): Future[JsValue] = {
     val start   = JsonBundle(Vector.empty, 0)
     val request = json.convertTo[ExportRequest]
     val response = request.fileType match {
       case "nodes"     => resForCursor(start, NodeInfo(dataResolver, project.models.zipWithIndex, request.cursor))
-      case "lists"     => resForCursor(start, ListInfo(dataResolver, project.models.filter(m => m.scalarFields.exists(f => f.isList)).zipWithIndex, request.cursor))
+      case "lists"     => resForCursor(start, ListInfo(dataResolver, project.models.filter(m => m.scalarListFields.nonEmpty).zipWithIndex, request.cursor))
       case "relations" => resForCursor(start, RelationInfo(dataResolver, project.relations.map(r => toRelationData(r, project)).zipWithIndex, request.cursor))
     }
     response.map(_.toJson)
   }
 
-  private def isLimitReached(bundle: JsonBundle): Boolean = bundle.size > clientInjector.maxImportExportSize
+  private def isLimitReached(bundle: JsonBundle): Boolean = bundle.size > maxImportExportSize
 
   private def resForCursor(in: JsonBundle, info: ExportInfo): Future[ResultFormat] = {
     for {
