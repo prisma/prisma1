@@ -4,7 +4,7 @@ import cool.graph.api.ApiDependencies
 import cool.graph.api.database.DataResolver
 import cool.graph.api.database.mutactions.{Mutaction, MutactionGroup}
 import cool.graph.api.mutations.definitions.UpdateOrCreateDefinition
-import cool.graph.api.mutations.{ClientMutation, ReturnValueResult}
+import cool.graph.api.mutations.{ClientMutation, ReturnValue, ReturnValueResult}
 import cool.graph.api.schema.InputTypesBuilder
 import cool.graph.shared.models.{AuthenticatedRequest, Model, Project}
 import cool.graph.util.coolSangria.Sangria
@@ -28,23 +28,19 @@ class UpdateOrCreate(model: Model, project: Project, args: schema.Args, dataReso
 
   val updateMutation: Update = {
     val updateArgs = Sangria.rawArgs(argsPointer("update").asInstanceOf[Map[String, Any]])
-    new Update(model, project, updateArgs, dataResolver, ???) // todo: add by argument
+    new Update(model, project, updateArgs, dataResolver)
   }
   val createMutation: Create = {
     val createArgs = Sangria.rawArgs(argsPointer("create").asInstanceOf[Map[String, Any]])
     new Create(model, project, createArgs, dataResolver)
   }
 
-  var itemExists = false
-
   override def prepareMutactions(): Future[List[MutactionGroup]] = {
     for {
-      exists <- dataResolver.existsByModelAndId(model, updateMutation.id)
-      mutactionGroups <- if (exists) {
-                          itemExists = true
+      item <- updateMutation.dataItem
+      mutactionGroups <- if (item.isDefined) {
                           updateMutation.prepareMutactions()
                         } else {
-                          itemExists = false
                           createMutation.prepareMutactions()
                         }
     } yield {
@@ -53,10 +49,9 @@ class UpdateOrCreate(model: Model, project: Project, args: schema.Args, dataReso
   }
 
   override def getReturnValue: Future[ReturnValueResult] = {
-    if (itemExists) {
-      returnValueById(model, updateMutation.id)
-    } else {
-      returnValueById(model, createMutation.id)
+    updateMutation.dataItem.flatMap {
+      case Some(dataItem) => returnValueById(model, dataItem.id)
+      case None           => returnValueById(model, createMutation.id)
     }
   }
 }

@@ -19,20 +19,24 @@ trait ClientMutationDefinition {
 
   def getSchemaArguments(model: Model): List[SchemaArgument]
 
-  def getByArgument(model: Model) = {
+  def getWhereArgument(model: Model) = {
     Argument(
-      name = "by",
+      name = "where",
       argumentType = InputObjectType(
-        name = s"${model.name}Selector",
+        name = s"${model.name}WhereUniqueInput",
         fields = model.fields.filter(_.isUnique).map(field => InputField(name = field.name, fieldType = SchemaBuilderUtils.mapToOptionalInputType(field)))
       )
     )
   }
 
-  def extractNodeSelectorFromByArg(model: Model, by: Map[String, Option[Any]]): NodeSelector = {
-    by.toList collectFirst {
-      case (fieldName, Some(value)) => NodeSelector(fieldName, GCAnyConverter(model.getFieldByName_!(fieldName).typeIdentifier, false).toGCValue(value).get)
-    } getOrElse (sys.error("You must specify a unique selector"))
+  def extractNodeSelectorFromSangriaArgs(model: Model, args: sangria.schema.Args): NodeSelector = {
+    val whereArgs = args.arg[Map[String, Option[Any]]]("where")
+    whereArgs.collectFirst {
+      case (fieldName, Some(value)) =>
+        NodeSelector(fieldName, GCAnyConverter(model.getFieldByName_!(fieldName).typeIdentifier, isList = false).toGCValue(value).get)
+    } getOrElse {
+      sys.error("You must specify a unique selector")
+    }
   }
 }
 

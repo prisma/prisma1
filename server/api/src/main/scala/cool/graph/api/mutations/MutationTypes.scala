@@ -1,12 +1,11 @@
 package cool.graph.api.mutations
 
-import cool.graph.shared.models.Field
 import cool.graph.shared.models.IdType.Id
 
 import scala.language.reflectiveCalls
 
 object MutationTypes {
-  case class ArgumentValue(name: String, value: Any, field: Option[Field] = None) {
+  case class ArgumentValue(name: String, value: Any) {
     def unwrappedValue: Any = {
       def unwrapSome(x: Any): Any = {
         x match {
@@ -16,9 +15,6 @@ object MutationTypes {
       }
       unwrapSome(value)
     }
-  }
-  object ArgumentValue {
-    def apply(name: String, value: Any, field: Field): ArgumentValue = ArgumentValue(name, value, Some(field))
   }
 
   object ArgumentValueList {

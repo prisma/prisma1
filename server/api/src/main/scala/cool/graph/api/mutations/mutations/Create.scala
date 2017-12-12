@@ -13,13 +13,11 @@ import cool.graph.cuid.Cuid
 import cool.graph.shared.models.IdType.Id
 import cool.graph.shared.models._
 import sangria.schema
-import scaldi.{Injectable, Injector}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class Create(model: Model, project: Project, args: schema.Args, dataResolver: DataResolver, allowSettingManagedFields: Boolean = false)(
-    implicit apiDependencies: ApiDependencies)
+class Create(model: Model, project: Project, args: schema.Args, dataResolver: DataResolver)(implicit apiDependencies: ApiDependencies)
     extends ClientMutation(model, args, dataResolver) {
 
   implicit val system: ActorSystem             = apiDependencies.system
@@ -31,19 +29,18 @@ class Create(model: Model, project: Project, args: schema.Args, dataResolver: Da
   val requestId: String = "" //                        = dataResolver.requestContext.map(_.requestId).getOrElse("")
 
   val coolArgs: CoolArgs = {
-    val argsPointer: Map[String, Any] = args.raw.get("input") match { // TODO: input token is probably relay specific?
+    val argsPointer: Map[String, Any] = args.raw.get("data") match { // TODO: input token is probably relay specific?
       case Some(value) => value.asInstanceOf[Map[String, Any]]
       case None        => args.raw
     }
 
-    CoolArgs(argsPointer, model, project)
+    CoolArgs(argsPointer)
   }
 
   def prepareMutactions(): Future[List[MutactionGroup]] = {
-    val createMutactionsResult =
-      SqlMutactions(dataResolver).getMutactionsForCreate(project, model, coolArgs, allowSettingManagedFields, id, requestId = requestId)
+    val createMutactionsResult = SqlMutactions(dataResolver).getMutactionsForCreate(project, model, coolArgs, id)
 
-    val transactionMutaction = Transaction(createMutactionsResult.allMutactions, dataResolver)
+    val transactionMutaction = Transaction(createMutactionsResult.allMutactions.toList, dataResolver)
     val createMutactions     = createMutactionsResult.allMutactions.collect { case x: CreateDataItem => x }
 
     val subscriptionMutactions = SubscriptionEvents.extractFromSqlMutactions(project, mutationId, createMutactionsResult.allMutactions)

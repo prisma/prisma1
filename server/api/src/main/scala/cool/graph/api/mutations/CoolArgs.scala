@@ -1,40 +1,45 @@
 package cool.graph.api.mutations
 
 import cool.graph.shared.models._
-import cool.graph.util.coolSangria.Sangria
+
 import scala.collection.immutable.Seq
 
 /**
   * It's called CoolArgs to easily differentiate from Sangrias Args class.
   */
-case class CoolArgs(raw: Map[String, Any], model: Model, project: Project) {
-  private val sangriaArgs = Sangria.rawArgs(raw)
+case class CoolArgs(raw: Map[String, Any]) {
 
-  def subArgsList(field: Field): Option[Seq[CoolArgs]] = {
-    val subModel = field.relatedModel(project).get
-    val fieldValues: Option[Seq[Map[String, Any]]] = field.isList match {
-      case true  => getFieldValuesAs[Map[String, Any]](field)
-      case false => getFieldValueAsSeq[Map[String, Any]](field.name)
-    }
+//  def subArgsList2(field: Field): Option[Seq[CoolArgs]] = {
+//    val fieldValues: Option[Seq[Map[String, Any]]] = field.isList match {
+//      case true  => getFieldValuesAs[Map[String, Any]](field)
+//      case false => getFieldValueAsSeq[Map[String, Any]](field.name)
+//    }
+//
+//    fieldValues match {
+//      case None    => None
+//      case Some(x) => Some(x.map(CoolArgs(_)))
+//    }
+//  }
 
-    fieldValues match {
+  def subArgsList(field: String): Option[Seq[CoolArgs]] = {
+    getFieldValuesAs[Map[String, Any]](field) match {
       case None    => None
-      case Some(x) => Some(x.map(CoolArgs(_, subModel, project)))
+      case Some(x) => Some(x.map(CoolArgs(_)))
+    }
+  }
+
+  def subArgs(field: Field): Option[Option[CoolArgs]] = subArgs(field.name)
+
+  def subArgs(name: String): Option[Option[CoolArgs]] = {
+    val fieldValue: Option[Option[Map[String, Any]]] = getFieldValueAs[Map[String, Any]](name)
+    fieldValue match {
+      case None          => None
+      case Some(None)    => Some(None)
+      case Some(Some(x)) => Some(Some(CoolArgs(x)))
     }
   }
 
   def hasArgFor(field: Field) = raw.get(field.name).isDefined
-
-  def fields: Seq[Field] = {
-    for {
-      field <- model.fields
-      if hasArgFor(field)
-    } yield field
-  }
-
-  def fieldsThatRequirePermissionCheckingInMutations = {
-    fields.filter(_.name != "id")
-  }
 
   /**
     * The outer option is defined if the field key was specified in the arguments at all.
@@ -62,7 +67,6 @@ case class CoolArgs(raw: Map[String, Any], model: Model, project: Project) {
         fieldValue.asInstanceOf[Option[T]] match {
           case Some(x) => Seq(x)
           case None    => Seq.empty
-
         }
       } catch {
         case _: ClassCastException =>
@@ -75,8 +79,10 @@ case class CoolArgs(raw: Map[String, Any], model: Model, project: Project) {
     * The outer option is defined if the field key was specified in the arguments at all.
     * The inner sequence then contains all the values specified.
     */
-  def getFieldValuesAs[T](field: Field, suffix: String = ""): Option[Seq[T]] = {
-    raw.get(field.name + suffix).map { fieldValue =>
+  def getFieldValuesAs[T](field: Field): Option[Seq[T]] = getFieldValuesAs(field.name)
+
+  def getFieldValuesAs[T](field: String): Option[Seq[T]] = {
+    raw.get(field).map { fieldValue =>
       try {
         fieldValue.asInstanceOf[Option[Seq[T]]].getOrElse(Seq.empty)
       } catch {

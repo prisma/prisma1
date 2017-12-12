@@ -534,6 +534,14 @@ case class Relation(
     }
   }
 
+  def getField_!(project: Project, model: Model): Field = {
+    model.id match {
+      case `modelAId` => getModelAField_!(project)
+      case `modelBId` => getModelBField_!(project)
+      case _          => ??? //throw SystemErrors.InvalidRelation(s"The model with the id ${model.id} is not part of this relation.")
+    }
+  }
+
   def getModelAField(project: Project): Option[Field] = modelFieldFor(project, modelAId, RelationSide.A)
   def getModelAField_!(project: Project): Field =
     getModelAField(project).get //OrElse(throw SystemErrors.InvalidRelation("A relation must have a field on model A."))

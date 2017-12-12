@@ -19,12 +19,13 @@ import scala.concurrent.Future
 import scala.util.Success
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class Delete[ManyDataItemType](model: Model,
-                               modelObjectTypes: ObjectTypeBuilder,
-                               project: Project,
-                               args: schema.Args,
-                               dataResolver: DataResolver,
-                               by: NodeSelector)(implicit apiDependencies: ApiDependencies)
+class Delete(
+    model: Model,
+    modelObjectTypes: ObjectTypeBuilder,
+    project: Project,
+    args: schema.Args,
+    dataResolver: DataResolver
+)(implicit apiDependencies: ApiDependencies)
     extends ClientMutation(model, args, dataResolver) {
 
   override val mutationDefinition = DeleteDefinition(project)
@@ -35,9 +36,11 @@ class Delete[ManyDataItemType](model: Model,
   var deletedItemOpt: Option[DataItem] = None
   val requestId: Id                    = "" // dataResolver.requestContext.map(_.requestId).getOrElse("")
 
+  val where = mutationDefinition.extractNodeSelectorFromSangriaArgs(model, args)
+
   override def prepareMutactions(): Future[List[MutactionGroup]] = {
     dataResolver
-      .resolveByUnique(model, by.fieldName, by.fieldValue)
+      .resolveByUnique(model, where.fieldName, where.fieldValue)
       .andThen {
         case Success(x) => deletedItemOpt = x.map(dataItem => dataItem) // todo: replace with GC Values
         // todo: do we need the fromSql stuff?

@@ -20,8 +20,10 @@ import scala.util.{Failure, Success, Try}
 case class AddDataItemToManyRelation(project: Project, fromModel: Model, fromField: Field, toId: String, fromId: String, toIdAlreadyInDB: Boolean = true)
     extends ClientSqlDataChangeMutaction {
 
-  // If this assertion fires, this mutaction is used wrong by the programmer.
-  assert(fromModel.fields.exists(_.id == fromField.id))
+  assert(
+    fromModel.fields.exists(_.id == fromField.id),
+    s"${fromModel.name} does not contain the field ${fromField.name}. If this assertion fires, this mutaction is used wrong by the programmer."
+  )
 
   val relationSide: cool.graph.shared.models.RelationSide.Value = fromField.relationSide.get
   val relation: Relation                                        = fromField.relation.get

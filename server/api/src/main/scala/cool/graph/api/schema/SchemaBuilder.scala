@@ -47,7 +47,6 @@ case class SchemaBuilderImpl(
     Schema(
       query = query,
       mutation = mutation,
-      subscription = subscription,
       validationRules = SchemaValidationRule.empty
     )
   }
@@ -56,7 +55,7 @@ case class SchemaBuilderImpl(
 
     val fields = project.models.map(getAllItemsField) ++
       project.models.map(getSingleItemField) ++
-      project.models.map(getAllItemsConenctionField) :+
+      project.models.map(getAllItemsConnectionField) :+
       nodeField
 
     ObjectType("Query", fields)
@@ -66,7 +65,6 @@ case class SchemaBuilderImpl(
 
     val fields = project.models.map(createItemField) ++
       project.models.map(updateItemField) ++
-      project.models.map(updateOrCreateItemField) ++
       project.models.map(deleteItemField)
 
     Some(ObjectType("Mutation", fields))
@@ -93,7 +91,7 @@ case class SchemaBuilderImpl(
     )
   }
 
-  def getAllItemsConenctionField(model: Model): Field[ApiUserContext, Unit] = {
+  def getAllItemsConnectionField(model: Model): Field[ApiUserContext, Unit] = {
     Field(
       s"${camelCase(pluralsCache.pluralName(model))}Connection",
       fieldType = conectionTypes(model.name),
@@ -137,7 +135,7 @@ case class SchemaBuilderImpl(
 
     Field(
       s"create${model.name}",
-      fieldType = OptionType(outputTypesBuilder.mapCreateOutputType(model, objectTypes(model.name))),
+      fieldType = outputTypesBuilder.mapCreateOutputType(model, objectTypes(model.name)),
       arguments = arguments,
       resolve = (ctx) => {
         val mutation = new Create(model = model, project = project, args = ctx.args, dataResolver = masterDataResolver)
@@ -150,19 +148,14 @@ case class SchemaBuilderImpl(
 
   def updateItemField(model: Model): Field[ApiUserContext, Unit] = {
     val definition = UpdateDefinition(project, inputTypesBuilder)
-    val arguments  = definition.getSangriaArguments(model = model) :+ definition.getByArgument(model)
+    val arguments  = definition.getSangriaArguments(model = model) :+ definition.getWhereArgument(model)
 
     Field(
       s"update${model.name}",
-      fieldType = OptionType(
-        outputTypesBuilder
-          .mapUpdateOutputType(model, objectTypes(model.name))),
+      fieldType = OptionType(outputTypesBuilder.mapUpdateOutputType(model, objectTypes(model.name))),
       arguments = arguments,
       resolve = (ctx) => {
-
-        val nodeSelector = definition.extractNodeSelectorFromByArg(model, ctx.args.arg[Map[String, Option[Any]]]("by"))
-
-        new Update(model = model, project = project, args = ctx.args, dataResolver = masterDataResolver, by = nodeSelector)
+        new Update(model = model, project = project, args = ctx.args, dataResolver = masterDataResolver)
           .run(ctx.ctx)
           .map(outputTypesBuilder.mapResolve(_, ctx.args))
       }
@@ -187,23 +180,20 @@ case class SchemaBuilderImpl(
   def deleteItemField(model: Model): Field[ApiUserContext, Unit] = {
     val definition = DeleteDefinition(project)
 
-    val arguments = List(definition.getByArgument(model))
+    val arguments = List(definition.getWhereArgument(model))
 
     Field(
       s"delete${model.name}",
       fieldType = OptionType(outputTypesBuilder.mapDeleteOutputType(model, objectTypes(model.name), onlyId = false)),
       arguments = arguments,
       resolve = (ctx) => {
-
-        val nodeSelector = definition.extractNodeSelectorFromByArg(model, ctx.args.arg[Map[String, Option[Any]]]("by"))
-
-        new Delete(model = model,
-                   modelObjectTypes = objectTypeBuilder,
-                   project = project,
-                   args = ctx.args,
-                   dataResolver = masterDataResolver,
-                   by = nodeSelector)
-          .run(ctx.ctx)
+        new Delete(
+          model = model,
+          modelObjectTypes = objectTypeBuilder,
+          project = project,
+          args = ctx.args,
+          dataResolver = masterDataResolver
+        ).run(ctx.ctx)
           .map(outputTypesBuilder.mapResolve(_, ctx.args))
       }
     )
