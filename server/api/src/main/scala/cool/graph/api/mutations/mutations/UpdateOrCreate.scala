@@ -28,7 +28,7 @@ class UpdateOrCreate(model: Model, project: Project, args: schema.Args, dataReso
 
   val updateMutation: Update = {
     val updateArgs = Sangria.rawArgs(argsPointer("update").asInstanceOf[Map[String, Any]])
-    new Update(model, project, updateArgs, dataResolver, ???) // todo: add by argument
+    new Update(model, project, updateArgs, dataResolver)
   }
   val createMutation: Create = {
     val createArgs = Sangria.rawArgs(argsPointer("create").asInstanceOf[Map[String, Any]])

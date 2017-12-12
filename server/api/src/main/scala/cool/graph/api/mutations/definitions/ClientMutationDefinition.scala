@@ -29,8 +29,9 @@ trait ClientMutationDefinition {
     )
   }
 
-  def extractNodeSelectorFromWhereArg(model: Model, where: Map[String, Option[Any]]): NodeSelector = {
-    where.collectFirst {
+  def extractNodeSelectorFromSangriaArgs(model: Model, args: sangria.schema.Args): NodeSelector = {
+    val whereArgs = args.arg[Map[String, Option[Any]]]("where")
+    whereArgs.collectFirst {
       case (fieldName, Some(value)) =>
         NodeSelector(fieldName, GCAnyConverter(model.getFieldByName_!(fieldName).typeIdentifier, isList = false).toGCValue(value).get)
     } getOrElse {

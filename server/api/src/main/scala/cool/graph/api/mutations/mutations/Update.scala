@@ -15,7 +15,12 @@ import sangria.schema
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class Update(model: Model, project: Project, args: schema.Args, dataResolver: DataResolver, where: NodeSelector)(implicit apiDependencies: ApiDependencies)
+class Update(
+    model: Model,
+    project: Project,
+    args: schema.Args,
+    dataResolver: DataResolver
+)(implicit apiDependencies: ApiDependencies)
     extends ClientMutation(model, args, dataResolver) {
 
   override val mutationDefinition = UpdateDefinition(project, InputTypesBuilder(project))
@@ -30,6 +35,8 @@ class Update(model: Model, project: Project, args: schema.Args, dataResolver: Da
     }
     CoolArgs(argsPointer)
   }
+
+  val where = mutationDefinition.extractNodeSelectorFromSangriaArgs(model, args)
 
   lazy val dataItem: Future[Option[DataItem]] = dataResolver.resolveByUnique(model, where.fieldName, where.fieldValue)
 

@@ -155,10 +155,7 @@ case class SchemaBuilderImpl(
       fieldType = OptionType(outputTypesBuilder.mapUpdateOutputType(model, objectTypes(model.name))),
       arguments = arguments,
       resolve = (ctx) => {
-
-        val nodeSelector = definition.extractNodeSelectorFromWhereArg(model, ctx.args.arg[Map[String, Option[Any]]]("where"))
-
-        new Update(model = model, project = project, args = ctx.args, dataResolver = masterDataResolver, where = nodeSelector)
+        new Update(model = model, project = project, args = ctx.args, dataResolver = masterDataResolver)
           .run(ctx.ctx)
           .map(outputTypesBuilder.mapResolve(_, ctx.args))
       }
@@ -190,16 +187,13 @@ case class SchemaBuilderImpl(
       fieldType = OptionType(outputTypesBuilder.mapDeleteOutputType(model, objectTypes(model.name), onlyId = false)),
       arguments = arguments,
       resolve = (ctx) => {
-
-        val nodeSelector = definition.extractNodeSelectorFromWhereArg(model, ctx.args.arg[Map[String, Option[Any]]]("by"))
-
-        new Delete(model = model,
-                   modelObjectTypes = objectTypeBuilder,
-                   project = project,
-                   args = ctx.args,
-                   dataResolver = masterDataResolver,
-                   by = nodeSelector)
-          .run(ctx.ctx)
+        new Delete(
+          model = model,
+          modelObjectTypes = objectTypeBuilder,
+          project = project,
+          args = ctx.args,
+          dataResolver = masterDataResolver
+        ).run(ctx.ctx)
           .map(outputTypesBuilder.mapResolve(_, ctx.args))
       }
     )
