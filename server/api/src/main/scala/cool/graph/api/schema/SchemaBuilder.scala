@@ -66,7 +66,6 @@ case class SchemaBuilderImpl(
 
     val fields = project.models.map(createItemField) ++
       project.models.map(updateItemField) ++
-      project.models.map(updateOrCreateItemField) ++
       project.models.map(deleteItemField)
 
     Some(ObjectType("Mutation", fields))
