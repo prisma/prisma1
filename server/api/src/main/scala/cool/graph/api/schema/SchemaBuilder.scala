@@ -47,7 +47,6 @@ case class SchemaBuilderImpl(
     Schema(
       query = query,
       mutation = mutation,
-      subscription = subscription,
       validationRules = SchemaValidationRule.empty
     )
   }
@@ -56,7 +55,7 @@ case class SchemaBuilderImpl(
 
     val fields = project.models.map(getAllItemsField) ++
       project.models.map(getSingleItemField) ++
-      project.models.map(getAllItemsConenctionField) :+
+      project.models.map(getAllItemsConnectionField) :+
       nodeField
 
     ObjectType("Query", fields)
@@ -92,7 +91,7 @@ case class SchemaBuilderImpl(
     )
   }
 
-  def getAllItemsConenctionField(model: Model): Field[ApiUserContext, Unit] = {
+  def getAllItemsConnectionField(model: Model): Field[ApiUserContext, Unit] = {
     Field(
       s"${camelCase(pluralsCache.pluralName(model))}Connection",
       fieldType = conectionTypes(model.name),
