@@ -111,7 +111,7 @@ case class InputTypesBuilder(project: Project) {
 
   private def cachedSchemaArgumentsForCreate(model: Model, omitRelation: Option[Relation] = None): List[SchemaArgument] = {
     caffeineCache.getOrElseUpdate(cacheKey("cachedSchemaArgumentsForCreate", model, omitRelation)) {
-      computeScalarSchemaArgumentsForCreate(model) ++ cachedRelationalSchemaArguments(model, omitRelation = omitRelation)
+      computeScalarSchemaArgumentsForCreate(model) ++ cachedRelationalSchemaArgumentsForCreate(model, omitRelation = omitRelation)
     }
   }
 
@@ -130,15 +130,21 @@ case class InputTypesBuilder(project: Project) {
 
   private def cachedSchemaArgumentsForUpdate(model: Model): List[SchemaArgument] = {
     caffeineCache.getOrElseUpdate(cacheKey("cachedSchemaArgumentsForUpdate", model)) {
-      computeScalarSchemaArgumentsForUpdate(model) ++ cachedRelationalSchemaArguments(model, omitRelation = None)
+      computeScalarSchemaArgumentsForUpdate(model) ++ cachedRelationalSchemaArgumentsForUpdate(model, omitRelation = None)
     }
   }
 
   // RELATIONAL CACHE
 
-  def cachedRelationalSchemaArguments(model: Model, omitRelation: Option[Relation]): List[SchemaArgument] = {
-    caffeineCache.getOrElseUpdate(cacheKey("cachedRelationalSchemaArguments", model, omitRelation)) {
-      computeRelationalSchemaArguments(model, omitRelation)
+  def cachedRelationalSchemaArgumentsForCreate(model: Model, omitRelation: Option[Relation]): List[SchemaArgument] = {
+    caffeineCache.getOrElseUpdate(cacheKey("cachedRelationalSchemaArgumentsForCreate", model, omitRelation)) {
+      computeRelationalSchemaArguments(model, omitRelation, operation = "Create")
+    }
+  }
+
+  def cachedRelationalSchemaArgumentsForUpdate(model: Model, omitRelation: Option[Relation]): List[SchemaArgument] = {
+    caffeineCache.getOrElseUpdate(cacheKey("cachedRelationalSchemaArgumentsForUpdate", model, omitRelation)) {
+      computeRelationalSchemaArguments(model, omitRelation, operation = "Update")
     }
   }
 
@@ -183,7 +189,7 @@ case class InputTypesBuilder(project: Project) {
     }
   }
 
-  private def computeRelationalSchemaArguments(model: Model, omitRelation: Option[Relation]): List[SchemaArgument] = {
+  private def computeRelationalSchemaArguments(model: Model, omitRelation: Option[Relation], operation: String): List[SchemaArgument] = {
     val manyRelationArguments = model.listRelationFields.flatMap { field =>
       val subModel              = field.relatedModel_!(project)
       val relation              = field.relation.get
@@ -194,7 +200,7 @@ case class InputTypesBuilder(project: Project) {
         None
       } else {
         val inputObjectType = InputObjectType[Any](
-          name = s"${subModel.name}CreateManyWithout${relatedField.name.capitalize}Input",
+          name = s"${subModel.name}${operation}ManyWithout${relatedField.name.capitalize}Input",
           fieldsFn = () => {
             List(
               schemaArgumentWithName(field, "create", OptionInputType(ListInputType(cachedInputObjectTypeForCreate(subModel, Some(relation))))).asSangriaInputField
@@ -214,7 +220,7 @@ case class InputTypesBuilder(project: Project) {
         None
       } else {
         val inputObjectType = InputObjectType[Any](
-          name = s"${subModel.name}CreateOneWithout${relatedField.name.capitalize}Input",
+          name = s"${subModel.name}${operation}OneWithout${relatedField.name.capitalize}Input",
           fieldsFn = () => {
             List(
               schemaArgumentWithName(field, "create", OptionInputType(cachedInputObjectTypeForCreate(subModel, Some(relation)))).asSangriaInputField

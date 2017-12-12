@@ -141,7 +141,7 @@ class SchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec with Gra
     mustBeEqual(
       todoInputType,
       """input TodoUpdateInput {
-        |  title: String!
+        |  title: String
         |  tag: String
         |  comments: CommentUpdateManyWithoutTodoInput
         |}""".stripMargin
@@ -151,14 +151,14 @@ class SchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec with Gra
     mustBeEqual(
       nestedInputTypeForComment,
       """input CommentUpdateManyWithoutTodoInput {
-        |  create: [CommentUpdateWithoutTodoInput!]
+        |  create: [CommentCreateWithoutTodoInput!]
         |}""".stripMargin
     )
 
-    val createInputForNestedComment = schema.mustContainInputType("CommentUpdateWithoutTodoInput")
+    val createInputForNestedComment = schema.mustContainInputType("CommentCreateWithoutTodoInput")
     mustBeEqual(
       createInputForNestedComment,
-      """input CommentUpdateWithoutTodoInput {
+      """input CommentCreateWithoutTodoInput {
         |  text: String!
         |}""".stripMargin
     )
@@ -168,7 +168,7 @@ class SchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec with Gra
     mustBeEqual(
       commentInputType,
       """input CommentUpdateInput {
-        |  text: String!
+        |  text: String
         |  todo: TodoUpdateOneWithoutCommentsInput
         |}""".stripMargin
     )
@@ -177,14 +177,14 @@ class SchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec with Gra
     mustBeEqual(
       nestedInputTypeForTodo,
       """input TodoUpdateOneWithoutCommentsInput {
-        |  create: TodoUpdateWithoutCommentsInput
+        |  create: TodoCreateWithoutCommentsInput
         |}""".stripMargin
     )
 
-    val createInputForNestedTodo = schema.mustContainInputType("TodoUpdateWithoutCommentsInput")
+    val createInputForNestedTodo = schema.mustContainInputType("TodoCreateWithoutCommentsInput")
     mustBeEqual(
       createInputForNestedTodo,
-      """input TodoUpdateWithoutCommentsInput {
+      """input TodoCreateWithoutCommentsInput {
         |  title: String!
         |  tag: String
         |}""".stripMargin

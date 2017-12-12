@@ -10,6 +10,6 @@ case class UpdateDefinition(project: Project, inputTypesBuilder: InputTypesBuild
 
   override def getSangriaArguments(model: Model): List[Argument[Any]] = inputTypesBuilder.getSangriaArgumentsForUpdate(model)
 
-  override def getRelationArguments(model: Model): List[SchemaArgument] = inputTypesBuilder.cachedRelationalSchemaArguments(model, omitRelation = None)
+  override def getRelationArguments(model: Model): List[SchemaArgument] = inputTypesBuilder.cachedRelationalSchemaArgumentsForUpdate(model, omitRelation = None)
   override def getScalarArguments(model: Model): List[SchemaArgument]   = inputTypesBuilder.computeScalarSchemaArgumentsForUpdate(model)
 }
