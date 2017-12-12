@@ -59,6 +59,9 @@ abstract class DataResolver(val project: Project, val requestContext: Option[Req
 
   def batchResolveByUnique(model: Model, key: String, values: List[Any]): Future[List[DataItem]]
 
+  def loadModelRowsForExport(model: Model, args: Option[QueryArguments] = None): Future[ResolverResult]
+  def loadRelationRowsForExport(relationId: String, args: Option[QueryArguments] = None): Future[ResolverResult]
+
   /**
     * Resolves a DataItem by its global id. As this method has no knowledge about which model table to query it has to do an additional
     * lookup from the id to the actual model table. This is stored in the _relayId table. Therefore this needs one more lookup.
