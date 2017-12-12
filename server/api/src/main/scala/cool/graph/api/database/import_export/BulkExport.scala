@@ -7,6 +7,7 @@ import cool.graph.shared.models.Project
 import spray.json.{JsValue, _}
 import MyJsonProtocol._
 import cool.graph.api.ApiDependencies
+import cool.graph.api.schema.CustomScalarTypes.parseValueFromString
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
