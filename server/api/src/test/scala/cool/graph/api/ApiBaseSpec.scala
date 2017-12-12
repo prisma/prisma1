@@ -3,11 +3,12 @@ package cool.graph.api
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import cool.graph.api.database.DataResolver
+import cool.graph.api.util.StringMatchers
 import cool.graph.shared.models.Project
 import cool.graph.util.json.SprayJsonExtensions
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
 
-trait ApiBaseSpec extends BeforeAndAfterEach with BeforeAndAfterAll with SprayJsonExtensions { self: Suite =>
+trait ApiBaseSpec extends BeforeAndAfterEach with BeforeAndAfterAll with SprayJsonExtensions with StringMatchers { self: Suite =>
 
   implicit lazy val system           = ActorSystem()
   implicit lazy val materializer     = ActorMaterializer()

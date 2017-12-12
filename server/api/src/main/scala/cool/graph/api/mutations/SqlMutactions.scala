@@ -31,8 +31,8 @@ case class SqlMutactions(dataResolver: DataResolver) {
 
   def getMutactionsForUpdate(project: Project, model: Model, args: CoolArgs, id: Id, previousValues: DataItem): List[ClientSqlMutaction] = {
     val updateMutaction = getUpdateMutaction(project, model, args, id, previousValues)
-
-    updateMutaction.toList
+    val nested          = getMutactionsForNestedMutation(project, model, args, fromId = id)
+    updateMutaction.toList ++ nested
   }
 
   def getMutactionsForCreate(

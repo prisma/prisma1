@@ -30,7 +30,7 @@ class NestedMutationInsideCreateSpec extends FlatSpec with Matchers with ApiBase
       """.stripMargin,
       project
     )
-    result.pathAsJsValue("data.createTodo.comments").toString should equal("""[{"text":"comment1"},{"text":"comment2"}]""")
+    mustBeEqual(result.pathAsJsValue("data.createTodo.comments").toString, """[{"text":"comment1"},{"text":"comment2"}]""")
   }
 
   "a many to one relation" should "be creatable through a nested mutation" in {
@@ -58,7 +58,7 @@ class NestedMutationInsideCreateSpec extends FlatSpec with Matchers with ApiBase
       """.stripMargin,
       project
     )
-    result.pathAsString("data.createComment.todo.title") should equal("todo1")
+    mustBeEqual(result.pathAsString("data.createComment.todo.title"), "todo1")
   }
 
   "a many to many relation" should "creatable through a nested mutation" in {
@@ -87,7 +87,7 @@ class NestedMutationInsideCreateSpec extends FlatSpec with Matchers with ApiBase
       project
     )
 
-    result.pathAsJsValue("data.createTodo.tags").toString should equal("""[{"name":"tag1"},{"name":"tag2"}]""")
+    mustBeEqual(result.pathAsJsValue("data.createTodo.tags").toString, """[{"name":"tag1"},{"name":"tag2"}]""")
 
     val result2 = server.executeQuerySimple(
       """
@@ -107,6 +107,6 @@ class NestedMutationInsideCreateSpec extends FlatSpec with Matchers with ApiBase
       """.stripMargin,
       project
     )
-    result2.pathAsJsValue("data.createTag.todos").toString should equal("""[{"title":"todo1"},{"title":"todo2"}]""")
+    mustBeEqual(result2.pathAsJsValue("data.createTag.todos").toString, """[{"title":"todo1"},{"title":"todo2"}]""")
   }
 }

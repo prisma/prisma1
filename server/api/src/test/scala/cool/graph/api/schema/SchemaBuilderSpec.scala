@@ -190,13 +190,4 @@ class SchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec with Gra
         |}""".stripMargin
     )
   }
-
-  private def mustBeEqual(actual: String, expected: String): Unit = {
-    if (actual != expected) {
-      sys.error(s"""The strings were not equal!
-          |actual:   $actual
-          |expected: $expected
-        """.stripMargin)
-    }
-  }
 }
