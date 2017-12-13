@@ -68,7 +68,15 @@ export class Validator {
     }
   }
 
-  astToTypes(ast: DocumentNode): Types {
+  validateNode(obj: any) {
+    this.checkTypeName(obj)
+    this.checkRequiredFields(obj)
+    this.checkUnknownFields(obj)
+    this.checkType(obj)
+    return true
+  }
+
+  private astToTypes(ast: DocumentNode): Types {
     return ast.definitions.reduce((acc, curr: ObjectTypeDefinitionNode) => {
       if (curr.kind !== 'ObjectTypeDefinition') {
         return acc
@@ -88,7 +96,7 @@ export class Validator {
     }, {})
   }
 
-  astToEnums(ast: DocumentNode): Enums {
+  private astToEnums(ast: DocumentNode): Enums {
     return ast.definitions.reduce((acc, curr: EnumTypeDefinitionNode) => {
       if (curr.kind !== 'EnumTypeDefinition') {
         return acc
@@ -102,7 +110,9 @@ export class Validator {
     }, {})
   }
 
-  makeEnumValidators(enums: Enums): { [enumName: string]: () => boolean } {
+  private makeEnumValidators(
+    enums: Enums,
+  ): { [enumName: string]: () => boolean } {
     return Object.keys(enums).reduce((acc, enumName) => {
       return {
         ...acc,
@@ -111,7 +121,7 @@ export class Validator {
     }, {})
   }
 
-  getFieldNames(
+  private getFieldNames(
     typeName: string,
     requiredOnly: boolean = false,
     includeRelations: boolean = false,
@@ -133,7 +143,7 @@ export class Validator {
       .map(f => f.name.value)
   }
 
-  resolveFieldName(typeName: string, fieldName: string): string {
+  private resolveFieldName(typeName: string, fieldName: string): string {
     if (
       this.mapping &&
       this.mapping[typeName] &&
@@ -145,15 +155,7 @@ export class Validator {
     return fieldName
   }
 
-  validateNode(obj: any) {
-    this.checkTypeName(obj)
-    this.checkRequiredFields(obj)
-    this.checkUnknownFields(obj)
-    this.checkType(obj)
-    return true
-  }
-
-  checkTypeName(obj: any) {
+  private checkTypeName(obj: any) {
     if (!obj._typeName) {
       throw new Error(
         `Object ${JSON.stringify(obj)} needs a _typeName property`,
@@ -164,7 +166,7 @@ export class Validator {
     }
   }
 
-  checkRequiredFields(obj: any) {
+  private checkRequiredFields(obj: any) {
     const typeName = obj._typeName
     const requiredFieldNames = this.getFieldNames(typeName, true)
 
@@ -178,7 +180,7 @@ export class Validator {
     }
   }
 
-  checkUnknownFields(obj: any) {
+  private checkUnknownFields(obj: any) {
     const typeName = obj._typeName
     const knownKeys = ['_typeName'].concat(
       this.getFieldNames(typeName, false, false),
@@ -193,7 +195,7 @@ export class Validator {
     }
   }
 
-  checkType(obj: any) {
+  private checkType(obj: any) {
     const typeName = obj._typeName
     const { definition, fields } = this.types[typeName]
     const fieldNames = Object.keys(obj).filter(f => f !== '_typeName')
@@ -203,7 +205,7 @@ export class Validator {
     })
   }
 
-  validateValue(value: any, field: FieldDefinitionNode) {
+  private validateValue(value: any, field: FieldDefinitionNode) {
     if (this.isList(field)) {
       if (!Array.isArray(value)) {
         throw new Error(`Error for value ${value}: It has to be a list.`)
@@ -214,7 +216,7 @@ export class Validator {
     }
   }
 
-  validateScalarValue(value: any, field: FieldDefinitionNode) {
+  private validateScalarValue(value: any, field: FieldDefinitionNode) {
     const type = this.getDeepType(field)
     const typeName = type.name.value
     const validator = this.validators[typeName]
@@ -236,7 +238,7 @@ export class Validator {
     }
   }
 
-  getDeepType(field: FieldDefinitionNode) {
+  private getDeepType(field: FieldDefinitionNode) {
     let pointer = field.type as any
     while (pointer.type) {
       pointer = pointer.type
@@ -245,7 +247,7 @@ export class Validator {
     return pointer
   }
 
-  isList(field: FieldDefinitionNode) {
+  private isList(field: FieldDefinitionNode) {
     let pointer = field.type as any
     while (pointer.type) {
       if (pointer.kind === 'ListType') {
