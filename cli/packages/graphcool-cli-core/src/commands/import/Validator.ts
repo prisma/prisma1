@@ -23,7 +23,8 @@ interface Types {
     fields: FieldsMap
     requiredNonRelationScalarFieldNames: string[]
     requiredNonRelationListFieldNames: string[]
-    allNonRelationFieldNames: string[]
+    allNonRelationListFieldNames: string[]
+    allNonRelationScalarFieldNames: string[]
   }
 }
 
@@ -104,7 +105,7 @@ export class Validator {
     this.checkTypeName(obj)
     this.checkIdField(obj)
     this.checkRequiredFields(obj, false)
-    this.checkUnknownFields(obj)
+    this.checkUnknownFields(obj, false)
     this.checkType(obj, false)
     return true
   }
@@ -113,7 +114,7 @@ export class Validator {
     this.checkTypeName(obj)
     this.checkIdField(obj)
     this.checkRequiredFields(obj, true)
-    this.checkUnknownFields(obj)
+    this.checkUnknownFields(obj, true)
     this.checkType(obj, true)
     return true
   }
@@ -160,30 +161,38 @@ export class Validator {
   }
 
   private astToTypes(ast: DocumentNode): Types {
-    return ast.definitions.reduce((acc, curr: ObjectTypeDefinitionNode) => {
-      if (curr.kind !== 'ObjectTypeDefinition') {
-        return acc
-      }
-      return {
-        ...acc,
-        [curr.name.value]: {
-          definition: curr,
-          fields: curr.fields.reduce((acc2, curr2) => {
-            return {
-              ...acc2,
-              [curr2.name.value]: curr2,
-            }
-          }, {}),
-          allNonRelationFieldNames: this.getFieldNames(curr, false),
-          requiredNonRelationScalarFieldNames: this.getFieldNames(curr, true),
-          requiredNonRelationListFieldNames: this.getFieldNames(
-            curr,
-            true,
-            true,
-          ),
-        },
-      }
-    }, {})
+    return ast.definitions.reduce(
+      (acc, curr: ObjectTypeDefinitionNode) => {
+        if (curr.kind !== 'ObjectTypeDefinition') {
+          return acc
+        }
+        return {
+          ...acc,
+          [curr.name.value]: {
+            definition: curr,
+            fields: curr.fields.reduce((acc2, curr2) => {
+              return {
+                ...acc2,
+                [curr2.name.value]: curr2,
+              }
+            }, {}),
+            allNonRelationScalarFieldNames: this.getFieldNames(
+              curr,
+              false,
+              false,
+            ),
+            allNonRelationListFieldNames: this.getFieldNames(curr, false, true),
+            requiredNonRelationScalarFieldNames: this.getFieldNames(curr, true),
+            requiredNonRelationListFieldNames: this.getFieldNames(
+              curr,
+              true,
+              true,
+            ),
+          },
+        }
+      },
+      {} as Types,
+    )
   }
 
   private astToEnums(ast: DocumentNode): Enums {
@@ -227,7 +236,8 @@ export class Validator {
         }
 
         let listBoolean = true
-        if (listsOnly && !this.isList(field)) {
+        const isList = this.isList(field)
+        if ((listsOnly && !isList) || (!listsOnly && isList)) {
           listBoolean = false
         }
 
@@ -292,10 +302,16 @@ export class Validator {
     }
   }
 
-  private checkUnknownFields(obj: any) {
+  private checkUnknownFields(obj: any, includeLists: boolean) {
     const typeName = obj._typeName
-    const { allNonRelationFieldNames } = this.types[typeName]
-    const knownKeys = ['_typeName'].concat(allNonRelationFieldNames)
+    const {
+      allNonRelationScalarFieldNames,
+      allNonRelationListFieldNames,
+    } = this.types[typeName]
+    const fieldNames = includeLists
+      ? allNonRelationListFieldNames
+      : allNonRelationScalarFieldNames
+    const knownKeys = ['_typeName', 'id'].concat(fieldNames)
     const unknownKeys = difference(Object.keys(obj), knownKeys)
     if (unknownKeys.length > 0) {
       throw new Error(

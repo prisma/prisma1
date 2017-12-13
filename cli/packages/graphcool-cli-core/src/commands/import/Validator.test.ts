@@ -46,6 +46,17 @@ describe('Validator', () => {
       expect(() => validator.validateNode({ _typeName: 'Post' })).toThrow()
     })
 
+    test('accepts non-existing list fields', () => {
+      const types = `
+      type Post {
+        id: ID!
+        titles: [String!]!
+      }
+    `
+      const validator = new Validator(types)
+      expect(validator.validateNode({ _typeName: 'Post', id: 'some-id' }))
+    })
+
     test('ID', () => {
       const types = `
       type Post {

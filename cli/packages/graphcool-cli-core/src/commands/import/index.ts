@@ -14,7 +14,7 @@ export default class Import extends Command {
     }),
     source: flags.string({
       char: 's',
-      description: 'Path to source to import',
+      description: 'Path to zip or folder including data to import',
       required: true,
     }),
   }
