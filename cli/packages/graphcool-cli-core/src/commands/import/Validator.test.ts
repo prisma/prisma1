@@ -26,11 +26,14 @@ describe('Validator', () => {
     test('ignores non-required field', () => {
       const types = `
       type Post {
+        id: ID!
         title: String
       }
     `
       const validator = new Validator(types)
-      expect(validator.validateNode({ _typeName: 'Post' })).toBe(true)
+      expect(validator.validateNode({ _typeName: 'Post', id: 'asd' })).toBe(
+        true,
+      )
     })
 
     test('throws non-existing required field', () => {
@@ -189,17 +192,17 @@ describe('Validator', () => {
     `
       const validator = new Validator(types)
       expect(() =>
-        validator.validateNode({
+        validator.validateListNode({
           _typeName: 'Post',
           id: '25',
           tags: [1, 2, 3],
         }),
       ).toThrow()
       expect(() =>
-        validator.validateNode({ _typeName: 'Post', id: '25', tags: '' }),
+        validator.validateListNode({ _typeName: 'Post', id: '25', tags: '' }),
       ).toThrow()
       expect(
-        validator.validateNode({
+        validator.validateListNode({
           _typeName: 'Post',
           id: '25',
           tags: ['a', 'b', 'c'],

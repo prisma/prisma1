@@ -1,4 +1,4 @@
-import { Node, ImportData } from './types'
+import { Node, ImportData, RelationTuple, RelationNode } from './types'
 import {
   parse,
   buildASTSchema,
@@ -70,14 +70,6 @@ export class Validator {
     }
   }
 
-  validateNode(obj: any): true {
-    this.checkTypeName(obj)
-    this.checkRequiredFields(obj)
-    this.checkUnknownFields(obj)
-    this.checkType(obj)
-    return true
-  }
-
   validateImportData(data: ImportData): true {
     if (!data.values) {
       throw new Error('Import data is missing the "values" property')
@@ -90,6 +82,78 @@ export class Validator {
         const node = data.values[i]
         this.validateNode(node)
       }
+    }
+    if (data.valueType === 'relations') {
+      for (let i = 0, len = data.values.length; i < len; i++) {
+        const node = data.values[i]
+        this.validateRelationTuple(node as any)
+      }
+    }
+    if (data.valueType === 'lists') {
+      for (let i = 0, len = data.values.length; i < len; i++) {
+        const node = data.values[i]
+        this.validateListNode(node)
+      }
+    }
+
+    return true
+  }
+
+  validateNode(obj: any): true {
+    this.checkTypeName(obj)
+    this.checkIdField(obj)
+    this.checkRequiredFields(obj)
+    this.checkUnknownFields(obj)
+    this.checkType(obj, false)
+    return true
+  }
+
+  validateListNode(obj: any): true {
+    this.checkTypeName(obj)
+    this.checkIdField(obj)
+    this.checkRequiredFields(obj)
+    this.checkUnknownFields(obj)
+    this.checkType(obj, true)
+    return true
+  }
+
+  validateRelationNode(node: RelationNode): true {
+    this.checkTypeName(node)
+    this.checkIdField(node)
+    this.checkFieldName(node)
+    return true
+  }
+
+  validateRelationTuple(tuple: RelationTuple): true {
+    if (Array.isArray(tuple)) {
+      throw new Error('Relation tuple must be an array')
+    }
+
+    if ((tuple as any).length !== 2) {
+      throw new Error(`Relation tuple must have 2 nodes`)
+    }
+
+    for (let i = 0; i < 2; i++) {
+      this.validateRelationNode(tuple[i])
+    }
+
+    return true
+  }
+
+  private checkFieldName(node: RelationNode): true {
+    if (!node.fieldName) {
+      throw new Error(
+        `Relation node ${JSON.stringify(
+          node,
+        )} must include a "fieldName" property`,
+      )
+    }
+    if (!this.types[node._typeName].fields[node.fieldName]) {
+      throw new Error(
+        `The "fieldName" property of node ${JSON.stringify(
+          node,
+        )} points to a non-existing fieldName "${node.fieldName}"`,
+      )
     }
     return true
   }
@@ -184,6 +248,18 @@ export class Validator {
     }
   }
 
+  private checkIdField(obj: any) {
+    if (!obj.id) {
+      throw new Error(`Object ${JSON.stringify(obj)} needs an id property`)
+    }
+
+    if (typeof obj.id !== 'string') {
+      throw new Error(
+        `The "id" of object ${JSON.stringify(obj)} needs to be a string`,
+      )
+    }
+  }
+
   private checkRequiredFields(obj: any) {
     const typeName = obj._typeName
     const { requiredNonRelationFieldNames } = this.types[typeName]
@@ -215,18 +291,35 @@ export class Validator {
     }
   }
 
-  private checkType(obj: any) {
+  private checkType(obj: any, listsOnly: boolean) {
     const typeName = obj._typeName
     const { definition, fields } = this.types[typeName]
     const fieldNames = Object.keys(obj).filter(f => f !== '_typeName')
     fieldNames.forEach(fieldName => {
       const value = obj[fieldName]
-      this.validateValue(value, fields[fieldName])
+      this.validateValue(value, fields[fieldName], listsOnly)
     })
   }
 
-  private validateValue(value: any, field: FieldDefinitionNode) {
-    if (this.isList(field)) {
+  private validateValue(
+    value: any,
+    field: FieldDefinitionNode,
+    listsOnly: boolean,
+  ) {
+    const isList = this.isList(field)
+    if (isList && !listsOnly) {
+      throw new Error(
+        `List value ${value} mustn't be provided in a "nodes" definition`,
+      )
+    }
+    if (!isList && listsOnly && field.name.value !== 'id') {
+      throw new Error(
+        `Single scalar value ${JSON.stringify(
+          value,
+        )} mustn't be provided in a "relations" definition`,
+      )
+    }
+    if (isList) {
       if (!Array.isArray(value)) {
         throw new Error(`Error for value ${value}: It has to be a list.`)
       }
