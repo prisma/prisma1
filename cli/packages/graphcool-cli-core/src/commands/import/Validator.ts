@@ -9,15 +9,15 @@ import {
 } from 'graphql'
 import { difference, isString, isNumber, isDate, isBoolean } from 'lodash'
 
-interface Mapping {
+export interface Mapping {
   [typeName: string]: { [key: string]: string }
 }
 
-interface FieldsMap {
+export interface FieldsMap {
   [name: string]: FieldDefinitionNode
 }
 
-interface Types {
+export interface Types {
   [typeName: string]: {
     definition: ObjectTypeDefinitionNode
     fields: FieldsMap
@@ -28,7 +28,7 @@ interface Types {
   }
 }
 
-interface Enums {
+export interface Enums {
   [enumName: string]: string[]
 }
 

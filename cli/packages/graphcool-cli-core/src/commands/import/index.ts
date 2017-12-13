@@ -1,8 +1,6 @@
 import { Command, flags, Flags } from 'graphcool-cli-engine'
 import * as fs from 'fs-extra'
-import * as JSONStream from 'JSONStream'
-import * as through2 from 'through2'
-import * as es from 'event-stream'
+import { Importer } from './Importer'
 
 export default class Import extends Command {
   static topic = 'import'
@@ -26,30 +24,19 @@ export default class Import extends Command {
 
     // continue
     console.log(target)
-    await this.import(source)
+    await this.import(source, id)
   }
 
-  import(source: string) {
-    console.log('reading', source)
-    return new Promise((resolve, reject) => {
-      fs
-        .createReadStream(source)
-        .pipe(JSONStream.parse('*'))
-        .pipe(
-          es.mapSync(data => {
-            console.error(data)
-            return data
-          }),
-        )
-      // .pipe(
-      //   through2.obj(function(chunk, env, callback) {
-      //     debugger
-      //     const data = {}
-      //     this.push(data)
-      //     callback()
-      //   }),
-      // )
+  async import(source: string, id: string) {
+    await this.definition.load({})
+    const types = this.definition.definition!.modules[0].definition!.types
+    const typesPaths = Array.isArray(types) ? types : [types]
+    let typesString = ''
+    typesPaths.forEach(typesPath => {
+      typesString += fs.readFileSync(typesPath, 'utf-8')
     })
+    const importer = new Importer(source, typesString, this.client)
+    await importer.upload(id)
   }
 }
 

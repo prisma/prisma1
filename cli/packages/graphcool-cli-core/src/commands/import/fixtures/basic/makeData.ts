@@ -4,13 +4,15 @@ import * as path from 'path'
 
 const defaultN = 50
 
+const start = 400
+
 function makeNodes(n: number = defaultN) {
   const values: any[] = []
 
   for (let i = 0; i < n; i++) {
     values.push({
       _typeName: 'Post',
-      id: '' + i,
+      id: String(start + i),
       title: faker.lorem.sentence(),
       description: faker.lorem.paragraphs(),
       state: 'Published',
@@ -19,7 +21,7 @@ function makeNodes(n: number = defaultN) {
   for (let i = 0; i < n; i++) {
     values.push({
       _typeName: 'Comment',
-      id: '' + i,
+      id: String(start + n + i),
       text: faker.lorem.sentence(),
     })
   }
@@ -36,7 +38,7 @@ function makeLists(n: number = defaultN) {
   for (let i = 0; i < n; i++) {
     values.push({
       _typeName: 'Post',
-      id: '' + i,
+      id: String(start + i),
       tags: ['a', 'b', 'c'],
     })
   }
@@ -54,12 +56,12 @@ function makeRelations(n: number = defaultN) {
     values.push([
       {
         _typeName: 'Post',
-        id: '' + i,
+        id: String(start + i),
         fieldName: 'comments',
       },
       {
         _typeName: 'Comment',
-        id: '' + i,
+        id: String(start + n + i),
         fieldName: 'post',
       },
     ])

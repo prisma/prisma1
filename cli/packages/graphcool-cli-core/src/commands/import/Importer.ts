@@ -4,7 +4,7 @@ import { Client } from 'graphcool-cli-engine'
 import * as globby from 'globby'
 import { Validator } from './Validator'
 
-interface Files {
+export interface Files {
   lists: string[]
   nodes: string[]
   relations: string[]
@@ -30,17 +30,20 @@ export class Importer {
     for (const fileName of files.nodes) {
       const file = fs.readFileSync(fileName, 'utf-8')
       const json = JSON.parse(file)
-      await this.client.upload(file, projectId)
+      const result = await this.client.upload(projectId, file)
+      console.log(result)
     }
     for (const fileName of files.lists) {
       const file = fs.readFileSync(fileName, 'utf-8')
       const json = JSON.parse(file)
-      await this.client.upload(file, projectId)
+      const result = await this.client.upload(projectId, file)
+      console.log(result)
     }
     for (const fileName of files.relations) {
       const file = fs.readFileSync(fileName, 'utf-8')
       const json = JSON.parse(file)
-      await this.client.upload(file, projectId)
+      const result = await this.client.upload(projectId, file)
+      console.log(result)
     }
     console.log(`Done with upload. Needed ${Date.now() - before}ms`)
   }

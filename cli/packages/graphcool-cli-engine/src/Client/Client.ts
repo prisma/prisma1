@@ -707,7 +707,9 @@ export class Client {
   }
 
   async upload(projectId: string, importData: any): Promise<any> {
-    const result = await fetch(this.env.importEndpoint(projectId), {
+    const endpoint = this.env.importEndpoint(projectId)
+    console.log('uploading', this.env.token, endpoint)
+    const result = await fetch(endpoint, {
       method: 'post',
       headers: {
         Authorization: `Bearer ${this.env.token}`,
@@ -716,7 +718,12 @@ export class Client {
       body: importData,
     })
 
-    return result.json()
+    const text = await result.text()
+    try {
+      return JSON.parse(text)
+    } catch (e) {
+      throw new Error(text)
+    }
   }
 
   private getProjectDefinition(project: RemoteProject): ProjectInfo {
