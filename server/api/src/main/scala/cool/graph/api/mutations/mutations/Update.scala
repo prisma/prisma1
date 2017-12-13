@@ -14,13 +14,13 @@ import sangria.schema
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class Update(
+case class Update(
     model: Model,
     project: Project,
     args: schema.Args,
     dataResolver: DataResolver
 )(implicit apiDependencies: ApiDependencies)
-    extends ClientMutation(model, args, dataResolver) {
+    extends ClientMutation {
 
   implicit val system: ActorSystem             = apiDependencies.system
   implicit val materializer: ActorMaterializer = apiDependencies.materializer

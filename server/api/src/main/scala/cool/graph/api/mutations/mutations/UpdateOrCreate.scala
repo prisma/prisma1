@@ -11,9 +11,14 @@ import sangria.schema
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class UpdateOrCreate(model: Model, project: Project, args: schema.Args, dataResolver: DataResolver, allowSettingManagedFields: Boolean = false)(
-    implicit apiDependencies: ApiDependencies)
-    extends ClientMutation(model, args, dataResolver) {
+case class UpdateOrCreate(
+    model: Model,
+    project: Project,
+    args: schema.Args,
+    dataResolver: DataResolver,
+    allowSettingManagedFields: Boolean = false
+)(implicit apiDependencies: ApiDependencies)
+    extends ClientMutation {
 
   val argsPointer: Map[String, Any] = args.raw.get("input") match {
     case Some(value) => value.asInstanceOf[Map[String, Any]]

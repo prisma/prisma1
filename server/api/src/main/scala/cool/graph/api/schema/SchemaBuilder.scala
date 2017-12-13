@@ -4,6 +4,7 @@ import akka.actor.ActorSystem
 import cool.graph.api.ApiDependencies
 import cool.graph.api.database.DataItem
 import cool.graph.api.database.DeferredTypes.{ManyModelDeferred, OneDeferred}
+import cool.graph.api.mutations.ClientMutationRunner
 import cool.graph.api.mutations.mutations._
 import cool.graph.shared.models.{Model, Project}
 import org.atteo.evo.inflector.English
@@ -134,8 +135,8 @@ case class SchemaBuilderImpl(
       arguments = argumentsBuilder.getSangriaArgumentsForCreate(model),
       resolve = (ctx) => {
         val mutation = new Create(model = model, project = project, args = ctx.args, dataResolver = masterDataResolver)
-        mutation
-          .run(ctx.ctx)
+        ClientMutationRunner
+          .run(mutation, dataResolver)
           .map(outputTypesBuilder.mapResolve(_, ctx.args))
       }
     )
@@ -147,8 +148,10 @@ case class SchemaBuilderImpl(
       fieldType = OptionType(outputTypesBuilder.mapUpdateOutputType(model, objectTypes(model.name))),
       arguments = argumentsBuilder.getSangriaArgumentsForUpdate(model),
       resolve = (ctx) => {
-        new Update(model = model, project = project, args = ctx.args, dataResolver = masterDataResolver)
-          .run(ctx.ctx)
+        val mutation = new Update(model = model, project = project, args = ctx.args, dataResolver = masterDataResolver)
+
+        ClientMutationRunner
+          .run(mutation, dataResolver)
           .map(outputTypesBuilder.mapResolve(_, ctx.args))
       }
     )
@@ -160,8 +163,9 @@ case class SchemaBuilderImpl(
       fieldType = OptionType(outputTypesBuilder.mapUpdateOrCreateOutputType(model, objectTypes(model.name))),
       arguments = argumentsBuilder.getSangriaArgumentsForUpdateOrCreate(model),
       resolve = (ctx) => {
-        new UpdateOrCreate(model = model, project = project, args = ctx.args, dataResolver = masterDataResolver)
-          .run(ctx.ctx)
+        val mutation = new UpdateOrCreate(model = model, project = project, args = ctx.args, dataResolver = masterDataResolver)
+        ClientMutationRunner
+          .run(mutation, dataResolver)
           .map(outputTypesBuilder.mapResolve(_, ctx.args))
       }
     )
@@ -173,13 +177,15 @@ case class SchemaBuilderImpl(
       fieldType = OptionType(outputTypesBuilder.mapDeleteOutputType(model, objectTypes(model.name), onlyId = false)),
       arguments = argumentsBuilder.getSangriaArgumentsForDelete(model),
       resolve = (ctx) => {
-        new Delete(
+        val mutation = new Delete(
           model = model,
           modelObjectTypes = objectTypeBuilder,
           project = project,
           args = ctx.args,
           dataResolver = masterDataResolver
-        ).run(ctx.ctx)
+        )
+        ClientMutationRunner
+          .run(mutation, dataResolver)
           .map(outputTypesBuilder.mapResolve(_, ctx.args))
       }
     )
