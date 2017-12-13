@@ -88,17 +88,6 @@ abstract class ClientMutation(model: Model, args: Args, dataResolver: DataResolv
     errors
   }
 
-  def extractScalarArgumentValues(args: Args): List[ArgumentValue] = {
-    SchemaArgument.extractArgumentValues(args, mutationDefinition.getSchemaArguments(model))
-  }
-
-  def extractIdFromScalarArgumentValues(args: Args, name: String): Option[Id] = {
-    extractScalarArgumentValues(args).find(_.name == name).map(_.value.asInstanceOf[Id])
-  }
-  def extractIdFromScalarArgumentValues_!(args: Args, name: String): Id = {
-    extractIdFromScalarArgumentValues(args, name).getOrElse(throw APIErrors.IdIsMissing())
-  }
-
   def performMutactions(mutactionGroups: List[MutactionGroup]): Future[List[MutactionExecutionResult]] = {
     // Cancel further Mutactions and MutactionGroups when a Mutaction fails
     // Failures in async MutactionGroups don't stop other Mutactions in same group

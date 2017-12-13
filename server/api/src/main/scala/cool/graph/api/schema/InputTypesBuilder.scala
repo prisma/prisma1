@@ -45,46 +45,11 @@ case class InputTypesBuilder(project: Project) {
   }
 
   def getSangriaArgumentsForUpdateOrCreate(model: Model): List[Argument[Any]] = {
-    getSangriaArguments(inputObjectType = cachedInputObjectTypeForUpdateOrCreate(model), arguments = cachedSchemaArgumentsForUpdateOrCreate(model))
-  }
-
-  private def getSangriaArguments(inputObjectType: => InputObjectType[Any], arguments: => List[SchemaArgument]): List[Argument[Any]] = {
-    SchemaArgument.convertSchemaArgumentsToSangriaArguments(inputObjectType.name, arguments)
-  }
-
-  // UPDATE_OR_CREATE CACHES
-  private def cachedInputObjectTypeForUpdateOrCreate(model: Model): InputObjectType[Any] = {
-    caffeineCache.getOrElseUpdate(cacheKey("cachedInputObjectTypeForUpdateOrCreate", model)) {
-      InputObjectType[Any](
-        name = s"UpdateOrCreate${model.name}",
-        fieldsFn = () => {
-          val updateField = InputField("update", cachedInputObjectTypeForUpdate(model))
-          val createField = InputField("create", cachedInputObjectTypeForCreate(model))
-
-          if (cachedInputObjectTypeForCreate(model).fields.isEmpty) {
-            List(updateField)
-          } else {
-
-            List(updateField, createField)
-          }
-        }
-      )
-    }
-  }
-
-  private def cachedSchemaArgumentsForUpdateOrCreate(model: Model): List[SchemaArgument] = {
-    caffeineCache.getOrElseUpdate(cacheKey("cachedSchemaArgumentsForUpdateOrCreate", model)) {
-      val createInputType = cachedInputObjectTypeForCreate(model)
-      val updateArgument  = SchemaArgument("update", cachedInputObjectTypeForUpdate(model))
-      val createArgument  = SchemaArgument("create", createInputType)
-
-      if (createInputType.fields.isEmpty) {
-        List(updateArgument)
-      } else {
-        List(updateArgument, createArgument)
-      }
-
-    }
+    List(
+      Argument[Any]("create", cachedInputObjectTypeForCreate(model)),
+      Argument[Any]("update", cachedInputObjectTypeForUpdate(model)),
+      Argument[Any]("where", ???)
+    )
   }
 
   // CREATE CACHES
@@ -314,10 +279,6 @@ object SchemaArgument {
   }
 
   implicit val anyFromInput = FromInputImplicit.CoercedResultMarshaller
-
-  def convertSchemaArgumentsToSangriaArguments(argumentGroupName: String, args: List[SchemaArgument]): List[Argument[Any]] = {
-    args.map(_.asSangriaArgument)
-  }
 
   def extractArgumentValues(args: Args, argumentDefinitions: List[SchemaArgument]): List[ArgumentValue] = {
     argumentDefinitions

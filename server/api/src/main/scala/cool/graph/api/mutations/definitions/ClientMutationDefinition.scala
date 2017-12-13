@@ -1,21 +1,14 @@
 package cool.graph.api.mutations.definitions
 
 import cool.graph.api.schema.{SchemaArgument, SchemaBuilderUtils}
-import cool.graph.gc_values.{GCValue, LeafGCValue}
+import cool.graph.gc_values.GCValue
 import cool.graph.shared.models.Model
-import cool.graph.util.gc_value.{GCAnyConverter, GCSangriaValueConverter}
+import cool.graph.util.gc_value.GCAnyConverter
 import sangria.schema.{Argument, InputField, InputObjectType}
 
 trait ClientMutationDefinition {
-  def argumentGroupName: String
-
   // TODO: there should be no need to override this one. It should be final. We should not override this one.
-  def getSangriaArguments(model: Model): List[Argument[Any]] = {
-    SchemaArgument.convertSchemaArgumentsToSangriaArguments(
-      argumentGroupName + model.name,
-      getSchemaArguments(model)
-    )
-  }
+  def getSangriaArguments(model: Model): List[Argument[Any]] = getSchemaArguments(model).map(_.asSangriaArgument)
 
   def getSchemaArguments(model: Model): List[SchemaArgument]
 

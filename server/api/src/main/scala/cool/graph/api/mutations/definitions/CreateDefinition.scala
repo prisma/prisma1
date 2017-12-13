@@ -6,8 +6,6 @@ import sangria.schema.Argument
 
 case class CreateDefinition(project: Project, inputTypesBuilder: InputTypesBuilder) extends CreateOrUpdateMutationDefinition {
 
-  val argumentGroupName = "Create"
-
   override def getSangriaArguments(model: Model): List[Argument[Any]] = inputTypesBuilder.getSangriaArgumentsForCreate(model)
 
   override def getRelationArguments(model: Model): List[SchemaArgument] = inputTypesBuilder.cachedRelationalSchemaArgumentsForCreate(model, omitRelation = None)

@@ -5,9 +5,6 @@ import cool.graph.shared.models.{Model, Project}
 import sangria.schema.Argument
 
 case class UpdateOrCreateDefinition(project: Project, inputTypesBuilder: InputTypesBuilder) extends ClientMutationDefinition {
-
-  val argumentGroupName = "UpdateOrCreate"
-
   val createDefinition = CreateDefinition(project, inputTypesBuilder)
   val updateDefinition = UpdateDefinition(project, inputTypesBuilder)
 
