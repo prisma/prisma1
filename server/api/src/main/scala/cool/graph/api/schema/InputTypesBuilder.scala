@@ -78,12 +78,6 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
     )
   }
 
-  private def computeByArguments(model: Model): List[SchemaArgument] = {
-    model.fields.filter(_.isUnique).map { field =>
-      SchemaArgument(field.name, SchemaBuilderUtils.mapToOptionalInputType(field), field.description)
-    }
-  }
-
   private def computeScalarSchemaArgumentsForCreate(model: Model): List[SchemaArgument] = {
     val filteredModel = model.filterFields(_.isWritable)
     computeScalarSchemaArguments(filteredModel, FieldToInputTypeMapper.mapForCreateCase)
