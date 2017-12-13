@@ -69,27 +69,25 @@ class BulkImportSpec extends FlatSpec with Matchers with ApiBaseSpec with AwaitU
       res2 should be("""{"data":{"model2s":[{"id":"2","a":"test","b":2,"name":null}]}}""")
     }
 
-//    "Inserting a single node with a field with a String value" should "work" in {
-//      val (client, project1) = SchemaDsl.schema().buildEmptyClientAndProject(isEjected = true)
-//      setupProject(client, project1)
-//
-//      val types =
-//        s"""type Model0 @model {
-//           |  id: ID! @isUnique
-//           |  a: String
-//           |}""".stripMargin
-//
-//      val refreshedProject = setupProjectForTest(types, client, project1)
-//
-//      val nodes    = """{ "valueType": "nodes", "values": [
-//                  |{"_typeName": "Model0", "id": "just-some-id", "a": "test"}
-//                  ]}""".stripMargin.parseJson
-//      val importer = new BulkImport()
-//      importer.executeImport(refreshedProject, nodes).await(5)
-//
-//      val res = executeQuerySimple("query{allModel0s{id, a}}", refreshedProject)
-//      res.toString should be("""{"data":{"allModel0s":[{"id":"just-some-id","a":"test"}]}}""")
-//    }
+    "Inserting a single node with a field with a String value" should "work" in {
+
+      val types =
+        s"""type Model0 @model {
+           |  id: ID! @isUnique
+           |  a: String
+           |}""".stripMargin
+
+
+      val nodes    = """{ "valueType": "nodes", "values": [
+                  |{"_typeName": "Model0", "id": "just-some-id", "a": "test"}
+                  ]}""".stripMargin.parseJson
+
+      val importer = new BulkImport(project)
+      importer.executeImport(nodes).await(5)
+
+      val res = server.executeQuerySimple("query{allModel0s{id, a}}", project)
+      res.toString should be("""{"data":{"allModel0s":[{"id":"just-some-id","a":"test"}]}}""")
+    }
 //
 //    "Inserting a several nodes with a field with a Int value" should "work" in {
 //      val (client, project1) = SchemaDsl.schema().buildEmptyClientAndProject(isEjected = true)
