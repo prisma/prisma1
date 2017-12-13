@@ -166,6 +166,7 @@ case class MigrationStepsProposerImpl(previousProject: Project, nextProject: Pro
       nextFieldName = renames.getNextFieldName(previousModel.name, previousField.name)
       nextModel     <- nextProject.getModelByName(nextModelName)
       if nextProject.getFieldByName(nextModelName, nextFieldName).isEmpty
+      if !previousField.isSystem // Do not delete system fields, only hide them
     } yield DeleteField(model = nextModel.name, name = previousField.name)
   }
 

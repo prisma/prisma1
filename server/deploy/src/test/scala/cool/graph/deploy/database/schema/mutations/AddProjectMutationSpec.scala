@@ -36,7 +36,7 @@ class AddProjectMutationSpec extends FlatSpec with Matchers with DeploySpecBase 
   "AddProjectMutation" should "fail if a project already exists" in {
 //    val project      = setupProject(basicTypesGql)
 //    val nameAndStage = ProjectId.fromEncodedString(project.id)
-//
+//c
 //    val result = server.querySimpleThatMustFail(
 //      s"""
 //       |mutation {

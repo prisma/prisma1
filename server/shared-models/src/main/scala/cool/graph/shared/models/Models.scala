@@ -265,7 +265,7 @@ case class Model(
 ) {
 
   lazy val scalarFields: List[Field]         = fields.filter(_.isScalar)
-  lazy val scalarListFields: List[Field] =     scalarFields.filter(_.isList)
+  lazy val scalarListFields: List[Field]     = scalarFields.filter(_.isList)
   lazy val relationFields: List[Field]       = fields.filter(_.isRelation)
   lazy val singleRelationFields: List[Field] = relationFields.filter(!_.isList)
   lazy val listRelationFields: List[Field]   = relationFields.filter(_.isList)
@@ -319,7 +319,10 @@ object TypeIdentifier extends Enumeration {
   val Json      = Value("Json")
   val Relation  = Value("Relation")
 
-  def withNameOpt(name: String): Option[TypeIdentifier.Value] = this.values.find(_.toString == name)
+  def withNameOpt(name: String): Option[TypeIdentifier.Value] = name match {
+    case "ID" => Some(GraphQLID)
+    case _    => this.values.find(_.toString == name)
+  }
 
   def withNameHacked(name: String) = name match {
     case "ID" => GraphQLID

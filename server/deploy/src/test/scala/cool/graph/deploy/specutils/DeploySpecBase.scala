@@ -32,6 +32,12 @@ trait DeploySpecBase extends BeforeAndAfterEach with BeforeAndAfterAll with Awai
     internalDb.createInternalDatabaseSchema()
   }
 
+  override protected def afterAll(): Unit = {
+    super.afterAll()
+    internalDb.shutdown()
+    clientDb.shutdown()
+  }
+
   override protected def beforeEach(): Unit = {
     super.beforeEach()
     internalDb.truncateTables()
@@ -59,7 +65,7 @@ trait DeploySpecBase extends BeforeAndAfterEach with BeforeAndAfterAll with Awai
 
     server.query(s"""
         |mutation {
-        |  deploy(input:{name: "$name", stage: "$stage", types: "${schema.replaceAll("\n", " ")}"}){
+        |  deploy(input:{name: "$name", stage: "$stage", types: "${formatSchema(schema)}"}){
         |    errors {
         |      description
         |    }
@@ -70,9 +76,5 @@ trait DeploySpecBase extends BeforeAndAfterEach with BeforeAndAfterAll with Awai
     testDependencies.projectPersistence.load(projectId).await.get
   }
 
-  override protected def afterAll(): Unit = {
-    super.afterAll()
-    internalDb.shutdown()
-    clientDb.shutdown()
-  }
+  def formatSchema(schema: String): String = schema.replaceAll("\n", " ").replaceAll("\\\"", "\\\\\"")
 }

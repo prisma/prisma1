@@ -5,20 +5,20 @@ import cool.graph.shared.models._
 import org.scalactic.{Good, Or}
 import sangria.ast.Document
 
-trait DesiredProjectInferer {
+trait DesiredProjectInferrer {
   def infer(baseProject: Project, graphQlSdl: Document): Project Or ProjectSyntaxError
 }
 
 sealed trait ProjectSyntaxError
 case class RelationDirectiveNeeded(type1: String, type1Fields: Vector[String], type2: String, type2Fields: Vector[String]) extends ProjectSyntaxError
 
-object DesiredProjectInferer {
-  def apply() = new DesiredProjectInferer {
-    override def infer(baseProject: Project, graphQlSdl: Document) = DesiredProjectInfererImpl(baseProject, graphQlSdl).infer()
+object DesiredProjectInferrer {
+  def apply() = new DesiredProjectInferrer {
+    override def infer(baseProject: Project, graphQlSdl: Document) = DesiredProjectInferrerImpl(baseProject, graphQlSdl).infer()
   }
 }
 
-case class DesiredProjectInfererImpl(
+case class DesiredProjectInferrerImpl(
     baseProject: Project,
     sdl: Document
 ) {
