@@ -6,7 +6,7 @@ import cool.graph.util.GraphQLSchemaAssertions
 import org.scalatest.{FlatSpec, Matchers}
 import sangria.renderer.SchemaRenderer
 
-class SchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec with GraphQLSchemaAssertions {
+class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec with GraphQLSchemaAssertions {
 
   val schemaBuilder = testDependencies.apiSchemaBuilder
 
