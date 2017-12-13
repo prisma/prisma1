@@ -1,4 +1,4 @@
-import { Node } from './types'
+import { Node, ImportData } from './types'
 import {
   parse,
   buildASTSchema,
@@ -21,6 +21,8 @@ interface Types {
   [typeName: string]: {
     definition: ObjectTypeDefinitionNode
     fields: FieldsMap
+    requiredNonRelationFieldNames: string[]
+    allNonRelationFieldNames: string[]
   }
 }
 
@@ -68,11 +70,27 @@ export class Validator {
     }
   }
 
-  validateNode(obj: any) {
+  validateNode(obj: any): true {
     this.checkTypeName(obj)
     this.checkRequiredFields(obj)
     this.checkUnknownFields(obj)
     this.checkType(obj)
+    return true
+  }
+
+  validateImportData(data: ImportData): true {
+    if (!data.values) {
+      throw new Error('Import data is missing the "values" property')
+    }
+    if (!Array.isArray(data.values)) {
+      throw new Error(`Key "values" must be an array`)
+    }
+    if (data.valueType === 'nodes') {
+      for (let i = 0, len = data.values.length; i < len; i++) {
+        const node = data.values[i]
+        this.validateNode(node)
+      }
+    }
     return true
   }
 
@@ -91,6 +109,8 @@ export class Validator {
               [curr2.name.value]: curr2,
             }
           }, {}),
+          allNonRelationFieldNames: this.getFieldNames(curr, false),
+          requiredNonRelationFieldNames: this.getFieldNames(curr, true),
         },
       }
     }, {})
@@ -122,12 +142,10 @@ export class Validator {
   }
 
   private getFieldNames(
-    typeName: string,
+    definition: ObjectTypeDefinitionNode,
     requiredOnly: boolean = false,
     includeRelations: boolean = false,
   ) {
-    //
-    const { definition } = this.types[typeName]
     return definition.fields
       .filter(field => {
         const nonNull = field.type.kind === 'NonNullType'
@@ -168,9 +186,12 @@ export class Validator {
 
   private checkRequiredFields(obj: any) {
     const typeName = obj._typeName
-    const requiredFieldNames = this.getFieldNames(typeName, true)
+    const { requiredNonRelationFieldNames } = this.types[typeName]
 
-    const missingFieldNames = difference(requiredFieldNames, Object.keys(obj))
+    const missingFieldNames = difference(
+      requiredNonRelationFieldNames,
+      Object.keys(obj),
+    )
     if (missingFieldNames.length > 0) {
       throw new Error(
         `Object ${JSON.stringify(
@@ -182,9 +203,8 @@ export class Validator {
 
   private checkUnknownFields(obj: any) {
     const typeName = obj._typeName
-    const knownKeys = ['_typeName'].concat(
-      this.getFieldNames(typeName, false, false),
-    )
+    const { allNonRelationFieldNames } = this.types[typeName]
+    const knownKeys = ['_typeName'].concat(allNonRelationFieldNames)
     const unknownKeys = difference(Object.keys(obj), knownKeys)
     if (unknownKeys.length > 0) {
       throw new Error(
