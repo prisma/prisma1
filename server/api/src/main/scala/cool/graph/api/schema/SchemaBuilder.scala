@@ -123,7 +123,7 @@ case class SchemaBuilderImpl(
       fieldType = outputTypesBuilder.mapCreateOutputType(model, objectTypes(model.name)),
       arguments = argumentsBuilder.getSangriaArgumentsForCreate(model),
       resolve = (ctx) => {
-        val mutation = new Create(model = model, project = project, args = ctx.args, dataResolver = masterDataResolver)
+        val mutation = Create(model = model, project = project, args = ctx.args, dataResolver = masterDataResolver)
         ClientMutationRunner
           .run(mutation, dataResolver)
           .map(outputTypesBuilder.mapResolve(_, ctx.args))
@@ -137,7 +137,7 @@ case class SchemaBuilderImpl(
       fieldType = OptionType(outputTypesBuilder.mapUpdateOutputType(model, objectTypes(model.name))),
       arguments = argumentsBuilder.getSangriaArgumentsForUpdate(model),
       resolve = (ctx) => {
-        val mutation = new Update(model = model, project = project, args = ctx.args, dataResolver = masterDataResolver)
+        val mutation = Update(model = model, project = project, args = ctx.args, dataResolver = masterDataResolver)
 
         ClientMutationRunner
           .run(mutation, dataResolver)
@@ -152,7 +152,7 @@ case class SchemaBuilderImpl(
       fieldType = OptionType(outputTypesBuilder.mapUpdateOrCreateOutputType(model, objectTypes(model.name))),
       arguments = argumentsBuilder.getSangriaArgumentsForUpdateOrCreate(model),
       resolve = (ctx) => {
-        val mutation = new UpdateOrCreate(model = model, project = project, args = ctx.args, dataResolver = masterDataResolver)
+        val mutation = UpdateOrCreate(model = model, project = project, args = ctx.args, dataResolver = masterDataResolver)
         ClientMutationRunner
           .run(mutation, dataResolver)
           .map(outputTypesBuilder.mapResolve(_, ctx.args))
@@ -166,7 +166,7 @@ case class SchemaBuilderImpl(
       fieldType = OptionType(outputTypesBuilder.mapDeleteOutputType(model, objectTypes(model.name), onlyId = false)),
       arguments = argumentsBuilder.getSangriaArgumentsForDelete(model),
       resolve = (ctx) => {
-        val mutation = new Delete(
+        val mutation = Delete(
           model = model,
           modelObjectTypes = objectTypeBuilder,
           project = project,
