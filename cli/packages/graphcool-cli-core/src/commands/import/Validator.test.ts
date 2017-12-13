@@ -20,6 +20,8 @@ const post = {
   id: '0',
   title: 'This is a title',
   description: 'And I have a description',
+  tags: ['This', 'is', 'a', 'list'],
 }
 
-validator.validateNode(post)
+const valid = validator.validateNode(post)
+console.log('The post is valid')

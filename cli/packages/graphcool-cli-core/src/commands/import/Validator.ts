@@ -130,7 +130,6 @@ export class Validator {
   checkRequiredFields(obj: any) {
     const typeName = obj._typeName
     const requiredFieldNames = this.getFieldNames(typeName, true)
-    console.log('Required Fieldnames', requiredFieldNames)
 
     const missingFieldNames = difference(requiredFieldNames, Object.keys(obj))
     if (missingFieldNames.length > 0) {
@@ -163,12 +162,22 @@ export class Validator {
     const fieldNames = Object.keys(obj).filter(f => f !== '_typeName')
     fieldNames.forEach(fieldName => {
       const value = obj[fieldName]
-      console.log('validating', fieldName)
       this.validateValue(value, fields[fieldName])
     })
   }
 
   validateValue(value: any, field: FieldDefinitionNode) {
+    if (this.isList(field)) {
+      if (!Array.isArray(value)) {
+        throw new Error(`Error for value ${value}: It has to be a list.`)
+      }
+      value.forEach(v => this.validateScalarValue(v, field))
+    } else {
+      this.validateScalarValue(value, field)
+    }
+  }
+
+  validateScalarValue(value: any, field: FieldDefinitionNode) {
     const type = this.getDeepType(field)
     const typeName = type.name.value
     const validator = this.validators[typeName]
@@ -197,5 +206,17 @@ export class Validator {
     }
 
     return pointer
+  }
+
+  isList(field: FieldDefinitionNode) {
+    let pointer = field.type as any
+    while (pointer.type) {
+      if (pointer.kind === 'ListType') {
+        return true
+      }
+      pointer = pointer.type
+    }
+
+    return false
   }
 }

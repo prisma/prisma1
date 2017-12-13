@@ -3,6 +3,7 @@ type Post @model {
   title: String!
   description: String
   comments: [Comment!]! @relation(name: "PostComment")
+  tags: [String!]!
 }
 
 type Comment @model {
