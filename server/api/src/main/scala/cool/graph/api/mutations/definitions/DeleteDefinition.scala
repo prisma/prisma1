@@ -1,16 +1,8 @@
 package cool.graph.api.mutations.definitions
 
-import cool.graph.api.schema.{SchemaArgument, SchemaBuilderUtils}
 import cool.graph.shared.models.{Model, Project}
+import sangria.schema.Argument
 
 case class DeleteDefinition(project: Project) extends ClientMutationDefinition {
-
-  override def getSchemaArguments(model: Model): List[SchemaArgument] = {
-//    val idField = model.getFieldByName_!("id")
-//    List(
-//      SchemaArgument(idField.name, SchemaBuilderUtils.mapToRequiredInputType(idField), idField.description, idField)
-//    )
-
-    List.empty
-  }
+  override def getSangriaArguments(model: Model): List[Argument[Any]] = List.empty
 }

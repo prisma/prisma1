@@ -7,10 +7,7 @@ import cool.graph.util.gc_value.GCAnyConverter
 import sangria.schema.{Argument, InputField, InputObjectType}
 
 trait ClientMutationDefinition {
-  // TODO: there should be no need to override this one. It should be final. We should not override this one.
-  def getSangriaArguments(model: Model): List[Argument[Any]] = getSchemaArguments(model).map(_.asSangriaArgument)
-
-  def getSchemaArguments(model: Model): List[SchemaArgument]
+  def getSangriaArguments(model: Model): List[Argument[Any]]
 
   def getWhereArgument(model: Model) = {
     Argument(
@@ -31,14 +28,6 @@ trait ClientMutationDefinition {
       sys.error("You must specify a unique selector")
     }
   }
-}
-
-trait CreateOrUpdateMutationDefinition extends ClientMutationDefinition {
-  final def getSchemaArguments(model: Model): List[SchemaArgument] = getScalarArguments(model) ++ getRelationArguments(model)
-
-  def getScalarArguments(model: Model): List[SchemaArgument]
-
-  def getRelationArguments(model: Model): List[SchemaArgument]
 }
 
 // note: Below is a SingleFieldNodeSelector. In the future we will also need a MultiFieldNodeSelector

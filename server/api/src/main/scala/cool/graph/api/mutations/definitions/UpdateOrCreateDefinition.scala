@@ -8,9 +8,5 @@ case class UpdateOrCreateDefinition(project: Project, inputTypesBuilder: InputTy
   val createDefinition = CreateDefinition(project, inputTypesBuilder)
   val updateDefinition = UpdateDefinition(project, inputTypesBuilder)
 
-  override def getSangriaArguments(model: Model): List[Argument[Any]] = {
-    inputTypesBuilder.getSangriaArgumentsForUpdateOrCreate(model)
-  }
-
-  override def getSchemaArguments(model: Model): List[SchemaArgument] = ???
+  override def getSangriaArguments(model: Model): List[Argument[Any]] = inputTypesBuilder.getSangriaArgumentsForUpdateOrCreate(model)
 }

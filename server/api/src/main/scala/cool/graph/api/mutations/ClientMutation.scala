@@ -3,15 +3,13 @@ package cool.graph.api.mutations
 import cool.graph.api.ApiDependencies
 import cool.graph.api.database.mutactions._
 import cool.graph.api.database.{DataItem, DataResolver}
-import cool.graph.api.mutations.MutationTypes.ArgumentValue
 import cool.graph.api.mutations.definitions.ClientMutationDefinition
-import cool.graph.api.schema.{APIErrors, ApiUserContext, GeneralError, SchemaArgument}
+import cool.graph.api.schema.{ApiUserContext, GeneralError}
 import cool.graph.cuid.Cuid
 import cool.graph.shared.models.IdType.Id
 import cool.graph.shared.models.{AuthenticatedRequest, Model}
 import cool.graph.utils.future.FutureUtils._
 import sangria.schema.Args
-import scaldi.Injector
 
 import scala.collection.immutable.Seq
 import scala.concurrent.ExecutionContext.Implicits.global

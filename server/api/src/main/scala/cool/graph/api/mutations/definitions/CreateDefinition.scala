@@ -1,13 +1,10 @@
 package cool.graph.api.mutations.definitions
 
-import cool.graph.api.schema.{InputTypesBuilder, SchemaArgument}
+import cool.graph.api.schema.InputTypesBuilder
 import cool.graph.shared.models.{Model, Project}
 import sangria.schema.Argument
 
-case class CreateDefinition(project: Project, inputTypesBuilder: InputTypesBuilder) extends CreateOrUpdateMutationDefinition {
+case class CreateDefinition(project: Project, inputTypesBuilder: InputTypesBuilder) extends ClientMutationDefinition {
 
   override def getSangriaArguments(model: Model): List[Argument[Any]] = inputTypesBuilder.getSangriaArgumentsForCreate(model)
-
-  override def getRelationArguments(model: Model): List[SchemaArgument] = inputTypesBuilder.cachedRelationalSchemaArgumentsForCreate(model, omitRelation = None)
-  override def getScalarArguments(model: Model): List[SchemaArgument]   = inputTypesBuilder.computeScalarSchemaArgumentsForCreate(model)
 }
