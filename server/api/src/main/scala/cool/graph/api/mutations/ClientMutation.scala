@@ -136,16 +136,4 @@ abstract class ClientMutation(model: Model, args: Args, dataResolver: DataResolv
     val mutationGroupResults: Future[List[Boolean]] = Future.sequence(mutactionGroups.map(performGroup)).map(_.flatten)
     mutationGroupResults.map(_.forall(identity))
   }
-
-  def extractNodeSelectorFromSangriaArgs(model: Model, args: sangria.schema.Args): NodeSelector = {
-    val whereArgs = args.arg[Map[String, Option[Any]]]("where")
-    whereArgs.collectFirst {
-      case (fieldName, Some(value)) =>
-        NodeSelector(fieldName, GCAnyConverter(model.getFieldByName_!(fieldName).typeIdentifier, isList = false).toGCValue(value).get)
-    } getOrElse {
-      sys.error("You must specify a unique selector")
-    }
-  }
 }
-
-case class NodeSelector(fieldName: String, fieldValue: GCValue)
