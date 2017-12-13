@@ -2,7 +2,7 @@ package cool.graph.api
 
 import cool.graph.api.schema.SchemaBuilder
 import cool.graph.api.server.{GraphQlQuery, GraphQlRequest}
-import cool.graph.shared.models.{AuthenticatedRequest, AuthenticatedUser, Project}
+import cool.graph.shared.models.Project
 import cool.graph.util.json.SprayJsonExtensions
 import sangria.parser.QueryParser
 import sangria.renderer.SchemaRenderer
@@ -81,7 +81,6 @@ case class ApiTestServer()(implicit dependencies: ApiDependencies) extends Spray
     val result = executeQuerySimpleWithAuthentication(
       query = query,
       project = project,
-      authenticatedRequest = userId.map(AuthenticatedUser(_, "User", "test-token")),
       variables = variables,
       requestId = requestId,
       graphcoolHeader = graphcoolHeader
@@ -95,7 +94,6 @@ case class ApiTestServer()(implicit dependencies: ApiDependencies) extends Spray
     */
   def executeQuerySimpleWithAuthentication(query: String,
                                            project: Project,
-                                           authenticatedRequest: Option[AuthenticatedRequest] = None,
                                            variables: JsValue = JsObject(),
                                            requestId: String = "CombinedTestDatabase.requestId",
                                            graphcoolHeader: Option[String] = None): JsValue = {
@@ -114,7 +112,6 @@ case class ApiTestServer()(implicit dependencies: ApiDependencies) extends Spray
       ip = "test.ip",
       json = JsObject.empty,
       sourceHeader = graphcoolHeader,
-      authorization = authenticatedRequest,
       project = project,
       schema = schema,
       queries = Vector(graphqlQuery),

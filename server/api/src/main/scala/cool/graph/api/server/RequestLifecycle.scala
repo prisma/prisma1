@@ -3,7 +3,7 @@ package cool.graph.api.server
 import cool.graph.api.schema.APIErrors.VariablesParsingError
 import cool.graph.api.schema.ApiUserContext
 import cool.graph.api.schema.CommonErrors.InputCompletelyMalformed
-import cool.graph.shared.models.{AuthenticatedRequest, Project, ProjectWithClientId}
+import cool.graph.shared.models.{Project, ProjectWithClientId}
 import cool.graph.utils.`try`.TryUtil
 import sangria.parser.QueryParser
 import sangria.schema.Schema
@@ -28,7 +28,6 @@ case class RawRequest(
 ) extends RawRequestAttributes {
 
   def toGraphQlRequest(
-      authorization: Option[AuthenticatedRequest],
       project: ProjectWithClientId,
       schema: Schema[ApiUserContext, Unit]
   ): Try[GraphQlRequest] = {
@@ -50,7 +49,6 @@ case class RawRequest(
           ip = ip,
           json = json,
           sourceHeader = sourceHeader,
-          authorization = authorization,
           project = project.project,
           schema = schema,
           queries = queries,
@@ -74,7 +72,6 @@ case class GraphQlRequest(
     json: JsValue,
     ip: String,
     sourceHeader: Option[String],
-    authorization: Option[AuthenticatedRequest],
     project: Project,
     schema: Schema[ApiUserContext, Unit],
     queries: Vector[GraphQlQuery],
