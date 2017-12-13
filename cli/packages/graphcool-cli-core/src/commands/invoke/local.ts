@@ -143,7 +143,7 @@ export default class InvokeLocal extends Command {
         )
         this.out.log(
           chalk.blue.bold(
-            `graphcool invoke local -f ${fnName} -j ${relativeLastEventPath}\n`,
+            `graphcool invoke-local -f ${fnName} -j ${relativeLastEventPath}\n`,
           ),
         )
         event = lastEventJson
