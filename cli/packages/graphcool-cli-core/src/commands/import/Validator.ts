@@ -56,7 +56,6 @@ export class Validator {
       )
     },
     Boolean: isBoolean,
-    // TODO: Enum
   }
   constructor(typesString: string) {
     this.typesString = typesString
