@@ -1,27 +1,8 @@
 package cool.graph.api.schema
 
-import java.lang.{StringBuilder => JStringBuilder}
-
-import com.github.benmanes.caffeine.cache.Cache
-import cool.graph.api.mutations.MutationTypes.ArgumentValue
-import cool.graph.shared.models.{Field, Model, Project}
+import cool.graph.shared.models.{Model, Project}
 import cool.graph.util.coolSangria.FromInputImplicit
 import sangria.schema.{InputObjectType, _}
-
-object CaffeineCacheExtensions {
-  implicit class GetOrElseUpdateExtension[K](val cache: Cache[K, Object]) extends AnyVal {
-    def getOrElseUpdate[T <: AnyRef](cacheKey: K)(fn: => T): T = {
-      val cacheEntry = cache.getIfPresent(cacheKey)
-      if (cacheEntry != null) {
-        cacheEntry.asInstanceOf[T]
-      } else {
-        val result = fn
-        cache.put(cacheKey, result)
-        result
-      }
-    }
-  }
-}
 
 case class ArgumentsBuilder(project: Project) {
 

@@ -159,6 +159,7 @@ lazy val api = serverProject("api")
   .dependsOn(akkaUtils % "compile")
   .dependsOn(metrics % "compile")
   .dependsOn(jvmProfiler % "compile")
+  .dependsOn(cache % "compile")
   .settings(
     libraryDependencies ++= Seq(
       playJson,

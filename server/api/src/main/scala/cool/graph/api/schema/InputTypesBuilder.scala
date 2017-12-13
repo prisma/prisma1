@@ -1,7 +1,7 @@
 package cool.graph.api.schema
 
-import com.github.benmanes.caffeine.cache.{Cache, Caffeine}
 import cool.graph.api.mutations.MutationTypes.ArgumentValue
+import cool.graph.cache.Cache
 import cool.graph.shared.models.{Field, Model, Project, Relation}
 import cool.graph.util.coolSangria.FromInputImplicit
 import sangria.schema.{Args, InputField, InputObjectType, InputType, ListInputType, OptionInputType}
@@ -14,20 +14,19 @@ trait InputTypesBuilder {
 
 case class CachedInputTypesBuilder(project: Project) extends UncachedInputTypesBuilder(project) {
   import java.lang.{StringBuilder => JStringBuilder}
-  import CaffeineCacheExtensions._
 
-  val caffeineCache: Cache[String, Object] = Caffeine.newBuilder().build[String, Object]()
+  val cache = Cache.unbounded[String, InputObjectType[Any]]()
 
   override def inputObjectTypeForCreate(model: Model, omitRelation: Option[Relation]): InputObjectType[Any] = {
-    caffeineCache.getOrElseUpdate(cacheKey("cachedInputObjectTypeForCreate", model, omitRelation)) {
+    cache.getOrUpdate(cacheKey("cachedInputObjectTypeForCreate", model, omitRelation), { () =>
       computeInputObjectTypeForCreate(model, omitRelation)
-    }
+    })
   }
 
   override def inputObjectTypeForUpdate(model: Model): InputObjectType[Any] = {
-    caffeineCache.getOrElseUpdate(cacheKey("cachedInputObjectTypeForUpdate", model)) {
+    cache.getOrUpdate(cacheKey("cachedInputObjectTypeForUpdate", model), { () =>
       computeInputObjectTypeForUpdate(model)
-    }
+    })
   }
 
   private def cacheKey(name: String, model: Model, relation: Option[Relation] = None): String = {
