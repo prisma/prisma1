@@ -93,7 +93,6 @@ class SingleServerInjectorImpl(implicit val actorSystem: ActorSystem, actorMater
       bind[SnsPublisher] identifiedBy "seatSnsPublisher" toNonLazy snsPublisher
       bind[KinesisPublisher] identifiedBy "kinesisAlgoliaSyncQueriesPublisher" toNonLazy kinesisAlgoliaSyncQueriesPublisher
       bind[KinesisPublisher] identifiedBy "kinesisApiMetricsPublisher" toNonLazy kinesisApiMetricsPublisher
-      bind[AlgoliaKeyChecker] identifiedBy "algoliaKeyChecker" toNonLazy outer.algoliaKeyChecker
       bind[Auth0Api] toNonLazy outer.auth0Api
       bind[Auth0Extend] toNonLazy outer.auth0Extend
       bind[BugSnagger] toNonLazy outer.bugsnagger
@@ -114,7 +113,6 @@ class SingleServerInjectorImpl(implicit val actorSystem: ActorSystem, actorMater
   lazy val masterToken: Option[String]                                            = sys.env.get("MASTER_TOKEN")
   lazy val clientResolver: ClientResolver                                         = ClientResolver(internalDB, cachedProjectResolver)(system.dispatcher)
   lazy val projectQueries: ProjectQueries                                         = ProjectQueries()(internalDB, cachedProjectResolver)
-  lazy val algoliaKeyChecker: AlgoliaKeyChecker                                   = new AlgoliaKeyCheckerImplementation()(toScaldi)
   lazy val auth0Api: Auth0Api                                                     = new Auth0ApiImplementation()(toScaldi)
   lazy val auth0Extend: Auth0Extend                                               = new Auth0ExtendImplementation()(toScaldi)
   override lazy val environment: String                                           = sys.env.getOrElse("ENVIRONMENT", "local")

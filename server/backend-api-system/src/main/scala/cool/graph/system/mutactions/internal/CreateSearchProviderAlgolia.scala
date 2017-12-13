@@ -1,16 +1,13 @@
 package cool.graph.system.mutactions.internal
 
 import cool.graph._
-import cool.graph.client.database.DataResolver
 import cool.graph.shared.errors.UserInputErrors
-import cool.graph.system.database.tables.{RelayIdTable, SearchProviderAlgoliaTable}
 import cool.graph.shared.models._
-import cool.graph.system.externalServices.AlgoliaKeyChecker
+import cool.graph.system.database.tables.{RelayIdTable, SearchProviderAlgoliaTable}
 import scaldi.{Injectable, Injector}
 import slick.jdbc.MySQLProfile.api._
 import slick.lifted.TableQuery
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
 
@@ -47,17 +44,6 @@ case class CreateSearchProviderAlgolia(project: Project, searchProviderAlgolia: 
           return Future.successful(Failure(UserInputErrors.ProjectAlreadyHasSearchProviderAlgolia()))
       })
 
-    if (searchProviderAlgolia.applicationId.isEmpty && searchProviderAlgolia.apiKey.isEmpty) {
-      Future.successful(Success(MutactionVerificationSuccess()))
-    } else {
-      val algoliaKeyChecker = inject[AlgoliaKeyChecker](identified by "algoliaKeyChecker")
-
-      algoliaKeyChecker
-        .verifyAlgoliaCredentialValidity(searchProviderAlgolia.applicationId, searchProviderAlgolia.apiKey)
-        .map {
-          case true  => Success(MutactionVerificationSuccess())
-          case false => Failure(UserInputErrors.AlgoliaCredentialsDontHaveRequiredPermissions())
-        }
-    }
+    Future.successful(Success(MutactionVerificationSuccess()))
   }
 }
