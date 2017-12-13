@@ -242,20 +242,6 @@ case class ProjectWithClientId(project: Project, clientId: Id) {
 }
 case class ProjectWithClient(project: Project, client: Client)
 
-sealed trait AuthenticatedRequest {
-  def id: String
-  def originalToken: String
-  val isAdmin: Boolean = this match {
-    case _: AuthenticatedCustomer  => true
-    case _: AuthenticatedRootToken => true
-    case _: AuthenticatedUser      => false
-  }
-}
-
-case class AuthenticatedUser(id: String, typeName: String, originalToken: String) extends AuthenticatedRequest
-case class AuthenticatedCustomer(id: String, originalToken: String)               extends AuthenticatedRequest
-case class AuthenticatedRootToken(id: String, originalToken: String)              extends AuthenticatedRequest
-
 case class Model(
     id: Id,
     name: String,
@@ -265,7 +251,7 @@ case class Model(
 ) {
 
   lazy val scalarFields: List[Field]         = fields.filter(_.isScalar)
-  lazy val scalarListFields: List[Field] =     scalarFields.filter(_.isList)
+  lazy val scalarListFields: List[Field]     = scalarFields.filter(_.isList)
   lazy val relationFields: List[Field]       = fields.filter(_.isRelation)
   lazy val singleRelationFields: List[Field] = relationFields.filter(!_.isList)
   lazy val listRelationFields: List[Field]   = relationFields.filter(_.isList)

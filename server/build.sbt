@@ -457,8 +457,14 @@ lazy val localFaas = Project(id = "localfaas", base = file("./localfaas"))
     }
   )
 
-val allProjects = List(
+val allServerProjects = List(
   api,
+  deploy,
+  singleServer,
+  sharedModels
+)
+
+val allLibProjects = List(
   bugsnag,
   akkaUtils,
   aws,
@@ -469,30 +475,15 @@ val allProjects = List(
   graphQlClient,
   javascriptEngine,
   stubServer,
-  backendShared,
-  clientShared,
-  backendApiSystem,
-  backendApiSimple,
-  backendApiRelay,
-  backendApiSubscriptionsWebsocket,
-  backendApiSimpleSubscriptions,
-  backendApiFileupload,
-  backendApiSchemaManager,
-  backendWorkers,
   scalaUtils,
   jsonUtils,
-  cache,
-  singleServer,
-  localFaas,
-  deploy,
-  sharedModels
+  cache
 )
 
-val allLibProjects = allProjects.filter(_.base.getPath.startsWith("./libs/")).map(Project.projectToRef)
-lazy val libs = (project in file("libs")).aggregate(allLibProjects: _*)
+lazy val libs = (project in file("libs")).aggregate(allLibProjects.map(Project.projectToRef): _*)
 
 lazy val root = (project in file("."))
-  .aggregate(allProjects.map(Project.projectToRef): _*)
+  .aggregate(allServerProjects.map(Project.projectToRef): _*)
   .settings(
     publish := { } // do not publish a JAR for the root project
   )

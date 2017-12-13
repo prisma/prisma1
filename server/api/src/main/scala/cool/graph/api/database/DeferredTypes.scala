@@ -1,6 +1,6 @@
 package cool.graph.api.database
 
-import cool.graph.shared.models.{AuthenticatedRequest, Field, Model}
+import cool.graph.shared.models.{Field, Model}
 import sangria.execution.deferred.Deferred
 
 import scala.concurrent.Future
@@ -53,12 +53,6 @@ object DeferredTypes {
   type SimpleConnectionOutputType = Seq[DataItem]
   type RelayConnectionOutputType  = IdBasedConnection[DataItem]
 
-  case class CheckPermissionDeferred(model: Model,
-                                     field: Field,
-                                     nodeId: String,
-                                     authenticatedRequest: Option[AuthenticatedRequest],
-                                     value: Any,
-                                     node: DataItem,
-                                     alwaysQueryMasterDatabase: Boolean)
+  case class CheckPermissionDeferred(model: Model, field: Field, nodeId: String, value: Any, node: DataItem, alwaysQueryMasterDatabase: Boolean)
       extends Deferred[Boolean]
 }

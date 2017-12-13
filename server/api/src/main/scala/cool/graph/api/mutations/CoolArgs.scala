@@ -1,6 +1,8 @@
 package cool.graph.api.mutations
 
+import cool.graph.gc_values.GCValue
 import cool.graph.shared.models._
+import cool.graph.util.gc_value.GCAnyConverter
 
 import scala.collection.immutable.Seq
 
@@ -46,9 +48,7 @@ case class CoolArgs(raw: Map[String, Any]) {
     * The inner option is empty if a null value was sent for this field. If the option is defined it contains a non null value
     * for this field.
     */
-  def getFieldValueAs[T](field: Field, suffix: String = ""): Option[Option[T]] = {
-    getFieldValueAs(field.name + suffix)
-  }
+  def getFieldValueAs[T](field: Field): Option[Option[T]] = getFieldValueAs(field.name)
 
   def getFieldValueAs[T](name: String): Option[Option[T]] = {
     raw.get(name).map { fieldValue =>
@@ -92,4 +92,16 @@ case class CoolArgs(raw: Map[String, Any]) {
     }
   }
 
+  def extractNodeSelectorFromSangriaArgs(model: Model): NodeSelector = {
+    val whereArgs = raw("where").asInstanceOf[Map[String, Option[Any]]]
+    whereArgs.collectFirst {
+      case (fieldName, Some(value)) =>
+        NodeSelector(fieldName, GCAnyConverter(model.getFieldByName_!(fieldName).typeIdentifier, isList = false).toGCValue(value).get)
+    } getOrElse {
+      sys.error("You must specify a unique selector")
+    }
+  }
+
 }
+
+case class NodeSelector(fieldName: String, fieldValue: GCValue)

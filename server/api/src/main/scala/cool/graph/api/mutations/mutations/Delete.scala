@@ -31,7 +31,8 @@ class Delete(
   var deletedItemOpt: Option[DataItem] = None
   val requestId: Id                    = "" // dataResolver.requestContext.map(_.requestId).getOrElse("")
 
-  val where = extractNodeSelectorFromSangriaArgs(model, args)
+  val coolArgs = CoolArgs(args.raw)
+  val where    = coolArgs.extractNodeSelectorFromSangriaArgs(model)
 
   override def prepareMutactions(): Future[List[MutactionGroup]] = {
     dataResolver

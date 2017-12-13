@@ -3,7 +3,7 @@ package cool.graph.api.database.deferreds
 import cool.graph.api.database.DeferredTypes._
 import cool.graph.api.database.QueryArguments
 import cool.graph.shared.models.IdType.Id
-import cool.graph.shared.models.{AuthenticatedRequest, Model}
+import cool.graph.shared.models.Model
 import sangria.execution.deferred.Deferred
 
 object DeferredUtils {
@@ -84,8 +84,7 @@ object DeferredUtils {
 
     val countSimilarDeferreds = deferreds.count { d =>
       headDeferred.nodeId == d.nodeId &&
-      headDeferred.model == headDeferred.model &&
-      headDeferred.authenticatedRequest == headDeferred.authenticatedRequest
+      headDeferred.model == headDeferred.model
     }
 
     if (countSimilarDeferreds != deferreds.length) {

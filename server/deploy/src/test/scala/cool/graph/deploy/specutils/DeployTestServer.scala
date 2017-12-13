@@ -3,7 +3,6 @@ package cool.graph.deploy.specutils
 import cool.graph.deploy.DeployDependencies
 import cool.graph.deploy.schema.{SchemaBuilder, SystemUserContext}
 import cool.graph.deploy.server.ErrorHandler
-import cool.graph.shared.models.{AuthenticatedRequest, AuthenticatedUser}
 import sangria.execution.Executor
 import sangria.parser.QueryParser
 import sangria.renderer.SchemaRenderer
@@ -75,7 +74,6 @@ case class DeployTestServer()(implicit dependencies: DeployDependencies) extends
                                graphcoolHeader: Option[String] = None): JsValue = {
     val result = executeQueryWithAuthentication(
       query = query,
-      authenticatedRequest = userId.map(AuthenticatedUser(_, "User", "test-token")),
       variables = variables,
       requestId = requestId,
       graphcoolHeader = graphcoolHeader
@@ -89,7 +87,6 @@ case class DeployTestServer()(implicit dependencies: DeployDependencies) extends
     * Execute a Query without Checks.
     */
   def executeQueryWithAuthentication(query: String,
-                                     authenticatedRequest: Option[AuthenticatedRequest] = None,
                                      variables: JsValue = JsObject(),
                                      requestId: String = "CombinedTestDatabase.requestId",
                                      graphcoolHeader: Option[String] = None): JsValue = {

@@ -5,10 +5,8 @@ import cool.graph.api.database.mutactions._
 import cool.graph.api.database.{DataItem, DataResolver}
 import cool.graph.api.schema.{ApiUserContext, GeneralError}
 import cool.graph.cuid.Cuid
-import cool.graph.gc_values.GCValue
 import cool.graph.shared.models.IdType.Id
-import cool.graph.shared.models.{AuthenticatedRequest, Model}
-import cool.graph.util.gc_value.GCAnyConverter
+import cool.graph.shared.models.Model
 import cool.graph.utils.future.FutureUtils._
 import sangria.schema.Args
 
@@ -36,20 +34,8 @@ abstract class ClientMutation(model: Model, args: Args, dataResolver: DataResolv
 
   def prepareMutactions(): Future[List[MutactionGroup]]
 
-  def prepareAndPerformMutactions(): Future[List[MutactionExecutionResult]] = {
-    for {
-      mutactionGroups <- prepareMutactions()
-      results         <- performMutactions(mutactionGroups)
-//      _               <- performPostExecutions(mutactionGroups) // this is probably not the way to go
-    } yield results
-  }
-
-  def run(authenticatedRequestrequestContext: ApiUserContext): Future[DataItem] = {
-    run(None, Some(authenticatedRequestrequestContext))
-  }
-
-  def run(authenticatedRequest: Option[AuthenticatedRequest] = None, requestContext: Option[ApiUserContext] = None): Future[DataItem] = {
-    ClientMutationRunner.run(this, authenticatedRequest, requestContext, dataResolver.project)
+  def run(apiUserContext: ApiUserContext): Future[DataItem] = {
+    ClientMutationRunner.run(this, Some(apiUserContext), dataResolver.project)
   }
 
   def performWithTiming[A](name: String, f: Future[A]): Future[A] = {
@@ -136,16 +122,4 @@ abstract class ClientMutation(model: Model, args: Args, dataResolver: DataResolv
     val mutationGroupResults: Future[List[Boolean]] = Future.sequence(mutactionGroups.map(performGroup)).map(_.flatten)
     mutationGroupResults.map(_.forall(identity))
   }
-
-  def extractNodeSelectorFromSangriaArgs(model: Model, args: sangria.schema.Args): NodeSelector = {
-    val whereArgs = args.arg[Map[String, Option[Any]]]("where")
-    whereArgs.collectFirst {
-      case (fieldName, Some(value)) =>
-        NodeSelector(fieldName, GCAnyConverter(model.getFieldByName_!(fieldName).typeIdentifier, isList = false).toGCValue(value).get)
-    } getOrElse {
-      sys.error("You must specify a unique selector")
-    }
-  }
 }
-
-case class NodeSelector(fieldName: String, fieldValue: GCValue)
