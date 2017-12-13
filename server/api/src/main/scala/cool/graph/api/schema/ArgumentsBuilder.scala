@@ -35,7 +35,7 @@ case class ArgumentsBuilder(project: Project) {
     List(getWhereArgument(model))
   }
 
-  private def getWhereArgument(model: Model) = {
+  def getWhereArgument(model: Model) = {
     Argument[Any](
       name = "where",
       argumentType = InputObjectType(

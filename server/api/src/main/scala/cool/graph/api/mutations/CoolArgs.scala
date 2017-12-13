@@ -2,7 +2,7 @@ package cool.graph.api.mutations
 
 import cool.graph.gc_values.GCValue
 import cool.graph.shared.models._
-import cool.graph.util.gc_value.GCAnyConverter
+import cool.graph.util.gc_value.{GCAnyConverter, GCDBValueConverter}
 
 import scala.collection.immutable.Seq
 
@@ -104,4 +104,6 @@ case class CoolArgs(raw: Map[String, Any]) {
 
 }
 
-case class NodeSelector(fieldName: String, fieldValue: GCValue)
+case class NodeSelector(fieldName: String, fieldValue: GCValue) {
+  lazy val unwrappedFieldValue: Any = GCDBValueConverter().fromGCValue(fieldValue)
+}

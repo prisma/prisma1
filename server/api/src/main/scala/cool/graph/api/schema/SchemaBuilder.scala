@@ -4,7 +4,7 @@ import akka.actor.ActorSystem
 import cool.graph.api.ApiDependencies
 import cool.graph.api.database.DataItem
 import cool.graph.api.database.DeferredTypes.{ManyModelDeferred, OneDeferred}
-import cool.graph.api.mutations.ClientMutationRunner
+import cool.graph.api.mutations.{ClientMutationRunner, CoolArgs}
 import cool.graph.api.mutations.mutations._
 import cool.graph.shared.models.{Model, Project}
 import org.atteo.evo.inflector.English
@@ -30,12 +30,12 @@ case class SchemaBuilderImpl(
 )(implicit apiDependencies: ApiDependencies, system: ActorSystem) {
   import system.dispatcher
 
+  val argumentsBuilder   = ArgumentsBuilder(project = project)
   val dataResolver       = apiDependencies.dataResolver(project)
   val masterDataResolver = apiDependencies.masterDataResolver(project)
   val objectTypeBuilder  = new ObjectTypeBuilder(project = project, nodeInterface = Some(nodeInterface))
   val objectTypes        = objectTypeBuilder.modelObjectTypes
   val conectionTypes     = objectTypeBuilder.modelConnectionTypes
-  val argumentsBuilder   = ArgumentsBuilder(project = project)
   val outputTypesBuilder = OutputTypesBuilder(project, objectTypes, dataResolver)
   val pluralsCache       = new PluralsCache
 
@@ -105,25 +105,14 @@ case class SchemaBuilderImpl(
   }
 
   def getSingleItemField(model: Model): Field[ApiUserContext, Unit] = {
-    val arguments = objectTypeBuilder.mapToUniqueArguments(model)
-
     Field(
       camelCase(model.name),
       fieldType = OptionType(objectTypes(model.name)),
-      arguments = arguments,
+      arguments = List(argumentsBuilder.getWhereArgument(model)),
       resolve = (ctx) => {
-
-        val arg = arguments.find(a => ctx.args.argOpt(a.name).isDefined) match {
-          case Some(value) => value
-          case None =>
-            ??? //throw UserAPIErrors.GraphQLArgumentsException(s"None of the following arguments provided: ${arguments.map(_.name)}")
-        }
-
-//        dataResolver
-//          .batchResolveByUnique(model, arg.name, List(ctx.arg(arg).asInstanceOf[Option[_]].get))
-//          .map(_.headOption)
-        // todo: Make OneDeferredResolver.dataItemsToToOneDeferredResultType work with Timestamps
-        OneDeferred(model, arg.name, ctx.arg(arg).asInstanceOf[Option[_]].get)
+        val coolArgs = CoolArgs(ctx.args.raw)
+        val where    = coolArgs.extractNodeSelectorFromSangriaArgs(model)
+        OneDeferred(model, where.fieldName, where.unwrappedFieldValue)
       }
     )
   }
