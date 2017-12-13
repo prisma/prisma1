@@ -34,7 +34,7 @@ case class SchemaBuilderImpl(
   val objectTypeBuilder  = new ObjectTypeBuilder(project = project, nodeInterface = Some(nodeInterface))
   val objectTypes        = objectTypeBuilder.modelObjectTypes
   val conectionTypes     = objectTypeBuilder.modelConnectionTypes
-  val inputTypesBuilder  = InputTypesBuilder(project = project)
+  val argumentsBuilder   = ArgumentsBuilder(project = project)
   val outputTypesBuilder = OutputTypesBuilder(project, objectTypes, dataResolver)
   val pluralsCache       = new PluralsCache
 
@@ -131,7 +131,7 @@ case class SchemaBuilderImpl(
     Field(
       s"create${model.name}",
       fieldType = outputTypesBuilder.mapCreateOutputType(model, objectTypes(model.name)),
-      arguments = inputTypesBuilder.getSangriaArgumentsForCreate(model),
+      arguments = argumentsBuilder.getSangriaArgumentsForCreate(model),
       resolve = (ctx) => {
         val mutation = new Create(model = model, project = project, args = ctx.args, dataResolver = masterDataResolver)
         mutation
@@ -145,7 +145,7 @@ case class SchemaBuilderImpl(
     Field(
       s"update${model.name}",
       fieldType = OptionType(outputTypesBuilder.mapUpdateOutputType(model, objectTypes(model.name))),
-      arguments = inputTypesBuilder.getSangriaArgumentsForUpdate(model),
+      arguments = argumentsBuilder.getSangriaArgumentsForUpdate(model),
       resolve = (ctx) => {
         new Update(model = model, project = project, args = ctx.args, dataResolver = masterDataResolver)
           .run(ctx.ctx)
@@ -158,7 +158,7 @@ case class SchemaBuilderImpl(
     Field(
       s"updateOrCreate${model.name}",
       fieldType = OptionType(outputTypesBuilder.mapUpdateOrCreateOutputType(model, objectTypes(model.name))),
-      arguments = inputTypesBuilder.getSangriaArgumentsForUpdateOrCreate(model),
+      arguments = argumentsBuilder.getSangriaArgumentsForUpdateOrCreate(model),
       resolve = (ctx) => {
         new UpdateOrCreate(model = model, project = project, args = ctx.args, dataResolver = masterDataResolver)
           .run(ctx.ctx)
@@ -171,7 +171,7 @@ case class SchemaBuilderImpl(
     Field(
       s"delete${model.name}",
       fieldType = OptionType(outputTypesBuilder.mapDeleteOutputType(model, objectTypes(model.name), onlyId = false)),
-      arguments = inputTypesBuilder.getSangriaArgumentsForDelete(model),
+      arguments = argumentsBuilder.getSangriaArgumentsForDelete(model),
       resolve = (ctx) => {
         new Delete(
           model = model,

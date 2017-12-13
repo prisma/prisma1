@@ -1,79 +1,32 @@
 package cool.graph.api.schema
 
-import java.lang.{StringBuilder => JStringBuilder}
-
 import com.github.benmanes.caffeine.cache.{Cache, Caffeine}
 import cool.graph.api.mutations.MutationTypes.ArgumentValue
 import cool.graph.shared.models.{Field, Model, Project, Relation}
 import cool.graph.util.coolSangria.FromInputImplicit
-import sangria.schema.{InputObjectType, _}
+import sangria.schema.{Args, InputField, InputObjectType, InputType, ListInputType, OptionInputType}
 
-object CaffeineCacheExtensions {
-  implicit class GetOrElseUpdateExtension[K](val cache: Cache[K, Object]) extends AnyVal {
-    def getOrElseUpdate[T <: AnyRef](cacheKey: K)(fn: => T): T = {
-      val cacheEntry = cache.getIfPresent(cacheKey)
-      if (cacheEntry != null) {
-        cacheEntry.asInstanceOf[T]
-      } else {
-        val result = fn
-        cache.put(cacheKey, result)
-        result
-      }
-    }
-  }
+trait InputTypesBuilder {
+  def inputObjectTypeForCreate(model: Model, omitRelation: Option[Relation] = None): InputObjectType[Any]
+
+  def inputObjectTypeForUpdate(model: Model): InputObjectType[Any]
 }
 
-case class InputTypesBuilder(project: Project) {
+case class CachedInputTypesBuilder(project: Project) extends UncachedInputTypesBuilder(project) {
+  import java.lang.{StringBuilder => JStringBuilder}
   import CaffeineCacheExtensions._
 
   val caffeineCache: Cache[String, Object] = Caffeine.newBuilder().build[String, Object]()
-  private val oneRelationIdFieldType       = OptionInputType(IDType)
-  private val manyRelationIdsFieldType     = OptionInputType(ListInputType(IDType))
 
-  implicit val anyFromInput = FromInputImplicit.CoercedResultMarshaller
-
-  def getSangriaArgumentsForCreate(model: Model): List[Argument[Any]] = {
-    val inputObjectType = cachedInputObjectTypeForCreate(model)
-    List(Argument[Any]("data", inputObjectType))
-  }
-
-  def getSangriaArgumentsForUpdate(model: Model): List[Argument[Any]] = {
-    val inputObjectType = cachedInputObjectTypeForUpdate(model)
-    List(Argument[Any]("data", inputObjectType), getWhereArgument(model))
-  }
-
-  def getSangriaArgumentsForUpdateOrCreate(model: Model): List[Argument[Any]] = {
-    List(
-      Argument[Any]("create", cachedInputObjectTypeForCreate(model)),
-      Argument[Any]("update", cachedInputObjectTypeForUpdate(model)),
-      Argument[Any]("where", ???)
-    )
-  }
-
-  def getSangriaArgumentsForDelete(model: Model): List[Argument[Any]] = {
-    List(getWhereArgument(model))
-  }
-
-  private def getWhereArgument(model: Model) = {
-    Argument[Any](
-      name = "where",
-      argumentType = InputObjectType(
-        name = s"${model.name}WhereUniqueInput",
-        fields = model.fields.filter(_.isUnique).map(field => InputField(name = field.name, fieldType = SchemaBuilderUtils.mapToOptionalInputType(field)))
-      )
-    )
-  }
-
-  // CACHES
-  private def cachedInputObjectTypeForCreate(model: Model, omitRelation: Option[Relation] = None): InputObjectType[Any] = {
+  override def inputObjectTypeForCreate(model: Model, omitRelation: Option[Relation]): InputObjectType[Any] = {
     caffeineCache.getOrElseUpdate(cacheKey("cachedInputObjectTypeForCreate", model, omitRelation)) {
       computeInputObjectTypeForCreate(model, omitRelation)
     }
   }
 
-  private def cachedInputObjectTypeForUpdate(model: Model): InputObjectType[Any] = {
+  override def inputObjectTypeForUpdate(model: Model): InputObjectType[Any] = {
     caffeineCache.getOrElseUpdate(cacheKey("cachedInputObjectTypeForUpdate", model)) {
-      computenInputObjectTypeForUpdate(model)
+      computeInputObjectTypeForUpdate(model)
     }
   }
 
@@ -84,10 +37,18 @@ case class InputTypesBuilder(project: Project) {
     sb.append(relation.orNull)
     sb.toString
   }
+}
 
-  // COMPUTE METHODS
+abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBuilder {
+  override def inputObjectTypeForCreate(model: Model, omitRelation: Option[Relation]): InputObjectType[Any] = {
+    computeInputObjectTypeForCreate(model, omitRelation)
+  }
 
-  private def computeInputObjectTypeForCreate(model: Model, omitRelation: Option[Relation]): InputObjectType[Any] = {
+  override def inputObjectTypeForUpdate(model: Model): InputObjectType[Any] = {
+    computeInputObjectTypeForUpdate(model)
+  }
+
+  protected def computeInputObjectTypeForCreate(model: Model, omitRelation: Option[Relation]): InputObjectType[Any] = {
     val inputObjectTypeName = omitRelation match {
       case None =>
         s"${model.name}CreateInput"
@@ -106,7 +67,7 @@ case class InputTypesBuilder(project: Project) {
     )
   }
 
-  private def computenInputObjectTypeForUpdate(model: Model): InputObjectType[Any] = {
+  protected def computeInputObjectTypeForUpdate(model: Model): InputObjectType[Any] = {
     InputObjectType[Any](
       name = s"${model.name}UpdateInput",
       fieldsFn = () => {
@@ -154,7 +115,7 @@ case class InputTypesBuilder(project: Project) {
           name = s"${subModel.name}${operation}ManyWithout${relatedField.name.capitalize}Input",
           fieldsFn = () => {
             List(
-              SchemaArgument("create", OptionInputType(ListInputType(cachedInputObjectTypeForCreate(subModel, Some(relation))))).asSangriaInputField
+              SchemaArgument("create", OptionInputType(ListInputType(inputObjectTypeForCreate(subModel, Some(relation))))).asSangriaInputField
             )
           }
         )
@@ -174,7 +135,7 @@ case class InputTypesBuilder(project: Project) {
           name = s"${subModel.name}${operation}OneWithout${relatedField.name.capitalize}Input",
           fieldsFn = () => {
             List(
-              SchemaArgument("create", OptionInputType(cachedInputObjectTypeForCreate(subModel, Some(relation)))).asSangriaInputField
+              SchemaArgument("create", OptionInputType(inputObjectTypeForCreate(subModel, Some(relation)))).asSangriaInputField
             )
           }
         )
