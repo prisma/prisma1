@@ -10,6 +10,8 @@ trait InputTypesBuilder {
   def inputObjectTypeForCreate(model: Model, omitRelation: Option[Relation] = None): InputObjectType[Any]
 
   def inputObjectTypeForUpdate(model: Model): InputObjectType[Any]
+
+  def inputObjectTypeForWhere(model: Model): InputObjectType[Any]
 }
 
 case class CachedInputTypesBuilder(project: Project) extends UncachedInputTypesBuilder(project) {
@@ -47,6 +49,10 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
     computeInputObjectTypeForUpdate(model)
   }
 
+  override def inputObjectTypeForWhere(model: Model): InputObjectType[Any] = {
+    computeInputObjectTypeForWhere(model)
+  }
+
   protected def computeInputObjectTypeForCreate(model: Model, omitRelation: Option[Relation]): InputObjectType[Any] = {
     val inputObjectTypeName = omitRelation match {
       case None =>
@@ -75,6 +81,13 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
 
         schemaArguments.map(_.asSangriaInputField)
       }
+    )
+  }
+
+  protected def computeInputObjectTypeForWhere(model: Model): InputObjectType[Any] = {
+    InputObjectType[Any](
+      name = s"${model.name}WhereUniqueInput",
+      fields = model.fields.filter(_.isUnique).map(field => InputField(name = field.name, fieldType = SchemaBuilderUtils.mapToOptionalInputType(field)))
     )
   }
 
@@ -108,7 +121,8 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
           name = s"${subModel.name}${operation}ManyWithout${relatedField.name.capitalize}Input",
           fieldsFn = () => {
             List(
-              SchemaArgument("create", OptionInputType(ListInputType(inputObjectTypeForCreate(subModel, Some(relation))))).asSangriaInputField
+              SchemaArgument("create", OptionInputType(ListInputType(inputObjectTypeForCreate(subModel, Some(relation))))).asSangriaInputField,
+              SchemaArgument("connect", OptionInputType(ListInputType(inputObjectTypeForWhere(subModel)))).asSangriaInputField
             )
           }
         )
@@ -128,7 +142,8 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
           name = s"${subModel.name}${operation}OneWithout${relatedField.name.capitalize}Input",
           fieldsFn = () => {
             List(
-              SchemaArgument("create", OptionInputType(inputObjectTypeForCreate(subModel, Some(relation)))).asSangriaInputField
+              SchemaArgument("create", OptionInputType(inputObjectTypeForCreate(subModel, Some(relation)))).asSangriaInputField,
+              SchemaArgument("connect", OptionInputType(inputObjectTypeForWhere(subModel))).asSangriaInputField
             )
           }
         )

@@ -92,9 +92,13 @@ case class CoolArgs(raw: Map[String, Any]) {
     }
   }
 
-  def extractNodeSelectorFromSangriaArgs(model: Model): NodeSelector = {
+  def extractNodeSelectorFromWhereField(model: Model): NodeSelector = {
     val whereArgs = raw("where").asInstanceOf[Map[String, Option[Any]]]
-    whereArgs.collectFirst {
+    CoolArgs(whereArgs).extractNodeSelector(model)
+  }
+
+  def extractNodeSelector(model: Model): NodeSelector = {
+    raw.asInstanceOf[Map[String, Option[Any]]].collectFirst {
       case (fieldName, Some(value)) =>
         NodeSelector(fieldName, GCAnyConverter(model.getFieldByName_!(fieldName).typeIdentifier, isList = false).toGCValue(value).get)
     } getOrElse {

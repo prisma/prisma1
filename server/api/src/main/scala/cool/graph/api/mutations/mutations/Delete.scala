@@ -32,7 +32,7 @@ case class Delete(
   val requestId: Id                    = "" // dataResolver.requestContext.map(_.requestId).getOrElse("")
 
   val coolArgs = CoolArgs(args.raw)
-  val where    = coolArgs.extractNodeSelectorFromSangriaArgs(model)
+  val where    = coolArgs.extractNodeSelectorFromWhereField(model)
 
   override def prepareMutactions(): Future[List[MutactionGroup]] = {
     dataResolver

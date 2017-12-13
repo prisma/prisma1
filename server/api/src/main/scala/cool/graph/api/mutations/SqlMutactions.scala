@@ -100,8 +100,12 @@ case class SqlMutactions(dataResolver: DataResolver) {
       subModel = field.relatedModel_!(project)
     } yield {
       args match {
-        case Some(args) => getMutactionsForNestedCreateMutation(project, subModel, field, args, ParentInfo(model, field, fromId))
-        case None       => Vector.empty // if the user specifies an explicit null for the relation field
+        case Some(args) =>
+          getMutactionsForNestedCreateMutation(project, subModel, field, args, ParentInfo(model, field, fromId)) ++
+            getMutactionsForNestedConnectMutation(project, subModel, field, args, ParentInfo(model, field, fromId))
+
+        case None =>
+          Vector.empty // if the user specifies an explicit null for the relation field
       }
     }
     x.flatten
@@ -126,6 +130,45 @@ case class SqlMutactions(dataResolver: DataResolver) {
       }
     }
     x.getOrElse(Vector.empty)
+  }
+
+  def getMutactionsForNestedConnectMutation(
+      project: Project,
+      model: Model,
+      field: Field,
+      args: CoolArgs,
+      parentInfo: ParentInfo
+  ): Seq[ClientSqlMutaction] = {
+    val x = for {
+      args <- if (field.isList) {
+               args.subArgsList("connect")
+             } else {
+               args.subArgs("connect").map(_.toVector)
+             }
+    } yield {
+      args.map { args =>
+        getMutactionForConnect(project, model, args, parentInfo = parentInfo)
+      }
+    }
+    x.getOrElse(Vector.empty)
+  }
+
+  def getMutactionForConnect(
+      project: Project,
+      model: Model,
+      args: CoolArgs,
+      parentInfo: ParentInfo
+  ): ClientSqlMutaction = {
+    val where = args.extractNodeSelector(model)
+
+    AddDataItemToManyRelation(
+      project = project,
+      fromModel = parentInfo.model,
+      fromField = parentInfo.field,
+      fromId = parentInfo.id,
+      toId = where.unwrappedFieldValue.toString,
+      toIdAlreadyInDB = false
+    )
   }
 
   private def checkIfRemovalWouldFailARequiredRelation(field: Field, fromId: String, project: Project): Option[InvalidInputClientSqlMutaction] = {
