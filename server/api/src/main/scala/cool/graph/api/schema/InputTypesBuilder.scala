@@ -39,7 +39,7 @@ case class InputTypesBuilder(project: Project) {
 
   def getSangriaArgumentsForUpdate(model: Model): List[Argument[Any]] = {
     val inputObjectType = cachedInputObjectTypeForUpdate(model)
-    List(Argument[Any]("data", inputObjectType))
+    List(Argument[Any]("data", inputObjectType), getWhereArgument(model))
   }
 
   def getSangriaArgumentsForUpdateOrCreate(model: Model): List[Argument[Any]] = {
@@ -50,43 +50,32 @@ case class InputTypesBuilder(project: Project) {
     )
   }
 
-  // CREATE CACHES
+  def getSangriaArgumentsForDelete(model: Model): List[Argument[Any]] = {
+    List(getWhereArgument(model))
+  }
+
+  private def getWhereArgument(model: Model) = {
+    Argument[Any](
+      name = "where",
+      argumentType = InputObjectType(
+        name = s"${model.name}WhereUniqueInput",
+        fields = model.fields.filter(_.isUnique).map(field => InputField(name = field.name, fieldType = SchemaBuilderUtils.mapToOptionalInputType(field)))
+      )
+    )
+  }
+
+  // CACHES
   private def cachedInputObjectTypeForCreate(model: Model, omitRelation: Option[Relation] = None): InputObjectType[Any] = {
     caffeineCache.getOrElseUpdate(cacheKey("cachedInputObjectTypeForCreate", model, omitRelation)) {
-      val inputObjectTypeName = omitRelation match {
-        case None =>
-          s"${model.name}CreateInput"
-
-        case Some(relation) =>
-          val field = relation.getField_!(project, model)
-          s"${model.name}CreateWithout${field.name.capitalize}Input"
-      }
-
-      InputObjectType[Any](
-        name = inputObjectTypeName,
-        fieldsFn = () => {
-          val schemaArguments = computeScalarSchemaArgumentsForCreate(model) ++ computeRelationalSchemaArguments(model, omitRelation, operation = "Create")
-          schemaArguments.map(_.asSangriaInputField)
-        }
-      )
+      computeInputObjectTypeForCreate(model, omitRelation)
     }
   }
 
-  // UPDATE CACHES
   private def cachedInputObjectTypeForUpdate(model: Model): InputObjectType[Any] = {
     caffeineCache.getOrElseUpdate(cacheKey("cachedInputObjectTypeForUpdate", model)) {
-      InputObjectType[Any](
-        name = s"${model.name}UpdateInput",
-        fieldsFn = () => {
-          val schemaArguments = computeScalarSchemaArgumentsForUpdate(model) ++
-            computeRelationalSchemaArguments(model, omitRelation = None, operation = "Update")
-
-          schemaArguments.map(_.asSangriaInputField)
-        }
-      )
+      computenInputObjectTypeForUpdate(model)
     }
   }
-  // CACHE KEYS
 
   private def cacheKey(name: String, model: Model, relation: Option[Relation] = None): String = {
     val sb = new JStringBuilder()
@@ -97,6 +86,37 @@ case class InputTypesBuilder(project: Project) {
   }
 
   // COMPUTE METHODS
+
+  private def computeInputObjectTypeForCreate(model: Model, omitRelation: Option[Relation]): InputObjectType[Any] = {
+    val inputObjectTypeName = omitRelation match {
+      case None =>
+        s"${model.name}CreateInput"
+
+      case Some(relation) =>
+        val field = relation.getField_!(project, model)
+        s"${model.name}CreateWithout${field.name.capitalize}Input"
+    }
+
+    InputObjectType[Any](
+      name = inputObjectTypeName,
+      fieldsFn = () => {
+        val schemaArguments = computeScalarSchemaArgumentsForCreate(model) ++ computeRelationalSchemaArguments(model, omitRelation, operation = "Create")
+        schemaArguments.map(_.asSangriaInputField)
+      }
+    )
+  }
+
+  private def computenInputObjectTypeForUpdate(model: Model): InputObjectType[Any] = {
+    InputObjectType[Any](
+      name = s"${model.name}UpdateInput",
+      fieldsFn = () => {
+        val schemaArguments = computeScalarSchemaArgumentsForUpdate(model) ++
+          computeRelationalSchemaArguments(model, omitRelation = None, operation = "Update")
+
+        schemaArguments.map(_.asSangriaInputField)
+      }
+    )
+  }
 
   private def computeByArguments(model: Model): List[SchemaArgument] = {
     model.fields.filter(_.isUnique).map { field =>

@@ -3,12 +3,11 @@ package cool.graph.api.mutations.mutations
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import cool.graph.api.ApiDependencies
-import cool.graph.api.database.{DataItem, DataResolver}
 import cool.graph.api.database.mutactions.mutactions.{ServerSideSubscription, UpdateDataItem}
 import cool.graph.api.database.mutactions.{ClientSqlMutaction, MutactionGroup, Transaction}
+import cool.graph.api.database.{DataItem, DataResolver}
 import cool.graph.api.mutations._
-import cool.graph.api.mutations.definitions.{NodeSelector, UpdateDefinition}
-import cool.graph.api.schema.{APIErrors, InputTypesBuilder}
+import cool.graph.api.schema.APIErrors
 import cool.graph.shared.models.{Model, Project}
 import sangria.schema
 
@@ -23,8 +22,6 @@ class Update(
 )(implicit apiDependencies: ApiDependencies)
     extends ClientMutation(model, args, dataResolver) {
 
-  override val mutationDefinition = UpdateDefinition(project, InputTypesBuilder(project))
-
   implicit val system: ActorSystem             = apiDependencies.system
   implicit val materializer: ActorMaterializer = apiDependencies.materializer
 
@@ -36,7 +33,7 @@ class Update(
     CoolArgs(argsPointer)
   }
 
-  val where = mutationDefinition.extractNodeSelectorFromSangriaArgs(model, args)
+  val where = extractNodeSelectorFromSangriaArgs(model, args)
 
   lazy val dataItem: Future[Option[DataItem]] = dataResolver.resolveByUnique(model, where.fieldName, where.fieldValue)
 

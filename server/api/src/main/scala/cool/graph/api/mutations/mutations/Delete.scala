@@ -6,18 +6,15 @@ import cool.graph.api.ApiDependencies
 import cool.graph.api.database.mutactions.mutactions.ServerSideSubscription
 import cool.graph.api.database.mutactions.{MutactionGroup, Transaction}
 import cool.graph.api.database.{DataItem, DataResolver}
-import cool.graph.api.mutations.MutationTypes.ArgumentValue
 import cool.graph.api.mutations._
-import cool.graph.api.mutations.definitions.{DeleteDefinition, NodeSelector}
 import cool.graph.api.schema.ObjectTypeBuilder
-import cool.graph.gc_values.GCValue
 import cool.graph.shared.models.IdType.Id
 import cool.graph.shared.models.{Model, Project}
 import sangria.schema
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.Success
-import scala.concurrent.ExecutionContext.Implicits.global
 
 class Delete(
     model: Model,
@@ -28,15 +25,13 @@ class Delete(
 )(implicit apiDependencies: ApiDependencies)
     extends ClientMutation(model, args, dataResolver) {
 
-  override val mutationDefinition = DeleteDefinition(project)
-
   implicit val system: ActorSystem             = apiDependencies.system
   implicit val materializer: ActorMaterializer = apiDependencies.materializer
 
   var deletedItemOpt: Option[DataItem] = None
   val requestId: Id                    = "" // dataResolver.requestContext.map(_.requestId).getOrElse("")
 
-  val where = mutationDefinition.extractNodeSelectorFromSangriaArgs(model, args)
+  val where = extractNodeSelectorFromSangriaArgs(model, args)
 
   override def prepareMutactions(): Future[List[MutactionGroup]] = {
     dataResolver

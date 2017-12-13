@@ -7,8 +7,6 @@ import cool.graph.api.database.DataResolver
 import cool.graph.api.database.mutactions.mutactions.CreateDataItem
 import cool.graph.api.database.mutactions.{MutactionGroup, Transaction}
 import cool.graph.api.mutations._
-import cool.graph.api.mutations.definitions.CreateDefinition
-import cool.graph.api.schema.InputTypesBuilder
 import cool.graph.cuid.Cuid
 import cool.graph.shared.models.IdType.Id
 import cool.graph.shared.models._
@@ -22,8 +20,6 @@ class Create(model: Model, project: Project, args: schema.Args, dataResolver: Da
 
   implicit val system: ActorSystem             = apiDependencies.system
   implicit val materializer: ActorMaterializer = apiDependencies.materializer
-
-  override val mutationDefinition = CreateDefinition(project, InputTypesBuilder(project))
 
   val id: Id            = Cuid.createCuid()
   val requestId: String = "" //                        = dataResolver.requestContext.map(_.requestId).getOrElse("")

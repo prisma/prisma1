@@ -2,9 +2,8 @@ package cool.graph.api.schema
 
 import akka.actor.ActorSystem
 import cool.graph.api.ApiDependencies
+import cool.graph.api.database.DataItem
 import cool.graph.api.database.DeferredTypes.{ManyModelDeferred, OneDeferred}
-import cool.graph.api.database.{DataItem, DataResolver}
-import cool.graph.api.mutations.definitions.{CreateDefinition, DeleteDefinition, UpdateDefinition, UpdateOrCreateDefinition}
 import cool.graph.api.mutations.mutations._
 import cool.graph.shared.models.{Model, Project}
 import org.atteo.evo.inflector.English
@@ -129,14 +128,10 @@ case class SchemaBuilderImpl(
   }
 
   def createItemField(model: Model): Field[ApiUserContext, Unit] = {
-
-    val definition = CreateDefinition(project, inputTypesBuilder)
-    val arguments  = definition.getSangriaArguments(model = model)
-
     Field(
       s"create${model.name}",
       fieldType = outputTypesBuilder.mapCreateOutputType(model, objectTypes(model.name)),
-      arguments = arguments,
+      arguments = inputTypesBuilder.getSangriaArgumentsForCreate(model),
       resolve = (ctx) => {
         val mutation = new Create(model = model, project = project, args = ctx.args, dataResolver = masterDataResolver)
         mutation
@@ -147,13 +142,10 @@ case class SchemaBuilderImpl(
   }
 
   def updateItemField(model: Model): Field[ApiUserContext, Unit] = {
-    val definition = UpdateDefinition(project, inputTypesBuilder)
-    val arguments  = definition.getSangriaArguments(model = model) :+ definition.getWhereArgument(model)
-
     Field(
       s"update${model.name}",
       fieldType = OptionType(outputTypesBuilder.mapUpdateOutputType(model, objectTypes(model.name))),
-      arguments = arguments,
+      arguments = inputTypesBuilder.getSangriaArgumentsForUpdate(model),
       resolve = (ctx) => {
         new Update(model = model, project = project, args = ctx.args, dataResolver = masterDataResolver)
           .run(ctx.ctx)
@@ -163,12 +155,10 @@ case class SchemaBuilderImpl(
   }
 
   def updateOrCreateItemField(model: Model): Field[ApiUserContext, Unit] = {
-    val arguments = UpdateOrCreateDefinition(project, inputTypesBuilder).getSangriaArguments(model = model)
-
     Field(
       s"updateOrCreate${model.name}",
       fieldType = OptionType(outputTypesBuilder.mapUpdateOrCreateOutputType(model, objectTypes(model.name))),
-      arguments = arguments,
+      arguments = inputTypesBuilder.getSangriaArgumentsForUpdateOrCreate(model),
       resolve = (ctx) => {
         new UpdateOrCreate(model = model, project = project, args = ctx.args, dataResolver = masterDataResolver)
           .run(ctx.ctx)
@@ -178,14 +168,10 @@ case class SchemaBuilderImpl(
   }
 
   def deleteItemField(model: Model): Field[ApiUserContext, Unit] = {
-    val definition = DeleteDefinition(project)
-
-    val arguments = List(definition.getWhereArgument(model))
-
     Field(
       s"delete${model.name}",
       fieldType = OptionType(outputTypesBuilder.mapDeleteOutputType(model, objectTypes(model.name), onlyId = false)),
-      arguments = arguments,
+      arguments = inputTypesBuilder.getSangriaArgumentsForDelete(model),
       resolve = (ctx) => {
         new Delete(
           model = model,
