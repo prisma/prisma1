@@ -4,6 +4,13 @@ type Post @model {
   description: String
   comments: [Comment!]! @relation(name: "PostComment")
   tags: [String!]!
+  state: PostState!
+}
+
+enum PostState {
+  Published
+  Unpublished
+  Reviewed
 }
 
 type Comment @model {

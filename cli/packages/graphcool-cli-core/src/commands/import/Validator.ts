@@ -5,6 +5,7 @@ import {
   DocumentNode,
   ObjectTypeDefinitionNode,
   FieldDefinitionNode,
+  EnumTypeDefinitionNode,
 } from 'graphql'
 import { difference, isString, isNumber, isDate, isBoolean } from 'lodash'
 
@@ -16,15 +17,22 @@ interface FieldsMap {
   [name: string]: FieldDefinitionNode
 }
 
+interface Types {
+  [typeName: string]: {
+    definition: ObjectTypeDefinitionNode
+    fields: FieldsMap
+  }
+}
+
+interface Enums {
+  [enumName: string]: string[]
+}
+
 export class Validator {
   typesString: string
   ast: DocumentNode
-  types: {
-    [typeName: string]: {
-      definition: ObjectTypeDefinitionNode
-      fields: FieldsMap
-    }
-  }
+  types: Types
+  enums: Enums
   mapping: Mapping
   validators: { [key: string]: (type: any) => boolean } = {
     ID: isString,
@@ -50,15 +58,22 @@ export class Validator {
     Boolean: isBoolean,
     // TODO: Enum
   }
-  constructor(typesString: string, mapping: Mapping) {
+  constructor(typesString: string) {
     this.typesString = typesString
     this.ast = parse(typesString)
     this.types = this.astToTypes(this.ast)
-    this.mapping = mapping
+    this.enums = this.astToEnums(this.ast)
+    this.validators = {
+      ...this.validators,
+      ...this.makeEnumValidators(this.enums),
+    }
   }
 
-  astToTypes(ast: DocumentNode): any {
+  astToTypes(ast: DocumentNode): Types {
     return ast.definitions.reduce((acc, curr: ObjectTypeDefinitionNode) => {
+      if (curr.kind !== 'ObjectTypeDefinition') {
+        return acc
+      }
       return {
         ...acc,
         [curr.name.value]: {
@@ -70,6 +85,29 @@ export class Validator {
             }
           }, {}),
         },
+      }
+    }, {})
+  }
+
+  astToEnums(ast: DocumentNode): Enums {
+    return ast.definitions.reduce((acc, curr: EnumTypeDefinitionNode) => {
+      if (curr.kind !== 'EnumTypeDefinition') {
+        return acc
+      }
+      return {
+        ...acc,
+        [curr.name.value]: curr.values.reduce((acc2, curr2) => {
+          return [...acc2, curr2.name.value]
+        }, []),
+      }
+    }, {})
+  }
+
+  makeEnumValidators(enums: Enums): { [enumName: string]: () => boolean } {
+    return Object.keys(enums).reduce((acc, enumName) => {
+      return {
+        ...acc,
+        [enumName]: value => enums[enumName].includes(value),
       }
     }, {})
   }
