@@ -182,7 +182,9 @@ describe('Validator', () => {
         }),
       ).toBe(true)
     })
+  })
 
+  describe('validateListNode', () => {
     test('List', () => {
       const types = `
       type Post {
@@ -206,6 +208,235 @@ describe('Validator', () => {
           _typeName: 'Post',
           id: '25',
           tags: ['a', 'b', 'c'],
+        }),
+      ).toBe(true)
+    })
+  })
+
+  describe('validateRelationTuple', () => {
+    test('relations', () => {
+      const types = `
+      type Post {
+        id: ID!
+        self: Post! @relation(name: "Some Name")
+      }
+    `
+      const validator = new Validator(types)
+      expect(() =>
+        validator.validateRelationTuple([
+          {
+            _typeName: 'Post',
+            fieldName: 'self2',
+            id: '23',
+          },
+          {
+            _typeName: 'Post',
+            fieldName: 'self',
+            id: '25',
+          },
+        ]),
+      ).toThrow()
+      expect(() =>
+        validator.validateRelationTuple([
+          {
+            _typeName: 'Post',
+            fieldName: 'self2',
+            id: '23',
+          },
+        ] as any),
+      ).toThrow()
+      expect(() =>
+        validator.validateRelationTuple([
+          {
+            _typeName: 'Post2',
+            fieldName: 'self',
+            id: '23',
+          },
+          {
+            _typeName: 'Post',
+            fieldName: 'self',
+            id: '25',
+          },
+        ] as any),
+      ).toThrow()
+      expect(() =>
+        validator.validateRelationTuple([
+          {
+            _typeName: 'Post2',
+            fieldName: 'self',
+          },
+          {
+            _typeName: 'Post',
+            fieldName: 'self',
+            id: '25',
+          },
+        ] as any),
+      ).toThrow()
+      expect(
+        validator.validateRelationTuple([
+          {
+            _typeName: 'Post',
+            fieldName: 'self',
+            id: '23',
+          },
+          {
+            _typeName: 'Post',
+            fieldName: 'self',
+            id: '25',
+          },
+        ]),
+      ).toBe(true)
+    })
+  })
+
+  describe('validateImportData', () => {
+    test('nodes', () => {
+      const types = `
+      type Post {
+        id: ID!
+        string: String!
+      }
+    `
+      const validator = new Validator(types)
+      expect(() =>
+        validator.validateImportData({
+          valueType: 'nodes',
+          values: [
+            {
+              _typeName: 'Post',
+              id: 'a',
+              string: '',
+            },
+            {
+              _typeName: 'Post',
+              id: 'b',
+            },
+          ],
+        }),
+      ).toThrow()
+      expect(
+        validator.validateImportData({
+          valueType: 'nodes',
+          values: [
+            {
+              _typeName: 'Post',
+              id: 'a',
+              string: '',
+            },
+            {
+              _typeName: 'Post',
+              id: 'b',
+              string: '',
+            },
+            {
+              _typeName: 'Post',
+              id: 'c',
+              string: '',
+            },
+            {
+              _typeName: 'Post',
+              id: 'd',
+              string: '',
+            },
+            {
+              _typeName: 'Post',
+              id: 'e',
+              string: '',
+            },
+          ],
+        }),
+      ).toBe(true)
+    })
+    test('relations', () => {
+      const types = `
+      type Post {
+        id: ID!
+        self: Post! @relation(name: "RelationName")
+      }
+    `
+      const validator = new Validator(types)
+      expect(() =>
+        validator.validateImportData({
+          valueType: 'relations',
+          values: [
+            [
+              {
+                _typeName: 'Post',
+                id: 'a',
+                fieldName: 'self',
+              },
+              {
+                _typeName: 'Post',
+                id: 'b',
+                fieldName: 'self2',
+              },
+            ],
+          ],
+        }),
+      ).toThrow()
+      expect(
+        validator.validateImportData({
+          valueType: 'relations',
+          values: [
+            [
+              {
+                _typeName: 'Post',
+                id: 'a',
+                fieldName: 'self',
+              },
+              {
+                _typeName: 'Post',
+                id: 'b',
+                fieldName: 'self',
+              },
+            ],
+          ],
+        }),
+      ).toBe(true)
+    })
+    test('lists', () => {
+      const types = `
+      type Post {
+        id: ID!
+        nonScalarButRequired: Int!
+        listValue: [String!]!
+      }
+    `
+      const validator = new Validator(types)
+      expect(() =>
+        validator.validateImportData({
+          valueType: 'lists',
+          values: [
+            {
+              _typeName: 'Post',
+              id: 'a',
+              nonScalarButRequired: 5,
+              listValue: ['a', 'b', 'c'],
+            },
+            {
+              _typeName: 'Post',
+              id: 'b',
+              nonScalarButRequired: 5,
+              listValue: ['a', 'b', 'c'],
+            },
+          ],
+        }),
+      ).toThrow()
+      expect(
+        validator.validateImportData({
+          valueType: 'lists',
+          values: [
+            {
+              _typeName: 'Post',
+              id: 'a',
+              listValue: ['a', 'b', 'c'],
+            },
+            {
+              _typeName: 'Post',
+              id: 'b',
+              listValue: ['a', 'b', 'c'],
+            },
+          ],
         }),
       ).toBe(true)
     })

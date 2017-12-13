@@ -21,7 +21,8 @@ interface Types {
   [typeName: string]: {
     definition: ObjectTypeDefinitionNode
     fields: FieldsMap
-    requiredNonRelationFieldNames: string[]
+    requiredNonRelationScalarFieldNames: string[]
+    requiredNonRelationListFieldNames: string[]
     allNonRelationFieldNames: string[]
   }
 }
@@ -102,7 +103,7 @@ export class Validator {
   validateNode(obj: any): true {
     this.checkTypeName(obj)
     this.checkIdField(obj)
-    this.checkRequiredFields(obj)
+    this.checkRequiredFields(obj, false)
     this.checkUnknownFields(obj)
     this.checkType(obj, false)
     return true
@@ -111,7 +112,7 @@ export class Validator {
   validateListNode(obj: any): true {
     this.checkTypeName(obj)
     this.checkIdField(obj)
-    this.checkRequiredFields(obj)
+    this.checkRequiredFields(obj, true)
     this.checkUnknownFields(obj)
     this.checkType(obj, true)
     return true
@@ -125,7 +126,7 @@ export class Validator {
   }
 
   validateRelationTuple(tuple: RelationTuple): true {
-    if (Array.isArray(tuple)) {
+    if (!Array.isArray(tuple)) {
       throw new Error('Relation tuple must be an array')
     }
 
@@ -174,7 +175,12 @@ export class Validator {
             }
           }, {}),
           allNonRelationFieldNames: this.getFieldNames(curr, false),
-          requiredNonRelationFieldNames: this.getFieldNames(curr, true),
+          requiredNonRelationScalarFieldNames: this.getFieldNames(curr, true),
+          requiredNonRelationListFieldNames: this.getFieldNames(
+            curr,
+            true,
+            true,
+          ),
         },
       }
     }, {})
@@ -208,7 +214,7 @@ export class Validator {
   private getFieldNames(
     definition: ObjectTypeDefinitionNode,
     requiredOnly: boolean = false,
-    includeRelations: boolean = false,
+    listsOnly: boolean = false,
   ) {
     return definition.fields
       .filter(field => {
@@ -216,11 +222,16 @@ export class Validator {
         const isRelation = field.directives
           ? field.directives.find(d => d.name.value === 'relation')
           : false
-        if (!includeRelations && isRelation) {
+        if (isRelation) {
           return false
         }
 
-        return !requiredOnly || nonNull
+        let listBoolean = true
+        if (listsOnly && !this.isList(field)) {
+          listBoolean = false
+        }
+
+        return listBoolean && (!requiredOnly || nonNull)
       })
       .map(f => f.name.value)
   }
@@ -260,14 +271,18 @@ export class Validator {
     }
   }
 
-  private checkRequiredFields(obj: any) {
+  private checkRequiredFields(obj: any, listsOnly: boolean) {
     const typeName = obj._typeName
-    const { requiredNonRelationFieldNames } = this.types[typeName]
+    const {
+      requiredNonRelationListFieldNames,
+      requiredNonRelationScalarFieldNames,
+    } = this.types[typeName]
 
-    const missingFieldNames = difference(
-      requiredNonRelationFieldNames,
-      Object.keys(obj),
-    )
+    const fieldNames = listsOnly
+      ? requiredNonRelationListFieldNames
+      : requiredNonRelationScalarFieldNames
+
+    const missingFieldNames = difference(fieldNames, Object.keys(obj))
     if (missingFieldNames.length > 0) {
       throw new Error(
         `Object ${JSON.stringify(
