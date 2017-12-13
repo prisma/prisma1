@@ -33,13 +33,11 @@ case class InputTypesBuilder(project: Project) {
   implicit val anyFromInput = FromInputImplicit.CoercedResultMarshaller
 
   def getSangriaArgumentsForCreate(model: Model): List[Argument[Any]] = {
-    //getSangriaArguments(inputObjectType = cachedInputObjectTypeForCreate(model), arguments = cachedSchemaArgumentsForCreate(model))
     val inputObjectType = cachedInputObjectTypeForCreate(model)
     List(Argument[Any]("data", inputObjectType))
   }
 
   def getSangriaArgumentsForUpdate(model: Model): List[Argument[Any]] = {
-    //getSangriaArguments(inputObjectType = cachedInputObjectTypeForUpdate(model), arguments = cachedSchemaArgumentsForUpdate(model))
     val inputObjectType = cachedInputObjectTypeForUpdate(model)
     List(Argument[Any]("data", inputObjectType))
   }
@@ -67,16 +65,10 @@ case class InputTypesBuilder(project: Project) {
       InputObjectType[Any](
         name = inputObjectTypeName,
         fieldsFn = () => {
-          val schemaArguments = cachedSchemaArgumentsForCreate(model, omitRelation = omitRelation)
+          val schemaArguments = computeScalarSchemaArgumentsForCreate(model) ++ computeRelationalSchemaArguments(model, omitRelation, operation = "Create")
           schemaArguments.map(_.asSangriaInputField)
         }
       )
-    }
-  }
-
-  private def cachedSchemaArgumentsForCreate(model: Model, omitRelation: Option[Relation] = None): List[SchemaArgument] = {
-    caffeineCache.getOrElseUpdate(cacheKey("cachedSchemaArgumentsForCreate", model, omitRelation)) {
-      computeScalarSchemaArgumentsForCreate(model) ++ cachedRelationalSchemaArgumentsForCreate(model, omitRelation = omitRelation)
     }
   }
 
@@ -86,36 +78,17 @@ case class InputTypesBuilder(project: Project) {
       InputObjectType[Any](
         name = s"${model.name}UpdateInput",
         fieldsFn = () => {
-          val schemaArguments = cachedSchemaArgumentsForUpdate(model)
+          val schemaArguments = computeScalarSchemaArgumentsForUpdate(model) ++
+            computeRelationalSchemaArguments(model, omitRelation = None, operation = "Update")
+
           schemaArguments.map(_.asSangriaInputField)
         }
       )
     }
   }
-
-  private def cachedSchemaArgumentsForUpdate(model: Model): List[SchemaArgument] = {
-    caffeineCache.getOrElseUpdate(cacheKey("cachedSchemaArgumentsForUpdate", model)) {
-      computeScalarSchemaArgumentsForUpdate(model) ++ cachedRelationalSchemaArgumentsForUpdate(model, omitRelation = None)
-    }
-  }
-
-  // RELATIONAL CACHE
-
-  def cachedRelationalSchemaArgumentsForCreate(model: Model, omitRelation: Option[Relation]): List[SchemaArgument] = {
-    caffeineCache.getOrElseUpdate(cacheKey("cachedRelationalSchemaArgumentsForCreate", model, omitRelation)) {
-      computeRelationalSchemaArguments(model, omitRelation, operation = "Create")
-    }
-  }
-
-  def cachedRelationalSchemaArgumentsForUpdate(model: Model, omitRelation: Option[Relation]): List[SchemaArgument] = {
-    caffeineCache.getOrElseUpdate(cacheKey("cachedRelationalSchemaArgumentsForUpdate", model, omitRelation)) {
-      computeRelationalSchemaArguments(model, omitRelation, operation = "Update")
-    }
-  }
-
   // CACHE KEYS
 
-  private def cacheKey(name: String, model: Model, relation: Option[Relation]): String = {
+  private def cacheKey(name: String, model: Model, relation: Option[Relation] = None): String = {
     val sb = new JStringBuilder()
     sb.append(name)
     sb.append(model.id)
@@ -123,27 +96,20 @@ case class InputTypesBuilder(project: Project) {
     sb.toString
   }
 
-  private def cacheKey(name: String, model: Model): String = {
-    val sb = new JStringBuilder()
-    sb.append(name)
-    sb.append(model.id)
-    sb.toString
-  }
-
   // COMPUTE METHODS
 
-  def computeByArguments(model: Model): List[SchemaArgument] = {
+  private def computeByArguments(model: Model): List[SchemaArgument] = {
     model.fields.filter(_.isUnique).map { field =>
       SchemaArgument(field.name, SchemaBuilderUtils.mapToOptionalInputType(field), field.description)
     }
   }
 
-  def computeScalarSchemaArgumentsForCreate(model: Model): List[SchemaArgument] = {
+  private def computeScalarSchemaArgumentsForCreate(model: Model): List[SchemaArgument] = {
     val filteredModel = model.filterFields(_.isWritable)
     computeScalarSchemaArguments(filteredModel, FieldToInputTypeMapper.mapForCreateCase)
   }
 
-  def computeScalarSchemaArgumentsForUpdate(model: Model): List[SchemaArgument] = {
+  private def computeScalarSchemaArgumentsForUpdate(model: Model): List[SchemaArgument] = {
     val filteredModel = model.filterFields(f => f.isWritable)
     computeScalarSchemaArguments(filteredModel, FieldToInputTypeMapper.mapForUpdateCase)
   }
