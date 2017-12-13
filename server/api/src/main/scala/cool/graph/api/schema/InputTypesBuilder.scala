@@ -297,7 +297,7 @@ object FieldToInputTypeMapper {
   }
 }
 
-case class SchemaArgument(name: String, inputType: InputType[Any], description: Option[String], field: Option[Field] = None) {
+case class SchemaArgument(name: String, inputType: InputType[Any], description: Option[String]) {
   import FromInputImplicit.CoercedResultMarshaller
 
   lazy val asSangriaInputField = InputField(name, inputType, description.getOrElse(""))
@@ -306,11 +306,11 @@ case class SchemaArgument(name: String, inputType: InputType[Any], description: 
 
 object SchemaArgument {
   def apply(name: String, inputType: InputType[Any], description: Option[String], field: Field): SchemaArgument = {
-    SchemaArgument(name, inputType, description, Some(field))
+    SchemaArgument(name, inputType, description)
   }
 
   def apply(name: String, inputType: InputType[Any]): SchemaArgument = {
-    SchemaArgument(name, inputType, None, None)
+    SchemaArgument(name, inputType, None)
   }
 
   implicit val anyFromInput = FromInputImplicit.CoercedResultMarshaller
@@ -328,8 +328,7 @@ object SchemaArgument {
           case Some(v)       => v
           case v             => v
         }
-        val argName = a.field.map(_.name).getOrElse(a.name)
-        ArgumentValue(argName, value)
+        ArgumentValue(a.name, value)
       }
   }
 }
