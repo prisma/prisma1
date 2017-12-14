@@ -4,7 +4,7 @@ import cool.graph.api.ApiBaseSpec
 import cool.graph.shared.project_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
-class NestedMutationInsideUpdateSpec extends FlatSpec with Matchers with ApiBaseSpec {
+class NestedCreateMutationInsideUpdateSpec extends FlatSpec with Matchers with ApiBaseSpec {
 
   "a one to many relation" should "be creatable through a nested mutation" in {
     val project = SchemaDsl() { schema =>

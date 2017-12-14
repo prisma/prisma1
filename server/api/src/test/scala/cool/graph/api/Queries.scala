@@ -28,7 +28,7 @@ class Queries extends FlatSpec with Matchers with ApiBaseSpec {
 
     server.executeQuerySimple("""{cars{wheelCount}}""", project).pathAsLong("data.cars.[0].wheelCount") should be(8)
     server.executeQuerySimple("""{carsConnection{edges{node{wheelCount}}}}""", project).pathAsLong("data.carsConnection.edges.[0].node.wheelCount") should be(8)
-    server.executeQuerySimple(s"""{car(id:"${newId}"){wheelCount}}""", project).pathAsLong("data.car.wheelCount") should be(8)
+    server.executeQuerySimple(s"""{car(where: {id:"${newId}"}){wheelCount}}""", project).pathAsLong("data.car.wheelCount") should be(8)
     server.executeQuerySimple(s"""{node(id:"${newId}"){... on Car { wheelCount }}}""", project).pathAsLong("data.node.wheelCount") should be(8)
   }
 

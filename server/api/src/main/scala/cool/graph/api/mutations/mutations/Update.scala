@@ -33,7 +33,7 @@ case class Update(
     CoolArgs(argsPointer)
   }
 
-  val where = CoolArgs(args.raw).extractNodeSelectorFromSangriaArgs(model)
+  val where = CoolArgs(args.raw).extractNodeSelectorFromWhereField(model)
 
   lazy val dataItem: Future[Option[DataItem]] = dataResolver.resolveByUnique(model, where.fieldName, where.fieldValue)
 

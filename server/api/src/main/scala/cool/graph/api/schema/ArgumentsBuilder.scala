@@ -2,7 +2,7 @@ package cool.graph.api.schema
 
 import cool.graph.shared.models.{Model, Project}
 import cool.graph.util.coolSangria.FromInputImplicit
-import sangria.schema.{InputObjectType, _}
+import sangria.schema._
 
 case class ArgumentsBuilder(project: Project) {
 
@@ -20,7 +20,7 @@ case class ArgumentsBuilder(project: Project) {
 
   def getSangriaArgumentsForUpdate(model: Model): List[Argument[Any]] = {
     val inputObjectType = inputTypesBuilder.inputObjectTypeForUpdate(model)
-    List(Argument[Any]("data", inputObjectType), getWhereArgument(model))
+    List(Argument[Any]("data", inputObjectType), whereArgument(model))
   }
 
   def getSangriaArgumentsForUpdateOrCreate(model: Model): List[Argument[Any]] = {
@@ -32,16 +32,8 @@ case class ArgumentsBuilder(project: Project) {
   }
 
   def getSangriaArgumentsForDelete(model: Model): List[Argument[Any]] = {
-    List(getWhereArgument(model))
+    List(whereArgument(model))
   }
 
-  private def getWhereArgument(model: Model) = {
-    Argument[Any](
-      name = "where",
-      argumentType = InputObjectType(
-        name = s"${model.name}WhereUniqueInput",
-        fields = model.fields.filter(_.isUnique).map(field => InputField(name = field.name, fieldType = SchemaBuilderUtils.mapToOptionalInputType(field)))
-      )
-    )
-  }
+  def whereArgument(model: Model) = Argument[Any](name = "where", argumentType = inputTypesBuilder.inputObjectTypeForWhere(model))
 }

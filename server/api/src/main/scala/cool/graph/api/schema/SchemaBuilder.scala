@@ -4,7 +4,7 @@ import akka.actor.ActorSystem
 import cool.graph.api.ApiDependencies
 import cool.graph.api.database.DataItem
 import cool.graph.api.database.DeferredTypes.{ManyModelDeferred, OneDeferred}
-import cool.graph.api.mutations.ClientMutationRunner
+import cool.graph.api.mutations.{ClientMutationRunner, CoolArgs}
 import cool.graph.api.mutations.mutations._
 import cool.graph.shared.models.{Model, Project}
 import org.atteo.evo.inflector.English
@@ -30,12 +30,12 @@ case class SchemaBuilderImpl(
 )(implicit apiDependencies: ApiDependencies, system: ActorSystem) {
   import system.dispatcher
 
+  val argumentsBuilder   = ArgumentsBuilder(project = project)
   val dataResolver       = apiDependencies.dataResolver(project)
   val masterDataResolver = apiDependencies.masterDataResolver(project)
   val objectTypeBuilder  = new ObjectTypeBuilder(project = project, nodeInterface = Some(nodeInterface))
   val objectTypes        = objectTypeBuilder.modelObjectTypes
   val conectionTypes     = objectTypeBuilder.modelConnectionTypes
-  val argumentsBuilder   = ArgumentsBuilder(project = project)
   val outputTypesBuilder = OutputTypesBuilder(project, objectTypes, dataResolver)
   val pluralsCache       = new PluralsCache
 
@@ -105,25 +105,14 @@ case class SchemaBuilderImpl(
   }
 
   def getSingleItemField(model: Model): Field[ApiUserContext, Unit] = {
-    val arguments = objectTypeBuilder.mapToUniqueArguments(model)
-
     Field(
       camelCase(model.name),
       fieldType = OptionType(objectTypes(model.name)),
-      arguments = arguments,
+      arguments = List(argumentsBuilder.whereArgument(model)),
       resolve = (ctx) => {
-
-        val arg = arguments.find(a => ctx.args.argOpt(a.name).isDefined) match {
-          case Some(value) => value
-          case None =>
-            ??? //throw UserAPIErrors.GraphQLArgumentsException(s"None of the following arguments provided: ${arguments.map(_.name)}")
-        }
-
-//        dataResolver
-//          .batchResolveByUnique(model, arg.name, List(ctx.arg(arg).asInstanceOf[Option[_]].get))
-//          .map(_.headOption)
-        // todo: Make OneDeferredResolver.dataItemsToToOneDeferredResultType work with Timestamps
-        OneDeferred(model, arg.name, ctx.arg(arg).asInstanceOf[Option[_]].get)
+        val coolArgs = CoolArgs(ctx.args.raw)
+        val where    = coolArgs.extractNodeSelectorFromWhereField(model)
+        OneDeferred(model, where.fieldName, where.unwrappedFieldValue)
       }
     )
   }
@@ -134,7 +123,7 @@ case class SchemaBuilderImpl(
       fieldType = outputTypesBuilder.mapCreateOutputType(model, objectTypes(model.name)),
       arguments = argumentsBuilder.getSangriaArgumentsForCreate(model),
       resolve = (ctx) => {
-        val mutation = new Create(model = model, project = project, args = ctx.args, dataResolver = masterDataResolver)
+        val mutation = Create(model = model, project = project, args = ctx.args, dataResolver = masterDataResolver)
         ClientMutationRunner
           .run(mutation, dataResolver)
           .map(outputTypesBuilder.mapResolve(_, ctx.args))
@@ -148,7 +137,7 @@ case class SchemaBuilderImpl(
       fieldType = OptionType(outputTypesBuilder.mapUpdateOutputType(model, objectTypes(model.name))),
       arguments = argumentsBuilder.getSangriaArgumentsForUpdate(model),
       resolve = (ctx) => {
-        val mutation = new Update(model = model, project = project, args = ctx.args, dataResolver = masterDataResolver)
+        val mutation = Update(model = model, project = project, args = ctx.args, dataResolver = masterDataResolver)
 
         ClientMutationRunner
           .run(mutation, dataResolver)
@@ -163,7 +152,7 @@ case class SchemaBuilderImpl(
       fieldType = OptionType(outputTypesBuilder.mapUpdateOrCreateOutputType(model, objectTypes(model.name))),
       arguments = argumentsBuilder.getSangriaArgumentsForUpdateOrCreate(model),
       resolve = (ctx) => {
-        val mutation = new UpdateOrCreate(model = model, project = project, args = ctx.args, dataResolver = masterDataResolver)
+        val mutation = UpdateOrCreate(model = model, project = project, args = ctx.args, dataResolver = masterDataResolver)
         ClientMutationRunner
           .run(mutation, dataResolver)
           .map(outputTypesBuilder.mapResolve(_, ctx.args))
@@ -177,7 +166,7 @@ case class SchemaBuilderImpl(
       fieldType = OptionType(outputTypesBuilder.mapDeleteOutputType(model, objectTypes(model.name), onlyId = false)),
       arguments = argumentsBuilder.getSangriaArgumentsForDelete(model),
       resolve = (ctx) => {
-        val mutation = new Delete(
+        val mutation = Delete(
           model = model,
           modelObjectTypes = objectTypeBuilder,
           project = project,
@@ -197,7 +186,7 @@ case class SchemaBuilderImpl(
     Field(
       s"${model.name}",
       fieldType = OptionType(outputTypesBuilder.mapSubscriptionOutputType(model, objectType)),
-      arguments = List(SangriaQueryArguments.filterSubscriptionArgument(model = model, project = project)),
+      arguments = List(SangriaQueryArguments.whereSubscriptionArgument(model = model, project = project)),
       resolve = _ => None
     )
 

@@ -21,15 +21,6 @@ class ObjectTypeBuilder(project: models.Project,
                         withRelations: Boolean = true,
                         onlyId: Boolean = false) {
 
-  val metaObjectType = sangria.schema.ObjectType(
-    "_QueryMeta",
-    description = "Meta information about the query.",
-    fields = sangria.schema.fields[ApiUserContext, DataItem](
-      sangria.schema
-        .Field(name = "count", fieldType = sangria.schema.IntType, resolve = _.value.get[CountToManyDeferred]("count"))
-    )
-  )
-
   val modelObjectTypes: Map[String, ObjectType[ApiUserContext, DataItem]] =
     project.models
       .map(model => (model.name, modelToObjectType(model)))
@@ -44,21 +35,24 @@ class ObjectTypeBuilder(project: models.Project,
       name = modelPrefix + model.name,
       nodeType = modelObjectTypes(model.name),
       connectionFields = List(
-        sangria.schema.Field(
-          "count",
-          IntType,
-          Some("Count of filtered result set without considering pagination arguments"),
-          resolve = ctx => {
-            val countArgs = ctx.value.parent.args.map(args => SangriaQueryArguments.createSimpleQueryArguments(None, None, None, None, None, args.filter, None))
+        // todo: add aggregate fields
 
-            ctx.value.parent match {
-              case ConnectionParentElement(Some(nodeId), Some(field), _) =>
-                CountToManyDeferred(field, nodeId, countArgs)
-              case _ =>
-                CountManyModelDeferred(model, countArgs)
-            }
-          }
-        ))
+//        sangria.schema.Field(
+//          "count",
+//          IntType,
+//          Some("Count of filtered result set without considering pagination arguments"),
+//          resolve = ctx => {
+//            val countArgs = ctx.value.parent.args.map(args => SangriaQueryArguments.createSimpleQueryArguments(None, None, None, None, None, args.filter, None))
+//
+//            ctx.value.parent match {
+//              case ConnectionParentElement(Some(nodeId), Some(field), _) =>
+//                CountToManyDeferred(field, nodeId, countArgs)
+//              case _ =>
+//                CountManyModelDeferred(model, countArgs)
+//            }
+//          }
+//        )
+      )
     )
   }
 
@@ -75,11 +69,7 @@ class ObjectTypeBuilder(project: models.Project,
               case true  => true
               case false => withRelations
           })
-          .map(mapClientField(model)) ++
-          (withRelations match {
-            case true  => model.relationFields.flatMap(mapMetaRelationField(model))
-            case false => List()
-          })
+          .map(mapClientField(model))
       },
       interfaces = nodeInterface.toList,
       instanceCheck = (value: Any, valClass: Class[_], tpe: ObjectType[ApiUserContext, _]) =>
@@ -136,39 +126,6 @@ class ObjectTypeBuilder(project: models.Project,
     }
   }
 
-  def mapMetaRelationField(model: models.Model)(field: models.Field): Option[sangria.schema.Field[ApiUserContext, DataItem]] = {
-
-    (field.relation, field.isList) match {
-      case (Some(_), true) =>
-        val inputArguments = mapToListConnectionArguments(model, field)
-
-        Some(
-          sangria.schema.Field(
-            s"_${field.name}Meta",
-            fieldType = metaObjectType,
-            description = Some("Meta information about the query."),
-            arguments = mapToListConnectionArguments(model, field),
-            resolve = (ctx: Context[ApiUserContext, DataItem]) => {
-
-              val item: DataItem = unwrapDataItemFromContext(ctx)
-
-              val queryArguments: Option[QueryArguments] =
-                extractQueryArgumentsFromContext(field.relatedModel(project).get, ctx.asInstanceOf[Context[ApiUserContext, Unit]])
-
-              val countArgs: Option[QueryArguments] =
-                queryArguments.map(args => SangriaQueryArguments.createSimpleQueryArguments(None, None, None, None, None, args.filter, None))
-
-              val countDeferred: CountToManyDeferred = CountToManyDeferred(field, item.id, countArgs)
-
-              DataItem(id = "meta", userData = Map[String, Option[Any]]("count" -> Some(countDeferred)))
-            },
-            tags = List()
-          ))
-      case _ => None
-    }
-
-  }
-
   def mapToListConnectionArguments(model: models.Model, field: models.Field): List[Argument[Option[Any]]] = {
 
     (field.isScalar, field.isList) match {
@@ -185,7 +142,7 @@ class ObjectTypeBuilder(project: models.Project,
     val skipArgument = Argument("skip", OptionInputType(IntType))
 
     List(
-      filterArgument(model, project),
+      whereArgument(model, project),
       orderByArgument(model).asInstanceOf[Argument[Option[Any]]],
       skipArgument.asInstanceOf[Argument[Option[Any]]],
       IdBasedConnection.Args.After.asInstanceOf[Argument[Option[Any]]],
@@ -208,7 +165,7 @@ class ObjectTypeBuilder(project: models.Project,
   def mapToSingleConnectionArguments(model: Model): List[Argument[Option[Any]]] = {
     import SangriaQueryArguments._
 
-    List(filterArgument(model, project))
+    List(whereArgument(model, project))
   }
 
   def generateFilterElement(input: Map[String, Any], model: Model, isSubscriptionFilter: Boolean = false): DataItemFilterCollection = {
@@ -258,7 +215,7 @@ class ObjectTypeBuilder(project: models.Project,
   def extractQueryArgumentsFromContext(model: Model, ctx: Context[ApiUserContext, Unit]): Option[QueryArguments] = {
     val skipOpt = ctx.argOpt[Int]("skip")
 
-    val rawFilterOpt: Option[Map[String, Any]] = ctx.argOpt[Map[String, Any]]("filter")
+    val rawFilterOpt: Option[Map[String, Any]] = ctx.argOpt[Map[String, Any]]("where")
     val filterOpt = rawFilterOpt.map(
       generateFilterElement(_,
                             model,

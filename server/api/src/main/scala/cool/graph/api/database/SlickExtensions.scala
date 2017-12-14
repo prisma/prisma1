@@ -1,5 +1,6 @@
 package cool.graph.api.database
 
+import cool.graph.gc_values._
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 import slick.jdbc.MySQLProfile.api._
@@ -8,6 +9,26 @@ import spray.json.DefaultJsonProtocol._
 import spray.json._
 
 object SlickExtensions {
+
+  implicit object SetGcValueParam extends SetParameter[GCValue] {
+    val dateTimeFormat = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSS").withZoneUTC()
+
+    override def apply(gcValue: GCValue, pp: PositionedParameters): Unit = {
+      gcValue match {
+        case NullGCValue         => sys.error("NullGcValue not implemented here yet.")
+        case x: StringGCValue    => pp.setString(x.value)
+        case x: EnumGCValue      => pp.setString(x.value)
+        case x: GraphQLIdGCValue => pp.setString(x.value)
+        case x: DateTimeGCValue  => pp.setString(dateTimeFormat.print(x.value))
+        case x: IntGCValue       => pp.setInt(x.value)
+        case x: FloatGCValue     => pp.setDouble(x.value)
+        case x: BooleanGCValue   => pp.setBoolean(x.value)
+        case x: JsonGCValue      => pp.setString(x.value.toString)
+        case x: ListGCValue      => sys.error("ListGCValue not implemented here yet.")
+        case x: RootGCValue      => sys.error("RootGCValues not implemented here yet.")
+      }
+    }
+  }
 
   implicit class SQLActionBuilderConcat(a: SQLActionBuilder) {
     def concat(b: SQLActionBuilder): SQLActionBuilder = {
@@ -42,7 +63,7 @@ object SlickExtensions {
       .toString
   }
 
-  def escapeUnsafeParam(param: Any) = {
+  def escapeUnsafeParam(param: Any): SQLActionBuilder = {
     def unwrapSome(x: Any): Any = {
       x match {
         case Some(x) => x
@@ -59,13 +80,11 @@ object SlickExtensions {
       case param: Double     => sql"$param"
       case param: BigInt     => sql"#${param.toString}"
       case param: BigDecimal => sql"#${param.toString}"
-      case param: DateTime =>
-        sql"${param.toString(DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSS").withZoneUTC())}"
-      case param: Vector[_] => sql"${listToJson(param.toList)}"
-      case None             => sql"NULL"
-      case null             => sql"NULL"
-      case _ =>
-        throw new IllegalArgumentException("Unsupported scalar value in SlickExtensions: " + param.toString)
+      case param: DateTime   => sql"${param.toString(DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSS").withZoneUTC())}"
+      case param: Vector[_]  => sql"${listToJson(param.toList)}"
+      case None              => sql"NULL"
+      case null              => sql"NULL"
+      case _                 => throw new IllegalArgumentException("Unsupported scalar value in SlickExtensions: " + param.toString)
     }
   }
 
