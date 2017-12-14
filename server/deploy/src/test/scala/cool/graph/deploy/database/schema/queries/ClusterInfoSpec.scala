@@ -17,6 +17,6 @@ class ClusterInfoSpec extends FlatSpec with Matchers with DeploySpecBase {
                                        |}
       """.stripMargin)
 
-    result.pathAsString("data.clusterInfo.version") shouldEqual "database-1.0-beta6"
+    result.pathAsString("data.clusterInfo.version") shouldEqual "1.0-beta1"
   }
 }
