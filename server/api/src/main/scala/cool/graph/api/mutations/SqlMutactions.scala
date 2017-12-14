@@ -14,14 +14,15 @@ import scala.collection.immutable.Seq
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
+case class ParentInfo(model: Model, field: Field, id: Id)
+case class CreateMutactionsResult(createMutaction: CreateDataItem, nestedMutactions: Seq[ClientSqlMutaction]) {
+  def allMutactions: Vector[ClientSqlMutaction] = Vector(createMutaction) ++ nestedMutactions
+}
+
 case class SqlMutactions(dataResolver: DataResolver) {
-  case class ParentInfo(model: Model, field: Field, id: Id)
-  case class CreateMutactionsResult(createMutaction: CreateDataItem, nestedMutactions: Seq[ClientSqlMutaction]) {
-    def allMutactions: Vector[ClientSqlMutaction] = Vector(createMutaction) ++ nestedMutactions
-  }
+  val project = dataResolver.project
 
-  def getMutactionsForDelete(model: Model, project: Project, id: Id, previousValues: DataItem): List[ClientSqlMutaction] = {
-
+  def getMutactionsForDelete(model: Model, id: Id, previousValues: DataItem): List[ClientSqlMutaction] = {
     val requiredRelationViolations     = model.relationFields.flatMap(field => checkIfRemovalWouldFailARequiredRelation(field, id, project))
     val removeFromConnectionMutactions = model.relationFields.map(field => RemoveDataItemFromManyRelationByToId(project.id, field, id))
     val deleteItemMutaction            = DeleteDataItem(project, model, id, previousValues)
@@ -29,31 +30,30 @@ case class SqlMutactions(dataResolver: DataResolver) {
     requiredRelationViolations ++ removeFromConnectionMutactions ++ List(deleteItemMutaction)
   }
 
-  def getMutactionsForUpdate(project: Project, model: Model, args: CoolArgs, id: Id, previousValues: DataItem): List[ClientSqlMutaction] = {
-    val updateMutaction = getUpdateMutaction(project, model, args, id, previousValues)
-    val nested          = getMutactionsForNestedMutation(project, model, args, fromId = id)
+  def getMutactionsForUpdate(model: Model, args: CoolArgs, id: Id, previousValues: DataItem): List[ClientSqlMutaction] = {
+    val updateMutaction = getUpdateMutaction(model, args, id, previousValues)
+    val nested          = getMutactionsForNestedMutation(model, args, fromId = id)
     updateMutaction.toList ++ nested
   }
 
   def getMutactionsForCreate(
-      project: Project,
       model: Model,
       args: CoolArgs,
       id: Id = createCuid(),
       parentInfo: Option[ParentInfo] = None
   ): CreateMutactionsResult = {
 
-    val createMutaction = getCreateMutaction(project, model, args, id)
+    val createMutaction = getCreateMutaction(model, args, id)
     val relationToParent = parentInfo.map { parent =>
       AddDataItemToManyRelation(project = project, fromModel = parent.model, fromField = parent.field, fromId = parent.id, toId = id, toIdAlreadyInDB = false)
     }
 
-    val nested = getMutactionsForNestedMutation(project, model, args, fromId = id)
+    val nested = getMutactionsForNestedMutation(model, args, fromId = id)
 
     CreateMutactionsResult(createMutaction = createMutaction, nestedMutactions = relationToParent.toVector ++ nested)
   }
 
-  def getCreateMutaction(project: Project, model: Model, args: CoolArgs, id: Id): CreateDataItem = {
+  def getCreateMutaction(model: Model, args: CoolArgs, id: Id): CreateDataItem = {
     val scalarArguments = for {
       field      <- model.scalarFields
       fieldValue <- args.getFieldValueAs[Any](field)
@@ -72,7 +72,7 @@ case class SqlMutactions(dataResolver: DataResolver) {
     )
   }
 
-  def getUpdateMutaction(project: Project, model: Model, args: CoolArgs, id: Id, previousValues: DataItem): Option[UpdateDataItem] = {
+  def getUpdateMutaction(model: Model, args: CoolArgs, id: Id, previousValues: DataItem): Option[UpdateDataItem] = {
     val scalarArguments = for {
       field      <- model.scalarFields.filter(_.name != "id")
       fieldValue <- args.getFieldValueAs[Any](field)
@@ -93,32 +93,30 @@ case class SqlMutactions(dataResolver: DataResolver) {
     } else None
   }
 
-  def getMutactionsForNestedMutation(project: Project, model: Model, args: CoolArgs, fromId: Id): Seq[ClientSqlMutaction] = {
+  def getMutactionsForNestedMutation(model: Model, args: CoolArgs, fromId: Id): Seq[ClientSqlMutaction] = {
     val x = for {
       field          <- model.relationFields
       subModel       = field.relatedModel_!(project)
       nestedMutation <- args.subNestedMutation(field, subModel) // this is the input object containing the nested mutation
     } yield {
-      getMutactionsForNestedCreateMutation(project, subModel, nestedMutation, ParentInfo(model, field, fromId)) ++
-        getMutactionsForNestedConnectMutation(project, nestedMutation, ParentInfo(model, field, fromId))
+      getMutactionsForNestedCreateMutation(subModel, nestedMutation, ParentInfo(model, field, fromId)) ++
+        getMutactionsForNestedConnectMutation(nestedMutation, ParentInfo(model, field, fromId))
 
     }
     x.flatten
   }
 
   def getMutactionsForNestedCreateMutation(
-      project: Project,
       model: Model,
       nestedMutation: NestedMutation,
       parentInfo: ParentInfo
   ): Seq[ClientSqlMutaction] = {
     nestedMutation.creates.flatMap { create =>
-      getMutactionsForCreate(project, model, create.data, parentInfo = Some(parentInfo)).allMutactions
+      getMutactionsForCreate(model, create.data, parentInfo = Some(parentInfo)).allMutactions
     }
   }
 
   def getMutactionsForNestedConnectMutation(
-      project: Project,
       nestedMutation: NestedMutation,
       parentInfo: ParentInfo
   ): Seq[ClientSqlMutaction] = {
@@ -136,14 +134,13 @@ case class SqlMutactions(dataResolver: DataResolver) {
   private def checkIfRemovalWouldFailARequiredRelation(field: Field, fromId: String, project: Project): Option[InvalidInputClientSqlMutaction] = {
     val isInvalid = () => dataResolver.resolveByRelation(fromField = field, fromModelId = fromId, args = None).map(_.items.nonEmpty)
 
-    runRequiredRelationCheckWithInvalidFunction(field, project, isInvalid)
+    runRequiredRelationCheckWithInvalidFunction(field, isInvalid)
   }
 
-  private def runRequiredRelationCheckWithInvalidFunction(field: Field,
-                                                          project: Project,
-                                                          isInvalid: () => Future[Boolean]): Option[InvalidInputClientSqlMutaction] = {
+  private def runRequiredRelationCheckWithInvalidFunction(field: Field, isInvalid: () => Future[Boolean]): Option[InvalidInputClientSqlMutaction] = {
     val relatedField = field.relatedFieldEager(project)
     val relatedModel = field.relatedModel_!(project)
+
     if (relatedField.isRequired && !relatedField.isList) {
       Some(InvalidInputClientSqlMutaction(RelationIsRequired(fieldName = relatedField.name, typeName = relatedModel.name), isInvalid = isInvalid))
     } else None
