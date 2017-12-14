@@ -186,7 +186,7 @@ case class SchemaBuilderImpl(
     Field(
       s"${model.name}",
       fieldType = OptionType(outputTypesBuilder.mapSubscriptionOutputType(model, objectType)),
-      arguments = List(SangriaQueryArguments.filterSubscriptionArgument(model = model, project = project)),
+      arguments = List(SangriaQueryArguments.whereSubscriptionArgument(model = model, project = project)),
       resolve = _ => None
     )
 
