@@ -1,10 +1,10 @@
 {
   "name": "graphcool",
-  "version": "1.0.4-alpha.1",
+  "version": "1.0.4-alpha.2",
   "main": "dist/index.js",
   "bin": {
-    "graphcool-db": "dist/index.js",
-    "gc-db": "dist/index.js"
+    "graphcool": "dist/index.js",
+    "gc": "dist/index.js"
   },
   "files": ["dist"],
   "typings": "dist/index.d.ts",
@@ -46,8 +46,9 @@
   },
   "dependencies": {
     "fs-extra": "^4.0.1",
-    "graphcool-cli-core": "1.9.0-alpha.11",
-    "graphcool-cli-engine": "0.5.0-alpha.6",
+    "graphcool-cli-core": "1.9.0-alpha.12",
+    "graphcool-cli-engine": "0.5.0-alpha.7",
+    "graphcool-yml": "0.0.2-alpha.1",
     "semver": "^5.4.1",
     "source-map-support": "^0.4.18"
   },

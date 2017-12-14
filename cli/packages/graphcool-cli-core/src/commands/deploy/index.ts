@@ -113,7 +113,6 @@ ${chalk.gray(
     let clusterName = this.definition.rawStages[stageName]
     const serviceIsNew = !clusterName
 
-    console.log(clusterName, newServiceClusterName)
     if (!clusterName) {
       clusterName =
         (!interactive && newServiceClusterName) ||
