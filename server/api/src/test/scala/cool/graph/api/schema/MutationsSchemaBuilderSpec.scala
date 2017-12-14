@@ -59,6 +59,7 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec
       nestedInputTypeForComment,
       """input CommentCreateManyWithoutTodoInput {
          |  create: [CommentCreateWithoutTodoInput!]
+         |  connect: [CommentWhereUniqueInput!]
          |}""".stripMargin
     )
 
@@ -85,6 +86,7 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec
       nestedInputTypeForTodo,
       """input TodoCreateOneWithoutCommentsInput {
        |  create: TodoCreateWithoutCommentsInput
+       |  connect: TodoWhereUniqueInput
        |}""".stripMargin
     )
 
@@ -152,6 +154,7 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec
       nestedInputTypeForComment,
       """input CommentUpdateManyWithoutTodoInput {
         |  create: [CommentCreateWithoutTodoInput!]
+        |  connect: [CommentWhereUniqueInput!]
         |}""".stripMargin
     )
 
@@ -178,6 +181,7 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec
       nestedInputTypeForTodo,
       """input TodoUpdateOneWithoutCommentsInput {
         |  create: TodoCreateWithoutCommentsInput
+        |  connect: TodoWhereUniqueInput
         |}""".stripMargin
     )
 
