@@ -73,8 +73,7 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
     InputObjectType[Any](
       name = s"${model.name}UpdateInput",
       fieldsFn = () => {
-        computeScalarInputFieldsForUpdate(model) ++
-          computeRelationalInputFields(model, omitRelation = None, operation = "Update")
+        computeScalarInputFieldsForUpdate(model) ++ computeRelationalInputFields(model, omitRelation = None, operation = "Update")
       }
     )
   }
@@ -82,7 +81,12 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
   protected def computeInputObjectTypeForWhere(model: Model): InputObjectType[Any] = {
     InputObjectType[Any](
       name = s"${model.name}WhereUniqueInput",
-      fields = model.fields.filter(_.isUnique).map(field => InputField(name = field.name, fieldType = SchemaBuilderUtils.mapToOptionalInputType(field)))
+      fieldsFn = () => {
+        val uniqueFields = model.fields.filter(_.isUnique)
+        uniqueFields.map { field =>
+          InputField(name = field.name, fieldType = SchemaBuilderUtils.mapToOptionalInputType(field))
+        }
+      }
     )
   }
 
@@ -93,7 +97,7 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
 
   private def computeScalarInputFieldsForUpdate(model: Model): List[InputField[Any]] = {
     val filteredModel = model.filterFields(f => f.isWritable)
-    computeScalarInputFields(filteredModel, FieldToInputTypeMapper.mapForUpdateCase)
+    computeScalarInputFields(filteredModel, SchemaBuilderUtils.mapToOptionalInputType)
   }
 
   private def computeScalarInputFields(model: Model, mapToInputType: Field => InputType[Any]): List[InputField[Any]] = {
@@ -153,10 +157,5 @@ object FieldToInputTypeMapper {
   def mapForCreateCase(field: Field): InputType[Any] = field.isRequired && field.defaultValue.isEmpty match {
     case true  => SchemaBuilderUtils.mapToRequiredInputType(field)
     case false => SchemaBuilderUtils.mapToOptionalInputType(field)
-  }
-
-  def mapForUpdateCase(field: Field): InputType[Any] = field.name match {
-    case "id" => SchemaBuilderUtils.mapToRequiredInputType(field)
-    case _    => SchemaBuilderUtils.mapToOptionalInputType(field)
   }
 }
