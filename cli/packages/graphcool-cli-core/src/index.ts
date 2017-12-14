@@ -16,7 +16,7 @@ import Eject from './commands/local/eject'
 import PsLocal from './commands/local/ps'
 // import Account from './commands/account'
 // import Reset from './commands/reset/reset'
-// import Clusters from './commands/clusters/index'
+import Clusters from './commands/clusters/index'
 
 export const groups = [
   {
@@ -61,6 +61,7 @@ export const topics = [
     group: 'general',
   },
   { name: 'list', description: 'List all deployed services', group: 'general' },
+  { name: 'clusters', description: 'List all clusters', group: 'general' },
   // {
   //   name: 'root-token',
   //   description: 'Get the service root tokens',
@@ -113,7 +114,7 @@ export const commands = [
   PsLocal,
   // Account,
   // Reset,
-  // Clusters,
+  Clusters,
 ]
 
 export {
@@ -134,6 +135,6 @@ export {
   Eject,
   PsLocal,
   // Reset,
-  // Clusters,
+  Clusters,
   // Account,
 }
