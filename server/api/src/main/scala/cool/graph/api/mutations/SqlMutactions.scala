@@ -147,46 +147,14 @@ case class SqlMutactions(dataResolver: DataResolver) {
   }
 }
 
-sealed trait NestedMutation {
-  val creates: Vector[CreateOne]
-  val updates: Vector[UpdateOne]
-  val upserts: Vector[UpsertOne]
-  val deletes: Vector[DeleteOne]
-  val connects: Vector[ConnectOne]
-  val disconnects: Vector[DisconnectOne]
-}
-
-case class NestedManyMutation(
-    create: Vector[CreateOne],
-    update: Vector[UpdateOne],
-    upsert: Vector[UpsertOne],
-    delete: Vector[DeleteOne],
-    connect: Vector[ConnectOne],
-    disconnect: Vector[DisconnectOne]
-) extends NestedMutation {
-  override val creates     = create
-  override val updates     = update
-  override val upserts     = upsert
-  override val deletes     = delete
-  override val connects    = connect
-  override val disconnects = disconnect
-}
-
-case class NestedOneMutation(
-    create: Option[CreateOne],
-    update: Option[UpdateOne],
-    upsert: Option[UpsertOne],
-    delete: Option[DeleteOne],
-    connect: Option[ConnectOne],
-    disconnect: Option[DisconnectOne]
-) extends NestedMutation {
-  override val creates     = create.toVector
-  override val updates     = update.toVector
-  override val upserts     = upsert.toVector
-  override val deletes     = delete.toVector
-  override val connects    = connect.toVector
-  override val disconnects = disconnect.toVector
-}
+case class NestedMutation(
+    creates: Vector[CreateOne],
+    updates: Vector[UpdateOne],
+    upserts: Vector[UpsertOne],
+    deletes: Vector[DeleteOne],
+    connects: Vector[ConnectOne],
+    disconnects: Vector[DisconnectOne]
+)
 
 case class CreateOne(data: CoolArgs)
 case class UpdateOne(where: NodeSelector, data: CoolArgs)

@@ -21,22 +21,22 @@ case class CoolArgs(raw: Map[String, Any]) {
 
   private def asNestedMutation(relationField: Field, subModel: Model): NestedMutation = {
     if (relationField.isList) {
-      NestedManyMutation(
-        create = subArgsVector("create").getOrElse(Vector.empty).map(CreateOne(_)),
-        update = Vector.empty,
-        upsert = Vector.empty,
-        delete = Vector.empty,
-        connect = subArgsVector("connect").getOrElse(Vector.empty).map(args => ConnectOne(args.extractNodeSelector(subModel))),
-        disconnect = Vector.empty
+      NestedMutation(
+        creates = subArgsVector("create").getOrElse(Vector.empty).map(CreateOne(_)),
+        updates = Vector.empty,
+        upserts = Vector.empty,
+        deletes = Vector.empty,
+        connects = subArgsVector("connect").getOrElse(Vector.empty).map(args => ConnectOne(args.extractNodeSelector(subModel))),
+        disconnects = Vector.empty
       )
     } else {
-      NestedOneMutation(
-        create = subArgsOption("create").flatten.map(CreateOne(_)),
-        update = Option.empty,
-        upsert = Option.empty,
-        delete = Option.empty,
-        connect = subArgsOption("connect").flatten.map(args => ConnectOne(args.extractNodeSelector(subModel))),
-        disconnect = Option.empty
+      NestedMutation(
+        creates = subArgsOption("create").flatten.map(CreateOne(_)).toVector,
+        updates = Vector.empty,
+        upserts = Vector.empty,
+        deletes = Vector.empty,
+        connects = subArgsOption("connect").flatten.map(args => ConnectOne(args.extractNodeSelector(subModel))).toVector,
+        disconnects = Vector.empty
       )
     }
   }
