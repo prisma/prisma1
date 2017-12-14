@@ -155,6 +155,7 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec
       """input CommentUpdateManyWithoutTodoInput {
         |  create: [CommentCreateWithoutTodoInput!]
         |  connect: [CommentWhereUniqueInput!]
+        |  disconnect: [CommentWhereUniqueInput!]
         |}""".stripMargin
     )
 
@@ -182,6 +183,7 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec
       """input TodoUpdateOneWithoutCommentsInput {
         |  create: TodoCreateWithoutCommentsInput
         |  connect: TodoWhereUniqueInput
+        |  disconnect: TodoWhereUniqueInput
         |}""".stripMargin
     )
 
@@ -213,7 +215,8 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec
 
   "the delete Mutation for a model" should "be generated correctly and contain all non-list unique fields" in {
     val project = SchemaDsl() { schema =>
-      schema.model("Todo")
+      schema
+        .model("Todo")
         .field_!("title", _.String)
         .field("tag", _.String)
         .field("unique", _.Int, isUnique = true)
