@@ -9,7 +9,7 @@ object ClusterInfoType {
     "ClusterInfo",
     "Information about the deployed cluster",
     fields[SystemUserContext, Unit](
-      Field("version", StringType, resolve = _ => "database-1.0-beta6")
+      Field("version", StringType, resolve = _ => "1.0-beta1")
     )
   )
 }

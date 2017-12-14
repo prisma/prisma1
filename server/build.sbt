@@ -114,7 +114,7 @@ def serverProject(name: String): Project = {
 def normalProject(name: String): Project = Project(id = name, base = file(s"./$name")).settings(commonSettings: _*)
 def libProject(name: String): Project =  Project(id = name, base = file(s"./libs/$name")).settings(commonSettings: _*)
 
-lazy val betaImageTag = "database-1.0-beta6"
+lazy val betaImageTag = "1.0-beta1"
 
 lazy val sharedModels = normalProject("shared-models")
   .dependsOn(gcValues % "compile")
