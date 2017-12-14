@@ -3,7 +3,7 @@ package cool.graph.system.mutations
 import cool.graph.shared.database.InternalAndProjectDbs
 import cool.graph.shared.models
 import cool.graph.shared.models._
-import cool.graph.system.mutactions.client.{DeleteAllDataItems, DeleteAllRelations}
+import cool.graph.system.mutactions.client.{DeleteAllDataItems, DeleteAllRelations, DeleteAllRelayIds}
 import cool.graph.{InternalProjectMutation, Mutaction}
 import sangria.relay.Mutation
 import scaldi.Injector
@@ -26,6 +26,10 @@ case class ResetProjectDataMutation(
     val removeDataItems = project.models.map(model => DeleteAllDataItems(projectId = project.id, model = model))
 
     actions ++= removeDataItems
+
+    val removeRelayIds = DeleteAllRelayIds(projectId = project.id)
+
+    actions :+= removeRelayIds
 
     actions
   }
