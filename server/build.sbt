@@ -151,6 +151,11 @@ lazy val deploy = serverProject("deploy")
                         }
                       }
                     )
+                    .enablePlugins(BuildInfoPlugin)
+                    .settings(
+                      buildInfoKeys := Seq[BuildInfoKey](name, version, "imageTag" -> betaImageTag),
+                      buildInfoPackage := "build_info"
+                    )
 
 lazy val api = serverProject("api")
   .dependsOn(sharedModels % "compile")

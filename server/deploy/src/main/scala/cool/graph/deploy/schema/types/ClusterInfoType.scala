@@ -1,7 +1,7 @@
 package cool.graph.deploy.schema.types
 
+import build_info.BuildInfo
 import cool.graph.deploy.schema.SystemUserContext
-import cool.graph.shared.models
 import sangria.schema._
 
 object ClusterInfoType {
@@ -9,7 +9,7 @@ object ClusterInfoType {
     "ClusterInfo",
     "Information about the deployed cluster",
     fields[SystemUserContext, Unit](
-      Field("version", StringType, resolve = _ => "1.0-beta1")
+      Field("version", StringType, resolve = _ => BuildInfo.imageTag)
     )
   )
 }
