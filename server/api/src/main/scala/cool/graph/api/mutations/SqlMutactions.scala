@@ -95,18 +95,13 @@ case class SqlMutactions(dataResolver: DataResolver) {
 
   def getMutactionsForNestedMutation(project: Project, model: Model, args: CoolArgs, fromId: Id): Seq[ClientSqlMutaction] = {
     val x = for {
-      field    <- model.relationFields
-      args     <- args.subArgs(field) // this is the input object containing the nested mutation
-      subModel = field.relatedModel_!(project)
+      field          <- model.relationFields
+      subModel       = field.relatedModel_!(project)
+      nestedMutation <- args.subNestedMutation(field, subModel) // this is the input object containing the nested mutation
     } yield {
-      args match {
-        case Some(args) =>
-          getMutactionsForNestedCreateMutation(project, subModel, field, args, ParentInfo(model, field, fromId)) ++
-            getMutactionsForNestedConnectMutation(project, subModel, field, args, ParentInfo(model, field, fromId))
+      getMutactionsForNestedCreateMutation(project, subModel, nestedMutation, ParentInfo(model, field, fromId)) ++
+        getMutactionsForNestedConnectMutation(project, nestedMutation, ParentInfo(model, field, fromId))
 
-        case None =>
-          Vector.empty // if the user specifies an explicit null for the relation field
-      }
     }
     x.flatten
   }
@@ -114,59 +109,28 @@ case class SqlMutactions(dataResolver: DataResolver) {
   def getMutactionsForNestedCreateMutation(
       project: Project,
       model: Model,
-      field: Field,
-      args: CoolArgs,
+      nestedMutation: NestedMutation,
       parentInfo: ParentInfo
   ): Seq[ClientSqlMutaction] = {
-    val x = for {
-      args <- if (field.isList) {
-               args.subArgsList("create")
-             } else {
-               args.subArgs("create").map(_.toVector)
-             }
-    } yield {
-      args.flatMap { args =>
-        getMutactionsForCreate(project, model, args, parentInfo = Some(parentInfo)).allMutactions
-      }
+    nestedMutation.creates.flatMap { create =>
+      getMutactionsForCreate(project, model, create.data, parentInfo = Some(parentInfo)).allMutactions
     }
-    x.getOrElse(Vector.empty)
   }
 
   def getMutactionsForNestedConnectMutation(
       project: Project,
-      model: Model,
-      field: Field,
-      args: CoolArgs,
+      nestedMutation: NestedMutation,
       parentInfo: ParentInfo
   ): Seq[ClientSqlMutaction] = {
-    val x = for {
-      args <- if (field.isList) {
-               args.subArgsList("connect")
-             } else {
-               args.subArgs("connect").map(_.toVector)
-             }
-    } yield {
-      args.map { args =>
-        getMutactionForConnect(project, model, args, parentInfo = parentInfo)
-      }
+    nestedMutation.connects.map { connect =>
+      AddDataItemToManyRelationByUniqueField(
+        project = project,
+        fromModel = parentInfo.model,
+        fromField = parentInfo.field,
+        fromId = parentInfo.id,
+        where = connect.where
+      )
     }
-    x.getOrElse(Vector.empty)
-  }
-
-  def getMutactionForConnect(
-      project: Project,
-      model: Model,
-      args: CoolArgs,
-      parentInfo: ParentInfo
-  ): ClientSqlMutaction = {
-    val where = args.extractNodeSelector(model)
-    AddDataItemToManyRelationByUniqueField(
-      project = project,
-      fromModel = parentInfo.model,
-      fromField = parentInfo.field,
-      fromId = parentInfo.id,
-      where = where
-    )
   }
 
   private def checkIfRemovalWouldFailARequiredRelation(field: Field, fromId: String, project: Project): Option[InvalidInputClientSqlMutaction] = {
@@ -186,7 +150,14 @@ case class SqlMutactions(dataResolver: DataResolver) {
   }
 }
 
-sealed trait NestedMutation
+sealed trait NestedMutation {
+  val creates: Vector[CreateOne]
+  val updates: Vector[UpdateOne]
+  val upserts: Vector[UpsertOne]
+  val deletes: Vector[DeleteOne]
+  val connects: Vector[ConnectOne]
+  val disconnects: Vector[DisconnectOne]
+}
 
 case class NestedManyMutation(
     create: Vector[CreateOne],
@@ -195,7 +166,14 @@ case class NestedManyMutation(
     delete: Vector[DeleteOne],
     connect: Vector[ConnectOne],
     disconnect: Vector[DisconnectOne]
-) extends NestedMutation
+) extends NestedMutation {
+  override val creates     = create
+  override val updates     = update
+  override val upserts     = upsert
+  override val deletes     = delete
+  override val connects    = connect
+  override val disconnects = disconnect
+}
 
 case class NestedOneMutation(
     create: Option[CreateOne],
@@ -204,7 +182,14 @@ case class NestedOneMutation(
     delete: Option[DeleteOne],
     connect: Option[ConnectOne],
     disconnect: Option[DisconnectOne]
-) extends NestedMutation
+) extends NestedMutation {
+  override val creates     = create.toVector
+  override val updates     = update.toVector
+  override val upserts     = upsert.toVector
+  override val deletes     = delete.toVector
+  override val connects    = connect.toVector
+  override val disconnects = disconnect.toVector
+}
 
 case class CreateOne(data: CoolArgs)
 case class UpdateOne(where: NodeSelector, data: CoolArgs)

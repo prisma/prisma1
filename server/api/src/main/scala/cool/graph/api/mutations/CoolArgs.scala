@@ -11,6 +11,36 @@ import scala.collection.immutable.Seq
   */
 case class CoolArgs(raw: Map[String, Any]) {
 
+  def subNestedMutation(relationField: Field, subModel: Model): Option[NestedMutation] = {
+    subArgsOption(relationField) match {
+      case None             => None
+      case Some(None)       => None
+      case Some(Some(args)) => Some(args.asNestedMutation(relationField, subModel))
+    }
+  }
+
+  private def asNestedMutation(relationField: Field, subModel: Model): NestedMutation = {
+    if (relationField.isList) {
+      NestedManyMutation(
+        create = subArgsVector("create").getOrElse(Vector.empty).map(CreateOne(_)),
+        update = Vector.empty,
+        upsert = Vector.empty,
+        delete = Vector.empty,
+        connect = subArgsVector("connect").getOrElse(Vector.empty).map(args => ConnectOne(args.extractNodeSelector(subModel))),
+        disconnect = Vector.empty
+      )
+    } else {
+      NestedOneMutation(
+        create = subArgsOption("create").flatten.map(CreateOne(_)),
+        update = Option.empty,
+        upsert = Option.empty,
+        delete = Option.empty,
+        connect = subArgsOption("connect").flatten.map(args => ConnectOne(args.extractNodeSelector(subModel))),
+        disconnect = Option.empty
+      )
+    }
+  }
+
 //  def subArgsList2(field: Field): Option[Seq[CoolArgs]] = {
 //    val fieldValues: Option[Seq[Map[String, Any]]] = field.isList match {
 //      case true  => getFieldValuesAs[Map[String, Any]](field)
@@ -23,6 +53,8 @@ case class CoolArgs(raw: Map[String, Any]) {
 //    }
 //  }
 
+  def subArgsVector(field: String): Option[Vector[CoolArgs]] = subArgsList(field).map(_.toVector)
+
   def subArgsList(field: String): Option[Seq[CoolArgs]] = {
     getFieldValuesAs[Map[String, Any]](field) match {
       case None    => None
@@ -30,9 +62,9 @@ case class CoolArgs(raw: Map[String, Any]) {
     }
   }
 
-  def subArgs(field: Field): Option[Option[CoolArgs]] = subArgs(field.name)
+  def subArgsOption(field: Field): Option[Option[CoolArgs]] = subArgsOption(field.name)
 
-  def subArgs(name: String): Option[Option[CoolArgs]] = {
+  def subArgsOption(name: String): Option[Option[CoolArgs]] = {
     val fieldValue: Option[Option[Map[String, Any]]] = getFieldValueAs[Map[String, Any]](name)
     fieldValue match {
       case None          => None
