@@ -156,6 +156,7 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec
         |  create: [CommentCreateWithoutTodoInput!]
         |  connect: [CommentWhereUniqueInput!]
         |  disconnect: [CommentWhereUniqueInput!]
+        |  delete: [CommentWhereUniqueInput!]
         |}""".stripMargin
     )
 
@@ -184,6 +185,7 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec
         |  create: TodoCreateWithoutCommentsInput
         |  connect: TodoWhereUniqueInput
         |  disconnect: TodoWhereUniqueInput
+        |  delete: TodoWhereUniqueInput
         |}""".stripMargin
     )
 

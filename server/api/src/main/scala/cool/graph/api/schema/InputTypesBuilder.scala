@@ -123,7 +123,7 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
       } else {
         val inputObjectType = InputObjectType[Any](
           name = inputObjectTypeName,
-          fieldsFn = () => List(nestedCreateInputField(field), nestedConnectInputField(field), nestedDisconnectInputField(field))
+          fieldsFn = () => List(nestedCreateInputField(field), nestedConnectInputField(field), nestedDisconnectInputField(field), nestedDeleteInputField(field))
         )
         Some(InputField[Any](field.name, OptionInputType(inputObjectType)))
       }
@@ -167,6 +167,7 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
 
   def nestedConnectInputField(field: Field): InputField[Any]    = whereInputField(field, name = "connect")
   def nestedDisconnectInputField(field: Field): InputField[Any] = whereInputField(field, name = "disconnect")
+  def nestedDeleteInputField(field: Field): InputField[Any]     = whereInputField(field, name = "delete")
 
   def whereInputField(field: Field, name: String): InputField[Any] = {
     val subModel = field.relatedModel_!(project)
