@@ -83,7 +83,7 @@ case class MigrationApplierImpl(clientDatabase: DatabaseDef)(implicit ec: Execut
       // todo I think those validations should be somewhere else, preferably preventing a step being created
       val model = nextProject.getModelByName_!(x.model)
       val field = model.getFieldByName_!(x.name)
-      if (field.isSystemField || !field.isScalar) {
+      if (ReservedFields.isReservedFieldName(field.name) || !field.isScalar) {
         None
       } else {
         Some(CreateColumn(nextProject.id, model, field))

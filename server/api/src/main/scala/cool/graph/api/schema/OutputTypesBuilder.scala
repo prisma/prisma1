@@ -18,6 +18,7 @@ case class OutputTypesBuilder(project: Project, objectTypes: Map[String, ObjectT
       name = objectType.name,
       fieldsFn = () => {
         objectType.ownFields.toList
+//          .filterNot( => field.isHidden)
           .filter(field => if (onlyId) field.name == "id" else true)
           .map { field =>
             field.copy(
@@ -120,8 +121,7 @@ case class OutputTypesBuilder(project: Project, objectTypes: Map[String, ObjectT
 
   type R = SimpleResolveOutput
 
-  def mapResolve(item: DataItem, args: Args): SimpleResolveOutput =
-    SimpleResolveOutput(item, args)
+  def mapResolve(item: DataItem, args: Args): SimpleResolveOutput = SimpleResolveOutput(item, args)
 
   def mapAddToRelationOutputType[C](relation: Relation,
                                     fromModel: Model,

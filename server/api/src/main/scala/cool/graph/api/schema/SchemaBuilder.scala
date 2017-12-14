@@ -129,7 +129,6 @@ case class SchemaBuilderImpl(
   }
 
   def createItemField(model: Model): Field[ApiUserContext, Unit] = {
-
     val definition = CreateDefinition(project, inputTypesBuilder)
     val arguments  = definition.getSangriaArguments(model = model)
 
@@ -179,8 +178,7 @@ case class SchemaBuilderImpl(
 
   def deleteItemField(model: Model): Field[ApiUserContext, Unit] = {
     val definition = DeleteDefinition(project)
-
-    val arguments = List(definition.getWhereArgument(model))
+    val arguments  = List(definition.getWhereArgument(model))
 
     Field(
       s"delete${model.name}",
@@ -200,15 +198,14 @@ case class SchemaBuilderImpl(
   }
 
   def getSubscriptionField(model: Model): Field[ApiUserContext, Unit] = {
-
     val objectType = objectTypes(model.name)
+
     Field(
       s"${model.name}",
       fieldType = OptionType(outputTypesBuilder.mapSubscriptionOutputType(model, objectType)),
       arguments = List(SangriaQueryArguments.filterSubscriptionArgument(model = model, project = project)),
       resolve = _ => None
     )
-
   }
 
   lazy val NodeDefinition(nodeInterface: InterfaceType[ApiUserContext, DataItem], nodeField, nodeRes) = Node.definitionById(

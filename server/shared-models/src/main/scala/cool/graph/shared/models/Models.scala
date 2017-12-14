@@ -435,8 +435,6 @@ case class Field(
     }
     returnField.head
   }
-
-  def isSystemField: Boolean = name == "id" || name == "createdAt" || name == "updatedAt"
 }
 
 sealed trait FieldConstraint {
