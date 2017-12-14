@@ -176,7 +176,7 @@ export default class Docker {
     return new Promise((resolve, reject) => {
       const defaultArgs = [
         '-p',
-        JSON.stringify(this.clusterName),
+        JSON.stringify(this.clusterName + '-database'),
         '--file',
         this.ymlPath,
         '--project-directory',

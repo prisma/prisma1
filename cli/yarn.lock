@@ -1438,40 +1438,6 @@ graphcool-json-schema@^1.0.1-alpha.2:
   version "1.0.1-alpha.2"
   resolved "https://registry.yarnpkg.com/graphcool-json-schema/-/graphcool-json-schema-1.0.1-alpha.2.tgz#14dd7c880d9df9045b8e658896948522c89f4f49"
 
-graphcool-yml@0.0.2-alpha.1:
-  version "0.0.2-alpha.1"
-  resolved "https://registry.yarnpkg.com/graphcool-yml/-/graphcool-yml-0.0.2-alpha.1.tgz#c560d743797652656010fd5fd9623eec04cf6de4"
-  dependencies:
-    ajv "^5.5.1"
-    bluebird "^3.5.1"
-    debug "^3.1.0"
-    dotenv "^4.0.0"
-    fs-extra "^4.0.3"
-    graphcool-json-schema "^1.0.1-alpha.2"
-    js-yaml "^3.10.0"
-    jsonwebtoken "^8.1.0"
-    lodash "^4.17.4"
-    replaceall "^0.1.6"
-    scuid "^1.0.2"
-    yaml-ast-parser "^0.0.40"
-
-graphcool-yml@^0.0.0-alpha.2:
-  version "0.0.0-alpha.3"
-  resolved "https://registry.yarnpkg.com/graphcool-yml/-/graphcool-yml-0.0.0-alpha.3.tgz#0086e450dedb6d0b6137ebcb09bca60485a55ce5"
-  dependencies:
-    ajv "^5.5.1"
-    bluebird "^3.5.1"
-    debug "^3.1.0"
-    dotenv "^4.0.0"
-    fs-extra "^4.0.3"
-    graphcool-json-schema "^1.0.1-alpha.2"
-    js-yaml "^3.10.0"
-    jsonwebtoken "^8.1.0"
-    lodash "^4.17.4"
-    replaceall "^0.1.6"
-    scuid "^1.0.2"
-    yaml-ast-parser "^0.0.40"
-
 graphql-config@^1.0.9:
   version "1.0.9"
   resolved "https://registry.yarnpkg.com/graphql-config/-/graphql-config-1.0.9.tgz#8fa416a7c2bdb8f62f441324775dd3ff8a266652"

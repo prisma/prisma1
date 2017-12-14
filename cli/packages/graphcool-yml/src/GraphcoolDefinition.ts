@@ -23,7 +23,7 @@ export class GraphcoolDefinitionClass {
   definition?: GraphcoolDefinition
   typesString?: string
   secrets: string[] | null
-  rawStages: Stages
+  rawStages: Stages = {}
   definitionPath?: string | null
   definitionDir: string
   env: Environment
@@ -54,7 +54,7 @@ export class GraphcoolDefinitionClass {
         this.out,
       )
       this.definitionString = fs.readFileSync(this.definitionPath, 'utf-8')
-      this.rawStages = this.definition.stages
+      this.rawStages = this.definition.stages || {}
       this.definition.stages = this.resolveStageAliases(this.definition.stages)
       this.typesString = this.getTypesString(this.definition)
       const secrets = this.envVars.GRAPHCOOL_SECRET || this.definition.secret

@@ -1,4 +1,10 @@
-import { Command, flags, Flags, DeployPayload } from 'graphcool-cli-engine'
+import {
+  Command,
+  flags,
+  Flags,
+  DeployPayload,
+  Config,
+} from 'graphcool-cli-engine'
 import { Cluster } from 'graphcool-yml'
 import chalk from 'chalk'
 import { ServiceDoesntExistError } from '../../errors/ServiceDoesntExistError'
@@ -9,6 +15,7 @@ import * as path from 'path'
 import * as fs from 'fs-extra'
 import { getGraphQLConfig } from 'graphql-config'
 import { fetchAndPrintSchema } from './printSchema'
+import Up from '../local/up'
 const debug = require('debug')('deploy')
 
 export default class Deploy extends Command {
@@ -110,7 +117,9 @@ ${chalk.gray(
         (await this.stageNameSelector('dev'))
     }
 
-    let clusterName = this.definition.rawStages[stageName]
+    let clusterName = this.definition.rawStages
+      ? this.definition.rawStages[stageName]
+      : null
     const serviceIsNew = !clusterName
 
     if (!clusterName) {
@@ -125,19 +134,20 @@ ${chalk.gray(
 
     const serviceName = this.definition.definition!.service
 
-    const cluster = this.env.clusterByName(clusterName!)
+    let cluster = this.env.clusterByName(clusterName!)
     if (!cluster) {
-      if (clusterName === 'local-database') {
-        this.out.log(`You selected the cluster ${chalk.bold(
-          'local-database',
-        )}, but don't have a local Graphcool cluster running yet.
-Please execute this to initialize a local Graphcool cluster:
-${chalk.bold.green('$ gc local up')}`)
-        this.out.exit(1)
+      if (clusterName === 'local') {
+        await Up.run(new Config({ mock: false, argv: [] }))
+        await this.env.load(this.flags)
+        cluster = this.env.clusterByName('local')!
+        console.log('setting newCluster as active cluster', cluster)
+        this.env.setActiveCluster(cluster)
+      } else {
+        this.out.error(`Cluster ${clusterName} could not be found.`)
       }
-      this.out.error(`Cluster ${clusterName} could not be found.`)
+    } else {
+      this.env.setActiveCluster(cluster!)
     }
-    this.env.setActiveCluster(cluster!)
 
     if (!await this.projectExists(serviceName, stageName)) {
       await this.addProject(serviceName, stageName)
@@ -334,7 +344,7 @@ ${chalk.bold.green('$ gc local up')}`)
       }
     })
     if (localClusters.length === 0) {
-      localClusters.push({ value: 'local-database', name: 'local-database' })
+      localClusters.push({ value: 'local', name: 'local' })
     }
     const question = {
       name: 'cluster',

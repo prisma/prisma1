@@ -18,7 +18,7 @@ export default class Up extends Command {
     name: flags.string({
       char: 'n',
       description: 'Name of the cluster instance',
-      defaultValue: 'local-database',
+      defaultValue: 'local',
     }),
   }
   async run() {
@@ -43,7 +43,7 @@ export default class Up extends Command {
     this.out.action.stop()
 
     if (!this.env.clusterByName(name)) {
-      debug('Setting cluster')
+      debug('Setting cluster', cluster)
       this.env.addCluster(cluster)
       this.env.saveGlobalRC()
       this.out.log(
