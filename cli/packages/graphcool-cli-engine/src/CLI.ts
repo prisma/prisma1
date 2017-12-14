@@ -9,6 +9,8 @@ import { NotFound } from './NotFound'
 import fs from './fs'
 import { getCommandId } from './util'
 import { StatusChecker } from './StatusChecker'
+import * as updateNotifier from 'update-notifier'
+import chalk from 'chalk'
 
 const debug = require('debug')('cli')
 const handleEPIPE = err => {
@@ -46,6 +48,7 @@ process.env.CLI_ENGINE_VERSION = require('../package.json').version
 export class CLI {
   config: Config
   cmd: Command
+  notifier: any
 
   constructor({ config }: { config?: RunOptions } = {}) {
     if (!config) {
@@ -68,6 +71,10 @@ export class CLI {
       )
     }
     this.config = new Config(config)
+    this.notifier = updateNotifier({
+      pkg: this.config.pjson,
+      updateCheckInterval: 1,
+    })
   }
 
   async run() {
@@ -131,6 +138,22 @@ export class CLI {
         }
       }
     }
+
+    this.notifier.notify({
+      message:
+        'Update available ' +
+        chalk.dim(this.notifier.update.current) +
+        chalk.reset(' → ') +
+        chalk.green(this.notifier.update.latest) +
+        `\nRun ${chalk.bold.green('npm i -g graphcool')} to update`,
+      boxenOpts: {
+        padding: 1,
+        margin: 1,
+        align: 'center',
+        borderColor: 'green',
+        borderStyle: 'round',
+      },
+    })
 
     if (
       !(

@@ -118,6 +118,7 @@
     "strip-ansi": "^4.0.0",
     "supports-color": "^4.4.0",
     "treeify": "^1.0.1",
+    "update-notifier": "^2.3.0",
     "validator": "^8.2.0",
     "yaml-ast-parser": "^0.0.34"
   }
