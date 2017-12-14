@@ -27,9 +27,9 @@ case class AddDataItemToManyRelationByUniqueField(
 
   override def execute: Future[ClientSqlStatementResult[Any]] = Future.successful {
     val action = if (connectByUniqueValueForB) {
-      DatabaseMutationBuilder.createRelationRowByUniqueValueForB(project.id, relation.name, fromId, where)
+      DatabaseMutationBuilder.createRelationRowByUniqueValueForB(project.id, relation.id, fromId, where)
     } else {
-      DatabaseMutationBuilder.createRelationRowByUniqueValueForA(project.id, relation.name, fromId, where)
+      DatabaseMutationBuilder.createRelationRowByUniqueValueForA(project.id, relation.id, fromId, where)
     }
     ClientSqlStatementResult(sqlAction = action)
   }
