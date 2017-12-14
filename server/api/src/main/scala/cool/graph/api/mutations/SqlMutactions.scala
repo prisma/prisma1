@@ -1,11 +1,11 @@
 package cool.graph.api.mutations
 
-import cool.graph.api.database.{DataItem, DataResolver}
 import cool.graph.api.database.mutactions.ClientSqlMutaction
 import cool.graph.api.database.mutactions.mutactions._
+import cool.graph.api.database.{DataItem, DataResolver}
 import cool.graph.api.mutations.MutationTypes.ArgumentValue
+import cool.graph.api.schema.APIErrors
 import cool.graph.api.schema.APIErrors.RelationIsRequired
-import cool.graph.api.schema.{APIErrors, SchemaBuilderConstants}
 import cool.graph.cuid.Cuid.createCuid
 import cool.graph.shared.models.IdType.Id
 import cool.graph.shared.models.{Field, Model, Project}
@@ -205,3 +205,30 @@ case class SqlMutactions(dataResolver: DataResolver) {
     x.flatten
   }
 }
+
+sealed trait NestedMutation
+
+case class NestedManyMutation(
+    create: Vector[CreateOne],
+    update: Vector[UpdateOne],
+    upsert: Vector[UpsertOne],
+    delete: Vector[DeleteOne],
+    connect: Vector[ConnectOne],
+    disconnect: Vector[DisconnectOne]
+) extends NestedMutation
+
+case class NestedOneMutation(
+    create: Option[CreateOne],
+    update: Option[UpdateOne],
+    upsert: Option[UpsertOne],
+    delete: Option[DeleteOne],
+    connect: Option[ConnectOne],
+    disconnect: Option[DisconnectOne]
+) extends NestedMutation
+
+case class CreateOne(data: CoolArgs)
+case class UpdateOne(where: NodeSelector, data: CoolArgs)
+case class UpsertOne(where: NodeSelector, create: CoolArgs, update: CoolArgs)
+case class DeleteOne(where: NodeSelector)
+case class ConnectOne(where: NodeSelector)
+case class DisconnectOne(where: NodeSelector)
