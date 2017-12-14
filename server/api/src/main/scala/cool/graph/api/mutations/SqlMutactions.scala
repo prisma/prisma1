@@ -97,7 +97,8 @@ case class SqlMutactions(dataResolver: DataResolver) {
       val parentInfo = ParentInfo(model, field, fromId)
       getMutactionsForNestedCreateMutation(subModel, nestedMutation, parentInfo) ++
         getMutactionsForNestedConnectMutation(nestedMutation, parentInfo) ++
-        getMutactionsForNestedDisconnectMutation(nestedMutation, parentInfo)
+        getMutactionsForNestedDisconnectMutation(nestedMutation, parentInfo) ++
+        getMutactionsForNestedDeleteMutation(nestedMutation, parentInfo)
 
     }
     x.flatten
@@ -129,6 +130,18 @@ case class SqlMutactions(dataResolver: DataResolver) {
         fromField = parentInfo.field,
         fromId = parentInfo.id,
         where = disconnect.where
+      )
+    }
+  }
+
+  def getMutactionsForNestedDeleteMutation(nestedMutation: NestedMutation, parentInfo: ParentInfo): Seq[ClientSqlMutaction] = {
+    nestedMutation.deletes.map { delete =>
+      DeleteDataItemByUniqueFieldIfInRelationWith(
+        project = project,
+        fromModel = parentInfo.model,
+        fromField = parentInfo.field,
+        fromId = parentInfo.id,
+        where = delete.where
       )
     }
   }

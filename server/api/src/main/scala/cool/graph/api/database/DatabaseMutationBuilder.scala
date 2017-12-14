@@ -106,6 +106,36 @@ object DatabaseMutationBuilder {
           """
   }
 
+  def deleteDataItemByUniqueValueForAIfInRelationWithGivenB(
+      projectId: String,
+      relationTableName: String,
+      b: String,
+      where: NodeSelector
+  ) = {
+    sqlu"""delete from `#$projectId`.`#${where.model.name}`
+           where #${where.fieldName} = ${where.fieldValue} and id in (
+             select `A`
+             from `#$projectId`.`#$relationTableName`
+             where `B` = '#$b'
+           )
+           """
+  }
+
+  def deleteDataItemByUniqueValueForBIfInRelationWithGivenA(
+      projectId: String,
+      relationTableName: String,
+      a: String,
+      where: NodeSelector
+  ) = {
+    sqlu"""delete from `#$projectId`.`#${where.model.name}`
+           where #${where.fieldName} = ${where.fieldValue} and id in (
+             select `B`
+             from `#$projectId`.`#$relationTableName`
+             where `A` = '#$a'
+           )
+           """
+  }
+
   def updateDataItem(projectId: String, modelName: String, id: String, values: Map[String, Any]) = {
     val escapedValues = combineByComma(values.map {
       case (k, v) =>
