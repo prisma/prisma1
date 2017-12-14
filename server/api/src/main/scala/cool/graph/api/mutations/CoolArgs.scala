@@ -1,5 +1,6 @@
 package cool.graph.api.mutations
 
+import cool.graph.api.mutations.MutationTypes.ArgumentValue
 import cool.graph.gc_values.GCValue
 import cool.graph.shared.models._
 import cool.graph.util.gc_value.{GCAnyConverter, GCDBValueConverter}
@@ -38,6 +39,15 @@ case class CoolArgs(raw: Map[String, Any]) {
         connects = subArgsOption("connect").flatten.map(args => ConnectOne(args.extractNodeSelector(subModel))).toVector,
         disconnects = Vector.empty
       )
+    }
+  }
+
+  def scalarArguments(model: Model): Vector[ArgumentValue] = {
+    for {
+      field      <- model.scalarFields.toVector
+      fieldValue <- getFieldValueAs[Any](field)
+    } yield {
+      ArgumentValue(field.name, fieldValue)
     }
   }
 

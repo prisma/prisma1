@@ -73,12 +73,7 @@ case class SqlMutactions(dataResolver: DataResolver) {
   }
 
   def getUpdateMutaction(model: Model, args: CoolArgs, id: Id, previousValues: DataItem): Option[UpdateDataItem] = {
-    val scalarArguments = for {
-      field      <- model.scalarFields.filter(_.name != "id")
-      fieldValue <- args.getFieldValueAs[Any](field)
-    } yield {
-      ArgumentValue(field.name, fieldValue)
-    }
+    val scalarArguments = args.scalarArguments(model)
     if (scalarArguments.nonEmpty) {
       Some(
         UpdateDataItem(
