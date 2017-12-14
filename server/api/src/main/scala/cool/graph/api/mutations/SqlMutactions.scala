@@ -184,26 +184,6 @@ case class SqlMutactions(dataResolver: DataResolver) {
       Some(InvalidInputClientSqlMutaction(RelationIsRequired(fieldName = relatedField.name, typeName = relatedModel.name), isInvalid = isInvalid))
     } else None
   }
-
-  def getComplexMutactions(project: Project, model: Model, args: CoolArgs, fromId: Id): Seq[ClientSqlMutaction] = {
-    val x: Seq[List[ClientSqlMutaction]] = for {
-      field     <- model.relationFields
-      nestedArg <- args.subArgs(field).flatten
-      subArgs   <- nestedArg.subArgs("create")
-      subModel  = field.relatedModel(project).get
-    } yield {
-
-      val removeOldFromRelation =
-        List(checkIfRemovalWouldFailARequiredRelation(field, fromId, project), Some(RemoveDataItemFromManyRelationByFromId(project.id, field, fromId))).flatten
-
-      val itemsToCreate = subArgs.toVector.flatMap { subArg =>
-        getMutactionsForCreate(project, subModel, subArg, parentInfo = Some(ParentInfo(model, field, fromId))).allMutactions
-      }
-
-      removeOldFromRelation ++ itemsToCreate
-    }
-    x.flatten
-  }
 }
 
 sealed trait NestedMutation
