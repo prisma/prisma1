@@ -5,20 +5,20 @@ import cool.graph.shared.models._
 import org.scalactic.{Good, Or}
 import sangria.ast.Document
 
-trait DesiredProjectInferrer {
+trait NextProjectInferrer {
   def infer(baseProject: Project, graphQlSdl: Document): Project Or ProjectSyntaxError
 }
 
 sealed trait ProjectSyntaxError
 case class RelationDirectiveNeeded(type1: String, type1Fields: Vector[String], type2: String, type2Fields: Vector[String]) extends ProjectSyntaxError
 
-object DesiredProjectInferrer {
-  def apply() = new DesiredProjectInferrer {
-    override def infer(baseProject: Project, graphQlSdl: Document) = DesiredProjectInferrerImpl(baseProject, graphQlSdl).infer()
+object NextProjectInferrer {
+  def apply() = new NextProjectInferrer {
+    override def infer(baseProject: Project, graphQlSdl: Document) = NextProjectInferrerImpl(baseProject, graphQlSdl).infer()
   }
 }
 
-case class DesiredProjectInferrerImpl(
+case class NextProjectInferrerImpl(
     baseProject: Project,
     sdl: Document
 ) {
@@ -28,18 +28,20 @@ case class DesiredProjectInferrerImpl(
     val newProject = Project(
       id = baseProject.id,
       ownerId = baseProject.ownerId,
-      models = desiredModels.toList,
-      relations = desiredRelations.toList,
-      enums = desiredEnums.toList
+      models = nextModels.toList,
+      relations = nextRelations.toList,
+      enums = nextEnums.toList
     )
+
     Good(newProject)
   }
 
-  lazy val desiredModels: Vector[Model] = {
+  lazy val nextModels: Vector[Model] = {
     sdl.objectTypes.map { objectType =>
       val fields = objectType.fields.map { fieldDef =>
         val typeIdentifier = typeIdentifierForTypename(fieldDef.typeName)
-        val relation       = fieldDef.relationName.flatMap(relationName => desiredRelations.find(_.name == relationName))
+        val relation       = fieldDef.relationName.flatMap(relationName => nextRelations.find(_.name == relationName))
+
         Field(
           id = fieldDef.name,
           name = fieldDef.name,
@@ -47,7 +49,7 @@ case class DesiredProjectInferrerImpl(
           isRequired = fieldDef.isRequired,
           isList = fieldDef.isList,
           isUnique = fieldDef.isUnique,
-          enum = desiredEnums.find(_.name == fieldDef.typeName),
+          enum = nextEnums.find(_.name == fieldDef.typeName),
           defaultValue = fieldDef.defaultValue.map(x => GCStringConverter(typeIdentifier, fieldDef.isList).toGCValue(x).get),
           relation = relation,
           relationSide = relation.map { relation =>
@@ -60,15 +62,19 @@ case class DesiredProjectInferrerImpl(
         )
       }
 
+      val fieldNames            = fields.map(_.name)
+      val missingReservedFields = ReservedFields.reservedFieldNames.filterNot(fieldNames.contains)
+      val hiddenReservedFields  = missingReservedFields.map(ReservedFields.reservedFieldFor(_).copy(isHidden = true))
+
       Model(
         id = objectType.name,
         name = objectType.name,
-        fields = fields.toList
+        fields = fields.toList ++ hiddenReservedFields
       )
     }
   }
 
-  lazy val desiredRelations: Set[Relation] = {
+  lazy val nextRelations: Set[Relation] = {
     val tmp = for {
       objectType    <- sdl.objectTypes
       relationField <- objectType.relationFields
@@ -80,11 +86,11 @@ case class DesiredProjectInferrerImpl(
         modelBId = relationField.typeName
       )
     }
-    val grouped: Map[String, Vector[Relation]] = tmp.groupBy(_.name)
-    grouped.values.flatMap(_.headOption).toSet
+
+    tmp.groupBy(_.name).values.flatMap(_.headOption).toSet
   }
 
-  lazy val desiredEnums: Vector[Enum] = {
+  lazy val nextEnums: Vector[Enum] = {
     sdl.enumTypes.map { enumDef =>
       Enum(
         id = enumDef.name,

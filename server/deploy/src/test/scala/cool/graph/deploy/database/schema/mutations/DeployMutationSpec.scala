@@ -1,5 +1,6 @@
 package cool.graph.deploy.database.schema.mutations
 
+import cool.graph.deploy.database.persistence.DbToModelMapper
 import cool.graph.deploy.specutils.DeploySpecBase
 import cool.graph.shared.models.ProjectId
 import org.scalatest.{FlatSpec, Matchers}
@@ -195,5 +196,68 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
     tryDeploy("updatedAt: DateTime!")
     tryDeploy("updatedAt: DateTime @unique")
     tryDeploy("""updatedAt: DateTime! @default("Woot")""")
+  }
+
+  "DeployMutation" should "create hidden reserved fields if they are not specified in the types" in {
+    val schema = """
+                   |type TestModel {
+                   |  test: String
+                   |}
+                 """.stripMargin
+
+    val project       = setupProject(schema)
+    val loadedProject = projectPersistence.load(project.id).await.get
+
+    loadedProject.getModelByName("TestModel").get.getFieldByName("id").get.isHidden shouldEqual true
+    loadedProject.getModelByName("TestModel").get.getFieldByName("createdAt").get.isHidden shouldEqual true
+    loadedProject.getModelByName("TestModel").get.getFieldByName("updatedAt").get.isHidden shouldEqual true
+  }
+
+  "DeployMutation" should "hide reserved fields instead of deleting them and reveal them instead of creating them" in {
+    val schema = """
+                   |type TestModel {
+                   |  id: ID! @unique
+                   |  test: String
+                   |}
+                 """.stripMargin
+
+    val project       = setupProject(schema)
+    val nameAndStage  = ProjectId.fromEncodedString(project.id)
+    val loadedProject = projectPersistence.load(project.id).await.get
+
+    loadedProject.getModelByName("TestModel").get.getFieldByName("id").get.isHidden shouldEqual false
+    loadedProject.getModelByName("TestModel").get.getFieldByName("createdAt").get.isHidden shouldEqual true
+    loadedProject.getModelByName("TestModel").get.getFieldByName("updatedAt").get.isHidden shouldEqual true
+
+    val updatedSchema = """
+                          |type TestModel {
+                          |  test: String
+                          |  createdAt: DateTime!
+                          |  updatedAt: DateTime!
+                          |}
+                        """.stripMargin
+
+    val updateResult = server.query(s"""
+                                       |mutation {
+                                       |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: "${formatSchema(updatedSchema)}"}){
+                                       |    project {
+                                       |      name
+                                       |      stage
+                                       |    }
+                                       |    errors {
+                                       |      description
+                                       |    }
+                                       |  }
+                                       |}""".stripMargin)
+
+    updateResult.pathAsSeq("data.deploy.errors") should be(empty)
+
+    val reloadedProject = projectPersistence.load(project.id).await.get
+
+    reloadedProject.getModelByName("TestModel").get.getFieldByName("id").get.isHidden shouldEqual true
+    reloadedProject.getModelByName("TestModel").get.getFieldByName("createdAt").get.isHidden shouldEqual false
+    reloadedProject.getModelByName("TestModel").get.getFieldByName("updatedAt").get.isHidden shouldEqual false
+
+    // todo assert client db cols?
   }
 }

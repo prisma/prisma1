@@ -131,6 +131,7 @@ class MigrationStepsProposerSpec extends FlatSpec with Matchers with DeploySpecB
     val previousProject = SchemaBuilder() { schema =>
       schema
         .model("Test")
+        .field_!("id", _.GraphQLID, isUnique = true)
         .field("a", _.String)
         .field("b", _.String)
         .field("c", _.String)
@@ -141,6 +142,7 @@ class MigrationStepsProposerSpec extends FlatSpec with Matchers with DeploySpecB
     val nextProject = SchemaBuilder() { schema =>
       schema
         .model("Test")
+        .field_!("id", _.GraphQLID, isUnique = true, isHidden = true) // Id field hidden
         .field("a2", _.String) // Rename
         .field("b", _.Int) // Type change
         .field_!("c", _.String) // Now required
@@ -151,13 +153,14 @@ class MigrationStepsProposerSpec extends FlatSpec with Matchers with DeploySpecB
     val proposer = MigrationStepsProposerImpl(previousProject, nextProject, renames)
     val steps    = proposer.evaluate()
 
-    steps.length shouldBe 5
+    steps.length shouldBe 6
     steps should contain allOf (
-      UpdateField("Test", "a", Some("a2"), None, None, None, None, None, None, None),
-      UpdateField("Test", "b", None, Some("Int"), None, None, None, None, None, None),
-      UpdateField("Test", "c", None, None, Some(true), None, None, None, None, None),
-      UpdateField("Test", "d", None, None, None, Some(true), None, None, None, None),
-      UpdateField("Test", "e", None, None, None, None, Some(true), None, None, None)
+      UpdateField("Test", "a", Some("a2"), None, None, None, None, None, None, None, None),
+      UpdateField("Test", "b", None, Some("Int"), None, None, None, None, None, None, None),
+      UpdateField("Test", "c", None, None, Some(true), None, None, None, None, None, None),
+      UpdateField("Test", "d", None, None, None, Some(true), None, None, None, None, None),
+      UpdateField("Test", "e", None, None, None, None, Some(true), None, None, None, None),
+      UpdateField("Test", "id", None, None, None, None, None, Some(true), None, None, None)
     )
   }
 
@@ -327,6 +330,7 @@ class MigrationStepsProposerSpec extends FlatSpec with Matchers with DeploySpecB
         typeName = None,
         isRequired = None,
         isList = None,
+        isHidden = None,
         isUnique = None,
         relation = None,
         defaultValue = None,

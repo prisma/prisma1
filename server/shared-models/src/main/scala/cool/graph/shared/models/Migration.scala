@@ -47,6 +47,7 @@ case class UpdateField(
     isRequired: Option[Boolean],
     isList: Option[Boolean],
     isUnique: Option[Boolean],
+    isHidden: Option[Boolean],
     relation: Option[Option[String]],
     defaultValue: Option[Option[String]],
     enum: Option[Option[String]]

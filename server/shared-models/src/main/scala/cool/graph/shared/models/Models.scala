@@ -1,15 +1,11 @@
 package cool.graph.shared.models
 
-import cool.graph.cuid.Cuid
 import cool.graph.gc_values.GCValue
 import cool.graph.shared.errors.SharedErrors
-import cool.graph.shared.models.CustomRule.CustomRule
 import cool.graph.shared.models.FieldConstraintType.FieldConstraintType
 import cool.graph.shared.models.LogStatus.LogStatus
 import cool.graph.shared.models.ModelMutationType.ModelMutationType
-import cool.graph.shared.models.ModelOperation.ModelOperation
 import cool.graph.shared.models.SeatStatus.SeatStatus
-import cool.graph.shared.models.UserType.UserType
 import org.joda.time.DateTime
 
 object IdType {
@@ -260,8 +256,7 @@ case class Model(
     id: Id,
     name: String,
     fields: List[Field],
-    description: Option[String] = None,
-    isSystem: Boolean = false
+    description: Option[String] = None
 ) {
 
   lazy val scalarFields: List[Field]         = fields.filter(_.isScalar)
@@ -350,7 +345,7 @@ case class Field(
     isRequired: Boolean,
     isList: Boolean,
     isUnique: Boolean,
-    isSystem: Boolean = false,
+    isHidden: Boolean = false,
     isReadonly: Boolean = false,
     enum: Option[Enum],
     defaultValue: Option[GCValue],

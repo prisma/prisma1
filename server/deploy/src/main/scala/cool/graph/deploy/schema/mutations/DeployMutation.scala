@@ -2,7 +2,7 @@ package cool.graph.deploy.schema.mutations
 
 import cool.graph.deploy.database.persistence.MigrationPersistence
 import cool.graph.deploy.migration.validation.{SchemaError, SchemaSyntaxValidator}
-import cool.graph.deploy.migration.{DesiredProjectInferrer, MigrationStepsProposer, Migrator, RenameInferer}
+import cool.graph.deploy.migration.{NextProjectInferrer, MigrationStepsProposer, Migrator, RenameInferer}
 import cool.graph.shared.models.{Migration, Project}
 import sangria.parser.QueryParser
 
@@ -12,7 +12,7 @@ import scala.concurrent.{ExecutionContext, Future}
 case class DeployMutation(
     args: DeployMutationInput,
     project: Project,
-    desiredProjectInferrer: DesiredProjectInferrer,
+    nextProjectInferrer: NextProjectInferrer,
     migrationStepsProposer: MigrationStepsProposer,
     renameInferer: RenameInferer,
     migrationPersistence: MigrationPersistence,
@@ -44,7 +44,7 @@ case class DeployMutation(
 
   private def performDeployment: Future[MutationSuccess[DeployMutationPayload]] = {
     for {
-      inferredProject <- desiredProjectInferrer.infer(baseProject = project, graphQlSdl).toFuture
+      inferredProject <- nextProjectInferrer.infer(baseProject = project, graphQlSdl).toFuture
       nextProject     = inferredProject.copy(secrets = args.secrets)
       renames         = renameInferer.infer(graphQlSdl)
       migrationSteps  = migrationStepsProposer.propose(project, nextProject, renames)
