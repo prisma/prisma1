@@ -70,7 +70,7 @@ object DependenciesNew {
     val joda        = "2.9.4"
     val jodaConvert = "1.7"
     val cuid        = "0.1.1"
-    val play        = "2.5.12"
+    val play        = "2.6.2"
     val scalactic   = "2.2.6"
     val scalaTest   = "2.2.6"
     val slick       = "3.2.0"
