@@ -94,27 +94,22 @@ case class SqlMutactions(dataResolver: DataResolver) {
       subModel       = field.relatedModel_!(project)
       nestedMutation <- args.subNestedMutation(field, subModel) // this is the input object containing the nested mutation
     } yield {
-      getMutactionsForNestedCreateMutation(subModel, nestedMutation, ParentInfo(model, field, fromId)) ++
-        getMutactionsForNestedConnectMutation(nestedMutation, ParentInfo(model, field, fromId))
+      val parentInfo = ParentInfo(model, field, fromId)
+      getMutactionsForNestedCreateMutation(subModel, nestedMutation, parentInfo) ++
+        getMutactionsForNestedConnectMutation(nestedMutation, parentInfo) ++
+        getMutactionsForNestedDisconnectMutation(nestedMutation, parentInfo)
 
     }
     x.flatten
   }
 
-  def getMutactionsForNestedCreateMutation(
-      model: Model,
-      nestedMutation: NestedMutation,
-      parentInfo: ParentInfo
-  ): Seq[ClientSqlMutaction] = {
+  def getMutactionsForNestedCreateMutation(model: Model, nestedMutation: NestedMutation, parentInfo: ParentInfo): Seq[ClientSqlMutaction] = {
     nestedMutation.creates.flatMap { create =>
       getMutactionsForCreate(model, create.data, parentInfo = Some(parentInfo)).allMutactions
     }
   }
 
-  def getMutactionsForNestedConnectMutation(
-      nestedMutation: NestedMutation,
-      parentInfo: ParentInfo
-  ): Seq[ClientSqlMutaction] = {
+  def getMutactionsForNestedConnectMutation(nestedMutation: NestedMutation, parentInfo: ParentInfo): Seq[ClientSqlMutaction] = {
     nestedMutation.connects.map { connect =>
       AddDataItemToManyRelationByUniqueField(
         project = project,
@@ -122,6 +117,18 @@ case class SqlMutactions(dataResolver: DataResolver) {
         fromField = parentInfo.field,
         fromId = parentInfo.id,
         where = connect.where
+      )
+    }
+  }
+
+  def getMutactionsForNestedDisconnectMutation(nestedMutation: NestedMutation, parentInfo: ParentInfo): Seq[ClientSqlMutaction] = {
+    nestedMutation.disconnects.map { disconnect =>
+      RemoveDataItemFromManyRelationByUniqueField(
+        project = project,
+        fromModel = parentInfo.model,
+        fromField = parentInfo.field,
+        fromId = parentInfo.id,
+        where = disconnect.where
       )
     }
   }
