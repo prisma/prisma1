@@ -32,6 +32,10 @@ function getProcessCommand(processId, processDirectory) {
     execOptions,
   )
 
+  if (command.includes('docker')) {
+    return 'docker'
+  }
+
   command = command.replace(/\n$/, '')
 }
 
@@ -48,12 +52,12 @@ export function getProcessForPort(port) {
     const directory = getDirectoryOfProcessById(processId)
     const command = getProcessCommand(processId, directory)
     return (
-      chalk.cyan(command) +
-      chalk.grey(' (pid ' + processId + ')\n') +
-      chalk.blue('  in ') +
-      chalk.cyan(directory)
+      chalk.cyan(command) + chalk.grey(' (pid ' + processId + ')')
+      // chalk.blue('  in ') +
+      // chalk.cyan(directory)
     )
   } catch (e) {
+    // console.error(e)
     return null
   }
 }

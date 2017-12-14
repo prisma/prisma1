@@ -140,7 +140,6 @@ ${chalk.gray(
         await Up.run(new Config({ mock: false, argv: [] }))
         await this.env.load(this.flags)
         cluster = this.env.clusterByName('local')!
-        console.log('setting newCluster as active cluster', cluster)
         this.env.setActiveCluster(cluster)
       } else {
         this.out.error(`Cluster ${clusterName} could not be found.`)

@@ -9,6 +9,7 @@ import { IOutput, Output } from './Output'
 import * as path from 'path'
 import * as os from 'os'
 import chalk from 'chalk'
+import 'isomorphic-fetch'
 
 export class Environment {
   sharedClusters: string[] = ['shared-public-demo']
@@ -27,7 +28,19 @@ export class Environment {
   }
 
   async load(args: Args) {
-    await this.loadGlobalRC()
+    await Promise.all([this.loadGlobalRC(), this.setSharedClusters()])
+  }
+
+  async setSharedClusters() {
+    const res = await fetch('https://stats.graph.cool/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ query: `{publicClusters}` }),
+    })
+    const json = await res.json()
+    this.sharedClusters = json.data.publicClusters
   }
 
   migrateOldCli(globalRCPath: string) {

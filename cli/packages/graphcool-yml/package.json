@@ -1,9 +1,11 @@
 {
   "name": "graphcool-yml",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "license": "Apache-2.0",
   "devDependencies": {
     "@types/fs-extra": "^4.0.5",
@@ -21,6 +23,7 @@
     "dotenv": "^4.0.0",
     "fs-extra": "^4.0.3",
     "graphcool-json-schema": "^1.0.1-alpha.2",
+    "isomorphic-fetch": "^2.2.1",
     "js-yaml": "^3.10.0",
     "jsonwebtoken": "^8.1.0",
     "lodash": "^4.17.4",
@@ -33,12 +36,20 @@
     "build": "tsc -d"
   },
   "jest": {
-    "moduleFileExtensions": ["ts", "tsx", "js", "jsx", "json"],
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "jsx",
+      "json"
+    ],
     "rootDir": "./src",
     "transform": {
       "^.+\\.(ts|tsx)$": "../../../node_modules/ts-jest/preprocessor.js"
     },
-    "testMatch": ["**/*.test.(ts|js)"],
+    "testMatch": [
+      "**/*.test.(ts|js)"
+    ],
     "globals": {
       "ts-jest": {
         "tsConfigFile": "./tsconfig.json"

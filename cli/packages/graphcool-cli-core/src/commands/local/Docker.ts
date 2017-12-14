@@ -59,10 +59,11 @@ export default class Docker {
     const portfinder = require('portfinder')
     port = port || (await portfinder.getPortPromise({ port: 60000 }))
     if (port > 60000) {
-      await this.askForHigherPort(port)
+      await this.askForHigherPort('60000', port)
     }
     const customVars = {
       PORT: String(port),
+      SCHEMA_MANAGER_ENDPOINT: `http://graphcool-database:${port}/system/schema`,
     }
     debug(`customVars`)
     debug(customVars)
@@ -72,13 +73,13 @@ export default class Docker {
     this.out.log(`This may take several minutes`)
     this.envVars = { ...process.env, ...defaultVars, ...customVars }
   }
-  async askForHigherPort(port: string) {
+  async askForHigherPort(port: string, higherPort: string) {
     const processForPort = getProcessForPort(port)
     const confirmationQuestion = {
       name: 'confirmation',
       type: 'input',
-      message: `Port 60000 is already used by ${processForPort}. Do you want to use the next free port (${port})? (Y/n)`,
-      default: 'n',
+      message: `Port 60000 is already used by ${processForPort}. Do you want to use the next free port (${higherPort})? (n/Y)`,
+      default: 'Y',
     }
     const { confirmation }: { confirmation: string } = await this.out.prompt(
       confirmationQuestion,
