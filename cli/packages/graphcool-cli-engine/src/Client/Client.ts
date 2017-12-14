@@ -52,9 +52,9 @@ fragment MigrationFragment on Migration {
       cf_typeName: typeName
       cf_isRequired: isRequired
       cf_isList: isList
-      cf_isUnique: isUnique
+      cf_isUnique: unique
       cf_relation: relation
-      cf_defaultValue: defaultValue
+      cf_defaultValue: default
       cf_enum: enum
     }
     ... on CreateModel {
@@ -90,10 +90,9 @@ fragment MigrationFragment on Migration {
       typeName
       isRequired
       isList
-      isUnique
-      isRequired
+      isUnique: unique
       relation
-      defaultValue
+      default
       enum
     }
     ... on UpdateModel {

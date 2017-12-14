@@ -110,8 +110,10 @@ ${chalk.gray(
         (await this.stageNameSelector('dev'))
     }
 
-    let clusterName = this.definition.getStage(stageName)
+    let clusterName = this.definition.rawStages[stageName]
     const serviceIsNew = !clusterName
+
+    console.log(clusterName, newServiceClusterName)
     if (!clusterName) {
       clusterName =
         (!interactive && newServiceClusterName) ||
@@ -126,6 +128,14 @@ ${chalk.gray(
 
     const cluster = this.env.clusterByName(clusterName!)
     if (!cluster) {
+      if (clusterName === 'local-database') {
+        this.out.log(`You selected the cluster ${chalk.bold(
+          'local-database',
+        )}, but don't have a local Graphcool cluster running yet.
+Please execute this to initialize a local Graphcool cluster:
+${chalk.bold.green('$ gc local up')}`)
+        this.out.exit(1)
+      }
       this.out.error(`Cluster ${clusterName} could not be found.`)
     }
     this.env.setActiveCluster(cluster!)
@@ -324,6 +334,9 @@ ${chalk.gray(
         name: c.name,
       }
     })
+    if (localClusters.length === 0) {
+      localClusters.push({ value: 'local-database', name: 'local-database' })
+    }
     const question = {
       name: 'cluster',
       type: 'list',
@@ -331,8 +344,8 @@ ${chalk.gray(
       choices: [
         new inquirer.Separator(chalk.bold('Shared Clusters:')),
         {
-          value: 'shared-eu-west-1',
-          name: 'shared-eu-west-1',
+          value: 'shared-public-demo',
+          name: 'shared-public-demo',
         },
         new inquirer.Separator('                     '),
         new inquirer.Separator(chalk.bold('Custom clusters (local/private):')),

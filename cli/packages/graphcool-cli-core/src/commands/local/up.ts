@@ -18,7 +18,7 @@ export default class Up extends Command {
     name: flags.string({
       char: 'n',
       description: 'Name of the cluster instance',
-      defaultValue: 'local',
+      defaultValue: 'local-database',
     }),
   }
   async run() {

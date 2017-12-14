@@ -3,3 +3,7 @@ service: SERVICE_NAME
 stages: {}
 
 datamodel: datamodel.graphql
+
+# to enable auth, provide
+# secret: my-secret
+disableAuth: true

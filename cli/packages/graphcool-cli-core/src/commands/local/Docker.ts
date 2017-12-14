@@ -77,7 +77,7 @@ export default class Docker {
     const confirmationQuestion = {
       name: 'confirmation',
       type: 'input',
-      message: `Port 60000 is already used by ${processForPort}. Do you want to use the next free port (${port})?`,
+      message: `Port 60000 is already used by ${processForPort}. Do you want to use the next free port (${port})? (Y/n)`,
       default: 'n',
     }
     const { confirmation }: { confirmation: string } = await this.out.prompt(

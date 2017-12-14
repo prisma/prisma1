@@ -114,7 +114,7 @@ export class Config {
     }
   }
   private setRCPaths() {
-    const homePath = path.join(this.home, '.graphcoolrc')
+    const homePath = path.join(this.home, '.graphcool')
     debug(`homepath`, homePath)
     this.globalRCPath = homePath
     debug(`globalRCPath`, this.globalRCPath)

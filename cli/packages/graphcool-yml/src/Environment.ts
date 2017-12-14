@@ -6,9 +6,12 @@ import { InternalRC } from './types/rc'
 import { ClusterNotFound } from './errors/ClusterNotFound'
 import { Variables } from './Variables'
 import { IOutput, Output } from './Output'
+import * as path from 'path'
+import * as os from 'os'
+import chalk from 'chalk'
 
 export class Environment {
-  sharedClusters: string[] = ['shared-eu-west-1']
+  sharedClusters: string[] = ['shared-public-demo']
   sharedEndpoint = 'https://database-beta.graph.cool'
   args: Args
   activeCluster: Cluster
@@ -20,10 +23,29 @@ export class Environment {
   constructor(globalRCPath: string, out: IOutput = new Output()) {
     this.globalRCPath = globalRCPath
     this.out = out
+    this.migrateOldCli(globalRCPath)
   }
 
   async load(args: Args) {
     await this.loadGlobalRC()
+  }
+
+  migrateOldCli(globalRCPath: string) {
+    if (fs.pathExistsSync(globalRCPath)) {
+      try {
+        const rc = fs.readFileSync(globalRCPath, 'utf-8')
+        const json = JSON.parse(rc)
+        if (json && typeof json === 'object') {
+          const newPath = path.join(os.homedir(), '.old.graphcool')
+          fs.moveSync(globalRCPath, newPath)
+          this.out.log(
+            `Old .graphcool file detected. We just moved it to ${newPath}`,
+          )
+        }
+      } catch (e) {
+        //
+      }
+    }
   }
 
   clusterByName(name: string, throws: boolean = false): Cluster | undefined {
@@ -52,7 +74,8 @@ export class Environment {
       platformToken: this.globalRC.platformToken,
       clusters: this.getLocalClusterConfig(),
     }
-    const rcString = yaml.safeDump(rc)
+    // parse & stringify to rm undefined for yaml parser
+    const rcString = yaml.safeDump(JSON.parse(JSON.stringify(rc)))
     fs.writeFileSync(this.globalRCPath, rcString)
   }
 

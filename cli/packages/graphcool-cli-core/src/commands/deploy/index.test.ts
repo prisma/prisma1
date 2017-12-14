@@ -35,7 +35,7 @@ describe('deploy', () => {
       '-n',
       'servicename',
       '-c',
-      'shared-eu-west-1',
+      'shared-public-demo',
     )
     expect(result.out.stdout.output).toMatchSnapshot()
   })

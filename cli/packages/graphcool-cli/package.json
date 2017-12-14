@@ -1,14 +1,12 @@
 {
-  "name": "graphcool-db",
-  "version": "0.0.0-alpha.12",
+  "name": "graphcool",
+  "version": "1.0.4-alpha.1",
   "main": "dist/index.js",
   "bin": {
     "graphcool-db": "dist/index.js",
     "gc-db": "dist/index.js"
   },
-  "files": [
-    "dist"
-  ],
+  "files": ["dist"],
   "typings": "dist/index.d.ts",
   "author": "Tim Suchanek <tim@graph.cool>",
   "license": "Apache-2.0",
@@ -27,7 +25,8 @@
     "build": "rimraf dist && tsc -d && chmod +x dist/index.js",
     "lint": "tslint src/**/*.ts",
     "precommit": "lint-staged",
-    "prettier": "prettier --single-quote --no-semi --trailing-comma all --write '*.ts' 'src/**/*.ts'",
+    "prettier":
+      "prettier --single-quote --no-semi --trailing-comma all --write '*.ts' 'src/**/*.ts'",
     "prepublishOnly": "npm run lint && npm run build"
   },
   "cli-engine": {
@@ -35,9 +34,7 @@
     "dirname": "graphcool",
     "node": "6.0.0",
     "defaultCommand": "help",
-    "plugins": [
-      "graphcool-cli-core"
-    ]
+    "plugins": ["graphcool-cli-core"]
   },
   "lint-staged": {
     "*.ts": [

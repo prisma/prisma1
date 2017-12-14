@@ -7,7 +7,8 @@
     "moduleResolution": "node",
     "lib": ["es2017", "dom", "esnext.asynciterable"],
     "target": "es5",
-    "rootDir": "src"
+    "rootDir": "src",
+    "skipLibCheck": true
   },
   "exclude": ["node_modules", "dist"]
 }

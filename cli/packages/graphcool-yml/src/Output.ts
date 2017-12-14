@@ -1,4 +1,7 @@
 export class Output {
+  log(...args) {
+    console.log(args)
+  }
   warn(...args) {
     console.warn(args)
   }
@@ -9,5 +12,6 @@ export class Output {
 
 export interface IOutput {
   warn: (...args) => void
+  log: (...args) => void
   getErrorPrefix: (fileName: string, type?: 'error' | 'warning') => string
 }
