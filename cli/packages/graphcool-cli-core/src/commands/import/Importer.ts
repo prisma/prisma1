@@ -1,8 +1,9 @@
 import * as path from 'path'
 import * as fs from 'fs-extra'
-import { Client } from 'graphcool-cli-engine'
+import { Client, Output } from 'graphcool-cli-engine'
 import * as globby from 'globby'
 import { Validator } from './Validator'
+import chalk from 'chalk'
 
 export interface Files {
   lists: string[]
@@ -14,38 +15,58 @@ export class Importer {
   importPath: string
   client: Client
   types: string
-  constructor(importPath: string, types: string, client: Client) {
+  out: Output
+  constructor(importPath: string, types: string, client: Client, out: Output) {
     if (!fs.pathExistsSync(importPath)) {
       throw new Error(`Import path ${importPath} does not exist`)
     }
     this.importPath = importPath
     this.client = client
     this.types = types
+    this.out = out
   }
   async upload(projectId: string) {
-    const before = Date.now()
-    console.log('Uploading...')
+    let before = Date.now()
+    this.out.action.start('Validating data')
     const files = this.getFiles()
     this.validateFiles(files)
+    this.out.action.stop(chalk.cyan(`${Date.now() - before}ms`))
+    before = Date.now()
+    this.out.action.start('Uploading nodes')
     for (const fileName of files.nodes) {
       const file = fs.readFileSync(fileName, 'utf-8')
       const json = JSON.parse(file)
       const result = await this.client.upload(projectId, file)
-      console.log(result)
+      if (result.length > 0) {
+        this.out.log(this.out.getStyledJSON(result))
+        this.out.exit(1)
+      }
     }
+    this.out.action.stop(chalk.cyan(`${Date.now() - before}ms`))
+    before = Date.now()
+    this.out.action.start('Uploading lists')
     for (const fileName of files.lists) {
       const file = fs.readFileSync(fileName, 'utf-8')
       const json = JSON.parse(file)
       const result = await this.client.upload(projectId, file)
-      console.log(result)
+      if (result.length > 0) {
+        this.out.log(this.out.getStyledJSON(result))
+        this.out.exit(1)
+      }
     }
+    this.out.action.stop(chalk.cyan(`${Date.now() - before}ms`))
+    before = Date.now()
+    this.out.action.start('Uploading relations')
     for (const fileName of files.relations) {
       const file = fs.readFileSync(fileName, 'utf-8')
       const json = JSON.parse(file)
       const result = await this.client.upload(projectId, file)
-      console.log(result)
+      if (result.length > 0) {
+        this.out.log(this.out.getStyledJSON(result))
+        this.out.exit(1)
+      }
     }
-    console.log(`Done with upload. Needed ${Date.now() - before}ms`)
+    this.out.action.stop(chalk.cyan(`${Date.now() - before}ms`))
   }
 
   validateFiles(files: Files) {

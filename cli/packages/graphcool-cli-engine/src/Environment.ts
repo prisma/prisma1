@@ -644,6 +644,19 @@ Please run ${chalk.bold('graphcool local up')} to start the local cluster.`)
     )
   }
 
+  exportEndpoint(projectId: string): string {
+    if (this.isSharedCluster(this.activeCluster)) {
+      return this.config.simpleAPIEndpoint + projectId + '/export'
+    }
+
+    return (
+      (this.rc.clusters![this.activeCluster]! as Cluster).host +
+      '/simple/v1/' +
+      projectId +
+      '/export'
+    )
+  }
+
   relayEndpoint(projectId: string): string {
     if (this.isSharedCluster(this.activeCluster)) {
       return this.config.relayAPIEndpoint + projectId

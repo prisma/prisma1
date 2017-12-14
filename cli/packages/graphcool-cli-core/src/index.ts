@@ -20,6 +20,7 @@ import PsLocal from './commands/local/ps'
 import Reset from './commands/reset/reset'
 import Clusters from './commands/clusters/index'
 import Import from './commands/import/index'
+import Export from './commands/export/index'
 
 export const groups = [
   {
@@ -106,6 +107,11 @@ export const topics = [
     description: 'Import command',
     group: 'general',
   },
+  {
+    name: 'export',
+    description: 'Export command',
+    group: 'general',
+  },
 ]
 
 export const commands = [
@@ -131,6 +137,7 @@ export const commands = [
   Reset,
   Clusters,
   Import,
+  Export,
 ]
 
 export {
@@ -156,4 +163,5 @@ export {
   Reset,
   Clusters,
   Import,
+  Export,
 }

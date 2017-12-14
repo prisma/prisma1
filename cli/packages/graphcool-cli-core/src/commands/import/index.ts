@@ -23,7 +23,6 @@ export default class Import extends Command {
     const { id } = await this.env.getTarget(target)
 
     // continue
-    console.log(target)
     await this.import(source, id)
   }
 
@@ -35,7 +34,7 @@ export default class Import extends Command {
     typesPaths.forEach(typesPath => {
       typesString += fs.readFileSync(typesPath, 'utf-8')
     })
-    const importer = new Importer(source, typesString, this.client)
+    const importer = new Importer(source, typesString, this.client, this.out)
     await importer.upload(id)
   }
 }

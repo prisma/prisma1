@@ -236,6 +236,9 @@ export class Validator {
         }
 
         let listBoolean = true
+        if (!field) {
+          debugger
+        }
         const isList = this.isList(field)
         if ((listsOnly && !isList) || (!listsOnly && isList)) {
           listBoolean = false
@@ -311,7 +314,9 @@ export class Validator {
     const fieldNames = includeLists
       ? allNonRelationListFieldNames
       : allNonRelationScalarFieldNames
-    const knownKeys = ['_typeName', 'id'].concat(fieldNames)
+    const knownKeys = ['_typeName', 'id', 'createdAt', 'updatedAt'].concat(
+      fieldNames,
+    )
     const unknownKeys = difference(Object.keys(obj), knownKeys)
     if (unknownKeys.length > 0) {
       throw new Error(
@@ -328,7 +333,9 @@ export class Validator {
     const fieldNames = Object.keys(obj).filter(f => f !== '_typeName')
     fieldNames.forEach(fieldName => {
       const value = obj[fieldName]
-      this.validateValue(value, fields[fieldName], listsOnly)
+      if (!['createdAt', 'updatedAt'].includes(fieldName)) {
+        this.validateValue(value, fields[fieldName], listsOnly)
+      }
     })
   }
 

@@ -706,9 +706,27 @@ export class Client {
     }
   }
 
+  async download(projectId: string, exportData: any): Promise<any> {
+    const endpoint = this.env.exportEndpoint(projectId)
+    const result = await fetch(endpoint, {
+      method: 'post',
+      headers: {
+        Authorization: `Bearer ${this.env.token}`,
+        'Content-Type': 'application/json',
+      },
+      body: exportData,
+    })
+
+    const text = await result.text()
+    try {
+      return JSON.parse(text)
+    } catch (e) {
+      throw new Error(text)
+    }
+  }
+
   async upload(projectId: string, importData: any): Promise<any> {
     const endpoint = this.env.importEndpoint(projectId)
-    console.log('uploading', this.env.token, endpoint)
     const result = await fetch(endpoint, {
       method: 'post',
       headers: {
