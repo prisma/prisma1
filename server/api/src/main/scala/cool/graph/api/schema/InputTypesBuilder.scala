@@ -1,10 +1,8 @@
 package cool.graph.api.schema
 
-import cool.graph.api.mutations.MutationTypes.ArgumentValue
 import cool.graph.cache.Cache
 import cool.graph.shared.models.{Field, Model, Project, Relation}
-import cool.graph.util.coolSangria.FromInputImplicit
-import sangria.schema.{Args, InputField, InputObjectType, InputType, ListInputType, OptionInputType}
+import sangria.schema.{InputField, InputObjectType, InputType, ListInputType, OptionInputType}
 
 trait InputTypesBuilder {
   def inputObjectTypeForCreate(model: Model, omitRelation: Option[Relation] = None): InputObjectType[Any]
@@ -66,8 +64,7 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
     InputObjectType[Any](
       name = inputObjectTypeName,
       fieldsFn = () => {
-        val schemaArguments = computeScalarSchemaArgumentsForCreate(model) ++ computeRelationalSchemaArguments(model, omitRelation, operation = "Create")
-        schemaArguments.map(_.asSangriaInputField)
+        computeScalarInputFieldsForCreate(model) ++ computeRelationalInputFields(model, omitRelation, operation = "Create")
       }
     )
   }
@@ -76,10 +73,8 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
     InputObjectType[Any](
       name = s"${model.name}UpdateInput",
       fieldsFn = () => {
-        val schemaArguments = computeScalarSchemaArgumentsForUpdate(model) ++
-          computeRelationalSchemaArguments(model, omitRelation = None, operation = "Update")
-
-        schemaArguments.map(_.asSangriaInputField)
+        computeScalarInputFieldsForUpdate(model) ++
+          computeRelationalInputFields(model, omitRelation = None, operation = "Update")
       }
     )
   }
@@ -91,23 +86,23 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
     )
   }
 
-  private def computeScalarSchemaArgumentsForCreate(model: Model): List[SchemaArgument] = {
+  private def computeScalarInputFieldsForCreate(model: Model): List[InputField[Any]] = {
     val filteredModel = model.filterFields(_.isWritable)
-    computeScalarSchemaArguments(filteredModel, FieldToInputTypeMapper.mapForCreateCase)
+    computeScalarInputFields(filteredModel, FieldToInputTypeMapper.mapForCreateCase)
   }
 
-  private def computeScalarSchemaArgumentsForUpdate(model: Model): List[SchemaArgument] = {
+  private def computeScalarInputFieldsForUpdate(model: Model): List[InputField[Any]] = {
     val filteredModel = model.filterFields(f => f.isWritable)
-    computeScalarSchemaArguments(filteredModel, FieldToInputTypeMapper.mapForUpdateCase)
+    computeScalarInputFields(filteredModel, FieldToInputTypeMapper.mapForUpdateCase)
   }
 
-  private def computeScalarSchemaArguments(model: Model, mapToInputType: Field => InputType[Any]): List[SchemaArgument] = {
+  private def computeScalarInputFields(model: Model, mapToInputType: Field => InputType[Any]): List[InputField[Any]] = {
     model.scalarFields.map { field =>
-      SchemaArgument(field.name, mapToInputType(field), field.description)
+      InputField(field.name, mapToInputType(field))
     }
   }
 
-  private def computeRelationalSchemaArguments(model: Model, omitRelation: Option[Relation], operation: String): List[SchemaArgument] = {
+  private def computeRelationalInputFields(model: Model, omitRelation: Option[Relation], operation: String): List[InputField[Any]] = {
     val manyRelationArguments = model.listRelationFields.flatMap { field =>
       val subModel              = field.relatedModel_!(project)
       val relation              = field.relation.get
@@ -121,12 +116,12 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
           name = s"${subModel.name}${operation}ManyWithout${relatedField.name.capitalize}Input",
           fieldsFn = () => {
             List(
-              SchemaArgument("create", OptionInputType(ListInputType(inputObjectTypeForCreate(subModel, Some(relation))))).asSangriaInputField,
-              SchemaArgument("connect", OptionInputType(ListInputType(inputObjectTypeForWhere(subModel)))).asSangriaInputField
+              InputField("create", OptionInputType(ListInputType(inputObjectTypeForCreate(subModel, Some(relation))))),
+              InputField("connect", OptionInputType(ListInputType(inputObjectTypeForWhere(subModel))))
             )
           }
         )
-        Some(SchemaArgument(field.name, OptionInputType(inputObjectType), field.description))
+        Some(InputField[Any](field.name, OptionInputType(inputObjectType)))
       }
     }
     val singleRelationArguments = model.singleRelationFields.flatMap { field =>
@@ -142,12 +137,12 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
           name = s"${subModel.name}${operation}OneWithout${relatedField.name.capitalize}Input",
           fieldsFn = () => {
             List(
-              SchemaArgument("create", OptionInputType(inputObjectTypeForCreate(subModel, Some(relation)))).asSangriaInputField,
-              SchemaArgument("connect", OptionInputType(inputObjectTypeForWhere(subModel))).asSangriaInputField
+              InputField("create", OptionInputType(inputObjectTypeForCreate(subModel, Some(relation)))),
+              InputField("connect", OptionInputType(inputObjectTypeForWhere(subModel)))
             )
           }
         )
-        Some(SchemaArgument(field.name, OptionInputType(inputObjectType), field.description))
+        Some(InputField[Any](field.name, OptionInputType(inputObjectType)))
       }
     }
     manyRelationArguments ++ singleRelationArguments
@@ -163,29 +158,5 @@ object FieldToInputTypeMapper {
   def mapForUpdateCase(field: Field): InputType[Any] = field.name match {
     case "id" => SchemaBuilderUtils.mapToRequiredInputType(field)
     case _    => SchemaBuilderUtils.mapToOptionalInputType(field)
-  }
-}
-
-case class SchemaArgument(name: String, inputType: InputType[Any], description: Option[String] = None) {
-
-  lazy val asSangriaInputField = InputField(name, inputType, description.getOrElse(""))
-  //lazy val asSangriaArgument   = Argument.createWithoutDefault(name, inputType, description)
-}
-
-object SchemaArgument {
-
-  implicit val anyFromInput = FromInputImplicit.CoercedResultMarshaller
-
-  def extractArgumentValues(args: Args, argumentDefinitions: List[SchemaArgument]): List[ArgumentValue] = {
-    argumentDefinitions
-      .filter(a => args.raw.contains(a.name))
-      .map { a =>
-        val value = args.raw.get(a.name) match {
-          case Some(Some(v)) => v
-          case Some(v)       => v
-          case v             => v
-        }
-        ArgumentValue(a.name, value)
-      }
   }
 }
