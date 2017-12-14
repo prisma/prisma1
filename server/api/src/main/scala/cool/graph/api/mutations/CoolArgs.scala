@@ -100,7 +100,7 @@ case class CoolArgs(raw: Map[String, Any]) {
   def extractNodeSelector(model: Model): NodeSelector = {
     raw.asInstanceOf[Map[String, Option[Any]]].collectFirst {
       case (fieldName, Some(value)) =>
-        NodeSelector(fieldName, GCAnyConverter(model.getFieldByName_!(fieldName).typeIdentifier, isList = false).toGCValue(value).get)
+        NodeSelector(model, fieldName, GCAnyConverter(model.getFieldByName_!(fieldName).typeIdentifier, isList = false).toGCValue(value).get)
     } getOrElse {
       sys.error("You must specify a unique selector")
     }
@@ -108,6 +108,6 @@ case class CoolArgs(raw: Map[String, Any]) {
 
 }
 
-case class NodeSelector(fieldName: String, fieldValue: GCValue) {
+case class NodeSelector(model: Model, fieldName: String, fieldValue: GCValue) {
   lazy val unwrappedFieldValue: Any = GCDBValueConverter().fromGCValue(fieldValue)
 }

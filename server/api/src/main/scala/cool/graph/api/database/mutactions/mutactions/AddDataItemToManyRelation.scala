@@ -17,8 +17,14 @@ import scala.util.{Failure, Success, Try}
   * Notation: It's not important which side you actually put into to or from. the only important
   * thing is that fromField belongs to fromModel
   */
-case class AddDataItemToManyRelation(project: Project, fromModel: Model, fromField: Field, toId: String, fromId: String, toIdAlreadyInDB: Boolean = true)
-    extends ClientSqlDataChangeMutaction {
+case class AddDataItemToManyRelation(
+    project: Project,
+    fromModel: Model,
+    fromField: Field,
+    toId: String,
+    fromId: String,
+    toIdAlreadyInDB: Boolean = true
+) extends ClientSqlDataChangeMutaction {
 
   assert(
     fromModel.fields.exists(_.id == fromField.id),

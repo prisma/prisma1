@@ -160,14 +160,12 @@ case class SqlMutactions(dataResolver: DataResolver) {
       parentInfo: ParentInfo
   ): ClientSqlMutaction = {
     val where = args.extractNodeSelector(model)
-
-    AddDataItemToManyRelation(
+    AddDataItemToManyRelationByUniqueField(
       project = project,
       fromModel = parentInfo.model,
       fromField = parentInfo.field,
       fromId = parentInfo.id,
-      toId = where.unwrappedFieldValue.toString,
-      toIdAlreadyInDB = false
+      where = where
     )
   }
 
