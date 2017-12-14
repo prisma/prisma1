@@ -28,7 +28,7 @@ case class CoolArgs(raw: Map[String, Any]) {
         upserts = Vector.empty,
         deletes = Vector.empty,
         connects = subArgsVector("connect").getOrElse(Vector.empty).map(args => ConnectOne(args.extractNodeSelector(subModel))),
-        disconnects = Vector.empty
+        disconnects = subArgsVector("disconnect").getOrElse(Vector.empty).map(args => DisconnectOne(args.extractNodeSelector(subModel)))
       )
     } else {
       NestedMutation(
@@ -37,7 +37,7 @@ case class CoolArgs(raw: Map[String, Any]) {
         upserts = Vector.empty,
         deletes = Vector.empty,
         connects = subArgsOption("connect").flatten.map(args => ConnectOne(args.extractNodeSelector(subModel))).toVector,
-        disconnects = Vector.empty
+        disconnects = subArgsOption("disconnect").flatten.map(args => DisconnectOne(args.extractNodeSelector(subModel))).toVector
       )
     }
   }
