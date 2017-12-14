@@ -91,10 +91,8 @@ case class OutputTypesBuilder(project: Project, objectTypes: Map[String, ObjectT
             arguments = List(),
             resolve = (parentCtx: Context[C, SimpleResolveOutput]) =>
               dataItem match {
-                case None =>
-                  Some(parentCtx.value)
-                case Some(x) =>
-                  None
+                case None => Some(parentCtx.value)
+                case Some(_) => None
             }
           ),
           schema.Field(

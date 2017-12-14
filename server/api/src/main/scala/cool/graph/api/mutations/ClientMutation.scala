@@ -29,3 +29,4 @@ trait ClientMutation {
 sealed trait ReturnValueResult
 case class ReturnValue(dataItem: DataItem) extends ReturnValueResult
 case class NoReturnValue(id: Id)           extends ReturnValueResult
+case class ReallyNoReturnValue()           extends ReturnValueResult

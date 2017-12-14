@@ -9,7 +9,7 @@ object OrExtensions {
     def toFuture: Future[G] = {
       or match {
         case Good(x)    => Future.successful(x)
-        case Bad(error) => Future.failed(new Exception(s"The underlying Or was a Bad: ${error}"))
+        case Bad(error) => Future.failed(new Exception(s"The underlying Or was a Bad: $error"))
       }
     }
   }
