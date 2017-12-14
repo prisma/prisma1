@@ -108,10 +108,10 @@ case class SchemaBuilderImpl(
     Field(
       camelCase(model.name),
       fieldType = OptionType(objectTypes(model.name)),
-      arguments = List(argumentsBuilder.getWhereArgument(model)),
+      arguments = List(argumentsBuilder.whereArgument(model)),
       resolve = (ctx) => {
         val coolArgs = CoolArgs(ctx.args.raw)
-        val where    = coolArgs.extractNodeSelectorFromSangriaArgs(model)
+        val where    = coolArgs.extractNodeSelectorFromWhereField(model)
         OneDeferred(model, where.fieldName, where.unwrappedFieldValue)
       }
     )
