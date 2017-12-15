@@ -40,24 +40,32 @@ object DatabaseMutationBuilder {
     (sql"update `#$projectId`.`#$modelName` set" concat escapedValues concat sql"where id = $id").asUpdate
   }
 
-  def upsertDataItem(project: Project, model: Model, createArgs: CoolArgs, updateArgs: CoolArgs) = {
+  def upsertDataItem(project: Project, model: Model, createArgs: CoolArgs, updateArgs: CoolArgs, where: NodeSelector) = {
 
     /**
       * - add id to insert statement -> should be in create args
       * - use where -> include in insert values to trigger duplicate key?
       *     -> but is also implicitly part of the createArgs
       */
-    val id             = Cuid.createCuid()
     val escapedColumns = combineByComma(createArgs.raw.keys.map(escapeKey))
-    val insertValues   = combineByComma(createArgs.raw.values.map(escapeUnsafeParam))
+    println(createArgs.raw)
+    val insertValues = combineByComma(createArgs.raw.values.map(escapeUnsafeParam))
     val updateValues = combineByComma(updateArgs.raw.map {
       case (k, v) =>
         escapeKey(k) ++ sql" = " ++ escapeUnsafeParam(v)
     })
 
-    (sql"INSERT INTO `#${project.id}`.`#${model.name}` (" ++ escapedColumns ++ sql")" ++
+    sql"""
+         select id
+         from `#${project.id}`.`#${model.name}
+         where #${where.fieldName} = ${where.fieldValue} 
+       """
+
+    val x = (sql"INSERT INTO `#${project.id}`.`#${model.name}` (" ++ escapedColumns ++ sql")" ++
       sql"VALUES (" ++ insertValues ++ sql")" ++
       sql"ON DUPLICATE KEY UPDATE" ++ updateValues).asUpdate
+    x.statements.foreach(println)
+    x
   }
 
   case class MirrorFieldDbValues(relationColumnName: String, modelColumnName: String, modelTableName: String, modelId: String)
