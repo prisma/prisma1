@@ -64,7 +64,7 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
     InputObjectType[Any](
       name = inputObjectTypeName,
       fieldsFn = () => {
-        computeScalarInputFieldsForCreate(model) ++ computeRelationalInputFields(model, omitRelation, operation = "Create")
+        computeScalarInputFieldsForCreate(model) ++ computeRelationalInputFieldsForCreate(model, omitRelation)
       }
     )
   }
@@ -73,7 +73,7 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
     InputObjectType[Any](
       name = s"${model.name}UpdateInput",
       fieldsFn = () => {
-        computeScalarInputFieldsForUpdate(model) ++ computeRelationalInputFields(model, omitRelation = None, operation = "Update")
+        computeScalarInputFieldsForUpdate(model) ++ computeRelationalInputFieldsForUpdate(model, omitRelation = None)
       }
     )
   }
@@ -106,50 +106,77 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
     }
   }
 
-  private def computeRelationalInputFields(model: Model, omitRelation: Option[Relation], operation: String): List[InputField[Any]] = {
-    val manyRelationArguments = model.listRelationFields.flatMap { field =>
+  private def computeRelationalInputFieldsForUpdate(model: Model, omitRelation: Option[Relation]): List[InputField[Any]] = {
+    model.relationFields.flatMap { field =>
       val subModel              = field.relatedModel_!(project)
-      val relation              = field.relation.get
       val relatedField          = field.relatedFieldEager(project)
       val relationMustBeOmitted = omitRelation.exists(rel => field.isRelationWithId(rel.id))
+
+      val inputObjectTypeName = if (field.isList) {
+        s"${subModel.name}UpdateManyWithout${relatedField.name.capitalize}Input"
+      } else {
+        s"${subModel.name}UpdateOneWithout${relatedField.name.capitalize}Input"
+      }
 
       if (relationMustBeOmitted) {
         None
       } else {
         val inputObjectType = InputObjectType[Any](
-          name = s"${subModel.name}${operation}ManyWithout${relatedField.name.capitalize}Input",
-          fieldsFn = () => {
-            List(
-              InputField("create", OptionInputType(ListInputType(inputObjectTypeForCreate(subModel, Some(relation))))),
-              InputField("connect", OptionInputType(ListInputType(inputObjectTypeForWhere(subModel))))
-            )
-          }
+          name = inputObjectTypeName,
+          fieldsFn = () => List(nestedCreateInputField(field), nestedConnectInputField(field), nestedDisconnectInputField(field), nestedDeleteInputField(field))
         )
         Some(InputField[Any](field.name, OptionInputType(inputObjectType)))
       }
     }
-    val singleRelationArguments = model.singleRelationFields.flatMap { field =>
+  }
+
+  private def computeRelationalInputFieldsForCreate(model: Model, omitRelation: Option[Relation]): List[InputField[Any]] = {
+    model.relationFields.flatMap { field =>
       val subModel              = field.relatedModel_!(project)
-      val relation              = field.relation.get
       val relatedField          = field.relatedFieldEager(project)
       val relationMustBeOmitted = omitRelation.exists(rel => field.isRelationWithId(rel.id))
+
+      val inputObjectTypeName = if (field.isList) {
+        s"${subModel.name}CreateManyWithout${relatedField.name.capitalize}Input"
+      } else {
+        s"${subModel.name}CreateOneWithout${relatedField.name.capitalize}Input"
+      }
 
       if (relationMustBeOmitted) {
         None
       } else {
         val inputObjectType = InputObjectType[Any](
-          name = s"${subModel.name}${operation}OneWithout${relatedField.name.capitalize}Input",
-          fieldsFn = () => {
-            List(
-              InputField("create", OptionInputType(inputObjectTypeForCreate(subModel, Some(relation)))),
-              InputField("connect", OptionInputType(inputObjectTypeForWhere(subModel)))
-            )
-          }
+          name = inputObjectTypeName,
+          fieldsFn = () => List(nestedCreateInputField(field), nestedConnectInputField(field))
         )
         Some(InputField[Any](field.name, OptionInputType(inputObjectType)))
       }
     }
-    manyRelationArguments ++ singleRelationArguments
+  }
+
+  def nestedCreateInputField(field: Field): InputField[Any] = {
+    val subModel = field.relatedModel_!(project)
+    val relation = field.relation.get
+    val inputType = if (field.isList) {
+      OptionInputType(ListInputType(inputObjectTypeForCreate(subModel, Some(relation))))
+    } else {
+      OptionInputType(inputObjectTypeForCreate(subModel, Some(relation)))
+    }
+    InputField[Any]("create", inputType)
+  }
+
+  def nestedConnectInputField(field: Field): InputField[Any]    = whereInputField(field, name = "connect")
+  def nestedDisconnectInputField(field: Field): InputField[Any] = whereInputField(field, name = "disconnect")
+  def nestedDeleteInputField(field: Field): InputField[Any]     = whereInputField(field, name = "delete")
+
+  def whereInputField(field: Field, name: String): InputField[Any] = {
+    val subModel = field.relatedModel_!(project)
+    val inputType = if (field.isList) {
+      OptionInputType(ListInputType(inputObjectTypeForWhere(subModel)))
+    } else {
+      OptionInputType(inputObjectTypeForWhere(subModel))
+    }
+    InputField[Any](name, inputType)
   }
 }
 

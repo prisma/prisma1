@@ -39,7 +39,7 @@ case class Create(
   }
 
   def prepareMutactions(): Future[List[MutactionGroup]] = {
-    val createMutactionsResult = SqlMutactions(dataResolver).getMutactionsForCreate(project, model, coolArgs, id)
+    val createMutactionsResult = SqlMutactions(dataResolver).getMutactionsForCreate(model, coolArgs, id)
 
     val transactionMutaction = Transaction(createMutactionsResult.allMutactions.toList, dataResolver)
     val createMutactions     = createMutactionsResult.allMutactions.collect { case x: CreateDataItem => x }

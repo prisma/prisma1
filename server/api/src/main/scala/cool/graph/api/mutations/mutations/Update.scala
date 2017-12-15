@@ -43,8 +43,7 @@ case class Update(
         val validatedDataItem = dataItem // todo: use GC Values
         // = dataItem.copy(userData = GraphcoolDataTypes.fromSql(dataItem.userData, model.fields))
 
-        val sqlMutactions: List[ClientSqlMutaction] =
-          SqlMutactions(dataResolver).getMutactionsForUpdate(project, model, coolArgs, dataItem.id, validatedDataItem)
+        val sqlMutactions: List[ClientSqlMutaction] = SqlMutactions(dataResolver).getMutactionsForUpdate(model, coolArgs, dataItem.id, validatedDataItem)
 
         val transactionMutaction = Transaction(sqlMutactions, dataResolver)
 
