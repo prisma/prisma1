@@ -81,12 +81,12 @@ case class SchemaBuilderImpl(
   def getAllItemsField(model: Model): Field[ApiUserContext, Unit] = {
     Field(
       camelCase(pluralsCache.pluralName(model)),
-      fieldType = ListType(objectTypes(model.name)),
+      fieldType = ListType(OptionType(objectTypes(model.name))),
       arguments = objectTypeBuilder.mapToListConnectionArguments(model),
       resolve = (ctx) => {
         val arguments = objectTypeBuilder.extractQueryArgumentsFromContext(model, ctx)
 
-        DeferredValue(ManyModelDeferred(model, arguments)).map(_.toNodes)
+        DeferredValue(ManyModelDeferred(model, arguments)).map(_.toNodes.map(Some(_)))
       }
     )
   }
@@ -183,10 +183,10 @@ case class SchemaBuilderImpl(
   def resetDataField: Field[ApiUserContext, Unit] = {
     Field(
       s"resetData",
-      fieldType =    OptionType(BooleanType),
+      fieldType = OptionType(BooleanType),
       resolve = (ctx) => {
         val mutation = ResetData(project = project, dataResolver = masterDataResolver)
-        ClientMutationRunner.run(mutation, dataResolver).map(x =>  true)
+        ClientMutationRunner.run(mutation, dataResolver).map(x => true)
       }
     )
   }
