@@ -136,6 +136,48 @@ object DatabaseMutationBuilder {
            """
   }
 
+  def updateDataItemByUniqueValueForAIfInRelationWithGivenB(
+      projectId: String,
+      relationTableName: String,
+      b: String,
+      where: NodeSelector,
+      values: Map[String, Any]
+  ) = {
+    val escapedValues = combineByComma(values.map {
+      case (k, v) =>
+        escapeKey(k) concat sql" = " concat escapeUnsafeParam(v)
+    })
+    (sql"""update `#$projectId`.`#${where.model.name}`""" concat
+      sql"""set""" concat escapedValues concat
+      sql"""where #${where.fieldName} = ${where.fieldValue} and id in (
+             select `A`
+             from `#$projectId`.`#$relationTableName`
+             where `B` = '#$b'
+           )
+        """).asUpdate
+  }
+
+  def updateDataItemByUniqueValueForBIfInRelationWithGivenA(
+      projectId: String,
+      relationTableName: String,
+      a: String,
+      where: NodeSelector,
+      values: Map[String, Any]
+  ) = {
+    val escapedValues = combineByComma(values.map {
+      case (k, v) =>
+        escapeKey(k) concat sql" = " concat escapeUnsafeParam(v)
+    })
+    (sql"""update `#$projectId`.`#${where.model.name}`""" concat
+      sql"""set""" concat escapedValues concat
+      sql"""where #${where.fieldName} = ${where.fieldValue} and id in (
+             select `B`
+             from `#$projectId`.`#$relationTableName`
+             where `A` = '#$a'
+           )
+        """).asUpdate
+  }
+
   def updateDataItem(projectId: String, modelName: String, id: String, values: Map[String, Any]) = {
     val escapedValues = combineByComma(values.map {
       case (k, v) =>
