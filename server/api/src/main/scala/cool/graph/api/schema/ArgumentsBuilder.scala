@@ -8,9 +8,6 @@ case class ArgumentsBuilder(project: Project) {
 
   val inputTypesBuilder: InputTypesBuilder = CachedInputTypesBuilder(project)
 
-  private val oneRelationIdFieldType   = OptionInputType(IDType)
-  private val manyRelationIdsFieldType = OptionInputType(ListInputType(IDType))
-
   implicit val anyFromInput = FromInputImplicit.CoercedResultMarshaller
 
   def getSangriaArgumentsForCreate(model: Model): List[Argument[Any]] = {
