@@ -67,7 +67,7 @@ case class SchemaBuilderImpl(
       project.models.map(updateItemField) ++
       project.models.map(deleteItemField)
 
-    Some(ObjectType("Mutation", fields :+ resetProjectDataField))
+    Some(ObjectType("Mutation", fields :+ resetDataField))
 
   }
 
@@ -180,13 +180,13 @@ case class SchemaBuilderImpl(
     )
   }
 
-  def resetProjectDataField: Field[ApiUserContext, Unit] = {
+  def resetDataField: Field[ApiUserContext, Unit] = {
     Field(
-      s"resetProjectData",
-      fieldType =    OptionType(StringType),
+      s"resetData",
+      fieldType =    OptionType(BooleanType),
       resolve = (ctx) => {
-        val mutation = ResetProjectData(project = project, dataResolver = masterDataResolver)
-        ClientMutationRunner.run(mutation, dataResolver).map(x => "")
+        val mutation = ResetData(project = project, dataResolver = masterDataResolver)
+        ClientMutationRunner.run(mutation, dataResolver).map(x =>  true)
       }
     )
   }

@@ -9,7 +9,7 @@ import cool.graph.shared.models._
 
 import scala.concurrent.Future
 
-case class ResetProjectData(project: Project, dataResolver: DataResolver)(implicit apiDependencies: ApiDependencies)
+case class ResetData(project: Project, dataResolver: DataResolver)(implicit apiDependencies: ApiDependencies)
   extends ClientMutation {
 
   override def prepareMutactions(): Future[List[MutactionGroup]] = {

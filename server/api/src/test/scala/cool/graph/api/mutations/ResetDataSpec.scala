@@ -5,14 +5,15 @@ import java.sql.SQLIntegrityConstraintViolationException
 import cool.graph.api.ApiBaseSpec
 import cool.graph.api.database.DatabaseQueryBuilder
 import cool.graph.api.database.import_export.BulkImport
+import cool.graph.shared.models.Project
 import cool.graph.shared.project_dsl.SchemaDsl
 import cool.graph.utils.await.AwaitUtils
 import org.scalatest.{FlatSpec, Matchers}
 import spray.json._
 
-class ResetProjectDataSpec extends FlatSpec with Matchers with ApiBaseSpec with AwaitUtils{
+class ResetDataSpec extends FlatSpec with Matchers with ApiBaseSpec with AwaitUtils{
 
-  val project = SchemaDsl() { schema =>
+  val project: Project = SchemaDsl() { schema =>
 
     val model1: SchemaDsl.ModelBuilder = schema
       .model("Model1")
@@ -85,7 +86,7 @@ class ResetProjectDataSpec extends FlatSpec with Matchers with ApiBaseSpec with 
       val rel2 = server.executeQuerySimple("query{model2s{id, model1{id}}}", project).toString
       rel2 should be("""{"data":{"model2s":[{"id":"2","model1":{"id":"1"}}]}}""")
 
-      server.executeQuerySimple("mutation{resetProjectData}", project)
+      server.executeQuerySimple("mutation{resetData}", project, dataContains = "true")
 
       server.executeQuerySimple("query{model0s{id}}", project, dataContains = """{"model0s":[]}""")
       server.executeQuerySimple("query{model1s{id}}", project, dataContains = """{"model1s":[]}""")
@@ -108,7 +109,7 @@ class ResetProjectDataSpec extends FlatSpec with Matchers with ApiBaseSpec with 
 
     importer.executeImport(nodes).await(5)
 
-    server.executeQuerySimple("mutation{resetProjectData}", project)
+    server.executeQuerySimple("mutation{resetData}", project)
 
     server.executeQuerySimple("query{model0s{id}}", project, dataContains = """{"model0s":[]}""")
     server.executeQuerySimple("query{model1s{id}}", project, dataContains = """{"model1s":[]}""")
@@ -121,10 +122,4 @@ class ResetProjectDataSpec extends FlatSpec with Matchers with ApiBaseSpec with 
 
    intercept [SQLIntegrityConstraintViolationException] {database.runDbActionOnClientDb(insert.asUpdate)}
   }
-
-
-
-
-
-
 }
