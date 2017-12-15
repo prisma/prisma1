@@ -1,10 +1,8 @@
 package cool.graph.api.schema
 
-import cool.graph.api.mutations.MutationTypes.ArgumentValue
 import cool.graph.cache.Cache
 import cool.graph.shared.models.{Field, Model, Project, Relation}
-import cool.graph.util.coolSangria.FromInputImplicit
-import sangria.schema.{Args, InputField, InputObjectType, InputType, ListInputType, OptionInputType}
+import sangria.schema.{InputField, InputObjectType, InputType, ListInputType, OptionInputType}
 
 trait InputTypesBuilder {
   def inputObjectTypeForCreate(model: Model, omitRelation: Option[Relation] = None): InputObjectType[Any]
@@ -66,8 +64,7 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
     InputObjectType[Any](
       name = inputObjectTypeName,
       fieldsFn = () => {
-        val schemaArguments = computeScalarSchemaArgumentsForCreate(model) ++ computeRelationalSchemaArguments(model, omitRelation, operation = "Create")
-        schemaArguments.map(_.asSangriaInputField)
+        computeScalarInputFieldsForCreate(model) ++ computeRelationalInputFieldsForCreate(model, omitRelation)
       }
     )
   }
@@ -76,10 +73,7 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
     InputObjectType[Any](
       name = s"${model.name}UpdateInput",
       fieldsFn = () => {
-        val schemaArguments = computeScalarSchemaArgumentsForUpdate(model) ++
-          computeRelationalSchemaArguments(model, omitRelation = None, operation = "Update")
-
-        schemaArguments.map(_.asSangriaInputField)
+        computeScalarInputFieldsForUpdate(model) ++ computeRelationalInputFieldsForUpdate(model, omitRelation = None)
       }
     )
   }
@@ -87,70 +81,102 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
   protected def computeInputObjectTypeForWhere(model: Model): InputObjectType[Any] = {
     InputObjectType[Any](
       name = s"${model.name}WhereUniqueInput",
-      fields = model.fields.filter(_.isUnique).map(field => InputField(name = field.name, fieldType = SchemaBuilderUtils.mapToOptionalInputType(field)))
+      fieldsFn = () => {
+        val uniqueFields = model.fields.filter(_.isUnique)
+        uniqueFields.map { field =>
+          InputField(name = field.name, fieldType = SchemaBuilderUtils.mapToOptionalInputType(field))
+        }
+      }
     )
   }
 
-  private def computeScalarSchemaArgumentsForCreate(model: Model): List[SchemaArgument] = {
+  private def computeScalarInputFieldsForCreate(model: Model): List[InputField[Any]] = {
     val filteredModel = model.filterFields(_.isWritable)
-    computeScalarSchemaArguments(filteredModel, FieldToInputTypeMapper.mapForCreateCase)
+    computeScalarInputFields(filteredModel, FieldToInputTypeMapper.mapForCreateCase)
   }
 
-  private def computeScalarSchemaArgumentsForUpdate(model: Model): List[SchemaArgument] = {
+  private def computeScalarInputFieldsForUpdate(model: Model): List[InputField[Any]] = {
     val filteredModel = model.filterFields(f => f.isWritable)
-    computeScalarSchemaArguments(filteredModel, FieldToInputTypeMapper.mapForUpdateCase)
+    computeScalarInputFields(filteredModel, SchemaBuilderUtils.mapToOptionalInputType)
   }
 
-  private def computeScalarSchemaArguments(model: Model, mapToInputType: Field => InputType[Any]): List[SchemaArgument] = {
+  private def computeScalarInputFields(model: Model, mapToInputType: Field => InputType[Any]): List[InputField[Any]] = {
     model.scalarFields.map { field =>
-      SchemaArgument(field.name, mapToInputType(field), field.description)
+      InputField(field.name, mapToInputType(field))
     }
   }
 
-  private def computeRelationalSchemaArguments(model: Model, omitRelation: Option[Relation], operation: String): List[SchemaArgument] = {
-    val manyRelationArguments = model.listRelationFields.flatMap { field =>
+  private def computeRelationalInputFieldsForUpdate(model: Model, omitRelation: Option[Relation]): List[InputField[Any]] = {
+    model.relationFields.flatMap { field =>
       val subModel              = field.relatedModel_!(project)
-      val relation              = field.relation.get
       val relatedField          = field.relatedFieldEager(project)
       val relationMustBeOmitted = omitRelation.exists(rel => field.isRelationWithId(rel.id))
+
+      val inputObjectTypeName = if (field.isList) {
+        s"${subModel.name}UpdateManyWithout${relatedField.name.capitalize}Input"
+      } else {
+        s"${subModel.name}UpdateOneWithout${relatedField.name.capitalize}Input"
+      }
 
       if (relationMustBeOmitted) {
         None
       } else {
         val inputObjectType = InputObjectType[Any](
-          name = s"${subModel.name}${operation}ManyWithout${relatedField.name.capitalize}Input",
-          fieldsFn = () => {
-            List(
-              SchemaArgument("create", OptionInputType(ListInputType(inputObjectTypeForCreate(subModel, Some(relation))))).asSangriaInputField,
-              SchemaArgument("connect", OptionInputType(ListInputType(inputObjectTypeForWhere(subModel)))).asSangriaInputField
-            )
-          }
+          name = inputObjectTypeName,
+          fieldsFn = () => List(nestedCreateInputField(field), nestedConnectInputField(field), nestedDisconnectInputField(field), nestedDeleteInputField(field))
         )
-        Some(SchemaArgument(field.name, OptionInputType(inputObjectType), field.description))
+        Some(InputField[Any](field.name, OptionInputType(inputObjectType)))
       }
     }
-    val singleRelationArguments = model.singleRelationFields.flatMap { field =>
+  }
+
+  private def computeRelationalInputFieldsForCreate(model: Model, omitRelation: Option[Relation]): List[InputField[Any]] = {
+    model.relationFields.flatMap { field =>
       val subModel              = field.relatedModel_!(project)
-      val relation              = field.relation.get
       val relatedField          = field.relatedFieldEager(project)
       val relationMustBeOmitted = omitRelation.exists(rel => field.isRelationWithId(rel.id))
+
+      val inputObjectTypeName = if (field.isList) {
+        s"${subModel.name}CreateManyWithout${relatedField.name.capitalize}Input"
+      } else {
+        s"${subModel.name}CreateOneWithout${relatedField.name.capitalize}Input"
+      }
 
       if (relationMustBeOmitted) {
         None
       } else {
         val inputObjectType = InputObjectType[Any](
-          name = s"${subModel.name}${operation}OneWithout${relatedField.name.capitalize}Input",
-          fieldsFn = () => {
-            List(
-              SchemaArgument("create", OptionInputType(inputObjectTypeForCreate(subModel, Some(relation)))).asSangriaInputField,
-              SchemaArgument("connect", OptionInputType(inputObjectTypeForWhere(subModel))).asSangriaInputField
-            )
-          }
+          name = inputObjectTypeName,
+          fieldsFn = () => List(nestedCreateInputField(field), nestedConnectInputField(field))
         )
-        Some(SchemaArgument(field.name, OptionInputType(inputObjectType), field.description))
+        Some(InputField[Any](field.name, OptionInputType(inputObjectType)))
       }
     }
-    manyRelationArguments ++ singleRelationArguments
+  }
+
+  def nestedCreateInputField(field: Field): InputField[Any] = {
+    val subModel = field.relatedModel_!(project)
+    val relation = field.relation.get
+    val inputType = if (field.isList) {
+      OptionInputType(ListInputType(inputObjectTypeForCreate(subModel, Some(relation))))
+    } else {
+      OptionInputType(inputObjectTypeForCreate(subModel, Some(relation)))
+    }
+    InputField[Any]("create", inputType)
+  }
+
+  def nestedConnectInputField(field: Field): InputField[Any]    = whereInputField(field, name = "connect")
+  def nestedDisconnectInputField(field: Field): InputField[Any] = whereInputField(field, name = "disconnect")
+  def nestedDeleteInputField(field: Field): InputField[Any]     = whereInputField(field, name = "delete")
+
+  def whereInputField(field: Field, name: String): InputField[Any] = {
+    val subModel = field.relatedModel_!(project)
+    val inputType = if (field.isList) {
+      OptionInputType(ListInputType(inputObjectTypeForWhere(subModel)))
+    } else {
+      OptionInputType(inputObjectTypeForWhere(subModel))
+    }
+    InputField[Any](name, inputType)
   }
 }
 
@@ -158,34 +184,5 @@ object FieldToInputTypeMapper {
   def mapForCreateCase(field: Field): InputType[Any] = field.isRequired && field.defaultValue.isEmpty match {
     case true  => SchemaBuilderUtils.mapToRequiredInputType(field)
     case false => SchemaBuilderUtils.mapToOptionalInputType(field)
-  }
-
-  def mapForUpdateCase(field: Field): InputType[Any] = field.name match {
-    case "id" => SchemaBuilderUtils.mapToRequiredInputType(field)
-    case _    => SchemaBuilderUtils.mapToOptionalInputType(field)
-  }
-}
-
-case class SchemaArgument(name: String, inputType: InputType[Any], description: Option[String] = None) {
-
-  lazy val asSangriaInputField = InputField(name, inputType, description.getOrElse(""))
-  //lazy val asSangriaArgument   = Argument.createWithoutDefault(name, inputType, description)
-}
-
-object SchemaArgument {
-
-  implicit val anyFromInput = FromInputImplicit.CoercedResultMarshaller
-
-  def extractArgumentValues(args: Args, argumentDefinitions: List[SchemaArgument]): List[ArgumentValue] = {
-    argumentDefinitions
-      .filter(a => args.raw.contains(a.name))
-      .map { a =>
-        val value = args.raw.get(a.name) match {
-          case Some(Some(v)) => v
-          case Some(v)       => v
-          case v             => v
-        }
-        ArgumentValue(a.name, value)
-      }
   }
 }

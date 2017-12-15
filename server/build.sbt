@@ -396,7 +396,7 @@ lazy val jsonUtils =
     .settings(libraryDependencies ++= Seq(
       playJson,
       scalaTest
-    ))
+    ) ++ joda)
 
 lazy val cache =
   Project(id = "cache", base = file("./libs/cache"))

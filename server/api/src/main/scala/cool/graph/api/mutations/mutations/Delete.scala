@@ -47,7 +47,7 @@ case class Delete(
 
         val itemToDelete = deletedItemOpt.getOrElse(sys.error("Than node does not exist"))
 
-        val sqlMutactions        = SqlMutactions(dataResolver).getMutactionsForDelete(model, project, itemToDelete.id, itemToDelete)
+        val sqlMutactions        = SqlMutactions(dataResolver).getMutactionsForDelete(model, itemToDelete.id, itemToDelete)
         val transactionMutaction = Transaction(sqlMutactions, dataResolver)
 
         val nodeData: Map[String, Any] = itemToDelete.userData
