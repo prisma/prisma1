@@ -18,7 +18,8 @@ case class Update(
     model: Model,
     project: Project,
     args: schema.Args,
-    dataResolver: DataResolver
+    dataResolver: DataResolver,
+    argsField: String = "data"
 )(implicit apiDependencies: ApiDependencies)
     extends ClientMutation {
 
@@ -26,7 +27,7 @@ case class Update(
   implicit val materializer: ActorMaterializer = apiDependencies.materializer
 
   val coolArgs: CoolArgs = {
-    val argsPointer: Map[String, Any] = args.raw.get("data") match { // TODO: input token is probably relay specific?
+    val argsPointer: Map[String, Any] = args.raw.get(argsField) match {
       case Some(value) => value.asInstanceOf[Map[String, Any]]
       case None        => args.raw
     }
