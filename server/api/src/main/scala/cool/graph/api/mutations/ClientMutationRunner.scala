@@ -32,7 +32,6 @@ object ClientMutationRunner {
             clientMutation.getReturnValue.map {
               case ReturnValue(dataItem) => dataItem
               case NoReturnValue(id)     => throw APIErrors.NodeNotFoundError(id)
-              case ReallyNoReturnValue() => DataItem("", Map.empty)
             }
         }
       }

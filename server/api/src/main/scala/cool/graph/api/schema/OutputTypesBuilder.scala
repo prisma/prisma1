@@ -118,8 +118,7 @@ case class OutputTypesBuilder(project: Project, objectTypes: Map[String, ObjectT
 
   type R = SimpleResolveOutput
 
-  def mapResolve(item: DataItem, args: Args): SimpleResolveOutput =
-    SimpleResolveOutput(item, args)
+  def mapResolve(item: DataItem, args: Args): SimpleResolveOutput = SimpleResolveOutput(item, args)
 
   def mapAddToRelationOutputType[C](relation: Relation,
                                     fromModel: Model,

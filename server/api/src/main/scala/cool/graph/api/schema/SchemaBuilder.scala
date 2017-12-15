@@ -200,7 +200,6 @@ case class SchemaBuilderImpl(
       arguments = List(SangriaQueryArguments.whereSubscriptionArgument(model = model, project = project)),
       resolve = _ => None
     )
-
   }
 
   lazy val NodeDefinition(nodeInterface: InterfaceType[ApiUserContext, DataItem], nodeField, nodeRes) = Node.definitionById(

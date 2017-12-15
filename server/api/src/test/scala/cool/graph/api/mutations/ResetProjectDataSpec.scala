@@ -1,6 +1,9 @@
 package cool.graph.api.mutations
 
+import java.sql.SQLIntegrityConstraintViolationException
+
 import cool.graph.api.ApiBaseSpec
+import cool.graph.api.database.DatabaseQueryBuilder
 import cool.graph.api.database.import_export.BulkImport
 import cool.graph.shared.project_dsl.SchemaDsl
 import cool.graph.utils.await.AwaitUtils
@@ -43,7 +46,7 @@ class ResetProjectDataSpec extends FlatSpec with Matchers with ApiBaseSpec with 
   }
   val importer = new BulkImport(project)
 
-    "Combining the data from the three files" should "work" in {
+    "The ResetDataMutation" should "wipe all data" in {
 
       val nodes = """{"valueType": "nodes", "values": [
                     |{"_typeName": "Model0", "id": "0", "a": "test", "b":  0, "createdAt": "2017-11-29 14:35:13"},
@@ -61,25 +64,14 @@ class ResetProjectDataSpec extends FlatSpec with Matchers with ApiBaseSpec with 
           |]}
           |""".stripMargin.parseJson
 
-
-      val lists = """{ "valueType": "lists", "values": [
-                    |{"_typeName": "Model1", "id": "1", "listField": [2,3,4,5]},
-                    |{"_typeName": "Model1", "id": "1", "listField": [2,3,4,5]},
-                    |{"_typeName": "Model1", "id": "1", "listField": [2,3,4,5]}
-                    |]}
-                    |""".stripMargin.parseJson
-
-
-
       importer.executeImport(nodes).await(5)
       importer.executeImport(relations).await(5)
-      importer.executeImport(lists).await(5)
 
       val res0 = server.executeQuerySimple("query{model0s{id, a, b}}", project).toString
       res0 should be("""{"data":{"model0s":[{"id":"0","a":"test","b":0},{"id":"3","a":"test","b":3}]}}""")
 
-      val res1 = server.executeQuerySimple("query{model1s{id, a, b, listField}}", project).toString
-      res1 should be("""{"data":{"model1s":[{"id":"1","a":"test","b":1,"listField":[2,3,4,5,2,3,4,5,2,3,4,5]}]}}""")
+      val res1 = server.executeQuerySimple("query{model1s{id, a, b}}", project).toString
+      res1 should be("""{"data":{"model1s":[{"id":"1","a":"test","b":1}]}}""")
 
       val res2 = server.executeQuerySimple("query{model2s{id, a, b, name}}", project).toString
       res2 should be("""{"data":{"model2s":[{"id":"2","a":"test","b":2,"name":null}]}}""")
@@ -95,11 +87,44 @@ class ResetProjectDataSpec extends FlatSpec with Matchers with ApiBaseSpec with 
 
       server.executeQuerySimple("mutation{resetProjectData}", project)
 
-      Thread.sleep(5000)
+      server.executeQuerySimple("query{model0s{id}}", project, dataContains = """{"model0s":[]}""")
+      server.executeQuerySimple("query{model1s{id}}", project, dataContains = """{"model1s":[]}""")
+      server.executeQuerySimple("query{model2s{id}}", project, dataContains = """{"model2s":[]}""")
 
-      val res6 = server.executeQuerySimple("query{model0s{id, a, b}}", project).toString
-      res6 should be("""{"data":{"model0s":[{"id":"0","a":"test","b":0},{"id":"3","a":"test","b":3}]}}""")
-
-
+      database.runDbActionOnClientDb(DatabaseQueryBuilder.existsByModel(project.id, "_RelayId").as[Boolean]).toString should be ("Vector(false)")
+      database.runDbActionOnClientDb(DatabaseQueryBuilder.existsByModel(project.id, "relation0").as[Boolean]).toString should be ("Vector(false)")
+      database.runDbActionOnClientDb(DatabaseQueryBuilder.existsByModel(project.id, "relation1").as[Boolean]).toString should be ("Vector(false)")
+      database.runDbActionOnClientDb(DatabaseQueryBuilder.existsByModel(project.id, "relation2").as[Boolean]).toString should be ("Vector(false)")
     }
+
+  "The ResetDataMutation" should "reinstate foreign key constraints again after wiping the data" in {
+
+    val nodes = """{"valueType": "nodes", "values": [
+                  |{"_typeName": "Model0", "id": "0", "a": "test", "b":  0, "createdAt": "2017-11-29 14:35:13"},
+                  |{"_typeName": "Model1", "id": "1", "a": "test", "b":  1},
+                  |{"_typeName": "Model2", "id": "2", "a": "test", "b":  2, "createdAt": "2017-11-29 14:35:13"},
+                  |{"_typeName": "Model0", "id": "3", "a": "test", "b":  3}
+                  |]}""".stripMargin.parseJson
+
+    importer.executeImport(nodes).await(5)
+
+    server.executeQuerySimple("mutation{resetProjectData}", project)
+
+    server.executeQuerySimple("query{model0s{id}}", project, dataContains = """{"model0s":[]}""")
+    server.executeQuerySimple("query{model1s{id}}", project, dataContains = """{"model1s":[]}""")
+    server.executeQuerySimple("query{model2s{id}}", project, dataContains = """{"model2s":[]}""")
+
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.existsByModel(project.id, "_RelayId").as[Boolean]).toString should be ("Vector(false)")
+
+    import slick.jdbc.MySQLProfile.api._
+     val insert = sql"INSERT INTO `#${project.id}`.`relation1` VALUES ('someID', 'a', 'b')"
+
+   intercept [SQLIntegrityConstraintViolationException] {database.runDbActionOnClientDb(insert.asUpdate)}
+  }
+
+
+
+
+
+
 }

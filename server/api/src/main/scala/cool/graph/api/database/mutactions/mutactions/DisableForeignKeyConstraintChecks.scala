@@ -5,8 +5,9 @@ import cool.graph.api.database.mutactions.{ClientSqlDataChangeMutaction, ClientS
 
 import scala.concurrent.Future
 
-case class DeleteAllRelayIds(projectId: String) extends ClientSqlDataChangeMutaction {
+case class DisableForeignKeyConstraintChecks() extends ClientSqlDataChangeMutaction {
 
   override def execute: Future[ClientSqlStatementResult[Any]] =
-    Future.successful(ClientSqlStatementResult(sqlAction = DatabaseMutationBuilder.truncateTable(projectId, "_RelayId")))
+    Future.successful(ClientSqlStatementResult(sqlAction = DatabaseMutationBuilder.disableForeignKeyConstraintChecks))
+
 }

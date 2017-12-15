@@ -117,7 +117,7 @@ object DatabaseQueryBuilder {
     sql"select exists (select `id` from `#$projectId`.`#$modelName` where `id` = '#$id')"
   }
 
-  def existsByModel(projectId: String, modelName: String) = {
+  def existsByModel(projectId: String, modelName: String): SQLActionBuilder = {
     sql"select exists (select `id` from `#$projectId`.`#$modelName`)"
   }
 
@@ -237,7 +237,7 @@ object DatabaseQueryBuilder {
       )
   }
 
-  def getTables(projectId: String) = {
+  def getTables(projectId: String): DBIOAction[Vector[String], NoStream, Read] = {
     for {
       metaTables <- MTable.getTables(cat = Some(projectId), schemaPattern = None, namePattern = None, types = None)
     } yield metaTables.map(table => table.name.name)
