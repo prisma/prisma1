@@ -203,6 +203,58 @@ export class Client {
     return client.request(introspectionQuery)
   }
 
+  async download(
+    serviceName: string,
+    stage: string,
+    exportData: any,
+    token?: string,
+  ): Promise<any> {
+    const result = await fetch(
+      this.env.activeCluster.getExportEndpoint(serviceName, stage),
+      {
+        method: 'post',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: exportData,
+      },
+    )
+
+    const text = await result.text()
+    try {
+      return JSON.parse(text)
+    } catch (e) {
+      throw new Error(text)
+    }
+  }
+
+  async upload(
+    serviceName: string,
+    stage: string,
+    exportData: any,
+    token?: string,
+  ): Promise<any> {
+    const result = await fetch(
+      this.env.activeCluster.getImportEndpoint(serviceName, stage),
+      {
+        method: 'post',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: exportData,
+      },
+    )
+
+    const text = await result.text()
+    try {
+      return JSON.parse(text)
+    } catch (e) {
+      throw new Error(text)
+    }
+  }
+
   async addProject(
     name: string,
     stage: string,

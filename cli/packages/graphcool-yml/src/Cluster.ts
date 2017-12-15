@@ -25,6 +25,14 @@ export class Cluster {
     return `${this.baseUrl}/api/${serviceName}/${stage}`
   }
 
+  getImportEndpoint(serviceName: string, stage: string) {
+    return `${this.baseUrl}/api/${serviceName}/${stage}/import`
+  }
+
+  getExportEndpoint(serviceName: string, stage: string) {
+    return `${this.baseUrl}/api/${serviceName}/${stage}/export`
+  }
+
   getDeployEndpoint() {
     return `${this.baseUrl}/system/playground`
   }

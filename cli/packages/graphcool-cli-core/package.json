@@ -13,6 +13,7 @@
     "@types/fs-extra": "^4.0.2",
     "@types/graphql": "^0.11.7",
     "@types/node": "^8.0.22",
+    "faker": "^4.1.0",
     "husky": "^0.14.3",
     "jest": "^21.0.2",
     "lint-staged": "^4.2.3",
@@ -101,6 +102,7 @@
     "table": "^4.0.1",
     "ts-node": "^3.3.0",
     "typescript": "^2.5.3",
+    "unzip": "^0.1.11",
     "validator": "^8.2.0"
   }
 }
