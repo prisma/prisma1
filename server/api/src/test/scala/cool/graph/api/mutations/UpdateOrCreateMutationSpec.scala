@@ -54,7 +54,7 @@ class UpdateOrCreateMutationSpec extends FlatSpec with Matchers with ApiBaseSpec
     todoCount should be(1)
   }
 
-  "an item" should "be updated if it already exsists (by id)" in {
+  "an item" should "be updated if it already exists (by id)" in {
     val todoId = server
       .executeQuerySimple(
         """mutation {
@@ -99,7 +99,7 @@ class UpdateOrCreateMutationSpec extends FlatSpec with Matchers with ApiBaseSpec
     todoCount should be(1)
   }
 
-  "an item" should "be updated if it already exsists (by any unique argument)" in {
+  "an item" should "be updated if it already exists (by any unique argument)" in {
     val todoAlias = server
       .executeQuerySimple(
         """mutation {
