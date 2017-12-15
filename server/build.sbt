@@ -114,7 +114,7 @@ def serverProject(name: String): Project = {
 def normalProject(name: String): Project = Project(id = name, base = file(s"./$name")).settings(commonSettings: _*)
 def libProject(name: String): Project =  Project(id = name, base = file(s"./libs/$name")).settings(commonSettings: _*)
 
-lazy val betaImageTag = "database-1.0-beta5"
+lazy val betaImageTag = "1.0-beta1"
 
 lazy val sharedModels = normalProject("shared-models")
   .dependsOn(gcValues % "compile")
@@ -151,6 +151,11 @@ lazy val deploy = serverProject("deploy")
                         }
                       }
                     )
+                    .enablePlugins(BuildInfoPlugin)
+                    .settings(
+                      buildInfoKeys := Seq[BuildInfoKey](name, version, "imageTag" -> betaImageTag),
+                      buildInfoPackage := "build_info"
+                    )
 
 lazy val api = serverProject("api")
   .dependsOn(sharedModels % "compile")
@@ -159,6 +164,7 @@ lazy val api = serverProject("api")
   .dependsOn(akkaUtils % "compile")
   .dependsOn(metrics % "compile")
   .dependsOn(jvmProfiler % "compile")
+  .dependsOn(cache % "compile")
   .settings(
     libraryDependencies ++= Seq(
       playJson,
@@ -390,7 +396,7 @@ lazy val jsonUtils =
     .settings(libraryDependencies ++= Seq(
       playJson,
       scalaTest
-    ))
+    ) ++ joda)
 
 lazy val cache =
   Project(id = "cache", base = file("./libs/cache"))
@@ -456,8 +462,14 @@ lazy val localFaas = Project(id = "localfaas", base = file("./localfaas"))
     }
   )
 
-val allProjects = List(
+val allServerProjects = List(
   api,
+  deploy,
+  singleServer,
+  sharedModels
+)
+
+val allLibProjects = List(
   bugsnag,
   akkaUtils,
   aws,
@@ -468,30 +480,15 @@ val allProjects = List(
   graphQlClient,
   javascriptEngine,
   stubServer,
-  backendShared,
-  clientShared,
-  backendApiSystem,
-  backendApiSimple,
-  backendApiRelay,
-  backendApiSubscriptionsWebsocket,
-  backendApiSimpleSubscriptions,
-  backendApiFileupload,
-  backendApiSchemaManager,
-  backendWorkers,
   scalaUtils,
   jsonUtils,
-  cache,
-  singleServer,
-  localFaas,
-  deploy,
-  sharedModels
+  cache
 )
 
-val allLibProjects = allProjects.filter(_.base.getPath.startsWith("./libs/")).map(Project.projectToRef)
-lazy val libs = (project in file("libs")).aggregate(allLibProjects: _*)
+lazy val libs = (project in file("libs")).aggregate(allLibProjects.map(Project.projectToRef): _*)
 
 lazy val root = (project in file("."))
-  .aggregate(allProjects.map(Project.projectToRef): _*)
+  .aggregate(allServerProjects.map(Project.projectToRef): _*)
   .settings(
     publish := { } // do not publish a JAR for the root project
   )

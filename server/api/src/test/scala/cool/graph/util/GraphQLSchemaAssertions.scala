@@ -5,22 +5,24 @@ object GraphQLSchemaAssertions extends GraphQLSchemaAssertions
 trait GraphQLSchemaAssertions {
   implicit class SchemaAssertions(schemaString: String) {
     val mutationStart = "type Mutation {"
+    val queryStart    = "type Query {"
     val objectEnd     = "}"
 
-    def mustContainMutation(name: String): String = {
-      val mutationDef = mutationDefinition()
-      val mutationField = mutationDef.lines.map(_.trim).find { line =>
-        line.startsWith(name)
+    def mustContainMutation(name: String): String = mustContainField(definition(mutationStart), name)
+
+    def mustContainQuery(name: String): String = mustContainField(definition(queryStart), name)
+
+    private def mustContainField(typeDef: String, field: String): String = {
+      val theField = typeDef.lines.map(_.trim).find { line =>
+        line.startsWith(field + "(")
       }
-      mutationField match {
+      theField match {
         case Some(field) => field
-        case None        => sys.error(s"Could not find the mutation field $name in this mutation definition: $mutationDef")
+        case None        => sys.error(s"Could not find the field $field in this definition: $typeDef")
       }
     }
 
     def mustContainInputType(name: String): String = definition(s"input $name {")
-
-    def mutationDefinition(): String = definition(mutationStart)
 
     private def definition(start: String): String = {
       val startOfDefinition = schemaString.lines.dropWhile(_ != start)

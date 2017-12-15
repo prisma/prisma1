@@ -1,6 +1,9 @@
 package cool.graph.api.mutations
 
+import cool.graph.api.mutations.MutationTypes.ArgumentValue
+import cool.graph.gc_values.GCValue
 import cool.graph.shared.models._
+import cool.graph.util.gc_value.{GCAnyConverter, GCDBValueConverter}
 
 import scala.collection.immutable.Seq
 
@@ -8,6 +11,45 @@ import scala.collection.immutable.Seq
   * It's called CoolArgs to easily differentiate from Sangrias Args class.
   */
 case class CoolArgs(raw: Map[String, Any]) {
+
+  def subNestedMutation(relationField: Field, subModel: Model): Option[NestedMutation] = {
+    subArgsOption(relationField) match {
+      case None             => None
+      case Some(None)       => None
+      case Some(Some(args)) => Some(args.asNestedMutation(relationField, subModel))
+    }
+  }
+
+  private def asNestedMutation(relationField: Field, subModel: Model): NestedMutation = {
+    if (relationField.isList) {
+      NestedMutation(
+        creates = subArgsVector("create").getOrElse(Vector.empty).map(CreateOne(_)),
+        updates = Vector.empty,
+        upserts = Vector.empty,
+        deletes = subArgsVector("delete").getOrElse(Vector.empty).map(args => DeleteOne(args.extractNodeSelector(subModel))),
+        connects = subArgsVector("connect").getOrElse(Vector.empty).map(args => ConnectOne(args.extractNodeSelector(subModel))),
+        disconnects = subArgsVector("disconnect").getOrElse(Vector.empty).map(args => DisconnectOne(args.extractNodeSelector(subModel)))
+      )
+    } else {
+      NestedMutation(
+        creates = subArgsOption("create").flatten.map(CreateOne(_)).toVector,
+        updates = Vector.empty,
+        upserts = Vector.empty,
+        deletes = subArgsOption("delete").flatten.map(args => DeleteOne(args.extractNodeSelector(subModel))).toVector,
+        connects = subArgsOption("connect").flatten.map(args => ConnectOne(args.extractNodeSelector(subModel))).toVector,
+        disconnects = subArgsOption("disconnect").flatten.map(args => DisconnectOne(args.extractNodeSelector(subModel))).toVector
+      )
+    }
+  }
+
+  def scalarArguments(model: Model): Vector[ArgumentValue] = {
+    for {
+      field      <- model.scalarFields.toVector
+      fieldValue <- getFieldValueAs[Any](field)
+    } yield {
+      ArgumentValue(field.name, fieldValue)
+    }
+  }
 
 //  def subArgsList2(field: Field): Option[Seq[CoolArgs]] = {
 //    val fieldValues: Option[Seq[Map[String, Any]]] = field.isList match {
@@ -21,6 +63,8 @@ case class CoolArgs(raw: Map[String, Any]) {
 //    }
 //  }
 
+  def subArgsVector(field: String): Option[Vector[CoolArgs]] = subArgsList(field).map(_.toVector)
+
   def subArgsList(field: String): Option[Seq[CoolArgs]] = {
     getFieldValuesAs[Map[String, Any]](field) match {
       case None    => None
@@ -28,9 +72,9 @@ case class CoolArgs(raw: Map[String, Any]) {
     }
   }
 
-  def subArgs(field: Field): Option[Option[CoolArgs]] = subArgs(field.name)
+  def subArgsOption(field: Field): Option[Option[CoolArgs]] = subArgsOption(field.name)
 
-  def subArgs(name: String): Option[Option[CoolArgs]] = {
+  def subArgsOption(name: String): Option[Option[CoolArgs]] = {
     val fieldValue: Option[Option[Map[String, Any]]] = getFieldValueAs[Map[String, Any]](name)
     fieldValue match {
       case None          => None
@@ -46,9 +90,7 @@ case class CoolArgs(raw: Map[String, Any]) {
     * The inner option is empty if a null value was sent for this field. If the option is defined it contains a non null value
     * for this field.
     */
-  def getFieldValueAs[T](field: Field, suffix: String = ""): Option[Option[T]] = {
-    getFieldValueAs(field.name + suffix)
-  }
+  def getFieldValueAs[T](field: Field): Option[Option[T]] = getFieldValueAs(field.name)
 
   def getFieldValueAs[T](name: String): Option[Option[T]] = {
     raw.get(name).map { fieldValue =>
@@ -92,4 +134,22 @@ case class CoolArgs(raw: Map[String, Any]) {
     }
   }
 
+  def extractNodeSelectorFromWhereField(model: Model): NodeSelector = {
+    val whereArgs = raw("where").asInstanceOf[Map[String, Option[Any]]]
+    CoolArgs(whereArgs).extractNodeSelector(model)
+  }
+
+  def extractNodeSelector(model: Model): NodeSelector = {
+    raw.asInstanceOf[Map[String, Option[Any]]].collectFirst {
+      case (fieldName, Some(value)) =>
+        NodeSelector(model, fieldName, GCAnyConverter(model.getFieldByName_!(fieldName).typeIdentifier, isList = false).toGCValue(value).get)
+    } getOrElse {
+      sys.error("You must specify a unique selector")
+    }
+  }
+
+}
+
+case class NodeSelector(model: Model, fieldName: String, fieldValue: GCValue) {
+  lazy val unwrappedFieldValue: Any = GCDBValueConverter().fromGCValue(fieldValue)
 }

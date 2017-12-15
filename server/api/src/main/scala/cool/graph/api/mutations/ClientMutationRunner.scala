@@ -1,37 +1,29 @@
 package cool.graph.api.mutations
 
-import cool.graph.api.database.DataItem
-import cool.graph.api.database.mutactions.mutactions.{CreateDataItem, DeleteDataItem, ServerSideSubscription, UpdateDataItem}
-import cool.graph.api.database.mutactions.{MutactionGroup, Transaction}
-import cool.graph.api.schema.{APIErrors, ApiUserContext, GeneralError}
-import cool.graph.shared.models.{AuthenticatedRequest, Project}
-import scaldi.Injector
+import cool.graph.api.database.mutactions._
+import cool.graph.api.database.{DataItem, DataResolver}
+import cool.graph.api.schema.{APIErrors, GeneralError}
 
+import scala.collection.immutable.Seq
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.util.{Failure, Try}
 
 object ClientMutationRunner {
-  def run(clientMutation: ClientMutation, authenticatedRequest: Option[AuthenticatedRequest], requestContext: ApiUserContext, project: Project)(
-      implicit inj: Injector): Future[DataItem] = {
-    run(clientMutation, authenticatedRequest, Some(requestContext), project)
-  }
 
-  def run(clientMutation: ClientMutation,
-          authenticatedRequest: Option[AuthenticatedRequest] = None,
-          requestContext: Option[ApiUserContext] = None,
-          project: Project): Future[DataItem] = {
+  import cool.graph.utils.future.FutureUtils._
 
+  def run(
+      clientMutation: ClientMutation,
+      dataResolver: DataResolver
+  ): Future[DataItem] = {
     for {
       mutactionGroups  <- clientMutation.prepareMutactions()
-      errors           <- clientMutation.verifyMutactions(mutactionGroups)
+      errors           <- verifyMutactions(mutactionGroups, dataResolver)
       _                = if (errors.nonEmpty) throw errors.head
-      executionResults <- clientMutation.performMutactions(mutactionGroups)
-      _                <- clientMutation.performPostExecutions(mutactionGroups)
+      executionResults <- performMutactions(mutactionGroups)
+      _                <- performPostExecutions(mutactionGroups)
       dataItem <- {
-//            trackApiMetrics(requestContext, mutactionGroups, project)
-
-//            requestContext.foreach(ctx => clientMutation.mutactionTimings.foreach(ctx.logMutactionTiming))
-
         executionResults
           .filter(_.isInstanceOf[GeneralError])
           .map(_.asInstanceOf[GeneralError]) match {
@@ -46,30 +38,81 @@ object ClientMutationRunner {
     } yield dataItem
   }
 
-  private def trackApiMetrics(context: Option[ApiUserContext], mutactionGroups: List[MutactionGroup], project: Project)(implicit inj: Injector): Unit = {
+  private def verifyMutactions(mutactionGroups: List[MutactionGroup], dataResolver: DataResolver): Future[List[GeneralError]] = {
+    val mutactions = mutactionGroups.flatMap(_.mutactions)
+    val verifications: Seq[Future[Try[MutactionVerificationSuccess]]] = mutactions.map { mutaction =>
+      lazy val verifyCall = mutaction match {
+        case mutaction: ClientSqlDataChangeMutaction => mutaction.verify(dataResolver)
+        case mutaction                               => mutaction.verify()
+      }
+      performWithTiming(s"verify ${mutaction.getClass.getSimpleName}", verifyCall)
+    }
+    val sequenced: Future[Seq[Try[MutactionVerificationSuccess]]] = Future.sequence(verifications)
+    val errors                                                    = sequenced.map(_.collect { case Failure(x: GeneralError) => x }.toList)
 
-    def containsNestedMutation: Boolean = {
-      val sqlMutactions = mutactionGroups.flatMap(_.mutactions collect { case Transaction(mutactions, _) => mutactions }).flatten
+    errors
+  }
 
-      val mutationMutactions = sqlMutactions.filter(m => m.isInstanceOf[CreateDataItem] || m.isInstanceOf[UpdateDataItem] || m.isInstanceOf[DeleteDataItem])
+  private def performMutactions(mutactionGroups: List[MutactionGroup]): Future[List[MutactionExecutionResult]] = {
+    // Cancel further Mutactions and MutactionGroups when a Mutaction fails
+    // Failures in async MutactionGroups don't stop other Mutactions in same group
+    mutactionGroups.map(group => () => performGroup(group)).runSequentially.map(_.flatten)
+  }
 
-      mutationMutactions.length > 1
+  private def performGroup(group: MutactionGroup): Future[List[MutactionExecutionResult]] = {
+    group match {
+      case MutactionGroup(mutactions, true) =>
+        Future.sequence(mutactions.map(runWithTiming))
+
+      case MutactionGroup(mutactions: List[Mutaction], false) =>
+        mutactions.map(m => () => runWithTiming(m)).runSequentially
+    }
+  }
+
+  private def runWithTiming(mutaction: Mutaction): Future[MutactionExecutionResult] = {
+    performWithTiming(
+      s"execute ${mutaction.getClass.getSimpleName}", {
+        mutaction match {
+          case mut: ClientSqlDataChangeMutaction =>
+            //            sqlDataChangeMutactionTimer.timeFuture(dataResolver.project.id) {
+            runWithErrorHandler(mut)
+          //            }
+          case mut =>
+            runWithErrorHandler(mut)
+        }
+      }
+    )
+  }
+
+  private def runWithErrorHandler(mutaction: Mutaction): Future[MutactionExecutionResult] = {
+    mutaction.handleErrors match {
+      case Some(errorHandler) => mutaction.execute.recover(errorHandler)
+      case None               => mutaction.execute
+    }
+  }
+
+  private def performPostExecutions(mutactionGroups: List[MutactionGroup]): Future[Boolean] = {
+    def performGroup(group: MutactionGroup) = {
+      group match {
+        case MutactionGroup(mutactions, true) =>
+          Future.sequence(mutactions.map(mutaction => performWithTiming(s"performPostExecution ${mutaction.getClass.getSimpleName}", mutaction.postExecute)))
+        case MutactionGroup(mutactions: List[Mutaction], false) =>
+          mutactions.map(m => () => performWithTiming(s"performPostExecution ${m.getClass.getSimpleName}", m.postExecute)).runSequentially
+      }
     }
 
-    def containsServersideSubscriptions: Boolean =
-      mutactionGroups.flatMap(_.mutactions.collect { case m: ServerSideSubscription => m }).nonEmpty
+    val mutationGroupResults: Future[List[Boolean]] = Future.sequence(mutactionGroups.map(performGroup)).map(_.flatten)
+    mutationGroupResults.map(_.forall(identity))
+  }
 
-    context match {
-      case Some(ctx) =>
-//        if (containsNestedMutation) {
-//          ctx.addFeatureMetric(FeatureMetric.NestedMutations)
-//        }
-//        if (containsServersideSubscriptions) {
-//          ctx.addFeatureMetric(FeatureMetric.ServersideSubscriptions)
-//        }
-        Unit
-      case _ => Unit
-    }
+  private def performWithTiming[A](name: String, f: Future[A]): Future[A] = {
+    //    val begin = System.currentTimeMillis()
+    //    f andThen {
+    //      case x =>
+    //        mutactionTimings :+= Timing(name, System.currentTimeMillis() - begin)
+    //        x
+    //    }
 
+    f
   }
 }

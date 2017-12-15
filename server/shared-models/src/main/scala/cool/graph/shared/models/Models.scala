@@ -238,20 +238,6 @@ case class ProjectWithClientId(project: Project, clientId: Id) {
 }
 case class ProjectWithClient(project: Project, client: Client)
 
-sealed trait AuthenticatedRequest {
-  def id: String
-  def originalToken: String
-  val isAdmin: Boolean = this match {
-    case _: AuthenticatedCustomer  => true
-    case _: AuthenticatedRootToken => true
-    case _: AuthenticatedUser      => false
-  }
-}
-
-case class AuthenticatedUser(id: String, typeName: String, originalToken: String) extends AuthenticatedRequest
-case class AuthenticatedCustomer(id: String, originalToken: String)               extends AuthenticatedRequest
-case class AuthenticatedRootToken(id: String, originalToken: String)              extends AuthenticatedRequest
-
 case class Model(
     id: Id,
     name: String,
@@ -293,6 +279,8 @@ case class Model(
 
   def getFieldByName_!(name: String): Field       = getFieldByName(name).get // .getOrElse(throw FieldNotInModel(fieldName = name, modelName = this.name))
   def getFieldByName(name: String): Option[Field] = fields.find(_.name == name)
+
+  def hasVisibleIdField: Boolean = !getFieldByName_!("id").isHidden
 }
 
 object RelationSide extends Enumeration {
@@ -364,6 +352,7 @@ case class Field(
 
   private val excludedFromMutations = Vector("updatedAt", "createdAt", "id")
   def isWritable: Boolean           = !isReadonly && !excludedFromMutations.contains(name)
+  def isVisible: Boolean            = !isHidden
 
   def isOneToOneRelation(project: Project): Boolean = {
     val otherField = relatedFieldEager(project)

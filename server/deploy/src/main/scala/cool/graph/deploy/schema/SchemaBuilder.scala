@@ -6,7 +6,7 @@ import cool.graph.deploy.database.persistence.{MigrationPersistence, ProjectPers
 import cool.graph.deploy.migration.{NextProjectInferrer, MigrationStepsProposer, Migrator, RenameInferer}
 import cool.graph.deploy.schema.fields.{AddProjectField, DeployField, ManualMarshallerHelpers}
 import cool.graph.deploy.schema.mutations._
-import cool.graph.deploy.schema.types.{MigrationStepType, MigrationType, ProjectType, SchemaErrorType}
+import cool.graph.deploy.schema.types._
 import cool.graph.shared.models.Project
 import cool.graph.utils.future.FutureUtils.FutureOpt
 import sangria.relay.Mutation
@@ -63,7 +63,8 @@ case class SchemaBuilderImpl(
     migrationStatusField,
     listProjectsField,
     listMigrationsField,
-    projectField
+    projectField,
+    clusterInfoField
   )
 
   def getMutationFields: Vector[Field[SystemUserContext, Unit]] = Vector(
@@ -120,6 +121,13 @@ case class SchemaBuilderImpl(
         projectOpt.getOrElse(throw InvalidProjectId(projectId))
       }
     }
+  )
+
+  val clusterInfoField: Field[SystemUserContext, Unit] = Field(
+    "clusterInfo",
+    ClusterInfoType.Type,
+    description = Some("Information about the cluster"),
+    resolve = (ctx) => ()
   )
 
   def deployField: Field[SystemUserContext, Unit] = {

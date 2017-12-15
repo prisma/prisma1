@@ -50,7 +50,7 @@ object ServerSideSubscription {
         sssFn,
         nodeId = mutaction.id,
         requestId = requestId,
-        updatedFields = Some(mutaction.namesOfUpdatedFields),
+        updatedFields = Some(mutaction.namesOfUpdatedFields.toList),
         previousValues = Some(mutaction.previousValues)
       )
     }

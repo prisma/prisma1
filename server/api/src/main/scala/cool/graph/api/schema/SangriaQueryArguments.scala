@@ -19,19 +19,19 @@ object SangriaQueryArguments {
     Argument(name, OptionInputType(EnumType(s"${model.name}OrderBy", None, values)))
   }
 
-  def filterArgument(model: models.Model, project: models.Project, name: String = "filter"): Argument[Option[Any]] = {
+  def whereArgument(model: models.Model, project: models.Project, name: String = "where"): Argument[Option[Any]] = {
     val utils                              = new FilterObjectTypeBuilder(model, project)
     val filterObject: InputObjectType[Any] = utils.filterObjectType
     Argument(name, OptionInputType(filterObject), description = "")
   }
 
-  def filterSubscriptionArgument(model: models.Model, project: models.Project, name: String = "filter") = {
+  def whereSubscriptionArgument(model: models.Model, project: models.Project, name: String = "where") = {
     val utils                              = new FilterObjectTypeBuilder(model, project)
     val filterObject: InputObjectType[Any] = utils.subscriptionFilterObjectType
     Argument(name, OptionInputType(filterObject), description = "")
   }
 
-  def internalFilterSubscriptionArgument(model: models.Model, project: models.Project, name: String = "filter") = {
+  def internalWhereSubscriptionArgument(model: models.Model, project: models.Project, name: String = "where") = {
     val utils                              = new FilterObjectTypeBuilder(model, project)
     val filterObject: InputObjectType[Any] = utils.internalSubscriptionFilterObjectType
     Argument(name, OptionInputType(filterObject), description = "")

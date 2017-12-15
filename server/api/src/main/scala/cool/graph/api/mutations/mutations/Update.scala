@@ -3,27 +3,24 @@ package cool.graph.api.mutations.mutations
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import cool.graph.api.ApiDependencies
-import cool.graph.api.database.{DataItem, DataResolver}
 import cool.graph.api.database.mutactions.mutactions.{ServerSideSubscription, UpdateDataItem}
 import cool.graph.api.database.mutactions.{ClientSqlMutaction, MutactionGroup, Transaction}
+import cool.graph.api.database.{DataItem, DataResolver}
 import cool.graph.api.mutations._
-import cool.graph.api.mutations.definitions.{NodeSelector, UpdateDefinition}
-import cool.graph.api.schema.{APIErrors, InputTypesBuilder}
+import cool.graph.api.schema.APIErrors
 import cool.graph.shared.models.{Model, Project}
 import sangria.schema
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class Update(
+case class Update(
     model: Model,
     project: Project,
     args: schema.Args,
     dataResolver: DataResolver
 )(implicit apiDependencies: ApiDependencies)
-    extends ClientMutation(model, args, dataResolver) {
-
-  override val mutationDefinition = UpdateDefinition(project, InputTypesBuilder(project))
+    extends ClientMutation {
 
   implicit val system: ActorSystem             = apiDependencies.system
   implicit val materializer: ActorMaterializer = apiDependencies.materializer
@@ -36,7 +33,7 @@ class Update(
     CoolArgs(argsPointer)
   }
 
-  val where = mutationDefinition.extractNodeSelectorFromSangriaArgs(model, args)
+  val where = CoolArgs(args.raw).extractNodeSelectorFromWhereField(model)
 
   lazy val dataItem: Future[Option[DataItem]] = dataResolver.resolveByUnique(model, where.fieldName, where.fieldValue)
 
@@ -46,8 +43,7 @@ class Update(
         val validatedDataItem = dataItem // todo: use GC Values
         // = dataItem.copy(userData = GraphcoolDataTypes.fromSql(dataItem.userData, model.fields))
 
-        val sqlMutactions: List[ClientSqlMutaction] =
-          SqlMutactions(dataResolver).getMutactionsForUpdate(project, model, coolArgs, dataItem.id, validatedDataItem)
+        val sqlMutactions: List[ClientSqlMutaction] = SqlMutactions(dataResolver).getMutactionsForUpdate(model, coolArgs, dataItem.id, validatedDataItem)
 
         val transactionMutaction = Transaction(sqlMutactions, dataResolver)
 

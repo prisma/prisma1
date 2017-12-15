@@ -16,7 +16,7 @@ trait ApiBaseSpec extends BeforeAndAfterEach with BeforeAndAfterAll with SprayJs
   val server                         = ApiTestServer()
   val database                       = ApiTestDatabase()
 
-  //def dataResolver(project: Project): DataResolver = DataResolver(project = project)
+  def dataResolver(project: Project): DataResolver = DataResolver(project = project)
 
   override protected def afterAll(): Unit = {
     super.afterAll()

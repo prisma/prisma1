@@ -1,6 +1,6 @@
-package cool.graph.api.mutations
+package cool.graph.api.import_export
 
-  import cool.graph.api.ApiBaseSpec
+import cool.graph.api.ApiBaseSpec
   import cool.graph.api.database.import_export.BulkImport
   import cool.graph.shared.project_dsl.SchemaDsl
   import cool.graph.utils.await.AwaitUtils
@@ -10,22 +10,27 @@ package cool.graph.api.mutations
 class BulkImportSpec extends FlatSpec with Matchers with ApiBaseSpec with AwaitUtils{
 
   val project = SchemaDsl() { schema =>
-    schema
-      .model("Model0")
-      .field("a", _.String)
-      .field("b", _.Int)
 
-    schema
+    val model1: SchemaDsl.ModelBuilder = schema
       .model("Model1")
       .field("a", _.String)
       .field("b", _.Int)
       .field("listField", _.Int, isList = true)
 
-    schema
+    val model0 : SchemaDsl.ModelBuilder= schema
+      .model("Model0")
+      .field("a", _.String)
+      .field("b", _.Int)
+      .oneToOneRelation("model1", "model0", model1, Some("Relation1"))
+
+    model0.oneToOneRelation("relation0top", "relation0bottom", model0 ,Some("Relation0"))
+
+    val model2 : SchemaDsl.ModelBuilder = schema
       .model("Model2")
       .field("a", _.String)
       .field("b", _.Int)
       .field("name", _.String)
+      .oneToOneRelation("model1", "model2", model1, Some("Relation2"))
   }
 
   override protected def beforeAll(): Unit = {
@@ -36,6 +41,7 @@ class BulkImportSpec extends FlatSpec with Matchers with ApiBaseSpec with AwaitU
   override def beforeEach(): Unit = {
     database.truncate(project)
   }
+  val importer = new BulkImport(project)
 
     "Combining the data from the three files" should "work" in {
 
@@ -46,6 +52,15 @@ class BulkImportSpec extends FlatSpec with Matchers with ApiBaseSpec with AwaitU
                     |{"_typeName": "Model0", "id": "3", "a": "test", "b":  3}
                     |]}""".stripMargin.parseJson
 
+      val relations =
+        """{"valueType":"relations", "values": [
+          |[{"_typeName": "Model0", "id": "0", "fieldName": "relation0top"},{"_typeName": "Model0", "id": "0", "fieldName": "relation0bottom"}],
+          |[{"_typeName": "Model1", "id": "1", "fieldName": "model0"},{"_typeName": "Model0", "id": "0", "fieldName": "model1"}],
+          |[{"_typeName": "Model2", "id": "2", "fieldName": "model1"},{"_typeName": "Model1", "id": "1", "fieldName": "model2"}],
+          |[{"_typeName": "Model0", "id": "3", "fieldName": "relation0top"},{"_typeName": "Model0", "id": "3", "fieldName": "relation0bottom"}]
+          |]}
+          |""".stripMargin.parseJson
+
 
       val lists = """{ "valueType": "lists", "values": [
                     |{"_typeName": "Model1", "id": "1", "listField": [2,3,4,5]},
@@ -54,9 +69,10 @@ class BulkImportSpec extends FlatSpec with Matchers with ApiBaseSpec with AwaitU
                     |]}
                     |""".stripMargin.parseJson
 
-      val importer = new BulkImport(project)
+
 
       importer.executeImport(nodes).await(5)
+      importer.executeImport(relations).await(5)
       importer.executeImport(lists).await(5)
 
       val res0 = server.executeQuerySimple("query{model0s{id, a, b}}", project).toString
@@ -67,121 +83,73 @@ class BulkImportSpec extends FlatSpec with Matchers with ApiBaseSpec with AwaitU
 
       val res2 = server.executeQuerySimple("query{model2s{id, a, b, name}}", project).toString
       res2 should be("""{"data":{"model2s":[{"id":"2","a":"test","b":2,"name":null}]}}""")
+
+      val rel0 = server.executeQuerySimple("query{model0s{id, model1{id}, relation0top{id}, relation0bottom{id}}}", project).toString
+      rel0 should be("""{"data":{"model0s":[{"id":"0","model1":{"id":"1"},"relation0top":{"id":"0"},"relation0bottom":{"id":"0"}},{"id":"3","model1":null,"relation0top":{"id":"3"},"relation0bottom":{"id":"3"}}]}}""")
+
+      val rel1 = server.executeQuerySimple("query{model1s{id, model0{id}, model2{id}}}", project).toString
+      rel1 should be("""{"data":{"model1s":[{"id":"1","model0":{"id":"0"},"model2":{"id":"2"}}]}}""")
+
+      val rel2 = server.executeQuerySimple("query{model2s{id, model1{id}}}", project).toString
+      rel2 should be("""{"data":{"model2s":[{"id":"2","model1":{"id":"1"}}]}}""")
     }
 
-//    "Inserting a single node with a field with a String value" should "work" in {
-//      val (client, project1) = SchemaDsl.schema().buildEmptyClientAndProject(isEjected = true)
-//      setupProject(client, project1)
-//
-//      val types =
-//        s"""type Model0 @model {
-//           |  id: ID! @isUnique
-//           |  a: String
-//           |}""".stripMargin
-//
-//      val refreshedProject = setupProjectForTest(types, client, project1)
-//
-//      val nodes    = """{ "valueType": "nodes", "values": [
-//                  |{"_typeName": "Model0", "id": "just-some-id", "a": "test"}
-//                  ]}""".stripMargin.parseJson
-//      val importer = new BulkImport()
-//      importer.executeImport(refreshedProject, nodes).await(5)
-//
-//      val res = executeQuerySimple("query{allModel0s{id, a}}", refreshedProject)
-//      res.toString should be("""{"data":{"allModel0s":[{"id":"just-some-id","a":"test"}]}}""")
-//    }
-//
-//    "Inserting a several nodes with a field with a Int value" should "work" in {
-//      val (client, project1) = SchemaDsl.schema().buildEmptyClientAndProject(isEjected = true)
-//      setupProject(client, project1)
-//
-//      val types =
-//        s"""type Model0 @model {
-//           |  id: ID! @isUnique
-//           |  a: Int!
-//           |}""".stripMargin
-//
-//      val refreshedProject = setupProjectForTest(types, client, project1)
-//
-//      val nodes = """{"valueType":"nodes","values":[
-//                  |{"_typeName": "Model0", "id": "just-some-id", "a": 12},
-//                  |{"_typeName": "Model0", "id": "just-some-id2", "a": 13}
-//                  ]}""".stripMargin.parseJson
-//
-//      val importer = new BulkImport()
-//      importer.executeImport(refreshedProject, nodes).await(5)
-//
-//      val res = executeQuerySimple("query{allModel0s{id, a}}", refreshedProject)
-//      res.toString should be("""{"data":{"allModel0s":[{"id":"just-some-id","a":12},{"id":"just-some-id2","a":13}]}}""")
-//    }
-//
-//    "Inserting a node with values for fields that do not exist" should "return the invalid index but keep on creating" in {
-//      val (client, project1) = SchemaDsl.schema().buildEmptyClientAndProject(isEjected = true)
-//      setupProject(client, project1)
-//
-//      val types =
-//        s"""type Model0 @model {
-//           |  id: ID! @isUnique
-//           |  a: Int!
-//           |}""".stripMargin
-//
-//      val refreshedProject = setupProjectForTest(types, client, project1)
-//
-//      val nodes = """{"valueType":"nodes","values":[
-//                  |{"_typeName": "Model0", "id": "just-some-id0", "a": 12},
-//                  |{"_typeName": "Model0", "id": "just-some-id3", "c": 12},
-//                  |{"_typeName": "Model0", "id": "just-some-id2", "a": 13}
-//                  ]}""".stripMargin.parseJson
-//
-//      val importer = new BulkImport()
-//      val res2     = importer.executeImport(refreshedProject, nodes).await(5)
-//
-//      println(res2)
-//
-//      res2.toString should be("""[{"index":1,"message":" Unknown column 'c' in 'field list'"}]""")
-//
-//      val res = executeQuerySimple("query{allModel0s{id, a}}", refreshedProject)
-//
-//      res.toString should be("""{"data":{"allModel0s":[{"id":"just-some-id0","a":12},{"id":"just-some-id2","a":13}]}}""")
-//    }
-//
-//    // the order in which the items are created is not deterministic. therefore the error message can vary depending on which item is created last
-//    "Inserting a node with a duplicate id" should "return the invalid index but keep on creating" in {
-//      val (client, project1) = SchemaDsl.schema().buildEmptyClientAndProject(isEjected = true)
-//      setupProject(client, project1)
-//
-//      val types =
-//        s"""type Model0 @model {
-//           |  id: ID! @isUnique
-//           |  a: Int!
-//           |}""".stripMargin
-//
-//      val refreshedProject = setupProjectForTest(types, client, project1)
-//
-//      val nodes = """{"valueType":"nodes","values":[
-//                  |{"_typeName": "Model0", "id": "just-some-id4", "a": 12},
-//                  |{"_typeName": "Model0", "id": "just-some-id5", "a": 13},
-//                  |{"_typeName": "Model0", "id": "just-some-id5", "a": 15}
-//                  ]}""".stripMargin.parseJson
-//
-//      val importer = new BulkImport()
-//      val res2     = importer.executeImport(refreshedProject, nodes).await(5)
-//
-//      res2.toString should (be(
-//        """[{"index":2,"message":" Duplicate entry 'just-some-id5' for key 'PRIMARY'"},{"index":2,"message":" Duplicate entry 'just-some-id5' for key 'PRIMARY'"}]""")
-//        or be(
-//        """[{"index":1,"message":" Duplicate entry 'just-some-id5' for key 'PRIMARY'"},{"index":1,"message":" Duplicate entry 'just-some-id5' for key 'PRIMARY'"}]"""))
-//
-//      val res = executeQuerySimple("query{allModel0s{id, a}}", refreshedProject)
-//      res.toString should (be("""{"data":{"allModel0s":[{"id":"just-some-id4","a":12},{"id":"just-some-id5","a":13}]}}""") or
-//        be("""{"data":{"allModel0s":[{"id":"just-some-id4","a":12},{"id":"just-some-id5","a":15}]}}"""))
-//    }
-//
-//    def setupProjectForTest(types: String, client: Client, project: Project): Project = {
-//      val files  = Map("./types.graphql" -> types)
-//      val config = newConfig(blankYamlWithGlobalStarPermission, files)
-//      val push   = pushMutationString(config, project.id)
-//      executeQuerySystem(push, client)
-//      loadProjectFromDB(client.id, project.id)
-//    }
+    "Inserting a single node with a field with a String value" should "work" in {
+      val nodes    = """{ "valueType": "nodes", "values": [{"_typeName": "Model0", "id": "just-some-id", "a": "test"}]}""".parseJson
+      importer.executeImport(nodes).await(5)
+
+      val res = server.executeQuerySimple("query{model0s{id, a}}", project)
+      res.toString should be("""{"data":{"model0s":[{"id":"just-some-id","a":"test"}]}}""")
+    }
+
+    "Inserting several nodes with a field with a Int value" should "work" in {
+
+      val nodes = """{"valueType":"nodes","values":[
+                  |{"_typeName": "Model0", "id": "just-some-id", "b": 12},
+                  |{"_typeName": "Model0", "id": "just-some-id2", "b": 13}
+                  ]}""".stripMargin.parseJson
+
+      importer.executeImport(nodes).await(5)
+
+      val res = server.executeQuerySimple("query{model0s{id, b}}", project)
+      res.toString should be("""{"data":{"model0s":[{"id":"just-some-id","b":12},{"id":"just-some-id2","b":13}]}}""")
+    }
+
+    "Inserting a node with values for fields that do not exist" should "return the invalid index but keep on creating" in {
+
+      val nodes = """{"valueType":"nodes","values":[
+                  |{"_typeName": "Model0", "id": "just-some-id0", "b": 12},
+                  |{"_typeName": "Model0", "id": "just-some-id3", "c": 12},
+                  |{"_typeName": "Model0", "id": "just-some-id2", "b": 13}
+                  ]}""".stripMargin.parseJson
+
+
+      val res2     = importer.executeImport(nodes).await(5)
+
+      res2.toString should be("""[{"index":1,"message":" Unknown column 'c' in 'field list'"}]""")
+
+      val res = server.executeQuerySimple("query{model0s{id, b}}", project)
+
+      res.toString should be("""{"data":{"model0s":[{"id":"just-some-id0","b":12},{"id":"just-some-id2","b":13}]}}""")
+    }
+
+    // the order in which the items are created is not deterministic. therefore the error message can vary depending on which item is created last
+    "Inserting a node with a duplicate id" should "return the invalid index but keep on creating" in {
+      val nodes = """{"valueType":"nodes","values":[
+                  |{"_typeName": "Model0", "id": "just-some-id4", "b": 12},
+                  |{"_typeName": "Model0", "id": "just-some-id5", "b": 13},
+                  |{"_typeName": "Model0", "id": "just-some-id5", "b": 15}
+                  ]}""".stripMargin.parseJson
+
+      val res2     = importer.executeImport(nodes).await(5)
+
+      res2.toString should (be(
+        """[{"index":2,"message":" Duplicate entry 'just-some-id5' for key 'PRIMARY'"},{"index":2,"message":" Duplicate entry 'just-some-id5' for key 'PRIMARY'"}]""")
+        or be(
+        """[{"index":1,"message":" Duplicate entry 'just-some-id5' for key 'PRIMARY'"},{"index":1,"message":" Duplicate entry 'just-some-id5' for key 'PRIMARY'"}]"""))
+
+      val res = server.executeQuerySimple("query{model0s{id, b}}", project)
+      res.toString should (be("""{"data":{"model0s":[{"id":"just-some-id4","b":12},{"id":"just-some-id5","b":13}]}}""") or
+        be("""{"data":{"model0s":[{"id":"just-some-id4","b":12},{"id":"just-some-id5","b":15}]}}"""))
+    }
 }

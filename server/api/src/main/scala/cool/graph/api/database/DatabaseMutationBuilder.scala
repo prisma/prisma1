@@ -1,11 +1,17 @@
 package cool.graph.api.database
 
+import cool.graph.api.mutations.NodeSelector
+import cool.graph.cuid.Cuid
+import cool.graph.gc_values._
 import cool.graph.shared.models.RelationSide.RelationSide
 import cool.graph.shared.models.TypeIdentifier.TypeIdentifier
 import cool.graph.shared.models.{Model, TypeIdentifier}
+import org.joda.time.format.DateTimeFormat
+import play.api.libs.json._
 import slick.dbio.DBIOAction
 import slick.jdbc.MySQLProfile.api._
-import slick.sql.SqlStreamingAction
+import slick.jdbc.{PositionedParameters, SetParameter}
+import slick.sql.{SqlAction, SqlStreamingAction}
 
 object DatabaseMutationBuilder {
 
@@ -42,6 +48,92 @@ object DatabaseMutationBuilder {
     // Concat query as sql, but then convert it to Update, since is an insert query.
     (sql"insert into `#$projectId`.`#$relationTableName` (" concat combineByComma(List(sql"`id`, `A`, `B`") ++ fieldMirrorColumns) concat sql") values (" concat combineByComma(
       List(sql"$id, $a, $b") ++ fieldMirrorValues) concat sql") on duplicate key update id=id").asUpdate
+  }
+
+  def createRelationRowByUniqueValueForA(
+      projectId: String,
+      relationTableName: String,
+      b: String,
+      where: NodeSelector
+  ): SqlAction[Int, NoStream, Effect] = {
+    val relationId = Cuid.createCuid()
+    sqlu"""insert into `#$projectId`.`#$relationTableName` (`id`, `A`, `B`)
+           select '#$relationId', id, '#$b' from `#$projectId`.`#${where.model.name}`
+           where #${where.fieldName} = ${where.fieldValue}
+          """
+  }
+
+  def createRelationRowByUniqueValueForB(
+      projectId: String,
+      relationTableName: String,
+      a: String,
+      where: NodeSelector
+  ): SqlAction[Int, NoStream, Effect] = {
+    val relationId = Cuid.createCuid()
+    sqlu"""insert into `#$projectId`.`#$relationTableName` (`id`, `A`, `B`)
+           select '#$relationId', '#$a', id from `#$projectId`.`#${where.model.name}`
+           where #${where.fieldName} = ${where.fieldValue}
+          """
+  }
+
+  def deleteRelationRowByUniqueValueForA(
+      projectId: String,
+      relationTableName: String,
+      b: String,
+      where: NodeSelector
+  ): SqlAction[Int, NoStream, Effect] = {
+    sqlu"""delete from `#$projectId`.`#$relationTableName`
+           where `B` = '#$b' and `A` in (
+             select id
+             from `#$projectId`.`#${where.model.name}`
+             where #${where.fieldName} = ${where.fieldValue}
+           )
+          """
+  }
+
+  def deleteRelationRowByUniqueValueForB(
+      projectId: String,
+      relationTableName: String,
+      a: String,
+      where: NodeSelector
+  ): SqlAction[Int, NoStream, Effect] = {
+    sqlu"""delete from `#$projectId`.`#$relationTableName`
+           where `A` = '#$a' and `B` in (
+             select id
+             from `#$projectId`.`#${where.model.name}`
+             where #${where.fieldName} = ${where.fieldValue}
+           )
+          """
+  }
+
+  def deleteDataItemByUniqueValueForAIfInRelationWithGivenB(
+      projectId: String,
+      relationTableName: String,
+      b: String,
+      where: NodeSelector
+  ) = {
+    sqlu"""delete from `#$projectId`.`#${where.model.name}`
+           where #${where.fieldName} = ${where.fieldValue} and id in (
+             select `A`
+             from `#$projectId`.`#$relationTableName`
+             where `B` = '#$b'
+           )
+           """
+  }
+
+  def deleteDataItemByUniqueValueForBIfInRelationWithGivenA(
+      projectId: String,
+      relationTableName: String,
+      a: String,
+      where: NodeSelector
+  ) = {
+    sqlu"""delete from `#$projectId`.`#${where.model.name}`
+           where #${where.fieldName} = ${where.fieldValue} and id in (
+             select `B`
+             from `#$projectId`.`#$relationTableName`
+             where `A` = '#$a'
+           )
+           """
   }
 
   def updateDataItem(projectId: String, modelName: String, id: String, values: Map[String, Any]) = {

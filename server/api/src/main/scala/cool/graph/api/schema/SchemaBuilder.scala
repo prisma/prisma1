@@ -2,9 +2,9 @@ package cool.graph.api.schema
 
 import akka.actor.ActorSystem
 import cool.graph.api.ApiDependencies
+import cool.graph.api.database.DataItem
 import cool.graph.api.database.DeferredTypes.{ManyModelDeferred, OneDeferred}
-import cool.graph.api.database.{DataItem, DataResolver}
-import cool.graph.api.mutations.definitions.{CreateDefinition, DeleteDefinition, UpdateDefinition, UpdateOrCreateDefinition}
+import cool.graph.api.mutations.{ClientMutationRunner, CoolArgs}
 import cool.graph.api.mutations.mutations._
 import cool.graph.shared.models.{Model, Project}
 import org.atteo.evo.inflector.English
@@ -30,12 +30,12 @@ case class SchemaBuilderImpl(
 )(implicit apiDependencies: ApiDependencies, system: ActorSystem) {
   import system.dispatcher
 
+  val argumentsBuilder   = ArgumentsBuilder(project = project)
   val dataResolver       = apiDependencies.dataResolver(project)
   val masterDataResolver = apiDependencies.masterDataResolver(project)
   val objectTypeBuilder  = new ObjectTypeBuilder(project = project, nodeInterface = Some(nodeInterface))
   val objectTypes        = objectTypeBuilder.modelObjectTypes
   val conectionTypes     = objectTypeBuilder.modelConnectionTypes
-  val inputTypesBuilder  = InputTypesBuilder(project = project)
   val outputTypesBuilder = OutputTypesBuilder(project, objectTypes, dataResolver)
   val pluralsCache       = new PluralsCache
 
@@ -54,7 +54,7 @@ case class SchemaBuilderImpl(
   def buildQuery(): ObjectType[ApiUserContext, Unit] = {
 
     val fields = project.models.map(getAllItemsField) ++
-      project.models.map(getSingleItemField) ++
+      project.models.flatMap(getSingleItemField) ++
       project.models.map(getAllItemsConnectionField) :+
       nodeField
 
@@ -62,13 +62,11 @@ case class SchemaBuilderImpl(
   }
 
   def buildMutation(): Option[ObjectType[ApiUserContext, Unit]] = {
-
     val fields = project.models.map(createItemField) ++
-      project.models.map(updateItemField) ++
-      project.models.map(deleteItemField)
+      project.models.flatMap(updateItemField) ++
+      project.models.flatMap(deleteItemField)
 
     Some(ObjectType("Mutation", fields))
-
   }
 
   def buildSubscription(): Option[ObjectType[ApiUserContext, Unit]] = {
@@ -104,97 +102,90 @@ case class SchemaBuilderImpl(
     )
   }
 
-  def getSingleItemField(model: Model): Field[ApiUserContext, Unit] = {
-    val arguments = objectTypeBuilder.mapToUniqueArguments(model)
-
-    Field(
-      camelCase(model.name),
-      fieldType = OptionType(objectTypes(model.name)),
-      arguments = arguments,
-      resolve = (ctx) => {
-
-        val arg = arguments.find(a => ctx.args.argOpt(a.name).isDefined) match {
-          case Some(value) => value
-          case None =>
-            ??? //throw UserAPIErrors.GraphQLArgumentsException(s"None of the following arguments provided: ${arguments.map(_.name)}")
-        }
-
-//        dataResolver
-//          .batchResolveByUnique(model, arg.name, List(ctx.arg(arg).asInstanceOf[Option[_]].get))
-//          .map(_.headOption)
-        // todo: Make OneDeferredResolver.dataItemsToToOneDeferredResultType work with Timestamps
-        OneDeferred(model, arg.name, ctx.arg(arg).asInstanceOf[Option[_]].get)
+  def getSingleItemField(model: Model): Option[Field[ApiUserContext, Unit]] = {
+    argumentsBuilder
+      .whereArgument(model)
+      .map { whereArg =>
+        Field(
+          camelCase(model.name),
+          fieldType = OptionType(objectTypes(model.name)),
+          arguments = List(whereArg),
+          resolve = (ctx) => {
+            val coolArgs = CoolArgs(ctx.args.raw)
+            val where    = coolArgs.extractNodeSelectorFromWhereField(model)
+            OneDeferred(model, where.fieldName, where.unwrappedFieldValue)
+          }
+        )
       }
-    )
   }
 
   def createItemField(model: Model): Field[ApiUserContext, Unit] = {
-    val definition = CreateDefinition(project, inputTypesBuilder)
-    val arguments  = definition.getSangriaArguments(model = model)
-
     Field(
       s"create${model.name}",
       fieldType = outputTypesBuilder.mapCreateOutputType(model, objectTypes(model.name)),
-      arguments = arguments,
+      arguments = argumentsBuilder.getSangriaArgumentsForCreate(model),
       resolve = (ctx) => {
-        val mutation = new Create(model = model, project = project, args = ctx.args, dataResolver = masterDataResolver)
-        mutation
-          .run(ctx.ctx)
+        val mutation = Create(model = model, project = project, args = ctx.args, dataResolver = masterDataResolver)
+        ClientMutationRunner
+          .run(mutation, dataResolver)
           .map(outputTypesBuilder.mapResolve(_, ctx.args))
       }
     )
   }
 
-  def updateItemField(model: Model): Field[ApiUserContext, Unit] = {
-    val definition = UpdateDefinition(project, inputTypesBuilder)
-    val arguments  = definition.getSangriaArguments(model = model) :+ definition.getWhereArgument(model)
+  def updateItemField(model: Model): Option[Field[ApiUserContext, Unit]] = {
+    argumentsBuilder.getSangriaArgumentsForUpdate(model).map { args =>
+      Field(
+        s"update${model.name}",
+        fieldType = OptionType(outputTypesBuilder.mapUpdateOutputType(model, objectTypes(model.name))),
+        arguments = args,
+        resolve = (ctx) => {
+          val mutation = Update(model = model, project = project, args = ctx.args, dataResolver = masterDataResolver)
 
-    Field(
-      s"update${model.name}",
-      fieldType = OptionType(outputTypesBuilder.mapUpdateOutputType(model, objectTypes(model.name))),
-      arguments = arguments,
-      resolve = (ctx) => {
-        new Update(model = model, project = project, args = ctx.args, dataResolver = masterDataResolver)
-          .run(ctx.ctx)
-          .map(outputTypesBuilder.mapResolve(_, ctx.args))
-      }
-    )
+          ClientMutationRunner
+            .run(mutation, dataResolver)
+            .map(outputTypesBuilder.mapResolve(_, ctx.args))
+        }
+      )
+    }
   }
 
-  def updateOrCreateItemField(model: Model): Field[ApiUserContext, Unit] = {
-    val arguments = UpdateOrCreateDefinition(project, inputTypesBuilder).getSangriaArguments(model = model)
-
-    Field(
-      s"updateOrCreate${model.name}",
-      fieldType = OptionType(outputTypesBuilder.mapUpdateOrCreateOutputType(model, objectTypes(model.name))),
-      arguments = arguments,
-      resolve = (ctx) => {
-        new UpdateOrCreate(model = model, project = project, args = ctx.args, dataResolver = masterDataResolver)
-          .run(ctx.ctx)
-          .map(outputTypesBuilder.mapResolve(_, ctx.args))
-      }
-    )
+  def updateOrCreateItemField(model: Model): Option[Field[ApiUserContext, Unit]] = {
+    argumentsBuilder.getSangriaArgumentsForUpdateOrCreate(model).map { args =>
+      Field(
+        s"updateOrCreate${model.name}",
+        fieldType = OptionType(outputTypesBuilder.mapUpdateOrCreateOutputType(model, objectTypes(model.name))),
+        arguments = args,
+        resolve = (ctx) => {
+          val mutation = UpdateOrCreate(model = model, project = project, args = ctx.args, dataResolver = masterDataResolver)
+          ClientMutationRunner
+            .run(mutation, dataResolver)
+            .map(outputTypesBuilder.mapResolve(_, ctx.args))
+        }
+      )
+    }
   }
 
-  def deleteItemField(model: Model): Field[ApiUserContext, Unit] = {
-    val definition = DeleteDefinition(project)
-    val arguments  = List(definition.getWhereArgument(model))
-
-    Field(
-      s"delete${model.name}",
-      fieldType = OptionType(outputTypesBuilder.mapDeleteOutputType(model, objectTypes(model.name), onlyId = false)),
-      arguments = arguments,
-      resolve = (ctx) => {
-        new Delete(
-          model = model,
-          modelObjectTypes = objectTypeBuilder,
-          project = project,
-          args = ctx.args,
-          dataResolver = masterDataResolver
-        ).run(ctx.ctx)
-          .map(outputTypesBuilder.mapResolve(_, ctx.args))
-      }
-    )
+  def deleteItemField(model: Model): Option[Field[ApiUserContext, Unit]] = {
+    argumentsBuilder.getSangriaArgumentsForDelete(model).map { args =>
+      Field(
+        s"delete${model.name}",
+        fieldType = OptionType(outputTypesBuilder.mapDeleteOutputType(model, objectTypes(model.name), onlyId = false)),
+        arguments = args,
+        resolve = (ctx) => {
+          val mutation = Delete(
+            model = model,
+            modelObjectTypes = objectTypeBuilder,
+            project = project,
+            args = ctx.args,
+            dataResolver = masterDataResolver
+          )
+          ClientMutationRunner
+            .run(mutation, dataResolver)
+            .map(outputTypesBuilder.mapResolve(_, ctx.args))
+        }
+      )
+    }
   }
 
   def getSubscriptionField(model: Model): Field[ApiUserContext, Unit] = {
@@ -203,7 +194,7 @@ case class SchemaBuilderImpl(
     Field(
       s"${model.name}",
       fieldType = OptionType(outputTypesBuilder.mapSubscriptionOutputType(model, objectType)),
-      arguments = List(SangriaQueryArguments.filterSubscriptionArgument(model = model, project = project)),
+      arguments = List(SangriaQueryArguments.whereSubscriptionArgument(model = model, project = project)),
       resolve = _ => None
     )
   }
@@ -213,7 +204,13 @@ case class SchemaBuilderImpl(
       dataResolver.resolveByGlobalId(id)
     },
     possibleTypes = {
-      objectTypes.values.map(o => PossibleNodeObject(o)).toList
+      objectTypes.values.flatMap { o =>
+        if (o.allInterfaces.exists(_.name == "Node")) {
+          Some(PossibleNodeObject(o))
+        } else {
+          None
+        }
+      }.toList
     }
   )
 

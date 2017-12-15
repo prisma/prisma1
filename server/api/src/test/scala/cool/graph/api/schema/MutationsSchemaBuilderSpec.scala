@@ -6,7 +6,7 @@ import cool.graph.util.GraphQLSchemaAssertions
 import org.scalatest.{FlatSpec, Matchers}
 import sangria.renderer.SchemaRenderer
 
-class SchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec with GraphQLSchemaAssertions {
+class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec with GraphQLSchemaAssertions {
 
   val schemaBuilder = testDependencies.apiSchemaBuilder
 
@@ -59,6 +59,7 @@ class SchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec with Gra
       nestedInputTypeForComment,
       """input CommentCreateManyWithoutTodoInput {
          |  create: [CommentCreateWithoutTodoInput!]
+         |  connect: [CommentWhereUniqueInput!]
          |}""".stripMargin
     )
 
@@ -85,6 +86,7 @@ class SchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec with Gra
       nestedInputTypeForTodo,
       """input TodoCreateOneWithoutCommentsInput {
        |  create: TodoCreateWithoutCommentsInput
+       |  connect: TodoWhereUniqueInput
        |}""".stripMargin
     )
 
@@ -152,6 +154,9 @@ class SchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec with Gra
       nestedInputTypeForComment,
       """input CommentUpdateManyWithoutTodoInput {
         |  create: [CommentCreateWithoutTodoInput!]
+        |  connect: [CommentWhereUniqueInput!]
+        |  disconnect: [CommentWhereUniqueInput!]
+        |  delete: [CommentWhereUniqueInput!]
         |}""".stripMargin
     )
 
@@ -178,6 +183,9 @@ class SchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec with Gra
       nestedInputTypeForTodo,
       """input TodoUpdateOneWithoutCommentsInput {
         |  create: TodoCreateWithoutCommentsInput
+        |  connect: TodoWhereUniqueInput
+        |  disconnect: TodoWhereUniqueInput
+        |  delete: TodoWhereUniqueInput
         |}""".stripMargin
     )
 
@@ -189,5 +197,42 @@ class SchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec with Gra
         |  tag: String
         |}""".stripMargin
     )
+  }
+
+  "the delete Mutation for a model" should "be generated correctly" in {
+    val project = SchemaDsl() { schema =>
+      schema.model("Todo").field_!("title", _.String).field("tag", _.String)
+    }
+
+    val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
+
+    val mutation = schema.mustContainMutation("deleteTodo")
+    mutation should be("deleteTodo(where: TodoWhereUniqueInput!): Todo")
+
+    val inputType = schema.mustContainInputType("TodoWhereUniqueInput")
+    inputType should be("""input TodoWhereUniqueInput {
+                          |  id: ID
+                          |}""".stripMargin)
+  }
+
+  "the delete Mutation for a model" should "be generated correctly and contain all non-list unique fields" in {
+    val project = SchemaDsl() { schema =>
+      schema
+        .model("Todo")
+        .field_!("title", _.String)
+        .field("tag", _.String)
+        .field("unique", _.Int, isUnique = true)
+    }
+
+    val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
+
+    val mutation = schema.mustContainMutation("deleteTodo")
+    mutation should be("deleteTodo(where: TodoWhereUniqueInput!): Todo")
+
+    val inputType = schema.mustContainInputType("TodoWhereUniqueInput")
+    inputType should be("""input TodoWhereUniqueInput {
+                          |  id: ID
+                          |  unique: Int
+                          |}""".stripMargin)
   }
 }
