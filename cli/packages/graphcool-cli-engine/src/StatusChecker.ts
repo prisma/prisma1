@@ -33,7 +33,7 @@ export class StatusChecker {
       platformToken,
       hashDate,
     })
-    const secret = 'oku0pa7ahcaPahg2Eeheeshun'
+    const secret = 'uo8oozoo7uiVaphailoongoh4'
 
     const hash = crypto
       .createHmac('sha256', secret)
