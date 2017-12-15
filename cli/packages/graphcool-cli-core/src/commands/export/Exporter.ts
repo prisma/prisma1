@@ -1,8 +1,10 @@
-import { Client, Output } from 'graphcool-cli-engine'
+import { Client, Output, Config } from 'graphcool-cli-engine'
 import * as fs from 'fs-extra'
 import * as path from 'path'
 import chalk from 'chalk'
 import { repeat } from 'lodash'
+import * as archiver from 'archiver'
+import * as os from 'os'
 
 export type FileType = 'nodes' | 'relations' | 'lists'
 
@@ -21,10 +23,14 @@ export interface ExportCursor {
 export class Exporter {
   client: Client
   exportPath: string
+  exportDir: string
   out: Output
-  constructor(exportPath: string, client: Client, out: Output) {
+  config: Config
+  constructor(exportPath: string, client: Client, out: Output, config: Config) {
     this.client = client
     this.exportPath = exportPath
+    this.config = config
+    this.exportDir = path.join(config.cwd, '.export')
     this.out = out
   }
 
@@ -33,12 +39,34 @@ export class Exporter {
     await this.downloadFiles('nodes', projectId)
     await this.downloadFiles('lists', projectId)
     await this.downloadFiles('relations', projectId)
+    await this.zipIt()
+    fs.removeSync(this.exportDir)
+  }
+
+  zipIt() {
+    return new Promise((resolve, reject) => {
+      this.out.action.start(`Zipping export`)
+      const before = Date.now()
+      const archive = archiver('zip')
+      archive.directory(this.exportDir, false)
+      const output = fs.createWriteStream(this.exportPath)
+      archive.pipe(output)
+      output.on('close', () => {
+        this.out.action.stop(
+          chalk.cyan(
+            `${Date.now() - before}ms. ${archive.pointer()} total bytes`,
+          ),
+        )
+        resolve()
+      })
+      archive.finalize()
+    })
   }
 
   makeDirs() {
-    fs.mkdirpSync(path.join(this.exportPath, 'nodes/'))
-    fs.mkdirpSync(path.join(this.exportPath, 'lists/'))
-    fs.mkdirpSync(path.join(this.exportPath, 'relations/'))
+    fs.mkdirpSync(path.join(this.exportDir, 'nodes/'))
+    fs.mkdirpSync(path.join(this.exportDir, 'lists/'))
+    fs.mkdirpSync(path.join(this.exportDir, 'relations/'))
   }
 
   async downloadFiles(fileType: FileType, projectId: string) {
@@ -59,7 +87,7 @@ export class Exporter {
       repeat('0', Math.max(zeroes - String(n).length, 0)) + n
 
     let count = 1
-    const filesDir = path.join(this.exportPath, `${fileType}/`)
+    const filesDir = path.join(this.exportDir, `${fileType}/`)
     while (cursorSum(cursor) >= 0) {
       const data = await this.client.download(
         projectId,

@@ -73,7 +73,7 @@
     }
   },
   "dependencies": {
-    "archiver": "^2.0.3",
+    "archiver": "^2.1.0",
     "callsites": "^2.0.0",
     "chalk": "^2.2.0",
     "chokidar": "^1.7.0",

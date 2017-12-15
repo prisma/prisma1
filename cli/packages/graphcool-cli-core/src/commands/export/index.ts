@@ -12,31 +12,41 @@ export default class Export extends Command {
       char: 't',
       description: 'Target name',
     }),
-    ['export-dir']: flags.string({
+    ['export-path']: flags.string({
       char: 'e',
-      description: 'Export directory',
+      description: 'Path to export .zip file',
     }),
   }
   async run() {
     const { target } = this.flags
-    const exportDir =
-      this.flags['export-dir'] || `export-${new Date().toISOString()}/`
+    const exportPath =
+      this.flags['export-path'] || `export-${new Date().toISOString()}.zip`
+
+    if (!exportPath.endsWith('.zip')) {
+      throw new Error(`export-path must point to a .zip file`)
+    }
+
     await this.auth.ensureAuth()
 
     const { id } = await this.env.getTarget(target)
 
-    await this.export(id, exportDir)
+    await this.export(id, exportPath)
 
     const importCommand = chalk.green.bold(
-      `$ graphcool import --source ${exportDir} --target target-name`,
+      `$ graphcool import --source ${exportPath} --target target-name`,
     )
-    this.out.log(`Exported service to ${chalk.bold(exportDir)}
+    this.out.log(`Exported service to ${chalk.bold(exportPath)}
 You can import it to a new service with
   ${importCommand}`)
   }
 
-  async export(id: string, exportDir: string) {
-    const exporter = new Exporter(exportDir, this.client, this.out)
+  async export(id: string, exportPath: string) {
+    const exporter = new Exporter(
+      exportPath,
+      this.client,
+      this.out,
+      this.config,
+    )
 
     await exporter.download(id)
   }
