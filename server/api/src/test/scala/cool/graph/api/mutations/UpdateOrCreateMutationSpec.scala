@@ -6,8 +6,7 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class UpdateOrCreateMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
   val project = SchemaDsl() { schema =>
-    val comment = schema.model("Comment").field_!("text", _.String)
-    schema.model("Todo").field_!("title", _.String).field_!("alias", _.String, isUnique = true).oneToManyRelation("comments", "todo", comment)
+    schema.model("Todo").field_!("title", _.String).field_!("alias", _.String, isUnique = true)
   }
 
   override protected def beforeAll(): Unit = {
