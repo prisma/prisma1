@@ -255,6 +255,35 @@ export class Client {
     }
   }
 
+  async reset(
+    serviceName: string,
+    stage: string,
+    token?: string,
+  ): Promise<void> {
+    const result = await fetch(
+      this.env.activeCluster.getApiEndpoint(serviceName, stage),
+      {
+        method: 'post',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          query: `mutation {
+          resetData
+        }`,
+        }),
+      },
+    )
+
+    const text = await result.text()
+    try {
+      return JSON.parse(text)
+    } catch (e) {
+      throw new Error(text)
+    }
+  }
+
   async addProject(
     name: string,
     stage: string,
@@ -361,21 +390,6 @@ export class Client {
     `)
 
     return listProjects
-  }
-
-  async resetServiceData(id: string): Promise<void> {
-    // dont send any auth information when running the authenticateCustomer mutation
-    await this.client.request(
-      `mutation ($id: String!) {
-          resetProjectData(input: {
-            projectId: $id
-          }) {
-            clientMutationId
-          }
-        }
-      `,
-      { id },
-    )
   }
 
   async waitForLocalDocker(endpoint: string): Promise<void> {

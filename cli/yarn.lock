@@ -1538,6 +1538,10 @@ graphcool-json-schema@^1.0.1-alpha.2:
   version "1.0.1-alpha.2"
   resolved "https://registry.yarnpkg.com/graphcool-json-schema/-/graphcool-json-schema-1.0.1-alpha.2.tgz#14dd7c880d9df9045b8e658896948522c89f4f49"
 
+graphcool-json-schema@^1.0.1-beta.2:
+  version "1.0.1-beta.2"
+  resolved "https://registry.yarnpkg.com/graphcool-json-schema/-/graphcool-json-schema-1.0.1-beta.2.tgz#59db6749abb7b59708b77bb2c24a8d64e7d92d3b"
+
 graphql-config@^1.0.9:
   version "1.0.9"
   resolved "https://registry.yarnpkg.com/graphql-config/-/graphql-config-1.0.9.tgz#8fa416a7c2bdb8f62f441324775dd3ff8a266652"

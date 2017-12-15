@@ -8,7 +8,7 @@ export default class Import extends Command {
   static flags: Flags = {
     stage: flags.string({
       char: 's',
-      description: 'Stage name to get the info for',
+      description: 'Stage name',
     }),
     source: flags.string({
       char: 's',

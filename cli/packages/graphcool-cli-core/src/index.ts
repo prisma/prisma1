@@ -15,10 +15,11 @@ import Restart from './commands/local/restart'
 import Eject from './commands/local/eject'
 import PsLocal from './commands/local/ps'
 // import Account from './commands/account'
-// import Reset from './commands/reset/reset'
+import Reset from './commands/reset/reset'
 import Clusters from './commands/clusters/index'
 import Import from './commands/import/index'
 import Export from './commands/export/index'
+import Seed from './commands/seed/seed'
 
 export const groups = [
   {
@@ -51,7 +52,6 @@ export const topics = [
     group: 'general',
   },
   // { name: 'login', description: 'Create account or login', group: 'platform' },
-  // { name: 'reset', description: 'Reset data of a service', group: 'data' },
   {
     name: 'playground',
     description: 'Opens the playground for the current service',
@@ -64,6 +64,7 @@ export const topics = [
   },
   { name: 'list', description: 'List all deployed services', group: 'general' },
   { name: 'clusters', description: 'List all clusters', group: 'general' },
+  { name: 'seed', description: 'Seed a service with data', group: 'general' },
   // {
   //   name: 'root-token',
   //   description: 'Get the service root tokens',
@@ -105,6 +106,7 @@ export const topics = [
     description: 'Export command',
     group: 'general',
   },
+  { name: 'reset', description: 'Reset data of a service', group: 'general' },
 ]
 
 export const commands = [
@@ -125,10 +127,11 @@ export const commands = [
   Eject,
   PsLocal,
   // Account,
-  // Reset,
+  Reset,
   Clusters,
   Import,
   Export,
+  Seed,
 ]
 
 export {
@@ -148,9 +151,10 @@ export {
   Restart,
   Eject,
   PsLocal,
-  // Reset,
+  Reset,
   Clusters,
   // Account,
   Import,
   Export,
+  Seed,
 }
