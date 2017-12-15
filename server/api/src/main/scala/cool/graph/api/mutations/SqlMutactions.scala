@@ -98,7 +98,8 @@ case class SqlMutactions(dataResolver: DataResolver) {
       getMutactionsForNestedCreateMutation(subModel, nestedMutation, parentInfo) ++
         getMutactionsForNestedConnectMutation(nestedMutation, parentInfo) ++
         getMutactionsForNestedDisconnectMutation(nestedMutation, parentInfo) ++
-        getMutactionsForNestedDeleteMutation(nestedMutation, parentInfo)
+        getMutactionsForNestedDeleteMutation(nestedMutation, parentInfo) ++
+        getMutactionsForNestedUpdateMutation(nestedMutation, parentInfo)
 
     }
     x.flatten
@@ -142,6 +143,19 @@ case class SqlMutactions(dataResolver: DataResolver) {
         fromField = parentInfo.field,
         fromId = parentInfo.id,
         where = delete.where
+      )
+    }
+  }
+
+  def getMutactionsForNestedUpdateMutation(nestedMutation: NestedMutation, parentInfo: ParentInfo): Seq[ClientSqlMutaction] = {
+    nestedMutation.updates.map { update =>
+      UpdateDataItemByUniqueFieldIfInRelationWith(
+        project = project,
+        fromModel = parentInfo.model,
+        fromField = parentInfo.field,
+        fromId = parentInfo.id,
+        where = update.where,
+        args = update.data
       )
     }
   }

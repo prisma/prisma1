@@ -157,6 +157,7 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec
         |  connect: [CommentWhereUniqueInput!]
         |  disconnect: [CommentWhereUniqueInput!]
         |  delete: [CommentWhereUniqueInput!]
+        |  update: [CommentUpdateWithoutTodoInput!]
         |}""".stripMargin
     )
 
@@ -165,6 +166,23 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec
       createInputForNestedComment,
       """input CommentCreateWithoutTodoInput {
         |  text: String!
+        |}""".stripMargin
+    )
+
+    val updateInputForNestedComment = schema.mustContainInputType("CommentUpdateWithoutTodoInput")
+    mustBeEqual(
+      updateInputForNestedComment,
+      """input CommentUpdateWithoutTodoInput {
+        |  where: CommentWhereUniqueInput!
+        |  data: CommentUpdateWithoutTodoDataInput!
+        |}""".stripMargin
+    )
+
+    val updateDataInputForNestedComment = schema.mustContainInputType("CommentUpdateWithoutTodoDataInput")
+    mustBeEqual(
+      updateDataInputForNestedComment,
+      """input CommentUpdateWithoutTodoDataInput {
+        |  text: String
         |}""".stripMargin
     )
 
@@ -186,6 +204,7 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec
         |  connect: TodoWhereUniqueInput
         |  disconnect: TodoWhereUniqueInput
         |  delete: TodoWhereUniqueInput
+        |  update: TodoUpdateWithoutCommentsInput
         |}""".stripMargin
     )
 
@@ -194,6 +213,24 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec
       createInputForNestedTodo,
       """input TodoCreateWithoutCommentsInput {
         |  title: String!
+        |  tag: String
+        |}""".stripMargin
+    )
+
+    val updateInputForNestedTodo = schema.mustContainInputType("TodoUpdateWithoutCommentsInput")
+    mustBeEqual(
+      updateInputForNestedTodo,
+      """input TodoUpdateWithoutCommentsInput {
+        |  where: TodoWhereUniqueInput!
+        |  data: TodoUpdateWithoutCommentsDataInput!
+        |}""".stripMargin
+    )
+
+    val updateDataInputForNestedTodo = schema.mustContainInputType("TodoUpdateWithoutCommentsDataInput")
+    mustBeEqual(
+      updateDataInputForNestedTodo,
+      """input TodoUpdateWithoutCommentsDataInput {
+        |  title: String
         |  tag: String
         |}""".stripMargin
     )
