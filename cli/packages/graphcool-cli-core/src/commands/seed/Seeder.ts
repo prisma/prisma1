@@ -81,10 +81,10 @@ export class Seeder {
         cwd: this.config.cwd,
       })
       child.stdout.on('data', data => {
-        this.out.log(data)
+        this.out.log(data.toString())
       })
       child.stderr.on('data', data => {
-        this.out.log(data)
+        this.out.log(data.toString())
       })
       child.on('error', err => {
         this.out.error(err)
