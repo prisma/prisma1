@@ -25,9 +25,9 @@ case class ArgumentsBuilder(project: Project) {
 
   def getSangriaArgumentsForUpdateOrCreate(model: Model): List[Argument[Any]] = {
     List(
+      whereArgument(model),
       Argument[Any]("create", inputTypesBuilder.inputObjectTypeForCreate(model)),
-      Argument[Any]("update", inputTypesBuilder.inputObjectTypeForUpdate(model)),
-      Argument[Any]("where", ???)
+      Argument[Any]("update", inputTypesBuilder.inputObjectTypeForUpdate(model))
     )
   }
 

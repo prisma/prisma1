@@ -236,6 +236,19 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec
     )
   }
 
+  "the upsert Mutation for a model" should "be generated correctly" in {
+    val project = SchemaDsl() { schema =>
+      schema.model("Todo").field_!("title", _.String)
+    }
+    val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
+
+    val mutation = schema.mustContainMutation("upsertTodo")
+    mustBeEqual(
+      mutation,
+      "upsertTodo(where: TodoWhereUniqueInput!, create: TodoCreateInput!, update: TodoUpdateInput!): Todo!"
+    )
+  }
+
   "the delete Mutation for a model" should "be generated correctly" in {
     val project = SchemaDsl() { schema =>
       schema.model("Todo").field_!("title", _.String).field("tag", _.String)

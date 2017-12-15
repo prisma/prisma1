@@ -65,7 +65,8 @@ case class SchemaBuilderImpl(
 
     val fields = project.models.map(createItemField) ++
       project.models.map(updateItemField) ++
-      project.models.map(deleteItemField)
+      project.models.map(deleteItemField) ++
+      project.models.map(updateOrCreateItemField)
 
     Some(ObjectType("Mutation", fields :+ resetDataField))
 
@@ -148,8 +149,8 @@ case class SchemaBuilderImpl(
 
   def updateOrCreateItemField(model: Model): Field[ApiUserContext, Unit] = {
     Field(
-      s"updateOrCreate${model.name}",
-      fieldType = OptionType(outputTypesBuilder.mapUpdateOrCreateOutputType(model, objectTypes(model.name))),
+      s"upsert${model.name}",
+      fieldType = outputTypesBuilder.mapUpdateOrCreateOutputType(model, objectTypes(model.name)),
       arguments = argumentsBuilder.getSangriaArgumentsForUpdateOrCreate(model),
       resolve = (ctx) => {
         val mutation = UpdateOrCreate(model = model, project = project, args = ctx.args, dataResolver = masterDataResolver)
