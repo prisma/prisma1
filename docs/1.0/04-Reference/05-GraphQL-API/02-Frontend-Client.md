@@ -5,7 +5,7 @@ description: Frontend Clients
 
 # Frontend Clients
 
-In most cases when working with a GraphQL API, you won't want to use plain HTTP to send your requests to the server. Instead, you can use a GraphQL client library that's abstracting away many of the boilerplate you otherwise would have to write.
+In most cases when working with a GraphQL API, you won't want to use plain HTTP to send your requests to the API. Instead, you can use a GraphQL client library that's abstracting away many of the boilerplate you otherwise would have to write.
 
 > Learn how to get started with Relay and Apollo in our [Quickstart examples](https://www.graph.cool/docs/quickstart/) or on [How to GraphQL](https://www.howtographql.com/)
 
@@ -15,7 +15,7 @@ There are three major GraphQL client libraries at the moment, varying in complex
 
 ### `graphql-request`
 
-[`graphql-request`](https://github.com/graphcool/graphql-request) is a lightweight GraphQL client for JavaScript. It basically is just a thin wrapper on top of `fetch` providing a convencience  API for sending queries and mutations, or for configuring HTTP headers.
+[`graphql-request`](https://github.com/graphcool/graphql-request) is a lightweight GraphQL client for JavaScript. It basically is just a thin wrapper on top of `fetch` providing a convencience API for sending queries and mutations, or for configuring HTTP headers.
 
 ### Apollo Client
 

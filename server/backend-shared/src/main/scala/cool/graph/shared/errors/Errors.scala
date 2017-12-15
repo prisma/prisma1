@@ -291,12 +291,6 @@ object UserInputErrors {
   case class RequiredSearchProviderAlgoliaNotPresent()
       extends SystemApiError(s"You must enable the Algolia integration before you add queries to sync data. Please enable this integration first.", 2027)
 
-  case class AlgoliaCredentialsDontHaveRequiredPermissions()
-      extends SystemApiError(
-        s"Please check that the Application ID and API Key is correct. You can find both on the API Keys page in the Algolia web interface. You must create a new API Key and enable 'Add records' and 'Delete records'. Make sure that you are not using the Admin API Key, as Algolia doesn't allow it to be used here.",
-        2028
-      )
-
   case class ProjectAlreadyHasSearchProviderAlgolia()
       extends SystemApiError(s"This project already has an Algolia integration. Try setup a sync query for a new modal using the existing integration.", 2029)
 

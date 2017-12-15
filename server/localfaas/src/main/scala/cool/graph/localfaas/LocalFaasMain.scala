@@ -5,9 +5,6 @@ import akka.stream.ActorMaterializer
 import better.files.File.root
 import cool.graph.akkautil.http.ServerExecutor
 
-import scala.concurrent.Await
-import scala.concurrent.duration.Duration
-
 object LocalFaasMain extends App {
   implicit val system       = ActorSystem("functions-runtime")
   implicit val materializer = ActorMaterializer()

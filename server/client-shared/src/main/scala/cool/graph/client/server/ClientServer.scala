@@ -77,6 +77,11 @@ case class ClientServer(prefix: String)(
                   extractRawRequest(requestLogger) { rawRequest =>
                     complete(requestHandler.handleRawRequestForImport(projectId = projectId, rawRequest = rawRequest))
                   }
+                } ~
+                path("export") {
+                  extractRawRequest(requestLogger) { rawRequest =>
+                    complete(requestHandler.handleRawRequestForExport(projectId = projectId, rawRequest = rawRequest))
+                  }
                 } ~ {
                 extractRawRequest(requestLogger) { rawRequest =>
                   timeoutHandler(requestId = rawRequest.id, projectId = projectId) {

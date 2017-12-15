@@ -61,6 +61,7 @@ trait ClientInjector {
   val globalApiEndpointManager: GlobalApiEndpointManager
   val s3: AmazonS3
   val s3Fileupload: AmazonS3
+  val maxImportExportSize: Int
 }
 
 class ClientInjectorImpl(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends ClientInjector with LazyLogging {
@@ -89,11 +90,13 @@ class ClientInjectorImpl(implicit val system: ActorSystem, val materializer: Act
   lazy val webhookPublisher: QueuePublisher[Webhook]    = RabbitQueue.publisher(rabbitMQUri, "webhooks")(bugsnagger, Webhook.marshaller)
   lazy val serviceName: String                          = sys.env.getOrElse("SERVICE_NAME", "local")
   lazy val environment: String                          = sys.env.getOrElse("ENVIRONMENT", "local")
+  lazy val maxImportExportSize: Int                     = 10000000
 
   lazy val projectSchemaInvalidationSubscriber: PubSubSubscriber[String] = {
     implicit val unmarshaller: ByteUnmarshaller[String] = Unmarshallers.ToString
     RabbitAkkaPubSub.subscriber[String](globalRabbitUri, "project-schema-invalidation", durable = true)
   }
+
   lazy val projectSchemaFetcher: RefreshableProjectFetcher = CachedProjectFetcherImpl(
     projectFetcher = ProjectFetcherImpl(blockedProjectIds, config),
     projectSchemaInvalidationSubscriber = projectSchemaInvalidationSubscriber

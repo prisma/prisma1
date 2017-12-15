@@ -6,9 +6,9 @@ import akka.actor.{Actor, ActorRef, Props, Terminated}
 import akka.util.Timeout
 import cool.graph.akkautil.{LogUnhandled, LogUnhandledExceptions}
 import cool.graph.bugsnag.BugSnagger
-import cool.graph.client.ClientInjector
 import cool.graph.messagebus.pubsub.Only
 import cool.graph.shared.models.ModelMutationType.ModelMutationType
+import cool.graph.subscriptions.SimpleSubscriptionInjector
 import cool.graph.subscriptions.protocol.StringOrInt
 import cool.graph.subscriptions.resolving.SubscriptionsManager.Requests.CreateSubscription
 import play.api.libs.json._
@@ -50,11 +50,14 @@ object SubscriptionsManager {
   }
 }
 
-case class SubscriptionsManager(bugsnag: BugSnagger)(implicit injector: ClientInjector) extends Actor with LogUnhandled with LogUnhandledExceptions {
+case class SubscriptionsManager(bugsnag: BugSnagger)(implicit injector: SimpleSubscriptionInjector)
+    extends Actor
+    with LogUnhandled
+    with LogUnhandledExceptions {
 
   import SubscriptionsManager.Requests._
 
-  val invalidationSubscriber  = injector.projectSchemaInvalidationSubscriber
+  val invalidationSubscriber  = injector.invalidationSubscriber
   implicit val timeout        = Timeout(10, TimeUnit.SECONDS)
   private val projectManagers = mutable.HashMap.empty[String, ActorRef]
 

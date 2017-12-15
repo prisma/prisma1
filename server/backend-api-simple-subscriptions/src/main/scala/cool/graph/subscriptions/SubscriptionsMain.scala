@@ -75,6 +75,7 @@ case class SimpleSubscriptionsServer(prefix: String = "")(
 
   override def onStop = Future {
     consumerRef.stop
-    subscriptionInjector.projectSchemaInvalidationSubscriber.shutdown
+
+//    subscriptionInjector.projectSchemaInvalidationSubscriber.shutdown
   }
 }

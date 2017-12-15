@@ -53,7 +53,6 @@ trait SystemInjector {
   val projectQueries: ProjectQueries
   val environment: String
   val serviceName: String
-  val algoliaKeyChecker: AlgoliaKeyChecker
   val auth0Api: Auth0Api
   val auth0Extend: Auth0Extend
   val testableTime: TestableTime
@@ -89,7 +88,6 @@ class SystemInjectorImpl(implicit val system: ActorSystem, val materializer: Act
   lazy val projectQueries: ProjectQueries               = ProjectQueries()(internalDB, cachedProjectResolver)
   lazy val environment: String                          = sys.env.getOrElse("ENVIRONMENT", "local")
   lazy val serviceName: String                          = sys.env.getOrElse("SERVICE_NAME", "local")
-  lazy val algoliaKeyChecker: AlgoliaKeyChecker         = new AlgoliaKeyCheckerImplementation()(toScaldi)
   lazy val auth0Api: Auth0Api                           = new Auth0ApiImplementation()(toScaldi)
   lazy val auth0Extend: Auth0Extend                     = new Auth0ExtendImplementation()(toScaldi)
   lazy val testableTime: TestableTime                   = new TestableTimeImplementation
@@ -131,7 +129,6 @@ class SystemInjectorImpl(implicit val system: ActorSystem, val materializer: Act
       binding identifiedBy "environment" toNonLazy outer.environment
       binding identifiedBy "service-name" toNonLazy outer.serviceName
 
-      bind[AlgoliaKeyChecker] identifiedBy "algoliaKeyChecker" toNonLazy outer.algoliaKeyChecker
       bind[Auth0Api] toNonLazy outer.auth0Api
       bind[Auth0Extend] toNonLazy outer.auth0Extend
       bind[BugSnagger] toNonLazy outer.bugsnagger
@@ -189,7 +186,6 @@ trait SystemApiDependencies extends Module {
   binding identifiedBy "environment" toNonLazy sys.env.getOrElse("ENVIRONMENT", "local")
   binding identifiedBy "service-name" toNonLazy sys.env.getOrElse("SERVICE_NAME", "local")
 
-  bind[AlgoliaKeyChecker] identifiedBy "algoliaKeyChecker" toNonLazy new AlgoliaKeyCheckerImplementation()
   bind[Auth0Api] toNonLazy new Auth0ApiImplementation
   bind[Auth0Extend] toNonLazy new Auth0ExtendImplementation()
   bind[BugSnagger] toNonLazy bugsnagger

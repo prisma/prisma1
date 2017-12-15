@@ -1,5 +1,5 @@
 ---
-alias: bai9yeitoa
+alias: vu5ohngud5
 description: Stop local development cluster
 ---
 

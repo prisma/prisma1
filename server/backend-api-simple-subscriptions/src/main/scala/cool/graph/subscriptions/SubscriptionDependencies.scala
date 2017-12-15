@@ -52,7 +52,6 @@ class SimpleSubscriptionInjectorImpl(implicit val system: ActorSystem, val mater
   implicit lazy val toScaldi: Module = {
     val outer = this
     new Module {
-
       bind[BugSnagger] toNonLazy outer.bugsnagger
       bind[TestableTime] toNonLazy outer.testableTime
       bind[ClientAuth] toNonLazy outer.clientAuth
@@ -168,4 +167,6 @@ class SimpleSubscriptionInjectorImpl(implicit val system: ActorSystem, val mater
   implicit lazy val bugsnagger: BugSnaggerImpl          = BugSnaggerImpl(sys.env.getOrElse("BUGSNAG_API_KEY", ""))
   lazy val environment: String                          = sys.env.getOrElse("ENVIRONMENT", "local")
   lazy val serviceName: String                          = sys.env.getOrElse("SERVICE_NAME", "local")
+  lazy val maxImportExportSize: Int                     = 10000000
+
 }
