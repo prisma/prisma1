@@ -43,6 +43,9 @@ object SlickExtensions {
       case Some(b) => a concat b
       case None    => a
     }
+
+    def ++(b: SQLActionBuilder): SQLActionBuilder         = concat(b)
+    def ++(b: Option[SQLActionBuilder]): SQLActionBuilder = concat(b)
   }
 
   def listToJson(param: List[Any]): String = {
