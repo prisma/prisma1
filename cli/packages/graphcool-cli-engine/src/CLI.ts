@@ -139,21 +139,23 @@ export class CLI {
       }
     }
 
-    this.notifier.notify({
-      message:
-        'Update available ' +
-        chalk.dim(this.notifier.update.current) +
-        chalk.reset(' → ') +
-        chalk.green(this.notifier.update.latest) +
-        `\nRun ${chalk.bold.green('npm i -g graphcool')} to update`,
-      boxenOpts: {
-        padding: 1,
-        margin: 1,
-        align: 'center',
-        borderColor: 'green',
-        borderStyle: 'round',
-      },
-    })
+    if (this.notifier.update) {
+      this.notifier.notify({
+        message:
+          'Update available ' +
+          chalk.dim(this.notifier.update.current) +
+          chalk.reset(' → ') +
+          chalk.green(this.notifier.update.latest) +
+          `\nRun ${chalk.bold.green('npm i -g graphcool')} to update`,
+        boxenOpts: {
+          padding: 1,
+          margin: 1,
+          align: 'center',
+          borderColor: 'green',
+          borderStyle: 'round',
+        },
+      })
+    }
 
     if (
       !(
