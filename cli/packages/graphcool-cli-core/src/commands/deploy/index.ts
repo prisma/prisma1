@@ -16,6 +16,7 @@ import * as fs from 'fs-extra'
 import { getGraphQLConfig } from 'graphql-config'
 import { fetchAndPrintSchema } from './printSchema'
 import Up from '../local/up'
+import { Seeder } from '../seed/Seeder'
 const debug = require('debug')('deploy')
 
 export default class Deploy extends Command {
@@ -72,6 +73,9 @@ ${chalk.gray(
     'dry-run': flags.boolean({
       char: 'd',
       description: 'Perform a dry-run of the deployment',
+    }),
+    'no-seed': flags.boolean({
+      description: 'Disable seed on initial service deploy',
     }),
     json: flags.boolean({
       char: 'j',
@@ -153,6 +157,17 @@ ${chalk.gray(
     }
 
     await this.deploy(stageName, serviceName, cluster!, force, dryRun)
+
+    if (this.definition.definition!.seed && !this.flags['no-seed']) {
+      const seeder = new Seeder(
+        this.definition,
+        this.client,
+        this.out,
+        this.config,
+      )
+      this.out.log(`Seeding Data...`)
+      await seeder.seed(serviceName, stageName)
+    }
 
     if (watch) {
       this.out.log('Watching for change...')
