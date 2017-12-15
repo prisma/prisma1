@@ -18,6 +18,7 @@ async function load() {
     types,
     client,
     out,
+    config,
   )
 
   importer.upload('cjb53jeus0bcv0139bq2liqvu')

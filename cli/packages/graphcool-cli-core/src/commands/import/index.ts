@@ -22,6 +22,14 @@ export default class Import extends Command {
 
     const { id } = await this.env.getTarget(target)
 
+    if (!source.endsWith('.zip')) {
+      throw new Error(`Source must end with .zip`)
+    }
+
+    if (!fs.pathExistsSync(source)) {
+      throw new Error(`Path ${source} does not exist`)
+    }
+
     // continue
     await this.import(source, id)
   }
@@ -34,7 +42,13 @@ export default class Import extends Command {
     typesPaths.forEach(typesPath => {
       typesString += fs.readFileSync(typesPath, 'utf-8')
     })
-    const importer = new Importer(source, typesString, this.client, this.out)
+    const importer = new Importer(
+      source,
+      typesString,
+      this.client,
+      this.out,
+      this.config,
+    )
     await importer.upload(id)
   }
 }

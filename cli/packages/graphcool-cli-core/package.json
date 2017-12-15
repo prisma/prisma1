@@ -103,6 +103,8 @@
     "through2": "^2.0.3",
     "ts-node": "^3.3.0",
     "typescript": "^2.5.3",
-    "validator": "^8.2.0"
+    "unzip": "^0.1.11",
+    "validator": "^8.2.0",
+    "yauzl": "^2.9.1"
   }
 }

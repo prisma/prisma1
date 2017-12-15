@@ -52,11 +52,8 @@ export class Exporter {
       const output = fs.createWriteStream(this.exportPath)
       archive.pipe(output)
       output.on('close', () => {
-        this.out.action.stop(
-          chalk.cyan(
-            `${Date.now() - before}ms. ${archive.pointer()} total bytes`,
-          ),
-        )
+        console.log(archive.pointer() + ' total bytes')
+        this.out.action.stop(chalk.cyan(`${Date.now() - before}ms`))
         resolve()
       })
       archive.finalize()
