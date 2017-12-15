@@ -426,7 +426,7 @@ type Story @model @rename(oldName: "Post") {
 
 The temporary directive `@migrationValue(value: String!)` is used to migrate the value of a scalar field. When changing an optional field to a requried field, it's necessary to also use this directive.
 
-## Naming onventions
+## Naming conventions
 
 Different objects you encounter in a Graphcool service like types or relations follow separate naming conventions to help you distinguish them.
 
