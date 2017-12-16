@@ -2,8 +2,7 @@
 
 TOKEN=${GITHUB_TOKEN}
 
-
-echo "Loading cb binary..."
+echo "Fetching cb binary..."
 curl --header "Authorization: token ${TOKEN}" \
      --header 'Accept: application/vnd.github.v3.raw' \
      --location https://api.github.com/repos/graphcool/coolbelt/releases/latest -sSL | \
@@ -15,4 +14,6 @@ curl --header "Authorization: token ${TOKEN}" \
 chmod +x cb
 
 echo "Replacing images..."
-cb service replace-all --customer graphcool --cluster database-beta-eu-west-1 --mode env
+
+export CB_MODE=env
+cb service replace-all --customer graphcool --cluster database-beta-eu-west-1-dev

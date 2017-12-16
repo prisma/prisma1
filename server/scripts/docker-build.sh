@@ -12,8 +12,8 @@ docker run -e "BRANCH=${BUILDKITE_BRANCH}" -e "PACKAGECLOUD_PW=${PACKAGECLOUD_PW
 
 docker images
 
-TAG=$(echo $BUILDKITE_COMMIT | cut -c1-7)
-
+#TAG=$(echo $BUILDKITE_COMMIT | cut -c1-7)
+TAG=latest
 
 for service in deploy api graphcool-dev;
 do
@@ -23,4 +23,4 @@ do
   docker push graphcool/$service:$TAG
 done
 
-docker push graphcool/graphcool-dev:latest
+#docker push graphcool/graphcool-dev:latest
