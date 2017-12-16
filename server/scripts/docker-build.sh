@@ -15,7 +15,7 @@ docker images
 #TAG=$(echo $BUILDKITE_COMMIT | cut -c1-7)
 TAG=latest
 
-for service in deploy api graphcool-dev;
+for service in graphcool-deploy graphcool-api graphcool-dev;
 do
   echo "Tagging graphcool/$service image with $TAG..."
   docker tag graphcool/$service graphcool/$service:$TAG
