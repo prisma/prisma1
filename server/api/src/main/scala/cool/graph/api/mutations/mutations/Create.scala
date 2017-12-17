@@ -19,8 +19,7 @@ case class Create(
     model: Model,
     project: Project,
     args: schema.Args,
-    dataResolver: DataResolver,
-    argsField: String = "data"
+    dataResolver: DataResolver
 )(implicit apiDependencies: ApiDependencies)
     extends ClientMutation {
 
@@ -31,7 +30,7 @@ case class Create(
   val requestId: String = "" //                        = dataResolver.requestContext.map(_.requestId).getOrElse("")
 
   val coolArgs: CoolArgs = {
-    val argsPointer: Map[String, Any] = args.raw.get(argsField) match {
+    val argsPointer: Map[String, Any] = args.raw.get("data") match {
       case Some(value) => value.asInstanceOf[Map[String, Any]]
       case None        => args.raw
     }
