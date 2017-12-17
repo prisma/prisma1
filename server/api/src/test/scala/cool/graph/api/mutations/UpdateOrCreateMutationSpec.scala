@@ -138,6 +138,77 @@ class UpdateOrCreateMutationSpec extends FlatSpec with Matchers with ApiBaseSpec
     todoCount should be(1)
   }
 
+  "[BUG DOC] an upsert" should "perform a create and an update if the update changes the unique field used in the where clause" in {
+    val todoId = server
+      .executeQuerySimple(
+        """mutation {
+          |  createTodo(
+          |    data: {
+          |      title: "title"
+          |      alias: "todo1"
+          |    }
+          |  ) {
+          |    id
+          |  }
+          |}
+        """.stripMargin,
+        project
+      )
+      .pathAsString("data.createTodo.id")
+
+    todoCount should be(1)
+
+    val result = server.executeQuerySimple(
+      s"""mutation {
+         |  upsertTodo(
+         |    where: {alias: "todo1"}
+         |    create: {
+         |      title: "title of new node"
+         |      alias: "alias-of-new-node"
+         |    }
+         |    update: {
+         |      title: "updated title"
+         |      alias: "todo1-new"
+         |    }
+         |  ){
+         |    id
+         |    title
+         |  }
+         |}
+      """.stripMargin,
+      project
+    )
+
+    // the mutation returns new created node
+    result.pathAsString("data.upsertTodo.title") should equal("title of new node")
+    // there are 2 nodes. So the create must have been performed.
+    todoCount should be(2)
+    // the original node has been updated
+    server
+      .executeQuerySimple(
+        s"""{
+        |  todo(where: {id: "$todoId"}){
+        |    title
+        |  }
+        |}
+      """.stripMargin,
+        project
+      )
+      .pathAsString("data.todo.title") should equal("updated title")
+    // a new node has been added
+    server
+      .executeQuerySimple(
+        s"""{
+           |  todo(where: {alias: "alias-of-new-node"}){
+           |    title
+           |  }
+           |}
+      """.stripMargin,
+        project
+      )
+      .pathAsString("data.todo.title") should equal("title of new node")
+  }
+
   def todoCount: Int = {
     val result = server.executeQuerySimple(
       "{ todoes { id } }",
