@@ -2,6 +2,7 @@ package cool.graph.api.database
 
 import cool.graph.api.ApiDependencies
 import cool.graph.api.database.DatabaseQueryBuilder._
+import cool.graph.api.mutations.NodeSelector
 import cool.graph.api.schema.APIErrors
 import cool.graph.gc_values.GCValue
 import cool.graph.shared.models.IdType.Id
@@ -68,6 +69,11 @@ case class DataResolver(project: Project, useMasterDatabaseOnly: Boolean = false
     batchResolveByUnique(model, key, List(unwrapGcValue(value))).map(_.headOption)
   }
 
+  def resolveByUniques(model: Model, uniques: Vector[NodeSelector]): Future[Vector[DataItem]] = {
+    val query = DatabaseQueryBuilder.selectFromModelsByUniques(project, model, uniques)
+    readonlyClientDatabase.run(readOnlyDataItem(query)).map(_.map(mapDataItem(model)))
+  }
+
   def resolveByUniqueWithoutValidation(model: Model, key: String, value: Any): Future[Option[DataItem]] = {
     batchResolveByUniqueWithoutValidation(model, key, List(value)).map(_.headOption)
   }
@@ -85,7 +91,6 @@ case class DataResolver(project: Project, useMasterDatabaseOnly: Boolean = false
 
     performWithTiming("loadRelationRowsForExport", readonlyClientDatabase.run(readOnlyDataItem(query))).map(_.toList).map(resultTransform(_))
   }
-
 
   def batchResolveByUnique(model: Model, key: String, values: List[Any]): Future[List[DataItem]] = {
     val query = DatabaseQueryBuilder.batchSelectFromModelByUnique(project.id, model.name, key, values)

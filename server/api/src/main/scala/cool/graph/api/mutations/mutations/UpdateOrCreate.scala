@@ -6,6 +6,7 @@ import cool.graph.api.database.mutactions.mutactions.UpsertDataItem
 import cool.graph.api.database.mutactions.{MutactionGroup, Transaction}
 import cool.graph.api.mutations._
 import cool.graph.cuid.Cuid
+import cool.graph.gc_values.GraphQLIdGCValue
 import cool.graph.shared.models.{Model, Project}
 import sangria.schema
 
@@ -35,16 +36,12 @@ case class UpdateOrCreate(
   }
 
   override def getReturnValue: Future[ReturnValueResult] = {
-    resolveReturnValue("id", idOfNewItem).flatMap {
-      case x: ReturnValue   => Future.successful(x)
-      case x: NoReturnValue => resolveReturnValue(where.fieldName, where.fieldValue)
-    }
-  }
-
-  def resolveReturnValue(field: String, value: Any): Future[ReturnValueResult] = {
-    dataResolver.resolveByUnique(model, field, value).map {
-      case Some(dataItem) => ReturnValue(dataItem)
-      case None           => NoReturnValue(value.toString)
+    val uniques = Vector(NodeSelector(model, "id", GraphQLIdGCValue(idOfNewItem)), where)
+    dataResolver.resolveByUniques(model, uniques).map { items =>
+      items.headOption match {
+        case Some(item) => ReturnValue(item)
+        case None       => sys.error("Could not find an item after an Upsert. This should not be possible.") // Todo: what should we do here?
+      }
     }
   }
 }
