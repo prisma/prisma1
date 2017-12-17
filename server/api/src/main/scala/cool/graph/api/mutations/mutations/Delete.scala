@@ -7,9 +7,10 @@ import cool.graph.api.database.mutactions.mutactions.ServerSideSubscription
 import cool.graph.api.database.mutactions.{MutactionGroup, Transaction}
 import cool.graph.api.database.{DataItem, DataResolver}
 import cool.graph.api.mutations._
-import cool.graph.api.schema.ObjectTypeBuilder
+import cool.graph.api.schema.{APIErrors, ObjectTypeBuilder}
 import cool.graph.shared.models.IdType.Id
 import cool.graph.shared.models.{Model, Project}
+import cool.graph.util.gc_value.GCStringConverter
 import sangria.schema
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -45,7 +46,10 @@ case class Delete(
       }
       .map(_ => {
 
-        val itemToDelete = deletedItemOpt.getOrElse(sys.error("Than node does not exist"))
+        val whereField = model.fields.find(_.name == where.fieldName).get
+        val converter = GCStringConverter(whereField.typeIdentifier, whereField.isList)
+
+        val itemToDelete = deletedItemOpt.getOrElse(throw APIErrors.DataItemDoesNotExist(model.name, where.fieldName, converter.fromGCValue(where.fieldValue)))
 
         val sqlMutactions        = SqlMutactions(dataResolver).getMutactionsForDelete(model, itemToDelete.id, itemToDelete)
         val transactionMutaction = Transaction(sqlMutactions, dataResolver)

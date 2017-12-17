@@ -9,6 +9,7 @@ import cool.graph.api.database.{DataItem, DataResolver}
 import cool.graph.api.mutations._
 import cool.graph.api.schema.APIErrors
 import cool.graph.shared.models.{Model, Project}
+import cool.graph.util.gc_value.GCStringConverter
 import sangria.schema
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -61,7 +62,9 @@ case class Update(
         )
 
       case None =>
-        throw APIErrors.DataItemDoesNotExist(model.name, where.fieldName, where.fieldValue.toString)
+        val whereField = model.fields.find(_.name == where.fieldName).get
+        val converter = GCStringConverter(whereField.typeIdentifier, whereField.isList)
+        throw APIErrors.DataItemDoesNotExist(model.name, where.fieldName, converter.fromGCValue(where.fieldValue))
     }
   }
 

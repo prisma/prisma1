@@ -5,7 +5,7 @@ import cool.graph.api.util.TroubleCharacters
 import cool.graph.shared.project_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
-class UpdateSpec extends FlatSpec with Matchers with ApiBaseSpec {
+class UpdateMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
 
   "The Update Mutation" should "update an item" in {
     val project = SchemaDsl() { schema =>
@@ -111,5 +111,47 @@ class UpdateSpec extends FlatSpec with Matchers with ApiBaseSpec {
       project
     )
     updateResult.pathAsString("data.updateTodo.title") should equal("updated title")
+  }
+
+  "The Update Mutation" should "gracefully fail when trying to update an item by a unique field with a non-existing value" in {
+    val project = SchemaDsl() { schema =>
+      schema.model("Todo").field_!("title", _.String).field("alias", _.String, isUnique = true)
+    }
+    database.setup(project)
+
+    val alias = "the-alias"
+    server.executeQuerySimple(
+      s"""
+         |mutation {
+         |  createTodo(
+         |    data: {
+         |      title: "initial title", alias: "$alias"
+         |    }
+         |  ){
+         |    id
+         |  }
+         |}
+      """.stripMargin,
+      project
+    )
+
+    server.executeQuerySimpleThatMustFail(
+      s"""
+         |mutation {
+         |  updateTodo(
+         |    data: {
+         |      title: "updated title"
+         |    }
+         |    where: {
+         |      alias: "NOT A VALID ALIAS"
+         |    }
+         |  ){
+         |    title
+         |  }
+         |}""".stripMargin,
+      project,
+      errorCode = 3002,
+      errorContains = "'Todo' has no item with alias 'NOT A VALID ALIAS'"
+    )
   }
 }
