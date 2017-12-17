@@ -1,5 +1,6 @@
 package cool.graph.deploy.database.schema.queries
 
+import build_info.BuildInfo
 import cool.graph.deploy.specutils.DeploySpecBase
 import cool.graph.shared.models.ProjectId
 import org.scalatest.{FlatSpec, Matchers}
@@ -17,6 +18,6 @@ class ClusterInfoSpec extends FlatSpec with Matchers with DeploySpecBase {
                                        |}
       """.stripMargin)
 
-    result.pathAsString("data.clusterInfo.version") shouldEqual "1.0-beta1"
+    result.pathAsString("data.clusterInfo.version") shouldEqual BuildInfo.imageTag
   }
 }

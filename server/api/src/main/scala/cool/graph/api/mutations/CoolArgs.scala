@@ -24,7 +24,9 @@ case class CoolArgs(raw: Map[String, Any]) {
     if (relationField.isList) {
       NestedMutation(
         creates = subArgsVector("create").getOrElse(Vector.empty).map(CreateOne(_)),
-        updates = Vector.empty,
+        updates = subArgsVector("update").getOrElse(Vector.empty).map { args =>
+          UpdateOne(args.extractNodeSelectorFromWhereField(subModel), args.subArgsOption("data").get.get)
+        },
         upserts = Vector.empty,
         deletes = subArgsVector("delete").getOrElse(Vector.empty).map(args => DeleteOne(args.extractNodeSelector(subModel))),
         connects = subArgsVector("connect").getOrElse(Vector.empty).map(args => ConnectOne(args.extractNodeSelector(subModel))),
@@ -33,7 +35,9 @@ case class CoolArgs(raw: Map[String, Any]) {
     } else {
       NestedMutation(
         creates = subArgsOption("create").flatten.map(CreateOne(_)).toVector,
-        updates = Vector.empty,
+        updates = subArgsOption("update").flatten.map { args =>
+          UpdateOne(args.extractNodeSelectorFromWhereField(subModel), args.subArgsOption("data").get.get)
+        }.toVector,
         upserts = Vector.empty,
         deletes = subArgsOption("delete").flatten.map(args => DeleteOne(args.extractNodeSelector(subModel))).toVector,
         connects = subArgsOption("connect").flatten.map(args => ConnectOne(args.extractNodeSelector(subModel))).toVector,
