@@ -20,7 +20,7 @@ case class ArgumentsBuilder(project: Project) {
     List(Argument[Any]("data", inputObjectType), whereArgument(model))
   }
 
-  def getSangriaArgumentsForUpdateOrCreate(model: Model): List[Argument[Any]] = {
+  def getSangriaArgumentsForUpsert(model: Model): List[Argument[Any]] = {
     List(
       whereArgument(model),
       Argument[Any]("create", inputTypesBuilder.inputObjectTypeForCreate(model)),

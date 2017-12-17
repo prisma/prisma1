@@ -1,7 +1,7 @@
 package cool.graph.api.mutations.mutations
 
 import cool.graph.api.ApiDependencies
-import cool.graph.api.database.{DataItem, DataResolver}
+import cool.graph.api.database.DataResolver
 import cool.graph.api.database.mutactions.mutactions.UpsertDataItem
 import cool.graph.api.database.mutactions.{MutactionGroup, Transaction}
 import cool.graph.api.mutations._
@@ -12,7 +12,7 @@ import sangria.schema
 
 import scala.concurrent.Future
 
-case class UpdateOrCreate(
+case class Upsert(
     model: Model,
     project: Project,
     args: schema.Args,

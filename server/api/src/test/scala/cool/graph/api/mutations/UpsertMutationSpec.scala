@@ -4,7 +4,7 @@ import cool.graph.api.ApiBaseSpec
 import cool.graph.shared.project_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
-class UpdateOrCreateMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
+class UpsertMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
   val project = SchemaDsl() { schema =>
     schema.model("Todo").field_!("title", _.String).field_!("alias", _.String, isUnique = true)
   }
