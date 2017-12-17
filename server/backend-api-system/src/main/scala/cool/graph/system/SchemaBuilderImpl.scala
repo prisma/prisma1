@@ -75,7 +75,6 @@ class SchemaBuilderImpl(
     getTemporaryDeployUrl,
     getAddProjectField,
     getAuthenticateCustomerField,
-    getExportDataField,
     getGenerateNodeTokenMutationField
   )
 
@@ -225,44 +224,6 @@ class SchemaBuilderImpl(
       internalDatabase = internalDatabase,
       projectDbsFn = internalAndProjectDbsForProjectDatabase
     )
-  }
-
-  def getExportDataField: Field[SystemUserContext, Unit] = {
-    import ExportData.manual
-
-    Mutation
-      .fieldWithClientMutationId[SystemUserContext, Unit, ExportDataMutationPayload, ExportDataInput](
-        fieldName = "exportData",
-        typeName = "ExportData",
-        inputFields = ExportData.inputFields,
-        outputFields = fields(
-          Field("viewer", viewerType, resolve = _ => ViewerModel()),
-          Field("project", ProjectType, resolve = ctx => ctx.value.project),
-          Field("user", clientType, resolve = ctx => ctx.ctx.getClient),
-          Field("url", StringType, resolve = ctx => ctx.value.url)
-        ),
-        mutateAndGetPayload = (input, ctx) => {
-          val project = ProjectFinder.loadById(ctx.ctx.getClient.id, input.projectId)
-          project.flatMap { project =>
-            val mutator = ExportDataMutation(
-              client = ctx.ctx.getClient,
-              project = project,
-              args = input,
-              projectDbsFn = internalAndProjectDbsForProject,
-              dataResolver = ctx.ctx.dataResolver(project)
-            )
-
-            mutator
-              .run(ctx.ctx)
-              .flatMap { payload =>
-                val clientId = ctx.ctx.getClient.id
-                ProjectFinder
-                  .loadById(clientId, payload.project.id)
-                  .map(project => payload.copy(project = project))
-              }
-          }
-        }
-      )
   }
 
   def getGenerateNodeTokenMutationField: Field[SystemUserContext, Unit] = {

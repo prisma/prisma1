@@ -46,6 +46,11 @@ class ProjectDataresolver(override val project: Project, override val requestCon
     performWithTiming("countByModel", readonlyClientDatabase.run(readOnlyInt(query))).map(_.head)
   }
 
+  def countRelayIds(args: Option[QueryArguments] = None): Future[Int] = {
+    val query = DatabaseQueryBuilder.countAllFromModel(project.id, "_RelayId", args)
+    performWithTiming("countByModel", readonlyClientDatabase.run(readOnlyInt(query))).map(_.head)
+  }
+
   def existsByModelAndId(model: Model, id: String): Future[Boolean] = {
     val query = DatabaseQueryBuilder.existsByModelAndId(project.id, model.name, id)
     performWithTiming("existsByModelAndId", readonlyClientDatabase.run(readOnlyBoolean(query))).map(_.head)

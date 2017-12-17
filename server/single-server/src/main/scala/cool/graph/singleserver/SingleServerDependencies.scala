@@ -83,6 +83,7 @@ class SingleServerInjectorImpl(implicit val actorSystem: ActorSystem, actorMater
       bind[PubSubPublisher[String]] identifiedBy "schema-invalidation-publisher" toNonLazy invalidationPublisher
       bind[QueuePublisher[String]] identifiedBy "logsPublisher" toNonLazy logsPublisher
       bind[PubSubSubscriber[SchemaInvalidatedMessage]] identifiedBy "schema-invalidation-subscriber" toNonLazy invalidationSubscriber
+      bind[PubSubSubscriber[String]] identifiedBy "schema-manager-invalidation-subscriber" toNonLazy schemaManagerInvalidationSubscriber
       bind[FunctionEnvironment] toNonLazy functionEnvironment
       bind[EndpointResolver] identifiedBy "endpointResolver" toNonLazy endpointResolver
       bind[QueuePublisher[Webhook]] identifiedBy "webhookPublisher" toNonLazy webhookPublisher
@@ -92,7 +93,6 @@ class SingleServerInjectorImpl(implicit val actorSystem: ActorSystem, actorMater
       bind[SnsPublisher] identifiedBy "seatSnsPublisher" toNonLazy snsPublisher
       bind[KinesisPublisher] identifiedBy "kinesisAlgoliaSyncQueriesPublisher" toNonLazy kinesisAlgoliaSyncQueriesPublisher
       bind[KinesisPublisher] identifiedBy "kinesisApiMetricsPublisher" toNonLazy kinesisApiMetricsPublisher
-      bind[AlgoliaKeyChecker] identifiedBy "algoliaKeyChecker" toNonLazy outer.algoliaKeyChecker
       bind[Auth0Api] toNonLazy outer.auth0Api
       bind[Auth0Extend] toNonLazy outer.auth0Extend
       bind[BugSnagger] toNonLazy outer.bugsnagger
@@ -113,7 +113,6 @@ class SingleServerInjectorImpl(implicit val actorSystem: ActorSystem, actorMater
   lazy val masterToken: Option[String]                                            = sys.env.get("MASTER_TOKEN")
   lazy val clientResolver: ClientResolver                                         = ClientResolver(internalDB, cachedProjectResolver)(system.dispatcher)
   lazy val projectQueries: ProjectQueries                                         = ProjectQueries()(internalDB, cachedProjectResolver)
-  lazy val algoliaKeyChecker: AlgoliaKeyChecker                                   = new AlgoliaKeyCheckerImplementation()(toScaldi)
   lazy val auth0Api: Auth0Api                                                     = new Auth0ApiImplementation()(toScaldi)
   lazy val auth0Extend: Auth0Extend                                               = new Auth0ExtendImplementation()(toScaldi)
   override lazy val environment: String                                           = sys.env.getOrElse("ENVIRONMENT", "local")
@@ -122,6 +121,7 @@ class SingleServerInjectorImpl(implicit val actorSystem: ActorSystem, actorMater
   override lazy val projectSchemaInvalidationSubscriber: PubSubSubscriber[String] = pubSub
   lazy val invalidationSubscriber: PubSubSubscriber[SchemaInvalidatedMessage]     = pubSub.map[SchemaInvalidatedMessage]((str: String) => SchemaInvalidated)
   lazy val invalidationPublisher: PubSubPublisher[String]                         = pubSub
+  lazy val schemaManagerInvalidationSubscriber: PubSubSubscriber[String]          = pubSub
   override lazy val functionEnvironment                                           = DevFunctionEnvironment()
   override lazy val blockedProjectIds: Vector[String]                             = Vector.empty
   override lazy val endpointResolver                                              = LocalEndpointResolver()

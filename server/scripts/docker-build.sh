@@ -15,7 +15,7 @@ docker images
 TAG=$(echo $BUILDKITE_COMMIT | cut -c1-7)
 
 
-for service in backend-api-relay backend-api-simple backend-api-system backend-api-simple-subscriptions backend-api-subscriptions-websocket backend-api-fileupload backend-api-schema-manager backend-workers graphcool-dev localfaas;
+for service in backend-api-relay backend-api-simple backend-api-system backend-api-simple-subscriptions backend-api-subscriptions-websocket backend-api-fileupload backend-api-schema-manager backend-workers graphcool-dev;
 do
   echo "Tagging graphcool/$service image with $TAG..."
   docker tag graphcool/$service graphcool/$service:$TAG
@@ -24,4 +24,3 @@ do
 done
 
 docker push graphcool/graphcool-dev:latest
-docker push graphcool/localfaas:latest
