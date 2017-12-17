@@ -19,11 +19,6 @@ class UpdateOrCreateMutationSpec extends FlatSpec with Matchers with ApiBaseSpec
     database.truncate(project)
   }
 
-  /**
-    * create if it doesn't exist yet
-    * update if id exists by id
-    * update if id exists by any unique
-    */
   "an item" should "be created if it does not exist yet" in {
     todoCount should be(0)
 

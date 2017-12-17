@@ -59,59 +59,6 @@ object DatabaseMutationBuilder {
       sql"where not exists (select * from `#${project.id}`.`#${model.name}` where #${where.fieldName} = ${where.fieldValue});").asUpdate
   }
 
-  def upsertDataItem(project: Project, model: Model, createArgs: CoolArgs, updateArgs: CoolArgs, where: NodeSelector) = {
-
-    /**
-      * - add id to insert statement -> should be in create args
-      * - use where -> include in insert values to trigger duplicate key?
-      *     -> but is also implicitly part of the createArgs
-      */
-    val escapedColumns = combineByComma(createArgs.raw.keys.map(escapeKey))
-    println(createArgs.raw)
-    val insertValues = combineByComma(createArgs.raw.values.map(escapeUnsafeParam))
-    val updateValues = combineByComma(updateArgs.raw.map {
-      case (k, v) =>
-        escapeKey(k) ++ sql" = " ++ escapeUnsafeParam(v)
-    })
-
-    /**
-      * Insert into `Todo` (`id`, `createdAt`, `updatedAt`, `title`, `alias`)
-        select 'newid', '3000-12-15 17:25:59', '2017-12-15 17:25:59', '3000', 'todo3000'
-        from `Todo`
-        where alias != 'todo2'
-        limit 1
-        ON DUPLICATE KEY UPDATE title ='foo';
-      */
-    sql"""
-         select id
-         from `#${project.id}`.`#${model.name}
-         where #${where.fieldName} = ${where.fieldValue} 
-       """
-
-//    val x = (sql"INSERT INTO `#${project.id}`.`#${model.name}` (" ++ escapedColumns ++ sql")" ++
-//      sql"VALUES (" ++ insertValues ++ sql")" ++
-//      sql"ON DUPLICATE KEY UPDATE" ++ updateValues).asUpdate
-//    x.statements.foreach(println)
-//    x
-
-    val x = (
-      sql"INSERT INTO `#${project.id}`.`#${model.name}` (" ++ escapedColumns ++ sql")" ++
-        sql"SELECT " ++ insertValues ++
-        sql"FROM `#${project.id}`.`#${model.name}`" ++
-        sql"WHERE #${where.fieldName} != ${where.fieldValue} LIMIT 1" ++
-        sql"ON DUPLICATE KEY UPDATE" ++ updateValues
-    ).asUpdate
-    x.statements.foreach(println)
-
-    (sql"update `#${project.id}`.`#${model.name}`" ++
-      sql"set " ++ updateValues ++
-      sql"where #${where.fieldName} = ${where.fieldValue};" ++
-      sql"INSERT INTO `#${project.id}`.`#${model.name}` (" ++ escapedColumns ++ sql")" ++
-      sql"SELECT " ++ insertValues ++
-      sql"FROM `#${project.id}`.`#${model.name}`" ++
-      sql"where not exists (select * from `#${project.id}`.`#${model.name}` where #${where.fieldName} = ${where.fieldValue});").asUpdate
-  }
-
   case class MirrorFieldDbValues(relationColumnName: String, modelColumnName: String, modelTableName: String, modelId: String)
 
   def createRelationRow(projectId: String,
