@@ -1,6 +1,7 @@
 package cool.graph.api.database
 
-import cool.graph.shared.models.{Field, Project}
+import cool.graph.api.mutations.NodeSelector
+import cool.graph.shared.models.{Field, Model, Project}
 import slick.dbio.DBIOAction
 import slick.dbio.Effect.Read
 import slick.jdbc.MySQLProfile.api._
@@ -61,8 +62,7 @@ object DatabaseQueryBuilder {
 
   def countAllFromModel(projectId: String, modelName: String, args: Option[QueryArguments]): SQLActionBuilder = {
 
-    val (conditionCommand, orderByCommand, _, _) =
-      extractQueryArgs(projectId, modelName, args)
+    val (conditionCommand, orderByCommand, _, _) = extractQueryArgs(projectId, modelName, args)
 
     sql"select count(*) from `#$projectId`.`#$modelName`" concat
       prefixIfNotNone("where", conditionCommand) concat
@@ -123,6 +123,21 @@ object DatabaseQueryBuilder {
 
   def batchSelectFromModelByUnique(projectId: String, modelName: String, key: String, values: List[Any]): SQLActionBuilder = {
     sql"select * from `#$projectId`.`#$modelName` where `#$key` in (" concat combineByComma(values.map(escapeUnsafeParam)) concat sql")"
+  }
+
+  def selectFromModelsByUniques(project: Project, model: Model, predicates: Vector[NodeSelector]) = {
+    sql"select * from `#${project.id}`.`#${model.name}`" ++ whereClauseByCombiningPredicatesByOr(predicates)
+  }
+
+  def whereClauseByCombiningPredicatesByOr(predicates: Vector[NodeSelector]) = {
+    if (predicates.isEmpty) {
+      sql""
+    } else {
+      val firstPredicate = predicates.head
+      predicates.tail.foldLeft(sql"where #${firstPredicate.fieldName} = ${firstPredicate.fieldValue}") { (sqlActionBuilder, predicate) =>
+        sqlActionBuilder ++ sql" OR #${predicate.fieldName} = ${predicate.fieldValue}"
+      }
+    }
   }
 
   def batchSelectAllFromRelatedModel(project: Project,

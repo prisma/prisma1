@@ -8,9 +8,6 @@ case class ArgumentsBuilder(project: Project) {
 
   val inputTypesBuilder: InputTypesBuilder = CachedInputTypesBuilder(project)
 
-  private val oneRelationIdFieldType   = OptionInputType(IDType)
-  private val manyRelationIdsFieldType = OptionInputType(ListInputType(IDType))
-
   implicit val anyFromInput = FromInputImplicit.CoercedResultMarshaller
 
   def getSangriaArgumentsForCreate(model: Model): List[Argument[Any]] = {
@@ -23,11 +20,11 @@ case class ArgumentsBuilder(project: Project) {
     List(Argument[Any]("data", inputObjectType), whereArgument(model))
   }
 
-  def getSangriaArgumentsForUpdateOrCreate(model: Model): List[Argument[Any]] = {
+  def getSangriaArgumentsForUpsert(model: Model): List[Argument[Any]] = {
     List(
+      whereArgument(model),
       Argument[Any]("create", inputTypesBuilder.inputObjectTypeForCreate(model)),
-      Argument[Any]("update", inputTypesBuilder.inputObjectTypeForUpdate(model)),
-      Argument[Any]("where", ???)
+      Argument[Any]("update", inputTypesBuilder.inputObjectTypeForUpdate(model))
     )
   }
 
