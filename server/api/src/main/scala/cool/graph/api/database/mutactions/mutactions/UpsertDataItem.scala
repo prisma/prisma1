@@ -21,15 +21,17 @@ case class UpsertDataItem(
     where: NodeSelector
 ) extends ClientSqlDataChangeMutaction {
 
+//  override def execute: Future[ClientSqlStatementResult[Any]] = Future.successful {
+//    val updateAction = DatabaseMutationBuilder.updateDataItemByUnique(project, model, updateArgs, where)
+//    val createAction = DatabaseMutationBuilder.createDataItemIfUniqueDoesNotExist(project, model, createArgs, where)
+//    ClientSqlStatementResult(DBIOAction.seq(updateAction, createAction))
+//  }
+
   override def execute: Future[ClientSqlStatementResult[Any]] = Future.successful {
-    val updateAction = DatabaseMutationBuilder.updateDataItemByUnique(project, model, updateArgs, where)
-    val createAction = DatabaseMutationBuilder.createDataItemIfUniqueDoesNotExist(project, model, createArgs, where)
-    ClientSqlStatementResult(DBIOAction.seq(updateAction, createAction))
+    ClientSqlStatementResult(DatabaseMutationBuilder.upsert(project,model,createArgs,updateArgs,where))
   }
 
-  override def handleErrors = {// https://dev.mysql.com/doc/refman/5.5/en/error-messages-server.html#error_er_dup_entry
-    Some({ case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1048 => APIErrors.FieldCannotBeNull()})
-  }
+  override def handleErrors = Some({ case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1048 => APIErrors.FieldCannotBeNull()})
 
   override def verify(resolver: DataResolver): Future[Try[MutactionVerificationSuccess]] = {
     val (createCheck, _) = InputValueValidation.validateDataItemInputs(model, createArgs.scalarArguments(model).toList)

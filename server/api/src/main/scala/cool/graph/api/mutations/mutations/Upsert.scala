@@ -27,7 +27,8 @@ case class Upsert(
   val where       = CoolArgs(args.raw).extractNodeSelectorFromWhereField(model)
   val createMap   = args.raw("create").asInstanceOf[Map[String, Any]]
   val createArgs  = CoolArgs(createMap + ("id" -> idOfNewItem))
-  val updateArgs  = CoolArgs(args.raw("update").asInstanceOf[Map[String, Any]])
+  val updateArgMap = args.raw("update").asInstanceOf[Map[String, Any]]
+  val updateArgs  = CoolArgs(updateArgMap)
 
   override def prepareMutactions(): Future[List[MutactionGroup]] = {
     val upsert      = UpsertDataItem(project, model, createArgs, updateArgs, where)
@@ -36,7 +37,12 @@ case class Upsert(
   }
 
   override def getReturnValue: Future[ReturnValueResult] = {
-    val uniques = Vector(NodeSelector(model, "id", GraphQLIdGCValue(idOfNewItem)), where)
+    val whereFromUpdateArgs = updateArgMap.get(where.fieldName) match {
+        case Some(_) => Vector(CoolArgs(updateArgMap).extractNodeSelector(model))
+        case None => Vector.empty
+    }
+
+    val uniques = Vector(NodeSelector(model, "id", GraphQLIdGCValue(idOfNewItem)), where) ++ whereFromUpdateArgs
     dataResolver.resolveByUniques(model, uniques).map { items =>
       items.headOption match {
         case Some(item) => ReturnValue(item)

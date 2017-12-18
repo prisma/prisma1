@@ -183,7 +183,7 @@ class UpsertMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
   }
 
 
-  "[BUG DOC] an upsert" should "perform a create and an update if the update changes the unique field used in the where clause" in {
+  "An upsert" should "perform only an update if the update changes the unique field used in the where clause" in {
     val todoId = server
       .executeQuerySimple(
         """mutation {
@@ -224,10 +224,8 @@ class UpsertMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
       project
     )
 
-    // the mutation returns new created node
-    result.pathAsString("data.upsertTodo.title") should equal("title of new node")
-    // there are 2 nodes. So the create must have been performed.
-    todoCount should be(2)
+    result.pathAsString("data.upsertTodo.title") should equal("updated title")
+    todoCount should be(1)
     // the original node has been updated
     server
       .executeQuerySimple(
@@ -240,18 +238,6 @@ class UpsertMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
         project
       )
       .pathAsString("data.todo.title") should equal("updated title")
-    // a new node has been added
-    server
-      .executeQuerySimple(
-        s"""{
-           |  todo(where: {alias: "alias-of-new-node"}){
-           |    title
-           |  }
-           |}
-      """.stripMargin,
-        project
-      )
-      .pathAsString("data.todo.title") should equal("title of new node")
   }
 
   def todoCount: Int = {

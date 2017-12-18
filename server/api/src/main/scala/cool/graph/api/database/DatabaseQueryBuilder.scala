@@ -129,6 +129,10 @@ object DatabaseQueryBuilder {
     sql"select * from `#${project.id}`.`#${model.name}`" ++ whereClauseByCombiningPredicatesByOr(predicates)
   }
 
+  def existsFromModelsByUniques(project: Project, model: Model, predicates: Vector[NodeSelector]) = {
+    sql"select exists (select * from `#${project.id}`.`#${model.name}`" ++ whereClauseByCombiningPredicatesByOr(predicates) concat sql")"
+  }
+
   def whereClauseByCombiningPredicatesByOr(predicates: Vector[NodeSelector]) = {
     if (predicates.isEmpty) {
       sql""
