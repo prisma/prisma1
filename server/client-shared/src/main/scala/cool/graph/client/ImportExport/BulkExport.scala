@@ -17,10 +17,15 @@ class BulkExport(implicit clientInjector: ClientInjector) {
   def executeExport(project: Project, dataResolver: DataResolver, json: JsValue): Future[JsValue] = {
     val start   = JsonBundle(Vector.empty, 0)
     val request = json.convertTo[ExportRequest]
+    val hasListFields   = project.models.flatMap(_.fields).exists(_.isList)
+    val zippedRelations = RelationInfo(dataResolver, project.relations.map(r => toRelationData(r, project)).zipWithIndex, request.cursor)
+    val zippedModels    = project.models.filter(m => m.scalarListFields.nonEmpty).zipWithIndex
+
     val response = request.fileType match {
-      case "nodes"     => resForCursor(start, NodeInfo(dataResolver, project.models.zipWithIndex, request.cursor))
-      case "lists"     => resForCursor(start, ListInfo(dataResolver, project.models.filter(m => m.scalarListFields.nonEmpty).zipWithIndex, request.cursor))
-      case "relations" => resForCursor(start, RelationInfo(dataResolver, project.relations.map(r => toRelationData(r, project)).zipWithIndex, request.cursor))
+      case "nodes" if project.models.nonEmpty        => resForCursor(start, NodeInfo(dataResolver, project.models.zipWithIndex, request.cursor))
+      case "lists" if hasListFields                  => resForCursor(start, ListInfo(dataResolver, zippedModels, request.cursor))
+      case "relations" if project.relations.nonEmpty => resForCursor(start, zippedRelations)
+      case _                                         => Future.successful(ResultFormat(start, Cursor(-1, -1, -1, -1), isFull = false))
     }
     response.map(_.toJson)
   }
