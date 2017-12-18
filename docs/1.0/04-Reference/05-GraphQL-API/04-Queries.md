@@ -24,48 +24,6 @@ query {
 }
 ```
 
-<!--
-
-```graphql
----
-endpoint: https://api.graph.cool/simple/v1/cixne4sn40c7m0122h8fabni1
-disabled: false
----
-query {
-  posts {
-    id
-    title
-    published
-  }
-}
----
-{
-  "data": {
-    "posts": [
-      {
-        "id": "cixnen24p33lo0143bexvr52n",
-        "title": "My biggest Adventure",
-        "published": false
-      },
-      {
-        "id": "cixnenqen38mb0134o0jp1svy",
-        "title": "My latest Hobbies",
-        "published": true
-      },
-      {
-        "id": "cixneo7zp3cda0134h7t4klep",
-        "title": "My great Vacation",
-        "published": true
-      }
-    ]
-  }
-}
-```
-
-> You can click the **Play**-button in the code snippet to run the query and see the server response. You can also modify the query and observe the changes in the responses sent by the server. 
-
--->
-
 Here's a list of available queries. To explore them, use the [GraphQL Playground](https://github.com/graphcool/graphql-playground) for your service.
 
 - Based on the [model types](!alias-eiroozae8u#model-types) and [relations](!alias-eiroozae8u#relations) in your data model, [type queries](#type-queries) and [relation queries](#relation-queries) will be generated to fetch type and relation data.
@@ -99,34 +57,6 @@ query {
 }
 ```
 
-<!--
-
-```graphql
----
-endpoint: https://api.graph.cool/simple/v1/cixne4sn40c7m0122h8fabni1
-disabled: false
----
-query {
-  post(where: "cixnen24p33lo0143bexvr52n") {
-    id
-    title
-    published
-  }
-}
----
-{
-  "data": {
-    "post": {
-      "id": "cixnen24p33lo0143bexvr52n",
-      "title": "My biggest Adventure",
-      "published": false
-    }
-  }
-}
-```
-
--->
-
 #### Specifying the node by another unique field
 
 You can also supply any [unique field](!alias-eiroozae8u#unique) as an argument to the query to identify a node. For example, if you already declared the `slug` field of the `Post` type to be unique, you could select a post by specifying its `slug`:
@@ -146,36 +76,6 @@ query {
 }
 ```
 
-<!--
-
-```graphql
----
-endpoint: https://api.graph.cool/simple/v1/cixne4sn40c7m0122h8fabni1
-disabled: false
----
-query {
-  Post(slug: "my-biggest-adventure") {
-    id
-    slug
-    title
-    published
-  }
-}
----
-{
-  "data": {
-    "Post": {
-      "id": "cixnen24p33lo0143bexvr52n",
-      "slug": "my-biggest-adventure",
-      "title": "My biggest Adventure",
-      "published": false
-    }
-  }
-}
-```
-
--->
-
 > Note: You cannot specify two or more unique arguments for one query at the same time.
 
 ### Fetch multiple nodes
@@ -187,7 +87,7 @@ The GraphQL API contains two automatically generated queries to fetch many/all n
 
 For a sample type `Post`, the correspdonding top-level queries are called `posts` and `postConnection`.
 
-#### Fetch all nodes of a specific type
+#### Fetch all nodes of a specific type directly
 
 Using the simple approach with the `posts` top-level query:
 
@@ -200,6 +100,8 @@ query {
   }
 }
 ```
+
+#### Fetch all nodes of a specific type using the "connection"-model
 
 Using the connection-based approach with the `postConnection` top-level query:
 
@@ -217,46 +119,6 @@ query {
 }
 ```
 
-<!--
-
-```graphql
----
-endpoint: https://api.graph.cool/simple/v1/cixne4sn40c7m0122h8fabni1
-disabled: false
----
-query {
-  posts {
-    id
-    title
-    published
-  }
-}
----
-{
-  "data": {
-    "posts": [
-      {
-        "id": "cixnen24p33lo0143bexvr52n",
-        "title": "My biggest Adventure",
-        "published": false
-      },
-      {
-        "id": "cixnenqen38mb0134o0jp1svy",
-        "title": "My latest Hobbies",
-        "published": true
-      },
-      {
-        "id": "cixneo7zp3cda0134h7t4klep",
-        "title": "My great Vacation",
-        "published": true
-      }
-    ]
-  }
-}
-```
-
--->
-
 Here are a few examples for the generated query names for the simple approach:
 
 - type name: `Post`, query name: `posts`
@@ -265,7 +127,7 @@ Here are a few examples for the generated query names for the simple approach:
 
 > Note: The query name approximate the plural rules of the English language. If you are unsure about the actual query name, explore available queries in your [GraphQL Playground](https://github.com/graphcool/graphql-playground).
 
-## Filter API
+### Filters
 
 Query all `Post` nodes with a `title` that contain the string `biggest`:
 
@@ -301,45 +163,7 @@ query {
 }
 ```
 
-<!--
-TODO
-- is `where` in `postConnection` an error and it should be called `filter`? https://github.com/graphcool/framework/issues/1340
-- 
--->
-
-<!--
-
-```graphql
----
-endpoint: https://api.graph.cool/simple/v1/cixne4sn40c7m0122h8fabni1
-disabled: false
----
-query {
-  posts(filter: {
-    title_contains: "biggest"
-  }) {
-    id
-    title
-    published
-  }
-}
----
-{
-  "data": {
-    "posts": [
-      {
-        "id": "cixnen24p33lo0143bexvr52n",
-        "title": "My biggest Adventure",
-        "published": false
-      }
-    ]
-  }
-}
-```
-
--->
-
-### Type aggregation queries
+### Aggregations
 
 For every type in your GraphQL schema, different aggregation queries are available through the connection-based approach. Here is a list of all aggregation options that can be applied to a list:
 
@@ -373,35 +197,6 @@ query {
 }
 ```
 
-<!--
-TODO
-- validate count query
--->
-
-<!--
-
-```graphql
----
-endpoint: https://api.graph.cool/simple/v1/cixne4sn40c7m0122h8fabni1
-disabled: false
----
-query {
-  _usersMeta {
-    count
-  }
-}
----
-{
-  "data": {
-    "_usersMeta": {
-      "count": 3
-    }
-  }
-}
-```
-
--->
-
 #### Compute the average for a specific field
 
 Compute the average `age` of all `User` nodes:
@@ -418,7 +213,7 @@ query {
 }
 ```
 
-#### Compute the median for a specific field
+### Compute the median for a specific field
 
 Compute the median `age` of all `User` nodes:
 
@@ -434,7 +229,7 @@ query {
 }
 ```
 
-#### Compute the min/max values for a specific field
+### Compute the min/max values for a specific field
 
 Compute the median `min`/`max` value for `age` of all `User` nodes:
 
@@ -466,7 +261,7 @@ query {
 }
 ```
 
-#### Using multiple aggregation fields simultaneously
+### Using multiple aggregation fields simultaneously
 
 It's also possible to use multiple aggregation options within the same query. In this example, the query asks for the total `count` of `User` nodes as well the `sum` and `max` values for the `age` field:
 
@@ -486,37 +281,11 @@ query {
 }
 ```
 
-<!--
-
-```graphql
----
-endpoint: https://api.graph.cool/simple/v1/cixne4sn40c7m0122h8fabni1
-disabled: false
----
-query {
-  _usersMeta(filter: {
-    accessRole: ADMIN
-  }) {
-    count
-  }
-}
----
-{
-  "data": {
-    "_usersMeta": {
-      "count": 1
-    }
-  }
-}
-```
-
--->
-
 ## Relation queries
 
 Every available [relation](!alias-eiroozae8u#relations) in your type definitions adds a new field to the [type queries](#type-queries) of the two connected types.
 
-For example, with the following schema:
+For example, consider the following schema:
 
 ```graphql
 type Post {
@@ -532,9 +301,21 @@ type User {
 }
 ```
 
+In the actual database schema, the `User` type will have an additional field that exposes the list of `Post` node through the "connection"-model mentioned above. So, it will look as follows:
+
+```graphql
+type User {
+  id: ID! @unique
+  name : String!
+  posts: [Post!]!
+  posts: PostConnection!
+}
+```
+
 The following fields will be available:
 
 - the `post` and `posts` queries expose a new `author` field to [traverse one node](#traversing-a-single-node)
+- the `postConnection` exposes the `edges` (of type `[PostEdge!]`) field where each `PostEdge` again has a field called `node` which is of type `Post`
 - the `user` and `users` queries expose a new `posts` field to [traverse many nodes](#traversing-many-nodes)
 
 ### Traversing a single node
@@ -543,15 +324,11 @@ Traversing edges that connect the current node to the one side of a relation can
 
 Query information on the `author` node connected to a specific `Post` node:
 
-<!-- 
-
 ```graphql
----
-endpoint: https://api.graph.cool/simple/v1/cixne4sn40c7m0122h8fabni1
-disabled: false
----
 query {
-  Post(id: "cixnen24p33lo0143bexvr52n") {
+  post(where: {
+    id: "cixnen24p33lo0143bexvr52n"
+  }) {
     id
     author {
       id
@@ -560,42 +337,25 @@ query {
     }
   }
 }
----
-{
-  "data": {
-    "Post": {
-      "id": "cixnen24p33lo0143bexvr52n",
-      "author": {
-        "id": "cixnekqnu2ify0134ekw4pox8",
-        "name": "John Doe",
-        "email": "john.doe@example.com"
-      }
-    }
-  }
-}
 ```
 
--->
-
-The `author` field exposes a further selection of properties that are defined on the `Author` type.
+The `author` field exposes a further selection of properties that are defined on the `User` type.
 
 > Note: You can add [filter query arguments](#filtering-by-field) to an inner field returning a single node.
 
-<!--
-
 ### Traversing many nodes
 
-In the Simple API, traversing edges connecting the current node to the many side of a relation works the same as for a one side of a relation. Simply select the relation field.
+Like before, many nodes can be retrieved either using the simple approach and directly accessing a list of nodes or using the more advanced "connection"-model.
 
-Query information on all `Post` nodes of a certain `author` node:
+#### Traversing many nodes of a specific type directly
+
+Query information on all `Post` nodes of a certain `User` node:
 
 ```graphql
----
-endpoint: https://api.graph.cool/simple/v1/cixne4sn40c7m0122h8fabni1
-disabled: false
----
 query {
-  User(id: "cixnekqnu2ify0134ekw4pox8") {
+  user(where: {
+    id: "cixnekqnu2ify0134ekw4pox8"
+  }) {
     id
     name
     posts {
@@ -604,102 +364,32 @@ query {
     }
   }
 }
----
-{
-  "data": {
-    "User": {
-      "id": "cixnekqnu2ify0134ekw4pox8",
-      "name": "John Doe",
-      "posts": [
-        {
-          "id": "cixnen24p33lo0143bexvr52n",
-          "published": false
-        },
-        {
-          "id": "cixnenqen38mb0134o0jp1svy",
-          "published": true
-        },
-        {
-          "id": "cixneo7zp3cda0134h7t4klep",
-          "published": true
-        }
-      ]
-    }
-  }
-}
 ```
 
 The `posts` field exposes a further selection of properties that are defined on the `Post` type.
 
-> Note: [Query arguments](#query-arguments) for an inner field returning multiple nodes work similar as elsewhere.
+#### Traversing many nodes of a specific type using the "connection"-model
 
-### Relation aggregation
-
-Nodes connected to multiple nodes via a one-to-many or many-to-many edge expose the `_<edge>Meta` field that can be used to query meta information of a connection rather than the actual connected nodes.
-
-Query meta information on all `Post` nodes of a certain `author` node:
+Query information on all `Post` nodes of a certain `User` node:
 
 ```graphql
----
-endpoint: https://api.graph.cool/simple/v1/cixne4sn40c7m0122h8fabni1
-disabled: false
----
 query {
-  User(id: "cixnekqnu2ify0134ekw4pox8") {
+  user(where: {
+    id: "cixnekqnu2ify0134ekw4pox8"
+  }) {
     id
     name
-    _postsMeta {
-      count
-    }
-  }
-}
----
-{
-  "data": {
-    "User": {
-      "id": "cixnekqnu2ify0134ekw4pox8",
-      "name": "John Doe",
-      "_postsMeta": {
-        "count": 3
+    postConnection {
+      edges {
+        node {
+          id
+          published
+        }
       }
     }
   }
 }
 ```
-
-Query meta information on certain `Post` nodes of a certain `author` node:
-
-```graphql
----
-endpoint: https://api.graph.cool/simple/v1/cixne4sn40c7m0122h8fabni1
-disabled: false
----
-query {
-  User(id: "cixnekqnu2ify0134ekw4pox8") {
-    id
-    name
-    _postsMeta(filter: {
-      title_contains: "adventure"
-    }) {
-      count
-    }
-  }
-}
----
-{
-  "data": {
-    "User": {
-      "id": "cixnekqnu2ify0134ekw4pox8",
-      "name": "John Doe",
-      "_postsMeta": {
-        "count": 1
-      }
-    }
-  }
-}
-```
-
--->
 
 ## Query arguments
 
@@ -707,22 +397,17 @@ All queries and fields that return many nodes accept different query arguments t
 
 - [ordered by field](#ordering-by-field)
 - [filtered by multiple fields](#filtering-by-field)
-- [paginated](#pagination) into multiple pages by fixing one specific node and either seeking forwards or backwards
+- [paginated](#pagination) into multiple chunks by fixing one specific node and either seeking forwards or backwards
 
 These query arguments can be combined to achieve very specific query responses.
 
-
 ### Ordering by field
 
-When querying all nodes of a [model type](!alias-eiroozae8u#model-types) you can supply the `orderBy` argument for every scalar field of the type: `orderBy: <field>_ASC` or `orderBy: <field>_DESC`.
+When querying all nodes of a type you can supply the `orderBy` argument for every scalar field of the type: `orderBy: <field>_ASC` or `orderBy: <field>_DESC`.
 
 Order the list of all `Post` nodes ascending by `title`:
 
 ```graphql
----
-endpoint: https://api.graph.cool/simple/v1/cixne4sn40c7m0122h8fabni1
-disabled: false
----
 query {
   posts(orderBy: title_ASC) {
     id
@@ -730,37 +415,11 @@ query {
     published
   }
 }
----
-{
-  "data": {
-    "posts": [
-      {
-        "id": "cixnen24p33lo0143bexvr52n",
-        "title": "My biggest Adventure",
-        "published": false
-      },
-      {
-        "id": "cixneo7zp3cda0134h7t4klep",
-        "title": "My great Vacation",
-        "published": true
-      },
-      {
-        "id": "cixnenqen38mb0134o0jp1svy",
-        "title": "My latest Hobbies",
-        "published": true
-      }
-    ]
-  }
-}
 ```
 
 Order the list of all `Post` nodes descending by `published`:
 
 ```graphql
----
-endpoint: https://api.graph.cool/simple/v1/cixne4sn40c7m0122h8fabni1
-disabled: false
----
 query {
   posts(orderBy: published_DESC) {
     id
@@ -768,59 +427,31 @@ query {
     published
   }
 }
----
-{
-  "data": {
-    "posts": [
-      {
-        "id": "cixnenqen38mb0134o0jp1svy",
-        "title": "My latest Hobbies",
-        "published": true
-      },
-      {
-        "id": "cixneo7zp3cda0134h7t4klep",
-        "title": "My great Vacation",
-        "published": true
-      },
-      {
-        "id": "cixnen24p33lo0143bexvr52n",
-        "title": "My biggest Adventure",
-        "published": false
-      }
-    ]
-  }
-}
 ```
 
-> Note: The field you are ordering by does not have to be selected in the actual query. If you do not specify an ordering, the response is implicitely ordered ascending by the `id` field
-
+> Note: The field you are ordering by does not have to be selected in the actual query. If you do not specify an ordering, the response is implicitely ordered ascending by the `id` field.
 
 #### Limitations
 
 It's currently not possible to order responses [by multiple fields](https://github.com/graphcool/feature-requests/issues/62) or [by related fields](https://github.com/graphcool/feature-requests/issues/95). Join the discussion in the feature requests if you're interested in these features!
 
-
 ### Filtering by field
 
-When querying all nodes of a type you can supply different parameters to the `filter` argument to filter the query response accordingly. The available options depend on the scalar fields defined on the type in question.
+When querying all nodes of a type you can supply different parameters to the `where` argument to filter the query response accordingly. The available options depend on the scalar fields defined on the type in question.
 
 You can also include filters when including related fields in your queries to [traverse your data graph](#relation-queries).
 
 #### Applying single filters
 
-If you supply exactly one parameter to the `filter` argument, the query response will only contain nodes that adhere to this constraint.
+If you supply exactly one parameter to the `where` argument, the query response will only contain nodes that adhere to this constraint.
 
-#### Filtering by value
+##### Filtering by value
 
 The easiest way to filter a query response is by supplying a field value to filter by.
 
 Query all `Post` nodes that are not yet `published`:
 
 ```graphql
----
-endpoint: https://api.graph.cool/simple/v1/cixne4sn40c7m0122h8fabni1
-disabled: false
----
 query {
   posts(filter: {
     published: false
@@ -828,18 +459,6 @@ query {
     id
     title
     published
-  }
-}
----
-{
-  "data": {
-    "posts": [
-      {
-        "id": "cixnen24p33lo0143bexvr52n",
-        "title": "My biggest Adventure",
-        "published": false
-      }
-    ]
   }
 }
 ```
@@ -851,10 +470,6 @@ Depending on the type of the field you want to filter by, you have access to dif
 Query all `Post` nodes whose `title` is in a given list of strings:
 
 ```graphql
----
-endpoint: https://api.graph.cool/simple/v1/cixne4sn40c7m0122h8fabni1
-disabled: false
----
 query {
   posts(filter: {
     title_in: ["My biggest Adventure", "My latest Hobbies"]
@@ -864,40 +479,19 @@ query {
     published
   }
 }
----
-{
-  "data": {
-    "posts": [
-      {
-        "id": "cixnen24p33lo0143bexvr52n",
-        "title": "My biggest Adventure",
-        "published": false
-      },
-      {
-        "id": "cixnenqen38mb0134o0jp1svy",
-        "title": "My latest Hobbies",
-        "published": true
-      }
-    ]
-  }
-}
 ```
 
-> Note: you have to supply a *list* as the `<field>_in` argument: `title_in: ["My biggest Adventure", "My latest Hobbies"]`.
+> Note: you have to supply a _list_ as the `<field>_in` argument: `title_in: ["My biggest Adventure", "My latest Hobbies"]`.
 
 #### Relation filters
 
-For to-one relations, you can define conditions on the related node by nesting the according argument in `filter`
+For to-one relations, you can define conditions on the related node by nesting the according argument in `where`.
 
 Query all `Post` nodes where the `author` has the `USER` access role:
 
 ```graphql
----
-endpoint: https://api.graph.cool/simple/v1/cixne4sn40c7m0122h8fabni1
-disabled: false
----
 query {
-  posts(filter: {
+  posts(where: {
     author: {
       accessRole: USER
     }
@@ -905,34 +499,13 @@ query {
     title
   }
 }
----
-{
-  "data": {
-    "posts": [
-      {
-        "title": "My biggest Adventure"
-      },
-      {
-        "title": "My latest Hobbies"
-      },
-      {
-        "title": "My great Vacation"
-      }
-    ]
-  }
-}
 ```
-
 
 For to-many relations, three additional arguments are available: `every`, `some` and `none`, to define that a condition should match every, some or none related nodes.
 
 Query all `User` nodes that have at least one `Post` node that's `published`:
 
 ```graphql
----
-endpoint: https://api.graph.cool/simple/v1/cixne4sn40c7m0122h8fabni1
-disabled: false
----
 query {
   users(filter: {
     posts_some: {
@@ -945,27 +518,6 @@ query {
     }
   }
 }
----
-{
-  "data": {
-    "users": [
-      {
-        "id": "cixnekqnu2ify0134ekw4pox8",
-        "posts": [
-          {
-            "published": false
-          },
-          {
-            "published": true
-          },
-          {
-            "published": true
-          }
-        ]
-      }
-    ]
-  }
-}
 ```
 
 Relation filters are also available in the nested arguments for to-one or to-many relations.
@@ -973,10 +525,6 @@ Relation filters are also available in the nested arguments for to-one or to-man
 Query all `User` nodes that did not _like_ a `Post` of an `author` in the `ADMIN` access role:
 
 ```graphql
----
-endpoint: https://api.graph.cool/simple/v1/cixne4sn40c7m0122h8fabni1
-disabled: false
----
 query {
   users(filter: {
     likedPosts_none: {
@@ -986,22 +534,6 @@ query {
     }
   }) {
     name
-  }
-}
----
-{
-  "data": {
-    "users": [
-      {
-        "name": "John Doe"
-      },
-      {
-        "name": "Sally Housecoat"
-      },
-      {
-        "name": "Admin"
-      }
-    ]
   }
 }
 ```
@@ -1017,12 +549,8 @@ Let's start with an easy example:
 Query all `Post` nodes that are `published` _and_ whose `title` is in a given list of strings:
 
 ```graphql
----
-endpoint: https://api.graph.cool/simple/v1/cixne4sn40c7m0122h8fabni1
-disabled: false
----
 query {
-  posts(filter: {
+  posts(where: {
     AND: [{
       title_in: ["My biggest Adventure", "My latest Hobbies"]
     }, {
@@ -1034,21 +562,9 @@ query {
     published
   }
 }
----
-{
-  "data": {
-    "posts": [
-      {
-        "id": "cixnenqen38mb0134o0jp1svy",
-        "title": "My latest Hobbies",
-        "published": true
-      }
-    ]
-  }
-}
 ```
 
-> Note: `OR` and `AND` accept a *list* as input where individual list items have to be wrapped by `{}`: `AND: [{title_in: ["My biggest Adventure", "My latest Hobbies"]}, {published: true}]`
+> Note: `OR` and `AND` accept a _list_ as input where each list item is an object and therefore needs to be wrapped with `{}`, for example: `AND: [{title_in: ["My biggest Adventure", "My latest Hobbies"]}, {published: true}]`
 
 ##### Arbitrary combination of filters with `AND` and `OR`
 
@@ -1057,10 +573,6 @@ You can combine and even nest the filter combinators `AND` and `OR` to create ar
 Query all `Post` nodes that are either `published` _and_ whose `title` is in a list of given strings, _or_ have the specific `id` we supply:
 
 ```graphql
----
-endpoint: https://api.graph.cool/simple/v1/cixne4sn40c7m0122h8fabni1
-disabled: false
----
 query($published: Boolean) {
   posts(filter: {
     OR: [{
@@ -1078,27 +590,6 @@ query($published: Boolean) {
     published
   }
 }
----
-{
-  "published": true
-}
----
-{
-  "data": {
-    "posts": [
-      {
-        "id": "cixnen24p33lo0143bexvr52n",
-        "title": "My biggest Adventure",
-        "published": false
-      },
-      {
-        "id": "cixnenqen38mb0134o0jp1svy",
-        "title": "My latest Hobbies",
-        "published": true
-      }
-    ]
-  }
-}
 ```
 
 > Notice how we nested the `AND` combinator inside the `OR` combinator, on the same level with the `id` value filter.
@@ -1110,8 +601,9 @@ Apart from the filter combinators `AND` and `OR`, the available filter arguments
 Let's consider the following schema:
 
 ```graphql
-type Meta {
+type MyType {
   id: ID! @unique
+  createdAt: DateTime!
   text: String!
   number: Int!
   decimal: Float!
@@ -1122,13 +614,13 @@ type Meta {
 }
 ```
 
-Based on this type, a `MetaFilter` type will be generated with the following fields, grouped by field type.
+Based on this type, a `MyTypeFilter` type will be generated with the following fields (grouped by field type):
 
 ```graphql
-input MetaFilter {
+input MyTypeFilter {
   # logical operators
-  AND: [MetaFilter!] # combines all passed `MetaFilter` objects with logical AND
-  OR: [MetaFilter!] # combines all passed `MetaFilter` objects with logical OR
+  AND: [MyTypeFilter!] # combines all passed `MyTypeFilter` objects with logical AND
+  OR: [MyTypeFilter!] # combines all passed `MyTypeFilter` objects with logical OR
 
   # DateTime filters
   createdAt: DateTime # matches all nodes with exact value
@@ -1151,10 +643,10 @@ input MetaFilter {
   decimal_gte: Float # matches all nodes with greater or equal value
 
   # Enum filters
-  enum: META_ENUM # matches all nodes with exact value
-  enum_not: META_ENUM # matches all nodes with different value
-  enum_in: [META_ENUM!] # matches all nodes with value in the passed list
-  enum_not_in: [META_ENUM!] # matches all nodes with value not in the passed list
+  enum: MYTYPE_ENUM # matches all nodes with exact value
+  enum_not: MYTYPE_ENUM # matches all nodes with different value
+  enum_in: [MYTYPE_ENUM!] # matches all nodes with value in the passed list
+  enum_not_in: [MYTYPE_ENUM!] # matches all nodes with value not in the passed list
 
   # Boolean filters
   flag: Boolean # matches all nodes with exact value
@@ -1234,8 +726,6 @@ type Tag {
 
 Now you can filter items based on their connected tags using the `tag_none`, `tags_some` and `tags_every` filters.
 
-
-
 ### Pagination
 
 When querying all nodes of a specific [model type](!alias-eiroozae8u#model-types), you can supply arguments that allow you to _paginate_ the query response.
@@ -1250,33 +740,10 @@ You can also skip an arbitrary amount of nodes in whichever direction you are se
 Consider a blog where only 3 `Post` nodes are shown at the front page. To query the first page:
 
 ```graphql
----
-endpoint: https://api.graph.cool/simple/v1/cixne4sn40c7m0122h8fabni1
-disabled: true
----
 query {
   posts(first: 3) {
     id
     title
-  }
-}
----
-{
-  "data": {
-    "posts": [
-      {
-        "id": "cixnen24p33lo0143bexvr52n",
-        "title": "My biggest Adventure"
-      },
-      {
-        "id": "cixnenqen38mb0134o0jp1svy",
-        "title": "My latest Hobbies"
-      },
-      {
-        "id": "cixneo7zp3cda0134h7t4klep",
-        "title": "My great Vacation"
-      }
-    ]
   }
 }
 ```
@@ -1284,10 +751,6 @@ query {
 To query the first two `Post` node after the first `Post` node:
 
 ```graphql
----
-endpoint: https://api.graph.cool/simple/v1/cixne4sn40c7m0122h8fabni1
-disabled: true
----
 query {
   posts(
     first: 2
@@ -1297,30 +760,11 @@ query {
     title
   }
 }
----
-{
-  "data": {
-    "posts": [
-      {
-        "id": "cixnenqen38mb0134o0jp1svy",
-        "title": "My latest Hobbies"
-      },
-      {
-        "id": "cixneo7zp3cda0134h7t4klep",
-        "title": "My great Vacation"
-      }
-    ]
-  }
-}
 ```
 
 We could reach the same result by combining `first` and `skip`:
 
 ```graphql
----
-endpoint: https://api.graph.cool/simple/v1/cixne4sn40c7m0122h8fabni1
-disabled: true
----
 query {
   posts(
     first: 2
@@ -1330,49 +774,15 @@ query {
     title
   }
 }
----
-{
-  "data": {
-    "posts": [
-      {
-        "id": "cixnenqen38mb0134o0jp1svy",
-        "title": "My latest Hobbies"
-      },
-      {
-        "id": "cixneo7zp3cda0134h7t4klep",
-        "title": "My great Vacation"
-      }
-    ]
-  }
-}
 ```
 
 Query the `last` 2 posts:
 
 ```graphql
----
-endpoint: https://api.graph.cool/simple/v1/cixne4sn40c7m0122h8fabni1
-disabled: true
----
 query {
   posts(last: 2) {
     id
     title
-  }
-}
----
-{
-  "data": {
-    "posts": [
-      {
-        "id": "cixnenqen38mb0134o0jp1svy",
-        "title": "My latest Hobbies"
-      },
-      {
-        "id": "cixneo7zp3cda0134h7t4klep",
-        "title": "My great Vacation"
-      }
-    ]
   }
 }
 ```
@@ -1384,109 +794,3 @@ query {
 Note that *a maximum of 1000 nodes* can be returned per pagination field. If you need to query more nodes than that, you can use `first` and `skip` to seek through the different pages. You can also include multiple versions of the same field with different pagination parameter in one query using GraphQL Aliases.
 
 Please join [the discussion on GitHub](https://github.com/graphcool/feature-requests/issues/259) for an according feature request to lift this limitation.
-
-## Custom queries
-
-For use cases that are not covered by the automatically generated CRUD API, [resolver](!alias-xohbu7uf2e) functions can be used to extend your service's GraphQL schema with custom queries and mutations.
-
-You can define the **name, input arguments and payload of the query** and **resolve it with a Graphcool Function**.
-
-### Example
-
-#### Validate the age of a user
-
-Schema Extension SDL document:
-
-```graphql
-type AgePayload {
-  isValid: Boolean!
-  age: Int!
-}
-
-extend type Query {
-  isValidAge(age: Int!): AgePayload
-}
-```
-
-Graphcool Function:
-
-```js
-module.exports = function age(event) {
-  const age = event.data.age
-
-  if (age < 0) {
-    return {
-      error: "Invalid input"
-    }
-  }
-
-  const isValid = age >= 18
-
-  return {
-    data: {
-      isValid,
-      age
-    }
-  }
-}
-```
-
-Then the query can be called like this using the Simple API:
-
-```graphql
-query {
-  isValidAge(age: 12) {
-    isValid # false
-    age # 12
-  }
-}
-```
-
-Note that the returned object contains a `data` key, which in turn contains the `number` field that was specified in the `RandomNumberPayload` in the SDL document. [Error handling](!alias-geihakoh4e) works similarly to other Graphcool Functions, if an object containing the `error` key is returned.
-
-
-## The authenticated `User` (only for [legacy Console projects](!alias-aemieb1aev))
-
-If the request of a query contains authentication information on the [session user](!alias-geekae9gah#user-login), you can use the `user` query to query information on that user. All fields of the `User` type are available.
-
-```graphql
----
-endpoint: https://api.graph.cool/simple/v1/cixne4sn40c7m0122h8fabni1
-disabled: true
----
-query {
-  user {
-    id
-  }
-}
----
-{
-  "data": {
-    "user": {
-      "id": "my-user-id"
-    }
-  }
-}
-```
-
-If no user is signed in, the query response will look like this:
-
-```graphql
----
-endpoint: https://api.graph.cool/simple/v1/cixne4sn40c7m0122h8fabni1
-disabled: true
----
-query {
-  user {
-    id
-  }
-}
----
-{
-  "data": {
-    "user": null
-  }
-}
-```
-
-Note that you have to set appropriate [permissions](!alias-iegoo0heez) on the `User` type to use the `user` query.
