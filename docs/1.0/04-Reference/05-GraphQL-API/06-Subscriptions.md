@@ -200,18 +200,16 @@ For example, to only be notified of a created post if a specific user follows th
 
 ```graphql
 subscription followedAuthorCreatedPost {
-  Post(
-    where: {
-      mutation_in: [CREATED]
-      node: {
-        author: {
-          followedBy_some: {
-            id: "cj03x3nacox6m0119755kmcm3"
-          }
+  Post(where: {
+    mutation_in: [CREATED]
+    node: {
+      author: {
+        followedBy_some: {
+          id: "cj03x3nacox6m0119755kmcm3"
         }
       }
     }
-  ) {
+  }) {
     mutation
     node {
       description
@@ -277,7 +275,6 @@ subscription followedAuthorUpdatedPost {
   }
 }
 ```
-
 
 ### Subscribing to updated nodes
 
