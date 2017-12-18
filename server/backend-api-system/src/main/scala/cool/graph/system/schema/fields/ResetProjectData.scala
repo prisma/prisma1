@@ -5,9 +5,7 @@ import sangria.marshalling.{CoercedScalaResultMarshaller, FromInput}
 import sangria.schema._
 
 object ResetProjectData {
-  val inputFields = List(
-    InputField("projectId", StringType, description = "")
-  )
+  val inputFields = List(InputField("projectId", StringType, description = ""))
 
   implicit val manual = new FromInput[ResetProjectDataInput] {
     val marshaller = CoercedScalaResultMarshaller.default
