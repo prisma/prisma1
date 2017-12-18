@@ -25,7 +25,7 @@ As mentioned above, step 1 has to be performed manually. Step 2 can then be done
 
 > To view the current state of supported transformations in the CLI and submit a vote for the one you need, you can check out [this](https://github.com/graphcool/framework/issues/1410) GitHub issue.
 
-When uploading files in NDF, you need to provide the import data split across three different kinds of files:
+When uploading files in NDF, you need to provide the import data split across three different _kinds_ of files:
 
 - `nodes`: Data for individual nodes (i.e. databases records)
 - `lists`: Data for a list of nodes
@@ -47,7 +47,7 @@ Under the hood, the CLI uses the import API that's described in the next section
 - ability to **pause and resume** an ongoing import
 - **import from various data sources** like MySQL, MongoDB or Firebase (_not available yet_)
 
-### Format
+### Input format
 
 When importing data using the CLI, the files containing the data in NDF need to be located in directories called after their type: `nodes`, `lists` and `relations`.
 
