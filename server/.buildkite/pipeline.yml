@@ -1,17 +1,17 @@
 steps:
-  - label: ":scala: libs"
-    command: cd server && ./scripts/test.sh libs
-
-  - label: ":scala: deploy"
-    command: cd server && ./scripts/test.sh deploy
-
-  - label: ":scala: api"
-    command: cd server && ./scripts/test.sh api
-
-  - label: ":scala: single-server"
-    command: cd server && ./scripts/test.sh single-server
-
-  - wait
+#  - label: ":scala: libs"
+#    command: cd server && ./scripts/test.sh libs
+#
+#  - label: ":scala: deploy"
+#    command: cd server && ./scripts/test.sh deploy
+#
+#  - label: ":scala: api"
+#    command: cd server && ./scripts/test.sh api
+#
+#  - label: ":scala: single-server"
+#    command: cd server && ./scripts/test.sh single-server
+#
+#  - wait
 
   - label: ":docker: Build"
     command: ./server/scripts/docker-build.sh
