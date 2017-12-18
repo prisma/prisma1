@@ -15,8 +15,6 @@ docker images
 #TAG=$(echo $BUILDKITE_COMMIT | cut -c1-7)
 TAG=latest
 
-echo $(env)
-
 for service in graphcool-deploy graphcool-database graphcool-dev;
 do
   latest=$(docker images graphcool/$service -q | head -n 1)
