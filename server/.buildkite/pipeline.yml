@@ -16,5 +16,7 @@ steps:
   - label: ":docker: Build"
     command: ./server/scripts/docker-build.sh
 
+  - wait
+
   - label: ":llama: Deploy"
     command: ./server/scripts/beta_deploy.sh

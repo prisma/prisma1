@@ -13,9 +13,6 @@ curl --header "Authorization: token ${TOKEN}" \
 
 chmod +x cb
 
-echo $(pwd)
-ls -lisah
-
 echo "Replacing images..."
 export CB_MODE=env
-cb service replace-all --customer graphcool --cluster database-beta-eu-west-1-dev
+./cb service replace-all --customer graphcool --cluster database-beta-eu-west-1-dev
