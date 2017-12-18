@@ -19,8 +19,8 @@ for service in graphcool-deploy graphcool-api graphcool-dev;
 do
   latest=$(docker images graphcool/$service -q | head -n 1)
 
-  echo "Tagging graphcool/$service:$latest image with $TAG..."
-  docker tag graphcool/$service:$latest graphcool/$service:$TAG
+  echo "Tagging graphcool/$service ($latest) image with $TAG..."
+  docker tag $latest graphcool/$service:$TAG
 
   echo "Pushing graphcool/$service:$TAG..."
   docker push graphcool/$service:$TAG
