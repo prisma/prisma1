@@ -1,12 +1,13 @@
 package cool.graph.api.mutations
 
 import cool.graph.api.ApiBaseSpec
+import cool.graph.shared.models.Project
 import cool.graph.shared.project_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class UpsertMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
-  val project = SchemaDsl() { schema =>
-    schema.model("Todo").field_!("title", _.String).field_!("alias", _.String, isUnique = true)
+  val project: Project = SchemaDsl() { schema =>
+    schema.model("Todo").field_!("title", _.String).field_!("alias", _.String, isUnique = true).field("anotherIDField", _.GraphQLID, isUnique = true)
   }
 
   override protected def beforeAll(): Unit = {
@@ -113,6 +114,49 @@ class UpsertMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
 
     todoCount should be(1)
 
+    server.executeQuerySimpleThatMustFail(
+      s"""mutation {
+         |  upsertTodo(
+         |    where: {alias: "$todoAlias"}
+         |    create: {
+         |      title: "irrelevant"
+         |      alias: "irrelevant"
+         |      anotherIDField: "morethantwentyfivecharacterslong"
+         |    }
+         |    update: {
+         |      title: "updated title"
+         |    }
+         |  ){
+         |    id
+         |    title
+         |  }
+         |}
+      """.stripMargin,
+      project,
+      3007
+    )
+  }
+
+  "Inputvaluevalidations" should "fire if an ID is too long" in {
+    val todoAlias = server
+      .executeQuerySimple(
+        """mutation {
+          |  createTodo(
+          |    data: {
+          |      title: "new title1"
+          |      alias: "todo1"
+          |    }
+          |  ) {
+          |    alias
+          |  }
+          |}
+        """.stripMargin,
+        project
+      )
+      .pathAsString("data.createTodo.alias")
+
+    todoCount should be(1)
+
     val result = server.executeQuerySimple(
       s"""mutation {
          |  upsertTodo(
@@ -137,6 +181,7 @@ class UpsertMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
 
     todoCount should be(1)
   }
+
 
   "[BUG DOC] an upsert" should "perform a create and an update if the update changes the unique field used in the where clause" in {
     val todoId = server

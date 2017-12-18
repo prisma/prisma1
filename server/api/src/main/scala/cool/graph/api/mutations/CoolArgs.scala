@@ -23,7 +23,7 @@ case class CoolArgs(raw: Map[String, Any]) {
   private def asNestedMutation(relationField: Field, subModel: Model): NestedMutation = {
     if (relationField.isList) {
       NestedMutation(
-        creates = subArgsVector("create").getOrElse(Vector.empty).map(CreateOne(_)),
+        creates = subArgsVector("create").getOrElse(Vector.empty).map(CreateOne),
         updates = subArgsVector("update").getOrElse(Vector.empty).map { args =>
           UpdateOne(args.extractNodeSelectorFromWhereField(subModel), args.subArgsOption("data").get.get)
         },
@@ -34,7 +34,7 @@ case class CoolArgs(raw: Map[String, Any]) {
       )
     } else {
       NestedMutation(
-        creates = subArgsOption("create").flatten.map(CreateOne(_)).toVector,
+        creates = subArgsOption("create").flatten.map(CreateOne).toVector,
         updates = subArgsOption("update").flatten.map { args =>
           UpdateOne(args.extractNodeSelectorFromWhereField(subModel), args.subArgsOption("data").get.get)
         }.toVector,
@@ -72,7 +72,7 @@ case class CoolArgs(raw: Map[String, Any]) {
   def subArgsList(field: String): Option[Seq[CoolArgs]] = {
     getFieldValuesAs[Map[String, Any]](field) match {
       case None    => None
-      case Some(x) => Some(x.map(CoolArgs(_)))
+      case Some(x) => Some(x.map(CoolArgs))
     }
   }
 

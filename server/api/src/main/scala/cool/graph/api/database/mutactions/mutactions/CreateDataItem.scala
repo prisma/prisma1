@@ -75,7 +75,7 @@ case class CreateDataItem(
   }
 
   override def verify(resolver: DataResolver): Future[Try[MutactionVerificationSuccess]] = {
-    val (check, _) = InputValueValidation.validateDataItemInputs(model, id, jsonCheckedValues)
+    val (check, _) = InputValueValidation.validateDataItemInputsWithID(model, id, jsonCheckedValues)
     if (check.isFailure) return Future.successful(check)
 
     resolver.existsByModelAndId(model, id) map {

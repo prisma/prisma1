@@ -13,8 +13,7 @@ import spray.json._
 
 class BulkExportIncompleteSchemaSpec extends FlatSpec with Matchers with ApiBaseSpec with AwaitUtils {
 
-  val project: Project = SchemaDsl() { schema =>
-    }
+  val project: Project = SchemaDsl() { schema =>}
 
   override protected def beforeAll(): Unit = {
     super.beforeAll()
@@ -25,33 +24,23 @@ class BulkExportIncompleteSchemaSpec extends FlatSpec with Matchers with ApiBase
     database.truncate(project)
   }
 
-  val exporter                   = new BulkExport(project)
+  val exporter = new BulkExport(project)
   val dataResolver: DataResolver = this.dataResolver(project)
+  val start = Cursor(0, 0, 0, 0)
+  val emptyResult = ResultFormat(JsonBundle(Vector.empty, 0), Cursor(-1, -1, -1, -1), isFull = false)
 
   "Exporting nodes" should "fail gracefully if no models are defined" in {
-
-    val cursor     = Cursor(0, 0, 0, 0)
-    val request    = ExportRequest("nodes", cursor)
-    val firstChunk = exporter.executeExport(dataResolver, request.toJson).await(5).convertTo[ResultFormat]
-
-    firstChunk should be(ResultFormat(JsonBundle(Vector.empty, 0), Cursor(-1, -1, -1, -1), isFull = false))
+    val request = ExportRequest("nodes", start)
+    exporter.executeExport(dataResolver, request.toJson).await(5).convertTo[ResultFormat] should be(emptyResult)
   }
 
-  "Exporting lists" should "fail gracefully if no relations are defined" in {
-
-    val cursor     = Cursor(0, 0, 0, 0)
-    val request    = ExportRequest("lists", cursor)
-    val firstChunk = exporter.executeExport(dataResolver, request.toJson).await(5).convertTo[ResultFormat]
-
-    firstChunk should be(ResultFormat(JsonBundle(Vector.empty, 0), Cursor(-1, -1, -1, -1), isFull = false))
+  "Exporting lists" should "fail gracefully if no lists are defined" in {
+    val request = ExportRequest("lists", start)
+    exporter.executeExport(dataResolver, request.toJson).await(5).convertTo[ResultFormat] should be(emptyResult)
   }
 
-  "Exporting relations" should "fail gracefully if no listfields are defined" in {
-
-    val cursor     = Cursor(0, 0, 0, 0)
-    val request    = ExportRequest("relations", cursor)
-    val firstChunk = exporter.executeExport(dataResolver, request.toJson).await(5).convertTo[ResultFormat]
-
-    firstChunk should be(ResultFormat(JsonBundle(Vector.empty, 0), Cursor(-1, -1, -1, -1), isFull = false))
+  "Exporting relations" should "fail gracefully if no relations are defined" in {
+    val request = ExportRequest("relations", start)
+    exporter.executeExport(dataResolver, request.toJson).await(5).convertTo[ResultFormat] should be(emptyResult)
   }
 }

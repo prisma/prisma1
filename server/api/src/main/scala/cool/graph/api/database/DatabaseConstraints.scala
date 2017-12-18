@@ -6,8 +6,7 @@ object DatabaseConstraints {
   def isValueSizeValid(value: Any, field: Field): Boolean = {
 
     // we can assume that `value` is already sane checked by the query-layer. we only check size here.
-    SqlDDL
-      .sqlTypeForScalarTypeIdentifier(isList = field.isList, typeIdentifier = field.typeIdentifier) match {
+    SqlDDL.sqlTypeForScalarTypeIdentifier(isList = field.isList, typeIdentifier = field.typeIdentifier) match {
       case "char(25)" => value.toString.length <= 25
       // at this level we know by courtesy of the type system that boolean, int and datetime won't be too big for mysql
       case "boolean" | "int" | "datetime(3)" => true
