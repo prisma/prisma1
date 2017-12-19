@@ -17,5 +17,5 @@ graphcool delete [flags]
 
 ```
  -f, --force               Force delete, without confirmation
- -t, --target TARGET       Target name
+ -t, --stage STAGE         Stage name
 ```
