@@ -47,7 +47,7 @@ case class Update(
 
         val transactionMutaction = Transaction(sqlMutactions, dataResolver)
 
-        val updateMutactionOpt: Option[UpdateDataItem] = sqlMutactions.collect { case x: UpdateDataItem => x }.headOption
+        val updateMutactionOpt: Option[UpdateDataItem] = sqlMutactions.collectFirst{ case x: UpdateDataItem => x }
 
         val updateMutactions = sqlMutactions.collect { case x: UpdateDataItem => x }
 

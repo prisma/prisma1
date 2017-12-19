@@ -240,6 +240,63 @@ class UpsertMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
       .pathAsString("data.todo.title") should equal("updated title")
   }
 
+  "An upsert" should "perform only an update if the update changes nothing" in {
+    val todoId = server
+      .executeQuerySimple(
+        """mutation {
+          |  createTodo(
+          |    data: {
+          |      title: "title"
+          |      alias: "todo1"
+          |    }
+          |  ) {
+          |    id
+          |  }
+          |}
+        """.stripMargin,
+        project
+      )
+      .pathAsString("data.createTodo.id")
+
+    todoCount should be(1)
+
+    val result = server.executeQuerySimple(
+      s"""mutation {
+         |  upsertTodo(
+         |    where: {alias: "todo1"}
+         |    create: {
+         |      title: "title of new node"
+         |      alias: "alias-of-new-node"
+         |    }
+         |    update: {
+         |      title: "title"
+         |      alias: "todo1"
+         |    }
+         |  ){
+         |    id
+         |    title
+         |  }
+         |}
+      """.stripMargin,
+      project
+    )
+
+    result.pathAsString("data.upsertTodo.title") should equal("title")
+    todoCount should be(1)
+    // the original node has been updated
+    server
+      .executeQuerySimple(
+        s"""{
+           |  todo(where: {id: "$todoId"}){
+           |    title
+           |  }
+           |}
+      """.stripMargin,
+        project
+      )
+      .pathAsString("data.todo.title") should equal("title")
+  }
+
   def todoCount: Int = {
     val result = server.executeQuerySimple(
       "{ todoes { id } }",

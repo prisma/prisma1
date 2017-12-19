@@ -68,7 +68,7 @@ case class CreateDataItem(
     Some({
       //https://dev.mysql.com/doc/refman/5.5/en/error-messages-server.html#error_er_dup_entry
       case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1062 =>
-        APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getField(jsonCheckedValues, e))
+        APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldFromArgumentValueList(jsonCheckedValues, e))
       case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1452 =>
         APIErrors.NodeDoesNotExist("")
     })
