@@ -6,7 +6,7 @@ Array [
     "baseUrl": "https://database-beta.graph.cool",
     "clusterToken": undefined,
     "local": false,
-    "name": "shared-eu-west-1",
+    "name": "shared-public-demo",
   },
 ]
 `;
@@ -17,7 +17,7 @@ Array [
     "baseUrl": "https://database-beta.graph.cool",
     "clusterToken": "this-is-so-special",
     "local": false,
-    "name": "shared-eu-west-1",
+    "name": "shared-public-demo",
   },
 ]
 `;
@@ -40,7 +40,7 @@ Array [
     "baseUrl": "https://database-beta.graph.cool",
     "clusterToken": undefined,
     "local": false,
-    "name": "shared-eu-west-1",
+    "name": "shared-public-demo",
   },
 ]
 `;
@@ -60,7 +60,7 @@ Array [
     "baseUrl": "https://database-beta.graph.cool",
     "clusterToken": undefined,
     "local": false,
-    "name": "shared-eu-west-1",
+    "name": "shared-public-demo",
   },
 ]
 `;
@@ -71,7 +71,7 @@ Array [
     "baseUrl": "https://database-beta.graph.cool",
     "clusterToken": "asdf",
     "local": false,
-    "name": "shared-eu-west-1",
+    "name": "shared-public-demo",
   },
 ]
 `;
@@ -84,10 +84,6 @@ Object {
   "schema": "schemas/database.graphql",
   "secret": "some-secret",
   "service": "jj",
-  "stages": Object {
-    "default": "shared-eu-west-1",
-    "dev": "shared-eu-west-1",
-  },
 }
 `;
 
@@ -101,10 +97,6 @@ Object {
   "disableAuth": true,
   "schema": "schemas/database.graphql",
   "service": "jj",
-  "stages": Object {
-    "default": "shared-eu-west-1",
-    "dev": "shared-eu-west-1",
-  },
 }
 `;
 
@@ -118,10 +110,6 @@ Object {
   "schema": "schemas/database.graphql",
   "secret": "this-is-a-long-secret",
   "service": "jj",
-  "stages": Object {
-    "default": "shared-eu-west-1",
-    "dev": "shared-eu-west-1",
-  },
 }
 `;
 
@@ -133,10 +121,6 @@ Object {
   "schema": "schemas/database.graphql",
   "secret": "this-is-very-secret,and-comma,seperated",
   "service": "jj",
-  "stages": Object {
-    "default": "shared-eu-west-1",
-    "dev": "shared-eu-west-1",
-  },
 }
 `;
 
@@ -155,10 +139,6 @@ Object {
   ],
   "schema": "schemas/database.graphql",
   "service": "jj",
-  "stages": Object {
-    "default": "shared-eu-west-1",
-    "dev": "shared-eu-west-1",
-  },
 }
 `;
 

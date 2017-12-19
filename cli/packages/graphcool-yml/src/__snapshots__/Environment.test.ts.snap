@@ -6,7 +6,7 @@ Array [
     "baseUrl": "https://database-beta.graph.cool",
     "clusterToken": undefined,
     "local": false,
-    "name": "shared-eu-west-1",
+    "name": "shared-public-demo",
   },
 ]
 `;
@@ -17,7 +17,7 @@ Array [
     "baseUrl": "https://database-beta.graph.cool",
     "clusterToken": "this-is-so-special",
     "local": false,
-    "name": "shared-eu-west-1",
+    "name": "shared-public-demo",
   },
 ]
 `;
@@ -40,7 +40,7 @@ Array [
     "baseUrl": "https://database-beta.graph.cool",
     "clusterToken": undefined,
     "local": false,
-    "name": "shared-eu-west-1",
+    "name": "shared-public-demo",
   },
 ]
 `;
@@ -60,7 +60,7 @@ Array [
     "baseUrl": "https://database-beta.graph.cool",
     "clusterToken": undefined,
     "local": false,
-    "name": "shared-eu-west-1",
+    "name": "shared-public-demo",
   },
 ]
 `;
@@ -71,7 +71,7 @@ Array [
     "baseUrl": "https://database-beta.graph.cool",
     "clusterToken": "asdf",
     "local": false,
-    "name": "shared-eu-west-1",
+    "name": "shared-public-demo",
   },
 ]
 `;

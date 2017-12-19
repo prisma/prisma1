@@ -57,9 +57,6 @@ datamodel:
 secret: some-secret
 
 schema: schemas/database.graphql
-stages: 
-  default: dev
-  dev: shared-eu-west-1
     `
     const datamodel = `
 type User @model {
@@ -86,9 +83,6 @@ datamodel:
 secret: \${env:MY_TEST_SECRET}
 
 schema: schemas/database.graphql
-stages: 
-  default: dev
-  dev: shared-eu-west-1
     `
     const datamodel = `
 type User @model {
@@ -114,9 +108,6 @@ datamodel:
 secret: \${env:MY_DOT_ENV_SECRET}
 
 schema: schemas/database.graphql
-stages: 
-  default: dev
-  dev: shared-eu-west-1
     `
     const datamodel = `
 type User @model {
@@ -148,9 +139,6 @@ datamodel:
 - datamodel.graphql
 
 schema: schemas/database.graphql
-stages: 
-  default: dev
-  dev: shared-eu-west-1
     `
     const datamodel = `
 type User @model {
@@ -166,7 +154,9 @@ type User @model {
     const modelPath = path.join(definitionDir, 'datamodel.graphql')
     const env = makeEnv(defaultGlobalRC)
 
-    const definition = new GraphcoolDefinitionClass(env, definitionPath, {GRAPHCOOL_SECRET: 'this-is-secret'})
+    const definition = new GraphcoolDefinitionClass(env, definitionPath, {
+      GRAPHCOOL_SECRET: 'this-is-secret',
+    })
 
     fs.writeFileSync(modelPath, datamodel)
     fs.writeFileSync(definitionPath, yml)
@@ -188,9 +178,6 @@ datamodel:
 disableAuth: true
 
 schema: schemas/database.graphql
-stages: 
-  default: dev
-  dev: shared-eu-west-1
     `
     const datamodel = `
 type User @model {
@@ -222,9 +209,6 @@ datamodel:
 - datamodel.graphql
 
 schema: schemas/database.graphql
-stages: 
-  default: dev
-  dev: shared-eu-west-1
     `
     const datamodel = `
 type User @model {
