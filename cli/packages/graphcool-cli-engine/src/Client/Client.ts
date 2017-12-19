@@ -208,17 +208,20 @@ export class Client {
     exportData: any,
     token?: string,
   ): Promise<any> {
-    const result = await fetch(
-      this.env.activeCluster.getExportEndpoint(serviceName, stage),
-      {
-        method: 'post',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: exportData,
-      },
+    const endpoint = this.env.activeCluster.getExportEndpoint(
+      serviceName,
+      stage,
     )
+    debug(`Downloading from ${endpoint}`)
+    debug(exportData)
+    const result = await fetch(endpoint, {
+      method: 'post',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: exportData,
+    })
 
     const text = await result.text()
     try {

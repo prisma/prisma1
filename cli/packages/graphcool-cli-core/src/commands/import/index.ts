@@ -11,30 +11,30 @@ export default class Import extends Command {
       description: 'Stage name',
       defaultValue: 'dev',
     }),
-    source: flags.string({
-      char: 's',
+    data: flags.string({
+      char: 'd',
       description: 'Path to zip or folder including data to import',
       required: true,
     }),
   }
   async run() {
-    const { stage, source } = this.flags
+    const { stage, data } = this.flags
     await this.definition.load(this.flags)
     const serviceName = this.definition.definition!.service
     const cluster = await this.client.getClusterSafe(serviceName, stage)
     this.env.setActiveCluster(cluster)
 
-    if (!source.endsWith('.zip')) {
-      throw new Error(`Source must end with .zip`)
+    if (!data.endsWith('.zip')) {
+      throw new Error(`data must end with .zip`)
     }
 
-    if (!fs.pathExistsSync(source)) {
-      throw new Error(`Path ${source} does not exist`)
+    if (!fs.pathExistsSync(data)) {
+      throw new Error(`Path ${data} does not exist`)
     }
 
     // continue
     await this.import(
-      source,
+      data,
       serviceName,
       stage,
       this.definition.getToken(serviceName, stage),
