@@ -23,23 +23,21 @@ case class Upsert(
 
   import apiDependencies.system.dispatcher
 
-  val idOfNewItem = Cuid.createCuid()
   val where       = CoolArgs(args.raw).extractNodeSelectorFromWhereField(model)
-  val createMap   = args.raw("create").asInstanceOf[Map[String, Any]]
-  val createArgs  = CoolArgs(createMap + ("id" -> idOfNewItem))
-  val updateArgMap = args.raw("update").asInstanceOf[Map[String, Any]]
-  val updateArgs  = CoolArgs(updateArgMap)
+  val createArgs  = CoolArgs(args.raw("create").asInstanceOf[Map[String, Any]])
+  val updateArgs  = CoolArgs(args.raw("update").asInstanceOf[Map[String, Any]])
+  val upsert      = UpsertDataItem(project, model, createArgs, updateArgs, where)
+  val idOfNewItem = upsert.idOfNewItem
 
   override def prepareMutactions(): Future[List[MutactionGroup]] = {
-    val upsert      = UpsertDataItem(project, model, createArgs, updateArgs, where)
     val transaction = Transaction(List(upsert), dataResolver)
     Future.successful(List(MutactionGroup(List(transaction), async = false)))
   }
 
   override def getReturnValue: Future[ReturnValueResult] = {
-    val newWhere = updateArgMap.get(where.fieldName) match {
-        case Some(_) => CoolArgs(updateArgMap).extractNodeSelector(model)
-        case None => where
+    val newWhere = updateArgs.raw.get(where.fieldName) match {
+      case Some(_) => updateArgs.extractNodeSelector(model)
+      case None    => where
     }
 
     val uniques = Vector(NodeSelector(model, "id", GraphQLIdGCValue(idOfNewItem)), newWhere)

@@ -3,9 +3,10 @@ package cool.graph.api.database
 import cool.graph.api.mutations.{CoolArgs, NodeSelector}
 import cool.graph.cuid.Cuid
 import cool.graph.gc_values._
+import cool.graph.shared.models.IdType.Id
 import cool.graph.shared.models.RelationSide.RelationSide
 import cool.graph.shared.models.TypeIdentifier.TypeIdentifier
-import cool.graph.shared.models.{Model, Project, TypeIdentifier}
+import cool.graph.shared.models.{Model, Project, Relation, TypeIdentifier}
 import org.joda.time.format.DateTimeFormat
 import play.api.libs.json._
 import slick.dbio.DBIOAction
@@ -18,6 +19,10 @@ object DatabaseMutationBuilder {
   import SlickExtensions._
 
   val implicitlyCreatedColumns = List("id", "createdAt", "updatedAt")
+
+  def createDataItem(project: Project, model: Model, args: CoolArgs): SqlStreamingAction[Vector[Int], Int, Effect]#ResultAction[Int, NoStream, Effect] = {
+    createDataItem(project.id, model.name, args.raw)
+  }
 
   def createDataItem(projectId: String,
                      modelName: String,
@@ -58,6 +63,29 @@ object DatabaseMutationBuilder {
 
     val q       = DatabaseQueryBuilder.existsFromModelsByUniques(project, model, Vector(where)).as[Boolean]
     val qInsert = createDataItemIfUniqueDoesNotExist(project, model, createArgs, where)
+    val qUpdate = updateDataItemByUnique(project, model, updateArgs, where)
+
+    val actions = for {
+      exists <- q
+      action <- if (exists.head) qUpdate else qInsert
+    } yield action
+
+    actions.transactionally
+  }
+
+  def upsertIfInRelationWith(
+      project: Project,
+      model: Model,
+      createArgs: CoolArgs,
+      updateArgs: CoolArgs,
+      where: NodeSelector,
+      relation: Relation,
+      target: Id
+  ) = {
+    import scala.concurrent.ExecutionContext.Implicits.global
+
+    val q       = DatabaseQueryBuilder.existsNodeIsInRelationshipWith(project, model, where, relation, target).as[Boolean]
+    val qInsert = createDataItem(project, model, createArgs)
     val qUpdate = updateDataItemByUnique(project, model, updateArgs, where)
 
     val actions = for {
