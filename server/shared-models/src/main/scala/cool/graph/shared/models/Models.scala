@@ -280,7 +280,7 @@ case class Model(
   def getFieldByName_!(name: String): Field       = getFieldByName(name).get // .getOrElse(throw FieldNotInModel(fieldName = name, modelName = this.name))
   def getFieldByName(name: String): Option[Field] = fields.find(_.name == name)
 
-  def hasVisibleIdField: Boolean = !getFieldByName("id").exists(_.isHidden)
+  def hasVisibleIdField: Boolean = getFieldByName_!("id").isVisible
 }
 
 object RelationSide extends Enumeration {

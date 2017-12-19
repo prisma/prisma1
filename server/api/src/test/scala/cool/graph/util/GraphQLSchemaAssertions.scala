@@ -8,11 +8,25 @@ trait GraphQLSchemaAssertions {
     val queryStart    = "type Query {"
     val objectEnd     = "}"
 
-    def mustContainMutation(name: String): String = mustContainField(definition(mutationStart), name)
+    def mustContainMutation(name: String): String    = mustContainField(definition(mutationStart), name)
+    def mustNotContainMutation(name: String): String = mustNotContainField(definition(mutationStart), name)
 
-    def mustContainQuery(name: String): String = mustContainField(definition(queryStart), name)
+    def mustContainQuery(name: String): String    = mustContainField(definition(queryStart), name)
+    def mustNotContainQuery(name: String): String = mustNotContainField(definition(queryStart), name)
+
+    def mustContainTypeSignature(signature: String) = schemaString
 
     private def mustContainField(typeDef: String, field: String): String = {
+      val theField = typeDef.lines.map(_.trim).find { line =>
+        line.startsWith(field + "(")
+      }
+      theField match {
+        case Some(field) => field
+        case None        => sys.error(s"Could not find the field $field in this definition: $typeDef")
+      }
+    }
+
+    private def mustNotContainField(typeDef: String, field: String): String = {
       val theField = typeDef.lines.map(_.trim).find { line =>
         line.startsWith(field + "(")
       }

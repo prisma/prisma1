@@ -64,7 +64,6 @@ class ObjectTypeBuilder(
       fieldsFn = () => {
         model.fields
           .filter(_.isVisible)
-//          .filter(field => if (onlyId) field.name == "id" else true)
           .filter(field =>
             field.isScalar match {
               case true  => true

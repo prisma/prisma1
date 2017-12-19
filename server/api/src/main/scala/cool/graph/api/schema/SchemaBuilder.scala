@@ -83,7 +83,6 @@ case class SchemaBuilderImpl(
       arguments = objectTypeBuilder.mapToListConnectionArguments(model),
       resolve = (ctx) => {
         val arguments = objectTypeBuilder.extractQueryArgumentsFromContext(model, ctx)
-
         DeferredValue(ManyModelDeferred(model, arguments)).map(_.toNodes)
       }
     )
@@ -96,7 +95,6 @@ case class SchemaBuilderImpl(
       arguments = objectTypeBuilder.mapToListConnectionArguments(model),
       resolve = (ctx) => {
         val arguments = objectTypeBuilder.extractQueryArgumentsFromContext(model, ctx)
-
         DeferredValue(ManyModelDeferred(model, arguments))
       }
     )
