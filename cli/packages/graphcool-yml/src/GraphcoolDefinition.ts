@@ -6,7 +6,7 @@ import * as yamlParser from 'yaml-ast-parser'
 import * as dotenv from 'dotenv'
 import * as path from 'path'
 import * as jwt from 'jsonwebtoken'
-import { Args, Stages } from './types/common'
+import { Args } from './types/common'
 import { StageNotFound } from './errors/StageNotFound'
 import { Environment } from './Environment'
 import { IOutput } from './Output'
@@ -23,7 +23,6 @@ export class GraphcoolDefinitionClass {
   definition?: GraphcoolDefinition
   typesString?: string
   secrets: string[] | null
-  rawStages: Stages = {}
   definitionPath?: string | null
   definitionDir: string
   env: Environment
@@ -54,12 +53,9 @@ export class GraphcoolDefinitionClass {
         this.out,
       )
       this.definitionString = fs.readFileSync(this.definitionPath, 'utf-8')
-      this.rawStages = this.definition.stages || {}
-      this.definition.stages = this.resolveStageAliases(this.definition.stages)
       this.typesString = this.getTypesString(this.definition)
       const secrets = this.envVars.GRAPHCOOL_SECRET || this.definition.secret
       this.secrets = secrets ? secrets.replace(/\s/g, '').split(',') : null
-      this.ensureOfClusters(this.definition, this.env)
       const disableAuth =
         typeof this.envVars.GRAPHCOOL_DISABLE_AUTH !== 'undefined'
           ? this.readBool(this.envVars.GRAPHCOOL_DISABLE_AUTH)
@@ -70,17 +66,6 @@ export class GraphcoolDefinitionClass {
         )
       }
     }
-  }
-
-  private ensureOfClusters(definition: GraphcoolDefinition, env: Environment) {
-    Object.keys(definition.stages).forEach(stageName => {
-      const referredCluster = definition.stages[stageName]
-      if (!env.clusters.find(c => c.name === referredCluster)) {
-        throw new Error(
-          `Could not find cluster '${referredCluster}', which is used in stage '${stageName}'.`,
-        )
-      }
-    })
   }
 
   readBool(value?: string) {
@@ -111,58 +96,6 @@ export class GraphcoolDefinitionClass {
 
     return undefined
   }
-
-  getStage(name: string, throws: boolean = false): string | undefined {
-    const stage =
-      this.definition &&
-      (this.definition.stages[name] || this.definition.stages.default)
-    if (!throws) {
-      return stage
-    }
-
-    if (!stage) {
-      throw new StageNotFound(name)
-    }
-
-    return stage
-  }
-
-  setStage(name: string, clusterName: string) {
-    let defaultString = ''
-    if (Object.keys(this.rawStages).length === 0) {
-      defaultString = `\n  default: ${name}`
-    }
-    this.definitionString = this.insertToDefinition(
-      this.definitionString,
-      'stages',
-      `${defaultString}\n  ${name}: ${clusterName}`,
-    )
-  }
-
-  insertToDefinition(file: string, key: string, insertion: string) {
-    const obj = yamlParser.safeLoad(file)
-
-    const mapping = obj.mappings.find(m => m.key.value === key)
-    if (mapping) {
-      const end = mapping.endPosition
-
-      const newFile = file.slice(0, end) + insertion + file.slice(end)
-      const valueStart = mapping.value.startPosition
-      const valueEnd = mapping.value.endPosition
-      if (mapping.value && valueEnd - valueStart < 4) {
-        return newFile.slice(0, valueStart) + newFile.slice(valueEnd)
-      }
-
-      return newFile
-    } else {
-      return file + `\n${key}: ` + insertion
-    }
-  }
-
-  save() {
-    fs.writeFileSync(this.definitionPath!, this.definitionString)
-  }
-
   private getTypesString(definition: GraphcoolDefinition) {
     const typesPaths = Array.isArray(definition.datamodel)
       ? definition.datamodel
@@ -183,26 +116,5 @@ export class GraphcoolDefinitionClass {
     })
 
     return allTypes
-  }
-
-  private resolveStageAliases = stages =>
-    mapValues(stages, target => this.resolveStage(target, stages))
-
-  private resolveStage = (
-    stage: string,
-    stages: { [key: string]: string },
-  ): string =>
-    stages[stage] ? this.resolveStage(stages[stage], stages) : stage
-
-  get default(): string | null {
-    if (
-      this.definition &&
-      this.definition.stages &&
-      this.definition.stages.default
-    ) {
-      return this.definition.stages.default
-    }
-
-    return null
   }
 }

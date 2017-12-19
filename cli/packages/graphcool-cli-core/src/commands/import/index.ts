@@ -9,6 +9,7 @@ export default class Import extends Command {
     stage: flags.string({
       char: 's',
       description: 'Stage name',
+      defaultValue: 'dev',
     }),
     source: flags.string({
       char: 's',
@@ -19,10 +20,8 @@ export default class Import extends Command {
   async run() {
     const { stage, source } = this.flags
     await this.definition.load(this.flags)
-    const clusterName = this.definition.getStage(stage, true)
-    const stageName = stage || this.definition.rawStages.default
-    const cluster = this.env.clusterByName(clusterName!, true)!
     const serviceName = this.definition.definition!.service
+    const cluster = await this.client.getClusterSafe(serviceName, stage)
     this.env.setActiveCluster(cluster)
 
     if (!source.endsWith('.zip')) {
@@ -37,8 +36,8 @@ export default class Import extends Command {
     await this.import(
       source,
       serviceName,
-      stageName,
-      this.definition.getToken(serviceName, stageName),
+      stage,
+      this.definition.getToken(serviceName, stage),
     )
   }
 

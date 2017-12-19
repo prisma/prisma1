@@ -94,7 +94,7 @@ export class MigrationPrinter {
   getUpdateFieldActions(step: MigrationStep) {
     const messages: string[] = []
     if (step.isRequired) {
-      messages.push(`got required`)
+      messages.push(`became required`)
     }
 
     if (step.isRequired === false) {
@@ -110,7 +110,7 @@ export class MigrationPrinter {
     }
 
     if (step.isUnique) {
-      messages.push(`got unique`)
+      messages.push(`became unique`)
     }
 
     if (step.enum) {

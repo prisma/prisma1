@@ -82,7 +82,7 @@
     "fs-extra": "^4.0.2",
     "globby": "^6.1.0",
     "graphcool-inquirer": "^1.0.3",
-    "graphcool-json-schema": "^1.0.1-beta.2",
+    "graphcool-json-schema": "^1.0.1-beta.5",
     "graphcool-yml": "^0.0.9",
     "graphql": "^0.11.7",
     "graphql-config": "^1.0.9",

@@ -11,6 +11,7 @@ export default class Export extends Command {
     stage: flags.string({
       char: 's',
       description: 'Stage name',
+      defaultValue: 'dev',
     }),
     ['export-path']: flags.string({
       char: 'e',
@@ -28,18 +29,16 @@ export default class Export extends Command {
     const { stage } = this.flags
 
     await this.definition.load(this.flags)
-    const clusterName = this.definition.getStage(stage, true)
-    const stageName = stage || this.definition.rawStages.default
-    const cluster = this.env.clusterByName(clusterName!, true)!
     const serviceName = this.definition.definition!.service
+    const cluster = await this.client.getClusterSafe(serviceName, stage)
 
     this.env.setActiveCluster(cluster)
 
     await this.export(
       serviceName,
-      stageName,
+      stage,
       exportPath,
-      this.definition.getToken(serviceName, stageName),
+      this.definition.getToken(serviceName, stage),
     )
 
     const importCommand = chalk.green.bold(

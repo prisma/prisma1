@@ -16,24 +16,23 @@ export default class InfoCommand extends Command {
     stage: flags.string({
       char: 's',
       description: 'Stage name to get the info for',
+      defaultValue: 'dev',
     }),
   }
   async run() {
     const { stage } = this.flags
 
     await this.definition.load(this.flags)
-    const clusterName = this.definition.getStage(stage, true)
-    const stageName = stage || this.definition.rawStages.default
-    const cluster = this.env.clusterByName(clusterName!, true)!
     const serviceName = this.definition.definition!.service
+    const cluster = await this.client.getClusterSafe(serviceName, stage)
 
     this.out.log(`\
 Service Name: ${chalk.bold(serviceName)}
 
-Stage: ${chalk.bold(stageName)} (deployed in ${chalk.bold(cluster.name)})
+Stage: ${chalk.bold(stage)} (deployed in ${chalk.bold(cluster.name)})
 
 Endpoints:
-HTTP        ${cluster.getApiEndpoint(serviceName, stageName)}
+HTTP        ${cluster!.getApiEndpoint(serviceName, stage)}
 `)
   }
 }

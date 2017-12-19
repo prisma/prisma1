@@ -11,6 +11,7 @@ export default class Playground extends Command {
     stage: flags.string({
       char: 's',
       description: 'Stage name',
+      defaultValue: 'dev',
     }),
     web: flags.boolean({
       char: 'w',
@@ -20,15 +21,14 @@ export default class Playground extends Command {
   async run() {
     const { stage, web } = this.flags
     await this.definition.load(this.flags)
-    const clusterName = this.definition.getStage(stage, true)
-    const cluster = this.env.clusterByName(clusterName!, true)!
+    const serviceName = this.definition.definition!.service!
+    const cluster = await this.client.getClusterSafe(serviceName, stage)
 
     const localPlaygroundPath = `/Applications/GraphQL\ Playground.app/Contents/MacOS/GraphQL\ Playground`
-    const stageName = stage || this.definition.rawStages.default
 
     const endpoint = cluster.getApiEndpoint(
       this.definition.definition!.service!,
-      stageName,
+      stage,
     )
     if (fs.pathExistsSync(localPlaygroundPath) && !web) {
       const url = `graphql-playground://?endpoint=${endpoint}&cwd=${process.cwd()}&env=${JSON.stringify(

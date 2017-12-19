@@ -10,6 +10,7 @@ export default class Seed extends Command {
     stage: flags.string({
       char: 's',
       description: 'Stage name',
+      defaultValue: 'dev',
     }),
     reset: flags.boolean({
       char: 'r',
@@ -19,11 +20,9 @@ export default class Seed extends Command {
   async run() {
     const { stage, reset } = this.flags
     await this.definition.load(this.flags)
-    const clusterName = this.definition.getStage(stage, true)
-    const stageName = stage || this.definition.rawStages.default
-    const cluster = this.env.clusterByName(clusterName!, true)!
     const serviceName = this.definition.definition!.service
-    this.env.setActiveCluster(cluster)
+    const cluster = await this.client.getClusterSafe(serviceName, stage)
+    this.env.setActiveCluster(cluster!)
 
     const seeder = new Seeder(
       this.definition,
@@ -32,6 +31,6 @@ export default class Seed extends Command {
       this.config,
     )
 
-    await seeder.seed(serviceName, stageName, reset)
+    await seeder.seed(serviceName, stage, reset)
   }
 }

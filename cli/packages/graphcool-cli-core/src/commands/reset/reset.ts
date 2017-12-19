@@ -16,6 +16,7 @@ export default class Reset extends Command {
     stage: flags.string({
       char: 's',
       description: 'Stage name to reset data of',
+      defaultValue: 'dev',
     }),
     force: flags.boolean({
       char: 'f',
@@ -26,17 +27,15 @@ export default class Reset extends Command {
     const { stage, force } = this.flags
 
     await this.definition.load(this.flags)
-    const clusterName = this.definition.getStage(stage, true)
-    const stageName = stage || this.definition.rawStages.default
-    const cluster = this.env.clusterByName(clusterName!, true)!
     const serviceName = this.definition.definition!.service
+    const cluster = await this.client.getClusterSafe(serviceName, stage)
     this.env.setActiveCluster(cluster)
 
     if (!force) {
-      await this.askForConfirmation(serviceName, stageName)
+      await this.askForConfirmation(serviceName, stage)
     }
 
-    await this.reset(serviceName, stageName)
+    await this.reset(serviceName, stage)
   }
 
   async reset(serviceName, stageName) {

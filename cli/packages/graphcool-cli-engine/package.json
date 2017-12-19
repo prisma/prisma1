@@ -85,7 +85,7 @@
     "find-up": "^2.1.0",
     "fs-extra": "^4.0.2",
     "graphcool-inquirer": "^1.0.3",
-    "graphcool-json-schema": "^1.0.1-alpha.2",
+    "graphcool-json-schema": "^1.0.1-beta.5",
     "graphcool-yml": "^0.0.9",
     "graphql-request": "^1.3.4",
     "isomorphic-fetch": "^2.2.1",

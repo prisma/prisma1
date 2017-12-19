@@ -8,6 +8,7 @@ export default class ExampleCommand extends Command {
     stage: flags.string({
       char: 't',
       description: 'Target name',
+      defaultValue: 'dev',
     }),
   }
   async run() {

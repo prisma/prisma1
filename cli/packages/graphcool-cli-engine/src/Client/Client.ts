@@ -15,10 +15,9 @@ import { GraphQLClient, request } from 'graphql-request'
 import { omit, flatMap } from 'lodash'
 import { Config } from '../Config'
 import { getFastestRegion } from './ping'
-import { Environment } from 'graphcool-yml'
+import { Environment, Cluster } from 'graphcool-yml'
 import { Output } from '../index'
 import chalk from 'chalk'
-import { Cluster } from '../Cluster'
 import { DeployPayload } from './clientTypes'
 import { introspectionQuery } from './introspectionQuery'
 
@@ -120,19 +119,19 @@ export class Client {
   }
 
   // always create a new client which points to the latest config for each request
+  getClient(cluster: Cluster) {
+    return new GraphQLClient(cluster.getDeployEndpoint(), {
+      headers: {
+        Authorization: `Bearer ${cluster.token}`,
+      },
+    })
+  }
   get client(): GraphQLClient {
     debug(
       'choosing clusterEndpoint',
       this.env.activeCluster.getDeployEndpoint(),
     )
-    const localClient = new GraphQLClient(
-      this.env.activeCluster.getDeployEndpoint(),
-      {
-        headers: {
-          Authorization: `Bearer ${this.env.activeCluster.token}`,
-        },
-      },
-    )
+    const localClient = this.getClient(this.env.activeCluster!)
     return {
       request: async (query, variables) => {
         debug('Sending query')
@@ -390,6 +389,61 @@ export class Client {
     `)
 
     return listProjects
+  }
+
+  async getCluster(name: string, stage: string): Promise<Cluster | null> {
+    const foundClusters: Cluster[] = []
+    for (const cluster of this.env.clusters) {
+      const client = this.getClient(cluster)
+      try {
+        const { project } = await client.request<{
+          project: Project
+        }>(
+          `
+            query ($name: String! $stage: String!) {
+              project (name: $name stage: $stage) {
+                name
+                stage
+              }
+            }
+          `,
+          {
+            name,
+            stage,
+          },
+        )
+
+        if (project) {
+          foundClusters.push(cluster)
+        }
+      } catch (e) {
+        //
+      }
+    }
+
+    if (foundClusters.length === 1) {
+      return foundClusters[0]
+    }
+
+    if (foundClusters.length > 1) {
+      const clusterNames = foundClusters.map(c => c.name).join(', ')
+      throw new Error(
+        `The service name / stage combination "${name}@${stage}" is ambigious. It exists in clusters ${clusterNames}`,
+      )
+    }
+
+    return null
+  }
+
+  async getClusterSafe(name: string, stage: string): Promise<Cluster> {
+    const cluster = await this.getCluster(name, stage)
+    if (!cluster) {
+      throw new Error(
+        `No cluster for "${name}@${stage}" found. Please make sure to deploy the stage ${stage}`,
+      )
+    }
+
+    return cluster
   }
 
   async waitForLocalDocker(endpoint: string): Promise<void> {

@@ -1,5 +1,3 @@
-export { Cluster } from './Cluster'
-
 export { Config } from './Config'
 export { Command } from './Command'
 export { CLI, run } from './CLI'

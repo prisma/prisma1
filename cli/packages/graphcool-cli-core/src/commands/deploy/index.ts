@@ -45,6 +45,7 @@ ${chalk.gray(
     stage: flags.string({
       char: 's',
       description: 'Local stage to deploy to',
+      defaultValue: 'dev',
     }),
     force: flags.boolean({
       char: 'f',
@@ -89,10 +90,9 @@ ${chalk.gray(
   private showedLines: number = 0
   async run() {
     debug('run')
-    const { force, watch, interactive, dotenv } = this.flags
+    const { force, watch, interactive, dotenv, stage } = this.flags
     const newServiceClusterName = this.flags['new-service-cluster']
     const dryRun = this.flags['dry-run']
-    let stageName = this.flags.stage
 
     if (newServiceClusterName) {
       const newServiceCluster = this.env.clusterByName(newServiceClusterName)
@@ -112,51 +112,38 @@ ${chalk.gray(
     }
 
     await this.definition.load(this.flags, dotenv)
+    const serviceName = this.definition.definition!.service
+    let cluster = await this.client.getCluster(serviceName, stage)
 
-    if (!stageName) {
-      stageName =
-        (!interactive &&
-          this.definition.rawStages &&
-          this.definition.rawStages.default) ||
-        (await this.stageNameSelector('dev'))
-    }
+    const serviceIsNew = !cluster
 
-    let clusterName = this.definition.rawStages
-      ? this.definition.rawStages[stageName]
-      : null
-    const serviceIsNew = !clusterName
-
-    if (!clusterName) {
-      clusterName =
+    if (!cluster) {
+      const clusterName =
         (!interactive && newServiceClusterName) ||
-        (await this.clusterSelection())
+        (await this.clusterSelection(stage))
+      cluster = this.env.clusterByName(clusterName)!
+      if (!cluster) {
+        if (clusterName === 'local') {
+          await Up.run(new Config({ mock: false, argv: [] }))
+          await this.env.load(this.flags)
+          cluster = this.env.clusterByName('local')!
+          this.env.setActiveCluster(cluster)
+        } else {
+          this.out.error(`Cluster ${clusterName} could not be found.`)
+        }
+      }
     }
+    this.env.setActiveCluster(cluster)
 
     if (this.showedLines > 0) {
       this.out.up(this.showedLines)
     }
 
-    const serviceName = this.definition.definition!.service
-
-    let cluster = this.env.clusterByName(clusterName!)
-    if (!cluster) {
-      if (clusterName === 'local') {
-        await Up.run(new Config({ mock: false, argv: [] }))
-        await this.env.load(this.flags)
-        cluster = this.env.clusterByName('local')!
-        this.env.setActiveCluster(cluster)
-      } else {
-        this.out.error(`Cluster ${clusterName} could not be found.`)
-      }
-    } else {
-      this.env.setActiveCluster(cluster!)
+    if (!await this.projectExists(serviceName, stage)) {
+      await this.addProject(serviceName, stage)
     }
 
-    if (!await this.projectExists(serviceName, stageName)) {
-      await this.addProject(serviceName, stageName)
-    }
-
-    await this.deploy(stageName, serviceName, cluster!, force, dryRun)
+    await this.deploy(stage, serviceName, cluster!, force, dryRun)
 
     if (this.definition.definition!.seed && !this.flags['no-seed']) {
       const seeder = new Seeder(
@@ -166,7 +153,7 @@ ${chalk.gray(
         this.config,
       )
       this.out.log(`Seeding Data...`)
-      await seeder.seed(serviceName, stageName)
+      await seeder.seed(serviceName, stage)
     }
 
     if (watch) {
@@ -178,7 +165,7 @@ ${chalk.gray(
             if (!this.deploying) {
               await this.definition.load(this.flags)
               await this.deploy(
-                stageName,
+                stage,
                 this.definition.definition!.service,
                 cluster!,
                 force,
@@ -188,12 +175,6 @@ ${chalk.gray(
             }
           })
         })
-    }
-
-    if (serviceIsNew) {
-      this.definition.setStage(stageName, cluster!.name)
-      this.definition.save()
-      this.out.log(`Added stage ${stageName} to graphcool.yml\n`)
     }
   }
 
@@ -350,7 +331,7 @@ ${chalk.gray(
   ${chalk.bold('HTTP:')}  ${cluster.getApiEndpoint(serviceName, stageName)}\n`)
   }
 
-  private async clusterSelection(): Promise<string> {
+  private async clusterSelection(stage: string): Promise<string> {
     const localClusters = this.env.clusters.filter(c => c.local).map(c => {
       return {
         value: c.name,
@@ -363,7 +344,7 @@ ${chalk.gray(
     const question = {
       name: 'cluster',
       type: 'list',
-      message: 'Please choose the cluster you want to deploy to',
+      message: `Please choose the cluster you want to deploy "${stage}" to`,
       choices: [
         new inquirer.Separator(chalk.bold('Shared Clusters:')),
         {
