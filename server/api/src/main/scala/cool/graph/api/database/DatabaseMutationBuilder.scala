@@ -59,6 +59,22 @@ object DatabaseMutationBuilder {
       sql"where not exists (select * from `#${project.id}`.`#${model.name}` where #${where.fieldName} = ${where.fieldValue});").asUpdate
   }
 
+  def upsert(project: Project, model: Model, createArgs: CoolArgs, updateArgs: CoolArgs, where: NodeSelector) ={
+    import scala.concurrent.ExecutionContext.Implicits.global
+
+    val q = DatabaseQueryBuilder.existsFromModelsByUniques(project, model, Vector(where)).as[Boolean]
+    val qInsert = createDataItemIfUniqueDoesNotExist(project, model, createArgs, where)
+    val qUpdate = updateDataItemByUnique(project, model, updateArgs, where)
+
+    val actions = for {
+      exists <- q
+      action <- if (exists.head) qUpdate else qInsert
+    } yield action
+
+    actions.transactionally
+  }
+
+
   case class MirrorFieldDbValues(relationColumnName: String, modelColumnName: String, modelTableName: String, modelId: String)
 
   def createRelationRow(projectId: String,

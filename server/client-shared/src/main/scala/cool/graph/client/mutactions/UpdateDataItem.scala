@@ -88,12 +88,9 @@ case class UpdateDataItem(project: Project,
 
     Some({
       // https://dev.mysql.com/doc/refman/5.5/en/error-messages-server.html#error_er_dup_entry
-      case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1062 =>
-        UserAPIErrors.UniqueConstraintViolation(model.name, getField(values, e))
-      case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1452 =>
-        UserAPIErrors.NodeDoesNotExist(id)
-      case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1048 =>
-        UserAPIErrors.FieldCannotBeNull()
+      case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1062 => UserAPIErrors.UniqueConstraintViolation(model.name, getField(values, e))
+      case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1452 => UserAPIErrors.NodeDoesNotExist(id)
+      case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1048 => UserAPIErrors.FieldCannotBeNull()
     })
   }
 

@@ -35,7 +35,12 @@ case class Upsert(
   }
 
   override def getReturnValue: Future[ReturnValueResult] = {
-    val uniques = Vector(NodeSelector(model, "id", GraphQLIdGCValue(idOfNewItem)), where)
+    val whereFromUpdateArgs = updateArgs.raw.get(where.fieldName) match {
+      case Some(_) => Vector(CoolArgs(updateArgs.raw).extractNodeSelector(model))
+      case None    => Vector.empty
+    }
+
+    val uniques = Vector(NodeSelector(model, "id", GraphQLIdGCValue(idOfNewItem)), where) ++ whereFromUpdateArgs
     dataResolver.resolveByUniques(model, uniques).map { items =>
       items.headOption match {
         case Some(item) => ReturnValue(item)
