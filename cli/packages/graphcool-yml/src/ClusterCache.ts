@@ -24,7 +24,8 @@ export class ClusterCache {
   load() {
     if (fs.pathExistsSync(this.cachePath)) {
       const file = fs.readFileSync(this.cachePath)
-      const content = yaml.safeLoad(file)
+      const content = yaml.safeLoad(file) as CacheData
+      this.cache = content.serviceClusterCache
     }
   }
   addCacheEntry(entry: CacheEntry) {
@@ -47,7 +48,7 @@ export class ClusterCache {
     fs.mkdirpSync(path.dirname(this.cachePath))
     fs.writeFileSync(this.cachePath, file)
   }
-  getStagesByService(service: string) {
+  getEntriesByService(service: string) {
     return this.cache.filter(function(e) {
       return e.service === service
     })

@@ -32,15 +32,19 @@ export class Environment {
   }
 
   async setSharedClusters() {
-    const res = await fetch('https://stats.graph.cool/', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      } as any,
-      body: JSON.stringify({ query: `{publicClusters}` }),
-    })
-    const json = await res.json()
-    this.sharedClusters = json.data.publicClusters
+    try {
+      const res = await fetch('https://stats.graph.cool/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        } as any,
+        body: JSON.stringify({ query: `{publicClusters}` }),
+      })
+      const json = await res.json()
+      this.sharedClusters = json.data.publicClusters
+    } catch (e) {
+      console.error(e)
+    }
   }
 
   migrateOldCli(oldGraphcoolRcPath: string, globalConfigPath: string) {
