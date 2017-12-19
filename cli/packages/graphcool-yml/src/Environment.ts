@@ -19,12 +19,12 @@ export class Environment {
   globalRC: InternalRC = {}
   clusters: Cluster[]
   platformToken?: string
-  globalRCPath: string
+  globalConfigPath: string
   out: IOutput
-  constructor(globalRCPath: string, out: IOutput = new Output()) {
-    this.globalRCPath = globalRCPath
+  constructor(globalConfigPath: string, out: IOutput = new Output()) {
+    this.globalConfigPath = globalConfigPath
     this.out = out
-    this.migrateOldCli(globalRCPath)
+    this.migrateOldCli(path.join(os.homedir(), '.graphcool'), globalConfigPath)
   }
 
   async load(args: Args) {
@@ -43,20 +43,18 @@ export class Environment {
     this.sharedClusters = json.data.publicClusters
   }
 
-  migrateOldCli(globalRCPath: string) {
-    if (fs.pathExistsSync(globalRCPath)) {
-      try {
-        const rc = fs.readFileSync(globalRCPath, 'utf-8')
-        const json = JSON.parse(rc)
-        if (json && typeof json === 'object') {
-          const newPath = path.join(os.homedir(), '.old.graphcool')
-          fs.moveSync(globalRCPath, newPath)
-          this.out.log(
-            `Old .graphcool file detected. We just moved it to ${newPath}`,
-          )
-        }
-      } catch (e) {
-        //
+  migrateOldCli(oldGraphcoolRcPath: string, globalConfigPath: string) {
+    if (fs.pathExistsSync(oldGraphcoolRcPath)) {
+      var isFile = fs.lstatSync(oldGraphcoolRcPath).isFile()
+      if (isFile) {
+        var rc = fs.readFileSync(oldGraphcoolRcPath, 'utf-8')
+        fs.removeSync(oldGraphcoolRcPath)
+        fs.mkdirpSync(oldGraphcoolRcPath)
+        fs.writeFileSync(globalConfigPath, rc)
+        this.out.log(
+          'Old .graphcool file detected. We just moved it to ' +
+            globalConfigPath,
+        )
       }
     }
   }
@@ -89,7 +87,7 @@ export class Environment {
     }
     // parse & stringify to rm undefined for yaml parser
     const rcString = yaml.safeDump(JSON.parse(JSON.stringify(rc)))
-    fs.writeFileSync(this.globalRCPath, rcString)
+    fs.writeFileSync(this.globalConfigPath, rcString)
   }
 
   setActiveCluster(cluster: Cluster) {
@@ -98,15 +96,15 @@ export class Environment {
 
   async loadGlobalRC(): Promise<void> {
     const globalFile =
-      this.globalRCPath && fs.pathExistsSync(this.globalRCPath)
-        ? fs.readFileSync(this.globalRCPath, 'utf-8')
+      this.globalConfigPath && fs.pathExistsSync(this.globalConfigPath)
+        ? fs.readFileSync(this.globalConfigPath, 'utf-8')
         : undefined
     await this.parseGlobalRC(globalFile)
   }
 
   async parseGlobalRC(globalFile?: string): Promise<void> {
     if (globalFile) {
-      this.globalRC = await this.loadYaml(globalFile, this.globalRCPath)
+      this.globalRC = await this.loadYaml(globalFile, this.globalConfigPath)
     }
     this.clusters = this.initClusters(this.globalRC)
     this.platformToken =

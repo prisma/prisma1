@@ -5,7 +5,8 @@ import * as fs from 'fs-extra'
 
 export function makeEnv(rc?: string) {
   const tmpDir = getTmpDir()
-  const globalRcPath = path.join(tmpDir, '.graphcoolrc')
+  fs.mkdirpSync(path.join(tmpDir, '.graphcool/'))
+  const globalRcPath = path.join(tmpDir, '.graphcool/config.yml')
   if (rc) {
     fs.writeFileSync(globalRcPath, rc)
   }

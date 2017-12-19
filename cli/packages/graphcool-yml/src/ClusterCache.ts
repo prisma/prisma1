@@ -44,6 +44,7 @@ export class ClusterCache {
       serviceClusterCache: this.cache,
     }
     const file = yaml.safeDump(JSON.parse(JSON.stringify(json)))
+    fs.mkdirpSync(path.dirname(this.cachePath))
     fs.writeFileSync(this.cachePath, file)
   }
   getStagesByService(service: string) {
