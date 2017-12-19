@@ -31,17 +31,16 @@ case class Delete(
   var deletedItemOpt: Option[DataItem] = None
   val requestId: Id                    = "" // dataResolver.requestContext.map(_.requestId).getOrElse("")
 
-  val coolArgs = CoolArgs(args.raw)
-  val where    = coolArgs.extractNodeSelectorFromWhereField(model)
+  val coolArgs            = CoolArgs(args.raw)
+  val where: NodeSelector = coolArgs.extractNodeSelectorFromWhereField(model)
 
   override def prepareMutactions(): Future[List[MutactionGroup]] = {
     dataResolver
-      .resolveByUnique(model, where.fieldName, where.fieldValue)
+      .resolveByUnique(where)
       .andThen {
         case Success(x) => deletedItemOpt = x.map(dataItem => dataItem) // todo: replace with GC Values
         // todo: do we need the fromSql stuff?
         //GraphcoolDataTypes.fromSql(dataItem.userData, model.fields)
-
       }
       .map(_ => {
 
@@ -50,10 +49,7 @@ case class Delete(
         val sqlMutactions        = SqlMutactions(dataResolver).getMutactionsForDelete(model, itemToDelete.id, itemToDelete)
         val transactionMutaction = Transaction(sqlMutactions, dataResolver)
 
-        val nodeData: Map[String, Any] = itemToDelete.userData
-          .collect {
-            case (key, Some(value)) => (key, value)
-          } + ("id" -> itemToDelete.id)
+        val nodeData: Map[String, Any] = itemToDelete.userData.collect { case (key, Some(value)) => (key, value) } + ("id" -> itemToDelete.id)
 
         val subscriptionMutactions = SubscriptionEvents.extractFromSqlMutactions(project, mutationId, sqlMutactions).toList
 
