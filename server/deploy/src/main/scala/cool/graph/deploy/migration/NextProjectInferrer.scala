@@ -42,7 +42,7 @@ case class NextProjectInferrerImpl(
         val typeIdentifier = typeIdentifierForTypename(fieldDef.typeName)
         val relation       = fieldDef.relationName.flatMap(relationName => nextRelations.find(_.name == relationName))
 
-        Field(
+        val wat = Field(
           id = fieldDef.name,
           name = fieldDef.name,
           typeIdentifier = typeIdentifier,
@@ -60,6 +60,8 @@ case class NextProjectInferrerImpl(
             }
           }
         )
+
+        wat
       }
 
       val fieldNames            = fields.map(_.name)

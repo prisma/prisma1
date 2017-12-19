@@ -39,16 +39,19 @@ class QueriesSchemaBuilderSpec extends WordSpec with Matchers with ApiBaseSpec w
 
     "not include a *WhereUniqueInput if there is no unique field" in {
       val project = SchemaDsl() { schema =>
-        schema.model("Todo").copy(fields = mutable.Buffer.empty).field("test", _.String)
+        val wat = schema.model("Todo")
+        wat.fields.clear()
+        wat.field("test", _.String)
+
+        println(wat)
+      // wat
       }
 
-      println(project)
-
       val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
-
-      //      val query = schema.mustContainQuery("todoes")
       println(schema)
-      //      query should be("todoes(where: TodoWhereInput, orderBy: TodoOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Todo]!")
+
+      val query = schema.mustContainQuery("todoes")
+//      query should be("todoes(where: TodoWhereInput, orderBy: TodoOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Todo]!")
     }
   }
 }
