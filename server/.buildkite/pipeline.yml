@@ -15,8 +15,10 @@ steps:
 
   - label: ":docker: Build"
     command: ./server/scripts/docker-build.sh
+    branch: graphql-database
 
   - wait
 
   - label: ":llama: Deploy"
     command: ./server/scripts/beta_deploy.sh
+    branch: graphql-database
