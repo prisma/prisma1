@@ -228,4 +228,34 @@ type User @model {
 
     expect(error).toMatchSnapshot()
   })
+  test('throws when stages key apparent', async () => {
+    const yml = `\
+service: jj
+
+datamodel:
+- datamodel.graphql
+
+schema: schemas/database.graphql
+
+stages:
+  dev: local
+    `
+    const datamodel = `
+type User @model {
+  id: ID! @isUnique
+  name: String!
+  lol: Int
+  what: String
+}
+`
+
+    let error
+    try {
+      const { definition } = await loadDefinition(yml, datamodel)
+    } catch (e) {
+      error = e
+    }
+
+    expect(error).toMatchSnapshot()
+  })
 })
