@@ -123,15 +123,14 @@ ${chalk.gray(
         (await this.clusterSelection(stage))
       cluster = this.env.clusterByName(clusterName)!
       if (!cluster) {
-        if (clusterName === 'local') {
-          await Up.run(new Config({ mock: false, argv: [] }))
-          await this.env.load(this.flags)
-          cluster = this.env.clusterByName('local')!
-          this.env.setActiveCluster(cluster)
-        } else {
           this.out.error(`Cluster ${clusterName} could not be found.`)
-        }
       }
+    }
+    if (cluster.name === 'local') {
+      await Up.run(new Config({ mock: false, argv: [] }))
+      await this.env.load(this.flags)
+      cluster = this.env.clusterByName('local')!
+      this.env.setActiveCluster(cluster)
     }
     this.env.setActiveCluster(cluster)
 

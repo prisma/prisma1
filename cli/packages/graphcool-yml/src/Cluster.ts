@@ -1,4 +1,5 @@
 const debug = require('debug')('environment')
+import 'isomorphic-fetch'
 
 export class Cluster {
   name: string
@@ -35,6 +36,29 @@ export class Cluster {
 
   getDeployEndpoint() {
     return `${this.baseUrl}/system/playground`
+  }
+
+  async isOnline() {
+    const result = await fetch(this.getDeployEndpoint(), {
+      method: 'post',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        query: `{
+            clusterInfo {
+              version
+            }
+          }`,
+      }),
+    })
+
+    const text = await result.text()
+    try {
+      return JSON.parse(text)
+    } catch (e) {
+      throw new Error(text)
+    }
   }
 
   // subscriptionEndpoint(projectId: string): string {
