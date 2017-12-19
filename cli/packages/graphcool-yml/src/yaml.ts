@@ -62,5 +62,5 @@ function printErrors(errors, name = 'graphcool.yml') {
 
 const betterMessagesByParams = {
   '{"additionalProperty":"stages"}':
-    'graphcool.yml should NOT have a "stages" property anymore. Stages are now just provided as CLI args. Read more here: https://goo.gl/SUD5i5',
+    'graphcool.yml should NOT have a "stages" property anymore. Stages are now just provided as CLI args.\nRead more here: https://goo.gl/SUD5i5',
 }

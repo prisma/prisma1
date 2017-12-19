@@ -11,8 +11,8 @@ const debug = require('debug')('up')
 
 export default class Up extends Command {
   static topic = 'local'
-  static command = 'up'
-  static description = 'Start local development cluster (Docker required)'
+  static command = 'start'
+  static description = 'Start local development cluster'
   static group = 'local'
   static flags: Flags = {
     name: flags.string({

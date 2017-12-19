@@ -57,9 +57,11 @@ export default class Docker {
     }
     const defaultVars = this.getDockerEnvVars()
     const portfinder = require('portfinder')
-    port = port || (await portfinder.getPortPromise({ port: 60000 }))
-    if (port > 60000) {
-      await this.askForHigherPort('60000', port)
+    if (!port) {
+      port = await portfinder.getPortPromise({ port: 60000 })
+      if (port > 60000) {
+        await this.askForHigherPort('60000', port)
+      }
     }
     const customVars = {
       PORT: String(port),
@@ -75,17 +77,19 @@ export default class Docker {
   }
   async askForHigherPort(port: string, higherPort: string) {
     const processForPort = getProcessForPort(port)
-    const confirmationQuestion = {
-      name: 'confirmation',
-      type: 'input',
-      message: `Port 60000 is already used by ${processForPort}. Do you want to use the next free port (${higherPort})? (n/Y)`,
-      default: 'Y',
-    }
-    const { confirmation }: { confirmation: string } = await this.out.prompt(
-      confirmationQuestion,
-    )
-    if (confirmation.toLowerCase().startsWith('n')) {
-      this.out.exit(0)
+    if (processForPort) {
+      const confirmationQuestion = {
+        name: 'confirmation',
+        type: 'input',
+        message: `Port 60000 is already used by ${processForPort}. Do you want to use the next free port (${higherPort})? (n/Y)`,
+        default: 'Y',
+      }
+      const { confirmation }: { confirmation: string } = await this.out.prompt(
+        confirmationQuestion,
+      )
+      if (confirmation.toLowerCase().startsWith('n')) {
+        this.out.exit(0)
+      }
     }
   }
 
@@ -117,6 +121,17 @@ export default class Docker {
   async pull(): Promise<Docker> {
     await this.init()
     return this.run('pull')
+  }
+
+  async logs(): Promise<Docker> {
+    await this.init()
+    return this.run('logs', '-f')
+  }
+
+  async nuke(): Promise<Docker> {
+    await this.init()
+    await this.run('down')
+    return this.run('up', '-d', '--remove-orphans')
   }
 
   getDockerEnvVars() {

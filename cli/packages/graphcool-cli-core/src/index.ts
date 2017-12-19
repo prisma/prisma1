@@ -11,102 +11,86 @@ import List from './commands/list/index'
 import PullLocal from './commands/local/pull'
 import Stop from './commands/local/stop'
 import Up from './commands/local/up'
-import Restart from './commands/local/restart'
 import Eject from './commands/local/eject'
-import PsLocal from './commands/local/ps'
+// import PsLocal from './commands/local/ps'
 // import Account from './commands/account'
 import Reset from './commands/reset/reset'
 import Clusters from './commands/clusters/index'
 import Import from './commands/import/index'
 import Export from './commands/export/index'
 import Seed from './commands/seed/seed'
+import Nuke from './commands/local/nuke'
+import ConsoleCommand from './commands/console/index'
+import Logs from './commands/local/logs'
 
 export const groups = [
   {
-    key: 'general',
+    key: 'db',
     name: 'Database service',
   },
-  // {
-  //   key: 'data',
-  //   name: 'Data workflows',
-  // },
+  {
+    key: 'data',
+    name: 'Data workflows',
+  },
   {
     key: 'local',
     name: 'Local development',
   },
-  // {
-  //   key: 'platform',
-  //   name: 'Platform',
-  // },
+  {
+    key: 'cloud',
+    name: 'Cloud',
+  },
 ]
 
 export const topics = [
+  /* Database service */
   {
     name: 'init',
     description: 'Create files for new services',
-    group: 'general',
+    group: 'db',
   },
   {
     name: 'deploy',
     description: 'Deploy local service definition',
-    group: 'general',
-  },
-  // { name: 'login', description: 'Create account or login', group: 'platform' },
-  {
-    name: 'playground',
-    description: 'Opens the playground for the current service',
-    group: 'general',
+    group: 'db',
   },
   {
     name: 'info',
     description: 'Print service info (endpoints, clusters, ...) ',
-    group: 'general',
+    group: 'db',
   },
-  { name: 'list', description: 'List all deployed services', group: 'general' },
-  { name: 'clusters', description: 'List all clusters', group: 'general' },
-  { name: 'seed', description: 'Seed a service with data', group: 'general' },
-  // {
-  //   name: 'root-token',
-  //   description: 'Get the service root tokens',
-  //   group: 'general',
-  // },
-  // { name: 'logs', description: 'Get logs of functions', group: 'general' },
-  // {
-  //   name: 'delete',
-  //   description: 'Delete a service',
-  //   group: 'general',
-  // },
-  // {
-  //   name: 'console',
-  //   description: 'Opens the console for the current service',
-  //   group: 'platform',
-  // },
-  // {
-  //   name: 'account',
-  //   description: 'Information about the current authenticated account',
-  //   group: 'platform',
-  // },
+  { name: 'list', description: 'List all deployed services', group: 'db' },
+  { name: 'clusters', description: 'List all clusters', group: 'db' },
+  /* Data workflows */
+  {
+    name: 'playground',
+    description: 'Opens the playground for the current service',
+    group: 'data',
+  },
+  {
+    name: 'import',
+    description: 'Import command',
+    group: 'data',
+  },
+  {
+    name: 'export',
+    description: 'Export command',
+    group: 'data',
+  },
+  { name: 'seed', description: 'Seed a service with data', group: 'data' },
+  { name: 'reset', description: 'Reset data of a service', group: 'data' },
+  /* Local development */
   {
     name: 'local',
     description: 'Manage the local Graphcool version',
     group: 'local',
   },
-  // {
-  //   name: 'clusters',
-  //   description: 'Manage your private clusters',
-  //   group: 'general',
-  // },
+  /* Cloud */
   {
-    name: 'import',
-    description: 'Import command',
-    group: 'general',
+    name: 'console',
+    description: 'Opens the console for the current service',
+    group: 'cloud',
   },
-  {
-    name: 'export',
-    description: 'Export command',
-    group: 'general',
-  },
-  { name: 'reset', description: 'Reset data of a service', group: 'general' },
 ]
 
 export const commands = [
@@ -115,18 +99,14 @@ export const commands = [
   // Auth,
   Info,
   Playground,
-  // Console,
+  ConsoleCommand,
   List,
-  // Delete,
-  // RootTokens,
-  // FunctionLogs,
-  PullLocal,
-  Stop,
   Up,
-  Restart,
+  Stop,
+  Logs,
+  PullLocal,
   Eject,
-  PsLocal,
-  // Account,
+  Nuke,
   Reset,
   Clusters,
   Import,
@@ -148,9 +128,9 @@ export {
   PullLocal,
   Stop,
   Up,
-  Restart,
   Eject,
-  PsLocal,
+  Logs,
+  // PsLocal,
   Reset,
   Clusters,
   // Account,
