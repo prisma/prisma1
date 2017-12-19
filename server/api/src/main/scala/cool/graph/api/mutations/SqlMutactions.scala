@@ -164,9 +164,10 @@ case class SqlMutactions(dataResolver: DataResolver) {
 
   def getMutactionsForNestedUpsertMutation(model: Model, nestedMutation: NestedMutation, parentInfo: ParentInfo): Seq[ClientSqlMutaction] = {
     nestedMutation.upserts.flatMap { upsert =>
-      val upsertItem = UpsertDataItem(
+      val upsertItem = UpsertDataItemIfInRelationWith(
         project = project,
-        model = model,
+        fromField = parentInfo.field,
+        fromId = parentInfo.id,
         createArgs = upsert.create,
         updateArgs = upsert.update,
         where = upsert.where
