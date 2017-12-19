@@ -36,7 +36,7 @@ export class Environment {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-      },
+      } as any,
       body: JSON.stringify({ query: `{publicClusters}` }),
     })
     const json = await res.json()

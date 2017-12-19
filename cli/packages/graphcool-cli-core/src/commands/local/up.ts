@@ -48,7 +48,7 @@ export default class Up extends Command {
       this.env.saveGlobalRC()
       this.out.log(
         `\nSuccess! Added local cluster ${chalk.bold(`\`${name}\``)} to ${
-          this.config.globalRCPath
+          this.config.globalConfigPath
         }\n`,
       )
     } else {

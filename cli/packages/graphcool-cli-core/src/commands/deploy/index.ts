@@ -145,6 +145,14 @@ ${chalk.gray(
 
     await this.deploy(stage, serviceName, cluster!, force, dryRun)
 
+    this.clusterCache.addCacheEntry({
+      service: serviceName,
+      stage,
+      cluster: cluster.name,
+    })
+
+    this.clusterCache.save()
+
     if (this.definition.definition!.seed && !this.flags['no-seed']) {
       const seeder = new Seeder(
         this.definition,

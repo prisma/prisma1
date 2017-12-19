@@ -43,7 +43,9 @@ export class Config {
 
   definitionDir: string
   definitionPath: string | null
-  globalRCPath: string
+  globalGraphcoolPath: string
+  globalConfigPath: string
+  globalClusterCachePath: string
   warnings: string[] = []
 
   /**
@@ -60,7 +62,7 @@ export class Config {
     debug(`CWD`, this.cwd)
     debug(`HOME`, this.home)
     this.setDefinitionPaths()
-    this.setRCPaths()
+    this.setPaths()
     if (options) {
       this.readPackageJson(options)
     }
@@ -113,11 +115,10 @@ export class Config {
       }
     }
   }
-  private setRCPaths() {
-    const homePath = path.join(this.home, '.graphcool')
-    debug(`homepath`, homePath)
-    this.globalRCPath = homePath
-    debug(`globalRCPath`, this.globalRCPath)
+  private setPaths() {
+    this.globalGraphcoolPath = path.join(this.home, '.graphcool/')
+    this.globalConfigPath = path.join(this.home, '.graphcool/config.yml')
+    this.globalClusterCachePath = path.join(this.home, '.graphcool/cache.yml')
   }
   private warn(msg: string) {
     this.warnings.push(msg)
