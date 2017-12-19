@@ -99,7 +99,8 @@ case class SqlMutactions(dataResolver: DataResolver) {
         getMutactionsForNestedConnectMutation(nestedMutation, parentInfo) ++
         getMutactionsForNestedDisconnectMutation(nestedMutation, parentInfo) ++
         getMutactionsForNestedDeleteMutation(nestedMutation, parentInfo) ++
-        getMutactionsForNestedUpdateMutation(nestedMutation, parentInfo)
+        getMutactionsForNestedUpdateMutation(nestedMutation, parentInfo) ++
+        getMutactionsForNestedUpsertMutation(subModel, nestedMutation, parentInfo)
 
     }
     x.flatten
@@ -157,6 +158,27 @@ case class SqlMutactions(dataResolver: DataResolver) {
         where = update.where,
         args = update.data
       )
+    }
+  }
+
+  def getMutactionsForNestedUpsertMutation(model: Model, nestedMutation: NestedMutation, parentInfo: ParentInfo): Seq[ClientSqlMutaction] = {
+    nestedMutation.upserts.flatMap { upsert =>
+      val upsertItem = UpsertDataItem(
+        project = project,
+        model = model,
+        createArgs = upsert.create,
+        updateArgs = upsert.update,
+        where = upsert.where
+      )
+      val addToRelation = AddDataItemToManyRelation(
+        project = project,
+        fromModel = parentInfo.model,
+        fromField = parentInfo.field,
+        fromId = parentInfo.id,
+        toId = upsertItem.idOfNewItem,
+        toIdAlreadyInDB = false
+      )
+      Vector(upsertItem, addToRelation)
     }
   }
 
