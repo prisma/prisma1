@@ -7,6 +7,7 @@ import cool.graph.api.mutations.MutationTypes.ArgumentValue
 import cool.graph.api.schema.APIErrors
 import cool.graph.api.schema.APIErrors.RelationIsRequired
 import cool.graph.cuid.Cuid.createCuid
+import cool.graph.gc_values.GraphQLIdGCValue
 import cool.graph.shared.models.IdType.Id
 import cool.graph.shared.models.{Field, Model, Project}
 
@@ -170,13 +171,12 @@ case class SqlMutactions(dataResolver: DataResolver) {
         updateArgs = upsert.update,
         where = upsert.where
       )
-      val addToRelation = AddDataItemToManyRelation(
+      val addToRelation = AddDataItemToManyRelationByUniqueField(
         project = project,
         fromModel = parentInfo.model,
         fromField = parentInfo.field,
         fromId = parentInfo.id,
-        toId = upsertItem.idOfNewItem,
-        toIdAlreadyInDB = false
+        where = NodeSelector(model, "id", GraphQLIdGCValue(upsertItem.idOfNewItem))
       )
       Vector(upsertItem, addToRelation)
     }

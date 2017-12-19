@@ -42,7 +42,7 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
          |      comments: {
          |        upsert: [
          |          {where: {id: "$comment1Id"}, update: {text: "update comment1"}, create: {text: "irrelevant"}},
-         |          {where: {id: "non-existent-id"}, update: {text: "irrelevant"}, create: {text: "new comment 3"}},
+         |          {where: {id: "non-existent-id"}, update: {text: "irrelevant"}, create: {text: "new comment3"}},
          |        ]
          |      }
          |    }
@@ -58,6 +58,6 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     mustBeEqual(result.pathAsString("data.updateTodo.comments.[0].text").toString, """update comment1""")
     mustBeEqual(result.pathAsString("data.updateTodo.comments.[1].text").toString, """comment2""")
-    mustBeEqual(result.pathAsString("data.updateTodo.comments.[3].text").toString, """new comment3""")
+    mustBeEqual(result.pathAsString("data.updateTodo.comments.[2].text").toString, """new comment3""")
   }
 }
