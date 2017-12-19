@@ -66,7 +66,8 @@ case class SchemaBuilderImpl(
     val fields = project.models.map(createItemField) ++
       project.models.map(updateItemField) ++
       project.models.map(deleteItemField) ++
-      project.models.map(upsertItemField)
+      project.models.map(upsertItemField) ++
+      project.models.map(updateItemsField)
 
     Some(ObjectType("Mutation", fields :+ resetDataField))
 
@@ -109,7 +110,7 @@ case class SchemaBuilderImpl(
     Field(
       camelCase(model.name),
       fieldType = OptionType(objectTypes(model.name)),
-      arguments = List(argumentsBuilder.whereArgument(model)),
+      arguments = List(argumentsBuilder.whereUniqueArgument(model)),
       resolve = (ctx) => {
         val coolArgs = CoolArgs(ctx.args.raw)
         val where    = coolArgs.extractNodeSelectorFromWhereField(model)
@@ -143,6 +144,17 @@ case class SchemaBuilderImpl(
         ClientMutationRunner
           .run(mutation, dataResolver)
           .map(outputTypesBuilder.mapResolve(_, ctx.args))
+      }
+    )
+  }
+
+  def updateItemsField(model: Model): Field[ApiUserContext, Unit] = {
+    Field(
+      s"update${pluralsCache.pluralName(model)}",
+      fieldType = objectTypeBuilder.batchPayloadType,
+      arguments = argumentsBuilder.getSangriaArgumentsForUpdateMultiple(model),
+      resolve = (ctx) => {
+        ???
       }
     )
   }

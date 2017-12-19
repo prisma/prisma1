@@ -123,6 +123,19 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec
                                 |}""".stripMargin)
   }
 
+  "the multi update Mutation for a model" should "be generated correctly" in {
+    val project = SchemaDsl() { schema =>
+      schema.model("Todo").field_!("title", _.String).field("alias", _.String, isUnique = true)
+    }
+
+    val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
+
+    val mutation = schema.mustContainMutation("updateTodoes")
+    mustBeEqual(mutation, "updateTodoes(data: TodoUpdateInput!, where: TodoWhereInput!): BatchPayload!")
+
+    schema.mustContainInputType("TodoWhereInput")
+  }
+
   "the update Mutation for a model with relations" should "be generated correctly" in {
     val project = SchemaDsl() { schema =>
       val comment = schema.model("Comment").field_!("text", _.String)

@@ -17,20 +17,30 @@ case class ArgumentsBuilder(project: Project) {
 
   def getSangriaArgumentsForUpdate(model: Model): List[Argument[Any]] = {
     val inputObjectType = inputTypesBuilder.inputObjectTypeForUpdate(model)
-    List(Argument[Any]("data", inputObjectType), whereArgument(model))
+    List(Argument[Any]("data", inputObjectType), whereUniqueArgument(model))
+  }
+
+  def getSangriaArgumentsForUpdateMultiple(model: Model): List[Argument[Any]] = {
+    val inputObjectType = inputTypesBuilder.inputObjectTypeForUpdate(model)
+    List(
+      Argument[Any]("data", inputObjectType),
+      whereArgument(model)
+    )
   }
 
   def getSangriaArgumentsForUpsert(model: Model): List[Argument[Any]] = {
     List(
-      whereArgument(model),
+      whereUniqueArgument(model),
       Argument[Any]("create", inputTypesBuilder.inputObjectTypeForCreate(model)),
       Argument[Any]("update", inputTypesBuilder.inputObjectTypeForUpdate(model))
     )
   }
 
   def getSangriaArgumentsForDelete(model: Model): List[Argument[Any]] = {
-    List(whereArgument(model))
+    List(whereUniqueArgument(model))
   }
+
+  def whereUniqueArgument(model: Model) = Argument[Any](name = "where", argumentType = inputTypesBuilder.inputObjectTypeForWhereUnique(model))
 
   def whereArgument(model: Model) = Argument[Any](name = "where", argumentType = inputTypesBuilder.inputObjectTypeForWhere(model))
 }

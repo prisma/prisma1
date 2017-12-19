@@ -9,6 +9,8 @@ trait InputTypesBuilder {
 
   def inputObjectTypeForUpdate(model: Model): InputObjectType[Any]
 
+  def inputObjectTypeForWhereUnique(model: Model): InputObjectType[Any]
+
   def inputObjectTypeForWhere(model: Model): InputObjectType[Any]
 }
 
@@ -45,6 +47,10 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
 
   override def inputObjectTypeForUpdate(model: Model): InputObjectType[Any] = {
     computeInputObjectTypeForUpdate(model)
+  }
+
+  override def inputObjectTypeForWhereUnique(model: Model): InputObjectType[Any] = {
+    computeInputObjectTypeForWhereUnique(model)
   }
 
   override def inputObjectTypeForWhere(model: Model): InputObjectType[Any] = {
@@ -86,7 +92,7 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
       name = s"${model.name}UpdateWithout${field.name.capitalize}Input",
       fieldsFn = () => {
         List(
-          InputField[Any]("where", computeInputObjectTypeForWhere(model)),
+          InputField[Any]("where", computeInputObjectTypeForWhereUnique(model)),
           InputField[Any]("data", updateDataInput)
         )
       }
@@ -110,7 +116,7 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
       name = s"${model.name}UpsertWithout${field.name.capitalize}Input",
       fieldsFn = () => {
         List(
-          InputField[Any]("where", computeInputObjectTypeForWhere(model)),
+          InputField[Any]("where", computeInputObjectTypeForWhereUnique(model)),
           InputField[Any]("update", computeInputObjectTypeForNestedUpdateData(model, omitRelation)),
           InputField[Any]("create", computeInputObjectTypeForCreate(model, Some(omitRelation)))
         )
@@ -118,7 +124,9 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
     )
   }
 
-  protected def computeInputObjectTypeForWhere(model: Model): InputObjectType[Any] = {
+  protected def computeInputObjectTypeForWhere(model: Model): InputObjectType[Any] = FilterObjectTypeBuilder(model, project).filterObjectType
+
+  protected def computeInputObjectTypeForWhereUnique(model: Model): InputObjectType[Any] = {
     InputObjectType[Any](
       name = s"${model.name}WhereUniqueInput",
       fieldsFn = () => {
@@ -243,9 +251,9 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
   def whereInputField(field: Field, name: String): InputField[Any] = {
     val subModel = field.relatedModel_!(project)
     val inputType = if (field.isList) {
-      OptionInputType(ListInputType(inputObjectTypeForWhere(subModel)))
+      OptionInputType(ListInputType(inputObjectTypeForWhereUnique(subModel)))
     } else {
-      OptionInputType(inputObjectTypeForWhere(subModel))
+      OptionInputType(inputObjectTypeForWhereUnique(subModel))
     }
     InputField[Any](name, inputType)
   }

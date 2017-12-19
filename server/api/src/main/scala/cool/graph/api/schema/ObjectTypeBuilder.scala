@@ -21,6 +21,24 @@ class ObjectTypeBuilder(project: models.Project,
                         withRelations: Boolean = true,
                         onlyId: Boolean = false) {
 
+  val batchPayloadType: ObjectType[ApiUserContext, DataItem] = ObjectType(
+    name = "BatchPayload",
+    description = "",
+    fieldsFn = () => {
+
+      List(
+        SangriaField(
+          "count",
+          fieldType = IntType,
+          description = Some("The number of nodes that have been affected by the Batch operation."),
+          resolve = (ctx: Context[ApiUserContext, DataItem]) => {
+            1
+          }
+        )
+      )
+    }
+  )
+
   val modelObjectTypes: Map[String, ObjectType[ApiUserContext, DataItem]] =
     project.models
       .map(model => (model.name, modelToObjectType(model)))

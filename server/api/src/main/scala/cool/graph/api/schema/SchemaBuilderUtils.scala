@@ -57,7 +57,7 @@ object SchemaBuilderUtils {
   }
 }
 
-class FilterObjectTypeBuilder(model: Model, project: Project) {
+case class FilterObjectTypeBuilder(model: Model, project: Project) {
   def mapToRelationFilterInputField(field: models.Field): List[InputField[_ >: Option[Seq[Any]] <: Option[Any]]] = {
     assert(!field.isScalar)
     val relatedModelInputType = new FilterObjectTypeBuilder(field.relatedModel(project).get, project).filterObjectType
