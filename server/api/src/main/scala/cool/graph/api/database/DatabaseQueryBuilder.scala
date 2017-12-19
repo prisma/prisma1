@@ -1,7 +1,8 @@
 package cool.graph.api.database
 
 import cool.graph.api.mutations.NodeSelector
-import cool.graph.shared.models.{Field, Model, Project}
+import cool.graph.shared.models.IdType.Id
+import cool.graph.shared.models.{Field, Model, Project, Relation}
 import slick.dbio.DBIOAction
 import slick.dbio.Effect.Read
 import slick.jdbc.MySQLProfile.api._
@@ -108,9 +109,24 @@ object DatabaseQueryBuilder {
   def existsNullByModelAndRelationField(projectId: String, modelName: String, field: Field) = {
     val relationId   = field.relation.get.id
     val relationSide = field.relationSide.get.toString
-    sql"""(select EXISTS (select `id`from `#$projectId`.`#$modelName`
-             where `#$projectId`.`#$modelName`.id Not IN
-             (Select `#$projectId`.`#$relationId`.#$relationSide from `#$projectId`.`#$relationId`)))"""
+    sql"""select EXISTS (
+            select `id`from `#$projectId`.`#$modelName`
+            where `id` Not IN
+            (Select `#$projectId`.`#$relationId`.#$relationSide from `#$projectId`.`#$relationId`)
+          )"""
+  }
+
+  def existsNodeIsInRelationshipWith(project: Project, model: Model, where: NodeSelector, relation: Relation, other: Id) = {
+    val relationSide         = relation.sideOf(model).toString
+    val oppositeRelationSide = relation.oppositeSideOf(model).toString
+    sql"""select EXISTS (
+            select `id`from `#${project.id}`.`#${model.name}`
+            where  #${where.fieldName} = ${where.fieldValue} and `id` IN (
+             select `#$relationSide`
+             from `#${project.id}`.`#${relation.id}`
+             where `#$oppositeRelationSide` = '#$other'
+           )
+          )"""
   }
 
   def existsByModelAndId(projectId: String, modelName: String, id: String) = {

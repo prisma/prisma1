@@ -158,6 +158,7 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec
         |  disconnect: [CommentWhereUniqueInput!]
         |  delete: [CommentWhereUniqueInput!]
         |  update: [CommentUpdateWithoutTodoInput!]
+        |  upsert: [CommentUpsertWithoutTodoInput!]
         |}""".stripMargin
     )
 
@@ -186,6 +187,16 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec
         |}""".stripMargin
     )
 
+    val upsertDataInputForNestedComment = schema.mustContainInputType("CommentUpsertWithoutTodoInput")
+    mustBeEqual(
+      upsertDataInputForNestedComment,
+      """input CommentUpsertWithoutTodoInput {
+        |  where: CommentWhereUniqueInput!
+        |  update: CommentUpdateWithoutTodoDataInput!
+        |  create: CommentCreateWithoutTodoInput!
+        |}""".stripMargin
+    )
+
     // from Comment to Todo
     val commentInputType = schema.mustContainInputType("CommentUpdateInput")
     mustBeEqual(
@@ -205,6 +216,7 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec
         |  disconnect: TodoWhereUniqueInput
         |  delete: TodoWhereUniqueInput
         |  update: TodoUpdateWithoutCommentsInput
+        |  upsert: TodoUpsertWithoutCommentsInput
         |}""".stripMargin
     )
 
@@ -232,6 +244,16 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec
       """input TodoUpdateWithoutCommentsDataInput {
         |  title: String
         |  tag: String
+        |}""".stripMargin
+    )
+
+    val upsertDataInputForNestedTodo = schema.mustContainInputType("TodoUpsertWithoutCommentsInput")
+    mustBeEqual(
+      upsertDataInputForNestedTodo,
+      """input TodoUpsertWithoutCommentsInput {
+        |  where: TodoWhereUniqueInput!
+        |  update: TodoUpdateWithoutCommentsDataInput!
+        |  create: TodoCreateWithoutCommentsInput!
         |}""".stripMargin
     )
   }
