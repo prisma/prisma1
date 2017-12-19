@@ -7,10 +7,11 @@ description: Creates the local file structure for a new Graphcool database servi
 
 Creates the local file structure for a new Graphcool database service:
 
-- `graphcool.yml` which contains the [service definition](!alias-opheidaix3)
-- `types.graphql` for your [data model](!alias-eiroozae8u) and other type definitions
+- `graphcool.yml` contains the [service definition](!alias-opheidaix3)
+- `datamodel.graphql` contains the definition of your [data model](!alias-eiroozae8u) 
+- `.graphqlconfig` is a configuration file following the standardized [`graphql-config`](https://github.com/graphcool/graphql-config) format and is used by various tools, e.g. the [GraphQL Playground](https://github.com/graphcool/graphql-playground)
 
-If you provide a directory name as an argument to the command, all these files will be placed inside that directory.
+If you provide a directory name as an argument to the command, all these files will be placed inside a new directory with that name.
 
 #### Usage
 

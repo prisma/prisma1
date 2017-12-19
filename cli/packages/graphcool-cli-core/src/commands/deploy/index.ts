@@ -21,16 +21,16 @@ export default class Deploy extends Command {
       
 ${chalk.gray(
     '-',
-  )} Deploy local changes from graphcool.yml to the default service environment.
+  )} Deploy local service definition changes to the default stage.
   ${chalk.green('$ graphcool deploy')}
 
-${chalk.gray('-')} Deploy local changes to a specific target
-  ${chalk.green('$ graphcool deploy --target production')}
+${chalk.gray('-')} Deploy local changes to a specific stage called \`prod\`
+  ${chalk.green('$ graphcool deploy --stage prod')}
     
 ${chalk.gray(
     '-',
-  )} Deploy local changes from default service file accepting potential data loss caused by schema changes
-  ${chalk.green('$ graphcool deploy --force --env production')}
+  )} Deploy local changes to a specific stage called \`prod\`, accepting potential data loss caused by schema changes
+  ${chalk.green('$ graphcool deploy --stage production --force')}
   `
   static flags: Flags = {
     target: flags.string({

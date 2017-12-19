@@ -5,7 +5,7 @@ description: Export service data to a local file
 
 # `graphcool export`
 
-Exports your service data by generating a URL from which you can download a .zip-file that contains all the data from your service.
+Exports your service data.
 
 #### Usage
 

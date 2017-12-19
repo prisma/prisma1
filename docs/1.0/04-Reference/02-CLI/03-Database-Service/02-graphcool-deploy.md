@@ -16,35 +16,34 @@ graphcool deploy [flags]
 #### Flags
 
 ```
- -a, --alias ALIAS                                Service alias
- -d, --default                                    Set specified target as default
- -D, --dry-run                                    Perform dry-run of deployment to view changes
+ -D, --default                                    Set specified stage as default
+ -d, --dry-run                                    Perform a dry-run of the deployment
  -f, --force                                      Accept data loss caused by schema changes
  -i, --interactive                                Force interactive mode to select the cluster
- -n, --new-service NEW-SERVICE                    Name of the new Service
+ -j, --json                                       JSON Output
  -c, --new-service-cluster NEW-SERVICE-CLUSTER    Name of the Cluster to deploy to
- -t, --target TARGET                              Target name
+ -s, --stage STAGE                                Local stage to deploy to
  -w, --watch                                      Watch for changes
+ --dotenv DOTENV                                  Path to .env file to inject env vars
+ --no-seed                                        Disable seed on initial service deploy
 ```
 
 #### Examples
 
-##### Deploy local service definition changes to the `default` target.
+##### Deploy local service definition changes to the default stage.
 
 ```sh
 graphcool deploy
 ```
 
-##### Deploy local changes to a specific target called `prod`.
+##### Deploy local changes to a specific stage called `prod`.
 
 ```sh
-graphcool deploy --target prod
+graphcool deploy --stage prod
 ```
 
-Note that in case your `.graphcoolrc` did not yet contain a target called `prod`, a new target with that name will be created.
-
-##### Deploy local changes from default service file accepting potential data loss caused by schema changes.
+##### Deploy local changes to a specific stage called `prod`, accepting potential data loss caused by schema changes.
 
 ```sh
-graphcool deploy --force
+graphcool deploy --stage production --force
 ```
