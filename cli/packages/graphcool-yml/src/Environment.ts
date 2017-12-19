@@ -13,7 +13,7 @@ import 'isomorphic-fetch'
 
 export class Environment {
   sharedClusters: string[] = ['shared-public-demo']
-  sharedEndpoint = 'https://dev.database-beta.graph.cool'
+  sharedEndpoint = 'https://database-beta.graph.cool'
   args: Args
   activeCluster: Cluster
   globalRC: InternalRC = {}
