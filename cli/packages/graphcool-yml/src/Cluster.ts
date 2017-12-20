@@ -23,19 +23,19 @@ export class Cluster {
   }
 
   getApiEndpoint(serviceName: string, stage: string) {
-    return `${this.baseUrl}/api/${serviceName}/${stage}`
+    return `${this.baseUrl}/${serviceName}/${stage}`
   }
 
   getImportEndpoint(serviceName: string, stage: string) {
-    return `${this.baseUrl}/api/${serviceName}/${stage}/import`
+    return `${this.baseUrl}/${serviceName}/${stage}/import`
   }
 
   getExportEndpoint(serviceName: string, stage: string) {
-    return `${this.baseUrl}/api/${serviceName}/${stage}/export`
+    return `${this.baseUrl}/${serviceName}/${stage}/export`
   }
 
   getDeployEndpoint() {
-    return `${this.baseUrl}/system/playground`
+    return `${this.baseUrl}/cluster`
   }
 
   async isOnline(): Promise<boolean> {
