@@ -74,16 +74,16 @@ class QueriesSchemaBuilderSpec extends WordSpec with Matchers with ApiBaseSpec w
       )
 
       val edgeType = schema.mustContainType("TodoEdge")
-//      mustBeEqual(
-//        edgeType,
-//        """type TodoEdge {
-//          |
-//          |}
-//        """.stripMargin
-//      )
-
-      //val aggregateType = schema.mustContainType("TodoAggregate")
-      //val groupByType   = schema.mustContainType("TodoGroupBy")
+      mustBeEqual(
+        edgeType,
+        """type TodoEdge {
+          |  # The item at the end of the edge.
+          |  node: Todo!
+          |
+          |  # A cursor for use in pagination.
+          |  cursor: String!
+          |}""".stripMargin
+      )
     }
   }
 }
