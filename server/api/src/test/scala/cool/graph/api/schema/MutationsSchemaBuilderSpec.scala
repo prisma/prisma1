@@ -156,7 +156,7 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec
         |
         |  # Logical OR on all given filters.
         |  OR: [TodoWhereInput!]
-        |}"""
+        |}""".stripMargin
     )
   }
 
