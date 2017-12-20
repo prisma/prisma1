@@ -31,7 +31,6 @@ class QueriesSchemaBuilderSpec extends WordSpec with Matchers with ApiBaseSpec w
       val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
 
       val query = schema.mustContainQuery("todoes")
-      println(query)
       query should be("todoes(where: TodoWhereInput, orderBy: TodoOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Todo]!")
     }
 
@@ -44,12 +43,8 @@ class QueriesSchemaBuilderSpec extends WordSpec with Matchers with ApiBaseSpec w
       }
 
       val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
-      println(schema)
 
       schema shouldNot include("type Todo implements Node")
-
-//      val query = schema.mustContainQuery("todoes")
-//      query should be("todoes(where: TodoWhereInput, orderBy: TodoOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Todo]!")
     }
   }
 }
