@@ -205,10 +205,9 @@ case class SchemaBuilderImpl(
       fieldType = objectTypeBuilder.batchPayloadType,
       arguments = argumentsBuilder.getSangriaArgumentsForDeleteMany(model),
       resolve = (ctx) => {
-        val where = objectTypeBuilder.extractRequiredFilterFromContext(model, ctx)
-//        val mutation = UpdateItems(project, model, ctx.args, where, dataResolver = masterDataResolver)
-//        ClientMutationRunner.run(mutation, dataResolver)
-        ???
+        val where    = objectTypeBuilder.extractRequiredFilterFromContext(model, ctx)
+        val mutation = DeleteMany(project, model, where, dataResolver = masterDataResolver)
+        ClientMutationRunner.run(mutation, dataResolver)
       }
     )
   }
