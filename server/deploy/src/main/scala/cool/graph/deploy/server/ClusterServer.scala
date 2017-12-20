@@ -13,11 +13,9 @@ import cool.graph.akkautil.http.Server
 import cool.graph.cuid.Cuid.createCuid
 import cool.graph.deploy.DeployMetrics
 import cool.graph.deploy.database.persistence.ProjectPersistence
-import cool.graph.deploy.schema.{DeployApiError, InvalidProjectId, SchemaBuilder, SystemUserContext}
+import cool.graph.deploy.schema.{DeployApiError, SchemaBuilder, SystemUserContext}
 import cool.graph.metrics.extensions.TimeResponseDirectiveImpl
-import cool.graph.shared.models.{Client, ProjectWithClientId}
 import cool.graph.util.logging.{LogData, LogKey}
-import play.api.libs.json.Json
 import sangria.execution.{Executor, HandledException}
 import sangria.marshalling.ResultMarshaller
 import sangria.parser.QueryParser
@@ -28,9 +26,8 @@ import scala.concurrent.Future
 import scala.language.postfixOps
 import scala.util.{Failure, Success}
 
-case class DeployServer(
+case class ClusterServer(
     schemaBuilder: SchemaBuilder,
-    projectPersistence: ProjectPersistence,
     prefix: String = ""
 )(implicit system: ActorSystem, materializer: ActorMaterializer)
     extends Server
@@ -40,11 +37,10 @@ case class DeployServer(
   import system.dispatcher
 
   val log: String => Unit = (msg: String) => logger.info(msg)
-  val requestPrefix       = "deploy"
-  val server2serverSecret = sys.env.getOrElse("SCHEMA_MANAGER_SECRET", sys.error("SCHEMA_MANAGER_SECRET env var required but not found"))
+  val requestPrefix       = "cluster"
 
   val innerRoutes = extractRequest { _ =>
-    val requestId            = requestPrefix + ":system:" + createCuid()
+    val requestId            = requestPrefix + ":cluster:" + createCuid()
     val requestBeginningTime = System.currentTimeMillis()
     val errorHandler         = ErrorHandler(requestId)
 
@@ -109,51 +105,12 @@ case class DeployServer(
           }
         } ~
           get {
-            path("playground") {
+            pathEnd {
               getFromResource("graphiql.html")
-            } ~
-              pathPrefix("schema") {
-                pathPrefix(Segment) { projectId =>
-                  optionalHeaderValueByName("Authorization") {
-                    case Some(authorizationHeader) if authorizationHeader == s"Bearer $server2serverSecret" =>
-                      parameters('forceRefresh ? false) { forceRefresh =>
-                        complete(performRequest(projectId, forceRefresh, logRequestEnd))
-                      }
-
-                    case Some(h) =>
-                      println(s"Wrong Authorization Header supplied: '$h'")
-                      complete(Unauthorized -> "Wrong Authorization Header supplied")
-
-                    case None =>
-                      println("No Authorization Header supplied")
-                      complete(Unauthorized -> "No Authorization Header supplied")
-                  }
-                }
-              }
+            }
           }
       }
     }
-  }
-
-  def performRequest(projectId: String, forceRefresh: Boolean, requestEnd: (Option[String], Option[String]) => Unit) = {
-    getSchema(projectId, forceRefresh)
-      .map(res => OK -> res)
-      .andThen {
-        case _ => requestEnd(Some(projectId), None)
-      }
-      .recover {
-        case error: Throwable => BadRequest -> error.toString
-      }
-  }
-
-  def getSchema(projectId: String, forceRefresh: Boolean): Future[String] = {
-    import cool.graph.shared.models.ProjectJsonFormatter._
-    projectPersistence
-      .load(projectId)
-      .flatMap {
-        case None    => Future.failed(InvalidProjectId(projectId))
-        case Some(p) => Future.successful(Json.toJson(ProjectWithClientId(p, p.ownerId)).toString)
-      }
   }
 
   def healthCheck: Future[_] = Future.successful(())

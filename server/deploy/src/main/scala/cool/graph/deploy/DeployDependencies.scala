@@ -26,7 +26,7 @@ trait DeployDependencies {
   lazy val clientDb             = Database.forConfig("client")
   lazy val projectPersistence   = ProjectPersistenceImpl(internalDb)
   lazy val migrationPersistence = MigrationPersistenceImpl(internalDb)
-  lazy val deploySchemaBuilder  = SchemaBuilder()
+  lazy val clusterSchemaBuilder = SchemaBuilder()
 
   def setupAndGetInternalDatabase()(implicit ec: ExecutionContext): MySQLProfile.backend.Database = {
     val rootDb = Database.forConfig(s"internalRoot")

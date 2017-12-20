@@ -71,20 +71,24 @@ case class ApiServer(
                   result.onComplete(_ => logRequestEnd(Some(projectId)))
                   complete(result)
                 }
-              }~ {
-            extractRawRequest(requestId) { rawRequest =>
-              val projectId = ProjectId.toEncodedString(name = name, stage = stage)
-              val result    = apiDependencies.requestHandler.handleRawRequest(projectId, rawRequest)
-              result.onComplete(_ => logRequestEnd(Some(projectId)))
-              complete(result)
-            }
+              } ~ {
+              extractRawRequest(requestId) { rawRequest =>
+                val projectId = ProjectId.toEncodedString(name = name, stage = stage)
+                val result    = apiDependencies.requestHandler.handleRawRequest(projectId, rawRequest)
+                result.onComplete(_ => logRequestEnd(Some(projectId)))
+                complete(result)
+              }
             }
           }
         }
       }
     } ~
       get {
-        getFromResource("graphiql.html")
+        pathPrefix(Segment) { name =>
+          pathPrefix(Segment) { stage =>
+            getFromResource("graphiql.html")
+          }
+        }
       }
   }
 

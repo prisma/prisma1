@@ -1,0 +1,114 @@
+package cool.graph.deploy.server
+
+import akka.actor.ActorSystem
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
+import akka.http.scaladsl.model.StatusCodes._
+import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.ExceptionHandler
+import akka.stream.ActorMaterializer
+import com.typesafe.scalalogging.LazyLogging
+import cool.graph.akkautil.http.Server
+import cool.graph.cuid.Cuid.createCuid
+import cool.graph.deploy.DeployMetrics
+import cool.graph.deploy.database.persistence.ProjectPersistence
+import cool.graph.deploy.schema.{DeployApiError, InvalidProjectId, SchemaBuilder}
+import cool.graph.metrics.extensions.TimeResponseDirectiveImpl
+import cool.graph.shared.models.ProjectWithClientId
+import cool.graph.util.logging.{LogData, LogKey}
+import play.api.libs.json.Json
+import scaldi._
+import spray.json._
+
+import scala.concurrent.Future
+import scala.language.postfixOps
+
+case class SchemaServer(
+    projectPersistence: ProjectPersistence,
+    prefix: String = ""
+)(implicit system: ActorSystem, materializer: ActorMaterializer)
+    extends Server
+    with Injectable
+    with LazyLogging {
+  import system.dispatcher
+
+  val log: String => Unit = (msg: String) => logger.info(msg)
+  val requestPrefix       = "schema"
+  val server2serverSecret = sys.env.getOrElse("SCHEMA_MANAGER_SECRET", sys.error("SCHEMA_MANAGER_SECRET env var required but not found"))
+
+  val innerRoutes = extractRequest { _ =>
+    val requestId            = requestPrefix + ":schema:" + createCuid()
+    val requestBeginningTime = System.currentTimeMillis()
+
+    def logRequestEnd(projectId: Option[String] = None, clientId: Option[String] = None) = {
+      log(
+        LogData(
+          key = LogKey.RequestComplete,
+          requestId = requestId,
+          projectId = projectId,
+          clientId = clientId,
+          payload = Some(Map("request_duration" -> (System.currentTimeMillis() - requestBeginningTime)))
+        ).json)
+    }
+
+    logger.info(LogData(LogKey.RequestNew, requestId).json)
+
+    handleExceptions(toplevelExceptionHandler(requestId)) {
+      TimeResponseDirectiveImpl(DeployMetrics).timeResponse {
+        get {
+
+          pathPrefix("schema") {
+            pathPrefix(Segment) { projectId =>
+              optionalHeaderValueByName("Authorization") {
+                case Some(authorizationHeader) if authorizationHeader == s"Bearer $server2serverSecret" =>
+                  parameters('forceRefresh ? false) { forceRefresh =>
+                    complete(performRequest(projectId, forceRefresh, logRequestEnd))
+                  }
+
+                case Some(h) =>
+                  println(s"Wrong Authorization Header supplied: '$h'")
+                  complete(Unauthorized -> "Wrong Authorization Header supplied")
+
+                case None =>
+                  println("No Authorization Header supplied")
+                  complete(Unauthorized -> "No Authorization Header supplied")
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  def performRequest(projectId: String, forceRefresh: Boolean, requestEnd: (Option[String], Option[String]) => Unit) = {
+    getSchema(projectId, forceRefresh)
+      .map(res => OK -> res)
+      .andThen {
+        case _ => requestEnd(Some(projectId), None)
+      }
+      .recover {
+        case error: Throwable => BadRequest -> error.toString
+      }
+  }
+
+  def getSchema(projectId: String, forceRefresh: Boolean): Future[String] = {
+    import cool.graph.shared.models.ProjectJsonFormatter._
+    projectPersistence
+      .load(projectId)
+      .flatMap {
+        case None    => Future.failed(InvalidProjectId(projectId))
+        case Some(p) => Future.successful(Json.toJson(ProjectWithClientId(p, p.ownerId)).toString)
+      }
+  }
+
+  def healthCheck: Future[_] = Future.successful(())
+
+  def toplevelExceptionHandler(requestId: String) = ExceptionHandler {
+    case e: DeployApiError =>
+      complete(OK -> JsObject("code" -> JsNumber(e.errorCode), "requestId" -> JsString(requestId), "error" -> JsString(e.getMessage)))
+
+    case e: Throwable =>
+      println(e.getMessage)
+      e.printStackTrace()
+      complete(500 -> e)
+  }
+}
