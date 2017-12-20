@@ -18,16 +18,28 @@ case class DeleteMany(
 )(implicit apiDependencies: ApiDependencies)
     extends ClientMutation[BatchPayload] {
 
-  def prepareMutactions(): Future[List[MutactionGroup]] = Future.successful {
-    val deleteItems          = DeleteDataItems(project, model, where)
-    val transactionMutaction = Transaction(List(deleteItems), dataResolver)
-    List(
-      MutactionGroup(mutactions = List(transactionMutaction), async = false)
-    )
+  import apiDependencies.system.dispatcher
+
+  val count = dataResolver.countByModel(model, where)
+
+  def prepareMutactions(): Future[List[MutactionGroup]] = {
+    for {
+      _ <- count // make sure that count query has been resolved before proceeding
+    } yield {
+      val deleteItems          = DeleteDataItems(project, model, where)
+      val transactionMutaction = Transaction(List(deleteItems), dataResolver)
+      List(
+        MutactionGroup(mutactions = List(transactionMutaction), async = false)
+      )
+    }
   }
 
-  override def getReturnValue: Future[BatchPayload] = Future.successful {
-    BatchPayload(count = 1)
+  override def getReturnValue: Future[BatchPayload] = {
+    for {
+      count <- count
+    } yield {
+      BatchPayload(count = count)
+    }
   }
 
 }

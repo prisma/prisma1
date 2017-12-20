@@ -58,7 +58,7 @@ class DeleteManySpec extends FlatSpec with Matchers with ApiBaseSpec {
       """.stripMargin,
       project
     )
-    result.pathAsLong("data.deleteTodoes.count") should equal(1)
+    result.pathAsLong("data.deleteTodoes.count") should equal(3)
 
     todoCount should equal(0)
 

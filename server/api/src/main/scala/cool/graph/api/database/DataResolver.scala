@@ -50,6 +50,8 @@ case class DataResolver(project: Project, useMasterDatabaseOnly: Boolean = false
       .map(resultTransform(_))
   }
 
+  def countByModel(model: Model, where: DataItemFilterCollection): Future[Int] = countByModel(model, Some(where))
+
   def countByModel(model: Model, where: Option[DataItemFilterCollection] = None): Future[Int] = {
     val query = DatabaseQueryBuilder.countAllFromModel(project, model, where)
     performWithTiming("countByModel", readonlyClientDatabase.run(readOnlyInt(query))).map(_.head)
