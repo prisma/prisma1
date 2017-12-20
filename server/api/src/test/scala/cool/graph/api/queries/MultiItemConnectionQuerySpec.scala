@@ -39,10 +39,10 @@ class MultiItemConnectionQuerySpec extends FlatSpec with Matchers with ApiBaseSp
     val id = server
       .executeQuerySimple(
         s"""mutation {
-                             |  createTodo(data: {title: "$title"}) {
-                             |    id
-                             |  }
-                             |}""".stripMargin,
+           |  createTodo(data: {title: "$title"}) {
+           |    id
+           |  }
+           |}""".stripMargin,
         project
       )
       .pathAsString("data.createTodo.id")
