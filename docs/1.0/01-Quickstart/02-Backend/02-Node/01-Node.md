@@ -4,7 +4,7 @@ description: Get started with in 5 min Graphcool and Node.js by building a Graph
 github: https://github.com/graphql-boilerplates/node-graphql-server/tree/master/basic
 ---
 
-# Node.js
+# Node.js Graphcool Quickstart
 
 In this quickstart tutorial, you'll learn how to build a GraphQL server with Node.js. You will use  [`graphql-yoga`](https://github.com/graphcool/graphql-yoga/) as your web server which is connected to a "GraphQL database" using [`graphcool-binding`](https://github.com/graphcool/graphcool-binding).
 
