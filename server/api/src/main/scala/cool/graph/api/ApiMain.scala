@@ -7,12 +7,12 @@ import cool.graph.api.schema.SchemaBuilder
 import cool.graph.api.server.ApiServer
 
 object ApiMain extends App with LazyLogging {
-  implicit val system = ActorSystem("api-main")
-  implicit val materializer = ActorMaterializer()
+  implicit val system          = ActorSystem("api-main")
+  implicit val materializer    = ActorMaterializer()
   implicit val apiDependencies = new ApiDependenciesImpl
 
   val schemaBuilder = SchemaBuilder()
-  val server = ApiServer(schemaBuilder = schemaBuilder, "api")
+  val server        = ApiServer(schemaBuilder = schemaBuilder)
 
   ServerExecutor(9000, server).startBlocking()
 }
