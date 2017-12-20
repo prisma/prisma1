@@ -134,7 +134,6 @@ ${chalk.gray(
       if (cacheEntry.cluster === 'local') {
         const online = await cluster.isOnline()
         if (!online) {
-          console.log('its not online')
           await this.localUp()
         }
       }
