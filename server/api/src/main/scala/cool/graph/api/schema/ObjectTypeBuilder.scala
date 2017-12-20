@@ -19,7 +19,6 @@ import scala.concurrent.ExecutionContext.Implicits.global
 class ObjectTypeBuilder(
     project: models.Project,
     nodeInterface: Option[InterfaceType[ApiUserContext, DataItem]] = None,
-    modelPrefix: String = "",
     withRelations: Boolean = true,
     onlyId: Boolean = false
 ) {
@@ -51,7 +50,7 @@ class ObjectTypeBuilder(
 
   def modelToConnectionType(model: Model): IdBasedConnectionDefinition[ApiUserContext, IdBasedConnection[DataItem], DataItem] = {
     IdBasedConnection.definition[ApiUserContext, IdBasedConnection, DataItem](
-      name = modelPrefix + model.name,
+      name = model.name,
       nodeType = modelObjectTypes(model.name),
       connectionFields = List(
         // todo: add aggregate fields
@@ -77,7 +76,7 @@ class ObjectTypeBuilder(
 
   protected def modelToObjectType(model: models.Model): ObjectType[ApiUserContext, DataItem] = {
     new ObjectType(
-      name = modelPrefix + model.name,
+      name = model.name,
       description = model.description,
       fieldsFn = () => {
         model.fields
