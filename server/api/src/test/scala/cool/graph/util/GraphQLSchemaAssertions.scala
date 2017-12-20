@@ -1,5 +1,9 @@
 package cool.graph.util
 
+import org.scalatest.matchers.{MatchResult, Matcher}
+
+import scala.util.{Failure, Success, Try}
+
 object GraphQLSchemaAssertions extends GraphQLSchemaAssertions
 
 trait GraphQLSchemaAssertions {
@@ -48,4 +52,74 @@ trait GraphQLSchemaAssertions {
       definitionWithOutClosingBrace + objectEnd
     }
   }
+}
+
+trait GraphQLSchemaMatchers {
+
+  sealed trait TopLevelSchemaElement {
+    val start: String
+  }
+
+  object Mutation extends TopLevelSchemaElement {
+    val start = "type Mutation {"
+  }
+
+  object Query extends TopLevelSchemaElement {
+    val start = "type Query {"
+  }
+
+  case class Type(name: String, interface: String = "") extends TopLevelSchemaElement {
+    val start = {
+      if (interface.isEmpty) {
+        s"type $name {"
+      } else {
+        s"type $name implements $interface {"
+      }
+    }
+  }
+
+  case class Enum(name: String) extends TopLevelSchemaElement {
+    val start = s"enum $name {"
+  }
+
+  class SchemaMatcher(element: TopLevelSchemaElement, expectationOnObject: Option[String] = None) extends Matcher[String] {
+    val objectEnd = "}"
+
+    def apply(schema: String) = {
+      val result = findObject(schema, element.start).flatMap(findOnObject(_, expectationOnObject))
+
+      MatchResult(
+        matches = result.isSuccess,
+        result.failed.map(_.getMessage).getOrElse(""),
+        result.getOrElse("")
+      )
+    }
+
+    // Returns an object from the schema
+    private def findObject(schema: String, objStart: String): Try[String] = {
+      val startOfDefinition = schema.lines.dropWhile(_ != objStart)
+      if (startOfDefinition.isEmpty) {
+        Failure(new Exception(s"The schema did not contain the definition [${element.start}] in the schema: $schema"))
+      } else {
+        val definitionWithOutClosingBrace = startOfDefinition.takeWhile(_ != objectEnd).mkString(start = "", sep = "\n", end = "\n")
+        Success(definitionWithOutClosingBrace + objectEnd)
+      }
+    }
+
+    private def findOnObject(obj: String, expectation: Option[String]): Try[String] = {
+      obj.lines.map(_.trim).find { line =>
+        line.startsWith(expectation.getOrElse(""))
+      } match {
+        case Some(line) => Success(line)
+        case None       => Failure(new Exception(s"Could not find $expectation on object: $obj"))
+      }
+    }
+  }
+
+  def containQuery(expectedQuery: String)               = new SchemaMatcher(Query, Some(expectedQuery))
+  def containMutation(expectedMutation: String)         = new SchemaMatcher(Query, Some(expectedMutation))
+  def containType(name: String, interface: String = "") = new SchemaMatcher(Type(name, interface))
+  def containEnum(name: String)                         = new SchemaMatcher(Enum(name))
+
+  //containsTypeWithField(typename, fieldname)
 }

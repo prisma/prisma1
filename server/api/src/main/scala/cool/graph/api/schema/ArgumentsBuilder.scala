@@ -10,24 +10,34 @@ case class ArgumentsBuilder(project: Project) {
 
   implicit val anyFromInput = FromInputImplicit.CoercedResultMarshaller
 
-  def getSangriaArgumentsForCreate(model: Model): List[Argument[Any]] = {
-    val inputObjectType = inputTypesBuilder.inputObjectTypeForCreate(model)
-    List(Argument[Any]("data", inputObjectType))
+  def getSangriaArgumentsForCreate(model: Model): Option[List[Argument[Any]]] = {
+    inputTypesBuilder.inputObjectTypeForCreate(model).map { args =>
+      List(Argument[Any]("data", args))
+    }
   }
 
   def getSangriaArgumentsForUpdate(model: Model): Option[List[Argument[Any]]] = {
-    val inputObjectType = inputTypesBuilder.inputObjectTypeForUpdate(model)
-    whereArgument(model).map { whereArg =>
-      List(Argument[Any]("data", inputObjectType), whereArg)
+    for {
+      whereArg <- whereArgument(model)
+      dataArg  <- inputTypesBuilder.inputObjectTypeForUpdate(model)
+    } yield {
+      List(
+        Argument[Any]("data", dataArg),
+        whereArg
+      )
     }
   }
 
   def getSangriaArgumentsForUpsert(model: Model): Option[List[Argument[Any]]] = {
-    whereArgument(model).map { whereArg =>
+    for {
+      whereArg  <- whereArgument(model)
+      createArg <- inputTypesBuilder.inputObjectTypeForCreate(model)
+      updateArg <- inputTypesBuilder.inputObjectTypeForUpdate(model)
+    } yield {
       List(
         whereArg,
-        Argument[Any]("create", inputTypesBuilder.inputObjectTypeForCreate(model)),
-        Argument[Any]("update", inputTypesBuilder.inputObjectTypeForUpdate(model))
+        Argument[Any]("create", createArg),
+        Argument[Any]("update", updateArg)
       )
     }
   }

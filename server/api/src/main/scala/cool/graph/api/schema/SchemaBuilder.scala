@@ -121,7 +121,7 @@ case class SchemaBuilderImpl(
     Field(
       s"create${model.name}",
       fieldType = outputTypesBuilder.mapCreateOutputType(model, objectTypes(model.name)),
-      arguments = argumentsBuilder.getSangriaArgumentsForCreate(model),
+      arguments = argumentsBuilder.getSangriaArgumentsForCreate(model).getOrElse(List.empty),
       resolve = (ctx) => {
         val mutation = Create(model = model, project = project, args = ctx.args, dataResolver = masterDataResolver)
         ClientMutationRunner

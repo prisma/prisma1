@@ -25,7 +25,6 @@ class FutureUtilSpec extends WordSpec with Matchers {
   }
 
   "andThenFuture" should {
-
     "Should work correctly in error and success cases" in {
       val f1 = Future.successful(100)
       val f2 = Future.failed(new Exception("This is a test"))
@@ -48,5 +47,4 @@ class FutureUtilSpec extends WordSpec with Matchers {
       }
     }
   }
-
 }
