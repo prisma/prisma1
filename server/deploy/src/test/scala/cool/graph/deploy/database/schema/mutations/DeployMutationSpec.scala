@@ -76,7 +76,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
 
     val result = server.query(s"""
        |mutation {
-       |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: "${formatSchema(schema)}"}){
+       |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(schema)}}){
        |    project {
        |      name
        |      stage
@@ -111,7 +111,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
 
     val result = server.query(s"""
        |mutation {
-       |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: "${formatSchema(schema)}"}){
+       |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(schema)}}){
        |    project {
        |      name
        |      stage
@@ -135,7 +135,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
 
     val updateResult = server.query(s"""
         |mutation {
-        |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: "${formatSchema(schema)}"}){
+        |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(schema)}}){
         |    project {
         |      name
         |      stage
@@ -226,7 +226,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
     val nameAndStage  = ProjectId.fromEncodedString(project.id)
     val loadedProject = projectPersistence.load(project.id).await.get
 
-    loadedProject.getModelByName("TestModel").get.getFieldByName("id").get.isHidden shouldEqual false
+    loadedProject.getModelByName("TestModel").get.getFieldByName("id").get.isVisible shouldEqual true
     loadedProject.getModelByName("TestModel").get.getFieldByName("createdAt").get.isHidden shouldEqual true
     loadedProject.getModelByName("TestModel").get.getFieldByName("updatedAt").get.isHidden shouldEqual true
 
@@ -240,7 +240,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
 
     val updateResult = server.query(s"""
                                        |mutation {
-                                       |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: "${formatSchema(updatedSchema)}"}){
+                                       |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(updatedSchema)}}){
                                        |    project {
                                        |      name
                                        |      stage
@@ -255,7 +255,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
 
     val reloadedProject = projectPersistence.load(project.id).await.get
 
-    reloadedProject.getModelByName("TestModel").get.getFieldByName("id").get.isHidden shouldEqual true
+    reloadedProject.getModelByName("TestModel").get.getFieldByName("id").get.isVisible shouldEqual false
     reloadedProject.getModelByName("TestModel").get.getFieldByName("createdAt").get.isHidden shouldEqual false
     reloadedProject.getModelByName("TestModel").get.getFieldByName("updatedAt").get.isHidden shouldEqual false
 

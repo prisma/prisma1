@@ -1,7 +1,7 @@
 package cool.graph.deploy.migration
 
 import cool.graph.deploy.gc_value.GCStringConverter
-import cool.graph.gc_values.InvalidValueForScalarType
+import cool.graph.gc_values.{GCValue, InvalidValueForScalarType}
 import cool.graph.shared.models._
 import cool.graph.utils.or.OrExtensions
 import org.scalactic.{Bad, Good, Or}
@@ -49,33 +49,31 @@ case class NextProjectInferrerImpl(
         val typeIdentifier = typeIdentifierForTypename(fieldDef.typeName)
         val relation       = fieldDef.relationName.flatMap(relationName => nextRelations.find(_.name == relationName))
 
-        fieldDef.defaultValue.map(x => GCStringConverter(typeIdentifier, fieldDef.isList).toGCValue(x)) match {
-          case Some(Good(gcValue)) =>
-            Some(
-              Good(
-                Field(
-                  id = fieldDef.name,
-                  name = fieldDef.name,
-                  typeIdentifier = typeIdentifier,
-                  isRequired = fieldDef.isRequired,
-                  isList = fieldDef.isList,
-                  isUnique = fieldDef.isUnique,
-                  enum = nextEnums.find(_.name == fieldDef.typeName),
-                  defaultValue = Some(gcValue),
-                  relation = relation,
-                  relationSide = relation.map { relation =>
-                    if (relation.modelAId == objectType.name) {
-                      RelationSide.A
-                    } else {
-                      RelationSide.B
-                    }
-                  }
-                )
-              )
-            )
+        def fieldWithDefault(default: Option[GCValue]) = {
+          Field(
+            id = fieldDef.name,
+            name = fieldDef.name,
+            typeIdentifier = typeIdentifier,
+            isRequired = fieldDef.isRequired,
+            isList = fieldDef.isList,
+            isUnique = fieldDef.isUnique,
+            enum = nextEnums.find(_.name == fieldDef.typeName),
+            defaultValue = default,
+            relation = relation,
+            relationSide = relation.map { relation =>
+              if (relation.modelAId == objectType.name) {
+                RelationSide.A
+              } else {
+                RelationSide.B
+              }
+            }
+          )
+        }
 
-          case Some(Bad(err)) => Some(Bad(InvalidGCValue(err)))
-          case None           => None
+        fieldDef.defaultValue.map(x => GCStringConverter(typeIdentifier, fieldDef.isList).toGCValue(x)) match {
+          case Some(Good(gcValue)) => Some(Good(fieldWithDefault(Some(gcValue))))
+          case Some(Bad(err))      => Some(Bad(InvalidGCValue(err)))
+          case None                => Some(Good(fieldWithDefault(None)))
         }
       }
 

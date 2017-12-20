@@ -77,5 +77,5 @@ trait DeploySpecBase extends BeforeAndAfterEach with BeforeAndAfterAll with Awai
     testDependencies.projectPersistence.load(projectId).await.get
   }
 
-  def formatSchema(schema: String): String = JsString(schema).toString() //.replaceAll("\n", " ").replaceAll("\\\"", "\\\\\"")
+  def formatSchema(schema: String): String = JsString(schema).toString()
 }
