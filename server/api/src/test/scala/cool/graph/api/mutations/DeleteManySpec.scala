@@ -5,7 +5,7 @@ import cool.graph.shared.models.Project
 import cool.graph.shared.project_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
-class UpdateItemsSpec extends FlatSpec with Matchers with ApiBaseSpec {
+class DeleteManySpec extends FlatSpec with Matchers with ApiBaseSpec {
 
   val project: Project = SchemaDsl() { schema =>
     schema.model("Todo").field_!("title", _.String)
@@ -21,14 +21,15 @@ class UpdateItemsSpec extends FlatSpec with Matchers with ApiBaseSpec {
     database.truncate(project)
   }
 
-  "The update items Mutation" should "update the items matching the where clause" in {
-    createTodo("title")
+  "The delete many Mutation" should "delete the items matching the where clause" in {
+    createTodo("title1")
+    createTodo("title2")
+    todoCount should equal(2)
 
     val result = server.executeQuerySimple(
       """mutation {
-        |  updateTodoes(
-        |    where: { title: "title" }
-        |    data: { title: "updated title" }
+        |  deleteTodoes(
+        |    where: { title: "title1" }
         |  ){
         |    count
         |  }
@@ -36,33 +37,20 @@ class UpdateItemsSpec extends FlatSpec with Matchers with ApiBaseSpec {
       """.stripMargin,
       project
     )
-    result.pathAsLong("data.updateTodoes.count") should equal(1)
+    result.pathAsLong("data.deleteTodoes.count") should equal(1)
 
-    val todoes = server.executeQuerySimple(
-      """{
-        |  todoes {
-        |    title
-        |  }
-        |}
-      """.stripMargin,
-      project
-    )
-    mustBeEqual(
-      todoes.pathAsJsValue("data.todoes").toString,
-      """[{"title":"updated title"}]"""
-    )
+    todoCount should equal(1)
   }
 
-  "The update items Mutation" should "update all items if the where clause is empty" in {
+  "The delete many Mutation" should "delete all items if the where clause is empty" in {
     createTodo("title1")
     createTodo("title2")
     createTodo("title3")
 
     val result = server.executeQuerySimple(
       """mutation {
-        |  updateTodoes(
+        |  deleteTodoes(
         |    where: { }
-        |    data: { title: "updated title" }
         |  ){
         |    count
         |  }
@@ -70,22 +58,18 @@ class UpdateItemsSpec extends FlatSpec with Matchers with ApiBaseSpec {
       """.stripMargin,
       project
     )
-    result.pathAsLong("data.updateTodoes.count") should equal(1)
+    result.pathAsLong("data.deleteTodoes.count") should equal(3)
 
-    val todoes = server.executeQuerySimple(
-      """{
-        |  todoes {
-        |    title
-        |  }
-        |}
-      """.stripMargin,
+    todoCount should equal(0)
+
+  }
+
+  def todoCount: Int = {
+    val result = server.executeQuerySimple(
+      "{ todoes { id } }",
       project
     )
-    mustBeEqual(
-      todoes.pathAsJsValue("data.todoes").toString,
-      """[{"title":"updated title"},{"title":"updated title"},{"title":"updated title"}]"""
-    )
-
+    result.pathAsSeq("data.todoes").size
   }
 
   def createTodo(title: String): Unit = {

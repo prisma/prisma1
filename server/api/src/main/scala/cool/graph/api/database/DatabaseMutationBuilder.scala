@@ -68,6 +68,11 @@ object DatabaseMutationBuilder {
       sql"where #${where.fieldName} = ${where.fieldValue};").asUpdate
   }
 
+  def deleteDataItems(project: Project, model: Model, where: DataItemFilterCollection) = {
+    val whereSql = QueryArguments.generateFilterConditions(project.id, model.name, where)
+    (sql"delete from `#${project.id}`.`#${model.name}`" ++ prefixIfNotNone("where", whereSql)).asUpdate
+  }
+
   def createDataItemIfUniqueDoesNotExist(project: Project, model: Model, createArgs: CoolArgs, where: NodeSelector) = {
     val escapedColumns = combineByComma(createArgs.raw.keys.map(escapeKey))
     val insertValues   = combineByComma(createArgs.raw.values.map(escapeUnsafeParam))

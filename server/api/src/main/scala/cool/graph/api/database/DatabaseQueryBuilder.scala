@@ -1,5 +1,6 @@
 package cool.graph.api.database
 
+import cool.graph.api.database.Types.DataItemFilterCollection
 import cool.graph.api.mutations.NodeSelector
 import cool.graph.shared.models.IdType.Id
 import cool.graph.shared.models.{Field, Model, Project, Relation}
@@ -61,13 +62,11 @@ object DatabaseQueryBuilder {
     (query, resultTransform)
   }
 
-  def countAllFromModel(projectId: String, modelName: String, args: Option[QueryArguments]): SQLActionBuilder = {
-
-    val (conditionCommand, orderByCommand, _, _) = extractQueryArgs(projectId, modelName, args)
-
-    sql"select count(*) from `#$projectId`.`#$modelName`" concat
-      prefixIfNotNone("where", conditionCommand) concat
-      prefixIfNotNone("order by", orderByCommand)
+  def countAllFromModel(project: Project, model: Model, where: Option[DataItemFilterCollection]): SQLActionBuilder = {
+    val whereSql = where.flatMap { where =>
+      QueryArguments.generateFilterConditions(project.id, model.name, where)
+    }
+    sql"select count(*) from `#${project.id}`.`#${model.name}`" ++ prefixIfNotNone("where", whereSql)
   }
 
   def extractQueryArgs(
