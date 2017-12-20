@@ -152,7 +152,9 @@ case class SchemaBuilderImpl(
       fieldType = objectTypeBuilder.batchPayloadType,
       arguments = argumentsBuilder.getSangriaArgumentsForUpdateMultiple(model),
       resolve = (ctx) => {
-        ???
+        val arguments = objectTypeBuilder.extractRequiredFilterFromContext(model, ctx)
+        val mutation  = UpdateItems(model, project, ctx.args, dataResolver = masterDataResolver)
+        ClientMutationRunner.run(mutation, dataResolver)
       }
     )
   }

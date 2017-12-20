@@ -4,6 +4,7 @@ import cool.graph.api.schema.CustomScalarTypes.{DateTimeType, JsonType}
 import cool.graph.api.database._
 import cool.graph.api.database.DeferredTypes.{CountManyModelDeferred, CountToManyDeferred, ToManyDeferred, ToOneDeferred}
 import cool.graph.api.database.Types.DataItemFilterCollection
+import cool.graph.api.mutations.BatchPayload
 import cool.graph.shared.models
 import cool.graph.shared.models.{Field, Model, TypeIdentifier}
 import org.joda.time.{DateTime, DateTimeZone}
@@ -21,18 +22,17 @@ class ObjectTypeBuilder(project: models.Project,
                         withRelations: Boolean = true,
                         onlyId: Boolean = false) {
 
-  val batchPayloadType: ObjectType[ApiUserContext, DataItem] = ObjectType(
+  val batchPayloadType: ObjectType[ApiUserContext, BatchPayload] = ObjectType(
     name = "BatchPayload",
     description = "",
     fieldsFn = () => {
-
       List(
         SangriaField(
           "count",
-          fieldType = IntType,
+          fieldType = LongType,
           description = Some("The number of nodes that have been affected by the Batch operation."),
-          resolve = (ctx: Context[ApiUserContext, DataItem]) => {
-            1
+          resolve = (ctx: Context[ApiUserContext, BatchPayload]) => {
+            ctx.value.count
           }
         )
       )
@@ -231,28 +231,21 @@ class ObjectTypeBuilder(project: models.Project,
   }
 
   def extractQueryArgumentsFromContext(model: Model, ctx: Context[ApiUserContext, Unit]): Option[QueryArguments] = {
-    val skipOpt = ctx.argOpt[Int]("skip")
-
     val rawFilterOpt: Option[Map[String, Any]] = ctx.argOpt[Map[String, Any]]("where")
-    val filterOpt = rawFilterOpt.map(
-      generateFilterElement(_,
-                            model,
-                            //ctx.ctx.isSubscription
-                            false))
+    val filterOpt                              = rawFilterOpt.map(generateFilterElement(_, model, isSubscriptionFilter = false))
+    val skipOpt                                = ctx.argOpt[Int]("skip")
+    val orderByOpt                             = ctx.argOpt[OrderBy]("orderBy")
+    val afterOpt                               = ctx.argOpt[String](IdBasedConnection.Args.After.name)
+    val beforeOpt                              = ctx.argOpt[String](IdBasedConnection.Args.Before.name)
+    val firstOpt                               = ctx.argOpt[Int](IdBasedConnection.Args.First.name)
+    val lastOpt                                = ctx.argOpt[Int](IdBasedConnection.Args.Last.name)
 
-//    if (filterOpt.isDefined) {
-//      ctx.ctx.addFeatureMetric(FeatureMetric.Filter)
-//    }
+    Some(SangriaQueryArguments.createSimpleQueryArguments(skipOpt, afterOpt, firstOpt, beforeOpt, lastOpt, filterOpt, orderByOpt))
+  }
 
-    val orderByOpt = ctx.argOpt[OrderBy]("orderBy")
-    val afterOpt   = ctx.argOpt[String](IdBasedConnection.Args.After.name)
-    val beforeOpt  = ctx.argOpt[String](IdBasedConnection.Args.Before.name)
-    val firstOpt   = ctx.argOpt[Int](IdBasedConnection.Args.First.name)
-    val lastOpt    = ctx.argOpt[Int](IdBasedConnection.Args.Last.name)
-
-    Some(
-      SangriaQueryArguments
-        .createSimpleQueryArguments(skipOpt, afterOpt, firstOpt, beforeOpt, lastOpt, filterOpt, orderByOpt))
+  def extractRequiredFilterFromContext(model: Model, ctx: Context[ApiUserContext, Unit]): Types.DataItemFilterCollection = {
+    val rawFilter = ctx.arg[Map[String, Any]]("where")
+    generateFilterElement(rawFilter, model, isSubscriptionFilter = false)
   }
 
   def extractUniqueArgument(model: models.Model, ctx: Context[ApiUserContext, Unit]): Argument[_] = {
