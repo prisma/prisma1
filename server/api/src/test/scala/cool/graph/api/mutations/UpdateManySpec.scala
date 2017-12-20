@@ -70,7 +70,7 @@ class UpdateManySpec extends FlatSpec with Matchers with ApiBaseSpec {
       """.stripMargin,
       project
     )
-    result.pathAsLong("data.updateTodoes.count") should equal(1)
+    result.pathAsLong("data.updateTodoes.count") should equal(3)
 
     val todoes = server.executeQuerySimple(
       """{
