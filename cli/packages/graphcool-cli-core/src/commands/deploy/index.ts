@@ -134,6 +134,7 @@ ${chalk.gray(
       if (cacheEntry.cluster === 'local') {
         const online = await cluster.isOnline()
         if (!online) {
+          console.log('its not online')
           await this.localUp()
         }
       }
@@ -380,14 +381,15 @@ ${chalk.gray(
       type: 'list',
       message: `Please choose the cluster you want to deploy "${stage}" to`,
       choices: [
+        new inquirer.Separator(chalk.bold('Custom clusters (local/private):')),
+        ...localClusters,
+        new inquirer.Separator('                     '),
         new inquirer.Separator(chalk.bold('Shared Clusters:')),
         {
           value: 'shared-public-demo',
           name: 'shared-public-demo',
         },
-        new inquirer.Separator('                     '),
-        new inquirer.Separator(chalk.bold('Custom clusters (local/private):')),
-      ].concat(localClusters),
+      ],
       pageSize: 8,
     }
 
