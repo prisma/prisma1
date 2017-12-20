@@ -38,27 +38,29 @@ export class Cluster {
     return `${this.baseUrl}/system/playground`
   }
 
-  async isOnline() {
-    const result = await fetch(this.getDeployEndpoint(), {
-      method: 'post',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        query: `{
+  async isOnline(): Promise<boolean> {
+    try {
+      const result = await fetch(this.getDeployEndpoint(), {
+        method: 'post',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          query: `{
             clusterInfo {
               version
             }
           }`,
-      }),
-    })
+        }),
+      })
 
-    const text = await result.text()
-    try {
-      return JSON.parse(text)
+      const text = await result.text()
+      return Boolean(JSON.parse(text))
     } catch (e) {
-      throw new Error(text)
+      //
     }
+
+    return false
   }
 
   // subscriptionEndpoint(projectId: string): string {

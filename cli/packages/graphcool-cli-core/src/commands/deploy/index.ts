@@ -113,25 +113,44 @@ ${chalk.gray(
 
     await this.definition.load(this.flags, dotenv)
     const serviceName = this.definition.definition!.service
-    let cluster = await this.client.getCluster(serviceName, stage)
+    const cacheEntry = this.clusterCache.cache.find(
+      e => e.service === serviceName && e.stage === stage,
+    )
+    /**
+     * try to get the cluster from the cache
+     */
+    let cluster
+    if (cacheEntry) {
+      const clusterName = cacheEntry.cluster
+      cluster = this.env.clusterByName(cacheEntry.cluster)
+      if (!cluster) {
+        if (clusterName === 'local') {
+          cluster = await this.localUp()
+        } else {
+          this.out.error(`Cluster ${clusterName} could not be found.`)
+        }
+      }
+      if (cacheEntry.cluster === 'local') {
+        const online = await cluster.isOnline()
+        console.log('cluster is online', online)
+        if (!online) {
+          await this.localUp()
+        }
+      }
+    }
 
     const serviceIsNew = !cluster
 
+    /**
+     * if you couldn't get it from the cache, get it from the newServiceClusterName param or from the cluster selection
+     */
     if (!cluster) {
       const clusterName =
         (!interactive && newServiceClusterName) ||
         (await this.clusterSelection(stage))
       cluster = this.env.clusterByName(clusterName)!
-      if (!cluster) {
-          this.out.error(`Cluster ${clusterName} could not be found.`)
-      }
     }
-    if (cluster.name === 'local') {
-      await Up.run(new Config({ mock: false, argv: [] }))
-      await this.env.load(this.flags)
-      cluster = this.env.clusterByName('local')!
-      this.env.setActiveCluster(cluster)
-    }
+
     this.env.setActiveCluster(cluster)
 
     if (this.showedLines > 0) {
@@ -183,6 +202,14 @@ ${chalk.gray(
           })
         })
     }
+  }
+
+  private async localUp(): Promise<Cluster> {
+    await Up.run(new Config({ mock: false, argv: [] }))
+    await this.env.load(this.flags)
+    const cluster = this.env.clusterByName('local')!
+    this.env.setActiveCluster(cluster)
+    return cluster
   }
 
   private async projectExists(name: string, stage: string): Promise<boolean> {
