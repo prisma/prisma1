@@ -66,8 +66,8 @@ case class SchemaBuilderImpl(
       project.models.flatMap(updateItemField) ++
       project.models.flatMap(deleteItemField) ++
       project.models.flatMap(upsertItemField) ++
-      project.models.map(updateItemsField) ++
-      project.models.map(deleteItemsField) ++
+      project.models.map(updateManyField) ++
+      project.models.map(deleteManyField) ++
       List(resetDataField)
 
     Some(ObjectType("Mutation", fields))
@@ -150,14 +150,14 @@ case class SchemaBuilderImpl(
     }
   }
 
-  def updateItemsField(model: Model): Field[ApiUserContext, Unit] = {
+  def updateManyField(model: Model): Field[ApiUserContext, Unit] = {
     Field(
       s"update${pluralsCache.pluralName(model)}",
       fieldType = objectTypeBuilder.batchPayloadType,
-      arguments = argumentsBuilder.getSangriaArgumentsForUpdateMultiple(model),
+      arguments = argumentsBuilder.getSangriaArgumentsForUpdateMany(model),
       resolve = (ctx) => {
         val where    = objectTypeBuilder.extractRequiredFilterFromContext(model, ctx)
-        val mutation = UpdateItems(project, model, ctx.args, where, dataResolver = masterDataResolver)
+        val mutation = UpdateMany(project, model, ctx.args, where, dataResolver = masterDataResolver)
         ClientMutationRunner.run(mutation, dataResolver)
       }
     )
@@ -199,7 +199,7 @@ case class SchemaBuilderImpl(
     }
   }
 
-  def deleteItemsField(model: Model): Field[ApiUserContext, Unit] = {
+  def deleteManyField(model: Model): Field[ApiUserContext, Unit] = {
     Field(
       s"delete${pluralsCache.pluralName(model)}",
       fieldType = objectTypeBuilder.batchPayloadType,

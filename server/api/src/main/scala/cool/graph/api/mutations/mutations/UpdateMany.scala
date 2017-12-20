@@ -13,7 +13,7 @@ import sangria.schema
 
 import scala.concurrent.Future
 
-case class UpdateItems(
+case class UpdateMany(
     project: Project,
     model: Model,
     args: schema.Args,

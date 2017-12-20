@@ -123,7 +123,7 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec
                                 |}""".stripMargin)
   }
 
-  "the multi update Mutation for a model" should "be generated correctly" in {
+  "the update many Mutation for a model" should "be generated correctly" in {
     val project = SchemaDsl() { schema =>
       schema.model("Todo").field_!("title", _.String).field("alias", _.String, isUnique = true)
     }
