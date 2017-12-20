@@ -39,6 +39,11 @@ export class Cluster {
   }
 
   async isOnline(): Promise<boolean> {
+    const version = await this.getVersion()
+    return Boolean(version)
+  }
+
+  async getVersion(): Promise<string | null> {
     try {
       const result = await fetch(this.getDeployEndpoint(), {
         method: 'post',
@@ -54,13 +59,13 @@ export class Cluster {
         }),
       })
 
-      const text = await result.text()
-      return Boolean(JSON.parse(text))
+      const { data } = await result.json()
+      return data.clusterInfo.version
     } catch (e) {
       //
     }
 
-    return false
+    return null
   }
 
   // subscriptionEndpoint(projectId: string): string {

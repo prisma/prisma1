@@ -45,7 +45,6 @@ ${chalk.gray(
     stage: flags.string({
       char: 's',
       description: 'Local stage to deploy to',
-      defaultValue: 'dev',
     }),
     force: flags.boolean({
       char: 'f',
@@ -90,7 +89,7 @@ ${chalk.gray(
   private showedLines: number = 0
   async run() {
     debug('run')
-    const { force, watch, interactive, dotenv, stage } = this.flags
+    const { force, watch, interactive, dotenv } = this.flags
     const newServiceClusterName = this.flags['new-service-cluster']
     const dryRun = this.flags['dry-run']
 
@@ -113,6 +112,8 @@ ${chalk.gray(
 
     await this.definition.load(this.flags, dotenv)
     const serviceName = this.definition.definition!.service
+
+    const stage = this.flags.stage || process.env.GRAPHCOOL_STAGE || 'dev'
     const cacheEntry = this.clusterCache.cache.find(
       e => e.service === serviceName && e.stage === stage,
     )
@@ -132,7 +133,6 @@ ${chalk.gray(
       }
       if (cacheEntry.cluster === 'local') {
         const online = await cluster.isOnline()
-        console.log('cluster is online', online)
         if (!online) {
           await this.localUp()
         }
