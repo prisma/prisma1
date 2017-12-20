@@ -4,7 +4,7 @@ import akka.actor.ActorSystem
 import cool.graph.api.ApiDependencies
 import cool.graph.api.database.DataItem
 import cool.graph.api.database.DeferredTypes.{ManyModelDeferred, OneDeferred}
-import cool.graph.api.mutations.{ClientMutationRunner, CoolArgs}
+import cool.graph.api.mutations._
 import cool.graph.api.mutations.mutations._
 import cool.graph.shared.models.{Model, Project}
 import org.atteo.evo.inflector.English
@@ -12,6 +12,7 @@ import sangria.relay.{Node, NodeDefinition, PossibleNodeObject}
 import sangria.schema._
 
 import scala.collection.mutable
+import scala.concurrent.Future
 
 case class ApiUserContext(clientId: String)
 
@@ -125,10 +126,9 @@ case class SchemaBuilderImpl(
       fieldType = outputTypesBuilder.mapCreateOutputType(model, objectTypes(model.name)),
       arguments = argumentsBuilder.getSangriaArgumentsForCreate(model),
       resolve = (ctx) => {
-        val mutation = Create(model = model, project = project, args = ctx.args, dataResolver = masterDataResolver)
-        ClientMutationRunner
-          .run(mutation, dataResolver)
-          .map(outputTypesBuilder.mapResolve(_, ctx.args))
+        val mutation       = Create(model = model, project = project, args = ctx.args, dataResolver = masterDataResolver)
+        val mutationResult = ClientMutationRunner.run(mutation, dataResolver)
+        mapReturnValueResult(mutationResult, ctx.args)
       }
     )
   }
@@ -139,11 +139,9 @@ case class SchemaBuilderImpl(
       fieldType = OptionType(outputTypesBuilder.mapUpdateOutputType(model, objectTypes(model.name))),
       arguments = argumentsBuilder.getSangriaArgumentsForUpdate(model),
       resolve = (ctx) => {
-        val mutation = Update(model = model, project = project, args = ctx.args, dataResolver = masterDataResolver)
-
-        ClientMutationRunner
-          .run(mutation, dataResolver)
-          .map(outputTypesBuilder.mapResolve(_, ctx.args))
+        val mutation       = Update(model = model, project = project, args = ctx.args, dataResolver = masterDataResolver)
+        val mutationResult = ClientMutationRunner.run(mutation, dataResolver)
+        mapReturnValueResult(mutationResult, ctx.args)
       }
     )
   }
@@ -165,10 +163,9 @@ case class SchemaBuilderImpl(
       fieldType = outputTypesBuilder.mapUpsertOutputType(model, objectTypes(model.name)),
       arguments = argumentsBuilder.getSangriaArgumentsForUpsert(model),
       resolve = (ctx) => {
-        val mutation = Upsert(model = model, project = project, args = ctx.args, dataResolver = masterDataResolver)
-        ClientMutationRunner
-          .run(mutation, dataResolver)
-          .map(outputTypesBuilder.mapResolve(_, ctx.args))
+        val mutation       = Upsert(model = model, project = project, args = ctx.args, dataResolver = masterDataResolver)
+        val mutationResult = ClientMutationRunner.run(mutation, dataResolver)
+        mapReturnValueResult(mutationResult, ctx.args)
       }
     )
   }
@@ -186,9 +183,8 @@ case class SchemaBuilderImpl(
           args = ctx.args,
           dataResolver = masterDataResolver
         )
-        ClientMutationRunner
-          .run(mutation, dataResolver)
-          .map(outputTypesBuilder.mapResolve(_, ctx.args))
+        val mutationResult = ClientMutationRunner.run(mutation, dataResolver)
+        mapReturnValueResult(mutationResult, ctx.args)
       }
     )
   }
@@ -199,7 +195,7 @@ case class SchemaBuilderImpl(
       fieldType = OptionType(BooleanType),
       resolve = (ctx) => {
         val mutation = ResetData(project = project, dataResolver = masterDataResolver)
-        ClientMutationRunner.run(mutation, dataResolver).map(x => true)
+        ClientMutationRunner.run(mutation, dataResolver).map(_ => true)
       }
     )
   }
@@ -225,6 +221,13 @@ case class SchemaBuilderImpl(
   )
 
   def camelCase(string: String): String = Character.toLowerCase(string.charAt(0)) + string.substring(1)
+
+  private def mapReturnValueResult(result: Future[ReturnValueResult], args: Args): Future[SimpleResolveOutput] = {
+    result.map {
+      case ReturnValue(dataItem) => outputTypesBuilder.mapResolve(dataItem, args)
+      case NoReturnValue(id)     => throw APIErrors.NodeNotFoundError(id)
+    }
+  }
 }
 
 class PluralsCache {

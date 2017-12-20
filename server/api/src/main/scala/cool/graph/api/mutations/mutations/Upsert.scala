@@ -19,7 +19,7 @@ case class Upsert(
     dataResolver: DataResolver,
     allowSettingManagedFields: Boolean = false
 )(implicit apiDependencies: ApiDependencies)
-    extends ClientMutation {
+    extends SingleItemClientMutation {
 
   import apiDependencies.system.dispatcher
 

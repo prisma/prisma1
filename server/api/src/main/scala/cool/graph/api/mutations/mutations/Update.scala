@@ -20,7 +20,7 @@ case class Update(
     args: schema.Args,
     dataResolver: DataResolver
 )(implicit apiDependencies: ApiDependencies)
-    extends ClientMutation {
+    extends SingleItemClientMutation {
 
   implicit val system: ActorSystem             = apiDependencies.system
   implicit val materializer: ActorMaterializer = apiDependencies.materializer
@@ -47,7 +47,7 @@ case class Update(
 
         val transactionMutaction = Transaction(sqlMutactions, dataResolver)
 
-        val updateMutactionOpt: Option[UpdateDataItem] = sqlMutactions.collectFirst{ case x: UpdateDataItem => x }
+        val updateMutactionOpt: Option[UpdateDataItem] = sqlMutactions.collectFirst { case x: UpdateDataItem => x }
 
         val updateMutactions = sqlMutactions.collect { case x: UpdateDataItem => x }
 
