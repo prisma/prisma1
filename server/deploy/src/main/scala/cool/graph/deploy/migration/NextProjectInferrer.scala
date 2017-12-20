@@ -1,8 +1,10 @@
 package cool.graph.deploy.migration
 
 import cool.graph.deploy.gc_value.GCStringConverter
+import cool.graph.gc_values.InvalidValueForScalarType
 import cool.graph.shared.models._
-import org.scalactic.{Good, Or}
+import cool.graph.utils.or.OrExtensions
+import org.scalactic.{Bad, Good, Or}
 import sangria.ast.Document
 
 trait NextProjectInferrer {
@@ -11,6 +13,7 @@ trait NextProjectInferrer {
 
 sealed trait ProjectSyntaxError
 case class RelationDirectiveNeeded(type1: String, type1Fields: Vector[String], type2: String, type2Fields: Vector[String]) extends ProjectSyntaxError
+case class InvalidGCValue(err: InvalidValueForScalarType)                                                                  extends ProjectSyntaxError
 
 object NextProjectInferrer {
   def apply() = new NextProjectInferrer {
@@ -25,55 +28,76 @@ case class NextProjectInferrerImpl(
   import DataSchemaAstExtensions._
 
   def infer(): Project Or ProjectSyntaxError = {
-    val newProject = Project(
-      id = baseProject.id,
-      ownerId = baseProject.ownerId,
-      models = nextModels.toList,
-      relations = nextRelations.toList,
-      enums = nextEnums.toList
-    )
+    for {
+      models <- nextModels
+    } yield {
+      val newProject = Project(
+        id = baseProject.id,
+        ownerId = baseProject.ownerId,
+        models = models.toList,
+        relations = nextRelations.toList,
+        enums = nextEnums.toList
+      )
 
-    Good(newProject)
+      newProject
+    }
   }
 
-  lazy val nextModels: Vector[Model] = {
-    sdl.objectTypes.map { objectType =>
-      val fields = objectType.fields.map { fieldDef =>
+  lazy val nextModels: Vector[Model] Or ProjectSyntaxError = {
+    val models = sdl.objectTypes.map { objectType =>
+      val fields: Seq[Or[Field, InvalidGCValue]] = objectType.fields.flatMap { fieldDef =>
         val typeIdentifier = typeIdentifierForTypename(fieldDef.typeName)
         val relation       = fieldDef.relationName.flatMap(relationName => nextRelations.find(_.name == relationName))
 
-        val wat = Field(
-          id = fieldDef.name,
-          name = fieldDef.name,
-          typeIdentifier = typeIdentifier,
-          isRequired = fieldDef.isRequired,
-          isList = fieldDef.isList,
-          isUnique = fieldDef.isUnique,
-          enum = nextEnums.find(_.name == fieldDef.typeName),
-          defaultValue = fieldDef.defaultValue.map(x => GCStringConverter(typeIdentifier, fieldDef.isList).toGCValue(x).get),
-          relation = relation,
-          relationSide = relation.map { relation =>
-            if (relation.modelAId == objectType.name) {
-              RelationSide.A
-            } else {
-              RelationSide.B
-            }
-          }
-        )
+        fieldDef.defaultValue.map(x => GCStringConverter(typeIdentifier, fieldDef.isList).toGCValue(x)) match {
+          case Some(Good(gcValue)) =>
+            Some(
+              Good(
+                Field(
+                  id = fieldDef.name,
+                  name = fieldDef.name,
+                  typeIdentifier = typeIdentifier,
+                  isRequired = fieldDef.isRequired,
+                  isList = fieldDef.isList,
+                  isUnique = fieldDef.isUnique,
+                  enum = nextEnums.find(_.name == fieldDef.typeName),
+                  defaultValue = Some(gcValue),
+                  relation = relation,
+                  relationSide = relation.map { relation =>
+                    if (relation.modelAId == objectType.name) {
+                      RelationSide.A
+                    } else {
+                      RelationSide.B
+                    }
+                  }
+                )
+              )
+            )
 
-        wat
+          case Some(Bad(err)) => Some(Bad(InvalidGCValue(err)))
+          case None           => None
+        }
       }
 
-      val fieldNames            = fields.map(_.name)
-      val missingReservedFields = ReservedFields.reservedFieldNames.filterNot(fieldNames.contains)
-      val hiddenReservedFields  = missingReservedFields.map(ReservedFields.reservedFieldFor(_).copy(isHidden = true))
+      OrExtensions.sequence(fields.toVector) match {
+        case Good(fields: Seq[Field]) =>
+          val fieldNames            = fields.map(_.name)
+          val missingReservedFields = ReservedFields.reservedFieldNames.filterNot(fieldNames.contains)
+          val hiddenReservedFields  = missingReservedFields.map(ReservedFields.reservedFieldFor(_).copy(isHidden = true))
 
-      Model(
-        id = objectType.name,
-        name = objectType.name,
-        fields = fields.toList ++ hiddenReservedFields
-      )
+          Good(
+            Model(
+              id = objectType.name,
+              name = objectType.name,
+              fields = fields.toList ++ hiddenReservedFields
+            ))
+
+        case Bad(err) =>
+          Bad(err)
+      }
     }
+
+    OrExtensions.sequence(models)
   }
 
   lazy val nextRelations: Set[Relation] = {

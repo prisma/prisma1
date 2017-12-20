@@ -1,6 +1,5 @@
 package cool.graph.deploy.database.schema.mutations
 
-import cool.graph.deploy.database.persistence.DbToModelMapper
 import cool.graph.deploy.specutils.DeploySpecBase
 import cool.graph.shared.models.ProjectId
 import org.scalatest.{FlatSpec, Matchers}
@@ -169,33 +168,35 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
           |}
         """.stripMargin
 
-      val result = server.queryThatMustFail(
+      val result = server.query(
         s"""
-       |mutation {
-       |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: "${formatSchema(schema)}"}){
-       |    project {
-       |      name
-       |      stage
-       |    }
-       |    errors {
-       |      description
-       |    }
-       |  }
-       |}
-      """.stripMargin,
-        4003
+         |mutation {
+         |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(schema)}}){
+         |    project {
+         |      name
+         |      stage
+         |    }
+         |    errors {
+         |      description
+         |    }
+         |  }
+         |}
+        """.stripMargin
       )
+
+      // Query must fail
+      result.pathExists("data.deploy.errors") shouldEqual true
     }
 
     tryDeploy("id: String! @unique")
     tryDeploy("id: ID!")
     tryDeploy("id: ID @unique")
-    tryDeploy("""id: ID! @default("Woot")""")
+    tryDeploy("""id: ID! @default(value: "Woot")""")
 
     tryDeploy("updatedAt: String! @unique")
     tryDeploy("updatedAt: DateTime!")
     tryDeploy("updatedAt: DateTime @unique")
-    tryDeploy("""updatedAt: DateTime! @default("Woot")""")
+    tryDeploy("""updatedAt: DateTime! @default(value: "Woot")""")
   }
 
   "DeployMutation" should "create hidden reserved fields if they are not specified in the types" in {
