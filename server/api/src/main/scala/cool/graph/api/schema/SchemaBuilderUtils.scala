@@ -81,7 +81,7 @@ case class FilterObjectTypeBuilder(model: Model, project: Project) {
         List(
           InputField("AND", OptionInputType(ListInputType(filterObjectType)), description = FilterArguments.ANDFilter.description),
           InputField("OR", OptionInputType(ListInputType(filterObjectType)), description = FilterArguments.ORFilter.description)
-        ) ++ model.scalarFields.flatMap(SchemaBuilderUtils.mapToInputField) ++ model.relationFields.flatMap(mapToRelationFilterInputField)
+        ) ++ model.scalarFields.filterNot(_.isHidden).flatMap(SchemaBuilderUtils.mapToInputField) ++ model.relationFields.flatMap(mapToRelationFilterInputField)
       }
     )
 

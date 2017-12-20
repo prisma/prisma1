@@ -136,6 +136,30 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec
     schema.mustContainInputType("TodoWhereInput")
   }
 
+  "the multi update Mutation for a model" should "be generated correctly for an empty model" in {
+    val project = SchemaDsl() { schema =>
+      val model = schema.model("Todo")
+      model.fields.clear()
+      model.field_!("id", _.GraphQLID, isHidden = true)
+    }
+
+    val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
+
+    val mutation = schema.mustContainMutation("updateTodoes")
+    mustBeEqual(mutation, "updateTodoes(data: TodoUpdateInput!, where: TodoWhereInput!): BatchPayload!")
+
+    mustBeEqual(
+      schema.mustContainInputType("TodoWhereInput"),
+      """input TodoWhereInput {
+        |  # Logical AND on all given filters.
+        |  AND: [TodoWhereInput!]
+        |
+        |  # Logical OR on all given filters.
+        |  OR: [TodoWhereInput!]
+        |}"""
+    )
+  }
+
   "the update Mutation for a model with relations" should "be generated correctly" in {
     val project = SchemaDsl() { schema =>
       val comment = schema.model("Comment").field_!("text", _.String)
