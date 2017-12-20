@@ -136,7 +136,7 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec
     schema.mustContainInputType("TodoWhereInput")
   }
 
-  "the multi update Mutation for a model" should "be generated correctly for an empty model" in {
+  "the many update Mutation for a model" should "be generated correctly for an empty model" in {
     val project = SchemaDsl() { schema =>
       val model = schema.model("Todo")
       model.fields.clear()
@@ -156,7 +156,7 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec
         |
         |  # Logical OR on all given filters.
         |  OR: [TodoWhereInput!]
-        |}"""
+        |}""".stripMargin
     )
   }
 
