@@ -387,7 +387,8 @@ lazy val scalaUtils =
   Project(id = "scala-utils", base = file("./libs/scala-utils"))
     .settings(commonSettings: _*)
     .settings(libraryDependencies ++= Seq(
-      scalaTest
+      scalaTest,
+      scalactic
     ))
 
 lazy val jsonUtils =
