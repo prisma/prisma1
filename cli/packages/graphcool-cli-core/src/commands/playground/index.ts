@@ -2,6 +2,19 @@ import { Command, flags, Flags } from 'graphcool-cli-engine'
 import * as opn from 'opn'
 import * as fs from 'fs-extra'
 import * as childProcess from 'child_process'
+const debug = require('debug')('playground')
+import * as path from 'path'
+import * as os from 'os'
+import * as crypto from 'crypto'
+
+function randomString(len = 32) {
+  return crypto
+    .randomBytes(Math.ceil(len * 3 / 4))
+    .toString('base64')
+    .slice(0, len)
+    .replace(/\+/g, '0')
+    .replace(/\//g, '0')
+}
 
 export default class Playground extends Command {
   static topic = 'playground'
@@ -31,10 +44,12 @@ export default class Playground extends Command {
       stage,
     )
     if (fs.pathExistsSync(localPlaygroundPath) && !web) {
-      const url = `graphql-playground://?endpoint=${endpoint}&cwd=${process.cwd()}&env=${JSON.stringify(
-        process.env,
-      )}`
-      opn(url)
+      const envPath = path.join(os.tmpdir(), `${randomString()}.json`)
+      fs.writeFileSync(envPath, JSON.stringify(process.env))
+      const url = `graphql-playground://?cwd=${process.cwd()}&envPath=${envPath}`
+      opn(url, { wait: false })
+      debug(url)
+      debug(process.env)
     } else {
       opn(endpoint)
     }
