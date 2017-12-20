@@ -15,7 +15,7 @@ import cool.graph.deploy.DeployMetrics
 import cool.graph.deploy.database.persistence.ProjectPersistence
 import cool.graph.deploy.schema.{DeployApiError, InvalidProjectId, SchemaBuilder, SystemUserContext}
 import cool.graph.metrics.extensions.TimeResponseDirectiveImpl
-import cool.graph.shared.models.{Client, ProjectWithClientId}
+import cool.graph.shared.models.ProjectWithClientId
 import cool.graph.util.logging.{LogData, LogKey}
 import play.api.libs.json.Json
 import sangria.execution.{Executor, HandledException}

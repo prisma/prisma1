@@ -6,6 +6,7 @@ import cool.graph.cuid.Cuid
 import cool.graph.shared.models.Project
 import cool.graph.utils.await.AwaitUtils
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
+import spray.json.JsString
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -65,7 +66,7 @@ trait DeploySpecBase extends BeforeAndAfterEach with BeforeAndAfterAll with Awai
 
     server.query(s"""
         |mutation {
-        |  deploy(input:{name: "$name", stage: "$stage", types: "${formatSchema(schema)}"}){
+        |  deploy(input:{name: "$name", stage: "$stage", types: ${formatSchema(schema)}}){
         |    errors {
         |      description
         |    }
@@ -76,5 +77,5 @@ trait DeploySpecBase extends BeforeAndAfterEach with BeforeAndAfterAll with Awai
     testDependencies.projectPersistence.load(projectId).await.get
   }
 
-  def formatSchema(schema: String): String = schema.replaceAll("\n", " ").replaceAll("\\\"", "\\\\\"")
+  def formatSchema(schema: String): String = JsString(schema).toString()
 }
