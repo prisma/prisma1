@@ -38,6 +38,8 @@ trait GraphQLSchemaAssertions {
 
     def mustContainInputType(name: String): String = definition(s"input $name {")
 
+    def mustContainType(name: String): String = definition(s"type $name {")
+
     private def definition(start: String): String = {
       val startOfDefinition = schemaString.lines.dropWhile(_ != start)
       if (startOfDefinition.isEmpty) {
