@@ -22,12 +22,13 @@ class UpdateManySpec extends FlatSpec with Matchers with ApiBaseSpec {
   }
 
   "The update items Mutation" should "update the items matching the where clause" in {
-    createTodo("title")
+    createTodo("title1")
+    createTodo("title2")
 
     val result = server.executeQuerySimple(
       """mutation {
         |  updateTodoes(
-        |    where: { title: "title" }
+        |    where: { title: "title1" }
         |    data: { title: "updated title" }
         |  ){
         |    count
@@ -49,7 +50,7 @@ class UpdateManySpec extends FlatSpec with Matchers with ApiBaseSpec {
     )
     mustBeEqual(
       todoes.pathAsJsValue("data.todoes").toString,
-      """[{"title":"updated title"}]"""
+      """[{"title":"updated title"},{"title":"title2"}]"""
     )
   }
 
