@@ -27,7 +27,7 @@ class ObjectTypeBuilder(
       .map(model => (model.name, modelToObjectType(model)))
       .toMap
 
-  val modelConnectionTypes = project.models
+  val modelConnectionTypes: Map[String, ObjectType[ApiUserContext, IdBasedConnection[DataItem]]] = project.models
     .map(model => (model.name, modelToConnectionType(model).connectionType))
     .toMap
 

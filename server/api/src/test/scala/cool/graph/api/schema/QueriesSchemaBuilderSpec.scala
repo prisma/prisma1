@@ -6,8 +6,6 @@ import cool.graph.util.GraphQLSchemaAssertions
 import org.scalatest.{Matchers, WordSpec}
 import sangria.renderer.SchemaRenderer
 
-import scala.collection.mutable
-
 class QueriesSchemaBuilderSpec extends WordSpec with Matchers with ApiBaseSpec with GraphQLSchemaAssertions {
   val schemaBuilder = testDependencies.apiSchemaBuilder
 
@@ -52,8 +50,6 @@ class QueriesSchemaBuilderSpec extends WordSpec with Matchers with ApiBaseSpec w
 
 //      val query = schema.mustContainQuery("todoes")
 //      query should be("todoes(where: TodoWhereInput, orderBy: TodoOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Todo]!")
-
-//      schema.
     }
   }
 }

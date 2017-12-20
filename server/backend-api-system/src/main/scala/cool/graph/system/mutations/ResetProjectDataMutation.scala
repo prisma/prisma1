@@ -18,8 +18,7 @@ case class ResetProjectDataMutation(
 
   override def prepareActions(): List[Mutaction] = {
 
-    val removeRelations =
-      project.relations.map(relation => DeleteAllRelations(projectId = project.id, relation = relation))
+    val removeRelations = project.relations.map(relation => DeleteAllRelations(projectId = project.id, relation = relation))
 
     actions ++= removeRelations
 

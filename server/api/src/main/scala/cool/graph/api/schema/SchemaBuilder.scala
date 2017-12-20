@@ -52,7 +52,6 @@ case class SchemaBuilderImpl(
   }
 
   def buildQuery(): ObjectType[ApiUserContext, Unit] = {
-
     val fields = project.models.map(getAllItemsField) ++
       project.models.flatMap(getSingleItemField) ++
       project.models.map(getAllItemsConnectionField) :+
@@ -64,9 +63,10 @@ case class SchemaBuilderImpl(
   def buildMutation(): Option[ObjectType[ApiUserContext, Unit]] = {
     val fields = project.models.map(createItemField) ++
       project.models.flatMap(updateItemField) ++
-      project.models.flatMap(deleteItemField)
+      project.models.flatMap(deleteItemField) ++
+      project.models.flatMap(upsertItemField)
 
-    Some(ObjectType("Mutation", fields))
+    Some(ObjectType("Mutation", fields :+ resetDataField))
   }
 
   def buildSubscription(): Option[ObjectType[ApiUserContext, Unit]] = {
@@ -79,11 +79,11 @@ case class SchemaBuilderImpl(
   def getAllItemsField(model: Model): Field[ApiUserContext, Unit] = {
     Field(
       camelCase(pluralsCache.pluralName(model)),
-      fieldType = ListType(objectTypes(model.name)),
+      fieldType = ListType(OptionType(objectTypes(model.name))),
       arguments = objectTypeBuilder.mapToListConnectionArguments(model),
       resolve = (ctx) => {
         val arguments = objectTypeBuilder.extractQueryArgumentsFromContext(model, ctx)
-        DeferredValue(ManyModelDeferred(model, arguments)).map(_.toNodes)
+        DeferredValue(ManyModelDeferred(model, arguments)).map(_.toNodes.map(Some(_)))
       }
     )
   }
@@ -148,14 +148,14 @@ case class SchemaBuilderImpl(
     }
   }
 
-  def updateOrCreateItemField(model: Model): Option[Field[ApiUserContext, Unit]] = {
-    argumentsBuilder.getSangriaArgumentsForUpdateOrCreate(model).map { args =>
+  def upsertItemField(model: Model): Option[Field[ApiUserContext, Unit]] = {
+    argumentsBuilder.getSangriaArgumentsForUpsert(model).map { args =>
       Field(
-        s"updateOrCreate${model.name}",
-        fieldType = OptionType(outputTypesBuilder.mapUpdateOrCreateOutputType(model, objectTypes(model.name))),
+        s"upsert${model.name}",
+        fieldType = outputTypesBuilder.mapUpsertOutputType(model, objectTypes(model.name)),
         arguments = args,
         resolve = (ctx) => {
-          val mutation = UpdateOrCreate(model = model, project = project, args = ctx.args, dataResolver = masterDataResolver)
+          val mutation = Upsert(model = model, project = project, args = ctx.args, dataResolver = masterDataResolver)
           ClientMutationRunner
             .run(mutation, dataResolver)
             .map(outputTypesBuilder.mapResolve(_, ctx.args))
@@ -184,6 +184,17 @@ case class SchemaBuilderImpl(
         }
       )
     }
+  }
+
+  def resetDataField: Field[ApiUserContext, Unit] = {
+    Field(
+      s"resetData",
+      fieldType = OptionType(BooleanType),
+      resolve = (ctx) => {
+        val mutation = ResetData(project = project, dataResolver = masterDataResolver)
+        ClientMutationRunner.run(mutation, dataResolver).map(x => true)
+      }
+    )
   }
 
   def getSubscriptionField(model: Model): Field[ApiUserContext, Unit] = {

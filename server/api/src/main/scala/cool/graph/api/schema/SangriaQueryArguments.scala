@@ -16,7 +16,7 @@ object SangriaQueryArguments {
       sortOrder <- List("ASC", "DESC")
     } yield EnumValue(field.name + "_" + sortOrder, description = None, OrderBy(field, SortOrder.withName(sortOrder.toLowerCase())))
 
-    Argument(name, OptionInputType(EnumType(s"${model.name}OrderBy", None, values)))
+    Argument(name, OptionInputType(EnumType(s"${model.name}OrderByInput", None, values)))
   }
 
   def whereArgument(model: models.Model, project: models.Project, name: String = "where"): Argument[Option[Any]] = {

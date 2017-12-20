@@ -157,6 +157,8 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec
         |  connect: [CommentWhereUniqueInput!]
         |  disconnect: [CommentWhereUniqueInput!]
         |  delete: [CommentWhereUniqueInput!]
+        |  update: [CommentUpdateWithoutTodoInput!]
+        |  upsert: [CommentUpsertWithoutTodoInput!]
         |}""".stripMargin
     )
 
@@ -165,6 +167,33 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec
       createInputForNestedComment,
       """input CommentCreateWithoutTodoInput {
         |  text: String!
+        |}""".stripMargin
+    )
+
+    val updateInputForNestedComment = schema.mustContainInputType("CommentUpdateWithoutTodoInput")
+    mustBeEqual(
+      updateInputForNestedComment,
+      """input CommentUpdateWithoutTodoInput {
+        |  where: CommentWhereUniqueInput!
+        |  data: CommentUpdateWithoutTodoDataInput!
+        |}""".stripMargin
+    )
+
+    val updateDataInputForNestedComment = schema.mustContainInputType("CommentUpdateWithoutTodoDataInput")
+    mustBeEqual(
+      updateDataInputForNestedComment,
+      """input CommentUpdateWithoutTodoDataInput {
+        |  text: String
+        |}""".stripMargin
+    )
+
+    val upsertDataInputForNestedComment = schema.mustContainInputType("CommentUpsertWithoutTodoInput")
+    mustBeEqual(
+      upsertDataInputForNestedComment,
+      """input CommentUpsertWithoutTodoInput {
+        |  where: CommentWhereUniqueInput!
+        |  update: CommentUpdateWithoutTodoDataInput!
+        |  create: CommentCreateWithoutTodoInput!
         |}""".stripMargin
     )
 
@@ -186,6 +215,8 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec
         |  connect: TodoWhereUniqueInput
         |  disconnect: TodoWhereUniqueInput
         |  delete: TodoWhereUniqueInput
+        |  update: TodoUpdateWithoutCommentsInput
+        |  upsert: TodoUpsertWithoutCommentsInput
         |}""".stripMargin
     )
 
@@ -196,6 +227,47 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec
         |  title: String!
         |  tag: String
         |}""".stripMargin
+    )
+
+    val updateInputForNestedTodo = schema.mustContainInputType("TodoUpdateWithoutCommentsInput")
+    mustBeEqual(
+      updateInputForNestedTodo,
+      """input TodoUpdateWithoutCommentsInput {
+        |  where: TodoWhereUniqueInput!
+        |  data: TodoUpdateWithoutCommentsDataInput!
+        |}""".stripMargin
+    )
+
+    val updateDataInputForNestedTodo = schema.mustContainInputType("TodoUpdateWithoutCommentsDataInput")
+    mustBeEqual(
+      updateDataInputForNestedTodo,
+      """input TodoUpdateWithoutCommentsDataInput {
+        |  title: String
+        |  tag: String
+        |}""".stripMargin
+    )
+
+    val upsertDataInputForNestedTodo = schema.mustContainInputType("TodoUpsertWithoutCommentsInput")
+    mustBeEqual(
+      upsertDataInputForNestedTodo,
+      """input TodoUpsertWithoutCommentsInput {
+        |  where: TodoWhereUniqueInput!
+        |  update: TodoUpdateWithoutCommentsDataInput!
+        |  create: TodoCreateWithoutCommentsInput!
+        |}""".stripMargin
+    )
+  }
+
+  "the upsert Mutation for a model" should "be generated correctly" in {
+    val project = SchemaDsl() { schema =>
+      schema.model("Todo").field_!("title", _.String)
+    }
+    val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
+
+    val mutation = schema.mustContainMutation("upsertTodo")
+    mustBeEqual(
+      mutation,
+      "upsertTodo(where: TodoWhereUniqueInput!, create: TodoCreateInput!, update: TodoUpdateInput!): Todo!"
     )
   }
 

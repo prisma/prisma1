@@ -62,7 +62,7 @@ case class OutputTypesBuilder(project: Project, objectTypes: Map[String, ObjectT
     mapOutputType(model, objectType, onlyId = false)
   }
 
-  def mapUpdateOrCreateOutputType[C](model: Model, objectType: ObjectType[C, DataItem]): ObjectType[C, SimpleResolveOutput] = {
+  def mapUpsertOutputType[C](model: Model, objectType: ObjectType[C, DataItem]): ObjectType[C, SimpleResolveOutput] = {
     mapOutputType(model, objectType, onlyId = false)
   }
 
@@ -92,10 +92,8 @@ case class OutputTypesBuilder(project: Project, objectTypes: Map[String, ObjectT
             arguments = List(),
             resolve = (parentCtx: Context[C, SimpleResolveOutput]) =>
               dataItem match {
-                case None =>
-                  Some(parentCtx.value)
-                case Some(x) =>
-                  None
+                case None    => Some(parentCtx.value)
+                case Some(_) => None
             }
           ),
           schema.Field(

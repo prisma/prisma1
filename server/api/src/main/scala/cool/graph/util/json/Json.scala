@@ -66,15 +66,7 @@ trait SprayJsonExtensions {
     def pathAsSeqOfType[T](path: String)(implicit format: JsonFormat[T]): Seq[T] =
       Json.getPathAs[JsArray](jsValue, path).elements.map(_.convertTo[T])
 
-    def pathAsString(path: String): String = {
-      try {
-        pathAs[JsString](path).value
-      } catch {
-        case e: Exception =>
-          pathAs[JsNull.type](path)
-          null
-      }
-    }
+    def pathAsString(path: String): String = pathAs[JsString](path).value
 
     def pathAsLong(path: String): Long = pathAs[JsNumber](path).value.toLong
 

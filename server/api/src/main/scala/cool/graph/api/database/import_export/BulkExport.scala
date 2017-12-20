@@ -12,18 +12,25 @@ import cool.graph.api.schema.CustomScalarTypes.parseValueFromString
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class BulkExport(project: Project)(implicit apiDependencies: ApiDependencies){
+class BulkExport(project: Project)(implicit apiDependencies: ApiDependencies) {
 
-  val maxImportExportSize = apiDependencies.maxImportExportSize
+  val maxImportExportSize: Int = apiDependencies.maxImportExportSize
 
-  def executeExport( dataResolver: DataResolver, json: JsValue): Future[JsValue] = {
-    val start   = JsonBundle(Vector.empty, 0)
-    val request = json.convertTo[ExportRequest]
+  def executeExport(dataResolver: DataResolver, json: JsValue): Future[JsValue] = {
+
+    val start           = JsonBundle(Vector.empty, 0)
+    val request         = json.convertTo[ExportRequest]
+    val hasListFields   = project.models.flatMap(_.fields).exists(_.isList)
+    val zippedRelations = RelationInfo(dataResolver, project.relations.map(r => toRelationData(r, project)).zipWithIndex, request.cursor)
+    val zippedModels    = project.models.filter(m => m.scalarListFields.nonEmpty).zipWithIndex
+
     val response = request.fileType match {
-      case "nodes"     => resForCursor(start, NodeInfo(dataResolver, project.models.zipWithIndex, request.cursor))
-      case "lists"     => resForCursor(start, ListInfo(dataResolver, project.models.filter(m => m.scalarListFields.nonEmpty).zipWithIndex, request.cursor))
-      case "relations" => resForCursor(start, RelationInfo(dataResolver, project.relations.map(r => toRelationData(r, project)).zipWithIndex, request.cursor))
+      case "nodes" if project.models.nonEmpty        => resForCursor(start, NodeInfo(dataResolver, project.models.zipWithIndex, request.cursor))
+      case "lists" if hasListFields                  => resForCursor(start, ListInfo(dataResolver, zippedModels, request.cursor))
+      case "relations" if project.relations.nonEmpty => resForCursor(start, zippedRelations)
+      case _                                         => Future.successful(ResultFormat(start, Cursor(-1, -1, -1, -1), isFull = false))
     }
+
     response.map(_.toJson)
   }
 
@@ -63,6 +70,7 @@ class BulkExport(project: Project)(implicit apiDependencies: ApiDependencies){
     } yield {
       DataItemsPage(result.items, hasMore = result.hasNextPage)
     }
+
     dataItemsPage.map { page =>
       info match {
         case info: ListInfo => filterDataItemsPageForLists(page, info)
@@ -73,7 +81,11 @@ class BulkExport(project: Project)(implicit apiDependencies: ApiDependencies){
 
   private def filterDataItemsPageForLists(in: DataItemsPage, info: ListInfo): DataItemsPage = {
     val itemsWithoutEmptyListsAndNonListFieldsInUserData =
-      in.items.map(item => item.copy(userData = item.userData.collect { case (k, v) if info.listFields.map(_._1).contains(k) && !v.contains("[]") => (k, v) }))
+      in.items.map(item =>
+        item.copy(userData = item.userData.collect {
+          case (k, v) if info.listFields.map(_._1).contains(k) && !v.contains("[]") =>
+            (k, v)
+        }))
 
     val itemsWithSomethingLeftToInsert = itemsWithoutEmptyListsAndNonListFieldsInUserData.filter(item => item.userData != Map.empty)
     in.copy(items = itemsWithSomethingLeftToInsert)
@@ -138,8 +150,8 @@ class BulkExport(project: Project)(implicit apiDependencies: ApiDependencies){
     val nonListFieldsWithValues: Map[String, Any]     = withoutHiddenFields.collect { case (k, Some(v)) if !info.current.getFieldByName_!(k).isList => (k, v) }
     val outputMap: Map[String, Any]                   = nonListFieldsWithValues ++ createdAtUpdatedAtMap
     val result: Map[String, Any]                      = Map("_typeName" -> info.current.name, "id" -> item.id) ++ outputMap
+    val json                                          = result.toJson
 
-    val json = result.toJson
     JsonBundle(jsonElements = Vector(json), size = json.toString.length)
   }
 

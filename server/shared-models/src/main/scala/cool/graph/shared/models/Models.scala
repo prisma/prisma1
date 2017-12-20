@@ -569,6 +569,22 @@ case class Relation(
   def getRelationFieldMirrorById_!(id: String): RelationFieldMirror =
     ??? //getRelationFieldMirrorById(id).getOrElse(throw SystemErrors.InvalidRelationFieldMirrorId(id))
 
+  def sideOf(model: Model): RelationSide.Value = {
+    if (model.id == modelAId) {
+      RelationSide.A
+    } else if (model.id == modelBId) {
+      RelationSide.B
+    } else {
+      sys.error(s"The model ${model.name} is not part of the relation ${name}")
+    }
+  }
+
+  def oppositeSideOf(model: Model): RelationSide.Value = {
+    sideOf(model) match {
+      case RelationSide.A => RelationSide.B
+      case RelationSide.B => RelationSide.A
+    }
+  }
 }
 
 case class RelationFieldMirror(

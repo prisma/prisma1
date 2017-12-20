@@ -1,11 +1,12 @@
 package cool.graph.api.database
 
-import cool.graph.api.mutations.NodeSelector
+import cool.graph.api.mutations.{CoolArgs, NodeSelector}
 import cool.graph.cuid.Cuid
 import cool.graph.gc_values._
+import cool.graph.shared.models.IdType.Id
 import cool.graph.shared.models.RelationSide.RelationSide
 import cool.graph.shared.models.TypeIdentifier.TypeIdentifier
-import cool.graph.shared.models.{Model, TypeIdentifier}
+import cool.graph.shared.models.{Model, Project, Relation, TypeIdentifier}
 import org.joda.time.format.DateTimeFormat
 import play.api.libs.json._
 import slick.dbio.DBIOAction
@@ -19,6 +20,10 @@ object DatabaseMutationBuilder {
 
   val implicitlyCreatedColumns = List("id", "createdAt", "updatedAt")
 
+  def createDataItem(project: Project, model: Model, args: CoolArgs): SqlStreamingAction[Vector[Int], Int, Effect]#ResultAction[Int, NoStream, Effect] = {
+    createDataItem(project.id, model.name, args.raw)
+  }
+
   def createDataItem(projectId: String,
                      modelName: String,
                      values: Map[String, Any]): SqlStreamingAction[Vector[Int], Int, Effect]#ResultAction[Int, NoStream, Effect] = {
@@ -29,6 +34,72 @@ object DatabaseMutationBuilder {
 
     // Concat query as sql, but then convert it to Update, since is an insert query.
     (sql"insert into `#$projectId`.`#$modelName` (" concat escapedKeys concat sql") values (" concat escapedValues concat sql")").asUpdate
+  }
+
+  def updateDataItem(projectId: String, modelName: String, id: String, values: Map[String, Any]) = {
+    val escapedValues = combineByComma(values.map {
+      case (k, v) =>
+        escapeKey(k) concat sql" = " concat escapeUnsafeParam(v)
+    })
+
+    (sql"update `#$projectId`.`#$modelName` set" concat escapedValues concat sql"where id = $id").asUpdate
+  }
+
+  def updateDataItemByUnique(project: Project, model: Model, updateArgs: CoolArgs, where: NodeSelector) = {
+    val updateValues = combineByComma(updateArgs.raw.map {
+      case (k, v) =>
+        escapeKey(k) ++ sql" = " ++ escapeUnsafeParam(v)
+    })
+    (sql"update `#${project.id}`.`#${model.name}`" ++
+      sql"set " ++ updateValues ++
+      sql"where #${where.fieldName} = ${where.fieldValue};").asUpdate
+  }
+
+  def createDataItemIfUniqueDoesNotExist(project: Project, model: Model, createArgs: CoolArgs, where: NodeSelector) = {
+    val escapedColumns = combineByComma(createArgs.raw.keys.map(escapeKey))
+    val insertValues   = combineByComma(createArgs.raw.values.map(escapeUnsafeParam))
+    (sql"INSERT INTO `#${project.id}`.`#${model.name}` (" ++ escapedColumns ++ sql")" ++
+      sql"SELECT " ++ insertValues ++
+      sql"FROM DUAL" ++
+      sql"where not exists (select * from `#${project.id}`.`#${model.name}` where #${where.fieldName} = ${where.fieldValue});").asUpdate
+  }
+
+  def upsert(project: Project, model: Model, createArgs: CoolArgs, updateArgs: CoolArgs, where: NodeSelector) = {
+    import scala.concurrent.ExecutionContext.Implicits.global
+
+    val q       = DatabaseQueryBuilder.existsFromModelsByUniques(project, model, Vector(where)).as[Boolean]
+    val qInsert = createDataItemIfUniqueDoesNotExist(project, model, createArgs, where)
+    val qUpdate = updateDataItemByUnique(project, model, updateArgs, where)
+
+    val actions = for {
+      exists <- q
+      action <- if (exists.head) qUpdate else qInsert
+    } yield action
+
+    actions.transactionally
+  }
+
+  def upsertIfInRelationWith(
+      project: Project,
+      model: Model,
+      createArgs: CoolArgs,
+      updateArgs: CoolArgs,
+      where: NodeSelector,
+      relation: Relation,
+      target: Id
+  ) = {
+    import scala.concurrent.ExecutionContext.Implicits.global
+
+    val q       = DatabaseQueryBuilder.existsNodeIsInRelationshipWith(project, model, where, relation, target).as[Boolean]
+    val qInsert = createDataItem(project, model, createArgs)
+    val qUpdate = updateDataItemByUnique(project, model, updateArgs, where)
+
+    val actions = for {
+      exists <- q
+      action <- if (exists.head) qUpdate else qInsert
+    } yield action
+
+    actions.transactionally
   }
 
   case class MirrorFieldDbValues(relationColumnName: String, modelColumnName: String, modelTableName: String, modelId: String)
@@ -136,13 +207,46 @@ object DatabaseMutationBuilder {
            """
   }
 
-  def updateDataItem(projectId: String, modelName: String, id: String, values: Map[String, Any]) = {
+  def updateDataItemByUniqueValueForAIfInRelationWithGivenB(
+      projectId: String,
+      relationTableName: String,
+      b: String,
+      where: NodeSelector,
+      values: Map[String, Any]
+  ) = {
     val escapedValues = combineByComma(values.map {
       case (k, v) =>
         escapeKey(k) concat sql" = " concat escapeUnsafeParam(v)
     })
+    (sql"""update `#$projectId`.`#${where.model.name}`""" concat
+      sql"""set""" concat escapedValues concat
+      sql"""where #${where.fieldName} = ${where.fieldValue} and id in (
+             select `A`
+             from `#$projectId`.`#$relationTableName`
+             where `B` = '#$b'
+           )
+        """).asUpdate
+  }
 
-    (sql"update `#$projectId`.`#$modelName` set" concat escapedValues concat sql"where id = $id").asUpdate
+  def updateDataItemByUniqueValueForBIfInRelationWithGivenA(
+      projectId: String,
+      relationTableName: String,
+      a: String,
+      where: NodeSelector,
+      values: Map[String, Any]
+  ) = {
+    val escapedValues = combineByComma(values.map {
+      case (k, v) =>
+        escapeKey(k) concat sql" = " concat escapeUnsafeParam(v)
+    })
+    (sql"""update `#$projectId`.`#${where.model.name}`""" concat
+      sql"""set""" concat escapedValues concat
+      sql"""where #${where.fieldName} = ${where.fieldValue} and id in (
+             select `B`
+             from `#$projectId`.`#$relationTableName`
+             where `A` = '#$a'
+           )
+        """).asUpdate
   }
 
   def updateDataItemListValue(projectId: String, modelName: String, id: String, values: Map[String, Vector[Any]]) = {
@@ -206,6 +310,11 @@ object DatabaseMutationBuilder {
   }
 
   def deleteAllDataItems(projectId: String, modelName: String) = sqlu"delete from `#$projectId`.`#$modelName`"
+
+  //only use transactionally in this order
+  def disableForeignKeyConstraintChecks                   = sqlu"SET FOREIGN_KEY_CHECKS=0"
+  def truncateTable(projectId: String, tableName: String) = sqlu"TRUNCATE TABLE `#$projectId`.`#$tableName`"
+  def enableForeignKeyConstraintChecks                    = sqlu"SET FOREIGN_KEY_CHECKS=1"
 
   def deleteDataItemByValues(projectId: String, modelName: String, values: Map[String, Any]) = {
     val whereClause =

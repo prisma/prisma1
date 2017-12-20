@@ -76,7 +76,7 @@ class FilterObjectTypeBuilder(model: Model, project: Project) {
 
   lazy val filterObjectType: InputObjectType[Any] =
     InputObjectType[Any](
-      s"${model.name}Filter",
+      s"${model.name}WhereInput",
       fieldsFn = () => {
         List(
           InputField("AND", OptionInputType(ListInputType(filterObjectType)), description = FilterArguments.ANDFilter.description),
