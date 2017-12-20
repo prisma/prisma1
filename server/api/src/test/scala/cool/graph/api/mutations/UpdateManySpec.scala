@@ -5,7 +5,7 @@ import cool.graph.shared.models.Project
 import cool.graph.shared.project_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
-class UpdateItemsSpec extends FlatSpec with Matchers with ApiBaseSpec {
+class UpdateManySpec extends FlatSpec with Matchers with ApiBaseSpec {
 
   val project: Project = SchemaDsl() { schema =>
     schema.model("Todo").field_!("title", _.String)
