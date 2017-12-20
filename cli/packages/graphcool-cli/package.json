@@ -1,6 +1,6 @@
 {
   "name": "graphcool",
-  "version": "1.0.0-beta1.2.4",
+  "version": "1.0.0-alpha1.2.5",
   "main": "dist/index.js",
   "bin": {
     "graphcool": "dist/index.js",
