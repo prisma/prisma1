@@ -15,9 +15,25 @@ case class ArgumentsBuilder(project: Project) {
     List(Argument[Any]("data", inputObjectType))
   }
 
-  def getSangriaArgumentsForUpdate(model: Model): List[Argument[Any]] = {
+  def getSangriaArgumentsForUpdate(model: Model): Option[List[Argument[Any]]] = {
     val inputObjectType = inputTypesBuilder.inputObjectTypeForUpdate(model)
-    List(Argument[Any]("data", inputObjectType), whereUniqueArgument(model))
+    whereUniqueArgument(model).map { whereArg =>
+      List(Argument[Any]("data", inputObjectType), whereArg)
+    }
+  }
+
+  def getSangriaArgumentsForUpsert(model: Model): Option[List[Argument[Any]]] = {
+    whereUniqueArgument(model).map { whereArg =>
+      List(
+        whereArg,
+        Argument[Any]("create", inputTypesBuilder.inputObjectTypeForCreate(model)),
+        Argument[Any]("update", inputTypesBuilder.inputObjectTypeForUpdate(model))
+      )
+    }
+  }
+
+  def getSangriaArgumentsForDelete(model: Model): Option[List[Argument[Any]]] = {
+    whereUniqueArgument(model).map(List(_))
   }
 
   def getSangriaArgumentsForUpdateMultiple(model: Model): List[Argument[Any]] = {
@@ -28,19 +44,10 @@ case class ArgumentsBuilder(project: Project) {
     )
   }
 
-  def getSangriaArgumentsForUpsert(model: Model): List[Argument[Any]] = {
-    List(
-      whereUniqueArgument(model),
-      Argument[Any]("create", inputTypesBuilder.inputObjectTypeForCreate(model)),
-      Argument[Any]("update", inputTypesBuilder.inputObjectTypeForUpdate(model))
-    )
-  }
-
-  def getSangriaArgumentsForDelete(model: Model): List[Argument[Any]] = {
-    List(whereUniqueArgument(model))
-  }
-
-  def whereUniqueArgument(model: Model) = Argument[Any](name = "where", argumentType = inputTypesBuilder.inputObjectTypeForWhereUnique(model))
-
   def whereArgument(model: Model) = Argument[Any](name = "where", argumentType = inputTypesBuilder.inputObjectTypeForWhere(model))
+
+  def whereUniqueArgument(model: Model): Option[Argument[Any]] = {
+    inputTypesBuilder.inputObjectTypeForWhereUnique(model).map(inputType => Argument[Any](name = "where", argumentType = inputType))
+  }
+
 }

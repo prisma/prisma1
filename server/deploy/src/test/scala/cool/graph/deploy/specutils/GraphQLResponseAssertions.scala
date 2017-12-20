@@ -55,7 +55,15 @@ trait GraphQLResponseAssertions extends SprayJsonExtensions {
       }
     }
 
-    private def hasErrors: Boolean                                = json.asJsObject.fields.get("errors").isDefined
+    // todo where should be error keys? Error concept is blurry at best, utterly confusing at worst.
+    private def hasErrors: Boolean = {
+      val topLevelErrors = json.asJsObject.fields.get("errors")
+      val innerErrors    = json.asJsObject.fields("data").asJsObject.fields.head._2.asJsObject()
+
+      topLevelErrors.isDefined ||
+      (innerErrors.pathExists("errors") && innerErrors.pathAsSeq("errors").nonEmpty)
+    }
+
     private def dataContainsString(assertData: String): Boolean   = json.asJsObject.fields.get("data").toString.contains(assertData)
     private def errorContainsString(assertError: String): Boolean = json.asJsObject.fields.get("errors").toString.contains(assertError)
 

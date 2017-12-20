@@ -16,12 +16,13 @@ import spray.json.{JsValue, _}
 import scala.util.{Failure, Success, Try}
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class ObjectTypeBuilder(project: models.Project,
-                        nodeInterface: Option[InterfaceType[ApiUserContext, DataItem]] = None,
-                        modelPrefix: String = "",
-                        withRelations: Boolean = true,
-                        onlyId: Boolean = false) {
-
+class ObjectTypeBuilder(
+    project: models.Project,
+    nodeInterface: Option[InterfaceType[ApiUserContext, DataItem]] = None,
+    modelPrefix: String = "",
+    withRelations: Boolean = true,
+    onlyId: Boolean = false
+) {
   val batchPayloadType: ObjectType[ApiUserContext, BatchPayload] = ObjectType(
     name = "BatchPayload",
     description = "",
@@ -75,13 +76,12 @@ class ObjectTypeBuilder(project: models.Project,
   }
 
   protected def modelToObjectType(model: models.Model): ObjectType[ApiUserContext, DataItem] = {
-
     new ObjectType(
       name = modelPrefix + model.name,
       description = model.description,
       fieldsFn = () => {
         model.fields
-          .filter(field => if (onlyId) field.name == "id" else true)
+          .filter(_.isVisible)
           .filter(field =>
             field.isScalar match {
               case true  => true
@@ -89,7 +89,13 @@ class ObjectTypeBuilder(project: models.Project,
           })
           .map(mapClientField(model))
       },
-      interfaces = nodeInterface.toList,
+      interfaces = {
+        if (model.hasVisibleIdField) {
+          nodeInterface.toList
+        } else {
+          List.empty
+        }
+      },
       instanceCheck = (value: Any, valClass: Class[_], tpe: ObjectType[ApiUserContext, _]) =>
         value match {
           case DataItem(_, _, Some(tpe.name)) => true
@@ -137,21 +143,17 @@ class ObjectTypeBuilder(project: models.Project,
 
   def resolveConnection(field: Field): OutputType[Any] = {
     field.isList match {
-      case true =>
-        ListType(modelObjectTypes.get(field.relatedModel(project).get.name).get)
-      case false =>
-        modelObjectTypes.get(field.relatedModel_!(project).name).get
+      case true  => ListType(modelObjectTypes(field.relatedModel(project).get.name))
+      case false => modelObjectTypes(field.relatedModel_!(project).name)
     }
   }
 
   def mapToListConnectionArguments(model: models.Model, field: models.Field): List[Argument[Option[Any]]] = {
-
-    (field.isScalar, field.isList) match {
-      case (true, _) => List()
-      case (false, true) =>
-        mapToListConnectionArguments(field.relatedModel(project).get)
-      case (false, false) =>
-        mapToSingleConnectionArguments(field.relatedModel(project).get)
+    (field.isHidden, field.isScalar, field.isList) match {
+      case (true, _, _)      => List()
+      case (_, true, _)      => List()
+      case (_, false, true)  => mapToListConnectionArguments(field.relatedModel(project).get)
+      case (_, false, false) => mapToSingleConnectionArguments(field.relatedModel(project).get)
     }
   }
 
@@ -171,7 +173,6 @@ class ObjectTypeBuilder(project: models.Project,
   }
 
   def mapToUniqueArguments(model: models.Model): List[Argument[_]] = {
-
     import cool.graph.util.coolSangria.FromInputImplicit.DefaultScalaResultMarshaller
 
     model.fields
@@ -190,7 +191,7 @@ class ObjectTypeBuilder(project: models.Project,
     val filterArguments = new FilterArguments(model, isSubscriptionFilter)
 
     input
-      .map({
+      .map {
         case (key, value) =>
           val FieldFilterTuple(field, filter) = filterArguments.lookup(key)
           value match {
@@ -214,6 +215,7 @@ class ObjectTypeBuilder(project: models.Project,
                     ))
                 )
               }
+
             case value: Seq[Any] if value.nonEmpty && value.head.isInstanceOf[Map[_, _]] => {
               FilterElement(key,
                             value
@@ -222,10 +224,14 @@ class ObjectTypeBuilder(project: models.Project,
                             None,
                             filter.name)
             }
-            case value: Seq[Any] => FilterElement(key, value, field, filter.name)
-            case _               => FilterElement(key, value, field, filter.name)
+
+            case value: Seq[Any] =>
+              FilterElement(key, value, field, filter.name)
+
+            case _ =>
+              FilterElement(key, value, field, filter.name)
           }
-      })
+      }
       .toList
       .asInstanceOf[DataItemFilterCollection]
   }
@@ -319,8 +325,12 @@ object ObjectTypeBuilder {
   // todo: this entire thing should rely on GraphcoolDataTypes instead
   def convertScalarFieldValueFromDatabase(field: models.Field, item: DataItem, resolver: Boolean = false): Any = {
     field.name match {
-      case "id" if resolver && item.userData.contains("id") => item.userData("id").getOrElse(None)
-      case "id"                                             => item.id
+      case "id" if resolver && item.userData.contains("id") =>
+        item.userData("id").getOrElse(None)
+
+      case "id" =>
+        item.id
+
       case _ =>
         (item(field.name), field.isList) match {
           case (None, _) =>
@@ -328,6 +338,7 @@ object ObjectTypeBuilder {
               // todo: handle this case
             }
             None
+
           case (Some(value), true) =>
             def mapTo[T](value: Any, convert: JsValue => T): Seq[T] = {
               value match {
@@ -355,6 +366,7 @@ object ObjectTypeBuilder {
               case TypeIdentifier.Enum     => mapTo(value, x => x.convertTo[String])
               case TypeIdentifier.Json     => mapTo(value, x => x.convertTo[JsValue])
             }
+
           case (Some(value), false) =>
             def mapTo[T](value: Any) = value.asInstanceOf[T]
 

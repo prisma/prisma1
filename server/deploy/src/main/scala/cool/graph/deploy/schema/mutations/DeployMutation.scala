@@ -2,7 +2,7 @@ package cool.graph.deploy.schema.mutations
 
 import cool.graph.deploy.database.persistence.MigrationPersistence
 import cool.graph.deploy.migration.validation.{SchemaError, SchemaSyntaxValidator}
-import cool.graph.deploy.migration.{DesiredProjectInferer, MigrationStepsProposer, Migrator, RenameInferer}
+import cool.graph.deploy.migration.{NextProjectInferrer, MigrationStepsProposer, Migrator, RenameInferer}
 import cool.graph.shared.models.{Migration, Project}
 import sangria.parser.QueryParser
 
@@ -12,7 +12,7 @@ import scala.concurrent.{ExecutionContext, Future}
 case class DeployMutation(
     args: DeployMutationInput,
     project: Project,
-    desiredProjectInferer: DesiredProjectInferer,
+    nextProjectInferrer: NextProjectInferrer,
     migrationStepsProposer: MigrationStepsProposer,
     renameInferer: RenameInferer,
     migrationPersistence: MigrationPersistence,
@@ -44,12 +44,12 @@ case class DeployMutation(
 
   private def performDeployment: Future[MutationSuccess[DeployMutationPayload]] = {
     for {
-      inferedProject <- desiredProjectInferer.infer(baseProject = project, graphQlSdl).toFuture
-      nextProject    = inferedProject.copy(secrets = args.secrets)
-      renames        = renameInferer.infer(graphQlSdl)
-      migrationSteps = migrationStepsProposer.propose(project, nextProject, renames)
-      migration      = Migration(nextProject.id, 0, hasBeenApplied = false, migrationSteps) // how to get to the revision...?
-      savedMigration <- handleMigration(nextProject, migration)
+      inferredProject <- nextProjectInferrer.infer(baseProject = project, graphQlSdl).toFuture
+      nextProject     = inferredProject.copy(secrets = args.secrets)
+      renames         = renameInferer.infer(graphQlSdl)
+      migrationSteps  = migrationStepsProposer.propose(project, nextProject, renames)
+      migration       = Migration(nextProject.id, 0, hasBeenApplied = false, migrationSteps) // how to get to the revision...?
+      savedMigration  <- handleMigration(nextProject, migration)
     } yield {
       MutationSuccess(DeployMutationPayload(args.clientMutationId, nextProject, savedMigration, schemaErrors))
     }
