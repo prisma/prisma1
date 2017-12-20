@@ -8,13 +8,15 @@ import cool.graph.api.schema.APIErrors.{InvalidFirstArgument, InvalidLastArgumen
 import cool.graph.shared.models.{Field, TypeIdentifier}
 import slick.jdbc.SQLActionBuilder
 
-case class QueryArguments(skip: Option[Int],
-                          after: Option[String],
-                          first: Option[Int],
-                          before: Option[String],
-                          last: Option[Int],
-                          filter: Option[DataItemFilterCollection],
-                          orderBy: Option[OrderBy]) {
+case class QueryArguments(
+    skip: Option[Int],
+    after: Option[String],
+    first: Option[Int],
+    before: Option[String],
+    last: Option[Int],
+    filter: Option[DataItemFilterCollection],
+    orderBy: Option[OrderBy]
+) {
 
   val MAX_NODE_COUNT = 1000
 
@@ -119,7 +121,8 @@ case class QueryArguments(skip: Option[Int],
     val standardCondition = filter match {
       case Some(filterArg) =>
         generateFilterConditions(projectId, modelId, filterArg)
-      case None => None
+      case None =>
+        None
     }
 
     val cursorCondition = buildCursorCondition(projectId, modelId, standardCondition)

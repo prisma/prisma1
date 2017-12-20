@@ -2,6 +2,7 @@ package cool.graph.api.database
 
 import cool.graph.api.ApiDependencies
 import cool.graph.api.database.DatabaseQueryBuilder._
+import cool.graph.api.database.Types.DataItemFilterCollection
 import cool.graph.api.mutations.NodeSelector
 import cool.graph.api.schema.APIErrors
 import cool.graph.gc_values.GCValue
@@ -49,8 +50,8 @@ case class DataResolver(project: Project, useMasterDatabaseOnly: Boolean = false
       .map(resultTransform(_))
   }
 
-  def countByModel(model: Model, args: Option[QueryArguments] = None): Future[Int] = {
-    val query = DatabaseQueryBuilder.countAllFromModel(project.id, model.name, args)
+  def countByModel(model: Model, where: Option[DataItemFilterCollection] = None): Future[Int] = {
+    val query = DatabaseQueryBuilder.countAllFromModel(project, model, where)
     performWithTiming("countByModel", readonlyClientDatabase.run(readOnlyInt(query))).map(_.head)
   }
 
