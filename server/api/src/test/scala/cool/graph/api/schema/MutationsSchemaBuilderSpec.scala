@@ -344,4 +344,19 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec
                           |  unique: Int
                           |}""".stripMargin)
   }
+
+  "the delete many Mutation for a model" should "be generated correctly" in {
+    val project = SchemaDsl() { schema =>
+      schema
+        .model("Todo")
+        .field_!("title", _.String)
+    }
+
+    val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
+
+    val mutation = schema.mustContainMutation("deleteTodoes")
+    mustBeEqual(mutation, "deleteTodoes(where: TodoWhereInput!): BatchPayload!")
+
+    schema.mustContainInputType("TodoWhereInput")
+  }
 }

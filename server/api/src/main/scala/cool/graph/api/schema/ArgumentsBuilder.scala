@@ -44,6 +44,8 @@ case class ArgumentsBuilder(project: Project) {
     )
   }
 
+  def getSangriaArgumentsForDeleteMany(model: Model): List[Argument[Any]] = List(whereArgument(model))
+
   def whereArgument(model: Model) = Argument[Any](name = "where", argumentType = inputTypesBuilder.inputObjectTypeForWhere(model))
 
   def whereUniqueArgument(model: Model): Option[Argument[Any]] = {
