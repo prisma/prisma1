@@ -182,7 +182,8 @@ class BulkExportSpec extends FlatSpec with Matchers with ApiBaseSpec with AwaitU
                   |{"_typeName": "Model0", "id": "0", "a": "test", "b":  0, "createdAt": "2017-11-29 14:35:13"},
                   |{"_typeName": "Model1", "id": "1", "a": "test", "b":  1},
                   |{"_typeName": "Model2", "id": "2", "a": "test", "b":  2, "createdAt": "2017-11-29 14:35:13"},
-                  |{"_typeName": "Model0", "id": "3", "a": "test", "b":  3}
+                  |{"_typeName": "Model0", "id": "3", "a": "test", "b":  3},
+                  |{"_typeName": "Model1", "id": "4", "a": "test", "b":  3}
                   |]}""".stripMargin.parseJson
 
     val lists =

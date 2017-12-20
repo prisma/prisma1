@@ -1,5 +1,6 @@
 package cool.graph.deploy.schema
 
+import cool.graph.gc_values.InvalidValueForScalarType
 import cool.graph.shared.models.ProjectId
 
 trait DeployApiError extends Exception {
