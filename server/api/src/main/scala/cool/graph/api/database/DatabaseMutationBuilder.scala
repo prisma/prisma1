@@ -1,5 +1,6 @@
 package cool.graph.api.database
 
+import cool.graph.api.database.Types.DataItemFilterCollection
 import cool.graph.api.mutations.{CoolArgs, NodeSelector}
 import cool.graph.cuid.Cuid
 import cool.graph.gc_values._
@@ -43,6 +44,17 @@ object DatabaseMutationBuilder {
     })
 
     (sql"update `#$projectId`.`#$modelName` set" concat escapedValues concat sql"where id = $id").asUpdate
+  }
+
+  def updateDataItems(project: Project, model: Model, args: CoolArgs, where: DataItemFilterCollection) = {
+    val updateValues = combineByComma(args.raw.map {
+      case (k, v) =>
+        escapeKey(k) ++ sql" = " ++ escapeUnsafeParam(v)
+    })
+    val whereSql = QueryArguments.generateFilterConditions(project.id, model.name, where)
+    (sql"update `#${project.id}`.`#${model.name}`" ++
+      sql"set " ++ updateValues ++
+      sql"where" ++ whereSql.get).asUpdate
   }
 
   def updateDataItemByUnique(project: Project, model: Model, updateArgs: CoolArgs, where: NodeSelector) = {

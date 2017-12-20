@@ -3,21 +3,21 @@ package cool.graph.api.mutations.mutations
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import cool.graph.api.ApiDependencies
-import cool.graph.api.database.mutactions.mutactions.{ServerSideSubscription, UpdateDataItem}
-import cool.graph.api.database.mutactions.{ClientSqlMutaction, MutactionGroup, Transaction}
-import cool.graph.api.database.{DataItem, DataResolver}
+import cool.graph.api.database.DataResolver
+import cool.graph.api.database.Types.DataItemFilterCollection
+import cool.graph.api.database.mutactions.mutactions.UpdateDataItems
+import cool.graph.api.database.mutactions.{MutactionGroup, Transaction}
 import cool.graph.api.mutations._
-import cool.graph.api.schema.APIErrors
 import cool.graph.shared.models.{Model, Project}
 import sangria.schema
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 case class UpdateItems(
-    model: Model,
     project: Project,
+    model: Model,
     args: schema.Args,
+    where: DataItemFilterCollection,
     dataResolver: DataResolver
 )(implicit apiDependencies: ApiDependencies)
     extends ClientMutation[BatchPayload] {
@@ -33,14 +33,12 @@ case class UpdateItems(
     CoolArgs(argsPointer)
   }
 
-  val where = CoolArgs(args.raw).extractNodeSelectorFromWhereField(model)
-
   def prepareMutactions(): Future[List[MutactionGroup]] = Future.successful {
-//    val transactionMutaction = Transaction(sqlMutactions, dataResolver)
-//    List(
-//      MutactionGroup(mutactions = List(transactionMutaction), async = false)
-//    )
-    List.empty
+    val updateItems          = UpdateDataItems(project, model, coolArgs, where)
+    val transactionMutaction = Transaction(List(updateItems), dataResolver)
+    List(
+      MutactionGroup(mutactions = List(transactionMutaction), async = false)
+    )
   }
 
   override def getReturnValue: Future[BatchPayload] = Future.successful {

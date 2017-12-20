@@ -22,8 +22,9 @@ class UpdateItemsSpec extends FlatSpec with Matchers with ApiBaseSpec {
   }
 
   "The update items Mutation" should "update the items matching the where cluase" in {
-    server.executeQuerySimple(
-      """mutation {
+    val todoId = server
+      .executeQuerySimple(
+        """mutation {
           |  createTodo(
           |    data: {
           |      title: "new title1"
@@ -33,8 +34,9 @@ class UpdateItemsSpec extends FlatSpec with Matchers with ApiBaseSpec {
           |  }
           |}
         """.stripMargin,
-      project
-    )
+        project
+      )
+      .pathAsString("data.createTodo.id")
     todoCount should be(1)
 
     val result = server.executeQuerySimple(
@@ -50,6 +52,17 @@ class UpdateItemsSpec extends FlatSpec with Matchers with ApiBaseSpec {
       project
     )
     result.pathAsLong("data.updateTodoes.count") should equal(1)
+
+    val updatedTodo = server.executeQuerySimple(
+      s"""{
+        |  todo(where: {id: "$todoId"}){
+        |    title
+        |  }
+        |}""".stripMargin,
+      project
+    )
+    mustBeEqual(updatedTodo.pathAsString("data.todo.title"), "updated title")
+
   }
 
   def todoCount: Int = {
