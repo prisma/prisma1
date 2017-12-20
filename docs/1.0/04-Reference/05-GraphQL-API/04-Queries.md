@@ -453,7 +453,7 @@ Query all `Post` nodes that are not yet `published`:
 
 ```graphql
 query {
-  posts(filter: {
+  posts(where: {
     published: false
   }) {
     id
@@ -471,7 +471,7 @@ Query all `Post` nodes whose `title` is in a given list of strings:
 
 ```graphql
 query {
-  posts(filter: {
+  posts(where: {
     title_in: ["My biggest Adventure", "My latest Hobbies"]
   }) {
     id
@@ -507,7 +507,7 @@ Query all `User` nodes that have at least one `Post` node that's `published`:
 
 ```graphql
 query {
-  users(filter: {
+  users(where: {
     posts_some: {
       published: true
     }
@@ -526,7 +526,7 @@ Query all `User` nodes that did not _like_ a `Post` of an `author` in the `ADMIN
 
 ```graphql
 query {
-  users(filter: {
+  users(where: {
     likedPosts_none: {
       author: {
         accessRole: ADMIN
@@ -574,7 +574,7 @@ Query all `Post` nodes that are either `published` _and_ whose `title` is in a l
 
 ```graphql
 query($published: Boolean) {
-  posts(filter: {
+  posts(where: {
     OR: [{
       AND: [{
         title_in: ["My biggest Adventure", "My latest Hobbies"]
