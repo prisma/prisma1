@@ -36,7 +36,7 @@ case class SchemaBuilderImpl(
   val masterDataResolver = apiDependencies.masterDataResolver(project)
   val objectTypeBuilder  = new ObjectTypeBuilder(project = project, nodeInterface = Some(nodeInterface))
   val objectTypes        = objectTypeBuilder.modelObjectTypes
-  val conectionTypes     = objectTypeBuilder.modelConnectionTypes
+  val connectionTypes    = objectTypeBuilder.modelConnectionTypes
   val outputTypesBuilder = OutputTypesBuilder(project, objectTypes, dataResolver)
   val pluralsCache       = new PluralsCache
 
@@ -95,7 +95,7 @@ case class SchemaBuilderImpl(
   def getAllItemsConnectionField(model: Model): Field[ApiUserContext, Unit] = {
     Field(
       s"${camelCase(pluralsCache.pluralName(model))}Connection",
-      fieldType = conectionTypes(model.name),
+      fieldType = connectionTypes(model.name),
       arguments = objectTypeBuilder.mapToListConnectionArguments(model),
       resolve = (ctx) => {
         val arguments = objectTypeBuilder.extractQueryArgumentsFromContext(model, ctx)
