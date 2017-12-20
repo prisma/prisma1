@@ -54,7 +54,8 @@ object DatabaseMutationBuilder {
     val whereSql = QueryArguments.generateFilterConditions(project.id, model.name, where)
     (sql"update `#${project.id}`.`#${model.name}`" ++
       sql"set " ++ updateValues ++
-      sql"where" ++ whereSql.get).asUpdate
+      prefixIfNotNone("where", whereSql)).asUpdate
+
   }
 
   def updateDataItemByUnique(project: Project, model: Model, updateArgs: CoolArgs, where: NodeSelector) = {

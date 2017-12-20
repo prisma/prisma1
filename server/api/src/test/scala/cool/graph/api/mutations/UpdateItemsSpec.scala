@@ -21,28 +21,13 @@ class UpdateItemsSpec extends FlatSpec with Matchers with ApiBaseSpec {
     database.truncate(project)
   }
 
-  "The update items Mutation" should "update the items matching the where cluase" in {
-    val todoId = server
-      .executeQuerySimple(
-        """mutation {
-          |  createTodo(
-          |    data: {
-          |      title: "new title1"
-          |    }
-          |  ) {
-          |    id
-          |  }
-          |}
-        """.stripMargin,
-        project
-      )
-      .pathAsString("data.createTodo.id")
-    todoCount should be(1)
+  "The update items Mutation" should "update the items matching the where clause" in {
+    createTodo("title")
 
     val result = server.executeQuerySimple(
       """mutation {
         |  updateTodoes(
-        |    where: { title: "new title1" }
+        |    where: { title: "title" }
         |    data: { title: "updated title" }
         |  ){
         |    count
@@ -53,23 +38,69 @@ class UpdateItemsSpec extends FlatSpec with Matchers with ApiBaseSpec {
     )
     result.pathAsLong("data.updateTodoes.count") should equal(1)
 
-    val updatedTodo = server.executeQuerySimple(
-      s"""{
-        |  todo(where: {id: "$todoId"}){
+    val todoes = server.executeQuerySimple(
+      """{
+        |  todoes {
         |    title
         |  }
-        |}""".stripMargin,
+        |}
+      """.stripMargin,
       project
     )
-    mustBeEqual(updatedTodo.pathAsString("data.todo.title"), "updated title")
+    mustBeEqual(
+      todoes.pathAsJsValue("data.todoes").toString,
+      """[{"title":"updated title"}]"""
+    )
+  }
+
+  "The update items Mutation" should "update all items if the where clause is empty" in {
+    createTodo("title1")
+    createTodo("title2")
+    createTodo("title3")
+
+    val result = server.executeQuerySimple(
+      """mutation {
+        |  updateTodoes(
+        |    where: { }
+        |    data: { title: "updated title" }
+        |  ){
+        |    count
+        |  }
+        |}
+      """.stripMargin,
+      project
+    )
+    result.pathAsLong("data.updateTodoes.count") should equal(1)
+
+    val todoes = server.executeQuerySimple(
+      """{
+        |  todoes {
+        |    title
+        |  }
+        |}
+      """.stripMargin,
+      project
+    )
+    mustBeEqual(
+      todoes.pathAsJsValue("data.todoes").toString,
+      """[{"title":"updated title"},{"title":"updated title"},{"title":"updated title"}]"""
+    )
 
   }
 
-  def todoCount: Int = {
-    val result = server.executeQuerySimple(
-      "{ todoes { id } }",
+  def createTodo(title: String): Unit = {
+    server.executeQuerySimple(
+      s"""mutation {
+        |  createTodo(
+        |    data: {
+        |      title: "$title"
+        |    }
+        |  ) {
+        |    id
+        |  }
+        |}
+      """.stripMargin,
       project
     )
-    result.pathAsSeq("data.todoes").size
   }
 }
