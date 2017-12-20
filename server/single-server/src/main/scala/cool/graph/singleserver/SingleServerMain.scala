@@ -5,7 +5,7 @@ import akka.stream.ActorMaterializer
 import cool.graph.akkautil.http.ServerExecutor
 import cool.graph.api.ApiDependenciesImpl
 import cool.graph.api.server.ApiServer
-import cool.graph.deploy.server.DeployServer
+import cool.graph.deploy.server.{ClusterServer}
 
 object SingleServerMain extends App {
   implicit val system          = ActorSystem("single-server")
@@ -19,7 +19,7 @@ object SingleServerMain extends App {
 
   ServerExecutor(
     port = port,
-    ApiServer(singleServerDependencies.apiSchemaBuilder, prefix = "api"),
-    DeployServer(singleServerDependencies.deploySchemaBuilder, singleServerDependencies.projectPersistence, "system")
+    ClusterServer(singleServerDependencies.clusterSchemaBuilder, singleServerDependencies.projectPersistence, "cluster"),
+    ApiServer(singleServerDependencies.apiSchemaBuilder)
   ).startBlocking()
 }
