@@ -3,7 +3,7 @@ package cool.graph.deploy.schema
 import akka.actor.ActorSystem
 import cool.graph.deploy.DeployDependencies
 import cool.graph.deploy.database.persistence.{MigrationPersistence, ProjectPersistence}
-import cool.graph.deploy.migration.{NextProjectInferrer, MigrationStepsProposer, Migrator, RenameInferer}
+import cool.graph.deploy.migration._
 import cool.graph.deploy.schema.fields.{AddProjectField, DeployField, ManualMarshallerHelpers}
 import cool.graph.deploy.schema.mutations._
 import cool.graph.deploy.schema.types._
@@ -41,7 +41,7 @@ case class SchemaBuilderImpl(
   val projectPersistence: ProjectPersistence         = dependencies.projectPersistence
   val migrationPersistence: MigrationPersistence     = dependencies.migrationPersistence
   val migrator: Migrator                             = dependencies.migrator
-  val desiredProjectInferer: NextProjectInferrer     = NextProjectInferrer()
+  val desiredProjectInferer: NextProjectInferer      = NextProjectInferer()
   val migrationStepsProposer: MigrationStepsProposer = MigrationStepsProposer()
   val renameInferer: RenameInferer                   = RenameInferer
 

@@ -13,7 +13,7 @@ import scala.concurrent.{ExecutionContext, Future}
 case class DeployMutation(
     args: DeployMutationInput,
     project: Project,
-    nextProjectInferrer: NextProjectInferrer,
+    nextProjectInferrer: NextProjectInferer,
     migrationStepsProposer: MigrationStepsProposer,
     renameInferer: RenameInferer,
     migrationPersistence: MigrationPersistence,
