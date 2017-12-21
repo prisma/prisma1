@@ -67,6 +67,13 @@ case class CreateRelation(
     rightModelName: String
 ) extends RelationMigrationStep
 
+case class UpdateRelation(
+    relation: String,
+    name: Option[String],
+    modelAId: Option[String],
+    modelBId: Option[String]
+) extends RelationMigrationStep
+
 case class DeleteRelation(
     name: String
 ) extends MigrationStep
