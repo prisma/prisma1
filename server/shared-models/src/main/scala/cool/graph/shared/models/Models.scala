@@ -173,6 +173,8 @@ case class Project(
 
   def getFieldsByRelationId(id: Id): List[Field] = models.flatMap(_.fields).filter(f => f.relation.isDefined && f.relation.get.id == id)
 
+  def getRelationsThatConnectModels(modelA: String, modelB: String): Set[Relation] = relations.filter(_.connectsTheModels(modelA, modelB)).toSet
+
   def getRelationFieldMirrorsByFieldId(id: Id): List[RelationFieldMirror] = relations.flatMap(_.fieldMirrors).filter(f => f.fieldId == id)
 
   lazy val getOneRelations: List[Relation] = {
@@ -277,7 +279,8 @@ case class Model(
   def getFieldById_!(id: Id): Field       = getFieldById(id).get
   def getFieldById(id: Id): Option[Field] = fields.find(_.id == id)
 
-  def getFieldByName_!(name: String): Field       = getFieldByName(name).get // .getOrElse(throw FieldNotInModel(fieldName = name, modelName = this.name))
+  def getFieldByName_!(name: String): Field =
+    getFieldByName(name).getOrElse(sys.error(s"field $name is not part of the model $name")) // .getOrElse(throw FieldNotInModel(fieldName = name, modelName = this.name))
   def getFieldByName(name: String): Option[Field] = fields.find(_.name == name)
 
   def hasVisibleIdField: Boolean = getFieldByName_!("id").isVisible

@@ -44,10 +44,10 @@ case class DeployMutation(
   }
 
   private def performDeployment: Future[MutationSuccess[DeployMutationPayload]] = {
-    nextProjectInferrer.infer(baseProject = project, graphQlSdl) match {
+    val renames = renameInferer.infer(graphQlSdl)
+    nextProjectInferrer.infer(baseProject = project, renames, graphQlSdl) match {
       case Good(inferredProject) =>
         val nextProject    = inferredProject.copy(secrets = args.secrets)
-        val renames        = renameInferer.infer(graphQlSdl)
         val migrationSteps = migrationStepsProposer.propose(project, nextProject, renames)
         val migration      = Migration(nextProject.id, 0, hasBeenApplied = false, migrationSteps) // how to get to the revision...?
 

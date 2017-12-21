@@ -8,7 +8,7 @@ import org.scalactic.{Bad, Good, Or}
 import sangria.ast.Document
 
 trait NextProjectInferer {
-  def infer(baseProject: Project, graphQlSdl: Document): Project Or ProjectSyntaxError
+  def infer(baseProject: Project, renames: Renames, graphQlSdl: Document): Project Or ProjectSyntaxError
 }
 
 sealed trait ProjectSyntaxError
@@ -17,12 +17,13 @@ case class InvalidGCValue(err: InvalidValueForScalarType)                       
 
 object NextProjectInferer {
   def apply() = new NextProjectInferer {
-    override def infer(baseProject: Project, graphQlSdl: Document) = NextProjectInfererImpl(baseProject, graphQlSdl).infer()
+    override def infer(baseProject: Project, renames: Renames, graphQlSdl: Document) = NextProjectInfererImpl(baseProject, renames, graphQlSdl).infer()
   }
 }
 
 case class NextProjectInfererImpl(
     baseProject: Project,
+    renames: Renames,
     sdl: Document
 ) {
   import DataSchemaAstExtensions._
@@ -48,8 +49,13 @@ case class NextProjectInfererImpl(
       val fields: Seq[Or[Field, InvalidGCValue]] = objectType.fields.flatMap { fieldDef =>
         val typeIdentifier = typeIdentifierForTypename(fieldDef.typeName)
         //val relation       = fieldDef.relationName.flatMap(relationName => nextRelations.find(_.name == relationName))
-        val relation = nextRelations.find { relation =>
-          relation.connectsTheModels(objectType.name, fieldDef.typeName)
+
+        val relation = if (fieldDef.hasScalarType) {
+          None
+        } else {
+          nextRelations.find { relation =>
+            relation.connectsTheModels(objectType.name, fieldDef.typeName)
+          }
         }
 
         def fieldWithDefault(default: Option[GCValue]) = {
@@ -106,24 +112,36 @@ case class NextProjectInfererImpl(
       objectType    <- sdl.objectTypes
       relationField <- objectType.fields.filter(!_.hasScalarType)
     } yield {
+      val model1           = objectType.name
+      val model2           = relationField.typeName
+      val (modelA, modelB) = if (model1 < model2) (model1, model2) else (model2, model1)
+
       val relationName = relationField.relationName match {
         case Some(name) =>
           name
         case None =>
-          val modelA = objectType.name
-          val modelB = relationField.typeName
-          if (modelA < modelB) { // we want the generation of relation names to be deterministic
-            s"${modelA}To${modelB}"
-          } else {
-            s"${modelB}To${modelA}"
-          }
+          s"${modelA}To${modelB}"
       }
-      Relation(
-        id = relationName,
-        name = relationName,
-        modelAId = objectType.name,
-        modelBId = relationField.typeName
-      )
+      val previousModelAName    = renames.getPreviousModelName(modelA)
+      val previousModelBName    = renames.getPreviousModelName(modelB)
+      val oldEquivalentRelation = baseProject.getRelationsThatConnectModels(previousModelAName, previousModelBName).headOption
+
+      oldEquivalentRelation match {
+        case Some(relation) =>
+          val nextModelAId = if (previousModelAName == relation.modelAId) modelA else modelB
+          val nextModelBId = if (previousModelBName == relation.modelBId) modelB else modelA
+          relation.copy(
+            modelAId = nextModelAId,
+            modelBId = nextModelBId
+          )
+        case None =>
+          Relation(
+            id = relationName,
+            name = relationName,
+            modelAId = modelA,
+            modelBId = modelB
+          )
+      }
     }
 
     tmp.groupBy(_.name).values.flatMap(_.headOption).toSet
