@@ -27,8 +27,8 @@ The first thing you need to do is download the starter project for this guide.
 Open a terminal and download the starter project:
 
 ```sh
-curl https://codeload.github.com/graphcool-examples/react-graphql/tar.gz/starters | tar -xz --strip=1 react-graphql-starters/authentication-with-email-and-apollo
-cd authentication-with-email-and-apollo
+git clone git@github.com:graphcool-examples/guide-starters.git
+cd guide-starters/authentication-with-email-and-apollo
 ```
 
 </Instruction>
