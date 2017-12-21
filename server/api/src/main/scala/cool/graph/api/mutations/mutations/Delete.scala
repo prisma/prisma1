@@ -45,11 +45,7 @@ case class Delete(
 
       }
       .map(_ => {
-
-        val whereField = model.fields.find(_.name == where.fieldName).get
-        val converter = GCStringConverter(whereField.typeIdentifier, whereField.isList)
-
-        val itemToDelete = deletedItemOpt.getOrElse(throw APIErrors.DataItemDoesNotExist(model.name, where.fieldName, converter.fromGCValue(where.fieldValue)))
+        val itemToDelete = deletedItemOpt.getOrElse(throw APIErrors.DataItemDoesNotExist(model.name, where.fieldName, where.fieldValueAsString))
 
         val sqlMutactions        = SqlMutactions(dataResolver).getMutactionsForDelete(model, itemToDelete.id, itemToDelete)
         val transactionMutaction = Transaction(sqlMutactions, dataResolver)

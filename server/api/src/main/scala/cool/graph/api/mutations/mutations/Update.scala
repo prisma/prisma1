@@ -62,16 +62,14 @@ case class Update(
         )
 
       case None =>
-        val whereField = model.fields.find(_.name == where.fieldName).get
-        val converter = GCStringConverter(whereField.typeIdentifier, whereField.isList)
-        throw APIErrors.DataItemDoesNotExist(model.name, where.fieldName, converter.fromGCValue(where.fieldValue))
+        throw APIErrors.DataItemDoesNotExist(model.name, where.fieldName, where.fieldValueAsString)
     }
   }
 
   override def getReturnValue: Future[ReturnValueResult] = {
     dataItem flatMap {
       case Some(dataItem) => returnValueById(model, dataItem.id)
-      case None           => Future.successful(NoReturnValue(where.fieldValue.toString)) // FIXME: NoReturnValue should not be fixed to id only.
+      case None           => Future.successful(NoReturnValue(where.fieldValueAsString))
     }
   }
 

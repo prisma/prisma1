@@ -59,10 +59,7 @@ object DatabaseMutationBuilder {
   }
 
   def updateDataItemByUnique(project: Project, model: Model, updateArgs: CoolArgs, where: NodeSelector) = {
-    val updateValues = combineByComma(updateArgs.raw.map {
-      case (k, v) =>
-        escapeKey(k) ++ sql" = " ++ escapeUnsafeParam(v)
-    })
+    val updateValues = combineByComma(updateArgs.raw.map { case (k, v) => escapeKey(k) ++ sql" = " ++ escapeUnsafeParam(v) })
     (sql"update `#${project.id}`.`#${model.name}`" ++
       sql"set " ++ updateValues ++
       sql"where #${where.fieldName} = ${where.fieldValue};").asUpdate
