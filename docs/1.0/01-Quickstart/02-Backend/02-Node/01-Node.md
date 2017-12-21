@@ -42,14 +42,14 @@ Here's the file structure of the project:
 Let's investigate the generated files and understand their roles:
 
 - `/` (_root directory_)
-  - [`.graphqlconfig.yml`](./.graphqlconfig.yml) GraphQL configuration file containing the endpoints and schema configuration. Used by the [`graphql-cli`](https://github.com/graphcool/graphql-cli) and the [GraphQL Playground](https://github.com/graphcool/graphql-playground). See [`graphql-config`](https://github.com/graphcool/graphql-config) for more information.
-  - [`graphcool.yml`](./graphcool.yml): The root configuration file for your database service ([documentation](https://www.graph.cool/docs/1.0/reference/graphcool.yml/overview-and-example-foatho8aip)).
+  - [`.graphqlconfig.yml`](https://github.com/graphql-boilerplates/node-graphql-server/tree/master/basic/.graphqlconfig.yml) GraphQL configuration file containing the endpoints and schema configuration. Used by the [`graphql-cli`](https://github.com/graphcool/graphql-cli) and the [GraphQL Playground](https://github.com/graphcool/graphql-playground). See [`graphql-config`](https://github.com/graphcool/graphql-config) for more information.
+  - [`graphcool.yml`](https://github.com/graphql-boilerplates/node-graphql-server/tree/master/basic/graphcool.yml): The root configuration file for your database service ([documentation](https://www.graph.cool/docs/1.0/reference/graphcool.yml/overview-and-example-foatho8aip)).
 - `/database`
-  - [`database/datamodel.graphql`](./database/datamodel.graphql) contains the data model that you define for the project (written in [SDL](https://blog.graph.cool/graphql-sdl-schema-definition-language-6755bcb9ce51)). We'll discuss this next.
-  - [`database/schema.generated.graphql`](./database/schema.generated.graphql) defines the **database schema**. It contains the definition of the CRUD API for the types in your data model and is generated based on your `datamodel.graphql`. **You should never edit this file manually**, but introduce changes only by altering `datamodel.graphql` and run `graphcool deploy`.
+  - [`database/datamodel.graphql`](https://github.com/graphql-boilerplates/node-graphql-server/tree/master/basic/database/datamodel.graphql) contains the data model that you define for the project (written in [SDL](https://blog.graph.cool/graphql-sdl-schema-definition-language-6755bcb9ce51)). We'll discuss this next.
+  - [`database/schema.generated.graphql`](https://github.com/graphql-boilerplates/node-graphql-server/tree/master/basic/database/schema.generated.graphql) defines the **database schema**. It contains the definition of the CRUD API for the types in your data model and is generated based on your `datamodel.graphql`. **You should never edit this file manually**, but introduce changes only by altering `datamodel.graphql` and run `graphcool deploy`.
 - `/src`
-  - [`src/schema.graphql`](src/schema.graphql) defines your **application schema**. It contains the GraphQL API that you want to expose to your client applications.
-  - [`src/index.js`](src/index.js) is the entry point of your server, pulling everything together and starting the `GraphQLServer` from [`graphql-yoga`](https://github.com/graphcool/graphql-yoga).
+  - [`src/schema.graphql`](https://github.com/graphql-boilerplates/node-graphql-server/tree/master/basic/src/schema.graphql) defines your **application schema**. It contains the GraphQL API that you want to expose to your client applications.
+  - [`src/index.js`](https://github.com/graphql-boilerplates/node-graphql-server/tree/master/basic/src/index.js) is the entry point of your server, pulling everything together and starting the `GraphQLServer` from [`graphql-yoga`](https://github.com/graphcool/graphql-yoga).
 
 Most important for you at this point is `database/datamodel.graphql` and `src/schema.graphql` as these are the files you use to define your data model which is the foundation for the API that's exposed to your client applications.
 
@@ -187,11 +187,11 @@ If you now send the `feed` query, the server will still return an empty list. Th
 
 <Instruction>
 
-Copy the `id` of the `Post` node that ws returned by the `createDraft` mutation and use it to replace the `__POST_ID__` placeholder in the following mutation:
+Copy the `id` of the `Post` node that was returned by the `createDraft` mutation and use it to replace the `__POST_ID__` placeholder in the following mutation:
 
 ```graphql
 mutation {
-  publish(id: ID) {
+  publish(id: "__POST_ID__) {
     id
     isPublished
   }
