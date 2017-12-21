@@ -162,7 +162,7 @@ graphcool playground
 
 Note that the Playground let's you interact with the web server's GraphQL API (the one that's defined by your application schema) as well as the CRUD GraphQL API of the database service directly. Both Playground are displayed side-by-side:
 
-![](https://imgur.com/a/tPSLc.png)
+![](https://imgur.com/z7MWZA8.png)
 
 Once the Playground opened, you can send queries and mutations.
 
