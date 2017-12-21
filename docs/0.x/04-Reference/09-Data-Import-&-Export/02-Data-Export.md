@@ -5,14 +5,14 @@ description: Data Export
 
 # Data Export
 
-Exporting data can be done either using the CLI or the raw export API. In both cases, the downloaded data is formatted in JSON and adheres to the Normalized Data Format (NDF). As the exported data is in NDF, it can directly be imported into a service with an identical schema. This can be useful when test data is needed for a service, e.g. in a `dev` stage.
+Exporting data can be done either using the CLI or the raw export API. In both cases, the downloaded data is formatted in JSON and adheres to the Normalized Data Format (NDF). As the exported data is in NDF, it can directly be imported into a service with an identical schema. This can be useful when test data is needed for a service, e.g. in a `dev` environment.
 
 ## Data export with the CLI
 
 The Graphcool CLI offers the `graphcool export` command. It accepts two options:
 
 - `--export-path` (short: `-e`): A file path to a .zip-directory which will be created by the CLI and where the exported data is stored
-- `--stage` (short: `-s`): The name of the stage from which the data should be exported
+- `--target` (short: `-t`): The name of the deployment target from which the data should be exported
 
 Under the hood, the CLI uses the expport API that's described in the next section. However, using the CLI provides some major benefits:
 

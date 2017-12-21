@@ -38,7 +38,7 @@ You can upload an unlimited number of files for each of these types, but each fi
 The Graphcool CLI offers the `graphcool import` command. It accepts two options:
 
 - `--data`  (short: `-d`): A file path to a .zip-directory containing the data to be imported
-- `--stage` (short: `-s`): The name of the stage where data should be imported
+- `--target` (short: `-t`): The name of the deployment target where data should be imported
 
 Under the hood, the CLI uses the import API that's described in the next section. However, using the CLI provides some major benefits:
 
