@@ -1,11 +1,10 @@
 package cool.graph.deploy.migration
 
-import cool.graph.deploy.specutils.DeploySpecBase
 import cool.graph.shared.models._
 import cool.graph.shared.project_dsl.SchemaDsl.SchemaBuilder
 import org.scalatest.{FlatSpec, Matchers}
 
-class MigrationStepsProposerSpec extends FlatSpec with Matchers with DeploySpecBase {
+class MigrationStepsProposerSpec extends FlatSpec with Matchers {
 
   /**
     * Basic tests
