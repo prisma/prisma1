@@ -5,7 +5,7 @@ import cool.graph.api.database.DatabaseQueryBuilder._
 import cool.graph.api.database.Types.DataItemFilterCollection
 import cool.graph.api.mutations.NodeSelector
 import cool.graph.api.schema.APIErrors
-import cool.graph.gc_values.GCValue
+import cool.graph.gc_values.{GCValue, GraphQLIdGCValue}
 import cool.graph.shared.models.IdType.Id
 import cool.graph.shared.models.TypeIdentifier.TypeIdentifier
 import cool.graph.shared.models._
@@ -68,8 +68,8 @@ case class DataResolver(project: Project, useMasterDatabaseOnly: Boolean = false
     performWithTiming("existsByModel", readonlyClientDatabase.run(readOnlyBoolean(query))).map(_.head)
   }
 
-  def resolveByUnique(model: Model, key: String, value: Any): Future[Option[DataItem]] = {
-    batchResolveByUnique(model, key, List(unwrapGcValue(value))).map(_.headOption)
+  def resolveByUnique(where: NodeSelector): Future[Option[DataItem]] = {
+    batchResolveByUnique(where.model, where.fieldName, List(where.unwrappedFieldValue)).map(_.headOption)
   }
 
   def resolveByUniques(model: Model, uniques: Vector[NodeSelector]): Future[Vector[DataItem]] = {
@@ -128,7 +128,7 @@ case class DataResolver(project: Project, useMasterDatabaseOnly: Boolean = false
       .map {
         case Some(modelId) =>
           val model = project.getModelById_!(modelId.trim)
-          resolveByUnique(model, "id", globalId).map(_.map(mapDataItem(model)).map(_.copy(typeName = Some(model.name))))
+          resolveByUnique(NodeSelector(model, "id", GraphQLIdGCValue(globalId))).map(_.map(mapDataItem(model)).map(_.copy(typeName = Some(model.name))))
         case _ => Future.successful(None)
       }
       .flatMap(identity)
@@ -189,7 +189,7 @@ case class DataResolver(project: Project, useMasterDatabaseOnly: Boolean = false
     )
   }
 
-  def resolveByModelAndId(model: Model, id: Id): Future[Option[DataItem]]                  = resolveByUnique(model, "id", id)
+  def resolveByModelAndId(model: Model, id: Id): Future[Option[DataItem]]                  = resolveByUnique(NodeSelector(model, "id", GraphQLIdGCValue(id)))
   def resolveByModelAndIdWithoutValidation(model: Model, id: Id): Future[Option[DataItem]] = resolveByUniqueWithoutValidation(model, "id", id)
 
   def countByRelationManyModels(fromField: Field, fromNodeIds: List[String], args: Option[QueryArguments]): Future[List[(String, Int)]] = {

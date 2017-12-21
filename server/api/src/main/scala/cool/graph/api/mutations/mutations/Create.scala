@@ -8,6 +8,7 @@ import cool.graph.api.database.mutactions.mutactions.CreateDataItem
 import cool.graph.api.database.mutactions.{MutactionGroup, Transaction}
 import cool.graph.api.mutations._
 import cool.graph.cuid.Cuid
+import cool.graph.gc_values.GraphQLIdGCValue
 import cool.graph.shared.models.IdType.Id
 import cool.graph.shared.models._
 import sangria.schema
@@ -59,7 +60,7 @@ case class Create(
 
   override def getReturnValue: Future[ReturnValueResult] = {
     for {
-      returnValue <- returnValueById(model, id)
+      returnValue <- returnValueByUnique(NodeSelector(model, "id", GraphQLIdGCValue(id)))
       dataItem    = returnValue.asInstanceOf[ReturnValue].dataItem
     } yield {
       ReturnValue(dataItem)
