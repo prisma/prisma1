@@ -4,7 +4,7 @@ import cool.graph.deploy.database.DatabaseMutationBuilder
 
 import scala.concurrent.Future
 
-case class RenameModelTable(projectId: String, previousName: String, nextName: String) extends ClientSqlMutaction {
+case class RenameTable(projectId: String, previousName: String, nextName: String) extends ClientSqlMutaction {
 
   override def execute: Future[ClientSqlStatementResult[Any]] = setName(previousName, nextName)
 
