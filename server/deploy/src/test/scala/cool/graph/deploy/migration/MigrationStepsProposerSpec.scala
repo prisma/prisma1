@@ -243,7 +243,7 @@ class MigrationStepsProposerSpec extends FlatSpec with Matchers {
     )
   }
 
-  "Updating Relations" should "create UpdateRelation steps" in {
+  "Updating Relations" should "create UpdateRelation steps (even when there are lots of renames)" in {
     val previousProject = SchemaDsl() { schema =>
       val comment = schema.model("Comment")
       schema.model("Todo").oneToManyRelation("comments", "todo", comment, relationName = Some("CommentToTodo"))
@@ -251,13 +251,17 @@ class MigrationStepsProposerSpec extends FlatSpec with Matchers {
 
     val nextProject = SchemaBuilder() { schema =>
       val comment = schema.model("CommentNew")
-      schema.model("TodoNew").oneToManyRelation("comments", "todo", comment, relationName = Some("CommentNewToTodoNew"))
+      schema.model("TodoNew").oneToManyRelation("commentsNew", "todoNew", comment, relationName = Some("CommentNewToTodoNew"))
     }
 
     val renames = Renames(
       models = Vector(
         Rename(previous = "Todo", next = "TodoNew"),
         Rename(previous = "Comment", next = "CommentNew")
+      ),
+      fields = Vector(
+        FieldRename(previousModel = "Todo", previousField = "comments", nextModel = "TodoNew", nextField = "commentsNew"),
+        FieldRename(previousModel = "Comment", previousField = "todo", nextModel = "CommentNew", nextField = "todoNew")
       )
     )
 
@@ -268,8 +272,8 @@ class MigrationStepsProposerSpec extends FlatSpec with Matchers {
     steps should contain(UpdateRelation("CommentToTodo", name = Some("CommentNewToTodoNew"), modelAId = Some("TodoNew"), modelBId = Some("CommentNew")))
     steps should contain(UpdateModel("Comment", newName = "CommentNew"))
     steps should contain(UpdateModel("Todo", newName = "TodoNew"))
-    steps should contain(UpdateField("Comment", "todo", None, None, None, None, None, None, Some(Some("commentnewtotodonew")), None, None))
-    steps should contain(UpdateField("Todo", "comments", None, None, None, None, None, None, Some(Some("commentnewtotodonew")), None, None))
+    steps should contain(UpdateField("Comment", "todo", Some("todoNew"), None, None, None, None, None, Some(Some("commentnewtotodonew")), None, None))
+    steps should contain(UpdateField("Todo", "comments", Some("commentsNew"), None, None, None, None, None, Some(Some("commentnewtotodonew")), None, None))
   }
 
   // TODO: this spec probably cannot be fulfilled. And it probably does need to because the NextProjectInferer guarantees that those swaps cannot occur. Though this must be verified by extensive testing.
