@@ -76,7 +76,7 @@ In case the `valueType` is `"lists"`, the structure for the objects inside the `
 }
 ```
 
-The notations expresses that the fields `_typeName` and `id` are of type string. `_typeName` refers to the name of the SDL type from your data model. The `<scalarListField>`-placeholder is the name of the of the list fields of that SDL type. Note that in contrast to the scalar list fields, each object can only values only for one field.
+The notations expresses that the fields `_typeName` and `id` are of type string. `_typeName` refers to the name of the SDL type from your data model. The `<scalarListField>`-placeholder is the name of the list fields of that SDL type. Note that in contrast to the scalar list fields, each object can only contain values only for one field.
 
 For example, the following JSON document can be used to import the values for the `hobbies` list field of two `User` nodes:
 
