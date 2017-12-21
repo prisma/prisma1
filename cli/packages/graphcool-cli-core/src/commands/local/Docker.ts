@@ -14,7 +14,7 @@ export default class Docker {
   config: Config
   cluster?: Cluster
   ymlPath: string = path.join(__dirname, 'docker/docker-compose.yml')
-  envPath: string = path.join(__dirname, 'docker/.envrc')
+  envPath: string = path.join(__dirname, 'docker/env')
   envVars: { [varName: string]: string }
   clusterName: string
   constructor(
@@ -65,7 +65,7 @@ export default class Docker {
     }
     const customVars = {
       PORT: String(port),
-      SCHEMA_MANAGER_ENDPOINT: `http://graphcool-database:${port}/system/schema`,
+      SCHEMA_MANAGER_ENDPOINT: `http://graphcool-database:${port}/cluster/schema`,
     }
     debug(`customVars`)
     debug(customVars)
@@ -130,7 +130,7 @@ export default class Docker {
 
   async nuke(): Promise<Docker> {
     await this.init()
-    await this.run('down')
+    await this.run('down', '--remove-orphans', '-v', '--rmi', 'local')
     return this.run('up', '-d', '--remove-orphans')
   }
 

@@ -8,7 +8,7 @@ import List from './commands/list/index'
 // import Delete from './commands/delete/index'
 // import RootTokens from './commands/root-token/index'
 // import FunctionLogs from './commands/logs/function'
-import PullLocal from './commands/local/pull'
+import UpgradeLocal from './commands/local/upgrade'
 import Stop from './commands/local/stop'
 import Up from './commands/local/up'
 import Eject from './commands/local/eject'
@@ -104,7 +104,7 @@ export const commands = [
   Up,
   Stop,
   Logs,
-  PullLocal,
+  UpgradeLocal,
   Eject,
   Nuke,
   Reset,
@@ -125,7 +125,7 @@ export {
   // Delete,
   // RootTokens,
   // FunctionLogs,
-  PullLocal,
+  UpgradeLocal,
   Stop,
   Up,
   Eject,

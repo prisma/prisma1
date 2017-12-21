@@ -20,8 +20,8 @@ export default class Eject extends Command {
       newEnvrcPath = path.join(process.cwd(), 'env.bat')
       fs.writeFileSync(newEnvrcPath, this.getWindowsBat())
     } else {
-      newEnvrcPath = path.join(process.cwd(), '.envrc')
-      fs.copySync(path.join(__dirname, 'docker/.envrc'), newEnvrcPath)
+      newEnvrcPath = path.join(process.cwd(), 'env')
+      fs.copySync(path.join(__dirname, 'docker/env'), newEnvrcPath)
     }
     this.out.log('')
     this.out.log(`Written ${newComposePath}`)
@@ -37,7 +37,7 @@ export default class Eject extends Command {
   }
 
   private getWindowsBat() {
-    const envrc = fs.readFileSync(path.join(__dirname, 'docker/.envrc'), 'utf-8')
+    const envrc = fs.readFileSync(path.join(__dirname, 'docker/env'), 'utf-8')
     const docker = new Docker(this.out, this.config, this.env, '')
     const env = docker.parseEnv(envrc)
     return this.printBat(env)
