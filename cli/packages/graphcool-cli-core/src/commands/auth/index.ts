@@ -12,10 +12,10 @@ export default class Auth extends Command {
   ${chalk.green('Examples:')}
       
   ${chalk.gray('-')} Authenticate using the browser
-    ${chalk.green('$ graphcool login')}
+    ${chalk.green('$ graphcool-framework login')}
   
   ${chalk.gray('-')} Authenticate using an existing token
-    ${chalk.green('$ graphcool login -t <token>')}    
+    ${chalk.green('$ graphcool-framework login -t <token>')}    
   
   `
   static flags: Flags = {
@@ -39,9 +39,7 @@ export default class Auth extends Command {
     if (token) {
       this.env.setToken(token)
       this.env.saveGlobalRC()
-      this.out.log(
-        `Saved new token to ${chalk.bold(this.config.globalRCPath)}`,
-      )
+      this.out.log(`Saved new token to ${chalk.bold(this.config.globalRCPath)}`)
     } else if (alreadyAuthenticated) {
       this.out.log(
         `You are already authenticated. Your local token is saved at ${chalk.bold(

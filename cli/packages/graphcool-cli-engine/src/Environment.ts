@@ -78,7 +78,7 @@ export class Environment {
           'local',
         )}, but don't have docker initialized, yet.
 Please run ${chalk.green(
-          '$ graphcool local up',
+          '$ graphcool-framework local up',
         )} to get a local Graphcool cluster.
 `)
         this.out.exit(1)

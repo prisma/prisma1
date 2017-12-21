@@ -19,18 +19,16 @@ export default class Deploy extends Command {
   
   ${chalk.green.bold('Examples:')}
       
-${chalk.gray(
-    '-',
-  )} Deploy local service definition changes to the default stage.
-  ${chalk.green('$ graphcool deploy')}
+${chalk.gray('-')} Deploy local service definition changes to the default stage.
+  ${chalk.green('$ graphcool-framework deploy')}
 
 ${chalk.gray('-')} Deploy local changes to a specific stage called \`prod\`
-  ${chalk.green('$ graphcool deploy --stage prod')}
+  ${chalk.green('$ graphcool-framework deploy --stage prod')}
     
 ${chalk.gray(
     '-',
   )} Deploy local changes to a specific stage called \`prod\`, accepting potential data loss caused by schema changes
-  ${chalk.green('$ graphcool deploy --stage production --force')}
+  ${chalk.green('$ graphcool-framework deploy --stage production --force')}
   `
   static flags: Flags = {
     target: flags.string({
@@ -126,7 +124,7 @@ ${chalk.gray(
           'local',
         )}, but don't have docker initialized, yet.
 Please run ${chalk.green(
-          '$ graphcool local up',
+          '$ graphcool-framework local up',
         )} to get a local Graphcool cluster.
 `)
         this.out.exit(1)
@@ -271,9 +269,9 @@ https://console.graph.cool/${encodeURIComponent(info.name)}/settings/general`)
     const localNote = isLocal ? ' locally' : ''
 
     this.out.log('')
-    const projectMessage = `Creating service ${chalk.bold(name)}${
-      localNote
-    } in cluster ${cluster}`
+    const projectMessage = `Creating service ${chalk.bold(
+      name,
+    )}${localNote} in cluster ${cluster}`
     this.out.action.start(projectMessage)
 
     // create project
