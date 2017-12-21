@@ -102,38 +102,5 @@ For example, a relation with the two fields `users: [User!]!` and `post: Post`, 
 
 Permission queries can be used to express all common authorization patterns like **role-based authorization**, **access control lists** and **ownership derived access**. For more information check [the full guide](!alias-miesho4goo).
 
-## Writing permission queries in a GraphQL Playground
-
-The [GraphQL Playground](https://github.com/graphcool/graphql-playground) has built-in support for writing permission queries.
-
-You can download it [here](https://github.com/graphcool/graphql-playground/releases).
-
-### Opening a Playground
-
-The Playground is a standalone app that you can simply open using the interface of your operating system and then set the endpoint of your GraphQL API.
-
-To directly open the Playground for a Graphcool service, you can execute the [`graphcool playground`](!alias-aiteerae6l#graphcool-playground) command in the root directory of your service definition.
-
-### Opening a new "permission query"-tab
-
-Once the Playground is open and configured to run against your Graphcool service, you can click the **Key**-icon in the top-right corner to open a new "permission query"-tab:
-
-![](https://i.imgur.com/yNwhYBq.png)
-
-Before the tab opens, you can specify the _operation_ for which the permission query should apply:
-
-![](https://imgur.com/s1EXJmx.png)
-
-Once you selected the operation, a new "permission query"-tab opens and you can start writing your query. The query will be executed against the [permission schema](#the-qraphql-permission-schema).
-
-
-### Writing a permission query
-
-Depending on the operation that was selected, the Playground displays a number of available [permission variables](#available-graphql-variables-for-permission-queries) in the center pane.
-
-When writing the query, you can select a variable and it will be automatically injected as an input argument for your query. Note that you still have to set the values of for the variables in the _Query Variables_ section of the Playground (in the bottom left corner):
-
-![](https://imgur.com/qfo6I8n.png)
-
 
 
