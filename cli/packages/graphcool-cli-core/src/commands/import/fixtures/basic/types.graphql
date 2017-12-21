@@ -1,0 +1,20 @@
+type Post @model {
+  id: ID! @isUnique
+  title: String!
+  description: String
+  comments: [Comment!]! @relation(name: "PostComment")
+  tags: [String!]!
+  state: PostState!
+}
+
+enum PostState {
+  Published
+  Unpublished
+  Reviewed
+}
+
+type Comment @model {
+  id: ID! @isUnique
+  text: String!
+  post: Post @relation(name: "PostComment")
+}

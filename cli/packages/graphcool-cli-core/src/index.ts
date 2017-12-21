@@ -19,6 +19,8 @@ import AddTemplate from './commands/add-template/add-template'
 import PsLocal from './commands/local/ps'
 import Reset from './commands/reset/reset'
 import Clusters from './commands/clusters/index'
+import Import from './commands/import/index'
+import Export from './commands/export/index'
 
 export const groups = [
   {
@@ -100,6 +102,16 @@ export const topics = [
     description: 'Manage your private clusters',
     group: 'general',
   },
+  {
+    name: 'import',
+    description: 'Import command',
+    group: 'general',
+  },
+  {
+    name: 'export',
+    description: 'Export command',
+    group: 'general',
+  },
 ]
 
 export const commands = [
@@ -124,6 +136,8 @@ export const commands = [
   PsLocal,
   Reset,
   Clusters,
+  Import,
+  Export,
 ]
 
 export {
@@ -148,4 +162,6 @@ export {
   PsLocal,
   Reset,
   Clusters,
+  Import,
+  Export,
 }
