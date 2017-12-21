@@ -1366,9 +1366,9 @@ graceful-fs@~3.0.2:
   dependencies:
     natives "^1.1.0"
 
-graphcool-cli-core@1.10.1-framework:
-  version "1.10.1-framework"
-  resolved "https://registry.yarnpkg.com/graphcool-cli-core/-/graphcool-cli-core-1.10.1-framework.tgz#889e805315552af613122cb1d56168d601e79bd1"
+graphcool-cli-core@1.10.2-framework:
+  version "1.10.2-framework"
+  resolved "https://registry.yarnpkg.com/graphcool-cli-core/-/graphcool-cli-core-1.10.2-framework.tgz#3896b5a54411c81376720605b0575cd6f3f15a6f"
   dependencies:
     archiver "^2.1.0"
     callsites "^2.0.0"
@@ -1404,9 +1404,9 @@ graphcool-cli-core@1.10.1-framework:
     validator "^8.2.0"
     yauzl "^2.9.1"
 
-graphcool-cli-engine@0.5.3-framework:
-  version "0.5.3-framework"
-  resolved "https://registry.yarnpkg.com/graphcool-cli-engine/-/graphcool-cli-engine-0.5.3-framework.tgz#000df822bd2da2ad53a00b27b82094ca8d2e7b5e"
+graphcool-cli-engine@0.5.4-framework:
+  version "0.5.4-framework"
+  resolved "https://registry.yarnpkg.com/graphcool-cli-engine/-/graphcool-cli-engine-0.5.4-framework.tgz#b6c65f092c07b00c75ff5ec2efa43d5e73666511"
   dependencies:
     "@heroku/linewrap" "^1.0.0"
     "@types/fs-extra" "^4.0.2"
