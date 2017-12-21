@@ -5,6 +5,7 @@ import chalk from 'chalk'
 import { repeat } from 'lodash'
 import * as archiver from 'archiver'
 import * as os from 'os'
+const debug = require('debug')('Exporter')
 
 export type FileType = 'nodes' | 'relations' | 'lists'
 
@@ -93,6 +94,16 @@ export class Exporter {
           cursor,
         }),
       )
+
+      if (!data.out || !data.out.jsonElements) {
+        this.out.action.stop()
+        this.out.warn(
+          `The download of ${fileType} failed. You may get fragmented data. Request ID: ${
+            data.requestId
+          }`,
+        )
+        return
+      }
 
       const jsonString = JSON.stringify({
         valueType: fileType,
