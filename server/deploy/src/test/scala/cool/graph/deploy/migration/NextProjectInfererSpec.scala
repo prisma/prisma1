@@ -86,7 +86,7 @@ class NextProjectInfererSpec extends WordSpec with Matchers {
       val newProject = infer(project, types, renames).get
       newProject.relations.foreach(println(_))
 
-      val relation = newProject.getRelationByName_!("CommentToTodo")
+      val relation = newProject.getRelationByName_!("CommentNewToTodoNew")
       relation.modelAId should be("TodoNew")
       relation.modelBId should be("CommentNew")
 
@@ -124,7 +124,7 @@ class NextProjectInfererSpec extends WordSpec with Matchers {
       val newProject = infer(project, types, renames).get
       newProject.relations.foreach(println(_))
 
-      val relation = newProject.getRelationByName_!("CommentToTodo")
+      val relation = newProject.getRelationByName_!("CommentNewToTodoNew")
       relation.modelAId should be("TodoNew")
       relation.modelBId should be("CommentNew")
 

@@ -131,6 +131,7 @@ case class NextProjectInfererImpl(
           val nextModelAId = if (previousModelAName == relation.modelAId) modelA else modelB
           val nextModelBId = if (previousModelBName == relation.modelBId) modelB else modelA
           relation.copy(
+            name = relationName,
             modelAId = nextModelAId,
             modelBId = nextModelBId
           )
