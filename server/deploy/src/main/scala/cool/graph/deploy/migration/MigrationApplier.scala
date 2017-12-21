@@ -77,7 +77,7 @@ case class MigrationApplierImpl(clientDatabase: DatabaseDef)(implicit ec: Execut
       Some(DeleteModelTable(previousProject.id, x.name))
 
     case x: UpdateModel =>
-      Some(RenameModelTable(projectId = previousProject.id, previousName = x.name, nextName = x.newName))
+      Some(RenameTable(projectId = previousProject.id, previousName = x.name, nextName = x.newName))
 
     case x: CreateField =>
       // todo I think those validations should be somewhere else, preferably preventing a step being created
@@ -110,6 +110,11 @@ case class MigrationApplierImpl(clientDatabase: DatabaseDef)(implicit ec: Execut
     case x: DeleteRelation =>
       val relation = previousProject.getRelationByName_!(x.name)
       Some(DeleteRelationTable(nextProject, relation))
+
+    case x: UpdateRelation =>
+      x.newName.map { newName =>
+        RenameTable(projectId = previousProject.id, previousName = x.name, nextName = newName)
+      }
   }
 
   def executeClientMutaction(mutaction: ClientSqlMutaction): Future[Unit] = {
