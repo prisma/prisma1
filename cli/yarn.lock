@@ -1515,9 +1515,9 @@ graceful-fs@~3.0.2:
   dependencies:
     natives "^1.1.0"
 
-graphcool-cli-core@1.9.0-alpha.33:
-  version "1.9.0-alpha.33"
-  resolved "https://registry.yarnpkg.com/graphcool-cli-core/-/graphcool-cli-core-1.9.0-alpha.33.tgz#fe3ca9ad214872c5c3515dc810e819a9807de529"
+graphcool-cli-core@1.9.3:
+  version "1.9.3"
+  resolved "https://registry.yarnpkg.com/graphcool-cli-core/-/graphcool-cli-core-1.9.3.tgz#34a8f9e7e1396cb49ad385559476851da7da1e07"
   dependencies:
     archiver "^2.0.3"
     callsites "^2.0.0"
@@ -1529,7 +1529,7 @@ graphcool-cli-core@1.9.0-alpha.33:
     globby "^6.1.0"
     graphcool-inquirer "^1.0.3"
     graphcool-json-schema "^1.0.1-beta.5"
-    graphcool-yml "0.0.22"
+    graphcool-yml "0.1.2"
     graphql "^0.11.7"
     graphql-config "^1.0.9"
     inquirer "^3.3.0"
@@ -1551,9 +1551,9 @@ graphcool-cli-core@1.9.0-alpha.33:
     unzip "^0.1.11"
     validator "^8.2.0"
 
-graphcool-cli-engine@0.5.0-alpha.24:
-  version "0.5.0-alpha.24"
-  resolved "https://registry.yarnpkg.com/graphcool-cli-engine/-/graphcool-cli-engine-0.5.0-alpha.24.tgz#b399b42845bd720ca135397986911f83950cc65f"
+graphcool-cli-engine@0.5.2:
+  version "0.5.2"
+  resolved "https://registry.yarnpkg.com/graphcool-cli-engine/-/graphcool-cli-engine-0.5.2.tgz#6b9d0ed2ee40e8836d0578519bcc4326257d9ad0"
   dependencies:
     "@heroku/linewrap" "^1.0.0"
     "@types/fs-extra" "^4.0.2"
@@ -1573,7 +1573,7 @@ graphcool-cli-engine@0.5.0-alpha.24:
     fs-extra "^4.0.2"
     graphcool-inquirer "^1.0.3"
     graphcool-json-schema "^1.0.1-beta.5"
-    graphcool-yml "0.0.22"
+    graphcool-yml "0.1.2"
     graphql-request "^1.3.4"
     isomorphic-fetch "^2.2.1"
     jsonwebtoken "^8.1.0"
@@ -1632,9 +1632,9 @@ graphcool-json-schema@^1.0.1-beta.5:
   version "1.0.1-beta.5"
   resolved "https://registry.yarnpkg.com/graphcool-json-schema/-/graphcool-json-schema-1.0.1-beta.5.tgz#5e5dace8b801727a311c5f35996b536a23501514"
 
-graphcool-yml@0.0.22:
-  version "0.0.22"
-  resolved "https://registry.yarnpkg.com/graphcool-yml/-/graphcool-yml-0.0.22.tgz#8b227e1ec36d6b6f31eb1f67879e6f8b9332ca8f"
+graphcool-yml@0.1.1:
+  version "0.1.1"
+  resolved "https://registry.yarnpkg.com/graphcool-yml/-/graphcool-yml-0.1.1.tgz#fd69b1ecd611a79d2e7b3270a4013f10f694e266"
   dependencies:
     ajv "^5.5.1"
     bluebird "^3.5.1"
@@ -1642,6 +1642,26 @@ graphcool-yml@0.0.22:
     dotenv "^4.0.0"
     fs-extra "^4.0.3"
     graphcool-json-schema "^1.0.1-beta.5"
+    isomorphic-fetch "^2.2.1"
+    js-yaml "^3.10.0"
+    json-stable-stringify "^1.0.1"
+    jsonwebtoken "^8.1.0"
+    lodash "^4.17.4"
+    replaceall "^0.1.6"
+    scuid "^1.0.2"
+    yaml-ast-parser "^0.0.40"
+
+graphcool-yml@0.1.2:
+  version "0.1.2"
+  resolved "https://registry.yarnpkg.com/graphcool-yml/-/graphcool-yml-0.1.2.tgz#bd0c78d10be544bad40af45fca7154d02dd9e9af"
+  dependencies:
+    ajv "^5.5.1"
+    bluebird "^3.5.1"
+    debug "^3.1.0"
+    dotenv "^4.0.0"
+    fs-extra "^4.0.3"
+    graphcool-json-schema "^1.0.1-beta.5"
+    graphcool-yml "0.1.1"
     isomorphic-fetch "^2.2.1"
     js-yaml "^3.10.0"
     json-stable-stringify "^1.0.1"
