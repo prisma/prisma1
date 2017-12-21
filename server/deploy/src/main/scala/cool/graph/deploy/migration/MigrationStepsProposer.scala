@@ -200,8 +200,8 @@ case class MigrationStepsProposerImpl(previousProject: Project, nextProject: Pro
       nextRelation     <- nextProject.getRelationsThatConnectModels(nextModelAName, nextModelBName).headOption
     } yield {
       UpdateRelation(
-        relation = previousRelation.name,
-        name = diff(previousRelation.name, nextRelation.name),
+        name = previousRelation.name,
+        newName = diff(previousRelation.name, nextRelation.name),
         modelAId = diff(previousRelation.modelAId, nextRelation.modelAId),
         modelBId = diff(previousRelation.modelBId, nextRelation.modelBId)
       )

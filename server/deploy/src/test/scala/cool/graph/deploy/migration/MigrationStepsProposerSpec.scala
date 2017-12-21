@@ -269,7 +269,7 @@ class MigrationStepsProposerSpec extends FlatSpec with Matchers {
     val steps    = proposer.evaluate()
 
     steps should have(size(5))
-    steps should contain(UpdateRelation("CommentToTodo", name = Some("CommentNewToTodoNew"), modelAId = Some("TodoNew"), modelBId = Some("CommentNew")))
+    steps should contain(UpdateRelation("CommentToTodo", newName = Some("CommentNewToTodoNew"), modelAId = Some("TodoNew"), modelBId = Some("CommentNew")))
     steps should contain(UpdateModel("Comment", newName = "CommentNew"))
     steps should contain(UpdateModel("Todo", newName = "TodoNew"))
     steps should contain(UpdateField("Comment", "todo", Some("todoNew"), None, None, None, None, None, Some(Some("commentnewtotodonew")), None, None))
