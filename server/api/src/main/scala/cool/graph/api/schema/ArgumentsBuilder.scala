@@ -18,7 +18,7 @@ case class ArgumentsBuilder(project: Project) {
 
   def getSangriaArgumentsForUpdate(model: Model): Option[List[Argument[Any]]] = {
     for {
-      whereArg <- whereArgument(model)
+      whereArg <- whereUniqueArgument(model)
       dataArg  <- inputTypesBuilder.inputObjectTypeForUpdate(model)
     } yield {
       List(
@@ -30,7 +30,7 @@ case class ArgumentsBuilder(project: Project) {
 
   def getSangriaArgumentsForUpsert(model: Model): Option[List[Argument[Any]]] = {
     for {
-      whereArg  <- whereArgument(model)
+      whereArg  <- whereUniqueArgument(model)
       createArg <- inputTypesBuilder.inputObjectTypeForCreate(model)
       updateArg <- inputTypesBuilder.inputObjectTypeForUpdate(model)
     } yield {
@@ -43,9 +43,24 @@ case class ArgumentsBuilder(project: Project) {
   }
 
   def getSangriaArgumentsForDelete(model: Model): Option[List[Argument[Any]]] = {
-    whereArgument(model).map(List(_))
+    whereUniqueArgument(model).map(List(_))
   }
 
-  def whereArgument(model: Model): Option[Argument[Any]] =
-    inputTypesBuilder.inputObjectTypeForWhere(model).map(inputType => Argument[Any](name = "where", argumentType = inputType))
+  def getSangriaArgumentsForUpdateMany(model: Model): Option[List[Argument[Any]]] = {
+    inputTypesBuilder.inputObjectTypeForUpdate(model).map { updateArg =>
+      List(
+        Argument[Any]("data", updateArg),
+        whereArgument(model)
+      )
+    }
+  }
+
+  def getSangriaArgumentsForDeleteMany(model: Model): List[Argument[Any]] = List(whereArgument(model))
+
+  def whereArgument(model: Model) = Argument[Any](name = "where", argumentType = inputTypesBuilder.inputObjectTypeForWhere(model))
+
+  def whereUniqueArgument(model: Model): Option[Argument[Any]] = {
+    inputTypesBuilder.inputObjectTypeForWhereUnique(model).map(inputType => Argument[Any](name = "where", argumentType = inputType))
+  }
+
 }

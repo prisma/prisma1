@@ -63,12 +63,12 @@ object IdBasedConnection {
           Field("pageInfo", PageInfoType, Some("Information to aid in pagination."), resolve = ctx ⇒ connEv.pageInfo(ctx.value)),
           Field(
             "edges",
-            OptionType(ListType(OptionType(edgeType))),
+            OptionType(ListType(edgeType)),
             Some("A list of edges."),
             resolve = ctx ⇒ {
               val items = ctx.value
               val edges = connEv.edges(items)
-              edges map (Some(_))
+              edges
             }
           )
         ) ++ connectionFields

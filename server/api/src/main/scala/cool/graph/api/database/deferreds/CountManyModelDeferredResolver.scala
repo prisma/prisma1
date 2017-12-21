@@ -12,8 +12,9 @@ class CountManyModelDeferredResolver(dataResolver: DataResolver) {
     val headDeferred = deferreds.head
     val model        = headDeferred.model
     val args         = headDeferred.args
+    val where        = args.flatMap(_.filter)
 
-    val futureDataItems = dataResolver.countByModel(model, args)
+    val futureDataItems = dataResolver.countByModel(model, where)
 
     val results = orderedDeferreds.map {
       case OrderedDeferred(deferred, order) =>

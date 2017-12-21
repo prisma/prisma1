@@ -28,7 +28,7 @@ import scala.concurrent.Future
 import scala.language.postfixOps
 import scala.util.{Failure, Success}
 
-case class DeployServer(
+case class ClusterServer(
     schemaBuilder: SchemaBuilder,
     projectPersistence: ProjectPersistence,
     prefix: String = ""
@@ -40,11 +40,11 @@ case class DeployServer(
   import system.dispatcher
 
   val log: String => Unit = (msg: String) => logger.info(msg)
-  val requestPrefix       = "deploy"
+  val requestPrefix       = "cluster"
   val server2serverSecret = sys.env.getOrElse("SCHEMA_MANAGER_SECRET", sys.error("SCHEMA_MANAGER_SECRET env var required but not found"))
 
   val innerRoutes = extractRequest { _ =>
-    val requestId            = requestPrefix + ":system:" + createCuid()
+    val requestId            = requestPrefix + ":cluster:" + createCuid()
     val requestBeginningTime = System.currentTimeMillis()
     val errorHandler         = ErrorHandler(requestId)
 
@@ -109,33 +109,32 @@ case class DeployServer(
           }
         } ~
           get {
-            path("playground") {
+            pathEnd {
               getFromResource("graphiql.html")
-            } ~
-              pathPrefix("schema") {
-                pathPrefix(Segment) { projectId =>
-                  optionalHeaderValueByName("Authorization") {
-                    case Some(authorizationHeader) if authorizationHeader == s"Bearer $server2serverSecret" =>
-                      parameters('forceRefresh ? false) { forceRefresh =>
-                        complete(performRequest(projectId, forceRefresh, logRequestEnd))
-                      }
+            } ~ pathPrefix("schema") {
+              pathPrefix(Segment) { projectId =>
+                optionalHeaderValueByName("Authorization") {
+                  case Some(authorizationHeader) if authorizationHeader == s"Bearer $server2serverSecret" =>
+                    parameters('forceRefresh ? false) { forceRefresh =>
+                      complete(performSchemaRequest(projectId, forceRefresh, logRequestEnd))
+                    }
 
-                    case Some(h) =>
-                      println(s"Wrong Authorization Header supplied: '$h'")
-                      complete(Unauthorized -> "Wrong Authorization Header supplied")
+                  case Some(h) =>
+                    println(s"Wrong Authorization Header supplied: '$h'")
+                    complete(Unauthorized -> "Wrong Authorization Header supplied")
 
-                    case None =>
-                      println("No Authorization Header supplied")
-                      complete(Unauthorized -> "No Authorization Header supplied")
-                  }
+                  case None =>
+                    println("No Authorization Header supplied")
+                    complete(Unauthorized -> "No Authorization Header supplied")
                 }
               }
+            }
           }
       }
     }
   }
 
-  def performRequest(projectId: String, forceRefresh: Boolean, requestEnd: (Option[String], Option[String]) => Unit) = {
+  def performSchemaRequest(projectId: String, forceRefresh: Boolean, requestEnd: (Option[String], Option[String]) => Unit) = {
     getSchema(projectId, forceRefresh)
       .map(res => OK -> res)
       .andThen {

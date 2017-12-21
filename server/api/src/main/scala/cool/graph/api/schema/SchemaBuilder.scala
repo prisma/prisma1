@@ -2,9 +2,9 @@ package cool.graph.api.schema
 
 import akka.actor.ActorSystem
 import cool.graph.api.ApiDependencies
-import cool.graph.api.database.DataItem
+import cool.graph.api.database.{DataItem, IdBasedConnection}
 import cool.graph.api.database.DeferredTypes.{ManyModelDeferred, OneDeferred}
-import cool.graph.api.mutations.{ClientMutationRunner, CoolArgs}
+import cool.graph.api.mutations._
 import cool.graph.api.mutations.mutations._
 import cool.graph.shared.models.{Model, Project}
 import org.atteo.evo.inflector.English
@@ -12,6 +12,7 @@ import sangria.relay.{Node, NodeDefinition, PossibleNodeObject}
 import sangria.schema._
 
 import scala.collection.mutable
+import scala.concurrent.Future
 
 case class ApiUserContext(clientId: String)
 
@@ -35,7 +36,7 @@ case class SchemaBuilderImpl(
   val masterDataResolver = apiDependencies.masterDataResolver(project)
   val objectTypeBuilder  = new ObjectTypeBuilder(project = project, nodeInterface = Some(nodeInterface))
   val objectTypes        = objectTypeBuilder.modelObjectTypes
-  val conectionTypes     = objectTypeBuilder.modelConnectionTypes
+  val connectionTypes    = objectTypeBuilder.modelConnectionTypes
   val outputTypesBuilder = OutputTypesBuilder(project, objectTypes, dataResolver)
   val pluralsCache       = new PluralsCache
 
@@ -54,8 +55,8 @@ case class SchemaBuilderImpl(
   def buildQuery(): ObjectType[ApiUserContext, Unit] = {
     val fields = project.models.map(getAllItemsField) ++
       project.models.flatMap(getSingleItemField) ++
-      project.models.map(getAllItemsConnectionField) :+
-      nodeField
+      project.models.map(getAllItemsConnectionField) ++
+      List(nodeField)
 
     ObjectType("Query", fields)
   }
@@ -64,9 +65,12 @@ case class SchemaBuilderImpl(
     val fields = project.models.map(createItemField) ++
       project.models.flatMap(updateItemField) ++
       project.models.flatMap(deleteItemField) ++
-      project.models.flatMap(upsertItemField)
+      project.models.flatMap(upsertItemField) ++
+      project.models.flatMap(updateManyField) ++
+      project.models.map(deleteManyField) ++
+      List(resetDataField)
 
-    Some(ObjectType("Mutation", fields :+ resetDataField))
+    Some(ObjectType("Mutation", fields))
   }
 
   def buildSubscription(): Option[ObjectType[ApiUserContext, Unit]] = {
@@ -91,7 +95,7 @@ case class SchemaBuilderImpl(
   def getAllItemsConnectionField(model: Model): Field[ApiUserContext, Unit] = {
     Field(
       s"${camelCase(pluralsCache.pluralName(model))}Connection",
-      fieldType = conectionTypes(model.name),
+      fieldType = connectionTypes(model.name),
       arguments = objectTypeBuilder.mapToListConnectionArguments(model),
       resolve = (ctx) => {
         val arguments = objectTypeBuilder.extractQueryArgumentsFromContext(model, ctx)
@@ -102,7 +106,7 @@ case class SchemaBuilderImpl(
 
   def getSingleItemField(model: Model): Option[Field[ApiUserContext, Unit]] = {
     argumentsBuilder
-      .whereArgument(model)
+      .whereUniqueArgument(model)
       .map { whereArg =>
         Field(
           camelCase(model.name),
@@ -123,10 +127,9 @@ case class SchemaBuilderImpl(
       fieldType = outputTypesBuilder.mapCreateOutputType(model, objectTypes(model.name)),
       arguments = argumentsBuilder.getSangriaArgumentsForCreate(model).getOrElse(List.empty),
       resolve = (ctx) => {
-        val mutation = Create(model = model, project = project, args = ctx.args, dataResolver = masterDataResolver)
-        ClientMutationRunner
-          .run(mutation, dataResolver)
-          .map(outputTypesBuilder.mapResolve(_, ctx.args))
+        val mutation       = Create(model = model, project = project, args = ctx.args, dataResolver = masterDataResolver)
+        val mutationResult = ClientMutationRunner.run(mutation, dataResolver)
+        mapReturnValueResult(mutationResult, ctx.args)
       }
     )
   }
@@ -140,9 +143,23 @@ case class SchemaBuilderImpl(
         resolve = (ctx) => {
           val mutation = Update(model = model, project = project, args = ctx.args, dataResolver = masterDataResolver)
 
-          ClientMutationRunner
-            .run(mutation, dataResolver)
-            .map(outputTypesBuilder.mapResolve(_, ctx.args))
+          val mutationResult = ClientMutationRunner.run(mutation, dataResolver)
+          mapReturnValueResult(mutationResult, ctx.args)
+        }
+      )
+    }
+  }
+
+  def updateManyField(model: Model): Option[Field[ApiUserContext, Unit]] = {
+    argumentsBuilder.getSangriaArgumentsForUpdateMany(model).map { args =>
+      Field(
+        s"update${pluralsCache.pluralName(model)}",
+        fieldType = objectTypeBuilder.batchPayloadType,
+        arguments = args,
+        resolve = (ctx) => {
+          val where    = objectTypeBuilder.extractRequiredFilterFromContext(model, ctx)
+          val mutation = UpdateMany(project, model, ctx.args, where, dataResolver = masterDataResolver)
+          ClientMutationRunner.run(mutation, dataResolver)
         }
       )
     }
@@ -155,10 +172,9 @@ case class SchemaBuilderImpl(
         fieldType = outputTypesBuilder.mapUpsertOutputType(model, objectTypes(model.name)),
         arguments = args,
         resolve = (ctx) => {
-          val mutation = Upsert(model = model, project = project, args = ctx.args, dataResolver = masterDataResolver)
-          ClientMutationRunner
-            .run(mutation, dataResolver)
-            .map(outputTypesBuilder.mapResolve(_, ctx.args))
+          val mutation       = Upsert(model = model, project = project, args = ctx.args, dataResolver = masterDataResolver)
+          val mutationResult = ClientMutationRunner.run(mutation, dataResolver)
+          mapReturnValueResult(mutationResult, ctx.args)
         }
       )
     }
@@ -178,12 +194,24 @@ case class SchemaBuilderImpl(
             args = ctx.args,
             dataResolver = masterDataResolver
           )
-          ClientMutationRunner
-            .run(mutation, dataResolver)
-            .map(outputTypesBuilder.mapResolve(_, ctx.args))
+          val mutationResult = ClientMutationRunner.run(mutation, dataResolver)
+          mapReturnValueResult(mutationResult, ctx.args)
         }
       )
     }
+  }
+
+  def deleteManyField(model: Model): Field[ApiUserContext, Unit] = {
+    Field(
+      s"delete${pluralsCache.pluralName(model)}",
+      fieldType = objectTypeBuilder.batchPayloadType,
+      arguments = argumentsBuilder.getSangriaArgumentsForDeleteMany(model),
+      resolve = (ctx) => {
+        val where    = objectTypeBuilder.extractRequiredFilterFromContext(model, ctx)
+        val mutation = DeleteMany(project, model, where, dataResolver = masterDataResolver)
+        ClientMutationRunner.run(mutation, dataResolver)
+      }
+    )
   }
 
   def resetDataField: Field[ApiUserContext, Unit] = {
@@ -192,7 +220,7 @@ case class SchemaBuilderImpl(
       fieldType = OptionType(BooleanType),
       resolve = (ctx) => {
         val mutation = ResetData(project = project, dataResolver = masterDataResolver)
-        ClientMutationRunner.run(mutation, dataResolver).map(x => true)
+        ClientMutationRunner.run(mutation, dataResolver).map(_ => true)
       }
     )
   }
@@ -224,6 +252,13 @@ case class SchemaBuilderImpl(
   )
 
   def camelCase(string: String): String = Character.toLowerCase(string.charAt(0)) + string.substring(1)
+
+  private def mapReturnValueResult(result: Future[ReturnValueResult], args: Args): Future[SimpleResolveOutput] = {
+    result.map {
+      case ReturnValue(dataItem) => outputTypesBuilder.mapResolve(dataItem, args)
+      case NoReturnValue(id)     => throw APIErrors.NodeNotFoundError(id)
+    }
+  }
 }
 
 class PluralsCache {

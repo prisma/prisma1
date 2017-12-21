@@ -9,7 +9,9 @@ trait InputTypesBuilder {
 
   def inputObjectTypeForUpdate(model: Model): Option[InputObjectType[Any]]
 
-  def inputObjectTypeForWhere(model: Model): Option[InputObjectType[Any]]
+  def inputObjectTypeForWhereUnique(model: Model): Option[InputObjectType[Any]]
+
+  def inputObjectTypeForWhere(model: Model): InputObjectType[Any]
 }
 
 case class CachedInputTypesBuilder(project: Project) extends UncachedInputTypesBuilder(project) {
@@ -48,7 +50,11 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
     computeInputObjectTypeForUpdate(model)
   }
 
-  override def inputObjectTypeForWhere(model: Model): Option[InputObjectType[Any]] = {
+  override def inputObjectTypeForWhereUnique(model: Model): Option[InputObjectType[Any]] = {
+    computeInputObjectTypeForWhereUnique(model)
+  }
+
+  override def inputObjectTypeForWhere(model: Model): InputObjectType[Any] = {
     computeInputObjectTypeForWhere(model)
   }
 
@@ -95,7 +101,7 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
     val field           = omitRelation.getField_!(project, model)
     val updateDataInput = computeInputObjectTypeForNestedUpdateData(model, omitRelation)
 
-    computeInputObjectTypeForWhere(model).map { whereArg =>
+    computeInputObjectTypeForWhereUnique(model).map { whereArg =>
       InputObjectType[Any](
         name = s"${model.name}UpdateWithout${field.name.capitalize}Input",
         fieldsFn = () => {
@@ -122,7 +128,7 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
   protected def computeInputObjectTypeForNestedUpsert(model: Model, omitRelation: Relation): Option[InputObjectType[Any]] = {
     val field = omitRelation.getField_!(project, model)
 
-    computeInputObjectTypeForWhere(model).flatMap { whereArg =>
+    computeInputObjectTypeForWhereUnique(model).flatMap { whereArg =>
       computeInputObjectTypeForCreate(model, Some(omitRelation)).map { createArg =>
         InputObjectType[Any](
           name = s"${model.name}UpsertWithout${field.name.capitalize}Input",
@@ -138,7 +144,9 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
     }
   }
 
-  protected def computeInputObjectTypeForWhere(model: Model): Option[InputObjectType[Any]] = {
+  protected def computeInputObjectTypeForWhere(model: Model): InputObjectType[Any] = FilterObjectTypeBuilder(model, project).filterObjectType
+
+  protected def computeInputObjectTypeForWhereUnique(model: Model): Option[InputObjectType[Any]] = {
     val uniqueFields = model.fields.filter(f => f.isUnique && f.isVisible)
 
     if (uniqueFields.isEmpty) {
@@ -155,6 +163,7 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
           }
         ))
     }
+
   }
 
   private def computeScalarInputFieldsForCreate(model: Model): List[InputField[Any]] = {
@@ -271,7 +280,7 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
   def whereInputField(field: Field, name: String): Option[InputField[Any]] = {
     val subModel = field.relatedModel_!(project)
 
-    inputObjectTypeForWhere(subModel).map { inputObjectType =>
+    inputObjectTypeForWhereUnique(subModel).map { inputObjectType =>
       val inputType = if (field.isList) {
         OptionInputType(ListInputType(inputObjectType))
       } else {

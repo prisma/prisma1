@@ -52,10 +52,11 @@ case class ApiServer(
 
     logger.info(LogData(LogKey.RequestNew, requestId).json)
 
-    post {
-      handleExceptions(toplevelExceptionHandler(requestId)) {
-        pathPrefix(Segment) { name =>
-          pathPrefix(Segment) { stage =>
+    pathPrefix(Segment) { name =>
+      pathPrefix(Segment) { stage =>
+        post {
+          handleExceptions(toplevelExceptionHandler(requestId)) {
+
             path("import") {
               extractRawRequest(requestId) { rawRequest =>
                 val projectId = ProjectId.toEncodedString(name = name, stage = stage)
@@ -71,21 +72,20 @@ case class ApiServer(
                   result.onComplete(_ => logRequestEnd(Some(projectId)))
                   complete(result)
                 }
-              }~ {
-            extractRawRequest(requestId) { rawRequest =>
-              val projectId = ProjectId.toEncodedString(name = name, stage = stage)
-              val result    = apiDependencies.requestHandler.handleRawRequest(projectId, rawRequest)
-              result.onComplete(_ => logRequestEnd(Some(projectId)))
-              complete(result)
-            }
+              } ~ {
+              extractRawRequest(requestId) { rawRequest =>
+                val projectId = ProjectId.toEncodedString(name = name, stage = stage)
+                val result    = apiDependencies.requestHandler.handleRawRequest(projectId, rawRequest)
+                result.onComplete(_ => logRequestEnd(Some(projectId)))
+                complete(result)
+              }
             }
           }
+        } ~ get {
+          getFromResource("graphiql.html")
         }
       }
-    } ~
-      get {
-        getFromResource("graphiql.html")
-      }
+    }
   }
 
   def extractRawRequest(requestId: String)(fn: RawRequest => Route): Route = {

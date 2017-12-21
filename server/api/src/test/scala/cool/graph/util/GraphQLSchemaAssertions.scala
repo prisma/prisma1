@@ -42,6 +42,8 @@ trait GraphQLSchemaAssertions {
 
     def mustContainInputType(name: String): String = definition(s"input $name {")
 
+    def mustContainType(name: String): String = definition(s"type $name {")
+
     private def definition(start: String): String = {
       val startOfDefinition = schemaString.lines.dropWhile(_ != start)
       if (startOfDefinition.isEmpty) {
@@ -120,6 +122,8 @@ trait GraphQLSchemaMatchers {
   def containMutation(expectedMutation: String)         = new SchemaMatcher(Query, Some(expectedMutation))
   def containType(name: String, interface: String = "") = new SchemaMatcher(Type(name, interface))
   def containEnum(name: String)                         = new SchemaMatcher(Enum(name))
+
+  def containField(typeName: String, fieldDef: String) = new SchemaMatcher(Type(typeName), Some(fieldDef))
 
   //containsTypeWithField(typename, fieldname)
 }
