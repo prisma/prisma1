@@ -47,7 +47,10 @@ case class NextProjectInfererImpl(
     val models = sdl.objectTypes.map { objectType =>
       val fields: Seq[Or[Field, InvalidGCValue]] = objectType.fields.flatMap { fieldDef =>
         val typeIdentifier = typeIdentifierForTypename(fieldDef.typeName)
-        val relation       = fieldDef.relationName.flatMap(relationName => nextRelations.find(_.name == relationName))
+        //val relation       = fieldDef.relationName.flatMap(relationName => nextRelations.find(_.name == relationName))
+        val relation = nextRelations.find { relation =>
+          relation.connectsTheModels(objectType.name, fieldDef.typeName)
+        }
 
         def fieldWithDefault(default: Option[GCValue]) = {
           Field(
@@ -101,11 +104,23 @@ case class NextProjectInfererImpl(
   lazy val nextRelations: Set[Relation] = {
     val tmp = for {
       objectType    <- sdl.objectTypes
-      relationField <- objectType.relationFields
+      relationField <- objectType.fields.filter(!_.hasScalarType)
     } yield {
+      val relationName = relationField.relationName match {
+        case Some(name) =>
+          name
+        case None =>
+          val modelA = objectType.name
+          val modelB = relationField.typeName
+          if (modelA < modelB) { // we want the generation of relation names to be deterministic
+            s"${modelA}To${modelB}"
+          } else {
+            s"${modelB}To${modelA}"
+          }
+      }
       Relation(
-        id = relationField.relationName.get,
-        name = relationField.relationName.get,
+        id = relationName,
+        name = relationName,
         modelAId = objectType.name,
         modelBId = relationField.typeName
       )

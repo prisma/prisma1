@@ -1,5 +1,6 @@
 package cool.graph.deploy.migration
 
+import cool.graph.shared.models.TypeIdentifier
 import sangria.ast._
 
 import scala.collection.Seq
@@ -49,6 +50,8 @@ object DataSchemaAstExtensions {
   }
 
   implicit class CoolField(val fieldDefinition: FieldDefinition) extends AnyVal {
+
+    def hasScalarType: Boolean = TypeIdentifier.withNameOpt(typeName).isDefined
 
     def previousName: String = {
       val nameBeforeRename = fieldDefinition.directiveArgumentAsString("rename", "oldName")
