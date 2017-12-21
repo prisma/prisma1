@@ -34,6 +34,13 @@ case class GCDBValueConverter() extends GCConverter[Any] {
     ???
   }
 
+  def fromGCValueToString(t: GCValue): String = {
+    fromGCValue(t) match {
+      case x: Vector[Any] => "[" + x.map(_.toString).mkString(",") + "]"
+      case x              => x.toString
+    }
+  }
+
   override def fromGCValue(t: GCValue): Any = {
     t match {
       case NullGCValue         => None
