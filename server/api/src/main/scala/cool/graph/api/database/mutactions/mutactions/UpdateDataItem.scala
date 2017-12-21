@@ -78,7 +78,7 @@ case class UpdateDataItem(project: Project,
     Some({
       // https://dev.mysql.com/doc/refman/5.5/en/error-messages-server.html#error_er_dup_entry
       case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1062 =>
-        APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getField(values.toList, e))
+        APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldFromArgumentValueList(values.toList, e))
       case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1452 =>
         APIErrors.NodeDoesNotExist(id)
       case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1048 =>
@@ -87,7 +87,7 @@ case class UpdateDataItem(project: Project,
   }
 
   override def verify(resolver: DataResolver): Future[Try[MutactionVerificationSuccess]] = {
-    lazy val (dataItemInputValidation, fieldsWithValues) = InputValueValidation.validateDataItemInputs(model, id, values.toList)
+    lazy val (dataItemInputValidation, fieldsWithValues) = InputValueValidation.validateDataItemInputsWithID(model, id, values.toList)
 
     def isReadonly(field: Field): Boolean = {
       // todo: replace with readOnly property on Field

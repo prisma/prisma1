@@ -1,9 +1,10 @@
 package cool.graph.deploy.schema.mutations
 
 import cool.graph.deploy.database.persistence.MigrationPersistence
-import cool.graph.deploy.migration.validation.{SchemaError, SchemaSyntaxValidator}
-import cool.graph.deploy.migration.{DesiredProjectInferer, MigrationStepsProposer, Migrator, RenameInferer}
+import cool.graph.deploy.migration.validation.{SchemaError, SchemaErrors, SchemaSyntaxValidator}
+import cool.graph.deploy.migration._
 import cool.graph.shared.models.{Migration, Project}
+import org.scalactic.{Bad, Good}
 import sangria.parser.QueryParser
 
 import scala.collection.Seq
@@ -12,7 +13,7 @@ import scala.concurrent.{ExecutionContext, Future}
 case class DeployMutation(
     args: DeployMutationInput,
     project: Project,
-    desiredProjectInferer: DesiredProjectInferer,
+    nextProjectInferrer: NextProjectInferrer,
     migrationStepsProposer: MigrationStepsProposer,
     renameInferer: RenameInferer,
     migrationPersistence: MigrationPersistence,
@@ -43,15 +44,32 @@ case class DeployMutation(
   }
 
   private def performDeployment: Future[MutationSuccess[DeployMutationPayload]] = {
-    for {
-      inferedProject <- desiredProjectInferer.infer(baseProject = project, graphQlSdl).toFuture
-      nextProject    = inferedProject.copy(secrets = args.secrets)
-      renames        = renameInferer.infer(graphQlSdl)
-      migrationSteps = migrationStepsProposer.propose(project, nextProject, renames)
-      migration      = Migration(nextProject.id, 0, hasBeenApplied = false, migrationSteps) // how to get to the revision...?
-      savedMigration <- handleMigration(nextProject, migration)
-    } yield {
-      MutationSuccess(DeployMutationPayload(args.clientMutationId, nextProject, savedMigration, schemaErrors))
+    nextProjectInferrer.infer(baseProject = project, graphQlSdl) match {
+      case Good(inferredProject) =>
+        val nextProject    = inferredProject.copy(secrets = args.secrets)
+        val renames        = renameInferer.infer(graphQlSdl)
+        val migrationSteps = migrationStepsProposer.propose(project, nextProject, renames)
+        val migration      = Migration(nextProject.id, 0, hasBeenApplied = false, migrationSteps) // how to get to the revision...?
+
+        for {
+          savedMigration <- handleMigration(nextProject, migration)
+        } yield {
+          MutationSuccess(DeployMutationPayload(args.clientMutationId, nextProject, savedMigration, schemaErrors))
+        }
+
+      case Bad(err) =>
+        Future.successful {
+          MutationSuccess(
+            DeployMutationPayload(
+              clientMutationId = args.clientMutationId,
+              project = project,
+              migration = Migration.empty(project),
+              errors = List(err match {
+                case RelationDirectiveNeeded(t1, t1Fields, t2, t2Fields) => SchemaError.global(s"Relation directive required for types $t1 and $t2.")
+                case InvalidGCValue(err)                                 => SchemaError.global(s"Invalid value '${err.value}' for type ${err.typeIdentifier}.")
+              })
+            ))
+        }
     }
   }
 

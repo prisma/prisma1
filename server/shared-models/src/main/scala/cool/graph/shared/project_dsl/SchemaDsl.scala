@@ -61,8 +61,7 @@ object SchemaDsl {
   case class ModelBuilder(
       name: String,
       fields: Buffer[Field] = Buffer(idField),
-      var withPermissions: Boolean = true,
-      var isSystem: Boolean = false
+      var withPermissions: Boolean = true
   ) {
     val id = name
 
@@ -71,7 +70,7 @@ object SchemaDsl {
               enum: Option[Enum] = None,
               isList: Boolean = false,
               isUnique: Boolean = false,
-              isSystem: Boolean = false,
+              isHidden: Boolean = false,
               defaultValue: Option[GCValue] = None,
               constraints: List[FieldConstraint] = List.empty): ModelBuilder = {
 
@@ -82,7 +81,7 @@ object SchemaDsl {
           theType(TypeIdentifier),
           isRequired = false,
           isUnique = isUnique,
-          isSystem = isSystem,
+          isHidden = isHidden,
           enum = enum,
           isList = isList,
           defaultValue = defaultValue,
@@ -99,7 +98,7 @@ object SchemaDsl {
                 enum: Option[Enum] = None,
                 isList: Boolean = false,
                 isUnique: Boolean = false,
-                isSystem: Boolean = false,
+                isHidden: Boolean = false,
                 defaultValue: Option[GCValue] = None): ModelBuilder = {
       val newField =
         plainField(
@@ -108,7 +107,7 @@ object SchemaDsl {
           theType(TypeIdentifier),
           isRequired = true,
           isUnique = isUnique,
-          isSystem = isSystem,
+          isHidden = isHidden,
           enum = enum,
           isList = isList,
           defaultValue = defaultValue
@@ -244,7 +243,6 @@ object SchemaDsl {
       Model(
         name = name,
         id = id,
-        isSystem = isSystem,
         fields = fields.toList
       )
     }
@@ -255,7 +253,7 @@ object SchemaDsl {
                  theType: TypeIdentifier.Value,
                  isRequired: Boolean,
                  isUnique: Boolean,
-                 isSystem: Boolean,
+                 isHidden: Boolean,
                  enum: Option[Enum],
                  isList: Boolean,
                  defaultValue: Option[GCValue] = None,
@@ -272,8 +270,8 @@ object SchemaDsl {
       description = None,
       isList = isList,
       isUnique = isUnique,
-      isSystem = isSystem,
       isReadonly = false,
+      isHidden = isHidden,
       relation = None,
       relationSide = None,
       constraints = constraints
@@ -299,7 +297,6 @@ object SchemaDsl {
       typeIdentifier = TypeIdentifier.Relation,
       isRequired = isRequired,
       isUnique = false,
-      isSystem = false,
       isReadonly = false,
       defaultValue = None,
       enum = None
@@ -315,7 +312,6 @@ object SchemaDsl {
     isRequired = true,
     isList = false,
     isUnique = true,
-    isSystem = true,
     isReadonly = true,
     enum = None,
     defaultValue = None,
@@ -330,7 +326,6 @@ object SchemaDsl {
     isRequired = true,
     isList = false,
     isUnique = false,
-    isSystem = true,
     isReadonly = true,
     enum = None,
     defaultValue = None,
@@ -345,7 +340,6 @@ object SchemaDsl {
     isRequired = true,
     isList = false,
     isUnique = true,
-    isSystem = true,
     isReadonly = true,
     enum = None,
     defaultValue = None,

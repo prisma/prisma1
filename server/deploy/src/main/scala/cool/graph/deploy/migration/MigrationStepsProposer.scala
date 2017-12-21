@@ -133,7 +133,7 @@ case class MigrationStepsProposerImpl(previousProject: Project, nextProject: Pro
   }
 
   lazy val fieldsToUpdate: Vector[UpdateField] = {
-    val tmp = for {
+    val updates = for {
       nextModel         <- nextProject.models.toVector
       previousModelName = renames.getPreviousModelName(nextModel.name)
       previousModel     = previousProject.getModelByName(previousModelName).getOrElse(emptyModel)
@@ -149,13 +149,14 @@ case class MigrationStepsProposerImpl(previousProject: Project, nextProject: Pro
         isRequired = diff(previousField.isRequired, fieldOfNextModel.isRequired),
         isList = diff(previousField.isList, fieldOfNextModel.isList),
         isUnique = diff(previousField.isUnique, fieldOfNextModel.isUnique),
+        isHidden = diff(previousField.isHidden, fieldOfNextModel.isHidden),
         relation = diff(previousField.relation.map(_.id), fieldOfNextModel.relation.map(_.id)),
         defaultValue = diff(previousField.defaultValue, fieldOfNextModel.defaultValue).map(_.map(_.toString)),
         enum = diff(previousField.enum.map(_.name), fieldOfNextModel.enum.map(_.name))
       )
     }
 
-    tmp.filter(isAnyOptionSet)
+    updates.filter(isAnyOptionSet)
   }
 
   lazy val fieldsToDelete: Vector[DeleteField] = {
@@ -223,8 +224,7 @@ case class MigrationStepsProposerImpl(previousProject: Project, nextProject: Pro
     id = "",
     name = "",
     fields = List.empty,
-    description = None,
-    isSystem = false
+    description = None
   )
 
   def containsRelation(project: Project, relation: Relation): Boolean = {

@@ -21,7 +21,7 @@ case class Create(
     args: schema.Args,
     dataResolver: DataResolver
 )(implicit apiDependencies: ApiDependencies)
-    extends ClientMutation {
+    extends SingleItemClientMutation {
 
   implicit val system: ActorSystem             = apiDependencies.system
   implicit val materializer: ActorMaterializer = apiDependencies.materializer
@@ -30,7 +30,7 @@ case class Create(
   val requestId: String = "" //                        = dataResolver.requestContext.map(_.requestId).getOrElse("")
 
   val coolArgs: CoolArgs = {
-    val argsPointer: Map[String, Any] = args.raw.get("data") match { // TODO: input token is probably relay specific?
+    val argsPointer: Map[String, Any] = args.raw.get("data") match {
       case Some(value) => value.asInstanceOf[Map[String, Any]]
       case None        => args.raw
     }

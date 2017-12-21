@@ -1,19 +1,22 @@
 package cool.graph.api.database
 
 import cool.graph.api.database.DatabaseQueryBuilder.ResultTransform
+import cool.graph.api.database.SlickExtensions.{combineByAnd, combineByOr, escapeUnsafeParam}
 import cool.graph.api.database.Types.DataItemFilterCollection
 import cool.graph.api.schema.APIErrors
 import cool.graph.api.schema.APIErrors.{InvalidFirstArgument, InvalidLastArgument, InvalidSkipArgument}
 import cool.graph.shared.models.{Field, TypeIdentifier}
 import slick.jdbc.SQLActionBuilder
 
-case class QueryArguments(skip: Option[Int],
-                          after: Option[String],
-                          first: Option[Int],
-                          before: Option[String],
-                          last: Option[Int],
-                          filter: Option[DataItemFilterCollection],
-                          orderBy: Option[OrderBy]) {
+case class QueryArguments(
+    skip: Option[Int],
+    after: Option[String],
+    first: Option[Int],
+    before: Option[String],
+    last: Option[Int],
+    filter: Option[DataItemFilterCollection],
+    orderBy: Option[OrderBy]
+) {
 
   val MAX_NODE_COUNT = 1000
 
@@ -118,11 +121,11 @@ case class QueryArguments(skip: Option[Int],
     val standardCondition = filter match {
       case Some(filterArg) =>
         generateFilterConditions(projectId, modelId, filterArg)
-      case None => None
+      case None =>
+        None
     }
 
-    val cursorCondition =
-      buildCursorCondition(projectId, modelId, standardCondition)
+    val cursorCondition = buildCursorCondition(projectId, modelId, standardCondition)
 
     val condition = cursorCondition match {
       case None                     => standardCondition
@@ -185,20 +188,25 @@ case class QueryArguments(skip: Option[Int],
     whereCommand.map(c => sql"" concat c)
   }
 
-  def generateInStatement(items: Seq[Any]) = {
-    val combinedItems = combineByComma(items.map(escapeUnsafeParam))
-    sql" IN (" concat combinedItems concat sql")"
+  def generateFilterConditions(projectId: String, tableName: String, filter: Seq[Any]): Option[SQLActionBuilder] = {
+    QueryArguments.generateFilterConditions(projectId, tableName, filter)
   }
+
+}
+
+object QueryArguments {
+  import slick.jdbc.MySQLProfile.api._
+  import SlickExtensions._
 
   def generateFilterConditions(projectId: String, tableName: String, filter: Seq[Any]): Option[SQLActionBuilder] = {
     // don't allow options that are Some(value), options that are None are ok
-//    assert(filter.count {
-//      case (key, value) =>
-//        value.isInstanceOf[Option[Any]] && (value match {
-//          case Some(v) => true
-//          case None => false
-//        })
-//    } == 0)
+    //    assert(filter.count {
+    //      case (key, value) =>
+    //        value.isInstanceOf[Option[Any]] && (value match {
+    //          case Some(v) => true
+    //          case None => false
+    //        })
+    //    } == 0)
     def getAliasAndTableName(fromModel: String, toModel: String): (String, String) = {
       var modTableName = ""
       if (!tableName.contains("_"))
@@ -389,4 +397,8 @@ case class QueryArguments(skip: Option[Int],
       combineByAnd(sqlParts)
   }
 
+  def generateInStatement(items: Seq[Any]) = {
+    val combinedItems = combineByComma(items.map(escapeUnsafeParam))
+    sql" IN (" concat combinedItems concat sql")"
+  }
 }

@@ -28,9 +28,7 @@ object AuthImpl extends Auth {
             claims.isSuccess
           })
 
-          if (!isValid) {
-            throw InvalidToken()
-          }
+          if (!isValid) throw InvalidToken()
 
         case None => throw InvalidToken()
       }

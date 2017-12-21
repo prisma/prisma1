@@ -18,6 +18,7 @@ object MigrationStepsJsonFormatter extends DefaultReads {
     val isRequiredField   = "isRequired"
     val isListField       = "isList"
     val isUniqueField     = "unique"
+    val isHiddenField     = "isHidden"
     val relationField     = "relation"
     val defaultValueField = "default"
     val enumField         = "enum"
@@ -30,6 +31,7 @@ object MigrationStepsJsonFormatter extends DefaultReads {
         typeName     <- (json \ typeNameField).validateOpt[String]
         isRequired   <- (json \ isRequiredField).validateOpt[Boolean]
         isList       <- (json \ isListField).validateOpt[Boolean]
+        isHidden     <- (json \ isHiddenField).validateOpt[Boolean]
         isUnique     <- (json \ isUniqueField).validateOpt[Boolean]
         relation     <- (json \ relationField).validateDoubleOpt[String]
         defaultValue <- (json \ defaultValueField).validateDoubleOpt[String]
@@ -43,6 +45,7 @@ object MigrationStepsJsonFormatter extends DefaultReads {
           isRequired = isRequired,
           isList = isList,
           isUnique = isUnique,
+          isHidden = isHidden,
           relation = relation,
           defaultValue = defaultValue,
           enum = enum

@@ -95,7 +95,7 @@ object ProjectJsonFormatter {
       case (`booleanType`, JsBoolean(x))    => JsSuccess(BooleanGCValue(x))
       case (`jsonType`, json)               => JsSuccess(JsonGCValue(json))
       case (_, JsArray(elements)) if isList =>
-        val gcValues = elements.map(element => this.createGcValue(discriminator, element, isList = false))
+        val gcValues = elements.map(element => this.reads(element))
         gcValues.find(_.isError) match {
           case Some(error) => error
           case None        => JsSuccess(ListGCValue(gcValues.map(_.get).toVector))

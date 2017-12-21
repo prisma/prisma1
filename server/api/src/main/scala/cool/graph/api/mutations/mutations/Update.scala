@@ -21,13 +21,13 @@ case class Update(
     args: schema.Args,
     dataResolver: DataResolver
 )(implicit apiDependencies: ApiDependencies)
-    extends ClientMutation {
+    extends SingleItemClientMutation {
 
   implicit val system: ActorSystem             = apiDependencies.system
   implicit val materializer: ActorMaterializer = apiDependencies.materializer
 
   val coolArgs: CoolArgs = {
-    val argsPointer: Map[String, Any] = args.raw.get("data") match { // TODO: input token is probably relay specific?
+    val argsPointer: Map[String, Any] = args.raw.get("data") match {
       case Some(value) => value.asInstanceOf[Map[String, Any]]
       case None        => args.raw
     }
@@ -48,7 +48,7 @@ case class Update(
 
         val transactionMutaction = Transaction(sqlMutactions, dataResolver)
 
-        val updateMutactionOpt: Option[UpdateDataItem] = sqlMutactions.collect { case x: UpdateDataItem => x }.headOption
+        val updateMutactionOpt: Option[UpdateDataItem] = sqlMutactions.collectFirst { case x: UpdateDataItem => x }
 
         val updateMutactions = sqlMutactions.collect { case x: UpdateDataItem => x }
 

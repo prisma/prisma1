@@ -12,6 +12,18 @@ case class RequiredArg(name: String, mustBeAString: Boolean)
 
 case class FieldAndType(objectType: ObjectTypeDefinition, fieldDef: FieldDefinition)
 
+case class FieldRequirement(name: String, typeName: String, required: Boolean, unique: Boolean, list: Boolean) {
+  import cool.graph.deploy.migration.DataSchemaAstExtensions._
+
+  def isValid(field: FieldDefinition): Boolean = {
+    if (field.name == name) {
+      field.fieldType.namedType.name == typeName && field.isRequired == required && field.isUnique == unique && field.isList == list
+    } else {
+      true
+    }
+  }
+}
+
 object SchemaSyntaxValidator {
   val directiveRequirements = Seq(
     DirectiveRequirement("relation", Seq(RequiredArg("name", mustBeAString = true))),
@@ -21,13 +33,20 @@ object SchemaSyntaxValidator {
     DirectiveRequirement("unique", Seq.empty)
   )
 
+  val reservedFieldsRequirements = Seq(
+    FieldRequirement("id", "ID", required = true, unique = true, list = false),
+    FieldRequirement("updatedAt", "DateTime", required = true, unique = false, list = false),
+    FieldRequirement("createdAt", "DateTime", required = true, unique = false, list = false)
+  )
+
   def apply(schema: String): SchemaSyntaxValidator = {
-    SchemaSyntaxValidator(schema, directiveRequirements)
+    SchemaSyntaxValidator(schema, directiveRequirements, reservedFieldsRequirements)
   }
 }
 
-case class SchemaSyntaxValidator(schema: String, directiveRequirements: Seq[DirectiveRequirement]) {
+case class SchemaSyntaxValidator(schema: String, directiveRequirements: Seq[DirectiveRequirement], reservedFieldsRequirements: Seq[FieldRequirement]) {
   import cool.graph.deploy.migration.DataSchemaAstExtensions._
+
   val result   = SdlSchemaParser.parse(schema)
   lazy val doc = result.get
 
@@ -39,58 +58,75 @@ case class SchemaSyntaxValidator(schema: String, directiveRequirements: Seq[Dire
   }
 
   def validateInternal(): Seq[SchemaError] = {
-    val nonSystemFieldAndTypes: Seq[FieldAndType] = for {
-      objectType <- doc.objectTypes
-      field      <- objectType.fields
-      if field.isNotSystemField
-    } yield FieldAndType(objectType, field)
+//    val nonSystemFieldAndTypes: Seq[FieldAndType] = for {
+//      objectType <- doc.objectTypes
+//      field      <- objectType.fields
+//    } yield FieldAndType(objectType, field)
 
     val allFieldAndTypes: Seq[FieldAndType] = for {
       objectType <- doc.objectTypes
       field      <- objectType.fields
     } yield FieldAndType(objectType, field)
 
-    val deprecatedImplementsNodeValidations = validateNodeInterfaceOnTypes(doc.objectTypes, allFieldAndTypes)
-    val duplicateTypeValidations            = validateDuplicateTypes(doc.objectTypes, allFieldAndTypes)
-    val duplicateFieldValidations           = validateDuplicateFields(allFieldAndTypes)
-    val missingTypeValidations              = validateMissingTypes(nonSystemFieldAndTypes)
-    val relationFieldValidations            = validateRelationFields(nonSystemFieldAndTypes)
-    val scalarFieldValidations              = validateScalarFields(nonSystemFieldAndTypes)
-    val fieldDirectiveValidations           = nonSystemFieldAndTypes.flatMap(validateFieldDirectives)
+//    val deprecatedImplementsNodeValidations = validateNodeInterfaceOnTypes(doc.objectTypes, allFieldAndTypes)
+    val reservedFieldsValidations = validateReservedFields(allFieldAndTypes)
+    val duplicateTypeValidations  = validateDuplicateTypes(doc.objectTypes, allFieldAndTypes)
+    val duplicateFieldValidations = validateDuplicateFields(allFieldAndTypes)
+    val missingTypeValidations    = validateMissingTypes(allFieldAndTypes)
+    val relationFieldValidations  = validateRelationFields(allFieldAndTypes)
+    val scalarFieldValidations    = validateScalarFields(allFieldAndTypes)
+    val fieldDirectiveValidations = allFieldAndTypes.flatMap(validateFieldDirectives)
 
-    deprecatedImplementsNodeValidations ++ validateIdFields ++ duplicateTypeValidations ++ duplicateFieldValidations ++ missingTypeValidations ++ relationFieldValidations ++ scalarFieldValidations ++ fieldDirectiveValidations ++ validateEnumTypes
+//    deprecatedImplementsNodeValidations ++
+    reservedFieldsValidations ++
+      duplicateTypeValidations ++
+      duplicateFieldValidations ++
+      missingTypeValidations ++
+      relationFieldValidations ++
+      scalarFieldValidations ++
+      fieldDirectiveValidations ++
+      validateEnumTypes
   }
 
-  def validateIdFields(): Seq[SchemaError] = {
-    val missingUniqueDirectives = for {
-      objectType <- doc.objectTypes
-      field      <- objectType.fields
-      if field.isIdField && !field.isUnique
-    } yield {
-      val fieldAndType = FieldAndType(objectType, field)
-      SchemaErrors.missingUniqueDirective(fieldAndType)
-    }
+//  def validateIdFields(): Seq[SchemaError] = {
+//    val missingUniqueDirectives = for {
+//      objectType <- doc.objectTypes
+//      field      <- objectType.fields
+//      if field.isIdField && !field.isUnique
+//    } yield {
+//      val fieldAndType = FieldAndType(objectType, field)
+//      SchemaErrors.missingUniqueDirective(fieldAndType)
+//    }
 
-    val missingIdFields = for {
-      objectType <- doc.objectTypes
-      if objectType.hasNoIdField
-    } yield {
-      SchemaErrors.missingIdField(objectType)
-    }
-    missingUniqueDirectives ++ missingIdFields
+//    val missingIdFields = for {
+//      objectType <- doc.objectTypes
+//      if objectType.hasNoIdField
+//    } yield {
+//      SchemaErrors.missingIdField(objectType)
+//    }
+//    missingUniqueDirectives //++ missingIdFields
+//  }
+
+  def validateReservedFields(fieldAndTypes: Seq[FieldAndType]): Seq[SchemaError] = {
+    for {
+      field        <- fieldAndTypes
+      failedChecks = reservedFieldsRequirements.filterNot { _.isValid(field.fieldDef) }
+      if failedChecks.nonEmpty
+    } yield SchemaErrors.malformedReservedField(field, failedChecks.head)
   }
 
   def validateDuplicateTypes(objectTypes: Seq[ObjectTypeDefinition], fieldAndTypes: Seq[FieldAndType]): Seq[SchemaError] = {
     val typeNames          = objectTypes.map(_.name)
     val duplicateTypeNames = typeNames.filter(name => typeNames.count(_ == name) > 1)
+
     duplicateTypeNames.map(name => SchemaErrors.duplicateTypeName(fieldAndTypes.find(_.objectType.name == name).head)).distinct
   }
 
-  def validateNodeInterfaceOnTypes(objectTypes: Seq[ObjectTypeDefinition], fieldAndTypes: Seq[FieldAndType]): Seq[SchemaError] = {
-    objectTypes.collect {
-      case x if x.interfaces.exists(_.name == "Node") => SchemaErrors.atNodeIsDeprecated(fieldAndTypes.find(_.objectType.name == x.name).get)
-    }
-  }
+//  def validateNodeInterfaceOnTypes(objectTypes: Seq[ObjectTypeDefinition], fieldAndTypes: Seq[FieldAndType]): Seq[SchemaError] = {
+//    objectTypes.collect {
+//      case x if x.interfaces.exists(_.name == "Node") => SchemaErrors.atNodeIsDeprecated(fieldAndTypes.find(_.objectType.name == x.name).get)
+//    }
+//  }
 
   def validateDuplicateFields(fieldAndTypes: Seq[FieldAndType]): Seq[SchemaError] = {
     val objectTypes         = fieldAndTypes.map(_.objectType)

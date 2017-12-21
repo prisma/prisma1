@@ -25,6 +25,7 @@ class CreateMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
       .field("optEnum", _.Enum, enum = Some(enum))
       .field("optDateTime", _.DateTime)
       .field("optJson", _.Json)
+      .field("optUnique", _.String, isUnique = true)
   }
 
   override protected def beforeAll(): Unit = {
@@ -167,5 +168,10 @@ class CreateMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
       project = project,
       errorCode = 3007
     )
+  }
+
+  "A Create Mutation" should "fail when a unique violation occurs" in {
+    server.executeQuerySimple(s"""mutation {createScalarModel(data: {optUnique: "test"}){optUnique}}""", project)
+    server.executeQuerySimpleThatMustFail(s"""mutation {createScalarModel(data: {optUnique: "test"}){optUnique}}""", project, errorCode = 3010)
   }
 }

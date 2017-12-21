@@ -23,22 +23,34 @@ case class CoolArgs(raw: Map[String, Any]) {
   private def asNestedMutation(relationField: Field, subModel: Model): NestedMutation = {
     if (relationField.isList) {
       NestedMutation(
-        creates = subArgsVector("create").getOrElse(Vector.empty).map(CreateOne(_)),
+        creates = subArgsVector("create").getOrElse(Vector.empty).map(CreateOne),
         updates = subArgsVector("update").getOrElse(Vector.empty).map { args =>
           UpdateOne(args.extractNodeSelectorFromWhereField(subModel), args.subArgsOption("data").get.get)
         },
-        upserts = Vector.empty,
+        upserts = subArgsVector("upsert").getOrElse(Vector.empty).map { args =>
+          UpsertOne(
+            where = args.extractNodeSelectorFromWhereField(subModel),
+            update = args.subArgsOption("update").get.get,
+            create = args.subArgsOption("create").get.get
+          )
+        },
         deletes = subArgsVector("delete").getOrElse(Vector.empty).map(args => DeleteOne(args.extractNodeSelector(subModel))),
         connects = subArgsVector("connect").getOrElse(Vector.empty).map(args => ConnectOne(args.extractNodeSelector(subModel))),
         disconnects = subArgsVector("disconnect").getOrElse(Vector.empty).map(args => DisconnectOne(args.extractNodeSelector(subModel)))
       )
     } else {
       NestedMutation(
-        creates = subArgsOption("create").flatten.map(CreateOne(_)).toVector,
+        creates = subArgsOption("create").flatten.map(CreateOne).toVector,
         updates = subArgsOption("update").flatten.map { args =>
           UpdateOne(args.extractNodeSelectorFromWhereField(subModel), args.subArgsOption("data").get.get)
         }.toVector,
-        upserts = Vector.empty,
+        upserts = subArgsOption("upsert").flatten.map { args =>
+          UpsertOne(
+            where = args.extractNodeSelectorFromWhereField(subModel),
+            update = args.subArgsOption("update").get.get,
+            create = args.subArgsOption("create").get.get
+          )
+        }.toVector,
         deletes = subArgsOption("delete").flatten.map(args => DeleteOne(args.extractNodeSelector(subModel))).toVector,
         connects = subArgsOption("connect").flatten.map(args => ConnectOne(args.extractNodeSelector(subModel))).toVector,
         disconnects = subArgsOption("disconnect").flatten.map(args => DisconnectOne(args.extractNodeSelector(subModel))).toVector
@@ -72,7 +84,7 @@ case class CoolArgs(raw: Map[String, Any]) {
   def subArgsList(field: String): Option[Seq[CoolArgs]] = {
     getFieldValuesAs[Map[String, Any]](field) match {
       case None    => None
-      case Some(x) => Some(x.map(CoolArgs(_)))
+      case Some(x) => Some(x.map(CoolArgs))
     }
   }
 

@@ -42,6 +42,10 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
         |  requiredOneRelation: TestModel4! @relation(name: "Test2OnTest4")
         |  multiRelation: [TestModel5!]! @relation(name: "Test2OnTest5")
         |  requiredMultiRelation: [TestModel6!]! @relation(name: "Test2OnTest6")
+        |  enumField: Testnum
+        |  requiredEnumField: Testnum!
+        |  enumListField: [Testnum!]
+        |  requiredEnumListField: [Testnum!]!
         |}
         |
         |type TestModel3 {
@@ -63,11 +67,16 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
         |  id: ID! @unique
         |  back: TestModel2! @relation(name: "Test2OnTest6")
         |}
+        |
+        |enum Testnum {
+        |  Test1
+        |  Test2
+        |}
       """.stripMargin
 
     val result = server.query(s"""
        |mutation {
-       |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: "${schema.replaceAll("\n", " ").replaceAll("\\\"", "\\\\\"")}"}){
+       |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(schema)}}){
        |    project {
        |      name
        |      stage
@@ -92,7 +101,6 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
     val project      = setupProject(basicTypesGql)
     val nameAndStage = ProjectId.fromEncodedString(project.id)
 
-    // Full feature set deploy
     val schema = basicTypesGql +
       """
         |type TestModel2 {
@@ -103,7 +111,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
 
     val result = server.query(s"""
        |mutation {
-       |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: "${schema.replaceAll("\n", " ")}"}){
+       |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(schema)}}){
        |    project {
        |      name
        |      stage
@@ -114,8 +122,6 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
        |  }
        |}
       """.stripMargin)
-
-    result.pathAsSeq("data.deploy.errors") should be(empty)
 
     // Todo create some client data to check / migrate
 
@@ -129,7 +135,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
 
     val updateResult = server.query(s"""
         |mutation {
-        |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: "${schema.replaceAll("\n", " ")}"}){
+        |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(schema)}}){
         |    project {
         |      name
         |      stage
@@ -147,5 +153,112 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
 //    migrations should have(size(3))
 //    migrations.exists(!_.hasBeenApplied) shouldEqual false
 //    migrations.head.revision shouldEqual 3 // order is DESC
+  }
+
+  "DeployMutation" should "fail if reserved fields are malformed" in {
+    val project      = setupProject(basicTypesGql)
+    val nameAndStage = ProjectId.fromEncodedString(project.id)
+
+    def tryDeploy(field: String) = {
+      val schema = basicTypesGql +
+        s"""
+          |type TestModel2 {
+          |  $field
+          |  test: String
+          |}
+        """.stripMargin
+
+      val result = server.query(
+        s"""
+         |mutation {
+         |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(schema)}}){
+         |    project {
+         |      name
+         |      stage
+         |    }
+         |    errors {
+         |      description
+         |    }
+         |  }
+         |}
+        """.stripMargin
+      )
+
+      // Query must fail
+      result.pathExists("data.deploy.errors") shouldEqual true
+    }
+
+    tryDeploy("id: String! @unique")
+    tryDeploy("id: ID!")
+    tryDeploy("id: ID @unique")
+    tryDeploy("""id: ID! @default(value: "Woot")""")
+
+    tryDeploy("updatedAt: String! @unique")
+    tryDeploy("updatedAt: DateTime!")
+    tryDeploy("updatedAt: DateTime @unique")
+    tryDeploy("""updatedAt: DateTime! @default(value: "Woot")""")
+  }
+
+  "DeployMutation" should "create hidden reserved fields if they are not specified in the types" in {
+    val schema = """
+                   |type TestModel {
+                   |  test: String
+                   |}
+                 """.stripMargin
+
+    val project       = setupProject(schema)
+    val loadedProject = projectPersistence.load(project.id).await.get
+
+    loadedProject.getModelByName("TestModel").get.getFieldByName("id").get.isHidden shouldEqual true
+    loadedProject.getModelByName("TestModel").get.getFieldByName("createdAt").get.isHidden shouldEqual true
+    loadedProject.getModelByName("TestModel").get.getFieldByName("updatedAt").get.isHidden shouldEqual true
+  }
+
+  "DeployMutation" should "hide reserved fields instead of deleting them and reveal them instead of creating them" in {
+    val schema = """
+                   |type TestModel {
+                   |  id: ID! @unique
+                   |  test: String
+                   |}
+                 """.stripMargin
+
+    val project       = setupProject(schema)
+    val nameAndStage  = ProjectId.fromEncodedString(project.id)
+    val loadedProject = projectPersistence.load(project.id).await.get
+
+    loadedProject.getModelByName("TestModel").get.getFieldByName("id").get.isVisible shouldEqual true
+    loadedProject.getModelByName("TestModel").get.getFieldByName("createdAt").get.isHidden shouldEqual true
+    loadedProject.getModelByName("TestModel").get.getFieldByName("updatedAt").get.isHidden shouldEqual true
+
+    val updatedSchema = """
+                          |type TestModel {
+                          |  test: String
+                          |  createdAt: DateTime!
+                          |  updatedAt: DateTime!
+                          |}
+                        """.stripMargin
+
+    val updateResult = server.query(s"""
+                                       |mutation {
+                                       |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(updatedSchema)}}){
+                                       |    project {
+                                       |      name
+                                       |      stage
+                                       |    }
+                                       |    errors {
+                                       |      description
+                                       |    }
+                                       |  }
+                                       |}""".stripMargin)
+
+    updateResult.pathAsSeq("data.deploy.errors") should be(empty)
+
+    val reloadedProject = projectPersistence.load(project.id).await.get
+
+    reloadedProject.getModelByName("TestModel").get.getFieldByName("id").get.isVisible shouldEqual false
+    reloadedProject.getModelByName("TestModel").get.getFieldByName("createdAt").get.isHidden shouldEqual false
+    reloadedProject.getModelByName("TestModel").get.getFieldByName("updatedAt").get.isHidden shouldEqual false
+
+    // todo assert client db cols?
   }
 }

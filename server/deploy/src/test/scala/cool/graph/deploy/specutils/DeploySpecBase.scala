@@ -6,6 +6,7 @@ import cool.graph.cuid.Cuid
 import cool.graph.shared.models.Project
 import cool.graph.utils.await.AwaitUtils
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
+import spray.json.JsString
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -30,6 +31,12 @@ trait DeploySpecBase extends BeforeAndAfterEach with BeforeAndAfterAll with Awai
   override protected def beforeAll(): Unit = {
     super.beforeAll()
     internalDb.createInternalDatabaseSchema()
+  }
+
+  override protected def afterAll(): Unit = {
+    super.afterAll()
+    internalDb.shutdown()
+    clientDb.shutdown()
   }
 
   override protected def beforeEach(): Unit = {
@@ -59,7 +66,7 @@ trait DeploySpecBase extends BeforeAndAfterEach with BeforeAndAfterAll with Awai
 
     server.query(s"""
         |mutation {
-        |  deploy(input:{name: "$name", stage: "$stage", types: "${schema.replaceAll("\n", " ")}"}){
+        |  deploy(input:{name: "$name", stage: "$stage", types: ${formatSchema(schema)}}){
         |    errors {
         |      description
         |    }
@@ -70,9 +77,5 @@ trait DeploySpecBase extends BeforeAndAfterEach with BeforeAndAfterAll with Awai
     testDependencies.projectPersistence.load(projectId).await.get
   }
 
-  override protected def afterAll(): Unit = {
-    super.afterAll()
-    internalDb.shutdown()
-    clientDb.shutdown()
-  }
+  def formatSchema(schema: String): String = JsString(schema).toString()
 }

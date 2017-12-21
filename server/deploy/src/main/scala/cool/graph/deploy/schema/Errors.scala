@@ -1,5 +1,6 @@
 package cool.graph.deploy.schema
 
+import cool.graph.gc_values.InvalidValueForScalarType
 import cool.graph.shared.models.ProjectId
 
 trait DeployApiError extends Exception {
@@ -22,6 +23,8 @@ case class InvalidServiceName(name: String) extends AbstractDeployApiError(Inval
 case class InvalidServiceStage(stage: String) extends AbstractDeployApiError(InvalidNames.forService(stage, "service stage"), 4002)
 
 case class InvalidName(name: String, entityType: String) extends AbstractDeployApiError(InvalidNames.default(name, entityType), 2008)
+
+case class InvalidDeployment(deployErrorMessage: String) extends AbstractDeployApiError(deployErrorMessage, 4003)
 
 object InvalidNames {
   def mustStartUppercase(name: String, entityType: String): String =

@@ -7,6 +7,7 @@ import cool.graph.api.mutations.MutationTypes.ArgumentValue
 import cool.graph.api.schema.APIErrors
 import cool.graph.api.schema.APIErrors.RelationIsRequired
 import cool.graph.cuid.Cuid.createCuid
+import cool.graph.gc_values.GraphQLIdGCValue
 import cool.graph.shared.models.IdType.Id
 import cool.graph.shared.models.{Field, Model, Project}
 
@@ -99,7 +100,8 @@ case class SqlMutactions(dataResolver: DataResolver) {
         getMutactionsForNestedConnectMutation(nestedMutation, parentInfo) ++
         getMutactionsForNestedDisconnectMutation(nestedMutation, parentInfo) ++
         getMutactionsForNestedDeleteMutation(nestedMutation, parentInfo) ++
-        getMutactionsForNestedUpdateMutation(nestedMutation, parentInfo)
+        getMutactionsForNestedUpdateMutation(nestedMutation, parentInfo) ++
+        getMutactionsForNestedUpsertMutation(subModel, nestedMutation, parentInfo)
 
     }
     x.flatten
@@ -157,6 +159,27 @@ case class SqlMutactions(dataResolver: DataResolver) {
         where = update.where,
         args = update.data
       )
+    }
+  }
+
+  def getMutactionsForNestedUpsertMutation(model: Model, nestedMutation: NestedMutation, parentInfo: ParentInfo): Seq[ClientSqlMutaction] = {
+    nestedMutation.upserts.flatMap { upsert =>
+      val upsertItem = UpsertDataItemIfInRelationWith(
+        project = project,
+        fromField = parentInfo.field,
+        fromId = parentInfo.id,
+        createArgs = upsert.create,
+        updateArgs = upsert.update,
+        where = upsert.where
+      )
+      val addToRelation = AddDataItemToManyRelationByUniqueField(
+        project = project,
+        fromModel = parentInfo.model,
+        fromField = parentInfo.field,
+        fromId = parentInfo.id,
+        where = NodeSelector(model, "id", GraphQLIdGCValue(upsertItem.idOfNewItem))
+      )
+      Vector(upsertItem, addToRelation)
     }
   }
 

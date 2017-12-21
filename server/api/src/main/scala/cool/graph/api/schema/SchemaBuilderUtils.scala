@@ -57,7 +57,7 @@ object SchemaBuilderUtils {
   }
 }
 
-class FilterObjectTypeBuilder(model: Model, project: Project) {
+case class FilterObjectTypeBuilder(model: Model, project: Project) {
   def mapToRelationFilterInputField(field: models.Field): List[InputField[_ >: Option[Seq[Any]] <: Option[Any]]] = {
     assert(!field.isScalar)
     val relatedModelInputType = new FilterObjectTypeBuilder(field.relatedModel(project).get, project).filterObjectType
@@ -81,7 +81,7 @@ class FilterObjectTypeBuilder(model: Model, project: Project) {
         List(
           InputField("AND", OptionInputType(ListInputType(filterObjectType)), description = FilterArguments.ANDFilter.description),
           InputField("OR", OptionInputType(ListInputType(filterObjectType)), description = FilterArguments.ORFilter.description)
-        ) ++ model.scalarFields.flatMap(SchemaBuilderUtils.mapToInputField) ++ model.relationFields.flatMap(mapToRelationFilterInputField)
+        ) ++ model.scalarFields.filterNot(_.isHidden).flatMap(SchemaBuilderUtils.mapToInputField) ++ model.relationFields.flatMap(mapToRelationFilterInputField)
       }
     )
 

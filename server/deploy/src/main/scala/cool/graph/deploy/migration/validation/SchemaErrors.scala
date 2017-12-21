@@ -61,6 +61,23 @@ object SchemaErrors {
     )
   }
 
+  // Brain kaputt, todo find a better solution
+  def malformedReservedField(fieldAndType: FieldAndType, requirement: FieldRequirement) = {
+    val requiredTypeMessage = requirement match {
+      case x @ FieldRequirement(name, typeName, true, false, false) => s"$name: $typeName!"
+      case x @ FieldRequirement(name, typeName, true, true, false)  => s"$name: $typeName! @unique"
+      case x @ FieldRequirement(name, typeName, true, true, true)   => s"$name: [$typeName!]!"
+      case x @ FieldRequirement(name, typeName, false, true, false) => s"$name: $typeName @unique"
+      case x @ FieldRequirement(name, typeName, false, true, true)  => s"$name: [$typeName!] @unique"
+      case x @ FieldRequirement(name, typeName, false, false, true) => s"$name: [$typeName!]"
+    }
+
+    error(
+      fieldAndType,
+      s"The field `${fieldAndType.fieldDef.name}` is reserved and has to have the format: $requiredTypeMessage."
+    )
+  }
+
 //  def missingAtModelDirective(fieldAndType: FieldAndType) = {
 //    error(
 //      fieldAndType,
@@ -132,9 +149,9 @@ object SchemaErrors {
     SchemaError(theType, field, s"The field `$field` is a system field and cannot be removed.")
   }
 
-  def systemTypeCannotBeRemoved(theType: String) = {
-    SchemaError(theType, s"The type `$theType` is a system type and cannot be removed.")
-  }
+//  def systemTypeCannotBeRemoved(theType: String) = {
+//    SchemaError(theType, s"The type `$theType` is a system type and cannot be removed.")
+//  }
 
   def schemaFileHeaderIsMissing() = {
     SchemaError.global(s"""The schema must specify the project id and version as a front matter, e.g.:

@@ -15,7 +15,7 @@ object SlickExtensions {
 
     override def apply(gcValue: GCValue, pp: PositionedParameters): Unit = {
       gcValue match {
-        case NullGCValue         => sys.error("NullGcValue not implemented here yet.")
+        case NullGCValue         => pp.setNull(java.sql.Types.NULL)
         case x: StringGCValue    => pp.setString(x.value)
         case x: EnumGCValue      => pp.setString(x.value)
         case x: GraphQLIdGCValue => pp.setString(x.value)
@@ -43,6 +43,9 @@ object SlickExtensions {
       case Some(b) => a concat b
       case None    => a
     }
+
+    def ++(b: SQLActionBuilder): SQLActionBuilder         = concat(b)
+    def ++(b: Option[SQLActionBuilder]): SQLActionBuilder = concat(b)
   }
 
   def listToJson(param: List[Any]): String = {

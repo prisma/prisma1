@@ -1,15 +1,11 @@
 package cool.graph.shared.models
 
-import cool.graph.cuid.Cuid
 import cool.graph.gc_values.GCValue
 import cool.graph.shared.errors.SharedErrors
-import cool.graph.shared.models.CustomRule.CustomRule
 import cool.graph.shared.models.FieldConstraintType.FieldConstraintType
 import cool.graph.shared.models.LogStatus.LogStatus
 import cool.graph.shared.models.ModelMutationType.ModelMutationType
-import cool.graph.shared.models.ModelOperation.ModelOperation
 import cool.graph.shared.models.SeatStatus.SeatStatus
-import cool.graph.shared.models.UserType.UserType
 import org.joda.time.DateTime
 
 object IdType {
@@ -246,8 +242,7 @@ case class Model(
     id: Id,
     name: String,
     fields: List[Field],
-    description: Option[String] = None,
-    isSystem: Boolean = false
+    description: Option[String] = None
 ) {
 
   lazy val scalarFields: List[Field]         = fields.filter(_.isScalar)
@@ -284,6 +279,8 @@ case class Model(
 
   def getFieldByName_!(name: String): Field       = getFieldByName(name).get // .getOrElse(throw FieldNotInModel(fieldName = name, modelName = this.name))
   def getFieldByName(name: String): Option[Field] = fields.find(_.name == name)
+
+  def hasVisibleIdField: Boolean = getFieldByName_!("id").isVisible
 }
 
 object RelationSide extends Enumeration {
@@ -305,7 +302,10 @@ object TypeIdentifier extends Enumeration {
   val Json      = Value("Json")
   val Relation  = Value("Relation")
 
-  def withNameOpt(name: String): Option[TypeIdentifier.Value] = this.values.find(_.toString == name)
+  def withNameOpt(name: String): Option[TypeIdentifier.Value] = name match {
+    case "ID" => Some(GraphQLID)
+    case _    => this.values.find(_.toString == name)
+  }
 
   def withNameHacked(name: String) = name match {
     case "ID" => GraphQLID
@@ -333,7 +333,7 @@ case class Field(
     isRequired: Boolean,
     isList: Boolean,
     isUnique: Boolean,
-    isSystem: Boolean = false,
+    isHidden: Boolean = false,
     isReadonly: Boolean = false,
     enum: Option[Enum],
     defaultValue: Option[GCValue],
@@ -352,6 +352,7 @@ case class Field(
 
   private val excludedFromMutations = Vector("updatedAt", "createdAt", "id")
   def isWritable: Boolean           = !isReadonly && !excludedFromMutations.contains(name)
+  def isVisible: Boolean            = !isHidden
 
   def isOneToOneRelation(project: Project): Boolean = {
     val otherField = relatedFieldEager(project)
@@ -423,8 +424,6 @@ case class Field(
     }
     returnField.head
   }
-
-  def isSystemField: Boolean = name == "id" || name == "createdAt" || name == "updatedAt"
 }
 
 sealed trait FieldConstraint {
@@ -570,6 +569,22 @@ case class Relation(
   def getRelationFieldMirrorById_!(id: String): RelationFieldMirror =
     ??? //getRelationFieldMirrorById(id).getOrElse(throw SystemErrors.InvalidRelationFieldMirrorId(id))
 
+  def sideOf(model: Model): RelationSide.Value = {
+    if (model.id == modelAId) {
+      RelationSide.A
+    } else if (model.id == modelBId) {
+      RelationSide.B
+    } else {
+      sys.error(s"The model ${model.name} is not part of the relation ${name}")
+    }
+  }
+
+  def oppositeSideOf(model: Model): RelationSide.Value = {
+    sideOf(model) match {
+      case RelationSide.A => RelationSide.B
+      case RelationSide.B => RelationSide.A
+    }
+  }
 }
 
 case class RelationFieldMirror(

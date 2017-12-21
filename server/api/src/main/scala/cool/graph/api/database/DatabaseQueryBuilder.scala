@@ -1,6 +1,9 @@
 package cool.graph.api.database
 
-import cool.graph.shared.models.{Field, Project}
+import cool.graph.api.database.Types.DataItemFilterCollection
+import cool.graph.api.mutations.NodeSelector
+import cool.graph.shared.models.IdType.Id
+import cool.graph.shared.models.{Field, Model, Project, Relation}
 import slick.dbio.DBIOAction
 import slick.dbio.Effect.Read
 import slick.jdbc.MySQLProfile.api._
@@ -59,14 +62,11 @@ object DatabaseQueryBuilder {
     (query, resultTransform)
   }
 
-  def countAllFromModel(projectId: String, modelName: String, args: Option[QueryArguments]): SQLActionBuilder = {
-
-    val (conditionCommand, orderByCommand, _, _) =
-      extractQueryArgs(projectId, modelName, args)
-
-    sql"select count(*) from `#$projectId`.`#$modelName`" concat
-      prefixIfNotNone("where", conditionCommand) concat
-      prefixIfNotNone("order by", orderByCommand)
+  def countAllFromModel(project: Project, model: Model, where: Option[DataItemFilterCollection]): SQLActionBuilder = {
+    val whereSql = where.flatMap { where =>
+      QueryArguments.generateFilterConditions(project.id, model.name, where)
+    }
+    sql"select count(*) from `#${project.id}`.`#${model.name}`" ++ prefixIfNotNone("where", whereSql)
   }
 
   def extractQueryArgs(
@@ -108,9 +108,24 @@ object DatabaseQueryBuilder {
   def existsNullByModelAndRelationField(projectId: String, modelName: String, field: Field) = {
     val relationId   = field.relation.get.id
     val relationSide = field.relationSide.get.toString
-    sql"""(select EXISTS (select `id`from `#$projectId`.`#$modelName`
-             where `#$projectId`.`#$modelName`.id Not IN
-             (Select `#$projectId`.`#$relationId`.#$relationSide from `#$projectId`.`#$relationId`)))"""
+    sql"""select EXISTS (
+            select `id`from `#$projectId`.`#$modelName`
+            where `id` Not IN
+            (Select `#$projectId`.`#$relationId`.#$relationSide from `#$projectId`.`#$relationId`)
+          )"""
+  }
+
+  def existsNodeIsInRelationshipWith(project: Project, model: Model, where: NodeSelector, relation: Relation, other: Id) = {
+    val relationSide         = relation.sideOf(model).toString
+    val oppositeRelationSide = relation.oppositeSideOf(model).toString
+    sql"""select EXISTS (
+            select `id`from `#${project.id}`.`#${model.name}`
+            where  #${where.fieldName} = ${where.fieldValue} and `id` IN (
+             select `#$relationSide`
+             from `#${project.id}`.`#${relation.id}`
+             where `#$oppositeRelationSide` = '#$other'
+           )
+          )"""
   }
 
   def existsByModelAndId(projectId: String, modelName: String, id: String) = {
@@ -123,6 +138,25 @@ object DatabaseQueryBuilder {
 
   def batchSelectFromModelByUnique(projectId: String, modelName: String, key: String, values: List[Any]): SQLActionBuilder = {
     sql"select * from `#$projectId`.`#$modelName` where `#$key` in (" concat combineByComma(values.map(escapeUnsafeParam)) concat sql")"
+  }
+
+  def selectFromModelsByUniques(project: Project, model: Model, predicates: Vector[NodeSelector]) = {
+    sql"select * from `#${project.id}`.`#${model.name}`" ++ whereClauseByCombiningPredicatesByOr(predicates)
+  }
+
+  def existsFromModelsByUniques(project: Project, model: Model, predicates: Vector[NodeSelector]) = {
+    sql"select exists (select * from `#${project.id}`.`#${model.name}`" ++ whereClauseByCombiningPredicatesByOr(predicates) concat sql")"
+  }
+
+  def whereClauseByCombiningPredicatesByOr(predicates: Vector[NodeSelector]) = {
+    if (predicates.isEmpty) {
+      sql""
+    } else {
+      val firstPredicate = predicates.head
+      predicates.tail.foldLeft(sql"where #${firstPredicate.fieldName} = ${firstPredicate.fieldValue}") { (sqlActionBuilder, predicate) =>
+        sqlActionBuilder ++ sql" OR #${predicate.fieldName} = ${predicate.fieldValue}"
+      }
+    }
   }
 
   def batchSelectAllFromRelatedModel(project: Project,

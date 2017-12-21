@@ -24,7 +24,7 @@ case class Delete(
     args: schema.Args,
     dataResolver: DataResolver
 )(implicit apiDependencies: ApiDependencies)
-    extends ClientMutation {
+    extends SingleItemClientMutation {
 
   implicit val system: ActorSystem             = apiDependencies.system
   implicit val materializer: ActorMaterializer = apiDependencies.materializer

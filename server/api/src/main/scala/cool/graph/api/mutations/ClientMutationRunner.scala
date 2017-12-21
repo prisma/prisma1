@@ -13,10 +13,10 @@ object ClientMutationRunner {
 
   import cool.graph.utils.future.FutureUtils._
 
-  def run(
-      clientMutation: ClientMutation,
+  def run[T](
+      clientMutation: ClientMutation[T],
       dataResolver: DataResolver
-  ): Future[DataItem] = {
+  ): Future[T] = {
     for {
       mutactionGroups  <- clientMutation.prepareMutactions()
       errors           <- verifyMutactions(mutactionGroups, dataResolver)
@@ -32,6 +32,9 @@ object ClientMutationRunner {
             clientMutation.getReturnValue.map {
               case ReturnValue(dataItem) => dataItem
               case NoReturnValue(id)     => throw APIErrors.NodeNotFoundError(id)
+            }
+            clientMutation.getReturnValue.map { result =>
+              result
             }
         }
       }

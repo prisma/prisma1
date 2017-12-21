@@ -14,7 +14,13 @@ import scala.util.{Failure, Success, Try}
 
 object InputValueValidation {
 
-  def validateDataItemInputs(model: Model, id: Id, values: List[ArgumentValue]): (Try[MutactionVerificationSuccess], List[Field]) = {
+
+  def validateDataItemInputsWithID(model: Model, id: Id, values: List[ArgumentValue]): (Try[MutactionVerificationSuccess], List[Field]) = {
+    if (!NameConstraints.isValidDataItemId(id)) (Failure(APIErrors.IdIsInvalid(id)), InputValueValidation.fieldsWithValues(model, values))
+    else validateDataItemInputs(model, values)
+  }
+
+  def validateDataItemInputs(model: Model, values: List[ArgumentValue]): (Try[MutactionVerificationSuccess], List[Field]) = {
 
     val fieldsWithValues              = InputValueValidation.fieldsWithValues(model, values)
     val fieldsWithIllegallySizedValue = InputValueValidation.checkValueSize(values, fieldsWithValues)
@@ -22,7 +28,6 @@ object InputValueValidation {
     lazy val constraintErrors         = checkConstraints(values, fieldsWithValues.filter(_.constraints.nonEmpty))
 
     val validationResult = () match {
-      case _ if !NameConstraints.isValidDataItemId(id) => Failure(APIErrors.IdIsInvalid(id))
       case _ if extraValues.nonEmpty                   => Failure(APIErrors.ExtraArguments(extraValues.map(_.name), model.name))
       case _ if fieldsWithIllegallySizedValue.nonEmpty => Failure(APIErrors.ValueTooLong(fieldsWithIllegallySizedValue.head.name))
       case _ if constraintErrors.nonEmpty              => Failure(APIErrors.ConstraintViolated(constraintErrors))
