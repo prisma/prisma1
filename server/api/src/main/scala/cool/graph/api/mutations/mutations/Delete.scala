@@ -44,16 +44,12 @@ case class Delete(
         //GraphcoolDataTypes.fromSql(dataItem.userData, model.fields)
       }
       .map(_ => {
-        val itemToDelete = deletedItemOpt.getOrElse(throw APIErrors.DataItemDoesNotExist(model.name, where.fieldName, where.fieldValueAsString))
+        val itemToDelete = deletedItemOpt.getOrElse(throw APIErrors.NodeNotFoundForWhereError(where))
 
-        val sqlMutactions        = SqlMutactions(dataResolver).getMutactionsForDelete(model, itemToDelete.id, itemToDelete)
-        val transactionMutaction = Transaction(sqlMutactions, dataResolver)
-
-        val nodeData: Map[String, Any] = itemToDelete.userData.collect { case (key, Some(value)) => (key, value) } + ("id" -> itemToDelete.id)
-
+        val sqlMutactions          = SqlMutactions(dataResolver).getMutactionsForDelete(model, itemToDelete.id, itemToDelete)
+        val transactionMutaction   = Transaction(sqlMutactions, dataResolver)
         val subscriptionMutactions = SubscriptionEvents.extractFromSqlMutactions(project, mutationId, sqlMutactions).toList
-
-        val sssActions = ServerSideSubscription.extractFromMutactions(project, sqlMutactions, requestId).toList
+        val sssActions             = ServerSideSubscription.extractFromMutactions(project, sqlMutactions, requestId).toList
 
         List(
           MutactionGroup(mutactions = List(transactionMutaction), async = false),

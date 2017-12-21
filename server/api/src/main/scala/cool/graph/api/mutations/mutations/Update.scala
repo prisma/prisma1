@@ -59,7 +59,7 @@ case class Update(
         )
 
       case None =>
-        throw APIErrors.DataItemDoesNotExist(model.name, where.fieldName, where.fieldValueAsString)
+        throw APIErrors.NodeNotFoundForWhereError(where)
     }
   }
 

@@ -150,8 +150,8 @@ class UpdateMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
          |  }
          |}""".stripMargin,
       project,
-      errorCode = 3002,
-      errorContains = "'Todo' has no item with alias 'NOT A VALID ALIAS'"
+      errorCode = 3039,
+      errorContains = "No Node for the model Todo with value NOT A VALID ALIAS for alias found"
     )
   }
 }
