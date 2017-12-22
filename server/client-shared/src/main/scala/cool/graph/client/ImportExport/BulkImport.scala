@@ -85,6 +85,7 @@ class BulkImport(implicit injector: ClientInjector) {
 
       val formatedDateTimes = element.values.map {
         case (k, v) if k == "createdAt" || k == "updatedAt"                                => (k, dateTimeFromISO8601(v))
+        case (k, v) if !model.fields.map(_.name).contains(k)                               => (k, v) // let it fail at db level
         case (k, v) if model.getFieldByName_!(k).typeIdentifier == TypeIdentifier.DateTime => (k, dateTimeFromISO8601(v))
         case (k, v)                                                                        => (k, v)
       }
