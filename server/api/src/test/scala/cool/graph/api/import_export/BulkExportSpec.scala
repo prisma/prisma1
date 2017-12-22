@@ -51,24 +51,24 @@ class BulkExportSpec extends FlatSpec with Matchers with ApiBaseSpec with AwaitU
 
     val nodes =
       """{ "valueType": "nodes", "values": [
-        |{"_typeName": "Model0", "id": "0","a": "test1", "b": 0, "createdAt": "2017-11-29 14:35:13", "updatedAt":"2017-12-05 12:34:23.0"},
-        |{"_typeName": "Model1", "id": "1","a": "test2", "b": 1, "createdAt": "2017-11-29 14:35:13", "updatedAt":"2017-12-05 12:34:23.0"},
-        |{"_typeName": "Model2", "id": "2", "a": "test3", "b": 2, "createdAt": "2017-11-29 14:35:13", "updatedAt":"2017-12-05 12:34:23.0"},
-        |{"_typeName": "Model0", "id": "3", "a": "test4", "b": 3, "createdAt": "2017-11-29 14:35:13", "updatedAt":"2017-12-05 12:34:23.0"},
-        |{"_typeName": "Model0", "id": "4", "a": "test1", "b": 0, "createdAt": "2017-11-29 14:35:13", "updatedAt":"2017-12-05 12:34:23.0"},
-        |{"_typeName": "Model1", "id": "5", "a": "test2", "b": 1, "createdAt": "2017-11-29 14:35:13", "updatedAt":"2017-12-05 12:34:23.0"},
-        |{"_typeName": "Model2", "id": "6", "a": "test3", "b": 2, "createdAt": "2017-11-29 14:35:13", "updatedAt":"2017-12-05 12:34:23.0"},
-        |{"_typeName": "Model0", "id": "7", "a": "test4", "b": 3, "createdAt": "2017-11-29 14:35:13", "updatedAt":"2017-12-05 12:34:23.0"},
-        |{"_typeName": "Model0", "id": "8", "a": "test1", "b": 0, "createdAt": "2017-11-29 14:35:13", "updatedAt":"2017-12-05 12:34:23.0"},
-        |{"_typeName": "Model1", "id": "9", "a": "test2", "b": 1, "createdAt": "2017-11-29 14:35:13", "updatedAt":"2017-12-05 12:34:23.0"},
-        |{"_typeName": "Model2", "id": "10", "a": "test3", "b": 2, "createdAt": "2017-11-29 14:35:13", "updatedAt":"2017-12-05 12:34:23.0"},
-        |{"_typeName": "Model0", "id": "11", "a": "test4", "b": 3, "createdAt": "2017-11-29 14:35:13", "updatedAt":"2017-12-05 12:34:23.0"},
-        |{"_typeName": "Model2", "id": "12", "a": "test3", "b": 2, "createdAt": "2017-11-29 14:35:13", "updatedAt":"2017-12-05 12:34:23.0"},
-        |{"_typeName": "Model0", "id": "13", "a": "test4", "b": 3, "createdAt": "2017-11-29 14:35:13", "updatedAt":"2017-12-05 12:34:23.0"},
-        |{"_typeName": "Model0", "id": "14", "a": "test1", "b": 0, "createdAt": "2017-11-29 14:35:13", "updatedAt":"2017-12-05 12:34:23.0"},
-        |{"_typeName": "Model1", "id": "15", "a": "test2", "b": 1, "createdAt": "2017-11-29 14:35:13", "updatedAt":"2017-12-05 12:34:23.0"},
-        |{"_typeName": "Model2", "id": "16", "a": "test3", "b": 2, "createdAt": "2017-11-29 14:35:13", "updatedAt":"2017-12-05 12:34:23.0"},
-        |{"_typeName": "Model0", "id": "17", "a": "test4", "b": 3, "createdAt": "2017-11-29 14:35:13", "updatedAt":"2017-12-05 12:34:23.0"}
+        |{"_typeName": "Model0", "id": "0","a": "test1", "b": 0, "createdAt": "2017-11-29T14:35:13.000Z", "updatedAt":"2017-12-05T12:34:23.000Z"},
+        |{"_typeName": "Model1", "id": "1","a": "test2", "b": 1, "createdAt": "2017-11-29T14:35:13.000Z", "updatedAt":"2017-12-05T12:34:23.000Z"},
+        |{"_typeName": "Model2", "id": "2", "a": "test3", "b": 2, "createdAt": "2017-11-29T14:35:13.000Z", "updatedAt":"2017-12-05T12:34:23.000Z"},
+        |{"_typeName": "Model0", "id": "3", "a": "test4", "b": 3,  "createdAt": "2017-11-29T14:35:13.000Z", "updatedAt":"2017-12-05T12:34:23.000Z"},
+        |{"_typeName": "Model0", "id": "4", "a": "test1", "b": 0,  "createdAt": "2017-11-29T14:35:13.000Z", "updatedAt":"2017-12-05T12:34:23.000Z"},
+        |{"_typeName": "Model1", "id": "5", "a": "test2", "b": 1,  "createdAt": "2017-11-29T14:35:13.000Z", "updatedAt":"2017-12-05T12:34:23.000Z"},
+        |{"_typeName": "Model2", "id": "6", "a": "test3", "b": 2,  "createdAt": "2017-11-29T14:35:13.000Z", "updatedAt":"2017-12-05T12:34:23.000Z"},
+        |{"_typeName": "Model0", "id": "7", "a": "test4", "b": 3,  "createdAt": "2017-11-29T14:35:13.000Z", "updatedAt":"2017-12-05T12:34:23.000Z"},
+        |{"_typeName": "Model0", "id": "8", "a": "test1", "b": 0,  "createdAt": "2017-11-29T14:35:13.000Z", "updatedAt":"2017-12-05T12:34:23.000Z"},
+        |{"_typeName": "Model1", "id": "9", "a": "test2", "b": 1,  "createdAt": "2017-11-29T14:35:13.000Z", "updatedAt":"2017-12-05T12:34:23.000Z"},
+        |{"_typeName": "Model2", "id": "10", "a": "test3", "b": 2,  "createdAt": "2017-11-29T14:35:13.000Z", "updatedAt":"2017-12-05T12:34:23.000Z"},
+        |{"_typeName": "Model0", "id": "11", "a": "test4", "b": 3,  "createdAt": "2017-11-29T14:35:13.000Z", "updatedAt":"2017-12-05T12:34:23.000Z"},
+        |{"_typeName": "Model2", "id": "12", "a": "test3", "b": 2,  "createdAt": "2017-11-29T14:35:13.000Z", "updatedAt":"2017-12-05T12:34:23.000Z"},
+        |{"_typeName": "Model0", "id": "13", "a": "test4", "b": 3,  "createdAt": "2017-11-29T14:35:13.000Z", "updatedAt":"2017-12-05T12:34:23.000Z"},
+        |{"_typeName": "Model0", "id": "14", "a": "test1", "b": 0,  "createdAt": "2017-11-29T14:35:13.000Z", "updatedAt":"2017-12-05T12:34:23.000Z"},
+        |{"_typeName": "Model1", "id": "15", "a": "test2", "b": 1,  "createdAt": "2017-11-29T14:35:13.000Z", "updatedAt":"2017-12-05T12:34:23.000Z"},
+        |{"_typeName": "Model2", "id": "16", "a": "test3", "b": 2,  "createdAt": "2017-11-29T14:35:13.000Z", "updatedAt":"2017-12-05T12:34:23.000Z"},
+        |{"_typeName": "Model0", "id": "17", "a": "test4", "b": 3,  "createdAt": "2017-11-29T14:35:13.000Z", "updatedAt":"2017-12-05T12:34:23.000Z"}
         |]}""".stripMargin.parseJson
 
     importer.executeImport(nodes).await(5).toString should be("[]")
@@ -78,42 +78,42 @@ class BulkExportSpec extends FlatSpec with Matchers with ApiBaseSpec with AwaitU
     val firstChunk = exporter.executeExport(dataResolver, request.toJson).await(5).convertTo[ResultFormat]
 
     JsArray(firstChunk.out.jsonElements).toString should be(
-      "[" concat
-        """{"updatedAt":"2017-12-05 12:34:23.0","_typeName":"Model0","a":"test1","id":"0","b":0,"createdAt":"2017-11-29 14:35:13.0"},""" concat
-        """{"updatedAt":"2017-12-05 12:34:23.0","_typeName":"Model0","a":"test4","id":"11","b":3,"createdAt":"2017-11-29 14:35:13.0"},""" concat
-        """{"updatedAt":"2017-12-05 12:34:23.0","_typeName":"Model0","a":"test4","id":"13","b":3,"createdAt":"2017-11-29 14:35:13.0"},""" concat
-        """{"updatedAt":"2017-12-05 12:34:23.0","_typeName":"Model0","a":"test1","id":"14","b":0,"createdAt":"2017-11-29 14:35:13.0"},""" concat
-        """{"updatedAt":"2017-12-05 12:34:23.0","_typeName":"Model0","a":"test4","id":"17","b":3,"createdAt":"2017-11-29 14:35:13.0"},""" concat
-        """{"updatedAt":"2017-12-05 12:34:23.0","_typeName":"Model0","a":"test4","id":"3","b":3,"createdAt":"2017-11-29 14:35:13.0"},""" concat
-        """{"updatedAt":"2017-12-05 12:34:23.0","_typeName":"Model0","a":"test1","id":"4","b":0,"createdAt":"2017-11-29 14:35:13.0"},""" concat
-        """{"updatedAt":"2017-12-05 12:34:23.0","_typeName":"Model0","a":"test4","id":"7","b":3,"createdAt":"2017-11-29 14:35:13.0"}""" concat "]")
+      "[" ++
+        """{"updatedAt":"2017-12-05T12:34:23.000Z","_typeName":"Model0","a":"test1","id":"0","b":0,"createdAt":"2017-11-29T14:35:13.000Z"},""" ++
+        """{"updatedAt":"2017-12-05T12:34:23.000Z","_typeName":"Model0","a":"test4","id":"11","b":3,"createdAt":"2017-11-29T14:35:13.000Z"},""" ++
+        """{"updatedAt":"2017-12-05T12:34:23.000Z","_typeName":"Model0","a":"test4","id":"13","b":3,"createdAt":"2017-11-29T14:35:13.000Z"},""" ++
+        """{"updatedAt":"2017-12-05T12:34:23.000Z","_typeName":"Model0","a":"test1","id":"14","b":0,"createdAt":"2017-11-29T14:35:13.000Z"},""" ++
+        """{"updatedAt":"2017-12-05T12:34:23.000Z","_typeName":"Model0","a":"test4","id":"17","b":3,"createdAt":"2017-11-29T14:35:13.000Z"},""" ++
+        """{"updatedAt":"2017-12-05T12:34:23.000Z","_typeName":"Model0","a":"test4","id":"3","b":3,"createdAt":"2017-11-29T14:35:13.000Z"},""" ++
+        """{"updatedAt":"2017-12-05T12:34:23.000Z","_typeName":"Model0","a":"test1","id":"4","b":0,"createdAt":"2017-11-29T14:35:13.000Z"}""" ++ "]")
     firstChunk.cursor.table should be(0)
-    firstChunk.cursor.row should be(8)
+    firstChunk.cursor.row should be(7)
 
     val request2    = request.copy(cursor = firstChunk.cursor)
     val secondChunk = exporter.executeExport(dataResolver, request2.toJson).await(5).convertTo[ResultFormat]
 
     JsArray(secondChunk.out.jsonElements).toString should be(
-      "[" concat
-        """{"updatedAt":"2017-12-05 12:34:23.0","_typeName":"Model0","a":"test1","id":"8","b":0,"createdAt":"2017-11-29 14:35:13.0"},""" concat
-        """{"updatedAt":"2017-12-05 12:34:23.0","_typeName":"Model1","a":"test2","id":"1","b":1,"createdAt":"2017-11-29 14:35:13.0"},""" concat
-        """{"updatedAt":"2017-12-05 12:34:23.0","_typeName":"Model1","a":"test2","id":"15","b":1,"createdAt":"2017-11-29 14:35:13.0"},""" concat
-        """{"updatedAt":"2017-12-05 12:34:23.0","_typeName":"Model1","a":"test2","id":"5","b":1,"createdAt":"2017-11-29 14:35:13.0"},""" concat
-        """{"updatedAt":"2017-12-05 12:34:23.0","_typeName":"Model1","a":"test2","id":"9","b":1,"createdAt":"2017-11-29 14:35:13.0"},""" concat
-        """{"updatedAt":"2017-12-05 12:34:23.0","_typeName":"Model2","a":"test3","id":"10","b":2,"createdAt":"2017-11-29 14:35:13.0"},""" concat
-        """{"updatedAt":"2017-12-05 12:34:23.0","_typeName":"Model2","a":"test3","id":"12","b":2,"createdAt":"2017-11-29 14:35:13.0"},""" concat
-        """{"updatedAt":"2017-12-05 12:34:23.0","_typeName":"Model2","a":"test3","id":"16","b":2,"createdAt":"2017-11-29 14:35:13.0"}""" concat "]")
+      "[" ++
+        """{"updatedAt":"2017-12-05T12:34:23.000Z","_typeName":"Model0","a":"test4","id":"7","b":3,"createdAt":"2017-11-29T14:35:13.000Z"},""" ++
+        """{"updatedAt":"2017-12-05T12:34:23.000Z","_typeName":"Model0","a":"test1","id":"8","b":0,"createdAt":"2017-11-29T14:35:13.000Z"},""" ++
+        """{"updatedAt":"2017-12-05T12:34:23.000Z","_typeName":"Model1","a":"test2","id":"1","b":1,"createdAt":"2017-11-29T14:35:13.000Z"},""" ++
+        """{"updatedAt":"2017-12-05T12:34:23.000Z","_typeName":"Model1","a":"test2","id":"15","b":1,"createdAt":"2017-11-29T14:35:13.000Z"},""" ++
+        """{"updatedAt":"2017-12-05T12:34:23.000Z","_typeName":"Model1","a":"test2","id":"5","b":1,"createdAt":"2017-11-29T14:35:13.000Z"},""" ++
+        """{"updatedAt":"2017-12-05T12:34:23.000Z","_typeName":"Model1","a":"test2","id":"9","b":1,"createdAt":"2017-11-29T14:35:13.000Z"},""" ++
+        """{"updatedAt":"2017-12-05T12:34:23.000Z","_typeName":"Model2","a":"test3","id":"10","b":2,"createdAt":"2017-11-29T14:35:13.000Z"}""" ++ "]")
 
     secondChunk.cursor.table should be(2)
-    secondChunk.cursor.row should be(3)
+    secondChunk.cursor.row should be(1)
 
     val request3   = request.copy(cursor = secondChunk.cursor)
     val thirdChunk = exporter.executeExport(dataResolver, request3.toJson).await(5).convertTo[ResultFormat]
 
     JsArray(thirdChunk.out.jsonElements).toString should be(
-      "[" concat
-        """{"updatedAt":"2017-12-05 12:34:23.0","_typeName":"Model2","a":"test3","id":"2","b":2,"createdAt":"2017-11-29 14:35:13.0"},""" concat
-        """{"updatedAt":"2017-12-05 12:34:23.0","_typeName":"Model2","a":"test3","id":"6","b":2,"createdAt":"2017-11-29 14:35:13.0"}""" concat "]")
+      "[" ++
+        """{"updatedAt":"2017-12-05T12:34:23.000Z","_typeName":"Model2","a":"test3","id":"12","b":2,"createdAt":"2017-11-29T14:35:13.000Z"},""" ++
+        """{"updatedAt":"2017-12-05T12:34:23.000Z","_typeName":"Model2","a":"test3","id":"16","b":2,"createdAt":"2017-11-29T14:35:13.000Z"},""" ++
+        """{"updatedAt":"2017-12-05T12:34:23.000Z","_typeName":"Model2","a":"test3","id":"2","b":2,"createdAt":"2017-11-29T14:35:13.000Z"},""" ++
+        """{"updatedAt":"2017-12-05T12:34:23.000Z","_typeName":"Model2","a":"test3","id":"6","b":2,"createdAt":"2017-11-29T14:35:13.000Z"}""" ++ "]")
 
     thirdChunk.cursor.table should be(-1)
     thirdChunk.cursor.row should be(-1)

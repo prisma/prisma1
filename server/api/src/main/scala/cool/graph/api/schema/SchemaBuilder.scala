@@ -6,6 +6,7 @@ import cool.graph.api.database.{DataItem, IdBasedConnection}
 import cool.graph.api.database.DeferredTypes.{ManyModelDeferred, OneDeferred}
 import cool.graph.api.mutations._
 import cool.graph.api.mutations.mutations._
+import cool.graph.gc_values.GraphQLIdGCValue
 import cool.graph.shared.models.{Model, Project}
 import org.atteo.evo.inflector.English
 import sangria.relay.{Node, NodeDefinition, PossibleNodeObject}
@@ -153,7 +154,7 @@ case class SchemaBuilderImpl(
   def updateManyField(model: Model): Option[Field[ApiUserContext, Unit]] = {
     argumentsBuilder.getSangriaArgumentsForUpdateMany(model).map { args =>
       Field(
-        s"update${pluralsCache.pluralName(model)}",
+        s"updateMany${pluralsCache.pluralName(model)}",
         fieldType = objectTypeBuilder.batchPayloadType,
         arguments = args,
         resolve = (ctx) => {
@@ -203,7 +204,7 @@ case class SchemaBuilderImpl(
 
   def deleteManyField(model: Model): Field[ApiUserContext, Unit] = {
     Field(
-      s"delete${pluralsCache.pluralName(model)}",
+      s"deleteMany${pluralsCache.pluralName(model)}",
       fieldType = objectTypeBuilder.batchPayloadType,
       arguments = argumentsBuilder.getSangriaArgumentsForDeleteMany(model),
       resolve = (ctx) => {
@@ -256,7 +257,7 @@ case class SchemaBuilderImpl(
   private def mapReturnValueResult(result: Future[ReturnValueResult], args: Args): Future[SimpleResolveOutput] = {
     result.map {
       case ReturnValue(dataItem) => outputTypesBuilder.mapResolve(dataItem, args)
-      case NoReturnValue(id)     => throw APIErrors.NodeNotFoundError(id)
+      case NoReturnValue(where)  => throw APIErrors.NodeNotFoundForWhereError(where)
     }
   }
 }

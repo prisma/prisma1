@@ -33,14 +33,11 @@ case class UpsertDataItem(
 
   override def handleErrors = {
     implicit val anyFormat = JsonFormats.AnyJsonFormat
-    val whereField         = model.fields.find(_.name == where.fieldName).get
-    val converter          = GCStringConverter(whereField.typeIdentifier, whereField.isList)
-
     Some({
       // https://dev.mysql.com/doc/refman/5.5/en/error-messages-server.html#error_er_dup_entry
       case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1062 =>
         APIErrors.UniqueConstraintViolation(model.name, getFieldFromCoolArgs(List(createArgs, updateArgs), e))
-      case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1452 => APIErrors.NodeDoesNotExist(converter.fromGCValue(where.fieldValue))
+      case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1452 => APIErrors.NodeDoesNotExist(where.fieldValueAsString)
       case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1048 => APIErrors.FieldCannotBeNull()
     })
   }

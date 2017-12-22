@@ -167,5 +167,6 @@ case class CoolArgs(raw: Map[String, Any]) {
 }
 
 case class NodeSelector(model: Model, fieldName: String, fieldValue: GCValue) {
-  lazy val unwrappedFieldValue: Any = GCDBValueConverter().fromGCValue(fieldValue)
+  lazy val unwrappedFieldValue: Any   = GCDBValueConverter().fromGCValue(fieldValue)
+  lazy val fieldValueAsString: String = GCDBValueConverter().fromGCValueToString(fieldValue)
 }

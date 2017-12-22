@@ -7,9 +7,10 @@ import cool.graph.api.database.mutactions.mutactions.ServerSideSubscription
 import cool.graph.api.database.mutactions.{MutactionGroup, Transaction}
 import cool.graph.api.database.{DataItem, DataResolver}
 import cool.graph.api.mutations._
-import cool.graph.api.schema.ObjectTypeBuilder
+import cool.graph.api.schema.{APIErrors, ObjectTypeBuilder}
 import cool.graph.shared.models.IdType.Id
 import cool.graph.shared.models.{Model, Project}
+import cool.graph.util.gc_value.GCStringConverter
 import sangria.schema
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -31,33 +32,24 @@ case class Delete(
   var deletedItemOpt: Option[DataItem] = None
   val requestId: Id                    = "" // dataResolver.requestContext.map(_.requestId).getOrElse("")
 
-  val coolArgs = CoolArgs(args.raw)
-  val where    = coolArgs.extractNodeSelectorFromWhereField(model)
+  val coolArgs            = CoolArgs(args.raw)
+  val where: NodeSelector = coolArgs.extractNodeSelectorFromWhereField(model)
 
   override def prepareMutactions(): Future[List[MutactionGroup]] = {
     dataResolver
-      .resolveByUnique(model, where.fieldName, where.fieldValue)
+      .resolveByUnique(where)
       .andThen {
         case Success(x) => deletedItemOpt = x.map(dataItem => dataItem) // todo: replace with GC Values
         // todo: do we need the fromSql stuff?
         //GraphcoolDataTypes.fromSql(dataItem.userData, model.fields)
-
       }
       .map(_ => {
+        val itemToDelete = deletedItemOpt.getOrElse(throw APIErrors.NodeNotFoundForWhereError(where))
 
-        val itemToDelete = deletedItemOpt.getOrElse(sys.error("Than node does not exist"))
-
-        val sqlMutactions        = SqlMutactions(dataResolver).getMutactionsForDelete(model, itemToDelete.id, itemToDelete)
-        val transactionMutaction = Transaction(sqlMutactions, dataResolver)
-
-        val nodeData: Map[String, Any] = itemToDelete.userData
-          .collect {
-            case (key, Some(value)) => (key, value)
-          } + ("id" -> itemToDelete.id)
-
+        val sqlMutactions          = SqlMutactions(dataResolver).getMutactionsForDelete(model, itemToDelete.id, itemToDelete)
+        val transactionMutaction   = Transaction(sqlMutactions, dataResolver)
         val subscriptionMutactions = SubscriptionEvents.extractFromSqlMutactions(project, mutationId, sqlMutactions).toList
-
-        val sssActions = ServerSideSubscription.extractFromMutactions(project, sqlMutactions, requestId).toList
+        val sssActions             = ServerSideSubscription.extractFromMutactions(project, sqlMutactions, requestId).toList
 
         List(
           MutactionGroup(mutactions = List(transactionMutaction), async = false),
