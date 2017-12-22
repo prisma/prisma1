@@ -10,7 +10,8 @@ abstract class AbstractApiError(val message: String, val errorCode: Int) extends
 case class InvalidProjectId(projectId: String) extends AbstractApiError(s"No service with id '$projectId'", 4000)
 
 import cool.graph.api.database.mutactions.MutactionExecutionResult
-import spray.json.{JsValue}
+import cool.graph.api.mutations.NodeSelector
+import spray.json.JsValue
 
 abstract class GeneralError(message: String) extends Exception with MutactionExecutionResult {
   override def getMessage: String = message
@@ -142,5 +143,8 @@ object APIErrors {
 
   case class StoredValueForFieldNotValid(fieldName: String, modelName: String)
       extends ClientApiError(s"The value in the field '$fieldName' on the model '$modelName' ist not valid for that field.", 3038)
+
+  case class NodeNotFoundForWhereError(where: NodeSelector)
+      extends ClientApiError(s"No Node for the model ${where.model.name} with value ${where.fieldValueAsString} for ${where.fieldName} found", 3039)
 
 }

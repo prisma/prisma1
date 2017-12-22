@@ -1,6 +1,8 @@
 package cool.graph.api.schema
 
 import cool.graph.api.database.{DataItem, DataResolver}
+import cool.graph.api.mutations.NodeSelector
+import cool.graph.gc_values.GraphQLIdGCValue
 import cool.graph.shared.models.ModelMutationType.ModelMutationType
 import cool.graph.shared.models.{Field, Model, Project, Relation}
 import sangria.schema
@@ -164,7 +166,7 @@ case class OutputTypesBuilder(project: Project, objectTypes: Map[String, ObjectT
         resolve = ctx => {
           val mutationKey = s"${fromField.relation.get.aName(project = project)}Id"
           masterDataResolver
-            .resolveByUnique(toModel, "id", ctx.value.args.arg[String](mutationKey))
+            .resolveByUnique(NodeSelector(toModel, "id", GraphQLIdGCValue(ctx.value.args.arg[String](mutationKey))))
             .map(_.get)
         }
       )

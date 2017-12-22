@@ -6,6 +6,7 @@ import cool.graph.api.database.{DataItem, IdBasedConnection}
 import cool.graph.api.database.DeferredTypes.{ManyModelDeferred, OneDeferred}
 import cool.graph.api.mutations._
 import cool.graph.api.mutations.mutations._
+import cool.graph.gc_values.GraphQLIdGCValue
 import cool.graph.shared.models.{Model, Project}
 import org.atteo.evo.inflector.English
 import sangria.relay.{Node, NodeDefinition, PossibleNodeObject}
@@ -254,7 +255,7 @@ case class SchemaBuilderImpl(
   private def mapReturnValueResult(result: Future[ReturnValueResult], args: Args): Future[SimpleResolveOutput] = {
     result.map {
       case ReturnValue(dataItem) => outputTypesBuilder.mapResolve(dataItem, args)
-      case NoReturnValue(id)     => throw APIErrors.NodeNotFoundError(id)
+      case NoReturnValue(where)  => throw APIErrors.NodeNotFoundForWhereError(where)
     }
   }
 }
