@@ -130,8 +130,8 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec
 
     val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
 
-    val mutation = schema.mustContainMutation("updateTodoes")
-    mustBeEqual(mutation, "updateTodoes(data: TodoUpdateInput!, where: TodoWhereInput!): BatchPayload!")
+    val mutation = schema.mustContainMutation("updateManyTodoes")
+    mustBeEqual(mutation, "updateManyTodoes(data: TodoUpdateInput!, where: TodoWhereInput!): BatchPayload!")
 
     schema.mustContainInputType("TodoWhereInput")
   }
@@ -145,8 +145,8 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec
 
     val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
 
-    val mutation = schema.mustContainMutation("updateTodoes")
-    mustBeEqual(mutation, "updateTodoes(data: TodoUpdateInput!, where: TodoWhereInput!): BatchPayload!")
+    val mutation = schema.mustContainMutation("updateManyTodoes")
+    mustBeEqual(mutation, "updateManyTodoes(data: TodoUpdateInput!, where: TodoWhereInput!): BatchPayload!")
 
     mustBeEqual(
       schema.mustContainInputType("TodoWhereInput"),
@@ -354,8 +354,8 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec
 
     val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
 
-    val mutation = schema.mustContainMutation("deleteTodoes")
-    mustBeEqual(mutation, "deleteTodoes(where: TodoWhereInput!): BatchPayload!")
+    val mutation = schema.mustContainMutation("deleteManyTodoes")
+    mustBeEqual(mutation, "deleteManyTodoes(where: TodoWhereInput!): BatchPayload!")
 
     schema.mustContainInputType("TodoWhereInput")
   }

@@ -152,7 +152,7 @@ case class SchemaBuilderImpl(
 
   def updateManyField(model: Model): Field[ApiUserContext, Unit] = {
     Field(
-      s"update${pluralsCache.pluralName(model)}",
+      s"updateMany${pluralsCache.pluralName(model)}",
       fieldType = objectTypeBuilder.batchPayloadType,
       arguments = argumentsBuilder.getSangriaArgumentsForUpdateMany(model),
       resolve = (ctx) => {
@@ -201,7 +201,7 @@ case class SchemaBuilderImpl(
 
   def deleteManyField(model: Model): Field[ApiUserContext, Unit] = {
     Field(
-      s"delete${pluralsCache.pluralName(model)}",
+      s"deleteMany${pluralsCache.pluralName(model)}",
       fieldType = objectTypeBuilder.batchPayloadType,
       arguments = argumentsBuilder.getSangriaArgumentsForDeleteMany(model),
       resolve = (ctx) => {
