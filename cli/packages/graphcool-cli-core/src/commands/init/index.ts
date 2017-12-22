@@ -15,7 +15,7 @@ export default class Init extends Command {
   ${chalk.green.bold('Examples:')}
   
   ${chalk.gray('-')} Initialize a new Graphcool service
-    ${chalk.green('$ graphcool init')}
+    ${chalk.green('$ graphcool-framework init')}
   `
   static flags: Flags = {
     force: flags.boolean({

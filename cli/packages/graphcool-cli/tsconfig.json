@@ -5,11 +5,8 @@
     "sourceMap": true,
     "outDir": "dist",
     "moduleResolution": "node",
-    "lib": ["es2017", "dom"],
+    "lib": ["es2017", "dom", "esnext.asynciterable"],
     "target": "es5"
   },
-  "exclude": [
-    "node_modules",
-    "dist"
-  ]
+  "exclude": ["node_modules", "dist"]
 }

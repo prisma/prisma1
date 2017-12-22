@@ -1,19 +1,19 @@
 package cool.graph.client.ImportExport
 
 import cool.graph.client.ClientInjector
+import cool.graph.client.ImportExport.MyJsonProtocol._
 import cool.graph.client.database.DatabaseMutationBuilder.MirrorFieldDbValues
 import cool.graph.client.database.{DatabaseMutationBuilder, ProjectRelayId, ProjectRelayIdTable}
 import cool.graph.cuid.Cuid
 import cool.graph.shared.RelationFieldMirrorColumn
 import cool.graph.shared.database.Databases
-import cool.graph.shared.models.{Model, Project, Relation, RelationSide}
+import cool.graph.shared.models._
 import slick.dbio.{DBIOAction, Effect, NoStream}
 import slick.jdbc.MySQLProfile.api._
 import slick.lifted.TableQuery
 import spray.json._
-import MyJsonProtocol._
-import scala.concurrent.ExecutionContext.Implicits.global
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.Try
 
@@ -67,12 +67,26 @@ class BulkImport(implicit injector: ClientInjector) {
     ImportRelation(left, right)
   }
 
+  private def dateTimeFromISO8601(v: Any) = {
+    val string = v.asInstanceOf[String]
+    //"2017-12-05T12:34:23.000Z" to "2017-12-05 12:34:23.000 " which MySQL will accept
+    string.replace("T", " ").replace("Z", " ")
+  }
+
   private def generateImportNodesDBActions(project: Project, nodes: Vector[ImportNode]): DBIOAction[Vector[Try[Int]], NoStream, Effect.Write] = {
     val items = nodes.map { element =>
       val id                              = element.identifier.id
       val model                           = project.getModelByName_!(element.identifier.typeName)
       val listFields: Map[String, String] = model.scalarListFields.map(field => field.name -> "[]").toMap
-      val values: Map[String, Any]        = element.values ++ listFields + ("id" -> id)
+
+      val formatedDateTimes = element.values.map {
+        case (k, v) if k == "createdAt" || k == "updatedAt"                                => (k, dateTimeFromISO8601(v))
+        case (k, v) if !model.fields.map(_.name).contains(k)                               => (k, v) // let it fail at db level
+        case (k, v) if model.getFieldByName_!(k).typeIdentifier == TypeIdentifier.DateTime => (k, dateTimeFromISO8601(v))
+        case (k, v)                                                                        => (k, v)
+      }
+
+      val values: Map[String, Any] = formatedDateTimes ++ listFields + ("id" -> id)
 
       DatabaseMutationBuilder.createDataItem(project.id, model.name, values).asTry
     }

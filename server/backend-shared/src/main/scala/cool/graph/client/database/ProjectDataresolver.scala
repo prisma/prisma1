@@ -27,6 +27,8 @@ class ProjectDataresolver(override val project: Project, override val requestCon
       .map(resultTransform(_))
   }
 
+  //we could do this without validation to be faster
+  //also check whether the hasNext has made the overrideMaxNodeCount obsolete
   def loadModelRowsForExport(model: Model, args: Option[QueryArguments] = None): Future[ResolverResult] = {
     val (query, resultTransform) = DatabaseQueryBuilder.selectAllFromModel(project.id, model.name, args, overrideMaxNodeCount = Some(1001))
 

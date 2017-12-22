@@ -17,14 +17,14 @@ export class Config {
     process.env.DEBUG && process.env.DEBUG!.includes('*'),
   )
   windows: boolean = false
-  bin: string = 'graphcool'
+  bin: string = 'graphcool-framework'
   mock: boolean = true
   argv: string[] = process.argv.slice(1)
   commandsDir: string = path.join(__dirname, '../dist/commands')
   defaultCommand: string = 'help'
   userPlugins: boolean = false
   version: string = '1.3.11'
-  name: string = 'graphcool'
+  name: string = 'graphcool-framework'
   pjson: any = {
     name: 'cli-engine',
     version: '0.0.0',
