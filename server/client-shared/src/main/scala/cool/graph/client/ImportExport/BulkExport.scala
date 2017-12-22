@@ -1,16 +1,22 @@
 package cool.graph.client.ImportExport
 
+import java.sql.Timestamp
+
 import cool.graph.DataItem
 import cool.graph.Types.UserData
 import cool.graph.client.ClientInjector
 import cool.graph.client.database.{DataResolver, QueryArguments}
-import cool.graph.shared.models.Project
+import cool.graph.shared.models.{Project, TypeIdentifier}
 import spray.json.JsValue
 import spray.json._
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import MyJsonProtocol._
+
 import scala.concurrent.Future
 import cool.graph.shared.schema.CustomScalarTypes.parseValueFromString
+import org.joda.time.{DateTime, DateTimeZone}
+import org.joda.time.format.DateTimeFormat
 
 class BulkExport(implicit clientInjector: ClientInjector) {
 
@@ -101,7 +107,7 @@ class BulkExport(implicit clientInjector: ClientInjector) {
       val bundles = info match {
         case info: NodeInfo     => dataItems.map(item => dataItemToExportNode(item, info))
         case info: RelationInfo => dataItems.map(item => dataItemToExportRelation(item, info))
-        case _: ListInfo        => sys.error("shouldnt happen")
+        case _: ListInfo        => sys.error("shouldn't happen")
       }
       val combinedElements = in.jsonElements ++ bundles.flatMap(_.jsonElements).toVector
       val combinedSize = bundles.map(_.size).fold(in.size) { (a, b) =>
@@ -141,10 +147,22 @@ class BulkExport(implicit clientInjector: ClientInjector) {
     val withoutHiddenFields: Map[String, Option[Any]] = dataValueMap.collect { case (k, v) if k != "createdAt" && k != "updatedAt" => (k, v) }
     val nonListFieldsWithValues: Map[String, Any]     = withoutHiddenFields.collect { case (k, Some(v)) if !info.current.getFieldByName_!(k).isList => (k, v) }
     val outputMap: Map[String, Any]                   = nonListFieldsWithValues ++ createdAtUpdatedAtMap
-    val result: Map[String, Any]                      = Map("_typeName" -> info.current.name, "id" -> item.id) ++ outputMap
+
+    val mapWithCorrectDateTimeFormat = outputMap.map {
+      case (k, v) if k == "createdAt" || k == "updatedAt"                                       => (k, dateTimeToISO8601(v))
+      case (k, v) if info.current.getFieldByName_!(k).typeIdentifier == TypeIdentifier.DateTime => (k, dateTimeToISO8601(v))
+      case (k, v)                                                                               => (k, v)
+    }
+
+    val result: Map[String, Any] = Map("_typeName" -> info.current.name, "id" -> item.id) ++ mapWithCorrectDateTimeFormat
 
     val json = result.toJson
     JsonBundle(jsonElements = Vector(json), size = json.toString.length)
+  }
+
+  private def dateTimeToISO8601(v: Any) = v.isInstanceOf[Timestamp] match {
+    case true  => DateTime.parse(v.asInstanceOf[Timestamp].toString, DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSS").withZoneUTC())
+    case false => new DateTime(v.asInstanceOf[String], DateTimeZone.UTC)
   }
 
   private def dataItemToExportList(in: JsonBundle, item: DataItem, info: ListInfo): ResultFormat = {
