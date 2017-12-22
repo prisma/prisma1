@@ -2,12 +2,11 @@ package cool.graph.api.schema
 
 import cool.graph.api.ApiBaseSpec
 import cool.graph.shared.project_dsl.SchemaDsl
-import cool.graph.util.GraphQLSchemaAssertions
+import cool.graph.util.GraphQLSchemaMatchers
 import org.scalatest.{FlatSpec, Matchers}
 import sangria.renderer.SchemaRenderer
 
-class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec with GraphQLSchemaAssertions {
-
+class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec with GraphQLSchemaMatchers {
   val schemaBuilder = testDependencies.apiSchemaBuilder
 
   "the create Mutation for a model" should "be generated correctly" in {
@@ -17,14 +16,8 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec
 
     val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
 
-    val mutation = schema.mustContainMutation("createTodo")
-    mutation should be("createTodo(data: TodoCreateInput!): Todo!")
-
-    val inputType = schema.mustContainInputType("TodoCreateInput")
-    inputType should be("""input TodoCreateInput {
-                          |  title: String!
-                          |  tag: String
-                          |}""".stripMargin)
+    schema should containMutation("createTodo(data: TodoCreateInput!): Todo!")
+    schema should containInputType("TodoCreateInput", fields = Vector("title: String!", "tag: String"))
   }
 
   "the create Mutation for a model with relations" should "be generated correctly" in {
@@ -40,64 +33,40 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec
     val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
 
     // from Todo to Comment
-    val mutation = schema.mustContainMutation("createTodo")
-    mustBeEqual(mutation, "createTodo(data: TodoCreateInput!): Todo!")
+    schema should containMutation("createTodo(data: TodoCreateInput!): Todo!")
+    schema should containInputType("TodoCreateInput",
+                                   fields = Vector(
+                                     "title: String!",
+                                     "tag: String",
+                                     "comments: CommentCreateManyWithoutTodoInput"
+                                   ))
 
-    val todoInputType = schema.mustContainInputType("TodoCreateInput")
-    mustBeEqual(
-      todoInputType,
-      """input TodoCreateInput {
-        |  title: String!
-        |  tag: String
-        |  comments: CommentCreateManyWithoutTodoInput
-        |}""".stripMargin
-    )
+    schema should containInputType("CommentCreateManyWithoutTodoInput",
+                                   fields = Vector(
+                                     "create: [CommentCreateWithoutTodoInput!]",
+                                     "connect: [CommentWhereUniqueInput!]"
+                                   ))
 
-    val nestedInputTypeForComment = schema.mustContainInputType("CommentCreateManyWithoutTodoInput")
-
-    mustBeEqual(
-      nestedInputTypeForComment,
-      """input CommentCreateManyWithoutTodoInput {
-         |  create: [CommentCreateWithoutTodoInput!]
-         |  connect: [CommentWhereUniqueInput!]
-         |}""".stripMargin
-    )
-
-    val createInputForNestedComment = schema.mustContainInputType("CommentCreateWithoutTodoInput")
-    mustBeEqual(
-      createInputForNestedComment,
-      """input CommentCreateWithoutTodoInput {
-        |  text: String!
-        |}""".stripMargin
-    )
+    schema should containInputType("CommentCreateWithoutTodoInput", fields = Vector("text: String!"))
 
     // from Comment to Todo
-    val commentInputType = schema.mustContainInputType("CommentCreateInput")
-    mustBeEqual(
-      commentInputType,
-      """input CommentCreateInput {
-       |  text: String!
-       |  todo: TodoCreateOneWithoutCommentsInput
-       |}""".stripMargin
-    )
+    schema should containInputType("CommentCreateInput",
+                                   fields = Vector(
+                                     "text: String!",
+                                     "todo: TodoCreateOneWithoutCommentsInput"
+                                   ))
 
-    val nestedInputTypeForTodo = schema.mustContainInputType("TodoCreateOneWithoutCommentsInput")
-    mustBeEqual(
-      nestedInputTypeForTodo,
-      """input TodoCreateOneWithoutCommentsInput {
-       |  create: TodoCreateWithoutCommentsInput
-       |  connect: TodoWhereUniqueInput
-       |}""".stripMargin
-    )
+    schema should containInputType("TodoCreateOneWithoutCommentsInput",
+                                   fields = Vector(
+                                     "create: TodoCreateWithoutCommentsInput",
+                                     "connect: TodoWhereUniqueInput"
+                                   ))
 
-    val createInputForNestedTodo = schema.mustContainInputType("TodoCreateWithoutCommentsInput")
-    mustBeEqual(
-      createInputForNestedTodo,
-      """input TodoCreateWithoutCommentsInput {
-        |  title: String!
-        |  tag: String
-        |}""".stripMargin
-    )
+    schema should containInputType("TodoCreateWithoutCommentsInput",
+                                   fields = Vector(
+                                     "title: String!",
+                                     "tag: String"
+                                   ))
   }
 
   "the update Mutation for a model" should "be generated correctly" in {
@@ -107,20 +76,19 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec
 
     val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
 
-    val mutation = schema.mustContainMutation("updateTodo")
-    mutation should be("updateTodo(data: TodoUpdateInput!, where: TodoWhereUniqueInput!): Todo")
+    schema should containMutation("updateTodo(data: TodoUpdateInput!, where: TodoWhereUniqueInput!): Todo")
 
-    val inputType = schema.mustContainInputType("TodoUpdateInput")
-    inputType should be("""input TodoUpdateInput {
-                          |  title: String
-                          |  alias: String
-                          |}""".stripMargin)
+    schema should containInputType("TodoUpdateInput",
+                                   fields = Vector(
+                                     "title: String",
+                                     "alias: String"
+                                   ))
 
-    val whereInputType = schema.mustContainInputType("TodoWhereUniqueInput")
-    whereInputType should be("""input TodoWhereUniqueInput {
-                                |  id: ID
-                                |  alias: String
-                                |}""".stripMargin)
+    schema should containInputType("TodoWhereUniqueInput",
+                                   fields = Vector(
+                                     "id: ID",
+                                     "alias: String"
+                                   ))
   }
 
   "the update many Mutation for a model" should "be generated correctly" in {
@@ -130,13 +98,11 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec
 
     val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
 
-    val mutation = schema.mustContainMutation("updateTodoes")
-    mustBeEqual(mutation, "updateTodoes(data: TodoUpdateInput!, where: TodoWhereInput!): BatchPayload!")
-
-    schema.mustContainInputType("TodoWhereInput")
+    schema should containMutation("updateTodoes(data: TodoUpdateInput!, where: TodoWhereInput!): BatchPayload!")
+    schema should containInputType("TodoWhereInput")
   }
 
-  "the many update Mutation for a model" should "be generated correctly for an empty model" in {
+  "the many update Mutation for a model" should "not be generated for an empty model" in {
     val project = SchemaDsl() { schema =>
       val model = schema.model("Todo")
       model.fields.clear()
@@ -145,19 +111,13 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec
 
     val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
 
-    val mutation = schema.mustContainMutation("updateTodoes")
-    mustBeEqual(mutation, "updateTodoes(data: TodoUpdateInput!, where: TodoWhereInput!): BatchPayload!")
-
-    mustBeEqual(
-      schema.mustContainInputType("TodoWhereInput"),
-      """input TodoWhereInput {
-        |  # Logical AND on all given filters.
-        |  AND: [TodoWhereInput!]
-        |
-        |  # Logical OR on all given filters.
-        |  OR: [TodoWhereInput!]
-        |}""".stripMargin
-    )
+    println(schema)
+    schema shouldNot containMutation("updateTodoes(data: TodoUpdateInput!, where: TodoWhereInput!): BatchPayload!")
+    schema should containInputType("TodoWhereInput",
+                                   fields = Vector(
+                                     "AND: [TodoWhereInput!]",
+                                     "OR: [TodoWhereInput!]"
+                                   ))
   }
 
   "the update Mutation for a model with relations" should "be generated correctly" in {
@@ -173,125 +133,96 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec
     val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
 
     // from Todo to Comment
-    val mutation = schema.mustContainMutation("updateTodo")
-    mustBeEqual(mutation, "updateTodo(data: TodoUpdateInput!, where: TodoWhereUniqueInput!): Todo")
+    schema should containMutation("updateTodo(data: TodoUpdateInput!, where: TodoWhereUniqueInput!): Todo")
 
-    val todoInputType = schema.mustContainInputType("TodoUpdateInput")
-    mustBeEqual(
-      todoInputType,
-      """input TodoUpdateInput {
-        |  title: String
-        |  tag: String
-        |  comments: CommentUpdateManyWithoutTodoInput
-        |}""".stripMargin
+    schema should containInputType("TodoUpdateInput",
+                                   fields = Vector(
+                                     "title: String",
+                                     "tag: String",
+                                     "comments: CommentUpdateManyWithoutTodoInput"
+                                   ))
+
+    schema should containInputType(
+      "CommentUpdateManyWithoutTodoInput",
+      fields = Vector(
+        "create: [CommentCreateWithoutTodoInput!]",
+        "connect: [CommentWhereUniqueInput!]",
+        "disconnect: [CommentWhereUniqueInput!]",
+        "delete: [CommentWhereUniqueInput!]",
+        "update: [CommentUpdateWithoutTodoInput!]",
+        "upsert: [CommentUpsertWithoutTodoInput!]"
+      )
     )
 
-    val nestedInputTypeForComment = schema.mustContainInputType("CommentUpdateManyWithoutTodoInput")
-    mustBeEqual(
-      nestedInputTypeForComment,
-      """input CommentUpdateManyWithoutTodoInput {
-        |  create: [CommentCreateWithoutTodoInput!]
-        |  connect: [CommentWhereUniqueInput!]
-        |  disconnect: [CommentWhereUniqueInput!]
-        |  delete: [CommentWhereUniqueInput!]
-        |  update: [CommentUpdateWithoutTodoInput!]
-        |  upsert: [CommentUpsertWithoutTodoInput!]
-        |}""".stripMargin
-    )
+    schema should containInputType("CommentCreateWithoutTodoInput",
+                                   fields = Vector(
+                                     "text: String!"
+                                   ))
 
-    val createInputForNestedComment = schema.mustContainInputType("CommentCreateWithoutTodoInput")
-    mustBeEqual(
-      createInputForNestedComment,
-      """input CommentCreateWithoutTodoInput {
-        |  text: String!
-        |}""".stripMargin
-    )
+    schema should containInputType("CommentUpdateWithoutTodoInput",
+                                   fields = Vector(
+                                     "where: CommentWhereUniqueInput!",
+                                     "data: CommentUpdateWithoutTodoDataInput!"
+                                   ))
 
-    val updateInputForNestedComment = schema.mustContainInputType("CommentUpdateWithoutTodoInput")
-    mustBeEqual(
-      updateInputForNestedComment,
-      """input CommentUpdateWithoutTodoInput {
-        |  where: CommentWhereUniqueInput!
-        |  data: CommentUpdateWithoutTodoDataInput!
-        |}""".stripMargin
-    )
+    schema should containInputType("CommentUpdateWithoutTodoDataInput",
+                                   fields = Vector(
+                                     "text: String"
+                                   ))
 
-    val updateDataInputForNestedComment = schema.mustContainInputType("CommentUpdateWithoutTodoDataInput")
-    mustBeEqual(
-      updateDataInputForNestedComment,
-      """input CommentUpdateWithoutTodoDataInput {
-        |  text: String
-        |}""".stripMargin
-    )
-
-    val upsertDataInputForNestedComment = schema.mustContainInputType("CommentUpsertWithoutTodoInput")
-    mustBeEqual(
-      upsertDataInputForNestedComment,
-      """input CommentUpsertWithoutTodoInput {
-        |  where: CommentWhereUniqueInput!
-        |  update: CommentUpdateWithoutTodoDataInput!
-        |  create: CommentCreateWithoutTodoInput!
-        |}""".stripMargin
+    schema should containInputType(
+      "CommentUpsertWithoutTodoInput",
+      fields = Vector(
+        "where: CommentWhereUniqueInput!",
+        "update: CommentUpdateWithoutTodoDataInput!",
+        "create: CommentCreateWithoutTodoInput!"
+      )
     )
 
     // from Comment to Todo
-    val commentInputType = schema.mustContainInputType("CommentUpdateInput")
-    mustBeEqual(
-      commentInputType,
-      """input CommentUpdateInput {
-        |  text: String
-        |  todo: TodoUpdateOneWithoutCommentsInput
-        |}""".stripMargin
+    schema should containInputType("CommentUpdateInput",
+                                   fields = Vector(
+                                     "text: String",
+                                     "todo: TodoUpdateOneWithoutCommentsInput"
+                                   ))
+
+    schema should containInputType(
+      "TodoUpdateOneWithoutCommentsInput",
+      fields = Vector(
+        "create: TodoCreateWithoutCommentsInput",
+        "connect: TodoWhereUniqueInput",
+        "disconnect: TodoWhereUniqueInput",
+        "delete: TodoWhereUniqueInput",
+        "update: TodoUpdateWithoutCommentsInput",
+        "upsert: TodoUpsertWithoutCommentsInput"
+      )
     )
 
-    val nestedInputTypeForTodo = schema.mustContainInputType("TodoUpdateOneWithoutCommentsInput")
-    mustBeEqual(
-      nestedInputTypeForTodo,
-      """input TodoUpdateOneWithoutCommentsInput {
-        |  create: TodoCreateWithoutCommentsInput
-        |  connect: TodoWhereUniqueInput
-        |  disconnect: TodoWhereUniqueInput
-        |  delete: TodoWhereUniqueInput
-        |  update: TodoUpdateWithoutCommentsInput
-        |  upsert: TodoUpsertWithoutCommentsInput
-        |}""".stripMargin
-    )
+    schema should containInputType("TodoCreateWithoutCommentsInput",
+                                   fields = Vector(
+                                     "title: String!",
+                                     "tag: String"
+                                   ))
 
-    val createInputForNestedTodo = schema.mustContainInputType("TodoCreateWithoutCommentsInput")
-    mustBeEqual(
-      createInputForNestedTodo,
-      """input TodoCreateWithoutCommentsInput {
-        |  title: String!
-        |  tag: String
-        |}""".stripMargin
-    )
+    schema should containInputType("TodoUpdateWithoutCommentsInput",
+                                   fields = Vector(
+                                     "where: TodoWhereUniqueInput!",
+                                     "data: TodoUpdateWithoutCommentsDataInput!"
+                                   ))
 
-    val updateInputForNestedTodo = schema.mustContainInputType("TodoUpdateWithoutCommentsInput")
-    mustBeEqual(
-      updateInputForNestedTodo,
-      """input TodoUpdateWithoutCommentsInput {
-        |  where: TodoWhereUniqueInput!
-        |  data: TodoUpdateWithoutCommentsDataInput!
-        |}""".stripMargin
-    )
+    schema should containInputType("TodoUpdateWithoutCommentsDataInput",
+                                   fields = Vector(
+                                     "title: String",
+                                     "tag: String"
+                                   ))
 
-    val updateDataInputForNestedTodo = schema.mustContainInputType("TodoUpdateWithoutCommentsDataInput")
-    mustBeEqual(
-      updateDataInputForNestedTodo,
-      """input TodoUpdateWithoutCommentsDataInput {
-        |  title: String
-        |  tag: String
-        |}""".stripMargin
-    )
-
-    val upsertDataInputForNestedTodo = schema.mustContainInputType("TodoUpsertWithoutCommentsInput")
-    mustBeEqual(
-      upsertDataInputForNestedTodo,
-      """input TodoUpsertWithoutCommentsInput {
-        |  where: TodoWhereUniqueInput!
-        |  update: TodoUpdateWithoutCommentsDataInput!
-        |  create: TodoCreateWithoutCommentsInput!
-        |}""".stripMargin
+    schema should containInputType(
+      "TodoUpsertWithoutCommentsInput",
+      fields = Vector(
+        "where: TodoWhereUniqueInput!",
+        "update: TodoUpdateWithoutCommentsDataInput!",
+        "create: TodoCreateWithoutCommentsInput!"
+      )
     )
   }
 
@@ -301,11 +232,7 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec
     }
     val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
 
-    val mutation = schema.mustContainMutation("upsertTodo")
-    mustBeEqual(
-      mutation,
-      "upsertTodo(where: TodoWhereUniqueInput!, create: TodoCreateInput!, update: TodoUpdateInput!): Todo!"
-    )
+    schema should containMutation("upsertTodo(where: TodoWhereUniqueInput!, create: TodoCreateInput!, update: TodoUpdateInput!): Todo!")
   }
 
   "the delete Mutation for a model" should "be generated correctly" in {
@@ -315,13 +242,11 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec
 
     val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
 
-    val mutation = schema.mustContainMutation("deleteTodo")
-    mutation should be("deleteTodo(where: TodoWhereUniqueInput!): Todo")
-
-    val inputType = schema.mustContainInputType("TodoWhereUniqueInput")
-    inputType should be("""input TodoWhereUniqueInput {
-                          |  id: ID
-                          |}""".stripMargin)
+    schema should containMutation("deleteTodo(where: TodoWhereUniqueInput!): Todo")
+    schema should containInputType("TodoWhereUniqueInput",
+                                   fields = Vector(
+                                     "id: ID"
+                                   ))
   }
 
   "the delete Mutation for a model" should "be generated correctly and contain all non-list unique fields" in {
@@ -335,14 +260,12 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec
 
     val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
 
-    val mutation = schema.mustContainMutation("deleteTodo")
-    mutation should be("deleteTodo(where: TodoWhereUniqueInput!): Todo")
-
-    val inputType = schema.mustContainInputType("TodoWhereUniqueInput")
-    inputType should be("""input TodoWhereUniqueInput {
-                          |  id: ID
-                          |  unique: Int
-                          |}""".stripMargin)
+    schema should containMutation("deleteTodo(where: TodoWhereUniqueInput!): Todo")
+    schema should containInputType("TodoWhereUniqueInput",
+                                   fields = Vector(
+                                     "id: ID",
+                                     "unique: Int"
+                                   ))
   }
 
   "the delete many Mutation for a model" should "be generated correctly" in {
@@ -354,9 +277,7 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec
 
     val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
 
-    val mutation = schema.mustContainMutation("deleteTodoes")
-    mustBeEqual(mutation, "deleteTodoes(where: TodoWhereInput!): BatchPayload!")
-
-    schema.mustContainInputType("TodoWhereInput")
+    schema should containMutation("deleteTodoes(where: TodoWhereInput!): BatchPayload!")
+    schema should containInputType("TodoWhereInput")
   }
 }
