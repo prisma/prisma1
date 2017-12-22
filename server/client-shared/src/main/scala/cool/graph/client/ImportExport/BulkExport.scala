@@ -17,7 +17,7 @@ class BulkExport(implicit clientInjector: ClientInjector) {
   def executeExport(project: Project, dataResolver: DataResolver, json: JsValue): Future[JsValue] = {
     val start            = JsonBundle(Vector.empty, 0)
     val request          = json.convertTo[ExportRequest]
-    val hasListFields    = project.models.flatMap(_.fields).exists(_.isList)
+    val hasListFields    = project.models.flatMap(_.scalarListFields).nonEmpty
     val zippedRelations  = RelationInfo(dataResolver, project.relations.map(r => toRelationData(r, project)).zipWithIndex, request.cursor)
     val zippedListModels = project.models.filter(m => m.scalarListFields.nonEmpty).zipWithIndex
 
