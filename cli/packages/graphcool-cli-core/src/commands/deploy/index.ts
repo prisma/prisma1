@@ -147,7 +147,7 @@ ${chalk.gray(
     if (!cluster) {
       const clusterName =
         (!interactive && newServiceClusterName) ||
-        (await this.clusterSelection(stage))
+        (await this.clusterSelection(serviceName, stage))
       cluster = this.env.clusterByName(clusterName)!
     }
 
@@ -365,7 +365,10 @@ ${chalk.gray(
   ${chalk.bold('HTTP:')}  ${cluster.getApiEndpoint(serviceName, stageName)}\n`)
   }
 
-  private async clusterSelection(stage: string): Promise<string> {
+  private async clusterSelection(
+    serviceName: string,
+    stage: string,
+  ): Promise<string> {
     const localClusters = this.env.clusters.filter(c => c.local).map(c => {
       return {
         value: c.name,
@@ -378,7 +381,7 @@ ${chalk.gray(
     const question = {
       name: 'cluster',
       type: 'list',
-      message: `Please choose the cluster you want to deploy "${stage}" to`,
+      message: `Please choose the cluster you want to deploy "${serviceName}@${stage}" to`,
       choices: [
         new inquirer.Separator(chalk.bold('Custom clusters (local/private):')),
         ...localClusters,

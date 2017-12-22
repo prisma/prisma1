@@ -21,6 +21,7 @@ import * as TerminalRenderer from 'marked-terminal'
 import * as Charm from 'charm'
 import { padEnd, repeat, set, uniqBy, values } from 'lodash'
 import { Project, Stages } from '../types/common'
+import * as Raven from 'raven'
 
 marked.setOptions({
   renderer: new TerminalRenderer(),
@@ -152,6 +153,11 @@ export class Output {
   }
 
   error(err: Error | string, exitCode: number | false = 1) {
+    try {
+      Raven.captureException(err)
+    } catch (e) {
+      //
+    }
     if (
       (this.mock && typeof err !== 'string' && exitCode !== false) ||
       process.env.NODE_ENV === 'test'

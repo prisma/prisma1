@@ -11,6 +11,11 @@ import { getCommandId } from './util'
 import { StatusChecker } from './StatusChecker'
 import * as updateNotifier from 'update-notifier'
 import chalk from 'chalk'
+import * as Raven from 'raven'
+
+Raven.config(
+  'https://93ed780dfd604e99974beeeff20559cf:bcbbced22be04f889c0f40e847cf544d@sentry.io/263225',
+).install()
 
 const debug = require('debug')('cli')
 const handleEPIPE = err => {
