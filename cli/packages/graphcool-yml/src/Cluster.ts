@@ -49,7 +49,7 @@ export class Cluster {
         method: 'post',
         headers: {
           'Content-Type': 'application/json',
-        },
+        } as any,
         body: JSON.stringify({
           query: `{
             clusterInfo {

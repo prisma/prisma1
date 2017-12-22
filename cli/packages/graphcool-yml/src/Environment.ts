@@ -41,7 +41,13 @@ export class Environment {
         body: JSON.stringify({ query: `{publicClusters}` }),
       })
       const json = await res.json()
-      this.sharedClusters = json.data.publicClusters
+      if (
+        json.data.publicClusters &&
+        Array.isArray(json.data.publicClusters) &&
+        json.data.publicClusters.length > 0
+      ) {
+        this.sharedClusters = json.data.publicClusters
+      }
     } catch (e) {
       console.error(e)
     }
