@@ -22,6 +22,7 @@ import * as Charm from 'charm'
 import { padEnd, repeat, set, uniqBy, values } from 'lodash'
 import { Project } from '../types/common'
 import { Targets } from '../types/rc'
+import * as Raven from 'raven'
 
 marked.setOptions({
   renderer: new TerminalRenderer(),
@@ -153,6 +154,7 @@ export class Output {
   }
 
   error(err: Error | string, exitCode: number | false = 1) {
+    Raven.captureException(err)
     if (
       (this.mock && typeof err !== 'string' && exitCode !== false) ||
       process.env.NODE_ENV === 'test'

@@ -9,6 +9,10 @@ import { NotFound } from './NotFound'
 import fs from './fs'
 import { getCommandId } from './util'
 import { StatusChecker } from './StatusChecker'
+import * as Raven from 'raven'
+Raven.config(
+  'https://337bd4ced421443282b2693709387a98:59e523cc610444919c3c38fb86bd430a@sentry.io/263237',
+).install()
 
 const debug = require('debug')('cli')
 const handleEPIPE = err => {
