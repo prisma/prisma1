@@ -1,6 +1,6 @@
 {
   "name": "graphcool-yml",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
@@ -23,7 +23,6 @@
     "dotenv": "^4.0.0",
     "fs-extra": "^4.0.3",
     "graphcool-json-schema": "^1.0.1-beta.5",
-    "graphcool-yml": "0.1.1",
     "isomorphic-fetch": "^2.2.1",
     "js-yaml": "^3.10.0",
     "json-stable-stringify": "^1.0.1",
