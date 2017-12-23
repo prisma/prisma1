@@ -1542,25 +1542,6 @@ graphcool-json-schema@^1.0.1-beta.5:
   version "1.0.1-beta.5"
   resolved "https://registry.yarnpkg.com/graphcool-json-schema/-/graphcool-json-schema-1.0.1-beta.5.tgz#5e5dace8b801727a311c5f35996b536a23501514"
 
-graphcool-yml@0.1.1:
-  version "0.1.1"
-  resolved "https://registry.yarnpkg.com/graphcool-yml/-/graphcool-yml-0.1.1.tgz#fd69b1ecd611a79d2e7b3270a4013f10f694e266"
-  dependencies:
-    ajv "^5.5.1"
-    bluebird "^3.5.1"
-    debug "^3.1.0"
-    dotenv "^4.0.0"
-    fs-extra "^4.0.3"
-    graphcool-json-schema "^1.0.1-beta.5"
-    isomorphic-fetch "^2.2.1"
-    js-yaml "^3.10.0"
-    json-stable-stringify "^1.0.1"
-    jsonwebtoken "^8.1.0"
-    lodash "^4.17.4"
-    replaceall "^0.1.6"
-    scuid "^1.0.2"
-    yaml-ast-parser "^0.0.40"
-
 graphql-config@^1.0.9:
   version "1.0.9"
   resolved "https://registry.yarnpkg.com/graphql-config/-/graphql-config-1.0.9.tgz#8fa416a7c2bdb8f62f441324775dd3ff8a266652"
