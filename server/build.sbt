@@ -193,26 +193,44 @@ lazy val gcValues = libProject("gc-values")
     scalactic
   ) ++ joda)
 
-lazy val bugsnag = Project(id = "bugsnag", base = file("./libs/bugsnag"))
-  .settings(commonSettings: _*)
+lazy val bugsnag = libProject("bugsnag")
+  .settings(libraryDependencies ++= Seq(
+    bugsnagClient,
+    specs2,
+    playJson
+  ) ++ jackson)
 
-lazy val akkaUtils = Project(id = "akka-utils", base = file("./libs/akka-utils"))
-  .settings(commonSettings: _*)
+lazy val akkaUtils = libProject("akka-utils")
   .dependsOn(bugsnag % "compile")
   .dependsOn(scalaUtils % "compile")
   .dependsOn(stubServer % "test")
   .settings(libraryDependencies ++= Seq(
+    akka,
+    akkaHttp,
+    akkaTestKit,
     scalaTest,
+    finagle,
     akkaHttpCors,
-    playJson
+    playJson,
+    specs2,
+    caffeine
   ))
+
+//libraryDependencies ++= Seq(
+//  "com.typesafe.akka"             %% "akka-actor"   % "2.4.8" % "provided",
+//  "com.typesafe.akka"             %% "akka-contrib" % "2.4.8" % "provided",
+//  "com.typesafe.akka"             %% "akka-http"    % "10.0.5",
+//  "com.typesafe.akka"             %% "akka-testkit" % "2.4.8" % "test",
+//  "org.specs2"                    %% "specs2-core"  % "3.8.8" % "test",
+//  "com.github.ben-manes.caffeine" %  "caffeine"     % "2.4.0",
+//  "com.twitter"                   %% "finagle-http" % "6.44.0"
+//)
 
 //lazy val aws = Project(id = "aws", base = file("./libs/aws"))
 //  .settings(commonSettings: _*)
 //  .settings(libraryDependencies ++= awsDependencies)
 
-lazy val metrics = Project(id = "metrics", base = file("./libs/metrics"))
-  .settings(commonSettings: _*)
+lazy val metrics = libProject("metrics")
   .dependsOn(bugsnag % "compile")
   .dependsOn(akkaUtils % "compile")
   .settings(
@@ -225,20 +243,34 @@ lazy val metrics = Project(id = "metrics", base = file("./libs/metrics"))
     )
   )
 
-lazy val rabbitProcessor = Project(id = "rabbit-processor", base = file("./libs/rabbit-processor"))
-  .settings(commonSettings: _*)
+lazy val rabbitProcessor = libProject("rabbit-processor")
+  .settings(
+    libraryDependencies ++= Seq(
+      amqp
+    ) ++ jackson
+  )
   .dependsOn(bugsnag % "compile")
 
-lazy val messageBus = Project(id = "message-bus", base = file("./libs/message-bus"))
+lazy val messageBus = libProject("message-bus")
   .settings(commonSettings: _*)
   .dependsOn(bugsnag % "compile")
   .dependsOn(akkaUtils % "compile")
   .dependsOn(rabbitProcessor % "compile")
   .settings(libraryDependencies ++= Seq(
+    akka,
+    specs2,
     scalaTest,
-    "com.typesafe.akka"   %% "akka-testkit" % "2.4.17" % "compile",
-    "com.typesafe.play" %% "play-json" % "2.5.12"
+    akkaTestKit,
+    playJson
   ))
+
+//libraryDependencies ++= Seq(
+//  "com.typesafe.akka" %% "akka-actor"         % "2.4.8"   % "provided",
+//  "com.typesafe.akka" %% "akka-testkit"       % "2.4.8"   % "test",
+//  "org.specs2"        %% "specs2-core"        % "3.8.8"   % "test",
+//  "com.typesafe.akka" %% "akka-cluster-tools" % "2.4.17"
+//)
+
 
 lazy val jvmProfiler = Project(id = "jvm-profiler", base = file("./libs/jvm-profiler"))
   .settings(commonSettings: _*)
@@ -247,15 +279,17 @@ lazy val jvmProfiler = Project(id = "jvm-profiler", base = file("./libs/jvm-prof
 
 lazy val graphQlClient = Project(id = "graphql-client", base = file("./libs/graphql-client"))
   .settings(commonSettings: _*)
-  .settings(libraryDependencies += scalaTest)
+  .settings(libraryDependencies ++= Seq(
+    scalaTest,
+    playJson,
+    akkaHttp
+  ))
   .dependsOn(stubServer % "test")
   .dependsOn(akkaUtils % "compile")
 
-lazy val javascriptEngine = Project(id = "javascript-engine", base = file("./libs/javascript-engine"))
-  .settings(commonSettings: _*)
+//lazy val javascriptEngine = libProject("javascript-engine")
 
-lazy val stubServer = Project(id = "stub-server", base = file("./libs/stub-server"))
-  .settings(commonSettings: _*)
+lazy val stubServer = libProject("stub-server")
 
 //lazy val backendShared =
 //  Project(id = "backend-shared", base = file("./backend-shared"))
@@ -404,7 +438,7 @@ lazy val cache =
     .settings(libraryDependencies ++= Seq(
       scalaTest,
       caffeine,
-//      java8Compat,
+      java8Compat,
       jsr305
     ))
 
@@ -478,7 +512,7 @@ val allLibProjects = List(
   messageBus,
   jvmProfiler,
   graphQlClient,
-  javascriptEngine,
+//  javascriptEngine,
   stubServer,
   scalaUtils,
   jsonUtils,
