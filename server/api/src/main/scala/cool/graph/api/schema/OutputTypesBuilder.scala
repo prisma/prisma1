@@ -7,7 +7,6 @@ import cool.graph.shared.models.ModelMutationType.ModelMutationType
 import cool.graph.shared.models.{Field, Model, Project, Relation}
 import sangria.schema
 import sangria.schema._
-import scaldi.{Injectable, Injector}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 

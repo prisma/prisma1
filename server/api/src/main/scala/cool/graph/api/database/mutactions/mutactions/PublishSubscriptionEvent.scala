@@ -5,7 +5,6 @@ import cool.graph.api.database.mutactions.{Mutaction, MutactionExecutionResult, 
 import cool.graph.messagebus.PubSubPublisher
 import cool.graph.messagebus.pubsub.Only
 import cool.graph.shared.models.Project
-import scaldi._
 import spray.json._
 import cool.graph.util.json.JsonFormats.AnyJsonFormat
 

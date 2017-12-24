@@ -81,10 +81,12 @@ case class RequestHandler(
   def fetchProject(projectId: String): Future[ProjectWithClientId] = {
     val result = projectFetcher.fetch(projectIdOrAlias = projectId)
 
-    result.onFailure {
-      case t =>
+    result.onComplete {
+      case Failure(t) =>
         val request = GraphCoolRequest(requestId = "", clientId = None, projectId = Some(projectId), query = "", variables = "")
         bugsnagger.report(t, request)
+
+      case _ =>
     }
 
     result map {

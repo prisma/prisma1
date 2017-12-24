@@ -16,7 +16,6 @@ import cool.graph.cuid.Cuid.createCuid
 import cool.graph.metrics.extensions.TimeResponseDirectiveImpl
 import cool.graph.shared.models.{ProjectId, ProjectWithClientId}
 import cool.graph.util.logging.{LogData, LogKey}
-import scaldi._
 import spray.json._
 
 import scala.concurrent.Future
@@ -27,7 +26,6 @@ case class ApiServer(
     prefix: String = ""
 )(implicit apiDependencies: ApiDependencies, system: ActorSystem, materializer: ActorMaterializer)
     extends Server
-    with Injectable
     with LazyLogging {
   import system.dispatcher
 

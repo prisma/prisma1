@@ -32,7 +32,7 @@ trait ApiDependencies extends AwaitUtils {
   lazy val graphQlRequestHandler: GraphQlRequestHandler = GraphQlRequestHandlerImpl(log)
   lazy val auth: Auth                                   = AuthImpl
   lazy val requestHandler: RequestHandler               = RequestHandler(projectFetcher, apiSchemaBuilder, graphQlRequestHandler, auth, log)
-  lazy val maxImportExportSize: Int = 10000000
+  lazy val maxImportExportSize: Int                     = 10000000
 
   def dataResolver(project: Project): DataResolver       = DataResolver(project)
   def masterDataResolver(project: Project): DataResolver = DataResolver(project, useMasterDatabaseOnly = true)
@@ -47,7 +47,7 @@ trait ApiDependencies extends AwaitUtils {
   }
 }
 
-case class ApiDependenciesImpl(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends ApiDependencies {
+case class ApiDependenciesImpl()(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends ApiDependencies {
   override implicit def self: ApiDependencies = this
 
   val databases                      = Databases.initialize(config)

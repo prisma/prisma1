@@ -11,11 +11,11 @@ object Databases {
   private val configRoot    = "clientDatabases"
 
   def initialize(config: Config): Databases = {
-    import scala.collection.JavaConversions._
+    import scala.collection.JavaConverters._
     config.resolve()
 
     val databasesMap = for {
-      (dbName, _) <- config.getObject(configRoot)
+      dbName <- asScalaSet(config.getObject(configRoot).keySet())
     } yield {
       val readOnlyPath    = s"$configRoot.$dbName.readonly"
       val masterDb        = Database.forConfig(s"$configRoot.$dbName.master", config, driver = dbDriver)

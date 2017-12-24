@@ -23,9 +23,9 @@ object MemoryProfiler {
 }
 
 case class MemoryProfiler(metricsManager: MetricsManager) {
-  import scala.collection.JavaConversions._
+  import scala.collection.JavaConverters._
 
-  val garbageCollectionMetrics = ManagementFactory.getGarbageCollectorMXBeans.map(gcBean => GarbageCollectionMetrics(metricsManager, gcBean))
+  val garbageCollectionMetrics = asScalaBuffer(ManagementFactory.getGarbageCollectorMXBeans).map(gcBean => GarbageCollectionMetrics(metricsManager, gcBean))
   val memoryMxBean             = ManagementFactory.getMemoryMXBean
   val heapMemoryMetrics        = MemoryMetrics(metricsManager, initialMemoryUsage = memoryMxBean.getHeapMemoryUsage, prefix = "heap")
   val offHeapMemoryMetrics     = MemoryMetrics(metricsManager, initialMemoryUsage = memoryMxBean.getNonHeapMemoryUsage, prefix = "off-heap")

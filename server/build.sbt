@@ -206,6 +206,7 @@ lazy val akkaUtils = libProject("akka-utils")
   .dependsOn(stubServer % "test")
   .settings(libraryDependencies ++= Seq(
     akka,
+    akkaContrib,
     akkaHttp,
     akkaTestKit,
     scalaTest,
@@ -464,37 +465,37 @@ lazy val singleServer = Project(id = "single-server", base = file("./single-serv
     }
   )
 
-lazy val localFaas = Project(id = "localfaas", base = file("./localfaas"))
-  .settings(commonSettings: _*)
-  .enablePlugins(sbtdocker.DockerPlugin, JavaAppPackaging)
-  .dependsOn(akkaUtils % "compile")
-  .settings(
-    libraryDependencies ++= Seq(
-      "com.typesafe.akka"     %% "akka-http"           % "10.0.5",
-      "com.github.pathikrit"  %% "better-files-akka"   % "2.17.1",
-      "org.apache.commons"    %  "commons-compress"    % "1.14",
-      "com.typesafe.play"     %% "play-json"           % "2.5.12",
-      "de.heikoseeberger"     %% "akka-http-play-json" % "1.14.0" excludeAll (
-        ExclusionRule(organization = "com.typesafe.akka"),
-        ExclusionRule(organization = "com.typesafe.play")
-      )
-    ),
-    imageNames in docker := Seq(
-      ImageName(s"graphcool/localfaas:latest")
-    ),
-    dockerfile in docker := {
-      val appDir    = stage.value
-      val targetDir = "/app"
-
-      new Dockerfile {
-        from("openjdk:8-alpine")
-        runRaw("apk add --update nodejs=6.10.3-r1 bash")
-        entryPoint(s"$targetDir/bin/${executableScriptName.value}")
-        copy(appDir, targetDir)
-        runRaw("rm -rf /var/cache/apk/*")
-      }
-    }
-  )
+//lazy val localFaas = Project(id = "localfaas", base = file("./localfaas"))
+//  .settings(commonSettings: _*)
+//  .enablePlugins(sbtdocker.DockerPlugin, JavaAppPackaging)
+//  .dependsOn(akkaUtils % "compile")
+//  .settings(
+//    libraryDependencies ++= Seq(
+//      "com.typesafe.akka"     %% "akka-http"           % "10.0.5",
+//      "com.github.pathikrit"  %% "better-files-akka"   % "2.17.1",
+//      "org.apache.commons"    %  "commons-compress"    % "1.14",
+//      "com.typesafe.play"     %% "play-json"           % "2.5.12",
+//      "de.heikoseeberger"     %% "akka-http-play-json" % "1.14.0" excludeAll (
+//        ExclusionRule(organization = "com.typesafe.akka"),
+//        ExclusionRule(organization = "com.typesafe.play")
+//      )
+//    ),
+//    imageNames in docker := Seq(
+//      ImageName(s"graphcool/localfaas:latest")
+//    ),
+//    dockerfile in docker := {
+//      val appDir    = stage.value
+//      val targetDir = "/app"
+//
+//      new Dockerfile {
+//        from("openjdk:8-alpine")
+//        runRaw("apk add --update nodejs=6.10.3-r1 bash")
+//        entryPoint(s"$targetDir/bin/${executableScriptName.value}")
+//        copy(appDir, targetDir)
+//        runRaw("rm -rf /var/cache/apk/*")
+//      }
+//    }
+//  )
 
 val allServerProjects = List(
   api,

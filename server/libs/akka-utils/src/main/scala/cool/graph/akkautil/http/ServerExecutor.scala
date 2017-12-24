@@ -39,7 +39,7 @@ case class ServerExecutor(port: Int, servers: Server*)(implicit system: ActorSys
 
   lazy val serverBinding: Future[ServerBinding] = {
     val binding = Http().bindAndHandle(Route.handlerFlow(routes), "0.0.0.0", port)
-    binding.onSuccess { case b => println(s"Server running on :${b.localAddress.getPort}") }
+    binding.foreach(b => println(s"Server running on :${b.localAddress.getPort}"))
     binding
   }
 

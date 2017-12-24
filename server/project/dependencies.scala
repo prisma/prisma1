@@ -46,6 +46,7 @@ object Dependencies {
 
   val akka              = "com.typesafe.akka" %% "akka-actor"           % v.akka
   val akkaClusterTools  = "com.typesafe.akka" %% "akka-cluster-tools"   % v.akka
+  val akkaContrib       = "com.typesafe.akka" %% "akka-contrib"         % v.akka
   val akkaTestKit       = "com.typesafe.akka" %% "akka-testkit"         % v.akka
   val akkaHttp          = "com.typesafe.akka" %% "akka-http"            % v.akkaHttp
   val akkaHttpTestKit   = "com.typesafe.akka" %% "akka-http-testkit"    % v.akkaHttp
@@ -72,8 +73,10 @@ object Dependencies {
   val jacksonDataformatCbor = "com.fasterxml.jackson.dataformat" % "jackson-dataformat-cbor" % "2.8.4"
   val jackson               = Seq(jacksonCore, jacksonDatabind, jacksonAnnotation, jacksonDataformatCbor)
 
-  val amqp        = "com.rabbitmq"           % "amqp-client"         % "4.1.0"
-  val java8Compat = "org.scala-lang.modules" %% "scala-java8-compat" % "0.8.0"
+  val amqp         = "com.rabbitmq"               % "amqp-client"         % "4.1.0"
+  val java8Compat  = "org.scala-lang.modules"     %% "scala-java8-compat" % "0.8.0"
+  val scalaLogging = "com.typesafe.scala-logging" %% "scala-logging"      % "3.7.0"
+  val jwt          = "com.pauldijou"              %% "jwt-core"           % "0.14.1"
 
   lazy val common: Seq[ModuleID] = sangria ++ Seq(
     guava,
@@ -88,7 +91,7 @@ object Dependencies {
     "io.spray"             %% "spray-json"        % "1.3.3",
 //    "org.scaldi"           %% "scaldi"            % "0.5.8",
 //    "org.scaldi"                 %% "scaldi-akka"       % "0.5.8",
-//    "com.typesafe.scala-logging" %% "scala-logging"  % "3.4.0",
+    scalaLogging,
     "ch.qos.logback"         % "logback-classic" % "1.1.7",
     "org.atteo"              % "evo-inflector"   % "1.2",
     "software.amazon.awssdk" % "lambda"          % "2.0.0-preview-4",
@@ -97,7 +100,7 @@ object Dependencies {
     "org.mariadb.jdbc"       % "mariadb-java-client" % "2.1.2",
 //    "com.github.t3hnar"      %% "scala-bcrypt"       % "2.6",
     scalactic,
-//    "com.pauldijou"            %% "jwt-core"                % "0.7.1",
+    jwt,
     "cool.graph"               % "cuid-java"                % "0.1.1",
     "com.jsuereth"             %% "scala-arm"               % "2.0",
     "com.google.code.findbugs" % "jsr305"                   % "3.0.1",

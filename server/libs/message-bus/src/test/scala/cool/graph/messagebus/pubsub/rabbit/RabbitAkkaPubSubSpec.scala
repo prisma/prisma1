@@ -6,6 +6,7 @@ import cool.graph.bugsnag.BugSnaggerMock
 import cool.graph.messagebus.Conversions
 import cool.graph.messagebus.pubsub.{Everything, Message, Only}
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Matchers, WordSpecLike}
+import scala.concurrent.duration._
 
 class RabbitAkkaPubSubSpec
     extends TestKit(SingleThreadedActorSystem("pubsub-spec"))
@@ -70,7 +71,7 @@ class RabbitAkkaPubSubSpec
         Thread.sleep(500)
 
         pubSub.publish(testTopic, testMsg)
-        probe.expectNoMsg()
+        probe.expectNoMessage(6.seconds)
       }
     }
 
@@ -83,7 +84,7 @@ class RabbitAkkaPubSubSpec
 
         pubSub.unsubscribe(subscription)
         pubSub.publish(testTopic, testMsg)
-        probe.expectNoMsg()
+        probe.expectNoMessage(6.seconds)
       }
     }
 
@@ -122,7 +123,7 @@ class RabbitAkkaPubSubSpec
         Thread.sleep(500)
 
         pubSub.publish(testTopic, testMsg)
-        probe.expectNoMsg()
+        probe.expectNoMessage(6.seconds)
       }
     }
 
@@ -134,7 +135,7 @@ class RabbitAkkaPubSubSpec
 
         pubSub.unsubscribe(subscription)
         pubSub.publish(testTopic, testMsg)
-        probe.expectNoMsg()
+        probe.expectNoMessage(6.seconds)
       }
     }
 

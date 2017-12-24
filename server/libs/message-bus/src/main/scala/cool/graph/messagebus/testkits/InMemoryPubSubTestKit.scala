@@ -124,14 +124,14 @@ case class InMemoryPubSubTestKit[T]()(
     * For expecting that no message arrived _at any subscriber_ in the given time frame.
     * Requires at least one subscriber to be meaningful.
     */
-  def expectNoMsg(maxWait: FiniteDuration = 6.seconds): Unit = probe.expectNoMsg(maxWait)
+  def expectNoMsg(maxWait: FiniteDuration = 6.seconds): Unit = probe.expectNoMessage(maxWait)
 
   /**
     * For expecting that no message was published to the PubSub in the given time frame.
     * Does _not_ require a subscriber to be meaningful.
     */
   def expectNoPublishedMsg(maxWait: FiniteDuration = 6.seconds): Unit = {
-    publishProbe.expectNoMsg(maxWait)
+    publishProbe.expectNoMessage(maxWait)
   }
 
   /**
@@ -142,7 +142,7 @@ case class InMemoryPubSubTestKit[T]()(
     */
   def expectMsgCount(count: Int, maxWait: FiniteDuration = 6.seconds): Unit = {
     probe.expectMsgAllClassOf(maxWait, Array.fill(count)(messageTag.runtimeClass): _*)
-    probe.expectNoMsg(maxWait)
+    probe.expectNoMessage(maxWait)
   }
 
   /**
@@ -153,7 +153,7 @@ case class InMemoryPubSubTestKit[T]()(
     */
   def expectPublishCount(count: Int, maxWait: FiniteDuration = 6.seconds): Unit = {
     publishProbe.expectMsgAllClassOf(maxWait, Array.fill(count)(messageTag.runtimeClass): _*)
-    publishProbe.expectNoMsg(maxWait)
+    publishProbe.expectNoMessage(maxWait)
   }
 
   /**

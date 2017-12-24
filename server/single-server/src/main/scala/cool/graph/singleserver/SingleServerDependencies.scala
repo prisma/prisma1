@@ -13,7 +13,7 @@ trait SingleServerApiDependencies extends DeployDependencies with ApiDependencie
   override implicit def self: SingleServerDependencies
 }
 
-case class SingleServerDependencies(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends SingleServerApiDependencies {
+case class SingleServerDependencies()(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends SingleServerApiDependencies {
   override implicit def self = this
 
   val databases                      = Databases.initialize(config)

@@ -39,7 +39,7 @@ case class Channel(rabbitChannel: RabbitChannel) {
     }
 
   def exchangeDeclare(name: String, durable: Boolean, autoDelete: Boolean = false, confirm: Boolean = false): Try[Exchange] = Try {
-    import collection.JavaConversions.mapAsJavaMap
+    import collection.JavaConverters.mapAsJavaMap
     val internal = false
     rabbitChannel
       .exchangeDeclare(name, BuiltinExchangeType.TOPIC, durable, autoDelete, mapAsJavaMap(Map.empty[String, Object]))

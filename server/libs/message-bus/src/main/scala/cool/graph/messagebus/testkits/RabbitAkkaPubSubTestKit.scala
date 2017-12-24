@@ -77,7 +77,7 @@ case class RabbitAkkaPubSubTestKit[T](
     * For expecting no message in the given timeframe.
     */
   def expectNoMsg(maxWait: FiniteDuration = 6.seconds): Unit = {
-    probe.expectNoMsg(maxWait)
+    probe.expectNoMessage(maxWait)
   }
 
   /**
@@ -86,7 +86,7 @@ case class RabbitAkkaPubSubTestKit[T](
     */
   def expectMsgCount(count: Int, maxWait: FiniteDuration = 6.seconds): Unit = {
     probe.expectMsgAllClassOf(maxWait, Array.fill(count)(tag.runtimeClass): _*)
-    probe.expectNoMsg(maxWait)
+    probe.expectNoMessage(maxWait)
   }
 
   /**
