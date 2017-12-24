@@ -55,8 +55,8 @@ lazy val deploySettings = overridePublishBothSettings ++ Seq(
     userName = "",
     passwd = sys.env.getOrElse("PACKAGECLOUD_PW", sys.error("PACKAGECLOUD_PW env var is not set."))
   ),
-  publishTo := Some("packagecloud+https" at "packagecloud+https://packagecloud.io/graphcool/graphcool"),
-  aether.AetherKeys.aetherWagons := Seq(aether.WagonWrapper("packagecloud+https", "io.packagecloud.maven.wagon.PackagecloudWagon"))
+  publishTo := Some("packagecloud+https" at "packagecloud+https://packagecloud.io/graphcool/graphcool")//,
+//  aether.AetherKeys.aetherWagons := Seq(aether.WagonWrapper("packagecloud+https", "io.packagecloud.maven.wagon.PackagecloudWagon"))
 )
 
 lazy val commonSettings = deploySettings ++ versionSettings ++ Seq(
