@@ -3,7 +3,7 @@
 # Changes:
 #   - Pinned scala version to 2.12.3 instead of 2.12.4
 #
-# Docker image responsible for building graphcool service images.
+# Docker image responsible for building Graphcool service images.
 #
 
 # Pull base image
