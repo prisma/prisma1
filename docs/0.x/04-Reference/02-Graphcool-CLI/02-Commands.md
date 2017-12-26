@@ -1,9 +1,15 @@
 ---
 alias: aiteerae6l
-description: An overview and explanation of all the commands of the Graphcool CLI. Learn about different options, workflows and examples.
+description: An overview and explanation of all the commands of the Graphcool Framework CLI. Learn about different options, workflows and examples.
 ---
 
 # Commands
+
+<InfoBox type=info>
+
+When invoking the CLI, you can use either the full `graphcool-framework` command or the short form `gfc`. All examples on this page are using the longer, explicit version.
+
+</InfoBox>
 
 ## Service management
 
@@ -37,13 +43,11 @@ graphcool-framework init
 graphcool-framework init server
 ```
 
-
-
 ### `graphcool-framework deploy`
 
 Deploys service definition changes. Every time you're making a local change to any file in the service definition on your machine, you need to synchronize these changes with the remote service with this command. 
 
-#### Usage 
+#### Usage
 
 ```sh
 graphcool-framework deploy [flags]
@@ -84,8 +88,6 @@ Note that in case your `.graphcoolrc` did not yet contain a target called `prod`
 ```sh
 graphcool-framework deploy --force
 ```
-
-
 
 ### `graphcool-framework info`
 
