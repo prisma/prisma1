@@ -38,7 +38,7 @@ npm install -g graphcool-framework
 
 </Instruction>
 
-Now that the CLI is installed, you can use it to create the file structure for new service with the [`graphcool init`](!alias-zboghez5go#graphcool-init) command.
+Now that the CLI is installed, you can use it to create the file structure for new service with the [`graphcool-framework init`](!alias-zboghez5go#graphcool-init) command.
 
 <Instruction>
 
@@ -46,12 +46,12 @@ Create the local file structure for a new Graphcool service inside a directory c
 
 ```sh(path="")
 # Create a local service definition in a new directory called `server`
-graphcool init server
+graphcool-framework init server
 ```
 
 </Instruction>
 
-`graphcool init` creates the local service structure inside the specified `server` directory:
+`graphcool-framework init` creates the local service structure inside the specified `server` directory:
 
 ```(nocopy)
 .
@@ -97,7 +97,7 @@ Navigate to the `server` directory and deploy your service:
 
 ```sh(path="")
 cd server
-graphcool deploy
+graphcool-framework deploy
 ```
 
 When prompted which cluster you want to deploy to, choose any of the **Shared Clusters** options (`shared-eu-west-1`, `shared-ap-northeast-1` or `shared-us-west-2`).
@@ -112,13 +112,13 @@ Notice that this command also created the _local_ [`.graphcoolrc`](!alias-zoug8s
 
 <Instruction>
 
-Save the HTTP endpoint for the `Simple API` from the output of the `graphcool deploy` command, you'll need it later!
+Save the HTTP endpoint for the `Simple API` from the output of the `graphcool-framework deploy` command, you'll need it later!
 
 </Instruction>
 
-> **Note**: If you ever lose the endpoint for your GraphQL API, you can simply get access to it again by using the `graphcool info` command. When using Apollo, you need to use the endpoint for the `Simple API`.
+> **Note**: If you ever lose the endpoint for your GraphQL API, you can simply get access to it again by using the `graphcool-framework info` command. When using Apollo, you need to use the endpoint for the `Simple API`.
 
-You can test the API inside a [GraphQL Playground](https://github.com/graphcool/graphql-playground) which you can open with the `graphcool playground` command. Feel free to try out the following query and mutation.
+You can test the API inside a [GraphQL Playground](https://github.com/graphcool/graphql-playground) which you can open with the `graphcool-framework playground` command. Feel free to try out the following query and mutation.
 
 **Fetching all posts:**
 
@@ -151,7 +151,7 @@ The next step is to connect the React application with the GraphQL API from your
 
 <Instruction>
 
-Paste the HTTP endpoint for the `Simple API` that you saved after running `graphcool deploy` into `./src/index.js` as the `uri` argument in the `HttpLink` constructor call:
+Paste the HTTP endpoint for the `Simple API` that you saved after running `graphcool-framework deploy` into `./src/index.js` as the `uri` argument in the `HttpLink` constructor call:
 
 ```js(path="src/index.js")
 // replace `__SIMPLE_API_ENDPOINT__` with the endpoint from the previous step

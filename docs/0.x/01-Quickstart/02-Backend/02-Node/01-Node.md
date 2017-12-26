@@ -68,18 +68,18 @@ npm install -g graphcool-framework
 
 </Instruction>
 
-> When starting out building a new service, you can use the [`graphcool init`](!alias-aiteerae6l#graphcool-init) command to bootstrap a new Graphcool service definition. In this example, we already provide you with a sample service definition so you can skip this step.
+> When starting out building a new service, you can use the [`graphcool-framework init`](!alias-aiteerae6l#graphcool-init) command to bootstrap a new Graphcool service definition. In this example, we already provide you with a sample service definition so you can skip this step.
 
 In the next step, you're going to deploy the service locally using Docker. You don't need to use the Docker CLI directly, the deployment is completely based on the Graphcool CLI.
 
-The first thing you need to do is [create a local cluster](!alias-ohs4asd0pe#create-a-local-cluster) in your global [`.graphcoolrc`](!alias-zoug8seen4). You can do this using the [`graphcool local up`](!alias-aiteerae6l#graphcool-local-up) command.
+The first thing you need to do is [create a local cluster](!alias-ohs4asd0pe#create-a-local-cluster) in your global [`.graphcoolrc`](!alias-zoug8seen4). You can do this using the [`graphcool-framework local up`](!alias-aiteerae6l#graphcool-local-up) command.
 
 <Instruction>
 
 Open a terminal and create a new local cluster with the following command:
 
 ```bash(path="")
-graphcool local up
+graphcool-framework local up
 ```
 
 </Instruction>
@@ -102,7 +102,7 @@ Navigate into the `service` directory and deploy the service:
 
 ```bash(path="")
 cd service
-graphcool deploy
+graphcool-framework deploy
 ```
 
 When prompted which cluster you want to deploy to, choose the `local` cluster from the **Local (Docker)** section. This section lists all your local clusters that are defined in the global `.graphcoolrc`.
@@ -134,7 +134,7 @@ You'll now create some dummy data in the database using a [GraphQL Playground](h
 Open a GraphQL Playground by executing the following command in the `service` directory:
 
 ```bash(path="service")
-graphcool playground
+graphcool-framework playground
 ```
 
 </Instruction>
@@ -202,7 +202,7 @@ const endpoint = '__SIMPLE_API_ENDPOINT__' // looks like: https://api.graph.cool
 
 </Instruction> 
 
-> **Note**: If you ever lose your API endpoint, you can get access to it again by running `graphcool info` in the root directory of your service (where `graphcool.yml` is located).
+> **Note**: If you ever lose your API endpoint, you can get access to it again by running `graphcool-framework info` in the root directory of your service (where `graphcool.yml` is located).
 
 The last step now is to start the API gateway.
 
