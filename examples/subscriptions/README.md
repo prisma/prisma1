@@ -83,7 +83,7 @@ The easiest way to test the deployed service is by using a [GraphQL Playground](
 You can open a Playground with the following command:
 
 ```sh
-graphcool playground
+graphcool-framework playground
 ```
 
 ### Retrieve `User` nodes from the database with the `allUsers`-query

@@ -76,7 +76,7 @@ The easiest way to test the deployed service is by using a [GraphQL Playground](
 You can open a Playground with the following command:
 
 ```sh
-graphcool playground
+graphcool-framework playground
 ```
 
 Inside the Playground, you can send queries for all the resolver functions that are defined inside [`graphcool.yml`](./graphcool.yml):

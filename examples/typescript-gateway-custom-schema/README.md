@@ -82,7 +82,7 @@ Navigate back into the [`service`](./service) directory and open a Playground:
 
 ```sh
 cd ../server
-graphcool playground
+graphcool-framework playground
 ```
 
 In the Playground, send the following mutation to create a new `User` node along with three `Post` nodes:
