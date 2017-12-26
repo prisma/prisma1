@@ -20,7 +20,7 @@ cd node-gateway-custom-schema
 If you haven't already, go ahead and install the [Graphcool CLI](https://www.graph.cool/docs/reference/graphcool-cli/overview-zboghez5go):
 
 ```sh
-npm install -g graphcool
+npm install -g graphcool-framework
 ```
 
 ### 3. Deploy the Graphcool service

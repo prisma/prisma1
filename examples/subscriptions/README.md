@@ -58,7 +58,7 @@ Next, you need to create your GraphQL server using the [Graphcool CLI](https://g
 If you haven't already, go ahead and install the CLI first:
 
 ```sh
-npm install -g graphcool
+npm install -g graphcool-framework
 ```
 
 ### 3. Create the GraphQL server

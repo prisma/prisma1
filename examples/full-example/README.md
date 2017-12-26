@@ -24,7 +24,7 @@ cd full-example
 Install the CLI (if you haven't already):
 
 ```sh
-npm install -g graphcool
+npm install -g graphcool-framework
 ```
 
 You can now [deploy](https://graph.cool/docs/reference/graphcool-cli/commands-aiteerae6l#graphcool-deploy) the Graphcool service that's defined in this directory. Before that, you need to install the node [dependencies](package.json#L14) for the defined functions:
