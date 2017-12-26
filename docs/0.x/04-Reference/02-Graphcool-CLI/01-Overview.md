@@ -7,7 +7,37 @@ description: An overview of the Graphcool CLI.
 
 The Graphcool CLI is the primary tool to manage your Graphcool services. Generally, the shape and contents of a Graphcool service are determined by the service definition file [`graphcool.yml`](!alias-foatho8aip).
 
-The CLI offers tools to modify the local version of your service definition and file structure as well as syncing these changes with already deployed services. 
+The CLI offers tools to modify the local version of your service definition and file structure as well as syncing these changes with already deployed services.
+
+<InfoBox typ=warning>
+
+Note that there are **2 major versions of the Graphcool CLI**:
+
+- [`graphcool-framework`](https://www.npmjs.com/package/graphcool-framework): The CLI to be used for services running on the Graphcool Framework, i.e. all Graphcool versions lower than 1.0
+- [`graphcool`](https://www.npmjs.com/package/graphcool): The new Graphcool CLI for version 1.0
+
+</InfoBox>
+
+## Installation & Usage
+
+You can install the Graphcool Framework CLI with NPM:
+
+```sh
+npm install -g graphcool-framework
+```
+
+Once the CLI is installed on your machine, you can invoke it as follows:
+
+```sh
+graphcool-framework init
+```
+
+Or, using the short form of the `graphcool-framework` command:
+
+```sh
+gfc init
+```
+
 
 ## Using command line options
 
