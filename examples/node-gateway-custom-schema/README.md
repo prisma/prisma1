@@ -29,7 +29,7 @@ The next step is to [deploy](https://www.graph.cool/docs/reference/graphcool-cli
 
 ```sh
 cd service
-graphcool deploy
+graphcool-framework deploy
 ```
 
 When prompted which cluster you'd like to deploy, choose any of **Shared Clusters**-options (`shared-eu-west-1`, `shared-ap-northeast-1` or `shared-us-west-2`) rather than `local`. 

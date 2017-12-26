@@ -31,7 +31,7 @@ You can now [deploy](https://graph.cool/docs/reference/graphcool-cli/commands-ai
 
 ```sh
 yarn install      # install dependencies - alternatively npm install
-graphcool deploy  # deploy service
+graphcool-framework deploy  # deploy service
 ```
 
 When prompted which cluster you'd like to deploy, choose any of the **Shared Clusters** (`shared-eu-west-1`, `shared-ap-northeast-1` or `shared-us-west-2`) rather than `local`.
