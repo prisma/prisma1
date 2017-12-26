@@ -63,7 +63,7 @@ Graphcool services are managed with the [Graphcool CLI](!alias-zboghez5go). So b
 Install the Graphcool CLI:
 
 ```sh
-npm install -g graphcool
+npm install -g graphcool-framework
 ```
 
 </Instruction>

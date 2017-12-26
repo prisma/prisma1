@@ -191,7 +191,7 @@ Copy the `id` of the `Post` node that was returned by the `createDraft` mutation
 
 ```graphql
 mutation {
-  publish(id: "__POST_ID__) {
+  publish(id: "__POST_ID__") {
     id
     isPublished
   }

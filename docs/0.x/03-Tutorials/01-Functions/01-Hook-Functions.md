@@ -51,7 +51,7 @@ We're going to use the [Graphcool CLI](https://www.npmjs.com/package/graphcool) 
 
 ```sh
 # Install the Graphcool CLI
-npm install -g graphcool
+npm install -g graphcool-framework
 
 # Create service
 graphcool init
