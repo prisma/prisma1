@@ -43,7 +43,7 @@ Copy the _Simple API endpoint_ for the next step.
 You can run the seed script to get started. First, obtain the _root token_ needed for the script:
 
 ```sh
-graphcool root-token seed-script
+graphcool-framework root-token seed-script
 ```
 
 Replace `__ENDPOINT__` and `__ROOT_TOKEN__` with the two copied values, and run the script to create a few product items:
