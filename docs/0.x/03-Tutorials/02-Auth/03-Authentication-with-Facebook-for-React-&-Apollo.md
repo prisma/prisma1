@@ -59,7 +59,7 @@ Now that the CLI is installed, you can use it to create the file structure for a
 ```bash(path="server")
 # Create a the file structure for a new Graphcool service in
 # a directory called `server` 
-graphcool init server
+graphcool-framework init server
 ```
 
 </Instruction>
@@ -84,7 +84,7 @@ Here is an overview of the generated files and the project structure which the C
 
 When working with Graphcool, you can easily add features to your service by pulling in a [template](!alias-zeiv8phail). 
 
-> A Graphcool template is nothing but the definition of another Graphcool service. When running `graphcool add-template <template>`, the CLI downloads all the code from the corresponding GitHub directory and adds the functionality from the template as _comments_ to your `graphcool.ym` and `types.graphql` files.
+> A Graphcool template is nothing but the definition of another Graphcool service. When running `graphcool-framework add-template <template>`, the CLI downloads all the code from the corresponding GitHub directory and adds the functionality from the template as _comments_ to your `graphcool.ym` and `types.graphql` files.
 
 #### Downloading the template code
 
@@ -95,7 +95,7 @@ For this tutorial, you'll use the [`facebook`](https://github.com/graphcool/temp
 In the `server` directory, execute the following command to add the template:
 
 ```bash(path="server")
-graphcool add-template graphcool/templates/auth/facebook
+graphcool-framework add-template graphcool/templates/auth/facebook
 ```
 
 </Instruction>
@@ -220,7 +220,7 @@ type User @model {
 
 #### Deploying the service
 
-It's now time to deploy your service! Once deployed it will be available via an HTTP endpoint that exposes the functionality defined in `graphcool.yml`. You can deploy a service using the [`graphcool deploy`](!alias-aiteerae6l#graphcool-deploy) command.
+It's now time to deploy your service! Once deployed it will be available via an HTTP endpoint that exposes the functionality defined in `graphcool.yml`. You can deploy a service using the [`graphcool-framework deploy`](!alias-aiteerae6l#graphcool-deploy) command.
 
 Before deployment, you still need to install the node dependencies for your `resolver` functions. These are specified in `server/package.json`.
 
@@ -230,7 +230,7 @@ In your terminal, navigate to the `server` directory, install the node dependenc
 
 ```bash(path="server")
 yarn install # or npm install
-graphcool deploy
+graphcool-framework deploy
 ``` 
 
 When prompted which cluster you want to deploy to, choose any of the **Backend-as-a-Service** options (`shared-eu-west-1`, `shared-ap-northeast-1` or `shared-us-west-2`).
@@ -297,7 +297,7 @@ After every change you're making to your service definition, you need to redeplo
 In the `server` directory inside a terminal, invoke the following command:
 
 ```bash(path="server")
-graphcool deploy
+graphcool-framework deploy
 ```
 
 </Instruction>
@@ -305,7 +305,7 @@ graphcool deploy
 Here's what the generated output looks like. 
 
 ```(nocopy)
-$ graphcool deploy
+$ graphcool-framework deploy
 Deploying to service __SERVICE_ID__ with local environment dev.... ✔
 
 Your service __SERVICE_ID__ of env dev was successfully updated.\nHere are the changes:
@@ -423,7 +423,7 @@ The `ApolloClient` is your main interface to the GraphQL server and will take ca
 To get access to your service ID, simply use the following command in the terminal:
 
 ```bash(path="server")
-graphcool info
+graphcool-framework info
 ```
 
 Then copy the value for `serviceId` and replace the `__SERVICE_ID__` placeholder from before.
@@ -827,7 +827,7 @@ permissions:
 
 This simply expresses that all operations are allowed.
 
-> If you remove this one permission and run `graphcool deploy` afterwards, you'll notice that all your queries and operations will fail with a _Insufficient permissions_ error.
+> If you remove this one permission and run `graphcool-framework deploy` afterwards, you'll notice that all your queries and operations will fail with a _Insufficient permissions_ error.
 
 Generally, the `permissions` property in the service definition contains a list of _permissions_. A single permission has the following properties:
 
@@ -932,7 +932,7 @@ Lastly, you need to make sure the changes are applied to your service.
 In the `server` directory, execute the following command in the terminal:
 
 ```bash(path="server")
-graphcool deploy
+graphcool-framework deploy
 ```
 
 </Instruction>

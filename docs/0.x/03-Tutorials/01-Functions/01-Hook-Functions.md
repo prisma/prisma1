@@ -54,7 +54,7 @@ We're going to use the [Graphcool CLI](https://www.npmjs.com/package/graphcool) 
 npm install -g graphcool-framework
 
 # Create service
-graphcool init
+graphcool-framework init
 ```
 
 </Instruction>
@@ -173,13 +173,13 @@ This adds the dependencies to the `package.json` file.
 Once you're done writing the function, you can deploy the changes to a new service:
 
 ```sh
-graphcool deploy # select any shared-cluster
+graphcool-framework deploy # select any shared-cluster
 ```
 
 Afterwards, let's open the GraphQL Playground:
 
 ```sh
-graphcool playground
+graphcool-framework playground
 ```
 
 We can use the Playground to send an actual mutation to your GraphQL API. A sample mutation could look as follows:

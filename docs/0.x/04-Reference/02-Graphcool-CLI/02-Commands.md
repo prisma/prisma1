@@ -7,7 +7,7 @@ description: An overview and explanation of all the commands of the Graphcool CL
 
 ## Service management
 
-### `graphcool init`
+### `graphcool-framework init`
 
 Creates the local file structure for a new Graphcool service:
 
@@ -20,7 +20,7 @@ If you provide a directory to the command, all these files will be places inside
 #### Usage
 
 ```sh
-graphcool init DIRNAME
+graphcool-framework init DIRNAME
 ```
 
 #### Examples
@@ -28,25 +28,25 @@ graphcool init DIRNAME
 ##### Create file structure for Graphcool service in current directory.
 
 ```sh
-graphcool init
+graphcool-framework init
 ```
 
 ##### Create file structure for Graphcool service in directory called `server`.
 
 ```sh
-graphcool init server
+graphcool-framework init server
 ```
 
 
 
-### `graphcool deploy`
+### `graphcool-framework deploy`
 
 Deploys service definition changes. Every time you're making a local change to any file in the service definition on your machine, you need to synchronize these changes with the remote service with this command. 
 
 #### Usage 
 
 ```sh
-graphcool deploy [flags]
+graphcool-framework deploy [flags]
 ```
 
 #### Flags
@@ -68,13 +68,13 @@ graphcool deploy [flags]
 ##### Deploy local service definition changes to the `default` target.
 
 ```sh
-graphcool deploy
+graphcool-framework deploy
 ```
 
 ##### Deploy local changes to a specific target called `prod`.
 
 ```sh
-graphcool deploy --target prod
+graphcool-framework deploy --target prod
 ```
 
 Note that in case your `.graphcoolrc` did not yet contain a target called `prod`, a new target with that name will be created.
@@ -82,12 +82,12 @@ Note that in case your `.graphcoolrc` did not yet contain a target called `prod`
 ##### Deploy local changes from default service file accepting potential data loss caused by schema changes.
 
 ```sh
-graphcool deploy --force
+graphcool-framework deploy --force
 ```
 
 
 
-### `graphcool info`
+### `graphcool-framework info`
 
 Prints meta-data about a specific service. The information contains:
 
@@ -97,7 +97,7 @@ Prints meta-data about a specific service. The information contains:
 #### Usage
 
 ```sh
-graphcool info
+graphcool-framework info
 ```
 
 #### Examples
@@ -105,19 +105,19 @@ graphcool info
 ##### Print info of current service.
 
 ```sh
-graphcool info
+graphcool-framework info
 ```
 
 
 
-### `graphcool playground`
+### `graphcool-framework playground`
 
 Open a [Playground](https://github.com/graphcool/graphql-playground) for the current service. The current service is determined by the default environment that's specified in the `.graphcoolrc` of the directory in which you're executing the command.
 
 #### Usage
 
 ```sh
-graphcool playground [flags]
+graphcool-framework playground [flags]
 ```
 
 #### Flags
@@ -129,14 +129,14 @@ graphcool playground [flags]
 
 
 
-### `graphcool delete`
+### `graphcool-framework delete`
 
 Delete an existing target from the cluster its deployed to.
 
 #### Usage
 
 ```sh
-graphcool delete [flags]
+graphcool-framework delete [flags]
 ```
 
 #### Flags
@@ -148,14 +148,14 @@ graphcool delete [flags]
 
 
 
-### `graphcool add-template`
+### `graphcool-framework add-template`
 
-Add new [template](!alias-zeiv8phail) to current Graphcool service. After invoking this command, you still need to uncomment the added lines in `graphcool.yml` and `types.graphql` and then run `graphcool deploy`.
+Add new [template](!alias-zeiv8phail) to current Graphcool service. After invoking this command, you still need to uncomment the added lines in `graphcool.yml` and `types.graphql` and then run `graphcool-framework deploy`.
 
 #### Usage 
 
 ```sh
-graphcool add-template TEMPLATE
+graphcool-framework add-template TEMPLATE
 ```
 
 #### Examples
@@ -163,7 +163,7 @@ graphcool add-template TEMPLATE
 ##### Pull in the officially supported [`email-password` authentication template](https://github.com/graphcool/templates/tree/master/auth/email-password)
 
 ```sh    
-graphcool add-template graphcool/templates/auth/email-password
+graphcool-framework add-template graphcool/templates/auth/email-password
 ```
 
 #### Examples
@@ -171,19 +171,19 @@ graphcool add-template graphcool/templates/auth/email-password
 ##### Pull in the officially supported [`mailgun` messaging template](https://github.com/graphcool/templates/tree/master/messaging/mailgun)
 
 ```sh    
-graphcool add-template graphcool/templates/messaging/mailgun
+graphcool-framework add-template graphcool/templates/messaging/mailgun
 ```
 
 
 
-### `graphcool root-token`
+### `graphcool-framework root-token`
 
 Print the root token of a specific service. If no concrete token is specified as an option, the command will only list the names of the available tokens.
 
 #### Usage 
 
 ```sh
-graphcool root-token [flags]
+graphcool-framework root-token [flags]
 ```
 
 #### Flags
@@ -198,29 +198,29 @@ graphcool root-token [flags]
 ##### List which root tokens are setup for the current service.
 
 ```sh
-graphcool root-token
+graphcool-framework root-token
 ```
 
 ##### Fetch a concrete root token.
 
 ```sh
-graphcool root-token --token my-token
+graphcool-framework root-token --token my-token
 ```
 
 Assuming the service has a root token that's called `my-token`. 
 
-> To add a new root token to your service, add the name of the new token to the `rootTokens` section in `graphcool.yml` and run `graphcool deploy`.
+> To add a new root token to your service, add the name of the new token to the `rootTokens` section in `graphcool.yml` and run `graphcool-framework deploy`.
 
 
 
-### `graphcool logs`
+### `graphcool-framework logs`
 
 Print the logs of the [functions](!alias-aiw4aimie9) that are setup in the current service.
 
 #### Usage
 
 ```sh
-graphcool logs [flags]
+graphcool-framework logs [flags]
 ```
 
 #### Flags
@@ -237,14 +237,14 @@ graphcool logs [flags]
 
 ## Local development (Docker)
 
-### `graphcool local pull`
+### `graphcool-framework local pull`
 
 Download latest (or specific) framework cluster version.
 
 #### Usage 
 
 ```sh
-graphcool local pull [flags]
+graphcool-framework local pull [flags]
 ```
 
 #### Flags
@@ -255,14 +255,14 @@ graphcool local pull [flags]
 
 
 
-### `graphcool local stop`
+### `graphcool-framework local stop`
 
 Stop local development cluster.
 
 #### Usage 
 
 ```sh
-graphcool local pull [flags]
+graphcool-framework local pull [flags]
 ```
 
 #### Flags
@@ -273,14 +273,14 @@ graphcool local pull [flags]
 
 
 
-### `graphcool local up`
+### `graphcool-framework local up`
 
 Start local development cluster (Docker required).
 
 #### Usage 
 
 ```sh
-graphcool local up [flags]
+graphcool-framework local up [flags]
 ```
 
 #### Flags
@@ -291,14 +291,14 @@ graphcool local up [flags]
 
 
 
-### `graphcool local restart`
+### `graphcool-framework local restart`
 
 Restart local development cluster.
 
 #### Usage 
 
 ```sh
-graphcool local restart [flags]
+graphcool-framework local restart [flags]
 ```
 
 #### Flags
@@ -307,39 +307,39 @@ graphcool local restart [flags]
  -n, --name NAME    Name of the cluster instance
 ```
 
-### `graphcool local ps`
+### `graphcool-framework local ps`
 
 List Docker containers.
 
 #### Usage 
 
 ```sh
-graphcool local ps
+graphcool-framework local ps
 ```
 
 
-### `graphcool local eject`
+### `graphcool-framework local eject`
 
 Eject from the managed docker runtime.
 
 #### Usage 
 
 ```sh
-graphcool local eject
+graphcool-framework local eject
 ```
 
 
 
 ## Platform
 
-### `graphcool login`
+### `graphcool-framework login`
 
 Sign up or login (opens your browser for authentication). The platform token that's received after successful login will be stored in `~/.graphcoolrc`.
 
 #### Usage 
 
 ```sh
-graphcool login [flags]
+graphcool-framework login [flags]
 ```
 
 #### Flags
@@ -353,25 +353,25 @@ graphcool login [flags]
 ##### Authenticate using the browser.
 
 ```sh    
-graphcool login
+graphcool-framework login
 ```
 
 ##### Authenticate using an existing authentication token.
 
 ```sh
-graphcool login -t <token>
+graphcool-framework login -t <token>
 ```
 
 
 
-### `graphcool console`
+### `graphcool-framework console`
 
 Open the console for the current service. The current service is determined by the default environment that's specified in the `.graphcoolrc` of the directory in which you're executing the command.
 
 #### Usage 
 
 ```sh
-graphcool console [flags]
+graphcool-framework console [flags]
 ```
 
 #### Flags
@@ -385,13 +385,13 @@ graphcool console [flags]
 ##### Open the console for the current service.
 
 ```sh    
-graphcool console
+graphcool-framework console
 ```
 
 ##### Open the console for the `prod` environment.
 
 ```sh
-graphcool console [flags]
+graphcool-framework console [flags]
 ```
 
 Assuming you're executing the command in a directory that contains a `.graphcoolrc` looking similar to this:
@@ -408,14 +408,14 @@ environments:
 
 ## Other
 
-### `graphcool help`
+### `graphcool-framework help`
 
 Prints instructions and examples for the usage of a specific command.
 
 #### Usage 
 
 ```sh
-graphcool help COMMAND
+graphcool-framework help COMMAND
 ```
 
 #### Examples
@@ -423,13 +423,13 @@ graphcool help COMMAND
 ##### Instructions and examples for the `init` command.
 
 ```sh
-graphcool help init
+graphcool-framework help init
 ```
 
 ##### Overview of all commands.
 
 ```sh
-graphcool help
+graphcool-framework help
 ```
 
 

@@ -53,7 +53,7 @@ There are three system fields, all of which are managed by the Graphcool runtime
 
 #### Required system field: `id` 
 
-Every type that you define with the `@model` directive needs to have an `id: ID! @isUnique` field, otherwise `graphcool deploy` is going to fail. This `id` however is managed by Graphcool: Every new node that is created in your service will get assigned a globally unique ID automatically.
+Every type that you define with the `@model` directive needs to have an `id: ID! @isUnique` field, otherwise `graphcool-framework deploy` is going to fail. This `id` however is managed by Graphcool: Every new node that is created in your service will get assigned a globally unique ID automatically.
 
 Notice that all your model types will implement the `Node` interface in the actual GraphQL schema that defines all the capabilities of your API. This is what the `Node` interface looks like:
 

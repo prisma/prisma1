@@ -34,7 +34,7 @@ How to add a template manually:
 2. Copy that folder into the root directory of your Graphcool service.
 3. Copy over the contents from the template's `graphcool.yml` into the `graphcool.yml` of your own service. Be sure to adjust any file references, e.g. source files that contain code for [functions](!alias-aiw4aimie9), if necessary.
 4. Copy over the contents from the template's `types.graphql` into the `types.graphql` of your own service. 
-5. Deploy your changes with `graphcool deploy`.
+5. Deploy your changes with `graphcool-framework deploy`.
 
 
 ### Adding templates with the CLI
@@ -44,7 +44,7 @@ The `add-template` command in the Graphcool CLI basically automates the process 
 The only option that can be provided to this command is the path to the template on GitHub, e.g. for the [`email-password`](https://github.com/graphcool/modules)-template:
 
 ```sh
-graphcool add-template graphcool/templates/auth/email-password
+graphcool-framework add-template graphcool/templates/auth/email-password
 ```
 
 When merging the template's `graphcool.yml` and `types.graphql` files with the ones from your local service definition, the CLI will only add the contents from the template files into your local files _as comments_. So you need to explicitly uncomment the parts form the template files that you actually want to use in your project.
@@ -53,5 +53,5 @@ The process for using the CLI to add a template thus looks as follows:
 
 1. Use the `add-template <path>` CLI command and specify the `<path>` which points to the template's directory in the [Graphcool GitHub organization](https://github.com/graphcool).
 2. Uncomment the lines in `graphcool.yml` and `types.graphql`.
-5. Deploy your changes with `graphcool deploy`.
+5. Deploy your changes with `graphcool-framework deploy`.
 

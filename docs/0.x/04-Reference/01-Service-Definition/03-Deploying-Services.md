@@ -17,13 +17,13 @@ After making a change to `graphcool.yml` or any file inside the project structur
 The only way of doing this is by running the following CLI command:
 
 ```sh
-graphcool deploy
+graphcool-framework deploy
 ``` 
 
 This deploys to the `default` target specified in [`.graphcoolrc`](!alias-zoug8seen4). If you want to deploy your service to a different target than the `default` one, you can add the `--target` (or `-t` option), for example:
 
 ```sh
-graphcool deploy --target prod
+graphcool-framework deploy --target prod
 ```
 
 Note that this command expects a target named `prod` to be configured in your [`.graphcoolrc`](!alias-zoug8seen4).
@@ -31,12 +31,12 @@ Note that this command expects a target named `prod` to be configured in your [`
 
 ## Previewing changes
 
-Using the `--dry-run` option will print all changes between your local service definition and the already deployed service without actually applying them: `graphcool deploy --dry-run` (or using the short form `graphcool deploy -D`).
+Using the `--dry-run` option will print all changes between your local service definition and the already deployed service without actually applying them: `graphcool-framework deploy --dry-run` (or using the short form `graphcool-framework deploy -D`).
 
 
 ## Using the `--force` option
 
-In case your local changes could result in data loss, for example when you're deleting a model type, you need to add the `--force` option to the command in order to signal to the CLI that you know what you're doing: `graphcool deploy --force` (or using the short form `graphcool deploy -f`).
+In case your local changes could result in data loss, for example when you're deleting a model type, you need to add the `--force` option to the command in order to signal to the CLI that you know what you're doing: `graphcool-framework deploy --force` (or using the short form `graphcool-framework deploy -f`).
 
 
 ## Providing migration values
@@ -53,7 +53,7 @@ type Customer {
 }
 ```
 
-In this example, all existing nodes of type `Customer` will have the value `unknown` for the new `gender` field. Note that you need to _manually remove_ the `@migrationValue`-directive after running `graphcool deploy`.
+In this example, all existing nodes of type `Customer` will have the value `unknown` for the new `gender` field. Note that you need to _manually remove_ the `@migrationValue`-directive after running `graphcool-framework deploy`.
 
 You can read more about migration values [here](!alias-paesahku9t).
 

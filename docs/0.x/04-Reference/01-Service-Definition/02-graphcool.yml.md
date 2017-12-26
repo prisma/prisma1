@@ -555,7 +555,7 @@ When referencing a CLI option, the value that you put into the bracket is compos
 For the following example, assume the following `graphcool` command was just ran in the terminal:
 
 ```sh
-graphcool deploy --stage prod
+graphcool-framework deploy --stage prod
 ```
 
 To reference the value of the `stage` option inside `graphcool.yml`, you can now specify the following:

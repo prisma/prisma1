@@ -55,7 +55,7 @@ module.exports = event => {
 
   const nodeId = ... // e.g. 
 
-  const graphcool = fromEvent(event)
+  const graphcool-framework = fromEvent(event)
   const validityDuration = 864000 // 864000 seconds are 10 days
 
   // validityDuration is an optional argument, the default is 30 days 
@@ -109,7 +109,7 @@ rootTokens:
   - myToken2
 ```
 
-After modifying the `rootTokens` list, you need to apply the changes by invoking the [`graphcool deploy`](!alias-aiteerae6l#graphcool-deploy) command. 
+After modifying the `rootTokens` list, you need to apply the changes by invoking the [`graphcool-framework deploy`](!alias-aiteerae6l#graphcool-deploy) command. 
 
 > Note: In the case of [legacy](!alias-aemieb1aev) projects, root tokens are managed through the Graphcool Console - not the CLI. To create a new root token in the Console, navigate to your [project settings](!alias-uh8shohxie#other-settings) and select the **Authentication**-tab. Then click the **add permanent access token**, set the name for the token and confirm.
 
@@ -117,10 +117,10 @@ After modifying the `rootTokens` list, you need to apply the changes by invoking
 
 When your service is deployed, the corresponding [target](!alias-zoug8seen4#managing-targets-in-a-local-graphcoolrc) will be associated with the root tokens defined in [`graphcool.yml`](!alias-foatho8aip).
 
-You can obtain the value of the root token using the [`graphcool root-token`](!alias-aiteerae6l#graphcool-root-token) command:
+You can obtain the value of the root token using the [`graphcool-framework root-token`](!alias-aiteerae6l#graphcool-root-token) command:
 
 ```sh
-graphcool root-token myToken1
+graphcool-framework root-token myToken1
 ```
 
 If you don't pass the token name to the command, it will simply print the names of all the root tokens associated with this target.

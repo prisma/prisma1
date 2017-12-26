@@ -68,19 +68,19 @@ Create a new Graphcool service using the following command:
 
 ```sh
 # Create a new service definition in the current directory
-graphcool init
+graphcool-framework init
 ```
 
 #### Create a local cluster
 
-If you don't have a local cluster defined in your global [`.graphcoolrc`](!alias-zoug8seen4#managing-clusters-in-the-global-.graphcoolrc), you first need to create one using [`graphcool local up`](!alias-aiteerae6l#graphcool-local-up).
+If you don't have a local cluster defined in your global [`.graphcoolrc`](!alias-zoug8seen4#managing-clusters-in-the-global-.graphcoolrc), you first need to create one using [`graphcool-framework local up`](!alias-aiteerae6l#graphcool-local-up).
 
 This creates a new entry in the `clusters` list in your global `.graphcoolrc` (which is located in your _home_ directory):
 
 ```yml
 clusters:
   default: shared-eu-west-1
-  # Created by `graphcool local up`
+  # Created by `graphcool-framework local up`
   local:
     host: 'http://localhost:60001'
     clusterSecret: >-
@@ -92,16 +92,16 @@ clusters:
 To [deploy](!alias-aiteerae6l#graphcool-deploy) the service, first run the following command:
 
 ```sh
-graphcool deploy
+graphcool-framework deploy
 ```
 
 When prompted which cluster you want to deploy to, choose `local`:
 
 ![](https://imgur.com/dP8dSyS.png)
 
-> Note: If you already have a local `.graphcoolrc` file for your service that contains a target, `graphcool deploy` will not prompt you to select a cluster. You can however add the `--interactive` option to the command to enforce the prompt: `graphcool deploy --interactive`.
+> Note: If you already have a local `.graphcoolrc` file for your service that contains a target, `graphcool-framework deploy` will not prompt you to select a cluster. You can however add the `--interactive` option to the command to enforce the prompt: `graphcool-framework deploy --interactive`.
 
-That's it, your service is now deployed to a local Docker container . Consequently, endpoints that are printed in the output of the `graphcool deploy` command are all targetting `localhost`:
+That's it, your service is now deployed to a local Docker container . Consequently, endpoints that are printed in the output of the `graphcool-framework deploy` command are all targetting `localhost`:
 
 ```
 Simple API:        http://localhost:60001/simple/v1/__SERVICE_ID__
@@ -126,14 +126,14 @@ We use these four images to spin up four containers, which you can see with the 
 
 - By default, the core APIs bind to port 60000, and the local function runtime binds to 60001. If you start more than one local intance of Graphcool, the CLI will search for the next open port, e.g. 60002, to bind to. You can change the binding of the core APIs by setting a `PORT` env var!
 - Your data in the database container and function deployments in the localfaas container are persisted using named docker volumes.
-- `docker tail -f CONTAINER_NAME` is useful for peeking into the containers and debugging issues, especially the localfaas container prints plenty of debug output for you to see what is going on, separate from the actual function logs that you can still retrieve with the `graphcool logs` command.
+- `docker tail -f CONTAINER_NAME` is useful for peeking into the containers and debugging issues, especially the localfaas container prints plenty of debug output for you to see what is going on, separate from the actual function logs that you can still retrieve with the `graphcool-framework logs` command.
 
 
 ### Debugging
 
 #### Accessing function logs
 
-When deploying [functions](!alias-aiw4aimie9) in a local Docker setup, you can access the function logs directly through [`docker logs`](https://docs.docker.com/engine/reference/commandline/logs/) instead of [`graphcool logs`](!alias-aiteerae6l#graphcool-logs):
+When deploying [functions](!alias-aiw4aimie9) in a local Docker setup, you can access the function logs directly through [`docker logs`](https://docs.docker.com/engine/reference/commandline/logs/) instead of [`graphcool-framework logs`](!alias-aiteerae6l#graphcool-logs):
 
 ```sh
 docker logs -f local_localfaas_1

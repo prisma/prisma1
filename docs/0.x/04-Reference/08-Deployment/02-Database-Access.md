@@ -48,7 +48,7 @@ This will print the following output:
 | Database                  |
 +---------------------------+
 | information_schema        |
-| graphcool                 |
+| graphcool-framework                 |
 | logs                      |
 | mysql                     |
 | performance_schema        |
