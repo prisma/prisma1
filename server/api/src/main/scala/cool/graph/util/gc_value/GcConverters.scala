@@ -36,7 +36,7 @@ case class GCDBValueConverter() extends GCConverter[Any] {
 
   def fromGCValueToString(t: GCValue): String = {
     fromGCValue(t) match {
-      case x: Vector[Any] => "[" + x.map(_.toString).mkString(",") + "]"
+      case x: Vector[Any] => x.map(_.toString).mkString(start = "[", sep = ",", end = "]")
       case x              => x.toString
     }
   }
@@ -252,7 +252,7 @@ case class StringSangriaValueConverter(typeIdentifier: TypeIdentifier, isList: B
     sangriaValue match {
       case _: NullValue                                          => sangriaValue.renderCompact
       case x: StringValue if !isList                             => unescape(sangriaValue.renderCompact)
-      case x: ListValue if typeIdentifier == TypeIdentifier.Json => "[" + x.values.map(y => unescape(y.renderCompact)).mkString(",") + "]"
+      case x: ListValue if typeIdentifier == TypeIdentifier.Json => x.values.map(y => unescape(y.renderCompact)).mkString(start = "[", sep = ",", end = "]")
       case _                                                     => sangriaValue.renderCompact
     }
   }
