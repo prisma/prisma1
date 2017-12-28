@@ -44,16 +44,17 @@ object IdBasedConnection {
         "Node type is invalid. It must be either a Scalar, Enum, Object, Interface, Union, " +
           "or a Non‐Null wrapper around one of those types. Notably, this field cannot return a list.")
 
-    val edgeType = ObjectType[Ctx, Edge[Val]](
-      name + "Edge",
-      "An edge in a connection.",
-      () ⇒ {
-        List[Field[Ctx, Edge[Val]]](
-          Field("node", nodeType, Some("The item at the end of the edge."), resolve = _.value.node),
-          Field("cursor", StringType, Some("A cursor for use in pagination."), resolve = _.value.cursor)
-        ) ++ edgeFields
-      }
-    )
+    val edgeType = OptionType(
+      ObjectType[Ctx, Edge[Val]](
+        name + "Edge",
+        "An edge in a connection.",
+        () ⇒ {
+          List[Field[Ctx, Edge[Val]]](
+            Field("node", nodeType, Some("The item at the end of the edge."), resolve = _.value.node),
+            Field("cursor", StringType, Some("A cursor for use in pagination."), resolve = _.value.cursor)
+          ) ++ edgeFields
+        }
+      ))
 
     val connectionType = ObjectType[Ctx, Conn[Val]](
       name + "Connection",
@@ -63,11 +64,11 @@ object IdBasedConnection {
           Field("pageInfo", PageInfoType, Some("Information to aid in pagination."), resolve = ctx ⇒ connEv.pageInfo(ctx.value)),
           Field(
             "edges",
-            OptionType(ListType(edgeType)),
+            ListType(edgeType),
             Some("A list of edges."),
             resolve = ctx ⇒ {
               val items = ctx.value
-              val edges = connEv.edges(items)
+              val edges = connEv.edges(items).map(Some(_))
               edges
             }
           )
@@ -106,7 +107,7 @@ object IdBasedConnection {
 
 case class SliceInfo(sliceStart: Int, size: Int)
 
-case class IdBasedConnectionDefinition[Ctx, Conn, Val](edgeType: ObjectType[Ctx, Edge[Val]], connectionType: ObjectType[Ctx, Conn])
+case class IdBasedConnectionDefinition[Ctx, Conn, Val](edgeType: OutputType[Option[Edge[Val]]], connectionType: ObjectType[Ctx, Conn])
 
 case class DefaultIdBasedConnection[T](pageInfo: PageInfo, edges: Seq[Edge[T]], parent: ConnectionParentElement) extends IdBasedConnection[T]
 

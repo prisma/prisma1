@@ -28,18 +28,22 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec
         .field_!("title", _.String)
         .field("tag", _.String)
         .oneToManyRelation("comments", "todo", comment)
+        .oneToOneRelation_!("topComment", "topCommentFor", comment)
     }
 
     val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
 
     // from Todo to Comment
     schema should containMutation("createTodo(data: TodoCreateInput!): Todo!")
-    schema should containInputType("TodoCreateInput",
-                                   fields = Vector(
-                                     "title: String!",
-                                     "tag: String",
-                                     "comments: CommentCreateManyWithoutTodoInput"
-                                   ))
+    schema should containInputType(
+      "TodoCreateInput",
+      fields = Vector(
+        "title: String!",
+        "tag: String",
+        "comments: CommentCreateManyWithoutTodoInput",
+        "topComment: CommentCreateOneWithoutTodoInput!"
+      )
+    )
 
     schema should containInputType("CommentCreateManyWithoutTodoInput",
                                    fields = Vector(
