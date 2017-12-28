@@ -1,7 +1,13 @@
 package cool.graph.deploy.migration
 
-import akka.actor.Actor
+import akka.actor.{Actor, ActorRef}
 import cool.graph.shared.models.Migration
+import akka.actor.Stash
+import cool.graph.messagebus.PubSub
+
+import scala.collection.mutable
+import scala.concurrent.Future
+import scala.util.{Failure, Success}
 
 trait Migrator {
   def schedule(migration: Migration): Unit
@@ -27,31 +33,60 @@ trait Migrator {
 //
 //- LastRevisionSeen as a safety net, no need to query really, just during init
 
-
 // Q: Are messages that are not matched discarded? How to store these? Look at the pattern
-object Initialized
+object Initialize
+case class InitializationFailed(err: Throwable)
 
-case class DeploymentSchedulerActor(projectID: String, var lastRevision: Int) extends Actor {
-  // Watches child actors and restarts if necessary
+object Ready
+
+case class Schedule(migration: Migration)
+
+case class DeploymentSchedulerActor(pubSub: PubSub[String]) extends Actor with Stash {
+  implicit val dispatcher = context.system.dispatcher
+  val projectWorkers      = new mutable.HashMap[String, ActorRef]()
+
   // Spins up new project deployment actors if a new one arrives
   // Signals deployment actors of new deployments
   //    - PubSub?
   // Enhancement(s): In the shared cluster we might face issues with too many project actors / high overhead during bootup
   //    - We could have a last active timestamp or something and if a limit is reached we reap project actors.
-  //    - Only load project actors with unapplied migrations
 
-  // Init -> become receive pattern
+  def receive: Receive = {
+    case Initialize =>
+      initialize().onComplete {
+        case Success(_) =>
+          println("Deployment worker initialization complete.")
+          sender() ! Ready
+          context.become(ready)
+          unstashAll()
 
-  def receive = ???
+        case Failure(err) =>
+          println(s"Deployment worker initialization failed with: $err")
+          sender() ! InitializationFailed(err)
+          context.stop(self)
+      }
+
+    case _ =>
+      stash()
+  }
+
+  def ready: Receive = {
+    case Schedule(migration) =>
+  }
+
+  def initialize(): Future[Unit] = {
+    // Watch child actors and restarts if necessary
+    // Load project actors for unapplied migration projects
+    //
+
+    ???
+  }
 }
 
-case class ProjectDeploymentActor() extends Actor {
+case class ProjectDeploymentActor(projectID: String, var lastRevision: Int) extends Actor {
   // Loads last unapplied / applied migration
   // Inactive until signal
   // Possible enhancement: Periodically scan the DB for migrations if signal was lost?
 
   def receive = ???
 }
-
-case class Schedule(migration: Migration)
-case class

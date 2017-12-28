@@ -1,22 +1,5 @@
 import sbt._
 
-//object Dependencies {
-//  import DependenciesNew._
-//
-//
-//
-//  val apiServer    = Seq.empty
-//  val clientShared = Seq(scalaTest)
-//  val java8Compat = "org.scala-lang.modules"        %% "scala-java8-compat" % "0.7.0"
-//
-//  val awsDependencies = Seq(
-//    "com.amazonaws" % "aws-java-sdk-kinesis"    % "1.11.171",
-//    "com.amazonaws" % "aws-java-sdk-s3"         % "1.11.171",
-//    "com.amazonaws" % "aws-java-sdk-cloudwatch" % "1.11.171",
-//    "com.amazonaws" % "aws-java-sdk-sns"        % "1.11.171"
-//  )
-//}
-
 object Dependencies {
   object v {
     val sangria     = "1.3.3"
