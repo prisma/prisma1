@@ -10,24 +10,34 @@ case class ArgumentsBuilder(project: Project) {
 
   implicit val anyFromInput = FromInputImplicit.CoercedResultMarshaller
 
-  def getSangriaArgumentsForCreate(model: Model): List[Argument[Any]] = {
-    val inputObjectType = inputTypesBuilder.inputObjectTypeForCreate(model)
-    List(Argument[Any]("data", inputObjectType))
+  def getSangriaArgumentsForCreate(model: Model): Option[List[Argument[Any]]] = {
+    inputTypesBuilder.inputObjectTypeForCreate(model).map { args =>
+      List(Argument[Any]("data", args))
+    }
   }
 
   def getSangriaArgumentsForUpdate(model: Model): Option[List[Argument[Any]]] = {
-    val inputObjectType = inputTypesBuilder.inputObjectTypeForUpdate(model)
-    whereUniqueArgument(model).map { whereArg =>
-      List(Argument[Any]("data", inputObjectType), whereArg)
+    for {
+      whereArg <- whereUniqueArgument(model)
+      dataArg  <- inputTypesBuilder.inputObjectTypeForUpdate(model)
+    } yield {
+      List(
+        Argument[Any]("data", dataArg),
+        whereArg
+      )
     }
   }
 
   def getSangriaArgumentsForUpsert(model: Model): Option[List[Argument[Any]]] = {
-    whereUniqueArgument(model).map { whereArg =>
+    for {
+      whereArg  <- whereUniqueArgument(model)
+      createArg <- inputTypesBuilder.inputObjectTypeForCreate(model)
+      updateArg <- inputTypesBuilder.inputObjectTypeForUpdate(model)
+    } yield {
       List(
         whereArg,
-        Argument[Any]("create", inputTypesBuilder.inputObjectTypeForCreate(model)),
-        Argument[Any]("update", inputTypesBuilder.inputObjectTypeForUpdate(model))
+        Argument[Any]("create", createArg),
+        Argument[Any]("update", updateArg)
       )
     }
   }
@@ -36,12 +46,13 @@ case class ArgumentsBuilder(project: Project) {
     whereUniqueArgument(model).map(List(_))
   }
 
-  def getSangriaArgumentsForUpdateMany(model: Model): List[Argument[Any]] = {
-    val inputObjectType = inputTypesBuilder.inputObjectTypeForUpdate(model)
-    List(
-      Argument[Any]("data", inputObjectType),
-      whereArgument(model)
-    )
+  def getSangriaArgumentsForUpdateMany(model: Model): Option[List[Argument[Any]]] = {
+    inputTypesBuilder.inputObjectTypeForUpdate(model).map { updateArg =>
+      List(
+        Argument[Any]("data", updateArg),
+        whereArgument(model)
+      )
+    }
   }
 
   def getSangriaArgumentsForDeleteMany(model: Model): List[Argument[Any]] = List(whereArgument(model))

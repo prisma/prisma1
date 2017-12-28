@@ -67,7 +67,7 @@ case class SchemaBuilderImpl(
       project.models.flatMap(updateItemField) ++
       project.models.flatMap(deleteItemField) ++
       project.models.flatMap(upsertItemField) ++
-      project.models.map(updateManyField) ++
+      project.models.flatMap(updateManyField) ++
       project.models.map(deleteManyField) ++
       List(resetDataField)
 
@@ -126,7 +126,7 @@ case class SchemaBuilderImpl(
     Field(
       s"create${model.name}",
       fieldType = outputTypesBuilder.mapCreateOutputType(model, objectTypes(model.name)),
-      arguments = argumentsBuilder.getSangriaArgumentsForCreate(model),
+      arguments = argumentsBuilder.getSangriaArgumentsForCreate(model).getOrElse(List.empty),
       resolve = (ctx) => {
         val mutation       = Create(model = model, project = project, args = ctx.args, dataResolver = masterDataResolver)
         val mutationResult = ClientMutationRunner.run(mutation, dataResolver)
@@ -151,17 +151,19 @@ case class SchemaBuilderImpl(
     }
   }
 
-  def updateManyField(model: Model): Field[ApiUserContext, Unit] = {
-    Field(
-      s"updateMany${pluralsCache.pluralName(model)}",
-      fieldType = objectTypeBuilder.batchPayloadType,
-      arguments = argumentsBuilder.getSangriaArgumentsForUpdateMany(model),
-      resolve = (ctx) => {
-        val where    = objectTypeBuilder.extractRequiredFilterFromContext(model, ctx)
-        val mutation = UpdateMany(project, model, ctx.args, where, dataResolver = masterDataResolver)
-        ClientMutationRunner.run(mutation, dataResolver)
-      }
-    )
+  def updateManyField(model: Model): Option[Field[ApiUserContext, Unit]] = {
+    argumentsBuilder.getSangriaArgumentsForUpdateMany(model).map { args =>
+      Field(
+        s"updateMany${pluralsCache.pluralName(model)}",
+        fieldType = objectTypeBuilder.batchPayloadType,
+        arguments = args,
+        resolve = (ctx) => {
+          val where    = objectTypeBuilder.extractRequiredFilterFromContext(model, ctx)
+          val mutation = UpdateMany(project, model, ctx.args, where, dataResolver = masterDataResolver)
+          ClientMutationRunner.run(mutation, dataResolver)
+        }
+      )
+    }
   }
 
   def upsertItemField(model: Model): Option[Field[ApiUserContext, Unit]] = {

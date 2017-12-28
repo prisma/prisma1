@@ -5,9 +5,9 @@ import cool.graph.shared.models.{Field, Model, Project, Relation}
 import sangria.schema.{InputField, InputObjectType, InputType, ListInputType, OptionInputType}
 
 trait InputTypesBuilder {
-  def inputObjectTypeForCreate(model: Model, omitRelation: Option[Relation] = None): InputObjectType[Any]
+  def inputObjectTypeForCreate(model: Model, omitRelation: Option[Relation] = None): Option[InputObjectType[Any]]
 
-  def inputObjectTypeForUpdate(model: Model): InputObjectType[Any]
+  def inputObjectTypeForUpdate(model: Model): Option[InputObjectType[Any]]
 
   def inputObjectTypeForWhereUnique(model: Model): Option[InputObjectType[Any]]
 
@@ -17,15 +17,15 @@ trait InputTypesBuilder {
 case class CachedInputTypesBuilder(project: Project) extends UncachedInputTypesBuilder(project) {
   import java.lang.{StringBuilder => JStringBuilder}
 
-  val cache = Cache.unbounded[String, InputObjectType[Any]]()
+  val cache = Cache.unbounded[String, Option[InputObjectType[Any]]]()
 
-  override def inputObjectTypeForCreate(model: Model, omitRelation: Option[Relation]): InputObjectType[Any] = {
+  override def inputObjectTypeForCreate(model: Model, omitRelation: Option[Relation]): Option[InputObjectType[Any]] = {
     cache.getOrUpdate(cacheKey("cachedInputObjectTypeForCreate", model, omitRelation), { () =>
       computeInputObjectTypeForCreate(model, omitRelation)
     })
   }
 
-  override def inputObjectTypeForUpdate(model: Model): InputObjectType[Any] = {
+  override def inputObjectTypeForUpdate(model: Model): Option[InputObjectType[Any]] = {
     cache.getOrUpdate(cacheKey("cachedInputObjectTypeForUpdate", model), { () =>
       computeInputObjectTypeForUpdate(model)
     })
@@ -33,6 +33,7 @@ case class CachedInputTypesBuilder(project: Project) extends UncachedInputTypesB
 
   private def cacheKey(name: String, model: Model, relation: Option[Relation] = None): String = {
     val sb = new JStringBuilder()
+
     sb.append(name)
     sb.append(model.id)
     sb.append(relation.orNull)
@@ -41,11 +42,11 @@ case class CachedInputTypesBuilder(project: Project) extends UncachedInputTypesB
 }
 
 abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBuilder {
-  override def inputObjectTypeForCreate(model: Model, omitRelation: Option[Relation]): InputObjectType[Any] = {
+  override def inputObjectTypeForCreate(model: Model, omitRelation: Option[Relation]): Option[InputObjectType[Any]] = {
     computeInputObjectTypeForCreate(model, omitRelation)
   }
 
-  override def inputObjectTypeForUpdate(model: Model): InputObjectType[Any] = {
+  override def inputObjectTypeForUpdate(model: Model): Option[InputObjectType[Any]] = {
     computeInputObjectTypeForUpdate(model)
   }
 
@@ -57,7 +58,7 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
     computeInputObjectTypeForWhere(model)
   }
 
-  protected def computeInputObjectTypeForCreate(model: Model, omitRelation: Option[Relation]): InputObjectType[Any] = {
+  protected def computeInputObjectTypeForCreate(model: Model, omitRelation: Option[Relation]): Option[InputObjectType[Any]] = {
     val inputObjectTypeName = omitRelation match {
       case None =>
         s"${model.name}CreateInput"
@@ -67,21 +68,33 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
         s"${model.name}CreateWithout${field.name.capitalize}Input"
     }
 
-    InputObjectType[Any](
-      name = inputObjectTypeName,
-      fieldsFn = () => {
-        computeScalarInputFieldsForCreate(model) ++ computeRelationalInputFieldsForCreate(model, omitRelation)
-      }
-    )
+    val fields = computeScalarInputFieldsForCreate(model) ++ computeRelationalInputFieldsForCreate(model, omitRelation)
+
+    if (fields.nonEmpty) {
+      Some(
+        InputObjectType[Any](
+          name = inputObjectTypeName,
+          fieldsFn = () => { fields }
+        )
+      )
+    } else {
+      None
+    }
   }
 
-  protected def computeInputObjectTypeForUpdate(model: Model): InputObjectType[Any] = {
-    InputObjectType[Any](
-      name = s"${model.name}UpdateInput",
-      fieldsFn = () => {
-        computeScalarInputFieldsForUpdate(model) ++ computeRelationalInputFieldsForUpdate(model, omitRelation = None)
-      }
-    )
+  protected def computeInputObjectTypeForUpdate(model: Model): Option[InputObjectType[Any]] = {
+    val fields = computeScalarInputFieldsForUpdate(model) ++ computeRelationalInputFieldsForUpdate(model, omitRelation = None)
+
+    if (fields.nonEmpty) {
+      Some(
+        InputObjectType[Any](
+          name = s"${model.name}UpdateInput",
+          fieldsFn = () => { fields }
+        )
+      )
+    } else {
+      None
+    }
   }
 
   protected def computeInputObjectTypeForNestedUpdate(model: Model, omitRelation: Relation): Option[InputObjectType[Any]] = {
@@ -103,6 +116,7 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
 
   protected def computeInputObjectTypeForNestedUpdateData(model: Model, omitRelation: Relation): InputObjectType[Any] = {
     val field = omitRelation.getField_!(project, model)
+
     InputObjectType[Any](
       name = s"${model.name}UpdateWithout${field.name.capitalize}DataInput",
       fieldsFn = () => {
@@ -114,17 +128,19 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
   protected def computeInputObjectTypeForNestedUpsert(model: Model, omitRelation: Relation): Option[InputObjectType[Any]] = {
     val field = omitRelation.getField_!(project, model)
 
-    computeInputObjectTypeForWhereUnique(model).map { whereArg =>
-      InputObjectType[Any](
-        name = s"${model.name}UpsertWithout${field.name.capitalize}Input",
-        fieldsFn = () => {
-          List(
-            InputField[Any]("where", whereArg),
-            InputField[Any]("update", computeInputObjectTypeForNestedUpdateData(model, omitRelation)),
-            InputField[Any]("create", computeInputObjectTypeForCreate(model, Some(omitRelation)))
-          )
-        }
-      )
+    computeInputObjectTypeForWhereUnique(model).flatMap { whereArg =>
+      computeInputObjectTypeForCreate(model, Some(omitRelation)).map { createArg =>
+        InputObjectType[Any](
+          name = s"${model.name}UpsertWithout${field.name.capitalize}Input",
+          fieldsFn = () => {
+            List(
+              InputField[Any]("where", whereArg),
+              InputField[Any]("update", computeInputObjectTypeForNestedUpdateData(model, omitRelation)),
+              InputField[Any]("create", createArg)
+            )
+          }
+        )
+      }
     }
   }
 
@@ -132,6 +148,7 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
 
   protected def computeInputObjectTypeForWhereUnique(model: Model): Option[InputObjectType[Any]] = {
     val uniqueFields = model.fields.filter(f => f.isUnique && f.isVisible)
+
     if (uniqueFields.isEmpty) {
       None
     } else {
@@ -183,7 +200,7 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
         val inputObjectType = InputObjectType[Any](
           name = inputObjectTypeName,
           fieldsFn = () =>
-            List(nestedCreateInputField(field)) ++
+            nestedCreateInputField(field).toList ++
               nestedConnectInputField(field) ++
               nestedDisconnectInputField(field) ++
               nestedDeleteInputField(field) ++
@@ -212,8 +229,9 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
       } else {
         val inputObjectType = InputObjectType[Any](
           name = inputObjectTypeName,
-          fieldsFn = () => List(nestedCreateInputField(field)) ++ nestedConnectInputField(field)
+          fieldsFn = () => nestedCreateInputField(field).toList ++ nestedConnectInputField(field)
         )
+
         Some(InputField[Any](field.name, OptionInputType(inputObjectType)))
       }
     }
@@ -231,16 +249,16 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
     inputType.map(x => InputField[Any]("update", x))
   }
 
-  def nestedCreateInputField(field: Field): InputField[Any] = {
+  def nestedCreateInputField(field: Field): Option[InputField[Any]] = {
     val subModel = field.relatedModel_!(project)
     val relation = field.relation.get
     val inputType = if (field.isList) {
-      OptionInputType(ListInputType(inputObjectTypeForCreate(subModel, Some(relation))))
+      inputObjectTypeForCreate(subModel, Some(relation)).map(x => OptionInputType(ListInputType(x)))
     } else {
-      OptionInputType(inputObjectTypeForCreate(subModel, Some(relation)))
+      inputObjectTypeForCreate(subModel, Some(relation)).map(x => OptionInputType(x))
     }
 
-    InputField[Any]("create", inputType)
+    inputType.map(x => InputField[Any]("create", x))
   }
 
   def nestedUpsertInputField(field: Field): Option[InputField[Any]] = {
