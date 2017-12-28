@@ -17,6 +17,7 @@ actualBranch := {
   if (branch != "master"){
     sys.props += "project.version" -> s"$branch-SNAPSHOT"
   }
+
   branch
 }
 

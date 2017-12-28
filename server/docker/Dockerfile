@@ -2,6 +2,7 @@
 # Adapted from https://github.com/hseeberger/scala-sbt
 # Changes:
 #   - Pinned scala version to 2.12.3 instead of 2.12.4
+#   - Added docker to installation
 #
 # Docker image responsible for building Graphcool service images.
 #
@@ -31,6 +32,8 @@ RUN \
   apt-get update && \
   apt-get install sbt && \
   sbt sbtVersion
+
+RUN curl -sSL https://get.docker.com/ | sh
 
 # Define working directory
 WORKDIR /root
