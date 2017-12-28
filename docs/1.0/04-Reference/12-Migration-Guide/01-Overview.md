@@ -3,6 +3,8 @@ alias: koo7shaino
 description: Overview
 ---
 
+## Graphcool evolution
+
 Graphcool has evolved quite a bit since it first went live. Here is an overview of its three major phases:
 
 - **Graphcool Backend-as-a-Service**: The initial product of Graphcool was a "BaaS for GraphQL". In that version, an entire backend is configured through the web-based GUI of the Graphcool Console, including the integration of serverless functions and features like authentication and 3rd party integrations.
@@ -14,3 +16,21 @@ Graphcool has evolved quite a bit since it first went live. Here is an overview 
 To learn more about the migration from the BaaS to the Graphcool Framework, you can check out the previous [upgrade guide](!alias-aemieb1aev).
 
 </InfoBox>
+
+## Migrating to 1.0
+
+### New architecture: Your GraphQL server uses Graphcool as a data store
+
+The core idea of Graphcool 1.0 is to use an additional GraphQL server that uses Graphcool as a data store. The easiest way to build this GraphQL server is using `graphql-yoga`. When implementing the resolvers for this GraphQL server, you can use schema bindings and the `graphcool-binding` package to conventiently forward incoming queries to Graphcool.
+
+### The GraphQL server takes over implementation of business logic and auth workflows
+
+Another important change in Graphcool 1.0 is that it is not possible to integrate any serverless functions directly with your Graphcool service any more. Instead, functionality you previously would have implemented with [resolvers](!alias-su6wu3yoo2) or [hooks](!alias-pa6guruhaf) now goes into your GraphQL server directly. This gives a lot more flexibility and caters a higher number of and overall more advanced use cases.
+
+This includes functionality for authentication and permissions which were previously handled by the Graphcool Framework directly. Another piece of logic many applications are dealing with, file handling, is moved into the GraphQL server as well.
+
+### Hosting your GraphQL server
+
+As Graphcool 1.0 is only the "database" component in your server architecture, you need to host the GraphQL server yourself.
+
+A quick and easy way to deploy your GraphQL server is using [Now](https://zeit.co/now).
