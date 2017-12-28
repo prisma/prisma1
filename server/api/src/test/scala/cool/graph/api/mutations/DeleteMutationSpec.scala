@@ -62,6 +62,17 @@ class DeleteMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
     server.executeQuerySimple(s"""query {scalarModels{unicorn}}""", project = project, dataContains = s"""{"scalarModels":[{"unicorn":"a"}]}""")
   }
 
+  "A Delete Mutation" should "gracefully fail when trying to delete on null value for unique field" in {
+    server.executeQuerySimple(s"""mutation {createScalarModel(data: {unicorn: "a"}){id}}""", project = project)
+    server.executeQuerySimpleThatMustFail(
+      s"""mutation {deleteScalarModel(where: {unicorn: null}){unicorn}}""",
+      project = project,
+      errorCode = 3040,
+      errorContains = "You provided an invalid argument for the where selector on ScalarModel."
+    )
+    server.executeQuerySimple(s"""query {scalarModels{unicorn}}""", project = project, dataContains = s"""{"scalarModels":[{"unicorn":"a"}]}""")
+  }
+
   "A Delete Mutation" should "gracefully fail when referring to a non-unique field" in {
     server.executeQuerySimple(s"""mutation {createScalarModel(data: {string: "a"}){id}}""", project = project)
     server.executeQuerySimpleThatMustFail(
