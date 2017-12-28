@@ -9,6 +9,10 @@ The GraphQL API of your Graphcool database service API is consumed via HTTP. Dep
 
 In the following, we'll provide an overview of the different ways you can interface with the API.
 
+## Authentication
+
+TODO
+
 ## GraphQL Playground
 
 The [GraphQL Playground](https://github.com/graphcool/graphql-playground) can be used to explore and run GraphQL mutations, queries and subscriptions.
