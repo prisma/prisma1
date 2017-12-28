@@ -149,9 +149,14 @@ ${chalk.gray(
         (!interactive && newServiceClusterName) ||
         (await this.clusterSelection(serviceName, stage))
       cluster = this.env.clusterByName(clusterName)!
+      if (!cluster && clusterName === 'local') {
+        await this.localUp()
+      }
     }
 
-    this.env.setActiveCluster(cluster)
+    if (cluster) {
+      this.env.setActiveCluster(cluster)
+    }
 
     if (this.showedLines > 0) {
       this.out.up(this.showedLines)
