@@ -14,6 +14,13 @@ object GetFieldFromSQLUniqueException {
     }
   }
 
+  def getFieldOptionFromArgumentValueList(values: List[ArgumentValue], e: SQLIntegrityConstraintViolationException): Option[String] = {
+    values.filter(x => e.getCause.getMessage.contains("\'" + x.name + "_")) match {
+      case x if x.nonEmpty => Some("Field name = " + x.head.name)
+      case _               => None
+    }
+  }
+
   def getFieldFromCoolArgs(values: List[CoolArgs], e: SQLIntegrityConstraintViolationException): String = {
     val combinedValues: List[(String, Any)] = values.flatMap(_.raw)
     combinedValues.filter(x => e.getCause.getMessage.contains("\'" + x._1 + "_")) match {

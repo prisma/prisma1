@@ -5,7 +5,7 @@ import akka.stream.ActorMaterializer
 import cool.graph.api.ApiDependencies
 import cool.graph.api.database.DataResolver
 import cool.graph.api.database.mutactions.mutactions.CreateDataItem
-import cool.graph.api.database.mutactions.{MutactionGroup, Transaction}
+import cool.graph.api.database.mutactions.{MutactionGroup, TransactionMutaction}
 import cool.graph.api.mutations._
 import cool.graph.cuid.Cuid
 import cool.graph.gc_values.GraphQLIdGCValue
@@ -42,7 +42,7 @@ case class Create(
   def prepareMutactions(): Future[List[MutactionGroup]] = {
     val createMutactionsResult = SqlMutactions(dataResolver).getMutactionsForCreate(model, coolArgs, id)
 
-    val transactionMutaction = Transaction(createMutactionsResult.allMutactions.toList, dataResolver)
+    val transactionMutaction = TransactionMutaction(createMutactionsResult.allMutactions.toList, dataResolver)
     val createMutactions     = createMutactionsResult.allMutactions.collect { case x: CreateDataItem => x }
 
     val subscriptionMutactions = SubscriptionEvents.extractFromSqlMutactions(project, mutationId, createMutactionsResult.allMutactions)

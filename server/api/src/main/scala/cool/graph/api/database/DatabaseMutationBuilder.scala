@@ -79,12 +79,10 @@ object DatabaseMutationBuilder {
     val qInsert = createDataItemIfUniqueDoesNotExist(project, model, createArgs, where)
     val qUpdate = updateDataItemByUnique(project, model, updateArgs, where)
 
-    val actions = for {
+    for {
       exists <- q
       action <- if (exists.head) qUpdate else qInsert
     } yield action
-
-    actions.transactionally
   }
 
   def upsertIfInRelationWith(
@@ -102,12 +100,10 @@ object DatabaseMutationBuilder {
     val qInsert = createDataItem(project, model, createArgs)
     val qUpdate = updateDataItemByUnique(project, model, updateArgs, where)
 
-    val actions = for {
+    for {
       exists <- q
       action <- if (exists.head) qUpdate else qInsert
     } yield action
-
-    actions.transactionally
   }
 
   case class MirrorFieldDbValues(relationColumnName: String, modelColumnName: String, modelTableName: String, modelId: String)

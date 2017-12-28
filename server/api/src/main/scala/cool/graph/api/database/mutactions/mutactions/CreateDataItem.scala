@@ -3,7 +3,7 @@ package cool.graph.api.database.mutactions.mutactions
 import java.sql.SQLIntegrityConstraintViolationException
 
 import cool.graph.api.database.mutactions.validation.InputValueValidation
-import cool.graph.api.database.mutactions.{ClientSqlDataChangeMutaction, ClientSqlStatementResult, GetFieldFromSQLUniqueException, MutactionVerificationSuccess}
+import cool.graph.api.database.mutactions._
 import cool.graph.api.database.{DataResolver, DatabaseMutationBuilder, ProjectRelayId, ProjectRelayIdTable}
 import cool.graph.api.mutations.CoolArgs
 import cool.graph.api.mutations.MutationTypes.{ArgumentValue, ArgumentValueList}
@@ -67,8 +67,8 @@ case class CreateDataItem(
     implicit val anyFormat = JsonFormats.AnyJsonFormat
     Some({
       //https://dev.mysql.com/doc/refman/5.5/en/error-messages-server.html#error_er_dup_entry
-      case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1062 =>
-        APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldFromArgumentValueList(jsonCheckedValues, e))
+      case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1062 && GetFieldFromSQLUniqueException.getFieldOptionFromArgumentValueList(jsonCheckedValues, e).isDefined=>
+        APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOptionFromArgumentValueList(jsonCheckedValues, e).get)
       case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1452 =>
         APIErrors.NodeDoesNotExist("")
     })

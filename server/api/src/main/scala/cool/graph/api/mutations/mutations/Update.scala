@@ -4,7 +4,7 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import cool.graph.api.ApiDependencies
 import cool.graph.api.database.mutactions.mutactions.ServerSideSubscription
-import cool.graph.api.database.mutactions.{ClientSqlMutaction, MutactionGroup, Transaction}
+import cool.graph.api.database.mutactions.{ClientSqlMutaction, MutactionGroup, TransactionMutaction}
 import cool.graph.api.database.{DataItem, DataResolver}
 import cool.graph.api.mutations._
 import cool.graph.api.schema.APIErrors
@@ -47,7 +47,7 @@ case class Update(
 
         val sqlMutactions: List[ClientSqlMutaction] = SqlMutactions(dataResolver).getMutactionsForUpdate(model, coolArgs, dataItem.id, validatedDataItem)
 
-        val transactionMutaction = Transaction(sqlMutactions, dataResolver)
+        val transactionMutaction = TransactionMutaction(sqlMutactions, dataResolver)
 
         val subscriptionMutactions = SubscriptionEvents.extractFromSqlMutactions(project, mutationId, sqlMutactions).toList
 

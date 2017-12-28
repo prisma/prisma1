@@ -3,7 +3,7 @@ package cool.graph.api.mutations.mutations
 import cool.graph.api.ApiDependencies
 import cool.graph.api.database.DataResolver
 import cool.graph.api.database.mutactions.mutactions.UpsertDataItem
-import cool.graph.api.database.mutactions.{MutactionGroup, Transaction}
+import cool.graph.api.database.mutactions.{MutactionGroup, TransactionMutaction}
 import cool.graph.api.mutations._
 import cool.graph.cuid.Cuid
 import cool.graph.gc_values.GraphQLIdGCValue
@@ -30,7 +30,7 @@ case class Upsert(
   val idOfNewItem = upsert.idOfNewItem
 
   override def prepareMutactions(): Future[List[MutactionGroup]] = {
-    val transaction = Transaction(List(upsert), dataResolver)
+    val transaction = TransactionMutaction(List(upsert), dataResolver)
     Future.successful(List(MutactionGroup(List(transaction), async = false)))
   }
 
