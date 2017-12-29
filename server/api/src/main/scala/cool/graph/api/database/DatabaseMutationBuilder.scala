@@ -435,8 +435,7 @@ object DatabaseMutationBuilder {
       case TypeIdentifier.Enum      => "varchar(191)"
       case TypeIdentifier.Json      => "mediumtext"
       case TypeIdentifier.DateTime  => "datetime(3)"
-      case TypeIdentifier.Relation =>
-        sys.error("Relation is not a scalar type. Are you trying to create a db column for a relation?")
+      case TypeIdentifier.Relation  => sys.error("Relation is not a scalar type. Are you trying to create a db column for a relation?")
     }
   }
 

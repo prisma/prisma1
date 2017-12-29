@@ -231,8 +231,9 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
           name = inputObjectTypeName,
           fieldsFn = () => nestedCreateInputField(field).toList ++ nestedConnectInputField(field)
         )
+        val possiblyRequired = if (field.isRequired) { inputObjectType } else { OptionInputType(inputObjectType) }
 
-        Some(InputField[Any](field.name, OptionInputType(inputObjectType)))
+        Some(InputField[Any](field.name, possiblyRequired))
       }
     }
   }
