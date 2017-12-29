@@ -270,178 +270,177 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
 //fail cases not yet implemented in the way we want it therefore these tests are commented out
 
-//
-//  "one2one relation both exist and are not connected" should "fail completely" in {
-//    val project = SchemaDsl() { schema =>
-//      val note = schema.model("Note").field("text", _.String, isUnique = true)
-//      schema.model("Todo").field_!("title", _.String, isUnique = true).oneToOneRelation("note", "todo", note)
-//    }
-//    database.setup(project)
-//
-//    val createResult = server.executeQuerySimple(
-//      """mutation {
-//        |  createNote(
-//        |    data: {
-//        |      text: "FirstUnique"
-//        |      todo: {
-//        |        create: { title: "the title" }
-//        |      }
-//        |    }
-//        |  ){
-//        |    id
-//        |  }
-//        |}""".stripMargin,
-//      project
-//    )
-//
-//    server.executeQuerySimple("""mutation {createNote(data: {text: "SecondUnique"}){id}}""", project)
-//
-//    val result = server.executeQuerySimple(
-//      s"""
-//         |mutation {
-//         |  updateNote(
-//         |    where: {
-//         |      text: "SecondUnique"
-//         |    }
-//         |    data: {
-//         |      todo: {
-//         |        delete: {title: "the title"}
-//         |      }
-//         |    }
-//         |  ){
-//         |    todo {
-//         |      title
-//         |    }
-//         |  }
-//         |}
-//      """.stripMargin,
-//      project
-//    )
-//    mustBeEqual(result.pathAsJsValue("data.updateNote").toString, """{"todo":null}""")
-//
-//    val query = server.executeQuerySimple("""{ todoes { title }}""", project)
-//    mustBeEqual(query.toString, """{"data":{"todoes":[{"title":"the title"}]}}""")
-//
-//    val query2 = server.executeQuerySimple("""{ notes { text }}""", project)
-//    mustBeEqual(query2.toString, """{"data":{"notes":[{"text":"FirstUnique"},{"text":"SecondUnique"}]}}""")
-//  }
-//
-//
-//  "a one to one relation" should "not do a nested delete by id if the nodes are not connected" in {
-//    val project = SchemaDsl() { schema =>
-//      val note = schema.model("Note").field("text", _.String)
-//      schema.model("Todo").field_!("title", _.String).oneToOneRelation("note", "todo", note)
-//    }
-//    database.setup(project)
-//
-//    val createResult = server.executeQuerySimple(
-//      """mutation {
-//        |  createNote(
-//        |    data: {
-//        |      text: "Note"
-//        |      todo: {
-//        |        create: { title: "the title" }
-//        |      }
-//        |    }
-//        |  ){
-//        |    id
-//        |    todo { id }
-//        |  }
-//        |}""".stripMargin,
-//      project
-//    )
-//    val noteId = createResult.pathAsString("data.createNote.id")
-//    val todoId = createResult.pathAsString("data.createNote.todo.id")
-//
-//    val todoId2 = server.executeQuerySimple("""mutation {createTodo(data: { title: "the title2" }){id}}""", project).pathAsString("data.createTodo.id")
-//
-//    val result = server.executeQuerySimple(
-//      s"""
-//         |mutation {
-//         |  updateNote(
-//         |    where: {
-//         |      id: "$noteId"
-//         |    }
-//         |    data: {
-//         |      todo: {
-//         |        delete: {id: "$todoId2"}
-//         |      }
-//         |    }
-//         |  ){
-//         |    todo {
-//         |      title
-//         |    }
-//         |  }
-//         |}
-//      """.stripMargin,
-//      project
-//    )
-//    mustBeEqual(result.pathAsJsValue("data.updateNote").toString, """{"todo":null}""")
-//
-//    val query = server.executeQuerySimple("""{ todoes { title }}""", project)
-//    mustBeEqual(query.toString, """{"data":{"todoes":[{"title":"the title"}]}}""")
-//
-//    val query2 = server.executeQuerySimple("""{ notes { text }}""", project)
-//    mustBeEqual(query2.toString, """{"data":{"notes":[{"text":"FirstUnique"},{"text":"SecondUnique"}]}}""")
-//  }
-//
-//  "a one to one relation" should "not do a nested delete by id if the nested node does not exist" in {
-//    val project = SchemaDsl() { schema =>
-//      val note = schema.model("Note").field("text", _.String)
-//      schema.model("Todo").field_!("title", _.String).oneToOneRelation("note", "todo", note)
-//    }
-//    database.setup(project)
-//
-//
-//
-//
-//    val createResult = server.executeQuerySimple(
-//      """mutation {
-//        |  createNote(
-//        |    data: {
-//        |      text: "Note"
-//        |      todo: {
-//        |        create: { title: "the title" }
-//        |      }
-//        |    }
-//        |  ){
-//        |    id
-//        |    todo { id }
-//        |  }
-//        |}""".stripMargin,
-//      project
-//    )
-//    val noteId = createResult.pathAsString("data.createNote.id")
-//    val todoId = createResult.pathAsString("data.createNote.todo.id")
-//
-//    val todoId2 = server.executeQuerySimple("""mutation {createTodo(data: { title: "the title2" }){id}}""", project).pathAsString("data.createTodo.id")
-//
-//    val result = server.executeQuerySimple(
-//      s"""
-//         |mutation {
-//         |  updateNote(
-//         |    where: {id: "$noteId"}
-//         |    data: {
-//         |      todo: {
-//         |        delete: {id: "DOES NOT EXISTS"}
-//         |        create::
-//         |      }
-//         |    }
-//         |  ){
-//         |    todo {
-//         |      title
-//         |    }
-//         |  }
-//         |}
-//      """.stripMargin,
-//      project
-//    )
-//    mustBeEqual(result.pathAsJsValue("data.updateNote").toString, """{"todo":null}""")
-//
-//    val query = server.executeQuerySimple("""{ todoes { title }}""", project)
-//    mustBeEqual(query.toString, """{"data":{"todoes":[{"title":"the title"}]}}""")
-//
-//    val query2 = server.executeQuerySimple("""{ notes { text }}""", project)
-//    mustBeEqual(query2.toString, """{"data":{"notes":[{"text":"FirstUnique"},{"text":"SecondUnique"}]}}""")
-//  }
+
+  "one2one relation both exist and are not connected" should "fail completely" in {
+    val project = SchemaDsl() { schema =>
+      val note = schema.model("Note").field("text", _.String, isUnique = true)
+      schema.model("Todo").field_!("title", _.String, isUnique = true).oneToOneRelation("note", "todo", note)
+    }
+    database.setup(project)
+
+    val createResult = server.executeQuerySimple(
+      """mutation {
+        |  createNote(
+        |    data: {
+        |      text: "FirstUnique"
+        |      todo: {
+        |        create: { title: "the title" }
+        |      }
+        |    }
+        |  ){
+        |    id
+        |  }
+        |}""".stripMargin,
+      project
+    )
+
+    server.executeQuerySimple("""mutation {createNote(data: {text: "SecondUnique"}){id}}""", project)
+
+    val result = server.executeQuerySimple(
+      s"""
+         |mutation {
+         |  updateNote(
+         |    where: {
+         |      text: "SecondUnique"
+         |    }
+         |    data: {
+         |      todo: {
+         |        delete: {title: "the title"}
+         |      }
+         |    }
+         |  ){
+         |    todo {
+         |      title
+         |    }
+         |  }
+         |}
+      """.stripMargin,
+      project
+    )
+    mustBeEqual(result.pathAsJsValue("data.updateNote").toString, """{"todo":null}""")
+
+    val query = server.executeQuerySimple("""{ todoes { title }}""", project)
+    mustBeEqual(query.toString, """{"data":{"todoes":[{"title":"the title"}]}}""")
+
+    val query2 = server.executeQuerySimple("""{ notes { text }}""", project)
+    mustBeEqual(query2.toString, """{"data":{"notes":[{"text":"FirstUnique"},{"text":"SecondUnique"}]}}""")
+  }
+
+
+  "a one to one relation" should "not do a nested delete by id if the nodes are not connected" in {
+    val project = SchemaDsl() { schema =>
+      val note = schema.model("Note").field("text", _.String)
+      schema.model("Todo").field_!("title", _.String).oneToOneRelation("note", "todo", note)
+    }
+    database.setup(project)
+
+    val createResult = server.executeQuerySimple(
+      """mutation {
+        |  createNote(
+        |    data: {
+        |      text: "Note"
+        |      todo: {
+        |        create: { title: "the title" }
+        |      }
+        |    }
+        |  ){
+        |    id
+        |    todo { id }
+        |  }
+        |}""".stripMargin,
+      project
+    )
+    val noteId = createResult.pathAsString("data.createNote.id")
+    val todoId = createResult.pathAsString("data.createNote.todo.id")
+
+    val todoId2 = server.executeQuerySimple("""mutation {createTodo(data: { title: "the title2" }){id}}""", project).pathAsString("data.createTodo.id")
+
+    val result = server.executeQuerySimple(
+      s"""
+         |mutation {
+         |  updateNote(
+         |    where: {
+         |      id: "$noteId"
+         |    }
+         |    data: {
+         |      todo: {
+         |        delete: {id: "$todoId2"}
+         |      }
+         |    }
+         |  ){
+         |    todo {
+         |      title
+         |    }
+         |  }
+         |}
+      """.stripMargin,
+      project
+    )
+    mustBeEqual(result.pathAsJsValue("data.updateNote").toString, """{"todo":null}""")
+
+    val query = server.executeQuerySimple("""{ todoes { title }}""", project)
+    mustBeEqual(query.toString, """{"data":{"todoes":[{"title":"the title"}]}}""")
+
+    val query2 = server.executeQuerySimple("""{ notes { text }}""", project)
+    mustBeEqual(query2.toString, """{"data":{"notes":[{"text":"FirstUnique"},{"text":"SecondUnique"}]}}""")
+  }
+
+  "a one to one relation" should "not do a nested delete by id if the nested node does not exist" in {
+    val project = SchemaDsl() { schema =>
+      val note = schema.model("Note").field("text", _.String)
+      schema.model("Todo").field_!("title", _.String).oneToOneRelation("note", "todo", note)
+    }
+    database.setup(project)
+
+
+
+
+    val createResult = server.executeQuerySimple(
+      """mutation {
+        |  createNote(
+        |    data: {
+        |      text: "Note"
+        |      todo: {
+        |        create: { title: "the title" }
+        |      }
+        |    }
+        |  ){
+        |    id
+        |    todo { id }
+        |  }
+        |}""".stripMargin,
+      project
+    )
+    val noteId = createResult.pathAsString("data.createNote.id")
+    val todoId = createResult.pathAsString("data.createNote.todo.id")
+
+    val todoId2 = server.executeQuerySimple("""mutation {createTodo(data: { title: "the title2" }){id}}""", project).pathAsString("data.createTodo.id")
+
+    val result = server.executeQuerySimple(
+      s"""
+         |mutation {
+         |  updateNote(
+         |    where: {id: "$noteId"}
+         |    data: {
+         |      todo: {
+         |        delete: {id: "DOES NOT EXISTS"}
+         |      }
+         |    }
+         |  ){
+         |    todo {
+         |      title
+         |    }
+         |  }
+         |}
+      """.stripMargin,
+      project
+    )
+    mustBeEqual(result.pathAsJsValue("data.updateNote").toString, """{"todo":null}""")
+
+    val query = server.executeQuerySimple("""{ todoes { title }}""", project)
+    mustBeEqual(query.toString, """{"data":{"todoes":[{"title":"the title"}]}}""")
+
+    val query2 = server.executeQuerySimple("""{ notes { text }}""", project)
+    mustBeEqual(query2.toString, """{"data":{"notes":[{"text":"FirstUnique"},{"text":"SecondUnique"}]}}""")
+  }
 }

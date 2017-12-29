@@ -58,6 +58,18 @@ object DatabaseMutationBuilder {
       sql"where `#${where.fieldName}` = ${where.fieldValue};").asUpdate
   }
 
+  def whereFailureTrigger(project: Project, where: NodeSelector) = {
+    (sql"select case" ++
+    sql"when exists" ++
+      sql"(select *" ++
+      sql"from `#${project.id}`.`#${where.model.name}`" ++
+      sql"where `#${where.fieldName}` = ${where.fieldValue})" ++
+      sql"then 1" ++
+      sql"else (select table_name" ++
+      sql"from information_schema.tables)end;").as[Int]
+    //++sql"where table_schema = `#${project.id}`.`#${where.model.name}`)end;"
+  }
+
   def deleteDataItems(project: Project, model: Model, where: DataItemFilterCollection) = {
     val whereSql = QueryArguments.generateFilterConditions(project.id, model.name, where)
     (sql"delete from `#${project.id}`.`#${model.name}`" ++ prefixIfNotNone("where", whereSql)).asUpdate

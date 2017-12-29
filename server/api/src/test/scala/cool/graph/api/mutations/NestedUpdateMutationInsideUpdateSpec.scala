@@ -210,4 +210,118 @@ class NestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     )
     mustBeEqual(result.pathAsJsValue("data.updateNote.todo").toString, """{"title":"updated title"}""")
   }
+
+
+  "a one to one relation" should "fail gracefully on wrong where and assign error correctly and not execute partially" in {
+    val project = SchemaDsl() { schema =>
+      val note = schema.model("Note").field("text", _.String)
+      schema.model("Todo").field_!("title", _.String).oneToOneRelation("note", "todo", note)
+    }
+    database.setup(project)
+
+    val createResult = server.executeQuerySimple(
+      """mutation {
+        |  createNote(
+        |    data: {
+        |      text: "Some Text"
+        |      todo: {
+        |        create: { title: "the title" }
+        |      }
+        |    }
+        |  ){
+        |    id
+        |    todo { id }
+        |  }
+        |}""".stripMargin,
+      project
+    )
+    val noteId = createResult.pathAsString("data.createNote.id")
+    val todoId = createResult.pathAsString("data.createNote.todo.id")
+
+    val result = server.executeQuerySimple(
+      s"""
+         |mutation {
+         |  updateNote(
+         |    where: {
+         |      id: "$noteId"
+         |    }
+         |    data: {
+         |      text: "Some Changed Text"
+         |      todo: {
+         |        update: {
+         |          where: {id: "DOES NOT EXIST"},
+         |          data:{title: "updated title"}
+         |        }
+         |      }
+         |    }
+         |  ){
+         |    text
+         |    todo {
+         |      title
+         |    }
+         |  }
+         |}
+      """.stripMargin,
+      project
+    )
+    mustBeEqual(result.pathAsJsValue("data.updateNote.text").toString, """Some Text""")
+    mustBeEqual(result.pathAsJsValue("data.updateNote.todo").toString, """{"title":"the title"}""")
+  }
+
+  "a many to many relation" should "handle null in unique fields" in {
+    val project = SchemaDsl() { schema =>
+      val note = schema.model("Note").field("text", _.String, isUnique = true)
+      schema.model("Todo").field_!("title", _.String, isUnique = true).field("unique", _.String, isUnique = true).manyToManyRelation("notes", "todos", note)
+    }
+    database.setup(project)
+
+    val createResult = server.executeQuerySimple(
+      """mutation {
+        |  createNote(
+        |    data: {
+        |      text: "Some Text"
+        |      todos:
+        |      {
+        |       create: [{ title: "the title"},{ title: "the other title"}]
+        |      }
+        |    }
+        |  ){
+        |    id
+        |    todos { id }
+        |  }
+        |}""".stripMargin,
+      project
+    )
+
+
+    val result = server.executeQuerySimpleThatMustFail(
+      s"""
+         |mutation {
+         |  updateNote(
+         |    where: {
+         |      text: "Some Text"
+         |    }
+         |    data: {
+         |      text: "Some Changed Text"
+         |      todos: {
+         |        update: {
+         |          where: {unique: null},
+         |          data:{title: "updated title"}
+         |        }
+         |      }
+         |    }
+         |  ){
+         |    text
+         |    todos {
+         |      title
+         |    }
+         |  }
+         |}
+      """.stripMargin,
+      project,
+      errorCode = 3040,
+      errorContains = "You provided an invalid argument for the where selector on Todo."
+    )
+  }
+
 }
