@@ -187,6 +187,15 @@ lazy val api = serverProject("api")
     }
   )
 
+lazy val subscriptions = serverProject("subscriptions")
+  .dependsOn(api % "compile")
+  .settings(
+    libraryDependencies ++= Seq(
+      playJson,
+      akkaHttpPlayJson
+    )
+  )
+
 lazy val gcValues = libProject("gc-values")
   .settings(libraryDependencies ++= Seq(
     playJson,

@@ -52,6 +52,10 @@ object Dependencies {
   val akkaHttpTestKit   = "com.typesafe.akka" %% "akka-http-testkit"    % v.akkaHttp
   val akkaHttpSprayJson = "com.typesafe.akka" %% "akka-http-spray-json" % v.akkaHttp
   val akkaHttpCors      = "ch.megard"         %% "akka-http-cors"       % "0.2.2"
+  val akkaHttpPlayJson = "de.heikoseeberger" %% "akka-http-play-json" % "1.18.0" excludeAll (
+    ExclusionRule(organization = "com.typesafe.akka"),
+    ExclusionRule(organization = "com.typesafe.play")
+  )
 
   val jsr305        = "com.google.code.findbugs"      % "jsr305"                % "3.0.0"
   val caffeine      = "com.github.ben-manes.caffeine" % "caffeine"              % "2.5.5"
