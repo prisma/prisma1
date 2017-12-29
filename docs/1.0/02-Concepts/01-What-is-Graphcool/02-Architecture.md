@@ -7,7 +7,7 @@ description: An overview of your architecture when using Graphcool.
 
 In this section, we'll discuss some architectural concepts you need to be familiar with when using Graphcool. 
 
-## Graphcool connects your web server with the database
+## Graphcool maps your GraphQL API to the database
 
 Considering the classic [three-tier architecture](https://en.wikipedia.org/wiki/Multitier_architecture#Three-tier_architecture) of client, (web) server and database, Graphcool is a layer which *connects your database with the server*. In that sense, it can somewhat be thought of as an [ORM](https://en.wikipedia.org/wiki/Object-relational_mapping), but comes with many additional benefits compared to conventional ORMs - most importantly: it enables an idiomatic way of building GraphQL servers!
 
@@ -15,7 +15,7 @@ Considering the classic [three-tier architecture](https://en.wikipedia.org/wiki/
 
 When implementing your GraphQL (web) server, you can use [schema delegation](https://blog.graph.cool/graphql-schema-stitching-explained-schema-delegation-4c6caf468405), and in particular the `graphcool-binding` package, to conveniently implement your Graphcool resolvers. In short, `graphcool-binding` allows to forward an incoming query to Graphcool's CRUD API.
 
-## High-level architecturE
+## High-level architecture
 
 When working with Graphcool, you typically have the following components in your stack:
 
