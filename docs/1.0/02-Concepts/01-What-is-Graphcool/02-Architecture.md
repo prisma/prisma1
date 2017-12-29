@@ -5,7 +5,7 @@ description: An overview of your architecture when using Graphcool.
 
 # Architecture
 
-In this section, we'll discuss some architectural concepts you need to be familiar with when using Graphcool. 
+In this section, we'll discuss some architectural concepts you need to be familiar with when using Graphcool.
 
 ## Graphcool maps your GraphQL API to the database
 
