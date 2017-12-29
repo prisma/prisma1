@@ -282,7 +282,7 @@ class NestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
         |      text: "Some Text"
         |      todos:
         |      {
-        |       create: [{ title: "the title"},{ title: "the other title"}]
+        |       create: [{ title: "the title", unique: "test"},{ title: "the other title"}]
         |      }
         |    }
         |  ){
