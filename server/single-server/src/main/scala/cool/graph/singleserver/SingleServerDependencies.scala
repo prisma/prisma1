@@ -7,7 +7,7 @@ import cool.graph.api.database.Databases
 import cool.graph.api.project.{ProjectFetcher, ProjectFetcherImpl}
 import cool.graph.api.schema.SchemaBuilder
 import cool.graph.deploy.DeployDependencies
-import cool.graph.deploy.migration.{AsyncMigrator, Migrator}
+import cool.graph.deploy.migration.migrator.{AsyncMigrator, Migrator}
 
 trait SingleServerApiDependencies extends DeployDependencies with ApiDependencies {
   override implicit def self: SingleServerDependencies

@@ -48,6 +48,20 @@ class ProjectPersistenceImplSpec extends FlatSpec with Matchers with DeploySpecB
     projectPersistence.loadAll().await should have(size(2))
   }
 
+  ".loadProjectsWithUnappliedMigrations()" should "load all distinct projects with unapplied migrations" in {
+    val migratedProject               = TestProject()
+    val unmigratedProject             = TestProject()
+    val unmigratedProjectWithMultiple = TestProject()
+
+    // Create base projects
+    projectPersistence.create(migratedProject).await()
+    projectPersistence.create(unmigratedProject).await()
+    projectPersistence.create(unmigratedProjectWithMultiple).await()
+
+    // Create pending migrations
+
+  }
+
   def assertNumberOfRowsInProjectTable(count: Int): Unit = {
     val query = Tables.Projects.size
     internalDb.run(query.result) should equal(count)

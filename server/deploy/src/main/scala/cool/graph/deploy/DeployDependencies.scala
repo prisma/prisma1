@@ -4,7 +4,7 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import cool.graph.deploy.database.persistence.{MigrationPersistenceImpl, ProjectPersistenceImpl}
 import cool.graph.deploy.database.schema.InternalDatabaseSchema
-import cool.graph.deploy.migration.{AsyncMigrator, Migrator}
+import cool.graph.deploy.migration.migrator.{AsyncMigrator, Migrator}
 import cool.graph.deploy.schema.SchemaBuilder
 import cool.graph.deploy.seed.InternalDatabaseSeedActions
 import slick.jdbc.MySQLProfile

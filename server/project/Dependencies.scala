@@ -68,15 +68,16 @@ object Dependencies {
   val jacksonDataformatCbor = "com.fasterxml.jackson.dataformat" % "jackson-dataformat-cbor" % "2.8.4"
   val jackson               = Seq(jacksonCore, jacksonDatabind, jacksonAnnotation, jacksonDataformatCbor)
 
-  val amqp         = "com.rabbitmq"               % "amqp-client"         % "4.1.0"
-  val java8Compat  = "org.scala-lang.modules"     %% "scala-java8-compat" % "0.8.0"
-  val scalaLogging = "com.typesafe.scala-logging" %% "scala-logging"      % "3.7.0"
-  val jwt          = "com.pauldijou"              %% "jwt-core"           % "0.14.1"
-  val scalaj       = "org.scalaj"                 %% "scalaj-http"        % "2.3.0"
-  val evoInflector = "org.atteo"                  % "evo-inflector"       % "1.2"
-  val logBack      = "ch.qos.logback"             % "logback-classic"     % "1.1.7"
-  val snakeYML     = "org.yaml"                   % "snakeyaml"           % "1.17"
-  val moultingYML  = "net.jcazevedo"              %% "moultingyaml"       % "0.4.0"
+  val amqp         = "com.rabbitmq"               % "amqp-client"              % "4.1.0"
+  val java8Compat  = "org.scala-lang.modules"     %% "scala-java8-compat"      % "0.8.0"
+  val scalaLogging = "com.typesafe.scala-logging" %% "scala-logging"           % "3.7.0"
+  val jwt          = "com.pauldijou"              %% "jwt-core"                % "0.14.1"
+  val scalaj       = "org.scalaj"                 %% "scalaj-http"             % "2.3.0"
+  val evoInflector = "org.atteo"                  % "evo-inflector"            % "1.2"
+  val logBack      = "ch.qos.logback"             % "logback-classic"          % "1.1.7"
+  val snakeYML     = "org.yaml"                   % "snakeyaml"                % "1.17"
+  val moultingYML  = "net.jcazevedo"              %% "moultingyaml"            % "0.4.0"
+  val logstash     = "net.logstash.logback"       % "logstash-logback-encoder" % "4.7"
 
   lazy val common: Seq[ModuleID] = sangria ++ slick ++ joda ++ Seq(
     guava,
@@ -96,7 +97,8 @@ object Dependencies {
     akkaHttpPlayJson,
     finagle,
     scalaTest,
-    snakeYML
+    snakeYML,
+    logstash
 
     //    "io.spray"   %% "spray-json"  % "1.3.3",
     //    "org.scaldi"           %% "scaldi"            % "0.5.8",
@@ -107,7 +109,6 @@ object Dependencies {
     //    "com.jsuereth" %% "scala-arm" % "2.0",
     //    "com.google.code.findbugs" % "jsr305"                   % "3.0.1",
     //    "com.stripe"               % "stripe-java"              % "3.9.0",
-    //    "net.logstash.logback"     % "logstash-logback-encoder" % "4.7",
     //    "com.fasterxml.jackson.dataformat" % "jackson-dataformat-cbor" % "2.8.4",
   )
 }
