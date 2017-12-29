@@ -129,7 +129,7 @@ object DatabaseMutationBuilder {
     val relationId = Cuid.createCuid()
     sqlu"""insert into `#$projectId`.`#$relationTableName` (`id`, `A`, `B`)
            select '#$relationId', id, '#$b' from `#$projectId`.`#${where.model.name}`
-           where #${where.fieldName} = ${where.fieldValue}
+           where `#${where.fieldName}` = ${where.fieldValue}
           """
   }
 
@@ -137,7 +137,7 @@ object DatabaseMutationBuilder {
     val relationId = Cuid.createCuid()
     sqlu"""insert into `#$projectId`.`#$relationTableName` (`id`, `A`, `B`)
            select '#$relationId', '#$a', id from `#$projectId`.`#${where.model.name}`
-           where #${where.fieldName} = ${where.fieldValue}
+           where `#${where.fieldName}` = ${where.fieldValue}
           """
   }
 
@@ -146,7 +146,7 @@ object DatabaseMutationBuilder {
            where `B` = '#$b' and `A` in (
              select id
              from `#$projectId`.`#${where.model.name}`
-             where #${where.fieldName} = ${where.fieldValue}
+             where `#${where.fieldName}` = ${where.fieldValue}
            )
           """
   }
@@ -156,7 +156,7 @@ object DatabaseMutationBuilder {
            where `A` = '#$a' and `B` in (
              select id
              from `#$projectId`.`#${where.model.name}`
-             where #${where.fieldName} = ${where.fieldValue}
+             where `#${where.fieldName}` = ${where.fieldValue}
            )
           """
   }
@@ -272,8 +272,7 @@ object DatabaseMutationBuilder {
 
   //only use transactionally in this order
   def disableForeignKeyConstraintChecks = sqlu"SET FOREIGN_KEY_CHECKS=0"
-  def truncateTable(projectId: String, tableName: String) =
-    sqlu"TRUNCATE TABLE `#$projectId`.`#$tableName`"
+  def truncateTable(projectId: String, tableName: String) = sqlu"TRUNCATE TABLE `#$projectId`.`#$tableName`"
   def enableForeignKeyConstraintChecks = sqlu"SET FOREIGN_KEY_CHECKS=1"
 
   def deleteDataItemByValues(projectId: String, modelName: String, values: Map[String, Any]) = {
