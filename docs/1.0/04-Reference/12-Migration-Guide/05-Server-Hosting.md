@@ -3,6 +3,8 @@ alias: thohk5ovul
 description: Server Hosting
 ---
 
+# Server Hosting
+
 In this section, you'll learn how you can host a GraphQL server that connects with your Graphcool data store.
 
 ## Background
@@ -21,8 +23,8 @@ It is recommended that you're using `graphql-yoga` as your GraphQL server.
 
 Now is a "one-click-deployment" tool allowing to easily deploy a server to the web. Here is how it works:
 
-- **Step 1 - Download Zeit Desktop**: Zeit provides a Desktop app to manage your deployments. There also is a CLI that comes along with the desktop app. You can download the app [here](https://zeit.co/download) or using homebrew. For information about installation using homebrew, check this [GitHub issue](https://github.com/zeit/now-cli/issues/688).
-- **Step 2 - Deploy your GraphQL server**: To deploy your GraphQL server, all you need to is run the `now` command in the root directory of your web server.
+* **Step 1 - Download Zeit Desktop**: Zeit provides a Desktop app to manage your deployments. There also is a CLI that comes along with the desktop app. You can download the app [here](https://zeit.co/download) or using homebrew. For information about installation using homebrew, check this [GitHub issue](https://github.com/zeit/now-cli/issues/688).
+* **Step 2 - Deploy your GraphQL server**: To deploy your GraphQL server, all you need to is run the `now` command in the root directory of your web server.
 
 Assume your GraphQL server has the following file structure:
 
@@ -63,10 +65,10 @@ serverless login
 
 Depending on your serverless functions provider, you can then follow instructions from the [quickstart documentation](https://serverless.com/framework/docs/getting-started/) of the Serverless Framework:
 
-- [AWS Lambda](https://serverless.com/framework/docs/providers/aws/guide/quick-start/)
-- [Microsoft Azure](https://serverless.com/framework/docs/providers/azure/guide/quick-start/)
-- [IBM Open Whisk](https://serverless.com/framework/docs/providers/openwhisk/guide/quick-start/)
-- [Google Cloud Platform](https://serverless.com/framework/docs/providers/google/guide/quick-start/)
-- [Kubeless](https://serverless.com/framework/docs/providers/kubeless/guide/quick-start/)
-- [Spotinst](https://serverless.com/framework/docs/providers/spotinst/guide/quick-start/)
-- [Webtasks](https://serverless.com/framework/docs/providers/webtasks/guide/quick-start/)
+* [AWS Lambda](https://serverless.com/framework/docs/providers/aws/guide/quick-start/)
+* [Microsoft Azure](https://serverless.com/framework/docs/providers/azure/guide/quick-start/)
+* [IBM Open Whisk](https://serverless.com/framework/docs/providers/openwhisk/guide/quick-start/)
+* [Google Cloud Platform](https://serverless.com/framework/docs/providers/google/guide/quick-start/)
+* [Kubeless](https://serverless.com/framework/docs/providers/kubeless/guide/quick-start/)
+* [Spotinst](https://serverless.com/framework/docs/providers/spotinst/guide/quick-start/)
+* [Webtasks](https://serverless.com/framework/docs/providers/webtasks/guide/quick-start/)
