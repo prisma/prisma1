@@ -9,7 +9,7 @@ In most cases when working with a GraphQL API, you won't want to use plain HTTP 
 
 > Learn how to get started with Relay and Apollo in our [Quickstart examples](https://www.graph.cool/docs/quickstart/) or on [How to GraphQL](https://www.howtographql.com/)
 
-## Popular GraphQL clients
+## Popular GraphQL client libraries
 
 There are three major GraphQL client libraries at the moment, varying in complexity, flexibility and power: `graphql-request`, Apollo Client and Relay.
 
