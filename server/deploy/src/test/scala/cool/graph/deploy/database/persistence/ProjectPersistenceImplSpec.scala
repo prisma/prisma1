@@ -59,7 +59,12 @@ class ProjectPersistenceImplSpec extends FlatSpec with Matchers with DeploySpecB
     projectPersistence.create(unmigratedProjectWithMultiple).await()
 
     // Create pending migrations
+    migrationPersistence.create(unmigratedProject, Migration.empty(unmigratedProject)).await
+    migrationPersistence.create(unmigratedProjectWithMultiple, Migration.empty(unmigratedProjectWithMultiple)).await
+    migrationPersistence.create(unmigratedProjectWithMultiple, Migration.empty(unmigratedProjectWithMultiple)).await
 
+    val projects = projectPersistence.loadProjectsWithUnappliedMigrations().await
+    projects should have(size(2))
   }
 
   def assertNumberOfRowsInProjectTable(count: Int): Unit = {

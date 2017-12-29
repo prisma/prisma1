@@ -40,7 +40,7 @@ object ProjectTable {
     val baseQuery = for {
       project   <- Tables.Projects
       migration <- Tables.Migrations
-      if migration.projectId === project.id && !migration.hasBeenApplied
+      if project.id === migration.projectId && !migration.hasBeenApplied
     } yield project
 
     baseQuery.distinct.result
