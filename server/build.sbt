@@ -192,6 +192,7 @@ lazy val subscriptions = serverProject("subscriptions")
   .settings(
     libraryDependencies ++= Seq(
       playJson,
+      playStreams,
       akkaHttpPlayJson
     )
   )
@@ -509,6 +510,7 @@ lazy val singleServer = Project(id = "single-server", base = file("./single-serv
 val allServerProjects = List(
   api,
   deploy,
+  subscriptions,
   singleServer,
   sharedModels
 )

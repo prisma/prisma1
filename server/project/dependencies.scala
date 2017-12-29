@@ -37,12 +37,14 @@ object Dependencies {
   val joda        = Seq(jodaTime, jodaConvert)
 
   val cuid        = "cool.graph"         % "cuid-java"       % v.cuid
-  val playJson    = "com.typesafe.play"  %% "play-json"      % v.play
   val scalactic   = "org.scalactic"      %% "scalactic"      % v.scalactic
   val scalaTest   = "org.scalatest"      %% "scalatest"      % v.scalaTest % Test
   val slick       = "com.typesafe.slick" %% "slick"          % v.slick
   val slickHikari = "com.typesafe.slick" %% "slick-hikaricp" % v.slick
   val spray       = "io.spray"           %% "spray-json"     % v.spray
+
+  val playJson    = "com.typesafe.play" %% "play-json"    % v.play
+  val playStreams = "com.typesafe.play" %% "play-streams" % v.play
 
   val akka              = "com.typesafe.akka" %% "akka-actor"           % v.akka
   val akkaClusterTools  = "com.typesafe.akka" %% "akka-cluster-tools"   % v.akka
