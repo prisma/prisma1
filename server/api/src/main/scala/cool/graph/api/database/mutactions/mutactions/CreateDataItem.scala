@@ -55,6 +55,7 @@ case class CreateDataItem(
             project.id,
             model.name,
             model.scalarFields
+              .filter(!_.isList)
               .filter(getValueOrDefault(values, _).isDefined)
               .map(field => (field.name, getValueOrDefault(values, field).get))
               .toMap

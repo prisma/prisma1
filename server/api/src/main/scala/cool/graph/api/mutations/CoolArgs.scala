@@ -59,6 +59,13 @@ case class CoolArgs(raw: Map[String, Any]) {
     }
   }
 
+  def subScalarList(scalarListField: Field): Option[ScalarListSet] = {
+    getFieldValuesAs[Any](scalarListField) match {
+      case None         => None
+      case Some(values) => Some(ScalarListSet(values = values.toVector))
+    }
+  }
+
   def scalarArguments(model: Model): Vector[ArgumentValue] = {
     for {
       field      <- model.scalarFields.toVector

@@ -16,8 +16,10 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 case class ParentInfo(model: Model, field: Field, id: Id)
-case class CreateMutactionsResult(createMutaction: CreateDataItem, nestedMutactions: Seq[ClientSqlMutaction]) {
-  def allMutactions: Vector[ClientSqlMutaction] = Vector(createMutaction) ++ nestedMutactions
+case class CreateMutactionsResult(createMutaction: CreateDataItem,
+                                  scalarListMutactions: Vector[ClientSqlMutaction],
+                                  nestedMutactions: Seq[ClientSqlMutaction]) {
+  def allMutactions: Vector[ClientSqlMutaction] = Vector(createMutaction) ++ scalarListMutactions ++ nestedMutactions
 }
 
 case class SqlMutactions(dataResolver: DataResolver) {
@@ -51,7 +53,19 @@ case class SqlMutactions(dataResolver: DataResolver) {
 
     val nested = getMutactionsForNestedMutation(model, args, fromId = id)
 
-    CreateMutactionsResult(createMutaction = createMutaction, nestedMutactions = relationToParent.toVector ++ nested)
+    val scalarLists = getMutactionsForScalarLists(model, args, nodeId = id)
+
+    CreateMutactionsResult(createMutaction = createMutaction, scalarListMutactions = scalarLists, nestedMutactions = relationToParent.toVector ++ nested)
+  }
+
+  def getSetScalarList(model: Model, field: Field, values: Vector[Any], id: Id): SetScalarList = {
+    SetScalarList(
+      project = project,
+      model = model,
+      field = field,
+      values = values,
+      nodeId = id
+    )
   }
 
   def getCreateMutaction(model: Model, args: CoolArgs, id: Id): CreateDataItem = {
@@ -87,6 +101,20 @@ case class SqlMutactions(dataResolver: DataResolver) {
           itemExists = true
         ))
     } else None
+  }
+
+  def getMutactionsForScalarLists(model: Model, args: CoolArgs, nodeId: Id): Vector[SetScalarList] = {
+    val x = for {
+      field  <- model.scalarListFields
+      values <- args.subScalarList(field)
+    } yield {
+      if (values.values.nonEmpty) {
+        Some(getSetScalarList(model, field, values.values, nodeId))
+      } else {
+        None
+      }
+    }
+    x.flatten.toVector
   }
 
   def getMutactionsForNestedMutation(model: Model, args: CoolArgs, fromId: Id): Seq[ClientSqlMutaction] = {
@@ -214,3 +242,5 @@ case class UpsertOne(where: NodeSelector, create: CoolArgs, update: CoolArgs)
 case class DeleteOne(where: NodeSelector)
 case class ConnectOne(where: NodeSelector)
 case class DisconnectOne(where: NodeSelector)
+
+case class ScalarListSet(values: Vector[Any])

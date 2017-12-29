@@ -31,6 +31,14 @@ object DatabaseQueryBuilder {
     }
   }
 
+  implicit object GetScalarListValue extends GetResult[ScalarListValue] {
+    def apply(ps: PositionedResult): ScalarListValue = {
+      val rs = ps.rs
+
+      ScalarListValue(position = rs.getInt("position"), value = rs.getObject("value"))
+    }
+  }
+
   def selectAllFromModel(projectId: String,
                          modelName: String,
                          args: Option[QueryArguments],
@@ -146,6 +154,10 @@ object DatabaseQueryBuilder {
 
   def existsFromModelsByUniques(project: Project, model: Model, predicates: Vector[NodeSelector]) = {
     sql"select exists (select * from `#${project.id}`.`#${model.name}`" ++ whereClauseByCombiningPredicatesByOr(predicates) concat sql")"
+  }
+
+  def selectFromScalarList(projectId: String, modelName: String, fieldName: String): SQLActionBuilder = {
+    sql"select position, value from `#$projectId`.`#${modelName}_#${fieldName}`"
   }
 
   def whereClauseByCombiningPredicatesByOr(predicates: Vector[NodeSelector]) = {

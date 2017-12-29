@@ -55,4 +55,7 @@ object DeferredTypes {
 
   case class CheckPermissionDeferred(model: Model, field: Field, nodeId: String, value: Any, node: DataItem, alwaysQueryMasterDatabase: Boolean)
       extends Deferred[Boolean]
+
+  type ScalarListDeferredResultType = Vector[Any]
+  case class ScalarListDeferred(model: Model, field: Field) extends Deferred[ScalarListDeferredResultType]
 }

@@ -12,7 +12,7 @@ import org.joda.time.format.DateTimeFormat
 import play.api.libs.json._
 import slick.dbio.DBIOAction
 import slick.jdbc.MySQLProfile.api._
-import slick.jdbc.{PositionedParameters, SetParameter}
+import slick.jdbc.{PositionedParameters, SQLActionBuilder, SetParameter}
 import slick.sql.{SqlAction, SqlStreamingAction}
 
 object DatabaseMutationBuilder {
@@ -299,6 +299,21 @@ object DatabaseMutationBuilder {
     (sql"delete from `#$projectId`.`#$modelName`" concat whereClauseWithWhere).asUpdate
   }
 
+  def setScalarList(projectId: String,
+                    modelName: String,
+                    fieldName: String,
+                    nodeId: String,
+                    values: Vector[Any]): SqlStreamingAction[Vector[Int], Int, Effect]#ResultAction[Int, NoStream, Effect] = {
+
+    val escapedValueTuples = for {
+      (escapedValue, position) <- values.map(escapeUnsafeParam(_)).zip((1 to values.length).map(_ * 1000))
+    } yield {
+      sql"($nodeId, $position, " concat escapedValue concat sql")"
+    }
+
+    (sql"insert into `#$projectId`.`#${modelName}_#${fieldName}` (`nodeId`, `position`, `value`) values " concat combineByComma(escapedValueTuples)).asUpdate
+  }
+
   def createClientDatabaseForProject(projectId: String) = {
     val idCharset = charsetTypeForScalarTypeIdentifier(isList = false, TypeIdentifier.GraphQLID)
 
@@ -325,6 +340,24 @@ object DatabaseMutationBuilder {
     `updatedAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
     UNIQUE INDEX `id_UNIQUE` (`id` ASC))
+    DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"""
+  }
+
+  def createScalarListTable(projectId: String, modelName: String, fieldName: String, typeIdentifier: TypeIdentifier) = {
+    val idCharset     = charsetTypeForScalarTypeIdentifier(isList = false, TypeIdentifier.GraphQLID)
+    val sqlType       = sqlTypeForScalarTypeIdentifier(false, typeIdentifier)
+    val charsetString = charsetTypeForScalarTypeIdentifier(false, typeIdentifier)
+    val indexSize = sqlType match {
+      case "text" | "mediumtext" => "(191)"
+      case _                     => ""
+    }
+
+    sqlu"""CREATE TABLE `#$projectId`.`#${modelName}_#${fieldName}`
+    (`nodeId` CHAR(25) #$idCharset NOT NULL,
+    `position` INT(4) NOT NULL,
+    `value` #$sqlType #$charsetString NOT NULL,
+    PRIMARY KEY (`nodeId`, `position`),
+    INDEX `value` (`value`#$indexSize ASC))
     DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"""
   }
 
@@ -459,6 +492,7 @@ object DatabaseMutationBuilder {
       DBIO.seq(createTable(projectId, model.name)),
       DBIO.seq(
         model.scalarFields
+          .filter(!_.isList)
           .filter(f => !DatabaseMutationBuilder.implicitlyCreatedColumns.contains(f.name))
           .map { (field) =>
             createColumn(
@@ -470,6 +504,12 @@ object DatabaseMutationBuilder {
               isList = field.isList,
               typeIdentifier = field.typeIdentifier
             )
+          }: _*),
+      DBIO.seq(
+        model.scalarFields
+          .filter(_.isList)
+          .map { (field) =>
+            createScalarListTable(projectId, model.name, field.name, field.typeIdentifier)
           }: _*)
     )
   }

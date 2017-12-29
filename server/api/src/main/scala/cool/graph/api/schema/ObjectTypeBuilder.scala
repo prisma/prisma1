@@ -2,7 +2,7 @@ package cool.graph.api.schema
 
 import cool.graph.api.schema.CustomScalarTypes.{DateTimeType, JsonType}
 import cool.graph.api.database._
-import cool.graph.api.database.DeferredTypes.{CountManyModelDeferred, CountToManyDeferred, ToManyDeferred, ToOneDeferred}
+import cool.graph.api.database.DeferredTypes._
 import cool.graph.api.database.Types.DataItemFilterCollection
 import cool.graph.api.mutations.BatchPayload
 import cool.graph.shared.models
@@ -111,7 +111,7 @@ class ObjectTypeBuilder(
     description = field.description,
     arguments = mapToListConnectionArguments(model, field),
     resolve = (ctx: Context[ApiUserContext, DataItem]) => {
-      mapToOutputResolve(Some(model), field)(ctx)
+      mapToOutputResolve(model, field)(ctx)
     },
     tags = List()
   )
@@ -271,8 +271,7 @@ class ObjectTypeBuilder(
     arg
   }
 
-  def mapToOutputResolve[C <: ApiUserContext](model: Option[models.Model], field: models.Field)(
-      ctx: Context[C, DataItem]): sangria.schema.Action[ApiUserContext, _] = {
+  def mapToOutputResolve[C <: ApiUserContext](model: models.Model, field: models.Field)(ctx: Context[C, DataItem]): sangria.schema.Action[ApiUserContext, _] = {
 
     val item: DataItem = unwrapDataItemFromContext(ctx)
 
@@ -280,30 +279,23 @@ class ObjectTypeBuilder(
       val arguments = extractQueryArgumentsFromContext(field.relatedModel(project).get, ctx.asInstanceOf[Context[ApiUserContext, Unit]])
 
       if (field.isList) {
-        return DeferredValue(
+        DeferredValue(
           ToManyDeferred(
             field,
             item.id,
             arguments
           )).map(_.toNodes)
+      } else {
+        ToOneDeferred(field, item.id, arguments)
       }
-      return ToOneDeferred(field, item.id, arguments)
-    }
 
-    // If model is None this is a custom mutation. We currently don't check permissions on custom mutation payloads
-    model match {
-      case None =>
-        val value = ObjectTypeBuilder.convertScalarFieldValueFromDatabase(field, item, resolver = true)
-        value
-
-      case Some(model) =>
-        // note: UserContext is currently used in many places where we should use the higher level RequestContextTrait
-        // until that is cleaned up we have to explicitly check the type here. This is okay as we don't check Permission
-        // for ActionUserContext and AlgoliaSyncContext
-        // If you need to touch this it's probably better to spend the 5 hours to clean up the Context hierarchy
-        val value = ObjectTypeBuilder.convertScalarFieldValueFromDatabase(field, item)
-
-        value
+    } else {
+      if (field.isList) {
+        ScalarListDeferred(model, field)
+//        Seq("q", "w")
+      } else {
+        ObjectTypeBuilder.convertScalarFieldValueFromDatabase(field, item)
+      }
     }
   }
 
@@ -322,11 +314,8 @@ class ObjectTypeBuilder(
 object ObjectTypeBuilder {
 
   // todo: this entire thing should rely on GraphcoolDataTypes instead
-  def convertScalarFieldValueFromDatabase(field: models.Field, item: DataItem, resolver: Boolean = false): Any = {
+  def convertScalarFieldValueFromDatabase(field: models.Field, item: DataItem): Any = {
     field.name match {
-      case "id" if resolver && item.userData.contains("id") =>
-        item.userData("id").getOrElse(None)
-
       case "id" =>
         item.id
 
