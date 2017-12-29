@@ -3,6 +3,8 @@ alias: yaeco6ieth
 description: Authentication
 ---
 
+# Authentication
+
 In this section, you'll learn how you can migrate your authentication functionality from the Graphcool Framework to Graphcool 1.0.
 
 ## Authentication with the Graphcool Framework
