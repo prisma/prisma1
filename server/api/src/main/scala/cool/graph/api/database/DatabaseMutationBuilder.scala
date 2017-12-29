@@ -55,7 +55,7 @@ object DatabaseMutationBuilder {
     val updateValues = combineByComma(updateArgs.raw.map { case (k, v) => escapeKey(k) ++ sql" = " ++ escapeUnsafeParam(v) })
     (sql"update `#${project.id}`.`#${model.name}`" ++
       sql"set " ++ updateValues ++
-      sql"where #${where.fieldName} = ${where.fieldValue};").asUpdate
+      sql"where `#${where.fieldName}` = ${where.fieldValue};").asUpdate
   }
 
   def deleteDataItems(project: Project, model: Model, where: DataItemFilterCollection) = {
@@ -69,7 +69,7 @@ object DatabaseMutationBuilder {
     (sql"INSERT INTO `#${project.id}`.`#${model.name}` (" ++ escapedColumns ++ sql")" ++
       sql"SELECT " ++ insertValues ++
       sql"FROM DUAL" ++
-      sql"where not exists (select * from `#${project.id}`.`#${model.name}` where #${where.fieldName} = ${where.fieldValue});").asUpdate
+      sql"where not exists (select * from `#${project.id}`.`#${model.name}` where `#${where.fieldName}` = ${where.fieldValue});").asUpdate
   }
 
   def upsert(project: Project, model: Model, createArgs: CoolArgs, updateArgs: CoolArgs, where: NodeSelector) = {
@@ -163,7 +163,7 @@ object DatabaseMutationBuilder {
 
   def deleteDataItemByUniqueValueForAIfInRelationWithGivenB(projectId: String, relationTableName: String, b: String, where: NodeSelector) = {
     sqlu"""delete from `#$projectId`.`#${where.model.name}`
-           where #${where.fieldName} = ${where.fieldValue} and id in (
+           where `#${where.fieldName}` = ${where.fieldValue} and id in (
              select `A`
              from `#$projectId`.`#$relationTableName`
              where `B` = '#$b'
@@ -173,7 +173,7 @@ object DatabaseMutationBuilder {
 
   def deleteDataItemByUniqueValueForBIfInRelationWithGivenA(projectId: String, relationTableName: String, a: String, where: NodeSelector) = {
     sqlu"""delete from `#$projectId`.`#${where.model.name}`
-           where #${where.fieldName} = ${where.fieldValue} and id in (
+           where `#${where.fieldName}` = ${where.fieldValue} and id in (
              select `B`
              from `#$projectId`.`#$relationTableName`
              where `A` = '#$a'
@@ -189,7 +189,7 @@ object DatabaseMutationBuilder {
     val escapedValues = combineByComma(values.map { case (k, v) => escapeKey(k) concat sql" = " concat escapeUnsafeParam(v) })
     (sql"""update `#$projectId`.`#${where.model.name}`""" concat
       sql"""set""" concat escapedValues concat
-      sql"""where #${where.fieldName} = ${where.fieldValue} and id in (
+      sql"""where `#${where.fieldName}` = ${where.fieldValue} and id in (
              select `A`
              from `#$projectId`.`#$relationTableName`
              where `B` = '#$b'
@@ -205,7 +205,7 @@ object DatabaseMutationBuilder {
     val escapedValues = combineByComma(values.map { case (k, v) => escapeKey(k) concat sql" = " concat escapeUnsafeParam(v) })
     (sql"""update `#$projectId`.`#${where.model.name}`""" concat
       sql"""set""" concat escapedValues concat
-      sql"""where #${where.fieldName} = ${where.fieldValue} and id in (
+      sql"""where `#${where.fieldName}` = ${where.fieldValue} and id in (
              select `B`
              from `#$projectId`.`#$relationTableName`
              where `A` = '#$a'
