@@ -7,7 +7,7 @@ description: An overview of how to configure and manage the database model with 
 
 Graphcool offers an abstraction over your database. This means you don't need to use SQL any more. Instead, you're using the GraphQL [Schema Definition Language](https://blog.graph.cool/graphql-sdl-schema-definition-language-6755bcb9ce51) (SDL) for your [type definitions](!alias-eiroozae8u). Graphcool then generates and manages the underlying database schema for you.
 
-[Migrations](!alis-paesahku9t) can be performed by updating your type definitions and running the [`graphcool deploy`](!alias-aiteerae6l#graphcool-deploy) command in the CLI. In cases where additional information for a migration is required (such as default values for a non-nullable type that was added to the database schema), you need to provide an additional file with the required information.
+[Migrations](!alis-paesahku9t) can be performed by updating your type definitions and running the [`graphcool-framework deploy`](!alias-aiteerae6l#graphcool-deploy) command in the CLI. In cases where additional information for a migration is required (such as default values for a non-nullable type that was added to the database schema), you need to provide an additional file with the required information.
 
 
 <InfoBox type=info>

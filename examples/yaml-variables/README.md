@@ -35,7 +35,7 @@ Next, you need to create your GraphQL server using the [Graphcool CLI](https://g
 If you haven't already, go ahead and install the CLI first:
 
 ```sh
-npm install -g graphcool
+npm install -g graphcool-framework
 ```
 
 ### 3. Create the GraphQL server
@@ -84,10 +84,10 @@ export GREETING=hello
 To deploy the service and actually create your GraphQL server, invoke the following command:
 
 ```sh
-graphcool deploy
+graphcool-framework deploy
 ```
 
-> Note: Whenever you make changes to files in this directory, you need to invoke `graphcool deploy` again to make sure your changes get applied to the "remote" service.
+> Note: Whenever you make changes to files in this directory, you need to invoke `graphcool-framework deploy` again to make sure your changes get applied to the "remote" service.
 
 
 ## Testing the service
@@ -99,7 +99,7 @@ The easiest way to test the deployed service is by using a [GraphQL Playground](
 You can open a Playground with the following command:
 
 ```sh
-graphcool playground
+graphcool-framework playground
 ```
 
 ### Send the `greeting` query _with_ the `name` argument
@@ -153,7 +153,7 @@ greeting:
 
 ### Referencing environment variables in `graphcool.yml` at deployment time
 
-Despite the fact that this service contains two function implementations, only _one_ of them will be deployed at any given time! Which one that is depends on the value of the environment variable `GREETING` when `graphcool deploy` is invoked. That's because the `greeting.handler.code.src` property refers to this environment variable: `./src/${env:GREETING}.js`. 
+Despite the fact that this service contains two function implementations, only _one_ of them will be deployed at any given time! Which one that is depends on the value of the environment variable `GREETING` when `graphcool-framework deploy` is invoked. That's because the `greeting.handler.code.src` property refers to this environment variable: `./src/${env:GREETING}.js`. 
 
-When `graphcool deploy` is called, the CLI will read the value of the environment variable and replace `${env:GREETING}` with it. If the value of `GREETING` is something other than `hello` or `hey`, `graphcool deploy` will fail with the message that the referenced source file does not exist.
+When `graphcool-framework deploy` is called, the CLI will read the value of the environment variable and replace `${env:GREETING}` with it. If the value of `GREETING` is something other than `hello` or `hey`, `graphcool-framework deploy` will fail with the message that the referenced source file does not exist.
 

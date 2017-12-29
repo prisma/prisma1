@@ -23,7 +23,7 @@ While most new features added to the Graphcool Framework will require you to upg
 
 Legacy Console projects can only use CLI versions lower than 0.4 and are primarily managed through the Console. Particularly, managing _functions_ and _permissions_ can only be done in the Console.
 
-Managing the GraphQL type definitions can still be done both in the Console (in the _Schema Editor_) and the old CLI (using `graphcool pull` and `graphcool push`).
+Managing the GraphQL type definitions can still be done both in the Console (in the _Schema Editor_) and the old CLI (using `graphcool-framework pull` and `graphcool-framework push`).
 
 
 ## Upgrading a legacy Console project to a Graphcool service
@@ -39,13 +39,13 @@ Before upgrading your legacy Console project to a Graphcool service, we recommen
 The first thing you need to do is get access to the [service definition](!alias-opheidaix3) of your legacy project. This can be done with the new Graphcool CLI and the following command:
 
 ```sh
-graphcool init --copy <legacyProjectId>
+graphcool-framework init --copy <legacyProjectId>
 ```
 
 This will download all the files that represent the functionality of your Graphcool project into the current directory. You can also download all files into a new directory, e.g. called `service`, by adding the directory name as an argument to the CLI command:
 
 ```sh
-graphcool init service --copy <legacyProjectId>
+graphcool-framework init service --copy <legacyProjectId>
 ```
 
 #### 2. Install node dependencies for [functions](!alias-aiw4aimie9) (if necessary)
@@ -63,7 +63,7 @@ npm install --save graphcool-lib # or yarn add graphcool-lib
 You can now [deploy](!alias-aiteerae6l#graphcool-deploy) your service with the following command:
 
 ```sh
-graphcool deploy
+graphcool-framework deploy
 ```
 
 You can either deploy to a **Shared Cluster** or **locally with Docker**. Once you deployed the service, you can add some test data using a Playground.

@@ -20,7 +20,7 @@ cd typescript-gateway-custom-schema
 If you haven't already, go ahead and install the [Graphcool CLI](https://graph.cool/docs/reference/graphcool-cli/overview-zboghez5go):
 
 ```sh
-npm install -g graphcool
+npm install -g graphcool-framework
 ```
 
 ### 3. Deploy the Graphcool service
@@ -29,7 +29,7 @@ The next step is to [deploy](https://graph.cool/docs/reference/graphcool-cli/com
 
 ```sh
 cd service
-graphcool deploy
+graphcool-framework deploy
 ```
 
 When prompted which cluster you'd like to deploy, choose any of the **Shared Clusters** (`shared-eu-west-1`, `shared-ap-northeast-1` or `shared-us-west-2`) rather than `local`. 
@@ -82,7 +82,7 @@ Navigate back into the [`service`](./service) directory and open a Playground:
 
 ```sh
 cd ../server
-graphcool playground
+graphcool-framework playground
 ```
 
 In the Playground, send the following mutation to create a new `User` node along with three `Post` nodes:

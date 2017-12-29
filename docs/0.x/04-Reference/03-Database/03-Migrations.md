@@ -16,9 +16,9 @@ _Schema migrations_ need to be performed when you're updating your model type de
 A schema migration includes two steps:
 
 1. Update your type definitions in `types.graphql`
-2. Run [`graphcool deploy`](!alias-aiteerae6l#graphcool-deploy) in the CLI
+2. Run [`graphcool-framework deploy`](!alias-aiteerae6l#graphcool-deploy) in the CLI
 
-Whenever the migration contains potentially destructive changes (e.g. when removing a type from your data model, which will delete all existing nodes of that type), you need to pass the `--force` (short: `-f`) to `graphcool deploy`.
+Whenever the migration contains potentially destructive changes (e.g. when removing a type from your data model, which will delete all existing nodes of that type), you need to pass the `--force` (short: `-f`) to `graphcool-framework deploy`.
 
 <InfoBox type=warning>
 

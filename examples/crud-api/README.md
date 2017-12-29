@@ -16,13 +16,13 @@ cd crud-api
 Install the CLI (if you haven't already):
 
 ```sh
-npm install -g graphcool
+npm install -g graphcool-framework
 ```
 
 Deploy the Graphcool backend and open the GraphQL API endpoint in your browser
 
 ```sh
-graphcool deploy
+graphcool-framework deploy
 # next step: open `https://api.graph.cool/simple/v1/xxx` in your browser
 ```
 

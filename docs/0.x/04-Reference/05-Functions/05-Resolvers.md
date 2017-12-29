@@ -3,7 +3,6 @@ alias: su6wu3yoo2
 description: Resolvers allow you to extend your GraphQL API with custom queries and mutations that are resolved by a function.
 ---
 
-
 # Resolvers
 
 ## Overview
@@ -60,7 +59,7 @@ enum TemperatureUnit {
 }
 ```
 
-`loadWeather ` is invoked when a `weather` query is run and is defined as a _webhook_. It receives as input the requested `TemperatureUnit` (as this is the only argument for the `weather` field on the `Query` type) and returns a new type called `Weather`.
+`loadWeather` is invoked when a `weather` query is run and is defined as a _webhook_. It receives as input the requested `TemperatureUnit` (as this is the only argument for the `weather` field on the `Query` type) and returns a new type called `Weather`.
 
 ### Properties
 

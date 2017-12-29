@@ -15,7 +15,7 @@ There generally are three kinds of functions that you can implement
 
 ## Adding a function to your Graphcool service
 
-To add a function to your Graphcool service, you need to add it to the [service definition file](!alias-opheidaix3#service-definition) under the `functions` section and apply the changes using `graphcool deploy`.
+To add a function to your Graphcool service, you need to add it to the [service definition file](!alias-opheidaix3#service-definition) under the `functions` section and apply the changes using `graphcool-framework deploy`.
 
 When being added, a function needs the following information:
 
@@ -40,7 +40,7 @@ The `handler` of a function can either refer to a _managed function_ or a _webho
 
 ### Managed functions
 
-With a managed function, you don't have to worry about explicit deployment of your function since it will get deployed along with your Graphcool service when you're running `graphcool deploy`.
+With a managed function, you don't have to worry about explicit deployment of your function since it will get deployed along with your Graphcool service when you're running `graphcool-framework deploy`.
 
 The source code for a managed function needs to be located in your service directory, typically in a folder called `src`.
 

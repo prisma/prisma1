@@ -24,14 +24,14 @@ cd full-example
 Install the CLI (if you haven't already):
 
 ```sh
-npm install -g graphcool
+npm install -g graphcool-framework
 ```
 
 You can now [deploy](https://graph.cool/docs/reference/graphcool-cli/commands-aiteerae6l#graphcool-deploy) the Graphcool service that's defined in this directory. Before that, you need to install the node [dependencies](package.json#L14) for the defined functions:
 
 ```sh
 yarn install      # install dependencies - alternatively npm install
-graphcool deploy  # deploy service
+graphcool-framework deploy  # deploy service
 ```
 
 When prompted which cluster you'd like to deploy, choose any of the **Shared Clusters** (`shared-eu-west-1`, `shared-ap-northeast-1` or `shared-us-west-2`) rather than `local`.
@@ -43,7 +43,7 @@ Copy the _Simple API endpoint_ for the next step.
 You can run the seed script to get started. First, obtain the _root token_ needed for the script:
 
 ```sh
-graphcool root-token seed-script
+graphcool-framework root-token seed-script
 ```
 
 Replace `__ENDPOINT__` and `__ROOT_TOKEN__` with the two copied values, and run the script to create a few product items:

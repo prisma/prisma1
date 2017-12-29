@@ -154,10 +154,10 @@ Here is a graphical overview of the relations in our final schema:
 
 ## Preparing the GraphQL server
 
-You can now either create these types and relations manually in the Web UI of the  [Graphcool console](https://console.graph.cool) or use the [command-line interface](https://www.npmjs.com/package/graphcool) to create the project including the data model. Simply execute the following `graphcool init` command in a Terminal and pass the remote [schema](http://graphqlbin.com/freecom.graphql) as the `--schema` option:
+You can now either create these types and relations manually in the Web UI of the  [Graphcool console](https://console.graph.cool) or use the [command-line interface](https://www.npmjs.com/package/graphcool) to create the project including the data model. Simply execute the following `graphcool-framework init` command in a Terminal and pass the remote [schema](http://graphqlbin.com/freecom.graphql) as the `--schema` option:
 
 ```sh
-graphcool init --schema http://graphqlbin.com/freecom.graphql --name Freecom
+graphcool-framework init --schema http://graphqlbin.com/freecom.graphql --name Freecom
 ```
 
 Note that this will require you to authenticate with Graphcool by opening a browser window before creating the actual project.
@@ -240,7 +240,7 @@ query {
 
 ## Wrap Up
 
-That's it for today! We hope you enjoyed this first part of our tutorial series and learning about how to create a GraphQL server from the command line using `graphcool init`.
+That's it for today! We hope you enjoyed this first part of our tutorial series and learning about how to create a GraphQL server from the command line using `graphcool-framework init`.
 
 In the next chapter, we'll start writing some actual code. We are going to write some basic React components and integrate them with the Apollo client, also sending our first queries and mutations to interact with the API.
 
