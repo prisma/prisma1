@@ -1,10 +1,10 @@
-package cool.graph.subscriptions
+package cool.graph.websocket
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import cool.graph.akkautil.http.ServerExecutor
 import cool.graph.bugsnag.BugSnaggerImpl
-import cool.graph.subscriptions.services.WebsocketCloudServives
+import cool.graph.websocket.services.WebsocketCloudServives
 
 object WebsocketMain extends App {
   implicit val system       = ActorSystem("graphql-subscriptions")

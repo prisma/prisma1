@@ -1,4 +1,4 @@
-package cool.graph.subscriptions.protocol
+package cool.graph.websocket.protocol
 
 import cool.graph.messagebus.Conversions
 import play.api.libs.json.Json

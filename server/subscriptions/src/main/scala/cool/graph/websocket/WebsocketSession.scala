@@ -1,4 +1,4 @@
-package cool.graph.subscriptions
+package cool.graph.websocket
 
 import java.util.concurrent.TimeUnit
 
@@ -8,7 +8,7 @@ import cool.graph.bugsnag.BugSnagger
 import cool.graph.messagebus.QueuePublisher
 import cool.graph.messagebus.queue.MappingQueuePublisher
 import cool.graph.messagebus.testkits.InMemoryQueueTestKit
-import cool.graph.subscriptions.protocol.Request
+import cool.graph.websocket.protocol.Request
 
 import scala.collection.mutable
 import scala.concurrent.duration._ // if you don't supply your own Protocol (see below)

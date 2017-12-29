@@ -1,10 +1,10 @@
-package cool.graph.subscriptions.websockets
+package cool.graph.websocket.websockets
 
 import akka.actor.{ActorSystem, Props}
 import akka.testkit.TestProbe
 import cool.graph.messagebus.testkits.spechelpers.InMemoryMessageBusTestKits
-import cool.graph.subscriptions.WebsocketSession
-import cool.graph.subscriptions.protocol.Request
+import cool.graph.websocket.WebsocketSession
+import cool.graph.websocket.protocol.Request
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 

@@ -1,11 +1,11 @@
-package cool.graph.subscriptions.services
+package cool.graph.websocket.services
 
 import akka.actor.ActorSystem
 import cool.graph.bugsnag.BugSnagger
 import cool.graph.messagebus.pubsub.rabbit.RabbitAkkaPubSub
 import cool.graph.messagebus._
 import cool.graph.messagebus.queue.rabbit.RabbitQueue
-import cool.graph.subscriptions.protocol.Request
+import cool.graph.websocket.protocol.Request
 
 trait WebsocketServices {
   val requestsQueuePublisher: QueuePublisher[Request]

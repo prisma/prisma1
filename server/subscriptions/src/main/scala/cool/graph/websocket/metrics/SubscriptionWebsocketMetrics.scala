@@ -1,4 +1,4 @@
-package cool.graph.subscriptions.metrics
+package cool.graph.websocket.metrics
 
 import cool.graph.metrics.MetricsManager
 import cool.graph.profiling.MemoryProfiler

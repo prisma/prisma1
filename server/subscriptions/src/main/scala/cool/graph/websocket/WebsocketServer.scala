@@ -1,4 +1,4 @@
-package cool.graph.subscriptions
+package cool.graph.websocket
 
 import akka.NotUsed
 import akka.actor.{ActorSystem, Props}
@@ -10,9 +10,9 @@ import cool.graph.akkautil.http.Server
 import cool.graph.bugsnag.BugSnagger
 import cool.graph.cuid.Cuid
 import cool.graph.messagebus.pubsub.Everything
-import cool.graph.subscriptions.WebsocketSessionManager.Requests.IncomingQueueMessage
-import cool.graph.subscriptions.metrics.SubscriptionWebsocketMetrics
-import cool.graph.subscriptions.services.WebsocketServices
+import cool.graph.websocket.WebsocketSessionManager.Requests.IncomingQueueMessage
+import cool.graph.websocket.metrics.SubscriptionWebsocketMetrics
+import cool.graph.websocket.services.WebsocketServices
 import play.api.libs.streams.ActorFlow
 
 import scala.concurrent.Future
