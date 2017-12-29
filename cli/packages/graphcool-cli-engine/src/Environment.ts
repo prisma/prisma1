@@ -323,7 +323,7 @@ It has been renamed to ${oldPath}. The up-to-date format has been written to ${r
   migrateGlobalFiles() {
     const dotFilePath = path.join(this.config.home, '.graphcool')
     const dotExists = fs.pathExistsSync(dotFilePath)
-    if (fs.lstatSync(dotFilePath).isDirectory()) {
+    if (dotExists && fs.lstatSync(dotFilePath).isDirectory()) {
       return
     }
     const rcHomePath = path.join(this.config.home, '.graphcoolrc')
