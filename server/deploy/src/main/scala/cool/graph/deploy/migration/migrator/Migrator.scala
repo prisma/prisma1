@@ -91,13 +91,21 @@ case class DeploymentSchedulerActor()(
 
 object ResumeMessageProcessing
 object Ready
-object Deploy
+case class Deploy(migration: Migration)
 
 // Todo only saves for now, doesn't work off (that is still in the applier job!)
-// State machine states:
-//   - Initializing: Stashing all messages while initializing
-//   - Ready: Ready to schedule deployments and deploy
-//   - Busy: Currently deploying or scheduling, subsequent scheduling is rejected
+/**
+  * State machine states:
+  *  - Initializing: Stashing all messages while initializing
+  *  - Ready: Ready to schedule deployments and deploy
+  *  - Busy: Currently deploying or scheduling, subsequent scheduling is rejected
+  *
+  * Transitions: Initializing -> Ready <-> Busy
+  *
+  * Why a state machine? Deployment should leverage futures for optimal performance, but there should only be one deployment
+  * at a time for a given project and stage. Hence, processing is kicked off async and the actor changes behavior to reject
+  * scheduling and deployment until the async processing restored the ready state.
+  */
 case class ProjectDeploymentActor(projectID: String)(
     implicit val migrationPersistence: MigrationPersistence,
     applier: MigrationApplier
@@ -123,11 +131,18 @@ case class ProjectDeploymentActor(projectID: String)(
   // A: Just restrict it to one deployment at a time at the moment
 
   def ready: Receive = {
-    case Schedule(nextProject, steps) =>
-      context.become(busy) // Block subsequent deploys
-      (migrationPersistence.create(nextProject, Migration(nextProject, steps)) pipeTo sender()).map { _ =>
-        context.unbecome()
-        self ! Deploy
+    case msg: Schedule =>
+      val caller = sender()
+      context.become(busy) // Block subsequent scheduling and deployments
+      handleScheduling(msg).onComplete {
+        case Success(migration: Migration) =>
+          context.unbecome()
+          self ! Deploy(migration)
+          caller ! migration
+
+        case Failure(err) =>
+          context.unbecome()
+          caller ! akka.actor.Status.Failure(err)
       }
 
     // work off replaces the actor behavior until the messages has been processed, as it is async and we need
@@ -150,21 +165,45 @@ case class ProjectDeploymentActor(projectID: String)(
   }
 
   def initialize() = {
-    // Load all unapplied migrations for project and schedule as many workoff messages
-    // Load all migrations from DB on init and queue them as messages, or Just schedule messages that something needs working off (more robust, not that much more overhead)
-    // => Later with the new the new migration progress, we need to go to the DB anyways to set the status.
-    // => This way we could check that the next one is the correct one...
+    migrationPersistence.getNextMigration(projectID).onComplete {
+      case Success(migrationOpt) =>
+        migrationOpt match {
+          case Some(migration) =>
+            self ! Ready
+            self ! Deploy(migration)
 
-    self ! Ready
+          case None =>
+            self ! Ready
+        }
+
+      case Failure(err) =>
+        println(s"Deployment worker initialization for project $projectID failed with $err")
+        context.stop(self)
+    }
   }
 
-  def handleScheduling(msg: Schedule): Future[Unit] = {
-    ???
+  def handleScheduling(msg: Schedule): Future[Migration] = {
+    // Check if scheduling is possible (no pending migration), then create and return the migration
+    migrationPersistence
+      .getNextMigration(projectID)
+      .transformWith {
+        case Success(pendingMigrationOpt) =>
+          pendingMigrationOpt match {
+            case Some(pendingMigration) => Future.failed(DeploymentInProgress)
+            case None                   => Future.unit
+          }
+
+        case Failure(err) =>
+          Future.failed(err)
+      }
+      .flatMap { _ =>
+        migrationPersistence.create(msg.nextProject, Migration(msg.nextProject, msg.steps))
+      }
   }
 
   def handleDeployment(): Future[Unit] = {
-    // applier works off here
+    // todo applier works off here
 
-    ???
+    Future.unit
   }
 }
