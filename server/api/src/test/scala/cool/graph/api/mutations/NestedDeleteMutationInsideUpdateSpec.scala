@@ -412,11 +412,8 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
       project
     )
     val noteId = createResult.pathAsString("data.createNote.id")
-    val todoId = createResult.pathAsString("data.createNote.todo.id")
 
-    val todoId2 = server.executeQuerySimple("""mutation {createTodo(data: { title: "the title2" }){id}}""", project).pathAsString("data.createTodo.id")
-
-    val result = server.executeQuerySimple(
+    val result = server.executeQuerySimpleThatMustFail(
       s"""
          |mutation {
          |  updateNote(
@@ -433,14 +430,15 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
          |  }
          |}
       """.stripMargin,
-      project
+      project,
+      errorCode = 3039,
+      errorContains = "No Node for the model Todo with value DOES NOT EXISTS for id found."
     )
-    mustBeEqual(result.pathAsJsValue("data.updateNote").toString, """{"todo":null}""")
 
     val query = server.executeQuerySimple("""{ todoes { title }}""", project)
     mustBeEqual(query.toString, """{"data":{"todoes":[{"title":"the title"}]}}""")
 
     val query2 = server.executeQuerySimple("""{ notes { text }}""", project)
-    mustBeEqual(query2.toString, """{"data":{"notes":[{"text":"FirstUnique"},{"text":"SecondUnique"}]}}""")
+    mustBeEqual(query2.toString, """{"data":{"notes":[{"text":"Note"}]}}""")
   }
 }

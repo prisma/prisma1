@@ -96,15 +96,23 @@ case class SqlMutactions(dataResolver: DataResolver) {
       nestedMutation <- args.subNestedMutation(field, subModel) // this is the input object containing the nested mutation
     } yield {
       val parentInfo = ParentInfo(model, field, fromId)
+      //add where trigger and relation trigger generate Where's out of the nested mutation
+      getMutactionsForWhereChecks(subModel, nestedMutation) ++
       getMutactionsForNestedCreateMutation(subModel, nestedMutation, parentInfo) ++
         getMutactionsForNestedConnectMutation(nestedMutation, parentInfo) ++
         getMutactionsForNestedDisconnectMutation(nestedMutation, parentInfo) ++
         getMutactionsForNestedDeleteMutation(nestedMutation, parentInfo) ++
         getMutactionsForNestedUpdateMutation(nestedMutation, parentInfo) ++
         getMutactionsForNestedUpsertMutation(subModel, nestedMutation, parentInfo)
-
     }
     x.flatten
+  }
+
+  def getMutactionsForWhereChecks(subModel: Model, nestedMutation: NestedMutation): Seq[ClientSqlMutaction] = {
+     nestedMutation.updates.map(update => VerifyWhere(project, update.where))++
+      nestedMutation.deletes.map(delete => VerifyWhere(project, delete.where))++
+      nestedMutation.connects.map(connect => VerifyWhere(project, connect.where))++
+      nestedMutation.disconnects.map(disconnect => VerifyWhere(project, disconnect.where))
   }
 
   def getMutactionsForNestedCreateMutation(model: Model, nestedMutation: NestedMutation, parentInfo: ParentInfo): Seq[ClientSqlMutaction] = {

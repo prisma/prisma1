@@ -238,7 +238,7 @@ class NestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     val noteId = createResult.pathAsString("data.createNote.id")
     val todoId = createResult.pathAsString("data.createNote.todo.id")
 
-    val result = server.executeQuerySimple(
+    server.executeQuerySimpleThatMustFail(
       s"""
          |mutation {
          |  updateNote(
@@ -256,16 +256,16 @@ class NestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
          |    }
          |  ){
          |    text
-         |    todo {
-         |      title
-         |    }
          |  }
          |}
       """.stripMargin,
-      project
+      project,
+      errorCode = 3039,
+      errorContains = "No Node for the model Todo with value DOES NOT EXIST for id found."
     )
-    mustBeEqual(result.pathAsJsValue("data.updateNote.text").toString, """Some Text""")
-    mustBeEqual(result.pathAsJsValue("data.updateNote.todo").toString, """{"title":"the title"}""")
+
+    server.executeQuerySimple(s"""query{note(where:{id: "$noteId"}){text}}""", project, dataContains = """{"note":{"text":"Some Text"}}""")
+    server.executeQuerySimple(s"""query{todo(where:{id: "$todoId"}){title}}""", project, dataContains = """{"todo":{"title":"the title"}}""")
   }
 
   "a many to many relation" should "handle null in unique fields" in {

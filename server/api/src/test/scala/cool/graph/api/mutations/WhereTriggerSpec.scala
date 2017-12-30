@@ -10,7 +10,7 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class WhereTriggerSpec extends FlatSpec with Matchers with ApiBaseSpec {
 
-  "a many to many relation" should "handle null in unique fields" in {
+  "Where trigger" should "fire" in {
     val project = SchemaDsl() { schema =>
       val note = schema.model("Note").field("text", _.String, isUnique = true)
       schema.model("Todo").field_!("title", _.String, isUnique = true).field("unique", _.String, isUnique = true).manyToManyRelation("notes", "todos", note)
@@ -43,6 +43,7 @@ class WhereTriggerSpec extends FlatSpec with Matchers with ApiBaseSpec {
      case e: SQLException =>
        println(e.getErrorCode)
        println(e.getMessage)
+       println(e.getCause)
    }
 
     database.runDbActionOnClientDb(DatabaseMutationBuilder.whereFailureTrigger(project, NodeSelector(noteModel, "text", StringGCValue("Some Text 2"))))
@@ -78,5 +79,26 @@ class WhereTriggerSpec extends FlatSpec with Matchers with ApiBaseSpec {
 //      errorContains = "You provided an invalid argument for the where selector on Todo."
 //    )
   }
+
+  //Test Where
+  // - multiple where's nested
+  // - insert both where's already?
+  //Test the parsing of the exception for different datatypes
+  // - json, float, string, boolean
+  // - put a catch all handling on it in the end?
+  //
+
+  //Implement Relation
+  //Test Relation
+
+
+
+
+
+
+
+
+
+
 
 }
