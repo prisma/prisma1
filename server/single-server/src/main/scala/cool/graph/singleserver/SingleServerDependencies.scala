@@ -7,7 +7,7 @@ import cool.graph.api.database.Databases
 import cool.graph.api.project.{ProjectFetcher, ProjectFetcherImpl}
 import cool.graph.api.schema.SchemaBuilder
 import cool.graph.deploy.DeployDependencies
-import cool.graph.deploy.migration.{AsyncMigrator, Migrator}
+import cool.graph.deploy.migration.migrator.{AsyncMigrator, Migrator}
 
 trait SingleServerApiDependencies extends DeployDependencies with ApiDependencies {
   override implicit def self: SingleServerDependencies
@@ -19,5 +19,5 @@ case class SingleServerDependencies()(implicit val system: ActorSystem, val mate
   val databases                      = Databases.initialize(config)
   val apiSchemaBuilder               = SchemaBuilder()
   val projectFetcher: ProjectFetcher = ProjectFetcherImpl(Vector.empty, config)
-  val migrator: Migrator             = AsyncMigrator(clientDb, migrationPersistence)
+  val migrator: Migrator             = AsyncMigrator(clientDb, migrationPersistence, projectPersistence, migrationApplier)
 }

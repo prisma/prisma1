@@ -148,6 +148,7 @@ object APIErrors {
       extends ClientApiError(s"No Node for the model ${where.model.name} with value ${where.fieldValueAsString} for ${where.fieldName} found.", 3039)
 
   case class NullProvidedForWhereError(modelName: String)
-      extends ClientApiError(s"You provided an invalid argument for the unique selector on $modelName.", 3040)
+      extends ClientApiError(s"You provided an invalid argument for the where selector on $modelName.", 3040)
+
 
 }

@@ -17,6 +17,7 @@ actualBranch := {
   if (branch != "master"){
     sys.props += "project.version" -> s"$branch-SNAPSHOT"
   }
+
   branch
 }
 
@@ -124,37 +125,38 @@ lazy val sharedModels = normalProject("shared-models")
   ) ++ joda
 )
 lazy val deploy = serverProject("deploy")
-                    .dependsOn(sharedModels % "compile")
-                    .dependsOn(akkaUtils % "compile")
-                    .dependsOn(metrics % "compile")
-                    .dependsOn(jvmProfiler % "compile")
-                    .settings(
-                      libraryDependencies ++= Seq(
-                        playJson,
-                        scalaTest
-                      )
-                    )
-                    .enablePlugins(sbtdocker.DockerPlugin, JavaAppPackaging)
-                    .settings(
-                      imageNames in docker := Seq(
-                        ImageName(s"graphcool/graphcool-deploy:$betaImageTag")
-                      ),
-                      dockerfile in docker := {
-                        val appDir    = stage.value
-                        val targetDir = "/app"
+  .dependsOn(sharedModels % "compile")
+  .dependsOn(akkaUtils % "compile")
+  .dependsOn(metrics % "compile")
+  .dependsOn(jvmProfiler % "compile")
+  .dependsOn(messageBus % "compile")
+  .settings(
+    libraryDependencies ++= Seq(
+      playJson,
+      scalaTest
+    )
+  )
+  .enablePlugins(sbtdocker.DockerPlugin, JavaAppPackaging)
+  .settings(
+    imageNames in docker := Seq(
+      ImageName(s"graphcool/graphcool-deploy:$betaImageTag")
+    ),
+    dockerfile in docker := {
+      val appDir    = stage.value
+      val targetDir = "/app"
 
-                        new Dockerfile {
-                          from("anapsix/alpine-java")
-                          entryPoint(s"$targetDir/bin/${executableScriptName.value}")
-                          copy(appDir, targetDir)
-                        }
-                      }
-                    )
-                    .enablePlugins(BuildInfoPlugin)
-                    .settings(
-                      buildInfoKeys := Seq[BuildInfoKey](name, version, "imageTag" -> betaImageTag),
-                      buildInfoPackage := "build_info"
-                    )
+      new Dockerfile {
+        from("anapsix/alpine-java")
+        entryPoint(s"$targetDir/bin/${executableScriptName.value}")
+        copy(appDir, targetDir)
+      }
+    }
+  )
+  .enablePlugins(BuildInfoPlugin)
+  .settings(
+    buildInfoKeys := Seq[BuildInfoKey](name, version, "imageTag" -> betaImageTag),
+    buildInfoPackage := "build_info"
+  )
 
 lazy val api = serverProject("api")
   .dependsOn(sharedModels % "compile")
