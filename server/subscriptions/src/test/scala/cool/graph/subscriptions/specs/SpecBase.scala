@@ -5,7 +5,7 @@ import akka.http.scaladsl.testkit.{ScalatestRouteTest, TestFrameworkInterface, W
 import akka.stream.ActorMaterializer
 import cool.graph.akkautil.http.ServerExecutor
 import cool.graph.api.ApiTestDatabase
-import cool.graph.bugsnag.{BugSnaggerImpl, BugSnaggerMock}
+import cool.graph.bugsnag.BugSnaggerImpl
 import cool.graph.shared.models.{Project, ProjectWithClientId}
 import cool.graph.subscriptions._
 import cool.graph.subscriptions.protocol.SubscriptionRequest
@@ -15,28 +15,25 @@ import cool.graph.websocket.services.WebsocketDevDependencies
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
 import play.api.libs.json.{JsObject, JsValue, Json}
 
-import scala.concurrent.Await
 import scala.concurrent.duration._
+import scala.concurrent.{Await, ExecutionContextExecutor}
 
 trait SpecBase extends TestFrameworkInterface with BeforeAndAfterEach with BeforeAndAfterAll with ScalatestRouteTest { this: Suite =>
-  implicit val bugsnag      = BugSnaggerMock
-  implicit val ec           = system.dispatcher
-  implicit val dependencies = new SubscriptionDependenciesForTest()
-  val testDatabase          = ApiTestDatabase()
-  implicit val actorSytem   = ActorSystem("test")
-  implicit val mat          = ActorMaterializer()
-  val config                = dependencies.config
-  val sssEventsTestKit      = dependencies.sssEventsTestKit
-  val invalidationTestKit   = dependencies.invalidationTestKit
-  val requestsTestKit       = dependencies.requestsQueueTestKit
-  val responsesTestKit      = dependencies.responsePubSubTestKit
+  implicit val bugsnag: BugSnaggerImpl      = BugSnaggerImpl("")
+  implicit val ec: ExecutionContextExecutor = system.dispatcher
+  implicit val dependencies                 = new SubscriptionDependenciesForTest()
+  val testDatabase                          = ApiTestDatabase()
+  implicit val actorSytem                   = ActorSystem("test")
+  implicit val mat                          = ActorMaterializer()
+  val config                                = dependencies.config
+  val sssEventsTestKit                      = dependencies.sssEventsTestKit
+  val invalidationTestKit                   = dependencies.invalidationTestKit
+  val requestsTestKit                       = dependencies.requestsQueueTestKit
+  val responsesTestKit                      = dependencies.responsePubSubTestKit
 
-  val websocketServices = WebsocketDevDependencies(
-    requestsQueuePublisher = requestsTestKit.map[Request] { req: Request =>
-      SubscriptionRequest(req.sessionId, req.projectId, req.body)
-    },
-    responsePubSubSubscriber = responsesTestKit
-  )
+  val websocketServices = WebsocketDevDependencies(requestsTestKit.map[Request] { req: Request =>
+    SubscriptionRequest(req.sessionId, req.projectId, req.body)
+  }, responsesTestKit)
 
   val wsServer            = WebsocketServer(websocketServices)
   val simpleSubServer     = SimpleSubscriptionsServer()
@@ -49,9 +46,8 @@ trait SpecBase extends TestFrameworkInterface with BeforeAndAfterEach with Befor
 //    testDatabase.beforeAllPublic()
   }
 
-  override def beforeEach() = {
+  override def beforeEach(): Unit = {
     super.beforeEach()
-
 //    testDatabase.beforeEach()
     sssEventsTestKit.reset
     invalidationTestKit.reset
@@ -59,14 +55,14 @@ trait SpecBase extends TestFrameworkInterface with BeforeAndAfterEach with Befor
     requestsTestKit.reset
   }
 
-  override def afterAll() = {
+  override def afterAll(): Unit = {
     println("finished spec " + (">" * 50))
     super.afterAll()
-//    testDatabase.afterAll()
     subscriptionServers.stopBlocking()
+//    testDatabase.afterAll()
   }
 
-  def sleep(millis: Long = 2000) = {
+  def sleep(millis: Long = 2000): Unit = {
     Thread.sleep(millis)
   }
 
