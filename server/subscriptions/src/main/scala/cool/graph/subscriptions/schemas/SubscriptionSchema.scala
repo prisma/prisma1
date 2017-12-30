@@ -5,6 +5,7 @@ import cool.graph.api.schema._
 import cool.graph.shared.models.ModelMutationType.ModelMutationType
 import cool.graph.shared.models.{Model, ModelMutationType, Project}
 import cool.graph.subscriptions.SubscriptionDependencies
+import cool.graph.subscriptions.resolving.SubscriptionUserContext
 import sangria.schema._
 
 import scala.concurrent.Future
@@ -25,7 +26,7 @@ case class SubscriptionSchema(
   val modelObjectTypes: Map[String, ObjectType[ApiUserContext, DataItem]] = schemaBuilder.objectTypes
   val outputMapper                                                        = OutputTypesBuilder(project, modelObjectTypes, dependencies.dataResolver(project))
 
-  val subscriptionField: Field[ApiUserContext, Unit] = Field(
+  val subscriptionField: Field[SubscriptionUserContext, Unit] = Field(
     s"${model.name}",
     description = Some("The updated node"),
     fieldType = OptionType(
@@ -59,14 +60,14 @@ case class SubscriptionSchema(
     }
   )
 
-  val createDummyField: Field[ApiUserContext, Unit] = Field(
+  val createDummyField: Field[SubscriptionUserContext, Unit] = Field(
     "dummy",
     description = Some("This is only a dummy field due to the API of Schema of Sangria, as Query is not optional"),
     fieldType = StringType,
     resolve = (ctx) => ""
   )
 
-  def build(): Schema[ApiUserContext, Unit] = {
+  def build(): Schema[SubscriptionUserContext, Unit] = {
     val Subscription = Some(
       ObjectType(
         "Subscription",

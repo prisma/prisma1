@@ -26,7 +26,6 @@ trait SubscriptionDependencies extends ApiDependencies {
   val responsePubSubPublisherV05: PubSubPublisher[SubscriptionSessionResponseV05]
   val responsePubSubPublisherV07: PubSubPublisher[SubscriptionSessionResponse]
   val requestsQueueConsumer: QueueConsumer[SubscriptionRequest]
-  def projectFetcher: ProjectFetcher
 
   lazy val apiMetricsFlushInterval = 10
   lazy val clientAuth              = AuthImpl

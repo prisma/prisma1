@@ -6,7 +6,7 @@ import com.typesafe.config.{Config, ConfigFactory}
 import cool.graph.api.database.deferreds.DeferredResolverProvider
 import cool.graph.api.database.{DataResolver, Databases}
 import cool.graph.api.project.{ProjectFetcher, ProjectFetcherImpl}
-import cool.graph.api.schema.SchemaBuilder
+import cool.graph.api.schema.{ApiUserContext, SchemaBuilder}
 import cool.graph.api.server.{Auth, AuthImpl, RequestHandler}
 import cool.graph.bugsnag.BugSnaggerImpl
 import cool.graph.client.server.{GraphQlRequestHandler, GraphQlRequestHandlerImpl}
@@ -36,7 +36,7 @@ trait ApiDependencies extends AwaitUtils {
 
   def dataResolver(project: Project): DataResolver       = DataResolver(project)
   def masterDataResolver(project: Project): DataResolver = DataResolver(project, useMasterDatabaseOnly = true)
-  def deferredResolverProvider(project: Project)         = new DeferredResolverProvider(dataResolver(project))
+  def deferredResolverProvider(project: Project)         = new DeferredResolverProvider[ApiUserContext](dataResolver(project))
 
   def destroy = {
     println("ApiDependencies [DESTROY]")

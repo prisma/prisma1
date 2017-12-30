@@ -14,7 +14,7 @@ object FilteredResolver {
       modelObjectTypes: ObjectTypeBuilder,
       model: Model,
       id: String,
-      ctx: Context[ApiUserContext, Unit],
+      ctx: Context[_, Unit],
       dataResolver: DataResolver
   ): Future[Option[DataItem]] = {
 
@@ -29,7 +29,7 @@ object FilteredResolver {
         case _                => true
       }
 
-    val filter = filterInput.filter(removeTopLevelIdFilter) ++ List(FilterElement(key = "id", value = id, field = Some(model.getFieldByName_!("id"))))
+    val filter = filterInput.filter(removeTopLevelIdFilter(_)) ++ List(FilterElement(key = "id", value = id, field = Some(model.getFieldByName_!("id"))))
 
     dataResolver
       .resolveByModel(

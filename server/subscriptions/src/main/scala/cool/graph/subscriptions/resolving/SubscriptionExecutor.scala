@@ -81,14 +81,14 @@ object SubscriptionExecutor extends SprayJsonExtensions {
       QueryTransformer.mergeBooleans(mutationInEvaluated).asInstanceOf[Document]
     }
 
-//    val context = SubscriptionUserContext(
-//      nodeId = nodeId,
-//      requestId = requestId,
-//      project = project,
-//      clientId = clientId,
-//      log = x => println(x),
-//      queryAst = Some(actualQuery)
-//    )
+    val context = SubscriptionUserContext(
+      nodeId = nodeId,
+      requestId = requestId,
+      project = project,
+      clientId = clientId,
+      log = x => println(x),
+      queryAst = Some(actualQuery)
+    )
     val dataResolver = if (alwaysQueryMasterDatabase) {
       dependencies.dataResolver(project).copy(useMasterDatabaseOnly = true)
     } else {
@@ -101,7 +101,7 @@ object SubscriptionExecutor extends SprayJsonExtensions {
       .execute(
         schema = schema,
         queryAst = actualQuery,
-        userContext = ApiUserContext("bla"),
+        userContext = context,
         variables = variables,
         exceptionHandler = sangriaHandler,
         operationName = operationName,
