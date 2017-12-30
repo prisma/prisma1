@@ -19,5 +19,5 @@ case class SingleServerDependencies()(implicit val system: ActorSystem, val mate
   val databases                      = Databases.initialize(config)
   val apiSchemaBuilder               = SchemaBuilder()
   val projectFetcher: ProjectFetcher = ProjectFetcherImpl(Vector.empty, config)
-  val migrator: Migrator             = AsyncMigrator(clientDb, migrationPersistence)
+  val migrator: Migrator             = AsyncMigrator(clientDb, migrationPersistence, projectPersistence, migrationApplier)
 }

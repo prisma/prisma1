@@ -1,7 +1,6 @@
 package cool.graph.deploy.migration.migrator
 
 import akka.actor.{Actor, ActorRef, Props, Stash, Terminated}
-import cool.graph.akkautil.LogUnhandled
 import cool.graph.deploy.database.persistence.{MigrationPersistence, ProjectPersistence}
 import cool.graph.deploy.migration.MigrationApplier
 import cool.graph.deploy.schema.DeploymentInProgress
@@ -92,7 +91,7 @@ case class DeploymentSchedulerActor()(
 
 object ResumeMessageProcessing
 object Ready
-case class Deploy(migration: Migration)
+object Deploy
 
 // Todo only saves for now, doesn't work off (that is still in the applier job!)
 /**
@@ -111,8 +110,7 @@ case class ProjectDeploymentActor(projectId: String)(
     implicit val migrationPersistence: MigrationPersistence,
     applier: MigrationApplier
 ) extends Actor
-    with Stash
-    with LogUnhandled {
+    with Stash {
 
   implicit val ec                  = context.system.dispatcher
   var currentProjectState: Project = _ // Latest valid project, saves a DB roundtrip
@@ -121,7 +119,7 @@ case class ProjectDeploymentActor(projectId: String)(
 
   initialize()
 
-  def receive: Receive = logAll {
+  def receive: Receive = {
     case Ready =>
       context.become(ready)
       unstashAll()
@@ -130,50 +128,59 @@ case class ProjectDeploymentActor(projectId: String)(
       stash()
   }
 
-  // Q: What happens if the first deployment in a series of deployments fails? All fail? Just deploy again?
-  // A: Just restrict it to one deployment at a time at the moment
-
-  def ready: Receive = logAll {
+  def ready: Receive = {
     case msg: Schedule =>
+      println(s"[Debug] Scheduling deployment for project $projectId")
       val caller = sender()
       context.become(busy) // Block subsequent scheduling and deployments
       handleScheduling(msg).onComplete {
         case Success(migration: Migration) =>
-          self ! ResumeMessageProcessing
-          self ! Deploy(migration)
           caller ! migration
+          self ! Deploy // will be stashed
+          self ! ResumeMessageProcessing
 
         case Failure(err) =>
           self ! ResumeMessageProcessing
           caller ! akka.actor.Status.Failure(err)
       }
 
-    // work off replaces the actor behavior until the messages has been processed, as it is async and we need
-    // to keep message processing sequential and consistent, but async for best performance
-    case Deploy(migration) =>
+    case Deploy =>
       context.become(busy)
-      handleDeployment(migration).onComplete {
-        case Success(_)   => self ! ResumeMessageProcessing
-        case Failure(err) => self ! ResumeMessageProcessing // todo Mark migration as failed
+      handleDeployment().onComplete {
+        case Success(_) =>
+          println(s"[Debug] Applied migration for project $projectId")
+          self ! ResumeMessageProcessing
+
+        case Failure(err) =>
+          println(s"[Debug] Error during deployment for project $projectId: $err")
+          self ! ResumeMessageProcessing // todo Mark migration as failed
       }
 
     // How to get migration progress into the picture?
-    // How to retry? -> No retry for now? Yes.
+    // How to retry? -> No retry for now? Yes. Just fail the deployment with the new migration progress.
   }
 
-  def busy: Receive = logAll {
-    case _: Schedule             => sender() ! akka.actor.Status.Failure(DeploymentInProgress)
-    case ResumeMessageProcessing => context.unbecome(); unstashAll()
-    case _                       => stash()
+  def busy: Receive = {
+    case _: Schedule =>
+      sender() ! akka.actor.Status.Failure(DeploymentInProgress)
+
+    case ResumeMessageProcessing =>
+      context.become(ready)
+      unstashAll()
+
+    case x =>
+      stash()
   }
 
   def initialize() = {
+    println(s"[Debug] Initializing deployment worker for $projectId")
     migrationPersistence.getNextMigration(projectId).onComplete {
       case Success(migrationOpt) =>
         migrationOpt match {
-          case Some(migration) =>
+          case Some(_) =>
+            println(s"[Debug] Found unapplied migration for $projectId during init.")
             self ! Ready
-            self ! Deploy(migration)
+            self ! Deploy
 
           case None =>
             self ! Ready
@@ -204,18 +211,24 @@ case class ProjectDeploymentActor(projectId: String)(
       }
   }
 
-  def handleDeployment(migration: Migration): Future[Unit] = {
-    // todo applier works off here
-
-    for {
-      result <- applier.applyMigration(prevProject, migration)
-      _ <- if (result.succeeded) {
-            migrationPersistence.markMigrationAsApplied(migration)
+  def handleDeployment(): Future[Unit] = {
+    migrationPersistence.getUnappliedMigration(projectId).transformWith {
+      case Success(Some(unapplied)) =>
+        applier.applyMigration(unapplied.previousProject, unapplied.nextProject, unapplied.migration).map { result =>
+          if (result.succeeded) {
+            migrationPersistence.markMigrationAsApplied(unapplied.migration)
           } else {
-            Future.successful(())
+            // todo or mark it as failed here?
+            Future.failed(new Exception("Applying migration failed."))
           }
-    } yield ()
+        }
 
-    Future.unit
+      case Failure(err) =>
+        Future.failed(new Exception(s"Error while fetching unapplied migration: $err"))
+
+      case Success(None) =>
+        println("[Warning] Deployment signalled but no unapplied migration found. Nothing to see here.")
+        Future.unit
+    }
   }
 }

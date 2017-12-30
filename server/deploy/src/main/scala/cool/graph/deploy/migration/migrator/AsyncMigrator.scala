@@ -5,13 +5,13 @@ import akka.pattern.ask
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
 import cool.graph.deploy.database.persistence.{MigrationPersistence, ProjectPersistence}
-import cool.graph.deploy.migration.{MigrationApplier, MigrationApplierJob}
+import cool.graph.deploy.migration.MigrationApplier
 import cool.graph.shared.models.{Migration, MigrationStep, Project}
 import slick.jdbc.MySQLProfile.backend.DatabaseDef
 
 import scala.concurrent.Future
-import scala.util.{Failure, Success}
 import scala.concurrent.duration._
+import scala.util.{Failure, Success}
 
 case class AsyncMigrator(
     clientDatabase: DatabaseDef,
@@ -24,10 +24,8 @@ case class AsyncMigrator(
 ) extends Migrator {
   import system.dispatcher
 
-//  val job                 = system.actorOf(Props(MigrationApplierJob(clientDatabase, migrationPersistence)))
   val deploymentScheduler = system.actorOf(Props(DeploymentSchedulerActor()(migrationPersistence, projectPersistence, applier)))
-
-  implicit val timeout = new Timeout(30.seconds)
+  implicit val timeout    = new Timeout(30.seconds)
 
   (deploymentScheduler ? Initialize).onComplete {
     case Success(_) =>

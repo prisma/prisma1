@@ -8,8 +8,8 @@ import slick.jdbc.MySQLProfile.api._
 
 class MigrationPersistenceImplSpec extends FlatSpec with Matchers with DeploySpecBase {
 
-  val migrationPersistence = testDependencies.migrationPersistence
-  val projectPersistence   = testDependencies.projectPersistence
+  val migrationPersistence: MigrationPersistenceImpl = testDependencies.migrationPersistence
+  val projectPersistence: ProjectPersistenceImpl     = testDependencies.projectPersistence
 
   ".create()" should "store the migration in the db and increment the revision accordingly" in {
     val project = setupProject(basicTypesGql)
@@ -32,7 +32,7 @@ class MigrationPersistenceImplSpec extends FlatSpec with Matchers with DeploySpe
     migrations should have(size(5))
   }
 
-  ".getUnappliedMigration()" should "return an unapplied migration from any project" in {
+  ".getUnappliedMigration()" should "return an unapplied migration from the specified project" in {
     val project  = setupProject(basicTypesGql)
     val project2 = setupProject(basicTypesGql)
 
@@ -40,17 +40,18 @@ class MigrationPersistenceImplSpec extends FlatSpec with Matchers with DeploySpe
     migrationPersistence.create(project, Migration.empty(project)).await
     migrationPersistence.create(project2, Migration.empty(project2)).await
 
-    val unapplied = migrationPersistence.getUnappliedMigration().await()
+    val unapplied = migrationPersistence.getUnappliedMigration(project.id).await()
     unapplied.isDefined shouldEqual true
+    unapplied.get.previousProject.id shouldEqual project.id
 
     migrationPersistence.markMigrationAsApplied(unapplied.get.migration).await()
-    val unapplied2 = migrationPersistence.getUnappliedMigration().await()
 
+    val unapplied2 = migrationPersistence.getUnappliedMigration(project2.id).await()
     unapplied2.isDefined shouldEqual true
-    unapplied2.get.migration.projectId shouldNot equal(unapplied.get.migration.projectId)
+    unapplied2.get.previousProject.id shouldEqual project2.id
 
     migrationPersistence.markMigrationAsApplied(unapplied2.get.migration).await()
-    migrationPersistence.getUnappliedMigration().await().isDefined shouldEqual false
+    migrationPersistence.getUnappliedMigration(project.id).await().isDefined shouldEqual false
   }
 
   ".markMigrationAsApplied()" should "mark a migration as applied (duh)" in {
