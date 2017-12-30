@@ -18,6 +18,7 @@ object Dependencies {
     val scalaTest   = "3.0.4"
     val slick       = "3.2.0"
     val spray       = "1.3.3"
+    val jackson     = "2.8.4"
   }
 
   val jodaTime    = "joda-time" % "joda-time" % v.joda
@@ -67,10 +68,10 @@ object Dependencies {
   val bugsnagClient = "com.bugsnag" % "bugsnag"      % "3.0.2"
   val specs2        = "org.specs2"  %% "specs2-core" % "3.8.8" % "test"
 
-  val jacksonCore           = "com.fasterxml.jackson.core" % "jackson-core" % "2.8.4"
-  val jacksonDatabind       = "com.fasterxml.jackson.core" % "jackson-databind" % "2.8.4"
-  val jacksonAnnotation     = "com.fasterxml.jackson.core" % "jackson-annotations" % "2.8.4"
-  val jacksonDataformatCbor = "com.fasterxml.jackson.dataformat" % "jackson-dataformat-cbor" % "2.8.4"
+  val jacksonCore           = "com.fasterxml.jackson.core" % "jackson-core" % v.jackson
+  val jacksonDatabind       = "com.fasterxml.jackson.core" % "jackson-databind" % v.jackson
+  val jacksonAnnotation     = "com.fasterxml.jackson.core" % "jackson-annotations" % v.jackson
+  val jacksonDataformatCbor = "com.fasterxml.jackson.dataformat" % "jackson-dataformat-cbor" % v.jackson
   val jackson               = Seq(jacksonCore, jacksonDatabind, jacksonAnnotation, jacksonDataformatCbor)
 
   val amqp         = "com.rabbitmq"               % "amqp-client"              % "4.1.0"
