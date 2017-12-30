@@ -1,5 +1,5 @@
 ---
-alias: tijghei9go
+alias: iph7ieng5h
 description: Get started in 5 min with Angular, Apollo Client and GraphQL and learn how to build a simple Instagram clone.
 github: https://github.com/graphql-boilerplates/angular-fullstack-graphql/tree/master/basic
 ---
