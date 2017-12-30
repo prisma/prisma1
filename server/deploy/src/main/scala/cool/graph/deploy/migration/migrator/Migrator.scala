@@ -5,6 +5,7 @@ import cool.graph.deploy.database.persistence.{MigrationPersistence, ProjectPers
 import cool.graph.shared.models.{Migration, MigrationStep, Project}
 import akka.pattern.pipe
 import cool.graph.deploy.migration.{MigrationApplier, MigrationApplierImpl}
+import cool.graph.deploy.schema.DeploymentInProgress
 
 import scala.collection.mutable
 import scala.concurrent.Future
@@ -88,11 +89,15 @@ case class DeploymentSchedulerActor()(
   }
 }
 
-object WorkoffDeployment
 object ResumeMessageProcessing
 object Ready
+object Deploy
 
 // Todo only saves for now, doesn't work off (that is still in the applier job!)
+// State machine states:
+//   - Initializing: Stashing all messages while initializing
+//   - Ready: Ready to schedule deployments and deploy
+//   - Busy: Currently deploying or scheduling, subsequent scheduling is rejected
 case class ProjectDeploymentActor(projectID: String)(
     implicit val migrationPersistence: MigrationPersistence,
     applier: MigrationApplier
@@ -100,9 +105,7 @@ case class ProjectDeploymentActor(projectID: String)(
     with Stash {
   implicit val ec = context.system.dispatcher
 
-  // Inactive until signal?
-  // Possible enhancement: Periodically scan the DB for migrations if signal was lost?
-  // How to retry failed migrations?
+  // Possible enhancement: Periodically scan the DB for migrations if signal was lost -> Wait and see if this is an issue at all
   // LastRevisionSeen as a safety net?
 
   initialize()
@@ -116,21 +119,32 @@ case class ProjectDeploymentActor(projectID: String)(
       stash()
   }
 
+  // Q: What happens if the first deployment in a series of deployments fails? All fail? Just deploy again?
+  // A: Just restrict it to one deployment at a time at the moment
+
   def ready: Receive = {
     case Schedule(nextProject, steps) =>
-      migrationPersistence.create(nextProject, Migration(nextProject, steps)) pipeTo sender()
-      self ! WorkoffDeployment
+      context.become(busy) // Block subsequent deploys
+      (migrationPersistence.create(nextProject, Migration(nextProject, steps)) pipeTo sender()).map { _ =>
+        context.unbecome()
+        self ! Deploy
+      }
 
     // work off replaces the actor behavior until the messages has been processed, as it is async and we need
     // to keep message processing sequential and consistent, but async for best performance
-    case WorkoffDeployment =>
+    case Deploy =>
       context.become(busy)
+      handleDeployment().onComplete {
+        case Success(_)   => context.unbecome()
+        case Failure(err) => // todo Mark migration as failed
+      }
 
     // How to get migration progress into the picture?
-    //
+    // How to retry? -> No retry for now? Yes.
   }
 
   def busy: Receive = {
+    case _: Schedule             => sender() ! akka.actor.Status.Failure(DeploymentInProgress)
     case ResumeMessageProcessing => context.unbecome()
     case _                       => stash()
   }
@@ -142,5 +156,15 @@ case class ProjectDeploymentActor(projectID: String)(
     // => This way we could check that the next one is the correct one...
 
     self ! Ready
+  }
+
+  def handleScheduling(msg: Schedule): Future[Unit] = {
+    ???
+  }
+
+  def handleDeployment(): Future[Unit] = {
+    // applier works off here
+
+    ???
   }
 }

@@ -26,6 +26,12 @@ case class InvalidName(name: String, entityType: String) extends AbstractDeployA
 
 case class InvalidDeployment(deployErrorMessage: String) extends AbstractDeployApiError(deployErrorMessage, 4003)
 
+object DeploymentInProgress
+    extends AbstractDeployApiError(
+      "You can not deploy to a service stage while there is a deployment in progress for that particular service and stage. Please try again after the deployment finished.",
+      4004
+    )
+
 object InvalidNames {
   def mustStartUppercase(name: String, entityType: String): String =
     s"'${default(name, entityType)} It must begin with an uppercase letter. It may contain letters and numbers."
