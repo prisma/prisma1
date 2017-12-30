@@ -41,12 +41,16 @@ trait SpecBase extends TestFrameworkInterface with BeforeAndAfterEach with Befor
 
   Await.result(subscriptionServers.start, 15.seconds)
 
+  var caseNumber = 1
+
   override protected def beforeAll(): Unit = {
     super.beforeAll()
 //    testDatabase.beforeAllPublic()
   }
 
   override def beforeEach(): Unit = {
+    println((">" * 25) + s" starting test $caseNumber")
+    caseNumber += 1
     super.beforeEach()
 //    testDatabase.beforeEach()
     sssEventsTestKit.reset

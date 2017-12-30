@@ -67,7 +67,7 @@ class SubscriptionFilterSpec extends FlatSpec with Matchers with SpecBase with A
         )
       )
 
-      sleep()
+      sleep(4000)
 
       val event = nodeEvent(
         modelId = model.id,
@@ -76,7 +76,6 @@ class SubscriptionFilterSpec extends FlatSpec with Matchers with SpecBase with A
       )
 
       sssEventsTestKit.publish(Only(s"subscription:event:${project.id}:updateTodo"), event)
-      sleep()
 
       wsClient.expectMessage(
         dataMessage(
