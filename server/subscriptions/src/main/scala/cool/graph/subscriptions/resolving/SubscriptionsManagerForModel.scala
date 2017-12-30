@@ -118,6 +118,8 @@ case class SubscriptionsManagerForModel(
   def handleDatabaseMessage(eventStr: String, mutationType: ModelMutationType): Unit = {
     import cool.graph.utils.future.FutureUtils._
 
+    println(s"handleDatabaseMessage: $mutationType $eventStr")
+
     val subscriptionsForMutationType = subscriptions.values.filter(_.mutationTypes.contains(mutationType))
 
     // We need to take query variables into consideration - group by query and variables

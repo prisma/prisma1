@@ -339,6 +339,7 @@ object ObjectTypeBuilder {
         item.id
 
       case _ =>
+        println(s"item: $item")
         (item(field.name), field.isList) match {
           case (None, _) =>
             if (field.isRequired) {
