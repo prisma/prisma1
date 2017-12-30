@@ -7,7 +7,6 @@ case class SubscriptionUserContext(
     nodeId: String,
     project: Project,
     requestId: String,
-    clientId: String,
     log: Function[String, Unit],
     queryAst: Option[Document] = None
 )

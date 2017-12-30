@@ -4,7 +4,7 @@ import java.util.concurrent.TimeUnit
 
 import cool.graph.api.database.DataItem
 import cool.graph.shared.models.ModelMutationType.ModelMutationType
-import cool.graph.shared.models.{Model, ModelMutationType, ProjectWithClientId}
+import cool.graph.shared.models.{Model, ModelMutationType, Project}
 import cool.graph.subscriptions.SubscriptionDependencies
 import cool.graph.subscriptions.adapters.GraphcoolDataTypes
 import cool.graph.subscriptions.metrics.SubscriptionMetrics.handleDatabaseEventTimer
@@ -16,7 +16,7 @@ import scala.concurrent.duration.Duration
 import scala.concurrent.{ExecutionContext, Future}
 
 case class SubscriptionResolver(
-    project: ProjectWithClientId,
+    project: Project,
     model: Model,
     mutationType: ModelMutationType,
     subscription: StartSubscription,
@@ -42,7 +42,7 @@ case class SubscriptionResolver(
         Future.successful(None)
 
       case JsSuccess(event, _) =>
-        handleDatabaseEventTimer.timeFuture(project.project.id) {
+        handleDatabaseEventTimer.timeFuture(project.id) {
           delayed(handleDatabaseMessage(event))
         }
     }
@@ -90,7 +90,7 @@ case class SubscriptionResolver(
 
     SubscriptionExecutor
       .execute(
-        project = project.project,
+        project = project,
         model = model,
         mutationType = mutationType,
         previousValues = previousValues,
@@ -98,7 +98,6 @@ case class SubscriptionResolver(
         query = subscription.query,
         variables = variables,
         nodeId = nodeId,
-        clientId = project.clientId,
         requestId = s"subscription:${subscription.sessionId}:${subscription.id.asString}",
         operationName = subscription.operationName,
         skipPermissionCheck = false,

@@ -52,7 +52,7 @@ case class SubscriptionsManagerForProject(
 
   override def receive: Receive = logUnhandled {
     case project: ProjectWithClientId =>
-      context.become(ready(project))
+      context.become(ready(project.project))
       unstashAll()
 
     case akka.actor.Status.Failure(e) =>
@@ -63,7 +63,7 @@ case class SubscriptionsManagerForProject(
       stash()
   }
 
-  def ready(project: ProjectWithClientId): Receive = logUnhandled {
+  def ready(project: Project): Receive = logUnhandled {
     case create: CreateSubscription =>
       val response = handleSubscriptionCreate(project, create)
       sender ! response
@@ -81,8 +81,8 @@ case class SubscriptionsManagerForProject(
       context.stop(self)
   }
 
-  def handleSubscriptionCreate(project: ProjectWithClientId, job: CreateSubscription): CreateSubscriptionResponse = {
-    val model = SubscriptionQueryValidator(project.project).validate(job.query) match {
+  def handleSubscriptionCreate(project: Project, job: CreateSubscription): CreateSubscriptionResponse = {
+    val model = SubscriptionQueryValidator(project).validate(job.query) match {
       case Good(model) => model
       case Bad(errors) => return CreateSubscriptionFailed(job, errors.map(violation => new Exception(violation.errorMessage)))
     }
@@ -101,7 +101,7 @@ case class SubscriptionsManagerForProject(
     CreateSubscriptionSucceeded(job)
   }
 
-  def managerForModel(project: ProjectWithClientId, model: Model, subscriptionId: StringOrInt): ActorRef = {
+  def managerForModel(project: Project, model: Model, subscriptionId: StringOrInt): ActorRef = {
     val resolver = resolversByModel.getOrElseUpdate(
       model, {
         val actorName = model.name

@@ -26,7 +26,6 @@ object SubscriptionExecutor extends SprayJsonExtensions {
       query: String,
       variables: spray.json.JsValue,
       nodeId: String,
-      clientId: String,
       requestId: String,
       operationName: Option[String],
       skipPermissionCheck: Boolean,
@@ -44,7 +43,6 @@ object SubscriptionExecutor extends SprayJsonExtensions {
       query = queryAst,
       variables = variables,
       nodeId = nodeId,
-      clientId = clientId,
       requestId = requestId,
       operationName = operationName,
       skipPermissionCheck = skipPermissionCheck,
@@ -61,7 +59,6 @@ object SubscriptionExecutor extends SprayJsonExtensions {
       query: Document,
       variables: spray.json.JsValue,
       nodeId: String,
-      clientId: String,
       requestId: String,
       operationName: Option[String],
       skipPermissionCheck: Boolean,
@@ -85,7 +82,6 @@ object SubscriptionExecutor extends SprayJsonExtensions {
       nodeId = nodeId,
       requestId = requestId,
       project = project,
-      clientId = clientId,
       log = x => println(x),
       queryAst = Some(actualQuery)
     )
