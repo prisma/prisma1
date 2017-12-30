@@ -10,6 +10,8 @@ In this quickstart tutorial, you'll learn how to build a GraphQL server with Nod
 
 > The code for this project can be found as a _GraphQL boilerplate_ project on [GitHub](https://github.com/graphql-boilerplates/node-graphql-server/tree/master/basic).
 
+## Step 1: Install required command line tools
+
 The first thing you need to is install the command line tools you'll need for this tutorial:
 
 - `graphql-cli` is used initially to bootstrap the file structure for your server with `graphql create`
@@ -23,6 +25,8 @@ npm install -g graphcool@beta
 ```
 
 </Instruction>
+
+## Step 2: Bootstrap your GraphQL server
 
 <Instruction>
 
@@ -51,7 +55,7 @@ Let's investigate the generated files and understand their roles:
   - [`src/schema.graphql`](https://github.com/graphql-boilerplates/node-graphql-server/tree/master/basic/src/schema.graphql) defines your **application schema**. It contains the GraphQL API that you want to expose to your client applications.
   - [`src/index.js`](https://github.com/graphql-boilerplates/node-graphql-server/tree/master/basic/src/index.js) is the entry point of your server, pulling everything together and starting the `GraphQLServer` from [`graphql-yoga`](https://github.com/graphcool/graphql-yoga).
 
-Most important for you at this point is `database/datamodel.graphql` and `src/schema.graphql` as these are the files you use to define your data model which is the foundation for the API that's exposed to your client applications.
+Most important for you at this point are `database/datamodel.graphql` and `src/schema.graphql`. `database/datamodel.graphql` is used to define your data model. This data model is the foundation for the API that's defined in `src/schema.graphql` and exposed to your client applications.
 
 Here is what the data model looks like:
 
@@ -66,9 +70,13 @@ type Post {
 
 Based on this data model Graphcool generates the **database schema**, a [GraphQL schema](https://blog.graph.cool/graphql-server-basics-the-schema-ac5e2950214e) that defines a CRUD API for the types in your data model. This schema is stored in `database/schema.generated.graphql` and will be updated every time you [`deploy`](!alias-kee1iedaov) changes to your data model.
 
+## Step 3: Deploy the Graphcool database service
+
 Before you can start the server, you first need to make sure your GraphQL database is available. You can do so by deploying the correspdonding Graphcool service that's responsible for the database.
 
 In this case, you'll deploy the Graphcool database service locally with [Docker](https://www.docker.com/).
+
+> Another option would be to deploy it to the **free development cluster** of Graphcool Cloud. This cluster is not intended for production use, but rather for development and demo purposes. When deploying to the development cluster, you need to authenticate with Graphcool Cloud.
 
 <Instruction>
 
@@ -138,6 +146,8 @@ const server = new GraphQLServer({
 
 You're now set to start the server! 🚀
 
+## Step 4: Start the server
+
 <Instruction>
 
 Execute the `start` script that's define in `package.json`:
@@ -147,6 +157,8 @@ yarn start
 ```
 
 </Instruction>
+
+## Step 5: Open a GraphQL playground to send queries and mutations
 
 Now that the server is running, you can use a [GraphQL Playground](https://github.com/graphcool/graphql-playground) to interact with it.
 
@@ -160,11 +172,20 @@ graphcool playground
 
 </Instruction>
 
-Note that the Playground let's you interact with the web server's GraphQL API (the one that's defined by your application schema) as well as the CRUD GraphQL API of the database service directly. Both Playground are displayed side-by-side:
+Note that the Playground let's you interact with two GraphQL APIs side-by-side:
+
+- `app`: The web server's GraphQL API defined in the **application schema** (from `./server/src/schema.graphql`)
+- `database`: The CRUD GraphQL API of the Graphcool database service defined in the **database schema** (from `./server/database/schema.generated.graphql`)
 
 ![](https://imgur.com/z7MWZA8.png)
 
+> Note that each Playground comes with auto-generated documentation which displays all GraphQL operations (i.e. queries, mutations as well as subscriptions) you can send to its API. The documentation is located on the rightmost edge of the Playground.
+
 Once the Playground opened, you can send queries and mutations.
+
+### Sending queries and mutations against the application schema
+
+The GraphQL API defined by your application schema (`src/schema.graphql`) can be accessed using the `app` Playground.
 
 <Instruction>
 
@@ -213,5 +234,85 @@ query {
   }
 }
 ```
+
+</Instruction>
+
+### Sending queries and mutations against the database schema
+
+The GraphQL CRUD API defined by the database schema (`database/schema.generated.graphql`) can be accessed using the `database` Playground.
+
+As you're now running directly against the database API, you're not limited to the operations from the application schema any more. Instead, you can take advantage of full CRUD capabilities to directly create a _published_ `Post` node.
+
+<Instruction>
+
+Paste the following mutation into the left pane of the `database` Playground and hit the _Play_-button (or use the keyboard shortcut `CMD+Enter`):
+
+```graphql
+mutation {
+  createPost(
+    title: "What I love most about GraphQL",
+    text: "That it is declarative.",
+    isPublished: true
+  ) {
+    id
+  }
+}
+```
+
+</Instruction>
+
+The `Post` node that was created from this mutation will already be returned by the `feed` query from the application schema since it has the `isPublished` field set to `true`.
+
+In the `database` Playground, you can also send mutations to _update_ and _delete_ existing posts. In order to do so, you must know their `id`s.
+
+<Instruction>
+
+Send the following query in the `database` Playground:
+
+```graphql
+{
+  posts {
+    id
+    title
+  }
+}
+```
+
+</Instruction>
+
+<Instruction>
+
+From the returned `Post` nodes, copy the `id` of the one that you just created (where the `title` was `What I love most about GraphQL`) and use it to replace the `__POST_ID__` placeholder in the following mutation:
+
+```graphql
+mutation {
+  updatePost({
+    by: { id: "__POST_ID__" },
+    data: { text: "The awesome community." }
+  }) {
+    id
+    title
+    text
+  }
+}
+```
+
+</Instruction>
+
+With this mutation, you're updating the `text` from `That it is declarative.` to `The awesome community.`.
+
+<Instruction>
+
+Finally, to delete a `Post` node, you can send the following mutation (where again `__POST_ID__` needs to be replaced with the actual `id` of a `Post` node):
+
+mutation {
+  deletePost({
+    by: { id: "__POST_ID__" }
+  }) {
+    id
+    title
+    text
+  }
+}
 
 </Instruction>

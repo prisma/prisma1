@@ -1,140 +1,190 @@
 ---
 alias: tijghei9go
 description: Get started in 5 min with [React](https://facebook.github.io/react/), [Apollo Client](https://github.com/apollographql/apollo-client) and [GraphQL](https://www.graphql.org) and learn how to build a simple Instagram clone.
-github: https://github.com/graphcool-examples/react-graphql/tree/master/quickstart-with-apollo
+github: https://github.com/graphql-boilerplates/react-fullstack-graphql/tree/master/basic
 ---
 
 # React & Apollo Quickstart
 
-For this quickstart tutorial, we have prepared a [repository](https://github.com/graphcool-examples/react-graphql/tree/master/quickstart-with-apollo) that contains the full React code for the Instagram clone. All you need to do is create the Graphcool service that will expose the GraphQL API and connect it with the React application. Let's get started! 
+In this quickstart tutorial, you'll learn how to build a fullstack app with React, GraphQL and Node.js. You will use [`graphql-yoga`](https://github.com/graphcool/graphql-yoga/) as your web server which is connected to a "GraphQL database" using [`graphcool-binding`](https://github.com/graphcool/graphcool-binding).
+
+> The code for this project can be found as a _GraphQL boilerplate_ project on [GitHub](https://github.com/graphql-boilerplates/react-fullstack-graphql/tree/master/basic).
+
+## Step 1: Install required command line tools
+
+The first thing you need to is install the command line tools you'll need for this tutorial:
+
+- `graphql-cli` is used initially to bootstrap the file structure for your fullstack app with `graphql create`
+- `graphcool` is used continuously to manage your Graphcool database service
 
 <Instruction>
 
-Clone the example repository that contains the React application:
-
 ```sh
-git clone https://github.com/graphcool-examples/react-graphql.git
-cd react-graphql/quickstart-with-apollo
+npm install -g graphql-cli
+npm install -g graphcool@beta
 ```
 
 </Instruction>
 
-Feel free to get familiar with the code. The app contains the following React [`components`](https://github.com/graphcool-examples/react-graphql/tree/master/quickstart-with-apollo/src/components):
+## Step 2: Bootstrap your React fullstack app
+
+<Instruction>
+
+Now you can use `graphql create` to bootstrap your project. With the following command, you name your project `my-app` and choose to use the `react-fullstack-basic` boilerplate:
+
+```sh
+graphql create my-app --boilerplate react-fullstack-basic
+cd my-app
+```
+
+Feel free to get familiar with the code. The app contains the following React [`components`](https://github.com/graphql-boilerplates/react-fullstack-graphql/tree/master/basic/src/components):
 
 - `Post`: Renders a single post item
 - `ListPage`: Renders a list of post items
 - `CreatePage`: Allows to create a new post item
 - `DetailPage`: Renders the details of a post item and allows to update and delete it
 
-Graphcool services are managed with the [Graphcool CLI](!alias-zboghez5go). So before moving on, you first need to install it.
+Let's also quickly understand the file structure for your GraphQL server:
 
-<Instruction>
-
-Install the Graphcool CLI:
-
-```sh
-npm install -g graphcool
+```
+server
+├── database
+│   ├── datamodel.graphql
+│   └── schema.generated.graphql
+├── graphcool.yml
+├── package.json
+├── src
+│   ├── index.js
+│   └── schema.graphql
+└── yarn.lock
 ```
 
-</Instruction>
+Here is an explanation of the generated files and their roles in your server-side setup:
 
-Now that the CLI is installed, you can use it to create the file structure for new service with the [`graphcool init`](!alias-zboghez5go#graphcool-init) command.
+- `/server`
+  - [`.graphqlconfig.yml`](https://github.com/graphql-boilerplates/node-graphql-server/tree/master/basic/.graphqlconfig.yml) GraphQL configuration file containing the endpoints and schema configuration. Used by the [`graphql-cli`](https://github.com/graphcool/graphql-cli) and the [GraphQL Playground](https://github.com/graphcool/graphql-playground). See [`graphql-config`](https://github.com/graphcool/graphql-config) for more information.
+  - [`graphcool.yml`](https://github.com/graphql-boilerplates/node-graphql-server/tree/master/basic/graphcool.yml): The root configuration file for your database service ([documentation](https://www.graph.cool/docs/1.0/reference/graphcool.yml/overview-and-example-foatho8aip)).
+- `/server/database`
+  - [`database/datamodel.graphql`](https://github.com/graphql-boilerplates/node-graphql-server/tree/master/basic/database/datamodel.graphql) contains the data model that you define for the project (written in [SDL](https://blog.graph.cool/graphql-sdl-schema-definition-language-6755bcb9ce51)). We'll discuss this next.
+  - [`database/schema.generated.graphql`](https://github.com/graphql-boilerplates/node-graphql-server/tree/master/basic/database/schema.generated.graphql) defines the **database schema**. It contains the definition of the CRUD API for the types in your data model and is generated based on your `datamodel.graphql`. **You should never edit this file manually**, but introduce changes only by altering `datamodel.graphql` and run `graphcool deploy`.
+- `/server/src`
+  - [`/server/src/schema.graphql`](https://github.com/graphql-boilerplates/node-graphql-server/tree/master/basic/src/schema.graphql) defines your **application schema**. It contains the GraphQL API that you want to expose to your client applications.
+  - [`/server/src/index.js`](https://github.com/graphql-boilerplates/node-graphql-server/tree/master/basic/src/index.js) is the entry point of your server, pulling everything together and starting the `GraphQLServer` from [`graphql-yoga`](https://github.com/graphcool/graphql-yoga).
 
-<Instruction>
+Most important for you at this point are `database/datamodel.graphql` and `src/schema.graphql`. `database/datamodel.graphql` is used to define your data model. This data model is the foundation for the API that's defined in `src/schema.graphql` and exposed to your React application.
 
-Create the local file structure for a new Graphcool service inside a directory called `server`:
+Here is what the data model looks like:
 
-```sh(path="")
-# Create a local service definition in a new directory called `server`
-graphcool init server
-```
-
-</Instruction>
-
-`graphcool init` creates the local service structure inside the specified `server` directory:
-
-```(nocopy)
-.
-└── server
-    ├── graphcool.yml
-    ├── types.graphql
-    └── src
-        ├── hello.graphql
-        └── hello.js
-```
-
-Each of the created files and directories have a dedicated purpose inside your Graphcool service:
-
-- `graphcool.yml`: Contains your [service definition](!alias-opheidaix3).
-- `types.graphql`: Contains the [data model](!alias-eiroozae8u) and any additional type definitions for your Graphcool service, written in the GraphQL [Schema Definition Language](https://medium.com/@graphcool/graphql-sdl-schema-definition-language-6755bcb9ce51) (SDL).
-- `src`: Contains the source code (and if necessary GraphQL queries) for the [functions](!alias-aiw4aimie9) you've configured for your service. Notice that a new service comes with a default "Hello World"-function (called `hello` in `graphcool.yml`) which you can delete if you don't want to use it.
-- `package.json`: Specifies the dependendies for your functions (if needed). 
-
-Next you need to configure the [data model](!alias-eiroozae8u) for your service.
-
-<Instruction>
-
-Open `./server/types.graphql` and add the following type definition to it (feel free to delete the existing `User` type):
-
-```graphql(path="server/types.graphql")
-type Post @model {
-  id: ID! @isUnique    # read-only (managed by Graphcool)
-  createdAt: DateTime! # read-only (managed by Graphcool)
-  updatedAt: DateTime! # read-only (managed by Graphcool)
-
+```graphql(path="server/database/datamodel.graphql")
+type Post {
+  id: ID! @unique
+  createdAt: DateTime!
+  updatedAt: DateTime!
   description: String!
   imageUrl: String!
 }
 ```
 
-</Instruction>
+Based on this data model Graphcool generates the **database schema**, a [GraphQL schema](https://blog.graph.cool/graphql-server-basics-the-schema-ac5e2950214e) that defines a CRUD API for the types in your data model. In your case, this is only the `Post` type. The database schema is stored in `database/schema.generated.graphql` and will be updated every time you [`deploy`](!alias-kee1iedaov) changes to your data model.
 
-The changes you introduced by adding the `Post` type to the data model are purely _local_ so far. So the next step is to actually [deploy](!alias-aiteerae6l#graphcool-deploy) the service!
+## Step 3: Deploy the Graphcool database service
+
+Before you can start the server, you first need to make sure your GraphQL database is available. You can do so by deploying the correspdonding Graphcool service that's responsible for the database.
+
+In this case, you'll deploy the Graphcool database serviceto the **free development cluster** of Graphcool Cloud. Note that this cluster is not intended for production use, but rather for development and demo purposes.
+
+> Another option would be to deploy it locally with [Docker](https://www.docker.com/). You can follow the [Node.js Quickstart tutorial](!alias-phe8vai1oo) to learn how that works.
 
 <Instruction>
 
-Navigate to the `server` directory and deploy your service:
+Deploy the database service from the `server` directory of the project:
 
-```sh(path="")
+```bash(path="")
 cd server
 graphcool deploy
 ```
 
-When prompted which cluster you want to deploy to, choose any of the **Shared Clusters** options (`shared-eu-west-1`, `shared-ap-northeast-1` or `shared-us-west-2`).
-
 </Instruction>
-
-> **Note**: If you haven't authenticated with the Graphcool CLI before, this command is going to open up a browser window and ask you to login. Your authentication token will be stored in the global [`~/.graphcoolrc`](!alias-zoug8seen4).
-
-You service is now deployed and available via the HTTP endpoints that were printed in the output of the command! The `Post` type is added to your data model and the corresponding CRUD operations are generated and exposed by the [GraphQL API](!alias-abogasd0go).
-
-Notice that this command also created the _local_ [`.graphcoolrc`](!alias-zoug8seen4) inside the current directory. It's used to manage your _deployment targets_.
 
 <Instruction>
 
-Save the HTTP endpoint for the `Simple API` from the output of the `graphcool deploy` command, you'll need it later!
+When prompted which cluster you want to deploy to, choose the `development` cluster from the **Graphcool Cloud** section.
 
 </Instruction>
 
-> **Note**: If you ever lose the endpoint for your GraphQL API, you can simply get access to it again by using the `graphcool info` command. When using Apollo, you need to use the endpoint for the `Simple API`.
+> **Note**: If you haven't authenticated with the Graphcool CLI before, this command is going to open up a browser window and ask you to login. Your authentication token will be stored in the global [`~/.graphcool`](!alias-zoug8seen4).
 
-You can test the API inside a [GraphQL Playground](https://github.com/graphcool/graphql-playground) which you can open with the `graphcool playground` command. Feel free to try out the following query and mutation.
+You Graphcool database service is now deployed and accessible under [`http://graphcool/my-app/dev`](http://graphcool/my-app/dev).
 
-**Fetching all posts:**
+As you might recognize, the HTTP endpoint for the database service is composed of the following components:
 
-```graphql
-query {
-  allPosts {
-    id
-    description
-    imageUrl
-  }
-}
+- The **cluster's domain** (specified as the `host` property in `~/.graphcool/config.yml`): `http://localhost:60000/my-app/dev`
+- The **name** of the Graphcool service specified in `graphcool.yml`: `my-app`
+- The **stage** to which the service is deployed, by default this is calleds: `dev`
+
+Note that the endpoint is referenced in `server/src/index.js`. There, it is used to instantiate `Graphcool` in order to create a binding between the application schema and the database schema:
+
+```js(path="src/index.js"&nocopy)
+const server = new GraphQLServer({
+  typeDefs,
+  resolvers,
+  context: req => ({
+    ...req,
+    db: new Graphcool({
+      schemaPath: './database/schema.generated.graphql',
+      endpoint: 'http://localhost:60000/api/my-app/dev',
+      secret: 'your-graphcool-secret',
+    }),
+  }),
+})
 ```
 
-**Creating a new post:**
+You're now set to start the server! 🚀
 
-```graphql
+## Step 4: Start the server
+
+<Instruction>
+
+Execute the `start` script that's define in `server/package.json`:
+
+```bash(path="server")
+yarn start
+```
+
+</Instruction>
+
+The server is now running on [http://localhost:4000](http://localhost:4000).
+
+## Step 5: Open a GraphQL playground to send queries and mutations
+
+Now that the server is running, you can use a [GraphQL Playground](https://github.com/graphcool/graphql-playground) to interact with it.
+
+<Instruction>
+
+Open a GraphQL Playground by executing the following command:
+
+```bash(path="server")
+graphcool playground
+```
+
+</Instruction>
+
+Note that the Playground let's you interact with two GraphQL APIs side-by-side:
+
+- `app`: The web server's GraphQL API defined in the **application schema** (from `./server/src/schema.graphql`)
+- `database`: The CRUD GraphQL API of the Graphcool database service defined in the **database schema** (from `./server/database/schema.generated.graphql`)
+
+![](https://imgur.com/z7MWZA8.png)
+
+> Note that each Playground comes with auto-generated documentation which displays all GraphQL operations (i.e. queries, mutations as well as subscriptions) you can send to its API. The documentation is located on the rightmost edge of the Playground.
+
+Once the Playground opened, you can send queries and mutations.
+
+<Instruction>
+
+Paste the following mutation into the left pane of the `app` Playground and hit the _Play_-button (or use the keyboard shortcut `CMD+Enter`):
+
+```grahpql
 mutation {
   createPost(
     description: "A rare look into the Graphcool office"
@@ -145,37 +195,39 @@ mutation {
 }
 ```
 
-![](https://imgur.com/w95UEi9.gif)
-
-The next step is to connect the React application with the GraphQL API from your Graphcool service.
+</Instruction>
 
 <Instruction>
 
-Paste the HTTP endpoint for the `Simple API` that you saved after running `graphcool deploy` into `./src/index.js` as the `uri` argument in the `HttpLink` constructor call:
+To retrieve the `Post` node that was just created, you can send the following query in the `app` Playground:
 
-```js(path="src/index.js")
-// replace `__SIMPLE_API_ENDPOINT__` with the endpoint from the previous step
-const httpLink = new HttpLink({ uri: '__SIMPLE_API_ENDPOINT__' })
+```graphql
+{
+  feed {
+    description
+    imageUrl
+  }
+}
 ```
 
 </Instruction>
 
-That's it. The last thing to do is actually launching the application 🚀
+<!-- TODO: what is this? should remove?
+![](https://imgur.com/w95UEi9.gif)
+-->
+
+## Step 6: Launch the React application
+
+The last thing to do is actually launching the application 🚀
 
 <Instruction>
 
 Install dependencies and run the app:
 
-```sh(path="")
+```sh(path="server")
+cd ..
 yarn install
 yarn start # open http://localhost:3000 in your browser
 ```
 
 </Instruction>
-
-
-### Learn more
-
-* Get more practical experience with our [Guides](https://graph.cool/docs/tutorials)
-* Secure your API by learning about [Authentication](!alias-bee4oodood) & [Permissions](!alias-iegoo0heez)
-* Implement business logic with [Functions](!alias-aiw4aimie9)

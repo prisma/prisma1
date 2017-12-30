@@ -1,18 +1,18 @@
 ---
-alias: yuwocai8ta
-description: Get started in 5 min with React Native, GraphQL and Apollo Client by building a simple Instagram clone.
-github: https://github.com/graphql-boilerplates/react-native-graphql/tree/master/basic
+alias: tijghei9go
+description: Get started in 5 min with Angular, Apollo Client and GraphQL and learn how to build a simple Instagram clone.
+github: https://github.com/graphql-boilerplates/angular-fullstack-graphql/tree/master/basic
 ---
 
-# React Native & Apollo Quickstart
+# Angular & Apollo Quickstart
 
-In this quickstart tutorial, you'll learn how to build a fullstack app with React Native, GraphQL and Node.js. You will use [`graphql-yoga`](https://github.com/graphcool/graphql-yoga/) as your web server which is connected to a "GraphQL database" using [`graphcool-binding`](https://github.com/graphcool/graphcool-binding).
+In this quickstart tutorial, you'll learn how to build a fullstack app with Angular, GraphQL and Node.js. You will use [`graphql-yoga`](https://github.com/graphcool/graphql-yoga/) as your web server which is connected to a "GraphQL database" using [`graphcool-binding`](https://github.com/graphcool/graphcool-binding).
 
-> The code for this project can be found as a _GraphQL boilerplate_ project on [GitHub](https://github.com/graphql-boilerplates/react-native-graphql/tree/master/basic).
+> The code for this project can be found as a _GraphQL boilerplate_ project on [GitHub](https://github.com/graphql-boilerplates/angular-fullstack-graphql/tree/master/basic).
 
 ## Step 1: Install required command line tools
 
-The first thing you need to do is install the command line tools you'll need for this tutorial:
+The first thing you need to is install the command line tools you'll need for this tutorial:
 
 - `graphql-cli` is used initially to bootstrap the file structure for your fullstack app with `graphql create`
 - `graphcool` is used continuously to manage your Graphcool database service
@@ -26,22 +26,16 @@ npm install -g graphcool@beta
 
 </Instruction>
 
-## Step 2: Bootstrap your React Native fullstack app
+## Step 2: Bootstrap your Angular fullstack app
 
 <Instruction>
 
-Now you can use `graphql create` to bootstrap your project. With the following command, you name your project `my-app` and choose to use the `react-native-basic` boilerplate:
+Now you can use `graphql create` to bootstrap your project. With the following command, you name your project `my-app` and choose to use the `angular-fullstack-basic` boilerplate:
 
 ```sh
-graphql create my-app --boilerplate react-native-basic
+graphql create my-app --boilerplate angular-fullstack-basic
 cd my-app
 ```
-
-Feel free to get familiar with the code. The app contains the following React [`components`](https://github.com/graphql-boilerplates/react-native-graphql/tree/master/basic/src/components):
-
-- `Post`: Renders a single post item
-- `ListPage`: Renders a list of post items
-- `CreatePage`: Allows to create a new post item
 
 Let's also quickly understand the file structure for your GraphQL server:
 
@@ -70,7 +64,7 @@ Here is an explanation of the generated files and their roles in your server-sid
   - [`/server/src/schema.graphql`](https://github.com/graphql-boilerplates/node-graphql-server/tree/master/basic/src/schema.graphql) defines your **application schema**. It contains the GraphQL API that you want to expose to your client applications.
   - [`/server/src/index.js`](https://github.com/graphql-boilerplates/node-graphql-server/tree/master/basic/src/index.js) is the entry point of your server, pulling everything together and starting the `GraphQLServer` from [`graphql-yoga`](https://github.com/graphcool/graphql-yoga).
 
-Most important for you at this point are `database/datamodel.graphql` and `src/schema.graphql`. `database/datamodel.graphql` is used to define your data model. This data model is the foundation for the API that's defined in `src/schema.graphql` and exposed to your React Native application.
+Most important for you at this point are `database/datamodel.graphql` and `src/schema.graphql`. `database/datamodel.graphql` is used to define your data model. This data model is the foundation for the API that's defined in `src/schema.graphql` and exposed to your Angular application.
 
 Here is what the data model looks like:
 
@@ -88,7 +82,7 @@ Based on this data model Graphcool generates the **database schema**, a [GraphQL
 
 ## Step 3: Deploy the Graphcool database service
 
-Before you can start the server, you first need to make sure your "GraphQL database" is available. You can do so by deploying the correspdonding Graphcool service that's responsible for the database.
+Before you can start the server, you first need to make sure your GraphQL database is available. You can do so by deploying the correspdonding Graphcool service that's responsible for the database.
 
 In this case, you'll deploy the Graphcool database serviceto the **free development cluster** of Graphcool Cloud. Note that this cluster is not intended for production use, but rather for development and demo purposes.
 
@@ -215,7 +209,7 @@ To retrieve the `Post` node that was just created, you can send the following qu
 ![](https://imgur.com/w95UEi9.gif)
 -->
 
-## Step 6: Launch the React Native app
+## Step 6: Launch the Angular application
 
 The last thing to do is actually launching the application 🚀
 
@@ -226,9 +220,7 @@ Install dependencies and run the app:
 ```sh(path="server")
 cd ..
 yarn install
-yarn start          # open using the Expo app on your phone
-# yarn run ios      # open with iOS simulator
-# yarn run android  # open with Android emulator
+yarn start # open http://localhost:3000 in your browser
 ```
 
 </Instruction>
