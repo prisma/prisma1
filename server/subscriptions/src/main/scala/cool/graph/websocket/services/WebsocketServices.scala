@@ -27,5 +27,5 @@ case class WebsocketCloudServives()(implicit val bugsnagger: BugSnagger, system:
 
 case class WebsocketDevDependencies(
     requestsQueuePublisher: QueuePublisher[Request],
-    responsePubSubSubscriber: PubSub[String]
+    responsePubSubSubscriber: PubSubSubscriber[String]
 ) extends WebsocketServices

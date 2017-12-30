@@ -11,17 +11,25 @@ import cool.graph.subscriptions.protocol.SubscriptionSessionManager.Requests.{En
 import cool.graph.subscriptions.protocol.{StringOrInt, SubscriptionRequest, SubscriptionSessionManager}
 import cool.graph.subscriptions.resolving.SubscriptionsManager
 import cool.graph.subscriptions.util.PlayJson
+import cool.graph.websocket.WebsocketServer
+import cool.graph.websocket.services.WebsocketDevDependencies
 import de.heikoseeberger.akkahttpplayjson.PlayJsonSupport
 import play.api.libs.json.{JsError, JsSuccess}
 
 import scala.concurrent.Future
 
 object SubscriptionsMain extends App {
-  implicit val system       = ActorSystem("graphql-subscriptions")
-  implicit val materializer = ActorMaterializer()
-  implicit val inj          = SubscriptionDependenciesImpl()
+  implicit val system                   = ActorSystem("graphql-subscriptions")
+  implicit val materializer             = ActorMaterializer()
+  implicit val subscriptionDependencies = SubscriptionDependenciesImpl()
+  import subscriptionDependencies.bugSnagger
 
-  ServerExecutor(port = 8086, SimpleSubscriptionsServer()).startBlocking()
+  val websocketDependencies = WebsocketDevDependencies(subscriptionDependencies.requestsQueuePublisher, subscriptionDependencies.responsePubSubscriber)
+
+  val subscriptionsServer = SimpleSubscriptionsServer()
+  val websocketServer     = WebsocketServer(websocketDependencies)
+
+  ServerExecutor(port = 8086, websocketServer, subscriptionsServer).startBlocking()
 }
 
 case class SimpleSubscriptionsServer(prefix: String = "")(

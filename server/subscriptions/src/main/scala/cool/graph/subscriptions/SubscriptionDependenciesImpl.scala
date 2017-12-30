@@ -2,20 +2,20 @@ package cool.graph.subscriptions
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import com.typesafe.config.ConfigFactory
 import cool.graph.api.ApiDependencies
 import cool.graph.api.database.Databases
 import cool.graph.api.project.{ProjectFetcher, ProjectFetcherImpl}
 import cool.graph.api.schema.SchemaBuilder
 import cool.graph.api.server.AuthImpl
-import cool.graph.bugsnag.{BugSnagger, BugSnaggerImpl}
+import cool.graph.messagebus._
+import cool.graph.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
 import cool.graph.messagebus.pubsub.rabbit.RabbitAkkaPubSub
-import cool.graph.messagebus.queue.rabbit.RabbitQueue
-import cool.graph.messagebus.{Conversions, PubSubPublisher, PubSubSubscriber, QueueConsumer}
+import cool.graph.messagebus.queue.inmemory.InMemoryAkkaQueue
 import cool.graph.subscriptions.protocol.SubscriptionProtocolV05.Responses.SubscriptionSessionResponseV05
 import cool.graph.subscriptions.protocol.SubscriptionProtocolV07.Responses.SubscriptionSessionResponse
 import cool.graph.subscriptions.protocol.SubscriptionRequest
 import cool.graph.subscriptions.resolving.SubscriptionsManagerForProject.{SchemaInvalidated, SchemaInvalidatedMessage}
+import cool.graph.websocket.protocol.Request
 
 trait SubscriptionDependencies extends ApiDependencies {
   implicit val system: ActorSystem
@@ -23,9 +23,11 @@ trait SubscriptionDependencies extends ApiDependencies {
 
   val invalidationSubscriber: PubSubSubscriber[SchemaInvalidatedMessage]
   val sssEventsSubscriber: PubSubSubscriber[String]
+  val responsePubSubscriber: PubSubSubscriber[String]
   val responsePubSubPublisherV05: PubSubPublisher[SubscriptionSessionResponseV05]
   val responsePubSubPublisherV07: PubSubPublisher[SubscriptionSessionResponse]
   val requestsQueueConsumer: QueueConsumer[SubscriptionRequest]
+  val requestsQueuePublisher: QueuePublisher[Request]
 
   lazy val apiMetricsFlushInterval = 10
   lazy val clientAuth              = AuthImpl
@@ -55,15 +57,14 @@ case class SubscriptionDependenciesImpl()(implicit val system: ActorSystem, val 
     durable = true
   )(bugSnagger, system, Conversions.Unmarshallers.ToString)
 
-  lazy val responsePubSubPublisher: PubSubPublisher[String] = RabbitAkkaPubSub.publisher[String](
-    clusterLocalRabbitUri,
-    "subscription-responses",
-    durable = true
-  )(bugSnagger, Conversions.Marshallers.FromString)
+  lazy val responsePubSubscriber      = InMemoryAkkaPubSub[String]()
+  lazy val responsePubSubPublisherV05 = responsePubSubscriber.map[SubscriptionSessionResponseV05](converterResponse05ToString)
+  lazy val responsePubSubPublisherV07 = responsePubSubscriber.map[SubscriptionSessionResponse](converterResponse07ToString)
 
-  lazy val responsePubSubPublisherV05              = responsePubSubPublisher.map[SubscriptionSessionResponseV05](converterResponse05ToString)
-  lazy val responsePubSubPublisherV07              = responsePubSubPublisher.map[SubscriptionSessionResponse](converterResponse07ToString)
-  lazy val requestsQueueConsumer                   = RabbitQueue.consumer[SubscriptionRequest](clusterLocalRabbitUri, "subscription-requests", durableExchange = true)
+  lazy val requestsQueuePublisher: InMemoryAkkaQueue[Request] = InMemoryAkkaQueue[Request]()
+  lazy val requestsQueueConsumer: QueueConsumer[SubscriptionRequest] = requestsQueuePublisher.map[SubscriptionRequest] { req: Request =>
+    SubscriptionRequest(req.sessionId, req.projectId, req.body)
+  }
   override lazy val projectFetcher: ProjectFetcher = ProjectFetcherImpl(blockedProjectIds = Vector.empty, config)
 
   val databases        = Databases.initialize(config)
