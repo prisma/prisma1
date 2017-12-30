@@ -200,6 +200,22 @@ lazy val subscriptions = serverProject("subscriptions")
       akkaHttpTestKit
     )
   )
+  .enablePlugins(sbtdocker.DockerPlugin, JavaAppPackaging)
+  .settings(
+    imageNames in docker := Seq(
+      ImageName(s"graphcool/graphcool-subscriptions:$betaImageTag")
+    ),
+    dockerfile in docker := {
+      val appDir    = stage.value
+      val targetDir = "/app"
+
+      new Dockerfile {
+        from("anapsix/alpine-java")
+        entryPoint(s"$targetDir/bin/${executableScriptName.value}")
+        copy(appDir, targetDir)
+      }
+    }
+  )
 
 lazy val gcValues = libProject("gc-values")
   .settings(libraryDependencies ++= Seq(
