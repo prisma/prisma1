@@ -9,7 +9,7 @@ import sangria.schema._
 
 import scala.concurrent.Future
 
-case class SubscriptionSchema[ManyDataItemType](
+case class SubscriptionSchema(
     model: Model,
     project: Project,
     updatedFields: Option[List[String]],
@@ -50,7 +50,7 @@ case class SubscriptionSchema[ManyDataItemType](
     resolve = (ctx) =>
       isDelete match {
         case false =>
-          SubscriptionDataResolver.resolve(schemaBuilder, model, ctx)
+          SubscriptionDataResolver.resolve(dependencies.dataResolver(project), schemaBuilder.objectTypeBuilder, model, ctx)
 
         case true =>
 //        Future.successful(None)
