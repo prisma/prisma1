@@ -188,12 +188,14 @@ lazy val api = serverProject("api")
   )
 
 lazy val subscriptions = serverProject("subscriptions")
-  .dependsOn(api % "compile")
+  .dependsOn(api % "compile;test->test")
+  .dependsOn(stubServer % "compile")
   .settings(
     libraryDependencies ++= Seq(
       playJson,
       playStreams,
-      akkaHttpPlayJson
+      akkaHttpPlayJson,
+      akkaHttpTestKit
     )
   )
 

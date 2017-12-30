@@ -5,6 +5,7 @@ import cool.graph.api.ApiDependencies
 import cool.graph.api.database.Databases
 import cool.graph.api.project.{ProjectFetcher, ProjectFetcherImpl}
 import cool.graph.api.schema.SchemaBuilder
+import cool.graph.bugsnag.{BugSnagger, BugSnaggerImpl, BugSnaggerMock}
 import cool.graph.messagebus.testkits.{InMemoryPubSubTestKit, InMemoryQueueTestKit}
 import cool.graph.messagebus.{PubSubPublisher, PubSubSubscriber, QueueConsumer}
 import cool.graph.subscriptions.protocol.SubscriptionProtocolV05.Responses.SubscriptionSessionResponseV05
@@ -14,6 +15,8 @@ import cool.graph.subscriptions.resolving.SubscriptionsManagerForProject.{Schema
 
 class SubscriptionDependenciesForTest()(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends SubscriptionDependencies {
   override implicit def self: ApiDependencies = this
+
+  override implicit lazy val bugSnagger: BugSnagger = BugSnaggerMock
 
   lazy val invalidationTestKit   = InMemoryPubSubTestKit[String]()
   lazy val sssEventsTestKit      = InMemoryPubSubTestKit[String]()

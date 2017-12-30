@@ -23,11 +23,12 @@ class WebsocketSessionSpec
         val projectId = "projectId"
         val sessionId = "sessionId"
         val outgoing  = TestProbe().ref
+        val manager   = TestProbe().ref
         val probe     = TestProbe()
 
         probe.watch(outgoing)
 
-        val session = system.actorOf(Props(WebsocketSession(projectId, sessionId, outgoing, testKit, bugsnag = null)))
+        val session = system.actorOf(Props(WebsocketSession(projectId, sessionId, outgoing, manager, testKit, bugsnag = null)))
 
         system.stop(session)
         probe.expectTerminated(outgoing)

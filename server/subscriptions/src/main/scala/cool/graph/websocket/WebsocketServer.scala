@@ -52,31 +52,39 @@ case class WebsocketServer(services: WebsocketServices, prefix: String = "")(
 
     val sessionId = Cuid.createCuid()
 
-    val flow: Flow[Message, IncomingWebsocketMessage, Any] = ActorFlow
-      .actorRef[Message, Message] { out =>
-        Props(WebsocketSession(projectId, sessionId, out, services.requestsQueuePublisher, bugsnag))
-      }(system, materializer)
-      .collect {
-        case TextMessage.Strict(text) ⇒ Future.successful(text)
-        case TextMessage.Streamed(textStream) ⇒
-          textStream
-            .limit(100)
-            .completionTimeout(5.seconds)
-            .runFold("")(_ + _)
-      }
-      .mapAsync(3)(identity)
-      .map(TextMessage.Strict)
-      .collect {
-        case TextMessage.Strict(text) =>
-          incomingWebsocketMessageRate.inc()
-          IncomingWebsocketMessage(projectId = projectId, sessionId = sessionId, body = text)
-      }
-
-    val x: Sink[Message, Any] = flow.to(Sink.actorRef[IncomingWebsocketMessage](manager, CloseWebsocketSession(sessionId)))
+//    val flow: Flow[Message, IncomingWebsocketMessage, Any] = ActorFlow
+//      .actorRef[Message, Message] { out =>
+//        Props(WebsocketSession(projectId, sessionId, out, services.requestsQueuePublisher, bugsnag))
+//      }(system, materializer)
+//      .collect {
+//        case TextMessage.Strict(text) ⇒ Future.successful(text)
+//        case TextMessage.Streamed(textStream) ⇒
+//          textStream
+//            .limit(100)
+//            .completionTimeout(5.seconds)
+//            .runFold("")(_ + _)
+//      }
+//      .mapAsync(3)(identity)
+//      .map(TextMessage.Strict)
+//      .collect {
+//        case TextMessage.Strict(text) =>
+//          incomingWebsocketMessageRate.inc()
+//          IncomingWebsocketMessage(projectId = projectId, sessionId = sessionId, body = text)
+//      }
+//
+//    val x: Sink[Message, Any] = flow.to(Sink.actorRef[IncomingWebsocketMessage](manager, CloseWebsocketSession(sessionId)))
 
     ActorFlow
       .actorRef[Message, Message] { out =>
-        Props(WebsocketSession(projectId, sessionId, out, services.requestsQueuePublisher, bugsnag))
+        Props(
+          WebsocketSession(
+            projectId = projectId,
+            sessionId = sessionId,
+            outgoing = out,
+            manager = manager,
+            requestsPublisher = services.requestsQueuePublisher,
+            bugsnag = bugsnag
+          ))
       }(system, materializer)
       .mapMaterializedValue(_ => akka.NotUsed)
 //    val incomingMessages =
