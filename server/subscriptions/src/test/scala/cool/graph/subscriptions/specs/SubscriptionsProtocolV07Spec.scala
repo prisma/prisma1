@@ -5,7 +5,7 @@ import cool.graph.shared.project_dsl.SchemaDsl
 import org.scalatest._
 import org.scalatest.concurrent.ScalaFutures
 import play.api.libs.json.{JsNull, Json}
-import spray.json.JsString
+import spray.json.{JsArray, JsNumber, JsObject, JsString}
 
 import scala.concurrent.duration._
 
@@ -24,8 +24,9 @@ class SubscriptionsProtocolV07Spec extends FlatSpec with Matchers with SpecBase 
   override def beforeEach() = {
     super.beforeEach()
     testDatabase.setup(project)
-    TestData.createTodo("test-node-id", "some todo", JsString("[1,2,{\"a\":\"b\"}]"), None, project, model, testDatabase)
-    TestData.createTodo("important-test-node-id", "important!", JsString("[1,2,{\"a\":\"b\"}]"), None, project, model, testDatabase)
+    val json = JsArray(JsNumber(1), JsNumber(2), JsObject("a" -> JsString("b")))
+    TestData.createTodo("test-node-id", "some todo", json, None, project, model, testDatabase)
+    TestData.createTodo("important-test-node-id", "important!", json, None, project, model, testDatabase)
   }
 
   "sending weird messages" should "result in a parsing error" in {
@@ -118,7 +119,7 @@ class SubscriptionsProtocolV07Spec extends FlatSpec with Matchers with SpecBase 
     testInitializedWebsocket(project) { wsClient =>
       wsClient.sendMessage(
         startMessage(id = "2",
-                     query = "subscription x { Todo(filter: {mutation_in: [CREATED]}) { node { id } } }  mutation y { createTodo { id } }",
+                     query = "subscription x { Todo(where: {mutation_in: [CREATED]}) { node { id } } }  mutation y { createTodo { id } }",
                      operationName = "x"))
       wsClient.expectNoMessage(200.milliseconds)
       sleep()
@@ -143,7 +144,7 @@ class SubscriptionsProtocolV07Spec extends FlatSpec with Matchers with SpecBase 
         startMessage(
           id = "3",
           operationName = "x",
-          query = "subscription x { Todo(filter: {mutation_in: [DELETED]}) { node { id } } }  mutation y { createTodo { id } }"
+          query = "subscription x { Todo(where: {mutation_in: [DELETED]}) { node { id } } }  mutation y { createTodo { id } }"
         ))
 
       wsClient.expectNoMessage(200.milliseconds)
@@ -168,7 +169,7 @@ class SubscriptionsProtocolV07Spec extends FlatSpec with Matchers with SpecBase 
       wsClient.sendMessage(
         startMessage(
           id = "4",
-          query = "subscription { Todo(filter: {mutation_in: [UPDATED]}) { node { id text } } } "
+          query = "subscription { Todo(where: {mutation_in: [UPDATED]}) { node { id text } } } "
         ))
 
       sleep()
@@ -193,7 +194,7 @@ class SubscriptionsProtocolV07Spec extends FlatSpec with Matchers with SpecBase 
         startMessage(
           id = "3",
           query =
-            "subscription asd($text: String!) { Todo(filter: {mutation_in: [CREATED] node: {text_contains: $text}}) { mutation node { id } previousValues { id text } updatedFields } }",
+            "subscription asd($text: String!) { Todo(where: {mutation_in: [CREATED] node: {text_contains: $text}}) { mutation node { id } previousValues { id text } updatedFields } }",
           variables = Json.obj("text" -> "some")
         )
       )
@@ -223,7 +224,7 @@ class SubscriptionsProtocolV07Spec extends FlatSpec with Matchers with SpecBase 
         startMessage(
           id = "3",
           query =
-            "subscription asd($text: String!) { Todo(filter: {mutation_in: UPDATED AND: [{updatedFields_contains: \"text\"},{node: {text_contains: $text}}]}) { mutation previousValues { id json int } node { ...todo } } } fragment todo on Todo { id }",
+            "subscription asd($text: String!) { Todo(where: {mutation_in: UPDATED AND: [{updatedFields_contains: \"text\"},{node: {text_contains: $text}}]}) { mutation previousValues { id json int } node { ...todo } } } fragment todo on Todo { id }",
           variables = Json.obj("text" -> "some")
         )
       )
@@ -248,7 +249,7 @@ class SubscriptionsProtocolV07Spec extends FlatSpec with Matchers with SpecBase 
     testInitializedWebsocket(project) { wsClient =>
       wsClient.sendMessage(
         startMessage(id = "3",
-                     query = "subscription { Todo(filter: {mutation_in: [DELETED]}) { node { ...todo } previousValues { id } } } fragment todo on Todo { id }")
+                     query = "subscription { Todo(where: {mutation_in: [DELETED]}) { node { ...todo } previousValues { id } } } fragment todo on Todo { id }")
       )
 
       sleep()
@@ -270,7 +271,7 @@ class SubscriptionsProtocolV07Spec extends FlatSpec with Matchers with SpecBase 
   "Subscription" should "regenerate changed schema and work on reconnect" ignore {
     testInitializedWebsocket(project) { wsClient =>
       wsClient.sendMessage(
-        startMessage(id = "create-filters", query = "subscription { Todo(filter:{node:{text_contains: \"important!\"}}) { node { id text } } }")
+        startMessage(id = "create-filters", query = "subscription { Todo(where:{node:{text_contains: \"important!\"}}) { node { id text } } }")
       )
 
       sleep(3000)
@@ -281,7 +282,7 @@ class SubscriptionsProtocolV07Spec extends FlatSpec with Matchers with SpecBase 
       // KEEP WORKING ON RECONNECT
 
       wsClient.sendMessage(
-        startMessage(id = "update-filters", query = "subscription { Todo(filter:{node:{text_contains: \"important!\"}}) { node { id text } } }")
+        startMessage(id = "update-filters", query = "subscription { Todo(where:{node:{text_contains: \"important!\"}}) { node { id text } } }")
       )
 
       sleep(3000)

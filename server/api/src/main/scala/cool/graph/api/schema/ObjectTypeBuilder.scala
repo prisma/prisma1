@@ -235,9 +235,17 @@ class ObjectTypeBuilder(
       .asInstanceOf[DataItemFilterCollection]
   }
 
-  def extractQueryArgumentsFromContext(model: Model, ctx: Context[_, Unit]): Option[QueryArguments] = {
+  def extractQueryArgumentsFromContext(model: Model, ctx: Context[ApiUserContext, Unit]): Option[QueryArguments] = {
+    extractQueryArgumentsFromContext(model, ctx, isSubscriptionFilter = false)
+  }
+
+  def extractQueryArgumentsFromContextForSubscription(model: Model, ctx: Context[_, Unit]): Option[QueryArguments] = {
+    extractQueryArgumentsFromContext(model, ctx, isSubscriptionFilter = true)
+  }
+
+  private def extractQueryArgumentsFromContext(model: Model, ctx: Context[_, Unit], isSubscriptionFilter: Boolean): Option[QueryArguments] = {
     val rawFilterOpt: Option[Map[String, Any]] = ctx.argOpt[Map[String, Any]]("where")
-    val filterOpt                              = rawFilterOpt.map(generateFilterElement(_, model, isSubscriptionFilter = false))
+    val filterOpt                              = rawFilterOpt.map(generateFilterElement(_, model, isSubscriptionFilter))
     val skipOpt                                = ctx.argOpt[Int]("skip")
     val orderByOpt                             = ctx.argOpt[OrderBy]("orderBy")
     val afterOpt                               = ctx.argOpt[String](IdBasedConnection.Args.After.name)

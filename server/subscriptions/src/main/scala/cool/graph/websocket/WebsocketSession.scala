@@ -3,6 +3,7 @@ package cool.graph.websocket
 import java.util.concurrent.TimeUnit
 
 import akka.actor.{Actor, ActorRef, PoisonPill, Props, ReceiveTimeout, Stash, Terminated}
+import akka.http.scaladsl.model.ws.TextMessage
 import cool.graph.akkautil.{LogUnhandled, LogUnhandledExceptions}
 import cool.graph.bugsnag.BugSnagger
 import cool.graph.messagebus.QueuePublisher
@@ -20,6 +21,8 @@ object WebsocketSessionManager {
 
     case class IncomingWebsocketMessage(projectId: String, sessionId: String, body: String)
     case class IncomingQueueMessage(sessionId: String, body: String)
+
+    case class RegisterWebsocketSession(sessionId: String, actor: ActorRef)
   }
 
   object Responses {
@@ -38,19 +41,23 @@ case class WebsocketSessionManager(
   val websocketSessions = mutable.Map.empty[String, ActorRef]
 
   override def receive: Receive = logUnhandled {
-    case OpenWebsocketSession(projectId, sessionId, outgoing) =>
-      val ref = context.actorOf(Props(WebsocketSession(projectId, sessionId, outgoing, requestsPublisher, bugsnag)))
-      context.watch(ref)
-      websocketSessions += sessionId -> ref
-
-    case CloseWebsocketSession(sessionId) =>
-      websocketSessions.get(sessionId).foreach(context.stop)
+//    case OpenWebsocketSession(projectId, sessionId, outgoing) =>
+//      val ref = context.actorOf(Props(WebsocketSession(projectId, sessionId, outgoing, requestsPublisher, bugsnag)))
+//      context.watch(ref)
+//      websocketSessions += sessionId -> ref
+//
+//    case CloseWebsocketSession(sessionId) =>
+//      websocketSessions.get(sessionId).foreach(context.stop)
 
     case req: IncomingWebsocketMessage =>
       websocketSessions.get(req.sessionId) match {
         case Some(session) => session ! req
         case None          => println(s"No session actor found for ${req.sessionId} when processing websocket message. This should only happen very rarely.")
       }
+
+    case req: RegisterWebsocketSession =>
+      context.watch(req.actor)
+      websocketSessions += req.sessionId -> req.actor
 
     case req: IncomingQueueMessage =>
       websocketSessions.get(req.sessionId) match {
@@ -69,6 +76,7 @@ case class WebsocketSession(
     projectId: String,
     sessionId: String,
     outgoing: ActorRef,
+    manager: ActorRef,
     requestsPublisher: QueuePublisher[Request],
     bugsnag: BugSnagger
 ) extends Actor
@@ -82,9 +90,12 @@ case class WebsocketSession(
   activeWsConnections.inc
   context.setReceiveTimeout(FiniteDuration(60, TimeUnit.MINUTES))
 
+  manager ! RegisterWebsocketSession(sessionId, self)
+
   def receive: Receive = logUnhandled {
+    case TextMessage.Strict(body)             => requestsPublisher.publish(Request(sessionId, projectId, body))
     case IncomingWebsocketMessage(_, _, body) => requestsPublisher.publish(Request(sessionId, projectId, body))
-    case IncomingQueueMessage(_, body)        => outgoing ! OutgoingMessage(body)
+    case IncomingQueueMessage(_, body)        => println(s"sending out over ws: $body"); outgoing ! TextMessage(body)
     case ReceiveTimeout                       => context.stop(self)
   }
 

@@ -19,7 +19,7 @@ object FilteredResolver {
   ): Future[Option[DataItem]] = {
 
     val filterInput: DataItemFilterCollection = modelObjectTypes
-      .extractQueryArgumentsFromContext(model = model, ctx = ctx)
+      .extractQueryArgumentsFromContextForSubscription(model = model, ctx = ctx)
       .flatMap(_.filter)
       .getOrElse(List.empty)
 
