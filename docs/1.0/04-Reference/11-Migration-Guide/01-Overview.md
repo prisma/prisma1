@@ -21,7 +21,7 @@ To learn more about the migration from the BaaS to the Graphcool Framework, you 
 
 ## Migrating to 1.0
 
-We recommend that you are migrating your project in a development environment before putting it into production. This ensures a smooth migration process. You can use the import and export functionality for Graphcool services to migrate data between the different projects.
+We recommend that you are migrating your project in a development environment before putting it into production. This ensures a smooth migration process. You can use the [import](!alias-ol2eoh8xie) and [export](!alias-pa0aip3loh) functionality for Graphcool services to migrate data between the different projects.
 
 ### New architecture: Your GraphQL server uses Graphcool as a data store
 
