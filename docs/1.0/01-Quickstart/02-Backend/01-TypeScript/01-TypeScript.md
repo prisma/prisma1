@@ -20,8 +20,7 @@ The first thing you need to is install the command line tools you'll need for th
 <Instruction>
 
 ```sh
-npm install -g graphql-cli
-npm install -g graphcool@beta
+npm install -g graphql-cli graphcool@beta
 ```
 
 </Instruction>
