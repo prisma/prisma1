@@ -1,11 +1,11 @@
 package cool.graph.deploy.migration.migrator
 
 import akka.actor.{Actor, ActorRef, Props, Stash, Terminated}
+import cool.graph.akkautil.LogUnhandled
 import cool.graph.deploy.database.persistence.{MigrationPersistence, ProjectPersistence}
-import cool.graph.shared.models.{Migration, MigrationStep, Project}
-import akka.pattern.pipe
-import cool.graph.deploy.migration.{MigrationApplier, MigrationApplierImpl}
+import cool.graph.deploy.migration.MigrationApplier
 import cool.graph.deploy.schema.DeploymentInProgress
+import cool.graph.shared.models.{Migration, MigrationStep, Project}
 
 import scala.collection.mutable
 import scala.concurrent.Future
@@ -20,7 +20,8 @@ case class Schedule(nextProject: Project, steps: Vector[MigrationStep])
 
 case class DeploymentSchedulerActor()(
     implicit val migrationPersistence: MigrationPersistence,
-    projectPersistence: ProjectPersistence
+    projectPersistence: ProjectPersistence,
+    applier: MigrationApplier
 ) extends Actor
     with Stash {
   implicit val dispatcher = context.system.dispatcher
@@ -106,19 +107,21 @@ case class Deploy(migration: Migration)
   * at a time for a given project and stage. Hence, processing is kicked off async and the actor changes behavior to reject
   * scheduling and deployment until the async processing restored the ready state.
   */
-case class ProjectDeploymentActor(projectID: String)(
+case class ProjectDeploymentActor(projectId: String)(
     implicit val migrationPersistence: MigrationPersistence,
     applier: MigrationApplier
 ) extends Actor
-    with Stash {
-  implicit val ec = context.system.dispatcher
+    with Stash
+    with LogUnhandled {
+
+  implicit val ec                  = context.system.dispatcher
+  var currentProjectState: Project = _ // Latest valid project, saves a DB roundtrip
 
   // Possible enhancement: Periodically scan the DB for migrations if signal was lost -> Wait and see if this is an issue at all
-  // LastRevisionSeen as a safety net?
 
   initialize()
 
-  def receive: Receive = {
+  def receive: Receive = logAll {
     case Ready =>
       context.become(ready)
       unstashAll()
@@ -130,42 +133,42 @@ case class ProjectDeploymentActor(projectID: String)(
   // Q: What happens if the first deployment in a series of deployments fails? All fail? Just deploy again?
   // A: Just restrict it to one deployment at a time at the moment
 
-  def ready: Receive = {
+  def ready: Receive = logAll {
     case msg: Schedule =>
       val caller = sender()
       context.become(busy) // Block subsequent scheduling and deployments
       handleScheduling(msg).onComplete {
         case Success(migration: Migration) =>
-          context.unbecome()
+          self ! ResumeMessageProcessing
           self ! Deploy(migration)
           caller ! migration
 
         case Failure(err) =>
-          context.unbecome()
+          self ! ResumeMessageProcessing
           caller ! akka.actor.Status.Failure(err)
       }
 
     // work off replaces the actor behavior until the messages has been processed, as it is async and we need
     // to keep message processing sequential and consistent, but async for best performance
-    case Deploy =>
+    case Deploy(migration) =>
       context.become(busy)
-      handleDeployment().onComplete {
-        case Success(_)   => context.unbecome()
-        case Failure(err) => // todo Mark migration as failed
+      handleDeployment(migration).onComplete {
+        case Success(_)   => self ! ResumeMessageProcessing
+        case Failure(err) => self ! ResumeMessageProcessing // todo Mark migration as failed
       }
 
     // How to get migration progress into the picture?
     // How to retry? -> No retry for now? Yes.
   }
 
-  def busy: Receive = {
+  def busy: Receive = logAll {
     case _: Schedule             => sender() ! akka.actor.Status.Failure(DeploymentInProgress)
-    case ResumeMessageProcessing => context.unbecome()
+    case ResumeMessageProcessing => context.unbecome(); unstashAll()
     case _                       => stash()
   }
 
   def initialize() = {
-    migrationPersistence.getNextMigration(projectID).onComplete {
+    migrationPersistence.getNextMigration(projectId).onComplete {
       case Success(migrationOpt) =>
         migrationOpt match {
           case Some(migration) =>
@@ -177,7 +180,7 @@ case class ProjectDeploymentActor(projectID: String)(
         }
 
       case Failure(err) =>
-        println(s"Deployment worker initialization for project $projectID failed with $err")
+        println(s"Deployment worker initialization for project $projectId failed with $err")
         context.stop(self)
     }
   }
@@ -185,7 +188,7 @@ case class ProjectDeploymentActor(projectID: String)(
   def handleScheduling(msg: Schedule): Future[Migration] = {
     // Check if scheduling is possible (no pending migration), then create and return the migration
     migrationPersistence
-      .getNextMigration(projectID)
+      .getNextMigration(projectId)
       .transformWith {
         case Success(pendingMigrationOpt) =>
           pendingMigrationOpt match {
@@ -201,8 +204,17 @@ case class ProjectDeploymentActor(projectID: String)(
       }
   }
 
-  def handleDeployment(): Future[Unit] = {
+  def handleDeployment(migration: Migration): Future[Unit] = {
     // todo applier works off here
+
+    for {
+      result <- applier.applyMigration(prevProject, migration)
+      _ <- if (result.succeeded) {
+            migrationPersistence.markMigrationAsApplied(migration)
+          } else {
+            Future.successful(())
+          }
+    } yield ()
 
     Future.unit
   }
