@@ -477,6 +477,7 @@ lazy val singleServer = Project(id = "single-server", base = file("./single-serv
   .settings(commonSettings: _*)
   .dependsOn(api% "compile")
   .dependsOn(deploy % "compile")
+  .dependsOn(subscriptions % "compile")
   .dependsOn(graphQlClient % "compile")
   .enablePlugins(sbtdocker.DockerPlugin, JavaAppPackaging)
   .settings(
