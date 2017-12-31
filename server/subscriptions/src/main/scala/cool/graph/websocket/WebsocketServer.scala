@@ -42,6 +42,7 @@ case class WebsocketServer(services: WebsocketServices, prefix: String = "")(
   val innerRoutes = pathPrefix(Segment) { name =>
     pathPrefix(Segment) { stage =>
       get {
+        println("establishing ws connection")
         val projectId = ProjectId.toEncodedString(name = name, stage = stage)
         handleWebSocketMessagesForProtocol(newSession(projectId, v7protocol = false), subProtocol1) ~
           handleWebSocketMessagesForProtocol(newSession(projectId, v7protocol = true), subProtocol2)
