@@ -60,6 +60,6 @@ case class ApiTestDatabase()(implicit dependencies: ApiDependencies) extends Awa
     clientDatabase.run(dbAction).await(60)
   }
 
-  private def runMutaction(mutaction: ClientSqlMutaction): Unit                         = runDbActionOnClientDb(mutaction.execute.await().sqlAction)
+  private def runMutaction(mutaction: ClientSqlMutaction): Unit                 = runDbActionOnClientDb(mutaction.execute.await().sqlAction)
   def runDbActionOnClientDb(action: DBIOAction[Any, NoStream, Effect.All]): Any = clientDatabase.run(action).await()
 }

@@ -17,6 +17,7 @@ actualBranch := {
   if (branch != "master"){
     sys.props += "project.version" -> s"$branch-SNAPSHOT"
   }
+
   branch
 }
 
@@ -113,8 +114,6 @@ def serverProject(name: String): Project = {
 def normalProject(name: String): Project = Project(id = name, base = file(s"./$name")).settings(commonSettings: _*)
 def libProject(name: String): Project =  Project(id = name, base = file(s"./libs/$name")).settings(commonSettings: _*)
 
-lazy val betaImageTag = "1.0.0-beta2"
-
 lazy val sharedModels = normalProject("shared-models")
   .dependsOn(gcValues % "compile")
   .dependsOn(jsonUtils % "compile")
@@ -124,37 +123,38 @@ lazy val sharedModels = normalProject("shared-models")
   ) ++ joda
 )
 lazy val deploy = serverProject("deploy")
-                    .dependsOn(sharedModels % "compile")
-                    .dependsOn(akkaUtils % "compile")
-                    .dependsOn(metrics % "compile")
-                    .dependsOn(jvmProfiler % "compile")
-                    .settings(
-                      libraryDependencies ++= Seq(
-                        playJson,
-                        scalaTest
-                      )
-                    )
-                    .enablePlugins(sbtdocker.DockerPlugin, JavaAppPackaging)
-                    .settings(
-                      imageNames in docker := Seq(
-                        ImageName(s"graphcool/graphcool-deploy:$betaImageTag")
-                      ),
-                      dockerfile in docker := {
-                        val appDir    = stage.value
-                        val targetDir = "/app"
+  .dependsOn(sharedModels % "compile")
+  .dependsOn(akkaUtils % "compile")
+  .dependsOn(metrics % "compile")
+  .dependsOn(jvmProfiler % "compile")
+  .dependsOn(messageBus % "compile")
+  .settings(
+    libraryDependencies ++= Seq(
+      playJson,
+      scalaTest
+    )
+  )
+  .enablePlugins(sbtdocker.DockerPlugin, JavaAppPackaging)
+  .settings(
+    imageNames in docker := Seq(
+      ImageName(s"graphcool/graphcool-deploy:latest")
+    ),
+    dockerfile in docker := {
+      val appDir    = stage.value
+      val targetDir = "/app"
 
-                        new Dockerfile {
-                          from("anapsix/alpine-java")
-                          entryPoint(s"$targetDir/bin/${executableScriptName.value}")
-                          copy(appDir, targetDir)
-                        }
-                      }
-                    )
-                    .enablePlugins(BuildInfoPlugin)
-                    .settings(
-                      buildInfoKeys := Seq[BuildInfoKey](name, version, "imageTag" -> betaImageTag),
-                      buildInfoPackage := "build_info"
-                    )
+      new Dockerfile {
+        from("anapsix/alpine-java")
+        entryPoint(s"$targetDir/bin/${executableScriptName.value}")
+        copy(appDir, targetDir)
+      }
+    }
+  )
+//  .enablePlugins(BuildInfoPlugin)
+//  .settings(
+//    buildInfoKeys := Seq[BuildInfoKey](name, version, "imageTag" -> betaImageTag),
+//    buildInfoPackage := "build_info"
+//  )
 
 lazy val api = serverProject("api")
   .dependsOn(sharedModels % "compile")
@@ -173,7 +173,35 @@ lazy val api = serverProject("api")
   .enablePlugins(sbtdocker.DockerPlugin, JavaAppPackaging)
   .settings(
     imageNames in docker := Seq(
-      ImageName(s"graphcool/graphcool-database:$betaImageTag")
+      ImageName(s"graphcool/graphcool-database:latest")
+    ),
+    dockerfile in docker := {
+      val appDir    = stage.value
+      val targetDir = "/app"
+
+      new Dockerfile {
+        from("anapsix/alpine-java")
+        entryPoint(s"$targetDir/bin/${executableScriptName.value}")
+        copy(appDir, targetDir)
+      }
+    }
+  )
+
+lazy val subscriptions = serverProject("subscriptions")
+  .dependsOn(api % "compile;test->test")
+  .dependsOn(stubServer % "compile")
+  .settings(
+    libraryDependencies ++= Seq(
+      playJson,
+      playStreams,
+      akkaHttpPlayJson,
+      akkaHttpTestKit
+    )
+  )
+  .enablePlugins(sbtdocker.DockerPlugin, JavaAppPackaging)
+  .settings(
+    imageNames in docker := Seq(
+      ImageName(s"graphcool/graphcool-subscriptions:latest")
     ),
     dockerfile in docker := {
       val appDir    = stage.value
@@ -447,11 +475,12 @@ lazy val singleServer = Project(id = "single-server", base = file("./single-serv
   .settings(commonSettings: _*)
   .dependsOn(api% "compile")
   .dependsOn(deploy % "compile")
+  .dependsOn(subscriptions % "compile")
   .dependsOn(graphQlClient % "compile")
   .enablePlugins(sbtdocker.DockerPlugin, JavaAppPackaging)
   .settings(
     imageNames in docker := Seq(
-      ImageName(s"graphcool/graphcool-dev:$betaImageTag")
+      ImageName(s"graphcool/graphcool-dev:latest")
     ),
     dockerfile in docker := {
       val appDir    = stage.value
@@ -500,6 +529,7 @@ lazy val singleServer = Project(id = "single-server", base = file("./single-serv
 val allServerProjects = List(
   api,
   deploy,
+  subscriptions,
   singleServer,
   sharedModels
 )

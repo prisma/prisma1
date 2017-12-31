@@ -1,6 +1,7 @@
 package cool.graph.api.database.mutactions.mutactions
 
 import com.typesafe.scalalogging.LazyLogging
+import cool.graph.api.ApiDependencies
 import cool.graph.api.database.mutactions.{Mutaction, MutactionExecutionResult, MutactionExecutionSuccess}
 import cool.graph.messagebus.PubSubPublisher
 import cool.graph.messagebus.pubsub.Only
@@ -10,16 +11,19 @@ import cool.graph.util.json.JsonFormats.AnyJsonFormat
 
 import scala.concurrent.Future
 
-case class PublishSubscriptionEvent(project: Project, value: Map[String, Any], mutationName: String) extends Mutaction with LazyLogging {
+case class PublishSubscriptionEvent(project: Project, value: Map[String, Any], mutationName: String)(implicit apiDependencies: ApiDependencies)
+    extends Mutaction
+    with LazyLogging {
   import EventJsonProtocol._
 
-  //todo: inject
-//  val publisher = inject[PubSubPublisher[String]](identified by "sss-events-publisher")
+  val publisher = apiDependencies.sssEventsPublisher
 
   override def execute: Future[MutactionExecutionResult] = {
     val topic = Only(s"subscription:event:${project.id}:$mutationName")
 
-//    publisher.publish(topic, value.toJson.compactPrint)
+    println(s"PUBLISHING SUBSCRIPTION EVENT TO $topic")
+
+    publisher.publish(topic, value.toJson.compactPrint)
     Future.successful(MutactionExecutionSuccess())
   }
 }

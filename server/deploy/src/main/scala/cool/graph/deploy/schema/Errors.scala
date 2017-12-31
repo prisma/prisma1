@@ -1,6 +1,5 @@
 package cool.graph.deploy.schema
 
-import cool.graph.gc_values.InvalidValueForScalarType
 import cool.graph.shared.models.ProjectId
 
 trait DeployApiError extends Exception {
@@ -25,6 +24,12 @@ case class InvalidServiceStage(stage: String) extends AbstractDeployApiError(Inv
 case class InvalidName(name: String, entityType: String) extends AbstractDeployApiError(InvalidNames.default(name, entityType), 2008)
 
 case class InvalidDeployment(deployErrorMessage: String) extends AbstractDeployApiError(deployErrorMessage, 4003)
+
+object DeploymentInProgress
+    extends AbstractDeployApiError(
+      "You can not deploy to a service stage while there is a deployment in progress or a pending deployment scheduled already. Please try again after the deployment finished.",
+      4004
+    )
 
 object InvalidNames {
   def mustStartUppercase(name: String, entityType: String): String =

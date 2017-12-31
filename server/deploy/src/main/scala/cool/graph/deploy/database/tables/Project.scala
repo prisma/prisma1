@@ -2,7 +2,7 @@ package cool.graph.deploy.database.tables
 
 import slick.dbio.Effect.Read
 import slick.jdbc.MySQLProfile.api._
-import slick.sql.SqlAction
+import slick.sql.{FixedSqlStreamingAction, SqlAction}
 
 case class Project(
     id: String,
@@ -34,5 +34,15 @@ object ProjectTable {
     } yield (project, migration)
 
     baseQuery.sortBy(_._2.revision.desc).take(1).result.headOption
+  }
+
+  def allWithUnappliedMigrations: FixedSqlStreamingAction[Seq[Project], Project, Read] = {
+    val baseQuery = for {
+      project   <- Tables.Projects
+      migration <- Tables.Migrations
+      if project.id === migration.projectId && !migration.hasBeenApplied
+    } yield project
+
+    baseQuery.distinct.result
   }
 }

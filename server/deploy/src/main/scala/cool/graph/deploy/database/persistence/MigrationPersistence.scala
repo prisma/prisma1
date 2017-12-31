@@ -6,8 +6,7 @@ import scala.concurrent.Future
 
 trait MigrationPersistence {
   def loadAll(projectId: String): Future[Seq[Migration]]
-
-  def getUnappliedMigration(): Future[Option[UnappliedMigration]]
+  def getUnappliedMigration(projectId: String): Future[Option[UnappliedMigration]]
 
   def create(project: Project, migration: Migration): Future[Migration]
   def getNextMigration(projectId: String): Future[Option[Migration]]

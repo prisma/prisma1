@@ -44,9 +44,8 @@ case class Create(
 
     val transactionMutaction = TransactionMutaction(createMutactionsResult.allMutactions.toList, dataResolver)
     val createMutactions     = createMutactionsResult.allMutactions.collect { case x: CreateDataItem => x }
-
     val subscriptionMutactions = SubscriptionEvents.extractFromSqlMutactions(project, mutationId, createMutactionsResult.allMutactions)
-//    val sssActions             = ServerSideSubscription.extractFromMutactions(project, createMutactionsResult.allMutactions, requestId)
+    //    val sssActions             = ServerSideSubscription.extractFromMutactions(project, createMutactionsResult.allMutactions, requestId)
 
     Future.successful(
       List(
