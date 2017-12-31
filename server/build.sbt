@@ -201,7 +201,7 @@ lazy val subscriptions = serverProject("subscriptions")
   .enablePlugins(sbtdocker.DockerPlugin, JavaAppPackaging)
   .settings(
     imageNames in docker := Seq(
-      ImageName(s"graphcool/graphcool-subscriptions:$betaImageTag")
+      ImageName(s"graphcool/graphcool-subscriptions:latest")
     ),
     dockerfile in docker := {
       val appDir    = stage.value
