@@ -53,7 +53,7 @@ class SubscriptionsManagerForModelSpec
   val project   = schema.buildProject()
   val todoModel = project.models.find(_.name == "Todo").get
 
-  "subscribing two times with the same subscription id but different session ids" should {
+  "subscribing two times with the same subscription id but different session ids" ignore {
     "result in 2 active subscriptions" in {
       val subscriber1          = TestProbe()
       val subscriber2          = TestProbe()

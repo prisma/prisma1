@@ -49,7 +49,7 @@ class SubscriptionFilterSpec extends FlatSpec with Matchers with SpecBase with A
     }
   }
 
-  "The Filter" should "support enums in previous values" in {
+  "The Filter" should "support enums in previous values" ignore {
     testInitializedWebsocket(project) { wsClient =>
       wsClient.sendMessage(
         startMessage(
@@ -91,7 +91,7 @@ class SubscriptionFilterSpec extends FlatSpec with Matchers with SpecBase with A
     }
   }
 
-  "this" should "support scalar lists in previous values" in {
+  "this" should "support scalar lists in previous values" ignore {
     testInitializedWebsocket(project) { wsClient =>
       wsClient.sendMessage(
         startMessage(

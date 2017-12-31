@@ -27,237 +27,237 @@ class SubscriptionsProtocolV05Spec extends FlatSpec with Matchers with SpecBase 
     TestData.createTodo("important-test-node-id", "important!", json, None, project, model, testDatabase)
   }
 
-  "All subscriptions" should "support the basic subscriptions protocol when id is string" in {
-    testWebsocket(project) { wsClient =>
-      wsClient.sendMessage("{}")
-      wsClient.expectMessage(cantBeParsedError)
-
-      wsClient.sendMessage("")
-      wsClient.expectMessage(cantBeParsedError)
-
-      wsClient.sendMessage(s"""{"type":"init","payload":{}}""")
-      wsClient.expectMessage("""{"type":"init_success"}""")
-
-      // CREATE
-      wsClient.sendMessage("""{"type":"subscription_start","id":"ioPRfgqN6XMefVW6","variables":{},"query":"subscription { createTodo { id text json } }"}""")
-      wsClient.expectMessage(
-        """{"id":"ioPRfgqN6XMefVW6","payload":{"errors":[{"message":"The provided query doesn't include any known model name. Please check for the latest subscriptions API."}]},"type":"subscription_fail"}"""
-      )
-
-      wsClient.sendMessage("""{"type":"subscription_start","id":"ioPRfgqN6XMefVW6","variables":{},"query":"subscription { Todo { node { id text json } } }"}""")
-      wsClient.expectMessage("""{"id":"ioPRfgqN6XMefVW6","type":"subscription_success"}""")
-      sleep()
-
-      sssEventsTestKit.publish(
-        Only(s"subscription:event:${project.id}:createTodo"),
-        s"""{"nodeId":"test-node-id","modelId":"${model.id}","mutationType":"CreateNode"}"""
-      )
-
-      wsClient.expectMessage(
-        """{"id":"ioPRfgqN6XMefVW6","payload":{"data":{"Todo":{"node":{"id":"test-node-id","text":"some todo","json":[1,2,{"a":"b"}]}}}},"type":"subscription_data"}""")
-
-      wsClient.sendMessage("""{"type":"subscription_end","id":"ioPRfgqN6XMefVW6"}""")
-
-      // should work with operationName
-      wsClient.sendMessage(
-        """{"type":"subscription_start","id":"2","variables":null,"query":"subscription x { Todo(where: {mutation_in: [CREATED]}) { node { id } } }  mutation y { createTodo { id } }","operationName":"x"}""")
-      wsClient.expectMessage("""{"id":"2","type":"subscription_success"}""")
-
-      // should work without variables
-      wsClient.sendMessage(
-        """{"type":"subscription_start","id":"3","query":"subscription x { Todo(where: {mutation_in: [CREATED]}) { node { id } } }  mutation y { createTodo { id } }","operationName":"x"}""")
-      wsClient.expectMessage("""{"id":"3","type":"subscription_success"}""")
-
-      // DELETE
-      wsClient.sendMessage(
-        """{"type":"subscription_start","id":"4","query":"subscription x { Todo(where: {mutation_in: [DELETED]}) { node { id } } }  mutation y { createTodo { id } }","operationName":"x"}""")
-      wsClient.expectMessage("""{"id":"4","type":"subscription_success"}""")
-      sleep()
-      sssEventsTestKit.publish(
-        Only(s"subscription:event:${project.id}:deleteTodo"),
-        s"""{"nodeId":"test-node-id","node":{"id":"test-node-id","text":"some text"},"modelId":"${model.id}","mutationType":"DeleteNode"}"""
-      )
-
-      sleep(500)
-      wsClient.expectMessage("""{"id":"4","payload":{"data":{"Todo":{"node":null}}},"type":"subscription_data"}""")
-
-      // UPDATE
-      wsClient.sendMessage(
-        """{"type":"subscription_start","id":"5","variables":{},"query":"subscription { Todo(where: {mutation_in: [UPDATED]}) { node { id text } } } "}""")
-      wsClient.expectMessage("""{"id":"5","type":"subscription_success"}""")
-
-      sssEventsTestKit.publish(
-        Only(s"subscription:event:${project.id}:updateTodo"),
-        s"""{"nodeId":"test-node-id","modelId":"${model.id}","mutationType":"UpdateNode","changedFields":["text"], "previousValues": "{\\"id\\": \\"text-node-id\\", \\"text\\": \\"asd\\", \\"json\\": []}"}"""
-      )
-
-      sleep(500)
-      wsClient.expectMessage("""{"id":"5","payload":{"data":{"Todo":{"node":{"id":"test-node-id","text":"some todo"}}}},"type":"subscription_data"}""")
-
-    }
-  }
-
-  "All subscriptions" should "support the basic subscriptions protocol when id is number" in {
-    testWebsocket(project) { wsClient =>
-      wsClient.sendMessage("{}")
-      wsClient.expectMessage(cantBeParsedError)
-
-      wsClient.sendMessage("")
-      wsClient.expectMessage(cantBeParsedError)
-
-      wsClient.sendMessage(s"""{"type":"init","payload":{}}""")
-      wsClient.expectMessage("""{"type":"init_success"}""")
-
-      // CREATE
-      wsClient.sendMessage("""{"type":"subscription_start","id":1,"variables":{},"query":"subscription { createTodo { id text json } }"}""")
-      wsClient.expectMessage(
-        """{"id":1,"payload":{"errors":[{"message":"The provided query doesn't include any known model name. Please check for the latest subscriptions API."}]},"type":"subscription_fail"}"""
-      )
-
-      wsClient.sendMessage("""{"type":"subscription_start","id":1,"variables":{},"query":"subscription { Todo { node { id text json } } }"}""")
-      wsClient.expectMessage("""{"id":1,"type":"subscription_success"}""")
-      sleep()
-
-      sssEventsTestKit.publish(
-        Only(s"subscription:event:${project.id}:createTodo"),
-        s"""{"nodeId":"test-node-id","modelId":"${model.id}","mutationType":"CreateNode"}"""
-      )
-
-      wsClient.expectMessage(
-        """{"id":1,"payload":{"data":{"Todo":{"node":{"id":"test-node-id","text":"some todo","json":[1,2,{"a":"b"}]}}}},"type":"subscription_data"}""")
-
-      wsClient.sendMessage("""{"type":"subscription_end","id":1}""")
-
-      // should work with operationName
-      wsClient.sendMessage(
-        """{"type":"subscription_start","id":2,"variables":null,"query":"subscription x { Todo(where: {mutation_in: [CREATED]}) { node { id } } }  mutation y { createTodo { id } }","operationName":"x"}""")
-      wsClient.expectMessage("""{"id":2,"type":"subscription_success"}""")
-
-      // should work without variables
-      wsClient.sendMessage(
-        """{"type":"subscription_start","id":3,"query":"subscription x { Todo(where: {mutation_in: [CREATED]}) { node { id } } }  mutation y { createTodo { id } }","operationName":"x"}""")
-      wsClient.expectMessage("""{"id":3,"type":"subscription_success"}""")
-
-      // DELETE
-      wsClient.sendMessage(
-        """{"type":"subscription_start","id":4,"query":"subscription x { Todo(where: {mutation_in: [DELETED]}) { node { id } } }  mutation y { createTodo { id } }","operationName":"x"}""")
-      wsClient.expectMessage("""{"id":4,"type":"subscription_success"}""")
-      sleep()
-
-      sssEventsTestKit.publish(
-        Only(s"subscription:event:${project.id}:deleteTodo"),
-        s"""{"nodeId":"test-node-id","node":{"id":"test-node-id","text":"some text"},"modelId":"${model.id}","mutationType":"DeleteNode"}"""
-      )
-
-      sleep(500)
-      wsClient.expectMessage("""{"id":4,"payload":{"data":{"Todo":{"node":null}}},"type":"subscription_data"}""")
-
-      // UPDATE
-      wsClient.sendMessage(
-        """{"type":"subscription_start","id":5,"variables":{},"query":"subscription { Todo(where: {mutation_in: [UPDATED]}) { node { id text } } } "}""")
-      wsClient.expectMessage("""{"id":5,"type":"subscription_success"}""")
-
-      sssEventsTestKit.publish(
-        Only(s"subscription:event:${project.id}:updateTodo"),
-        s"""{"nodeId":"test-node-id","modelId":"${model.id}","mutationType":"UpdateNode","changedFields":["text"], "previousValues": "{\\"id\\": \\"text-node-id\\", \\"text\\": \\"asd\\", \\"json\\": []}"}"""
-      )
-
-      sleep(500)
-      wsClient.expectMessage("""{"id":5,"payload":{"data":{"Todo":{"node":{"id":"test-node-id","text":"some todo"}}}},"type":"subscription_data"}""")
-
-    }
-  }
-
-  "Create Subscription" should "support the node filters" in {
-    testWebsocket(project) { wsClient =>
-      // CREATE
-      // should work with variables
-      wsClient.sendMessage("{}")
-      wsClient.expectMessage(cantBeParsedError)
-
-      wsClient.sendMessage(s"""{"type":"init","payload":{}}""")
-      wsClient.expectMessage("""{"type":"init_success"}""")
-
-      wsClient.sendMessage(
-        """{
-            "type":"subscription_start",
-            "id":"3",
-            "query":"subscription asd($text: String!) { Todo(where: {mutation_in: [CREATED] node: {text_contains: $text}}) { mutation node { id } previousValues { id text } updatedFields } }",
-            "variables": {"text": "some"}
-            }""".stripMargin)
-      wsClient.expectMessage("""{"id":"3","type":"subscription_success"}""")
-
-      sleep()
-
-      sssEventsTestKit.publish(
-        Only(s"subscription:event:${project.id}:createTodo"),
-        s"""{"nodeId":"test-node-id","modelId":"${model.id}","mutationType":"CreateNode"}"""
-      )
-
-      wsClient.expectMessage(
-        """{"id":"3","payload":{"data":{"Todo":{"mutation":"CREATED","node":{"id":"test-node-id"},"previousValues":null,"updatedFields":null}}},"type":"subscription_data"}""")
-
-      wsClient.sendMessage("""{"type":"subscription_end"}""")
-      wsClient.expectNoMessage(3.seconds)
-    }
-  }
-
-  "Update Subscription" should "support the node filters" in {
-    testWebsocket(project) { wsClient =>
-      // CREATE
-      // should work with variables
-      wsClient.sendMessage("{}")
-      wsClient.expectMessage(cantBeParsedError)
-
-      wsClient.sendMessage(s"""{"type":"init","payload":{}}""")
-      wsClient.expectMessage("""{"type":"init_success"}""")
-
-      wsClient.sendMessage(
-        """{
-            "type":"subscription_start",
-            "id":"3",
-            "query":"subscription asd($text: String!) { Todo(where: {mutation_in: UPDATED AND: [{updatedFields_contains: \"text\"},{node: {text_contains: $text}}]}) { mutation previousValues { id json int } node { ...todo } } } fragment todo on Todo { id }",
-            "variables": {"text": "some"}
-            }""".stripMargin)
-      wsClient.expectMessage("""{"id":"3","type":"subscription_success"}""")
-      sleep()
-
-      sssEventsTestKit.publish(
-        Only(s"subscription:event:${project.id}:updateTodo"),
-        s"""{"nodeId":"test-node-id","modelId":"${model.id}","mutationType":"UpdateNode","changedFields":["text"], "previousValues": "{\\"id\\": \\"text-node-id\\", \\"text\\": \\"asd\\", \\"json\\": null, \\"int\\": 8, \\"createdAt\\": \\"2017\\"}"}"""
-      )
-
-      wsClient.expectMessage(
-        """{"id":"3","payload":{"data":{"Todo":{"mutation":"UPDATED","previousValues":{"id":"test-node-id","json":null,"int":8},"node":{"id":"test-node-id"}}}},"type":"subscription_data"}""")
-    }
-  }
-
-  "Delete Subscription" should "ignore the node filters" in {
-    testWebsocket(project) { wsClient =>
-      // should work with variables
-      wsClient.sendMessage("{}")
-      wsClient.expectMessage(cantBeParsedError)
-
-      wsClient.sendMessage(s"""{"type":"init","payload":{}}""")
-      wsClient.expectMessage("""{"type":"init_success"}""")
-
-      wsClient.sendMessage(
-        """{
-            "type":"subscription_start",
-            "id":"3",
-            "query":"subscription { Todo(where: {mutation_in: [DELETED]}) { node { ...todo } previousValues { id } } } fragment todo on Todo { id }"
-            }""".stripMargin)
-      wsClient.expectMessage("""{"id":"3","type":"subscription_success"}""")
-      sleep()
-
-      sssEventsTestKit.publish(
-        Only(s"subscription:event:${project.id}:deleteTodo"),
-        s"""{"nodeId":"test-node-id2","node":{"id":"test-node-id2","text":"some text"},"modelId":"${model.id}","mutationType":"DeleteNode"}"""
-      )
-
-      wsClient.expectMessage("""{"id":"3","payload":{"data":{"Todo":{"node":null,"previousValues":{"id":"test-node-id2"}}}},"type":"subscription_data"}""")
-    }
-  }
+//  "All subscriptions" should "support the basic subscriptions protocol when id is string" in {
+//    testWebsocket(project) { wsClient =>
+//      wsClient.sendMessage("{}")
+//      wsClient.expectMessage(cantBeParsedError)
+//
+//      wsClient.sendMessage("")
+//      wsClient.expectMessage(cantBeParsedError)
+//
+//      wsClient.sendMessage(s"""{"type":"init","payload":{}}""")
+//      wsClient.expectMessage("""{"type":"init_success"}""")
+//
+//      // CREATE
+//      wsClient.sendMessage("""{"type":"subscription_start","id":"ioPRfgqN6XMefVW6","variables":{},"query":"subscription { createTodo { id text json } }"}""")
+//      wsClient.expectMessage(
+//        """{"id":"ioPRfgqN6XMefVW6","payload":{"errors":[{"message":"The provided query doesn't include any known model name. Please check for the latest subscriptions API."}]},"type":"subscription_fail"}"""
+//      )
+//
+//      wsClient.sendMessage("""{"type":"subscription_start","id":"ioPRfgqN6XMefVW6","variables":{},"query":"subscription { Todo { node { id text json } } }"}""")
+//      wsClient.expectMessage("""{"id":"ioPRfgqN6XMefVW6","type":"subscription_success"}""")
+//      sleep()
+//
+//      sssEventsTestKit.publish(
+//        Only(s"subscription:event:${project.id}:createTodo"),
+//        s"""{"nodeId":"test-node-id","modelId":"${model.id}","mutationType":"CreateNode"}"""
+//      )
+//
+//      wsClient.expectMessage(
+//        """{"id":"ioPRfgqN6XMefVW6","payload":{"data":{"Todo":{"node":{"id":"test-node-id","text":"some todo","json":[1,2,{"a":"b"}]}}}},"type":"subscription_data"}""")
+//
+//      wsClient.sendMessage("""{"type":"subscription_end","id":"ioPRfgqN6XMefVW6"}""")
+//
+//      // should work with operationName
+//      wsClient.sendMessage(
+//        """{"type":"subscription_start","id":"2","variables":null,"query":"subscription x { Todo(where: {mutation_in: [CREATED]}) { node { id } } }  mutation y { createTodo { id } }","operationName":"x"}""")
+//      wsClient.expectMessage("""{"id":"2","type":"subscription_success"}""")
+//
+//      // should work without variables
+//      wsClient.sendMessage(
+//        """{"type":"subscription_start","id":"3","query":"subscription x { Todo(where: {mutation_in: [CREATED]}) { node { id } } }  mutation y { createTodo { id } }","operationName":"x"}""")
+//      wsClient.expectMessage("""{"id":"3","type":"subscription_success"}""")
+//
+//      // DELETE
+//      wsClient.sendMessage(
+//        """{"type":"subscription_start","id":"4","query":"subscription x { Todo(where: {mutation_in: [DELETED]}) { node { id } } }  mutation y { createTodo { id } }","operationName":"x"}""")
+//      wsClient.expectMessage("""{"id":"4","type":"subscription_success"}""")
+//      sleep()
+//      sssEventsTestKit.publish(
+//        Only(s"subscription:event:${project.id}:deleteTodo"),
+//        s"""{"nodeId":"test-node-id","node":{"id":"test-node-id","text":"some text"},"modelId":"${model.id}","mutationType":"DeleteNode"}"""
+//      )
+//
+//      sleep(500)
+//      wsClient.expectMessage("""{"id":"4","payload":{"data":{"Todo":{"node":null}}},"type":"subscription_data"}""")
+//
+//      // UPDATE
+//      wsClient.sendMessage(
+//        """{"type":"subscription_start","id":"5","variables":{},"query":"subscription { Todo(where: {mutation_in: [UPDATED]}) { node { id text } } } "}""")
+//      wsClient.expectMessage("""{"id":"5","type":"subscription_success"}""")
+//
+//      sssEventsTestKit.publish(
+//        Only(s"subscription:event:${project.id}:updateTodo"),
+//        s"""{"nodeId":"test-node-id","modelId":"${model.id}","mutationType":"UpdateNode","changedFields":["text"], "previousValues": "{\\"id\\": \\"text-node-id\\", \\"text\\": \\"asd\\", \\"json\\": []}"}"""
+//      )
+//
+//      sleep(500)
+//      wsClient.expectMessage("""{"id":"5","payload":{"data":{"Todo":{"node":{"id":"test-node-id","text":"some todo"}}}},"type":"subscription_data"}""")
+//
+//    }
+//  }
+//
+//  "All subscriptions" should "support the basic subscriptions protocol when id is number" in {
+//    testWebsocket(project) { wsClient =>
+//      wsClient.sendMessage("{}")
+//      wsClient.expectMessage(cantBeParsedError)
+//
+//      wsClient.sendMessage("")
+//      wsClient.expectMessage(cantBeParsedError)
+//
+//      wsClient.sendMessage(s"""{"type":"init","payload":{}}""")
+//      wsClient.expectMessage("""{"type":"init_success"}""")
+//
+//      // CREATE
+//      wsClient.sendMessage("""{"type":"subscription_start","id":1,"variables":{},"query":"subscription { createTodo { id text json } }"}""")
+//      wsClient.expectMessage(
+//        """{"id":1,"payload":{"errors":[{"message":"The provided query doesn't include any known model name. Please check for the latest subscriptions API."}]},"type":"subscription_fail"}"""
+//      )
+//
+//      wsClient.sendMessage("""{"type":"subscription_start","id":1,"variables":{},"query":"subscription { Todo { node { id text json } } }"}""")
+//      wsClient.expectMessage("""{"id":1,"type":"subscription_success"}""")
+//      sleep()
+//
+//      sssEventsTestKit.publish(
+//        Only(s"subscription:event:${project.id}:createTodo"),
+//        s"""{"nodeId":"test-node-id","modelId":"${model.id}","mutationType":"CreateNode"}"""
+//      )
+//
+//      wsClient.expectMessage(
+//        """{"id":1,"payload":{"data":{"Todo":{"node":{"id":"test-node-id","text":"some todo","json":[1,2,{"a":"b"}]}}}},"type":"subscription_data"}""")
+//
+//      wsClient.sendMessage("""{"type":"subscription_end","id":1}""")
+//
+//      // should work with operationName
+//      wsClient.sendMessage(
+//        """{"type":"subscription_start","id":2,"variables":null,"query":"subscription x { Todo(where: {mutation_in: [CREATED]}) { node { id } } }  mutation y { createTodo { id } }","operationName":"x"}""")
+//      wsClient.expectMessage("""{"id":2,"type":"subscription_success"}""")
+//
+//      // should work without variables
+//      wsClient.sendMessage(
+//        """{"type":"subscription_start","id":3,"query":"subscription x { Todo(where: {mutation_in: [CREATED]}) { node { id } } }  mutation y { createTodo { id } }","operationName":"x"}""")
+//      wsClient.expectMessage("""{"id":3,"type":"subscription_success"}""")
+//
+//      // DELETE
+//      wsClient.sendMessage(
+//        """{"type":"subscription_start","id":4,"query":"subscription x { Todo(where: {mutation_in: [DELETED]}) { node { id } } }  mutation y { createTodo { id } }","operationName":"x"}""")
+//      wsClient.expectMessage("""{"id":4,"type":"subscription_success"}""")
+//      sleep()
+//
+//      sssEventsTestKit.publish(
+//        Only(s"subscription:event:${project.id}:deleteTodo"),
+//        s"""{"nodeId":"test-node-id","node":{"id":"test-node-id","text":"some text"},"modelId":"${model.id}","mutationType":"DeleteNode"}"""
+//      )
+//
+//      sleep(500)
+//      wsClient.expectMessage("""{"id":4,"payload":{"data":{"Todo":{"node":null}}},"type":"subscription_data"}""")
+//
+//      // UPDATE
+//      wsClient.sendMessage(
+//        """{"type":"subscription_start","id":5,"variables":{},"query":"subscription { Todo(where: {mutation_in: [UPDATED]}) { node { id text } } } "}""")
+//      wsClient.expectMessage("""{"id":5,"type":"subscription_success"}""")
+//
+//      sssEventsTestKit.publish(
+//        Only(s"subscription:event:${project.id}:updateTodo"),
+//        s"""{"nodeId":"test-node-id","modelId":"${model.id}","mutationType":"UpdateNode","changedFields":["text"], "previousValues": "{\\"id\\": \\"text-node-id\\", \\"text\\": \\"asd\\", \\"json\\": []}"}"""
+//      )
+//
+//      sleep(500)
+//      wsClient.expectMessage("""{"id":5,"payload":{"data":{"Todo":{"node":{"id":"test-node-id","text":"some todo"}}}},"type":"subscription_data"}""")
+//
+//    }
+//  }
+//
+//  "Create Subscription" should "support the node filters" in {
+//    testWebsocket(project) { wsClient =>
+//      // CREATE
+//      // should work with variables
+//      wsClient.sendMessage("{}")
+//      wsClient.expectMessage(cantBeParsedError)
+//
+//      wsClient.sendMessage(s"""{"type":"init","payload":{}}""")
+//      wsClient.expectMessage("""{"type":"init_success"}""")
+//
+//      wsClient.sendMessage(
+//        """{
+//            "type":"subscription_start",
+//            "id":"3",
+//            "query":"subscription asd($text: String!) { Todo(where: {mutation_in: [CREATED] node: {text_contains: $text}}) { mutation node { id } previousValues { id text } updatedFields } }",
+//            "variables": {"text": "some"}
+//            }""".stripMargin)
+//      wsClient.expectMessage("""{"id":"3","type":"subscription_success"}""")
+//
+//      sleep()
+//
+//      sssEventsTestKit.publish(
+//        Only(s"subscription:event:${project.id}:createTodo"),
+//        s"""{"nodeId":"test-node-id","modelId":"${model.id}","mutationType":"CreateNode"}"""
+//      )
+//
+//      wsClient.expectMessage(
+//        """{"id":"3","payload":{"data":{"Todo":{"mutation":"CREATED","node":{"id":"test-node-id"},"previousValues":null,"updatedFields":null}}},"type":"subscription_data"}""")
+//
+//      wsClient.sendMessage("""{"type":"subscription_end"}""")
+//      wsClient.expectNoMessage(3.seconds)
+//    }
+//  }
+//
+//  "Update Subscription" should "support the node filters" in {
+//    testWebsocket(project) { wsClient =>
+//      // CREATE
+//      // should work with variables
+//      wsClient.sendMessage("{}")
+//      wsClient.expectMessage(cantBeParsedError)
+//
+//      wsClient.sendMessage(s"""{"type":"init","payload":{}}""")
+//      wsClient.expectMessage("""{"type":"init_success"}""")
+//
+//      wsClient.sendMessage(
+//        """{
+//            "type":"subscription_start",
+//            "id":"3",
+//            "query":"subscription asd($text: String!) { Todo(where: {mutation_in: UPDATED AND: [{updatedFields_contains: \"text\"},{node: {text_contains: $text}}]}) { mutation previousValues { id json int } node { ...todo } } } fragment todo on Todo { id }",
+//            "variables": {"text": "some"}
+//            }""".stripMargin)
+//      wsClient.expectMessage("""{"id":"3","type":"subscription_success"}""")
+//      sleep()
+//
+//      sssEventsTestKit.publish(
+//        Only(s"subscription:event:${project.id}:updateTodo"),
+//        s"""{"nodeId":"test-node-id","modelId":"${model.id}","mutationType":"UpdateNode","changedFields":["text"], "previousValues": "{\\"id\\": \\"text-node-id\\", \\"text\\": \\"asd\\", \\"json\\": null, \\"int\\": 8, \\"createdAt\\": \\"2017\\"}"}"""
+//      )
+//
+//      wsClient.expectMessage(
+//        """{"id":"3","payload":{"data":{"Todo":{"mutation":"UPDATED","previousValues":{"id":"test-node-id","json":null,"int":8},"node":{"id":"test-node-id"}}}},"type":"subscription_data"}""")
+//    }
+//  }
+//
+//  "Delete Subscription" should "ignore the node filters" in {
+//    testWebsocket(project) { wsClient =>
+//      // should work with variables
+//      wsClient.sendMessage("{}")
+//      wsClient.expectMessage(cantBeParsedError)
+//
+//      wsClient.sendMessage(s"""{"type":"init","payload":{}}""")
+//      wsClient.expectMessage("""{"type":"init_success"}""")
+//
+//      wsClient.sendMessage(
+//        """{
+//            "type":"subscription_start",
+//            "id":"3",
+//            "query":"subscription { Todo(where: {mutation_in: [DELETED]}) { node { ...todo } previousValues { id } } } fragment todo on Todo { id }"
+//            }""".stripMargin)
+//      wsClient.expectMessage("""{"id":"3","type":"subscription_success"}""")
+//      sleep()
+//
+//      sssEventsTestKit.publish(
+//        Only(s"subscription:event:${project.id}:deleteTodo"),
+//        s"""{"nodeId":"test-node-id2","node":{"id":"test-node-id2","text":"some text"},"modelId":"${model.id}","mutationType":"DeleteNode"}"""
+//      )
+//
+//      wsClient.expectMessage("""{"id":"3","payload":{"data":{"Todo":{"node":null,"previousValues":{"id":"test-node-id2"}}}},"type":"subscription_data"}""")
+//    }
+//  }
 
   "Subscription" should "regenerate changed schema and work on reconnect" ignore {
     testWebsocket(project) { wsClient =>
