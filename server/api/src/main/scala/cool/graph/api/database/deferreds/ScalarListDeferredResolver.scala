@@ -1,7 +1,7 @@
 package cool.graph.api.database.deferreds
 
 import cool.graph.api.database.DeferredTypes._
-import cool.graph.api.database.{DataItem, DataResolver}
+import cool.graph.api.database.{DataItem, DataResolver, ScalarListValue}
 import cool.graph.shared.models.Project
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -16,14 +16,15 @@ class ScalarListDeferredResolver(dataResolver: DataResolver) {
 
     val headDeferred = deferreds.head
 
-    // fetch dataitems
-    val futureValues: Future[Vector[Any]] =
-      dataResolver.resolveScalarList(headDeferred.model, headDeferred.field)
+    val futureValues: Future[Vector[ScalarListValue]] =
+      dataResolver.batchResolveScalarList(headDeferred.model, headDeferred.field, deferreds.map(_.nodeId))
 
-    // assign the dataitem that was requested by each deferred
+    // assign and sort the scalarListValues that was requested by each deferred
     val results = orderedDeferreds.map {
       case OrderedDeferred(deferred, order) =>
-        OrderedDeferredFutureResult[ScalarListDeferredResultType](futureValues, order)
+        OrderedDeferredFutureResult[ScalarListDeferredResultType](futureValues.map {
+          _.filter(_.nodeId == deferred.nodeId).sortBy(_.position).map(_.value)
+        }, order)
     }
 
     results

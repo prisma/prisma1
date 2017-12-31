@@ -35,7 +35,7 @@ object DatabaseQueryBuilder {
     def apply(ps: PositionedResult): ScalarListValue = {
       val rs = ps.rs
 
-      ScalarListValue(position = rs.getInt("position"), value = rs.getObject("value"))
+      ScalarListValue(nodeId = rs.getString("nodeId"), position = rs.getInt("position"), value = rs.getObject("value"))
     }
   }
 
@@ -156,8 +156,8 @@ object DatabaseQueryBuilder {
     sql"select exists (select * from `#${project.id}`.`#${model.name}`" ++ whereClauseByCombiningPredicatesByOr(predicates) concat sql")"
   }
 
-  def selectFromScalarList(projectId: String, modelName: String, fieldName: String): SQLActionBuilder = {
-    sql"select position, value from `#$projectId`.`#${modelName}_#${fieldName}`"
+  def selectFromScalarList(projectId: String, modelName: String, fieldName: String, nodeIds: Vector[String]): SQLActionBuilder = {
+    sql"select nodeId, position, value from `#$projectId`.`#${modelName}_#${fieldName}` where nodeId in (" concat combineByComma(nodeIds.map(escapeUnsafeParam)) concat sql")"
   }
 
   def whereClauseByCombiningPredicatesByOr(predicates: Vector[NodeSelector]) = {

@@ -92,7 +92,7 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
     server
       .executeQuerySimple(
         s"""mutation {
-           |  updateModel(where: {id: "${id}"} data: {ints: [2,1]}) {
+           |  updateModel(where: {id: "${id}"} data: {ints: { set: [2,1] }}) {
            |    id
            |  }
            |}""".stripMargin,

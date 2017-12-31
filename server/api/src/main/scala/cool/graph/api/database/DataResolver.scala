@@ -103,11 +103,10 @@ case class DataResolver(project: Project, useMasterDatabaseOnly: Boolean = false
       .map(_.map(mapDataItem(model)))
   }
 
-  def resolveScalarList(model: Model, field: Field): Future[Vector[Any]] = {
-    val query = DatabaseQueryBuilder.selectFromScalarList(project.id, model.name, field.name)
+  def batchResolveScalarList(model: Model, field: Field, nodeIds: Vector[String]): Future[Vector[ScalarListValue]] = {
+    val query = DatabaseQueryBuilder.selectFromScalarList(project.id, model.name, field.name, nodeIds)
 
-    performWithTiming("resolveScalarList", readonlyClientDatabase.run(readOnlyScalarListValue(query)))
-      .map(_.map(_.value))
+    performWithTiming("batchResolveScalarList", readonlyClientDatabase.run(readOnlyScalarListValue(query)))
   }
 
   def batchResolveByUniqueWithoutValidation(model: Model, key: String, values: List[Any]): Future[List[DataItem]] = {

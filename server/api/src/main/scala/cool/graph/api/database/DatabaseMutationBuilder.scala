@@ -299,11 +299,7 @@ object DatabaseMutationBuilder {
     (sql"delete from `#$projectId`.`#$modelName`" concat whereClauseWithWhere).asUpdate
   }
 
-  def setScalarList(projectId: String,
-                    modelName: String,
-                    fieldName: String,
-                    nodeId: String,
-                    values: Vector[Any]): SqlStreamingAction[Vector[Int], Int, Effect]#ResultAction[Int, NoStream, Effect] = {
+  def setScalarList(projectId: String, modelName: String, fieldName: String, nodeId: String, values: Vector[Any]): DBIOAction[Unit, NoStream, Effect] = {
 
     val escapedValueTuples = for {
       (escapedValue, position) <- values.map(escapeUnsafeParam(_)).zip((1 to values.length).map(_ * 1000))
@@ -311,7 +307,10 @@ object DatabaseMutationBuilder {
       sql"($nodeId, $position, " concat escapedValue concat sql")"
     }
 
-    (sql"insert into `#$projectId`.`#${modelName}_#${fieldName}` (`nodeId`, `position`, `value`) values " concat combineByComma(escapedValueTuples)).asUpdate
+    DBIO.seq(
+      sqlu"""delete from `#$projectId`.`#${modelName}_#${fieldName}` where nodeId = $nodeId""",
+      (sql"insert into `#$projectId`.`#${modelName}_#${fieldName}` (`nodeId`, `position`, `value`) values " concat combineByComma(escapedValueTuples)).asUpdate
+    )
   }
 
   def createClientDatabaseForProject(projectId: String) = {

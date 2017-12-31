@@ -57,5 +57,5 @@ object DeferredTypes {
       extends Deferred[Boolean]
 
   type ScalarListDeferredResultType = Vector[Any]
-  case class ScalarListDeferred(model: Model, field: Field) extends Deferred[ScalarListDeferredResultType]
+  case class ScalarListDeferred(model: Model, field: Field, nodeId: String) extends Deferred[ScalarListDeferredResultType]
 }

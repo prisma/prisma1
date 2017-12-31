@@ -36,7 +36,8 @@ case class SqlMutactions(dataResolver: DataResolver) {
   def getMutactionsForUpdate(model: Model, args: CoolArgs, id: Id, previousValues: DataItem): List[ClientSqlMutaction] = {
     val updateMutaction = getUpdateMutaction(model, args, id, previousValues)
     val nested          = getMutactionsForNestedMutation(model, args, fromId = id)
-    updateMutaction.toList ++ nested
+    val scalarLists     = getMutactionsForScalarLists(model, args, nodeId = id)
+    updateMutaction.toList ++ nested ++ scalarLists
   }
 
   def getMutactionsForCreate(
@@ -88,7 +89,7 @@ case class SqlMutactions(dataResolver: DataResolver) {
   }
 
   def getUpdateMutaction(model: Model, args: CoolArgs, id: Id, previousValues: DataItem): Option[UpdateDataItem] = {
-    val scalarArguments = args.scalarArguments(model)
+    val scalarArguments = args.nonListScalarArguments(model)
     if (scalarArguments.nonEmpty) {
       Some(
         UpdateDataItem(

@@ -291,8 +291,7 @@ class ObjectTypeBuilder(
 
     } else {
       if (field.isList) {
-        ScalarListDeferred(model, field)
-//        Seq("q", "w")
+        ScalarListDeferred(model, field, item.id)
       } else {
         ObjectTypeBuilder.convertScalarFieldValueFromDatabase(field, item)
       }

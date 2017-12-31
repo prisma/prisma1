@@ -168,16 +168,32 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
 
   private def computeScalarInputFieldsForCreate(model: Model): List[InputField[Any]] = {
     val filteredModel = model.filterFields(_.isWritable)
-    computeScalarInputFields(filteredModel, FieldToInputTypeMapper.mapForCreateCase)
+
+    val allFields = filteredModel.scalarFields.map { field =>
+      InputField(field.name, FieldToInputTypeMapper.mapForCreateCase(field))
+    }
+
+    allFields
   }
 
   private def computeScalarInputFieldsForUpdate(model: Model): List[InputField[Any]] = {
     val filteredModel = model.filterFields(f => f.isWritable)
-    computeScalarInputFields(filteredModel, SchemaBuilderUtils.mapToOptionalInputType)
+
+    val nonListFields = filteredModel.scalarFields.filter(!_.isList).map { field =>
+      InputField(field.name, SchemaBuilderUtils.mapToOptionalInputType(field))
+    }
+
+    val listFields = filteredModel.scalarListFields.map { field =>
+      val setField = InputObjectType(name = "set", fieldsFn = () => List(InputField SchemaBuilderUtils.mapToOptionalInputType(field)))
+
+      InputField(field.name, setField)
+    }
+
+    nonListFields
   }
 
-  private def computeScalarInputFields(model: Model, mapToInputType: Field => InputType[Any]): List[InputField[Any]] = {
-    model.scalarFields.map { field =>
+  private def computeNonListScalarInputFields(model: Model, mapToInputType: Field => InputType[Any]): List[InputField[Any]] = {
+    model.scalarFields.filter(!_.isList).map { field =>
       InputField(field.name, mapToInputType(field))
     }
   }
