@@ -55,7 +55,7 @@ object DatabaseMutationBuilder {
     val updateValues = combineByComma(updateArgs.raw.map { case (k, v) => escapeKey(k) ++ sql" = " ++ escapeUnsafeParam(v) })
     (sql"update `#${project.id}`.`#${model.name}`" ++
       sql"set " ++ updateValues ++
-      sql"where `#${where.fieldName}` = ${where.fieldValue};").asUpdate
+      sql"where `#${where.field.name}` = ${where.fieldValue};").asUpdate
   }
 
   def whereFailureTrigger(project: Project, where: NodeSelector) = {
@@ -63,7 +63,7 @@ object DatabaseMutationBuilder {
     sql"when exists" ++
       sql"(select *" ++
       sql"from `#${project.id}`.`#${where.model.name}`" ++
-      sql"where `#${where.fieldName}` = ${where.fieldValue})" ++
+      sql"where `#${where.field.name}` = ${where.fieldValue})" ++
       sql"then 1" ++
       sql"else (select COLUMN_NAME" ++
       sql"from information_schema.columns" ++
@@ -75,8 +75,8 @@ object DatabaseMutationBuilder {
       sql"when exists" ++
       sql"(select *" ++
       sql"from `#${project.id}`.`#${relationTableName}`" ++
-      sql"where `B` = (Select `id` from `#${project.id}`.`#${outerWhere.model.name}`where `#${outerWhere.fieldName}` = ${outerWhere.fieldValue})" ++
-      sql"AND `A` = (Select `id` from `#${project.id}`.`#${innerWhere.model.name}`where `#${innerWhere.fieldName}` = ${innerWhere.fieldValue}))" ++
+      sql"where `B` = (Select `id` from `#${project.id}`.`#${outerWhere.model.name}`where `#${outerWhere.field.name}` = ${outerWhere.fieldValue})" ++
+      sql"AND `A` = (Select `id` from `#${project.id}`.`#${innerWhere.model.name}`where `#${innerWhere.field.name}` = ${innerWhere.fieldValue}))" ++
       sql"then 1" ++
       sql"else (select COLUMN_NAME" ++
       sql"from information_schema.columns" ++
@@ -94,7 +94,7 @@ object DatabaseMutationBuilder {
     (sql"INSERT INTO `#${project.id}`.`#${model.name}` (" ++ escapedColumns ++ sql")" ++
       sql"SELECT " ++ insertValues ++
       sql"FROM DUAL" ++
-      sql"where not exists (select * from `#${project.id}`.`#${model.name}` where `#${where.fieldName}` = ${where.fieldValue});").asUpdate
+      sql"where not exists (select * from `#${project.id}`.`#${model.name}` where `#${where.field.name}` = ${where.fieldValue});").asUpdate
   }
 
   def upsert(project: Project, model: Model, createArgs: CoolArgs, updateArgs: CoolArgs, where: NodeSelector) = {
@@ -154,7 +154,7 @@ object DatabaseMutationBuilder {
     val relationId = Cuid.createCuid()
     sqlu"""insert into `#$projectId`.`#$relationTableName` (`id`, `A`, `B`)
            select '#$relationId', id, '#$b' from `#$projectId`.`#${where.model.name}`
-           where `#${where.fieldName}` = ${where.fieldValue}
+           where `#${where.field.name}` = ${where.fieldValue}
           """
   }
 
@@ -162,7 +162,7 @@ object DatabaseMutationBuilder {
     val relationId = Cuid.createCuid()
     sqlu"""insert into `#$projectId`.`#$relationTableName` (`id`, `A`, `B`)
            select '#$relationId', '#$a', id from `#$projectId`.`#${where.model.name}`
-           where `#${where.fieldName}` = ${where.fieldValue}
+           where `#${where.field.name}` = ${where.fieldValue}
           """
   }
 
@@ -171,7 +171,7 @@ object DatabaseMutationBuilder {
            where `B` = '#$b' and `A` in (
              select id
              from `#$projectId`.`#${where.model.name}`
-             where `#${where.fieldName}` = ${where.fieldValue}
+             where `#${where.field.name}` = ${where.fieldValue}
            )
           """
   }
@@ -181,14 +181,14 @@ object DatabaseMutationBuilder {
            where `A` = '#$a' and `B` in (
              select id
              from `#$projectId`.`#${where.model.name}`
-             where `#${where.fieldName}` = ${where.fieldValue}
+             where `#${where.field.name}` = ${where.fieldValue}
            )
           """
   }
 
   def deleteDataItemByUniqueValueForAIfInRelationWithGivenB(projectId: String, relationTableName: String, b: String, where: NodeSelector) = {
     sqlu"""delete from `#$projectId`.`#${where.model.name}`
-           where `#${where.fieldName}` = ${where.fieldValue} and id in (
+           where `#${where.field.name}` = ${where.fieldValue} and id in (
              select `A`
              from `#$projectId`.`#$relationTableName`
              where `B` = '#$b'
@@ -198,7 +198,7 @@ object DatabaseMutationBuilder {
 
   def deleteDataItemByUniqueValueForBIfInRelationWithGivenA(projectId: String, relationTableName: String, a: String, where: NodeSelector) = {
     sqlu"""delete from `#$projectId`.`#${where.model.name}`
-           where `#${where.fieldName}` = ${where.fieldValue} and id in (
+           where `#${where.field.name}` = ${where.fieldValue} and id in (
              select `B`
              from `#$projectId`.`#$relationTableName`
              where `A` = '#$a'
@@ -214,7 +214,7 @@ object DatabaseMutationBuilder {
     val escapedValues = combineByComma(values.map { case (k, v) => escapeKey(k) concat sql" = " concat escapeUnsafeParam(v) })
     (sql"""update `#$projectId`.`#${where.model.name}`""" concat
       sql"""set""" concat escapedValues concat
-      sql"""where `#${where.fieldName}` = ${where.fieldValue} and id in (
+      sql"""where `#${where.field.name}` = ${where.fieldValue} and id in (
              select `A`
              from `#$projectId`.`#$relationTableName`
              where `B` = '#$b'
@@ -230,7 +230,7 @@ object DatabaseMutationBuilder {
     val escapedValues = combineByComma(values.map { case (k, v) => escapeKey(k) concat sql" = " concat escapeUnsafeParam(v) })
     (sql"""update `#$projectId`.`#${where.model.name}`""" concat
       sql"""set""" concat escapedValues concat
-      sql"""where `#${where.fieldName}` = ${where.fieldValue} and id in (
+      sql"""where `#${where.field.name}` = ${where.fieldValue} and id in (
              select `B`
              from `#$projectId`.`#$relationTableName`
              where `A` = '#$a'

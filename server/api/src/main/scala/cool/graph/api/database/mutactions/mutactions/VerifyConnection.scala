@@ -11,37 +11,30 @@ import cool.graph.shared.models.Project
 
 import scala.concurrent.Future
 
-case class VerifyConnection(project: Project, where: NodeSelector) extends ClientSqlDataChangeMutaction {
+case class VerifyConnection(project: Project, relationTableName: String, outerWhere: NodeSelector, innerWhere: NodeSelector) extends ClientSqlDataChangeMutaction {
 
   override def execute: Future[ClientSqlStatementResult[Any]] = {
-    Future.successful(ClientSqlStatementResult(sqlAction = DatabaseMutationBuilder.whereFailureTrigger(project, where)))
+    Future.successful(ClientSqlStatementResult(sqlAction = DatabaseMutationBuilder.connectionFailureTrigger(project, relationTableName, outerWhere, innerWhere)))
   }
 
-  override def handleErrors = {Some({ case e: SQLException if e.getErrorCode == 1242 && causedByThisMutaction(e.getCause.toString) => throw APIErrors.NodeNotFoundForWhereError(where)})}
-
-  private def dateTimeFromISO8601(v: Any) = {
-    val string = v.toString
-    //"2017-12-05T12:34:23.000Z" to "2017-12-05T12:34:23.000" which MySQL will accept
-    string.replace("Z", "")
-  }
-
-
-  def causedByThisMutaction(cause: String) = {
-    val parameterString = where.fieldValue match {
-      case StringGCValue(x) => s"parameters ['$x',"
-      case IntGCValue(x) => s"parameters [$x,"
-      case FloatGCValue(x) => s"parameters [$x,"
-      case BooleanGCValue(false) => s"parameters [0,"
-      case BooleanGCValue(true) => s"parameters [1,"
-      case GraphQLIdGCValue(x) => s"parameters ['$x',"
-      case EnumGCValue(x) => s"parameters ['$x',"
-      case DateTimeGCValue(x) => s"parameters ['${dateTimeFromISO8601(x)}',"
-      case JsonGCValue(x) => s"parameters ['$x',"
-      case ListGCValue(_) => sys.error("Not an acceptable Where")
-      case RootGCValue(_) => sys.error("Not an acceptable Where")
-      case NullGCValue => sys.error("Not an acceptable Where")
-    }
-
-  cause.contains(s"`${where.model.name}` where `${where.fieldName}` =") && cause.contains(parameterString)
-  }
+//  override def handleErrors = {Some({ case e: SQLException if e.getErrorCode == 1242 && causedByThisMutaction(e.getCause.toString) => throw APIErrors.NodesNotConnectedError(outerWhere, innerWhere)})}
+//
+////  def causedByThisMutaction(cause: String) = {
+////    val parameterString = where.fieldValue match {
+////      case StringGCValue(x) => s"parameters ['$x',"
+////      case IntGCValue(x) => s"parameters [$x,"
+////      case FloatGCValue(x) => s"parameters [$x,"
+////      case BooleanGCValue(false) => s"parameters [0,"
+////      case BooleanGCValue(true) => s"parameters [1,"
+////      case GraphQLIdGCValue(x) => s"parameters ['$x',"
+////      case EnumGCValue(x) => s"parameters ['$x',"
+////      case DateTimeGCValue(x) => s"parameters ['${dateTimeFromISO8601(x)}',"
+////      case JsonGCValue(x) => s"parameters ['$x',"
+////      case ListGCValue(_) => sys.error("Not an acceptable Where")
+////      case RootGCValue(_) => sys.error("Not an acceptable Where")
+////      case NullGCValue => sys.error("Not an acceptable Where")
+////    }
+////
+////  cause.contains(s"`${where.model.name}` where `${where.fieldName}` =") && cause.contains(parameterString)
+////  }
 }

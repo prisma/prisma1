@@ -4,9 +4,8 @@ import cool.graph.api.ApiDependencies
 import cool.graph.api.database.DataResolver
 import cool.graph.api.database.mutactions.mutactions.UpsertDataItem
 import cool.graph.api.database.mutactions.{MutactionGroup, TransactionMutaction}
+import cool.graph.api.mutations.IdNodeSelector._
 import cool.graph.api.mutations._
-import cool.graph.cuid.Cuid
-import cool.graph.gc_values.GraphQLIdGCValue
 import cool.graph.shared.models.{Model, Project}
 import sangria.schema
 
@@ -35,12 +34,12 @@ case class Upsert(
   }
 
   override def getReturnValue: Future[ReturnValueResult] = {
-    val newWhere = updateArgs.raw.get(where.fieldName) match {
+    val newWhere = updateArgs.raw.get(where.field.name) match {
       case Some(_) => updateArgs.extractNodeSelector(model)
       case None    => where
     }
 
-    val uniques = Vector(NodeSelector(model, "id", GraphQLIdGCValue(idOfNewItem)), newWhere)
+    val uniques = Vector(idNodeSelector(model, idOfNewItem), newWhere)
     dataResolver.resolveByUniques(model, uniques).map { items =>
       items.headOption match {
         case Some(item) => ReturnValue(item)

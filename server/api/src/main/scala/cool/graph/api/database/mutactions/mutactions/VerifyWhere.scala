@@ -42,6 +42,6 @@ case class VerifyWhere(project: Project, where: NodeSelector) extends ClientSqlD
       case NullGCValue => sys.error("Not an acceptable Where")
     }
 
-  cause.contains(s"`${where.model.name}` where `${where.fieldName}` =") && cause.contains(parameterString)
+  cause.contains(s"`${where.model.name}` where `${where.field.name}` =") && cause.contains(parameterString)
   }
 }

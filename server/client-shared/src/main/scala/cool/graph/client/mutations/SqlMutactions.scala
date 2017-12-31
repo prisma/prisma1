@@ -12,6 +12,8 @@ import cool.graph.shared.models.{Field, Model, Project}
 import cool.graph.shared.mutactions.InvalidInputClientSqlMutaction
 import cool.graph.{ClientSqlMutaction, DataItem}
 import scaldi.Injector
+import cool.graph.api.mutations.IdNodeSelector._
+
 
 import scala.collection.immutable.Seq
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -48,7 +50,7 @@ case class SqlMutactions(dataResolver: DataResolver) {
                              args: CoolArgs,
                              allowSettingManagedFields: Boolean,
                              id: Id = createCuid(),
-                             parentInfo: Option[ParentInfo] = None,
+                             outerWhere: Option[ParentInfo] = None,
                              requestId: String)(implicit inj: Injector): CreateMutactionsResult = {
 
     val createMutaction      = getCreateMutaction(project, model, args, id, allowSettingManagedFields, requestId)
@@ -56,7 +58,7 @@ case class SqlMutactions(dataResolver: DataResolver) {
     val forFlatOneRelation   = getAddToRelationMutactionsForIdFieldsForCreate(project, model, args, fromId = createMutaction.id)
     val forComplexRelations  = getComplexMutactions(project, model, args, fromId = createMutaction.id, requestId = requestId)
 
-    val relationToParent = parentInfo.map { parent =>
+    val relationToParent = outerWhere.map { parent =>
       AddDataItemToManyRelation(project = project, fromModel = parent.model, fromField = parent.field, fromId = parent.id, toId = id, toIdAlreadyInDB = false)
     }
 
@@ -65,7 +67,7 @@ case class SqlMutactions(dataResolver: DataResolver) {
       .filter { field =>
         val isRelatedById      = args.getFieldValueAs(field, suffix = SchemaBuilderConstants.idSuffix).flatten.isDefined
         val isRelatedByComplex = args.getFieldValueAs(field).flatten.isDefined
-        val isRelatedToParent = parentInfo match {
+        val isRelatedToParent = outerWhere match {
           case None         => false
           case Some(parent) => parent.field.relation.map(_.id) == field.relation.map(_.id)
         }
@@ -272,7 +274,7 @@ case class SqlMutactions(dataResolver: DataResolver) {
       val allowSettingManagedFields = false
 
       val itemsToCreate = subArgs.flatMap { subArg =>
-        getMutactionsForCreate(project, subModel, subArg, allowSettingManagedFields, parentInfo = Some(ParentInfo(model, field, fromId)), requestId = requestId).allMutactions
+        getMutactionsForCreate(project, subModel, subArg, allowSettingManagedFields, outerWhere = Some(idNodeSelector(model,fromId)), requestId = requestId).allMutactions
       }
 
       removeOldFromRelation ++ itemsToCreate
