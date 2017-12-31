@@ -1,32 +1,32 @@
-package cool.graph.subscriptions.specs
-
-import cool.graph.messagebus.pubsub.Only
-import cool.graph.shared.models.Model
-import cool.graph.shared.project_dsl.SchemaDsl
-import org.scalatest._
-import spray.json.{JsArray, JsNumber, JsObject, JsString}
-
-import scala.concurrent.duration._
-
-class SubscriptionsProtocolV05Spec extends FlatSpec with Matchers with SpecBase {
-  val schema = SchemaDsl.schema()
-  val todo = schema
-    .model("Todo")
-    .field("text", _.String)
-    .field("json", _.Json)
-    .field("int", _.Int)
-
-  val project      = schema.buildProject()
-  val model: Model = project.getModelByName_!("Todo")
-
-  override def beforeEach() = {
-    super.beforeEach()
-    testDatabase.setup(project)
-    val json = JsArray(JsNumber(1), JsNumber(2), JsObject("a" -> JsString("b")))
-    TestData.createTodo("test-node-id", "some todo", json, None, project, model, testDatabase)
-    TestData.createTodo("important-test-node-id", "important!", json, None, project, model, testDatabase)
-  }
-
+//package cool.graph.subscriptions.specs
+//
+//import cool.graph.messagebus.pubsub.Only
+//import cool.graph.shared.models.Model
+//import cool.graph.shared.project_dsl.SchemaDsl
+//import org.scalatest._
+//import spray.json.{JsArray, JsNumber, JsObject, JsString}
+//
+//import scala.concurrent.duration._
+//
+//class SubscriptionsProtocolV05Spec extends FlatSpec with Matchers with SpecBase {
+//  val schema = SchemaDsl.schema()
+//  val todo = schema
+//    .model("Todo")
+//    .field("text", _.String)
+//    .field("json", _.Json)
+//    .field("int", _.Int)
+//
+//  val project      = schema.buildProject()
+//  val model: Model = project.getModelByName_!("Todo")
+//
+//  override def beforeEach() = {
+//    super.beforeEach()
+//    testDatabase.setup(project)
+//    val json = JsArray(JsNumber(1), JsNumber(2), JsObject("a" -> JsString("b")))
+//    TestData.createTodo("test-node-id", "some todo", json, None, project, model, testDatabase)
+//    TestData.createTodo("important-test-node-id", "important!", json, None, project, model, testDatabase)
+//  }
+//
 //  "All subscriptions" should "support the basic subscriptions protocol when id is string" in {
 //    testWebsocket(project) { wsClient =>
 //      wsClient.sendMessage("{}")
@@ -258,43 +258,43 @@ class SubscriptionsProtocolV05Spec extends FlatSpec with Matchers with SpecBase 
 //      wsClient.expectMessage("""{"id":"3","payload":{"data":{"Todo":{"node":null,"previousValues":{"id":"test-node-id2"}}}},"type":"subscription_data"}""")
 //    }
 //  }
-
-  "Subscription" should "regenerate changed schema and work on reconnect" ignore {
-    testWebsocket(project) { wsClient =>
-      // SCHEMA INVALIDATION
-
-      wsClient.sendMessage(s"""{"type":"init","payload":{}}""")
-      wsClient.expectMessage("""{"type":"init_success"}""")
-
-      wsClient.sendMessage(
-        """{"type":"subscription_start","id":"create-filters","variables":{},"query":"subscription { Todo(where:{node:{text_contains: \"important!\"}}) { node { id text } } }"}""")
-      wsClient.expectMessage("""{"id":"create-filters","type":"subscription_success"}""")
-      sleep()
-
-      invalidationTestKit.publish(Only(project.id), "")
-      wsClient.expectMessage("""{"id":"create-filters","payload":{"errors":[{"message":"Schema changed"}]},"type":"subscription_fail"}""")
-      sleep()
-
-      // KEEP WORKING ON RECONNECT
-
-      wsClient.sendMessage(
-        """{"type":"subscription_start","id":"update-filters","variables":{},"query":"subscription { Todo(where:{node:{text_contains: \"important!\"}}) { node { id text } } }"}""")
-      wsClient.expectMessage("""{"id":"update-filters","type":"subscription_success"}""")
-      sleep()
-
-      sssEventsTestKit.publish(
-        Only(s"subscription:event:${project.id}:updateTodo"),
-        s"""{"nodeId":"important-test-node-id","modelId":"${model.id}","mutationType":"UpdateNode","changedFields":["text"], "previousValues": "{\\"id\\": \\"text-node-id\\", \\"text\\": \\"asd\\", \\"json\\": null, \\"createdAt\\": \\"2017\\"}"}"""
-      )
-
-      wsClient.expectMessage(
-        """{"id":"update-filters","payload":{"data":{"Todo":{"node":{"id":"important-test-node-id","text":"important!"}}}},"type":"subscription_data"}""")
-
-      wsClient.sendMessage("""{"type":"subscription_end","id":"update-filters"}""")
-    }
-  }
-
-  override def failTest(msg: String): Nothing = { // required by RouteTest
-    throw new Error("Test failed: " + msg)
-  }
-}
+//
+//  "Subscription" should "regenerate changed schema and work on reconnect" ignore {
+//    testWebsocket(project) { wsClient =>
+//      // SCHEMA INVALIDATION
+//
+//      wsClient.sendMessage(s"""{"type":"init","payload":{}}""")
+//      wsClient.expectMessage("""{"type":"init_success"}""")
+//
+//      wsClient.sendMessage(
+//        """{"type":"subscription_start","id":"create-filters","variables":{},"query":"subscription { Todo(where:{node:{text_contains: \"important!\"}}) { node { id text } } }"}""")
+//      wsClient.expectMessage("""{"id":"create-filters","type":"subscription_success"}""")
+//      sleep()
+//
+//      invalidationTestKit.publish(Only(project.id), "")
+//      wsClient.expectMessage("""{"id":"create-filters","payload":{"errors":[{"message":"Schema changed"}]},"type":"subscription_fail"}""")
+//      sleep()
+//
+//      // KEEP WORKING ON RECONNECT
+//
+//      wsClient.sendMessage(
+//        """{"type":"subscription_start","id":"update-filters","variables":{},"query":"subscription { Todo(where:{node:{text_contains: \"important!\"}}) { node { id text } } }"}""")
+//      wsClient.expectMessage("""{"id":"update-filters","type":"subscription_success"}""")
+//      sleep()
+//
+//      sssEventsTestKit.publish(
+//        Only(s"subscription:event:${project.id}:updateTodo"),
+//        s"""{"nodeId":"important-test-node-id","modelId":"${model.id}","mutationType":"UpdateNode","changedFields":["text"], "previousValues": "{\\"id\\": \\"text-node-id\\", \\"text\\": \\"asd\\", \\"json\\": null, \\"createdAt\\": \\"2017\\"}"}"""
+//      )
+//
+//      wsClient.expectMessage(
+//        """{"id":"update-filters","payload":{"data":{"Todo":{"node":{"id":"important-test-node-id","text":"important!"}}}},"type":"subscription_data"}""")
+//
+//      wsClient.sendMessage("""{"type":"subscription_end","id":"update-filters"}""")
+//    }
+//  }
+//
+//  override def failTest(msg: String): Nothing = { // required by RouteTest
+//    throw new Error("Test failed: " + msg)
+//  }
+//}
