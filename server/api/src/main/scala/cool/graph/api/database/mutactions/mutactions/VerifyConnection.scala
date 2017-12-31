@@ -11,7 +11,7 @@ import cool.graph.shared.models.Project
 
 import scala.concurrent.Future
 
-case class VerifyWhere(project: Project, where: NodeSelector) extends ClientSqlDataChangeMutaction {
+case class VerifyConnection(project: Project, where: NodeSelector) extends ClientSqlDataChangeMutaction {
 
   override def execute: Future[ClientSqlStatementResult[Any]] = {
     Future.successful(ClientSqlStatementResult(sqlAction = DatabaseMutationBuilder.whereFailureTrigger(project, where)))

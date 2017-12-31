@@ -2,7 +2,7 @@ package cool.graph.api.mutations
 
 import cool.graph.api.mutations.MutationTypes.ArgumentValue
 import cool.graph.api.schema.APIErrors
-import cool.graph.gc_values.GCValue
+import cool.graph.gc_values.{DateTimeGCValue, GCValue}
 import cool.graph.shared.models._
 import cool.graph.util.gc_value.{GCAnyConverter, GCDBValueConverter}
 
@@ -170,4 +170,15 @@ case class CoolArgs(raw: Map[String, Any]) {
 case class NodeSelector(model: Model, fieldName: String, fieldValue: GCValue) {
   lazy val unwrappedFieldValue: Any   = GCDBValueConverter().fromGCValue(fieldValue)
   lazy val fieldValueAsString: String = GCDBValueConverter().fromGCValueToString(fieldValue)
+
+//  lazy val unwrappedFieldValue: Any   = {
+//    fieldValue match {
+//      case x: DateTimeGCValue => x.toMySqlDateTimeFormat
+//      case _ => GCDBValueConverter().fromGCValue(fieldValue)
+//    }
+//  }
+//  lazy val fieldValueAsString: String = fieldValue match {
+//    case x: DateTimeGCValue => x.toMySqlDateTimeFormat
+//    case _ => GCDBValueConverter().fromGCValueToString(fieldValue)
+//  }
 }

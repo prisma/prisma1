@@ -323,5 +323,4 @@ class NestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
       errorContains = "You provided an invalid argument for the where selector on Todo."
     )
   }
-
 }
