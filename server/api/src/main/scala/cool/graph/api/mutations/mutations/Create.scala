@@ -42,11 +42,10 @@ case class Create(
   def prepareMutactions(): Future[List[MutactionGroup]] = {
     val createMutactionsResult = SqlMutactions(dataResolver).getMutactionsForCreate(model, coolArgs, id)
 
-    val transactionMutaction = Transaction(createMutactionsResult.allMutactions.toList, dataResolver)
-    val createMutactions     = createMutactionsResult.allMutactions.collect { case x: CreateDataItem => x }
-
+    val transactionMutaction   = Transaction(createMutactionsResult.allMutactions.toList, dataResolver)
+    val createMutactions       = createMutactionsResult.allMutactions.collect { case x: CreateDataItem => x }
     val subscriptionMutactions = SubscriptionEvents.extractFromSqlMutactions(project, mutationId, createMutactionsResult.allMutactions)
-//    val sssActions             = ServerSideSubscription.extractFromMutactions(project, createMutactionsResult.allMutactions, requestId)
+    //    val sssActions             = ServerSideSubscription.extractFromMutactions(project, createMutactionsResult.allMutactions, requestId)
 
     Future.successful(
       List(

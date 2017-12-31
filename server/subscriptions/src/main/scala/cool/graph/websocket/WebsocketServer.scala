@@ -10,6 +10,7 @@ import cool.graph.akkautil.http.Server
 import cool.graph.bugsnag.BugSnagger
 import cool.graph.cuid.Cuid
 import cool.graph.messagebus.pubsub.Everything
+import cool.graph.shared.models.ProjectId
 import cool.graph.websocket.WebsocketSessionManager.Requests.IncomingQueueMessage
 import cool.graph.websocket.metrics.SubscriptionWebsocketMetrics
 import cool.graph.websocket.services.WebsocketServices
@@ -38,9 +39,10 @@ case class WebsocketServer(services: WebsocketServices, prefix: String = "")(
   override def healthCheck: Future[_] = Future.successful(())
   override def onStop: Future[_]      = Future { responseSubscription.unsubscribe }
 
-  val innerRoutes = pathPrefix("v1") {
-    path(Segment) { projectId =>
+  val innerRoutes = pathPrefix(Segment) { name =>
+    pathPrefix(Segment) { stage =>
       get {
+        val projectId = ProjectId.toEncodedString(name = name, stage = stage)
         handleWebSocketMessagesForProtocol(newSession(projectId, v7protocol = false), subProtocol1) ~
           handleWebSocketMessagesForProtocol(newSession(projectId, v7protocol = true), subProtocol2)
       }

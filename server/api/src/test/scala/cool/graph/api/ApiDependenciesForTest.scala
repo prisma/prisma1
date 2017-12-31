@@ -5,6 +5,7 @@ import akka.stream.ActorMaterializer
 import cool.graph.api.database.Databases
 import cool.graph.api.project.{ProjectFetcher, ProjectFetcherImpl}
 import cool.graph.api.schema.SchemaBuilder
+import cool.graph.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
 
 case class ApiDependenciesForTest()(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends ApiDependencies {
   override implicit def self: ApiDependencies = this
@@ -13,5 +14,5 @@ case class ApiDependenciesForTest()(implicit val system: ActorSystem, val materi
   val apiSchemaBuilder                       = SchemaBuilder()(system, this)
   val projectFetcher: ProjectFetcher         = ProjectFetcherImpl(Vector.empty, config)
   override lazy val maxImportExportSize: Int = 1000
-
+  override val sssEventsPubSub               = ???
 }

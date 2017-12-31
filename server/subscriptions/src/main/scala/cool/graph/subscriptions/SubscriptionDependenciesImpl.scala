@@ -51,11 +51,15 @@ case class SubscriptionDependenciesImpl()(implicit val system: ActorSystem, val 
     durable = true
   )
 
-  lazy val sssEventsSubscriber = RabbitAkkaPubSub.subscriber[String](
-    clusterLocalRabbitUri,
-    "sss-events",
-    durable = true
-  )(bugSnagger, system, Conversions.Unmarshallers.ToString)
+  override lazy val sssEventsPubSub: InMemoryAkkaPubSub[String] = InMemoryAkkaPubSub[String]()
+//  override lazy val sssEventsPublisher: PubSubPublisher[String]   = sssEventsPubSub
+  override lazy val sssEventsSubscriber: PubSubSubscriber[String] = sssEventsPubSub
+
+//  lazy val sssEventsSubscriber = RabbitAkkaPubSub.subscriber[String](
+//    clusterLocalRabbitUri,
+//    "sss-events",
+//    durable = true
+//  )(bugSnagger, system, Conversions.Unmarshallers.ToString)
 
   lazy val responsePubSubscriber      = InMemoryAkkaPubSub[String]()
   lazy val responsePubSubPublisherV05 = responsePubSubscriber.map[SubscriptionSessionResponseV05](converterResponse05ToString)

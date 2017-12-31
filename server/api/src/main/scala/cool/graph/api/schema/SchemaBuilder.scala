@@ -49,6 +49,7 @@ case class SchemaBuilderImpl(
     Schema(
       query = query,
       mutation = mutation,
+      subscription = subscription,
       validationRules = SchemaValidationRule.empty
     )
   }
