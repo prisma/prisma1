@@ -42,6 +42,8 @@ services:
       CLIENT_API_ADDRESS: "http://localhost:8888/"
       PRIVATE_CLIENT_API_SECRET: "empty"
       PACKAGECLOUD_PW: "${PACKAGECLOUD_PW}"
+      CLUSTER_VERSION: "latest"
+
     volumes:
       - ../..:/root
     working_dir: /root/server

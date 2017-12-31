@@ -114,8 +114,6 @@ def serverProject(name: String): Project = {
 def normalProject(name: String): Project = Project(id = name, base = file(s"./$name")).settings(commonSettings: _*)
 def libProject(name: String): Project =  Project(id = name, base = file(s"./libs/$name")).settings(commonSettings: _*)
 
-lazy val betaImageTag = "1.0.0-beta2"
-
 lazy val sharedModels = normalProject("shared-models")
   .dependsOn(gcValues % "compile")
   .dependsOn(jsonUtils % "compile")
@@ -139,7 +137,7 @@ lazy val deploy = serverProject("deploy")
   .enablePlugins(sbtdocker.DockerPlugin, JavaAppPackaging)
   .settings(
     imageNames in docker := Seq(
-      ImageName(s"graphcool/graphcool-deploy:$betaImageTag")
+      ImageName(s"graphcool/graphcool-deploy:latest")
     ),
     dockerfile in docker := {
       val appDir    = stage.value
@@ -152,11 +150,11 @@ lazy val deploy = serverProject("deploy")
       }
     }
   )
-  .enablePlugins(BuildInfoPlugin)
-  .settings(
-    buildInfoKeys := Seq[BuildInfoKey](name, version, "imageTag" -> betaImageTag),
-    buildInfoPackage := "build_info"
-  )
+//  .enablePlugins(BuildInfoPlugin)
+//  .settings(
+//    buildInfoKeys := Seq[BuildInfoKey](name, version, "imageTag" -> betaImageTag),
+//    buildInfoPackage := "build_info"
+//  )
 
 lazy val api = serverProject("api")
   .dependsOn(sharedModels % "compile")
@@ -175,7 +173,7 @@ lazy val api = serverProject("api")
   .enablePlugins(sbtdocker.DockerPlugin, JavaAppPackaging)
   .settings(
     imageNames in docker := Seq(
-      ImageName(s"graphcool/graphcool-database:$betaImageTag")
+      ImageName(s"graphcool/graphcool-database:latest")
     ),
     dockerfile in docker := {
       val appDir    = stage.value
@@ -453,7 +451,7 @@ lazy val singleServer = Project(id = "single-server", base = file("./single-serv
   .enablePlugins(sbtdocker.DockerPlugin, JavaAppPackaging)
   .settings(
     imageNames in docker := Seq(
-      ImageName(s"graphcool/graphcool-dev:$betaImageTag")
+      ImageName(s"graphcool/graphcool-dev:latest")
     ),
     dockerfile in docker := {
       val appDir    = stage.value
