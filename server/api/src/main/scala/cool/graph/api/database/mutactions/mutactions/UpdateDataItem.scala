@@ -74,11 +74,10 @@ case class UpdateDataItem(project: Project,
 
   override def handleErrors = {
     implicit val anyFormat = JsonFormats.AnyJsonFormat
-
     Some({
       // https://dev.mysql.com/doc/refman/5.5/en/error-messages-server.html#error_er_dup_entry
-      case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1062 =>
-        APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldFromArgumentValueList(values.toList, e))
+      case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1062 && GetFieldFromSQLUniqueException.getFieldOptionFromArgumentValueList(values.toList, e).isDefined=>
+        APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOptionFromArgumentValueList(values.toList, e).get)
       case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1452 =>
         APIErrors.NodeDoesNotExist(id)
       case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1048 =>

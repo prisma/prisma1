@@ -69,7 +69,7 @@ case class DataResolver(project: Project, useMasterDatabaseOnly: Boolean = false
   }
 
   def resolveByUnique(where: NodeSelector): Future[Option[DataItem]] = {
-    batchResolveByUnique(where.model, where.fieldName, List(where.unwrappedFieldValue)).map(_.headOption)
+    batchResolveByUnique(where.model, where.field.name, List(where.unwrappedFieldValue)).map(_.headOption)
   }
 
   def resolveByUniques(model: Model, uniques: Vector[NodeSelector]): Future[Vector[DataItem]] = {
@@ -128,7 +128,7 @@ case class DataResolver(project: Project, useMasterDatabaseOnly: Boolean = false
       .map {
         case Some(modelId) =>
           val model = project.getModelById_!(modelId.trim)
-          resolveByUnique(NodeSelector(model, "id", GraphQLIdGCValue(globalId))).map(_.map(mapDataItem(model)).map(_.copy(typeName = Some(model.name))))
+          resolveByUnique(NodeSelector(model, model.getFieldByName_!("id"), GraphQLIdGCValue(globalId))).map(_.map(mapDataItem(model)).map(_.copy(typeName = Some(model.name))))
         case _ => Future.successful(None)
       }
       .flatMap(identity)
@@ -189,7 +189,7 @@ case class DataResolver(project: Project, useMasterDatabaseOnly: Boolean = false
     )
   }
 
-  def resolveByModelAndId(model: Model, id: Id): Future[Option[DataItem]]                  = resolveByUnique(NodeSelector(model, "id", GraphQLIdGCValue(id)))
+  def resolveByModelAndId(model: Model, id: Id): Future[Option[DataItem]]                  = resolveByUnique(NodeSelector(model, model.getFieldByName_!("id"), GraphQLIdGCValue(id)))
   def resolveByModelAndIdWithoutValidation(model: Model, id: Id): Future[Option[DataItem]] = resolveByUniqueWithoutValidation(model, "id", id)
 
   def countByRelationManyModels(fromField: Field, fromNodeIds: List[String], args: Option[QueryArguments]): Future[List[(String, Int)]] = {
