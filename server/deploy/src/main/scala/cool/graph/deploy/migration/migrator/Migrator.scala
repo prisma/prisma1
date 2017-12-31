@@ -93,7 +93,6 @@ object ResumeMessageProcessing
 object Ready
 object Deploy
 
-// Todo only saves for now, doesn't work off (that is still in the applier job!)
 /**
   * State machine states:
   *  - Initializing: Stashing all messages while initializing
@@ -112,8 +111,7 @@ case class ProjectDeploymentActor(projectId: String)(
 ) extends Actor
     with Stash {
 
-  implicit val ec                  = context.system.dispatcher
-  var currentProjectState: Project = _ // Latest valid project, saves a DB roundtrip
+  implicit val ec = context.system.dispatcher
 
   // Possible enhancement: Periodically scan the DB for migrations if signal was lost -> Wait and see if this is an issue at all
 
@@ -136,7 +134,7 @@ case class ProjectDeploymentActor(projectId: String)(
       handleScheduling(msg).onComplete {
         case Success(migration: Migration) =>
           caller ! migration
-          self ! Deploy // will be stashed
+          self ! Deploy
           self ! ResumeMessageProcessing
 
         case Failure(err) =>

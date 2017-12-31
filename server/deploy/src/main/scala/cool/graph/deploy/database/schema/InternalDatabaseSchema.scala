@@ -30,10 +30,18 @@ object InternalDatabaseSchema {
         `projectId` varchar(200) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',
         `revision` int(11) NOT NULL DEFAULT '1',
         `schema` mediumtext COLLATE utf8_unicode_ci DEFAULT NULL,
+        `status` ENUM('PENDING', 'IN_PROGRESS', 'SUCCESS', 'ROLLING_BACK', 'ROLLBACK_SUCCESS', 'ROLLBACK_FAILURE') NOT NULL DEFAULT 'PENDING',
+        `progress`
         `steps` mediumtext COLLATE utf8_unicode_ci DEFAULT NULL,
-        `hasBeenApplied` tinyint(1) NOT NULL DEFAULT '0',
         PRIMARY KEY (`projectId`, `revision`),
         CONSTRAINT `migrations_projectid_foreign` FOREIGN KEY (`projectId`) REFERENCES `Project` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;""",
+    // Migration progress
+    sqlu"""
+      CREATE TABLE IF NOT EXISTS `MigrationProgress` (
+        `id` varchar(200) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',
+        `ownerId` varchar(25) COLLATE utf8_unicode_ci DEFAULT NULL,
+        PRIMARY KEY (`id`)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;"""
   )
 }
