@@ -10,6 +10,7 @@ import { Args } from './types/common'
 import { StageNotFound } from './errors/StageNotFound'
 import { Environment } from './Environment'
 import { IOutput } from './Output'
+import { Cluster } from './Cluster'
 
 interface ErrorMessage {
   message: string
@@ -54,12 +55,9 @@ export class GraphcoolDefinitionClass {
       )
       this.definitionString = fs.readFileSync(this.definitionPath, 'utf-8')
       this.typesString = this.getTypesString(this.definition)
-      const secrets = this.envVars.GRAPHCOOL_SECRET || this.definition.secret
+      const secrets = this.definition.secret
       this.secrets = secrets ? secrets.replace(/\s/g, '').split(',') : null
-      const disableAuth =
-        typeof this.envVars.GRAPHCOOL_DISABLE_AUTH !== 'undefined'
-          ? this.readBool(this.envVars.GRAPHCOOL_DISABLE_AUTH)
-          : this.definition.disableAuth
+      const disableAuth = this.definition.disableAuth
       if (this.secrets === null && !disableAuth) {
         throw new Error(
           'Please either provide a secret in your graphcool.yml or disableAuth: true',
@@ -68,19 +66,6 @@ export class GraphcoolDefinitionClass {
     }
   }
 
-  readBool(value?: string) {
-    if (value) {
-      const trimmed = value.trim()
-      if (trimmed === 'true') {
-        return true
-      }
-      if (trimmed === 'false') {
-        return false
-      }
-    }
-
-    return false
-  }
   getToken(serviceName: string, stageName: string): string | undefined {
     if (this.secrets) {
       const data = {
@@ -96,7 +81,16 @@ export class GraphcoolDefinitionClass {
 
     return undefined
   }
-  private getTypesString(definition: GraphcoolDefinition) {
+
+  getCluster(): Cluster | undefined {
+    if (this.definition && this.definition.cluster) {
+      return this.env.clusterByName(this.definition.cluster)
+    }
+
+    return undefined
+  }
+
+  getTypesString(definition: GraphcoolDefinition) {
     const typesPaths = Array.isArray(definition.datamodel)
       ? definition.datamodel
       : [definition.datamodel]

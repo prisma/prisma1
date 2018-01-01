@@ -42,10 +42,6 @@ ${chalk.gray(
   ${chalk.green('$ graphcool deploy --force --stage production')}
   `
   static flags: Flags = {
-    stage: flags.string({
-      char: 's',
-      description: 'Local stage to deploy to',
-    }),
     force: flags.boolean({
       char: 'f',
       description: 'Accept data loss caused by schema changes',
@@ -54,21 +50,9 @@ ${chalk.gray(
       char: 'w',
       description: 'Watch for changes',
     }),
-    'new-service-cluster': flags.string({
-      char: 'c',
-      description: 'Name of the Cluster to deploy to',
-    }),
-    // alias: flags.string({
-    //   char: 'a',
-    //   description: 'Service alias',
-    // }),
     interactive: flags.boolean({
       char: 'i',
       description: 'Force interactive mode to select the cluster',
-    }),
-    default: flags.boolean({
-      char: 'D',
-      description: 'Set specified stage as default',
     }),
     'dry-run': flags.boolean({
       char: 'd',
@@ -81,78 +65,30 @@ ${chalk.gray(
       char: 'j',
       description: 'Json Output',
     }),
-    dotenv: flags.string({
+    ['env-file']: flags.string({
       description: 'Path to .env file to inject env vars',
+      char: 'e',
     }),
   }
   private deploying: boolean = false
   private showedLines: number = 0
   async run() {
     debug('run')
-    const { force, watch, interactive, dotenv } = this.flags
-    const newServiceClusterName = this.flags['new-service-cluster']
+    const { force, watch, interactive } = this.flags
+    const envFile = this.flags['env-file']
     const dryRun = this.flags['dry-run']
 
-    if (newServiceClusterName) {
-      const newServiceCluster = this.env.clusterByName(newServiceClusterName)
-      if (!newServiceCluster) {
-        this.out.error(
-          `You provided 'new-service-cluster' ${chalk.bold(
-            newServiceClusterName,
-          )}, but it doesn't exist. Please check your global ~/.graphcoolrc`,
-        )
-      } else {
-        this.env.setActiveCluster(newServiceCluster)
-      }
+    if (envFile && !fs.pathExistsSync(path.join(this.config.cwd, envFile))) {
+      this.out.error(`--env-file path '${envFile}' does not exist`)
     }
 
-    if (dotenv && !fs.pathExistsSync(path.join(this.config.cwd, dotenv))) {
-      this.out.error(`--dotenv path '${dotenv}' does not exist`)
-    }
-
-    await this.definition.load(this.flags, dotenv)
+    await this.definition.load(this.flags, envFile)
     const serviceName = this.definition.definition!.service
+    const stage = this.definition.definition!.stage
 
-    const stage = this.flags.stage || process.env.GRAPHCOOL_STAGE || 'dev'
-    const cacheEntry = this.clusterCache.cache.find(
-      e => e.service === serviceName && e.stage === stage,
-    )
-    /**
-     * try to get the cluster from the cache
-     */
-    let cluster
-    if (cacheEntry) {
-      const clusterName = cacheEntry.cluster
-      cluster = this.env.clusterByName(cacheEntry.cluster)
-      if (!cluster) {
-        if (clusterName === 'local') {
-          cluster = await this.localUp()
-        } else {
-          this.out.error(`Cluster ${clusterName} could not be found.`)
-        }
-      }
-      if (cacheEntry.cluster === 'local') {
-        const online = await cluster.isOnline()
-        if (!online) {
-          await this.localUp()
-        }
-      }
-    }
-
-    const serviceIsNew = !cluster
-
-    /**
-     * if you couldn't get it from the cache, get it from the newServiceClusterName param or from the cluster selection
-     */
-    if (!cluster) {
-      const clusterName =
-        (!interactive && newServiceClusterName) ||
-        (await this.clusterSelection(serviceName, stage))
-      cluster = this.env.clusterByName(clusterName)!
-      if (!cluster && clusterName === 'local') {
-        await this.localUp()
-      }
-    }
+    const cluster =
+      this.definition.getCluster() ||
+      (await this.getCluster(serviceName, stage))
 
     if (cluster) {
       this.env.setActiveCluster(cluster)
@@ -167,14 +103,6 @@ ${chalk.gray(
     }
 
     await this.deploy(stage, serviceName, cluster!, force, dryRun)
-
-    this.clusterCache.addCacheEntry({
-      service: serviceName,
-      stage,
-      cluster: cluster.name,
-    })
-
-    this.clusterCache.save()
 
     if (this.definition.definition!.seed && !this.flags['no-seed']) {
       const seeder = new Seeder(
@@ -368,6 +296,14 @@ ${chalk.gray(
     this.out.log(`\n${chalk.bold('Your GraphQL database endpoint is live:')}
 
   ${chalk.bold('HTTP:')}  ${cluster.getApiEndpoint(serviceName, stageName)}\n`)
+  }
+
+  private async getCluster(
+    serviceName: string,
+    stage: string,
+  ): Promise<Cluster | undefined> {
+    const name = await this.clusterSelection(serviceName, stage)
+    return this.env.clusterByName(name)
   }
 
   private async clusterSelection(

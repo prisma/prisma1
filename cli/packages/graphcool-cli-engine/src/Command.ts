@@ -7,11 +7,7 @@ import { OutputArgs, OutputFlags, Parser } from './Parser'
 import Help from './Help'
 import { Client } from './Client/Client'
 // import { Auth } from './Auth'
-import {
-  Environment,
-  GraphcoolDefinitionClass,
-  ClusterCache,
-} from 'graphcool-yml'
+import { Environment, GraphcoolDefinitionClass } from 'graphcool-yml'
 import packagejson = require('../package.json')
 import * as mock from './mock'
 import * as fs from 'fs-extra'
@@ -108,7 +104,6 @@ export class Command {
   flags: OutputFlags
   args?: OutputArgs
   argv: string[]
-  clusterCache: ClusterCache
 
   constructor(options: { config?: RunOptions } = { config: { mock: true } }) {
     this.config =
@@ -127,7 +122,6 @@ export class Command {
       this.out,
     )
     this.client = new Client(this.config, this.env, this.out)
-    this.clusterCache = new ClusterCache(this.config.globalClusterCachePath)
     // this.auth = new Auth(this.out, this.config, this.env, this.client)
     // this.client.setAuth(this.auth)
   }

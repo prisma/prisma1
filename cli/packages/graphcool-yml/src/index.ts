@@ -1,5 +1,3 @@
-export { ClusterCache } from './ClusterCache'
-
 export { Cluster } from './Cluster'
 export { GraphcoolDefinitionClass } from './GraphcoolDefinition'
 export { Environment } from './Environment'
