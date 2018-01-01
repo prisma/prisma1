@@ -17,7 +17,7 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
     val id = server
       .executeQuerySimple(
         s"""mutation {
-           |  createModel(data: {strings: []}) {
+           |  createModel(data: {strings: { set: [] }}) {
            |    id
            |  }
            |}""".stripMargin,
@@ -49,7 +49,7 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
     val id = server
       .executeQuerySimple(
         s"""mutation {
-           |  createModel(data: {ints: [1], strings: ["short", "looooooooooong"]}) {
+           |  createModel(data: {ints: { set: [1] }, strings: { set: ["short", "looooooooooong"]}}) {
            |    id
            |  }
            |}""".stripMargin,
@@ -81,7 +81,7 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
     val id = server
       .executeQuerySimple(
         s"""mutation {
-           |  createModel(data: {ints: [1,2], strings: ["short", "looooooooooong"]}) {
+           |  createModel(data: {ints: { set: [1,2] }, strings: { set: ["short", "looooooooooong"] }}) {
            |    id
            |  }
            |}""".stripMargin,

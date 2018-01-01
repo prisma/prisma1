@@ -166,30 +166,35 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
 
   }
 
-  private def computeScalarInputFieldsForCreate(model: Model): List[InputField[Any]] = {
+  private def computeScalarInputFieldsForCreate(model: Model) = {
     val filteredModel = model.filterFields(_.isWritable)
 
-    val allFields = filteredModel.scalarFields.map { field =>
-      InputField(field.name, FieldToInputTypeMapper.mapForCreateCase(field))
-    }
-
-    allFields
+    computeScalarInputFields(filteredModel, FieldToInputTypeMapper.mapForCreateCase, "Create")
   }
 
-  private def computeScalarInputFieldsForUpdate(model: Model): List[InputField[Any]] = {
+  private def computeScalarInputFieldsForUpdate(model: Model) = {
     val filteredModel = model.filterFields(f => f.isWritable)
 
-    val nonListFields = filteredModel.scalarFields.filter(!_.isList).map { field =>
-      InputField(field.name, SchemaBuilderUtils.mapToOptionalInputType(field))
+    computeScalarInputFields(filteredModel, SchemaBuilderUtils.mapToOptionalInputType, "Update")
+  }
+
+  private def computeScalarInputFields(model: Model, mapToInputType: Field => InputType[Any], inputObjectName: String) = {
+    val nonListFields = model.scalarFields.filter(!_.isList).map { field =>
+      InputField(field.name, mapToInputType(field))
     }
 
-    val listFields = filteredModel.scalarListFields.map { field =>
-      val setField = InputObjectType(name = "set", fieldsFn = () => List(InputField SchemaBuilderUtils.mapToOptionalInputType(field)))
+    val listFields = model.scalarListFields.map { field =>
+      val setField =
+        OptionInputType(
+          InputObjectType(
+            name = s"${model.name}$inputObjectName${field.name}Input",
+            fieldsFn = () => List(InputField(name = "set", fieldType = SchemaBuilderUtils.mapToOptionalInputType(field)))
+          ))
 
       InputField(field.name, setField)
     }
 
-    nonListFields
+    nonListFields ++ listFields
   }
 
   private def computeNonListScalarInputFields(model: Model, mapToInputType: Field => InputType[Any]): List[InputField[Any]] = {
