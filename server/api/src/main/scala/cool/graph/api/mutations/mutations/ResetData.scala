@@ -2,7 +2,7 @@ package cool.graph.api.mutations.mutations
 
 import cool.graph.api.ApiDependencies
 import cool.graph.api.database.mutactions.mutactions._
-import cool.graph.api.database.mutactions.{MutactionGroup, Transaction}
+import cool.graph.api.database.mutactions.{MutactionGroup, TransactionMutaction}
 import cool.graph.api.database.{DataItem, DataResolver}
 import cool.graph.api.mutations.{SingleItemClientMutation, ReturnValue, ReturnValueResult}
 import cool.graph.shared.models._
@@ -18,7 +18,7 @@ case class ResetData(project: Project, dataResolver: DataResolver)(implicit apiD
     val removeRelayIds  = List(TruncateTable(projectId = project.id, tableName = "_RelayId"))
     val enableChecks    = List(EnableForeignKeyConstraintChecks())
 
-    val transactionMutaction = Transaction(disableChecks ++ removeRelations ++ removeDataItems ++ removeRelayIds ++ enableChecks, dataResolver)
+    val transactionMutaction = TransactionMutaction(disableChecks ++ removeRelations ++ removeDataItems ++ removeRelayIds ++ enableChecks, dataResolver)
     Future.successful(List(MutactionGroup(mutactions = List(transactionMutaction), async = false)))
   }
 

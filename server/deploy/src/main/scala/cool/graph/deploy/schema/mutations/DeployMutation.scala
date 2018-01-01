@@ -3,7 +3,8 @@ package cool.graph.deploy.schema.mutations
 import cool.graph.deploy.database.persistence.MigrationPersistence
 import cool.graph.deploy.migration.validation.{SchemaError, SchemaErrors, SchemaSyntaxValidator}
 import cool.graph.deploy.migration._
-import cool.graph.shared.models.{Migration, Project}
+import cool.graph.deploy.migration.migrator.Migrator
+import cool.graph.shared.models.{Migration, MigrationStep, Project}
 import org.scalactic.{Bad, Good}
 import sangria.parser.QueryParser
 
@@ -46,15 +47,12 @@ case class DeployMutation(
   private def performDeployment: Future[MutationSuccess[DeployMutationPayload]] = {
     nextProjectInferrer.infer(baseProject = project, graphQlSdl) match {
       case Good(inferredProject) =>
-        val nextProject    = inferredProject.copy(secrets = args.secrets)
-        val renames        = renameInferer.infer(graphQlSdl)
-        val migrationSteps = migrationStepsProposer.propose(project, nextProject, renames)
-        val migration      = Migration(nextProject.id, 0, hasBeenApplied = false, migrationSteps) // how to get to the revision...?
+        val nextProject = inferredProject.copy(secrets = args.secrets)
+        val renames     = renameInferer.infer(graphQlSdl)
+        val steps       = migrationStepsProposer.propose(project, nextProject, renames)
 
-        for {
-          savedMigration <- handleMigration(nextProject, migration)
-        } yield {
-          MutationSuccess(DeployMutationPayload(args.clientMutationId, nextProject, savedMigration, schemaErrors))
+        handleMigration(nextProject, steps).map { migration =>
+          MutationSuccess(DeployMutationPayload(args.clientMutationId, nextProject, migration, schemaErrors))
         }
 
       case Bad(err) =>
@@ -73,18 +71,13 @@ case class DeployMutation(
     }
   }
 
-  private def handleMigration(nextProject: Project, migration: Migration): Future[Migration] = {
-    val changesDetected = migration.steps.nonEmpty || project.secrets != args.secrets
+  private def handleMigration(nextProject: Project, steps: Vector[MigrationStep]): Future[Migration] = {
+    val changesDetected = steps.nonEmpty || project.secrets != args.secrets
 
     if (changesDetected && !args.dryRun.getOrElse(false)) {
-      for {
-        savedMigration <- migrationPersistence.create(nextProject, migration)
-      } yield {
-        migrator.schedule(savedMigration)
-        savedMigration
-      }
+      migrator.schedule(nextProject, steps)
     } else {
-      Future.successful(migration)
+      Future.successful(Migration.empty(nextProject))
     }
   }
 }

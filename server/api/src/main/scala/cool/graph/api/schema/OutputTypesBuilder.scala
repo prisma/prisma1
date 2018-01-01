@@ -165,7 +165,7 @@ case class OutputTypesBuilder(project: Project, objectTypes: Map[String, ObjectT
         resolve = ctx => {
           val mutationKey = s"${fromField.relation.get.aName(project = project)}Id"
           masterDataResolver
-            .resolveByUnique(NodeSelector(toModel, "id", GraphQLIdGCValue(ctx.value.args.arg[String](mutationKey))))
+            .resolveByUnique(NodeSelector(toModel, toModel.getFieldByName_!("id"), GraphQLIdGCValue(ctx.value.args.arg[String](mutationKey))))
             .map(_.get)
         }
       )

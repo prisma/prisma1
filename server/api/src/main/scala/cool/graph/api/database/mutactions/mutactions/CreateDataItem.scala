@@ -3,7 +3,7 @@ package cool.graph.api.database.mutactions.mutactions
 import java.sql.SQLIntegrityConstraintViolationException
 
 import cool.graph.api.database.mutactions.validation.InputValueValidation
-import cool.graph.api.database.mutactions.{ClientSqlDataChangeMutaction, ClientSqlStatementResult, GetFieldFromSQLUniqueException, MutactionVerificationSuccess}
+import cool.graph.api.database.mutactions._
 import cool.graph.api.database.{DataResolver, DatabaseMutationBuilder, ProjectRelayId, ProjectRelayIdTable}
 import cool.graph.api.mutations.CoolArgs
 import cool.graph.api.mutations.MutationTypes.{ArgumentValue, ArgumentValueList}
@@ -29,7 +29,7 @@ case class CreateDataItem(
   // FIXME: it should be guaranteed to always have an id (generate it in here)
   val id: Id = ArgumentValueList.getId_!(values)
 
-  val jsonCheckedValues: List[ArgumentValue] = {
+  val jsonCheckedValues: List[ArgumentValue] = {    // we do not store the transformed version, why?
     if (model.fields.exists(_.typeIdentifier == TypeIdentifier.Json)) {
       InputValueValidation.transformStringifiedJson(values, model)
     } else {
@@ -46,7 +46,6 @@ case class CreateDataItem(
 
   override def execute: Future[ClientSqlStatementResult[Any]] = {
     val relayIds          = TableQuery(new ProjectRelayIdTable(_, project.id))
-    val valuesIncludingId = jsonCheckedValues :+ ArgumentValue("id", id)
 
     Future.successful(
       ClientSqlStatementResult(
@@ -60,16 +59,15 @@ case class CreateDataItem(
               .map(field => (field.name, getValueOrDefault(values, field).get))
               .toMap
           ),
-          relayIds += ProjectRelayId(id = ArgumentValueList.getId_!(jsonCheckedValues), model.id)
+          relayIds += ProjectRelayId(id = id, model.id)
         )))
   }
 
   override def handleErrors = {
     implicit val anyFormat = JsonFormats.AnyJsonFormat
     Some({
-      //https://dev.mysql.com/doc/refman/5.5/en/error-messages-server.html#error_er_dup_entry
-      case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1062 =>
-        APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldFromArgumentValueList(jsonCheckedValues, e))
+      case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1062 && GetFieldFromSQLUniqueException.getFieldOptionFromArgumentValueList(jsonCheckedValues, e).isDefined=>
+        APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOptionFromArgumentValueList(jsonCheckedValues, e).get)
       case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1452 =>
         APIErrors.NodeDoesNotExist("")
     })

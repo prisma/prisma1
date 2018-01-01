@@ -28,4 +28,8 @@ case class ProjectPersistenceImpl(
   override def loadAll(): Future[Seq[Project]] = {
     internalDatabase.run(Tables.Projects.result).map(_.map(p => DbToModelMapper.convert(p)))
   }
+
+  override def loadProjectsWithUnappliedMigrations(): Future[Seq[Project]] = {
+    internalDatabase.run(ProjectTable.allWithUnappliedMigrations).map(_.map(p => DbToModelMapper.convert(p)))
+  }
 }

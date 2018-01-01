@@ -61,5 +61,5 @@ case class GraphQlRequestHandlerImpl(
     }
   }
 
-  override def healthCheck: Future[Unit] = Future.successful(())
+  override def healthCheck: Future[Unit] = Future.unit
 }

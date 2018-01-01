@@ -68,8 +68,9 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
     }
     database.setup(project)
 
-    val result = server.executeQuerySimple(
-      """
+    val result = server
+      .executeQuerySimple(
+        """
         |mutation {
         |  createTodo(data:{
         |    title: "todo1"
@@ -84,8 +85,8 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
         |  }
         |}
       """.stripMargin,
-      project
-    )
+        project
+      )
 
     mustBeEqual(result.pathAsJsValue("data.createTodo.tags").toString, """[{"name":"tag1"},{"name":"tag2"}]""")
 
@@ -109,4 +110,69 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
     )
     mustBeEqual(result2.pathAsJsValue("data.createTag.todos").toString, """[{"title":"todo1"},{"title":"todo2"}]""")
   }
+
+  "A nested create on a one to one relation" should "correctly assign violations to offending model and not partially execute" in {
+    val project = SchemaDsl() { schema =>
+      val user = schema.model("User").field_!("name", _.String).field("unique", _.String, isUnique = true)
+      schema.model("Post").field_!("title", _.String).field("uniquePost", _.String, isUnique = true).oneToOneRelation("user", "post", user)
+    }
+    database.setup(project)
+
+    server.executeQuerySimple(
+      """mutation{
+        |  createUser(data:{
+        |    name: "Paul"
+        |    unique: "uniqueUser"
+        |    post: {create:{title: "test"    uniquePost: "uniquePost"}
+        |    }
+        |  })
+        |    {id}
+        |  }
+      """.stripMargin,
+      project
+    )
+
+    server.executeQuerySimple("query{users{id}}", project).pathAsSeq("data.users").length should be (1)
+    server.executeQuerySimple("query{posts{id}}", project).pathAsSeq("data.posts").length should be (1)
+
+
+    server.executeQuerySimpleThatMustFail(
+      """mutation{
+        |  createUser(data:{
+        |    name: "Paul2"
+        |    unique: "uniqueUser"
+        |    post: {create:{title: "test2"    uniquePost: "uniquePost2"}
+        |    }
+        |  })
+        |    {id}
+        |  }
+      """.stripMargin,
+      project,
+      errorCode = 3010,
+      errorContains = "A unique constraint would be violated on User. Details: Field name = unique"
+    )
+
+    server.executeQuerySimple("query{users{id}}", project).pathAsSeq("data.users").length should be (1)
+    server.executeQuerySimple("query{posts{id}}", project).pathAsSeq("data.posts").length should be (1)
+
+    server.executeQuerySimpleThatMustFail(
+      """mutation{
+        |  createUser(data:{
+        |    name: "Paul2"
+        |    unique: "uniqueUser2"
+        |    post: {create:{title: "test2"    uniquePost: "uniquePost"}
+        |    }
+        |  })
+        |    {id}
+        |  }
+      """.stripMargin,
+      project,
+      errorCode = 3010,
+      errorContains = "A unique constraint would be violated on Post. Details: Field name = uniquePost"
+    )
+
+    server.executeQuerySimple("query{users{id}}", project).pathAsSeq("data.users").length should be (1)
+    server.executeQuerySimple("query{posts{id}}", project).pathAsSeq("data.posts").length should be (1)
+  }
+
 }
