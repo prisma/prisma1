@@ -6,7 +6,7 @@ import akka.stream.ActorMaterializer
 import cool.graph.akkautil.http.ServerExecutor
 import cool.graph.api.ApiTestDatabase
 import cool.graph.bugsnag.BugSnaggerImpl
-import cool.graph.shared.models.{Project, ProjectWithClientId}
+import cool.graph.shared.models.{Project, ProjectId, ProjectWithClientId}
 import cool.graph.subscriptions._
 import cool.graph.subscriptions.protocol.SubscriptionRequest
 import cool.graph.websocket.WebsocketServer
@@ -85,10 +85,11 @@ trait SpecBase extends TestFrameworkInterface with BeforeAndAfterEach with Befor
 
     val projectWithClientId = ProjectWithClientId(project, "clientId")
     val stubs = List(
-      cool.graph.stub.Import.Request("GET", s"/cluster/schema/${project.id}").stub(200, Json.toJson(projectWithClientId).toString)
+      cool.graph.stub.Import.Request("GET", s"/${dependencies.projectFetcherPath}/${project.id}").stub(200, Json.toJson(projectWithClientId).toString)
     )
-    withStubServer(stubs, port = 9000) {
-      WS(s"/${project.id}", wsClient.flow, Seq(wsServer.subProtocol2)) ~> wsServer.routes ~> check {
+    withStubServer(stubs, port = dependencies.projectFetcherPort) {
+      val projectId = ProjectId.fromEncodedString(project.id)
+      WS(s"/${projectId.name}/${projectId.stage}", wsClient.flow, Seq(wsServer.subProtocol2)) ~> wsServer.routes ~> check {
         checkFn(wsClient)
       }
     }

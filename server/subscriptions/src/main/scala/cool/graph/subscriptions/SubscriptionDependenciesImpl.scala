@@ -68,7 +68,11 @@ case class SubscriptionDependenciesImpl()(implicit val system: ActorSystem, val 
   lazy val requestsQueueConsumer: QueueConsumer[SubscriptionRequest] = requestsQueuePublisher.map[SubscriptionRequest] { req: Request =>
     SubscriptionRequest(req.sessionId, req.projectId, req.body)
   }
-  override lazy val projectFetcher: ProjectFetcher = ProjectFetcherImpl(blockedProjectIds = Vector.empty, config)
+  lazy val projectFetcher: ProjectFetcher = {
+    val schemaManagerEndpoint = config.getString("schemaManagerEndpoint")
+    val schemaManagerSecret   = config.getString("schemaManagerSecret")
+    ProjectFetcherImpl(Vector.empty, config, schemaManagerEndpoint = schemaManagerEndpoint, schemaManagerSecret = schemaManagerSecret)
+  }
 
   val databases        = Databases.initialize(config)
   val apiSchemaBuilder = SchemaBuilder()(system, this)

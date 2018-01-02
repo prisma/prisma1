@@ -29,10 +29,14 @@ case class SingleServerDependencies()(implicit val system: ActorSystem, val mate
     with SubscriptionDependencies {
   override implicit def self = this
 
-  val databases                      = Databases.initialize(config)
-  val apiSchemaBuilder               = SchemaBuilder()
-  val projectFetcher: ProjectFetcher = ProjectFetcherImpl(Vector.empty, config)
-  val migrator: Migrator             = AsyncMigrator(clientDb, migrationPersistence, projectPersistence, migrationApplier)
+  val databases        = Databases.initialize(config)
+  val apiSchemaBuilder = SchemaBuilder()
+  val projectFetcher: ProjectFetcher = {
+    val schemaManagerEndpoint = config.getString("schemaManagerEndpoint")
+    val schemaManagerSecret   = config.getString("schemaManagerSecret")
+    ProjectFetcherImpl(Vector.empty, config, schemaManagerEndpoint = schemaManagerEndpoint, schemaManagerSecret = schemaManagerSecret)
+  }
+  val migrator: Migrator = AsyncMigrator(clientDb, migrationPersistence, projectPersistence, migrationApplier)
 
   lazy val pubSub: InMemoryAkkaPubSub[String]                                 = InMemoryAkkaPubSub[String]()
   lazy val invalidationSubscriber: PubSubSubscriber[SchemaInvalidatedMessage] = pubSub.map[SchemaInvalidatedMessage]((str: String) => SchemaInvalidated)

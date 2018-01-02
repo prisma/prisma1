@@ -29,6 +29,7 @@ class SubscriptionDependenciesForTest()(implicit val system: ActorSystem, val ma
 
   override lazy val sssEventsPublisher: PubSubPublisher[String] = sssEventsTestKit
   override val sssEventsSubscriber: PubSubSubscriber[String]    = sssEventsTestKit
+
   override val responsePubSubPublisherV05: PubSubPublisher[SubscriptionSessionResponseV05] = {
     responsePubSubTestKit.map[SubscriptionSessionResponseV05](Converters.converterResponse05ToString)
   }
@@ -38,9 +39,14 @@ class SubscriptionDependenciesForTest()(implicit val system: ActorSystem, val ma
 
   override val requestsQueueConsumer: QueueConsumer[SubscriptionRequest] = requestsQueueTestKit
 
-  val responsePubSubSubscriber: PubSubSubscriber[String] = responsePubSubTestKit
-
-  override val projectFetcher: ProjectFetcher       = ProjectFetcherImpl(Vector.empty, config)
+  val projectFetcherPort = 12345
+  val projectFetcherPath = "project-fetcher"
+  override val projectFetcher: ProjectFetcher = {
+    ProjectFetcherImpl(Vector.empty,
+                       config,
+                       schemaManagerEndpoint = s"http://localhost:${projectFetcherPort}/${projectFetcherPath}",
+                       schemaManagerSecret = "empty")
+  }
   override lazy val apiSchemaBuilder: SchemaBuilder = ???
   override val databases: Databases                 = Databases.initialize(config)
   override lazy val sssEventsPubSub                 = ???
