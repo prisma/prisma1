@@ -19,6 +19,7 @@ import Up from '../local/up'
 import { Seeder } from '../seed/Seeder'
 import * as childProcess from 'child_process'
 import { getBinPath } from './getbin'
+import * as semver from 'semver'
 const debug = require('debug')('deploy')
 
 export default class Deploy extends Command {
@@ -113,6 +114,8 @@ ${chalk.gray(
       )
     }
 
+    await this.checkVersions(cluster!)
+
     let projectNew = false
     if (!await this.projectExists(serviceName, stage)) {
       await this.addProject(serviceName, stage)
@@ -141,6 +144,46 @@ ${chalk.gray(
             }
           })
         })
+    }
+  }
+
+  private async checkVersions(cluster: Cluster) {
+    const clusterVersion = await cluster!.getVersion()
+    if (clusterVersion) {
+      const gcSemverRegex = /(\d{1,2}\.\d{1,2}\.?\d{0,2})-?\w*(\d{1,2}\.\d{1,2}\.?\d{0,2})/
+      const clusterMatch = clusterVersion.match(gcSemverRegex)
+      const cliMatch = this.config.version.match(gcSemverRegex)
+      if (clusterMatch && clusterMatch[1] && cliMatch && cliMatch[1]) {
+        const mainSatisfied = semver.satisfies(
+          cliMatch[1],
+          `~${clusterMatch[1]}`,
+        )
+        if (mainSatisfied) {
+          if (clusterMatch[2] && cliMatch[2]) {
+            const secondarySatisfied = semver.satisfies(
+              cliMatch[2],
+              `~${clusterMatch[2]}`,
+            )
+            if (!secondarySatisfied) {
+              throw new Error(
+                `The CLI version (${
+                  this.config.version
+                }) and cluster version (${clusterVersion}) of cluster ${
+                  cluster.name
+                } do not match. Please upgrade your cluster and/or CLI.`,
+              )
+            }
+          }
+        } else {
+          throw new Error(
+            `The CLI version (${
+              this.config.version
+            }) and cluster version (${clusterVersion}) of cluster ${
+              cluster.name
+            } do not match. Please upgrade your cluster and/or CLI.`,
+          )
+        }
+      }
     }
   }
 
