@@ -278,11 +278,16 @@ ${chalk.gray(
       child.stdout.on('data', data => {
         this.out.log(data.toString())
       })
+      let errorShown = false
       child.stderr.on('data', data => {
-        // this.out.log(data.toString())
+        if (!errorShown) {
+          this.out.log(chalk.bold.red(`\nError:`))
+          errorShown = true
+        }
+        this.out.log(data.toString())
       })
       child.on('error', err => {
-        // this.out.error(err)
+        this.out.error(err)
       })
       child.on('close', code => {
         if (code !== 0) {
