@@ -394,6 +394,24 @@ export class Client {
     return listProjects
   }
 
+  async getProject(name: string, stage: string): Promise<Project | null> {
+    const { project } = await this.client.request<{
+      project: Project | null
+    }>(
+      `
+      query($name: String! $stage: String!) {
+        project(name: $name stage: $stage) {
+          name
+          stage
+        }
+      }
+    `,
+      { name, stage },
+    )
+
+    return project
+  }
+
   async getCluster(name: string, stage: string): Promise<Cluster | null> {
     const foundClusters: Cluster[] = []
     for (const cluster of this.env.clusters) {

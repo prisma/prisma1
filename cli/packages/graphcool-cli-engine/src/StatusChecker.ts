@@ -23,7 +23,7 @@ export class StatusChecker {
       flags,
       argv,
     })
-    const platformToken = this.env.platformToken
+    const platformToken = this.env.databaseRC.cloudSessionKey
     const hashDate = new Date().toUTCString()
     const message = JSON.stringify({
       source,

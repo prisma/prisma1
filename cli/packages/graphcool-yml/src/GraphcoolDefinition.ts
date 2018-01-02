@@ -84,7 +84,13 @@ export class GraphcoolDefinitionClass {
 
   getCluster(): Cluster | undefined {
     if (this.definition && this.definition.cluster) {
-      return this.env.clusterByName(this.definition.cluster)
+      const cluster = this.env.clusterByName(this.definition.cluster)
+      if (!cluster && this.definition.cluster !== 'local') {
+        throw new Error(
+          `Cluster ${cluster}, that is provided in the graphcoo.yml could not be found.`,
+        )
+      }
+      return cluster
     }
 
     return undefined
@@ -110,5 +116,11 @@ export class GraphcoolDefinitionClass {
     })
 
     return allTypes
+  }
+
+  async addCluster(cluster: string, args: any) {
+    const newString = this.definitionString + `\ncluster: ${cluster}`
+    fs.writeFileSync(this.definitionPath!, newString)
+    await this.load(args)
   }
 }

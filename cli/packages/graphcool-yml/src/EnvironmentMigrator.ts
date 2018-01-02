@@ -3,6 +3,7 @@ import * as path from 'path'
 import * as fs from 'fs-extra'
 import * as yaml from 'js-yaml'
 import { merge } from 'lodash'
+const debug = require('debug')('EnvironmentMigrator')
 
 const readMore = `. Read more here: https://goo.gl/3bLCVV`
 
@@ -29,6 +30,9 @@ export class EnvironmentMigrator {
       } else {
         this.migrateGraphcoolFolder()
       }
+      debug(`graphcoolPath ${this.graphcoolPath} does exists`)
+    } else {
+      debug(`graphcoolPath ${this.graphcoolPath} does not exist`)
     }
     if (fs.pathExistsSync(this.rcPath)) {
       const isFile = fs.lstatSync(this.rcPath).isFile()
@@ -65,7 +69,7 @@ export class EnvironmentMigrator {
     const fileExists = fs.pathExistsSync(this.rcPath)
     const file = fileExists ? fs.readFileSync(this.rcPath, 'utf-8') : null
     let currentRC = file ? yaml.safeLoad(file) : {}
-    currentRC = currentRC.clusters ? {} : currentRC
+    currentRC = currentRC.clusters || currentRC.platformToken ? {} : currentRC
     const newRC = merge(currentRC, content)
     const rcString = yaml.safeDump(JSON.parse(JSON.stringify(newRC)))
     fs.writeFileSync(this.rcPath, rcString)

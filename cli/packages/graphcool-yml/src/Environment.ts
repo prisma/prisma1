@@ -12,10 +12,13 @@ import 'isomorphic-fetch'
 import { RC } from './index'
 import { DatabaseRC } from './types/rc'
 import { EnvironmentMigrator } from './EnvironmentMigrator'
+const debug = require('debug')('Environment')
 
 export class Environment {
   sharedClusters: string[] = ['shared-public-demo']
-  sharedEndpoint = 'https://database-beta.graph.cool'
+  sharedEndpoint = (process.env.ENV || '').toLowerCase() === 'dev'
+    ? 'https://dev.database-beta.graph.cool'
+    : 'https://database-beta.graph.cool'
   args: Args
   activeCluster: Cluster
   globalRC: RC = {}
@@ -30,6 +33,7 @@ export class Environment {
 
     this.rcPath = path.join(this.home, '.graphcoolrc')
     const migrator = new EnvironmentMigrator(home, out)
+    debug(`migrating`)
     migrator.migrate()
   }
 

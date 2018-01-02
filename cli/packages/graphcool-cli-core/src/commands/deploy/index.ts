@@ -86,9 +86,13 @@ ${chalk.gray(
     const serviceName = this.definition.definition!.service
     const stage = this.definition.definition!.stage
 
-    const cluster =
-      this.definition.getCluster() ||
-      (await this.getCluster(serviceName, stage))
+    let cluster = this.definition.getCluster()
+    let gotCluster = false
+
+    if (!cluster) {
+      cluster = await this.getCluster(serviceName, stage)
+      gotCluster = true
+    }
 
     if (cluster) {
       this.env.setActiveCluster(cluster)
@@ -96,6 +100,12 @@ ${chalk.gray(
 
     if (this.showedLines > 0) {
       this.out.up(this.showedLines)
+    }
+
+    if (gotCluster) {
+      this.out.log(
+        `Added ${chalk.bold(`cluster: ${cluster!.name}`)} to graphcool.yml`,
+      )
     }
 
     if (!await this.projectExists(serviceName, stage)) {
@@ -146,8 +156,11 @@ ${chalk.gray(
   }
 
   private async projectExists(name: string, stage: string): Promise<boolean> {
-    const projects = await this.client.listProjects()
-    return Boolean(projects.find(p => p.name === name && p.stage === stage))
+    try {
+      return Boolean(await this.client.getProject(name, stage))
+    } catch (e) {
+      return false
+    }
   }
 
   private async addProject(name: string, stage: string): Promise<void> {
@@ -303,6 +316,7 @@ ${chalk.gray(
     stage: string,
   ): Promise<Cluster | undefined> {
     const name = await this.clusterSelection(serviceName, stage)
+    await this.definition.addCluster(name, this.flags)
     return this.env.clusterByName(name)
   }
 

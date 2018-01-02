@@ -114,7 +114,7 @@ export class Command {
     this.out = new Output(this.config)
     this.config.setOutput(this.out)
     this.argv = options.config && options.config.argv ? options.config.argv : []
-    this.env = new Environment(this.config.globalConfigPath, this.out)
+    this.env = new Environment(this.config.home, this.out)
     this.definition = new GraphcoolDefinitionClass(
       this.env,
       this.config.definitionPath,
