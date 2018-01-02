@@ -27,6 +27,7 @@ export class Environment {
   constructor(home: string, out: IOutput = new Output()) {
     this.out = out
     this.home = home
+
     this.rcPath = path.join(this.home, '.graphcoolrc')
     const migrator = new EnvironmentMigrator(home, out)
     migrator.migrate()
@@ -86,7 +87,7 @@ export class Environment {
     }
     // parse & stringify to rm undefined for yaml parser
     const rcString = yaml.safeDump(JSON.parse(JSON.stringify(rc)))
-    fs.writeFileSync(this.globalConfigPath, rcString)
+    fs.writeFileSync(this.rcPath, rcString)
   }
 
   setActiveCluster(cluster: Cluster) {
@@ -95,15 +96,15 @@ export class Environment {
 
   async loadGlobalRC(): Promise<void> {
     const globalFile =
-      this.globalConfigPath && fs.pathExistsSync(this.globalConfigPath)
-        ? fs.readFileSync(this.globalConfigPath, 'utf-8')
+      this.rcPath && fs.pathExistsSync(this.rcPath)
+        ? fs.readFileSync(this.rcPath, 'utf-8')
         : undefined
     await this.parseGlobalRC(globalFile)
   }
 
   async parseGlobalRC(globalFile?: string): Promise<void> {
     if (globalFile) {
-      this.globalRC = await this.loadYaml(globalFile, this.globalConfigPath)
+      this.globalRC = await this.loadYaml(globalFile, this.rcPath)
       this.databaseRC = this.globalRC['graphcool-1.0'] || {}
     }
     this.clusters = this.initClusters(this.databaseRC)
