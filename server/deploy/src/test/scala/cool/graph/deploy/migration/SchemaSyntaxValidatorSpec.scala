@@ -265,7 +265,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
           |}
         """.stripMargin
 
-      val result = SchemaSyntaxValidator(schema, directiveRequirements).validate
+      val result = SchemaSyntaxValidator(schema, directiveRequirements, reservedFieldsRequirements = Vector.empty).validate
       result should have(size(0))
     }
 
@@ -282,7 +282,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
           |}
         """.stripMargin
 
-      val result = SchemaSyntaxValidator(schema, directiveRequirements).validate
+      val result = SchemaSyntaxValidator(schema, directiveRequirements, reservedFieldsRequirements = Vector.empty).validate
       result should have(size(2))
       val error1 = result.head
       error1.`type` should equal("Todo")
