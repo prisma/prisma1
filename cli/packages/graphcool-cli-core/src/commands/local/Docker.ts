@@ -6,6 +6,8 @@ import * as fs from 'fs-extra'
 import chalk from 'chalk'
 import { mapValues } from 'lodash'
 import { getProcessForPort } from './getProcessForPort'
+import { getBinPath } from '../deploy/getbin'
+import * as semver from 'semver'
 const debug = require('debug')('Docker')
 
 export default class Docker {
@@ -189,7 +191,8 @@ export default class Docker {
   }
 
   private run(...argv: string[]): Promise<Docker> {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
+      await this.checkBin()
       const defaultArgs = [
         '-p',
         JSON.stringify(this.clusterName + '-database'),
@@ -221,6 +224,28 @@ export default class Docker {
         }
       })
     })
+  }
+
+  private async checkBin() {
+    const bin = getBinPath('docker-compose')
+    if (!bin) {
+      throw new Error(
+        `Please install docker-compose in order to run "graphcool local".\nLearn more here: https://docs.docker.com/compose/install/`,
+      )
+    }
+
+    const output = childProcess.execSync('docker-compose -v').toString()
+    const regex = /.*?(\d{1,2}\.\d{1,2}\.\d{1,2}),?/
+    const match = output.match(regex)
+    if (match && match[1]) {
+      const version = match[1]
+      const greater = semver.gt(version, '1.13.0')
+      if (!greater) {
+        throw new Error(
+          `Your docker-compose version ${version} is too old. Please update to the latest docker-compose https://github.com/docker/compose/releases`,
+        )
+      }
+    }
   }
 
   private format(data: string | Buffer) {
