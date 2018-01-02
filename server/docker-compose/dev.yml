@@ -1,4 +1,3 @@
-# For developing the deploy service standalone.
 # Transient db - will lose it's data once restarted
 version: "3"
 services:

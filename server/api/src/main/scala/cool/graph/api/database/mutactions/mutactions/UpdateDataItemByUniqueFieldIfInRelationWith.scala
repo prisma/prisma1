@@ -23,10 +23,10 @@ case class UpdateDataItemByUniqueFieldIfInRelationWith(
 
   val relation: Relation      = fromField.relation.get
   val aModel: Model           = relation.getModelA_!(project)
-  val deleteByUniqueValueForB = aModel.name == fromModel.name
+  val updateByUniqueValueForB = aModel.name == fromModel.name
 
   override def execute: Future[ClientSqlStatementResult[Any]] = Future.successful {
-    val action = if (deleteByUniqueValueForB) {
+    val action = if (updateByUniqueValueForB) {
       DatabaseMutationBuilder.updateDataItemByUniqueValueForBIfInRelationWithGivenA(project.id, relation.id, fromId, where, args.raw)
     } else {
       DatabaseMutationBuilder.updateDataItemByUniqueValueForAIfInRelationWithGivenB(project.id, relation.id, fromId, where, args.raw)

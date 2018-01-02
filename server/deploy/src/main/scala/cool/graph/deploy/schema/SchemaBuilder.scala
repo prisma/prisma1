@@ -4,6 +4,7 @@ import akka.actor.ActorSystem
 import cool.graph.deploy.DeployDependencies
 import cool.graph.deploy.database.persistence.{MigrationPersistence, ProjectPersistence}
 import cool.graph.deploy.migration._
+import cool.graph.deploy.migration.migrator.Migrator
 import cool.graph.deploy.schema.fields.{AddProjectField, DeployField, ManualMarshallerHelpers}
 import cool.graph.deploy.schema.mutations._
 import cool.graph.deploy.schema.types._

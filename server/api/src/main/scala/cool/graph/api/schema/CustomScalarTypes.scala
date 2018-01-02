@@ -31,8 +31,8 @@ object CustomScalarTypes {
         case _         ⇒ Left(DateCoercionViolation)
       },
       coerceInput = {
-        case ast.StringValue(s, _, _) ⇒ parseDate(s)
-        case _                        ⇒ Left(DateCoercionViolation)
+        case ast.StringValue(s, _, _, _, _) ⇒ parseDate(s)
+        case _                              ⇒ Left(DateCoercionViolation)
       }
     )
 
@@ -65,8 +65,8 @@ object CustomScalarTypes {
       case v: JsValue ⇒ Right(v)
     },
     coerceInput = {
-      case ast.StringValue(jsonStr, _, _) ⇒ parseJson(jsonStr)
-      case _                              ⇒ Left(JsonCoercionViolation)
+      case ast.StringValue(jsonStr, _, _, _, _) ⇒ parseJson(jsonStr)
+      case _                                    ⇒ Left(JsonCoercionViolation)
     }
   )
 

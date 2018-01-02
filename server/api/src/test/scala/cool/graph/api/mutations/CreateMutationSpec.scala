@@ -153,7 +153,7 @@ class CreateMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
       """{"data":{"createScalarModel":{"optJson":[],"optInt":1337,"optBoolean":true,"optDateTime":"2016-01-01T00:00:00.000Z","optString":"test","optEnum":"A","optFloat":1.234}}}""")
   }
 
-  "A Create Mutation" should "fail when a Int is invalid" in {
+  "A Create Mutation" should "fail when an Int is invalid" in {
     val result = server.executeQuerySimpleThatMustFail(
       s"""mutation {createScalarModel(data: {optString: "test", optInt: B, optFloat: 1.234, optBoolean: true, optEnum: A, optDateTime: "2016-07-31T23:59:01.000Z", optJson: "[]"}){optString, optInt, optFloat, optBoolean, optEnum, optDateTime, optJson}}""",
       project = project,
@@ -162,7 +162,7 @@ class CreateMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
     result.toString should include("Int value expected")
   }
 
-  "A Create Mutation" should "fail when an Enum is over 191 chars long long" in {
+  "A Create Mutation" should "gracefully fail when an Enum is over 191 chars long long" in {
     server.executeQuerySimpleThatMustFail(
       s"""mutation {createScalarModel(data: {optString: "test", optInt: 1337, optFloat: 1.234, optBoolean: true, optEnum: ABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJ, optDateTime: "2016-07-31T23:59:01.000Z", optJson: "[\\\"test\\\",\\\"is\\\",\\\"json\\\"]"}){optString, optInt, optFloat, optBoolean, optEnum, optDateTime, optJson}}""",
       project = project,
@@ -170,7 +170,7 @@ class CreateMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
     )
   }
 
-  "A Create Mutation" should "fail when a unique violation occurs" in {
+  "A Create Mutation" should "gracefully fail when a unique violation occurs" in {
     server.executeQuerySimple(s"""mutation {createScalarModel(data: {optUnique: "test"}){optUnique}}""", project)
     server.executeQuerySimpleThatMustFail(s"""mutation {createScalarModel(data: {optUnique: "test"}){optUnique}}""", project, errorCode = 3010)
   }

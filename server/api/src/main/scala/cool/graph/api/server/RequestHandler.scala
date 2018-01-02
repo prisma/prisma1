@@ -37,20 +37,16 @@ case class RequestHandler(
     } yield graphQlRequest
 
     graphQlRequestFuture.toFutureTry.flatMap {
-      case Success(graphQlRequest) =>
-        handleGraphQlRequest(graphQlRequest)
-
-      case Failure(e: InvalidGraphQlRequest) =>
-        Future.successful(OK -> JsObject("error" -> JsString(e.underlying.getMessage)))
-
-      case Failure(e) =>
-        Future.successful(ErrorHandler(rawRequest.id).handle(e))
+      case Success(graphQlRequest)           => handleGraphQlRequest(graphQlRequest)
+      case Failure(e: InvalidGraphQlRequest) => Future.successful(OK -> JsObject("error" -> JsString(e.underlying.getMessage)))
+      case Failure(e)                        => Future.successful(ErrorHandler(rawRequest.id).handle(e))
     }
   }
 
   def handleRawRequestForImport(projectId: String, rawRequest: RawRequest): Future[(StatusCode, JsValue)] = {
     val graphQlRequestFuture: Future[Future[JsValue]] = for {
       projectWithClientId <- fetchProject(projectId)
+      _                   <- auth.verify(projectWithClientId.project, rawRequest.authorizationHeader).toFuture
       importer            = new BulkImport(projectWithClientId.project)
       res                 = importer.executeImport(rawRequest.json)
     } yield res
@@ -64,6 +60,7 @@ case class RequestHandler(
 
     val graphQlRequestFuture: Future[Future[JsValue]] = for {
       projectWithClientId <- fetchProject(projectId)
+      _                   <- auth.verify(projectWithClientId.project, rawRequest.authorizationHeader).toFuture
       resolver            = DataResolver(project = projectWithClientId.project)
       exporter            = new BulkExport(projectWithClientId.project)
       res                 = exporter.executeExport(resolver, rawRequest.json)
@@ -78,19 +75,18 @@ case class RequestHandler(
   def handleGraphQlRequest(graphQlRequest: GraphQlRequest): Future[(StatusCode, JsValue)] = {
     val resultFuture = graphQlRequestHandler.handle(graphQlRequest)
 
-    resultFuture.recover {
-      case error: Throwable =>
-        ErrorHandler(graphQlRequest.id).handle(error)
-    }
+    resultFuture.recover { case error: Throwable => ErrorHandler(graphQlRequest.id).handle(error) }
   }
 
   def fetchProject(projectId: String): Future[ProjectWithClientId] = {
     val result = projectFetcher.fetch(projectIdOrAlias = projectId)
 
-    result.onFailure {
-      case t =>
+    result.onComplete {
+      case Failure(t) =>
         val request = GraphCoolRequest(requestId = "", clientId = None, projectId = Some(projectId), query = "", variables = "")
         bugsnagger.report(t, request)
+
+      case _ =>
     }
 
     result map {

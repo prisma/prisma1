@@ -59,20 +59,20 @@ object MigrationTable {
     query.result.headOption
   }
 
-  def markAsApplied(id: String, revision: Int): FixedSqlAction[Int, NoStream, Write] = {
+  def markAsApplied(projectId: String, revision: Int): FixedSqlAction[Int, NoStream, Write] = {
     val baseQuery = for {
       migration <- Tables.Migrations
-      if migration.projectId === id
+      if migration.projectId === projectId
       if migration.revision === revision
     } yield migration
 
     baseQuery.map(_.hasBeenApplied).update(true)
   }
 
-  def getUnappliedMigration: SqlAction[Option[Migration], NoStream, Read] = {
+  def getUnappliedMigration(projectId: String): SqlAction[Option[Migration], NoStream, Read] = {
     val baseQuery = for {
       migration <- Tables.Migrations
-      if !migration.hasBeenApplied
+      if migration.projectId === projectId && !migration.hasBeenApplied
     } yield migration
 
     baseQuery.sortBy(_.revision.asc).take(1).result.headOption

@@ -120,7 +120,7 @@ object DatabaseQueryBuilder {
     val oppositeRelationSide = relation.oppositeSideOf(model).toString
     sql"""select EXISTS (
             select `id`from `#${project.id}`.`#${model.name}`
-            where  #${where.fieldName} = ${where.fieldValue} and `id` IN (
+            where  #${where.field.name} = ${where.fieldValue} and `id` IN (
              select `#$relationSide`
              from `#${project.id}`.`#${relation.id}`
              where `#$oppositeRelationSide` = '#$other'
@@ -153,8 +153,8 @@ object DatabaseQueryBuilder {
       sql""
     } else {
       val firstPredicate = predicates.head
-      predicates.tail.foldLeft(sql"where #${firstPredicate.fieldName} = ${firstPredicate.fieldValue}") { (sqlActionBuilder, predicate) =>
-        sqlActionBuilder ++ sql" OR #${predicate.fieldName} = ${predicate.fieldValue}"
+      predicates.tail.foldLeft(sql"where #${firstPredicate.field.name} = ${firstPredicate.fieldValue}") { (sqlActionBuilder, predicate) =>
+        sqlActionBuilder ++ sql" OR #${predicate.field.name} = ${predicate.fieldValue}"
       }
     }
   }

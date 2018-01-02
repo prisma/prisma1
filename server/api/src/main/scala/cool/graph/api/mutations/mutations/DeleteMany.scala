@@ -4,7 +4,7 @@ import cool.graph.api.ApiDependencies
 import cool.graph.api.database.DataResolver
 import cool.graph.api.database.Types.DataItemFilterCollection
 import cool.graph.api.database.mutactions.mutactions.DeleteDataItems
-import cool.graph.api.database.mutactions.{MutactionGroup, Transaction}
+import cool.graph.api.database.mutactions.{MutactionGroup, TransactionMutaction}
 import cool.graph.api.mutations._
 import cool.graph.shared.models.{Model, Project}
 
@@ -27,7 +27,7 @@ case class DeleteMany(
       _ <- count // make sure that count query has been resolved before proceeding
     } yield {
       val deleteItems          = DeleteDataItems(project, model, where)
-      val transactionMutaction = Transaction(List(deleteItems), dataResolver)
+      val transactionMutaction = TransactionMutaction(List(deleteItems), dataResolver)
       List(
         MutactionGroup(mutactions = List(transactionMutaction), async = false)
       )

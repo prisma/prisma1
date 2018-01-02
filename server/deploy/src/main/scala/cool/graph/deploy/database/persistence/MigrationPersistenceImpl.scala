@@ -33,10 +33,10 @@ case class MigrationPersistenceImpl(
     } yield migration.copy(revision = withRevisionBumped.revision)
   }
 
-  override def getUnappliedMigration(): Future[Option[UnappliedMigration]] = {
+  override def getUnappliedMigration(projectId: String): Future[Option[UnappliedMigration]] = {
     val x = for {
-      unappliedMigration           <- FutureOpt(internalDatabase.run(MigrationTable.getUnappliedMigration))
-      previousProjectWithMigration <- FutureOpt(internalDatabase.run(ProjectTable.byIdWithMigration(unappliedMigration.projectId)))
+      unappliedMigration           <- FutureOpt(internalDatabase.run(MigrationTable.getUnappliedMigration(projectId)))
+      previousProjectWithMigration <- FutureOpt(internalDatabase.run(ProjectTable.byIdWithMigration(projectId)))
     } yield {
       val previousProject = DbToModelMapper.convert(previousProjectWithMigration._1, previousProjectWithMigration._2)
       val nextProject     = DbToModelMapper.convert(previousProjectWithMigration._1, unappliedMigration)

@@ -205,7 +205,7 @@ class StubServerSpec extends Specification {
         val response: HttpResponse[String] = Http(s"http://127.0.0.1:${server.port}/path").asString
         response.code mustEqual 200
         response.body mustEqual "response"
-        response.headers.get("X-Test-Header").get must equalTo("value")
+        response.headers.get("X-Test-Header").get.head must equalTo("value")
       }
     }
 

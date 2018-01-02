@@ -6,6 +6,7 @@ import cool.graph.api.database.{DataItem, IdBasedConnection}
 import cool.graph.api.database.DeferredTypes.{ManyModelDeferred, OneDeferred}
 import cool.graph.api.mutations._
 import cool.graph.api.mutations.mutations._
+import cool.graph.gc_values.GraphQLIdGCValue
 import cool.graph.shared.models.{Model, Project}
 import org.atteo.evo.inflector.English
 import sangria.relay.{Node, NodeDefinition, PossibleNodeObject}
@@ -48,6 +49,7 @@ case class SchemaBuilderImpl(
     Schema(
       query = query,
       mutation = mutation,
+      subscription = subscription,
       validationRules = SchemaValidationRule.empty
     )
   }
@@ -66,7 +68,7 @@ case class SchemaBuilderImpl(
       project.models.flatMap(updateItemField) ++
       project.models.flatMap(deleteItemField) ++
       project.models.flatMap(upsertItemField) ++
-      project.models.map(updateManyField) ++
+      project.models.flatMap(updateManyField) ++
       project.models.map(deleteManyField) ++
       List(resetDataField)
 
@@ -115,7 +117,7 @@ case class SchemaBuilderImpl(
           resolve = (ctx) => {
             val coolArgs = CoolArgs(ctx.args.raw)
             val where    = coolArgs.extractNodeSelectorFromWhereField(model)
-            OneDeferred(model, where.fieldName, where.unwrappedFieldValue)
+            OneDeferred(model, where.field.name, where.unwrappedFieldValue)
           }
         )
       }
@@ -125,7 +127,7 @@ case class SchemaBuilderImpl(
     Field(
       s"create${model.name}",
       fieldType = outputTypesBuilder.mapCreateOutputType(model, objectTypes(model.name)),
-      arguments = argumentsBuilder.getSangriaArgumentsForCreate(model),
+      arguments = argumentsBuilder.getSangriaArgumentsForCreate(model).getOrElse(List.empty),
       resolve = (ctx) => {
         val mutation       = Create(model = model, project = project, args = ctx.args, dataResolver = masterDataResolver)
         val mutationResult = ClientMutationRunner.run(mutation, dataResolver)
@@ -150,17 +152,19 @@ case class SchemaBuilderImpl(
     }
   }
 
-  def updateManyField(model: Model): Field[ApiUserContext, Unit] = {
-    Field(
-      s"update${pluralsCache.pluralName(model)}",
-      fieldType = objectTypeBuilder.batchPayloadType,
-      arguments = argumentsBuilder.getSangriaArgumentsForUpdateMany(model),
-      resolve = (ctx) => {
-        val where    = objectTypeBuilder.extractRequiredFilterFromContext(model, ctx)
-        val mutation = UpdateMany(project, model, ctx.args, where, dataResolver = masterDataResolver)
-        ClientMutationRunner.run(mutation, dataResolver)
-      }
-    )
+  def updateManyField(model: Model): Option[Field[ApiUserContext, Unit]] = {
+    argumentsBuilder.getSangriaArgumentsForUpdateMany(model).map { args =>
+      Field(
+        s"updateMany${pluralsCache.pluralName(model)}",
+        fieldType = objectTypeBuilder.batchPayloadType,
+        arguments = args,
+        resolve = (ctx) => {
+          val where    = objectTypeBuilder.extractRequiredFilterFromContext(model, ctx)
+          val mutation = UpdateMany(project, model, ctx.args, where, dataResolver = masterDataResolver)
+          ClientMutationRunner.run(mutation, dataResolver)
+        }
+      )
+    }
   }
 
   def upsertItemField(model: Model): Option[Field[ApiUserContext, Unit]] = {
@@ -201,7 +205,7 @@ case class SchemaBuilderImpl(
 
   def deleteManyField(model: Model): Field[ApiUserContext, Unit] = {
     Field(
-      s"delete${pluralsCache.pluralName(model)}",
+      s"deleteMany${pluralsCache.pluralName(model)}",
       fieldType = objectTypeBuilder.batchPayloadType,
       arguments = argumentsBuilder.getSangriaArgumentsForDeleteMany(model),
       resolve = (ctx) => {
@@ -254,7 +258,7 @@ case class SchemaBuilderImpl(
   private def mapReturnValueResult(result: Future[ReturnValueResult], args: Args): Future[SimpleResolveOutput] = {
     result.map {
       case ReturnValue(dataItem) => outputTypesBuilder.mapResolve(dataItem, args)
-      case NoReturnValue(id)     => throw APIErrors.NodeNotFoundError(id)
+      case NoReturnValue(where)  => throw APIErrors.NodeNotFoundForWhereError(where)
     }
   }
 }

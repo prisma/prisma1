@@ -120,7 +120,7 @@ class RabbitQueueSpec
       rabbitQueue.exchange.publish("msg.also.not.a.valid.key", "test")
 
       // process() will never be called in the consumer
-      testProbe.expectNoMsg()
+      testProbe.expectNoMessage(6.seconds)
     }
 
     "requeue with timestamp on backoff > 60s" in {

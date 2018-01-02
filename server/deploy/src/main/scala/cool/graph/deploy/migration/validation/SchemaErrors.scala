@@ -64,12 +64,14 @@ object SchemaErrors {
   // Brain kaputt, todo find a better solution
   def malformedReservedField(fieldAndType: FieldAndType, requirement: FieldRequirement) = {
     val requiredTypeMessage = requirement match {
-      case x @ FieldRequirement(name, typeName, true, false, false) => s"$name: $typeName!"
-      case x @ FieldRequirement(name, typeName, true, true, false)  => s"$name: $typeName! @unique"
-      case x @ FieldRequirement(name, typeName, true, true, true)   => s"$name: [$typeName!]!"
-      case x @ FieldRequirement(name, typeName, false, true, false) => s"$name: $typeName @unique"
-      case x @ FieldRequirement(name, typeName, false, true, true)  => s"$name: [$typeName!] @unique"
-      case x @ FieldRequirement(name, typeName, false, false, true) => s"$name: [$typeName!]"
+      case x @ FieldRequirement(name, typeName, true, false, false)  => s"$name: $typeName!"
+      case x @ FieldRequirement(name, typeName, true, true, false)   => s"$name: $typeName! @unique"
+      case x @ FieldRequirement(name, typeName, true, true, true)    => s"$name: [$typeName!]! @unique" // is that even possible? Prob. not.
+      case x @ FieldRequirement(name, typeName, true, false, true)   => s"$name: [$typeName!]!"
+      case x @ FieldRequirement(name, typeName, false, true, false)  => s"$name: $typeName @unique"
+      case x @ FieldRequirement(name, typeName, false, true, true)   => s"$name: [$typeName!] @unique"
+      case x @ FieldRequirement(name, typeName, false, false, true)  => s"$name: [$typeName!]"
+      case x @ FieldRequirement(name, typeName, false, false, false) => s"$name: $typeName"
     }
 
     error(

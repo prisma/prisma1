@@ -34,6 +34,13 @@ case class GCDBValueConverter() extends GCConverter[Any] {
     ???
   }
 
+  def fromGCValueToString(t: GCValue): String = {
+    fromGCValue(t) match {
+      case x: Vector[Any] => x.map(_.toString).mkString(start = "[", sep = ",", end = "]")
+      case x              => x.toString
+    }
+  }
+
   override def fromGCValue(t: GCValue): Any = {
     t match {
       case NullGCValue         => None
@@ -245,7 +252,7 @@ case class StringSangriaValueConverter(typeIdentifier: TypeIdentifier, isList: B
     sangriaValue match {
       case _: NullValue                                          => sangriaValue.renderCompact
       case x: StringValue if !isList                             => unescape(sangriaValue.renderCompact)
-      case x: ListValue if typeIdentifier == TypeIdentifier.Json => "[" + x.values.map(y => unescape(y.renderCompact)).mkString(",") + "]"
+      case x: ListValue if typeIdentifier == TypeIdentifier.Json => x.values.map(y => unescape(y.renderCompact)).mkString(start = "[", sep = ",", end = "]")
       case _                                                     => sangriaValue.renderCompact
     }
   }
@@ -292,12 +299,15 @@ case class GCAnyConverter(typeIdentifier: TypeIdentifier, isList: Boolean) exten
         case (_: NullValue, _)                                                        => NullGCValue
         case (x: String, _) if x == "null" && typeIdentifier != TypeIdentifier.String => NullGCValue
         case (x: String, TypeIdentifier.String)                                       => StringGCValue(x)
+        case (x: Int, TypeIdentifier.Int)                                             => IntGCValue(x.toInt)
         case (x: BigInt, TypeIdentifier.Int)                                          => IntGCValue(x.toInt)
         case (x: BigInt, TypeIdentifier.Float)                                        => FloatGCValue(x.toDouble)
         case (x: BigDecimal, TypeIdentifier.Float)                                    => FloatGCValue(x.toDouble)
         case (x: Float, TypeIdentifier.Float)                                         => FloatGCValue(x)
+        case (x: Double, TypeIdentifier.Float)                                        => FloatGCValue(x)
         case (x: Boolean, TypeIdentifier.Boolean)                                     => BooleanGCValue(x)
         case (x: String, TypeIdentifier.DateTime)                                     => DateTimeGCValue(new DateTime(x, DateTimeZone.UTC))
+        case (x: DateTime, TypeIdentifier.DateTime)                                   => DateTimeGCValue(x)
         case (x: String, TypeIdentifier.GraphQLID)                                    => GraphQLIdGCValue(x)
         case (x: String, TypeIdentifier.Enum)                                         => EnumGCValue(x)
         case (x: String, TypeIdentifier.Json)                                         => JsonGCValue(Json.parse(x))

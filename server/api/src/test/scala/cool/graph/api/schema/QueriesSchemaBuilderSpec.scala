@@ -2,11 +2,11 @@ package cool.graph.api.schema
 
 import cool.graph.api.ApiBaseSpec
 import cool.graph.shared.project_dsl.SchemaDsl
-import cool.graph.util.GraphQLSchemaAssertions
+import cool.graph.util.GraphQLSchemaMatchers
 import org.scalatest.{Matchers, WordSpec}
 import sangria.renderer.SchemaRenderer
 
-class QueriesSchemaBuilderSpec extends WordSpec with Matchers with ApiBaseSpec with GraphQLSchemaAssertions {
+class QueriesSchemaBuilderSpec extends WordSpec with Matchers with ApiBaseSpec with GraphQLSchemaMatchers {
   val schemaBuilder = testDependencies.apiSchemaBuilder
 
   "the single item query for a model" must {
@@ -16,9 +16,30 @@ class QueriesSchemaBuilderSpec extends WordSpec with Matchers with ApiBaseSpec w
       }
 
       val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
+      schema should containQuery("todo(where: TodoWhereUniqueInput!): Todo")
+    }
 
-      val query = schema.mustContainQuery("todo")
-      query should be("todo(where: TodoWhereUniqueInput!): Todo")
+    "not be present if there is no unique field" in {
+      val project = SchemaDsl() { schema =>
+        val testSchema = schema.model("Todo")
+        testSchema.fields.clear()
+        testSchema.field("id", _.GraphQLID, isUnique = true, isHidden = true)
+      }
+
+      val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
+      schema shouldNot containQuery("todo")
+    }
+
+    "be present if there is a unique field other than ID" in {
+      val project = SchemaDsl() { schema =>
+        val testSchema = schema.model("Todo")
+        testSchema.fields.clear()
+        testSchema.field("id", _.GraphQLID, isUnique = true, isHidden = true)
+        testSchema.field("test", _.String, isUnique = true)
+      }
+
+      val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
+      schema should containQuery("todo")
     }
   }
 
@@ -29,22 +50,9 @@ class QueriesSchemaBuilderSpec extends WordSpec with Matchers with ApiBaseSpec w
       }
 
       val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
-
-      val query = schema.mustContainQuery("todoes")
-      query should be("todoes(where: TodoWhereInput, orderBy: TodoOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Todo]!")
-    }
-
-    "not include a *WhereUniqueInput if there is no visible unique field" in {
-      val project = SchemaDsl() { schema =>
-        val testSchema = schema.model("Todo")
-        testSchema.fields.clear()
-        testSchema.field("id", _.GraphQLID, isUnique = true, isHidden = true)
-        testSchema.field("test", _.String)
-      }
-
-      val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
-
-      schema shouldNot include("type Todo implements Node")
+      schema should containQuery(
+        "todoes(where: TodoWhereInput, orderBy: TodoOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Todo]!"
+      )
     }
   }
 
@@ -56,34 +64,12 @@ class QueriesSchemaBuilderSpec extends WordSpec with Matchers with ApiBaseSpec w
 
       val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
 
-      val query = schema.mustContainQuery("todoesConnection")
-      query should be(
-        "todoesConnection(where: TodoWhereInput, orderBy: TodoOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): TodoConnection!")
-
-      val connectionType = schema.mustContainType("TodoConnection")
-
-      mustBeEqual(
-        connectionType,
-        """type TodoConnection {
-          |  # Information to aid in pagination.
-          |  pageInfo: PageInfo!
-          |
-          |  # A list of edges.
-          |  edges: [TodoEdge!]
-          |}""".stripMargin
+      schema should containQuery(
+        "todoesConnection(where: TodoWhereInput, orderBy: TodoOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): TodoConnection!"
       )
 
-      val edgeType = schema.mustContainType("TodoEdge")
-      mustBeEqual(
-        edgeType,
-        """type TodoEdge {
-          |  # The item at the end of the edge.
-          |  node: Todo!
-          |
-          |  # A cursor for use in pagination.
-          |  cursor: String!
-          |}""".stripMargin
-      )
+      schema should containType("TodoConnection", fields = Vector("pageInfo: PageInfo!", "edges: [TodoEdge]!"))
+      schema should containType("TodoEdge", fields = Vector("node: Todo!", "cursor: String!"))
     }
   }
 }

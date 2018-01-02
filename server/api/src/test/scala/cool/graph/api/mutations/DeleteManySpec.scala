@@ -28,7 +28,7 @@ class DeleteManySpec extends FlatSpec with Matchers with ApiBaseSpec {
 
     val result = server.executeQuerySimple(
       """mutation {
-        |  deleteTodoes(
+        |  deleteManyTodoes(
         |    where: { title: "title1" }
         |  ){
         |    count
@@ -37,7 +37,7 @@ class DeleteManySpec extends FlatSpec with Matchers with ApiBaseSpec {
       """.stripMargin,
       project
     )
-    result.pathAsLong("data.deleteTodoes.count") should equal(1)
+    result.pathAsLong("data.deleteManyTodoes.count") should equal(1)
 
     todoCount should equal(1)
   }
@@ -49,7 +49,7 @@ class DeleteManySpec extends FlatSpec with Matchers with ApiBaseSpec {
 
     val result = server.executeQuerySimple(
       """mutation {
-        |  deleteTodoes(
+        |  deleteManyTodoes(
         |    where: { }
         |  ){
         |    count
@@ -58,7 +58,7 @@ class DeleteManySpec extends FlatSpec with Matchers with ApiBaseSpec {
       """.stripMargin,
       project
     )
-    result.pathAsLong("data.deleteTodoes.count") should equal(3)
+    result.pathAsLong("data.deleteManyTodoes.count") should equal(3)
 
     todoCount should equal(0)
 

@@ -3,12 +3,15 @@ package cool.graph.api.mutations.mutations
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import cool.graph.api.ApiDependencies
-import cool.graph.api.database.mutactions.mutactions.{ServerSideSubscription, UpdateDataItem}
-import cool.graph.api.database.mutactions.{ClientSqlMutaction, MutactionGroup, Transaction}
+import cool.graph.api.database.mutactions.mutactions.ServerSideSubscription
+import cool.graph.api.database.mutactions.{ClientSqlMutaction, MutactionGroup, TransactionMutaction}
 import cool.graph.api.database.{DataItem, DataResolver}
 import cool.graph.api.mutations._
 import cool.graph.api.schema.APIErrors
+import cool.graph.gc_values.GraphQLIdGCValue
 import cool.graph.shared.models.{Model, Project}
+import cool.graph.api.mutations.IdNodeSelector._
+
 import sangria.schema
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -35,7 +38,7 @@ case class Update(
 
   val where = CoolArgs(args.raw).extractNodeSelectorFromWhereField(model)
 
-  lazy val dataItem: Future[Option[DataItem]] = dataResolver.resolveByUnique(model, where.fieldName, where.fieldValue)
+  lazy val dataItem: Future[Option[DataItem]] = dataResolver.resolveByUnique(where)
 
   def prepareMutactions(): Future[List[MutactionGroup]] = {
     dataItem map {
@@ -45,11 +48,7 @@ case class Update(
 
         val sqlMutactions: List[ClientSqlMutaction] = SqlMutactions(dataResolver).getMutactionsForUpdate(model, coolArgs, dataItem.id, validatedDataItem)
 
-        val transactionMutaction = Transaction(sqlMutactions, dataResolver)
-
-        val updateMutactionOpt: Option[UpdateDataItem] = sqlMutactions.collectFirst { case x: UpdateDataItem => x }
-
-        val updateMutactions = sqlMutactions.collect { case x: UpdateDataItem => x }
+        val transactionMutaction = TransactionMutaction(sqlMutactions, dataResolver)
 
         val subscriptionMutactions = SubscriptionEvents.extractFromSqlMutactions(project, mutationId, sqlMutactions).toList
 
@@ -61,14 +60,14 @@ case class Update(
         )
 
       case None =>
-        throw APIErrors.DataItemDoesNotExist(model.name, where.fieldName, where.fieldValue.toString)
+        throw APIErrors.NodeNotFoundForWhereError(where)
     }
   }
 
   override def getReturnValue: Future[ReturnValueResult] = {
     dataItem flatMap {
-      case Some(dataItem) => returnValueById(model, dataItem.id)
-      case None           => Future.successful(NoReturnValue(where.fieldValue.toString)) // FIXME: NoReturnValue should not be fixed to id only.
+      case Some(dataItem) => returnValueByUnique(idNodeSelector(model, dataItem.id))
+      case None           => Future.successful(NoReturnValue(where))
     }
   }
 

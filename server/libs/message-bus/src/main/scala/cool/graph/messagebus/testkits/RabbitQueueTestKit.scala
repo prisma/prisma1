@@ -114,7 +114,7 @@ case class RabbitQueueTestKit[T](
     * For expecting no message in the given timeframe.
     */
   def expectNoMsg(maxWait: FiniteDuration = 6.seconds): Unit = {
-    probe.expectNoMsg(maxWait)
+    probe.expectNoMessage(maxWait)
   }
 
   /**
@@ -123,7 +123,7 @@ case class RabbitQueueTestKit[T](
     */
   def expectMsgCount(count: Int, maxWait: FiniteDuration = 6.seconds): Unit = {
     probe.expectMsgAllClassOf(maxWait, Array.fill(count)(tag.runtimeClass): _*)
-    probe.expectNoMsg(maxWait)
+    probe.expectNoMessage(maxWait)
   }
 
   /**
@@ -134,14 +134,14 @@ case class RabbitQueueTestKit[T](
   /**
     * For expecting no error message in the given timeframe.
     */
-  def expectNoErrorMsg(maxWait: FiniteDuration = 6.seconds): Unit = errorProbe.expectNoMsg(maxWait)
+  def expectNoErrorMsg(maxWait: FiniteDuration = 6.seconds): Unit = errorProbe.expectNoMessage(maxWait)
 
   /**
     * Expects a number of error messages to arrive in the error queue.
     */
   def expectErrorMsgCount[U: ClassTag](count: Int, maxWait: FiniteDuration = 6.seconds) = {
     errorProbe.expectMsgAllClassOf(maxWait, Array.fill(count)(tag.runtimeClass): _*)
-    errorProbe.expectNoMsg(maxWait)
+    errorProbe.expectNoMessage(maxWait)
   }
 
   /**

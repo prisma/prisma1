@@ -97,7 +97,7 @@ case class InMemoryQueueTestKit[T](backoff: BackoffStrategy = ConstantBackoff(1.
     * Requires at least one consumer to be meaningful.
     */
   def expectNoMsg(maxWait: FiniteDuration = 6.seconds): Unit = {
-    probe.expectNoMsg(maxWait)
+    probe.expectNoMessage(maxWait)
   }
 
   /**
@@ -105,7 +105,7 @@ case class InMemoryQueueTestKit[T](backoff: BackoffStrategy = ConstantBackoff(1.
     * Does not require a consumer to be meaningful.
     */
   def expectNoPublishedMsg(maxWait: FiniteDuration = 6.seconds): Unit = {
-    publishProbe.expectNoMsg(maxWait)
+    publishProbe.expectNoMessage(maxWait)
   }
 
   /**
@@ -117,7 +117,7 @@ case class InMemoryQueueTestKit[T](backoff: BackoffStrategy = ConstantBackoff(1.
     */
   def expectMsgCount(count: Int, maxWait: FiniteDuration = 6.seconds): Unit = {
     probe.expectMsgAllClassOf(maxWait, Array.fill(count)(tag.runtimeClass): _*)
-    probe.expectNoMsg(maxWait)
+    probe.expectNoMessage(maxWait)
   }
 
   /**
@@ -129,7 +129,7 @@ case class InMemoryQueueTestKit[T](backoff: BackoffStrategy = ConstantBackoff(1.
     */
   def expectPublishCount(count: Int, maxWait: FiniteDuration = 6.seconds): Unit = {
     publishProbe.expectMsgAllClassOf(maxWait, Array.fill(count)(tag.runtimeClass): _*)
-    publishProbe.expectNoMsg(maxWait)
+    publishProbe.expectNoMessage(maxWait)
   }
 
   /**

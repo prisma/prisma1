@@ -10,7 +10,8 @@ abstract class AbstractApiError(val message: String, val errorCode: Int) extends
 case class InvalidProjectId(projectId: String) extends AbstractApiError(s"No service with id '$projectId'", 4000)
 
 import cool.graph.api.database.mutactions.MutactionExecutionResult
-import spray.json.{JsValue}
+import cool.graph.api.mutations.NodeSelector
+import spray.json.JsValue
 
 abstract class GeneralError(message: String) extends Exception with MutactionExecutionResult {
   override def getMessage: String = message
@@ -143,4 +144,12 @@ object APIErrors {
   case class StoredValueForFieldNotValid(fieldName: String, modelName: String)
       extends ClientApiError(s"The value in the field '$fieldName' on the model '$modelName' ist not valid for that field.", 3038)
 
+  case class NodeNotFoundForWhereError(where: NodeSelector)
+      extends ClientApiError(s"No Node for the model ${where.model.name} with value ${where.fieldValueAsString} for ${where.field.name} found.", 3039)
+
+  case class NullProvidedForWhereError(modelName: String)
+      extends ClientApiError(s"You provided an invalid argument for the where selector on $modelName.", 3040)
+
+  case class NodesNotConnectedError(outerWhere: NodeSelector, innerWhere: NodeSelector)
+    extends ClientApiError(s"The Node for the model ${outerWhere.model.name} with value ${outerWhere.fieldValueAsString} for ${outerWhere.field.name} was not connected to the Node for the model ${outerWhere.model.name} with value ${outerWhere.fieldValueAsString} for ${outerWhere.field.name}", 3041)
 }

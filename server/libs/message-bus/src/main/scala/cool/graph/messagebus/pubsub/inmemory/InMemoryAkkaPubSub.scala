@@ -10,7 +10,7 @@ import cool.graph.messagebus.pubsub._
   * PubSub implementation solely backed by actors, no external queueing or pubsub stack is utilized.
   * Useful for the single server solution and tests.
   */
-case class InMemoryAkkaPubSub[T](implicit val system: ActorSystem) extends PubSub[T] {
+case class InMemoryAkkaPubSub[T]()(implicit val system: ActorSystem) extends PubSub[T] {
   val router = system.actorOf(Props(PubSubRouter()))
 
   def subscribe(topic: Topic, onReceive: Message[T] => Unit): Subscription =

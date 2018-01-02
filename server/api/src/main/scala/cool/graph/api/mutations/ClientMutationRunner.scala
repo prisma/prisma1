@@ -28,14 +28,7 @@ object ClientMutationRunner {
           .filter(_.isInstanceOf[GeneralError])
           .map(_.asInstanceOf[GeneralError]) match {
           case errors if errors.nonEmpty => throw errors.head
-          case _ =>
-            clientMutation.getReturnValue.map {
-              case ReturnValue(dataItem) => dataItem
-              case NoReturnValue(id)     => throw APIErrors.NodeNotFoundError(id)
-            }
-            clientMutation.getReturnValue.map { result =>
-              result
-            }
+          case _ => clientMutation.getReturnValue
         }
       }
     } yield dataItem

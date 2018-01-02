@@ -21,7 +21,6 @@ import play.api.libs.json.Json
 import sangria.execution.{Executor, HandledException}
 import sangria.marshalling.ResultMarshaller
 import sangria.parser.QueryParser
-import scaldi._
 import spray.json._
 
 import scala.concurrent.Future
@@ -34,7 +33,6 @@ case class ClusterServer(
     prefix: String = ""
 )(implicit system: ActorSystem, materializer: ActorMaterializer)
     extends Server
-    with Injectable
     with LazyLogging {
   import cool.graph.deploy.server.JsonMarshalling._
   import system.dispatcher
@@ -174,15 +172,19 @@ case class ErrorHandler(
   private val internalErrorMessage =
     s"Whoops. Looks like an internal server error. Please contact us from the Console (https://console.graph.cool) or via email (support@graph.cool) and include your Request ID: $requestId"
 
-  lazy val sangriaExceptionHandler: Executor.ExceptionHandler = {
+  lazy val handler: PartialFunction[(ResultMarshaller, Throwable), HandledException] = {
     case (marshaller: ResultMarshaller, error: DeployApiError) =>
       val additionalFields = Map("code" -> marshaller.scalarNode(error.errorCode, "Int", Set.empty))
       HandledException(error.getMessage, additionalFields ++ commonFields(marshaller))
 
-    case (marshaller, error) =>
+    case (marshaller, error: Throwable) =>
       error.printStackTrace()
       HandledException(internalErrorMessage, commonFields(marshaller))
   }
+
+  lazy val sangriaExceptionHandler: Executor.ExceptionHandler = sangria.execution.ExceptionHandler(
+    onException = handler
+  )
 
   private def commonFields(marshaller: ResultMarshaller) = Map(
     "requestId" -> marshaller.scalarNode(requestId, "Int", Set.empty)
