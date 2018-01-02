@@ -2,15 +2,15 @@ package cool.graph.api.database.mutactions.mutactions
 
 import java.sql.SQLIntegrityConstraintViolationException
 
-import cool.graph.api.database.mutactions.validation.InputValueValidation
 import cool.graph.api.database.mutactions._
+import cool.graph.api.database.mutactions.validation.InputValueValidation
 import cool.graph.api.database.{DataResolver, DatabaseMutationBuilder, ProjectRelayId, ProjectRelayIdTable}
 import cool.graph.api.mutations.CoolArgs
 import cool.graph.api.mutations.MutationTypes.{ArgumentValue, ArgumentValueList}
 import cool.graph.api.schema.APIErrors
 import cool.graph.shared.models.IdType.Id
 import cool.graph.shared.models._
-import cool.graph.util.gc_value.GCDBValueConverter
+import cool.graph.util.gc_value.GCValueExtractor
 import cool.graph.util.json.JsonFormats
 import slick.jdbc.MySQLProfile.api._
 import slick.lifted.TableQuery
@@ -41,7 +41,7 @@ case class CreateDataItem(
     transformedValues
       .find(_.name == field.name)
       .map(v => Some(v.value))
-      .getOrElse(field.defaultValue.map(GCDBValueConverter().fromGCValue))
+      .getOrElse(field.defaultValue.map(GCValueExtractor.fromGCValue))
   }
 
   override def execute: Future[ClientSqlStatementResult[Any]] = {

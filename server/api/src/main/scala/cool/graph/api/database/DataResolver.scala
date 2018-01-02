@@ -9,7 +9,7 @@ import cool.graph.gc_values.{GCValue, GraphQLIdGCValue}
 import cool.graph.shared.models.IdType.Id
 import cool.graph.shared.models.TypeIdentifier.TypeIdentifier
 import cool.graph.shared.models._
-import cool.graph.util.gc_value.GCDBValueConverter
+import cool.graph.util.gc_value.GCValueExtractor
 import slick.dbio.Effect.Read
 import slick.dbio.{DBIOAction, Effect, NoStream}
 import slick.jdbc.MySQLProfile.api._
@@ -297,7 +297,7 @@ case class DataResolver(project: Project, useMasterDatabaseOnly: Boolean = false
 
   private def unwrapGcValue(value: Any): Any = {
     value match {
-      case x: GCValue => GCDBValueConverter().fromGCValue(x)
+      case x: GCValue => GCValueExtractor.fromGCValue(x)
       case x          => x
     }
   }

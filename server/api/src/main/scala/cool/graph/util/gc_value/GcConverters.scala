@@ -1,19 +1,20 @@
 package cool.graph.util.gc_value
 
 import cool.graph.gc_values._
-import cool.graph.shared.models.{Field, TypeIdentifier}
 import cool.graph.shared.models.TypeIdentifier.TypeIdentifier
+import cool.graph.shared.models.{Field, TypeIdentifier}
+import cool.graph.util.gc_value.OtherGCStuff.sequence
 import org.apache.commons.lang.StringEscapeUtils
+import org.joda.time.format.{DateTimeFormat, ISODateTimeFormat}
 import org.joda.time.{DateTime, DateTimeZone}
-import org.joda.time.format.ISODateTimeFormat
 import org.parboiled2.{Parser, ParserInput}
 import org.scalactic.{Bad, Good, Or}
 import play.api.libs.json._
 import sangria.ast.{Field => SangriaField, Value => SangriaValue, _}
 import sangria.parser._
 
-import scala.util.{Failure, Success}
 import scala.util.control.NonFatal
+import scala.util.{Failure, Success}
 
 /**
   * We need a bunch of different converters from / to GC values
@@ -25,13 +26,63 @@ import scala.util.control.NonFatal
   * 5.  SangriaValue  <->  String      for reading and writing default and migrationValues
   * 6.  InputString   <->  GCValue     chains String -> SangriaValue -> GCValue and back
   */
+
+
+/**
+  * 0. This gets us a GCValue as String or Any without requiring context like field it therefore only works from GCValue
+  * Can be made a singleton
+  */
+object GCValueExtractor {
+
+  def fromGCValueToString(t: GCValue): String = {
+    fromGCValue(t) match {
+      case x: Vector[Any] => x.map(_.toString).mkString(start = "[", sep = ",", end = "]")
+      case x              => x.toString
+    }
+  }
+
+   def fromGCValue(t: GCValue): Any = {
+    t match {
+      case NullGCValue         => None
+      case x: StringGCValue    => x.value
+      case x: EnumGCValue      => x.value
+      case x: GraphQLIdGCValue => x.value
+      case x: DateTimeGCValue  => x.value
+      case x: IntGCValue       => x.value
+      case x: FloatGCValue     => x.value
+      case x: BooleanGCValue   => x.value
+      case x: JsonGCValue      => x.value
+      case x: ListGCValue      => x.values.map(this.fromGCValue)
+      case x: RootGCValue      => sys.error("RootGCValues not implemented yet in GCDBValueConverter")
+    }
+  }
+}
+
 /**
   * 1. DBValue <-> GCValue - This is used write and read GCValues to typed Db fields in the ClientDB
   */
-case class GCDBValueConverter() extends GCConverter[Any] {
+case class GCDBValueConverter2(typeIdentifier: TypeIdentifier, isList: Boolean) extends GCConverter[Any] {
 
   override def toGCValue(t: Any): Or[GCValue, InvalidValueForScalarType] = {
-    ???
+    try {
+      val result = (t, typeIdentifier) match {
+        case (x: String, TypeIdentifier.String)                 => StringGCValue(x)
+        case (x: Int, TypeIdentifier.Int)                       => IntGCValue(x)
+        case (x: Float, TypeIdentifier.Float)                   => FloatGCValue(x)
+        case (x: Double, TypeIdentifier.Float)                  => FloatGCValue(x)
+        case (x: Boolean, TypeIdentifier.Boolean)               => BooleanGCValue(x)
+        case (x: java.sql.Timestamp, TypeIdentifier.DateTime)   => DateTimeGCValue(DateTime.parse(x.toString, DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSS").withZoneUTC()))
+        case (x: String, TypeIdentifier.GraphQLID)              => GraphQLIdGCValue(x)
+        case (x: String, TypeIdentifier.Enum)                   => EnumGCValue(x)
+        case (x: String, TypeIdentifier.Json)                   => JsonGCValue(Json.parse(x))
+        case (x: ListValue, _) if isList                        => sequence(x.values.map(this.toGCValue)).map(seq => ListGCValue(seq)).get
+        case _                                                  => sys.error("Error in GCDBValueConverter. Value: " + t.toString)
+      }
+
+      Good(result)
+    } catch {
+      case NonFatal(_) => Bad(InvalidValueForScalarType(t.toString, typeIdentifier.toString))
+    }
   }
 
   def fromGCValueToString(t: GCValue): String = {
@@ -47,7 +98,7 @@ case class GCDBValueConverter() extends GCConverter[Any] {
       case x: StringGCValue    => x.value
       case x: EnumGCValue      => x.value
       case x: GraphQLIdGCValue => x.value
-      case x: DateTimeGCValue  => x.value
+      case x: DateTimeGCValue  => x.value //todo needs fitting format for Sql
       case x: IntGCValue       => x.value
       case x: FloatGCValue     => x.value
       case x: BooleanGCValue   => x.value
@@ -110,7 +161,7 @@ case class GCSangriaValueConverter(typeIdentifier: TypeIdentifier, isList: Boole
 }
 
 /**
-  * 3. DBString <-> GCValue - This is used write the defaultValue as a String to the SystemDB and read it from there
+  * 3. DBString <-> GCValue - This is used to write the defaultValue as a String to the SystemDB and read it from there
   */
 case class GCStringDBConverter(typeIdentifier: TypeIdentifier, isList: Boolean) extends GCConverter[String] {
   override def toGCValue(t: String): Or[GCValue, InvalidValueForScalarType] = {
@@ -205,7 +256,7 @@ case class GCJsonConverter(typeIdentifier: TypeIdentifier, isList: Boolean) exte
 }
 
 /**
-  * 5. String <-> SangriaAST - This is reads and writes Default and MigrationValues we get/need as String.
+  * 5. String <-> SangriaAST - This reads and writes Default and MigrationValues we get/need as String.
   */
 class MyQueryParser(val input: ParserInput) extends Parser with Tokens with Ignored with Operations with Fragments with Values with Directives with Types
 

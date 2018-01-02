@@ -43,7 +43,10 @@ object DeferredTypes {
   }
 
   type OneDeferredResultType = Option[DataItem]
-  case class OneDeferred(model: Model, key: String, value: Any)                                      extends Deferred[OneDeferredResultType]
+  case class OneDeferred(model: Model, key: String, value: Any)                                      extends Deferred[OneDeferredResultType] {
+
+
+  }
   case class ToOneDeferred(relationField: Field, parentNodeId: String, args: Option[QueryArguments]) extends RelationDeferred[OneDeferredResultType]
 
   case class ToManyDeferred(relationField: Field, parentNodeId: String, args: Option[QueryArguments]) extends RelationDeferred[RelayConnectionOutputType]

@@ -130,16 +130,10 @@ class TransactionalNestedExecutionSpec extends FlatSpec with Matchers with ApiBa
   }
 
   "a one to one relation" should "fail gracefully on wrong DateTime where and assign error correctly and not execute partially" in {
-    //date time is tricky since the shape is transformed
-    //I would expect the where to find stuff if I use the same shape that I entered
-    //OutwardFacing we use ISO8601
-    //SQL needs a different format for the where queries and the errorparsing
-    //we also accept shortened ISO8601 versions and change extend them internally
-
     val outerWhere = """"2018""""
     val innerWhere = """"2019""""
     val falseWhere = """"2020""""
-    val falseWhereInError = DateTimeGCValue(new DateTime("2020", DateTimeZone.UTC)).toMySqlDateTimeFormat
+    val falseWhereInError = new DateTime("2020", DateTimeZone.UTC)
 
     val project = SchemaDsl() { schema =>
       val note = schema.model("Note").field("outerString", _.String).field("outerUnique", _.DateTime ,isUnique = true)
