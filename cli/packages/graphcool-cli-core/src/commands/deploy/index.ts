@@ -83,6 +83,9 @@ ${chalk.gray(
     }
 
     await this.definition.load(this.flags, envFile)
+    if (!this.definition.definition) {
+      throw new Error(`No graphcool.yml found`)
+    }
     const serviceName = this.definition.definition!.service
     const stage = this.definition.definition!.stage
 
