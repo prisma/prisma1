@@ -77,13 +77,13 @@ object DatabaseMutationBuilder {
     (sql"select case" ++
       sql"when exists" ++
       sql"(select *" ++
-      sql"from `#${project.id}`.`#${relation.name}`" ++
+      sql"from `#${project.id}`.`#${relation.id}`" ++
       sql"where `#$innerSide` = (Select `id` from `#${project.id}`.`#${innerWhere.model.name}`where `#${innerWhere.field.name}` = ${innerWhere.fieldValue})" ++
       sql"AND `#$outerSide` = (Select `id` from `#${project.id}`.`#${outerWhere.model.name}`where `#${outerWhere.field.name}` = ${outerWhere.fieldValue}))" ++
       sql"then 1" ++
       sql"else (select COLUMN_NAME" ++
       sql"from information_schema.columns" ++
-      sql"where table_schema = ${project.id} AND TABLE_NAME = ${relation.name})end;").as[Int]
+      sql"where table_schema = ${project.id} AND TABLE_NAME = ${relation.id})end;").as[Int]
   }
 
   def deleteDataItems(project: Project, model: Model, where: DataItemFilterCollection) = {

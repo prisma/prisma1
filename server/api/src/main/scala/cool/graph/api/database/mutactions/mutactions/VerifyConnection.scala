@@ -42,7 +42,7 @@ case class VerifyConnection(project: Project, relation: Relation, outerWhere: No
       case NullGCValue => sys.error("Not an acceptable Where")
     }
 
-  val relationString = s"`${relation.name}` where `${relation.sideOf(innerWhere.model)}` ="
+  val relationString = s"`${relation.id}` where `${relation.sideOf(innerWhere.model)}` ="
 
   cause.contains(relationString) && cause.contains(parameterString)
   }
