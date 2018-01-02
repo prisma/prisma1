@@ -74,10 +74,14 @@ case class MigrationApplierImpl(clientDatabase: DatabaseDef)(implicit ec: Execut
       Some(CreateModelTable(previousProject.id, x.name))
 
     case x: DeleteModel =>
-      Some(DeleteModelTable(previousProject.id, x.name))
+      val model                = previousProject.getModelByName_!(x.name)
+      val scalarListFieldNames = model.scalarListFields.map(_.name).toVector
+      Some(DeleteModelTable(previousProject.id, x.name, scalarListFieldNames))
 
     case x: UpdateModel =>
-      Some(RenameModelTable(projectId = previousProject.id, previousName = x.name, nextName = x.newName))
+      val model                = nextProject.getModelByName_!(x.newName)
+      val scalarListFieldNames = model.scalarListFields.map(_.name).toVector
+      Some(RenameModelTable(projectId = previousProject.id, previousName = x.name, nextName = x.newName, scalarListFieldsNames = scalarListFieldNames))
 
     case x: CreateField =>
       // todo I think those validations should be somewhere else, preferably preventing a step being created
@@ -110,7 +114,6 @@ case class MigrationApplierImpl(clientDatabase: DatabaseDef)(implicit ec: Execut
 
       if (previousField.isList) {
         // todo: also handle changing to/from scalar list
-        // todo: also handle changing model name
         Some(UpdateScalarListTable(nextProject.id, model, model, previousField, nextField))
       } else {
         Some(UpdateColumn(nextProject.id, model, previousField, nextField))

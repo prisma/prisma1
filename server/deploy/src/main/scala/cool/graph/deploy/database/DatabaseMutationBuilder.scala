@@ -66,7 +66,7 @@ object DatabaseMutationBuilder {
   }
 
   def renameScalarListTable(projectId: String, modelName: String, fieldName: String, newModelName: String, newFieldName: String) = {
-    sqlu"RENAME TABLE `#$projectId`.`#${modelName}_#${fieldName}` TO `#$projectId`.`#${modelName}_#${newFieldName}`"
+    sqlu"RENAME TABLE `#$projectId`.`#${modelName}_#${fieldName}` TO `#$projectId`.`#${newModelName}_#${newFieldName}`"
   }
 
   def renameTable(projectId: String, name: String, newName: String) = sqlu"""RENAME TABLE `#$projectId`.`#$name` TO `#$projectId`.`#$newName`;"""
