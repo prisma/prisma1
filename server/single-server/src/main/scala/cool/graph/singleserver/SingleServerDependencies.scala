@@ -10,14 +10,13 @@ import cool.graph.deploy.DeployDependencies
 import cool.graph.deploy.migration.migrator.{AsyncMigrator, Migrator}
 import cool.graph.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
 import cool.graph.messagebus.queue.inmemory.InMemoryAkkaQueue
-import cool.graph.messagebus.{PubSubPublisher, PubSubSubscriber, QueueConsumer}
+import cool.graph.messagebus.{PubSubPublisher, PubSubSubscriber, QueueConsumer, QueuePublisher}
 import cool.graph.subscriptions.SubscriptionDependencies
 import cool.graph.subscriptions.protocol.SubscriptionProtocolV05.Responses.SubscriptionSessionResponseV05
 import cool.graph.subscriptions.protocol.SubscriptionProtocolV07.Responses.SubscriptionSessionResponse
 import cool.graph.subscriptions.protocol.SubscriptionRequest
 import cool.graph.subscriptions.resolving.SubscriptionsManagerForProject.{SchemaInvalidated, SchemaInvalidatedMessage}
 import cool.graph.websocket.protocol.{Request => WebsocketRequest}
-import cool.graph.websocket.services.WebsocketDevDependencies
 import play.api.libs.json.Json
 
 trait SingleServerApiDependencies extends DeployDependencies with ApiDependencies {
@@ -29,22 +28,29 @@ case class SingleServerDependencies()(implicit val system: ActorSystem, val mate
     with SubscriptionDependencies {
   override implicit def self = this
 
-  val databases                      = Databases.initialize(config)
-  val apiSchemaBuilder               = SchemaBuilder()
-  val projectFetcher: ProjectFetcher = ProjectFetcherImpl(Vector.empty, config)
-  val migrator: Migrator             = AsyncMigrator(clientDb, migrationPersistence, projectPersistence, migrationApplier)
+  override val databases        = Databases.initialize(config)
+  override val apiSchemaBuilder = SchemaBuilder()
+  override val projectFetcher: ProjectFetcher = {
+    val schemaManagerEndpoint = config.getString("schemaManagerEndpoint")
+    val schemaManagerSecret   = config.getString("schemaManagerSecret")
+    ProjectFetcherImpl(Vector.empty, config, schemaManagerEndpoint = schemaManagerEndpoint, schemaManagerSecret = schemaManagerSecret)
+  }
+  override val migrator: Migrator = AsyncMigrator(clientDb, migrationPersistence, projectPersistence, migrationApplier)
 
-  lazy val pubSub: InMemoryAkkaPubSub[String]                                 = InMemoryAkkaPubSub[String]()
-  lazy val invalidationSubscriber: PubSubSubscriber[SchemaInvalidatedMessage] = pubSub.map[SchemaInvalidatedMessage]((str: String) => SchemaInvalidated)
+  lazy val invalidationPubSub: InMemoryAkkaPubSub[String] = InMemoryAkkaPubSub[String]()
+  override lazy val invalidationSubscriber: PubSubSubscriber[SchemaInvalidatedMessage] =
+    invalidationPubSub.map[SchemaInvalidatedMessage]((str: String) => SchemaInvalidated)
 
-  lazy val sssEventsPubSub: InMemoryAkkaPubSub[String]   = InMemoryAkkaPubSub[String]()
-  lazy val sssEventsSubscriber: PubSubSubscriber[String] = sssEventsPubSub
+  override lazy val sssEventsPubSub: InMemoryAkkaPubSub[String]   = InMemoryAkkaPubSub[String]()
+  override lazy val sssEventsSubscriber: PubSubSubscriber[String] = sssEventsPubSub
 
-  lazy val requestsQueue: InMemoryAkkaQueue[WebsocketRequest]        = InMemoryAkkaQueue[WebsocketRequest]()
-  lazy val requestsQueueConsumer: QueueConsumer[SubscriptionRequest] = requestsQueue.map[SubscriptionRequest](Converters.websocketRequest2SubscriptionRequest)
+  lazy val requestsQueue: InMemoryAkkaQueue[WebsocketRequest]                = InMemoryAkkaQueue[WebsocketRequest]()
+  override lazy val requestsQueuePublisher: QueuePublisher[WebsocketRequest] = requestsQueue
+  override lazy val requestsQueueConsumer: QueueConsumer[SubscriptionRequest] =
+    requestsQueue.map[SubscriptionRequest](Converters.websocketRequest2SubscriptionRequest)
 
-  lazy val responsePubSub: InMemoryAkkaPubSub[String] = InMemoryAkkaPubSub[String]()
-  lazy val websocketServices                          = WebsocketDevDependencies(requestsQueue, responsePubSub)
+  lazy val responsePubSub: InMemoryAkkaPubSub[String]                  = InMemoryAkkaPubSub[String]()
+  override lazy val responsePubSubSubscriber: PubSubSubscriber[String] = responsePubSub
 
   lazy val converterResponse07ToString: SubscriptionSessionResponse => String = (response: SubscriptionSessionResponse) => {
     import cool.graph.subscriptions.protocol.ProtocolV07.SubscriptionResponseWriters._

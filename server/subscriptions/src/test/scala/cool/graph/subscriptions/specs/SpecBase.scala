@@ -6,12 +6,9 @@ import akka.stream.ActorMaterializer
 import cool.graph.akkautil.http.ServerExecutor
 import cool.graph.api.ApiTestDatabase
 import cool.graph.bugsnag.BugSnaggerImpl
-import cool.graph.shared.models.{Project, ProjectWithClientId}
+import cool.graph.shared.models.{Project, ProjectId, ProjectWithClientId}
 import cool.graph.subscriptions._
-import cool.graph.subscriptions.protocol.SubscriptionRequest
 import cool.graph.websocket.WebsocketServer
-import cool.graph.websocket.protocol.Request
-import cool.graph.websocket.services.WebsocketDevDependencies
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
 import play.api.libs.json.{JsObject, JsValue, Json}
 
@@ -31,11 +28,7 @@ trait SpecBase extends TestFrameworkInterface with BeforeAndAfterEach with Befor
   val requestsTestKit                       = dependencies.requestsQueueTestKit
   val responsesTestKit                      = dependencies.responsePubSubTestKit
 
-  val websocketServices = WebsocketDevDependencies(requestsTestKit.map[Request] { req: Request =>
-    SubscriptionRequest(req.sessionId, req.projectId, req.body)
-  }, responsesTestKit)
-
-  val wsServer            = WebsocketServer(websocketServices)
+  val wsServer            = WebsocketServer(dependencies)
   val simpleSubServer     = SimpleSubscriptionsServer()
   val subscriptionServers = ServerExecutor(port = 8085, wsServer, simpleSubServer)
 
@@ -80,15 +73,16 @@ trait SpecBase extends TestFrameworkInterface with BeforeAndAfterEach with Befor
 
   def testWebsocket(project: Project)(checkFn: WSProbe => Unit): Unit = {
     val wsClient = WSProbe()
-    import cool.graph.stub.Import._
     import cool.graph.shared.models.ProjectJsonFormatter._
+    import cool.graph.stub.Import._
 
     val projectWithClientId = ProjectWithClientId(project, "clientId")
     val stubs = List(
-      cool.graph.stub.Import.Request("GET", s"/system/${project.id}").stub(200, Json.toJson(projectWithClientId).toString)
+      cool.graph.stub.Import.Request("GET", s"/${dependencies.projectFetcherPath}/${project.id}").stub(200, Json.toJson(projectWithClientId).toString)
     )
-    withStubServer(stubs, port = 9000) {
-      WS(s"/v1/${project.id}", wsClient.flow, Seq(wsServer.subProtocol2)) ~> wsServer.routes ~> check {
+    withStubServer(stubs, port = dependencies.projectFetcherPort) {
+      val projectId = ProjectId.fromEncodedString(project.id)
+      WS(s"/${projectId.name}/${projectId.stage}", wsClient.flow, Seq(wsServer.subProtocol2)) ~> wsServer.routes ~> check {
         checkFn(wsClient)
       }
     }

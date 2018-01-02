@@ -13,7 +13,7 @@ case class CreateModelTable(projectId: String, model: String) extends ClientSqlM
     Future.successful(ClientSqlStatementResult(sqlAction = DatabaseMutationBuilder.createTable(projectId = projectId, name = model)))
   }
 
-  override def rollback = Some(DeleteModelTable(projectId, model).execute)
+  override def rollback = Some(DeleteModelTable(projectId, model, Vector.empty).execute)
 
   override def verify(): Future[Try[Unit]] = {
     val validationResult = if (NameConstraints.isValidModelName(model)) {

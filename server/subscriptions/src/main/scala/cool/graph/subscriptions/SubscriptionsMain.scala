@@ -13,21 +13,19 @@ import cool.graph.subscriptions.protocol.{StringOrInt, SubscriptionRequest, Subs
 import cool.graph.subscriptions.resolving.SubscriptionsManager
 import cool.graph.subscriptions.util.PlayJson
 import cool.graph.websocket.WebsocketServer
-import cool.graph.websocket.services.WebsocketDevDependencies
 import de.heikoseeberger.akkahttpplayjson.PlayJsonSupport
 import play.api.libs.json.{JsError, JsSuccess}
 
 import scala.concurrent.Future
 
 object SubscriptionsMain extends App {
-  implicit val system                   = ActorSystem("graphql-subscriptions")
-  implicit val materializer             = ActorMaterializer()
-  implicit val subscriptionDependencies = SubscriptionDependenciesImpl()
-  import subscriptionDependencies.bugSnagger
+  implicit val system       = ActorSystem("graphql-subscriptions")
+  implicit val materializer = ActorMaterializer()
+  implicit val dependencies = SubscriptionDependenciesImpl()
+  import dependencies.bugSnagger
 
-  val websocketDependencies = WebsocketDevDependencies(subscriptionDependencies.requestsQueuePublisher, subscriptionDependencies.responsePubSubSubscriber)
-  val subscriptionsServer   = SimpleSubscriptionsServer()
-  val websocketServer       = WebsocketServer(websocketDependencies)
+  val subscriptionsServer = SimpleSubscriptionsServer()
+  val websocketServer     = WebsocketServer(dependencies)
 
   ServerExecutor(port = 8086, websocketServer, subscriptionsServer).startBlocking()
 }
@@ -46,9 +44,8 @@ case class SimpleSubscriptionsServer(prefix: String = "")(
 
   val innerRoutes          = Routes.emptyRoute
   val subscriptionsManager = system.actorOf(Props(new SubscriptionsManager(bugsnagger)), "subscriptions-manager")
-  val requestsConsumer     = dependencies.requestsQueueConsumer
 
-  val consumerRef = requestsConsumer.withConsumer { req: SubscriptionRequest =>
+  val consumerRef = dependencies.requestsQueueConsumer.withConsumer { req: SubscriptionRequest =>
     Future {
       if (req.body == "STOP") {
         subscriptionSessionManager ! StopSession(req.sessionId)
