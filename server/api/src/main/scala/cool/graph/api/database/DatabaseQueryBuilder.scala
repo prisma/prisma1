@@ -27,7 +27,15 @@ object DatabaseQueryBuilder {
         // note: getObject(string) is case insensitive, so we get the index in scala land instead
         yield n -> Option(rs.getObject(colNames.indexOf(n) + 1))).toMap
 
-      DataItem(id = rs.getString("id"), userData = userData)
+      DataItem(id = rs.getString("id").trim, userData = userData)
+    }
+  }
+
+  implicit object GetScalarListValue extends GetResult[ScalarListValue] {
+    def apply(ps: PositionedResult): ScalarListValue = {
+      val rs = ps.rs
+
+      ScalarListValue(nodeId = rs.getString("nodeId").trim, position = rs.getInt("position"), value = rs.getObject("value"))
     }
   }
 
@@ -146,6 +154,10 @@ object DatabaseQueryBuilder {
 
   def existsFromModelsByUniques(project: Project, model: Model, predicates: Vector[NodeSelector]) = {
     sql"select exists (select * from `#${project.id}`.`#${model.name}`" ++ whereClauseByCombiningPredicatesByOr(predicates) concat sql")"
+  }
+
+  def selectFromScalarList(projectId: String, modelName: String, fieldName: String, nodeIds: Vector[String]): SQLActionBuilder = {
+    sql"select nodeId, position, value from `#$projectId`.`#${modelName}_#${fieldName}` where nodeId in (" concat combineByComma(nodeIds.map(escapeUnsafeParam)) concat sql")"
   }
 
   def whereClauseByCombiningPredicatesByOr(predicates: Vector[NodeSelector]) = {

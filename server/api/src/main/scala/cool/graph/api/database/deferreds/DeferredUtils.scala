@@ -3,7 +3,7 @@ package cool.graph.api.database.deferreds
 import cool.graph.api.database.DeferredTypes._
 import cool.graph.api.database.QueryArguments
 import cool.graph.shared.models.IdType.Id
-import cool.graph.shared.models.Model
+import cool.graph.shared.models.{Field, Model}
 import sangria.execution.deferred.Deferred
 
 object DeferredUtils {
@@ -25,6 +25,10 @@ object DeferredUtils {
 
   def groupOneDeferred[T <: OneDeferred](oneDeferred: Vector[OrderedDeferred[T]]): Map[Model, Vector[OrderedDeferred[T]]] = {
     oneDeferred.groupBy(ordered => ordered.deferred.model)
+  }
+
+  def groupScalarListDeferreds[T <: ScalarListDeferred](oneDeferred: Vector[OrderedDeferred[T]]): Map[Field, Vector[OrderedDeferred[T]]] = {
+    oneDeferred.groupBy(ordered => ordered.deferred.field)
   }
 
   def groupRelatedDeferred[T <: RelationDeferred[Any]](
@@ -76,6 +80,18 @@ object DeferredUtils {
 
     if (countSimilarDeferreds != deferreds.length) {
       throw new Error("Passed deferreds should not have different key or model.")
+    }
+  }
+
+  def checkSimilarityOfScalarListDeferredsAndThrow(deferreds: Vector[ScalarListDeferred]) = {
+    val headDeferred = deferreds.head
+
+    val countSimilarDeferreds = deferreds.count { d =>
+      d.field.id == headDeferred.field.id
+    }
+
+    if (countSimilarDeferreds != deferreds.length) {
+      throw new Error("Passed deferreds should not have different field or model.")
     }
   }
 
