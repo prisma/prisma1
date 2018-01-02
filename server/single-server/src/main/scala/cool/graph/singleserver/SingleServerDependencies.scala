@@ -17,7 +17,6 @@ import cool.graph.subscriptions.protocol.SubscriptionProtocolV07.Responses.Subsc
 import cool.graph.subscriptions.protocol.SubscriptionRequest
 import cool.graph.subscriptions.resolving.SubscriptionsManagerForProject.{SchemaInvalidated, SchemaInvalidatedMessage}
 import cool.graph.websocket.protocol.{Request => WebsocketRequest}
-import cool.graph.websocket.services.WebsocketDevDependencies
 import play.api.libs.json.Json
 
 trait SingleServerApiDependencies extends DeployDependencies with ApiDependencies {
