@@ -78,7 +78,8 @@ case class WebsocketSession(
     outgoing: ActorRef,
     manager: ActorRef,
     requestsPublisher: QueuePublisher[Request],
-    bugsnag: BugSnagger
+    bugsnag: BugSnagger,
+    isV7protocol: Boolean
 ) extends Actor
     with LogUnhandled
     with LogUnhandledExceptions
@@ -87,10 +88,18 @@ case class WebsocketSession(
   import WebsocketSessionManager.Responses._
   import metrics.SubscriptionWebsocketMetrics._
 
+  implicit val ec = context.system.dispatcher
+
   activeWsConnections.inc
   context.setReceiveTimeout(FiniteDuration(60, TimeUnit.MINUTES))
 
   manager ! RegisterWebsocketSession(sessionId, self)
+
+  context.system.scheduler.schedule(10.seconds, 10.seconds, outgoing, if (isV7protocol) {
+    TextMessage.Strict("""{"type":"ka"}""")
+  } else {
+    TextMessage.Strict("""{"type":"keepalive"}""")
+  })
 
   def receive: Receive = logUnhandled {
     case TextMessage.Strict(body)             => println(s"received TextMessage: $body"); requestsPublisher.publish(Request(sessionId, projectId, body))

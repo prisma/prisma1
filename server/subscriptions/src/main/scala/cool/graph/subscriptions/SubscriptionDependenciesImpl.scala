@@ -23,11 +23,9 @@ trait SubscriptionDependencies extends ApiDependencies {
 
   val invalidationSubscriber: PubSubSubscriber[SchemaInvalidatedMessage]
   val sssEventsSubscriber: PubSubSubscriber[String]
-  val responsePubSubscriber: PubSubSubscriber[String]
   val responsePubSubPublisherV05: PubSubPublisher[SubscriptionSessionResponseV05]
   val responsePubSubPublisherV07: PubSubPublisher[SubscriptionSessionResponse]
   val requestsQueueConsumer: QueueConsumer[SubscriptionRequest]
-  val requestsQueuePublisher: QueuePublisher[Request]
 
   lazy val apiMetricsFlushInterval = 10
   lazy val clientAuth              = AuthImpl
@@ -36,6 +34,7 @@ trait SubscriptionDependencies extends ApiDependencies {
 //  binding identifiedBy "service-name" toNonLazy sys.env.getOrElse("SERVICE_NAME", "local")
 }
 
+// todo this needs rewiring
 case class SubscriptionDependenciesImpl()(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends SubscriptionDependencies {
   override implicit def self: ApiDependencies = this
 
@@ -61,9 +60,9 @@ case class SubscriptionDependenciesImpl()(implicit val system: ActorSystem, val 
 //    durable = true
 //  )(bugSnagger, system, Conversions.Unmarshallers.ToString)
 
-  lazy val responsePubSubscriber      = InMemoryAkkaPubSub[String]()
-  lazy val responsePubSubPublisherV05 = responsePubSubscriber.map[SubscriptionSessionResponseV05](converterResponse05ToString)
-  lazy val responsePubSubPublisherV07 = responsePubSubscriber.map[SubscriptionSessionResponse](converterResponse07ToString)
+  lazy val responsePubSubSubscriber   = InMemoryAkkaPubSub[String]()
+  lazy val responsePubSubPublisherV05 = responsePubSubSubscriber.map[SubscriptionSessionResponseV05](converterResponse05ToString)
+  lazy val responsePubSubPublisherV07 = responsePubSubSubscriber.map[SubscriptionSessionResponse](converterResponse07ToString)
 
   lazy val requestsQueuePublisher: InMemoryAkkaQueue[Request] = InMemoryAkkaQueue[Request]()
   lazy val requestsQueueConsumer: QueueConsumer[SubscriptionRequest] = requestsQueuePublisher.map[SubscriptionRequest] { req: Request =>

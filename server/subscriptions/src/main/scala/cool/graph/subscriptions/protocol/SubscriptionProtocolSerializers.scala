@@ -47,18 +47,14 @@ object ProtocolV07 {
         (json \ "type").validate[String] match {
           case x: JsError =>
             x
+
           case JsSuccess(value, _) =>
             value match {
-              case MessageTypes.GQL_CONNECTION_INIT =>
-                initReads.reads(json)
-              case MessageTypes.GQL_CONNECTION_TERMINATE =>
-                JsSuccess(GqlConnectionTerminate)
-              case MessageTypes.GQL_START =>
-                gqlStartReads.reads(json)
-              case MessageTypes.GQL_STOP =>
-                gqlStopReads.reads(json)
-              case _ =>
-                JsError(error = s"Message could not be parsed. Message Type '$value' is not defined.")
+              case MessageTypes.GQL_CONNECTION_INIT      => initReads.reads(json)
+              case MessageTypes.GQL_CONNECTION_TERMINATE => JsSuccess(GqlConnectionTerminate)
+              case MessageTypes.GQL_START                => gqlStartReads.reads(json)
+              case MessageTypes.GQL_STOP                 => gqlStopReads.reads(json)
+              case _                                     => JsError(error = s"Message could not be parsed. Message Type '$value' is not defined.")
             }
         }
       }
@@ -120,14 +116,10 @@ object ProtocolV05 {
             x
           case JsSuccess(value, _) =>
             value match {
-              case MessageTypes.INIT =>
-                subscriptionInitReads.reads(json)
-              case MessageTypes.SUBSCRIPTION_START =>
-                subscriptionStartReads.reads(json)
-              case MessageTypes.SUBSCRIPTION_END =>
-                subscriptionEndReads.reads(json)
-              case _ =>
-                JsError(error = s"Message could not be parsed. Message Type '$value' is not defined.")
+              case MessageTypes.INIT               => subscriptionInitReads.reads(json)
+              case MessageTypes.SUBSCRIPTION_START => subscriptionStartReads.reads(json)
+              case MessageTypes.SUBSCRIPTION_END   => subscriptionEndReads.reads(json)
+              case _                               => JsError(error = s"Message could not be parsed. Message Type '$value' is not defined.")
             }
         }
       }
@@ -137,11 +129,8 @@ object ProtocolV05 {
 
 object CommonReaders {
   lazy val stringOrIntReads: Reads[StringOrInt] = Reads {
-    case JsNumber(x) =>
-      JsSuccess(StringOrInt(string = None, int = Some(x.toInt)))
-    case JsString(x) =>
-      JsSuccess(StringOrInt(string = Some(x), int = None))
-    case _ =>
-      JsError("Couldn't parse request id. Supply a number or a string.")
+    case JsNumber(x) => JsSuccess(StringOrInt(string = None, int = Some(x.toInt)))
+    case JsString(x) => JsSuccess(StringOrInt(string = Some(x), int = None))
+    case _           => JsError("Couldn't parse request id. Supply a number or a string.")
   }
 }

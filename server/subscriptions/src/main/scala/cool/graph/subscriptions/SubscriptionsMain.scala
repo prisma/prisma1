@@ -3,6 +3,7 @@ package cool.graph.subscriptions
 import akka.actor.{ActorSystem, Props}
 import akka.stream.ActorMaterializer
 import cool.graph.akkautil.http.{Routes, Server, ServerExecutor}
+import cool.graph.bugsnag.BugSnagger
 import cool.graph.messagebus.pubsub.Only
 import cool.graph.subscriptions.protocol.SubscriptionProtocolV05.Requests.SubscriptionSessionRequestV05
 import cool.graph.subscriptions.protocol.SubscriptionProtocolV07.Requests.SubscriptionSessionRequest
@@ -24,10 +25,9 @@ object SubscriptionsMain extends App {
   implicit val subscriptionDependencies = SubscriptionDependenciesImpl()
   import subscriptionDependencies.bugSnagger
 
-  val websocketDependencies = WebsocketDevDependencies(subscriptionDependencies.requestsQueuePublisher, subscriptionDependencies.responsePubSubscriber)
-
-  val subscriptionsServer = SimpleSubscriptionsServer()
-  val websocketServer     = WebsocketServer(websocketDependencies)
+  val websocketDependencies = WebsocketDevDependencies(subscriptionDependencies.requestsQueuePublisher, subscriptionDependencies.responsePubSubSubscriber)
+  val subscriptionsServer   = SimpleSubscriptionsServer()
+  val websocketServer       = WebsocketServer(websocketDependencies)
 
   ServerExecutor(port = 8086, websocketServer, subscriptionsServer).startBlocking()
 }
@@ -35,17 +35,17 @@ object SubscriptionsMain extends App {
 case class SimpleSubscriptionsServer(prefix: String = "")(
     implicit dependencies: SubscriptionDependencies,
     system: ActorSystem,
-    materializer: ActorMaterializer
+    materializer: ActorMaterializer,
+    bugsnagger: BugSnagger
 ) extends Server
     with PlayJsonSupport {
   import system.dispatcher
 
-  implicit val bugSnag             = dependencies.bugSnagger
   implicit val response05Publisher = dependencies.responsePubSubPublisherV05
   implicit val response07Publisher = dependencies.responsePubSubPublisherV07
 
   val innerRoutes          = Routes.emptyRoute
-  val subscriptionsManager = system.actorOf(Props(new SubscriptionsManager(bugSnag)), "subscriptions-manager")
+  val subscriptionsManager = system.actorOf(Props(new SubscriptionsManager(bugsnagger)), "subscriptions-manager")
   val requestsConsumer     = dependencies.requestsQueueConsumer
 
   val consumerRef = requestsConsumer.withConsumer { req: SubscriptionRequest =>
@@ -59,7 +59,7 @@ case class SimpleSubscriptionsServer(prefix: String = "")(
   }
 
   val subscriptionSessionManager = system.actorOf(
-    Props(new SubscriptionSessionManager(subscriptionsManager, bugSnag)),
+    Props(new SubscriptionSessionManager(subscriptionsManager, bugsnagger)),
     "subscriptions-sessions-manager"
   )
 
