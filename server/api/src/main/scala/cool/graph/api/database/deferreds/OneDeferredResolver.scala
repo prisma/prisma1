@@ -15,8 +15,7 @@ class OneDeferredResolver(dataResolver: DataResolver) {
     val headDeferred = deferreds.head
 
     // fetch dataitems
-    val futureDataItems =
-      dataResolver.batchResolveByUnique(headDeferred.model, headDeferred.key, deferreds.map(_.value).toList)
+    val futureDataItems = dataResolver.batchResolveByUnique(headDeferred.model, headDeferred.key, deferreds.map(_.value).toList)
 
     // assign the dataitem that was requested by each deferred
     val results = orderedDeferreds.map {
@@ -33,8 +32,7 @@ class OneDeferredResolver(dataResolver: DataResolver) {
 
     deferred.key match {
       case "id" => dataItems.find(_.id == deferred.value)
-      case _ =>
-        dataItems.find(_.getOption(deferred.key) == Some(deferred.value))
+      case _ => dataItems.find(_.getOption(deferred.key).contains(deferred.value))   // Todo this breaks on datetime due to differing formats
     }
   }
 }

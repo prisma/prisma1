@@ -129,7 +129,7 @@ class TransactionalNestedExecutionSpec extends FlatSpec with Matchers with ApiBa
     verifyTransactionalExecutionAndErrorMessage(outerWhere, innerWhere, falseWhere, falseWhereInError, project)
   }
 
-  "a one to one relation" should "fail gracefully on wrong DateTime where and assign error correctly and not execute partially" ignore {
+  "a one to one relation" should "fail gracefully on wrong DateTime where and assign error correctly and not execute partially" in {
     //date time is tricky since the shape is transformed
     //I would expect the where to find stuff if I use the same shape that I entered
     //OutwardFacing we use ISO8601
