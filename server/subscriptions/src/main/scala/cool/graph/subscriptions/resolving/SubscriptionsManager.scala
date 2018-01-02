@@ -61,7 +61,6 @@ case class SubscriptionsManager(
   import SubscriptionsManager.Requests._
 
   val invalidationSubscriber  = dependencies.invalidationSubscriber
-  implicit val timeout        = Timeout(10, TimeUnit.SECONDS)
   private val projectManagers = mutable.HashMap.empty[String, ActorRef]
 
   override def receive: Receive = logUnhandled {

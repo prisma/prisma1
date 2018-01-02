@@ -1,4 +1,4 @@
-package cool.graph.subscriptions.adapters
+package cool.graph.api.mutations
 
 import cool.graph.api.database.Types.UserData
 import cool.graph.api.schema.APIErrors.ValueNotAValidJson
@@ -73,7 +73,7 @@ object GraphcoolDataTypes {
     def isOfType(key: String, expectedtTypeIdentifier: TypeIdentifier.type => TypeIdentifier) =
       getTypeIdentifier(key).contains(expectedtTypeIdentifier(TypeIdentifier))
 
-    def toDateTime(string: String) = new DateTime(string, DateTimeZone.UTC)
+    def toDateTime(string: String) = DateTime.parse(string, DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSS")).withZone(DateTimeZone.UTC)
 
     val mappedData = data.fields
       .flatMap({
@@ -130,7 +130,7 @@ object GraphcoolDataTypes {
       case false          => JsFalse
       case v: JsValue     => v
       case null           => JsNull
-      case r              => JsString(r.toString)
+      case r              => JsString(r.toString + "00")
     }
 
     write(unwrapSomes(data)).asJsObject

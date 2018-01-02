@@ -47,12 +47,11 @@ object SubscriptionEvents {
     PublishSubscriptionEvent(
       project = project,
       value = Map(
-        "nodeId"         -> mutaction.id,
-        "changedFields"  -> mutaction.namesOfUpdatedFields.toList, // must be a List as Vector is printed verbatim
-        "previousValues" -> None, // todo: replace this with proper GC Values
-//          GraphcoolDataTypes
-//          .convertToJson(mutaction.previousValues.userData)
-//          .compactPrint,
+        "nodeId"        -> mutaction.id,
+        "changedFields" -> mutaction.namesOfUpdatedFields.toList, // must be a List as Vector is printed verbatim
+        "previousValues" -> GraphcoolDataTypes
+          .convertToJson(mutaction.previousValues.userData)
+          .compactPrint,
         "modelId"      -> mutaction.model.id,
         "mutationType" -> "UpdateNode"
       ),
