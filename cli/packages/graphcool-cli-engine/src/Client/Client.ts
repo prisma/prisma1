@@ -157,7 +157,7 @@ export class Client {
           ) {
             this.out.error(
               `Could not connect to local cluster. Please use ${chalk.bold.green(
-                'graphcool local up',
+                'graphcool local start',
               )} to start your local Graphcool cluster.`,
             )
           } else {
