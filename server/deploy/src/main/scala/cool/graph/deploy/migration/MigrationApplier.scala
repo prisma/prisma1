@@ -86,19 +86,35 @@ case class MigrationApplierImpl(clientDatabase: DatabaseDef)(implicit ec: Execut
       if (ReservedFields.isReservedFieldName(field.name) || !field.isScalar) {
         None
       } else {
-        Some(CreateColumn(nextProject.id, model, field))
+        if (field.isList) {
+          Some(CreateScalarListTable(nextProject.id, model.name, field.name, field.typeIdentifier))
+        } else {
+          Some(CreateColumn(nextProject.id, model, field))
+        }
+
       }
 
     case x: DeleteField =>
       val model = previousProject.getModelByName_!(x.model)
       val field = model.getFieldByName_!(x.name)
-      Some(DeleteColumn(nextProject.id, model, field))
+      if (field.isList) {
+        Some(DeleteScalarListTable(nextProject.id, model.name, field.name, field.typeIdentifier))
+      } else {
+        Some(DeleteColumn(nextProject.id, model, field))
+      }
 
     case x: UpdateField =>
       val model         = nextProject.getModelByName_!(x.model)
       val nextField     = nextProject.getFieldByName_!(x.model, x.finalName)
       val previousField = previousProject.getFieldByName_!(x.model, x.name)
-      Some(UpdateColumn(nextProject.id, model, previousField, nextField))
+
+      if (previousField.isList) {
+        // todo: also handle changing to/from scalar list
+        // todo: also handle changing model name
+        Some(UpdateScalarListTable(nextProject.id, model, model, previousField, nextField))
+      } else {
+        Some(UpdateColumn(nextProject.id, model, previousField, nextField))
+      }
 
     case x: EnumMigrationStep =>
       None
