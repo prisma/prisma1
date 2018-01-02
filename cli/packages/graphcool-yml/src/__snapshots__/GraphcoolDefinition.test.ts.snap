@@ -59,7 +59,7 @@ Array [
 
 exports[`graphcool definition dont load yml with secret and env var in args 1`] = `[Error: Please either provide a secret in your graphcool.yml or disableAuth: true]`;
 
-exports[`graphcool definition load basic yml 1`] = `
+exports[`graphcool definition load basic yml, provide cluster 1`] = `
 Object {
   "cluster": "local",
   "datamodel": Array [
@@ -72,7 +72,7 @@ Object {
 }
 `;
 
-exports[`graphcool definition load basic yml 2`] = `[Error: Please either provide a secret in your graphcool.yml or disableAuth: true]`;
+exports[`graphcool definition load basic yml, provide cluster 2`] = `undefined`;
 
 exports[`graphcool definition load yml with disableAuth: true 1`] = `
 Object {
@@ -123,8 +123,10 @@ Array [
 ]
 `;
 
+exports[`graphcool definition throw when no secret or disable auth provided 1`] = `[Error: Please either provide a secret in your graphcool.yml or disableAuth: true]`;
+
 exports[`graphcool definition throws when stages key apparent 1`] = `
-[Error: [31m[1mError: [22m Invalid graphcool.yml file[39m
+[Error: Invalid graphcool.yml file
 graphcool.yml should NOT have a "stages" property anymore. Stages are now just provided as CLI args.
 Read more here: https://goo.gl/SUD5i5]
 `;

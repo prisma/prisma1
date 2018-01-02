@@ -48,7 +48,7 @@ async function loadDefinition(
 }
 
 describe('graphcool definition', () => {
-  test('load basic yml', async () => {
+  test('load basic yml, provide cluster', async () => {
     const yml = `\
 service: jj
 stage: dev
@@ -73,6 +73,7 @@ type User @model {
     const { definition } = await loadDefinition(yml, datamodel)
 
     expect(definition.definition).toMatchSnapshot()
+    expect(definition.getCluster()).toMatchSnapshot()
   })
   test('load yml with secret and env var', async () => {
     const secret = 'this-is-a-long-secret'
@@ -219,7 +220,7 @@ type User @model {
     expect(definition.definition).toMatchSnapshot()
     expect(definition.secrets).toMatchSnapshot()
   })
-  test('load basic yml', async () => {
+  test('throw when no secret or disable auth provided', async () => {
     const yml = `\
 service: jj
 stage: dev

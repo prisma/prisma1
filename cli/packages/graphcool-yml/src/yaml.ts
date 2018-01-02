@@ -37,9 +37,7 @@ export async function readDefinition(
   if (!valid) {
     debugger
     let errorMessage =
-      `${chalk.red(`${chalk.bold('Error: ')} Invalid graphcool.yml file`)}` +
-      '\n' +
-      printErrors(validate.errors!)
+      `Invalid graphcool.yml file` + '\n' + printErrors(validate.errors!)
     throw new Error(errorMessage)
   }
 
