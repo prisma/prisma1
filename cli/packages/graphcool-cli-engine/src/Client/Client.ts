@@ -202,6 +202,26 @@ export class Client {
     return client.request(introspectionQuery)
   }
 
+  async exec(
+    serviceName: string,
+    stageName: string,
+    query: string,
+    token?: string,
+  ): Promise<any> {
+    debug('executing query', serviceName, stageName, query, token)
+    const headers: any = {}
+    if (token) {
+      headers.Authorization = `Bearer ${token}`
+    }
+    const client = new GraphQLClient(
+      this.env.activeCluster.getApiEndpoint(serviceName, stageName),
+      {
+        headers,
+      },
+    )
+    return client.request(query)
+  }
+
   async download(
     serviceName: string,
     stage: string,

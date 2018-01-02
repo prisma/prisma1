@@ -4,6 +4,7 @@ import { Importer } from '../import/Importer'
 import * as fs from 'fs-extra'
 import * as childProcess from 'child_process'
 import chalk from 'chalk'
+import { parse } from 'graphql'
 
 export class Seeder {
   definition: GraphcoolDefinitionClass
@@ -38,8 +39,8 @@ export class Seeder {
     if (seed.import) {
       const source = seed.import
 
-      if (!source.endsWith('.zip')) {
-        throw new Error(`Source must end with .zip`)
+      if (!source.endsWith('.zip') && !source.endsWith('.graphql')) {
+        throw new Error(`Source must end with .zip or .graphql`)
       }
 
       if (!fs.pathExistsSync(source)) {
@@ -52,12 +53,36 @@ export class Seeder {
         await this.reset(serviceName, stageName)
       }
 
-      await this.import(seed.import, serviceName, stageName, token)
+      if (source.endsWith('.zip')) {
+        await this.import(seed.import, serviceName, stageName, token)
+      } else if (source.endsWith('.graphql')) {
+        await this.executeQuery(seed.import, serviceName, stageName, token)
+      }
     }
 
     if (seed.run) {
       await this.run(seed.run)
     }
+  }
+
+  async executeQuery(
+    filePath: string,
+    serviceName: string,
+    stageName: string,
+    token?: string,
+  ) {
+    if (!fs.pathExistsSync(filePath)) {
+      throw new Error(`Can't find seed import file ${filePath}`)
+    }
+
+    const query = fs.readFileSync(filePath, 'utf-8')
+    try {
+      parse(query)
+    } catch (e) {
+      throw new Error(`Error while parsing ${filePath}:\n${e.message}`)
+    }
+
+    await this.client.exec(serviceName, stageName, query, token)
   }
 
   async reset(serviceName, stageName) {

@@ -113,22 +113,13 @@ ${chalk.gray(
       )
     }
 
+    let projectNew = false
     if (!await this.projectExists(serviceName, stage)) {
       await this.addProject(serviceName, stage)
+      projectNew = true
     }
 
-    await this.deploy(stage, serviceName, cluster!, force, dryRun)
-
-    if (this.definition.definition!.seed && !this.flags['no-seed']) {
-      const seeder = new Seeder(
-        this.definition,
-        this.client,
-        this.out,
-        this.config,
-      )
-      this.out.log(`Seeding Data...`)
-      await seeder.seed(serviceName, stage)
-    }
+    await this.deploy(stage, serviceName, cluster!, force, dryRun, projectNew)
 
     if (watch) {
       this.out.log('Watching for change...')
@@ -144,6 +135,7 @@ ${chalk.gray(
                 cluster!,
                 force,
                 dryRun,
+                false,
               )
               this.out.log('Watching for change...')
             }
@@ -190,6 +182,7 @@ ${chalk.gray(
     cluster: Cluster,
     force: boolean,
     dryRun: boolean,
+    projectNew: boolean,
   ): Promise<void> {
     this.deploying = true
     const localNote = cluster.local ? ' locally' : ''
@@ -227,6 +220,13 @@ ${chalk.gray(
     }
     // TODO move up to if statement after testing done
     this.out.log(chalk.bold(`\nHooks:\n`))
+    if (
+      this.definition.definition!.seed &&
+      !this.flags['no-seed'] &&
+      projectNew
+    ) {
+      await this.seed(projectNew, serviceName, stageName)
+    }
     await this.generateSchema(serviceName, stageName)
     await this.graphqlPrepare()
 
@@ -235,6 +235,28 @@ ${chalk.gray(
     if (migrationResult.migration.steps.length > 0) {
       this.printEndpoints(cluster, serviceName, stageName)
     }
+  }
+
+  private async seed(
+    projectNew: boolean,
+    serviceName: string,
+    stageName: string,
+  ) {
+    const seeder = new Seeder(
+      this.definition,
+      this.client,
+      this.out,
+      this.config,
+    )
+    const before = Date.now()
+    const from =
+      this.definition.definition!.seed &&
+      this.definition.definition!.seed!.import
+        ? ` from \`${this.definition.definition!.seed!.import}\``
+        : ''
+    this.out.action.start(`Importing seed dataset${from}`)
+    await seeder.seed(serviceName, stageName)
+    this.out.action.stop(this.prettyTime(Date.now() - before))
   }
 
   private async generateSchema(serviceName: string, stageName: string) {
