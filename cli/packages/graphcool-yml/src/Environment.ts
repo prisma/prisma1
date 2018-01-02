@@ -2,7 +2,6 @@ import { Args } from './types/common'
 import { Cluster } from './Cluster'
 import * as fs from 'fs-extra'
 import * as yaml from 'js-yaml'
-import { InternalRC } from './types/rc'
 import { ClusterNotFound } from './errors/ClusterNotFound'
 import { Variables } from './Variables'
 import { IOutput, Output } from './Output'
@@ -10,21 +9,27 @@ import * as path from 'path'
 import * as os from 'os'
 import chalk from 'chalk'
 import 'isomorphic-fetch'
+import { RC } from './index'
+import { DatabaseRC } from './types/rc'
+import { EnvironmentMigrator } from './EnvironmentMigrator'
 
 export class Environment {
   sharedClusters: string[] = ['shared-public-demo']
   sharedEndpoint = 'https://database-beta.graph.cool'
   args: Args
   activeCluster: Cluster
-  globalRC: InternalRC = {}
+  globalRC: RC = {}
+  databaseRC: DatabaseRC = {}
   clusters: Cluster[]
-  platformToken?: string
-  globalConfigPath: string
   out: IOutput
-  constructor(globalConfigPath: string, out: IOutput = new Output()) {
-    this.globalConfigPath = globalConfigPath
+  home: string
+  rcPath: string
+  constructor(home: string, out: IOutput = new Output()) {
     this.out = out
-    this.migrateOldCli(path.join(os.homedir(), '.graphcool'), globalConfigPath)
+    this.home = home
+    this.rcPath = path.join(this.home, '.graphcoolrc')
+    const migrator = new EnvironmentMigrator(home, out)
+    migrator.migrate()
   }
 
   async load(args: Args) {
@@ -53,22 +58,6 @@ export class Environment {
     }
   }
 
-  migrateOldCli(oldGraphcoolRcPath: string, globalConfigPath: string) {
-    if (fs.pathExistsSync(oldGraphcoolRcPath)) {
-      var isFile = fs.lstatSync(oldGraphcoolRcPath).isFile()
-      if (isFile) {
-        var rc = fs.readFileSync(oldGraphcoolRcPath, 'utf-8')
-        fs.removeSync(oldGraphcoolRcPath)
-        fs.mkdirpSync(oldGraphcoolRcPath)
-        fs.writeFileSync(globalConfigPath, rc)
-        this.out.log(
-          'Old .graphcool file detected. We just moved it to ' +
-            globalConfigPath,
-        )
-      }
-    }
-  }
-
   clusterByName(name: string, throws: boolean = false): Cluster | undefined {
     const cluster = this.clusters.find(c => c.name === name)
     if (!throws) {
@@ -83,7 +72,7 @@ export class Environment {
   }
 
   setToken(token: string | undefined) {
-    this.globalRC.platformToken = token
+    this.databaseRC.cloudSessionKey = token
   }
 
   addCluster(cluster: Cluster) {
@@ -92,7 +81,7 @@ export class Environment {
 
   saveGlobalRC() {
     const rc = {
-      platformToken: this.globalRC.platformToken,
+      platformToken: this.globalRC['graphcool-1.0'],
       clusters: this.getLocalClusterConfig(),
     }
     // parse & stringify to rm undefined for yaml parser
@@ -115,10 +104,9 @@ export class Environment {
   async parseGlobalRC(globalFile?: string): Promise<void> {
     if (globalFile) {
       this.globalRC = await this.loadYaml(globalFile, this.globalConfigPath)
+      this.databaseRC = this.globalRC['graphcool-1.0'] || {}
     }
-    this.clusters = this.initClusters(this.globalRC)
-    this.platformToken =
-      this.globalRC.platformToken || process.env.GRAPHCOOL_PLATFORM_TOKEN
+    this.clusters = this.initClusters(this.databaseRC)
   }
 
   private async loadYaml(
@@ -145,30 +133,30 @@ export class Environment {
     }
   }
 
-  private getClustersFromRC(rc: InternalRC): Cluster[] {
+  private initClusters(rc: DatabaseRC): Cluster[] {
+    const rcClusters = this.getClustersFromRC(rc)
+    const sharedClusters = this.getSharedClusters(rc)
+    return [...rcClusters, ...sharedClusters]
+  }
+
+  private getSharedClusters(rc: DatabaseRC): Cluster[] {
+    return this.sharedClusters.map(clusterName => {
+      return new Cluster(
+        clusterName,
+        this.sharedEndpoint,
+        rc && rc.cloudSessionKey,
+        false,
+      )
+    })
+  }
+
+  private getClustersFromRC(rc: DatabaseRC): Cluster[] {
     if (!rc.clusters) {
       return []
     }
     return Object.keys(rc.clusters).map(name => {
       const cluster = rc.clusters![name]
       return new Cluster(name, cluster.host, cluster.clusterSecret, true)
-    })
-  }
-
-  private initClusters(rc: InternalRC): Cluster[] {
-    const rcClusters = this.getClustersFromRC(rc)
-    const sharedClusters = this.getSharedClusters(rc)
-    return [...rcClusters, ...sharedClusters]
-  }
-
-  private getSharedClusters(rc: InternalRC): Cluster[] {
-    return this.sharedClusters.map(clusterName => {
-      return new Cluster(
-        clusterName,
-        this.sharedEndpoint,
-        rc && rc.platformToken,
-        false,
-      )
     })
   }
 

@@ -6,10 +6,4 @@ export { ClusterNotFound } from './errors/ClusterNotFound'
 export { StageNotFound } from './errors/StageNotFound'
 export { Output, IOutput } from './Output'
 export { Variables } from './Variables'
-export {
-  RC,
-  Clusters,
-  ClusterConfig,
-  InternalRC,
-  InternalTargets,
-} from './types/rc'
+export { RC, Clusters, ClusterConfig } from './types/rc'

@@ -10,6 +10,22 @@ export class Output {
   }
 }
 
+export class TestOutput {
+  output: string[]
+  constructor() {
+    this.output = []
+  }
+  log(...args) {
+    this.output = this.output.concat(args)
+  }
+  warn(...args) {
+    this.output = this.output.concat(args)
+  }
+  getErrorPrefix(fileName: string, type: 'error' | 'warning' = 'error') {
+    return `[${type.toUpperCase()}] in ${fileName}: `
+  }
+}
+
 export interface IOutput {
   warn: (...args) => void
   log: (...args) => void

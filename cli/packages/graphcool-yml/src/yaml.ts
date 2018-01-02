@@ -8,6 +8,7 @@ import { Args } from './types/common'
 import { Output, IOutput } from './Output'
 const debug = require('debug')('yaml')
 import * as stringify from 'json-stable-stringify'
+import chalk from 'chalk'
 
 const ajv = new Ajv()
 
@@ -36,7 +37,9 @@ export async function readDefinition(
   if (!valid) {
     debugger
     let errorMessage =
-      out.getErrorPrefix(filePath) + '\n' + printErrors(validate.errors!)
+      `${chalk.red(`${chalk.bold('Error: ')} Invalid graphcool.yml file`)}` +
+      '\n' +
+      printErrors(validate.errors!)
     throw new Error(errorMessage)
   }
 
@@ -63,6 +66,6 @@ function printErrors(errors, name = 'graphcool.yml') {
 const betterMessagesByParams = {
   // this is not up-to-date, stages are in again!
   // https://github.com/graphcool/framework/issues/1461
-  // '{"additionalProperty":"stages"}':
-  //   'graphcool.yml should NOT have a "stages" property anymore. Stages are now just provided as CLI args.\nRead more here: https://goo.gl/SUD5i5',
+  '{"additionalProperty":"stages"}':
+    'graphcool.yml should NOT have a "stages" property anymore. Stages are now just provided as CLI args.\nRead more here: https://goo.gl/SUD5i5',
 }

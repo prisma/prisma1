@@ -22,7 +22,7 @@
     "debug": "^3.1.0",
     "dotenv": "^4.0.0",
     "fs-extra": "^4.0.3",
-    "graphcool-json-schema": "^1.0.1-beta.8",
+    "graphcool-json-schema": "1.2.0",
     "isomorphic-fetch": "^2.2.1",
     "js-yaml": "^3.10.0",
     "json-stable-stringify": "^1.0.1",

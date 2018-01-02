@@ -15,7 +15,7 @@ exports[`Environment interpolates env vars 1`] = `
 Array [
   Cluster {
     "baseUrl": "https://database-beta.graph.cool",
-    "clusterToken": "this-is-so-special",
+    "clusterToken": undefined,
     "local": false,
     "name": "shared-public-demo",
   },
@@ -25,18 +25,6 @@ Array [
 exports[`Environment loads multiple cluster definitions correctly + gives cluster by name 1`] = `
 Array [
   Cluster {
-    "baseUrl": "http://localhost:60000",
-    "clusterToken": undefined,
-    "local": true,
-    "name": "local",
-  },
-  Cluster {
-    "baseUrl": "https://remote.graph.cool",
-    "clusterToken": "here-is-a-token",
-    "local": true,
-    "name": "remote",
-  },
-  Cluster {
     "baseUrl": "https://database-beta.graph.cool",
     "clusterToken": undefined,
     "local": false,
@@ -45,14 +33,7 @@ Array [
 ]
 `;
 
-exports[`Environment loads multiple cluster definitions correctly + gives cluster by name 2`] = `
-Cluster {
-  "baseUrl": "https://remote.graph.cool",
-  "clusterToken": "here-is-a-token",
-  "local": true,
-  "name": "remote",
-}
-`;
+exports[`Environment loads multiple cluster definitions correctly + gives cluster by name 2`] = `undefined`;
 
 exports[`Environment non-existent global graphcool rc 1`] = `
 Array [
@@ -69,21 +50,25 @@ exports[`Environment sets the platform token correctly 1`] = `
 Array [
   Cluster {
     "baseUrl": "https://database-beta.graph.cool",
-    "clusterToken": "asdf",
+    "clusterToken": undefined,
     "local": false,
     "name": "shared-public-demo",
   },
 ]
 `;
 
+exports[`graphcool definition dont load yml with secret and env var in args 1`] = `[Error: Please either provide a secret in your graphcool.yml or disableAuth: true]`;
+
 exports[`graphcool definition load basic yml 1`] = `
 Object {
+  "cluster": "local",
   "datamodel": Array [
     "datamodel.graphql",
   ],
   "schema": "schemas/database.graphql",
   "secret": "some-secret",
   "service": "jj",
+  "stage": "dev",
 }
 `;
 
@@ -91,12 +76,14 @@ exports[`graphcool definition load basic yml 2`] = `[Error: Please either provid
 
 exports[`graphcool definition load yml with disableAuth: true 1`] = `
 Object {
+  "cluster": "local",
   "datamodel": Array [
     "datamodel.graphql",
   ],
   "disableAuth": true,
   "schema": "schemas/database.graphql",
   "service": "jj",
+  "stage": "dev",
 }
 `;
 
@@ -104,23 +91,27 @@ exports[`graphcool definition load yml with disableAuth: true 2`] = `null`;
 
 exports[`graphcool definition load yml with secret and env var 1`] = `
 Object {
+  "cluster": "local",
   "datamodel": Array [
     "datamodel.graphql",
   ],
   "schema": "schemas/database.graphql",
   "secret": "this-is-a-long-secret",
   "service": "jj",
+  "stage": "dev",
 }
 `;
 
 exports[`graphcool definition load yml with secret and env var in .env 1`] = `
 Object {
+  "cluster": "local",
   "datamodel": Array [
     "datamodel.graphql",
   ],
   "schema": "schemas/database.graphql",
   "secret": "this-is-very-secret,and-comma,seperated",
   "service": "jj",
+  "stage": "dev",
 }
 `;
 
@@ -132,23 +123,8 @@ Array [
 ]
 `;
 
-exports[`graphcool definition load yml with secret and env var in args 1`] = `
-Object {
-  "datamodel": Array [
-    "datamodel.graphql",
-  ],
-  "schema": "schemas/database.graphql",
-  "service": "jj",
-}
-`;
-
-exports[`graphcool definition load yml with secret and env var in args 2`] = `
-Array [
-  "this-is-secret",
-]
-`;
-
 exports[`graphcool definition throws when stages key apparent 1`] = `
-[Error: [ERROR] in /var/folders/lc/rzmq7fnn4_jbrcsbz_f1kyfr0000gr/T/cjbdog5vt000hpd101oym9ucr/graphcool.yml: 
-graphcool.yml should NOT have a "stages" property anymore. Stages are now just provided as CLI args. Read more here: https://goo.gl/SUD5i5]
+[Error: [31m[1mError: [22m Invalid graphcool.yml file[39m
+graphcool.yml should NOT have a "stages" property anymore. Stages are now just provided as CLI args.
+Read more here: https://goo.gl/SUD5i5]
 `;

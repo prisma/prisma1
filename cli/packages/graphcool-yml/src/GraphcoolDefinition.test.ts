@@ -6,12 +6,13 @@ import { Environment } from './Environment'
 import { makeEnv } from './Environment.test'
 import { Args } from './types/common'
 
-const defaultGlobalRC = `clusters:
-local:
-  host: 'http://localhost:60000'
-remote:
-  host: 'https://remote.graph.cool'
-  clusterSecret: 'here-is-a-token'
+const defaultGlobalRC = `graphcool-1.0:
+  clusters:
+    local:
+      host: 'http://localhost:60000'
+    remote:
+      host: 'https://remote.graph.cool'
+      clusterSecret: 'here-is-a-token'
 `
 
 function makeDefinition(
@@ -50,6 +51,8 @@ describe('graphcool definition', () => {
   test('load basic yml', async () => {
     const yml = `\
 service: jj
+stage: dev
+cluster: local
 
 datamodel:
 - datamodel.graphql
@@ -76,6 +79,8 @@ type User @model {
     process.env.MY_TEST_SECRET = secret
     const yml = `\
 service: jj
+stage: dev
+cluster: local
 
 datamodel:
 - datamodel.graphql
@@ -101,6 +106,8 @@ type User @model {
     const secret = 'this-is-a-long-secret'
     const yml = `\
 service: jj
+stage: dev
+cluster: local
 
 datamodel:
 - datamodel.graphql
@@ -131,9 +138,14 @@ type User @model {
     expect(definition.definition).toMatchSnapshot()
     expect(definition.secrets).toMatchSnapshot()
   })
-  test('load yml with secret and env var in args', async () => {
+  /**
+   * This test ensures, that GRAPHCOOL_SECRET can't be injected anymore
+   */
+  test('dont load yml with secret and env var in args', async () => {
     const yml = `\
 service: jj
+stage: dev
+cluster: local
 
 datamodel:
 - datamodel.graphql
@@ -161,16 +173,22 @@ type User @model {
     fs.writeFileSync(modelPath, datamodel)
     fs.writeFileSync(definitionPath, yml)
 
-    await env.load({})
-    await definition.load({})
+    let error
+    try {
+      await env.load({})
+      await definition.load({})
+    } catch (e) {
+      error = e
+    }
 
-    expect(definition.definition).toMatchSnapshot()
-    expect(definition.secrets).toMatchSnapshot()
+    expect(error).toMatchSnapshot()
   })
   test('load yml with disableAuth: true', async () => {
     const secret = 'this-is-a-long-secret'
     const yml = `\
 service: jj
+stage: dev
+cluster: local
 
 datamodel:
 - datamodel.graphql
@@ -204,6 +222,8 @@ type User @model {
   test('load basic yml', async () => {
     const yml = `\
 service: jj
+stage: dev
+cluster: local
 
 datamodel:
 - datamodel.graphql
@@ -231,6 +251,8 @@ type User @model {
   test('throws when stages key apparent', async () => {
     const yml = `\
 service: jj
+stage: dev
+cluster: local
 
 datamodel:
 - datamodel.graphql

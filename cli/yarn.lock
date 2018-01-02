@@ -1538,17 +1538,17 @@ graphcool-inquirer@^1.0.3:
     strip-ansi "^4.0.0"
     through "^2.3.6"
 
+graphcool-json-schema@1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/graphcool-json-schema/-/graphcool-json-schema-1.1.0.tgz#151e4c506273ba13fabcaf8f54ce8725b11d571c"
+
+graphcool-json-schema@1.2.0:
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/graphcool-json-schema/-/graphcool-json-schema-1.2.0.tgz#6c7a9de36a130c5048fa8d9817dff2b5a88bc226"
+
 graphcool-json-schema@^1.0.1-beta.5:
   version "1.0.1-beta.5"
   resolved "https://registry.yarnpkg.com/graphcool-json-schema/-/graphcool-json-schema-1.0.1-beta.5.tgz#5e5dace8b801727a311c5f35996b536a23501514"
-
-graphcool-json-schema@^1.0.1-beta.7:
-  version "1.0.1-beta.7"
-  resolved "https://registry.yarnpkg.com/graphcool-json-schema/-/graphcool-json-schema-1.0.1-beta.7.tgz#d127417dfa4a39cf4704d206e34483345162de69"
-
-graphcool-json-schema@^1.0.1-beta.8:
-  version "1.0.1-beta.8"
-  resolved "https://registry.yarnpkg.com/graphcool-json-schema/-/graphcool-json-schema-1.0.1-beta.8.tgz#b85ce5ee5b1998585d206f3c67570e73b120c78a"
 
 graphcool-yml@0.1.1:
   version "0.1.1"
