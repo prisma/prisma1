@@ -12,7 +12,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
       val schema =
         """
           |type Todo @model{
-          |  id: ID! @isUnique
+          |  id: ID! @unique
           |  title: String
           |}
         """.stripMargin
@@ -23,7 +23,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
       val schema =
         """
           |type Todo @model {
-          |  id: ID! @isUnique
+          |  id: ID! @unique
           |  title: String
           |  isDone
           |}
@@ -37,13 +37,13 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
       val schema =
         """
           |type Todo @model{
-          |  id: ID! @isUnique
+          |  id: ID! @unique
           |  title: String
           |  comments: [Comment!]!
           |}
           |
           |type Comment @model{
-          |  id: ID! @isUnique
+          |  id: ID! @unique
           |  bla: String
           |}
         """.stripMargin
@@ -58,12 +58,12 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
       val schema =
         """
           |type Todo @model {
-          |  id: ID! @isUnique
+          |  id: ID! @unique
           |  title: String @relation(name: "TodoToComments")
           |}
           |
           |type Comment @model{
-          |  id: ID! @isUnique
+          |  id: ID! @unique
           |  bla: String
           |}
         """.stripMargin
@@ -78,13 +78,13 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
       val schema =
         """
           |type Todo @model{
-          |  id: ID! @isUnique
+          |  id: ID! @unique
           |  title: String
           |  comments: [Comment!]! @relation(name: "TodoToComments")
           |}
           |
           |type Comment @model{
-          |  id: ID! @isUnique
+          |  id: ID! @unique
           |  bla: String
           |}
         """.stripMargin
@@ -99,13 +99,13 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
       val schema =
         """
           |type Todo @model{
-          |  id: ID! @isUnique
+          |  id: ID! @unique
           |  title: String
           |  comments: [Comment!]! @relation(name: "TodoToCommentsNew", oldName: "TodoToComments")
           |}
           |
           |type Comment @model{
-          |  id: ID! @isUnique
+          |  id: ID! @unique
           |  bla: String
           |  todo: Todo @relation(name: "TodoToComments") 
           |}
@@ -119,7 +119,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
       val schema =
         """
           |type Todo @model{
-          |  id: ID! @isUnique
+          |  id: ID! @unique
           |  title: String
           |  todo: Todo @relation(name: "OneFieldSelfRelation")
           |  todos: [Todo!]! @relation(name: "OneFieldManySelfRelation")
@@ -136,18 +136,18 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
       val schema =
         """
           |type Todo @model{
-          |  id: ID! @isUnique
+          |  id: ID! @unique
           |  title: String
           |  comments: [Comment!]! @relation(name: "TodoToComments")
           |}
           |
           |type Comment @model{
-          |  id: ID! @isUnique
+          |  id: ID! @unique
           |  bla: String
           |}
           |
           |type Author @model{
-          |  id: ID! @isUnique
+          |  id: ID! @unique
           |  name: String
           |  todo: Todo @relation(name: "TodoToComments")
           |}
@@ -164,18 +164,18 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
       val schema =
         """
           |type Todo @model{
-          |  id: ID! @isUnique
+          |  id: ID! @unique
           |  title: String
           |  comments: [Comment!]! @relation(name: "TodoToComments")
           |}
           |
           |type Comment @model{
-          |  id: ID! @isUnique
+          |  id: ID! @unique
           |  bla: String
           |}
           |
           |type Author @model{
-          |  id: ID! @isUnique
+          |  id: ID! @unique
           |  name: String
           |  whatever: Comment @relation(name: "TodoToComments")
           |}
@@ -197,13 +197,13 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
       val schema =
         """
           |type Todo @model{
-          |  id: ID! @isUnique
+          |  id: ID! @unique
           |  title: String
           |  comments: [Comment!] @relation(name: "TodoToComments")
           |}
           |
           |type Comment @model{
-          |  id: ID! @isUnique
+          |  id: ID! @unique
           |  text: String
           |  todo: Todo @relation(name: "TodoToComments")
           |}
@@ -216,13 +216,13 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
       val schema =
         """
           |type Todo @model{
-          |  id: ID! @isUnique
+          |  id: ID! @unique
           |  title: String
           |  comments: [Comment!]! @relation(name: "TodoToComments")
           |}
           |
           |type Comment @model{
-          |  id: ID! @isUnique
+          |  id: ID! @unique
           |  text: String
           |  todo: Todo! @relation(name: "TodoToComments")
           |}
@@ -235,7 +235,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
       val schema =
         """
           |type Todo @model{
-          |  id: ID! @isUnique
+          |  id: ID! @unique
           |  title: String
           |  comments: [Comment!]!
           |}
@@ -260,7 +260,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
       val schema =
         """
           |type Todo @model{
-          |  id: ID! @isUnique
+          |  id: ID! @unique
           |  title: String @zero @one(a: "") @two(a:1, b: "")
           |}
         """.stripMargin
@@ -277,7 +277,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
       val schema =
         """
           |type Todo @model{
-          |  id: ID! @isUnique
+          |  id: ID! @unique
           |  title: String @one(a:1) @two(a:1)
           |}
         """.stripMargin
@@ -300,7 +300,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
     val schema =
       """
         |type Todo @model{
-        |  id: ID! @isUnique
+        |  id: ID! @unique
         |  title: String @one @two(a:"")
         |  status: TodoStatus
         |}
@@ -323,7 +323,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
     val schema =
       s"""
          |type Todo @model{
-         |  id: ID! @isUnique
+         |  id: ID! @unique
          |  title: String @one @two(a:"")
          |  status: TodoStatus
          |}
@@ -344,7 +344,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
     val schema =
       """
         |type Todo @model{
-        |  id: ID! @isUnique
+        |  id: ID! @unique
         |  title: String @defaultValue(value: "foo") @defaultValue(value: "bar")
         |}
       """.stripMargin
@@ -356,7 +356,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
     error1.description should include(s"Directives must appear exactly once on a field.")
   }
 
-  "fail if an id field does not specify @isUnique directive" in {
+  "fail if an id field does not specify @unique directive" in {
     val schema =
       """
         |type Todo @model{
@@ -368,7 +368,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
     val error1 = result.head
     error1.`type` should equal("Todo")
     error1.field should equal(Some("id"))
-    error1.description should include(s"All id fields must specify the `@isUnique` directive.")
+    error1.description should include(s"All id fields must specify the `@unique` directive.")
   }
 
   "fail if a model does not specify an id field at all" in {
@@ -382,7 +382,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
     result should have(size(1))
     val error1 = result.head
     error1.`type` should equal("Todo")
-    error1.description should include(s"All models must specify the `id` field: `id: ID! @isUnique`")
+    error1.description should include(s"All models must specify the `id` field: `id: ID! @unique`")
   }
 
   def missingDirectiveArgument(directive: String, argument: String) = {
