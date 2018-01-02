@@ -7,7 +7,7 @@ description: An overview and explanation of all the commands of the Graphcool Fr
 
 <InfoBox type=info>
 
-When invoking the CLI, you can use either the full `graphcool-framework` command or the short form `gfc`. All examples on this page are using the longer, explicit version.
+When invoking the CLI, you can use either the full `graphcool-framework` command or the short form `gcf`. All examples on this page are using the longer, explicit version.
 
 </InfoBox>
 
