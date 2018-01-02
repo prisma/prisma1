@@ -103,6 +103,12 @@ case class DataResolver(project: Project, useMasterDatabaseOnly: Boolean = false
       .map(_.map(mapDataItem(model)))
   }
 
+  def batchResolveScalarList(model: Model, field: Field, nodeIds: Vector[String]): Future[Vector[ScalarListValue]] = {
+    val query = DatabaseQueryBuilder.selectFromScalarList(project.id, model.name, field.name, nodeIds)
+
+    performWithTiming("batchResolveScalarList", readonlyClientDatabase.run(readOnlyScalarListValue(query)))
+  }
+
   def batchResolveByUniqueWithoutValidation(model: Model, key: String, values: List[Any]): Future[List[DataItem]] = {
     val query = DatabaseQueryBuilder.batchSelectFromModelByUnique(project.id, model.name, key, values)
 
@@ -235,6 +241,12 @@ case class DataResolver(project: Project, useMasterDatabaseOnly: Boolean = false
   // see also http://danielwestheide.com/blog/2015/06/28/put-your-writes-where-your-master-is-compile-time-restriction-of-slick-effect-types.html
   private def readOnlyDataItem(query: SQLActionBuilder): SqlStreamingAction[Vector[DataItem], DataItem, Read] = {
     val action: SqlStreamingAction[Vector[DataItem], DataItem, Read] = query.as[DataItem]
+
+    action
+  }
+
+  private def readOnlyScalarListValue(query: SQLActionBuilder): SqlStreamingAction[Vector[ScalarListValue], Any, Read] = {
+    val action: SqlStreamingAction[Vector[ScalarListValue], Any, Read] = query.as[ScalarListValue]
 
     action
   }

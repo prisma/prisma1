@@ -34,6 +34,41 @@ object DatabaseMutationBuilder {
     DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"""
   }
 
+  def dropScalarListTable(projectId: String, modelName: String, fieldName: String) = sqlu"DROP TABLE `#$projectId`.`#${modelName}_#${fieldName}`"
+
+  def createScalarListTable(projectId: String, modelName: String, fieldName: String, typeIdentifier: TypeIdentifier) = {
+    val idCharset     = charsetTypeForScalarTypeIdentifier(isList = false, TypeIdentifier.GraphQLID)
+    val sqlType       = sqlTypeForScalarTypeIdentifier(false, typeIdentifier)
+    val charsetString = charsetTypeForScalarTypeIdentifier(false, typeIdentifier)
+    val indexSize = sqlType match {
+      case "text" | "mediumtext" => "(191)"
+      case _                     => ""
+    }
+
+    sqlu"""CREATE TABLE `#$projectId`.`#${modelName}_#${fieldName}`
+    (`nodeId` CHAR(25) #$idCharset NOT NULL,
+    `position` INT(4) NOT NULL,
+    `value` #$sqlType #$charsetString NOT NULL,
+    PRIMARY KEY (`nodeId`, `position`),
+    INDEX `value` (`value`#$indexSize ASC))
+    DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"""
+  }
+
+  def updateScalarListType(projectId: String, modelName: String, fieldName: String, typeIdentifier: TypeIdentifier) = {
+    val sqlType       = sqlTypeForScalarTypeIdentifier(false, typeIdentifier)
+    val charsetString = charsetTypeForScalarTypeIdentifier(false, typeIdentifier)
+    val indexSize = sqlType match {
+      case "text" | "mediumtext" => "(191)"
+      case _                     => ""
+    }
+
+    sqlu"ALTER TABLE `#$projectId`.`#${modelName}_#${fieldName}` DROP INDEX `value`, CHANGE COLUMN `value` `value` #$sqlType, ADD INDEX `value` (`value`#$indexSize ASC)"
+  }
+
+  def renameScalarListTable(projectId: String, modelName: String, fieldName: String, newModelName: String, newFieldName: String) = {
+    sqlu"RENAME TABLE `#$projectId`.`#${modelName}_#${fieldName}` TO `#$projectId`.`#${newModelName}_#${newFieldName}`"
+  }
+
   def renameTable(projectId: String, name: String, newName: String) = sqlu"""RENAME TABLE `#$projectId`.`#$name` TO `#$projectId`.`#$newName`;"""
 
   def charsetTypeForScalarTypeIdentifier(isList: Boolean, typeIdentifier: TypeIdentifier): String = {

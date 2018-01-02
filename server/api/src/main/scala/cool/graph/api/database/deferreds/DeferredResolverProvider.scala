@@ -17,6 +17,7 @@ class DeferredResolverProvider[CtxType](dataResolver: DataResolver) extends Defe
   val countToManyDeferredResolver                          = new CountToManyDeferredResolver(dataResolver)
   val toOneDeferredResolver                                = new ToOneDeferredResolver(dataResolver)
   val oneDeferredResolver                                  = new OneDeferredResolver(dataResolver)
+  val scalarListDeferredResolver                           = new ScalarListDeferredResolver(dataResolver)
 
   override def resolve(deferred: Vector[Deferred[Any]], ctx: CtxType, queryState: Any)(implicit ec: ExecutionContext): Vector[Future[Any]] = {
 
@@ -58,6 +59,11 @@ class DeferredResolverProvider[CtxType](dataResolver: DataResolver) extends Defe
         OrderedDeferred(deferred, order)
     }
 
+    val scalarListDeferreds = orderedDeferred.collect {
+      case OrderedDeferred(deferred: ScalarListDeferred, order) =>
+        OrderedDeferred(deferred, order)
+    }
+
     val checkScalarFieldPermissionsDeferreds = orderedDeferred.collect {
       case OrderedDeferred(deferred: CheckPermissionDeferred, order) =>
         OrderedDeferred(deferred, order)
@@ -83,6 +89,8 @@ class DeferredResolverProvider[CtxType](dataResolver: DataResolver) extends Defe
       DeferredUtils.groupRelatedDeferred[ToOneDeferred](toOneDeferreds)
 
     val oneDeferredsMap = DeferredUtils.groupOneDeferred(oneDeferreds)
+
+    val scalarListDeferredsMap = DeferredUtils.groupScalarListDeferreds(scalarListDeferreds)
 
     // for every group of deferreds, resolve them
     val manyModelFutureResults = manyModelDeferredsMap
@@ -141,12 +149,20 @@ class DeferredResolverProvider[CtxType](dataResolver: DataResolver) extends Defe
       .toVector
       .flatten
 
+    val scalarListFutureResult = scalarListDeferredsMap
+      .map {
+        case (field, value) => scalarListDeferredResolver.resolve(value)
+      }
+      .toVector
+      .flatten
+
     (manyModelFutureResults ++
       manyModelExistsFutureResults ++
       countManyModelFutureResults ++
       toManyFutureResults ++
       countToManyFutureResults ++
       toOneFutureResults ++
-      oneFutureResult).sortBy(_.order).map(_.future)
+      oneFutureResult ++
+      scalarListFutureResult).sortBy(_.order).map(_.future)
   }
 }
