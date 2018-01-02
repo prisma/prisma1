@@ -324,7 +324,7 @@ object ObjectTypeBuilder {
   def convertScalarFieldValueFromDatabase(field: models.Field, item: DataItem): Any = {
     field.name match {
       case "id" =>
-        item.id
+        item.id.trim
 
       case _ =>
         println(s"item: $item")

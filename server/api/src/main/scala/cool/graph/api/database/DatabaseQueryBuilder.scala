@@ -27,7 +27,7 @@ object DatabaseQueryBuilder {
         // note: getObject(string) is case insensitive, so we get the index in scala land instead
         yield n -> Option(rs.getObject(colNames.indexOf(n) + 1))).toMap
 
-      DataItem(id = rs.getString("id"), userData = userData)
+      DataItem(id = rs.getString("id").trim, userData = userData)
     }
   }
 
@@ -35,7 +35,7 @@ object DatabaseQueryBuilder {
     def apply(ps: PositionedResult): ScalarListValue = {
       val rs = ps.rs
 
-      ScalarListValue(nodeId = rs.getString("nodeId"), position = rs.getInt("position"), value = rs.getObject("value"))
+      ScalarListValue(nodeId = rs.getString("nodeId").trim, position = rs.getInt("position"), value = rs.getObject("value"))
     }
   }
 

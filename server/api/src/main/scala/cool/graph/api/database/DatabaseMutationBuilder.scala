@@ -14,6 +14,7 @@ import slick.dbio.DBIOAction
 import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.{PositionedParameters, SQLActionBuilder, SetParameter}
 import slick.sql.{SqlAction, SqlStreamingAction}
+import scala.concurrent.ExecutionContext.Implicits.global
 
 object DatabaseMutationBuilder {
 
@@ -60,7 +61,7 @@ object DatabaseMutationBuilder {
 
   def whereFailureTrigger(project: Project, where: NodeSelector) = {
     (sql"select case" ++
-    sql"when exists" ++
+      sql"when exists" ++
       sql"(select *" ++
       sql"from `#${project.id}`.`#${where.model.name}`" ++
       sql"where `#${where.field.name}` = ${where.fieldValue})" ++
@@ -70,7 +71,7 @@ object DatabaseMutationBuilder {
       sql"where table_schema = ${project.id} AND TABLE_NAME = ${where.model.name})end;").as[Int]
   }
 
-  def connectionFailureTrigger(project: Project, relationTableName: String, outerWhere: NodeSelector, innerWhere: NodeSelector) ={
+  def connectionFailureTrigger(project: Project, relationTableName: String, outerWhere: NodeSelector, innerWhere: NodeSelector) = {
     (sql"select case" ++
       sql"when exists" ++
       sql"(select *" ++
@@ -238,16 +239,6 @@ object DatabaseMutationBuilder {
         """).asUpdate
   }
 
-  def updateDataItemListValue(projectId: String, modelName: String, id: String, values: Map[String, Vector[Any]]) = {
-    val (fieldName, commaSeparatedValues) = values.map { case (k, v) => (k, escapeUnsafeParamListValue(v)) }.head
-
-    (sql"update `#$projectId`.`#$modelName`" concat
-      sql"set`#$fieldName` = CASE WHEN `#$fieldName` like '[]'" concat
-      sql"THEN Concat(LEFT(`#$fieldName`,LENGTH(`#$fieldName`)-1)," concat commaSeparatedValues concat sql",']')" concat
-      sql"ELSE Concat(LEFT(`#$fieldName`,LENGTH(`#$fieldName`)-1),','," concat commaSeparatedValues concat sql",']') END " concat
-      sql"where id = $id").asUpdate
-  }
-
   def updateRelationRow(projectId: String, relationTable: String, relationSide: String, nodeId: String, values: Map[String, Any]) = {
     val escapedValues = combineByComma(values.map { case (k, v) => escapeKey(k) concat sql" = " concat escapeUnsafeParam(v) })
 
@@ -296,9 +287,9 @@ object DatabaseMutationBuilder {
     sqlu"delete from `#$projectId`.`#$modelName`"
 
   //only use transactionally in this order
-  def disableForeignKeyConstraintChecks = sqlu"SET FOREIGN_KEY_CHECKS=0"
+  def disableForeignKeyConstraintChecks                   = sqlu"SET FOREIGN_KEY_CHECKS=0"
   def truncateTable(projectId: String, tableName: String) = sqlu"TRUNCATE TABLE `#$projectId`.`#$tableName`"
-  def enableForeignKeyConstraintChecks = sqlu"SET FOREIGN_KEY_CHECKS=1"
+  def enableForeignKeyConstraintChecks                    = sqlu"SET FOREIGN_KEY_CHECKS=1"
 
   def deleteDataItemByValues(projectId: String, modelName: String, values: Map[String, Any]) = {
     val whereClause =
@@ -331,6 +322,23 @@ object DatabaseMutationBuilder {
       sqlu"""delete from `#$projectId`.`#${modelName}_#${fieldName}` where nodeId = $nodeId""",
       (sql"insert into `#$projectId`.`#${modelName}_#${fieldName}` (`nodeId`, `position`, `value`) values " concat combineByComma(escapedValueTuples)).asUpdate
     )
+  }
+
+  def pushScalarList(projectId: String, modelName: String, fieldName: String, nodeId: String, values: Vector[Any]): DBIOAction[Int, NoStream, Effect] = {
+
+    val escapedValueTuples = for {
+      (escapedValue, position) <- values.map(escapeUnsafeParam(_)).zip((1 to values.length).map(_ * 1000))
+    } yield {
+      sql"($nodeId, @baseline + $position, " concat escapedValue concat sql")"
+    }
+
+    DBIO
+      .sequence(
+        List(
+          sqlu"""set @baseline := ifnull((select max(position) from `#$projectId`.`#${modelName}_#${fieldName}` where nodeId = $nodeId), 0) + 1000""",
+          (sql"insert into `#$projectId`.`#${modelName}_#${fieldName}` (`nodeId`, `position`, `value`) values " concat combineByComma(escapedValueTuples)).asUpdate
+        ))
+      .map(_.last)
   }
 
   def createClientDatabaseForProject(projectId: String) = {

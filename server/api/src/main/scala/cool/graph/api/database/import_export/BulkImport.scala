@@ -10,6 +10,8 @@ import slick.jdbc.MySQLProfile.api._
 import slick.lifted.TableQuery
 import spray.json._
 import MyJsonProtocol._
+import slick.jdbc
+import slick.jdbc.MySQLProfile
 
 import scala.concurrent.Future
 import scala.util.Try
@@ -76,9 +78,11 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) {
 
   private def generateImportNodesDBActions(nodes: Vector[ImportNode]): DBIOAction[Vector[Try[Int]], NoStream, Effect.Write] = {
     val items = nodes.map { element =>
-      val id                              = element.identifier.id
-      val model                           = project.getModelByName_!(element.identifier.typeName)
-      val listFields: Map[String, String] = model.scalarListFields.map(field => field.name -> "[]").toMap
+      val id    = element.identifier.id
+      val model = project.getModelByName_!(element.identifier.typeName)
+
+      // todo: treat separately
+//      val listFields: Map[String, String] = model.scalarListFields.map(field => field.name -> "[]").toMap
 
       val formatedDateTimes = element.values.map {
         case (k, v) if k == "createdAt" || k == "updatedAt"                                => (k, dateTimeFromISO8601(v))
@@ -87,7 +91,7 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) {
         case (k, v)                                                                        => (k, v)
       }
 
-      val values: Map[String, Any] = formatedDateTimes ++ listFields + ("id" -> id)
+      val values: Map[String, Any] = formatedDateTimes + ("id" -> id)
 
       DatabaseMutationBuilder.createDataItem(project.id, model.name, values).asTry
     }
@@ -118,9 +122,13 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) {
     DBIO.sequence(x)
   }
 
-  private def generateImportListsDBActions(lists: Vector[ImportList]): DBIOAction[Vector[Try[Int]], NoStream, Effect.Write] = {
-    val updateListValueActions = lists.map { element =>
-      DatabaseMutationBuilder.updateDataItemListValue(project.id, element.identifier.typeName, element.identifier.id, element.values).asTry
+  private def generateImportListsDBActions(lists: Vector[ImportList]): DBIOAction[Vector[Try[Int]], NoStream, jdbc.MySQLProfile.api.Effect] = {
+    val updateListValueActions = lists.flatMap { element =>
+      element.values.map {
+        case (fieldName, values) => {
+          DatabaseMutationBuilder.pushScalarList(project.id, element.identifier.typeName, fieldName, element.identifier.id, values).asTry
+        }
+      }
     }
     DBIO.sequence(updateListValueActions)
   }
