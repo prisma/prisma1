@@ -17,6 +17,8 @@ import { getGraphQLConfig } from 'graphql-config'
 import { fetchAndPrintSchema } from './printSchema'
 import Up from '../local/up'
 import { Seeder } from '../seed/Seeder'
+import * as childProcess from 'child_process'
+import { getBinPath } from './getbin'
 const debug = require('debug')('deploy')
 
 export default class Deploy extends Command {
@@ -224,7 +226,9 @@ ${chalk.gray(
       this.out.action.stop(this.prettyTime(Date.now() - before))
     }
     // TODO move up to if statement after testing done
+    this.out.log(chalk.bold(`\nHooks:\n`))
     await this.generateSchema(serviceName, stageName)
+    await this.graphqlPrepare()
 
     // no action required
     this.deploying = false
@@ -240,6 +244,8 @@ ${chalk.gray(
       const schemaDir = path.dirname(schemaPath)
       fs.mkdirpSync(schemaDir)
       const token = this.definition.getToken(serviceName, stageName)
+      const before = Date.now()
+      this.out.action.start(`Writing database schema to \`${schemaPath}\` `)
       const schemaString = await fetchAndPrintSchema(
         this.client,
         serviceName,
@@ -247,7 +253,45 @@ ${chalk.gray(
         token,
       )
       fs.writeFileSync(schemaPath, schemaString)
+      this.out.action.stop(this.prettyTime(Date.now() - before))
     }
+  }
+
+  private async graphqlPrepare() {
+    const graphqlBin = await getBinPath('graphql')
+    if (graphqlBin) {
+      try {
+        await this.runCmd(`graphql prepare`)
+      } catch (e) {
+        //
+      }
+    }
+  }
+
+  private runCmd(cmd: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      this.out.log(`Running ${chalk.cyan(`$ ${cmd}`)}...`)
+      const args = cmd.split(/\s/g)
+      const child = childProcess.spawn(args[0], args.slice(1), {
+        cwd: this.config.cwd,
+      })
+      child.stdout.on('data', data => {
+        this.out.log(data.toString())
+      })
+      child.stderr.on('data', data => {
+        // this.out.log(data.toString())
+      })
+      child.on('error', err => {
+        // this.out.error(err)
+      })
+      child.on('close', code => {
+        if (code !== 0) {
+          reject(code)
+        } else {
+          resolve()
+        }
+      })
+    })
   }
 
   private getSchemaPathFromConfig(): string | null {
