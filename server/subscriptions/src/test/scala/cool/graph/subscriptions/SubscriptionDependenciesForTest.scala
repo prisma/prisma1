@@ -5,14 +5,13 @@ import cool.graph.api.ApiDependencies
 import cool.graph.api.database.Databases
 import cool.graph.api.project.{ProjectFetcher, ProjectFetcherImpl}
 import cool.graph.api.schema.SchemaBuilder
-import cool.graph.bugsnag.{BugSnagger, BugSnaggerImpl, BugSnaggerMock}
+import cool.graph.bugsnag.{BugSnagger, BugSnaggerMock}
 import cool.graph.messagebus.testkits.{InMemoryPubSubTestKit, InMemoryQueueTestKit}
-import cool.graph.messagebus.{PubSubPublisher, PubSubSubscriber, QueueConsumer, QueuePublisher}
+import cool.graph.messagebus.{PubSubPublisher, PubSubSubscriber, QueueConsumer}
 import cool.graph.subscriptions.protocol.SubscriptionProtocolV05.Responses.SubscriptionSessionResponseV05
 import cool.graph.subscriptions.protocol.SubscriptionProtocolV07.Responses.SubscriptionSessionResponse
 import cool.graph.subscriptions.protocol.{Converters, SubscriptionRequest}
 import cool.graph.subscriptions.resolving.SubscriptionsManagerForProject.{SchemaInvalidated, SchemaInvalidatedMessage}
-import cool.graph.websocket.protocol.Request
 
 class SubscriptionDependenciesForTest()(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends SubscriptionDependencies {
   override implicit def self: ApiDependencies = this

@@ -85,10 +85,10 @@ trait SpecBase extends TestFrameworkInterface with BeforeAndAfterEach with Befor
 
     val projectWithClientId = ProjectWithClientId(project, "clientId")
     val stubs = List(
-      cool.graph.stub.Import.Request("GET", s"/system/${project.id}").stub(200, Json.toJson(projectWithClientId).toString)
+      cool.graph.stub.Import.Request("GET", s"/cluster/schema/${project.id}").stub(200, Json.toJson(projectWithClientId).toString)
     )
     withStubServer(stubs, port = 9000) {
-      WS(s"/v1/${project.id}", wsClient.flow, Seq(wsServer.subProtocol2)) ~> wsServer.routes ~> check {
+      WS(s"/${project.id}", wsClient.flow, Seq(wsServer.subProtocol2)) ~> wsServer.routes ~> check {
         checkFn(wsClient)
       }
     }
