@@ -86,7 +86,8 @@ case class WebsocketServer(services: WebsocketServices, prefix: String = "")(
             outgoing = out,
             manager = manager,
             requestsPublisher = services.requestsQueuePublisher,
-            bugsnag = bugsnag
+            bugsnag = bugsnag,
+            isV7protocol = v7protocol
           ))
       }(system, materializer)
       .mapMaterializedValue(_ => akka.NotUsed)
