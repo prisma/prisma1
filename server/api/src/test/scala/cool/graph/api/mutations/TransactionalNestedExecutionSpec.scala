@@ -145,13 +145,12 @@ class TransactionalNestedExecutionSpec extends FlatSpec with Matchers with ApiBa
     verifyTransactionalExecutionAndErrorMessage(outerWhere, innerWhere, falseWhere, falseWhereInError, project)
   }
 
-  "a one to one relation" should "fail gracefully on wrong JSON where and assign error correctly and not execute partially" ignore {
-    //we're mixing play and spray jsons all over the place which messes up pattern matches
+  "a one to one relation" should "fail gracefully on wrong JSON where and assign error correctly and not execute partially" in {
 
-    val outerWhere = """"{\"a\": \"a\"}""""
-    val innerWhere = """"{\"a\": \"b\"}""""
-    val falseWhere = """"{\"a\": \"c\"}""""
-    val falseWhereInError = """"{\"a\": \"c\"}""""
+    val outerWhere = """"{\"a\":\"a\"}""""
+    val innerWhere = """"{\"a\":\"b\"}""""
+    val falseWhere = """"{\"a\":\"c\"}""""
+    val falseWhereInError = """{\"a\":\"c\"}"""
 
     val project = SchemaDsl() { schema =>
       val note = schema.model("Note").field("outerString", _.String).field("outerUnique", _.Json,isUnique = true)

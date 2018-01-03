@@ -61,7 +61,10 @@ object GCValueExtractor {
 /**
   * 1. DBValue <-> GCValue - This is used write and read GCValues to typed Db fields in the ClientDB
   */
-case class GCDBValueConverter2(typeIdentifier: TypeIdentifier, isList: Boolean) extends GCConverter[Any] {
+case class GCDBValueConverter(typeIdentifier: TypeIdentifier, isList: Boolean) extends GCConverter[Any] {
+  import play.api.libs.json.{JsObject => PlayJsObject}
+  import spray.json.{JsObject => SprayJsObject}
+
 
   override def toGCValue(t: Any): Or[GCValue, InvalidValueForScalarType] = {
     try {
@@ -75,6 +78,8 @@ case class GCDBValueConverter2(typeIdentifier: TypeIdentifier, isList: Boolean) 
         case (x: String, TypeIdentifier.GraphQLID)              => GraphQLIdGCValue(x)
         case (x: String, TypeIdentifier.Enum)                   => EnumGCValue(x)
         case (x: String, TypeIdentifier.Json)                   => JsonGCValue(Json.parse(x))
+        case (x: PlayJsObject, TypeIdentifier.Json)             => JsonGCValue(x)
+        case (x: SprayJsObject, TypeIdentifier.Json)            => JsonGCValue(Json.parse(x.compactPrint))
         case (x: ListValue, _) if isList                        => sequence(x.values.map(this.toGCValue)).map(seq => ListGCValue(seq)).get
         case _                                                  => sys.error("Error in GCDBValueConverter. Value: " + t.toString)
       }
@@ -344,6 +349,9 @@ case class GCStringConverter(typeIdentifier: TypeIdentifier, isList: Boolean) ex
 case class GCAnyConverter(typeIdentifier: TypeIdentifier, isList: Boolean) extends GCConverter[Any] {
   import OtherGCStuff._
 
+  import play.api.libs.json.{JsObject => PlayJsObject}
+  import spray.json.{JsObject => SprayJsObject}
+
   override def toGCValue(t: Any): Or[GCValue, InvalidValueForScalarType] = {
     try {
       val result = (t, typeIdentifier) match {
@@ -361,6 +369,8 @@ case class GCAnyConverter(typeIdentifier: TypeIdentifier, isList: Boolean) exten
         case (x: DateTime, TypeIdentifier.DateTime)                                   => DateTimeGCValue(x)
         case (x: String, TypeIdentifier.GraphQLID)                                    => GraphQLIdGCValue(x)
         case (x: String, TypeIdentifier.Enum)                                         => EnumGCValue(x)
+        case (x: PlayJsObject, TypeIdentifier.Json)                                   => JsonGCValue(x)
+        case (x: SprayJsObject, TypeIdentifier.Json)                                  => JsonGCValue(Json.parse(x.compactPrint))
         case (x: String, TypeIdentifier.Json)                                         => JsonGCValue(Json.parse(x))
         case (x: List[Any], _) if isList                                              => sequence(x.map(this.toGCValue).toVector).map(seq => ListGCValue(seq)).get
         case _                                                                        => sys.error("Error in toGCValue. Value: " + t)

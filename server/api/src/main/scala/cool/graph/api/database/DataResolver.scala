@@ -5,11 +5,11 @@ import cool.graph.api.database.DatabaseQueryBuilder._
 import cool.graph.api.database.Types.DataItemFilterCollection
 import cool.graph.api.mutations.NodeSelector
 import cool.graph.api.schema.APIErrors
-import cool.graph.gc_values.{GCValue, GraphQLIdGCValue}
+import cool.graph.gc_values.{GCValue, GraphQLIdGCValue, JsonGCValue}
 import cool.graph.shared.models.IdType.Id
 import cool.graph.shared.models.TypeIdentifier.TypeIdentifier
 import cool.graph.shared.models._
-import cool.graph.util.gc_value.GCValueExtractor
+import cool.graph.util.gc_value.{GCJsonConverter, GCValueExtractor}
 import slick.dbio.Effect.Read
 import slick.dbio.{DBIOAction, Effect, NoStream}
 import slick.jdbc.MySQLProfile.api._
@@ -69,7 +69,10 @@ case class DataResolver(project: Project, useMasterDatabaseOnly: Boolean = false
   }
 
   def resolveByUnique(where: NodeSelector): Future[Option[DataItem]] = {
-    batchResolveByUnique(where.model, where.field.name, List(where.unwrappedFieldValue)).map(_.headOption)
+    where.fieldValue match {
+      case JsonGCValue(x) => batchResolveByUnique(where.model, where.field.name, List(where.fieldValueAsString)).map(_.headOption)
+      case _ => batchResolveByUnique(where.model, where.field.name, List(where.unwrappedFieldValue)).map(_.headOption)
+    }
   }
 
   def resolveByUniques(model: Model, uniques: Vector[NodeSelector]): Future[Vector[DataItem]] = {

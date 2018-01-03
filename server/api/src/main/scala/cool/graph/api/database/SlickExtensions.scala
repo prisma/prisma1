@@ -7,6 +7,8 @@ import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.{PositionedParameters, SQLActionBuilder, SetParameter}
 import spray.json.DefaultJsonProtocol._
 import spray.json._
+import spray.json.{JsValue => SprayJsValue}
+import play.api.libs.json.{Json, JsValue => PlayJsValue}
 
 object SlickExtensions {
 
@@ -50,18 +52,18 @@ object SlickExtensions {
 
   def listToJson(param: List[Any]): String = {
     param
-      .map(_ match {
-        case v: String     => v.toJson
-        case v: JsValue    => v.toJson
-        case v: Boolean    => v.toJson
-        case v: Int        => v.toJson
-        case v: Long       => v.toJson
-        case v: Float      => v.toJson
-        case v: Double     => v.toJson
-        case v: BigInt     => v.toJson
+      .map {
+        case v: String => v.toJson
+        case v: JsValue => v.toJson
+        case v: Boolean => v.toJson
+        case v: Int => v.toJson
+        case v: Long => v.toJson
+        case v: Float => v.toJson
+        case v: Double => v.toJson
+        case v: BigInt => v.toJson
         case v: BigDecimal => v.toJson
-        case v: DateTime   => v.toString.toJson
-      })
+        case v: DateTime => v.toString.toJson
+      }
       .toJson
       .toString
   }
@@ -75,7 +77,8 @@ object SlickExtensions {
     }
     unwrapSome(param) match {
       case param: String     => sql"$param"
-      case param: JsValue    => sql"${param.compactPrint}"
+      case param: PlayJsValue    => sql"${param.toString}"
+      case param: SprayJsValue    => sql"${param.compactPrint}"
       case param: Boolean    => sql"$param"
       case param: Int        => sql"$param"
       case param: Long       => sql"$param"

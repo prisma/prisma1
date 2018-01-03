@@ -3,7 +3,7 @@ package cool.graph.api.database.deferreds
 import cool.graph.api.database.DeferredTypes.{OneDeferred, OneDeferredResultType, OrderedDeferred, OrderedDeferredFutureResult}
 import cool.graph.api.database.{DataItem, DataResolver}
 import cool.graph.shared.models.Project
-import cool.graph.util.gc_value.{GCAnyConverter, GCDBValueConverter2}
+import cool.graph.util.gc_value.{GCAnyConverter, GCDBValueConverter}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -38,7 +38,7 @@ class OneDeferredResolver(dataResolver: DataResolver) {
         dataItems.find { dataItem =>
           val itemValue = dataItem.getOption(deferred.key)
           val field = deferred.model.getFieldByName_!(deferred.key)
-          val gcValue = GCDBValueConverter2(field.typeIdentifier, field.isList).toGCValue(itemValue.get)
+          val gcValue = GCDBValueConverter(field.typeIdentifier, field.isList).toGCValue(itemValue.get)
           val bla = GCAnyConverter(field.typeIdentifier, field.isList).toGCValue(deferred.value)
           bla == gcValue
         }
