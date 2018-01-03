@@ -26,6 +26,11 @@ export class Cluster {
     return `${this.baseUrl}/${serviceName}/${stage}`
   }
 
+  getWSEndpoint(serviceName: string, stage: string) {
+    const replacedUrl = this.baseUrl.replace('http', 'ws')
+    return `${replacedUrl}/${serviceName}/${stage}`
+  }
+
   getImportEndpoint(serviceName: string, stage: string) {
     return `${this.baseUrl}/${serviceName}/${stage}/import`
   }

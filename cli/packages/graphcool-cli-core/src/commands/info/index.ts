@@ -7,6 +7,7 @@ import {
   Project,
 } from 'graphcool-cli-engine'
 import chalk from 'chalk'
+import { Cluster } from 'graphcool-yml'
 
 export default class InfoCommand extends Command {
   static topic = 'info'
@@ -16,15 +17,36 @@ export default class InfoCommand extends Command {
     await this.definition.load(this.flags)
     const serviceName = this.definition.definition!.service
     const stage = this.definition.definition!.stage
-    const cluster = await this.client.getClusterSafe(serviceName, stage)
+
+    let services: any[] = []
+
+    for (const cluster of this.env.clusters) {
+      this.env.setActiveCluster(cluster)
+      const projects = await this.client.listProjects()
+      const filteredProjects = projects.filter(p => p.name === serviceName)
+      services = services.concat(
+        filteredProjects.map(project => ({
+          project,
+          cluster,
+        })),
+      )
+    }
 
     this.out.log(`\
 Service Name: ${chalk.bold(serviceName)}
 
-Stage: ${chalk.bold(stage)} (deployed in ${chalk.bold(cluster.name)})
-
-Endpoints:
-HTTP        ${cluster!.getApiEndpoint(serviceName, stage)}
+Stages:
+${services
+      .map(s => this.printStage(serviceName, s.project.stage, s.cluster))
+      .join('\n\n')}
 `)
+  }
+
+  printStage(name: string, stage: string, cluster: Cluster) {
+    return `
+  ${chalk.bold(stage)} (cluster: ${chalk.bold(`\`${cluster.name}\``)})
+
+    HTTP:       ${cluster.getApiEndpoint(name, stage)}
+    Websocket:  ${cluster.getWSEndpoint(name, stage)}`
   }
 }
