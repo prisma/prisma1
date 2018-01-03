@@ -6,7 +6,7 @@ import cool.graph.api.schema.APIErrors.ClientApiError
 import cool.graph.api.schema.UserFacingError
 import sangria.execution.{Executor, HandledException}
 import sangria.marshalling.ResultMarshaller
-import spray.json.{JsNumber, JsObject, JsString}
+import spray.json.{JsArray, JsNumber, JsObject, JsString}
 
 case class ErrorHandler(
     requestId: String
@@ -21,7 +21,7 @@ case class ErrorHandler(
 
     case (marshaller, error: Throwable) =>
       error.printStackTrace()
-      HandledException(internalErrorMessage, commonFields(marshaller))
+      HandledException(error.getMessage, commonFields(marshaller))
   }
 
   lazy val sangriaExceptionHandler: Executor.ExceptionHandler = sangria.execution.ExceptionHandler(
@@ -32,11 +32,11 @@ case class ErrorHandler(
 
     throwable match {
       case e: UserFacingError =>
-        OK -> JsObject("code" -> JsNumber(e.code), "requestId" -> JsString(requestId), "error" -> JsString(e.getMessage))
+        OK -> JsObject("errors" -> JsArray(JsObject("code" -> JsNumber(e.code), "requestId" -> JsString(requestId), "message" -> JsString(e.getMessage))))
 
       case e: Throwable =>
         throwable.printStackTrace()
-        InternalServerError → JsObject("requestId" -> JsString(requestId), "error" -> JsString(e.getMessage))
+        InternalServerError → JsObject("errors" -> JsArray(JsObject("requestId" -> JsString(requestId), "message" -> JsString(e.getMessage))))
     }
 
   }

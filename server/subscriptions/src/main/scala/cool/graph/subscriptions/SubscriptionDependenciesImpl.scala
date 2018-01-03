@@ -21,17 +21,16 @@ trait SubscriptionDependencies extends ApiDependencies {
   implicit val system: ActorSystem
   implicit val materializer: ActorMaterializer
 
-  val invalidationSubscriber: PubSubSubscriber[SchemaInvalidatedMessage]
-  val sssEventsSubscriber: PubSubSubscriber[String]
-  val responsePubSubPublisherV05: PubSubPublisher[SubscriptionSessionResponseV05]
-  val responsePubSubPublisherV07: PubSubPublisher[SubscriptionSessionResponse]
-  val requestsQueueConsumer: QueueConsumer[SubscriptionRequest]
+  def invalidationSubscriber: PubSubSubscriber[SchemaInvalidatedMessage]
+  def sssEventsSubscriber: PubSubSubscriber[String]
+  def responsePubSubPublisherV05: PubSubPublisher[SubscriptionSessionResponseV05]
+  def responsePubSubPublisherV07: PubSubPublisher[SubscriptionSessionResponse]
+  def requestsQueueConsumer: QueueConsumer[SubscriptionRequest]
+  def requestsQueuePublisher: QueuePublisher[Request]
+  def responsePubSubSubscriber: PubSubSubscriber[String]
 
   lazy val apiMetricsFlushInterval = 10
   lazy val clientAuth              = AuthImpl
-
-//  binding identifiedBy "environment" toNonLazy sys.env.getOrElse("ENVIRONMENT", "local")
-//  binding identifiedBy "service-name" toNonLazy sys.env.getOrElse("SERVICE_NAME", "local")
 }
 
 // todo this needs rewiring
@@ -50,15 +49,8 @@ case class SubscriptionDependenciesImpl()(implicit val system: ActorSystem, val 
     durable = true
   )
 
-  override lazy val sssEventsPubSub: InMemoryAkkaPubSub[String] = InMemoryAkkaPubSub[String]()
-//  override lazy val sssEventsPublisher: PubSubPublisher[String]   = sssEventsPubSub
+  override lazy val sssEventsPubSub: InMemoryAkkaPubSub[String]   = InMemoryAkkaPubSub[String]()
   override lazy val sssEventsSubscriber: PubSubSubscriber[String] = sssEventsPubSub
-
-//  lazy val sssEventsSubscriber = RabbitAkkaPubSub.subscriber[String](
-//    clusterLocalRabbitUri,
-//    "sss-events",
-//    durable = true
-//  )(bugSnagger, system, Conversions.Unmarshallers.ToString)
 
   lazy val responsePubSubSubscriber   = InMemoryAkkaPubSub[String]()
   lazy val responsePubSubPublisherV05 = responsePubSubSubscriber.map[SubscriptionSessionResponseV05](converterResponse05ToString)
@@ -68,7 +60,12 @@ case class SubscriptionDependenciesImpl()(implicit val system: ActorSystem, val 
   lazy val requestsQueueConsumer: QueueConsumer[SubscriptionRequest] = requestsQueuePublisher.map[SubscriptionRequest] { req: Request =>
     SubscriptionRequest(req.sessionId, req.projectId, req.body)
   }
-  override lazy val projectFetcher: ProjectFetcher = ProjectFetcherImpl(blockedProjectIds = Vector.empty, config)
+
+  lazy val projectFetcher: ProjectFetcher = {
+    val schemaManagerEndpoint = config.getString("schemaManagerEndpoint")
+    val schemaManagerSecret   = config.getString("schemaManagerSecret")
+    ProjectFetcherImpl(Vector.empty, config, schemaManagerEndpoint = schemaManagerEndpoint, schemaManagerSecret = schemaManagerSecret)
+  }
 
   val databases        = Databases.initialize(config)
   val apiSchemaBuilder = SchemaBuilder()(system, this)

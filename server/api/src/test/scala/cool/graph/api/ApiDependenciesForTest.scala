@@ -12,7 +12,7 @@ case class ApiDependenciesForTest()(implicit val system: ActorSystem, val materi
 
   val databases                              = Databases.initialize(config)
   val apiSchemaBuilder                       = SchemaBuilder()(system, this)
-  val projectFetcher: ProjectFetcher         = ProjectFetcherImpl(Vector.empty, config)
+  lazy val projectFetcher: ProjectFetcher    = ???
   override lazy val maxImportExportSize: Int = 1000
   override val sssEventsPubSub               = InMemoryAkkaPubSub[String]()
 }

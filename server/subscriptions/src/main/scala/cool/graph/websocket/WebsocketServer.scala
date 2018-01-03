@@ -2,24 +2,23 @@ package cool.graph.websocket
 
 import akka.NotUsed
 import akka.actor.{ActorSystem, Props}
-import akka.http.scaladsl.model.ws.{Message, TextMessage}
+import akka.http.scaladsl.model.ws.Message
 import akka.http.scaladsl.server.Directives._
 import akka.stream.ActorMaterializer
-import akka.stream.scaladsl.{Flow, Sink}
+import akka.stream.scaladsl.Flow
 import cool.graph.akkautil.http.Server
 import cool.graph.bugsnag.BugSnagger
 import cool.graph.cuid.Cuid
 import cool.graph.messagebus.pubsub.Everything
 import cool.graph.shared.models.ProjectId
+import cool.graph.subscriptions.SubscriptionDependencies
 import cool.graph.websocket.WebsocketSessionManager.Requests.IncomingQueueMessage
 import cool.graph.websocket.metrics.SubscriptionWebsocketMetrics
-import cool.graph.websocket.services.WebsocketServices
 import play.api.libs.streams.ActorFlow
 
 import scala.concurrent.Future
-import scala.concurrent.duration._
 
-case class WebsocketServer(services: WebsocketServices, prefix: String = "")(
+case class WebsocketServer(dependencies: SubscriptionDependencies, prefix: String = "")(
     implicit system: ActorSystem,
     materializer: ActorMaterializer,
     bugsnag: BugSnagger
@@ -27,11 +26,11 @@ case class WebsocketServer(services: WebsocketServices, prefix: String = "")(
   import SubscriptionWebsocketMetrics._
   import system.dispatcher
 
-  val manager      = system.actorOf(Props(WebsocketSessionManager(services.requestsQueuePublisher, bugsnag)))
+  val manager      = system.actorOf(Props(WebsocketSessionManager(dependencies.requestsQueuePublisher, bugsnag)))
   val subProtocol1 = "graphql-subscriptions"
   val subProtocol2 = "graphql-ws"
 
-  val responseSubscription = services.responsePubSubSubscriber.subscribe(Everything, { strMsg =>
+  val responseSubscription = dependencies.responsePubSubSubscriber.subscribe(Everything, { strMsg =>
     incomingResponseQueueMessageRate.inc()
     manager ! IncomingQueueMessage(strMsg.topic, strMsg.payload)
   })
@@ -51,7 +50,6 @@ case class WebsocketServer(services: WebsocketServices, prefix: String = "")(
   }
 
   def newSession(projectId: String, v7protocol: Boolean): Flow[Message, Message, NotUsed] = {
-    import WebsocketSessionManager.Requests._
 
     val sessionId = Cuid.createCuid()
 
@@ -85,7 +83,7 @@ case class WebsocketServer(services: WebsocketServices, prefix: String = "")(
             sessionId = sessionId,
             outgoing = out,
             manager = manager,
-            requestsPublisher = services.requestsQueuePublisher,
+            requestsPublisher = dependencies.requestsQueuePublisher,
             bugsnag = bugsnag,
             isV7protocol = v7protocol
           ))
