@@ -236,15 +236,15 @@ case class SchemaSyntaxValidator(schema: String, directiveRequirements: Seq[Dire
     }
   }
 
-  def relationCount(fieldAndType: FieldAndType): Int = relationCount(fieldAndType.fieldDef.previousRelationName.get)
-  def relationCount(relationName: String): Int = {
-    // FIXME: this relies on the relation directive
-    val tmp = for {
-      objectType <- doc.objectTypes
-      field      <- objectType.relationFields
-      if field.previousRelationName.contains(relationName)
-    } yield field
-    tmp.size
+  def relationCount(fieldAndType: FieldAndType): Int = {
+    def fieldsWithType(objectType: ObjectTypeDefinition, typeName: String): Seq[FieldDefinition] = objectType.fields.filter(_.typeName == typeName)
+
+    val oppositeObjectType = doc.objectType_!(fieldAndType.fieldDef.typeName)
+    val fieldsOnTypeA      = fieldsWithType(fieldAndType.objectType, fieldAndType.fieldDef.typeName)
+    val fieldsOnTypeB      = fieldsWithType(oppositeObjectType, fieldAndType.objectType.name)
+
+    // TODO: this probably only works if a relation directive appears twice actually in case of ambiguous relations
+    (fieldsOnTypeA ++ fieldsOnTypeB).count(_.relationName == fieldAndType.fieldDef.relationName)
   }
 
   def isSelfRelation(fieldAndType: FieldAndType): Boolean  = fieldAndType.fieldDef.typeName == fieldAndType.objectType.name
