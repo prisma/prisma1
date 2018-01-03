@@ -193,7 +193,7 @@ case class MigrationStepsProposerImpl(previousProject: Project, nextProject: Pro
   }
 
   lazy val relationsToUpdate: Vector[UpdateRelation] = {
-    for {
+    val updates = for {
       previousRelation <- previousProject.relations.toVector
       nextModelAName   = renames.getNextModelName(previousRelation.modelAId)
       nextModelBName   = renames.getNextModelName(previousRelation.modelBId)
@@ -206,6 +206,7 @@ case class MigrationStepsProposerImpl(previousProject: Project, nextProject: Pro
         modelBId = diff(previousRelation.modelBId, nextRelation.modelBId)
       )
     }
+    updates.filter(isAnyOptionSet)
   }
 
   lazy val enumsToCreate: Vector[CreateEnum] = {
@@ -225,7 +226,7 @@ case class MigrationStepsProposerImpl(previousProject: Project, nextProject: Pro
   }
 
   lazy val enumsToUpdate: Vector[UpdateEnum] = {
-    (for {
+    val updates = for {
       previousEnum <- previousProject.enums.toVector
       nextEnumName = renames.getNextEnumName(previousEnum.name)
       nextEnum     <- nextProject.getEnumByName(nextEnumName)
@@ -235,7 +236,8 @@ case class MigrationStepsProposerImpl(previousProject: Project, nextProject: Pro
         newName = diff(previousEnum.name, nextEnum.name),
         values = diff(previousEnum.values, nextEnum.values)
       )
-    }).filter(isAnyOptionSet)
+    }
+    updates.filter(isAnyOptionSet)
   }
 
   lazy val emptyModel = Model(
