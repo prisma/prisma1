@@ -175,7 +175,7 @@ class BulkExportSpec extends FlatSpec with Matchers with ApiBaseSpec with AwaitU
     secondChunk.cursor.row should be(-1)
   }
 
-  "Exporting ListValues" should "work" ignore {
+  "Exporting ListValues" should "work" in {
 
     val nodes =
       """{"valueType": "nodes", "values": [

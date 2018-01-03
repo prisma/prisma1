@@ -42,7 +42,7 @@ class BulkImportSpec extends FlatSpec with Matchers with ApiBaseSpec with AwaitU
   }
   val importer = new BulkImport(project)
 
-  "Combining the data from the three files" should "work" ignore {
+  "Combining the data from the three files" should "work" in {
 
     val nodes = """{"valueType": "nodes", "values": [
                     |{"_typeName": "Model0", "id": "0", "a": "test", "b":  0, "createdAt": "2017-11-29 14:35:13"},

@@ -313,7 +313,7 @@ object DatabaseMutationBuilder {
   def setScalarList(projectId: String, modelName: String, fieldName: String, nodeId: String, values: Vector[Any]): DBIOAction[Unit, NoStream, Effect] = {
 
     val escapedValueTuples = for {
-      (escapedValue, position) <- values.map(escapeUnsafeParam(_)).zip((1 to values.length).map(_ * 1000))
+      (escapedValue, position) <- values.map(escapeUnsafeParam).zip((1 to values.length).map(_ * 1000))
     } yield {
       sql"($nodeId, $position, " concat escapedValue concat sql")"
     }
@@ -327,7 +327,7 @@ object DatabaseMutationBuilder {
   def pushScalarList(projectId: String, modelName: String, fieldName: String, nodeId: String, values: Vector[Any]): DBIOAction[Int, NoStream, Effect] = {
 
     val escapedValueTuples = for {
-      (escapedValue, position) <- values.map(escapeUnsafeParam(_)).zip((1 to values.length).map(_ * 1000))
+      (escapedValue, position) <- values.map(escapeUnsafeParam).zip((1 to values.length).map(_ * 1000))
     } yield {
       sql"($nodeId, @baseline + $position, " concat escapedValue concat sql")"
     }
