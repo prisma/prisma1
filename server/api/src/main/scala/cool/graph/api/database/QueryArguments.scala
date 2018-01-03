@@ -1,7 +1,6 @@
 package cool.graph.api.database
 
 import cool.graph.api.database.DatabaseQueryBuilder.{ResultListTransform, ResultTransform}
-import cool.graph.api.database.SlickExtensions.{combineByAnd, combineByOr, escapeUnsafeParam}
 import cool.graph.api.database.Types.DataItemFilterCollection
 import cool.graph.api.schema.APIErrors
 import cool.graph.api.schema.APIErrors.{InvalidFirstArgument, InvalidLastArgument, InvalidSkipArgument}
@@ -66,7 +65,7 @@ case class QueryArguments(
       case (Some(first), _, _) if first < 0 => throw InvalidFirstArgument()
       case (_, Some(last), _) if last < 0   => throw InvalidLastArgument()
       case (_, _, Some(skip)) if skip < 0   => throw InvalidSkipArgument()
-      case _ => {
+      case _ =>
         val count: Option[Int] = last.isDefined match {
           case true  => last
           case false => first
@@ -79,89 +78,60 @@ case class QueryArguments(
           case Some(x) => (x + 1).toString
         }
         Some(sql"${skip.getOrElse(0)}, #$limitedCount")
-      }
     }
   }
 
   // If order is inverted we have to reverse the returned data items. We do this in-mem to keep the sql query simple.
   // Also, remove excess items from limit + 1 queries and set page info (hasNext, hasPrevious).
-  def extractResultTransform(projectId: String, modelId: String): ResultTransform =
-    (list: List[DataItem]) => {
-      val items = isReverseOrder match {
-        case true  => list.reverse
-        case false => list
-      }
-
-      (first, last) match {
-        case (Some(f), _) =>
-          if (items.size > f) {
-            ResolverResult(items.dropRight(1), hasNextPage = true)
-          } else {
-            ResolverResult(items)
-          }
-
-        case (_, Some(l)) =>
-          if (items.size > l) {
-            ResolverResult(items.tail, hasPreviousPage = true)
-          } else {
-            ResolverResult(items)
-          }
-
-        case _ =>
-          ResolverResult(items)
-      }
-    }
+  def extractResultTransform(projectId: String, modelId: String): ResultTransform = (list: List[DataItem]) => {generateResultTransform(list)}
 
   def extractListResultTransform(projectId: String, modelId: String): ResultListTransform =
     (listValues: List[ScalarListValue]) => {
-      val list = listValues.map{listValue =>DataItem(id = listValue.nodeId, userData = Map("value" -> Some(listValue.value)))}
-
-      val items = isReverseOrder match {
-        case true  => list.reverse
-        case false => list
-      }
-
-      (first, last) match {
-        case (Some(f), _) =>
-          if (items.size > f) {
-            ResolverResult(items.dropRight(1), hasNextPage = true)
-          } else {
-            ResolverResult(items)
-          }
-
-        case (_, Some(l)) =>
-          if (items.size > l) {
-            ResolverResult(items.tail, hasPreviousPage = true)
-          } else {
-            ResolverResult(items)
-          }
-
-        case _ =>
-          ResolverResult(items)
-      }
+      val list = listValues.map { listValue => DataItem(id = listValue.nodeId, userData = Map("value" -> Some(listValue.value))) }
+      generateResultTransform(list)
     }
+
+  private def generateResultTransform(list: List[DataItem]) = {
+    val items = isReverseOrder match {
+      case true => list.reverse
+      case false => list
+    }
+
+    (first, last) match {
+      case (Some(f), _) =>
+        if (items.size > f) {
+          ResolverResult(items.dropRight(1), hasNextPage = true)
+        } else {
+          ResolverResult(items)
+        }
+
+      case (_, Some(l)) =>
+        if (items.size > l) {
+          ResolverResult(items.tail, hasPreviousPage = true)
+        } else {
+          ResolverResult(items)
+        }
+
+      case _ =>
+        ResolverResult(items)
+    }
+  }
 
   def extractWhereConditionCommand(projectId: String, modelId: String): Option[SQLActionBuilder] = {
 
-    if (first.isDefined && last.isDefined) {
-      throw APIErrors.InvalidConnectionArguments()
-    }
+    if (first.isDefined && last.isDefined) throw APIErrors.InvalidConnectionArguments()
 
     val standardCondition = filter match {
-      case Some(filterArg) =>
-        generateFilterConditions(projectId, modelId, filterArg)
-      case None =>
-        None
+      case Some(filterArg) => generateFilterConditions(projectId, modelId, filterArg)
+      case None            => None
     }
 
     val cursorCondition = buildCursorCondition(projectId, modelId, standardCondition)
 
-    val condition = cursorCondition match {
+    cursorCondition match {
       case None                     => standardCondition
       case Some(cursorConditionArg) => Some(cursorConditionArg)
     }
-
-    condition
   }
 
   def invertOrder(order: String) = order.trim().toLowerCase match {
@@ -175,8 +145,7 @@ case class QueryArguments(
   // On invalid cursor params, no error is thrown. The result set will just be empty.
   def buildCursorCondition(projectId: String, modelId: String, injectedFilter: Option[SQLActionBuilder]): Option[SQLActionBuilder] = {
     // If both params are empty, don't generate any query.
-    if (before.isEmpty && after.isEmpty)
-      return None
+    if (before.isEmpty && after.isEmpty) return None
 
     val idField = s"`$projectId`.`$modelId`.`id`"
 
@@ -224,8 +193,8 @@ case class QueryArguments(
 }
 
 object QueryArguments {
-  import slick.jdbc.MySQLProfile.api._
   import SlickExtensions._
+  import slick.jdbc.MySQLProfile.api._
 
   def generateFilterConditions(projectId: String, tableName: String, filter: Seq[Any]): Option[SQLActionBuilder] = {
     // don't allow options that are Some(value), options that are None are ok

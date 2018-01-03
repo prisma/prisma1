@@ -106,9 +106,8 @@ object DatabaseQueryBuilder {
           givenArgs.extractWhereConditionCommand(projectId, modelName),
           givenArgs.extractOrderByCommand(projectId, modelName, defaultOrderShortcut),
           overrideMaxNodeCount match {
-            case None => givenArgs.extractLimitCommand(projectId, modelName)
-            case Some(maxCount: Int) =>
-              givenArgs.extractLimitCommand(projectId, modelName, maxCount)
+            case None                => givenArgs.extractLimitCommand(projectId, modelName)
+            case Some(maxCount: Int) => givenArgs.extractLimitCommand(projectId, modelName, maxCount)
           },
           givenArgs.extractResultTransform(projectId, modelName)
         )
@@ -128,9 +127,8 @@ object DatabaseQueryBuilder {
           givenArgs.extractWhereConditionCommand(projectId, modelName),
           givenArgs.extractOrderByCommand(projectId, modelName, defaultOrderShortcut),
           overrideMaxNodeCount match {
-            case None => givenArgs.extractLimitCommand(projectId, modelName)
-            case Some(maxCount: Int) =>
-              givenArgs.extractLimitCommand(projectId, modelName, maxCount)
+            case None                => givenArgs.extractLimitCommand(projectId, modelName)
+            case Some(maxCount: Int) => givenArgs.extractLimitCommand(projectId, modelName, maxCount)
           },
           givenArgs.extractListResultTransform(projectId, modelName)
         )
