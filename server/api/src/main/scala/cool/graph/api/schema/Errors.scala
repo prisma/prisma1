@@ -150,6 +150,6 @@ object APIErrors {
   case class NullProvidedForWhereError(modelName: String)
       extends ClientApiError(s"You provided an invalid argument for the where selector on $modelName.", 3040)
 
-  case class NodesNotConnectedError(outerWhere: NodeSelector, innerWhere: NodeSelector)
-    extends ClientApiError(s"The Node for the model ${outerWhere.model.name} with value ${outerWhere.fieldValueAsString} for ${outerWhere.field.name} was not connected to the Node for the model ${outerWhere.model.name} with value ${outerWhere.fieldValueAsString} for ${outerWhere.field.name}", 3041)
+  case class NodesNotConnectedError(relationName: String, outerWhere: NodeSelector, innerWhere: NodeSelector)
+    extends ClientApiError(s"The relation $relationName has no Node for the model ${outerWhere.model.name} with value `${outerWhere.fieldValueAsString}` for ${outerWhere.field.name} connected to a Node for the model ${innerWhere.model.name} with value `${innerWhere.fieldValueAsString}` for ${innerWhere.field.name}", 3041)
 }
