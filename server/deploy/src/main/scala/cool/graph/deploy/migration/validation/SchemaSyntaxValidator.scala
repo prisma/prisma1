@@ -132,7 +132,7 @@ case class SchemaSyntaxValidator(schema: String, directiveRequirements: Seq[Dire
     }
     val ambiguousRelationFields = doc.objectTypes.flatMap(ambiguousRelationFieldsForType)
 
-    val (schemaErrors, validAmbiguousRelationFields) = partition(ambiguousRelationFields) {
+    val (schemaErrors, _) = partition(ambiguousRelationFields) {
       case fieldAndType if !fieldAndType.fieldDef.hasRelationDirective =>
         Left(SchemaErrors.missingRelationDirective(fieldAndType))
 

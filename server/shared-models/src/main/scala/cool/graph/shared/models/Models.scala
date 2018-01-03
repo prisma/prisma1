@@ -129,7 +129,7 @@ case class Project(
   def getFunctionByName_!(name: String): Function       = getFunctionByName(name).get //OrElse(throw SystemErrors.InvalidFunctionName(name))
 
   def getModelById(id: Id): Option[Model] = models.find(_.id == id)
-  def getModelById_!(id: Id): Model       = getModelById(id).get //OrElse(throw SystemErrors.InvalidModelId(id))
+  def getModelById_!(id: Id): Model       = getModelById(id).getOrElse(throw SharedErrors.InvalidModel(id))
 
   // note: mysql columns are case insensitive, so we have to be as well. But we could make them case sensitive https://dev.mysql.com/doc/refman/5.6/en/case-sensitivity.html
   def getModelByName(name: String): Option[Model] = models.find(_.name.toLowerCase() == name.toLowerCase())
