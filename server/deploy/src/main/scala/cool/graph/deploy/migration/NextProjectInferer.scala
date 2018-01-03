@@ -46,10 +46,8 @@ case class NextProjectInfererImpl(
 
   lazy val nextModels: Vector[Model] Or ProjectSyntaxError = {
     val models = sdl.objectTypes.map { objectType =>
-      val fields = fieldsForType(objectType)
-
-      OrExtensions.sequence(fields) match {
-        case Good(fields: Seq[Field]) =>
+      fieldsForType(objectType) match {
+        case Good(fields: Vector[Field]) =>
           val fieldNames            = fields.map(_.name)
           val missingReservedFields = ReservedFields.reservedFieldNames.filterNot(fieldNames.contains)
           val hiddenReservedFields  = missingReservedFields.map(ReservedFields.reservedFieldFor(_).copy(isHidden = true))
@@ -70,7 +68,7 @@ case class NextProjectInfererImpl(
     OrExtensions.sequence(models)
   }
 
-  def fieldsForType(objectType: ObjectTypeDefinition): Vector[Or[Field, InvalidGCValue]] = {
+  def fieldsForType(objectType: ObjectTypeDefinition): Or[Vector[Field], InvalidGCValue] = {
     val fields: Seq[Or[Field, InvalidGCValue]] = objectType.fields.flatMap { fieldDef =>
       val typeIdentifier = typeIdentifierForTypename(fieldDef.typeName)
 
@@ -110,7 +108,7 @@ case class NextProjectInfererImpl(
       }
     }
 
-    fields.toVector
+    OrExtensions.sequence(fields.toVector)
   }
 
   lazy val nextRelations: Set[Relation] = {
