@@ -118,30 +118,9 @@ case class SchemaSyntaxValidator(schema: String, directiveRequirements: Seq[Dire
 
   def validateRelationFields(fieldAndTypes: Seq[FieldAndType]): Seq[SchemaError] = {
     val relationFields = fieldAndTypes.filter(isRelationField)
-
     val wrongTypeDefinitions = relationFields.collect {
       case fieldAndType if !fieldAndType.fieldDef.isValidRelationType => SchemaErrors.relationFieldTypeWrong(fieldAndType)
     }
-
-    /**
-      * group relation fields by the types it is connecting? Map[ConnectedTypes, Fields]
-      * ambiguous if map.get(types).get.count > 2
-      *
-      * a relation field is ambiguous if a type contains 2 relation fields that refer to the same type
-      */
-//    case class ConnectedTypes(type1: ObjectTypeDefinition, type2: ObjectTypeDefinition)
-//    object ConnectedTypes {
-//      def apply(fieldAndType: FieldAndType): ConnectedTypes = {
-//        val oppositeType = doc.objectType_!(fieldAndType.fieldDef.typeName)
-//        if (fieldAndType.objectType.name < oppositeType.name) {
-//          ConnectedTypes(fieldAndType.objectType, oppositeType)
-//        } else {
-//          ConnectedTypes(oppositeType, fieldAndType.objectType)
-//        }
-//      }
-//    }
-//    val connectionMap: Map[ConnectedTypes, Seq[FieldAndType]] = relationFields.groupBy(ConnectedTypes(_))
-    //val ambiguousRelationFields                               = connectionMap.values.filter(_.size > 2).flatten.toVector
 
     def ambiguousRelationFieldsForType(objectType: ObjectTypeDefinition): Vector[FieldAndType] = {
       val relationFields                                = objectType.fields.filter(isRelationField)
@@ -153,29 +132,35 @@ case class SchemaSyntaxValidator(schema: String, directiveRequirements: Seq[Dire
     }
     val ambiguousRelationFields = doc.objectTypes.flatMap(ambiguousRelationFieldsForType)
 
-    // TODO: should this be only performed for ambiguous relations?
-    val (schemaErrors, validRelationFields) = partition(ambiguousRelationFields) {
+    val (schemaErrors, validAmbiguousRelationFields) = partition(ambiguousRelationFields) {
       case fieldAndType if !fieldAndType.fieldDef.hasRelationDirective =>
-        // TODO: only error if relation would be ambiguous
         Left(SchemaErrors.missingRelationDirective(fieldAndType))
 
       case fieldAndType if !isSelfRelation(fieldAndType) && relationCount(fieldAndType) != 2 =>
-        // TODO: only error if relation would be ambiguous
         Left(SchemaErrors.relationNameMustAppear2Times(fieldAndType))
 
       case fieldAndType if isSelfRelation(fieldAndType) && relationCount(fieldAndType) != 1 && relationCount(fieldAndType) != 2 =>
-        // TODO: only error if relation would be ambiguous
         Left(SchemaErrors.selfRelationMustAppearOneOrTwoTimes(fieldAndType))
 
       case fieldAndType =>
         Right(fieldAndType)
     }
 
-    // TODO: we can't rely on the relation directive anymore
-    val relationFieldsWithNonMatchingTypes = validRelationFields
+    val relationFieldsWithRelationDirective = for {
+      objectType <- doc.objectTypes
+      field      <- objectType.fields
+      if field.hasRelationDirective
+      if isRelationField(field)
+    } yield FieldAndType(objectType, field)
+
+    /**
+      * The validation below must be only applied to fields that specify the relation directive.
+      * And it can only occur for relation that specify both sides of a relation.
+      */
+    val relationFieldsWithNonMatchingTypes = relationFieldsWithRelationDirective
       .groupBy(_.fieldDef.previousRelationName.get)
       .flatMap {
-        case (_, fieldAndTypes) =>
+        case (_, fieldAndTypes) if fieldAndTypes.size > 1 =>
           val first  = fieldAndTypes.head
           val second = fieldAndTypes.last
           val firstError = if (first.fieldDef.typeName != second.objectType.name) {
@@ -189,6 +174,8 @@ case class SchemaSyntaxValidator(schema: String, directiveRequirements: Seq[Dire
             None
           }
           firstError ++ secondError
+        case _ =>
+          Iterable.empty
       }
 
     wrongTypeDefinitions ++ schemaErrors ++ relationFieldsWithNonMatchingTypes
