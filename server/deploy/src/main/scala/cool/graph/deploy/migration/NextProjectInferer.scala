@@ -127,14 +127,9 @@ case class NextProjectInfererImpl(
         */
       val relationNameOnRelatedField: Option[String] = sdl.relatedFieldOf(objectType, relationField).flatMap(_.relationName)
       val relationName = (relationField.relationName, relationNameOnRelatedField) match {
-        case (Some(name), _) =>
-          name
-
-        case (None, Some(name)) =>
-          name
-
-        case (None, None) =>
-          s"${modelA}To${modelB}"
+        case (Some(name), _)    => name
+        case (None, Some(name)) => name
+        case (None, None)       => s"${modelA}To${modelB}"
       }
       val previousModelAName    = renames.getPreviousModelName(modelA)
       val previousModelBName    = renames.getPreviousModelName(modelB)
