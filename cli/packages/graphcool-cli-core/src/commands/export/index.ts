@@ -8,11 +8,6 @@ export default class Export extends Command {
   static description = 'Export service data to local file'
   static group = 'data'
   static flags: Flags = {
-    stage: flags.string({
-      char: 's',
-      description: 'Stage name',
-      defaultValue: 'dev',
-    }),
     ['export-path']: flags.string({
       char: 'e',
       description: 'Path to export .zip file',
@@ -26,10 +21,9 @@ export default class Export extends Command {
       throw new Error(`export-path must point to a .zip file`)
     }
 
-    const { stage } = this.flags
-
     await this.definition.load(this.flags)
     const serviceName = this.definition.definition!.service
+    const stage = this.definition.definition!.stage
     const cluster = await this.client.getClusterSafe(serviceName, stage)
 
     this.env.setActiveCluster(cluster)
@@ -42,7 +36,7 @@ export default class Export extends Command {
     )
 
     const importCommand = chalk.green.bold(
-      `$ graphcool import --source ${exportPath} --target target-name`,
+      `$ graphcool import --data ${exportPath}`,
     )
     this.out.log(`Exported service to ${chalk.bold(exportPath)}
 You can import it to a new service with

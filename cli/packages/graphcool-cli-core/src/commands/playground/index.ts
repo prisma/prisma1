@@ -21,20 +21,16 @@ export default class Playground extends Command {
   static description = 'Open service endpoints in GraphQL Playground'
   static group = 'general'
   static flags: Flags = {
-    stage: flags.string({
-      char: 's',
-      description: 'Stage name',
-      defaultValue: 'dev',
-    }),
     web: flags.boolean({
       char: 'w',
       description: 'Force open web playground',
     }),
   }
   async run() {
-    const { stage, web } = this.flags
+    const { web } = this.flags
     await this.definition.load(this.flags)
     const serviceName = this.definition.definition!.service!
+    const stage = this.definition.definition!.stage!
     const cluster = await this.client.getClusterSafe(serviceName, stage)
 
     const localPlaygroundPath = `/Applications/GraphQL\ Playground.app/Contents/MacOS/GraphQL\ Playground`

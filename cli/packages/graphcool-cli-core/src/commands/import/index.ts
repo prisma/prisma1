@@ -6,11 +6,6 @@ export default class Import extends Command {
   static topic = 'import'
   static description = 'Import data into a service'
   static flags: Flags = {
-    stage: flags.string({
-      char: 's',
-      description: 'Stage name',
-      defaultValue: 'dev',
-    }),
     data: flags.string({
       char: 'd',
       description: 'Path to zip or folder including data to import',
@@ -18,9 +13,10 @@ export default class Import extends Command {
     }),
   }
   async run() {
-    const { stage, data } = this.flags
+    const { data } = this.flags
     await this.definition.load(this.flags)
     const serviceName = this.definition.definition!.service
+    const stage = this.definition.definition!.stage
     const cluster = await this.client.getClusterSafe(serviceName, stage)
     this.env.setActiveCluster(cluster)
 

@@ -18,7 +18,6 @@ import Reset from './commands/reset/reset'
 import Clusters from './commands/clusters/index'
 import Import from './commands/import/index'
 import Export from './commands/export/index'
-import Seed from './commands/seed/seed'
 import Nuke from './commands/local/nuke'
 import ConsoleCommand from './commands/console/index'
 import Logs from './commands/local/logs'
@@ -77,7 +76,6 @@ export const topics = [
     description: 'Export command',
     group: 'data',
   },
-  { name: 'seed', description: 'Seed a service with data', group: 'data' },
   { name: 'reset', description: 'Reset data of a service', group: 'data' },
   /* Local development */
   {
@@ -111,7 +109,6 @@ export const commands = [
   Clusters,
   Import,
   Export,
-  Seed,
 ]
 
 export {
@@ -136,5 +133,4 @@ export {
   // Account,
   Import,
   Export,
-  Seed,
 }
