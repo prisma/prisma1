@@ -103,8 +103,11 @@ case class MigrationApplierImpl(clientDatabase: DatabaseDef)(implicit ec: Execut
       val field = model.getFieldByName_!(x.name)
       if (field.isList) {
         Some(DeleteScalarListTable(nextProject.id, model.name, field.name, field.typeIdentifier))
-      } else {
+      } else if (!field.isRelation) {
+        // TODO: add test case for not deleting columns for relation fields
         Some(DeleteColumn(nextProject.id, model, field))
+      } else {
+        None
       }
 
     case x: UpdateField =>
