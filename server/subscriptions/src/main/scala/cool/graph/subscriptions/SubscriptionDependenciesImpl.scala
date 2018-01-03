@@ -31,6 +31,7 @@ trait SubscriptionDependencies extends ApiDependencies {
 
   lazy val apiMetricsFlushInterval = 10
   lazy val clientAuth              = AuthImpl
+  val keepAliveIntervalSeconds: Long
 }
 
 // todo this needs rewiring
@@ -39,9 +40,10 @@ case class SubscriptionDependenciesImpl()(implicit val system: ActorSystem, val 
 
   import cool.graph.subscriptions.protocol.Converters._
 
-  implicit val unmarshaller      = (_: Array[Byte]) => SchemaInvalidated
-  lazy val globalRabbitUri       = sys.env("GLOBAL_RABBIT_URI")
-  lazy val clusterLocalRabbitUri = sys.env("RABBITMQ_URI")
+  implicit val unmarshaller             = (_: Array[Byte]) => SchemaInvalidated
+  lazy val globalRabbitUri              = sys.env("GLOBAL_RABBIT_URI")
+  lazy val clusterLocalRabbitUri        = sys.env("RABBITMQ_URI")
+  override val keepAliveIntervalSeconds = 10
 
   lazy val invalidationSubscriber: PubSubSubscriber[SchemaInvalidatedMessage] = RabbitAkkaPubSub.subscriber[SchemaInvalidatedMessage](
     globalRabbitUri,
