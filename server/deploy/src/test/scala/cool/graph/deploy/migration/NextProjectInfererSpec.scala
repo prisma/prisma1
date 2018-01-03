@@ -12,7 +12,7 @@ class NextProjectInfererSpec extends WordSpec with Matchers {
   val emptyProject = SchemaDsl().buildProject()
 
   "if a given relation does not exist yet, the inferer" should {
-    "infer relations with the given name if a relation directive is provided" in {
+    "infer relations with the given name if a relation directive is provided on both sides" in {
       val types =
         """
           |type Todo {
@@ -24,9 +24,27 @@ class NextProjectInfererSpec extends WordSpec with Matchers {
           |}
         """.stripMargin.trim()
       val project = infer(emptyProject, types).get
-      project.relations.foreach(println(_))
 
       val relation = project.getRelationByName_!("MyNameForTodoToComments")
+      relation.modelAId should equal("Comment")
+      relation.modelBId should equal("Todo")
+    }
+
+    "infer relations with provided name if only one relation directive is given" in {
+      val types =
+        """
+          |type Todo {
+          |  comments: [Comment!] @relation(name:"MyRelationName")
+          |}
+          |
+          |type Comment {
+          |  todo: Todo!
+          |}
+        """.stripMargin.trim()
+      val project = infer(emptyProject, types).get
+
+      project.relations should have(size(1))
+      val relation = project.getRelationByName_!("MyRelationName")
       relation.modelAId should equal("Comment")
       relation.modelBId should equal("Todo")
     }
@@ -56,25 +74,6 @@ class NextProjectInfererSpec extends WordSpec with Matchers {
       val field2 = project.getModelByName_!("Comment").getFieldByName_!("todo")
       field2.isList should be(false)
       field2.relation should be(Some(relation))
-    }
-
-    "infer relations with provided name if only one relation directive is given" in {
-      val types =
-        """
-          |type Todo {
-          |  comments: [Comment!] @relation(name:"MyRelationName")
-          |}
-          |
-          |type Comment {
-          |  todo: Todo!
-          |}
-        """.stripMargin.trim()
-      val project = infer(emptyProject, types).get
-
-      project.relations should have(size(1))
-      val relation = project.getRelationByName_!("MyRelationName")
-      relation.modelAId should equal("Comment")
-      relation.modelBId should equal("Todo")
     }
   }
 
