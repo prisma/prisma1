@@ -13,11 +13,6 @@ object DataSchemaAstExtensions {
     def enumNames: Vector[String]         = enumTypes.map(_.name)
     def previousEnumNames: Vector[String] = enumTypes.map(_.previousName)
 
-//    def containsRelation(relationName: String): Boolean = {
-//      val allFields = objectTypes.flatMap(_.fields)
-//      allFields.exists(fieldDef => fieldDef.previousRelationName.contains(relationName))
-//    }
-
     def isObjectOrEnumType(name: String): Boolean = objectType(name).isDefined || enumType(name).isDefined
 
     def objectType_!(name: String): ObjectTypeDefinition       = objectType(name).getOrElse(sys.error(s"Could not find the object type $name!"))
@@ -42,9 +37,6 @@ object DataSchemaAstExtensions {
 
     def field_!(name: String): FieldDefinition       = field(name).getOrElse(sys.error(s"Could not find the field $name on the type ${objectType.name}"))
     def field(name: String): Option[FieldDefinition] = objectType.fields.find(_.name == name)
-
-//    def nonRelationFields: Vector[FieldDefinition] = objectType.fields.filter(_.isNoRelation)
-//    def relationFields: Vector[FieldDefinition] = objectType.fields.filter(_.hasRelationDirective)
 
     def description: Option[String] = objectType.directiveArgumentAsString("description", "text")
   }
@@ -94,9 +86,7 @@ object DataSchemaAstExtensions {
       case _                                                            => false
     }
 
-//    def isOneRelationField: Boolean          = hasRelationDirective && !isList
-    def hasRelationDirective: Boolean = relationName.isDefined
-//    def isNoRelation: Boolean                = !hasRelationDirective
+    def hasRelationDirective: Boolean        = relationName.isDefined
     def description: Option[String]          = fieldDefinition.directiveArgumentAsString("description", "text")
     def defaultValue: Option[String]         = fieldDefinition.directiveArgumentAsString("default", "value")
     def migrationValue: Option[String]       = fieldDefinition.directiveArgumentAsString("migrationValue", "value")
