@@ -1,6 +1,6 @@
 {
   "name": "graphcool-yml",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
@@ -34,7 +34,9 @@
   },
   "scripts": {
     "test": "jest",
-    "build": "tsc -d"
+    "build": "tsc -d",
+    "lint": "tslint src/**/*.ts",
+    "prepublishOnly": "yarn lint && yarn test && yarn build"
   },
   "jest": {
     "moduleFileExtensions": [
