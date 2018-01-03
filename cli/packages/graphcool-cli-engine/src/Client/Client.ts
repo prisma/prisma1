@@ -127,6 +127,11 @@ export class Client {
     })
   }
   get client(): GraphQLClient {
+    if (!this.env.activeCluster) {
+      throw new Error(
+        `No cluster set. Please set the "cluster" property in your graphcool.yml`,
+      )
+    }
     debug(
       'choosing clusterEndpoint',
       this.env.activeCluster.getDeployEndpoint(),
