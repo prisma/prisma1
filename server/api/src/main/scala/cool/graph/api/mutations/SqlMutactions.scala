@@ -34,38 +34,18 @@ case class SqlMutactions(dataResolver: DataResolver) {
 
   def getMutactionsForUpdate(model: Model, args: CoolArgs, id: Id, previousValues: DataItem, outerWhere: NodeSelector): List[ClientSqlMutaction] = {
     val updateMutaction = getUpdateMutaction(model, args, id, previousValues)
-<<<<<<< HEAD
     val nested          = getMutactionsForNestedMutation(model, args, fromId = id, outerWhere)
-    updateMutaction.toList ++ nested
-=======
-    val nested          = getMutactionsForNestedMutation(model, args, fromId = id)
     val scalarLists     = getMutactionsForScalarLists(model, args, nodeId = id)
     updateMutaction.toList ++ nested ++ scalarLists
->>>>>>> graphql-database
   }
 
   def getMutactionsForCreate(model: Model, args: CoolArgs, id: Id = createCuid()): CreateMutactionsResult = {
 
     val createMutaction = getCreateMutaction(model, args, id)
-<<<<<<< HEAD
     val nested = getMutactionsForNestedMutation(model, args, fromId = id, NodeSelector(model, model.getFieldByName_!("id"), GraphQLIdGCValue(id)))
-
-    CreateMutactionsResult(createMutaction = createMutaction, nestedMutactions =  nested)
-=======
-    val relationToParent = where.map { selector =>
-      AddDataItemToManyRelation(project = project,
-                                fromModel = selector.model,
-                                fromField = selector.field,
-                                fromId = selector.fieldValueAsString,
-                                toId = id,
-                                toIdAlreadyInDB = false)
-    }
-
-    val nested = getMutactionsForNestedMutation(model, args, fromId = id)
-
     val scalarLists = getMutactionsForScalarLists(model, args, nodeId = id)
 
-    CreateMutactionsResult(createMutaction = createMutaction, scalarListMutactions = scalarLists, nestedMutactions = relationToParent.toVector ++ nested)
+    CreateMutactionsResult(createMutaction = createMutaction, scalarListMutactions = scalarLists, nestedMutactions =  nested)
   }
 
   def getSetScalarList(model: Model, field: Field, values: Vector[Any], id: Id): SetScalarList = {
@@ -76,7 +56,6 @@ case class SqlMutactions(dataResolver: DataResolver) {
       values = values,
       nodeId = id
     )
->>>>>>> graphql-database
   }
 
   def getCreateMutaction(model: Model, args: CoolArgs, id: Id): CreateDataItem = {
@@ -114,9 +93,7 @@ case class SqlMutactions(dataResolver: DataResolver) {
     } else None
   }
 
-<<<<<<< HEAD
-  def getMutactionsForNestedMutation(model: Model, args: CoolArgs, fromId: Id, outerWhere: NodeSelector): Seq[ClientSqlMutaction] = {
-=======
+
   def getMutactionsForScalarLists(model: Model, args: CoolArgs, nodeId: Id): Vector[SetScalarList] = {
     val x = for {
       field  <- model.scalarListFields
@@ -131,8 +108,7 @@ case class SqlMutactions(dataResolver: DataResolver) {
     x.flatten.toVector
   }
 
-  def getMutactionsForNestedMutation(model: Model, args: CoolArgs, fromId: Id): Seq[ClientSqlMutaction] = {
->>>>>>> graphql-database
+  def getMutactionsForNestedMutation(model: Model, args: CoolArgs, fromId: Id, outerWhere: NodeSelector): Seq[ClientSqlMutaction] = {
     val x = for {
       field          <- model.relationFields
       subModel       = field.relatedModel_!(project)
@@ -140,7 +116,6 @@ case class SqlMutactions(dataResolver: DataResolver) {
     } yield {
       val parentInfo = NodeSelector(model, field, GraphQLIdGCValue(fromId))
       getMutactionsForWhereChecks(subModel, nestedMutation) ++
-<<<<<<< HEAD
       getMutactionsForConnectionChecks(subModel, nestedMutation, outerWhere) ++
       getMutactionsForNestedCreateMutation(subModel, nestedMutation, parentInfo) ++
         getMutactionsForNestedConnectMutation(nestedMutation, parentInfo) ++
@@ -148,15 +123,6 @@ case class SqlMutactions(dataResolver: DataResolver) {
         getMutactionsForNestedDeleteMutation(nestedMutation, parentInfo) ++
         getMutactionsForNestedUpdateMutation(nestedMutation, parentInfo) ++
         getMutactionsForNestedUpsertMutation(subModel, nestedMutation, parentInfo)
-=======
-        getMutactionsForConnectionChecks(subModel, nestedMutation, outerWhere) ++
-        getMutactionsForNestedCreateMutation(subModel, nestedMutation, outerWhere) ++
-        getMutactionsForNestedConnectMutation(nestedMutation, outerWhere) ++
-        getMutactionsForNestedDisconnectMutation(nestedMutation, outerWhere) ++
-        getMutactionsForNestedDeleteMutation(nestedMutation, outerWhere) ++
-        getMutactionsForNestedUpdateMutation(nestedMutation, outerWhere) ++
-        getMutactionsForNestedUpsertMutation(subModel, nestedMutation, outerWhere)
->>>>>>> graphql-database
     }
     x.flatten
   }
@@ -169,18 +135,11 @@ case class SqlMutactions(dataResolver: DataResolver) {
   }
 
   def getMutactionsForConnectionChecks(subModel: Model, nestedMutation: NestedMutation, outerWhere: NodeSelector): Seq[ClientSqlMutaction] = {
-<<<<<<< HEAD
     val relation = project.relations.find(r => r.connectsTheModels(outerWhere.model, subModel)).get
 
     nestedMutation.updates.map(update => VerifyConnection(project, relation, outerWhere = outerWhere, innerWhere = update.where))++
       nestedMutation.deletes.map(delete => VerifyConnection(project, relation, outerWhere = outerWhere, innerWhere = delete.where))++
       nestedMutation.disconnects.map(disconnect => VerifyConnection(project, relation, outerWhere = outerWhere, innerWhere = disconnect.where))
-=======
-    nestedMutation.updates.map(update => VerifyWhere(project, update.where)) ++
-      nestedMutation.deletes.map(delete => VerifyWhere(project, delete.where)) ++
-      nestedMutation.connects.map(connect => VerifyWhere(project, connect.where)) ++
-      nestedMutation.disconnects.map(disconnect => VerifyWhere(project, disconnect.where))
->>>>>>> graphql-database
   }
 
   def getMutactionsForNestedCreateMutation(model: Model, nestedMutation: NestedMutation, parentInfo: NodeSelector): Seq[ClientSqlMutaction] = {

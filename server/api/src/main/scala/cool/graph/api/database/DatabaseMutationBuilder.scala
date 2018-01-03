@@ -71,14 +71,10 @@ object DatabaseMutationBuilder {
       sql"where table_schema = ${project.id} AND TABLE_NAME = ${where.model.name})end;").as[Int]
   }
 
-<<<<<<< HEAD
   def connectionFailureTrigger(project: Project, relation: Relation, outerWhere: NodeSelector, innerWhere: NodeSelector) ={
     val innerSide = relation.sideOf(innerWhere.model)
     val outerSide = relation.sideOf(outerWhere.model)
 
-=======
-  def connectionFailureTrigger(project: Project, relationTableName: String, outerWhere: NodeSelector, innerWhere: NodeSelector) = {
->>>>>>> graphql-database
     (sql"select case" ++
       sql"when exists" ++
       sql"(select *" ++
