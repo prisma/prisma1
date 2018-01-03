@@ -129,22 +129,14 @@ case class SchemaSyntaxValidator(schema: String, directiveRequirements: Seq[Dire
 //  }
 
   def validateDuplicateFields(fieldAndTypes: Seq[FieldAndType]): Seq[SchemaError] = {
-    val objectTypes         = fieldAndTypes.map(_.objectType)
-    val distinctObjectTypes = objectTypes.distinct
-
-    distinctObjectTypes
-      .flatMap(objectType => {
-        val fieldNames = objectType.fields.map(_.name)
-        fieldNames.map {
-          case name: String if fieldNames.count(_ == name) > 1 =>
-            Seq(SchemaErrors.duplicateFieldName(fieldAndTypes.find(ft => ft.objectType == objectType & ft.fieldDef.name == name).get))
-
-          case _ =>
-            Seq.empty
-        }
-      })
-      .flatten
-      .distinct
+    for {
+      objectType <- fieldAndTypes.map(_.objectType).distinct
+      fieldNames = objectType.fields.map(_.name)
+      fieldName  <- fieldNames
+      if fieldNames.count(_ == fieldName) > 1
+    } yield {
+      SchemaErrors.duplicateFieldName(fieldAndTypes.find(ft => ft.objectType == objectType & ft.fieldDef.name == fieldName).get)
+    }
   }
 
   def validateMissingTypes(fieldAndTypes: Seq[FieldAndType]): Seq[SchemaError] = {
