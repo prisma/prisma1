@@ -21,6 +21,11 @@ object DataSchemaAstExtensions {
 
     def enumType(name: String): Option[EnumTypeDefinition] = enumTypes.find(_.name == name)
     def enumTypes: Vector[EnumTypeDefinition]              = doc.definitions collect { case x: EnumTypeDefinition => x }
+
+    def relatedFieldOf(objectType: ObjectTypeDefinition, fieldDef: FieldDefinition): Option[FieldDefinition] = {
+      val relatedType = objectType_!(fieldDef.typeName)
+      relatedType.fields.find(_.typeName == objectType.name)
+    }
   }
 
   implicit class CoolObjectType(val objectType: ObjectTypeDefinition) extends AnyVal {

@@ -120,10 +120,20 @@ case class NextProjectInfererImpl(
       val model2           = relationField.typeName
       val (modelA, modelB) = if (model1 < model2) (model1, model2) else (model2, model1)
 
-      val relationName = relationField.relationName match {
-        case Some(name) =>
+      /**
+        * 1: has relation directive. use that one.
+        * 2: has no relation directive but there's a related field with directive. Use name of the related field.
+        * 3: use auto generated name else
+        */
+      val relationNameOnRelatedField: Option[String] = sdl.relatedFieldOf(objectType, relationField).flatMap(_.relationName)
+      val relationName = (relationField.relationName, relationNameOnRelatedField) match {
+        case (Some(name), _) =>
           name
-        case None =>
+
+        case (None, Some(name)) =>
+          name
+
+        case (None, None) =>
           s"${modelA}To${modelB}"
       }
       val previousModelAName    = renames.getPreviousModelName(modelA)
