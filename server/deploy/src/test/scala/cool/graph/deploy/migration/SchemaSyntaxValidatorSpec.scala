@@ -7,293 +7,291 @@ import scala.collection.immutable.Seq
 
 class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
 
-  "Validation" should {
-    "succeed if the schema is fine" in {
-      val schema =
-        """
-          |type Todo @model{
-          |  id: ID! @unique
-          |  title: String
-          |}
+  "succeed if the schema is fine" in {
+    val schema =
+      """
+        |type Todo @model{
+        |  id: ID! @unique
+        |  title: String
+        |}
+      """.stripMargin
+    SchemaSyntaxValidator(schema).validate should be(empty)
+  }
+
+  "fail if the schema is syntactically incorrect" in {
+    val schema =
+      """
+        |type Todo @model {
+        |  id: ID! @unique
+        |  title: String
+        |  isDone
+        |}
+      """.stripMargin
+    val result = SchemaSyntaxValidator(schema).validate
+    result should have(size(1))
+    result.head.`type` should equal("Global")
+  }
+
+  "fail if a relation field does not specify the relation directive" in {
+    val schema =
+      """
+        |type Todo @model{
+        |  id: ID! @unique
+        |  title: String
+        |  comments: [Comment!]!
+        |}
+        |
+        |type Comment @model{
+        |  id: ID! @unique
+        |  bla: String
+        |}
+      """.stripMargin
+    val result = SchemaSyntaxValidator(schema).validate
+    result should have(size(1))
+    result.head.`type` should equal("Todo")
+    result.head.field should equal(Some("comments"))
+    result.head.description should include("The relation field `comments` must specify a `@relation` directive")
+  }
+
+  "fail if a relation directive appears on a scalar field" in {
+    val schema =
+      """
+        |type Todo @model {
+        |  id: ID! @unique
+        |  title: String @relation(name: "TodoToComments")
+        |}
+        |
+        |type Comment @model{
+        |  id: ID! @unique
+        |  bla: String
+        |}
         """.stripMargin
-      SchemaSyntaxValidator(schema).validate should be(empty)
-    }
+    val result = SchemaSyntaxValidator(schema).validate
+    result should have(size(1))
+    result.head.`type` should equal("Todo")
+    result.head.field should equal(Some("title"))
+    result.head.description should include("cannot specify the `@relation` directive.")
+  }
 
-    "fail if the schema is syntactically incorrect" in {
-      val schema =
-        """
-          |type Todo @model {
-          |  id: ID! @unique
-          |  title: String
-          |  isDone
-          |}
-        """.stripMargin
-      val result = SchemaSyntaxValidator(schema).validate
-      result should have(size(1))
-      result.head.`type` should equal("Global")
-    }
+  "fail if a normal relation name does not appear exactly two times" in {
+    val schema =
+      """
+        |type Todo @model{
+        |  id: ID! @unique
+        |  title: String
+        |  comments: [Comment!]! @relation(name: "TodoToComments")
+        |}
+        |
+        |type Comment @model{
+        |  id: ID! @unique
+        |  bla: String
+        |}
+      """.stripMargin
+    val result = SchemaSyntaxValidator(schema).validate
+    result should have(size(1))
+    result.head.`type` should equal("Todo")
+    result.head.field should equal(Some("comments"))
+    result.head.description should include("exactly 2 times")
+  }
 
-    "fail if a relation field does not specify the relation directive" in {
-      val schema =
-        """
-          |type Todo @model{
-          |  id: ID! @unique
-          |  title: String
-          |  comments: [Comment!]!
-          |}
-          |
-          |type Comment @model{
-          |  id: ID! @unique
-          |  bla: String
-          |}
-        """.stripMargin
-      val result = SchemaSyntaxValidator(schema).validate
-      result should have(size(1))
-      result.head.`type` should equal("Todo")
-      result.head.field should equal(Some("comments"))
-      result.head.description should include("The relation field `comments` must specify a `@relation` directive")
-    }
+  "succeed if a relation gets renamed" in {
+    val schema =
+      """
+        |type Todo @model{
+        |  id: ID! @unique
+        |  title: String
+        |  comments: [Comment!]! @relation(name: "TodoToCommentsNew", oldName: "TodoToComments")
+        |}
+        |
+        |type Comment @model{
+        |  id: ID! @unique
+        |  bla: String
+        |  todo: Todo @relation(name: "TodoToComments")
+        |}
+      """.stripMargin
 
-    "fail if a relation directive appears on a scalar field" in {
-      val schema =
-        """
-          |type Todo @model {
-          |  id: ID! @unique
-          |  title: String @relation(name: "TodoToComments")
-          |}
-          |
-          |type Comment @model{
-          |  id: ID! @unique
-          |  bla: String
-          |}
-        """.stripMargin
-      val result = SchemaSyntaxValidator(schema).validate
-      result should have(size(1))
-      result.head.`type` should equal("Todo")
-      result.head.field should equal(Some("title"))
-      result.head.description should include("cannot specify the `@relation` directive.")
-    }
+    val result = SchemaSyntaxValidator(schema).validate
+    result should have(size(0))
+  }
 
-    "fail if a normal relation name does not appear exactly two times" in {
-      val schema =
-        """
-          |type Todo @model{
-          |  id: ID! @unique
-          |  title: String
-          |  comments: [Comment!]! @relation(name: "TodoToComments")
-          |}
-          |
-          |type Comment @model{
-          |  id: ID! @unique
-          |  bla: String
-          |}
-        """.stripMargin
-      val result = SchemaSyntaxValidator(schema).validate
-      result should have(size(1))
-      result.head.`type` should equal("Todo")
-      result.head.field should equal(Some("comments"))
-      result.head.description should include("exactly 2 times")
-    }
+  "succeed if a one field self relation does appear only once" in {
+    val schema =
+      """
+        |type Todo @model{
+        |  id: ID! @unique
+        |  title: String
+        |  todo: Todo @relation(name: "OneFieldSelfRelation")
+        |  todos: [Todo!]! @relation(name: "OneFieldManySelfRelation")
+        |}
+      """.stripMargin
 
-    "succeed if a relation gets renamed" in {
-      val schema =
-        """
-          |type Todo @model{
-          |  id: ID! @unique
-          |  title: String
-          |  comments: [Comment!]! @relation(name: "TodoToCommentsNew", oldName: "TodoToComments")
-          |}
-          |
-          |type Comment @model{
-          |  id: ID! @unique
-          |  bla: String
-          |  todo: Todo @relation(name: "TodoToComments") 
-          |}
-        """.stripMargin
+    val result = SchemaSyntaxValidator(schema).validate
+    result should have(size(0))
+  }
 
-      val result = SchemaSyntaxValidator(schema).validate
-      result should have(size(0))
-    }
+  // FIXME: also a case for when a relation appears 3 times?
 
-    "succeed if a one field self relation does appear only once" in {
-      val schema =
-        """
-          |type Todo @model{
-          |  id: ID! @unique
-          |  title: String
-          |  todo: Todo @relation(name: "OneFieldSelfRelation")
-          |  todos: [Todo!]! @relation(name: "OneFieldManySelfRelation")
-          |}
-        """.stripMargin
+  "fail if the relation directive does not appear on the right fields case 1" in {
+    val schema =
+      """
+        |type Todo @model{
+        |  id: ID! @unique
+        |  title: String
+        |  comments: [Comment!]! @relation(name: "TodoToComments")
+        |}
+        |
+        |type Comment @model{
+        |  id: ID! @unique
+        |  bla: String
+        |}
+        |
+        |type Author @model{
+        |  id: ID! @unique
+        |  name: String
+        |  todo: Todo @relation(name: "TodoToComments")
+        |}
+      """.stripMargin
+    val result = SchemaSyntaxValidator(schema).validate
+    result should have(size(1))
+    val first = result.head
+    first.`type` should equal("Todo")
+    first.field should equal(Some("comments"))
+    first.description should include("But the other directive for this relation appeared on the type")
+  }
 
-      val result = SchemaSyntaxValidator(schema).validate
-      result should have(size(0))
-    }
+  "fail if the relation directive does not appear on the right fields case 2" in {
+    val schema =
+      """
+        |type Todo @model{
+        |  id: ID! @unique
+        |  title: String
+        |  comments: [Comment!]! @relation(name: "TodoToComments")
+        |}
+        |
+        |type Comment @model{
+        |  id: ID! @unique
+        |  bla: String
+        |}
+        |
+        |type Author @model{
+        |  id: ID! @unique
+        |  name: String
+        |  whatever: Comment @relation(name: "TodoToComments")
+        |}
+      """.stripMargin
+    val result = SchemaSyntaxValidator(schema).validate
+    result should have(size(2))
+    val first = result.head
+    first.`type` should equal("Todo")
+    first.field should equal(Some("comments"))
+    first.description should include("But the other directive for this relation appeared on the type")
 
-    // FIXME: also a case for when a relation appears 3 times?
+    val second = result(1)
+    second.`type` should equal("Author")
+    second.field should equal(Some("whatever"))
+    second.description should include("But the other directive for this relation appeared on the type")
+  }
 
-    "fail if the relation directive does not appear on the right fields case 1" in {
-      val schema =
-        """
-          |type Todo @model{
-          |  id: ID! @unique
-          |  title: String
-          |  comments: [Comment!]! @relation(name: "TodoToComments")
-          |}
-          |
-          |type Comment @model{
-          |  id: ID! @unique
-          |  bla: String
-          |}
-          |
-          |type Author @model{
-          |  id: ID! @unique
-          |  name: String
-          |  todo: Todo @relation(name: "TodoToComments")
-          |}
-        """.stripMargin
-      val result = SchemaSyntaxValidator(schema).validate
-      result should have(size(1))
-      val first = result.head
-      first.`type` should equal("Todo")
-      first.field should equal(Some("comments"))
-      first.description should include("But the other directive for this relation appeared on the type")
-    }
+  "not accept that a many relation field is not marked as required" in {
+    val schema =
+      """
+        |type Todo @model{
+        |  id: ID! @unique
+        |  title: String
+        |  comments: [Comment!] @relation(name: "TodoToComments")
+        |}
+        |
+        |type Comment @model{
+        |  id: ID! @unique
+        |  text: String
+        |  todo: Todo @relation(name: "TodoToComments")
+        |}
+      """.stripMargin
+    val result = SchemaSyntaxValidator(schema).validate
+    result should have(size(1))
+  }
 
-    "fail if the relation directive does not appear on the right fields case 2" in {
-      val schema =
-        """
-          |type Todo @model{
-          |  id: ID! @unique
-          |  title: String
-          |  comments: [Comment!]! @relation(name: "TodoToComments")
-          |}
-          |
-          |type Comment @model{
-          |  id: ID! @unique
-          |  bla: String
-          |}
-          |
-          |type Author @model{
-          |  id: ID! @unique
-          |  name: String
-          |  whatever: Comment @relation(name: "TodoToComments")
-          |}
-        """.stripMargin
-      val result = SchemaSyntaxValidator(schema).validate
-      result should have(size(2))
-      val first = result.head
-      first.`type` should equal("Todo")
-      first.field should equal(Some("comments"))
-      first.description should include("But the other directive for this relation appeared on the type")
+  "succeed if a one relation field is marked as required" in {
+    val schema =
+      """
+        |type Todo @model{
+        |  id: ID! @unique
+        |  title: String
+        |  comments: [Comment!]! @relation(name: "TodoToComments")
+        |}
+        |
+        |type Comment @model{
+        |  id: ID! @unique
+        |  text: String
+        |  todo: Todo! @relation(name: "TodoToComments")
+        |}
+      """.stripMargin
+    val result = SchemaSyntaxValidator(schema).validate
+    result should have(size(0))
+  }
 
-      val second = result(1)
-      second.`type` should equal("Author")
-      second.field should equal(Some("whatever"))
-      second.description should include("But the other directive for this relation appeared on the type")
-    }
+  "fail if schema refers to a type that is not there" in {
+    val schema =
+      """
+        |type Todo @model{
+        |  id: ID! @unique
+        |  title: String
+        |  comments: [Comment!]!
+        |}
+        |
+        |
+      """.stripMargin
 
-    "not accept that a many relation field is not marked as required" in {
-      val schema =
-        """
-          |type Todo @model{
-          |  id: ID! @unique
-          |  title: String
-          |  comments: [Comment!] @relation(name: "TodoToComments")
-          |}
-          |
-          |type Comment @model{
-          |  id: ID! @unique
-          |  text: String
-          |  todo: Todo @relation(name: "TodoToComments")
-          |}
-        """.stripMargin
-      val result = SchemaSyntaxValidator(schema).validate
-      result should have(size(1))
-    }
+    val result = SchemaSyntaxValidator(schema).validate
+    result should have(size(2)) // additionally the relation directive is missing
+    val error = result.head
+    error.`type` should equal("Todo")
+    error.field should equal(Some("comments"))
+    error.description should include("no type or enum declaration with that name")
+  }
 
-    "succeed if a one relation field is marked as required" in {
-      val schema =
-        """
-          |type Todo @model{
-          |  id: ID! @unique
-          |  title: String
-          |  comments: [Comment!]! @relation(name: "TodoToComments")
-          |}
-          |
-          |type Comment @model{
-          |  id: ID! @unique
-          |  text: String
-          |  todo: Todo! @relation(name: "TodoToComments")
-          |}
-        """.stripMargin
-      val result = SchemaSyntaxValidator(schema).validate
-      result should have(size(0))
-    }
+  "NOT fail if the directives contain all required attributes" in {
+    val directiveRequirements = Seq(
+      DirectiveRequirement("zero", Seq.empty),
+      DirectiveRequirement("one", Seq(RequiredArg("a", mustBeAString = true))),
+      DirectiveRequirement("two", Seq(RequiredArg("a", mustBeAString = false), RequiredArg("b", mustBeAString = true)))
+    )
+    val schema =
+      """
+        |type Todo @model{
+        |  id: ID! @unique
+        |  title: String @zero @one(a: "") @two(a:1, b: "")
+        |}
+      """.stripMargin
 
-    "fail if schema refers to a type that is not there" in {
-      val schema =
-        """
-          |type Todo @model{
-          |  id: ID! @unique
-          |  title: String
-          |  comments: [Comment!]!
-          |}
-          |
-          |
-        """.stripMargin
+    val result = SchemaSyntaxValidator(schema, directiveRequirements, reservedFieldsRequirements = Vector.empty).validate
+    result should have(size(0))
+  }
 
-      val result = SchemaSyntaxValidator(schema).validate
-      result should have(size(2)) // additionally the relation directive is missing
-      val error = result.head
-      error.`type` should equal("Todo")
-      error.field should equal(Some("comments"))
-      error.description should include("no type or enum declaration with that name")
-    }
+  "fail if a directive misses a required attribute" in {
+    val directiveRequirements = Seq(
+      DirectiveRequirement("one", Seq(RequiredArg("a", mustBeAString = true))),
+      DirectiveRequirement("two", Seq(RequiredArg("a", mustBeAString = false), RequiredArg("b", mustBeAString = true)))
+    )
+    val schema =
+      """
+        |type Todo @model{
+        |  id: ID! @unique
+        |  title: String @one(a:1) @two(a:1)
+        |}
+      """.stripMargin
 
-    "NOT fail if the directives contain all required attributes" in {
-      val directiveRequirements = Seq(
-        DirectiveRequirement("zero", Seq.empty),
-        DirectiveRequirement("one", Seq(RequiredArg("a", mustBeAString = true))),
-        DirectiveRequirement("two", Seq(RequiredArg("a", mustBeAString = false), RequiredArg("b", mustBeAString = true)))
-      )
-      val schema =
-        """
-          |type Todo @model{
-          |  id: ID! @unique
-          |  title: String @zero @one(a: "") @two(a:1, b: "")
-          |}
-        """.stripMargin
+    val result = SchemaSyntaxValidator(schema, directiveRequirements, reservedFieldsRequirements = Vector.empty).validate
+    result should have(size(2))
+    val error1 = result.head
+    error1.`type` should equal("Todo")
+    error1.field should equal(Some("title"))
+    error1.description should include(missingDirectiveArgument("one", "a"))
 
-      val result = SchemaSyntaxValidator(schema, directiveRequirements, reservedFieldsRequirements = Vector.empty).validate
-      result should have(size(0))
-    }
-
-    "fail if a directive misses a required attribute" in {
-      val directiveRequirements = Seq(
-        DirectiveRequirement("one", Seq(RequiredArg("a", mustBeAString = true))),
-        DirectiveRequirement("two", Seq(RequiredArg("a", mustBeAString = false), RequiredArg("b", mustBeAString = true)))
-      )
-      val schema =
-        """
-          |type Todo @model{
-          |  id: ID! @unique
-          |  title: String @one(a:1) @two(a:1)
-          |}
-        """.stripMargin
-
-      val result = SchemaSyntaxValidator(schema, directiveRequirements, reservedFieldsRequirements = Vector.empty).validate
-      result should have(size(2))
-      val error1 = result.head
-      error1.`type` should equal("Todo")
-      error1.field should equal(Some("title"))
-      error1.description should include(missingDirectiveArgument("one", "a"))
-
-      val error2 = result(1)
-      error2.`type` should equal("Todo")
-      error2.field should equal(Some("title"))
-      error2.description should include(missingDirectiveArgument("two", "b"))
-    }
+    val error2 = result(1)
+    error2.`type` should equal("Todo")
+    error2.field should equal(Some("title"))
+    error2.description should include(missingDirectiveArgument("two", "b"))
   }
 
   "fail if the values in an enum declaration don't begin uppercase" in {
