@@ -123,20 +123,29 @@ case class SchemaSyntaxValidator(schema: String, directiveRequirements: Seq[Dire
       case fieldAndType if !fieldAndType.fieldDef.isValidRelationType => SchemaErrors.relationFieldTypeWrong(fieldAndType)
     }
 
+    /**
+      * group relation fields by the types it is connecting? Map[ConnectedTypes, Fields]
+      * ambiguous if map.get(types).get.count > 2
+      */
+    // TODO: should this be only performed for ambiguous relations?
     val (schemaErrors, validRelationFields) = partition(relationFields) {
       case fieldAndType if !fieldAndType.fieldDef.hasRelationDirective =>
+        // TODO: only error if relation would be ambiguous
         Left(SchemaErrors.missingRelationDirective(fieldAndType))
 
       case fieldAndType if !isSelfRelation(fieldAndType) && relationCount(fieldAndType) != 2 =>
+        // TODO: only error if relation would be ambiguous
         Left(SchemaErrors.relationNameMustAppear2Times(fieldAndType))
 
       case fieldAndType if isSelfRelation(fieldAndType) && relationCount(fieldAndType) != 1 && relationCount(fieldAndType) != 2 =>
+        // TODO: only error if relation would be ambiguous
         Left(SchemaErrors.selfRelationMustAppearOneOrTwoTimes(fieldAndType))
 
       case fieldAndType =>
         Right(fieldAndType)
     }
 
+    // TODO: we can't rely on the relation directive anymore
     val relationFieldsWithNonMatchingTypes = validRelationFields
       .groupBy(_.fieldDef.previousRelationName.get)
       .flatMap {
@@ -216,6 +225,7 @@ case class SchemaSyntaxValidator(schema: String, directiveRequirements: Seq[Dire
 
   def relationCount(fieldAndType: FieldAndType): Int = relationCount(fieldAndType.fieldDef.previousRelationName.get)
   def relationCount(relationName: String): Int = {
+    // FIXME: this relies on the relation directive
     val tmp = for {
       objectType <- doc.objectTypes
       field      <- objectType.relationFields

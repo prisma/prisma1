@@ -32,6 +32,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
     result.head.`type` should equal("Global")
   }
 
+  // TODO: adapt
   "fail if a relation field does not specify the relation directive" in {
     val schema =
       """
@@ -73,6 +74,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
     result.head.description should include("cannot specify the `@relation` directive.")
   }
 
+  // TODO: adapt
   "fail if a normal relation name does not appear exactly two times" in {
     val schema =
       """
@@ -94,6 +96,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
     result.head.description should include("exactly 2 times")
   }
 
+  // TODO: adapt
   "succeed if a relation gets renamed" in {
     val schema =
       """
@@ -114,6 +117,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
     result should have(size(0))
   }
 
+  // TODO: adapt
   "succeed if a one field self relation does appear only once" in {
     val schema =
       """
@@ -159,6 +163,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
     first.description should include("But the other directive for this relation appeared on the type")
   }
 
+  // TODO: adapt
   "fail if the relation directive does not appear on the right fields case 2" in {
     val schema =
       """
