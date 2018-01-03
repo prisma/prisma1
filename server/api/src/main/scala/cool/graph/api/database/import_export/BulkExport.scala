@@ -95,7 +95,7 @@ class BulkExport(project: Project)(implicit apiDependencies: ApiDependencies) {
         case info: ListInfo     => dataItemToExportList(dataItems, info)
       }
       val combinedElements = in.jsonElements ++ bundles.flatMap(_.jsonElements).toVector
-      val combinedSize = bundles.map(_.size).fold(in.size) { (a, b) => a + b }
+      val combinedSize     = bundles.map(_.size).fold(in.size) { (a, b) => a + b }
       val out              = JsonBundle(combinedElements, combinedSize)
       val numberSerialized = dataItems.length
 
@@ -112,7 +112,7 @@ class BulkExport(project: Project)(implicit apiDependencies: ApiDependencies) {
      val values = dataItems.filter(_.id == id).map(item => item("value").get)
      val result: Map[String, Any] = Map("_typeName" -> info.currentModel, "id" -> id, info.currentField -> values)
      val json = result.toJson
-     val combinedSize             = json.toString.length // todo
+     val combinedSize             = json.toString.length
 
      JsonBundle(Vector(json), combinedSize)
     }

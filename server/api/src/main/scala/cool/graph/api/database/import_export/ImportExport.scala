@@ -7,7 +7,7 @@ import spray.json.{DefaultJsonProtocol, JsArray, JsBoolean, JsFalse, JsNull, JsN
 
 package object ImportExport {
 
-  case class ExportRequest(fileType: String, cursor: Cursor)      //{"fileType":"nodes","cursor":{"table":INT,"row":INT,"field":INT,"array":INT}}
+  case class ExportRequest(fileType: String, cursor: Cursor)      //{"fileType":"nodes","cursor":{"table":INT,"row":INT,"field":INT,"array":INT}} // TODO make CLI agnostic to this, get rid of field and array columns
   case class Cursor(table: Int, row: Int, field: Int, array: Int) //{"table":INT,"row":INT,"field":INT,"array":INT}
   case class ResultFormat(out: JsonBundle, cursor: Cursor, isFull: Boolean)
   case class ImportBundle(valueType: String, values: JsArray)
