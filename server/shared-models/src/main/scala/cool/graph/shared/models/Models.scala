@@ -392,8 +392,6 @@ case class Field(
     })
   }
 
-  def relatedField_!(project: Project): Field = relatedField(project).get
-
   def relatedField(project: Project): Option[Field] = {
     val fields = relatedModel(project).get.fields
 
