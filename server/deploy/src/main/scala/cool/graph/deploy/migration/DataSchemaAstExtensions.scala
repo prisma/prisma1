@@ -44,7 +44,7 @@ object DataSchemaAstExtensions {
     def field(name: String): Option[FieldDefinition] = objectType.fields.find(_.name == name)
 
 //    def nonRelationFields: Vector[FieldDefinition] = objectType.fields.filter(_.isNoRelation)
-    def relationFields: Vector[FieldDefinition] = objectType.fields.filter(_.hasRelationDirective)
+//    def relationFields: Vector[FieldDefinition] = objectType.fields.filter(_.hasRelationDirective)
 
     def description: Option[String] = objectType.directiveArgumentAsString("description", "text")
   }
