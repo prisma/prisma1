@@ -11,7 +11,6 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
     val schema =
       """
         |type Todo @model{
-        |  id: ID! @unique
         |  title: String
         |}
       """.stripMargin
@@ -22,7 +21,6 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
     val schema =
       """
         |type Todo @model {
-        |  id: ID! @unique
         |  title: String
         |  isDone
         |}
@@ -118,12 +116,10 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
     val schema =
       """
         |type Todo @model {
-        |  id: ID! @unique
         |  title: String @relation(name: "TodoToComments")
         |}
         |
         |type Comment @model{
-        |  id: ID! @unique
         |  bla: String
         |}
         """.stripMargin
@@ -139,14 +135,12 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
     val schema =
       """
         |type Todo @model{
-        |  id: ID! @unique
         |  title: String
         |  comments: [Comment!]! @relation(name: "TodoToComments")
         |  comments2: [Comment!]! @relation(name: "TodoToComments2")
         |}
         |
         |type Comment @model{
-        |  id: ID! @unique
         |  bla: String
         |}
       """.stripMargin
@@ -162,13 +156,11 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
     val schema =
       """
         |type Todo @model{
-        |  id: ID! @unique
         |  title: String
         |  comments: [Comment!]! @relation(name: "TodoToCommentsNew", oldName: "TodoToComments")
         |}
         |
         |type Comment @model{
-        |  id: ID! @unique
         |  bla: String
         |  todo: Todo @relation(name: "TodoToComments")
         |}
@@ -183,7 +175,6 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
     val schema =
       """
         |type Todo @model{
-        |  id: ID! @unique
         |  title: String
         |  todo: Todo @relation(name: "OneFieldSelfRelation")
         |  todos: [Todo!]! @relation(name: "OneFieldManySelfRelation")
@@ -200,18 +191,15 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
     val schema =
       """
         |type Todo @model{
-        |  id: ID! @unique
         |  title: String
         |  comments: [Comment!]! @relation(name: "TodoToComments")
         |}
         |
         |type Comment @model{
-        |  id: ID! @unique
         |  bla: String
         |}
         |
         |type Author @model{
-        |  id: ID! @unique
         |  name: String
         |  todo: Todo @relation(name: "TodoToComments")
         |}
@@ -229,18 +217,15 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
     val schema =
       """
         |type Todo @model{
-        |  id: ID! @unique
         |  title: String
         |  comments: [Comment!]! @relation(name: "TodoToComments")
         |}
         |
         |type Comment @model{
-        |  id: ID! @unique
         |  bla: String
         |}
         |
         |type Author @model{
-        |  id: ID! @unique
         |  name: String
         |  whatever: Comment @relation(name: "TodoToComments")
         |}
@@ -262,13 +247,11 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
     val schema =
       """
         |type Todo @model{
-        |  id: ID! @unique
         |  title: String
         |  comments: [Comment!] @relation(name: "TodoToComments")
         |}
         |
         |type Comment @model{
-        |  id: ID! @unique
         |  text: String
         |  todo: Todo @relation(name: "TodoToComments")
         |}
@@ -281,13 +264,11 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
     val schema =
       """
         |type Todo @model{
-        |  id: ID! @unique
         |  title: String
         |  comments: [Comment!]! @relation(name: "TodoToComments")
         |}
         |
         |type Comment @model{
-        |  id: ID! @unique
         |  text: String
         |  todo: Todo! @relation(name: "TodoToComments")
         |}
@@ -300,12 +281,9 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
     val schema =
       """
         |type Todo @model{
-        |  id: ID! @unique
         |  title: String
         |  comments: [Comment!]!
         |}
-        |
-        |
       """.stripMargin
 
     val result = SchemaSyntaxValidator(schema).validate
@@ -325,7 +303,6 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
     val schema =
       """
         |type Todo @model{
-        |  id: ID! @unique
         |  title: String @zero @one(a: "") @two(a:1, b: "")
         |}
       """.stripMargin
@@ -342,7 +319,6 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
     val schema =
       """
         |type Todo @model{
-        |  id: ID! @unique
         |  title: String @one(a:1) @two(a:1)
         |}
       """.stripMargin
@@ -364,7 +340,6 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
     val schema =
       """
         |type Todo @model{
-        |  id: ID! @unique
         |  title: String @one @two(a:"")
         |  status: TodoStatus
         |}
@@ -387,7 +362,6 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
     val schema =
       s"""
          |type Todo @model{
-         |  id: ID! @unique
          |  title: String @one @two(a:"")
          |  status: TodoStatus
          |}
@@ -408,7 +382,6 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
     val schema =
       """
         |type Todo @model{
-        |  id: ID! @unique
         |  title: String @defaultValue(value: "foo") @defaultValue(value: "bar")
         |}
       """.stripMargin
