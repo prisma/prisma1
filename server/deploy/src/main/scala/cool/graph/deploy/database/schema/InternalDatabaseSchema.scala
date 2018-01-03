@@ -28,20 +28,14 @@ object InternalDatabaseSchema {
     sqlu"""
       CREATE TABLE IF NOT EXISTS `Migration` (
         `projectId` varchar(200) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',
-        `revision` int(11) NOT NULL DEFAULT '1',
+        `revision` int NOT NULL DEFAULT '1',
         `schema` mediumtext COLLATE utf8_unicode_ci DEFAULT NULL,
         `status` ENUM('PENDING', 'IN_PROGRESS', 'SUCCESS', 'ROLLING_BACK', 'ROLLBACK_SUCCESS', 'ROLLBACK_FAILURE') NOT NULL DEFAULT 'PENDING',
-        `progress`
+        `progress` int NOT NULL default 0,
         `steps` mediumtext COLLATE utf8_unicode_ci DEFAULT NULL,
+        `errors` mediumtext COLLATE utf8_unicode_ci DEFAULT NULL,
         PRIMARY KEY (`projectId`, `revision`),
         CONSTRAINT `migrations_projectid_foreign` FOREIGN KEY (`projectId`) REFERENCES `Project` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;""",
-    // Migration progress
-    sqlu"""
-      CREATE TABLE IF NOT EXISTS `MigrationProgress` (
-        `id` varchar(200) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',
-        `ownerId` varchar(25) COLLATE utf8_unicode_ci DEFAULT NULL,
-        PRIMARY KEY (`id`)
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;"""
   )
 }

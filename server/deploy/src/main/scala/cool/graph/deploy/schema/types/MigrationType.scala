@@ -11,8 +11,10 @@ object MigrationType {
     fields[SystemUserContext, models.Migration](
       Field("projectId", StringType, resolve = _.value.projectId),
       Field("revision", IntType, resolve = _.value.revision),
-      Field("hasBeenApplied", BooleanType, resolve = _.value.hasBeenApplied),
-      Field("steps", ListType(MigrationStepType.Type), resolve = _.value.steps)
+      Field("status", StringType, resolve = _.value.status.toString),
+      Field("progress", StringType, resolve = x => s"${x.value.progress}/${x.value.steps.length}"),
+      Field("steps", ListType(MigrationStepType.Type), resolve = _.value.steps),
+      Field("errors", ListType(MigrationStepType.Type), resolve = _.value.steps)
     )
   )
 }

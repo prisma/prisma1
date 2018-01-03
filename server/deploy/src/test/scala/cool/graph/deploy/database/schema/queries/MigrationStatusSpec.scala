@@ -1,7 +1,7 @@
 package cool.graph.deploy.database.schema.queries
 
 import cool.graph.deploy.specutils.DeploySpecBase
-import cool.graph.shared.models.{Migration, ProjectId}
+import cool.graph.shared.models.{CreateField, CreateModel, Migration, ProjectId}
 import org.scalatest.{FlatSpec, Matchers}
 
 class MigrationStatusSpec extends FlatSpec with Matchers with DeploySpecBase {
@@ -18,7 +18,8 @@ class MigrationStatusSpec extends FlatSpec with Matchers with DeploySpecBase {
        |  migrationStatus(name: "${nameAndStage.name}", stage: "${nameAndStage.stage}") {
        |    projectId
        |    revision
-       |    hasBeenApplied
+       |    progress
+       |    status
        |    steps {
        |      type
        |    }
@@ -28,21 +29,40 @@ class MigrationStatusSpec extends FlatSpec with Matchers with DeploySpecBase {
 
     result.pathAsString("data.migrationStatus.projectId") shouldEqual project.id
     result.pathAsLong("data.migrationStatus.revision") shouldEqual 2
-    result.pathAsBool("data.migrationStatus.hasBeenApplied") shouldEqual true
+    result.pathAsString("data.migrationStatus.status") shouldEqual "SUCCESS"
+    result.pathAsString("data.migrationStatus.progress") shouldEqual "0/4"
     result.pathAsSeq("data.migrationStatus.steps") shouldNot be(empty)
   }
 
   "MigrationStatus" should "return the next pending migration if one exists" in {
     val project      = setupProject(basicTypesGql)
     val nameAndStage = ProjectId.fromEncodedString(project.id)
-    val migration    = migrationPersistence.create(project, Migration.empty(project)).await
+    val migration = migrationPersistence
+      .create(
+        project,
+        Migration(project,
+                  Vector(CreateModel("TestModel"),
+                         CreateField(
+                           "TestModel",
+                           "TestField",
+                           "String",
+                           isRequired = false,
+                           isList = false,
+                           isUnique = false,
+                           None,
+                           None,
+                           None
+                         )))
+      )
+      .await
 
     val result = server.query(s"""
        |query {
        |  migrationStatus(name: "${nameAndStage.name}", stage: "${nameAndStage.stage}") {
        |    projectId
        |    revision
-       |    hasBeenApplied
+       |    progress
+       |    status
        |    steps {
        |      type
        |    }
@@ -52,6 +72,7 @@ class MigrationStatusSpec extends FlatSpec with Matchers with DeploySpecBase {
 
     result.pathAsString("data.migrationStatus.projectId") shouldEqual project.id
     result.pathAsLong("data.migrationStatus.revision") shouldEqual migration.revision
-    result.pathAsBool("data.migrationStatus.hasBeenApplied") shouldEqual false
+    result.pathAsString("data.migrationStatus.status") shouldEqual "PENDING"
+    result.pathAsString("data.migrationStatus.progress") shouldEqual "0/2"
   }
 }

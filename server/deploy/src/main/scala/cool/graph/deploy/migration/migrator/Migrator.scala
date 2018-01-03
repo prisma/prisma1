@@ -1,10 +1,12 @@
 package cool.graph.deploy.migration.migrator
 
 import akka.actor.{Actor, ActorRef, Props, Stash, Terminated}
-import cool.graph.deploy.database.persistence.{MigrationPersistence, ProjectPersistence}
-import cool.graph.deploy.migration.MigrationApplier
+import cool.graph.deploy.database.persistence.{DbToModelMapper, MigrationPersistence, ProjectPersistence}
+import cool.graph.deploy.database.tables.MigrationTable
+import cool.graph.deploy.migration.mutactions.ClientSqlMutaction
 import cool.graph.deploy.schema.DeploymentInProgress
 import cool.graph.shared.models.{Migration, MigrationStep, Project}
+import slick.jdbc.MySQLProfile.backend.DatabaseDef
 
 import scala.collection.mutable
 import scala.concurrent.Future
@@ -19,8 +21,8 @@ case class Schedule(nextProject: Project, steps: Vector[MigrationStep])
 
 case class DeploymentSchedulerActor()(
     implicit val migrationPersistence: MigrationPersistence,
-    projectPersistence: ProjectPersistence,
-    applier: MigrationApplier
+    val projectPersistence: ProjectPersistence,
+    val clientDatabase: DatabaseDef
 ) extends Actor
     with Stash {
   implicit val dispatcher = context.system.dispatcher
@@ -107,11 +109,12 @@ object Deploy
   */
 case class ProjectDeploymentActor(projectId: String)(
     implicit val migrationPersistence: MigrationPersistence,
-    applier: MigrationApplier
+    val clientDatabase: DatabaseDef
 ) extends Actor
     with Stash {
 
   implicit val ec = context.system.dispatcher
+  val
 
   // Possible enhancement: Periodically scan the DB for migrations if signal was lost -> Wait and see if this is an issue at all
 
@@ -210,9 +213,18 @@ case class ProjectDeploymentActor(projectId: String)(
   }
 
   def handleDeployment(): Future[Unit] = {
-    migrationPersistence.getUnappliedMigration(projectId).transformWith {
-      case Success(Some(unapplied)) =>
-        applier.applyMigration(unapplied.previousProject, unapplied.nextProject, unapplied.migration).map { result =>
+    // Need next project -> Load from DB or by migration
+    // Get previous project from cache
+
+//    MigrationTable.nextOpenMigration(projectId)
+
+    migrationPersistence.getNextMigration(projectId).transformWith {
+      case Success(Some(nextMigration)) =>
+
+        val nextProject = DbToModelMapper.convert(nextMigration)
+
+
+        applyMigration(nextMigration.previousProject, unapplied.nextProject, unapplied.migration).map { result =>
           if (result.succeeded) {
             migrationPersistence.markMigrationAsApplied(unapplied.migration)
           } else {
@@ -228,5 +240,73 @@ case class ProjectDeploymentActor(projectId: String)(
         println("[Warning] Deployment signalled but no unapplied migration found. Nothing to see here.")
         Future.unit
     }
+  }
+
+  override def applyMigration(previousProject: Project, nextProject: Project, migration: Migration): Future[MigrationApplierResult] = {
+    val initialProgress = MigrationProgress(pendingSteps = migration.steps, appliedSteps = Vector.empty, isRollingback = false)
+    recurse(previousProject, nextProject, initialProgress)
+  }
+
+  def recurse(previousProject: Project, nextProject: Project, progress: MigrationProgress): Future[MigrationApplierResult] = {
+    if (!progress.isRollingback) {
+      recurseForward(previousProject, nextProject, progress)
+    } else {
+      recurseForRollback(previousProject, nextProject, progress)
+    }
+  }
+
+  def recurseForward(previousProject: Project, nextProject: Project, progress: MigrationProgress): Future[MigrationApplierResult] = {
+    if (progress.pendingSteps.nonEmpty) {
+      val (step, newProgress) = progress.popPending
+
+      val result = for {
+        _ <- applyStep(previousProject, nextProject, step)
+        x <- recurse(previousProject, nextProject, newProgress)
+      } yield x
+
+      result.recoverWith {
+        case exception =>
+          println("encountered exception while applying migration. will roll back.")
+          exception.printStackTrace()
+          recurseForRollback(previousProject, nextProject, newProgress.markForRollback)
+      }
+    } else {
+      Future.successful(MigrationApplierResult(succeeded = true))
+    }
+  }
+
+  def recurseForRollback(previousProject: Project, nextProject: Project, progress: MigrationProgress): Future[MigrationApplierResult] = {
+    if (progress.appliedSteps.nonEmpty) {
+      val (step, newProgress) = progress.popApplied
+
+      for {
+        _ <- unapplyStep(previousProject, nextProject, step).recover { case _ => () }
+        x <- recurse(previousProject, nextProject, newProgress)
+      } yield x
+    } else {
+      Future.successful(MigrationApplierResult(succeeded = false))
+    }
+  }
+
+  def applyStep(previousProject: Project, nextProject: Project, step: MigrationStep): Future[Unit] = {
+    migrationStepToMutaction(previousProject, nextProject, step).map(executeClientMutaction).getOrElse(Future.successful(()))
+  }
+
+  def unapplyStep(previousProject: Project, nextProject: Project, step: MigrationStep): Future[Unit] = {
+    migrationStepToMutaction(previousProject, nextProject, step).map(executeClientMutactionRollback).getOrElse(Future.successful(()))
+  }
+
+  def executeClientMutaction(mutaction: ClientSqlMutaction): Future[Unit] = {
+    for {
+      statements <- mutaction.execute
+      _          <- clientDatabase.run(statements.sqlAction)
+    } yield ()
+  }
+
+  def executeClientMutactionRollback(mutaction: ClientSqlMutaction): Future[Unit] = {
+    for {
+      statements <- mutaction.rollback.get
+      _          <- clientDatabase.run(statements.sqlAction)
+    } yield ()
   }
 }

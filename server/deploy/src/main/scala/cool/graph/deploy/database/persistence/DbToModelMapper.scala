@@ -8,6 +8,11 @@ object DbToModelMapper {
   import cool.graph.shared.models.ProjectJsonFormatter._
   import MigrationStepsJsonFormatter._
 
+  def convert(projectId: String, migration: Migration): models.Project = {
+    val projectModel = migration.schema.as[models.Project]
+    projectModel.copy(revision = migration.revision)
+  }
+
   def convert(project: Project, migration: Migration): models.Project = {
     val projectModel = migration.schema.as[models.Project]
     projectModel.copy(revision = migration.revision)
@@ -22,8 +27,10 @@ object DbToModelMapper {
     models.Migration(
       migration.projectId,
       migration.revision,
-      migration.hasBeenApplied,
-      migration.steps.as[Vector[MigrationStep]]
+      migration.status,
+      migration.progress,
+      migration.steps.as[Vector[MigrationStep]],
+      migration.errors.as[Vector[String]]
     )
   }
 }

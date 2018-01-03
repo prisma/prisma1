@@ -1,6 +1,9 @@
 package cool.graph.deploy.database.persistence
 
+import cool.graph.shared.models.MigrationStatus
+import cool.graph.shared.models.MigrationStatus.MigrationStatus
 import cool.graph.shared.models._
+import cool.graph.utils.json.JsonUtils
 import play.api.libs.json._
 
 object MigrationStepsJsonFormatter extends DefaultReads {
@@ -110,6 +113,7 @@ object MigrationStepsJsonFormatter extends DefaultReads {
     }
   }
 
+  implicit val migrationStatusFormat                   = JsonUtils.enumFormat(MigrationStatus)
   implicit val migrationStepsFormat: Format[Migration] = Json.format[Migration]
 
   def writeDoubleOpt[T](field: String, opt: Option[Option[T]])(implicit writes: Writes[T]): JsObject = {

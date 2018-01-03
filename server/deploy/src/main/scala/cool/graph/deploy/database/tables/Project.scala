@@ -1,5 +1,6 @@
 package cool.graph.deploy.database.tables
 
+import cool.graph.shared.models.MigrationStatus
 import slick.dbio.Effect.Read
 import slick.jdbc.MySQLProfile.api._
 import slick.sql.{FixedSqlStreamingAction, SqlAction}
@@ -16,6 +17,8 @@ class ProjectTable(tag: Tag) extends Table[Project](tag, "Project") {
 }
 
 object ProjectTable {
+  implicit val statusMapper = MigrationTable.statusMapper
+
   def byId(id: String): SqlAction[Option[Project], NoStream, Read] = {
     Tables.Projects
       .filter {
@@ -30,7 +33,7 @@ object ProjectTable {
     val baseQuery = for {
       project   <- Tables.Projects
       migration <- Tables.Migrations
-      if migration.projectId === id && project.id === id && migration.hasBeenApplied
+      if migration.projectId === id && project.id === id && migration.status === MigrationStatus.Success
     } yield (project, migration)
 
     baseQuery.sortBy(_._2.revision.desc).take(1).result.headOption
@@ -40,7 +43,8 @@ object ProjectTable {
     val baseQuery = for {
       project   <- Tables.Projects
       migration <- Tables.Migrations
-      if project.id === migration.projectId && !migration.hasBeenApplied
+      if project.id === migration.projectId
+      if migration.status inSet MigrationStatus.openStates
     } yield project
 
     baseQuery.distinct.result

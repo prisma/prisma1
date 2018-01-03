@@ -1,7 +1,8 @@
 package cool.graph.deploy.database.schema.mutations
 
+import cool.graph.deploy.database.tables.Migration
 import cool.graph.deploy.specutils.DeploySpecBase
-import cool.graph.shared.models.ProjectId
+import cool.graph.shared.models.{MigrationStatus, ProjectId}
 import org.scalatest.{FlatSpec, Matchers}
 
 class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
@@ -93,7 +94,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
 
     val migrations = migrationPersistence.loadAll(project.id).await
     migrations should have(size(3))
-    migrations.exists(!_.hasBeenApplied) shouldEqual false
+    migrations.exists(x => x.status != MigrationStatus.Success) shouldEqual false
     migrations.head.revision shouldEqual 3 // order is DESC
   }
 
@@ -172,7 +173,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
 
     val migrations = migrationPersistence.loadAll(project.id).await
     migrations should have(size(5))
-    migrations.exists(!_.hasBeenApplied) shouldEqual false
+    migrations.exists(x => x.status != MigrationStatus.Success) shouldEqual false
     migrations.head.revision shouldEqual 5 // order is DESC
   }
 

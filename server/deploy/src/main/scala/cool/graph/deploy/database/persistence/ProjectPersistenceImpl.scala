@@ -20,6 +20,8 @@ case class ProjectPersistenceImpl(
       })
   }
 
+  def loadNext(id: )
+
   override def create(project: Project): Future[Unit] = {
     val addProject = Tables.Projects += ModelToDbMapper.convert(project)
     internalDatabase.run(addProject).map(_ => ())

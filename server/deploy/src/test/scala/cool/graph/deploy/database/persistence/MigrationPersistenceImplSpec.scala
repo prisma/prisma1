@@ -2,7 +2,7 @@ package cool.graph.deploy.database.persistence
 
 import cool.graph.deploy.database.tables.Tables
 import cool.graph.deploy.specutils.DeploySpecBase
-import cool.graph.shared.models.Migration
+import cool.graph.shared.models.{Migration, MigrationStatus}
 import org.scalatest.{FlatSpec, Matchers}
 import slick.jdbc.MySQLProfile.api._
 
@@ -23,8 +23,8 @@ class MigrationPersistenceImplSpec extends FlatSpec with Matchers with DeploySpe
   ".loadAll()" should "return all migrations for a project" in {
     val project = setupProject(basicTypesGql)
 
-    // 1 applied, 2 unapplied migrations (+ 2 from setup)
-    migrationPersistence.create(project, Migration.empty(project).copy(hasBeenApplied = true)).await
+    // 1 successful, 2 pending migrations (+ 2 from setup)
+    migrationPersistence.create(project, Migration.empty(project).copy(status = MigrationStatus.Success)).await
     migrationPersistence.create(project, Migration.empty(project)).await
     migrationPersistence.create(project, Migration.empty(project)).await
 
@@ -32,27 +32,27 @@ class MigrationPersistenceImplSpec extends FlatSpec with Matchers with DeploySpe
     migrations should have(size(5))
   }
 
-  ".getUnappliedMigration()" should "return an unapplied migration from the specified project" in {
-    val project  = setupProject(basicTypesGql)
-    val project2 = setupProject(basicTypesGql)
-
-    // 2 unapplied migrations
-    migrationPersistence.create(project, Migration.empty(project)).await
-    migrationPersistence.create(project2, Migration.empty(project2)).await
-
-    val unapplied = migrationPersistence.getUnappliedMigration(project.id).await()
-    unapplied.isDefined shouldEqual true
-    unapplied.get.previousProject.id shouldEqual project.id
-
-    migrationPersistence.markMigrationAsApplied(unapplied.get.migration).await()
-
-    val unapplied2 = migrationPersistence.getUnappliedMigration(project2.id).await()
-    unapplied2.isDefined shouldEqual true
-    unapplied2.get.previousProject.id shouldEqual project2.id
-
-    migrationPersistence.markMigrationAsApplied(unapplied2.get.migration).await()
-    migrationPersistence.getUnappliedMigration(project.id).await().isDefined shouldEqual false
-  }
+//  ".getUnappliedMigration()" should "return an unapplied migration from the specified project" in {
+//    val project  = setupProject(basicTypesGql)
+//    val project2 = setupProject(basicTypesGql)
+//
+//    // 2 unapplied migrations
+//    migrationPersistence.create(project, Migration.empty(project)).await
+//    migrationPersistence.create(project2, Migration.empty(project2)).await
+//
+//    val unapplied = migrationPersistence.getUnappliedMigration(project.id).await()
+//    unapplied.isDefined shouldEqual true
+//    unapplied.get.previousProject.id shouldEqual project.id
+//
+//    migrationPersistence.markMigrationAsApplied(unapplied.get.migration).await()
+//
+//    val unapplied2 = migrationPersistence.getUnappliedMigration(project2.id).await()
+//    unapplied2.isDefined shouldEqual true
+//    unapplied2.get.previousProject.id shouldEqual project2.id
+//
+//    migrationPersistence.markMigrationAsApplied(unapplied2.get.migration).await()
+//    migrationPersistence.getUnappliedMigration(project.id).await().isDefined shouldEqual false
+//  }
 
   ".markMigrationAsApplied()" should "mark a migration as applied (duh)" in {
     val project          = setupProject(basicTypesGql)

@@ -31,8 +31,10 @@ case class AddProjectMutation(
     val migration = Migration(
       projectId = newProject.id,
       revision = 0,
-      hasBeenApplied = true,
-      steps = Vector.empty
+      progress = 0,
+      status = MigrationStatus.Success,
+      steps = Vector.empty,
+      errors = Vector.empty
     )
 
     for {

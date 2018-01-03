@@ -5,7 +5,7 @@ import cool.graph.deploy.database.persistence.{DbToModelMapper, MigrationPersist
 import cool.graph.deploy.database.tables.ProjectTable
 import cool.graph.deploy.migration.MigrationApplierImpl
 import cool.graph.deploy.migration.migrator.Migrator
-import cool.graph.shared.models.{Migration, MigrationStep, Project, UnappliedMigration}
+import cool.graph.shared.models._
 import cool.graph.utils.await.AwaitUtils
 import cool.graph.utils.future.FutureUtils.FutureOpt
 import slick.jdbc.MySQLProfile.backend.DatabaseDef
@@ -37,7 +37,7 @@ case class TestMigrator(
     applier.applyMigration(unappliedMigration.previousProject, unappliedMigration.nextProject, unappliedMigration.migration).flatMap { result =>
       if (result.succeeded) {
         migrationPersistence.markMigrationAsApplied(unappliedMigration.migration).map { _ =>
-          unappliedMigration.migration.copy(hasBeenApplied = true)
+          unappliedMigration.migration.copy(status = MigrationStatus.Success)
         }
       } else {
         Future.failed(new Exception("applyMigration resulted in an error"))
