@@ -465,9 +465,8 @@ case class Relation(
     modelBId: Id,
     fieldMirrors: List[RelationFieldMirror] = List.empty
 ) {
-  def connectsTheModels(model1: String, model2: String): Boolean = {
-    (modelAId == model1 && modelBId == model2) || (modelAId == model2 && modelBId == model1)
-  }
+  def connectsTheModels(model1: Model, model2: Model): Boolean   = connectsTheModels(model1.id, model2.id)
+  def connectsTheModels(model1: String, model2: String): Boolean = (modelAId == model1 && modelBId == model2) || (modelAId == model2 && modelBId == model1)
 
   def isSameModelRelation(project: Project): Boolean          = getModelA(project) == getModelB(project)
   def isSameFieldSameModelRelation(project: Project): Boolean = getModelAField(project) == getModelBField(project)
