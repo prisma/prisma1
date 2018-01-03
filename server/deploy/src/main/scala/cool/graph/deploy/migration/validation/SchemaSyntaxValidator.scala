@@ -126,9 +126,35 @@ case class SchemaSyntaxValidator(schema: String, directiveRequirements: Seq[Dire
     /**
       * group relation fields by the types it is connecting? Map[ConnectedTypes, Fields]
       * ambiguous if map.get(types).get.count > 2
+      *
+      * a relation field is ambiguous if a type contains 2 relation fields that refer to the same type
       */
+//    case class ConnectedTypes(type1: ObjectTypeDefinition, type2: ObjectTypeDefinition)
+//    object ConnectedTypes {
+//      def apply(fieldAndType: FieldAndType): ConnectedTypes = {
+//        val oppositeType = doc.objectType_!(fieldAndType.fieldDef.typeName)
+//        if (fieldAndType.objectType.name < oppositeType.name) {
+//          ConnectedTypes(fieldAndType.objectType, oppositeType)
+//        } else {
+//          ConnectedTypes(oppositeType, fieldAndType.objectType)
+//        }
+//      }
+//    }
+//    val connectionMap: Map[ConnectedTypes, Seq[FieldAndType]] = relationFields.groupBy(ConnectedTypes(_))
+    //val ambiguousRelationFields                               = connectionMap.values.filter(_.size > 2).flatten.toVector
+
+    def ambiguousRelationFieldsForType(objectType: ObjectTypeDefinition): Vector[FieldAndType] = {
+      val relationFields                                = objectType.fields.filter(isRelationField)
+      val grouped: Map[String, Vector[FieldDefinition]] = relationFields.groupBy(_.typeName)
+      val ambiguousFields                               = grouped.values.filter(_.size > 1).flatten.toVector
+      ambiguousFields.map { field =>
+        FieldAndType(objectType, field)
+      }
+    }
+    val ambiguousRelationFields = doc.objectTypes.flatMap(ambiguousRelationFieldsForType)
+
     // TODO: should this be only performed for ambiguous relations?
-    val (schemaErrors, validRelationFields) = partition(relationFields) {
+    val (schemaErrors, validRelationFields) = partition(ambiguousRelationFields) {
       case fieldAndType if !fieldAndType.fieldDef.hasRelationDirective =>
         // TODO: only error if relation would be ambiguous
         Left(SchemaErrors.missingRelationDirective(fieldAndType))

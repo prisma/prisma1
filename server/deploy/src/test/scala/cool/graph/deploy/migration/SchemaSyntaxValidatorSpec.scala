@@ -32,26 +32,86 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
     result.head.`type` should equal("Global")
   }
 
-  // TODO: adapt
-  "fail if a relation field does not specify the relation directive" in {
+  "succeed if an unambiguous relation field does not specify the relation directive" in {
     val schema =
       """
         |type Todo @model{
-        |  id: ID! @unique
         |  title: String
         |  comments: [Comment!]!
         |}
         |
         |type Comment @model{
-        |  id: ID! @unique
-        |  bla: String
+        |  text: String
         |}
       """.stripMargin
     val result = SchemaSyntaxValidator(schema).validate
-    result should have(size(1))
+    result should have(size(0))
+  }
+
+  "fail if ambiguous relation fields do not specify the relation directive" in {
+    val schema =
+      """
+        |type Todo @model{
+        |  title: String
+        |  comments: [Comment!]!
+        |  comments2: [Comment!]!
+        |}
+        |
+        |type Comment @model{
+        |  text: String
+        |}
+      """.stripMargin
+    val result = SchemaSyntaxValidator(schema).validate
+    result should have(size(2))
+
     result.head.`type` should equal("Todo")
     result.head.field should equal(Some("comments"))
     result.head.description should include("The relation field `comments` must specify a `@relation` directive")
+
+    result(1).`type` should equal("Todo")
+    result(1).field should equal(Some("comments2"))
+    result(1).description should include("The relation field `comments2` must specify a `@relation` directive")
+  }
+
+  // TODO: adapt when back relations are optional
+  "fail if ambiguous relation fields specify the same relation name" in {
+    val schema =
+      """
+        |type Todo @model{
+        |  title: String
+        |  comments: [Comment!]! @relation(name: "TodoToComments")
+        |  comments2: [Comment!]! @relation(name: "TodoToComments")
+        |}
+        |
+        |type Comment @model{
+        |  todo: Todo! @relation(name: "TodoToComments")
+        |  todo2: Todo! @relation(name: "TodoToComments")
+        |  text: String
+        |}
+      """.stripMargin
+    val result = SchemaSyntaxValidator(schema).validate
+    result should have(size(4))
+    result.forall(_.description.contains("A relation directive with a name must appear exactly 2 times.")) should be(true)
+  }
+
+  // TODO: adapt when back relations are optional
+  "succeed if ambiguous relation fields specify the relation directive" in {
+    val schema =
+      """
+        |type Todo @model{
+        |  title: String
+        |  comments: [Comment!]! @relation(name: "TodoToComments1")
+        |  comments2: [Comment!]! @relation(name: "TodoToComments2")
+        |}
+        |
+        |type Comment @model{
+        |  todo: Todo! @relation(name: "TodoToComments1")
+        |  todo2: Todo! @relation(name: "TodoToComments2")
+        |  text: String
+        |}
+      """.stripMargin
+    val result = SchemaSyntaxValidator(schema).validate
+    result should have(size(0))
   }
 
   "fail if a relation directive appears on a scalar field" in {
@@ -74,7 +134,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
     result.head.description should include("cannot specify the `@relation` directive.")
   }
 
-  // TODO: adapt
+  // TODO: adapt when back relations are optional
   "fail if a normal relation name does not appear exactly two times" in {
     val schema =
       """
@@ -82,6 +142,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
         |  id: ID! @unique
         |  title: String
         |  comments: [Comment!]! @relation(name: "TodoToComments")
+        |  comments2: [Comment!]! @relation(name: "TodoToComments2")
         |}
         |
         |type Comment @model{
@@ -90,7 +151,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
         |}
       """.stripMargin
     val result = SchemaSyntaxValidator(schema).validate
-    result should have(size(1))
+    result should have(size(2))
     result.head.`type` should equal("Todo")
     result.head.field should equal(Some("comments"))
     result.head.description should include("exactly 2 times")
@@ -248,7 +309,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
       """.stripMargin
 
     val result = SchemaSyntaxValidator(schema).validate
-    result should have(size(2)) // additionally the relation directive is missing
+    result should have(size(1))
     val error = result.head
     error.`type` should equal("Todo")
     error.field should equal(Some("comments"))
