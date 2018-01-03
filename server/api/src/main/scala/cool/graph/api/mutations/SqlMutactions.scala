@@ -234,7 +234,7 @@ case class SqlMutactions(dataResolver: DataResolver) {
   }
 
   private def runRequiredRelationCheckWithInvalidFunction(field: Field, isInvalid: () => Future[Boolean]): Option[InvalidInputClientSqlMutaction] = {
-    val relatedField = field.relatedFieldEager(project)
+    val relatedField = field.relatedField_!(project)
     val relatedModel = field.relatedModel_!(project)
 
     if (relatedField.isRequired && !relatedField.isList) {

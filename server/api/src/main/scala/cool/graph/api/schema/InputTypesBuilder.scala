@@ -206,7 +206,7 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
   private def computeRelationalInputFieldsForUpdate(model: Model, omitRelation: Option[Relation]): List[InputField[Any]] = {
     model.relationFields.flatMap { field =>
       val subModel              = field.relatedModel_!(project)
-      val relatedField          = field.relatedFieldEager(project)
+      val relatedField          = field.relatedField_!(project)
       val relationMustBeOmitted = omitRelation.exists(rel => field.isRelationWithId(rel.id))
 
       val inputObjectTypeName = if (field.isList) {
@@ -236,7 +236,7 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
   private def computeRelationalInputFieldsForCreate(model: Model, omitRelation: Option[Relation]): List[InputField[Any]] = {
     model.relationFields.flatMap { field =>
       val subModel              = field.relatedModel_!(project)
-      val relatedField          = field.relatedFieldEager(project)
+      val relatedField          = field.relatedField_!(project)
       val relationMustBeOmitted = omitRelation.exists(rel => field.isRelationWithId(rel.id))
 
       val inputObjectTypeName = if (field.isList) {

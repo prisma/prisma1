@@ -407,7 +407,7 @@ case class Field(
     })
   }
 
-  def relatedFieldEager(project: Project): Field = {
+  def relatedField_!(project: Project): Field = {
     val fields = relatedModel(project).get.fields
 
     var returnField = fields.find { field =>
