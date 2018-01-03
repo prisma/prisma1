@@ -19,6 +19,7 @@ Raven.config(
 
 const debug = require('debug')('cli')
 const handleEPIPE = err => {
+  Raven.captureException(err)
   if (err.code !== 'EPIPE') {
     throw err
   }
@@ -36,7 +37,7 @@ if (!global.testing) {
       process.exit(1)
     }
   })
-  const handleErr = err => {
+  const handleErr = async err => {
     if (!out) {
       throw err
     }

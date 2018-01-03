@@ -21,6 +21,7 @@ import * as childProcess from 'child_process'
 import { getBinPath } from './getbin'
 import * as semver from 'semver'
 const debug = require('debug')('deploy')
+import * as Raven from 'raven'
 
 export default class Deploy extends Command {
   static topic = 'deploy'
@@ -87,7 +88,9 @@ ${chalk.gray(
 
     await this.definition.load(this.flags, envFile)
     if (!this.definition.definition) {
-      throw new Error(`No graphcool.yml found`)
+      throw new Error(
+        `Couldn’t find \`graphcool.yml\` file. Are you in the right directory?`,
+      )
     }
     const serviceName = this.definition.definition!.service
     const stage = this.definition.definition!.stage

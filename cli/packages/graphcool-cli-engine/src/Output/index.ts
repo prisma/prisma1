@@ -152,12 +152,10 @@ export class Output {
     return path.join(this.config.cacheDir, 'autoupdate.log')
   }
 
-  error(err: Error | string, exitCode: number | false = 1) {
-    try {
-      Raven.captureException(err)
-    } catch (e) {
-      //
-    }
+  async error(err: Error | string, exitCode: number | false = 1) {
+    await new Promise(r => {
+      Raven.captureException(err, () => r())
+    })
     if (
       (this.mock && typeof err !== 'string' && exitCode !== false) ||
       process.env.NODE_ENV === 'test'
