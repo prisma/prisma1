@@ -268,10 +268,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     mustBeEqual(query2.toString, """{"data":{"notes":[{"text":"FirstUnique"}]}}""")
   }
 
-//fail cases not yet implemented in the way we want it therefore these tests are commented out
-
-
-  "one2one relation both exist and are not connected" should "fail completely" in {
+  "A nested delete in a one2one relation where both nodes exist but are not connected" should "fail completely" in {
     val project = SchemaDsl() { schema =>
       val note = schema.model("Note").field("text", _.String, isUnique = true)
       schema.model("Todo").field_!("title", _.String, isUnique = true).oneToOneRelation("note", "todo", note)
@@ -296,7 +293,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     server.executeQuerySimple("""mutation {createNote(data: {text: "SecondUnique"}){id}}""", project)
 
-    val result = server.executeQuerySimple(
+    val result = server.executeQuerySimpleThatMustFail(
       s"""
          |mutation {
          |  updateNote(
@@ -315,9 +312,10 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
          |  }
          |}
       """.stripMargin,
-      project
+      project,
+      errorCode = 3041,
+      errorContains = "The relation TodoToNote has no Node for the model Note with value `SecondUnique` for text connected to a Node for the model Todo with value `the title` for title"
     )
-    mustBeEqual(result.pathAsJsValue("data.updateNote").toString, """{"todo":null}""")
 
     val query = server.executeQuerySimple("""{ todoes { title }}""", project)
     mustBeEqual(query.toString, """{"data":{"todoes":[{"title":"the title"}]}}""")
@@ -327,7 +325,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
   }
 
 
-  "a one to one relation" should "not do a nested delete by id if the nodes are not connected" ignore {
+  "A one2one relation" should "not do a nested delete by id if the nodes are not connected" in {
     val project = SchemaDsl() { schema =>
       val note = schema.model("Note").field("text", _.String)
       schema.model("Todo").field_!("title", _.String).oneToOneRelation("note", "todo", note)
@@ -355,7 +353,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     val todoId2 = server.executeQuerySimple("""mutation {createTodo(data: { title: "the title2" }){id}}""", project).pathAsString("data.createTodo.id")
 
-    val result = server.executeQuerySimple(
+    val result = server.executeQuerySimpleThatMustFail(
       s"""
          |mutation {
          |  updateNote(
@@ -374,15 +372,16 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
          |  }
          |}
       """.stripMargin,
-      project
+      project,
+      errorCode = 3041,
+      errorContains = "The relation TodoToNote has no Node for the model Note"
     )
-    mustBeEqual(result.pathAsJsValue("data.updateNote").toString, """{"todo":null}""")
 
     val query = server.executeQuerySimple("""{ todoes { title }}""", project)
-    mustBeEqual(query.toString, """{"data":{"todoes":[{"title":"the title"}]}}""")
+    mustBeEqual(query.toString, """{"data":{"todoes":[{"title":"the title"},{"title":"the title2"}]}}""")
 
     val query2 = server.executeQuerySimple("""{ notes { text }}""", project)
-    mustBeEqual(query2.toString, """{"data":{"notes":[{"text":"FirstUnique"},{"text":"SecondUnique"}]}}""")
+    mustBeEqual(query2.toString, """{"data":{"notes":[{"text":"Note"}]}}""")
   }
 
   "a one to one relation" should "not do a nested delete by id if the nested node does not exist" in {
@@ -391,9 +390,6 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
       schema.model("Todo").field_!("title", _.String).oneToOneRelation("note", "todo", note)
     }
     database.setup(project)
-
-
-
 
     val createResult = server.executeQuerySimple(
       """mutation {

@@ -9,16 +9,11 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class TransactionalNestedExecutionSpec extends FlatSpec with Matchers with ApiBaseSpec {
 
-  //At the moment we are only inserting the inner where, the outer condition is checked s
+  //At the moment we are only inserting the inner where, the outer condition is checked separately
+  //the up front check for the outer where is still needed to provide return values
 
-  //Test Where
-  // - multiple where's nested
-  //Test the parsing of the exception for different datatypes
   // - put a catch all handling on it in the end?
-  //
-
-  //Implement Relation
-  //Test Relation
+  //Test the parsing of the exception for different datatypes -> DateTime, Json problematic
 
   "a one to one relation" should "fail gracefully on wrong STRING where and assign error correctly and not execute partially" in {
 
@@ -134,17 +129,11 @@ class TransactionalNestedExecutionSpec extends FlatSpec with Matchers with ApiBa
     verifyTransactionalExecutionAndErrorMessage(outerWhere, innerWhere, falseWhere, falseWhereInError, project)
   }
 
-  "a one to one relation" should "fail gracefully on wrong DateTime where and assign error correctly and not execute partially" ignore {
-    //date time is tricky since the shape is transformed
-    //I would expect the where to find stuff if I use the same shape that I entered
-    //OutwardFacing we use ISO8601
-    //SQL needs a different format for the where queries and the errorparsing
-    //we also accept shortened ISO8601 versions and change extend them internally
-
+  "a one to one relation" should "fail gracefully on wrong DateTime where and assign error correctly and not execute partially" in {
     val outerWhere = """"2018""""
     val innerWhere = """"2019""""
     val falseWhere = """"2020""""
-    val falseWhereInError = DateTimeGCValue(new DateTime("2020", DateTimeZone.UTC)).toMySqlDateTimeFormat
+    val falseWhereInError = new DateTime("2020", DateTimeZone.UTC)
 
     val project = SchemaDsl() { schema =>
       val note = schema.model("Note").field("outerString", _.String).field("outerUnique", _.DateTime ,isUnique = true)
@@ -156,13 +145,12 @@ class TransactionalNestedExecutionSpec extends FlatSpec with Matchers with ApiBa
     verifyTransactionalExecutionAndErrorMessage(outerWhere, innerWhere, falseWhere, falseWhereInError, project)
   }
 
-  "a one to one relation" should "fail gracefully on wrong JSON where and assign error correctly and not execute partially" ignore {
-    //we're mixing play and spray jsons all over the place which messes up pattern matches
+  "a one to one relation" should "fail gracefully on wrong JSON where and assign error correctly and not execute partially" in {
 
-    val outerWhere = """"{\"a\": \"a\"}""""
-    val innerWhere = """"{\"a\": \"b\"}""""
-    val falseWhere = """"{\"a\": \"c\"}""""
-    val falseWhereInError = """"{\"a\": \"c\"}""""
+    val outerWhere = """"{\"a\":\"a\"}""""
+    val innerWhere = """"{\"a\":\"b\"}""""
+    val falseWhere = """"{\"a\":\"c\"}""""
+    val falseWhereInError = """{\"a\":\"c\"}"""
 
     val project = SchemaDsl() { schema =>
       val note = schema.model("Note").field("outerString", _.String).field("outerUnique", _.Json,isUnique = true)
@@ -263,6 +251,68 @@ class TransactionalNestedExecutionSpec extends FlatSpec with Matchers with ApiBa
       project,
       errorCode = 3039,
       errorContains = s"No Node for the model Todo with value $falseWhereInError for innerUnique found."
+    )
+
+    server.executeQuerySimple(s"""query{note(where:{outerUnique:$outerWhere}){outerString}}""", project, dataContains = s"""{"note":{"outerString":"Outer String"}}""")
+    server.executeQuerySimple(s"""query{todo(where:{innerUnique:$innerWhere}){innerString}}""", project, dataContains = s"""{"todo":{"innerString":"Inner String"}}""")
+    server.executeQuerySimple(s"""query{todo(where:{innerUnique:$innerWhere2}){innerString}}""", project, dataContains = s"""{"todo":{"innerString":"Inner String"}}""")
+  }
+
+  "a many2many relation" should "fail gracefully on wrong GRAPHQLID for multiple nested updates where one of them is not connected" in {
+
+    val outerWhere = """"Some Outer ID""""
+    val innerWhere = """"Some Inner ID""""
+    val innerWhere2 = """"Some Inner ID2""""
+
+    val project = SchemaDsl() { schema =>
+      val note = schema.model("Note").field("outerString", _.String).field("outerUnique", _.GraphQLID, isUnique = true)
+      schema.model("Todo").field_!("innerString", _.String).field("innerUnique", _.GraphQLID, isUnique = true).manyToManyRelation("notes", "todos", note)
+    }
+    database.setup(project)
+
+    val createResult = server.executeQuerySimple(
+      s"""mutation {
+         |  createNote(
+         |    data: {
+         |      outerString: "Outer String"
+         |      outerUnique: $outerWhere
+         |      todos: {
+         |        create: [
+         |        {innerString: "Inner String", innerUnique: $innerWhere}
+         |        ]
+         |      }
+         |    }
+         |  ){
+         |    id
+         |  }
+         |}""".stripMargin,
+      project
+    )
+
+    server.executeQuerySimple(s"""mutation {createTodo(data:{innerString: "Inner String", innerUnique: $innerWhere2}){id}}""".stripMargin, project)
+
+    server.executeQuerySimpleThatMustFail(
+      s"""
+         |mutation {
+         |  updateNote(
+         |    where: { outerUnique: $outerWhere }
+         |    data: {
+         |      outerString: "Changed Outer String"
+         |      todos: {
+         |        update: [
+         |        {where: { innerUnique: $innerWhere },data:{ innerString: "Changed Inner String"}},
+         |        {where: { innerUnique: $innerWhere2 },data:{ innerString: "Changed Inner String"}}
+         |        ]
+         |      }
+         |    }
+         |  ){
+         |    id
+         |  }
+         |}
+      """.stripMargin,
+      project,
+      errorCode = 3041,
+      errorContains = s"The relation TodoToNote has no Node for the model Note with value `Some Outer ID` for outerUnique connected to a Node for the model Todo with value `Some Inner ID2` for innerUnique"
     )
 
     server.executeQuerySimple(s"""query{note(where:{outerUnique:$outerWhere}){outerString}}""", project, dataContains = s"""{"note":{"outerString":"Outer String"}}""")

@@ -70,7 +70,7 @@ class SubscriptionsProtocolV07Spec extends FlatSpec with Matchers with SpecBase 
 
       val id = "ioPRfgqN6XMefVW6"
 
-      wsClient.sendMessage(startMessage(id = id, query = "subscription { Todo { node { id text json } } }"))
+      wsClient.sendMessage(startMessage(id = id, query = "subscription { todo { node { id text json } } }"))
       sleep()
 
       sssEventsTestKit.publish(
@@ -81,7 +81,7 @@ class SubscriptionsProtocolV07Spec extends FlatSpec with Matchers with SpecBase 
       wsClient.expectMessage(
         dataMessage(
           id = id,
-          payload = """{"Todo":{"node":{"id":"test-node-id","text":"some todo","json":[1,2,{"a":"b"}]}}}"""
+          payload = """{"todo":{"node":{"id":"test-node-id","text":"some todo","json":[1,2,{"a":"b"}]}}}"""
         )
       )
 
@@ -96,7 +96,7 @@ class SubscriptionsProtocolV07Spec extends FlatSpec with Matchers with SpecBase 
 
       val id = 3
 
-      wsClient.sendMessage(startMessage(id = id, query = "subscription { Todo { node { id text json } } }", variables = JsNull, operationName = None))
+      wsClient.sendMessage(startMessage(id = id, query = "subscription { todo { node { id text json } } }", variables = JsNull, operationName = None))
       sleep()
 
       sssEventsTestKit.publish(
@@ -107,7 +107,7 @@ class SubscriptionsProtocolV07Spec extends FlatSpec with Matchers with SpecBase 
       wsClient.expectMessage(
         dataMessage(
           id = id,
-          payload = """{"Todo":{"node":{"id":"test-node-id","text":"some todo","json":[1,2,{"a":"b"}]}}}"""
+          payload = """{"todo":{"node":{"id":"test-node-id","text":"some todo","json":[1,2,{"a":"b"}]}}}"""
         )
       )
 
@@ -119,7 +119,7 @@ class SubscriptionsProtocolV07Spec extends FlatSpec with Matchers with SpecBase 
     testInitializedWebsocket(project) { wsClient =>
       wsClient.sendMessage(
         startMessage(id = "2",
-                     query = "subscription x { Todo(where: {mutation_in: [CREATED]}) { node { id } } }  mutation y { createTodo { id } }",
+                     query = "subscription x { todo(where: {mutation_in: [CREATED]}) { node { id } } }  mutation y { createTodo { id } }",
                      operationName = "x"))
       wsClient.expectNoMessage(200.milliseconds)
       sleep()
@@ -132,7 +132,7 @@ class SubscriptionsProtocolV07Spec extends FlatSpec with Matchers with SpecBase 
       wsClient.expectMessage(
         dataMessage(
           id = "2",
-          payload = """{"Todo":{"node":{"id":"test-node-id"}}}"""
+          payload = """{"todo":{"node":{"id":"test-node-id"}}}"""
         )
       )
     }
@@ -144,7 +144,7 @@ class SubscriptionsProtocolV07Spec extends FlatSpec with Matchers with SpecBase 
         startMessage(
           id = "3",
           operationName = "x",
-          query = "subscription x { Todo(where: {mutation_in: [DELETED]}) { node { id } } }  mutation y { createTodo { id } }"
+          query = "subscription x { todo(where: {mutation_in: [DELETED]}) { node { id } } }  mutation y { createTodo { id } }"
         ))
 
       wsClient.expectNoMessage(200.milliseconds)
@@ -158,7 +158,7 @@ class SubscriptionsProtocolV07Spec extends FlatSpec with Matchers with SpecBase 
       wsClient.expectMessage(
         dataMessage(
           id = "3",
-          payload = """{"Todo":{"node":null}}"""
+          payload = """{"todo":{"node":null}}"""
         )
       )
     }
@@ -169,7 +169,7 @@ class SubscriptionsProtocolV07Spec extends FlatSpec with Matchers with SpecBase 
       wsClient.sendMessage(
         startMessage(
           id = "4",
-          query = "subscription { Todo(where: {mutation_in: [UPDATED]}) { node { id text } } } "
+          query = "subscription { todo(where: {mutation_in: [UPDATED]}) { node { id text } } } "
         ))
 
       sleep()
@@ -182,7 +182,7 @@ class SubscriptionsProtocolV07Spec extends FlatSpec with Matchers with SpecBase 
       wsClient.expectMessage(
         dataMessage(
           id = "4",
-          payload = """{"Todo":{"node":{"id":"test-node-id","text":"some todo"}}}"""
+          payload = """{"todo":{"node":{"id":"test-node-id","text":"some todo"}}}"""
         )
       )
     }
@@ -194,7 +194,7 @@ class SubscriptionsProtocolV07Spec extends FlatSpec with Matchers with SpecBase 
         startMessage(
           id = "3",
           query =
-            "subscription asd($text: String!) { Todo(where: {mutation_in: [CREATED] node: {text_contains: $text}}) { mutation node { id } previousValues { id text } updatedFields } }",
+            "subscription asd($text: String!) { todo(where: {mutation_in: [CREATED] node: {text_contains: $text}}) { mutation node { id } previousValues { id text } updatedFields } }",
           variables = Json.obj("text" -> "some")
         )
       )
@@ -209,7 +209,7 @@ class SubscriptionsProtocolV07Spec extends FlatSpec with Matchers with SpecBase 
       wsClient.expectMessage(
         dataMessage(
           id = "3",
-          payload = """{"Todo":{"mutation":"CREATED","node":{"id":"test-node-id"},"previousValues":null,"updatedFields":null}}"""
+          payload = """{"todo":{"mutation":"CREATED","node":{"id":"test-node-id"},"previousValues":null,"updatedFields":null}}"""
         )
       )
 
@@ -224,7 +224,7 @@ class SubscriptionsProtocolV07Spec extends FlatSpec with Matchers with SpecBase 
         startMessage(
           id = "3",
           query =
-            "subscription asd($text: String!) { Todo(where: {mutation_in: UPDATED AND: [{updatedFields_contains: \"text\"},{node: {text_contains: $text}}]}) { mutation previousValues { id json int } node { ...todo } } } fragment todo on Todo { id }",
+            "subscription asd($text: String!) { todo(where: {mutation_in: UPDATED AND: [{updatedFields_contains: \"text\"},{node: {text_contains: $text}}]}) { mutation previousValues { id json int } node { ...todo } } } fragment todo on Todo { id }",
           variables = Json.obj("text" -> "some")
         )
       )
@@ -239,7 +239,7 @@ class SubscriptionsProtocolV07Spec extends FlatSpec with Matchers with SpecBase 
       wsClient.expectMessage(
         dataMessage(
           id = "3",
-          payload = """{"Todo":{"mutation":"UPDATED","previousValues":{"id":"test-node-id","json":null,"int":8},"node":{"id":"test-node-id"}}}"""
+          payload = """{"todo":{"mutation":"UPDATED","previousValues":{"id":"test-node-id","json":null,"int":8},"node":{"id":"test-node-id"}}}"""
         )
       )
     }
@@ -249,7 +249,7 @@ class SubscriptionsProtocolV07Spec extends FlatSpec with Matchers with SpecBase 
     testInitializedWebsocket(project) { wsClient =>
       wsClient.sendMessage(
         startMessage(id = "3",
-                     query = "subscription { Todo(where: {mutation_in: [DELETED]}) { node { ...todo } previousValues { id } } } fragment todo on Todo { id }")
+                     query = "subscription { todo(where: {mutation_in: [DELETED]}) { node { ...todo } previousValues { id } } } fragment todo on Todo { id }")
       )
 
       sleep()
@@ -262,7 +262,7 @@ class SubscriptionsProtocolV07Spec extends FlatSpec with Matchers with SpecBase 
       wsClient.expectMessage(
         dataMessage(
           id = "3",
-          payload = """{"Todo":{"node":null,"previousValues":{"id":"test-node-id2"}}}"""
+          payload = """{"todo":{"node":null,"previousValues":{"id":"test-node-id2"}}}"""
         )
       )
     }
@@ -271,7 +271,7 @@ class SubscriptionsProtocolV07Spec extends FlatSpec with Matchers with SpecBase 
   "Subscription" should "regenerate changed schema and work on reconnect" ignore {
     testInitializedWebsocket(project) { wsClient =>
       wsClient.sendMessage(
-        startMessage(id = "create-filters", query = "subscription { Todo(where:{node:{text_contains: \"important!\"}}) { node { id text } } }")
+        startMessage(id = "create-filters", query = "subscription { todo(where:{node:{text_contains: \"important!\"}}) { node { id text } } }")
       )
 
       sleep(3000)
@@ -282,7 +282,7 @@ class SubscriptionsProtocolV07Spec extends FlatSpec with Matchers with SpecBase 
       // KEEP WORKING ON RECONNECT
 
       wsClient.sendMessage(
-        startMessage(id = "update-filters", query = "subscription { Todo(where:{node:{text_contains: \"important!\"}}) { node { id text } } }")
+        startMessage(id = "update-filters", query = "subscription { todo(where:{node:{text_contains: \"important!\"}}) { node { id text } } }")
       )
 
       sleep(3000)
@@ -295,7 +295,7 @@ class SubscriptionsProtocolV07Spec extends FlatSpec with Matchers with SpecBase 
       wsClient.expectMessage(
         dataMessage(
           id = "update-filters",
-          payload = """{"Todo":{"node":{"id":"important-test-node-id","text":"important!"}}}"""
+          payload = """{"todo":{"node":{"id":"important-test-node-id","text":"important!"}}}"""
         )
       )
 

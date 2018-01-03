@@ -55,7 +55,7 @@ class SubscriptionFilterSpec extends FlatSpec with Matchers with SpecBase with A
         startMessage(
           id = "3",
           query = """subscription {
-              |  Todo(where: {mutation_in: UPDATED}) {
+              |  todo(where: {mutation_in: UPDATED}) {
               |    mutation
               |    previousValues {
               |      id
@@ -67,7 +67,7 @@ class SubscriptionFilterSpec extends FlatSpec with Matchers with SpecBase with A
         )
       )
 
-      sleep(4000)
+      sleep(8000)
 
       val event = nodeEvent(
         modelId = model.id,
@@ -81,7 +81,7 @@ class SubscriptionFilterSpec extends FlatSpec with Matchers with SpecBase with A
         dataMessage(
           id = "3",
           payload = """{
-              |  "Todo":{
+              |  "todo":{
               |    "mutation":"UPDATED",
               |    "previousValues":{"id":"test-node-id","text":"event1", "status":"Active"}
               |  }
@@ -97,7 +97,7 @@ class SubscriptionFilterSpec extends FlatSpec with Matchers with SpecBase with A
         startMessage(
           id = "3",
           query = """subscription {
-                    |  Todo(where: {mutation_in: UPDATED}) {
+                    |  todo(where: {mutation_in: UPDATED}) {
                     |    mutation
                     |    previousValues {
                     |      id
@@ -122,7 +122,7 @@ class SubscriptionFilterSpec extends FlatSpec with Matchers with SpecBase with A
       wsClient.expectMessage(
         dataMessage(
           id = "3",
-          payload = """{"Todo":{"mutation":"UPDATED","previousValues":{"id":"test-node-id","text":"event2", "tags":["important"]}}}"""
+          payload = """{"todo":{"mutation":"UPDATED","previousValues":{"id":"test-node-id","text":"event2", "tags":["important"]}}}"""
         )
       )
     }
