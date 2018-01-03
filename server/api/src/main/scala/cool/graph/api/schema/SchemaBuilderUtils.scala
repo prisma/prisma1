@@ -88,7 +88,7 @@ case class FilterObjectTypeBuilder(model: Model, project: Project) {
   // this is just a dummy schema as it is only used by graphiql to validate the subscription input
   lazy val subscriptionFilterObjectType: InputObjectType[Any] =
     InputObjectType[Any](
-      s"${model.name}SubscriptionFilter",
+      s"${model.name}SubscriptionWhereInput",
       () => {
         List(
           InputField("AND", OptionInputType(ListInputType(subscriptionFilterObjectType)), description = FilterArguments.ANDFilter.description),
@@ -115,14 +115,7 @@ case class FilterObjectTypeBuilder(model: Model, project: Project) {
           ),
           InputField(
             "node",
-            OptionInputType(
-              InputObjectType[Any](
-                s"${model.name}SubscriptionFilterNode",
-                () => {
-                  model.scalarFields.flatMap(SchemaBuilderUtils.mapToInputField) ++ model.relationFields.flatMap(mapToRelationFilterInputField)
-                }
-              )
-            )
+            OptionInputType(filterObjectType)
           )
         )
       }
@@ -130,7 +123,7 @@ case class FilterObjectTypeBuilder(model: Model, project: Project) {
 
   lazy val internalSubscriptionFilterObjectType: InputObjectType[Any] =
     InputObjectType[Any](
-      s"${model.name}SubscriptionFilter",
+      s"${model.name}SubscriptionWhereInput",
       () => {
         List(
           InputField("AND", OptionInputType(ListInputType(internalSubscriptionFilterObjectType)), description = FilterArguments.ANDFilter.description),
@@ -140,14 +133,7 @@ case class FilterObjectTypeBuilder(model: Model, project: Project) {
                      description = "Placeholder boolean type that will be replaced with the according boolean in the schema"),
           InputField(
             "node",
-            OptionInputType(
-              InputObjectType[Any](
-                s"${model.name}SubscriptionFilterNode",
-                () => {
-                  model.scalarFields.flatMap(SchemaBuilderUtils.mapToInputField) ++ model.relationFields.flatMap(mapToRelationFilterInputField)
-                }
-              )
-            )
+            OptionInputType(filterObjectType)
           )
         )
       }

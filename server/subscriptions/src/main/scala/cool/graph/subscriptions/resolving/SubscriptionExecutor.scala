@@ -104,11 +104,13 @@ object SubscriptionExecutor extends SprayJsonExtensions {
         deferredResolver = new DeferredResolverProvider(dataResolver)
       )
       .map { result =>
-        if (result.pathAs[JsValue](s"data.${model.name}") != JsNull) {
+        if (result.pathAs[JsValue](s"data.${camelCase(model.name)}") != JsNull) {
           Some(result)
         } else {
           None
         }
       }
   }
+
+  def camelCase(string: String): String = Character.toLowerCase(string.charAt(0)) + string.substring(1)
 }
