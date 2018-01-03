@@ -445,6 +445,10 @@ ${chalk.gray(
     stage: string,
   ): Promise<Cluster | undefined> {
     const name = await this.clusterSelection(serviceName, stage)
+    const exists = this.env.clusterByName(name)
+    if (!exists && name === 'local') {
+      await this.localUp()
+    }
     await this.definition.addCluster(name, this.flags)
     return this.env.clusterByName(name)
   }

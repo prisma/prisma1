@@ -120,6 +120,7 @@ export class GraphcoolDefinitionClass {
 
   async addCluster(cluster: string, args: any) {
     if (!this.definition!.cluster) {
+      this.definition!.cluster = cluster
       const newString = this.definitionString + `\ncluster: ${cluster}`
       fs.writeFileSync(this.definitionPath!, newString)
       await this.load(args)
