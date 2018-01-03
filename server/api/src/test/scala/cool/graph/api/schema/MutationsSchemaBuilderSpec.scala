@@ -240,10 +240,19 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec
     }
 
     val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
-    schema should containInputType("CommentUpdateDataInput",
+    schema should not(containInputType("CommentCreateWithoutTodoInput"))
+    schema should not(containInputType("CommentUpdateWithoutTodoInput"))
+
+    schema should containInputType("TodoCreateInput",
                                    fields = Vector(
-                                     "text: String"
+                                     "comments: CommentCreateManyInput"
                                    ))
+
+    schema should containInputType("CommentCreateManyInput",
+                                   fields = Vector(
+                                     "create: [CommentCreateInput!]"
+                                   ))
+
   }
 
   "the upsert Mutation for a model" should "be generated correctly" in {

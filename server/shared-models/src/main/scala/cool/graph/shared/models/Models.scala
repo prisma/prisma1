@@ -177,15 +177,6 @@ case class Project(
 
   def getRelationFieldMirrorsByFieldId(id: Id): List[RelationFieldMirror] = relations.flatMap(_.fieldMirrors).filter(f => f.fieldId == id)
 
-  lazy val getOneRelations: List[Relation] = {
-    relations.filter(
-      relation =>
-        !relation.getModelAField(this).exists(_.isList) &&
-          !relation.getModelBField(this).exists(_.isList))
-  }
-
-  lazy val getManyRelations: List[Relation] = relations.filter(x => !getOneRelations.contains(x))
-
   def getRelatedModelForField(field: Field): Option[Model] = {
     val relation = field.relation.getOrElse {
       return None
@@ -505,13 +496,13 @@ case class Relation(
 //    }
 //  }
 
-  def getField_!(project: Project, model: Model): Field = {
-    model.id match {
-      case `modelAId` => getModelAField_!(project)
-      case `modelBId` => getModelBField_!(project)
-      case _          => ??? //throw SystemErrors.InvalidRelation(s"The model with the id ${model.id} is not part of this relation.")
-    }
-  }
+//  def getField_!(project: Project, model: Model): Field = {
+//    model.id match {
+//      case `modelAId` => getModelAField_!(project)
+//      case `modelBId` => getModelBField_!(project)
+//      case _          => ??? //throw SystemErrors.InvalidRelation(s"The model with the id ${model.id} is not part of this relation.")
+//    }
+//  }
 
   def getField(project: Project, model: Model): Option[Field] = {
     model.id match {
@@ -528,7 +519,7 @@ case class Relation(
 
   def getModelBField(project: Project): Option[Field] = {
     // note: defaults to modelAField to handle same model, same field relations
-    modelFieldFor(project, modelBId, RelationSide.B).orElse(getModelAField(project))
+    modelFieldFor(project, modelBId, RelationSide.B) //.orElse(getModelAField(project))
   }
   def getModelBField_!(project: Project): Field =
     getModelBField(project).get //OrElse(throw SystemErrors.InvalidRelation("This must return a Model, if not Model B then Model A."))
