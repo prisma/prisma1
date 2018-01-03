@@ -132,7 +132,7 @@ case class MigrationApplierImpl(clientDatabase: DatabaseDef)(implicit ec: Execut
 
     case x: UpdateRelation =>
       x.newName.map { newName =>
-        RenameTable(projectId = previousProject.id, previousName = x.name, nextName = newName)
+        RenameTable(projectId = previousProject.id, previousName = x.name, nextName = newName, scalarListFieldsNames = Vector.empty)
       }
   }
 
