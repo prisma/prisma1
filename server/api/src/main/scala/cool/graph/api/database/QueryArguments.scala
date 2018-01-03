@@ -1,6 +1,6 @@
 package cool.graph.api.database
 
-import cool.graph.api.database.DatabaseQueryBuilder.ResultTransform
+import cool.graph.api.database.DatabaseQueryBuilder.{ResultListTransform, ResultTransform}
 import cool.graph.api.database.SlickExtensions.{combineByAnd, combineByOr, escapeUnsafeParam}
 import cool.graph.api.database.Types.DataItemFilterCollection
 import cool.graph.api.schema.APIErrors
@@ -87,6 +87,35 @@ case class QueryArguments(
   // Also, remove excess items from limit + 1 queries and set page info (hasNext, hasPrevious).
   def extractResultTransform(projectId: String, modelId: String): ResultTransform =
     (list: List[DataItem]) => {
+      val items = isReverseOrder match {
+        case true  => list.reverse
+        case false => list
+      }
+
+      (first, last) match {
+        case (Some(f), _) =>
+          if (items.size > f) {
+            ResolverResult(items.dropRight(1), hasNextPage = true)
+          } else {
+            ResolverResult(items)
+          }
+
+        case (_, Some(l)) =>
+          if (items.size > l) {
+            ResolverResult(items.tail, hasPreviousPage = true)
+          } else {
+            ResolverResult(items)
+          }
+
+        case _ =>
+          ResolverResult(items)
+      }
+    }
+
+  def extractListResultTransform(projectId: String, modelId: String): ResultListTransform =
+    (listValues: List[ScalarListValue]) => {
+      val list = listValues.map{listValue =>DataItem(id = listValue.nodeId, userData = Map("value" -> Some(listValue.value)))}
+
       val items = isReverseOrder match {
         case true  => list.reverse
         case false => list

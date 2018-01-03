@@ -37,29 +37,20 @@ package object ImportExport {
     val length: Int           = models.length
     val hasNext: Boolean      = cursor.table < length - 1
     lazy val current: Model   = models.find(_._2 == cursor.table).get._1
-    lazy val nextModel: Model = models.find(_._2 == cursor.table + 1).get._1
   }
 
-  case class ListInfo(dataResolver: DataResolver, models: List[(Model, Int)], cursor: Cursor) extends ExportInfo {
-    val length: Int                                          = models.length
+  case class ListInfo(dataResolver: DataResolver, listFieldTables: List[(String,String, Int)], cursor: Cursor) extends ExportInfo {
+    val length: Int                                          = listFieldTables.length
     val hasNext: Boolean                                     = cursor.table < length - 1
-    val hasNextField: Boolean                                = cursor.field < fieldLength - 1
-    lazy val currentModel: Model                             = models.find(_._2 == cursor.table).get._1
-    lazy val nextModel: Model                                = models.find(_._2 == cursor.table + 1).get._1
-    lazy val listFields: List[(String, TypeIdentifier, Int)] = currentModel.scalarListFields.zipWithIndex.map { case (f, i) => (f.name, f.typeIdentifier, i) }
-    lazy val fieldLength: Int                                = listFields.length
-    lazy val currentField: String                            = listFields.find(_._3 == cursor.field).get._1
-    lazy val nextField: String                               = listFields.find(_._3 == cursor.field + 1).get._1
-    lazy val currentTypeIdentifier: TypeIdentifier           = listFields.find(_._3 == cursor.field).get._2
-    def arrayPlus(increase: Int): ListInfo                   = this.copy(cursor = this.cursor.copy(array = this.cursor.array + increase))
-    def cursorAtNextField: ListInfo                          = this.copy(cursor = this.cursor.copy(field = this.cursor.field + 1, array = 0))
+    lazy val currentModel: String                   = listFieldTables.find(_._3 == cursor.table).get._1
+    lazy val currentField: String                   = listFieldTables.find(_._3 == cursor.table).get._2
+
   }
 
   case class RelationInfo(dataResolver: DataResolver, relations: List[(RelationData, Int)], cursor: Cursor) extends ExportInfo {
     val length: Int                     = relations.length
     val hasNext: Boolean                = cursor.table < length - 1
     lazy val current: RelationData      = relations.find(_._2 == cursor.table).get._1
-    lazy val nextRelation: RelationData = relations.find(_._2 == cursor.table + 1).get._1
   }
 
   case class RelationData(relationId: String, leftModel: String, leftField: String, rightModel: String, rightField: String)
