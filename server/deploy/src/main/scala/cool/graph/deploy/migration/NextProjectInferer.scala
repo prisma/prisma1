@@ -5,7 +5,7 @@ import cool.graph.gc_values.{GCValue, InvalidValueForScalarType}
 import cool.graph.shared.models._
 import cool.graph.utils.or.OrExtensions
 import org.scalactic.{Bad, Good, Or}
-import sangria.ast.Document
+import sangria.ast.{Document, ObjectTypeDefinition}
 
 trait NextProjectInferer {
   def infer(baseProject: Project, renames: Renames, graphQlSdl: Document): Project Or ProjectSyntaxError
@@ -46,57 +46,21 @@ case class NextProjectInfererImpl(
 
   lazy val nextModels: Vector[Model] Or ProjectSyntaxError = {
     val models = sdl.objectTypes.map { objectType =>
-      val fields: Seq[Or[Field, InvalidGCValue]] = objectType.fields.flatMap { fieldDef =>
-        val typeIdentifier = typeIdentifierForTypename(fieldDef.typeName)
+      val fields = fieldsForType(objectType)
 
-        val relation = if (fieldDef.hasScalarType) {
-          None
-        } else {
-          nextRelations.find { relation =>
-            relation.connectsTheModels(objectType.name, fieldDef.typeName)
-          }
-        }
-
-        def fieldWithDefault(default: Option[GCValue]) = {
-          Field(
-            id = fieldDef.name,
-            name = fieldDef.name,
-            typeIdentifier = typeIdentifier,
-            isRequired = fieldDef.isRequired,
-            isList = fieldDef.isList,
-            isUnique = fieldDef.isUnique,
-            enum = nextEnums.find(_.name == fieldDef.typeName),
-            defaultValue = default,
-            relation = relation,
-            relationSide = relation.map { relation =>
-              if (relation.modelAId == objectType.name) {
-                RelationSide.A
-              } else {
-                RelationSide.B
-              }
-            }
-          )
-        }
-
-        fieldDef.defaultValue.map(x => GCStringConverter(typeIdentifier, fieldDef.isList).toGCValue(x)) match {
-          case Some(Good(gcValue)) => Some(Good(fieldWithDefault(Some(gcValue))))
-          case Some(Bad(err))      => Some(Bad(InvalidGCValue(err)))
-          case None                => Some(Good(fieldWithDefault(None)))
-        }
-      }
-
-      OrExtensions.sequence(fields.toVector) match {
+      OrExtensions.sequence(fields) match {
         case Good(fields: Seq[Field]) =>
           val fieldNames            = fields.map(_.name)
           val missingReservedFields = ReservedFields.reservedFieldNames.filterNot(fieldNames.contains)
           val hiddenReservedFields  = missingReservedFields.map(ReservedFields.reservedFieldFor(_).copy(isHidden = true))
 
-          Good(
+          Good {
             Model(
               id = objectType.name,
               name = objectType.name,
               fields = fields.toList ++ hiddenReservedFields
-            ))
+            )
+          }
 
         case Bad(err) =>
           Bad(err)
@@ -104,6 +68,49 @@ case class NextProjectInfererImpl(
     }
 
     OrExtensions.sequence(models)
+  }
+
+  def fieldsForType(objectType: ObjectTypeDefinition): Vector[Or[Field, InvalidGCValue]] = {
+    val fields: Seq[Or[Field, InvalidGCValue]] = objectType.fields.flatMap { fieldDef =>
+      val typeIdentifier = typeIdentifierForTypename(fieldDef.typeName)
+
+      val relation = if (fieldDef.hasScalarType) {
+        None
+      } else {
+        nextRelations.find { relation =>
+          relation.connectsTheModels(objectType.name, fieldDef.typeName)
+        }
+      }
+
+      def fieldWithDefault(default: Option[GCValue]) = {
+        Field(
+          id = fieldDef.name,
+          name = fieldDef.name,
+          typeIdentifier = typeIdentifier,
+          isRequired = fieldDef.isRequired,
+          isList = fieldDef.isList,
+          isUnique = fieldDef.isUnique,
+          enum = nextEnums.find(_.name == fieldDef.typeName),
+          defaultValue = default,
+          relation = relation,
+          relationSide = relation.map { relation =>
+            if (relation.modelAId == objectType.name) {
+              RelationSide.A
+            } else {
+              RelationSide.B
+            }
+          }
+        )
+      }
+
+      fieldDef.defaultValue.map(x => GCStringConverter(typeIdentifier, fieldDef.isList).toGCValue(x)) match {
+        case Some(Good(gcValue)) => Some(Good(fieldWithDefault(Some(gcValue))))
+        case Some(Bad(err))      => Some(Bad(InvalidGCValue(err)))
+        case None                => Some(Good(fieldWithDefault(None)))
+      }
+    }
+
+    fields.toVector
   }
 
   lazy val nextRelations: Set[Relation] = {
