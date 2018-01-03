@@ -64,17 +64,15 @@ class BulkExport(project: Project)(implicit apiDependencies: ApiDependencies) {
 
   private def fetchDataItemsPage(info: ExportInfo): Future[DataItemsPage] = {
     val queryArguments = QueryArguments(skip = Some(info.cursor.row), after = None, first = Some(1000), None, None, None, None)
-    val dataItemsPage: Future[DataItemsPage] = for {
+    for {
       result <- info match {
                  case x: NodeInfo     => x.dataResolver.loadModelRowsForExport(x.current, Some(queryArguments))
-                 case x: ListInfo     => x.dataResolver.loadListRowsForExport(x.currentModel, Some(queryArguments))
+                 case x: ListInfo     => x.dataResolver.loadListRowsForExport(x.currentTable, Some(queryArguments))
                  case x: RelationInfo => x.dataResolver.loadRelationRowsForExport(x.current.relationId, Some(queryArguments))
                }
     } yield {
       DataItemsPage(result.items, hasMore = result.hasNextPage)
     }
-
-    dataItemsPage
   }
 
   private def serializePage(in: JsonBundle, page: DataItemsPage, info: ExportInfo, startOnPage: Int = 0, amount: Int = 1000): ResultFormat = {

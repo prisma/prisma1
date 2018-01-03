@@ -40,11 +40,11 @@ package object ImportExport {
   }
 
   case class ListInfo(dataResolver: DataResolver, listFieldTables: List[(String,String, Int)], cursor: Cursor) extends ExportInfo {
-    val length: Int                                          = listFieldTables.length
-    val hasNext: Boolean                                     = cursor.table < length - 1
+    val length: Int                                 = listFieldTables.length
+    val hasNext: Boolean                            = cursor.table < length - 1
     lazy val currentModel: String                   = listFieldTables.find(_._3 == cursor.table).get._1
     lazy val currentField: String                   = listFieldTables.find(_._3 == cursor.table).get._2
-
+    lazy val currentTable: String                   = s"${currentModel}_$currentField"
   }
 
   case class RelationInfo(dataResolver: DataResolver, relations: List[(RelationData, Int)], cursor: Cursor) extends ExportInfo {
