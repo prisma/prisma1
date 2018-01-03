@@ -486,7 +486,7 @@ case class Relation(
     }
   }
 
-  def fields(project: Project): Iterable[Field] = getModelAField(project) ++ getModelBField(project)
+//  def fields(project: Project): Iterable[Field] = getModelAField(project) ++ getModelBField(project)
 
 //  def getOtherField_!(project: Project, model: Model): Field = {
 //    model.id match {
@@ -530,18 +530,6 @@ case class Relation(
       field <- model.relationFieldForIdAndSide(relationId = id, relationSide = relationSide)
     } yield field
   }
-
-  def aName(project: Project): String =
-    getModelAField(project)
-      .map(field => s"${field.name}${makeUnique("1", project)}${field.relatedModel(project).get.name}")
-      .getOrElse("from")
-
-  def bName(project: Project): String =
-    getModelBField(project)
-      .map(field => s"${field.name}${makeUnique("2", project)}${field.relatedModel(project).get.name}")
-      .getOrElse("to")
-
-  private def makeUnique(x: String, project: Project) = if (getModelAField(project) == getModelBField(project)) x else ""
 
   def fieldSide(project: Project, field: Field): cool.graph.shared.models.RelationSide.Value = {
     val fieldModel = project.getModelByFieldId_!(field.id)
