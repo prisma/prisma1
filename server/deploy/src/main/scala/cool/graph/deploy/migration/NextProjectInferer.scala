@@ -110,7 +110,7 @@ case class NextProjectInfererImpl(
   lazy val nextRelations: Set[Relation] = {
     val tmp = for {
       objectType    <- sdl.objectTypes
-      relationField <- objectType.fields.filter(!_.hasScalarType)
+      relationField <- objectType.fields if typeIdentifierForTypename(relationField.typeName) == TypeIdentifier.Relation //.filter(!_.hasScalarType)
     } yield {
       val model1           = objectType.name
       val model2           = relationField.typeName
