@@ -11,10 +11,11 @@ import sangria.parser.QueryParser
 import scala.collection.Seq
 import scala.concurrent.{ExecutionContext, Future}
 
+// todo should the deploy mutation work with schemas only?
 case class DeployMutation(
     args: DeployMutationInput,
     project: Project,
-    nextProjectInferrer: NextProjectInferrer,
+    schemaInferrer: SchemaInferrer,
     migrationStepsProposer: MigrationStepsProposer,
     renameInferer: RenameInferer,
     migrationPersistence: MigrationPersistence,
@@ -45,7 +46,7 @@ case class DeployMutation(
   }
 
   private def performDeployment: Future[MutationSuccess[DeployMutationPayload]] = {
-    nextProjectInferrer.infer(baseProject = project, graphQlSdl) match {
+    schemaInferrer.infer(baseProject = project, graphQlSdl) match {
       case Good(inferredProject) =>
         val nextProject = inferredProject.copy(secrets = args.secrets)
         val renames     = renameInferer.infer(graphQlSdl)
@@ -96,18 +97,3 @@ case class DeployMutationPayload(
     migration: Migration,
     errors: Seq[SchemaError]
 ) extends sangria.relay.Mutation
-
-///**
-//  * SKETCH
-//  */
-//trait DeployMutationSketch {
-//  def deploy(desiredProject: Project, migrationSteps: Migration): DeployResultSketch
-//}
-//
-//sealed trait DeployResultSketch
-//case class DeploySucceeded(project: Project, descriptions: Vector[VerbalDescription]) extends DeployResultSketch
-//case class MigrationsDontSuffice(proposal: Migration)                                 extends DeployResultSketch
-//
-//trait VerbalDescription {
-//  def description: String
-//}

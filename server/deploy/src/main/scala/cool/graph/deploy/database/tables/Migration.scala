@@ -5,7 +5,7 @@ import cool.graph.shared.models.MigrationStatus.MigrationStatus
 import play.api.libs.json.JsValue
 import slick.dbio.Effect.{Read, Write}
 import slick.jdbc.MySQLProfile.api._
-import slick.sql.{FixedSqlAction, SqlAction}
+import slick.sql.{FixedSqlAction, FixedSqlStreamingAction, SqlAction}
 
 case class Migration(
     projectId: String,
@@ -81,15 +81,6 @@ object MigrationTable {
     baseQuery.map(_.status).update(status)
   }
 
-//  def getUnappliedMigration(projectId: String): SqlAction[Option[Migration], NoStream, Read] = {
-//    val baseQuery = for {
-//      migration <- Tables.Migrations
-//      if migration.projectId === projectId && !migration.hasBeenApplied
-//    } yield migration
-//
-//    baseQuery.sortBy(_.revision.asc).take(1).result.headOption
-//  }
-
   def loadByRevision(projectId: String, revision: Int): SqlAction[Option[Migration], NoStream, Read] = {
     val baseQuery = for {
       migration <- Tables.Migrations
@@ -97,5 +88,14 @@ object MigrationTable {
     } yield migration
 
     baseQuery.take(1).result.headOption
+  }
+
+  def distinctUnmigratedProjectIds(): FixedSqlStreamingAction[Seq[String], Project, Read] = {
+    val baseQuery = for {
+      migration <- Tables.Migrations
+      if migration.status inSet MigrationStatus.openStates
+    } yield migration.projectId
+
+    baseQuery.distinct.result
   }
 }

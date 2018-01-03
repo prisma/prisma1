@@ -1,7 +1,8 @@
 package cool.graph.deploy.database.persistence
 
-import cool.graph.deploy.database.tables.{MigrationTable, ProjectTable, Tables}
-import cool.graph.shared.models.{Migration, MigrationStatus, Project, UnappliedMigration}
+import cool.graph.deploy.database.tables.{MigrationTable, Tables}
+import cool.graph.shared.models.Migration
+import cool.graph.shared.models.MigrationStatus.MigrationStatus
 import cool.graph.utils.future.FutureUtils.FutureOpt
 import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.MySQLProfile.backend.DatabaseDef
@@ -23,17 +24,17 @@ case class MigrationPersistenceImpl(
     internalDatabase.run(query.result).map(_.map(DbToModelMapper.convert))
   }
 
-  override def create(project: Project, migration: Migration): Future[Migration] = {
+  override def create(migration: Migration): Future[Migration] = {
     for {
       lastRevision       <- internalDatabase.run(MigrationTable.lastRevision(migration.projectId))
-      dbMigration        = ModelToDbMapper.convert(project, migration)
+      dbMigration        = ModelToDbMapper.convert(migration)
       withRevisionBumped = dbMigration.copy(revision = lastRevision.getOrElse(0) + 1)
       addMigration       = Tables.Migrations += withRevisionBumped
       _                  <- internalDatabase.run(addMigration)
     } yield migration.copy(revision = withRevisionBumped.revision)
   }
 
-  override def getUnappliedMigration(projectId: String): Future[Option[UnappliedMigration]] = {
+//  override def getUnappliedMigration(projectId: String): Future[Option[UnappliedMigration]] = {
 //    val x = for {
 //      unappliedMigration           <- FutureOpt(internalDatabase.run(MigrationTable.getUnappliedMigration(projectId)))
 //      previousProjectWithMigration <- FutureOpt(internalDatabase.run(ProjectTable.byIdWithMigration(projectId)))
@@ -46,11 +47,10 @@ case class MigrationPersistenceImpl(
 //    }
 //
 //    x.future
-    ???
-  }
+//  }
 
-  override def markMigrationAsApplied(migration: Migration): Future[Unit] = {
-    internalDatabase.run(MigrationTable.updateMigrationStatus(migration.projectId, migration.revision, MigrationStatus.Success)).map(_ => ())
+  override def updateMigrationStatus(migration: Migration, status: MigrationStatus): Future[Unit] = {
+    internalDatabase.run(MigrationTable.updateMigrationStatus(migration.projectId, migration.revision, status)).map(_ => ())
   }
 
   override def getLastMigration(projectId: String): Future[Option[Migration]] = {
@@ -59,5 +59,9 @@ case class MigrationPersistenceImpl(
 
   override def getNextMigration(projectId: String): Future[Option[Migration]] = {
     FutureOpt(internalDatabase.run(MigrationTable.nextOpenMigration(projectId))).map(DbToModelMapper.convert).future
+  }
+
+  override def loadDistinctUnmigratedProjectIds(): Future[Seq[String]] = {
+    internalDatabase.run(MigrationTable.distinctUnmigratedProjectIds())
   }
 }

@@ -2,15 +2,16 @@ package cool.graph.shared.models
 
 import cool.graph.shared.models.MigrationStatus.MigrationStatus
 
-case class UnappliedMigration(
-    previousProject: Project,
-    nextProject: Project,
-    migration: Migration
-)
+//case class UnappliedMigration(
+//    previousProject: Project,
+//    nextProject: Project,
+//    migration: Migration
+//)
 
 case class Migration(
     projectId: String,
     revision: Int,
+    schema: Schema,
     status: MigrationStatus,
     progress: Int,
     steps: Vector[MigrationStep],
@@ -32,16 +33,18 @@ object MigrationStatus extends Enumeration {
 }
 
 object Migration {
-  def apply(project: Project, steps: Vector[MigrationStep]): Migration = Migration(
-    project.id,
+  def apply(projectId: String, steps: Vector[MigrationStep]): Migration = Migration(
+    projectId,
     revision = 0,
+    schema = Schema(),
     status = MigrationStatus.Pending,
     progress = 0,
     steps,
     errors = Vector.empty
   )
 
-  def empty(project: Project) = apply(project, Vector.empty)
+//  def empty(project: Project) = apply(project, Vector.empty)
+  def empty(projectId: String) = apply(projectId, Vector.empty)
 }
 
 sealed trait MigrationStep

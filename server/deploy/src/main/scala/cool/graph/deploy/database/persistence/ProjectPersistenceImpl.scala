@@ -20,18 +20,16 @@ case class ProjectPersistenceImpl(
       })
   }
 
-  def loadNext(id: )
-
   override def create(project: Project): Future[Unit] = {
     val addProject = Tables.Projects += ModelToDbMapper.convert(project)
     internalDatabase.run(addProject).map(_ => ())
   }
 
   override def loadAll(): Future[Seq[Project]] = {
-    internalDatabase.run(Tables.Projects.result).map(_.map(p => DbToModelMapper.convert(p)))
+    internalDatabase.run(ProjectTable.loadAllWithMigration()).map(_.map { case (p, m) => DbToModelMapper.convert(p, m) })
   }
 
-  override def loadProjectsWithUnappliedMigrations(): Future[Seq[Project]] = {
-    internalDatabase.run(ProjectTable.allWithUnappliedMigrations).map(_.map(p => DbToModelMapper.convert(p)))
-  }
+//  override def loadProjectsWithUnappliedMigrations(): Future[Seq[Project]] = {
+//    internalDatabase.run(ProjectTable.allWithUnappliedMigrations).map(_.map(p => DbToModelMapper.convert(p)))
+//  }
 }

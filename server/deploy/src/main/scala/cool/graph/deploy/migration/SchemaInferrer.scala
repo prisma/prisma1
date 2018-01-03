@@ -7,7 +7,7 @@ import cool.graph.utils.or.OrExtensions
 import org.scalactic.{Bad, Good, Or}
 import sangria.ast.Document
 
-trait NextProjectInferrer {
+trait SchemaInferrer {
   def infer(baseProject: Project, graphQlSdl: Document): Project Or ProjectSyntaxError
 }
 
@@ -15,8 +15,8 @@ sealed trait ProjectSyntaxError
 case class RelationDirectiveNeeded(type1: String, type1Fields: Vector[String], type2: String, type2Fields: Vector[String]) extends ProjectSyntaxError
 case class InvalidGCValue(err: InvalidValueForScalarType)                                                                  extends ProjectSyntaxError
 
-object NextProjectInferrer {
-  def apply() = new NextProjectInferrer {
+object SchemaInferrer {
+  def apply() = new SchemaInferrer {
     override def infer(baseProject: Project, graphQlSdl: Document) = NextProjectInferrerImpl(baseProject, graphQlSdl).infer()
   }
 }

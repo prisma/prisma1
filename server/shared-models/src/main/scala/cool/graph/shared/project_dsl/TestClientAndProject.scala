@@ -30,6 +30,6 @@ object TestProject {
   val empty = this.apply()
 
   def apply(): Project = {
-    Project(id = testProjectId, ownerId = testClientId)
+    Project(id = testProjectId, ownerId = testClientId, schema = Schema())
   }
 }

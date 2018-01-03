@@ -137,6 +137,7 @@ object ProjectJsonFormatter {
   implicit lazy val model                     = Json.format[Model]
   implicit lazy val seat                      = Json.format[Seat]
   implicit lazy val featureToggle             = Json.format[FeatureToggle]
+  implicit lazy val schemaFormat              = Json.format[Schema]
   implicit lazy val projectFormat             = Json.format[Project]
   implicit lazy val projectWithClientIdFormat = Json.format[ProjectWithClientId]
 

@@ -92,14 +92,18 @@ case class ServerSideSubscriptionFunction(
 //  def binding = FunctionBinding.SERVERSIDE_SUBSCRIPTION
 }
 
+case class Schema(
+    models: List[Model] = List.empty,
+    relations: List[Relation] = List.empty,
+    enums: List[Enum] = List.empty
+)
+
 case class Project(
     id: Id,
     ownerId: Id,
     revision: Int = 1,
+    schema: Schema,
     webhookUrl: Option[String] = None,
-    models: List[Model] = List.empty,
-    relations: List[Relation] = List.empty,
-    enums: List[Enum] = List.empty,
     secrets: Vector[String] = Vector.empty,
     seats: List[Seat] = List.empty,
     allowQueries: Boolean = true,
@@ -107,6 +111,13 @@ case class Project(
     functions: List[Function] = List.empty,
     featureToggles: List[FeatureToggle] = List.empty
 ) {
+  def models    = schema.models
+  def relations = schema.relations
+  def enums     = schema.enums
+
+//  models: List[Model] = List.empty,
+//  relations: List[Relation] = List.empty,
+//  enums: List[Enum] = List.empty,
 
   lazy val projectId: ProjectId = ProjectId.fromEncodedString(id)
 

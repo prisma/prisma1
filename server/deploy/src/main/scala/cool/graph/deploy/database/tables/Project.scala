@@ -1,19 +1,37 @@
 package cool.graph.deploy.database.tables
 
 import cool.graph.shared.models.MigrationStatus
+import play.api.libs.json.JsValue
 import slick.dbio.Effect.Read
 import slick.jdbc.MySQLProfile.api._
-import slick.sql.{FixedSqlStreamingAction, SqlAction}
+import slick.sql.SqlAction
 
 case class Project(
     id: String,
-    ownerId: Option[String]
+    ownerId: Option[String],
+    webhookUrl: Option[String],
+    secrets: JsValue,
+    seats: JsValue,
+    allowQueries: Boolean,
+    allowMutations: Boolean,
+    functions: JsValue,
+    featureToggles: JsValue
 )
 
 class ProjectTable(tag: Tag) extends Table[Project](tag, "Project") {
-  def id      = column[String]("id", O.PrimaryKey)
-  def ownerId = column[Option[String]]("ownerId")
-  def *       = (id, ownerId) <> ((Project.apply _).tupled, Project.unapply)
+  implicit val jsonMapper = MappedColumns.jsonMapper
+
+  def id             = column[String]("id", O.PrimaryKey)
+  def ownerId        = column[Option[String]]("webhookUrl")
+  def webhookUrl     = column[Option[String]]("ownerId")
+  def secrets        = column[JsValue]("secrets")
+  def seats          = column[JsValue]("seats")
+  def allowQueries   = column[Boolean]("allowQueries")
+  def allowMutations = column[Boolean]("allowMutations")
+  def functions      = column[JsValue]("functions")
+  def featureToggles = column[JsValue]("featureToggles")
+
+  def * = (id, ownerId, webhookUrl, secrets, seats, allowQueries, allowMutations, functions, featureToggles) <> ((Project.apply _).tupled, Project.unapply)
 }
 
 object ProjectTable {
@@ -39,14 +57,13 @@ object ProjectTable {
     baseQuery.sortBy(_._2.revision.desc).take(1).result.headOption
   }
 
-  def allWithUnappliedMigrations: FixedSqlStreamingAction[Seq[Project], Project, Read] = {
+  def loadAllWithMigration(): SqlAction[Seq[(Project, Migration)], NoStream, Read] = {
+    // For each project, the latest successful migration (there has to be at least one, e.g. the initial migtation during create)
     val baseQuery = for {
       project   <- Tables.Projects
-      migration <- Tables.Migrations
-      if project.id === migration.projectId
-      if migration.status inSet MigrationStatus.openStates
-    } yield project
+      migration <- Tables.Migrations.filter(m => m.projectId === project.id && m.status === MigrationStatus.Success).sortBy(_.revision.desc).take(1)
+    } yield (project, migration)
 
-    baseQuery.distinct.result
+    baseQuery.result
   }
 }

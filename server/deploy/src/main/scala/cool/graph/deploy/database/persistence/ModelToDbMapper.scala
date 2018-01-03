@@ -9,14 +9,26 @@ object ModelToDbMapper {
   import cool.graph.shared.models.ProjectJsonFormatter._
 
   def convert(project: models.Project): Project = {
+    val secretsJson        = Json.toJson(project.secrets)
+    val seatsJson          = Json.toJson(project.seats)
+    val functionsJson      = Json.toJson(project.functions)
+    val featureTogglesJson = Json.toJson(project.featureToggles)
+
     Project(
       id = project.id,
-      ownerId = Some(project.ownerId) // todo ideally, owner id is not optional or it is optional on models.Project as well
+      ownerId = Some(project.ownerId), // todo ideally, owner id is not optional or it is optional on models.Project as well
+      project.webhookUrl,
+      secretsJson,
+      seatsJson,
+      project.allowQueries,
+      project.allowMutations,
+      functionsJson,
+      featureTogglesJson
     )
   }
 
-  def convert(project: models.Project, migration: models.Migration): Migration = {
-    val schemaJson         = Json.toJson(project)
+  def convert(migration: models.Migration): Migration = {
+    val schemaJson         = Json.toJson(migration.schema)
     val migrationStepsJson = Json.toJson(migration.steps)
     val errorsJson         = Json.toJson(migration.errors)
 
