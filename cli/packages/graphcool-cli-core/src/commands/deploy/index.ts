@@ -417,6 +417,10 @@ https://console.graph.cool/${encodeURIComponent(info.name)}/settings/general`)
         }
       },
     )
+
+    if (localClusters.length === 0) {
+      localClusters.push({ value: 'local', name: 'local' })
+    }
     const question = {
       name: 'cluster',
       type: 'list',
