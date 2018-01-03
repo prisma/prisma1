@@ -93,6 +93,9 @@ ${chalk.gray(
     const stage = this.definition.definition!.stage
 
     let cluster = this.definition.getCluster()
+    if (!cluster && this.definition.definition.cluster) {
+      cluster = await this.localUp()
+    }
     let gotCluster = false
 
     if (!cluster) {

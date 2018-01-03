@@ -40,6 +40,7 @@ services:
       SQL_INTERNAL_DATABASE: $SQL_INTERNAL_DATABASE
       SQL_INTERNAL_CONNECTION_LIMIT: 10
       BUGSNAG_API_KEY: ""
+      CLUSTER_VERSION: 1.0.0-beta3.1
 
 networks:
   graphcool:

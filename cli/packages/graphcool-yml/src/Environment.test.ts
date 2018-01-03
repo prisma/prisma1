@@ -2,6 +2,7 @@ import { Environment } from './Environment'
 import { getTmpDir } from './test/getTmpDir'
 import * as path from 'path'
 import * as fs from 'fs-extra'
+import { Cluster } from './Cluster'
 
 export function makeEnv(rc?: string) {
   const tmpDir = getTmpDir()
@@ -12,6 +13,15 @@ describe('Environment', () => {
   test('non-existent global graphcool rc', async () => {
     const env = makeEnv()
     await env.load({})
+    expect(env.clusters).toMatchSnapshot()
+  })
+  test('persists .graphcoolrc correctly', async () => {
+    const env = makeEnv()
+    await env.load({})
+    const cluster = new Cluster('cluster', `http://localhost:60000`, '')
+    env.addCluster(cluster)
+    env.saveGlobalRC()
+    expect(fs.readFileSync(env.rcPath, 'utf-8')).toMatchSnapshot()
     expect(env.clusters).toMatchSnapshot()
   })
   test('empty global graphcool rc', async () => {

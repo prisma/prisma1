@@ -86,8 +86,13 @@ export class Environment {
 
   saveGlobalRC() {
     const rc = {
-      platformToken: this.globalRC['graphcool-1.0'],
-      clusters: this.getLocalClusterConfig(),
+      'graphcool-1.0': {
+        cloudSessionKey: this.databaseRC.cloudSessionKey,
+        clusters: this.getLocalClusterConfig(),
+      },
+    }
+    if (this.globalRC['graphcool-framework']) {
+      rc['graphcool-framework'] = this.globalRC['graphcool-framework']
     }
     // parse & stringify to rm undefined for yaml parser
     const rcString = yaml.safeDump(JSON.parse(JSON.stringify(rc)))

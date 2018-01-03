@@ -46,6 +46,32 @@ Array [
 ]
 `;
 
+exports[`Environment persists .graphcoolrc correctly 1`] = `
+"graphcool-1.0:
+  clusters:
+    cluster:
+      host: 'http://localhost:60000'
+      clusterSecret: ''
+"
+`;
+
+exports[`Environment persists .graphcoolrc correctly 2`] = `
+Array [
+  Cluster {
+    "baseUrl": "https://database-beta.graph.cool",
+    "clusterToken": undefined,
+    "local": false,
+    "name": "shared-public-demo",
+  },
+  Cluster {
+    "baseUrl": "http://localhost:60000",
+    "clusterToken": "",
+    "local": true,
+    "name": "cluster",
+  },
+]
+`;
+
 exports[`Environment sets the platform token correctly 1`] = `
 Array [
   Cluster {
