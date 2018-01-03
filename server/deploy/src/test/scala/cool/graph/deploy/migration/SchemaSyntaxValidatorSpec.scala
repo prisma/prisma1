@@ -368,10 +368,10 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
     val error1 = result.head
     error1.`type` should equal("Todo")
     error1.field should equal(Some("id"))
-    error1.description should include(s"All id fields must specify the `@unique` directive.")
+    error1.description should include(s"The field `id` is reserved and has to have the format: id: ID! @unique.")
   }
 
-  "fail if a model does not specify an id field at all" in {
+  "not fail if a model does not specify an id field at all" in {
     val schema =
       """
         |type Todo @model{
@@ -379,10 +379,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
         |}
       """.stripMargin
     val result = SchemaSyntaxValidator(schema).validate
-    result should have(size(1))
-    val error1 = result.head
-    error1.`type` should equal("Todo")
-    error1.description should include(s"All models must specify the `id` field: `id: ID! @unique`")
+    result should have(size(0))
   }
 
   def missingDirectiveArgument(directive: String, argument: String) = {
