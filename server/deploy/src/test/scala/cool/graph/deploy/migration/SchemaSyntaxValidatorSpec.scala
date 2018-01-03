@@ -185,8 +185,6 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
     result should have(size(0))
   }
 
-  // FIXME: also a case for when a relation appears 3 times?
-
   "fail if the relation directive does not appear on the right fields case 1" in {
     val schema =
       """
@@ -212,7 +210,6 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
     first.description should include("But the other directive for this relation appeared on the type")
   }
 
-  // TODO: adapt
   "fail if the relation directive does not appear on the right fields case 2" in {
     val schema =
       """

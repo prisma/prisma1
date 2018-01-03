@@ -48,7 +48,6 @@ case class NextProjectInfererImpl(
     val models = sdl.objectTypes.map { objectType =>
       val fields: Seq[Or[Field, InvalidGCValue]] = objectType.fields.flatMap { fieldDef =>
         val typeIdentifier = typeIdentifierForTypename(fieldDef.typeName)
-        //val relation       = fieldDef.relationName.flatMap(relationName => nextRelations.find(_.name == relationName))
 
         val relation = if (fieldDef.hasScalarType) {
           None
@@ -110,7 +109,7 @@ case class NextProjectInfererImpl(
   lazy val nextRelations: Set[Relation] = {
     val tmp = for {
       objectType    <- sdl.objectTypes
-      relationField <- objectType.fields if typeIdentifierForTypename(relationField.typeName) == TypeIdentifier.Relation //.filter(!_.hasScalarType)
+      relationField <- objectType.fields if typeIdentifierForTypename(relationField.typeName) == TypeIdentifier.Relation
     } yield {
       val model1           = objectType.name
       val model2           = relationField.typeName
