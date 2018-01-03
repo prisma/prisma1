@@ -43,7 +43,7 @@ case class DataResolver(project: Project, useMasterDatabaseOnly: Boolean = false
   }
 
   def resolveByModel(model: Model, args: Option[QueryArguments] = None): Future[ResolverResult] = {
-    val (query, resultTransform) = DatabaseQueryBuilder.selectAllFromModel(project.id, model.name, args)
+    val (query, resultTransform) = DatabaseQueryBuilder.selectAllFromTable(project.id, model.name, args)
 
     performWithTiming("resolveByModel", readonlyClientDatabase.run(readOnlyDataItem(query)))
       .map(_.toList.map(mapDataItem(model)(_)))
@@ -85,15 +85,21 @@ case class DataResolver(project: Project, useMasterDatabaseOnly: Boolean = false
   }
 
   def loadModelRowsForExport(model: Model, args: Option[QueryArguments] = None): Future[ResolverResult] = {
-    val (query, resultTransform) = DatabaseQueryBuilder.selectAllFromModel(project.id, model.name, args, overrideMaxNodeCount = Some(1001))
+    val (query, resultTransform) = DatabaseQueryBuilder.selectAllFromTable(project.id, model.name, args, None)
 
     performWithTiming("loadModelRowsForExport", readonlyClientDatabase.run(readOnlyDataItem(query)))
       .map(_.toList.map(mapDataItem(model)(_)))
       .map(resultTransform(_))
   }
 
+  def loadListRowsForExport(tableName: String, args: Option[QueryArguments] = None): Future[ResolverResult] = {
+    val (query, resultTransform) = DatabaseQueryBuilder.selectAllFromListTable(project.id, tableName, args, None)
+
+    performWithTiming("loadListRowsForExport", readonlyClientDatabase.run(readOnlyScalarListValue(query))).map(_.toList).map(resultTransform(_))
+  }
+
   def loadRelationRowsForExport(relationId: String, args: Option[QueryArguments] = None): Future[ResolverResult] = {
-    val (query, resultTransform) = DatabaseQueryBuilder.selectAllFromModel(project.id, relationId, args, overrideMaxNodeCount = Some(1001))
+    val (query, resultTransform) = DatabaseQueryBuilder.selectAllFromTable(project.id, relationId, args, None)
 
     performWithTiming("loadRelationRowsForExport", readonlyClientDatabase.run(readOnlyDataItem(query))).map(_.toList).map(resultTransform(_))
   }
@@ -144,7 +150,7 @@ case class DataResolver(project: Project, useMasterDatabaseOnly: Boolean = false
   }
 
   def resolveRelation(relationId: String, aId: String, bId: String): Future[ResolverResult] = {
-    val (query, resultTransform) = DatabaseQueryBuilder.selectAllFromModel(
+    val (query, resultTransform) = DatabaseQueryBuilder.selectAllFromTable(
       project.id,
       relationId,
       Some(QueryArguments(None, None, None, None, None, Some(List(FilterElement("A", aId), FilterElement("B", bId))), None)))
@@ -326,6 +332,7 @@ case class ModelCounts(countsMap: Map[Model, Int]) {
 }
 
 case class ResolverResult(items: Seq[DataItem], hasNextPage: Boolean = false, hasPreviousPage: Boolean = false, parentModelId: Option[String] = None)
+case class ResolverListResult(items: Seq[ScalarListValue], hasNextPage: Boolean = false, hasPreviousPage: Boolean = false)
 
 case class DataResolverValidations(f: String, v: Option[Any], model: Model, validate: Boolean) {
 

@@ -125,9 +125,7 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) {
   private def generateImportListsDBActions(lists: Vector[ImportList]): DBIOAction[Vector[Try[Int]], NoStream, jdbc.MySQLProfile.api.Effect] = {
     val updateListValueActions = lists.flatMap { element =>
       element.values.map {
-        case (fieldName, values) => {
-          DatabaseMutationBuilder.pushScalarList(project.id, element.identifier.typeName, fieldName, element.identifier.id, values).asTry
-        }
+        case (fieldName, values) => DatabaseMutationBuilder.pushScalarList(project.id, element.identifier.typeName, fieldName, element.identifier.id, values).asTry
       }
     }
     DBIO.sequence(updateListValueActions)
