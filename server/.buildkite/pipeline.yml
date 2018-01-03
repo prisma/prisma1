@@ -2,6 +2,9 @@ steps:
   - label: ":scala: libs"
     command: cd server && ./scripts/test.sh libs
 
+  - label: ":scala: subscriptions"
+    command: cd server && ./scripts/test.sh subscriptions
+
   - label: ":scala: deploy"
     command: cd server && ./scripts/test.sh deploy
 

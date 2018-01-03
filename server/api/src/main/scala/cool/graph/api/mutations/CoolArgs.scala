@@ -2,7 +2,7 @@ package cool.graph.api.mutations
 
 import cool.graph.api.mutations.MutationTypes.ArgumentValue
 import cool.graph.api.schema.APIErrors
-import cool.graph.gc_values.GCValue
+import cool.graph.gc_values.{DateTimeGCValue, GCValue, GraphQLIdGCValue}
 import cool.graph.shared.models._
 import cool.graph.util.gc_value.{GCAnyConverter, GCDBValueConverter}
 
@@ -59,9 +59,19 @@ case class CoolArgs(raw: Map[String, Any]) {
     }
   }
 
-  def scalarArguments(model: Model): Vector[ArgumentValue] = {
+  def subScalarList(scalarListField: Field): Option[ScalarListSet] = {
+    subArgsOption(scalarListField).flatten.flatMap { args =>
+      args.getFieldValuesAs[Any]("set") match {
+        case None         => None
+        case Some(values) => Some(ScalarListSet(values = values.toVector))
+      }
+    }
+
+  }
+
+  def nonListScalarArguments(model: Model): Vector[ArgumentValue] = {
     for {
-      field      <- model.scalarFields.toVector
+      field      <- model.scalarFields.toVector.filter(!_.isList)
       fieldValue <- getFieldValueAs[Any](field)
     } yield {
       ArgumentValue(field.name, fieldValue)
@@ -159,15 +169,36 @@ case class CoolArgs(raw: Map[String, Any]) {
   def extractNodeSelector(model: Model): NodeSelector = {
     raw.asInstanceOf[Map[String, Option[Any]]].collectFirst {
       case (fieldName, Some(value)) =>
-        NodeSelector(model, fieldName, GCAnyConverter(model.getFieldByName_!(fieldName).typeIdentifier, isList = false).toGCValue(value).get)
+        NodeSelector(model, model.getFieldByName_!(fieldName), GCAnyConverter(model.getFieldByName_!(fieldName).typeIdentifier, isList = false).toGCValue(value).get)
     } getOrElse {
       throw APIErrors.NullProvidedForWhereError(model.name)
     }
   }
 
+
+
 }
 
-case class NodeSelector(model: Model, fieldName: String, fieldValue: GCValue) {
+object IdNodeSelector{
+
+  def idNodeSelector(model: Model, id: String) : NodeSelector= NodeSelector(model, model.getFieldByName_!("id"), GraphQLIdGCValue(id))
+
+}
+
+case class NodeSelector(model: Model, field: Field, fieldValue: GCValue) {
   lazy val unwrappedFieldValue: Any   = GCDBValueConverter().fromGCValue(fieldValue)
   lazy val fieldValueAsString: String = GCDBValueConverter().fromGCValueToString(fieldValue)
+
+//  lazy val unwrappedFieldValue: Any   = {
+//    fieldValue match {
+//      case x: DateTimeGCValue => x.toMySqlDateTimeFormat
+//      case _ => GCDBValueConverter().fromGCValue(fieldValue)
+//    }
+//  }
+//  lazy val fieldValueAsString: String = fieldValue match {
+//    case x: DateTimeGCValue => x.toMySqlDateTimeFormat
+//    case _ => GCDBValueConverter().fromGCValueToString(fieldValue)
+//  }
 }
+
+

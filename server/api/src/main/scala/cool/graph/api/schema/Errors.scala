@@ -145,10 +145,11 @@ object APIErrors {
       extends ClientApiError(s"The value in the field '$fieldName' on the model '$modelName' ist not valid for that field.", 3038)
 
   case class NodeNotFoundForWhereError(where: NodeSelector)
-      extends ClientApiError(s"No Node for the model ${where.model.name} with value ${where.fieldValueAsString} for ${where.fieldName} found.", 3039)
+      extends ClientApiError(s"No Node for the model ${where.model.name} with value ${where.fieldValueAsString} for ${where.field.name} found.", 3039)
 
   case class NullProvidedForWhereError(modelName: String)
       extends ClientApiError(s"You provided an invalid argument for the where selector on $modelName.", 3040)
 
-
+  case class NodesNotConnectedError(outerWhere: NodeSelector, innerWhere: NodeSelector)
+    extends ClientApiError(s"The Node for the model ${outerWhere.model.name} with value ${outerWhere.fieldValueAsString} for ${outerWhere.field.name} was not connected to the Node for the model ${outerWhere.model.name} with value ${outerWhere.fieldValueAsString} for ${outerWhere.field.name}", 3041)
 }

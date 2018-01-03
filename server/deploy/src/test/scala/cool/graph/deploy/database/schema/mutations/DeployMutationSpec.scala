@@ -97,6 +97,85 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
     migrations.head.revision shouldEqual 3 // order is DESC
   }
 
+  "DeployMutation" should "create, update and delete scalar list" in {
+    val project      = setupProject(basicTypesGql)
+    val nameAndStage = ProjectId.fromEncodedString(project.id)
+
+    val schema1 =
+      """
+        |type TestModel {
+        |  id: ID! @unique
+        |  stringListField: [String!]
+        |}
+      """.stripMargin
+
+    val schema2 =
+      """
+        |type TestModel {
+        |  id: ID! @unique
+        |  stringListField: [Int!]
+        |}
+      """.stripMargin
+
+    val schema3 =
+      """
+        |type TestModel {
+        |  id: ID! @unique
+        |  intListField: [Int!]
+        |}
+      """.stripMargin
+
+    val result1 = server.query(s"""
+                                 |mutation {
+                                 |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(schema1)}}){
+                                 |    project {
+                                 |      name
+                                 |      stage
+                                 |    }
+                                 |    errors {
+                                 |      description
+                                 |    }
+                                 |  }
+                                 |}
+      """.stripMargin)
+
+    result1.pathAsString("data.deploy.project.name") shouldEqual nameAndStage.name
+    result1.pathAsString("data.deploy.project.stage") shouldEqual nameAndStage.stage
+
+    server.query(s"""
+                                  |mutation {
+                                  |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(schema2)}}){
+                                  |    project {
+                                  |      name
+                                  |      stage
+                                  |    }
+                                  |    errors {
+                                  |      description
+                                  |    }
+                                  |  }
+                                  |}
+      """.stripMargin)
+
+    server.query(s"""
+                                  |mutation {
+                                  |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(schema3)}}){
+                                  |    project {
+                                  |      name
+                                  |      stage
+                                  |    }
+                                  |    errors {
+                                  |      description
+                                  |    }
+                                  |  }
+                                  |}
+      """.stripMargin)
+
+    val migrations = migrationPersistence.loadAll(project.id).await
+    migrations should have(size(5))
+    migrations.exists(!_.hasBeenApplied) shouldEqual false
+    migrations.head.revision shouldEqual 5 // order is DESC
+  }
+
   "DeployMutation" should "handle renames with migration values" in {
     val project      = setupProject(basicTypesGql)
     val nameAndStage = ProjectId.fromEncodedString(project.id)

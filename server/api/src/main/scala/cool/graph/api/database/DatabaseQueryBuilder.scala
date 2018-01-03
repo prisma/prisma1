@@ -27,7 +27,15 @@ object DatabaseQueryBuilder {
         // note: getObject(string) is case insensitive, so we get the index in scala land instead
         yield n -> Option(rs.getObject(colNames.indexOf(n) + 1))).toMap
 
-      DataItem(id = rs.getString("id"), userData = userData)
+      DataItem(id = rs.getString("id").trim, userData = userData)
+    }
+  }
+
+  implicit object GetScalarListValue extends GetResult[ScalarListValue] {
+    def apply(ps: PositionedResult): ScalarListValue = {
+      val rs = ps.rs
+
+      ScalarListValue(nodeId = rs.getString("nodeId").trim, position = rs.getInt("position"), value = rs.getObject("value"))
     }
   }
 
@@ -120,7 +128,7 @@ object DatabaseQueryBuilder {
     val oppositeRelationSide = relation.oppositeSideOf(model).toString
     sql"""select EXISTS (
             select `id`from `#${project.id}`.`#${model.name}`
-            where  #${where.fieldName} = ${where.fieldValue} and `id` IN (
+            where  #${where.field.name} = ${where.fieldValue} and `id` IN (
              select `#$relationSide`
              from `#${project.id}`.`#${relation.id}`
              where `#$oppositeRelationSide` = '#$other'
@@ -148,13 +156,17 @@ object DatabaseQueryBuilder {
     sql"select exists (select * from `#${project.id}`.`#${model.name}`" ++ whereClauseByCombiningPredicatesByOr(predicates) concat sql")"
   }
 
+  def selectFromScalarList(projectId: String, modelName: String, fieldName: String, nodeIds: Vector[String]): SQLActionBuilder = {
+    sql"select nodeId, position, value from `#$projectId`.`#${modelName}_#${fieldName}` where nodeId in (" concat combineByComma(nodeIds.map(escapeUnsafeParam)) concat sql")"
+  }
+
   def whereClauseByCombiningPredicatesByOr(predicates: Vector[NodeSelector]) = {
     if (predicates.isEmpty) {
       sql""
     } else {
       val firstPredicate = predicates.head
-      predicates.tail.foldLeft(sql"where #${firstPredicate.fieldName} = ${firstPredicate.fieldValue}") { (sqlActionBuilder, predicate) =>
-        sqlActionBuilder ++ sql" OR #${predicate.fieldName} = ${predicate.fieldValue}"
+      predicates.tail.foldLeft(sql"where #${firstPredicate.field.name} = ${firstPredicate.fieldValue}") { (sqlActionBuilder, predicate) =>
+        sqlActionBuilder ++ sql" OR #${predicate.field.name} = ${predicate.fieldValue}"
       }
     }
   }

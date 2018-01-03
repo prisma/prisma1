@@ -49,6 +49,7 @@ case class SchemaBuilderImpl(
     Schema(
       query = query,
       mutation = mutation,
+      subscription = subscription,
       validationRules = SchemaValidationRule.empty
     )
   }
@@ -116,7 +117,7 @@ case class SchemaBuilderImpl(
           resolve = (ctx) => {
             val coolArgs = CoolArgs(ctx.args.raw)
             val where    = coolArgs.extractNodeSelectorFromWhereField(model)
-            OneDeferred(model, where.fieldName, where.unwrappedFieldValue)
+            OneDeferred(model, where.field.name, where.unwrappedFieldValue)
           }
         )
       }

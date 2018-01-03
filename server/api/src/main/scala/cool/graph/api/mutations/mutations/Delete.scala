@@ -4,7 +4,7 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import cool.graph.api.ApiDependencies
 import cool.graph.api.database.mutactions.mutactions.ServerSideSubscription
-import cool.graph.api.database.mutactions.{MutactionGroup, Transaction}
+import cool.graph.api.database.mutactions.{MutactionGroup, TransactionMutaction}
 import cool.graph.api.database.{DataItem, DataResolver}
 import cool.graph.api.mutations._
 import cool.graph.api.schema.{APIErrors, ObjectTypeBuilder}
@@ -47,7 +47,7 @@ case class Delete(
         val itemToDelete = deletedItemOpt.getOrElse(throw APIErrors.NodeNotFoundForWhereError(where))
 
         val sqlMutactions          = SqlMutactions(dataResolver).getMutactionsForDelete(model, itemToDelete.id, itemToDelete)
-        val transactionMutaction   = Transaction(sqlMutactions, dataResolver)
+        val transactionMutaction   = TransactionMutaction(sqlMutactions, dataResolver)
         val subscriptionMutactions = SubscriptionEvents.extractFromSqlMutactions(project, mutationId, sqlMutactions).toList
         val sssActions             = ServerSideSubscription.extractFromMutactions(project, sqlMutactions, requestId).toList
 

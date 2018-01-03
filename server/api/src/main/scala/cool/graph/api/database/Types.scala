@@ -24,6 +24,8 @@ case class DataItem(id: Id, userData: UserData = Map.empty, typeName: Option[Str
   def getOption[T](key: String): Option[T] = userData.get(key).flatten.map(_.asInstanceOf[T])
 }
 
+case class ScalarListValue(nodeId: String, position: Int, value: Any)
+
 object SortOrder extends Enumeration {
   type SortOrder = Value
   val Asc: SortOrder.Value  = Value("asc")

@@ -12,10 +12,10 @@ import scala.concurrent.Future
 
 case class ProjectFetcherImpl(
     blockedProjectIds: Vector[String],
-    config: Config
+    config: Config,
+    schemaManagerEndpoint: String,
+    schemaManagerSecret: String
 ) extends RefreshableProjectFetcher {
-  private val schemaManagerEndpoint = config.getString("schemaManagerEndpoint")
-  private val schemaManagerSecret   = config.getString("schemaManagerSecret")
 
   private lazy val schemaService = {
     val client = if (schemaManagerEndpoint.startsWith("https")) {

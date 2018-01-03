@@ -187,6 +187,34 @@ lazy val api = serverProject("api")
     }
   )
 
+lazy val subscriptions = serverProject("subscriptions")
+  .dependsOn(api % "compile;test->test")
+  .dependsOn(stubServer % "compile")
+  .settings(
+    libraryDependencies ++= Seq(
+      playJson,
+      playStreams,
+      akkaHttpPlayJson,
+      akkaHttpTestKit
+    )
+  )
+  .enablePlugins(sbtdocker.DockerPlugin, JavaAppPackaging)
+  .settings(
+    imageNames in docker := Seq(
+      ImageName(s"graphcool/graphcool-subscriptions:latest")
+    ),
+    dockerfile in docker := {
+      val appDir    = stage.value
+      val targetDir = "/app"
+
+      new Dockerfile {
+        from("anapsix/alpine-java")
+        entryPoint(s"$targetDir/bin/${executableScriptName.value}")
+        copy(appDir, targetDir)
+      }
+    }
+  )
+
 lazy val gcValues = libProject("gc-values")
   .settings(libraryDependencies ++= Seq(
     playJson,
@@ -447,6 +475,7 @@ lazy val singleServer = Project(id = "single-server", base = file("./single-serv
   .settings(commonSettings: _*)
   .dependsOn(api% "compile")
   .dependsOn(deploy % "compile")
+  .dependsOn(subscriptions % "compile")
   .dependsOn(graphQlClient % "compile")
   .enablePlugins(sbtdocker.DockerPlugin, JavaAppPackaging)
   .settings(
@@ -500,6 +529,7 @@ lazy val singleServer = Project(id = "single-server", base = file("./single-serv
 val allServerProjects = List(
   api,
   deploy,
+  subscriptions,
   singleServer,
   sharedModels
 )

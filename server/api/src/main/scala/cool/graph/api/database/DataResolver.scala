@@ -69,7 +69,7 @@ case class DataResolver(project: Project, useMasterDatabaseOnly: Boolean = false
   }
 
   def resolveByUnique(where: NodeSelector): Future[Option[DataItem]] = {
-    batchResolveByUnique(where.model, where.fieldName, List(where.unwrappedFieldValue)).map(_.headOption)
+    batchResolveByUnique(where.model, where.field.name, List(where.unwrappedFieldValue)).map(_.headOption)
   }
 
   def resolveByUniques(model: Model, uniques: Vector[NodeSelector]): Future[Vector[DataItem]] = {
@@ -103,6 +103,12 @@ case class DataResolver(project: Project, useMasterDatabaseOnly: Boolean = false
       .map(_.map(mapDataItem(model)))
   }
 
+  def batchResolveScalarList(model: Model, field: Field, nodeIds: Vector[String]): Future[Vector[ScalarListValue]] = {
+    val query = DatabaseQueryBuilder.selectFromScalarList(project.id, model.name, field.name, nodeIds)
+
+    performWithTiming("batchResolveScalarList", readonlyClientDatabase.run(readOnlyScalarListValue(query)))
+  }
+
   def batchResolveByUniqueWithoutValidation(model: Model, key: String, values: List[Any]): Future[List[DataItem]] = {
     val query = DatabaseQueryBuilder.batchSelectFromModelByUnique(project.id, model.name, key, values)
 
@@ -128,7 +134,7 @@ case class DataResolver(project: Project, useMasterDatabaseOnly: Boolean = false
       .map {
         case Some(modelId) =>
           val model = project.getModelById_!(modelId.trim)
-          resolveByUnique(NodeSelector(model, "id", GraphQLIdGCValue(globalId))).map(_.map(mapDataItem(model)).map(_.copy(typeName = Some(model.name))))
+          resolveByUnique(NodeSelector(model, model.getFieldByName_!("id"), GraphQLIdGCValue(globalId))).map(_.map(mapDataItem(model)).map(_.copy(typeName = Some(model.name))))
         case _ => Future.successful(None)
       }
       .flatMap(identity)
@@ -189,7 +195,7 @@ case class DataResolver(project: Project, useMasterDatabaseOnly: Boolean = false
     )
   }
 
-  def resolveByModelAndId(model: Model, id: Id): Future[Option[DataItem]]                  = resolveByUnique(NodeSelector(model, "id", GraphQLIdGCValue(id)))
+  def resolveByModelAndId(model: Model, id: Id): Future[Option[DataItem]]                  = resolveByUnique(NodeSelector(model, model.getFieldByName_!("id"), GraphQLIdGCValue(id)))
   def resolveByModelAndIdWithoutValidation(model: Model, id: Id): Future[Option[DataItem]] = resolveByUniqueWithoutValidation(model, "id", id)
 
   def countByRelationManyModels(fromField: Field, fromNodeIds: List[String], args: Option[QueryArguments]): Future[List[(String, Int)]] = {
@@ -235,6 +241,12 @@ case class DataResolver(project: Project, useMasterDatabaseOnly: Boolean = false
   // see also http://danielwestheide.com/blog/2015/06/28/put-your-writes-where-your-master-is-compile-time-restriction-of-slick-effect-types.html
   private def readOnlyDataItem(query: SQLActionBuilder): SqlStreamingAction[Vector[DataItem], DataItem, Read] = {
     val action: SqlStreamingAction[Vector[DataItem], DataItem, Read] = query.as[DataItem]
+
+    action
+  }
+
+  private def readOnlyScalarListValue(query: SQLActionBuilder): SqlStreamingAction[Vector[ScalarListValue], Any, Read] = {
+    val action: SqlStreamingAction[Vector[ScalarListValue], Any, Read] = query.as[ScalarListValue]
 
     action
   }

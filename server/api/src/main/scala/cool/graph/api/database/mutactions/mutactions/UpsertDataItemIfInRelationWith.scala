@@ -47,15 +47,15 @@ case class UpsertDataItemIfInRelationWith(
     implicit val anyFormat = JsonFormats.AnyJsonFormat
     Some({
       // https://dev.mysql.com/doc/refman/5.5/en/error-messages-server.html#error_er_dup_entry
-      case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1062 =>
-        APIErrors.UniqueConstraintViolation(model.name, getFieldFromCoolArgs(List(createArgs, updateArgs), e))
+      case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1062 && getFieldOptionFromCoolArgs(List(createArgs, updateArgs), e).isDefined=>
+        APIErrors.UniqueConstraintViolation(model.name, getFieldOptionFromCoolArgs(List(createArgs, updateArgs), e).get)
       case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1452 => APIErrors.NodeDoesNotExist(where.fieldValueAsString)
       case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1048 => APIErrors.FieldCannotBeNull()
     })
   }
   override def verify(resolver: DataResolver): Future[Try[MutactionVerificationSuccess]] = {
-    val (createCheck, _) = InputValueValidation.validateDataItemInputs(model, createArgs.scalarArguments(model).toList)
-    val (updateCheck, _) = InputValueValidation.validateDataItemInputs(model, updateArgs.scalarArguments(model).toList)
+    val (createCheck, _) = InputValueValidation.validateDataItemInputs(model, createArgs.nonListScalarArguments(model).toList)
+    val (updateCheck, _) = InputValueValidation.validateDataItemInputs(model, updateArgs.nonListScalarArguments(model).toList)
 
     (createCheck.isFailure, updateCheck.isFailure) match {
       case (true, _)      => Future.successful(createCheck)

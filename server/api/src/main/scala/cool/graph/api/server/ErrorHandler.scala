@@ -1,11 +1,12 @@
 package cool.graph.api.server
 
 import akka.http.scaladsl.model.StatusCode
-import akka.http.scaladsl.model.StatusCodes.InternalServerError
+import akka.http.scaladsl.model.StatusCodes.{InternalServerError, OK}
 import cool.graph.api.schema.APIErrors.ClientApiError
+import cool.graph.api.schema.UserFacingError
 import sangria.execution.{Executor, HandledException}
 import sangria.marshalling.ResultMarshaller
-import spray.json.{JsObject, JsString}
+import spray.json.{JsArray, JsNumber, JsObject, JsString}
 
 case class ErrorHandler(
     requestId: String
@@ -20,7 +21,7 @@ case class ErrorHandler(
 
     case (marshaller, error: Throwable) =>
       error.printStackTrace()
-      HandledException(internalErrorMessage, commonFields(marshaller))
+      HandledException(error.getMessage, commonFields(marshaller))
   }
 
   lazy val sangriaExceptionHandler: Executor.ExceptionHandler = sangria.execution.ExceptionHandler(
@@ -28,8 +29,16 @@ case class ErrorHandler(
   )
 
   def handle(throwable: Throwable): (StatusCode, JsObject) = {
-    throwable.printStackTrace()
-    InternalServerError → JsObject("requestId" -> JsString(requestId), "error" -> JsString(internalErrorMessage))
+
+    throwable match {
+      case e: UserFacingError =>
+        OK -> JsObject("errors" -> JsArray(JsObject("code" -> JsNumber(e.code), "requestId" -> JsString(requestId), "message" -> JsString(e.getMessage))))
+
+      case e: Throwable =>
+        throwable.printStackTrace()
+        InternalServerError → JsObject("errors" -> JsArray(JsObject("requestId" -> JsString(requestId), "message" -> JsString(e.getMessage))))
+    }
+
   }
 
   private def commonFields(marshaller: ResultMarshaller) = Map(

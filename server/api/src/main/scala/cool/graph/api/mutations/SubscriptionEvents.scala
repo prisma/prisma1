@@ -1,5 +1,6 @@
 package cool.graph.api.mutations
 
+import cool.graph.api.ApiDependencies
 import cool.graph.api.database.mutactions.ClientSqlMutaction
 import cool.graph.api.database.mutactions.mutactions.{CreateDataItem, DeleteDataItem, PublishSubscriptionEvent, UpdateDataItem}
 import cool.graph.shared.models.IdType.Id
@@ -8,7 +9,8 @@ import cool.graph.shared.models.Project
 import scala.collection.immutable.Seq
 
 object SubscriptionEvents {
-  def extractFromSqlMutactions(project: Project, mutationId: Id, mutactions: Seq[ClientSqlMutaction]): Seq[PublishSubscriptionEvent] = {
+  def extractFromSqlMutactions(project: Project, mutationId: Id, mutactions: Seq[ClientSqlMutaction])(
+      implicit apiDependencies: ApiDependencies): Seq[PublishSubscriptionEvent] = {
     mutactions.collect {
       case x: UpdateDataItem => fromUpdateMutaction(project, mutationId, x)
       case x: CreateDataItem => fromCreateMutaction(project, mutationId, x)
@@ -16,7 +18,7 @@ object SubscriptionEvents {
     }
   }
 
-  def fromDeleteMutaction(project: Project, mutationId: Id, mutaction: DeleteDataItem): PublishSubscriptionEvent = {
+  def fromDeleteMutaction(project: Project, mutationId: Id, mutaction: DeleteDataItem)(implicit apiDependencies: ApiDependencies): PublishSubscriptionEvent = {
     val nodeData: Map[String, Any] = mutaction.previousValues.userData
       .collect {
         case (key, Some(value)) =>
@@ -33,7 +35,7 @@ object SubscriptionEvents {
     )
   }
 
-  def fromCreateMutaction(project: Project, mutationId: Id, mutaction: CreateDataItem): PublishSubscriptionEvent = {
+  def fromCreateMutaction(project: Project, mutationId: Id, mutaction: CreateDataItem)(implicit apiDependencies: ApiDependencies): PublishSubscriptionEvent = {
     PublishSubscriptionEvent(
       project = project,
       value = Map("nodeId" -> mutaction.id, "modelId" -> mutaction.model.id, "mutationType" -> "CreateNode"),
@@ -41,16 +43,15 @@ object SubscriptionEvents {
     )
   }
 
-  def fromUpdateMutaction(project: Project, mutationId: Id, mutaction: UpdateDataItem): PublishSubscriptionEvent = {
+  def fromUpdateMutaction(project: Project, mutationId: Id, mutaction: UpdateDataItem)(implicit apiDependencies: ApiDependencies): PublishSubscriptionEvent = {
     PublishSubscriptionEvent(
       project = project,
       value = Map(
-        "nodeId"         -> mutaction.id,
-        "changedFields"  -> mutaction.namesOfUpdatedFields,
-        "previousValues" -> None, // todo: replace this with proper GC Values
-//          GraphcoolDataTypes
-//          .convertToJson(mutaction.previousValues.userData)
-//          .compactPrint,
+        "nodeId"        -> mutaction.id,
+        "changedFields" -> mutaction.namesOfUpdatedFields.toList, // must be a List as Vector is printed verbatim
+        "previousValues" -> GraphcoolDataTypes
+          .convertToJson(mutaction.previousValues.userData)
+          .compactPrint,
         "modelId"      -> mutaction.model.id,
         "mutationType" -> "UpdateNode"
       ),

@@ -18,17 +18,17 @@ object Dependencies {
     val scalaTest   = "3.0.4"
     val slick       = "3.2.0"
     val spray       = "1.3.3"
+    val jackson     = "2.8.4"
   }
 
   val jodaTime    = "joda-time" % "joda-time" % v.joda
   val jodaConvert = "org.joda" % "joda-convert" % v.jodaConvert
   val joda        = Seq(jodaTime, jodaConvert)
 
-  val cuid      = "cool.graph"        % "cuid-java"   % v.cuid
-  val playJson  = "com.typesafe.play" %% "play-json"  % v.play
-  val scalactic = "org.scalactic"     %% "scalactic"  % v.scalactic
-  val scalaTest = "org.scalatest"     %% "scalatest"  % v.scalaTest % Test
-  val spray     = "io.spray"          %% "spray-json" % v.spray
+  val cuid      = "cool.graph"    % "cuid-java"   % v.cuid
+  val scalactic = "org.scalactic" %% "scalactic"  % v.scalactic
+  val scalaTest = "org.scalatest" %% "scalatest"  % v.scalaTest % Test
+  val spray     = "io.spray"      %% "spray-json" % v.spray
 
   val slickCore   = "com.typesafe.slick" %% "slick" % v.slick
   val slickHikari = "com.typesafe.slick" %% "slick-hikaricp" % v.slick
@@ -37,6 +37,9 @@ object Dependencies {
 
   val mariaDbClient = "org.mariadb.jdbc" % "mariadb-java-client" % "2.1.2"
 
+  val playJson    = "com.typesafe.play" %% "play-json"    % v.play
+  val playStreams = "com.typesafe.play" %% "play-streams" % v.play
+
   val akka              = "com.typesafe.akka" %% "akka-actor"           % v.akka
   val akkaClusterTools  = "com.typesafe.akka" %% "akka-cluster-tools"   % v.akka
   val akkaContrib       = "com.typesafe.akka" %% "akka-contrib"         % v.akka
@@ -44,8 +47,11 @@ object Dependencies {
   val akkaHttp          = "com.typesafe.akka" %% "akka-http"            % v.akkaHttp
   val akkaHttpTestKit   = "com.typesafe.akka" %% "akka-http-testkit"    % v.akkaHttp
   val akkaHttpSprayJson = "com.typesafe.akka" %% "akka-http-spray-json" % v.akkaHttp
-  val akkaHttpPlayJson  = "de.heikoseeberger" %% "akka-http-play-json"  % "1.19.0-M3"
   val akkaHttpCors      = "ch.megard"         %% "akka-http-cors"       % "0.2.2"
+  val akkaHttpPlayJson = "de.heikoseeberger" %% "akka-http-play-json" % "1.18.0" excludeAll (
+    ExclusionRule(organization = "com.typesafe.akka"),
+    ExclusionRule(organization = "com.typesafe.play")
+  )
 
   val jsr305        = "com.google.code.findbugs"      % "jsr305"                % "3.0.0"
   val caffeine      = "com.github.ben-manes.caffeine" % "caffeine"              % "2.5.5"
@@ -62,10 +68,10 @@ object Dependencies {
   val bugsnagClient = "com.bugsnag" % "bugsnag"      % "3.0.2"
   val specs2        = "org.specs2"  %% "specs2-core" % "3.8.8" % "test"
 
-  val jacksonCore           = "com.fasterxml.jackson.core" % "jackson-core" % "2.8.4"
-  val jacksonDatabind       = "com.fasterxml.jackson.core" % "jackson-databind" % "2.8.4"
-  val jacksonAnnotation     = "com.fasterxml.jackson.core" % "jackson-annotations" % "2.8.4"
-  val jacksonDataformatCbor = "com.fasterxml.jackson.dataformat" % "jackson-dataformat-cbor" % "2.8.4"
+  val jacksonCore           = "com.fasterxml.jackson.core" % "jackson-core" % v.jackson
+  val jacksonDatabind       = "com.fasterxml.jackson.core" % "jackson-databind" % v.jackson
+  val jacksonAnnotation     = "com.fasterxml.jackson.core" % "jackson-annotations" % v.jackson
+  val jacksonDataformatCbor = "com.fasterxml.jackson.dataformat" % "jackson-dataformat-cbor" % v.jackson
   val jackson               = Seq(jacksonCore, jacksonDatabind, jacksonAnnotation, jacksonDataformatCbor)
 
   val amqp         = "com.rabbitmq"               % "amqp-client"              % "4.1.0"
