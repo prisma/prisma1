@@ -58,17 +58,11 @@ case class SchemaSyntaxValidator(schema: String, directiveRequirements: Seq[Dire
   }
 
   def validateInternal(): Seq[SchemaError] = {
-//    val nonSystemFieldAndTypes: Seq[FieldAndType] = for {
-//      objectType <- doc.objectTypes
-//      field      <- objectType.fields
-//    } yield FieldAndType(objectType, field)
-
     val allFieldAndTypes: Seq[FieldAndType] = for {
       objectType <- doc.objectTypes
       field      <- objectType.fields
     } yield FieldAndType(objectType, field)
 
-//    val deprecatedImplementsNodeValidations = validateNodeInterfaceOnTypes(doc.objectTypes, allFieldAndTypes)
     val reservedFieldsValidations = validateReservedFields(allFieldAndTypes)
     val duplicateTypeValidations  = validateDuplicateTypes(doc.objectTypes, allFieldAndTypes)
     val duplicateFieldValidations = validateDuplicateFields(allFieldAndTypes)
@@ -77,7 +71,6 @@ case class SchemaSyntaxValidator(schema: String, directiveRequirements: Seq[Dire
     val scalarFieldValidations    = validateScalarFields(allFieldAndTypes)
     val fieldDirectiveValidations = allFieldAndTypes.flatMap(validateFieldDirectives)
 
-//    deprecatedImplementsNodeValidations ++
     reservedFieldsValidations ++
       duplicateTypeValidations ++
       duplicateFieldValidations ++
@@ -87,25 +80,6 @@ case class SchemaSyntaxValidator(schema: String, directiveRequirements: Seq[Dire
       fieldDirectiveValidations ++
       validateEnumTypes
   }
-
-//  def validateIdFields(): Seq[SchemaError] = {
-//    val missingUniqueDirectives = for {
-//      objectType <- doc.objectTypes
-//      field      <- objectType.fields
-//      if field.isIdField && !field.isUnique
-//    } yield {
-//      val fieldAndType = FieldAndType(objectType, field)
-//      SchemaErrors.missingUniqueDirective(fieldAndType)
-//    }
-
-//    val missingIdFields = for {
-//      objectType <- doc.objectTypes
-//      if objectType.hasNoIdField
-//    } yield {
-//      SchemaErrors.missingIdField(objectType)
-//    }
-//    missingUniqueDirectives //++ missingIdFields
-//  }
 
   def validateReservedFields(fieldAndTypes: Seq[FieldAndType]): Seq[SchemaError] = {
     for {
@@ -121,12 +95,6 @@ case class SchemaSyntaxValidator(schema: String, directiveRequirements: Seq[Dire
 
     duplicateTypeNames.map(name => SchemaErrors.duplicateTypeName(fieldAndTypes.find(_.objectType.name == name).head)).distinct
   }
-
-//  def validateNodeInterfaceOnTypes(objectTypes: Seq[ObjectTypeDefinition], fieldAndTypes: Seq[FieldAndType]): Seq[SchemaError] = {
-//    objectTypes.collect {
-//      case x if x.interfaces.exists(_.name == "Node") => SchemaErrors.atNodeIsDeprecated(fieldAndTypes.find(_.objectType.name == x.name).get)
-//    }
-//  }
 
   def validateDuplicateFields(fieldAndTypes: Seq[FieldAndType]): Seq[SchemaError] = {
     for {
