@@ -163,6 +163,20 @@ ${chalk.gray(
       const gcSemverRegex = /(\d{1,2}\.\d{1,2}\.?\d{0,2})-?\w*(\d{1,2}\.\d{1,2}\.?\d{0,2})/
       const clusterMatch = clusterVersion.match(gcSemverRegex)
       const cliMatch = this.config.version.match(gcSemverRegex)
+      const localNote = cluster.local
+        ? `Please use ${chalk.green.bold(
+            'graphcool local upgrade',
+          )} to get the latest cluster.`
+        : `Please update your graphcool cli to the latest version ${chalk.green.bold(
+            'npm install -g graphcool',
+          )}`
+      const error = new Error(
+        `The CLI version (${
+          this.config.version
+        }) and cluster version (${clusterVersion}) of cluster ${
+          cluster.name
+        } do not match. ${localNote}`,
+      )
       if (clusterMatch && clusterMatch[1] && cliMatch && cliMatch[1]) {
         const mainSatisfied = semver.satisfies(
           cliMatch[1],
@@ -175,23 +189,11 @@ ${chalk.gray(
               `~${clusterMatch[2]}`,
             )
             if (!secondarySatisfied) {
-              throw new Error(
-                `The CLI version (${
-                  this.config.version
-                }) and cluster version (${clusterVersion}) of cluster ${
-                  cluster.name
-                } do not match. Please upgrade your cluster and/or CLI.`,
-              )
+              throw error
             }
           }
         } else {
-          throw new Error(
-            `The CLI version (${
-              this.config.version
-            }) and cluster version (${clusterVersion}) of cluster ${
-              cluster.name
-            } do not match. Please upgrade your cluster and/or CLI.`,
-          )
+          throw error
         }
       }
     }
