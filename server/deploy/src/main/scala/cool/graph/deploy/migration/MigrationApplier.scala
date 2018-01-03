@@ -81,7 +81,7 @@ case class MigrationApplierImpl(clientDatabase: DatabaseDef)(implicit ec: Execut
     case x: UpdateModel =>
       val model                = nextProject.getModelByName_!(x.newName)
       val scalarListFieldNames = model.scalarListFields.map(_.name).toVector
-      Some(RenameModelTable(projectId = previousProject.id, previousName = x.name, nextName = x.newName, scalarListFieldsNames = scalarListFieldNames))
+      Some(RenameTable(projectId = previousProject.id, previousName = x.name, nextName = x.newName, scalarListFieldsNames = scalarListFieldNames))
 
     case x: CreateField =>
       // todo I think those validations should be somewhere else, preferably preventing a step being created
@@ -103,8 +103,11 @@ case class MigrationApplierImpl(clientDatabase: DatabaseDef)(implicit ec: Execut
       val field = model.getFieldByName_!(x.name)
       if (field.isList) {
         Some(DeleteScalarListTable(nextProject.id, model.name, field.name, field.typeIdentifier))
-      } else {
+      } else if (!field.isRelation) {
+        // TODO: add test case for not deleting columns for relation fields
         Some(DeleteColumn(nextProject.id, model, field))
+      } else {
+        None
       }
 
     case x: UpdateField =>
@@ -129,6 +132,11 @@ case class MigrationApplierImpl(clientDatabase: DatabaseDef)(implicit ec: Execut
     case x: DeleteRelation =>
       val relation = previousProject.getRelationByName_!(x.name)
       Some(DeleteRelationTable(nextProject, relation))
+
+    case x: UpdateRelation =>
+      x.newName.map { newName =>
+        RenameTable(projectId = previousProject.id, previousName = x.name, nextName = newName, scalarListFieldsNames = Vector.empty)
+      }
   }
 
   def executeClientMutaction(mutaction: ClientSqlMutaction): Future[Unit] = {

@@ -5,7 +5,7 @@ import cool.graph.deploy.database.DatabaseMutationBuilder
 import scala.concurrent.Future
 import slick.jdbc.MySQLProfile.api._
 
-case class RenameModelTable(projectId: String, previousName: String, nextName: String, scalarListFieldsNames: Vector[String]) extends ClientSqlMutaction {
+case class RenameTable(projectId: String, previousName: String, nextName: String, scalarListFieldsNames: Vector[String]) extends ClientSqlMutaction {
 
   override def execute: Future[ClientSqlStatementResult[Any]] = setName(previousName, nextName)
 

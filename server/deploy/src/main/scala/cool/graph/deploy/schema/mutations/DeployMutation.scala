@@ -14,7 +14,7 @@ import scala.concurrent.{ExecutionContext, Future}
 case class DeployMutation(
     args: DeployMutationInput,
     project: Project,
-    nextProjectInferrer: NextProjectInferrer,
+    nextProjectInferrer: NextProjectInferer,
     migrationStepsProposer: MigrationStepsProposer,
     renameInferer: RenameInferer,
     migrationPersistence: MigrationPersistence,
@@ -45,13 +45,14 @@ case class DeployMutation(
   }
 
   private def performDeployment: Future[MutationSuccess[DeployMutationPayload]] = {
-    nextProjectInferrer.infer(baseProject = project, graphQlSdl) match {
+    val renames = renameInferer.infer(graphQlSdl)
+    nextProjectInferrer.infer(baseProject = project, renames, graphQlSdl) match {
       case Good(inferredProject) =>
-        val nextProject = inferredProject.copy(secrets = args.secrets)
-        val renames     = renameInferer.infer(graphQlSdl)
-        val steps       = migrationStepsProposer.propose(project, nextProject, renames)
+        val nextProject    = inferredProject.copy(secrets = args.secrets)
+        val migrationSteps = migrationStepsProposer.propose(project, nextProject, renames)
+        val migration      = Migration(nextProject.id, 0, hasBeenApplied = false, migrationSteps) // how to get to the revision...?
 
-        handleMigration(nextProject, steps).map { migration =>
+        handleMigration(nextProject, migrationSteps).map { migration =>
           MutationSuccess(DeployMutationPayload(args.clientMutationId, nextProject, migration, schemaErrors))
         }
 

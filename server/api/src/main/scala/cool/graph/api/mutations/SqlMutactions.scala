@@ -228,12 +228,13 @@ case class SqlMutactions(dataResolver: DataResolver) {
   }
 
   private def runRequiredRelationCheckWithInvalidFunction(field: Field, isInvalid: () => Future[Boolean]): Option[InvalidInputClientSqlMutaction] = {
-    val relatedField = field.relatedFieldEager(project)
-    val relatedModel = field.relatedModel_!(project)
+    field.relatedField(project).flatMap { relatedField =>
+      val relatedModel = field.relatedModel_!(project)
 
-    if (relatedField.isRequired && !relatedField.isList) {
-      Some(InvalidInputClientSqlMutaction(RelationIsRequired(fieldName = relatedField.name, typeName = relatedModel.name), isInvalid = isInvalid))
-    } else None
+      if (relatedField.isRequired && !relatedField.isList) {
+        Some(InvalidInputClientSqlMutaction(RelationIsRequired(fieldName = relatedField.name, typeName = relatedModel.name), isInvalid = isInvalid))
+      } else None
+    }
   }
 }
 

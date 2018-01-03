@@ -121,55 +121,6 @@ case class OutputTypesBuilder(project: Project, objectTypes: Map[String, ObjectT
   type R = SimpleResolveOutput
 
   def mapResolve(item: DataItem, args: Args): SimpleResolveOutput = SimpleResolveOutput(item, args)
-
-  def mapAddToRelationOutputType[C](relation: Relation,
-                                    fromModel: Model,
-                                    fromField: Field,
-                                    toModel: Model,
-                                    objectType: ObjectType[C, DataItem],
-                                    payloadName: String): ObjectType[C, SimpleResolveOutput] =
-    ObjectType[C, SimpleResolveOutput](
-      name = s"${payloadName}Payload",
-      () => fields[C, SimpleResolveOutput](connectionFields(relation, fromModel, fromField, toModel, objectType): _*)
-    )
-
-  def mapRemoveFromRelationOutputType[C](relation: Relation,
-                                         fromModel: Model,
-                                         fromField: Field,
-                                         toModel: Model,
-                                         objectType: ObjectType[C, DataItem],
-                                         payloadName: String): ObjectType[C, SimpleResolveOutput] =
-    ObjectType[C, SimpleResolveOutput](
-      name = s"${payloadName}Payload",
-      () => fields[C, SimpleResolveOutput](connectionFields(relation, fromModel, fromField, toModel, objectType): _*)
-    )
-
-  def connectionFields[C](relation: Relation,
-                          fromModel: Model,
-                          fromField: Field,
-                          toModel: Model,
-                          objectType: ObjectType[C, DataItem]): List[sangria.schema.Field[C, SimpleResolveOutput]] =
-    List(
-      schema.Field[C, SimpleResolveOutput, Any, Any](name = relation.bName(project),
-                                                     fieldType = OptionType(objectType),
-                                                     description = None,
-                                                     arguments = List(),
-                                                     resolve = ctx => {
-                                                       ctx.value.item
-                                                     }),
-      schema.Field[C, SimpleResolveOutput, Any, Any](
-        name = relation.aName(project),
-        fieldType = OptionType(objectTypes(fromField.relatedModel(project).get.name)),
-        description = None,
-        arguments = List(),
-        resolve = ctx => {
-          val mutationKey = s"${fromField.relation.get.aName(project = project)}Id"
-          masterDataResolver
-            .resolveByUnique(NodeSelector(toModel, toModel.getFieldByName_!("id"), GraphQLIdGCValue(ctx.value.args.arg[String](mutationKey))))
-            .map(_.get)
-        }
-      )
-    )
 }
 
 case class SimpleResolveOutput(item: DataItem, args: Args)

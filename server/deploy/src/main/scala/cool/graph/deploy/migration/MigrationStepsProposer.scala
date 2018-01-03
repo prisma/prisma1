@@ -58,6 +58,7 @@ case class MigrationStepsProposerImpl(previousProject: Project, nextProject: Pro
     * - Update Enum
     * - Update Field
     * - Update Model
+    * - Update Relation
     *
     * Note that all actions can be performed on the database level without the knowledge of previous or next migration steps.
     * This would not be true if, for example, the order would be reversed, as field updates and deletes would need to know the new
@@ -76,7 +77,8 @@ case class MigrationStepsProposerImpl(previousProject: Project, nextProject: Pro
       relationsToCreate ++
       enumsToUpdate ++
       fieldsToUpdate ++
-      modelsToUpdate
+      modelsToUpdate ++
+      relationsToUpdate
   }
 
   lazy val modelsToCreate: Vector[CreateModel] = {
@@ -173,7 +175,7 @@ case class MigrationStepsProposerImpl(previousProject: Project, nextProject: Pro
   lazy val relationsToCreate: Vector[CreateRelation] = {
     for {
       nextRelation <- nextProject.relations.toVector
-      if !containsRelation(previousProject, nextRelation)
+      if !containsRelation(previousProject, nextRelation, renames.getPreviousModelName)
     } yield {
       CreateRelation(
         name = nextRelation.name,
@@ -186,8 +188,25 @@ case class MigrationStepsProposerImpl(previousProject: Project, nextProject: Pro
   lazy val relationsToDelete: Vector[DeleteRelation] = {
     for {
       previousRelation <- previousProject.relations.toVector
-      if !containsRelation(nextProject, previousRelation)
+      if !containsRelation(nextProject, previousRelation, renames.getNextModelName)
     } yield DeleteRelation(previousRelation.name)
+  }
+
+  lazy val relationsToUpdate: Vector[UpdateRelation] = {
+    val updates = for {
+      previousRelation <- previousProject.relations.toVector
+      nextModelAName   = renames.getNextModelName(previousRelation.modelAId)
+      nextModelBName   = renames.getNextModelName(previousRelation.modelBId)
+      nextRelation     <- nextProject.getRelationsThatConnectModels(nextModelAName, nextModelBName).headOption
+    } yield {
+      UpdateRelation(
+        name = previousRelation.name,
+        newName = diff(previousRelation.name, nextRelation.name),
+        modelAId = diff(previousRelation.modelAId, nextRelation.modelAId),
+        modelBId = diff(previousRelation.modelBId, nextRelation.modelBId)
+      )
+    }
+    updates.filter(isAnyOptionSet)
   }
 
   lazy val enumsToCreate: Vector[CreateEnum] = {
@@ -207,7 +226,7 @@ case class MigrationStepsProposerImpl(previousProject: Project, nextProject: Pro
   }
 
   lazy val enumsToUpdate: Vector[UpdateEnum] = {
-    (for {
+    val updates = for {
       previousEnum <- previousProject.enums.toVector
       nextEnumName = renames.getNextEnumName(previousEnum.name)
       nextEnum     <- nextProject.getEnumByName(nextEnumName)
@@ -217,7 +236,8 @@ case class MigrationStepsProposerImpl(previousProject: Project, nextProject: Pro
         newName = diff(previousEnum.name, nextEnum.name),
         values = diff(previousEnum.values, nextEnum.values)
       )
-    }).filter(isAnyOptionSet)
+    }
+    updates.filter(isAnyOptionSet)
   }
 
   lazy val emptyModel = Model(
@@ -227,11 +247,20 @@ case class MigrationStepsProposerImpl(previousProject: Project, nextProject: Pro
     description = None
   )
 
-  def containsRelation(project: Project, relation: Relation): Boolean = {
+  def containsRelation(project: Project, relation: Relation, adjacentModelName: String => String): Boolean = {
     project.relations.exists { rel =>
-      val refersToModelsExactlyRight = rel.modelAId == relation.modelAId && rel.modelBId == relation.modelBId
-      val refersToModelsSwitched     = rel.modelAId == relation.modelBId && rel.modelBId == relation.modelAId
-      rel.name == relation.name && (refersToModelsExactlyRight || refersToModelsSwitched)
+      val adjacentModelAId  = adjacentModelName(relation.modelAId)
+      val adajacentModelBId = adjacentModelName(relation.modelBId)
+      val adjacentGeneratedRelationName = if (adjacentModelAId < adajacentModelBId) {
+        s"${adjacentModelAId}To${adajacentModelBId}"
+      } else {
+        s"${adajacentModelBId}To${adjacentModelAId}"
+      }
+
+      val refersToModelsExactlyRight = rel.modelAId == adjacentModelAId && rel.modelBId == adajacentModelBId
+      val refersToModelsSwitched     = rel.modelAId == adajacentModelBId && rel.modelBId == adjacentModelAId
+      val relationNameMatches        = rel.name == adjacentGeneratedRelationName || rel.name == relation.name
+      relationNameMatches && (refersToModelsExactlyRight || refersToModelsSwitched)
     }
   }
 

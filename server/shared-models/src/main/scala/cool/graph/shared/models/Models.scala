@@ -129,7 +129,7 @@ case class Project(
   def getFunctionByName_!(name: String): Function       = getFunctionByName(name).get //OrElse(throw SystemErrors.InvalidFunctionName(name))
 
   def getModelById(id: Id): Option[Model] = models.find(_.id == id)
-  def getModelById_!(id: Id): Model       = getModelById(id).get //OrElse(throw SystemErrors.InvalidModelId(id))
+  def getModelById_!(id: Id): Model       = getModelById(id).getOrElse(throw SharedErrors.InvalidModel(id))
 
   // note: mysql columns are case insensitive, so we have to be as well. But we could make them case sensitive https://dev.mysql.com/doc/refman/5.6/en/case-sensitivity.html
   def getModelByName(name: String): Option[Model] = models.find(_.name.toLowerCase() == name.toLowerCase())
@@ -173,16 +173,9 @@ case class Project(
 
   def getFieldsByRelationId(id: Id): List[Field] = models.flatMap(_.fields).filter(f => f.relation.isDefined && f.relation.get.id == id)
 
+  def getRelationsThatConnectModels(modelA: String, modelB: String): Set[Relation] = relations.filter(_.connectsTheModels(modelA, modelB)).toSet
+
   def getRelationFieldMirrorsByFieldId(id: Id): List[RelationFieldMirror] = relations.flatMap(_.fieldMirrors).filter(f => f.fieldId == id)
-
-  lazy val getOneRelations: List[Relation] = {
-    relations.filter(
-      relation =>
-        !relation.getModelAField(this).exists(_.isList) &&
-          !relation.getModelBField(this).exists(_.isList))
-  }
-
-  lazy val getManyRelations: List[Relation] = relations.filter(x => !getOneRelations.contains(x))
 
   def getRelatedModelForField(field: Field): Option[Model] = {
     val relation = field.relation.getOrElse {
@@ -277,7 +270,8 @@ case class Model(
   def getFieldById_!(id: Id): Field       = getFieldById(id).get
   def getFieldById(id: Id): Option[Field] = fields.find(_.id == id)
 
-  def getFieldByName_!(name: String): Field       = getFieldByName(name).get // .getOrElse(throw FieldNotInModel(fieldName = name, modelName = this.name))
+  def getFieldByName_!(name: String): Field =
+    getFieldByName(name).getOrElse(sys.error(s"field $name is not part of the model $name")) // .getOrElse(throw FieldNotInModel(fieldName = name, modelName = this.name))
   def getFieldByName(name: String): Option[Field] = fields.find(_.name == name)
 
   def hasVisibleIdField: Boolean = getFieldByName_!("id").isVisible
@@ -354,21 +348,6 @@ case class Field(
   def isWritable: Boolean           = !isReadonly && !excludedFromMutations.contains(name)
   def isVisible: Boolean            = !isHidden
 
-  def isOneToOneRelation(project: Project): Boolean = {
-    val otherField = relatedFieldEager(project)
-    !this.isList && !otherField.isList
-  }
-
-  def isManyToManyRelation(project: Project): Boolean = {
-    val otherField = relatedFieldEager(project)
-    this.isList && otherField.isList
-  }
-
-  def isOneToManyRelation(project: Project): Boolean = {
-    val otherField = relatedFieldEager(project)
-    (this.isList && !otherField.isList) || (!this.isList && otherField.isList)
-  }
-
   def oppositeRelationSide: Option[RelationSide.Value] = {
     relationSide match {
       case Some(RelationSide.A) => Some(RelationSide.B)
@@ -404,25 +383,23 @@ case class Field(
     })
   }
 
-  def relatedFieldEager(project: Project): Field = {
+  def relatedField(project: Project): Option[Field] = {
     val fields = relatedModel(project).get.fields
 
-    var returnField = fields.find { field =>
+    val returnField = fields.find { field =>
       field.relation.exists { relation =>
         val isTheSameField    = field.id == this.id
         val isTheSameRelation = relation.id == this.relation.get.id
         isTheSameRelation && !isTheSameField
       }
     }
-
-    if (returnField.isEmpty) {
-      returnField = fields.find { relatedField =>
-        relatedField.relation.exists { relation =>
-          relation.id == this.relation.get.id
-        }
+    val fallback = fields.find { relatedField =>
+      relatedField.relation.exists { relation =>
+        relation.id == this.relation.get.id
       }
     }
-    returnField.head
+
+    returnField.orElse(fallback)
   }
 }
 
@@ -488,8 +465,8 @@ case class Relation(
     modelBId: Id,
     fieldMirrors: List[RelationFieldMirror] = List.empty
 ) {
-  def connectsTheModels(model1: Model, model2: Model): Boolean = {
-    (modelAId == model1.id && modelBId == model2.id) || (modelAId == model2.id && modelBId == model1.id)
+  def connectsTheModels(model1: String, model2: String): Boolean = {
+    (modelAId == model1 && modelBId == model2) || (modelAId == model2 && modelBId == model1)
   }
 
   def isSameModelRelation(project: Project): Boolean          = getModelA(project) == getModelB(project)
@@ -509,21 +486,30 @@ case class Relation(
     }
   }
 
-  def fields(project: Project): Iterable[Field] = getModelAField(project) ++ getModelBField(project)
+//  def fields(project: Project): Iterable[Field] = getModelAField(project) ++ getModelBField(project)
 
-  def getOtherField_!(project: Project, model: Model): Field = {
-    model.id match {
-      case `modelAId` => getModelBField_!(project)
-      case `modelBId` => getModelAField_!(project)
-      case _          => ??? //throw SystemErrors.InvalidRelation(s"The model with the id ${model.id} is not part of this relation.")
-    }
-  }
+//  def getOtherField_!(project: Project, model: Model): Field = {
+//    model.id match {
+//      case `modelAId` => getModelBField_!(project)
+//      case `modelBId` => getModelAField_!(project)
+//      case _          => ??? //throw SystemErrors.InvalidRelation(s"The model with the id ${model.id} is not part of this relation.")
+//    }
+//  }
 
-  def getField_!(project: Project, model: Model): Field = {
+//  def getField_!(project: Project, model: Model): Field = {
+//    model.id match {
+//      case `modelAId` => getModelAField_!(project)
+//      case `modelBId` => getModelBField_!(project)
+//      case _          => ??? //throw SystemErrors.InvalidRelation(s"The model with the id ${model.id} is not part of this relation.")
+//    }
+//  }
+
+  def getField(project: Project, model: Model): Option[Field] = {
     model.id match {
-      case `modelAId` => getModelAField_!(project)
-      case `modelBId` => getModelBField_!(project)
-      case _          => ??? //throw SystemErrors.InvalidRelation(s"The model with the id ${model.id} is not part of this relation.")
+      case `modelAId` => getModelAField(project)
+      case `modelBId` => getModelBField(project)
+      case _ =>
+        sys.error(s"The model with the id ${model.id} is not part of this relation.") //throw SystemErrors.InvalidRelation(s"The model with the id ${model.id} is not part of this relation.")
     }
   }
 
@@ -533,7 +519,7 @@ case class Relation(
 
   def getModelBField(project: Project): Option[Field] = {
     // note: defaults to modelAField to handle same model, same field relations
-    modelFieldFor(project, modelBId, RelationSide.B).orElse(getModelAField(project))
+    modelFieldFor(project, modelBId, RelationSide.B) //.orElse(getModelAField(project))
   }
   def getModelBField_!(project: Project): Field =
     getModelBField(project).get //OrElse(throw SystemErrors.InvalidRelation("This must return a Model, if not Model B then Model A."))
@@ -544,18 +530,6 @@ case class Relation(
       field <- model.relationFieldForIdAndSide(relationId = id, relationSide = relationSide)
     } yield field
   }
-
-  def aName(project: Project): String =
-    getModelAField(project)
-      .map(field => s"${field.name}${makeUnique("1", project)}${field.relatedModel(project).get.name}")
-      .getOrElse("from")
-
-  def bName(project: Project): String =
-    getModelBField(project)
-      .map(field => s"${field.name}${makeUnique("2", project)}${field.relatedModel(project).get.name}")
-      .getOrElse("to")
-
-  private def makeUnique(x: String, project: Project) = if (getModelAField(project) == getModelBField(project)) x else ""
 
   def fieldSide(project: Project, field: Field): cool.graph.shared.models.RelationSide.Value = {
     val fieldModel = project.getModelByFieldId_!(field.id)
