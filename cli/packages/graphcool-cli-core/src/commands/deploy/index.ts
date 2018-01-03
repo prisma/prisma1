@@ -102,6 +102,10 @@ ${chalk.gray(
 
     if (cluster) {
       this.env.setActiveCluster(cluster)
+    } else {
+      throw new Error(
+        `No cluster set. Please set the "cluster" property in your graphcool.yml`,
+      )
     }
 
     if (this.showedLines > 0) {
