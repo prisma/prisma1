@@ -357,21 +357,6 @@ case class Field(
   def isWritable: Boolean           = !isReadonly && !excludedFromMutations.contains(name)
   def isVisible: Boolean            = !isHidden
 
-  def isOneToOneRelation(project: Project): Boolean = {
-    val otherField = relatedFieldEager(project)
-    !this.isList && !otherField.isList
-  }
-
-  def isManyToManyRelation(project: Project): Boolean = {
-    val otherField = relatedFieldEager(project)
-    this.isList && otherField.isList
-  }
-
-  def isOneToManyRelation(project: Project): Boolean = {
-    val otherField = relatedFieldEager(project)
-    (this.isList && !otherField.isList) || (!this.isList && otherField.isList)
-  }
-
   def oppositeRelationSide: Option[RelationSide.Value] = {
     relationSide match {
       case Some(RelationSide.A) => Some(RelationSide.B)
