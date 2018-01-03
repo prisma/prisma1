@@ -24,7 +24,7 @@ trait ApiDependencies extends AwaitUtils {
 
   val system: ActorSystem
   val materializer: ActorMaterializer
-  val projectFetcher: ProjectFetcher
+  def projectFetcher: ProjectFetcher
   val apiSchemaBuilder: SchemaBuilder
   val databases: Databases
 
@@ -56,7 +56,11 @@ case class ApiDependenciesImpl(sssEventsPubSub: InMemoryAkkaPubSub[String])(impl
     extends ApiDependencies {
   override implicit def self: ApiDependencies = this
 
-  val databases                      = Databases.initialize(config)
-  val apiSchemaBuilder               = SchemaBuilder()(system, this)
-  val projectFetcher: ProjectFetcher = ProjectFetcherImpl(Vector.empty, config)
+  val databases        = Databases.initialize(config)
+  val apiSchemaBuilder = SchemaBuilder()(system, this)
+  val projectFetcher: ProjectFetcher = {
+    val schemaManagerEndpoint = config.getString("schemaManagerEndpoint")
+    val schemaManagerSecret   = config.getString("schemaManagerSecret")
+    ProjectFetcherImpl(Vector.empty, config, schemaManagerEndpoint = schemaManagerEndpoint, schemaManagerSecret = schemaManagerSecret)
+  }
 }

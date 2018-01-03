@@ -3,6 +3,7 @@ package cool.graph.subscriptions
 import akka.actor.{ActorSystem, Props}
 import akka.stream.ActorMaterializer
 import cool.graph.akkautil.http.{Routes, Server, ServerExecutor}
+import cool.graph.bugsnag.BugSnagger
 import cool.graph.messagebus.pubsub.Only
 import cool.graph.subscriptions.protocol.SubscriptionProtocolV05.Requests.SubscriptionSessionRequestV05
 import cool.graph.subscriptions.protocol.SubscriptionProtocolV07.Requests.SubscriptionSessionRequest
@@ -12,22 +13,19 @@ import cool.graph.subscriptions.protocol.{StringOrInt, SubscriptionRequest, Subs
 import cool.graph.subscriptions.resolving.SubscriptionsManager
 import cool.graph.subscriptions.util.PlayJson
 import cool.graph.websocket.WebsocketServer
-import cool.graph.websocket.services.WebsocketDevDependencies
 import de.heikoseeberger.akkahttpplayjson.PlayJsonSupport
 import play.api.libs.json.{JsError, JsSuccess}
 
 import scala.concurrent.Future
 
 object SubscriptionsMain extends App {
-  implicit val system                   = ActorSystem("graphql-subscriptions")
-  implicit val materializer             = ActorMaterializer()
-  implicit val subscriptionDependencies = SubscriptionDependenciesImpl()
-  import subscriptionDependencies.bugSnagger
-
-  val websocketDependencies = WebsocketDevDependencies(subscriptionDependencies.requestsQueuePublisher, subscriptionDependencies.responsePubSubscriber)
+  implicit val system       = ActorSystem("graphql-subscriptions")
+  implicit val materializer = ActorMaterializer()
+  implicit val dependencies = SubscriptionDependenciesImpl()
+  import dependencies.bugSnagger
 
   val subscriptionsServer = SimpleSubscriptionsServer()
-  val websocketServer     = WebsocketServer(websocketDependencies)
+  val websocketServer     = WebsocketServer(dependencies)
 
   ServerExecutor(port = 8086, websocketServer, subscriptionsServer).startBlocking()
 }
@@ -35,20 +33,19 @@ object SubscriptionsMain extends App {
 case class SimpleSubscriptionsServer(prefix: String = "")(
     implicit dependencies: SubscriptionDependencies,
     system: ActorSystem,
-    materializer: ActorMaterializer
+    materializer: ActorMaterializer,
+    bugsnagger: BugSnagger
 ) extends Server
     with PlayJsonSupport {
   import system.dispatcher
 
-  implicit val bugSnag             = dependencies.bugSnagger
   implicit val response05Publisher = dependencies.responsePubSubPublisherV05
   implicit val response07Publisher = dependencies.responsePubSubPublisherV07
 
   val innerRoutes          = Routes.emptyRoute
-  val subscriptionsManager = system.actorOf(Props(new SubscriptionsManager(bugSnag)), "subscriptions-manager")
-  val requestsConsumer     = dependencies.requestsQueueConsumer
+  val subscriptionsManager = system.actorOf(Props(new SubscriptionsManager(bugsnagger)), "subscriptions-manager")
 
-  val consumerRef = requestsConsumer.withConsumer { req: SubscriptionRequest =>
+  val consumerRef = dependencies.requestsQueueConsumer.withConsumer { req: SubscriptionRequest =>
     Future {
       if (req.body == "STOP") {
         subscriptionSessionManager ! StopSession(req.sessionId)
@@ -59,7 +56,7 @@ case class SimpleSubscriptionsServer(prefix: String = "")(
   }
 
   val subscriptionSessionManager = system.actorOf(
-    Props(new SubscriptionSessionManager(subscriptionsManager, bugSnag)),
+    Props(new SubscriptionSessionManager(subscriptionsManager, bugsnagger)),
     "subscriptions-sessions-manager"
   )
 
