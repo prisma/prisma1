@@ -20,6 +20,8 @@ export default class Init extends Command {
       const newDefinitionDir = path.join(process.cwd(), dirName + '/')
       this.config.definitionDir = newDefinitionDir
       fs.mkdirpSync(newDefinitionDir)
+    } else {
+      this.config.definitionDir = process.cwd()
     }
 
     const files = fs.readdirSync(this.config.definitionDir)
