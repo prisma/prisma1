@@ -229,6 +229,23 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec
     )
   }
 
+  "the update Mutation for a model with omitted back relation" should "be generated correctly" in {
+    val project = SchemaDsl() { schema =>
+      val comment = schema.model("Comment").field_!("text", _.String)
+      schema
+        .model("Todo")
+        .field_!("title", _.String)
+        .field("tag", _.String)
+        .oneToManyRelation("comments", "todo", comment, includeOtherField = false)
+    }
+
+    val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
+    schema should containInputType("CommentUpdateDataInput",
+                                   fields = Vector(
+                                     "text: String"
+                                   ))
+  }
+
   "the upsert Mutation for a model" should "be generated correctly" in {
     val project = SchemaDsl() { schema =>
       schema.model("Todo").field_!("title", _.String)

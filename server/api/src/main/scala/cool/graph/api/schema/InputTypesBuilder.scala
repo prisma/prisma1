@@ -115,10 +115,13 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
   }
 
   protected def computeInputObjectTypeForNestedUpdateData(model: Model, omitRelation: Relation): InputObjectType[Any] = {
-    val field = omitRelation.getField_!(project, model)
+    val typeName = omitRelation.getField(project, model) match {
+      case Some(field) => s"${model.name}UpdateWithout${field.name.capitalize}DataInput"
+      case None        => s"${model.name}UpdateDataInput"
+    }
 
     InputObjectType[Any](
-      name = s"${model.name}UpdateWithout${field.name.capitalize}DataInput",
+      name = typeName,
       fieldsFn = () => {
         computeScalarInputFieldsForUpdate(model) ++ computeRelationalInputFieldsForUpdate(model, omitRelation = Some(omitRelation))
       }
@@ -206,13 +209,16 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
   private def computeRelationalInputFieldsForUpdate(model: Model, omitRelation: Option[Relation]): List[InputField[Any]] = {
     model.relationFields.flatMap { field =>
       val subModel              = field.relatedModel_!(project)
-      val relatedField          = field.relatedField_!(project)
+      val relatedField          = field.relatedField(project)
       val relationMustBeOmitted = omitRelation.exists(rel => field.isRelationWithId(rel.id))
 
-      val inputObjectTypeName = if (field.isList) {
-        s"${subModel.name}UpdateManyWithout${relatedField.name.capitalize}Input"
-      } else {
-        s"${subModel.name}UpdateOneWithout${relatedField.name.capitalize}Input"
+      val inputObjectTypeName = {
+        val arityPart = if (field.isList) "Many" else "One"
+        val withoutPart = relatedField match {
+          case Some(field) => s"Without${field.name.capitalize}"
+          case None        => ""
+        }
+        s"${subModel.name}Update${arityPart}${withoutPart}Input"
       }
 
       if (relationMustBeOmitted) {
@@ -236,13 +242,16 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
   private def computeRelationalInputFieldsForCreate(model: Model, omitRelation: Option[Relation]): List[InputField[Any]] = {
     model.relationFields.flatMap { field =>
       val subModel              = field.relatedModel_!(project)
-      val relatedField          = field.relatedField_!(project)
+      val relatedField          = field.relatedField(project)
       val relationMustBeOmitted = omitRelation.exists(rel => field.isRelationWithId(rel.id))
 
-      val inputObjectTypeName = if (field.isList) {
-        s"${subModel.name}CreateManyWithout${relatedField.name.capitalize}Input"
-      } else {
-        s"${subModel.name}CreateOneWithout${relatedField.name.capitalize}Input"
+      val inputObjectTypeName = {
+        val arityPart = if (field.isList) "Many" else "One"
+        val withoutPart = relatedField match {
+          case Some(field) => s"Without${field.name.capitalize}"
+          case None        => ""
+        }
+        s"${subModel.name}Create${arityPart}${withoutPart}Input"
       }
 
       if (relationMustBeOmitted) {

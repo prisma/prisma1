@@ -392,25 +392,25 @@ case class Field(
     })
   }
 
-  def relatedField_!(project: Project): Field = {
+  def relatedField_!(project: Project): Field = relatedField(project).get
+
+  def relatedField(project: Project): Option[Field] = {
     val fields = relatedModel(project).get.fields
 
-    var returnField = fields.find { field =>
+    val returnField = fields.find { field =>
       field.relation.exists { relation =>
         val isTheSameField    = field.id == this.id
         val isTheSameRelation = relation.id == this.relation.get.id
         isTheSameRelation && !isTheSameField
       }
     }
-
-    if (returnField.isEmpty) {
-      returnField = fields.find { relatedField =>
-        relatedField.relation.exists { relation =>
-          relation.id == this.relation.get.id
-        }
+    val fallback = fields.find { relatedField =>
+      relatedField.relation.exists { relation =>
+        relation.id == this.relation.get.id
       }
     }
-    returnField.head
+
+    returnField.orElse(fallback)
   }
 }
 
@@ -499,19 +499,28 @@ case class Relation(
 
   def fields(project: Project): Iterable[Field] = getModelAField(project) ++ getModelBField(project)
 
-  def getOtherField_!(project: Project, model: Model): Field = {
-    model.id match {
-      case `modelAId` => getModelBField_!(project)
-      case `modelBId` => getModelAField_!(project)
-      case _          => ??? //throw SystemErrors.InvalidRelation(s"The model with the id ${model.id} is not part of this relation.")
-    }
-  }
+//  def getOtherField_!(project: Project, model: Model): Field = {
+//    model.id match {
+//      case `modelAId` => getModelBField_!(project)
+//      case `modelBId` => getModelAField_!(project)
+//      case _          => ??? //throw SystemErrors.InvalidRelation(s"The model with the id ${model.id} is not part of this relation.")
+//    }
+//  }
 
   def getField_!(project: Project, model: Model): Field = {
     model.id match {
       case `modelAId` => getModelAField_!(project)
       case `modelBId` => getModelBField_!(project)
       case _          => ??? //throw SystemErrors.InvalidRelation(s"The model with the id ${model.id} is not part of this relation.")
+    }
+  }
+
+  def getField(project: Project, model: Model): Option[Field] = {
+    model.id match {
+      case `modelAId` => getModelAField(project)
+      case `modelBId` => getModelBField(project)
+      case _ =>
+        sys.error(s"The model with the id ${model.id} is not part of this relation.") //throw SystemErrors.InvalidRelation(s"The model with the id ${model.id} is not part of this relation.")
     }
   }
 
