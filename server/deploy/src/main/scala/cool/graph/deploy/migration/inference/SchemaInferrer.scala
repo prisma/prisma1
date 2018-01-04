@@ -1,14 +1,16 @@
-package cool.graph.deploy.migration
+package cool.graph.deploy.migration.inference
 
 import cool.graph.deploy.gc_value.GCStringConverter
+import cool.graph.deploy.migration.{ReservedFields, inference}
 import cool.graph.gc_values.{GCValue, InvalidValueForScalarType}
 import cool.graph.shared.models._
 import cool.graph.utils.or.OrExtensions
 import org.scalactic.{Bad, Good, Or}
 import sangria.ast.Document
+import cool.graph.deploy.migration.DataSchemaAstExtensions._
 
 trait SchemaInferrer {
-  def infer(baseProject: Project, graphQlSdl: Document): Project Or ProjectSyntaxError
+  def infer(baseSchema: Schema, graphQlSdl: Document): Schema Or ProjectSyntaxError
 }
 
 sealed trait ProjectSyntaxError
@@ -17,29 +19,23 @@ case class InvalidGCValue(err: InvalidValueForScalarType)                       
 
 object SchemaInferrer {
   def apply() = new SchemaInferrer {
-    override def infer(baseProject: Project, graphQlSdl: Document) = NextProjectInferrerImpl(baseProject, graphQlSdl).infer()
+    override def infer(baseSchema: Schema, graphQlSdl: Document) = SchemaInferrerImpl(baseSchema, graphQlSdl).infer()
   }
 }
 
-case class NextProjectInferrerImpl(
-    baseProject: Project,
+case class SchemaInferrerImpl(
+    baseSchema: Schema,
     sdl: Document
 ) {
-  import DataSchemaAstExtensions._
-
-  def infer(): Project Or ProjectSyntaxError = {
+  def infer(): Schema Or ProjectSyntaxError = {
     for {
       models <- nextModels
     } yield {
-      val newProject = Project(
-        id = baseProject.id,
-        ownerId = baseProject.ownerId,
+      Schema(
         models = models.toList,
         relations = nextRelations.toList,
         enums = nextEnums.toList
       )
-
-      newProject
     }
   }
 
@@ -72,7 +68,7 @@ case class NextProjectInferrerImpl(
 
         fieldDef.defaultValue.map(x => GCStringConverter(typeIdentifier, fieldDef.isList).toGCValue(x)) match {
           case Some(Good(gcValue)) => Some(Good(fieldWithDefault(Some(gcValue))))
-          case Some(Bad(err))      => Some(Bad(InvalidGCValue(err)))
+          case Some(Bad(err))      => Some(Bad(inference.InvalidGCValue(err)))
           case None                => Some(Good(fieldWithDefault(None)))
         }
       }

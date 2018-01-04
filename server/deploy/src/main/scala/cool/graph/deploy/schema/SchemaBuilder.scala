@@ -3,8 +3,9 @@ package cool.graph.deploy.schema
 import akka.actor.ActorSystem
 import cool.graph.deploy.DeployDependencies
 import cool.graph.deploy.database.persistence.{MigrationPersistence, ProjectPersistence}
+import cool.graph.deploy.migration.inference.{MigrationStepsInferrer, SchemaInferrer}
 import cool.graph.deploy.migration.migrator.Migrator
-import cool.graph.deploy.migration.{MigrationStepsProposer, SchemaInferrer, RenameInferer}
+import cool.graph.deploy.migration.SchemaMapper
 import cool.graph.deploy.schema.fields.{AddProjectField, DeployField, ManualMarshallerHelpers}
 import cool.graph.deploy.schema.mutations._
 import cool.graph.deploy.schema.types._
@@ -42,9 +43,9 @@ case class SchemaBuilderImpl(
   val projectPersistence: ProjectPersistence         = dependencies.projectPersistence
   val migrationPersistence: MigrationPersistence     = dependencies.migrationPersistence
   val migrator: Migrator                             = dependencies.migrator
-  val desiredProjectInferer: SchemaInferrer          = SchemaInferrer()
-  val migrationStepsProposer: MigrationStepsProposer = MigrationStepsProposer()
-  val renameInferer: RenameInferer                   = RenameInferer
+  val schemaInferrer: SchemaInferrer                 = SchemaInferrer()
+  val migrationStepsInferrer: MigrationStepsInferrer = MigrationStepsInferrer()
+  val schemaMapper: SchemaMapper                     = SchemaMapper
 
   def build(): Schema[SystemUserContext, Unit] = {
     val Query = ObjectType[SystemUserContext, Unit](
@@ -140,7 +141,7 @@ case class SchemaBuilderImpl(
       outputFields = sangria.schema.fields[SystemUserContext, DeployMutationPayload](
         Field("project", OptionType(ProjectType.Type), resolve = (ctx: Context[SystemUserContext, DeployMutationPayload]) => ctx.value.project),
         Field("errors", ListType(SchemaErrorType.Type), resolve = (ctx: Context[SystemUserContext, DeployMutationPayload]) => ctx.value.errors),
-        Field("migration", MigrationType.Type, resolve = (ctx: Context[SystemUserContext, DeployMutationPayload]) => ctx.value.migration)
+        Field("migration", OptionType(MigrationType.Type), resolve = (ctx: Context[SystemUserContext, DeployMutationPayload]) => ctx.value.migration)
       ),
       mutateAndGetPayload = (args, ctx) =>
         handleMutationResult {
@@ -149,9 +150,9 @@ case class SchemaBuilderImpl(
             result <- DeployMutation(
                        args = args,
                        project = project,
-                       schemaInferrer = desiredProjectInferer,
-                       migrationStepsProposer = migrationStepsProposer,
-                       renameInferer = renameInferer,
+                       schemaInferrer = schemaInferrer,
+                       migrationStepsProposer = migrationStepsInferrer,
+                       renameInferer = schemaMapper,
                        migrationPersistence = migrationPersistence,
                        migrator = migrator
                      ).execute

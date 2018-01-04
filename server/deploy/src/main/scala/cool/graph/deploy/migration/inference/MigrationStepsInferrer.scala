@@ -1,24 +1,23 @@
-package cool.graph.deploy.migration
+package cool.graph.deploy.migration.inference
 
 import cool.graph.shared.models._
 
-trait MigrationStepsProposer {
-  def propose(currentProject: Project, nextProject: Project, renames: Renames): Vector[MigrationStep]
+trait MigrationStepsInferrer {
+  def propose(previousSchema: Schema, nextSchema: Schema, renames: SchemaMapping): Vector[MigrationStep]
 }
 
-object MigrationStepsProposer {
-  def apply(): MigrationStepsProposer = {
-    apply((current, next, renames) => MigrationStepsProposerImpl(current, next, renames).evaluate())
+object MigrationStepsInferrer {
+  def apply(): MigrationStepsInferrer = {
+    apply((previous, next, renames) => MigrationStepsProposerImpl(previous, next, renames).evaluate())
   }
 
-  def apply(fn: (Project, Project, Renames) => Vector[MigrationStep]): MigrationStepsProposer = new MigrationStepsProposer {
-    override def propose(currentProject: Project, nextProject: Project, renames: Renames): Vector[MigrationStep] = fn(currentProject, nextProject, renames)
+  def apply(fn: (Schema, Schema, SchemaMapping) => Vector[MigrationStep]): MigrationStepsInferrer = new MigrationStepsInferrer {
+    override def propose(previousSchema: Schema, nextSchema: Schema, renames: SchemaMapping): Vector[MigrationStep] = fn(previousSchema, nextSchema, renames)
   }
 }
 
 //todo This is not really tracking renames. Renames can be deducted from this mapping, but all it does is mapping previous to current values.
-// TransitionMapping?
-case class Renames(
+case class SchemaMapping(
     models: Vector[Rename] = Vector.empty,
     enums: Vector[Rename] = Vector.empty,
     fields: Vector[FieldRename] = Vector.empty
@@ -37,12 +36,12 @@ case class Renames(
 case class Rename(previous: String, next: String)
 case class FieldRename(previousModel: String, previousField: String, nextModel: String, nextField: String)
 
-object Renames {
-  val empty = Renames()
+object SchemaMapping {
+  val empty = SchemaMapping()
 }
 
 // todo Doesnt propose a thing. It generates the steps, but they cant be rejected or approved. Naming is off.
-case class MigrationStepsProposerImpl(previousProject: Project, nextProject: Project, renames: Renames) {
+case class MigrationStepsProposerImpl(previousSchema: Schema, nextSchema: Schema, renames: SchemaMapping) {
   import cool.graph.util.Diff._
 
   /**
@@ -81,17 +80,17 @@ case class MigrationStepsProposerImpl(previousProject: Project, nextProject: Pro
 
   lazy val modelsToCreate: Vector[CreateModel] = {
     for {
-      nextModel         <- nextProject.models.toVector
+      nextModel         <- nextSchema.models.toVector
       previousModelName = renames.getPreviousModelName(nextModel.name)
-      if previousProject.getModelByName(previousModelName).isEmpty
+      if previousSchema.getModelByName(previousModelName).isEmpty
     } yield CreateModel(nextModel.name)
   }
 
   lazy val modelsToUpdate: Vector[UpdateModel] = {
     for {
-      nextModel         <- nextProject.models.toVector
+      nextModel         <- nextSchema.models.toVector
       previousModelName = renames.getPreviousModelName(nextModel.name)
-      if previousProject.getModelByName(previousModelName).isDefined
+      if previousSchema.getModelByName(previousModelName).isDefined
       if nextModel.name != previousModelName
     } yield UpdateModel(name = previousModelName, newName = nextModel.name)
   }
@@ -104,16 +103,16 @@ case class MigrationStepsProposerImpl(previousProject: Project, nextProject: Pro
   lazy val modelsToDelete: Vector[DeleteModel] = {
     val updatedModels = modelsToUpdate.map(_.name)
     for {
-      previousModel <- previousProject.models.toVector.filterNot(m => updatedModels.contains(m.name))
-      if nextProject.getModelByName(previousModel.name).isEmpty
+      previousModel <- previousSchema.models.toVector.filterNot(m => updatedModels.contains(m.name))
+      if nextSchema.getModelByName(previousModel.name).isEmpty
     } yield DeleteModel(previousModel.name)
   }
 
   lazy val fieldsToCreate: Vector[CreateField] = {
     for {
-      nextModel         <- nextProject.models.toVector
+      nextModel         <- nextSchema.models.toVector
       previousModelName = renames.getPreviousModelName(nextModel.name)
-      previousModel     = previousProject.getModelByName(previousModelName).getOrElse(emptyModel)
+      previousModel     = previousSchema.getModelByName(previousModelName).getOrElse(emptyModel)
       fieldOfNextModel  <- nextModel.fields.toVector
       previousFieldName = renames.getPreviousFieldName(nextModel.name, fieldOfNextModel.name)
       if previousModel.getFieldByName(previousFieldName).isEmpty
@@ -134,9 +133,9 @@ case class MigrationStepsProposerImpl(previousProject: Project, nextProject: Pro
 
   lazy val fieldsToUpdate: Vector[UpdateField] = {
     val updates = for {
-      nextModel         <- nextProject.models.toVector
+      nextModel         <- nextSchema.models.toVector
       previousModelName = renames.getPreviousModelName(nextModel.name)
-      previousModel     = previousProject.getModelByName(previousModelName).getOrElse(emptyModel)
+      previousModel     = previousSchema.getModelByName(previousModelName).getOrElse(emptyModel)
       fieldOfNextModel  <- nextModel.fields.toVector
       previousFieldName = renames.getPreviousFieldName(nextModel.name, fieldOfNextModel.name)
       previousField     <- previousModel.getFieldByName(previousFieldName)
@@ -161,19 +160,19 @@ case class MigrationStepsProposerImpl(previousProject: Project, nextProject: Pro
 
   lazy val fieldsToDelete: Vector[DeleteField] = {
     for {
-      previousModel <- previousProject.models.toVector
+      previousModel <- previousSchema.models.toVector
       previousField <- previousModel.fields
       nextModelName = renames.getNextModelName(previousModel.name)
       nextFieldName = renames.getNextFieldName(previousModel.name, previousField.name)
-      nextModel     <- nextProject.getModelByName(nextModelName)
-      if nextProject.getFieldByName(nextModelName, nextFieldName).isEmpty
+      nextModel     <- nextSchema.getModelByName(nextModelName)
+      if nextSchema.getFieldByName(nextModelName, nextFieldName).isEmpty
     } yield DeleteField(model = nextModel.name, name = previousField.name)
   }
 
   lazy val relationsToCreate: Vector[CreateRelation] = {
     for {
-      nextRelation <- nextProject.relations.toVector
-      if !containsRelation(previousProject, nextRelation)
+      nextRelation <- nextSchema.relations.toVector
+      if !containsRelation(previousSchema, nextRelation)
     } yield {
       CreateRelation(
         name = nextRelation.name,
@@ -185,32 +184,32 @@ case class MigrationStepsProposerImpl(previousProject: Project, nextProject: Pro
 
   lazy val relationsToDelete: Vector[DeleteRelation] = {
     for {
-      previousRelation <- previousProject.relations.toVector
-      if !containsRelation(nextProject, previousRelation)
+      previousRelation <- previousSchema.relations.toVector
+      if !containsRelation(nextSchema, previousRelation)
     } yield DeleteRelation(previousRelation.name)
   }
 
   lazy val enumsToCreate: Vector[CreateEnum] = {
     for {
-      nextEnum         <- nextProject.enums.toVector
+      nextEnum         <- nextSchema.enums.toVector
       previousEnumName = renames.getPreviousEnumName(nextEnum.name)
-      if !containsEnum(previousProject, previousEnumName)
+      if !containsEnum(previousSchema, previousEnumName)
     } yield CreateEnum(nextEnum.name, nextEnum.values)
   }
 
   lazy val enumsToDelete: Vector[DeleteEnum] = {
     for {
-      previousEnum <- previousProject.enums.toVector
+      previousEnum <- previousSchema.enums.toVector
       nextEnumName = renames.getNextEnumName(previousEnum.name)
-      if nextProject.getEnumByName(nextEnumName).isEmpty
+      if nextSchema.getEnumByName(nextEnumName).isEmpty
     } yield DeleteEnum(previousEnum.name)
   }
 
   lazy val enumsToUpdate: Vector[UpdateEnum] = {
     (for {
-      previousEnum <- previousProject.enums.toVector
+      previousEnum <- previousSchema.enums.toVector
       nextEnumName = renames.getNextEnumName(previousEnum.name)
-      nextEnum     <- nextProject.getEnumByName(nextEnumName)
+      nextEnum     <- nextSchema.getEnumByName(nextEnumName)
     } yield {
       UpdateEnum(
         name = previousEnum.name,
@@ -227,15 +226,15 @@ case class MigrationStepsProposerImpl(previousProject: Project, nextProject: Pro
     description = None
   )
 
-  def containsRelation(project: Project, relation: Relation): Boolean = {
-    project.relations.exists { rel =>
+  def containsRelation(schema: Schema, relation: Relation): Boolean = {
+    schema.relations.exists { rel =>
       val refersToModelsExactlyRight = rel.modelAId == relation.modelAId && rel.modelBId == relation.modelBId
       val refersToModelsSwitched     = rel.modelAId == relation.modelBId && rel.modelBId == relation.modelAId
       rel.name == relation.name && (refersToModelsExactlyRight || refersToModelsSwitched)
     }
   }
 
-  def containsEnum(project: Project, enumName: String): Boolean = project.enums.exists(_.name == enumName)
+  def containsEnum(schema: Schema, enumName: String): Boolean = schema.enums.exists(_.name == enumName)
 
   def isAnyOptionSet(product: Product): Boolean = {
     import shapeless._

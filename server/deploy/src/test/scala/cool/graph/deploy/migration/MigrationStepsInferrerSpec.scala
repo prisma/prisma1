@@ -1,17 +1,18 @@
 package cool.graph.deploy.migration
 
+import cool.graph.deploy.migration.inference.{FieldRename, Rename, SchemaMapping}
 import cool.graph.deploy.specutils.DeploySpecBase
 import cool.graph.shared.models._
 import cool.graph.shared.project_dsl.SchemaDsl.SchemaBuilder
 import org.scalatest.{FlatSpec, Matchers}
 
-class MigrationStepsProposerSpec extends FlatSpec with Matchers with DeploySpecBase {
+class MigrationStepsInferrerSpec extends FlatSpec with Matchers with DeploySpecBase {
 
   /**
     * Basic tests
     */
   "No changes" should "create no migration steps" in {
-    val renames = Renames.empty
+    val renames = SchemaMapping.empty
 
     val previousProject = SchemaBuilder() { schema =>
       schema.model("Test").field("a", _.String).field("b", _.Int)
@@ -27,7 +28,7 @@ class MigrationStepsProposerSpec extends FlatSpec with Matchers with DeploySpecB
   }
 
   "Creating models" should "create CreateModel and CreateField migration steps" in {
-    val renames = Renames.empty
+    val renames = SchemaMapping.empty
 
     val previousProject = SchemaBuilder() { schema =>
       schema.model("Test").field("a", _.String).field("b", _.Int)
@@ -50,7 +51,7 @@ class MigrationStepsProposerSpec extends FlatSpec with Matchers with DeploySpecB
   }
 
   "Deleting models" should "create DeleteModel migration steps" in {
-    val renames = Renames.empty
+    val renames = SchemaMapping.empty
 
     val previousProject = SchemaBuilder() { schema =>
       schema.model("Test").field("a", _.String).field("b", _.Int)
@@ -69,7 +70,7 @@ class MigrationStepsProposerSpec extends FlatSpec with Matchers with DeploySpecB
   }
 
   "Updating models" should "create UpdateModel migration steps" in {
-    val renames = Renames(
+    val renames = SchemaMapping(
       models = Vector(Rename(previous = "Test", next = "Test2"))
     )
 
@@ -88,7 +89,7 @@ class MigrationStepsProposerSpec extends FlatSpec with Matchers with DeploySpecB
   }
 
   "Creating fields" should "create CreateField migration steps" in {
-    val renames = Renames.empty
+    val renames = SchemaMapping.empty
 
     val previousProject = SchemaBuilder() { schema =>
       schema.model("Test").field("a", _.String)
@@ -105,7 +106,7 @@ class MigrationStepsProposerSpec extends FlatSpec with Matchers with DeploySpecB
   }
 
   "Deleting fields" should "create DeleteField migration steps" in {
-    val renames = Renames.empty
+    val renames = SchemaMapping.empty
 
     val previousProject = SchemaBuilder() { schema =>
       schema.model("Test").field("a", _.String).field("b", _.Int)
@@ -122,7 +123,7 @@ class MigrationStepsProposerSpec extends FlatSpec with Matchers with DeploySpecB
   }
 
   "Updating fields" should "create UpdateField migration steps" in {
-    val renames = Renames(
+    val renames = SchemaMapping(
       fields = Vector(
         FieldRename("Test", "a", "Test", "a2")
       )
@@ -180,7 +181,7 @@ class MigrationStepsProposerSpec extends FlatSpec with Matchers with DeploySpecB
         .oneToManyRelation_!("comments", "todo", comment)
     }
 
-    val proposer = MigrationStepsProposerImpl(previousProject, nextProject, Renames.empty)
+    val proposer = MigrationStepsProposerImpl(previousProject, nextProject, SchemaMapping.empty)
     val steps    = proposer.evaluate()
 
     steps.length shouldBe 3
@@ -232,7 +233,7 @@ class MigrationStepsProposerSpec extends FlatSpec with Matchers with DeploySpecB
         .field("title", _.String)
     }
 
-    val proposer = MigrationStepsProposerImpl(previousProject, nextProject, Renames.empty)
+    val proposer = MigrationStepsProposerImpl(previousProject, nextProject, SchemaMapping.empty)
     val steps    = proposer.evaluate()
 
     steps should have(size(3))
@@ -257,7 +258,7 @@ class MigrationStepsProposerSpec extends FlatSpec with Matchers with DeploySpecB
       comment.manyToOneRelation("todo", "comments", todo, relationName = Some(relationName))
     }
 
-    val proposer = MigrationStepsProposerImpl(previousProject, nextProject, Renames.empty)
+    val proposer = MigrationStepsProposerImpl(previousProject, nextProject, SchemaMapping.empty)
     val steps    = proposer.evaluate()
 
     steps should have(size(0))
@@ -275,7 +276,7 @@ class MigrationStepsProposerSpec extends FlatSpec with Matchers with DeploySpecB
         .field("status", _.Enum, enum = Some(enum))
     }
 
-    val proposer = MigrationStepsProposerImpl(previousProject, nextProject, Renames.empty)
+    val proposer = MigrationStepsProposerImpl(previousProject, nextProject, SchemaMapping.empty)
     val steps    = proposer.evaluate()
 
     steps should have(size(2))
@@ -296,7 +297,7 @@ class MigrationStepsProposerSpec extends FlatSpec with Matchers with DeploySpecB
   }
 
   "Updating an Enum Name" should "create one UpdateEnum and one UpdateField for each field using that Enum" in {
-    val renames = Renames(
+    val renames = SchemaMapping(
       enums = Vector(Rename(previous = "TodoStatus", next = "TodoStatusNew"))
     )
 
@@ -340,7 +341,7 @@ class MigrationStepsProposerSpec extends FlatSpec with Matchers with DeploySpecB
   }
 
   "Updating the values of an Enum" should "create one UpdateEnum step" in {
-    val renames = Renames.empty
+    val renames = SchemaMapping.empty
     val previousProject = SchemaBuilder() { schema =>
       val enum = schema.enum("TodoStatus", Vector("Active", "Done"))
       schema
@@ -369,7 +370,7 @@ class MigrationStepsProposerSpec extends FlatSpec with Matchers with DeploySpecB
 
   // Regression
   "Enums" should "not be displayed as updated if they haven't been touched in a deploy" in {
-    val renames = Renames(
+    val renames = SchemaMapping(
       enums = Vector()
     )
 
@@ -406,7 +407,7 @@ class MigrationStepsProposerSpec extends FlatSpec with Matchers with DeploySpecB
   }
 
   "Removing Enums" should "create an DeleteEnum step" in {
-    val renames = Renames.empty
+    val renames = SchemaMapping.empty
     val previousProject = SchemaBuilder() { schema =>
       val enum = schema.enum("TodoStatus", Vector("Active", "Done"))
       schema

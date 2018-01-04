@@ -310,3 +310,24 @@ case class ProjectDeploymentActor(projectId: String)(
 //    } yield ()
 //  }
 }
+
+
+//case class MigrationProgress(
+//    appliedSteps: Vector[MigrationStep],
+//    pendingSteps: Vector[MigrationStep],
+//    isRollingback: Boolean
+//) {
+//  def addAppliedStep(step: MigrationStep) = copy(appliedSteps = appliedSteps :+ step)
+//
+//  def popPending: (MigrationStep, MigrationProgress) = {
+//    val step = pendingSteps.head
+//    step -> copy(appliedSteps = appliedSteps :+ step, pendingSteps = pendingSteps.tail)
+//  }
+//
+//  def popApplied: (MigrationStep, MigrationProgress) = {
+//    val step = appliedSteps.last
+//    step -> copy(appliedSteps = appliedSteps.dropRight(1))
+//  }
+//
+//  def markForRollback = copy(isRollingback = true)
+//}
