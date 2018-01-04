@@ -1,0 +1,11 @@
+# To connect or disconnect a `Post` and a `User` node via the 
+# `UsersPosts`-relation, the `User` node must be the `author`
+# of the corresponding `Post` node. 
+query UpdateUsersPosts ($user_id: ID!, $node_id: ID!) {
+  SomePostExists(filter: {
+    id: $node_id,
+    author: {
+      id: $user_id
+    }
+  })
+}

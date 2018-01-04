@@ -1,8 +1,0 @@
-type LoggedInUserPayload {
-  id: ID!
-}
-
-extend type Query {
-  # return user data if request contains valid authentication token
-  loggedInUser: LoggedInUserPayload
-}
