@@ -8,6 +8,10 @@ import { mapValues } from 'lodash'
 import { getProcessForPort } from './getProcessForPort'
 import { getBinPath } from '../deploy/getbin'
 import * as semver from 'semver'
+import { ContainerInfo } from './types'
+import { spawn } from '../../spawn'
+import { userInfo } from 'os'
+import * as Raven from 'raven'
 const debug = require('debug')('Docker')
 
 export default class Docker {
@@ -62,7 +66,10 @@ export default class Docker {
     if (!port) {
       port = await portfinder.getPortPromise({ port: 60000 })
       if (port > 60000) {
-        await this.askForHigherPort('60000', port)
+        const useHigherPort = await this.askForHigherPort('60000', port)
+        if (!useHigherPort) {
+          port = 60000
+        }
       }
     }
     const customVars = {
@@ -71,32 +78,62 @@ export default class Docker {
     }
     debug(`customVars`)
     debug(customVars)
-    this.out.log(
-      `Running local Graphcool cluster at http://localhost:${customVars.PORT}`,
-    )
-    this.out.log(`This may take several minutes`)
+    // this.out.log(
+    //   `Running local Graphcool cluster at http://localhost:${customVars.PORT}`,
+    // )
+    // this.out.log(`This may take several minutes`)
     this.envVars = { ...process.env, ...defaultVars, ...customVars }
   }
-  async askForHigherPort(port: string, higherPort: string) {
+  /**
+   * returns true, if higher port should be used
+   * @param port original port
+   * @param higherPort alternative port
+   */
+  async askForHigherPort(port: string, higherPort: string): Promise<boolean> {
     const processForPort = getProcessForPort(port)
     if (processForPort) {
-      const confirmationQuestion = {
+      const question = {
         name: 'confirmation',
-        type: 'input',
-        message: `Port 60000 is already used by ${processForPort}. Do you want to use the next free port (${higherPort})? (n/Y)`,
-        default: 'Y',
+        type: 'list',
+        message: `Port ${port} is already in use by ${processForPort}. What do you want to do?`,
+        choices: [
+          {
+            value: 'stop',
+            name: 'Stop container running on 60000',
+          },
+          {
+            value: 'next',
+            name: `Use port ${higherPort}`,
+          },
+          {
+            value: 'cancel',
+            name: 'Do not continue',
+          },
+        ],
+        pageSize: 8,
       }
       const { confirmation }: { confirmation: string } = await this.out.prompt(
-        confirmationQuestion,
+        question,
       )
-      if (confirmation.toLowerCase().startsWith('n')) {
+      if (confirmation === 'stop') {
+        await this.stopContainersBlockingPort(port)
+        return false
+      }
+      if (confirmation === 'next') {
+        return true
+      }
+      if (confirmation === 'cancel') {
         this.out.exit(0)
       }
     }
+
+    await Raven.captureException(
+      new Error('Port is blocked, but could not find blocking process'),
+    )
+    return true
   }
 
   async up(): Promise<Docker> {
-    await this.init()
     return this.run('up', '-d', '--remove-orphans')
   }
 
@@ -190,40 +227,90 @@ export default class Docker {
     })
   }
 
-  private run(...argv: string[]): Promise<Docker> {
-    return new Promise(async (resolve, reject) => {
-      await this.checkBin()
-      const defaultArgs = [
-        '-p',
-        JSON.stringify(this.clusterName + '-database'),
-        '--file',
-        this.ymlPath,
-        '--project-directory',
-        this.config.cwd,
-      ]
-      const args = defaultArgs.concat(argv)
-      this.out.log(chalk.dim(`$ docker-compose ${argv.join(' ')}\n`))
-      const child = childProcess.spawn('docker-compose', args, {
-        env: this.envVars,
-        cwd: this.config.cwd,
-      })
-      child.stdout.on('data', data => {
-        this.out.log(this.format(data))
-      })
-      child.stderr.on('data', data => {
-        this.out.log(this.format(data))
-      })
-      child.on('error', err => {
-        this.out.error(err)
-      })
-      child.on('close', code => {
-        if (code !== 0) {
-          reject(code)
-        } else {
-          resolve(this)
-        }
-      })
+  async stopContainersBlockingPort(port: string) {
+    const output = childProcess.execSync('docker ps').toString()
+    const containers = this.parsePs(output)
+    const regex = /\d+\.\d+\.\d+\.\d+:(\d+)->/
+    const blockingContainer = containers.find(c => {
+      const match = c.PORTS.match(regex)
+      return (match && match[1] === port) || false
     })
+    if (blockingContainer) {
+      const nameStart = blockingContainer.NAMES.split('_')[0]
+      const relatedContainers = containers.filter(
+        c => c.NAMES.split('_')[0] === nameStart,
+      )
+      const containerNames = relatedContainers.map(c => c.NAMES)
+      this.out.action.start(`Stopping docker containers`)
+      await spawn('docker', ['stop'].concat(containerNames))
+      this.out.action.stop()
+      this.out.log('')
+    } else {
+      throw new Error(
+        `Could not find container blocking port ${port}. Please either stop it by hand or choose another port.`,
+      )
+    }
+  }
+
+  private parsePs(output): ContainerInfo[] {
+    if (!output) {
+      return []
+    }
+
+    const lines = output.trim().split('\n')
+
+    if (lines.length < 2) {
+      return []
+    }
+
+    const headers = {}
+    const start = 0
+    lines[0].replace(/([A-Z\s]+?)($|\s{2,})/g, (all, name, space, index) => {
+      headers[name] = {
+        start: index,
+        end: index + all.length,
+      }
+
+      // check if this header is at the end of the line
+      if (space.length === 0) {
+        headers[name].end = undefined
+      }
+      return name + ' '
+    })
+
+    const entries: any = []
+    for (let i = 1; i < lines.length; i++) {
+      const entry = {}
+      for (const key in headers) {
+        if (headers.hasOwnProperty(key)) {
+          entry[key] = lines[i]
+            .substring(headers[key].start, headers[key].end)
+            .trim()
+        }
+      }
+      entries.push(entry)
+    }
+
+    return entries
+  }
+
+  private async run(...argv: string[]): Promise<Docker> {
+    await this.checkBin()
+    const defaultArgs = [
+      '-p',
+      JSON.stringify(this.clusterName + '-database'),
+      '--file',
+      this.ymlPath,
+      '--project-directory',
+      this.config.cwd,
+    ]
+    const args = defaultArgs.concat(argv)
+    // this.out.log(chalk.dim(`$ docker-compose ${argv.join(' ')}\n`))
+    await spawn('docker-compose', args, {
+      env: this.envVars,
+      cwd: this.config.cwd,
+    })
+    return this
   }
 
   private async checkBin() {

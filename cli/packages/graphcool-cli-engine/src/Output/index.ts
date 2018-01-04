@@ -189,7 +189,7 @@ To get more detailed output, run ${chalk.dim(instruction)}`,
       console.error(e)
       console.error(err)
     }
-    // make sure error is logged first
+    // make sure error is logged first, then execute raven
     await new Promise(r => {
       Raven.captureException(err, () => r())
     })

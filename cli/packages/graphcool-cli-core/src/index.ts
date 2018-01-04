@@ -21,6 +21,7 @@ import Export from './commands/export/index'
 import Nuke from './commands/local/nuke'
 import ConsoleCommand from './commands/console/index'
 import Logs from './commands/local/logs'
+import PsLocal from './commands/local/ps'
 
 export const groups = [
   {
@@ -109,6 +110,7 @@ export const commands = [
   Clusters,
   Import,
   Export,
+  PsLocal,
 ]
 
 export {
@@ -127,7 +129,7 @@ export {
   Up,
   Eject,
   Logs,
-  // PsLocal,
+  PsLocal,
   Reset,
   Clusters,
   // Account,

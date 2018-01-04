@@ -22,6 +22,7 @@ import { getBinPath } from './getbin'
 import * as semver from 'semver'
 const debug = require('debug')('deploy')
 import * as Raven from 'raven'
+import { prettyTime } from '../../util'
 
 export default class Deploy extends Command {
   static topic = 'deploy'
@@ -225,12 +226,6 @@ ${chalk.gray(
     this.out.action.stop()
   }
 
-  private prettyTime(time: number): string {
-    const output =
-      time > 1000 ? (Math.round(time / 100) / 10).toFixed(1) + 's' : time + 'ms'
-    return chalk.cyan(output)
-  }
-
   private async deploy(
     stageName: string,
     serviceName: string,
@@ -260,7 +255,7 @@ ${chalk.gray(
       dryRun,
       this.definition.secrets,
     )
-    this.out.action.stop(this.prettyTime(Date.now() - before))
+    this.out.action.stop(prettyTime(Date.now() - before))
     this.printResult(migrationResult)
 
     if (migrationResult.migration.revision > 0 && !dryRun) {
@@ -271,7 +266,7 @@ ${chalk.gray(
         stageName,
         migrationResult.migration.revision,
       )
-      this.out.action.stop(this.prettyTime(Date.now() - before))
+      this.out.action.stop(prettyTime(Date.now() - before))
     }
     // TODO move up to if statement after testing done
     this.out.log(chalk.bold(`\nHooks:\n`))
@@ -311,7 +306,7 @@ ${chalk.gray(
         : ''
     this.out.action.start(`Importing seed dataset${from}`)
     await seeder.seed(serviceName, stageName)
-    this.out.action.stop(this.prettyTime(Date.now() - before))
+    this.out.action.stop(prettyTime(Date.now() - before))
   }
 
   private async generateSchema(serviceName: string, stageName: string) {
@@ -330,7 +325,7 @@ ${chalk.gray(
         token,
       )
       fs.writeFileSync(schemaPath, schemaString)
-      this.out.action.stop(this.prettyTime(Date.now() - before))
+      this.out.action.stop(prettyTime(Date.now() - before))
     }
   }
 
