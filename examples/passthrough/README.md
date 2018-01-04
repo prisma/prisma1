@@ -27,3 +27,7 @@ mutation c {
   }
 }
 ```
+
+### Questions
+
+why is it called `db` on `forwardTo(`'db')`: because it is called like this in index.js
