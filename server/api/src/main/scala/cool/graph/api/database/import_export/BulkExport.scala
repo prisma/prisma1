@@ -147,8 +147,8 @@ class BulkExport(project: Project)(implicit apiDependencies: ApiDependencies) {
   private def dataItemToExportRelation(item: DataItem, info: RelationInfo): JsonBundle = {
     val idA      = item.userData("A").get.toString.trim
     val idB      = item.userData("B").get.toString.trim
-    val leftMap  = Map("_typeName" -> info.current.leftModel, "id" -> idB, "fieldName" -> info.current.leftField)
-    val rightMap = Map("_typeName" -> info.current.rightModel, "id" -> idA, "fieldName" -> info.current.rightField)
+    val leftMap  = ExportRelationSide(info.current.leftModel, idB, info.current.leftField)
+    val rightMap = ExportRelationSide(info.current.rightModel, idA, info.current.rightField)
 
     val json = JsArray(leftMap.toJson, rightMap.toJson)
     JsonBundle(jsonElements = Vector(json), size = json.toString.length)

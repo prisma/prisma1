@@ -2,8 +2,7 @@ package cool.graph.api.database.import_export
 
 import cool.graph.api.database.{DataItem, DataResolver}
 import cool.graph.shared.models.{Model, Project, Relation}
-import cool.graph.shared.models.TypeIdentifier.TypeIdentifier
-import spray.json.{DefaultJsonProtocol, JsArray, JsBoolean, JsFalse, JsNull, JsNumber, JsObject, JsString, JsTrue, JsValue, JsonFormat, RootJsonFormat}
+import spray.json._
 
 package object ImportExport {
 
@@ -12,11 +11,12 @@ package object ImportExport {
   case class ResultFormat(out: JsonBundle, cursor: Cursor, isFull: Boolean)
   case class ImportBundle(valueType: String, values: JsArray)
   case class ImportIdentifier(typeName: String, id: String)
-  case class ImportRelationSide(identifier: ImportIdentifier, fieldName: String)
+  case class ImportRelationSide(identifier: ImportIdentifier, fieldName: Option[String])
   case class ImportNode(identifier: ImportIdentifier, values: Map[String, Any])
   case class ImportRelation(left: ImportRelationSide, right: ImportRelationSide)
   case class ImportList(identifier: ImportIdentifier, values: Map[String, Vector[Any]])
   case class JsonBundle(jsonElements: Vector[JsValue], size: Int)
+  case class ExportRelationSide(_typeName: String, id: String, fieldName: Option[String])
 
   sealed trait ExportInfo {
     val cursor: Cursor
@@ -53,10 +53,12 @@ package object ImportExport {
     lazy val current: RelationData      = relations.find(_._2 == cursor.table).get._1
   }
 
-  case class RelationData(relationId: String, leftModel: String, leftField: String, rightModel: String, rightField: String)
+  case class RelationData(relationId: String, leftModel: String, leftField: Option[String], rightModel: String, rightField: Option[String]){
+    require(leftField.isDefined || rightField.isDefined)
+  }
 
   def toRelationData(r: Relation, project: Project): RelationData = {
-    RelationData(r.id, r.getModelB_!(project).name, r.getModelBField_!(project).name, r.getModelA_!(project).name, r.getModelAField_!(project).name)
+    RelationData(r.id, r.getModelB_!(project).name, r.getModelBField(project).map(_.name), r.getModelA_!(project).name, r.getModelAField(project).map(_.name))
   }
 
   case class DataItemsPage(items: Seq[DataItem], hasMore: Boolean) { def itemCount: Int = items.length }
@@ -104,6 +106,7 @@ package object ImportExport {
     implicit val cursor: RootJsonFormat[Cursor]                         = jsonFormat4(Cursor)
     implicit val exportRequest: RootJsonFormat[ExportRequest]           = jsonFormat2(ExportRequest)
     implicit val resultFormat: RootJsonFormat[ResultFormat]             = jsonFormat3(ResultFormat)
+    implicit val exportRelationSide: RootJsonFormat[ExportRelationSide] = jsonFormat3(ExportRelationSide)
   }
 
 }
