@@ -13,6 +13,8 @@ import { spawn } from '../../spawn'
 import { userInfo } from 'os'
 import * as Raven from 'raven'
 const debug = require('debug')('Docker')
+import * as portfinder from 'portfinder'
+import { prettyTime } from '../../util'
 
 export default class Docker {
   out: Output
@@ -20,7 +22,12 @@ export default class Docker {
   config: Config
   cluster?: Cluster
   ymlPath: string = path.join(__dirname, 'docker/docker-compose.yml')
+  frameworkYmlPath: string = path.join(
+    __dirname,
+    'docker/framework-docker-compose.yml',
+  )
   envPath: string = path.join(__dirname, 'docker/env')
+  frameworkEnvPath: string = path.join(__dirname, 'docker/oldenv')
   envVars: { [varName: string]: string }
   clusterName: string
   constructor(
@@ -62,7 +69,6 @@ export default class Docker {
       port = sliced.slice(0, sliced.indexOf('/'))
     }
     const defaultVars = this.getDockerEnvVars()
-    const portfinder = require('portfinder')
     if (!port) {
       port = await portfinder.getPortPromise({ port: 60000 })
       if (port > 60000) {
@@ -72,17 +78,7 @@ export default class Docker {
         }
       }
     }
-    const customVars = {
-      PORT: String(port),
-      SCHEMA_MANAGER_ENDPOINT: `http://graphcool-database:${port}/cluster/schema`,
-    }
-    debug(`customVars`)
-    debug(customVars)
-    // this.out.log(
-    //   `Running local Graphcool cluster at http://localhost:${customVars.PORT}`,
-    // )
-    // this.out.log(`This may take several minutes`)
-    this.envVars = { ...process.env, ...defaultVars, ...customVars }
+    this.setEnvVars(port)
   }
   /**
    * returns true, if higher port should be used
@@ -168,13 +164,36 @@ export default class Docker {
   }
 
   async nuke(): Promise<Docker> {
-    await this.init()
-    await this.run('down', '--remove-orphans', '-v', '--rmi', 'local')
-    return this.run('up', '-d', '--remove-orphans')
+    let port
+    // if there is a cluster, try to stop it regularly
+    if (this.cluster) {
+      const endpoint = this.cluster.getDeployEndpoint()
+      const sliced = endpoint.slice(endpoint.lastIndexOf(':') + 1)
+      port = sliced.slice(0, sliced.indexOf('/'))
+      this.setEnvVars(port)
+      const before = Date.now()
+      this.out.action.start('Nuking local cluster')
+      await this.run('down', '--remove-orphans', '-v', '--rmi', 'local')
+      this.out.action.stop(prettyTime(Date.now() - before))
+    }
+
+    // if there is still a cluster on 60000 or just a cluster we don't know, NUKE IT
+    const used = getProcessForPort(60000)
+    if (used) {
+      this.stopContainersBlockingPort('60000', true)
+    }
+    const before = Date.now()
+    this.out.action.start('Booting fresh local development cluster')
+    await this.run('up', '-d', '--remove-orphans')
+    this.out.action.stop(prettyTime(Date.now() - before))
+    return this
   }
 
-  getDockerEnvVars() {
-    const file = fs.readFileSync(this.envPath, 'utf-8')
+  getDockerEnvVars(db: boolean = true) {
+    const file = fs.readFileSync(
+      db ? this.envPath : this.frameworkEnvPath,
+      'utf-8',
+    )
     return this.parseEnv(file)
   }
 
@@ -227,7 +246,16 @@ export default class Docker {
     })
   }
 
-  async stopContainersBlockingPort(port: string) {
+  setEnvVars(port: string) {
+    const defaultVars = this.getDockerEnvVars()
+    const customVars = {
+      PORT: port,
+      SCHEMA_MANAGER_ENDPOINT: `http://graphcool-database:${port}/cluster/schema`,
+    }
+    this.envVars = { ...process.env, ...defaultVars, ...customVars }
+  }
+
+  async stopContainersBlockingPort(port: string, nuke: boolean = false) {
     const output = childProcess.execSync('docker ps').toString()
     const containers = this.parsePs(output)
     const regex = /\d+\.\d+\.\d+\.\d+:(\d+)->/
@@ -235,14 +263,44 @@ export default class Docker {
       const match = c.PORTS.match(regex)
       return (match && match[1] === port) || false
     })
+
     if (blockingContainer) {
       const nameStart = blockingContainer.NAMES.split('_')[0]
-      const relatedContainers = containers.filter(
-        c => c.NAMES.split('_')[0] === nameStart,
-      )
-      const containerNames = relatedContainers.map(c => c.NAMES)
+
       this.out.action.start(`Stopping docker containers`)
-      await spawn('docker', ['stop'].concat(containerNames))
+      let error
+      try {
+        if (nameStart.startsWith('localdatabase')) {
+          console.log('nuking db')
+          this.setEnvVars(port)
+          await this.nukeContainers(nameStart, true)
+        } else if (nameStart.startsWith('local')) {
+          console.log('nuking framework')
+          const defaultVars = this.getDockerEnvVars(false)
+          const FUNCTIONS_PORT = '60050'
+          const customVars = {
+            PORT: String(port),
+            FUNCTIONS_PORT,
+            FUNCTION_ENDPOINT_INTERNAL: `http://localfaas:${FUNCTIONS_PORT}`,
+            FUNCTION_ENDPOINT_EXTERNAL: `http://${
+              this.hostName
+            }:${FUNCTIONS_PORT}`,
+          }
+          this.envVars = { ...process.env, ...defaultVars, ...customVars }
+          await this.nukeContainers(nameStart, false)
+        }
+      } catch (e) {
+        error = e
+      }
+
+      console.error(error)
+      if (error) {
+        const relatedContainers = containers.filter(
+          c => c.NAMES.split('_')[0] === nameStart,
+        )
+        const containerNames = relatedContainers.map(c => c.NAMES)
+        await spawn('docker', [nuke ? 'kill' : 'stop'].concat(containerNames))
+      }
       this.out.action.stop()
       this.out.log('')
     } else {
@@ -250,6 +308,26 @@ export default class Docker {
         `Could not find container blocking port ${port}. Please either stop it by hand or choose another port.`,
       )
     }
+  }
+
+  async nukeContainers(name: string, isDB: boolean = false) {
+    console.log('STOPPING', name, isDB)
+    const argv = ['down', '--remove-orphans', '-v', '--rmi', 'local']
+    await this.checkBin()
+    const defaultArgs = [
+      '-p',
+      JSON.stringify(name),
+      '--file',
+      isDB ? this.ymlPath : this.frameworkYmlPath,
+      '--project-directory',
+      this.config.cwd,
+    ]
+    const args = defaultArgs.concat(argv)
+    // this.out.log(chalk.dim(`$ docker-compose ${argv.join(' ')}\n`))
+    const result = await spawn('docker-compose', args, {
+      env: this.envVars,
+      cwd: this.config.cwd,
+    })
   }
 
   private parsePs(output): ContainerInfo[] {

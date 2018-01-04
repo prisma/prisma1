@@ -1,5 +1,6 @@
 import { Command, flags, Flags } from 'graphcool-cli-engine'
 import Docker from './Docker'
+import { prettyTime } from '../../util'
 
 export default class Nuke extends Command {
   static topic = 'local'
@@ -15,6 +16,9 @@ export default class Nuke extends Command {
   }
   async run() {
     const docker = new Docker(this.out, this.config, this.env, this.flags.name)
+    const before = Date.now()
+    // this.out.action.start(`Nuking local graphcool cluster`)
     await docker.nuke()
+    // this.out.action.stop(prettyTime(Date.now() - before))
   }
 }
