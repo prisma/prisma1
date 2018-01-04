@@ -7,7 +7,7 @@ description: Variables
 
 Variables allow you to dynamically replace configuration values in your service definition file `graphcool.yml`.
 
-> Variables are especially useful when providing _secrets_ for your service and when you have a multi-staging developer workflow.
+> Variables are especially useful when providing _secrets_ for your service and when you have a multi-stage developer workflow.
 
 To use variables inside `graphcool.yml`, you need to reference the values enclosed in `${}` brackets. Inside the brackes, you first need to specify the _variable source_ and the _variable name_, separated by a colon.
 
@@ -82,7 +82,7 @@ subscriptions:
 Note that the CLI will load environment variables from 3 different locations and in the following order:
 
 1. The local environment
-1. A `.env` file specified with the `--dotenv` parameter
+1. A `.env` file specified with the `--dotenv` parameter, or if the `--dotenv` parameter was omitted:
 1. A file called `.env` in the same directory, if no `--dotenv` parameter is specified
 
 ### CLI options
@@ -95,6 +95,11 @@ When referencing a CLI option, the value that you put into the bracket is compos
 - the _name_ of the CLI option
 
 > Note: It is valid to use the _empty string_ as the _name_ of the CLI option. This looks like `${opt:}` and the result of declaring this in your `graphcool.yml` is to embed the complete options object (i.e. all the command line options from your `graphcool` command).
+
+
+<!--
+
+TODO example is outdated (no --stage option anymore)
 
 For the following example, assume the following `graphcool` command was just ran in the terminal:
 
@@ -110,3 +115,5 @@ webhook:
 ```
 
 When the command is invoked, the value of `webhook.url` will be deployed as `http://myapi.prod.com/example`.
+
+-->
