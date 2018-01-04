@@ -163,7 +163,6 @@ case class NextProjectInfererImpl(
   lazy val nextEnums: Vector[Enum] = {
     sdl.enumTypes.map { enumDef =>
       Enum(
-        id = enumDef.name,
         name = enumDef.name,
         values = enumDef.values.map(_.name)
       )

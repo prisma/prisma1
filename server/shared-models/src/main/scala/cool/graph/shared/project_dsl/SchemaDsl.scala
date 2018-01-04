@@ -30,8 +30,7 @@ object SchemaDsl {
     }
 
     def enum(name: String, values: Vector[String]): Enum = {
-      val id      = name
-      val newEnum = Enum(id, name, values)
+      val newEnum = Enum(name, values)
       enums += newEnum
       newEnum
     }

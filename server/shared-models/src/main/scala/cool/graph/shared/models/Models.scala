@@ -312,10 +312,11 @@ object TypeIdentifier extends Enumeration {
 }
 
 case class Enum(
-    id: Id,
     name: String,
     values: Vector[String] = Vector.empty
-)
+) {
+  val id = name
+}
 
 case class FeatureToggle(
     id: Id,
