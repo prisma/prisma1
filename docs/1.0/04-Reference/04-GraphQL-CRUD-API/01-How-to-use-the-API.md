@@ -5,7 +5,7 @@ description: How to use the API
 
 # How to use the API
 
-The GraphQL API of your Graphcool database service API is consumed via HTTP. Depending on your environment, can either use plain HTTP to communicate with the API or a [GraphQL client](!alias-chig6ahxeo) library to facilitate the process.
+The GraphQL API of your Graphcool database service API is consumed via HTTP. Depending on your environment, you can either use plain HTTP to communicate with the API or a [GraphQL client](!alias-chig6ahxeo) library to facilitate the process.
 
 In the following, we'll provide an overview of the different ways you can interface with the API.
 
