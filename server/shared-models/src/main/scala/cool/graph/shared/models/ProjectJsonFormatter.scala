@@ -16,10 +16,7 @@ object ProjectJsonFormatter {
   implicit lazy val relationSide             = enumFormat(RelationSide)
   implicit lazy val typeIdentifier           = enumFormat(TypeIdentifier)
   implicit lazy val fieldConstraintType      = enumFormat(FieldConstraintType)
-  implicit lazy val userType                 = enumFormat(UserType)
   implicit lazy val modelMutationType        = enumFormat(ModelMutationType)
-  implicit lazy val customRule               = enumFormat(CustomRule)
-  implicit lazy val modelOperation           = enumFormat(ModelOperation)
 
   // FAILING STUBS
   implicit lazy val function = failingFormat[Function]
@@ -136,7 +133,6 @@ object ProjectJsonFormatter {
   implicit lazy val field                     = Json.format[Field]
   implicit lazy val model                     = Json.format[Model]
   implicit lazy val seat                      = Json.format[Seat]
-  implicit lazy val featureToggle             = Json.format[FeatureToggle]
   implicit lazy val projectFormat             = Json.format[Project]
   implicit lazy val projectWithClientIdFormat = Json.format[ProjectWithClientId]
 

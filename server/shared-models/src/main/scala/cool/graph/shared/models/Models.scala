@@ -104,8 +104,7 @@ case class Project(
     seats: List[Seat] = List.empty,
     allowQueries: Boolean = true,
     allowMutations: Boolean = true,
-    functions: List[Function] = List.empty,
-    featureToggles: List[FeatureToggle] = List.empty
+    functions: List[Function] = List.empty
 ) {
 
   lazy val projectId: ProjectId = ProjectId.fromEncodedString(id)
@@ -311,12 +310,6 @@ object TypeIdentifier extends Enumeration {
 case class Enum(
     name: String,
     values: Vector[String] = Vector.empty
-)
-
-case class FeatureToggle(
-    id: Id,
-    name: String,
-    isEnabled: Boolean
 )
 
 case class Field(
@@ -549,30 +542,9 @@ case class RelationFieldMirror(
     fieldId: String
 )
 
-object UserType extends Enumeration {
-  type UserType = Value
-  val Everyone      = Value("EVERYONE")
-  val Authenticated = Value("AUTHENTICATED")
-}
-
 object ModelMutationType extends Enumeration {
   type ModelMutationType = Value
   val Created = Value("CREATED")
   val Updated = Value("UPDATED")
   val Deleted = Value("DELETED")
-}
-
-object CustomRule extends Enumeration {
-  type CustomRule = Value
-  val None    = Value("NONE")
-  val Graph   = Value("GRAPH")
-  val Webhook = Value("WEBHOOK")
-}
-
-object ModelOperation extends Enumeration {
-  type ModelOperation = Value
-  val Create = Value("CREATE")
-  val Read   = Value("READ")
-  val Update = Value("UPDATE")
-  val Delete = Value("DELETE")
 }
