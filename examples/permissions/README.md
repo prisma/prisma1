@@ -1,6 +1,6 @@
 # Authentication
 
-This example demonstrates how to implement an **email-password-based authentication** workflow with Graphcool. Feel free to use it as a template for your own project!
+This example demonstrates how to implement **permission rules** in combination with an email-password-based authentication workflow. Feel free to use it as a template for your own project!
 
 ## Overview
 
@@ -10,15 +10,18 @@ This directory contains a GraphQL server (based on [`graphql-yoga`](https://gith
 .
 ├── README.md
 ├── database
-│   ├── datamodel.graphql
-│   └── schema.generated.graphql
+│   └── datamodel.graphql
 ├── graphcool.yml
-├── src
-│   ├── schema.graphql
-│   ├── index.js
-│   ├── auth.js
-│   └── utils.js
 ├── package.json
+├── src
+│   ├── auth.js
+│   ├── index.js
+│   ├── permissions
+│   │   ├── Post.graphql
+│   │   ├── User.graphql
+│   │   └── UsersPosts.graphql
+│   ├── schema.graphql
+│   └── utils.js
 └── yarn.lock
 ```
 
@@ -39,8 +42,8 @@ npm install -g graphcool
 Clone the Graphcool monorepo and navigate to this directory or download _only_ this example with the following command:
 
 ```sh
-curl https://codeload.github.com/graphcool/graphcool/tar.gz/master | tar -xz --strip=2 graphcool-master/examples/auth
-cd auth
+curl https://codeload.github.com/graphcool/graphcool/tar.gz/master | tar -xz --strip=2 graphcool-master/examples/permissions
+cd permissions
 ```
 
 ### 2. Deploy the Graphcool database service

@@ -1,4 +1,4 @@
-service: myapp
+service: permissions-demo
 
 datamodel: database/datamodel.graphql
 

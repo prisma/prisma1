@@ -1,0 +1,24 @@
+enum Role {
+  ADMIN
+  CUSTOMER
+}
+
+type User {
+  id: ID! @unique
+  createdAt: DateTime!
+
+  role: Role!
+  posts: [Post!]! @relation(name: "UserPosts")
+
+  email: String @unique
+  password: String
+}
+
+type Post {
+  id: ID! @unique
+  createdAt: DateTime!
+
+  title: String!
+
+  author: User! @relation(name: "UserPosts")
+}
