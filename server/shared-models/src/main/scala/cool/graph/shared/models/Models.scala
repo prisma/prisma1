@@ -150,9 +150,6 @@ case class Project(
   }
   def getFieldConstraintById_!(id: Id): FieldConstraint = getFieldConstraintById(id).get //OrElse(throw SystemErrors.InvalidFieldConstraintId(id))
 
-  def getEnumById(enumId: String): Option[Enum] = enums.find(_.id == enumId)
-  def getEnumById_!(enumId: String): Enum       = getEnumById(enumId).get //OrElse(throw SystemErrors.InvalidEnumId(id = enumId))
-
   // note: mysql columns are case insensitive, so we have to be as well
   def getEnumByName(name: String): Option[Enum] = enums.find(_.name.toLowerCase == name.toLowerCase)
 
@@ -314,9 +311,7 @@ object TypeIdentifier extends Enumeration {
 case class Enum(
     name: String,
     values: Vector[String] = Vector.empty
-) {
-  val id = name
-}
+)
 
 case class FeatureToggle(
     id: Id,
