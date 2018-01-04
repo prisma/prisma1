@@ -8,33 +8,6 @@ Revolver.settings
 import Dependencies._
 import com.typesafe.sbt.SbtGit
 
-lazy val propagateVersionToOtherRepo = taskKey[Unit]("Propagates the version of this project to another github repo.")
-lazy val actualBranch = settingKey[String]("the current branch of the git repo")
-
-actualBranch := {
-  val branch = sys.env.getOrElse("BRANCH", git.gitCurrentBranch.value)
-
-  if (branch != "master"){
-    sys.props += "project.version" -> s"$branch-SNAPSHOT"
-  }
-
-  branch
-}
-
-propagateVersionToOtherRepo := {
-  val branch = actualBranch.value
-  println(s"Will try to propagate the version to branch $branch in other repo.")
-
-  val githubClient = GithubClient()
-  githubClient.updateFile(
-    owner = Env.read("OTHER_REPO_OWNER"),
-    repo = Env.read("OTHER_REPO"),
-    filePath = Env.read("OTHER_REPO_FILE"),
-    branch = branch,
-    newContent = version.value
-  )
-}
-
 // determine the version of our artifacts with sbt-git
 lazy val versionSettings = SbtGit.versionWithGit ++ Seq(
   git.baseVersion := "0.8.0",
@@ -49,18 +22,7 @@ lazy val versionSettings = SbtGit.versionWithGit ++ Seq(
   }
 )
 
-lazy val deploySettings = overridePublishBothSettings ++ Seq(
-  credentials += Credentials(
-    realm = "packagecloud",
-    host = "packagecloud.io",
-    userName = "",
-    passwd = sys.env.getOrElse("PACKAGECLOUD_PW", sys.error("PACKAGECLOUD_PW env var is not set."))
-  ),
-  publishTo := Some("packagecloud+https" at "packagecloud+https://packagecloud.io/graphcool/graphcool")//,
-//  aether.AetherKeys.aetherWagons := Seq(aether.WagonWrapper("packagecloud+https", "io.packagecloud.maven.wagon.PackagecloudWagon"))
-)
-
-lazy val commonSettings = deploySettings ++ versionSettings ++ Seq(
+lazy val commonSettings = versionSettings ++ Seq(
   organization := "cool.graph",
   organizationName := "graphcool",
   scalaVersion := "2.12.3",
@@ -72,10 +34,10 @@ lazy val commonSettings = deploySettings ++ versionSettings ++ Seq(
   resolvers += "Sonatype snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/"
 )
 
-lazy val commonBackendSettings = commonSettings ++ Seq(
+def commonBackendSettings(imageName: String) = commonSettings ++ Seq(
   libraryDependencies ++= common,
   imageNames in docker := Seq(
-    ImageName(s"graphcool/${name.value}:latest")
+    ImageName(s"graphcool/${imageName}:latest")
   ),
   dockerfile in docker := {
     val appDir    = stage.value
@@ -85,9 +47,6 @@ lazy val commonBackendSettings = commonSettings ++ Seq(
       from("anapsix/alpine-java")
       entryPoint(s"$targetDir/bin/${executableScriptName.value}")
       copy(appDir, targetDir)
-      expose(8081)
-      expose(8000)
-      expose(3333)
     }
   },
   javaOptions in Universal ++= Seq(
@@ -104,10 +63,10 @@ lazy val commonBackendSettings = commonSettings ++ Seq(
   )
 )
 
-def serverProject(name: String): Project = {
+def serverProject(name: String, imageName: String): Project = {
   normalProject(name)
     .enablePlugins(sbtdocker.DockerPlugin, JavaAppPackaging)
-    .settings(commonBackendSettings: _*)
+    .settings(commonBackendSettings(imageName): _*)
     .dependsOn(scalaUtils)
 }
 
@@ -122,7 +81,7 @@ lazy val sharedModels = normalProject("shared-models")
     cuid
   ) ++ joda
 )
-lazy val deploy = serverProject("deploy")
+lazy val deploy = serverProject("deploy", imageName = "graphcool-deploy")
   .dependsOn(sharedModels % "compile")
   .dependsOn(akkaUtils % "compile")
   .dependsOn(metrics % "compile")
@@ -134,29 +93,13 @@ lazy val deploy = serverProject("deploy")
       scalaTest
     )
   )
-  .enablePlugins(sbtdocker.DockerPlugin, JavaAppPackaging)
-  .settings(
-    imageNames in docker := Seq(
-      ImageName(s"graphcool/graphcool-deploy:latest")
-    ),
-    dockerfile in docker := {
-      val appDir    = stage.value
-      val targetDir = "/app"
-
-      new Dockerfile {
-        from("anapsix/alpine-java")
-        entryPoint(s"$targetDir/bin/${executableScriptName.value}")
-        copy(appDir, targetDir)
-      }
-    }
-  )
 //  .enablePlugins(BuildInfoPlugin)
 //  .settings(
 //    buildInfoKeys := Seq[BuildInfoKey](name, version, "imageTag" -> betaImageTag),
 //    buildInfoPackage := "build_info"
 //  )
 
-lazy val api = serverProject("api")
+lazy val api = serverProject("api", imageName = "graphcool-database")
   .dependsOn(sharedModels % "compile")
   .dependsOn(deploy % "test")
   .dependsOn(messageBus % "compile")
@@ -170,24 +113,8 @@ lazy val api = serverProject("api")
       scalaTest
     )
   )
-  .enablePlugins(sbtdocker.DockerPlugin, JavaAppPackaging)
-  .settings(
-    imageNames in docker := Seq(
-      ImageName(s"graphcool/graphcool-database:latest")
-    ),
-    dockerfile in docker := {
-      val appDir    = stage.value
-      val targetDir = "/app"
 
-      new Dockerfile {
-        from("anapsix/alpine-java")
-        entryPoint(s"$targetDir/bin/${executableScriptName.value}")
-        copy(appDir, targetDir)
-      }
-    }
-  )
-
-lazy val subscriptions = serverProject("subscriptions")
+lazy val subscriptions = serverProject("subscriptions", imageName = "graphcool-subscriptions")
   .dependsOn(api % "compile;test->test")
   .dependsOn(stubServer % "compile")
   .settings(
@@ -197,22 +124,6 @@ lazy val subscriptions = serverProject("subscriptions")
       akkaHttpPlayJson,
       akkaHttpTestKit
     )
-  )
-  .enablePlugins(sbtdocker.DockerPlugin, JavaAppPackaging)
-  .settings(
-    imageNames in docker := Seq(
-      ImageName(s"graphcool/graphcool-subscriptions:latest")
-    ),
-    dockerfile in docker := {
-      val appDir    = stage.value
-      val targetDir = "/app"
-
-      new Dockerfile {
-        from("anapsix/alpine-java")
-        entryPoint(s"$targetDir/bin/${executableScriptName.value}")
-        copy(appDir, targetDir)
-      }
-    }
   )
 
 lazy val gcValues = libProject("gc-values")
@@ -244,20 +155,6 @@ lazy val akkaUtils = libProject("akka-utils")
     specs2,
     caffeine
   ))
-
-//libraryDependencies ++= Seq(
-//  "com.typesafe.akka"             %% "akka-actor"   % "2.4.8" % "provided",
-//  "com.typesafe.akka"             %% "akka-contrib" % "2.4.8" % "provided",
-//  "com.typesafe.akka"             %% "akka-http"    % "10.0.5",
-//  "com.typesafe.akka"             %% "akka-testkit" % "2.4.8" % "test",
-//  "org.specs2"                    %% "specs2-core"  % "3.8.8" % "test",
-//  "com.github.ben-manes.caffeine" %  "caffeine"     % "2.4.0",
-//  "com.twitter"                   %% "finagle-http" % "6.44.0"
-//)
-
-//lazy val aws = Project(id = "aws", base = file("./libs/aws"))
-//  .settings(commonSettings: _*)
-//  .settings(libraryDependencies ++= awsDependencies)
 
 lazy val metrics = libProject("metrics")
   .dependsOn(bugsnag % "compile")
@@ -293,13 +190,6 @@ lazy val messageBus = libProject("message-bus")
     playJson
   ))
 
-//libraryDependencies ++= Seq(
-//  "com.typesafe.akka" %% "akka-actor"         % "2.4.8"   % "provided",
-//  "com.typesafe.akka" %% "akka-testkit"       % "2.4.8"   % "test",
-//  "org.specs2"        %% "specs2-core"        % "3.8.8"   % "test",
-//  "com.typesafe.akka" %% "akka-cluster-tools" % "2.4.17"
-//)
-
 
 lazy val jvmProfiler = Project(id = "jvm-profiler", base = file("./libs/jvm-profiler"))
   .settings(commonSettings: _*)
@@ -316,134 +206,8 @@ lazy val graphQlClient = Project(id = "graphql-client", base = file("./libs/grap
   .dependsOn(stubServer % "test")
   .dependsOn(akkaUtils % "compile")
 
-//lazy val javascriptEngine = libProject("javascript-engine")
 
 lazy val stubServer = libProject("stub-server")
-
-//lazy val backendShared =
-//  Project(id = "backend-shared", base = file("./backend-shared"))
-//    .enablePlugins(sbtdocker.DockerPlugin, JavaAppPackaging)
-//    .settings(commonBackendSettings: _*)
-//    .settings(unmanagedBase := baseDirectory.value / "self_built_libs")
-//    .dependsOn(bugsnag % "compile")
-//    .dependsOn(akkaUtils % "compile")
-//    .dependsOn(aws % "compile")
-//    .dependsOn(metrics % "compile")
-//    .dependsOn(jvmProfiler % "compile")
-//    .dependsOn(rabbitProcessor % "compile")
-//    .dependsOn(graphQlClient % "compile")
-//    .dependsOn(javascriptEngine % "compile")
-//    .dependsOn(stubServer % "test")
-//    .dependsOn(messageBus % "compile")
-//    .dependsOn(scalaUtils % "compile")
-//    .dependsOn(cache % "compile")
-//
-//lazy val clientShared =
-//  Project(id = "client-shared", base = file("./client-shared"))
-//    .settings(commonSettings: _*)
-//    .dependsOn(backendShared % "compile")
-//    .settings(libraryDependencies ++= Dependencies.clientShared)
-
-//lazy val backendApiSystem =
-//  Project(id = "backend-api-system", base = file("./backend-api-system"))
-//    .dependsOn(backendShared % "compile")
-//    .enablePlugins(sbtdocker.DockerPlugin, JavaAppPackaging)
-//    .settings(commonBackendSettings: _*)
-//
-//lazy val backendApiSimple =
-//  Project(id = "backend-api-simple", base = file("./backend-api-simple"))
-//    .dependsOn(clientShared % "compile")
-//    .enablePlugins(sbtdocker.DockerPlugin, JavaAppPackaging)
-//    .settings(commonBackendSettings: _*)
-//    .settings(libraryDependencies ++= Dependencies.apiServer)
-//
-//lazy val backendApiRelay =
-//  Project(id = "backend-api-relay", base = file("./backend-api-relay"))
-//    .dependsOn(clientShared % "compile")
-//    .enablePlugins(sbtdocker.DockerPlugin, JavaAppPackaging)
-//    .settings(commonBackendSettings: _*)
-//    .settings(libraryDependencies ++= Dependencies.apiServer)
-//
-//lazy val backendApiSubscriptionsWebsocket =
-//  Project(id = "backend-api-subscriptions-websocket", base = file("./backend-api-subscriptions-websocket"))
-//    .enablePlugins(sbtdocker.DockerPlugin, JavaAppPackaging)
-//    .settings(commonBackendSettings: _*)
-//    .settings(libraryDependencies ++= Seq(
-//      "com.typesafe.play" %% "play-json"           % "2.5.12",
-//      "de.heikoseeberger" %% "akka-http-play-json" % "1.14.0" excludeAll (
-//        ExclusionRule(organization = "com.typesafe.akka"),
-//        ExclusionRule(organization = "com.typesafe.play")
-//      )
-//    ))
-//    .dependsOn(aws % "compile")
-//    .dependsOn(metrics % "compile")
-//    .dependsOn(jvmProfiler % "compile")
-//    .dependsOn(akkaUtils % "compile")
-//    .dependsOn(rabbitProcessor % "compile")
-//    .dependsOn(bugsnag % "compile")
-//    .dependsOn(messageBus % "compile")
-
-//lazy val backendApiSimpleSubscriptions =
-//  Project(id = "backend-api-simple-subscriptions", base = file("./backend-api-simple-subscriptions"))
-//    .enablePlugins(sbtdocker.DockerPlugin, JavaAppPackaging)
-//    .settings(commonBackendSettings: _*)
-//    .settings(libraryDependencies ++= Dependencies.apiServer)
-//    .settings(libraryDependencies ++= Seq(
-//      "com.typesafe.play" %% "play-json"           % "2.5.12",
-//      "de.heikoseeberger" %% "akka-http-play-json" % "1.14.0" excludeAll (
-//        ExclusionRule(organization = "com.typesafe.akka"),
-//        ExclusionRule(organization = "com.typesafe.play")
-//      )
-//    ))
-//    .dependsOn(clientShared % "compile")
-//
-//lazy val backendApiFileupload =
-//  Project(id = "backend-api-fileupload", base = file("./backend-api-fileupload"))
-//    .dependsOn(clientShared % "compile")
-//    .enablePlugins(sbtdocker.DockerPlugin, JavaAppPackaging)
-//    .settings(commonBackendSettings: _*)
-//    .settings(libraryDependencies ++= Dependencies.apiServer)
-
-//lazy val backendApiSchemaManager =
-//  Project(id = "backend-api-schema-manager", base = file("./backend-api-schema-manager"))
-//    .dependsOn(backendApiSystem % "compile")
-//    .enablePlugins(sbtdocker.DockerPlugin, JavaAppPackaging)
-//    .settings(commonBackendSettings: _*)
-//    .settings(libraryDependencies ++= Dependencies.apiServer)
-//
-//lazy val backendWorkers =
-//  Project(id = "backend-workers", base = file("./backend-workers"))
-//    .enablePlugins(sbtdocker.DockerPlugin, JavaAppPackaging)
-//    .settings(commonSettings: _*)
-//    .dependsOn(bugsnag % "compile")
-//    .dependsOn(messageBus % "compile")
-//    .dependsOn(stubServer % "test")
-//    .dependsOn(scalaUtils % "compile")
-//    .settings(libraryDependencies ++= Seq(
-//      "com.typesafe.play"                %% "play-json"              % "2.5.12",
-//      "com.typesafe.akka"                %% "akka-http"              % "10.0.5",
-//      "com.typesafe.slick"               %% "slick"                  % "3.2.0",
-//      "com.typesafe.slick"               %% "slick-hikaricp"         % "3.2.0",
-//      "org.mariadb.jdbc"                 %  "mariadb-java-client"    % "1.5.8",
-//      "cool.graph"                       %  "cuid-java"              % "0.1.1",
-//      "org.scalatest"                    %% "scalatest"              % "2.2.6" % "test"
-//    ))
-//    .settings(
-//      imageNames in docker := Seq(
-//        ImageName(s"graphcool/${name.value}:latest")
-//      ),
-//      dockerfile in docker := {
-//        val appDir    = stage.value
-//        val targetDir = "/app"
-//
-//        new Dockerfile {
-//          from("anapsix/alpine-java")
-//          entryPoint(s"$targetDir/bin/${executableScriptName.value}")
-//          copy(appDir, targetDir)
-//          runRaw("apk add --update mysql-client && rm -rf /var/cache/apk/*")
-//        }
-//      }
-//    )
 
 lazy val scalaUtils =
   Project(id = "scala-utils", base = file("./libs/scala-utils"))
@@ -470,61 +234,11 @@ lazy val cache =
       java8Compat,
       jsr305
     ))
-
-lazy val singleServer = Project(id = "single-server", base = file("./single-server"))
-  .settings(commonSettings: _*)
+lazy val singleServer = serverProject("single-server", imageName = "graphcool-dev")
   .dependsOn(api% "compile")
   .dependsOn(deploy % "compile")
   .dependsOn(subscriptions % "compile")
   .dependsOn(graphQlClient % "compile")
-  .enablePlugins(sbtdocker.DockerPlugin, JavaAppPackaging)
-  .settings(
-    imageNames in docker := Seq(
-      ImageName(s"graphcool/graphcool-dev:latest")
-    ),
-    dockerfile in docker := {
-      val appDir    = stage.value
-      val targetDir = "/app"
-
-      new Dockerfile {
-        from("anapsix/alpine-java")
-        entryPoint(s"$targetDir/bin/${executableScriptName.value}")
-        copy(appDir, targetDir)
-      }
-    }
-  )
-
-//lazy val localFaas = Project(id = "localfaas", base = file("./localfaas"))
-//  .settings(commonSettings: _*)
-//  .enablePlugins(sbtdocker.DockerPlugin, JavaAppPackaging)
-//  .dependsOn(akkaUtils % "compile")
-//  .settings(
-//    libraryDependencies ++= Seq(
-//      "com.typesafe.akka"     %% "akka-http"           % "10.0.5",
-//      "com.github.pathikrit"  %% "better-files-akka"   % "2.17.1",
-//      "org.apache.commons"    %  "commons-compress"    % "1.14",
-//      "com.typesafe.play"     %% "play-json"           % "2.5.12",
-//      "de.heikoseeberger"     %% "akka-http-play-json" % "1.14.0" excludeAll (
-//        ExclusionRule(organization = "com.typesafe.akka"),
-//        ExclusionRule(organization = "com.typesafe.play")
-//      )
-//    ),
-//    imageNames in docker := Seq(
-//      ImageName(s"graphcool/localfaas:latest")
-//    ),
-//    dockerfile in docker := {
-//      val appDir    = stage.value
-//      val targetDir = "/app"
-//
-//      new Dockerfile {
-//        from("openjdk:8-alpine")
-//        runRaw("apk add --update nodejs=6.10.3-r1 bash")
-//        entryPoint(s"$targetDir/bin/${executableScriptName.value}")
-//        copy(appDir, targetDir)
-//        runRaw("rm -rf /var/cache/apk/*")
-//      }
-//    }
-//  )
 
 val allServerProjects = List(
   api,
@@ -537,13 +251,11 @@ val allServerProjects = List(
 val allLibProjects = List(
   bugsnag,
   akkaUtils,
-//  aws,
   metrics,
   rabbitProcessor,
   messageBus,
   jvmProfiler,
   graphQlClient,
-//  javascriptEngine,
   stubServer,
   scalaUtils,
   jsonUtils,
