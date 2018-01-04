@@ -9,7 +9,7 @@ description: Overview
 
 Every Graphcool service consists of several components that developers can provide, such as the service name, the data model for the service, information about deployment targets and authentication or the configuration of subscription functions.
 
-All of these components are configured your service's root configuration file: `graphcool.yml`.
+All of these components are configured in your service's root configuration file: `graphcool.yml`.
 
 ## Example
 
