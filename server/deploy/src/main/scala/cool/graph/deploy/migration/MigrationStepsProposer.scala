@@ -242,12 +242,7 @@ case class MigrationStepsProposerImpl(previousProject: Project, nextProject: Pro
     updates.filter(isAnyOptionSet)
   }
 
-  lazy val emptyModel = Model(
-    id = "",
-    name = "",
-    fields = List.empty,
-    description = None
-  )
+  lazy val emptyModel = Model(name = "", fields = List.empty)
 
   def containsRelation(project: Project, relation: Relation, adjacentModelName: String => String): Boolean = {
     project.relations.exists { rel =>
