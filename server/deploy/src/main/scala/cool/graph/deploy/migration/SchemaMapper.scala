@@ -1,6 +1,6 @@
 package cool.graph.deploy.migration
 
-import cool.graph.deploy.migration.inference.{FieldRename, Rename, SchemaMapping}
+import cool.graph.deploy.migration.inference.{FieldMapping, Mapping, SchemaMapping}
 import sangria.ast.Document
 
 trait SchemaMapper {
@@ -13,20 +13,20 @@ object SchemaMapper extends SchemaMapper {
 
   // Mapping is from the next (== new) name to the previous name. The name can only be different if there is an @rename directive present.
   override def createMapping(graphQlSdl: Document): SchemaMapping = {
-    val modelMapping: Vector[Rename] = graphQlSdl.objectTypes.map { objectType =>
-      Rename(previous = objectType.previousName, next = objectType.name)
+    val modelMapping: Vector[Mapping] = graphQlSdl.objectTypes.map { objectType =>
+      Mapping(previous = objectType.previousName, next = objectType.name)
     }
 
-    val enumMapping: Vector[Rename] = graphQlSdl.enumTypes.map { enumType =>
-      Rename(previous = enumType.previousName, next = enumType.name)
+    val enumMapping: Vector[Mapping] = graphQlSdl.enumTypes.map { enumType =>
+      Mapping(previous = enumType.previousName, next = enumType.name)
     }
 
-    val fieldMapping: Vector[FieldRename] =
+    val fieldMapping: Vector[FieldMapping] =
       for {
         objectType <- graphQlSdl.objectTypes
         fieldDef   <- objectType.fields
       } yield {
-        FieldRename(
+        FieldMapping(
           previousModel = objectType.previousName,
           previousField = fieldDef.previousName,
           nextModel = objectType.name,

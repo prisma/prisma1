@@ -25,7 +25,7 @@ class BulkExport(project: Project)(implicit apiDependencies: ApiDependencies) {
     val start            = JsonBundle(Vector.empty, 0)
     val request          = json.convertTo[ExportRequest]
     val hasListFields    = project.models.flatMap(_.scalarListFields).nonEmpty
-    val zippedRelations  = RelationInfo(dataResolver, project.relations.map(r => toRelationData(r, project)).zipWithIndex, request.cursor)
+    val zippedRelations  = RelationInfo(dataResolver, project.relations.map(r => toRelationData(r, project.schema)).zipWithIndex, request.cursor)
     val zippedListModels = project.models.filter(m => m.scalarListFields.nonEmpty).zipWithIndex
 
     val response = request.fileType match {

@@ -157,7 +157,7 @@ object DatabaseQueryBuilder {
   }
 
   def selectFromScalarList(projectId: String, modelName: String, fieldName: String, nodeIds: Vector[String]): SQLActionBuilder = {
-    sql"select nodeId, position, value from `#$projectId`.`#${modelName}_#${fieldName}` where nodeId in (" concat combineByComma(nodeIds.map(escapeUnsafeParam)) concat sql")"
+    sql"select nodeId, position, value from `#$projectId`.`#${modelName}_#$fieldName` where nodeId in (" concat combineByComma(nodeIds.map(escapeUnsafeParam)) concat sql")"
   }
 
   def whereClauseByCombiningPredicatesByOr(predicates: Vector[NodeSelector]) = {
@@ -176,7 +176,7 @@ object DatabaseQueryBuilder {
                                      parentNodeIds: List[String],
                                      args: Option[QueryArguments]): (SQLActionBuilder, ResultTransform) = {
 
-    val fieldTable        = relationField.relatedModel(project).get.name
+    val fieldTable        = relationField.relatedModel(project.schema).get.name
     val unsafeRelationId  = relationField.relation.get.id
     val modelRelationSide = relationField.relationSide.get.toString
     val fieldRelationSide = relationField.oppositeRelationSide.get.toString
@@ -203,12 +203,13 @@ object DatabaseQueryBuilder {
 
     // see https://github.com/graphcool/internal-docs/blob/master/relations.md#findings
     val resolveFromBothSidesAndMerge = relationField.relation.get
-      .isSameFieldSameModelRelation(project) && !relationField.isList
+      .isSameFieldSameModelRelation(project.schema) && !relationField.isList
 
     val query = resolveFromBothSidesAndMerge match {
       case false =>
         parentNodeIds.distinct.view.zipWithIndex.foldLeft(sql"")((a, b) =>
           a concat unionIfNotFirst(b._2) concat createQuery(b._1, modelRelationSide, fieldRelationSide))
+
       case true =>
         parentNodeIds.distinct.view.zipWithIndex.foldLeft(sql"")(
           (a, b) =>
@@ -226,7 +227,7 @@ object DatabaseQueryBuilder {
                                 parentNodeIds: List[String],
                                 args: Option[QueryArguments]): (SQLActionBuilder, ResultTransform) = {
 
-    val fieldTable        = relationField.relatedModel(project).get.name
+    val fieldTable        = relationField.relatedModel(project.schema).get.name
     val unsafeRelationId  = relationField.relation.get.id
     val modelRelationSide = relationField.relationSide.get.toString
     val fieldRelationSide = relationField.oppositeRelationSide.get.toString
@@ -267,7 +268,7 @@ object DatabaseQueryBuilder {
       metaTables <- MTable
                      .getTables(cat = Some(projectId), schemaPattern = None, namePattern = tableName, types = None)
       columns     <- metaTables.head.getColumns
-      indexes     <- metaTables.head.getIndexInfo(false, false)
+      indexes     <- metaTables.head.getIndexInfo(unique = false, approximate = false)
       foreignKeys <- metaTables.head.getImportedKeys
     } yield
       TableInfo(

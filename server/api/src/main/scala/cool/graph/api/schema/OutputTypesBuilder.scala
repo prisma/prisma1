@@ -150,7 +150,7 @@ case class OutputTypesBuilder(project: Project, objectTypes: Map[String, ObjectT
                           toModel: Model,
                           objectType: ObjectType[C, DataItem]): List[sangria.schema.Field[C, SimpleResolveOutput]] =
     List(
-      schema.Field[C, SimpleResolveOutput, Any, Any](name = relation.bName(project),
+      schema.Field[C, SimpleResolveOutput, Any, Any](name = relation.bName(project.schema),
                                                      fieldType = OptionType(objectType),
                                                      description = None,
                                                      arguments = List(),
@@ -158,12 +158,12 @@ case class OutputTypesBuilder(project: Project, objectTypes: Map[String, ObjectT
                                                        ctx.value.item
                                                      }),
       schema.Field[C, SimpleResolveOutput, Any, Any](
-        name = relation.aName(project),
-        fieldType = OptionType(objectTypes(fromField.relatedModel(project).get.name)),
+        name = relation.aName(project.schema),
+        fieldType = OptionType(objectTypes(fromField.relatedModel(project.schema).get.name)),
         description = None,
         arguments = List(),
         resolve = ctx => {
-          val mutationKey = s"${fromField.relation.get.aName(project = project)}Id"
+          val mutationKey = s"${fromField.relation.get.aName(project.schema)}Id"
           masterDataResolver
             .resolveByUnique(NodeSelector(toModel, toModel.getFieldByName_!("id"), GraphQLIdGCValue(ctx.value.args.arg[String](mutationKey))))
             .map(_.get)

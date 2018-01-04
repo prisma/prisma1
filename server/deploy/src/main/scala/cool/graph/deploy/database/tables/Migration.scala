@@ -90,7 +90,7 @@ object MigrationTable {
     baseQuery.take(1).result.headOption
   }
 
-  def distinctUnmigratedProjectIds(): FixedSqlStreamingAction[Seq[String], Project, Read] = {
+  def distinctUnmigratedProjectIds(): FixedSqlStreamingAction[Seq[String], String, Read] = {
     val baseQuery = for {
       migration <- Tables.Migrations
       if migration.status inSet MigrationStatus.openStates

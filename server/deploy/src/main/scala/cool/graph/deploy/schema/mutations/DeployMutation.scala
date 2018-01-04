@@ -1,11 +1,11 @@
 package cool.graph.deploy.schema.mutations
 
-import cool.graph.deploy.database.persistence.MigrationPersistence
+import cool.graph.deploy.database.persistence.{MigrationPersistence, ProjectPersistence}
 import cool.graph.deploy.migration.validation.{SchemaError, SchemaErrors, SchemaSyntaxValidator}
 import cool.graph.deploy.migration._
-import cool.graph.deploy.migration.inference.{MigrationStepsInferrer, SchemaInferrer}
+import cool.graph.deploy.migration.inference.{InvalidGCValue, MigrationStepsInferrer, RelationDirectiveNeeded, SchemaInferrer}
 import cool.graph.deploy.migration.migrator.Migrator
-import cool.graph.shared.models.{Migration, MigrationStep, Project}
+import cool.graph.shared.models.{Migration, MigrationStep, Project, Schema}
 import org.scalactic.{Bad, Good}
 import sangria.parser.QueryParser
 
@@ -17,9 +17,10 @@ case class DeployMutation(
     args: DeployMutationInput,
     project: Project,
     schemaInferrer: SchemaInferrer,
-    migrationStepsProposer: MigrationStepsInferrer,
-    renameInferer: SchemaMapper,
+    migrationStepsInferrer: MigrationStepsInferrer,
+    schemaMapper: SchemaMapper,
     migrationPersistence: MigrationPersistence,
+    projectPersistence: ProjectPersistence,
     migrator: Migrator
 )(
     implicit ec: ExecutionContext
@@ -36,7 +37,6 @@ case class DeployMutation(
         MutationSuccess(
           DeployMutationPayload(
             clientMutationId = args.clientMutationId,
-            project = project,
             migration = None,
             errors = schemaErrors
           ))
@@ -47,28 +47,26 @@ case class DeployMutation(
   }
 
   private def performDeployment: Future[MutationSuccess[DeployMutationPayload]] = {
-    schemaInferrer.infer(baseProject = project, graphQlSdl) match {
-      case Good(inferredProject) =>
-        val nextProject = inferredProject.copy(secrets = args.secrets)
-        val renames     = renameInferer.createMapping(graphQlSdl)
-        val steps       = migrationStepsProposer.propose(project, nextProject, renames)
+    schemaInferrer.infer(project.schema, graphQlSdl) match {
+      case Good(inferredNextSchema) =>
+        val schemaMapping = schemaMapper.createMapping(graphQlSdl)
+        val steps         = migrationStepsInferrer.infer(project.schema, inferredNextSchema, schemaMapping)
 
-        handleMigration(nextProject, steps).map { migration =>
-          MutationSuccess(
-            DeployMutationPayload(
-              args.clientMutationId,
-              nextProject,
-              migration,
-              schemaErrors
-            ))
-        }
+        handleProjectUpdate().flatMap(_ =>
+          handleMigration(inferredNextSchema, steps).map { migration =>
+            MutationSuccess(
+              DeployMutationPayload(
+                args.clientMutationId,
+                migration,
+                schemaErrors
+              ))
+        })
 
       case Bad(err) =>
         Future.successful {
           MutationSuccess(
             DeployMutationPayload(
               clientMutationId = args.clientMutationId,
-              project = project,
               migration = None,
               errors = List(err match {
                 case RelationDirectiveNeeded(t1, t1Fields, t2, t2Fields) => SchemaError.global(s"Relation directive required for types $t1 and $t2.")
@@ -79,11 +77,17 @@ case class DeployMutation(
     }
   }
 
-  private def handleMigration(nextProject: Project, steps: Vector[MigrationStep]): Future[Option[Migration]] = {
-    val changesDetected = steps.nonEmpty || project.secrets != args.secrets
+  private def handleProjectUpdate(): Future[_] = {
+    if (project.secrets != args.secrets && !args.dryRun.getOrElse(false)) {
+      projectPersistence.update(project.copy(secrets = args.secrets))
+    } else {
+      Future.unit
+    }
+  }
 
-    if (changesDetected && !args.dryRun.getOrElse(false)) {
-      migrator.schedule(nextProject, steps).map(Some(_))
+  private def handleMigration(nextSchema: Schema, steps: Vector[MigrationStep]): Future[Option[Migration]] = {
+    if (steps.nonEmpty && !args.dryRun.getOrElse(false)) {
+      migrator.schedule(project.id, nextSchema, steps).map(Some(_))
     } else {
       Future.successful(None)
     }
@@ -100,7 +104,6 @@ case class DeployMutationInput(
 
 case class DeployMutationPayload(
     clientMutationId: Option[String],
-    project: Project,
     migration: Option[Migration],
     errors: Seq[SchemaError]
 ) extends sangria.relay.Mutation

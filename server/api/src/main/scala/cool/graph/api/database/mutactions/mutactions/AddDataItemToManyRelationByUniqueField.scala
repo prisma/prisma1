@@ -21,8 +21,8 @@ case class AddDataItemToManyRelationByUniqueField(
   )
 
   val relation: Relation       = fromField.relation.get
-  val aModel: Model            = relation.getModelA_!(project)
-  val bModel: Model            = relation.getModelB_!(project)
+  val aModel: Model            = relation.getModelA_!(project.schema)
+  val bModel: Model            = relation.getModelB_!(project.schema)
   val connectByUniqueValueForB = aModel.name == fromModel.name
 
   override def execute: Future[ClientSqlStatementResult[Any]] = Future.successful {

@@ -5,14 +5,13 @@ import cool.graph.shared.models
 import play.api.libs.json.Json
 
 object ModelToDbMapper {
-  import MigrationStepsJsonFormatter._
+  import cool.graph.shared.models.MigrationStepsJsonFormatter._
   import cool.graph.shared.models.ProjectJsonFormatter._
 
   def convert(project: models.Project): Project = {
-    val secretsJson        = Json.toJson(project.secrets)
-    val seatsJson          = Json.toJson(project.seats)
-    val functionsJson      = Json.toJson(project.functions)
-    val featureTogglesJson = Json.toJson(project.featureToggles)
+    val secretsJson   = Json.toJson(project.secrets)
+    val seatsJson     = Json.toJson(project.seats)
+    val functionsJson = Json.toJson(project.functions)
 
     Project(
       id = project.id,
@@ -22,8 +21,7 @@ object ModelToDbMapper {
       seatsJson,
       project.allowQueries,
       project.allowMutations,
-      functionsJson,
-      featureTogglesJson
+      functionsJson
     )
   }
 

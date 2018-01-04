@@ -28,7 +28,6 @@ object InternalDatabaseSchema {
         `allowQueries` tinyint(1) NOT NULL DEFAULT '1',
         `allowMutations` tinyint(1) NOT NULL DEFAULT '1',
         `functions` mediumtext COLLATE utf8_unicode_ci DEFAULT NULL,
-        `featureToggles` mediumtext COLLATE utf8_unicode_ci DEFAULT NULL,
         PRIMARY KEY (`id`)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;""",
     // Migration

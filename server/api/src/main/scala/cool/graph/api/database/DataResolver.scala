@@ -133,8 +133,9 @@ case class DataResolver(project: Project, useMasterDatabaseOnly: Boolean = false
       .run(query)
       .map {
         case Some(modelId) =>
-          val model = project.getModelById_!(modelId.trim)
-          resolveByUnique(NodeSelector(model, model.getFieldByName_!("id"), GraphQLIdGCValue(globalId))).map(_.map(mapDataItem(model)).map(_.copy(typeName = Some(model.name))))
+          val model = project.schema.getModelById_!(modelId.trim)
+          resolveByUnique(NodeSelector(model, model.getFieldByName_!("id"), GraphQLIdGCValue(globalId)))
+            .map(_.map(mapDataItem(model)).map(_.copy(typeName = Some(model.name))))
         case _ => Future.successful(None)
       }
       .flatMap(identity)
@@ -163,7 +164,7 @@ case class DataResolver(project: Project, useMasterDatabaseOnly: Boolean = false
       "resolveByRelation",
       readonlyClientDatabase
         .run(readOnlyDataItem(query))
-        .map(_.toList.map(mapDataItem(fromField.relatedModel(project).get)))
+        .map(_.toList.map(mapDataItem(fromField.relatedModel(project.schema).get)))
         .map(resultTransform)
     )
   }
@@ -177,7 +178,7 @@ case class DataResolver(project: Project, useMasterDatabaseOnly: Boolean = false
       "resolveByRelation",
       readonlyClientDatabase
         .run(readOnlyDataItem(query))
-        .map(_.toList.map(mapDataItem(fromField.relatedModel(project).get)))
+        .map(_.toList.map(mapDataItem(fromField.relatedModel(project.schema).get)))
         .map((items: List[DataItem]) => {
           val itemGroupsByModelId = items.groupBy(item => {
             item.userData
@@ -195,7 +196,8 @@ case class DataResolver(project: Project, useMasterDatabaseOnly: Boolean = false
     )
   }
 
-  def resolveByModelAndId(model: Model, id: Id): Future[Option[DataItem]]                  = resolveByUnique(NodeSelector(model, model.getFieldByName_!("id"), GraphQLIdGCValue(id)))
+  def resolveByModelAndId(model: Model, id: Id): Future[Option[DataItem]] =
+    resolveByUnique(NodeSelector(model, model.getFieldByName_!("id"), GraphQLIdGCValue(id)))
   def resolveByModelAndIdWithoutValidation(model: Model, id: Id): Future[Option[DataItem]] = resolveByUniqueWithoutValidation(model, "id", id)
 
   def countByRelationManyModels(fromField: Field, fromNodeIds: List[String], args: Option[QueryArguments]): Future[List[(String, Int)]] = {

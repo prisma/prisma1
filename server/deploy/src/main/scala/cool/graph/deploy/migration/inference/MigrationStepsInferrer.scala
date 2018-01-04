@@ -3,45 +3,20 @@ package cool.graph.deploy.migration.inference
 import cool.graph.shared.models._
 
 trait MigrationStepsInferrer {
-  def propose(previousSchema: Schema, nextSchema: Schema, renames: SchemaMapping): Vector[MigrationStep]
+  def infer(previousSchema: Schema, nextSchema: Schema, renames: SchemaMapping): Vector[MigrationStep]
 }
 
 object MigrationStepsInferrer {
   def apply(): MigrationStepsInferrer = {
-    apply((previous, next, renames) => MigrationStepsProposerImpl(previous, next, renames).evaluate())
+    apply((previous, next, renames) => MigrationStepsInferrerImpl(previous, next, renames).evaluate())
   }
 
   def apply(fn: (Schema, Schema, SchemaMapping) => Vector[MigrationStep]): MigrationStepsInferrer = new MigrationStepsInferrer {
-    override def propose(previousSchema: Schema, nextSchema: Schema, renames: SchemaMapping): Vector[MigrationStep] = fn(previousSchema, nextSchema, renames)
+    override def infer(previousSchema: Schema, nextSchema: Schema, renames: SchemaMapping): Vector[MigrationStep] = fn(previousSchema, nextSchema, renames)
   }
 }
 
-//todo This is not really tracking renames. Renames can be deducted from this mapping, but all it does is mapping previous to current values.
-case class SchemaMapping(
-    models: Vector[Rename] = Vector.empty,
-    enums: Vector[Rename] = Vector.empty,
-    fields: Vector[FieldRename] = Vector.empty
-) {
-  def getPreviousModelName(nextModel: String): String = models.find(_.next == nextModel).map(_.previous).getOrElse(nextModel)
-  def getPreviousEnumName(nextEnum: String): String   = enums.find(_.next == nextEnum).map(_.previous).getOrElse(nextEnum)
-  def getPreviousFieldName(nextModel: String, nextField: String): String =
-    fields.find(r => r.nextModel == nextModel && r.nextField == nextField).map(_.previousField).getOrElse(nextField)
-
-  def getNextModelName(previousModel: String): String = models.find(_.previous == previousModel).map(_.next).getOrElse(previousModel)
-  def getNextEnumName(previousEnum: String): String   = enums.find(_.previous == previousEnum).map(_.next).getOrElse(previousEnum)
-  def getNextFieldName(previousModel: String, previousField: String) =
-    fields.find(r => r.previousModel == previousModel && r.previousField == previousField).map(_.nextField).getOrElse(previousField)
-}
-
-case class Rename(previous: String, next: String)
-case class FieldRename(previousModel: String, previousField: String, nextModel: String, nextField: String)
-
-object SchemaMapping {
-  val empty = SchemaMapping()
-}
-
-// todo Doesnt propose a thing. It generates the steps, but they cant be rejected or approved. Naming is off.
-case class MigrationStepsProposerImpl(previousSchema: Schema, nextSchema: Schema, renames: SchemaMapping) {
+case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema, renames: SchemaMapping) {
   import cool.graph.util.Diff._
 
   /**

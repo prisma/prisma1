@@ -14,8 +14,7 @@ case class Project(
     seats: JsValue,
     allowQueries: Boolean,
     allowMutations: Boolean,
-    functions: JsValue,
-    featureToggles: JsValue
+    functions: JsValue
 )
 
 class ProjectTable(tag: Tag) extends Table[Project](tag, "Project") {
@@ -29,9 +28,8 @@ class ProjectTable(tag: Tag) extends Table[Project](tag, "Project") {
   def allowQueries   = column[Boolean]("allowQueries")
   def allowMutations = column[Boolean]("allowMutations")
   def functions      = column[JsValue]("functions")
-  def featureToggles = column[JsValue]("featureToggles")
 
-  def * = (id, ownerId, webhookUrl, secrets, seats, allowQueries, allowMutations, functions, featureToggles) <> ((Project.apply _).tupled, Project.unapply)
+  def * = (id, ownerId, webhookUrl, secrets, seats, allowQueries, allowMutations, functions) <> ((Project.apply _).tupled, Project.unapply)
 }
 
 object ProjectTable {

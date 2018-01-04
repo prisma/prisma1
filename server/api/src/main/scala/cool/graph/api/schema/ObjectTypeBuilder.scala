@@ -142,8 +142,8 @@ class ObjectTypeBuilder(
 
   def resolveConnection(field: Field): OutputType[Any] = {
     field.isList match {
-      case true  => ListType(modelObjectTypes(field.relatedModel(project).get.name))
-      case false => modelObjectTypes(field.relatedModel_!(project).name)
+      case true  => ListType(modelObjectTypes(field.relatedModel(project.schema).get.name))
+      case false => modelObjectTypes(field.relatedModel_!(project.schema).name)
     }
   }
 
@@ -151,8 +151,8 @@ class ObjectTypeBuilder(
     (field.isHidden, field.isScalar, field.isList) match {
       case (true, _, _)      => List()
       case (_, true, _)      => List()
-      case (_, false, true)  => mapToListConnectionArguments(field.relatedModel(project).get)
-      case (_, false, false) => mapToSingleConnectionArguments(field.relatedModel(project).get)
+      case (_, false, true)  => mapToListConnectionArguments(field.relatedModel(project.schema).get)
+      case (_, false, false) => mapToSingleConnectionArguments(field.relatedModel(project.schema).get)
     }
   }
 
@@ -208,9 +208,9 @@ class ObjectTypeBuilder(
                   Some(
                     FilterElementRelation(
                       fromModel = model,
-                      toModel = field.get.relatedModel(project).get,
+                      toModel = field.get.relatedModel(project.schema).get,
                       relation = field.get.relation.get,
-                      filter = generateFilterElement(typedValue, field.get.relatedModel(project).get, isSubscriptionFilter)
+                      filter = generateFilterElement(typedValue, field.get.relatedModel(project.schema).get, isSubscriptionFilter)
                     ))
                 )
               }
@@ -284,7 +284,7 @@ class ObjectTypeBuilder(
     val item: DataItem = unwrapDataItemFromContext(ctx)
 
     if (!field.isScalar) {
-      val arguments = extractQueryArgumentsFromContext(field.relatedModel(project).get, ctx.asInstanceOf[Context[ApiUserContext, Unit]])
+      val arguments = extractQueryArgumentsFromContext(field.relatedModel(project.schema).get, ctx.asInstanceOf[Context[ApiUserContext, Unit]])
 
       if (field.isList) {
         DeferredValue(

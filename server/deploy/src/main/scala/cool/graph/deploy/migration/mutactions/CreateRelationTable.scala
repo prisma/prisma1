@@ -17,5 +17,5 @@ case class CreateRelationTable(projectId: String, schema: Schema, relation: Rela
           .createRelationTable(projectId = projectId, tableName = relation.id, aTableName = aModel.name, bTableName = bModel.name)))
   }
 
-  override def rollback = Some(DeleteRelationTable(project, relation).execute)
+  override def rollback = Some(DeleteRelationTable(projectId, schema, relation).execute)
 }

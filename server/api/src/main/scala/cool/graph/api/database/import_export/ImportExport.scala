@@ -1,8 +1,8 @@
 package cool.graph.api.database.import_export
 
 import cool.graph.api.database.{DataItem, DataResolver}
-import cool.graph.shared.models.{Model, Project, Relation}
 import cool.graph.shared.models.TypeIdentifier.TypeIdentifier
+import cool.graph.shared.models.{Model, Relation, Schema}
 import spray.json.{DefaultJsonProtocol, JsArray, JsBoolean, JsFalse, JsNull, JsNumber, JsObject, JsString, JsTrue, JsValue, JsonFormat, RootJsonFormat}
 
 package object ImportExport {
@@ -64,8 +64,8 @@ package object ImportExport {
 
   case class RelationData(relationId: String, leftModel: String, leftField: String, rightModel: String, rightField: String)
 
-  def toRelationData(r: Relation, project: Project): RelationData = {
-    RelationData(r.id, r.getModelB_!(project).name, r.getModelBField_!(project).name, r.getModelA_!(project).name, r.getModelAField_!(project).name)
+  def toRelationData(r: Relation, schema: Schema): RelationData = {
+    RelationData(r.id, r.getModelB_!(schema).name, r.getModelBField_!(schema).name, r.getModelA_!(schema).name, r.getModelAField_!(schema).name)
   }
 
   case class DataItemsPage(items: Seq[DataItem], hasMore: Boolean) { def itemCount: Int = items.length }

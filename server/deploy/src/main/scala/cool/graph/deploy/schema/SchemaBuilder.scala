@@ -139,7 +139,6 @@ case class SchemaBuilderImpl(
       typeName = "Deploy",
       inputFields = DeployField.inputFields,
       outputFields = sangria.schema.fields[SystemUserContext, DeployMutationPayload](
-        Field("project", OptionType(ProjectType.Type), resolve = (ctx: Context[SystemUserContext, DeployMutationPayload]) => ctx.value.project),
         Field("errors", ListType(SchemaErrorType.Type), resolve = (ctx: Context[SystemUserContext, DeployMutationPayload]) => ctx.value.errors),
         Field("migration", OptionType(MigrationType.Type), resolve = (ctx: Context[SystemUserContext, DeployMutationPayload]) => ctx.value.migration)
       ),
@@ -151,9 +150,10 @@ case class SchemaBuilderImpl(
                        args = args,
                        project = project,
                        schemaInferrer = schemaInferrer,
-                       migrationStepsProposer = migrationStepsInferrer,
-                       renameInferer = schemaMapper,
+                       migrationStepsInferrer = migrationStepsInferrer,
+                       schemaMapper = schemaMapper,
                        migrationPersistence = migrationPersistence,
+                       projectPersistence = projectPersistence,
                        migrator = migrator
                      ).execute
           } yield result

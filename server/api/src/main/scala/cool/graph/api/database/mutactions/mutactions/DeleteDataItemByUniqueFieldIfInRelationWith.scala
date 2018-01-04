@@ -21,7 +21,7 @@ case class DeleteDataItemByUniqueFieldIfInRelationWith(
   )
 
   val relation: Relation      = fromField.relation.get
-  val aModel: Model           = relation.getModelA_!(project)
+  val aModel: Model           = relation.getModelA_!(project.schema)
   val deleteByUniqueValueForB = aModel.name == fromModel.name
 
   override def execute: Future[ClientSqlStatementResult[Any]] = Future.successful {

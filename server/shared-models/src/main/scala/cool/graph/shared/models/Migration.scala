@@ -33,18 +33,17 @@ object MigrationStatus extends Enumeration {
 }
 
 object Migration {
-  def apply(projectId: String, steps: Vector[MigrationStep]): Migration = Migration(
+  def apply(projectId: String, schema: Schema, steps: Vector[MigrationStep]): Migration = Migration(
     projectId,
     revision = 0,
-    schema = Schema(),
+    schema = schema,
     status = MigrationStatus.Pending,
     progress = 0,
     steps,
     errors = Vector.empty
   )
 
-//  def empty(project: Project) = apply(project, Vector.empty)
-  def empty(projectId: String) = apply(projectId, Vector.empty)
+  def empty(projectId: String) = apply(projectId, Schema(), Vector.empty)
 }
 
 sealed trait MigrationStep

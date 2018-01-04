@@ -120,7 +120,7 @@ case class SqlMutactions(dataResolver: DataResolver) {
   def getMutactionsForNestedMutation(model: Model, args: CoolArgs, fromId: Id): Seq[ClientSqlMutaction] = {
     val x = for {
       field          <- model.relationFields
-      subModel       = field.relatedModel_!(project)
+      subModel       = field.relatedModel_!(project.schema)
       nestedMutation <- args.subNestedMutation(field, subModel) // this is the input object containing the nested mutation
     } yield {
       val outerWhere = NodeSelector(model, field, GraphQLIdGCValue(fromId))
@@ -234,8 +234,8 @@ case class SqlMutactions(dataResolver: DataResolver) {
   }
 
   private def runRequiredRelationCheckWithInvalidFunction(field: Field, isInvalid: () => Future[Boolean]): Option[InvalidInputClientSqlMutaction] = {
-    val relatedField = field.relatedFieldEager(project)
-    val relatedModel = field.relatedModel_!(project)
+    val relatedField = field.relatedFieldEager(project.schema)
+    val relatedModel = field.relatedModel_!(project.schema)
 
     if (relatedField.isRequired && !relatedField.isList) {
       Some(InvalidInputClientSqlMutaction(RelationIsRequired(fieldName = relatedField.name, typeName = relatedModel.name), isInvalid = isInvalid))

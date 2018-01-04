@@ -8,5 +8,5 @@ trait ProjectPersistence {
   def load(id: String): Future[Option[Project]]
   def loadAll(): Future[Seq[Project]]
   def create(project: Project): Future[Unit]
-//  def loadProjectsWithUnappliedMigrations(): Future[Seq[Project]]
+  def update(project: Project): Future[_]
 }

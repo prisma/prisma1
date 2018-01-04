@@ -44,13 +44,14 @@ class ToOneDeferredResolver(dataResolver: DataResolver) {
 
     // see https://github.com/graphcool/internal-docs/blob/master/relations.md#findings
     val resolveFromBothSidesAndMerge =
-      deferred.relationField.relation.get.isSameFieldSameModelRelation(project)
+      deferred.relationField.relation.get.isSameFieldSameModelRelation(project.schema)
 
     dataItems.find(
       dataItem => {
         resolveFromBothSidesAndMerge match {
           case false =>
             matchesRelation(dataItem, deferred.relationField.relationSide.get.toString)
+
           case true =>
             dataItem.id != deferred.parentNodeId && (matchesRelation(dataItem, deferred.relationField.relationSide.get.toString) ||
               matchesRelation(dataItem, deferred.relationField.oppositeRelationSide.get.toString))

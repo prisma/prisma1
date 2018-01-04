@@ -30,7 +30,7 @@ case class RemoveDataItemFromRelationByToAndFromField(project: Project, relation
 
   override def verify(resolver: DataResolver): Future[Try[MutactionVerificationSuccess] with Product with Serializable] = {
     def dataItemExists(field: Field, id: Id): Future[Boolean] = {
-      val model = project.getModelByFieldId_!(field.id)
+      val model = project.schema.getModelByFieldId_!(field.id)
       resolver.existsByModelAndId(model, id)
     }
     val dataItemAExists = dataItemExists(aField, aId)

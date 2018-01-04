@@ -2,11 +2,11 @@ package cool.graph.deploy.database.persistence
 
 import cool.graph.deploy.database.tables.{Migration, Project}
 import cool.graph.shared.models
-import cool.graph.shared.models.{FeatureToggle, MigrationStep, Schema, Seat}
+import cool.graph.shared.models.{MigrationStep, Schema, Seat}
 
 object DbToModelMapper {
+  import cool.graph.shared.models.MigrationStepsJsonFormatter._
   import cool.graph.shared.models.ProjectJsonFormatter._
-  import MigrationStepsJsonFormatter._
 
 //  def convert(migration: Migration): models.Project = {
 //    val projectModel = migration.schema.as[models.Project]
@@ -29,8 +29,7 @@ object DbToModelMapper {
       project.seats.as[List[Seat]],
       allowQueries = project.allowQueries,
       allowMutations = project.allowMutations,
-      project.functions.as[List[models.Function]],
-      project.featureToggles.as[List[FeatureToggle]]
+      project.functions.as[List[models.Function]]
     )
   }
 

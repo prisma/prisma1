@@ -40,8 +40,8 @@ case class UpdateDataItem(project: Project,
 
   override def execute: Future[ClientSqlStatementResult[Any]] = {
     val mirrorUpdates = getFieldMirrors.flatMap(mirror => {
-      val relation = project.getRelationById_!(mirror.relationId)
-      val field    = project.getFieldById_!(mirror.fieldId)
+      val relation = project.schema.getRelationById_!(mirror.relationId)
+      val field    = project.schema.getFieldById_!(mirror.fieldId)
 
       values.find(_.name == field.name).map(_.value) match {
         case Some(value) =>
@@ -49,7 +49,7 @@ case class UpdateDataItem(project: Project,
             DatabaseMutationBuilder.updateRelationRow(
               project.id,
               mirror.relationId,
-              relation.fieldSide(project, field).toString,
+              relation.fieldSide(project.schema, field).toString,
               id,
               Map(RelationFieldMirrorUtils.mirrorColumnName(project, field, relation) -> value)
             ))
@@ -76,10 +76,13 @@ case class UpdateDataItem(project: Project,
     implicit val anyFormat = JsonFormats.AnyJsonFormat
     Some({
       // https://dev.mysql.com/doc/refman/5.5/en/error-messages-server.html#error_er_dup_entry
-      case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1062 && GetFieldFromSQLUniqueException.getFieldOptionFromArgumentValueList(values.toList, e).isDefined=>
+      case e: SQLIntegrityConstraintViolationException
+          if e.getErrorCode == 1062 && GetFieldFromSQLUniqueException.getFieldOptionFromArgumentValueList(values.toList, e).isDefined =>
         APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOptionFromArgumentValueList(values.toList, e).get)
+
       case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1452 =>
         APIErrors.NodeDoesNotExist(id)
+
       case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1048 =>
         APIErrors.FieldCannotBeNull()
     })

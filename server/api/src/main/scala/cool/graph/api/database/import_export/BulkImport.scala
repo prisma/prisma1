@@ -1,17 +1,16 @@
 package cool.graph.api.database.import_export
 
 import cool.graph.api.ApiDependencies
+import cool.graph.api.database.import_export.ImportExport.MyJsonProtocol._
 import cool.graph.api.database.import_export.ImportExport._
 import cool.graph.api.database.{DatabaseMutationBuilder, ProjectRelayId, ProjectRelayIdTable}
 import cool.graph.cuid.Cuid
 import cool.graph.shared.models._
 import slick.dbio.{DBIOAction, Effect, NoStream}
+import slick.jdbc
 import slick.jdbc.MySQLProfile.api._
 import slick.lifted.TableQuery
 import spray.json._
-import MyJsonProtocol._
-import slick.jdbc
-import slick.jdbc.MySQLProfile
 
 import scala.concurrent.Future
 import scala.util.Try
@@ -79,7 +78,7 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) {
   private def generateImportNodesDBActions(nodes: Vector[ImportNode]): DBIOAction[Vector[Try[Int]], NoStream, Effect.Write] = {
     val items = nodes.map { element =>
       val id    = element.identifier.id
-      val model = project.getModelByName_!(element.identifier.typeName)
+      val model = project.schema.getModelByName_!(element.identifier.typeName)
 
       // todo: treat separately
 //      val listFields: Map[String, String] = model.scalarListFields.map(field => field.name -> "[]").toMap
@@ -99,7 +98,7 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) {
     val relayIds: TableQuery[ProjectRelayIdTable] = TableQuery(new ProjectRelayIdTable(_, project.id))
     val relay = nodes.map { element =>
       val id    = element.identifier.id
-      val model = project.getModelByName_!(element.identifier.typeName)
+      val model = project.schema.getModelByName_!(element.identifier.typeName)
       val x     = relayIds += ProjectRelayId(id = id, model.id)
       x.asTry
     }
@@ -108,7 +107,7 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) {
 
   private def generateImportRelationsDBActions(relations: Vector[ImportRelation]): DBIOAction[Vector[Try[Int]], NoStream, Effect.Write] = {
     val x = relations.map { element =>
-      val fromModel                                                 = project.getModelByName_!(element.left.identifier.typeName)
+      val fromModel                                                 = project.schema.getModelByName_!(element.left.identifier.typeName)
       val fromField                                                 = fromModel.getFieldByName_!(element.left.fieldName)
       val relationSide: cool.graph.shared.models.RelationSide.Value = fromField.relationSide.get
       val relation: Relation                                        = fromField.relation.get

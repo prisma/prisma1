@@ -37,7 +37,7 @@ case class SubscriptionQueryValidator(project: Project)(implicit dependencies: S
         Bad(Seq(SubscriptionQueryError("The provided query doesn't include any known model name. Please check for the latest subscriptions API.")))
     }
 
-  def modelFor(model: String): Model Or Seq[SubscriptionQueryError] = project.getModelByName(model) match {
+  def modelFor(model: String): Model Or Seq[SubscriptionQueryError] = project.schema.getModelByName(model) match {
     case Some(model) => Good(model)
     case None        => Bad(Seq(SubscriptionQueryError("The provided query doesn't include any known model name. Please check for the latest subscriptions API.")))
   }

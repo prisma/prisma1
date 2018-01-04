@@ -29,7 +29,8 @@ case class ProjectPersistenceImpl(
     internalDatabase.run(ProjectTable.loadAllWithMigration()).map(_.map { case (p, m) => DbToModelMapper.convert(p, m) })
   }
 
-//  override def loadProjectsWithUnappliedMigrations(): Future[Seq[Project]] = {
-//    internalDatabase.run(ProjectTable.allWithUnappliedMigrations).map(_.map(p => DbToModelMapper.convert(p)))
-//  }
+  override def update(project: Project): Future[_] = {
+    val dbRow = ModelToDbMapper.convert(project)
+    internalDatabase.run(Tables.Projects.filter(_.id === project.id).update(dbRow))
+  }
 }

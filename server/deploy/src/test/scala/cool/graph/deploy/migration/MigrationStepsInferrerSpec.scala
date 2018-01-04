@@ -1,6 +1,6 @@
 package cool.graph.deploy.migration
 
-import cool.graph.deploy.migration.inference.{FieldRename, Rename, SchemaMapping}
+import cool.graph.deploy.migration.inference.{FieldMapping, Mapping, SchemaMapping}
 import cool.graph.deploy.specutils.DeploySpecBase
 import cool.graph.shared.models._
 import cool.graph.shared.project_dsl.SchemaDsl.SchemaBuilder
@@ -71,7 +71,7 @@ class MigrationStepsInferrerSpec extends FlatSpec with Matchers with DeploySpecB
 
   "Updating models" should "create UpdateModel migration steps" in {
     val renames = SchemaMapping(
-      models = Vector(Rename(previous = "Test", next = "Test2"))
+      models = Vector(Mapping(previous = "Test", next = "Test2"))
     )
 
     val previousProject = SchemaBuilder() { schema =>
@@ -125,7 +125,7 @@ class MigrationStepsInferrerSpec extends FlatSpec with Matchers with DeploySpecB
   "Updating fields" should "create UpdateField migration steps" in {
     val renames = SchemaMapping(
       fields = Vector(
-        FieldRename("Test", "a", "Test", "a2")
+        FieldMapping("Test", "a", "Test", "a2")
       )
     )
 
@@ -298,7 +298,7 @@ class MigrationStepsInferrerSpec extends FlatSpec with Matchers with DeploySpecB
 
   "Updating an Enum Name" should "create one UpdateEnum and one UpdateField for each field using that Enum" in {
     val renames = SchemaMapping(
-      enums = Vector(Rename(previous = "TodoStatus", next = "TodoStatusNew"))
+      enums = Vector(Mapping(previous = "TodoStatus", next = "TodoStatusNew"))
     )
 
     val previousProject = SchemaBuilder() { schema =>
