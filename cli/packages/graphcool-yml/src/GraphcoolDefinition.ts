@@ -52,6 +52,7 @@ export class GraphcoolDefinitionClass {
         this.definitionPath,
         args,
         this.out,
+        this.envVars,
       )
       this.definitionString = fs.readFileSync(this.definitionPath, 'utf-8')
       this.typesString = this.getTypesString(this.definition)

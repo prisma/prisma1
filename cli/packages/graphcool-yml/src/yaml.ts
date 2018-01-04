@@ -20,6 +20,7 @@ export async function readDefinition(
   filePath: string,
   args: Args,
   out: IOutput = new Output(),
+  envVars?: any
 ): Promise<GraphcoolDefinition> {
   if (!fs.pathExistsSync(filePath)) {
     throw new Error(`${filePath} could not be found.`)
@@ -27,7 +28,7 @@ export async function readDefinition(
   const file = fs.readFileSync(filePath, 'utf-8')
   const json = yaml.safeLoad(file) as GraphcoolDefinition
 
-  const vars = new Variables(filePath, args, out)
+  const vars = new Variables(filePath, args, out, envVars)
   const populatedJson = await vars.populateJson(json)
   if (populatedJson.custom) {
     delete populatedJson.custom

@@ -22,15 +22,18 @@ export class Variables {
   fileName: string
   options: Args
   out: Output
+  envVars: any
 
   constructor(
     fileName: string,
     options: Args = {},
     out: IOutput = new Output(),
+    envVars?: any,
   ) {
     this.out = out
     this.fileName = fileName
     this.options = options
+    this.envVars = envVars || process.env
 
     // this.fileRefSyntax = RegExp(/^file\((~?[a-zA-Z0-9._\-/]+?)\)/g);
     // this.cfRefSyntax = RegExp(/^cf:/g);
@@ -212,9 +215,9 @@ export class Variables {
   getValueFromEnv(variableString) {
     const requestedEnvVar = variableString.split(':')[1]
     const valueToPopulate =
-      requestedEnvVar !== '' || '' in process.env
-        ? process.env[requestedEnvVar]
-        : process.env
+      requestedEnvVar !== '' || '' in this.envVars
+        ? this.envVars[requestedEnvVar]
+        : this.envVars
     return BbPromise.resolve(valueToPopulate)
   }
 

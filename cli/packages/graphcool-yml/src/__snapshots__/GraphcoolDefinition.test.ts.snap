@@ -115,6 +115,25 @@ Object {
 
 exports[`graphcool definition load yml with disableAuth: true 2`] = `null`;
 
+exports[`graphcool definition load yml with injected env var 1`] = `
+Object {
+  "cluster": "local",
+  "datamodel": Array [
+    "datamodel.graphql",
+  ],
+  "schema": "schemas/database.graphql",
+  "secret": "some-secret",
+  "service": "jj",
+  "stage": "dev",
+}
+`;
+
+exports[`graphcool definition load yml with injected env var 2`] = `
+Array [
+  "some-secret",
+]
+`;
+
 exports[`graphcool definition load yml with secret and env var 1`] = `
 Object {
   "cluster": "local",

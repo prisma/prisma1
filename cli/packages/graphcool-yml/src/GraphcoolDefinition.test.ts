@@ -20,13 +20,14 @@ function makeDefinition(
   datamodel: string,
   args: Args = {},
   globalRC: string = defaultGlobalRC,
+  envVars: any = process.env,
 ) {
   const definitionDir = getTmpDir()
   const definitionPath = path.join(definitionDir, 'graphcool.yml')
   const modelPath = path.join(definitionDir, 'datamodel.graphql')
   const env = makeEnv(defaultGlobalRC)
 
-  const definition = new GraphcoolDefinitionClass(env, definitionPath)
+  const definition = new GraphcoolDefinitionClass(env, definitionPath, envVars)
 
   fs.writeFileSync(modelPath, datamodel)
   fs.writeFileSync(definitionPath, yml)
@@ -135,6 +136,46 @@ type User @model {
 
     await env.load({})
     await definition.load({}, envPath)
+
+    expect(definition.definition).toMatchSnapshot()
+    expect(definition.secrets).toMatchSnapshot()
+  })
+  test('load yml with injected env var', async () => {
+    const secret = 'this-is-a-long-secret'
+    const yml = `\
+service: jj
+stage: dev
+cluster: local
+
+datamodel:
+- datamodel.graphql
+
+secret: \${env:MY_INJECTED_ENV_SECRET}
+
+schema: schemas/database.graphql
+    `
+    const datamodel = `
+type User @model {
+  id: ID! @isUnique
+  name: String!
+  lol: Int
+  what: String
+}
+`
+    const envVars = {
+      MY_INJECTED_ENV_SECRET: 'some-secret',
+    }
+
+    const { definition, env } = makeDefinition(
+      yml,
+      datamodel,
+      {},
+      defaultGlobalRC,
+      envVars,
+    )
+
+    await env.load({})
+    await definition.load({})
 
     expect(definition.definition).toMatchSnapshot()
     expect(definition.secrets).toMatchSnapshot()
