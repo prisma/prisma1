@@ -27,7 +27,7 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
 
     val result = server.executeQuerySimple(
       s"""{
-         |  model(where: {id:"${id}"}) {
+         |  model(where: {id:"$id"}) {
          |    ints
          |    strings
          |  }
@@ -59,7 +59,7 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
 
     val result = server.executeQuerySimple(
       s"""{
-         |  model(where: {id:"${id}"}) {
+         |  model(where: {id:"$id"}) {
          |    ints
          |    strings
          |  }
@@ -92,7 +92,7 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
     server
       .executeQuerySimple(
         s"""mutation {
-           |  updateModel(where: {id: "${id}"} data: {ints: { set: [2,1] }}) {
+           |  updateModel(where: {id: "$id"} data: {ints: { set: [2,1] }}) {
            |    id
            |  }
            |}""".stripMargin,
@@ -101,7 +101,7 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
 
     val result = server.executeQuerySimple(
       s"""{
-         |  model(where: {id:"${id}"}) {
+         |  model(where: {id:"$id"}) {
          |    ints
          |    strings
          |  }
@@ -111,5 +111,37 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
 
     result.toString should equal("""{"data":{"model":{"ints":[2,1],"strings":["short","looooooooooong"]}}}""")
   }
+
+  "full scalar list" should "return full list for json" in {
+
+    val project = SchemaDsl() { schema =>
+      schema.model("Model").field("jsons", _.Json, isList = true)
+    }
+
+    database.setup(project)
+
+    val id = server
+      .executeQuerySimple(
+        s"""mutation {
+           |  createModel(data: {jsons: { set: ["{\"a\":\"b\"}","{\"a\":1}"] }}) {
+           |    id
+           |  }
+           |}""".stripMargin,
+        project
+      )
+      .pathAsString("data.createModel.id")
+
+    val result = server.executeQuerySimple(
+      s"""{
+         |  model(where: {id:"$id"}) {
+         |    jsons
+         |  }
+         |}""".stripMargin,
+      project
+    )
+
+    result.toString should equal("""{"data":{"model":{"jsons":[1]}}}""")
+  }
+
 
 }

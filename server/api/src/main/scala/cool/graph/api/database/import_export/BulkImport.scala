@@ -63,8 +63,8 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) {
     val array    = json.convertTo[JsArray]
     val leftMap  = array.elements.head.convertTo[Map[String, Option[String]]]
     val rightMap = array.elements.reverse.head.convertTo[Map[String, Option[String]]]
-    val left     = ImportRelationSide(ImportIdentifier(leftMap("_typeName").get, leftMap("id").get), leftMap("fieldName"))
-    val right    = ImportRelationSide(ImportIdentifier(rightMap("_typeName").get, rightMap("id").get), rightMap("fieldName"))
+    val left     = ImportRelationSide(ImportIdentifier(leftMap("_typeName").get, leftMap("id").get), leftMap.get("fieldName").flatten)
+    val right    = ImportRelationSide(ImportIdentifier(rightMap("_typeName").get, rightMap("id").get), rightMap.get("fieldName").flatten)
 
     ImportRelation(left, right)
   }
@@ -123,9 +123,14 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) {
     DBIO.sequence(x)
   }
 
+
+  //Todo datetime format in here -.-
   private def generateImportListsDBActions(lists: Vector[ImportList]): DBIOAction[Vector[Try[Int]], NoStream, jdbc.MySQLProfile.api.Effect] = {
     val updateListValueActions = lists.flatMap { element =>
+      def isDateTime(fieldName: String) = project.getModelByName_!(element.identifier.typeName).getFieldByName_!(fieldName).typeIdentifier == TypeIdentifier.DateTime
+
       element.values.map {
+        case (fieldName, values) if isDateTime(fieldName)=> DatabaseMutationBuilder.pushScalarList(project.id, element.identifier.typeName, fieldName, element.identifier.id, values.map(dateTimeFromISO8601)).asTry
         case (fieldName, values) => DatabaseMutationBuilder.pushScalarList(project.id, element.identifier.typeName, fieldName, element.identifier.id, values).asTry
       }
     }

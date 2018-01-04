@@ -106,12 +106,17 @@ class BulkExport(project: Project)(implicit apiDependencies: ApiDependencies) {
   }
 
   def dataItemToExportList(dataItems: Seq[DataItem], info: ListInfo) : Vector[JsonBundle] = {
-    val distinctIds = dataItems.map(_.id).distinct
+    val outputs = project.getModelByName_!(info.currentModel).getFieldByName_!(info.currentField).typeIdentifier == TypeIdentifier.DateTime match {
+      case true   => dataItems.map(item => item.copy(userData = Map("value" -> Some(dateTimeToISO8601(item.userData("value").get)))))
+      case false  => dataItems
+    }
+
+    val distinctIds = outputs.map(_.id).distinct
 
     val x = distinctIds.map{id =>
-     val values = dataItems.filter(_.id == id).map(item => item("value").get)
+     val values: Seq[Any]         = outputs.filter(_.id == id).map(item => item("value").get)
      val result: Map[String, Any] = Map("_typeName" -> info.currentModel, "id" -> id, info.currentField -> values)
-     val json = result.toJson
+     val json                     = result.toJson
      val combinedSize             = json.toString.length
 
      JsonBundle(Vector(json), combinedSize)
