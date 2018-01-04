@@ -145,14 +145,7 @@ export class Client {
         try {
           return await localClient.request(query, variables)
         } catch (e) {
-          if (e.message.includes('No service with id')) {
-            // const user = await this.getAccount()
-            const message = e.response.errors[0].message
-            this.out.error(
-              message +
-                ` Please check if you are logged in to the right account.`,
-            )
-          } else if (e.message.startsWith('No valid session')) {
+          if (e.message.startsWith('No valid session')) {
             // await this.auth.ensureAuth(true)
             // try again with new token
             return await this.client.request(query, variables)
@@ -372,6 +365,7 @@ export class Client {
       }
       ${MIGRATION_FRAGMENT}
     `
+
     const { deploy } = await this.client.request<{
       deploy: DeployPayload
     }>(mutation, {

@@ -153,9 +153,6 @@ export class Output {
   }
 
   async error(err: Error | string, exitCode: number | false = 1) {
-    await new Promise(r => {
-      Raven.captureException(err, () => r())
-    })
     if (
       (this.mock && typeof err !== 'string' && exitCode !== false) ||
       process.env.NODE_ENV === 'test'
@@ -192,6 +189,10 @@ To get more detailed output, run ${chalk.dim(instruction)}`,
       console.error(e)
       console.error(err)
     }
+    // make sure error is logged first
+    await new Promise(r => {
+      Raven.captureException(err, () => r())
+    })
     if (exitCode !== false) {
       this.exit(exitCode)
     }
