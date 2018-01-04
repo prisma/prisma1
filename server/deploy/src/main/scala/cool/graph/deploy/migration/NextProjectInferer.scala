@@ -74,9 +74,11 @@ case class NextProjectInfererImpl(
       val relation = if (fieldDef.hasScalarType) {
         None
       } else {
-        nextRelations.find { relation =>
-          relation.connectsTheModels(objectType.name, fieldDef.typeName)
+        fieldDef.relationName match {
+          case Some(name) => nextRelations.find(_.name == name)
+          case None       => nextRelations.find(relation => relation.connectsTheModels(objectType.name, fieldDef.typeName))
         }
+
       }
 
       def fieldWithDefault(default: Option[GCValue]) = {

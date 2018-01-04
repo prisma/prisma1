@@ -150,6 +150,91 @@ class ProposerAndInfererIntegrationSpec extends FlatSpec with Matchers {
     )
   }
 
+  "they" should "handle ambiguous relations correctly" in {
+    val previousSchema =
+      """
+        |type Todo {
+        |  title: String
+        |}
+        |type Comment {
+        |  text: String
+        |}
+      """.stripMargin
+    val project = infer(previousSchema)
+
+    val nextSchema =
+      """
+        |type Todo {
+        |  title: String
+        |  comment1: Comment @relation(name: "TodoToComment1")
+        |  comment2: Comment @relation(name: "TodoToComment2")
+        |}
+        |type Comment {
+        |  text: String
+        |  todo1: Todo @relation(name: "TodoToComment1")
+        |  todo2: Todo @relation(name: "TodoToComment2")
+        |}
+      """.stripMargin
+    val steps = propose(previous = project, next = nextSchema)
+    steps should have(size(6))
+    steps should contain allOf (
+      CreateField(
+        model = "Todo",
+        name = "comment1",
+        typeName = "Relation",
+        isRequired = false,
+        isList = false,
+        isUnique = false,
+        relation = Some("TodoToComment1"),
+        defaultValue = None,
+        enum = None
+      ),
+      CreateField(
+        model = "Todo",
+        name = "comment2",
+        typeName = "Relation",
+        isRequired = false,
+        isList = false,
+        isUnique = false,
+        relation = Some("TodoToComment2"),
+        defaultValue = None,
+        enum = None
+      ),
+      CreateField(
+        model = "Comment",
+        name = "todo1",
+        typeName = "Relation",
+        isRequired = false,
+        isList = false,
+        isUnique = false,
+        relation = Some("TodoToComment1"),
+        defaultValue = None,
+        enum = None
+      ),
+      CreateField(
+        model = "Comment",
+        name = "todo2",
+        typeName = "Relation",
+        isRequired = false,
+        isList = false,
+        isUnique = false,
+        relation = Some("TodoToComment2"),
+        defaultValue = None,
+        enum = None
+      ),
+      CreateRelation(
+        name = "TodoToComment1",
+        leftModelName = "Comment",
+        rightModelName = "Todo"
+      ),
+      CreateRelation(
+        name = "TodoToComment2",
+        leftModelName = "Comment",
+        rightModelName = "Todo"
+      )
+    )
+  }
+
   def infer(schema: String): Project = {
     val newProject = Project(
       id = "test-project",
@@ -168,6 +253,8 @@ class ProposerAndInfererIntegrationSpec extends FlatSpec with Matchers {
 
   def propose(previous: Project, next: String): Vector[MigrationStep] = {
     val nextProject = infer(previous, next)
+    println(s"fields of next project:")
+    nextProject.allFields.foreach(println)
     MigrationStepsProposer().propose(
       currentProject = previous,
       nextProject = nextProject,
