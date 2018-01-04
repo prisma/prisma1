@@ -272,8 +272,8 @@ class MigrationStepsProposerSpec extends FlatSpec with Matchers {
     steps should contain(UpdateRelation("CommentToTodo", newName = Some("CommentNewToTodoNew"), modelAId = Some("TodoNew"), modelBId = Some("CommentNew")))
     steps should contain(UpdateModel("Comment", newName = "CommentNew"))
     steps should contain(UpdateModel("Todo", newName = "TodoNew"))
-    steps should contain(UpdateField("Comment", "todo", Some("todoNew"), None, None, None, None, None, Some(Some("commentnewtotodonew")), None, None))
-    steps should contain(UpdateField("Todo", "comments", Some("commentsNew"), None, None, None, None, None, Some(Some("commentnewtotodonew")), None, None))
+    steps should contain(UpdateField("Comment", "todo", Some("todoNew"), None, None, None, None, None, Some(Some("CommentNewToTodoNew")), None, None))
+    steps should contain(UpdateField("Todo", "comments", Some("commentsNew"), None, None, None, None, None, Some(Some("CommentNewToTodoNew")), None, None))
   }
 
   // TODO: this spec probably cannot be fulfilled. And it probably does need to because the NextProjectInferer guarantees that those swaps cannot occur. Though this must be verified by extensive testing.
