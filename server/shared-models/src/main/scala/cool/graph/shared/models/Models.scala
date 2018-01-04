@@ -3,9 +3,7 @@ package cool.graph.shared.models
 import cool.graph.gc_values.GCValue
 import cool.graph.shared.errors.SharedErrors
 import cool.graph.shared.models.FieldConstraintType.FieldConstraintType
-import cool.graph.shared.models.LogStatus.LogStatus
 import cool.graph.shared.models.ModelMutationType.ModelMutationType
-import cool.graph.shared.models.SeatStatus.SeatStatus
 import org.joda.time.DateTime
 
 object IdType {
@@ -13,14 +11,6 @@ object IdType {
 }
 
 import cool.graph.shared.models.IdType._
-
-object MutationLogStatus extends Enumeration {
-  type MutationLogStatus = Value
-  val SCHEDULED  = Value("SCHEDULED")
-  val SUCCESS    = Value("SUCCESS")
-  val FAILURE    = Value("FAILURE")
-  val ROLLEDBACK = Value("ROLLEDBACK")
-}
 
 case class Client(
     id: Id,
@@ -33,37 +23,6 @@ case class Client(
     projects: List[Project] = List.empty,
     createdAt: DateTime,
     updatedAt: DateTime
-)
-
-object SeatStatus extends Enumeration {
-  type SeatStatus = Value
-  val JOINED               = Value("JOINED")
-  val INVITED_TO_PROJECT   = Value("INVITED_TO_PROJECT")
-  val INVITED_TO_GRAPHCOOL = Value("INVITED_TO_GRAPHCOOL")
-}
-
-case class Seat(id: String, status: SeatStatus, isOwner: Boolean, email: String, clientId: Option[String], name: Option[String])
-
-object LogStatus extends Enumeration {
-  type LogStatus = Value
-  val SUCCESS = Value("SUCCESS")
-  val FAILURE = Value("FAILURE")
-}
-
-object RequestPipelineOperation extends Enumeration {
-  type RequestPipelineOperation = Value
-  val CREATE = Value("CREATE")
-  val UPDATE = Value("UPDATE")
-  val DELETE = Value("DELETE")
-}
-
-case class Log(
-    id: Id,
-    requestId: Option[String],
-    status: LogStatus,
-    duration: Int,
-    timestamp: DateTime,
-    message: String
 )
 
 sealed trait Function {
@@ -101,7 +60,6 @@ case class Project(
     relations: List[Relation] = List.empty,
     enums: List[Enum] = List.empty,
     secrets: Vector[String] = Vector.empty,
-    seats: List[Seat] = List.empty,
     allowQueries: Boolean = true,
     allowMutations: Boolean = true,
     functions: List[Function] = List.empty
@@ -211,12 +169,6 @@ case class Project(
     }
 
   }
-
-  def seatByEmail(email: String): Option[Seat] = seats.find(_.email == email)
-  def seatByEmail_!(email: String): Seat       = seatByEmail(email).get //OrElse(throw SystemErrors.InvalidSeatEmail(email))
-
-  def seatByClientId(clientId: Id): Option[Seat] = seats.find(_.clientId.contains(clientId))
-  def seatByClientId_!(clientId: Id): Seat       = seatByClientId(clientId).get //OrElse(throw SystemErrors.InvalidSeatClientId(clientId))
 
   def allFields: Seq[Field] = models.flatMap(_.fields)
 
