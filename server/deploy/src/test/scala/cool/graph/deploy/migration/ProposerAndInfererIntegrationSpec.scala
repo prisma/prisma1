@@ -30,14 +30,18 @@ class ProposerAndInfererIntegrationSpec extends FlatSpec with Matchers {
       id = "test-project",
       ownerId = "owner"
     )
+    infer(newProject, schema)
+  }
+
+  def infer(previous: Project, schema: String): Project = {
     val schemaAst = QueryParser.parse(schema).get
-    val project   = NextProjectInferer().infer(newProject, Renames.empty, schemaAst).getOrElse(sys.error("Infering the project failed."))
+    val project   = NextProjectInferer().infer(previous, Renames.empty, schemaAst).getOrElse(sys.error("Infering the project failed."))
     println(project.relations)
     project
   }
 
   def propose(previous: Project, next: String): Vector[MigrationStep] = {
-    val nextProject = infer(next)
+    val nextProject = infer(previous, next)
     MigrationStepsProposer().propose(
       currentProject = previous,
       nextProject = nextProject,
