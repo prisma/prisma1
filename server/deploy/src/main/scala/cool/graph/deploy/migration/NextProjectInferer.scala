@@ -54,7 +54,6 @@ case class NextProjectInfererImpl(
 
           Good {
             Model(
-              id = objectType.name,
               name = objectType.name,
               fields = fields.toList ++ hiddenReservedFields
             )

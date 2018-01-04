@@ -236,11 +236,11 @@ case class ProjectWithClientId(project: Project, clientId: Id) {
 case class ProjectWithClient(project: Project, client: Client)
 
 case class Model(
-    id: Id,
     name: String,
     fields: List[Field],
     description: Option[String] = None
 ) {
+  val id = name
 
   lazy val scalarFields: List[Field]         = fields.filter(_.isScalar)
   lazy val scalarListFields: List[Field]     = scalarFields.filter(_.isList)

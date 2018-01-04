@@ -283,7 +283,6 @@ object SchemaDsl {
     def build(): Model = {
       Model(
         name = name,
-        id = id,
         fields = fields.toList
       )
     }
