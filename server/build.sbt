@@ -22,18 +22,7 @@ lazy val versionSettings = SbtGit.versionWithGit ++ Seq(
   }
 )
 
-lazy val deploySettings = overridePublishBothSettings ++ Seq(
-  credentials += Credentials(
-    realm = "packagecloud",
-    host = "packagecloud.io",
-    userName = "",
-    passwd = sys.env.getOrElse("PACKAGECLOUD_PW", sys.error("PACKAGECLOUD_PW env var is not set."))
-  ),
-  publishTo := Some("packagecloud+https" at "packagecloud+https://packagecloud.io/graphcool/graphcool")//,
-//  aether.AetherKeys.aetherWagons := Seq(aether.WagonWrapper("packagecloud+https", "io.packagecloud.maven.wagon.PackagecloudWagon"))
-)
-
-lazy val commonSettings = deploySettings ++ versionSettings ++ Seq(
+lazy val commonSettings = versionSettings ++ Seq(
   organization := "cool.graph",
   organizationName := "graphcool",
   scalaVersion := "2.12.3",
