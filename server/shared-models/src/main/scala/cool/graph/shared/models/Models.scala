@@ -237,7 +237,7 @@ case class Model(
     fields: List[Field],
     description: Option[String] = None
 ) {
-  val id = name
+  def id = name
 
   lazy val scalarFields: List[Field]         = fields.filter(_.isScalar)
   lazy val scalarListFields: List[Field]     = scalarFields.filter(_.isList)
@@ -320,7 +320,6 @@ case class FeatureToggle(
 )
 
 case class Field(
-    id: Id,
     name: String,
     typeIdentifier: TypeIdentifier.Value,
     description: Option[String] = None,
@@ -335,6 +334,7 @@ case class Field(
     relationSide: Option[RelationSide.Value],
     constraints: List[FieldConstraint] = List.empty
 ) {
+  def id = name
 
   def isScalar: Boolean                             = typeIdentifier != TypeIdentifier.Relation
   def isRelation: Boolean                           = typeIdentifier == TypeIdentifier.Relation
@@ -454,7 +454,6 @@ object FieldConstraintType extends Enumeration {
 // NOTE modelA/modelB should actually be included here
 // but left out for now because of cyclic dependencies
 case class Relation(
-    id: Id,
     name: String,
     description: Option[String] = None,
     // BEWARE: if the relation looks like this: val relation = Relation(id = "relationId", modelAId = "userId", modelBId = "todoId")
@@ -465,6 +464,8 @@ case class Relation(
     modelBId: Id,
     fieldMirrors: List[RelationFieldMirror] = List.empty
 ) {
+  val id = name
+
   def connectsTheModels(model1: Model, model2: Model): Boolean   = connectsTheModels(model1.id, model2.id)
   def connectsTheModels(model1: String, model2: String): Boolean = (modelAId == model1 && modelBId == model2) || (modelAId == model2 && modelBId == model1)
 

@@ -81,7 +81,6 @@ case class NextProjectInfererImpl(
 
       def fieldWithDefault(default: Option[GCValue]) = {
         Field(
-          id = fieldDef.name,
           name = fieldDef.name,
           typeIdentifier = typeIdentifier,
           isRequired = fieldDef.isRequired,
@@ -149,7 +148,6 @@ case class NextProjectInfererImpl(
           )
         case None =>
           Relation(
-            id = relationName,
             name = relationName,
             modelAId = modelA,
             modelBId = modelB
