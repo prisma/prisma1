@@ -1,189 +1,113 @@
-# REST API Wrapper
+# node-basic
 
+🚀 Basic starter code for a scalable, production-ready GraphQL server for Node.js.
 
-## Overview
+![](https://imgur.com/LG6r1q1.png)
 
-This directory contains the service definition and file structure for a simple Graphcool service that **wraps a REST API** using [resolver](https://blog.graph.cool/extend-your-graphcool-api-with-resolvers-ca0f0270bca7) functions. Read the [last section](#whats-in-this-example) of this README to learn how the different components fit together.
+## Features
 
-The example is based on the free [Dog API](https://dog.ceo/dog-api/) which allows to retrieve images of dogs that belong to certain breeds and subbreeds.
+- **Scalable GraphQL Server:** `graphql-yoga` based on Apollo Server & Express
+- **GraphQL-native database:** Includes GraphQL database binding to Graphcool (running on MySQL)
+- Out-of-the-box support for [GraphQL Playground](https://github.com/graphcool/graphql-playground) & [Tracing](https://github.com/apollographql/apollo-tracing)
+- Simple data model – easy to adjust
+- Preconfigured [`graphql-config`](https://github.com/graphcool/graphql-config) setup
 
-```
-.
-├── README.md
-├── graphcool.yml
-├── src
-│   ├── allBreeds.graphql
-│   ├── allBreeds.js
-│   ├── allSubBreeds.graphql
-│   ├── allSubBreeds.js
-│   ├── breedImages.graphql
-│   ├── breedImages.js
-│   ├── randomBreedImage.graphql
-│   ├── randomBreedImage.js
-│   ├── randomDogImage.graphql
-│   ├── randomDogImage.js
-│   ├── randomSubBreedImage.graphql
-│   ├── randomSubBreedImage.js
-│   ├── subBreedImages.graphql
-│   └── subBreedImages.js
-└── types.graphql
-```
+## Requirements
 
-> Read more about [service configuration](https://graph.cool/docs/reference/project-configuration/overview-opheidaix3) in the docs.
+You need to have the following things installed:
 
-## Get started
+* Node 8+
+* Graphcool CLI: `npm i -g graphcool@beta`
+* GraphQL CLI: `npm i -g graphql-cli`
+* GraphQL Playground desktop app (optional): [Download](https://github.com/graphcool/graphql-playground/releases)
 
-### 1. Download the example
-
-Clone the full [framework](https://github.com/graphcool/framework) repository and navigate to this directory or download _only_ this example with the following command:
+## Getting started
 
 ```sh
-curl https://codeload.github.com/graphcool/framework/tar.gz/master | tar -xz --strip=2 framework-master/examples/rest-wrapper
-cd rest-wrapper
+# Bootstrap GraphQL server in directory `my-app`, based on `node-basic` boilerplate
+graphql create my-app --boilerplate node-basic
+
+# Navigate to the new project
+cd my-app
+
+# Deploy the Graphcool database
+graphcool deploy
+
+# Start server (runs on http://localhost:4000)
+yarn start
+
+# Open Playground to explore GraphQL API
+yarn playground
 ```
 
-Next, you need to create your GraphQL server using the [Graphcool CLI](https://graph.cool/docs/reference/graphcool-cli/overview-zboghez5go).
+<details>
 
-### 2. Install the Graphcool CLI
-
-If you haven't already, go ahead and install the CLI first:
+<summary>Alternative: Clone repo</summary>
 
 ```sh
-npm install -g graphcool-framework
+# Clone the repo and navigate into project directory
+git clone https://github.com/graphql-boilerplates/node-graphql-server.git
+cd node-graphql-server/basic
+
+# Deploy the Graphcool database
+graphcool deploy
+
+# Install node dependencies
+yarn install
+
+# Start server (runs on http://localhost:4000)
+yarn start
+
+# Open Playground to explore GraphQL API
+yarn playground
 ```
 
-### 3. Create the GraphQL server
+</details>
 
-The next step will be to [deploy](https://graph.cool/docs/reference/graphcool-cli/commands-aiteerae6l#graphcool-deploy) the Graphcool service that's defined in this directory. 
+## Docs
 
-To deploy the service and actually create your GraphQL server, invoke the following command:
+### Commands
 
-```sh
-graphcool-framework deploy
-```
+* `yarn start` starts GraphQL server
+* `yarn playground` opens the GraphQL Playground
+* `yarn deploy` deploys GraphQL server to [`now`](https://now.sh)
 
+### Project structure
 
-When prompted which cluster you'd like to deploy, choose any of the **Shared Clusters** (`shared-eu-west-1`, `shared-ap-northeast-1` or `shared-us-west-2`) rather than `local`. 
+#### `/` (_root directory_)
 
-> Note: Whenever you make changes to files in this directory, you need to invoke `graphcool-framework deploy` again to make sure your changes get applied to the "remote" service.
+- [`.graphqlconfig.yml`](./.graphqlconfig.yml) GraphQL configuration file containing the endpoints and schema configuration. Used by the [`graphql-cli`](https://github.com/graphcool/graphql-cli) and the [GraphQL Playground](https://github.com/graphcool/graphql-playground). See [`graphql-config`](https://github.com/graphcool/graphql-config) for more information.
+- [`graphcool.yml`](./graphcool.yml): The root configuration file for your database service ([documentation](https://www.graph.cool/docs/1.0/reference/graphcool.yml/overview-and-example-foatho8aip)).
 
+#### `/database`
 
-## Testing the service
+- [`database/datamodel.graphql`](./database/datamodel.graphql) contains the data model that you define for the project (written in [SDL](https://blog.graph.cool/graphql-sdl-schema-definition-language-6755bcb9ce51)).
+- [`database/schema.generated.graphql`](./database/schema.generated.graphql) defines the **database schema**. It contains the definition of the CRUD API for the types in your data model and is generated based on your `datamodel.graphql`. **You should never edit this file manually**, but introduce changes only by altering `datamodel.graphql` and run `graphcool deploy`.
 
+#### `/src`
 
-The easiest way to test the deployed service is by using a [GraphQL Playground](https://github.com/graphcool/graphql-playground).
+- [`src/schema.graphql`](src/schema.graphql) defines your **application schema**. It contains the GraphQL API that you want to expose to your client applications.
+- [`src/index.js`](src/index.js) is the entry point of your server, pulling everything together and starting the `GraphQLServer` from [`graphql-yoga`](https://github.com/graphcool/graphql-yoga).
 
-You can open a Playground with the following command:
+### Common questions
 
-```sh
-graphcool-framework playground
-```
+#### I'm getting a 'Schema could not be fetched.' error after deploying, what gives?
 
-Inside the Playground, you can send queries for all the resolver functions that are defined inside [`graphcool.yml`](./graphcool.yml):
+Access to the Graphcool API is secured by a secret. This also applies to the introspection query. Using the latest version of GraphQL Playground, the `Authorization` header should automatically be setup with a proper JWT signing the secret. If that's not the case, you can follow these steps to access your API:
 
-- `allBreeds`
-- `allSubBreeds`
-- `randomDogImage`
-- `randomBreedImage`
-- `randomSubBreedImage`
-- `breedImages`
-- `subBreedImages`
+1. Visit http://jwtbuilder.jamiekurtz.com/
+1. Replace the `Key` at the bottom of the page with your `secret` from the [`graphcool.yml`](./graphcool.yml#L5)
+1. Click `Create signed JWT` and copy the obtained token
+1. Now, to access the schema, use the `Authorization: Bearer <token>` header, or in the GraphQL Playground set it as JSON:
+    ```json
+    {
+      "Authorization": "Bearer <token>"
+    }
+    ```
+1. Reload the schema in the Playground (the _refresh_-button is located right next to the URL of the server)
 
-Here are are some sample queries you can send:
+> Note: Currently, no content of the signed JWT is verified by the database! This will be implemented [according to this proposal](https://github.com/graphcool/framework/issues/1365) at a later stage.
 
-##### Get all breeds and their subbreeds
+## Contributing
 
-```graphql
-{
-  allBreeds {
-    name
-    subBreeds
-  }
-}
-```
-
-##### Get all subbreeds of the `hound` breed
-
-```graphql
-{
-  allSubBreeds(breedName: "hound") {
-    name
-  }
-}
-```
-
-##### Get a random dog image
-
-```graphql
-{
-  randomDogImage {
-    url
-  }
-}
-```
-
-##### Get a list of of the `afghan` breed (subbreed of `hound`)
-
-```graphql
-{
-  subBreedImages(breedName: "hound", subBreedName: "afghan") {
-    url
-  }
-}
-```
-
-## What's in this example?
-
-This example demonstrates how you can use Graphcool's [resolver functions](https://graph.cool/docs/reference/functions/resolvers-su6wu3yoo2) to wrap an existing REST API (a [Dog API](https://dog.ceo/dog-api/) to retrieve images of certain breeds and their subbreeds).
-
-Each resolver targets one dedicated endpoint from the API and effectively acts as a proxy to provide a GraphQL API for the existing REST endpoint.
-
-For example, the `allBreeds` resolver provides the following API defined in [`allBreeds.graphql`](./src/allBreeds.graphql):
-
-```graphql
-type AllBreedsPayload {
-  name: String!
-  subBreeds: [String!]!
-}
-
-extend type Query {
-  allBreeds: [AllBreedsPayload!]!
-}
-``` 
-
-It's implementation in [`allBreeds.js`](./src/allBreeds.js) looks as follows:
-
-```js
-require('isomorphic-fetch')
-
-const url = 'https://dog.ceo/api/breeds/list/all'
-
-module.exports = () => {
-  return fetch(url)
-    .then(response => response.json())
-    .then(responseData => {
-      const breedsListData = responseData.message
-      const allBreeds = []
-      Object.keys(breedsListData).map(breedName => {
-        const breed = {
-          name: breedName,
-          subBreeds: breedsListData[breedName]
-        }
-        allBreeds.push(breed)
-      })
-      return { data: allBreeds }
-    })
-}
-```
-
-All that's happening in there is sending an HTTP request to the specified endpoint and convert the response into the format that's defined in the extension of the `Query` type above.
-
-
-
-
-
-
-
-
-
-
+Your feedback is **very helpful**, please share your opinion and thoughts! If you have any questions, join the [`#graphql-boilerplate`](https://graphcool.slack.com/messages/graphql-boilerplate) channel on our [Slack](https://graphcool.slack.com/).

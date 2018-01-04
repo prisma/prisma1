@@ -1,5 +1,20 @@
 {
+  "name": "rest-wrapper",
+  "scripts": {
+    "start": "NODE_ENV=dev node src/index.js",
+    "playground": "graphql playground",
+    "deploy": "now --public && now alias && now rm --yes --safe graphql-template-node"
+  },
   "dependencies": {
-    "isomorphic-fetch": "^2.2.1"
+    "graphcool-binding": "0.3.6",
+    "graphql-import": "0.1.8",
+    "graphql-yoga": "0.4.7",
+    "jsonwebtoken": "8.1.0"
+  },
+  "devDependencies": {
+    "now": "8.5.4"
+  },
+  "now": {
+    "alias": "graphql-template-node"
   }
 }

@@ -1,14 +1,19 @@
-types: ./types.graphql
+# The service name is composed of the environment variable
+# `SERVICE_NAME` and the `--stage` command line option.
+# If `SERVICE_NAME` is not set, the default is `yaml-demo`.
+# If `--stage` is not explicitly provided, it will use the 
+# default value `dev`.
+# Thus, the default service name is `yaml-demo-dev`.
+service: ${env:SERVICE_NAME, 'yaml-demo'}-${opt:stage, 'dev'}
 
-functions:
+# You can also reference custom variables defined in this file.
+# As `custom.modelPath` is set to `datamodel`, the file path
+# for the data model will resolve to `mymodel.graphql`.
+datamodel: ${self:custom.modelPath}.graphql
 
-  # This function either invokes `hey.js` or `hello.js`, 
-  # depending on the value of the environment variable `GREETING`.
-  # If `GREETING` is not set, or set to something other than 
-  # `hello` or `hey`, then `graphcool deploy` will fail.
-  greeting:
-    type: resolver
-    schema: ./src/greeting.graphql
-    handler:
-      code:
-        src: ./src/${env:GREETING}.js
+# Define custom variables.
+custom: 
+  modelPath: mymodel
+
+# Disable authentication for demo purposes
+disableAuth: true

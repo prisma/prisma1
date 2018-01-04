@@ -1,7 +1,0 @@
-type RandomSubBreedImagePayload {
-  url: String!
-}
-
-extend type Query {
-  randomSubBreedImage(breedName: String!, subBreedName: String!): RandomSubBreedImagePayload!
-}
