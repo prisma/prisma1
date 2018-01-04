@@ -19,7 +19,3 @@ For each option you provide, you can use either of the following two forms:
 
 - **Long form**: Spell out the full name of the option prepended by _two_ dashes, e.g. `graphcool deploy --service prod`.
 - **Short form**: Take only a single letter of the option's name (most of the time, this is the very first letter) and prepend with only _one_ dash, e.g. `graphcool deploy -s prod`.
-
-## The `GRAPHCOOL_STAGE`, `GRAPHCOOL_DISABLE_AUTH` and `GRAPHCOOL_DISABLE_AUTH` environment variables
-
-TODO
