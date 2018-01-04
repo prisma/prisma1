@@ -131,9 +131,13 @@ case class NextProjectInfererImpl(
         case (None, Some(name)) => name
         case (None, None)       => s"${modelA}To${modelB}"
       }
-      val previousModelAName    = renames.getPreviousModelName(modelA)
-      val previousModelBName    = renames.getPreviousModelName(modelB)
-      val oldEquivalentRelation = baseProject.getRelationsThatConnectModels(previousModelAName, previousModelBName).headOption
+      val previousModelAName = renames.getPreviousModelName(modelA)
+      val previousModelBName = renames.getPreviousModelName(modelB)
+
+      // TODO: this needs to be adapted once we allow rename of relations
+      val oldEquivalentRelation = relationField.relationName.flatMap(baseProject.getRelationByName).orElse {
+        baseProject.getUnambiguousRelationThatConnectsModels_!(previousModelAName, previousModelBName)
+      }
 
       oldEquivalentRelation match {
         case Some(relation) =>

@@ -197,7 +197,9 @@ case class MigrationStepsProposerImpl(previousProject: Project, nextProject: Pro
       previousRelation <- previousProject.relations.toVector
       nextModelAName   = renames.getNextModelName(previousRelation.modelAId)
       nextModelBName   = renames.getNextModelName(previousRelation.modelBId)
-      nextRelation     <- nextProject.getRelationsThatConnectModels(nextModelAName, nextModelBName).headOption
+      nextRelation <- nextProject // TODO: this needs to be adapted once we allow rename of relations
+                       .getRelationByName(previousRelation.name)
+                       .orElse(nextProject.getUnambiguousRelationThatConnectsModels_!(nextModelAName, nextModelBName))
     } yield {
       UpdateRelation(
         name = previousRelation.name,

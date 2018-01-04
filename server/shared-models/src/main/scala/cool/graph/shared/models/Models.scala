@@ -173,7 +173,11 @@ case class Project(
 
   def getFieldsByRelationId(id: Id): List[Field] = models.flatMap(_.fields).filter(f => f.relation.isDefined && f.relation.get.id == id)
 
-  def getRelationsThatConnectModels(modelA: String, modelB: String): Set[Relation] = relations.filter(_.connectsTheModels(modelA, modelB)).toSet
+  def getUnambiguousRelationThatConnectsModels_!(modelA: String, modelB: String): Option[Relation] = {
+    val candidates = relations.filter(_.connectsTheModels(modelA, modelB))
+    require(candidates.size < 2, "This method must only be called for unambiguous relations!")
+    candidates.headOption
+  }
 
   def getRelationFieldMirrorsByFieldId(id: Id): List[RelationFieldMirror] = relations.flatMap(_.fieldMirrors).filter(f => f.fieldId == id)
 
