@@ -90,7 +90,7 @@ object MigrationStepsJsonFormatter extends DefaultReads {
         case "UpdateEnum"     => updateEnumFormat.reads(json)
         case "CreateRelation" => createRelationFormat.reads(json)
         case "DeleteRelation" => deleteRelationFormat.reads(json)
-        case "UpdateRelation" => deleteRelationFormat.reads(json)
+        case "UpdateRelation" => updateRelationFormat.reads(json)
       }
     }
 
