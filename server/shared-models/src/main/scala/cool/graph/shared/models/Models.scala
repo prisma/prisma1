@@ -26,7 +26,6 @@ case class Client(
 )
 
 sealed trait Function {
-  def id: Id
   def name: String
   def isActive: Boolean
 //  def delivery: FunctionDelivery
@@ -34,7 +33,6 @@ sealed trait Function {
 }
 
 case class ServerSideSubscriptionFunction(
-    id: Id,
     name: String,
     isActive: Boolean,
     query: String,
@@ -74,13 +72,6 @@ case class Project(
       .filter(_.isActive)
 //      .filter(_.isServerSideSubscriptionFor(model, mutationType))
   }
-
-  def getServerSideSubscriptionFunction(id: Id): Option[ServerSideSubscriptionFunction] = serverSideSubscriptionFunctions.find(_.id == id)
-  def getServerSideSubscriptionFunction_!(id: Id): ServerSideSubscriptionFunction =
-    getServerSideSubscriptionFunction(id).get //OrElse(throw SystemErrors.InvalidFunctionId(id))
-
-  def getFunctionById(id: Id): Option[Function] = functions.find(_.id == id)
-  def getFunctionById_!(id: Id): Function       = getFunctionById(id).get //OrElse(throw SystemErrors.InvalidFunctionId(id))
 
   def getFunctionByName(name: String): Option[Function] = functions.find(_.name == name)
   def getFunctionByName_!(name: String): Function       = getFunctionByName(name).get //OrElse(throw SystemErrors.InvalidFunctionName(name))
