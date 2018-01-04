@@ -63,7 +63,7 @@ permissions:
   - operation: User.read
     authenticated: true
     query: src/permissions/models/User.graphql:isOwner
-    fields: [id, email, name]
+    fields: [id, email]
 
 # authenticated user can create + edit orders
   - operation: Order.create
