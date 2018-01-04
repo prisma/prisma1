@@ -485,24 +485,6 @@ case class Relation(
     }
   }
 
-//  def fields(project: Project): Iterable[Field] = getModelAField(project) ++ getModelBField(project)
-
-//  def getOtherField_!(project: Project, model: Model): Field = {
-//    model.id match {
-//      case `modelAId` => getModelBField_!(project)
-//      case `modelBId` => getModelAField_!(project)
-//      case _          => ??? //throw SystemErrors.InvalidRelation(s"The model with the id ${model.id} is not part of this relation.")
-//    }
-//  }
-
-//  def getField_!(project: Project, model: Model): Field = {
-//    model.id match {
-//      case `modelAId` => getModelAField_!(project)
-//      case `modelBId` => getModelBField_!(project)
-//      case _          => ??? //throw SystemErrors.InvalidRelation(s"The model with the id ${model.id} is not part of this relation.")
-//    }
-//  }
-
   def getField(project: Project, model: Model): Option[Field] = {
     model.id match {
       case `modelAId` => getModelAField(project)
