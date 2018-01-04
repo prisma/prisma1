@@ -23,6 +23,7 @@ import * as semver from 'semver'
 const debug = require('debug')('deploy')
 import * as Raven from 'raven'
 import { prettyTime } from '../../util'
+import { spawn } from '../../spawn'
 
 export default class Deploy extends Command {
   static topic = 'deploy'
@@ -333,37 +334,12 @@ ${chalk.gray(
     const graphqlBin = await getBinPath('graphql')
     if (graphqlBin) {
       try {
-        await this.runCmd(`graphql prepare`)
+        this.out.log(`Running ${chalk.cyan(`$ graphql prepare`)}...`)
+        await spawn(`graphql`, ['prepare'])
       } catch (e) {
         //
       }
     }
-  }
-
-  private runCmd(cmd: string): Promise<void> {
-    return new Promise((resolve, reject) => {
-      this.out.log(`Running ${chalk.cyan(`$ ${cmd}`)}...`)
-      const args = cmd.split(/\s/g)
-      const child = childProcess.spawn(args[0], args.slice(1), {
-        cwd: this.config.cwd,
-      })
-      child.stdout.on('data', data => {
-        this.out.log(data.toString())
-      })
-      child.stderr.on('data', data => {
-        this.out.log(data.toString())
-      })
-      child.on('error', err => {
-        this.out.error(err)
-      })
-      child.on('close', code => {
-        if (code !== 0) {
-          reject(code)
-        } else {
-          resolve()
-        }
-      })
-    })
   }
 
   private getSchemaPathFromConfig(): string | null {
