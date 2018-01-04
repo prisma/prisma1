@@ -8,33 +8,6 @@ Revolver.settings
 import Dependencies._
 import com.typesafe.sbt.SbtGit
 
-lazy val propagateVersionToOtherRepo = taskKey[Unit]("Propagates the version of this project to another github repo.")
-lazy val actualBranch = settingKey[String]("the current branch of the git repo")
-
-actualBranch := {
-  val branch = sys.env.getOrElse("BRANCH", git.gitCurrentBranch.value)
-
-  if (branch != "master"){
-    sys.props += "project.version" -> s"$branch-SNAPSHOT"
-  }
-
-  branch
-}
-
-propagateVersionToOtherRepo := {
-  val branch = actualBranch.value
-  println(s"Will try to propagate the version to branch $branch in other repo.")
-
-  val githubClient = GithubClient()
-  githubClient.updateFile(
-    owner = Env.read("OTHER_REPO_OWNER"),
-    repo = Env.read("OTHER_REPO"),
-    filePath = Env.read("OTHER_REPO_FILE"),
-    branch = branch,
-    newContent = version.value
-  )
-}
-
 // determine the version of our artifacts with sbt-git
 lazy val versionSettings = SbtGit.versionWithGit ++ Seq(
   git.baseVersion := "0.8.0",
