@@ -1,18 +1,12 @@
 package cool.graph.api.schema
 
 import cool.graph.api.database.{DataItem, DataResolver}
-import cool.graph.api.mutations.NodeSelector
-import cool.graph.gc_values.GraphQLIdGCValue
 import cool.graph.shared.models.ModelMutationType.ModelMutationType
-import cool.graph.shared.models.{Field, Model, Project, Relation}
+import cool.graph.shared.models.{Model, Project}
 import sangria.schema
 import sangria.schema._
 
-import scala.concurrent.ExecutionContext.Implicits.global
-
 case class OutputTypesBuilder(project: Project, objectTypes: Map[String, ObjectType[ApiUserContext, DataItem]], masterDataResolver: DataResolver) {
-
-  def nodePaths(model: Model) = List(List())
 
   def mapOutputType[C](model: Model, objectType: ObjectType[C, DataItem], onlyId: Boolean): ObjectType[C, SimpleResolveOutput] = {
     ObjectType[C, SimpleResolveOutput](
