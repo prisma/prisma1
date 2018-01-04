@@ -5,7 +5,6 @@ description: Raw DB Access
 
 # Raw DB Access (SQL)
 
-
 When deploying your Graphcool service locally with Docker, it is possible to send SQL queries directly against the connected MySQL database.
 
 Follow these steps to open the [MySQL client](https://dev.mysql.com/doc/mysql-getting-started/en/#mysql-getting-started-connecting) in your terminal.
@@ -14,7 +13,7 @@ Follow these steps to open the [MySQL client](https://dev.mysql.com/doc/mysql-ge
 
 #### 1. Get the name of the Docker container that runs the MySQL database
 
-In the root directory of your locally deplopyed Graphcool service, run the following command:
+In the root directory of your locally deployed Graphcool service, run the following command:
 
 ```sh
 docker ps --filter name=local_graphcool-db

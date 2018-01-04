@@ -9,7 +9,7 @@ description: Overview
 
 Every Graphcool service consists of several components that developers can provide, such as the service name, the data model for the service, information about deployment targets and authentication or the configuration of subscription functions.
 
-All of these components are configured your service's root configuration file: `graphcool.yml`.
+All of these components are configured in your service's root configuration file: `graphcool.yml`.
 
 ## Example
 
@@ -27,14 +27,16 @@ datamodel:
   - database/types.graphql
   - database/enums.graphql
 
+# OPTIONAL
+# The service will be deployed to the `local` cluster.
+# Note that if you leave out this option, you will be
+# asked which cluster to deploy to, and your decision
+# will be persisted here.
+cluster: local
+
 # REQUIRED
-# This service has two stages: `dev` and `prod`. The
-# default stage is `dev` (meaning it will be used by
-# the CLI unless explicitly stated otherwise).
-stages:
-  default: dev
-  dev: local
-  prod: london-cluster
+# This service will be deployed to the `dev` stage.
+stage: dev
 
 # OPTIONAL (default: false)
 # Whether authentication is required for this service
@@ -43,8 +45,8 @@ stages:
 disableAuth: ${env:GRAPHCOOL_DISABLE_AUTH}
 
 # OPTIONAL
-# Path to the full GraphQL schema definition of your service.
-# Note that the schema definition is generated based on your
+# Path where the full GraphQL schema will be written to
+# after deploying. Note that it is generated based on your
 # data model.
 schema: schemas/database.graphql
 
@@ -59,6 +61,13 @@ subscriptions:
       url: https://${self.custom:serverlessEndpoint}/sendWelcomeEmail
       headers:
         Authorization: ${env:MY_ENDPOINT_SECRET}
+
+# OPTIONAL
+# Points to a `.graphql` file containing GraphQL operations that will be
+# executed when initially deploying a service, or when explicitely
+# running the `seed` command.
+seed:
+  import: database/seed.graphql
 
 # OPTIONAL
 # This service only defines one custom variable that's referenced in

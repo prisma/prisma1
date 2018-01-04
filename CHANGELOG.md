@@ -1,10 +1,8 @@
-Download the latest CLI version with `npm install -g graphcool`.
+Download the latest Graphcool Framework version with `npm install -g graphcool-framework`.
 
 # 0.11.4 (2017-12-22)
 
 # CLI
-
-Download the latest Framework CLI version with `npm install -g graphcool-framework`.
 
 ## Features
 
@@ -21,18 +19,18 @@ Currently, `npm i -g graphcool` installs the latest _Framework CLI_ as well. How
 
 # 0.10.1 (2017-12-01)
 
-## CLI 
+## CLI
 
 ## Features
 - 8faf9a298b062df48f2ccbedda4347c9eb0905d2 support multiple types.graphql files
 
 ## Fixes
-- 14d5b2578238e2c52f04a815e6b0ac9ab88c7e2e Fix Windows deployment paths. Thanks @kbrandwijk 
-- f79ad6b02af39409ca9ca347f0a3d6729fd1c537 Fix #1220. Thanks @AlexanderChen1989 
-- ad619460bced486e118e353ea2e57404959b0c1c Upgrade json-schema. Thanks @kbrandwijk 
-- 3ac4e966e368514f9e2aacd88d81815a7301e563 Remove temp folder after add-template. Thanks @kbrandwijk 
-- 67729fb8c357b8a96d3901740e4e7bb09037feeb No auth required for local cluster commands. Thanks @kbrandwijk 
-- 53ff291236c072ba95384f354d2c2a20448cbea2 Fixed outdated docs links. Thanks @kbrandwijk 
+- 14d5b2578238e2c52f04a815e6b0ac9ab88c7e2e Fix Windows deployment paths. Thanks @kbrandwijk
+- f79ad6b02af39409ca9ca347f0a3d6729fd1c537 Fix #1220. Thanks @AlexanderChen1989
+- ad619460bced486e118e353ea2e57404959b0c1c Upgrade json-schema. Thanks @kbrandwijk
+- 3ac4e966e368514f9e2aacd88d81815a7301e563 Remove temp folder after add-template. Thanks @kbrandwijk
+- 67729fb8c357b8a96d3901740e4e7bb09037feeb No auth required for local cluster commands. Thanks @kbrandwijk
+- 53ff291236c072ba95384f354d2c2a20448cbea2 Fixed outdated docs links. Thanks @kbrandwijk
 
 
 # Playground `1.3.0`
@@ -52,7 +50,7 @@ https://github.com/graphcool/graphql-playground/releases/tag/v1.3.0
 
 ## CLI
 The CLI now works with Windows.
-* ced3ae7cb7cdde23d965ca17a3abdf7b623201b0 Fixed local IP address https://github.com/graphcool/framework/issues/1092 
+* ced3ae7cb7cdde23d965ca17a3abdf7b623201b0 Fixed local IP address https://github.com/graphcool/framework/issues/1092
 * 2a3e45b639bc904c30e0423908fbb3a6681568bb Fixed function return type
 * 8605b0db7e85e7262396a38fb43272ceb5619739 Fix Windows deployment paths https://github.com/graphcool/framework/issues/1031 https://github.com/graphcool/framework/issues/836 https://github.com/graphcool/framework/issues/885
 

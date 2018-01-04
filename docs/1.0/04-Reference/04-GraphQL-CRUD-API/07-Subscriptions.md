@@ -148,7 +148,7 @@ webSocket.send(JSON.stringify(message))
 
 ## Type subscriptions
 
-For every available [model type](!alias-eiroozae8u#model-types) mutation in your data model, certain subscriptions are automatically generated.
+For every available [model type](!alias-eiroozae8u#model-types) in your data model, certain subscriptions are automatically generated.
 
 For example, if your schema contains a `Post` type:
 
@@ -428,7 +428,7 @@ subscription changedPost {
 
 ### Advanced subscription filters
 
-You can make use of a similar [filter system as for queries](!alias-nia9nushae#filtering-by-field) using the `filter` argument.
+You can make use of a similar [filter system as for queries](!alias-nia9nushae#filtering-by-field) using the `where` argument.
 
 For example, you can subscribe to all `CREATED` and `DELETE` subscriptions, as well as all `UPDATED` subscriptions when the `imageUrl` was updated
 

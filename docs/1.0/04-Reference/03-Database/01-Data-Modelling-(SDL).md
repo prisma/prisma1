@@ -7,11 +7,11 @@ description: An overview of how to model application data in Graphcool.
 
 ## Overview
 
-Graphcool uses the GraphQL [Schema Definition Language](https://blog.graph.cool/graphql-sdl-schema-definition-language-6755bcb9ce51) (SDL) for data modelling. Your data model is written in one or more `.graphql`-file(s) and is the foundation for the actual database schema that Graphcool generates under the hood. If you're using just a single file for your type definitions, this file is typically called `types.graphql`.
+Graphcool uses the GraphQL [Schema Definition Language](https://blog.graph.cool/graphql-sdl-schema-definition-language-6755bcb9ce51) (SDL) for data modelling. Your data model is written in one or more `.graphql`-files and is the foundation for the actual database schema that Graphcool generates under the hood. If you're using just a single file for your type definitions, this file is typically called `types.graphql`.
 
-> To learn more about the SDL, you can check out the [official documentation](http://graphql.org/learn/schema/#type-language).
+> To learn more about the SDL, you can check out the [official GraphQL documentation](http://graphql.org/learn/schema/#type-language).
 
-The `.graphql`-file(s) containing the data model need to be specified in `graphcool.yml` under the `datamodel` property. For example:
+The `.graphql`-files containing the data model need to be specified in `graphcool.yml` under the `datamodel` property. For example:
 
 ```yml
 datamodel:
@@ -63,20 +63,24 @@ There are several available building blocks to shape your data model.
 
 * [Types](#graphql-types) consist of multiple [fields](#fields) and are used to group similar entities together. Each type in your data model is mapped to the database and CRUD operations for it are added to your GraphQL API.
 * [Relations](#relations) describe _relationships_ between types.
-* [Interfaces](http://graphql.org/learn/schema/#interfaces) are abstract types that include a certain set of fields which a type must include to _implement_ the interface.
+* [Interfaces](http://graphql.org/learn/schema/#interfaces) are abstract types that include a certain set of fields which a type must include to _implement_ the interface. Currently, interfaces cannot be user-defined, but [there's a pending feature request](https://github.com/graphcool/framework/issues/83) for advanced interface support.
 * Special [directives](#graphql-directives) covering different use cases are available.
 
 ### System fields
 
-When writing type definitions for your Graphcool service, you need to be aware of three _system fields_ which are managed for you by Graphcool: `id`, `createdAt` and `updatedAt`. 
+When writing type definitions for your Graphcool service, you need to be aware of three _system fields_ which are managed for you by Graphcool: `id`, `createdAt` and `updatedAt`.
 
-> The values of these fields are currently read-only in the GraphQL API (unless in _import mode_) but will be made configurable in the future. See this [proposal](https://github.com/graphcool/framework/issues/1278) for more info.
+> The values of these fields are currently read-only in the GraphQL API (unless in _import mode_) but will be made configurable in the future. See [this proposal](https://github.com/graphcool/framework/issues/1278) for more information.
 
 In general, Graphcool will _always_ maintain these fields in the actual database. It's up to you to decide whether they will also be exposed in the GraphQL API by adding them explicitly to the SDL type definition.
 
 <InfoBox type=warning>
 
-Notice that you can not have custom fields that are called `id`, `createdAt` and `updatedAt` since these field names are reserved for the system fields.
+Notice that you cannot have custom fields that are called `id`, `createdAt` and `updatedAt` since these field names are reserved for the system fields. Here are the only supported declarations for these three fields:
+
+* `id: ID! @unique`
+* `createdAt: DateTime!`
+* `updatedAt: DateTime!`
 
 </InfoBox>
 
@@ -89,8 +93,8 @@ Whenever you add the `id` field to a type definition to expose it in the GraphQL
 The `id` has the following properties:
 
 - Consists of 25 alphanumeric characters (letters are always lowercase)
-- Always starts with a (lowercase) letter
-- Follows [CUID](https://github.com/ericelliott/cuid) (_collision resistant unique identifiers_) scheme
+- Always starts with a (lowercase) letter `c`
+- Follows [cuid](https://github.com/ericelliott/cuid) (_collision resistant unique identifiers_) scheme
 
 Notice that all your model types will implement the `Node` interface in the database schema. This is what the `Node` interface looks like:
 
@@ -112,7 +116,7 @@ If you want your types to expose these fields, you can simply add them to the ty
 
 ## Object types
 
-An _object type_ (or short _type_) defines the structure for one concrete part of your data model. If you are familiar with SQL databases you can think of an object type as the schema for a table in your relational database. A type has a _name_ and one or multiple _[fields](#fields)_. 
+An _object type_ (or short _type_) defines the structure for one concrete part of your data model. If you are familiar with SQL databases you can think of an object type as the schema for a table in your relational database. A type has a _name_ and one or multiple _[fields](#fields)_.
 
 An instantiation of a type is called a _node_. The collection of all nodes is what you would refer to as your "application data". The term node refers to a node inside your "data graph".
 
@@ -126,14 +130,14 @@ A GraphQL object type is defined in the data model with the keyword `type`:
 type Article {
   id: ID! @unique
   text: String!
-  isPublished: Boolean @defaultValue(value: "false")
+  isPublished: Boolean @default(value: "false")
 }
 ```
 
 The type defined above has the following properties:
 
 - Name: `Story`
-- Fields: `id`, `text` and `isPublished`
+- Fields: `id`, `text` and `isPublished` (with the default value `false`)
 
 ### Generated operations based on types
 
@@ -153,7 +157,7 @@ _Fields_ are the building blocks of a [type](#object-types), giving a node its s
 
 A `String` holds text. This is the type you would use for a username, the content of a blog post or anything else that is best represented as text.
 
-Note: String values are currently limited to 256KB in size.
+Note: String values are currently limited to 256KB in size on the shared demo cluster. This limit can be increased on other clusters using [the cluster configuration](https://github.com/graphcool/framework/issues/748).
 
 In queries or mutations, String fields have to be specified using enclosing double quotes: `string: "some-string"`.
 
@@ -181,7 +185,12 @@ In queries or mutations, `Boolean` fields have to be specified without any enclo
 
 The `DateTime` type can be used to store date or time values. A good example might be a person's date of birth.
 
-In queries or mutations, `DateTime` fields have to be specified in [ISO 8601 format](https://en.wikipedia.org/wiki/ISO_8601) with enclosing double quotes: `datetime: "2015-11-22T13:57:31.123Z"`.
+In queries or mutations, `DateTime` fields have to be specified in [ISO 8601 format](https://en.wikipedia.org/wiki/ISO_8601) with enclosing double quotes:
+
+* `datatime: "2015"`
+* `datatime: "2015-11"`
+* `datatime: "2015-11-22"`
+* `datetime: "2015-11-22T13:57:31.123Z"`.
 
 #### Enum
 
@@ -197,7 +206,7 @@ In queries or mutations, Enum fields have to be specified without any enclosing 
 
 Sometimes you need to store arbitrary JSON values for loosely structured data. The JSON type makes sure that it is actually valid JSON and returns the value as a parsed JSON object/array instead of a string.
 
-Note: JSON values are currently limited to 64KB in size.
+Note: JSON values are currently limited to 256KB in size on the shared demo cluster. This limit can be increased on other clusters using [the cluster configuration](https://github.com/graphcool/framework/issues/748).
 
 In queries or mutations, JSON fields have to be specified with enclosing double quotes. Special characters have to be escaped: `json: "{\"int\": 1, \"string\": \"value\"}"`.
 
@@ -217,9 +226,7 @@ In queries or mutations, list fields have to be enclosed by square brackets, whi
 
 Fields can be marked as required (sometimes also referred to as "non-null"). When creating a new node, you need to supply a value for fields which are required and don't have a [default value](#default-value).
 
-Required fields are marked using a `!` after the field type.
-
-An example for a required field on the `User` type could look like this: `name: String!`.
+Required fields are marked using a `!` after the field type: `name: String!`.
 
 ### Field constraints
 
@@ -241,15 +248,19 @@ type User {
 }
 ```
 
+#### More constraints
+
+More database constraints will be added going forward according [to this feature request](https://github.com/graphcool/graphcool/issues/728).
+
 ### Default value
 
 You can set a default value for scalar fields. The value will be taken for new nodes when no value was supplied during creation.
 
-To specify a default value for a field, you can use the `@defaultValue` directive:
+To specify a default value for a field, you can use the `@default` directive:
 
 ```graphql
 type Story {
-  isPublished: Boolean @defaultValue(value: "false")
+  isPublished: Boolean @default(value: "false")
 }
 ```
 
@@ -276,7 +287,7 @@ Nodes for a type that contains a required `to-one` relation field can only be cr
 When defining relations between types, there is the `@relation` directive which provides meta-information about the relation. It can take two arguments:
 
 - `name`: An identifier for this relation (provided as a string). This argument is only required if relations are ambiguous.
-- `onDelete`: Specifies the _deletion behaviour_. (In case a node with related nodes gets deleted, the deletion behaviour determines what should happen to the related node(s).) The input values for this argument are defined as an enum with the following possible values:
+- `onDelete` ([pending feature request](https://github.com/graphcool/framework/issues/1262)): Specifies the _deletion behaviour_. (In case a node with related nodes gets deleted, the deletion behaviour determines what should happen to the related node(s).) The input values for this argument are defined as an enum with the following possible values:
   - `NO_ACTION` (default): Keep the related node
   - `CASCADE`: Delete the related node
   - `SET_NULL`: Set the related node to `null`
@@ -321,7 +332,7 @@ type Story {
 }
 ```
 
-If the `name` wasn't provided in this case, there would be now way for Graphcool to know whether `writtenStories` should relate to the `author` or the `likedBy` field.
+If the `name` wasn't provided in this case, there would be no way to decide whether `writtenStories` should relate to the `author` or the `likedBy` field.
 
 #### Using the `onDelete` argument of the `@relation` directive
 
@@ -366,7 +377,7 @@ Let's investigate the deletion behaviour for the three types:
 The relations that are included in your schema affect the available operations in the [GraphQL API](!alias-abogasd0go). For every relation,
 
 * [relation queries](!alias-nia9nushae#relation-queries) allow you to query data across types or aggregated for a relation
-* [nested mutations](!alias-ol0yuoz6go#nested-mutations) allow you to create and connect nodes across types
+* [nested mutations](!alias-ol0yuoz6go#nested-mutations) allow you to create, connect, update, upsert and delete nodes across types
 * [relation subscriptions](!alias-aip7oojeiv#relation-subscriptions) allow you to get notified of changes to a relation
 
 ## GraphQL directives
@@ -392,7 +403,7 @@ type User {
 
 The static directive `@relation(name: String, onDelete: ON_DELETE! = NO_ACTION)` can be attached to a [relation field](#scalar-and-relation-fields).
 
-[See above](#the-relation-directive) for more info.
+[See above](#the-relation-directive) for more information.
 
 #### Default value for scalar fields
 
