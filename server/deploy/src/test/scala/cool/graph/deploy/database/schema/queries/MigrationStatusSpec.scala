@@ -39,20 +39,24 @@ class MigrationStatusSpec extends FlatSpec with Matchers with DeploySpecBase {
     val nameAndStage = ProjectId.fromEncodedString(project.id)
     val migration = migrationPersistence
       .create(
-        project,
-        Migration(project,
-                  Vector(CreateModel("TestModel"),
-                         CreateField(
-                           "TestModel",
-                           "TestField",
-                           "String",
-                           isRequired = false,
-                           isList = false,
-                           isUnique = false,
-                           None,
-                           None,
-                           None
-                         )))
+        Migration(
+          project.id,
+          project.schema,
+          Vector(
+            CreateModel("TestModel"),
+            CreateField(
+              "TestModel",
+              "TestField",
+              "String",
+              isRequired = false,
+              isList = false,
+              isUnique = false,
+              None,
+              None,
+              None
+            )
+          )
+        )
       )
       .await
 

@@ -2,7 +2,7 @@ package cool.graph.deploy.database.persistence
 
 import cool.graph.deploy.database.tables.Tables
 import cool.graph.deploy.specutils.{DeploySpecBase, TestProject}
-import cool.graph.shared.models.Migration
+import cool.graph.shared.models.{Migration, MigrationStatus}
 import org.scalatest.{FlatSpec, Matchers}
 import slick.jdbc.MySQLProfile.api._
 
@@ -20,7 +20,7 @@ class ProjectPersistenceImplSpec extends FlatSpec with Matchers with DeploySpecB
     val project = setupProject(basicTypesGql)
 
     // Create an empty migration to have an unapplied migration with a higher revision
-    migrationPersistence.create(project, Migration.empty(project)).await
+    migrationPersistence.create(Migration.empty(project.id)).await
 
     def loadProject = {
       val result = projectPersistence.load(project.id).await()
@@ -32,7 +32,7 @@ class ProjectPersistenceImplSpec extends FlatSpec with Matchers with DeploySpecB
     loadProject.get.revision shouldEqual 2
 
     // After another migration is completed, the revision is bumped to the revision of the latest migration
-    migrationPersistence.markMigrationAsApplied(Migration.empty(project).copy(revision = 3)).await
+    migrationPersistence.updateMigrationStatus(Migration.empty(project.id).copy(revision = 3), MigrationStatus.Success).await
     loadProject.get.revision shouldEqual 3
   }
 
@@ -48,23 +48,17 @@ class ProjectPersistenceImplSpec extends FlatSpec with Matchers with DeploySpecB
     projectPersistence.loadAll().await should have(size(2))
   }
 
-  ".loadProjectsWithUnappliedMigrations()" should "load all distinct projects with unapplied migrations" in {
-    val migratedProject               = TestProject()
-    val unmigratedProject             = TestProject()
-    val unmigratedProjectWithMultiple = TestProject()
+  ".update()" should "update a project" in {
+    val project = setupProject(basicTypesGql)
 
-    // Create base projects
-    projectPersistence.create(migratedProject).await()
-    projectPersistence.create(unmigratedProject).await()
-    projectPersistence.create(unmigratedProjectWithMultiple).await()
+    val updatedProject = project.copy(secrets = Vector("Some", "secrets"))
+    projectPersistence.update(updatedProject).await()
 
-    // Create pending migrations
-    migrationPersistence.create(unmigratedProject, Migration.empty(unmigratedProject)).await
-    migrationPersistence.create(unmigratedProjectWithMultiple, Migration.empty(unmigratedProjectWithMultiple)).await
-    migrationPersistence.create(unmigratedProjectWithMultiple, Migration.empty(unmigratedProjectWithMultiple)).await
-
-    val projects = projectPersistence.loadProjectsWithUnappliedMigrations().await
-    projects should have(size(2))
+    val reloadedProject = projectPersistence.load(project.id).await.get
+    reloadedProject.secrets should contain allOf (
+      "Some",
+      "secrets"
+    )
   }
 
   def assertNumberOfRowsInProjectTable(count: Int): Unit = {

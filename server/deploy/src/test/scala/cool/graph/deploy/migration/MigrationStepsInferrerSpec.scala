@@ -1,6 +1,6 @@
 package cool.graph.deploy.migration
 
-import cool.graph.deploy.migration.inference.{FieldMapping, Mapping, SchemaMapping}
+import cool.graph.deploy.migration.inference.{FieldMapping, Mapping, MigrationStepsInferrerImpl, SchemaMapping}
 import cool.graph.deploy.specutils.DeploySpecBase
 import cool.graph.shared.models._
 import cool.graph.shared.project_dsl.SchemaDsl.SchemaBuilder
@@ -21,8 +21,8 @@ class MigrationStepsInferrerSpec extends FlatSpec with Matchers with DeploySpecB
       schema.model("Test").field("a", _.String).field("b", _.Int)
     }
 
-    val proposer = MigrationStepsProposerImpl(previousProject, nextProject, renames)
-    val steps    = proposer.evaluate()
+    val inferrer = MigrationStepsInferrerImpl(previousProject.schema, nextProject.schema, renames)
+    val steps    = inferrer.evaluate()
 
     steps shouldBe empty
   }
@@ -38,7 +38,7 @@ class MigrationStepsInferrerSpec extends FlatSpec with Matchers with DeploySpecB
       schema.model("Test2").field("c", _.String).field("d", _.Int)
     }
 
-    val proposer = MigrationStepsProposerImpl(previousProject, nextProject, renames)
+    val proposer = MigrationStepsInferrerImpl(previousProject.schema, nextProject.schema, renames)
     val steps    = proposer.evaluate()
 
     steps.length shouldBe 4
@@ -62,7 +62,7 @@ class MigrationStepsInferrerSpec extends FlatSpec with Matchers with DeploySpecB
       schema.model("Test").field("a", _.String).field("b", _.Int)
     }
 
-    val proposer = MigrationStepsProposerImpl(previousProject, nextProject, renames)
+    val proposer = MigrationStepsInferrerImpl(previousProject.schema, nextProject.schema, renames)
     val steps    = proposer.evaluate()
 
     steps.length shouldBe 1
@@ -81,7 +81,7 @@ class MigrationStepsInferrerSpec extends FlatSpec with Matchers with DeploySpecB
       schema.model("Test2").field("a", _.String).field("b", _.Int)
     }
 
-    val proposer = MigrationStepsProposerImpl(previousProject, nextProject, renames)
+    val proposer = MigrationStepsInferrerImpl(previousProject.schema, nextProject.schema, renames)
     val steps    = proposer.evaluate()
 
     steps.length shouldBe 1
@@ -98,7 +98,7 @@ class MigrationStepsInferrerSpec extends FlatSpec with Matchers with DeploySpecB
       schema.model("Test").field("a", _.String).field("b", _.Int)
     }
 
-    val proposer = MigrationStepsProposerImpl(previousProject, nextProject, renames)
+    val proposer = MigrationStepsInferrerImpl(previousProject.schema, nextProject.schema, renames)
     val steps    = proposer.evaluate()
 
     steps.length shouldBe 1
@@ -115,7 +115,7 @@ class MigrationStepsInferrerSpec extends FlatSpec with Matchers with DeploySpecB
       schema.model("Test").field("a", _.String)
     }
 
-    val proposer = MigrationStepsProposerImpl(previousProject, nextProject, renames)
+    val proposer = MigrationStepsInferrerImpl(previousProject.schema, nextProject.schema, renames)
     val steps    = proposer.evaluate()
 
     steps.length shouldBe 1
@@ -151,7 +151,7 @@ class MigrationStepsInferrerSpec extends FlatSpec with Matchers with DeploySpecB
         .field("e", _.String, isUnique = true) // Now unique
     }
 
-    val proposer = MigrationStepsProposerImpl(previousProject, nextProject, renames)
+    val proposer = MigrationStepsInferrerImpl(previousProject.schema, nextProject.schema, renames)
     val steps    = proposer.evaluate()
 
     steps.length shouldBe 6
@@ -181,7 +181,7 @@ class MigrationStepsInferrerSpec extends FlatSpec with Matchers with DeploySpecB
         .oneToManyRelation_!("comments", "todo", comment)
     }
 
-    val proposer = MigrationStepsProposerImpl(previousProject, nextProject, SchemaMapping.empty)
+    val proposer = MigrationStepsInferrerImpl(previousProject.schema, nextProject.schema, SchemaMapping.empty)
     val steps    = proposer.evaluate()
 
     steps.length shouldBe 3
@@ -233,7 +233,7 @@ class MigrationStepsInferrerSpec extends FlatSpec with Matchers with DeploySpecB
         .field("title", _.String)
     }
 
-    val proposer = MigrationStepsProposerImpl(previousProject, nextProject, SchemaMapping.empty)
+    val proposer = MigrationStepsInferrerImpl(previousProject.schema, nextProject.schema, SchemaMapping.empty)
     val steps    = proposer.evaluate()
 
     steps should have(size(3))
@@ -258,7 +258,7 @@ class MigrationStepsInferrerSpec extends FlatSpec with Matchers with DeploySpecB
       comment.manyToOneRelation("todo", "comments", todo, relationName = Some(relationName))
     }
 
-    val proposer = MigrationStepsProposerImpl(previousProject, nextProject, SchemaMapping.empty)
+    val proposer = MigrationStepsInferrerImpl(previousProject.schema, nextProject.schema, SchemaMapping.empty)
     val steps    = proposer.evaluate()
 
     steps should have(size(0))
@@ -276,7 +276,7 @@ class MigrationStepsInferrerSpec extends FlatSpec with Matchers with DeploySpecB
         .field("status", _.Enum, enum = Some(enum))
     }
 
-    val proposer = MigrationStepsProposerImpl(previousProject, nextProject, SchemaMapping.empty)
+    val proposer = MigrationStepsInferrerImpl(previousProject.schema, nextProject.schema, SchemaMapping.empty)
     val steps    = proposer.evaluate()
 
     steps should have(size(2))
@@ -315,7 +315,7 @@ class MigrationStepsInferrerSpec extends FlatSpec with Matchers with DeploySpecB
         .field("status", _.Enum, enum = Some(enum))
     }
 
-    val steps = MigrationStepsProposerImpl(previousProject, nextProject, renames).evaluate()
+    val steps = MigrationStepsInferrerImpl(previousProject.schema, nextProject.schema, renames).evaluate()
 
     steps should have(size(2))
     steps should contain allOf (
@@ -356,7 +356,7 @@ class MigrationStepsInferrerSpec extends FlatSpec with Matchers with DeploySpecB
         .field("status", _.Enum, enum = Some(enum))
     }
 
-    val steps = MigrationStepsProposerImpl(previousProject, nextProject, renames).evaluate()
+    val steps = MigrationStepsInferrerImpl(previousProject.schema, nextProject.schema, renames).evaluate()
 
     steps should have(size(1))
     steps should contain(
@@ -389,7 +389,7 @@ class MigrationStepsInferrerSpec extends FlatSpec with Matchers with DeploySpecB
         .field("status", _.Enum, enum = Some(enum))
     }
 
-    val steps = MigrationStepsProposerImpl(previousProject, nextProject, renames).evaluate()
+    val steps = MigrationStepsInferrerImpl(previousProject.schema, nextProject.schema, renames).evaluate()
     steps should have(size(1))
     steps should contain(
       CreateField(
@@ -418,7 +418,7 @@ class MigrationStepsInferrerSpec extends FlatSpec with Matchers with DeploySpecB
       schema.model("Todo")
     }
 
-    val steps = MigrationStepsProposerImpl(previousProject, nextProject, renames).evaluate()
+    val steps = MigrationStepsInferrerImpl(previousProject.schema, nextProject.schema, renames).evaluate()
 
     steps should have(size(1))
     steps should contain(

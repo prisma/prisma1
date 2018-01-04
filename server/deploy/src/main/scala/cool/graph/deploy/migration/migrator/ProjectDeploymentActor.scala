@@ -6,11 +6,10 @@ import cool.graph.deploy.migration.MigrationStepMapper
 import cool.graph.deploy.migration.mutactions.ClientSqlMutaction
 import cool.graph.deploy.schema.DeploymentInProgress
 import cool.graph.shared.models.{Migration, MigrationStatus, MigrationStep, Schema}
-import cool.graph.utils.future.FutureUtils.FutureOpt
+import slick.jdbc.MySQLProfile.backend.DatabaseDef
 
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
-import slick.jdbc.MySQLProfile.backend.DatabaseDef
 
 object DeploymentProtocol {
   object Initialize

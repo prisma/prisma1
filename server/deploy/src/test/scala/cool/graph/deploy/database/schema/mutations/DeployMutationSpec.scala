@@ -289,9 +289,9 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
     val project       = setupProject(schema)
     val loadedProject = projectPersistence.load(project.id).await.get
 
-    loadedProject.getModelByName("TestModel").get.getFieldByName("id").get.isHidden shouldEqual true
-    loadedProject.getModelByName("TestModel").get.getFieldByName("createdAt").get.isHidden shouldEqual true
-    loadedProject.getModelByName("TestModel").get.getFieldByName("updatedAt").get.isHidden shouldEqual true
+    loadedProject.schema.getModelByName("TestModel").get.getFieldByName("id").get.isHidden shouldEqual true
+    loadedProject.schema.getModelByName("TestModel").get.getFieldByName("createdAt").get.isHidden shouldEqual true
+    loadedProject.schema.getModelByName("TestModel").get.getFieldByName("updatedAt").get.isHidden shouldEqual true
   }
 
   "DeployMutation" should "hide reserved fields instead of deleting them and reveal them instead of creating them" in {
@@ -306,9 +306,9 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
     val nameAndStage  = ProjectId.fromEncodedString(project.id)
     val loadedProject = projectPersistence.load(project.id).await.get
 
-    loadedProject.getModelByName("TestModel").get.getFieldByName("id").get.isVisible shouldEqual true
-    loadedProject.getModelByName("TestModel").get.getFieldByName("createdAt").get.isHidden shouldEqual true
-    loadedProject.getModelByName("TestModel").get.getFieldByName("updatedAt").get.isHidden shouldEqual true
+    loadedProject.schema.getModelByName("TestModel").get.getFieldByName("id").get.isVisible shouldEqual true
+    loadedProject.schema.getModelByName("TestModel").get.getFieldByName("createdAt").get.isHidden shouldEqual true
+    loadedProject.schema.getModelByName("TestModel").get.getFieldByName("updatedAt").get.isHidden shouldEqual true
 
     val updatedSchema = """
                           |type TestModel {
@@ -335,9 +335,9 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
 
     val reloadedProject = projectPersistence.load(project.id).await.get
 
-    reloadedProject.getModelByName("TestModel").get.getFieldByName("id").get.isVisible shouldEqual false
-    reloadedProject.getModelByName("TestModel").get.getFieldByName("createdAt").get.isHidden shouldEqual false
-    reloadedProject.getModelByName("TestModel").get.getFieldByName("updatedAt").get.isHidden shouldEqual false
+    reloadedProject.schema.getModelByName("TestModel").get.getFieldByName("id").get.isVisible shouldEqual false
+    reloadedProject.schema.getModelByName("TestModel").get.getFieldByName("createdAt").get.isHidden shouldEqual false
+    reloadedProject.schema.getModelByName("TestModel").get.getFieldByName("updatedAt").get.isHidden shouldEqual false
 
     // todo assert client db cols?
   }

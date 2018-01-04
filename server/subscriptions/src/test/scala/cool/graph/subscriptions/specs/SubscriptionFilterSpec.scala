@@ -33,7 +33,7 @@ class SubscriptionFilterSpec extends FlatSpec with Matchers with SpecBase with A
     testDatabase.runDbActionOnClientDb {
       CreateDataItem(
         project = project,
-        model = project.getModelByName_!("Comment"),
+        model = project.schema.getModelByName_!("Comment"),
         values = List(ArgumentValue(name = "text", value = "some comment"), ArgumentValue(name = "id", value = "comment-id"))
       ).execute.await.sqlAction
     }

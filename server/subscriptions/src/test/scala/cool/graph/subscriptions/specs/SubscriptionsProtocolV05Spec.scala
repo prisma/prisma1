@@ -17,7 +17,7 @@ class SubscriptionsProtocolV05Spec extends FlatSpec with Matchers with SpecBase 
     .field("int", _.Int)
 
   val project      = schema.buildProject()
-  val model: Model = project.getModelByName_!("Todo")
+  val model: Model = project.schema.getModelByName_!("Todo")
 
   override def beforeEach() = {
     super.beforeEach()

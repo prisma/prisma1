@@ -1,7 +1,7 @@
 package cool.graph.deploy.database.persistence
 
 import cool.graph.deploy.database.tables.Tables
-import cool.graph.deploy.specutils.DeploySpecBase
+import cool.graph.deploy.specutils.{DeploySpecBase, TestProject}
 import cool.graph.shared.models.{Migration, MigrationStatus}
 import org.scalatest.{FlatSpec, Matchers}
 import slick.jdbc.MySQLProfile.api._
@@ -15,7 +15,7 @@ class MigrationPersistenceImplSpec extends FlatSpec with Matchers with DeploySpe
     val project = setupProject(basicTypesGql)
     assertNumberOfRowsInMigrationTable(2)
 
-    val savedMigration = migrationPersistence.create(project, Migration.empty(project)).await()
+    val savedMigration = migrationPersistence.create(Migration.empty(project.id)).await()
     assertNumberOfRowsInMigrationTable(3)
     savedMigration.revision shouldEqual 3
   }
@@ -24,9 +24,9 @@ class MigrationPersistenceImplSpec extends FlatSpec with Matchers with DeploySpe
     val project = setupProject(basicTypesGql)
 
     // 1 successful, 2 pending migrations (+ 2 from setup)
-    migrationPersistence.create(project, Migration.empty(project).copy(status = MigrationStatus.Success)).await
-    migrationPersistence.create(project, Migration.empty(project)).await
-    migrationPersistence.create(project, Migration.empty(project)).await
+    migrationPersistence.create(Migration.empty(project.id).copy(status = MigrationStatus.Success)).await
+    migrationPersistence.create(Migration.empty(project.id)).await
+    migrationPersistence.create(Migration.empty(project.id)).await
 
     val migrations = migrationPersistence.loadAll(project.id).await
     migrations should have(size(5))
@@ -54,12 +54,15 @@ class MigrationPersistenceImplSpec extends FlatSpec with Matchers with DeploySpe
 //    migrationPersistence.getUnappliedMigration(project.id).await().isDefined shouldEqual false
 //  }
 
-  ".markMigrationAsApplied()" should "mark a migration as applied (duh)" in {
+  ".updateMigrationStatus()" should "update a migration status correctly" in {
     val project          = setupProject(basicTypesGql)
-    val createdMigration = migrationPersistence.create(project, Migration.empty(project)).await
+    val createdMigration = migrationPersistence.create(Migration.empty(project.id)).await
 
-    migrationPersistence.markMigrationAsApplied(createdMigration).await
-    migrationPersistence.getLastMigration(project.id).await.get.revision shouldEqual createdMigration.revision
+    migrationPersistence.updateMigrationStatus(createdMigration, MigrationStatus.Success).await
+
+    val lastMigration = migrationPersistence.getLastMigration(project.id).await.get
+    lastMigration.revision shouldEqual createdMigration.revision
+    lastMigration.status shouldEqual MigrationStatus.Success.toString
   }
 
   ".getLastMigration()" should "get the last migration applied to a project" in {
@@ -69,10 +72,30 @@ class MigrationPersistenceImplSpec extends FlatSpec with Matchers with DeploySpe
 
   ".getNextMigration()" should "get the next migration to be applied to a project" in {
     val project          = setupProject(basicTypesGql)
-    val createdMigration = migrationPersistence.create(project, Migration.empty(project)).await
+    val createdMigration = migrationPersistence.create(Migration.empty(project.id)).await
 
     migrationPersistence.getNextMigration(project.id).await.get.revision shouldEqual createdMigration.revision
   }
+
+  "loadDistinctUnmigratedProjectIds()" should "load all distinct project ids that have open migrations" in {
+    val migratedProject               = TestProject()
+    val unmigratedProject             = TestProject()
+    val unmigratedProjectWithMultiple = TestProject()
+
+    // Create base projects
+    projectPersistence.create(migratedProject).await()
+    projectPersistence.create(unmigratedProject).await()
+    projectPersistence.create(unmigratedProjectWithMultiple).await()
+
+    // Create pending migrations
+    migrationPersistence.create(Migration.empty(unmigratedProject.id)).await
+    migrationPersistence.create(Migration.empty(unmigratedProjectWithMultiple.id)).await
+    migrationPersistence.create(Migration.empty(unmigratedProjectWithMultiple.id)).await
+
+    val projectIds = migrationPersistence.loadDistinctUnmigratedProjectIds().await
+    projectIds should have(size(2))
+  }
+
   def assertNumberOfRowsInMigrationTable(count: Int): Unit = {
     val query = Tables.Migrations.size
     internalDb.run(query.result) should equal(count)
