@@ -2,15 +2,9 @@ package cool.graph.api.database.mutactions.mutactions
 
 import cool.graph.api.database.DatabaseMutationBuilder
 import cool.graph.api.database.mutactions.{ClientSqlDataChangeMutaction, ClientSqlStatementResult}
-<<<<<<< HEAD
 import cool.graph.api.mutations.{CoolArgs, NodeSelector, ParentInfo}
 import cool.graph.shared.models.{Model, Project}
-=======
-import cool.graph.api.mutations.{CoolArgs, NodeSelector}
-import cool.graph.shared.models.IdType.Id
-import cool.graph.shared.models.{Field, Model, Project, Relation}
 import slick.dbio.DBIOAction
->>>>>>> graphql-database
 
 import scala.concurrent.Future
 

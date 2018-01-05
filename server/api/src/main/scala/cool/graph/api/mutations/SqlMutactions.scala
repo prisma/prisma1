@@ -206,14 +206,10 @@ case class SqlMutactions(dataResolver: DataResolver) {
         updateArgs = upsert.update,
         where = upsert.where
       )
-      val addToRelation = AddDataItemToManyRelationByUniqueField(
-        project = project,
-        parentInfo,
-        where = NodeSelector(model, model.getFieldByName_!("id"), GraphQLIdGCValue(upsertItem.idOfNewItem))
-      )
+      val addToRelation = AddDataItemToManyRelationByUniqueField(project = project, parentInfo, where = NodeSelector.forId(model, upsertItem.idOfNewItem))
       Vector(upsertItem, addToRelation) ++
-        getMutactionsForNestedMutation(upsert.where.model, upsert.update, upsert.where) ++
-        getMutactionsForNestedMutation(upsert.where.model, upsert.create, upsert.where)
+        getMutactionsForNestedMutation(upsert.update, upsert.where) ++
+        getMutactionsForNestedMutation(upsert.create, upsert.where)
     }
   }
 

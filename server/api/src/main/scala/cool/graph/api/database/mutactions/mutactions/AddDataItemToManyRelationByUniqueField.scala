@@ -3,7 +3,6 @@ package cool.graph.api.database.mutactions.mutactions
 import cool.graph.api.database.DatabaseMutationBuilder
 import cool.graph.api.database.mutactions.{ClientSqlDataChangeMutaction, ClientSqlStatementResult}
 import cool.graph.api.mutations.{NodeSelector, ParentInfo}
-import cool.graph.shared.models.IdType.Id
 import cool.graph.shared.models._
 
 import scala.concurrent.Future
