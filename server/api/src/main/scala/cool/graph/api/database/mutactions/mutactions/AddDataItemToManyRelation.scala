@@ -5,6 +5,7 @@ import java.sql.SQLIntegrityConstraintViolationException
 import cool.graph.api.database.{DataResolver, DatabaseMutationBuilder, NameConstraints, RelationFieldMirrorUtils}
 import cool.graph.api.database.DatabaseMutationBuilder.MirrorFieldDbValues
 import cool.graph.api.database.mutactions.{ClientSqlDataChangeMutaction, ClientSqlStatementResult, MutactionVerificationSuccess}
+import cool.graph.api.mutations.ParentInfo
 import cool.graph.api.schema.APIErrors
 import cool.graph.cuid.Cuid
 import cool.graph.shared.models._
@@ -17,36 +18,24 @@ import scala.util.{Failure, Success, Try}
   * Notation: It's not important which side you actually put into to or from. the only important
   * thing is that fromField belongs to fromModel
   */
-case class AddDataItemToManyRelation(
-    project: Project,
-    fromModel: Model,
-    fromField: Field,
-    toId: String,
-    fromId: String,
-    toIdAlreadyInDB: Boolean = true
-) extends ClientSqlDataChangeMutaction {
+case class AddDataItemToManyRelation(project: Project, parentInfo: ParentInfo, toId: String, toIdAlreadyInDB: Boolean = true)
+    extends ClientSqlDataChangeMutaction {
 
-  assert(
-    fromModel.fields.exists(_.id == fromField.id),
-    s"${fromModel.name} does not contain the field ${fromField.name}. If this assertion fires, this mutaction is used wrong by the programmer."
-  )
+  val relationSide: cool.graph.shared.models.RelationSide.Value = parentInfo.field.relationSide.get
 
-  val relationSide: cool.graph.shared.models.RelationSide.Value = fromField.relationSide.get
-  val relation: Relation                                        = fromField.relation.get
+  val aValue: String = if (relationSide == RelationSide.A) parentInfo.where.fieldValueAsString else toId
+  val bValue: String = if (relationSide == RelationSide.A) toId else parentInfo.where.fieldValueAsString
 
-  val aValue: String = if (relationSide == RelationSide.A) fromId else toId
-  val bValue: String = if (relationSide == RelationSide.A) toId else fromId
-
-  val aModel: Model = relation.getModelA_!(project.schema)
-  val bModel: Model = relation.getModelB_!(project.schema)
+  val aModel: Model = parentInfo.relation.getModelA_!(project.schema)
+  val bModel: Model = parentInfo.relation.getModelB_!(project.schema)
 
   private def getFieldMirrors(model: Model, id: String) =
-    relation.fieldMirrors
+    parentInfo.relation.fieldMirrors
       .filter(mirror => model.fields.map(_.id).contains(mirror.fieldId))
       .map(mirror => {
         val field = project.schema.getFieldById_!(mirror.fieldId)
         MirrorFieldDbValues(
-          relationColumnName = RelationFieldMirrorUtils.mirrorColumnName(project, field, relation),
+          relationColumnName = RelationFieldMirrorUtils.mirrorColumnName(project, field, parentInfo.relation),
           modelColumnName = field.name,
           model.name,
           id
@@ -59,7 +48,7 @@ case class AddDataItemToManyRelation(
     Future.successful(
       ClientSqlStatementResult(
         sqlAction = DatabaseMutationBuilder
-          .createRelationRow(project.id, relation.id, Cuid.createCuid(), aValue, bValue, fieldMirrors)))
+          .createRelationRow(project.id, parentInfo.relation.id, Cuid.createCuid(), aValue, bValue, fieldMirrors)))
   }
 
   override def handleErrors =
@@ -74,7 +63,7 @@ case class AddDataItemToManyRelation(
   override def verify(resolver: DataResolver): Future[Try[MutactionVerificationSuccess]] = {
 
     if (toIdAlreadyInDB) {
-      val toModel = if (relationSide == RelationSide.A) relation.getModelB_!(project.schema) else relation.getModelA_!(project.schema)
+      val toModel = if (relationSide == RelationSide.A) parentInfo.relation.getModelB_!(project.schema) else parentInfo.relation.getModelA_!(project.schema)
       resolver.existsByModelAndId(toModel, toId) map {
         case false => Failure(APIErrors.NodeDoesNotExist(toId))
         case true =>

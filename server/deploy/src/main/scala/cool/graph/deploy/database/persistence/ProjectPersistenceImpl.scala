@@ -26,6 +26,11 @@ case class ProjectPersistenceImpl(
     internalDatabase.run(addProject).map(_ => ())
   }
 
+  override def delete(projectId: String): Future[Unit] = {
+    val deleteProject = Tables.Projects.filter(_.id === projectId).delete
+    internalDatabase.run(deleteProject).map(_ => ())
+  }
+
   override def loadAll(): Future[Seq[Project]] = {
     internalDatabase.run(ProjectTable.loadAllWithMigration()).map(_.map { case (p, m) => DbToModelMapper.convert(p, m) })
   }

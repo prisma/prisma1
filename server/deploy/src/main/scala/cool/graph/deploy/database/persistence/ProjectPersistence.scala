@@ -8,5 +8,6 @@ trait ProjectPersistence {
   def load(id: String): Future[Option[Project]]
   def loadAll(): Future[Seq[Project]]
   def create(project: Project): Future[Unit]
-  def update(project: Project): Future[_]
+  def delete(project: String): Future[Unit]
+  def loadProjectsWithUnappliedMigrations(): Future[Seq[Project]]
 }

@@ -2,6 +2,7 @@ package cool.graph.api.import_export
 
 import cool.graph.api.ApiBaseSpec
 import cool.graph.api.database.import_export.BulkImport
+import cool.graph.shared.models.Project
 import cool.graph.shared.project_dsl.SchemaDsl
 import cool.graph.utils.await.AwaitUtils
 import org.scalatest.{FlatSpec, Matchers}
@@ -9,7 +10,7 @@ import spray.json._
 
 class BulkImportSpec extends FlatSpec with Matchers with ApiBaseSpec with AwaitUtils {
 
-  val project = SchemaDsl() { schema =>
+  val project: Project = SchemaDsl() { schema =>
     val model1: SchemaDsl.ModelBuilder = schema
       .model("Model1")
       .field("a", _.String)

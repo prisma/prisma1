@@ -439,15 +439,10 @@ case class Relation(
   }
 
   def getModelAField(schema: Schema): Option[Field] = modelFieldFor(schema, modelAId, RelationSide.A)
-  def getModelAField_!(schema: Schema): Field =
-    getModelAField(schema).get //OrElse(throw SystemErrors.InvalidRelation("A relation must have a field on model A."))
-
   def getModelBField(schema: Schema): Option[Field] = {
     // note: defaults to modelAField to handle same model, same field relations
     modelFieldFor(schema, modelBId, RelationSide.B) //.orElse(getModelAField(project))
   }
-  def getModelBField_!(schema: Schema): Field =
-    getModelBField(schema).get //OrElse(throw SystemErrors.InvalidRelation("This must return a Model, if not Model B then Model A."))
 
   private def modelFieldFor(schema: Schema, modelId: String, relationSide: RelationSide.Value): Option[Field] = {
     for {

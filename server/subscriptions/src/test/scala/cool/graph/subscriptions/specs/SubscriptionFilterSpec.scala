@@ -2,8 +2,9 @@ package cool.graph.subscriptions.specs
 
 import cool.graph.api.database.mutactions.mutactions.{AddDataItemToManyRelation, CreateDataItem}
 import cool.graph.api.mutations.MutationTypes.ArgumentValue
+import cool.graph.api.mutations.{NodeSelector, ParentInfo}
 import cool.graph.messagebus.pubsub.Only
-import cool.graph.shared.models.{Enum, Model}
+import cool.graph.shared.models.{Enum, Model, Project}
 import cool.graph.shared.project_dsl.SchemaDsl
 import cool.graph.utils.await.AwaitUtils
 import org.scalatest.{FlatSpec, Matchers}
@@ -11,18 +12,18 @@ import play.api.libs.json.Json
 import spray.json.JsString
 
 class SubscriptionFilterSpec extends FlatSpec with Matchers with SpecBase with AwaitUtils {
-  val schema           = SchemaDsl.schema()
-  val statusEnum: Enum = schema.enum("Status", Vector("Active", "Done"))
-  val comment          = schema.model("Comment").field("text", _.String)
-  val todo = schema
+  val schema: SchemaDsl.SchemaBuilder = SchemaDsl.schema()
+  val statusEnum: Enum                = schema.enum("Status", Vector("Active", "Done"))
+  val comment: SchemaDsl.ModelBuilder = schema.model("Comment").field("text", _.String)
+  val todo: SchemaDsl.ModelBuilder = schema
     .model("Todo")
     .field("text", _.String)
     .field("tags", _.String, isList = true)
     .field("status", _.Enum, enum = Some(statusEnum))
     .oneToManyRelation("comments", "todo", comment)
 
-  val project      = schema.buildProject()
-  val model: Model = project.models.find(_.name == "Todo").get
+  val project: Project = schema.buildProject()
+  val model: Model     = project.getModelByName_!("Todo")
 
   override def beforeEach(): Unit = {
     super.beforeEach()
@@ -38,15 +39,9 @@ class SubscriptionFilterSpec extends FlatSpec with Matchers with SpecBase with A
       ).execute.await.sqlAction
     }
 
-    testDatabase.runDbActionOnClientDb {
-      AddDataItemToManyRelation(
-        project = project,
-        fromModel = model,
-        fromField = model.getFieldByName_!("comments"),
-        toId = "comment-id",
-        fromId = "test-node-id"
-      ).execute.await.sqlAction
-    }
+    val parentInfo = ParentInfo(model.getFieldByName_!("comments"), NodeSelector.forId(model, "test-node-id"))
+
+    testDatabase.runDbActionOnClientDb { AddDataItemToManyRelation(project, parentInfo, toId = "comment-id").execute.await.sqlAction }
   }
 
   "The Filter" should "support enums in previous values" in {

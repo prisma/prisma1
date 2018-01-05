@@ -10,6 +10,8 @@ import cool.graph.shared.models.IdType.Id
 import cool.graph.shared.models.TypeIdentifier.TypeIdentifier
 import cool.graph.shared.models._
 import cool.graph.util.gc_value.{GCJsonConverter, GCValueExtractor}
+import org.joda.time.DateTime
+import org.joda.time.format.DateTimeFormat
 import slick.dbio.Effect.Read
 import slick.dbio.{DBIOAction, Effect, NoStream}
 import slick.jdbc.MySQLProfile.api._
@@ -71,7 +73,7 @@ case class DataResolver(project: Project, useMasterDatabaseOnly: Boolean = false
   def resolveByUnique(where: NodeSelector): Future[Option[DataItem]] = {
     where.fieldValue match {
       case JsonGCValue(x) => batchResolveByUnique(where.model, where.field.name, List(where.fieldValueAsString)).map(_.headOption)
-      case _ => batchResolveByUnique(where.model, where.field.name, List(where.unwrappedFieldValue)).map(_.headOption)
+      case _              => batchResolveByUnique(where.model, where.field.name, List(where.unwrappedFieldValue)).map(_.headOption)
     }
   }
 
@@ -116,6 +118,7 @@ case class DataResolver(project: Project, useMasterDatabaseOnly: Boolean = false
     val query = DatabaseQueryBuilder.selectFromScalarList(project.id, model.name, field.name, nodeIds)
 
     performWithTiming("batchResolveScalarList", readonlyClientDatabase.run(readOnlyScalarListValue(query)))
+      .map(_.map(mapScalarListValueWithoutValidation(model, field)))
   }
 
   def batchResolveByUniqueWithoutValidation(model: Model, key: String, values: List[Any]): Future[List[DataItem]] = {
@@ -166,8 +169,7 @@ case class DataResolver(project: Project, useMasterDatabaseOnly: Boolean = false
   }
 
   def resolveByRelation(fromField: Field, fromModelId: String, args: Option[QueryArguments]): Future[ResolverResult] = {
-    val (query, resultTransform) =
-      DatabaseQueryBuilder.batchSelectAllFromRelatedModel(project, fromField, List(fromModelId), args)
+    val (query, resultTransform) = DatabaseQueryBuilder.batchSelectAllFromRelatedModel(project, fromField, List(fromModelId), args)
 
     performWithTiming(
       "resolveByRelation",
@@ -179,9 +181,7 @@ case class DataResolver(project: Project, useMasterDatabaseOnly: Boolean = false
   }
 
   def resolveByRelationManyModels(fromField: Field, fromModelIds: List[String], args: Option[QueryArguments]): Future[Seq[ResolverResult]] = {
-    val (query, resultTransform) =
-      DatabaseQueryBuilder
-        .batchSelectAllFromRelatedModel(project, fromField, fromModelIds, args)
+    val (query, resultTransform) = DatabaseQueryBuilder.batchSelectAllFromRelatedModel(project, fromField, fromModelIds, args)
 
     performWithTiming(
       "resolveByRelation",
@@ -210,9 +210,7 @@ case class DataResolver(project: Project, useMasterDatabaseOnly: Boolean = false
   def resolveByModelAndIdWithoutValidation(model: Model, id: Id): Future[Option[DataItem]] = resolveByUniqueWithoutValidation(model, "id", id)
 
   def countByRelationManyModels(fromField: Field, fromNodeIds: List[String], args: Option[QueryArguments]): Future[List[(String, Int)]] = {
-
     val (query, _) = DatabaseQueryBuilder.countAllFromRelatedModels(project, fromField, fromNodeIds, args)
-
     performWithTiming("countByRelation", readonlyClientDatabase.run(readOnlyStringInt(query)).map(_.toList))
   }
 
@@ -223,19 +221,16 @@ case class DataResolver(project: Project, useMasterDatabaseOnly: Boolean = false
 
   def existsNullByModelAndScalarField(model: Model, field: Field): Future[Boolean] = {
     val query = DatabaseQueryBuilder.existsNullByModelAndScalarField(project.id, model.name, field.name)
-
     performWithTiming("existsNullByModelAndScalarField", readonlyClientDatabase.run(readOnlyBoolean(query)).map(_.head))
   }
 
   def existsNullByModelAndRelationField(model: Model, field: Field): Future[Boolean] = {
     val query = DatabaseQueryBuilder.existsNullByModelAndRelationField(project.id, model.name, field)
-
     performWithTiming("existsNullByModelAndRelationField", readonlyClientDatabase.run(readOnlyBoolean(query)).map(_.head))
   }
 
   def itemCountForRelation(relation: Relation): Future[Int] = {
     val query = DatabaseQueryBuilder.itemCountForTable(project.id, relation.id)
-
     performWithTiming("itemCountForRelation", readonlyClientDatabase.run(readOnlyInt(query))).map(_.head)
   }
 
@@ -290,6 +285,10 @@ case class DataResolver(project: Project, useMasterDatabaseOnly: Boolean = false
     mapDataItemHelper(model, dataItem, validate = false)
   }
 
+  protected def mapScalarListValueWithoutValidation(model: Model, field: Field)(scalarListValue: ScalarListValue): ScalarListValue = {
+    mapScalarListValueHelper(model, field, scalarListValue, validate = false)
+  }
+
   private def mapDataItemHelper(model: Model, dataItem: DataItem, validate: Boolean = true): DataItem = {
 
     def isType(fieldName: String, typeIdentifier: TypeIdentifier) = model.fields.exists(f => f.name == fieldName && f.typeIdentifier == typeIdentifier)
@@ -316,6 +315,23 @@ case class DataResolver(project: Project, useMasterDatabaseOnly: Boolean = false
     })
 
     res
+  }
+
+  private def mapScalarListValueHelper(model: Model, field: Field, listValue: ScalarListValue, validate: Boolean = true): ScalarListValue = {
+    // Todo handle Json, it already seems to break earlier when casting the queryresult to a Vector
+
+    val value = listValue.value match {
+      case v: java.math.BigDecimal if field.typeIdentifier == TypeIdentifier.Float && field.isList =>
+        v.doubleValue()
+
+      case v: java.sql.Timestamp if field.typeIdentifier == TypeIdentifier.DateTime && field.isList =>
+        DateTime.parse(v.toString, DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSS").withZoneUTC())
+
+      case v =>
+        v
+    }
+
+    listValue.copy(value = value)
   }
 
   private def unwrapGcValue(value: Any): Any = {

@@ -16,8 +16,7 @@ class ScalarListDeferredResolver(dataResolver: DataResolver) {
 
     val headDeferred = deferreds.head
 
-    val futureValues: Future[Vector[ScalarListValue]] =
-      dataResolver.batchResolveScalarList(headDeferred.model, headDeferred.field, deferreds.map(_.nodeId))
+    val futureValues: Future[Vector[ScalarListValue]] = dataResolver.batchResolveScalarList(headDeferred.model, headDeferred.field, deferreds.map(_.nodeId))
 
     // assign and sort the scalarListValues that was requested by each deferred
     val results = orderedDeferreds.map {

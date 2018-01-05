@@ -132,9 +132,8 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
       project
     )
 
-    server.executeQuerySimple("query{users{id}}", project).pathAsSeq("data.users").length should be (1)
-    server.executeQuerySimple("query{posts{id}}", project).pathAsSeq("data.posts").length should be (1)
-
+    server.executeQuerySimple("query{users{id}}", project).pathAsSeq("data.users").length should be(1)
+    server.executeQuerySimple("query{posts{id}}", project).pathAsSeq("data.posts").length should be(1)
 
     server.executeQuerySimpleThatMustFail(
       """mutation{
@@ -152,8 +151,8 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
       errorContains = "A unique constraint would be violated on User. Details: Field name = unique"
     )
 
-    server.executeQuerySimple("query{users{id}}", project).pathAsSeq("data.users").length should be (1)
-    server.executeQuerySimple("query{posts{id}}", project).pathAsSeq("data.posts").length should be (1)
+    server.executeQuerySimple("query{users{id}}", project).pathAsSeq("data.users").length should be(1)
+    server.executeQuerySimple("query{posts{id}}", project).pathAsSeq("data.posts").length should be(1)
 
     server.executeQuerySimpleThatMustFail(
       """mutation{
@@ -171,8 +170,54 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
       errorContains = "A unique constraint would be violated on Post. Details: Field name = uniquePost"
     )
 
-    server.executeQuerySimple("query{users{id}}", project).pathAsSeq("data.users").length should be (1)
-    server.executeQuerySimple("query{posts{id}}", project).pathAsSeq("data.posts").length should be (1)
+    server.executeQuerySimple("query{users{id}}", project).pathAsSeq("data.users").length should be(1)
+    server.executeQuerySimple("query{posts{id}}", project).pathAsSeq("data.posts").length should be(1)
+  }
+
+  "a deeply nested mutation" should "execute all levels of the mutation" in {
+    val project = SchemaDsl() { schema =>
+      val list = schema.model("List").field_!("name", _.String)
+      val todo = schema.model("Todo").field_!("title", _.String)
+      val tag  = schema.model("Tag").field_!("name", _.String)
+
+      list.oneToManyRelation("todos", "list", todo)
+      todo.oneToOneRelation("tag", "todo", tag)
+    }
+    database.setup(project)
+
+    val mutation =
+      """
+        |mutation  {
+        |  createList(data: {
+        |    name: "the list",
+        |    todos: {
+        |      create: [
+        |        {
+        |          title: "the todo"
+        |          tag: {
+        |            create: {
+        |              name: "the tag"
+        |            }
+        |          }
+        |        }
+        |      ]
+        |    }
+        |  }) {
+        |    name
+        |    todos {
+        |      title
+        |      tag {
+        |        name
+        |      }
+        |    }
+        |  }
+        |}
+      """.stripMargin
+
+    val result = server.executeQuerySimple(mutation, project)
+    result.pathAsString("data.createList.name") should equal("the list")
+    result.pathAsString("data.createList.todos.[0].title") should equal("the todo")
+    result.pathAsString("data.createList.todos.[0].tag.name") should equal("the tag")
   }
 
 }

@@ -110,10 +110,15 @@ class BulkExport(project: Project)(implicit apiDependencies: ApiDependencies) {
   }
 
   def dataItemToExportList(dataItems: Seq[DataItem], info: ListInfo): Vector[JsonBundle] = {
-    val distinctIds = dataItems.map(_.id).distinct
+    val outputs = project.schema.getModelByName_!(info.currentModel).getFieldByName_!(info.currentField).typeIdentifier == TypeIdentifier.DateTime match {
+      case true  => dataItems.map(item => item.copy(userData = Map("value" -> Some(dateTimeToISO8601(item.userData("value").get)))))
+      case false => dataItems
+    }
+
+    val distinctIds = outputs.map(_.id).distinct
 
     val x = distinctIds.map { id =>
-      val values                   = dataItems.filter(_.id == id).map(item => item("value").get)
+      val values: Seq[Any]         = outputs.filter(_.id == id).map(item => item("value").get)
       val result: Map[String, Any] = Map("_typeName" -> info.currentModel, "id" -> id, info.currentField -> values)
       val json                     = result.toJson
       val combinedSize             = json.toString.length
@@ -150,8 +155,8 @@ class BulkExport(project: Project)(implicit apiDependencies: ApiDependencies) {
   private def dataItemToExportRelation(item: DataItem, info: RelationInfo): JsonBundle = {
     val idA      = item.userData("A").get.toString.trim
     val idB      = item.userData("B").get.toString.trim
-    val leftMap  = Map("_typeName" -> info.current.leftModel, "id" -> idB, "fieldName" -> info.current.leftField)
-    val rightMap = Map("_typeName" -> info.current.rightModel, "id" -> idA, "fieldName" -> info.current.rightField)
+    val leftMap  = ExportRelationSide(info.current.leftModel, idB, info.current.leftField)
+    val rightMap = ExportRelationSide(info.current.rightModel, idA, info.current.rightField)
 
     val json = JsArray(leftMap.toJson, rightMap.toJson)
     JsonBundle(jsonElements = Vector(json), size = json.toString.length)
