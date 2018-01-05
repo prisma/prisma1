@@ -5,7 +5,7 @@ import cool.graph.deploy.DeployDependencies
 import cool.graph.deploy.database.persistence.{MigrationPersistence, ProjectPersistence}
 import cool.graph.deploy.migration._
 import cool.graph.deploy.migration.migrator.Migrator
-import cool.graph.deploy.schema.fields.{AddProjectField, DeployField, ManualMarshallerHelpers}
+import cool.graph.deploy.schema.fields.{AddProjectField, DeleteProjectField, DeployField, ManualMarshallerHelpers}
 import cool.graph.deploy.schema.mutations._
 import cool.graph.deploy.schema.types._
 import cool.graph.shared.models.Project
@@ -70,7 +70,8 @@ case class SchemaBuilderImpl(
 
   def getMutationFields: Vector[Field[SystemUserContext, Unit]] = Vector(
     deployField,
-    addProjectField
+    addProjectField,
+    deleteProjectField
   )
 
   val migrationStatusField: Field[SystemUserContext, Unit] = Field(
@@ -175,6 +176,26 @@ case class SchemaBuilderImpl(
             args = args,
             projectPersistence = projectPersistence,
             migrationPersistence = migrationPersistence,
+            clientDb = clientDb
+          ).execute
+      }
+    )
+  }
+
+  def deleteProjectField: Field[SystemUserContext, Unit] = {
+    import DeleteProjectField.fromInput
+    Mutation.fieldWithClientMutationId[SystemUserContext, Unit, DeleteProjectMutationPayload, DeleteProjectInput](
+      fieldName = "deleteProject",
+      typeName = "DeleteProject",
+      inputFields = DeleteProjectField.inputFields,
+      outputFields = sangria.schema.fields[SystemUserContext, DeleteProjectMutationPayload](
+        Field("project", OptionType(ProjectType.Type), resolve = (ctx: Context[SystemUserContext, DeleteProjectMutationPayload]) => ctx.value.project)
+      ),
+      mutateAndGetPayload = (args, ctx) =>
+        handleMutationResult {
+          DeleteProjectMutation(
+            args = args,
+            projectPersistence = projectPersistence,
             clientDb = clientDb
           ).execute
       }
