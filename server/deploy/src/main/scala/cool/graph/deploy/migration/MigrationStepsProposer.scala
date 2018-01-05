@@ -175,7 +175,7 @@ case class MigrationStepsProposerImpl(previousProject: Project, nextProject: Pro
   lazy val relationsToCreate: Vector[CreateRelation] = {
     for {
       nextRelation <- nextProject.relations.toVector
-      if !containsRelation(previousProject, nextRelation, renames.getPreviousModelName)
+      if !containsRelation(previousProject, ambiguityCheck = nextProject, nextRelation, renames.getPreviousModelName)
     } yield {
       CreateRelation(
         name = nextRelation.name,
@@ -188,7 +188,7 @@ case class MigrationStepsProposerImpl(previousProject: Project, nextProject: Pro
   lazy val relationsToDelete: Vector[DeleteRelation] = {
     for {
       previousRelation <- previousProject.relations.toVector
-      if !containsRelation(nextProject, previousRelation, renames.getNextModelName)
+      if !containsRelation(nextProject, ambiguityCheck = previousProject, previousRelation, renames.getNextModelName)
     } yield DeleteRelation(previousRelation.name)
   }
 
@@ -197,7 +197,9 @@ case class MigrationStepsProposerImpl(previousProject: Project, nextProject: Pro
       previousRelation <- previousProject.relations.toVector
       nextModelAName   = renames.getNextModelName(previousRelation.modelAId)
       nextModelBName   = renames.getNextModelName(previousRelation.modelBId)
-      nextRelation     <- nextProject.getRelationsThatConnectModels(nextModelAName, nextModelBName).headOption
+      nextRelation <- nextProject // TODO: this needs to be adapted once we allow rename of relations
+                       .getRelationByName(previousRelation.name)
+                       .orElse(nextProject.getUnambiguousRelationThatConnectsModels_!(nextModelAName, nextModelBName))
     } yield {
       UpdateRelation(
         name = previousRelation.name,
@@ -240,14 +242,9 @@ case class MigrationStepsProposerImpl(previousProject: Project, nextProject: Pro
     updates.filter(isAnyOptionSet)
   }
 
-  lazy val emptyModel = Model(
-    id = "",
-    name = "",
-    fields = List.empty,
-    description = None
-  )
+  lazy val emptyModel = Model(name = "", fields = List.empty)
 
-  def containsRelation(project: Project, relation: Relation, adjacentModelName: String => String): Boolean = {
+  def containsRelation(project: Project, ambiguityCheck: Project, relation: Relation, adjacentModelName: String => String): Boolean = {
     project.relations.exists { rel =>
       val adjacentModelAId  = adjacentModelName(relation.modelAId)
       val adajacentModelBId = adjacentModelName(relation.modelBId)
@@ -260,7 +257,9 @@ case class MigrationStepsProposerImpl(previousProject: Project, nextProject: Pro
       val refersToModelsExactlyRight = rel.modelAId == adjacentModelAId && rel.modelBId == adajacentModelBId
       val refersToModelsSwitched     = rel.modelAId == adajacentModelBId && rel.modelBId == adjacentModelAId
       val relationNameMatches        = rel.name == adjacentGeneratedRelationName || rel.name == relation.name
-      relationNameMatches && (refersToModelsExactlyRight || refersToModelsSwitched)
+      val relationIsUnambiguous      = rel.isUnambiguous(ambiguityCheck)
+
+      (relationNameMatches || relationIsUnambiguous) && (refersToModelsExactlyRight || refersToModelsSwitched)
     }
   }
 

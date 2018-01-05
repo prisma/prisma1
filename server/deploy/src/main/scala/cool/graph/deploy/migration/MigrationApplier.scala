@@ -103,7 +103,7 @@ case class MigrationApplierImpl(clientDatabase: DatabaseDef)(implicit ec: Execut
       val field = model.getFieldByName_!(x.name)
       if (field.isList) {
         Some(DeleteScalarListTable(nextProject.id, model.name, field.name, field.typeIdentifier))
-      } else if (!field.isRelation) {
+      } else if (field.isScalar) {
         // TODO: add test case for not deleting columns for relation fields
         Some(DeleteColumn(nextProject.id, model, field))
       } else {
@@ -118,8 +118,10 @@ case class MigrationApplierImpl(clientDatabase: DatabaseDef)(implicit ec: Execut
       if (previousField.isList) {
         // todo: also handle changing to/from scalar list
         Some(UpdateScalarListTable(nextProject.id, model, model, previousField, nextField))
-      } else {
+      } else if (previousField.isScalar) {
         Some(UpdateColumn(nextProject.id, model, previousField, nextField))
+      } else {
+        None
       }
 
     case x: EnumMigrationStep =>
@@ -135,7 +137,9 @@ case class MigrationApplierImpl(clientDatabase: DatabaseDef)(implicit ec: Execut
 
     case x: UpdateRelation =>
       x.newName.map { newName =>
-        RenameTable(projectId = previousProject.id, previousName = x.name, nextName = newName, scalarListFieldsNames = Vector.empty)
+        val previousRelation = previousProject.getRelationByName_!(x.name)
+        val nextRelation     = nextProject.getRelationByName_!(newName)
+        RenameTable(projectId = previousProject.id, previousName = previousRelation.id, nextName = nextRelation.id, scalarListFieldsNames = Vector.empty)
       }
   }
 

@@ -3,9 +3,7 @@ package cool.graph.shared.models
 import cool.graph.gc_values.GCValue
 import cool.graph.shared.errors.SharedErrors
 import cool.graph.shared.models.FieldConstraintType.FieldConstraintType
-import cool.graph.shared.models.LogStatus.LogStatus
 import cool.graph.shared.models.ModelMutationType.ModelMutationType
-import cool.graph.shared.models.SeatStatus.SeatStatus
 import org.joda.time.DateTime
 
 object IdType {
@@ -13,14 +11,6 @@ object IdType {
 }
 
 import cool.graph.shared.models.IdType._
-
-object MutationLogStatus extends Enumeration {
-  type MutationLogStatus = Value
-  val SCHEDULED  = Value("SCHEDULED")
-  val SUCCESS    = Value("SUCCESS")
-  val FAILURE    = Value("FAILURE")
-  val ROLLEDBACK = Value("ROLLEDBACK")
-}
 
 case class Client(
     id: Id,
@@ -35,39 +25,7 @@ case class Client(
     updatedAt: DateTime
 )
 
-object SeatStatus extends Enumeration {
-  type SeatStatus = Value
-  val JOINED               = Value("JOINED")
-  val INVITED_TO_PROJECT   = Value("INVITED_TO_PROJECT")
-  val INVITED_TO_GRAPHCOOL = Value("INVITED_TO_GRAPHCOOL")
-}
-
-case class Seat(id: String, status: SeatStatus, isOwner: Boolean, email: String, clientId: Option[String], name: Option[String])
-
-object LogStatus extends Enumeration {
-  type LogStatus = Value
-  val SUCCESS = Value("SUCCESS")
-  val FAILURE = Value("FAILURE")
-}
-
-object RequestPipelineOperation extends Enumeration {
-  type RequestPipelineOperation = Value
-  val CREATE = Value("CREATE")
-  val UPDATE = Value("UPDATE")
-  val DELETE = Value("DELETE")
-}
-
-case class Log(
-    id: Id,
-    requestId: Option[String],
-    status: LogStatus,
-    duration: Int,
-    timestamp: DateTime,
-    message: String
-)
-
 sealed trait Function {
-  def id: Id
   def name: String
   def isActive: Boolean
 //  def delivery: FunctionDelivery
@@ -75,7 +33,6 @@ sealed trait Function {
 }
 
 case class ServerSideSubscriptionFunction(
-    id: Id,
     name: String,
     isActive: Boolean,
     query: String,
@@ -101,11 +58,9 @@ case class Project(
     relations: List[Relation] = List.empty,
     enums: List[Enum] = List.empty,
     secrets: Vector[String] = Vector.empty,
-    seats: List[Seat] = List.empty,
     allowQueries: Boolean = true,
     allowMutations: Boolean = true,
-    functions: List[Function] = List.empty,
-    featureToggles: List[FeatureToggle] = List.empty
+    functions: List[Function] = List.empty
 ) {
 
   lazy val projectId: ProjectId = ProjectId.fromEncodedString(id)
@@ -117,13 +72,6 @@ case class Project(
       .filter(_.isActive)
 //      .filter(_.isServerSideSubscriptionFor(model, mutationType))
   }
-
-  def getServerSideSubscriptionFunction(id: Id): Option[ServerSideSubscriptionFunction] = serverSideSubscriptionFunctions.find(_.id == id)
-  def getServerSideSubscriptionFunction_!(id: Id): ServerSideSubscriptionFunction =
-    getServerSideSubscriptionFunction(id).get //OrElse(throw SystemErrors.InvalidFunctionId(id))
-
-  def getFunctionById(id: Id): Option[Function] = functions.find(_.id == id)
-  def getFunctionById_!(id: Id): Function       = getFunctionById(id).get //OrElse(throw SystemErrors.InvalidFunctionId(id))
 
   def getFunctionByName(name: String): Option[Function] = functions.find(_.name == name)
   def getFunctionByName_!(name: String): Function       = getFunctionByName(name).get //OrElse(throw SystemErrors.InvalidFunctionName(name))
@@ -150,9 +98,6 @@ case class Project(
   }
   def getFieldConstraintById_!(id: Id): FieldConstraint = getFieldConstraintById(id).get //OrElse(throw SystemErrors.InvalidFieldConstraintId(id))
 
-  def getEnumById(enumId: String): Option[Enum] = enums.find(_.id == enumId)
-  def getEnumById_!(enumId: String): Enum       = getEnumById(enumId).get //OrElse(throw SystemErrors.InvalidEnumId(id = enumId))
-
   // note: mysql columns are case insensitive, so we have to be as well
   def getEnumByName(name: String): Option[Enum] = enums.find(_.name.toLowerCase == name.toLowerCase)
 
@@ -173,7 +118,11 @@ case class Project(
 
   def getFieldsByRelationId(id: Id): List[Field] = models.flatMap(_.fields).filter(f => f.relation.isDefined && f.relation.get.id == id)
 
-  def getRelationsThatConnectModels(modelA: String, modelB: String): Set[Relation] = relations.filter(_.connectsTheModels(modelA, modelB)).toSet
+  def getUnambiguousRelationThatConnectsModels_!(modelA: String, modelB: String): Option[Relation] = {
+    val candidates = relations.filter(_.connectsTheModels(modelA, modelB))
+    require(candidates.size < 2, "This method must only be called for unambiguous relations!")
+    candidates.headOption
+  }
 
   def getRelationFieldMirrorsByFieldId(id: Id): List[RelationFieldMirror] = relations.flatMap(_.fieldMirrors).filter(f => f.fieldId == id)
 
@@ -212,12 +161,6 @@ case class Project(
 
   }
 
-  def seatByEmail(email: String): Option[Seat] = seats.find(_.email == email)
-  def seatByEmail_!(email: String): Seat       = seatByEmail(email).get //OrElse(throw SystemErrors.InvalidSeatEmail(email))
-
-  def seatByClientId(clientId: Id): Option[Seat] = seats.find(_.clientId.contains(clientId))
-  def seatByClientId_!(clientId: Id): Seat       = seatByClientId(clientId).get //OrElse(throw SystemErrors.InvalidSeatClientId(clientId))
-
   def allFields: Seq[Field] = models.flatMap(_.fields)
 
   def hasSchemaNameConflict(name: String, id: String): Boolean = {
@@ -232,11 +175,11 @@ case class ProjectWithClientId(project: Project, clientId: Id) {
 case class ProjectWithClient(project: Project, client: Client)
 
 case class Model(
-    id: Id,
     name: String,
     fields: List[Field],
     description: Option[String] = None
 ) {
+  def id = name
 
   lazy val scalarFields: List[Field]         = fields.filter(_.isScalar)
   lazy val scalarListFields: List[Field]     = scalarFields.filter(_.isList)
@@ -308,19 +251,11 @@ object TypeIdentifier extends Enumeration {
 }
 
 case class Enum(
-    id: Id,
     name: String,
     values: Vector[String] = Vector.empty
 )
 
-case class FeatureToggle(
-    id: Id,
-    name: String,
-    isEnabled: Boolean
-)
-
 case class Field(
-    id: Id,
     name: String,
     typeIdentifier: TypeIdentifier.Value,
     description: Option[String] = None,
@@ -335,6 +270,7 @@ case class Field(
     relationSide: Option[RelationSide.Value],
     constraints: List[FieldConstraint] = List.empty
 ) {
+  def id = name
 
   def isScalar: Boolean                             = typeIdentifier != TypeIdentifier.Relation
   def isRelation: Boolean                           = typeIdentifier == TypeIdentifier.Relation
@@ -454,7 +390,6 @@ object FieldConstraintType extends Enumeration {
 // NOTE modelA/modelB should actually be included here
 // but left out for now because of cyclic dependencies
 case class Relation(
-    id: Id,
     name: String,
     description: Option[String] = None,
     // BEWARE: if the relation looks like this: val relation = Relation(id = "relationId", modelAId = "userId", modelBId = "todoId")
@@ -465,8 +400,12 @@ case class Relation(
     modelBId: Id,
     fieldMirrors: List[RelationFieldMirror] = List.empty
 ) {
+  val id = "_" + name // to avoid potential name clashes with user chosen model names
+
   def connectsTheModels(model1: Model, model2: Model): Boolean   = connectsTheModels(model1.id, model2.id)
   def connectsTheModels(model1: String, model2: String): Boolean = (modelAId == model1 && modelBId == model2) || (modelAId == model2 && modelBId == model1)
+
+  def isUnambiguous(project: Project): Boolean = (project.relations.toSet - this).nonEmpty
 
   def isSameModelRelation(project: Project): Boolean          = getModelA(project) == getModelB(project)
   def isSameFieldSameModelRelation(project: Project): Boolean = getModelAField(project) == getModelBField(project)
@@ -543,30 +482,9 @@ case class RelationFieldMirror(
     fieldId: String
 )
 
-object UserType extends Enumeration {
-  type UserType = Value
-  val Everyone      = Value("EVERYONE")
-  val Authenticated = Value("AUTHENTICATED")
-}
-
 object ModelMutationType extends Enumeration {
   type ModelMutationType = Value
   val Created = Value("CREATED")
   val Updated = Value("UPDATED")
   val Deleted = Value("DELETED")
-}
-
-object CustomRule extends Enumeration {
-  type CustomRule = Value
-  val None    = Value("NONE")
-  val Graph   = Value("GRAPH")
-  val Webhook = Value("WEBHOOK")
-}
-
-object ModelOperation extends Enumeration {
-  type ModelOperation = Value
-  val Create = Value("CREATE")
-  val Read   = Value("READ")
-  val Update = Value("UPDATE")
-  val Delete = Value("DELETE")
 }

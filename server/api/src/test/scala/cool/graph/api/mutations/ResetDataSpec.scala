@@ -99,9 +99,9 @@ class ResetDataSpec extends FlatSpec with Matchers with ApiBaseSpec with AwaitUt
     server.executeQuerySimple("query{model2s{id}}", project, dataContains = """{"model2s":[]}""")
 
     database.runDbActionOnClientDb(DatabaseQueryBuilder.existsByModel(project.id, "_RelayId").as[Boolean]).toString should be("Vector(false)")
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.existsByModel(project.id, "relation0").as[Boolean]).toString should be("Vector(false)")
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.existsByModel(project.id, "relation1").as[Boolean]).toString should be("Vector(false)")
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.existsByModel(project.id, "relation2").as[Boolean]).toString should be("Vector(false)")
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.existsByModel(project.id, "_Relation0").as[Boolean]).toString should be("Vector(false)")
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.existsByModel(project.id, "_Relation1").as[Boolean]).toString should be("Vector(false)")
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.existsByModel(project.id, "_Relation2").as[Boolean]).toString should be("Vector(false)")
   }
 
   "The ResetDataMutation" should "reinstate foreign key constraints again after wiping the data" in {
@@ -124,7 +124,7 @@ class ResetDataSpec extends FlatSpec with Matchers with ApiBaseSpec with AwaitUt
     database.runDbActionOnClientDb(DatabaseQueryBuilder.existsByModel(project.id, "_RelayId").as[Boolean]).toString should be("Vector(false)")
 
     import slick.jdbc.MySQLProfile.api._
-    val insert = sql"INSERT INTO `#${project.id}`.`relation1` VALUES ('someID', 'a', 'b')"
+    val insert = sql"INSERT INTO `#${project.id}`.`_Relation1` VALUES ('someID', 'a', 'b')"
 
     intercept[SQLIntegrityConstraintViolationException] { database.runDbActionOnClientDb(insert.asUpdate) }
   }

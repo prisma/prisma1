@@ -54,7 +54,6 @@ case class NextProjectInfererImpl(
 
           Good {
             Model(
-              id = objectType.name,
               name = objectType.name,
               fields = fields.toList ++ hiddenReservedFields
             )
@@ -75,14 +74,15 @@ case class NextProjectInfererImpl(
       val relation = if (fieldDef.hasScalarType) {
         None
       } else {
-        nextRelations.find { relation =>
-          relation.connectsTheModels(objectType.name, fieldDef.typeName)
+        fieldDef.relationName match {
+          case Some(name) => nextRelations.find(_.name == name)
+          case None       => nextRelations.find(relation => relation.connectsTheModels(objectType.name, fieldDef.typeName))
         }
+
       }
 
       def fieldWithDefault(default: Option[GCValue]) = {
         Field(
-          id = fieldDef.name,
           name = fieldDef.name,
           typeIdentifier = typeIdentifier,
           isRequired = fieldDef.isRequired,
@@ -131,9 +131,13 @@ case class NextProjectInfererImpl(
         case (None, Some(name)) => name
         case (None, None)       => s"${modelA}To${modelB}"
       }
-      val previousModelAName    = renames.getPreviousModelName(modelA)
-      val previousModelBName    = renames.getPreviousModelName(modelB)
-      val oldEquivalentRelation = baseProject.getRelationsThatConnectModels(previousModelAName, previousModelBName).headOption
+      val previousModelAName = renames.getPreviousModelName(modelA)
+      val previousModelBName = renames.getPreviousModelName(modelB)
+
+      // TODO: this needs to be adapted once we allow rename of relations
+      val oldEquivalentRelation = relationField.relationName.flatMap(baseProject.getRelationByName).orElse {
+        baseProject.getUnambiguousRelationThatConnectsModels_!(previousModelAName, previousModelBName)
+      }
 
       oldEquivalentRelation match {
         case Some(relation) =>
@@ -146,7 +150,6 @@ case class NextProjectInfererImpl(
           )
         case None =>
           Relation(
-            id = relationName,
             name = relationName,
             modelAId = modelA,
             modelBId = modelB
@@ -160,7 +163,6 @@ case class NextProjectInfererImpl(
   lazy val nextEnums: Vector[Enum] = {
     sdl.enumTypes.map { enumDef =>
       Enum(
-        id = enumDef.name,
         name = enumDef.name,
         values = enumDef.values.map(_.name)
       )
