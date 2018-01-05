@@ -64,17 +64,20 @@ case class MigrationApplierImpl(
   def recurseForRollback(previousSchema: Schema, migration: Migration): Future[MigrationApplierResult] = {
     if (migration.pendingRollBackSteps.nonEmpty) {
       for {
-        nextMigration <- unapplyStep(previousSchema, migration, migration.pendingRollBackSteps.head).recoverWith {
-                          case err =>
-                            println("encountered exception while unapplying migration. will roll back.")
-                            val failedMigration = migration.markAsRollBackFailure
-                            for {
-                              _ <- migrationPersistence.updateMigrationStatus(migration.id, failedMigration.status)
-                              _ <- migrationPersistence.updateMigrationErrors(migration.id, failedMigration.errors :+ StackTraceUtils.print(err))
-                            } yield failedMigration
-
-                        }
-        x <- recurse(previousSchema, nextMigration)
+        _ <- unapplyStep(previousSchema, migration, migration.pendingRollBackSteps.head)
+//          .recoverWith {
+//                          case err =>
+//                            println("encountered exception while unapplying migration.")
+//                            val failedMigration = migration.markAsRollBackFailure
+//                            for {
+//                              _ <- migrationPersistence.updateMigrationStatus(migration.id, failedMigration.status)
+//                              _ <- migrationPersistence.updateMigrationErrors(migration.id, failedMigration.errors :+ StackTraceUtils.print(err))
+//                            } yield failedMigration
+//
+//                        }
+        nextMigration = migration.incRolledBack
+        _             <- migrationPersistence.updateMigrationRolledBack(migration.id, nextMigration.rolledBack)
+        x             <- recurse(previousSchema, nextMigration)
       } yield x
     } else {
       migrationPersistence.updateMigrationStatus(migration.id, MigrationStatus.RollbackSuccess).map(_ => MigrationApplierResult(succeeded = false))
