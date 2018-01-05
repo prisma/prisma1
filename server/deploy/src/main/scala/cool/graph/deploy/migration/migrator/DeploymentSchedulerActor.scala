@@ -60,7 +60,7 @@ case class DeploymentSchedulerActor(
       case None         => workerForProject(scheduleMsg.projectId)
     }
 
-    workerRef.tell(scheduleMsg, sender())
+    workerRef.tell(scheduleMsg, sender)
   }
 
   def workerForProject(projectId: String): ActorRef = {

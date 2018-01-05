@@ -224,12 +224,19 @@ case class ProjectDeploymentActor(projectId: String, migrationPersistence: Migra
     }
   }
 
-  def applyStep(previousSchema: Schema, migration: Migration, step: MigrationStep): Future[Migration] = {
-    stepMapper.mutactionFor(previousSchema, migration.schema, step).map(executeClientMutaction).getOrElse(Future.unit).map(_ => migration)
+  def applyStep(previousSchema: Schema, migration: Migration, step: MigrationStep): Future[Unit] = {
+    stepMapper.mutactionFor(previousSchema, migration.schema, step) match {
+      case Some(mutaction) => executeClientMutaction(mutaction)
+      case None            => Future.unit
+    }
   }
 
   def unapplyStep(previousSchema: Schema, migration: Migration, step: MigrationStep): Future[Migration] = {
-    stepMapper.mutactionFor(previousSchema, migration.schema, step).map(executeClientMutactionRollback).getOrElse(Future.unit).map(_ => migration)
+    val x = stepMapper.mutactionFor(previousSchema, migration.schema, step) match {
+      case Some(mutaction) => executeClientMutaction(mutaction)
+      case None            => Future.unit
+    }
+    x.map(_ => migration)
   }
 
   def executeClientMutaction(mutaction: ClientSqlMutaction): Future[Unit] = {
@@ -246,25 +253,5 @@ case class ProjectDeploymentActor(projectId: String, migrationPersistence: Migra
     } yield ()
   }
 }
-//
-//case class MigrationProgress(
-//    appliedSteps: Vector[MigrationStep],
-//    pendingSteps: Vector[MigrationStep],
-//    isRollingback: Boolean
-//) {
-//  def addAppliedStep(step: MigrationStep) = copy(appliedSteps = appliedSteps :+ step)
-//
-//  def popPending: (MigrationStep, MigrationProgress) = {
-//    val step = pendingSteps.head
-//    step -> copy(appliedSteps = appliedSteps :+ step, pendingSteps = pendingSteps.tail)
-//  }
-//
-//  def popApplied: (MigrationStep, MigrationProgress) = {
-//    val step = appliedSteps.last
-//    step -> copy(appliedSteps = appliedSteps.dropRight(1))
-//  }
-//
-//  def markForRollback = copy(isRollingback = true)
-//}
-//
+
 case class MigrationApplierResult(succeeded: Boolean)
