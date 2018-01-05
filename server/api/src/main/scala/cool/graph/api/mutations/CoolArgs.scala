@@ -12,6 +12,8 @@ import scala.collection.immutable.Seq
   * It's called CoolArgs to easily differentiate from Sangrias Args class.
   */
 case class CoolArgs(raw: Map[String, Any]) {
+  def isEmpty: Boolean    = raw.isEmpty
+  def isNonEmpty: Boolean = raw.nonEmpty
 
   def subNestedMutation(relationField: Field, subModel: Model): Option[NestedMutation] = {
     subArgsOption(relationField) match {
@@ -67,6 +69,12 @@ case class CoolArgs(raw: Map[String, Any]) {
       }
     }
 
+  }
+
+  def nonListScalarArgumentsAsCoolArgs(model: Model): CoolArgs = {
+    val argumentValues = nonListScalarArguments(model)
+    val rawArgs        = argumentValues.map(x => x.name -> x.value).toMap
+    CoolArgs(rawArgs)
   }
 
   def nonListScalarArguments(model: Model): Vector[ArgumentValue] = {
@@ -179,8 +187,8 @@ case class CoolArgs(raw: Map[String, Any]) {
 
 }
 
-object IdNodeSelector {
-  def idNodeSelector(model: Model, id: String): NodeSelector = NodeSelector(model, model.getFieldByName_!("id"), GraphQLIdGCValue(id))
+object NodeSelector {
+  def forId(model: Model, id: String): NodeSelector = NodeSelector(model, model.getFieldByName_!("id"), GraphQLIdGCValue(id))
 }
 
 case class NodeSelector(model: Model, field: Field, fieldValue: GCValue) {

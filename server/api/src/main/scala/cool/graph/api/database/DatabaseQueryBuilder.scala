@@ -1,7 +1,7 @@
 package cool.graph.api.database
 
 import cool.graph.api.database.Types.DataItemFilterCollection
-import cool.graph.api.mutations.NodeSelector
+import cool.graph.api.mutations.{NodeSelector, ParentInfo}
 import cool.graph.shared.models.IdType.Id
 import cool.graph.shared.models.{Field, Model, Project, Relation}
 import slick.dbio.DBIOAction
@@ -167,15 +167,15 @@ object DatabaseQueryBuilder {
           )"""
   }
 
-  def existsNodeIsInRelationshipWith(project: Project, model: Model, where: NodeSelector, relation: Relation, other: Id) = {
-    val relationSide         = relation.sideOf(model).toString
-    val oppositeRelationSide = relation.oppositeSideOf(model).toString
+  def existsNodeIsInRelationshipWith(project: Project, parentInfo: ParentInfo, where: NodeSelector) = {
+    val relationSide         = parentInfo.relation.sideOf(where.model).toString
+    val oppositeRelationSide = parentInfo.relation.oppositeSideOf(where.model).toString
     sql"""select EXISTS (
-            select `id`from `#${project.id}`.`#${model.name}`
+            select `id`from `#${project.id}`.`#${where.model.name}`
             where  #${where.field.name} = ${where.fieldValue} and `id` IN (
              select `#$relationSide`
-             from `#${project.id}`.`#${relation.id}`
-             where `#$oppositeRelationSide` = '#$other'
+             from `#${project.id}`.`#${parentInfo.relation.id}`
+             where `#$oppositeRelationSide` = '#${parentInfo.where.fieldValueAsString}'
            )
           )"""
   }

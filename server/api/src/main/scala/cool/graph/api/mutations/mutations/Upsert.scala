@@ -4,7 +4,6 @@ import cool.graph.api.ApiDependencies
 import cool.graph.api.database.DataResolver
 import cool.graph.api.database.mutactions.mutactions.UpsertDataItem
 import cool.graph.api.database.mutactions.{MutactionGroup, TransactionMutaction}
-import cool.graph.api.mutations.IdNodeSelector._
 import cool.graph.api.mutations._
 import cool.graph.shared.models.{Model, Project}
 import sangria.schema
@@ -39,7 +38,7 @@ case class Upsert(
       case None    => where
     }
 
-    val uniques = Vector(idNodeSelector(model, idOfNewItem), newWhere)
+    val uniques = Vector(NodeSelector.forId(model, idOfNewItem), newWhere)
     dataResolver.resolveByUniques(model, uniques).map { items =>
       items.headOption match {
         case Some(item) => ReturnValue(item)

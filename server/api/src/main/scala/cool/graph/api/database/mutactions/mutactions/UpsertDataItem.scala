@@ -28,13 +28,13 @@ case class UpsertDataItem(
   val actualCreateArgs = CoolArgs(createArgs.raw + ("id" -> idOfNewItem))
 
   override def execute: Future[ClientSqlStatementResult[Any]] = Future.successful {
-    ClientSqlStatementResult(DatabaseMutationBuilder.upsert(project, model, actualCreateArgs, updateArgs, where))
+    ClientSqlStatementResult(DatabaseMutationBuilder.upsert(project, where, actualCreateArgs, updateArgs))
   }
 
   override def handleErrors = {
     implicit val anyFormat = JsonFormats.AnyJsonFormat
     Some({
-      case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1062 && getFieldOptionFromCoolArgs(List(createArgs, updateArgs), e).isDefined=>
+      case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1062 && getFieldOptionFromCoolArgs(List(createArgs, updateArgs), e).isDefined =>
         APIErrors.UniqueConstraintViolation(model.name, getFieldOptionFromCoolArgs(List(createArgs, updateArgs), e).get)
       case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1452 => APIErrors.NodeDoesNotExist(where.fieldValueAsString)
       case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1048 => APIErrors.FieldCannotBeNull()
