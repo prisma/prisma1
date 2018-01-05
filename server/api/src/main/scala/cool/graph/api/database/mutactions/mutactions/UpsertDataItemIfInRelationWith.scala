@@ -28,7 +28,8 @@ case class UpsertDataItemIfInRelationWith(
 
   val model            = where.model
   val idOfNewItem      = Cuid.createCuid()
-  val actualCreateArgs = CoolArgs(createArgs.raw + ("id" -> idOfNewItem))
+  val actualCreateArgs = CoolArgs(createArgs.raw + ("id" -> idOfNewItem)).nonListScalarArgumentsAsCoolArgs(model)
+  val actualUpdateArgs = CoolArgs(createArgs.raw).nonListScalarArgumentsAsCoolArgs(model)
 
   override def execute: Future[ClientSqlStatementResult[Any]] = Future.successful {
     ClientSqlStatementResult(
@@ -36,7 +37,7 @@ case class UpsertDataItemIfInRelationWith(
         project = project,
         model = model,
         createArgs = actualCreateArgs,
-        updateArgs = updateArgs,
+        updateArgs = actualUpdateArgs,
         where = where,
         relation = fromField.relation.get,
         target = fromId
@@ -47,7 +48,7 @@ case class UpsertDataItemIfInRelationWith(
     implicit val anyFormat = JsonFormats.AnyJsonFormat
     Some({
       // https://dev.mysql.com/doc/refman/5.5/en/error-messages-server.html#error_er_dup_entry
-      case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1062 && getFieldOptionFromCoolArgs(List(createArgs, updateArgs), e).isDefined=>
+      case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1062 && getFieldOptionFromCoolArgs(List(createArgs, updateArgs), e).isDefined =>
         APIErrors.UniqueConstraintViolation(model.name, getFieldOptionFromCoolArgs(List(createArgs, updateArgs), e).get)
       case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1452 => APIErrors.NodeDoesNotExist(where.fieldValueAsString)
       case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1048 => APIErrors.FieldCannotBeNull()
