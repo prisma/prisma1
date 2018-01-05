@@ -59,13 +59,9 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
   }
 
   protected def computeInputObjectTypeForCreate(model: Model, omitRelation: Option[Relation]): Option[InputObjectType[Any]] = {
-    val inputObjectTypeName = omitRelation match {
-      case None =>
-        s"${model.name}CreateInput"
-
-      case Some(relation) =>
-        val field = relation.getField_!(project.schema, model)
-        s"${model.name}CreateWithout${field.name.capitalize}Input"
+    val inputObjectTypeName = omitRelation.flatMap(_.getField(project.schema, model)) match {
+      case None        => s"${model.name}CreateInput"
+      case Some(field) => s"${model.name}CreateWithout${field.name.capitalize}Input"
     }
 
     val fields = computeScalarInputFieldsForCreate(model) ++ computeRelationalInputFieldsForCreate(model, omitRelation)
@@ -98,10 +94,12 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
   }
 
   protected def computeInputObjectTypeForNestedUpdate(model: Model, omitRelation: Relation): Option[InputObjectType[Any]] = {
-    val field           = omitRelation.getField_!(project.schema, model)
     val updateDataInput = computeInputObjectTypeForNestedUpdateData(model, omitRelation)
 
-    computeInputObjectTypeForWhereUnique(model).map { whereArg =>
+    for {
+      field    <- omitRelation.getField(project.schema, model)
+      whereArg <- computeInputObjectTypeForWhereUnique(model)
+    } yield {
       InputObjectType[Any](
         name = s"${model.name}UpdateWithout${field.name.capitalize}Input",
         fieldsFn = () => {
@@ -115,10 +113,13 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
   }
 
   protected def computeInputObjectTypeForNestedUpdateData(model: Model, omitRelation: Relation): InputObjectType[Any] = {
-    val field = omitRelation.getField_!(project.schema, model)
+    val typeName = omitRelation.getField(project.schema, model) match {
+      case Some(field) => s"${model.name}UpdateWithout${field.name.capitalize}DataInput"
+      case None        => s"${model.name}UpdateDataInput"
+    }
 
     InputObjectType[Any](
-      name = s"${model.name}UpdateWithout${field.name.capitalize}DataInput",
+      name = typeName,
       fieldsFn = () => {
         computeScalarInputFieldsForUpdate(model) ++ computeRelationalInputFieldsForUpdate(model, omitRelation = Some(omitRelation))
       }
@@ -126,21 +127,22 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
   }
 
   protected def computeInputObjectTypeForNestedUpsert(model: Model, omitRelation: Relation): Option[InputObjectType[Any]] = {
-    val field = omitRelation.getField_!(project.schema, model)
 
-    computeInputObjectTypeForWhereUnique(model).flatMap { whereArg =>
-      computeInputObjectTypeForCreate(model, Some(omitRelation)).map { createArg =>
-        InputObjectType[Any](
-          name = s"${model.name}UpsertWithout${field.name.capitalize}Input",
-          fieldsFn = () => {
-            List(
-              InputField[Any]("where", whereArg),
-              InputField[Any]("update", computeInputObjectTypeForNestedUpdateData(model, omitRelation)),
-              InputField[Any]("create", createArg)
-            )
-          }
-        )
-      }
+    for {
+      field     <- omitRelation.getField(project.schema, model)
+      whereArg  <- computeInputObjectTypeForWhereUnique(model)
+      createArg <- computeInputObjectTypeForCreate(model, Some(omitRelation))
+    } yield {
+      InputObjectType[Any](
+        name = s"${model.name}UpsertWithout${field.name.capitalize}Input",
+        fieldsFn = () => {
+          List(
+            InputField[Any]("where", whereArg),
+            InputField[Any]("update", computeInputObjectTypeForNestedUpdateData(model, omitRelation)),
+            InputField[Any]("create", createArg)
+          )
+        }
+      )
     }
   }
 
@@ -206,13 +208,16 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
   private def computeRelationalInputFieldsForUpdate(model: Model, omitRelation: Option[Relation]): List[InputField[Any]] = {
     model.relationFields.flatMap { field =>
       val subModel              = field.relatedModel_!(project.schema)
-      val relatedField          = field.relatedFieldEager(project.schema)
+      val relatedField          = field.relatedField(project.schema)
       val relationMustBeOmitted = omitRelation.exists(rel => field.isRelationWithId(rel.id))
 
-      val inputObjectTypeName = if (field.isList) {
-        s"${subModel.name}UpdateManyWithout${relatedField.name.capitalize}Input"
-      } else {
-        s"${subModel.name}UpdateOneWithout${relatedField.name.capitalize}Input"
+      val inputObjectTypeName = {
+        val arityPart = if (field.isList) "Many" else "One"
+        val withoutPart = relatedField match {
+          case Some(field) => s"Without${field.name.capitalize}"
+          case None        => ""
+        }
+        s"${subModel.name}Update${arityPart}${withoutPart}Input"
       }
 
       if (relationMustBeOmitted) {
@@ -236,13 +241,16 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
   private def computeRelationalInputFieldsForCreate(model: Model, omitRelation: Option[Relation]): List[InputField[Any]] = {
     model.relationFields.flatMap { field =>
       val subModel              = field.relatedModel_!(project.schema)
-      val relatedField          = field.relatedFieldEager(project.schema)
+      val relatedField          = field.relatedField(project.schema)
       val relationMustBeOmitted = omitRelation.exists(rel => field.isRelationWithId(rel.id))
 
-      val inputObjectTypeName = if (field.isList) {
-        s"${subModel.name}CreateManyWithout${relatedField.name.capitalize}Input"
-      } else {
-        s"${subModel.name}CreateOneWithout${relatedField.name.capitalize}Input"
+      val inputObjectTypeName = {
+        val arityPart = if (field.isList) "Many" else "One"
+        val withoutPart = relatedField match {
+          case Some(field) => s"Without${field.name.capitalize}"
+          case None        => ""
+        }
+        s"${subModel.name}Create${arityPart}${withoutPart}Input"
       }
 
       if (relationMustBeOmitted) {

@@ -1,30 +1,32 @@
 package cool.graph.deploy.migration.inference
 
 import cool.graph.deploy.gc_value.GCStringConverter
-import cool.graph.deploy.migration.{ReservedFields, inference}
+import cool.graph.deploy.migration.DataSchemaAstExtensions._
+import cool.graph.deploy.migration.ReservedFields
 import cool.graph.gc_values.{GCValue, InvalidValueForScalarType}
 import cool.graph.shared.models._
 import cool.graph.utils.or.OrExtensions
 import org.scalactic.{Bad, Good, Or}
-import sangria.ast.Document
-import cool.graph.deploy.migration.DataSchemaAstExtensions._
+import sangria.ast.{Document, ObjectTypeDefinition}
 
 trait SchemaInferrer {
-  def infer(baseSchema: Schema, graphQlSdl: Document): Schema Or ProjectSyntaxError
+  def infer(baseSchema: Schema, schemaMapping: SchemaMapping, graphQlSdl: Document): Schema Or ProjectSyntaxError
+}
+
+object SchemaInferrer {
+  def apply() = new SchemaInferrer {
+    override def infer(baseSchema: Schema, schemaMapping: SchemaMapping, graphQlSdl: Document) =
+      SchemaInferrerImpl(baseSchema, schemaMapping, graphQlSdl).infer()
+  }
 }
 
 sealed trait ProjectSyntaxError
 case class RelationDirectiveNeeded(type1: String, type1Fields: Vector[String], type2: String, type2Fields: Vector[String]) extends ProjectSyntaxError
 case class InvalidGCValue(err: InvalidValueForScalarType)                                                                  extends ProjectSyntaxError
 
-object SchemaInferrer {
-  def apply() = new SchemaInferrer {
-    override def infer(baseSchema: Schema, graphQlSdl: Document) = SchemaInferrerImpl(baseSchema, graphQlSdl).infer()
-  }
-}
-
 case class SchemaInferrerImpl(
     baseSchema: Schema,
+    schemaMapping: SchemaMapping,
     sdl: Document
 ) {
   def infer(): Schema Or ProjectSyntaxError = {
@@ -41,50 +43,18 @@ case class SchemaInferrerImpl(
 
   lazy val nextModels: Vector[Model] Or ProjectSyntaxError = {
     val models = sdl.objectTypes.map { objectType =>
-      val fields: Seq[Or[Field, InvalidGCValue]] = objectType.fields.flatMap { fieldDef =>
-        val typeIdentifier = typeIdentifierForTypename(fieldDef.typeName)
-        val relation       = fieldDef.relationName.flatMap(relationName => nextRelations.find(_.name == relationName))
-
-        def fieldWithDefault(default: Option[GCValue]) = {
-          Field(
-            id = fieldDef.name,
-            name = fieldDef.name,
-            typeIdentifier = typeIdentifier,
-            isRequired = fieldDef.isRequired,
-            isList = fieldDef.isList,
-            isUnique = fieldDef.isUnique,
-            enum = nextEnums.find(_.name == fieldDef.typeName),
-            defaultValue = default,
-            relation = relation,
-            relationSide = relation.map { relation =>
-              if (relation.modelAId == objectType.name) {
-                RelationSide.A
-              } else {
-                RelationSide.B
-              }
-            }
-          )
-        }
-
-        fieldDef.defaultValue.map(x => GCStringConverter(typeIdentifier, fieldDef.isList).toGCValue(x)) match {
-          case Some(Good(gcValue)) => Some(Good(fieldWithDefault(Some(gcValue))))
-          case Some(Bad(err))      => Some(Bad(inference.InvalidGCValue(err)))
-          case None                => Some(Good(fieldWithDefault(None)))
-        }
-      }
-
-      OrExtensions.sequence(fields.toVector) match {
-        case Good(fields: Seq[Field]) =>
+      fieldsForType(objectType) match {
+        case Good(fields: Vector[Field]) =>
           val fieldNames            = fields.map(_.name)
           val missingReservedFields = ReservedFields.reservedFieldNames.filterNot(fieldNames.contains)
           val hiddenReservedFields  = missingReservedFields.map(ReservedFields.reservedFieldFor(_).copy(isHidden = true))
 
-          Good(
+          Good {
             Model(
-              id = objectType.name,
               name = objectType.name,
               fields = fields.toList ++ hiddenReservedFields
-            ))
+            )
+          }
 
         case Bad(err) =>
           Bad(err)
@@ -94,17 +64,93 @@ case class SchemaInferrerImpl(
     OrExtensions.sequence(models)
   }
 
+  def fieldsForType(objectType: ObjectTypeDefinition): Or[Vector[Field], InvalidGCValue] = {
+    val fields: Vector[Or[Field, InvalidGCValue]] = objectType.fields.flatMap { fieldDef =>
+      val typeIdentifier = typeIdentifierForTypename(fieldDef.typeName)
+
+      val relation = if (fieldDef.hasScalarType) {
+        None
+      } else {
+        fieldDef.relationName match {
+          case Some(name) => nextRelations.find(_.name == name)
+          case None       => nextRelations.find(relation => relation.connectsTheModels(objectType.name, fieldDef.typeName))
+        }
+      }
+
+      def fieldWithDefault(default: Option[GCValue]) = {
+        Field(
+          name = fieldDef.name,
+          typeIdentifier = typeIdentifier,
+          isRequired = fieldDef.isRequired,
+          isList = fieldDef.isList,
+          isUnique = fieldDef.isUnique,
+          enum = nextEnums.find(_.name == fieldDef.typeName),
+          defaultValue = default,
+          relation = relation,
+          relationSide = relation.map { relation =>
+            if (relation.modelAId == objectType.name) {
+              RelationSide.A
+            } else {
+              RelationSide.B
+            }
+          }
+        )
+      }
+
+      fieldDef.defaultValue.map(x => GCStringConverter(typeIdentifier, fieldDef.isList).toGCValue(x)) match {
+        case Some(Good(gcValue)) => Some(Good(fieldWithDefault(Some(gcValue))))
+        case Some(Bad(err))      => Some(Bad(InvalidGCValue(err)))
+        case None                => Some(Good(fieldWithDefault(None)))
+      }
+    }
+
+    OrExtensions.sequence(fields)
+  }
+
   lazy val nextRelations: Set[Relation] = {
     val tmp = for {
       objectType    <- sdl.objectTypes
-      relationField <- objectType.relationFields
+      relationField <- objectType.fields if typeIdentifierForTypename(relationField.typeName) == TypeIdentifier.Relation
     } yield {
-      Relation(
-        id = relationField.relationName.get,
-        name = relationField.relationName.get,
-        modelAId = objectType.name,
-        modelBId = relationField.typeName
-      )
+      val model1           = objectType.name
+      val model2           = relationField.typeName
+      val (modelA, modelB) = if (model1 < model2) (model1, model2) else (model2, model1)
+
+      /**
+        * 1: has relation directive. use that one.
+        * 2: has no relation directive but there's a related field with directive. Use name of the related field.
+        * 3: use auto generated name else
+        */
+      val relationNameOnRelatedField: Option[String] = sdl.relatedFieldOf(objectType, relationField).flatMap(_.relationName)
+      val relationName = (relationField.relationName, relationNameOnRelatedField) match {
+        case (Some(name), _)    => name
+        case (None, Some(name)) => name
+        case (None, None)       => s"${modelA}To${modelB}"
+      }
+      val previousModelAName = schemaMapping.getPreviousModelName(modelA)
+      val previousModelBName = schemaMapping.getPreviousModelName(modelB)
+
+      // TODO: this needs to be adapted once we allow rename of relations
+      val oldEquivalentRelation = relationField.relationName.flatMap(baseSchema.getRelationByName).orElse {
+        baseSchema.getUnambiguousRelationThatConnectsModels_!(previousModelAName, previousModelBName)
+      }
+
+      oldEquivalentRelation match {
+        case Some(relation) =>
+          val nextModelAId = if (previousModelAName == relation.modelAId) modelA else modelB
+          val nextModelBId = if (previousModelBName == relation.modelBId) modelB else modelA
+          relation.copy(
+            name = relationName,
+            modelAId = nextModelAId,
+            modelBId = nextModelBId
+          )
+        case None =>
+          Relation(
+            name = relationName,
+            modelAId = modelA,
+            modelBId = modelB
+          )
+      }
     }
 
     tmp.groupBy(_.name).values.flatMap(_.headOption).toSet
@@ -113,7 +159,6 @@ case class SchemaInferrerImpl(
   lazy val nextEnums: Vector[Enum] = {
     sdl.enumTypes.map { enumDef =>
       Enum(
-        id = enumDef.name,
         name = enumDef.name,
         values = enumDef.values.map(_.name)
       )

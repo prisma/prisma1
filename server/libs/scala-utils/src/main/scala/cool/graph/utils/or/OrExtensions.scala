@@ -27,4 +27,11 @@ object OrExtensions {
     }
     recurse(seq)(Vector.empty)
   }
+
+  def sequence[A, B](opt: Option[Or[A, B]]): Or[Option[A], B] = {
+    opt match {
+      case Some(x) => x.map(Some(_))
+      case None    => Good(None)
+    }
+  }
 }

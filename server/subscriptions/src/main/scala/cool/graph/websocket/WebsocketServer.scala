@@ -86,7 +86,7 @@ case class WebsocketServer(dependencies: SubscriptionDependencies, prefix: Strin
             requestsPublisher = dependencies.requestsQueuePublisher,
             bugsnag = bugsnag,
             isV7protocol = v7protocol
-          ))
+          )(dependencies))
       }(system, materializer)
       .mapMaterializedValue(_ => akka.NotUsed)
 //    val incomingMessages =

@@ -30,8 +30,7 @@ object SchemaDsl {
     }
 
     def enum(name: String, values: Vector[String]): Enum = {
-      val id      = name
-      val newEnum = Enum(id, name, values)
+      val newEnum = Enum(name, values)
       enums += newEnum
       newEnum
     }
@@ -76,19 +75,18 @@ object SchemaDsl {
               defaultValue: Option[GCValue] = None,
               constraints: List[FieldConstraint] = List.empty): ModelBuilder = {
 
-      val newField =
-        plainField(
-          name,
-          this,
-          theType(TypeIdentifier),
-          isRequired = false,
-          isUnique = isUnique,
-          isHidden = isHidden,
-          enum = enum,
-          isList = isList,
-          defaultValue = defaultValue,
-          constraints = constraints
-        )
+      val newField = plainField(
+        name,
+        this,
+        theType(TypeIdentifier),
+        isRequired = false,
+        isUnique = isUnique,
+        isHidden = isHidden,
+        enum = enum,
+        isList = isList,
+        defaultValue = defaultValue,
+        constraints = constraints
+      )
 
       fields += newField
       this
@@ -102,18 +100,17 @@ object SchemaDsl {
                 isUnique: Boolean = false,
                 isHidden: Boolean = false,
                 defaultValue: Option[GCValue] = None): ModelBuilder = {
-      val newField =
-        plainField(
-          name,
-          this,
-          theType(TypeIdentifier),
-          isRequired = true,
-          isUnique = isUnique,
-          isHidden = isHidden,
-          enum = enum,
-          isList = isList,
-          defaultValue = defaultValue
-        )
+      val newField = plainField(
+        name,
+        this,
+        theType(TypeIdentifier),
+        isRequired = true,
+        isUnique = isUnique,
+        isHidden = isHidden,
+        enum = enum,
+        isList = isList,
+        defaultValue = defaultValue
+      )
       fields += newField
       this
     }
@@ -123,34 +120,39 @@ object SchemaDsl {
       this
     }
 
-    def oneToOneRelation(fieldName: String, otherFieldName: String, other: ModelBuilder, relationName: Option[String] = None): ModelBuilder = {
-      val _relationName = relationName.getOrElse(s"${this.name}To${other.name}")
-      val relation =
-        Relation(
-          id = _relationName.toLowerCase,
-          name = _relationName,
-          modelAId = this.id,
-          modelBId = other.id
-        )
+    def oneToOneRelation(
+        fieldName: String,
+        otherFieldName: String,
+        other: ModelBuilder,
+        relationName: Option[String] = None,
+        includeOtherField: Boolean = true
+    ): ModelBuilder = {
+      val relation = Relation(
+        name = relationName.getOrElse(s"${this.name}To${other.name}"),
+        modelAId = this.id,
+        modelBId = other.id
+      )
       val newField = relationField(fieldName, this, other, relation, isList = false, isBackward = false)
       fields += newField
 
-      val otherNewField = relationField(otherFieldName, other, this, relation, isList = false, isBackward = true)
-      other.fields += otherNewField // also add the backwards relation
+      if (includeOtherField) {
+        val otherNewField = relationField(otherFieldName, other, this, relation, isList = false, isBackward = true)
+        other.fields += otherNewField
+      }
 
       this
     }
 
-    def oneToOneRelation_!(fieldName: String,
-                           otherFieldName: String,
-                           other: ModelBuilder,
-                           relationName: Option[String] = None,
-                           isRequiredOnOtherField: Boolean = true): ModelBuilder = {
-      val _relationName = relationName.getOrElse(s"${this.name}To${other.name}")
-
+    def oneToOneRelation_!(
+        fieldName: String,
+        otherFieldName: String,
+        other: ModelBuilder,
+        relationName: Option[String] = None,
+        isRequiredOnOtherField: Boolean = true,
+        includeOtherField: Boolean = true
+    ): ModelBuilder = {
       val relation = Relation(
-        id = _relationName.toLowerCase,
-        name = _relationName,
+        name = relationName.getOrElse(s"${this.name}To${other.name}"),
         modelAId = this.id,
         modelBId = other.id
       )
@@ -158,85 +160,103 @@ object SchemaDsl {
       val newField = relationField(fieldName, this, other, relation, isList = false, isBackward = false, isRequired = true)
       fields += newField
 
-      val otherNewField = relationField(otherFieldName, other, this, relation, isList = false, isBackward = true, isRequired = isRequiredOnOtherField)
-      other.fields += otherNewField // also add the backwards relation
+      if (includeOtherField) {
+        val otherNewField = relationField(otherFieldName, other, this, relation, isList = false, isBackward = true, isRequired = isRequiredOnOtherField)
+        other.fields += otherNewField
+      }
 
       this
     }
 
-    def oneToManyRelation_!(fieldName: String, otherFieldName: String, other: ModelBuilder, relationName: Option[String] = None): ModelBuilder = {
-      val _relationName = relationName.getOrElse(s"${this.name}To${other.name}")
-
+    def oneToManyRelation_!(
+        fieldName: String,
+        otherFieldName: String,
+        other: ModelBuilder,
+        relationName: Option[String] = None,
+        includeOtherField: Boolean = true
+    ): ModelBuilder = {
       val relation = Relation(
-        id = _relationName.toLowerCase,
-        name = _relationName,
+        name = relationName.getOrElse(s"${this.name}To${other.name}"),
         modelAId = this.id,
         modelBId = other.id
       )
 
-      val newField =
-        relationField(fieldName, this, other, relation, isList = true, isBackward = false, isRequired = false)
+      val newField = relationField(fieldName, this, other, relation, isList = true, isBackward = false, isRequired = false)
       fields += newField
 
-      val otherNewField =
-        relationField(otherFieldName, other, this, relation, isList = false, isBackward = true, isRequired = true)
-
-      other.fields += otherNewField // also add the backwards relation
+      if (includeOtherField) {
+        val otherNewField = relationField(otherFieldName, other, this, relation, isList = false, isBackward = true, isRequired = true)
+        other.fields += otherNewField
+      }
 
       this
     }
 
-    def oneToManyRelation(fieldName: String, otherFieldName: String, other: ModelBuilder, relationName: Option[String] = None): ModelBuilder = {
-      val _relationName = relationName.getOrElse(s"${this.name}To${other.name}")
-      val relation =
-        Relation(
-          id = _relationName.toLowerCase,
-          name = _relationName,
-          modelAId = this.id,
-          modelBId = other.id
-        )
+    def oneToManyRelation(
+        fieldName: String,
+        otherFieldName: String,
+        other: ModelBuilder,
+        relationName: Option[String] = None,
+        includeOtherField: Boolean = true
+    ): ModelBuilder = {
+      val relation = Relation(
+        name = relationName.getOrElse(s"${this.name}To${other.name}"),
+        modelAId = this.id,
+        modelBId = other.id
+      )
       val newField = relationField(fieldName, this, other, relation, isList = true, isBackward = false)
       fields += newField
 
-      val otherNewField = relationField(otherFieldName, other, this, relation, isList = false, isBackward = true)
-      other.fields += otherNewField // also add the backwards relation
+      if (includeOtherField) {
+        val otherNewField = relationField(otherFieldName, other, this, relation, isList = false, isBackward = true)
+        other.fields += otherNewField
+      }
 
       this
     }
 
-    def manyToOneRelation(fieldName: String, otherFieldName: String, other: ModelBuilder, relationName: Option[String] = None): ModelBuilder = {
-      val _relationName = relationName.getOrElse(s"${this.name}To${other.name}")
-      val relation =
-        Relation(
-          id = _relationName.toLowerCase,
-          name = _relationName,
-          modelAId = this.id,
-          modelBId = other.id
-        )
+    def manyToOneRelation(
+        fieldName: String,
+        otherFieldName: String,
+        other: ModelBuilder,
+        relationName: Option[String] = None,
+        includeOtherField: Boolean = true
+    ): ModelBuilder = {
+      val relation = Relation(
+        name = relationName.getOrElse(s"${this.name}To${other.name}"),
+        modelAId = this.id,
+        modelBId = other.id
+      )
       val newField = relationField(fieldName, this, other, relation, isList = false, isBackward = false)
       fields += newField
 
-      val otherNewField = relationField(otherFieldName, other, this, relation, isList = true, isBackward = true)
-      other.fields += otherNewField // also add the backwards relation
+      if (includeOtherField) {
+        val otherNewField = relationField(otherFieldName, other, this, relation, isList = true, isBackward = true)
+        other.fields += otherNewField
+      }
 
       this
     }
 
-    def manyToManyRelation(fieldName: String, otherFieldName: String, other: ModelBuilder, relationName: Option[String] = None): ModelBuilder = {
-      val _relationName = relationName.getOrElse(s"${this.name}To${other.name}")
-      val relation =
-        Relation(
-          id = _relationName.toLowerCase,
-          name = _relationName,
-          modelAId = this.id,
-          modelBId = other.id
-        )
+    def manyToManyRelation(
+        fieldName: String,
+        otherFieldName: String,
+        other: ModelBuilder,
+        relationName: Option[String] = None,
+        includeOtherField: Boolean = true
+    ): ModelBuilder = {
+      val relation = Relation(
+        name = relationName.getOrElse(s"${this.name}To${other.name}"),
+        modelAId = this.id,
+        modelBId = other.id
+      )
       val newField = relationField(fieldName, from = this, to = other, relation, isList = true, isBackward = false)
       fields += newField
 
-      val otherNewField =
-        relationField(otherFieldName, from = other, to = this, relation, isList = true, isBackward = true)
-      other.fields += otherNewField // also add the backwards relation
+      if (includeOtherField) {
+        val otherNewField = relationField(otherFieldName, from = other, to = this, relation, isList = true, isBackward = true)
+        other.fields += otherNewField
+      }
 
       this
     }
@@ -244,7 +264,6 @@ object SchemaDsl {
     def build(): Model = {
       Model(
         name = name,
-        id = id,
         fields = fields.toList
       )
     }
@@ -263,7 +282,6 @@ object SchemaDsl {
 
     Field(
       name = name,
-      id = name,
       typeIdentifier = theType,
       isRequired = isRequired,
       enum = enum,
@@ -289,7 +307,6 @@ object SchemaDsl {
                     isRequired: Boolean = false): Field = {
     Field(
       name = name,
-      id = s"${from.id}.$name",
       isList = isList,
       relationSide = Some {
         if (!isBackward) RelationSide.A else RelationSide.B
@@ -308,7 +325,6 @@ object SchemaDsl {
   def newId(): Id = Cuid.createCuid()
 
   private val idField = Field(
-    id = "id",
     name = "id",
     typeIdentifier = TypeIdentifier.GraphQLID,
     isRequired = true,
@@ -322,7 +338,6 @@ object SchemaDsl {
   )
 
   private val updatedAtField = Field(
-    id = "updatedAt",
     name = "updatedAt",
     typeIdentifier = TypeIdentifier.DateTime,
     isRequired = true,
@@ -336,7 +351,6 @@ object SchemaDsl {
   )
 
   private val createdAtField = Field(
-    id = "createdAt",
     name = "createdAt",
     typeIdentifier = TypeIdentifier.DateTime,
     isRequired = true,

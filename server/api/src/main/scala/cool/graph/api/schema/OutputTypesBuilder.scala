@@ -1,18 +1,12 @@
 package cool.graph.api.schema
 
 import cool.graph.api.database.{DataItem, DataResolver}
-import cool.graph.api.mutations.NodeSelector
-import cool.graph.gc_values.GraphQLIdGCValue
 import cool.graph.shared.models.ModelMutationType.ModelMutationType
-import cool.graph.shared.models.{Field, Model, Project, Relation}
+import cool.graph.shared.models.{Model, Project}
 import sangria.schema
 import sangria.schema._
 
-import scala.concurrent.ExecutionContext.Implicits.global
-
 case class OutputTypesBuilder(project: Project, objectTypes: Map[String, ObjectType[ApiUserContext, DataItem]], masterDataResolver: DataResolver) {
-
-  def nodePaths(model: Model) = List(List())
 
   def mapOutputType[C](model: Model, objectType: ObjectType[C, DataItem], onlyId: Boolean): ObjectType[C, SimpleResolveOutput] = {
     ObjectType[C, SimpleResolveOutput](
@@ -121,55 +115,6 @@ case class OutputTypesBuilder(project: Project, objectTypes: Map[String, ObjectT
   type R = SimpleResolveOutput
 
   def mapResolve(item: DataItem, args: Args): SimpleResolveOutput = SimpleResolveOutput(item, args)
-
-  def mapAddToRelationOutputType[C](relation: Relation,
-                                    fromModel: Model,
-                                    fromField: Field,
-                                    toModel: Model,
-                                    objectType: ObjectType[C, DataItem],
-                                    payloadName: String): ObjectType[C, SimpleResolveOutput] =
-    ObjectType[C, SimpleResolveOutput](
-      name = s"${payloadName}Payload",
-      () => fields[C, SimpleResolveOutput](connectionFields(relation, fromModel, fromField, toModel, objectType): _*)
-    )
-
-  def mapRemoveFromRelationOutputType[C](relation: Relation,
-                                         fromModel: Model,
-                                         fromField: Field,
-                                         toModel: Model,
-                                         objectType: ObjectType[C, DataItem],
-                                         payloadName: String): ObjectType[C, SimpleResolveOutput] =
-    ObjectType[C, SimpleResolveOutput](
-      name = s"${payloadName}Payload",
-      () => fields[C, SimpleResolveOutput](connectionFields(relation, fromModel, fromField, toModel, objectType): _*)
-    )
-
-  def connectionFields[C](relation: Relation,
-                          fromModel: Model,
-                          fromField: Field,
-                          toModel: Model,
-                          objectType: ObjectType[C, DataItem]): List[sangria.schema.Field[C, SimpleResolveOutput]] =
-    List(
-      schema.Field[C, SimpleResolveOutput, Any, Any](name = relation.bName(project.schema),
-                                                     fieldType = OptionType(objectType),
-                                                     description = None,
-                                                     arguments = List(),
-                                                     resolve = ctx => {
-                                                       ctx.value.item
-                                                     }),
-      schema.Field[C, SimpleResolveOutput, Any, Any](
-        name = relation.aName(project.schema),
-        fieldType = OptionType(objectTypes(fromField.relatedModel(project.schema).get.name)),
-        description = None,
-        arguments = List(),
-        resolve = ctx => {
-          val mutationKey = s"${fromField.relation.get.aName(project.schema)}Id"
-          masterDataResolver
-            .resolveByUnique(NodeSelector(toModel, toModel.getFieldByName_!("id"), GraphQLIdGCValue(ctx.value.args.arg[String](mutationKey))))
-            .map(_.get)
-        }
-      )
-    )
 }
 
 case class SimpleResolveOutput(item: DataItem, args: Args)

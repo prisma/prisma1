@@ -2,7 +2,7 @@ package cool.graph.deploy.database.persistence
 
 import cool.graph.deploy.database.tables.{Migration, Project}
 import cool.graph.shared.models
-import cool.graph.shared.models.{MigrationStep, Schema, Seat}
+import cool.graph.shared.models.{MigrationStep, Schema}
 
 object DbToModelMapper {
   import cool.graph.shared.models.MigrationStepsJsonFormatter._
@@ -26,7 +26,6 @@ object DbToModelMapper {
       migration.schema.as[Schema],
       project.webhookUrl,
       project.secrets.as[Vector[String]],
-      project.seats.as[List[Seat]],
       allowQueries = project.allowQueries,
       allowMutations = project.allowMutations,
       project.functions.as[List[models.Function]]

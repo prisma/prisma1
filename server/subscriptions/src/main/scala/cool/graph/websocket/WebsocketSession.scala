@@ -9,6 +9,7 @@ import cool.graph.bugsnag.BugSnagger
 import cool.graph.messagebus.QueuePublisher
 import cool.graph.messagebus.queue.MappingQueuePublisher
 import cool.graph.messagebus.testkits.InMemoryQueueTestKit
+import cool.graph.subscriptions.SubscriptionDependencies
 import cool.graph.websocket.protocol.Request
 
 import scala.collection.mutable
@@ -80,7 +81,8 @@ case class WebsocketSession(
     requestsPublisher: QueuePublisher[Request],
     bugsnag: BugSnagger,
     isV7protocol: Boolean
-) extends Actor
+)(implicit dependencies: SubscriptionDependencies)
+    extends Actor
     with LogUnhandled
     with LogUnhandledExceptions
     with Stash {
@@ -95,11 +97,16 @@ case class WebsocketSession(
 
   manager ! RegisterWebsocketSession(sessionId, self)
 
-  context.system.scheduler.schedule(10.seconds, 10.seconds, outgoing, if (isV7protocol) {
-    TextMessage.Strict("""{"type":"ka"}""")
-  } else {
-    TextMessage.Strict("""{"type":"keepalive"}""")
-  })
+  context.system.scheduler.schedule(
+    dependencies.keepAliveIntervalSeconds.seconds,
+    dependencies.keepAliveIntervalSeconds.seconds,
+    outgoing,
+    if (isV7protocol) {
+      TextMessage.Strict("""{"type":"ka"}""")
+    } else {
+      TextMessage.Strict("""{"type":"keepalive"}""")
+    }
+  )
 
   def receive: Receive = logUnhandled {
     case TextMessage.Strict(body)             => println(s"received TextMessage: $body"); requestsPublisher.publish(Request(sessionId, projectId, body))

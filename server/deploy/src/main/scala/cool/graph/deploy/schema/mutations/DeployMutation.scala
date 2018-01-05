@@ -1,10 +1,10 @@
 package cool.graph.deploy.schema.mutations
 
 import cool.graph.deploy.database.persistence.{MigrationPersistence, ProjectPersistence}
-import cool.graph.deploy.migration.validation.{SchemaError, SchemaErrors, SchemaSyntaxValidator}
 import cool.graph.deploy.migration._
 import cool.graph.deploy.migration.inference.{InvalidGCValue, MigrationStepsInferrer, RelationDirectiveNeeded, SchemaInferrer}
 import cool.graph.deploy.migration.migrator.Migrator
+import cool.graph.deploy.migration.validation.{SchemaError, SchemaSyntaxValidator}
 import cool.graph.shared.models.{Migration, MigrationStep, Project, Schema}
 import org.scalactic.{Bad, Good}
 import sangria.parser.QueryParser
@@ -12,7 +12,6 @@ import sangria.parser.QueryParser
 import scala.collection.Seq
 import scala.concurrent.{ExecutionContext, Future}
 
-// todo should the deploy mutation work with schemas only?
 case class DeployMutation(
     args: DeployMutationInput,
     project: Project,
@@ -25,7 +24,6 @@ case class DeployMutation(
 )(
     implicit ec: ExecutionContext
 ) extends Mutation[DeployMutationPayload] {
-  import cool.graph.util.or.OrExtensions._
 
   val graphQlSdl   = QueryParser.parse(args.types).get
   val validator    = SchemaSyntaxValidator(args.types)
@@ -47,10 +45,11 @@ case class DeployMutation(
   }
 
   private def performDeployment: Future[MutationSuccess[DeployMutationPayload]] = {
-    schemaInferrer.infer(project.schema, graphQlSdl) match {
+    val schemaMapping = schemaMapper.createMapping(graphQlSdl)
+
+    schemaInferrer.infer(project.schema, schemaMapping, graphQlSdl) match {
       case Good(inferredNextSchema) =>
-        val schemaMapping = schemaMapper.createMapping(graphQlSdl)
-        val steps         = migrationStepsInferrer.infer(project.schema, inferredNextSchema, schemaMapping)
+        val steps = migrationStepsInferrer.infer(project.schema, inferredNextSchema, schemaMapping)
 
         handleProjectUpdate().flatMap(_ =>
           handleMigration(inferredNextSchema, steps).map { migration =>

@@ -24,8 +24,7 @@ case class VerifyWhere(project: Project, where: NodeSelector) extends ClientSqlD
     //"2017-12-05T12:34:23.000Z" to "2017-12-05T12:34:23.000" which MySQL will accept
     string.replace("Z", "")
   }
-
-
+  
   def causedByThisMutaction(cause: String) = {
     val parameterString = where.fieldValue match {
       case StringGCValue(x) => s"parameters ['$x',"
@@ -35,13 +34,15 @@ case class VerifyWhere(project: Project, where: NodeSelector) extends ClientSqlD
       case BooleanGCValue(true) => s"parameters [1,"
       case GraphQLIdGCValue(x) => s"parameters ['$x',"
       case EnumGCValue(x) => s"parameters ['$x',"
-      case DateTimeGCValue(x) => s"parameters ['${dateTimeFromISO8601(x)}',"
-      case JsonGCValue(x) => s"parameters ['$x',"
+      case DateTimeGCValue(x) => s"parameters ['${dateTimeFromISO8601(x)}',"  // Todo
+      case JsonGCValue(x) => s"parameters ['$x',"                             // Todo
       case ListGCValue(_) => sys.error("Not an acceptable Where")
       case RootGCValue(_) => sys.error("Not an acceptable Where")
       case NullGCValue => sys.error("Not an acceptable Where")
     }
 
-  cause.contains(s"`${where.model.name}` where `${where.field.name}` =") && cause.contains(parameterString)
+    val modelString = s"`${where.model.name}` where `${where.field.name}` ="
+
+  cause.contains(modelString) && cause.contains(parameterString)
   }
 }

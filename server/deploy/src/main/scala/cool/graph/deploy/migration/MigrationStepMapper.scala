@@ -19,7 +19,7 @@ case class MigrationStepMapper(projectId: String) {
     case x: UpdateModel =>
       val model                = nextSchema.getModelByName_!(x.newName)
       val scalarListFieldNames = model.scalarListFields.map(_.name).toVector
-      Some(RenameModelTable(projectId, previousName = x.name, nextName = x.newName, scalarListFieldsNames = scalarListFieldNames))
+      Some(RenameTable(projectId = projectId, previousName = x.name, nextName = x.newName, scalarListFieldsNames = scalarListFieldNames))
 
     case x: CreateField =>
       // todo I think those validations should be somewhere else, preferably preventing a step being created
@@ -40,8 +40,11 @@ case class MigrationStepMapper(projectId: String) {
       val field = model.getFieldByName_!(x.name)
       if (field.isList) {
         Some(DeleteScalarListTable(projectId, model.name, field.name, field.typeIdentifier))
-      } else {
+      } else if (field.isScalar) {
+        // TODO: add test case for not deleting columns for relation fields
         Some(DeleteColumn(projectId, model, field))
+      } else {
+        None
       }
 
     case x: UpdateField =>
@@ -52,11 +55,13 @@ case class MigrationStepMapper(projectId: String) {
       if (previousField.isList) {
         // todo: also handle changing to/from scalar list
         Some(UpdateScalarListTable(projectId, model, model, previousField, nextField))
-      } else {
+      } else if (previousField.isScalar) {
         Some(UpdateColumn(projectId, model, previousField, nextField))
+      } else {
+        None
       }
 
-    case _: EnumMigrationStep =>
+    case x: EnumMigrationStep =>
       None
 
     case x: CreateRelation =>
@@ -66,5 +71,12 @@ case class MigrationStepMapper(projectId: String) {
     case x: DeleteRelation =>
       val relation = previousSchema.getRelationByName_!(x.name)
       Some(DeleteRelationTable(projectId, nextSchema, relation))
+
+    case x: UpdateRelation =>
+      x.newName.map { newName =>
+        val previousRelation = previousSchema.getRelationByName_!(x.name)
+        val nextRelation     = nextSchema.getRelationByName_!(newName)
+        RenameTable(projectId = projectId, previousName = previousRelation.id, nextName = nextRelation.id, scalarListFieldsNames = Vector.empty)
+      }
   }
 }

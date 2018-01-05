@@ -1,6 +1,5 @@
 package cool.graph.deploy.migration
 
-import cool.graph.cuid.Cuid
 import cool.graph.shared.models.{Field, TypeIdentifier}
 
 object ReservedFields {
@@ -17,9 +16,8 @@ object ReservedFields {
     )
   }
 
-  def createdAtField(id: String = Cuid.createCuid()): Field = {
+  def createdAtField(): Field = {
     Field(
-      id = createdAtFieldName,
       name = createdAtFieldName,
       typeIdentifier = TypeIdentifier.DateTime,
       isRequired = true,
@@ -33,9 +31,8 @@ object ReservedFields {
     )
   }
 
-  def updatedAtField(id: String = Cuid.createCuid()): Field = {
+  def updatedAtField(): Field = {
     Field(
-      id = updatedAtFieldName,
       name = updatedAtFieldName,
       typeIdentifier = TypeIdentifier.DateTime,
       isRequired = true,
@@ -49,9 +46,8 @@ object ReservedFields {
     )
   }
 
-  def idField(id: String = Cuid.createCuid()): Field = {
+  def idField(): Field = {
     Field(
-      id = idFieldName,
       name = idFieldName,
       typeIdentifier = TypeIdentifier.GraphQLID,
       isRequired = true,

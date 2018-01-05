@@ -11,7 +11,6 @@ case class Project(
     ownerId: Option[String],
     webhookUrl: Option[String],
     secrets: JsValue,
-    seats: JsValue,
     allowQueries: Boolean,
     allowMutations: Boolean,
     functions: JsValue
@@ -24,12 +23,11 @@ class ProjectTable(tag: Tag) extends Table[Project](tag, "Project") {
   def ownerId        = column[Option[String]]("webhookUrl")
   def webhookUrl     = column[Option[String]]("ownerId")
   def secrets        = column[JsValue]("secrets")
-  def seats          = column[JsValue]("seats")
   def allowQueries   = column[Boolean]("allowQueries")
   def allowMutations = column[Boolean]("allowMutations")
   def functions      = column[JsValue]("functions")
 
-  def * = (id, ownerId, webhookUrl, secrets, seats, allowQueries, allowMutations, functions) <> ((Project.apply _).tupled, Project.unapply)
+  def * = (id, ownerId, webhookUrl, secrets, allowQueries, allowMutations, functions) <> ((Project.apply _).tupled, Project.unapply)
 }
 
 object ProjectTable {

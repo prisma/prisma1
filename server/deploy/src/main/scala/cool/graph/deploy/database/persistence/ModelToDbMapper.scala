@@ -10,7 +10,6 @@ object ModelToDbMapper {
 
   def convert(project: models.Project): Project = {
     val secretsJson   = Json.toJson(project.secrets)
-    val seatsJson     = Json.toJson(project.seats)
     val functionsJson = Json.toJson(project.functions)
 
     Project(
@@ -18,7 +17,6 @@ object ModelToDbMapper {
       ownerId = Some(project.ownerId), // todo ideally, owner id is not optional or it is optional on models.Project as well
       project.webhookUrl,
       secretsJson,
-      seatsJson,
       project.allowQueries,
       project.allowMutations,
       functionsJson

@@ -1,8 +1,7 @@
 package cool.graph.deploy.database.schema.mutations
 
-import cool.graph.deploy.database.tables.Migration
 import cool.graph.deploy.specutils.DeploySpecBase
-import cool.graph.shared.models.{MigrationStatus, ProjectId}
+import cool.graph.shared.models.{MigrationStatus, Project, ProjectId}
 import org.scalatest.{FlatSpec, Matchers}
 
 class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
@@ -319,17 +318,17 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
                         """.stripMargin
 
     val updateResult = server.query(s"""
-                                       |mutation {
-                                       |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(updatedSchema)}}){
-                                       |    project {
-                                       |      name
-                                       |      stage
-                                       |    }
-                                       |    errors {
-                                       |      description
-                                       |    }
-                                       |  }
-                                       |}""".stripMargin)
+         |mutation {
+         |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(updatedSchema)}}){
+         |    project {
+         |      name
+         |      stage
+         |    }
+         |    errors {
+         |      description
+         |    }
+         |  }
+         |}""".stripMargin)
 
     updateResult.pathAsSeq("data.deploy.errors") should be(empty)
 
@@ -340,5 +339,46 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
     reloadedProject.schema.getModelByName("TestModel").get.getFieldByName("updatedAt").get.isHidden shouldEqual false
 
     // todo assert client db cols?
+  }
+
+//  "DeployMutation" should "should not blow up on consecutive deploys" in {
+//    val project = setupProject(basicTypesGql)
+//
+//    val schema =
+//      """
+//        |type A {
+//        |  id: ID!@unique
+//        |  i: Int
+//        |  b: B @relation(name: "TADA")
+//        |}
+//        |type B {
+//        |  i: Int
+//        |  a: A
+//        |}""".stripMargin
+//
+//    deploySchema(project, schema)
+//    Thread.sleep(10000)
+//    deploySchema(project, schema)
+//    Thread.sleep(10000)
+//    deploySchema(project, schema)
+//
+//    Thread.sleep(30000)
+//  }
+
+  def deploySchema(project: Project, schema: String) = {
+    val nameAndStage = ProjectId.fromEncodedString(project.id)
+    server.query(s"""
+      |mutation {
+      |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(schema)}}){
+      |    migration {
+      |      steps {
+      |        type
+      |      }
+      |    }
+      |    errors {
+      |      description
+      |    }
+      |  }
+      |}""".stripMargin)
   }
 }
