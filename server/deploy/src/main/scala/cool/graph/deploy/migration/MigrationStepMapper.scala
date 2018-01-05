@@ -3,7 +3,11 @@ package cool.graph.deploy.migration
 import cool.graph.deploy.migration.mutactions._
 import cool.graph.shared.models._
 
-case class MigrationStepMapper(projectId: String) {
+trait MigrationStepMapper {
+  def mutactionFor(previousSchema: Schema, nextSchema: Schema, step: MigrationStep): Option[ClientSqlMutaction]
+}
+
+case class MigrationStepMapperImpl(projectId: String) extends MigrationStepMapper {
 
   // todo: I think this knows too much about previous and next. It should just know how to apply steps to previous.
   // todo: Ideally, the interface would just have a (previous)project and a step, maybe?

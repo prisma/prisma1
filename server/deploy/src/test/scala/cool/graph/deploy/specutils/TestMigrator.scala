@@ -2,7 +2,7 @@ package cool.graph.deploy.specutils
 
 import akka.actor.ActorSystem
 import cool.graph.deploy.database.persistence.MigrationPersistence
-import cool.graph.deploy.migration.MigrationStepMapper
+import cool.graph.deploy.migration.{MigrationStepMapper, MigrationStepMapperImpl}
 import cool.graph.deploy.migration.migrator.Migrator
 import cool.graph.deploy.migration.mutactions.ClientSqlMutaction
 import cool.graph.shared.models._
@@ -23,7 +23,7 @@ case class TestMigrator(
   // Todo this is temporary, a real implementation is required
   // For tests, the schedule directly does all the migration work to remove asy
   override def schedule(projectId: String, nextSchema: Schema, steps: Vector[MigrationStep]): Future[Migration] = {
-    val stepMapper = MigrationStepMapper(projectId)
+    val stepMapper = MigrationStepMapperImpl(projectId)
     val result: Future[Migration] = for {
       savedMigration <- migrationPersistence.create(Migration(projectId, nextSchema, steps))
       lastMigration  <- migrationPersistence.getLastMigration(projectId)

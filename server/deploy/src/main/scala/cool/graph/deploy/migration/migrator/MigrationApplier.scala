@@ -16,7 +16,8 @@ case class MigrationApplierResult(succeeded: Boolean)
 
 case class MigrationApplierImpl(
     migrationPersistence: MigrationPersistence,
-    clientDatabase: DatabaseDef
+    clientDatabase: DatabaseDef,
+    migrationStepMapper: MigrationStepMapper
 )(implicit ec: ExecutionContext)
     extends MigrationApplier {
 
@@ -82,16 +83,14 @@ case class MigrationApplierImpl(
   }
 
   def applyStep(previousSchema: Schema, migration: Migration, step: MigrationStep): Future[Unit] = {
-    val stepMapper = MigrationStepMapper(migration.projectId)
-    stepMapper.mutactionFor(previousSchema, migration.schema, step) match {
+    migrationStepMapper.mutactionFor(previousSchema, migration.schema, step) match {
       case Some(mutaction) => executeClientMutaction(mutaction)
       case None            => Future.unit
     }
   }
 
   def unapplyStep(previousSchema: Schema, migration: Migration, step: MigrationStep): Future[Migration] = {
-    val stepMapper = MigrationStepMapper(migration.projectId)
-    val x = stepMapper.mutactionFor(previousSchema, migration.schema, step) match {
+    val x = migrationStepMapper.mutactionFor(previousSchema, migration.schema, step) match {
       case Some(mutaction) => executeClientMutactionRollback(mutaction)
       case None            => Future.unit
     }

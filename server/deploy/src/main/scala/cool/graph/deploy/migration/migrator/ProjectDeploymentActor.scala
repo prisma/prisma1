@@ -2,11 +2,9 @@ package cool.graph.deploy.migration.migrator
 
 import akka.actor.{Actor, Stash}
 import cool.graph.deploy.database.persistence.MigrationPersistence
-import cool.graph.deploy.migration.MigrationStepMapper
-import cool.graph.deploy.migration.mutactions.ClientSqlMutaction
+import cool.graph.deploy.migration.MigrationStepMapperImpl
 import cool.graph.deploy.schema.DeploymentInProgress
-import cool.graph.shared.models.{Migration, MigrationStatus, MigrationStep, Schema}
-import cool.graph.utils.exceptions.StackTraceUtils
+import cool.graph.shared.models.{Migration, MigrationStep, Schema}
 import slick.jdbc.MySQLProfile.backend.DatabaseDef
 
 import scala.concurrent.Future
@@ -32,11 +30,16 @@ object DeploymentProtocol {
   * at a time for a given project and stage. Hence, processing is kicked off async and the actor changes behavior to reject
   * scheduling and deployment until the async processing restored the ready state.
   */
-case class ProjectDeploymentActor(projectId: String, migrationPersistence: MigrationPersistence, clientDatabase: DatabaseDef) extends Actor with Stash {
+case class ProjectDeploymentActor(
+    projectId: String,
+    migrationPersistence: MigrationPersistence,
+    clientDatabase: DatabaseDef
+) extends Actor
+    with Stash {
   import DeploymentProtocol._
 
   implicit val ec          = context.system.dispatcher
-  val stepMapper           = MigrationStepMapper(projectId)
+  val stepMapper           = MigrationStepMapperImpl(projectId)
   var activeSchema: Schema = _
 
   // Possible enhancement: Periodically scan the DB for migrations if signal was lost -> Wait and see if this is an issue at all
@@ -112,7 +115,7 @@ case class ProjectDeploymentActor(projectId: String, migrationPersistence: Migra
 
   def busy: Receive = {
     case _: Schedule =>
-      sender() ! akka.actor.Status.Failure(DeploymentInProgress)
+      sender ! akka.actor.Status.Failure(DeploymentInProgress)
 
     case ResumeMessageProcessing =>
       context.become(ready)
@@ -144,7 +147,7 @@ case class ProjectDeploymentActor(projectId: String, migrationPersistence: Migra
   def handleDeployment(): Future[Unit] = {
     // Need next project -> Load from DB or by migration
     // Get previous project from cache
-    val applier = MigrationApplierImpl(migrationPersistence, clientDatabase)
+    val applier = MigrationApplierImpl(migrationPersistence, clientDatabase, stepMapper)
 
     migrationPersistence.getNextMigration(projectId).transformWith {
       case Success(Some(nextMigration)) =>
