@@ -54,9 +54,13 @@ object DatabaseMutationBuilder {
 
   def updateDataItemByUnique(project: Project, model: Model, updateArgs: CoolArgs, where: NodeSelector) = {
     val updateValues = combineByComma(updateArgs.raw.map { case (k, v) => escapeKey(k) ++ sql" = " ++ escapeUnsafeParam(v) })
-    (sql"update `#${project.id}`.`#${model.name}`" ++
-      sql"set " ++ updateValues ++
-      sql"where `#${where.field.name}` = ${where.fieldValue};").asUpdate
+    if (updateArgs.isNonEmpty) {
+      (sql"update `#${project.id}`.`#${model.name}`" ++
+        sql"set " ++ updateValues ++
+        sql"where `#${where.field.name}` = ${where.fieldValue};").asUpdate
+    } else {
+      DBIOAction.successful(())
+    }
   }
 
   def whereFailureTrigger(project: Project, where: NodeSelector) = {
@@ -71,7 +75,7 @@ object DatabaseMutationBuilder {
       sql"where table_schema = ${project.id} AND TABLE_NAME = ${where.model.name})end;").as[Int]
   }
 
-  def connectionFailureTrigger(project: Project, relation: Relation, outerWhere: NodeSelector, innerWhere: NodeSelector) ={
+  def connectionFailureTrigger(project: Project, relation: Relation, outerWhere: NodeSelector, innerWhere: NodeSelector) = {
     val innerSide = relation.sideOf(innerWhere.model)
     val outerSide = relation.sideOf(outerWhere.model)
 
