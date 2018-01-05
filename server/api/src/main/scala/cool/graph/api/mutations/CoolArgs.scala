@@ -69,6 +69,12 @@ case class CoolArgs(raw: Map[String, Any]) {
 
   }
 
+  def nonListScalarArgumentsAsCoolArgs(model: Model): CoolArgs = {
+    val argumentValues = nonListScalarArguments(model)
+    val rawArgs        = argumentValues.map(x => x.name -> x.value).toMap
+    CoolArgs(rawArgs)
+  }
+
   def nonListScalarArguments(model: Model): Vector[ArgumentValue] = {
     for {
       field      <- model.scalarFields.toVector.filter(!_.isList)
