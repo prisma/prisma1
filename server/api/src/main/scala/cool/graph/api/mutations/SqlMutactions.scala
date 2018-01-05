@@ -206,7 +206,7 @@ case class SqlMutactions(dataResolver: DataResolver) {
         where = update.where,
         args = update.data
       )
-      List(updateMutaction)
+      List(updateMutaction) ++ getMutactionsForNestedMutation(update.where.model, update.data, update.where)
     }
   }
 
