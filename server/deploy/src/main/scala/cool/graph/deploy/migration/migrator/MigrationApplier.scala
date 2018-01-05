@@ -21,17 +21,15 @@ case class MigrationApplierImpl(
     extends MigrationApplier {
 
   override def apply(previousSchema: Schema, migration: Migration): Future[MigrationApplierResult] = {
-    val nextState = if (migration.status == MigrationStatus.Pending) MigrationStatus.InProgress else migration.status
-
-    migrationPersistence
-      .updateMigrationStatus(migration.id, nextState)
-      .flatMap { _ =>
-        applyMigration(previousSchema, migration)
-      }
+    for {
+      _         <- Future.unit
+      nextState = if (migration.status == MigrationStatus.Pending) MigrationStatus.InProgress else migration.status
+      _         <- migrationPersistence.updateMigrationStatus(migration.id, nextState)
+      result    <- applyMigration(previousSchema, migration)
+    } yield result
   }
 
   def applyMigration(previousSchema: Schema, migration: Migration): Future[MigrationApplierResult] = {
-    //    val initialProgress = MigrationProgress(pendingSteps = migration.steps, appliedSteps = Vector.empty, isRollingback = false)
     recurse(previousSchema, migration)
   }
 
