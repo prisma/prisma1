@@ -22,7 +22,7 @@ case class Migration(
 ) {
   def id: MigrationId                             = MigrationId(projectId, revision)
   def isRollingBack: Boolean                      = status == MigrationStatus.RollingBack
-  def pendingSteps: Vector[MigrationStep]         = steps.drop(applied + 1)
+  def pendingSteps: Vector[MigrationStep]         = steps.drop(applied)
   def appliedSteps: Vector[MigrationStep]         = steps.take(applied)
   def pendingRollBackSteps: Vector[MigrationStep] = appliedSteps.reverse.drop(rolledBack)
   def currentStep: MigrationStep                  = steps(applied)

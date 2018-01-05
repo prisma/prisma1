@@ -50,8 +50,6 @@ case class MigrationApplierImpl(
       result.recoverWith {
         case exception =>
           println("encountered exception while applying migration. will roll back.")
-          exception.printStackTrace()
-
           for {
             _             <- migrationPersistence.updateMigrationStatus(migration.id, MigrationStatus.RollingBack)
             _             <- migrationPersistence.updateMigrationErrors(migration.id, migration.errors :+ StackTraceUtils.print(exception))
@@ -68,6 +66,7 @@ case class MigrationApplierImpl(
       for {
         nextMigration <- unapplyStep(previousSchema, migration, migration.pendingRollBackSteps.head).recoverWith {
                           case err =>
+                            println("encountered exception while unapplying migration. will roll back.")
                             val failedMigration = migration.markAsRollBackFailure
                             for {
                               _ <- migrationPersistence.updateMigrationStatus(migration.id, failedMigration.status)
