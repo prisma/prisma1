@@ -6,25 +6,17 @@ import cool.graph.api.database.mutactions.GetFieldFromSQLUniqueException._
 import cool.graph.api.database.mutactions.validation.InputValueValidation
 import cool.graph.api.database.mutactions.{ClientSqlDataChangeMutaction, ClientSqlStatementResult, MutactionVerificationSuccess}
 import cool.graph.api.database.{DataResolver, DatabaseMutationBuilder}
-import cool.graph.api.mutations.{CoolArgs, NodeSelector}
+import cool.graph.api.mutations.{CoolArgs, NodeSelector, ParentInfo}
 import cool.graph.api.schema.APIErrors
 import cool.graph.cuid.Cuid
-import cool.graph.shared.models.IdType.Id
-import cool.graph.shared.models.{Field, Model, Project}
-import cool.graph.util.gc_value.GCStringConverter
+import cool.graph.shared.models.Project
 import cool.graph.util.json.JsonFormats
 
 import scala.concurrent.Future
 import scala.util.{Success, Try}
 
-case class UpsertDataItemIfInRelationWith(
-    project: Project,
-    fromField: Field,
-    fromId: Id,
-    createArgs: CoolArgs,
-    updateArgs: CoolArgs,
-    where: NodeSelector
-) extends ClientSqlDataChangeMutaction {
+case class UpsertDataItemIfInRelationWith(project: Project, parentInfo: ParentInfo, where: NodeSelector, createArgs: CoolArgs, updateArgs: CoolArgs)
+    extends ClientSqlDataChangeMutaction {
 
   val model            = where.model
   val idOfNewItem      = Cuid.createCuid()
@@ -33,15 +25,8 @@ case class UpsertDataItemIfInRelationWith(
 
   override def execute: Future[ClientSqlStatementResult[Any]] = Future.successful {
     ClientSqlStatementResult(
-      DatabaseMutationBuilder.upsertIfInRelationWith(
-        project = project,
-        model = model,
-        createArgs = actualCreateArgs,
-        updateArgs = actualUpdateArgs,
-        where = where,
-        relation = fromField.relation.get,
-        target = fromId
-      ))
+      DatabaseMutationBuilder
+        .upsertIfInRelationWith(project, parentInfo, where, actualCreateArgs, actualUpdateArgs))
   }
 
   override def handleErrors = {

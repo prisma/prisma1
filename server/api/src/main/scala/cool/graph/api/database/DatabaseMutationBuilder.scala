@@ -3,16 +3,11 @@ package cool.graph.api.database
 import cool.graph.api.database.Types.DataItemFilterCollection
 import cool.graph.api.mutations.{CoolArgs, NodeSelector, ParentInfo}
 import cool.graph.cuid.Cuid
-import cool.graph.gc_values._
-import cool.graph.shared.models.IdType.Id
 import cool.graph.shared.models.RelationSide.RelationSide
 import cool.graph.shared.models.TypeIdentifier.TypeIdentifier
-import cool.graph.shared.models.{Model, Project, Relation, TypeIdentifier}
-import org.joda.time.format.DateTimeFormat
-import play.api.libs.json._
+import cool.graph.shared.models.{Model, Project, TypeIdentifier}
 import slick.dbio.DBIOAction
 import slick.jdbc.MySQLProfile.api._
-import slick.jdbc.{PositionedParameters, SQLActionBuilder, SetParameter}
 import slick.sql.{SqlAction, SqlStreamingAction}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -53,10 +48,10 @@ object DatabaseMutationBuilder {
       prefixIfNotNone("where", whereSql)).asUpdate
   }
 
-  def updateDataItemByUnique(project: Project, model: Model, updateArgs: CoolArgs, where: NodeSelector) = {
+  def updateDataItemByUnique(project: Project, where: NodeSelector, updateArgs: CoolArgs) = {
     val updateValues = combineByComma(updateArgs.raw.map { case (k, v) => escapeKey(k) ++ sql" = " ++ escapeUnsafeParam(v) })
     if (updateArgs.isNonEmpty) {
-      (sql"update `#${project.id}`.`#${model.name}`" ++
+      (sql"update `#${project.id}`.`#${where.model.name}`" ++
         sql"set " ++ updateValues ++
         sql"where `#${where.field.name}` = ${where.fieldValue};").asUpdate
     } else {
@@ -76,20 +71,20 @@ object DatabaseMutationBuilder {
       sql"where table_schema = ${project.id} AND TABLE_NAME = ${where.model.name})end;").as[Int]
   }
 
-  def connectionFailureTrigger(project: Project, relation: Relation, outerWhere: NodeSelector, innerWhere: NodeSelector) = {
-    val innerSide = relation.sideOf(innerWhere.model)
-    val outerSide = relation.sideOf(outerWhere.model)
+  def connectionFailureTrigger(project: Project, parentInfo: ParentInfo, innerWhere: NodeSelector) = {
+    val innerSide = parentInfo.relation.sideOf(innerWhere.model)
+    val outerSide = parentInfo.relation.sideOf(parentInfo.model)
 
     (sql"select case" ++
       sql"when exists" ++
       sql"(select *" ++
-      sql"from `#${project.id}`.`#${relation.id}`" ++
+      sql"from `#${project.id}`.`#${parentInfo.relation.id}`" ++
       sql"where `#$innerSide` = (Select `id` from `#${project.id}`.`#${innerWhere.model.name}`where `#${innerWhere.field.name}` = ${innerWhere.fieldValue})" ++
-      sql"AND `#$outerSide` = (Select `id` from `#${project.id}`.`#${outerWhere.model.name}`where `#${outerWhere.field.name}` = ${outerWhere.fieldValue}))" ++
+      sql"AND `#$outerSide` = (Select `id` from `#${project.id}`.`#${parentInfo.model.name}`where `#${parentInfo.where.field.name}` = ${parentInfo.where.fieldValue}))" ++
       sql"then 1" ++
       sql"else (select COLUMN_NAME" ++
       sql"from information_schema.columns" ++
-      sql"where table_schema = ${project.id} AND TABLE_NAME = ${relation.id})end;").as[Int]
+      sql"where table_schema = ${project.id} AND TABLE_NAME = ${parentInfo.relation.id})end;").as[Int]
   }
 
   def deleteDataItems(project: Project, model: Model, where: DataItemFilterCollection) = {
@@ -97,21 +92,21 @@ object DatabaseMutationBuilder {
     (sql"delete from `#${project.id}`.`#${model.name}`" ++ prefixIfNotNone("where", whereSql)).asUpdate
   }
 
-  def createDataItemIfUniqueDoesNotExist(project: Project, model: Model, createArgs: CoolArgs, where: NodeSelector) = {
+  def createDataItemIfUniqueDoesNotExist(project: Project, where: NodeSelector, createArgs: CoolArgs) = {
     val escapedColumns = combineByComma(createArgs.raw.keys.map(escapeKey))
     val insertValues   = combineByComma(createArgs.raw.values.map(escapeUnsafeParam))
-    (sql"INSERT INTO `#${project.id}`.`#${model.name}` (" ++ escapedColumns ++ sql")" ++
+    (sql"INSERT INTO `#${project.id}`.`#${where.model.name}` (" ++ escapedColumns ++ sql")" ++
       sql"SELECT " ++ insertValues ++
       sql"FROM DUAL" ++
-      sql"where not exists (select * from `#${project.id}`.`#${model.name}` where `#${where.field.name}` = ${where.fieldValue});").asUpdate
+      sql"where not exists (select * from `#${project.id}`.`#${where.model.name}` where `#${where.field.name}` = ${where.fieldValue});").asUpdate
   }
 
-  def upsert(project: Project, model: Model, createArgs: CoolArgs, updateArgs: CoolArgs, where: NodeSelector) = {
+  def upsert(project: Project, where: NodeSelector, createArgs: CoolArgs, updateArgs: CoolArgs) = {
     import scala.concurrent.ExecutionContext.Implicits.global
 
-    val q       = DatabaseQueryBuilder.existsFromModelsByUniques(project, model, Vector(where)).as[Boolean]
-    val qInsert = createDataItemIfUniqueDoesNotExist(project, model, createArgs, where)
-    val qUpdate = updateDataItemByUnique(project, model, updateArgs, where)
+    val q       = DatabaseQueryBuilder.existsFromModelsByUniques(project, where.model, Vector(where)).as[Boolean]
+    val qInsert = createDataItemIfUniqueDoesNotExist(project, where, createArgs)
+    val qUpdate = updateDataItemByUnique(project, where, updateArgs)
 
     for {
       exists <- q
@@ -121,18 +116,16 @@ object DatabaseMutationBuilder {
 
   def upsertIfInRelationWith(
       project: Project,
-      model: Model,
-      createArgs: CoolArgs,
-      updateArgs: CoolArgs,
+      parentInfo: ParentInfo,
       where: NodeSelector,
-      relation: Relation,
-      target: Id
+      createArgs: CoolArgs,
+      updateArgs: CoolArgs
   ) = {
     import scala.concurrent.ExecutionContext.Implicits.global
 
-    val q       = DatabaseQueryBuilder.existsNodeIsInRelationshipWith(project, model, where, relation, target).as[Boolean]
-    val qInsert = createDataItem(project, model, createArgs)
-    val qUpdate = updateDataItemByUnique(project, model, updateArgs, where)
+    val q       = DatabaseQueryBuilder.existsNodeIsInRelationshipWith(project, parentInfo, where).as[Boolean]
+    val qInsert = createDataItem(project, where.model, createArgs)
+    val qUpdate = updateDataItemByUnique(project, where, updateArgs)
 
     for {
       exists <- q
@@ -162,25 +155,21 @@ object DatabaseMutationBuilder {
   def createRelationRowByUniqueValueForA(projectId: String, parentInfo: ParentInfo, where: NodeSelector): SqlAction[Int, NoStream, Effect] = {
     val relationId = Cuid.createCuid()
     sqlu"""insert into `#$projectId`.`#${parentInfo.relation.id}` (`id`, `A`, `B`)
-           VALUES ('#$relationId',
-                   (select id from `#$projectId`.`#${where.model.name}` where `#${where.field.name}` = ${where.fieldValue}),
-                   (select id from `#$projectId`.`#${parentInfo.model.name}` where `#${parentInfo.where.field.name}` = ${parentInfo.where.fieldValue})
-                   )"""
+           Select '#$relationId', (select id from `#$projectId`.`#${where.model.name}` where `#${where.field.name}` = ${where.fieldValue}), `id`
+           FROM   `#$projectId`.`#${parentInfo.model.name}` where `#${parentInfo.where.field.name}` = ${parentInfo.where.fieldValue}"""
   }
 
   def createRelationRowByUniqueValueForB(projectId: String, parentInfo: ParentInfo, where: NodeSelector): SqlAction[Int, NoStream, Effect] = {
     val relationId = Cuid.createCuid()
 
     sqlu"""insert into `#$projectId`.`#${parentInfo.relation.id}` (`id`, `A`, `B`)
-           VALUES ('#$relationId',
-                   (select id from `#$projectId`.`#${parentInfo.model.name}` where `#${parentInfo.where.field.name}` = ${parentInfo.where.fieldValue}),
-                   (select id from `#$projectId`.`#${where.model.name}` where `#${where.field.name}` = ${where.fieldValue})
-                  )"""
+           Select'#$relationId', (select id from `#$projectId`.`#${parentInfo.model.name}` where `#${parentInfo.where.field.name}` = ${parentInfo.where.fieldValue}), `id`
+           FROM `#$projectId`.`#${where.model.name}` where `#${where.field.name}` = ${where.fieldValue}"""
   }
 
-  def deleteRelationRowByUniqueValueForA(projectId: String, relationTableName: String, b: String, where: NodeSelector): SqlAction[Int, NoStream, Effect] = {
-    sqlu"""delete from `#$projectId`.`#$relationTableName`
-           where `B` = '#$b' and `A` in (
+  def deleteRelationRowByUniqueValueForA(projectId: String, parentInfo: ParentInfo, where: NodeSelector): SqlAction[Int, NoStream, Effect] = {
+    sqlu"""delete from `#$projectId`.`#${parentInfo.relation.id}`
+           where `B` = ${parentInfo.where.fieldValueAsString} and `A` in (
              select id
              from `#$projectId`.`#${where.model.name}`
              where `#${where.field.name}` = ${where.fieldValue}
@@ -188,9 +177,9 @@ object DatabaseMutationBuilder {
           """
   }
 
-  def deleteRelationRowByUniqueValueForB(projectId: String, relationTableName: String, a: String, where: NodeSelector): SqlAction[Int, NoStream, Effect] = {
-    sqlu"""delete from `#$projectId`.`#$relationTableName`
-           where `A` = '#$a' and `B` in (
+  def deleteRelationRowByUniqueValueForB(projectId: String, parentInfo: ParentInfo, where: NodeSelector): SqlAction[Int, NoStream, Effect] = {
+    sqlu"""delete from `#$projectId`.`#${parentInfo.relation.id}`
+           where `A` = ${parentInfo.where.fieldValueAsString} and `B` in (
              select id
              from `#$projectId`.`#${where.model.name}`
              where `#${where.field.name}` = ${where.fieldValue}
