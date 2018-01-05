@@ -29,7 +29,7 @@ case class TestMigrator(
       lastMigration  <- migrationPersistence.getLastMigration(projectId)
       applied <- applyMigration(lastMigration.get.schema, savedMigration, stepMapper).flatMap { result =>
                   if (result.succeeded) {
-                    migrationPersistence.updateMigrationStatus(lastMigration.get, MigrationStatus.Success).map { _ =>
+                    migrationPersistence.updateMigrationStatus(savedMigration, MigrationStatus.Success).map { _ =>
                       savedMigration.copy(status = MigrationStatus.Success)
                     }
                   } else {
@@ -41,7 +41,6 @@ case class TestMigrator(
     }
 
     result.await
-    println(result)
     result
   }
 
