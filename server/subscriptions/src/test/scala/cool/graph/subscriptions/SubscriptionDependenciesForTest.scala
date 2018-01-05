@@ -44,8 +44,9 @@ class SubscriptionDependenciesForTest()(implicit val system: ActorSystem, val ma
   }
   override val requestsQueueConsumer: QueueConsumer[SubscriptionRequest] = requestsQueueTestKit
 
-  val projectFetcherPort = 12345
-  val projectFetcherPath = "project-fetcher"
+  val projectFetcherPort                = 12345
+  override val keepAliveIntervalSeconds = 1000
+  val projectFetcherPath                = "project-fetcher"
   override val projectFetcher: ProjectFetcher = {
     ProjectFetcherImpl(Vector.empty,
                        config,

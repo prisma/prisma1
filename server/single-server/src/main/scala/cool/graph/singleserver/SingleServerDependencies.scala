@@ -66,4 +66,6 @@ case class SingleServerDependencies()(implicit val system: ActorSystem, val mate
     responsePubSub.map[SubscriptionSessionResponseV05](converterResponse05ToString)
   lazy val responsePubSubPublisherV07: PubSubPublisher[SubscriptionSessionResponse] =
     responsePubSub.map[SubscriptionSessionResponse](converterResponse07ToString)
+
+  override val keepAliveIntervalSeconds = 10
 }

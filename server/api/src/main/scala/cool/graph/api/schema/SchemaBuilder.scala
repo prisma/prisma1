@@ -231,7 +231,7 @@ case class SchemaBuilderImpl(
     val objectType = objectTypes(model.name)
 
     Field(
-      s"${model.name}",
+      camelCase(model.name),
       fieldType = OptionType(outputTypesBuilder.mapSubscriptionOutputType(model, objectType)),
       arguments = List(SangriaQueryArguments.whereSubscriptionArgument(model = model, project = project)),
       resolve = _ => None

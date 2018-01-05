@@ -5,7 +5,7 @@ import sangria.schema._
 
 object ModelMutationType {
   val Type = EnumType(
-    "_ModelMutationType",
+    "MutationType",
     values = List(
       EnumValue("CREATED", value = models.ModelMutationType.Created),
       EnumValue("UPDATED", value = models.ModelMutationType.Updated),

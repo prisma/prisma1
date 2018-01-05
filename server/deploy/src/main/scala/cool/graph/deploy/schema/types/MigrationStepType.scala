@@ -20,6 +20,7 @@ object MigrationStepType {
     UpdateFieldType,
     DeleteFieldType,
     CreateRelationType,
+    UpdateRelationType,
     DeleteRelationType
   )
 
@@ -93,6 +94,13 @@ object MigrationStepType {
     Field("name", StringType, resolve = _.value.name),
     Field("leftModel", StringType, resolve = _.value.leftModelName),
     Field("rightModel", StringType, resolve = _.value.rightModelName)
+  )
+
+  lazy val UpdateRelationType = fieldsHelper[UpdateRelation](
+    Field("name", StringType, resolve = _.value.name),
+    Field("newName", OptionType(StringType), resolve = _.value.newName),
+    Field("modelAId", OptionType(StringType), resolve = _.value.modelAId),
+    Field("modelBId", OptionType(StringType), resolve = _.value.modelBId),
   )
 
   lazy val DeleteRelationType = fieldsHelper[DeleteRelation](

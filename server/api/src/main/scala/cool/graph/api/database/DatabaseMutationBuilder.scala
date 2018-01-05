@@ -71,17 +71,20 @@ object DatabaseMutationBuilder {
       sql"where table_schema = ${project.id} AND TABLE_NAME = ${where.model.name})end;").as[Int]
   }
 
-  def connectionFailureTrigger(project: Project, relationTableName: String, outerWhere: NodeSelector, innerWhere: NodeSelector) = {
+  def connectionFailureTrigger(project: Project, relation: Relation, outerWhere: NodeSelector, innerWhere: NodeSelector) ={
+    val innerSide = relation.sideOf(innerWhere.model)
+    val outerSide = relation.sideOf(outerWhere.model)
+
     (sql"select case" ++
       sql"when exists" ++
       sql"(select *" ++
-      sql"from `#${project.id}`.`#${relationTableName}`" ++
-      sql"where `B` = (Select `id` from `#${project.id}`.`#${outerWhere.model.name}`where `#${outerWhere.field.name}` = ${outerWhere.fieldValue})" ++
-      sql"AND `A` = (Select `id` from `#${project.id}`.`#${innerWhere.model.name}`where `#${innerWhere.field.name}` = ${innerWhere.fieldValue}))" ++
+      sql"from `#${project.id}`.`#${relation.id}`" ++
+      sql"where `#$innerSide` = (Select `id` from `#${project.id}`.`#${innerWhere.model.name}`where `#${innerWhere.field.name}` = ${innerWhere.fieldValue})" ++
+      sql"AND `#$outerSide` = (Select `id` from `#${project.id}`.`#${outerWhere.model.name}`where `#${outerWhere.field.name}` = ${outerWhere.fieldValue}))" ++
       sql"then 1" ++
       sql"else (select COLUMN_NAME" ++
       sql"from information_schema.columns" ++
-      sql"where table_schema = ${project.id} AND TABLE_NAME = ${relationTableName})end;").as[Int]
+      sql"where table_schema = ${project.id} AND TABLE_NAME = ${relation.id})end;").as[Int]
   }
 
   def deleteDataItems(project: Project, model: Model, where: DataItemFilterCollection) = {
@@ -313,7 +316,7 @@ object DatabaseMutationBuilder {
   def setScalarList(projectId: String, modelName: String, fieldName: String, nodeId: String, values: Vector[Any]): DBIOAction[Unit, NoStream, Effect] = {
 
     val escapedValueTuples = for {
-      (escapedValue, position) <- values.map(escapeUnsafeParam(_)).zip((1 to values.length).map(_ * 1000))
+      (escapedValue, position) <- values.map(escapeUnsafeParam).zip((1 to values.length).map(_ * 1000))
     } yield {
       sql"($nodeId, $position, " concat escapedValue concat sql")"
     }
@@ -327,7 +330,7 @@ object DatabaseMutationBuilder {
   def pushScalarList(projectId: String, modelName: String, fieldName: String, nodeId: String, values: Vector[Any]): DBIOAction[Int, NoStream, Effect] = {
 
     val escapedValueTuples = for {
-      (escapedValue, position) <- values.map(escapeUnsafeParam(_)).zip((1 to values.length).map(_ * 1000))
+      (escapedValue, position) <- values.map(escapeUnsafeParam).zip((1 to values.length).map(_ * 1000))
     } yield {
       sql"($nodeId, @baseline + $position, " concat escapedValue concat sql")"
     }

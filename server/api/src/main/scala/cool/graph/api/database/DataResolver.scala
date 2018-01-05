@@ -5,11 +5,11 @@ import cool.graph.api.database.DatabaseQueryBuilder._
 import cool.graph.api.database.Types.DataItemFilterCollection
 import cool.graph.api.mutations.NodeSelector
 import cool.graph.api.schema.APIErrors
-import cool.graph.gc_values.{GCValue, GraphQLIdGCValue}
+import cool.graph.gc_values.{GCValue, GraphQLIdGCValue, JsonGCValue}
 import cool.graph.shared.models.IdType.Id
 import cool.graph.shared.models.TypeIdentifier.TypeIdentifier
 import cool.graph.shared.models._
-import cool.graph.util.gc_value.GCDBValueConverter
+import cool.graph.util.gc_value.{GCJsonConverter, GCValueExtractor}
 import slick.dbio.Effect.Read
 import slick.dbio.{DBIOAction, Effect, NoStream}
 import slick.jdbc.MySQLProfile.api._
@@ -43,7 +43,7 @@ case class DataResolver(project: Project, useMasterDatabaseOnly: Boolean = false
   }
 
   def resolveByModel(model: Model, args: Option[QueryArguments] = None): Future[ResolverResult] = {
-    val (query, resultTransform) = DatabaseQueryBuilder.selectAllFromModel(project.id, model.name, args)
+    val (query, resultTransform) = DatabaseQueryBuilder.selectAllFromTable(project.id, model.name, args)
 
     performWithTiming("resolveByModel", readonlyClientDatabase.run(readOnlyDataItem(query)))
       .map(_.toList.map(mapDataItem(model)(_)))
@@ -69,7 +69,10 @@ case class DataResolver(project: Project, useMasterDatabaseOnly: Boolean = false
   }
 
   def resolveByUnique(where: NodeSelector): Future[Option[DataItem]] = {
-    batchResolveByUnique(where.model, where.field.name, List(where.unwrappedFieldValue)).map(_.headOption)
+    where.fieldValue match {
+      case JsonGCValue(x) => batchResolveByUnique(where.model, where.field.name, List(where.fieldValueAsString)).map(_.headOption)
+      case _ => batchResolveByUnique(where.model, where.field.name, List(where.unwrappedFieldValue)).map(_.headOption)
+    }
   }
 
   def resolveByUniques(model: Model, uniques: Vector[NodeSelector]): Future[Vector[DataItem]] = {
@@ -82,15 +85,21 @@ case class DataResolver(project: Project, useMasterDatabaseOnly: Boolean = false
   }
 
   def loadModelRowsForExport(model: Model, args: Option[QueryArguments] = None): Future[ResolverResult] = {
-    val (query, resultTransform) = DatabaseQueryBuilder.selectAllFromModel(project.id, model.name, args, overrideMaxNodeCount = Some(1001))
+    val (query, resultTransform) = DatabaseQueryBuilder.selectAllFromTable(project.id, model.name, args, None)
 
     performWithTiming("loadModelRowsForExport", readonlyClientDatabase.run(readOnlyDataItem(query)))
       .map(_.toList.map(mapDataItem(model)(_)))
       .map(resultTransform(_))
   }
 
+  def loadListRowsForExport(tableName: String, args: Option[QueryArguments] = None): Future[ResolverResult] = {
+    val (query, resultTransform) = DatabaseQueryBuilder.selectAllFromListTable(project.id, tableName, args, None)
+
+    performWithTiming("loadListRowsForExport", readonlyClientDatabase.run(readOnlyScalarListValue(query))).map(_.toList).map(resultTransform(_))
+  }
+
   def loadRelationRowsForExport(relationId: String, args: Option[QueryArguments] = None): Future[ResolverResult] = {
-    val (query, resultTransform) = DatabaseQueryBuilder.selectAllFromModel(project.id, relationId, args, overrideMaxNodeCount = Some(1001))
+    val (query, resultTransform) = DatabaseQueryBuilder.selectAllFromTable(project.id, relationId, args, None)
 
     performWithTiming("loadRelationRowsForExport", readonlyClientDatabase.run(readOnlyDataItem(query))).map(_.toList).map(resultTransform(_))
   }
@@ -141,7 +150,7 @@ case class DataResolver(project: Project, useMasterDatabaseOnly: Boolean = false
   }
 
   def resolveRelation(relationId: String, aId: String, bId: String): Future[ResolverResult] = {
-    val (query, resultTransform) = DatabaseQueryBuilder.selectAllFromModel(
+    val (query, resultTransform) = DatabaseQueryBuilder.selectAllFromTable(
       project.id,
       relationId,
       Some(QueryArguments(None, None, None, None, None, Some(List(FilterElement("A", aId), FilterElement("B", bId))), None)))
@@ -309,7 +318,7 @@ case class DataResolver(project: Project, useMasterDatabaseOnly: Boolean = false
 
   private def unwrapGcValue(value: Any): Any = {
     value match {
-      case x: GCValue => GCDBValueConverter().fromGCValue(x)
+      case x: GCValue => GCValueExtractor.fromGCValue(x)
       case x          => x
     }
   }
@@ -323,6 +332,7 @@ case class ModelCounts(countsMap: Map[Model, Int]) {
 }
 
 case class ResolverResult(items: Seq[DataItem], hasNextPage: Boolean = false, hasPreviousPage: Boolean = false, parentModelId: Option[String] = None)
+case class ResolverListResult(items: Seq[ScalarListValue], hasNextPage: Boolean = false, hasPreviousPage: Boolean = false)
 
 case class DataResolverValidations(f: String, v: Option[Any], model: Model, validate: Boolean) {
 

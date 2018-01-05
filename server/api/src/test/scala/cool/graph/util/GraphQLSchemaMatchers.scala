@@ -17,6 +17,10 @@ trait GraphQLSchemaMatchers {
     val start = "type Query {"
   }
 
+  object Subscription extends TopLevelSchemaElement {
+    val start = "type Subscription {"
+  }
+
   case class Type(name: String, interface: String = "") extends TopLevelSchemaElement {
     val start = {
       if (interface.isEmpty) {
@@ -111,11 +115,12 @@ trait GraphQLSchemaMatchers {
     }
   }
 
+  def containSubscription(expectedSubscription: String)                                             = new SchemaMatcher(Subscription, Vector(constrainExpectation(expectedSubscription)))
   def containQuery(expectedQuery: String)                                                           = new SchemaMatcher(Query, Vector(constrainExpectation(expectedQuery)))
   def containMutation(expectedMutation: String)                                                     = new SchemaMatcher(Mutation, Vector(constrainExpectation(expectedMutation)))
   def containType(name: String, interface: String = "", fields: Vector[String] = Vector.empty)      = new SchemaMatcher(Type(name, interface), fields)
   def containInputType(name: String, interface: String = "", fields: Vector[String] = Vector.empty) = new SchemaMatcher(InputType(name, interface), fields)
-  def containEnum(name: String)                                                                     = new SchemaMatcher(Enum(name))
+  def containEnum(name: String, values: Vector[String] = Vector.empty)                              = new SchemaMatcher(Enum(name), values)
 
   // Ensures that singular and pluralized queries/mutations don't match each other, for example
   private def constrainExpectation(expectation: String): String = {

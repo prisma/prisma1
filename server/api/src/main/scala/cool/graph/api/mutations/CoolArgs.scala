@@ -2,9 +2,9 @@ package cool.graph.api.mutations
 
 import cool.graph.api.mutations.MutationTypes.ArgumentValue
 import cool.graph.api.schema.APIErrors
-import cool.graph.gc_values.{DateTimeGCValue, GCValue, GraphQLIdGCValue}
+import cool.graph.gc_values.{GCValue, GraphQLIdGCValue}
 import cool.graph.shared.models._
-import cool.graph.util.gc_value.{GCAnyConverter, GCDBValueConverter}
+import cool.graph.util.gc_value.{GCAnyConverter, GCValueExtractor}
 
 import scala.collection.immutable.Seq
 
@@ -186,8 +186,8 @@ object IdNodeSelector{
 }
 
 case class NodeSelector(model: Model, field: Field, fieldValue: GCValue) {
-  lazy val unwrappedFieldValue: Any   = GCDBValueConverter().fromGCValue(fieldValue)
-  lazy val fieldValueAsString: String = GCDBValueConverter().fromGCValueToString(fieldValue)
+  lazy val unwrappedFieldValue: Any   = GCValueExtractor.fromGCValue(fieldValue)
+  lazy val fieldValueAsString: String = GCValueExtractor.fromGCValueToString(fieldValue)
 
 //  lazy val unwrappedFieldValue: Any   = {
 //    fieldValue match {

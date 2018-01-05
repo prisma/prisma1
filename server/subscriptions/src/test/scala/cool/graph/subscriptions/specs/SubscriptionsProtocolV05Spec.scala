@@ -44,7 +44,7 @@ class SubscriptionsProtocolV05Spec extends FlatSpec with Matchers with SpecBase 
         """{"id":"ioPRfgqN6XMefVW6","payload":{"errors":[{"message":"The provided query doesn't include any known model name. Please check for the latest subscriptions API."}]},"type":"subscription_fail"}"""
       )
 
-      wsClient.sendMessage("""{"type":"subscription_start","id":"ioPRfgqN6XMefVW6","variables":{},"query":"subscription { Todo { node { id text json } } }"}""")
+      wsClient.sendMessage("""{"type":"subscription_start","id":"ioPRfgqN6XMefVW6","variables":{},"query":"subscription { todo { node { id text json } } }"}""")
       wsClient.expectMessage("""{"id":"ioPRfgqN6XMefVW6","type":"subscription_success"}""")
       sleep()
 
@@ -54,23 +54,23 @@ class SubscriptionsProtocolV05Spec extends FlatSpec with Matchers with SpecBase 
       )
 
       wsClient.expectMessage(
-        """{"id":"ioPRfgqN6XMefVW6","payload":{"data":{"Todo":{"node":{"id":"test-node-id","text":"some todo","json":[1,2,{"a":"b"}]}}}},"type":"subscription_data"}""")
+        """{"id":"ioPRfgqN6XMefVW6","payload":{"data":{"todo":{"node":{"id":"test-node-id","text":"some todo","json":[1,2,{"a":"b"}]}}}},"type":"subscription_data"}""")
 
       wsClient.sendMessage("""{"type":"subscription_end","id":"ioPRfgqN6XMefVW6"}""")
 
       // should work with operationName
       wsClient.sendMessage(
-        """{"type":"subscription_start","id":"2","variables":null,"query":"subscription x { Todo(where: {mutation_in: [CREATED]}) { node { id } } }  mutation y { createTodo { id } }","operationName":"x"}""")
+        """{"type":"subscription_start","id":"2","variables":null,"query":"subscription x { todo(where: {mutation_in: [CREATED]}) { node { id } } }  mutation y { createTodo { id } }","operationName":"x"}""")
       wsClient.expectMessage("""{"id":"2","type":"subscription_success"}""")
 
       // should work without variables
       wsClient.sendMessage(
-        """{"type":"subscription_start","id":"3","query":"subscription x { Todo(where: {mutation_in: [CREATED]}) { node { id } } }  mutation y { createTodo { id } }","operationName":"x"}""")
+        """{"type":"subscription_start","id":"3","query":"subscription x { todo(where: {mutation_in: [CREATED]}) { node { id } } }  mutation y { createTodo { id } }","operationName":"x"}""")
       wsClient.expectMessage("""{"id":"3","type":"subscription_success"}""")
 
       // DELETE
       wsClient.sendMessage(
-        """{"type":"subscription_start","id":"4","query":"subscription x { Todo(where: {mutation_in: [DELETED]}) { node { id } } }  mutation y { createTodo { id } }","operationName":"x"}""")
+        """{"type":"subscription_start","id":"4","query":"subscription x { todo(where: {mutation_in: [DELETED]}) { node { id } } }  mutation y { createTodo { id } }","operationName":"x"}""")
       wsClient.expectMessage("""{"id":"4","type":"subscription_success"}""")
       sleep()
       sssEventsTestKit.publish(
@@ -78,12 +78,11 @@ class SubscriptionsProtocolV05Spec extends FlatSpec with Matchers with SpecBase 
         s"""{"nodeId":"test-node-id","node":{"id":"test-node-id","text":"some text"},"modelId":"${model.id}","mutationType":"DeleteNode"}"""
       )
 
-      sleep(500)
-      wsClient.expectMessage("""{"id":"4","payload":{"data":{"Todo":{"node":null}}},"type":"subscription_data"}""")
+      wsClient.expectMessage("""{"id":"4","payload":{"data":{"todo":{"node":null}}},"type":"subscription_data"}""")
 
       // UPDATE
       wsClient.sendMessage(
-        """{"type":"subscription_start","id":"5","variables":{},"query":"subscription { Todo(where: {mutation_in: [UPDATED]}) { node { id text } } } "}""")
+        """{"type":"subscription_start","id":"5","variables":{},"query":"subscription { todo(where: {mutation_in: [UPDATED]}) { node { id text } } } "}""")
       wsClient.expectMessage("""{"id":"5","type":"subscription_success"}""")
 
       sssEventsTestKit.publish(
@@ -91,13 +90,12 @@ class SubscriptionsProtocolV05Spec extends FlatSpec with Matchers with SpecBase 
         s"""{"nodeId":"test-node-id","modelId":"${model.id}","mutationType":"UpdateNode","changedFields":["text"], "previousValues": "{\\"id\\": \\"text-node-id\\", \\"text\\": \\"asd\\", \\"json\\": []}"}"""
       )
 
-      sleep(500)
-      wsClient.expectMessage("""{"id":"5","payload":{"data":{"Todo":{"node":{"id":"test-node-id","text":"some todo"}}}},"type":"subscription_data"}""")
+      wsClient.expectMessage("""{"id":"5","payload":{"data":{"todo":{"node":{"id":"test-node-id","text":"some todo"}}}},"type":"subscription_data"}""")
 
     }
   }
 
-  "All subscriptions" should "support the basic subscriptions protocol when id is number" in {
+  "All subscriptions" should "support the basic subscriptions protocol when id is number, part 1" in {
     testWebsocket(project) { wsClient =>
       wsClient.sendMessage("{}")
       wsClient.expectMessage(cantBeParsedError)
@@ -114,7 +112,7 @@ class SubscriptionsProtocolV05Spec extends FlatSpec with Matchers with SpecBase 
         """{"id":1,"payload":{"errors":[{"message":"The provided query doesn't include any known model name. Please check for the latest subscriptions API."}]},"type":"subscription_fail"}"""
       )
 
-      wsClient.sendMessage("""{"type":"subscription_start","id":1,"variables":{},"query":"subscription { Todo { node { id text json } } }"}""")
+      wsClient.sendMessage("""{"type":"subscription_start","id":1,"variables":{},"query":"subscription { todo { node { id text json } } }"}""")
       wsClient.expectMessage("""{"id":1,"type":"subscription_success"}""")
       sleep()
 
@@ -124,23 +122,23 @@ class SubscriptionsProtocolV05Spec extends FlatSpec with Matchers with SpecBase 
       )
 
       wsClient.expectMessage(
-        """{"id":1,"payload":{"data":{"Todo":{"node":{"id":"test-node-id","text":"some todo","json":[1,2,{"a":"b"}]}}}},"type":"subscription_data"}""")
+        """{"id":1,"payload":{"data":{"todo":{"node":{"id":"test-node-id","text":"some todo","json":[1,2,{"a":"b"}]}}}},"type":"subscription_data"}""")
 
       wsClient.sendMessage("""{"type":"subscription_end","id":1}""")
 
       // should work with operationName
       wsClient.sendMessage(
-        """{"type":"subscription_start","id":2,"variables":null,"query":"subscription x { Todo(where: {mutation_in: [CREATED]}) { node { id } } }  mutation y { createTodo { id } }","operationName":"x"}""")
+        """{"type":"subscription_start","id":2,"variables":null,"query":"subscription x { todo(where: {mutation_in: [CREATED]}) { node { id } } }  mutation y { createTodo { id } }","operationName":"x"}""")
       wsClient.expectMessage("""{"id":2,"type":"subscription_success"}""")
 
       // should work without variables
       wsClient.sendMessage(
-        """{"type":"subscription_start","id":3,"query":"subscription x { Todo(where: {mutation_in: [CREATED]}) { node { id } } }  mutation y { createTodo { id } }","operationName":"x"}""")
+        """{"type":"subscription_start","id":3,"query":"subscription x { todo(where: {mutation_in: [CREATED]}) { node { id } } }  mutation y { createTodo { id } }","operationName":"x"}""")
       wsClient.expectMessage("""{"id":3,"type":"subscription_success"}""")
 
       // DELETE
       wsClient.sendMessage(
-        """{"type":"subscription_start","id":4,"query":"subscription x { Todo(where: {mutation_in: [DELETED]}) { node { id } } }  mutation y { createTodo { id } }","operationName":"x"}""")
+        """{"type":"subscription_start","id":4,"query":"subscription x { todo(where: {mutation_in: [DELETED]}) { node { id } } }  mutation y { createTodo { id } }","operationName":"x"}""")
       wsClient.expectMessage("""{"id":4,"type":"subscription_success"}""")
       sleep()
 
@@ -149,21 +147,22 @@ class SubscriptionsProtocolV05Spec extends FlatSpec with Matchers with SpecBase 
         s"""{"nodeId":"test-node-id","node":{"id":"test-node-id","text":"some text"},"modelId":"${model.id}","mutationType":"DeleteNode"}"""
       )
 
-      sleep(500)
-      wsClient.expectMessage("""{"id":4,"payload":{"data":{"Todo":{"node":null}}},"type":"subscription_data"}""")
+//      sleep(500)
+      wsClient.expectMessage("""{"id":4,"payload":{"data":{"todo":{"node":null}}},"type":"subscription_data"}""")
 
       // UPDATE
       wsClient.sendMessage(
-        """{"type":"subscription_start","id":5,"variables":{},"query":"subscription { Todo(where: {mutation_in: [UPDATED]}) { node { id text } } } "}""")
+        """{"type":"subscription_start","id":5,"variables":{},"query":"subscription { todo(where: {mutation_in: [UPDATED]}) { node { id text } } } "}""")
       wsClient.expectMessage("""{"id":5,"type":"subscription_success"}""")
+      sleep()
 
       sssEventsTestKit.publish(
         Only(s"subscription:event:${project.id}:updateTodo"),
         s"""{"nodeId":"test-node-id","modelId":"${model.id}","mutationType":"UpdateNode","changedFields":["text"], "previousValues": "{\\"id\\": \\"text-node-id\\", \\"text\\": \\"asd\\", \\"json\\": []}"}"""
       )
 
-      sleep(500)
-      wsClient.expectMessage("""{"id":5,"payload":{"data":{"Todo":{"node":{"id":"test-node-id","text":"some todo"}}}},"type":"subscription_data"}""")
+//      sleep(500)
+      wsClient.expectMessage("""{"id":5,"payload":{"data":{"todo":{"node":{"id":"test-node-id","text":"some todo"}}}},"type":"subscription_data"}""")
 
     }
   }
@@ -182,7 +181,7 @@ class SubscriptionsProtocolV05Spec extends FlatSpec with Matchers with SpecBase 
         """{
             "type":"subscription_start",
             "id":"3",
-            "query":"subscription asd($text: String!) { Todo(where: {mutation_in: [CREATED] node: {text_contains: $text}}) { mutation node { id } previousValues { id text } updatedFields } }",
+            "query":"subscription asd($text: String!) { todo(where: {mutation_in: [CREATED] node: {text_contains: $text}}) { mutation node { id } previousValues { id text } updatedFields } }",
             "variables": {"text": "some"}
             }""".stripMargin)
       wsClient.expectMessage("""{"id":"3","type":"subscription_success"}""")
@@ -195,7 +194,7 @@ class SubscriptionsProtocolV05Spec extends FlatSpec with Matchers with SpecBase 
       )
 
       wsClient.expectMessage(
-        """{"id":"3","payload":{"data":{"Todo":{"mutation":"CREATED","node":{"id":"test-node-id"},"previousValues":null,"updatedFields":null}}},"type":"subscription_data"}""")
+        """{"id":"3","payload":{"data":{"todo":{"mutation":"CREATED","node":{"id":"test-node-id"},"previousValues":null,"updatedFields":null}}},"type":"subscription_data"}""")
 
       wsClient.sendMessage("""{"type":"subscription_end"}""")
       wsClient.expectNoMessage(3.seconds)
@@ -216,7 +215,7 @@ class SubscriptionsProtocolV05Spec extends FlatSpec with Matchers with SpecBase 
         """{
             "type":"subscription_start",
             "id":"3",
-            "query":"subscription asd($text: String!) { Todo(where: {mutation_in: UPDATED AND: [{updatedFields_contains: \"text\"},{node: {text_contains: $text}}]}) { mutation previousValues { id json int } node { ...todo } } } fragment todo on Todo { id }",
+            "query":"subscription asd($text: String!) { todo(where: {mutation_in: UPDATED AND: [{updatedFields_contains: \"text\"},{node: {text_contains: $text}}]}) { mutation previousValues { id json int } node { ...todo } } } fragment todo on Todo { id }",
             "variables": {"text": "some"}
             }""".stripMargin)
       wsClient.expectMessage("""{"id":"3","type":"subscription_success"}""")
@@ -228,7 +227,7 @@ class SubscriptionsProtocolV05Spec extends FlatSpec with Matchers with SpecBase 
       )
 
       wsClient.expectMessage(
-        """{"id":"3","payload":{"data":{"Todo":{"mutation":"UPDATED","previousValues":{"id":"test-node-id","json":null,"int":8},"node":{"id":"test-node-id"}}}},"type":"subscription_data"}""")
+        """{"id":"3","payload":{"data":{"todo":{"mutation":"UPDATED","previousValues":{"id":"test-node-id","json":null,"int":8},"node":{"id":"test-node-id"}}}},"type":"subscription_data"}""")
     }
   }
 
@@ -245,7 +244,7 @@ class SubscriptionsProtocolV05Spec extends FlatSpec with Matchers with SpecBase 
         """{
             "type":"subscription_start",
             "id":"3",
-            "query":"subscription { Todo(where: {mutation_in: [DELETED]}) { node { ...todo } previousValues { id } } } fragment todo on Todo { id }"
+            "query":"subscription { todo(where: {mutation_in: [DELETED]}) { node { ...todo } previousValues { id } } } fragment todo on Todo { id }"
             }""".stripMargin)
       wsClient.expectMessage("""{"id":"3","type":"subscription_success"}""")
       sleep()
@@ -255,7 +254,7 @@ class SubscriptionsProtocolV05Spec extends FlatSpec with Matchers with SpecBase 
         s"""{"nodeId":"test-node-id2","node":{"id":"test-node-id2","text":"some text"},"modelId":"${model.id}","mutationType":"DeleteNode"}"""
       )
 
-      wsClient.expectMessage("""{"id":"3","payload":{"data":{"Todo":{"node":null,"previousValues":{"id":"test-node-id2"}}}},"type":"subscription_data"}""")
+      wsClient.expectMessage("""{"id":"3","payload":{"data":{"todo":{"node":null,"previousValues":{"id":"test-node-id2"}}}},"type":"subscription_data"}""")
     }
   }
 
@@ -267,7 +266,7 @@ class SubscriptionsProtocolV05Spec extends FlatSpec with Matchers with SpecBase 
       wsClient.expectMessage("""{"type":"init_success"}""")
 
       wsClient.sendMessage(
-        """{"type":"subscription_start","id":"create-filters","variables":{},"query":"subscription { Todo(where:{node:{text_contains: \"important!\"}}) { node { id text } } }"}""")
+        """{"type":"subscription_start","id":"create-filters","variables":{},"query":"subscription { todo(where:{node:{text_contains: \"important!\"}}) { node { id text } } }"}""")
       wsClient.expectMessage("""{"id":"create-filters","type":"subscription_success"}""")
       sleep()
 
@@ -278,7 +277,7 @@ class SubscriptionsProtocolV05Spec extends FlatSpec with Matchers with SpecBase 
       // KEEP WORKING ON RECONNECT
 
       wsClient.sendMessage(
-        """{"type":"subscription_start","id":"update-filters","variables":{},"query":"subscription { Todo(where:{node:{text_contains: \"important!\"}}) { node { id text } } }"}""")
+        """{"type":"subscription_start","id":"update-filters","variables":{},"query":"subscription { todo(where:{node:{text_contains: \"important!\"}}) { node { id text } } }"}""")
       wsClient.expectMessage("""{"id":"update-filters","type":"subscription_success"}""")
       sleep()
 
@@ -288,7 +287,7 @@ class SubscriptionsProtocolV05Spec extends FlatSpec with Matchers with SpecBase 
       )
 
       wsClient.expectMessage(
-        """{"id":"update-filters","payload":{"data":{"Todo":{"node":{"id":"important-test-node-id","text":"important!"}}}},"type":"subscription_data"}""")
+        """{"id":"update-filters","payload":{"data":{"todo":{"node":{"id":"important-test-node-id","text":"important!"}}}},"type":"subscription_data"}""")
 
       wsClient.sendMessage("""{"type":"subscription_end","id":"update-filters"}""")
     }

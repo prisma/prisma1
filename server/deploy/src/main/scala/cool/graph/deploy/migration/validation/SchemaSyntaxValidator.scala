@@ -58,17 +58,11 @@ case class SchemaSyntaxValidator(schema: String, directiveRequirements: Seq[Dire
   }
 
   def validateInternal(): Seq[SchemaError] = {
-//    val nonSystemFieldAndTypes: Seq[FieldAndType] = for {
-//      objectType <- doc.objectTypes
-//      field      <- objectType.fields
-//    } yield FieldAndType(objectType, field)
-
     val allFieldAndTypes: Seq[FieldAndType] = for {
       objectType <- doc.objectTypes
       field      <- objectType.fields
     } yield FieldAndType(objectType, field)
 
-//    val deprecatedImplementsNodeValidations = validateNodeInterfaceOnTypes(doc.objectTypes, allFieldAndTypes)
     val reservedFieldsValidations = validateReservedFields(allFieldAndTypes)
     val duplicateTypeValidations  = validateDuplicateTypes(doc.objectTypes, allFieldAndTypes)
     val duplicateFieldValidations = validateDuplicateFields(allFieldAndTypes)
@@ -77,7 +71,6 @@ case class SchemaSyntaxValidator(schema: String, directiveRequirements: Seq[Dire
     val scalarFieldValidations    = validateScalarFields(allFieldAndTypes)
     val fieldDirectiveValidations = allFieldAndTypes.flatMap(validateFieldDirectives)
 
-//    deprecatedImplementsNodeValidations ++
     reservedFieldsValidations ++
       duplicateTypeValidations ++
       duplicateFieldValidations ++
@@ -87,25 +80,6 @@ case class SchemaSyntaxValidator(schema: String, directiveRequirements: Seq[Dire
       fieldDirectiveValidations ++
       validateEnumTypes
   }
-
-//  def validateIdFields(): Seq[SchemaError] = {
-//    val missingUniqueDirectives = for {
-//      objectType <- doc.objectTypes
-//      field      <- objectType.fields
-//      if field.isIdField && !field.isUnique
-//    } yield {
-//      val fieldAndType = FieldAndType(objectType, field)
-//      SchemaErrors.missingUniqueDirective(fieldAndType)
-//    }
-
-//    val missingIdFields = for {
-//      objectType <- doc.objectTypes
-//      if objectType.hasNoIdField
-//    } yield {
-//      SchemaErrors.missingIdField(objectType)
-//    }
-//    missingUniqueDirectives //++ missingIdFields
-//  }
 
   def validateReservedFields(fieldAndTypes: Seq[FieldAndType]): Seq[SchemaError] = {
     for {
@@ -122,29 +96,15 @@ case class SchemaSyntaxValidator(schema: String, directiveRequirements: Seq[Dire
     duplicateTypeNames.map(name => SchemaErrors.duplicateTypeName(fieldAndTypes.find(_.objectType.name == name).head)).distinct
   }
 
-//  def validateNodeInterfaceOnTypes(objectTypes: Seq[ObjectTypeDefinition], fieldAndTypes: Seq[FieldAndType]): Seq[SchemaError] = {
-//    objectTypes.collect {
-//      case x if x.interfaces.exists(_.name == "Node") => SchemaErrors.atNodeIsDeprecated(fieldAndTypes.find(_.objectType.name == x.name).get)
-//    }
-//  }
-
   def validateDuplicateFields(fieldAndTypes: Seq[FieldAndType]): Seq[SchemaError] = {
-    val objectTypes         = fieldAndTypes.map(_.objectType)
-    val distinctObjectTypes = objectTypes.distinct
-
-    distinctObjectTypes
-      .flatMap(objectType => {
-        val fieldNames = objectType.fields.map(_.name)
-        fieldNames.map {
-          case name: String if fieldNames.count(_ == name) > 1 =>
-            Seq(SchemaErrors.duplicateFieldName(fieldAndTypes.find(ft => ft.objectType == objectType & ft.fieldDef.name == name).get))
-
-          case _ =>
-            Seq.empty
-        }
-      })
-      .flatten
-      .distinct
+    for {
+      objectType <- fieldAndTypes.map(_.objectType).distinct
+      fieldNames = objectType.fields.map(_.name)
+      fieldName  <- fieldNames
+      if fieldNames.count(_ == fieldName) > 1
+    } yield {
+      SchemaErrors.duplicateFieldName(fieldAndTypes.find(ft => ft.objectType == objectType & ft.fieldDef.name == fieldName).get)
+    }
   }
 
   def validateMissingTypes(fieldAndTypes: Seq[FieldAndType]): Seq[SchemaError] = {
@@ -158,12 +118,21 @@ case class SchemaSyntaxValidator(schema: String, directiveRequirements: Seq[Dire
 
   def validateRelationFields(fieldAndTypes: Seq[FieldAndType]): Seq[SchemaError] = {
     val relationFields = fieldAndTypes.filter(isRelationField)
-
     val wrongTypeDefinitions = relationFields.collect {
       case fieldAndType if !fieldAndType.fieldDef.isValidRelationType => SchemaErrors.relationFieldTypeWrong(fieldAndType)
     }
 
-    val (schemaErrors, validRelationFields) = partition(relationFields) {
+    def ambiguousRelationFieldsForType(objectType: ObjectTypeDefinition): Vector[FieldAndType] = {
+      val relationFields                                = objectType.fields.filter(isRelationField)
+      val grouped: Map[String, Vector[FieldDefinition]] = relationFields.groupBy(_.typeName)
+      val ambiguousFields                               = grouped.values.filter(_.size > 1).flatten.toVector
+      ambiguousFields.map { field =>
+        FieldAndType(objectType, field)
+      }
+    }
+    val ambiguousRelationFields = doc.objectTypes.flatMap(ambiguousRelationFieldsForType)
+
+    val (schemaErrors, _) = partition(ambiguousRelationFields) {
       case fieldAndType if !fieldAndType.fieldDef.hasRelationDirective =>
         Left(SchemaErrors.missingRelationDirective(fieldAndType))
 
@@ -177,10 +146,21 @@ case class SchemaSyntaxValidator(schema: String, directiveRequirements: Seq[Dire
         Right(fieldAndType)
     }
 
-    val relationFieldsWithNonMatchingTypes = validRelationFields
+    val relationFieldsWithRelationDirective = for {
+      objectType <- doc.objectTypes
+      field      <- objectType.fields
+      if field.hasRelationDirective
+      if isRelationField(field)
+    } yield FieldAndType(objectType, field)
+
+    /**
+      * The validation below must be only applied to fields that specify the relation directive.
+      * And it can only occur for relation that specify both sides of a relation.
+      */
+    val relationFieldsWithNonMatchingTypes = relationFieldsWithRelationDirective
       .groupBy(_.fieldDef.previousRelationName.get)
       .flatMap {
-        case (_, fieldAndTypes) =>
+        case (_, fieldAndTypes) if fieldAndTypes.size > 1 =>
           val first  = fieldAndTypes.head
           val second = fieldAndTypes.last
           val firstError = if (first.fieldDef.typeName != second.objectType.name) {
@@ -194,6 +174,8 @@ case class SchemaSyntaxValidator(schema: String, directiveRequirements: Seq[Dire
             None
           }
           firstError ++ secondError
+        case _ =>
+          Iterable.empty
       }
 
     wrongTypeDefinitions ++ schemaErrors ++ relationFieldsWithNonMatchingTypes
@@ -254,14 +236,15 @@ case class SchemaSyntaxValidator(schema: String, directiveRequirements: Seq[Dire
     }
   }
 
-  def relationCount(fieldAndType: FieldAndType): Int = relationCount(fieldAndType.fieldDef.previousRelationName.get)
-  def relationCount(relationName: String): Int = {
-    val tmp = for {
-      objectType <- doc.objectTypes
-      field      <- objectType.relationFields
-      if field.previousRelationName.contains(relationName)
-    } yield field
-    tmp.size
+  def relationCount(fieldAndType: FieldAndType): Int = {
+    def fieldsWithType(objectType: ObjectTypeDefinition, typeName: String): Seq[FieldDefinition] = objectType.fields.filter(_.typeName == typeName)
+
+    val oppositeObjectType = doc.objectType_!(fieldAndType.fieldDef.typeName)
+    val fieldsOnTypeA      = fieldsWithType(fieldAndType.objectType, fieldAndType.fieldDef.typeName)
+    val fieldsOnTypeB      = fieldsWithType(oppositeObjectType, fieldAndType.objectType.name)
+
+    // TODO: this probably only works if a relation directive appears twice actually in case of ambiguous relations
+    (fieldsOnTypeA ++ fieldsOnTypeB).count(_.relationName == fieldAndType.fieldDef.relationName)
   }
 
   def isSelfRelation(fieldAndType: FieldAndType): Boolean  = fieldAndType.fieldDef.typeName == fieldAndType.objectType.name

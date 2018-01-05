@@ -27,7 +27,7 @@ case class SubscriptionSchema(
   val outputMapper                                                        = OutputTypesBuilder(project, modelObjectTypes, dependencies.dataResolver(project))
 
   val subscriptionField: Field[SubscriptionUserContext, Unit] = Field(
-    s"${model.name}",
+    camelCase(model.name),
     description = Some("The updated node"),
     fieldType = OptionType(
       outputMapper
@@ -81,4 +81,6 @@ case class SubscriptionSchema(
 
     Schema(Query, None, Subscription)
   }
+
+  def camelCase(string: String): String = Character.toLowerCase(string.charAt(0)) + string.substring(1)
 }

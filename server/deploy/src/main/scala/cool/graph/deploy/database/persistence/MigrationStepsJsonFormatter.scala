@@ -72,6 +72,7 @@ object MigrationStepsJsonFormatter extends DefaultReads {
 
   implicit val createRelationFormat = Json.format[CreateRelation]
   implicit val deleteRelationFormat = Json.format[DeleteRelation]
+  implicit val updateRelationFormat = Json.format[UpdateRelation]
 
   implicit val migrationStepFormat: Format[MigrationStep] = new Format[MigrationStep] {
     val discriminatorField = "discriminator"
@@ -89,6 +90,7 @@ object MigrationStepsJsonFormatter extends DefaultReads {
         case "UpdateEnum"     => updateEnumFormat.reads(json)
         case "CreateRelation" => createRelationFormat.reads(json)
         case "DeleteRelation" => deleteRelationFormat.reads(json)
+        case "UpdateRelation" => updateRelationFormat.reads(json)
       }
     }
 
@@ -105,6 +107,7 @@ object MigrationStepsJsonFormatter extends DefaultReads {
         case x: UpdateEnum     => updateEnumFormat.writes(x)
         case x: CreateRelation => createRelationFormat.writes(x)
         case x: DeleteRelation => deleteRelationFormat.writes(x)
+        case x: UpdateRelation => updateRelationFormat.writes(x)
       }
       withOutDiscriminator ++ Json.obj(discriminatorField -> step.getClass.getSimpleName)
     }
