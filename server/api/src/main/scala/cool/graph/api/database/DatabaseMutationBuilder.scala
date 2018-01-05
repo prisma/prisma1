@@ -1,7 +1,7 @@
 package cool.graph.api.database
 
 import cool.graph.api.database.Types.DataItemFilterCollection
-import cool.graph.api.mutations.{CoolArgs, NodeSelector}
+import cool.graph.api.mutations.{CoolArgs, NodeSelector, ParentInfo}
 import cool.graph.cuid.Cuid
 import cool.graph.gc_values._
 import cool.graph.shared.models.IdType.Id
@@ -14,6 +14,7 @@ import slick.dbio.DBIOAction
 import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.{PositionedParameters, SQLActionBuilder, SetParameter}
 import slick.sql.{SqlAction, SqlStreamingAction}
+
 import scala.concurrent.ExecutionContext.Implicits.global
 
 object DatabaseMutationBuilder {
@@ -71,7 +72,7 @@ object DatabaseMutationBuilder {
       sql"where table_schema = ${project.id} AND TABLE_NAME = ${where.model.name})end;").as[Int]
   }
 
-  def connectionFailureTrigger(project: Project, relation: Relation, outerWhere: NodeSelector, innerWhere: NodeSelector) ={
+  def connectionFailureTrigger(project: Project, relation: Relation, outerWhere: NodeSelector, innerWhere: NodeSelector) = {
     val innerSide = relation.sideOf(innerWhere.model)
     val outerSide = relation.sideOf(outerWhere.model)
 
@@ -154,20 +155,23 @@ object DatabaseMutationBuilder {
       List(sql"$id, $a, $b") ++ fieldMirrorValues) concat sql") on duplicate key update id=id").asUpdate
   }
 
-  def createRelationRowByUniqueValueForA(projectId: String, relationTableName: String, b: String, where: NodeSelector): SqlAction[Int, NoStream, Effect] = {
+  def createRelationRowByUniqueValueForA(projectId: String, parentInfo: ParentInfo, where: NodeSelector): SqlAction[Int, NoStream, Effect] = {
     val relationId = Cuid.createCuid()
-    sqlu"""insert into `#$projectId`.`#$relationTableName` (`id`, `A`, `B`)
-           select '#$relationId', id, '#$b' from `#$projectId`.`#${where.model.name}`
-           where `#${where.field.name}` = ${where.fieldValue}
-          """
+    sqlu"""insert into `#$projectId`.`#${parentInfo.relation.id}` (`id`, `A`, `B`)
+           VALUES ('#$relationId',
+                   (select id from `#$projectId`.`#${where.model.name}` where `#${where.field.name}` = ${where.fieldValue}),
+                   (select id from `#$projectId`.`#${parentInfo.model.name}` where `#${parentInfo.where.field.name}` = ${parentInfo.where.fieldValue})
+                   )"""
   }
 
-  def createRelationRowByUniqueValueForB(projectId: String, relationTableName: String, a: String, where: NodeSelector): SqlAction[Int, NoStream, Effect] = {
+  def createRelationRowByUniqueValueForB(projectId: String, parentInfo: ParentInfo, where: NodeSelector): SqlAction[Int, NoStream, Effect] = {
     val relationId = Cuid.createCuid()
-    sqlu"""insert into `#$projectId`.`#$relationTableName` (`id`, `A`, `B`)
-           select '#$relationId', '#$a', id from `#$projectId`.`#${where.model.name}`
-           where `#${where.field.name}` = ${where.fieldValue}
-          """
+
+    sqlu"""insert into `#$projectId`.`#${parentInfo.relation.id}` (`id`, `A`, `B`)
+           VALUES ('#$relationId',
+                   (select id from `#$projectId`.`#${parentInfo.model.name}` where `#${parentInfo.where.field.name}` = ${parentInfo.where.fieldValue}),
+                   (select id from `#$projectId`.`#${where.model.name}` where `#${where.field.name}` = ${where.fieldValue})
+                  )"""
   }
 
   def deleteRelationRowByUniqueValueForA(projectId: String, relationTableName: String, b: String, where: NodeSelector): SqlAction[Int, NoStream, Effect] = {
@@ -190,54 +194,62 @@ object DatabaseMutationBuilder {
           """
   }
 
-  def deleteDataItemByUniqueValueForAIfInRelationWithGivenB(projectId: String, relationTableName: String, b: String, where: NodeSelector) = {
+  def deleteDataItemByUniqueValueForAIfInRelationWithGivenB(projectId: String, parentInfo: ParentInfo, where: NodeSelector) = {
     sqlu"""delete from `#$projectId`.`#${where.model.name}`
            where `#${where.field.name}` = ${where.fieldValue} and id in (
              select `A`
-             from `#$projectId`.`#$relationTableName`
-             where `B` = '#$b'
+             from `#$projectId`.`#${parentInfo.relation.id}`
+             where `B` in (
+               select id
+               from `#$projectId`.`#${parentInfo.where.model.name}`
+               where `#${parentInfo.where.field.name}` = ${parentInfo.where.fieldValue}
+              )
            )
            """
   }
 
-  def deleteDataItemByUniqueValueForBIfInRelationWithGivenA(projectId: String, relationTableName: String, a: String, where: NodeSelector) = {
+  def deleteDataItemByUniqueValueForBIfInRelationWithGivenA(projectId: String, parentInfo: ParentInfo, where: NodeSelector) = {
     sqlu"""delete from `#$projectId`.`#${where.model.name}`
            where `#${where.field.name}` = ${where.fieldValue} and id in (
              select `B`
-             from `#$projectId`.`#$relationTableName`
-             where `A` = '#$a'
+             from `#$projectId`.`#${parentInfo.relation.id}`
+             where `A` in (
+               select id
+               from `#$projectId`.`#${parentInfo.where.model.name}`
+               where `#${parentInfo.where.field.name}` = ${parentInfo.where.fieldValue}
+              )
            )
            """
   }
 
-  def updateDataItemByUniqueValueForAIfInRelationWithGivenB(projectId: String,
-                                                            relationTableName: String,
-                                                            b: String,
-                                                            where: NodeSelector,
-                                                            values: Map[String, Any]) = {
+  def updateDataItemByUniqueValueForAIfInRelationWithGivenB(projectId: String, parentInfo: ParentInfo, where: NodeSelector, values: Map[String, Any]) = {
     val escapedValues = combineByComma(values.map { case (k, v) => escapeKey(k) concat sql" = " concat escapeUnsafeParam(v) })
     (sql"""update `#$projectId`.`#${where.model.name}`""" concat
       sql"""set""" concat escapedValues concat
       sql"""where `#${where.field.name}` = ${where.fieldValue} and id in (
              select `A`
-             from `#$projectId`.`#$relationTableName`
-             where `B` = '#$b'
+             from `#$projectId`.`#${parentInfo.relation.id}`
+             where `B` in (
+               select id
+               from `#$projectId`.`#${parentInfo.where.model.name}`
+               where `#${parentInfo.where.field.name}` = ${parentInfo.where.fieldValue}
+              )
            )
         """).asUpdate
   }
 
-  def updateDataItemByUniqueValueForBIfInRelationWithGivenA(projectId: String,
-                                                            relationTableName: String,
-                                                            a: String,
-                                                            where: NodeSelector,
-                                                            values: Map[String, Any]) = {
+  def updateDataItemByUniqueValueForBIfInRelationWithGivenA(projectId: String, parentInfo: ParentInfo, where: NodeSelector, values: Map[String, Any]) = {
     val escapedValues = combineByComma(values.map { case (k, v) => escapeKey(k) concat sql" = " concat escapeUnsafeParam(v) })
     (sql"""update `#$projectId`.`#${where.model.name}`""" concat
       sql"""set""" concat escapedValues concat
       sql"""where `#${where.field.name}` = ${where.fieldValue} and id in (
              select `B`
-             from `#$projectId`.`#$relationTableName`
-             where `A` = '#$a'
+             from `#$projectId`.`#${parentInfo.relation.id}`
+             where `A` in (
+               select id
+               from `#$projectId`.`#${parentInfo.where.model.name}`
+               where `#${parentInfo.where.field.name}` = ${parentInfo.where.fieldValue}
+              )
            )
         """).asUpdate
   }

@@ -9,12 +9,11 @@ import cool.graph.api.schema.APIErrors.RelationIsRequired
 import cool.graph.cuid.Cuid.createCuid
 import cool.graph.gc_values.GraphQLIdGCValue
 import cool.graph.shared.models.IdType.Id
-import cool.graph.shared.models.{Field, Model, Project}
+import cool.graph.shared.models.{Field, Model, Project, Relation}
 
 import scala.collection.immutable.Seq
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-
 import cool.graph.utils.boolean.BooleanUtils._
 
 case class CreateMutactionsResult(createMutaction: CreateDataItem,
@@ -24,7 +23,12 @@ case class CreateMutactionsResult(createMutaction: CreateDataItem,
 }
 
 case class ParentInfo(field: Field, where: NodeSelector) {
-  val model = where.model
+  val model: Model       = where.model
+  val relation: Relation = field.relation.get
+  assert(
+    model.fields.exists(_.id == field.id),
+    s"${model.name} does not contain the field ${field.name}. If this assertion fires, this mutaction is used wrong by the programmer."
+  )
 }
 
 case class SqlMutactions(dataResolver: DataResolver) {
@@ -38,16 +42,16 @@ case class SqlMutactions(dataResolver: DataResolver) {
     requiredRelationViolations ++ removeFromConnectionMutactions ++ List(deleteItemMutaction)
   }
 
-  def getMutactionsForUpdate(model: Model, args: CoolArgs, id: Id, previousValues: DataItem, outerWhere: NodeSelector): List[ClientSqlMutaction] = {
-    val updateMutaction = getUpdateMutaction(model, args, id, previousValues)
-    val nested          = getMutactionsForNestedMutation(model, args, outerWhere)
-    val scalarLists     = getMutactionsForScalarLists(model, args, nodeId = id)
+  def getMutactionsForUpdate(args: CoolArgs, id: Id, previousValues: DataItem, outerWhere: NodeSelector): List[ClientSqlMutaction] = {
+    val updateMutaction = getUpdateMutaction(outerWhere.model, args, id, previousValues)
+    val nested          = getMutactionsForNestedMutation(args, outerWhere)
+    val scalarLists     = getMutactionsForScalarLists(outerWhere.model, args, nodeId = id)
     updateMutaction.toList ++ nested ++ scalarLists
   }
 
   def getMutactionsForCreate(model: Model, args: CoolArgs, id: Id = createCuid()): CreateMutactionsResult = {
     val createMutaction = getCreateMutaction(model, args, id)
-    val nested          = getMutactionsForNestedMutation(model, args, NodeSelector.forId(model, id))
+    val nested          = getMutactionsForNestedMutation(args, NodeSelector.forId(model, id))
     val scalarLists     = getMutactionsForScalarLists(model, args, nodeId = id)
 
     CreateMutactionsResult(createMutaction = createMutaction, scalarListMutactions = scalarLists, nestedMutactions = nested)
@@ -109,9 +113,9 @@ case class SqlMutactions(dataResolver: DataResolver) {
     x.flatten.toVector
   }
 
-  def getMutactionsForNestedMutation(model: Model, args: CoolArgs, outerWhere: NodeSelector): Seq[ClientSqlMutaction] = {
+  def getMutactionsForNestedMutation(args: CoolArgs, outerWhere: NodeSelector): Seq[ClientSqlMutaction] = {
     val x = for {
-      field          <- model.relationFields
+      field          <- outerWhere.model.relationFields
       subModel       = field.relatedModel_!(project)
       nestedMutation <- args.subNestedMutation(field, subModel) // this is the input object containing the nested mutation
     } yield {
@@ -156,20 +160,12 @@ case class SqlMutactions(dataResolver: DataResolver) {
         toIdAlreadyInDB = false
       )
 
-      List(createItem, connectItem) ++ getMutactionsForNestedMutation(model, create.data, NodeSelector.forId(model, id))
+      List(createItem, connectItem) ++ getMutactionsForNestedMutation(create.data, NodeSelector.forId(model, id))
     }
   }
 
   def getMutactionsForNestedConnectMutation(nestedMutation: NestedMutation, parentInfo: ParentInfo): Seq[ClientSqlMutaction] = {
-    nestedMutation.connects.map { connect =>
-      AddDataItemToManyRelationByUniqueField(
-        project = project,
-        fromModel = parentInfo.model,
-        fromField = parentInfo.field,
-        fromId = parentInfo.where.fieldValueAsString,
-        where = connect.where
-      )
-    }
+    nestedMutation.connects.map(connect => AddDataItemToManyRelationByUniqueField(project = project, parentInfo, where = connect.where))
   }
 
   def getMutactionsForNestedDisconnectMutation(nestedMutation: NestedMutation, parentInfo: ParentInfo): Seq[ClientSqlMutaction] = {
@@ -185,28 +181,18 @@ case class SqlMutactions(dataResolver: DataResolver) {
   }
 
   def getMutactionsForNestedDeleteMutation(nestedMutation: NestedMutation, parentInfo: ParentInfo): Seq[ClientSqlMutaction] = {
-    nestedMutation.deletes.map { delete =>
-      DeleteDataItemByUniqueFieldIfInRelationWith(
-        project = project,
-        fromModel = parentInfo.model,
-        fromField = parentInfo.field,
-        fromId = parentInfo.where.fieldValueAsString,
-        where = delete.where
-      )
-    }
+    nestedMutation.deletes.map(delete => DeleteDataItemByUniqueFieldIfInRelationWith(project = project, parentInfo = parentInfo, where = delete.where))
   }
 
   def getMutactionsForNestedUpdateMutation(nestedMutation: NestedMutation, parentInfo: ParentInfo): Seq[ClientSqlMutaction] = {
     nestedMutation.updates.flatMap { update =>
       val updateMutaction = UpdateDataItemByUniqueFieldIfInRelationWith(
         project = project,
-        fromModel = parentInfo.model,
-        fromField = parentInfo.field,
-        fromId = parentInfo.where.fieldValueAsString,
+        parentInfo = parentInfo,
         where = update.where,
         args = update.data
       )
-      List(updateMutaction) ++ getMutactionsForNestedMutation(update.where.model, update.data, update.where)
+      List(updateMutaction) ++ getMutactionsForNestedMutation(update.data, update.where)
     }
   }
 
@@ -222,9 +208,7 @@ case class SqlMutactions(dataResolver: DataResolver) {
       )
       val addToRelation = AddDataItemToManyRelationByUniqueField(
         project = project,
-        fromModel = parentInfo.model,
-        fromField = parentInfo.field,
-        fromId = parentInfo.where.fieldValueAsString,
+        parentInfo,
         where = NodeSelector(model, model.getFieldByName_!("id"), GraphQLIdGCValue(upsertItem.idOfNewItem))
       )
       Vector(upsertItem, addToRelation)
