@@ -227,7 +227,9 @@ case class SqlMutactions(dataResolver: DataResolver) {
         fromId = parentInfo.where.fieldValueAsString,
         where = NodeSelector(model, model.getFieldByName_!("id"), GraphQLIdGCValue(upsertItem.idOfNewItem))
       )
-      Vector(upsertItem, addToRelation)
+      Vector(upsertItem, addToRelation) ++
+        getMutactionsForNestedMutation(upsert.where.model, upsert.update, upsert.where) ++
+        getMutactionsForNestedMutation(upsert.where.model, upsert.create, upsert.where)
     }
   }
 
