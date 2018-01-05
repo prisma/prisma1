@@ -29,6 +29,24 @@ case class QueryArguments(
   // "where" keyword. This is because we might need to combine these commands with other commands. If nothing is to be
   // returned, DO NOT return an empty string, but None instead.
 
+  def extractOrderByCommandForLists(projectId: String, modelId: String, defaultOrderShortcut: Option[String] = None): Option[SQLActionBuilder] = {
+
+    if (first.isDefined && last.isDefined) throw APIErrors.InvalidConnectionArguments()
+
+    // The limit instruction only works from up to down. Therefore, we have to invert order when we use before.
+    val defaultOrder = "asc"
+    val (order, idOrder) = isReverseOrder match {
+      case true  => (invertOrder(defaultOrder), "desc")
+      case false => (defaultOrder, "asc")
+    }
+
+    val nodeIdField = s"`$projectId`.`$modelId`.`nodeId`"
+    val positionField = s"`$projectId`.`$modelId`.`position`"
+
+    // First order by the orderByField, then by id to break ties
+    Some(sql"#$nodeIdField #$order, #$positionField #$idOrder")
+  }
+
   def extractOrderByCommand(projectId: String, modelId: String, defaultOrderShortcut: Option[String] = None): Option[SQLActionBuilder] = {
 
     if (first.isDefined && last.isDefined) {

@@ -12,6 +12,8 @@ import scala.collection.immutable.Seq
   * It's called CoolArgs to easily differentiate from Sangrias Args class.
   */
 case class CoolArgs(raw: Map[String, Any]) {
+  def isEmpty: Boolean    = raw.isEmpty
+  def isNonEmpty: Boolean = raw.nonEmpty
 
   def subNestedMutation(relationField: Field, subModel: Model): Option[NestedMutation] = {
     subArgsOption(relationField) match {
@@ -67,6 +69,12 @@ case class CoolArgs(raw: Map[String, Any]) {
       }
     }
 
+  }
+
+  def nonListScalarArgumentsAsCoolArgs(model: Model): CoolArgs = {
+    val argumentValues = nonListScalarArguments(model)
+    val rawArgs        = argumentValues.map(x => x.name -> x.value).toMap
+    CoolArgs(rawArgs)
   }
 
   def nonListScalarArguments(model: Model): Vector[ArgumentValue] = {
@@ -169,20 +177,18 @@ case class CoolArgs(raw: Map[String, Any]) {
   def extractNodeSelector(model: Model): NodeSelector = {
     raw.asInstanceOf[Map[String, Option[Any]]].collectFirst {
       case (fieldName, Some(value)) =>
-        NodeSelector(model, model.getFieldByName_!(fieldName), GCAnyConverter(model.getFieldByName_!(fieldName).typeIdentifier, isList = false).toGCValue(value).get)
+        NodeSelector(model,
+                     model.getFieldByName_!(fieldName),
+                     GCAnyConverter(model.getFieldByName_!(fieldName).typeIdentifier, isList = false).toGCValue(value).get)
     } getOrElse {
       throw APIErrors.NullProvidedForWhereError(model.name)
     }
   }
 
-
-
 }
 
-object IdNodeSelector{
-
-  def idNodeSelector(model: Model, id: String) : NodeSelector= NodeSelector(model, model.getFieldByName_!("id"), GraphQLIdGCValue(id))
-
+object NodeSelector {
+  def forId(model: Model, id: String): NodeSelector = NodeSelector(model, model.getFieldByName_!("id"), GraphQLIdGCValue(id))
 }
 
 case class NodeSelector(model: Model, field: Field, fieldValue: GCValue) {
@@ -200,5 +206,3 @@ case class NodeSelector(model: Model, field: Field, fieldValue: GCValue) {
 //    case _ => GCDBValueConverter().fromGCValueToString(fieldValue)
 //  }
 }
-
-

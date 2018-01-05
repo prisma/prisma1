@@ -211,7 +211,6 @@ class NestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     mustBeEqual(result.pathAsJsValue("data.updateNote.todo").toString, """{"title":"updated title"}""")
   }
 
-
   "a one to one relation" should "fail gracefully on wrong where and assign error correctly and not execute partially" in {
     val project = SchemaDsl() { schema =>
       val note = schema.model("Note").field("text", _.String)
@@ -293,7 +292,6 @@ class NestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
       project
     )
 
-
     val result = server.executeQuerySimpleThatMustFail(
       s"""
          |mutation {
@@ -322,5 +320,100 @@ class NestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
       errorCode = 3040,
       errorContains = "You provided an invalid argument for the where selector on Todo."
     )
+  }
+
+  "a deeply nested mutation" should "execute all levels of the mutation" in {
+    val project = SchemaDsl() { schema =>
+      val list = schema.model("List").field_!("name", _.String)
+      val todo = schema.model("Todo").field_!("title", _.String)
+      val tag  = schema.model("Tag").field_!("name", _.String)
+
+      list.oneToManyRelation("todos", "list", todo)
+      todo.oneToOneRelation("tag", "todo", tag)
+    }
+    database.setup(project)
+
+    val createMutation =
+      """
+        |mutation  {
+        |  createList(data: {
+        |    name: "the list",
+        |    todos: {
+        |      create: [
+        |        {
+        |          title: "the todo"
+        |          tag: {
+        |            create: {
+        |              name: "the tag"
+        |            }
+        |          }
+        |        }
+        |      ]
+        |    }
+        |  }) {
+        |    id
+        |    todos {
+        |      id
+        |      tag {
+        |        id
+        |      }
+        |    }
+        |  }
+        |}
+      """.stripMargin
+
+    val createResult = server.executeQuerySimple(createMutation, project)
+    val listId       = createResult.pathAsString("data.createList.id")
+    val todoId       = createResult.pathAsString("data.createList.todos.[0].id")
+    val tagId        = createResult.pathAsString("data.createList.todos.[0].tag.id")
+
+    val updateMutation =
+      s"""
+        |mutation  {
+        |  updateList(
+        |    where: {
+        |      id: "$listId"
+        |    }
+        |    data: {
+        |      name: "updated list",
+        |      todos: {
+        |        update: [
+        |          {
+        |            where: {
+        |              id: "$todoId"
+        |            }
+        |            data: {
+        |              title: "updated todo"
+        |              tag: {
+        |                update: {
+        |                  where: {
+        |                    id: "$tagId"
+        |                  }
+        |                  data: {
+        |                    name: "updated tag"
+        |                  }
+        |                }
+        |              }
+        |            }
+        |          }
+        |        ]
+        |      }
+        |    }
+        |  ) {
+        |    name
+        |    todos {
+        |      title
+        |      tag {
+        |        name
+        |      }
+        |    }
+        |  }
+        |}
+      """.stripMargin
+
+    val result = server.executeQuerySimple(updateMutation, project)
+    result.pathAsString("data.updateList.name") should equal("updated list")
+    result.pathAsString("data.updateList.todos.[0].title") should equal("updated todo")
+    result.pathAsString("data.updateList.todos.[0].tag.name") should equal("updated tag")
   }
 }

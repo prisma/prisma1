@@ -8,10 +8,7 @@ import cool.graph.api.database.mutactions.{ClientSqlMutaction, MutactionGroup, T
 import cool.graph.api.database.{DataItem, DataResolver}
 import cool.graph.api.mutations._
 import cool.graph.api.schema.APIErrors
-import cool.graph.gc_values.GraphQLIdGCValue
 import cool.graph.shared.models.{Model, Project}
-import cool.graph.api.mutations.IdNodeSelector._
-
 import sangria.schema
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -46,7 +43,7 @@ case class Update(
         val validatedDataItem = dataItem // todo: use GC Values
         // = dataItem.copy(userData = GraphcoolDataTypes.fromSql(dataItem.userData, model.fields))
 
-        val sqlMutactions: List[ClientSqlMutaction] = SqlMutactions(dataResolver).getMutactionsForUpdate(model, coolArgs, dataItem.id, validatedDataItem, where)
+        val sqlMutactions: List[ClientSqlMutaction] = SqlMutactions(dataResolver).getMutactionsForUpdate(coolArgs, dataItem.id, validatedDataItem, where)
 
         val transactionMutaction = TransactionMutaction(sqlMutactions, dataResolver)
 
@@ -66,7 +63,7 @@ case class Update(
 
   override def getReturnValue: Future[ReturnValueResult] = {
     dataItem flatMap {
-      case Some(dataItem) => returnValueByUnique(idNodeSelector(model, dataItem.id))
+      case Some(dataItem) => returnValueByUnique(NodeSelector.forId(model, dataItem.id))
       case None           => Future.successful(NoReturnValue(where))
     }
   }
