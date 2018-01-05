@@ -27,11 +27,11 @@ case class MigrationApplierImpl(
       _         <- Future.unit
       nextState = if (migration.status == MigrationStatus.Pending) MigrationStatus.InProgress else migration.status
       _         <- migrationPersistence.updateMigrationStatus(migration.id, nextState)
-      result    <- recurse(previousSchema, migration)
+      result    <- startRecurse(previousSchema, migration)
     } yield result
   }
 
-  def recurse(previousSchema: Schema, migration: Migration): Future[MigrationApplierResult] = {
+  def startRecurse(previousSchema: Schema, migration: Migration): Future[MigrationApplierResult] = {
     if (!migration.isRollingBack) {
       recurseForward(previousSchema, migration)
     } else {
