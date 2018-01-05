@@ -37,7 +37,7 @@ class MigrationApplierSpec extends FlatSpec with Matchers with DeploySpecBase wi
 
   "the applier" should "succeed when all steps succeed" in {
     persistence.create(migration).await
-    val mapper  = stepMapper { case _ => succeedingSqlMutaction }
+    val mapper  = stepMapper { case _ => succeedingSqlMutactionWithSucceedingRollback }
     val applier = migrationApplier(mapper)
 
     val result = applier.apply(previousSchema = emptySchema, migration = migration).await
@@ -49,13 +49,13 @@ class MigrationApplierSpec extends FlatSpec with Matchers with DeploySpecBase wi
     persisted.rolledBack should be(0)
   }
 
-  "the applier" should "fail at the first failing mutaction" in {
+  "the applier" should "mark a migration as ROLLBACK_SUCCESS if all steps can be rolled back successfully" in {
     persistence.create(migration).await
 
     val mapper = stepMapper({
-      case CreateModel("Step1") => succeedingSqlMutaction
+      case CreateModel("Step1") => succeedingSqlMutactionWithSucceedingRollback
       case CreateModel("Step2") => failingSqlMutactionWithSucceedingRollback
-      case CreateModel("Step3") => succeedingSqlMutaction
+      case CreateModel("Step3") => succeedingSqlMutactionWithSucceedingRollback
     })
     val applier = migrationApplier(mapper)
 
@@ -66,6 +66,25 @@ class MigrationApplierSpec extends FlatSpec with Matchers with DeploySpecBase wi
     persisted.status should be(MigrationStatus.RollbackSuccess)
     persisted.applied should be(1)    // 1 step succeeded
     persisted.rolledBack should be(1) // 1 step was rolled back
+  }
+
+  "the applier" should "mark a migration as ROLLBACK_FAILURE if the rollback fails" in {
+    persistence.create(migration).await
+
+    val mapper = stepMapper({
+      case CreateModel("Step1") => succeedingSqlMutactionWithFailingRollback
+      case CreateModel("Step2") => succeedingSqlMutactionWithSucceedingRollback
+      case CreateModel("Step3") => failingSqlMutactionWithSucceedingRollback
+    })
+    val applier = migrationApplier(mapper)
+
+    val result = applier.apply(previousSchema = emptySchema, migration = migration).await
+    result.succeeded should be(false)
+
+    val persisted = loadMigrationFromDb
+    persisted.status should be(MigrationStatus.RollbackFailure)
+    persisted.applied should be(2)    // 2 steps succeeded
+    persisted.rolledBack should be(1) // 1 steps were rolled back
   }
 
   def loadMigrationFromDb: Migration = {
@@ -79,10 +98,12 @@ class MigrationApplierSpec extends FlatSpec with Matchers with DeploySpecBase wi
 
   def migrationApplier(stepMapper: MigrationStepMapper) = MigrationApplierImpl(persistence, clientDb.clientDatabase, stepMapper)
 
-  lazy val succeedingSqlMutaction                    = clientSqlMutaction(succeedingStatementResult, rollback = succeedingStatementResult)
-  lazy val failingSqlMutactionWithSucceedingRollback = clientSqlMutaction(failingStatementResult, rollback = succeedingStatementResult)
-  lazy val succeedingStatementResult                 = ClientSqlStatementResult[Any](DBIOAction.successful(()))
-  lazy val failingStatementResult                    = ClientSqlStatementResult[Any](DBIOAction.failed(new Exception("failing statement result")))
+  lazy val succeedingSqlMutactionWithSucceedingRollback = clientSqlMutaction(succeedingStatementResult, rollback = succeedingStatementResult)
+  lazy val succeedingSqlMutactionWithFailingRollback    = clientSqlMutaction(succeedingStatementResult, rollback = failingStatementResult)
+  lazy val failingSqlMutactionWithSucceedingRollback    = clientSqlMutaction(failingStatementResult, rollback = succeedingStatementResult)
+  lazy val failingSqlMutactionWithFailingRollback       = clientSqlMutaction(failingStatementResult, rollback = failingStatementResult)
+  lazy val succeedingStatementResult                    = ClientSqlStatementResult[Any](DBIOAction.successful(()))
+  lazy val failingStatementResult                       = ClientSqlStatementResult[Any](DBIOAction.failed(new Exception("failing statement result")))
 
   def clientSqlMutaction(execute: ClientSqlStatementResult[Any], rollback: ClientSqlStatementResult[Any]): ClientSqlMutaction = {
     clientSqlMutaction(execute, Some(rollback))

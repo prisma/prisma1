@@ -8,6 +8,7 @@ import cool.graph.utils.exceptions.StackTraceUtils
 import slick.jdbc.MySQLProfile.backend.DatabaseDef
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success}
 
 trait MigrationApplier {
   def apply(previousSchema: Schema, migration: Migration): Future[MigrationApplierResult]
@@ -44,7 +45,7 @@ case class MigrationApplierImpl(
         _             <- applyStep(previousSchema, migration, migration.currentStep)
         nextMigration = migration.incApplied
         _             <- migrationPersistence.updateMigrationApplied(migration.id, nextMigration.applied)
-        x             <- recurse(previousSchema, nextMigration)
+        x             <- recurseForward(previousSchema, nextMigration)
       } yield x
 
       result.recoverWith {
@@ -62,23 +63,27 @@ case class MigrationApplierImpl(
   }
 
   def recurseForRollback(previousSchema: Schema, migration: Migration): Future[MigrationApplierResult] = {
-    if (migration.pendingRollBackSteps.nonEmpty) {
+    def continueRollback = {
+      val nextMigration = migration.incRolledBack
       for {
-        _ <- unapplyStep(previousSchema, migration, migration.pendingRollBackSteps.head)
-//          .recoverWith {
-//                          case err =>
-//                            println("encountered exception while unapplying migration.")
-//                            val failedMigration = migration.markAsRollBackFailure
-//                            for {
-//                              _ <- migrationPersistence.updateMigrationStatus(migration.id, failedMigration.status)
-//                              _ <- migrationPersistence.updateMigrationErrors(migration.id, failedMigration.errors :+ StackTraceUtils.print(err))
-//                            } yield failedMigration
-//
-//                        }
-        nextMigration = migration.incRolledBack
-        _             <- migrationPersistence.updateMigrationRolledBack(migration.id, nextMigration.rolledBack)
-        x             <- recurse(previousSchema, nextMigration)
+        _ <- migrationPersistence.updateMigrationRolledBack(migration.id, nextMigration.rolledBack)
+        x <- recurseForRollback(previousSchema, nextMigration)
       } yield x
+    }
+    def abortRollback(err: Throwable) = {
+      println("encountered exception while unapplying migration. will abort.")
+      val failedMigration = migration.markAsRollBackFailure
+      for {
+        _ <- migrationPersistence.updateMigrationStatus(migration.id, failedMigration.status)
+        _ <- migrationPersistence.updateMigrationErrors(migration.id, failedMigration.errors :+ StackTraceUtils.print(err))
+      } yield MigrationApplierResult(succeeded = false)
+    }
+
+    if (migration.pendingRollBackSteps.nonEmpty) {
+      unapplyStep(previousSchema, migration, migration.pendingRollBackSteps.head).transformWith {
+        case Success(_)   => continueRollback
+        case Failure(err) => abortRollback(err)
+      }
     } else {
       migrationPersistence.updateMigrationStatus(migration.id, MigrationStatus.RollbackSuccess).map(_ => MigrationApplierResult(succeeded = false))
     }
@@ -91,12 +96,11 @@ case class MigrationApplierImpl(
     }
   }
 
-  def unapplyStep(previousSchema: Schema, migration: Migration, step: MigrationStep): Future[Migration] = {
-    val x = migrationStepMapper.mutactionFor(previousSchema, migration.schema, step) match {
+  def unapplyStep(previousSchema: Schema, migration: Migration, step: MigrationStep): Future[Unit] = {
+    migrationStepMapper.mutactionFor(previousSchema, migration.schema, step) match {
       case Some(mutaction) => executeClientMutactionRollback(mutaction)
       case None            => Future.unit
     }
-    x.map(_ => migration)
   }
 
   def executeClientMutaction(mutaction: ClientSqlMutaction): Future[Unit] = {
