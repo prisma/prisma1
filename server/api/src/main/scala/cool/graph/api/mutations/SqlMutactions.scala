@@ -15,6 +15,8 @@ import scala.collection.immutable.Seq
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
+import cool.graph.utils.boolean.BooleanUtils._
+
 case class CreateMutactionsResult(createMutaction: CreateDataItem,
                                   scalarListMutactions: Vector[ClientSqlMutaction],
                                   nestedMutactions: Seq[ClientSqlMutaction]) {
@@ -79,30 +81,26 @@ case class SqlMutactions(dataResolver: DataResolver) {
 
   def getUpdateMutaction(model: Model, args: CoolArgs, id: Id, previousValues: DataItem): Option[UpdateDataItem] = {
     val scalarArguments = args.nonListScalarArguments(model)
-    if (scalarArguments.nonEmpty) {
-      Some(
-        UpdateDataItem(
-          project = project,
-          model = model,
-          id = id,
-          values = scalarArguments,
-          originalArgs = Some(args),
-          previousValues = previousValues,
-          itemExists = true
-        ))
-    } else None
+    scalarArguments.nonEmpty.toOption {
+      UpdateDataItem(
+        project = project,
+        model = model,
+        id = id,
+        values = scalarArguments,
+        originalArgs = Some(args),
+        previousValues = previousValues,
+        itemExists = true
+      )
+    }
   }
-
 
   def getMutactionsForScalarLists(model: Model, args: CoolArgs, nodeId: Id): Vector[SetScalarList] = {
     val x = for {
       field  <- model.scalarListFields
       values <- args.subScalarList(field)
     } yield {
-      if (values.values.nonEmpty) {
-        Some(getSetScalarList(model, field, values.values, nodeId))
-      } else {
-        None
+      values.values.nonEmpty.toOption {
+        getSetScalarList(model, field, values.values, nodeId)
       }
     }
     x.flatten.toVector
@@ -231,9 +229,9 @@ case class SqlMutactions(dataResolver: DataResolver) {
     field.relatedField(project).flatMap { relatedField =>
       val relatedModel = field.relatedModel_!(project)
 
-      if (relatedField.isRequired && !relatedField.isList) {
-        Some(InvalidInputClientSqlMutaction(RelationIsRequired(fieldName = relatedField.name, typeName = relatedModel.name), isInvalid = isInvalid))
-      } else None
+      (relatedField.isRequired && !relatedField.isList).toOption {
+        InvalidInputClientSqlMutaction(RelationIsRequired(fieldName = relatedField.name, typeName = relatedModel.name), isInvalid = isInvalid)
+      }
     }
   }
 }
