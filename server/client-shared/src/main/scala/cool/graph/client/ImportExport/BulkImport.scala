@@ -59,10 +59,10 @@ class BulkImport(implicit injector: ClientInjector) {
 
   private def convertToImportRelation(json: JsValue): ImportRelation = {
     val array    = json.convertTo[JsArray]
-    val leftMap  = array.elements.head.convertTo[Map[String, String]]
-    val rightMap = array.elements.reverse.head.convertTo[Map[String, String]]
-    val left     = ImportRelationSide(getImportIdentifier(leftMap), leftMap("fieldName"))
-    val right    = ImportRelationSide(getImportIdentifier(rightMap), rightMap("fieldName"))
+    val leftMap  = array.elements.head.convertTo[Map[String, Option[String]]]
+    val rightMap = array.elements.reverse.head.convertTo[Map[String, Option[String]]]
+    val left     = ImportRelationSide(ImportIdentifier(leftMap("_typeName").get, leftMap("id").get), leftMap.get("fieldName").flatten)
+    val right    = ImportRelationSide(ImportIdentifier(rightMap("_typeName").get, rightMap("id").get), rightMap.get("fieldName").flatten)
 
     ImportRelation(left, right)
   }
@@ -103,13 +103,19 @@ class BulkImport(implicit injector: ClientInjector) {
 
   private def generateImportRelationsDBActions(project: Project, relations: Vector[ImportRelation]): DBIOAction[Vector[Try[Int]], NoStream, Effect.Write] = {
     val x = relations.map { element =>
-      val fromModel                                                 = project.getModelByName_!(element.left.identifier.typeName)
-      val fromField                                                 = fromModel.getFieldByName_!(element.left.fieldName)
+      val (left, right) = (element.left, element.right) match {
+        case (l, r) if l.fieldName.isDefined => (l, r)
+        case (l, r) if r.fieldName.isDefined => (r, l)
+        case _                               => throw sys.error("Invalid ImportRelation at least one fieldName needs to be defined.")
+      }
+
+      val fromModel                                                 = project.getModelByName_!(left.identifier.typeName)
+      val fromField                                                 = fromModel.getFieldByName_!(left.fieldName.get)
       val relationSide: cool.graph.shared.models.RelationSide.Value = fromField.relationSide.get
       val relation: Relation                                        = fromField.relation.get
 
-      val aValue: String = if (relationSide == RelationSide.A) element.left.identifier.id else element.right.identifier.id
-      val bValue: String = if (relationSide == RelationSide.A) element.right.identifier.id else element.left.identifier.id
+      val aValue: String = if (relationSide == RelationSide.A) left.identifier.id else right.identifier.id
+      val bValue: String = if (relationSide == RelationSide.A) right.identifier.id else left.identifier.id
 
       val aModel: Model = relation.getModelA_!(project)
       val bModel: Model = relation.getModelB_!(project)

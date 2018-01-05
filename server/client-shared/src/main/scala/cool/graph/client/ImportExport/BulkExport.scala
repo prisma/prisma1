@@ -196,8 +196,13 @@ class BulkExport(implicit clientInjector: ClientInjector) {
   }
 
   private def serializeArray(in: JsonBundle, identifier: ImportIdentifier, arrayValues: Vector[Any], info: ListInfo, amount: Int = 1000000): ResultFormat = {
-    val values                   = arrayValues.slice(info.cursor.array, info.cursor.array + amount)
-    val result: Map[String, Any] = Map("_typeName" -> identifier.typeName, "id" -> identifier.id, info.currentField -> values)
+    val values = arrayValues.slice(info.cursor.array, info.cursor.array + amount)
+    val convertedValues = info.currentTypeIdentifier match {
+      case TypeIdentifier.Enum => values.map(enum => enum.asInstanceOf[String].replaceAll("\"", ""))
+      case _                   => values
+    }
+
+    val result: Map[String, Any] = Map("_typeName" -> identifier.typeName, "id" -> identifier.id, info.currentField -> convertedValues) // todo this needs to handle enum better
     val json                     = result.toJson
     val combinedElements         = in.jsonElements :+ json
     val combinedSize             = in.size + json.toString.length

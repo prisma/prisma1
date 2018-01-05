@@ -13,7 +13,7 @@ package object ImportExport {
   case class ResultFormat(out: JsonBundle, cursor: Cursor, isFull: Boolean)
   case class ImportBundle(valueType: String, values: JsArray)
   case class ImportIdentifier(typeName: String, id: String)
-  case class ImportRelationSide(identifier: ImportIdentifier, fieldName: String)
+  case class ImportRelationSide(identifier: ImportIdentifier, fieldName: Option[String])
   case class ImportNode(identifier: ImportIdentifier, values: Map[String, Any])
   case class ImportRelation(left: ImportRelationSide, right: ImportRelationSide)
   case class ImportList(identifier: ImportIdentifier, values: Map[String, Vector[Any]])
