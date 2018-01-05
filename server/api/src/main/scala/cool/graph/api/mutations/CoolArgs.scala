@@ -12,6 +12,8 @@ import scala.collection.immutable.Seq
   * It's called CoolArgs to easily differentiate from Sangrias Args class.
   */
 case class CoolArgs(raw: Map[String, Any]) {
+  def isEmpty: Boolean    = raw.isEmpty
+  def isNonEmpty: Boolean = raw.nonEmpty
 
   def subNestedMutation(relationField: Field, subModel: Model): Option[NestedMutation] = {
     subArgsOption(relationField) match {

@@ -5,6 +5,7 @@ import cool.graph.api.database.mutactions.{ClientSqlDataChangeMutaction, ClientS
 import cool.graph.api.mutations.{CoolArgs, NodeSelector}
 import cool.graph.shared.models.IdType.Id
 import cool.graph.shared.models.{Field, Model, Project, Relation}
+import slick.dbio.DBIOAction
 
 import scala.concurrent.Future
 
@@ -32,6 +33,11 @@ case class UpdateDataItemByUniqueFieldIfInRelationWith(
     } else {
       DatabaseMutationBuilder.updateDataItemByUniqueValueForAIfInRelationWithGivenB(project.id, relation.id, fromId, where, scalarArgs.raw)
     }
-    ClientSqlStatementResult(sqlAction = action)
+
+    if (scalarArgs.isNonEmpty) {
+      ClientSqlStatementResult(sqlAction = action)
+    } else {
+      ClientSqlStatementResult(sqlAction = DBIOAction.successful(()))
+    }
   }
 }
