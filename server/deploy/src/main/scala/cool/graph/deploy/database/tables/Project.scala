@@ -56,9 +56,11 @@ object ProjectTable {
   def loadAllWithMigration(): SqlAction[Seq[(Project, Migration)], NoStream, Read] = {
     // For each project, the latest successful migration (there has to be at least one, e.g. the initial migtation during create)
     val baseQuery = for {
-      project   <- Tables.Projects
-      migration <- Tables.Migrations.filter(m => m.projectId === project.id && m.status === MigrationStatus.Success).sortBy(_.revision.desc).take(1)
-    } yield (project, migration)
+      projectIdWithMax <- Tables.Migrations.filter(_.status === MigrationStatus.Success).groupBy(_.projectId).map(x => (x._1, x._2.map(_.revision).max))
+      projectAndMigration <- Tables.Projects join Tables.Migrations on { (pro, mig) =>
+                              pro.id === projectIdWithMax._1 && pro.id === mig.projectId && mig.revision === projectIdWithMax._2
+                            }
+    } yield (projectAndMigration._1, projectAndMigration._2)
 
     baseQuery.result
   }

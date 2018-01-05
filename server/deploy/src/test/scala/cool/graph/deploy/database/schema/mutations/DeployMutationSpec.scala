@@ -77,9 +77,8 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
     val result = server.query(s"""
        |mutation {
        |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(schema)}}){
-       |    project {
-       |      name
-       |      stage
+       |    migration {
+       |      progress
        |    }
        |    errors {
        |      description
@@ -87,9 +86,6 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
        |  }
        |}
       """.stripMargin)
-
-    result.pathAsString("data.deploy.project.name") shouldEqual nameAndStage.name
-    result.pathAsString("data.deploy.project.stage") shouldEqual nameAndStage.stage
 
     val migrations = migrationPersistence.loadAll(project.id).await
     migrations should have(size(3))
@@ -128,9 +124,8 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
     val result1 = server.query(s"""
                                  |mutation {
                                  |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(schema1)}}){
-                                 |    project {
-                                 |      name
-                                 |      stage
+                                 |    migration {
+                                 |      progress
                                  |    }
                                  |    errors {
                                  |      description
@@ -139,15 +134,11 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
                                  |}
       """.stripMargin)
 
-    result1.pathAsString("data.deploy.project.name") shouldEqual nameAndStage.name
-    result1.pathAsString("data.deploy.project.stage") shouldEqual nameAndStage.stage
-
     server.query(s"""
                                   |mutation {
                                   |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(schema2)}}){
-                                  |    project {
-                                  |      name
-                                  |      stage
+                                  |    migration {
+                                  |      progress
                                   |    }
                                   |    errors {
                                   |      description
@@ -159,9 +150,8 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
     server.query(s"""
                                   |mutation {
                                   |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(schema3)}}){
-                                  |    project {
-                                  |      name
-                                  |      stage
+                                  |    migration {
+                                  |      progress
                                   |    }
                                   |    errors {
                                   |      description
@@ -191,9 +181,8 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
     val result = server.query(s"""
        |mutation {
        |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(schema)}}){
-       |    project {
-       |      name
-       |      stage
+       |    migration {
+       |      progress
        |    }
        |    errors {
        |      description
@@ -215,9 +204,8 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
     val updateResult = server.query(s"""
         |mutation {
         |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(schema)}}){
-        |    project {
-        |      name
-        |      stage
+        |    migration {
+        |      progress
         |    }
         |    errors {
         |      description
@@ -251,9 +239,8 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
         s"""
          |mutation {
          |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(schema)}}){
-         |    project {
-         |      name
-         |      stage
+         |    migration {
+         |      progress
          |    }
          |    errors {
          |      description
@@ -320,9 +307,8 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
     val updateResult = server.query(s"""
          |mutation {
          |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(updatedSchema)}}){
-         |    project {
-         |      name
-         |      stage
+         |    migration {
+         |      progress
          |    }
          |    errors {
          |      description

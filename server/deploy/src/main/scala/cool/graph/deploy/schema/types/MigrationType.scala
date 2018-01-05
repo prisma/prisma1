@@ -14,7 +14,7 @@ object MigrationType {
       Field("status", StringType, resolve = _.value.status.toString),
       Field("progress", StringType, resolve = x => s"${x.value.progress}/${x.value.steps.length}"),
       Field("steps", ListType(MigrationStepType.Type), resolve = _.value.steps),
-      Field("errors", ListType(MigrationStepType.Type), resolve = _.value.steps)
+      Field("errors", ListType(StringType), resolve = _.value.errors)
     )
   )
 }

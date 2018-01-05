@@ -1,7 +1,7 @@
 package cool.graph.deploy.migration
 
 import cool.graph.deploy.migration.inference._
-import cool.graph.shared.models.{Project, Schema}
+import cool.graph.shared.models.Schema
 import cool.graph.shared.project_dsl.SchemaDsl
 import org.scalactic.Or
 import org.scalatest.{Matchers, WordSpec}

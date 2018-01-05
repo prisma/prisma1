@@ -149,7 +149,6 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
   lazy val relationsToCreate: Vector[CreateRelation] = {
     for {
       nextRelation <- nextSchema.relations.toVector
-      nextRelation <- nextSchema.relations.toVector
       if !containsRelation(previousSchema, ambiguityCheck = nextSchema, nextRelation, renames.getPreviousModelName)
     } yield {
       CreateRelation(

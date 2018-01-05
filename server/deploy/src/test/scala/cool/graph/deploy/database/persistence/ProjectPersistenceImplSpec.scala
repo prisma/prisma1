@@ -43,8 +43,9 @@ class ProjectPersistenceImplSpec extends FlatSpec with Matchers with DeploySpecB
   }
 
   ".loadAll()" should "load all projects (for a user TODO)" in {
-    projectPersistence.create(TestProject()).await()
-    projectPersistence.create(TestProject()).await()
+    setupProject(basicTypesGql)
+    setupProject(basicTypesGql)
+
     projectPersistence.loadAll().await should have(size(2))
   }
 

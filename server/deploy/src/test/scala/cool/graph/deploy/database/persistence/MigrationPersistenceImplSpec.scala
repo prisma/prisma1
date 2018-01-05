@@ -62,7 +62,7 @@ class MigrationPersistenceImplSpec extends FlatSpec with Matchers with DeploySpe
 
     val lastMigration = migrationPersistence.getLastMigration(project.id).await.get
     lastMigration.revision shouldEqual createdMigration.revision
-    lastMigration.status shouldEqual MigrationStatus.Success.toString
+    lastMigration.status shouldEqual MigrationStatus.Success
   }
 
   ".getLastMigration()" should "get the last migration applied to a project" in {
