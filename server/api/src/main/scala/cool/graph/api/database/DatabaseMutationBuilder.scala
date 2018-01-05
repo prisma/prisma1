@@ -55,9 +55,13 @@ object DatabaseMutationBuilder {
 
   def updateDataItemByUnique(project: Project, model: Model, updateArgs: CoolArgs, where: NodeSelector) = {
     val updateValues = combineByComma(updateArgs.raw.map { case (k, v) => escapeKey(k) ++ sql" = " ++ escapeUnsafeParam(v) })
-    (sql"update `#${project.id}`.`#${model.name}`" ++
-      sql"set " ++ updateValues ++
-      sql"where `#${where.field.name}` = ${where.fieldValue};").asUpdate
+    if (updateArgs.isNonEmpty) {
+      (sql"update `#${project.id}`.`#${model.name}`" ++
+        sql"set " ++ updateValues ++
+        sql"where `#${where.field.name}` = ${where.fieldValue};").asUpdate
+    } else {
+      DBIOAction.successful(())
+    }
   }
 
   def whereFailureTrigger(project: Project, where: NodeSelector) = {
