@@ -6,6 +6,7 @@ import cool.graph.deploy.migration.MigrationStepMapper
 import cool.graph.deploy.migration.mutactions.ClientSqlMutaction
 import cool.graph.deploy.schema.DeploymentInProgress
 import cool.graph.shared.models.{Migration, MigrationStatus, MigrationStep, Schema}
+import cool.graph.utils.exceptions.StackTraceUtils
 import slick.jdbc.MySQLProfile.backend.DatabaseDef
 
 import scala.concurrent.Future
@@ -146,15 +147,16 @@ case class ProjectDeploymentActor(projectId: String, migrationPersistence: Migra
 
     migrationPersistence.getNextMigration(projectId).transformWith {
       case Success(Some(nextMigration)) =>
-        applyMigration(activeSchema, nextMigration).map { result =>
-          if (result.succeeded) {
-            activeSchema = nextMigration.schema
-            migrationPersistence.updateMigrationStatus(nextMigration, MigrationStatus.Success)
-          } else {
-            migrationPersistence.updateMigrationStatus(nextMigration, MigrationStatus.RollbackFailure)
-            Future.failed(new Exception("Applying migration failed."))
+        val nextState = if (nextMigration.status == MigrationStatus.Pending) MigrationStatus.InProgress else nextMigration.status
+        migrationPersistence
+          .updateMigrationStatus(nextMigration.id, nextState)
+          .flatMap { _ =>
+            applyMigration(activeSchema, nextMigration).map { result =>
+              if (result.succeeded) {
+                activeSchema = nextMigration.schema
+              }
+            }
           }
-        }
 
       case Failure(err) =>
         Future.failed(new Exception(s"Error while fetching migration: $err"))
@@ -166,57 +168,68 @@ case class ProjectDeploymentActor(projectId: String, migrationPersistence: Migra
   }
 
   def applyMigration(previousSchema: Schema, migration: Migration): Future[MigrationApplierResult] = {
-    val initialProgress = MigrationProgress(pendingSteps = migration.steps, appliedSteps = Vector.empty, isRollingback = false)
-    recurse(previousSchema, migration.schema, initialProgress)
+//    val initialProgress = MigrationProgress(pendingSteps = migration.steps, appliedSteps = Vector.empty, isRollingback = false)
+    recurse(previousSchema, migration)
   }
 
-  def recurse(previousSchema: Schema, nextSchema: Schema, progress: MigrationProgress): Future[MigrationApplierResult] = {
-    if (!progress.isRollingback) {
-      recurseForward(previousSchema, nextSchema, progress)
+  def recurse(previousSchema: Schema, migration: Migration): Future[MigrationApplierResult] = {
+    if (!migration.isRollingBack) {
+      recurseForward(previousSchema, migration)
     } else {
-      recurseForRollback(previousSchema, nextSchema, progress)
+      recurseForRollback(previousSchema, migration)
     }
   }
 
-  def recurseForward(previousSchema: Schema, nextSchema: Schema, progress: MigrationProgress): Future[MigrationApplierResult] = {
-    if (progress.pendingSteps.nonEmpty) {
-      val (step, newProgress) = progress.popPending
-
+  def recurseForward(previousSchema: Schema, migration: Migration): Future[MigrationApplierResult] = {
+    if (migration.pendingSteps.nonEmpty) {
       val result = for {
-        _ <- applyStep(previousSchema, nextSchema, step)
-        x <- recurse(previousSchema, nextSchema, newProgress)
+        _             <- applyStep(previousSchema, migration, migration.currentStep)
+        nextMigration = migration.incApplied
+        _             <- migrationPersistence.updateMigrationApplied(migration.id, nextMigration.applied)
+        x             <- recurse(previousSchema, nextMigration)
       } yield x
 
       result.recoverWith {
         case exception =>
           println("encountered exception while applying migration. will roll back.")
           exception.printStackTrace()
-          recurseForRollback(previousSchema, nextSchema, newProgress.markForRollback)
+
+          for {
+            _             <- migrationPersistence.updateMigrationStatus(migration.id, MigrationStatus.RollingBack)
+            _             <- migrationPersistence.updateMigrationErrors(migration.id, migration.errors :+ StackTraceUtils.print(exception))
+            applierResult <- recurseForRollback(previousSchema, migration.copy(status = MigrationStatus.RollingBack))
+          } yield applierResult
       }
     } else {
-      Future.successful(MigrationApplierResult(succeeded = true))
+      migrationPersistence.updateMigrationStatus(migration.id, MigrationStatus.Success).map(_ => MigrationApplierResult(succeeded = true))
     }
   }
 
-  def recurseForRollback(previousSchema: Schema, nextSchema: Schema, progress: MigrationProgress): Future[MigrationApplierResult] = {
-    if (progress.appliedSteps.nonEmpty) {
-      val (step, newProgress) = progress.popApplied
-
+  def recurseForRollback(previousSchema: Schema, migration: Migration): Future[MigrationApplierResult] = {
+    if (migration.pendingRollBackSteps.nonEmpty) {
       for {
-        _ <- unapplyStep(previousSchema, nextSchema, step).recover { case _ => () }
-        x <- recurse(previousSchema, nextSchema, newProgress)
+        nextMigration <- unapplyStep(previousSchema, migration, migration.pendingRollBackSteps.head).recoverWith {
+                          case err =>
+                            val failedMigration = migration.markAsRollBackFailure
+                            for {
+                              _ <- migrationPersistence.updateMigrationStatus(migration.id, failedMigration.status)
+                              _ <- migrationPersistence.updateMigrationErrors(migration.id, failedMigration.errors :+ StackTraceUtils.print(err))
+                            } yield failedMigration
+
+                        }
+        x <- recurse(previousSchema, nextMigration)
       } yield x
     } else {
-      Future.successful(MigrationApplierResult(succeeded = false))
+      migrationPersistence.updateMigrationStatus(migration.id, MigrationStatus.RollbackSuccess).map(_ => MigrationApplierResult(succeeded = false))
     }
   }
 
-  def applyStep(previousSchema: Schema, nextSchema: Schema, step: MigrationStep): Future[Unit] = {
-    stepMapper.mutactionFor(previousSchema, nextSchema, step).map(executeClientMutaction).getOrElse(Future.successful(()))
+  def applyStep(previousSchema: Schema, migration: Migration, step: MigrationStep): Future[Migration] = {
+    stepMapper.mutactionFor(previousSchema, migration.schema, step).map(executeClientMutaction).getOrElse(Future.unit).map(_ => migration)
   }
 
-  def unapplyStep(previousSchema: Schema, nextSchema: Schema, step: MigrationStep): Future[Unit] = {
-    stepMapper.mutactionFor(previousSchema, nextSchema, step).map(executeClientMutactionRollback).getOrElse(Future.successful(()))
+  def unapplyStep(previousSchema: Schema, migration: Migration, step: MigrationStep): Future[Migration] = {
+    stepMapper.mutactionFor(previousSchema, migration.schema, step).map(executeClientMutactionRollback).getOrElse(Future.unit).map(_ => migration)
   }
 
   def executeClientMutaction(mutaction: ClientSqlMutaction): Future[Unit] = {
@@ -233,25 +246,25 @@ case class ProjectDeploymentActor(projectId: String, migrationPersistence: Migra
     } yield ()
   }
 }
-
-case class MigrationProgress(
-    appliedSteps: Vector[MigrationStep],
-    pendingSteps: Vector[MigrationStep],
-    isRollingback: Boolean
-) {
-  def addAppliedStep(step: MigrationStep) = copy(appliedSteps = appliedSteps :+ step)
-
-  def popPending: (MigrationStep, MigrationProgress) = {
-    val step = pendingSteps.head
-    step -> copy(appliedSteps = appliedSteps :+ step, pendingSteps = pendingSteps.tail)
-  }
-
-  def popApplied: (MigrationStep, MigrationProgress) = {
-    val step = appliedSteps.last
-    step -> copy(appliedSteps = appliedSteps.dropRight(1))
-  }
-
-  def markForRollback = copy(isRollingback = true)
-}
-
+//
+//case class MigrationProgress(
+//    appliedSteps: Vector[MigrationStep],
+//    pendingSteps: Vector[MigrationStep],
+//    isRollingback: Boolean
+//) {
+//  def addAppliedStep(step: MigrationStep) = copy(appliedSteps = appliedSteps :+ step)
+//
+//  def popPending: (MigrationStep, MigrationProgress) = {
+//    val step = pendingSteps.head
+//    step -> copy(appliedSteps = appliedSteps :+ step, pendingSteps = pendingSteps.tail)
+//  }
+//
+//  def popApplied: (MigrationStep, MigrationProgress) = {
+//    val step = appliedSteps.last
+//    step -> copy(appliedSteps = appliedSteps.dropRight(1))
+//  }
+//
+//  def markForRollback = copy(isRollingback = true)
+//}
+//
 case class MigrationApplierResult(succeeded: Boolean)

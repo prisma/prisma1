@@ -58,7 +58,7 @@ class MigrationPersistenceImplSpec extends FlatSpec with Matchers with DeploySpe
     val project          = setupProject(basicTypesGql)
     val createdMigration = migrationPersistence.create(Migration.empty(project.id)).await
 
-    migrationPersistence.updateMigrationStatus(createdMigration, MigrationStatus.Success).await
+    migrationPersistence.updateMigrationStatus(createdMigration.id, MigrationStatus.Success).await
 
     val lastMigration = migrationPersistence.getLastMigration(project.id).await.get
     lastMigration.revision shouldEqual createdMigration.revision

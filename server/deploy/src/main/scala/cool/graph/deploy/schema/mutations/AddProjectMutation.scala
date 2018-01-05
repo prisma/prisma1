@@ -32,7 +32,8 @@ case class AddProjectMutation(
     val migration = Migration(
       projectId = newProject.id,
       revision = 0,
-      progress = 0,
+      applied = 0,
+      rolledBack = 0,
       status = MigrationStatus.Success,
       steps = Vector.empty,
       errors = Vector.empty,

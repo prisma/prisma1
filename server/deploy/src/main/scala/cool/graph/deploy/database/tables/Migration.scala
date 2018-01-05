@@ -12,28 +12,31 @@ case class Migration(
     revision: Int,
     schema: JsValue,
     status: MigrationStatus,
-    progress: Int,
+    applied: Int,
+    rolledBack: Int,
     steps: JsValue,
     errors: JsValue
 )
 
 class MigrationTable(tag: Tag) extends Table[Migration](tag, "Migration") {
   implicit val statusMapper = MigrationTable.statusMapper
-  implicit val jsonMapper   = MappedColumns.jsonMapper
+  implicit val jsonMapper   = MigrationTable.jsonMapper
 
-  def projectId = column[String]("projectId")
-  def revision  = column[Int]("revision")
-  def schema    = column[JsValue]("schema")
-  def status    = column[MigrationStatus]("status")
-  def progress  = column[Int]("progress")
-  def steps     = column[JsValue]("steps")
-  def errors    = column[JsValue]("errors")
+  def projectId  = column[String]("projectId")
+  def revision   = column[Int]("revision")
+  def schema     = column[JsValue]("schema")
+  def status     = column[MigrationStatus]("status")
+  def applied    = column[Int]("applied")
+  def rolledBack = column[Int]("rolledBack")
+  def steps      = column[JsValue]("steps")
+  def errors     = column[JsValue]("errors")
 
   def migration = foreignKey("migrations_projectid_foreign", projectId, Tables.Projects)(_.id)
-  def *         = (projectId, revision, schema, status, progress, steps, errors) <> (Migration.tupled, Migration.unapply)
+  def *         = (projectId, revision, schema, status, applied, rolledBack, steps, errors) <> (Migration.tupled, Migration.unapply)
 }
 
 object MigrationTable {
+  implicit val jsonMapper = MappedColumns.jsonMapper
   implicit val statusMapper = MappedColumnType.base[MigrationStatus, String](
     _.toString,
     MigrationStatus.withName
@@ -71,14 +74,28 @@ object MigrationTable {
     query.result.headOption
   }
 
-  def updateMigrationStatus(projectId: String, revision: Int, status: MigrationStatus): FixedSqlAction[Int, NoStream, Write] = {
-    val baseQuery = for {
+  private def updateBaseQuery(projectId: String, revision: Int) = {
+    for {
       migration <- Tables.Migrations
       if migration.projectId === projectId
       if migration.revision === revision
     } yield migration
+  }
 
-    baseQuery.map(_.status).update(status)
+  def updateMigrationStatus(projectId: String, revision: Int, status: MigrationStatus): FixedSqlAction[Int, NoStream, Write] = {
+    updateBaseQuery(projectId, revision).map(_.status).update(status)
+  }
+
+  def updateMigrationErrors(projectId: String, revision: Int, errors: JsValue) = {
+    updateBaseQuery(projectId, revision).map(_.errors).update(errors)
+  }
+
+  def updateMigrationApplied(projectId: String, revision: Int, applied: Int): FixedSqlAction[Int, NoStream, Write] = {
+    updateBaseQuery(projectId, revision).map(_.applied).update(applied)
+  }
+
+  def updateMigrationRolledBack(projectId: String, revision: Int, rolledBack: Int): FixedSqlAction[Int, NoStream, Write] = {
+    updateBaseQuery(projectId, revision).map(_.rolledBack).update(rolledBack)
   }
 
   def loadByRevision(projectId: String, revision: Int): SqlAction[Option[Migration], NoStream, Read] = {

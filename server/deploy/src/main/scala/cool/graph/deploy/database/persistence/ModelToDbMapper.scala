@@ -33,7 +33,8 @@ object ModelToDbMapper {
       revision = migration.revision,
       schema = schemaJson,
       status = migration.status,
-      progress = migration.progress,
+      applied = migration.applied,
+      rolledBack = migration.rolledBack,
       steps = migrationStepsJson,
       errors = errorsJson
     )

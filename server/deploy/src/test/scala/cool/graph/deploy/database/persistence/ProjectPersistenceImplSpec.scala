@@ -32,7 +32,7 @@ class ProjectPersistenceImplSpec extends FlatSpec with Matchers with DeploySpecB
     loadProject.get.revision shouldEqual 2
 
     // After another migration is completed, the revision is bumped to the revision of the latest migration
-    migrationPersistence.updateMigrationStatus(Migration.empty(project.id).copy(revision = 3), MigrationStatus.Success).await
+    migrationPersistence.updateMigrationStatus(Migration.empty(project.id).id, MigrationStatus.Success).await
     loadProject.get.revision shouldEqual 3
   }
 

@@ -8,15 +8,28 @@ import cool.graph.shared.models.MigrationStatus.MigrationStatus
 //    migration: Migration
 //)
 
+case class MigrationId(projectId: String, revision: Int)
+
 case class Migration(
     projectId: String,
     revision: Int,
     schema: Schema,
     status: MigrationStatus,
-    progress: Int,
+    applied: Int,
+    rolledBack: Int,
     steps: Vector[MigrationStep],
     errors: Vector[String]
-)
+) {
+  def id: MigrationId                             = MigrationId(projectId, revision)
+  def isRollingBack: Boolean                      = status == MigrationStatus.RollingBack
+  def pendingSteps: Vector[MigrationStep]         = steps.drop(applied + 1)
+  def appliedSteps: Vector[MigrationStep]         = steps.take(applied)
+  def pendingRollBackSteps: Vector[MigrationStep] = appliedSteps.reverse.drop(rolledBack)
+  def currentStep: MigrationStep                  = steps(applied)
+  def incApplied: Migration                       = copy(applied = applied + 1)
+  def incRolledBack: Migration                    = copy(rolledBack = rolledBack + 1)
+  def markAsRollBackFailure: Migration            = copy(status = MigrationStatus.RollbackFailure)
+}
 
 object MigrationStatus extends Enumeration {
   type MigrationStatus = Value
@@ -38,7 +51,8 @@ object Migration {
     revision = 0,
     schema = schema,
     status = MigrationStatus.Pending,
-    progress = 0,
+    applied = 0,
+    rolledBack = 0,
     steps,
     errors = Vector.empty
   )

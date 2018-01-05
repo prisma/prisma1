@@ -38,7 +38,8 @@ object DbToModelMapper {
       migration.revision,
       migration.schema.as[Schema],
       migration.status,
-      migration.progress,
+      migration.applied,
+      migration.rolledBack,
       migration.steps.as[Vector[MigrationStep]],
       migration.errors.as[Vector[String]]
     )
