@@ -412,8 +412,8 @@ class NestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
       """.stripMargin
 
     val result = server.executeQuerySimple(updateMutation, project)
-    result.pathAsString("data.createList.name") should equal("updated list")
-    result.pathAsString("data.createList.todos.[0].title") should equal("updated todo")
-    result.pathAsString("data.createList.todos.[0].tag.name") should equal("updated tag")
+    result.pathAsString("data.updateList.name") should equal("updated list")
+    result.pathAsString("data.updateList.todos.[0].title") should equal("updated todo")
+    result.pathAsString("data.updateList.todos.[0].tag.name") should equal("updated tag")
   }
 }
