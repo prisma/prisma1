@@ -25,12 +25,8 @@ case class MigrationApplierImpl(
       _         <- Future.unit
       nextState = if (migration.status == MigrationStatus.Pending) MigrationStatus.InProgress else migration.status
       _         <- migrationPersistence.updateMigrationStatus(migration.id, nextState)
-      result    <- applyMigration(previousSchema, migration)
+      result    <- recurse(previousSchema, migration)
     } yield result
-  }
-
-  def applyMigration(previousSchema: Schema, migration: Migration): Future[MigrationApplierResult] = {
-    recurse(previousSchema, migration)
   }
 
   def recurse(previousSchema: Schema, migration: Migration): Future[MigrationApplierResult] = {
@@ -96,7 +92,7 @@ case class MigrationApplierImpl(
   def unapplyStep(previousSchema: Schema, migration: Migration, step: MigrationStep): Future[Migration] = {
     val stepMapper = MigrationStepMapper(migration.projectId)
     val x = stepMapper.mutactionFor(previousSchema, migration.schema, step) match {
-      case Some(mutaction) => executeClientMutaction(mutaction)
+      case Some(mutaction) => executeClientMutactionRollback(mutaction)
       case None            => Future.unit
     }
     x.map(_ => migration)
