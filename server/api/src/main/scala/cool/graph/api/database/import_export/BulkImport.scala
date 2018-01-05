@@ -127,7 +127,7 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) {
   private def generateImportListsDBActions(lists: Vector[ImportList]): DBIOAction[Vector[Try[Int]], NoStream, jdbc.MySQLProfile.api.Effect] = {
     val updateListValueActions = lists.flatMap { element =>
       def isDateTime(fieldName: String) =
-        project.getModelByName_!(element.identifier.typeName).getFieldByName_!(fieldName).typeIdentifier == TypeIdentifier.DateTime
+        project.schema.getModelByName_!(element.identifier.typeName).getFieldByName_!(fieldName).typeIdentifier == TypeIdentifier.DateTime
 
       element.values.map {
         case (fieldName, values) if isDateTime(fieldName) =>

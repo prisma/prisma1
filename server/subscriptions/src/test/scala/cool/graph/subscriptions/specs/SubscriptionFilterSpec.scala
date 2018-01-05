@@ -23,7 +23,7 @@ class SubscriptionFilterSpec extends FlatSpec with Matchers with SpecBase with A
     .oneToManyRelation("comments", "todo", comment)
 
   val project: Project = schema.buildProject()
-  val model: Model     = project.getModelByName_!("Todo")
+  val model: Model     = project.schema.getModelByName_!("Todo")
 
   override def beforeEach(): Unit = {
     super.beforeEach()
