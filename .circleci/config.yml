@@ -26,6 +26,9 @@ jobs:
 workflows:
   version: 2
   build:
+    branches:
+      only:
+        - master
     jobs:
       - cli
       - content
