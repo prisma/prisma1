@@ -2,6 +2,9 @@ jobs:
 
   # CLI testing
   cli:
+    branches:
+      only:
+        - master
     docker:
       - image: circleci/node:8
     steps:
@@ -11,6 +14,9 @@ jobs:
 
   # content deployment
   content:
+    branches:
+      only:
+        - master
     docker:
       - image: circleci/node:8
     steps:
@@ -26,9 +32,6 @@ jobs:
 workflows:
   version: 2
   build:
-    branches:
-      only:
-        - master
     jobs:
       - cli
       - content
