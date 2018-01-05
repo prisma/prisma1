@@ -2,6 +2,7 @@ package cool.graph.subscriptions.specs
 
 import cool.graph.api.database.mutactions.mutactions.{AddDataItemToManyRelation, CreateDataItem}
 import cool.graph.api.mutations.MutationTypes.ArgumentValue
+import cool.graph.api.mutations.{NodeSelector, ParentInfo}
 import cool.graph.messagebus.pubsub.Only
 import cool.graph.shared.models.{Enum, Model}
 import cool.graph.shared.project_dsl.SchemaDsl
@@ -38,15 +39,9 @@ class SubscriptionFilterSpec extends FlatSpec with Matchers with SpecBase with A
       ).execute.await.sqlAction
     }
 
-    testDatabase.runDbActionOnClientDb {
-      AddDataItemToManyRelation(
-        project = project,
-        fromModel = model,
-        fromField = model.getFieldByName_!("comments"),
-        toId = "comment-id",
-        fromId = "test-node-id"
-      ).execute.await.sqlAction
-    }
+    val parentInfo = ParentInfo(model.getFieldByName_!("comments"), NodeSelector.forId(model, "test-node-id"))
+
+    testDatabase.runDbActionOnClientDb { AddDataItemToManyRelation(project, parentInfo, toId = "comment-id").execute.await.sqlAction }
   }
 
   "The Filter" should "support enums in previous values" in {
