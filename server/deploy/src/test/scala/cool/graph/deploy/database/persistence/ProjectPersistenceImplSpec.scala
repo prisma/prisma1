@@ -2,7 +2,7 @@ package cool.graph.deploy.database.persistence
 
 import cool.graph.deploy.database.tables.Tables
 import cool.graph.deploy.specutils.{DeploySpecBase, TestProject}
-import cool.graph.shared.models.{Migration, MigrationStatus}
+import cool.graph.shared.models.{Migration, MigrationId, MigrationStatus}
 import org.scalatest.{FlatSpec, Matchers}
 import slick.jdbc.MySQLProfile.api._
 
@@ -32,7 +32,7 @@ class ProjectPersistenceImplSpec extends FlatSpec with Matchers with DeploySpecB
     loadProject.get.revision shouldEqual 2
 
     // After another migration is completed, the revision is bumped to the revision of the latest migration
-    migrationPersistence.updateMigrationStatus(Migration.empty(project.id).id, MigrationStatus.Success).await
+    migrationPersistence.updateMigrationStatus(MigrationId(project.id, 3), MigrationStatus.Success).await
     loadProject.get.revision shouldEqual 3
   }
 

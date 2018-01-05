@@ -15,7 +15,7 @@ class ListMigrationsSpec extends FlatSpec with Matchers with DeploySpecBase {
        |    projectId
        |    revision
        |    status
-       |    progress
+       |    applied
        |    errors
        |    steps {
        |      type

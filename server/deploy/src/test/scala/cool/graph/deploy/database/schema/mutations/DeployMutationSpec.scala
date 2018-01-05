@@ -78,7 +78,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
        |mutation {
        |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(schema)}}){
        |    migration {
-       |      progress
+       |      applied
        |    }
        |    errors {
        |      description
@@ -125,7 +125,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
                                  |mutation {
                                  |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(schema1)}}){
                                  |    migration {
-                                 |      progress
+                                 |      applied
                                  |    }
                                  |    errors {
                                  |      description
@@ -138,7 +138,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
                                   |mutation {
                                   |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(schema2)}}){
                                   |    migration {
-                                  |      progress
+                                  |      applied
                                   |    }
                                   |    errors {
                                   |      description
@@ -151,7 +151,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
                                   |mutation {
                                   |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(schema3)}}){
                                   |    migration {
-                                  |      progress
+                                  |      applied
                                   |    }
                                   |    errors {
                                   |      description
@@ -182,7 +182,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
        |mutation {
        |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(schema)}}){
        |    migration {
-       |      progress
+       |      applied
        |    }
        |    errors {
        |      description
@@ -205,7 +205,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
         |mutation {
         |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(schema)}}){
         |    migration {
-        |      progress
+        |      applied
         |    }
         |    errors {
         |      description
@@ -240,7 +240,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
          |mutation {
          |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(schema)}}){
          |    migration {
-         |      progress
+         |      applied
          |    }
          |    errors {
          |      description
@@ -308,7 +308,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
          |mutation {
          |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(updatedSchema)}}){
          |    migration {
-         |      progress
+         |      applied
          |    }
          |    errors {
          |      description
