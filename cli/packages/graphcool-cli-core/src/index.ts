@@ -22,6 +22,7 @@ import Nuke from './commands/local/nuke'
 import ConsoleCommand from './commands/console/index'
 import Logs from './commands/local/logs'
 import PsLocal from './commands/local/ps'
+import Token from './commands/token/token'
 
 export const groups = [
   {
@@ -59,6 +60,7 @@ export const topics = [
     description: 'Print service info (endpoints, clusters, ...) ',
     group: 'db',
   },
+  { name: 'token', description: 'Create a new service token', group: 'db' },
   { name: 'list', description: 'List all deployed services', group: 'db' },
   { name: 'clusters', description: 'List all clusters', group: 'db' },
   /* Data workflows */
@@ -111,6 +113,7 @@ export const commands = [
   Import,
   Export,
   PsLocal,
+  Token,
 ]
 
 export {
@@ -135,4 +138,5 @@ export {
   // Account,
   Import,
   Export,
+  Token,
 }

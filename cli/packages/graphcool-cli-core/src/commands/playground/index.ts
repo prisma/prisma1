@@ -31,11 +31,14 @@ export default class Playground extends Command {
     await this.definition.load(this.flags)
     const serviceName = this.definition.definition!.service!
     const stage = this.definition.definition!.stage!
-    const cluster = await this.client.getClusterSafe(serviceName, stage)
+
+    const clusterName = this.definition.definition!.cluster
+    const cluster = this.env.clusterByName(clusterName!, true)
+    this.env.setActiveCluster(cluster!)
 
     const localPlaygroundPath = `/Applications/GraphQL\ Playground.app/Contents/MacOS/GraphQL\ Playground`
 
-    const endpoint = cluster.getApiEndpoint(
+    const endpoint = cluster!.getApiEndpoint(
       this.definition.definition!.service!,
       stage,
     )
