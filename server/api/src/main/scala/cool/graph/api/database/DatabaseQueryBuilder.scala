@@ -67,6 +67,7 @@ object DatabaseQueryBuilder {
     val query =
       sql"select * from `#$projectId`.`#$tableName`" concat
         prefixIfNotNone("where", conditionCommand) concat
+        prefixIfNotNone("order by", orderByCommand) concat
         prefixIfNotNone("limit", limitCommand)
 
     (query, resultTransform)
@@ -132,7 +133,7 @@ object DatabaseQueryBuilder {
       case Some(givenArgs: QueryArguments) =>
         (
           givenArgs.extractWhereConditionCommand(projectId, modelName),
-          givenArgs.extractOrderByCommand(projectId, modelName, defaultOrderShortcut),
+          givenArgs.extractOrderByCommandForLists(projectId, modelName, defaultOrderShortcut),
           overrideMaxNodeCount match {
             case None                => givenArgs.extractLimitCommand(projectId, modelName)
             case Some(maxCount: Int) => givenArgs.extractLimitCommand(projectId, modelName, maxCount)

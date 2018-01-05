@@ -392,7 +392,8 @@ object DatabaseMutationBuilder {
     `position` INT(4) NOT NULL,
     `value` #$sqlType #$charsetString NOT NULL,
     PRIMARY KEY (`nodeId`, `position`),
-    INDEX `value` (`value`#$indexSize ASC))
+    INDEX `value` (`value`#$indexSize ASC),
+    FOREIGN KEY (`nodeId`) REFERENCES `#$projectId`.`#$modelName`(id) ON DELETE CASCADE)
     DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"""
   }
 
