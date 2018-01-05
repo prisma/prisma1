@@ -6,7 +6,6 @@ import cool.graph.api.ApiDependencies
 import cool.graph.api.database.DataResolver
 import cool.graph.api.database.mutactions.mutactions.CreateDataItem
 import cool.graph.api.database.mutactions.{MutactionGroup, TransactionMutaction}
-import cool.graph.api.mutations.IdNodeSelector._
 import cool.graph.api.mutations._
 import cool.graph.cuid.Cuid
 import cool.graph.shared.models.IdType.Id
@@ -42,8 +41,8 @@ case class Create(
   def prepareMutactions(): Future[List[MutactionGroup]] = {
     val createMutactionsResult = SqlMutactions(dataResolver).getMutactionsForCreate(model, coolArgs, id)
 
-    val transactionMutaction = TransactionMutaction(createMutactionsResult.allMutactions.toList, dataResolver)
-    val createMutactions     = createMutactionsResult.allMutactions.collect { case x: CreateDataItem => x }
+    val transactionMutaction   = TransactionMutaction(createMutactionsResult.allMutactions.toList, dataResolver)
+    val createMutactions       = createMutactionsResult.allMutactions.collect { case x: CreateDataItem => x }
     val subscriptionMutactions = SubscriptionEvents.extractFromSqlMutactions(project, mutationId, createMutactionsResult.allMutactions)
     //    val sssActions             = ServerSideSubscription.extractFromMutactions(project, createMutactionsResult.allMutactions, requestId)
 
@@ -59,7 +58,7 @@ case class Create(
 
   override def getReturnValue: Future[ReturnValueResult] = {
     for {
-      returnValue <- returnValueByUnique(idNodeSelector(model, id))
+      returnValue <- returnValueByUnique(NodeSelector.forId(model, id))
       dataItem    = returnValue.asInstanceOf[ReturnValue].dataItem
     } yield {
       ReturnValue(dataItem)

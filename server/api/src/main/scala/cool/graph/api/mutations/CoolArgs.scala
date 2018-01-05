@@ -169,20 +169,18 @@ case class CoolArgs(raw: Map[String, Any]) {
   def extractNodeSelector(model: Model): NodeSelector = {
     raw.asInstanceOf[Map[String, Option[Any]]].collectFirst {
       case (fieldName, Some(value)) =>
-        NodeSelector(model, model.getFieldByName_!(fieldName), GCAnyConverter(model.getFieldByName_!(fieldName).typeIdentifier, isList = false).toGCValue(value).get)
+        NodeSelector(model,
+                     model.getFieldByName_!(fieldName),
+                     GCAnyConverter(model.getFieldByName_!(fieldName).typeIdentifier, isList = false).toGCValue(value).get)
     } getOrElse {
       throw APIErrors.NullProvidedForWhereError(model.name)
     }
   }
 
-
-
 }
 
-object IdNodeSelector{
-
-  def idNodeSelector(model: Model, id: String) : NodeSelector= NodeSelector(model, model.getFieldByName_!("id"), GraphQLIdGCValue(id))
-
+object NodeSelector {
+  def forId(model: Model, id: String): NodeSelector = NodeSelector(model, model.getFieldByName_!("id"), GraphQLIdGCValue(id))
 }
 
 case class NodeSelector(model: Model, field: Field, fieldValue: GCValue) {
@@ -200,5 +198,3 @@ case class NodeSelector(model: Model, field: Field, fieldValue: GCValue) {
 //    case _ => GCDBValueConverter().fromGCValueToString(fieldValue)
 //  }
 }
-
-
