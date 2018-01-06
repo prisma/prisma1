@@ -6,12 +6,7 @@ import * as childProcess from 'child_process'
 export default class ConsoleCommand extends Command {
   static topic = 'console'
   static description = 'Open Graphcool Console in browser'
-  static flags: Flags = {
-    web: flags.boolean({
-      char: 'w',
-      description: 'Force open web playground',
-    }),
-  }
+  static flags: Flags = {}
   async run() {
     const { web } = this.flags
     await this.definition.load(this.flags)
