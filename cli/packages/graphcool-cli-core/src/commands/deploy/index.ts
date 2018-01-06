@@ -85,7 +85,7 @@ ${chalk.gray(
     const dryRun = this.flags['dry-run']
 
     if (envFile && !fs.pathExistsSync(path.join(this.config.cwd, envFile))) {
-      this.out.error(`--env-file path '${envFile}' does not exist`)
+      await this.out.error(`--env-file path '${envFile}' does not exist`)
     }
 
     await this.definition.load(this.flags, envFile)
@@ -278,7 +278,7 @@ ${chalk.gray(
         const migration = await this.client.getMigration(serviceName, stageName)
 
         if (migration.errors && migration.errors.length > 0) {
-          this.out.error(migration.errors.join('\n'))
+          await this.out.error(migration.errors.join('\n'))
         }
 
         if (migration.applied === migrationResult.migration.steps.length) {
@@ -294,21 +294,23 @@ ${chalk.gray(
       this.out.action.stop(prettyTime(Date.now() - before))
     }
     // TODO move up to if statement after testing done
-    this.out.log(chalk.bold(`\nHooks:\n`))
-    if (
-      this.definition.definition!.seed &&
-      !this.flags['no-seed'] &&
-      projectNew
-    ) {
-      await this.seed(projectNew, serviceName, stageName)
-    }
-    await this.generateSchema(serviceName, stageName)
-    await this.graphqlPrepare()
-
-    // no action required
-    this.deploying = false
     if (migrationResult.migration) {
-      this.printEndpoints(cluster, serviceName, stageName)
+      this.out.log(chalk.bold(`\nHooks:\n`))
+      if (
+        this.definition.definition!.seed &&
+        !this.flags['no-seed'] &&
+        projectNew
+      ) {
+        await this.seed(projectNew, serviceName, stageName)
+      }
+      await this.generateSchema(serviceName, stageName)
+      await this.graphqlPrepare()
+
+      // no action required
+      this.deploying = false
+      if (migrationResult.migration) {
+        this.printEndpoints(cluster, serviceName, stageName)
+      }
     }
   }
 
@@ -439,6 +441,9 @@ ${chalk.gray(
     stage: string,
   ): Promise<Cluster | undefined> {
     const name = await this.clusterSelection(serviceName, stage)
+    if (name === 'login') {
+      await this.out.error(`This is not implemented yet`)
+    }
     const exists = this.env.clusterByName(name)
     if (!exists && name === 'local') {
       await this.localUp()
@@ -451,30 +456,56 @@ ${chalk.gray(
     serviceName: string,
     stage: string,
   ): Promise<string> {
-    const localClusters = this.env.clusters.filter(c => c.local).map(c => {
-      return {
-        value: c.name,
-        name: c.name,
-      }
-    })
+    // const localClusters = this.env.clusters.filter(c => c.local).map(c => {
+    //   return {
+    //     value: c.name,
+    //     name: c.name,
+    //   }
+    // })
+
+    // TODO add other local clusters later
+    const localClusters: any[] = []
     if (localClusters.length === 0) {
-      localClusters.push({ value: 'local', name: 'local' })
+      localClusters.push({
+        value: 'local',
+        name: 'local                 Local cluster (requires Docker)',
+      })
     }
     const question = {
       name: 'cluster',
       type: 'list',
       message: `Please choose the cluster you want to deploy "${serviceName}@${stage}" to`,
       choices: [
-        new inquirer.Separator(chalk.bold('Custom clusters (local/private):')),
         ...localClusters,
-        new inquirer.Separator('                     '),
-        new inquirer.Separator(chalk.bold('Shared Clusters:')),
         {
           value: 'shared-public-demo',
-          name: 'shared-public-demo',
+          name:
+            'graphcool-eu1         Public development cluster (hosted in EU on Graphcool Cloud)',
         },
+        {
+          value: 'shared-public-demo',
+          name:
+            'graphcool-us1         Public development cluster (hosted in US on Graphcool Cloud)',
+        },
+        new inquirer.Separator('                     '),
+        {
+          value: 'login',
+          name: 'Log in or create new account on Graphcool Cloud',
+        },
+        new inquirer.Separator('                     '),
+        new inquirer.Separator(
+          chalk.dim(
+            `Note: When not logged in, service deployments to Graphcool Cloud expire after 7 days.`,
+          ),
+        ),
+        new inquirer.Separator(
+          chalk.dim(
+            `You can learn more about deployment in the docs: http://bit.ly/graphcool-deployment`,
+          ),
+        ),
+        new inquirer.Separator('                     '),
       ],
-      pageSize: 8,
+      pageSize: 9,
     }
 
     const { cluster } = await this.out.prompt(question)
