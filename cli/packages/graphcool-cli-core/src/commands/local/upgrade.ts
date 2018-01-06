@@ -1,5 +1,7 @@
 import { Command, Flags, flags } from 'graphcool-cli-engine'
 import Docker from './Docker'
+import { prettyTime } from '../../util'
+import { Cluster } from 'graphcool-yml'
 
 export default class UpgradeLocal extends Command {
   static topic = 'local'
@@ -10,12 +12,20 @@ export default class UpgradeLocal extends Command {
     name: flags.string({
       char: 'n',
       description: 'Name of the cluster instance',
-      defaultValue: 'local'
+      defaultValue: 'local',
     }),
   }
   async run() {
     const docker = new Docker(this.out, this.config, this.env, this.flags.name)
+    let before = Date.now()
+    this.out.action.start('Pulling latest docker image')
     await docker.pull()
+    this.out.action.stop(prettyTime(Date.now() - before))
+    before = Date.now()
+    this.out.action.start('Booting local development cluster')
     await docker.up()
+    this.out.action.stop(prettyTime(Date.now() - before))
+
+    docker.saveCluster()
   }
 }

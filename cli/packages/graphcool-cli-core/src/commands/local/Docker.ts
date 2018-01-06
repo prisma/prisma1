@@ -15,6 +15,7 @@ import * as Raven from 'raven'
 const debug = require('debug')('Docker')
 import * as portfinder from 'portfinder'
 import { prettyTime } from '../../util'
+import { createRsaKeyPair } from '../../utils/crypto'
 
 export default class Docker {
   out: Output
@@ -30,6 +31,7 @@ export default class Docker {
   frameworkEnvPath: string = path.join(__dirname, 'docker/oldenv')
   envVars: { [varName: string]: string }
   clusterName: string
+  privateKey?: string
   constructor(
     out: Output,
     config: Config,
@@ -79,6 +81,24 @@ export default class Docker {
       }
     }
     this.setEnvVars(port)
+    await this.setKeyPair()
+  }
+  async setKeyPair() {
+    const pair = await createRsaKeyPair()
+    this.envVars.CLUSTER_PUBLIC_KEY = pair.public
+    this.privateKey = pair.private
+    debug(pair)
+  }
+  saveCluster(): Cluster {
+    const cluster = new Cluster(
+      this.clusterName,
+      `http://${this.hostName}:${this.envVars.PORT}`,
+      this.privateKey,
+    )
+    debug('Saving cluster', cluster)
+    this.env.addCluster(cluster)
+    this.env.saveGlobalRC()
+    return cluster
   }
   /**
    * returns true, if higher port should be used
@@ -384,10 +404,11 @@ export default class Docker {
     ]
     const args = defaultArgs.concat(argv)
     // this.out.log(chalk.dim(`$ docker-compose ${argv.join(' ')}\n`))
-    await spawn('docker-compose', args, {
+    const output = await spawn('docker-compose', args, {
       env: this.envVars,
       cwd: this.config.cwd,
     })
+    debug(output)
     return this
   }
 

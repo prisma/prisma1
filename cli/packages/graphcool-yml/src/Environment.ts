@@ -81,6 +81,12 @@ export class Environment {
   }
 
   addCluster(cluster: Cluster) {
+    const existingClusterIndex = this.clusters.findIndex(
+      c => c.name === cluster.name,
+    )
+    if (existingClusterIndex > -1) {
+      this.clusters.splice(existingClusterIndex, 1)
+    }
     this.clusters.push(cluster)
   }
 
@@ -176,7 +182,7 @@ export class Environment {
         ...acc,
         [cluster.name]: {
           host: cluster.baseUrl,
-          clusterSecret: cluster.token,
+          clusterSecret: cluster.clusterSecret,
         },
       }
     }, {})

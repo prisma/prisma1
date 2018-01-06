@@ -95,6 +95,7 @@
     "lodash": "^4.17.4",
     "lodash.differenceby": "^4.8.0",
     "multimatch": "^2.1.0",
+    "node-forge": "^0.7.1",
     "opn": "^5.1.0",
     "pause": "^0.1.0",
     "portfinder": "^1.0.13",

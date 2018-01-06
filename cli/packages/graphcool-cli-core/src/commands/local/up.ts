@@ -29,21 +29,7 @@ export default class Up extends Command {
 
     await docker.init()
 
-    const { envVars: { MASTER_TOKEN, PORT, FUNCTIONS_PORT }, hostName } = docker
-    const cluster =
-      this.env.clusterByName(name) ||
-      new Cluster(name, `http://${hostName}:${PORT}`, '')
-
-    if (!this.env.clusterByName(name)) {
-      debug('Setting cluster', cluster)
-      this.env.addCluster(cluster)
-      this.env.saveGlobalRC()
-      // this.out.log(
-      //   `\nSuccess! Added local cluster ${chalk.bold(`\`${name}\``)} to ${
-      //     this.config.globalConfigPath
-      //   }\n`,
-      // )
-    }
+    const cluster = docker.saveCluster()
 
     this.out.action.start('Booting local development cluster')
     await docker.up()

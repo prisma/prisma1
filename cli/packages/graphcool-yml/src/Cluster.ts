@@ -1,25 +1,36 @@
 const debug = require('debug')('environment')
 import 'isomorphic-fetch'
+import * as jwt from 'jsonwebtoken'
 
 export class Cluster {
   name: string
   baseUrl: string
   local: boolean
-  private clusterToken?: string
+  clusterSecret?: string
+  private cachedToken?: string
   constructor(
     name: string,
     baseUrl: string,
-    token?: string,
+    clusterSecret?: string,
     local: boolean = true,
   ) {
     this.name = name
     this.baseUrl = baseUrl
-    this.clusterToken = token
+    this.clusterSecret = clusterSecret
     this.local = local
   }
 
-  get token(): string | undefined {
-    return this.clusterToken
+  get token(): string {
+    if (!this.cachedToken) {
+      const grants = [{ target: `*/*/*`, action: '*' }]
+
+      this.cachedToken = jwt.sign({ grants }, this.clusterSecret, {
+        expiresIn: '10 minutes',
+        algorithm: 'RS256',
+      })
+    }
+
+    return this.cachedToken!
   }
 
   getApiEndpoint(serviceName: string, stage: string) {
