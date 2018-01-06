@@ -23,6 +23,7 @@ import ConsoleCommand from './commands/console/index'
 import Logs from './commands/local/logs'
 import PsLocal from './commands/local/ps'
 import Token from './commands/token/token'
+import Login from './commands/login/login'
 
 export const groups = [
   {
@@ -92,6 +93,11 @@ export const topics = [
     description: 'Opens the console for the current service',
     group: 'cloud',
   },
+  {
+    name: 'login',
+    description: 'Login or signup to Graphcool Cloud',
+    group: 'cloud',
+  },
 ]
 
 export const commands = [
@@ -114,6 +120,7 @@ export const commands = [
   Export,
   PsLocal,
   Token,
+  Login,
 ]
 
 export {
@@ -139,4 +146,5 @@ export {
   Import,
   Export,
   Token,
+  Login,
 }

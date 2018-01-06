@@ -204,6 +204,7 @@ export default class Docker {
     }
     const before = Date.now()
     this.out.action.start('Booting fresh local development cluster')
+    await this.setKeyPair()
     await this.run('up', '-d', '--remove-orphans')
     this.out.action.stop(prettyTime(Date.now() - before))
     return this
@@ -404,6 +405,7 @@ export default class Docker {
     ]
     const args = defaultArgs.concat(argv)
     // this.out.log(chalk.dim(`$ docker-compose ${argv.join(' ')}\n`))
+    debug(this.envVars)
     const output = await spawn('docker-compose', args, {
       env: this.envVars,
       cwd: this.config.cwd,

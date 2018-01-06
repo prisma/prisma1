@@ -9,6 +9,7 @@ import {
   ProjectInfo,
   RemoteProject,
   SimpleProjectInfo,
+  CloudTokenRequestPayload,
 } from '../types/common'
 
 import { GraphQLClient, request } from 'graphql-request'
@@ -132,14 +133,11 @@ export class Client {
         `No cluster set. Please set the "cluster" property in your graphcool.yml`,
       )
     }
-    debug(
-      'choosing clusterEndpoint',
-      this.env.activeCluster.getDeployEndpoint(),
-    )
     const localClient = this.getClient(this.env.activeCluster!)
     return {
       request: async (query, variables) => {
-        debug('Sending query')
+        debug(`Sending query to cluster ${this.env.activeCluster.name}`)
+        debug(this.env.activeCluster.getDeployEndpoint())
         debug(query)
         debug(variables)
         try {
@@ -165,21 +163,26 @@ export class Client {
       },
     } as any
   }
-
-  // async getAccount(): Promise<AccountInfo> {
-  //   const { viewer: { user } } = await this.client.request<{
-  //     viewer: { user: AccountInfo }
-  //   }>(`{
-  //     viewer {
-  //       user {
-  //         email
-  //         name
-  //       }
-  //     }
-  //   }`)
-
-  //   return user
-  // }
+  get cloudClient(): GraphQLClient {
+    const options = {
+      headers: {},
+    }
+    if (this.env.databaseRC.cloudSessionKey) {
+      options.headers = {
+        Authorization: `Bearer ${this.env.databaseRC.cloudSessionKey}`,
+      }
+    }
+    const client = new GraphQLClient(this.config.cloudApiEndpoint, options)
+    return {
+      request: async (query, variables) => {
+        debug('Sending query to cloud api')
+        debug(this.config.cloudApiEndpoint)
+        debug(query)
+        debug(variables)
+        return await client.request(query, variables)
+      },
+    } as any
+  }
 
   async introspect(
     serviceName: string,
@@ -302,6 +305,41 @@ export class Client {
     } catch (e) {
       throw new Error(text)
     }
+  }
+
+  async requestCloudToken(): Promise<string> {
+    const mutation = `mutation {
+      requestCloudToken {
+        secret
+      }
+    }`
+
+    interface RequestCloudTokenPayload {
+      requestCloudToken: {
+        secret: string
+      }
+    }
+
+    const { requestCloudToken: { secret } } = await this.cloudClient.request<
+      RequestCloudTokenPayload
+    >(mutation)
+
+    return secret
+  }
+
+  async cloudTokenRequest(secret: string): Promise<CloudTokenRequestPayload> {
+    const query = `query ($secret: String!) {
+      cloudTokenRequest(secret: $secret) {
+        secret
+        token
+      }
+    }`
+
+    const { cloudTokenRequest } = await this.cloudClient.request<{
+      cloudTokenRequest: CloudTokenRequestPayload
+    }>(query, { secret })
+
+    return cloudTokenRequest
   }
 
   async addProject(

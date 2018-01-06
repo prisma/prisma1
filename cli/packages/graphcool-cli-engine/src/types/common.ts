@@ -136,3 +136,8 @@ export interface Args {
 export interface Stages {
   [name: string]: string
 }
+
+export interface CloudTokenRequestPayload {
+  secret: string
+  token: string | null
+}
