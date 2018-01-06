@@ -21,6 +21,13 @@ export class Cluster {
   }
 
   get token(): string {
+    if (!this.clusterSecret) {
+      return ''
+    }
+    // public clusters just take the token
+    if (!this.local) {
+      return this.clusterSecret
+    }
     if (!this.cachedToken) {
       const grants = [{ target: `*/*/*`, action: '*' }]
 

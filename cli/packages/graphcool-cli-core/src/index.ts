@@ -24,6 +24,7 @@ import Logs from './commands/local/logs'
 import PsLocal from './commands/local/ps'
 import Token from './commands/token/token'
 import Login from './commands/login/login'
+import ClusterToken from './commands/token/cluster-token'
 
 export const groups = [
   {
@@ -127,6 +128,7 @@ export const commands = [
   Token,
   Login,
   Account,
+  ClusterToken,
 ]
 
 export {
@@ -153,4 +155,5 @@ export {
   Export,
   Token,
   Login,
+  ClusterToken,
 }
