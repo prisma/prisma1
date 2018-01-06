@@ -6,7 +6,7 @@ import { transformSchema } from 'graphql-transform-schema'
 import { makeRemoteExecutableSchema, mergeSchemas, introspectSchema } from 'graphql-tools'
 import { HttpLink } from 'apollo-link-http'
 import fetch from 'node-fetch'
-import { express as playground } from 'graphql-playground/middleware'
+import playground from 'graphql-playground-middleware-express'
 
 async function run() {
 
