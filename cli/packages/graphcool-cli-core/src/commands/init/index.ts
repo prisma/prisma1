@@ -5,7 +5,7 @@ import chalk from 'chalk'
 
 export default class Init extends Command {
   static topic = 'init'
-  static description = 'Initialize  a new service'
+  static description = 'Initialize a new service'
 
   static args = [
     {
