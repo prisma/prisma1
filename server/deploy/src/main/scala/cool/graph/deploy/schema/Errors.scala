@@ -25,6 +25,8 @@ case class InvalidName(name: String, entityType: String) extends AbstractDeployA
 
 case class InvalidDeployment(deployErrorMessage: String) extends AbstractDeployApiError(deployErrorMessage, 4003)
 
+case class InvalidToken(reason: String) extends AbstractDeployApiError(s"Your token is invalid: $reason", 3015)
+
 object DeploymentInProgress
     extends AbstractDeployApiError(
       "You can not deploy to a service stage while there is a deployment in progress or a pending deployment scheduled already. Please try again after the deployment finished.",
