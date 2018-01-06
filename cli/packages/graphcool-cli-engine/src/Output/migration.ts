@@ -4,7 +4,7 @@ import chalk from 'chalk'
 import { Output } from './index'
 import { makePartsEnclodesByCharacterBold } from './util'
 import * as groupBy from 'lodash.groupby'
-import { SchemaError, MigrationStep } from '../Client/clientTypes'
+import { SchemaError, MigrationStep } from '../Client/types'
 
 const b = s => `\`${chalk.bold(s)}\``
 

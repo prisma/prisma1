@@ -13,7 +13,9 @@ export class SpinnerAction extends ActionBase {
   constructor(out: Output) {
     super(out)
     this.ansi = require('ansi-escapes')
-    this.frames = require('../spinners')[process.platform === 'win32' ? 'line' : 'dots2'].frames
+    this.frames = require('../spinners')[
+      process.platform === 'win32' ? 'line' : 'dots2'
+    ].frames
     this.frameIndex = 0
     const screen = require('./screen')
     this.width = screen.errtermwidth
@@ -25,7 +27,11 @@ export class SpinnerAction extends ActionBase {
       clearInterval(this.spinner)
     }
     this._render()
-    const interval: any = this.spinner = setInterval(this._render.bind(this), this.out.config.windows ? 500 : 100, 'spinner')
+    const interval: any = (this.spinner = setInterval(
+      this._render.bind(this),
+      this.out.config.windows ? 500 : 100,
+      'spinner',
+    ))
     interval.unref()
   }
 
@@ -46,15 +52,14 @@ export class SpinnerAction extends ActionBase {
 
   _render(icon?: string) {
     const task = this.task
-    if (!task){
+    if (!task) {
       return
     }
     this._reset()
-    const frame = icon === 'spinner'
-      ? ` ${this._frame()}`
-      : icon || ''
+    const frame = icon === 'spinner' ? ` ${this._frame()}` : icon || ''
     const status = task.status ? ` ${task.status}` : ''
-    this.output = `${task.action}...${frame}${status}\n`
+    const dots = task.status ? '' : '...'
+    this.output = `${task.action}${status}${dots}${frame}\n`
     this._write(this.output)
   }
 
@@ -63,9 +68,9 @@ export class SpinnerAction extends ActionBase {
       return
     }
     const lines = this._lines(this.output)
-    this._write(this.ansi.cursorLeft +
-      this.ansi.cursorUp(lines) +
-      this.ansi.eraseDown)
+    this._write(
+      this.ansi.cursorLeft + this.ansi.cursorUp(lines) + this.ansi.eraseDown,
+    )
     this.output = null
   }
 
@@ -83,6 +88,6 @@ export class SpinnerAction extends ActionBase {
   }
 
   _write(s: string) {
-    this.out.stderr.write(s, {log: false})
+    this.out.stderr.write(s, { log: false })
   }
 }

@@ -262,14 +262,35 @@ ${chalk.gray(
     this.out.action.stop(prettyTime(Date.now() - before))
     this.printResult(migrationResult)
 
-    if (migrationResult.migration.revision > 0 && !dryRun) {
+    if (
+      migrationResult.migration &&
+      migrationResult.migration.revision > 0 &&
+      !dryRun
+    ) {
       before = Date.now()
-      this.out.action.start(`Applying changes`)
-      await this.client.waitForMigration(
-        serviceName,
-        stageName,
-        migrationResult.migration.revision,
+      this.out.action.start(
+        `Applying changes`,
+        this.getProgress(0, migrationResult.migration.steps.length),
       )
+      let done = false
+      while (!done) {
+        const revision = migrationResult.migration.revision
+        const migration = await this.client.getMigration(serviceName, stageName)
+
+        if (migration.errors && migration.errors.length > 0) {
+          this.out.error(migration.errors.join('\n'))
+        }
+
+        if (migration.applied === migrationResult.migration.steps.length) {
+          done = true
+        }
+        this.out.action.status = this.getProgress(
+          migration.applied,
+          migrationResult.migration.steps.length,
+        )
+        await new Promise(r => setTimeout(r, 500))
+      }
+
       this.out.action.stop(prettyTime(Date.now() - before))
     }
     // TODO move up to if statement after testing done
@@ -286,9 +307,13 @@ ${chalk.gray(
 
     // no action required
     this.deploying = false
-    if (migrationResult.migration.steps.length > 0) {
+    if (migrationResult.migration) {
       this.printEndpoints(cluster, serviceName, stageName)
     }
+  }
+
+  private getProgress(applied: number, of: number) {
+    return this.out.color.graphcool(`(${applied}/${of})`)
   }
 
   private async seed(
@@ -383,10 +408,10 @@ ${chalk.gray(
       this.out.log(`${chalk.bold.red('Errors:')}`)
       this.out.migration.printErrors(payload.errors)
       this.out.log('')
-      return
+      this.out.exit(1)
     }
 
-    if (payload.migration.steps.length === 0) {
+    if (!payload.migration || payload.migration.steps.length === 0) {
       this.out.log('Service is already up to date.')
       return
     }

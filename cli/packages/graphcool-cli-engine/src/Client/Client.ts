@@ -19,9 +19,8 @@ import { getFastestRegion } from './ping'
 import { Environment, Cluster } from 'graphcool-yml'
 import { Output } from '../index'
 import chalk from 'chalk'
-import { DeployPayload } from './clientTypes'
 import { introspectionQuery } from './introspectionQuery'
-import { User } from './types'
+import { User, Migration, DeployPayload } from './types'
 import boolean from '../Flags/boolean'
 import * as opn from 'opn'
 
@@ -103,7 +102,6 @@ fragment MigrationFragment on Migration {
       um_newName: newName
     }
   }
-  hasBeenApplied
 }
 `
 
@@ -144,7 +142,9 @@ export class Client {
         debug(query)
         debug(variables)
         try {
-          return await localClient.request(query, variables)
+          const result = await localClient.request(query, variables)
+          debug(result)
+          return result
         } catch (e) {
           if (e.message.startsWith('No valid session')) {
             // await this.auth.ensureAuth(true)
@@ -595,36 +595,29 @@ export class Client {
     }
   }
 
-  async waitForMigration(
-    name: string,
-    stage: string,
-    revision: number,
-  ): Promise<void> {
-    while (true) {
-      const { migrationStatus } = await this.client.request<any>(
-        `query ($name: String! $stage: String!) {
-              migrationStatus(name: $name stage: $stage) {
-                revision
-                hasBeenApplied
-              }
-            }
+  async getMigration(name: string, stage: string): Promise<Migration> {
+    const { migrationStatus } = await this.client.request<{
+      migrationStatus: Migration
+    }>(
+      `query ($name: String! $stage: String!) {
+          migrationStatus(name: $name stage: $stage) {
+            projectId
+            revision
+            status
+            applied
+            rolledBack
+            errors
+          }
+        }
         `,
 
-        {
-          stage,
-          name,
-        },
-      )
+      {
+        stage,
+        name,
+      },
+    )
 
-      if (
-        migrationStatus.revision >= revision &&
-        migrationStatus.hasBeenApplied
-      ) {
-        return
-      }
-
-      await new Promise(r => setTimeout(r, 500))
-    }
+    return migrationStatus
   }
 
   async authenticateCustomer(

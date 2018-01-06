@@ -1,4 +1,4 @@
-import { MigrationStep } from '../../Client/clientTypes'
+import { MigrationStep } from '../../Client/types'
 
 export const steps: MigrationStep[] = [
   {
