@@ -7,6 +7,7 @@ import cool.graph.api.database.Types.UserData
 import cool.graph.api.database.import_export.ImportExport.MyJsonProtocol._
 import cool.graph.api.database.import_export.ImportExport._
 import cool.graph.api.database.{DataItem, DataResolver, QueryArguments}
+import cool.graph.shared.models.IdType.Id
 import cool.graph.shared.models.{Project, TypeIdentifier}
 import org.joda.time.format.DateTimeFormat
 import org.joda.time.{DateTime, DateTimeZone}
@@ -21,11 +22,12 @@ class BulkExport(project: Project)(implicit apiDependencies: ApiDependencies) {
 
   def executeExport(dataResolver: DataResolver, json: JsValue): Future[JsValue] = {
 
-    val start            = JsonBundle(Vector.empty, 0)
-    val request          = json.convertTo[ExportRequest]
-    val hasListFields    = project.models.flatMap(_.scalarListFields).nonEmpty
-    val zippedRelations  = RelationInfo(dataResolver, project.relations.map(r => toRelationData(r, project)).zipWithIndex, request.cursor)
-    val listFieldTableNames: List[(String, String, Int)] = project.models.flatMap(m => m.scalarListFields.map(f => (m.name, f.name))).zipWithIndex.map{case ((a, b),c)=> (a,b,c)}
+    val start           = JsonBundle(Vector.empty, 0)
+    val request         = json.convertTo[ExportRequest]
+    val hasListFields   = project.models.flatMap(_.scalarListFields).nonEmpty
+    val zippedRelations = RelationInfo(dataResolver, project.relations.map(r => toRelationData(r, project)).zipWithIndex, request.cursor)
+    val listFieldTableNames: List[(String, String, Int)] =
+      project.models.flatMap(m => m.scalarListFields.map(f => (m.name, f.name))).zipWithIndex.map { case ((a, b), c) => (a, b, c) }
 
     val response = request.fileType match {
       case "nodes" if project.models.nonEmpty        => resForCursor(start, NodeInfo(dataResolver, project.models.zipWithIndex, request.cursor))
@@ -89,41 +91,43 @@ class BulkExport(project: Project)(implicit apiDependencies: ApiDependencies) {
   }
 
   private def serializeDataItems(in: JsonBundle, dataItems: Seq[DataItem], info: ExportInfo): ResultFormat = {
-      val bundles: Seq[JsonBundle] = info match {
-        case info: NodeInfo     => dataItems.map(item => dataItemToExportNode(item, info))
-        case info: RelationInfo => dataItems.map(item => dataItemToExportRelation(item, info))
-        case info: ListInfo     => dataItemToExportList(dataItems, info)
-      }
-      val combinedElements = in.jsonElements ++ bundles.flatMap(_.jsonElements).toVector
-      val combinedSize     = bundles.map(_.size).fold(in.size) { (a, b) => a + b }
-      val out              = JsonBundle(combinedElements, combinedSize)
-      val numberSerialized = dataItems.length
+    val bundles: Seq[JsonBundle] = info match {
+      case info: NodeInfo     => dataItems.map(item => dataItemToExportNode(item, info))
+      case info: RelationInfo => dataItems.map(item => dataItemToExportRelation(item, info))
+      case info: ListInfo     => dataItemToExportList(dataItems, info)
+    }
+    val combinedElements = in.jsonElements ++ bundles.flatMap(_.jsonElements).toVector
+    val combinedSize = bundles.map(_.size).fold(in.size) { (a, b) =>
+      a + b
+    }
+    val out              = JsonBundle(combinedElements, combinedSize)
+    val numberSerialized = dataItems.length
 
-      isLimitReached(out) match {
-        case true  => ResultFormat(in, info.cursor, isFull = true)
-        case false => ResultFormat(out, info.cursor.copy(row = info.cursor.row + numberSerialized), isFull = false)
-      }
+    isLimitReached(out) match {
+      case true  => ResultFormat(in, info.cursor, isFull = true)
+      case false => ResultFormat(out, info.cursor.copy(row = info.cursor.row + numberSerialized), isFull = false)
+    }
   }
 
-  def dataItemToExportList(dataItems: Seq[DataItem], info: ListInfo) : Vector[JsonBundle] = {
-    val outputs = project.getModelByName_!(info.currentModel).getFieldByName_!(info.currentField).typeIdentifier == TypeIdentifier.DateTime match {
-      case true   => dataItems.map(item => item.copy(userData = Map("value" -> Some(dateTimeToISO8601(item.userData("value").get)))))
-      case false  => dataItems
+  def dataItemToExportList(dataItems: Seq[DataItem], info: ListInfo): Vector[JsonBundle] = {
+    val outputs: Seq[(Id, Any)] = project.getModelByName_!(info.currentModel).getFieldByName_!(info.currentField).typeIdentifier match {
+      case TypeIdentifier.DateTime => dataItems.map(item => item.id -> dateTimeToISO8601(item.userData("value").get))
+      case TypeIdentifier.Float    => dataItems.map(item => item.id -> item.userData("value").get.toString.toDouble)
+      case _                       => dataItems.map(item => item.id -> item.userData("value").get)
     }
 
-    val distinctIds = outputs.map(_.id).distinct
+    val distinctIds = outputs.map(_._1).distinct
 
-    val x = distinctIds.map{id =>
-     val values: Seq[Any]         = outputs.filter(_.id == id).map(item => item("value").get)
-     val result: Map[String, Any] = Map("_typeName" -> info.currentModel, "id" -> id, info.currentField -> values)
-     val json                     = result.toJson
-     val combinedSize             = json.toString.length
+    val x = distinctIds.map { id =>
+      val values: Seq[Any]         = outputs.filter(_._1 == id).map(_._2)
+      val result: Map[String, Any] = Map("_typeName" -> info.currentModel, "id" -> id, info.currentField -> values)
+      val json                     = result.toJson
+      val combinedSize             = json.toString.length
 
-     JsonBundle(Vector(json), combinedSize)
+      JsonBundle(Vector(json), combinedSize)
     }
     Vector.empty ++ x
   }
-
 
   private def dataItemToExportNode(item: DataItem, info: NodeInfo): JsonBundle = {
     val dataValueMap: UserData                        = item.userData
