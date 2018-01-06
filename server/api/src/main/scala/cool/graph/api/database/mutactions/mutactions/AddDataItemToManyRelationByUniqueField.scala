@@ -9,8 +9,8 @@ import scala.concurrent.Future
 
 case class AddDataItemToManyRelationByUniqueField(project: Project, parentInfo: ParentInfo, where: NodeSelector) extends ClientSqlDataChangeMutaction {
 
-  val aModel: Model            = parentInfo.relation.getModelA_!(project)
-  val bModel: Model            = parentInfo.relation.getModelB_!(project)
+  val aModel: Model            = parentInfo.relation.getModelA_!(project.schema)
+  val bModel: Model            = parentInfo.relation.getModelB_!(project.schema)
   val connectByUniqueValueForB = aModel.name == parentInfo.model.name
 
   override def execute: Future[ClientSqlStatementResult[Any]] = Future.successful {

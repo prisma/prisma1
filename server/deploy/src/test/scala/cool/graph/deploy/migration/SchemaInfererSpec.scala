@@ -1,14 +1,15 @@
 package cool.graph.deploy.migration
 
-import cool.graph.shared.models.Project
+import cool.graph.deploy.migration.inference._
+import cool.graph.shared.models.Schema
 import cool.graph.shared.project_dsl.SchemaDsl
 import org.scalactic.Or
 import org.scalatest.{Matchers, WordSpec}
 import sangria.parser.QueryParser
 
-class NextProjectInfererSpec extends WordSpec with Matchers {
+class SchemaInfererSpec extends WordSpec with Matchers {
 
-  val inferer      = NextProjectInferer()
+  val inferer      = SchemaInferrer()
   val emptyProject = SchemaDsl().buildProject()
 
   "if a given relation does not exist yet, the inferer" should {
@@ -23,9 +24,9 @@ class NextProjectInfererSpec extends WordSpec with Matchers {
           |  todo: Todo! @relation(name:"MyNameForTodoToComments")
           |}
         """.stripMargin.trim()
-      val project = infer(emptyProject, types).get
+      val schema = infer(emptyProject.schema, types).get
 
-      val relation = project.getRelationByName_!("MyNameForTodoToComments")
+      val relation = schema.getRelationByName_!("MyNameForTodoToComments")
       relation.modelAId should equal("Comment")
       relation.modelBId should equal("Todo")
     }
@@ -41,10 +42,10 @@ class NextProjectInfererSpec extends WordSpec with Matchers {
           |  todo: Todo!
           |}
         """.stripMargin.trim()
-      val project = infer(emptyProject, types).get
+      val schema = infer(emptyProject.schema, types).get
 
-      project.relations should have(size(1))
-      val relation = project.getRelationByName_!("MyRelationName")
+      schema.relations should have(size(1))
+      val relation = schema.getRelationByName_!("MyRelationName")
       relation.modelAId should equal("Comment")
       relation.modelBId should equal("Todo")
     }
@@ -60,18 +61,18 @@ class NextProjectInfererSpec extends WordSpec with Matchers {
           |  todo: Todo!
           |}
         """.stripMargin.trim()
-      val project = infer(emptyProject, types).get
-      project.relations.foreach(println(_))
+      val schema = infer(emptyProject.schema, types).get
+      schema.relations.foreach(println(_))
 
-      val relation = project.getRelationByName_!("CommentToTodo")
+      val relation = schema.getRelationByName_!("CommentToTodo")
       relation.modelAId should equal("Comment")
       relation.modelBId should equal("Todo")
 
-      val field1 = project.getModelByName_!("Todo").getFieldByName_!("comments")
+      val field1 = schema.getModelByName_!("Todo").getFieldByName_!("comments")
       field1.isList should be(true)
       field1.relation should be(Some(relation))
 
-      val field2 = project.getModelByName_!("Comment").getFieldByName_!("todo")
+      val field2 = schema.getModelByName_!("Comment").getFieldByName_!("todo")
       field2.isList should be(false)
       field2.relation should be(Some(relation))
     }
@@ -95,24 +96,25 @@ class NextProjectInfererSpec extends WordSpec with Matchers {
           |}
         """.stripMargin
 
-      val renames = Renames(
+      val renames = SchemaMapping(
         models = Vector(
-          Rename(previous = "Todo", next = "TodoNew"),
-          Rename(previous = "Comment", next = "CommentNew")
+          Mapping(previous = "Todo", next = "TodoNew"),
+          Mapping(previous = "Comment", next = "CommentNew")
         )
       )
-      val newProject = infer(project, types, renames).get
-      newProject.relations.foreach(println(_))
 
-      val relation = newProject.getRelationByName_!("CommentNewToTodoNew")
+      val newSchema = infer(project.schema, types, renames).get
+      newSchema.relations.foreach(println(_))
+
+      val relation = newSchema.getRelationByName_!("CommentNewToTodoNew")
       relation.modelAId should be("TodoNew")
       relation.modelBId should be("CommentNew")
 
-      val field1 = newProject.getModelByName_!("TodoNew").getFieldByName_!("comments")
+      val field1 = newSchema.getModelByName_!("TodoNew").getFieldByName_!("comments")
       field1.isList should be(true)
       field1.relation should be(Some(relation))
 
-      val field2 = newProject.getModelByName_!("CommentNew").getFieldByName_!("todo")
+      val field2 = newSchema.getModelByName_!("CommentNew").getFieldByName_!("todo")
       field2.isList should be(false)
       field2.relation should be(Some(relation))
     }
@@ -129,35 +131,36 @@ class NextProjectInfererSpec extends WordSpec with Matchers {
           |}
         """.stripMargin
 
-      val renames = Renames(
+      val renames = SchemaMapping(
         models = Vector(
-          Rename(previous = "Todo", next = "TodoNew"),
-          Rename(previous = "Comment", next = "CommentNew")
+          Mapping(previous = "Todo", next = "TodoNew"),
+          Mapping(previous = "Comment", next = "CommentNew")
         ),
         fields = Vector(
-          FieldRename(previousModel = "Todo", previousField = "comments", nextModel = "TodoNew", nextField = "commentsNew"),
-          FieldRename(previousModel = "Comment", previousField = "todo", nextModel = "CommentNew", nextField = "todoNew")
+          FieldMapping(previousModel = "Todo", previousField = "comments", nextModel = "TodoNew", nextField = "commentsNew"),
+          FieldMapping(previousModel = "Comment", previousField = "todo", nextModel = "CommentNew", nextField = "todoNew")
         )
       )
-      val newProject = infer(project, types, renames).get
-      newProject.relations.foreach(println(_))
 
-      val relation = newProject.getRelationByName_!("CommentNewToTodoNew")
+      val newSchema = infer(project.schema, types, renames).get
+      newSchema.relations.foreach(println(_))
+
+      val relation = newSchema.getRelationByName_!("CommentNewToTodoNew")
       relation.modelAId should be("TodoNew")
       relation.modelBId should be("CommentNew")
 
-      val field1 = newProject.getModelByName_!("TodoNew").getFieldByName_!("commentsNew")
+      val field1 = newSchema.getModelByName_!("TodoNew").getFieldByName_!("commentsNew")
       field1.isList should be(true)
       field1.relation should be(Some(relation))
 
-      val field2 = newProject.getModelByName_!("CommentNew").getFieldByName_!("todoNew")
+      val field2 = newSchema.getModelByName_!("CommentNew").getFieldByName_!("todoNew")
       field2.isList should be(false)
       field2.relation should be(Some(relation))
     }
   }
 
-  def infer(project: Project, types: String, renames: Renames = Renames.empty): Or[Project, ProjectSyntaxError] = {
+  def infer(schema: Schema, types: String, mapping: SchemaMapping = SchemaMapping.empty): Or[Schema, ProjectSyntaxError] = {
     val document = QueryParser.parse(types).get
-    inferer.infer(project, renames, document)
+    inferer.infer(schema, mapping, document)
   }
 }

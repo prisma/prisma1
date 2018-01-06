@@ -25,21 +25,26 @@ case class AddProjectMutation(
     val newProject = Project(
       id = projectId,
       ownerId = args.ownerId.getOrElse(""),
-      secrets = args.secrets
+      secrets = args.secrets,
+      schema = Schema()
     )
 
     val migration = Migration(
       projectId = newProject.id,
       revision = 0,
-      hasBeenApplied = true,
-      steps = Vector.empty
+      applied = 0,
+      rolledBack = 0,
+      status = MigrationStatus.Success,
+      steps = Vector.empty,
+      errors = Vector.empty,
+      schema = Schema()
     )
 
     for {
       _    <- projectPersistence.create(newProject)
       stmt <- CreateClientDatabaseForProject(newProject.id).execute
       _    <- clientDb.run(stmt.sqlAction)
-      _    <- migrationPersistence.create(newProject, migration)
+      _    <- migrationPersistence.create(migration)
     } yield MutationSuccess(AddProjectMutationPayload(args.clientMutationId, newProject))
   }
 

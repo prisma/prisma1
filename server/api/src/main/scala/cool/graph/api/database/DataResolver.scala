@@ -145,7 +145,7 @@ case class DataResolver(project: Project, useMasterDatabaseOnly: Boolean = false
       .run(query)
       .map {
         case Some(modelId) =>
-          val model = project.getModelById_!(modelId.trim)
+          val model = project.schema.getModelById_!(modelId.trim)
           resolveByUnique(NodeSelector(model, model.getFieldByName_!("id"), GraphQLIdGCValue(globalId)))
             .map(_.map(mapDataItem(model)).map(_.copy(typeName = Some(model.name))))
         case _ => Future.successful(None)
@@ -175,7 +175,7 @@ case class DataResolver(project: Project, useMasterDatabaseOnly: Boolean = false
       "resolveByRelation",
       readonlyClientDatabase
         .run(readOnlyDataItem(query))
-        .map(_.toList.map(mapDataItem(fromField.relatedModel(project).get)))
+        .map(_.toList.map(mapDataItem(fromField.relatedModel(project.schema).get)))
         .map(resultTransform)
     )
   }
@@ -187,7 +187,7 @@ case class DataResolver(project: Project, useMasterDatabaseOnly: Boolean = false
       "resolveByRelation",
       readonlyClientDatabase
         .run(readOnlyDataItem(query))
-        .map(_.toList.map(mapDataItem(fromField.relatedModel(project).get)))
+        .map(_.toList.map(mapDataItem(fromField.relatedModel(project.schema).get)))
         .map((items: List[DataItem]) => {
           val itemGroupsByModelId = items.groupBy(item => {
             item.userData

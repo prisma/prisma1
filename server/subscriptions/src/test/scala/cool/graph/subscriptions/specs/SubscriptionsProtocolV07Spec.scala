@@ -19,7 +19,7 @@ class SubscriptionsProtocolV07Spec extends FlatSpec with Matchers with SpecBase 
     .field("float", _.Float)
 
   val project = schema.buildProject()
-  val model   = project.getModelByName_!("Todo")
+  val model   = project.schema.getModelByName_!("Todo")
 
   override def beforeEach() = {
     super.beforeEach()

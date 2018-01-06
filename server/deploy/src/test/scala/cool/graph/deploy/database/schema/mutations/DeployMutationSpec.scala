@@ -1,7 +1,7 @@
 package cool.graph.deploy.database.schema.mutations
 
 import cool.graph.deploy.specutils.DeploySpecBase
-import cool.graph.shared.models.{Project, ProjectId}
+import cool.graph.shared.models.{MigrationStatus, Project, ProjectId}
 import org.scalatest.{FlatSpec, Matchers}
 
 class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
@@ -77,9 +77,8 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
     val result = server.query(s"""
        |mutation {
        |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(schema)}}){
-       |    project {
-       |      name
-       |      stage
+       |    migration {
+       |      applied
        |    }
        |    errors {
        |      description
@@ -88,12 +87,9 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
        |}
       """.stripMargin)
 
-    result.pathAsString("data.deploy.project.name") shouldEqual nameAndStage.name
-    result.pathAsString("data.deploy.project.stage") shouldEqual nameAndStage.stage
-
     val migrations = migrationPersistence.loadAll(project.id).await
     migrations should have(size(3))
-    migrations.exists(!_.hasBeenApplied) shouldEqual false
+    migrations.exists(x => x.status != MigrationStatus.Success) shouldEqual false
     migrations.head.revision shouldEqual 3 // order is DESC
   }
 
@@ -128,9 +124,8 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
     val result1 = server.query(s"""
                                  |mutation {
                                  |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(schema1)}}){
-                                 |    project {
-                                 |      name
-                                 |      stage
+                                 |    migration {
+                                 |      applied
                                  |    }
                                  |    errors {
                                  |      description
@@ -139,15 +134,11 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
                                  |}
       """.stripMargin)
 
-    result1.pathAsString("data.deploy.project.name") shouldEqual nameAndStage.name
-    result1.pathAsString("data.deploy.project.stage") shouldEqual nameAndStage.stage
-
     server.query(s"""
                                   |mutation {
                                   |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(schema2)}}){
-                                  |    project {
-                                  |      name
-                                  |      stage
+                                  |    migration {
+                                  |      applied
                                   |    }
                                   |    errors {
                                   |      description
@@ -159,9 +150,8 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
     server.query(s"""
                                   |mutation {
                                   |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(schema3)}}){
-                                  |    project {
-                                  |      name
-                                  |      stage
+                                  |    migration {
+                                  |      applied
                                   |    }
                                   |    errors {
                                   |      description
@@ -172,7 +162,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
 
     val migrations = migrationPersistence.loadAll(project.id).await
     migrations should have(size(5))
-    migrations.exists(!_.hasBeenApplied) shouldEqual false
+    migrations.exists(x => x.status != MigrationStatus.Success) shouldEqual false
     migrations.head.revision shouldEqual 5 // order is DESC
   }
 
@@ -191,9 +181,8 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
     val result = server.query(s"""
        |mutation {
        |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(schema)}}){
-       |    project {
-       |      name
-       |      stage
+       |    migration {
+       |      applied
        |    }
        |    errors {
        |      description
@@ -215,9 +204,8 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
     val updateResult = server.query(s"""
         |mutation {
         |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(schema)}}){
-        |    project {
-        |      name
-        |      stage
+        |    migration {
+        |      applied
         |    }
         |    errors {
         |      description
@@ -251,9 +239,8 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
         s"""
          |mutation {
          |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(schema)}}){
-         |    project {
-         |      name
-         |      stage
+         |    migration {
+         |      applied
          |    }
          |    errors {
          |      description
@@ -288,9 +275,9 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
     val project       = setupProject(schema)
     val loadedProject = projectPersistence.load(project.id).await.get
 
-    loadedProject.getModelByName("TestModel").get.getFieldByName("id").get.isHidden shouldEqual true
-    loadedProject.getModelByName("TestModel").get.getFieldByName("createdAt").get.isHidden shouldEqual true
-    loadedProject.getModelByName("TestModel").get.getFieldByName("updatedAt").get.isHidden shouldEqual true
+    loadedProject.schema.getModelByName("TestModel").get.getFieldByName("id").get.isHidden shouldEqual true
+    loadedProject.schema.getModelByName("TestModel").get.getFieldByName("createdAt").get.isHidden shouldEqual true
+    loadedProject.schema.getModelByName("TestModel").get.getFieldByName("updatedAt").get.isHidden shouldEqual true
   }
 
   "DeployMutation" should "hide reserved fields instead of deleting them and reveal them instead of creating them" in {
@@ -305,9 +292,9 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
     val nameAndStage  = ProjectId.fromEncodedString(project.id)
     val loadedProject = projectPersistence.load(project.id).await.get
 
-    loadedProject.getModelByName("TestModel").get.getFieldByName("id").get.isVisible shouldEqual true
-    loadedProject.getModelByName("TestModel").get.getFieldByName("createdAt").get.isHidden shouldEqual true
-    loadedProject.getModelByName("TestModel").get.getFieldByName("updatedAt").get.isHidden shouldEqual true
+    loadedProject.schema.getModelByName("TestModel").get.getFieldByName("id").get.isVisible shouldEqual true
+    loadedProject.schema.getModelByName("TestModel").get.getFieldByName("createdAt").get.isHidden shouldEqual true
+    loadedProject.schema.getModelByName("TestModel").get.getFieldByName("updatedAt").get.isHidden shouldEqual true
 
     val updatedSchema = """
                           |type TestModel {
@@ -320,9 +307,8 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
     val updateResult = server.query(s"""
          |mutation {
          |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(updatedSchema)}}){
-         |    project {
-         |      name
-         |      stage
+         |    migration {
+         |      applied
          |    }
          |    errors {
          |      description
@@ -334,9 +320,9 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
 
     val reloadedProject = projectPersistence.load(project.id).await.get
 
-    reloadedProject.getModelByName("TestModel").get.getFieldByName("id").get.isVisible shouldEqual false
-    reloadedProject.getModelByName("TestModel").get.getFieldByName("createdAt").get.isHidden shouldEqual false
-    reloadedProject.getModelByName("TestModel").get.getFieldByName("updatedAt").get.isHidden shouldEqual false
+    reloadedProject.schema.getModelByName("TestModel").get.getFieldByName("id").get.isVisible shouldEqual false
+    reloadedProject.schema.getModelByName("TestModel").get.getFieldByName("createdAt").get.isHidden shouldEqual false
+    reloadedProject.schema.getModelByName("TestModel").get.getFieldByName("updatedAt").get.isHidden shouldEqual false
 
     // todo assert client db cols?
   }

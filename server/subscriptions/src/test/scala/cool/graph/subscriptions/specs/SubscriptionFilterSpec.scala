@@ -23,7 +23,7 @@ class SubscriptionFilterSpec extends FlatSpec with Matchers with SpecBase with A
     .oneToManyRelation("comments", "todo", comment)
 
   val project: Project = schema.buildProject()
-  val model: Model     = project.getModelByName_!("Todo")
+  val model: Model     = project.schema.getModelByName_!("Todo")
 
   override def beforeEach(): Unit = {
     super.beforeEach()
@@ -34,7 +34,7 @@ class SubscriptionFilterSpec extends FlatSpec with Matchers with SpecBase with A
     testDatabase.runDbActionOnClientDb {
       CreateDataItem(
         project = project,
-        model = project.getModelByName_!("Comment"),
+        model = project.schema.getModelByName_!("Comment"),
         values = List(ArgumentValue(name = "text", value = "some comment"), ArgumentValue(name = "id", value = "comment-id"))
       ).execute.await.sqlAction
     }

@@ -26,6 +26,7 @@ class BulkExport(project: Project)(implicit apiDependencies: ApiDependencies) {
     val request         = json.convertTo[ExportRequest]
     val hasListFields   = project.models.flatMap(_.scalarListFields).nonEmpty
     val zippedRelations = RelationInfo(dataResolver, project.relations.map(r => toRelationData(r, project)).zipWithIndex, request.cursor)
+
     val listFieldTableNames: List[(String, String, Int)] =
       project.models.flatMap(m => m.scalarListFields.map(f => (m.name, f.name))).zipWithIndex.map { case ((a, b), c) => (a, b, c) }
 
@@ -110,7 +111,7 @@ class BulkExport(project: Project)(implicit apiDependencies: ApiDependencies) {
   }
 
   def dataItemToExportList(dataItems: Seq[DataItem], info: ListInfo): Vector[JsonBundle] = {
-    val outputs: Seq[(Id, Any)] = project.getModelByName_!(info.currentModel).getFieldByName_!(info.currentField).typeIdentifier match {
+    val outputs: Seq[(Id, Any)] = project.schema.getModelByName_!(info.currentModel).getFieldByName_!(info.currentField).typeIdentifier match {
       case TypeIdentifier.DateTime => dataItems.map(item => item.id -> dateTimeToISO8601(item.userData("value").get))
       case TypeIdentifier.Float    => dataItems.map(item => item.id -> item.userData("value").get.toString.toDouble)
       case _                       => dataItems.map(item => item.id -> item.userData("value").get)

@@ -2,7 +2,7 @@ package cool.graph.api.database.import_export
 
 import cool.graph.api.database.{DataItem, DataResolver}
 import cool.graph.shared.models.{Model, Project, Relation}
-import spray.json._
+import spray.json.{DefaultJsonProtocol, JsArray, JsBoolean, JsFalse, JsNull, JsNumber, JsObject, JsString, JsTrue, JsValue, JsonFormat, RootJsonFormat}
 
 package object ImportExport {
 
@@ -34,31 +34,37 @@ package object ImportExport {
     }
   }
   case class NodeInfo(dataResolver: DataResolver, models: List[(Model, Int)], cursor: Cursor) extends ExportInfo {
-    val length: Int           = models.length
-    val hasNext: Boolean      = cursor.table < length - 1
-    lazy val current: Model   = models.find(_._2 == cursor.table).get._1
+    val length: Int         = models.length
+    val hasNext: Boolean    = cursor.table < length - 1
+    lazy val current: Model = models.find(_._2 == cursor.table).get._1
   }
 
-  case class ListInfo(dataResolver: DataResolver, listFieldTables: List[(String,String, Int)], cursor: Cursor) extends ExportInfo {
-    val length: Int                                 = listFieldTables.length
-    val hasNext: Boolean                            = cursor.table < length - 1
-    lazy val currentModel: String                   = listFieldTables.find(_._3 == cursor.table).get._1
-    lazy val currentField: String                   = listFieldTables.find(_._3 == cursor.table).get._2
-    lazy val currentTable: String                   = s"${currentModel}_$currentField"
+  case class ListInfo(dataResolver: DataResolver, listFieldTables: List[(String, String, Int)], cursor: Cursor) extends ExportInfo {
+    val length: Int               = listFieldTables.length
+    val hasNext: Boolean          = cursor.table < length - 1
+    lazy val currentModel: String = listFieldTables.find(_._3 == cursor.table).get._1
+    lazy val currentField: String = listFieldTables.find(_._3 == cursor.table).get._2
+    lazy val currentTable: String = s"${currentModel}_$currentField"
   }
 
   case class RelationInfo(dataResolver: DataResolver, relations: List[(RelationData, Int)], cursor: Cursor) extends ExportInfo {
-    val length: Int                     = relations.length
-    val hasNext: Boolean                = cursor.table < length - 1
-    lazy val current: RelationData      = relations.find(_._2 == cursor.table).get._1
+    val length: Int                = relations.length
+    val hasNext: Boolean           = cursor.table < length - 1
+    lazy val current: RelationData = relations.find(_._2 == cursor.table).get._1
   }
 
-  case class RelationData(relationId: String, leftModel: String, leftField: Option[String], rightModel: String, rightField: Option[String]){
+  case class RelationData(relationId: String, leftModel: String, leftField: Option[String], rightModel: String, rightField: Option[String]) {
     require(leftField.isDefined || rightField.isDefined)
   }
 
   def toRelationData(r: Relation, project: Project): RelationData = {
-    RelationData(r.id, r.getModelB_!(project).name, r.getModelBField(project).map(_.name), r.getModelA_!(project).name, r.getModelAField(project).map(_.name))
+    RelationData(
+      r.id,
+      r.getModelB_!(project.schema).name,
+      r.getModelBField(project.schema).map(_.name),
+      r.getModelA_!(project.schema).name,
+      r.getModelAField(project.schema).map(_.name)
+    )
   }
 
   case class DataItemsPage(items: Seq[DataItem], hasMore: Boolean) { def itemCount: Int = items.length }

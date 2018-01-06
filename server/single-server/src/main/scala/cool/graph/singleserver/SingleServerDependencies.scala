@@ -36,7 +36,7 @@ case class SingleServerDependencies()(implicit val system: ActorSystem, val mate
     val schemaManagerSecret   = config.getString("schemaManagerSecret")
     ProjectFetcherImpl(Vector.empty, config, schemaManagerEndpoint = schemaManagerEndpoint, schemaManagerSecret = schemaManagerSecret)
   }
-  override val migrator: Migrator = AsyncMigrator(clientDb, migrationPersistence, projectPersistence, migrationApplier)
+  override val migrator: Migrator = AsyncMigrator(clientDb, migrationPersistence, projectPersistence)
   override val clusterAuth        = new ClusterAuthImpl(sys.env.get("CLUSTER_PUBLIC_KEY"))
 
   lazy val invalidationPubSub: InMemoryAkkaPubSub[String] = InMemoryAkkaPubSub[String]()

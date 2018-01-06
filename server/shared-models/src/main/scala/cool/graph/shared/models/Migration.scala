@@ -1,21 +1,63 @@
 package cool.graph.shared.models
 
-case class UnappliedMigration(
-    previousProject: Project,
-    nextProject: Project,
-    migration: Migration
-)
+import cool.graph.shared.models.MigrationStatus.MigrationStatus
+
+//case class UnappliedMigration(
+//    previousProject: Project,
+//    nextProject: Project,
+//    migration: Migration
+//)
+
+case class MigrationId(projectId: String, revision: Int)
 
 case class Migration(
     projectId: String,
     revision: Int,
-    hasBeenApplied: Boolean,
-    steps: Vector[MigrationStep]
-)
+    schema: Schema,
+    status: MigrationStatus,
+    applied: Int,
+    rolledBack: Int,
+    steps: Vector[MigrationStep],
+    errors: Vector[String]
+) {
+  def id: MigrationId                             = MigrationId(projectId, revision)
+  def isRollingBack: Boolean                      = status == MigrationStatus.RollingBack
+  def pendingSteps: Vector[MigrationStep]         = steps.drop(applied)
+  def appliedSteps: Vector[MigrationStep]         = steps.take(applied)
+  def pendingRollBackSteps: Vector[MigrationStep] = appliedSteps.reverse.drop(rolledBack)
+  def currentStep: MigrationStep                  = steps(applied)
+  def incApplied: Migration                       = copy(applied = applied + 1)
+  def incRolledBack: Migration                    = copy(rolledBack = rolledBack + 1)
+  def markAsRollBackFailure: Migration            = copy(status = MigrationStatus.RollbackFailure)
+}
+
+object MigrationStatus extends Enumeration {
+  type MigrationStatus = Value
+
+  val Pending         = Value("PENDING")
+  val InProgress      = Value("IN_PROGRESS")
+  val Success         = Value("SUCCESS")
+  val RollingBack     = Value("ROLLING_BACK")
+  val RollbackSuccess = Value("ROLLBACK_SUCCESS")
+  val RollbackFailure = Value("ROLLBACK_FAILURE")
+
+  val openStates  = Vector(Pending, InProgress, RollingBack)
+  val finalStates = Vector(Success, RollbackSuccess, RollbackFailure)
+}
 
 object Migration {
-  def apply(project: Project, steps: Vector[MigrationStep]): Migration = Migration(project.id, 0, hasBeenApplied = false, steps)
-  def empty(project: Project)                                          = Migration(project.id, 0, hasBeenApplied = false, steps = Vector.empty)
+  def apply(projectId: String, schema: Schema, steps: Vector[MigrationStep]): Migration = Migration(
+    projectId,
+    revision = 0,
+    schema = schema,
+    status = MigrationStatus.Pending,
+    applied = 0,
+    rolledBack = 0,
+    steps,
+    errors = Vector.empty
+  )
+
+  def empty(projectId: String) = apply(projectId, Schema(), Vector.empty)
 }
 
 sealed trait MigrationStep

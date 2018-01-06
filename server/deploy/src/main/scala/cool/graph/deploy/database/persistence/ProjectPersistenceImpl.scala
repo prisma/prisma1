@@ -1,6 +1,7 @@
 package cool.graph.deploy.database.persistence
 
-import cool.graph.deploy.database.tables.{ProjectTable, Tables}
+import cool.graph.deploy.database.tables
+import cool.graph.deploy.database.tables.{Migration, ProjectTable, Tables}
 import cool.graph.shared.models.Project
 import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.MySQLProfile.backend.DatabaseDef
@@ -31,10 +32,11 @@ case class ProjectPersistenceImpl(
   }
 
   override def loadAll(): Future[Seq[Project]] = {
-    internalDatabase.run(Tables.Projects.result).map(_.map(p => DbToModelMapper.convert(p)))
+    internalDatabase.run(ProjectTable.loadAllWithMigration()).map(_.map { case (p, m) => DbToModelMapper.convert(p, m) })
   }
 
-  override def loadProjectsWithUnappliedMigrations(): Future[Seq[Project]] = {
-    internalDatabase.run(ProjectTable.allWithUnappliedMigrations).map(_.map(p => DbToModelMapper.convert(p)))
+  override def update(project: Project): Future[_] = {
+    val dbRow = ModelToDbMapper.convert(project)
+    internalDatabase.run(Tables.Projects.filter(_.id === project.id).update(dbRow))
   }
 }

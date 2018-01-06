@@ -14,7 +14,9 @@ class ListMigrationsSpec extends FlatSpec with Matchers with DeploySpecBase {
        |  listMigrations(name: "${nameAndStage.name}", stage: "${nameAndStage.stage}") {
        |    projectId
        |    revision
-       |    hasBeenApplied
+       |    status
+       |    applied
+       |    errors
        |    steps {
        |      type
        |    }

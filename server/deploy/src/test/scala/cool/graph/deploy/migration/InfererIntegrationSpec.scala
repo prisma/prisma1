@@ -1,10 +1,11 @@
 package cool.graph.deploy.migration
 
+import cool.graph.deploy.migration.inference.{MigrationStepsInferrer, SchemaInferrer, SchemaMapping}
 import cool.graph.shared.models._
 import org.scalatest.{FlatSpec, Matchers}
 import sangria.parser.QueryParser
 
-class ProposerAndInfererIntegrationSpec extends FlatSpec with Matchers {
+class InfererIntegrationSpec extends FlatSpec with Matchers {
 
   "they" should "should propose no UpdateRelation when ambiguous relations are involved" in {
     val schema =
@@ -19,8 +20,8 @@ class ProposerAndInfererIntegrationSpec extends FlatSpec with Matchers {
         |  todo2: Todo @relation(name: "TodoToComments2")
         |}
       """.stripMargin
-    val project = infer(schema)
-    val steps   = propose(previous = project, next = schema)
+    val project = inferSchema(schema)
+    val steps   = inferSteps(previousSchema = project, next = schema)
 
     steps should be(empty)
   }
@@ -36,7 +37,7 @@ class ProposerAndInfererIntegrationSpec extends FlatSpec with Matchers {
         |  todo: Todo @relation(name: "ManualRelationName")
         |}
       """.stripMargin
-    val project = infer(previousSchema)
+    val project = inferSchema(previousSchema)
 
     val nextSchema =
       """
@@ -48,7 +49,7 @@ class ProposerAndInfererIntegrationSpec extends FlatSpec with Matchers {
         |  todo: Todo
         |}
       """.stripMargin
-    val steps = propose(previous = project, next = nextSchema)
+    val steps = inferSteps(previousSchema = project, next = nextSchema)
 
     steps should have(size(3))
     steps should contain allOf (
@@ -99,7 +100,7 @@ class ProposerAndInfererIntegrationSpec extends FlatSpec with Matchers {
         |  todo: Todo
         |}
       """.stripMargin
-    val project = infer(previousSchema)
+    val project = inferSchema(previousSchema)
 
     val nextSchema =
       """
@@ -111,7 +112,7 @@ class ProposerAndInfererIntegrationSpec extends FlatSpec with Matchers {
         |  todo: Todo @relation(name: "ManualRelationName")
         |}
       """.stripMargin
-    val steps = propose(previous = project, next = nextSchema)
+    val steps = inferSteps(previousSchema = project, next = nextSchema)
 
     steps should have(size(3))
     steps should contain allOf (
@@ -160,7 +161,7 @@ class ProposerAndInfererIntegrationSpec extends FlatSpec with Matchers {
         |  text: String
         |}
       """.stripMargin
-    val project = infer(previousSchema)
+    val project = inferSchema(previousSchema)
 
     val nextSchema =
       """
@@ -175,7 +176,7 @@ class ProposerAndInfererIntegrationSpec extends FlatSpec with Matchers {
         |  todo2: Todo @relation(name: "TodoToComment2")
         |}
       """.stripMargin
-    val steps = propose(previous = project, next = nextSchema)
+    val steps = inferSteps(previousSchema = project, next = nextSchema)
     steps should have(size(6))
     steps should contain allOf (
       CreateField(
@@ -235,30 +236,26 @@ class ProposerAndInfererIntegrationSpec extends FlatSpec with Matchers {
     )
   }
 
-  def infer(schema: String): Project = {
-    val newProject = Project(
-      id = "test-project",
-      ownerId = "owner"
-    )
-    infer(newProject, schema)
+  def inferSchema(schema: String): Schema = {
+    inferSchema(Schema(), schema)
   }
 
-  def infer(previous: Project, schema: String): Project = {
-    val schemaAst = QueryParser.parse(schema).get
-    val project   = NextProjectInferer().infer(previous, Renames.empty, schemaAst).getOrElse(sys.error("Infering the project failed."))
+  def inferSchema(previous: Schema, schema: String): Schema = {
+    val schemaAst  = QueryParser.parse(schema).get
+    val nextSchema = SchemaInferrer().infer(previous, SchemaMapping.empty, schemaAst).getOrElse(sys.error("Infering the project failed."))
 
-    println(s"Relations of infered project:\n  " + project.relations)
-    project
+    println(s"Relations of infered schema:\n  " + nextSchema.relations)
+    nextSchema
   }
 
-  def propose(previous: Project, next: String): Vector[MigrationStep] = {
-    val nextProject = infer(previous, next)
+  def inferSteps(previousSchema: Schema, next: String): Vector[MigrationStep] = {
+    val nextSchema = inferSchema(previousSchema, next)
     println(s"fields of next project:")
-    nextProject.allFields.foreach(println)
-    MigrationStepsProposer().propose(
-      currentProject = previous,
-      nextProject = nextProject,
-      renames = Renames.empty
+    nextSchema.allFields.foreach(println)
+    MigrationStepsInferrer().infer(
+      previousSchema = previousSchema,
+      nextSchema = nextSchema,
+      renames = SchemaMapping.empty
     )
   }
 }

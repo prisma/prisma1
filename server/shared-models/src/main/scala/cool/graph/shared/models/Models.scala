@@ -49,32 +49,17 @@ case class ServerSideSubscriptionFunction(
 //  def binding = FunctionBinding.SERVERSIDE_SUBSCRIPTION
 }
 
-case class Project(
-    id: Id,
-    ownerId: Id,
-    revision: Int = 1,
-    webhookUrl: Option[String] = None,
+case class Schema(
     models: List[Model] = List.empty,
     relations: List[Relation] = List.empty,
-    enums: List[Enum] = List.empty,
-    secrets: Vector[String] = Vector.empty,
-    allowQueries: Boolean = true,
-    allowMutations: Boolean = true,
-    functions: List[Function] = List.empty
+    enums: List[Enum] = List.empty
 ) {
+  def allFields: Seq[Field] = models.flatMap(_.fields)
 
-  lazy val projectId: ProjectId = ProjectId.fromEncodedString(id)
-
-  val serverSideSubscriptionFunctions: List[ServerSideSubscriptionFunction] = functions.collect { case x: ServerSideSubscriptionFunction => x }
-
-  def serverSideSubscriptionFunctionsFor(model: Model, mutationType: ModelMutationType): Seq[ServerSideSubscriptionFunction] = {
-    serverSideSubscriptionFunctions
-      .filter(_.isActive)
-//      .filter(_.isServerSideSubscriptionFor(model, mutationType))
+  def hasSchemaNameConflict(name: String, id: String): Boolean = {
+    val conflictingType = this.models.exists(model => List(s"create${model.name}", s"update${model.name}", s"delete${model.name}").contains(name))
+    conflictingType
   }
-
-  def getFunctionByName(name: String): Option[Function] = functions.find(_.name == name)
-  def getFunctionByName_!(name: String): Function       = getFunctionByName(name).get //OrElse(throw SystemErrors.InvalidFunctionName(name))
 
   def getModelById(id: Id): Option[Model] = models.find(_.id == id)
   def getModelById_!(id: Id): Model       = getModelById(id).getOrElse(throw SharedErrors.InvalidModel(id))
@@ -160,13 +145,34 @@ case class Project(
     }
 
   }
+}
 
-  def allFields: Seq[Field] = models.flatMap(_.fields)
+case class Project(
+    id: Id,
+    ownerId: Id,
+    revision: Int = 1,
+    schema: Schema,
+    webhookUrl: Option[String] = None,
+    secrets: Vector[String] = Vector.empty,
+    allowQueries: Boolean = true,
+    allowMutations: Boolean = true,
+    functions: List[Function] = List.empty
+) {
+  def models    = schema.models
+  def relations = schema.relations
+  def enums     = schema.enums
 
-  def hasSchemaNameConflict(name: String, id: String): Boolean = {
-    val conflictingType = this.models.exists(model => List(s"create${model.name}", s"update${model.name}", s"delete${model.name}").contains(name))
-    conflictingType
+  lazy val projectId: ProjectId       = ProjectId.fromEncodedString(id)
+  val serverSideSubscriptionFunctions = functions.collect { case x: ServerSideSubscriptionFunction => x }
+
+  def serverSideSubscriptionFunctionsFor(model: Model, mutationType: ModelMutationType): Seq[ServerSideSubscriptionFunction] = {
+    serverSideSubscriptionFunctions
+      .filter(_.isActive)
+//      .filter(_.isServerSideSubscriptionFor(model, mutationType))
   }
+
+  def getFunctionByName(name: String): Option[Function] = functions.find(_.name == name)
+  def getFunctionByName_!(name: String): Function       = getFunctionByName(name).get //OrElse(throw SystemErrors.InvalidFunctionName(name))
 }
 
 case class ProjectWithClientId(project: Project, clientId: Id) {
@@ -270,8 +276,7 @@ case class Field(
     relationSide: Option[RelationSide.Value],
     constraints: List[FieldConstraint] = List.empty
 ) {
-  def id = name
-
+  def id                                            = name
   def isScalar: Boolean                             = typeIdentifier != TypeIdentifier.Relation
   def isRelation: Boolean                           = typeIdentifier == TypeIdentifier.Relation
   def isRelationWithId(relationId: String): Boolean = relation.exists(_.id == relationId)
@@ -292,35 +297,35 @@ case class Field(
     }
   }
 
-  def relatedModel_!(project: Project): Model = {
-    relatedModel(project) match {
-      case None        => sys.error(s"Could not find relatedModel for field [$name] on model [${model(project)}]")
+  def relatedModel_!(schema: Schema): Model = {
+    relatedModel(schema) match {
+      case None        => sys.error(s"Could not find relatedModel for field [$name] on model [${model(schema)}]")
       case Some(model) => model
     }
   }
 
-  def relatedModel(project: Project): Option[Model] = {
+  def relatedModel(schema: Schema): Option[Model] = {
     relation.flatMap(relation => {
       relationSide match {
-        case Some(RelationSide.A) => relation.getModelB(project)
-        case Some(RelationSide.B) => relation.getModelA(project)
+        case Some(RelationSide.A) => relation.getModelB(schema)
+        case Some(RelationSide.B) => relation.getModelA(schema)
         case x                    => ??? //throw SystemErrors.InvalidStateException(message = s" relationSide was $x")
       }
     })
   }
 
-  def model(project: Project): Option[Model] = {
+  def model(schema: Schema): Option[Model] = {
     relation.flatMap(relation => {
       relationSide match {
-        case Some(RelationSide.A) => relation.getModelA(project)
-        case Some(RelationSide.B) => relation.getModelB(project)
+        case Some(RelationSide.A) => relation.getModelA(schema)
+        case Some(RelationSide.B) => relation.getModelB(schema)
         case x                    => ??? //throw SystemErrors.InvalidStateException(message = s" relationSide was $x")
       }
     })
   }
 
-  def relatedField(project: Project): Option[Field] = {
-    val fields = relatedModel(project).get.fields
+  def relatedField(schema: Schema): Option[Field] = {
+    val fields = relatedModel(schema).get.fields
 
     val returnField = fields.find { field =>
       field.relation.exists { relation =>
@@ -405,49 +410,49 @@ case class Relation(
   def connectsTheModels(model1: Model, model2: Model): Boolean   = connectsTheModels(model1.id, model2.id)
   def connectsTheModels(model1: String, model2: String): Boolean = (modelAId == model1 && modelBId == model2) || (modelAId == model2 && modelBId == model1)
 
-  def isUnambiguous(project: Project): Boolean = (project.relations.toSet - this).nonEmpty
+  def isUnambiguous(schema: Schema): Boolean = (schema.relations.toSet - this).nonEmpty
 
-  def isSameModelRelation(project: Project): Boolean          = getModelA(project) == getModelB(project)
-  def isSameFieldSameModelRelation(project: Project): Boolean = getModelAField(project) == getModelBField(project)
+  def isSameModelRelation(schema: Schema): Boolean          = getModelA(schema) == getModelB(schema)
+  def isSameFieldSameModelRelation(schema: Schema): Boolean = getModelAField(schema) == getModelBField(schema)
 
-  def getModelA(project: Project): Option[Model] = project.getModelById(modelAId)
-  def getModelA_!(project: Project): Model       = getModelA(project).get //OrElse(throw SystemErrors.InvalidRelation("A relation should have a valid Model A."))
+  def getModelA(schema: Schema): Option[Model] = schema.getModelById(modelAId)
+  def getModelA_!(schema: Schema): Model       = getModelA(schema).get //OrElse(throw SystemErrors.InvalidRelation("A relation should have a valid Model A."))
 
-  def getModelB(project: Project): Option[Model] = project.getModelById(modelBId)
-  def getModelB_!(project: Project): Model       = getModelB(project).get //OrElse(throw SystemErrors.InvalidRelation("A relation should have a valid Model B."))
+  def getModelB(schema: Schema): Option[Model] = schema.getModelById(modelBId)
+  def getModelB_!(schema: Schema): Model       = getModelB(schema).get //OrElse(throw SystemErrors.InvalidRelation("A relation should have a valid Model B."))
 
-  def getOtherModel_!(project: Project, model: Model): Model = {
+  def getOtherModel_!(schema: Schema, model: Model): Model = {
     model.id match {
-      case `modelAId` => getModelB_!(project)
-      case `modelBId` => getModelA_!(project)
+      case `modelAId` => getModelB_!(schema)
+      case `modelBId` => getModelA_!(schema)
       case _          => ??? //throw SystemErrors.InvalidRelation(s"The model with the id ${model.id} is not part of this relation.")
     }
   }
 
-  def getField(project: Project, model: Model): Option[Field] = {
+  def getField(schema: Schema, model: Model): Option[Field] = {
     model.id match {
-      case `modelAId` => getModelAField(project)
-      case `modelBId` => getModelBField(project)
+      case `modelAId` => getModelAField(schema)
+      case `modelBId` => getModelBField(schema)
       case _ =>
         sys.error(s"The model with the id ${model.id} is not part of this relation.") //throw SystemErrors.InvalidRelation(s"The model with the id ${model.id} is not part of this relation.")
     }
   }
 
-  def getModelAField(project: Project): Option[Field] = modelFieldFor(project, modelAId, RelationSide.A)
-  def getModelBField(project: Project): Option[Field] = {
+  def getModelAField(schema: Schema): Option[Field] = modelFieldFor(schema, modelAId, RelationSide.A)
+  def getModelBField(schema: Schema): Option[Field] = {
     // note: defaults to modelAField to handle same model, same field relations
-    modelFieldFor(project, modelBId, RelationSide.B) //.orElse(getModelAField(project))
+    modelFieldFor(schema, modelBId, RelationSide.B) //.orElse(getModelAField(project))
   }
 
-  private def modelFieldFor(project: Project, modelId: String, relationSide: RelationSide.Value): Option[Field] = {
+  private def modelFieldFor(schema: Schema, modelId: String, relationSide: RelationSide.Value): Option[Field] = {
     for {
-      model <- project.getModelById(modelId)
+      model <- schema.getModelById(modelId)
       field <- model.relationFieldForIdAndSide(relationId = id, relationSide = relationSide)
     } yield field
   }
 
-  def fieldSide(project: Project, field: Field): cool.graph.shared.models.RelationSide.Value = {
-    val fieldModel = project.getModelByFieldId_!(field.id)
+  def fieldSide(schema: Schema, field: Field): cool.graph.shared.models.RelationSide.Value = {
+    val fieldModel = schema.getModelByFieldId_!(field.id)
     fieldModel.id match {
       case `modelAId` => RelationSide.A
       case `modelBId` => RelationSide.B
@@ -464,7 +469,7 @@ case class Relation(
     } else if (model.id == modelBId) {
       RelationSide.B
     } else {
-      sys.error(s"The model ${model.name} is not part of the relation ${name}")
+      sys.error(s"The model ${model.name} is not part of the relation $name")
     }
   }
 

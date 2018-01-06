@@ -11,7 +11,7 @@ import scala.concurrent.Future
 case class UpdateDataItemByUniqueFieldIfInRelationWith(project: Project, parentInfo: ParentInfo, where: NodeSelector, args: CoolArgs)
     extends ClientSqlDataChangeMutaction {
 
-  val aModel: Model           = parentInfo.relation.getModelA_!(project)
+  val aModel: Model           = parentInfo.relation.getModelA_!(project.schema)
   val updateByUniqueValueForB = aModel.name == parentInfo.model.name
   val scalarArgs              = args.nonListScalarArgumentsAsCoolArgs(where.model)
 

@@ -1,46 +1,43 @@
-package cool.graph.deploy.migration
+package cool.graph.deploy.migration.inference
 
 import cool.graph.deploy.gc_value.GCStringConverter
+import cool.graph.deploy.migration.DataSchemaAstExtensions._
+import cool.graph.deploy.migration.ReservedFields
 import cool.graph.gc_values.{GCValue, InvalidValueForScalarType}
 import cool.graph.shared.models._
 import cool.graph.utils.or.OrExtensions
 import org.scalactic.{Bad, Good, Or}
 import sangria.ast.{Document, ObjectTypeDefinition}
 
-trait NextProjectInferer {
-  def infer(baseProject: Project, renames: Renames, graphQlSdl: Document): Project Or ProjectSyntaxError
+trait SchemaInferrer {
+  def infer(baseSchema: Schema, schemaMapping: SchemaMapping, graphQlSdl: Document): Schema Or ProjectSyntaxError
+}
+
+object SchemaInferrer {
+  def apply() = new SchemaInferrer {
+    override def infer(baseSchema: Schema, schemaMapping: SchemaMapping, graphQlSdl: Document) =
+      SchemaInferrerImpl(baseSchema, schemaMapping, graphQlSdl).infer()
+  }
 }
 
 sealed trait ProjectSyntaxError
 case class RelationDirectiveNeeded(type1: String, type1Fields: Vector[String], type2: String, type2Fields: Vector[String]) extends ProjectSyntaxError
 case class InvalidGCValue(err: InvalidValueForScalarType)                                                                  extends ProjectSyntaxError
 
-object NextProjectInferer {
-  def apply() = new NextProjectInferer {
-    override def infer(baseProject: Project, renames: Renames, graphQlSdl: Document) = NextProjectInfererImpl(baseProject, renames, graphQlSdl).infer()
-  }
-}
-
-case class NextProjectInfererImpl(
-    baseProject: Project,
-    renames: Renames,
+case class SchemaInferrerImpl(
+    baseSchema: Schema,
+    schemaMapping: SchemaMapping,
     sdl: Document
 ) {
-  import DataSchemaAstExtensions._
-
-  def infer(): Project Or ProjectSyntaxError = {
+  def infer(): Schema Or ProjectSyntaxError = {
     for {
       models <- nextModels
     } yield {
-      val newProject = Project(
-        id = baseProject.id,
-        ownerId = baseProject.ownerId,
+      Schema(
         models = models.toList,
         relations = nextRelations.toList,
         enums = nextEnums.toList
       )
-
-      newProject
     }
   }
 
@@ -68,7 +65,7 @@ case class NextProjectInfererImpl(
   }
 
   def fieldsForType(objectType: ObjectTypeDefinition): Or[Vector[Field], InvalidGCValue] = {
-    val fields: Seq[Or[Field, InvalidGCValue]] = objectType.fields.flatMap { fieldDef =>
+    val fields: Vector[Or[Field, InvalidGCValue]] = objectType.fields.flatMap { fieldDef =>
       val typeIdentifier = typeIdentifierForTypename(fieldDef.typeName)
 
       val relation = if (fieldDef.hasScalarType) {
@@ -78,7 +75,6 @@ case class NextProjectInfererImpl(
           case Some(name) => nextRelations.find(_.name == name)
           case None       => nextRelations.find(relation => relation.connectsTheModels(objectType.name, fieldDef.typeName))
         }
-
       }
 
       def fieldWithDefault(default: Option[GCValue]) = {
@@ -108,7 +104,7 @@ case class NextProjectInfererImpl(
       }
     }
 
-    OrExtensions.sequence(fields.toVector)
+    OrExtensions.sequence(fields)
   }
 
   lazy val nextRelations: Set[Relation] = {
@@ -131,12 +127,12 @@ case class NextProjectInfererImpl(
         case (None, Some(name)) => name
         case (None, None)       => s"${modelA}To${modelB}"
       }
-      val previousModelAName = renames.getPreviousModelName(modelA)
-      val previousModelBName = renames.getPreviousModelName(modelB)
+      val previousModelAName = schemaMapping.getPreviousModelName(modelA)
+      val previousModelBName = schemaMapping.getPreviousModelName(modelB)
 
       // TODO: this needs to be adapted once we allow rename of relations
-      val oldEquivalentRelation = relationField.relationName.flatMap(baseProject.getRelationByName).orElse {
-        baseProject.getUnambiguousRelationThatConnectsModels_!(previousModelAName, previousModelBName)
+      val oldEquivalentRelation = relationField.relationName.flatMap(baseSchema.getRelationByName).orElse {
+        baseSchema.getUnambiguousRelationThatConnectsModels_!(previousModelAName, previousModelBName)
       }
 
       oldEquivalentRelation match {

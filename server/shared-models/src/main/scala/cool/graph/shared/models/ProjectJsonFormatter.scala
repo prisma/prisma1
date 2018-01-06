@@ -2,10 +2,12 @@ package cool.graph.shared.models
 
 import cool.graph.gc_values._
 import cool.graph.shared.models.FieldConstraintType.FieldConstraintType
+import cool.graph.utils.json.JsonUtils
 import org.joda.time.format.ISODateTimeFormat
 import org.joda.time.{DateTime, DateTimeZone}
 import play.api.libs.json._
 import cool.graph.utils.json.JsonUtils._
+import MigrationStepsJsonFormatter._
 
 object ProjectJsonFormatter {
 
@@ -129,8 +131,11 @@ object ProjectJsonFormatter {
   implicit lazy val enum                      = Json.format[Enum]
   implicit lazy val field                     = Json.format[Field]
   implicit lazy val model                     = Json.format[Model]
+  implicit lazy val schemaFormat              = Json.format[Schema]
   implicit lazy val projectFormat             = Json.format[Project]
   implicit lazy val projectWithClientIdFormat = Json.format[ProjectWithClientId]
+  implicit lazy val migrationStatusFormat     = JsonUtils.enumFormat(MigrationStatus)
+  implicit lazy val migrationStepsFormat      = Json.format[Migration]
 
   def failingFormat[T] = new Format[T] {
 

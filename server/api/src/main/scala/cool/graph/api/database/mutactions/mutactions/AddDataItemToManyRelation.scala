@@ -26,14 +26,14 @@ case class AddDataItemToManyRelation(project: Project, parentInfo: ParentInfo, t
   val aValue: String = if (relationSide == RelationSide.A) parentInfo.where.fieldValueAsString else toId
   val bValue: String = if (relationSide == RelationSide.A) toId else parentInfo.where.fieldValueAsString
 
-  val aModel: Model = parentInfo.relation.getModelA_!(project)
-  val bModel: Model = parentInfo.relation.getModelB_!(project)
+  val aModel: Model = parentInfo.relation.getModelA_!(project.schema)
+  val bModel: Model = parentInfo.relation.getModelB_!(project.schema)
 
   private def getFieldMirrors(model: Model, id: String) =
     parentInfo.relation.fieldMirrors
       .filter(mirror => model.fields.map(_.id).contains(mirror.fieldId))
       .map(mirror => {
-        val field = project.getFieldById_!(mirror.fieldId)
+        val field = project.schema.getFieldById_!(mirror.fieldId)
         MirrorFieldDbValues(
           relationColumnName = RelationFieldMirrorUtils.mirrorColumnName(project, field, parentInfo.relation),
           modelColumnName = field.name,
@@ -63,7 +63,7 @@ case class AddDataItemToManyRelation(project: Project, parentInfo: ParentInfo, t
   override def verify(resolver: DataResolver): Future[Try[MutactionVerificationSuccess]] = {
 
     if (toIdAlreadyInDB) {
-      val toModel = if (relationSide == RelationSide.A) parentInfo.relation.getModelB_!(project) else parentInfo.relation.getModelA_!(project)
+      val toModel = if (relationSide == RelationSide.A) parentInfo.relation.getModelB_!(project.schema) else parentInfo.relation.getModelA_!(project.schema)
       resolver.existsByModelAndId(toModel, toId) map {
         case false => Failure(APIErrors.NodeDoesNotExist(toId))
         case true =>

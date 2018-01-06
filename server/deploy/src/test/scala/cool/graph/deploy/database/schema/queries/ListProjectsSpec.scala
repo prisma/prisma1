@@ -5,7 +5,7 @@ import cool.graph.shared.models.{Migration, ProjectId}
 import org.scalatest.{FlatSpec, Matchers}
 
 class ListProjectsSpec extends FlatSpec with Matchers with DeploySpecBase {
-  "ListProjects" should "an empty list with no projects" in {
+  "ListProjects" should "return an empty list with no projects" in {
     val result = server.query(s"""
        |query {
        |  listProjects {

@@ -10,5 +10,6 @@ object DeployMain extends App {
 
   val dependencies  = DeployDependenciesImpl()
   val clusterServer = ClusterServer(dependencies.clusterSchemaBuilder, dependencies.projectPersistence, "cluster")
+
   ServerExecutor(8081, clusterServer).startBlocking()
 }

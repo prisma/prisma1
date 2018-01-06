@@ -13,7 +13,7 @@ case class DeleteDataItemByUniqueFieldIfInRelationWith(
     where: NodeSelector
 ) extends ClientSqlDataChangeMutaction {
 
-  val aModel: Model           = parentInfo.relation.getModelA_!(project)
+  val aModel: Model           = parentInfo.relation.getModelA_!(project.schema)
   val deleteByUniqueValueForB = aModel.name == parentInfo.model.name
 
   override def execute: Future[ClientSqlStatementResult[Any]] = Future.successful {

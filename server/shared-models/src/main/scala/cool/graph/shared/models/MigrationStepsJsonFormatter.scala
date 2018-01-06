@@ -1,6 +1,5 @@
-package cool.graph.deploy.database.persistence
+package cool.graph.shared.models
 
-import cool.graph.shared.models._
 import play.api.libs.json._
 
 object MigrationStepsJsonFormatter extends DefaultReads {
@@ -112,8 +111,6 @@ object MigrationStepsJsonFormatter extends DefaultReads {
       withOutDiscriminator ++ Json.obj(discriminatorField -> step.getClass.getSimpleName)
     }
   }
-
-  implicit val migrationStepsFormat: Format[Migration] = Json.format[Migration]
 
   def writeDoubleOpt[T](field: String, opt: Option[Option[T]])(implicit writes: Writes[T]): JsObject = {
     opt match {

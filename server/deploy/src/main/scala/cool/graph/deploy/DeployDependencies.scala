@@ -4,7 +4,6 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import cool.graph.deploy.database.persistence.{MigrationPersistenceImpl, ProjectPersistenceImpl}
 import cool.graph.deploy.database.schema.InternalDatabaseSchema
-import cool.graph.deploy.migration.MigrationApplierImpl
 import cool.graph.deploy.migration.migrator.{AsyncMigrator, Migrator}
 import cool.graph.deploy.schema.SchemaBuilder
 import cool.graph.deploy.seed.InternalDatabaseSeedActions
@@ -31,7 +30,6 @@ trait DeployDependencies {
   lazy val clientDb             = Database.forConfig("client")
   lazy val projectPersistence   = ProjectPersistenceImpl(internalDb)
   lazy val migrationPersistence = MigrationPersistenceImpl(internalDb)
-  lazy val migrationApplier     = MigrationApplierImpl(clientDb)
   lazy val clusterSchemaBuilder = SchemaBuilder()
 
   def setupAndGetInternalDatabase()(implicit ec: ExecutionContext): MySQLProfile.backend.Database = {
@@ -51,6 +49,6 @@ trait DeployDependencies {
 case class DeployDependenciesImpl()(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends DeployDependencies {
   override implicit def self: DeployDependencies = this
 
-  override val migrator: Migrator = AsyncMigrator(clientDb, migrationPersistence, projectPersistence, migrationApplier)
-  override val clusterAuth        = new ClusterAuthImpl(sys.env.get("CLUSTER_PUBLIC_KEY"))
+  val migrator: Migrator   = AsyncMigrator(clientDb, migrationPersistence, projectPersistence)
+  override val clusterAuth = new ClusterAuthImpl(sys.env.get("CLUSTER_PUBLIC_KEY"))
 }

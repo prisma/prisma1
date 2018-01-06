@@ -49,9 +49,11 @@ object SchemaDsl {
       val (models, relations) = build()
       TestProject().copy(
         id = id,
-        models = models.toList,
-        relations = relations.toList,
-        enums = enums.toList,
+        schema = Schema(
+          models = models.toList,
+          relations = relations.toList,
+          enums = enums.toList
+        ),
         functions = functions.toList
       )
     }

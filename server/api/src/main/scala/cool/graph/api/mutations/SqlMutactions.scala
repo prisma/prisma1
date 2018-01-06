@@ -101,8 +101,9 @@ case class SqlMutactions(dataResolver: DataResolver) {
 
   def getMutactionsForNestedMutation(args: CoolArgs, outerWhere: NodeSelector): Seq[ClientSqlMutaction] = {
     val x = for {
+
       field          <- outerWhere.model.relationFields
-      subModel       = field.relatedModel_!(project)
+      subModel       = field.relatedModel_!(project.schema)
       nestedMutation <- args.subNestedMutation(field, subModel) // this is the input object containing the nested mutation
     } yield {
       val parentInfo = ParentInfo(field, outerWhere)
@@ -177,8 +178,8 @@ case class SqlMutactions(dataResolver: DataResolver) {
   }
 
   private def runRequiredRelationCheckWithInvalidFunction(field: Field, isInvalid: () => Future[Boolean]): Option[InvalidInputClientSqlMutaction] = {
-    field.relatedField(project).flatMap { relatedField =>
-      val relatedModel = field.relatedModel_!(project)
+    field.relatedField(project.schema).flatMap { relatedField =>
+      val relatedModel = field.relatedModel_!(project.schema)
 
       (relatedField.isRequired && !relatedField.isList).toOption {
         InvalidInputClientSqlMutaction(RelationIsRequired(fieldName = relatedField.name, typeName = relatedModel.name), isInvalid = isInvalid)

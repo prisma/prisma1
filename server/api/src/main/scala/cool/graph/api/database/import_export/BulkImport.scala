@@ -1,17 +1,16 @@
 package cool.graph.api.database.import_export
 
 import cool.graph.api.ApiDependencies
+import cool.graph.api.database.import_export.ImportExport.MyJsonProtocol._
 import cool.graph.api.database.import_export.ImportExport._
 import cool.graph.api.database.{DatabaseMutationBuilder, ProjectRelayId, ProjectRelayIdTable}
 import cool.graph.cuid.Cuid
 import cool.graph.shared.models._
 import slick.dbio.{DBIOAction, Effect, NoStream}
+import slick.jdbc
 import slick.jdbc.MySQLProfile.api._
 import slick.lifted.TableQuery
 import spray.json._
-import MyJsonProtocol._
-import slick.jdbc
-import slick.jdbc.MySQLProfile
 
 import scala.concurrent.Future
 import scala.util.Try
@@ -43,7 +42,8 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) {
       .map(x => JsArray(x))
   }
 
-  private def getImportIdentifier(map: Map[String, Any]): ImportIdentifier = ImportIdentifier(map("_typeName").asInstanceOf[String], map("id").asInstanceOf[String])
+  private def getImportIdentifier(map: Map[String, Any]): ImportIdentifier =
+    ImportIdentifier(map("_typeName").asInstanceOf[String], map("id").asInstanceOf[String])
 
   private def convertToImportNode(json: JsValue): ImportNode = {
     val map      = json.convertTo[Map[String, Any]]
@@ -78,7 +78,7 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) {
   private def generateImportNodesDBActions(nodes: Vector[ImportNode]): DBIOAction[Vector[Try[Int]], NoStream, Effect.Write] = {
     val items = nodes.map { element =>
       val id    = element.identifier.id
-      val model = project.getModelByName_!(element.identifier.typeName)
+      val model = project.schema.getModelByName_!(element.identifier.typeName)
 
       val formatedDateTimes = element.values.map {
         case (k, v) if k == "createdAt" || k == "updatedAt"                                => (k, dateTimeFromISO8601(v))
@@ -95,7 +95,7 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) {
     val relayIds: TableQuery[ProjectRelayIdTable] = TableQuery(new ProjectRelayIdTable(_, project.id))
     val relay = nodes.map { element =>
       val id    = element.identifier.id
-      val model = project.getModelByName_!(element.identifier.typeName)
+      val model = project.schema.getModelByName_!(element.identifier.typeName)
       val x     = relayIds += ProjectRelayId(id = id, model.id)
       x.asTry
     }
@@ -105,12 +105,12 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) {
   private def generateImportRelationsDBActions(relations: Vector[ImportRelation]): DBIOAction[Vector[Try[Int]], NoStream, Effect.Write] = {
     val x = relations.map { element =>
       val (left, right) = (element.left, element.right) match {
-        case (l, r) if l.fieldName.isDefined    => (l, r)
-        case (l, r) if r.fieldName.isDefined    => (r, l)
-        case _                                  => throw sys.error("Invalid ImportRelation at least one fieldName needs to be defined.")
+        case (l, r) if l.fieldName.isDefined => (l, r)
+        case (l, r) if r.fieldName.isDefined => (r, l)
+        case _                               => throw sys.error("Invalid ImportRelation at least one fieldName needs to be defined.")
       }
 
-      val fromModel                                                 = project.getModelByName_!(left.identifier.typeName)
+      val fromModel                                                 = project.schema.getModelByName_!(left.identifier.typeName)
       val fromField                                                 = fromModel.getFieldByName_!(left.fieldName.get)
       val relationSide: cool.graph.shared.models.RelationSide.Value = fromField.relationSide.get
       val relation: Relation                                        = fromField.relation.get
@@ -123,15 +123,19 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) {
     DBIO.sequence(x)
   }
 
-
   //Todo datetime format in here -.-
   private def generateImportListsDBActions(lists: Vector[ImportList]): DBIOAction[Vector[Try[Int]], NoStream, jdbc.MySQLProfile.api.Effect] = {
     val updateListValueActions = lists.flatMap { element =>
-      def isDateTime(fieldName: String) = project.getModelByName_!(element.identifier.typeName).getFieldByName_!(fieldName).typeIdentifier == TypeIdentifier.DateTime
+      def isDateTime(fieldName: String) =
+        project.schema.getModelByName_!(element.identifier.typeName).getFieldByName_!(fieldName).typeIdentifier == TypeIdentifier.DateTime
 
       element.values.map {
-        case (fieldName, values) if isDateTime(fieldName)=> DatabaseMutationBuilder.pushScalarList(project.id, element.identifier.typeName, fieldName, element.identifier.id, values.map(dateTimeFromISO8601)).asTry
-        case (fieldName, values) => DatabaseMutationBuilder.pushScalarList(project.id, element.identifier.typeName, fieldName, element.identifier.id, values).asTry
+        case (fieldName, values) if isDateTime(fieldName) =>
+          DatabaseMutationBuilder
+            .pushScalarList(project.id, element.identifier.typeName, fieldName, element.identifier.id, values.map(dateTimeFromISO8601))
+            .asTry
+        case (fieldName, values) =>
+          DatabaseMutationBuilder.pushScalarList(project.id, element.identifier.typeName, fieldName, element.identifier.id, values).asTry
       }
     }
     DBIO.sequence(updateListValueActions)
