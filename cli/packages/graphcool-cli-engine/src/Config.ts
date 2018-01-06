@@ -53,7 +53,7 @@ export class Config {
    */
   statusEndpoint = 'https://crm.graph.cool/prod/status'
   cloudApiEndpoint = 'http://localhost:4000'
-  consoleEndpoint = 'http://localhost:3000'
+  consoleEndpoint = 'https://app.graph.cool'
 
   /* tslint:disable-next-line */
   __cache = {}
