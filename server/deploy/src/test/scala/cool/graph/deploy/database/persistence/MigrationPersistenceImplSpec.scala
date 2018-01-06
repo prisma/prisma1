@@ -53,10 +53,6 @@ class MigrationPersistenceImplSpec extends FlatSpec with Matchers with DeploySpe
     migrations should have(size(5))
   }
 
-  //  def updateMigrationErrors(id: MigrationId, errors: Vector[String]): Future[Unit]
-  //  def updateMigrationApplied(id: MigrationId, applied: Int): Future[Unit]
-  //  def updateMigrationRolledBack(id: MigrationId, rolledBack: Int): Future[Unit]
-
   ".updateMigrationStatus()" should "update a migration status correctly" in {
     val project          = setupProject(basicTypesGql)
     val createdMigration = migrationPersistence.create(Migration.empty(project.id)).await

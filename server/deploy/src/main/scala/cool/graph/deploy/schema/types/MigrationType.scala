@@ -12,8 +12,8 @@ object MigrationType {
       Field("projectId", StringType, resolve = _.value.projectId),
       Field("revision", IntType, resolve = _.value.revision),
       Field("status", StringType, resolve = _.value.status.toString),
-      Field("applied", StringType, resolve = x => s"${x.value.applied}/${x.value.steps.length}"),
-      Field("rolledBack", StringType, resolve = x => s"${x.value.rolledBack}/${x.value.applied}"),
+      Field("applied", IntType, resolve = _.value.applied),
+      Field("rolledBack", IntType, resolve = _.value.rolledBack),
       Field("steps", ListType(MigrationStepType.Type), resolve = _.value.steps),
       Field("errors", ListType(StringType), resolve = _.value.errors)
     )

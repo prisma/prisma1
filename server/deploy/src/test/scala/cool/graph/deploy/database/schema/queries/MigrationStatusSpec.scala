@@ -19,6 +19,7 @@ class MigrationStatusSpec extends FlatSpec with Matchers with DeploySpecBase {
        |    projectId
        |    revision
        |    applied
+       |    rolledBack
        |    status
        |    steps {
        |      type
@@ -30,8 +31,9 @@ class MigrationStatusSpec extends FlatSpec with Matchers with DeploySpecBase {
     result.pathAsString("data.migrationStatus.projectId") shouldEqual project.id
     result.pathAsLong("data.migrationStatus.revision") shouldEqual 2
     result.pathAsString("data.migrationStatus.status") shouldEqual "SUCCESS"
-    result.pathAsString("data.migrationStatus.applied") shouldEqual "0/4"
+    result.pathAsLong("data.migrationStatus.applied") shouldEqual 4
     result.pathAsSeq("data.migrationStatus.steps") shouldNot be(empty)
+    result.pathAsLong("data.migrationStatus.rolledBack") shouldEqual 0
   }
 
   "MigrationStatus" should "return the next pending migration if one exists" in {
@@ -66,6 +68,7 @@ class MigrationStatusSpec extends FlatSpec with Matchers with DeploySpecBase {
        |    projectId
        |    revision
        |    applied
+       |    rolledBack
        |    status
        |    steps {
        |      type
@@ -77,6 +80,7 @@ class MigrationStatusSpec extends FlatSpec with Matchers with DeploySpecBase {
     result.pathAsString("data.migrationStatus.projectId") shouldEqual project.id
     result.pathAsLong("data.migrationStatus.revision") shouldEqual migration.revision
     result.pathAsString("data.migrationStatus.status") shouldEqual "PENDING"
-    result.pathAsString("data.migrationStatus.applied") shouldEqual "0/2"
+    result.pathAsLong("data.migrationStatus.applied") shouldEqual 0
+    result.pathAsLong("data.migrationStatus.rolledBack") shouldEqual 0
   }
 }

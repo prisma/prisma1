@@ -20,7 +20,8 @@ case class DeploymentSchedulerActor(
   implicit val dispatcher = context.system.dispatcher
   val projectWorkers      = new mutable.HashMap[String, ActorRef]()
 
-  // Enhancement(s): In the shared cluster we might face issues with too many project actors / high overhead during bootup
+  // Enhancement(s):
+  //    - In the shared cluster we might face issues with too many project actors / high overhead during bootup
   //    - We could have a last active timestamp or something and if a limit is reached we reap project actors.
   // todo How to handle graceful shutdown? -> Unwatch, stop message, wait for completion?
 
