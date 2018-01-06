@@ -67,7 +67,7 @@ To deploy your Graphcool service:
   ${chalk.green('graphcool deploy')}
 
 To start your local Graphcool cluster:
-  ${chalk.green('graphcool local up')}
+  ${chalk.green('graphcool local start')}
 
 You can find further instructions in the ${chalk.green('graphcool.yml')} file,
 which is the central service configuration.
