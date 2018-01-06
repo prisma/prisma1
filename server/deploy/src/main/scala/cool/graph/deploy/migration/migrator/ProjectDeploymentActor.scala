@@ -40,6 +40,7 @@ case class ProjectDeploymentActor(
 
   implicit val ec          = context.system.dispatcher
   val stepMapper           = MigrationStepMapperImpl(projectId)
+  val applier              = MigrationApplierImpl(migrationPersistence, clientDatabase, stepMapper)
   var activeSchema: Schema = _
 
   // Possible enhancement: Periodically scan the DB for migrations if signal was lost -> Wait and see if this is an issue at all
@@ -145,10 +146,6 @@ case class ProjectDeploymentActor(
   }
 
   def handleDeployment(): Future[Unit] = {
-    // Need next project -> Load from DB or by migration
-    // Get previous project from cache
-    val applier = MigrationApplierImpl(migrationPersistence, clientDatabase, stepMapper)
-
     migrationPersistence.getNextMigration(projectId).transformWith {
       case Success(Some(nextMigration)) =>
         applier.apply(previousSchema = activeSchema, migration = nextMigration).map { result =>

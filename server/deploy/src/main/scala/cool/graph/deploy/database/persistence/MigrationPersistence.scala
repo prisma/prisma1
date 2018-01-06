@@ -6,6 +6,7 @@ import cool.graph.shared.models.MigrationStatus.MigrationStatus
 import scala.concurrent.Future
 
 trait MigrationPersistence {
+  def byId(migrationId: MigrationId): Future[Option[Migration]]
   def loadAll(projectId: String): Future[Seq[Migration]]
   def create(migration: Migration): Future[Migration]
   def getNextMigration(projectId: String): Future[Option[Migration]]

@@ -15,6 +15,16 @@ case class MigrationPersistenceImpl(
 )(implicit ec: ExecutionContext)
     extends MigrationPersistence {
 
+  override def byId(migrationId: MigrationId): Future[Option[Migration]] = {
+    val baseQuery = for {
+      migration <- Tables.Migrations
+      if migration.projectId === migrationId.projectId
+      if migration.revision === migrationId.revision
+    } yield migration
+
+    internalDatabase.run(baseQuery.result.headOption).map(_.map(DbToModelMapper.convert))
+  }
+
   override def loadAll(projectId: String): Future[Seq[Migration]] = {
     val baseQuery = for {
       migration <- Tables.Migrations

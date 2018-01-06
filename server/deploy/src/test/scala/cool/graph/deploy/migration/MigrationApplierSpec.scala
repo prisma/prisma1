@@ -1,7 +1,5 @@
 package cool.graph.deploy.migration
 
-import cool.graph.deploy.database.persistence.DbToModelMapper
-import cool.graph.deploy.database.tables.Tables
 import cool.graph.deploy.migration.migrator.MigrationApplierImpl
 import cool.graph.deploy.migration.mutactions.{ClientSqlMutaction, ClientSqlStatementResult}
 import cool.graph.deploy.specutils.DeploySpecBase
@@ -9,7 +7,6 @@ import cool.graph.shared.models._
 import cool.graph.utils.await.AwaitUtils
 import org.scalatest.{FlatSpec, Matchers}
 import slick.dbio.DBIOAction
-import slick.jdbc.MySQLProfile.api._
 
 import scala.concurrent.Future
 
@@ -39,8 +36,7 @@ class MigrationApplierSpec extends FlatSpec with Matchers with DeploySpecBase wi
     persistence.create(migration).await
     val mapper  = stepMapper { case _ => succeedingSqlMutactionWithSucceedingRollback }
     val applier = migrationApplier(mapper)
-
-    val result = applier.apply(previousSchema = emptySchema, migration = migration).await
+    val result  = applier.apply(previousSchema = emptySchema, migration = migration).await
     result.succeeded should be(true)
 
     val persisted = persistence.getLastMigration(projectId).await.get
@@ -57,9 +53,9 @@ class MigrationApplierSpec extends FlatSpec with Matchers with DeploySpecBase wi
       case CreateModel("Step2") => failingSqlMutactionWithSucceedingRollback
       case CreateModel("Step3") => succeedingSqlMutactionWithSucceedingRollback
     })
-    val applier = migrationApplier(mapper)
 
-    val result = applier.apply(previousSchema = emptySchema, migration = migration).await
+    val applier = migrationApplier(mapper)
+    val result  = applier.apply(previousSchema = emptySchema, migration = migration).await
     result.succeeded should be(false)
 
     val persisted = loadMigrationFromDb
@@ -76,9 +72,9 @@ class MigrationApplierSpec extends FlatSpec with Matchers with DeploySpecBase wi
       case CreateModel("Step2") => succeedingSqlMutactionWithSucceedingRollback
       case CreateModel("Step3") => failingSqlMutactionWithSucceedingRollback
     })
-    val applier = migrationApplier(mapper)
 
-    val result = applier.apply(previousSchema = emptySchema, migration = migration).await
+    val applier = migrationApplier(mapper)
+    val result  = applier.apply(previousSchema = emptySchema, migration = migration).await
     result.succeeded should be(false)
 
     val persisted = loadMigrationFromDb
@@ -87,14 +83,7 @@ class MigrationApplierSpec extends FlatSpec with Matchers with DeploySpecBase wi
     persisted.rolledBack should be(1) // 1 steps were rolled back
   }
 
-  def loadMigrationFromDb: Migration = {
-    val query = for {
-      migration <- Tables.Migrations
-      if migration.projectId === projectId
-    } yield migration
-    val dbEntry = internalDb.internalDatabase.run(query.result).await.head
-    DbToModelMapper.convert(dbEntry)
-  }
+  def loadMigrationFromDb: Migration = persistence.byId(migration.id).await.get
 
   def migrationApplier(stepMapper: MigrationStepMapper) = MigrationApplierImpl(persistence, clientDb.clientDatabase, stepMapper)
 

@@ -2,7 +2,7 @@ package cool.graph.deploy.database.persistence
 
 import cool.graph.deploy.database.tables.Tables
 import cool.graph.deploy.specutils.{DeploySpecBase, TestProject}
-import cool.graph.shared.models.{Migration, MigrationStatus}
+import cool.graph.shared.models.{Migration, MigrationId, MigrationStatus}
 import org.scalatest.{FlatSpec, Matchers}
 import slick.jdbc.MySQLProfile.api._
 
@@ -10,6 +10,27 @@ class MigrationPersistenceImplSpec extends FlatSpec with Matchers with DeploySpe
 
   val migrationPersistence: MigrationPersistenceImpl = testDependencies.migrationPersistence
   val projectPersistence: ProjectPersistenceImpl     = testDependencies.projectPersistence
+
+  ".byId()" should "load a migration by project ID and revision" in {
+    val project1 = setupProject(basicTypesGql)
+    val project2 = setupProject(basicTypesGql)
+
+    val migration0Project1 = migrationPersistence.byId(MigrationId(project1.id, 1)).await.get
+    val migration1Project1 = migrationPersistence.byId(MigrationId(project1.id, 2)).await.get
+
+    migration0Project1.projectId shouldEqual project1.id
+    migration0Project1.revision shouldEqual 1
+    migration1Project1.projectId shouldEqual project1.id
+    migration1Project1.revision shouldEqual 2
+
+    val migration0Project2 = migrationPersistence.byId(MigrationId(project2.id, 1)).await.get
+    val migration1Project2 = migrationPersistence.byId(MigrationId(project2.id, 2)).await.get
+
+    migration0Project2.projectId shouldEqual project2.id
+    migration0Project2.revision shouldEqual 1
+    migration1Project2.projectId shouldEqual project2.id
+    migration1Project2.revision shouldEqual 2
+  }
 
   ".create()" should "store the migration in the db and increment the revision accordingly" in {
     val project = setupProject(basicTypesGql)
@@ -32,27 +53,9 @@ class MigrationPersistenceImplSpec extends FlatSpec with Matchers with DeploySpe
     migrations should have(size(5))
   }
 
-//  ".getUnappliedMigration()" should "return an unapplied migration from the specified project" in {
-//    val project  = setupProject(basicTypesGql)
-//    val project2 = setupProject(basicTypesGql)
-//
-//    // 2 unapplied migrations
-//    migrationPersistence.create(project, Migration.empty(project)).await
-//    migrationPersistence.create(project2, Migration.empty(project2)).await
-//
-//    val unapplied = migrationPersistence.getUnappliedMigration(project.id).await()
-//    unapplied.isDefined shouldEqual true
-//    unapplied.get.previousProject.id shouldEqual project.id
-//
-//    migrationPersistence.markMigrationAsApplied(unapplied.get.migration).await()
-//
-//    val unapplied2 = migrationPersistence.getUnappliedMigration(project2.id).await()
-//    unapplied2.isDefined shouldEqual true
-//    unapplied2.get.previousProject.id shouldEqual project2.id
-//
-//    migrationPersistence.markMigrationAsApplied(unapplied2.get.migration).await()
-//    migrationPersistence.getUnappliedMigration(project.id).await().isDefined shouldEqual false
-//  }
+  //  def updateMigrationErrors(id: MigrationId, errors: Vector[String]): Future[Unit]
+  //  def updateMigrationApplied(id: MigrationId, applied: Int): Future[Unit]
+  //  def updateMigrationRolledBack(id: MigrationId, rolledBack: Int): Future[Unit]
 
   ".updateMigrationStatus()" should "update a migration status correctly" in {
     val project          = setupProject(basicTypesGql)
@@ -63,6 +66,37 @@ class MigrationPersistenceImplSpec extends FlatSpec with Matchers with DeploySpe
     val lastMigration = migrationPersistence.getLastMigration(project.id).await.get
     lastMigration.revision shouldEqual createdMigration.revision
     lastMigration.status shouldEqual MigrationStatus.Success
+  }
+
+  ".updateMigrationErrors()" should "update the migration errors correctly" in {
+    val project          = setupProject(basicTypesGql)
+    val createdMigration = migrationPersistence.create(Migration.empty(project.id)).await
+    val errors           = Vector("This is a serious issue", "Another one, oh noes.")
+
+    migrationPersistence.updateMigrationErrors(createdMigration.id, errors).await
+
+    val reloadedMigration = migrationPersistence.byId(createdMigration.id).await.get
+    reloadedMigration.errors shouldEqual errors
+  }
+
+  ".updateMigrationApplied()" should "update the migration applied counter correctly" in {
+    val project          = setupProject(basicTypesGql)
+    val createdMigration = migrationPersistence.create(Migration.empty(project.id)).await
+
+    migrationPersistence.updateMigrationApplied(createdMigration.id, 1).await
+
+    val reloadedMigration = migrationPersistence.byId(createdMigration.id).await.get
+    reloadedMigration.applied shouldEqual 1
+  }
+
+  ".updateMigrationRolledBack()" should "update the migration rolled back counter correctly" in {
+    val project          = setupProject(basicTypesGql)
+    val createdMigration = migrationPersistence.create(Migration.empty(project.id)).await
+
+    migrationPersistence.updateMigrationRolledBack(createdMigration.id, 1).await
+
+    val reloadedMigration = migrationPersistence.byId(createdMigration.id).await.get
+    reloadedMigration.rolledBack shouldEqual 1
   }
 
   ".getLastMigration()" should "get the last migration applied to a project" in {
