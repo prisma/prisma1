@@ -175,7 +175,8 @@ case class SchemaBuilderImpl(
       ),
       mutateAndGetPayload = (args, ctx) =>
         handleMutationResult {
-          verifyAuthOrThrow(new Project(ProjectId.toEncodedString(name = args.name, stage = args.stage), ""), ctx.ctx.authorizationHeader)
+          verifyAuthOrThrow(new Project(ProjectId.toEncodedString(name = args.name, stage = args.stage), "", schema = cool.graph.shared.models.Schema()),
+                            ctx.ctx.authorizationHeader)
 
           AddProjectMutation(
             args = args,

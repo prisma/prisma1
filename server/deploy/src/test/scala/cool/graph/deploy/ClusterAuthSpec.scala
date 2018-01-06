@@ -1,7 +1,7 @@
 package cool.graph.deploy
 
 import cool.graph.deploy.server.{ClusterAuth, ClusterAuthImpl}
-import cool.graph.shared.models.Project
+import cool.graph.shared.models.{Project, Schema}
 import org.scalatest.{FlatSpec, Matchers}
 
 import scala.util.{Failure, Success}
@@ -11,20 +11,20 @@ class ClusterAuthSpec extends FlatSpec with Matchers {
     val auth = new ClusterAuthImpl(Some(publicKey))
     val jwt  = createJwt("""[{"target": "*/*/*", "action": "*"}]""")
 
-    auth.verify(Project("service@stage", ""), None).isSuccess shouldBe false
-    auth.verify(Project("service@stage", ""), Some(jwt)).isSuccess shouldBe true
+    auth.verify(Project("service@stage", "", schema = Schema()), None).isSuccess shouldBe false
+    auth.verify(Project("service@stage", "", schema = Schema()), Some(jwt)).isSuccess shouldBe true
   }
 
   "Grant with wildcard for service and stage" should "give access to any service and stage" in {
     val auth = new ClusterAuthImpl(Some(publicKey))
     val jwt  = createJwt("""[{"target": "*/*", "action": "*"}]""")
 
-    auth.verify(Project("service@stage", ""), Some(jwt)).isSuccess shouldBe true
+    auth.verify(Project("service@stage", "", schema = Schema()), Some(jwt)).isSuccess shouldBe true
   }
 
   "Grant with invalid target" should "not give access" in {
     val auth    = new ClusterAuthImpl(Some(publicKey))
-    val project = Project("service@stage", "")
+    val project = Project("service@stage", "", schema = Schema())
 
     auth.verify(project, Some(createJwt("""[{"target": "/*", "action": "*"}]"""))).isSuccess shouldBe false
     auth.verify(project, Some(createJwt("""[{"target": "*", "action": "*"}]"""))).isSuccess shouldBe false
@@ -40,8 +40,8 @@ class ClusterAuthSpec extends FlatSpec with Matchers {
     val auth = new ClusterAuthImpl(Some(publicKey))
     val jwt  = createJwt("""[{"target": "service/*", "action": "*"}]""")
 
-    auth.verify(Project("service@stage", ""), Some(jwt)).isSuccess shouldBe true
-    auth.verify(Project("otherService@stage", ""), Some(jwt)).isSuccess shouldBe false
+    auth.verify(Project("service@stage", "", schema = Schema()), Some(jwt)).isSuccess shouldBe true
+    auth.verify(Project("otherService@stage", "", schema = Schema()), Some(jwt)).isSuccess shouldBe false
   }
 
   val privateKey =
