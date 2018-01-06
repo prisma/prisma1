@@ -92,7 +92,7 @@ case class DeployTestServer()(implicit dependencies: DeployDependencies) extends
                                      graphcoolHeader: Option[String] = None): JsValue = {
 
     val schemaBuilder  = SchemaBuilder()(dependencies.system, dependencies)
-    val userContext    = SystemUserContext()
+    val userContext    = SystemUserContext(None)
     val schema         = schemaBuilder(userContext)
     val renderedSchema = SchemaRenderer.renderSchema(schema)
     val errorHandler   = ErrorHandler(requestId)

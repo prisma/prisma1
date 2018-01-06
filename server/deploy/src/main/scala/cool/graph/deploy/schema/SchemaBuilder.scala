@@ -8,15 +8,16 @@ import cool.graph.deploy.migration.migrator.Migrator
 import cool.graph.deploy.schema.fields.{AddProjectField, DeleteProjectField, DeployField, ManualMarshallerHelpers}
 import cool.graph.deploy.schema.mutations._
 import cool.graph.deploy.schema.types._
-import cool.graph.shared.models.Project
+import cool.graph.shared.models.{Project, ProjectId}
 import cool.graph.utils.future.FutureUtils.FutureOpt
 import sangria.relay.Mutation
 import sangria.schema._
 import slick.jdbc.MySQLProfile.backend.DatabaseDef
 
 import scala.concurrent.Future
+import scala.util.{Failure, Try}
 
-case class SystemUserContext()
+case class SystemUserContext(authorizationHeader: Option[String])
 
 trait SchemaBuilder {
   def apply(userContext: SystemUserContext): Schema[SystemUserContext, Unit]
@@ -147,6 +148,7 @@ case class SchemaBuilderImpl(
         handleMutationResult {
           for {
             project <- getProjectOrThrow(args.projectId)
+            _       = verifyAuthOrThrow(project, ctx.ctx.authorizationHeader)
             result <- DeployMutation(
                        args = args,
                        project = project,
@@ -172,6 +174,8 @@ case class SchemaBuilderImpl(
       ),
       mutateAndGetPayload = (args, ctx) =>
         handleMutationResult {
+          verifyAuthOrThrow(new Project(ProjectId.toEncodedString(name = args.name, stage = args.stage), ""), ctx.ctx.authorizationHeader)
+
           AddProjectMutation(
             args = args,
             projectPersistence = projectPersistence,
@@ -214,4 +218,6 @@ case class SchemaBuilderImpl(
       projectOpt.getOrElse(throw InvalidProjectId(projectId))
     }
   }
+
+  private def verifyAuthOrThrow(project: Project, authHeader: Option[String]) = dependencies.clusterAuth.verify(project, authHeader).get
 }
