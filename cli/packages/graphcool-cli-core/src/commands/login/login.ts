@@ -14,29 +14,6 @@ export default class Login extends Command {
   async run() {
     const { key } = this.flags
 
-    const secret = await this.client.requestCloudToken()
-
-    const url = `${this.config.consoleEndpoint}/cli-auth?secret=${secret}`
-
-    this.out.log(`Opening ${url} in the browser\n`)
-
-    opn(url)
-
-    this.out.action.start(`Authenticating`)
-
-    let token
-    while (!token) {
-      const cloud = await this.client.cloudTokenRequest(secret)
-      if (cloud.token) {
-        token = cloud.token
-      }
-      await new Promise(r => setTimeout(r, 1000))
-    }
-
-    this.env.databaseRC.cloudSessionKey = token
-    this.env.saveGlobalRC()
-    debug(`Saved token ${token}`)
-
-    this.out.action.stop()
+    await this.client.login()
   }
 }

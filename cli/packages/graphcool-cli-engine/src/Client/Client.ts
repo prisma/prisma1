@@ -21,6 +21,9 @@ import { Output } from '../index'
 import chalk from 'chalk'
 import { DeployPayload } from './clientTypes'
 import { introspectionQuery } from './introspectionQuery'
+import { User } from './types'
+import boolean from '../Flags/boolean'
+import * as opn from 'opn'
 
 const debug = require('debug')('client')
 
@@ -179,6 +182,7 @@ export class Client {
         debug(this.config.cloudApiEndpoint)
         debug(query)
         debug(variables)
+        debug(options)
         return await client.request(query, variables)
       },
     } as any
@@ -340,6 +344,64 @@ export class Client {
     }>(query, { secret })
 
     return cloudTokenRequest
+  }
+
+  async ensureAuth(): Promise<void> {
+    let authenticated
+    try {
+      authenticated = Boolean(await this.getAccount())
+    } catch (e) {
+      //
+    }
+
+    if (!authenticated) {
+      await this.login()
+    }
+  }
+
+  async login(key?: string): Promise<void> {
+    const secret = await this.requestCloudToken()
+
+    const url = `${this.config.consoleEndpoint}/cli-auth?secret=${secret}`
+
+    this.out.log(`Opening ${url} in the browser\n`)
+
+    opn(url)
+
+    this.out.action.start(`Authenticating`)
+
+    let token
+    while (!token) {
+      const cloud = await this.cloudTokenRequest(secret)
+      if (cloud.token) {
+        token = cloud.token
+      }
+      await new Promise(r => setTimeout(r, 500))
+    }
+
+    this.env.databaseRC.cloudSessionKey = token
+    this.env.saveGlobalRC()
+    debug(`Saved token ${token}`)
+
+    this.out.action.stop()
+  }
+
+  async getAccount(): Promise<User | null> {
+    const query = `{
+      me {
+        id
+        name
+        login {
+          email
+        }
+      }
+    }`
+
+    const { me } = await this.cloudClient.request<{
+      me: User
+    }>(query)
+
+    return me
   }
 
   async addProject(

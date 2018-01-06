@@ -13,7 +13,7 @@ import Stop from './commands/local/stop'
 import Up from './commands/local/up'
 import Eject from './commands/local/eject'
 // import PsLocal from './commands/local/ps'
-// import Account from './commands/account'
+import Account from './commands/account/account'
 import Reset from './commands/reset/reset'
 import Clusters from './commands/clusters/index'
 import Import from './commands/import/index'
@@ -98,6 +98,11 @@ export const topics = [
     description: 'Login or signup to Graphcool Cloud',
     group: 'cloud',
   },
+  {
+    name: 'account',
+    description: 'Print account information',
+    group: 'cloud',
+  },
 ]
 
 export const commands = [
@@ -121,6 +126,7 @@ export const commands = [
   PsLocal,
   Token,
   Login,
+  Account,
 ]
 
 export {
@@ -142,7 +148,7 @@ export {
   PsLocal,
   Reset,
   Clusters,
-  // Account,
+  Account,
   Import,
   Export,
   Token,
