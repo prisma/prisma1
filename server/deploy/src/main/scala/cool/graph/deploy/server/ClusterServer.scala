@@ -62,45 +62,47 @@ case class ClusterServer(
     handleExceptions(toplevelExceptionHandler(requestId)) {
       TimeResponseDirectiveImpl(DeployMetrics).timeResponse {
         post {
-          respondWithHeader(RawHeader("Request-Id", requestId)) {
-            entity(as[JsValue]) { requestJson =>
-              complete {
-                val JsObject(fields) = requestJson
-                val JsString(query)  = fields("query")
+          optionalHeaderValueByName("Authorization") { authorizationHeader =>
+            respondWithHeader(RawHeader("Request-Id", requestId)) {
+              entity(as[JsValue]) { requestJson =>
+                complete {
+                  val JsObject(fields) = requestJson
+                  val JsString(query)  = fields("query")
 
-                val operationName =
-                  fields.get("operationName") collect {
-                    case JsString(op) if !op.isEmpty => op
+                  val operationName =
+                    fields.get("operationName") collect {
+                      case JsString(op) if !op.isEmpty => op
+                    }
+
+                  val variables = fields.get("variables") match {
+                    case Some(obj: JsObject)                  => obj
+                    case Some(JsString(s)) if s.trim.nonEmpty => s.parseJson
+                    case _                                    => JsObject.empty
                   }
 
-                val variables = fields.get("variables") match {
-                  case Some(obj: JsObject)                  => obj
-                  case Some(JsString(s)) if s.trim.nonEmpty => s.parseJson
-                  case _                                    => JsObject.empty
-                }
+                  QueryParser.parse(query) match {
+                    case Failure(error) =>
+                      Future.successful(BadRequest -> JsObject("error" -> JsString(error.getMessage)))
 
-                QueryParser.parse(query) match {
-                  case Failure(error) =>
-                    Future.successful(BadRequest -> JsObject("error" -> JsString(error.getMessage)))
+                    case Success(queryAst) =>
+                      val userContext = SystemUserContext(authorizationHeader = authorizationHeader)
 
-                  case Success(queryAst) =>
-                    val userContext = SystemUserContext()
+                      val result: Future[(StatusCode, JsValue)] =
+                        Executor
+                          .execute(
+                            schema = schemaBuilder(userContext),
+                            queryAst = queryAst,
+                            userContext = userContext,
+                            variables = variables,
+                            operationName = operationName,
+                            middleware = List.empty,
+                            exceptionHandler = errorHandler.sangriaExceptionHandler
+                          )
+                          .map(node => OK -> node)
 
-                    val result: Future[(StatusCode, JsValue)] =
-                      Executor
-                        .execute(
-                          schema = schemaBuilder(userContext),
-                          queryAst = queryAst,
-                          userContext = userContext,
-                          variables = variables,
-                          operationName = operationName,
-                          middleware = List.empty,
-                          exceptionHandler = errorHandler.sangriaExceptionHandler
-                        )
-                        .map(node => OK -> node)
-
-                    result.onComplete(_ => logRequestEnd(None, None))
-                    result
+                      result.onComplete(_ => logRequestEnd(None, None))
+                      result
+                  }
                 }
               }
             }
