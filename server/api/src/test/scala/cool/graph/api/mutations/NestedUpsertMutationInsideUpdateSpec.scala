@@ -128,6 +128,58 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     mustBeEqual(result.pathAsString("data.updateTodo.comments.[1].text").toString, """new comment3""")
   }
 
+  "a one to many relation" should "generate helpfull error messages" in {
+    val project = SchemaDsl() { schema =>
+      val comment = schema.model("Comment").field("text", _.String).field("uniqueComment", _.String, isUnique = true)
+      schema.model("Todo").field("uniqueTodo", _.String, isUnique = true).oneToManyRelation("comments", "todo", comment)
+    }
+    database.setup(project)
+
+    val createResult = server.executeQuerySimple(
+      """mutation {
+        |  createTodo(
+        |    data: {
+        |      uniqueTodo: "todo"
+        |      comments: {
+        |        create: [{text: "comment1", uniqueComment: "comments"}]
+        |      }
+        |    }
+        |  ){
+        |    id
+        |    comments { id }
+        |  }
+        |}""".stripMargin,
+      project
+    )
+    val todoId     = createResult.pathAsString("data.createTodo.id")
+    val comment1Id = createResult.pathAsString("data.createTodo.comments.[0].id")
+
+    server.executeQuerySimpleThatMustFail(
+      s"""mutation {
+         |  updateTodo(
+         |    where: {
+         |      id: "$todoId"
+         |    }
+         |    data:{
+         |      comments: {
+         |        upsert: [
+         |          {where: {id: "NotExistant"}, update: {text: "update comment1"}, create: {text: "irrelevant", uniqueComment: "comments"}},
+         |        ]
+         |      }
+         |    }
+         |  ){
+         |    comments {
+         |      text
+         |    }
+         |  }
+         |}
+      """.stripMargin,
+      project,
+      errorCode = 3010,
+      errorContains = "A unique constraint would be violated on Comment. Details: Field name = uniqueComment"
+    )
+  }
+
   "a deeply nested mutation" should "execute all levels of the mutation" in {
     val project = SchemaDsl() { schema =>
       val list = schema.model("List").field_!("name", _.String)
