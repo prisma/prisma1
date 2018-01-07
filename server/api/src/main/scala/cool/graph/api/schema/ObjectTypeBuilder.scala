@@ -31,22 +31,16 @@ class ObjectTypeBuilder(
           "count",
           fieldType = LongType,
           description = Some("The number of nodes that have been affected by the Batch operation."),
-          resolve = (ctx: Context[ApiUserContext, BatchPayload]) => {
-            ctx.value.count
-          }
+          resolve = (ctx: Context[ApiUserContext, BatchPayload]) => { ctx.value.count }
         )
       )
     }
   )
 
-  val modelObjectTypes: Map[String, ObjectType[ApiUserContext, DataItem]] =
-    project.models
-      .map(model => (model.name, modelToObjectType(model)))
-      .toMap
+  val modelObjectTypes: Map[String, ObjectType[ApiUserContext, DataItem]] = project.models.map(model => (model.name, modelToObjectType(model))).toMap
 
-  val modelConnectionTypes: Map[String, ObjectType[ApiUserContext, IdBasedConnection[DataItem]]] = project.models
-    .map(model => (model.name, modelToConnectionType(model).connectionType))
-    .toMap
+  val modelConnectionTypes: Map[String, ObjectType[ApiUserContext, IdBasedConnection[DataItem]]] =
+    project.models.map(model => (model.name, modelToConnectionType(model).connectionType)).toMap
 
   def modelToConnectionType(model: Model): IdBasedConnectionDefinition[ApiUserContext, IdBasedConnection[DataItem], DataItem] = {
     IdBasedConnection.definition[ApiUserContext, IdBasedConnection, DataItem](
@@ -110,9 +104,7 @@ class ObjectTypeBuilder(
     fieldType = mapToOutputType(Some(model), field),
     description = field.description,
     arguments = mapToListConnectionArguments(model, field),
-    resolve = (ctx: Context[ApiUserContext, DataItem]) => {
-      mapToOutputResolve(model, field)(ctx)
-    },
+    resolve = (ctx: Context[ApiUserContext, DataItem]) => { mapToOutputResolve(model, field)(ctx) },
     tags = List()
   )
 
@@ -215,14 +207,8 @@ class ObjectTypeBuilder(
                 )
               }
 
-            case value: Seq[Any] if value.nonEmpty && value.head.isInstanceOf[Map[_, _]] => {
-              FilterElement(key,
-                            value
-                              .asInstanceOf[Seq[Map[String, Any]]]
-                              .map(generateFilterElement(_, model, isSubscriptionFilter)),
-                            None,
-                            filter.name)
-            }
+            case value: Seq[Any] if value.nonEmpty && value.head.isInstanceOf[Map[_, _]] =>
+              FilterElement(key, value.asInstanceOf[Seq[Map[String, Any]]].map(generateFilterElement(_, model, isSubscriptionFilter)), None, filter.name)
 
             case value: Seq[Any] =>
               FilterElement(key, value, field, filter.name)
@@ -245,13 +231,14 @@ class ObjectTypeBuilder(
 
   private def extractQueryArgumentsFromContext(model: Model, ctx: Context[_, Unit], isSubscriptionFilter: Boolean): Option[QueryArguments] = {
     val rawFilterOpt: Option[Map[String, Any]] = ctx.argOpt[Map[String, Any]]("where")
-    val filterOpt                              = rawFilterOpt.map(generateFilterElement(_, model, isSubscriptionFilter))
-    val skipOpt                                = ctx.argOpt[Int]("skip")
-    val orderByOpt                             = ctx.argOpt[OrderBy]("orderBy")
-    val afterOpt                               = ctx.argOpt[String](IdBasedConnection.Args.After.name)
-    val beforeOpt                              = ctx.argOpt[String](IdBasedConnection.Args.Before.name)
-    val firstOpt                               = ctx.argOpt[Int](IdBasedConnection.Args.First.name)
-    val lastOpt                                = ctx.argOpt[Int](IdBasedConnection.Args.Last.name)
+    println(rawFilterOpt)
+    val filterOpt  = rawFilterOpt.map(generateFilterElement(_, model, isSubscriptionFilter))
+    val skipOpt    = ctx.argOpt[Int]("skip")
+    val orderByOpt = ctx.argOpt[OrderBy]("orderBy")
+    val afterOpt   = ctx.argOpt[String](IdBasedConnection.Args.After.name)
+    val beforeOpt  = ctx.argOpt[String](IdBasedConnection.Args.Before.name)
+    val firstOpt   = ctx.argOpt[Int](IdBasedConnection.Args.First.name)
+    val lastOpt    = ctx.argOpt[Int](IdBasedConnection.Args.Last.name)
 
     Some(SangriaQueryArguments.createSimpleQueryArguments(skipOpt, afterOpt, firstOpt, beforeOpt, lastOpt, filterOpt, orderByOpt))
   }
@@ -272,8 +259,7 @@ class ObjectTypeBuilder(
 
     val arg = args.find(a => ctx.args.argOpt(a.name).isDefined) match {
       case Some(value) => value
-      case None =>
-        ??? //throw UserAPIErrors.GraphQLArgumentsException(s"None of the following arguments provided: ${args.map(_.name)}")
+      case None        => ??? //throw UserAPIErrors.GraphQLArgumentsException(s"None of the following arguments provided: ${args.map(_.name)}")
     }
 
     arg

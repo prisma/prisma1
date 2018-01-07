@@ -61,7 +61,27 @@ class DeleteManySpec extends FlatSpec with Matchers with ApiBaseSpec {
     result.pathAsLong("data.deleteManyTodoes.count") should equal(3)
 
     todoCount should equal(0)
+  }
 
+  "The delete many Mutation" should "delete all items using in" in {
+    createTodo("title1")
+    createTodo("title2")
+    createTodo("title3")
+
+    val result = server.executeQuerySimple(
+      """mutation {
+        |  deleteManyTodoes(
+        |    where: { title_in: [ "title1", "title2" ]}
+        |  ){
+        |    count
+        |  }
+        |}
+      """.stripMargin,
+      project
+    )
+    result.pathAsLong("data.deleteManyTodoes.count") should equal(2)
+
+    todoCount should equal(1)
   }
 
   def todoCount: Int = {

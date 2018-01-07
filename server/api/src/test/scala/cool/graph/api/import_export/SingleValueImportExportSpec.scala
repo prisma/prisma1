@@ -58,13 +58,16 @@ class SingleValueImportExportSpec extends FlatSpec with Matchers with ApiBaseSpe
     val request    = ExportRequest("nodes", cursor)
     val firstChunk = exporter.executeExport(dataResolver, request.toJson).await(5).convertTo[ResultFormat]
 
-    JsArray(firstChunk.out.jsonElements).toString should be("[" ++
-      """{"updatedAt":"2017-12-05T12:34:23.000Z","_typeName":"Model0","string":"string","id":"0","createdAt":"2017-11-29T14:35:13.000Z"}""" ++
-      """{"updatedAt":"2017-12-05T12:34:23.000Z","_typeName":"Model0","float":1.2345,"id":"2","createdAt":"2017-11-29T14:35:13.000Z"},""" ++
-      """{"updatedAt":"2017-12-05T12:34:23.000Z","_typeName":"Model0","id":"3","boolean":true,"createdAt":"2017-11-29T14:35:13.000Z"},""" ++
-      """{"updatedAt":"2017-12-05T12:34:23.000Z","_typeName":"Model0","datetime":"2018-01-07T15:55:19.000Z","id":"4","createdAt":"2017-11-29T14:35:13.000Z"},""" ++
-      """{"updatedAt":"2017-12-05T12:34:23.000Z","_typeName":"Model0","id":"5","enum":"HA","createdAt":"2017-11-29T14:35:13.000Z"},""" ++
-      """{"updatedAt":"2017-12-05T12:34:23.000Z","_typeName":"Model0","json":{"a":2},"id":"6","createdAt":"2017-11-29T14:35:13.000Z"}""" ++ "]")
+    val res = JsArray(firstChunk.out.jsonElements).toString
+
+    res should include("""{"updatedAt":"2017-12-05T12:34:23.000Z","_typeName":"Model0","string":"string","id":"0","createdAt":"2017-11-29T14:35:13.000Z"}""")
+    res should include("""{"updatedAt":"2017-12-05T12:34:23.000Z","_typeName":"Model0","float":1.2345,"id":"2","createdAt":"2017-11-29T14:35:13.000Z"}""")
+    res should include("""{"updatedAt":"2017-12-05T12:34:23.000Z","_typeName":"Model0","id":"3","boolean":true,"createdAt":"2017-11-29T14:35:13.000Z"}""")
+    res should include(
+      """{"updatedAt":"2017-12-05T12:34:23.000Z","_typeName":"Model0","datetime":"2018-01-07T15:55:19.000Z","id":"4","createdAt":"2017-11-29T14:35:13.000Z"}""")
+    res should include("""{"updatedAt":"2017-12-05T12:34:23.000Z","_typeName":"Model0","id":"5","enum":"HA","createdAt":"2017-11-29T14:35:13.000Z"}""")
+    res should include("""{"updatedAt":"2017-12-05T12:34:23.000Z","_typeName":"Model0","json":{"a":2},"id":"6","createdAt":"2017-11-29T14:35:13.000Z"}""")
+
     firstChunk.cursor.table should be(-1)
     firstChunk.cursor.row should be(-1)
   }
