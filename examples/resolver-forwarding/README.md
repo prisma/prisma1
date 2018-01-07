@@ -1,4 +1,4 @@
-# passthrough
+# resolver-forwarding
 
 ## Examples
 
