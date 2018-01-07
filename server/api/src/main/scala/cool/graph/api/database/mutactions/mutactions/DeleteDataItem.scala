@@ -18,7 +18,12 @@ case class DeleteDataItem(project: Project, model: Model, id: Id, previousValues
     val relayIds = TableQuery(new ProjectRelayIdTable(_, project.id))
     Future.successful(
       ClientSqlStatementResult(
-        sqlAction = DBIO.seq(DatabaseMutationBuilder.deleteDataItemById(project.id, model.name, id), relayIds.filter(_.id === id).delete)))
+        sqlAction = DBIO.seq(
+          DatabaseMutationBuilder.deleteDataItemById(project.id, model.name, id),
+          relayIds.filter(_.id === id).delete
+        )
+      )
+    )
   }
 
   override def verify(resolver: DataResolver): Future[Try[MutactionVerificationSuccess]] = {

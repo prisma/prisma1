@@ -34,16 +34,6 @@ object SqlDDL {
     (sql"update `#$projectId`.`#$modelName` set" concat escapedValues).asUpdate
   }
 
-  def createClientDatabaseForProject(projectId: String) = {
-    val idCharset =
-      charsetTypeForScalarTypeIdentifier(isList = false, TypeIdentifier.GraphQLID)
-
-    DBIO.seq(
-      sqlu"""CREATE SCHEMA `#$projectId` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci; """,
-      sqlu"""CREATE TABLE `#$projectId`.`_RelayId` (`id` CHAR(25) #$idCharset NOT NULL, `modelId` CHAR(25) #$idCharset NOT NULL, PRIMARY KEY (`id`), UNIQUE INDEX `id_UNIQUE` (`id` ASC)) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"""
-    )
-  }
-
   def copyTableData(sourceProjectId: String, sourceTableName: String, columns: List[String], targetProjectId: String, targetTableName: String) = {
     val columnString = combineByComma(columns.map(c => escapeKey(c)))
     (sql"INSERT INTO `#$targetProjectId`.`#$targetTableName` (" concat columnString concat sql") SELECT " concat columnString concat sql" FROM `#$sourceProjectId`.`#$sourceTableName`").asUpdate

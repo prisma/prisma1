@@ -96,7 +96,7 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) {
     val relay = nodes.map { element =>
       val id    = element.identifier.id
       val model = project.schema.getModelByName_!(element.identifier.typeName)
-      val x     = relayIds += ProjectRelayId(id = id, model.id)
+      val x     = relayIds += ProjectRelayId(id = id, stableModelIdentifier = model.stableIdentifier)
       x.asTry
     }
     DBIO.sequence(items ++ relay)

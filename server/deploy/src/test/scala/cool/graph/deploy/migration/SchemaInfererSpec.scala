@@ -159,6 +159,33 @@ class SchemaInfererSpec extends WordSpec with Matchers {
     }
   }
 
+  "if a model already exists and it gets renamed, the inferrer" should {
+    "infer the next model with the stable identifier of the existing model" in {
+      val project = SchemaDsl() { schema =>
+        schema.model("Todo").field("title", _.String)
+      }
+      val types =
+        """
+          |type TodoNew {
+          |  title: String
+          |}
+        """.stripMargin
+
+      val renames = SchemaMapping(
+        models = Vector(
+          Mapping(previous = "Todo", next = "TodoNew")
+        )
+      )
+
+      val newSchema = infer(project.schema, types, renames).get
+
+      val previousModel = project.schema.getModelByName_!("Todo")
+      val nextModel     = newSchema.getModelByName_!("TodoNew")
+
+      previousModel.stableIdentifier should equal(nextModel.stableIdentifier)
+    }
+  }
+
   def infer(schema: Schema, types: String, mapping: SchemaMapping = SchemaMapping.empty): Or[Schema, ProjectSyntaxError] = {
     val document = QueryParser.parse(types).get
     inferer.infer(schema, mapping, document)
