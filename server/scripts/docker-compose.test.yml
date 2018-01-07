@@ -46,6 +46,8 @@ services:
 
     volumes:
       - ../..:/root
+      - ~/.ivy2:/root/.ivy2
+      - ~/.coursier:/root/.coursier
     working_dir: /root/server
 
   client-db:
