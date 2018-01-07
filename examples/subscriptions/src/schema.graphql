@@ -1,0 +1,13 @@
+# import Post, PostSubscriptionPayload from "./generated/graphcool.graphql"
+
+type Query {
+  feed: [Post!]!
+}
+
+type Mutation {
+  writePost(title: String!, text: String!, isPublished: Boolean!): Post
+}
+
+type Subscription {
+  publications: PostSubscriptionPayload
+}

@@ -1,0 +1,15 @@
+{
+  "name": "subscriptions",
+  "scripts": {
+    "start": "NODE_ENV=dev node src/index.js",
+    "graphcool": "graphcool",
+    "playground": "graphcool playground"
+  },
+  "dependencies": {
+    "graphcool-binding": "1.3.3",
+    "graphql-yoga": "1.1.4"
+  },
+  "devDependencies": {
+    "graphcool": "1.0.0-alpha3.3.7"
+  }
+}
