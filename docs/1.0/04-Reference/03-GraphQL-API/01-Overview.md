@@ -5,7 +5,7 @@ description: How to use the API
 
 # Overview
 
-The main interface to a Graphcool database service is a GraphQL API of a Graphcool database service is the
+A Graphcool service exposes a GraphQL API, that is automatically generated based on the deployed data model.
 
 ## Authentication
 
