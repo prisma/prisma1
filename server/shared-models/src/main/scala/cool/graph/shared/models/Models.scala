@@ -187,9 +187,9 @@ case class ProjectWithClient(project: Project, client: Client)
 
 case class Model(
     name: String,
+    stableIdentifier: String,
     fields: List[Field],
     description: Option[String] = None,
-    stableIdentifier: String = Cuid.createCuid()
 ) {
   def id = name
 

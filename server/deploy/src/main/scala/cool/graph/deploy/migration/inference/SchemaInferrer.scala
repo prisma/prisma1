@@ -1,5 +1,6 @@
 package cool.graph.deploy.migration.inference
 
+import cool.graph.cuid.Cuid
 import cool.graph.deploy.gc_value.GCStringConverter
 import cool.graph.deploy.migration.DataSchemaAstExtensions._
 import cool.graph.deploy.migration.ReservedFields
@@ -43,21 +44,21 @@ case class SchemaInferrerImpl(
 
   lazy val nextModels: Vector[Model] Or ProjectSyntaxError = {
     val models = sdl.objectTypes.map { objectType =>
-      fieldsForType(objectType) match {
-        case Good(fields: Vector[Field]) =>
-          val fieldNames            = fields.map(_.name)
-          val missingReservedFields = ReservedFields.reservedFieldNames.filterNot(fieldNames.contains)
-          val hiddenReservedFields  = missingReservedFields.map(ReservedFields.reservedFieldFor(_).copy(isHidden = true))
+      fieldsForType(objectType).map { fields =>
+        val fieldNames            = fields.map(_.name)
+        val missingReservedFields = ReservedFields.reservedFieldNames.filterNot(fieldNames.contains)
+        val hiddenReservedFields  = missingReservedFields.map(ReservedFields.reservedFieldFor(_).copy(isHidden = true))
 
-          Good {
-            Model(
-              name = objectType.name,
-              fields = fields.toList ++ hiddenReservedFields
-            )
-          }
+        val stableIdentifier = baseSchema.getModelByName(schemaMapping.getPreviousModelName(objectType.name)) match {
+          case Some(existingModel) => existingModel.stableIdentifier
+          case None                => Cuid.createCuid()
+        }
 
-        case Bad(err) =>
-          Bad(err)
+        Model(
+          name = objectType.name,
+          fields = fields.toList ++ hiddenReservedFields,
+          stableIdentifier = stableIdentifier
+        )
       }
     }
 

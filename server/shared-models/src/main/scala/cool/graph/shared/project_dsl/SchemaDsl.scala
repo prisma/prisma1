@@ -264,6 +264,7 @@ object SchemaDsl {
     def build(): Model = {
       Model(
         name = name,
+        stableIdentifier = Cuid.createCuid(),
         fields = fields.toList
       )
     }

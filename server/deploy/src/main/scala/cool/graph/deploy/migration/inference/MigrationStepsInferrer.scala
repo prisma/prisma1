@@ -216,7 +216,7 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
     updates.filter(isAnyOptionSet)
   }
 
-  lazy val emptyModel = Model(name = "", fields = List.empty)
+  lazy val emptyModel = Model(name = "", stableIdentifier = "", fields = List.empty)
 
   def containsRelation(schema: Schema, ambiguityCheck: Schema, relation: Relation, adjacentModelName: String => String): Boolean = {
     schema.relations.exists { rel =>
