@@ -7,6 +7,8 @@ import * as findUp from 'find-up'
 import { Output } from './Output/index'
 import * as yaml from 'js-yaml'
 const debug = require('debug')('config')
+import { getGraphQLConfig } from 'graphql-config'
+import { values } from 'lodash'
 
 export class Config {
   /**
@@ -134,6 +136,34 @@ export class Config {
       const found = findUp.sync('graphcool.yml', { cwd: this.cwd })
       this.definitionDir = found ? path.dirname(found) : this.cwd
       this.definitionPath = found || null
+    }
+
+    if (!this.definitionPath) {
+      // try to lookup with graphql config
+      try {
+        const config = getGraphQLConfig().config
+
+        const allExtensions = [
+          config.extensions,
+          ...values(config.projects).map(p => p.extensions),
+        ]
+
+        const graphcoolExtension = allExtensions.find(e =>
+          Boolean(e && e.graphcool),
+        )
+        if (graphcoolExtension) {
+          const { graphcool } = graphcoolExtension
+          this.definitionPath = path.resolve(graphcool)
+          this.definitionDir = path.dirname(this.definitionPath)
+          debug(
+            `resolved with graphcool extension`,
+            this.definitionPath,
+            this.definitionDir,
+          )
+        }
+      } catch (e) {
+        debug(e)
+      }
     }
     debug(`definitionDir`, this.definitionDir)
     debug(`definitionPath`, this.definitionPath)
