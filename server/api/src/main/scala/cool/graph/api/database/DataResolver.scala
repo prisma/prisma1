@@ -66,7 +66,6 @@ case class DataResolver(project: Project, useMasterDatabaseOnly: Boolean = false
 
   def existsByModel(model: Model): Future[Boolean] = {
     val query = DatabaseQueryBuilder.existsByModel(project.id, model.name)
-
     performWithTiming("existsByModel", readonlyClientDatabase.run(readOnlyBoolean(query))).map(_.head)
   }
 
@@ -88,7 +87,6 @@ case class DataResolver(project: Project, useMasterDatabaseOnly: Boolean = false
 
   def loadModelRowsForExport(model: Model, args: Option[QueryArguments] = None): Future[ResolverResult] = {
     val (query, resultTransform) = DatabaseQueryBuilder.selectAllFromTable(project.id, model.name, args, None)
-
     performWithTiming("loadModelRowsForExport", readonlyClientDatabase.run(readOnlyDataItem(query)))
       .map(_.toList.map(mapDataItem(model)(_)))
       .map(resultTransform(_))
@@ -96,37 +94,28 @@ case class DataResolver(project: Project, useMasterDatabaseOnly: Boolean = false
 
   def loadListRowsForExport(tableName: String, args: Option[QueryArguments] = None): Future[ResolverResult] = {
     val (query, resultTransform) = DatabaseQueryBuilder.selectAllFromListTable(project.id, tableName, args, None)
-
     performWithTiming("loadListRowsForExport", readonlyClientDatabase.run(readOnlyScalarListValue(query))).map(_.toList).map(resultTransform(_))
   }
 
   def loadRelationRowsForExport(relationId: String, args: Option[QueryArguments] = None): Future[ResolverResult] = {
     val (query, resultTransform) = DatabaseQueryBuilder.selectAllFromTable(project.id, relationId, args, None)
-
     performWithTiming("loadRelationRowsForExport", readonlyClientDatabase.run(readOnlyDataItem(query))).map(_.toList).map(resultTransform(_))
   }
 
   def batchResolveByUnique(model: Model, key: String, values: List[Any]): Future[List[DataItem]] = {
     val query = DatabaseQueryBuilder.batchSelectFromModelByUnique(project.id, model.name, key, values)
-
-    performWithTiming("batchResolveByUnique", readonlyClientDatabase.run(readOnlyDataItem(query)))
-      .map(_.toList)
-      .map(_.map(mapDataItem(model)))
+    performWithTiming("batchResolveByUnique", readonlyClientDatabase.run(readOnlyDataItem(query))).map(_.toList).map(_.map(mapDataItem(model)))
   }
 
   def batchResolveScalarList(model: Model, field: Field, nodeIds: Vector[String]): Future[Vector[ScalarListValue]] = {
     val query = DatabaseQueryBuilder.selectFromScalarList(project.id, model.name, field.name, nodeIds)
-
     performWithTiming("batchResolveScalarList", readonlyClientDatabase.run(readOnlyScalarListValue(query)))
       .map(_.map(mapScalarListValueWithoutValidation(model, field)))
   }
 
   def batchResolveByUniqueWithoutValidation(model: Model, key: String, values: List[Any]): Future[List[DataItem]] = {
     val query = DatabaseQueryBuilder.batchSelectFromModelByUnique(project.id, model.name, key, values)
-
-    performWithTiming("batchResolveByUnique", readonlyClientDatabase.run(readOnlyDataItem(query)))
-      .map(_.toList)
-      .map(_.map(mapDataItemWithoutValidation(model)))
+    performWithTiming("batchResolveByUnique", readonlyClientDatabase.run(readOnlyDataItem(query))).map(_.toList).map(_.map(mapDataItemWithoutValidation(model)))
   }
 
   def resolveByGlobalId(globalId: String): Future[Option[DataItem]] = {
@@ -159,13 +148,7 @@ case class DataResolver(project: Project, useMasterDatabaseOnly: Boolean = false
       relationId,
       Some(QueryArguments(None, None, None, None, None, Some(List(FilterElement("A", aId), FilterElement("B", bId))), None)))
 
-    performWithTiming("resolveRelation",
-                      readonlyClientDatabase
-                        .run(
-                          readOnlyDataItem(query)
-                        )
-                        .map(_.toList)
-                        .map(resultTransform))
+    performWithTiming("resolveRelation", readonlyClientDatabase.run(readOnlyDataItem(query)).map(_.toList).map(resultTransform))
   }
 
   def resolveByRelation(fromField: Field, fromModelId: String, args: Option[QueryArguments]): Future[ResolverResult] = {
