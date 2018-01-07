@@ -231,14 +231,13 @@ class ObjectTypeBuilder(
 
   private def extractQueryArgumentsFromContext(model: Model, ctx: Context[_, Unit], isSubscriptionFilter: Boolean): Option[QueryArguments] = {
     val rawFilterOpt: Option[Map[String, Any]] = ctx.argOpt[Map[String, Any]]("where")
-    println(rawFilterOpt)
-    val filterOpt  = rawFilterOpt.map(generateFilterElement(_, model, isSubscriptionFilter))
-    val skipOpt    = ctx.argOpt[Int]("skip")
-    val orderByOpt = ctx.argOpt[OrderBy]("orderBy")
-    val afterOpt   = ctx.argOpt[String](IdBasedConnection.Args.After.name)
-    val beforeOpt  = ctx.argOpt[String](IdBasedConnection.Args.Before.name)
-    val firstOpt   = ctx.argOpt[Int](IdBasedConnection.Args.First.name)
-    val lastOpt    = ctx.argOpt[Int](IdBasedConnection.Args.Last.name)
+    val filterOpt                              = rawFilterOpt.map(generateFilterElement(_, model, isSubscriptionFilter))
+    val skipOpt                                = ctx.argOpt[Int]("skip")
+    val orderByOpt                             = ctx.argOpt[OrderBy]("orderBy")
+    val afterOpt                               = ctx.argOpt[String](IdBasedConnection.Args.After.name)
+    val beforeOpt                              = ctx.argOpt[String](IdBasedConnection.Args.Before.name)
+    val firstOpt                               = ctx.argOpt[Int](IdBasedConnection.Args.First.name)
+    val lastOpt                                = ctx.argOpt[Int](IdBasedConnection.Args.Last.name)
 
     Some(SangriaQueryArguments.createSimpleQueryArguments(skipOpt, afterOpt, firstOpt, beforeOpt, lastOpt, filterOpt, orderByOpt))
   }
