@@ -10,6 +10,7 @@ import cool.graph.shared.models.IdType.Id
 import cool.graph.shared.models.TypeIdentifier.TypeIdentifier
 import cool.graph.shared.models._
 import cool.graph.util.gc_value.{GCJsonConverter, GCValueExtractor}
+import cool.graph.utils.future.FutureUtils.FutureOpt
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 import slick.dbio.Effect.Read
@@ -125,21 +126,21 @@ case class DataResolver(project: Project, useMasterDatabaseOnly: Boolean = false
 
     val query: SqlAction[Option[String], NoStream, Read] = TableQuery(new ProjectRelayIdTable(_, project.id))
       .filter(_.id === globalId)
-      .map(_.modelId)
+      .map(_.stableModelIdentifier)
       .take(1)
       .result
       .headOption
 
     readonlyClientDatabase
       .run(query)
-      .map {
-        case Some(modelId) =>
-          val model = project.schema.getModelById_!(modelId.trim)
-          resolveByUnique(NodeSelector(model, model.getFieldByName_!("id"), GraphQLIdGCValue(globalId)))
-            .map(_.map(mapDataItem(model)).map(_.copy(typeName = Some(model.name))))
-        case _ => Future.successful(None)
+      .flatMap {
+        case Some(stableModelIdentifier) =>
+          val model = project.schema.getModelByStableIdentifier_!(stableModelIdentifier.trim)
+          resolveByUnique(NodeSelector.forId(model, globalId)).map(_.map(mapDataItem(model)))
+
+        case _ =>
+          Future.successful(None)
       }
-      .flatMap(identity)
   }
 
   def resolveRelation(relationId: String, aId: String, bId: String): Future[ResolverResult] = {
@@ -277,25 +278,28 @@ case class DataResolver(project: Project, useMasterDatabaseOnly: Boolean = false
     def isType(fieldName: String, typeIdentifier: TypeIdentifier) = model.fields.exists(f => f.name == fieldName && f.typeIdentifier == typeIdentifier)
     def isList(fieldName: String)                                 = model.fields.exists(f => f.name == fieldName && f.isList)
 
-    val res = dataItem.copy(userData = dataItem.userData.map {
-      case (f, Some(value: java.math.BigDecimal)) if isType(f, TypeIdentifier.Float) && !isList(f) =>
-        (f, Some(value.doubleValue()))
+    val res = dataItem.copy(
+      userData = dataItem.userData.map {
+        case (f, Some(value: java.math.BigDecimal)) if isType(f, TypeIdentifier.Float) && !isList(f) =>
+          (f, Some(value.doubleValue()))
 
-      case (f, Some(value: String)) if isType(f, TypeIdentifier.Json) && !isList(f) =>
-        DataResolverValidations(f, Some(value), model, validate).validateSingleJson(value)
+        case (f, Some(value: String)) if isType(f, TypeIdentifier.Json) && !isList(f) =>
+          DataResolverValidations(f, Some(value), model, validate).validateSingleJson(value)
 
-      case (f, v) if isType(f, TypeIdentifier.Boolean) && !isList(f) =>
-        DataResolverValidations(f, v, model, validate).validateSingleBoolean
+        case (f, v) if isType(f, TypeIdentifier.Boolean) && !isList(f) =>
+          DataResolverValidations(f, v, model, validate).validateSingleBoolean
 
-      case (f, v) if isType(f, TypeIdentifier.Enum) && !isList(f) =>
-        DataResolverValidations(f, v, model, validate).validateSingleEnum
+        case (f, v) if isType(f, TypeIdentifier.Enum) && !isList(f) =>
+          DataResolverValidations(f, v, model, validate).validateSingleEnum
 
-      case (f, v) if isType(f, TypeIdentifier.Enum) =>
-        DataResolverValidations(f, v, model, validate).validateListEnum
+        case (f, v) if isType(f, TypeIdentifier.Enum) =>
+          DataResolverValidations(f, v, model, validate).validateListEnum
 
-      case (f, v) =>
-        (f, v)
-    })
+        case (f, v) =>
+          (f, v)
+      },
+      typeName = Some(model.name)
+    )
 
     res
   }
