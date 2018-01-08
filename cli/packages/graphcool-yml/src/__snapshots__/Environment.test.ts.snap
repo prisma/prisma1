@@ -8,6 +8,12 @@ Array [
     "local": false,
     "name": "graphcool-eu1",
   },
+  Cluster {
+    "baseUrl": "https://graphcool-us1.graphcool.cloud",
+    "clusterSecret": undefined,
+    "local": false,
+    "name": "graphcool-us1",
+  },
 ]
 `;
 
@@ -19,6 +25,12 @@ Array [
     "local": false,
     "name": "graphcool-eu1",
   },
+  Cluster {
+    "baseUrl": "https://graphcool-us1.graphcool.cloud",
+    "clusterSecret": undefined,
+    "local": false,
+    "name": "graphcool-us1",
+  },
 ]
 `;
 
@@ -29,6 +41,12 @@ Array [
     "clusterSecret": undefined,
     "local": false,
     "name": "graphcool-eu1",
+  },
+  Cluster {
+    "baseUrl": "https://graphcool-us1.graphcool.cloud",
+    "clusterSecret": undefined,
+    "local": false,
+    "name": "graphcool-us1",
   },
 ]
 `;
@@ -42,6 +60,12 @@ Array [
     "clusterSecret": undefined,
     "local": false,
     "name": "graphcool-eu1",
+  },
+  Cluster {
+    "baseUrl": "https://graphcool-us1.graphcool.cloud",
+    "clusterSecret": undefined,
+    "local": false,
+    "name": "graphcool-us1",
   },
 ]
 `;
@@ -64,6 +88,12 @@ Array [
     "name": "graphcool-eu1",
   },
   Cluster {
+    "baseUrl": "https://graphcool-us1.graphcool.cloud",
+    "clusterSecret": undefined,
+    "local": false,
+    "name": "graphcool-us1",
+  },
+  Cluster {
     "baseUrl": "http://localhost:60000",
     "clusterSecret": "",
     "local": true,
@@ -79,6 +109,12 @@ Array [
     "clusterSecret": undefined,
     "local": false,
     "name": "graphcool-eu1",
+  },
+  Cluster {
+    "baseUrl": "https://graphcool-us1.graphcool.cloud",
+    "clusterSecret": undefined,
+    "local": false,
+    "name": "graphcool-us1",
   },
 ]
 `;
