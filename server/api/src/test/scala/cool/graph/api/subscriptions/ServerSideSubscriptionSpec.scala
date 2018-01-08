@@ -271,173 +271,103 @@ class ServerSideSubscriptionSpec extends FlatSpec with Matchers with ApiBaseSpec
 
     webhook.headers shouldEqual Map("header" -> "value")
   }
-//
-//  "ServerSideSubscription" should "send a message to our Webhook Queue if the SSS Query matches a nested Update mutation" in {
-//    val newTodoTitle = "The title of the new todo"
-//    val createComment =
-//      s"""
-//         |mutation {
-//         |  createComment(text:"some text"){
-//         |    id
-//         |  }
-//         |}
-//      """.stripMargin
-//    val commentId = executeQuerySimple(createComment, actualProject).pathAsString("data.createComment.id")
-//
-//    webhookTestKit.expectNoPublishedMsg()
-//
-//    val updateCommentWithNestedTodo =
-//      s"""
-//         |mutation {
-//         |  updateComment(id: "$commentId",text:"some updated text", todo: {
-//         |    title:"$newTodoTitle"
-//         |    status: $newTodoStatus
-//         |  }){
-//         |    id
-//         |  }
-//         |}
-//       """.stripMargin
-//
-//    val _ = executeQuerySimple(updateCommentWithNestedTodo, actualProject).pathAsString("data.updateComment.id")
-//
-//    webhookTestKit.expectPublishCount(1)
-//
-//    val webhook = webhookTestKit.messagesPublished.head
-//
-//    webhook.functionName shouldEqual sssFunction.id
-//    webhook.projectId shouldEqual project.id
+
+  "ServerSideSubscription" should "send a message to our Webhook Queue if the SSS Query matches a nested Update mutation" in {
+    val newTodoTitle = "The title of the new todo"
+    val createComment =
+      s"""
+         |mutation {
+         |  createComment(data:{
+         |    text:"some text"
+         |  }){
+         |    id
+         |  }
+         |}
+      """.stripMargin
+    val commentId = server.executeQuerySimple(createComment, actualProject).pathAsString("data.createComment.id")
+
+    webhookTestKit.expectNoPublishedMsg()
+
+    val updateCommentWithNestedTodo =
+      s"""
+         |mutation {
+         |  updateComment(
+         |    where: { id: "$commentId"}
+         |    data: {
+         |      text:"some updated text"
+         |      todo: {
+         |        create: {
+         |          title:"$newTodoTitle"
+         |          status: $newTodoStatus
+         |        }
+         |      }
+         |    }
+         |  ){
+         |    id
+         |  }
+         |}
+       """.stripMargin
+
+    server.executeQuerySimple(updateCommentWithNestedTodo, actualProject).pathAsString("data.updateComment.id")
+
+    webhookTestKit.expectPublishCount(1)
+
+    val webhook = webhookTestKit.messagesPublished.head
+
+    webhook.functionName shouldEqual sssFunction.name
+    webhook.projectId shouldEqual project.id
 //    webhook.requestId shouldNot be(empty)
 //    webhook.id shouldNot be(empty)
-//    webhook.url shouldEqual webhookUrl
-//    webhook.payload.redactTokens shouldEqual s"""
-//                                                |{
-//                                                |  "data": {
-//                                                |    "Todo": {
-//                                                |      "node": {
-//                                                |        "title": "$newTodoTitle",
-//                                                |        "status": "$newTodoStatus",
-//                                                |        "comments": [{"text":"some updated text"}]
-//                                                |      },
-//                                                |      "previousValues": null
-//                                                |    }
-//                                                |  },
-//                                                |  "context": {
-//                                                |    "request": {
-//                                                |      "sourceIp": "",
-//                                                |      "headers": {
-//                                                |
-//                                                |      },
-//                                                |      "httpMethod": "post"
-//                                                |    },
-//                                                |    "auth": null,
-//                                                |    "sessionCache": {
-//                                                |
-//                                                |    },
-//                                                |    "environment": {
-//                                                |
-//                                                |    },
-//                                                |    "graphcool": {
-//                                                |      "projectId": "test-project-id",
-//                                                |      "alias": "test-project-alias",
-//                                                |      "pat": "*",
-//                                                |      "serviceId":"test-project-id",
-//                                                |      "rootToken": "*",
-//                                                |      "endpoints": $endpoints
-//                                                |    }
-//                                                |  }
-//                                                |}""".stripMargin.parseJson.compactPrint
-//
-//    webhook.headers shouldEqual Map("header" -> "value")
-//  }
-//
-//  "ServerSideSubscription" should "NOT send a message to our Webhook Queue if the SSS Query does not match" in {
-//    val theTitle = "The title of the new todo"
-//    val createTodo =
-//      s"""
-//         |mutation {
-//         |  createTodo(title:"$theTitle", status: Active){
-//         |    id
-//         |  }
-//         |}
-//      """.stripMargin
-//    val id = executeQuerySimple(createTodo, actualProject).pathAsString("data.createTodo.id")
-//
-//    webhookTestKit.expectPublishCount(1)
-//
-//    executeQuerySimple(
-//      s"""
-//         |mutation {
-//         |  updateTodo(id: "$id", title:"new title", status: Done){
-//         |    id
-//         |  }
-//         |}
-//      """.stripMargin,
-//      actualProject
-//    ).pathAsString("data.updateTodo.id")
-//
-//    webhookTestKit.expectNoPublishedMsg()
-//  }
-//
-//  "ServerSideSubscription" should "trigger a managed function" in {
-//    val actualProjectManagedFunction = project.copy(functions = List(sssManagedFunction))
-//    def endpoints                    = AnyJsonFormat.write(endpointResolver.endpoints(actualProjectManagedFunction.id).toMap).compactPrint
-//
-//    val createTodo =
-//      s"""
-//         |mutation {
-//         |  createTodo(title:"$newTodoTitle", status: $newTodoStatus){
-//         |    id
-//         |  }
-//         |}
-//      """.stripMargin
-//
-//    executeQuerySimple(createTodo, actualProjectManagedFunction).pathAsString("data.createTodo.id")
-//    val functionEnvironment = injector.functionEnvironment.asInstanceOf[TestFunctionEnvironment]
-//    val invocations         = functionEnvironment.invocations
-//
-//    invocations.length shouldEqual 1      // Fire one managed function
-//    webhookTestKit.expectNoPublishedMsg() // Don't fire a webhook
-//
-//    val lastInvocation = invocations.last
-//    val parsedEvent    = lastInvocation.event.parseJson
-//
-//    lastInvocation.event.redactTokens shouldEqual s"""
-//                                                     |{
-//                                                     |  "data": {
-//                                                     |    "Todo": {
-//                                                     |      "node": {
-//                                                     |        "title": "$newTodoTitle",
-//                                                     |        "status": "$newTodoStatus",
-//                                                     |        "comments": []
-//                                                     |      },
-//                                                     |      "previousValues": null
-//                                                     |    }
-//                                                     |  },
-//                                                     |  "context": {
-//                                                     |    "request": {
-//                                                     |      "sourceIp": "",
-//                                                     |      "headers": {
-//                                                     |
-//       |      },
-//                                                     |      "httpMethod": "post"
-//                                                     |    },
-//                                                     |    "auth": null,
-//                                                     |    "sessionCache": {
-//                                                     |
-//       |    },
-//                                                     |    "environment": {
-//                                                     |
-//       |    },
-//                                                     |    "graphcool": {
-//                                                     |      "projectId": "test-project-id",
-//                                                     |      "alias": "test-project-alias",
-//                                                     |      "pat": "*",
-//                                                     |      "serviceId":"test-project-id",
-//                                                     |      "rootToken": "*",
-//                                                     |      "endpoints": $endpoints
-//                                                     |    }
-//                                                     |  }
-//                                                     |}
-//      """.stripMargin.parseJson.compactPrint
-//  }
+    webhook.url shouldEqual webhookUrl
+    webhook.payload shouldEqual s"""
+                                  |{
+                                  |  "data": {
+                                  |    "todo": {
+                                  |      "node": {
+                                  |        "title": "$newTodoTitle",
+                                  |        "status": "$newTodoStatus",
+                                  |        "comments": [{"text":"some updated text"}]
+                                  |      },
+                                  |      "previousValues": null
+                                  |    }
+                                  |  }
+                                  |}""".stripMargin.parseJson.compactPrint
+
+    webhook.headers shouldEqual Map("header" -> "value")
+  }
+
+  "ServerSideSubscription" should "NOT send a message to our Webhook Queue if the SSS Query does not match" in {
+    val theTitle = "The title of the new todo"
+    val createTodo =
+      s"""mutation {
+         |  createTodo(data:{
+         |    title:"$theTitle"
+         |    status: Active
+         |  }){
+         |    id
+         |  }
+         |}
+      """.stripMargin
+    val id = server.executeQuerySimple(createTodo, actualProject).pathAsString("data.createTodo.id")
+
+    webhookTestKit.expectPublishCount(1)
+
+    server
+      .executeQuerySimple(
+        s"""
+         |mutation {
+         |  updateTodo(
+         |    where: { id: "$id" }
+         |    data: { title:"new title", status: Done } 
+         |  ){
+         |    id
+         |  }
+         |}
+      """.stripMargin,
+        actualProject
+      )
+      .pathAsString("data.updateTodo.id")
+
+    webhookTestKit.expectNoPublishedMsg()
+  }
 }
