@@ -58,13 +58,30 @@ export class GraphcoolDefinitionClass {
       this.typesString = this.getTypesString(this.definition)
       const secrets = this.definition.secret
       this.secrets = secrets ? secrets.replace(/\s/g, '').split(',') : null
-      const disableAuth = this.definition.disableAuth
-      if (this.secrets === null && !disableAuth) {
-        throw new Error(
-          'Please either provide a secret in your graphcool.yml or disableAuth: true',
-        )
-      }
+      this.validate()
     }
+  }
+
+  validate() {
+    const disableAuth = this.definition!.disableAuth
+    if (this.secrets === null && !disableAuth) {
+      throw new Error(
+        'Please either provide a secret in your graphcool.yml or disableAuth: true',
+      )
+    }
+
+    // shared clusters need a workspace
+    const clusterName = this.getClusterName()
+    if (
+      clusterName &&
+      this.env.sharedClusters.includes(clusterName) &&
+      !this.getWorkspace()
+    ) {
+      throw new Error(
+        `You provided the cluster ${clusterName}, but it needs to be prepended with the workspace you want to deploy to`,
+      )
+    }
+    this.env.sharedClusters
   }
 
   getToken(serviceName: string, stageName: string): string | undefined {
@@ -84,9 +101,10 @@ export class GraphcoolDefinitionClass {
   }
 
   getCluster(): Cluster | undefined {
-    if (this.definition && this.definition.cluster) {
-      const cluster = this.env.clusterByName(this.definition.cluster)
-      if (!cluster && this.definition.cluster !== 'local') {
+    const clusterName = this.getClusterName()
+    if (clusterName) {
+      const cluster = this.env.clusterByName(clusterName)
+      if (!cluster && clusterName !== 'local') {
         throw new Error(
           `Cluster ${cluster}, that is provided in the graphcoo.yml could not be found.`,
         )
@@ -117,6 +135,24 @@ export class GraphcoolDefinitionClass {
     })
 
     return allTypes
+  }
+
+  getClusterName(): string | null {
+    if (this.definition && this.definition.cluster) {
+      return this.definition!.cluster!.split('/').slice(-1)[0]
+    }
+    return null
+  }
+
+  getWorkspace(): string | null {
+    if (this.definition && this.definition.cluster) {
+      const splitted = this.definition!.cluster!.split('/')
+      if (splitted.length > 1) {
+        return splitted[0]
+      }
+    }
+
+    return null
   }
 
   async addCluster(cluster: string, args: any) {

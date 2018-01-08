@@ -68,3 +68,9 @@ export interface MigrationStep {
   // updateModel
   um_newName?: string | null
 }
+
+export interface Workspace {
+  id: string
+  name: string
+  slug: string
+}

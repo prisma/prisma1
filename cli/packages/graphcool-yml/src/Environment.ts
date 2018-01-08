@@ -14,11 +14,15 @@ import { DatabaseRC } from './types/rc'
 import { EnvironmentMigrator } from './EnvironmentMigrator'
 const debug = require('debug')('Environment')
 
+const isDev = (process.env.ENV || '').toLowerCase() === 'dev'
+
 export class Environment {
-  sharedClusters: string[] = ['shared-public-demo']
-  sharedEndpoint = (process.env.ENV || '').toLowerCase() === 'dev'
-    ? 'https://dev.database-beta.graph.cool'
-    : 'https://database-beta.graph.cool'
+  sharedClusters: string[] = ['graphcool-eu1']
+  clusterEndpointMap: { [key: string]: string } = {
+    'graphcool-eu1': isDev
+      ? 'https://dev.database-beta.graph.cool'
+      : 'https://database-beta.graph.cool',
+  }
   args: Args
   activeCluster: Cluster
   globalRC: RC = {}
@@ -42,25 +46,26 @@ export class Environment {
   }
 
   async setSharedClusters() {
-    try {
-      const res = await fetch('https://stats.graph.cool/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        } as any,
-        body: JSON.stringify({ query: `{publicClusters}` }),
-      })
-      const json = await res.json()
-      if (
-        json.data.publicClusters &&
-        Array.isArray(json.data.publicClusters) &&
-        json.data.publicClusters.length > 0
-      ) {
-        this.sharedClusters = json.data.publicClusters
-      }
-    } catch (e) {
-      console.error(e)
-    }
+    // TODO: reenable
+    // try {
+    //   const res = await fetch('https://stats.graph.cool/', {
+    //     method: 'POST',
+    //     headers: {
+    //       'Content-Type': 'application/json',
+    //     } as any,
+    //     body: JSON.stringify({ query: `{publicClusters}` }),
+    //   })
+    //   const json = await res.json()
+    //   if (
+    //     json.data.publicClusters &&
+    //     Array.isArray(json.data.publicClusters) &&
+    //     json.data.publicClusters.length > 0
+    //   ) {
+    //     this.sharedClusters = json.data.publicClusters
+    //   }
+    // } catch (e) {
+    //   console.error(e)
+    // }
   }
 
   clusterByName(name: string, throws: boolean = false): Cluster | undefined {
@@ -159,7 +164,7 @@ export class Environment {
     return this.sharedClusters.map(clusterName => {
       return new Cluster(
         clusterName,
-        this.sharedEndpoint,
+        this.clusterEndpointMap[clusterName],
         rc && rc.cloudSessionKey,
         false,
       )

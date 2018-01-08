@@ -16,10 +16,18 @@ export default class ClusterToken extends Command {
     await this.definition.load(this.flags)
     const serviceName = this.definition.definition!.service
     const stage = this.definition.definition!.stage
-    const clusterName = this.definition.definition!.cluster
+    const clusterName = this.definition.getClusterName()
     const cluster = this.env.clusterByName(clusterName!, true)
 
-    const { token } = cluster!
+    if (!clusterName) {
+      throw new Error(`Please provide a cluster in your graphcool.yml`)
+    }
+
+    const token = cluster!.generateClusterToken(
+      serviceName,
+      this.definition.getWorkspace() || '*',
+      stage,
+    )
 
     if (copy) {
       await new Promise(r => {

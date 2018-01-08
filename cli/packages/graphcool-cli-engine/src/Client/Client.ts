@@ -20,7 +20,7 @@ import { Environment, Cluster } from 'graphcool-yml'
 import { Output } from '../index'
 import chalk from 'chalk'
 import { introspectionQuery } from './introspectionQuery'
-import { User, Migration, DeployPayload } from './types'
+import { User, Migration, DeployPayload, Workspace } from './types'
 import boolean from '../Flags/boolean'
 import * as opn from 'opn'
 
@@ -109,6 +109,7 @@ export class Client {
   config: Config
   env: Environment
   out: Output
+  clusterClient: GraphQLClient
   public mock: (input: { request: any; response: any }) => void
 
   private mocks: { [request: string]: string } = {}
@@ -121,10 +122,17 @@ export class Client {
   }
 
   // always create a new client which points to the latest config for each request
-  getClient(cluster: Cluster) {
-    return new GraphQLClient(cluster.getDeployEndpoint(), {
+  async initClusterClient(
+    cluster: Cluster,
+    workspaceSlug: string,
+    serviceName: string,
+    stageName?: string,
+  ) {
+    const token = await cluster.getToken(serviceName, workspaceSlug, stageName)
+    debug(`Token`, token)
+    this.clusterClient = new GraphQLClient(cluster.getDeployEndpoint(), {
       headers: {
-        Authorization: `Bearer ${cluster.token}`,
+        Authorization: `Bearer ${token}`,
       },
     })
   }
@@ -134,7 +142,6 @@ export class Client {
         `No cluster set. Please set the "cluster" property in your graphcool.yml`,
       )
     }
-    const localClient = this.getClient(this.env.activeCluster!)
     return {
       request: async (query, variables) => {
         debug(`Sending query to cluster ${this.env.activeCluster.name}`)
@@ -142,15 +149,15 @@ export class Client {
         debug(query)
         debug(variables)
         try {
-          const result = await localClient.request(query, variables)
+          const result = await this.clusterClient.request(query, variables)
           debug(result)
           return result
         } catch (e) {
-          if (e.message.startsWith('No valid session')) {
-            // await this.auth.ensureAuth(true)
-            // try again with new token
-            return await this.client.request(query, variables)
-          } else if (
+          // if (e.message.startsWith('No valid session')) {
+          // await this.auth.ensureAuth(true)
+          // try again with new token
+          // return await this.client.request(query, variables)
+          /*} else */ if (
             e.message.includes('ECONNREFUSED') &&
             (e.message.includes('localhost') || e.message.includes('127.0.0.1'))
           ) {
@@ -404,6 +411,74 @@ export class Client {
     return me
   }
 
+  async generateClusterToken(
+    workspaceSlug: string,
+    clusterName: string,
+    serviceName: string,
+    stageName: string,
+  ): Promise<string> {
+    const query = `
+      mutation ($input: GenerateClusterTokenRequest!) {
+        generateClusterToken(input: $input) {
+          clusterToken
+        }
+      }
+    `
+
+    const {
+      generateClusterToken: { clusterToken },
+    } = await this.cloudClient.request<{
+      generateClusterToken: {
+        clusterToken: string
+      }
+    }>(query, {
+      input: {
+        workspaceSlug,
+        clusterName,
+        serviceName,
+        stageName,
+      },
+    })
+
+    return clusterToken
+  }
+
+  async isAuthenticated(): Promise<boolean> {
+    let authenticated = false
+    try {
+      const account = await this.getAccount()
+      if (account) {
+        authenticated = Boolean(account)
+      }
+    } catch (e) {
+      //
+    }
+
+    return authenticated
+  }
+
+  async getWorkspaces(): Promise<Workspace[]> {
+    const query = `{
+      me {
+        memberships {
+          workspace {
+            id
+            name
+            slug
+          }
+        }
+      }
+    }`
+
+    const { me: { memberships } } = await this.cloudClient.request<{
+      me: {
+        memberships: Array<{ workspace: Workspace }>
+      }
+    }>(query)
+
+    return memberships.map(m => m.workspace)
+  }
+
   async addProject(
     name: string,
     stage: string,
@@ -515,9 +590,8 @@ export class Client {
   async getCluster(name: string, stage: string): Promise<Cluster | null> {
     const foundClusters: Cluster[] = []
     for (const cluster of this.env.clusters) {
-      const client = this.getClient(cluster)
       try {
-        const { project } = await client.request<{
+        const { project } = await this.client.request<{
           project: Project
         }>(
           `

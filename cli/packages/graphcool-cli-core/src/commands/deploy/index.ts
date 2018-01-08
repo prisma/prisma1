@@ -107,7 +107,8 @@ ${chalk.gray(
     let gotCluster = false
 
     if (!cluster) {
-      cluster = await this.getCluster(serviceName, stage)
+      const clusterWorkspace = await this.getCluster(serviceName, stage)
+      cluster = clusterWorkspace.cluster
       gotCluster = true
     }
 
@@ -129,6 +130,13 @@ ${chalk.gray(
       )
     }
 
+    await this.client.initClusterClient(
+      cluster,
+      this.definition.getWorkspace() || '*',
+      serviceName,
+      stage,
+    )
+
     await this.checkVersions(cluster!)
 
     let projectNew = false
@@ -137,7 +145,15 @@ ${chalk.gray(
       projectNew = true
     }
 
-    await this.deploy(stage, serviceName, cluster!, force, dryRun, projectNew)
+    await this.deploy(
+      stage,
+      serviceName,
+      cluster!,
+      this.definition.definition!.cluster!,
+      force,
+      dryRun,
+      projectNew,
+    )
 
     if (watch) {
       this.out.log('Watching for change...')
@@ -151,6 +167,7 @@ ${chalk.gray(
                 stage,
                 this.definition.definition!.service,
                 cluster!,
+                this.definition.definition!.cluster!,
                 force,
                 dryRun,
                 false,
@@ -234,6 +251,7 @@ ${chalk.gray(
     stageName: string,
     serviceName: string,
     cluster: Cluster,
+    completeClusterName: string,
     force: boolean,
     dryRun: boolean,
     projectNew: boolean,
@@ -249,7 +267,7 @@ ${chalk.gray(
     this.out.action.start(
       `${verb} service ${b(serviceName)} to stage ${b(
         stageName,
-      )} on cluster ${b(cluster.name)}`,
+      )} on cluster ${b(completeClusterName)}`,
     )
 
     const migrationResult: DeployPayload = await this.client.deploy(
@@ -439,17 +457,28 @@ ${chalk.gray(
   private async getCluster(
     serviceName: string,
     stage: string,
-  ): Promise<Cluster | undefined> {
-    const name = await this.clusterSelection(serviceName, stage)
-    if (name === 'login') {
-      await this.out.error(`This is not implemented yet`)
+  ): Promise<{ cluster?: Cluster; workspace?: string }> {
+    const workspaceClusterCombination = await this.clusterSelection(
+      serviceName,
+      stage,
+    )
+    const splitted = workspaceClusterCombination.split('/')
+    const workspace = splitted.length > 1 ? splitted[0] : null
+    const clusterName = splitted.slice(-1)[0]
+    const exists = this.env.clusterByName(clusterName)
+    if (!exists) {
+      if (clusterName === 'local') {
+        await this.localUp()
+      } else {
+        await this.out.error(`Could not find selected cluster ${clusterName}`)
+      }
     }
-    const exists = this.env.clusterByName(name)
-    if (!exists && name === 'local') {
-      await this.localUp()
+    await this.definition.addCluster(workspaceClusterCombination, this.flags)
+
+    return {
+      cluster: this.env.clusterByName(clusterName) || undefined,
+      workspace: workspace || undefined,
     }
-    await this.definition.addCluster(name, this.flags)
-    return this.env.clusterByName(name)
   }
 
   private async clusterSelection(
@@ -463,55 +492,101 @@ ${chalk.gray(
     //   }
     // })
 
-    // TODO add other local clusters later
-    const localClusters: any[] = []
-    if (localClusters.length === 0) {
-      localClusters.push({
-        value: 'local',
-        name: 'local                 Local cluster (requires Docker)',
-      })
-    }
+    const loggedIn = await this.client.isAuthenticated()
+
+    console.log('LOGGGED IN', loggedIn)
+
+    const choices = loggedIn
+      ? await this.getLoggedInChoices()
+      : this.getPublicChoices()
+
     const question = {
       name: 'cluster',
       type: 'list',
       message: `Please choose the cluster you want to deploy "${serviceName}@${stage}" to`,
-      choices: [
-        ...localClusters,
-        {
-          value: 'shared-public-demo',
-          name:
-            'graphcool-eu1         Public development cluster (hosted in EU on Graphcool Cloud)',
-        },
-        {
-          value: 'shared-public-demo',
-          name:
-            'graphcool-us1         Public development cluster (hosted in US on Graphcool Cloud)',
-        },
-        new inquirer.Separator('                     '),
-        {
-          value: 'login',
-          name: 'Log in or create new account on Graphcool Cloud',
-        },
-        new inquirer.Separator('                     '),
-        new inquirer.Separator(
-          chalk.dim(
-            `Note: When not logged in, service deployments to Graphcool Cloud expire after 7 days.`,
-          ),
-        ),
-        new inquirer.Separator(
-          chalk.dim(
-            `You can learn more about deployment in the docs: http://bit.ly/graphcool-deployment`,
-          ),
-        ),
-        new inquirer.Separator('                     '),
-      ],
+      choices,
       pageSize: 9,
     }
 
     const { cluster } = await this.out.prompt(question)
     this.showedLines += 2
 
+    if (cluster === 'login') {
+      await this.client.login()
+      return this.clusterSelection(serviceName, stage)
+    }
+
     return cluster
+  }
+
+  private getLocalClusterChoices(): string[][] {
+    return [['local', 'Local cluster (requires Docker)']]
+  }
+
+  private async getLoggedInChoices(): Promise<any[]> {
+    const localChoices = this.getLocalClusterChoices()
+    const workspaces = await this.client.getWorkspaces()
+    const clusters = this.env.clusters.filter(c => !c.local)
+    const combinations: string[][] = []
+    workspaces.forEach(workspace => {
+      clusters.forEach(cluster => {
+        combinations.push([
+          `${workspace.slug}/${cluster.name}`,
+          'Free development cluster (hosted on Graphcool Cloud)',
+        ])
+      })
+    })
+
+    const allCombinations = [...localChoices, ...combinations]
+
+    const padded = this.out.printPadded(allCombinations, 0, 6).split('\n')
+    const clusterChoices = padded.map((name, index) => ({
+      name,
+      value: allCombinations[index][0],
+    }))
+
+    return [
+      ...clusterChoices,
+
+      new inquirer.Separator('                     '),
+      new inquirer.Separator(
+        chalk.dim(
+          `You can learn more about deployment in the docs: http://bit.ly/graphcool-deployment`,
+        ),
+      ),
+    ]
+  }
+
+  private getPublicChoices(): any[] {
+    return [
+      {
+        value: 'shared-public-demo',
+        name:
+          'graphcool-eu1         Public development cluster (hosted in EU on Graphcool Cloud)',
+      },
+      {
+        value: 'shared-public-demo',
+        name:
+          'graphcool-us1         Public development cluster (hosted in US on Graphcool Cloud)',
+      },
+      new inquirer.Separator('                     '),
+      {
+        value: 'login',
+        name: 'Log in or create new account on Graphcool Cloud',
+      },
+      new inquirer.Separator('                     '),
+      new inquirer.Separator(
+        chalk.dim(
+          `Note: When not logged in, service deployments to Graphcool Cloud expire after 7 days.`,
+        ),
+      ),
+      new inquirer.Separator(
+        chalk.dim(
+          `You can learn more about deployment in the docs: http://bit.ly/graphcool-deployment`,
+        ),
+      ),
+      new inquirer.Separator('                     '),
+    ]
   }
 
   private async stageNameSelector(defaultName: string): Promise<string> {

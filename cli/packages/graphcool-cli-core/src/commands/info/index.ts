@@ -38,7 +38,7 @@ export default class InfoCommand extends Command {
     const stage = this.definition.definition!.stage
 
     if (current) {
-      const clusterName = this.definition.definition!.cluster
+      const clusterName = this.definition.getClusterName()
       if (!clusterName) {
         throw new Error(
           `No cluster set. Please set the "cluster" property in your graphcool.yml`,

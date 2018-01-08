@@ -1,12 +1,15 @@
 const debug = require('debug')('environment')
 import 'isomorphic-fetch'
 import * as jwt from 'jsonwebtoken'
+import { cloudApiEndpoint } from './constants'
+import { GraphQLClient } from 'graphql-request'
 
 export class Cluster {
   name: string
   baseUrl: string
   local: boolean
   clusterSecret?: string
+  requiresAuth: boolean
   private cachedToken?: string
   constructor(
     name: string,
@@ -20,14 +23,23 @@ export class Cluster {
     this.local = local
   }
 
-  get token(): string {
+  async getToken(
+    serviceName: string,
+    workspaceSlug?: string,
+    stageName?: string,
+  ): Promise<string> {
     if (!this.clusterSecret) {
       return ''
     }
     // public clusters just take the token
-    if (!this.local) {
-      return this.clusterSecret
+    if (this.local) {
+      return this.getLocalToken()
+    } else {
+      return this.generateClusterToken(serviceName, workspaceSlug, stageName)
     }
+  }
+
+  getLocalToken() {
     if (!this.cachedToken) {
       const grants = [{ target: `*/*/*`, action: '*' }]
 
@@ -38,6 +50,45 @@ export class Cluster {
     }
 
     return this.cachedToken!
+  }
+
+  get cloudClient() {
+    return new GraphQLClient(cloudApiEndpoint, {
+      headers: {
+        Authorization: `Bearer ${this.clusterSecret}`,
+      },
+    })
+  }
+
+  async generateClusterToken(
+    serviceName: string,
+    workspaceSlug: string = '*',
+    stageName?: string,
+  ): Promise<string> {
+    const query = `
+      mutation ($input: GenerateClusterTokenRequest!) {
+        generateClusterToken(input: $input) {
+          clusterToken
+        }
+      }
+    `
+
+    const {
+      generateClusterToken: { clusterToken },
+    } = await this.cloudClient.request<{
+      generateClusterToken: {
+        clusterToken: string
+      }
+    }>(query, {
+      input: {
+        workspaceSlug,
+        clusterName: this.name,
+        serviceName,
+        stageName,
+      },
+    })
+
+    return clusterToken
   }
 
   getApiEndpoint(serviceName: string, stage: string) {
