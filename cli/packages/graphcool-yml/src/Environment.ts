@@ -19,9 +19,10 @@ const isDev = (process.env.ENV || '').toLowerCase() === 'dev'
 export class Environment {
   sharedClusters: string[] = ['graphcool-eu1']
   clusterEndpointMap: { [key: string]: string } = {
-    'graphcool-eu1': isDev
-      ? 'https://dev.database-beta.graph.cool'
-      : 'https://database-beta.graph.cool',
+    'graphcool-eu1': 'https://graphcool-eu1.graphcool.cloud',
+    // 'graphcool-eu1': isDev
+    //   ? 'https://dev.database-beta.graph.cool'
+    //   : 'https://database-beta.graph.cool',
   }
   args: Args
   activeCluster: Cluster

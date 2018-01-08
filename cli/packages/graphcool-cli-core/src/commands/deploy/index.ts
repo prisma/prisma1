@@ -99,7 +99,7 @@ ${chalk.gray(
 
     let cluster = this.definition.getCluster()
     if (
-      this.definition.definition.cluster &&
+      this.definition.definition.cluster === 'local' &&
       (!cluster || !await cluster.isOnline())
     ) {
       cluster = await this.localUp()
@@ -140,8 +140,14 @@ ${chalk.gray(
     await this.checkVersions(cluster!)
 
     let projectNew = false
-    if (!await this.projectExists(serviceName, stage)) {
-      await this.addProject(serviceName, stage)
+    if (
+      !await this.projectExists(
+        serviceName,
+        stage,
+        this.definition.getWorkspace(),
+      )
+    ) {
+      await this.addProject(serviceName, stage, this.definition.getWorkspace())
       projectNew = true
     }
 
@@ -153,6 +159,7 @@ ${chalk.gray(
       force,
       dryRun,
       projectNew,
+      this.definition.getWorkspace(),
     )
 
     if (watch) {
@@ -171,6 +178,7 @@ ${chalk.gray(
                 force,
                 dryRun,
                 false,
+                this.definition.getWorkspace(),
               )
               this.out.log('Watching for change...')
             }
@@ -229,22 +237,37 @@ ${chalk.gray(
     return cluster
   }
 
-  private async projectExists(name: string, stage: string): Promise<boolean> {
+  private async projectExists(
+    name: string,
+    stage: string,
+    workspace: string | null,
+  ): Promise<boolean> {
     try {
-      return Boolean(await this.client.getProject(name, stage))
+      return Boolean(
+        await this.client.getProject(this.concatName(name, workspace), stage),
+      )
     } catch (e) {
       return false
     }
   }
 
-  private async addProject(name: string, stage: string): Promise<void> {
+  private async addProject(
+    name: string,
+    stage: string,
+    workspace: string | null,
+  ): Promise<void> {
     this.out.action.start(`Creating stage ${stage} for service ${name}`)
     const createdProject = await this.client.addProject(
-      name,
+      this.concatName(name, workspace),
       stage,
       this.definition.secrets,
     )
     this.out.action.stop()
+  }
+
+  private concatName(name: string, workspace: string | null) {
+    const workspaceString = workspace ? `${workspace}~` : ''
+    return `${workspaceString}${name}`
   }
 
   private async deploy(
@@ -255,6 +278,7 @@ ${chalk.gray(
     force: boolean,
     dryRun: boolean,
     projectNew: boolean,
+    workspace: string | null,
   ): Promise<void> {
     this.deploying = true
     const localNote = cluster.local ? ' locally' : ''
@@ -271,7 +295,7 @@ ${chalk.gray(
     )
 
     const migrationResult: DeployPayload = await this.client.deploy(
-      serviceName,
+      this.concatName(serviceName, workspace),
       stageName,
       this.definition.typesString!,
       dryRun,
