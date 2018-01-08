@@ -117,80 +117,60 @@ class ServerSideSubscriptionSpec extends FlatSpec with Matchers with ApiBaseSpec
     webhook.headers shouldEqual Map("header" -> "value")
   }
 
-//  "ServerSideSubscription" should "send a message to our Webhook Queue if the SSS Query matches on an Update" in {
-//    val createTodo =
-//      s"""
-//         |mutation {
-//         |  createTodo(title:"$newTodoTitle"){
-//         |    id
-//         |  }
-//         |}
-//      """.stripMargin
-//    val id = executeQuerySimple(createTodo, actualProject).pathAsString("data.createTodo.id")
-//
-//    webhookTestKit.expectNoPublishedMsg()
-//
-//    val updateTodo =
-//      s"""
-//         |mutation {
-//         |  updateTodo(id: "$id", title:"$updatedTodoTitle", status: Active){
-//         |    id
-//         |  }
-//         |}
-//      """.stripMargin
-//    val _ = executeQuerySimple(updateTodo, actualProject).pathAsString("data.updateTodo.id")
-//
-//    webhookTestKit.expectPublishCount(1)
-//
-//    val webhook = webhookTestKit.messagesPublished.head
-//
-//    webhook.functionName shouldEqual sssFunction.id
-//    webhook.projectId shouldEqual project.id
+  "ServerSideSubscription" should "send a message to our Webhook Queue if the SSS Query matches on an Update" in {
+    val createTodo =
+      s"""
+         |mutation {
+         |  createTodo(data: {
+         |    title:"$newTodoTitle"
+         |  }){
+         |    id
+         |  }
+         |}
+      """.stripMargin
+    val id = server.executeQuerySimple(createTodo, actualProject).pathAsString("data.createTodo.id")
+
+    webhookTestKit.expectNoPublishedMsg()
+
+    val updateTodo =
+      s"""
+         |mutation {
+         |  updateTodo(
+         |    where: { id: "$id" }
+         |    data: { title:"$updatedTodoTitle", status: Active}
+         |  ){
+         |    id
+         |  }
+         |}
+      """.stripMargin
+    server.executeQuerySimple(updateTodo, actualProject).pathAsString("data.updateTodo.id")
+
+    webhookTestKit.expectPublishCount(1)
+
+    val webhook = webhookTestKit.messagesPublished.head
+
+    webhook.functionName shouldEqual sssFunction.name
+    webhook.projectId shouldEqual project.id
 //    webhook.requestId shouldNot be(empty)
 //    webhook.id shouldNot be(empty)
-//    webhook.url shouldEqual webhookUrl
-//    webhook.payload.redactTokens shouldEqual s"""
-//                                                |{
-//                                                |  "data": {
-//                                                |    "Todo": {
-//                                                |      "node": {
-//                                                |        "title": "$updatedTodoTitle",
-//                                                |        "status": "Active",
-//                                                |        "comments": []
-//                                                |      },
-//                                                |      "previousValues": {
-//                                                |        "title": "$newTodoTitle"
-//                                                |      }
-//                                                |    }
-//                                                |  },
-//                                                |  "context": {
-//                                                |    "request": {
-//                                                |      "sourceIp": "",
-//                                                |      "headers": {
-//                                                |
-//                                              |      },
-//                                                |      "httpMethod": "post"
-//                                                |    },
-//                                                |    "auth": null,
-//                                                |    "sessionCache": {
-//                                                |
-//                                              |    },
-//                                                |    "environment": {
-//                                                |
-//                                              |    },
-//                                                |    "graphcool": {
-//                                                |      "projectId": "test-project-id",
-//                                                |      "alias": "test-project-alias",
-//                                                |      "pat": "*",
-//                                                |      "serviceId":"test-project-id",
-//                                                |      "rootToken": "*",
-//                                                |      "endpoints": $endpoints
-//                                                |    }
-//                                                |  }
-//                                                |}""".stripMargin.parseJson.compactPrint
-//
-//    webhook.headers shouldEqual Map("header" -> "value")
-//  }
+    webhook.url shouldEqual webhookUrl
+    webhook.payload shouldEqual s"""{
+                                    |  "data": {
+                                    |    "todo": {
+                                    |      "node": {
+                                    |        "title": "$updatedTodoTitle",
+                                    |        "status": "Active",
+                                    |        "comments": []
+                                    |      },
+                                    |      "previousValues": {
+                                    |        "title": "$newTodoTitle"
+                                    |      }
+                                    |    }
+                                    |  }
+                                    |}""".stripMargin.parseJson.compactPrint
+
+    webhook.headers shouldEqual Map("header" -> "value")
+  }
 //
 //  "ServerSideSubscription" should "send a message to our Webhook Queue if the SSS Query matches on an Delete" in {
 //    val createTodo =
