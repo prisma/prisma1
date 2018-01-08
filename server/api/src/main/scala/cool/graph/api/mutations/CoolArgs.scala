@@ -15,11 +15,11 @@ case class CoolArgs(raw: Map[String, Any]) {
   def isEmpty: Boolean    = raw.isEmpty
   def isNonEmpty: Boolean = raw.nonEmpty
 
-  def subNestedMutation(relationField: Field, subModel: Model): Option[NestedMutation] = {
+  def subNestedMutation(relationField: Field, subModel: Model): NestedMutation = {
     subArgsOption(relationField) match {
-      case None             => None
-      case Some(None)       => None
-      case Some(Some(args)) => Some(args.asNestedMutation(relationField, subModel))
+      case None             => NestedMutation.empty
+      case Some(None)       => NestedMutation.empty
+      case Some(Some(args)) => args.asNestedMutation(relationField, subModel)
     }
   }
 

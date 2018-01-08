@@ -181,9 +181,7 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
   }
 
   private def computeScalarInputFields(model: Model, mapToInputType: Field => InputType[Any], inputObjectName: String) = {
-    val nonListFields = model.scalarFields.filter(!_.isList).map { field =>
-      InputField(field.name, mapToInputType(field))
-    }
+    val nonListFields = model.scalarNonListFields.map(field => InputField(field.name, mapToInputType(field)))
 
     val listFields = model.scalarListFields.map { field =>
       val setField =
@@ -197,12 +195,6 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
     }
 
     nonListFields ++ listFields
-  }
-
-  private def computeNonListScalarInputFields(model: Model, mapToInputType: Field => InputType[Any]): List[InputField[Any]] = {
-    model.scalarFields.filter(!_.isList).map { field =>
-      InputField(field.name, mapToInputType(field))
-    }
   }
 
   private def computeRelationalInputFieldsForUpdate(model: Model, omitRelation: Option[Relation]): List[InputField[Any]] = {

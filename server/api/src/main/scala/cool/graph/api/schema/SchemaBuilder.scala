@@ -2,11 +2,10 @@ package cool.graph.api.schema
 
 import akka.actor.ActorSystem
 import cool.graph.api.ApiDependencies
-import cool.graph.api.database.{DataItem, IdBasedConnection}
+import cool.graph.api.database.DataItem
 import cool.graph.api.database.DeferredTypes.{ManyModelDeferred, OneDeferred}
 import cool.graph.api.mutations._
 import cool.graph.api.mutations.mutations._
-import cool.graph.gc_values.GraphQLIdGCValue
 import cool.graph.shared.models.{Model, Project}
 import org.atteo.evo.inflector.English
 import sangria.relay.{Node, NodeDefinition, PossibleNodeObject}

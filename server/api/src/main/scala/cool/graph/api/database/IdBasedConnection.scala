@@ -101,8 +101,7 @@ object IdBasedConnection {
 
   val CursorPrefix = "arrayconnection:"
 
-  def empty[T] =
-    DefaultIdBasedConnection(PageInfo.empty, Vector.empty[Edge[T]], ConnectionParentElement(None, None, None))
+  def empty[T] = DefaultIdBasedConnection(PageInfo.empty, Vector.empty[Edge[T]], ConnectionParentElement(None, None, None))
 }
 
 case class SliceInfo(sliceStart: Int, size: Int)

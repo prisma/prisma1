@@ -125,7 +125,7 @@ object APIErrors {
       extends ClientApiError(s"The function '$functionName' returned an error: '$message'", 3031)
 
   case class RelationIsRequired(fieldName: String, typeName: String)
-      extends ClientApiError(s"The field '$fieldName' on type '$typeName' is required. Performing this mutation would violate the constraint", 3032)
+      extends ClientApiError(s"The field '$fieldName' on type '$typeName' is required. Performing this mutation would violate that constraint", 3032)
 
   case class FilterCannotBeNullOnToManyField(fieldName: String)
       extends ClientApiError(s"The field '$fieldName' is a toMany relation. This cannot be filtered by null.", 3033)
