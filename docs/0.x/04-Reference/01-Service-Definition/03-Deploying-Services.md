@@ -5,7 +5,7 @@ description: Learn how to synchronize your local changes with the remote Graphco
 
 # Deploying a Graphcool service
 
-A Graphcool service is deployed to a dedicated _target_. A target always needs to reference a specific _cluster_. are managed and configured in `.graphcoolrc`.
+A Graphcool service is deployed to a dedicated _target_. A target always needs to reference a specific _cluster_. Clusters and targets are managed and configured in `.graphcoolrc`.
 
 > Read more about how clusters and targets play together [here](!alias-zoug8seen4).
 
