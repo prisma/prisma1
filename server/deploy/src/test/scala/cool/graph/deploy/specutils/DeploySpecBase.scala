@@ -78,4 +78,5 @@ trait DeploySpecBase extends BeforeAndAfterEach with BeforeAndAfterAll with Awai
   }
 
   def formatSchema(schema: String): String = JsString(schema).toString()
+  def escapeString(str: String): String    = JsString(str).toString()
 }

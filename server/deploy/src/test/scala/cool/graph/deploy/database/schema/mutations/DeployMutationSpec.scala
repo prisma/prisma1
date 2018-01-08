@@ -1,5 +1,6 @@
 package cool.graph.deploy.database.schema.mutations
 
+import cool.graph.deploy.schema.mutations.FunctionInput
 import cool.graph.deploy.specutils.DeploySpecBase
 import cool.graph.shared.models.{MigrationStatus, Project, ProjectId}
 import org.scalatest.{FlatSpec, Matchers}
@@ -351,11 +352,36 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
 //    Thread.sleep(30000)
 //  }
 
-  def deploySchema(project: Project, schema: String) = {
+  "DeployMutation" should "create functions" in {
+    val schema = """
+                   |type TestModel {
+                   |  id: ID! @unique
+                   |  test: String
+                   |}
+                 """.stripMargin
+
+    val project = setupProject(schema)
+
+    val functions = Vector(
+      FunctionInput(name = "my-function", query = "my query", url = "http://whatever.com/webhook", headers = """{"header1":"value1"}""")
+    )
+    val result = deploySchema(project, schema, functions)
+    result.pathAsSeq("data.deploy.errors") should be(empty)
+
+    val reloadedProject = projectPersistence.load(project.id).await.get
+    reloadedProject.functions should have(size(1))
+  }
+
+  def deploySchema(project: Project, schema: String, functions: Vector[FunctionInput] = Vector.empty) = {
     val nameAndStage = ProjectId.fromEncodedString(project.id)
     server.query(s"""
       |mutation {
-      |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(schema)}}){
+      |  deploy(input:{
+      |    name: "${nameAndStage.name}"
+      |    stage: "${nameAndStage.stage}"
+      |    types: ${formatSchema(schema)}
+      |    functions: [${formatFunctions(functions)}]
+      |  }){
       |    migration {
       |      steps {
       |        type
@@ -366,5 +392,18 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
       |    }
       |  }
       |}""".stripMargin)
+  }
+
+  private def formatFunctions(functions: Vector[FunctionInput]) = {
+    def formatFunction(fn: FunctionInput) = {
+      s"""{
+         |  name: ${escapeString(fn.name)}
+         |  query: ${escapeString(fn.query)}
+         |  url: ${escapeString(fn.url)}
+         |  headers: ${escapeString(fn.headers)}
+         |}
+       """.stripMargin
+    }
+    functions.map(formatFunction).mkString(",")
   }
 }
