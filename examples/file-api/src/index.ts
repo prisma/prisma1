@@ -32,7 +32,6 @@ const server = new GraphQLServer({
       secret: process.env.GRAPHCOOL_SECRET,
     }),
   }),
-  options: { port: 5000 },
 })
 
 // Middleware ----------------------------------------------------------------
@@ -47,6 +46,8 @@ server.express.post('/upload', fileApi({
 
 // Start ---------------------------------------------------------------------
 
-server.start(() => console.log(`Server is running on http://localhost:5000`))
+server.start({ port: 5000 }, () => {
+  console.log(`Server is running on http://localhost:5000`)
+})
 
 // ---------------------------------------------------------------------------
