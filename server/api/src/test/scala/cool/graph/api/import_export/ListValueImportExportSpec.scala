@@ -106,7 +106,7 @@ class ListValueImportExportSpec extends FlatSpec with Matchers with ApiBaseSpec 
     val secondChunk = exporter.executeExport(dataResolver, request2.toJson).await().convertTo[ResultFormat]
 
     JsArray(secondChunk.out.jsonElements).toString should be("[" ++
-      """{"_typeName":"Model0","id":"1","floatList":["1.423423000000000000000000000000","3.123432423400000000000000000000","4.234324240000000000000000000000","4.234234324234000000000000000000","1.423423000000000000000000000000","3.123432423400000000000000000000","4.234324240000000000000000000000","4.234234324234000000000000000000"]},""" ++
+      """{"_typeName":"Model0","id":"1","floatList":[1.423423,3.1234324234,4.23432424,4.234234324234,1.423423,3.1234324234,4.23432424,4.234234324234]},""" ++
       """{"_typeName":"Model0","id":"1","booleanList":[true,true,false,false,true,true,false,false,false,false,false,false,true,true,false,false,true,true]}""" ++
       "]")
 

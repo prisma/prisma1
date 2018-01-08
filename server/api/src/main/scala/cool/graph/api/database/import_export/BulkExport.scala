@@ -7,6 +7,7 @@ import cool.graph.api.database.Types.UserData
 import cool.graph.api.database.import_export.ImportExport.MyJsonProtocol._
 import cool.graph.api.database.import_export.ImportExport._
 import cool.graph.api.database.{DataItem, DataResolver, QueryArguments}
+import cool.graph.shared.models.IdType.Id
 import cool.graph.shared.models.{Project, TypeIdentifier}
 import org.joda.time.format.DateTimeFormat
 import org.joda.time.{DateTime, DateTimeZone}
@@ -110,15 +111,16 @@ class BulkExport(project: Project)(implicit apiDependencies: ApiDependencies) {
   }
 
   def dataItemToExportList(dataItems: Seq[DataItem], info: ListInfo): Vector[JsonBundle] = {
-    val outputs = project.schema.getModelByName_!(info.currentModel).getFieldByName_!(info.currentField).typeIdentifier == TypeIdentifier.DateTime match {
-      case true  => dataItems.map(item => item.copy(userData = Map("value" -> Some(dateTimeToISO8601(item.userData("value").get)))))
-      case false => dataItems
+    val outputs: Seq[(Id, Any)] = project.schema.getModelByName_!(info.currentModel).getFieldByName_!(info.currentField).typeIdentifier match {
+      case TypeIdentifier.DateTime => dataItems.map(item => item.id -> dateTimeToISO8601(item.userData("value").get))
+      case TypeIdentifier.Float    => dataItems.map(item => item.id -> item.userData("value").get.toString.toDouble)
+      case _                       => dataItems.map(item => item.id -> item.userData("value").get)
     }
 
-    val distinctIds = outputs.map(_.id).distinct
+    val distinctIds = outputs.map(_._1).distinct
 
     val x = distinctIds.map { id =>
-      val values: Seq[Any]         = outputs.filter(_.id == id).map(item => item("value").get)
+      val values: Seq[Any]         = outputs.filter(_._1 == id).map(_._2)
       val result: Map[String, Any] = Map("_typeName" -> info.currentModel, "id" -> id, info.currentField -> values)
       val json                     = result.toJson
       val combinedSize             = json.toString.length
