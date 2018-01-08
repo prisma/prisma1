@@ -17,10 +17,15 @@ const debug = require('debug')('Environment')
 const isDev = (process.env.ENV || '').toLowerCase() === 'dev'
 
 export class Environment {
-  sharedClusters: string[] = ['graphcool-eu1', 'graphcool-us1']
+  sharedClusters: string[] = [
+    'graphcool-eu1',
+    'graphcool-us1',
+    'shared-public-demo',
+  ]
   clusterEndpointMap: { [key: string]: string } = {
     'graphcool-eu1': 'https://graphcool-eu1.graphcool.cloud',
     'graphcool-us1': 'https://graphcool-us1.graphcool.cloud',
+    'shared-public-demo': 'https://database-beta.graph.cool',
     // 'graphcool-eu1': isDev
     //   ? 'https://dev.database-beta.graph.cool'
     //   : 'https://database-beta.graph.cool',
@@ -49,25 +54,49 @@ export class Environment {
 
   async setSharedClusters() {
     // TODO: reenable
-    // try {
-    //   const res = await fetch('https://stats.graph.cool/', {
-    //     method: 'POST',
-    //     headers: {
-    //       'Content-Type': 'application/json',
-    //     } as any,
-    //     body: JSON.stringify({ query: `{publicClusters}` }),
-    //   })
-    //   const json = await res.json()
-    //   if (
-    //     json.data.publicClusters &&
-    //     Array.isArray(json.data.publicClusters) &&
-    //     json.data.publicClusters.length > 0
-    //   ) {
-    //     this.sharedClusters = json.data.publicClusters
-    //   }
-    // } catch (e) {
-    //   console.error(e)
-    // }
+
+    try {
+      const res = await fetch('https://stats.graph.cool/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        } as any,
+        body: JSON.stringify({
+          query: `
+        {
+          publicClusters {
+            name
+            endpoint
+            description
+          }
+        }
+        `,
+        }),
+      })
+      const json = await res.json()
+      if (
+        json.data.publicClusters &&
+        Array.isArray(json.data.publicClusters) &&
+        json.data.publicClusters.length > 0
+      ) {
+        this.sharedClusters = json.data.publicClusters.map(c => c.name)
+        this.clusterEndpointMap = json.data.publicClusters.reduce(
+          (acc, curr) => {
+            return {
+              ...acc,
+              [curr.name]: curr.endpoint,
+            }
+          },
+          {},
+        )
+
+        debug(this.sharedClusters)
+        debug(this.clusterEndpointMap)
+      }
+    } catch (e) {
+      debug(e)
+      //
+    }
   }
 
   clusterByName(name: string, throws: boolean = false): Cluster | undefined {

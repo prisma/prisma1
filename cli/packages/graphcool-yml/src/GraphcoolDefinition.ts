@@ -75,7 +75,8 @@ export class GraphcoolDefinitionClass {
     if (
       clusterName &&
       this.env.sharedClusters.includes(clusterName) &&
-      !this.getWorkspace()
+      !this.getWorkspace() &&
+      clusterName !== 'shared-public-demo'
     ) {
       throw new Error(
         `You provided the cluster ${clusterName}, but it needs to be prepended with the workspace you want to deploy to`,
@@ -106,7 +107,7 @@ export class GraphcoolDefinitionClass {
       const cluster = this.env.clusterByName(clusterName)
       if (!cluster && clusterName !== 'local') {
         throw new Error(
-          `Cluster ${cluster}, that is provided in the graphcoo.yml could not be found.`,
+          `Cluster ${clusterName}, that is provided in the graphcoo.yml could not be found.`,
         )
       }
       return cluster
