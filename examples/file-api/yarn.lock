@@ -174,6 +174,13 @@ apollo-server-express@^1.3.2:
     apollo-server-core "^1.3.2"
     apollo-server-module-graphiql "^1.3.0"
 
+apollo-server-lambda@1.3.2:
+  version "1.3.2"
+  resolved "https://registry.yarnpkg.com/apollo-server-lambda/-/apollo-server-lambda-1.3.2.tgz#bcf75f3d7115d11cc9892ad3b17427b3d536df0f"
+  dependencies:
+    apollo-server-core "^1.3.2"
+    apollo-server-module-graphiql "^1.3.0"
+
 apollo-server-module-graphiql@^1.3.0:
   version "1.3.2"
   resolved "https://registry.yarnpkg.com/apollo-server-module-graphiql/-/apollo-server-module-graphiql-1.3.2.tgz#0a9e4c48dece3af904fee333f95f7b9817335ca7"
@@ -1198,9 +1205,9 @@ graceful-fs@^4.1.11, graceful-fs@^4.1.2, graceful-fs@^4.1.6:
   version "4.1.11"
   resolved "https://registry.yarnpkg.com/graceful-fs/-/graceful-fs-4.1.11.tgz#0e8bdfe4d1ddb8854d64e04ea7c00e2a026e5658"
 
-graphcool-binding@1.3.0:
-  version "1.3.0"
-  resolved "https://registry.yarnpkg.com/graphcool-binding/-/graphcool-binding-1.3.0.tgz#3c74c5c477a37f6f12cd5d4c000f59fb5152ed44"
+graphcool-binding@^1.3.3:
+  version "1.3.3"
+  resolved "https://registry.yarnpkg.com/graphcool-binding/-/graphcool-binding-1.3.3.tgz#232a98a92b38724cb99a1e179cb20e81fc9af2e9"
   dependencies:
     apollo-link "1.0.7"
     apollo-link-error "1.0.3"
@@ -1209,7 +1216,7 @@ graphcool-binding@1.3.0:
     cross-fetch "^1.1.1"
     graphql "0.12.3"
     graphql-binding "0.5.0"
-    graphql-import "0.1.9"
+    graphql-import "0.3.0"
     graphql-tools "2.16.0"
     jsonwebtoken "^8.1.0"
     subscriptions-transport-ws "0.9.4"
@@ -1323,21 +1330,19 @@ graphql-extensions@^0.0.x:
     core-js "^2.5.1"
     source-map-support "^0.5.0"
 
-graphql-import@0.1.9, graphql-import@^0.1.9:
-  version "0.1.9"
-  resolved "https://registry.yarnpkg.com/graphql-import/-/graphql-import-0.1.9.tgz#9161f4f7ea92337b60fd40e22e64d3a68c212729"
-  dependencies:
-    "@types/graphql" "0.11.7"
-    "@types/lodash" "^4.14.85"
-    graphql "^0.12.3"
-    lodash "^4.17.4"
-
 graphql-import@0.2.0:
   version "0.2.0"
   resolved "https://registry.yarnpkg.com/graphql-import/-/graphql-import-0.2.0.tgz#4877fef467d8a9255e6760c3988f6c00018e94af"
   dependencies:
     "@types/graphql" "0.11.7"
     "@types/lodash" "^4.14.85"
+    graphql "^0.12.3"
+    lodash "^4.17.4"
+
+graphql-import@0.3.0:
+  version "0.3.0"
+  resolved "https://registry.yarnpkg.com/graphql-import/-/graphql-import-0.3.0.tgz#4eb2c8aabac7fdb535fd1507b565336f4f707a64"
+  dependencies:
     graphql "^0.12.3"
     lodash "^4.17.4"
 
@@ -1359,6 +1364,13 @@ graphql-import@^0.1.7:
     graphql "^0.12.3"
     lodash "^4.17.4"
 
+graphql-import@^0.3.0:
+  version "0.3.1"
+  resolved "https://registry.yarnpkg.com/graphql-import/-/graphql-import-0.3.1.tgz#953f31323e851b5246602ea8e3d36a95b8fc47b5"
+  dependencies:
+    graphql "^0.12.3"
+    lodash "^4.17.4"
+
 graphql-playground-html@1.4.2:
   version "1.4.2"
   resolved "https://registry.yarnpkg.com/graphql-playground-html/-/graphql-playground-html-1.4.2.tgz#af97a84ea6cf6ba18e8ff148a6a8b17eef40aa46"
@@ -1373,12 +1385,11 @@ graphql-playground-html@^1.3.6:
   dependencies:
     graphql-config "^1.0.9"
 
-graphql-playground-middleware-express@1.4.3:
-  version "1.4.3"
-  resolved "https://registry.yarnpkg.com/graphql-playground-middleware-express/-/graphql-playground-middleware-express-1.4.3.tgz#51e46711fc75b94bcc23b058ea364789a1bda65b"
+graphql-playground-middleware-express@1.4.7:
+  version "1.4.7"
+  resolved "https://registry.yarnpkg.com/graphql-playground-middleware-express/-/graphql-playground-middleware-express-1.4.7.tgz#d6a8c11def09d36cd613bce996df3adc286b364a"
   dependencies:
     graphql-playground-html "1.4.2"
-    graphql-playground-middleware "^1.2.1-beta.6"
 
 graphql-playground-middleware-express@^1.3.1:
   version "1.3.6"
@@ -1386,6 +1397,12 @@ graphql-playground-middleware-express@^1.3.1:
   dependencies:
     graphql-playground-html "^1.3.6"
     graphql-playground-middleware "^1.2.1-beta.6"
+
+graphql-playground-middleware-lambda@1.3.9:
+  version "1.3.9"
+  resolved "https://registry.yarnpkg.com/graphql-playground-middleware-lambda/-/graphql-playground-middleware-lambda-1.3.9.tgz#29109890f396b71161f79d5c83c8a0af8dc4f8b6"
+  dependencies:
+    graphql-playground-html "^1.3.6"
 
 graphql-playground-middleware@^1.2.1-beta.6:
   version "1.2.1-beta.6"
@@ -1436,9 +1453,9 @@ graphql-tools@2.16.0, graphql-tools@^2.16.0:
     graphql-subscriptions "^0.5.6"
     uuid "^3.1.0"
 
-graphql-yoga@0.8.4:
-  version "0.8.4"
-  resolved "https://registry.yarnpkg.com/graphql-yoga/-/graphql-yoga-0.8.4.tgz#0a38bd3172e063fc978295d973cfe812c9ed9c15"
+graphql-yoga@^1.1.4:
+  version "1.1.4"
+  resolved "https://registry.yarnpkg.com/graphql-yoga/-/graphql-yoga-1.1.4.tgz#ab388ed29e9c4562d9e9a48f3c0484c3e9d07901"
   dependencies:
     "@types/cors" "^2.8.3"
     "@types/express" "^4.0.39"
@@ -1446,13 +1463,15 @@ graphql-yoga@0.8.4:
     "@types/zen-observable" "^0.5.3"
     apollo-link "^1.0.7"
     apollo-server-express "^1.3.2"
+    apollo-server-lambda "1.3.2"
     apollo-upload-server "^4.0.0-alpha.1"
     body-parser-graphql "1.0.0"
     cors "^2.8.4"
     express "^4.16.2"
     graphql "^0.12.0"
-    graphql-import "^0.1.9"
-    graphql-playground-middleware-express "1.4.3"
+    graphql-import "^0.3.0"
+    graphql-playground-middleware-express "1.4.7"
+    graphql-playground-middleware-lambda "1.3.9"
     graphql-subscriptions "^0.5.6"
     graphql-tools "^2.16.0"
     portfinder "^1.0.13"
