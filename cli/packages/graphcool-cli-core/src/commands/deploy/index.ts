@@ -24,6 +24,7 @@ const debug = require('debug')('deploy')
 import * as Raven from 'raven'
 import { prettyTime } from '../../util'
 import { spawn } from '../../spawn'
+import * as sillyname from 'sillyname'
 
 export default class Deploy extends Command {
   static topic = 'deploy'
@@ -227,6 +228,14 @@ ${chalk.gray(
         }
       }
     }
+  }
+
+  private getSillyName() {
+    return `${slugify(sillyname())}-${Math.round(Math.random() * 1000000)}`
+  }
+
+  private getPublicName() {
+    return `public-${this.getSillyName()}`
   }
 
   private async localUp(): Promise<Cluster> {
@@ -482,14 +491,24 @@ ${chalk.gray(
     serviceName: string,
     stage: string,
   ): Promise<{ cluster?: Cluster; workspace?: string }> {
-    const workspaceClusterCombination = await this.clusterSelection(
+    const loggedIn = await this.client.isAuthenticated()
+    let workspaceClusterCombination = await this.clusterSelection(
       serviceName,
       stage,
+      loggedIn,
     )
     const splitted = workspaceClusterCombination.split('/')
-    const workspace = splitted.length > 1 ? splitted[0] : null
+    let workspace = splitted.length > 1 ? splitted[0] : null
     const clusterName = splitted.slice(-1)[0]
     const exists = this.env.clusterByName(clusterName)
+
+    // in this case it's a public cluster and we need to generate a workspace name
+    if (!loggedIn && exists && !exists.local) {
+      workspace = this.getPublicName()
+      debug(`silly name`, workspace)
+      workspaceClusterCombination = `${workspace}/${clusterName}`
+    }
+
     if (!exists) {
       if (clusterName === 'local') {
         await this.localUp()
@@ -508,17 +527,9 @@ ${chalk.gray(
   private async clusterSelection(
     serviceName: string,
     stage: string,
+    loggedIn: boolean,
   ): Promise<string> {
-    // const localClusters = this.env.clusters.filter(c => c.local).map(c => {
-    //   return {
-    //     value: c.name,
-    //     name: c.name,
-    //   }
-    // })
-
-    const loggedIn = await this.client.isAuthenticated()
-
-    console.log('LOGGGED IN', loggedIn)
+    debug({ loggedIn })
 
     const choices = loggedIn
       ? await this.getLoggedInChoices()
@@ -537,7 +548,7 @@ ${chalk.gray(
 
     if (cluster === 'login') {
       await this.client.login()
-      return this.clusterSelection(serviceName, stage)
+      return this.clusterSelection(serviceName, stage, loggedIn)
     }
 
     return cluster
@@ -563,15 +574,8 @@ ${chalk.gray(
 
     const allCombinations = [...localChoices, ...combinations]
 
-    const padded = this.out.printPadded(allCombinations, 0, 6).split('\n')
-    const clusterChoices = padded.map((name, index) => ({
-      name,
-      value: allCombinations[index][0],
-    }))
-
     return [
-      ...clusterChoices,
-
+      ...this.convertChoices(allCombinations),
       new inquirer.Separator('                     '),
       new inquirer.Separator(
         chalk.dim(
@@ -581,18 +585,25 @@ ${chalk.gray(
     ]
   }
 
+  private convertChoices(
+    choices: string[][],
+  ): Array<{ value: string; name: string }> {
+    const padded = this.out.printPadded(choices, 0, 6).split('\n')
+    return padded.map((name, index) => ({
+      name,
+      value: choices[index][0],
+    }))
+  }
+
   private getPublicChoices(): any[] {
+    const publicChoices = [
+      'graphcool-eu1',
+      'Public development cluster (hosted in EU on Graphcool Cloud)',
+    ]
+    const allCombinations = [...this.getLocalClusterChoices(), publicChoices]
+
     return [
-      {
-        value: 'shared-public-demo',
-        name:
-          'graphcool-eu1         Public development cluster (hosted in EU on Graphcool Cloud)',
-      },
-      {
-        value: 'shared-public-demo',
-        name:
-          'graphcool-us1         Public development cluster (hosted in US on Graphcool Cloud)',
-      },
+      ...this.convertChoices(allCombinations),
       new inquirer.Separator('                     '),
       {
         value: 'login',
@@ -631,4 +642,15 @@ ${chalk.gray(
 
 export function isValidProjectName(projectName: string): boolean {
   return /^[A-Z](.*)/.test(projectName)
+}
+
+function slugify(text) {
+  return text
+    .toString()
+    .toLowerCase()
+    .replace(/\s+/g, '-') // Replace spaces with -
+    .replace(/[^\w\-]+/g, '') // Remove all non-word chars
+    .replace(/\-\-+/g, '-') // Replace multiple - with single -
+    .replace(/^-+/, '') // Trim - from start of text
+    .replace(/-+$/, '') // Trim - from end of text
 }
