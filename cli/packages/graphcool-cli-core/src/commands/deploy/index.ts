@@ -326,7 +326,10 @@ ${chalk.gray(
       let done = false
       while (!done) {
         const revision = migrationResult.migration.revision
-        const migration = await this.client.getMigration(serviceName, stageName)
+        const migration = await this.client.getMigration(
+          this.concatName(serviceName, workspace),
+          stageName,
+        )
 
         if (migration.errors && migration.errors.length > 0) {
           await this.out.error(migration.errors.join('\n'))
@@ -360,7 +363,12 @@ ${chalk.gray(
       // no action required
       this.deploying = false
       if (migrationResult.migration) {
-        this.printEndpoints(cluster, serviceName, stageName)
+        this.printEndpoints(
+          cluster,
+          serviceName,
+          stageName,
+          this.definition.getWorkspace() || undefined,
+        )
       }
     }
   }
@@ -481,10 +489,21 @@ ${chalk.gray(
     cluster: Cluster,
     serviceName: string,
     stageName: string,
+    workspace?: string,
   ) {
     this.out.log(`\n${chalk.bold('Your GraphQL database endpoint is live:')}
 
-  ${chalk.bold('HTTP:')}  ${cluster.getApiEndpoint(serviceName, stageName)}\n`)
+  ${chalk.bold('HTTP:')}  ${cluster.getApiEndpoint(
+      serviceName,
+      stageName,
+      workspace,
+    )}
+  ${chalk.bold('WS:')}    ${cluster.getWSEndpoint(
+      serviceName,
+      stageName,
+      workspace,
+    )}
+`)
   }
 
   private async getCluster(
@@ -555,7 +574,12 @@ ${chalk.gray(
   }
 
   private getLocalClusterChoices(): string[][] {
-    return [['local', 'Local cluster (requires Docker)']]
+    const clusters = this.env.clusters.filter(c => c.local).map(c => c.name)
+    if (clusters.length === 0) {
+      clusters.push('local')
+    }
+
+    return clusters.map(c => [c, 'Local cluster (requires Docker)'])
   }
 
   private async getLoggedInChoices(): Promise<any[]> {

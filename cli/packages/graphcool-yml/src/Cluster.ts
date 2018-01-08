@@ -91,13 +91,15 @@ export class Cluster {
     return clusterToken
   }
 
-  getApiEndpoint(serviceName: string, stage: string) {
-    return `${this.baseUrl}/${serviceName}/${stage}`
+  getApiEndpoint(serviceName: string, stage: string, workspaceSlug?: string) {
+    const workspaceString = workspaceSlug ? `${workspaceSlug}/` : ''
+    return `${this.baseUrl}/${workspaceString}${serviceName}/${stage}`
   }
 
-  getWSEndpoint(serviceName: string, stage: string) {
+  getWSEndpoint(serviceName: string, stage: string, workspaceSlug?: string) {
     const replacedUrl = this.baseUrl.replace('http', 'ws')
-    return `${replacedUrl}/${serviceName}/${stage}`
+    const workspaceString = workspaceSlug ? `${workspaceSlug}/` : ''
+    return `${replacedUrl}/${workspaceString}${serviceName}/${stage}`
   }
 
   getImportEndpoint(serviceName: string, stage: string) {

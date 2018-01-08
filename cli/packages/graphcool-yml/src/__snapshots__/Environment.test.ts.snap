@@ -3,10 +3,10 @@
 exports[`Environment empty global graphcool rc 1`] = `
 Array [
   Cluster {
-    "baseUrl": "https://database-beta.graph.cool",
+    "baseUrl": "https://graphcool-eu1.graphcool.cloud",
     "clusterSecret": undefined,
     "local": false,
-    "name": "shared-public-demo",
+    "name": "graphcool-eu1",
   },
 ]
 `;
@@ -14,10 +14,10 @@ Array [
 exports[`Environment interpolates env vars 1`] = `
 Array [
   Cluster {
-    "baseUrl": "https://database-beta.graph.cool",
+    "baseUrl": "https://graphcool-eu1.graphcool.cloud",
     "clusterSecret": undefined,
     "local": false,
-    "name": "shared-public-demo",
+    "name": "graphcool-eu1",
   },
 ]
 `;
@@ -25,10 +25,10 @@ Array [
 exports[`Environment loads multiple cluster definitions correctly + gives cluster by name 1`] = `
 Array [
   Cluster {
-    "baseUrl": "https://database-beta.graph.cool",
+    "baseUrl": "https://graphcool-eu1.graphcool.cloud",
     "clusterSecret": undefined,
     "local": false,
-    "name": "shared-public-demo",
+    "name": "graphcool-eu1",
   },
 ]
 `;
@@ -38,10 +38,10 @@ exports[`Environment loads multiple cluster definitions correctly + gives cluste
 exports[`Environment non-existent global graphcool rc 1`] = `
 Array [
   Cluster {
-    "baseUrl": "https://database-beta.graph.cool",
+    "baseUrl": "https://graphcool-eu1.graphcool.cloud",
     "clusterSecret": undefined,
     "local": false,
-    "name": "shared-public-demo",
+    "name": "graphcool-eu1",
   },
 ]
 `;
@@ -58,10 +58,10 @@ exports[`Environment persists .graphcoolrc correctly 1`] = `
 exports[`Environment persists .graphcoolrc correctly 2`] = `
 Array [
   Cluster {
-    "baseUrl": "https://database-beta.graph.cool",
+    "baseUrl": "https://graphcool-eu1.graphcool.cloud",
     "clusterSecret": undefined,
     "local": false,
-    "name": "shared-public-demo",
+    "name": "graphcool-eu1",
   },
   Cluster {
     "baseUrl": "http://localhost:60000",
@@ -75,10 +75,10 @@ Array [
 exports[`Environment sets the platform token correctly 1`] = `
 Array [
   Cluster {
-    "baseUrl": "https://database-beta.graph.cool",
+    "baseUrl": "https://graphcool-eu1.graphcool.cloud",
     "clusterSecret": undefined,
     "local": false,
-    "name": "shared-public-demo",
+    "name": "graphcool-eu1",
   },
 ]
 `;
