@@ -92,7 +92,8 @@ class ResetDataSpec extends FlatSpec with Matchers with ApiBaseSpec with AwaitUt
     val rel2 = server.executeQuerySimple("query{model2s{id, model1{id}}}", project).toString
     rel2 should be("""{"data":{"model2s":[{"id":"2","model1":{"id":"1"}}]}}""")
 
-    server.executeQuerySimple("mutation{resetData}", project, dataContains = "true")
+    val result = server.queryPrivateSchema("mutation{resetData}", project)
+    result.pathAsBool("data.resetData") should equal(true)
 
     server.executeQuerySimple("query{model0s{id}}", project, dataContains = """{"model0s":[]}""")
     server.executeQuerySimple("query{model1s{id}}", project, dataContains = """{"model1s":[]}""")
@@ -115,7 +116,8 @@ class ResetDataSpec extends FlatSpec with Matchers with ApiBaseSpec with AwaitUt
 
     importer.executeImport(nodes).await(5)
 
-    server.executeQuerySimple("mutation{resetData}", project)
+    val result = server.queryPrivateSchema("mutation{resetData}", project)
+    result.pathAsBool("data.resetData") should equal(true)
 
     server.executeQuerySimple("query{model0s{id}}", project, dataContains = """{"model0s":[]}""")
     server.executeQuerySimple("query{model1s{id}}", project, dataContains = """{"model1s":[]}""")

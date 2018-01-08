@@ -1,11 +1,12 @@
 package cool.graph.api
 
-import cool.graph.api.schema.SchemaBuilder
+import cool.graph.api.schema.{ApiUserContext, PrivateSchemaBuilder, SchemaBuilder}
 import cool.graph.api.server.{GraphQlQuery, GraphQlRequest}
 import cool.graph.shared.models.Project
 import cool.graph.util.json.SprayJsonExtensions
 import sangria.parser.QueryParser
 import sangria.renderer.SchemaRenderer
+import sangria.schema.Schema
 import spray.json._
 
 import scala.concurrent.Await
@@ -92,15 +93,45 @@ case class ApiTestServer()(implicit dependencies: ApiDependencies) extends Spray
   /**
     * Execute a Query without Checks.
     */
-  def executeQuerySimpleWithAuthentication(query: String,
-                                           project: Project,
-                                           variables: JsValue = JsObject(),
-                                           requestId: String = "CombinedTestDatabase.requestId",
-                                           graphcoolHeader: Option[String] = None): JsValue = {
-
+  def executeQuerySimpleWithAuthentication(
+      query: String,
+      project: Project,
+      variables: JsValue = JsObject(),
+      requestId: String = "CombinedTestDatabase.requestId",
+      graphcoolHeader: Option[String] = None
+  ): JsValue = {
     val schemaBuilder = SchemaBuilder()(dependencies.system, dependencies)
-    val schema        = schemaBuilder(project)
-    val queryAst      = QueryParser.parse(query).get
+    querySchema(
+      query = query,
+      project = project,
+      schema = schemaBuilder(project),
+      variables = variables,
+      requestId = requestId,
+      graphcoolHeader = graphcoolHeader
+    )
+  }
+
+  def queryPrivateSchema(query: String, project: Project): JsValue = {
+    val schemaBuilder = PrivateSchemaBuilder(project)(dependencies, dependencies.system)
+    querySchema(
+      query = query,
+      project = project,
+      schema = schemaBuilder.build(),
+      variables = JsObject.empty,
+      requestId = "private-api-request",
+      graphcoolHeader = None
+    )
+  }
+
+  private def querySchema(
+      query: String,
+      project: Project,
+      schema: Schema[ApiUserContext, Unit],
+      variables: JsValue,
+      requestId: String,
+      graphcoolHeader: Option[String]
+  ): JsValue = {
+    val queryAst = QueryParser.parse(query).get
 
     lazy val renderedSchema = SchemaRenderer.renderSchema(schema)
     if (printSchema) println(renderedSchema)
