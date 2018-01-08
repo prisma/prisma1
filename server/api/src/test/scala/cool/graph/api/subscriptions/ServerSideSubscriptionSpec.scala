@@ -39,7 +39,7 @@ class ServerSideSubscriptionSpec extends FlatSpec with Matchers with ApiBaseSpec
   val subscriptionQueryForCreates: String =
     """
       |subscription {
-      |  Todo(filter: {
+      |  todo(where: {
       |    mutation_in : [CREATED, UPDATED, DELETED]
       |    node: {
       |      status: Active
@@ -97,24 +97,22 @@ class ServerSideSubscriptionSpec extends FlatSpec with Matchers with ApiBaseSpec
 
     webhook.functionName shouldEqual sssFunction.name
     webhook.projectId shouldEqual project.id
-    webhook.requestId shouldNot be(empty)
-    webhook.id shouldNot be(empty)
+//    webhook.requestId shouldNot be(empty)
+//    webhook.id shouldNot be(empty)
     webhook.url shouldEqual webhookUrl
 
-    webhook.payload shouldEqual s"""
-                                                |{
-                                                |  "data": {
-                                                |    "Todo": {
-                                                |      "node": {
-                                                |        "title": "$newTodoTitle",
-                                                |        "status": "$newTodoStatus",
-                                                |        "comments": []
-                                                |      },
-                                                |      "previousValues": null
-                                                |    }
-                                                |  }
-                                                |}
-      """.stripMargin.parseJson.compactPrint
+    webhook.payload shouldEqual s"""|{
+                                    |  "data": {
+                                    |    "todo": {
+                                    |      "node": {
+                                    |        "title": "$newTodoTitle",
+                                    |        "status": "$newTodoStatus",
+                                    |        "comments": []
+                                    |      },
+                                    |      "previousValues": null
+                                    |    }
+                                    |  }
+                                    |}""".stripMargin.parseJson.compactPrint
 
     webhook.headers shouldEqual Map("header" -> "value")
   }

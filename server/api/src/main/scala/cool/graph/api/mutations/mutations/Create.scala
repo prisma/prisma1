@@ -4,7 +4,7 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import cool.graph.api.ApiDependencies
 import cool.graph.api.database.DataResolver
-import cool.graph.api.database.mutactions.mutactions.CreateDataItem
+import cool.graph.api.database.mutactions.mutactions.{CreateDataItem, ServerSideSubscription}
 import cool.graph.api.database.mutactions.{MutactionGroup, TransactionMutaction}
 import cool.graph.api.mutations._
 import cool.graph.cuid.Cuid
@@ -42,17 +42,15 @@ case class Create(
     val createMutactionsResult = SqlMutactions(dataResolver).getMutactionsForCreate(model, coolArgs, id)
 
     val transactionMutaction   = TransactionMutaction(createMutactionsResult.allMutactions.toList, dataResolver)
-    val createMutactions       = createMutactionsResult.allMutactions.collect { case x: CreateDataItem => x }
     val subscriptionMutactions = SubscriptionEvents.extractFromSqlMutactions(project, mutationId, createMutactionsResult.allMutactions)
-    //    val sssActions             = ServerSideSubscription.extractFromMutactions(project, createMutactionsResult.allMutactions, requestId)
+    val sssActions             = ServerSideSubscription.extractFromMutactions(project, createMutactionsResult.allMutactions, requestId)
 
-    Future.successful(
+    Future.successful {
       List(
         MutactionGroup(mutactions = List(transactionMutaction), async = false),
-        MutactionGroup(mutactions = //sssActions ++
-                         subscriptionMutactions.toList,
-                       async = true)
-      ))
+        MutactionGroup(mutactions = sssActions.toList ++ subscriptionMutactions.toList, async = true)
+      )
+    }
 
   }
 
