@@ -5,9 +5,9 @@ description: Queries
 
 # Queries
 
-<!-- 
+<!--
 TODO
-- update interactive examples 
+- update interactive examples
 -->
 
 ## Overview
@@ -24,10 +24,7 @@ query {
 }
 ```
 
-Here's a list of available queries. To explore them, use the [GraphQL Playground](https://github.com/graphcool/graphql-playground) for your service.
-
-- Based on the [model types](!alias-eiroozae8u#model-types) and [relations](!alias-eiroozae8u#relations) in your data model, [type queries](#type-queries) and [relation queries](#relation-queries) will be generated to fetch type and relation data.
-- Additionally, [custom queries and mutations](#custom-queries) can be added to your API using [resolver](!alias-su6wu3yoo2) functions.
+Based on the [model types](!alias-eiroozae8u#model-types) and [relations](!alias-eiroozae8u#relations) in your data model, [type queries](#type-queries) and [relation queries](#relation-queries) will be generated to fetch type and relation data. To explore them, use the [GraphQL Playground](https://github.com/graphcool/graphql-playground) for your service.
 
 Some queries support [query arguments](#query-arguments) to further control the query response.
 
@@ -83,9 +80,9 @@ query {
 The GraphQL API contains two automatically generated queries to fetch many/all nodes per [model type](!alias-eiroozae8u#model-types).
 
 - A simple approach that directly returns the nodes of that type
-- A more sophisticated approach based on GraphQL's [connection](https://dev-blog.apollodata.com/explaining-graphql-connections-c48b7c3d6976l) model
+- A more sophisticated approach based on [Relay connections](https://facebook.github.io/relay/graphql/connections.htm)
 
-For a sample type `Post`, the correspdonding top-level queries are called `posts` and `postConnection`.
+For a sample type `Post`, the corresponding top-level queries are called `posts` and `postConnection`.
 
 #### Fetch all nodes of a specific type directly
 
@@ -101,7 +98,7 @@ query {
 }
 ```
 
-#### Fetch all nodes of a specific type using the "connection"-model
+#### Fetch all nodes of a specific type using connections
 
 Using the connection-based approach with the `postConnection` top-level query:
 
@@ -121,9 +118,9 @@ query {
 
 Here are a few examples for the generated query names for the simple approach:
 
-- type name: `Post`, query name: `posts`
-- type name: `Todo`, query name: `todoes`
-- type name: `Hobby`, query name: `hobbies`
+- type name: `Post`, query name: `posts`, `postsConnection`
+- type name: `Todo`, query name: `todoes`, ``todoesConnection`
+- type name: `Hobby`, query name: `hobbies`, ``hobbiesConnection`
 
 > Note: The query name approximate the plural rules of the English language. If you are unsure about the actual query name, explore available queries in your [GraphQL Playground](https://github.com/graphcool/graphql-playground).
 
@@ -164,6 +161,12 @@ query {
 ```
 
 ### Aggregations
+
+<InfoBox type=info>
+
+The **Aggregation** features are not yet implemented in Graphcool but will be available soon. For more information, follow the discussion on [GitHub](https://github.com/graphcool/framework/issues/1312).
+
+</InfoBox>
 
 For every type in your GraphQL schema, different aggregation queries are available through the connection-based approach. Here is a list of all aggregation options that can be applied to a list:
 
@@ -301,14 +304,14 @@ type User {
 }
 ```
 
-In the actual database schema, the `User` type will have an additional field that exposes the list of `Post` node through the "connection"-model mentioned above. So, it will look as follows:
+In the actual database schema, the `User` type will have an additional field that exposes the list of `Post` node through connections mentioned above. So, it will look as follows:
 
 ```graphql
 type User {
   id: ID! @unique
   name : String!
   posts: [Post!]!
-  posts: PostConnection!
+  postsConnection: PostConnection!
 }
 ```
 
@@ -345,7 +348,7 @@ The `author` field exposes a further selection of properties that are defined on
 
 ### Traversing many nodes
 
-Like before, many nodes can be retrieved either using the simple approach and directly accessing a list of nodes or using the more advanced "connection"-model.
+Like before, many nodes can be retrieved either using the simple approach and directly accessing a list of nodes or using the more advanced connections.
 
 #### Traversing many nodes of a specific type directly
 
@@ -368,7 +371,7 @@ query {
 
 The `posts` field exposes a further selection of properties that are defined on the `Post` type.
 
-#### Traversing many nodes of a specific type using the "connection"-model
+#### Traversing many nodes of a specific type using connections
 
 Query information on all `Post` nodes of a certain `User` node:
 
@@ -437,9 +440,9 @@ It's currently not possible to order responses [by multiple fields](https://gith
 
 ### Filtering by field
 
-When querying all nodes of a type you can supply different parameters to the `where` argument to filter the query response accordingly. The available options depend on the scalar fields defined on the type in question.
+When querying all nodes of a type you can supply different parameters to the `where` argument to filter the query response accordingly. The available options depend on the scalar and relational fields defined on the type in question.
 
-You can also include filters when including related fields in your queries to [traverse your data graph](#relation-queries).
+You can also include filters when [traversing your data graph](#relation-queries).
 
 #### Applying single filters
 
@@ -700,32 +703,6 @@ input MyTypeFilter {
 
 Currently, neither [**scalar list filters**](https://github.com/graphcool/feature-requests/issues/60) nor [**JSON filters**](https://github.com/graphcool/feature-requests/issues/148) are available. Join the discussion in the respective feature requests on GitHub!
 
-If you want to filter a list of strings `tags: [String!]!`:
-
-```graphql
-type Item {
-  id: ID! @unique
-  tags: [String!]!
-}
-```
-
-you can introduce a new type `Tag` with a single `key: String` field and connect `Item` to `Key` one-to-many or many-to-many:
-
-```graphql
-type Item {
-  id: ID! @unique
-  tags: [Tag!]! @relation(name: "ItemTags")
-}
-
-type Tag {
-  id: ID! @unique
-  key: String!
-  item: Item @relation(name: "ItemTags")
-}
-```
-
-Now you can filter items based on their connected tags using the `tag_none`, `tags_some` and `tags_every` filters.
-
 ### Pagination
 
 When querying all nodes of a specific [model type](!alias-eiroozae8u#model-types), you can supply arguments that allow you to _paginate_ the query response.
@@ -791,6 +768,4 @@ query {
 
 #### Limitations
 
-Note that *a maximum of 1000 nodes* can be returned per pagination field. If you need to query more nodes than that, you can use `first` and `skip` to seek through the different pages. You can also include multiple versions of the same field with different pagination parameter in one query using GraphQL Aliases.
-
-Please join [the discussion on GitHub](https://github.com/graphcool/feature-requests/issues/259) for an according feature request to lift this limitation.
+Note that *a maximum of 1000 nodes* can be returned per pagination field on the shared demo cluster. This limit can be increased on other clusters using [the cluster configuration](https://github.com/graphcool/framework/issues/748).

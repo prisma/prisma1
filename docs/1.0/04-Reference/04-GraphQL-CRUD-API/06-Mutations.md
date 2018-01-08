@@ -23,7 +23,7 @@ mutation {
 }
 ```
 
-Here's a list of available mutations. To explore them, use the [playground](!alias-aiteerae6l#graphcool-playground) for your service.
+Here's a list of available mutations. To explore them, use the [GraphQL Playground](!alias-aiteerae6l#graphcool-playground) for your service.
 
 * Based on the [model types](!alias-eiroozae8u#model-types) and [relations](!alias-eiroozae8u#relations) in your data model, [type mutations](#type-mutations) and [relation mutations](#relation-mutations) will be generated to modify nodes and edges.
 
@@ -80,12 +80,15 @@ Update the `text` and `published` fields for an existing `Post` node and query i
 
 ```graphql
 mutation {
-  updatePost(data: {
-    text: "This is the start of my biggest adventure!"
-    published: true
-  }, where: {
-    id: "cixnen24p33lo0143bexvr52n"  # or any other unique field
-  }) {
+  updatePost(
+    data: {
+      text: "This is the start of my biggest adventure!"
+      published: true
+    }
+    where: {
+      id: "cixnen24p33lo0143bexvr52n"  # or any other unique field
+    }
+  ) {
     id
   }
 }

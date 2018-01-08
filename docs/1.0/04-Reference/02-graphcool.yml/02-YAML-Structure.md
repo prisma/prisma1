@@ -11,11 +11,12 @@ The service definition file `graphcool.yml` has the following root properties:
 
 - `service` (required): Name of the Graphcool service
 - `datamodel` (required): Type definitions for database models, relations, enums and other types
-- `stages` (required): List of different deployment targets ("stages")
+- `stage` (required): The stage of the Graphcool service to deploy to
+- `cluster`: The cluster name to deploy to. Can be omitted to prompt interactive cluster selection.
 - `disableAuth`: Disable authentication for the endpoint
 - `secret`: Secret for securing the API endpoint
-- `schema`: Determines where the CLI should store the database schema (typically in a file called `database.graphql`)
 - `subscriptions`: Configuration of subscription functions
+- `seed`: Instructions for data seeding
 - `custom`: Use to provide variables which can be referenced from other fields
 
 > The exact structure of `graphcool.yml` is defined with [JSON schema](http://json-schema.org/). You can find the corresponding schema definition [here](https://github.com/graphcool/graphcool-json-schema/blob/master/src/schema.json).
@@ -24,7 +25,7 @@ The service definition file `graphcool.yml` has the following root properties:
 
 The service defines the service name which will also be reflected in the endpoint for your service once it's deployed. The service name must follow these requirements:
 
-- must contain only alphanumeric characters, hyphens and undersroces
+- must contain only alphanumeric characters, hyphens and underscores
 - must start with an uppercase or lowercase letter
 - must be at most 64 characters long
 
@@ -70,30 +71,53 @@ datamodel:
   - enums.graphql
 ```
 
-## `stages` (required)
+## `stage` (required)
 
-The `stages` property defines a list of named deployment targets to which you can deploy your service.
+The `stage` property defines the deployment target name to which you can deploy your service.
 
 #### Type
 
-The `stages` property expects an **object**. The keys in that object represent the names of the available stages, the values are the identifiers of the corresponding cluster (loaded from the global `.graphcoolrc`).
-
-Note that the object has one special key called `default` which points at the default deployment target.
+The `stages` property expects a **string** that denotes the name of the stage.
 
 #### Examples
 
-Define two stages called `dev` and `prod` where `dev` is set as the default deployment target. Note that this example expects two entries in the global `.graphcoolrc` file called `local` and `london-cluster`.
+Define a `dev` stage:
 
 ```yml
-stages:
-  default: dev
-  dev: local
-  prod: london-cluster
+stage: dev
+```
+
+Read the stage from an environment variable:
+
+```yml
+stage: ${env:MY_STAGE}
+```
+
+## `cluster` (optional)
+
+The cluster defines the cluster to which the service will be deployed to. It refers to clusters in the global registry, `~/.graphcoolrc`.
+
+- must contain only alphanumeric characters, hyphens and underscores
+- must start with an uppercase or lowercase letter
+- must be at most 64 characters long
+
+If the `cluster` property is omitted, an interactive selection is prompted.
+
+#### Type
+
+The `cluster` property expects a **string**.
+
+#### Examples
+
+Refer to the `local` cluster.
+
+```yml
+cluster: local
 ```
 
 ## `disableAuth` (optional)
 
-The `disableAuth` property indicates whether the Graphcool service requires authentication. If set to `true`, anyone who has access to the service's endpoint has full read/write-access to the database!
+The `disableAuth` property indicates whether the Graphcool service requires authentication. If set to `true`, anyone has full read/write-access to the database!
 
 Setting `disableAuth` is optional. If not set, the default is `false` (which means authentication is enabled by default).
 
@@ -117,18 +141,15 @@ disableAuth: false
 
 ## `secret` (optional)
 
-A secret is used to generate (_sign_) authentication tokens ([JWT](https://jwt.io)). If your Graphcool service requires authentication, one of these authentication tokens needs to be attached to the HTTP request (in the `Authorization` header field). Note that it's possible to specify multiple secrets. Each secret must follow these requirements:
+A secret is used to generate (or _sign_) authentication tokens ([JWT](https://jwt.io)). If your Graphcool service requires authentication, one of these authentication tokens needs to be attached to the HTTP request (in the `Authorization` header field). A secret must follow these requirements:
 
 - must be [utf8](https://en.wikipedia.org/wiki/UTF-8) encoded
 - must not contain spaces
 - must be at most 256 characters long
 
-The JWT sent to the API needs to meet the following conditions:
+Note that it's possible to encode multiple secrets in this string, which allows smoothless secret rotation.
 
-- must be signed with a `secret` configured for the service
-- must contain an `exp` claim with a value in the future
-- must contain a `service` claim with service and stage matching the current request
-- must contain a `roles` claim that provides access to the current operation
+Read more about Database [authentication here](TODO).
 
 #### Type
 
@@ -148,7 +169,7 @@ Define three secrets with values `myFirstSecret`, `SECRET_NUMBER_2` and `3rd-sec
 secret: myFirstSecret,    SECRET_NUMBER_2,3rd-secret
 ```
 
-Use the value of the `MY_SECRET` environment variable as the value for  `disableAuth`.
+Use the value of the `MY_SECRET` environment variable as the secret(s).
 
 ```yml
 secret: ${env:MY_SECRET}
@@ -218,6 +239,47 @@ subscriptions:
           Authorization: ${env:MY_ENDPOINT_SECRET}
           Content-Type: application/json
 ```
+
+## `seed` (optional)
+
+Database seeding is a standardised way to populate a service with test data.
+
+#### Type
+
+The `seed` property expects an **object**, with either one of two sub-properties:
+
+* `import`: instructions to import data when seeding a service. You can refer to two kinds of files:
+  * either a path to a `.graphql` file with GraphQL operations
+  * or a path to a `.zip` file that contains a data set in [Normalized Data Format (NDF)](TODO)
+* `run`: shell command that will be executed when seeding a service. This is meant for more complex seed setups that are not covered by `import`.
+
+> Note: `run` is currently not supported. Follow [the proposal](https://github.com/graphcool/framework/issues/1181) to stay informed.
+
+Seeds are implicitely executed when deploying a service for the first time (unless explicitely disabled using the `--no-seed` flag). You can run the seeding anytime with the `seed` command.
+
+#### Examples
+
+Refer to a `.graphql` file containing seeding mutations:
+
+```yml
+seed:
+  import: database/seed.graphql
+```
+
+Refer to a `.zip` file with a data set in NDF:
+
+```yml
+seed:
+  import: database/backup.zip
+```
+
+Run a Node script when seeding:
+
+```yml
+seed:
+  run: node script.js
+```
+
 
 ## `custom` (optional)
 

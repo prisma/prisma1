@@ -38,3 +38,4 @@ This includes functionality for authentication and permissions which were previo
 As Graphcool 1.0 only represents the "database" component in your server architecture, you need to host the GraphQL server yourself.
 
 A quick and easy way to deploy your GraphQL server is using [Now](https://zeit.co/now) or using a serverless function and the [Serverless Framework](https://serverless.com). When doing so, you should ensure that your server is deployed to the same [AWS region](http://docs.aws.amazon.com/general/latest/gr/rande.html) as your Graphcool service to not introduce additional latency and ensure optimal performance.
+

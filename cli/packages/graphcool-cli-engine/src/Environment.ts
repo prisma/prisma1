@@ -3,13 +3,21 @@ import * as path from 'path'
 import fs from './fs'
 import { Output } from './Output/index'
 import { Config } from './Config'
-import { Cluster, InternalRC, RC, Target, Targets } from './types/rc'
+import {
+  Cluster,
+  InternalRC,
+  RC,
+  Target,
+  Targets,
+  FrameworkRC,
+} from './types/rc'
 import { mapValues, merge } from 'lodash'
 import { Args, Region } from './types/common'
 import Variables from './ProjectDefinition/Variables'
 const debug = require('debug')('environment')
 import * as stringSimilarity from 'string-similarity'
 import chalk from 'chalk'
+import { EnvironmentMigrator } from './EnvironmentMigrator'
 
 const defaultRC = {
   clusters: {
@@ -19,7 +27,8 @@ const defaultRC = {
 
 export class Environment {
   localRC: InternalRC = {}
-  globalRC: InternalRC = {}
+  globalRC: FrameworkRC = {}
+  globalFrameworkRC: InternalRC = {}
   out: Output
   config: Config
   args: Args
@@ -36,7 +45,7 @@ export class Environment {
     // todo: memoizing / caching
     return this.deserializeRCs(
       this.localRC,
-      this.globalRC,
+      this.globalFrameworkRC,
       this.config.localRCPath,
       this.config.globalRCPath,
     )
@@ -147,7 +156,8 @@ Please run ${chalk.green(
         target = this.rc.targets.default
         name =
           (this.localRC.targets && this.localRC.targets.default) ||
-          (this.globalRC.targets && this.globalRC.targets.default) ||
+          (this.globalFrameworkRC.targets &&
+            this.globalFrameworkRC.targets.default) ||
           null
         name = name && name.split('/').length === 1 ? name : null
       }
@@ -197,11 +207,11 @@ Please run ${chalk.green(
       if (localTarget) {
         delete this.localRC[localTarget]
       }
-      const globalTarget = Object.keys(this.globalRC.targets || {}).find(
-        name => this.globalRC.targets![name].split('/')[1] === id,
-      )
+      const globalTarget = Object.keys(
+        this.globalFrameworkRC.targets || {},
+      ).find(name => this.globalFrameworkRC.targets![name].split('/')[1] === id)
       if (globalTarget) {
-        delete this.globalRC[globalTarget]
+        delete this.globalFrameworkRC[globalTarget]
       }
     })
   }
@@ -210,7 +220,8 @@ Please run ${chalk.green(
    * This is used to migrate the old .graphcool and .graphcoolrc to the new format
    */
   migrateOldFormat() {
-    this.migrateGlobalFiles()
+    const migrator = new EnvironmentMigrator(this.config.home, this.out)
+    migrator.migrate()
     this.migrateLocalFile()
     this.migrateClusters(this.config.localRCPath)
     this.migrateClusters(this.config.globalRCPath)
@@ -247,7 +258,9 @@ Read more about the changes here:
 https://github.com/graphcool/framework/issues/714
 `)
         }
-      } catch (e) {}
+      } catch (e) {
+        //
+      }
     }
   }
 
@@ -316,73 +329,8 @@ It has been renamed to ${oldPath}. The up-to-date format has been written to ${r
             )} has been added, which contains the address to the new local function runtime.`,
           )
         }
-      } catch (e) {}
-    }
-  }
-
-  migrateGlobalFiles() {
-    const dotFilePath = path.join(this.config.home, '.graphcool')
-    const dotExists = fs.pathExistsSync(dotFilePath)
-    if (fs.lstatSync(dotFilePath).isDirectory()) {
-      return
-    }
-    const rcHomePath = path.join(this.config.home, '.graphcoolrc')
-    const rcHomeExists = fs.pathExistsSync(rcHomePath)
-
-    const dotFile = dotExists ? fs.readFileSync(dotFilePath, 'utf-8') : null
-    const rcFile = rcHomeExists ? fs.readFileSync(rcHomePath, 'utf-8') : null
-
-    // if both legacy files exist, prefer the newer one, .graphcool
-    if (rcHomeExists && rcFile) {
-      // only move this file, if it is json and contains the "token" field
-      // in this case, it's the old format
-      try {
-        const rcJson = JSON.parse(rcFile)
-        if (Object.keys(rcJson).length === 1 && rcJson.token) {
-          this.out.warn(
-            `Moved deprecated file ${rcHomePath} to .graphcoolrc.old`,
-          )
-          fs.moveSync(
-            rcHomePath,
-            path.join(this.config.home, '.graphcoolrc.old'),
-          )
-        }
       } catch (e) {
         //
-      }
-    }
-    if (dotExists) {
-      if (dotFile) {
-        try {
-          const dotJson = JSON.parse(dotFile)
-          if (dotJson.token) {
-            const rc = { ...defaultRC, platformToken: dotJson.token }
-            const rcSerialized = this.serializeRC(rc)
-            const oldPath = path.join(this.config.home, '.graphcool.old')
-            fs.moveSync(dotFilePath, oldPath)
-            debug(`Writing`, rcHomePath, rcSerialized)
-            fs.writeFileSync(rcHomePath, rcSerialized)
-            const READ = fs.readFileSync(rcHomePath, 'utf-8')
-            debug('YES', READ)
-            this.out
-              .warn(`We detected the old definition format of the ${dotFilePath} file.
-It has been renamed to ${oldPath}. The new file is called ${rcHomePath}.
-Read more about the changes here:
-https://github.com/graphcool/framework/issues/714
-`)
-          }
-        } catch (e) {
-          // noop
-        }
-      }
-    } else if (rcHomeExists && rcFile) {
-      try {
-        const rcJson = JSON.parse(rcFile)
-        const rc = { ...defaultRC, platformToken: rcJson.token }
-        const rcSerialized = this.serializeRC(rc)
-        fs.writeFileSync(rcHomePath, rcSerialized)
-      } catch (e) {
-        // noop
       }
     }
   }
@@ -437,6 +385,7 @@ https://github.com/graphcool/framework/issues/714
 
     this.localRC = await this.loadYaml(localFile, this.config.localRCPath)
     this.globalRC = await this.loadYaml(globalFile, this.config.globalRCPath)
+    this.globalFrameworkRC = this.globalRC['graphcool-framework'] || {}
 
     if (this.rc.clusters && this.rc.clusters.default) {
       if (!this.allClusters.includes(this.rc.clusters.default)) {
@@ -558,7 +507,7 @@ Please run ${chalk.bold('graphcool local up')} to start the local cluster.`)
   ): string =>
     targets[target] ? this.resolveTarget(targets[target], targets) : target
 
-  serializeRC(rc: InternalRC): string {
+  serializeRC(rc: any): string {
     // const copy: any = {...rc}
     // if (copy.targets) {
     //   copy.targets = this.serializeTargets(copy.targets)
@@ -571,7 +520,7 @@ Please run ${chalk.bold('graphcool local up')} to start the local cluster.`)
   // }
 
   setToken(token: string | undefined) {
-    this.globalRC.platformToken = token
+    this.globalFrameworkRC.platformToken = token
   }
 
   saveLocalRC() {
@@ -580,7 +529,10 @@ Please run ${chalk.bold('graphcool local up')} to start the local cluster.`)
   }
 
   saveGlobalRC() {
-    const file = this.serializeRC(this.globalRC)
+    const file = this.serializeRC({
+      ...this.globalRC,
+      'graphcool-framework': this.globalFrameworkRC,
+    })
     fs.writeFileSync(this.config.globalRCPath, file)
   }
 
@@ -590,17 +542,17 @@ Please run ${chalk.bold('graphcool local up')} to start the local cluster.`)
   }
 
   setGlobalCluster(name: string, cluster: Cluster) {
-    if (!this.globalRC.clusters) {
-      this.globalRC.clusters = {}
+    if (!this.globalFrameworkRC.clusters) {
+      this.globalFrameworkRC.clusters = {}
     }
-    this.globalRC.clusters[name] = cluster
+    this.globalFrameworkRC.clusters[name] = cluster
   }
 
   setLocalDefaultCluster(cluster: string) {
-    if (!this.globalRC.clusters) {
-      this.globalRC.clusters = {}
+    if (!this.globalFrameworkRC.clusters) {
+      this.globalFrameworkRC.clusters = {}
     }
-    this.globalRC.clusters.default = cluster
+    this.globalFrameworkRC.clusters.default = cluster
   }
 
   getRegionFromCluster(cluster: string): Region {
@@ -698,7 +650,7 @@ Please run ${chalk.bold('graphcool local up')} to start the local cluster.`)
 
   private setTestToken() {
     debug('taking graphcool test token')
-    this.globalRC.platformToken = process.env.GRAPHCOOL_TEST_TOKEN!
+    this.globalFrameworkRC.platformToken = process.env.GRAPHCOOL_TEST_TOKEN!
   }
 
   private subscriptionURL = ({
