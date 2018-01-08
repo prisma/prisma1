@@ -2,6 +2,7 @@ package cool.graph.singleserver
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
+import cool.graph.akkautil.http.SimpleHttpClient
 import cool.graph.api.ApiDependencies
 import cool.graph.api.database.Databases
 import cool.graph.api.project.{ProjectFetcher, ProjectFetcherImpl}
@@ -19,9 +20,11 @@ import cool.graph.subscriptions.protocol.SubscriptionProtocolV07.Responses.Subsc
 import cool.graph.subscriptions.protocol.SubscriptionRequest
 import cool.graph.subscriptions.resolving.SubscriptionsManagerForProject.{SchemaInvalidated, SchemaInvalidatedMessage}
 import cool.graph.websocket.protocol.{Request => WebsocketRequest}
+import cool.graph.workers.dependencies.WorkerDependencies
 import play.api.libs.json.Json
+import cool.graph.workers.payloads.{Webhook => WorkerWebhook}
 
-trait SingleServerApiDependencies extends DeployDependencies with ApiDependencies {
+trait SingleServerApiDependencies extends DeployDependencies with ApiDependencies with WorkerDependencies {
   override implicit def self: SingleServerDependencies
 }
 
@@ -72,5 +75,10 @@ case class SingleServerDependencies()(implicit val system: ActorSystem, val mate
 
   override val keepAliveIntervalSeconds = 10
 
-  override val webhookPublisher = InMemoryAkkaQueue[Webhook]()
+  lazy val webhooksQueue = InMemoryAkkaQueue[Webhook]()
+
+  override lazy val webhookPublisher = webhooksQueue
+  override lazy val webhooksConsumer = webhooksQueue.map[WorkerWebhook](Converters.apiWebhook2WorkerWebhook)
+  override lazy val httpClient       = SimpleHttpClient()
+
 }

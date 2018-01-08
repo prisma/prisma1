@@ -8,6 +8,7 @@ import cool.graph.bugsnag.BugSnaggerImpl
 import cool.graph.deploy.server.ClusterServer
 import cool.graph.subscriptions.SimpleSubscriptionsServer
 import cool.graph.websocket.WebsocketServer
+import cool.graph.workers.WorkerServer
 
 object SingleServerMain extends App {
   implicit val system       = ActorSystem("single-server")
@@ -24,6 +25,7 @@ object SingleServerMain extends App {
     ClusterServer(singleServerDependencies.clusterSchemaBuilder, singleServerDependencies.projectPersistence, "cluster"),
     WebsocketServer(singleServerDependencies),
     ApiServer(singleServerDependencies.apiSchemaBuilder),
-    SimpleSubscriptionsServer()
+    SimpleSubscriptionsServer(),
+    WorkerServer(singleServerDependencies)
   ).startBlocking()
 }

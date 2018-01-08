@@ -129,6 +129,25 @@ lazy val subscriptions = serverProject("subscriptions", imageName = "graphcool-s
     )
   )
 
+lazy val workers =
+  serverProject("workers", imageName = "graphcool-workers")
+    .dependsOn(bugsnag % "compile")
+    .dependsOn(messageBus % "compile")
+    .dependsOn(scalaUtils % "compile")
+    .dependsOn(stubServer % "test")
+    .settings(libraryDependencies ++= Seq(
+      playJson,
+      akkaHttp,
+      scalaTest
+//      "com.typesafe.play"                %% "play-json"              % "2.5.12",
+//      "com.typesafe.akka"                %% "akka-http"              % "10.0.5",
+//      "com.typesafe.slick"               %% "slick"                  % "3.2.0",
+//      "com.typesafe.slick"               %% "slick-hikaricp"         % "3.2.0",
+//      "org.mariadb.jdbc"                 %  "mariadb-java-client"    % "1.5.8",
+//      "cool.graph"                       %  "cuid-java"              % "0.1.1",
+//      "org.scalatest"                    %% "scalatest"              % "2.2.6" % "test"
+    ))
+
 lazy val gcValues = libProject("gc-values")
   .settings(libraryDependencies ++= Seq(
     playJson,
@@ -251,6 +270,7 @@ lazy val singleServer = serverProject("single-server", imageName = "graphcool-de
   .dependsOn(api% "compile")
   .dependsOn(deploy % "compile")
   .dependsOn(subscriptions % "compile")
+  .dependsOn(workers % "compile")
   .dependsOn(graphQlClient % "compile")
 
 val allServerProjects = List(
@@ -258,7 +278,8 @@ val allServerProjects = List(
   deploy,
   subscriptions,
   singleServer,
-  sharedModels
+  sharedModels,
+  workers
 )
 
 val allLibProjects = List(
