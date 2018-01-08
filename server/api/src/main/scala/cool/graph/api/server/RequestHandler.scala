@@ -6,7 +6,7 @@ import cool.graph.api.ApiDependencies
 import cool.graph.api.database.DataResolver
 import cool.graph.api.database.import_export.{BulkExport, BulkImport}
 import cool.graph.api.project.ProjectFetcher
-import cool.graph.api.schema.{APIErrors, SchemaBuilder}
+import cool.graph.api.schema.{APIErrors, PrivateSchemaBuilder, SchemaBuilder}
 import cool.graph.bugsnag.{BugSnagger, GraphCoolRequest}
 import cool.graph.client.server.GraphQlRequestHandler
 import cool.graph.shared.models.ProjectWithClientId
@@ -70,6 +70,21 @@ case class RequestHandler(
     val response: Future[JsValue] = graphQlRequestFuture.flatMap(identity)
 
     response.map(x => (200, x))
+  }
+
+  def handleRawRequestForPrivateApi(projectId: String, rawRequest: RawRequest): Future[(StatusCode, JsValue)] = {
+    val graphQlRequestFuture = for {
+      projectWithClientId <- fetchProject(projectId)
+      schema              = PrivateSchemaBuilder(projectWithClientId.project)(apiDependencies, apiDependencies.system).build()
+      _                   <- auth.verify(projectWithClientId.project, rawRequest.authorizationHeader).toFuture
+      graphQlRequest      <- rawRequest.toGraphQlRequest(projectWithClientId, schema).toFuture
+    } yield graphQlRequest
+
+    graphQlRequestFuture.toFutureTry.flatMap {
+      case Success(graphQlRequest)           => handleGraphQlRequest(graphQlRequest)
+      case Failure(e: InvalidGraphQlRequest) => Future.successful(OK -> JsObject("error" -> JsString(e.underlying.getMessage)))
+      case Failure(e)                        => Future.successful(ErrorHandler(rawRequest.id).handle(e))
+    }
   }
 
   def handleGraphQlRequest(graphQlRequest: GraphQlRequest): Future[(StatusCode, JsValue)] = {
