@@ -98,8 +98,16 @@ case class DeployMutationInput(
     projectId: String,
     types: String,
     dryRun: Option[Boolean],
-    secrets: Vector[String]
+    secrets: Vector[String],
+    functions: Vector[FunctionInput]
 ) extends sangria.relay.Mutation
+
+case class FunctionInput(
+    name: String,
+    query: String,
+    url: String,
+    headers: String
+)
 
 case class DeployMutationPayload(
     clientMutationId: Option[String],
