@@ -5,7 +5,9 @@ description: Learn the fundamentals of using Graphcool.
 
 # Graphcool Basics
 
-In this tutorial, you'll learn how to get started with Graphcool as a "GraphQL database" service.
+In this tutorial, you'll learn how to get started with Graphcool as a "GraphQL database" service. To ensure you're not accidentally skipping an instruction in the tutorial, all required actions on your end are highlighted with a little counter on the left.
+
+**Pro tip**: If you're only keen on getting started but don't care so much about the explanations of what's going on, you can simply jump from instruction to instruction.
 
 > **Note**: This tutorial only covers the basics of using Graphcool. To learn how to use Graphcool with a specific framework or programming language (like [React](!alias-tijghei9go), [Node.js](!alias-phe8vai1oo) or [TypeScript](!alias-rohd6ipoo4)), please refer to the other quickstart tutorials.
 
@@ -79,7 +81,7 @@ type User {
 
 The data model contains type definitions for the entities in your application domain. In this case, you're starting out with a very simple `User` type with an `id` and a `name`.
 
-The `@unique` directive here expresses that no two users in the database can have the same `id`, Graphcool service will ensure this requirement is met at all times.
+The `@unique` directive here expresses that no two users in the database can have the same `id`, Graphcool will ensure this requirement is met at all times.
 
 ## Deploying your Graphcool service
 
