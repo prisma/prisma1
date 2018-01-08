@@ -220,4 +220,147 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
     result.pathAsString("data.createList.todos.[0].tag.name") should equal("the tag")
   }
 
+  "a required one2one relation" should "be creatable through a nested create mutation" in {
+    val project = SchemaDsl() { schema =>
+      val comment = schema.model("Comment").field_!("reqOnComment", _.String).field("optOnComment", _.String)
+      schema.model("Todo").field_!("reqOnTodo", _.String).field("optOnTodo", _.String).oneToOneRelation_!("comments", "todo", comment)
+    }
+    database.setup(project)
+
+    val result = server.executeQuerySimple(
+      """
+        |mutation {
+        |  createComment(data: {
+        |    reqOnComment: "comment1"
+        |    todo: {
+        |      create: {reqOnTodo: "todo1"}
+        |    }
+        |  }){
+        |    id
+        |    todo{reqOnTodo}
+        |  }
+        |}
+      """.stripMargin,
+      project
+    )
+    mustBeEqual(result.pathAsString("data.createComment.todo.reqOnTodo"), "todo1")
+
+    server.executeQuerySimpleThatMustFail(
+      """
+        |mutation {
+        |  createComment(data: {
+        |    reqOnComment: "comment1"
+        |    todo: {}
+        |  }){
+        |    id
+        |    todo {
+        |      reqOnTodo
+        |    }
+        |  }
+        |}
+      """.stripMargin,
+      project,
+      errorCode = 3032,
+      errorContains = "The field 'todo' on type 'Comment' is required. Performing this mutation would violate that constraint"
+    )
+  }
+
+  "a required one2one relation" should "be creatable through a nested connected mutation" in {
+    val project = SchemaDsl() { schema =>
+      val todo = schema.model("Todo").field_!("reqOnTodo", _.String).field("optOnTodo", _.String)
+      schema
+        .model("Comment")
+        .field_!("reqOnComment", _.String)
+        .field("optOnComment", _.String)
+        .oneToOneRelation_!("todo", "comment", todo, isRequiredOnOtherField = false)
+    }
+    database.setup(project)
+
+    val result = server.executeQuerySimple(
+      """
+        |mutation {
+        |  createComment(data: {
+        |    reqOnComment: "comment1"
+        |    todo: {
+        |      create: {reqOnTodo: "todo1"}
+        |    }
+        |  }){
+        |    id
+        |    todo{
+        |       reqOnTodo
+        |    }
+        |  }
+        |}
+      """.stripMargin,
+      project
+    )
+    mustBeEqual(result.pathAsString("data.createComment.todo.reqOnTodo"), "todo1")
+
+    server.executeQuerySimple("{ todoes { id } }", project).pathAsSeq("data.todoes").size should be(1)
+    server.executeQuerySimple("{ comments { id } }", project).pathAsSeq("data.comments").size should be(1)
+
+    server.executeQuerySimpleThatMustFail(
+      """
+        |mutation {
+        |  createComment(data: {
+        |    reqOnComment: "comment1"
+        |    todo: {}
+        |  }){
+        |    id
+        |    todo {
+        |      reqOnTodo
+        |    }
+        |  }
+        |}
+      """.stripMargin,
+      project,
+      errorCode = 3032,
+      errorContains = "The field 'todo' on type 'Comment' is required. Performing this mutation would violate that constraint"
+    )
+
+    server.executeQuerySimple("{ todoes { id } }", project).pathAsSeq("data.todoes").size should be(1)
+    server.executeQuerySimple("{ comments { id } }", project).pathAsSeq("data.comments").size should be(1)
+
+    val todoId = server
+      .executeQuerySimple(
+        """
+        |mutation {
+        |  createTodo(data: {
+        |       reqOnTodo: "todo2"
+        |       }
+        |       )
+        |  {id}
+        |}
+      """.stripMargin,
+        project
+      )
+      .pathAsString("data.createTodo.id")
+
+    server.executeQuerySimple("{ todoes { id } }", project).pathAsSeq("data.todoes").size should be(2)
+    server.executeQuerySimple("{ comments { id } }", project).pathAsSeq("data.comments").size should be(1)
+
+    server.executeQuerySimple(
+      s"""
+        |mutation {
+        |  createComment(data: {
+        |    reqOnComment: "comment1"
+        |    todo: {
+        |      connect: {id: "$todoId"}
+        |    }
+        |  }){
+        |    id
+        |    todo{
+        |       reqOnTodo
+        |    }
+        |  }
+        |}
+      """.stripMargin,
+      project
+    )
+
+    server.executeQuerySimple("{ todoes { id } }", project).pathAsSeq("data.todoes").size should be(2)
+    server.executeQuerySimple("{ comments { id } }", project).pathAsSeq("data.comments").size should be(2)
+
+  }
+
 }
