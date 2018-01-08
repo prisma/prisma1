@@ -10,6 +10,9 @@ const debug = require('debug')('config')
 import { getGraphQLConfig } from 'graphql-config'
 import { values } from 'lodash'
 
+const isDevConsole =
+  (process.env.CONSOLE_ENDPOINT || '').toLowerCase() === 'dev'
+
 export class Config {
   /**
    * Local settings
@@ -55,7 +58,9 @@ export class Config {
    */
   statusEndpoint = 'https://crm.graph.cool/prod/status'
   cloudApiEndpoint = 'https://api.cloud.graph.cool'
-  consoleEndpoint = 'https://app.graph.cool'
+  consoleEndpoint = isDevConsole
+    ? 'http://localhost:3000'
+    : 'https://app.graph.cool'
 
   /* tslint:disable-next-line */
   __cache = {}
