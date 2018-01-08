@@ -17,9 +17,10 @@ const debug = require('debug')('Environment')
 const isDev = (process.env.ENV || '').toLowerCase() === 'dev'
 
 export class Environment {
-  sharedClusters: string[] = ['graphcool-eu1']
+  sharedClusters: string[] = ['graphcool-eu1', 'graphcool-us1']
   clusterEndpointMap: { [key: string]: string } = {
     'graphcool-eu1': 'https://graphcool-eu1.graphcool.cloud',
+    'graphcool-us1': 'https://graphcool-us1.graphcool.cloud',
     // 'graphcool-eu1': isDev
     //   ? 'https://dev.database-beta.graph.cool'
     //   : 'https://database-beta.graph.cool',

@@ -28,9 +28,6 @@ export class Cluster {
     workspaceSlug?: string,
     stageName?: string,
   ): Promise<string> {
-    if (!this.clusterSecret) {
-      return ''
-    }
     // public clusters just take the token
     if (this.local) {
       return this.getLocalToken()

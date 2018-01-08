@@ -621,10 +621,16 @@ ${chalk.gray(
 
   private getPublicChoices(): any[] {
     const publicChoices = [
-      'graphcool-eu1',
-      'Public development cluster (hosted in EU on Graphcool Cloud)',
+      [
+        'graphcool-eu1',
+        'Public development cluster (hosted in EU on Graphcool Cloud)',
+      ],
+      [
+        'graphcool-us1',
+        'Public development cluster (hosted in US on Graphcool Cloud)',
+      ],
     ]
-    const allCombinations = [...this.getLocalClusterChoices(), publicChoices]
+    const allCombinations = [...this.getLocalClusterChoices(), ...publicChoices]
 
     return [
       ...this.convertChoices(allCombinations),
