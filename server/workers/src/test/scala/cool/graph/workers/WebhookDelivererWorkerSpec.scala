@@ -9,7 +9,6 @@ import cool.graph.stub.StubDsl.Default.Request
 import cool.graph.workers.payloads.Webhook
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Matchers, WordSpecLike}
-import play.api.libs.json.{JsObject, Json}
 
 import scala.util.{Failure, Success, Try}
 
@@ -64,141 +63,41 @@ class WebhookDelivererWorkerSpec
           webhookTestKit.publish(webhook)
 
           // Give the worker time to work off
-          Thread.sleep(1200)
+          Thread.sleep(1000)
 
           server.requestCount(stub) should equal(1)
+          val lastRequest = server.lastRequest
+          lastRequest.httpMethod should equal("POST")
+          lastRequest.body should equal(webhook.payload)
+          lastRequest.headers should contain("X-Cheese-Header" -> "Gouda")
+          lastRequest.path should equal("/function-endpoint")
         }
       }
     }
 
-//    "work off items and log a failure message if the delivery was unsuccessful" in {
-//      val stubs = List(
-//        Request("POST", "/function-endpoint")
-//          .stub(400, """{"error": what are you doing?"}""")
-//          .ignoreBody)
-//
-//      withWebhookWorker { (webhookWorker, webhookTestKit) =>
-//        withStubServer(stubs).withArg { server =>
-//          val webhook =
-//            Webhook(
-//              "pid",
-//              "fid",
-//              "rid",
-//              s"http://localhost:${server.port}/function-endpoint",
-//              "GIGAPIZZA",
-//              "someId",
-//              Map("X-Cheese-Header" -> "Gouda")
-//            )
-//
-//          webhookTestKit.publish(webhook)
-//          logsTestKit.expectPublishCount(1)
-//
-//          val logMessage: LogItem = logsTestKit.messagesPublished.head
-//
-//          logMessage.projectId shouldBe "pid"
-//          logMessage.functionId shouldBe "fid"
-//          logMessage.requestId shouldBe "rid"
-//          logMessage.id shouldNot be(empty)
-//          logMessage.status shouldBe "FAILURE"
-//          logMessage.timestamp shouldNot be(empty)
-//          logMessage.duration > 0 shouldBe true
-//          logMessage.message shouldBe a[JsObject]
-//          (logMessage.message \ "error").get.as[String] should include("what are you doing?")
-//        }
-//      }
-//    }
-//
-//    "work off items and log a failure message if the delivery was unsuccessful due to the http call itself failing (e.g. timeout or not available)" in {
-//      withWebhookWorker { (webhookWorker, webhookTestKit) =>
-//        val webhook =
-//          Webhook(
-//            "pid",
-//            "fid",
-//            "rid",
-//            s"http://thishosthopefullydoesntexist123/function-endpoint",
-//            "GIGAPIZZA",
-//            "someId",
-//            Map("X-Cheese-Header" -> "Gouda")
-//          )
-//
-//        webhookTestKit.publish(webhook)
-//        logsTestKit.expectPublishCount(1)
-//
-//        val logMessage: LogItem = logsTestKit.messagesPublished.head
-//
-//        logMessage.projectId shouldBe "pid"
-//        logMessage.functionId shouldBe "fid"
-//        logMessage.requestId shouldBe "rid"
-//        logMessage.id shouldNot be(empty)
-//        logMessage.status shouldBe "FAILURE"
-//        logMessage.timestamp shouldNot be(empty)
-//        logMessage.duration > 0 shouldBe true
-//        logMessage.message shouldBe a[JsObject]
-//        (logMessage.message \ "error").get.as[String] shouldNot be(empty)
-//      }
-//    }
-//
-//    "work off items and log a success message if the delivery was successful and returned a non-json body" in {
-//      val stubs = List(
-//        Request("POST", "/function-endpoint")
-//          .stub(200, "A plain response")
-//          .ignoreBody)
-//
-//      withWebhookWorker { (webhookWorker, webhookTestKit) =>
-//        withStubServer(stubs).withArg { server =>
-//          val webhook =
-//            Webhook(
-//              "pid",
-//              "fid",
-//              "rid",
-//              s"http://localhost:${server.port}/function-endpoint",
-//              "GIGAPIZZA",
-//              "someId",
-//              Map("X-Cheese-Header" -> "Gouda")
-//            )
-//
-//          webhookTestKit.publish(webhook)
-//          logsTestKit.expectPublishCount(1)
-//
-//          val logMessage: LogItem = logsTestKit.messagesPublished.head
-//
-//          logMessage.projectId shouldBe "pid"
-//          logMessage.functionId shouldBe "fid"
-//          logMessage.requestId shouldBe "rid"
-//          logMessage.id shouldNot be(empty)
-//          logMessage.status shouldBe "SUCCESS"
-//          logMessage.timestamp shouldNot be(empty)
-//          logMessage.duration > 0 shouldBe true
-//          logMessage.message shouldBe a[JsObject]
-//          (logMessage.message \ "returnValue" \ "rawResponse").get.as[String] shouldBe "A plain response"
-//        }
-//      }
-//    }
-//
-//    "work off old mutation callbacks" in {
-//      val stubs = List(
-//        Request("POST", "/function-endpoint")
-//          .stub(200, "{}")
-//          .ignoreBody)
-//
-//      withWebhookWorker { (webhookWorker, webhookTestKit) =>
-//        withStubServer(stubs).withArg { server =>
-//          val webhook = Webhook(
-//            "test-project-id",
-//            "",
-//            "",
-//            s"http://localhost:${server.port}/function-endpoint",
-//            "{\\\"createdNode\\\":{\\\"text\\\":\\\"a comment\\\",\\\"json\\\":[1,2,3]}}",
-//            "cj7c3vllp001nha58lxr6cx5b",
-//            Map.empty
-//          )
-//
-//          webhookTestKit.publish(webhook)
-//          logsTestKit.expectPublishCount(1)
-//
-//          logsTestKit.messagesPublished.head.status shouldBe "SUCCESS"
-//        }
-//      }
-//    }
+    "work off old mutation callbacks" in {
+      val stub = Request("POST", "/function-endpoint")
+        .stub(200, "{}")
+        .ignoreBody
+
+      withWebhookWorker { (webhookWorker, webhookTestKit) =>
+        withStubServer(List(stub)).withArg { server =>
+          val webhook = Webhook(
+            "test-project-id",
+            "",
+            "",
+            s"http://localhost:${server.port}/function-endpoint",
+            "{\\\"createdNode\\\":{\\\"text\\\":\\\"a comment\\\",\\\"json\\\":[1,2,3]}}",
+            "cj7c3vllp001nha58lxr6cx5b",
+            Map.empty
+          )
+
+          webhookTestKit.publish(webhook)
+
+          Thread.sleep(1000)
+          server.requestCount(stub) should equal(1)
+        }
+      }
+    }
   }
 }
