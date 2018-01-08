@@ -3,10 +3,12 @@ package cool.graph.api.database.mutactions.mutactions
 import cool.graph.api.ApiDependencies
 import cool.graph.api.database.DataItem
 import cool.graph.api.database.mutactions.{ClientSqlMutaction, Mutaction, MutactionExecutionResult, MutactionExecutionSuccess}
+import cool.graph.api.subscriptions.schema.QueryTransformer
 import cool.graph.api.subscriptions.{SubscriptionExecutor, Webhook}
 import cool.graph.shared.models.IdType.Id
 import cool.graph.shared.models.ModelMutationType.ModelMutationType
 import cool.graph.shared.models._
+import sangria.parser.QueryParser
 import spray.json.{JsValue, _}
 
 import scala.concurrent.Future
@@ -33,7 +35,7 @@ object ServerSideSubscription {
   )(implicit apiDependencies: ApiDependencies): Seq[ServerSideSubscription] = {
     for {
       mutaction <- mutactions
-      sssFn     <- project.serverSideSubscriptionFunctionsFor(mutaction.model, ModelMutationType.Created)
+      sssFn     <- serverSideSubscriptionFunctionsFor(project, mutaction.model, ModelMutationType.Deleted)
     } yield {
       ServerSideSubscription(
         project,
@@ -53,7 +55,7 @@ object ServerSideSubscription {
   )(implicit apiDependencies: ApiDependencies): Seq[ServerSideSubscription] = {
     for {
       mutaction <- mutactions
-      sssFn     <- project.serverSideSubscriptionFunctionsFor(mutaction.model, ModelMutationType.Updated)
+      sssFn     <- serverSideSubscriptionFunctionsFor(project, mutaction.model, ModelMutationType.Deleted)
     } yield {
       ServerSideSubscription(
         project,
@@ -76,7 +78,7 @@ object ServerSideSubscription {
   )(implicit apiDependencies: ApiDependencies): Seq[ServerSideSubscription] = {
     for {
       mutaction <- mutactions
-      sssFn     <- project.serverSideSubscriptionFunctionsFor(mutaction.model, ModelMutationType.Deleted)
+      sssFn     <- serverSideSubscriptionFunctionsFor(project, mutaction.model, ModelMutationType.Deleted)
     } yield {
       ServerSideSubscription(
         project,
@@ -88,6 +90,16 @@ object ServerSideSubscription {
         previousValues = Some(mutaction.previousValues)
       )
     }
+  }
+
+  private def serverSideSubscriptionFunctionsFor(project: Project, model: Model, mutationType: ModelMutationType) = {
+    def isServerSideSubscriptionForModelAndMutationType(function: ServerSideSubscriptionFunction): Boolean = {
+      val queryDoc             = QueryParser.parse(function.query).get
+      val modelNameInQuery     = QueryTransformer.getModelNameFromSubscription(queryDoc).get
+      val mutationTypesInQuery = QueryTransformer.getMutationTypesFromSubscription(queryDoc)
+      model.name == modelNameInQuery && mutationTypesInQuery.contains(mutationType)
+    }
+    project.serverSideSubscriptionFunctions.filter(isServerSideSubscriptionForModelAndMutationType)
   }
 }
 

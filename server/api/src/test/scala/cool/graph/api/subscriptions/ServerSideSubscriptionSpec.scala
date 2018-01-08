@@ -224,72 +224,53 @@ class ServerSideSubscriptionSpec extends FlatSpec with Matchers with ApiBaseSpec
 
     webhook.headers shouldEqual Map("header" -> "value")
   }
-//
-//  "ServerSideSubscription" should "send a message to our Webhook Queue if the SSS Query matches a nested Create mutation" in {
-//    val theTitle = "The title of the new todo"
-//    val createCommentWithNestedTodo =
-//      s"""
-//         |mutation {
-//         |  createComment(text:"some text", todo: {
-//         |    title:"$theTitle"
-//         |    status: $newTodoStatus
-//         |  }){
-//         |    id
-//         |  }
-//         |}
-//      """.stripMargin
-//
-//    executeQuerySimple(createCommentWithNestedTodo, actualProject).pathAsString("data.createComment.id")
-//    webhookTestKit.expectPublishCount(1)
-//
-//    val webhook = webhookTestKit.messagesPublished.head
-//
-//    webhook.functionName shouldEqual sssFunction.id
-//    webhook.projectId shouldEqual project.id
+
+  "ServerSideSubscription" should "send a message to our Webhook Queue if the SSS Query matches a nested Create mutation" in {
+    val theTitle = "The title of the new todo"
+    val createCommentWithNestedTodo =
+      s"""
+         |mutation {
+         |  createComment(data: {
+         |    text:"some text",
+         |    todo: {
+         |      create: {
+         |        title:"$theTitle"
+         |        status: $newTodoStatus
+         |      }
+         |    }
+         |  }){
+         |    id
+         |  }
+         |}
+      """.stripMargin
+
+    server.executeQuerySimple(createCommentWithNestedTodo, actualProject).pathAsString("data.createComment.id")
+    webhookTestKit.expectPublishCount(1)
+
+    val webhook = webhookTestKit.messagesPublished.head
+
+    webhook.functionName shouldEqual sssFunction.name
+    webhook.projectId shouldEqual project.id
 //    webhook.requestId shouldNot be(empty)
 //    webhook.id shouldNot be(empty)
-//    webhook.url shouldEqual webhookUrl
-//
-//    webhook.payload.redactTokens shouldEqual s"""
-//                                                |{
-//                                                |  "data": {
-//                                                |    "Todo": {
-//                                                |      "node": {
-//                                                |        "title": "$newTodoTitle",
-//                                                |        "status": "$newTodoStatus",
-//                                                |        "comments": [{"text":"some text"}]
-//                                                |      },
-//                                                |      "previousValues": null
-//                                                |    }
-//                                                |  },
-//                                                |  "context": {
-//                                                |    "request": {
-//                                                |      "sourceIp": "",
-//                                                |      "headers": {
-//                                                |
-//                                              |      },
-//                                                |      "httpMethod": "post"
-//                                                |    },
-//                                                |    "auth": null,
-//                                                |    "sessionCache": {
-//                                                |
-//                                              |    },
-//                                                |    "environment": {
-//                                                |
-//                                              |    },
-//                                                |    "graphcool": {
-//                                                |      "projectId": "test-project-id",
-//                                                |      "alias": "test-project-alias",
-//                                                |      "pat": "*",
-//                                                |      "serviceId":"test-project-id",
-//                                                |      "rootToken": "*",
-//                                                |      "endpoints": $endpoints
-//                                                |    }
-//                                                |  }
-//                                                |}""".stripMargin.parseJson.compactPrint
-//
-//    webhook.headers shouldEqual Map("header" -> "value")
-//  }
+    webhook.url shouldEqual webhookUrl
+
+    webhook.payload shouldEqual s"""
+                                    |{
+                                    |  "data": {
+                                    |    "todo": {
+                                    |      "node": {
+                                    |        "title": "$newTodoTitle",
+                                    |        "status": "$newTodoStatus",
+                                    |        "comments": [{"text":"some text"}]
+                                    |      },
+                                    |      "previousValues": null
+                                    |    }
+                                    |  }
+                                    |}""".stripMargin.parseJson.compactPrint
+
+    webhook.headers shouldEqual Map("header" -> "value")
+  }
 //
 //  "ServerSideSubscription" should "send a message to our Webhook Queue if the SSS Query matches a nested Update mutation" in {
 //    val newTodoTitle = "The title of the new todo"
