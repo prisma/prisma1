@@ -20,9 +20,9 @@ Graphcool services are managed with the [Graphcool CLI](!alias-ieshoo5ohm). You 
 Open your terminal and run the following command to install the Graphcool CLI:
 
 ```sh
-npm install -g graphcool
+npm install -g graphcool@beta
 # or
-# yarn global add graphcool
+# yarn global add graphcool@beta
 ```
 
 </Instruction>
