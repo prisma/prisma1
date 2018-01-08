@@ -75,7 +75,7 @@ Here's an overview of the properties in the generated `graphcool.yml`:
 - `service`: Defines the service name which will be part of the service's HTTP endpoint
 - `stage`: A service can be deployed to multiple stages (e.g. a _development_ and a _production_ environment)
 - `datamodel`: The path to the file which contains your data model
-- `disableAuth`: If set to true, everyone who knows the endpoint of your Graphcool service has full read and write access. If set to `false`, you need to specify a `secret` which is used to generate JWT authentication tokens. These tokens need to be attached to the `Authorization` header of the requests sent to your service.
+- `disableAuth`: If set to true, everyone who knows the endpoint of your Graphcool service has full read and write access. If set to `false`, you need to specify a `secret` which is used to generate JWT authentication tokens. These tokens need to be attached to the `Authorization` header of the requests sent to your service. The easiest way to obtain a token is the `graphcool token` command from the Graphcool CLI.
 
 > **Note**: We'll keep `disableAuth` set to `true` for this tutorial. In production applications, you'll always want to require authentication for your service! You can read more about this topic [here](!alias-pua7soog4v).
 
@@ -121,6 +121,8 @@ Your Graphcool service is now deployed and ready to accept your queries and muta
 So your service is deployed - but how do you know how to interact with it? What does its API actually look like?
 
 In general, the generated API allows to perform CRUD operations on the types in your data model. It also exposes GraphQL subscriptions which allow clients to _subscribe_ to certain _events_ and receive updates in realtime.
+
+It is important to understand that the data model is the foundation for your API. Every time you make changes to your data model, the GraphQL API gets updated accordingly.
 
 Because your datamodel contains the `User` type, the Graphcool API now allows for its clients to create, read, update and delete instances, also called _nodes_, of that type. In particular, the following GraphQL operations are now generated based on the `User` type:
 
@@ -220,4 +222,86 @@ This time, the `User` node that was just created is returned in the server respo
 
 ![](https://imgur.com/AE5Z5Vu.png)
 
-## Extending the API and adjusting the data model
+Note that the API also offers powerful filtering, ordering and pagination capabilities. Here are examples for queries that provide the corresponding input arguments to the `users` query.
+
+**Retrieve all `User` nodes where the `name` contains the string `"ra"`**
+
+```graphql
+query {
+  users(where: {
+    name_contains: "ra"
+  }) {
+    id
+    name
+  }
+}
+```
+
+**Retrieve all `User` nodes sorted descending by their names**
+
+```graphql
+query {
+  users(orderBy: name_DESC) {
+    id
+    name
+  }
+}
+```
+
+**Retrieve a chunk of `User` nodes (position 20-29 in the list)**
+
+```graphql
+query {
+  users(skip: 20, first: 10) {
+    id
+    name
+  }
+}
+```
+
+## Changing data model and updating API
+
+You now learned how to deploy a Graphcool service, how to explore its API and how to interact with it by sending queries and mutations. The last thing we want to cover in this tutorial is how you can update the API by making changes to the data model.
+
+We want to make the following changes to the data model:
+
+- Add an `age` field to the `User` type.
+- Track the exact time when a `User` was _initially created_ or _last updated_.
+- Add a new `Post` type with a `title` field.
+- Create a one-to-many relation between `User` and `Post` to express that one `User` can create many `Post` nodes.
+
+<Instruction>
+
+Start by adding the required fields to the `User` type:
+
+```graphql
+type User {
+  id: ID! @unique
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  name: String!
+  age: Int
+}
+```
+
+</Instruction>
+
+The `age` field is of type `Int` and not required on the `User` type. This means you can store `User` nodes where `age` will be null (in fact, this is the case for the `User` named `Sarah` you created before).
+
+`createdAt` and `updatedAt` on the other hand are actually special fields that are managed by Graphcool. Under the hood, Graphcool always maintains these fields - but they're only exposed in your API once you add them to the type definition in the data model (the same is true for the `id` field by the way).
+
+> **Note**: Right now, the values for these fields are read-only. In the future, it will be possible to set the values for these fields via regular mutations as well. To learn more about this feature and timeline, check out this [GitHub issue](https://github.com/graphcool/graphcool/issues/1278).
+
+So far, the changes you made are only local. So, you won't be able to access the new fields in a GraphQL Playground if you open it right now.
+
+<Instruction>
+
+To make your changes take effect, you need to to deploy the service again. In the `hello-world` directory, run the following command:
+
+```sh
+graphcool deploy
+```
+
+</Instruction>
+
+You can now either open up a new GraphQL Playground or _reload the schema_ in one that's already open (the button for reloading the schema is the **Refresh**-button right next to the URL of your GraphQL API).
