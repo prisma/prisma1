@@ -81,7 +81,10 @@ class ServerSideSubscriptionSpec extends FlatSpec with Matchers with ApiBaseSpec
     val createTodo =
       s"""
          |mutation {
-         |  createTodo(title:"$newTodoTitle", status: $newTodoStatus){
+         |  createTodo(data:{
+         |    title:"$newTodoTitle"
+         |    status: $newTodoStatus
+         |  }){
          |    id
          |  }
          |}
