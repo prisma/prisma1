@@ -1,4 +1,4 @@
-package cool.graph.subscriptions.resolving
+package cool.graph.api.subscriptions
 
 import cool.graph.shared.models.Project
 import sangria.ast.Document

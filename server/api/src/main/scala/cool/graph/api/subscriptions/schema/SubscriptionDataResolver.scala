@@ -1,9 +1,10 @@
-package cool.graph.subscriptions.schemas
+package cool.graph.api.subscriptions.schema
 
 import cool.graph.api.database.DataResolver
-import cool.graph.api.schema.{ApiUserContext, ObjectTypeBuilder, SimpleResolveOutput}
+import cool.graph.api.schema.{ObjectTypeBuilder, SimpleResolveOutput}
+import cool.graph.api.subscriptions.SubscriptionUserContext
+import cool.graph.api.subscriptions.resolving.FilteredResolver
 import cool.graph.shared.models.Model
-import cool.graph.subscriptions.resolving.{FilteredResolver, SubscriptionUserContext}
 import sangria.schema.{Args, Context}
 
 import scala.concurrent.ExecutionContext.Implicits.global

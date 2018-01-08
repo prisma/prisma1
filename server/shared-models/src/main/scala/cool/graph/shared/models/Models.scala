@@ -58,7 +58,7 @@ case class ServerSideSubscriptionFunction(
 
 sealed trait FunctionDelivery
 
-case class HttpFunction(
+case class WebhookFunction(
     url: String,
     headers: Vector[(String, String)]
 ) extends FunctionDelivery

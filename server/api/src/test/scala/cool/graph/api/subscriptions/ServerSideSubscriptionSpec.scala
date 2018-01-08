@@ -1,42 +1,43 @@
 package cool.graph.api.subscriptions
 
-import cool.graph.JsonFormats.AnyJsonFormat
-import cool.graph.api.ApiTestServer
+import Webhook
+import cool.graph.api.{ApiBaseSpec, ApiTestServer}
 import cool.graph.messagebus.testkits.InMemoryQueueTestKit
 import cool.graph.shared.models._
+import cool.graph.shared.project_dsl.SchemaDsl
+import cool.graph.shared.project_dsl.SchemaDsl.ModelBuilder
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{FlatSpec, Matchers}
 
-class ServerSideSubscriptionSpec extends FlatSpec with Matchers with ApiTestServer with ScalaFutures with SchemaSpecHelper {
+class ServerSideSubscriptionSpec extends FlatSpec with Matchers with ApiBaseSpec with ScalaFutures {
   import spray.json._
 
   val webhookTestKit = InMemoryQueueTestKit[Webhook]()
 
   override protected def beforeAll(): Unit = {
     super.beforeAll()
-    setupProject(client, actualProject)
+    database.setup(actualProject)
   }
 
   override def beforeEach = {
     super.beforeEach()
 
-    truncateProjectDatabase(actualProject)
+    database.truncate(project)
     webhookTestKit.reset
   }
 
-  val schema: SchemaBuilder = SchemaDsl.schema()
-  val status: Enum          = schema.enum("TodoStatus", Seq("Active", "Done"))
-  val comment: ModelBuilder = schema
-    .model("Comment")
-    .field("text", _.String)
+  val project = SchemaDsl.schema() { schema =>
+    val status: Enum = schema.enum("TodoStatus", Vector("Active", "Done"))
+    val comment: ModelBuilder = schema
+      .model("Comment")
+      .field("text", _.String)
+    val todo: ModelBuilder = schema
+      .model("Todo")
+      .field("title", _.String)
+      .field("status", _.Enum, enum = Some(status))
+      .oneToManyRelation("comments", "todo", comment)
+  }
 
-  val todo: ModelBuilder = schema
-    .model("Todo")
-    .field("title", _.String)
-    .field("status", _.Enum, enum = Some(status))
-    .oneToManyRelation("comments", "todo", comment)
-
-  val (client, project) = schema.buildClientAndProject()
   val subscriptionQueryForCreates: String =
     """
       |subscription {
@@ -61,9 +62,8 @@ class ServerSideSubscriptionSpec extends FlatSpec with Matchers with ApiTestServ
     """.stripMargin
 
   val webhookUrl     = "http://www.mywebhooks.com"
-  val webhookHeaders = Seq("header" -> "value")
+  val webhookHeaders = Vector("header" -> "value")
   val sssFunction = ServerSideSubscriptionFunction(
-    id = "test-function",
     name = "Test Function",
     isActive = true,
     query = subscriptionQueryForCreates,
@@ -73,19 +73,7 @@ class ServerSideSubscriptionSpec extends FlatSpec with Matchers with ApiTestServ
     )
   )
 
-  val sssManagedFunction = ServerSideSubscriptionFunction(
-    id = "test-function",
-    name = "Test Function",
-    isActive = true,
-    query = subscriptionQueryForCreates,
-    delivery = ManagedFunction()
-  )
-
   val actualProject: Project = project.copy(functions = List(sssFunction))
-  val endpointResolver       = injector.endpointResolver
-  def endpoints              = AnyJsonFormat.write(endpointResolver.endpoints(actualProject.id).toMap).compactPrint
-
-  override def writeSchemaToFile: Boolean = true
 
   val newTodoTitle     = "The title of the new todo"
   val newTodoStatus    = "Active"
@@ -100,19 +88,19 @@ class ServerSideSubscriptionSpec extends FlatSpec with Matchers with ApiTestServ
          |  }
          |}
       """.stripMargin
-    val id = executeQuerySimple(createTodo, actualProject).pathAsString("data.createTodo.id")
+    val id = server.executeQuerySimple(createTodo, actualProject).pathAsString("data.createTodo.id")
 
     webhookTestKit.expectPublishCount(1)
 
     val webhook = webhookTestKit.messagesPublished.head
 
-    webhook.functionId shouldEqual sssFunction.id
+    webhook.functionName shouldEqual sssFunction.name
     webhook.projectId shouldEqual project.id
     webhook.requestId shouldNot be(empty)
     webhook.id shouldNot be(empty)
     webhook.url shouldEqual webhookUrl
 
-    webhook.payload.redactTokens shouldEqual s"""
+    webhook.payload shouldEqual s"""
                                                 |{
                                                 |  "data": {
                                                 |    "Todo": {
@@ -181,7 +169,7 @@ class ServerSideSubscriptionSpec extends FlatSpec with Matchers with ApiTestServ
 
     val webhook = webhookTestKit.messagesPublished.head
 
-    webhook.functionId shouldEqual sssFunction.id
+    webhook.functionName shouldEqual sssFunction.id
     webhook.projectId shouldEqual project.id
     webhook.requestId shouldNot be(empty)
     webhook.id shouldNot be(empty)
@@ -257,7 +245,7 @@ class ServerSideSubscriptionSpec extends FlatSpec with Matchers with ApiTestServ
 
     val webhook = webhookTestKit.messagesPublished.head
 
-    webhook.functionId shouldEqual sssFunction.id
+    webhook.functionName shouldEqual sssFunction.id
     webhook.projectId shouldEqual project.id
     webhook.requestId shouldNot be(empty)
     webhook.id shouldNot be(empty)
@@ -321,7 +309,7 @@ class ServerSideSubscriptionSpec extends FlatSpec with Matchers with ApiTestServ
 
     val webhook = webhookTestKit.messagesPublished.head
 
-    webhook.functionId shouldEqual sssFunction.id
+    webhook.functionName shouldEqual sssFunction.id
     webhook.projectId shouldEqual project.id
     webhook.requestId shouldNot be(empty)
     webhook.id shouldNot be(empty)
@@ -400,7 +388,7 @@ class ServerSideSubscriptionSpec extends FlatSpec with Matchers with ApiTestServ
 
     val webhook = webhookTestKit.messagesPublished.head
 
-    webhook.functionId shouldEqual sssFunction.id
+    webhook.functionName shouldEqual sssFunction.id
     webhook.projectId shouldEqual project.id
     webhook.requestId shouldNot be(empty)
     webhook.id shouldNot be(empty)

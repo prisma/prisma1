@@ -1,4 +1,4 @@
-package cool.graph.subscriptions.schemas
+package cool.graph.api.subscriptions.schema
 
 import cool.graph.shared.models.ModelMutationType
 import cool.graph.shared.models.ModelMutationType.ModelMutationType

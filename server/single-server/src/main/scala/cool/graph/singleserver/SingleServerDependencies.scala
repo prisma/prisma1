@@ -6,6 +6,7 @@ import cool.graph.api.ApiDependencies
 import cool.graph.api.database.Databases
 import cool.graph.api.project.{ProjectFetcher, ProjectFetcherImpl}
 import cool.graph.api.schema.SchemaBuilder
+import cool.graph.api.subscriptions.Webhook
 import cool.graph.deploy.DeployDependencies
 import cool.graph.deploy.migration.migrator.{AsyncMigrator, Migrator}
 import cool.graph.deploy.server.ClusterAuthImpl
@@ -70,4 +71,6 @@ case class SingleServerDependencies()(implicit val system: ActorSystem, val mate
     responsePubSub.map[SubscriptionSessionResponse](converterResponse07ToString)
 
   override val keepAliveIntervalSeconds = 10
+
+  override val webhookPublisher = InMemoryAkkaQueue[Webhook]()
 }

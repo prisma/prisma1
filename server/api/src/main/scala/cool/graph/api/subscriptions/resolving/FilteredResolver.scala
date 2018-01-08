@@ -1,8 +1,8 @@
-package cool.graph.subscriptions.resolving
+package cool.graph.api.subscriptions.resolving
 
-import cool.graph.api.database.{DataItem, DataResolver, FilterElement, QueryArguments}
 import cool.graph.api.database.Types.DataItemFilterCollection
-import cool.graph.api.schema.{ApiUserContext, ObjectTypeBuilder}
+import cool.graph.api.database.{DataItem, DataResolver, FilterElement, QueryArguments}
+import cool.graph.api.schema.ObjectTypeBuilder
 import cool.graph.shared.models.Model
 import sangria.schema.Context
 
