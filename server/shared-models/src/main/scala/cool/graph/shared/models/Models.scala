@@ -29,26 +29,39 @@ case class Client(
 sealed trait Function {
   def name: String
   def isActive: Boolean
-//  def delivery: FunctionDelivery
-//  def binding: FunctionBinding
+  def delivery: FunctionDelivery
 }
+
+//case class ServerSideSubscriptionFunction(
+//    name: String,
+//    isActive: Boolean,
+//    query: String,
+//    queryFilePath: Option[String] = None //,
+////                                           delivery: FunctionDelivery
+//) extends Function {
+////  def isServerSideSubscriptionFor(model: Model, mutationType: ModelMutationType): Boolean = {
+////    val queryDoc             = QueryParser.parse(query).get
+////    val modelNameInQuery     = QueryTransformer.getModelNameFromSubscription(queryDoc).get
+////    val mutationTypesInQuery = QueryTransformer.getMutationTypesFromSubscription(queryDoc)
+////    model.name == modelNameInQuery && mutationTypesInQuery.contains(mutationType)
+////  }
+////
+////  def binding = FunctionBinding.SERVERSIDE_SUBSCRIPTION
+//}
 
 case class ServerSideSubscriptionFunction(
     name: String,
     isActive: Boolean,
-    query: String,
-    queryFilePath: Option[String] = None //,
-//                                           delivery: FunctionDelivery
-) extends Function {
-//  def isServerSideSubscriptionFor(model: Model, mutationType: ModelMutationType): Boolean = {
-//    val queryDoc             = QueryParser.parse(query).get
-//    val modelNameInQuery     = QueryTransformer.getModelNameFromSubscription(queryDoc).get
-//    val mutationTypesInQuery = QueryTransformer.getMutationTypesFromSubscription(queryDoc)
-//    model.name == modelNameInQuery && mutationTypesInQuery.contains(mutationType)
-//  }
-//
-//  def binding = FunctionBinding.SERVERSIDE_SUBSCRIPTION
-}
+    delivery: FunctionDelivery,
+    query: String
+) extends Function
+
+sealed trait FunctionDelivery
+
+case class HttpFunction(
+    url: String,
+    headers: Vector[(String, String)]
+) extends FunctionDelivery
 
 case class Schema(
     models: List[Model] = List.empty,
