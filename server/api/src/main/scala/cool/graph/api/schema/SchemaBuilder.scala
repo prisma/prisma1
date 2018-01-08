@@ -69,9 +69,7 @@ case class SchemaBuilderImpl(
       project.models.flatMap(deleteItemField) ++
       project.models.flatMap(upsertItemField) ++
       project.models.flatMap(updateManyField) ++
-      project.models.map(deleteManyField) ++
-      List(resetDataField)
-
+      project.models.map(deleteManyField)
     Some(ObjectType("Mutation", fields))
   }
 
@@ -212,17 +210,6 @@ case class SchemaBuilderImpl(
         val where    = objectTypeBuilder.extractRequiredFilterFromContext(model, ctx)
         val mutation = DeleteMany(project, model, where, dataResolver = masterDataResolver)
         ClientMutationRunner.run(mutation, dataResolver)
-      }
-    )
-  }
-
-  def resetDataField: Field[ApiUserContext, Unit] = {
-    Field(
-      s"resetData",
-      fieldType = OptionType(BooleanType),
-      resolve = (ctx) => {
-        val mutation = ResetData(project = project, dataResolver = masterDataResolver)
-        ClientMutationRunner.run(mutation, dataResolver).map(_ => true)
       }
     )
   }
