@@ -314,13 +314,8 @@ object QueryArguments {
           Some(sql"false")
 
         case FilterElement(key, value, Some(field), filterName, None) if filterName == "_in" =>
-          val unwrapSome = value match {
-            case Some(x) => x
-            case x       => x
-          }
-
-          unwrapSome.asInstanceOf[Seq[Any]].nonEmpty match {
-            case true  => Some(sql"`#$projectId`.`#$tableName`.`#${field.name}` " concat generateInStatement(unwrapSome.asInstanceOf[Seq[Any]]))
+          value.asInstanceOf[Seq[Any]].nonEmpty match {
+            case true  => Some(sql"`#$projectId`.`#$tableName`.`#${field.name}` " concat generateInStatement(value.asInstanceOf[Seq[Any]]))
             case false => Some(sql"false")
           }
 
@@ -412,4 +407,5 @@ object QueryArguments {
     val combinedItems = combineByComma(items.map(escapeUnsafeParam))
     sql" IN (" concat combinedItems concat sql")"
   }
+
 }

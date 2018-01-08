@@ -213,6 +213,9 @@ class ObjectTypeBuilder(
             case value: Seq[Any] =>
               FilterElement(key, value, field, filter.name)
 
+            case Some(filterValue) =>
+              FilterElement(key, filterValue, field, filter.name)
+
             case _ =>
               FilterElement(key, value, field, filter.name)
           }
