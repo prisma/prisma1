@@ -100,6 +100,7 @@ Please make sure it contains the cluster. You can create a local cluster using '
           name,
           stage,
           cluster: cluster.name,
+          workspace,
           httpEndpoint: cluster.getApiEndpoint(name, stage, workspace),
           wsEndpoint: cluster.getWSEndpoint(name, stage, workspace),
         },

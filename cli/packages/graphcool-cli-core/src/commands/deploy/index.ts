@@ -410,7 +410,7 @@ ${chalk.gray(
       this.out.action.start(`Writing database schema to \`${schemaPath}\` `)
       const schemaString = await fetchAndPrintSchema(
         this.client,
-        serviceName,
+        this.concatName(serviceName, this.definition.getWorkspace()),
         stageName,
         token,
       )
@@ -567,7 +567,7 @@ ${chalk.gray(
 
     if (cluster === 'login') {
       await this.client.login()
-      return this.clusterSelection(serviceName, stage, loggedIn)
+      return this.clusterSelection(serviceName, stage, true)
     }
 
     return cluster
@@ -585,7 +585,9 @@ ${chalk.gray(
   private async getLoggedInChoices(): Promise<any[]> {
     const localChoices = this.getLocalClusterChoices()
     const workspaces = await this.client.getWorkspaces()
-    const clusters = this.env.clusters.filter(c => !c.local)
+    const clusters = this.env.clusters.filter(
+      c => !c.local && c.name !== 'shared-public-demo',
+    )
     const combinations: string[][] = []
     workspaces.forEach(workspace => {
       clusters.forEach(cluster => {
