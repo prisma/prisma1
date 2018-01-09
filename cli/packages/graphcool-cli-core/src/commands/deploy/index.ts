@@ -215,15 +215,15 @@ ${chalk.gray(
         )
         if (mainSatisfied) {
           // disable minor check in beta
-          if (clusterMatch[2] && cliMatch[2]) {
-            const secondarySatisfied = semver.satisfies(
-              cliMatch[2],
-              `~${clusterMatch[2]}`,
-            )
-            if (!secondarySatisfied) {
-              throw error
-            }
-          }
+          // if (clusterMatch[2] && cliMatch[2]) {
+          //   const secondarySatisfied = semver.satisfies(
+          //     cliMatch[2],
+          //     `~${clusterMatch[2]}`,
+          //   )
+          //   if (!secondarySatisfied) {
+          //     throw error
+          //   }
+          // }
         } else {
           throw error
         }

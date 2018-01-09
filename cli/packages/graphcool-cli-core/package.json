@@ -1,6 +1,6 @@
 {
   "name": "graphcool-cli-core",
-  "version": "1.14.12",
+  "version": "1.14.13",
   "main": "dist/index.js",
   "files": [
     "dist"
@@ -87,6 +87,7 @@
     "graphcool-json-schema": "1.2.1",
     "graphcool-yml": "0.4.10",
     "graphql": "^0.11.7",
+    "graphql-cli": "^2.10.1",
     "graphql-config": "^1.0.9",
     "inquirer": "^3.3.0",
     "isomorphic-fetch": "^2.2.1",
@@ -96,6 +97,7 @@
     "lodash.differenceby": "^4.8.0",
     "multimatch": "^2.1.0",
     "node-forge": "^0.7.1",
+    "npm-run": "^4.1.2",
     "opn": "^5.1.0",
     "pause": "^0.1.0",
     "portfinder": "^1.0.13",
