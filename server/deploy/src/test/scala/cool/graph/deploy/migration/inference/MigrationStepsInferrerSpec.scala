@@ -1,6 +1,5 @@
-package cool.graph.deploy.migration
+package cool.graph.deploy.migration.inference
 
-import cool.graph.deploy.migration.inference.{FieldMapping, Mapping, MigrationStepsInferrerImpl, SchemaMapping}
 import cool.graph.deploy.specutils.DeploySpecBase
 import cool.graph.shared.models._
 import cool.graph.shared.project_dsl.SchemaDsl

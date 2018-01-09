@@ -1,86 +1,86 @@
 package cool.graph.deploy.server
 
-import cool.graph.deploy.schema.InvalidToken
-import cool.graph.shared.models.Project
+import java.time.Instant
 
-import scala.util.{Failure, Success, Try}
+import cool.graph.deploy.schema.{InvalidToken, TokenExpired}
 import play.api.libs.json._
 
+import scala.util.{Failure, Success, Try}
+
 trait ClusterAuth {
-  def verify(project: Project, authHeaderOpt: Option[String]): Try[Unit]
+  def verify(name: String, stage: String, authHeaderOpt: Option[String]): Try[Unit]
 }
 
-class ClusterAuthImpl(publicKey: Option[String]) extends ClusterAuth {
-  override def verify(project: Project, authHeaderOpt: Option[String]): Try[Unit] = Try {
-    publicKey match {
+case class DummyClusterAuth() extends ClusterAuth {
+  override def verify(name: String, stage: String, authHeaderOpt: Option[String]): Try[Unit] = {
+    println("Warning: Cluster authentication is disabled. To protect your cluster you should provide the environment variable 'CLUSTER_PUBLIC_KEY'.")
+    Success(())
+  }
+}
+
+case class ClusterAuthImpl(publicKey: String) extends ClusterAuth {
+  import pdi.jwt.{Jwt, JwtAlgorithm, JwtOptions}
+
+  implicit val tokenGrantReads = Json.reads[TokenGrant]
+  implicit val tokenDataReads  = Json.reads[TokenData]
+
+  override def verify(name: String, stage: String, authHeaderOpt: Option[String]): Try[Unit] = Try {
+    authHeaderOpt match {
       case None =>
-        println("warning: cluster authentication is disabled")
-        println("To protect your cluster you should provide the environment variable 'CLUSTER_PUBLIC_KEY'")
-        ()
-      case Some(publicKey) =>
-        authHeaderOpt match {
-          case None => throw InvalidToken("'Authorization' header not provided")
-          case Some(authHeader) =>
-            import pdi.jwt.{Jwt, JwtAlgorithm, JwtOptions}
+        throw InvalidToken("'Authorization' header not provided")
 
-            val jwtOptions = JwtOptions(signature = true, expiration = true)
-            val algorithms = Seq(JwtAlgorithm.RS256)
-            println(authHeader)
-            val claims = Jwt.decodeRaw(token = authHeader.stripPrefix("Bearer "), key = publicKey, algorithms = algorithms, options = jwtOptions)
-            println(claims)
+      case Some(authHeader) =>
+        val jwtOptions = JwtOptions(signature = true, expiration = true)
+        val algorithms = Seq(JwtAlgorithm.RS256)
+        val decodedToken = Jwt.decodeRaw(
+          token = authHeader.stripPrefix("Bearer "),
+          key = publicKey,
+          algorithms = algorithms,
+          options = jwtOptions
+        )
 
-            claims match {
-              case Failure(exception) => throw InvalidToken(s"claims are invalid: ${exception.getMessage}")
-              case Success(claims) =>
-                val grants = parseclaims(claims)
+        decodedToken match {
+          case Failure(exception) =>
+            throw InvalidToken(s"Token can't be decoded: ${exception.getMessage}")
 
-                val isSuccess = grants.exists(verifyGrant(project, _))
-
-                if (isSuccess) {
-                  ()
-                } else {
-                  throw InvalidToken(s"Token contained ${grants.length} grants but none satisfied the request")
-                }
+          case Success(rawToken) =>
+            val token = parseToken(rawToken)
+            if ((token.exp * 1000) < Instant.now().toEpochMilli) {
+              throw TokenExpired
             }
+
+            token.grants
+              .find(verifyGrant(name, stage, _))
+              .getOrElse(throw InvalidToken(s"Token contained ${token.grants.length} grants but none satisfied the request."))
         }
     }
   }
 
-  private def verifyGrant(project: Project, grant: TokenGrant): Boolean = {
-    val (workspace: String, service: String, stage: String) = grant.target.split("/").toVector match {
-      case Vector(workspace, service, stage) => (workspace, service, stage)
-      case Vector(service, stage)            => ("", service, stage)
-      case invalid                           => throw InvalidToken(s"Contained invalid grant '${invalid}'")
+  private def verifyGrant(nameToCheck: String, stageToCheck: String, grant: TokenGrant): Boolean = {
+    val (grantedName: String, grantedStage: String) = grant.target.split("/").toVector match {
+      case Vector(service, stage) => (service, stage)
+      case invalid                => throw InvalidToken(s"Contained invalid grant '$invalid'")
     }
 
-    if (service == "" || stage == "") {
-      throw InvalidToken(s"Both service and stage must be defined in grant '${grant}'")
+    if (grantedName == "" || grantedStage == "") {
+      throw InvalidToken(s"Both service and stage must be defined in grant '$grant'")
     }
 
-    validateService(project, service) && validateStage(project, stage)
+    validate(nameToCheck, grantedName) && validate(stageToCheck, grantedStage)
   }
 
-  private def validateService(project: Project, servicePart: String) = servicePart match {
+  private def validate(toValidate: String, granted: String): Boolean = granted match {
     case "*" => true
-    case s   => project.projectId.name == s
+    case str => toValidate == str
   }
 
-  private def validateStage(project: Project, stagePart: String) = stagePart match {
-    case "*" => true
-    case s   => project.projectId.stage == s
-  }
-
-  private def parseclaims(claims: String): Vector[TokenGrant] = {
-
-    implicit val TokenGrantReads = Json.reads[TokenGrant]
-    implicit val TokenDataReads  = Json.reads[TokenData]
-
-    Json.parse(claims).asOpt[TokenData] match {
-      case None         => throw InvalidToken(s"Failed to parse 'grants' claim in '${claims}'")
-      case Some(claims) => claims.grants.toVector
+  private def parseToken(token: String): TokenData = {
+    Json.parse(token).asOpt[TokenData] match {
+      case None              => throw InvalidToken(s"Failed to parse token data")
+      case Some(parsedToken) => parsedToken
     }
   }
 }
 
-case class TokenData(grants: Vector[TokenGrant])
+case class TokenData(grants: Vector[TokenGrant], exp: Long)
 case class TokenGrant(target: String, action: String)
