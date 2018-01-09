@@ -52,8 +52,6 @@ export class Environment {
   }
 
   async setSharedClusters() {
-    // TODO: reenable
-
     try {
       const res = await fetch('https://stats.graph.cool/', {
         method: 'POST',
