@@ -74,6 +74,8 @@ export class Environment {
       })
       const json = await res.json()
       if (
+        json &&
+        json.data &&
         json.data.publicClusters &&
         Array.isArray(json.data.publicClusters) &&
         json.data.publicClusters.length > 0
