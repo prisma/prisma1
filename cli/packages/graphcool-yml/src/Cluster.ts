@@ -73,6 +73,8 @@ export class Cluster {
       }
     `
 
+    debug('generateClusterToken')
+
     const {
       generateClusterToken: { clusterToken },
     } = await this.cloudClient.request<{
@@ -87,6 +89,8 @@ export class Cluster {
         stageName,
       },
     })
+
+    debug('generated cluster token')
 
     return clusterToken
   }

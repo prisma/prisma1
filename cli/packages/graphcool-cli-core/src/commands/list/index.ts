@@ -1,5 +1,7 @@
 import { Command } from 'graphcool-cli-engine'
 import { table, getBorderCharacters } from 'table'
+import { NoClusterSetError } from '../../errors/NoClusterSetError'
+import { ClusterNotFoundError } from '../../errors/ClusterNotFoundError'
 const debug = require('debug')('command')
 
 export interface Project {
@@ -15,9 +17,19 @@ export default class List extends Command {
   static aliases = ['ls']
   async run() {
     let projects: Project[] = []
-    for (const cluster of this.env.clusters) {
+
+    await this.definition.load(this.flags)
+
+    for (const cluster of this.env.clusters.filter(c => c.local)) {
+      await this.client.initClusterClient(
+        cluster,
+        this.definition.getWorkspace() || '*',
+        '*',
+        '*',
+      )
       try {
         this.env.setActiveCluster(cluster)
+        debug('listing projects')
         const clusterProjects = await this.client.listProjects()
         const mappedClusterProjects = clusterProjects.map(p => ({
           ...p,

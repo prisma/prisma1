@@ -411,6 +411,33 @@ export class Client {
     return me
   }
 
+  //   async getCloudServices(): Promise<Service[]> {
+  //     const query = `
+  // {
+  //   me {
+  //     memberships {
+  //       workspace {
+  //         services {
+  //           id
+  //           stage
+  //           name
+  //           cluster {
+  //             name
+  //           }
+  //         }
+  //       }
+  //     }
+  //   }
+  // }
+  //     `
+
+  //     const { me } = await this.cloudClient.request<{
+  //       me: User
+  //     }>(query)
+
+  //     return me
+  //   }
+
   async generateClusterToken(
     workspaceSlug: string,
     clusterName: string,

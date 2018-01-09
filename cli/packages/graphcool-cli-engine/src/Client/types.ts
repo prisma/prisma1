@@ -74,3 +74,12 @@ export interface Workspace {
   name: string
   slug: string
 }
+
+export interface Service {
+  id: string
+  stage: string
+  name: string
+  cluster: {
+    name: string
+  }
+}
