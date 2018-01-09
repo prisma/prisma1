@@ -50,6 +50,8 @@ case class SingleServerDependencies()(implicit val system: ActorSystem, val mate
   }
 
   lazy val invalidationPubSub: InMemoryAkkaPubSub[String] = InMemoryAkkaPubSub[String]()
+
+  override lazy val invalidationPublisher = invalidationPubSub
   override lazy val invalidationSubscriber: PubSubSubscriber[SchemaInvalidatedMessage] =
     invalidationPubSub.map[SchemaInvalidatedMessage]((str: String) => SchemaInvalidated)
 
