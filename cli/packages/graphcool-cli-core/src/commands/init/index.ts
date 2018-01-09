@@ -86,6 +86,17 @@ Either try using a new directory name, or remove the files listed above.
     const definitionPath = path.join(this.config.definitionDir, 'graphcool.yml')
     const graphcoolYml = fs.readFileSync(definitionPath, 'utf-8')
 
+    const newGraphcoolYml = graphcoolYml.replace(
+      'SERVICE_NAME',
+      path.basename(this.config.definitionDir),
+    )
+    fs.writeFileSync(definitionPath, newGraphcoolYml)
+
+    const dir = this.args!.dirName
+    const dirString = dir
+      ? `Open the new folder via ${chalk.cyan(`$ cd ${dir}`)}. `
+      : ``
+
     this.out.log(`\
 Created 3 new files:               
 
@@ -97,7 +108,7 @@ Created 3 new files:
     '.graphqlconfig.yml',
   )}   Configuration file for GraphQL tooling (Playground, IDE, …)
 
-You can now run ${chalk.cyan(
+${dirString}You can now run ${chalk.cyan(
       '$ graphcool deploy',
     )} to deploy your database service.
 
@@ -110,7 +121,7 @@ For next steps follow this tutorial: https://bit.ly/graphcool-first-steps`)
       )} ...                             `,
     )
 
-    const args: any[] = ['create']
+    const args: any[] = ['create', 'my-app']
 
     if (this.args && this.args.dirName) {
       args.push(this.args!.dirName!)

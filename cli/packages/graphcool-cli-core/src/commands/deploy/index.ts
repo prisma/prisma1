@@ -352,7 +352,12 @@ ${chalk.gray(
         !this.flags['no-seed'] &&
         projectNew
       ) {
-        await this.seed(projectNew, serviceName, stageName)
+        await this.seed(
+          projectNew,
+          serviceName,
+          stageName,
+          this.definition.getWorkspace(),
+        )
       }
       await this.generateSchema(serviceName, stageName)
       await this.graphqlPrepare()
@@ -378,6 +383,7 @@ ${chalk.gray(
     projectNew: boolean,
     serviceName: string,
     stageName: string,
+    workspace: string | null,
   ) {
     const seeder = new Seeder(
       this.definition,
@@ -392,7 +398,7 @@ ${chalk.gray(
         ? ` from \`${this.definition.definition!.seed!.import}\``
         : ''
     this.out.action.start(`Importing seed dataset${from}`)
-    await seeder.seed(serviceName, stageName)
+    await seeder.seed(concatName(serviceName, workspace), stageName)
     this.out.action.stop(prettyTime(Date.now() - before))
   }
 
