@@ -6,8 +6,8 @@ import cool.graph.api.mutations.ClientMutationRunner
 import cool.graph.api.mutations.mutations.ResetData
 import cool.graph.api.subscriptions.schema.{SubscriptionQueryError, SubscriptionQueryValidator}
 import cool.graph.shared.models.{Model, Project}
-import org.scalactic.Or
-import sangria.schema.{Argument, BooleanType, Field, ObjectType, OptionType, Schema, SchemaValidationRule, StringType}
+import org.scalactic.{Bad, Good, Or}
+import sangria.schema.{Argument, BooleanType, Context, Field, ListType, ObjectType, OptionType, Schema, SchemaValidationRule, StringType}
 
 case class PrivateSchemaBuilder(
     project: Project
@@ -54,13 +54,25 @@ case class PrivateSchemaBuilder(
   def validateSubscriptionQueryField: Field[ApiUserContext, Unit] = {
     Field(
       s"validateSubscriptionQuery",
-      fieldType = BooleanType,
+      fieldType = ObjectType(
+        name = "SubscriptionQueryValidationResult",
+        fields = List(
+          Field(
+            name = "errors",
+            fieldType = ListType(StringType),
+            resolve = (ctx: Context[ApiUserContext, Seq[SubscriptionQueryError]]) => ctx.value.map(_.errorMessage)
+          )
+        )
+      ),
       arguments = List(Argument("query", StringType)),
       resolve = (ctx) => {
         val query                                          = ctx.arg[String]("query")
         val validator                                      = SubscriptionQueryValidator(project)
         val result: Or[Model, Seq[SubscriptionQueryError]] = validator.validate(query)
-        result.isGood
+        result match {
+          case Bad(errors) => errors
+          case Good(_)     => Seq.empty[SubscriptionQueryError]
+        }
       }
     )
   }
