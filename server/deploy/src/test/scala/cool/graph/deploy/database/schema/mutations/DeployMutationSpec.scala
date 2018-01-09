@@ -362,7 +362,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
                    |}
                  """.stripMargin
 
-    val project = setupProject(schema)
+    val (project, _) = setupProject(schema)
 
     val fnInput = FunctionInput(name = "my-function", query = "invalid query", url = "http://whatever.com", headers = Vector(HeaderInput("header1", "value1")))
 

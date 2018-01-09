@@ -22,10 +22,7 @@ case class DeployTestDependencies()(implicit val system: ActorSystem, val materi
   override lazy val invalidationPublisher = InMemoryAkkaPubSub[String]()
 
   override def graphQlClient(project: Project) = {
-    val port = sys.props.getOrElse("STUB_SERVER_PORT", {
-      println("No running stub server detected! the GraphQlClient won't work!")
-      12345
-    })
+    val port = sys.props.getOrElse("STUB_SERVER_PORT", sys.error("No running stub server detected! Can't instantiate GraphQlClient."))
     val headers = project.secrets.headOption match {
       case Some(secret) => Map("Authorization" -> s"Bearer $secret")
       case None         => Map.empty[String, String]

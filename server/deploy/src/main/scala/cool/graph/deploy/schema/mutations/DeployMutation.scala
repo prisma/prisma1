@@ -24,8 +24,7 @@ case class DeployMutation(
     schemaMapper: SchemaMapper,
     migrationPersistence: MigrationPersistence,
     projectPersistence: ProjectPersistence,
-    migrator: Migrator,
-    graphQlClient: GraphQlClient
+    migrator: Migrator
 )(
     implicit ec: ExecutionContext,
     dependencies: DeployDependencies
@@ -106,7 +105,8 @@ case class DeployMutation(
   private def validateFunctionInputs(fns: Vector[FunctionInput]): Future[Vector[SchemaError]] = Future.sequence(fns.map(validateFunctionInput)).map(_.flatten)
 
   private def validateFunctionInput(fn: FunctionInput): Future[Vector[SchemaError]] = {
-    graphQlClient
+    dependencies
+      .graphQlClient(project)
       .sendQuery(
         s"""{
        |  validateSubscriptionQuery(query: ${JsString(fn.query).toString()}){
