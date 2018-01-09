@@ -10,7 +10,7 @@ import cool.graph.api.schema.SchemaBuilder
 import cool.graph.api.subscriptions.Webhook
 import cool.graph.deploy.DeployDependencies
 import cool.graph.deploy.migration.migrator.{AsyncMigrator, Migrator}
-import cool.graph.deploy.server.ClusterAuthImpl
+import cool.graph.deploy.server.{ClusterAuthImpl, DummyClusterAuth}
 import cool.graph.graphql.GraphQlClient
 import cool.graph.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
 import cool.graph.messagebus.queue.inmemory.InMemoryAkkaQueue
@@ -23,8 +23,8 @@ import cool.graph.subscriptions.protocol.SubscriptionRequest
 import cool.graph.subscriptions.resolving.SubscriptionsManagerForProject.{SchemaInvalidated, SchemaInvalidatedMessage}
 import cool.graph.websocket.protocol.{Request => WebsocketRequest}
 import cool.graph.workers.dependencies.WorkerDependencies
-import play.api.libs.json.Json
 import cool.graph.workers.payloads.{Webhook => WorkerWebhook}
+import play.api.libs.json.Json
 
 trait SingleServerApiDependencies extends DeployDependencies with ApiDependencies with WorkerDependencies {
   override implicit def self: SingleServerDependencies
@@ -42,10 +42,18 @@ case class SingleServerDependencies()(implicit val system: ActorSystem, val mate
     val schemaManagerSecret   = config.getString("schemaManagerSecret")
     ProjectFetcherImpl(Vector.empty, config, schemaManagerEndpoint = schemaManagerEndpoint, schemaManagerSecret = schemaManagerSecret)
   }
+
   override val migrator: Migrator = AsyncMigrator(clientDb, migrationPersistence, projectPersistence)
-  override val clusterAuth        = new ClusterAuthImpl(sys.env.get("CLUSTER_PUBLIC_KEY"))
+  override val clusterAuth = {
+    sys.env.get("CLUSTER_PUBLIC_KEY") match {
+      case Some(publicKey) => ClusterAuthImpl(publicKey)
+      case None            => DummyClusterAuth()
+    }
+  }
 
   lazy val invalidationPubSub: InMemoryAkkaPubSub[String] = InMemoryAkkaPubSub[String]()
+
+  override lazy val invalidationPublisher = invalidationPubSub
   override lazy val invalidationSubscriber: PubSubSubscriber[SchemaInvalidatedMessage] =
     invalidationPubSub.map[SchemaInvalidatedMessage]((str: String) => SchemaInvalidated)
 

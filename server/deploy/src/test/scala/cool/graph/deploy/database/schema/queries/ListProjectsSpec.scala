@@ -1,7 +1,6 @@
 package cool.graph.deploy.database.schema.queries
 
 import cool.graph.deploy.specutils.DeploySpecBase
-import cool.graph.shared.models.{Migration, ProjectId}
 import org.scalatest.{FlatSpec, Matchers}
 
 class ListProjectsSpec extends FlatSpec with Matchers with DeploySpecBase {
@@ -19,10 +18,10 @@ class ListProjectsSpec extends FlatSpec with Matchers with DeploySpecBase {
   }
 
   "MigrationStatus" should "return all projects" in {
-    val project  = setupProject(basicTypesGql)
-    val project2 = setupProject(basicTypesGql)
-    val project3 = setupProject(basicTypesGql)
-    val result   = server.query(s"""
+    val (project, _)  = setupProject(basicTypesGql)
+    val (project2, _) = setupProject(basicTypesGql)
+    val (project3, _) = setupProject(basicTypesGql)
+    val result        = server.query(s"""
        |query {
        |  listProjects {
        |    name

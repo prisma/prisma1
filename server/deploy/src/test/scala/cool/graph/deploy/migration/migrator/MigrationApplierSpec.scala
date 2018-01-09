@@ -1,6 +1,6 @@
-package cool.graph.deploy.migration
+package cool.graph.deploy.migration.migrator
 
-import cool.graph.deploy.migration.migrator.MigrationApplierImpl
+import cool.graph.deploy.migration.MigrationStepMapper
 import cool.graph.deploy.migration.mutactions.{ClientSqlMutaction, ClientSqlStatementResult}
 import cool.graph.deploy.specutils.DeploySpecBase
 import cool.graph.shared.models._

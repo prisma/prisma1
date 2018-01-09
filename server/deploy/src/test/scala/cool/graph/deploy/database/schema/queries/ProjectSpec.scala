@@ -7,7 +7,7 @@ import org.scalatest.{FlatSpec, Matchers}
 class ProjectSpec extends FlatSpec with Matchers with DeploySpecBase {
 
   "Project query" should "return a project that exists" in {
-    val project      = setupProject(basicTypesGql)
+    val (project, _) = setupProject(basicTypesGql)
     val nameAndStage = ProjectId.fromEncodedString(project.id)
     val result       = server.query(s"""
        |query {

@@ -13,7 +13,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
   val migrationPersistence = testDependencies.migrationPersistence
 
   "DeployMutation" should "succeed for valid input" in {
-    val project      = setupProject(basicTypesGql)
+    val (project, _) = setupProject(basicTypesGql)
     val nameAndStage = ProjectId.fromEncodedString(project.id)
 
     // Full feature set deploy
@@ -97,7 +97,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
   }
 
   "DeployMutation" should "create, update and delete scalar list" in {
-    val project      = setupProject(basicTypesGql)
+    val (project, _) = setupProject(basicTypesGql)
     val nameAndStage = ProjectId.fromEncodedString(project.id)
 
     val schema1 =
@@ -170,7 +170,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
   }
 
   "DeployMutation" should "handle renames with migration values" in {
-    val project      = setupProject(basicTypesGql)
+    val (project, _) = setupProject(basicTypesGql)
     val nameAndStage = ProjectId.fromEncodedString(project.id)
 
     val schema = basicTypesGql +
@@ -226,7 +226,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
   }
 
   "DeployMutation" should "fail if reserved fields are malformed" in {
-    val project      = setupProject(basicTypesGql)
+    val (project, _) = setupProject(basicTypesGql)
     val nameAndStage = ProjectId.fromEncodedString(project.id)
 
     def tryDeploy(field: String) = {
@@ -275,7 +275,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
                    |}
                  """.stripMargin
 
-    val project       = setupProject(schema)
+    val (project, _)  = setupProject(schema)
     val loadedProject = projectPersistence.load(project.id).await.get
 
     loadedProject.schema.getModelByName("TestModel").get.getFieldByName("id").get.isHidden shouldEqual true
@@ -291,7 +291,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
                    |}
                  """.stripMargin
 
-    val project       = setupProject(schema)
+    val (project, _)  = setupProject(schema)
     val nameAndStage  = ProjectId.fromEncodedString(project.id)
     val loadedProject = projectPersistence.load(project.id).await.get
 
@@ -399,7 +399,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
                    |}
                  """.stripMargin
 
-    val project = setupProject(schema)
+    val (project, _) = setupProject(schema)
 
     val fnInput = FunctionInput(name = "my-function", query = "my query", url = "http://whatever.com", headers = Vector(HeaderInput("header1", "value1")))
     val result = {

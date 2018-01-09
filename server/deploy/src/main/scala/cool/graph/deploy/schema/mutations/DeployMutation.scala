@@ -1,11 +1,13 @@
 package cool.graph.deploy.schema.mutations
 
+import cool.graph.deploy.DeployDependencies
 import cool.graph.deploy.database.persistence.{MigrationPersistence, ProjectPersistence}
 import cool.graph.deploy.migration._
 import cool.graph.deploy.migration.inference.{InvalidGCValue, MigrationStepsInferrer, RelationDirectiveNeeded, SchemaInferrer}
 import cool.graph.deploy.migration.migrator.Migrator
 import cool.graph.deploy.migration.validation.{SchemaError, SchemaSyntaxValidator}
 import cool.graph.graphql.GraphQlClient
+import cool.graph.messagebus.pubsub.Only
 import cool.graph.shared.models.{Function, Migration, MigrationStep, Project, Schema, ServerSideSubscriptionFunction, WebhookDelivery}
 import org.scalactic.{Bad, Good, Or}
 import play.api.libs.json.{JsString, Json}
@@ -25,7 +27,8 @@ case class DeployMutation(
     migrator: Migrator,
     graphQlClient: GraphQlClient
 )(
-    implicit ec: ExecutionContext
+    implicit ec: ExecutionContext,
+    dependencies: DeployDependencies
 ) extends Mutation[DeployMutationPayload] {
 
   val graphQlSdl   = QueryParser.parse(args.types).get
@@ -135,11 +138,14 @@ case class DeployMutation(
     val migrationNeeded = steps.nonEmpty || functions.nonEmpty
     val isNotDryRun     = !args.dryRun.getOrElse(false)
     if (migrationNeeded && isNotDryRun) {
+      invalidateSchema()
       migrator.schedule(project.id, nextSchema, steps, functions).map(Some(_))
     } else {
       Future.successful(None)
     }
   }
+
+  private def invalidateSchema(): Unit = dependencies.invalidationPublisher.publish(Only(project.id), project.id)
 }
 
 case class DeployMutationInput(

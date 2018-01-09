@@ -7,7 +7,7 @@ import org.scalatest.{FlatSpec, Matchers}
 class ClusterInfoSpec extends FlatSpec with Matchers with DeploySpecBase {
 
   "ClusterInfo query" should "return cluster version" in {
-    val project      = setupProject(basicTypesGql)
+    val (project, _) = setupProject(basicTypesGql)
     val nameAndStage = ProjectId.fromEncodedString(project.id)
     val result       = server.query(s"""
                                        |query {

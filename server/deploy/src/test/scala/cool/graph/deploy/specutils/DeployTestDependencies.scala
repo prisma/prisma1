@@ -3,8 +3,9 @@ package cool.graph.deploy.specutils
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import cool.graph.deploy.DeployDependencies
-import cool.graph.deploy.server.ClusterAuthImpl
+import cool.graph.deploy.server.DummyClusterAuth
 import cool.graph.graphql.GraphQlClient
+import cool.graph.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
 import cool.graph.shared.models.{Project, ProjectId}
 
 case class DeployTestDependencies()(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends DeployDependencies {
@@ -16,8 +17,9 @@ case class DeployTestDependencies()(implicit val system: ActorSystem, val materi
   override lazy val internalDb = internalTestDb.internalDatabase
   override lazy val clientDb   = clientTestDb.clientDatabase
 
-  val migrator             = TestMigrator(clientDb, internalDb, migrationPersistence)
-  override val clusterAuth = new ClusterAuthImpl(publicKey = None)
+  override lazy val migrator              = TestMigrator(clientDb, internalDb, migrationPersistence)
+  override lazy val clusterAuth           = DummyClusterAuth()
+  override lazy val invalidationPublisher = InMemoryAkkaPubSub[String]()
 
   override def graphQlClient(project: Project) = {
     val port = sys.props.getOrElse("STUB_SERVER_PORT", {

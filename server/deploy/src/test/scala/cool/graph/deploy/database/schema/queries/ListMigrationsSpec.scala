@@ -7,7 +7,7 @@ import org.scalatest.{FlatSpec, Matchers}
 class ListMigrationsSpec extends FlatSpec with Matchers with DeploySpecBase {
 
   "ListMigrations" should "return all migrations for a project" in {
-    val project      = setupProject(basicTypesGql)
+    val (project, _) = setupProject(basicTypesGql)
     val nameAndStage = ProjectId.fromEncodedString(project.id)
     val result       = server.query(s"""
        |query {

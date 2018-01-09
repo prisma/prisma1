@@ -1,6 +1,5 @@
-package cool.graph.deploy.migration
+package cool.graph.deploy.migration.validation
 
-import validation.{DirectiveRequirement, RequiredArg, SchemaSyntaxValidator}
 import org.scalatest.{Matchers, WordSpecLike}
 
 import scala.collection.immutable.Seq

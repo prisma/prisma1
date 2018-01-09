@@ -84,7 +84,11 @@ case class SchemaBuilderImpl(
       "Shows the status of the next migration in line to be applied to the project. If no such migration exists, it shows the last applied migration."
     ),
     resolve = (ctx) => {
-      val projectId = ctx.args.raw.projectId
+      val projectId    = ctx.args.raw.projectId
+      val nameAndStage = ProjectId.fromEncodedString(projectId)
+
+      verifyAuthOrThrow(nameAndStage.name, nameAndStage.stage, ctx.ctx.authorizationHeader)
+
       FutureOpt(migrationPersistence.getNextMigration(projectId)).fallbackTo(migrationPersistence.getLastMigration(projectId)).map {
         case Some(migration) => migration
         case None            => throw InvalidProjectId(projectId)
@@ -97,6 +101,8 @@ case class SchemaBuilderImpl(
     ListType(ProjectType.Type),
     description = Some("Shows all projects the caller has access to."),
     resolve = (ctx) => {
+      // Only accessible via */* token, like the one the Cloud API uses
+      verifyAuthOrThrow("", "", ctx.ctx.authorizationHeader)
       projectPersistence.loadAll()
     }
   )
@@ -108,6 +114,10 @@ case class SchemaBuilderImpl(
     arguments = projectIdArguments,
     description = Some("Shows all migrations for the project. Debug query, will likely be removed in the future."),
     resolve = (ctx) => {
+      val projectId    = ctx.args.raw.projectId
+      val nameAndStage = ProjectId.fromEncodedString(projectId)
+
+      verifyAuthOrThrow(nameAndStage.name, nameAndStage.stage, ctx.ctx.authorizationHeader)
       migrationPersistence.loadAll(ctx.args.raw.projectId)
     }
   )
@@ -118,7 +128,11 @@ case class SchemaBuilderImpl(
     arguments = projectIdArguments,
     description = Some("Gets a project by name and stage."),
     resolve = (ctx) => {
-      val projectId = ctx.args.raw.projectId
+      val projectId    = ctx.args.raw.projectId
+      val nameAndStage = ProjectId.fromEncodedString(projectId)
+
+      verifyAuthOrThrow(nameAndStage.name, nameAndStage.stage, ctx.ctx.authorizationHeader)
+
       for {
         projectOpt <- projectPersistence.load(projectId)
       } yield {
@@ -147,8 +161,9 @@ case class SchemaBuilderImpl(
       mutateAndGetPayload = (args, ctx) =>
         handleMutationResult {
           for {
-            project <- getProjectOrThrow(args.projectId)
-            _       = verifyAuthOrThrow(project, ctx.ctx.authorizationHeader)
+            project   <- getProjectOrThrow(args.projectId)
+            projectId = project.projectId
+            _         = verifyAuthOrThrow(projectId.name, projectId.stage, ctx.ctx.authorizationHeader)
             result <- DeployMutation(
                        args = args,
                        project = project,
@@ -176,8 +191,7 @@ case class SchemaBuilderImpl(
       ),
       mutateAndGetPayload = (args, ctx) =>
         handleMutationResult {
-          verifyAuthOrThrow(new Project(ProjectId.toEncodedString(name = args.name, stage = args.stage), "", schema = cool.graph.shared.models.Schema()),
-                            ctx.ctx.authorizationHeader)
+          verifyAuthOrThrow(args.name, args.stage, ctx.ctx.authorizationHeader)
 
           AddProjectMutation(
             args = args,
@@ -200,6 +214,7 @@ case class SchemaBuilderImpl(
       ),
       mutateAndGetPayload = (args, ctx) =>
         handleMutationResult {
+          verifyAuthOrThrow(args.name, args.stage, ctx.ctx.authorizationHeader)
           DeleteProjectMutation(
             args = args,
             projectPersistence = projectPersistence,
@@ -222,5 +237,7 @@ case class SchemaBuilderImpl(
     }
   }
 
-  private def verifyAuthOrThrow(project: Project, authHeader: Option[String]) = dependencies.clusterAuth.verify(project, authHeader).get
+  private def verifyAuthOrThrow(name: String, stage: String, authHeader: Option[String]) = {
+    dependencies.clusterAuth.verify(name, stage, authHeader).get
+  }
 }
