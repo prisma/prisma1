@@ -1,5 +1,6 @@
 package cool.graph.subscriptions.schemas
 
+import cool.graph.api.subscriptions.schema.{QueryTransformer, SubscriptionSchema}
 import cool.graph.shared.models.{Model, ModelMutationType, Project}
 import cool.graph.subscriptions.SubscriptionDependencies
 import org.scalactic.{Bad, Good, Or}

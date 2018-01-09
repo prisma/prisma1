@@ -14,6 +14,7 @@ case class Migration(
     projectId: String,
     revision: Int,
     schema: Schema,
+    functions: Vector[Function],
     status: MigrationStatus,
     applied: Int,
     rolledBack: Int,
@@ -46,10 +47,11 @@ object MigrationStatus extends Enumeration {
 }
 
 object Migration {
-  def apply(projectId: String, schema: Schema, steps: Vector[MigrationStep]): Migration = Migration(
+  def apply(projectId: String, schema: Schema, steps: Vector[MigrationStep], functions: Vector[Function]): Migration = Migration(
     projectId,
     revision = 0,
     schema = schema,
+    functions = functions,
     status = MigrationStatus.Pending,
     applied = 0,
     rolledBack = 0,
@@ -57,7 +59,7 @@ object Migration {
     errors = Vector.empty
   )
 
-  def empty(projectId: String) = apply(projectId, Schema(), Vector.empty)
+  def empty(projectId: String) = apply(projectId, Schema(), Vector.empty, Vector.empty)
 }
 
 sealed trait MigrationStep

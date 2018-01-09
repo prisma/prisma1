@@ -36,6 +36,7 @@ object InternalDatabaseSchema {
         `projectId` varchar(200) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',
         `revision` int NOT NULL DEFAULT '1',
         `schema` mediumtext COLLATE utf8_unicode_ci DEFAULT NULL,
+        `functions` mediumtext COLLATE utf8_unicode_ci DEFAULT NULL,
         `status` ENUM('PENDING', 'IN_PROGRESS', 'SUCCESS', 'ROLLING_BACK', 'ROLLBACK_SUCCESS', 'ROLLBACK_FAILURE') NOT NULL DEFAULT 'PENDING',
         `applied` int NOT NULL default 0,
         `rolledBack` int NOT NULL default 0,

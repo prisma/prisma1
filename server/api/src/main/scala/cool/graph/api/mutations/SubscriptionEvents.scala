@@ -9,8 +9,11 @@ import cool.graph.shared.models.Project
 import scala.collection.immutable.Seq
 
 object SubscriptionEvents {
-  def extractFromSqlMutactions(project: Project, mutationId: Id, mutactions: Seq[ClientSqlMutaction])(
-      implicit apiDependencies: ApiDependencies): Seq[PublishSubscriptionEvent] = {
+  def extractFromSqlMutactions(
+      project: Project,
+      mutationId: Id,
+      mutactions: Seq[ClientSqlMutaction]
+  )(implicit apiDependencies: ApiDependencies): Seq[PublishSubscriptionEvent] = {
     mutactions.collect {
       case x: UpdateDataItem => fromUpdateMutaction(project, mutationId, x)
       case x: CreateDataItem => fromCreateMutaction(project, mutationId, x)

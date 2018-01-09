@@ -1,4 +1,4 @@
-package cool.graph.subscriptions.schemas
+package cool.graph.api.subscriptions.schema
 
 import cool.graph.shared.models.ModelMutationType
 import cool.graph.shared.models.ModelMutationType.ModelMutationType
@@ -139,7 +139,7 @@ object QueryTransformer {
         node match {
           case OperationDefinition(Subscription, _, _, _, selections, _, _, _) =>
             selections match {
-              case (x: Field) +: _ => modelName = Some(x.name)
+              case (x: Field) +: _ => modelName = Some(x.name.capitalize)
               case _               =>
             }
 

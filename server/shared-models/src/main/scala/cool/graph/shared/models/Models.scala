@@ -1,10 +1,8 @@
 package cool.graph.shared.models
 
-import cool.graph.cuid.Cuid
 import cool.graph.gc_values.GCValue
 import cool.graph.shared.errors.SharedErrors
 import cool.graph.shared.models.FieldConstraintType.FieldConstraintType
-import cool.graph.shared.models.ModelMutationType.ModelMutationType
 import org.joda.time.DateTime
 
 object IdType {
@@ -29,25 +27,36 @@ case class Client(
 sealed trait Function {
   def name: String
   def isActive: Boolean
-//  def delivery: FunctionDelivery
-//  def binding: FunctionBinding
+  def delivery: FunctionDelivery
+  def typeCode: FunctionType.Value
+}
+
+object FunctionType extends Enumeration {
+  val ServerSideSubscription = Value("server-side-subscription")
 }
 
 case class ServerSideSubscriptionFunction(
     name: String,
     isActive: Boolean,
-    query: String,
-    queryFilePath: Option[String] = None //,
-//                                           delivery: FunctionDelivery
+    delivery: FunctionDelivery,
+    query: String
 ) extends Function {
-//  def isServerSideSubscriptionFor(model: Model, mutationType: ModelMutationType): Boolean = {
-//    val queryDoc             = QueryParser.parse(query).get
-//    val modelNameInQuery     = QueryTransformer.getModelNameFromSubscription(queryDoc).get
-//    val mutationTypesInQuery = QueryTransformer.getMutationTypesFromSubscription(queryDoc)
-//    model.name == modelNameInQuery && mutationTypesInQuery.contains(mutationType)
-//  }
-//
-//  def binding = FunctionBinding.SERVERSIDE_SUBSCRIPTION
+  override def typeCode = FunctionType.ServerSideSubscription
+}
+
+sealed trait FunctionDelivery {
+  def typeCode: FunctionDeliveryType.Value
+}
+
+object FunctionDeliveryType extends Enumeration {
+  val WebhookDelivery = Value("webhook-delivery")
+}
+
+case class WebhookDelivery(
+    url: String,
+    headers: Vector[(String, String)]
+) extends FunctionDelivery {
+  override def typeCode = FunctionDeliveryType.WebhookDelivery
 }
 
 case class Schema(
@@ -169,12 +178,6 @@ case class Project(
 
   lazy val projectId: ProjectId       = ProjectId.fromEncodedString(id)
   val serverSideSubscriptionFunctions = functions.collect { case x: ServerSideSubscriptionFunction => x }
-
-  def serverSideSubscriptionFunctionsFor(model: Model, mutationType: ModelMutationType): Seq[ServerSideSubscriptionFunction] = {
-    serverSideSubscriptionFunctions
-      .filter(_.isActive)
-//      .filter(_.isServerSideSubscriptionFor(model, mutationType))
-  }
 
   def getFunctionByName(name: String): Option[Function] = functions.find(_.name == name)
   def getFunctionByName_!(name: String): Function       = getFunctionByName(name).get //OrElse(throw SystemErrors.InvalidFunctionName(name))

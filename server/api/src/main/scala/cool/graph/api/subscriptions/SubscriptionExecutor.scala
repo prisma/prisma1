@@ -1,13 +1,12 @@
-package cool.graph.subscriptions.resolving
+package cool.graph.api.subscriptions
 
+import cool.graph.api.ApiDependencies
 import cool.graph.api.database.DataItem
 import cool.graph.api.database.deferreds.DeferredResolverProvider
-import cool.graph.api.schema.ApiUserContext
-import cool.graph.api.server.{ErrorHandler, GraphQlRequest}
+import cool.graph.api.server.ErrorHandler
+import cool.graph.api.subscriptions.schema.{QueryTransformer, SubscriptionSchema}
 import cool.graph.shared.models.ModelMutationType.ModelMutationType
 import cool.graph.shared.models._
-import cool.graph.subscriptions.SubscriptionDependencies
-import cool.graph.subscriptions.schemas.{QueryTransformer, SubscriptionSchema}
 import cool.graph.util.json.SprayJsonExtensions
 import sangria.ast.Document
 import sangria.execution.Executor
@@ -30,7 +29,7 @@ object SubscriptionExecutor extends SprayJsonExtensions {
       operationName: Option[String],
       skipPermissionCheck: Boolean,
       alwaysQueryMasterDatabase: Boolean
-  )(implicit dependencies: SubscriptionDependencies, ec: ExecutionContext): Future[Option[JsValue]] = {
+  )(implicit dependencies: ApiDependencies, ec: ExecutionContext): Future[Option[JsValue]] = {
 
     val queryAst = QueryParser.parse(query).get
 
@@ -63,7 +62,7 @@ object SubscriptionExecutor extends SprayJsonExtensions {
       operationName: Option[String],
       skipPermissionCheck: Boolean,
       alwaysQueryMasterDatabase: Boolean
-  )(implicit dependencies: SubscriptionDependencies, ec: ExecutionContext): Future[Option[JsValue]] = {
+  )(implicit dependencies: ApiDependencies, ec: ExecutionContext): Future[Option[JsValue]] = {
     import cool.graph.api.server.JsonMarshalling._
 
     val schema = SubscriptionSchema(model, project, updatedFields, mutationType, previousValues).build()

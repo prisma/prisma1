@@ -6,7 +6,7 @@ import akka.stream.ActorMaterializer
 import akka.util.Timeout
 import cool.graph.deploy.database.persistence.{MigrationPersistence, ProjectPersistence}
 import cool.graph.deploy.migration.migrator.DeploymentProtocol.{Initialize, Schedule}
-import cool.graph.shared.models.{Migration, MigrationStep, Schema}
+import cool.graph.shared.models.{Migration, MigrationStep, Schema, Function}
 import slick.jdbc.MySQLProfile.backend.DatabaseDef
 
 import scala.concurrent.Future
@@ -35,7 +35,7 @@ case class AsyncMigrator(
       sys.exit(-1)
   }
 
-  override def schedule(projectId: String, nextSchema: Schema, steps: Vector[MigrationStep]): Future[Migration] = {
-    (deploymentScheduler ? Schedule(projectId, nextSchema, steps)).mapTo[Migration]
+  override def schedule(projectId: String, nextSchema: Schema, steps: Vector[MigrationStep], functions: Vector[Function]): Future[Migration] = {
+    (deploymentScheduler ? Schedule(projectId, nextSchema, steps, functions)).mapTo[Migration]
   }
 }

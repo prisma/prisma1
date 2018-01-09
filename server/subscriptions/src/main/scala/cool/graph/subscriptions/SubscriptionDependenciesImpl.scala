@@ -71,4 +71,6 @@ case class SubscriptionDependenciesImpl()(implicit val system: ActorSystem, val 
 
   val databases        = Databases.initialize(config)
   val apiSchemaBuilder = SchemaBuilder()(system, this)
+
+  override val webhookPublisher = ???
 }

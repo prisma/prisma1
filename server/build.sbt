@@ -31,7 +31,10 @@ lazy val commonSettings = versionSettings ++ Seq(
   // We should gradually introduce https://tpolecat.github.io/2014/04/11/scalac-flags.html
   // These needs to separately be configured in Idea
   scalacOptions ++= Seq("-deprecation", "-feature", "-Xfatal-warnings"),
-  resolvers += "Sonatype snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/"
+  resolvers ++= Seq(
+    "Sonatype snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/",
+    "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"
+  )
 )
 
 def commonBackendSettings(imageName: String) = commonSettings ++ Seq(
@@ -126,6 +129,12 @@ lazy val subscriptions = serverProject("subscriptions", imageName = "graphcool-s
     )
   )
 
+lazy val workers = serverProject("workers", imageName = "graphcool-workers")
+    .dependsOn(bugsnag % "compile")
+    .dependsOn(messageBus % "compile")
+    .dependsOn(scalaUtils % "compile")
+    .dependsOn(stubServer % "test")
+
 lazy val gcValues = libProject("gc-values")
   .settings(libraryDependencies ++= Seq(
     playJson,
@@ -208,6 +217,16 @@ lazy val graphQlClient = Project(id = "graphql-client", base = file("./libs/grap
 
 
 lazy val stubServer = libProject("stub-server")
+    .settings(
+      libraryDependencies ++= Seq(
+        "org.eclipse.jetty"      % "jetty-server"              % "9.3.0.v20150612",
+        "com.netaporter"         %% "scala-uri"                % "0.4.16",
+        "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.4",
+        "org.scalaj"             %% "scalaj-http"              % "2.3.0" % "test",
+        "org.scalatest"          %% "scalatest"                % "3.0.4" % "test",
+        "org.specs2"             %% "specs2-core"              % "3.8.8" % "test"
+      )
+    )
 
 lazy val scalaUtils =
   Project(id = "scala-utils", base = file("./libs/scala-utils"))
@@ -238,6 +257,7 @@ lazy val singleServer = serverProject("single-server", imageName = "graphcool-de
   .dependsOn(api% "compile")
   .dependsOn(deploy % "compile")
   .dependsOn(subscriptions % "compile")
+  .dependsOn(workers % "compile")
   .dependsOn(graphQlClient % "compile")
 
 val allServerProjects = List(
@@ -245,7 +265,8 @@ val allServerProjects = List(
   deploy,
   subscriptions,
   singleServer,
-  sharedModels
+  sharedModels,
+  workers
 )
 
 val allLibProjects = List(

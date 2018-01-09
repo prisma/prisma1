@@ -5,8 +5,9 @@ import cool.graph.deploy.migration._
 import cool.graph.deploy.migration.inference.{InvalidGCValue, MigrationStepsInferrer, RelationDirectiveNeeded, SchemaInferrer}
 import cool.graph.deploy.migration.migrator.Migrator
 import cool.graph.deploy.migration.validation.{SchemaError, SchemaSyntaxValidator}
-import cool.graph.shared.models.{Migration, MigrationStep, Project, Schema}
+import cool.graph.shared.models.{Function, Migration, MigrationStep, Project, Schema, ServerSideSubscriptionFunction, WebhookDelivery}
 import org.scalactic.{Bad, Good}
+import play.api.libs.json.Json
 import sangria.parser.QueryParser
 
 import scala.collection.Seq
@@ -50,16 +51,14 @@ case class DeployMutation(
     schemaInferrer.infer(project.schema, schemaMapping, graphQlSdl) match {
       case Good(inferredNextSchema) =>
         val steps = migrationStepsInferrer.infer(project.schema, inferredNextSchema, schemaMapping)
-
-        handleProjectUpdate().flatMap(_ =>
-          handleMigration(inferredNextSchema, steps).map { migration =>
-            MutationSuccess(
-              DeployMutationPayload(
-                args.clientMutationId,
-                migration,
-                schemaErrors
-              ))
-        })
+        for {
+          _         <- handleProjectUpdate()
+          migration <- handleMigration(inferredNextSchema, steps, functionsForInput)
+        } yield {
+          MutationSuccess {
+            DeployMutationPayload(args.clientMutationId, migration = migration, errors = schemaErrors)
+          }
+        }
 
       case Bad(err) =>
         Future.successful {
@@ -76,6 +75,20 @@ case class DeployMutation(
     }
   }
 
+  val functionsForInput: Vector[Function] = {
+    args.functions.map { fnInput =>
+      ServerSideSubscriptionFunction(
+        name = fnInput.name,
+        isActive = true,
+        delivery = WebhookDelivery(
+          url = fnInput.url,
+          headers = fnInput.headers.map(header => header.name -> header.value)
+        ),
+        query = fnInput.query
+      )
+    }
+  }
+
   private def handleProjectUpdate(): Future[_] = {
     if (project.secrets != args.secrets && !args.dryRun.getOrElse(false)) {
       projectPersistence.update(project.copy(secrets = args.secrets))
@@ -84,9 +97,11 @@ case class DeployMutation(
     }
   }
 
-  private def handleMigration(nextSchema: Schema, steps: Vector[MigrationStep]): Future[Option[Migration]] = {
-    if (steps.nonEmpty && !args.dryRun.getOrElse(false)) {
-      migrator.schedule(project.id, nextSchema, steps).map(Some(_))
+  private def handleMigration(nextSchema: Schema, steps: Vector[MigrationStep], functions: Vector[Function]): Future[Option[Migration]] = {
+    val migrationNeeded = steps.nonEmpty || functions.nonEmpty
+    val isNotDryRun     = !args.dryRun.getOrElse(false)
+    if (migrationNeeded && isNotDryRun) {
+      migrator.schedule(project.id, nextSchema, steps, functions).map(Some(_))
     } else {
       Future.successful(None)
     }
@@ -98,8 +113,21 @@ case class DeployMutationInput(
     projectId: String,
     types: String,
     dryRun: Option[Boolean],
-    secrets: Vector[String]
+    secrets: Vector[String],
+    functions: Vector[FunctionInput]
 ) extends sangria.relay.Mutation
+
+case class FunctionInput(
+    name: String,
+    query: String,
+    url: String,
+    headers: Vector[HeaderInput]
+)
+
+case class HeaderInput(
+    name: String,
+    value: String
+)
 
 case class DeployMutationPayload(
     clientMutationId: Option[String],

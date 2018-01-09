@@ -1,11 +1,11 @@
-package cool.graph.subscriptions.schemas
+package cool.graph.api.subscriptions.schema
 
+import cool.graph.api.ApiDependencies
 import cool.graph.api.database.DataItem
 import cool.graph.api.schema._
+import cool.graph.api.subscriptions.SubscriptionUserContext
 import cool.graph.shared.models.ModelMutationType.ModelMutationType
 import cool.graph.shared.models.{Model, ModelMutationType, Project}
-import cool.graph.subscriptions.SubscriptionDependencies
-import cool.graph.subscriptions.resolving.SubscriptionUserContext
 import sangria.schema._
 
 import scala.concurrent.Future
@@ -17,7 +17,7 @@ case class SubscriptionSchema(
     mutation: ModelMutationType,
     previousValues: Option[DataItem],
     externalSchema: Boolean = false
-)(implicit dependencies: SubscriptionDependencies) {
+)(implicit dependencies: ApiDependencies) {
   val isDelete: Boolean = mutation == ModelMutationType.Deleted
 
   import dependencies.system

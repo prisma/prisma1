@@ -1,7 +1,8 @@
 package cool.graph.deploy.database.schema.mutations
 
+import cool.graph.deploy.schema.mutations.{FunctionInput, HeaderInput}
 import cool.graph.deploy.specutils.DeploySpecBase
-import cool.graph.shared.models.{MigrationStatus, Project, ProjectId}
+import cool.graph.shared.models._
 import org.scalatest.{FlatSpec, Matchers}
 
 class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
@@ -351,11 +352,40 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
 //    Thread.sleep(30000)
 //  }
 
-  def deploySchema(project: Project, schema: String) = {
+  "DeployMutation" should "create functions" in {
+    val schema = """
+                   |type TestModel {
+                   |  id: ID! @unique
+                   |  test: String
+                   |}
+                 """.stripMargin
+
+    val project = setupProject(schema)
+
+    val fnInput = FunctionInput(name = "my-function", query = "my query", url = "http://whatever.com", headers = Vector(HeaderInput("header1", "value1")))
+    val result  = deploySchema(project, schema, Vector(fnInput))
+    result.pathAsSeq("data.deploy.errors") should be(empty)
+
+    val reloadedProject = projectPersistence.load(project.id).await.get
+    reloadedProject.functions should have(size(1))
+    val function = reloadedProject.functions.head.asInstanceOf[ServerSideSubscriptionFunction]
+    function.name should equal(fnInput.name)
+    function.query should equal(fnInput.query)
+    val delivery = function.delivery.asInstanceOf[WebhookDelivery]
+    delivery.url should equal(fnInput.url)
+    delivery.headers should equal(Vector("header1" -> "value1"))
+  }
+
+  def deploySchema(project: Project, schema: String, functions: Vector[FunctionInput] = Vector.empty) = {
     val nameAndStage = ProjectId.fromEncodedString(project.id)
     server.query(s"""
       |mutation {
-      |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(schema)}}){
+      |  deploy(input:{
+      |    name: "${nameAndStage.name}"
+      |    stage: "${nameAndStage.stage}"
+      |    types: ${formatSchema(schema)}
+      |    subscriptions: ${formatFunctions(functions)}
+      |  }){
       |    migration {
       |      steps {
       |        type
@@ -366,5 +396,26 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
       |    }
       |  }
       |}""".stripMargin)
+  }
+
+  private def formatFunctions(functions: Vector[FunctionInput]) = {
+    def formatFunction(fn: FunctionInput) = {
+      s"""{
+         |  name: ${escapeString(fn.name)}
+         |  query: ${escapeString(fn.query)}
+         |  url: ${escapeString(fn.url)}
+         |  headers: ${formatArray(fn.headers, formatHeader)}
+         |}
+       """.stripMargin
+    }
+    def formatHeader(header: HeaderInput) = {
+      s"""{
+         |  name: ${escapeString(header.name)}
+         |  value: ${escapeString(header.value)}
+         |}""".stripMargin
+    }
+    def formatArray[T](objs: Vector[T], formatFn: T => String) = "[" + objs.map(formatFn).mkString(",") + "]"
+
+    formatArray(functions, formatFunction)
   }
 }

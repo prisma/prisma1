@@ -11,6 +11,7 @@ case class Migration(
     projectId: String,
     revision: Int,
     schema: JsValue,
+    functions: JsValue,
     status: MigrationStatus,
     applied: Int,
     rolledBack: Int,
@@ -25,6 +26,7 @@ class MigrationTable(tag: Tag) extends Table[Migration](tag, "Migration") {
   def projectId  = column[String]("projectId")
   def revision   = column[Int]("revision")
   def schema     = column[JsValue]("schema")
+  def functions  = column[JsValue]("functions")
   def status     = column[MigrationStatus]("status")
   def applied    = column[Int]("applied")
   def rolledBack = column[Int]("rolledBack")
@@ -32,7 +34,7 @@ class MigrationTable(tag: Tag) extends Table[Migration](tag, "Migration") {
   def errors     = column[JsValue]("errors")
 
   def migration = foreignKey("migrations_projectid_foreign", projectId, Tables.Projects)(_.id)
-  def *         = (projectId, revision, schema, status, applied, rolledBack, steps, errors) <> (Migration.tupled, Migration.unapply)
+  def *         = (projectId, revision, schema, functions, status, applied, rolledBack, steps, errors) <> (Migration.tupled, Migration.unapply)
 }
 
 object MigrationTable {

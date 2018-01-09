@@ -1,16 +1,24 @@
 package cool.graph.api.database.mutactions.mutactions
 
+import cool.graph.api.ApiDependencies
 import cool.graph.api.database.DataItem
 import cool.graph.api.database.mutactions.{ClientSqlMutaction, Mutaction, MutactionExecutionResult, MutactionExecutionSuccess}
+import cool.graph.api.subscriptions.schema.QueryTransformer
+import cool.graph.api.subscriptions.{SubscriptionExecutor, Webhook}
 import cool.graph.shared.models.IdType.Id
 import cool.graph.shared.models.ModelMutationType.ModelMutationType
 import cool.graph.shared.models._
+import sangria.parser.QueryParser
 import spray.json.{JsValue, _}
 
 import scala.concurrent.Future
 
 object ServerSideSubscription {
-  def extractFromMutactions(project: Project, mutactions: Seq[ClientSqlMutaction], requestId: Id): Seq[ServerSideSubscription] = {
+  def extractFromMutactions(
+      project: Project,
+      mutactions: Seq[ClientSqlMutaction],
+      requestId: Id
+  )(implicit apiDependencies: ApiDependencies): Seq[ServerSideSubscription] = {
     val createMutactions = mutactions.collect { case x: CreateDataItem => x }
     val updateMutactions = mutactions.collect { case x: UpdateDataItem => x }
     val deleteMutactions = mutactions.collect { case x: DeleteDataItem => x }
@@ -20,10 +28,14 @@ object ServerSideSubscription {
       extractFromDeleteMutactions(project, deleteMutactions, requestId)
   }
 
-  def extractFromCreateMutactions(project: Project, mutactions: Seq[CreateDataItem], requestId: Id): Seq[ServerSideSubscription] = {
+  def extractFromCreateMutactions(
+      project: Project,
+      mutactions: Seq[CreateDataItem],
+      requestId: Id
+  )(implicit apiDependencies: ApiDependencies): Seq[ServerSideSubscription] = {
     for {
       mutaction <- mutactions
-      sssFn     <- project.serverSideSubscriptionFunctionsFor(mutaction.model, ModelMutationType.Created)
+      sssFn     <- serverSideSubscriptionFunctionsFor(project, mutaction.model, ModelMutationType.Deleted)
     } yield {
       ServerSideSubscription(
         project,
@@ -36,10 +48,14 @@ object ServerSideSubscription {
     }
   }
 
-  def extractFromUpdateMutactions(project: Project, mutactions: Seq[UpdateDataItem], requestId: Id): Seq[ServerSideSubscription] = {
+  def extractFromUpdateMutactions(
+      project: Project,
+      mutactions: Seq[UpdateDataItem],
+      requestId: Id
+  )(implicit apiDependencies: ApiDependencies): Seq[ServerSideSubscription] = {
     for {
       mutaction <- mutactions
-      sssFn     <- project.serverSideSubscriptionFunctionsFor(mutaction.model, ModelMutationType.Updated)
+      sssFn     <- serverSideSubscriptionFunctionsFor(project, mutaction.model, ModelMutationType.Deleted)
     } yield {
       ServerSideSubscription(
         project,
@@ -55,10 +71,14 @@ object ServerSideSubscription {
 
   }
 
-  def extractFromDeleteMutactions(project: Project, mutactions: Seq[DeleteDataItem], requestId: Id): Seq[ServerSideSubscription] = {
+  def extractFromDeleteMutactions(
+      project: Project,
+      mutactions: Seq[DeleteDataItem],
+      requestId: Id
+  )(implicit apiDependencies: ApiDependencies): Seq[ServerSideSubscription] = {
     for {
       mutaction <- mutactions
-      sssFn     <- project.serverSideSubscriptionFunctionsFor(mutaction.model, ModelMutationType.Deleted)
+      sssFn     <- serverSideSubscriptionFunctionsFor(project, mutaction.model, ModelMutationType.Deleted)
     } yield {
       ServerSideSubscription(
         project,
@@ -71,6 +91,16 @@ object ServerSideSubscription {
       )
     }
   }
+
+  private def serverSideSubscriptionFunctionsFor(project: Project, model: Model, mutationType: ModelMutationType) = {
+    def isServerSideSubscriptionForModelAndMutationType(function: ServerSideSubscriptionFunction): Boolean = {
+      val queryDoc             = QueryParser.parse(function.query).get
+      val modelNameInQuery     = QueryTransformer.getModelNameFromSubscription(queryDoc).get
+      val mutationTypesInQuery = QueryTransformer.getMutationTypesFromSubscription(queryDoc)
+      model.name == modelNameInQuery && mutationTypesInQuery.contains(mutationType)
+    }
+    project.serverSideSubscriptionFunctions.filter(isServerSideSubscriptionForModelAndMutationType)
+  }
 }
 
 case class ServerSideSubscription(
@@ -82,32 +112,31 @@ case class ServerSideSubscription(
     requestId: String,
     updatedFields: Option[List[String]] = None,
     previousValues: Option[DataItem] = None
-) extends Mutaction {
+)(implicit apiDependencies: ApiDependencies)
+    extends Mutaction {
   import scala.concurrent.ExecutionContext.Implicits.global
 
-//  val webhookPublisher = inject[QueuePublisher[Webhook]](identified by "webhookPublisher")
+  val webhookPublisher = apiDependencies.webhookPublisher
 
   override def execute: Future[MutactionExecutionResult] = {
     for {
       result <- executeQuery()
     } yield {
       result match {
-//        case Some(JsObject(fields)) if fields.contains("data") =>
-//          val endpointResolver          = inject[EndpointResolver](identified by "endpointResolver")
-//          val context: Map[String, Any] = FunctionExecutor.createEventContext(project, "", headers = Map.empty, None, endpointResolver)
-//          val event                     = JsObject(fields + ("context" -> AnyJsonFormat.write(context)))
-//          val json                      = event.compactPrint
-//
-//          function.delivery match {
-//            case fn: HttpFunction =>
-//              val webhook = Webhook(project.id, function.id, requestId, fn.url, json, requestId, fn.headers.toMap)
-//              webhookPublisher.publish(webhook)
-//
-//            case fn: ManagedFunction =>
-//              new FunctionExecutor().syncWithLoggingAndErrorHandling_!(function, json, project, requestId)
-//
-//            case _ =>
-//          }
+        case Some(JsObject(fields)) if fields.contains("data") =>
+          function.delivery match {
+            case fn: WebhookDelivery =>
+              val webhook = Webhook(
+                projectId = project.id,
+                functionName = function.name,
+                requestId = requestId,
+                url = fn.url,
+                payload = JsObject(fields).compactPrint,
+                id = requestId,
+                headers = fn.headers.toMap
+              )
+              webhookPublisher.publish(webhook)
+          }
 
         case _ =>
       }
@@ -117,23 +146,20 @@ case class ServerSideSubscription(
   }
 
   def executeQuery(): Future[Option[JsValue]] = {
-    Future.successful(None)
-//    SubscriptionExecutor.execute(
-//      project = project,
-//      model = model,
-//      mutationType = mutationType,
-//      previousValues = previousValues,
-//      updatedFields = updatedFields,
-//      query = function.query,
-//      variables = JsObject.empty,
-//      nodeId = nodeId,
-//      clientId = project.ownerId,
-//      authenticatedRequest = None,
-//      requestId = s"subscription:server_side:${project.id}",
-//      operationName = None,
-//      skipPermissionCheck = true,
-//      alwaysQueryMasterDatabase = true
-//    )
+    SubscriptionExecutor.execute(
+      project = project,
+      model = model,
+      mutationType = mutationType,
+      previousValues = previousValues,
+      updatedFields = updatedFields,
+      query = function.query,
+      variables = JsObject.empty,
+      nodeId = nodeId,
+      requestId = s"subscription:server_side:${project.id}",
+      operationName = None,
+      skipPermissionCheck = true,
+      alwaysQueryMasterDatabase = true
+    )
   }
 
   implicit object AnyJsonFormat extends JsonFormat[Any] {

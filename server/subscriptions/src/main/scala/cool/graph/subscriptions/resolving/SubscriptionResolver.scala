@@ -4,6 +4,7 @@ import java.util.concurrent.TimeUnit
 
 import cool.graph.api.database.DataItem
 import cool.graph.api.mutations.GraphcoolDataTypes
+import cool.graph.api.subscriptions.SubscriptionExecutor
 import cool.graph.shared.models.ModelMutationType.ModelMutationType
 import cool.graph.shared.models.{Model, ModelMutationType, Project}
 import cool.graph.subscriptions.SubscriptionDependencies
