@@ -138,40 +138,42 @@ export class Config {
       this.definitionDir = this.cwd
       this.definitionPath = definitionPath
     } else {
-      const found = findUp.sync('graphcool.yml', { cwd: this.cwd })
-      this.definitionDir = found ? path.dirname(found) : this.cwd
-      this.definitionPath = found || null
-    }
-
-    if (!this.definitionPath) {
-      // try to lookup with graphql config
-      try {
-        const config = getGraphQLConfig().config
-
-        const allExtensions = [
-          config.extensions,
-          ...values(config.projects).map(p => p.extensions),
-        ]
-
-        const graphcoolExtension = allExtensions.find(e =>
-          Boolean(e && e.graphcool),
-        )
-        if (graphcoolExtension) {
-          const { graphcool } = graphcoolExtension
-          this.definitionPath = path.resolve(graphcool)
-          this.definitionDir = path.dirname(this.definitionPath)
-          debug(
-            `resolved with graphcool extension`,
-            this.definitionPath,
-            this.definitionDir,
-          )
-        }
-      } catch (e) {
-        debug(e)
+      this.definitionPath = this.getDefinitionPathByGraphQLConfig()
+      if (this.definitionPath) {
+        this.definitionDir = path.dirname(this.definitionPath)
+      } else {
+        const found = findUp.sync('graphcool.yml', { cwd: this.cwd })
+        this.definitionDir = found ? path.dirname(found) : this.cwd
+        this.definitionPath = found || null
       }
     }
+
     debug(`definitionDir`, this.definitionDir)
     debug(`definitionPath`, this.definitionPath)
+  }
+  private getDefinitionPathByGraphQLConfig(): string | null {
+    // try to lookup with graphql config
+    let definitionPath
+    try {
+      const config = getGraphQLConfig().config
+
+      const allExtensions = [
+        config.extensions,
+        ...values(config.projects).map(p => p.extensions),
+      ]
+
+      const graphcoolExtension = allExtensions.find(e =>
+        Boolean(e && e.graphcool),
+      )
+      if (graphcoolExtension) {
+        const { graphcool } = graphcoolExtension
+        definitionPath = path.resolve(graphcool)
+      }
+    } catch (e) {
+      debug(e)
+    }
+
+    return definitionPath
   }
   private getCwd() {
     // get cwd
