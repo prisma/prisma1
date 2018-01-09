@@ -4,8 +4,10 @@ import akka.actor.ActorSystem
 import cool.graph.api.ApiDependencies
 import cool.graph.api.mutations.ClientMutationRunner
 import cool.graph.api.mutations.mutations.ResetData
-import cool.graph.shared.models.Project
-import sangria.schema.{BooleanType, Field, ObjectType, OptionType, Schema, SchemaValidationRule, StringType}
+import cool.graph.api.subscriptions.schema.{SubscriptionQueryError, SubscriptionQueryValidator}
+import cool.graph.shared.models.{Model, Project}
+import org.scalactic.Or
+import sangria.schema.{Argument, BooleanType, Field, ObjectType, OptionType, Schema, SchemaValidationRule, StringType}
 
 case class PrivateSchemaBuilder(
     project: Project
@@ -17,19 +19,25 @@ case class PrivateSchemaBuilder(
   import system.dispatcher
 
   def build(): Schema[ApiUserContext, Unit] = {
-    val mutation = buildMutation()
-
     Schema(
       query = queryType,
-      mutation = mutation,
+      mutation = Some(mutationType),
       validationRules = SchemaValidationRule.empty
     )
   }
 
-  def buildMutation(): Option[ObjectType[ApiUserContext, Unit]] = {
-    val fields = List(resetDataField)
+  lazy val queryType = {
+    ObjectType(
+      name = "Query",
+      fields = List(validateSubscriptionQueryField)
+    )
+  }
 
-    Some(ObjectType("Mutation", fields))
+  lazy val mutationType = {
+    ObjectType(
+      name = "Mutation",
+      fields = List(resetDataField)
+    )
   }
 
   def resetDataField: Field[ApiUserContext, Unit] = {
@@ -43,17 +51,17 @@ case class PrivateSchemaBuilder(
     )
   }
 
-  lazy val queryType = {
-    ObjectType(
-      "Query",
-      List(dummyField)
+  def validateSubscriptionQueryField: Field[ApiUserContext, Unit] = {
+    Field(
+      s"validateSubscriptionQuery",
+      fieldType = BooleanType,
+      arguments = List(Argument("query", StringType)),
+      resolve = (ctx) => {
+        val query                                          = ctx.arg[String]("query")
+        val validator                                      = SubscriptionQueryValidator(project)
+        val result: Or[Model, Seq[SubscriptionQueryError]] = validator.validate(query)
+        result.isGood
+      }
     )
   }
-
-  lazy val dummyField: Field[ApiUserContext, Unit] = Field(
-    "dummy",
-    description = Some("This is only a dummy field due to the API of Schema of Sangria, as Query is not optional"),
-    fieldType = StringType,
-    resolve = (ctx) => ""
-  )
 }
