@@ -11,13 +11,12 @@ services:
       MYSQL_ROOT_PASSWORD: $SQL_INTERNAL_PASSWORD
       MYSQL_DATABASE: $SQL_INTERNAL_DATABASE
     ports:
-      - "7777:3306" # Temporary/debug mapping to the host
+      - "3306:3306" # Temporary/debug mapping to the host
     volumes:
       - db-persistence:/var/lib/mysql
 
   graphcool-database:
-    # image: graphcool/graphcool-dev:1.0.0-beta3.3
-    image: graphcool/graphcool-dev:migration-progress
+    image: graphcool/graphcool-dev:1.0.0-beta4.0
     restart: always
     ports:
       - "0.0.0.0:${PORT}:${PORT}"
@@ -42,7 +41,7 @@ services:
       SQL_INTERNAL_CONNECTION_LIMIT: 10
       CLUSTER_PUBLIC_KEY: $CLUSTER_PUBLIC_KEY
       BUGSNAG_API_KEY: ""
-      CLUSTER_VERSION: 1.0.0-beta3.3
+      CLUSTER_VERSION: 1.0.0-beta4.0
 
 networks:
   graphcool:
