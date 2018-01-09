@@ -295,7 +295,6 @@ export default class Docker {
       let error
       try {
         if (nameStart.startsWith('localdatabase')) {
-          console.log('nuking db')
           this.setEnvVars(port, `http://${this.hostName}:${port}`)
           await this.nukeContainers(nameStart, true)
         } else if (nameStart.startsWith('local')) {
@@ -336,7 +335,6 @@ export default class Docker {
   }
 
   async nukeContainers(name: string, isDB: boolean = false) {
-    console.log('STOPPING', name, isDB)
     const argv = ['down', '--remove-orphans', '-v', '--rmi', 'local']
     await this.checkBin()
     const defaultArgs = [

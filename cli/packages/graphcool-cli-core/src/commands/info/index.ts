@@ -32,59 +32,59 @@ export default class InfoCommand extends Command {
     }),
   }
   async run() {
-    const { json, current } = this.flags
+    const { json } = this.flags
     await this.definition.load(this.flags)
     const serviceName = this.definition.definition!.service
     const stage = this.definition.definition!.stage
     const workspace = this.definition.getWorkspace()
 
-    if (current) {
-      const clusterName = this.definition.getClusterName()
-      if (!clusterName) {
-        throw new Error(
-          `No cluster set. Please set the "cluster" property in your graphcool.yml`,
-        )
-      }
-      const cluster = this.definition.getCluster()
-      if (!cluster) {
-        throw new Error(`Cluster ${clusterName} could not be found in global ~/.graphcoolrc.
-Please make sure it contains the cluster. You can create a local cluster using 'gc local start'`)
-      }
-      if (!json) {
-        this.out.log(`Service Name: ${chalk.bold(serviceName)}`)
-      }
-      this.out.log(
-        this.printStage(
-          serviceName,
-          stage,
-          cluster,
-          workspace || undefined,
-          json,
-        ),
+    // if (current) {
+    const clusterName = this.definition.getClusterName()
+    if (!clusterName) {
+      throw new Error(
+        `No cluster set. Please set the "cluster" property in your graphcool.yml`,
       )
-    } else {
-      let services: Service[] = []
-
-      for (const cluster of this.env.clusters) {
-        this.env.setActiveCluster(cluster)
-        await this.client.initClusterClient(
-          cluster,
-          workspace!,
-          serviceName,
-          stage,
-        )
-        const projects = await this.client.listProjects()
-        const filteredProjects = projects.filter(p => p.name === serviceName)
-        services = services.concat(
-          filteredProjects.map(project => ({
-            project,
-            cluster,
-          })),
-        )
-      }
-
-      this.out.log(this.printStages(serviceName, services, json))
     }
+    const cluster = this.definition.getCluster()
+    if (!cluster) {
+      throw new Error(`Cluster ${clusterName} could not be found in global ~/.graphcoolrc.
+Please make sure it contains the cluster. You can create a local cluster using 'gc local start'`)
+    }
+    if (!json) {
+      this.out.log(`Service Name: ${chalk.bold(serviceName)}`)
+    }
+    this.out.log(
+      this.printStage(
+        serviceName,
+        stage,
+        cluster,
+        workspace || undefined,
+        json,
+      ),
+    )
+    // } else {
+    //   let services: Service[] = []
+
+    //   for (const cluster of this.env.clusters) {
+    //     this.env.setActiveCluster(cluster)
+    //     await this.client.initClusterClient(
+    //       cluster,
+    //       workspace!,
+    //       serviceName,
+    //       stage,
+    //     )
+    //     const projects = await this.client.listProjects()
+    //     const filteredProjects = projects.filter(p => p.name === serviceName)
+    //     services = services.concat(
+    //       filteredProjects.map(project => ({
+    //         project,
+    //         cluster,
+    //       })),
+    //     )
+    //   }
+
+    //   this.out.log(this.printStages(serviceName, services, json))
+    // }
   }
 
   printStage(
