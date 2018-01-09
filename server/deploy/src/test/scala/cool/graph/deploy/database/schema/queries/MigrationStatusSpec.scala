@@ -10,7 +10,7 @@ class MigrationStatusSpec extends FlatSpec with Matchers with DeploySpecBase {
   val migrationPersistence = testDependencies.migrationPersistence
 
   "MigrationStatus" should "return the last applied migration if there is no pending migration" in {
-    val project      = setupProject(basicTypesGql)
+    val (project, _) = setupProject(basicTypesGql)
     val nameAndStage = ProjectId.fromEncodedString(project.id)
 
     val result = server.query(s"""
@@ -37,7 +37,7 @@ class MigrationStatusSpec extends FlatSpec with Matchers with DeploySpecBase {
   }
 
   "MigrationStatus" should "return the next pending migration if one exists" in {
-    val project      = setupProject(basicTypesGql)
+    val (project, _) = setupProject(basicTypesGql)
     val nameAndStage = ProjectId.fromEncodedString(project.id)
     val migration = migrationPersistence
       .create(

@@ -42,7 +42,7 @@ case class MigrationStepMapperImpl(projectId: String) extends MigrationStepMappe
     case x: DeleteField =>
       val model = previousSchema.getModelByName_!(x.model)
       val field = model.getFieldByName_!(x.name)
-      if (field.isList) {
+      if (field.isList && !field.isRelation) {
         Some(DeleteScalarListTable(projectId, model.name, field.name, field.typeIdentifier))
       } else if (field.isScalar) {
         // TODO: add test case for not deleting columns for relation fields

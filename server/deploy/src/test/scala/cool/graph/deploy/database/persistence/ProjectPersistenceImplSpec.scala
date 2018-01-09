@@ -17,7 +17,7 @@ class ProjectPersistenceImplSpec extends FlatSpec with Matchers with DeploySpecB
   }
 
   ".load()" should "return the project with the correct revision" in {
-    val project = setupProject(basicTypesGql)
+    val (project, _) = setupProject(basicTypesGql)
 
     // Create an empty migration to have an unapplied migration with a higher revision
     migrationPersistence.create(Migration.empty(project.id)).await
@@ -50,7 +50,7 @@ class ProjectPersistenceImplSpec extends FlatSpec with Matchers with DeploySpecB
   }
 
   ".update()" should "update a project" in {
-    val project = setupProject(basicTypesGql)
+    val (project, _) = setupProject(basicTypesGql)
 
     val updatedProject = project.copy(secrets = Vector("Some", "secrets"))
     projectPersistence.update(updatedProject).await()
