@@ -384,7 +384,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
       |    name: "${nameAndStage.name}"
       |    stage: "${nameAndStage.stage}"
       |    types: ${formatSchema(schema)}
-      |    functions: ${formatFunctions(functions)}
+      |    subscriptions: ${formatFunctions(functions)}
       |  }){
       |    migration {
       |      steps {
