@@ -145,4 +145,62 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
     )
     mustBeEqual(result.pathAsString("data.updateNote.todo.title"), "the title")
   }
+
+  "A one to one relation" should "connecting nodes by id through a nested mutation should not error when items are already connected" in {
+    val project = SchemaDsl() { schema =>
+      val note = schema.model("Note").field("text", _.String)
+      schema.model("Todo").field_!("title", _.String).oneToOneRelation("note", "todo", note)
+    }
+    database.setup(project)
+
+    val noteId = server.executeQuerySimple("""mutation { createNote(data: {}){ id } }""", project).pathAsString("data.createNote.id")
+    val todoId = server.executeQuerySimple("""mutation { createTodo(data: { title: "the title" }){ id } }""", project).pathAsString("data.createTodo.id")
+
+    val result = server.executeQuerySimple(
+      s"""
+         |mutation {
+         |  updateNote(
+         |    where: {
+         |      id: "$noteId"
+         |    }
+         |    data: {
+         |      todo: {
+         |        connect: {id: "$todoId"}
+         |      }
+         |    }
+         |  ){
+         |    id
+         |    todo {
+         |      title
+         |    }
+         |  }
+         |}
+      """.stripMargin,
+      project
+    )
+    mustBeEqual(result.pathAsString("data.updateNote.todo.title"), "the title")
+
+    server.executeQuerySimple(
+      s"""
+         |mutation {
+         |  updateNote(
+         |    where: {
+         |      id: "$noteId"
+         |    }
+         |    data: {
+         |      todo: {
+         |        connect: {id: "$todoId"}
+         |      }
+         |    }
+         |  ){
+         |    id
+         |    todo {
+         |      title
+         |    }
+         |  }
+         |}
+      """.stripMargin,
+      project
+    )
+  }
 }

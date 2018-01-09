@@ -156,7 +156,7 @@ object DatabaseMutationBuilder {
     val relationId = Cuid.createCuid()
     sqlu"""insert into `#$projectId`.`#${parentInfo.relation.id}` (`id`, `A`, `B`)
            Select '#$relationId', (select id from `#$projectId`.`#${where.model.name}` where `#${where.field.name}` = ${where.fieldValue}), `id`
-           FROM   `#$projectId`.`#${parentInfo.model.name}` where `#${parentInfo.where.field.name}` = ${parentInfo.where.fieldValue}"""
+           FROM   `#$projectId`.`#${parentInfo.model.name}` where `#${parentInfo.where.field.name}` = ${parentInfo.where.fieldValue} on duplicate key update `#$projectId`.`#${parentInfo.relation.id}`.id=`#$projectId`.`#${parentInfo.relation.id}`.id"""
   }
 
   def createRelationRowByUniqueValueForB(projectId: String, parentInfo: ParentInfo, where: NodeSelector): SqlAction[Int, NoStream, Effect] = {
@@ -164,7 +164,7 @@ object DatabaseMutationBuilder {
 
     sqlu"""insert into `#$projectId`.`#${parentInfo.relation.id}` (`id`, `A`, `B`)
            Select'#$relationId', (select id from `#$projectId`.`#${parentInfo.model.name}` where `#${parentInfo.where.field.name}` = ${parentInfo.where.fieldValue}), `id`
-           FROM `#$projectId`.`#${where.model.name}` where `#${where.field.name}` = ${where.fieldValue}"""
+           FROM `#$projectId`.`#${where.model.name}` where `#${where.field.name}` = ${where.fieldValue} on duplicate key update `#$projectId`.`#${parentInfo.relation.id}`.id=`#$projectId`.`#${parentInfo.relation.id}`.id"""
   }
 
   def deleteRelationRowByUniqueValueForA(projectId: String, parentInfo: ParentInfo, where: NodeSelector): SqlAction[Int, NoStream, Effect] = {
@@ -354,7 +354,7 @@ object DatabaseMutationBuilder {
 
     DBIO.seq(
       sqlu"""CREATE SCHEMA `#$projectId` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci; """,
-      sqlu"""CREATE TABLE `#$projectId`.`_RelayId` (`id` CHAR(25) #$idCharset NOT NULL, `modelId` CHAR(25) #$idCharset NOT NULL, PRIMARY KEY (`id`), UNIQUE INDEX `id_UNIQUE` (`id` ASC)) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"""
+      sqlu"""CREATE TABLE `#$projectId`.`_RelayId` (`id` CHAR(25) #$idCharset NOT NULL, `stableModelIdentifier` CHAR(25) #$idCharset NOT NULL, PRIMARY KEY (`id`), UNIQUE INDEX `id_UNIQUE` (`id` ASC)) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"""
     )
   }
 

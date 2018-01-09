@@ -1,5 +1,6 @@
 package cool.graph.shared.models
 
+import cool.graph.cuid.Cuid
 import cool.graph.gc_values.GCValue
 import cool.graph.shared.errors.SharedErrors
 import cool.graph.shared.models.FieldConstraintType.FieldConstraintType
@@ -63,6 +64,10 @@ case class Schema(
 
   def getModelById(id: Id): Option[Model] = models.find(_.id == id)
   def getModelById_!(id: Id): Model       = getModelById(id).getOrElse(throw SharedErrors.InvalidModel(id))
+
+  def getModelByStableIdentifier_!(stableId: String): Model = {
+    models.find(_.stableIdentifier == stableId).getOrElse(throw SharedErrors.InvalidModel(s"Could not find a model for the stable identifier: $stableId"))
+  }
 
   // note: mysql columns are case insensitive, so we have to be as well. But we could make them case sensitive https://dev.mysql.com/doc/refman/5.6/en/case-sensitivity.html
   def getModelByName(name: String): Option[Model] = models.find(_.name.toLowerCase() == name.toLowerCase())
@@ -182,26 +187,22 @@ case class ProjectWithClient(project: Project, client: Client)
 
 case class Model(
     name: String,
+    stableIdentifier: String,
     fields: List[Field],
-    description: Option[String] = None
+    description: Option[String] = None,
 ) {
   def id = name
 
-  lazy val scalarFields: List[Field]         = fields.filter(_.isScalar)
-  lazy val scalarListFields: List[Field]     = scalarFields.filter(_.isList)
-  lazy val relationFields: List[Field]       = fields.filter(_.isRelation)
-  lazy val singleRelationFields: List[Field] = relationFields.filter(!_.isList)
-  lazy val listRelationFields: List[Field]   = relationFields.filter(_.isList)
+  lazy val scalarFields: List[Field]          = fields.filter(_.isScalar)
+  lazy val scalarListFields: List[Field]      = scalarFields.filter(_.isList)
+  lazy val scalarNonListFields: List[Field]   = scalarFields.filter(!_.isList)
+  lazy val relationFields: List[Field]        = fields.filter(_.isRelation)
+  lazy val relationListFields: List[Field]    = relationFields.filter(_.isList)
+  lazy val relationNonListFields: List[Field] = relationFields.filter(!_.isList)
+  lazy val relations: List[Relation]          = fields.flatMap(_.relation).distinct
 
   def relationFieldForIdAndSide(relationId: String, relationSide: RelationSide.Value): Option[Field] = {
     fields.find(_.isRelationWithIdAndSide(relationId, relationSide))
-  }
-
-  lazy val relations: List[Relation] = {
-    fields
-      .map(_.relation)
-      .collect { case Some(relation) => relation }
-      .distinct
   }
 
   def withoutFieldsForRelation(relation: Relation): Model = withoutFieldsForRelations(Seq(relation))

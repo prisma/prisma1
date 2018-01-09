@@ -29,7 +29,7 @@ case class CreateDataItem(
   // FIXME: it should be guaranteed to always have an id (generate it in here)
   val id: Id = ArgumentValueList.getId_!(values)
 
-  val jsonCheckedValues: List[ArgumentValue] = {    // we do not store the transformed version, why?
+  val jsonCheckedValues: List[ArgumentValue] = { // we do not store the transformed version, why?
     if (model.fields.exists(_.typeIdentifier == TypeIdentifier.Json)) {
       InputValueValidation.transformStringifiedJson(values, model)
     } else {
@@ -45,7 +45,7 @@ case class CreateDataItem(
   }
 
   override def execute: Future[ClientSqlStatementResult[Any]] = {
-    val relayIds          = TableQuery(new ProjectRelayIdTable(_, project.id))
+    val relayIds = TableQuery(new ProjectRelayIdTable(_, project.id))
 
     Future.successful(
       ClientSqlStatementResult(
@@ -59,14 +59,15 @@ case class CreateDataItem(
               .map(field => (field.name, getValueOrDefault(values, field).get))
               .toMap
           ),
-          relayIds += ProjectRelayId(id = id, model.id)
+          relayIds += ProjectRelayId(id = id, model.stableIdentifier)
         )))
   }
 
   override def handleErrors = {
     implicit val anyFormat = JsonFormats.AnyJsonFormat
     Some({
-      case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1062 && GetFieldFromSQLUniqueException.getFieldOptionFromArgumentValueList(jsonCheckedValues, e).isDefined=>
+      case e: SQLIntegrityConstraintViolationException
+          if e.getErrorCode == 1062 && GetFieldFromSQLUniqueException.getFieldOptionFromArgumentValueList(jsonCheckedValues, e).isDefined =>
         APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOptionFromArgumentValueList(jsonCheckedValues, e).get)
       case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1452 =>
         APIErrors.NodeDoesNotExist("")

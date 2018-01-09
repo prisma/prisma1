@@ -2,7 +2,6 @@ package cool.graph.deploy.database.schema.mutations
 
 import cool.graph.cuid.Cuid
 import cool.graph.deploy.specutils.DeploySpecBase
-import cool.graph.shared.models.ProjectId
 import org.scalatest.{FlatSpec, Matchers}
 
 class AddProjectMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
@@ -10,7 +9,7 @@ class AddProjectMutationSpec extends FlatSpec with Matchers with DeploySpecBase 
   val projectPersistence = testDependencies.projectPersistence
 
   "AddProjectMutation" should "succeed for valid input" in {
-    val name  = Cuid.createCuid()
+    val name  = s"${Cuid.createCuid()}~test"
     val stage = Cuid.createCuid()
 
     val result = server.query(s"""

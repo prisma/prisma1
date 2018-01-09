@@ -14,11 +14,9 @@ object NameConstraints {
 
   def isValidRelationName(name: String): Boolean = name.length <= 64 && name.matches("^[A-Z][a-zA-Z0-9]*$")
 
-  def isValidServiceName(name: String): Boolean = name.length <= 140 && isValidName(name)
+  def isValidServiceName(name: String): Boolean = name.length <= 140 && name.matches("^[a-zA-Z][a-zA-Z0-9\\-_~]*$")
 
-  def isValidServiceStage(stage: String): Boolean = stage.length <= 30 && isValidName(stage)
-
-  private def isValidName(str: String): Boolean = str.matches("^[a-zA-Z][a-zA-Z0-9\\-_]*$")
+  def isValidServiceStage(stage: String): Boolean = stage.length <= 30 && stage.matches("^[a-zA-Z][a-zA-Z0-9\\-_]*$")
 
   def isValidFunctionName(name: String): Boolean = 1 <= name.length && name.length <= 64 && name.matches("^[a-zA-Z0-9\\-_]*$")
 }

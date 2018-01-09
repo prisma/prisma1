@@ -18,7 +18,7 @@ object AuthImpl extends Auth {
         case Some(authHeader) =>
           import pdi.jwt.{Jwt, JwtAlgorithm, JwtOptions}
 
-          val isValid = project.secrets.exists(secret => {
+          val isValid = project.secrets.exists { secret =>
             val jwtOptions = JwtOptions(signature = true, expiration = false)
             val algorithms = Seq(JwtAlgorithm.HS256)
             val claims     = Jwt.decodeRaw(token = authHeader.stripPrefix("Bearer "), key = secret, algorithms = algorithms, options = jwtOptions)
@@ -26,7 +26,7 @@ object AuthImpl extends Auth {
             // todo: also verify claims in accordance with https://github.com/graphcool/framework/issues/1365
 
             claims.isSuccess
-          })
+          }
 
           if (!isValid) throw InvalidToken()
 

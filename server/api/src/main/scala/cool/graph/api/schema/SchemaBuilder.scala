@@ -2,11 +2,10 @@ package cool.graph.api.schema
 
 import akka.actor.ActorSystem
 import cool.graph.api.ApiDependencies
-import cool.graph.api.database.{DataItem, IdBasedConnection}
+import cool.graph.api.database.DataItem
 import cool.graph.api.database.DeferredTypes.{ManyModelDeferred, OneDeferred}
 import cool.graph.api.mutations._
 import cool.graph.api.mutations.mutations._
-import cool.graph.gc_values.GraphQLIdGCValue
 import cool.graph.shared.models.{Model, Project}
 import org.atteo.evo.inflector.English
 import sangria.relay.{Node, NodeDefinition, PossibleNodeObject}
@@ -69,9 +68,7 @@ case class SchemaBuilderImpl(
       project.models.flatMap(deleteItemField) ++
       project.models.flatMap(upsertItemField) ++
       project.models.flatMap(updateManyField) ++
-      project.models.map(deleteManyField) ++
-      List(resetDataField)
-
+      project.models.map(deleteManyField)
     Some(ObjectType("Mutation", fields))
   }
 
@@ -212,17 +209,6 @@ case class SchemaBuilderImpl(
         val where    = objectTypeBuilder.extractRequiredFilterFromContext(model, ctx)
         val mutation = DeleteMany(project, model, where, dataResolver = masterDataResolver)
         ClientMutationRunner.run(mutation, dataResolver)
-      }
-    )
-  }
-
-  def resetDataField: Field[ApiUserContext, Unit] = {
-    Field(
-      s"resetData",
-      fieldType = OptionType(BooleanType),
-      resolve = (ctx) => {
-        val mutation = ResetData(project = project, dataResolver = masterDataResolver)
-        ClientMutationRunner.run(mutation, dataResolver).map(_ => true)
       }
     )
   }

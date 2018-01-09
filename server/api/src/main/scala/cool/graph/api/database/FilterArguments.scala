@@ -32,11 +32,8 @@ class FilterArguments(model: Model, isSubscriptionFilter: Boolean = false) {
 
     case _ =>
       index.get(filter) match {
-        case None =>
-          throw new Exception(s""""No field for the filter "$filter" has been found.""")
-
-        case Some(fieldFilterTuple) =>
-          fieldFilterTuple
+        case None                   => throw new Exception(s""""No field for the filter "$filter" has been found.""")
+        case Some(fieldFilterTuple) => fieldFilterTuple
       }
   }
 }

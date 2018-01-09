@@ -31,22 +31,16 @@ class ObjectTypeBuilder(
           "count",
           fieldType = LongType,
           description = Some("The number of nodes that have been affected by the Batch operation."),
-          resolve = (ctx: Context[ApiUserContext, BatchPayload]) => {
-            ctx.value.count
-          }
+          resolve = (ctx: Context[ApiUserContext, BatchPayload]) => { ctx.value.count }
         )
       )
     }
   )
 
-  val modelObjectTypes: Map[String, ObjectType[ApiUserContext, DataItem]] =
-    project.models
-      .map(model => (model.name, modelToObjectType(model)))
-      .toMap
+  val modelObjectTypes: Map[String, ObjectType[ApiUserContext, DataItem]] = project.models.map(model => (model.name, modelToObjectType(model))).toMap
 
-  val modelConnectionTypes: Map[String, ObjectType[ApiUserContext, IdBasedConnection[DataItem]]] = project.models
-    .map(model => (model.name, modelToConnectionType(model).connectionType))
-    .toMap
+  val modelConnectionTypes: Map[String, ObjectType[ApiUserContext, IdBasedConnection[DataItem]]] =
+    project.models.map(model => (model.name, modelToConnectionType(model).connectionType)).toMap
 
   def modelToConnectionType(model: Model): IdBasedConnectionDefinition[ApiUserContext, IdBasedConnection[DataItem], DataItem] = {
     IdBasedConnection.definition[ApiUserContext, IdBasedConnection, DataItem](
@@ -110,9 +104,7 @@ class ObjectTypeBuilder(
     fieldType = mapToOutputType(Some(model), field),
     description = field.description,
     arguments = mapToListConnectionArguments(model, field),
-    resolve = (ctx: Context[ApiUserContext, DataItem]) => {
-      mapToOutputResolve(model, field)(ctx)
-    },
+    resolve = (ctx: Context[ApiUserContext, DataItem]) => { mapToOutputResolve(model, field)(ctx) },
     tags = List()
   )
 
@@ -215,17 +207,14 @@ class ObjectTypeBuilder(
                 )
               }
 
-            case value: Seq[Any] if value.nonEmpty && value.head.isInstanceOf[Map[_, _]] => {
-              FilterElement(key,
-                            value
-                              .asInstanceOf[Seq[Map[String, Any]]]
-                              .map(generateFilterElement(_, model, isSubscriptionFilter)),
-                            None,
-                            filter.name)
-            }
+            case value: Seq[Any] if value.nonEmpty && value.head.isInstanceOf[Map[_, _]] =>
+              FilterElement(key, value.asInstanceOf[Seq[Map[String, Any]]].map(generateFilterElement(_, model, isSubscriptionFilter)), None, filter.name)
 
             case value: Seq[Any] =>
               FilterElement(key, value, field, filter.name)
+
+            case Some(filterValue) =>
+              FilterElement(key, filterValue, field, filter.name)
 
             case _ =>
               FilterElement(key, value, field, filter.name)
@@ -272,8 +261,7 @@ class ObjectTypeBuilder(
 
     val arg = args.find(a => ctx.args.argOpt(a.name).isDefined) match {
       case Some(value) => value
-      case None =>
-        ??? //throw UserAPIErrors.GraphQLArgumentsException(s"None of the following arguments provided: ${args.map(_.name)}")
+      case None        => ??? //throw UserAPIErrors.GraphQLArgumentsException(s"None of the following arguments provided: ${args.map(_.name)}")
     }
 
     arg

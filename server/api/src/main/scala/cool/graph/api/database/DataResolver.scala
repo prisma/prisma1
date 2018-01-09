@@ -10,6 +10,7 @@ import cool.graph.shared.models.IdType.Id
 import cool.graph.shared.models.TypeIdentifier.TypeIdentifier
 import cool.graph.shared.models._
 import cool.graph.util.gc_value.{GCJsonConverter, GCValueExtractor}
+import cool.graph.utils.future.FutureUtils.FutureOpt
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 import slick.dbio.Effect.Read
@@ -66,7 +67,6 @@ case class DataResolver(project: Project, useMasterDatabaseOnly: Boolean = false
 
   def existsByModel(model: Model): Future[Boolean] = {
     val query = DatabaseQueryBuilder.existsByModel(project.id, model.name)
-
     performWithTiming("existsByModel", readonlyClientDatabase.run(readOnlyBoolean(query))).map(_.head)
   }
 
@@ -88,7 +88,6 @@ case class DataResolver(project: Project, useMasterDatabaseOnly: Boolean = false
 
   def loadModelRowsForExport(model: Model, args: Option[QueryArguments] = None): Future[ResolverResult] = {
     val (query, resultTransform) = DatabaseQueryBuilder.selectAllFromTable(project.id, model.name, args, None)
-
     performWithTiming("loadModelRowsForExport", readonlyClientDatabase.run(readOnlyDataItem(query)))
       .map(_.toList.map(mapDataItem(model)(_)))
       .map(resultTransform(_))
@@ -96,37 +95,28 @@ case class DataResolver(project: Project, useMasterDatabaseOnly: Boolean = false
 
   def loadListRowsForExport(tableName: String, args: Option[QueryArguments] = None): Future[ResolverResult] = {
     val (query, resultTransform) = DatabaseQueryBuilder.selectAllFromListTable(project.id, tableName, args, None)
-
     performWithTiming("loadListRowsForExport", readonlyClientDatabase.run(readOnlyScalarListValue(query))).map(_.toList).map(resultTransform(_))
   }
 
   def loadRelationRowsForExport(relationId: String, args: Option[QueryArguments] = None): Future[ResolverResult] = {
     val (query, resultTransform) = DatabaseQueryBuilder.selectAllFromTable(project.id, relationId, args, None)
-
     performWithTiming("loadRelationRowsForExport", readonlyClientDatabase.run(readOnlyDataItem(query))).map(_.toList).map(resultTransform(_))
   }
 
   def batchResolveByUnique(model: Model, key: String, values: List[Any]): Future[List[DataItem]] = {
     val query = DatabaseQueryBuilder.batchSelectFromModelByUnique(project.id, model.name, key, values)
-
-    performWithTiming("batchResolveByUnique", readonlyClientDatabase.run(readOnlyDataItem(query)))
-      .map(_.toList)
-      .map(_.map(mapDataItem(model)))
+    performWithTiming("batchResolveByUnique", readonlyClientDatabase.run(readOnlyDataItem(query))).map(_.toList).map(_.map(mapDataItem(model)))
   }
 
   def batchResolveScalarList(model: Model, field: Field, nodeIds: Vector[String]): Future[Vector[ScalarListValue]] = {
     val query = DatabaseQueryBuilder.selectFromScalarList(project.id, model.name, field.name, nodeIds)
-
     performWithTiming("batchResolveScalarList", readonlyClientDatabase.run(readOnlyScalarListValue(query)))
       .map(_.map(mapScalarListValueWithoutValidation(model, field)))
   }
 
   def batchResolveByUniqueWithoutValidation(model: Model, key: String, values: List[Any]): Future[List[DataItem]] = {
     val query = DatabaseQueryBuilder.batchSelectFromModelByUnique(project.id, model.name, key, values)
-
-    performWithTiming("batchResolveByUnique", readonlyClientDatabase.run(readOnlyDataItem(query)))
-      .map(_.toList)
-      .map(_.map(mapDataItemWithoutValidation(model)))
+    performWithTiming("batchResolveByUnique", readonlyClientDatabase.run(readOnlyDataItem(query))).map(_.toList).map(_.map(mapDataItemWithoutValidation(model)))
   }
 
   def resolveByGlobalId(globalId: String): Future[Option[DataItem]] = {
@@ -136,21 +126,21 @@ case class DataResolver(project: Project, useMasterDatabaseOnly: Boolean = false
 
     val query: SqlAction[Option[String], NoStream, Read] = TableQuery(new ProjectRelayIdTable(_, project.id))
       .filter(_.id === globalId)
-      .map(_.modelId)
+      .map(_.stableModelIdentifier)
       .take(1)
       .result
       .headOption
 
     readonlyClientDatabase
       .run(query)
-      .map {
-        case Some(modelId) =>
-          val model = project.schema.getModelById_!(modelId.trim)
-          resolveByUnique(NodeSelector(model, model.getFieldByName_!("id"), GraphQLIdGCValue(globalId)))
-            .map(_.map(mapDataItem(model)).map(_.copy(typeName = Some(model.name))))
-        case _ => Future.successful(None)
+      .flatMap {
+        case Some(stableModelIdentifier) =>
+          val model = project.schema.getModelByStableIdentifier_!(stableModelIdentifier.trim)
+          resolveByUnique(NodeSelector.forId(model, globalId)).map(_.map(mapDataItem(model)))
+
+        case _ =>
+          Future.successful(None)
       }
-      .flatMap(identity)
   }
 
   def resolveRelation(relationId: String, aId: String, bId: String): Future[ResolverResult] = {
@@ -159,13 +149,7 @@ case class DataResolver(project: Project, useMasterDatabaseOnly: Boolean = false
       relationId,
       Some(QueryArguments(None, None, None, None, None, Some(List(FilterElement("A", aId), FilterElement("B", bId))), None)))
 
-    performWithTiming("resolveRelation",
-                      readonlyClientDatabase
-                        .run(
-                          readOnlyDataItem(query)
-                        )
-                        .map(_.toList)
-                        .map(resultTransform))
+    performWithTiming("resolveRelation", readonlyClientDatabase.run(readOnlyDataItem(query)).map(_.toList).map(resultTransform))
   }
 
   def resolveByRelation(fromField: Field, fromModelId: String, args: Option[QueryArguments]): Future[ResolverResult] = {
@@ -294,25 +278,28 @@ case class DataResolver(project: Project, useMasterDatabaseOnly: Boolean = false
     def isType(fieldName: String, typeIdentifier: TypeIdentifier) = model.fields.exists(f => f.name == fieldName && f.typeIdentifier == typeIdentifier)
     def isList(fieldName: String)                                 = model.fields.exists(f => f.name == fieldName && f.isList)
 
-    val res = dataItem.copy(userData = dataItem.userData.map {
-      case (f, Some(value: java.math.BigDecimal)) if isType(f, TypeIdentifier.Float) && !isList(f) =>
-        (f, Some(value.doubleValue()))
+    val res = dataItem.copy(
+      userData = dataItem.userData.map {
+        case (f, Some(value: java.math.BigDecimal)) if isType(f, TypeIdentifier.Float) && !isList(f) =>
+          (f, Some(value.doubleValue()))
 
-      case (f, Some(value: String)) if isType(f, TypeIdentifier.Json) && !isList(f) =>
-        DataResolverValidations(f, Some(value), model, validate).validateSingleJson(value)
+        case (f, Some(value: String)) if isType(f, TypeIdentifier.Json) && !isList(f) =>
+          DataResolverValidations(f, Some(value), model, validate).validateSingleJson(value)
 
-      case (f, v) if isType(f, TypeIdentifier.Boolean) && !isList(f) =>
-        DataResolverValidations(f, v, model, validate).validateSingleBoolean
+        case (f, v) if isType(f, TypeIdentifier.Boolean) && !isList(f) =>
+          DataResolverValidations(f, v, model, validate).validateSingleBoolean
 
-      case (f, v) if isType(f, TypeIdentifier.Enum) && !isList(f) =>
-        DataResolverValidations(f, v, model, validate).validateSingleEnum
+        case (f, v) if isType(f, TypeIdentifier.Enum) && !isList(f) =>
+          DataResolverValidations(f, v, model, validate).validateSingleEnum
 
-      case (f, v) if isType(f, TypeIdentifier.Enum) =>
-        DataResolverValidations(f, v, model, validate).validateListEnum
+        case (f, v) if isType(f, TypeIdentifier.Enum) =>
+          DataResolverValidations(f, v, model, validate).validateListEnum
 
-      case (f, v) =>
-        (f, v)
-    })
+        case (f, v) =>
+          (f, v)
+      },
+      typeName = Some(model.name)
+    )
 
     res
   }

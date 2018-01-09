@@ -40,7 +40,7 @@ case class QueryArguments(
       case false => (defaultOrder, "asc")
     }
 
-    val nodeIdField = s"`$projectId`.`$modelId`.`nodeId`"
+    val nodeIdField   = s"`$projectId`.`$modelId`.`nodeId`"
     val positionField = s"`$projectId`.`$modelId`.`position`"
 
     // First order by the orderByField, then by id to break ties
@@ -101,17 +101,17 @@ case class QueryArguments(
 
   // If order is inverted we have to reverse the returned data items. We do this in-mem to keep the sql query simple.
   // Also, remove excess items from limit + 1 queries and set page info (hasNext, hasPrevious).
-  def extractResultTransform(projectId: String, modelId: String): ResultTransform = (list: List[DataItem]) => {generateResultTransform(list)}
+  def extractResultTransform(projectId: String, modelId: String): ResultTransform = (list: List[DataItem]) => { generateResultTransform(list) }
 
   def extractListResultTransform(projectId: String, modelId: String): ResultListTransform =
     (listValues: List[ScalarListValue]) => {
-      val list = listValues.map { listValue => DataItem(id = listValue.nodeId, userData = Map("value" -> Some(listValue.value))) }
+      val list = listValues.map(listValue => DataItem(id = listValue.nodeId, userData = Map("value" -> Some(listValue.value))))
       generateResultTransform(list)
     }
 
   private def generateResultTransform(list: List[DataItem]) = {
     val items = isReverseOrder match {
-      case true => list.reverse
+      case true  => list.reverse
       case false => list
     }
 
@@ -240,7 +240,7 @@ object QueryArguments {
       .map {
         case FilterElement(key, None, Some(field), filterName, None) =>
           None
-        case FilterElement(key, value, None, filterName, None) if filterName == "AND" => {
+        case FilterElement(key, value, None, filterName, None) if filterName == "AND" =>
           val values = value
             .asInstanceOf[Seq[Any]]
             .map(subFilter => generateFilterConditions(projectId, tableName, subFilter.asInstanceOf[Seq[Any]]))
@@ -248,8 +248,7 @@ object QueryArguments {
               case Some(x) => x
             }
           combineByAnd(values)
-        }
-        case FilterElement(key, value, None, filterName, None) if filterName == "AND" => {
+        case FilterElement(key, value, None, filterName, None) if filterName == "AND" =>
           val values = value
             .asInstanceOf[Seq[Any]]
             .map(subFilter => generateFilterConditions(projectId, tableName, subFilter.asInstanceOf[Seq[Any]]))
@@ -257,8 +256,7 @@ object QueryArguments {
               case Some(x) => x
             }
           combineByAnd(values)
-        }
-        case FilterElement(key, value, None, filterName, None) if filterName == "OR" => {
+        case FilterElement(key, value, None, filterName, None) if filterName == "OR" =>
           val values = value
             .asInstanceOf[Seq[Any]]
             .map(subFilter => generateFilterConditions(projectId, tableName, subFilter.asInstanceOf[Seq[Any]]))
@@ -266,8 +264,7 @@ object QueryArguments {
               case Some(x) => x
             }
           combineByOr(values)
-        }
-        case FilterElement(key, value, None, filterName, None) if filterName == "node" => {
+        case FilterElement(key, value, None, filterName, None) if filterName == "node" =>
           val values = value
             .asInstanceOf[Seq[Any]]
             .map(subFilter => generateFilterConditions(projectId, tableName, subFilter.asInstanceOf[Seq[Any]]))
@@ -275,16 +272,14 @@ object QueryArguments {
               case Some(x) => x
             }
           combineByOr(values)
-        }
         // the boolean filter comes from precomputed fields
-        case FilterElement(key, value, None, filterName, None) if filterName == "boolean" => {
+        case FilterElement(key, value, None, filterName, None) if filterName == "boolean" =>
           value match {
             case true =>
               Some(sql"TRUE")
             case false =>
               Some(sql"FALSE")
           }
-        }
         case FilterElement(key, value, Some(field), filterName, None) if filterName == "_contains" =>
           Some(sql"`#$projectId`.`#$tableName`.`#${field.name}` LIKE " concat escapeUnsafeParam(s"%$value%"))
 
@@ -315,29 +310,24 @@ object QueryArguments {
         case FilterElement(key, value, Some(field), filterName, None) if filterName == "_gte" =>
           Some(sql"`#$projectId`.`#$tableName`.`#${field.name}` >= " concat escapeUnsafeParam(value))
 
-        case FilterElement(key, null, Some(field), filterName, None) if filterName == "_in" => {
+        case FilterElement(key, null, Some(field), filterName, None) if filterName == "_in" =>
           Some(sql"false")
-        }
 
-        case FilterElement(key, value, Some(field), filterName, None) if filterName == "_in" => {
+        case FilterElement(key, value, Some(field), filterName, None) if filterName == "_in" =>
           value.asInstanceOf[Seq[Any]].nonEmpty match {
-            case true =>
-              Some(sql"`#$projectId`.`#$tableName`.`#${field.name}` " concat generateInStatement(value.asInstanceOf[Seq[Any]]))
+            case true  => Some(sql"`#$projectId`.`#$tableName`.`#${field.name}` " concat generateInStatement(value.asInstanceOf[Seq[Any]]))
             case false => Some(sql"false")
           }
-        }
 
-        case FilterElement(key, null, Some(field), filterName, None) if filterName == "_not_in" => {
+        case FilterElement(key, null, Some(field), filterName, None) if filterName == "_not_in" =>
           Some(sql"false")
-        }
 
-        case FilterElement(key, value, Some(field), filterName, None) if filterName == "_not_in" => {
+        case FilterElement(key, value, Some(field), filterName, None) if filterName == "_not_in" =>
           value.asInstanceOf[Seq[Any]].nonEmpty match {
             case true =>
               Some(sql"`#$projectId`.`#$tableName`.`#${field.name}` NOT " concat generateInStatement(value.asInstanceOf[Seq[Any]]))
             case false => Some(sql"true")
           }
-        }
 
         case FilterElement(key, null, Some(field), filterName, None) if filterName == "_not" =>
           Some(sql"`#$projectId`.`#$tableName`.`#${field.name}` IS NOT NULL")
@@ -417,4 +407,5 @@ object QueryArguments {
     val combinedItems = combineByComma(items.map(escapeUnsafeParam))
     sql" IN (" concat combinedItems concat sql")"
   }
+
 }
