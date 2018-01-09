@@ -8,13 +8,12 @@ import cool.graph.deploy.migration.migrator.{AsyncMigrator, Migrator}
 import cool.graph.deploy.schema.SchemaBuilder
 import cool.graph.deploy.seed.InternalDatabaseSeedActions
 import cool.graph.deploy.server.{ClusterAuth, ClusterAuthImpl}
-import cool.graph.shared.models.Project
+import cool.graph.messagebus.PubSubPublisher
 import slick.jdbc.MySQLProfile
 import slick.jdbc.MySQLProfile.api._
 
 import scala.concurrent.duration.{Duration, _}
 import scala.concurrent.{Await, Awaitable, ExecutionContext}
-import scala.util.Try
 
 trait DeployDependencies {
   implicit val system: ActorSystem
@@ -23,8 +22,9 @@ trait DeployDependencies {
 
   implicit def self: DeployDependencies
 
-  val migrator: Migrator
-  val clusterAuth: ClusterAuth
+  def migrator: Migrator
+  def clusterAuth: ClusterAuth
+  def invalidationPublisher: PubSubPublisher[String]
 
   lazy val internalDb           = setupAndGetInternalDatabase()
   lazy val clientDb             = Database.forConfig("client")
@@ -51,4 +51,6 @@ case class DeployDependenciesImpl()(implicit val system: ActorSystem, val materi
 
   val migrator: Migrator   = AsyncMigrator(clientDb, migrationPersistence, projectPersistence)
   override val clusterAuth = new ClusterAuthImpl(sys.env.get("CLUSTER_PUBLIC_KEY"))
+
+  override lazy val invalidationPublisher = ???
 }
