@@ -10,13 +10,16 @@ import play.api.libs.json.Json
 
 import scala.concurrent.Future
 
-case class GraphQlClientImpl(uri: String, headers: Map[String, String], akkaHttp: HttpExt)(
+case class GraphQlClientImpl(baseUri: String, headers: Map[String, String], akkaHttp: HttpExt)(
     implicit system: ActorSystem,
     materializer: ActorMaterializer
 ) extends GraphQlClient {
   import system.dispatcher
 
-  def sendQuery(query: String): Future[GraphQlResponse] = {
+  def sendQuery(query: String): Future[GraphQlResponse] = sendQuery(query, path = "")
+
+  override def sendQuery(query: String, path: String) = {
+    val uri    = s"$baseUri/${path.stripPrefix("/")}"
     val body   = Json.obj("query" -> query)
     val entity = HttpEntity(ContentTypes.`application/json`, body.toString)
     val akkaHeaders = headers
@@ -38,7 +41,6 @@ case class GraphQlClientImpl(uri: String, headers: Map[String, String], akkaHttp
 
     akkaHttp.singleRequest(akkaRequest).flatMap(convertResponse)
   }
-
   private def convertResponse(akkaResponse: HttpResponse): Future[GraphQlResponse] = {
     Unmarshal(akkaResponse).to[String].map { bodyString =>
       GraphQlResponse(akkaResponse.status.intValue, bodyString)
