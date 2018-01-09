@@ -157,7 +157,8 @@ case class SchemaBuilderImpl(
                        schemaMapper = schemaMapper,
                        migrationPersistence = migrationPersistence,
                        projectPersistence = projectPersistence,
-                       migrator = migrator
+                       migrator = migrator,
+                       graphQlClient = dependencies.graphQlClient(project)
                      ).execute
           } yield result
       }

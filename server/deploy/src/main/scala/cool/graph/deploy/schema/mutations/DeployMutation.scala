@@ -5,9 +5,10 @@ import cool.graph.deploy.migration._
 import cool.graph.deploy.migration.inference.{InvalidGCValue, MigrationStepsInferrer, RelationDirectiveNeeded, SchemaInferrer}
 import cool.graph.deploy.migration.migrator.Migrator
 import cool.graph.deploy.migration.validation.{SchemaError, SchemaSyntaxValidator}
+import cool.graph.graphql.GraphQlClient
 import cool.graph.shared.models.{Function, Migration, MigrationStep, Project, Schema, ServerSideSubscriptionFunction, WebhookDelivery}
-import org.scalactic.{Bad, Good}
-import play.api.libs.json.Json
+import org.scalactic.{Bad, Good, Or}
+import play.api.libs.json.{JsString, Json}
 import sangria.parser.QueryParser
 
 import scala.collection.Seq
@@ -21,7 +22,8 @@ case class DeployMutation(
     schemaMapper: SchemaMapper,
     migrationPersistence: MigrationPersistence,
     projectPersistence: ProjectPersistence,
-    migrator: Migrator
+    migrator: Migrator,
+    graphQlClient: GraphQlClient
 )(
     implicit ec: ExecutionContext
 ) extends Mutation[DeployMutationPayload] {
@@ -53,10 +55,15 @@ case class DeployMutation(
         val steps = migrationStepsInferrer.infer(project.schema, inferredNextSchema, schemaMapping)
         for {
           _         <- handleProjectUpdate()
-          migration <- handleMigration(inferredNextSchema, steps, functionsForInput)
+          functions <- callThis(args.functions)
+          migration <- functions match {
+                        case Bad(_)  => Future.successful(Some(Migration.empty(project.id)))
+                        case Good(_) => handleMigration(inferredNextSchema, steps, functionsForInput)
+                      }
         } yield {
+          val functionErrors = functions.swap.getOrElse(Vector.empty)
           MutationSuccess {
-            DeployMutationPayload(args.clientMutationId, migration = migration, errors = schemaErrors)
+            DeployMutationPayload(args.clientMutationId, migration = migration, errors = schemaErrors ++ functionErrors)
           }
         }
 
@@ -73,6 +80,38 @@ case class DeployMutation(
             ))
         }
     }
+  }
+
+//  val url           = ""
+//  val graphQlClient = GraphQlClient(url, Map("Authorization" -> s"Bearer ${project.secrets.head}"))
+
+  def callThis(fns: Vector[FunctionInput]): Future[Vector[Function] Or Vector[SchemaError]] = {
+    foo(fns).map { errors =>
+      if (errors.nonEmpty) {
+        Bad(errors)
+      } else {
+        Good(functionsForInput)
+      }
+    }
+  }
+
+  def foo(fns: Vector[FunctionInput]): Future[Vector[SchemaError]] = Future.sequence(fns.map(bar)).map(_.flatten)
+
+  def bar(fn: FunctionInput): Future[Vector[SchemaError]] = {
+    graphQlClient
+      .sendQuery(
+        s"""{
+       |  validateSubscriptionQuery(query: ${JsString(fn.query).toString()}){
+       |    errors
+       |  }
+       |}""".stripMargin
+      )
+      .map { response =>
+        response.bodyAs[Vector[String]]("data.validateSubscriptionQuery.errors").get
+      }
+      .map { errorMessages =>
+        errorMessages.map(error => SchemaError(`type` = "Subscription", field = fn.name, description = error))
+      }
   }
 
   val functionsForInput: Vector[Function] = {

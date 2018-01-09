@@ -11,9 +11,11 @@ import cool.graph.api.subscriptions.Webhook
 import cool.graph.deploy.DeployDependencies
 import cool.graph.deploy.migration.migrator.{AsyncMigrator, Migrator}
 import cool.graph.deploy.server.ClusterAuthImpl
+import cool.graph.graphql.GraphQlClient
 import cool.graph.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
 import cool.graph.messagebus.queue.inmemory.InMemoryAkkaQueue
 import cool.graph.messagebus.{PubSubPublisher, PubSubSubscriber, QueueConsumer, QueuePublisher}
+import cool.graph.shared.models.Project
 import cool.graph.subscriptions.SubscriptionDependencies
 import cool.graph.subscriptions.protocol.SubscriptionProtocolV05.Responses.SubscriptionSessionResponseV05
 import cool.graph.subscriptions.protocol.SubscriptionProtocolV07.Responses.SubscriptionSessionResponse
@@ -81,4 +83,8 @@ case class SingleServerDependencies()(implicit val system: ActorSystem, val mate
   override lazy val webhooksConsumer = webhooksQueue.map[WorkerWebhook](Converters.apiWebhook2WorkerWebhook)
   override lazy val httpClient       = SimpleHttpClient()
 
+  override def graphQlClient(project: Project) = {
+    val url = sys.env.getOrElse("CLUSTER_ADDRESS", sys.error("env var CLUSTER_ADDRESS is not set"))
+    GraphQlClient(url, Map("Authorization" -> s"Bearer ${project.secrets.head}"))
+  }
 }

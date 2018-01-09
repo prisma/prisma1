@@ -7,6 +7,8 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
 
+  import cool.graph.stub.Import._
+
   val projectPersistence   = testDependencies.projectPersistence
   val migrationPersistence = testDependencies.migrationPersistence
 
@@ -352,7 +354,44 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
 //    Thread.sleep(30000)
 //  }
 
-  "DeployMutation" should "create functions" in {
+  "DeployMutation" should "return an error if a subscription query is invalid" in {
+    val schema = """
+                   |type TestModel {
+                   |  id: ID! @unique
+                   |  test: String
+                   |}
+                 """.stripMargin
+
+    val project = setupProject(schema)
+
+    val fnInput = FunctionInput(name = "my-function", query = "invalid query", url = "http://whatever.com", headers = Vector(HeaderInput("header1", "value1")))
+
+    val result = {
+      val ProjectId(name, stage) = project.projectId
+      val stub = Request("POST", s"/$name/$stage/private")
+        .stub(
+          200,
+          """{
+          |  "data": {
+          |    "validateSubscriptionQuery": {
+          |      "errors": ["This did not work!"]
+          |    }
+          |  }
+          |}
+        """.stripMargin
+        )
+        .ignoreBody
+      withStubServer(List(stub), stubNotFoundStatusCode = 418) {
+        deploySchema(project, schema, Vector(fnInput))
+      }
+    }
+    result.pathAsSeq("data.deploy.errors") should not(be(empty))
+
+    val reloadedProject = projectPersistence.load(project.id).await.get
+    reloadedProject.functions should have(size(0))
+  }
+
+  "DeployMutation" should "create a server side subscription if the subscription query is valid" in {
     val schema = """
                    |type TestModel {
                    |  id: ID! @unique
@@ -363,7 +402,25 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
     val project = setupProject(schema)
 
     val fnInput = FunctionInput(name = "my-function", query = "my query", url = "http://whatever.com", headers = Vector(HeaderInput("header1", "value1")))
-    val result  = deploySchema(project, schema, Vector(fnInput))
+    val result = {
+      val ProjectId(name, stage) = project.projectId
+      val stub = Request("POST", s"/$name/$stage/private")
+        .stub(
+          200,
+          """{
+            |  "data": {
+            |    "validateSubscriptionQuery": {
+            |      "errors": []
+            |    }
+            |  }
+            |}
+          """.stripMargin
+        )
+        .ignoreBody
+      withStubServer(List(stub), stubNotFoundStatusCode = 418) {
+        deploySchema(project, schema, Vector(fnInput))
+      }
+    }
     result.pathAsSeq("data.deploy.errors") should be(empty)
 
     val reloadedProject = projectPersistence.load(project.id).await.get

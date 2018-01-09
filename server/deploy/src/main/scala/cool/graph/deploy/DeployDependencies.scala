@@ -8,6 +8,7 @@ import cool.graph.deploy.migration.migrator.{AsyncMigrator, Migrator}
 import cool.graph.deploy.schema.SchemaBuilder
 import cool.graph.deploy.seed.InternalDatabaseSeedActions
 import cool.graph.deploy.server.{ClusterAuth, ClusterAuthImpl}
+import cool.graph.graphql.GraphQlClient
 import cool.graph.shared.models.Project
 import slick.jdbc.MySQLProfile
 import slick.jdbc.MySQLProfile.api._
@@ -23,8 +24,9 @@ trait DeployDependencies {
 
   implicit def self: DeployDependencies
 
-  val migrator: Migrator
-  val clusterAuth: ClusterAuth
+  def migrator: Migrator
+  def clusterAuth: ClusterAuth
+  def graphQlClient(project: Project): GraphQlClient
 
   lazy val internalDb           = setupAndGetInternalDatabase()
   lazy val clientDb             = Database.forConfig("client")
@@ -49,6 +51,10 @@ trait DeployDependencies {
 case class DeployDependenciesImpl()(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends DeployDependencies {
   override implicit def self: DeployDependencies = this
 
-  val migrator: Migrator   = AsyncMigrator(clientDb, migrationPersistence, projectPersistence)
-  override val clusterAuth = new ClusterAuthImpl(sys.env.get("CLUSTER_PUBLIC_KEY"))
+  override lazy val migrator: Migrator = AsyncMigrator(clientDb, migrationPersistence, projectPersistence)
+  override lazy val clusterAuth        = new ClusterAuthImpl(sys.env.get("CLUSTER_PUBLIC_KEY"))
+  override def graphQlClient(project: Project) = {
+    val url = sys.env.getOrElse("CLUSTER_ADDRESS", sys.error("env var CLUSTER_ADDRESS is not set"))
+    GraphQlClient(url, Map("Authorization" -> s"Bearer ${project.secrets.head}"))
+  }
 }
