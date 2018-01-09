@@ -25,7 +25,9 @@ case class InvalidName(name: String, entityType: String) extends AbstractDeployA
 
 case class InvalidDeployment(deployErrorMessage: String) extends AbstractDeployApiError(deployErrorMessage, 4003)
 
-case class InvalidToken(reason: String) extends AbstractDeployApiError(s"Your token is invalid: $reason", 3015)
+case class InvalidToken(reason: String) extends AbstractDeployApiError(s"Authentication token is invalid: $reason", 3015)
+
+object TokenExpired extends AbstractDeployApiError(s"Authentication token is expired", 3016)
 
 object DeploymentInProgress
     extends AbstractDeployApiError(

@@ -7,7 +7,7 @@ import cool.graph.deploy.database.schema.InternalDatabaseSchema
 import cool.graph.deploy.migration.migrator.{AsyncMigrator, Migrator}
 import cool.graph.deploy.schema.SchemaBuilder
 import cool.graph.deploy.seed.InternalDatabaseSeedActions
-import cool.graph.deploy.server.{ClusterAuth, ClusterAuthImpl}
+import cool.graph.deploy.server.{ClusterAuth, ClusterAuthImpl, DummyClusterAuth}
 import cool.graph.messagebus.PubSubPublisher
 import slick.jdbc.MySQLProfile
 import slick.jdbc.MySQLProfile.api._
@@ -49,8 +49,13 @@ trait DeployDependencies {
 case class DeployDependenciesImpl()(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends DeployDependencies {
   override implicit def self: DeployDependencies = this
 
-  val migrator: Migrator   = AsyncMigrator(clientDb, migrationPersistence, projectPersistence)
-  override val clusterAuth = new ClusterAuthImpl(sys.env.get("CLUSTER_PUBLIC_KEY"))
+  val migrator: Migrator = AsyncMigrator(clientDb, migrationPersistence, projectPersistence)
+  val clusterAuth = {
+    sys.env.get("CLUSTER_PUBLIC_KEY") match {
+      case Some(publicKey) => ClusterAuthImpl(publicKey)
+      case None            => DummyClusterAuth()
+    }
+  }
 
   override lazy val invalidationPublisher = ???
 }

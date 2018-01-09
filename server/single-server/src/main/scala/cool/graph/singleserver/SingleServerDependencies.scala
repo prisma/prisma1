@@ -10,7 +10,7 @@ import cool.graph.api.schema.SchemaBuilder
 import cool.graph.api.subscriptions.Webhook
 import cool.graph.deploy.DeployDependencies
 import cool.graph.deploy.migration.migrator.{AsyncMigrator, Migrator}
-import cool.graph.deploy.server.ClusterAuthImpl
+import cool.graph.deploy.server.{ClusterAuthImpl, DummyClusterAuth}
 import cool.graph.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
 import cool.graph.messagebus.queue.inmemory.InMemoryAkkaQueue
 import cool.graph.messagebus.{PubSubPublisher, PubSubSubscriber, QueueConsumer, QueuePublisher}
@@ -40,8 +40,14 @@ case class SingleServerDependencies()(implicit val system: ActorSystem, val mate
     val schemaManagerSecret   = config.getString("schemaManagerSecret")
     ProjectFetcherImpl(Vector.empty, config, schemaManagerEndpoint = schemaManagerEndpoint, schemaManagerSecret = schemaManagerSecret)
   }
+
   override val migrator: Migrator = AsyncMigrator(clientDb, migrationPersistence, projectPersistence)
-  override val clusterAuth        = new ClusterAuthImpl(sys.env.get("CLUSTER_PUBLIC_KEY"))
+  override val clusterAuth = {
+    sys.env.get("CLUSTER_PUBLIC_KEY") match {
+      case Some(publicKey) => ClusterAuthImpl(publicKey)
+      case None            => DummyClusterAuth()
+    }
+  }
 
   lazy val invalidationPubSub: InMemoryAkkaPubSub[String] = InMemoryAkkaPubSub[String]()
 

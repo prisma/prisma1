@@ -1,6 +1,5 @@
-package cool.graph.deploy.migration
+package cool.graph.deploy.migration.inference
 
-import cool.graph.deploy.migration.inference._
 import cool.graph.shared.models.Schema
 import cool.graph.shared.project_dsl.SchemaDsl
 import org.scalactic.Or

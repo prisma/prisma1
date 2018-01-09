@@ -1,6 +1,5 @@
-package cool.graph.deploy.migration
+package cool.graph.deploy.migration.inference
 
-import cool.graph.deploy.migration.inference.{MigrationStepsInferrer, SchemaInferrer, SchemaMapping}
 import cool.graph.shared.models._
 import org.scalatest.{FlatSpec, Matchers}
 import sangria.parser.QueryParser

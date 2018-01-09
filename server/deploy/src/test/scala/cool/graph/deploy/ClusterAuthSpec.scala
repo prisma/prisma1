@@ -1,47 +1,48 @@
 package cool.graph.deploy
 
-import cool.graph.deploy.server.{ClusterAuth, ClusterAuthImpl}
-import cool.graph.shared.models.{Project, Schema}
+import java.time.Instant
+
+import cool.graph.deploy.server.ClusterAuthImpl
 import org.scalatest.{FlatSpec, Matchers}
 
-import scala.util.{Failure, Success}
-
 class ClusterAuthSpec extends FlatSpec with Matchers {
-  "Grant with wildcard for workspace, service and stage" should "give access to any service and stage" in {
-    val auth = new ClusterAuthImpl(Some(publicKey))
-    val jwt  = createJwt("""[{"target": "*/*/*", "action": "*"}]""")
-
-    auth.verify(Project("service@stage", "", schema = Schema()), None).isSuccess shouldBe false
-    auth.verify(Project("service@stage", "", schema = Schema()), Some(jwt)).isSuccess shouldBe true
-  }
 
   "Grant with wildcard for service and stage" should "give access to any service and stage" in {
-    val auth = new ClusterAuthImpl(Some(publicKey))
+    val auth = ClusterAuthImpl(publicKey)
     val jwt  = createJwt("""[{"target": "*/*", "action": "*"}]""")
 
-    auth.verify(Project("service@stage", "", schema = Schema()), Some(jwt)).isSuccess shouldBe true
+    auth.verify("service", "stage", Some(jwt)).isSuccess shouldBe true
   }
 
   "Grant with invalid target" should "not give access" in {
-    val auth    = new ClusterAuthImpl(Some(publicKey))
-    val project = Project("service@stage", "", schema = Schema())
+    val auth  = ClusterAuthImpl(publicKey)
+    val name  = "service"
+    val stage = "stage"
 
-    auth.verify(project, Some(createJwt("""[{"target": "/*", "action": "*"}]"""))).isSuccess shouldBe false
-    auth.verify(project, Some(createJwt("""[{"target": "*", "action": "*"}]"""))).isSuccess shouldBe false
-    auth.verify(project, Some(createJwt("""[{"target": "abba", "action": "*"}]"""))).isSuccess shouldBe false
-    auth.verify(project, Some(createJwt("""[{"target": "/*/*/*", "action": "*"}]"""))).isSuccess shouldBe false
-    auth.verify(project, Some(createJwt("""[{"target": "*/*/*/*", "action": "*"}]"""))).isSuccess shouldBe false
-    auth.verify(project, Some(createJwt("""[{"target": "", "action": "*"}]"""))).isSuccess shouldBe false
-    auth.verify(project, Some(createJwt("""[{"target": "/", "action": "*"}]"""))).isSuccess shouldBe false
-    auth.verify(project, Some(createJwt("""[{"target": "//", "action": "*"}]"""))).isSuccess shouldBe false
+    auth.verify(name, stage, Some(createJwt("""[{"target": "/*", "action": "*"}]"""))).isSuccess shouldBe false
+    auth.verify(name, stage, Some(createJwt("""[{"target": "*", "action": "*"}]"""))).isSuccess shouldBe false
+    auth.verify(name, stage, Some(createJwt("""[{"target": "abba", "action": "*"}]"""))).isSuccess shouldBe false
+    auth.verify(name, stage, Some(createJwt("""[{"target": "/*/*", "action": "*"}]"""))).isSuccess shouldBe false
+    auth.verify(name, stage, Some(createJwt("""[{"target": "*/*/*", "action": "*"}]"""))).isSuccess shouldBe false
+    auth.verify(name, stage, Some(createJwt("""[{"target": "", "action": "*"}]"""))).isSuccess shouldBe false
+    auth.verify(name, stage, Some(createJwt("""[{"target": "/", "action": "*"}]"""))).isSuccess shouldBe false
+    auth.verify(name, stage, Some(createJwt("""[{"target": "//", "action": "*"}]"""))).isSuccess shouldBe false
   }
 
   "Grant with wildcard for stage" should "give access to defined service only" in {
-    val auth = new ClusterAuthImpl(Some(publicKey))
+    val auth = ClusterAuthImpl(publicKey)
     val jwt  = createJwt("""[{"target": "service/*", "action": "*"}]""")
 
-    auth.verify(Project("service@stage", "", schema = Schema()), Some(jwt)).isSuccess shouldBe true
-    auth.verify(Project("otherService@stage", "", schema = Schema()), Some(jwt)).isSuccess shouldBe false
+    auth.verify("service", "stage", Some(jwt)).isSuccess shouldBe true
+    auth.verify("otherService", "stage", Some(jwt)).isSuccess shouldBe false
+  }
+
+  "An expired token" should "not give access" in {
+    val auth = ClusterAuthImpl(publicKey)
+    val jwt  = createJwt("""[{"target": "service/*", "action": "*"}]""", expiration = (Instant.now().toEpochMilli / 1000) - 5)
+
+    auth.verify("service", "stage", Some(jwt)).isSuccess shouldBe false
+    auth.verify("otherService", "stage", Some(jwt)).isSuccess shouldBe false
   }
 
   val privateKey =
@@ -83,10 +84,10 @@ qQR5IBPJHVVMiSntY0eW4/4A9HoZfjQYG5R4jyzp4NiChXRRGZhy7cvn3K7AmGsq
 0QIDAQAB
 -----END PUBLIC KEY-----"""
 
-  def createJwt(grants: String) = {
+  def createJwt(grants: String, expiration: Long = (Instant.now().toEpochMilli / 1000) + 5) = {
     import pdi.jwt.{Jwt, JwtAlgorithm}
 
-    val claim = s"""{"grants": $grants}"""
+    val claim = s"""{"grants": $grants, "exp": $expiration}"""
 
     Jwt.encode(claim = claim, algorithm = JwtAlgorithm.RS256, key = privateKey)
   }
