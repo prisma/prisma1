@@ -10,17 +10,16 @@ function renderList(items: string[][]): string {
   const max = require('lodash.maxby')
 
   const maxLength = max(items, '[0].length')[0].length
-  const lines = items
-    .map(i => {
-      let left = i[0]
-      let right = i[1]
-      if (!right) {
-        return left
-      }
-      left = `${S(left).padRight(maxLength)}`
-      right = linewrap(maxLength + 2, right)
-      return `${left}    ${right}`
-    })
+  const lines = items.map(i => {
+    let left = i[0]
+    let right = i[1]
+    if (!right) {
+      return left
+    }
+    left = `${S(left).padRight(maxLength)}`
+    right = linewrap(maxLength + 2, right)
+    return `${left}    ${right}`
+  })
   return lines.join('\n')
 }
 
@@ -58,15 +57,21 @@ export default class Help {
   // TODO: command (cmd: Class<Command<*>>): string {
   command(cmd: any): string {
     const color = this.out.color
-    const flags = Object.keys(cmd.flags || {}).map(f => [f, cmd.flags[f]]).filter(f => !f[1].hidden)
+    const flags = Object.keys(cmd.flags || {})
+      .map(f => [f, cmd.flags[f]])
+      .filter(f => !f[1].hidden)
     const args = (cmd.args || []).filter(a => !a.hidden)
     const hasFlags = flags.length ? ` ${color.green('[flags]')}` : ''
-    const usage = `${color.bold('Usage:')} ${this.config.bin} ${buildUsage(cmd)}${hasFlags}\n`
-    return [usage, cmd.description ? `\n${color.bold(cmd.description.trim())}\n` : '',
+    const usage = `${color.bold('Usage:')} ${this.config.bin} ${buildUsage(
+      cmd,
+    )}${hasFlags}\n`
+    return [
+      usage,
+      cmd.description ? `\n${color.bold(cmd.description.trim())}\n` : '',
       this.renderAliases(cmd.aliases),
       this.renderArgs(args),
       this.renderFlags(flags),
-      cmd.help ? `\n${cmd.help.trim()}\n` : ''
+      cmd.help ? `\n${cmd.help.trim()}\n` : '',
     ].join('')
   }
 
@@ -74,7 +79,7 @@ export default class Help {
   commandLine(cmd: any): string[] {
     return [
       buildUsage(cmd),
-      cmd.description ? this.out.color.dim(cmd.description) : null
+      cmd.description ? this.out.color.dim(cmd.description) : null,
     ]
   }
 
@@ -90,15 +95,21 @@ export default class Help {
     if (!args.find(f => !!f.description)) {
       return ''
     }
-    return '\n' + renderList(args.map(a => {
-      return [
-        a.name.toUpperCase(),
-        a.description ? this.out.color.dim(a.description) : null
-      ]
-    })) + '\n'
+    return (
+      '\n' +
+      renderList(
+        args.map(a => {
+          return [
+            a.name.toUpperCase(),
+            a.description ? this.out.color.dim(a.description) : null,
+          ]
+        }),
+      ) +
+      '\n'
+    )
   }
 
-// TODO renderFlags (flags: [string, Flag][]): string {
+  // TODO renderFlags (flags: [string, Flag][]): string {
   renderFlags(flags: any): string {
     if (!flags.length) {
       return ''
@@ -115,24 +126,29 @@ export default class Help {
       }
       return b[0] < a[0] ? 1 : 0
     })
-    return `\n${this.out.color.green('Flags:')}\n` +
-      renderList(flags.map(([name, f]) => {
-        const label: string[] = []
-        if (f.char) {
-          label.push(`-${f.char}`)
-        }
-        if (name) {
-          label.push(` --${name}`)
-        }
-        const usage = f.parse ? ` ${name.toUpperCase()}` : ''
-        let description = f.description || ''
-        if (f.required || f.optional === false) {
-          description = `(required) ${description}`
-        }
-        return [
-          ` ${label.join(',').trim()}` + usage,
-          description ? this.out.color.dim(description) : null
-        ]
-      })) + '\n'
+    return (
+      `\n${this.out.color.green('Flags:')}\n` +
+      renderList(
+        flags.map(([name, f]) => {
+          const label: string[] = []
+          if (f.char) {
+            label.push(`-${f.char}`)
+          }
+          if (name) {
+            label.push(` --${name}`)
+          }
+          const usage = f.parse ? ` ${name.toUpperCase()}` : ''
+          let description = f.description || ''
+          if (f.required || f.optional === false) {
+            description = `(required) ${description}`
+          }
+          return [
+            ` ${label.join(',').trim()}` + usage,
+            description ? this.out.color.dim(description) : null,
+          ]
+        }),
+      ) +
+      '\n'
+    )
   }
 }

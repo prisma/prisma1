@@ -156,6 +156,10 @@ export class GraphcoolDefinitionClass {
     return null
   }
 
+  getDeployName() {
+    return concatName(this.definition!.service!, this.getWorkspace())
+  }
+
   async addCluster(cluster: string, args: any) {
     if (!this.definition!.cluster) {
       this.definition!.cluster = cluster
@@ -164,4 +168,9 @@ export class GraphcoolDefinitionClass {
       await this.load(args)
     }
   }
+}
+
+export function concatName(name: string, workspace: string | null) {
+  const workspaceString = workspace ? `${workspace}~` : ''
+  return `${workspaceString}${name}`
 }

@@ -22,7 +22,7 @@ import { getBinPath } from './getbin'
 import * as semver from 'semver'
 const debug = require('debug')('deploy')
 import * as Raven from 'raven'
-import { prettyTime } from '../../util'
+import { prettyTime, concatName } from '../../util'
 import { spawn } from '../../spawn'
 import * as sillyname from 'sillyname'
 
@@ -253,7 +253,7 @@ ${chalk.gray(
   ): Promise<boolean> {
     try {
       return Boolean(
-        await this.client.getProject(this.concatName(name, workspace), stage),
+        await this.client.getProject(concatName(name, workspace), stage),
       )
     } catch (e) {
       return false
@@ -267,16 +267,11 @@ ${chalk.gray(
   ): Promise<void> {
     this.out.action.start(`Creating stage ${stage} for service ${name}`)
     const createdProject = await this.client.addProject(
-      this.concatName(name, workspace),
+      concatName(name, workspace),
       stage,
       this.definition.secrets,
     )
     this.out.action.stop()
-  }
-
-  private concatName(name: string, workspace: string | null) {
-    const workspaceString = workspace ? `${workspace}~` : ''
-    return `${workspaceString}${name}`
   }
 
   private async deploy(
@@ -304,7 +299,7 @@ ${chalk.gray(
     )
 
     const migrationResult: DeployPayload = await this.client.deploy(
-      this.concatName(serviceName, workspace),
+      concatName(serviceName, workspace),
       stageName,
       this.definition.typesString!,
       dryRun,
@@ -327,7 +322,7 @@ ${chalk.gray(
       while (!done) {
         const revision = migrationResult.migration.revision
         const migration = await this.client.getMigration(
-          this.concatName(serviceName, workspace),
+          concatName(serviceName, workspace),
           stageName,
         )
 
@@ -410,7 +405,7 @@ ${chalk.gray(
       this.out.action.start(`Writing database schema to \`${schemaPath}\` `)
       const schemaString = await fetchAndPrintSchema(
         this.client,
-        this.concatName(serviceName, this.definition.getWorkspace()),
+        concatName(serviceName, this.definition.getWorkspace()),
         stageName,
         token,
       )

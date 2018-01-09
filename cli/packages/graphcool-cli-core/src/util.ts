@@ -27,3 +27,8 @@ export function prettyTime(time: number): string {
     time > 1000 ? (Math.round(time / 100) / 10).toFixed(1) + 's' : time + 'ms'
   return chalk.cyan(output)
 }
+
+export function concatName(name: string, workspace: string | null) {
+  const workspaceString = workspace ? `${workspace}~` : ''
+  return `${workspaceString}${name}`
+}

@@ -511,6 +511,23 @@ export class Client {
     return project
   }
 
+  async deleteProject(name: string, stage: string): Promise<void> {
+    const mutation = `\
+      mutation ($input: DeleteProjectInput!) {
+        deleteProject(input: $input) {
+          clientMutationId
+        }
+      }
+      `
+
+    await this.client.request(mutation, {
+      input: {
+        name,
+        stage,
+      },
+    })
+  }
+
   async deploy(
     name: string,
     stage: string,

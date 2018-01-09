@@ -15,7 +15,7 @@ import Eject from './commands/local/eject'
 // import PsLocal from './commands/local/ps'
 import Account from './commands/account/account'
 import Reset from './commands/reset/reset'
-import Clusters from './commands/clusters/index'
+import ClusterList from './commands/cluster/list'
 import Import from './commands/import/index'
 import Export from './commands/export/index'
 import Nuke from './commands/local/nuke'
@@ -25,6 +25,7 @@ import PsLocal from './commands/local/ps'
 import Token from './commands/token/token'
 import Login from './commands/login/login'
 import ClusterToken from './commands/token/cluster-token'
+import Delete from './commands/delete/index'
 
 export const groups = [
   {
@@ -42,6 +43,10 @@ export const groups = [
   {
     key: 'cloud',
     name: 'Cloud',
+  },
+  {
+    key: 'clusters',
+    name: 'Clusters',
   },
 ]
 
@@ -64,7 +69,7 @@ export const topics = [
   },
   { name: 'token', description: 'Create a new service token', group: 'db' },
   { name: 'list', description: 'List all deployed services', group: 'db' },
-  { name: 'clusters', description: 'List all clusters', group: 'db' },
+  { name: 'delete', description: 'Delete an existing service', group: 'db' },
   /* Data workflows */
   {
     name: 'playground',
@@ -104,6 +109,8 @@ export const topics = [
     description: 'Print account information',
     group: 'cloud',
   },
+  /* Clusters */
+  { name: 'cluster', description: 'Manage local clusters', group: 'clusters' },
 ]
 
 export const commands = [
@@ -114,6 +121,7 @@ export const commands = [
   Playground,
   ConsoleCommand,
   List,
+  Delete,
   Up,
   Stop,
   Logs,
@@ -121,7 +129,6 @@ export const commands = [
   Eject,
   Nuke,
   Reset,
-  Clusters,
   Import,
   Export,
   PsLocal,
@@ -129,6 +136,7 @@ export const commands = [
   Login,
   Account,
   ClusterToken,
+  ClusterList,
 ]
 
 export {
@@ -139,7 +147,7 @@ export {
   Playground,
   // Console,
   List,
-  // Delete,
+  Delete,
   // RootTokens,
   // FunctionLogs,
   UpgradeLocal,
@@ -149,11 +157,11 @@ export {
   Logs,
   PsLocal,
   Reset,
-  Clusters,
   Account,
   Import,
   Export,
   Token,
   Login,
   ClusterToken,
+  ClusterList,
 }
