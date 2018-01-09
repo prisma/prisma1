@@ -29,10 +29,10 @@ npm install -g graphql-cli graphcool@beta
 
 <Instruction>
 
-Now you can use `graphql create` to bootstrap your project. With the following command, you name your project `my-app` and choose to use the `tpyescript-basic` boilerplate:
+Now you can use `graphql create` to bootstrap your project. With the following command, you name your project `my-app` and choose to use the `typescript-basic` boilerplate:
 
 ```sh
-graphql create my-app --boilerplate tpyescript-basic
+graphql create my-app --boilerplate typescript-basic
 cd my-app
 ```
 
