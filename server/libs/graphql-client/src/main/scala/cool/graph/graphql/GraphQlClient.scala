@@ -10,7 +10,7 @@ import scala.util.{Failure, Success, Try}
 
 trait GraphQlClient {
   def sendQuery(query: String): Future[GraphQlResponse]
-  def sendQuery(query: String, path: String): Future[GraphQlResponse]
+  def sendQuery(query: String, path: String, headers: Map[String, String]): Future[GraphQlResponse]
 }
 
 object GraphQlClient {
