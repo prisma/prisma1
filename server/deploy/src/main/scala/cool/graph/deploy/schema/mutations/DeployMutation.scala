@@ -55,10 +55,10 @@ case class DeployMutation(
         val steps = migrationStepsInferrer.infer(project.schema, inferredNextSchema, schemaMapping)
         for {
           _         <- handleProjectUpdate()
-          functions <- callThis(args.functions)
+          functions <- getFunctionModelsOrErrors(args.functions)
           migration <- functions match {
-                        case Bad(_)  => Future.successful(Some(Migration.empty(project.id)))
-                        case Good(_) => handleMigration(inferredNextSchema, steps, functionsForInput)
+                        case Bad(_)                  => Future.successful(Some(Migration.empty(project.id)))
+                        case Good(functionsForInput) => handleMigration(inferredNextSchema, steps, functionsForInput)
                       }
         } yield {
           val functionErrors = functions.swap.getOrElse(Vector.empty)
@@ -74,30 +74,35 @@ case class DeployMutation(
               clientMutationId = args.clientMutationId,
               migration = None,
               errors = List(err match {
-                case RelationDirectiveNeeded(t1, t1Fields, t2, t2Fields) => SchemaError.global(s"Relation directive required for types $t1 and $t2.")
-                case InvalidGCValue(err)                                 => SchemaError.global(s"Invalid value '${err.value}' for type ${err.typeIdentifier}.")
+                case RelationDirectiveNeeded(t1, _, t2, _) => SchemaError.global(s"Relation directive required for types $t1 and $t2.")
+                case InvalidGCValue(err)                   => SchemaError.global(s"Invalid value '${err.value}' for type ${err.typeIdentifier}.")
               })
             ))
         }
     }
   }
 
-//  val url           = ""
-//  val graphQlClient = GraphQlClient(url, Map("Authorization" -> s"Bearer ${project.secrets.head}"))
+  private def handleProjectUpdate(): Future[_] = {
+    if (project.secrets != args.secrets && !args.dryRun.getOrElse(false)) {
+      projectPersistence.update(project.copy(secrets = args.secrets))
+    } else {
+      Future.unit
+    }
+  }
 
-  def callThis(fns: Vector[FunctionInput]): Future[Vector[Function] Or Vector[SchemaError]] = {
-    foo(fns).map { errors =>
+  def getFunctionModelsOrErrors(fns: Vector[FunctionInput]): Future[Vector[Function] Or Vector[SchemaError]] = {
+    validateFunctionInputs(fns).map { errors =>
       if (errors.nonEmpty) {
         Bad(errors)
       } else {
-        Good(functionsForInput)
+        Good(args.functions.map(convertFunctionInput))
       }
     }
   }
 
-  def foo(fns: Vector[FunctionInput]): Future[Vector[SchemaError]] = Future.sequence(fns.map(bar)).map(_.flatten)
+  private def validateFunctionInputs(fns: Vector[FunctionInput]): Future[Vector[SchemaError]] = Future.sequence(fns.map(validateFunctionInput)).map(_.flatten)
 
-  def bar(fn: FunctionInput): Future[Vector[SchemaError]] = {
+  private def validateFunctionInput(fn: FunctionInput): Future[Vector[SchemaError]] = {
     graphQlClient
       .sendQuery(
         s"""{
@@ -114,26 +119,16 @@ case class DeployMutation(
       }
   }
 
-  val functionsForInput: Vector[Function] = {
-    args.functions.map { fnInput =>
-      ServerSideSubscriptionFunction(
-        name = fnInput.name,
-        isActive = true,
-        delivery = WebhookDelivery(
-          url = fnInput.url,
-          headers = fnInput.headers.map(header => header.name -> header.value)
-        ),
-        query = fnInput.query
-      )
-    }
-  }
-
-  private def handleProjectUpdate(): Future[_] = {
-    if (project.secrets != args.secrets && !args.dryRun.getOrElse(false)) {
-      projectPersistence.update(project.copy(secrets = args.secrets))
-    } else {
-      Future.unit
-    }
+  private def convertFunctionInput(fnInput: FunctionInput): ServerSideSubscriptionFunction = {
+    ServerSideSubscriptionFunction(
+      name = fnInput.name,
+      isActive = true,
+      delivery = WebhookDelivery(
+        url = fnInput.url,
+        headers = fnInput.headers.map(header => header.name -> header.value)
+      ),
+      query = fnInput.query
+    )
   }
 
   private def handleMigration(nextSchema: Schema, steps: Vector[MigrationStep], functions: Vector[Function]): Future[Option[Migration]] = {
