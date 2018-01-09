@@ -43,7 +43,7 @@ object DeployField {
         dryRun = node.optionalArgAsBoolean("dryRun"),
         secrets = node.optionalArgAs[Vector[String]]("secrets").getOrElse(Vector.empty),
         functions = {
-          val functionNodes = node.optionalArgAs[Vector[marshaller.Node]]("functions").getOrElse(Vector.empty)
+          val functionNodes = node.optionalArgAs[Vector[marshaller.Node]]("subscriptions").getOrElse(Vector.empty)
           functionNodes.map { functionNode =>
             val headerNodes = functionNode.requiredArgAs[Vector[marshaller.Node]]("headers")
             val headers     = headerNodes.map(node => HeaderInput(node.requiredArgAsString("name"), node.requiredArgAsString("value")))
