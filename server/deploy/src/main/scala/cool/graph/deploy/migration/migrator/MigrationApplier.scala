@@ -71,7 +71,7 @@ case class MigrationApplierImpl(
       } yield x
     }
     def abortRollback(err: Throwable) = {
-      println("encountered exception while unapplying migration. will abort.")
+      println("encountered exception while rolling back migration. will abort.")
       val failedMigration = migration.markAsRollBackFailure
       for {
         _ <- migrationPersistence.updateMigrationStatus(migration.id, failedMigration.status)

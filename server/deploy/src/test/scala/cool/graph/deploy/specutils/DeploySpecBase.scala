@@ -3,7 +3,7 @@ package cool.graph.deploy.specutils
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import cool.graph.cuid.Cuid
-import cool.graph.shared.models.Project
+import cool.graph.shared.models.{Migration, MigrationId, Project}
 import cool.graph.utils.await.AwaitUtils
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
 import spray.json.JsString
@@ -46,7 +46,7 @@ trait DeploySpecBase extends BeforeAndAfterEach with BeforeAndAfterAll with Awai
     projectsToCleanUp.clear()
   }
 
-  def setupProject(schema: String, name: String = Cuid.createCuid(), stage: String = Cuid.createCuid()): Project = {
+  def setupProject(schema: String, name: String = Cuid.createCuid(), stage: String = Cuid.createCuid()): (Project, Migration) = {
     server.query(s"""
         |mutation {
         | addProject(input: {
@@ -64,9 +64,12 @@ trait DeploySpecBase extends BeforeAndAfterEach with BeforeAndAfterAll with Awai
     val projectId = name + "@" + stage
     projectsToCleanUp :+ projectId
 
-    server.query(s"""
+    val deployResult = server.query(s"""
         |mutation {
         |  deploy(input:{name: "$name", stage: "$stage", types: ${formatSchema(schema)}}){
+        |    migration {
+        |      revision
+        |    }
         |    errors {
         |      description
         |    }
@@ -74,7 +77,12 @@ trait DeploySpecBase extends BeforeAndAfterEach with BeforeAndAfterAll with Awai
         |}
       """.stripMargin)
 
-    testDependencies.projectPersistence.load(projectId).await.get
+    val revision = deployResult.pathAsLong("data.deploy.migration.revision")
+
+    (
+      testDependencies.projectPersistence.load(projectId).await.get,
+      testDependencies.migrationPersistence.byId(MigrationId(projectId, revision.toInt)).await.get
+    )
   }
 
   def formatSchema(schema: String): String = JsString(schema).toString()
