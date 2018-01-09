@@ -84,7 +84,7 @@ case class DeployMutation(
         isActive = true,
         delivery = WebhookDelivery(
           url = fnInput.url,
-          headers = Json.parse(fnInput.headers).as[Map[String, String]].toVector
+          headers = fnInput.headers.map(header => header.name -> header.value)
         ),
         query = fnInput.query
       )
@@ -123,7 +123,12 @@ case class FunctionInput(
     name: String,
     query: String,
     url: String,
-    headers: String
+    headers: Vector[HeaderInput]
+)
+
+case class HeaderInput(
+    name: String,
+    value: String
 )
 
 case class DeployMutationPayload(

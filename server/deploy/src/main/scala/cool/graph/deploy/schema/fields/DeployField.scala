@@ -1,6 +1,6 @@
 package cool.graph.deploy.schema.fields
 
-import cool.graph.deploy.schema.mutations.{DeployMutationInput, FunctionInput}
+import cool.graph.deploy.schema.mutations.{DeployMutationInput, FunctionInput, HeaderInput}
 import sangria.marshalling.{CoercedScalaResultMarshaller, FromInput}
 import sangria.schema._
 
@@ -20,7 +20,15 @@ object DeployField {
       InputField("name", StringType),
       InputField("query", StringType),
       InputField("url", StringType),
-      InputField("headers", StringType)
+      InputField("headers", ListInputType(headerInputType))
+    )
+  )
+
+  lazy val headerInputType = InputObjectType(
+    name = "HeaderInput",
+    fields = List(
+      InputField("name", StringType),
+      InputField("value", StringType),
     )
   )
 
@@ -35,13 +43,15 @@ object DeployField {
         dryRun = node.optionalArgAsBoolean("dryRun"),
         secrets = node.optionalArgAs[Vector[String]]("secrets").getOrElse(Vector.empty),
         functions = {
-          val asMaps = node.optionalArgAs[Vector[Map[String, Any]]]("functions").getOrElse(Vector.empty)
-          asMaps.map { map =>
+          val functionNodes = node.optionalArgAs[Vector[marshaller.Node]]("functions").getOrElse(Vector.empty)
+          functionNodes.map { functionNode =>
+            val headerNodes = functionNode.requiredArgAs[Vector[marshaller.Node]]("headers")
+            val headers     = headerNodes.map(node => HeaderInput(node.requiredArgAsString("name"), node.requiredArgAsString("value")))
             FunctionInput(
-              name = map.requiredArgAs("name"),
-              query = map.requiredArgAs("query"),
-              url = map.requiredArgAs("url"),
-              headers = map.requiredArgAs("headers")
+              name = functionNode.requiredArgAs("name"),
+              query = functionNode.requiredArgAs("query"),
+              url = functionNode.requiredArgAs("url"),
+              headers = headers
             )
           }
         }

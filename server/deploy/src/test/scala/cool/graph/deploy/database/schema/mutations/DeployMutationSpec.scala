@@ -1,6 +1,6 @@
 package cool.graph.deploy.database.schema.mutations
 
-import cool.graph.deploy.schema.mutations.FunctionInput
+import cool.graph.deploy.schema.mutations.{FunctionInput, HeaderInput}
 import cool.graph.deploy.specutils.DeploySpecBase
 import cool.graph.shared.models._
 import org.scalatest.{FlatSpec, Matchers}
@@ -362,7 +362,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
 
     val project = setupProject(schema)
 
-    val fnInput = FunctionInput(name = "my-function", query = "my query", url = "http://whatever.com/webhook", headers = """{"header1":"value1"}""")
+    val fnInput = FunctionInput(name = "my-function", query = "my query", url = "http://whatever.com", headers = Vector(HeaderInput("header1", "value1")))
     val result  = deploySchema(project, schema, Vector(fnInput))
     result.pathAsSeq("data.deploy.errors") should be(empty)
 
@@ -384,7 +384,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
       |    name: "${nameAndStage.name}"
       |    stage: "${nameAndStage.stage}"
       |    types: ${formatSchema(schema)}
-      |    functions: [${formatFunctions(functions)}]
+      |    functions: ${formatFunctions(functions)}
       |  }){
       |    migration {
       |      steps {
@@ -404,10 +404,18 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
          |  name: ${escapeString(fn.name)}
          |  query: ${escapeString(fn.query)}
          |  url: ${escapeString(fn.url)}
-         |  headers: ${escapeString(fn.headers)}
+         |  headers: ${formatArray(fn.headers, formatHeader)}
          |}
        """.stripMargin
     }
-    functions.map(formatFunction).mkString(",")
+    def formatHeader(header: HeaderInput) = {
+      s"""{
+         |  name: ${escapeString(header.name)}
+         |  value: ${escapeString(header.value)}
+         |}""".stripMargin
+    }
+    def formatArray[T](objs: Vector[T], formatFn: T => String) = "[" + objs.map(formatFn).mkString(",") + "]"
+
+    formatArray(functions, formatFunction)
   }
 }
