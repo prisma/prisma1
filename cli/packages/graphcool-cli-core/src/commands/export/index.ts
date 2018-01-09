@@ -34,6 +34,7 @@ export default class Export extends Command {
       stage,
       exportPath,
       this.definition.getToken(serviceName, stage),
+      this.definition.getWorkspace() || undefined,
     )
 
     const importCommand = chalk.green.bold(
@@ -49,6 +50,7 @@ You can import it to a new service with
     stage: string,
     exportPath: string,
     token?: string,
+    workspaceSlug?: string,
   ) {
     const exporter = new Exporter(
       exportPath,
@@ -57,6 +59,6 @@ You can import it to a new service with
       this.config,
     )
 
-    await exporter.download(serviceName, stage, token)
+    await exporter.download(serviceName, stage, token, workspaceSlug)
   }
 }

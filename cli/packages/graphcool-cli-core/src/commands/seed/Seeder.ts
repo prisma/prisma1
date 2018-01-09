@@ -26,7 +26,12 @@ export class Seeder {
     this.config = config
   }
 
-  async seed(serviceName: string, stageName: string, reset: boolean = false) {
+  async seed(
+    serviceName: string,
+    stageName: string,
+    reset: boolean = false,
+    workspaceSlug?: string,
+  ) {
     const seed = this.definition.definition!.seed
     if (!seed) {
       throw new Error(
@@ -59,9 +64,15 @@ export class Seeder {
       }
 
       if (source.endsWith('.zip')) {
-        await this.import(source, serviceName, stageName, token)
+        await this.import(source, serviceName, stageName, token, workspaceSlug)
       } else if (source.endsWith('.graphql')) {
-        await this.executeQuery(source, serviceName, stageName, token)
+        await this.executeQuery(
+          source,
+          serviceName,
+          stageName,
+          token,
+          workspaceSlug,
+        )
       }
     }
 
@@ -75,6 +86,7 @@ export class Seeder {
     serviceName: string,
     stageName: string,
     token?: string,
+    workspaceSlug?: string,
   ) {
     if (!fs.pathExistsSync(filePath)) {
       throw new Error(`Can't find seed import file ${filePath}`)
@@ -87,7 +99,7 @@ export class Seeder {
       throw new Error(`Error while parsing ${filePath}:\n${e.message}`)
     }
 
-    await this.client.exec(serviceName, stageName, query, token)
+    await this.client.exec(serviceName, stageName, query, token, workspaceSlug)
   }
 
   async reset(serviceName, stageName) {
@@ -133,6 +145,7 @@ export class Seeder {
     serviceName: string,
     stage: string,
     token?: string,
+    workspaceSlug?: string,
   ) {
     await this.definition.load({})
     const typesString = this.definition.typesString!
@@ -143,6 +156,6 @@ export class Seeder {
       this.out,
       this.config,
     )
-    await importer.upload(serviceName, stage, token)
+    await importer.upload(serviceName, stage, token, workspaceSlug)
   }
 }

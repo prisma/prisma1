@@ -5,6 +5,7 @@ import chalk from 'chalk'
 import { repeat } from 'lodash'
 import * as archiver from 'archiver'
 import * as os from 'os'
+const debug = require('debug')('Exporter')
 
 export type FileType = 'nodes' | 'relations' | 'lists'
 
@@ -34,11 +35,22 @@ export class Exporter {
     this.out = out
   }
 
-  async download(serviceName: string, stage: string, token?: string) {
+  async download(
+    serviceName: string,
+    stage: string,
+    token?: string,
+    workspaceSlug?: string,
+  ) {
     this.makeDirs()
-    await this.downloadFiles('nodes', serviceName, stage, token)
-    await this.downloadFiles('lists', serviceName, stage, token)
-    await this.downloadFiles('relations', serviceName, stage, token)
+    await this.downloadFiles('nodes', serviceName, stage, token, workspaceSlug)
+    await this.downloadFiles('lists', serviceName, stage, token, workspaceSlug)
+    await this.downloadFiles(
+      'relations',
+      serviceName,
+      stage,
+      token,
+      workspaceSlug,
+    )
     await this.zipIt()
     fs.removeSync(this.exportDir)
   }
@@ -71,6 +83,7 @@ export class Exporter {
     serviceName: string,
     stage: string,
     token?: string,
+    workspaceSlug?: string,
   ) {
     const before = Date.now()
     this.out.action.start(`Downloading ${fileType}`)
@@ -99,7 +112,14 @@ export class Exporter {
           cursor,
         }),
         token,
+        workspaceSlug,
       )
+
+      debug(data)
+
+      if (data.errors) {
+        throw new Error(data.errors)
+      }
 
       const jsonString = JSON.stringify({
         valueType: fileType,

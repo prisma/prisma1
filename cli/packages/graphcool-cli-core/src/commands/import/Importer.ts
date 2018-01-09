@@ -87,7 +87,12 @@ export class Importer {
       })
     })
   }
-  async upload(serviceName: string, stage: string, token?: string) {
+  async upload(
+    serviceName: string,
+    stage: string,
+    token?: string,
+    workspaceSlug?: string,
+  ) {
     await this.unzip()
     let before = Date.now()
     this.out.action.start('Validating data')
@@ -106,7 +111,13 @@ export class Importer {
       }
       const file = fs.readFileSync(fileName, 'utf-8')
       const json = JSON.parse(file)
-      const result = await this.client.upload(serviceName, stage, file, token)
+      const result = await this.client.upload(
+        serviceName,
+        stage,
+        file,
+        token,
+        workspaceSlug,
+      )
       if (result.length > 0) {
         this.out.log(this.out.getStyledJSON(result))
         this.out.exit(1)
@@ -128,7 +139,13 @@ export class Importer {
       }
       const file = fs.readFileSync(fileName, 'utf-8')
       const json = JSON.parse(file)
-      const result = await this.client.upload(serviceName, stage, file, token)
+      const result = await this.client.upload(
+        serviceName,
+        stage,
+        file,
+        token,
+        workspaceSlug,
+      )
       if (result.length > 0) {
         this.out.log(this.out.getStyledJSON(result))
         this.out.exit(1)
@@ -149,7 +166,13 @@ export class Importer {
       }
       const file = fs.readFileSync(fileName, 'utf-8')
       const json = JSON.parse(file)
-      const result = await this.client.upload(serviceName, stage, file, token)
+      const result = await this.client.upload(
+        serviceName,
+        stage,
+        file,
+        token,
+        workspaceSlug,
+      )
       if (result.length > 0) {
         this.out.log(this.out.getStyledJSON(result))
         this.out.exit(1)

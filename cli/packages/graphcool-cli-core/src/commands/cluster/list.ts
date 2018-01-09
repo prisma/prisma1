@@ -9,11 +9,13 @@ export default class ClusterList extends Command {
   static group = 'cluster'
   async run() {
     const clusters = await Promise.all(
-      this.env.clusters.map(async c => ({
-        name: c.name,
-        version: await c.getVersion(),
-        endpoint: c.getDeployEndpoint(),
-      })),
+      this.env.clusters
+        .filter(c => c.name !== 'shared-public-demo')
+        .map(async c => ({
+          name: c.name,
+          version: await c.getVersion(),
+          endpoint: c.getDeployEndpoint(),
+        })),
     )
 
     this.out.table(clusters)

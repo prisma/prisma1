@@ -45,6 +45,7 @@ export default class Reset extends Command {
       serviceName,
       stageName,
       this.definition.getToken(serviceName, stageName),
+      this.definition.getWorkspace() || undefined,
     )
     this.out.action.stop(chalk.cyan(`${Date.now() - before}ms`))
   }

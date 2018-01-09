@@ -36,6 +36,7 @@ export default class Import extends Command {
       serviceName,
       stage,
       this.definition.getToken(serviceName, stage),
+      this.definition.getWorkspace() || undefined,
     )
   }
 
@@ -44,6 +45,7 @@ export default class Import extends Command {
     serviceName: string,
     stage: string,
     token?: string,
+    workspaceSlug?: string,
   ) {
     await this.definition.load({})
     const typesString = this.definition.typesString!
@@ -54,6 +56,6 @@ export default class Import extends Command {
       this.out,
       this.config,
     )
-    await importer.upload(serviceName, stage, token)
+    await importer.upload(serviceName, stage, token, workspaceSlug)
   }
 }

@@ -30,9 +30,13 @@ export default class InfoCommand extends Command {
       char: 'c',
       description: 'Only show info for current service',
     }),
+    secret: flags.boolean({
+      char: 's',
+      description: 'Print secret in json output',
+    }),
   }
   async run() {
-    const { json } = this.flags
+    const { json, secret } = this.flags
     await this.definition.load(this.flags)
     const serviceName = this.definition.definition!.service
     const stage = this.definition.definition!.stage
@@ -58,6 +62,7 @@ Please make sure it contains the cluster. You can create a local cluster using '
         serviceName,
         stage,
         cluster,
+        this.definition.secrets,
         workspace || undefined,
         json,
       ),
@@ -91,22 +96,25 @@ Please make sure it contains the cluster. You can create a local cluster using '
     name: string,
     stage: string,
     cluster: Cluster,
+    secrets: string[] | null,
     workspace?: string,
     printJson: boolean = false,
   ) {
+    const { secret } = this.flags
     if (printJson) {
-      return JSON.stringify(
-        {
-          name,
-          stage,
-          cluster: cluster.name,
-          workspace,
-          httpEndpoint: cluster.getApiEndpoint(name, stage, workspace),
-          wsEndpoint: cluster.getWSEndpoint(name, stage, workspace),
-        },
-        null,
-        2,
-      )
+      const result: any = {
+        name,
+        stage,
+        cluster: cluster.name,
+        workspace,
+        httpEndpoint: cluster.getApiEndpoint(name, stage, workspace),
+        wsEndpoint: cluster.getWSEndpoint(name, stage, workspace),
+      }
+
+      if (secret) {
+        result.secret = secrets
+      }
+      return JSON.stringify(result, null, 2)
     }
     return `
   ${chalk.bold(stage)} (cluster: ${chalk.bold(`\`${cluster.name}\``)})
@@ -115,43 +123,43 @@ Please make sure it contains the cluster. You can create a local cluster using '
     Websocket:  ${cluster.getWSEndpoint(name, stage, workspace)}`
   }
 
-  printStages(
-    serviceName: string,
-    services: Service[],
-    printJson: boolean = false,
-  ) {
-    if (!printJson) {
-      this.out.log(`\
-Service Name: ${chalk.bold(serviceName)}
+  //   printStages(
+  //     serviceName: string,
+  //     services: Service[],
+  //     printJson: boolean = false,
+  //   ) {
+  //     if (!printJson) {
+  //       this.out.log(`\
+  // Service Name: ${chalk.bold(serviceName)}
 
-Stages:
-${services
-        .map(s =>
-          this.printStage(
-            s.project.name,
-            s.project.stage,
-            s.cluster,
-            undefined,
-          ),
-        )
-        .join('\n\n')}
-  `)
-    } else {
-      return JSON.stringify(
-        services.map(s =>
-          JSON.parse(
-            this.printStage(
-              s.project.name,
-              s.project.stage,
-              s.cluster,
-              undefined,
-              true,
-            ),
-          ),
-        ),
-        null,
-        2,
-      )
-    }
-  }
+  // Stages:
+  // ${services
+  //         .map(s =>
+  //           this.printStage(
+  //             s.project.name,
+  //             s.project.stage,
+  //             s.cluster,
+  //             undefined,
+  //           ),
+  //         )
+  //         .join('\n\n')}
+  //   `)
+  //     } else {
+  //       return JSON.stringify(
+  //         services.map(s =>
+  //           JSON.parse(
+  //             this.printStage(
+  //               s.project.name,
+  //               s.project.stage,
+  //               s.cluster,
+  //               undefined,
+  //               true,
+  //             ),
+  //           ),
+  //         ),
+  //         null,
+  //         2,
+  //       )
+  //     }
+  //   }
 }

@@ -106,12 +106,22 @@ export class Cluster {
     return `${replacedUrl}/${workspaceString}${serviceName}/${stage}`
   }
 
-  getImportEndpoint(serviceName: string, stage: string) {
-    return `${this.baseUrl}/${serviceName}/${stage}/import`
+  getImportEndpoint(
+    serviceName: string,
+    stage: string,
+    workspaceSlug?: string,
+  ) {
+    const workspaceString = workspaceSlug ? `${workspaceSlug}/` : ''
+    return `${this.baseUrl}/${workspaceString}${serviceName}/${stage}/import`
   }
 
-  getExportEndpoint(serviceName: string, stage: string) {
-    return `${this.baseUrl}/${serviceName}/${stage}/export`
+  getExportEndpoint(
+    serviceName: string,
+    stage: string,
+    workspaceSlug?: string,
+  ) {
+    const workspaceString = workspaceSlug ? `${workspaceSlug}/` : ''
+    return `${this.baseUrl}/${workspaceString}${serviceName}/${stage}/export`
   }
 
   getDeployEndpoint() {
@@ -142,7 +152,7 @@ export class Cluster {
       const { data } = await result.json()
       return data.clusterInfo.version
     } catch (e) {
-      //
+      debug(e)
     }
 
     return null

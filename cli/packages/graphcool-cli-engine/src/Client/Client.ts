@@ -199,6 +199,7 @@ export class Client {
     serviceName: string,
     stageName: string,
     token?: string,
+    workspaceSlug?: string,
   ): Promise<any> {
     debug('introspecting', serviceName, stageName, token)
     const headers: any = {}
@@ -206,7 +207,11 @@ export class Client {
       headers.Authorization = `Bearer ${token}`
     }
     const client = new GraphQLClient(
-      this.env.activeCluster.getApiEndpoint(serviceName, stageName),
+      this.env.activeCluster.getApiEndpoint(
+        serviceName,
+        stageName,
+        workspaceSlug,
+      ),
       {
         headers,
       },
@@ -219,6 +224,7 @@ export class Client {
     stageName: string,
     query: string,
     token?: string,
+    workspaceSlug?: string,
   ): Promise<any> {
     debug('executing query', serviceName, stageName, query, token)
     const headers: any = {}
@@ -226,7 +232,11 @@ export class Client {
       headers.Authorization = `Bearer ${token}`
     }
     const client = new GraphQLClient(
-      this.env.activeCluster.getApiEndpoint(serviceName, stageName),
+      this.env.activeCluster.getApiEndpoint(
+        serviceName,
+        stageName,
+        workspaceSlug,
+      ),
       {
         headers,
       },
@@ -239,10 +249,12 @@ export class Client {
     stage: string,
     exportData: any,
     token?: string,
+    workspaceSlug?: string,
   ): Promise<any> {
     const endpoint = this.env.activeCluster.getExportEndpoint(
       serviceName,
       stage,
+      workspaceSlug,
     )
     debug(`Downloading from ${endpoint}`)
     debug(exportData)
@@ -268,9 +280,14 @@ export class Client {
     stage: string,
     exportData: any,
     token?: string,
+    workspaceSlug?: string,
   ): Promise<any> {
     const result = await fetch(
-      this.env.activeCluster.getImportEndpoint(serviceName, stage),
+      this.env.activeCluster.getImportEndpoint(
+        serviceName,
+        stage,
+        workspaceSlug,
+      ),
       {
         method: 'post',
         headers: {
@@ -293,9 +310,11 @@ export class Client {
     serviceName: string,
     stage: string,
     token?: string,
+    workspaceSlug?: string,
   ): Promise<void> {
     const result = await fetch(
-      this.env.activeCluster.getApiEndpoint(serviceName, stage),
+      this.env.activeCluster.getApiEndpoint(serviceName, stage, workspaceSlug) +
+        '/private',
       {
         method: 'post',
         headers: {
