@@ -47,6 +47,8 @@ case class SubscriptionQueryValidator(project: Project)(implicit dependencies: A
     val violations = QueryValidator.default.validateQuery(schema, queryDoc)
     if (violations.nonEmpty) {
       Bad(violations.map(v => SubscriptionQueryError(v.errorMessage)))
-    } else Good(())
+    } else {
+      Good(())
+    }
   }
 }
