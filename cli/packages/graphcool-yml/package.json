@@ -1,6 +1,6 @@
 {
   "name": "graphcool-yml",
-  "version": "0.4.11",
+  "version": "0.4.13",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "repository": {

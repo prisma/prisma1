@@ -41,7 +41,7 @@ export class Cluster {
 
   getLocalToken() {
     if (!this.cachedToken) {
-      const grants = [{ target: `*/*/*`, action: '*' }]
+      const grants = [{ target: `*/*`, action: '*' }]
 
       this.cachedToken = jwt.sign({ grants }, this.clusterSecret, {
         expiresIn: '10 minutes',
