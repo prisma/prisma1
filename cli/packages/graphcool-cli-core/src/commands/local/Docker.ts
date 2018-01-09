@@ -65,8 +65,9 @@ export default class Docker {
   async init() {
     // either get the ports
     let port: any = null
+    let endpoint
     if (this.cluster) {
-      const endpoint = this.cluster.getDeployEndpoint()
+      endpoint = this.cluster.getDeployEndpoint()
       const sliced = endpoint.slice(endpoint.lastIndexOf(':') + 1)
       port = sliced.slice(0, sliced.indexOf('/'))
     }
@@ -79,8 +80,9 @@ export default class Docker {
           port = 60000
         }
       }
+      endpoint = `http://${this.hostName}:${this.envVars.PORT}`
     }
-    this.setEnvVars(port)
+    this.setEnvVars(port, endpoint)
     await this.setKeyPair()
   }
   async setKeyPair() {
@@ -190,7 +192,7 @@ export default class Docker {
       const endpoint = this.cluster.getDeployEndpoint()
       const sliced = endpoint.slice(endpoint.lastIndexOf(':') + 1)
       port = sliced.slice(0, sliced.indexOf('/'))
-      this.setEnvVars(port)
+      this.setEnvVars(port, endpoint)
       const before = Date.now()
       this.out.action.start('Nuking local cluster')
       await this.run('down', '--remove-orphans', '-v', '--rmi', 'local')
@@ -267,11 +269,12 @@ export default class Docker {
     })
   }
 
-  setEnvVars(port: string) {
+  setEnvVars(port: string, endpoint: string) {
     const defaultVars = this.getDockerEnvVars()
     const customVars = {
       PORT: port,
       SCHEMA_MANAGER_ENDPOINT: `http://graphcool-database:${port}/cluster/schema`,
+      CLUSTER_ADDRESS: endpoint,
     }
     this.envVars = { ...process.env, ...defaultVars, ...customVars }
   }
@@ -293,7 +296,7 @@ export default class Docker {
       try {
         if (nameStart.startsWith('localdatabase')) {
           console.log('nuking db')
-          this.setEnvVars(port)
+          this.setEnvVars(port, `http://${this.hostName}:${port}`)
           await this.nukeContainers(nameStart, true)
         } else if (nameStart.startsWith('local')) {
           console.log('nuking framework')
@@ -306,6 +309,7 @@ export default class Docker {
             FUNCTION_ENDPOINT_EXTERNAL: `http://${
               this.hostName
             }:${FUNCTIONS_PORT}`,
+            CLUSTER_ADDRESS: `http://${this.hostName}:${port}`,
           }
           this.envVars = { ...process.env, ...defaultVars, ...customVars }
           await this.nukeContainers(nameStart, false)

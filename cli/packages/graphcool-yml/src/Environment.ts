@@ -127,6 +127,10 @@ export class Environment {
     this.clusters.push(cluster)
   }
 
+  removeCluster(name: string) {
+    this.clusters = this.clusters.filter(c => c.name !== name)
+  }
+
   saveGlobalRC() {
     const rc = {
       'graphcool-1.0': {
@@ -138,6 +142,8 @@ export class Environment {
       rc['graphcool-framework'] = this.globalRC['graphcool-framework']
     }
     // parse & stringify to rm undefined for yaml parser
+    debug('saving global rc')
+    debug(rc)
     const rcString = yaml.safeDump(JSON.parse(JSON.stringify(rc)))
     fs.writeFileSync(this.rcPath, rcString)
   }
