@@ -407,7 +407,6 @@ export default class Docker {
     ]
     const args = defaultArgs.concat(argv)
     // this.out.log(chalk.dim(`$ docker-compose ${argv.join(' ')}\n`))
-    debug(this.envVars)
     const output = await spawn('docker-compose', args, {
       env: this.envVars,
       cwd: this.config.cwd,
