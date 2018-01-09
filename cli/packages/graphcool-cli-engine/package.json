@@ -1,6 +1,6 @@
 {
   "name": "graphcool-cli-engine",
-  "version": "0.9.5",
+  "version": "0.9.6",
   "main": "dist/index.js",
   "files": [
     "dist"
@@ -86,7 +86,7 @@
     "fs-extra": "^4.0.2",
     "graphcool-inquirer": "^1.0.3",
     "graphcool-json-schema": "1.2.1",
-    "graphcool-yml": "0.4.9",
+    "graphcool-yml": "0.4.10",
     "graphql-request": "^1.3.4",
     "isomorphic-fetch": "^2.2.1",
     "jsonwebtoken": "^8.1.0",
