@@ -26,7 +26,7 @@ trait DeployDependencies {
 
   def migrator: Migrator
   def clusterAuth: ClusterAuth
-  def graphQlClient(project: Project): GraphQlClient
+  def graphQlClient: GraphQlClient
   def invalidationPublisher: PubSubPublisher[String]
 
   lazy val internalDb           = setupAndGetInternalDatabase()
@@ -59,9 +59,6 @@ case class DeployDependenciesImpl()(implicit val system: ActorSystem, val materi
       case None            => DummyClusterAuth()
     }
   }
-  override def graphQlClient(project: Project) = {
-    val url = sys.env.getOrElse("CLUSTER_ADDRESS", sys.error("env var CLUSTER_ADDRESS is not set"))
-    GraphQlClient(url, Map("Authorization" -> s"Bearer ${project.secrets.head}"))
-  }
+  override lazy val graphQlClient         = GraphQlClient(sys.env.getOrElse("CLUSTER_ADDRESS", sys.error("env var CLUSTER_ADDRESS is not set")))
   override lazy val invalidationPublisher = ???
 }

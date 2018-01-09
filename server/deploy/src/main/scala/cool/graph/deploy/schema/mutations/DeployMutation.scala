@@ -8,7 +8,7 @@ import cool.graph.deploy.migration.migrator.Migrator
 import cool.graph.deploy.migration.validation.{SchemaError, SchemaSyntaxValidator}
 import cool.graph.graphql.GraphQlClient
 import cool.graph.messagebus.pubsub.Only
-import cool.graph.shared.models.{Function, Migration, MigrationStep, Project, Schema, ServerSideSubscriptionFunction, WebhookDelivery}
+import cool.graph.shared.models.{Function, Migration, MigrationStep, Project, ProjectId, Schema, ServerSideSubscriptionFunction, WebhookDelivery}
 import org.scalactic.{Bad, Good, Or}
 import play.api.libs.json.{JsString, Json}
 import sangria.parser.QueryParser
@@ -105,14 +105,16 @@ case class DeployMutation(
   private def validateFunctionInputs(fns: Vector[FunctionInput]): Future[Vector[SchemaError]] = Future.sequence(fns.map(validateFunctionInput)).map(_.flatten)
 
   private def validateFunctionInput(fn: FunctionInput): Future[Vector[SchemaError]] = {
-    dependencies
-      .graphQlClient(project)
+    val ProjectId(name, stage) = project.projectId
+    dependencies.graphQlClient
       .sendQuery(
-        s"""{
+        query = s"""{
        |  validateSubscriptionQuery(query: ${JsString(fn.query).toString()}){
        |    errors
        |  }
-       |}""".stripMargin
+       |}""".stripMargin,
+        path = s"/$name/$stage/private",
+        headers = Map("Authorization" -> s"Bearer ${project.secrets.headOption.getOrElse("empty")}")
       )
       .map { response =>
         response.bodyAs[Vector[String]]("data.validateSubscriptionQuery.errors").get
