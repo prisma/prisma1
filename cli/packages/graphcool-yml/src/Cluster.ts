@@ -29,6 +29,9 @@ export class Cluster {
     stageName?: string,
   ): Promise<string> {
     // public clusters just take the token
+    if (this.name === 'shared-public-demo') {
+      return ''
+    }
     if (this.local) {
       return this.getLocalToken()
     } else {

@@ -16,7 +16,7 @@ import { GraphQLClient, request } from 'graphql-request'
 import { omit, flatMap } from 'lodash'
 import { Config } from '../Config'
 import { getFastestRegion } from './ping'
-import { Environment, Cluster } from 'graphcool-yml'
+import { Environment, Cluster, FunctionInput } from 'graphcool-yml'
 import { Output } from '../index'
 import chalk from 'chalk'
 import { introspectionQuery } from './introspectionQuery'
@@ -533,17 +533,19 @@ export class Client {
     stage: string,
     types: string,
     dryRun: boolean,
+    subscriptions: FunctionInput[],
     secrets: string[] | null,
   ): Promise<any> {
     // TODO add dryRun to query as soon as the backend is ready
     const mutation = `\
-      mutation($name: String!, $stage: String! $types: String! $dryRun: Boolean $secrets: [String!]) {
+      mutation($name: String!, $stage: String! $types: String! $dryRun: Boolean $secrets: [String!], $subscriptions: [FunctionInput!]) {
         deploy(input: {
           name: $name
           stage: $stage
           types: $types
           dryRun: $dryRun
           secrets: $secrets
+          subscriptions: $subscriptions
         }) {
           errors {
             type
@@ -566,6 +568,7 @@ export class Client {
       types,
       dryRun,
       secrets,
+      subscriptions,
     })
 
     return deploy

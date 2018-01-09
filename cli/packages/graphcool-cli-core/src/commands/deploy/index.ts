@@ -214,6 +214,7 @@ ${chalk.gray(
           `~${clusterMatch[1]}`,
         )
         if (mainSatisfied) {
+          // disable minor check in beta
           if (clusterMatch[2] && cliMatch[2]) {
             const secondarySatisfied = semver.satisfies(
               cliMatch[2],
@@ -303,6 +304,7 @@ ${chalk.gray(
       stageName,
       this.definition.typesString!,
       dryRun,
+      this.definition.getSubscriptions(),
       this.definition.secrets,
     )
     this.out.action.stop(prettyTime(Date.now() - before))

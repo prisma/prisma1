@@ -11,6 +11,7 @@ import { StageNotFound } from './errors/StageNotFound'
 import { Environment } from './Environment'
 import { IOutput } from './Output'
 import { Cluster } from './Cluster'
+import { FunctionInput, Header } from './types/rc'
 
 interface ErrorMessage {
   message: string
@@ -160,6 +161,42 @@ export class GraphcoolDefinitionClass {
     return concatName(this.definition!.service!, this.getWorkspace())
   }
 
+  getSubscriptions(): FunctionInput[] {
+    if (this.definition && this.definition.subscriptions) {
+      return Object.keys(this.definition!.subscriptions!).map(name => {
+        const subscription = this.definition!.subscriptions![name]
+
+        const url =
+          typeof subscription.webhook === 'string'
+            ? subscription.webhook
+            : subscription.webhook.url
+        const headers =
+          typeof subscription.webhook === 'string'
+            ? []
+            : transformHeaders(subscription.webhook.headers)
+
+        let query = subscription.query
+        if (subscription.query.endsWith('.graphql')) {
+          const queryPath = path.join(this.definitionDir, subscription.query)
+          if (!fs.pathExistsSync(queryPath)) {
+            throw new Error(
+              `Subscription query ${queryPath} provided in subscription "${name}" in graphcool.yml does not exist.`,
+            )
+          }
+          query = fs.readFileSync(queryPath, 'utf-8')
+        }
+
+        return {
+          name,
+          query,
+          headers,
+          url,
+        }
+      })
+    }
+    return []
+  }
+
   async addCluster(cluster: string, args: any) {
     if (!this.definition!.cluster) {
       this.definition!.cluster = cluster
@@ -173,4 +210,14 @@ export class GraphcoolDefinitionClass {
 export function concatName(name: string, workspace: string | null) {
   const workspaceString = workspace ? `${workspace}~` : ''
   return `${workspaceString}${name}`
+}
+
+function transformHeaders(headers?: { [key: string]: string }): Header[] {
+  if (!headers) {
+    return []
+  }
+  return Object.keys(headers).map(key => ({
+    name: key,
+    value: headers[key],
+  }))
 }

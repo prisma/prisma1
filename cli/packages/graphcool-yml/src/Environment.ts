@@ -25,10 +25,9 @@ export class Environment {
   clusterEndpointMap: { [key: string]: string } = {
     'graphcool-eu1': 'https://graphcool-eu1.graphcool.cloud',
     'graphcool-us1': 'https://graphcool-us1.graphcool.cloud',
-    'shared-public-demo': 'https://database-beta.graph.cool',
-    // 'graphcool-eu1': isDev
-    //   ? 'https://dev.database-beta.graph.cool'
-    //   : 'https://database-beta.graph.cool',
+    'shared-public-demo': isDev
+      ? 'https://dev.database-beta.graph.cool'
+      : 'https://database-beta.graph.cool',
   }
   args: Args
   activeCluster: Cluster
