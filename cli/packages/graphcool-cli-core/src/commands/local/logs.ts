@@ -6,6 +6,7 @@ export default class Logs extends Command {
   static command = 'logs'
   static description = 'Print cluster logs'
   static group = 'local'
+  static hidden = true
   static flags: Flags = {
     name: flags.string({
       char: 'n',

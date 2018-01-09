@@ -124,7 +124,7 @@ ${chalk.bold('Usage:')} ${chalk.bold('graphcool')} COMMAND`)
           // if (t.id === 'local') {
           //   debugger
           // }
-          return cmds.map(cmd => {
+          return cmds.filter(cmd => !cmd.hidden).map(cmd => {
             const cmdName = cmd.command ? ` ${cmd.command}` : ''
             return [t.id + cmdName, chalk.dim(cmd.description || t.description)]
           })

@@ -8,10 +8,14 @@ export default class Eject extends Command {
   static topic = 'local'
   static command = 'eject'
   static description = 'Eject from the managed docker runtime'
-  static group = 'local'
+  // static group = 'local'
+  static hidden = true
   async run() {
     const newComposePath = path.join(process.cwd(), 'docker-compose.yml')
-    fs.copySync(path.join(__dirname, 'docker/docker-compose.yml'), newComposePath)
+    fs.copySync(
+      path.join(__dirname, 'docker/docker-compose.yml'),
+      newComposePath,
+    )
     let newEnvrcPath
 
     const isWin = /^win/.test(process.platform)
@@ -43,11 +47,13 @@ export default class Eject extends Command {
     return this.printBat(env)
   }
 
-  private printBat(env: {[key: string]: string}): string {
-    return Object.keys(env).map(key => {
-      const value = env[key]
+  private printBat(env: { [key: string]: string }): string {
+    return Object.keys(env)
+      .map(key => {
+        const value = env[key]
 
-      return `set ${key}=${value}`
-    }).join('\n')
+        return `set ${key}=${value}`
+      })
+      .join('\n')
   }
 }

@@ -6,11 +6,12 @@ export default class PsLocal extends Command {
   static command = 'ps'
   static description = 'List docker containers'
   static group = 'local'
+  static hidden = true
   static flags: Flags = {
     name: flags.string({
       char: 'n',
       description: 'Name of the cluster instance',
-      defaultValue: 'local'
+      defaultValue: 'local',
     }),
   }
   async run() {

@@ -37,12 +37,12 @@ export const groups = [
     name: 'Data workflows',
   },
   {
-    key: 'local',
-    name: 'Local development',
-  },
-  {
     key: 'cloud',
     name: 'Cloud',
+  },
+  {
+    key: 'local',
+    name: 'Local development',
   },
   {
     key: 'clusters',
