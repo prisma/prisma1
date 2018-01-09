@@ -6,7 +6,7 @@ export default class ClusterList extends Command {
   static topic = 'cluster'
   static command = 'list'
   static description = 'List all clusters'
-  static group = 'clusters'
+  static group = 'cluster'
   async run() {
     const clusters = await Promise.all(
       this.env.clusters.map(async c => ({

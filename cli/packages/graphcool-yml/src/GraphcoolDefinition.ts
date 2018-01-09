@@ -60,6 +60,10 @@ export class GraphcoolDefinitionClass {
       const secrets = this.definition.secret
       this.secrets = secrets ? secrets.replace(/\s/g, '').split(',') : null
       this.validate()
+    } else {
+      throw new Error(
+        `Couldn’t find \`graphcool.yml\` file. Are you in the right directory?`,
+      )
     }
   }
 

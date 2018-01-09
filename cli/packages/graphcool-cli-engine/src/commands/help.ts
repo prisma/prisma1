@@ -117,6 +117,9 @@ ${chalk.bold('Usage:')} ${chalk.bold('graphcool')} COMMAND`)
       //   t.id,
       //   t.description ? chalk.dim(t.description) : null,
       // ])
+      if (!groupTopics) {
+        continue
+      }
       const list: string[][][] = (await Promise.all(
         groupTopics.map(async t => {
           const cmds = await this.plugins.commandsForTopic(t.id)

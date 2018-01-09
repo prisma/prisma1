@@ -48,7 +48,7 @@ export const groups = [
     name: 'Local development',
   },
   {
-    key: 'clusters',
+    key: 'cluster',
     name: 'Clusters',
   },
 ]
@@ -113,7 +113,7 @@ export const topics = [
     group: 'cloud',
   },
   /* Clusters */
-  { name: 'cluster', description: 'Manage local clusters', group: 'clusters' },
+  { name: 'cluster', description: 'Manage local clusters', group: 'cluster' },
 ]
 
 export const commands = [

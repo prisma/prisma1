@@ -7,6 +7,7 @@ export default class ClusterAdd extends Command {
   static topic = 'cluster'
   static command = 'add'
   static description = 'Add an existing cluster'
+  static group = 'cluster'
   async run() {
     const endpoint = await this.endpointSelector()
     const clusterSecret = await this.clusterSecretSelector()

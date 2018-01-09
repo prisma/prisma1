@@ -7,6 +7,7 @@ export default class ClusterLogs extends Command {
   static topic = 'cluster'
   static command = 'logs'
   static description = 'Output cluster logs'
+  static group = 'cluster'
   async run() {
     await this.definition.load(this.flags)
 
