@@ -2,9 +2,12 @@ import { Client, Config, Output } from 'graphcool-cli-engine'
 import { GraphcoolDefinitionClass } from 'graphcool-yml'
 import { Importer } from '../import/Importer'
 import * as fs from 'fs-extra'
+import * as path from 'path'
 import * as childProcess from 'child_process'
 import chalk from 'chalk'
 import { parse } from 'graphql'
+import crossSpawn from 'cross-spawn'
+const debug = require('debug')('Seeder')
 
 export class Seeder {
   definition: GraphcoolDefinitionClass
@@ -37,7 +40,9 @@ export class Seeder {
     }
 
     if (seed.import) {
-      const source = seed.import
+      const source = path.join(this.config.definitionDir, seed.import)
+
+      debug(source)
 
       if (!source.endsWith('.zip') && !source.endsWith('.graphql')) {
         throw new Error(`Source must end with .zip or .graphql`)
@@ -54,9 +59,9 @@ export class Seeder {
       }
 
       if (source.endsWith('.zip')) {
-        await this.import(seed.import, serviceName, stageName, token)
+        await this.import(source, serviceName, stageName, token)
       } else if (source.endsWith('.graphql')) {
-        await this.executeQuery(seed.import, serviceName, stageName, token)
+        await this.executeQuery(source, serviceName, stageName, token)
       }
     }
 
@@ -100,9 +105,8 @@ export class Seeder {
 
   private run(cmd: string): Promise<void> {
     return new Promise((resolve, reject) => {
-      this.out.log(chalk.dim(`$ ${cmd}`))
       const args = cmd.split(/\s/g)
-      const child = childProcess.spawn(args[0], args.slice(1), {
+      const child = crossSpawn(args[0], args.slice(1), {
         cwd: this.config.cwd,
       })
       child.stdout.on('data', data => {
