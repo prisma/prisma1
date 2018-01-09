@@ -26,6 +26,7 @@ import Token from './commands/token/token'
 import Login from './commands/login/login'
 import ClusterToken from './commands/token/cluster-token'
 import Delete from './commands/delete/index'
+import ClusterLogs from './commands/cluster/logs'
 
 export const groups = [
   {
@@ -137,6 +138,7 @@ export const commands = [
   Account,
   ClusterToken,
   ClusterList,
+  ClusterLogs,
 ]
 
 export {
@@ -164,4 +166,5 @@ export {
   Login,
   ClusterToken,
   ClusterList,
+  ClusterLogs,
 }
