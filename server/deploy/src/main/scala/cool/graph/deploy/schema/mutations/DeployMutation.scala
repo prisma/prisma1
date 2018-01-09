@@ -51,16 +51,14 @@ case class DeployMutation(
     schemaInferrer.infer(project.schema, schemaMapping, graphQlSdl) match {
       case Good(inferredNextSchema) =>
         val steps = migrationStepsInferrer.infer(project.schema, inferredNextSchema, schemaMapping)
-
-        handleProjectUpdate().flatMap(_ =>
-          handleMigration(inferredNextSchema, steps, functionsForInput).map { migration =>
-            MutationSuccess(
-              DeployMutationPayload(
-                args.clientMutationId,
-                migration,
-                schemaErrors
-              ))
-        })
+        for {
+          _         <- handleProjectUpdate()
+          migration <- handleMigration(inferredNextSchema, steps, functionsForInput)
+        } yield {
+          MutationSuccess {
+            DeployMutationPayload(args.clientMutationId, migration = migration, errors = schemaErrors)
+          }
+        }
 
       case Bad(err) =>
         Future.successful {
