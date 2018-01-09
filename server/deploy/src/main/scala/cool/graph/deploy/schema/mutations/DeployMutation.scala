@@ -5,8 +5,9 @@ import cool.graph.deploy.migration._
 import cool.graph.deploy.migration.inference.{InvalidGCValue, MigrationStepsInferrer, RelationDirectiveNeeded, SchemaInferrer}
 import cool.graph.deploy.migration.migrator.Migrator
 import cool.graph.deploy.migration.validation.{SchemaError, SchemaSyntaxValidator}
-import cool.graph.shared.models.{Migration, MigrationStep, Project, Schema, Function}
+import cool.graph.shared.models.{Function, Migration, MigrationStep, Project, Schema, ServerSideSubscriptionFunction, WebhookDelivery}
 import org.scalactic.{Bad, Good}
+import play.api.libs.json.Json
 import sangria.parser.QueryParser
 
 import scala.collection.Seq
@@ -52,7 +53,7 @@ case class DeployMutation(
         val steps = migrationStepsInferrer.infer(project.schema, inferredNextSchema, schemaMapping)
 
         handleProjectUpdate().flatMap(_ =>
-          handleMigration(inferredNextSchema, steps, functions = Vector.empty).map { migration =>
+          handleMigration(inferredNextSchema, steps, functionsForInput).map { migration =>
             MutationSuccess(
               DeployMutationPayload(
                 args.clientMutationId,
@@ -76,6 +77,20 @@ case class DeployMutation(
     }
   }
 
+  val functionsForInput: Vector[Function] = {
+    args.functions.map { fnInput =>
+      ServerSideSubscriptionFunction(
+        name = fnInput.name,
+        isActive = true,
+        delivery = WebhookDelivery(
+          url = fnInput.url,
+          headers = Json.parse(fnInput.headers).as[Map[String, String]].toVector
+        ),
+        query = fnInput.query
+      )
+    }
+  }
+
   private def handleProjectUpdate(): Future[_] = {
     if (project.secrets != args.secrets && !args.dryRun.getOrElse(false)) {
       projectPersistence.update(project.copy(secrets = args.secrets))
@@ -85,7 +100,9 @@ case class DeployMutation(
   }
 
   private def handleMigration(nextSchema: Schema, steps: Vector[MigrationStep], functions: Vector[Function]): Future[Option[Migration]] = {
-    if (steps.nonEmpty && !args.dryRun.getOrElse(false)) {
+    val migrationNeeded = steps.nonEmpty || functions.nonEmpty
+    val isNotDryRun     = !args.dryRun.getOrElse(false)
+    if (migrationNeeded && isNotDryRun) {
       migrator.schedule(project.id, nextSchema, steps, functions).map(Some(_))
     } else {
       Future.successful(None)

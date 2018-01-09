@@ -2,7 +2,7 @@ package cool.graph.deploy.database.schema.mutations
 
 import cool.graph.deploy.schema.mutations.FunctionInput
 import cool.graph.deploy.specutils.DeploySpecBase
-import cool.graph.shared.models.{MigrationStatus, Project, ProjectId}
+import cool.graph.shared.models._
 import org.scalatest.{FlatSpec, Matchers}
 
 class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
@@ -362,14 +362,18 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
 
     val project = setupProject(schema)
 
-    val functions = Vector(
-      FunctionInput(name = "my-function", query = "my query", url = "http://whatever.com/webhook", headers = """{"header1":"value1"}""")
-    )
-    val result = deploySchema(project, schema, functions)
+    val fnInput = FunctionInput(name = "my-function", query = "my query", url = "http://whatever.com/webhook", headers = """{"header1":"value1"}""")
+    val result  = deploySchema(project, schema, Vector(fnInput))
     result.pathAsSeq("data.deploy.errors") should be(empty)
 
     val reloadedProject = projectPersistence.load(project.id).await.get
     reloadedProject.functions should have(size(1))
+    val function = reloadedProject.functions.head.asInstanceOf[ServerSideSubscriptionFunction]
+    function.name should equal(fnInput.name)
+    function.query should equal(fnInput.query)
+    val delivery = function.delivery.asInstanceOf[WebhookDelivery]
+    delivery.url should equal(fnInput.url)
+    delivery.headers should equal(Vector("header1" -> "value1"))
   }
 
   def deploySchema(project: Project, schema: String, functions: Vector[FunctionInput] = Vector.empty) = {
