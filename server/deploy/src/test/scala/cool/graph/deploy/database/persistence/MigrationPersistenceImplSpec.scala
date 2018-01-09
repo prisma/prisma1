@@ -42,7 +42,7 @@ class MigrationPersistenceImplSpec extends FlatSpec with Matchers with DeploySpe
   }
 
   ".create()" should "store the migration with its function in the db" in {
-    val project = setupProject(basicTypesGql)
+    val (project, _) = setupProject(basicTypesGql)
     val function = ServerSideSubscriptionFunction(
       name = "my-function",
       isActive = true,
