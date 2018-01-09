@@ -4,6 +4,7 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import cool.graph.deploy.DeployDependencies
 import cool.graph.deploy.server.ClusterAuthImpl
+import cool.graph.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
 
 case class DeployTestDependencies()(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends DeployDependencies {
   override implicit def self: DeployDependencies = this
@@ -16,4 +17,6 @@ case class DeployTestDependencies()(implicit val system: ActorSystem, val materi
 
   val migrator             = TestMigrator(clientDb, internalDb, migrationPersistence)
   override val clusterAuth = new ClusterAuthImpl(publicKey = None)
+
+  override lazy val invalidationPublisher = InMemoryAkkaPubSub[String]()
 }
