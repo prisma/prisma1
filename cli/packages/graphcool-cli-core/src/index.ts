@@ -98,13 +98,13 @@ export const topics = [
   },
   /* Cloud */
   {
-    name: 'console',
-    description: 'Opens the console for the current service',
+    name: 'login',
+    description: 'Login or signup to Graphcool Cloud',
     group: 'cloud',
   },
   {
-    name: 'login',
-    description: 'Login or signup to Graphcool Cloud',
+    name: 'console',
+    description: 'Opens the console for the current service',
     group: 'cloud',
   },
   {
