@@ -25,6 +25,7 @@ object ModelToDbMapper {
 
   def convert(migration: models.Migration): Migration = {
     val schemaJson         = Json.toJson(migration.schema)
+    val functionsJson      = Json.toJson(migration.functions)
     val migrationStepsJson = Json.toJson(migration.steps)
     val errorsJson         = Json.toJson(migration.errors)
 
@@ -32,6 +33,7 @@ object ModelToDbMapper {
       projectId = migration.projectId,
       revision = migration.revision,
       schema = schemaJson,
+      functions = functionsJson,
       status = migration.status,
       applied = migration.applied,
       rolledBack = migration.rolledBack,

@@ -4,7 +4,7 @@ import akka.actor.{Actor, Stash}
 import cool.graph.deploy.database.persistence.MigrationPersistence
 import cool.graph.deploy.migration.MigrationStepMapperImpl
 import cool.graph.deploy.schema.DeploymentInProgress
-import cool.graph.shared.models.{Migration, MigrationStep, Schema}
+import cool.graph.shared.models.{Migration, MigrationStep, Schema, Function}
 import slick.jdbc.MySQLProfile.backend.DatabaseDef
 
 import scala.concurrent.Future
@@ -12,7 +12,7 @@ import scala.util.{Failure, Success}
 
 object DeploymentProtocol {
   object Initialize
-  case class Schedule(projectId: String, nextSchema: Schema, steps: Vector[MigrationStep])
+  case class Schedule(projectId: String, nextSchema: Schema, steps: Vector[MigrationStep], functions: Vector[Function])
   object ResumeMessageProcessing
   object Ready
   object Deploy
@@ -141,7 +141,7 @@ case class ProjectDeploymentActor(
           Future.failed(err)
       }
       .flatMap { _ =>
-        migrationPersistence.create(Migration(projectId, msg.nextSchema, msg.steps))
+        migrationPersistence.create(Migration(projectId, msg.nextSchema, msg.steps, msg.functions))
       }
   }
 

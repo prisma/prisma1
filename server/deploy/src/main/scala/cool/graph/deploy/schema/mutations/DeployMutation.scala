@@ -5,7 +5,7 @@ import cool.graph.deploy.migration._
 import cool.graph.deploy.migration.inference.{InvalidGCValue, MigrationStepsInferrer, RelationDirectiveNeeded, SchemaInferrer}
 import cool.graph.deploy.migration.migrator.Migrator
 import cool.graph.deploy.migration.validation.{SchemaError, SchemaSyntaxValidator}
-import cool.graph.shared.models.{Migration, MigrationStep, Project, Schema}
+import cool.graph.shared.models.{Migration, MigrationStep, Project, Schema, Function}
 import org.scalactic.{Bad, Good}
 import sangria.parser.QueryParser
 
@@ -52,7 +52,7 @@ case class DeployMutation(
         val steps = migrationStepsInferrer.infer(project.schema, inferredNextSchema, schemaMapping)
 
         handleProjectUpdate().flatMap(_ =>
-          handleMigration(inferredNextSchema, steps).map { migration =>
+          handleMigration(inferredNextSchema, steps, functions = Vector.empty).map { migration =>
             MutationSuccess(
               DeployMutationPayload(
                 args.clientMutationId,
@@ -84,9 +84,9 @@ case class DeployMutation(
     }
   }
 
-  private def handleMigration(nextSchema: Schema, steps: Vector[MigrationStep]): Future[Option[Migration]] = {
+  private def handleMigration(nextSchema: Schema, steps: Vector[MigrationStep], functions: Vector[Function]): Future[Option[Migration]] = {
     if (steps.nonEmpty && !args.dryRun.getOrElse(false)) {
-      migrator.schedule(project.id, nextSchema, steps).map(Some(_))
+      migrator.schedule(project.id, nextSchema, steps, functions).map(Some(_))
     } else {
       Future.successful(None)
     }

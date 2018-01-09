@@ -42,9 +42,9 @@ class MigrationStatusSpec extends FlatSpec with Matchers with DeploySpecBase {
     val migration = migrationPersistence
       .create(
         Migration(
-          project.id,
-          project.schema,
-          Vector(
+          projectId = project.id,
+          schema = project.schema,
+          steps = Vector(
             CreateModel("TestModel"),
             CreateField(
               "TestModel",
@@ -57,7 +57,8 @@ class MigrationStatusSpec extends FlatSpec with Matchers with DeploySpecBase {
               None,
               None
             )
-          )
+          ),
+          functions = Vector.empty
         )
       )
       .await

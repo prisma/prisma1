@@ -20,6 +20,7 @@ class MigrationApplierSpec extends FlatSpec with Matchers with DeploySpecBase wi
     projectId = projectId,
     revision = 1,
     schema = emptySchema,
+    functions = Vector.empty,
     status = MigrationStatus.Pending,
     applied = 0,
     rolledBack = 0,
