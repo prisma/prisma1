@@ -41,10 +41,28 @@ export default class List extends Command {
       }
     }
 
+    const services = await this.client.getCloudServices()
+    const mappedServices = services.map(s => ({
+      name: s.name,
+      stage: s.stage,
+      cluster: s.cluster.name,
+    }))
+
+    projects = [...projects, ...mappedServices]
+
     this.printProjects(projects)
   }
 
   printProjects(projects: Project[]) {
-    this.out.table(projects)
+    if (projects.length === 0) {
+      this.out.log('No deployed service found')
+    } else {
+      const mapped = projects.map(p => ({
+        'Service Name': p.name,
+        Stage: p.stage,
+        Cluster: p.cluster,
+      }))
+      this.out.table(mapped)
+    }
   }
 }

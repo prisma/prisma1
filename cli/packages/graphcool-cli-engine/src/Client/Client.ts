@@ -13,14 +13,14 @@ import {
 } from '../types/common'
 
 import { GraphQLClient, request } from 'graphql-request'
-import { omit, flatMap } from 'lodash'
+import { omit, flatMap, flatten } from 'lodash'
 import { Config } from '../Config'
 import { getFastestRegion } from './ping'
 import { Environment, Cluster, FunctionInput } from 'graphcool-yml'
 import { Output } from '../index'
 import chalk from 'chalk'
 import { introspectionQuery } from './introspectionQuery'
-import { User, Migration, DeployPayload, Workspace } from './types'
+import { User, Migration, DeployPayload, Workspace, Service } from './types'
 import boolean from '../Flags/boolean'
 import * as opn from 'opn'
 
@@ -411,32 +411,38 @@ export class Client {
     return me
   }
 
-  //   async getCloudServices(): Promise<Service[]> {
-  //     const query = `
-  // {
-  //   me {
-  //     memberships {
-  //       workspace {
-  //         services {
-  //           id
-  //           stage
-  //           name
-  //           cluster {
-  //             name
-  //           }
-  //         }
-  //       }
-  //     }
-  //   }
-  // }
-  //     `
+  async getCloudServices(): Promise<Service[]> {
+    const query = `
+  {
+    me {
+      memberships {
+        workspace {
+          services {
+            id
+            stage
+            name
+            cluster {
+              name
+            }
+          }
+        }
+      }
+    }
+  }
+      `
 
-  //     const { me } = await this.cloudClient.request<{
-  //       me: User
-  //     }>(query)
+    const { me } = await this.cloudClient.request<{
+      me: {
+        memberships: Array<{
+          workspace: {
+            services: Service[]
+          }
+        }>
+      }
+    }>(query)
 
-  //     return me
-  //   }
+    return flatten(me.memberships.map(m => m.workspace.services))
+  }
 
   async generateClusterToken(
     workspaceSlug: string,
