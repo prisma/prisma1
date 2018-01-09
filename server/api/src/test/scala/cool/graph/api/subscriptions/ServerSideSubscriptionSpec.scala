@@ -65,7 +65,7 @@ class ServerSideSubscriptionSpec extends FlatSpec with Matchers with ApiBaseSpec
     name = "Test Function",
     isActive = true,
     query = subscriptionQueryForCreates,
-    delivery = WebhookFunction(
+    delivery = WebhookDelivery(
       url = webhookUrl,
       headers = webhookHeaders
     )

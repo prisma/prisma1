@@ -125,7 +125,7 @@ case class ServerSideSubscription(
       result match {
         case Some(JsObject(fields)) if fields.contains("data") =>
           function.delivery match {
-            case fn: WebhookFunction =>
+            case fn: WebhookDelivery =>
               val webhook = Webhook(
                 projectId = project.id,
                 functionName = function.name,

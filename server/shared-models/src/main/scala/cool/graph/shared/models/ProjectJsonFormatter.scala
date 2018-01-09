@@ -17,9 +17,6 @@ object ProjectJsonFormatter {
   implicit lazy val fieldConstraintType = enumFormat(FieldConstraintType)
   implicit lazy val modelMutationType   = enumFormat(ModelMutationType)
 
-  // FAILING STUBS
-  implicit lazy val function = failingFormat[Function]
-
   // MODELS
   implicit lazy val numberConstraint  = Json.format[NumberConstraint]
   implicit lazy val booleanConstraint = Json.format[BooleanConstraint]
@@ -124,6 +121,46 @@ object ProjectJsonFormatter {
         valueField         -> valueAsJson
       )
     }
+  }
+
+  implicit lazy val webhookDelivery = Json.format[WebhookDelivery]
+  implicit lazy val functionDelivery = new OFormat[FunctionDelivery] {
+    val discriminatorField = "type"
+
+    override def reads(json: JsValue) = {
+      (json \ discriminatorField).validate[String].map(FunctionDeliveryType.withName).flatMap {
+        case FunctionDeliveryType.WebhookDelivery => webhookDelivery.reads(json)
+      }
+    }
+
+    override def writes(delivery: FunctionDelivery) = {
+      val objectJson = delivery match {
+        case x: WebhookDelivery => webhookDelivery.writes(x)
+      }
+      addDiscriminator(objectJson, delivery)
+    }
+
+    private def addDiscriminator(json: JsObject, delivery: FunctionDelivery) = json ++ Json.obj(discriminatorField -> delivery.typeCode.toString)
+  }
+
+  implicit lazy val sssFn = Json.format[ServerSideSubscriptionFunction]
+  implicit lazy val function = new OFormat[Function] {
+    val discriminatorField = "type"
+
+    override def reads(json: JsValue): JsResult[ServerSideSubscriptionFunction] = {
+      (json \ discriminatorField).validate[String].map(FunctionType.withName).flatMap {
+        case FunctionType.ServerSideSubscription => sssFn.reads(json)
+      }
+    }
+
+    override def writes(fn: Function): JsObject = {
+      val objectJson = fn match {
+        case x: ServerSideSubscriptionFunction => sssFn.writes(x)
+      }
+      addDiscriminator(objectJson, fn)
+    }
+
+    private def addDiscriminator(json: JsObject, fn: Function) = json ++ Json.obj(discriminatorField -> fn.typeCode.toString)
   }
 
   implicit lazy val relationFieldMirror       = Json.format[RelationFieldMirror]

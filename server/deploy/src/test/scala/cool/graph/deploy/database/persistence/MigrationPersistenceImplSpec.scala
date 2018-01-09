@@ -2,7 +2,7 @@ package cool.graph.deploy.database.persistence
 
 import cool.graph.deploy.database.tables.Tables
 import cool.graph.deploy.specutils.{DeploySpecBase, TestProject}
-import cool.graph.shared.models.{Migration, MigrationId, MigrationStatus}
+import cool.graph.shared.models._
 import org.scalatest.{FlatSpec, Matchers}
 import slick.jdbc.MySQLProfile.api._
 
@@ -39,6 +39,21 @@ class MigrationPersistenceImplSpec extends FlatSpec with Matchers with DeploySpe
     val savedMigration = migrationPersistence.create(Migration.empty(project.id)).await()
     assertNumberOfRowsInMigrationTable(3)
     savedMigration.revision shouldEqual 3
+  }
+
+  ".create()" should "store the migration with its function in the db" in {
+    val project = setupProject(basicTypesGql)
+    val function = ServerSideSubscriptionFunction(
+      name = "my-function",
+      isActive = true,
+      delivery = WebhookDelivery("https://mywebhook.com", Vector("header1" -> "value1")),
+      query = "query"
+    )
+    val migration = Migration.empty(project.id).copy(functions = Vector(function), status = MigrationStatus.Success)
+    migrationPersistence.create(migration).await()
+
+    val inDb = migrationPersistence.getLastMigration(project.id).await().get
+    inDb.functions should equal(Vector(function))
   }
 
   ".loadAll()" should "return all migrations for a project" in {

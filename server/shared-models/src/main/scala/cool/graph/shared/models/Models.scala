@@ -28,6 +28,11 @@ sealed trait Function {
   def name: String
   def isActive: Boolean
   def delivery: FunctionDelivery
+  def typeCode: FunctionType.Value
+}
+
+object FunctionType extends Enumeration {
+  val ServerSideSubscription = Value("server-side-subscription")
 }
 
 case class ServerSideSubscriptionFunction(
@@ -35,14 +40,24 @@ case class ServerSideSubscriptionFunction(
     isActive: Boolean,
     delivery: FunctionDelivery,
     query: String
-) extends Function
+) extends Function {
+  override def typeCode = FunctionType.ServerSideSubscription
+}
 
-sealed trait FunctionDelivery
+sealed trait FunctionDelivery {
+  def typeCode: FunctionDeliveryType.Value
+}
 
-case class WebhookFunction(
+object FunctionDeliveryType extends Enumeration {
+  val WebhookDelivery = Value("webhook-delivery")
+}
+
+case class WebhookDelivery(
     url: String,
     headers: Vector[(String, String)]
-) extends FunctionDelivery
+) extends FunctionDelivery {
+  override def typeCode = FunctionDeliveryType.WebhookDelivery
+}
 
 case class Schema(
     models: List[Model] = List.empty,
