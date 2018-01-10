@@ -6,9 +6,15 @@ trait Auth {
   def verify(secrets: Vector[String], authHeader: String): AuthResult
 }
 
-sealed trait AuthResult
-object AuthSuccess extends AuthResult
-object AuthFailure extends AuthResult
+sealed trait AuthResult {
+  def isSuccess: Boolean
+}
+object AuthSuccess extends AuthResult {
+  override def isSuccess = true
+}
+object AuthFailure extends AuthResult {
+  override def isSuccess = false
+}
 
 object AuthImpl extends Auth {
   private val jwtOptions = JwtOptions(signature = true, expiration = false)

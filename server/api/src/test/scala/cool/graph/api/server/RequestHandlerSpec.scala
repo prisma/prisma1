@@ -4,9 +4,10 @@ import akka.http.scaladsl.model.StatusCodes
 import cool.graph.api.project.ProjectFetcher
 import cool.graph.api.schema.{ApiUserContext, SchemaBuilder}
 import cool.graph.api.{ApiBaseSpec, GraphQLResponseAssertions}
+import cool.graph.auth.AuthImpl
 import cool.graph.client.server.GraphQlRequestHandler
-import cool.graph.deploy.specutils.TestProject
 import cool.graph.shared.models.{Project, ProjectWithClientId}
+import cool.graph.shared.project_dsl.TestProject
 import cool.graph.utils.await.AwaitUtils
 import org.scalatest.{FlatSpec, Matchers}
 import pdi.jwt.{Jwt, JwtAlgorithm}

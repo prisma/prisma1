@@ -95,7 +95,8 @@ lazy val deploy = serverProject("deploy", imageName = "graphcool-deploy")
   .settings(
     libraryDependencies ++= Seq(
       playJson,
-      scalaTest
+      scalaTest,
+      jwt
     )
   )
 //  .enablePlugins(BuildInfoPlugin)
@@ -112,6 +113,7 @@ lazy val api = serverProject("api", imageName = "graphcool-database")
   .dependsOn(metrics % "compile")
   .dependsOn(jvmProfiler % "compile")
   .dependsOn(cache % "compile")
+  .dependsOn(auth % "compile")
   .settings(
     libraryDependencies ++= Seq(
       playJson,

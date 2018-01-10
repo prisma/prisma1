@@ -6,17 +6,18 @@ import cool.graph.api.ApiDependencies
 import cool.graph.api.database.DataResolver
 import cool.graph.api.database.import_export.{BulkExport, BulkImport}
 import cool.graph.api.project.ProjectFetcher
+import cool.graph.api.schema.APIErrors.InvalidToken
 import cool.graph.api.schema.{APIErrors, ApiUserContext, PrivateSchemaBuilder, SchemaBuilder}
+import cool.graph.auth.Auth
 import cool.graph.bugsnag.{BugSnagger, GraphCoolRequest}
 import cool.graph.client.server.GraphQlRequestHandler
 import cool.graph.shared.models.{Project, ProjectWithClientId}
 import cool.graph.utils.`try`.TryExtensions._
-import cool.graph.utils.future.FutureUtils.FutureExtensions
 import sangria.schema.Schema
 import spray.json.{JsObject, JsString, JsValue}
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success}
+import scala.util.Failure
 
 case class RequestHandler(
     projectFetcher: ProjectFetcher,
@@ -79,9 +80,20 @@ case class RequestHandler(
   )(fn: Project => Future[(StatusCode, JsValue)]): Future[(StatusCode, JsValue)] = {
     for {
       projectWithClientId <- fetchProject(projectId)
-      _                   <- auth.verify(projectWithClientId.project, rawRequest.authorizationHeader).toFuture
+      _                   <- verifyAuth(projectWithClientId.project, rawRequest)
       result              <- fn(projectWithClientId.project)
     } yield result
+  }
+
+  def verifyAuth(project: Project, rawRequest: RawRequest): Future[Unit] = {
+    rawRequest.authorizationHeader match {
+      case Some(authHeader) =>
+        val authResult = auth.verify(project.secrets, authHeader)
+        if (authResult.isSuccess) Future.unit else Future.failed(InvalidToken())
+
+      case None =>
+        Future.unit
+    }
   }
 
   def handleGraphQlRequest(graphQlRequest: GraphQlRequest): Future[(StatusCode, JsValue)] = {

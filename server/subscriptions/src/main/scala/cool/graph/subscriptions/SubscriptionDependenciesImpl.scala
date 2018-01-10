@@ -6,7 +6,7 @@ import cool.graph.api.ApiDependencies
 import cool.graph.api.database.Databases
 import cool.graph.api.project.{ProjectFetcher, ProjectFetcherImpl}
 import cool.graph.api.schema.SchemaBuilder
-import cool.graph.api.server.AuthImpl
+import cool.graph.auth.AuthImpl
 import cool.graph.messagebus._
 import cool.graph.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
 import cool.graph.messagebus.pubsub.rabbit.RabbitAkkaPubSub
