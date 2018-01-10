@@ -31,8 +31,8 @@ case class RequestHandler(
   ): Future[(StatusCode, JsValue)] = {
     val graphQlRequestFuture = for {
       projectWithClientId <- fetchProject(projectId)
-      schema              = schemaBuilder(projectWithClientId.project)
       _                   <- auth.verify(projectWithClientId.project, rawRequest.authorizationHeader).toFuture
+      schema              = schemaBuilder(projectWithClientId.project)
       graphQlRequest      <- rawRequest.toGraphQlRequest(projectWithClientId, schema).toFuture
     } yield graphQlRequest
 
@@ -75,8 +75,8 @@ case class RequestHandler(
   def handleRawRequestForPrivateApi(projectId: String, rawRequest: RawRequest): Future[(StatusCode, JsValue)] = {
     val graphQlRequestFuture = for {
       projectWithClientId <- fetchProject(projectId)
-      schema              = PrivateSchemaBuilder(projectWithClientId.project)(apiDependencies, apiDependencies.system).build()
       _                   <- auth.verify(projectWithClientId.project, rawRequest.authorizationHeader).toFuture
+      schema              = PrivateSchemaBuilder(projectWithClientId.project)(apiDependencies, apiDependencies.system).build()
       graphQlRequest      <- rawRequest.toGraphQlRequest(projectWithClientId, schema).toFuture
     } yield graphQlRequest
 
