@@ -6,6 +6,7 @@ import akka.testkit.{TestKit, TestProbe}
 import cool.graph.bugsnag.{BugSnagger, BugSnaggerMock}
 import cool.graph.messagebus.pubsub.Message
 import cool.graph.messagebus.testkits._
+import cool.graph.subscriptions.SubscriptionDependenciesForTest
 import cool.graph.subscriptions.protocol.SubscriptionProtocolV07.Responses.SubscriptionSessionResponse
 import cool.graph.subscriptions.protocol.SubscriptionSessionManager.Requests.EnrichedSubscriptionRequestV05
 import cool.graph.subscriptions.resolving.SubscriptionsManager.Requests.{CreateSubscription, EndSubscription}
@@ -31,6 +32,7 @@ class SubscriptionSessionManagerProtocolV05Spec
   val ignoreProbe: TestProbe = TestProbe()
   val ignoreRef: ActorRef    = ignoreProbe.testActor
   val bugsnag: BugSnagger    = BugSnaggerMock
+  implicit val dependencies  = new SubscriptionDependenciesForTest
 
   def ignoreKeepAliveProbe: TestProbe = {
     val ret = TestProbe()

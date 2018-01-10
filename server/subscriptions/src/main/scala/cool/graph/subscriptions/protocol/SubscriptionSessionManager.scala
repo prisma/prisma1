@@ -4,6 +4,7 @@ import akka.actor.{Actor, ActorRef, PoisonPill, Props, Terminated}
 import cool.graph.akkautil.{LogUnhandled, LogUnhandledExceptions}
 import cool.graph.bugsnag.BugSnagger
 import cool.graph.messagebus.PubSubPublisher
+import cool.graph.subscriptions.SubscriptionDependencies
 import cool.graph.subscriptions.protocol.SubscriptionProtocolV05.Requests.{InitConnection, SubscriptionSessionRequestV05}
 import cool.graph.subscriptions.protocol.SubscriptionProtocolV05.Responses.SubscriptionSessionResponseV05
 import cool.graph.subscriptions.protocol.SubscriptionProtocolV07.Requests.{GqlConnectionInit, SubscriptionSessionRequest}
@@ -34,7 +35,8 @@ object SubscriptionSessionManager {
 
 case class SubscriptionSessionManager(subscriptionsManager: ActorRef, bugsnag: BugSnagger)(
     implicit responsePublisher05: PubSubPublisher[SubscriptionSessionResponseV05],
-    responsePublisher07: PubSubPublisher[SubscriptionSessionResponse]
+    responsePublisher07: PubSubPublisher[SubscriptionSessionResponse],
+    dependencies: SubscriptionDependencies
 ) extends Actor
     with LogUnhandledExceptions
     with LogUnhandled {

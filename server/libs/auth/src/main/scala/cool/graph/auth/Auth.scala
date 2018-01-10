@@ -26,6 +26,6 @@ object AuthImpl extends Auth {
       // todo: also verify claims in accordance with https://github.com/graphcool/framework/issues/1365
       claims.isSuccess
     }
-    if (isValid) AuthSuccess else AuthFailure
+    if (isValid || secrets.isEmpty) AuthSuccess else AuthFailure
   }
 }
