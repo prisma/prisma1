@@ -102,6 +102,8 @@ trait SpecBase extends TestFrameworkInterface with BeforeAndAfterEach with Befor
     case None        => s"""{"type":"connection_init","payload":{}}"""
   }
 
+  def connectionError() = s"""{"payload":{"message":"Authentication token is invalid."},"type":"connection_error"}"""
+
   def startMessage(id: String, query: String, variables: JsObject = Json.obj()): String = {
     startMessage(id, query, variables = variables, operationName = None)
   }
