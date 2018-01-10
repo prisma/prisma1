@@ -80,7 +80,7 @@ case class ApiServer(
               } ~ {
               extractRawRequest(requestId) { rawRequest =>
                 val projectId = ProjectId.toEncodedString(name = name, stage = stage)
-                val result    = apiDependencies.requestHandler.handleRawRequest(projectId, rawRequest)
+                val result    = apiDependencies.requestHandler.handleRawRequestForPublicApi(projectId, rawRequest)
                 result.onComplete(_ => logRequestEnd(Some(projectId)))
                 complete(result)
               }
