@@ -6,10 +6,11 @@ import cool.graph.deploy.migration._
 import cool.graph.deploy.migration.inference.{InvalidGCValue, MigrationStepsInferrer, RelationDirectiveNeeded, SchemaInferrer}
 import cool.graph.deploy.migration.migrator.Migrator
 import cool.graph.deploy.migration.validation.{SchemaError, SchemaSyntaxValidator}
+import cool.graph.graphql.GraphQlClient
 import cool.graph.messagebus.pubsub.Only
-import cool.graph.shared.models.{Function, Migration, MigrationStep, Project, Schema, ServerSideSubscriptionFunction, WebhookDelivery}
-import org.scalactic.{Bad, Good}
-import play.api.libs.json.Json
+import cool.graph.shared.models.{Function, Migration, MigrationStep, Project, ProjectId, Schema, ServerSideSubscriptionFunction, WebhookDelivery}
+import org.scalactic.{Bad, Good, Or}
+import play.api.libs.json.{JsString, Json}
 import sangria.parser.QueryParser
 
 import scala.collection.Seq
@@ -56,10 +57,15 @@ case class DeployMutation(
         val steps = migrationStepsInferrer.infer(project.schema, inferredNextSchema, schemaMapping)
         for {
           _         <- handleProjectUpdate()
-          migration <- handleMigration(inferredNextSchema, steps, functionsForInput)
+          functions <- getFunctionModelsOrErrors(args.functions)
+          migration <- functions match {
+                        case Bad(_)                  => Future.successful(Some(Migration.empty(project.id)))
+                        case Good(functionsForInput) => handleMigration(inferredNextSchema, steps, functionsForInput)
+                      }
         } yield {
+          val functionErrors = functions.swap.getOrElse(Vector.empty)
           MutationSuccess {
-            DeployMutationPayload(args.clientMutationId, migration = migration, errors = schemaErrors)
+            DeployMutationPayload(args.clientMutationId, migration = migration, errors = schemaErrors ++ functionErrors)
           }
         }
 
@@ -70,25 +76,11 @@ case class DeployMutation(
               clientMutationId = args.clientMutationId,
               migration = None,
               errors = List(err match {
-                case RelationDirectiveNeeded(t1, t1Fields, t2, t2Fields) => SchemaError.global(s"Relation directive required for types $t1 and $t2.")
-                case InvalidGCValue(err)                                 => SchemaError.global(s"Invalid value '${err.value}' for type ${err.typeIdentifier}.")
+                case RelationDirectiveNeeded(t1, _, t2, _) => SchemaError.global(s"Relation directive required for types $t1 and $t2.")
+                case InvalidGCValue(err)                   => SchemaError.global(s"Invalid value '${err.value}' for type ${err.typeIdentifier}.")
               })
             ))
         }
-    }
-  }
-
-  val functionsForInput: Vector[Function] = {
-    args.functions.map { fnInput =>
-      ServerSideSubscriptionFunction(
-        name = fnInput.name,
-        isActive = true,
-        delivery = WebhookDelivery(
-          url = fnInput.url,
-          headers = fnInput.headers.map(header => header.name -> header.value)
-        ),
-        query = fnInput.query
-      )
     }
   }
 
@@ -98,6 +90,50 @@ case class DeployMutation(
     } else {
       Future.unit
     }
+  }
+
+  def getFunctionModelsOrErrors(fns: Vector[FunctionInput]): Future[Vector[Function] Or Vector[SchemaError]] = {
+    validateFunctionInputs(fns).map { errors =>
+      if (errors.nonEmpty) {
+        Bad(errors)
+      } else {
+        Good(args.functions.map(convertFunctionInput))
+      }
+    }
+  }
+
+  private def validateFunctionInputs(fns: Vector[FunctionInput]): Future[Vector[SchemaError]] = Future.sequence(fns.map(validateFunctionInput)).map(_.flatten)
+
+  private def validateFunctionInput(fn: FunctionInput): Future[Vector[SchemaError]] = {
+    val ProjectId(name, stage) = project.projectId
+    dependencies.graphQlClient
+      .sendQuery(
+        query = s"""{
+       |  validateSubscriptionQuery(query: ${JsString(fn.query).toString()}){
+       |    errors
+       |  }
+       |}""".stripMargin,
+        path = s"/$name/$stage/private",
+        headers = Map("Authorization" -> s"Bearer ${project.secrets.headOption.getOrElse("empty")}")
+      )
+      .map { response =>
+        response.bodyAs[Vector[String]]("data.validateSubscriptionQuery.errors").get
+      }
+      .map { errorMessages =>
+        errorMessages.map(error => SchemaError(`type` = "Subscription", field = fn.name, description = error))
+      }
+  }
+
+  private def convertFunctionInput(fnInput: FunctionInput): ServerSideSubscriptionFunction = {
+    ServerSideSubscriptionFunction(
+      name = fnInput.name,
+      isActive = true,
+      delivery = WebhookDelivery(
+        url = fnInput.url,
+        headers = fnInput.headers.map(header => header.name -> header.value)
+      ),
+      query = fnInput.query
+    )
   }
 
   private def handleMigration(nextSchema: Schema, steps: Vector[MigrationStep], functions: Vector[Function]): Future[Option[Migration]] = {

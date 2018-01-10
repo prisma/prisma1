@@ -34,7 +34,7 @@ services:
       GLOBAL_RABBIT_URI: "amqp://rabbit"
       INITIAL_PRICING_PLAN: "initial-plan"
       BUGSNAG_API_KEY: ""
-      SCHEMA_MANAGER_ENDPOINT: "http://localhost:9000/system"
+      CLUSTER_ADDRESS: "http://localhost:9000"
       SCHEMA_MANAGER_SECRET: "empty"
       AWS_ACCESS_KEY_ID: "empty"
       AWS_SECRET_ACCESS_KEY: "empty"

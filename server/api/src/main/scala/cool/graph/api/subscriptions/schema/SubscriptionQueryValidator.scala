@@ -1,8 +1,7 @@
-package cool.graph.subscriptions.schemas
+package cool.graph.api.subscriptions.schema
 
-import cool.graph.api.subscriptions.schema.{QueryTransformer, SubscriptionSchema}
+import cool.graph.api.ApiDependencies
 import cool.graph.shared.models.{Model, ModelMutationType, Project}
-import cool.graph.subscriptions.SubscriptionDependencies
 import org.scalactic.{Bad, Good, Or}
 import sangria.ast.Document
 import sangria.parser.QueryParser
@@ -12,7 +11,7 @@ import scala.util.{Failure, Success}
 
 case class SubscriptionQueryError(errorMessage: String)
 
-case class SubscriptionQueryValidator(project: Project)(implicit dependencies: SubscriptionDependencies) {
+case class SubscriptionQueryValidator(project: Project)(implicit dependencies: ApiDependencies) {
 
   def validate(query: String): Model Or Seq[SubscriptionQueryError] = {
     queryDocument(query).flatMap(validate)
@@ -44,10 +43,12 @@ case class SubscriptionQueryValidator(project: Project)(implicit dependencies: S
   }
 
   def validateSubscriptionQuery(queryDoc: Document, model: Model): Unit Or Seq[SubscriptionQueryError] = {
-    val schema     = SubscriptionSchema(model, project, None, ModelMutationType.Created, None, true).build
+    val schema     = SubscriptionSchema(model, project, None, ModelMutationType.Created, None, externalSchema = true).build
     val violations = QueryValidator.default.validateQuery(schema, queryDoc)
     if (violations.nonEmpty) {
       Bad(violations.map(v => SubscriptionQueryError(v.errorMessage)))
-    } else Good(())
+    } else {
+      Good(())
+    }
   }
 }

@@ -90,6 +90,8 @@ lazy val deploy = serverProject("deploy", imageName = "graphcool-deploy")
   .dependsOn(metrics % "compile")
   .dependsOn(jvmProfiler % "compile")
   .dependsOn(messageBus % "compile")
+  .dependsOn(graphQlClient % "compile")
+  .dependsOn(stubServer % "test")
   .settings(
     libraryDependencies ++= Seq(
       playJson,
