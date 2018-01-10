@@ -7,6 +7,7 @@ import cool.graph.api.util.StringMatchers
 import cool.graph.shared.models.Project
 import cool.graph.util.json.SprayJsonExtensions
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
+import play.api.libs.json.JsString
 
 trait ApiBaseSpec extends BeforeAndAfterEach with BeforeAndAfterAll with SprayJsonExtensions with StringMatchers { self: Suite =>
 
@@ -22,4 +23,6 @@ trait ApiBaseSpec extends BeforeAndAfterEach with BeforeAndAfterAll with SprayJs
     super.afterAll()
     testDependencies.destroy
   }
+
+  def escapeString(str: String) = JsString(str).toString()
 }

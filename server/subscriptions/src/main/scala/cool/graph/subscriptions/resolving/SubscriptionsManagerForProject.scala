@@ -2,7 +2,7 @@ package cool.graph.subscriptions.resolving
 
 import akka.actor.{Actor, ActorRef, Props, Stash, Terminated}
 import cool.graph.akkautil.{LogUnhandled, LogUnhandledExceptions}
-import cool.graph.api.subscriptions.schema.QueryTransformer
+import cool.graph.api.subscriptions.schema.{QueryTransformer, SubscriptionQueryValidator}
 import cool.graph.bugsnag.BugSnagger
 import cool.graph.messagebus.pubsub.Message
 import cool.graph.shared.models._
@@ -13,7 +13,6 @@ import cool.graph.subscriptions.protocol.StringOrInt
 import cool.graph.subscriptions.resolving.SubscriptionsManager.Responses.{CreateSubscriptionFailed, CreateSubscriptionResponse, CreateSubscriptionSucceeded}
 import cool.graph.subscriptions.resolving.SubscriptionsManagerForModel.Requests.StartSubscription
 import cool.graph.subscriptions.resolving.SubscriptionsManagerForProject.{SchemaInvalidated, SchemaInvalidatedMessage}
-import cool.graph.subscriptions.schemas.SubscriptionQueryValidator
 import org.scalactic.{Bad, Good}
 
 import scala.collection.mutable

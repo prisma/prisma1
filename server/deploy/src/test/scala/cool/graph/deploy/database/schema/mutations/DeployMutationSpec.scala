@@ -3,9 +3,12 @@ package cool.graph.deploy.database.schema.mutations
 import cool.graph.deploy.schema.mutations.{FunctionInput, HeaderInput}
 import cool.graph.deploy.specutils.DeploySpecBase
 import cool.graph.shared.models._
+import cool.graph.stub.Stub
 import org.scalatest.{FlatSpec, Matchers}
 
 class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
+
+  import cool.graph.stub.Import._
 
   val projectPersistence   = testDependencies.projectPersistence
   val migrationPersistence = testDependencies.migrationPersistence
@@ -352,7 +355,44 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
 //    Thread.sleep(30000)
 //  }
 
-  "DeployMutation" should "create functions" in {
+  "DeployMutation" should "return an error if a subscription query is invalid" in {
+    val schema = """
+                   |type TestModel {
+                   |  id: ID! @unique
+                   |  test: String
+                   |}
+                 """.stripMargin
+
+    val (project, _) = setupProject(schema)
+
+    val fnInput = FunctionInput(name = "my-function", query = "invalid query", url = "http://whatever.com", headers = Vector(HeaderInput("header1", "value1")))
+
+    val result = {
+      val ProjectId(name, stage) = project.projectId
+      val stub = Request("POST", s"/$name/$stage/private")
+        .stub(
+          200,
+          """{
+          |  "data": {
+          |    "validateSubscriptionQuery": {
+          |      "errors": ["This did not work!"]
+          |    }
+          |  }
+          |}
+        """.stripMargin
+        )
+        .ignoreBody
+      withStubs(stub) {
+        deploySchema(project, schema, Vector(fnInput))
+      }
+    }
+    result.pathAsSeq("data.deploy.errors") should not(be(empty))
+
+    val reloadedProject = projectPersistence.load(project.id).await.get
+    reloadedProject.functions should have(size(0))
+  }
+
+  "DeployMutation" should "create a server side subscription if the subscription query is valid" in {
     val schema = """
                    |type TestModel {
                    |  id: ID! @unique
@@ -363,7 +403,26 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
     val (project, _) = setupProject(schema)
 
     val fnInput = FunctionInput(name = "my-function", query = "my query", url = "http://whatever.com", headers = Vector(HeaderInput("header1", "value1")))
-    val result  = deploySchema(project, schema, Vector(fnInput))
+    val result = {
+      val ProjectId(name, stage) = project.projectId
+      val stub = Request("POST", s"/$name/$stage/private")
+        .stub(
+          200,
+          """{
+            |  "data": {
+            |    "validateSubscriptionQuery": {
+            |      "errors": []
+            |    }
+            |  }
+            |}
+          """.stripMargin
+        )
+        .ignoreBody
+
+      withStubs(stub) {
+        deploySchema(project, schema, Vector(fnInput))
+      }
+    }
     result.pathAsSeq("data.deploy.errors") should be(empty)
 
     val reloadedProject = projectPersistence.load(project.id).await.get
@@ -374,6 +433,11 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
     val delivery = function.delivery.asInstanceOf[WebhookDelivery]
     delivery.url should equal(fnInput.url)
     delivery.headers should equal(Vector("header1" -> "value1"))
+  }
+
+  def withStubs(stubs: Stub*) = {
+    // use a fixed port for every test because we instantiate the client only once in the dependencies
+    withStubServer(List(stubs: _*), stubNotFoundStatusCode = 418, port = 8777)
   }
 
   def deploySchema(project: Project, schema: String, functions: Vector[FunctionInput] = Vector.empty) = {
