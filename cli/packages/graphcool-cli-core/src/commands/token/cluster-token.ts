@@ -23,9 +23,9 @@ export default class ClusterToken extends Command {
       throw new Error(`Please provide a cluster in your graphcool.yml`)
     }
 
-    const token = cluster!.generateClusterToken(
+    const token = await cluster!.getToken(
       serviceName,
-      this.definition.getWorkspace() || '*',
+      this.definition.getWorkspace() || undefined,
       stage,
     )
 

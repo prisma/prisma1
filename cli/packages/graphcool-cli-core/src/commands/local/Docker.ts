@@ -80,7 +80,7 @@ export default class Docker {
           port = 60000
         }
       }
-      endpoint = `http://${this.hostName}:${this.envVars.PORT}`
+      endpoint = `http://${this.hostName}:${port}`
     }
     this.setEnvVars(port, endpoint)
     await this.setKeyPair()
