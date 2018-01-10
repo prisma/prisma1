@@ -24,15 +24,12 @@ This directory contains a GraphQL server (based on [`graphql-yoga`](https://gith
 
 ## Get started
 
-### 0. Prerequisites: Graphcool CLI
+### 0. Prerequisites
 
-If you haven't already, go ahead and install the Graphcool CLI:
+You need to have the following things installed: 
 
-```sh
-npm install -g graphcool
-# or
-# yarn global add graphcool
-```
+* Node.js 8 (or higher)
+* yarn
 
 ### 1. Download the example
 
@@ -45,11 +42,10 @@ cd auth
 
 ### 2. Deploy the Graphcool database service
 
-You can now [deploy](https://graph.cool/docs/reference/graphcool-cli/commands-aiteerae6l#graphcool-deploy) the Graphcool service that's defined in the `database` directory:
+You can now [deploy](https://graph.cool/docs/reference/graphcool-cli/commands-aiteerae6l#graphcool-deploy) the Graphcool service that's defined in `database/graphcool.yml`:
 
 ```sh
-cd database
-graphcool deploy
+yarn graphcool deploy
 ```
 
 > Note: Whenever you make changes to files in the `database` directory, you need to invoke `graphcool deploy` again to make sure your changes get applied to the running service.
@@ -59,7 +55,6 @@ graphcool deploy
 Your GraphQL web server that's powered by [`graphql-yoga`](https://github.com/graphcool/graphql-yoga/) is now ready to be deployed. This is because the Graphcool database service it connects to is now available.
 
 ```sh
-cd ..
 yarn start
 ```
 
@@ -71,11 +66,13 @@ The easiest way to test the deployed service is by using a [GraphQL Playground](
 
 ### Open a Playground
 
-You can open a Playground by navigating to [http://localhost:4000](http://localhost:4000) in your browser or with the following command:
+You can either start the [desktop app](https://github.com/graphcool/graphql-playground) via
 
 ```sh
 graphcool playground
 ```
+
+Or you can open a Playground by navigating to [http://localhost:4000](http://localhost:4000) in your browser.
 
 ### Register a new user with the `signup` mutation
 
@@ -92,13 +89,13 @@ mutation {
 }
 ```
 
-### Logging in an existing user with the `authenticateUser` mutation
+### Logging in an existing user with the `login` mutation
 
 This mutation will log in an _existing_ user by requesting a new authentication token for her:
 
 ```graphql
 mutation {
-  authenticateUser(email: "alice@graph.cool" password: "graphql") {
+  login(email: "alice@graph.cool" password: "graphql") {
     token
   }
 }
