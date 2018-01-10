@@ -91,8 +91,5 @@ case class SingleServerDependencies()(implicit val system: ActorSystem, val mate
   override lazy val webhooksConsumer = webhooksQueue.map[WorkerWebhook](Converters.apiWebhook2WorkerWebhook)
   override lazy val httpClient       = SimpleHttpClient()
 
-  override def graphQlClient(project: Project) = {
-    val url = sys.env.getOrElse("CLUSTER_ADDRESS", sys.error("env var CLUSTER_ADDRESS is not set"))
-    GraphQlClient(url, Map("Authorization" -> s"Bearer ${project.secrets.head}"))
-  }
+  override lazy val graphQlClient = GraphQlClient(sys.env.getOrElse("CLUSTER_ADDRESS", sys.error("env var CLUSTER_ADDRESS is not set")))
 }
