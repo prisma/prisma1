@@ -3,8 +3,6 @@ const { importSchema } = require('graphql-import')
 const { Graphcool } = require('graphcool-binding')
 const { me, signup, login, AuthPayload } = require('./auth')
 
-const typeDefs = importSchema('./src/schema.graphql')
-
 const resolvers = {
   Query: {
     me,
@@ -16,12 +14,12 @@ const resolvers = {
 }
 
 const server = new GraphQLServer({
-  typeDefs,
+  typeDefs: './src/schema.graphql',
   resolvers,
   context: req => ({
     ...req,
     db: new Graphcool({
-      schemaPath: './database/schema.generated.graphql',
+      typeDefs: 'src/generated/graphcool.graphql',
       endpoint: process.env.GRAPHCOOL_ENDPOINT,
       secret: process.env.GRAPHCOOL_SECRET,
     }),
