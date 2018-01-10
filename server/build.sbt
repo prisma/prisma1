@@ -255,6 +255,9 @@ lazy val cache =
       java8Compat,
       jsr305
     ))
+
+lazy val auth = libProject("auth").settings(libraryDependencies += jwt)
+
 lazy val singleServer = serverProject("single-server", imageName = "graphcool-dev")
   .dependsOn(api% "compile")
   .dependsOn(deploy % "compile")
