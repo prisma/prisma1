@@ -10,10 +10,11 @@ This directory contains a GraphQL server (based on [`graphql-yoga`](https://gith
 .
 ├── README.md
 ├── database
-│   ├── datamodel.graphql
-│   └── schema.generated.graphql
+│   └── datamodel.graphql
 ├── graphcool.yml
 ├── src
+│   ├── generated
+│   │   └── graphcool.graphql
 │   ├── schema.graphql
 │   ├── index.js
 │   ├── auth.js
@@ -105,7 +106,7 @@ mutation {
 
 For this query, you need to make sure a valid authentication token is sent along with the `Bearer `-prefix in the `Authorization` header of the request. Inside the Playground, you can set HTTP headers in the bottom-left corner:
 
-![](https://imgur.com/a/J8Alc)
+![](https://i.imgur.com/BLNI8z1.png)
 
 Once you've set the header, you can send the following query to check whether the token is valid:
 
