@@ -1,0 +1,13 @@
+# the name for the service (will be part of the service's HTTP endpoint)
+service: myapp
+
+# the cluster and stage the service is deployed to
+stage: dev
+
+datamodel: datamodel.graphql
+
+# to disable authentication:
+# disableAuth: true
+secret: mysecret123
+
+cluster: local
