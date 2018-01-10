@@ -88,5 +88,4 @@ case class SingleServerDependencies()(implicit val system: ActorSystem, val mate
   override lazy val webhookPublisher = webhooksQueue
   override lazy val webhooksConsumer = webhooksQueue.map[WorkerWebhook](Converters.apiWebhook2WorkerWebhook)
   override lazy val httpClient       = SimpleHttpClient()
-
 }

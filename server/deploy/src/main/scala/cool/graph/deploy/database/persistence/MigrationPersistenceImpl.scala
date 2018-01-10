@@ -9,11 +9,20 @@ import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.MySQLProfile.backend.DatabaseDef
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success}
 
 case class MigrationPersistenceImpl(
     internalDatabase: DatabaseDef
 )(implicit ec: ExecutionContext)
     extends MigrationPersistence {
+
+  def lock(): Future[Int] = {
+    // todo Possible enhancement: Canary row in a separate table to prevent serious damage to data in case another instance spins up and circumvents this protection.
+    internalDatabase.run(sql"SELECT GET_LOCK('deploy_privileges', -1);".as[Int].head.withPinnedSession).transformWith {
+      case Success(result) => if (result == 1) Future.successful(result) else lock()
+      case Failure(err)    => Future.failed(err)
+    }
+  }
 
   override def byId(migrationId: MigrationId): Future[Option[Migration]] = {
     val baseQuery = for {
