@@ -3,6 +3,7 @@ package cool.graph.deploy.database.schema.mutations
 import cool.graph.deploy.schema.mutations.{FunctionInput, HeaderInput}
 import cool.graph.deploy.specutils.DeploySpecBase
 import cool.graph.shared.models._
+import cool.graph.stub.Stub
 import org.scalatest.{FlatSpec, Matchers}
 
 class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
@@ -381,7 +382,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
         """.stripMargin
         )
         .ignoreBody
-      withStubServer(List(stub), stubNotFoundStatusCode = 418) {
+      withStubs(stub) {
         deploySchema(project, schema, Vector(fnInput))
       }
     }
@@ -417,7 +418,8 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
           """.stripMargin
         )
         .ignoreBody
-      withStubServer(List(stub), stubNotFoundStatusCode = 418) {
+
+      withStubs(stub) {
         deploySchema(project, schema, Vector(fnInput))
       }
     }
@@ -431,6 +433,11 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
     val delivery = function.delivery.asInstanceOf[WebhookDelivery]
     delivery.url should equal(fnInput.url)
     delivery.headers should equal(Vector("header1" -> "value1"))
+  }
+
+  def withStubs(stubs: Stub*) = {
+    // use a fixed port for every test because we instantiate the client only once in the dependencies
+    withStubServer(List(stubs: _*), stubNotFoundStatusCode = 418, port = 8777)
   }
 
   def deploySchema(project: Project, schema: String, functions: Vector[FunctionInput] = Vector.empty) = {
