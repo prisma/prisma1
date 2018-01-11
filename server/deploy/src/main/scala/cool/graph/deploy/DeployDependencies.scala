@@ -55,8 +55,8 @@ case class DeployDependenciesImpl()(implicit val system: ActorSystem, val materi
   override lazy val migrator: Migrator = AsyncMigrator(clientDb, migrationPersistence, projectPersistence)
   override lazy val clusterAuth = {
     sys.env.get("CLUSTER_PUBLIC_KEY") match {
-      case Some(publicKey) => ClusterAuthImpl(publicKey)
-      case None            => DummyClusterAuth()
+      case Some(publicKey) if publicKey.nonEmpty => ClusterAuthImpl(publicKey)
+      case _                                     => DummyClusterAuth()
     }
   }
   override lazy val graphQlClient         = GraphQlClient(sys.env.getOrElse("CLUSTER_ADDRESS", sys.error("env var CLUSTER_ADDRESS is not set")))

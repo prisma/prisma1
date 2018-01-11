@@ -46,8 +46,8 @@ case class SingleServerDependencies()(implicit val system: ActorSystem, val mate
   override val migrator: Migrator = AsyncMigrator(clientDb, migrationPersistence, projectPersistence)
   override val clusterAuth = {
     sys.env.get("CLUSTER_PUBLIC_KEY") match {
-      case Some(publicKey) => ClusterAuthImpl(publicKey)
-      case None            => DummyClusterAuth()
+      case Some(publicKey) if publicKey.nonEmpty => ClusterAuthImpl(publicKey)
+      case _                                     => DummyClusterAuth()
     }
   }
 
