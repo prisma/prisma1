@@ -15,19 +15,39 @@ const resolvers = {
           isPublished,
         }
       }, info)
-    }
+    },
+    // writeComment(parent, { body, postId }, ctx, info) {
+    //   return ctx.db.mutation.writeComment({ data: {
+    //       body,
+    //       post: {
+    //         connect: { postId }
+    //       },
+    //     }
+    //   }, info)
+    // },
   },
   Subscription: {
     publications: {
       subscribe: async(parent, args, ctx, info) => {
         return ctx.db.subscription.post({ where: {
-          mutation_in: [CREATED, UPDATED],
+          mutation_in: ["CREATED", "UPDATED"],
           node: {
             isPublished: true
           }
         }}, info)
       },
     },
+    comments: {
+      subscribe: async(parent, args, ctx, info) => {
+        return ctx.db.subscription.comments({ where: {
+          node: {
+            post: {
+              title_contains: "News"
+            }
+          }
+        }}, info)
+      }
+    }
   }
 }
 

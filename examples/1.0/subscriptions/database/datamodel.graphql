@@ -1,6 +1,13 @@
 type Post {
+  # comments: [Comment!]!
   id: ID! @unique
   isPublished: Boolean!
   title: String!
   text: String!
 }
+
+# type Comment {
+#   body: String!
+#   id: ID! @unique
+#   post: Post!
+# }
