@@ -1,4 +1,4 @@
-# import Post from "./generated/database.graphql"
+# import Post, PostWhereInput, PostOrderByInput, PostCreateInput from "./generated/database.graphql"
 
 type Query {
   posts(where: PostWhereInput, orderBy: PostOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Post]!
