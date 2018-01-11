@@ -10,8 +10,8 @@ This directory contains a GraphQL server (based on [`graphql-yoga`](https://gith
 .
 ├── README.md
 ├── database
-│   └── datamodel.graphql
-├── graphcool.yml
+│   ├── schema.graphql
+│   └── graphcool.yml
 ├── src
 │   ├── generated
 │   │   └── graphcool.graphql
@@ -20,7 +20,9 @@ This directory contains a GraphQL server (based on [`graphql-yoga`](https://gith
 │   ├── auth.js
 │   └── utils.js
 ├── package.json
-└── yarn.lock
+├── yarn.lock
+├── .env
+└── .graphqlconfig.yml
 ```
 
 ## Get started
@@ -30,7 +32,8 @@ This directory contains a GraphQL server (based on [`graphql-yoga`](https://gith
 You need to have the following things installed: 
 
 * Node.js 8 (or higher)
-* yarn
+* Yarn
+* Docker (only for deploying locally)
 
 ### 1. Download the example
 
@@ -43,7 +46,7 @@ cd auth
 
 ### 2. Deploy the Graphcool database service
 
-You can now [deploy](https://graph.cool/docs/reference/graphcool-cli/commands-aiteerae6l#graphcool-deploy) the Graphcool service that's defined in `database/graphcool.yml`:
+You can now [deploy](https://graph.cool/docs/reference/graphcool-cli/commands-aiteerae6l#graphcool-deploy) the Graphcool service:
 
 ```sh
 yarn graphcool deploy
