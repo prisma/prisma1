@@ -31,15 +31,13 @@ This directory contains a GraphQL server (based on [`graphql-yoga`](https://gith
 
 ## Get started
 
-### 0. Prerequisites: Graphcool CLI
+### 0. Prerequisites
 
-If you haven't already, go ahead and install the Graphcool CLI:
+You need to have the following things installed: 
 
-```sh
-npm install -g graphcool
-# or
-# yarn global add graphcool
-```
+* Node.js 8 (or higher)
+* Yarn
+* Docker (only for deploying locally)
 
 ### 1. Download the example
 
