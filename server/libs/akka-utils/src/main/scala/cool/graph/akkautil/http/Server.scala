@@ -17,5 +17,5 @@ trait Server {
   def onStart: Future[_] = Future.successful(())
   def onStop: Future[_]  = Future.successful(())
 
-  def healthCheck: Future[_]
+  final def healthCheck: Future[_] = Future.successful(())
 }

@@ -30,9 +30,7 @@ class ServerExecutorSpec extends AcceptanceSpecification with AfterAll {
       innerRoutes: Route,
       prefix: String = "",
       check: Unit => Future[_] = _ => Future.successful(())
-  ) extends Server {
-    override def healthCheck: Future[_] = check(())
-  }
+  ) extends Server
 
   def withServerExecutor(servers: Server*)(checkFn: ServerExecutor => MatchResult[Any]): MatchResult[Any] = {
     val server = ServerExecutor(port = 8000 + new scala.util.Random().nextInt(50000), servers: _*)

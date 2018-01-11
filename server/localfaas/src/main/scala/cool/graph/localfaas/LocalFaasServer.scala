@@ -36,18 +36,19 @@ case class BadRequestException(reason: String) extends Exception(reason)
 case class FunctionRuntimeServer(prefix: String = "", workingDir: File)(implicit system: ActorSystem, materializer: ActorMaterializer)
     extends Server
     with PlayJsonSupport {
+
   import Conversions._
   import system.dispatcher
 
   val functionHandlerFile = (workingDir / "handlers.json").createIfNotExists() // persistence file for handlers
-  val functionsDir        = (workingDir / "functions").createIfNotExists(asDirectory = true, createParents = true)
-  val deploymentsDir      = (workingDir / "deployments").createIfNotExists(asDirectory = true, createParents = true)
+  val functionsDir = (workingDir / "functions").createIfNotExists(asDirectory = true, createParents = true)
+  val deploymentsDir = (workingDir / "deployments").createIfNotExists(asDirectory = true, createParents = true)
 
   implicit val timeout = Timeout(5.seconds)
 
   val exceptionHandler = ExceptionHandler {
-    case e: BadRequestException => println(e.getMessage); complete(StatusCodes.BadRequest          -> StatusResponse(success = false, Some(e.getMessage)))
-    case e                      => println(e.getMessage); complete(StatusCodes.InternalServerError -> StatusResponse(success = false, Some(e.getMessage)))
+    case e: BadRequestException => println(e.getMessage); complete(StatusCodes.BadRequest -> StatusResponse(success = false, Some(e.getMessage)))
+    case e => println(e.getMessage); complete(StatusCodes.InternalServerError -> StatusResponse(success = false, Some(e.getMessage)))
   }
 
   // Actor responsible for persisting the mapping of functions to their handlers
@@ -60,11 +61,11 @@ case class FunctionRuntimeServer(prefix: String = "", workingDir: File)(implicit
           pathPrefix(Segment) { projectId =>
             pathPrefix(Segment) { deploymentId =>
               val deployDirForProject = (deploymentsDir / projectId / deploymentId).createIfNotExists(asDirectory = true, createParents = true).clear()
-              val destFile            = deployDirForProject / s"$deploymentId.zip"
+              val destFile = deployDirForProject / s"$deploymentId.zip"
 
               println(s"Writing to ${destFile.path}")
 
-              val sink        = FileIO.toPath(destFile.path)
+              val sink = FileIO.toPath(destFile.path)
               val writeResult = req.entity.dataBytes.runWith(sink)
 
               onSuccess(writeResult) { result =>
@@ -76,11 +77,15 @@ case class FunctionRuntimeServer(prefix: String = "", workingDir: File)(implicit
                       Utils.unzip(destFile, deployDirForProject)
                     } match {
                       case Success(_) =>
-                        Try { destFile.delete() }
+                        Try {
+                          destFile.delete()
+                        }
                         println("Done unzipping.")
 
                       case Failure(e) =>
-                        Try { deployDirForProject.clear() }
+                        Try {
+                          deployDirForProject.clear()
+                        }
                         println(s"Error while unzipping: $e")
                         throw e
                     }
@@ -109,7 +114,7 @@ case class FunctionRuntimeServer(prefix: String = "", workingDir: File)(implicit
                 throw BadRequestException(s"Invalid zip URL '${input.zipUrl}', expected path '/functions/files/$projectId/<deploymentID>'.")
               }
 
-              val deploymentId      = segments.last
+              val deploymentId = segments.last
               val functionArtifacts = deploymentsDir / projectId / deploymentId
 
               if (!functionArtifacts.exists || functionArtifacts.isEmpty) {
@@ -150,7 +155,7 @@ case class FunctionRuntimeServer(prefix: String = "", workingDir: File)(implicit
           pathPrefix("invoke") {
             pathPrefix(Segment) { projectId =>
               entity(as[FunctionInvocation]) { invocation =>
-                val input       = Json.parse(invocation.input).toString
+                val input = Json.parse(invocation.input).toString
                 val handlerPath = mappingActor ? GetHandler(projectId, invocation.functionName)
 
                 val invocationResult = handlerPath.mapTo[String].map { path =>
@@ -181,19 +186,19 @@ case class FunctionRuntimeServer(prefix: String = "", workingDir: File)(implicit
                   )
 
                   val startTime = System.currentTimeMillis()
-                  val process   = Process("node", Seq(handlerFile.path.toString)).run(io)
-                  val exitCode  = process.exitValue()
-                  val duration  = System.currentTimeMillis() - startTime
+                  val process = Process("node", Seq(handlerFile.path.toString)).run(io)
+                  val exitCode = process.exitValue()
+                  val duration = System.currentTimeMillis() - startTime
 
                   // For now only the stdout of the wrapper process is really interesting.
                   val parsedResult = Json.parse(stdout).validate[FunctionInvocationResult] match {
                     case JsSuccess(res, _) => res
-                    case JsError(e)        => println(e); FunctionInvocationResult(None, None, None, stdout, stderr)
+                    case JsError(e) => println(e); FunctionInvocationResult(None, None, None, stdout, stderr)
                   }
 
                   println(stdout)
 
-                  val error   = parsedResult.error
+                  val error = parsedResult.error
                   val success = (error.isEmpty || error.exists(e => e.isEmpty || e == "null" || e == "{}")) && exitCode == 0
 
                   parsedResult.printSummary(duration, success, projectId, invocation.functionName)
@@ -218,6 +223,4 @@ case class FunctionRuntimeServer(prefix: String = "", workingDir: File)(implicit
         }
       }
   }
-
-  override def healthCheck = Future.successful(())
 }

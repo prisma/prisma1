@@ -37,7 +37,6 @@ case class WebsocketServer(services: WebsocketServices, prefix: String = "")(
     manager ! IncomingQueueMessage(strMsg.topic, strMsg.payload)
   })
 
-  override def healthCheck: Future[_] = Future.successful(())
   override def onStop: Future[_]      = Future { responseSubscription.unsubscribe }
 
   val innerRoutes = pathPrefix("v1") {
