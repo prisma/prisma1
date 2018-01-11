@@ -57,7 +57,9 @@ export class Config {
    * Urls
    */
   statusEndpoint = 'https://crm.graph.cool/prod/status'
-  cloudApiEndpoint = 'https://api.cloud.graph.cool'
+  cloudApiEndpoint = isDevConsole
+    ? 'http://localhost:4000'
+    : 'https://api.cloud.graph.cool'
   consoleEndpoint = isDevConsole
     ? 'http://localhost:3000'
     : 'https://app.graph.cool'
