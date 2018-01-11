@@ -159,16 +159,4 @@ case class SystemServer(
         getFromResource("graphiql.html")
       }
   }
-
-  def healthCheck: Future[_] =
-    for {
-      _ <- Future.sequence {
-            globalDatabaseManager.databases.values.map { db =>
-              for {
-                _ <- db.master.run(sql"SELECT 1".as[Int])
-                _ <- db.readOnly.run(sql"SELECT 1".as[Int])
-              } yield ()
-            }
-          }
-    } yield ()
 }

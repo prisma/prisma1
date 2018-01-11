@@ -109,9 +109,4 @@ case class SchemaManagerServer(prefix: String = "")(
       case Some(schema) => SchemaSerializer.serialize(schema)
     }
   }
-
-  def healthCheck =
-    for {
-      internalDb <- internalDatabase.run(sql"SELECT 1".as[Int])
-    } yield internalDb
 }
