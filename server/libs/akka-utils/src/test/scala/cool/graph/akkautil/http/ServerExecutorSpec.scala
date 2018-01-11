@@ -20,7 +20,6 @@ class ServerExecutorSpec extends AcceptanceSpecification with AfterAll {
       execute a single server correctly $singleServerExecution
       execute a single server with prefix correctly $singleServerPrefixExecution
       merge routes from multiple servers correctly $mergeRoutesTest
-      merge health checks from all servers correctly $healthCheckMerge
   """
 
   implicit val system       = SingleThreadedActorSystem("server-spec")
@@ -113,18 +112,6 @@ class ServerExecutorSpec extends AcceptanceSpecification with AfterAll {
       val firstRouteSuccessResult = server.makeRequest("/v2/surprise")
       firstRouteSuccessResult.status.intValue() mustEqual 200
       bodyAsString(firstRouteSuccessResult.entity) mustEqual "much surprise, wow"
-    }
-  }
-
-  def healthCheckMerge: MatchResult[Any] = {
-    val testServer = TestServer(route, prefix = "v1")
-    val otherTestServer = TestServer(route, prefix = "v2", check = _ => {
-      Future.failed(new Exception("QUICK, EVERYBODY DO THE PANIC"))
-    })
-
-    withServerExecutor(testServer, otherTestServer) { server =>
-      val statusResult = server.makeRequest("/status")
-      statusResult.status.intValue() mustNotEqual 200
     }
   }
 }
