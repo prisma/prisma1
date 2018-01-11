@@ -1,4 +1,4 @@
-# import ID, File from "./generated/database.graphql"
+# import ID, File from "./generated/graphcool.graphql"
 
 type Query {
   file(id: ID!): File

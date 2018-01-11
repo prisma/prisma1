@@ -214,7 +214,6 @@ type Mutation {
   upsertFile(where: FileWhereUniqueInput!, create: FileCreateInput!, update: FileUpdateInput!): File!
   updateManyFiles(data: FileUpdateInput!, where: FileWhereInput!): BatchPayload!
   deleteManyFiles(where: FileWhereInput!): BatchPayload!
-  resetData: Boolean
 }
 
 enum MutationType {
