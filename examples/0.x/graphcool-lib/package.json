@@ -1,0 +1,9 @@
+{
+  "name": "graphcool-lib",
+  "version": "1.0.0",
+  "description": "My Graphcool Service",
+  "dependencies": {
+    "graphcool-lib": "^0.1.4",
+    "isomorphic-fetch": "^2.2.1"
+  }
+}

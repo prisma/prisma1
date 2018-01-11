@@ -1,0 +1,27 @@
+{
+  "name": "webshop",
+  "version": "1.0.0",
+  "description": "## What it includes",
+  "main": "index.js",
+  "engines": {
+    "node": ">=8.3.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@types/bcryptjs": "^2.4.1",
+    "@types/validator": "^6.3.0",
+    "bcryptjs": "^2.4.3",
+    "graphcool-lib": "^0.1.0",
+    "graphql-request": "^1.4.0",
+    "stripe": "^5.1.1",
+    "validator": "^9.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^8.0.45",
+    "@types/stripe-node": "^4.7.1"
+  }
+}

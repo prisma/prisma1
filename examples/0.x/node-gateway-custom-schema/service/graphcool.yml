@@ -1,0 +1,4 @@
+types: ./types.graphql
+
+permissions:
+- operation: "*"

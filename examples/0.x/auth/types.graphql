@@ -1,0 +1,8 @@
+type User @model {
+  id: ID! @isUnique
+  createdAt: DateTime!
+  updatedAt: DateTime!
+
+  email: String! @isUnique
+  password: String!
+}

@@ -1,0 +1,15 @@
+types: ./types.graphql
+
+functions: 
+  createFirstArticle: 
+    type: subscription
+    # The subscription query inside `src/createFirstArticle.graphql` determines
+    # _when_ (i.e. upon which event) the `handler` function will be invoked.
+    # The selection set of the subscription query further determines the _input type_ 
+    # for the `handler` function.
+    query: src/createFirstArticle.graphql
+    handler: 
+      code: src/createFirstArticle.js
+
+permissions:
+  - operation: "*"

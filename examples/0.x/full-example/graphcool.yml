@@ -1,0 +1,92 @@
+types: ./types.graphql
+
+functions:
+
+  # Authentication functions from: `https://github.com/graphcool/templates/tree/master/auth/email-password`
+  signup:
+    type: resolver
+    schema: src/email-password/signup.graphql
+    handler:
+      code: src/email-password/signup.ts
+
+  authenticate:
+    type: resolver
+    schema: src/email-password/authenticate.graphql
+    handler:
+      code: src/email-password/authenticate.ts
+
+  loggedInUser:
+    type: resolver
+    schema: src/email-password/loggedInUser.graphql
+    handler:
+      code: src/email-password/loggedInUser.ts
+
+  # Payment function using the implementation in `./src/checkout/pay.ts`
+  pay:
+    handler:
+      code:
+        src: ./src/checkout/pay.ts
+        # Define environment variable accessible by the function in `./src/checkout/pay.ts`
+        environment:
+          STRIPE_KEY: ${env:STRIPE_TEST_KEY}
+    type: resolver
+    schema: ./src/checkout/pay.graphql
+
+  # Adding items using the implementation in `./src/checkout/pay.ts`
+  setOrderItem:
+    handler:
+      code:
+        src: ./src/checkout/setOrderItem.ts
+    type: resolver
+    schema: ./src/checkout/setOrderItem.graphql
+
+permissions:
+  # development permissions
+
+  # - operation: "*"
+
+  # production permissions
+
+  # everyone can read products
+  - operation: Product.read
+
+  # owner can read orders, items, user
+  - operation: Order.read
+    authenticated: true
+    query: src/permissions/models/Order.graphql:isOwner
+  - operation: Item.read
+    authenticated: true
+    query: src/permissions/models/Item.graphql:isOwner
+  - operation: Order.read
+    authenticated: true
+    query: src/permissions/models/Order.graphql:isOwner
+  - operation: User.read
+    authenticated: true
+    query: src/permissions/models/User.graphql:isOwner
+    fields: [id, email, name]
+
+# authenticated user can create + edit orders
+  - operation: Order.create
+    authenticated: true
+    fields: [description]
+    query: src/permissions/models/Order.graphql:isOwnerCreate
+  - operation: Order.update
+    authenticated: true
+    fields: [description]
+    query: src/permissions/models/Order.graphql:isOwner
+
+# owner can delete orders, items
+  - operation: Order.delete
+    authenticated: true
+    query: src/permissions/models/Order.graphql:isOwner
+  - operation: Item.delete
+    authenticated: true
+    query: src/permissions/models/Item.graphql:isOwner
+
+# owner can make orders for themselves
+  - operation: Orders.connect
+    authenticated: true
+    query: src/permissions/relations/Orders.graphql:isOwner
+
+rootTokens:
+  - seed-script

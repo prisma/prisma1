@@ -1,0 +1,8 @@
+type AllBreedsPayload {
+  name: String!
+  subBreeds: [String!]!
+}
+
+extend type Query {
+  allBreeds: [AllBreedsPayload!]!
+}

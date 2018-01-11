@@ -1,0 +1,17 @@
+types: ./types.graphql
+
+functions:
+  postRandomDogImage:
+    handler:
+      code: src/postRandomDogImage.js
+    type: resolver
+    schema: src/postRandomDogImage.graphql
+  checkPostCount:
+    handler:
+      code: src/checkPostCount.js
+    type: operationBefore
+    operation: Post.create
+
+permissions:
+- operation: "*"
+
