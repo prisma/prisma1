@@ -1,5 +1,8 @@
 type A implements Node {
     id: ID! @isUnique
+    field1: String!
+    field2: String
+    field3: [Int]
     fieldB: B! @relation(name:"AOnB")
 	fieldC: C! @relation(name:"AOnC")
 	fieldD: D! @relation(name:"AOnD")
@@ -23,6 +26,9 @@ type A implements Node {
 
 type B implements Node {
     id: ID! @isUnique
+    field1: String!
+    field2: String
+    field3: [Int]
     fieldA: A! @relation(name:"AOnB")
 	fieldC: C! @relation(name:"BOnC")
 	fieldD: D! @relation(name:"BOnD")
@@ -46,6 +52,9 @@ type B implements Node {
 
 type C implements Node {
     id: ID! @isUnique
+    field1: String!
+    field2: String
+    field3: [Int]
     fieldA: A! @relation(name:"AOnC")
 	fieldB: B! @relation(name:"BOnC")
 	fieldD: D! @relation(name:"COnD")
@@ -69,6 +78,9 @@ type C implements Node {
 
 type D implements Node {
     id: ID! @isUnique
+    field1: String!
+    field2: String
+    field3: [Int]
     fieldA: A! @relation(name:"AOnD")
 	fieldB: B! @relation(name:"BOnD")
 	fieldC: C! @relation(name:"COnD")
@@ -92,6 +104,9 @@ type D implements Node {
 
 type E implements Node {
     id: ID! @isUnique
+    field1: String!
+    field2: String
+    field3: [Int]
     fieldA: A! @relation(name:"AOnE")
 	fieldB: B! @relation(name:"BOnE")
 	fieldC: C! @relation(name:"COnE")
@@ -115,6 +130,9 @@ type E implements Node {
 
 type F implements Node {
     id: ID! @isUnique
+    field1: String!
+    field2: String
+    field3: [Int]
     fieldA: A! @relation(name:"AOnF")
 	fieldB: B! @relation(name:"BOnF")
 	fieldC: C! @relation(name:"COnF")
@@ -138,6 +156,9 @@ type F implements Node {
 
 type G implements Node {
     id: ID! @isUnique
+    field1: String!
+    field2: String
+    field3: [Int]
     fieldA: A! @relation(name:"AOnG")
 	fieldB: B! @relation(name:"BOnG")
 	fieldC: C! @relation(name:"COnG")
@@ -161,6 +182,9 @@ type G implements Node {
 
 type H implements Node {
     id: ID! @isUnique
+    field1: String!
+    field2: String
+    field3: [Int]
     fieldA: A! @relation(name:"AOnH")
 	fieldB: B! @relation(name:"BOnH")
 	fieldC: C! @relation(name:"COnH")
@@ -184,6 +208,9 @@ type H implements Node {
 
 type I implements Node {
     id: ID! @isUnique
+    field1: String!
+    field2: String
+    field3: [Int]
     fieldA: A! @relation(name:"AOnI")
 	fieldB: B! @relation(name:"BOnI")
 	fieldC: C! @relation(name:"COnI")
@@ -207,6 +234,9 @@ type I implements Node {
 
 type J implements Node {
     id: ID! @isUnique
+    field1: String!
+    field2: String
+    field3: [Int]
     fieldA: A! @relation(name:"AOnJ")
 	fieldB: B! @relation(name:"BOnJ")
 	fieldC: C! @relation(name:"COnJ")
@@ -230,6 +260,9 @@ type J implements Node {
 
 type K implements Node {
     id: ID! @isUnique
+    field1: String!
+    field2: String
+    field3: [Int]
     fieldA: A! @relation(name:"AOnK")
 	fieldB: B! @relation(name:"BOnK")
 	fieldC: C! @relation(name:"COnK")
@@ -253,6 +286,9 @@ type K implements Node {
 
 type L implements Node {
     id: ID! @isUnique
+    field1: String!
+    field2: String
+    field3: [Int]
     fieldA: A! @relation(name:"AOnL")
 	fieldB: B! @relation(name:"BOnL")
 	fieldC: C! @relation(name:"COnL")
@@ -276,6 +312,9 @@ type L implements Node {
 
 type M implements Node {
     id: ID! @isUnique
+    field1: String!
+    field2: String
+    field3: [Int]
     fieldA: A! @relation(name:"AOnM")
 	fieldB: B! @relation(name:"BOnM")
 	fieldC: C! @relation(name:"COnM")
@@ -299,6 +338,9 @@ type M implements Node {
 
 type N implements Node {
     id: ID! @isUnique
+    field1: String!
+    field2: String
+    field3: [Int]
     fieldA: A! @relation(name:"AOnN")
 	fieldB: B! @relation(name:"BOnN")
 	fieldC: C! @relation(name:"COnN")
@@ -322,6 +364,9 @@ type N implements Node {
 
 type O implements Node {
     id: ID! @isUnique
+    field1: String!
+    field2: String
+    field3: [Int]
     fieldA: A! @relation(name:"AOnO")
 	fieldB: B! @relation(name:"BOnO")
 	fieldC: C! @relation(name:"COnO")
@@ -345,6 +390,9 @@ type O implements Node {
 
 type P implements Node {
     id: ID! @isUnique
+    field1: String!
+    field2: String
+    field3: [Int]
     fieldA: A! @relation(name:"AOnP")
 	fieldB: B! @relation(name:"BOnP")
 	fieldC: C! @relation(name:"COnP")
@@ -368,6 +416,9 @@ type P implements Node {
 
 type Q implements Node {
     id: ID! @isUnique
+    field1: String!
+    field2: String
+    field3: [Int]
     fieldA: A! @relation(name:"AOnQ")
 	fieldB: B! @relation(name:"BOnQ")
 	fieldC: C! @relation(name:"COnQ")
@@ -391,6 +442,9 @@ type Q implements Node {
 
 type R implements Node {
     id: ID! @isUnique
+    field1: String!
+    field2: String
+    field3: [Int]
     fieldA: A! @relation(name:"AOnR")
 	fieldB: B! @relation(name:"BOnR")
 	fieldC: C! @relation(name:"COnR")
@@ -414,6 +468,9 @@ type R implements Node {
 
 type S implements Node {
     id: ID! @isUnique
+    field1: String!
+    field2: String
+    field3: [Int]
     fieldA: A! @relation(name:"AOnS")
 	fieldB: B! @relation(name:"BOnS")
 	fieldC: C! @relation(name:"COnS")
@@ -437,6 +494,9 @@ type S implements Node {
 
 type T implements Node {
     id: ID! @isUnique
+    field1: String!
+    field2: String
+    field3: [Int]
     fieldA: A! @relation(name:"AOnT")
 	fieldB: B! @relation(name:"BOnT")
 	fieldC: C! @relation(name:"COnT")
