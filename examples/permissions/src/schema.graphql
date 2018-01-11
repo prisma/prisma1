@@ -1,7 +1,7 @@
 # import Post from "./generated/graphcool.graphql"
 
 type Query {
-  # all authenticated users can retrieve about themselves
+  # authenticated users can information retrieve about themselves
   me: User
 
   # all authenticated users can retrieve a list of posts
@@ -15,13 +15,13 @@ type Mutation {
   # everyone can signup
   signup(email: String!, password: String!, admin: Boolean): AuthPayload!
 
-  # everyone can logins
+  # everyone can login
   login(email: String!, password: String!): AuthPayload!
 
   # users can only update their own passwords
   # if `userId` is set, the user trying to update the password needs to be an admin
   updatePassword(oldPassword: String, newPassword: String!, userId: ID): User!
-  
+
   # all authenticated users can create posts
   createPost(title: String!): Post!
 
@@ -38,12 +38,11 @@ type AuthPayload {
 }
 
 # The `User` type is a reduced version ("mask") of the `User` type from the data model (and database schema).
-# It does not expose the `password` fields.
-# The `createdAt` will only be exposed to `admin` users.
+# It does not expose the `password` `role` field.
 type User {
   id: ID!
   createdAt: DateTime!
   email: String!
-  name: String!
+  role: Role!
   posts: [Post!]!
 }

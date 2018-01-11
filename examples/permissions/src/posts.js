@@ -11,7 +11,7 @@ async function createPost(parent, { title }, ctx, info) {
         },
       },
     },
-  })
+  }, info)
 }
 
 async function updatePost(parent, { id, title }, ctx, info) {
@@ -31,7 +31,7 @@ async function updatePost(parent, { id, title }, ctx, info) {
     return await ctx.db.mutation.updatePost({
       where: { id },
       data: { title },
-    })
+    }, info)
   }
   throw new Error(
     'Invalid permissions, you must be an admin or the author of a post to update it',
@@ -54,7 +54,7 @@ async function deletePost(parent, { id }, ctx, info) {
   if (requestingUserIsAdmin || requestingUserIsAuthor) {
     return await ctx.db.mutation.deletePost({
       where: { id },
-    })
+    }, info)
   }
   throw new Error(
     'Invalid permissions, you must be an admin or the author of a post to delete it',

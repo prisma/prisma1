@@ -1,7 +1,7 @@
 {
   "name": "myapp",
   "scripts": {
-    "start": "dotenv -- nodemon src/index.js",
+    "start": "nodemon -e js,graphql -x node -r dotenv/config src/index.js",
     "playground": "graphcool playground"
   },
   "dependencies": {
@@ -14,12 +14,7 @@
   "devDependencies": {
     "dotenv-cli": "1.4.0",
     "graphcool": "1.0.0-beta4.1.1",
-    "graphql-cli": "2.2.0",
-    "nodemon": "1.14.3",
-    "now": "9.0.1",
-    "rimraf": "2.6.2"
-  },
-  "now": {
-    "alias": "myapp"
+    "graphql-cli": "2.10.1",
+    "nodemon": "1.14.3"
   }
 }
