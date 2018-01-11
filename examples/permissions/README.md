@@ -18,10 +18,6 @@ This directory contains a GraphQL server (based on [`graphql-yoga`](https://gith
 │   │   └── graphcool.graphql
 │   ├── auth.js
 │   ├── index.js
-│   ├── permissions
-│   │   ├── Post.graphql
-│   │   ├── User.graphql
-│   │   └── UsersPosts.graphql
 │   ├── schema.graphql
 │   └── utils.js
 ├── yarn.lock
@@ -82,13 +78,26 @@ graphcool playground
 
 Or you can open a Playground by navigating to [http://localhost:4000](http://localhost:4000) in your browser.
 
-### Register a new user with the `signup` mutation
+### Register users with the `signup` mutation
 
 You can send the following mutation in the Playground to create a new `User` node and at the same time retrieve an authentication token for it:
 
 ```graphql
 mutation {
   signup(email: "alice@graph.cool" password: "graphql") {
+    token
+    user {
+      id
+    }
+  }
+}
+```
+
+If no admin field is set, the role defaults to CUSTOMER. Create users with the ADMIN role by setting admin to true:
+
+```graphql
+mutation {
+  signup(email: "super_admin@graph.cool" password: "12345" admin: true) {
     token
     user {
       id
@@ -127,3 +136,33 @@ Once you've set the header, you can send the following query to check whether th
 ```
 
 If the token is valid, the server will return the `id` and `email` of the `User` node that it belongs to.
+
+
+### Change the password with the `updatePassword` query
+
+This query changes the password of the authenticated user. Make sure the Authorization header is set.
+
+```graphql
+mutation {
+  updatePassword(oldPassword: "graphql" newPassword:"dKt9kAn6gkq") {
+    id
+  }
+}
+```
+
+You can verify the password change by trying the login mutation with the new password.
+
+Admin users can also change the password of other users. Make sure the provided Authorization token is obtained from a login mutation of a user with the ADMIN role.
+
+```graphql
+mutation {
+  updatePassword(userId: "cjcaldr891d1d0180hl8lb1lp" newPassword:"test") {
+    id
+    email
+  }
+}
+```
+
+
+
+

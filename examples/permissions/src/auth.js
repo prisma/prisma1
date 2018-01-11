@@ -61,7 +61,8 @@ async function updatePassword(
 ) {
   if (!userId) {
     // a user updates her own password
-    const user = await ctx.db.query.user({ where: { id: getUserId(ctx) } })
+    userId = getUserId(ctx)
+    const user = await ctx.db.query.user({ where: { id: userId } })
     const oldPasswordValid = await bcrypt.compare(oldPassword, user.password)
     if (!oldPasswordValid) {
       throw new Error(
@@ -81,7 +82,7 @@ async function updatePassword(
   } else {
     // a user updates the password of another user -> must be an admin
     const requestingUserId = getUserId(ctx)
-    const userIsAdmin = ctx.db.exists.user({
+    const userIsAdmin = ctx.db.exists.User({
       id: requestingUserId,
       role: 'ADMIN',
     })
