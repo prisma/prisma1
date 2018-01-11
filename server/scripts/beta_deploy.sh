@@ -15,4 +15,4 @@ chmod +x cb
 
 echo "Replacing images..."
 export CB_MODE=env
-./cb service replace-all --customer graphcool --cluster database-beta-eu-west-1-dev
+./cb service replace-all --customer graphcool --cluster db-beta-ew1-dev
