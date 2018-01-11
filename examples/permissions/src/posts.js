@@ -16,13 +16,13 @@ async function createPost(parent, { title }, ctx, info) {
 
 async function updatePost(parent, { id, title }, ctx, info) {
   const userId = getUserId(ctx)
-  const requestingUserIsAuthor = await ctx.db.exists.posts({
+  const requestingUserIsAuthor = await ctx.db.exists.Post({
     id,
     author: {
       id: userId,
     },
   })
-  const requestingUserIsAdmin = await ctx.db.exists.users({
+  const requestingUserIsAdmin = await ctx.db.exists.User({
     id: userId,
     role: 'ADMIN',
   })
@@ -40,13 +40,13 @@ async function updatePost(parent, { id, title }, ctx, info) {
 
 async function deletePost(parent, { id }, ctx, info) {
   const userId = getUserId(ctx)
-  const requestingUserIsAuthor = await ctx.db.exists.posts({
+  const requestingUserIsAuthor = await ctx.db.exists.Post({
     id,
     author: {
       id: userId,
     },
   })
-  const requestingUserIsAdmin = await ctx.db.exists.users({
+  const requestingUserIsAdmin = await ctx.db.exists.User({
     id: userId,
     role: 'ADMIN',
   })
@@ -66,7 +66,7 @@ async function posts(parent, args, ctx, info) {
   if (!userId) {
     throw new Error('You must be authenticated to view the posts.')
   }
-  return await ctx.db.query.posts
+  return await ctx.db.query.posts(args, info)
 }
 
 module.exports = {
