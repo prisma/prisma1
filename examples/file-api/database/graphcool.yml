@@ -4,7 +4,6 @@ stage: dev
 cluster: local
 
 datamodel:
-  - database/datamodel/types.graphql
-
-schema: src/generated/database.graphql
+  - datamodel.graphql
+  
 secret: ${env:GRAPHCOOL_SECRET}

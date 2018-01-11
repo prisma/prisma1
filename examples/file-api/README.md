@@ -1,6 +1,6 @@
 # GraphQL Server File Upload Example
 
-This example illustrates the implementation of File API with GraphQL Server pattern. To better understand how things work, you cal follow along with [this](https://medium.com/@maticzavadlal/graphcool-1-0-examples-series-file-api-3b16b4b8785f) article.
+This example illustrates the implementation of File API with GraphQL Server pattern. To better understand how things work, you can follow along with [this](https://medium.com/@maticzavadlal/graphcool-1-0-examples-series-file-api-3b16b4b8785f) article.
 
 ## Getting Started
 
@@ -9,8 +9,6 @@ This example illustrates the implementation of File API with GraphQL Server patt
 graphcool deploy # choose local cluster
 # copy API endpoint into the `GRAPHCOOL_ENPOINT` env var in .env
 ```
-
-To get `GRAPHCOOL_SECRET` visit http://jwtbuilder.jamiekurtz.com and scroll to the bottom where you can hash your secret from `graphcool.yml` and get the hashed output. (`sssh` is used in the example.)
 
 ### Setting up the S3 bucket
 1. Head over to the [AWS console](http://console.aws.amazon.com/) and navigate to the `S3` section.
@@ -26,7 +24,7 @@ To get `GRAPHCOOL_SECRET` visit http://jwtbuilder.jamiekurtz.com and scroll to t
 ```sh
 yarn install
 yarn start
-# Open http://localhost:5000/
+# Open http://localhost:4000/
 ```
 
 ## Uploading files

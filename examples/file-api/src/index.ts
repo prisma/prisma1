@@ -1,5 +1,4 @@
 import { Graphcool } from "./generated/graphcool"
-import { importSchema } from "graphql-import"
 import { GraphQLServer } from "graphql-yoga"
 import { S3 } from 'aws-sdk'
 import { resolvers } from "./resolvers"
@@ -8,9 +7,6 @@ import fileApi from './modules/fileApi'
 // Config --------------------------------------------------------------------
 
 const APP_SCHEMA_PATH = './src/schema.graphql'
-
-const typeDefs = importSchema(APP_SCHEMA_PATH)
-
 const s3client = new S3({
   accessKeyId: process.env.S3_KEY,
   secretAccessKey: process.env.S3_SECRET,
@@ -23,7 +19,6 @@ const s3client = new S3({
 // Server --------------------------------------------------------------------
 
 const server = new GraphQLServer({
-  typeDefs,
   resolvers,
   context: req => ({
     ...req,
