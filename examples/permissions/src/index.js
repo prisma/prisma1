@@ -1,11 +1,9 @@
 const { GraphQLServer } = require('graphql-yoga')
-const { importSchema } = require('graphql-import')
 const { Graphcool } = require('graphcool-binding')
 const { me, signup, login, updatePassword, AuthPayload } = require('./auth')
 const { createPost, updatePost, deletePost, posts } = require('./posts')
 const { user } = require('./users')
 
-const typeDefs = importSchema('./src/schema.graphql')
 
 const resolvers = {
   Query: {
@@ -24,12 +22,12 @@ const resolvers = {
 }
 
 const server = new GraphQLServer({
-  typeDefs,
+  typeDefs: './src/schema.graphql',
   resolvers,
   context: req => ({
     ...req,
     db: new Graphcool({
-      schemaPath: './database/schema.generated.graphql',
+      typeDefs: 'src/generated/graphcool.graphql',
       endpoint: process.env.GRAPHCOOL_ENDPOINT,
       secret: process.env.GRAPHCOOL_SECRET,
       debug: true,
