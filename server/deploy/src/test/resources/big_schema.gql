@@ -22,6 +22,16 @@ type A implements Node {
 	fieldR: R! @relation(name:"AOnR")
 	fieldS: S! @relation(name:"AOnS")
 	fieldT: T! @relation(name:"AOnT")
+	fieldU: U! @relation(name:"AOnU")
+	fieldV: V! @relation(name:"AOnV")
+	fieldW: W! @relation(name:"AOnW")
+	fieldX: X! @relation(name:"AOnX")
+	fieldY: Y! @relation(name:"AOnY")
+	fieldZ: Z! @relation(name:"AOnZ")
+	fieldAA: AA! @relation(name:"AOnAA")
+	fieldAB: AB! @relation(name:"AOnAB")
+	fieldAC: AC! @relation(name:"AOnAC")
+	fieldAD: AD! @relation(name:"AOnAD")
 }
 
 type B implements Node {
@@ -48,6 +58,16 @@ type B implements Node {
 	fieldR: R! @relation(name:"BOnR")
 	fieldS: S! @relation(name:"BOnS")
 	fieldT: T! @relation(name:"BOnT")
+	fieldU: U! @relation(name:"BOnU")
+	fieldV: V! @relation(name:"BOnV")
+	fieldW: W! @relation(name:"BOnW")
+	fieldX: X! @relation(name:"BOnX")
+	fieldY: Y! @relation(name:"BOnY")
+	fieldZ: Z! @relation(name:"BOnZ")
+	fieldAA: AA! @relation(name:"AAOnB")
+	fieldAB: AB! @relation(name:"ABOnB")
+	fieldAC: AC! @relation(name:"ACOnB")
+	fieldAD: AD! @relation(name:"ADOnB")
 }
 
 type C implements Node {
@@ -74,6 +94,16 @@ type C implements Node {
 	fieldR: R! @relation(name:"COnR")
 	fieldS: S! @relation(name:"COnS")
 	fieldT: T! @relation(name:"COnT")
+	fieldU: U! @relation(name:"COnU")
+	fieldV: V! @relation(name:"COnV")
+	fieldW: W! @relation(name:"COnW")
+	fieldX: X! @relation(name:"COnX")
+	fieldY: Y! @relation(name:"COnY")
+	fieldZ: Z! @relation(name:"COnZ")
+	fieldAA: AA! @relation(name:"AAOnC")
+	fieldAB: AB! @relation(name:"ABOnC")
+	fieldAC: AC! @relation(name:"ACOnC")
+	fieldAD: AD! @relation(name:"ADOnC")
 }
 
 type D implements Node {
@@ -100,6 +130,16 @@ type D implements Node {
 	fieldR: R! @relation(name:"DOnR")
 	fieldS: S! @relation(name:"DOnS")
 	fieldT: T! @relation(name:"DOnT")
+	fieldU: U! @relation(name:"DOnU")
+	fieldV: V! @relation(name:"DOnV")
+	fieldW: W! @relation(name:"DOnW")
+	fieldX: X! @relation(name:"DOnX")
+	fieldY: Y! @relation(name:"DOnY")
+	fieldZ: Z! @relation(name:"DOnZ")
+	fieldAA: AA! @relation(name:"AAOnD")
+	fieldAB: AB! @relation(name:"ABOnD")
+	fieldAC: AC! @relation(name:"ACOnD")
+	fieldAD: AD! @relation(name:"ADOnD")
 }
 
 type E implements Node {
@@ -126,6 +166,16 @@ type E implements Node {
 	fieldR: R! @relation(name:"EOnR")
 	fieldS: S! @relation(name:"EOnS")
 	fieldT: T! @relation(name:"EOnT")
+	fieldU: U! @relation(name:"EOnU")
+	fieldV: V! @relation(name:"EOnV")
+	fieldW: W! @relation(name:"EOnW")
+	fieldX: X! @relation(name:"EOnX")
+	fieldY: Y! @relation(name:"EOnY")
+	fieldZ: Z! @relation(name:"EOnZ")
+	fieldAA: AA! @relation(name:"AAOnE")
+	fieldAB: AB! @relation(name:"ABOnE")
+	fieldAC: AC! @relation(name:"ACOnE")
+	fieldAD: AD! @relation(name:"ADOnE")
 }
 
 type F implements Node {
@@ -152,6 +202,16 @@ type F implements Node {
 	fieldR: R! @relation(name:"FOnR")
 	fieldS: S! @relation(name:"FOnS")
 	fieldT: T! @relation(name:"FOnT")
+	fieldU: U! @relation(name:"FOnU")
+	fieldV: V! @relation(name:"FOnV")
+	fieldW: W! @relation(name:"FOnW")
+	fieldX: X! @relation(name:"FOnX")
+	fieldY: Y! @relation(name:"FOnY")
+	fieldZ: Z! @relation(name:"FOnZ")
+	fieldAA: AA! @relation(name:"AAOnF")
+	fieldAB: AB! @relation(name:"ABOnF")
+	fieldAC: AC! @relation(name:"ACOnF")
+	fieldAD: AD! @relation(name:"ADOnF")
 }
 
 type G implements Node {
@@ -178,6 +238,16 @@ type G implements Node {
 	fieldR: R! @relation(name:"GOnR")
 	fieldS: S! @relation(name:"GOnS")
 	fieldT: T! @relation(name:"GOnT")
+	fieldU: U! @relation(name:"GOnU")
+	fieldV: V! @relation(name:"GOnV")
+	fieldW: W! @relation(name:"GOnW")
+	fieldX: X! @relation(name:"GOnX")
+	fieldY: Y! @relation(name:"GOnY")
+	fieldZ: Z! @relation(name:"GOnZ")
+	fieldAA: AA! @relation(name:"AAOnG")
+	fieldAB: AB! @relation(name:"ABOnG")
+	fieldAC: AC! @relation(name:"ACOnG")
+	fieldAD: AD! @relation(name:"ADOnG")
 }
 
 type H implements Node {
@@ -204,6 +274,16 @@ type H implements Node {
 	fieldR: R! @relation(name:"HOnR")
 	fieldS: S! @relation(name:"HOnS")
 	fieldT: T! @relation(name:"HOnT")
+	fieldU: U! @relation(name:"HOnU")
+	fieldV: V! @relation(name:"HOnV")
+	fieldW: W! @relation(name:"HOnW")
+	fieldX: X! @relation(name:"HOnX")
+	fieldY: Y! @relation(name:"HOnY")
+	fieldZ: Z! @relation(name:"HOnZ")
+	fieldAA: AA! @relation(name:"AAOnH")
+	fieldAB: AB! @relation(name:"ABOnH")
+	fieldAC: AC! @relation(name:"ACOnH")
+	fieldAD: AD! @relation(name:"ADOnH")
 }
 
 type I implements Node {
@@ -230,6 +310,16 @@ type I implements Node {
 	fieldR: R! @relation(name:"IOnR")
 	fieldS: S! @relation(name:"IOnS")
 	fieldT: T! @relation(name:"IOnT")
+	fieldU: U! @relation(name:"IOnU")
+	fieldV: V! @relation(name:"IOnV")
+	fieldW: W! @relation(name:"IOnW")
+	fieldX: X! @relation(name:"IOnX")
+	fieldY: Y! @relation(name:"IOnY")
+	fieldZ: Z! @relation(name:"IOnZ")
+	fieldAA: AA! @relation(name:"AAOnI")
+	fieldAB: AB! @relation(name:"ABOnI")
+	fieldAC: AC! @relation(name:"ACOnI")
+	fieldAD: AD! @relation(name:"ADOnI")
 }
 
 type J implements Node {
@@ -256,6 +346,16 @@ type J implements Node {
 	fieldR: R! @relation(name:"JOnR")
 	fieldS: S! @relation(name:"JOnS")
 	fieldT: T! @relation(name:"JOnT")
+	fieldU: U! @relation(name:"JOnU")
+	fieldV: V! @relation(name:"JOnV")
+	fieldW: W! @relation(name:"JOnW")
+	fieldX: X! @relation(name:"JOnX")
+	fieldY: Y! @relation(name:"JOnY")
+	fieldZ: Z! @relation(name:"JOnZ")
+	fieldAA: AA! @relation(name:"AAOnJ")
+	fieldAB: AB! @relation(name:"ABOnJ")
+	fieldAC: AC! @relation(name:"ACOnJ")
+	fieldAD: AD! @relation(name:"ADOnJ")
 }
 
 type K implements Node {
@@ -282,6 +382,16 @@ type K implements Node {
 	fieldR: R! @relation(name:"KOnR")
 	fieldS: S! @relation(name:"KOnS")
 	fieldT: T! @relation(name:"KOnT")
+	fieldU: U! @relation(name:"KOnU")
+	fieldV: V! @relation(name:"KOnV")
+	fieldW: W! @relation(name:"KOnW")
+	fieldX: X! @relation(name:"KOnX")
+	fieldY: Y! @relation(name:"KOnY")
+	fieldZ: Z! @relation(name:"KOnZ")
+	fieldAA: AA! @relation(name:"AAOnK")
+	fieldAB: AB! @relation(name:"ABOnK")
+	fieldAC: AC! @relation(name:"ACOnK")
+	fieldAD: AD! @relation(name:"ADOnK")
 }
 
 type L implements Node {
@@ -308,6 +418,16 @@ type L implements Node {
 	fieldR: R! @relation(name:"LOnR")
 	fieldS: S! @relation(name:"LOnS")
 	fieldT: T! @relation(name:"LOnT")
+	fieldU: U! @relation(name:"LOnU")
+	fieldV: V! @relation(name:"LOnV")
+	fieldW: W! @relation(name:"LOnW")
+	fieldX: X! @relation(name:"LOnX")
+	fieldY: Y! @relation(name:"LOnY")
+	fieldZ: Z! @relation(name:"LOnZ")
+	fieldAA: AA! @relation(name:"AAOnL")
+	fieldAB: AB! @relation(name:"ABOnL")
+	fieldAC: AC! @relation(name:"ACOnL")
+	fieldAD: AD! @relation(name:"ADOnL")
 }
 
 type M implements Node {
@@ -334,6 +454,16 @@ type M implements Node {
 	fieldR: R! @relation(name:"MOnR")
 	fieldS: S! @relation(name:"MOnS")
 	fieldT: T! @relation(name:"MOnT")
+	fieldU: U! @relation(name:"MOnU")
+	fieldV: V! @relation(name:"MOnV")
+	fieldW: W! @relation(name:"MOnW")
+	fieldX: X! @relation(name:"MOnX")
+	fieldY: Y! @relation(name:"MOnY")
+	fieldZ: Z! @relation(name:"MOnZ")
+	fieldAA: AA! @relation(name:"AAOnM")
+	fieldAB: AB! @relation(name:"ABOnM")
+	fieldAC: AC! @relation(name:"ACOnM")
+	fieldAD: AD! @relation(name:"ADOnM")
 }
 
 type N implements Node {
@@ -360,6 +490,16 @@ type N implements Node {
 	fieldR: R! @relation(name:"NOnR")
 	fieldS: S! @relation(name:"NOnS")
 	fieldT: T! @relation(name:"NOnT")
+	fieldU: U! @relation(name:"NOnU")
+	fieldV: V! @relation(name:"NOnV")
+	fieldW: W! @relation(name:"NOnW")
+	fieldX: X! @relation(name:"NOnX")
+	fieldY: Y! @relation(name:"NOnY")
+	fieldZ: Z! @relation(name:"NOnZ")
+	fieldAA: AA! @relation(name:"AAOnN")
+	fieldAB: AB! @relation(name:"ABOnN")
+	fieldAC: AC! @relation(name:"ACOnN")
+	fieldAD: AD! @relation(name:"ADOnN")
 }
 
 type O implements Node {
@@ -386,6 +526,16 @@ type O implements Node {
 	fieldR: R! @relation(name:"OOnR")
 	fieldS: S! @relation(name:"OOnS")
 	fieldT: T! @relation(name:"OOnT")
+	fieldU: U! @relation(name:"OOnU")
+	fieldV: V! @relation(name:"OOnV")
+	fieldW: W! @relation(name:"OOnW")
+	fieldX: X! @relation(name:"OOnX")
+	fieldY: Y! @relation(name:"OOnY")
+	fieldZ: Z! @relation(name:"OOnZ")
+	fieldAA: AA! @relation(name:"AAOnO")
+	fieldAB: AB! @relation(name:"ABOnO")
+	fieldAC: AC! @relation(name:"ACOnO")
+	fieldAD: AD! @relation(name:"ADOnO")
 }
 
 type P implements Node {
@@ -412,6 +562,16 @@ type P implements Node {
 	fieldR: R! @relation(name:"POnR")
 	fieldS: S! @relation(name:"POnS")
 	fieldT: T! @relation(name:"POnT")
+	fieldU: U! @relation(name:"POnU")
+	fieldV: V! @relation(name:"POnV")
+	fieldW: W! @relation(name:"POnW")
+	fieldX: X! @relation(name:"POnX")
+	fieldY: Y! @relation(name:"POnY")
+	fieldZ: Z! @relation(name:"POnZ")
+	fieldAA: AA! @relation(name:"AAOnP")
+	fieldAB: AB! @relation(name:"ABOnP")
+	fieldAC: AC! @relation(name:"ACOnP")
+	fieldAD: AD! @relation(name:"ADOnP")
 }
 
 type Q implements Node {
@@ -438,6 +598,16 @@ type Q implements Node {
 	fieldR: R! @relation(name:"QOnR")
 	fieldS: S! @relation(name:"QOnS")
 	fieldT: T! @relation(name:"QOnT")
+	fieldU: U! @relation(name:"QOnU")
+	fieldV: V! @relation(name:"QOnV")
+	fieldW: W! @relation(name:"QOnW")
+	fieldX: X! @relation(name:"QOnX")
+	fieldY: Y! @relation(name:"QOnY")
+	fieldZ: Z! @relation(name:"QOnZ")
+	fieldAA: AA! @relation(name:"AAOnQ")
+	fieldAB: AB! @relation(name:"ABOnQ")
+	fieldAC: AC! @relation(name:"ACOnQ")
+	fieldAD: AD! @relation(name:"ADOnQ")
 }
 
 type R implements Node {
@@ -464,6 +634,16 @@ type R implements Node {
 	fieldQ: Q! @relation(name:"QOnR")
 	fieldS: S! @relation(name:"ROnS")
 	fieldT: T! @relation(name:"ROnT")
+	fieldU: U! @relation(name:"ROnU")
+	fieldV: V! @relation(name:"ROnV")
+	fieldW: W! @relation(name:"ROnW")
+	fieldX: X! @relation(name:"ROnX")
+	fieldY: Y! @relation(name:"ROnY")
+	fieldZ: Z! @relation(name:"ROnZ")
+	fieldAA: AA! @relation(name:"AAOnR")
+	fieldAB: AB! @relation(name:"ABOnR")
+	fieldAC: AC! @relation(name:"ACOnR")
+	fieldAD: AD! @relation(name:"ADOnR")
 }
 
 type S implements Node {
@@ -490,6 +670,16 @@ type S implements Node {
 	fieldQ: Q! @relation(name:"QOnS")
 	fieldR: R! @relation(name:"ROnS")
 	fieldT: T! @relation(name:"SOnT")
+	fieldU: U! @relation(name:"SOnU")
+	fieldV: V! @relation(name:"SOnV")
+	fieldW: W! @relation(name:"SOnW")
+	fieldX: X! @relation(name:"SOnX")
+	fieldY: Y! @relation(name:"SOnY")
+	fieldZ: Z! @relation(name:"SOnZ")
+	fieldAA: AA! @relation(name:"AAOnS")
+	fieldAB: AB! @relation(name:"ABOnS")
+	fieldAC: AC! @relation(name:"ACOnS")
+	fieldAD: AD! @relation(name:"ADOnS")
 }
 
 type T implements Node {
@@ -516,5 +706,375 @@ type T implements Node {
 	fieldQ: Q! @relation(name:"QOnT")
 	fieldR: R! @relation(name:"ROnT")
 	fieldS: S! @relation(name:"SOnT")
+	fieldU: U! @relation(name:"TOnU")
+	fieldV: V! @relation(name:"TOnV")
+	fieldW: W! @relation(name:"TOnW")
+	fieldX: X! @relation(name:"TOnX")
+	fieldY: Y! @relation(name:"TOnY")
+	fieldZ: Z! @relation(name:"TOnZ")
+	fieldAA: AA! @relation(name:"AAOnT")
+	fieldAB: AB! @relation(name:"ABOnT")
+	fieldAC: AC! @relation(name:"ACOnT")
+	fieldAD: AD! @relation(name:"ADOnT")
+}
+
+type U implements Node {
+    id: ID! @isUnique
+    field1: String!
+    field2: String
+    field3: [Int]
+    fieldA: A! @relation(name:"AOnU")
+	fieldB: B! @relation(name:"BOnU")
+	fieldC: C! @relation(name:"COnU")
+	fieldD: D! @relation(name:"DOnU")
+	fieldE: E! @relation(name:"EOnU")
+	fieldF: F! @relation(name:"FOnU")
+	fieldG: G! @relation(name:"GOnU")
+	fieldH: H! @relation(name:"HOnU")
+	fieldI: I! @relation(name:"IOnU")
+	fieldJ: J! @relation(name:"JOnU")
+	fieldK: K! @relation(name:"KOnU")
+	fieldL: L! @relation(name:"LOnU")
+	fieldM: M! @relation(name:"MOnU")
+	fieldN: N! @relation(name:"NOnU")
+	fieldO: O! @relation(name:"OOnU")
+	fieldP: P! @relation(name:"POnU")
+	fieldQ: Q! @relation(name:"QOnU")
+	fieldR: R! @relation(name:"ROnU")
+	fieldS: S! @relation(name:"SOnU")
+	fieldT: T! @relation(name:"TOnU")
+	fieldV: V! @relation(name:"UOnV")
+	fieldW: W! @relation(name:"UOnW")
+	fieldX: X! @relation(name:"UOnX")
+	fieldY: Y! @relation(name:"UOnY")
+	fieldZ: Z! @relation(name:"UOnZ")
+	fieldAA: AA! @relation(name:"AAOnU")
+	fieldAB: AB! @relation(name:"ABOnU")
+	fieldAC: AC! @relation(name:"ACOnU")
+	fieldAD: AD! @relation(name:"ADOnU")
+}
+
+type V implements Node {
+    id: ID! @isUnique
+    field1: String!
+    field2: String
+    field3: [Int]
+    fieldA: A! @relation(name:"AOnV")
+	fieldB: B! @relation(name:"BOnV")
+	fieldC: C! @relation(name:"COnV")
+	fieldD: D! @relation(name:"DOnV")
+	fieldE: E! @relation(name:"EOnV")
+	fieldF: F! @relation(name:"FOnV")
+	fieldG: G! @relation(name:"GOnV")
+	fieldH: H! @relation(name:"HOnV")
+	fieldI: I! @relation(name:"IOnV")
+	fieldJ: J! @relation(name:"JOnV")
+	fieldK: K! @relation(name:"KOnV")
+	fieldL: L! @relation(name:"LOnV")
+	fieldM: M! @relation(name:"MOnV")
+	fieldN: N! @relation(name:"NOnV")
+	fieldO: O! @relation(name:"OOnV")
+	fieldP: P! @relation(name:"POnV")
+	fieldQ: Q! @relation(name:"QOnV")
+	fieldR: R! @relation(name:"ROnV")
+	fieldS: S! @relation(name:"SOnV")
+	fieldT: T! @relation(name:"TOnV")
+	fieldU: U! @relation(name:"UOnV")
+	fieldW: W! @relation(name:"VOnW")
+	fieldX: X! @relation(name:"VOnX")
+	fieldY: Y! @relation(name:"VOnY")
+	fieldZ: Z! @relation(name:"VOnZ")
+	fieldAA: AA! @relation(name:"AAOnV")
+	fieldAB: AB! @relation(name:"ABOnV")
+	fieldAC: AC! @relation(name:"ACOnV")
+	fieldAD: AD! @relation(name:"ADOnV")
+}
+
+type W implements Node {
+    id: ID! @isUnique
+    field1: String!
+    field2: String
+    field3: [Int]
+    fieldA: A! @relation(name:"AOnW")
+	fieldB: B! @relation(name:"BOnW")
+	fieldC: C! @relation(name:"COnW")
+	fieldD: D! @relation(name:"DOnW")
+	fieldE: E! @relation(name:"EOnW")
+	fieldF: F! @relation(name:"FOnW")
+	fieldG: G! @relation(name:"GOnW")
+	fieldH: H! @relation(name:"HOnW")
+	fieldI: I! @relation(name:"IOnW")
+	fieldJ: J! @relation(name:"JOnW")
+	fieldK: K! @relation(name:"KOnW")
+	fieldL: L! @relation(name:"LOnW")
+	fieldM: M! @relation(name:"MOnW")
+	fieldN: N! @relation(name:"NOnW")
+	fieldO: O! @relation(name:"OOnW")
+	fieldP: P! @relation(name:"POnW")
+	fieldQ: Q! @relation(name:"QOnW")
+	fieldR: R! @relation(name:"ROnW")
+	fieldS: S! @relation(name:"SOnW")
+	fieldT: T! @relation(name:"TOnW")
+	fieldU: U! @relation(name:"UOnW")
+	fieldV: V! @relation(name:"VOnW")
+	fieldX: X! @relation(name:"WOnX")
+	fieldY: Y! @relation(name:"WOnY")
+	fieldZ: Z! @relation(name:"WOnZ")
+	fieldAA: AA! @relation(name:"AAOnW")
+	fieldAB: AB! @relation(name:"ABOnW")
+	fieldAC: AC! @relation(name:"ACOnW")
+	fieldAD: AD! @relation(name:"ADOnW")
+}
+
+type X implements Node {
+    id: ID! @isUnique
+    field1: String!
+    field2: String
+    field3: [Int]
+    fieldA: A! @relation(name:"AOnX")
+	fieldB: B! @relation(name:"BOnX")
+	fieldC: C! @relation(name:"COnX")
+	fieldD: D! @relation(name:"DOnX")
+	fieldE: E! @relation(name:"EOnX")
+	fieldF: F! @relation(name:"FOnX")
+	fieldG: G! @relation(name:"GOnX")
+	fieldH: H! @relation(name:"HOnX")
+	fieldI: I! @relation(name:"IOnX")
+	fieldJ: J! @relation(name:"JOnX")
+	fieldK: K! @relation(name:"KOnX")
+	fieldL: L! @relation(name:"LOnX")
+	fieldM: M! @relation(name:"MOnX")
+	fieldN: N! @relation(name:"NOnX")
+	fieldO: O! @relation(name:"OOnX")
+	fieldP: P! @relation(name:"POnX")
+	fieldQ: Q! @relation(name:"QOnX")
+	fieldR: R! @relation(name:"ROnX")
+	fieldS: S! @relation(name:"SOnX")
+	fieldT: T! @relation(name:"TOnX")
+	fieldU: U! @relation(name:"UOnX")
+	fieldV: V! @relation(name:"VOnX")
+	fieldW: W! @relation(name:"WOnX")
+	fieldY: Y! @relation(name:"XOnY")
+	fieldZ: Z! @relation(name:"XOnZ")
+	fieldAA: AA! @relation(name:"AAOnX")
+	fieldAB: AB! @relation(name:"ABOnX")
+	fieldAC: AC! @relation(name:"ACOnX")
+	fieldAD: AD! @relation(name:"ADOnX")
+}
+
+type Y implements Node {
+    id: ID! @isUnique
+    field1: String!
+    field2: String
+    field3: [Int]
+    fieldA: A! @relation(name:"AOnY")
+	fieldB: B! @relation(name:"BOnY")
+	fieldC: C! @relation(name:"COnY")
+	fieldD: D! @relation(name:"DOnY")
+	fieldE: E! @relation(name:"EOnY")
+	fieldF: F! @relation(name:"FOnY")
+	fieldG: G! @relation(name:"GOnY")
+	fieldH: H! @relation(name:"HOnY")
+	fieldI: I! @relation(name:"IOnY")
+	fieldJ: J! @relation(name:"JOnY")
+	fieldK: K! @relation(name:"KOnY")
+	fieldL: L! @relation(name:"LOnY")
+	fieldM: M! @relation(name:"MOnY")
+	fieldN: N! @relation(name:"NOnY")
+	fieldO: O! @relation(name:"OOnY")
+	fieldP: P! @relation(name:"POnY")
+	fieldQ: Q! @relation(name:"QOnY")
+	fieldR: R! @relation(name:"ROnY")
+	fieldS: S! @relation(name:"SOnY")
+	fieldT: T! @relation(name:"TOnY")
+	fieldU: U! @relation(name:"UOnY")
+	fieldV: V! @relation(name:"VOnY")
+	fieldW: W! @relation(name:"WOnY")
+	fieldX: X! @relation(name:"XOnY")
+	fieldZ: Z! @relation(name:"YOnZ")
+	fieldAA: AA! @relation(name:"AAOnY")
+	fieldAB: AB! @relation(name:"ABOnY")
+	fieldAC: AC! @relation(name:"ACOnY")
+	fieldAD: AD! @relation(name:"ADOnY")
+}
+
+type Z implements Node {
+    id: ID! @isUnique
+    field1: String!
+    field2: String
+    field3: [Int]
+    fieldA: A! @relation(name:"AOnZ")
+	fieldB: B! @relation(name:"BOnZ")
+	fieldC: C! @relation(name:"COnZ")
+	fieldD: D! @relation(name:"DOnZ")
+	fieldE: E! @relation(name:"EOnZ")
+	fieldF: F! @relation(name:"FOnZ")
+	fieldG: G! @relation(name:"GOnZ")
+	fieldH: H! @relation(name:"HOnZ")
+	fieldI: I! @relation(name:"IOnZ")
+	fieldJ: J! @relation(name:"JOnZ")
+	fieldK: K! @relation(name:"KOnZ")
+	fieldL: L! @relation(name:"LOnZ")
+	fieldM: M! @relation(name:"MOnZ")
+	fieldN: N! @relation(name:"NOnZ")
+	fieldO: O! @relation(name:"OOnZ")
+	fieldP: P! @relation(name:"POnZ")
+	fieldQ: Q! @relation(name:"QOnZ")
+	fieldR: R! @relation(name:"ROnZ")
+	fieldS: S! @relation(name:"SOnZ")
+	fieldT: T! @relation(name:"TOnZ")
+	fieldU: U! @relation(name:"UOnZ")
+	fieldV: V! @relation(name:"VOnZ")
+	fieldW: W! @relation(name:"WOnZ")
+	fieldX: X! @relation(name:"XOnZ")
+	fieldY: Y! @relation(name:"YOnZ")
+	fieldAA: AA! @relation(name:"AAOnZ")
+	fieldAB: AB! @relation(name:"ABOnZ")
+	fieldAC: AC! @relation(name:"ACOnZ")
+	fieldAD: AD! @relation(name:"ADOnZ")
+}
+
+type AA implements Node {
+    id: ID! @isUnique
+    field1: String!
+    field2: String
+    field3: [Int]
+    fieldA: A! @relation(name:"AOnAA")
+	fieldB: B! @relation(name:"AAOnB")
+	fieldC: C! @relation(name:"AAOnC")
+	fieldD: D! @relation(name:"AAOnD")
+	fieldE: E! @relation(name:"AAOnE")
+	fieldF: F! @relation(name:"AAOnF")
+	fieldG: G! @relation(name:"AAOnG")
+	fieldH: H! @relation(name:"AAOnH")
+	fieldI: I! @relation(name:"AAOnI")
+	fieldJ: J! @relation(name:"AAOnJ")
+	fieldK: K! @relation(name:"AAOnK")
+	fieldL: L! @relation(name:"AAOnL")
+	fieldM: M! @relation(name:"AAOnM")
+	fieldN: N! @relation(name:"AAOnN")
+	fieldO: O! @relation(name:"AAOnO")
+	fieldP: P! @relation(name:"AAOnP")
+	fieldQ: Q! @relation(name:"AAOnQ")
+	fieldR: R! @relation(name:"AAOnR")
+	fieldS: S! @relation(name:"AAOnS")
+	fieldT: T! @relation(name:"AAOnT")
+	fieldU: U! @relation(name:"AAOnU")
+	fieldV: V! @relation(name:"AAOnV")
+	fieldW: W! @relation(name:"AAOnW")
+	fieldX: X! @relation(name:"AAOnX")
+	fieldY: Y! @relation(name:"AAOnY")
+	fieldZ: Z! @relation(name:"AAOnZ")
+	fieldAB: AB! @relation(name:"AAOnAB")
+	fieldAC: AC! @relation(name:"AAOnAC")
+	fieldAD: AD! @relation(name:"AAOnAD")
+}
+
+type AB implements Node {
+    id: ID! @isUnique
+    field1: String!
+    field2: String
+    field3: [Int]
+    fieldA: A! @relation(name:"AOnAB")
+	fieldB: B! @relation(name:"ABOnB")
+	fieldC: C! @relation(name:"ABOnC")
+	fieldD: D! @relation(name:"ABOnD")
+	fieldE: E! @relation(name:"ABOnE")
+	fieldF: F! @relation(name:"ABOnF")
+	fieldG: G! @relation(name:"ABOnG")
+	fieldH: H! @relation(name:"ABOnH")
+	fieldI: I! @relation(name:"ABOnI")
+	fieldJ: J! @relation(name:"ABOnJ")
+	fieldK: K! @relation(name:"ABOnK")
+	fieldL: L! @relation(name:"ABOnL")
+	fieldM: M! @relation(name:"ABOnM")
+	fieldN: N! @relation(name:"ABOnN")
+	fieldO: O! @relation(name:"ABOnO")
+	fieldP: P! @relation(name:"ABOnP")
+	fieldQ: Q! @relation(name:"ABOnQ")
+	fieldR: R! @relation(name:"ABOnR")
+	fieldS: S! @relation(name:"ABOnS")
+	fieldT: T! @relation(name:"ABOnT")
+	fieldU: U! @relation(name:"ABOnU")
+	fieldV: V! @relation(name:"ABOnV")
+	fieldW: W! @relation(name:"ABOnW")
+	fieldX: X! @relation(name:"ABOnX")
+	fieldY: Y! @relation(name:"ABOnY")
+	fieldZ: Z! @relation(name:"ABOnZ")
+	fieldAA: AA! @relation(name:"AAOnAB")
+	fieldAC: AC! @relation(name:"ABOnAC")
+	fieldAD: AD! @relation(name:"ABOnAD")
+}
+
+type AC implements Node {
+    id: ID! @isUnique
+    field1: String!
+    field2: String
+    field3: [Int]
+    fieldA: A! @relation(name:"AOnAC")
+	fieldB: B! @relation(name:"ACOnB")
+	fieldC: C! @relation(name:"ACOnC")
+	fieldD: D! @relation(name:"ACOnD")
+	fieldE: E! @relation(name:"ACOnE")
+	fieldF: F! @relation(name:"ACOnF")
+	fieldG: G! @relation(name:"ACOnG")
+	fieldH: H! @relation(name:"ACOnH")
+	fieldI: I! @relation(name:"ACOnI")
+	fieldJ: J! @relation(name:"ACOnJ")
+	fieldK: K! @relation(name:"ACOnK")
+	fieldL: L! @relation(name:"ACOnL")
+	fieldM: M! @relation(name:"ACOnM")
+	fieldN: N! @relation(name:"ACOnN")
+	fieldO: O! @relation(name:"ACOnO")
+	fieldP: P! @relation(name:"ACOnP")
+	fieldQ: Q! @relation(name:"ACOnQ")
+	fieldR: R! @relation(name:"ACOnR")
+	fieldS: S! @relation(name:"ACOnS")
+	fieldT: T! @relation(name:"ACOnT")
+	fieldU: U! @relation(name:"ACOnU")
+	fieldV: V! @relation(name:"ACOnV")
+	fieldW: W! @relation(name:"ACOnW")
+	fieldX: X! @relation(name:"ACOnX")
+	fieldY: Y! @relation(name:"ACOnY")
+	fieldZ: Z! @relation(name:"ACOnZ")
+	fieldAA: AA! @relation(name:"AAOnAC")
+	fieldAB: AB! @relation(name:"ABOnAC")
+	fieldAD: AD! @relation(name:"ACOnAD")
+}
+
+type AD implements Node {
+    id: ID! @isUnique
+    field1: String!
+    field2: String
+    field3: [Int]
+    fieldA: A! @relation(name:"AOnAD")
+	fieldB: B! @relation(name:"ADOnB")
+	fieldC: C! @relation(name:"ADOnC")
+	fieldD: D! @relation(name:"ADOnD")
+	fieldE: E! @relation(name:"ADOnE")
+	fieldF: F! @relation(name:"ADOnF")
+	fieldG: G! @relation(name:"ADOnG")
+	fieldH: H! @relation(name:"ADOnH")
+	fieldI: I! @relation(name:"ADOnI")
+	fieldJ: J! @relation(name:"ADOnJ")
+	fieldK: K! @relation(name:"ADOnK")
+	fieldL: L! @relation(name:"ADOnL")
+	fieldM: M! @relation(name:"ADOnM")
+	fieldN: N! @relation(name:"ADOnN")
+	fieldO: O! @relation(name:"ADOnO")
+	fieldP: P! @relation(name:"ADOnP")
+	fieldQ: Q! @relation(name:"ADOnQ")
+	fieldR: R! @relation(name:"ADOnR")
+	fieldS: S! @relation(name:"ADOnS")
+	fieldT: T! @relation(name:"ADOnT")
+	fieldU: U! @relation(name:"ADOnU")
+	fieldV: V! @relation(name:"ADOnV")
+	fieldW: W! @relation(name:"ADOnW")
+	fieldX: X! @relation(name:"ADOnX")
+	fieldY: Y! @relation(name:"ADOnY")
+	fieldZ: Z! @relation(name:"ADOnZ")
+	fieldAA: AA! @relation(name:"AAOnAD")
+	fieldAB: AB! @relation(name:"ABOnAD")
+	fieldAC: AC! @relation(name:"ACOnAD")
 }
 
