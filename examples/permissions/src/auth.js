@@ -29,7 +29,7 @@ async function signup(parent, args, ctx, info) {
   })
 
   return {
-    token: jwt.sign({ userId: user.id }, process.env.JWT_SECRET),
+    token: jwt.sign({ userId: user.id }, process.env.APP_SECRET),
     user,
   }
 }
@@ -47,7 +47,7 @@ async function login(parent, { email, password }, ctx, info) {
   }
 
   return {
-    token: jwt.sign({ userId: user.id }, process.env.JWT_SECRET),
+    token: jwt.sign({ userId: user.id }, process.env.APP_SECRET),
     user,
   }
 }

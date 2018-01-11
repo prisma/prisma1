@@ -1,9 +1,9 @@
 service: permissions-demo
 
-# the cluster and stage the service is deployed to
-stage: dev
+stage: ${env:GRAPHCOOL_STAGE}
 
 datamodel: datamodel.graphql
 
-secret: mysecret123
+secret: ${env:GRAPHCOOL_SECRET}
+
 cluster: local

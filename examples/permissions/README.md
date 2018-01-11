@@ -29,7 +29,7 @@ This directory contains a GraphQL server (based on [`graphql-yoga`](https://gith
 
 ### 0. Prerequisites
 
-You need to have the following things installed: 
+You need to have the following things installed:
 
 * Node.js 8 (or higher)
 * Yarn
@@ -49,6 +49,7 @@ cd permissions
 You can now [deploy](https://graph.cool/docs/reference/graphcool-cli/commands-aiteerae6l#graphcool-deploy) the Graphcool service:
 
 ```sh
+yarn
 yarn graphcool deploy
 ```
 
@@ -73,7 +74,7 @@ The easiest way to test the deployed service is by using a [GraphQL Playground](
 You can either start the [desktop app](https://github.com/graphcool/graphql-playground) via
 
 ```sh
-graphcool playground
+yarn playground
 ```
 
 Or you can open a Playground by navigating to [http://localhost:4000](http://localhost:4000) in your browser.
@@ -84,7 +85,10 @@ You can send the following mutation in the Playground to create a new `User` nod
 
 ```graphql
 mutation {
-  signup(email: "alice@graph.cool" password: "graphql") {
+  signup(
+    email: "alice@graph.cool"
+    password: "graphql"
+  ) {
     token
     user {
       id
@@ -97,7 +101,11 @@ If no admin field is set, the role defaults to CUSTOMER. Create users with the A
 
 ```graphql
 mutation {
-  signup(email: "super_admin@graph.cool" password: "12345" admin: true) {
+  signup(
+    email: "super_admin@graph.cool"
+    password: "12345"
+    admin: true
+  ) {
     token
     user {
       id
@@ -112,7 +120,10 @@ This mutation will log in an _existing_ user by requesting a new authentication 
 
 ```graphql
 mutation {
-  login(email: "alice@graph.cool" password: "graphql") {
+  login(
+    email: "alice@graph.cool"
+    password: "graphql"
+  ) {
     token
   }
 }
@@ -144,7 +155,10 @@ This mutation changes the password of the authenticated user. Make sure the Auth
 
 ```graphql
 mutation {
-  updatePassword(oldPassword: "graphql" newPassword:"dKt9kAn6gkq") {
+  updatePassword(
+    oldPassword: "graphql"
+    newPassword:"dKt9kAn6gkq"
+  ) {
     id
   }
 }
@@ -156,7 +170,10 @@ Admin users can also change the password of other users. Make sure the provided 
 
 ```graphql
 mutation {
-  updatePassword(userId: "cjcaldr891d1d0180hl8lb1lp" newPassword:"test") {
+  updatePassword(
+    userId: "cjcaldr891d1d0180hl8lb1lp"
+    newPassword:"test"
+  ) {
     id
     email
   }
@@ -169,7 +186,9 @@ With this mutation authorized users can create a new post. Make sure the Authori
 
 ```graphql
 mutation {
-  createPost(title: "Observation of Gravitational Waves from a Binary Black Hole Merger") {
+  createPost(
+    title: "Observation of Gravitational Waves from a Binary Black Hole Merger"
+  ) {
     id
   }
 }
@@ -182,10 +201,11 @@ With this mutation users with the default CUSTOMER role can change their own pos
 
 ```graphql
 mutation {
-  updatePost(id: "cjcanspge1e4z01802of5gqp1", title: "Hyperloop Alpha - SpaceX") {
+  updatePost(
+    id: "cjcanspge1e4z01802of5gqp1"
+    title: "Hyperloop Alpha - SpaceX"
+  ) {
     title
   }
 }
 ```
-
-

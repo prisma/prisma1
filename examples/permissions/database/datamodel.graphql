@@ -8,7 +8,7 @@ type User {
   createdAt: DateTime!
 
   role: Role!
-  posts: [Post!]! @relation(name: "UserPosts")
+  posts: [Post!]!
 
   email: String @unique
   password: String
@@ -20,5 +20,5 @@ type Post {
 
   title: String!
 
-  author: User! @relation(name: "UserPosts")
+  author: User!
 }
