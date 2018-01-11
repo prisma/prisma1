@@ -98,7 +98,6 @@ object Dependencies {
     java8Compat,
     mariaDbClient,
     scalactic,
-    jwt,
     cuid,
     akkaHttpPlayJson,
     finagle,

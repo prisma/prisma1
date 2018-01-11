@@ -1,10 +1,14 @@
 package cool.graph.subscriptions.protocol
 
-import akka.actor.{Actor, ActorRef}
+import akka.actor.{Actor, ActorRef, Stash}
 import cool.graph.akkautil.{LogUnhandled, LogUnhandledExceptions}
+import cool.graph.auth.{AuthImpl, AuthSuccess}
 import cool.graph.bugsnag.BugSnagger
 import cool.graph.messagebus.PubSubPublisher
 import cool.graph.messagebus.pubsub.Only
+import cool.graph.shared.models.{Project, ProjectWithClientId}
+import cool.graph.subscriptions.SubscriptionDependencies
+import cool.graph.subscriptions.helpers.ProjectHelper
 import cool.graph.subscriptions.metrics.SubscriptionMetrics
 import cool.graph.subscriptions.protocol.SubscriptionProtocolV07.Responses.SubscriptionSessionResponse
 import cool.graph.subscriptions.protocol.SubscriptionSessionActorV05.Internal.Authorization
@@ -36,18 +40,23 @@ case class SubscriptionSessionActor(
     subscriptionsManager: ActorRef,
     bugsnag: BugSnagger,
     responsePublisher: PubSubPublisher[SubscriptionSessionResponse]
-) extends Actor
+)(implicit dependencies: SubscriptionDependencies)
+    extends Actor
     with LogUnhandled
-    with LogUnhandledExceptions {
+    with LogUnhandledExceptions
+    with Stash {
 
   import SubscriptionMetrics._
   import SubscriptionProtocolV07.Requests._
   import SubscriptionProtocolV07.Responses._
   import cool.graph.subscriptions.resolving.SubscriptionsManager.Requests.CreateSubscription
+  import akka.pattern.pipe
+  import context.dispatcher
 
   override def preStart() = {
     super.preStart()
     activeSubcriptionSessions.inc
+    pipe(ProjectHelper.resolveProject(projectId)(dependencies, context.system, context.dispatcher)) to self
   }
 
   override def postStop(): Unit = {
@@ -56,11 +65,29 @@ case class SubscriptionSessionActor(
   }
 
   override def receive: Receive = logUnhandled {
+    case project: ProjectWithClientId =>
+      context.become(waitingForInit(project.project))
+      unstashAll()
+
+    case akka.actor.Status.Failure(e) =>
+      e.printStackTrace()
+      context.stop(self)
+
+    case _ =>
+      stash()
+  }
+
+  def waitingForInit(project: Project): Receive = logUnhandled {
     case GqlConnectionInit(payload) =>
       ParseAuthorization.parseAuthorization(payload.getOrElse(Json.obj())) match {
         case Some(auth) =>
-          publishToResponseQueue(GqlConnectionAck)
-          context.become(readyReceive(auth))
+          val authResult = AuthImpl.verify(project.secrets, auth.token)
+          if (authResult.isSuccess) {
+            publishToResponseQueue(GqlConnectionAck)
+            context.become(initFinishedReceive(auth))
+          } else {
+            publishToResponseQueue(GqlConnectionError("Authentication token is invalid."))
+          }
 
         case None =>
           publishToResponseQueue(GqlConnectionError("No Authorization field was provided in payload."))
@@ -70,7 +97,7 @@ case class SubscriptionSessionActor(
       publishToResponseQueue(GqlConnectionError("You have to send an init message before sending anything else."))
   }
 
-  def readyReceive(auth: Authorization): Receive = logUnhandled {
+  def initFinishedReceive(auth: Authorization): Receive = logUnhandled {
     case GqlStart(id, payload) =>
       handleStart(id, payload, auth)
 

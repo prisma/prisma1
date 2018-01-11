@@ -182,7 +182,9 @@ case class Project(
   def getFunctionByName(name: String): Option[Function] = functions.find(_.name == name)
   def getFunctionByName_!(name: String): Function       = getFunctionByName(name).get //OrElse(throw SystemErrors.InvalidFunctionName(name))
 }
-
+object ProjectWithClientId {
+  def apply(project: Project): ProjectWithClientId = ProjectWithClientId(project, project.ownerId)
+}
 case class ProjectWithClientId(project: Project, clientId: Id) {
   val id: Id = project.id
 }
