@@ -138,9 +138,9 @@ Once you've set the header, you can send the following query to check whether th
 If the token is valid, the server will return the `id` and `email` of the `User` node that it belongs to.
 
 
-### Change the password with the `updatePassword` query
+### Change the password with the `updatePassword` mutation
 
-This query changes the password of the authenticated user. Make sure the Authorization header is set.
+This mutation changes the password of the authenticated user. Make sure the Authorization header is set:
 
 ```graphql
 mutation {
@@ -152,7 +152,7 @@ mutation {
 
 You can verify the password change by trying the login mutation with the new password.
 
-Admin users can also change the password of other users. Make sure the provided Authorization token is obtained from a login mutation of a user with the ADMIN role.
+Admin users can also change the password of other users. Make sure the provided Authorization token is obtained from a login mutation of a user with the ADMIN role:
 
 ```graphql
 mutation {
@@ -163,6 +163,29 @@ mutation {
 }
 ```
 
+### Create Posts via `createPost` mutation
 
+With this mutation authorized users can create a new post. Make sure the Authorization header is set:
+
+```graphql
+mutation {
+  createPost(title: "Observation of Gravitational Waves from a Binary Black Hole Merger") {
+    id
+  }
+}
+```
+
+
+### `updatePosts` mutation
+
+With this mutation users with the default CUSTOMER role can change their own posts and users with the ADMIN role can also change postst of other users:
+
+```graphql
+mutation {
+  updatePost(id: "cjcanspge1e4z01802of5gqp1", title: "Hyperloop Alpha - SpaceX") {
+    title
+  }
+}
+```
 
 
