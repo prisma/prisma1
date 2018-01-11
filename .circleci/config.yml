@@ -21,10 +21,19 @@ jobs:
           environment:
             BLUE_ID: cj67nv8do36px0187fa6i2n6z
             GREEN_ID: cj6glidms1ego0162chqa3al4
+            ALIAS: graphcool-docs
 
 workflows:
   version: 2
   build:
     jobs:
-      - cli
-      - content
+      - cli:
+          filters:
+            branches:
+              only:
+                - master
+      - content:
+          filters:
+            branches:
+              only:
+                - master
