@@ -43,11 +43,16 @@ type Mutation {
   deletePost(where: PostWhereUniqueInput!): Post
   upsertUser(where: UserWhereUniqueInput!, create: UserCreateInput!, update: UserUpdateInput!): User!
   upsertPost(where: PostWhereUniqueInput!, create: PostCreateInput!, update: PostUpdateInput!): Post!
-  updateUsers(data: UserUpdateInput!, where: UserWhereInput!): BatchPayload!
-  updatePosts(data: PostUpdateInput!, where: PostWhereInput!): BatchPayload!
-  deleteUsers(where: UserWhereInput!): BatchPayload!
-  deletePosts(where: PostWhereInput!): BatchPayload!
-  resetData: Boolean
+  updateManyUsers(data: UserUpdateInput!, where: UserWhereInput!): BatchPayload!
+  updateManyPosts(data: PostUpdateInput!, where: PostWhereInput!): BatchPayload!
+  deleteManyUsers(where: UserWhereInput!): BatchPayload!
+  deleteManyPosts(where: PostWhereInput!): BatchPayload!
+}
+
+enum MutationType {
+  CREATED
+  UPDATED
+  DELETED
 }
 
 interface Node {
@@ -63,12 +68,12 @@ type PageInfo {
 
 type PostConnection {
   pageInfo: PageInfo!
-  edges: [PostEdge!]
+  edges: [PostEdge]!
 }
 
 input PostCreateInput {
   title: String!
-  author: UserCreateOneWithoutPostsInput
+  author: UserCreateOneWithoutPostsInput!
 }
 
 input PostCreateManyWithoutAuthorInput {
@@ -94,6 +99,29 @@ enum PostOrderByInput {
   title_DESC
   updatedAt_ASC
   updatedAt_DESC
+}
+
+type PostPreviousValues {
+  id: ID!
+  createdAt: DateTime!
+  title: String!
+}
+
+type PostSubscriptionPayload {
+  mutation: MutationType!
+  node: Post
+  updatedFields: [String!]
+  previousValues: PostPreviousValues
+}
+
+input PostSubscriptionWhereInput {
+  AND: [PostSubscriptionWhereInput!]
+  OR: [PostSubscriptionWhereInput!]
+  mutation_in: [MutationType!]
+  updatedFields_contains: String
+  updatedFields_contains_every: [String!]
+  updatedFields_contains_some: [String!]
+  node: PostWhereInput
 }
 
 input PostUpdateInput {
@@ -186,9 +214,14 @@ enum Role {
   CUSTOMER
 }
 
+type Subscription {
+  user(where: UserSubscriptionWhereInput): UserSubscriptionPayload
+  post(where: PostSubscriptionWhereInput): PostSubscriptionPayload
+}
+
 type UserConnection {
   pageInfo: PageInfo!
-  edges: [UserEdge!]
+  edges: [UserEdge]!
 }
 
 input UserCreateInput {
@@ -227,6 +260,31 @@ enum UserOrderByInput {
   password_DESC
   updatedAt_ASC
   updatedAt_DESC
+}
+
+type UserPreviousValues {
+  id: ID!
+  createdAt: DateTime!
+  role: Role!
+  email: String
+  password: String
+}
+
+type UserSubscriptionPayload {
+  mutation: MutationType!
+  node: User
+  updatedFields: [String!]
+  previousValues: UserPreviousValues
+}
+
+input UserSubscriptionWhereInput {
+  AND: [UserSubscriptionWhereInput!]
+  OR: [UserSubscriptionWhereInput!]
+  mutation_in: [MutationType!]
+  updatedFields_contains: String
+  updatedFields_contains_every: [String!]
+  updatedFields_contains_some: [String!]
+  node: UserWhereInput
 }
 
 input UserUpdateInput {

@@ -1,4 +1,4 @@
-# import Post from "../database/schema.generated.graphql"
+# import Post from "./generated/graphcool.graphql"
 
 type Query {
   # all authenticated users can retrieve about themselves
