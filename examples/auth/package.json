@@ -18,8 +18,5 @@
     "nodemon": "1.14.3",
     "now": "8.5.4",
     "rimraf": "2.6.2"
-  },
-  "now": {
-    "alias": "myapp"
   }
 }
