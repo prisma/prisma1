@@ -10,7 +10,7 @@ This directory contains a GraphQL server (based on [`graphql-yoga`](https://gith
 .
 ├── README.md
 ├── database
-│   ├── schema.graphql
+│   ├── datamodel.graphql
 │   └── graphcool.yml
 ├── src
 │   ├── generated
