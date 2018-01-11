@@ -81,7 +81,7 @@ case class SubscriptionSessionActor(
     case GqlConnectionInit(payload) =>
       ParseAuthorization.parseAuthorization(payload.getOrElse(Json.obj())) match {
         case Some(auth) =>
-          val authResult = auth.token.map(x => AuthImpl.verify(project.secrets, x)).getOrElse(AuthSuccess)
+          val authResult = AuthImpl.verify(project.secrets, auth.token)
           if (authResult.isSuccess) {
             publishToResponseQueue(GqlConnectionAck)
             context.become(initFinishedReceive(auth))

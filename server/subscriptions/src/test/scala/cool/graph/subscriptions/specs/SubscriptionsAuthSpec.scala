@@ -30,6 +30,31 @@ class SubscriptionsAuthSpec extends FlatSpec with Matchers with SpecBase {
     }
   }
 
+  "the subscriptions" should "succeed if the provided token is valid for a project with a secret" in {
+    val project = SchemaDsl() { schema =>
+      schema.model("Todo").field("text", _.String)
+    }
+    val actualProject = project.copy(secrets = Vector("other_secret", "secret"))
+    val validToken    = Jwt.encode("{}", "secret", JwtAlgorithm.HS256)
+
+    testWebsocket(actualProject) { wsClient =>
+      wsClient.sendMessage(connectionInit(validToken))
+      wsClient.expectMessage(connectionAck)
+    }
+  }
+
+  "the subscriptions" should "fail if no token is provided for a project with a secret" in {
+    val project = SchemaDsl() { schema =>
+      schema.model("Todo").field("text", _.String)
+    }
+    val actualProject = project.copy(secrets = Vector("secret"))
+
+    testWebsocket(actualProject) { wsClient =>
+      wsClient.sendMessage(connectionInit)
+      wsClient.expectMessage(s"""{"payload":{"message":"Authentication token is invalid."},"type":"connection_error"}""")
+    }
+  }
+
   "the subscriptions" should "fail if the provided token is invalid for a project with a secret" in {
     val project = SchemaDsl() { schema =>
       schema.model("Todo").field("text", _.String)
@@ -40,19 +65,6 @@ class SubscriptionsAuthSpec extends FlatSpec with Matchers with SpecBase {
     testWebsocket(actualProject) { wsClient =>
       wsClient.sendMessage(connectionInit(invalidToken))
       wsClient.expectMessage(s"""{"payload":{"message":"Authentication token is invalid."},"type":"connection_error"}""")
-    }
-  }
-
-  "the subscriptions" should "succeed if the provided token is invalid for a project with a secret" in {
-    val project = SchemaDsl() { schema =>
-      schema.model("Todo").field("text", _.String)
-    }
-    val actualProject = project.copy(secrets = Vector("other_secret", "secret"))
-    val validToken    = Jwt.encode("{}", "secret", JwtAlgorithm.HS256)
-
-    testWebsocket(actualProject) { wsClient =>
-      wsClient.sendMessage(connectionInit(validToken))
-      wsClient.expectMessage(connectionAck)
     }
   }
 

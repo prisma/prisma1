@@ -77,7 +77,9 @@ case class RequestHandler(
   def handleRawRequest(
       projectId: String,
       rawRequest: RawRequest,
-  )(fn: Project => Future[(StatusCode, JsValue)]): Future[(StatusCode, JsValue)] = {
+  )(
+      fn: Project => Future[(StatusCode, JsValue)]
+  ): Future[(StatusCode, JsValue)] = {
     for {
       projectWithClientId <- fetchProject(projectId)
       _                   <- verifyAuth(projectWithClientId.project, rawRequest)
@@ -86,14 +88,8 @@ case class RequestHandler(
   }
 
   def verifyAuth(project: Project, rawRequest: RawRequest): Future[Unit] = {
-    rawRequest.authorizationHeader match {
-      case Some(authHeader) =>
-        val authResult = auth.verify(project.secrets, authHeader)
-        if (authResult.isSuccess) Future.unit else Future.failed(InvalidToken())
-
-      case None =>
-        Future.unit
-    }
+    val authResult = auth.verify(project.secrets, rawRequest.authorizationHeader)
+    if (authResult.isSuccess) Future.unit else Future.failed(InvalidToken())
   }
 
   def handleGraphQlRequest(graphQlRequest: GraphQlRequest): Future[(StatusCode, JsValue)] = {
