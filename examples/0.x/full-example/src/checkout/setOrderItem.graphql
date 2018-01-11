@@ -1,0 +1,12 @@
+type SetOrderItemPayload {
+  itemId: ID
+  amount: Int!
+}
+
+extend type Mutation {
+  setOrderItem(
+    orderId: ID!
+    productId: ID!
+    amount: Int!
+  ): SetOrderItemPayload!
+}

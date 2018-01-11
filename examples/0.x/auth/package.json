@@ -1,0 +1,16 @@
+{
+  "name": "auth",
+  "version": "1.0.0",
+  "description": "This example demonstrates how to implement an **email-password-based authentication** workflow with Graphcool. Feel free to use it as a template for your own project!",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "graphcool-lib": "^0.1.4",
+    "validator": "^9.0.0"
+  }
+}

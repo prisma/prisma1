@@ -1,0 +1,37 @@
+type User @model {
+  id: ID! @isUnique
+  email: String! @isUnique
+  name: String!
+  stripeCustomerId: String
+  password: String!
+  orders: [Order!]! @relation(name: "Orders")
+}
+
+type Order @model {
+  id: ID! @isUnique
+  description: String!
+  user: User @relation(name: "Orders")
+  items: [Item!]! @relation(name: "Items")
+  orderStatus: OrderStatus @defaultValue(value: NEW)
+}
+
+type Item @model {
+  id: ID! @isUnique
+  product: Product @relation(name: "ProductOnItem")
+  order: Order @relation(name: "Items")
+  amount: Int! @default(value: 1)
+}
+
+type Product @model {
+  id: ID! @isUnique
+  items: [Item!]! @relation(name: "ProductOnItem")
+  name: String!
+  description: String
+  imageUrl: String
+  price: Int!
+}
+
+enum OrderStatus {
+  NEW
+  PAID
+}

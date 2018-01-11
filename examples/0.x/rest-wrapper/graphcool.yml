@@ -1,0 +1,53 @@
+types: ./types.graphql
+
+functions:
+  
+  allBreeds:
+    handler:
+      code:
+        src: ./src/allBreeds.js
+    type: resolver
+    schema: ./src/allBreeds.graphql
+
+  allSubBreeds:
+    handler:
+      code:
+        src: ./src/allSubBreeds.js
+    type: resolver
+    schema: ./src/allSubBreeds.graphql
+
+  randomDogImage:
+    handler:
+      code:
+        src: ./src/randomDogImage.js
+    type: resolver
+    schema: ./src/randomDogImage.graphql
+
+  randomBreedImage:
+    handler:
+      code:
+        src: ./src/randomBreedImage.js
+    type: resolver
+    schema: ./src/randomBreedImage.graphql
+
+  randomSubBreedImage:
+    handler:
+      code:
+        src: ./src/randomSubBreedImage.js
+    type: resolver
+    schema: ./src/randomSubBreedImage.graphql
+
+  breedImages:
+    handler:
+      code:
+        src: ./src/breedImages.js
+    type: resolver
+    schema: ./src/breedImages.graphql
+
+  subBreedImages:
+    handler:
+      code:
+        src: ./src/subBreedImages.js
+    type: resolver
+    schema: ./src/subBreedImages.graphql
+

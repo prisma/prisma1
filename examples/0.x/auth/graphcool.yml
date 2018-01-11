@@ -1,0 +1,41 @@
+types: ./types.graphql
+
+functions:
+
+  # This resolver allows to create a new user with the
+  # `signupUser`-mutation defined in `signup.graphql`.
+  signup:
+    type: resolver
+    schema: src/signup.graphql
+    handler:
+      code: 
+        src: src/signup.js
+
+  # This resolver allows to retrieve a node token using the
+  # `authenticateUser`-mutation defined in `authenticate.graphql`.
+  authenticate:
+    type: resolver
+    schema: src/authenticate.graphql
+    handler:
+      code: 
+        src: src/authenticate.js
+
+  # This resolver allows to check whether a request belongs to a
+  # currently authenticated `User` node using the 
+  # `loggedInUser` query defined in `loggedInUser.graphql`.
+  loggedInUser:
+    type: resolver
+    schema: src/loggedInUser.graphql
+    handler:
+      code: 
+        src: src/loggedInUser.js
+
+# To learn how to configure permission rules for your Graphcool service, 
+# check out the `permissions` example. 
+permissions: []
+
+rootTokens:
+  - signup
+  - authenticate
+  - loggedInUser
+

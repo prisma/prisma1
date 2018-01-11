@@ -1,0 +1,31 @@
+# The following types define the data model of the example app
+# based on which the GraphQL API is generated
+
+type User @model {
+  id: ID! @isUnique
+  firstName: String!
+  lastName: String!
+
+  # You can declare relations between models like this
+  posts: [Post!]! @relation(name: "UserPosts")
+  comments: [Comment!]! @relation(name: "UserComments")
+}
+
+type Post @model {
+  id: ID! @isUnique
+  title: String!
+  description: String!
+
+  # Every relation also required a back-relation (to determine 1:1, 1:n or n:m)
+  author: User! @relation(name: "UserPosts")
+  comments: [Comment!]! @relation(name: "PostComments")
+
+}
+
+type Comment @model {
+  id: ID! @isUnique
+  text: String!
+  isPublished: Boolean!
+  author: User! @relation(name: "UserComments")
+  post: Post! @relation(name: "PostComments")
+}

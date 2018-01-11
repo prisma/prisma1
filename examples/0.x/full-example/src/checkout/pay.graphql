@@ -1,0 +1,10 @@
+type PaymentPayload {
+  success: Boolean!
+}
+
+extend type Mutation {
+  pay(
+    stripeToken: String
+    orderId: String!
+  ): PaymentPayload!
+}
