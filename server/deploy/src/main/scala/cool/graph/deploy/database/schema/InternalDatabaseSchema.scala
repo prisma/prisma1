@@ -45,5 +45,12 @@ object InternalDatabaseSchema {
         PRIMARY KEY (`projectId`, `revision`),
         CONSTRAINT `migrations_projectid_foreign` FOREIGN KEY (`projectId`) REFERENCES `Project` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;""",
+    // Internal migrations
+    sqlu"""
+      CREATE TABLE IF NOT EXISTS `InternalMigration` (
+        `id` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
+        `appliedAt` datetime NOT NULL,
+        PRIMARY KEY (`id`)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;""",
   )
 }
