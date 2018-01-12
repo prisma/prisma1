@@ -21,8 +21,6 @@ case class WorkerServer(services: WorkerServices, prefix: String = "")(implicit 
 
   val innerRoutes = Routes.emptyRoute
 
-  def healthCheck: Future[_] = Future.successful(())
-
   override def onStart: Future[_] = {
     println("Initializing workers...")
     val initFutures = Future.sequence(workers.map(_.start))

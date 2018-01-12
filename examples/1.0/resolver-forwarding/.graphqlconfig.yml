@@ -1,0 +1,10 @@
+projects:
+  app:
+    schemaPath: "src/schema.graphql"
+    extensions:
+      endpoints:
+        default: "http://localhost:4000"
+  database:
+    schemaPath: "src/generated/graphcool.graphql"
+    extensions:
+      graphcool: database/graphcool.yml

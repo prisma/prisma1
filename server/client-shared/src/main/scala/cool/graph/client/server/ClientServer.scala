@@ -47,12 +47,6 @@ case class ClientServer(prefix: String)(
 
   private val requestHandler = RequestHandler(errorHandlerFactory, projectSchemaFetcher, projectSchemaBuilder, graphQlRequestHandler, clientAuth, log)
 
-  override def healthCheck: Future[_] =
-    for {
-      _ <- graphQlRequestHandler.healthCheck
-      _ <- kinesis.healthCheck
-    } yield ()
-
   val innerRoutes: Route = extractRequest { _ =>
     val requestLogger = new RequestLogger(requestIdPrefix = requestIdPrefix, log = log)
     requestLogger.begin

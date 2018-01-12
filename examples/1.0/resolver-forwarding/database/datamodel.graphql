@@ -1,0 +1,8 @@
+type Post {
+  id: ID! @unique
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  isPublished: Boolean!
+  title: String!
+  text: String!
+}
