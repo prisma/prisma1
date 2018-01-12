@@ -121,7 +121,7 @@ For next steps follow this tutorial: https://bit.ly/graphcool-first-steps`)
       )} ...                             `,
     )
 
-    const args: any[] = ['create', 'my-app']
+    const args: any[] = ['create']
 
     if (this.args && this.args.dirName) {
       args.push(this.args!.dirName!)
