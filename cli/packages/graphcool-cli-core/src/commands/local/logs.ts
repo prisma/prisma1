@@ -16,6 +16,7 @@ export default class Logs extends Command {
   }
   async run() {
     const docker = new Docker(this.out, this.config, this.env, this.flags.name)
+    await docker.init()
     await docker.logs()
   }
 }

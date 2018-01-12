@@ -20,12 +20,8 @@ export default class ClusterLogs extends Command {
     }
 
     if (cluster.local) {
-      const docker = new Docker(
-        this.out,
-        this.config,
-        this.env,
-        this.flags.name,
-      )
+      const docker = new Docker(this.out, this.config, this.env, 'local')
+      await docker.init()
       await docker.logs()
     } else {
       throw new Error(
