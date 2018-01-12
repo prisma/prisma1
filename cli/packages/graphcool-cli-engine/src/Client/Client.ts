@@ -550,13 +550,19 @@ export class Client {
       }
       `
 
-    const { addProject: { project } } = await this.client.request<{
+    const result = await this.client.request<{
       addProject: { project: SimpleProjectInfo }
     }>(mutation, {
       name,
       stage,
       secrets,
     })
+
+    if (!result) {
+      throw new Error(`Could not create service ${name}`)
+    }
+
+    const { addProject: { project } } = result
 
     // TODO set project definition, should be possibility in the addProject mutation
 
