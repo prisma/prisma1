@@ -48,8 +48,14 @@ export class GraphcoolDefinitionClass {
     this.envVars = envVars
   }
   async load(args: Args, envPath?: string) {
-    if (envPath && !fs.pathExistsSync(path.join(process.cwd(), envPath))) {
-      throw new Error(`--env-file path '${envPath}' does not exist`)
+    if (envPath) {
+      if (!fs.pathExistsSync(envPath)) {
+        envPath = path.join(process.cwd(), envPath)
+      }
+
+      if (!fs.pathExistsSync(envPath)) {
+        throw new Error(`--env-file path '${envPath}' does not exist`)
+      }
     }
     dotenv.config({ path: envPath })
     if (this.definitionPath) {

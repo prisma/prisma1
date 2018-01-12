@@ -129,7 +129,7 @@ type User @model {
     const { definition, env } = makeDefinition(yml, datamodel, {})
     const envPath = path.join(definition.definitionDir, '.env')
 
-    fs.writeFileSync(
+    fs.outputFileSync(
       envPath,
       `MY_DOT_ENV_SECRET=this-is-very-secret,and-comma,seperated`,
     )
@@ -250,7 +250,7 @@ type User @model {
     const { definition, env } = makeDefinition(yml, datamodel)
     const envPath = path.join(definition.definitionDir, '.env')
 
-    fs.writeFileSync(
+    fs.outputFileSync(
       envPath,
       `MY_DOT_ENV_SECRET=this-is-very-secret,and-comma,seperated`,
     )
