@@ -5,7 +5,7 @@ description: Overview
 
 # Overview
 
-GraphQL IDE for better development workflows (GraphQL subscriptions, interactive docs & collaboration).
+🎮 [`graphql-playground`](https://github.com/graphcool/graphql-playground/) is a GraphQL IDE for better development workflows (GraphQL subscriptions, interactive docs & collaboration).
 
 **You can download the [desktop app](https://github.com/graphcool/graphql-playground/releases) or use the web version at graphqlbin.com: [Demo](https://www.graphqlbin.com/RVIn)**
 

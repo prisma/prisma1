@@ -5,7 +5,7 @@ description: GraphQL Request
 
 # Overview
 
-[`graphql-request`](https://github.com/graphcool/graphql-request) is a minimal GraphQL client supporting Node and browsers for scripts or simple apps.
+📡 [`graphql-request`](https://github.com/graphcool/graphql-request) is a minimal GraphQL client supporting Node and browsers for scripts or simple apps.
 
 ## Features
 
