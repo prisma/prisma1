@@ -3,6 +3,7 @@ import 'isomorphic-fetch'
 import * as jwt from 'jsonwebtoken'
 import { cloudApiEndpoint } from './constants'
 import { GraphQLClient } from 'graphql-request'
+import chalk from 'chalk'
 
 export class Cluster {
   name: string
@@ -40,6 +41,14 @@ export class Cluster {
   }
 
   getLocalToken() {
+    if (!this.clusterSecret || this.clusterSecret === '') {
+      throw new Error(`Property '${chalk.bold(
+        'clusterSecret',
+      )}' of cluster ${chalk.bold(this.name)} in ~/.graphcoolrc is empty.
+Please either provide a clusterSecret or run ${chalk.green.bold(
+        'graphcool local start',
+      )} to generate a new one`)
+    }
     if (!this.cachedToken) {
       const grants = [{ target: `*/*`, action: '*' }]
 
