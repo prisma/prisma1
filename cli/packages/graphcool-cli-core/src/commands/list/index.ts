@@ -1,7 +1,5 @@
 import { Command } from 'graphcool-cli-engine'
 import { table, getBorderCharacters } from 'table'
-import { NoClusterSetError } from '../../errors/NoClusterSetError'
-import { ClusterNotFoundError } from '../../errors/ClusterNotFoundError'
 const debug = require('debug')('command')
 
 export interface Project {

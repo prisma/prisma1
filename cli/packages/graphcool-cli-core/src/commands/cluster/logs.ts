@@ -1,7 +1,6 @@
 import { Command, flags, Flags } from 'graphcool-cli-engine'
 import Docker from '../local/Docker'
-import { NoClusterSetError } from '../../errors/NoClusterSetError'
-import { ClusterNotFoundError } from '../../errors/ClusterNotFoundError'
+import { ClusterNotFound, ClusterNotSet } from 'graphcool-yml'
 
 export default class ClusterLogs extends Command {
   static topic = 'cluster'
@@ -13,11 +12,11 @@ export default class ClusterLogs extends Command {
 
     const clusterName = this.definition.getClusterName()
     if (!clusterName) {
-      throw new NoClusterSetError()
+      throw new ClusterNotSet()
     }
     const cluster = this.definition.getCluster()
     if (!cluster) {
-      throw new ClusterNotFoundError(clusterName)
+      throw new ClusterNotFound(clusterName)
     }
 
     if (cluster.local) {

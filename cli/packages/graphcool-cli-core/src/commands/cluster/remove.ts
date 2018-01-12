@@ -1,7 +1,5 @@
 import { Command, flags, Flags } from 'graphcool-cli-engine'
 import Docker from '../local/Docker'
-import { NoClusterSetError } from '../../errors/NoClusterSetError'
-import { ClusterNotFoundError } from '../../errors/ClusterNotFoundError'
 import { Cluster } from 'graphcool-yml'
 import chalk from 'chalk'
 

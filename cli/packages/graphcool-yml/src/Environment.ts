@@ -12,6 +12,7 @@ import 'isomorphic-fetch'
 import { RC } from './index'
 import { DatabaseRC } from './types/rc'
 import { EnvironmentMigrator } from './EnvironmentMigrator'
+import { ClusterNotSet } from './errors/ClusterNotSet'
 const debug = require('debug')('Environment')
 
 const isDev = (process.env.ENV || '').toLowerCase() === 'dev'
@@ -105,6 +106,9 @@ export class Environment {
     }
 
     if (!cluster) {
+      if (!name) {
+        throw new ClusterNotSet()
+      }
       throw new ClusterNotFound(name)
     }
 
