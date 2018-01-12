@@ -1,14 +1,21 @@
 ---
-alias: clchg7lwe1
-description: Reset data
+alias: anaif5iez3
+description: Open a GraphQL Playground
 ---
 
-# `graphcool reset`
+# `graphcool playground`
+
+Open a [Playground](https://github.com/graphcool/graphql-playground) for the current service. The current service is determined by the default environment that's specified in the `.graphcoolrc` of the directory in which you're executing the command.
 
 #### Usage
 
 ```sh
-graphcool reset [flags]
+graphcool playground [flags]
 ```
 
 #### Flags
+
+```
+-t, --target TARGET      Target name
+-w, --web                Open browser-based Playground
+```
