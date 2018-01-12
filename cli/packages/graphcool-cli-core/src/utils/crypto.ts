@@ -1,4 +1,4 @@
-import { promisify } from 'util'
+import * as promisify from 'util.promisify'
 import * as forge from 'node-forge'
 
 export async function createRsaKeyPair(): Promise<KeyPair> {
