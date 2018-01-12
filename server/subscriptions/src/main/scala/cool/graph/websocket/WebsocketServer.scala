@@ -41,10 +41,13 @@ case class WebsocketServer(dependencies: SubscriptionDependencies, prefix: Strin
   val innerRoutes = pathPrefix(Segment) { name =>
     pathPrefix(Segment) { stage =>
       get {
-        println("establishing ws connection")
         val projectId = ProjectId.toEncodedString(name = name, stage = stage)
-        handleWebSocketMessagesForProtocol(newSession(projectId, v7protocol = false), subProtocol1) ~
-          handleWebSocketMessagesForProtocol(newSession(projectId, v7protocol = true), subProtocol2)
+
+        extractUpgradeToWebSocket { upgrade =>
+          val protocol     = upgrade.requestedProtocols.head
+          val isV7Protocol = protocol == "graphql-ws"
+          handleWebSocketMessages(newSession(projectId, v7protocol = isV7Protocol))
+        }
       }
     }
   }
@@ -77,7 +80,7 @@ case class WebsocketServer(dependencies: SubscriptionDependencies, prefix: Strin
 
     ActorFlow
       .actorRef[Message, Message] { out =>
-        Props(
+        Props {
           WebsocketSession(
             projectId = projectId,
             sessionId = sessionId,
@@ -86,9 +89,11 @@ case class WebsocketServer(dependencies: SubscriptionDependencies, prefix: Strin
             requestsPublisher = dependencies.requestsQueuePublisher,
             bugsnag = bugsnag,
             isV7protocol = v7protocol
-          )(dependencies))
+          )
+        }
       }(system, materializer)
       .mapMaterializedValue(_ => akka.NotUsed)
+
 //    val incomingMessages =
 //      Flow[Message]
 //        .collect {
