@@ -10,8 +10,9 @@ import akka.stream.ActorMaterializer
 import com.typesafe.scalalogging.LazyLogging
 import cool.graph.akkautil.http.Server
 import cool.graph.akkautil.throttler.Throttler
-import cool.graph.akkautil.throttler.Throttler.ThrottlerException
+import cool.graph.akkautil.throttler.Throttler.{ThrottleBufferFullException, ThrottlerException}
 import cool.graph.api.schema.APIErrors.ProjectNotFound
+import cool.graph.api.schema.CommonErrors.ThrottlerBufferFullException
 import cool.graph.api.schema.{SchemaBuilder, UserFacingError}
 import cool.graph.api.{ApiDependencies, ApiMetrics}
 import cool.graph.cuid.Cuid.createCuid
@@ -43,7 +44,7 @@ case class ApiServer(
       amount = throttleValue,
       per = 1.seconds,
       timeout = 60.seconds,
-      maxCallsInFlight = 1
+      maxCallsInFlight = 5
     )
   }
 
@@ -89,11 +90,12 @@ case class ApiServer(
             complete(result.result)
           }
 
-        case scala.util.Failure(_: ThrottlerException) =>
+        case scala.util.Failure(_: ThrottleBufferFullException) =>
           logRequestEnd(Some(projectId))
-          complete(OK -> "throttled!")
+          throw ThrottlerBufferFullException()
 
         case scala.util.Failure(exception) => // just propagate the exception
+          logRequestEnd(Some(projectId))
           throw exception
       }
     }
