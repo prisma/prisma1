@@ -44,10 +44,10 @@ Read the [last section](#whats-in-this-example) of this README to learn how the 
 
 ### 1. Download the example
 
-Clone the full [framework](https://github.com/graphcool/framework) repository and navigate to this directory or download _only_ this example with the following command:
+Clone the full [framework](https://github.com/graphcool/graphcool) repository and navigate to this directory or download _only_ this example with the following command:
 
 ```sh
-curl https://codeload.github.com/graphcool/framework/tar.gz/master | tar -xz --strip=2 framework-master/examples/subscriptions
+curl https://codeload.github.com/graphcool/graphcool/tar.gz/master | tar -xz --strip=2 graphcool-master/examples/0.x/subscriptions
 cd subscriptions
 ```
 
