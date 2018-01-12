@@ -82,11 +82,13 @@ export default class Docker {
       }
       endpoint = `http://${this.hostName}:${port}`
     }
-    this.setEnvVars(port, endpoint)
-    await this.setKeyPair()
+    await this.setEnvVars(port, endpoint)
   }
   async setKeyPair() {
     const pair = await createRsaKeyPair()
+    if (!this.envVars) {
+      this.envVars = {}
+    }
     this.envVars.CLUSTER_PUBLIC_KEY = pair.public
     this.privateKey = pair.private
     debug(pair)
@@ -206,7 +208,7 @@ export default class Docker {
     }
     const before = Date.now()
     this.out.action.start('Booting fresh local development cluster')
-    await this.setKeyPair()
+    await this.setEnvVars('60000', `http://${this.hostName}:60000`)
     await this.run('up', '-d', '--remove-orphans')
     this.out.action.stop(prettyTime(Date.now() - before))
     return this
@@ -269,7 +271,7 @@ export default class Docker {
     })
   }
 
-  setEnvVars(port: string, endpoint: string) {
+  async setEnvVars(port: string, endpoint: string) {
     const defaultVars = this.getDockerEnvVars()
     const customVars = {
       PORT: port,
@@ -277,6 +279,7 @@ export default class Docker {
       CLUSTER_ADDRESS: endpoint,
     }
     this.envVars = { ...process.env, ...defaultVars, ...customVars }
+    await this.setKeyPair()
   }
 
   async stopContainersBlockingPort(port: string, nuke: boolean = false) {

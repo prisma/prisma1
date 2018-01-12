@@ -52,10 +52,18 @@ Please either provide a clusterSecret or run ${chalk.green.bold(
     if (!this.cachedToken) {
       const grants = [{ target: `*/*`, action: '*' }]
 
-      this.cachedToken = jwt.sign({ grants }, this.clusterSecret, {
-        expiresIn: '10 minutes',
-        algorithm: 'RS256',
-      })
+      try {
+        this.cachedToken = jwt.sign({ grants }, this.clusterSecret, {
+          expiresIn: '10 minutes',
+          algorithm: 'RS256',
+        })
+      } catch (e) {
+        throw new Error(
+          `Could not generate token for local cluster ${chalk.bold(
+            this.name,
+          )}. ${e.message}`,
+        )
+      }
     }
 
     return this.cachedToken!
