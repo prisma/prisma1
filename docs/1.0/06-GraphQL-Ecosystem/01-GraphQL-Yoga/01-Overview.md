@@ -69,9 +69,13 @@ server.start(() => console.log('Server is running on localhost:4000'))
 
 ### API
 
-#### `GraphQLServer`
+#### GraphQLServer
 
-##### `constructor(props: Props): GraphQLServer`
+##### new GraphQLServer(...)
+
+```ts
+constructor(props: Props): GraphQLServer
+```
 
 The `props` argument accepts the following fields:
 
@@ -105,7 +109,11 @@ const resolvers = {
 const server = new GraphQLServer({ typeDefs, resolvers })
 ```
 
-#### `start(options: Options, callback: ((options: Options) => void) = (() => null)): Promise<void>`
+#### server.start(...)
+
+```ts
+start(options: Options, callback: ((options: Options) => void) = (() => null)): Promise<void>
+```
 
 Once your `GraphQLServer` is instantiated, you can call the `start` method on it. It takes two arguments: `options`, the options object defined above, and `callback`, a function that's invoked right before the server is started. As an example, the `callback` can be used to print information that the server was now started.
 
@@ -146,7 +154,7 @@ const options = {
 server.start(options, ({ port }) => console.log(`Server started, listening on port ${port} for incoming requests.`))
 ```
 
-#### `PubSub`
+#### PubSub
 
 See the original documentation in [`graphql-subscriptions`](https://github.com/apollographql/graphql-subscriptions).
 
