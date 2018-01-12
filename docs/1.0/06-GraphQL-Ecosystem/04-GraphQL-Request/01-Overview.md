@@ -1,5 +1,5 @@
 ---
-alias: quaidah9ph
+alias: chinohsh2j
 description: GraphQL Request
 ---
 
