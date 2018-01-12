@@ -36,7 +36,7 @@ case class CachedInputTypesBuilder(project: Project) extends UncachedInputTypesB
 
     sb.append(name)
     sb.append(model.id)
-    sb.append(relation.orNull)
+    sb.append(relation.map(_.name).orNull)
     sb.toString
   }
 }
