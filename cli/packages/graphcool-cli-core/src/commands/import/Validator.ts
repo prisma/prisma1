@@ -333,8 +333,12 @@ export class Validator {
     const fieldNames = Object.keys(obj).filter(f => f !== '_typeName')
     fieldNames.forEach(fieldName => {
       const value = obj[fieldName]
-      if (!['createdAt', 'updatedAt'].includes(fieldName)) {
-        this.validateValue(value, fields[fieldName], listsOnly)
+      if (!['createdAt', 'updatedAt', 'id'].includes(fieldName)) {
+        const field = fields[fieldName]
+        if (!field) {
+          throw new Error(`Could not find field ${fieldName}`)
+        }
+        this.validateValue(value, field, listsOnly)
       }
     })
   }
@@ -399,6 +403,9 @@ export class Validator {
   }
 
   private isList(field: FieldDefinitionNode) {
+    if (!field) {
+      return false
+    }
     let pointer = field.type as any
     while (pointer.type) {
       if (pointer.kind === 'ListType') {
