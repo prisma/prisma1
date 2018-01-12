@@ -336,7 +336,7 @@ export default class Docker {
 
   async nukeContainers(name: string, isDB: boolean = false) {
     const argv = ['down', '--remove-orphans', '-v', '--rmi', 'local']
-    await this.checkBin()
+    const bin = await this.getBin()
     const defaultArgs = [
       '-p',
       JSON.stringify(name),
@@ -347,7 +347,7 @@ export default class Docker {
     ]
     const args = defaultArgs.concat(argv)
     // this.out.log(chalk.dim(`$ docker-compose ${argv.join(' ')}\n`))
-    const result = await spawn('docker-compose', args, {
+    const result = await spawn(bin, args, {
       env: this.envVars,
       cwd: this.config.cwd,
     })
@@ -396,7 +396,7 @@ export default class Docker {
   }
 
   private async run(...argv: string[]): Promise<Docker> {
-    await this.checkBin()
+    const bin = await this.getBin()
     const defaultArgs = [
       '-p',
       JSON.stringify(this.clusterName + '-database'),
@@ -407,7 +407,7 @@ export default class Docker {
     ]
     const args = defaultArgs.concat(argv)
     // this.out.log(chalk.dim(`$ docker-compose ${argv.join(' ')}\n`))
-    const output = await spawn('docker-compose', args, {
+    const output = await spawn(bin, args, {
       env: this.envVars,
       cwd: this.config.cwd,
     })
@@ -415,7 +415,7 @@ export default class Docker {
     return this
   }
 
-  private async checkBin() {
+  private async getBin(): Promise<string> {
     const bin = getBinPath('docker-compose')
     if (!bin) {
       throw new Error(
@@ -435,6 +435,8 @@ export default class Docker {
         )
       }
     }
+
+    return bin as any
   }
 
   private format(data: string | Buffer) {
