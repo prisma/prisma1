@@ -28,9 +28,9 @@ case class WebsocketServer(dependencies: SubscriptionDependencies, prefix: Strin
   import SubscriptionWebsocketMetrics._
   import system.dispatcher
 
-  val manager         = system.actorOf(Props(WebsocketSessionManager(dependencies.requestsQueuePublisher, bugsnag)))
-  val oldProtocol     = "graphql-subscriptions"
-  val currentProtocol = "graphql-ws"
+  val manager        = system.actorOf(Props(WebsocketSessionManager(dependencies.requestsQueuePublisher, bugsnag)))
+  val v5ProtocolName = "graphql-subscriptions"
+  val v7ProtocolName = "graphql-ws"
 
   val responseSubscription = dependencies.responsePubSubSubscriber.subscribe(Everything, { strMsg =>
     incomingResponseQueueMessageRate.inc()
@@ -48,9 +48,9 @@ case class WebsocketServer(dependencies: SubscriptionDependencies, prefix: Strin
 
           extractUpgradeToWebSocket { upgrade =>
             upgrade.requestedProtocols.headOption match {
-              case Some(`currentProtocol`) => handleWebSocketMessages(newSession(projectId, v7protocol = true))
-              case Some(`oldProtocol`)     => handleWebSocketMessages(newSession(projectId, v7protocol = false))
-              case _                       => reject(UnsupportedWebSocketSubprotocolRejection(currentProtocol))
+              case Some(`v7ProtocolName`) => handleWebSocketMessages(newSession(projectId, v7protocol = true))
+              case Some(`v5ProtocolName`) => handleWebSocketMessages(newSession(projectId, v7protocol = false))
+              case _                      => reject(UnsupportedWebSocketSubprotocolRejection(v7ProtocolName))
             }
           }
         }
