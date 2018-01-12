@@ -111,7 +111,7 @@ ${chalk.gray(
       if (this.definition.definition!.hasOwnProperty('cluster')) {
         const value = this.definition.rawJson.cluster
         const envNotice = value.toLowerCase().includes('env')
-          ? `Make sure that the env var ${value} is set correctly.`
+          ? `Make sure that the env var ${value} is set correctly or remove the cluster property from the graphcool.yml and execute deploy again to get a new cluster.`
           : ''
         throw new Error(
           `Property cluster in graphcool.yml is provided, but provided value ${value} could not be resolved. ${envNotice}`,
