@@ -1,6 +1,6 @@
 {
   "name": "graphcool-cli-core",
-  "version": "1.14.24",
+  "version": "1.14.25",
   "main": "dist/index.js",
   "files": [
     "dist"
@@ -85,7 +85,7 @@
     "globby": "^6.1.0",
     "graphcool-inquirer": "^1.0.3",
     "graphcool-json-schema": "1.2.1",
-    "graphcool-yml": "0.4.13",
+    "graphcool-yml": "0.4.15",
     "graphql": "^0.11.7",
     "graphql-cli": "^2.10.2",
     "graphql-config": "^1.0.9",
