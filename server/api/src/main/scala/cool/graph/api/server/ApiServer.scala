@@ -10,7 +10,7 @@ import akka.stream.ActorMaterializer
 import com.typesafe.scalalogging.LazyLogging
 import cool.graph.akkautil.http.Server
 import cool.graph.akkautil.throttler.Throttler
-import cool.graph.akkautil.throttler.Throttler.{ThrottleBufferFullException, ThrottlerException}
+import cool.graph.akkautil.throttler.Throttler.ThrottleBufferFullException
 import cool.graph.api.schema.APIErrors.ProjectNotFound
 import cool.graph.api.schema.CommonErrors.ThrottlerBufferFullException
 import cool.graph.api.schema.{SchemaBuilder, UserFacingError}
@@ -38,14 +38,19 @@ case class ApiServer(
 
   import scala.concurrent.duration._
 
-  lazy val throttler: Option[Throttler[ProjectId]] = sys.env.get("THROTTLING").map(_.toInt).map { throttleValue =>
-    Throttler[ProjectId](
-      groupBy = pid => pid.name + "_" + pid.stage,
-      amount = throttleValue,
-      per = 1.seconds,
-      timeout = 25.seconds,
-      maxCallsInFlight = 5
-    )
+  lazy val throttler: Option[Throttler[ProjectId]] = {
+    for {
+      throttlingRate    <- sys.env.get("THROTTLING_RATE")
+      maxCallsInFlights <- sys.env.get("THROTTLING_MAX_CALLS_IN_FLIGHT")
+    } yield {
+      Throttler[ProjectId](
+        groupBy = pid => pid.name + "_" + pid.stage,
+        amount = throttlingRate.toInt,
+        per = 1.seconds,
+        timeout = 25.seconds,
+        maxCallsInFlight = maxCallsInFlights.toInt
+      )
+    }
   }
 
   val innerRoutes = extractRequest { _ =>
