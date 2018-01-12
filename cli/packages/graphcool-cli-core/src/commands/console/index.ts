@@ -7,16 +7,6 @@ export default class ConsoleCommand extends Command {
   static topic = 'console'
   static description = 'Open Graphcool Console in browser'
   async run() {
-    const serviceName = this.definition.definition!.service!
-    const stage = this.definition.definition!.stage
-
-    const clusterName = this.definition.getClusterName()
-    const cluster = this.env.clusterByName(clusterName!, true)
-    this.env.setActiveCluster(cluster!)
-
-    opn(`https://console.graph.cool`)
-    // if (!cluster.local) {
-
-    // }
+    throw new Error(`The new console is coming soon!`)
   }
 }
