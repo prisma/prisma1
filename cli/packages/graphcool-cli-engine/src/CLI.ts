@@ -139,6 +139,16 @@ export class CLI {
         const topic = await dispatcher.findTopic(id)
         if (topic) {
           await this.Help.run(this.config)
+        } else if (id === 'push') {
+          throw new Error(
+            `The ${chalk.bold(
+              'push',
+            )} command has been replaced by the ${chalk.bold(
+              'deploy',
+            )} command. Get more info with ${chalk.bold.green(
+              'graphcool deploy --help',
+            )}`,
+          )
         } else {
           return new NotFound(out, this.config.argv).run()
         }
