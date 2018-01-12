@@ -610,7 +610,7 @@ ${chalk.gray(
       })
     })
 
-    const allCombinations = [...localChoices, ...combinations]
+    const allCombinations = [...combinations, ...localChoices]
 
     return [
       ...this.convertChoices(allCombinations),
@@ -644,7 +644,7 @@ ${chalk.gray(
         'Public development cluster (hosted in US on Graphcool Cloud)',
       ],
     ]
-    const allCombinations = [...this.getLocalClusterChoices(), ...publicChoices]
+    const allCombinations = [...publicChoices, ...this.getLocalClusterChoices()]
 
     return [
       ...this.convertChoices(allCombinations),
