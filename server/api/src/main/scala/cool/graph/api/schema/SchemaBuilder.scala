@@ -31,14 +31,14 @@ case class SchemaBuilderImpl(
 )(implicit apiDependencies: ApiDependencies, system: ActorSystem) {
   import system.dispatcher
 
-  val argumentsBuilder   = ArgumentsBuilder(project = project)
-  val dataResolver       = apiDependencies.dataResolver(project)
-  val masterDataResolver = apiDependencies.masterDataResolver(project)
-  val objectTypeBuilder  = new ObjectTypeBuilder(project = project, nodeInterface = Some(nodeInterface))
-  val objectTypes        = objectTypeBuilder.modelObjectTypes
-  val connectionTypes    = objectTypeBuilder.modelConnectionTypes
-  val outputTypesBuilder = OutputTypesBuilder(project, objectTypes, dataResolver)
-  val pluralsCache       = new PluralsCache
+  val argumentsBuilder                     = ArgumentsBuilder(project = project)
+  val dataResolver                         = apiDependencies.dataResolver(project)
+  val masterDataResolver                   = apiDependencies.masterDataResolver(project)
+  val objectTypeBuilder: ObjectTypeBuilder = new ObjectTypeBuilder(project = project, nodeInterface = Some(nodeInterface))
+  val objectTypes                          = objectTypeBuilder.modelObjectTypes
+  val connectionTypes                      = objectTypeBuilder.modelConnectionTypes
+  val outputTypesBuilder                   = OutputTypesBuilder(project, objectTypes, dataResolver)
+  val pluralsCache                         = new PluralsCache
 
   def build(): Schema[ApiUserContext, Unit] = {
     val query        = buildQuery()
