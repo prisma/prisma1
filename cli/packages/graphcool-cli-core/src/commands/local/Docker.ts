@@ -276,10 +276,11 @@ export default class Docker {
     const customVars = {
       PORT: port,
       SCHEMA_MANAGER_ENDPOINT: `http://graphcool-database:${port}/cluster/schema`,
-      CLUSTER_ADDRESS: endpoint,
+      CLUSTER_ADDRESS: `http://${this.hostName}:${port}`,
     }
     this.envVars = { ...process.env, ...defaultVars, ...customVars }
     await this.setKeyPair()
+    debug(this.envVars)
   }
 
   async stopContainersBlockingPort(port: string, nuke: boolean = false) {
