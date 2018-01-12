@@ -71,8 +71,6 @@ server.start(() => console.log('Server is running on localhost:4000'))
 
 #### GraphQLServer
 
-##### new GraphQLServer(...)
-
 ```ts
 constructor(props: Props): GraphQLServer
 ```
