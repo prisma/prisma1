@@ -40,7 +40,7 @@ export default class List extends Command {
     }
 
     const services = await this.client.getCloudServices()
-    const mappedServices = services.map(s => ({
+    const mappedServices = services.filter(s => s.cluster).map(s => ({
       name: s.name,
       stage: s.stage,
       cluster: s.cluster.name,
