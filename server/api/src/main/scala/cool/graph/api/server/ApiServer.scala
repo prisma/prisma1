@@ -43,7 +43,7 @@ case class ApiServer(
       groupBy = pid => pid.name + "_" + pid.stage,
       amount = throttleValue,
       per = 1.seconds,
-      timeout = 60.seconds,
+      timeout = 25.seconds,
       maxCallsInFlight = 5
     )
   }
