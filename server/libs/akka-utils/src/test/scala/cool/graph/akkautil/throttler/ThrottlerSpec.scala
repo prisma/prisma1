@@ -1,7 +1,5 @@
 package cool.graph.akkautil.throttler
 
-// Todo - reinstantiate tests after throttler migration
-
 import java.util.concurrent.TimeUnit
 
 import akka.actor.ActorSystem
@@ -31,7 +29,7 @@ class ThrottlerSpec extends AcceptanceSpecification {
       }
       .await
 
-    result mustEqual "the-result"
+    result.result mustEqual "the-result"
     callExecuted must beTrue
   }
 

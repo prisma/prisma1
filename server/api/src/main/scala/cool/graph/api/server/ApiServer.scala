@@ -9,6 +9,8 @@ import akka.http.scaladsl.server.{ExceptionHandler, Route}
 import akka.stream.ActorMaterializer
 import com.typesafe.scalalogging.LazyLogging
 import cool.graph.akkautil.http.Server
+import cool.graph.akkautil.throttler.Throttler
+import cool.graph.akkautil.throttler.Throttler.ThrottlerException
 import cool.graph.api.schema.APIErrors.ProjectNotFound
 import cool.graph.api.schema.{SchemaBuilder, UserFacingError}
 import cool.graph.api.{ApiDependencies, ApiMetrics}
@@ -32,6 +34,16 @@ case class ApiServer(
   val log: String => Unit = (msg: String) => logger.info(msg)
   val requestPrefix       = "api"
   val projectFetcher      = apiDependencies.projectFetcher
+
+  import scala.concurrent.duration._
+
+  lazy val throttler = Throttler[ProjectId](
+    groupBy = pid => pid.name,
+    amount = 1,
+    per = 5.seconds,
+    timeout = 60.seconds,
+    maxCallsInFlight = 1
+  )
 
   val innerRoutes = extractRequest { _ =>
     val requestId            = requestPrefix + ":api:" + createCuid()
@@ -80,9 +92,23 @@ case class ApiServer(
               } ~ {
               extractRawRequest(requestId) { rawRequest =>
                 val projectId = ProjectId.toEncodedString(name = name, stage = stage)
-                val result    = apiDependencies.requestHandler.handleRawRequestForPublicApi(projectId, rawRequest)
-                result.onComplete(_ => logRequestEnd(Some(projectId)))
-                complete(result)
+                val result = throttler.throttled(ProjectId(name, stage)) { () =>
+                  apiDependencies.requestHandler.handleRawRequestForPublicApi(projectId, rawRequest)
+                }
+                onComplete(result) {
+                  case scala.util.Success(result) =>
+                    logRequestEnd(Some(projectId))
+                    respondWithHeader(RawHeader("Throttled-By", result.throttledBy.toString + "ms")) {
+                      complete(result.result)
+                    }
+
+                  case scala.util.Failure(_: ThrottlerException) =>
+                    logRequestEnd(Some(projectId))
+                    complete(OK -> "throttled!")
+
+                  case scala.util.Failure(exception) => // just propagate the exception
+                    throw exception
+                }
               }
             }
           }
