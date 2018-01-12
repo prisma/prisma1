@@ -82,7 +82,7 @@ trait SpecBase extends TestFrameworkInterface with BeforeAndAfterEach with Befor
     )
     withStubServer(stubs, port = dependencies.projectFetcherPort) {
       val projectId = ProjectId.fromEncodedString(project.id)
-      WS(s"/${projectId.name}/${projectId.stage}", wsClient.flow, Seq(wsServer.subProtocol2)) ~> wsServer.routes ~> check {
+      WS(s"/${projectId.name}/${projectId.stage}", wsClient.flow, Seq(wsServer.currentProtocol)) ~> wsServer.routes ~> check {
         checkFn(wsClient)
       }
     }

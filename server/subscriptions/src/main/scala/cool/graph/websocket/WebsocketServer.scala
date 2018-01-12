@@ -4,6 +4,8 @@ import akka.NotUsed
 import akka.actor.{ActorSystem, Props}
 import akka.http.scaladsl.model.ws.Message
 import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.UnsupportedWebSocketSubprotocolRejection
+import akka.http.scaladsl.server.directives.RouteDirectives.reject
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.Flow
 import cool.graph.akkautil.http.Server
@@ -26,9 +28,9 @@ case class WebsocketServer(dependencies: SubscriptionDependencies, prefix: Strin
   import SubscriptionWebsocketMetrics._
   import system.dispatcher
 
-  val manager      = system.actorOf(Props(WebsocketSessionManager(dependencies.requestsQueuePublisher, bugsnag)))
-  val subProtocol1 = "graphql-subscriptions"
-  val subProtocol2 = "graphql-ws"
+  val manager         = system.actorOf(Props(WebsocketSessionManager(dependencies.requestsQueuePublisher, bugsnag)))
+  val oldProtocol     = "graphql-subscriptions"
+  val currentProtocol = "graphql-ws"
 
   val responseSubscription = dependencies.responsePubSubSubscriber.subscribe(Everything, { strMsg =>
     incomingResponseQueueMessageRate.inc()
@@ -38,19 +40,22 @@ case class WebsocketServer(dependencies: SubscriptionDependencies, prefix: Strin
   override def healthCheck: Future[_] = Future.successful(())
   override def onStop: Future[_]      = Future { responseSubscription.unsubscribe }
 
-  val innerRoutes = pathPrefix(Segment) { name =>
-    pathPrefix(Segment) { stage =>
-      get {
-        val projectId = ProjectId.toEncodedString(name = name, stage = stage)
+  val innerRoutes =
+    pathPrefix(Segment) { name =>
+      pathPrefix(Segment) { stage =>
+        get {
+          val projectId = ProjectId.toEncodedString(name = name, stage = stage)
 
-        extractUpgradeToWebSocket { upgrade =>
-          val protocol     = upgrade.requestedProtocols.head
-          val isV7Protocol = protocol == "graphql-ws"
-          handleWebSocketMessages(newSession(projectId, v7protocol = isV7Protocol))
+          extractUpgradeToWebSocket { upgrade =>
+            upgrade.requestedProtocols.headOption match {
+              case Some(`currentProtocol`) => handleWebSocketMessages(newSession(projectId, v7protocol = true))
+              case Some(`oldProtocol`)     => handleWebSocketMessages(newSession(projectId, v7protocol = false))
+              case _                       => reject(UnsupportedWebSocketSubprotocolRejection(currentProtocol))
+            }
+          }
         }
       }
     }
-  }
 
   def newSession(projectId: String, v7protocol: Boolean): Flow[Message, Message, NotUsed] = {
     ActorFlow
@@ -64,7 +69,7 @@ case class WebsocketServer(dependencies: SubscriptionDependencies, prefix: Strin
             requestsPublisher = dependencies.requestsQueuePublisher,
             bugsnag = bugsnag,
             isV7protocol = v7protocol
-          )
+          )(dependencies)
         }
       }(system, materializer)
       .mapMaterializedValue(_ => akka.NotUsed)
