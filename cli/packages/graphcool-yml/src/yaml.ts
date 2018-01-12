@@ -72,4 +72,6 @@ const betterMessagesByParams = {
   // https://github.com/graphcool/framework/issues/1461
   '{"additionalProperty":"stages"}':
     'graphcool.yml should NOT have a "stages" property anymore. Stages are now just provided as CLI args.\nRead more here: https://goo.gl/SUD5i5',
+  '{"additionalProperty":"types"}':
+    'graphcool.yml should NOT have a "types" property anymore. It has been renamed to "datamodel"',
 }
