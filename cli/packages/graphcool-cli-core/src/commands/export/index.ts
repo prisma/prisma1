@@ -12,6 +12,10 @@ export default class Export extends Command {
       char: 'e',
       description: 'Path to export .zip file',
     }),
+    ['env-file']: flags.string({
+      description: 'Path to .env file to inject env vars',
+      char: 'E',
+    }),
   }
   async run() {
     const exportPath =
@@ -21,7 +25,8 @@ export default class Export extends Command {
       throw new Error(`export-path must point to a .zip file`)
     }
 
-    await this.definition.load(this.flags)
+    const envFile = this.flags['env-file']
+    await this.definition.load(this.flags, envFile)
     const serviceName = this.definition.definition!.service
     const stage = this.definition.definition!.stage
 

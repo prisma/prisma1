@@ -34,10 +34,15 @@ export default class InfoCommand extends Command {
       char: 's',
       description: 'Print secret in json output',
     }),
+    ['env-file']: flags.string({
+      description: 'Path to .env file to inject env vars',
+      char: 'e',
+    }),
   }
   async run() {
     const { json, secret } = this.flags
-    await this.definition.load(this.flags)
+    const envFile = this.flags['env-file']
+    await this.definition.load(this.flags, envFile)
     const serviceName = this.definition.definition!.service
     const stage = this.definition.definition!.stage
     const workspace = this.definition.getWorkspace()
@@ -67,29 +72,6 @@ Please make sure it contains the cluster. You can create a local cluster using '
         json,
       ),
     )
-    // } else {
-    //   let services: Service[] = []
-
-    //   for (const cluster of this.env.clusters) {
-    //     this.env.setActiveCluster(cluster)
-    //     await this.client.initClusterClient(
-    //       cluster,
-    //       workspace!,
-    //       serviceName,
-    //       stage,
-    //     )
-    //     const projects = await this.client.listProjects()
-    //     const filteredProjects = projects.filter(p => p.name === serviceName)
-    //     services = services.concat(
-    //       filteredProjects.map(project => ({
-    //         project,
-    //         cluster,
-    //       })),
-    //     )
-    //   }
-
-    //   this.out.log(this.printStages(serviceName, services, json))
-    // }
   }
 
   printStage(
@@ -122,44 +104,4 @@ Please make sure it contains the cluster. You can create a local cluster using '
     HTTP:       ${cluster.getApiEndpoint(name, stage, workspace)}
     Websocket:  ${cluster.getWSEndpoint(name, stage, workspace)}`
   }
-
-  //   printStages(
-  //     serviceName: string,
-  //     services: Service[],
-  //     printJson: boolean = false,
-  //   ) {
-  //     if (!printJson) {
-  //       this.out.log(`\
-  // Service Name: ${chalk.bold(serviceName)}
-
-  // Stages:
-  // ${services
-  //         .map(s =>
-  //           this.printStage(
-  //             s.project.name,
-  //             s.project.stage,
-  //             s.cluster,
-  //             undefined,
-  //           ),
-  //         )
-  //         .join('\n\n')}
-  //   `)
-  //     } else {
-  //       return JSON.stringify(
-  //         services.map(s =>
-  //           JSON.parse(
-  //             this.printStage(
-  //               s.project.name,
-  //               s.project.stage,
-  //               s.cluster,
-  //               undefined,
-  //               true,
-  //             ),
-  //           ),
-  //         ),
-  //         null,
-  //         2,
-  //       )
-  //     }
-  //   }
 }

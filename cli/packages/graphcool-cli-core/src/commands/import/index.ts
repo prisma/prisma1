@@ -11,10 +11,15 @@ export default class Import extends Command {
       description: 'Path to zip or folder including data to import',
       required: true,
     }),
+    ['env-file']: flags.string({
+      description: 'Path to .env file to inject env vars',
+      char: 'e',
+    }),
   }
   async run() {
     const { data } = this.flags
-    await this.definition.load(this.flags)
+    const envFile = this.flags['env-file']
+    await this.definition.load(this.flags, envFile)
     const serviceName = this.definition.definition!.service
     const stage = this.definition.definition!.stage
 

@@ -25,10 +25,15 @@ export default class Playground extends Command {
       char: 'w',
       description: 'Force open web playground',
     }),
+    ['env-file']: flags.string({
+      description: 'Path to .env file to inject env vars',
+      char: 'e',
+    }),
   }
   async run() {
     const { web } = this.flags
-    await this.definition.load(this.flags)
+    const envFile = this.flags['env-file']
+    await this.definition.load(this.flags, envFile)
     const serviceName = this.definition.definition!.service!
     const stage = this.definition.definition!.stage!
 
