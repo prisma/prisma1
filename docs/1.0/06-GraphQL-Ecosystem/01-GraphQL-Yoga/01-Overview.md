@@ -5,9 +5,7 @@ description: GraphQL Yoga
 
 # graphql-yoga
 
-Fully-featured GraphQL Server with focus on easy setup, performance & great developer experience.
-
-> Source code on [GitHub](https://github.com/graphcool/graphql-yoga/)
+[`graphql-yoga`](https://github.com/graphcool/graphql-yoga/) is a fully-featured GraphQL Server with focus on easy setup, performance & great developer experience.
 
 ## Overview
 
