@@ -46,9 +46,22 @@ class ObjectTypeBuilder(
     IdBasedConnection.definition[ApiUserContext, IdBasedConnection, DataItem](
       name = model.name,
       nodeType = modelObjectTypes(model.name),
-      connectionFields = List(
-        // todo: add aggregate fields
+      connectionFields = {
 
+        List(
+          SangriaField(
+            "aggregate",
+            aggregateTypeForModel(model),
+            resolve = (ctx: Context[ApiUserContext, IdBasedConnection[DataItem]]) => {
+//              val countArgs =
+//                ctx.value.parent.args.map(args => SangriaQueryArguments.createSimpleQueryArguments(None, None, None, None, None, args.filter, None))
+//              CountManyModelDeferred(model, ???)
+              val emptyQueryArguments = QueryArguments(None, None, None, None, None, None, None)
+              ctx.value.parent.args.getOrElse(emptyQueryArguments)
+            }
+          )
+        )
+      }
 //        sangria.schema.Field(
 //          "count",
 //          IntType,
@@ -64,6 +77,18 @@ class ObjectTypeBuilder(
 //            }
 //          }
 //        )
+    )
+  }
+
+  def aggregateTypeForModel(model: models.Model): ObjectType[ApiUserContext, QueryArguments] = {
+    ObjectType(
+      name = s"Aggregate${model.name}",
+      fields = List(
+        SangriaField(
+          "count",
+          IntType,
+          resolve = (ctx: Context[ApiUserContext, QueryArguments]) => CountManyModelDeferred(model, Some(ctx.value))
+        )
       )
     )
   }
