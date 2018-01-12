@@ -5,25 +5,22 @@ description: GraphQL Yoga
 
 # graphql-yoga
 
-<p align="center"><img src="https://imgur.com/Sv6j0B6.png" width="100" /></p>
+Fully-featured GraphQL Server with focus on easy setup, performance & great developer experience.
 
-
-[![CircleCI](https://circleci.com/gh/graphcool/graphql-yoga.svg?style=shield)](https://circleci.com/gh/graphcool/graphql-yoga) [![npm version](https://badge.fury.io/js/graphql-yoga.svg)](https://badge.fury.io/js/graphql-yoga)
-
-Fully-featured GraphQL Server with focus on easy setup, performance &amp; great developer experience
+> Source code on [GitHub](https://github.com/graphcool/graphql-yoga/)
 
 ## Overview
 
-* **Easiest way to run a GraphQL server:** Good defaults & includes everything you need with minimal setup.
+* **Easiest way to run a GraphQL server:** Sensible defaults & includes everything you need with minimal setup.
 * **Includes Subscriptions:** Built-in support for GraphQL Subscriptions using WebSockets.
 * **Compatible:** Works with all GraphQL clients (Apollo, Relay...) and fits seamless in your GraphQL workflow.
 
 `graphql-yoga` is based on the following libraries & tools:
 
-  * [`express`](https://github.com/expressjs/express)/[`apollo-server`](https://github.com/apollographql/apollo-server): Performant, extensible web server framework
-  * [`graphql-subscriptions`](https://github.com/apollographql/graphql-subscriptions)/[`subscriptions-transport-ws`](https://github.com/apollographql/subscriptions-transport-ws): GraphQL subscriptions server
-  * [`graphql.js`](https://github.com/graphql/graphql-js)/[`graphql-tools`](https://github.com/apollographql/graphql-tools): GraphQL engine & schema helpers
-  * [`graphql-playground`](https://github.com/graphcool/graphql-playground): Interactive GraphQL IDE
+* [`express`](https://github.com/expressjs/express)/[`apollo-server`](https://github.com/apollographql/apollo-server): Performant, extensible web server framework
+* [`graphql-subscriptions`](https://github.com/apollographql/graphql-subscriptions)/[`subscriptions-transport-ws`](https://github.com/apollographql/subscriptions-transport-ws): GraphQL subscriptions server
+* [`graphql.js`](https://github.com/graphql/graphql-js)/[`graphql-tools`](https://github.com/apollographql/graphql-tools): GraphQL engine & schema helpers
+* [`graphql-playground`](https://github.com/graphcool/graphql-playground): Interactive GraphQL IDE
 
 ## Features
 
@@ -68,7 +65,7 @@ const server = new GraphQLServer({ typeDefs, resolvers })
 server.start(() => console.log('Server is running on localhost:4000'))
 ```
 
-> To get started with `graphql-yoga`, follow the instructions in the READMEs of the [examples](./examples). 
+> To get started with `graphql-yoga`, follow the instructions in the READMEs of the [examples](./examples).
 
 ### API
 
@@ -86,9 +83,9 @@ The `props` argument accepts the following fields:
 | `context`  | Object or Function  |  `{}`  | Contains custom data being passed through your resolver chain. This can be passed in as an object, or as a Function with the signature `(req: Request) => any`  |
 
 > (*) There are two major ways of providing the [schema](https://blog.graph.cool/graphql-server-basics-the-schema-ac5e2950214e) information to the `constructor`:
-> 
+>
 > 1. Provide `typeDefs` and `resolvers` and omit the `schema`, in this case `graphql-yoga` will construct the `GraphQLSchema` instance using [`makeExecutableSchema`](https://www.apollographql.com/docs/graphql-tools/generate-schema.html#makeExecutableSchema) from [`graphql-tools`](https://github.com/apollographql/graphql-tools).
-> 2. Provide the `schema` directly and omit `typeDefs` and `resolvers`.
+> 1. Provide the `schema` directly and omit `typeDefs` and `resolvers`.
 
 Here is example of creating a new server:
 
@@ -176,18 +173,18 @@ Once your `graphql-yoga` server is running, you can use [GraphQL Playground](htt
 To deploy your `graphql-yoga` server with [`now`](https://zeit.co/now), follow these instructions:
 
 1. Download [**Now Desktop**](https://zeit.co/download) 
-2. Navigate to the root directory of your `graphql-yoga` server
-3. Run `now` in your terminal
+1. Navigate to the root directory of your `graphql-yoga` server
+1. Run `now` in your terminal
 
 ### Heroku
 
 To deploy your `graphql-yoga` server with [Heroku](https://heroku.com), follow these instructions:
 
 1. Download and install the [Heroku Command Line Interface](https://devcenter.heroku.com/articles/heroku-cli#download-and-install) (previously Heroku Toolbelt)
-2. Log In to the Heroku CLI with `heroku login`
-3. Navigate to the root directory of your `graphql-yoga` server
-4. Create the Heroku instance by executing `heroku create`
-5. Deploy your GraphQL server by executing `git push heroku master`
+1. Log In to the Heroku CLI with `heroku login`
+1. Navigate to the root directory of your `graphql-yoga` server
+1. Create the Heroku instance by executing `heroku create`
+1. Deploy your GraphQL server by executing `git push heroku master`
 
 ### `up` (Coming soon 🔜 )
 
@@ -214,17 +211,15 @@ Whenever the defaults of `graphql-yoga` are too tight of a corset for you, you c
 The core value of `graphql-yoga` is that you don't have to write the boilerplate required to configure your [express.js](https://github.com/expressjs/) application. However, once you need to add more customized behaviour to your server, the default configuration provided by `graphql-yoga` might not suit your use case any more. For example, it might be the case that you want to add more custom _middleware_ to your server, like for logging or error reporting.
 
 For these cases, `GraphQLServer` exposes the `express.Application` directly via its [`express`](./src/index.ts#L17) property:
+
 ```js
 server.express.use(myMiddleware())
 ```
+
 Middlewares can also be added specifically to the GraphQL endpoint route, by using:
+
 ```js
 server.express.post(server.options.endpoint, myMiddleware())
 ```
+
 Any middlewares you add to that route, will be added right before the `apollo-server-express` middleware.
-
-## Help & Community [![Slack Status](https://slack.graph.cool/badge.svg)](https://slack.graph.cool)
-
-Join our [Slack community](http://slack.graph.cool/) if you run into issues or have questions. We love talking to you!
-
-[![](http://i.imgur.com/5RHR6Ku.png)](https://www.graph.cool/)
