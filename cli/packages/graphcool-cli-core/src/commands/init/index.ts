@@ -15,6 +15,14 @@ export default class Init extends Command {
     },
   ]
 
+  static flags: Flags = {
+    boilerplate: flags.string({
+      char: 'b',
+      description:
+        'Full URL or repo shorthand (e.g. `owner/repo`) to boilerplate GitHub repository',
+    }),
+  }
+
   async run() {
     const dirName = this.args!.dirName
     if (dirName) {
@@ -25,12 +33,17 @@ export default class Init extends Command {
       this.config.definitionDir = process.cwd()
     }
 
-    const choice = await this.prompt()
-
-    if (choice === 'create') {
-      await this.graphqlCreate()
+    const { boilerplate } = this.flags
+    if (boilerplate) {
+      await this.graphqlCreate(boilerplate)
     } else {
-      this.initMinimal()
+      const choice = await this.prompt()
+
+      if (choice === 'create') {
+        await this.graphqlCreate()
+      } else {
+        this.initMinimal()
+      }
     }
   }
 
@@ -114,7 +127,7 @@ ${dirString}You can now run ${chalk.cyan(
 
 For next steps follow this tutorial: https://bit.ly/graphcool-first-steps`)
   }
-  async graphqlCreate() {
+  async graphqlCreate(boilerplate?: string) {
     this.out.log(
       `Running ${chalk.cyan(
         '$ graphql create',
@@ -125,6 +138,11 @@ For next steps follow this tutorial: https://bit.ly/graphcool-first-steps`)
 
     if (this.args && this.args.dirName) {
       args.push(this.args!.dirName!)
+    }
+
+    if (boilerplate) {
+      args.push('--boilerplate')
+      args.push(boilerplate)
     }
 
     npmRun.spawnSync('graphql', args, {
