@@ -59,21 +59,18 @@ export default class Init extends Command {
     // CONTINUE: special env handling for dockaa. can't just override the host/dinges
     if (
       files.length > 0 &&
-      !(files.length === 1 && files[0] === '.graphcoolrc') &&
-      files.includes('graphcool.yml')
+      !(files.length === 1 && files[0] === '.graphcoolrc')
     ) {
       this.out.log(`
 The directory ${chalk.green(
         this.config.definitionDir,
-      )} contains files that could conflict:
+      )} is not empty.
 
-${files.map(f => `  ${f}`).join('\n')}
-
-Either try using a new directory name, or remove the files listed above.
+It is recommended to initialize your service in a new directory.
 
 ${chalk.bold(
         'NOTE:',
-      )} The behavior of the init command changed, to deploy a project, please use ${chalk.green(
+      )} The behavior of the init command changed, to deploy a service, please use ${chalk.green(
         'graphcool deploy',
       )}
 
