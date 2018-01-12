@@ -53,7 +53,6 @@ trait MetricsManager {
   }
 
   protected val client: StatsDClient = {
-    // As we don't have an 'env' ENV var (prod, dev) this variable suppresses failing metrics output locally / during testing
     if (metricsCollectionIsEnabled) {
       new NonBlockingStatsDClient("", Integer.MAX_VALUE, new Array[String](0), errorHandler, StatsdHostLookup())
     } else {
