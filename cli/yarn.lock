@@ -1804,48 +1804,6 @@ graceful-fs@~3.0.2:
   dependencies:
     natives "^1.1.0"
 
-graphcool-cli-core@1.14.23:
-  version "1.14.23"
-  resolved "https://registry.yarnpkg.com/graphcool-cli-core/-/graphcool-cli-core-1.14.23.tgz#59a77f68580ddded406f4d8fa1c2c5f05f180f57"
-  dependencies:
-    archiver "^2.0.3"
-    callsites "^2.0.0"
-    chalk "^2.2.0"
-    chokidar "^1.7.0"
-    copy-paste "^1.3.0"
-    cross-spawn "^5.1.0"
-    download-github-repo "^0.1.3"
-    figures "^2.0.0"
-    fs-extra "^4.0.2"
-    globby "^6.1.0"
-    graphcool-inquirer "^1.0.3"
-    graphcool-json-schema "1.2.1"
-    graphcool-yml "0.4.13"
-    graphql "^0.11.7"
-    graphql-cli "^2.10.1"
-    graphql-config "^1.0.9"
-    inquirer "^3.3.0"
-    isomorphic-fetch "^2.2.1"
-    js-yaml "^3.9.1"
-    jwt-decode "^2.2.0"
-    lodash "^4.17.4"
-    lodash.differenceby "^4.8.0"
-    multimatch "^2.1.0"
-    node-forge "^0.7.1"
-    npm-run "^4.1.2"
-    opn "^5.1.0"
-    pause "^0.1.0"
-    portfinder "^1.0.13"
-    scuid "^1.0.2"
-    semver "^5.4.1"
-    sillyname "^0.1.0"
-    source-map-support "^0.4.18"
-    table "^4.0.1"
-    ts-node "^3.3.0"
-    typescript "^2.5.3"
-    unzip "^0.1.11"
-    validator "^8.2.0"
-
 graphcool-inquirer@^1.0.3:
   version "1.0.3"
   resolved "https://registry.yarnpkg.com/graphcool-inquirer/-/graphcool-inquirer-1.0.3.tgz#4ab8e28b4b9371eabb8ad0ad3c59754a35431633"
@@ -1902,7 +1860,7 @@ graphql-cli-prepare@1.4.7:
     graphql-static-binding "0.6.0"
     lodash "4.17.4"
 
-graphql-cli@^2.10.1, graphql-cli@^2.10.2:
+graphql-cli@^2.10.2:
   version "2.10.2"
   resolved "https://registry.yarnpkg.com/graphql-cli/-/graphql-cli-2.10.2.tgz#8fb88357f5e0106fdbcdabc7f5374e7285c4b294"
   dependencies:

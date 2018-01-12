@@ -23,6 +23,7 @@ export interface EnvVars {
 
 export class GraphcoolDefinitionClass {
   definition?: GraphcoolDefinition
+  rawJson?: any
   typesString?: string
   secrets: string[] | null
   definitionPath?: string | null
@@ -49,12 +50,14 @@ export class GraphcoolDefinitionClass {
   async load(args: Args, envPath?: string) {
     dotenv.config({ path: envPath })
     if (this.definitionPath) {
-      this.definition = await readDefinition(
+      const { definition, rawJson } = await readDefinition(
         this.definitionPath,
         args,
         this.out,
         this.envVars,
       )
+      this.definition = definition
+      this.rawJson = rawJson
       this.definitionString = fs.readFileSync(this.definitionPath, 'utf-8')
       this.typesString = this.getTypesString(this.definition)
       const secrets = this.definition.secret

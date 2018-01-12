@@ -108,6 +108,15 @@ ${chalk.gray(
     let gotCluster = false
 
     if (!cluster) {
+      if (this.definition.definition!.hasOwnProperty('cluster')) {
+        const value = this.definition.rawJson.cluster
+        const envNotice = value.toLowerCase().includes('env')
+          ? `Make sure that the env var ${value} is set correctly.`
+          : ''
+        throw new Error(
+          `Property cluster in graphcool.yml is provided, but provided value ${value} could not be resolved. ${envNotice}`,
+        )
+      }
       const clusterWorkspace = await this.getCluster(serviceName, stage)
       cluster = clusterWorkspace.cluster
       gotCluster = true

@@ -20,13 +20,15 @@ export async function readDefinition(
   filePath: string,
   args: Args,
   out: IOutput = new Output(),
-  envVars?: any
-): Promise<GraphcoolDefinition> {
+  envVars?: any,
+): Promise<{ definition: GraphcoolDefinition; rawJson: any }> {
   if (!fs.pathExistsSync(filePath)) {
     throw new Error(`${filePath} could not be found.`)
   }
   const file = fs.readFileSync(filePath, 'utf-8')
   const json = yaml.safeLoad(file) as GraphcoolDefinition
+  // we need this copy because populateJson runs inplace
+  const jsonCopy = { ...json }
 
   const vars = new Variables(filePath, args, out, envVars)
   const populatedJson = await vars.populateJson(json)
@@ -43,7 +45,10 @@ export async function readDefinition(
   }
 
   cache[file] = populatedJson
-  return populatedJson
+  return {
+    definition: populatedJson,
+    rawJson: jsonCopy,
+  }
 }
 
 function printErrors(errors, name = 'graphcool.yml') {
