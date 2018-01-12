@@ -109,10 +109,10 @@ case class WebsocketSession(
   )
 
   def receive: Receive = logUnhandled {
-    case TextMessage.Strict(body)             => println(s"received TextMessage: $body"); requestsPublisher.publish(Request(sessionId, projectId, body))
-    case IncomingWebsocketMessage(_, _, body) => println(s"received WebsocketMessage: $body"); requestsPublisher.publish(Request(sessionId, projectId, body))
-    case IncomingQueueMessage(_, body)        => println(s"sending out over ws: $body"); outgoing ! TextMessage(body)
-    case ReceiveTimeout                       => println(s"received Timeout"); context.stop(self)
+    case TextMessage.Strict(body)             => requestsPublisher.publish(Request(sessionId, projectId, body))
+    case IncomingWebsocketMessage(_, _, body) => requestsPublisher.publish(Request(sessionId, projectId, body))
+    case IncomingQueueMessage(_, body)        => outgoing ! TextMessage(body)
+    case ReceiveTimeout                       => context.stop(self)
   }
 
   override def postStop = {
