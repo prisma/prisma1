@@ -161,10 +161,15 @@ export class Client {
             e.message.includes('ECONNREFUSED') &&
             (e.message.includes('localhost') || e.message.includes('127.0.0.1'))
           ) {
+            const localNotice = this.env.activeCluster.local
+              ? `Please use ${chalk.bold.green(
+                  'graphcool local start',
+                )} to start your local Graphcool cluster.`
+              : ''
             this.out.error(
-              `Could not connect to local cluster. Please use ${chalk.bold.green(
-                'graphcool local start',
-              )} to start your local Graphcool cluster.`,
+              `Could not connect to cluster ${chalk.bold(
+                this.env.activeCluster.name,
+              )}. ${localNotice}`,
             )
           } else {
             throw e

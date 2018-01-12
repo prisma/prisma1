@@ -99,10 +99,13 @@ ${chalk.gray(
     const stage = this.definition.definition!.stage
 
     let cluster = this.definition.getCluster()
+    const isOnline = cluster ? await cluster.isOnline() : false
     if (
       this.definition.definition.cluster === 'local' &&
-      (!cluster || !await cluster.isOnline())
+      (!cluster || !isOnline)
     ) {
+      cluster = await this.localUp()
+    } else if (!isOnline && cluster && cluster.local) {
       cluster = await this.localUp()
     }
     let gotCluster = false
