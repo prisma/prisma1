@@ -3,7 +3,6 @@ service: subscriptions
 
 # the cluster and stage the service is deployed to
 stage: dev
-cluster: local
 
 # to disable authentication:
 # disableAuth: true
