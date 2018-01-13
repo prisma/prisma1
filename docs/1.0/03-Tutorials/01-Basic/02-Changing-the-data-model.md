@@ -7,6 +7,11 @@ description: Learn the fundamentals of using Graphcool.
 
 You now learned how to deploy a Prisma service, how to explore its API and how to interact with it by sending queries and mutations.
 
+In this tutorial, you'll learn the following:
+
+- Make changes to the data model
+- Deploy the changes to update the service's API
+
 > To ensure you're not accidentally skipping an instruction in the tutorial, all required actions on your end are highlighted with a little counter on the left.
 >
 > **Pro tip**: If you're only keen on trying the practical parts but don't care so much about the explanations of what's going on, you can simply jump from instruction to instruction.
