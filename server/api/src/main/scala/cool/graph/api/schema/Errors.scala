@@ -29,6 +29,8 @@ object CommonErrors {
 
   case class MutationsNotAllowedForProject(projectId: String)
       extends UserFacingError(s"The project '$projectId' is currently in read-only mode. Please try again in a few minutes", 1003)
+
+  case class ThrottlerBufferFullException() extends UserFacingError("There are too many concurrent queries for this service.", 1004)
 }
 
 // errors caused by the client when using the relay/simple API- should only appear in relay/simple/shared!

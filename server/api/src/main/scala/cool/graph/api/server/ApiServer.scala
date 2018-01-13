@@ -9,7 +9,10 @@ import akka.http.scaladsl.server.{ExceptionHandler, Route}
 import akka.stream.ActorMaterializer
 import com.typesafe.scalalogging.LazyLogging
 import cool.graph.akkautil.http.Server
+import cool.graph.akkautil.throttler.Throttler
+import cool.graph.akkautil.throttler.Throttler.ThrottleBufferFullException
 import cool.graph.api.schema.APIErrors.ProjectNotFound
+import cool.graph.api.schema.CommonErrors.ThrottlerBufferFullException
 import cool.graph.api.schema.{SchemaBuilder, UserFacingError}
 import cool.graph.api.{ApiDependencies, ApiMetrics}
 import cool.graph.cuid.Cuid.createCuid
@@ -33,6 +36,23 @@ case class ApiServer(
   val requestPrefix       = "api"
   val projectFetcher      = apiDependencies.projectFetcher
 
+  import scala.concurrent.duration._
+
+  lazy val throttler: Option[Throttler[ProjectId]] = {
+    for {
+      throttlingRate    <- sys.env.get("THROTTLING_RATE")
+      maxCallsInFlights <- sys.env.get("THROTTLING_MAX_CALLS_IN_FLIGHT")
+    } yield {
+      Throttler[ProjectId](
+        groupBy = pid => pid.name + "_" + pid.stage,
+        amount = throttlingRate.toInt,
+        per = 1.seconds,
+        timeout = 25.seconds,
+        maxCallsInFlight = maxCallsInFlights.toInt
+      )
+    }
+  }
+
   val innerRoutes = extractRequest { _ =>
     val requestId            = requestPrefix + ":api:" + createCuid()
     val requestBeginningTime = System.currentTimeMillis()
@@ -46,6 +66,43 @@ case class ApiServer(
           clientId = clientId,
           payload = Some(Map("request_duration" -> (System.currentTimeMillis() - requestBeginningTime)))
         ).json)
+    }
+
+    def throttleApiCallIfNeeded(name: String, stage: String, rawRequest: RawRequest) = {
+      throttler match {
+        case Some(throttler) =>
+          throttledCall(name, stage, rawRequest, throttler)
+        case None =>
+          unthrottledCall(name, stage, rawRequest)
+      }
+    }
+
+    def unthrottledCall(name: String, stage: String, rawRequest: RawRequest) = {
+      val projectId = ProjectId.toEncodedString(name = name, stage = stage)
+      val result    = apiDependencies.requestHandler.handleRawRequestForPublicApi(projectId, rawRequest)
+      complete(result)
+    }
+
+    def throttledCall(name: String, stage: String, rawRequest: RawRequest, throttler: Throttler[ProjectId]) = {
+      val projectId = ProjectId.toEncodedString(name = name, stage = stage)
+      val result = throttler.throttled(ProjectId(name, stage)) { () =>
+        apiDependencies.requestHandler.handleRawRequestForPublicApi(projectId, rawRequest)
+      }
+      onComplete(result) {
+        case scala.util.Success(result) =>
+          logRequestEnd(Some(projectId))
+          respondWithHeader(RawHeader("Throttled-By", result.throttledBy.toString + "ms")) {
+            complete(result.result)
+          }
+
+        case scala.util.Failure(_: ThrottleBufferFullException) =>
+          logRequestEnd(Some(projectId))
+          throw ThrottlerBufferFullException()
+
+        case scala.util.Failure(exception) => // just propagate the exception
+          logRequestEnd(Some(projectId))
+          throw exception
+      }
     }
 
     logger.info(LogData(LogKey.RequestNew, requestId).json)
@@ -79,10 +136,7 @@ case class ApiServer(
                 }
               } ~ {
               extractRawRequest(requestId) { rawRequest =>
-                val projectId = ProjectId.toEncodedString(name = name, stage = stage)
-                val result    = apiDependencies.requestHandler.handleRawRequestForPublicApi(projectId, rawRequest)
-                result.onComplete(_ => logRequestEnd(Some(projectId)))
-                complete(result)
+                throttleApiCallIfNeeded(name, stage, rawRequest)
               }
             }
           }

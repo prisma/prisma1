@@ -168,6 +168,7 @@ lazy val akkaUtils = libProject("akka-utils")
     specs2,
     caffeine
   ))
+  .settings(scalacOptions := Seq("-deprecation", "-feature"))
 
 lazy val metrics = libProject("metrics")
   .dependsOn(bugsnag % "compile")
