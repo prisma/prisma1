@@ -1,12 +1,12 @@
 ---
 alias: rohd6ipoo4
-description: Get started with in 5 min Graphcool and TypeScript by building a GraphQL backend and deploying it with Docker
+description: Get started with in 5 min Prisma and TypeScript by building a GraphQL backend and deploying it with Docker
 github: https://github.com/graphql-boilerplates/typescript-graphql-server/tree/master/basic
 ---
 
-# TypeScript Graphcool Quickstart
+# TypeScript Prisma Quickstart
 
-In this quickstart tutorial, you'll learn how to build a GraphQL server with TypeScript. You will use  [`graphql-yoga`](https://github.com/graphcool/graphql-yoga/) as your web server which is connected to a "GraphQL database" using [`graphcool-binding`](https://github.com/graphcool/graphcool-binding).
+In this quickstart tutorial, you'll learn how to build a GraphQL server with TypeScript. You will use  [`graphql-yoga`](https://github.com/prisma/graphql-yoga/) as your web server which is connected to a "GraphQL database" using [`prisma-binding`](https://github.com/prisma/prisma-binding).
 
 > The code for this project can be found as a _GraphQL boilerplate_ project on [GitHub](https://github.com/graphql-boilerplates/typescript-graphql-server/tree/master/basic).
 
@@ -15,13 +15,26 @@ In this quickstart tutorial, you'll learn how to build a GraphQL server with Typ
 The first thing you need to is install the command line tools you'll need for this tutorial:
 
 - `graphql-cli` is used initially to bootstrap the file structure for your server with `graphql create`
-- `graphcool` is used continuously to manage your Graphcool database service (the "GraphQL database")
+- `prisma-cli` is used continuously to manage your Prisma database service (the "GraphQL database")
 
 <Instruction>
 
 ```sh
-npm install -g graphql-cli graphcool@beta
+npm install -g graphql-cli
 ```
+
+</Instruction>
+
+> Note that you don't have to globally install the Prisma CLI as it's listed as a _development dependency_ in the boilerplate project you'll use. However, we still recommend that you install it. If you don't install it globally, you can invoke all `prisma` commands by prefixing them with `yarn`, e.g. `yarn prisma deploy` or `yarn prisma playground`.
+
+You also need to have [Docker](https://www.docker.com/) installed on your machine.
+
+<Instruction>
+
+If you don't have Docker installed on your machine yet, go and download it now from the official website:
+
+- [Mac OS](https://www.docker.com/docker-mac)
+- [Windows](https://www.docker.com/docker-windows)
 
 </Instruction>
 
@@ -38,6 +51,37 @@ cd my-app
 
 </Instruction>
 
+<Instruction>
+
+When prompted which cluster you want to deploy to, choose the `local` cluster.
+
+</Instruction>
+
+After `graphql create` has finished, your Prisma database service is deployed and will be accessible under [`http://localhost:60000/my-app/dev`](http://localhost:60000/my-app/dev).
+
+As you might recognize, the HTTP endpoint for the database service is composed of the following components:
+
+- The **cluster's domain** (specified as the `host` property in `~/.prisma/config.yml`): `http://localhost:60000/my-app/dev`
+- The **name** of the Prisma `service` specified in `prisma.yml`: `my-app`
+- The **stage** to which the service is deployed, by default this is calleds: `dev`
+
+Note that the endpoint is referenced in `src/index.ts`. There, it is used to instantiate `Prisma` in order to create a binding between the application schema and the Prisma schema:
+
+```ts(path="src/index.ts"&nocopy)
+const server = new GraphQLServer({
+  typeDefs,
+  resolvers,
+  context: req => ({
+    ...req,
+    db: new Prisma({
+      schemaPath: './database/schema.generated.graphql',
+      endpoint: 'http://localhost:60000/api/my-app/dev',
+      secret: 'your-prisma-secret',
+    }),
+  }),
+})
+```
+
 Here's the file structure of the project:
 
 ![](https://cdn-images-1.medium.com/max/900/1*xBvxqgFDJrUGxDZChPObHA.png)
@@ -45,14 +89,15 @@ Here's the file structure of the project:
 Let's investigate the generated files and understand their roles:
 
 - `/` (_root directory_)
-  - [`.graphqlconfig.yml`](https://github.com/graphql-boilerplates/typescript-graphql-server/tree/master/basic/.graphqlconfig.yml) GraphQL configuration file containing the endpoints and schema configuration. Used by the [`graphql-cli`](https://github.com/graphcool/graphql-cli) and the [GraphQL Playground](https://github.com/graphcool/graphql-playground). See [`graphql-config`](https://github.com/graphcool/graphql-config) for more information.
-  - [`graphcool.yml`](https://github.com/graphql-boilerplates/typescript-graphql-server/tree/master/basic/graphcool.yml): The root configuration file for your database service ([documentation](https://www.graph.cool/docs/1.0/reference/graphcool.yml/overview-and-example-foatho8aip)).
+  - [`.graphqlconfig.yml`](https://github.com/graphql-boilerplates/typescript-graphql-server/tree/master/basic/.graphqlconfig.yml) GraphQL configuration file containing the endpoints and schema configuration. Used by the [`graphql-cli`](https://github.com/prisma/graphql-cli) and the [GraphQL Playground](https://github.com/prisma/graphql-playground). See [`graphql-config`](https://github.com/prisma/graphql-config) for more information.
 - `/database`
+  - [`database/prisma.yml`](https://github.com/graphql-boilerplates/typescript-graphql-server/tree/master/basic/database/prisma.yml): The root configuration file for your database service ([documentation](https://www.graph.cool/docs/1.0/reference/prisma.yml/overview-and-example-foatho8aip)).
   - [`database/datamodel.graphql`](https://github.com/graphql-boilerplates/typescript-graphql-server/tree/master/basic/database/datamodel.graphql) contains the data model that you define for the project (written in [SDL](https://blog.graph.cool/graphql-sdl-schema-definition-language-6755bcb9ce51)). We'll discuss this next.
-  - [`database/schema.generated.graphql`](https://github.com/graphql-boilerplates/typescript-graphql-server/tree/master/basic/database/schema.generated.graphql) defines the **database schema**. It contains the definition of the CRUD API for the types in your data model and is generated based on your `datamodel.graphql`. **You should never edit this file manually**, but introduce changes only by altering `datamodel.graphql` and run `graphcool deploy`.
+  - [`database/seed.graphql`](https://github.com/graphql-boilerplates/typescript-graphql-server/tree/master/basic/database/seed.graphql): Contains mutations to seed the database with some initial data.
 - `/src`
   - [`src/schema.graphql`](https://github.com/graphql-boilerplates/typescript-graphql-server/tree/master/basic/src/schema.graphql) defines your **application schema**. It contains the GraphQL API that you want to expose to your client applications.
-  - [`src/index.ts`](https://github.com/graphql-boilerplates/typescript-graphql-server/tree/master/basic/src/index.ts) is the entry point of your server, pulling everything together and starting the `GraphQLServer` from [`graphql-yoga`](https://github.com/graphcool/graphql-yoga).
+  - [`src/generated/prisma.graphql`](https://github.com/graphql-boilerplates/typescript-graphql-server/tree/master/basic/database/schema.generated.graphql) defines the **Prisma schema**. It contains the definition of the CRUD API for the types in your data model and is generated based on your `datamodel.graphql`. **You should never edit this file manually**, but introduce changes only by altering `datamodel.graphql` and run `prisma deploy`.
+  - [`src/index.ts`](https://github.com/graphql-boilerplates/typescript-graphql-server/tree/master/basic/src/index.ts) is the entry point of your server, pulling everything together and starting the `GraphQLServer` from [`graphql-yoga`](https://github.com/prisma/graphql-yoga).
 
 Most important for you at this point are `database/datamodel.graphql` and `src/schema.graphql`. `database/datamodel.graphql` is used to define your data model. This data model is the foundation for the API that's defined in `src/schema.graphql` and exposed to your client applications.
 
@@ -67,79 +112,7 @@ type Post {
 }
 ```
 
-Based on this data model Graphcool generates the **database schema**, a [GraphQL schema](https://blog.graph.cool/graphql-server-basics-the-schema-ac5e2950214e) that defines a CRUD API for the types in your data model. This schema is stored in `database/schema.generated.graphql` and will be updated every time you [`deploy`](!alias-kee1iedaov) changes to your data model.
-
-## Step 3: Deploy the Graphcool database service
-
-Before you can start the server, you first need to make sure your GraphQL database is available. You can do so by deploying the correspdonding Graphcool service that's responsible for the database.
-
-In this case, you'll deploy the Graphcool database service locally with [Docker](https://www.docker.com/). 
-
-<Instruction>
-
-If you don't have Docker installed on your machine yet, go and download it now from the official website:
-
-- [Mac OS](https://www.docker.com/docker-mac)
-- [Windows](https://www.docker.com/docker-windows)
-
-</Instruction>
-
-With Docker installed, you now need to fetch the required Docker images that provide the functionality for Graphcool and start the corresponding containers. In general, the `graphgcool local <subcommand>` commands are used to manage your Docker setup. However, when first getting started you don't need to worry about that. Everything that needs to be done will be handled by the `graphcool deploy` command.
-
-<Instruction>
-
-Deploy the database service from the root directory of the project:
-
-```bash(path="")
-graphcool deploy
-```
-
-</Instruction>
-
-This command created a new entry in the `clusters` list in the global `.graphcool/config.yml` file (which is located in your _home_ directory), looking similar to the following:
-
-<!--```yml(path="~/.graphcool/config.yml"&nocopy) -->
-
-```yml(path=".../.graphcool/config.yml"&nocopy)
-clusters:
-  local:
-    host: 'http://localhost:60000'
-    clusterSecret: >-
-      eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE1MDgwODI3NjMsImNsaWVudElkIjoiY2o4bmJ5bjE3MDAvMDAxNzdmNHZzN3FxNCJ9.sOyzwJplYF2x9YHXGVtnd-GneMuzEQauKQC9vLxBag0
-```
-
-This cluster called `local` is exactly the cluster you want to deploy your service to.
-
-<Instruction>
-
-When prompted which cluster you want to deploy to, choose the `local` cluster from the **Custom clusters** section. This section lists all your local clusters that are defined in the global `~/.graphcool/config.yml`.
-
-</Instruction>
-
-Once you selected the cluster, the database is deployed and will be accessible under [`http://localhost:60000/my-app/dev`](http://localhost:60000/my-app/dev).
-
-As you might recognize, the HTTP endpoint for the database service is composed of the following components:
-
-- The **cluster's domain** (specified as the `host` property in `~/.graphcool/config.yml`): `http://localhost:60000/my-app/dev`
-- The **name** of the Graphcool `service` specified in `graphcool.yml`: `my-app`
-- The **stage** to which the service is deployed, by default this is calleds: `dev`
-
-Note that the endpoint is referenced in `src/index.ts`. There, it is used to instantiate `Graphcool` in order to create a binding between the application schema and the database schema:
-
-```ts(path="src/index.ts"&nocopy)
-const server = new GraphQLServer({
-  typeDefs,
-  resolvers,
-  context: req => ({
-    ...req,
-    db: new Graphcool({
-      schemaPath: './database/schema.generated.graphql',
-      endpoint: 'http://localhost:60000/api/my-app/dev',
-      secret: 'your-graphcool-secret',
-    }),
-  }),
-})
-```
+Based on this data model Prisma generates the **Prisma schema**, a [GraphQL schema](https://blog.graph.cool/graphql-server-basics-the-schema-ac5e2950214e) that defines a CRUD API for the types in your data model. This schema is stored in `database/schema.generated.graphql` and will be updated every time you [`deploy`](!alias-kee1iedaov) changes to your data model.
 
 You're now set to start the server! 🚀
 
@@ -157,14 +130,14 @@ yarn start
 
 ## Step 5: Open a GraphQL playground to send queries and mutations
 
-Now that the server is running, you can use a [GraphQL Playground](https://github.com/graphcool/graphql-playground) to interact with it.
+Now that the server is running, you can use a [GraphQL Playground](https://github.com/prisma/graphql-playground) to interact with it.
 
 <Instruction>
 
 Open a GraphQL Playground by executing the following command:
 
 ```bash(path="")
-graphcool playground
+prisma playground
 ```
 
 </Instruction>
@@ -172,7 +145,7 @@ graphcool playground
 Note that the Playground let's you interact with two GraphQL APIs side-by-side:
 
 - `app`: The web server's GraphQL API defined in the **application schema** (from `./server/src/schema.graphql`)
-- `database`: The CRUD GraphQL API of the Graphcool database service defined in the **database schema** (from `./server/database/schema.generated.graphql`)
+- `database`: The CRUD GraphQL API of the Prisma database service defined in the **Prisma schema** (from `./server/database/schema.generated.graphql`)
 
 ![](https://imgur.com/z7MWZA8.png)
 
@@ -234,9 +207,9 @@ query {
 
 </Instruction>
 
-### Sending queries and mutations against the database schema
+### Sending queries and mutations against the Prisma schema
 
-The GraphQL CRUD API defined by the database schema (`database/schema.generated.graphql`) can be accessed using the `database` Playground.
+The GraphQL CRUD API defined by the Prisma schema (`database/schema.generated.graphql`) can be accessed using the `database` Playground.
 
 As you're now running directly against the database API, you're not limited to the operations from the application schema any more. Instead, you can take advantage of full CRUD capabilities to directly create a _published_ `Post` node.
 
