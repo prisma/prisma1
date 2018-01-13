@@ -14,13 +14,13 @@ docker images
 #TAG=$(echo $BUILDKITE_COMMIT | cut -c1-7)
 TAG=latest
 
-for service in graphcool-deploy graphcool-database graphcool-dev;
+for service in deploy database prisma;
 do
   latest=$(docker images graphcool/$service -q | head -n 1)
 
-  echo "Tagging graphcool/$service ($latest) image with $TAG..."
-  docker tag $latest graphcool/$service:$TAG
+  echo "Tagging prismagraphql/$service ($latest) image with $TAG..."
+  docker tag $latest prismagraphql/$service:$TAG
 
-  echo "Pushing graphcool/$service:$TAG..."
-  docker push graphcool/$service:$TAG
+  echo "Pushing prismagraphql/$service:$TAG..."
+  docker push prismagraphql/$service:$TAG
 done

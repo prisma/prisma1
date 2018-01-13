@@ -40,7 +40,7 @@ lazy val commonSettings = versionSettings ++ Seq(
 def commonBackendSettings(imageName: String) = commonSettings ++ Seq(
   libraryDependencies ++= common,
   imageNames in docker := Seq(
-    ImageName(s"graphcool/${imageName}:latest")
+    ImageName(s"prismagraphql/$imageName:latest")
   ),
   dockerfile in docker := {
     val appDir    = stage.value
@@ -84,7 +84,7 @@ lazy val sharedModels = normalProject("shared-models")
     cuid
   ) ++ joda
 )
-lazy val deploy = serverProject("deploy", imageName = "graphcool-deploy")
+lazy val deploy = serverProject("deploy", imageName = "deploy")
   .dependsOn(sharedModels % "compile")
   .dependsOn(akkaUtils % "compile")
   .dependsOn(metrics % "compile")
@@ -105,7 +105,7 @@ lazy val deploy = serverProject("deploy", imageName = "graphcool-deploy")
 //    buildInfoPackage := "build_info"
 //  )
 
-lazy val api = serverProject("api", imageName = "graphcool-database")
+lazy val api = serverProject("api", imageName = "database")
   .dependsOn(sharedModels % "compile")
   .dependsOn(deploy % "test")
   .dependsOn(messageBus % "compile")
@@ -121,7 +121,7 @@ lazy val api = serverProject("api", imageName = "graphcool-database")
     )
   )
 
-lazy val subscriptions = serverProject("subscriptions", imageName = "graphcool-subscriptions")
+lazy val subscriptions = serverProject("subscriptions", imageName = "subscriptions")
   .dependsOn(api % "compile;test->test")
   .dependsOn(stubServer % "compile")
   .settings(
@@ -133,7 +133,7 @@ lazy val subscriptions = serverProject("subscriptions", imageName = "graphcool-s
     )
   )
 
-lazy val workers = serverProject("workers", imageName = "graphcool-workers")
+lazy val workers = serverProject("workers", imageName = "workers")
     .dependsOn(bugsnag % "compile")
     .dependsOn(messageBus % "compile")
     .dependsOn(scalaUtils % "compile")
@@ -260,7 +260,7 @@ lazy val cache =
 
 lazy val auth = libProject("auth").settings(libraryDependencies += jwt)
 
-lazy val singleServer = serverProject("single-server", imageName = "graphcool-dev")
+lazy val singleServer = serverProject("single-server", imageName = "prisma")
   .dependsOn(api% "compile")
   .dependsOn(deploy % "compile")
   .dependsOn(subscriptions % "compile")
