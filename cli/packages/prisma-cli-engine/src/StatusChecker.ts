@@ -26,7 +26,15 @@ export class StatusChecker {
     })
     const platformToken = this.env.globalRC.cloudSessionKey
     const hashDate = new Date().toISOString()
-    const fid = getMac()
+    const mac = getMac()
+    const fidSecret = 'yeiB6sooy6eedahgooj0shiez'
+
+    const fid = mac
+      ? crypto
+          .createHmac('sha256', fidSecret)
+          .update(mac)
+          .digest('hex')
+      : ''
 
     const message = JSON.stringify({
       source,
