@@ -1,3 +1,0 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
-
-exports[`throws when no cluster provided 1`] = `[Error: No cluster set. Please set the "cluster" property in your graphcool.yml]`;
