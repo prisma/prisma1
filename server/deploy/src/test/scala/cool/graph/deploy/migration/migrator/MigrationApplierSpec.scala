@@ -44,6 +44,8 @@ class MigrationApplierSpec extends FlatSpec with Matchers with DeploySpecBase wi
     persisted.status should be(MigrationStatus.Success)
     persisted.applied should be(migration.steps.size)
     persisted.rolledBack should be(0)
+    persisted.startedAt.isDefined shouldEqual true
+    persisted.finishedAt.isDefined shouldEqual true
   }
 
   "the applier" should "mark a migration as ROLLBACK_SUCCESS if all steps can be rolled back successfully" in {
