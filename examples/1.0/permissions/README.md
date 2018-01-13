@@ -40,8 +40,8 @@ You need to have the following things installed:
 Clone the Graphcool monorepo and navigate to this directory or download _only_ this example with the following command:
 
 ```sh
-curl https://codeload.github.com/graphcool/graphcool/tar.gz/master | tar -xz --strip=2 graphcool-master/examples/permissions
-cd permissions
+curl https://codeload.github.com/graphcool/graphcool/tar.gz/master | tar -xz --strip=2 graphcool-master/examples/1.0/permissions
+cd 1.0/permissions
 ```
 
 ### 2. Deploy the Graphcool database service

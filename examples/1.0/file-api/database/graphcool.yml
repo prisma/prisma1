@@ -1,9 +1,9 @@
 service: graphql-server-file-upload-example
 
 stage: dev
-cluster: local
+
+secret: ${env:GRAPHCOOL_SECRET}
 
 datamodel:
   - datamodel.graphql
   
-secret: ${env:GRAPHCOOL_SECRET}
