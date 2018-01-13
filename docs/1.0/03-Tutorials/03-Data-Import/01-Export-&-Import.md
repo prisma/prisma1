@@ -229,7 +229,7 @@ Now that the service is running, you can import the data from the zip directory!
 
 <Instruction>
 
-Run the following command in your terminal - note that you need to replace the `__DATA__` placeholder with the path to the exported zip directory (e.g. `export-2018-01-13T19:28:25.921Z.zip`):
+Run the following command in your terminal. Note that you need to replace the `__DATA__` placeholder with the path to the exported zip directory (e.g. `export-2018-01-13T19:28:25.921Z.zip`):
 
 ```sh
 prisma import --data __DATA__
@@ -237,4 +237,4 @@ prisma import --data __DATA__
 
 </Instruction>
 
-That's it! To convince yourself the import actually worked, you can open up a GraphQL Playground for the current `test` stage and send the query from before again.
+That's it! To convince yourself the import actually worked, you can open up a GraphQL Playground for the current `test` stage and send the above query again.
