@@ -64,6 +64,8 @@ This updates the local file `example.png` with the new name `myname.png`. The re
 
 File uploads using the File API are not governed by the permissions on the `File` type. As such, everyone can upload files to your project. Please reach out in the [Forum](https://graph.cool/forum) or [Slack](https://slack.graph.cool) if you have any questions about this.
 
+#### You must create the File type in your types.graphql otherwise you will recieve 500 error reponses from the server.
+
 ### Current limitations
 
 You can't upload files when you defined a required field on the `File` type.
