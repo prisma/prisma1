@@ -5,5 +5,3 @@ stage: ${env:GRAPHCOOL_STAGE}
 datamodel: datamodel.graphql
 
 secret: ${env:GRAPHCOOL_SECRET}
-
-cluster: local
