@@ -1,6 +1,6 @@
 {
   "name": "prisma-cli-core",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "main": "dist/index.js",
   "files": [
     "dist"
@@ -100,7 +100,7 @@
     "pause": "^0.1.0",
     "portfinder": "^1.0.13",
     "prisma-json-schema": "^0.0.1",
-    "prisma-yml": "0.0.2",
+    "prisma-yml": "0.0.4",
     "scuid": "^1.0.2",
     "semver": "^5.4.1",
     "sillyname": "^0.1.0",
