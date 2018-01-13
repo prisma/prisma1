@@ -103,10 +103,9 @@ Since `prisma.yml` doesn't yet contain the information about _where_ (meaning to
 
 <Instruction>
 
-Select the `shared-public-demo` option in the **Shared Clusters** section.
+When prompted where (i.e. to which _cluster_) to deploy your Prisma service, choose one of the _public cluster_ options: `graphcool-eu1` or `graphcool-us1`.
 
 </Instruction>
-
 Your Prisma service is now deployed and ready to accept your queries and mutations 🎉
 
 ## Exploring your service in a GraphQL Playground

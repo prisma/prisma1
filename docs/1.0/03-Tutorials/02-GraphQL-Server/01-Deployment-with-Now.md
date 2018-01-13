@@ -42,7 +42,7 @@ graphql create hello-world -b node-basic
 
 <Instruction>
 
-When being prompted where (i.e. to which _cluster_) to deploy your Prisma service, choose one of the _public cluster_ options: `graphcool-eu1` or `graphcool-us1`.
+When prompted where (i.e. to which _cluster_) to deploy your Prisma service, choose one of the _public cluster_ options: `graphcool-eu1` or `graphcool-us1`.
 
 </Instruction>
 
@@ -50,7 +50,21 @@ The above `graphql create` command creates a new directory called `hello-world` 
 
 ## Deploy the server with `now`
 
-You now have the right foundation to deploy your GraphQL server.
+The `now` command uploads your source files and invokes the `start` script defined in your `package.json`.
+
+Before you can invoke `now`, you need to make one minor change to the project, which is to ensure the `graphql-yoga` / Express.js server is started in production mode.
+
+<Instruction>
+
+Open `package.json` and remove `NODE_ENV=dev` from the `start` script so it looks as follows:
+
+```json
+"start: node src/index.js"
+```
+
+</Instruction>
+
+You now have a proper foundation to deploy your GraphQL server.
 
 <Instruction>
 

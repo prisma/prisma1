@@ -1,68 +1,240 @@
 ---
 alias: caith9teiy
-description: Learn how to deploy your GraphQL server with now.
+description: Learn how to export and import data with Prisma.
 ---
 
-# Deploy a GraphQL server with Now
+# Export & Import
 
-Once you're done implementing your GraphQL server and have tested it enough locally to make it available to the general public, you need to _deploy_ it to the web.
+Prisma uses a dedicated, intermediate format for importing and exporting data: The [Normalized Data Format](!alias-teroo5uxih) (NDF).
 
-In this tutorial, you're going to learn how you can use [Now](https://zeit.co/now) - an amazing one-click deployment tool from the [Zeit](https://zeit.co/) team - to deploy your GraphQL server.
+```
++--------------+                    +----------------+                       +------------+
+| +--------------+                  |                |                       |            |
+| |            | |                  |                |                       |            |
+| | SQL        | |  (1) transform   |      NDF       |  (2) chunked upload   |  prisma |
+| | MongoDB    | | +--------------> |                | +-------------------> |            |
+| | JSON       | |                  |                |                       |            |
+| |            | |                  |                |                       |            |
++--------------+ |                  +----------------+                       +------------+
+  +--------------+
+```
 
-## Install Now Desktop
+In this tutorial, you'll perform the following steps:
 
-The first thing you to do is download the Now Desktop and login.
+1. Create a Prisma service
+1. Seed some initial data for the service
+1. Export the data in NDF
+1. Deploy the service to a new stage
+1. Import the data in NDF
+
+## Create a Prisma service
 
 <Instruction>
 
-Open [`https://zeit.co/download`](https://zeit.co/download) in your browser and hit the **DOWNLOAD**-button.
-
-</Instruction>
-
-> **Note**: Now Desktop includes the `now` CLI.
-
-![](https://imgur.com/UpRzQsY.png)
-
-## Bootstrap a GraphQL server
-
-In this tutorial, you'll use the [`node-basic`](https://github.com/graphql-boilerplates/node-graphql-server/tree/master/basic) GraphQL boilerplate project as a sample server to be deployed. The easiest way to get access to this boilerplate is by using the `graphql create` command from the [GraphQL CLI](https://github.com/graphql-cli/graphql-cli/).
-
-The boilerplate project is based on [`graphql-yoga`](https://github.com/graphcool/graphql-yoga/), a lightweight GraphQL server based on Express.js, `apollo-server` and `graphql-tools`.
-
-<Instruction>
-
-If you haven't already, go ahead and install the GraphQL CLI. Then, bootstrap your GraphQL server with `graphql create`:
+In your terminal, navigate to a folder of your choice and run the following command:
 
 ```sh
-npm install -g graphql-cli
-graphql create hello-world -b node-basic
+prisma init import-example
 ```
 
 </Instruction>
 
 <Instruction>
 
-When being prompted where (i.e. to which _cluster_) to deploy your Prisma service, choose one of the _public cluster_ options: `graphcool-eu1` or `graphcool-us1`.
+When prompted what kind of template to use, choose the `Minimal setup: database-only` one.
 
 </Instruction>
 
-The above `graphql create` command creates a new directory called `hello-world` where it places the source files for your GraphQL server as well as the configuration for the belonging Prisma service.
+This created a new directory called `import-example` with the root configuration file `prisma.yml` as well as the definition of the service's data model in `datamodel.graphql`.
 
-## Deploy the server with `now`
-
-You now have the right foundation to deploy your GraphQL server.
+Next, you'll update the data model to also include a relation.
 
 <Instruction>
 
-All you need to is navigate into the `hello-world` directory and invoke `now`:
+Open `datamodel.graphql` and change the contents to looks as follows:
+
+```graphql
+type User {
+  id: ID! @unique
+  name: String!
+  posts: [Post!]!
+}
+
+type Post {
+  id: ID! @unique
+  title: String!
+  author: User!
+}
+```
+
+## Seed initial data
+
+Next, you're going to seed some initial data for the service.
+
+<Instruction>
+
+Create a new file called `seed.graphql` inside the `import-example` directory and add the following mutation to it:
 
 ```sh
-cd hello-world
-now
+mutation {
+  createUser(data: {
+    name: "Sarah",
+    posts: {
+      create: [
+        { title: "GraphQL is awesome" },
+        { title: "It really is" },
+        { title: "How to GraphQL is the best GraphQL tutorial" }
+      ]
+    }
+  }) {
+    id
+  }
+}
 ```
 
 </Instruction>
 
-> **Note**: If this is the first time you're using `now`, it will ask you to authenticate with their service.
+Now you need to tell the CLI that you created this file. You can do so by setting the `seed` property in `prisma.yml`.
 
-That's it, your GraphQL server is now deployed and available under the URL printed by the CLI 🎉  The URL looks similar to `https://hello-world-__ID__.now.sh` (where `__ID__` is a random ID for your service generated by `now`).
+<Instruction>
+
+Open `prisma.yml` and update its contents to look as follows:
+
+```yml
+service: import-example
+stage: dev
+
+datamodel: datamodel.graphql
+
+# to enable auth, provide
+# secret: my-secret
+disableAuth: true
+
+seed:
+  import: seed.graphql
+```
+
+</Instruction>
+
+When deploying the service, the CLI will now send the mutation defined in `seed.graphql` to your service's API.
+
+<Instruction>
+
+Deploy the Prisma service by running the following command:
+
+```sh
+prisma deploy
+```
+
+</Instruction>
+
+<Instruction>
+
+When prompted where (i.e. to which _cluster_) to deploy your Prisma service, choose one of the _public cluster_ options: `prisma-eu1` or `prisma-us1`. (Note that seeding also works when deploying with Docker)
+
+</Instruction>
+
+The CLI now deploys the service and executes the mutation in `seed.graphql`. To convince yourself the seeding actually worked, you can open up a GraphQL Playground and send the following query:
+
+```graphql
+{
+  users {
+    name
+    posts {
+      title
+    }
+  }
+}
+```
+
+The Prisma API will respond with the following data:
+
+```json
+
+
+{
+  "data": {
+    "users": [
+      {
+        "name": "Sarah",
+        "posts": [
+          {
+            "title": "GraphQL is awesome"
+          },
+          {
+            "title": "It really is"
+          },
+          {
+            "title": "How to GraphQL is the best GraphQL tutorial"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+## Export the data in NDF
+
+It's time to export the in the Normalized Data Format.
+
+<Instruction>
+
+In the `import-example` in your terminal, execute the following command:
+
+```sh
+prisma export
+```
+
+</Instruction>
+
+This creates a new file called `export-__TIMESTAMP__.zip` where `__TIMESTAMP__` represents the exact time of the export. The files in the zip directory are in NDF. To learn more about the structure, check out the [reference documentation for the NDF](!alias-teroo5uxih).
+
+## Deploy the service to a new stage
+
+Next, you'll create "clone" of the service by deploying it to a new stage.
+
+<Instruction>
+
+Open `prisma.yml` and set the `stage` property to a new value. Also remove the `seed` and `cluster` properties!
+
+```sh
+service: import-example
+stage: test
+
+datamodel: datamodel.graphql
+
+# to enable auth, provide
+# secret: my-secret
+disableAuth: true
+```
+
+</Instruction>
+
+<Instruction>
+
+Run `prisma deploy` again to deploy the service the new `test` stage.
+
+</Instruction>
+
+<Instruction>
+
+Like before, when prompted where to deploy your Prisma service, either choose `prisma-eu1` or `prisma-us1`.
+
+</Instruction>
+
+## Import the data in NDF
+
+Now that the service is running, you can import the data from the zip directory!
+
+<Instruction>
+
+Run the following command in your terminal - note that you need to replace the `__DATA__` placeholder with the path to the exported zip directory (e.g. `export-2018-01-13T19:28:25.921Z.zip`):
+
+```sh
+prisma import --data __DATA__
+```
+
+</Instruction>
+
+That's it! To convince yourself the import actually worked, you can open up a GraphQL Playground for the current `test` stage and send the query from before again.
