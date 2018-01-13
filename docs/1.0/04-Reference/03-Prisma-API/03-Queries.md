@@ -5,7 +5,7 @@ description: Queries
 
 # Queries
 
-The Prisma API features
+The Prisma API offers
 
 * **Model Queries**, to fetch single or multiple nodes of a certain model
 * **Connection Queries**, that expose advanced features like _aggregation_ and [Relay compliant connections](TODO N)
