@@ -2,21 +2,11 @@ package cool.graph.deploy.database.persistence
 
 import cool.graph.deploy.database.tables.{Migration, Project}
 import cool.graph.shared.models
-import cool.graph.shared.models.{MigrationStep, Schema, Function}
+import cool.graph.shared.models.{MigrationStep, Schema}
 
 object DbToModelMapper {
   import cool.graph.shared.models.MigrationStepsJsonFormatter._
   import cool.graph.shared.models.ProjectJsonFormatter._
-
-//  def convert(migration: Migration): models.Project = {
-//    val projectModel = migration.schema.as[models.Project]
-//    projectModel.copy(revision = migration.revision)
-//  }
-
-//  def convert(project: Project, migration: Migration): models.Project = {
-//    val projectModel = migration.schema.as[models.Project]
-//    projectModel.copy(revision = migration.revision)
-//  }
 
   def convert(project: Project, migration: Migration): models.Project = {
     models.Project(
@@ -42,7 +32,9 @@ object DbToModelMapper {
       applied = migration.applied,
       rolledBack = migration.rolledBack,
       steps = migration.steps.as[Vector[MigrationStep]],
-      errors = migration.errors.as[Vector[String]]
+      errors = migration.errors.as[Vector[String]],
+      startedAt = migration.startedAt,
+      finishedAt = migration.finishedAt
     )
   }
 }

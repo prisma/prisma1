@@ -1,7 +1,9 @@
 package cool.graph.deploy.database.tables
 
+import com.github.tototoshi.slick.MySQLJodaSupport
 import cool.graph.shared.models.MigrationStatus
 import cool.graph.shared.models.MigrationStatus.MigrationStatus
+import org.joda.time.DateTime
 import play.api.libs.json.JsValue
 import slick.dbio.Effect.{Read, Write}
 import slick.jdbc.MySQLProfile.api._
@@ -16,12 +18,15 @@ case class Migration(
     applied: Int,
     rolledBack: Int,
     steps: JsValue,
-    errors: JsValue
+    errors: JsValue,
+    startedAt: Option[DateTime],
+    finishedAt: Option[DateTime]
 )
 
 class MigrationTable(tag: Tag) extends Table[Migration](tag, "Migration") {
   implicit val statusMapper = MigrationTable.statusMapper
   implicit val jsonMapper   = MigrationTable.jsonMapper
+  implicit val jodaMapper   = MySQLJodaSupport.datetimeTypeMapper
 
   def projectId  = column[String]("projectId")
   def revision   = column[Int]("revision")
@@ -32,13 +37,16 @@ class MigrationTable(tag: Tag) extends Table[Migration](tag, "Migration") {
   def rolledBack = column[Int]("rolledBack")
   def steps      = column[JsValue]("steps")
   def errors     = column[JsValue]("errors")
+  def startedAt  = column[Option[DateTime]]("startedAt")
+  def finishedAt = column[Option[DateTime]]("finishedAt")
 
   def migration = foreignKey("migrations_projectid_foreign", projectId, Tables.Projects)(_.id)
-  def *         = (projectId, revision, schema, functions, status, applied, rolledBack, steps, errors) <> (Migration.tupled, Migration.unapply)
+  def *         = (projectId, revision, schema, functions, status, applied, rolledBack, steps, errors, startedAt, finishedAt) <> (Migration.tupled, Migration.unapply)
 }
 
 object MigrationTable {
   implicit val jsonMapper = MappedColumns.jsonMapper
+  implicit val jodaMapper = MySQLJodaSupport.datetimeTypeMapper
   implicit val statusMapper = MappedColumnType.base[MigrationStatus, String](
     _.toString,
     MigrationStatus.withName
@@ -98,6 +106,14 @@ object MigrationTable {
 
   def updateMigrationRolledBack(projectId: String, revision: Int, rolledBack: Int): FixedSqlAction[Int, NoStream, Write] = {
     updateBaseQuery(projectId, revision).map(_.rolledBack).update(rolledBack)
+  }
+
+  def updateStartedAt(projectId: String, revision: Int, startedAt: DateTime) = {
+    updateBaseQuery(projectId, revision).map(_.startedAt).update(Some(startedAt))
+  }
+
+  def updateFinishedAt(projectId: String, revision: Int, finishedAt: DateTime) = {
+    updateBaseQuery(projectId, revision).map(_.finishedAt).update(Some(finishedAt))
   }
 
   def loadByRevision(projectId: String, revision: Int): SqlAction[Option[Migration], NoStream, Read] = {

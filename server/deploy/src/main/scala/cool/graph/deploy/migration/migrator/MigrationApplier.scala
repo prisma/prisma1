@@ -5,6 +5,7 @@ import cool.graph.deploy.migration.MigrationStepMapper
 import cool.graph.deploy.migration.mutactions.ClientSqlMutaction
 import cool.graph.shared.models.{Migration, MigrationStatus, MigrationStep, Schema}
 import cool.graph.utils.exceptions.StackTraceUtils
+import org.joda.time.DateTime
 import slick.jdbc.MySQLProfile.backend.DatabaseDef
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -27,7 +28,9 @@ case class MigrationApplierImpl(
       _         <- Future.unit
       nextState = if (migration.status == MigrationStatus.Pending) MigrationStatus.InProgress else migration.status
       _         <- migrationPersistence.updateMigrationStatus(migration.id, nextState)
+      _         <- migrationPersistence.updateStartedAt(migration.id, DateTime.now())
       result    <- startRecurse(previousSchema, migration)
+      _         <- migrationPersistence.updateFinishedAt(migration.id, DateTime.now())
     } yield result
   }
 

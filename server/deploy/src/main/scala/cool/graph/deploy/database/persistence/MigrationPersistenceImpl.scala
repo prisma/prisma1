@@ -4,6 +4,7 @@ import cool.graph.deploy.database.tables.{MigrationTable, Tables}
 import cool.graph.shared.models.{Migration, MigrationId}
 import cool.graph.shared.models.MigrationStatus.MigrationStatus
 import cool.graph.utils.future.FutureUtils.FutureOpt
+import org.joda.time.DateTime
 import play.api.libs.json.Json
 import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.MySQLProfile.backend.DatabaseDef
@@ -60,6 +61,14 @@ case class MigrationPersistenceImpl(
 
   override def updateMigrationRolledBack(id: MigrationId, rolledBack: Int): Future[Unit] = {
     internalDatabase.run(MigrationTable.updateMigrationRolledBack(id.projectId, id.revision, rolledBack)).map(_ => ())
+  }
+
+  override def updateStartedAt(id: MigrationId, startedAt: DateTime): Future[Unit] = {
+    internalDatabase.run(MigrationTable.updateStartedAt(id.projectId, id.revision, startedAt)).map(_ => ())
+  }
+
+  override def updateFinishedAt(id: MigrationId, finishedAt: DateTime): Future[Unit] = {
+    internalDatabase.run(MigrationTable.updateFinishedAt(id.projectId, id.revision, finishedAt)).map(_ => ())
   }
 
   override def getLastMigration(projectId: String): Future[Option[Migration]] = {
