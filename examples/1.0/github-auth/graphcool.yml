@@ -1,7 +1,6 @@
 service: graphql-server-github-auth-example
 
 stage: dev
-cluster: local
 
 datamodel:
   - database/datamodel/types.graphql
