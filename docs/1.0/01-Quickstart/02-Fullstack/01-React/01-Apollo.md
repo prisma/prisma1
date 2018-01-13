@@ -12,7 +12,7 @@ In this quickstart tutorial, you'll learn how to build a fullstack app with Reac
 
 ## Step 1: Install required command line tools
 
-The first thing you need to is install the command line tools you'll need for this tutorial:
+The first thing you need to do is install the command line tools you'll need for this tutorial:
 
 - `graphql-cli` is used initially to bootstrap the file structure for your fullstack app with `graphql create`
 - `graphcool` is used continuously to manage your Graphcool database service
