@@ -1,9 +1,13 @@
 ---
-alias: ahs1jahkee
+alias: eifeecahx4
 description: Learn about different resolver patterns
 ---
 
+# Common Resolver Patterns
+
 This tutorial gives an overview about common scenarios you might encounter when implementing your GraphQL server with `graphql-yoga` and Prisma.
+
+Note that all scenarios in this tutorial are based on the [`typescript-basic`](https://github.com/graphql-boilerplates/typescript-graphql-server/tree/master/basic) GraphQL boilerplate project.
 
 ### Scenario: Add a new field to the data model and expose it in the API
 
@@ -28,18 +32,19 @@ type User {
 
 #### 2. Deploying the updated data model
 
-```
+```sh
 graphcool deploy
 ```
 
-This will
+This will...
 
-* deploy the new database structure to the local service
-* download the new GraphQL schema for the database to `database/schema.graphql`
+* ... deploy the new database structure to the local service
+* ... download the new GraphQL schema for the database to `database/schema.graphql`
 
 #### 3. Adding the field to the application schema
 
-in `src/schema.graphql`:
+In `src/schema.graphql`:
+
 ```diff
 type User {
   id: ID!
