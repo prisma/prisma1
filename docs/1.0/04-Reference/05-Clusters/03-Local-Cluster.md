@@ -18,7 +18,7 @@ If you used `prisma local start` to start your local Prisma cluster, you will ha
 
 This guide explains how to connect to your local MySQL server in order to query and update data directly.
 
-> In the following, we assume that you have a local Graphcool service running (as described in the [previous chapter](!alias-ohs4asd0pe)).
+> In the following, we assume that you have a local Prisma service running (as described in the [previous chapter](!alias-ohs4asd0pe)).
 
 #### 1. Get the name of the Docker container that runs the MySQL database
 
@@ -35,7 +35,7 @@ Verify that there is a container with the name `prisma-db` image `mysql:5.7`.
 To open the MySQL client in your terminal, run the following command. Note that prisma-db is the container name from the list above:
 
 ```sh
- docker exec -it prisma-db mysql -u root --host 127.0.0.1 --port 3306 --password=graphcool
+ docker exec -it prisma-db mysql -u root --host 127.0.0.1 --port 3306 --password=prisma
 ```
 
 #### 3. Send SQL queries to the database
@@ -53,7 +53,7 @@ This will print the following output:
 | Database                  |
 +---------------------------+
 | information_schema        |
-| graphcool                 |
+| prisma                    |
 | logs                      |
 | mysql                     |
 | performance_schema        |
