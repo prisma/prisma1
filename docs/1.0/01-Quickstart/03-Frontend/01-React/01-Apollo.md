@@ -51,7 +51,6 @@ graphcool deploy
 
 </Instruction>
 
-
 When prompted which cluster you want to deploy to, choose any of the _public cluster_ options (`graphcool-eu1` or `graphcool-us1`).
 
 > **Note**: If you haven't authenticated with the Graphcool CLI before, this command is going to open up a browser window and ask you to login.

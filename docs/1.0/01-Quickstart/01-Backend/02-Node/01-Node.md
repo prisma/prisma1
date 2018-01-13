@@ -90,7 +90,7 @@ const server = new GraphQLServer({
 
 Here's the file structure of the project:
 
-![](https://cdn-images-1.medium.com/max/900/1*xBvxqgFDJrUGxDZChPObHA.png)
+![](https://imgur.com/95faUsa.png)
 
 Let's investigate the generated files and understand their roles:
 
