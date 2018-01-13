@@ -18,8 +18,8 @@ const isDev = (process.env.ENV || '').toLowerCase() === 'dev'
 export class Environment {
   sharedClusters: string[] = ['prisma-eu1', 'prisma-us1']
   clusterEndpointMap: { [key: string]: string } = {
-    'prisma-eu1': 'https://graphcool-eu1.graphcool.cloud',
-    'prisma-us1': 'https://graphcool-us1.graphcool.cloud',
+    'prisma-eu1': 'https://eu1.prisma.sh',
+    'prisma-us1': 'https://us1.prisma.sh',
   }
   args: Args
   activeCluster: Cluster

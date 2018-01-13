@@ -56,7 +56,6 @@ export class Config {
   /**
    * Urls
    */
-  statusEndpoint = 'https://crm.graph.cool/prod/status'
   cloudApiEndpoint = isDevConsole
     ? 'http://localhost:4000'
     : 'https://api.cloud.graph.cool'
@@ -164,9 +163,7 @@ export class Config {
         ...values(config.projects).map(p => p.extensions),
       ]
 
-      const prismaExtension = allExtensions.find(e =>
-        Boolean(e && e.prisma),
-      )
+      const prismaExtension = allExtensions.find(e => Boolean(e && e.prisma))
       if (prismaExtension) {
         const { prisma } = prismaExtension
         definitionPath = path.resolve(prisma)

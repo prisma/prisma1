@@ -5,6 +5,7 @@ import { spawn } from 'child_process'
 import * as fetch from 'isomorphic-fetch'
 import * as fs from 'fs-extra'
 import { Environment } from 'prisma-yml'
+import * as os from 'os'
 
 export class StatusChecker {
   config: Config
@@ -24,7 +25,9 @@ export class StatusChecker {
       argv,
     })
     const platformToken = this.env.globalRC.cloudSessionKey
-    const hashDate = new Date().toUTCString()
+    const hashDate = new Date().toISOString()
+    const fid = getMac()
+
     const message = JSON.stringify({
       source,
       sourceVersion,
@@ -32,8 +35,9 @@ export class StatusChecker {
       payload,
       platformToken,
       hashDate,
+      fid,
     })
-    const secret = 'uo8oozoo7uiVaphailoongoh4'
+    const secret = 'eshi4ohgai3eeHaih4Bifahhi'
 
     const hash = crypto
       .createHmac('sha256', secret)
@@ -48,6 +52,7 @@ export class StatusChecker {
         $platformToken: String
         $hash: String!
         $hashDate: String!
+        $fid: String!
       ) {
         sendStats(
           source: $source
@@ -57,6 +62,7 @@ export class StatusChecker {
           platformToken: $platformToken
           hash: $hash
           hashDate: $hashDate
+          fid: $fid
         )
     }`
 
@@ -71,6 +77,7 @@ export class StatusChecker {
           platformToken,
           hash,
           hashDate,
+          fid,
         },
       },
       cachePath: this.config.requestsCachePath,
@@ -118,7 +125,7 @@ async function requestWithTimeout(input) {
     setTimeout(() => {
       reject('Timeout')
     }, 5000)
-    const result = await fetch('https://stats.graph.cool', {
+    const result = await fetch('https://stats.prismagraphql.com', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -128,4 +135,16 @@ async function requestWithTimeout(input) {
     const json = await result.json()
     resolve(json)
   })
+}
+
+function getMac() {
+  const interfaces = os.networkInterfaces()
+  return Object.keys(interfaces).reduce((acc, key) => {
+    if (acc) {
+      return acc
+    }
+    const i = interfaces[key]
+    const mac = i.find(a => a.mac !== '00:00:00:00:00:00')
+    return mac ? mac.mac : null
+  }, null)
 }

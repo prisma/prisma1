@@ -91,6 +91,13 @@ export class CLI {
     if (this.cmdAskingForHelp) {
       debug('command asking for help')
       this.cmd = await this.Help.run(this.config)
+      const checker = new StatusChecker(this.config, this.cmd.env)
+      checker.checkStatus(
+        this.config.argv[1],
+        this.cmd.args,
+        this.cmd.flags,
+        this.cmd.argv,
+      )
     } else {
       const id = getCommandId(this.config.argv.slice(1))
       debug('command id', id)
@@ -139,6 +146,8 @@ export class CLI {
         const topic = await dispatcher.findTopic(id)
         if (topic) {
           await this.Help.run(this.config)
+          const checker = new StatusChecker(this.config, this.cmd.env)
+          checker.checkStatus(id, this.cmd.args, this.cmd.flags, this.cmd.argv)
         } else if (id === 'push') {
           throw new Error(
             `The ${chalk.bold(
