@@ -429,10 +429,18 @@ ${chalk.gray(
   }
 
   private async graphqlPrepare() {
-    const graphqlBin = await getBinPath('graphql')
-    if (graphqlBin) {
-      this.out.log(`Running ${chalk.cyan(`$ graphql prepare`)}...`)
-      await spawn(`graphql`, ['prepare'])
+    let config
+    try {
+      config = getGraphQLConfig()
+    } catch (e) {
+      //
+    }
+    if (config) {
+      const graphqlBin = await getBinPath('graphql')
+      if (graphqlBin) {
+        this.out.log(`Running ${chalk.cyan(`$ graphql prepare`)}...`)
+        await spawn(`graphql`, ['prepare'])
+      }
     }
   }
 
