@@ -4,10 +4,10 @@ import cool.graph.shared.NameConstraints
 import cool.graph.shared.errors.SystemErrors.SchemaError
 import cool.graph.shared.models.TypeIdentifier
 import cool.graph.system.migration.dataSchema.{DataSchemaAstExtensions, SdlSchemaParser}
-import sangria.ast.{Directive, FieldDefinition, ObjectTypeDefinition}
+import sangria.ast.{Directive, Document, FieldDefinition, ObjectTypeDefinition}
 
 import scala.collection.immutable.Seq
-import scala.util.{Failure, Success}
+import scala.util.{Failure, Success, Try}
 
 case class DirectiveRequirement(directiveName: String, arguments: Seq[RequiredArg])
 case class RequiredArg(name: String, mustBeAString: Boolean)
@@ -31,12 +31,12 @@ object SchemaSyntaxValidator {
 
 case class SchemaSyntaxValidator(schema: String, directiveRequirements: Seq[DirectiveRequirement]) {
   import DataSchemaAstExtensions._
-  val result   = SdlSchemaParser.parse(schema)
-  lazy val doc = result.get
+  val result: Try[Document] = SdlSchemaParser.parse(schema)
+  lazy val doc: Document    = result.get
 
   def validate(): Seq[SchemaError] = {
     result match {
-      case Success(x) => validateInternal()
+      case Success(_) => validateInternal()
       case Failure(e) => List(SchemaError.global(s"There's a syntax error in the Schema Definition. ${e.getMessage}"))
     }
   }
@@ -54,6 +54,7 @@ case class SchemaSyntaxValidator(schema: String, directiveRequirements: Seq[Dire
     } yield FieldAndType(objectType, field)
 
     val missingModelDirectiveValidations    = validateModelDirectiveOnTypes(doc.objectTypes, allFieldAndTypes)
+    val directiveValidations                = validateDirectives(doc.objectTypes, allFieldAndTypes)
     val deprecatedImplementsNodeValidations = validateNodeInterfaceOnTypes(doc.objectTypes, allFieldAndTypes)
     val duplicateTypeValidations            = validateDuplicateTypes(doc.objectTypes, allFieldAndTypes)
     val duplicateFieldValidations           = validateDuplicateFields(allFieldAndTypes)
@@ -62,7 +63,7 @@ case class SchemaSyntaxValidator(schema: String, directiveRequirements: Seq[Dire
     val scalarFieldValidations              = validateScalarFields(nonSystemFieldAndTypes)
     val fieldDirectiveValidations           = nonSystemFieldAndTypes.flatMap(validateFieldDirectives)
 
-    missingModelDirectiveValidations ++ deprecatedImplementsNodeValidations ++ validateIdFields ++ duplicateTypeValidations ++ duplicateFieldValidations ++ missingTypeValidations ++ relationFieldValidations ++ scalarFieldValidations ++ fieldDirectiveValidations ++ validateEnumTypes
+    missingModelDirectiveValidations ++ directiveValidations ++ deprecatedImplementsNodeValidations ++ validateIdFields ++ duplicateTypeValidations ++ duplicateFieldValidations ++ missingTypeValidations ++ relationFieldValidations ++ scalarFieldValidations ++ fieldDirectiveValidations ++ validateEnumTypes
   }
 
   def validateIdFields(): Seq[SchemaError] = {
@@ -94,6 +95,38 @@ case class SchemaSyntaxValidator(schema: String, directiveRequirements: Seq[Dire
     objectTypes.collect {
       case x if !x.directives.exists(_.name == "model") => SchemaErrors.missingAtModelDirective(fieldAndTypes.find(_.objectType.name == x.name).get)
     }
+  }
+
+  def validateDirectives(objectTypes: Seq[ObjectTypeDefinition], fieldAndTypes: Seq[FieldAndType]): Seq[SchemaError] = {
+    val validModelDirectives         = Vector("rename", "model")
+    val validScalarFieldDirectives   = Vector("rename", "defaultValue", "migrationValue", "isUnique")
+    val validRelationFieldDirectives = Vector("rename", "relation")
+
+    def invalidDirectiveNames(directives: Vector[sangria.ast.Directive], valid: Vector[String]): Vector[String] = {
+      directives.map(_.name).filter(name => !valid.contains(name))
+    }
+
+    val invalidModelDirectives = objectTypes.collect {
+      case x if invalidDirectiveNames(x.directives, validModelDirectives).nonEmpty =>
+        SchemaErrors.invalidDirectiveOnModel(fieldAndTypes.find(_.objectType.name == x.name).get,
+                                             invalidDirectiveNames(x.directives, validModelDirectives).mkString)
+    }
+
+    val invalidFieldDirectives = fieldAndTypes.collect {
+      case x if x.fieldDef.isNoRelation && invalidDirectiveNames(x.fieldDef.directives, validScalarFieldDirectives).nonEmpty =>
+        SchemaErrors.invalidDirectiveOnScalarField(
+          fieldAndTypes.find(ft => ft.objectType.name == x.objectType.name && ft.fieldDef.name == x.fieldDef.name).get,
+          invalidDirectiveNames(x.fieldDef.directives, validScalarFieldDirectives).mkString
+        )
+
+      case x if !x.fieldDef.isNoRelation && invalidDirectiveNames(x.fieldDef.directives, validRelationFieldDirectives).nonEmpty =>
+        SchemaErrors.invalidDirectiveOnRelationField(
+          fieldAndTypes.find(ft => ft.objectType.name == x.objectType.name && ft.fieldDef.name == x.fieldDef.name).get,
+          invalidDirectiveNames(x.fieldDef.directives, validRelationFieldDirectives).mkString
+        )
+    }
+
+    invalidModelDirectives ++ invalidFieldDirectives
   }
 
   def validateNodeInterfaceOnTypes(objectTypes: Seq[ObjectTypeDefinition], fieldAndTypes: Seq[FieldAndType]): Seq[SchemaError] = {
@@ -130,7 +163,9 @@ case class SchemaSyntaxValidator(schema: String, directiveRequirements: Seq[Dire
   def validateRelationFields(fieldAndTypes: Seq[FieldAndType]): Seq[SchemaError] = {
     val relationFields = fieldAndTypes.filter(isRelationField)
 
-    val wrongTypeDefinitions = relationFields.collect{case fieldAndType if !fieldAndType.fieldDef.isValidRelationType => SchemaErrors.relationFieldTypeWrong(fieldAndType)}
+    val wrongTypeDefinitions = relationFields.collect {
+      case fieldAndType if !fieldAndType.fieldDef.isValidRelationType => SchemaErrors.relationFieldTypeWrong(fieldAndType)
+    }
 
     val (schemaErrors, validRelationFields) = partition(relationFields) {
       case fieldAndType if !fieldAndType.fieldDef.hasRelationDirective =>
@@ -170,7 +205,7 @@ case class SchemaSyntaxValidator(schema: String, directiveRequirements: Seq[Dire
 
   def validateScalarFields(fieldAndTypes: Seq[FieldAndType]): Seq[SchemaError] = {
     val scalarFields = fieldAndTypes.filter(isScalarField)
-    scalarFields.collect{case fieldAndType if !fieldAndType.fieldDef.isValidScalarType => SchemaErrors.scalarFieldTypeWrong(fieldAndType)}
+    scalarFields.collect { case fieldAndType if !fieldAndType.fieldDef.isValidScalarType => SchemaErrors.scalarFieldTypeWrong(fieldAndType) }
   }
 
   def validateFieldDirectives(fieldAndType: FieldAndType): Seq[SchemaError] = {
