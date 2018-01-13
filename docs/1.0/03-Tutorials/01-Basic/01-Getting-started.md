@@ -7,6 +7,12 @@ description: Learn how to generate a GraphQL API for your database with Prisma.
 
 In this tutorial, you'll learn how to get started with Prisma to generate a GraphQL API for your database.
 
+Here are the steps you're going to perform:
+
+- Install the Prisma CLI
+- Bootstraping a Prisma service with `prisma init`
+- Explore the API in a GraphQL Playground and send queries & mutations 
+
 > To ensure you're not accidentally skipping an instruction in the tutorial, all required actions on your end are highlighted with a little counter on the left.
 >
 > **Pro tip**: If you're only keen on getting started but don't care so much about the explanations of what's going on, you can simply jump from instruction to instruction.
