@@ -6,4 +6,3 @@ cluster: local
 datamodel:
   - datamodel.graphql
   
-secret: ${env:GRAPHCOOL_SECRET}
