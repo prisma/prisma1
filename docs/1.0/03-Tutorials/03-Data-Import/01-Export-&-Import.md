@@ -1,5 +1,5 @@
 ---
-alias: ahs1jahkee
+alias: caith9teiy
 description: Learn how to deploy your GraphQL server with now.
 ---
 
