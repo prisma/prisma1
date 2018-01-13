@@ -9,5 +9,3 @@ datamodel: datamodel.graphql
 # to disable authentication:
 # disableAuth: true
 secret: mysecret123
-
-cluster: local
