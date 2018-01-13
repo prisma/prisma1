@@ -58,10 +58,10 @@ export class Config {
    */
   cloudApiEndpoint = isDevConsole
     ? 'http://localhost:4000'
-    : 'https://api.cloud.graph.cool'
+    : 'https://api.cloud.prisma.sh'
   consoleEndpoint = isDevConsole
     ? 'http://localhost:3000'
-    : 'https://app.graph.cool'
+    : 'https://app.prismagraphql.com'
 
   /* tslint:disable-next-line */
   __cache = {}

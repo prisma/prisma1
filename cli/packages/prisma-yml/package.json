@@ -1,13 +1,14 @@
 {
   "name": "prisma-yml",
-  "version": "0.0.2",
+  "version": "0.0.4",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "repository": {
-    "url":
-      "https://github.com/graphcool/graphcool/tree/prisma-cli/cli/packages/prisma-yml"
+    "url": "https://github.com/graphcool/graphcool/tree/prisma-cli/cli/packages/prisma-yml"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "license": "Apache-2.0",
   "devDependencies": {
     "@types/fs-extra": "^4.0.5",
@@ -21,6 +22,7 @@
   "dependencies": {
     "ajv": "^5.5.1",
     "bluebird": "^3.5.1",
+    "chalk": "^2.3.0",
     "debug": "^3.1.0",
     "dotenv": "^4.0.0",
     "fs-extra": "^4.0.3",
@@ -42,12 +44,20 @@
     "prepublishOnly": "yarn lint && yarn test && yarn build"
   },
   "jest": {
-    "moduleFileExtensions": ["ts", "tsx", "js", "jsx", "json"],
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "jsx",
+      "json"
+    ],
     "rootDir": "./src",
     "transform": {
       "^.+\\.(ts|tsx)$": "../../../node_modules/ts-jest/preprocessor.js"
     },
-    "testMatch": ["**/*.test.(ts|js)"],
+    "testMatch": [
+      "**/*.test.(ts|js)"
+    ],
     "globals": {
       "ts-jest": {
         "tsConfigFile": "./tsconfig.json"

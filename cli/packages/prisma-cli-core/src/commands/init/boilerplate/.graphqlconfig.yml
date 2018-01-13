@@ -1,4 +1,4 @@
 projects:
   database:
     extensions:
-      graphcool: graphcool.yml
+      prisma: prisma.yml

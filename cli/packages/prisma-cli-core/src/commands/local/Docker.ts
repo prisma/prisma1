@@ -410,7 +410,7 @@ export default class Docker {
     const bin = await this.getBin()
     const defaultArgs = [
       '-p',
-      JSON.stringify(this.clusterName + '-database'),
+      JSON.stringify(this.clusterName),
       '--file',
       this.ymlPath,
       '--project-directory',

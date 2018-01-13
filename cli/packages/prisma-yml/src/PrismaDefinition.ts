@@ -124,7 +124,7 @@ export class PrismaDefinitionClass {
       const cluster = this.env.clusterByName(clusterName)
       if (!cluster && clusterName !== 'local') {
         throw new Error(
-          `Cluster ${clusterName}, that is provided in the graphcoo.yml could not be found.`,
+          `Cluster ${clusterName}, that is provided in the prisma.yml could not be found.`,
         )
       }
       return cluster
