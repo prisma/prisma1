@@ -8,7 +8,7 @@ github: https://github.com/graphcool/frontend-examples/tree/master/react
 
 In this quickstart tutorial, you'll learn how to connect your React app directly to a Graphcool service. Note that this approach will only allow to perform CRUD operations on your data model. You won't be able to implement any custom business logic or other common features like authentication - if you need these features, see the corresponding [fullstack tutorial](!alias-tijghei9go).
 
-> The code for this project on [GitHub](https://github.com/graphcool/frontend-examples/tree/master/react).
+> The code for this project can be found on [GitHub](https://github.com/graphcool/frontend-examples/tree/master/react).
 
 <Instruction>
 
