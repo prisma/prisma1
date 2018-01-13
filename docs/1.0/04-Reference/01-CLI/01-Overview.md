@@ -1,12 +1,10 @@
 ---
 alias: ieshoo5ohm
-description: Learn how to use the Graphcool command line
+description: Learn how to use the Prisma command line
 ---
 
 # Overview
 
-The Graphcool command line interface (CLI) is the primary tool to manage your Graphcool database services. Generally, the structure and behaviour of a Graphcool service are determined by the service definition file [`graphcool.yml`](!alias-foatho8aip).
+The Prisma command line interface (CLI) is the primary tool to manage your database services with Prisma.
 
-The CLI offers tools to modify the local version of your service definition and file structure as well as syncing these changes with already deployed services.
-
-## Service Deployment
+Generally, the configuration of a Prisma service is handled using the CLI and the service definition file [`prisma.yml`](!alias-foatho8aip).

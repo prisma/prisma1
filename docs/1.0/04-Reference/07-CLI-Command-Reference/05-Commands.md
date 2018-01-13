@@ -1,6 +1,6 @@
 ---
 alias: eeb1ohr4ec
-description: Graphcool CLI Commands
+description: Prisma CLI Commands
 ---
 
 TODO: # ` -> ### `
@@ -10,11 +10,11 @@ TODO: # ` -> ### `
 
 ## Database Service
 
-# `graphcool init`
+# `prisma init`
 
-Creates the local file structure for a new Graphcool database service:
+Creates the local file structure for a new Prisma database service:
 
-- `graphcool.yml` contains the [service definition](!alias-opheidaix3)
+- `prisma.yml` contains the [service definition](!alias-opheidaix3)
 - `datamodel.graphql` contains the definition of your [data model](!alias-eiroozae8u)
 - `.graphqlconfig` is a configuration file following the standardized [`graphql-config`](https://github.com/graphcool/graphql-config) format and is used by various tools, e.g. the [GraphQL Playground](https://github.com/graphcool/graphql-playground)
 
@@ -23,31 +23,31 @@ If you provide a directory name as an argument to the command, all these files w
 #### Usage
 
 ```sh
-graphcool init DIRNAME
+prisma init DIRNAME
 ```
 
 #### Examples
 
-##### Create file structure for Graphcool database service in current directory.
+##### Create file structure for Prisma database service in current directory.
 
 ```sh
-graphcool init
+prisma init
 ```
 
-##### Create file structure for Graphcool database service in directory called `database`.
+##### Create file structure for Prisma database service in directory called `database`.
 
 ```sh
-graphcool init database
+prisma init database
 ```
 
-# `graphcool deploy`
+# `prisma deploy`
 
 Deploys service definition changes. Every time you're making a local change to any file in the service definition on your machine, you need to synchronize these changes with the remote service using this command.
 
 #### Usage
 
 ```sh
-graphcool deploy [flags]
+prisma deploy [flags]
 ```
 
 #### Flags
@@ -70,22 +70,22 @@ graphcool deploy [flags]
 ##### Deploy local service definition changes to the default stage.
 
 ```sh
-graphcool deploy
+prisma deploy
 ```
 
 ##### Deploy local changes to a specific stage called `prod`.
 
 ```sh
-graphcool deploy --stage prod
+prisma deploy --stage prod
 ```
 
 ##### Deploy local changes to a specific stage called `prod`, accepting potential data loss caused by schema changes.
 
 ```sh
-graphcool deploy --stage production --force
+prisma deploy --stage production --force
 ```
 
-# `graphcool info`
+# `prisma info`
 
 Prints meta-data about a specific service. The information contains:
 
@@ -95,7 +95,7 @@ Prints meta-data about a specific service. The information contains:
 #### Usage
 
 ```sh
-graphcool info
+prisma info
 ```
 
 #### Examples
@@ -103,51 +103,51 @@ graphcool info
 ##### Print info of current service.
 
 ```sh
-graphcool info
+prisma info
 ```
 
-# `graphcool clusters`
+# `prisma clusters`
 
 Lists all clusters.
 
 #### Usage
 
 ```sh
-graphcool clusters
+prisma clusters
 ```
 
-# `graphcool token`
+# `prisma token`
 
 Create a new service token
 
 #### Usage
 
 ```sh
-graphcool token [flags]
+prisma token [flags]
 ```
 
 #### Flags
 
 TODO
 
-# `graphcool logs`
+# `prisma logs`
 
 Output service logs.
 
 #### Usage
 
 ```sh
-graphcool logs [flags]
+prisma logs [flags]
 ```
 
-# `graphcool list`
+# `prisma list`
 
 List all deployed services.
 
 #### Usage
 
 ```sh
-graphcool list
+prisma list
 ```
 
 #### Examples
@@ -155,17 +155,17 @@ graphcool list
 ##### List all deployed services for the currently authenticated user.
 
 ```sh
-graphcool list
+prisma list
 ```
 
-# `graphcool delete`
+# `prisma delete`
 
 Delete an existing target from the cluster its deployed to.
 
 #### Usage
 
 ```sh
-graphcool delete [flags]
+prisma delete [flags]
 ```
 
 #### Flags
@@ -177,14 +177,14 @@ graphcool delete [flags]
 
 ## Data Workflows
 
-# `graphcool playground`
+# `prisma playground`
 
 Open service endpoints in [GraphQL Playground](https://github.com/graphcool/graphql-playground).
 
 #### Usage
 
 ```sh
-graphcool playground [flags]
+prisma playground [flags]
 ```
 
 #### Flags
@@ -194,14 +194,14 @@ graphcool playground [flags]
 ```
 
 
-# `graphcool import`
+# `prisma import`
 
-Import data into the database of your Graphcool service. The data needs to be formatted according to the [Normalized Data Format](!alias-teroo5uxih). For more info, read the [Data Import](!alias-ol2eoh8xie) chapter.
+Import data into the database of your Prisma service. The data needs to be formatted according to the [Normalized Data Format](!alias-teroo5uxih). For more info, read the [Data Import](!alias-ol2eoh8xie) chapter.
 
 #### Usage
 
 ```sh
-graphcool import [flags]
+prisma import [flags]
 ```
 
 #### Flags
@@ -210,14 +210,14 @@ graphcool import [flags]
 -d, --data DATA    (required) Path to zip or folder including data to import
 ```
 
-# `graphcool export`
+# `prisma export`
 
 Exports your service data.
 
 #### Usage
 
 ```sh
-graphcool export [flags]
+prisma export [flags]
 ```
 
 #### Flags
@@ -231,17 +231,17 @@ graphcool export [flags]
 ##### Export data
 
 ```sh
-graphcool export -e export.zip
+prisma export -e export.zip
 ```
 
-# `graphcool reset`
+# `prisma reset`
 
 Reset the stage data.
 
 #### Usage
 
 ```sh
-graphcool reset [flags]
+prisma reset [flags]
 ```
 
 #### Flags
@@ -252,14 +252,14 @@ graphcool reset [flags]
 
 ## Cloud
 
-# `graphcool login`
+# `prisma login`
 
-Sign up or login (opens your browser for authentication). The platform token that's received after successful login will be stored in `~/.graphcoolrc`.
+Sign up or login (opens your browser for authentication). The platform token that's received after successful login will be stored in `~/.prismarc`.
 
 #### Usage
 
 ```sh
-graphcool login [flags]
+prisma login [flags]
 ```
 
 #### Flags
@@ -273,29 +273,29 @@ graphcool login [flags]
 ##### Authenticate using the browser.
 
 ```sh
-graphcool login
+prisma login
 ```
 
 ##### Authenticate using an existing authentication token.
 
 ```sh
-graphcool login -t <token>
+prisma login -t <token>
 ```
 
-# `graphcool account`
+# `prisma account`
 
 Print account info
 
 ## Local Development
 
-# `graphcool local start`
+# `prisma local start`
 
 Start local development cluster (Docker required).
 
 #### Usage
 
 ```sh
-graphcool local start [flags]
+prisma local start [flags]
 ```
 
 #### Flags
@@ -304,14 +304,14 @@ graphcool local start [flags]
  -n, --name NAME    Name of the cluster instance
 ```
 
-# `graphcool local stop`
+# `prisma local stop`
 
 Stop local development cluster.
 
 #### Usage
 
 ```sh
-graphcool local stop [flags]
+prisma local stop [flags]
 ```
 
 #### Flags
@@ -320,14 +320,14 @@ graphcool local stop [flags]
  -n, --name NAME    Name of the cluster instance
 ```
 
-# `graphcool local upgrade`
+# `prisma local upgrade`
 
 Upgrades local cluster to the latest version for the current CLI.
 
 #### Usage
 
 ```sh
-graphcool local pull [flags]
+prisma local pull [flags]
 ```
 
 #### Flags
@@ -336,14 +336,14 @@ graphcool local pull [flags]
 -n, --name NAME    Name of the cluster instance
 ```
 
-# `graphcool local nuke`
+# `prisma local nuke`
 
 Hard-reset local development cluster.
 
 #### Usage
 
 ```sh
-graphcool local nuke [flags]
+prisma local nuke [flags]
 ```
 
 #### Flags
@@ -356,12 +356,12 @@ graphcool local nuke [flags]
 
 TODO
 
-# `graphcool cluster list`
+# `prisma cluster list`
 
 List all clusters.
 
 #### Usage
 
 ```sh
-graphcool cluster list
+prisma cluster list
 ```

@@ -1,6 +1,6 @@
 ---
 alias: eiroozae8u
-description: An overview of how to model application data in Graphcool.
+description: An overview of how to design data models with Prisma.
 ---
 
 # Data Modelling
@@ -14,11 +14,11 @@ TODO N: polish
 
 ## Overview
 
-Graphcool uses the GraphQL [Schema Definition Language](https://blog.graph.cool/graphql-sdl-schema-definition-language-6755bcb9ce51) (SDL) for data modelling. Your data model is written in one or more `.graphql`-files and is the foundation for the actual database schema that Graphcool generates under the hood. If you're using just a single file for your type definitions, this file is typically called `datamodel.graphql`.
+Prisma uses the GraphQL [Schema Definition Language](https://blog.graph.cool/graphql-sdl-schema-definition-language-6755bcb9ce51) (SDL) for data modeling. Your data model is written in one or more `.graphql`-files and is the foundation for the actual database schema that Prisma generates under the hood. If you're using just a single file for your type definitions, this file is typically called `datamodel.graphql`.
 
 > To learn more about the SDL, you can check out the [official GraphQL documentation](http://graphql.org/learn/schema/#type-language).
 
-The `.graphql`-files containing the data model need to be specified in `graphcool.yml` under the `datamodel` property. For example:
+The `.graphql`-files containing the data model need to be specified in `prisma.yml` under the `datamodel` property. For example:
 
 ```yml
 datamodel:
@@ -68,18 +68,18 @@ Here are a few things to note about these type definitions:
 
 There are several available building blocks to shape your data model.
 
-* [Types](#graphql-types) consist of multiple [fields](#fields) and are used to group similar entities together. Each type in your data model is mapped to the database and CRUD operations for it are added to your GraphQL API.
+* [Types](#graphql-types) consist of multiple [fields](#fields) and are used to group similar entities together. Each type in your data model is mapped to the database and available operations in the exposed GraphQL API.
 * [Relations](#relations) describe _relationships_ between types.
 * [Interfaces](http://graphql.org/learn/schema/#interfaces) are abstract types that include a certain set of fields which a type must include to _implement_ the interface. Currently, interfaces cannot be user-defined, but [there's a pending feature request](https://github.com/graphcool/framework/issues/83) for advanced interface support.
 * Special [directives](#graphql-directives) covering different use cases are available.
 
 ### System fields
 
-When writing type definitions for your Graphcool service, you need to be aware of three _system fields_ which are managed for you by Graphcool: `id`, `createdAt` and `updatedAt`.
+When writing type definitions for your Prisma service, you need to be aware of three _system fields_ which are automatically managed: `id`, `createdAt` and `updatedAt`.
 
-> The values of these fields are currently read-only in the GraphQL API (unless in _import mode_) but will be made configurable in the future. See [this proposal](https://github.com/graphcool/framework/issues/1278) for more information.
+> The values of these fields are currently read-only in the GraphQL API (unless when [importing data](!alias-TODO N)) but will be made configurable in the future. See [this proposal](https://github.com/graphcool/framework/issues/1278) for more information.
 
-In general, Graphcool will _always_ maintain these fields in the actual database. It's up to you to decide whether they will also be exposed in the GraphQL API by adding them explicitly to the SDL type definition.
+In general, Prisma will _always_ maintain these fields in the actual database. It's up to you to decide whether they will also be exposed in the GraphQL API by adding them explicitly to the SDL type definition.
 
 <InfoBox type=warning>
 
@@ -93,7 +93,7 @@ Notice that you cannot have custom fields that are called `id`, `createdAt` and 
 
 #### System field: `id`
 
-Every record in your Graphcool database (also called _node_) will get assigned a globally unique identifier when it's created.
+A record in your Prisma database (also called _node_) will get assigned a globally unique identifier when it's created.
 
 Whenever you add the `id` field to a type definition to expose it in the GraphQL API, you must annotate it with the `@unique` directive.
 
@@ -114,24 +114,23 @@ interface Node {
 
 #### System fields: `createdAt` and `updatedAt`
 
-Graphcool further has two special fields which you can add to your types:
+The data model further provides two special fields which you can add to your types:
 
 - `createdAt: DateTime!`: Stores the exact date and time for when a node of this model type was _created_.
 - `updatedAt: DateTime!`: Stores the exact date and time for when a node of this model type was _last updated_.
 
-If you want your types to expose these fields, you can simply add them to the type definition and Graphcool will take care of actually managing them for you.
+If you want your types to expose these fields, you can simply add them to the type definition.
 
-## Object types
+## Model types
 
-An _object type_ (or short _type_) defines the structure for one concrete part of your data model. If you are familiar with SQL databases you can think of an object type as the schema for a table in your relational database. A type has a _name_ and one or multiple _[fields](#fields)_.
+A _model type_ (or short _type_) defines the structure for one concrete part of your data model. If you are familiar with SQL databases you can think of a model type as the schema for a table in your relational database. A type has a _name_ and one or multiple _[fields](#fields)_.
 
-An instantiation of a type is called a _node_. The collection of all nodes is what you would refer to as your "application data". The term node refers to a node inside your "data graph".
+An instantiation of a type is called a _node_. This term refers to a node inside your _data graph_.
+Every type you define in your data model will be available as an analogous type in the generated _database schema_.
 
-Every type you define in your data model will be available as a type in the generated database schema.
+### Defining a model type
 
-### Defining an object type
-
-A GraphQL object type is defined in the data model with the keyword `type`:
+A model type is defined in the data model with the keyword `type`:
 
 ```graphql
 type Article {
@@ -143,12 +142,12 @@ type Article {
 
 The type defined above has the following properties:
 
-- Name: `Story`
+- Name: `Article`
 - Fields: `id`, `text` and `isPublished` (with the default value `false`)
 
 ### Generated operations based on types
 
-The types that are included in your schema affect the available operations in the [GraphQL API](!alias-abogasd0go). For every type,
+The types in your data model affect the available operations in the [GraphQL API](!alias-abogasd0go). For every type,
 
 * [type queries](!alias-nia9nushae) allow you to fetch one or many nodes of that type
 * [type mutations](!alias-ol0yuoz6go) allow you to create, update or delete nodes of that type
@@ -209,13 +208,13 @@ Note: Enum values can at most be 191 characters long.
 
 In queries or mutations, Enum fields have to be specified without any enclosing characters. You can only use values that you defined for the enum: `enum: COMPACT`, `enum: WIDE`.
 
-#### JSON
+#### Json
 
-Sometimes you need to store arbitrary JSON values for loosely structured data. The JSON type makes sure that it is actually valid JSON and returns the value as a parsed JSON object/array instead of a string.
+Sometimes you need to store arbitrary Json values for loosely structured data. The JSON type makes sure that it is actually valid Json and returns the value as a parsed Json object/array instead of a string.
 
-Note: JSON values are currently limited to 256KB in size on the shared demo cluster. This limit can be increased on other clusters using [the cluster configuration](https://github.com/graphcool/framework/issues/748).
+Note: Json values are currently limited to 256KB in size on the shared demo cluster. This limit can be increased on other clusters using [the cluster configuration](https://github.com/graphcool/framework/issues/748).
 
-In queries or mutations, JSON fields have to be specified with enclosing double quotes. Special characters have to be escaped: `json: "{\"int\": 1, \"string\": \"value\"}"`.
+In queries or mutations, Json fields have to be specified with enclosing double quotes. Special characters have to be escaped: `json: "{\"int\": 1, \"string\": \"value\"}"`.
 
 #### ID
 

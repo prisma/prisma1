@@ -1,13 +1,13 @@
 ---
 alias: zoug8seen4
-description: Graphcool allows to deploy a service to different targets.
+description: Learn about configuring a Prisma database service.
 ---
 
 # Configuration
 
 ## Overview
 
-TODO
+TODO N
 
 ## .graphcoolrc
 
