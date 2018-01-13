@@ -148,3 +148,13 @@ CONTAINER ID  IMAGE                       COMMAND                 CREATED       
 7210106b6650  prismagraphql/prisma:1.0.0  "/app/bin/single-ser…"  About an hour ago  Up About an hour  0.0.0.0:4466->4466/tcp  prisma
 1c15922e15ba  mysql:5.7                   "docker-entrypoint.s…"  About an hour ago  Up About an hour  0.0.0.0:3306->3306/tcp  prisma-db
 ```
+
+### Nuke
+
+If your local prisma cluster is in an unrecoverable state, the easiest option might be to completely reset it. Be careful as this command will reset all data in your local cluster.
+
+```sh
+❯ prisma local nuke
+Nuking local cluster 10.9s
+Booting fresh local development cluster 18.4s
+```
