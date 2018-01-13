@@ -3,13 +3,13 @@
 exports[`Environment empty global prisma rc 1`] = `
 Array [
   Cluster {
-    "baseUrl": "https://graphcool-eu1.graphcool.cloud",
+    "baseUrl": "https://eu1.prisma.sh",
     "clusterSecret": undefined,
     "local": false,
     "name": "prisma-eu1",
   },
   Cluster {
-    "baseUrl": "https://graphcool-us1.graphcool.cloud",
+    "baseUrl": "https://us1.prisma.sh",
     "clusterSecret": undefined,
     "local": false,
     "name": "prisma-us1",
@@ -20,13 +20,13 @@ Array [
 exports[`Environment interpolates env vars 1`] = `
 Array [
   Cluster {
-    "baseUrl": "https://graphcool-eu1.graphcool.cloud",
+    "baseUrl": "https://eu1.prisma.sh",
     "clusterSecret": undefined,
     "local": false,
     "name": "prisma-eu1",
   },
   Cluster {
-    "baseUrl": "https://graphcool-us1.graphcool.cloud",
+    "baseUrl": "https://us1.prisma.sh",
     "clusterSecret": undefined,
     "local": false,
     "name": "prisma-us1",
@@ -37,13 +37,13 @@ Array [
 exports[`Environment loads multiple cluster definitions correctly + gives cluster by name 1`] = `
 Array [
   Cluster {
-    "baseUrl": "https://graphcool-eu1.graphcool.cloud",
+    "baseUrl": "https://eu1.prisma.sh",
     "clusterSecret": undefined,
     "local": false,
     "name": "prisma-eu1",
   },
   Cluster {
-    "baseUrl": "https://graphcool-us1.graphcool.cloud",
+    "baseUrl": "https://us1.prisma.sh",
     "clusterSecret": undefined,
     "local": false,
     "name": "prisma-us1",
@@ -56,13 +56,13 @@ exports[`Environment loads multiple cluster definitions correctly + gives cluste
 exports[`Environment non-existent global prisma rc 1`] = `
 Array [
   Cluster {
-    "baseUrl": "https://graphcool-eu1.graphcool.cloud",
+    "baseUrl": "https://eu1.prisma.sh",
     "clusterSecret": undefined,
     "local": false,
     "name": "prisma-eu1",
   },
   Cluster {
-    "baseUrl": "https://graphcool-us1.graphcool.cloud",
+    "baseUrl": "https://us1.prisma.sh",
     "clusterSecret": undefined,
     "local": false,
     "name": "prisma-us1",
@@ -81,13 +81,13 @@ exports[`Environment persists .prisma correctly 1`] = `
 exports[`Environment persists .prisma correctly 2`] = `
 Array [
   Cluster {
-    "baseUrl": "https://graphcool-eu1.graphcool.cloud",
+    "baseUrl": "https://eu1.prisma.sh",
     "clusterSecret": undefined,
     "local": false,
     "name": "prisma-eu1",
   },
   Cluster {
-    "baseUrl": "https://graphcool-us1.graphcool.cloud",
+    "baseUrl": "https://us1.prisma.sh",
     "clusterSecret": undefined,
     "local": false,
     "name": "prisma-us1",
@@ -104,13 +104,13 @@ Array [
 exports[`Environment sets the platform token correctly 1`] = `
 Array [
   Cluster {
-    "baseUrl": "https://graphcool-eu1.graphcool.cloud",
+    "baseUrl": "https://eu1.prisma.sh",
     "clusterSecret": undefined,
     "local": false,
     "name": "prisma-eu1",
   },
   Cluster {
-    "baseUrl": "https://graphcool-us1.graphcool.cloud",
+    "baseUrl": "https://us1.prisma.sh",
     "clusterSecret": undefined,
     "local": false,
     "name": "prisma-us1",
