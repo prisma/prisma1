@@ -1,6 +1,6 @@
 ---
 alias: eifeecahx4
-description: Learn about different resolver patterns
+description: Learn about graphqlerent resolver patterns
 ---
 
 # Common Resolver Patterns
@@ -19,7 +19,7 @@ Adding a new address field to the `User` type in the database, with the purpose 
 
 in `database/datamodel.graphql`:
 
-```diff
+```graphql
 type User {
   id: ID! @unique
   email: String! @unique
@@ -45,12 +45,53 @@ This will...
 
 In `src/schema.graphql`:
 
-```diff
+```graphql
 type User {
   id: ID!
   email: String!
   name: String!
   posts: [Post!]!
 + address: String
+}
+```
+
+### Scenario: Adding a new resolver
+
+Suppose we want to add a custom resolver to delete a `Post`.
+
+### Instructions
+
+Add a new `delete` field to the Mutation type in `src/schema.graphql`
+
+```graphql
+type Mutation {
+  createDraft(title: String!, text: String): Post
+  publish(id: ID!): Post
++ delete(id: ID!): Post
+}
+```
+
+Add a `delete` resolver to Mutation part of `src/index.js`
+
+```js
+delete(parent, { id }, ctx, info) {
+  return ctx.db.mutation.deletePost(
+  {
+    where: { id }
+  },
+    info
+  );
+}
+```
+
+Run `yarn start`.
+
+Then you can run the following mutation to delete a post:
+
+```graphql
+mutation {
+  delete(id: "__POST_ID__") {
+    id
+  }
 }
 ```
