@@ -1,6 +1,8 @@
 ---
-alias: eetiej0bah
+alias: ahs1jahkee
 description: Learn how to deploy your GraphQL server with now.
 ---
 
-# Getting started with Prisma
+# Deploy a GraphQL server with Now
+
+
