@@ -1,6 +1,6 @@
 ---
 alias: kut8kohzoo
-subtitle: Learn everything about serverless functions in Graphcool by practical examples.
+subtitle: A practical introduction to using Prisma.
 imageUrl: "http://imgur.com/a/dvsep"
-description: "Graphcool makes use of three different kinds of functions: Hooks, Resolver and Subscriptions. In this guide series, we'll show you how to get started with all of these and implement features like data validation & transformation, sending welcome emails or calling out to arbitrary 3rd-party APIs."
+description: "Learn how to generate a GraphQL API for your database with Prisma. This tutorial series includes the very first steps of installing the Prisma CLI, defining and updating your data model as well as working with the API."
 ---
