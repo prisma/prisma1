@@ -8,10 +8,12 @@ import { Dispatcher } from './Dispatcher/Dispatcher'
 import { NotFound } from './NotFound'
 import fs from './fs'
 import { getCommandId } from './util'
-import { StatusChecker } from './StatusChecker'
+import { StatusChecker, getFid } from './StatusChecker'
 import * as updateNotifier from 'update-notifier'
 import chalk from 'chalk'
 import * as Raven from 'raven'
+import * as os from 'os'
+import * as jwt from 'jsonwebtoken'
 
 Raven.config(
   'https://1e57780fb0bb4b52938cbb3456268121:fc6a6c6fd8cd4bbf81e2cd5c7c814a49@sentry.io/271168',
@@ -81,6 +83,7 @@ export class CLI {
       pkg: this.config.pjson,
       updateCheckInterval: 1,
     })
+    this.initRaven()
   }
 
   async run() {
@@ -133,6 +136,7 @@ export class CLI {
         }
 
         this.cmd = await foundCommand.run(this.config)
+        this.setRavenUserContext()
         const checker = new StatusChecker(this.config, this.cmd.env)
         checker.checkStatus(id, this.cmd.args, this.cmd.flags, this.cmd.argv)
 
@@ -200,6 +204,30 @@ export class CLI {
     }
   }
 
+  initRaven() {
+    Raven.setContext({
+      user: {
+        fid: getFid(),
+      },
+      tags: {
+        version: this.config.version,
+        platform: os.platform(),
+      },
+    })
+  }
+
+  setRavenUserContext() {
+    if (this.cmd.env.globalRC.cloudSessionKey) {
+      const data = jwt.decode(this.cmd.env.globalRC.cloudSessionKey)
+      Raven.mergeContext({
+        user: {
+          fid: getFid(),
+          id: data.userId,
+        },
+      })
+    }
+  }
+
   flush(): Promise<{} | void> {
     if (global.testing) {
       return Promise.resolve()
@@ -233,6 +261,9 @@ export function run({ config }: { config?: RunOptions } = {}) {
       mock: false,
     }
   }
-  const cli = new CLI({ config })
-  return cli.run()
+
+  Raven.context(() => {
+    const cli = new CLI({ config })
+    return cli.run()
+  })
 }

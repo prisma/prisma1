@@ -27,14 +27,8 @@ export class StatusChecker {
     const auth = this.env.globalRC.cloudSessionKey
     const hashDate = new Date().toISOString()
     const mac = getMac()
-    const fidSecret = 'yeiB6sooy6eedahgooj0shiez'
 
-    const fid = mac
-      ? crypto
-          .createHmac('sha256', fidSecret)
-          .update(mac)
-          .digest('hex')
-      : ''
+    const fid = getFid()
 
     const message = JSON.stringify({
       source,
@@ -143,4 +137,22 @@ function getMac() {
     const mac = i.find(a => a.mac !== '00:00:00:00:00:00')
     return mac ? mac.mac : null
   }, null)
+}
+
+let fidCache: string | null = null
+
+export function getFid() {
+  if (fidCache) {
+    return fidCache
+  }
+  const mac = getMac()
+  const fidSecret = 'yeiB6sooy6eedahgooj0shiez'
+  const fid = mac
+    ? crypto
+        .createHmac('sha256', fidSecret)
+        .update(mac)
+        .digest('hex')
+    : ''
+  fidCache = fid
+  return fid
 }

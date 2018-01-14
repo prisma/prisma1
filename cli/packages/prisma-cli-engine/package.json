@@ -1,6 +1,6 @@
 {
   "name": "prisma-cli-engine",
-  "version": "0.0.6",
+  "version": "0.0.9",
   "main": "dist/index.js",
   "files": [
     "dist"
@@ -109,7 +109,7 @@
     "opn": "^5.1.0",
     "prisma-json-schema": "^0.0.1",
     "prisma-yml": "0.0.4",
-    "raven": "^2.3.0",
+    "raven": "2.3.0",
     "replaceall": "^0.1.6",
     "rwlockfile": "^1.4.8",
     "scuid": "^1.0.2",

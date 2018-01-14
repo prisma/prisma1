@@ -15,7 +15,6 @@ import * as childProcess from 'child_process'
 import { getBinPath } from './getbin'
 import * as semver from 'semver'
 const debug = require('debug')('deploy')
-import * as Raven from 'raven'
 import { prettyTime, concatName } from '../../util'
 import { spawn } from '../../spawn'
 import * as sillyname from 'sillyname'
