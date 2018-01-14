@@ -1,6 +1,6 @@
 {
   "name": "prisma-cli-core",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "main": "dist/index.js",
   "files": [
     "dist"
@@ -85,7 +85,7 @@
     "globby": "^6.1.0",
     "graphcool-inquirer": "^1.0.3",
     "graphql": "^0.11.7",
-    "graphql-cli": "^2.10.2",
+    "graphql-cli": "2.12.1",
     "graphql-config": "^1.0.9",
     "inquirer": "^3.3.0",
     "isomorphic-fetch": "^2.2.1",
