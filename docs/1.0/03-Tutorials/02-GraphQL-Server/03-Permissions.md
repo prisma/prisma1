@@ -1,5 +1,5 @@
 ---
-alias: eifeecahx4
+alias: thohp1zaih
 description: Learn how to implement permissions and access rights with Graphcool and graphql-yoga
 ---
 

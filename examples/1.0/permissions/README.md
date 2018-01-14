@@ -1,6 +1,8 @@
-# Authentication
+# Permissions
 
 This example demonstrates how to implement **permission rules** in combination with an email-password-based authentication workflow. Feel free to use it as a template for your own project!
+
+To learn more about implemeting permissions with Graphcool and `graphql-yoga`, you can check out [this]() in-depth tutorial.
 
 ## Overview
 
