@@ -1,9 +1,11 @@
 package cool.graph.deploy.migration.inference
 
+import akka.actor.InvalidActorNameException
 import cool.graph.cuid.Cuid
 import cool.graph.deploy.gc_value.GCStringConverter
 import cool.graph.deploy.migration.DataSchemaAstExtensions._
 import cool.graph.deploy.migration.ReservedFields
+import cool.graph.deploy.schema.{InvalidName, InvalidRelationName}
 import cool.graph.deploy.validation.NameConstraints
 import cool.graph.gc_values.{GCValue, InvalidValueForScalarType}
 import cool.graph.shared.models._
@@ -138,8 +140,8 @@ case class SchemaInferrerImpl(
 
       val relationNameOnRelatedField: Option[String] = sdl.relatedFieldOf(objectType, relationField).flatMap(_.relationName)
       val relationName = (relationField.relationName, relationNameOnRelatedField) match {
-        case (Some(name), _) if !NameConstraints.isValidRelationName(name)    => sys.error("The name is too damn long")
-        case (None, Some(name)) if !NameConstraints.isValidRelationName(name) => sys.error("The name is too damn long")
+        case (Some(name), _) if !NameConstraints.isValidRelationName(name)    => throw InvalidRelationName(name)
+        case (None, Some(name)) if !NameConstraints.isValidRelationName(name) => throw InvalidRelationName(name)
         case (Some(name), _)                                                  => name
         case (None, Some(name))                                               => name
         case (None, None)                                                     => generateRelationName

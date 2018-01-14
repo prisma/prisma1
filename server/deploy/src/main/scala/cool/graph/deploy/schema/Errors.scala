@@ -11,6 +11,8 @@ trait DeployApiError extends Exception {
 
 abstract class AbstractDeployApiError(val message: String, val errorCode: Int) extends DeployApiError
 
+case class InvalidName(name: String, entityType: String) extends AbstractDeployApiError(InvalidNames.default(name, entityType), 2008)
+
 case class InvalidProjectId(projectId: String)
     extends AbstractDeployApiError({
       val nameAndStage = ProjectId.fromEncodedString(projectId)
@@ -21,9 +23,9 @@ case class InvalidServiceName(name: String) extends AbstractDeployApiError(Inval
 
 case class InvalidServiceStage(stage: String) extends AbstractDeployApiError(InvalidNames.forService(stage, "service stage"), 4002)
 
-case class InvalidName(name: String, entityType: String) extends AbstractDeployApiError(InvalidNames.default(name, entityType), 2008)
-
 case class InvalidDeployment(deployErrorMessage: String) extends AbstractDeployApiError(deployErrorMessage, 4003)
+
+case class InvalidRelationName(relationName: String) extends AbstractDeployApiError(InvalidNames.forService(relationName, "relation"), 4004)
 
 case class InvalidToken(reason: String) extends AbstractDeployApiError(s"Authentication token is invalid: $reason", 3015)
 
@@ -43,5 +45,8 @@ object InvalidNames {
 
   def forService(value: String, tpe: String) = {
     s"$value is not a valid name for a $tpe. It must start with a letter and may contain up to 30 letters, numbers, underscores and hyphens."
+  }
+  def forRelation(value: String, tpe: String) = {
+    s"The provided name: $value is not valid for a $tpe. It can only have up to 54 characters and must have the shape [A-Z][a-zA-Z0-9]*"
   }
 }
