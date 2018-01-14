@@ -145,13 +145,11 @@ case class SqlMutactions(dataResolver: DataResolver) {
   def getMutactionsForNestedCreateMutation(model: Model, nestedMutation: NestedMutation, parentInfo: ParentInfo): Seq[ClientSqlMutaction] = {
     nestedMutation.creates.flatMap { create =>
       val id          = createCuid()
+      val where       = NodeSelector.forId(model, id)
       val createItem  = getCreateMutaction(model, create.data, id)
-      val connectItem = AddDataItemToManyRelation(project, parentInfo, toId = id, toIdAlreadyInDB = false)
+      val connectItem = AddDataItemToManyRelationByUniqueField(project, parentInfo, where)
 
-      List(createItem, connectItem) ++ getMutactionsForNestedMutation(create.data,
-                                                                      NodeSelector.forId(model, id),
-                                                                      triggeredFromCreate = true,
-                                                                      omitRelation = parentInfo.field.relation)
+      List(createItem, connectItem) ++ getMutactionsForNestedMutation(create.data, where, triggeredFromCreate = true, omitRelation = parentInfo.field.relation)
     }
   }
 

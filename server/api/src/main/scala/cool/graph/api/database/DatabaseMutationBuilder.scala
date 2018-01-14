@@ -169,7 +169,7 @@ object DatabaseMutationBuilder {
 
   def deleteRelationRowByUniqueValueForA(projectId: String, parentInfo: ParentInfo, where: NodeSelector): SqlAction[Int, NoStream, Effect] = {
     sqlu"""delete from `#$projectId`.`#${parentInfo.relation.id}`
-           where `B` = ${parentInfo.where.fieldValueAsString} and `A` in (
+           where `B` = (select id from `#$projectId`.`#${parentInfo.model.name}` where `#${parentInfo.where.field.name}` = ${parentInfo.where.fieldValue}) and `A` in (
              select id
              from `#$projectId`.`#${where.model.name}`
              where `#${where.field.name}` = ${where.fieldValue}
@@ -179,7 +179,7 @@ object DatabaseMutationBuilder {
 
   def deleteRelationRowByUniqueValueForB(projectId: String, parentInfo: ParentInfo, where: NodeSelector): SqlAction[Int, NoStream, Effect] = {
     sqlu"""delete from `#$projectId`.`#${parentInfo.relation.id}`
-           where `A` = ${parentInfo.where.fieldValueAsString} and `B` in (
+           where `A` = (select id from `#$projectId`.`#${parentInfo.model.name}` where `#${parentInfo.where.field.name}` = ${parentInfo.where.fieldValue}) and `B` in (
              select id
              from `#$projectId`.`#${where.model.name}`
              where `#${where.field.name}` = ${where.fieldValue}
