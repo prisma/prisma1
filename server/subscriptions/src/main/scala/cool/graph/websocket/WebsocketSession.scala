@@ -93,7 +93,7 @@ case class WebsocketSession(
   implicit val ec = context.system.dispatcher
 
   activeWsConnections.inc
-  context.setReceiveTimeout(FiniteDuration(60, TimeUnit.MINUTES))
+  context.setReceiveTimeout(FiniteDuration(10, TimeUnit.MINUTES))
 
   manager ! RegisterWebsocketSession(sessionId, self)
 
