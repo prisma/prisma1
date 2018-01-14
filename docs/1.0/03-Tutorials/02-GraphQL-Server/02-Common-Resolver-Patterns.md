@@ -1,6 +1,6 @@
 ---
 alias: eifeecahx4
-description: Learn about graphqlerent resolver patterns
+description: Learn about common resolver patterns
 ---
 
 # Common Resolver Patterns
