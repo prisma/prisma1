@@ -6,6 +6,7 @@ import * as fetch from 'isomorphic-fetch'
 import * as fs from 'fs-extra'
 import { Environment } from 'prisma-yml'
 import * as os from 'os'
+import { getIsGlobal } from './utils/isGlobal'
 
 export class StatusChecker {
   config: Config
@@ -29,6 +30,7 @@ export class StatusChecker {
     const mac = getMac()
 
     const fid = getFid()
+    const globalBin = getIsGlobal()
 
     const message = JSON.stringify({
       source,
@@ -37,6 +39,7 @@ export class StatusChecker {
       payload,
       auth,
       fid,
+      globalBin,
       hashDate,
     })
     const secret = 'eshi4ohgai3eeHaih4Bifahhi'
@@ -65,6 +68,7 @@ export class StatusChecker {
             payload,
             auth,
             fid,
+            globalBin,
             hash,
             hashDate,
           },
@@ -115,13 +119,16 @@ async function requestWithTimeout(input) {
     setTimeout(() => {
       reject('Timeout')
     }, 5000)
-    const result = await fetch('https://stats.prismagraphql.com', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
+    const result = await fetch(
+      process.env.STATS_ENDPOINT || 'https://stats.prismagraphql.com',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(input),
       },
-      body: JSON.stringify(input),
-    })
+    )
     const json = await result.json()
     resolve(json)
   })

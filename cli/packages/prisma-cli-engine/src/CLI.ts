@@ -14,6 +14,7 @@ import chalk from 'chalk'
 import * as Raven from 'raven'
 import * as os from 'os'
 import * as jwt from 'jsonwebtoken'
+import { getIsGlobal } from './utils/isGlobal'
 
 Raven.config(
   'https://1e57780fb0bb4b52938cbb3456268121:fc6a6c6fd8cd4bbf81e2cd5c7c814a49@sentry.io/271168',
@@ -208,12 +209,14 @@ export class CLI {
     Raven.setContext({
       user: {
         fid: getFid(),
+        isGlobal: getIsGlobal(),
       },
       tags: {
         version: this.config.version,
         platform: os.platform(),
       },
     })
+    debug({ isGlobal: getIsGlobal() })
   }
 
   setRavenUserContext() {
@@ -223,6 +226,7 @@ export class CLI {
         user: {
           fid: getFid(),
           id: data.userId,
+          isGlobal: getIsGlobal(),
         },
       })
     }

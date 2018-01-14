@@ -1,9 +1,8 @@
-
 import { stdtermwidth } from './Output/actions/screen'
 
 const debug = require('debug')('util')
 
-export function compare (...props: any[]) {
+export function compare(...props: any[]) {
   return (a: any, b: any) => {
     for (const prop of props) {
       if (a[prop] === undefined) {
@@ -23,7 +22,7 @@ export function compare (...props: any[]) {
   }
 }
 
-export function wait (ms: number, unref: boolean = false): Promise<void> {
+export function wait(ms: number, unref: boolean = false): Promise<void> {
   return new Promise(resolve => {
     const t: any = setTimeout(resolve, ms)
     if (unref && typeof t.unref === 'function') {
@@ -32,21 +31,18 @@ export function wait (ms: number, unref: boolean = false): Promise<void> {
   })
 }
 
-export function timeout (p: Promise<any>, ms: number): Promise<void> {
-  return Promise.race([
-    p,
-    wait(ms, true).then(() => debug('timed out'))
-  ])
+export function timeout(p: Promise<any>, ms: number): Promise<void> {
+  return Promise.race([p, wait(ms, true).then(() => debug('timed out'))])
 }
 
-export function undefault (m: any) {
+export function undefault(m: any) {
   return m.default ? m.default : m
 }
 
 export function linewrap(length: number, s: string): string {
   const linewrapOverride = require('@heroku/linewrap')
   return linewrapOverride(length, stdtermwidth, {
-    skipScheme: 'ansi-color'
+    skipScheme: 'ansi-color',
   })(s).trim()
 }
 
