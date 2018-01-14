@@ -66,7 +66,7 @@ For example, the following JSON document can be used to import the scalar values
 
 In case the `valueType` is `"lists"`, the structure for the objects inside the `values` array is as follows:
 
-```js
+```json
 {
   "valueType": "lists",
   "values": [
@@ -94,7 +94,7 @@ For example, the following JSON document can be used to import the values for th
 
 In case the `valueType` is `"relations"`, the structure for the objects inside the `values` array is as follows:
 
-```js
+```json
 {
   "valueType": "relations",
   "values": [
