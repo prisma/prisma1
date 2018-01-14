@@ -7,7 +7,6 @@ import { prettyProject, prettyTime } from '../../util'
 export default class Delete extends Command {
   static topic = 'delete'
   static description = 'Delete an existing service'
-  static hidden = true
   static group = 'db'
   static flags: Flags = {
     force: flags.boolean({
