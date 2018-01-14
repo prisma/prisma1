@@ -1,4 +1,4 @@
-  ---
+---
 alias: phe8vai1oo
 description: Get started with in 5 min Graphcool and Node.js by building a GraphQL backend and deploying it with Docker
 github: https://github.com/graphql-boilerplates/node-graphql-server/tree/master/basic
