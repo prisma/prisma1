@@ -112,6 +112,7 @@ Since `graphcool.yml` doesn't yet contain the information about _where_ (meaning
 When prompted where (i.e. to which _cluster_) to deploy your Graphcool service, choose one of the _public cluster_ options: `graphcool-eu1` or `graphcool-us1`.
 
 </Instruction>
+
 Your Graphcool service is now deployed and ready to accept your queries and mutations 🎉
 
 ## Exploring your service in a GraphQL Playground

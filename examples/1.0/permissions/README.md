@@ -49,7 +49,7 @@ cd 1.0/permissions
 You can now [deploy](https://graph.cool/docs/reference/graphcool-cli/commands-aiteerae6l#graphcool-deploy) the Graphcool service:
 
 ```sh
-yarn
+yarn install
 yarn graphcool deploy
 ```
 
@@ -81,7 +81,7 @@ Or you can open a Playground by navigating to [http://localhost:4000](http://loc
 
 ### Register users with the `signup` mutation
 
-You can send the following mutation in the Playground to create a new `User` node and at the same time retrieve an authentication token for it:
+You can send the following mutation in the Playground to create a new `User` node and at the same time retrieve an authentication `token` for it:
 
 ```graphql
 mutation {
@@ -97,7 +97,7 @@ mutation {
 }
 ```
 
-If no admin field is set, the role defaults to CUSTOMER. Create users with the ADMIN role by setting admin to true:
+If no `admin` field is set, the role defaults to `CUSTOMER`. Create users with the `ADMIN` role by setting `admin` to `true`:
 
 ```graphql
 mutation {
@@ -116,7 +116,7 @@ mutation {
 
 ### Logging in an existing user with the `login` mutation
 
-This mutation will log in an _existing_ user by requesting a new authentication token for her:
+This mutation will log in an _existing_ user by requesting a new authentication `token` for her:
 
 ```graphql
 mutation {
@@ -148,7 +148,6 @@ Once you've set the header, you can send the following query to check whether th
 
 If the token is valid, the server will return the `id` and `email` of the `User` node that it belongs to.
 
-
 ### Change the password with the `updatePassword` mutation
 
 This mutation changes the password of the authenticated user. Make sure the Authorization header is set:
@@ -166,7 +165,7 @@ mutation {
 
 You can verify the password change by trying the login mutation with the new password.
 
-Admin users can also change the password of other users. Make sure the provided Authorization token is obtained from a login mutation of a user with the ADMIN role:
+Admin users can also change the password of other users. Make sure the provided Authorization token is obtained from a `login` mutation of a user with the `ADMIN` role:
 
 ```graphql
 mutation {
@@ -182,7 +181,7 @@ mutation {
 
 ### Create Posts via `createPost` mutation
 
-With this mutation authorized users can create a new post. Make sure the Authorization header is set:
+With this mutation authorized users can create a new post. Make sure the `Authorization` header is set:
 
 ```graphql
 mutation {
@@ -194,10 +193,9 @@ mutation {
 }
 ```
 
-
 ### `updatePosts` mutation
 
-With this mutation users with the default CUSTOMER role can change their own posts and users with the ADMIN role can also change postst of other users:
+With this mutation users with the default `CUSTOMER` role can change their own posts and users with the `ADMIN` role can also change postst of other users:
 
 ```graphql
 mutation {
