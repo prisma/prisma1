@@ -1,6 +1,6 @@
 {
   "name": "prisma-cli",
-  "version": "1.0.0-alpha.4.2.11",
+  "version": "1.0.0-beta.4.1.3",
   "main": "dist/index.js",
   "bin": {
     "prisma": "dist/index.js"
