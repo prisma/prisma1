@@ -111,18 +111,20 @@ case class SqlMutactions(dataResolver: DataResolver) {
       parentInfo     = ParentInfo(field, outerWhere)
     } yield {
 
+      val checkMutactions = getMutactionsForWhereChecks(nestedMutation) ++ getMutactionsForConnectionChecks(subModel, nestedMutation, parentInfo)
+
       val mutactionsThatACreateCanTrigger = getMutactionsForNestedCreateMutation(subModel, nestedMutation, parentInfo) ++
         getMutactionsForNestedConnectMutation(nestedMutation, parentInfo)
 
-      val mutactions = mutactionsThatACreateCanTrigger ++ getMutactionsForWhereChecks(nestedMutation) ++
-        getMutactionsForConnectionChecks(subModel, nestedMutation, parentInfo) ++
-        getMutactionsForNestedDisconnectMutation(nestedMutation, parentInfo) ++
+      val otherMutactions = getMutactionsForNestedDisconnectMutation(nestedMutation, parentInfo) ++
         getMutactionsForNestedDeleteMutation(nestedMutation, parentInfo) ++
         getMutactionsForNestedUpdateMutation(nestedMutation, parentInfo) ++
         getMutactionsForNestedUpsertMutation(subModel, nestedMutation, parentInfo)
 
+      val orderedMutactions = checkMutactions ++ mutactionsThatACreateCanTrigger ++ otherMutactions
+
       if (triggeredFromCreate && mutactionsThatACreateCanTrigger.isEmpty && field.isRequired) throw RelationIsRequired(field.name, outerWhere.model.name)
-      mutactions
+      orderedMutactions
     }
     x.flatten
   }

@@ -40,6 +40,107 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
     )
   }
 
+  "a many relation" should "throw a proper error if connected by wrong id" in {
+    val project = SchemaDsl() { schema =>
+      val comment = schema.model("Comment").field_!("text", _.String)
+      schema.model("Todo").oneToManyRelation("comments", "todo", comment)
+    }
+    database.setup(project)
+
+    server.executeQuerySimpleThatMustFail(
+      s"""
+         |mutation {
+         |  createTodo(data:{
+         |    comments: {
+         |      connect: [{id: "DoesNotExist"}]
+         |    }
+         |  }){
+         |    id
+         |    comments {
+         |      id
+         |      text
+         |    }
+         |  }
+         |}
+      """.stripMargin,
+      project,
+      errorCode = 3039,
+      errorContains = "No Node for the model Comment with value DoesNotExist for id found."
+    )
+  }
+
+  "a many relation" should "throw a proper error if connected by wrong id the other way around" in {
+    val project = SchemaDsl() { schema =>
+      val comment = schema.model("Comment").field_!("text", _.String)
+      schema.model("Todo").oneToManyRelation("comments", "todo", comment)
+    }
+    database.setup(project)
+
+    server.executeQuerySimpleThatMustFail(
+      s"""
+         |mutation {
+         |  createComment(data:{
+         |    text: "bla"
+         |    todo: {
+         |      connect: {id: "DoesNotExist"}
+         |    }
+         |  }){
+         |    id
+         |  }
+         |}
+      """.stripMargin,
+      project,
+      errorCode = 3039,
+      errorContains = "No Node for the model Todo with value DoesNotExist for id found."
+    )
+  }
+
+  "a many relation" should "throw a proper error if the id of a wrong model is provided" in {
+    val project = SchemaDsl() { schema =>
+      val comment = schema.model("Comment").field_!("text", _.String)
+      schema.model("Todo").oneToManyRelation("comments", "todo", comment)
+    }
+    database.setup(project)
+
+    val comment1Id = server.executeQuerySimple("""mutation { createComment(data: {text: "comment1"}){ id } }""", project).pathAsString("data.createComment.id")
+    val comment2Id = server.executeQuerySimple("""mutation { createComment(data: {text: "comment2"}){ id } }""", project).pathAsString("data.createComment.id")
+
+    val todoId = server
+      .executeQuerySimple(
+        s"""
+         |mutation {
+         |  createTodo(data:{
+         |    comments: {
+         |      connect: [{id: "$comment1Id"}, {id: "$comment2Id"}]
+         |    }
+         |  }){
+         |    id
+         |  }
+         |}
+      """.stripMargin,
+        project
+      )
+      .pathAsString("data.createTodo.id")
+
+    server.executeQuerySimpleThatMustFail(
+      s"""
+         |mutation {
+         |  createTodo(data:{
+         |    comments: {
+         |      connect: [{id: "$todoId"}]
+         |    }
+         |  }){
+         |    id
+         |  }
+         |}
+      """.stripMargin,
+      project,
+      errorCode = 3039,
+      errorContains = s"No Node for the model Comment with value $todoId for id found."
+    )
+
+  }
+
   "a many relation" should "be connectable through a nested mutation by any unique argument" in {
     val project = SchemaDsl() { schema =>
       val comment = schema.model("Comment").field_!("text", _.String).field_!("alias", _.String, isUnique = true)
