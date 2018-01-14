@@ -1,7 +1,9 @@
 let isGlobal: null | boolean = null
 import * as path from 'path'
+const debug = require('debug')('isGlobal')
 
 export function getIsGlobal() {
+  debug({ argv: process.argv })
   if (isGlobal !== null) {
     return isGlobal
   }
@@ -22,14 +24,7 @@ export function getIsGlobal() {
       }
     }
   } else {
-    if (!process.env._) {
-      isGlobal = true
-    } else if (process.mainModule) {
-      const fileName = process.mainModule.filename
-      const relative = path.relative(process.cwd(), fileName)
-      isGlobal = !relative.startsWith('..')
-    }
-    isGlobal = process.env._ !== process.execPath
+    isGlobal = !process.argv[1].includes('node_modules/.bin')
   }
 
   return isGlobal

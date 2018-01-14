@@ -100,7 +100,7 @@
     "pause": "^0.1.0",
     "portfinder": "^1.0.13",
     "prisma-json-schema": "^0.0.1",
-    "prisma-yml": "0.0.4",
+    "prisma-yml": "0.0.17",
     "scuid": "^1.0.2",
     "semver": "^5.4.1",
     "sillyname": "^0.1.0",

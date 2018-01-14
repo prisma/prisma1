@@ -3903,9 +3903,9 @@ pretty-format@^21.2.1:
     ansi-regex "^3.0.0"
     ansi-styles "^3.2.0"
 
-prisma-cli-engine@0.0.10:
-  version "0.0.10"
-  resolved "https://registry.yarnpkg.com/prisma-cli-engine/-/prisma-cli-engine-0.0.10.tgz#f98ef9572a7533ed3fd3056d24f42a6239055dcd"
+prisma-cli-engine@0.0.14:
+  version "0.0.14"
+  resolved "https://registry.yarnpkg.com/prisma-cli-engine/-/prisma-cli-engine-0.0.14.tgz#bd6bef8534b4408f8cd1c8bf0f7974986a4f62f3"
   dependencies:
     "@heroku/linewrap" "^1.0.0"
     "@types/fs-extra" "^4.0.2"
@@ -3947,7 +3947,7 @@ prisma-cli-engine@0.0.10:
     memfs "^2.5.3"
     opn "^5.1.0"
     prisma-json-schema "^0.0.1"
-    prisma-yml "0.0.4"
+    prisma-yml "0.0.17"
     raven "2.3.0"
     replaceall "^0.1.6"
     rwlockfile "^1.4.8"

@@ -1,6 +1,6 @@
 import { Client } from './Client'
 import { Config } from '../Config'
-import { Environment } from '../../../prisma-yml/dist/Environment'
+import { Environment } from 'prisma-yml'
 import { Output } from '../index'
 
 test('throws when no cluster provided', async () => {
