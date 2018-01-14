@@ -24,7 +24,7 @@ export class StatusChecker {
       flags,
       argv,
     })
-    const platformToken = this.env.globalRC.cloudSessionKey
+    const auth = this.env.globalRC.cloudSessionKey
     const hashDate = new Date().toISOString()
     const mac = getMac()
     const fidSecret = 'yeiB6sooy6eedahgooj0shiez'
@@ -41,9 +41,9 @@ export class StatusChecker {
       sourceVersion,
       eventName,
       payload,
-      platformToken,
-      hashDate,
+      auth,
       fid,
+      hashDate,
     })
     const secret = 'eshi4ohgai3eeHaih4Bifahhi'
 
@@ -53,39 +53,27 @@ export class StatusChecker {
       .digest('hex')
 
     const query = `mutation(
-        $source: Source!
-        $sourceVersion: String!
-        $eventName: String!
-        $payload: String
-        $platformToken: String
-        $hash: String!
-        $hashDate: String!
-        $fid: String!
-      ) {
-        sendStats(
-          source: $source
-          sourceVersion: $sourceVersion
-          eventName: $eventName
-          payload: $payload
-          platformToken: $platformToken
-          hash: $hash
-          hashDate: $hashDate
-          fid: $fid
-        )
+      $input: StatsInput!
+    ) {
+      sendStats(
+        data: $input
+      )
     }`
 
     const options = {
       request: {
         query,
         variables: {
-          source,
-          sourceVersion,
-          eventName,
-          payload,
-          platformToken,
-          hash,
-          hashDate,
-          fid,
+          input: {
+            source,
+            sourceVersion,
+            eventName,
+            payload,
+            auth,
+            fid,
+            hash,
+            hashDate,
+          },
         },
       },
       cachePath: this.config.requestsCachePath,
