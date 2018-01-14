@@ -1,17 +1,17 @@
 ---
 alias: caith9teiy
-description: Learn how to export and import data with Prisma.
+description: Learn how to export and import data with Graphcool.
 ---
 
 # Export & Import
 
-Prisma uses a dedicated, intermediate format for importing and exporting data: The [Normalized Data Format](!alias-teroo5uxih) (NDF).
+Graphcool uses a dedicated, intermediate format for importing and exporting data: The [Normalized Data Format](!alias-teroo5uxih) (NDF).
 
 ```
 +--------------+                    +----------------+                       +------------+
 | +--------------+                  |                |                       |            |
 | |            | |                  |                |                       |            |
-| | SQL        | |  (1) transform   |      NDF       |  (2) chunked upload   |  prisma |
+| | SQL        | |  (1) transform   |      NDF       |  (2) chunked upload   |  graphcool |
 | | MongoDB    | | +--------------> |                | +-------------------> |            |
 | | JSON       | |                  |                |                       |            |
 | |            | |                  |                |                       |            |
@@ -21,20 +21,20 @@ Prisma uses a dedicated, intermediate format for importing and exporting data: T
 
 In this tutorial, you'll perform the following steps:
 
-1. Create a Prisma service
+1. Create a Graphcool service
 1. Seed some initial data for the service
 1. Export the data in NDF
 1. Deploy the service to a new stage
 1. Import the data in NDF
 
-## Create a Prisma service
+## Create a Graphcool service
 
 <Instruction>
 
 In your terminal, navigate to a folder of your choice and run the following command:
 
 ```sh
-prisma init import-example
+graphcool init import-example
 ```
 
 </Instruction>
@@ -45,7 +45,7 @@ When prompted what kind of template to use, choose the `Minimal setup: database-
 
 </Instruction>
 
-This created a new directory called `import-example` with the root configuration file `prisma.yml` as well as the definition of the service's data model in `datamodel.graphql`.
+This created a new directory called `import-example` with the root configuration file `graphcool.yml` as well as the definition of the service's data model in `datamodel.graphql`.
 
 Next, you'll update the data model to also include a relation.
 
@@ -94,11 +94,11 @@ mutation {
 
 </Instruction>
 
-Now you need to tell the CLI that you created this file. You can do so by setting the `seed` property in `prisma.yml`.
+Now you need to tell the CLI that you created this file. You can do so by setting the `seed` property in `graphcool.yml`.
 
 <Instruction>
 
-Open `prisma.yml` and update its contents to look as follows:
+Open `graphcool.yml` and update its contents to look as follows:
 
 ```yml
 service: import-example
@@ -120,17 +120,17 @@ When deploying the service, the CLI will now send the mutation defined in `seed.
 
 <Instruction>
 
-Deploy the Prisma service by running the following command:
+Deploy the Graphcool service by running the following command:
 
 ```sh
-prisma deploy
+graphcool deploy
 ```
 
 </Instruction>
 
 <Instruction>
 
-When prompted where (i.e. to which _cluster_) to deploy your Prisma service, choose one of the _public cluster_ options: `prisma-eu1` or `prisma-us1`. (Note that seeding also works when deploying with Docker)
+When prompted where (i.e. to which _cluster_) to deploy your Graphcool service, choose one of the _public cluster_ options: `graphcool-eu1` or `graphcool-us1`. (Note that seeding also works when deploying with Docker)
 
 </Instruction>
 
@@ -147,7 +147,7 @@ The CLI now deploys the service and executes the mutation in `seed.graphql`. To 
 }
 ```
 
-The Prisma API will respond with the following data:
+The Graphcool API will respond with the following data:
 
 ```json
 
@@ -183,7 +183,7 @@ It's time to export the in the Normalized Data Format.
 In the `import-example` in your terminal, execute the following command:
 
 ```sh
-prisma export
+graphcool export
 ```
 
 </Instruction>
@@ -196,7 +196,7 @@ Next, you'll create "clone" of the service by deploying it to a new stage.
 
 <Instruction>
 
-Open `prisma.yml` and set the `stage` property to a new value. Also remove the `seed` and `cluster` properties!
+Open `graphcool.yml` and set the `stage` property to a new value. Also remove the `seed` and `cluster` properties!
 
 ```sh
 service: import-example
@@ -213,13 +213,13 @@ disableAuth: true
 
 <Instruction>
 
-Run `prisma deploy` again to deploy the service the new `test` stage.
+Run `graphcool deploy` again to deploy the service the new `test` stage.
 
 </Instruction>
 
 <Instruction>
 
-Like before, when prompted where to deploy your Prisma service, either choose `prisma-eu1` or `prisma-us1`.
+Like before, when prompted where to deploy your Graphcool service, either choose `graphcool-eu1` or `graphcool-us1`.
 
 </Instruction>
 
@@ -232,7 +232,7 @@ Now that the service is running, you can import the data from the zip directory!
 Run the following command in your terminal. Note that you need to replace the `__DATA__` placeholder with the path to the exported zip directory (e.g. `export-2018-01-13T19:28:25.921Z.zip`):
 
 ```sh
-prisma import --data __DATA__
+graphcool import --data __DATA__
 ```
 
 </Instruction>

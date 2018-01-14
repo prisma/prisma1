@@ -42,11 +42,11 @@ graphql create hello-world -b node-basic
 
 <Instruction>
 
-When prompted where (i.e. to which _cluster_) to deploy your Prisma service, choose one of the _public cluster_ options: `graphcool-eu1` or `graphcool-us1`.
+When prompted where (i.e. to which _cluster_) to deploy your Graphcool service, choose one of the _public cluster_ options: `graphcool-eu1` or `graphcool-us1`.
 
 </Instruction>
 
-The above `graphql create` command creates a new directory called `hello-world` where it places the source files for your GraphQL server as well as the configuration for the belonging Prisma service.
+The above `graphql create` command creates a new directory called `hello-world` where it places the source files for your GraphQL server as well as the configuration for the belonging Graphcool service.
 
 ## Deploy the server with `now`
 

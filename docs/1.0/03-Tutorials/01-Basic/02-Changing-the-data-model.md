@@ -5,7 +5,7 @@ description: Learn the fundamentals of using Graphcool.
 
 # Changing the data mode and updating the API
 
-You now learned how to deploy a Prisma service, how to explore its API and how to interact with it by sending queries and mutations.
+You now learned how to deploy a Graphcool service, how to explore its API and how to interact with it by sending queries and mutations.
 
 In this tutorial, you'll learn the following:
 
@@ -45,9 +45,9 @@ type User {
 
 The `age` field is of type `Int` and not required on the `User` type. This means you can store `User` nodes where `age` will be null (in fact, this is the case for the `User` named `Sarah` you created before).
 
-`createdAt` and `updatedAt` on the other hand are actually special fields that are managed by Prisma. Under the hood, Prisma always maintains these fields - but they're only exposed in your API once you add them to the type definition in the data model (the same is true for the `id` field by the way).
+`createdAt` and `updatedAt` on the other hand are actually special fields that are managed by Graphcool. Under the hood, Graphcool always maintains these fields - but they're only exposed in your API once you add them to the type definition in the data model (the same is true for the `id` field by the way).
 
-> **Note**: Right now, the values for these fields are read-only. In the future, it will be possible to set the values for these fields via regular mutations as well. To learn more about this feature and timeline, check out this [GitHub issue](https://github.com/prisma/prisma/issues/1278).
+> **Note**: Right now, the values for these fields are read-only. In the future, it will be possible to set the values for these fields via regular mutations as well. To learn more about this feature and timeline, check out this [GitHub issue](https://github.com/graphcool/graphcool/issues/1278).
 
 So far, the changes you made are only local. So, you won't be able to access the new fields in a GraphQL Playground if you open it right now.
 
@@ -58,7 +58,7 @@ So far, the changes you made are only local. So, you won't be able to access the
 To make your changes take effect, you need to to deploy the service again. In the `hello-world` directory, run the following command:
 
 ```sh
-prisma deploy
+graphcool deploy
 ```
 
 </Instruction>
@@ -108,7 +108,7 @@ type Post {
 
 <Instruction>
 
-To apply these changes, you need to run `prisma deploy` inside the `hello-world` directory again.
+To apply these changes, you need to run `graphcool deploy` inside the `hello-world` directory again.
 
 </Instruction>
 
@@ -175,10 +175,10 @@ Of course, this now also allows you to send nested queries where you're asking f
 
 ## Next steps
 
-In this tutorial, we covered the very basics of using Prisma - but there's a lot more to explore!
+In this tutorial, we covered the very basics of using Graphcool - but there's a lot more to explore!
 
 Here's a few pointers for where you can go next:
 
-- **Quickstart Tutorials (Backend & Frontend)**: The remaining quickstart tutorials explain how to use Prisma together with conrete languages and frameworks, like [React](!alias-tijghei9go), [Node.js](!alias-phe8vai1oo) or [TypeScript](!alias-rohd6ipoo4).
-- [**Examples**](https://github.com/Prisma/Prisma/tree/master/examples): We're maintaing a list of practical examples showcasing certain use cases and scenarios with Prisma, such as authentication & permissions, file handling, wrapping REST APIs or using GraphQL subscriptions.
+- **Quickstart Tutorials (Backend & Frontend)**: The remaining quickstart tutorials explain how to use Graphcool together with conrete languages and frameworks, like [React](!alias-tijghei9go), [Node.js](!alias-phe8vai1oo) or [TypeScript](!alias-rohd6ipoo4).
+- [**Examples**](https://github.com/Graphcool/Graphcool/tree/master/examples): We're maintaing a list of practical examples showcasing certain use cases and scenarios with Graphcool, such as authentication & permissions, file handling, wrapping REST APIs or using GraphQL subscriptions.
 - [**Deployment Docs**](!alias-eu2ood0she): To learn more about different deployment options, you can check out the cluster documentation.

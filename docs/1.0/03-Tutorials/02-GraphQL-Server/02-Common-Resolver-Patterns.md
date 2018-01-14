@@ -5,7 +5,7 @@ description: Learn about graphqlerent resolver patterns
 
 # Common Resolver Patterns
 
-This tutorial gives an overview about common scenarios you might encounter when implementing your GraphQL server with `graphql-yoga` and Prisma.
+This tutorial gives an overview about common scenarios you might encounter when implementing your GraphQL server with `graphql-yoga` and Graphcool.
 
 Note that all scenarios in this tutorial are based on the [`typescript-basic`](https://github.com/graphql-boilerplates/typescript-graphql-server/tree/master/basic) GraphQL boilerplate project.
 

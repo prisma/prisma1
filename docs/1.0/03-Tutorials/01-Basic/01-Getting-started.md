@@ -1,60 +1,60 @@
 ---
 alias: ouzia3ahqu
-description: Learn how to generate a GraphQL API for your database with Prisma.
+description: Learn how to generate a GraphQL API for your database with Graphcool.
 ---
 
-# Getting started with Prisma
+# Getting started with Graphcool
 
-In this tutorial, you'll learn how to get started with Prisma to generate a GraphQL API for your database.
+In this tutorial, you'll learn how to get started with Graphcool to generate a GraphQL API for your database.
 
 Here are the steps you're going to perform:
 
-- Install the Prisma CLI
-- Bootstraping a Prisma service with `prisma init`
+- Install the Graphcool CLI
+- Bootstraping a Graphcool service with `graphcool init`
 - Explore the API in a GraphQL Playground and send queries & mutations 
 
 > To ensure you're not accidentally skipping an instruction in the tutorial, all required actions on your end are highlighted with a little counter on the left.
 >
 > **Pro tip**: If you're only keen on getting started but don't care so much about the explanations of what's going on, you can simply jump from instruction to instruction.
 
-## Installing the Prisma CLI
+## Installing the Graphcool CLI
 
-Prisma services are managed with the [Prisma CLI](!alias-ieshoo5ohm). You can install it using `npm` (or `yarn`).
+Graphcool services are managed with the [Graphcool CLI](!alias-ieshoo5ohm). You can install it using `npm` (or `yarn`).
 
 <Instruction>
 
-Open your terminal and run the following command to install the Prisma CLI:
+Open your terminal and run the following command to install the Graphcool CLI:
 
 ```sh
-npm install -g prisma@beta
+npm install -g graphcool@beta
 # or
-# yarn global add prisma@beta
+# yarn global add graphcool@beta
 ```
 
 </Instruction>
 
-## Bootstraping a Prisma service
+## Bootstraping a Graphcool service
 
 <Instruction>
 
-Open a terminal and navigate to a folder of your choice. Then bootstrap your Prisma service with the following command:
+Open a terminal and navigate to a folder of your choice. Then bootstrap your Graphcool service with the following command:
 
 ```sh
-prisma init hello-world
+graphcool init hello-world
 ```
 
 </Instruction>
 
 This will create a new directory called `hello-world` as well as the two files which provide a minimal setup for your service:
 
-- [`prisma.yml`](!alias-foatho8aip): The root configuration file for your service. It contains information about your service, like the name (which is used to generate the service's HTTP endpoint), a secret to secure the access to the endpoint and about where it should be deployed.
+- [`graphcool.yml`](!alias-foatho8aip): The root configuration file for your service. It contains information about your service, like the name (which is used to generate the service's HTTP endpoint), a secret to secure the access to the endpoint and about where it should be deployed.
 - `datamodel.graphql` (can also be called differently, e.g. `types.graphql`): This file contains the definition of your [data model](!alias-eiroozae8u), written in [GraphQL SDL](https://blog.graph.cool/graphql-sdl-schema-definition-language-6755bcb9ce51).
 
-> **Note**: The `hello-world` directory actually contains a third file as well: `.graphqlconfig.yml`. This file follows the industry standard for configuring and structuring GraphQL projects (based on [`graphql-config`](https://github.com/Prisma/graphql-config)). If present, it is used by GraphQL tooling (such as the GraphQL Playground, the [`graphql-cli`](https://github.com/graphql-cli/graphql-cli/), text editors, build tools and others) to improve your local developer workflows.
+> **Note**: The `hello-world` directory actually contains a third file as well: `.graphqlconfig.yml`. This file follows the industry standard for configuring and structuring GraphQL projects (based on [`graphql-config`](https://github.com/Graphcool/graphql-config)). If present, it is used by GraphQL tooling (such as the GraphQL Playground, the [`graphql-cli`](https://github.com/graphql-cli/graphql-cli/), text editors, build tools and others) to improve your local developer workflows.
 
 Let's take a look at the contents of the generated files:
 
-**`prisma.yml`**
+**`graphcool.yml`**
 
 ```yml
 service: hello-world
@@ -67,12 +67,12 @@ datamodel: datamodel.graphql
 disableAuth: true
 ```
 
-Here's an overview of the properties in the generated `prisma.yml`:
+Here's an overview of the properties in the generated `graphcool.yml`:
 
 - `service`: Defines the service name which will be part of the service's HTTP endpoint
 - `stage`: A service can be deployed to multiple stages (e.g. a _development_ and a _production_ environment)
 - `datamodel`: The path to the file which contains your data model
-- `disableAuth`: If set to true, everyone who knows the endpoint of your Prisma service has full read and write access. If set to `false`, you need to specify a `secret` in `prisma.yml` which is used to generate JWT authentication tokens. These tokens need to be attached to the `Authorization` header of the requests sent to the API of your service. The easiest way to obtain such a token is the `Prisma token` command from the Prisma CLI.
+- `disableAuth`: If set to true, everyone who knows the endpoint of your Graphcool service has full read and write access. If set to `false`, you need to specify a `secret` in `graphcool.yml` which is used to generate JWT authentication tokens. These tokens need to be attached to the `Authorization` header of the requests sent to the API of your service. The easiest way to obtain such a token is the `Graphcool token` command from the Graphcool CLI.
 
 > **Note**: We'll keep `disableAuth` set to `true` for this tutorial. In production applications, you'll always want to require authentication for your service! You can read more about this topic [here](!alias-pua7soog4v).
 
@@ -87,32 +87,32 @@ type User {
 
 The data model contains type definitions for the entities in your application domain. In this case, you're starting out with a very simple `User` type with an `id` and a `name`.
 
-The `@unique` directive here expresses that no two users in the database can have the same `id`, Prisma will ensure this requirement is met at all times.
+The `@unique` directive here expresses that no two users in the database can have the same `id`, Graphcool will ensure this requirement is met at all times.
 
-## Deploying your Prisma service
+## Deploying your Graphcool service
 
-`prisma.yml` and `datamodel.graphql` are your abstract _service definition_. To actually create an instance of this service that can be invoked via HTTP, you need to _deploy_ it.
+`graphcool.yml` and `datamodel.graphql` are your abstract _service definition_. To actually create an instance of this service that can be invoked via HTTP, you need to _deploy_ it.
 
 <Instruction>
 
 Inside the `hello-world` directory in your terminal, run the following command:
 
 ```sh
-prisma deploy
+graphcool deploy
 ```
 
 </Instruction>
 
 <!-- TODO: Enter screenshot of terminal -->
 
-Since `prisma.yml` doesn't yet contain the information about _where_ (meaning to which `cluster`) your service should be deployed, the CLI triggers a prompt for you to provide this information. At this point, you can choose to either deploy it locally with [Docker](https://www.docker.com) (which of course requires you to have Docker installed on your machine) or to a public Prisma cluster. You'll use a public cluster for the purpose of this tutorial.
+Since `graphcool.yml` doesn't yet contain the information about _where_ (meaning to which `cluster`) your service should be deployed, the CLI triggers a prompt for you to provide this information. At this point, you can choose to either deploy it locally with [Docker](https://www.docker.com) (which of course requires you to have Docker installed on your machine) or to a public Graphcool cluster. You'll use a public cluster for the purpose of this tutorial.
 
 <Instruction>
 
-When prompted where (i.e. to which _cluster_) to deploy your Prisma service, choose one of the _public cluster_ options: `graphcool-eu1` or `graphcool-us1`.
+When prompted where (i.e. to which _cluster_) to deploy your Graphcool service, choose one of the _public cluster_ options: `graphcool-eu1` or `graphcool-us1`.
 
 </Instruction>
-Your Prisma service is now deployed and ready to accept your queries and mutations 🎉
+Your Graphcool service is now deployed and ready to accept your queries and mutations 🎉
 
 ## Exploring your service in a GraphQL Playground
 
@@ -122,7 +122,7 @@ In general, the generated API allows to perform CRUD operations on the types in 
 
 It is important to understand that the data model is the foundation for your API. Every time you make changes to your data model, the GraphQL API gets updated accordingly.
 
-Because your datamodel contains the `User` type, the Prisma API now allows for its clients to create, read, update and delete instances, also called _nodes_, of that type. In particular, the following GraphQL operations are now generated based on the `User` type:
+Because your datamodel contains the `User` type, the Graphcool API now allows for its clients to create, read, update and delete instances, also called _nodes_, of that type. In particular, the following GraphQL operations are now generated based on the `User` type:
 
 - `user`: Query to retrieve a single `User` node by its `id` (or another `@unique` field).
 - `users`: Query to retrieve a list of `User` nodes.
@@ -130,16 +130,16 @@ Because your datamodel contains the `User` type, the Prisma API now allows for i
 - `updateUser`: Mutation to update an existing `User` node.
 - `deleteUser`: Mutation to delete an existing `User` node.
 
-> **Note**: This list of generated operations is not complete. The Prisma API exposes a couple of more convenience operations that, for example, allow to batch update/delete many nodes. However, all operations either create, read, update or delete nodes of the types defined in the data model.
+> **Note**: This list of generated operations is not complete. The Graphcool API exposes a couple of more convenience operations that, for example, allow to batch update/delete many nodes. However, all operations either create, read, update or delete nodes of the types defined in the data model.
 
-To actually use these operations, you need a way to [send requests to your service's API](ohm2ouceuj). Since that API is exposed via HTTP, you could use tools like [`curl`](https://en.wikipedia.org/wiki/CURL) or [Postman](https://www.getpostman.com/) to interact with it. However, GraphQL actually comes with much nicer tooling for that purpose: [GraphQL Playground](https://github.com/Prisma/graphql-playground), an interactive GraphQL IDE.
+To actually use these operations, you need a way to [send requests to your service's API](ohm2ouceuj). Since that API is exposed via HTTP, you could use tools like [`curl`](https://en.wikipedia.org/wiki/CURL) or [Postman](https://www.getpostman.com/) to interact with it. However, GraphQL actually comes with much nicer tooling for that purpose: [GraphQL Playground](https://github.com/Graphcool/graphql-playground), an interactive GraphQL IDE.
 
 <Instruction>
 
-To open a GraphQL Playground, you can use the Prisma CLI again. Simply run the following command inside the `hello-world` directory:
+To open a GraphQL Playground, you can use the Graphcool CLI again. Simply run the following command inside the `hello-world` directory:
 
 ```sh
-prisma playground
+graphcool playground
 ```
 
 </Instruction>
