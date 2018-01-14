@@ -362,7 +362,7 @@ mutation {
 
 </Instruction>
 
-![](https://imgur.com/X8N9oJw.png)
+![](https://imgur.com/gbnUlkr.png)
 
 <Instruction>
 
