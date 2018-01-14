@@ -75,7 +75,7 @@ Next, you're going to seed some initial data for the service.
 
 Create a new file called `seed.graphql` inside the `import-example` directory and add the following mutation to it:
 
-```sh
+```graphql
 mutation {
   createUser(data: {
     name: "Sarah",
@@ -150,8 +150,6 @@ The CLI now deploys the service and executes the mutation in `seed.graphql`. To 
 The Graphcool API will respond with the following data:
 
 ```json
-
-
 {
   "data": {
     "users": [
