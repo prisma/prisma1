@@ -7,7 +7,6 @@ import * as chokidar from 'chokidar'
 import * as inquirer from 'inquirer'
 import * as path from 'path'
 import * as fs from 'fs-extra'
-import { getGraphQLConfig } from 'graphql-config'
 import { fetchAndPrintSchema } from './printSchema'
 import Up from '../local/up'
 import { Seeder } from '../seed/Seeder'
@@ -18,6 +17,8 @@ const debug = require('debug')('deploy')
 import { prettyTime, concatName } from '../../util'
 import { spawn } from '../../spawn'
 import * as sillyname from 'sillyname'
+import { getSchemaPathFromConfig } from './getSchemaPathFromConfig'
+import { getGraphQLConfig } from 'graphql-config'
 
 export default class Deploy extends Command {
   static topic = 'deploy'
@@ -409,7 +410,7 @@ ${chalk.gray(
 
   private async generateSchema(serviceName: string, stageName: string) {
     const schemaPath =
-      this.definition.definition!.schema || this.getSchemaPathFromConfig()
+      this.definition.definition!.schema || getSchemaPathFromConfig()
     if (schemaPath) {
       const schemaDir = path.dirname(schemaPath)
       fs.mkdirpSync(schemaDir)
@@ -441,39 +442,6 @@ ${chalk.gray(
         await spawn(`graphql`, ['prepare'])
       }
     }
-  }
-
-  private getSchemaPathFromConfig(): string | null {
-    try {
-      const config = getGraphQLConfig()
-      if (config) {
-        const schemaPath = config.config.schemaPath
-        if (schemaPath) {
-          return schemaPath
-        }
-        const projects = config.getProjects()
-        if (projects) {
-          const foundProjectName = Object.keys(projects).find(projectName => {
-            const project = projects[projectName]
-            if (
-              ['prisma', 'database', 'db'].includes(projectName) &&
-              project.schemaPath
-            ) {
-              return true
-            }
-            return false
-          })
-          if (foundProjectName) {
-            const foundProject = projects[foundProjectName]
-            return foundProject.schemaPath
-          }
-        }
-      }
-    } catch (e) {
-      //
-    }
-
-    return null
   }
 
   private printResult(payload: DeployPayload) {
