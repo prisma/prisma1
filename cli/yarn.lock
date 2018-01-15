@@ -1370,9 +1370,9 @@ graceful-fs@~3.0.2:
   dependencies:
     natives "^1.1.0"
 
-graphcool-cli-core@1.10.6-framework:
-  version "1.10.6-framework"
-  resolved "https://registry.yarnpkg.com/graphcool-cli-core/-/graphcool-cli-core-1.10.6-framework.tgz#f25bd361aa07f48f182bc0223ddfc99ad7f041bc"
+graphcool-cli-core@1.10.9-framework:
+  version "1.10.9-framework"
+  resolved "https://registry.yarnpkg.com/graphcool-cli-core/-/graphcool-cli-core-1.10.9-framework.tgz#212373b2782c13d07a01c284610eea21ec016fd0"
   dependencies:
     archiver "^2.1.0"
     callsites "^2.0.0"

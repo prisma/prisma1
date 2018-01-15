@@ -147,7 +147,7 @@ ${chalk.bold('Usage:')} ${chalk.bold('graphcool')} COMMAND`)
     })
 
     this.out.log(`\nUse ${chalk.green(
-      'graphcool-framework help [command]',
+      'graphcool help [command]',
     )} for more information about a command.
 Docs can be found here:
 https://www.graph.cool/docs/reference/graphcool-cli/commands-aiteerae6l
@@ -155,10 +155,10 @@ https://www.graph.cool/docs/reference/graphcool-cli/commands-aiteerae6l
 ${chalk.dim('Examples:')}
 
 ${chalk.gray('-')} Initialize files for a new Graphcool service
-  ${chalk.green('$ graphcool-framework init')}
+  ${chalk.green('$ graphcool init')}
 
 ${chalk.gray('-')} Deploy service changes (or new service)
-  ${chalk.green('$ graphcool-framework deploy')}
+  ${chalk.green('$ graphcool deploy')}
 `)
   }
 

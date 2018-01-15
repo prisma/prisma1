@@ -118,7 +118,7 @@ Please remove ~/.graphcool by hand to prevent this warning.`)
         })
         success = true
       } else {
-        // if there are accidentally platformToken or clusters on the top-level, put it into the graphcool-framework namespace
+        // if there are accidentally platformToken or clusters on the top-level, put it into the graphcool namespace
         if (content.platformToken || content.clusters) {
           const newContent = {
             ['graphcool-framework']: {

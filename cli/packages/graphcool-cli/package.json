@@ -1,10 +1,12 @@
 {
-  "name": "graphcool-framework",
-  "version": "0.11.5-alpha.2",
+  "name": "graphcool",
+  "version": "0.11.5",
   "main": "dist/index.js",
   "bin": {
     "graphcool-framework": "dist/index.js",
-    "gcf": "dist/index.js"
+    "gcf": "dist/index.js",
+    "graphcool": "dist/index.js",
+    "gc": "dist/index.js"
   },
   "files": [
     "dist"
@@ -49,8 +51,8 @@
   },
   "dependencies": {
     "fs-extra": "^4.0.1",
-    "graphcool-cli-core": "1.10.7-framework",
-    "graphcool-cli-engine": "0.6.6-framework",
+    "graphcool-cli-core": "1.10.10-framework",
+    "graphcool-cli-engine": "0.6.8-framework",
     "semver": "^5.4.1",
     "source-map-support": "^0.4.18"
   },

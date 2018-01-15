@@ -12,10 +12,10 @@ export default class Auth extends Command {
   ${chalk.green('Examples:')}
       
   ${chalk.gray('-')} Authenticate using the browser
-    ${chalk.green('$ graphcool-framework login')}
+    ${chalk.green('$ graphcool login')}
   
   ${chalk.gray('-')} Authenticate using an existing token
-    ${chalk.green('$ graphcool-framework login -t <token>')}    
+    ${chalk.green('$ graphcool login -t <token>')}    
   
   `
   static flags: Flags = {

@@ -20,15 +20,15 @@ export default class Deploy extends Command {
   ${chalk.green.bold('Examples:')}
       
 ${chalk.gray('-')} Deploy local service definition changes to the default stage.
-  ${chalk.green('$ graphcool-framework deploy')}
+  ${chalk.green('$ graphcool deploy')}
 
-${chalk.gray('-')} Deploy local changes to a specific stage called \`prod\`
-  ${chalk.green('$ graphcool-framework deploy --stage prod')}
+${chalk.gray('-')} Deploy local changes to a specific target called \`prod\`
+  ${chalk.green('$ graphcool deploy --target prod')}
     
 ${chalk.gray(
     '-',
-  )} Deploy local changes to a specific stage called \`prod\`, accepting potential data loss caused by schema changes
-  ${chalk.green('$ graphcool-framework deploy --stage production --force')}
+  )} Deploy local changes to a specific target called \`prod\`, accepting potential data loss caused by schema changes
+  ${chalk.green('$ graphcool deploy --target production --force')}
   `
   static flags: Flags = {
     target: flags.string({
@@ -124,7 +124,7 @@ ${chalk.gray(
           'local',
         )}, but don't have docker initialized, yet.
 Please run ${chalk.green(
-          '$ graphcool-framework local up',
+          '$ graphcool local up',
         )} to get a local Graphcool cluster.
 `)
         this.out.exit(1)

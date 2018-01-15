@@ -78,8 +78,8 @@ export default class Up extends Command {
     }
     this.out.log(`To get started, execute
     
-  ${chalk.green('$ graphcool-framework init')}
-  ${chalk.green('$ graphcool-framework deploy')}
+  ${chalk.green('$ graphcool init')}
+  ${chalk.green('$ graphcool deploy')}
 `)
   }
 }

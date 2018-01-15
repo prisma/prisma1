@@ -33,7 +33,7 @@ export default class Export extends Command {
     await this.export(id, exportPath)
 
     const importCommand = chalk.green.bold(
-      `$ graphcool-framework import --source ${exportPath} --target target-name`,
+      `$ graphcool import --source ${exportPath} --target target-name`,
     )
     this.out.log(`Exported service to ${chalk.bold(exportPath)}
 You can import it to a new service with
