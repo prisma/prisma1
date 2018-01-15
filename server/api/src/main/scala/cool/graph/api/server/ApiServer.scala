@@ -57,7 +57,7 @@ case class ApiServer(
     val requestId            = requestPrefix + ":api:" + createCuid()
     val requestBeginningTime = System.currentTimeMillis()
 
-    def logRequestEnd(projectId: String, clientId: Option[String] = None, throttledBy: Long = 0) = {
+    def logRequestEnd(projectId: String, throttledBy: Long = 0) = {
       val end            = System.currentTimeMillis()
       val actualDuration = end - requestBeginningTime - throttledBy
       ApiMetrics.requestDuration.record(actualDuration, Seq(projectId))
@@ -66,7 +66,6 @@ case class ApiServer(
           key = LogKey.RequestComplete,
           requestId = requestId,
           projectId = Some(projectId),
-          clientId = clientId,
           payload = Some(
             Map(
               "request_duration" -> (end - requestBeginningTime),
