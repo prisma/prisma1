@@ -10,7 +10,7 @@ class DefaultValueSpec extends FlatSpec with Matchers with ApiBaseSpec {
   val project = SchemaDsl() { schema =>
     schema
       .model("ScalarModel")
-//      .field("optString", _.String)
+      .field("optString", _.String)
       .field_!("reqString", _.String, defaultValue = Some(StringGCValue("default")))
 
   }
@@ -29,7 +29,6 @@ class DefaultValueSpec extends FlatSpec with Matchers with ApiBaseSpec {
     val res = server.executeQuerySimple(
       s"""mutation {
          |  createScalarModel(data: {
-         |  reqString: null
          |    }
          |  ){
          |  reqString
@@ -38,11 +37,11 @@ class DefaultValueSpec extends FlatSpec with Matchers with ApiBaseSpec {
       project = project
     )
 
-    res.toString should be(s"""{"data":{"createScalarModel":{"optString":"optional","reqString":"default"}}}""")
+    res.toString should be(s"""{"data":{"createScalarModel":{"reqString":"default"}}}""")
 
-    val queryRes = server.executeQuerySimple("""{ scalarModels{optString, reqString}}""", project = project)
+    val queryRes = server.executeQuerySimple("""{ scalarModels{reqString}}""", project = project)
 
-    queryRes.toString should be(s"""{"data":{"scalarModels":[{"optString":"optional","reqString":"default"}]}}""")
+    queryRes.toString should be(s"""{"data":{"scalarModels":[{"reqString":"default"}]}}""")
   }
 
 }

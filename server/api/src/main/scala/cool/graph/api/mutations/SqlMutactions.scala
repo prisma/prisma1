@@ -64,9 +64,6 @@ case class SqlMutactions(dataResolver: DataResolver) {
       field      <- model.scalarNonListFields
       fieldValue <- args.getFieldValueAs[Any](field)
     } yield {
-      if (field.isRequired && field.defaultValue.isDefined && fieldValue.isEmpty) {
-        throw APIErrors.InputInvalid("null", field.name, model.name)
-      }
       ArgumentValue(field.name, fieldValue)
     }
 

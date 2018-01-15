@@ -40,7 +40,6 @@ case class Create(
 
   def prepareMutactions(): Future[List[MutactionGroup]] = {
     val createMutactionsResult = SqlMutactions(dataResolver).getMutactionsForCreate(model, coolArgs, id)
-
     val transactionMutaction   = TransactionMutaction(createMutactionsResult.allMutactions.toList, dataResolver)
     val subscriptionMutactions = SubscriptionEvents.extractFromSqlMutactions(project, mutationId, createMutactionsResult.allMutactions)
     val sssActions             = ServerSideSubscription.extractFromMutactions(project, createMutactionsResult.allMutactions, requestId)
