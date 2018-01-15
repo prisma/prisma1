@@ -30,7 +30,7 @@ export default class Auth extends Command {
 
     if (token) {
       this.out.log('Using token from --token flag')
-      this.auth.setToken(token)
+      await this.auth.setToken(token)
     }
 
     const alreadyAuthenticated = await this.auth.ensureAuth()
