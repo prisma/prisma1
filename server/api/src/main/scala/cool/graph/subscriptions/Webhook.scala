@@ -1,4 +1,4 @@
-package cool.graph.api.subscriptions
+package cool.graph.subscriptions
 
 case class Webhook(
     projectId: String,

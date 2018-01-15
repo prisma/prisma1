@@ -4,9 +4,9 @@ import cool.graph.api.database.mutactions.ClientSqlMutaction
 import cool.graph.api.database.mutactions.mutactions._
 import cool.graph.api.database.{DataItem, DataResolver}
 import cool.graph.api.mutations.MutationTypes.ArgumentValue
-import cool.graph.api.schema.APIErrors
 import cool.graph.api.schema.APIErrors.RelationIsRequired
 import cool.graph.cuid.Cuid.createCuid
+import cool.graph.gc_values.StringGCValue
 import cool.graph.shared.models.IdType.Id
 import cool.graph.shared.models.{Field, Model, Project, Relation}
 import cool.graph.utils.boolean.BooleanUtils._
@@ -55,6 +55,27 @@ case class SqlMutactions(dataResolver: DataResolver) {
     val scalarLists     = getMutactionsForScalarLists(model, args, nodeId = id)
 
     CreateMutactionsResult(createMutaction = createMutaction, scalarListMutactions = scalarLists, nestedMutactions = nested)
+  }
+
+  def getMutactionsForUpsert(allArgs: CoolArgs, createArgs: CoolArgs, updateArgs: CoolArgs, id: Id, outerWhere: NodeSelector): List[ClientSqlMutaction] = {
+    val idWhere         = NodeSelector.forId(outerWhere.model, createArgs.raw("id").toString)
+    val upsertMutaction = UpsertDataItem(project, outerWhere, createArgs, updateArgs)
+
+    //todo cleanup this handles only strings atm
+    //
+    ///
+
+    // todo really, this is important
+    val whereFieldValue = updateArgs.raw.get(outerWhere.field.name)
+    val currentOuterWhere =
+      if (whereFieldValue.isDefined) outerWhere.copy(fieldValue = StringGCValue(whereFieldValue.get.asInstanceOf[Option[String]].get)) else outerWhere
+
+    val updateNested =
+      getMutactionsForNestedMutation(CoolArgs(allArgs.raw("update").asInstanceOf[Map[String, Any]]), currentOuterWhere, triggeredFromCreate = false)
+    val createNested = getMutactionsForNestedMutation(CoolArgs(allArgs.raw("create").asInstanceOf[Map[String, Any]]), idWhere, triggeredFromCreate = true)
+//    val scalarLists     = getMutactionsForScalarLists(outerWhere.model, args, nodeId = id) // todo scalar lists for both cases?
+
+    List(upsertMutaction) ++ updateNested ++ createNested
   }
 
   def getSetScalarList(model: Model, field: Field, values: Vector[Any], id: Id): SetScalarList = SetScalarList(project, model, field, values, nodeId = id)
@@ -173,10 +194,11 @@ case class SqlMutactions(dataResolver: DataResolver) {
   def getMutactionsForNestedUpsertMutation(model: Model, nestedMutation: NestedMutation, parentInfo: ParentInfo): Seq[ClientSqlMutaction] = {
     nestedMutation.upserts.flatMap { upsert =>
       val upsertItem    = UpsertDataItemIfInRelationWith(project, parentInfo, upsert.where, upsert.create, upsert.update)
-      val addToRelation = AddDataItemToManyRelationByUniqueField(project, parentInfo, NodeSelector.forId(model, upsertItem.idOfNewItem))
+      val idWhere       = NodeSelector.forId(model, upsertItem.idOfNewItem)
+      val addToRelation = AddDataItemToManyRelationByUniqueField(project, parentInfo, idWhere)
       Vector(upsertItem, addToRelation) ++
         getMutactionsForNestedMutation(upsert.update, upsert.where, triggeredFromCreate = false) ++
-        getMutactionsForNestedMutation(upsert.create, upsert.where, triggeredFromCreate = true)
+        getMutactionsForNestedMutation(upsert.create, idWhere, triggeredFromCreate = true)
     }
   }
 

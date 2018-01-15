@@ -1,4 +1,4 @@
-package cool.graph.api.subscriptions
+package cool.graph.subscriptions
 
 import cool.graph.api.ApiBaseSpec
 import cool.graph.shared.models._

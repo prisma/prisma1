@@ -8,7 +8,7 @@ import cool.graph.api.database.{DataResolver, Databases}
 import cool.graph.api.project.{ProjectFetcher, ProjectFetcherImpl}
 import cool.graph.api.schema.{ApiUserContext, SchemaBuilder}
 import cool.graph.api.server.RequestHandler
-import cool.graph.api.subscriptions.Webhook
+import cool.graph.subscriptions.Webhook
 import cool.graph.auth.{Auth, AuthImpl}
 import cool.graph.bugsnag.{BugSnagger, BugSnaggerImpl}
 import cool.graph.client.server.{GraphQlRequestHandler, GraphQlRequestHandlerImpl}

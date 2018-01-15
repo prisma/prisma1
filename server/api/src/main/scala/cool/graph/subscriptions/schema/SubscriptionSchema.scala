@@ -1,9 +1,9 @@
-package cool.graph.api.subscriptions.schema
+package cool.graph.subscriptions.schema
 
 import cool.graph.api.ApiDependencies
 import cool.graph.api.database.DataItem
 import cool.graph.api.schema._
-import cool.graph.api.subscriptions.SubscriptionUserContext
+import cool.graph.subscriptions.SubscriptionUserContext
 import cool.graph.shared.models.ModelMutationType.ModelMutationType
 import cool.graph.shared.models.{Model, ModelMutationType, Project}
 import sangria.schema._

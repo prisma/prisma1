@@ -1,6 +1,6 @@
 package cool.graph.singleserver
 
-import cool.graph.api.subscriptions.{Webhook => ApiWebhook}
+import cool.graph.subscriptions.{Webhook => ApiWebhook}
 import cool.graph.messagebus.Conversions.Converter
 import cool.graph.subscriptions.protocol.SubscriptionRequest
 import cool.graph.websocket.protocol.Request

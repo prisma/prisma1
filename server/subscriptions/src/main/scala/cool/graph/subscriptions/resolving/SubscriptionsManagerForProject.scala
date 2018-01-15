@@ -2,7 +2,7 @@ package cool.graph.subscriptions.resolving
 
 import akka.actor.{Actor, ActorRef, Props, Stash, Terminated}
 import cool.graph.akkautil.{LogUnhandled, LogUnhandledExceptions}
-import cool.graph.api.subscriptions.schema.{QueryTransformer, SubscriptionQueryValidator}
+import cool.graph.subscriptions.schema.{QueryTransformer, SubscriptionQueryValidator}
 import cool.graph.bugsnag.BugSnagger
 import cool.graph.messagebus.pubsub.Message
 import cool.graph.shared.models._

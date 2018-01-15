@@ -5,7 +5,7 @@ import akka.stream.ActorMaterializer
 import cool.graph.api.database.Databases
 import cool.graph.api.project.{ProjectFetcher, ProjectFetcherImpl}
 import cool.graph.api.schema.SchemaBuilder
-import cool.graph.api.subscriptions.Webhook
+import cool.graph.subscriptions.Webhook
 import cool.graph.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
 import cool.graph.messagebus.testkits.InMemoryQueueTestKit
 

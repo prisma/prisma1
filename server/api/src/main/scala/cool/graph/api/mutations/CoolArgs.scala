@@ -71,7 +71,36 @@ case class CoolArgs(raw: Map[String, Any]) {
 
   }
 
-  // todo it would be nice to standardize on one format, at the moment we mix Map[String, Any], CoolArgs and Vector[ArgumentValue]
+  def createArgumentsAsCoolArgs: CoolArgs = CoolArgs(raw("create").asInstanceOf[Map[String, Any]])
+  def updateArgumentsAsCoolArgs: CoolArgs = CoolArgs(raw("update").asInstanceOf[Map[String, Any]])
+
+  def generateCreateArgs(model: Model, id: String): CoolArgs = {
+    CoolArgs(
+      model.scalarNonListFields
+        .filter(_.name != "id")
+        .flatMap { field =>
+          raw.get(field.name) match {
+            case Some(None) if field.defaultValue.isDefined && field.isRequired => throw APIErrors.InputInvalid("null", field.name, model.name)
+            case Some(value)                                                    => Some((field.name, value))
+            case None if field.defaultValue.isDefined                           => Some((field.name, GCValueExtractor.fromGCValue(field.defaultValue.get)))
+            case None                                                           => None
+          }
+        }
+        .toMap + ("id" -> id))
+  }
+
+  def generateUpdateArgs(model: Model): CoolArgs = {
+    CoolArgs(
+      model.scalarNonListFields
+        .filter(_.name != "id")
+        .flatMap { field =>
+          raw.get(field.name) match {
+            case Some(value) => Some((field.name, value))
+            case None        => None
+          }
+        }
+        .toMap)
+  }
 
   def nonListScalarArgumentsAsCoolArgs(model: Model): CoolArgs = {
     val argumentValues = nonListScalarArguments(model)

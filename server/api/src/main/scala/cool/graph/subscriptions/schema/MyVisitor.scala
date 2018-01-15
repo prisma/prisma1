@@ -1,4 +1,4 @@
-package cool.graph.api.subscriptions.schema
+package cool.graph.subscriptions.schema
 
 import sangria.ast._
 

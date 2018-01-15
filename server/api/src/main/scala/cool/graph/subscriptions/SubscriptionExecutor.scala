@@ -1,10 +1,10 @@
-package cool.graph.api.subscriptions
+package cool.graph.subscriptions
 
 import cool.graph.api.ApiDependencies
 import cool.graph.api.database.DataItem
 import cool.graph.api.database.deferreds.DeferredResolverProvider
 import cool.graph.api.server.ErrorHandler
-import cool.graph.api.subscriptions.schema.{QueryTransformer, SubscriptionSchema}
+import cool.graph.subscriptions.schema.{QueryTransformer, SubscriptionSchema}
 import cool.graph.shared.models.ModelMutationType.ModelMutationType
 import cool.graph.shared.models._
 import cool.graph.util.json.SprayJsonExtensions

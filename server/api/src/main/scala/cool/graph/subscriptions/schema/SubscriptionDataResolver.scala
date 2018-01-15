@@ -1,9 +1,9 @@
-package cool.graph.api.subscriptions.schema
+package cool.graph.subscriptions.schema
 
 import cool.graph.api.database.DataResolver
 import cool.graph.api.schema.{ObjectTypeBuilder, SimpleResolveOutput}
-import cool.graph.api.subscriptions.SubscriptionUserContext
-import cool.graph.api.subscriptions.resolving.FilteredResolver
+import cool.graph.subscriptions.SubscriptionUserContext
+import cool.graph.subscriptions.resolving.FilteredResolver
 import cool.graph.shared.models.Model
 import sangria.schema.{Args, Context}
 

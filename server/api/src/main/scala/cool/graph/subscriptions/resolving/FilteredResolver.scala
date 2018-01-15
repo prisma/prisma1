@@ -1,4 +1,4 @@
-package cool.graph.api.subscriptions.resolving
+package cool.graph.subscriptions.resolving
 
 import cool.graph.api.database.Types.DataItemFilterCollection
 import cool.graph.api.database.{DataItem, DataResolver, FilterElement, QueryArguments}

@@ -1,4 +1,4 @@
-package cool.graph.api.subscriptions
+package cool.graph.subscriptions
 
 import cool.graph.shared.models.Project
 import sangria.ast.Document

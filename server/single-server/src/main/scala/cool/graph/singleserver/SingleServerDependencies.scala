@@ -7,7 +7,7 @@ import cool.graph.api.ApiDependencies
 import cool.graph.api.database.Databases
 import cool.graph.api.project.{CachedProjectFetcherImpl, ProjectFetcher, ProjectFetcherImpl}
 import cool.graph.api.schema.{CachedSchemaBuilder, SchemaBuilder}
-import cool.graph.api.subscriptions.Webhook
+import cool.graph.subscriptions.Webhook
 import cool.graph.deploy.DeployDependencies
 import cool.graph.deploy.migration.migrator.{AsyncMigrator, Migrator}
 import cool.graph.deploy.server.{ClusterAuthImpl, DummyClusterAuth}
