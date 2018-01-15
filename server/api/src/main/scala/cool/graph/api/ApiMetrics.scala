@@ -19,4 +19,7 @@ object ApiMetrics extends MetricsManager {
       .mkString
 
   MemoryProfiler.schedule(this)
+
+  val projectCacheGetCount  = defineCounter("projectCacheGetCount")
+  val projectCacheMissCount = defineCounter("projectCacheMissCount")
 }

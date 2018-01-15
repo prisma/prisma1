@@ -5,7 +5,7 @@ import akka.stream.ActorMaterializer
 import cool.graph.akkautil.http.SimpleHttpClient
 import cool.graph.api.ApiDependencies
 import cool.graph.api.database.Databases
-import cool.graph.api.project.{ProjectFetcher, ProjectFetcherImpl}
+import cool.graph.api.project.{CachedProjectFetcherImpl, ProjectFetcher, ProjectFetcherImpl}
 import cool.graph.api.schema.{CachedSchemaBuilder, SchemaBuilder}
 import cool.graph.api.subscriptions.Webhook
 import cool.graph.deploy.DeployDependencies
@@ -40,7 +40,8 @@ case class SingleServerDependencies()(implicit val system: ActorSystem, val mate
   override val projectFetcher: ProjectFetcher = {
     val schemaManagerEndpoint = config.getString("schemaManagerEndpoint")
     val schemaManagerSecret   = config.getString("schemaManagerSecret")
-    ProjectFetcherImpl(Vector.empty, config, schemaManagerEndpoint = schemaManagerEndpoint, schemaManagerSecret = schemaManagerSecret)
+    val fetcher               = ProjectFetcherImpl(Vector.empty, config, schemaManagerEndpoint = schemaManagerEndpoint, schemaManagerSecret = schemaManagerSecret)
+    CachedProjectFetcherImpl(fetcher, invalidationPubSub)
   }
 
   override val migrator: Migrator = AsyncMigrator(clientDb, migrationPersistence, projectPersistence)
