@@ -45,6 +45,7 @@ case class SqlMutactions(dataResolver: DataResolver) {
     val updateMutaction = getUpdateMutaction(outerWhere.model, args, id, previousValues)
     val nested          = getMutactionsForNestedMutation(args, outerWhere, triggeredFromCreate = false)
     val scalarLists     = getMutactionsForScalarLists(outerWhere.model, args, nodeId = id)
+
     updateMutaction.toList ++ nested ++ scalarLists
   }
 
@@ -60,12 +61,9 @@ case class SqlMutactions(dataResolver: DataResolver) {
 
   def getCreateMutaction(model: Model, args: CoolArgs, id: Id): CreateDataItem = {
     val scalarArguments = for {
-      field      <- model.scalarFields
+      field      <- model.scalarNonListFields
       fieldValue <- args.getFieldValueAs[Any](field)
     } yield {
-      if (field.isRequired && field.defaultValue.isDefined && fieldValue.isEmpty) {
-        throw APIErrors.InputInvalid("null", field.name, model.name)
-      }
       ArgumentValue(field.name, fieldValue)
     }
 
@@ -111,18 +109,20 @@ case class SqlMutactions(dataResolver: DataResolver) {
       parentInfo     = ParentInfo(field, outerWhere)
     } yield {
 
+      val checkMutactions = getMutactionsForWhereChecks(nestedMutation) ++ getMutactionsForConnectionChecks(subModel, nestedMutation, parentInfo)
+
       val mutactionsThatACreateCanTrigger = getMutactionsForNestedCreateMutation(subModel, nestedMutation, parentInfo) ++
         getMutactionsForNestedConnectMutation(nestedMutation, parentInfo)
 
-      val mutactions = mutactionsThatACreateCanTrigger ++ getMutactionsForWhereChecks(nestedMutation) ++
-        getMutactionsForConnectionChecks(subModel, nestedMutation, parentInfo) ++
-        getMutactionsForNestedDisconnectMutation(nestedMutation, parentInfo) ++
+      val otherMutactions = getMutactionsForNestedDisconnectMutation(nestedMutation, parentInfo) ++
         getMutactionsForNestedDeleteMutation(nestedMutation, parentInfo) ++
         getMutactionsForNestedUpdateMutation(nestedMutation, parentInfo) ++
         getMutactionsForNestedUpsertMutation(subModel, nestedMutation, parentInfo)
 
+      val orderedMutactions = checkMutactions ++ mutactionsThatACreateCanTrigger ++ otherMutactions
+
       if (triggeredFromCreate && mutactionsThatACreateCanTrigger.isEmpty && field.isRequired) throw RelationIsRequired(field.name, outerWhere.model.name)
-      mutactions
+      orderedMutactions
     }
     x.flatten
   }
@@ -143,13 +143,11 @@ case class SqlMutactions(dataResolver: DataResolver) {
   def getMutactionsForNestedCreateMutation(model: Model, nestedMutation: NestedMutation, parentInfo: ParentInfo): Seq[ClientSqlMutaction] = {
     nestedMutation.creates.flatMap { create =>
       val id          = createCuid()
+      val where       = NodeSelector.forId(model, id)
       val createItem  = getCreateMutaction(model, create.data, id)
-      val connectItem = AddDataItemToManyRelation(project, parentInfo, toId = id, toIdAlreadyInDB = false)
+      val connectItem = AddDataItemToManyRelationByUniqueField(project, parentInfo, where)
 
-      List(createItem, connectItem) ++ getMutactionsForNestedMutation(create.data,
-                                                                      NodeSelector.forId(model, id),
-                                                                      triggeredFromCreate = true,
-                                                                      omitRelation = parentInfo.field.relation)
+      List(createItem, connectItem) ++ getMutactionsForNestedMutation(create.data, where, triggeredFromCreate = true, omitRelation = parentInfo.field.relation)
     }
   }
 

@@ -123,6 +123,10 @@ object SchemaErrors {
     error(fieldAndType, s"Many relation fields must be marked as required.")
   }
 
+  def listFieldsCantHaveDefaultValues(fieldAndType: FieldAndType) = {
+    error(fieldAndType, s"List fields cannot have defaultValues.")
+  }
+
   def relationFieldTypeWrong(fieldAndType: FieldAndType): SchemaError = {
     val oppositeType = fieldAndType.fieldDef.fieldType.namedType.name
     error(

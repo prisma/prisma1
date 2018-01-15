@@ -14,7 +14,6 @@ import scala.util.{Failure, Success, Try}
 
 object InputValueValidation {
 
-
   def validateDataItemInputsWithID(model: Model, id: Id, values: List[ArgumentValue]): (Try[MutactionVerificationSuccess], List[Field]) = {
     if (!NameConstraints.isValidDataItemId(id)) (Failure(APIErrors.IdIsInvalid(id)), InputValueValidation.fieldsWithValues(model, values))
     else validateDataItemInputs(model, values)

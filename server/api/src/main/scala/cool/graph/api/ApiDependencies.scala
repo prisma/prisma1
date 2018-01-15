@@ -28,9 +28,9 @@ trait ApiDependencies extends AwaitUtils {
   implicit val system: ActorSystem
   val materializer: ActorMaterializer
   def projectFetcher: ProjectFetcher
-  val apiSchemaBuilder: SchemaBuilder
-  val databases: Databases
-  val webhookPublisher: Queue[Webhook]
+  def apiSchemaBuilder: SchemaBuilder
+  def databases: Databases
+  def webhookPublisher: Queue[Webhook]
 
   implicit lazy val executionContext: ExecutionContext  = system.dispatcher
   implicit lazy val reporter: ErrorReporter             = BugsnagErrorReporter(sys.env("BUGSNAG_API_KEY"))

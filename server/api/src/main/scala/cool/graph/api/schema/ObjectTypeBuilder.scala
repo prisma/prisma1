@@ -53,30 +53,12 @@ class ObjectTypeBuilder(
             "aggregate",
             aggregateTypeForModel(model),
             resolve = (ctx: Context[ApiUserContext, IdBasedConnection[DataItem]]) => {
-//              val countArgs =
-//                ctx.value.parent.args.map(args => SangriaQueryArguments.createSimpleQueryArguments(None, None, None, None, None, args.filter, None))
-//              CountManyModelDeferred(model, ???)
               val emptyQueryArguments = QueryArguments(None, None, None, None, None, None, None)
               ctx.value.parent.args.getOrElse(emptyQueryArguments)
             }
           )
         )
       }
-//        sangria.schema.Field(
-//          "count",
-//          IntType,
-//          Some("Count of filtered result set without considering pagination arguments"),
-//          resolve = ctx => {
-//            val countArgs = ctx.value.parent.args.map(args => SangriaQueryArguments.createSimpleQueryArguments(None, None, None, None, None, args.filter, None))
-//
-//            ctx.value.parent match {
-//              case ConnectionParentElement(Some(nodeId), Some(field), _) =>
-//                CountToManyDeferred(field, nodeId, countArgs)
-//              case _ =>
-//                CountManyModelDeferred(model, countArgs)
-//            }
-//          }
-//        )
     )
   }
 
@@ -191,8 +173,7 @@ class ObjectTypeBuilder(
   def mapToUniqueArguments(model: models.Model): List[Argument[_]] = {
     import cool.graph.util.coolSangria.FromInputImplicit.DefaultScalaResultMarshaller
 
-    model.fields
-      .filter(!_.isList)
+    model.scalarNonListFields
       .filter(_.isUnique)
       .map(field => Argument(field.name, SchemaBuilderUtils.mapToOptionalInputType(field), description = field.description.getOrElse("")))
   }
@@ -279,8 +260,7 @@ class ObjectTypeBuilder(
 
     import cool.graph.util.coolSangria.FromInputImplicit.DefaultScalaResultMarshaller
 
-    val args = model.fields
-      .filter(!_.isList)
+    val args = model.scalarNonListFields
       .filter(_.isUnique)
       .map(field => Argument(field.name, SchemaBuilderUtils.mapToOptionalInputType(field), description = field.description.getOrElse("")))
 

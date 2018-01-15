@@ -37,11 +37,15 @@ case class CreateDataItem(
     }
   }
 
-  def getValueOrDefault(transformedValues: List[ArgumentValue], field: Field): Option[Any] = {
-    transformedValues
-      .find(_.name == field.name)
-      .map(v => Some(v.value))
-      .getOrElse(field.defaultValue.map(GCValueExtractor.fromGCValue))
+  def generateArgumentMapWithDefaultValues(model: Model, values: List[ArgumentValue]): Map[String, Any] = {
+    model.scalarNonListFields.flatMap { field =>
+      values.find(_.name == field.name) match {
+        case Some(v) if v.value == None && field.defaultValue.isEmpty && field.isRequired => throw APIErrors.InputInvalid("null", field.name, model.name)
+        case Some(v)                                                                      => Some((field.name, v.value))
+        case None if field.defaultValue.isDefined                                         => Some((field.name, GCValueExtractor.fromGCValue(field.defaultValue.get)))
+        case None                                                                         => None
+      }
+    }.toMap
   }
 
   override def execute: Future[ClientSqlStatementResult[Any]] = {
@@ -50,15 +54,7 @@ case class CreateDataItem(
     Future.successful(
       ClientSqlStatementResult(
         sqlAction = DBIO.seq(
-          DatabaseMutationBuilder.createDataItem(
-            project.id,
-            model.name,
-            model.scalarFields
-              .filter(!_.isList)
-              .filter(getValueOrDefault(values, _).isDefined)
-              .map(field => (field.name, getValueOrDefault(values, field).get))
-              .toMap
-          ),
+          DatabaseMutationBuilder.createDataItem(project.id, model.name, generateArgumentMapWithDefaultValues(model, values)),
           relayIds += ProjectRelayId(id = id, model.stableIdentifier)
         )))
   }

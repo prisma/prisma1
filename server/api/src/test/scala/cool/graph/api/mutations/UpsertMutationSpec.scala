@@ -1,6 +1,7 @@
 package cool.graph.api.mutations
 
 import cool.graph.api.ApiBaseSpec
+import cool.graph.gc_values.StringGCValue
 import cool.graph.shared.models.Project
 import cool.graph.shared.project_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
@@ -8,6 +9,7 @@ import org.scalatest.{FlatSpec, Matchers}
 class UpsertMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
   val project: Project = SchemaDsl() { schema =>
     schema.model("Todo").field_!("title", _.String).field_!("alias", _.String, isUnique = true).field("anotherIDField", _.GraphQLID, isUnique = true)
+    schema.model("WithDefaultValue").field_!("reqString", _.String, defaultValue = Some(StringGCValue("defaultValue"))).field_!("title", _.String)
   }
 
   override protected def beforeAll(): Unit = {
@@ -47,6 +49,55 @@ class UpsertMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
     result.pathAsString("data.upsertTodo.title") should be("new title")
 
     todoCount should be(1)
+  }
+
+  "an item" should "be created if it does not exist yet and use the defaultValue if necessary" in {
+    val todoId = "non-existent-id"
+    val result = server.executeQuerySimple(
+      s"""mutation {
+         |  upsertWithDefaultValue(
+         |    where: {id: "$todoId"}
+         |    create: {
+         |      title: "new title"
+         |    }
+         |    update: {
+         |      title: "updated title"
+         |    }
+         |  ){
+         |    title
+         |    reqString
+         |  }
+         |}
+      """.stripMargin,
+      project
+    )
+
+    result.pathAsString("data.upsertWithDefaultValue.title") should be("new title")
+    result.pathAsString("data.upsertWithDefaultValue.reqString") should be("defaultValue")
+  }
+
+  "an item" should "note be created when trying to set a required value to null even if there is a default value for that field" in {
+    server.executeQuerySimpleThatMustFail(
+      s"""mutation {
+         |  upsertWithDefaultValue(
+         |    where: {id: "NonExistantID"}
+         |    create: {
+         |      reqString: null
+         |      title: "new title"
+         |    }
+         |    update: {
+         |      title: "updated title"
+         |    }
+         |  ){
+         |    title
+         |    reqString
+         |  }
+         |}
+      """.stripMargin,
+      project,
+      3036,
+      errorContains = "The input value null was not valid for field reqString of type WithDefaultValue."
+    )
   }
 
   "an item" should "be updated if it already exists (by id)" in {
@@ -181,7 +232,6 @@ class UpsertMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
 
     todoCount should be(1)
   }
-
 
   "An upsert" should "perform only an update if the update changes the unique field used in the where clause" in {
     val todoId = server

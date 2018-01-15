@@ -1,6 +1,6 @@
 package cool.graph.api.database
 
-import cool.graph.api.ApiDependencies
+import cool.graph.api.{ApiDependencies, ApiMetrics}
 import cool.graph.api.database.DatabaseQueryBuilder._
 import cool.graph.api.database.Types.DataItemFilterCollection
 import cool.graph.api.mutations.NodeSelector
@@ -34,15 +34,9 @@ case class DataResolver(project: Project, useMasterDatabaseOnly: Boolean = false
     else apiDependencies.databases.readOnly
 
   protected def performWithTiming[A](name: String, f: => Future[A]): Future[A] = {
-    f
-    //    val begin = System.currentTimeMillis()
-    //    sqlQueryTimer.time(project.id, name) {
-    //      f andThen {
-    //        case x =>
-    //          requestContext.foreach(_.logSqlTiming(Timing(name, System.currentTimeMillis() - begin)))
-    //          x
-    //      }
-    //    }
+    ApiMetrics.sqlQueryTimer.timeFuture() {
+      f
+    }
   }
 
   def resolveByModel(model: Model, args: Option[QueryArguments] = None): Future[ResolverResult] = {

@@ -35,10 +35,9 @@ case class ApiTestDatabase()(implicit dependencies: ApiDependencies) extends Awa
 
   def delete(project: Project): Unit = dropDatabases(Vector(project.id))
 
-  private def createProjectDatabase(project: Project): Unit          = runDbActionOnClientDb(DatabaseMutationBuilder.createClientDatabaseForProject(project.id))
-  private def createModelTable(project: Project, model: Model): Unit = runDbActionOnClientDb(DatabaseMutationBuilder.createTableForModel(project.id, model))
-  private def createRelationTable(project: Project, relation: Relation): Unit =
-    runMutaction(CreateRelationTable(project.id, project.schema, relation = relation))
+  private def createProjectDatabase(project: Project)                   = runDbActionOnClientDb(DatabaseMutationBuilder.createClientDatabaseForProject(project.id))
+  private def createModelTable(project: Project, model: Model)          = runDbActionOnClientDb(DatabaseMutationBuilder.createTableForModel(project.id, model))
+  private def createRelationTable(project: Project, relation: Relation) = runMutaction(CreateRelationTable(project.id, project.schema, relation = relation))
 
   //  def loadRelationFieldMirrors(project: Project, relation: Relation): Unit = {
 //    relation.fieldMirrors.foreach { mirror =>

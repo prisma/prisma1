@@ -62,16 +62,22 @@ case class ApiServer(
     val requestId            = requestPrefix + ":api:" + createCuid()
     val requestBeginningTime = System.currentTimeMillis()
 
-    def logRequestEnd(projectId: Option[String] = None, clientId: Option[String] = None) = {
+    def logRequestEnd(projectId: String, throttledBy: Long = 0) = {
+      val end            = System.currentTimeMillis()
+      val actualDuration = end - requestBeginningTime - throttledBy
+      ApiMetrics.requestDuration.record(actualDuration, Seq(projectId))
       log(
         Json
           .toJson(
             LogData(
               key = LogKey.RequestComplete,
               requestId = requestId,
-              projectId = projectId,
-              clientId = clientId,
-              payload = Some(Map("request_duration" -> (System.currentTimeMillis() - requestBeginningTime)))
+              projectId = Some(projectId),
+              payload = Some(
+                Map(
+                  "request_duration" -> (end - requestBeginningTime),
+                  "throttled_by"     -> throttledBy
+                ))
             )
           )
           .toString())
@@ -97,17 +103,17 @@ case class ApiServer(
       }
       onComplete(result) {
         case scala.util.Success(result) =>
-          logRequestEnd(Some(projectId))
+          logRequestEnd(projectId)
           respondWithHeader(RawHeader("Throttled-By", result.throttledBy.toString + "ms")) {
             complete(result.result)
           }
 
         case scala.util.Failure(_: ThrottleBufferFullException) =>
-          logRequestEnd(Some(projectId))
+          logRequestEnd(projectId)
           throw ThrottlerBufferFullException()
 
         case scala.util.Failure(exception) => // just propagate the exception
-          logRequestEnd(Some(projectId))
+          logRequestEnd(projectId)
           throw exception
       }
     }
@@ -122,7 +128,7 @@ case class ApiServer(
               extractRawRequest(requestId) { rawRequest =>
                 val projectId = ProjectId.toEncodedString(name = name, stage = stage)
                 val result    = apiDependencies.requestHandler.handleRawRequestForPrivateApi(projectId = projectId, rawRequest = rawRequest)
-                result.onComplete(_ => logRequestEnd(Some(projectId)))
+                result.onComplete(_ => logRequestEnd(projectId))
                 complete(result)
               }
             } ~
@@ -130,7 +136,7 @@ case class ApiServer(
                 extractRawRequest(requestId) { rawRequest =>
                   val projectId = ProjectId.toEncodedString(name = name, stage = stage)
                   val result    = apiDependencies.requestHandler.handleRawRequestForImport(projectId = projectId, rawRequest = rawRequest)
-                  result.onComplete(_ => logRequestEnd(Some(projectId)))
+                  result.onComplete(_ => logRequestEnd(projectId))
                   complete(result)
                 }
               } ~
@@ -138,7 +144,7 @@ case class ApiServer(
                 extractRawRequest(requestId) { rawRequest =>
                   val projectId = ProjectId.toEncodedString(name = name, stage = stage)
                   val result    = apiDependencies.requestHandler.handleRawRequestForExport(projectId = projectId, rawRequest = rawRequest)
-                  result.onComplete(_ => logRequestEnd(Some(projectId)))
+                  result.onComplete(_ => logRequestEnd(projectId))
                   complete(result)
                 }
               } ~ {

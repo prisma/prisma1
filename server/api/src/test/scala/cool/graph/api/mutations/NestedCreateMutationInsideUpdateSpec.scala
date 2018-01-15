@@ -90,4 +90,48 @@ class NestedCreateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     )
     mustBeEqual(result.pathAsString("data.updateComment.todo.title"), "todo1")
   }
+
+  "a many to one relation" should "be creatable through a nested mutation using non-id unique field" in {
+    val project = SchemaDsl() { schema =>
+      val comment = schema.model("Comment").field("text", _.String, isUnique = true)
+      schema.model("Todo").field_!("title", _.String, isUnique = true).oneToManyRelation("comments", "todo", comment)
+    }
+    database.setup(project)
+
+    server.executeQuerySimple(
+      """mutation {
+        |  createComment(data:{ text: "comment|"}){
+        |    id
+        |    text
+        |  }
+        |}
+      """.stripMargin,
+      project
+    )
+
+    val result = server.executeQuerySimple(
+      s"""
+         |mutation {
+         |  updateComment(
+         |    where: {
+         |      text: "comment|"
+         |    }
+         |    data: {
+         |      todo: {
+         |        create: {title: "todo1"}
+         |      }
+         |    }
+         |  ){
+         |    id
+         |    todo {
+         |      title
+         |    }
+         |  }
+         |}
+      """.stripMargin,
+      project
+    )
+    mustBeEqual(result.pathAsString("data.updateComment.todo.title"), "todo1")
+  }
+
 }
