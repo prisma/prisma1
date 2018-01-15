@@ -23,8 +23,8 @@ lazy val versionSettings = SbtGit.versionWithGit ++ Seq(
 )
 
 lazy val commonSettings = versionSettings ++ Seq(
-  organization := "cool.graph",
-  organizationName := "graphcool",
+  organization := "com.prisma",
+  organizationName := "Graphcool",
   scalaVersion := "2.12.3",
   parallelExecution in Test := false,
   publishArtifact in Test := true,

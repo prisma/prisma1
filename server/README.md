@@ -1,5 +1,5 @@
-# Graphcool Server
-The Graphcool Server is composed of a GraphQL database, the Realtime Subscriptions API, and an engine enabling asynchronous, event-driven flows using serverless functions.
+# Prisma Server
+The Prisma Server is composed of a GraphQL database, the Realtime Subscriptions API, and an engine enabling asynchronous, event-driven flows using serverless functions.
 
 ## Running the tests
 1. Make sure to have docker up and running

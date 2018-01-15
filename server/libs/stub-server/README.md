@@ -38,14 +38,14 @@ lazy val myProject =
 
 And add the following  import to your test:
 ```scala
-import cool.graph.stub.Import._ // this import is all you need
+import com.prisma.stub.Import._ // this import is all you need
 ````
 
 ### How to suppress verbose log output
 We use the Jetty Server underneath. This server has the super annoying property to configure it's logging via class loading magic. This leads to very verbose logging in Play projects. Here's the fix:
 
 1. Place a file `jetty-logging.properties` in the `src/test/resources` or `src/main/resources` folder of your project.
-2. Add the line `org.eclipse.jetty.util.log.class=cool.graph.stub.JustWarningsLogger` to this file.
+2. Add the line `org.eclipse.jetty.util.log.class=com.prisma.stub.JustWarningsLogger` to this file.
 
 ### How to use
 
