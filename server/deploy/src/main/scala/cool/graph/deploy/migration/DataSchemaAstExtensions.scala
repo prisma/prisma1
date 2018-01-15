@@ -92,6 +92,7 @@ object DataSchemaAstExtensions {
     }
 
     def hasRelationDirective: Boolean        = relationName.isDefined
+    def hasDefaultValueDirective: Boolean    = defaultValue.isDefined
     def description: Option[String]          = fieldDefinition.directiveArgumentAsString("description", "text")
     def defaultValue: Option[String]         = fieldDefinition.directiveArgumentAsString("default", "value")
     def migrationValue: Option[String]       = fieldDefinition.directiveArgumentAsString("migrationValue", "value")
