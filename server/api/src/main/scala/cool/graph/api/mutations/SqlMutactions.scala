@@ -45,6 +45,7 @@ case class SqlMutactions(dataResolver: DataResolver) {
     val updateMutaction = getUpdateMutaction(outerWhere.model, args, id, previousValues)
     val nested          = getMutactionsForNestedMutation(args, outerWhere, triggeredFromCreate = false)
     val scalarLists     = getMutactionsForScalarLists(outerWhere.model, args, nodeId = id)
+
     updateMutaction.toList ++ nested ++ scalarLists
   }
 
@@ -60,12 +61,9 @@ case class SqlMutactions(dataResolver: DataResolver) {
 
   def getCreateMutaction(model: Model, args: CoolArgs, id: Id): CreateDataItem = {
     val scalarArguments = for {
-      field      <- model.scalarFields
+      field      <- model.scalarNonListFields
       fieldValue <- args.getFieldValueAs[Any](field)
     } yield {
-      if (field.isRequired && field.defaultValue.isDefined && fieldValue.isEmpty) {
-        throw APIErrors.InputInvalid("null", field.name, model.name)
-      }
       ArgumentValue(field.name, fieldValue)
     }
 

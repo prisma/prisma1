@@ -71,6 +71,8 @@ case class CoolArgs(raw: Map[String, Any]) {
 
   }
 
+  // todo it would be nice to standardize on one format, at the moment we mix Map[String, Any], CoolArgs and Vector[ArgumentValue]
+
   def nonListScalarArgumentsAsCoolArgs(model: Model): CoolArgs = {
     val argumentValues = nonListScalarArguments(model)
     val rawArgs        = argumentValues.map(x => x.name -> x.value).toMap
@@ -79,7 +81,7 @@ case class CoolArgs(raw: Map[String, Any]) {
 
   def nonListScalarArguments(model: Model): Vector[ArgumentValue] = {
     for {
-      field      <- model.scalarFields.toVector.filter(!_.isList)
+      field      <- model.scalarNonListFields.toVector
       fieldValue <- getFieldValueAs[Any](field)
     } yield {
       ArgumentValue(field.name, fieldValue)

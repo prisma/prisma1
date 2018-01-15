@@ -558,6 +558,36 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
     reloadedProject.schema.relations.head.name should be("TestModel2WhichAlsoHappensToTestModelWithAVeryLongName")
   }
 
+  "DeployMutation" should "error if defaultValue are provided for list fields" in {
+
+    val (project, _)           = setupProject(basicTypesGql)
+    val nameAndStage           = ProjectId.fromEncodedString(project.id)
+    val loadedProject: Project = projectPersistence.load(project.id).await.get
+
+    val schema =
+      """
+        |type TestModel {
+        |  id: ID! @unique
+        |  requiredIntList: [Int!]! @default(value: "[1,2]") 
+        |}
+      """.stripMargin
+
+    val result1 = server.query(s"""
+                                  |mutation {
+                                  |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(schema)}}){
+                                  |    migration {
+                                  |      applied
+                                  |    }
+                                  |    errors {
+                                  |      description
+                                  |    }
+                                  |  }
+                                  |}
+      """.stripMargin)
+
+    result1.pathAsSeq("data.deploy.errors").head.toString should include("List fields cannot have defaultValues.")
+
+  }
   private def formatFunctions(functions: Vector[FunctionInput]) = {
     def formatFunction(fn: FunctionInput) = {
       s"""{
@@ -574,7 +604,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
          |  value: ${escapeString(header.value)}
          |}""".stripMargin
     }
-    def formatArray[T](objs: Vector[T], formatFn: T => String) = "[" + objs.map(formatFn).mkString(",") + "]"
+    def formatArray[T](objs: Vector[T], formatFn: T => String) = objs.map(formatFn).mkString(start = "[", sep = ",", end = "]")
 
     formatArray(functions, formatFunction)
   }

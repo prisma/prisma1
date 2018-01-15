@@ -217,9 +217,18 @@ case class SchemaSyntaxValidator(schema: String, directiveRequirements: Seq[Dire
       }
     }
 
+    def ensureNoDefaultValuesOnListFields(fieldAndTypes: FieldAndType): Option[SchemaError] = {
+      if (fieldAndType.fieldDef.isList && fieldAndType.fieldDef.hasDefaultValueDirective) {
+        Some(SchemaErrors.listFieldsCantHaveDefaultValues(fieldAndType))
+      } else {
+        None
+      }
+    }
+
     fieldAndType.fieldDef.directives.flatMap(validateDirectiveRequirements) ++
       ensureDirectivesAreUnique(fieldAndType) ++
-      ensureRelationDirectivesArePlacedCorrectly(fieldAndType)
+      ensureRelationDirectivesArePlacedCorrectly(fieldAndType) ++
+      ensureNoDefaultValuesOnListFields(fieldAndType)
   }
 
   def validateEnumTypes: Seq[SchemaError] = {

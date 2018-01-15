@@ -173,8 +173,7 @@ class ObjectTypeBuilder(
   def mapToUniqueArguments(model: models.Model): List[Argument[_]] = {
     import cool.graph.util.coolSangria.FromInputImplicit.DefaultScalaResultMarshaller
 
-    model.fields
-      .filter(!_.isList)
+    model.scalarNonListFields
       .filter(_.isUnique)
       .map(field => Argument(field.name, SchemaBuilderUtils.mapToOptionalInputType(field), description = field.description.getOrElse("")))
   }
@@ -261,8 +260,7 @@ class ObjectTypeBuilder(
 
     import cool.graph.util.coolSangria.FromInputImplicit.DefaultScalaResultMarshaller
 
-    val args = model.fields
-      .filter(!_.isList)
+    val args = model.scalarNonListFields
       .filter(_.isUnique)
       .map(field => Argument(field.name, SchemaBuilderUtils.mapToOptionalInputType(field), description = field.description.getOrElse("")))
 
