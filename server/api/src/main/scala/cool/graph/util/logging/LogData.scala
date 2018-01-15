@@ -14,7 +14,9 @@ object LogKey extends Enumeration {
 case class LogData(
     key: LogKey.Value,
     requestId: String,
+    clientId: Option[String] = None,
     projectId: Option[String] = None,
+    message: Option[String] = None,
     payload: Option[Map[String, Any]] = None
 )
 

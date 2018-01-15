@@ -2,13 +2,13 @@ package cool.graph.deploy.server
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
+import akka.http.scaladsl.model.StatusCode
 import akka.http.scaladsl.model.StatusCodes._
 import akka.http.scaladsl.model.headers.RawHeader
-import akka.http.scaladsl.model.{HttpRequest, StatusCode}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.ExceptionHandler
 import akka.stream.ActorMaterializer
-import com.prisma.errors.{ErrorReporter, GraphQlMetadata, RequestMetadata}
+import com.prisma.errors.RequestMetadata
 import com.prisma.sangria.utils.ErrorHandler
 import com.typesafe.scalalogging.LazyLogging
 import cool.graph.akkautil.http.Server
@@ -21,8 +21,7 @@ import cool.graph.shared.models.ProjectWithClientId
 import cool.graph.util.logging.LogDataWrites.logDataWrites
 import cool.graph.util.logging.{LogData, LogKey}
 import play.api.libs.json.Json
-import sangria.execution.{Executor, HandledException}
-import sangria.marshalling.ResultMarshaller
+import sangria.execution.Executor
 import sangria.parser.QueryParser
 import spray.json._
 
