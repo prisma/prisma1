@@ -1,7 +1,7 @@
 package cool.graph.api.schema
 
 import akka.actor.ActorSystem
-import cool.graph.api.ApiDependencies
+import cool.graph.api.{ApiDependencies, ApiMetrics}
 import cool.graph.api.database.DataItem
 import cool.graph.api.database.DeferredTypes.{ManyModelDeferred, OneDeferred}
 import cool.graph.api.mutations._
@@ -40,7 +40,7 @@ case class SchemaBuilderImpl(
   val outputTypesBuilder                   = OutputTypesBuilder(project, objectTypes, dataResolver)
   val pluralsCache                         = new PluralsCache
 
-  def build(): Schema[ApiUserContext, Unit] = {
+  def build(): Schema[ApiUserContext, Unit] = ApiMetrics.schemaBuilderBuildTimerMetric.time(project.id) {
     val query        = buildQuery()
     val mutation     = buildMutation()
     val subscription = buildSubscription()

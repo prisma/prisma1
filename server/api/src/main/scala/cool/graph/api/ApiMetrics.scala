@@ -1,6 +1,6 @@
 package cool.graph.api
 
-import cool.graph.metrics.MetricsManager
+import cool.graph.metrics.{CustomTag, MetricsManager}
 import cool.graph.profiling.MemoryProfiler
 
 object ApiMetrics extends MetricsManager {
@@ -20,6 +20,8 @@ object ApiMetrics extends MetricsManager {
 
   MemoryProfiler.schedule(this)
 
-  val projectCacheGetCount  = defineCounter("projectCacheGetCount")
-  val projectCacheMissCount = defineCounter("projectCacheMissCount")
+  val projectCacheGetCount          = defineCounter("projectCacheGetCount")
+  val projectCacheMissCount         = defineCounter("projectCacheMissCount")
+  val schemaBuilderBuildTimerMetric = defineTimer("schemaBuilderBuildTimer", CustomTag("projectId", recordingThreshold = 600))
+
 }
