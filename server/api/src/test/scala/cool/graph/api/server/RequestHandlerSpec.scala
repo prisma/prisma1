@@ -2,6 +2,7 @@ package cool.graph.api.server
 
 import akka.http.scaladsl.model.StatusCodes
 import cool.graph.api.project.ProjectFetcher
+import cool.graph.api.schema.APIErrors.InvalidToken
 import cool.graph.api.schema.{ApiUserContext, SchemaBuilder}
 import cool.graph.api.{ApiBaseSpec, GraphQLResponseAssertions}
 import cool.graph.auth.AuthImpl
@@ -21,10 +22,8 @@ class RequestHandlerSpec extends FlatSpec with Matchers with ApiBaseSpec with Aw
   import testDependencies.reporter
 
   "a request without token" should "result in an InvalidToken error" in {
-    val (_, result) = handler(projectWithSecret).handleRawRequestForPublicApi(projectWithSecret.id, request("header")).await
-
-    result.pathAsLong("errors.[0].code") should equal(3015)
-    result.pathAsString("errors.[0].message") should include("Your token is invalid")
+    val error = handler(projectWithSecret).handleRawRequestForPublicApi(projectWithSecret.id, request("header")).failed.await
+    error shouldBe an[InvalidToken]
   }
 
   "request with a proper token" should "result in a successful query" in {
