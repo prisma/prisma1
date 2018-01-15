@@ -1,6 +1,6 @@
 {
   "name": "prisma-cli",
-  "version": "1.0.0-alpha.4.1.9",
+  "version": "1.0.0-alpha.4.3.1",
   "main": "dist/index.js",
   "bin": {
     "prisma": "dist/index.js"
@@ -48,7 +48,7 @@
   },
   "dependencies": {
     "fs-extra": "^4.0.1",
-    "prisma-cli-core": "0.0.11",
+    "prisma-cli-core": "0.0.13",
     "prisma-cli-engine": "0.0.16",
     "semver": "^5.4.1",
     "source-map-support": "^0.4.18"
