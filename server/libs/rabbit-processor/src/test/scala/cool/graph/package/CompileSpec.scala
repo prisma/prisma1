@@ -1,17 +1,16 @@
 package cool.graph
 
-import cool.graph.bugsnag.BugSnaggerMock
+import com.prisma.errors.BugsnagErrorReporter
 
 import scala.util.{Failure, Success, Try}
 
 object CompileSpec {
-  import cool.graph.rabbit.Import._
-  import cool.graph.rabbit.Import.ExchangeTypes._
   import cool.graph.rabbit.Import.Bindings._
+  import cool.graph.rabbit.Import._
 
-  implicit val bugsnag = BugSnaggerMock
-  val amqpUri          = "amqp://localhost"
-  val queueName        = "some-name"
+  implicit val reporter = BugsnagErrorReporter("")
+  val amqpUri           = "amqp://localhost"
+  val queueName         = "some-name"
 
   // Consume with 1 consumer
   for {
