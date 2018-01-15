@@ -1,14 +1,14 @@
 package cool.graph.akkautil
 
 import akka.actor.Actor
-import cool.graph.bugsnag.{BugSnagger, MetaData}
+import com.prisma.errors.{ErrorReporter, GenericMetadata}
 
 trait LogUnhandledExceptions extends Actor {
 
-  val bugsnag: BugSnagger
+  val reporter: ErrorReporter
 
   override def preRestart(reason: Throwable, message: Option[Any]): Unit = {
     super.preRestart(reason, message)
-    bugsnag.report(reason, Seq(MetaData("Akka", "message", message)))
+    reporter.report(reason, GenericMetadata("Akka", "Message", message.toString))
   }
 }

@@ -24,11 +24,8 @@ case class UpsertDataItem(
     where: NodeSelector
 ) extends ClientSqlDataChangeMutaction {
 
-  val idOfNewItem      = Cuid.createCuid()
-  val actualCreateArgs = CoolArgs(createArgs.raw + ("id" -> idOfNewItem))
-
   override def execute: Future[ClientSqlStatementResult[Any]] = Future.successful {
-    ClientSqlStatementResult(DatabaseMutationBuilder.upsert(project, where, actualCreateArgs, updateArgs))
+    ClientSqlStatementResult(DatabaseMutationBuilder.upsert(project, where, createArgs, updateArgs))
   }
 
   override def handleErrors = {

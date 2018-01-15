@@ -3,6 +3,7 @@ package cool.graph.deploy.database.persistence
 import cool.graph.deploy.database.tables.Tables
 import cool.graph.deploy.specutils.{DeploySpecBase, TestProject}
 import cool.graph.shared.models._
+import org.joda.time.DateTime
 import org.scalatest.{FlatSpec, Matchers}
 import slick.jdbc.MySQLProfile.api._
 
@@ -108,6 +109,28 @@ class MigrationPersistenceImplSpec extends FlatSpec with Matchers with DeploySpe
 
     val reloadedMigration = migrationPersistence.byId(createdMigration.id).await.get
     reloadedMigration.rolledBack shouldEqual 1
+  }
+
+  ".updateMigrationStartedAt()" should "update the migration startedAt timestamp correctly" in {
+    val (project, _)     = setupProject(basicTypesGql)
+    val createdMigration = migrationPersistence.create(Migration.empty(project.id)).await
+    val time             = DateTime.now()
+
+    migrationPersistence.updateStartedAt(createdMigration.id, time).await
+
+    val reloadedMigration = migrationPersistence.byId(createdMigration.id).await.get
+    reloadedMigration.startedAt.isDefined shouldEqual true // some bug causes mysql timstamps to be off by a margin, equal is broken
+  }
+
+  ".updateMigrationFinishedAt()" should "update the migration finishedAt timestamp correctly" in {
+    val (project, _)     = setupProject(basicTypesGql)
+    val createdMigration = migrationPersistence.create(Migration.empty(project.id)).await
+    val time             = DateTime.now()
+
+    migrationPersistence.updateFinishedAt(createdMigration.id, time).await
+
+    val reloadedMigration = migrationPersistence.byId(createdMigration.id).await.get
+    reloadedMigration.finishedAt.isDefined shouldEqual true // some bug causes mysql timstamps to be off by a margin, equal is broken
   }
 
   ".getLastMigration()" should "get the last migration applied to a project" in {

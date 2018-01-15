@@ -68,7 +68,7 @@ class QueriesSchemaBuilderSpec extends WordSpec with Matchers with ApiBaseSpec w
         "todoesConnection(where: TodoWhereInput, orderBy: TodoOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): TodoConnection!"
       )
 
-      schema should containType("TodoConnection", fields = Vector("pageInfo: PageInfo!", "edges: [TodoEdge]!"))
+      schema should containType("TodoConnection", fields = Vector("pageInfo: PageInfo!", "edges: [TodoEdge]!", "aggregate: AggregateTodo!"))
       schema should containType("TodoEdge", fields = Vector("node: Todo!", "cursor: String!"))
     }
   }

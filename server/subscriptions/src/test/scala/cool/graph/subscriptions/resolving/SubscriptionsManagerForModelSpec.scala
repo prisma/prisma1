@@ -5,7 +5,6 @@ import java.util.concurrent.atomic.AtomicLong
 import akka.actor.{ActorSystem, Props}
 import akka.stream.ActorMaterializer
 import akka.testkit.{TestKit, TestProbe}
-import cool.graph.bugsnag.{BugSnagger, BugSnaggerMock}
 import cool.graph.messagebus.pubsub.Only
 import cool.graph.shared.models.ModelMutationType
 import cool.graph.shared.models.ModelMutationType.ModelMutationType
@@ -35,7 +34,6 @@ class SubscriptionsManagerForModelSpec
   implicit val materializer = ActorMaterializer()
   implicit val dependencies = new SubscriptionDependenciesForTest()
   //val testDatabase                 = new SimpleTestDatabase
-  implicit val bugsnag: BugSnagger = BugSnaggerMock
 
   val testQuery = QueryParser.parse("""
                                       |subscription {
@@ -74,8 +72,7 @@ class SubscriptionsManagerForModelSpec
           Props {
             new SubscriptionsManagerForModel(
               project,
-              todoModel,
-              bugsnag
+              todoModel
             ) {
               override def processDatabaseEventForSubscription(
                   event: String,

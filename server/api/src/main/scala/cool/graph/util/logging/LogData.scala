@@ -14,15 +14,9 @@ object LogKey extends Enumeration {
 case class LogData(
     key: LogKey.Value,
     requestId: String,
-    clientId: Option[String] = None,
     projectId: Option[String] = None,
-    message: Option[String] = None,
     payload: Option[Map[String, Any]] = None
-) {
-  import LogDataWrites._
-
-  lazy val json: String = Json.toJson(this).toString()
-}
+)
 
 object LogDataWrites extends DefaultWrites {
   implicit val anyWrites: Writes[Any] = Writes(any => JsString(any.toString))

@@ -2,8 +2,8 @@ package cool.graph.subscriptions.protocol
 
 import akka.actor.{Actor, ActorRef, PoisonPill, Props, Terminated}
 import cool.graph.akkautil.{LogUnhandled, LogUnhandledExceptions}
-import cool.graph.bugsnag.BugSnagger
 import cool.graph.messagebus.PubSubPublisher
+import cool.graph.subscriptions.SubscriptionDependencies
 import cool.graph.subscriptions.protocol.SubscriptionProtocolV05.Requests.{InitConnection, SubscriptionSessionRequestV05}
 import cool.graph.subscriptions.protocol.SubscriptionProtocolV05.Responses.SubscriptionSessionResponseV05
 import cool.graph.subscriptions.protocol.SubscriptionProtocolV07.Requests.{GqlConnectionInit, SubscriptionSessionRequest}
@@ -32,13 +32,15 @@ object SubscriptionSessionManager {
   }
 }
 
-case class SubscriptionSessionManager(subscriptionsManager: ActorRef, bugsnag: BugSnagger)(
+case class SubscriptionSessionManager(subscriptionsManager: ActorRef)(
     implicit responsePublisher05: PubSubPublisher[SubscriptionSessionResponseV05],
-    responsePublisher07: PubSubPublisher[SubscriptionSessionResponse]
+    responsePublisher07: PubSubPublisher[SubscriptionSessionResponse],
+    dependencies: SubscriptionDependencies
 ) extends Actor
     with LogUnhandledExceptions
     with LogUnhandled {
 
+  val reporter                                = dependencies.reporter
   val sessions: mutable.Map[String, ActorRef] = mutable.Map.empty
 
   override def receive: Receive = logUnhandled {
@@ -76,12 +78,12 @@ case class SubscriptionSessionManager(subscriptionsManager: ActorRef, bugsnag: B
   }
 
   private def startSessionActorForProtocolVersionV05(sessionId: String, projectId: String): ActorRef = {
-    val props = Props(SubscriptionSessionActorV05(sessionId, projectId, subscriptionsManager, bugsnag, responsePublisher05))
+    val props = Props(SubscriptionSessionActorV05(sessionId, projectId, subscriptionsManager, responsePublisher05))
     startSessionActor(sessionId, props)
   }
 
   private def startSessionActorForCurrentProtocolVersion(sessionId: String, projectId: String): ActorRef = {
-    val props = Props(SubscriptionSessionActor(sessionId, projectId, subscriptionsManager, bugsnag, responsePublisher07))
+    val props = Props(SubscriptionSessionActor(sessionId, projectId, subscriptionsManager, responsePublisher07))
     startSessionActor(sessionId, props)
   }
 

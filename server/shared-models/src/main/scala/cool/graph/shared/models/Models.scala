@@ -182,7 +182,9 @@ case class Project(
   def getFunctionByName(name: String): Option[Function] = functions.find(_.name == name)
   def getFunctionByName_!(name: String): Function       = getFunctionByName(name).get //OrElse(throw SystemErrors.InvalidFunctionName(name))
 }
-
+object ProjectWithClientId {
+  def apply(project: Project): ProjectWithClientId = ProjectWithClientId(project, project.ownerId)
+}
 case class ProjectWithClientId(project: Project, clientId: Id) {
   val id: Id = project.id
 }
@@ -409,7 +411,7 @@ case class Relation(
     modelBId: Id,
     fieldMirrors: List[RelationFieldMirror] = List.empty
 ) {
-  val id = "_" + name // to avoid potential name clashes with user chosen model names
+  val id = "_" + name
 
   def connectsTheModels(model1: Model, model2: Model): Boolean   = connectsTheModels(model1.id, model2.id)
   def connectsTheModels(model1: String, model2: String): Boolean = (modelAId == model1 && modelBId == model2) || (modelAId == model2 && modelBId == model1)

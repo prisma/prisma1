@@ -1,19 +1,11 @@
 package cool.graph.api.schema
 
-trait ApiError extends Exception {
-  def message: String
-  def errorCode: Int
-}
-
-abstract class AbstractApiError(val message: String, val errorCode: Int) extends ApiError
-
-case class InvalidProjectId(projectId: String) extends AbstractApiError(s"No service with id '$projectId'", 4000)
-
+import com.prisma.sangria.utils.ErrorWithCode
 import cool.graph.api.database.mutactions.MutactionExecutionResult
 import cool.graph.api.mutations.{NodeSelector, ParentInfo}
 import spray.json.JsValue
 
-abstract class GeneralError(message: String) extends Exception with MutactionExecutionResult {
+abstract class GeneralError(message: String) extends Exception with MutactionExecutionResult with ErrorWithCode {
   override def getMessage: String = message
 }
 
@@ -29,6 +21,8 @@ object CommonErrors {
 
   case class MutationsNotAllowedForProject(projectId: String)
       extends UserFacingError(s"The project '$projectId' is currently in read-only mode. Please try again in a few minutes", 1003)
+
+  case class ThrottlerBufferFullException() extends UserFacingError("There are too many concurrent queries for this service.", 1004)
 }
 
 // errors caused by the client when using the relay/simple API- should only appear in relay/simple/shared!
@@ -155,4 +149,5 @@ object APIErrors {
         s"The relation ${parentInfo.relation.name} has no Node for the model ${parentInfo.model.name} with value `${parentInfo.where.fieldValueAsString}` for ${parentInfo.where.field.name} connected to a Node for the model ${innerWhere.model.name} with value `${innerWhere.fieldValueAsString}` for ${innerWhere.field.name}",
         3041
       )
+
 }

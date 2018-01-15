@@ -46,24 +46,31 @@ class ObjectTypeBuilder(
     IdBasedConnection.definition[ApiUserContext, IdBasedConnection, DataItem](
       name = model.name,
       nodeType = modelObjectTypes(model.name),
-      connectionFields = List(
-        // todo: add aggregate fields
+      connectionFields = {
 
-//        sangria.schema.Field(
-//          "count",
-//          IntType,
-//          Some("Count of filtered result set without considering pagination arguments"),
-//          resolve = ctx => {
-//            val countArgs = ctx.value.parent.args.map(args => SangriaQueryArguments.createSimpleQueryArguments(None, None, None, None, None, args.filter, None))
-//
-//            ctx.value.parent match {
-//              case ConnectionParentElement(Some(nodeId), Some(field), _) =>
-//                CountToManyDeferred(field, nodeId, countArgs)
-//              case _ =>
-//                CountManyModelDeferred(model, countArgs)
-//            }
-//          }
-//        )
+        List(
+          SangriaField(
+            "aggregate",
+            aggregateTypeForModel(model),
+            resolve = (ctx: Context[ApiUserContext, IdBasedConnection[DataItem]]) => {
+              val emptyQueryArguments = QueryArguments(None, None, None, None, None, None, None)
+              ctx.value.parent.args.getOrElse(emptyQueryArguments)
+            }
+          )
+        )
+      }
+    )
+  }
+
+  def aggregateTypeForModel(model: models.Model): ObjectType[ApiUserContext, QueryArguments] = {
+    ObjectType(
+      name = s"Aggregate${model.name}",
+      fields = List(
+        SangriaField(
+          "count",
+          IntType,
+          resolve = (ctx: Context[ApiUserContext, QueryArguments]) => CountManyModelDeferred(model, Some(ctx.value))
+        )
       )
     )
   }
@@ -166,8 +173,7 @@ class ObjectTypeBuilder(
   def mapToUniqueArguments(model: models.Model): List[Argument[_]] = {
     import cool.graph.util.coolSangria.FromInputImplicit.DefaultScalaResultMarshaller
 
-    model.fields
-      .filter(!_.isList)
+    model.scalarNonListFields
       .filter(_.isUnique)
       .map(field => Argument(field.name, SchemaBuilderUtils.mapToOptionalInputType(field), description = field.description.getOrElse("")))
   }
@@ -254,8 +260,7 @@ class ObjectTypeBuilder(
 
     import cool.graph.util.coolSangria.FromInputImplicit.DefaultScalaResultMarshaller
 
-    val args = model.fields
-      .filter(!_.isList)
+    val args = model.scalarNonListFields
       .filter(_.isUnique)
       .map(field => Argument(field.name, SchemaBuilderUtils.mapToOptionalInputType(field), description = field.description.getOrElse("")))
 

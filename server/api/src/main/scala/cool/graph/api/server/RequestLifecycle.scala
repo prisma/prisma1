@@ -28,7 +28,7 @@ case class RawRequest(
 ) extends RawRequestAttributes {
 
   def toGraphQlRequest(
-      project: ProjectWithClientId,
+      project: Project,
       schema: Schema[ApiUserContext, Unit]
   ): Try[GraphQlRequest] = {
     val queries: Try[Vector[GraphQlQuery]] = TryUtil.sequence {
@@ -49,7 +49,7 @@ case class RawRequest(
           ip = ip,
           json = json,
           sourceHeader = sourceHeader,
-          project = project.project,
+          project = project,
           schema = schema,
           queries = queries,
           isBatch = isBatch

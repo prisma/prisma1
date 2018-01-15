@@ -2,8 +2,8 @@ package cool.graph.messagebus.testkits
 
 import akka.actor.ActorRef
 import akka.testkit.TestProbe
+import com.prisma.errors.ErrorReporter
 import cool.graph.akkautil.SingleThreadedActorSystem
-import cool.graph.bugsnag.BugSnagger
 import cool.graph.messagebus.Conversions.{ByteMarshaller, ByteUnmarshaller, Converter}
 import cool.graph.messagebus.PubSub
 import cool.graph.messagebus.pubsub.{Message, Only, Subscription, Topic}
@@ -37,13 +37,12 @@ case class RabbitAkkaPubSubTestKit[T](
     randomizeQueues: Boolean = false,
     exchangeDurable: Boolean = false
 )(
-    implicit tag: ClassTag[Message[T]],
+    implicit val reporter: ErrorReporter,
+    tag: ClassTag[Message[T]],
     marshaller: ByteMarshaller[T],
     unmarshaller: ByteUnmarshaller[T]
 ) extends PubSub[T] {
-
-  implicit val system                 = SingleThreadedActorSystem("rabbitPubSubTestKit")
-  implicit val bugSnagger: BugSnagger = null
+  implicit val system = SingleThreadedActorSystem("rabbitPubSubTestKit")
 
   val probe                        = TestProbe()
   val logId                        = new java.util.Random().nextInt(Integer.MAX_VALUE) // For log output correlation

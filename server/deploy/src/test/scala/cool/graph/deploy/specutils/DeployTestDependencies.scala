@@ -2,6 +2,7 @@ package cool.graph.deploy.specutils
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
+import com.prisma.errors.{BugsnagErrorReporter, ErrorReporter}
 import cool.graph.deploy.DeployDependencies
 import cool.graph.deploy.server.DummyClusterAuth
 import cool.graph.graphql.GraphQlClient
@@ -9,6 +10,8 @@ import cool.graph.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
 
 case class DeployTestDependencies()(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends DeployDependencies {
   override implicit def self: DeployDependencies = this
+
+  implicit val reporter: ErrorReporter = BugsnagErrorReporter(sys.env.getOrElse("BUGSNAG_API_KEY", ""))
 
   val internalTestDb = new InternalTestDatabase()
   val clientTestDb   = new ClientTestDatabase()

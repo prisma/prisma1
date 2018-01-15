@@ -1,8 +1,8 @@
 package cool.graph.messagebus.testkits
 
 import akka.testkit.TestProbe
+import com.prisma.errors.ErrorReporter
 import cool.graph.akkautil.SingleThreadedActorSystem
-import cool.graph.bugsnag.BugSnagger
 import cool.graph.messagebus.Conversions.{ByteMarshaller, ByteUnmarshaller}
 import cool.graph.messagebus.Queue
 import cool.graph.messagebus.QueueConsumer.ConsumeFn
@@ -39,13 +39,13 @@ case class RabbitQueueTestKit[T](
     backoff: BackoffStrategy = ConstantBackoff(1.second),
     exchangeDurable: Boolean = false
 )(
-    implicit tag: ClassTag[T],
+    implicit reporter: ErrorReporter,
+    tag: ClassTag[T],
     marshaller: ByteMarshaller[T],
     unmarshaller: ByteUnmarshaller[T]
 ) extends Queue[T] {
 
-  implicit val system                 = SingleThreadedActorSystem("rabbitTestKit")
-  implicit val bugSnagger: BugSnagger = null
+  implicit val system = SingleThreadedActorSystem("rabbitTestKit")
 
   val probe                    = TestProbe()
   val errorProbe               = TestProbe()

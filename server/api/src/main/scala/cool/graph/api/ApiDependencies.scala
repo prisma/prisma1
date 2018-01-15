@@ -2,18 +2,19 @@ package cool.graph.api
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
+import com.prisma.errors.{BugsnagErrorReporter, ErrorReporter}
 import com.typesafe.config.{Config, ConfigFactory}
 import cool.graph.api.database.deferreds.DeferredResolverProvider
 import cool.graph.api.database.{DataResolver, Databases}
 import cool.graph.api.project.{ProjectFetcher, ProjectFetcherImpl}
 import cool.graph.api.schema.{ApiUserContext, SchemaBuilder}
-import cool.graph.api.server.{Auth, AuthImpl, RequestHandler}
+import cool.graph.api.server.RequestHandler
 import cool.graph.api.subscriptions.Webhook
-import cool.graph.bugsnag.{BugSnagger, BugSnaggerImpl}
+import cool.graph.auth.{Auth, AuthImpl}
 import cool.graph.client.server.{GraphQlRequestHandler, GraphQlRequestHandlerImpl}
-import cool.graph.messagebus.{PubSubPublisher, PubSubSubscriber, Queue}
 import cool.graph.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
 import cool.graph.messagebus.queue.inmemory.InMemoryAkkaQueue
+import cool.graph.messagebus.{PubSubPublisher, Queue}
 import cool.graph.shared.models.Project
 import cool.graph.utils.await.AwaitUtils
 
@@ -27,12 +28,12 @@ trait ApiDependencies extends AwaitUtils {
   implicit val system: ActorSystem
   val materializer: ActorMaterializer
   def projectFetcher: ProjectFetcher
-  val apiSchemaBuilder: SchemaBuilder
-  val databases: Databases
-  val webhookPublisher: Queue[Webhook]
+  def apiSchemaBuilder: SchemaBuilder
+  def databases: Databases
+  def webhookPublisher: Queue[Webhook]
 
   implicit lazy val executionContext: ExecutionContext  = system.dispatcher
-  implicit lazy val bugSnagger: BugSnagger              = BugSnaggerImpl(sys.env("BUGSNAG_API_KEY"))
+  implicit lazy val reporter: ErrorReporter             = BugsnagErrorReporter(sys.env("BUGSNAG_API_KEY"))
   lazy val log: String => Unit                          = println
   lazy val graphQlRequestHandler: GraphQlRequestHandler = GraphQlRequestHandlerImpl(log)
   lazy val auth: Auth                                   = AuthImpl

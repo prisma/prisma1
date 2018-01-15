@@ -203,4 +203,40 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
       project
     )
   }
+
+  "a one to many relation" should "be connectable by unique through a nested mutation" in {
+    val project = SchemaDsl() { schema =>
+      val comment = schema.model("Comment").field("text", _.String, isUnique = true)
+      schema.model("Todo").field("title", _.String, isUnique = true).oneToManyRelation("comments", "todo", comment)
+    }
+    database.setup(project)
+
+    server.executeQuerySimple("""mutation { createTodo(data: {title: "todo"}){ id } }""", project).pathAsString("data.createTodo.id")
+    server.executeQuerySimple("""mutation { createComment(data: {text: "comment1"}){ id } }""", project).pathAsString("data.createComment.id")
+    server.executeQuerySimple("""mutation { createComment(data: {text: "comment2"}){ id } }""", project).pathAsString("data.createComment.id")
+
+    val result = server.executeQuerySimple(
+      s"""mutation {
+         |  updateTodo(
+         |    where: {
+         |      title: "todo"
+         |    }
+         |    data:{
+         |      comments: {
+         |        connect: [{text: "comment1"}, {text: "comment2"}]
+         |      }
+         |    }
+         |  ){
+         |    comments {
+         |      text
+         |    }
+         |  }
+         |}
+      """.stripMargin,
+      project
+    )
+
+    mustBeEqual(result.pathAsJsValue("data.updateTodo.comments").toString, """[{"text":"comment1"},{"text":"comment2"}]""")
+  }
+
 }

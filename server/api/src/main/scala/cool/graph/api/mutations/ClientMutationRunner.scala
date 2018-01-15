@@ -1,5 +1,6 @@
 package cool.graph.api.mutations
 
+import cool.graph.api.ApiMetrics
 import cool.graph.api.database.mutactions._
 import cool.graph.api.database.{DataItem, DataResolver}
 import cool.graph.api.schema.{APIErrors, GeneralError}
@@ -21,14 +22,14 @@ object ClientMutationRunner {
       mutactionGroups  <- clientMutation.prepareMutactions()
       errors           <- verifyMutactions(mutactionGroups, dataResolver)
       _                = if (errors.nonEmpty) throw errors.head
-      executionResults <- performMutactions(mutactionGroups)
+      executionResults <- performMutactions(mutactionGroups, dataResolver.project.id)
       _                <- performPostExecutions(mutactionGroups)
       dataItem <- {
         executionResults
           .filter(_.isInstanceOf[GeneralError])
           .map(_.asInstanceOf[GeneralError]) match {
           case errors if errors.nonEmpty => throw errors.head
-          case _ => clientMutation.getReturnValue
+          case _                         => clientMutation.getReturnValue
         }
       }
     } yield dataItem
@@ -49,30 +50,30 @@ object ClientMutationRunner {
     errors
   }
 
-  private def performMutactions(mutactionGroups: List[MutactionGroup]): Future[List[MutactionExecutionResult]] = {
+  private def performMutactions(mutactionGroups: List[MutactionGroup], projectId: String): Future[List[MutactionExecutionResult]] = {
     // Cancel further Mutactions and MutactionGroups when a Mutaction fails
     // Failures in async MutactionGroups don't stop other Mutactions in same group
-    mutactionGroups.map(group => () => performGroup(group)).runSequentially.map(_.flatten)
+    mutactionGroups.map(group => () => performGroup(group, projectId)).runSequentially.map(_.flatten)
   }
 
-  private def performGroup(group: MutactionGroup): Future[List[MutactionExecutionResult]] = {
+  private def performGroup(group: MutactionGroup, projectId: String): Future[List[MutactionExecutionResult]] = {
     group match {
       case MutactionGroup(mutactions, true) =>
-        Future.sequence(mutactions.map(runWithTiming))
+        Future.sequence(mutactions.map(m => runWithTiming(m, projectId)))
 
       case MutactionGroup(mutactions: List[Mutaction], false) =>
-        mutactions.map(m => () => runWithTiming(m)).runSequentially
+        mutactions.map(m => () => runWithTiming(m, projectId)).runSequentially
     }
   }
 
-  private def runWithTiming(mutaction: Mutaction): Future[MutactionExecutionResult] = {
+  private def runWithTiming(mutaction: Mutaction, projectId: String): Future[MutactionExecutionResult] = {
     performWithTiming(
       s"execute ${mutaction.getClass.getSimpleName}", {
         mutaction match {
           case mut: ClientSqlDataChangeMutaction =>
-            //            sqlDataChangeMutactionTimer.timeFuture(dataResolver.project.id) {
-            runWithErrorHandler(mut)
-          //            }
+            ApiMetrics.sqlDataChangeMutactionTimer.timeFuture(projectId) {
+              runWithErrorHandler(mut)
+            }
           case mut =>
             runWithErrorHandler(mut)
         }

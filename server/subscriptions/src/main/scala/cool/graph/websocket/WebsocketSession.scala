@@ -2,13 +2,11 @@ package cool.graph.websocket
 
 import java.util.concurrent.TimeUnit
 
-import akka.actor.{Actor, ActorRef, PoisonPill, Props, ReceiveTimeout, Stash, Terminated}
+import akka.actor.{Actor, ActorRef, PoisonPill, ReceiveTimeout, Stash, Terminated}
 import akka.http.scaladsl.model.ws.TextMessage
+import com.prisma.errors.ErrorReporter
 import cool.graph.akkautil.{LogUnhandled, LogUnhandledExceptions}
-import cool.graph.bugsnag.BugSnagger
 import cool.graph.messagebus.QueuePublisher
-import cool.graph.messagebus.queue.MappingQueuePublisher
-import cool.graph.messagebus.testkits.InMemoryQueueTestKit
 import cool.graph.subscriptions.SubscriptionDependencies
 import cool.graph.websocket.protocol.Request
 
@@ -20,7 +18,7 @@ object WebsocketSessionManager {
     case class OpenWebsocketSession(projectId: String, sessionId: String, outgoing: ActorRef)
     case class CloseWebsocketSession(sessionId: String)
 
-    case class IncomingWebsocketMessage(projectId: String, sessionId: String, body: String)
+//    case class IncomingWebsocketMessage(projectId: String, sessionId: String, body: String)
     case class IncomingQueueMessage(sessionId: String, body: String)
 
     case class RegisterWebsocketSession(sessionId: String, actor: ActorRef)
@@ -33,8 +31,8 @@ object WebsocketSessionManager {
 
 case class WebsocketSessionManager(
     requestsPublisher: QueuePublisher[Request],
-    bugsnag: BugSnagger
-) extends Actor
+)(implicit val reporter: ErrorReporter)
+    extends Actor
     with LogUnhandled
     with LogUnhandledExceptions {
   import WebsocketSessionManager.Requests._
@@ -50,11 +48,11 @@ case class WebsocketSessionManager(
 //    case CloseWebsocketSession(sessionId) =>
 //      websocketSessions.get(sessionId).foreach(context.stop)
 
-    case req: IncomingWebsocketMessage =>
-      websocketSessions.get(req.sessionId) match {
-        case Some(session) => session ! req
-        case None          => println(s"No session actor found for ${req.sessionId} when processing websocket message. This should only happen very rarely.")
-      }
+//    case req: IncomingWebsocketMessage =>
+//      websocketSessions.get(req.sessionId) match {
+//        case Some(session) => session ! req
+//        case None          => println(s"No session actor found for ${req.sessionId} when processing websocket message. This should only happen very rarely.")
+//      }
 
     case req: RegisterWebsocketSession =>
       context.watch(req.actor)
@@ -79,7 +77,6 @@ case class WebsocketSession(
     outgoing: ActorRef,
     manager: ActorRef,
     requestsPublisher: QueuePublisher[Request],
-    bugsnag: BugSnagger,
     isV7protocol: Boolean
 )(implicit dependencies: SubscriptionDependencies)
     extends Actor
@@ -87,13 +84,13 @@ case class WebsocketSession(
     with LogUnhandledExceptions
     with Stash {
   import WebsocketSessionManager.Requests._
-  import WebsocketSessionManager.Responses._
   import metrics.SubscriptionWebsocketMetrics._
 
+  val reporter    = dependencies.reporter
   implicit val ec = context.system.dispatcher
 
   activeWsConnections.inc
-  context.setReceiveTimeout(FiniteDuration(60, TimeUnit.MINUTES))
+  context.setReceiveTimeout(FiniteDuration(10, TimeUnit.MINUTES))
 
   manager ! RegisterWebsocketSession(sessionId, self)
 
@@ -109,10 +106,16 @@ case class WebsocketSession(
   )
 
   def receive: Receive = logUnhandled {
-    case TextMessage.Strict(body)             => println(s"received TextMessage: $body"); requestsPublisher.publish(Request(sessionId, projectId, body))
-    case IncomingWebsocketMessage(_, _, body) => println(s"received WebsocketMessage: $body"); requestsPublisher.publish(Request(sessionId, projectId, body))
-    case IncomingQueueMessage(_, body)        => println(s"sending out over ws: $body"); outgoing ! TextMessage(body)
-    case ReceiveTimeout                       => println(s"received Timeout"); context.stop(self)
+    case TextMessage.Strict(body) =>
+      requestsPublisher.publish(Request(sessionId, projectId, body))
+      incomingWebsocketMessageRate.inc()
+
+    case IncomingQueueMessage(_, body) =>
+      outgoing ! TextMessage(body)
+      outgoingWebsocketMessageRate.inc()
+
+    case ReceiveTimeout =>
+      context.stop(self)
   }
 
   override def postStop = {

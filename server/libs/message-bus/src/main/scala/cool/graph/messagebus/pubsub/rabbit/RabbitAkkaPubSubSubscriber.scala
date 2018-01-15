@@ -1,7 +1,7 @@
 package cool.graph.messagebus.pubsub.rabbit
 
 import akka.actor.{ActorRef, ActorSystem, Props}
-import cool.graph.bugsnag.BugSnagger
+import com.prisma.errors.ErrorReporter
 import cool.graph.messagebus.Conversions.{ByteUnmarshaller, Converter}
 import cool.graph.messagebus._
 import cool.graph.messagebus.pubsub.PubSubProtocol.Publish
@@ -32,7 +32,7 @@ case class RabbitAkkaPubSubSubscriber[T](
     exchange: Exchange,
     onShutdown: () => Unit = () => ()
 )(
-    implicit val bugSnagger: BugSnagger,
+    implicit val reporter: ErrorReporter,
     val system: ActorSystem,
     unmarshaller: ByteUnmarshaller[T]
 ) extends PubSubSubscriber[T] {

@@ -2,8 +2,8 @@ package cool.graph.subscriptions
 
 import akka.actor.{ActorSystem, Props}
 import akka.stream.ActorMaterializer
+import com.prisma.errors.ErrorReporter
 import cool.graph.akkautil.http.{Routes, Server, ServerExecutor}
-import cool.graph.bugsnag.BugSnagger
 import cool.graph.messagebus.pubsub.Only
 import cool.graph.subscriptions.protocol.SubscriptionProtocolV05.Requests.SubscriptionSessionRequestV05
 import cool.graph.subscriptions.protocol.SubscriptionProtocolV07.Requests.SubscriptionSessionRequest
@@ -22,7 +22,7 @@ object SubscriptionsMain extends App {
   implicit val system       = ActorSystem("graphql-subscriptions")
   implicit val materializer = ActorMaterializer()
   implicit val dependencies = SubscriptionDependenciesImpl()
-  import dependencies.bugSnagger
+  import dependencies.reporter
 
   val subscriptionsServer = SimpleSubscriptionsServer()
   val websocketServer     = WebsocketServer(dependencies)
@@ -33,8 +33,7 @@ object SubscriptionsMain extends App {
 case class SimpleSubscriptionsServer(prefix: String = "")(
     implicit dependencies: SubscriptionDependencies,
     system: ActorSystem,
-    materializer: ActorMaterializer,
-    bugsnagger: BugSnagger
+    materializer: ActorMaterializer
 ) extends Server
     with PlayJsonSupport {
   import system.dispatcher
@@ -43,7 +42,7 @@ case class SimpleSubscriptionsServer(prefix: String = "")(
   implicit val response07Publisher = dependencies.responsePubSubPublisherV07
 
   val innerRoutes          = Routes.emptyRoute
-  val subscriptionsManager = system.actorOf(Props(new SubscriptionsManager(bugsnagger)), "subscriptions-manager")
+  val subscriptionsManager = system.actorOf(Props(new SubscriptionsManager()), "subscriptions-manager")
 
   val consumerRef = dependencies.requestsQueueConsumer.withConsumer { req: SubscriptionRequest =>
     Future {
@@ -56,7 +55,7 @@ case class SimpleSubscriptionsServer(prefix: String = "")(
   }
 
   val subscriptionSessionManager = system.actorOf(
-    Props(new SubscriptionSessionManager(subscriptionsManager, bugsnagger)),
+    Props(new SubscriptionSessionManager(subscriptionsManager)),
     "subscriptions-sessions-manager"
   )
 

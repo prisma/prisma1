@@ -5,7 +5,6 @@ import cool.graph.api.ApiDependencies
 import cool.graph.api.database.Databases
 import cool.graph.api.project.{ProjectFetcher, ProjectFetcherImpl}
 import cool.graph.api.schema.SchemaBuilder
-import cool.graph.bugsnag.{BugSnagger, BugSnaggerMock}
 import cool.graph.messagebus.testkits.{InMemoryPubSubTestKit, InMemoryQueueTestKit}
 import cool.graph.messagebus.{PubSubPublisher, PubSubSubscriber, QueueConsumer, QueuePublisher}
 import cool.graph.subscriptions.protocol.SubscriptionProtocolV05.Responses.SubscriptionSessionResponseV05
@@ -16,8 +15,6 @@ import cool.graph.websocket.protocol.Request
 
 class SubscriptionDependenciesForTest()(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends SubscriptionDependencies {
   override implicit def self: ApiDependencies = this
-
-  override implicit lazy val bugSnagger: BugSnagger = BugSnaggerMock
 
   lazy val invalidationTestKit   = InMemoryPubSubTestKit[String]()
   lazy val sssEventsTestKit      = InMemoryPubSubTestKit[String]()
@@ -48,10 +45,7 @@ class SubscriptionDependenciesForTest()(implicit val system: ActorSystem, val ma
   override val keepAliveIntervalSeconds = 1000
   val projectFetcherPath                = "project-fetcher"
   override val projectFetcher: ProjectFetcher = {
-    ProjectFetcherImpl(Vector.empty,
-                       config,
-                       schemaManagerEndpoint = s"http://localhost:${projectFetcherPort}/${projectFetcherPath}",
-                       schemaManagerSecret = "empty")
+    ProjectFetcherImpl(Vector.empty, config, schemaManagerEndpoint = s"http://localhost:$projectFetcherPort/$projectFetcherPath", schemaManagerSecret = "empty")
   }
   override lazy val apiSchemaBuilder: SchemaBuilder = ???
   override val databases: Databases                 = Databases.initialize(config)

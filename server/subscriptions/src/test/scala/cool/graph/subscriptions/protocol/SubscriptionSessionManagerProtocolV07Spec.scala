@@ -3,9 +3,12 @@ package cool.graph.subscriptions.protocol
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.stream.ActorMaterializer
 import akka.testkit.{TestKit, TestProbe}
-import cool.graph.bugsnag.{BugSnagger, BugSnaggerMock}
 import cool.graph.messagebus.pubsub.Message
 import cool.graph.messagebus.testkits.{DummyPubSubPublisher, InMemoryPubSubTestKit}
+import cool.graph.shared.models.ProjectWithClientId
+import cool.graph.shared.project_dsl.TestProject
+import cool.graph.stub.Import.withStubServer
+import cool.graph.subscriptions.SubscriptionDependenciesForTest
 import cool.graph.subscriptions.protocol.SubscriptionProtocolV05.Responses.SubscriptionSessionResponseV05
 import cool.graph.subscriptions.protocol.SubscriptionSessionManager.Requests.EnrichedSubscriptionRequest
 import cool.graph.subscriptions.resolving.SubscriptionsManager.Requests.{CreateSubscription, EndSubscription}
@@ -31,7 +34,7 @@ class SubscriptionSessionManagerProtocolV07Spec
   val ignoreProbe: TestProbe = TestProbe()
   val ignoreRef: ActorRef    = ignoreProbe.testActor
 
-  val bugsnag: BugSnagger = BugSnaggerMock
+  implicit val dependencies = new SubscriptionDependenciesForTest
 
   def ignoreKeepAliveProbe: TestProbe = {
     val ret = TestProbe()
@@ -41,34 +44,36 @@ class SubscriptionSessionManagerProtocolV07Spec
     ret
   }
 
+  val projectId = "projectId"
+
   "Sending an GQL_CONNECTION_INIT message" should {
-    "succeed when the payload is empty" in {
+    "succeed when the payload is empty" in withProjectFetcherStub(projectId) {
       implicit val response07Publisher = InMemoryPubSubTestKit[SubscriptionSessionResponse]()
       implicit val response05Publisher = DummyPubSubPublisher[SubscriptionSessionResponseV05]()
 
-      val manager      = system.actorOf(Props(new SubscriptionSessionManager(ignoreRef, bugsnag)))
+      val manager      = system.actorOf(Props(new SubscriptionSessionManager(ignoreRef)))
       val emptyPayload = Json.obj()
 
-      manager ! EnrichedSubscriptionRequest("sessionId", "projectId", GqlConnectionInit(Some(emptyPayload)))
+      manager ! EnrichedSubscriptionRequest("sessionId", projectId, GqlConnectionInit(Some(emptyPayload)))
       response07Publisher.expectPublishedMsg(Message("sessionId", GqlConnectionAck), maxWait = 15.seconds)
     }
 
-    "succeed when the payload contains a String in the Authorization field" in {
+    "succeed when the payload contains a String in the Authorization field" in withProjectFetcherStub(projectId) {
       implicit val response07Publisher = InMemoryPubSubTestKit[SubscriptionSessionResponse]()
       implicit val response05Publisher = DummyPubSubPublisher[SubscriptionSessionResponseV05]()
 
-      val manager         = system.actorOf(Props(new SubscriptionSessionManager(ignoreRef, bugsnag)))
+      val manager         = system.actorOf(Props(new SubscriptionSessionManager(ignoreRef)))
       val payloadWithAuth = Json.obj("Authorization" -> "abc")
 
       manager ! EnrichedSubscriptionRequest("sessionId", "projectId", GqlConnectionInit(Some(payloadWithAuth)))
       response07Publisher.expectPublishedMsg(Message("sessionId", GqlConnectionAck), maxWait = 15.seconds)
     }
 
-    "fail when the payload contains a NON String value in the Authorization field" in {
+    "fail when the payload contains a NON String value in the Authorization field" in withProjectFetcherStub(projectId) {
       implicit val response07Publisher = InMemoryPubSubTestKit[SubscriptionSessionResponse]()
       implicit val response05Publisher = DummyPubSubPublisher[SubscriptionSessionResponseV05]()
 
-      val manager  = system.actorOf(Props(new SubscriptionSessionManager(ignoreRef, bugsnag)))
+      val manager  = system.actorOf(Props(new SubscriptionSessionManager(ignoreRef)))
       val payload1 = Json.obj("Authorization" -> 123)
 
       manager ! EnrichedSubscriptionRequest("sessionId", "projectId", GqlConnectionInit(Some(payload1)))
@@ -85,11 +90,11 @@ class SubscriptionSessionManagerProtocolV07Spec
   }
 
   "Sending GQL_START after an INIT" should {
-    "respond with GQL_ERROR when the query is not valid GraphQL" in {
+    "respond with GQL_ERROR when the query is not valid GraphQL" in withProjectFetcherStub(projectId) {
       implicit val response07Publisher = InMemoryPubSubTestKit[SubscriptionSessionResponse]()
       implicit val response05Publisher = DummyPubSubPublisher[SubscriptionSessionResponseV05]()
 
-      val manager      = system.actorOf(Props(new SubscriptionSessionManager(ignoreRef, bugsnag)))
+      val manager      = system.actorOf(Props(new SubscriptionSessionManager(ignoreRef)))
       val emptyPayload = Json.obj()
 
       manager ! EnrichedSubscriptionRequest("sessionId", "projectId", GqlConnectionInit(Some(emptyPayload)))
@@ -120,12 +125,12 @@ class SubscriptionSessionManagerProtocolV07Spec
     "respond with nothing if " +
       "1. the query is valid " +
       "2. the subscriptions manager received CreateSubscription " +
-      "3. and the manager responded with CreateSubscriptionSucceeded" in {
+      "3. and the manager responded with CreateSubscriptionSucceeded" in withProjectFetcherStub(projectId) {
       implicit val response07Publisher = InMemoryPubSubTestKit[SubscriptionSessionResponse]()
       implicit val response05Publisher = DummyPubSubPublisher[SubscriptionSessionResponseV05]()
 
       val testProbe    = TestProbe()
-      val manager      = system.actorOf(Props(new SubscriptionSessionManager(testProbe.ref, bugsnag)))
+      val manager      = system.actorOf(Props(new SubscriptionSessionManager(testProbe.ref)))
       val emptyPayload = Json.obj()
 
       manager ! EnrichedSubscriptionRequest("sessionId", "projectId", GqlConnectionInit(Some(emptyPayload)))
@@ -155,12 +160,12 @@ class SubscriptionSessionManagerProtocolV07Spec
   }
 
   "Sending GQL_STOP after a GQL_START" should {
-    "result in an EndSubscription message being sent to the subscriptions manager" in {
+    "result in an EndSubscription message being sent to the subscriptions manager" in withProjectFetcherStub(projectId) {
       implicit val response07Publisher = InMemoryPubSubTestKit[SubscriptionSessionResponse]()
       implicit val response05Publisher = DummyPubSubPublisher[SubscriptionSessionResponseV05]()
 
       val testProbe    = TestProbe()
-      val manager      = system.actorOf(Props(new SubscriptionSessionManager(testProbe.ref, bugsnag)))
+      val manager      = system.actorOf(Props(new SubscriptionSessionManager(testProbe.ref)))
       val emptyPayload = Json.obj()
 
       manager ! EnrichedSubscriptionRequest("sessionId", "projectId", GqlConnectionInit(Some(emptyPayload)))
@@ -194,6 +199,18 @@ class SubscriptionSessionManagerProtocolV07Spec
 
       endMsg.id should equal(subscriptionId)
       endMsg.projectId should equal("projectId")
+    }
+  }
+
+  def withProjectFetcherStub[T](projectId: String)(fn: => T) = {
+    import cool.graph.shared.models.ProjectJsonFormatter._
+    val project             = TestProject().copy(id = projectId)
+    val projectWithClientId = ProjectWithClientId(project)
+    val stubs = List(
+      cool.graph.stub.Import.Request("GET", s"/${dependencies.projectFetcherPath}/${project.id}").stub(200, Json.toJson(projectWithClientId).toString)
+    )
+    withStubServer(stubs, port = dependencies.projectFetcherPort) {
+      fn
     }
   }
 

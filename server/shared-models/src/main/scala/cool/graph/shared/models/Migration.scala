@@ -1,12 +1,7 @@
 package cool.graph.shared.models
 
 import cool.graph.shared.models.MigrationStatus.MigrationStatus
-
-//case class UnappliedMigration(
-//    previousProject: Project,
-//    nextProject: Project,
-//    migration: Migration
-//)
+import org.joda.time.DateTime
 
 case class MigrationId(projectId: String, revision: Int)
 
@@ -19,7 +14,9 @@ case class Migration(
     applied: Int,
     rolledBack: Int,
     steps: Vector[MigrationStep],
-    errors: Vector[String]
+    errors: Vector[String],
+    startedAt: Option[DateTime] = None,
+    finishedAt: Option[DateTime] = None
 ) {
   def id: MigrationId                             = MigrationId(projectId, revision)
   def isRollingBack: Boolean                      = status == MigrationStatus.RollingBack

@@ -40,7 +40,7 @@ lazy val commonSettings = versionSettings ++ Seq(
 def commonBackendSettings(imageName: String) = commonSettings ++ Seq(
   libraryDependencies ++= common,
   imageNames in docker := Seq(
-    ImageName(s"graphcool/${imageName}:latest")
+    ImageName(s"prismagraphql/$imageName:latest")
   ),
   dockerfile in docker := {
     val appDir    = stage.value
@@ -84,7 +84,7 @@ lazy val sharedModels = normalProject("shared-models")
     cuid
   ) ++ joda
 )
-lazy val deploy = serverProject("deploy", imageName = "graphcool-deploy")
+lazy val deploy = serverProject("deploy", imageName = "deploy")
   .dependsOn(sharedModels % "compile")
   .dependsOn(akkaUtils % "compile")
   .dependsOn(metrics % "compile")
@@ -92,10 +92,12 @@ lazy val deploy = serverProject("deploy", imageName = "graphcool-deploy")
   .dependsOn(messageBus % "compile")
   .dependsOn(graphQlClient % "compile")
   .dependsOn(stubServer % "test")
+  .dependsOn(sangriaUtils % "compile")
   .settings(
     libraryDependencies ++= Seq(
       playJson,
-      scalaTest
+      scalaTest,
+      jwt
     )
   )
 //  .enablePlugins(BuildInfoPlugin)
@@ -104,7 +106,7 @@ lazy val deploy = serverProject("deploy", imageName = "graphcool-deploy")
 //    buildInfoPackage := "build_info"
 //  )
 
-lazy val api = serverProject("api", imageName = "graphcool-database")
+lazy val api = serverProject("api", imageName = "database")
   .dependsOn(sharedModels % "compile")
   .dependsOn(deploy % "test")
   .dependsOn(messageBus % "compile")
@@ -112,6 +114,8 @@ lazy val api = serverProject("api", imageName = "graphcool-database")
   .dependsOn(metrics % "compile")
   .dependsOn(jvmProfiler % "compile")
   .dependsOn(cache % "compile")
+  .dependsOn(auth % "compile")
+  .dependsOn(sangriaUtils % "compile")
   .settings(
     libraryDependencies ++= Seq(
       playJson,
@@ -119,7 +123,7 @@ lazy val api = serverProject("api", imageName = "graphcool-database")
     )
   )
 
-lazy val subscriptions = serverProject("subscriptions", imageName = "graphcool-subscriptions")
+lazy val subscriptions = serverProject("subscriptions", imageName = "subscriptions")
   .dependsOn(api % "compile;test->test")
   .dependsOn(stubServer % "compile")
   .settings(
@@ -131,8 +135,8 @@ lazy val subscriptions = serverProject("subscriptions", imageName = "graphcool-s
     )
   )
 
-lazy val workers = serverProject("workers", imageName = "graphcool-workers")
-    .dependsOn(bugsnag % "compile")
+lazy val workers = serverProject("workers", imageName = "workers")
+    .dependsOn(errorReporting % "compile")
     .dependsOn(messageBus % "compile")
     .dependsOn(scalaUtils % "compile")
     .dependsOn(stubServer % "test")
@@ -143,15 +147,8 @@ lazy val gcValues = libProject("gc-values")
     scalactic
   ) ++ joda)
 
-lazy val bugsnag = libProject("bugsnag")
-  .settings(libraryDependencies ++= Seq(
-    bugsnagClient,
-    specs2,
-    playJson
-  ) ++ jackson)
-
 lazy val akkaUtils = libProject("akka-utils")
-  .dependsOn(bugsnag % "compile")
+  .dependsOn(errorReporting % "compile")
   .dependsOn(scalaUtils % "compile")
   .dependsOn(stubServer % "test")
   .settings(libraryDependencies ++= Seq(
@@ -166,9 +163,10 @@ lazy val akkaUtils = libProject("akka-utils")
     specs2,
     caffeine
   ))
+  .settings(scalacOptions := Seq("-deprecation", "-feature"))
 
 lazy val metrics = libProject("metrics")
-  .dependsOn(bugsnag % "compile")
+  .dependsOn(errorReporting % "compile")
   .dependsOn(akkaUtils % "compile")
   .settings(
     libraryDependencies ++= Seq(
@@ -186,11 +184,11 @@ lazy val rabbitProcessor = libProject("rabbit-processor")
       amqp
     ) ++ jackson
   )
-  .dependsOn(bugsnag % "compile")
+  .dependsOn(errorReporting % "compile")
 
 lazy val messageBus = libProject("message-bus")
   .settings(commonSettings: _*)
-  .dependsOn(bugsnag % "compile")
+  .dependsOn(errorReporting % "compile")
   .dependsOn(akkaUtils % "compile")
   .dependsOn(rabbitProcessor % "compile")
   .settings(libraryDependencies ++= Seq(
@@ -238,6 +236,22 @@ lazy val scalaUtils =
       scalactic
     ))
 
+lazy val errorReporting =
+  Project(id = "error-reporting", base = file("./libs/error-reporting"))
+    .settings(commonSettings: _*)
+    .settings(libraryDependencies ++= Seq(
+      bugsnagClient,
+      playJson
+    ))
+
+lazy val sangriaUtils =
+  Project(id = "sangria-utils", base = file("./libs/sangria-utils"))
+    .settings(commonSettings: _*)
+    .dependsOn(errorReporting % "compile")
+    .settings(libraryDependencies ++= Seq(
+      akkaHttp,
+    ) ++ sangria)
+
 lazy val jsonUtils =
   Project(id = "json-utils", base = file("./libs/json-utils"))
     .settings(commonSettings: _*)
@@ -255,7 +269,10 @@ lazy val cache =
       java8Compat,
       jsr305
     ))
-lazy val singleServer = serverProject("single-server", imageName = "graphcool-dev")
+
+lazy val auth = libProject("auth").settings(libraryDependencies += jwt)
+
+lazy val singleServer = serverProject("single-server", imageName = "prisma")
   .dependsOn(api% "compile")
   .dependsOn(deploy % "compile")
   .dependsOn(subscriptions % "compile")
@@ -272,7 +289,6 @@ val allServerProjects = List(
 )
 
 val allLibProjects = List(
-  bugsnag,
   akkaUtils,
   metrics,
   rabbitProcessor,
@@ -282,7 +298,9 @@ val allLibProjects = List(
   stubServer,
   scalaUtils,
   jsonUtils,
-  cache
+  cache,
+  errorReporting,
+  sangriaUtils
 )
 
 lazy val libs = (project in file("libs")).aggregate(allLibProjects.map(Project.projectToRef): _*)

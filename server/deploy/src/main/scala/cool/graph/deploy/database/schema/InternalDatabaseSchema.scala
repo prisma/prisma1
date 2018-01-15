@@ -42,8 +42,17 @@ object InternalDatabaseSchema {
         `rolledBack` int NOT NULL default 0,
         `steps` mediumtext COLLATE utf8_unicode_ci DEFAULT NULL,
         `errors` mediumtext COLLATE utf8_unicode_ci DEFAULT NULL,
+        `startedAt` datetime DEFAULT NULL,
+        `finishedAt` datetime DEFAULT NULL,
         PRIMARY KEY (`projectId`, `revision`),
         CONSTRAINT `migrations_projectid_foreign` FOREIGN KEY (`projectId`) REFERENCES `Project` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;""",
+    // Internal migrations
+    sqlu"""
+      CREATE TABLE IF NOT EXISTS `InternalMigration` (
+        `id` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
+        `appliedAt` datetime NOT NULL,
+        PRIMARY KEY (`id`)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;""",
   )
 }
