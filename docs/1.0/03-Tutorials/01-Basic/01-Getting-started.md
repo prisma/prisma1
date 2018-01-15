@@ -1,15 +1,21 @@
 ---
-alias: xil8ahdayo
-description: Learn the fundamentals of using Graphcool.
+alias: ouzia3ahqu
+description: Learn how to generate a GraphQL API for your database with Graphcool.
 ---
 
-# Graphcool Basics
+# Getting started with Graphcool
 
-In this tutorial, you'll learn how to get started with Graphcool as a "GraphQL database" service. To ensure you're not accidentally skipping an instruction in the tutorial, all required actions on your end are highlighted with a little counter on the left.
+In this tutorial, you'll learn how to get started with Graphcool to generate a GraphQL API for your database.
 
-**Pro tip**: If you're only keen on getting started but don't care so much about the explanations of what's going on, you can simply jump from instruction to instruction.
+Here are the steps you're going to perform:
 
-> **Note**: This tutorial only covers the basics of using Graphcool. To learn how to use Graphcool with a specific framework or programming language (like [React](!alias-tijghei9go), [Node.js](!alias-phe8vai1oo) or [TypeScript](!alias-rohd6ipoo4)), please refer to the other quickstart tutorials.
+- Install the Graphcool CLI
+- Bootstraping a Graphcool service with `graphcool init`
+- Explore the API in a GraphQL Playground and send queries & mutations 
+
+> To ensure you're not accidentally skipping an instruction in the tutorial, all required actions on your end are highlighted with a little counter on the left.
+>
+> **Pro tip**: If you're only keen on getting started but don't care so much about the explanations of what's going on, you can simply jump from instruction to instruction.
 
 ## Installing the Graphcool CLI
 
@@ -44,7 +50,7 @@ This will create a new directory called `hello-world` as well as the two files w
 - [`graphcool.yml`](!alias-foatho8aip): The root configuration file for your service. It contains information about your service, like the name (which is used to generate the service's HTTP endpoint), a secret to secure the access to the endpoint and about where it should be deployed.
 - `datamodel.graphql` (can also be called differently, e.g. `types.graphql`): This file contains the definition of your [data model](!alias-eiroozae8u), written in [GraphQL SDL](https://blog.graph.cool/graphql-sdl-schema-definition-language-6755bcb9ce51).
 
-> **Note**: The `hello-world` directory actually contains a third file as well: `.graphqlconfig.yml`. This file follows the industry standard for configuring and structuring GraphQL projects (based on [`graphql-config`](https://github.com/graphcool/graphql-config)). If present, it is used by GraphQL tooling (such as the GraphQL Playground, the [`graphql-cli`](https://github.com/graphql-cli/graphql-cli/), text editors, build tools and others) to improve your local developer workflows.
+> **Note**: The `hello-world` directory actually contains a third file as well: `.graphqlconfig.yml`. This file follows the industry standard for configuring and structuring GraphQL projects (based on [`graphql-config`](https://github.com/Graphcool/graphql-config)). If present, it is used by GraphQL tooling (such as the GraphQL Playground, the [`graphql-cli`](https://github.com/graphql-cli/graphql-cli/), text editors, build tools and others) to improve your local developer workflows.
 
 Let's take a look at the contents of the generated files:
 
@@ -66,7 +72,7 @@ Here's an overview of the properties in the generated `graphcool.yml`:
 - `service`: Defines the service name which will be part of the service's HTTP endpoint
 - `stage`: A service can be deployed to multiple stages (e.g. a _development_ and a _production_ environment)
 - `datamodel`: The path to the file which contains your data model
-- `disableAuth`: If set to true, everyone who knows the endpoint of your Graphcool service has full read and write access. If set to `false`, you need to specify a `secret` in `graphcool.yml` which is used to generate JWT authentication tokens. These tokens need to be attached to the `Authorization` header of the requests sent to the API of your service. The easiest way to obtain such a token is the `graphcool token` command from the Graphcool CLI.
+- `disableAuth`: If set to true, everyone who knows the endpoint of your Graphcool service has full read and write access. If set to `false`, you need to specify a `secret` in `graphcool.yml` which is used to generate JWT authentication tokens. These tokens need to be attached to the `Authorization` header of the requests sent to the API of your service. The easiest way to obtain such a token is the `Graphcool token` command from the Graphcool CLI.
 
 > **Note**: We'll keep `disableAuth` set to `true` for this tutorial. In production applications, you'll always want to require authentication for your service! You can read more about this topic [here](!alias-pua7soog4v).
 
@@ -103,7 +109,7 @@ Since `graphcool.yml` doesn't yet contain the information about _where_ (meaning
 
 <Instruction>
 
-Select the `shared-public-demo` option in the **Shared Clusters** section.
+When prompted where (i.e. to which _cluster_) to deploy your Graphcool service, choose one of the _public cluster_ options: `graphcool-eu1` or `graphcool-us1`.
 
 </Instruction>
 
@@ -127,7 +133,7 @@ Because your datamodel contains the `User` type, the Graphcool API now allows fo
 
 > **Note**: This list of generated operations is not complete. The Graphcool API exposes a couple of more convenience operations that, for example, allow to batch update/delete many nodes. However, all operations either create, read, update or delete nodes of the types defined in the data model.
 
-To actually use these operations, you need a way to [send requests to your service's API](ohm2ouceuj). Since that API is exposed via HTTP, you could use tools like [`curl`](https://en.wikipedia.org/wiki/CURL) or [Postman](https://www.getpostman.com/) to interact with it. However, GraphQL actually comes with much nicer tooling for that purpose: [GraphQL Playground](https://github.com/graphcool/graphql-playground), an interactive GraphQL IDE.
+To actually use these operations, you need a way to [send requests to your service's API](ohm2ouceuj). Since that API is exposed via HTTP, you could use tools like [`curl`](https://en.wikipedia.org/wiki/CURL) or [Postman](https://www.getpostman.com/) to interact with it. However, GraphQL actually comes with much nicer tooling for that purpose: [GraphQL Playground](https://github.com/Graphcool/graphql-playground), an interactive GraphQL IDE.
 
 <Instruction>
 
@@ -251,168 +257,3 @@ query {
   }
 }
 ```
-
-## Changing data model and updating API
-
-You now learned how to deploy a Graphcool service, how to explore its API and how to interact with it by sending queries and mutations. The last thing we want to cover in this tutorial is how you can update the API by making changes to the data model.
-
-We want to make the following changes to the data model:
-
-- Add an `age` field to the `User` type.
-- Track the exact time when a `User` was _initially created_ or _last updated_.
-- Add a new `Post` type with a `title` field.
-- Create a one-to-many relation between `User` and `Post` to express that one `User` can create many `Post` nodes.
-
-<Instruction>
-
-Start by adding the required fields to the `User` type:
-
-```graphql
-type User {
-  id: ID! @unique
-  createdAt: DateTime!
-  updatedAt: DateTime!
-  name: String!
-  age: Int
-}
-```
-
-</Instruction>
-
-The `age` field is of type `Int` and not required on the `User` type. This means you can store `User` nodes where `age` will be null (in fact, this is the case for the `User` named `Sarah` you created before).
-
-`createdAt` and `updatedAt` on the other hand are actually special fields that are managed by Graphcool. Under the hood, Graphcool always maintains these fields - but they're only exposed in your API once you add them to the type definition in the data model (the same is true for the `id` field by the way).
-
-> **Note**: Right now, the values for these fields are read-only. In the future, it will be possible to set the values for these fields via regular mutations as well. To learn more about this feature and timeline, check out this [GitHub issue](https://github.com/graphcool/graphcool/issues/1278).
-
-So far, the changes you made are only local. So, you won't be able to access the new fields in a GraphQL Playground if you open it right now.
-
-<Instruction>
-
-To make your changes take effect, you need to to deploy the service again. In the `hello-world` directory, run the following command:
-
-```sh
-graphcool deploy
-```
-
-</Instruction>
-
-You can now either open up a new GraphQL Playground or _reload the schema_ in one that's already open (the button for reloading the schema is the **Refresh**-button right next to the URL of your GraphQL API).
-
-Once you did that, you can access the new fields on the `User` type.
-
-<Instruction>
-
-Try this mutation to create a new `User` node and set its `age` field:
-
-```graphql
-mutation {
-  createUser(data: {
-    name: "John"
-    age: 42
-  }) {
-    id
-    createdAt
-    updatedAt
-  }
-}
-```
-
-</Instruction>
-
-Lastly in this tutorial, we want to add another type, called `Post`, to the data model and create a relation to the existing `User` type.
-
-Creating a relation between types comes very natural: All you need to do is add a new field of the related type to represent one end of the relation. Relations can - but don't have to - go in both directions.
-
-Go ahead and start by defining the new `Post` type with its end of the relation.
-
-<Instruction>
-
-Open `datamodel.graphql` and add the following type definition to it:
-
-```graphql
-type Post {
-  id: ID! @unique
-  title: String!
-  author: User!
-}
-```
-
-</Instruction>
-
-<Instruction>
-
-To apply these changes, you need to run `graphcool deploy` inside the `hello-world` directory again.
-
-</Instruction>
-
-Every `Post` now requires a `User` node as its `author`. The way how this works is by using the `connect` argument for _nested_ mutations.
-
-<Instruction>
-
-You can for example send the following mutation to connect a new `Post` node with an existing `User` node (you'll of course have to replace the `__USER_ID__` placeholder with the actual `id` of a `User`):
-
-```graphql
-mutation {
-  createPost(data: {
-    title: "GraphQL is awesome"
-    author: {
-      connect: {
-        id: "__USER_ID__"
-      }
-    }
-  }) {
-    id
-  }
-}
-```
-
-</Instruction>
-
-Let's also add the other end of the relation, so we have a proper one-to-many relationship between the `User` and the `Post` types.
-
-<Instruction>
-
-Open `datamodel.graphql` and add a new field, called `posts`, to the `User` type so it looks as follows:
-
-```graphql
-type User {
-  id: ID! @unique
-  createdAt: DateTime!
-  updatedAt: DateTime!
-  name: String!
-  age: Int
-  posts: [Post!]!
-}
-```
-
-</Instruction>
-
-That's it! The new `posts` field represents a list of `Post` nodes which were created by that `User`. 
-
-<Instruction>
-
-Of course, this now also allows you to send nested queries where you're asking for all `User` nodes, as well as all the `Post` nodes for these users as well:
-
-```graphql
-{
-  users {
-    name
-    posts {
-      title
-    }
-  }
-}
-```
-
-</Instruction>
-
-## Next steps
-
-In this tutorial, we covered the very basics of using Graphcool - but there's a lot more to explore!
-
-Here's a few pointers for where you can go next:
-
-- **Quickstart Tutorials (Backend & Frontend)**: The remaining quickstart tutorials explain how to use Graphcool together with conrete languages and frameworks, like [React](!alias-tijghei9go), [Node.js](!alias-phe8vai1oo) or [TypeScript](!alias-rohd6ipoo4).
-- [**Examples**](https://github.com/graphcool/graphcool/tree/master/examples): We're maintaing a list of practical examples showcasing certain use cases and scenarios with Graphcool, such as authentication & permissions, file handling, wrapping REST APIs or using GraphQL subscriptions.
-- [**Deployment Docs**](!alias-eu2ood0she): To learn more about different deployment options, you can check out the cluster documentation.
