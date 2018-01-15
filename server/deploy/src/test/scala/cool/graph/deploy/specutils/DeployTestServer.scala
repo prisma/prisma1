@@ -1,8 +1,9 @@
 package cool.graph.deploy.specutils
 
+import akka.http.scaladsl.model.HttpRequest
+import com.prisma.sangria.utils.ErrorHandler
 import cool.graph.deploy.DeployDependencies
 import cool.graph.deploy.schema.{SchemaBuilder, SystemUserContext}
-import cool.graph.deploy.server.ErrorHandler
 import sangria.execution.Executor
 import sangria.parser.QueryParser
 import sangria.renderer.SchemaRenderer
@@ -95,7 +96,7 @@ case class DeployTestServer()(implicit dependencies: DeployDependencies) extends
     val userContext    = SystemUserContext(None)
     val schema         = schemaBuilder(userContext)
     val renderedSchema = SchemaRenderer.renderSchema(schema)
-    val errorHandler   = ErrorHandler(requestId)
+    val errorHandler   = ErrorHandler(requestId, HttpRequest(), query, variables.toString(), dependencies.reporter)
 
     if (printSchema) println(renderedSchema)
     if (writeSchemaToFile) writeSchemaIntoFile(renderedSchema)

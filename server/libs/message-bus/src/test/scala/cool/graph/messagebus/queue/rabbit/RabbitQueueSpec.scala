@@ -4,7 +4,7 @@ import java.nio.charset.Charset
 
 import akka.actor.ActorSystem
 import akka.testkit.{TestKit, TestProbe}
-import cool.graph.bugsnag.BugSnagger
+import com.prisma.errors.BugsnagErrorReporter
 import cool.graph.messagebus.queue.ConstantBackoff
 import cool.graph.messagebus.utils.RabbitUtils
 import cool.graph.rabbit.Bindings.RoutingKey
@@ -27,7 +27,7 @@ class RabbitQueueSpec
   val amqpUri                                          = sys.env.getOrElse("RABBITMQ_URI", sys.error("RABBITMQ_URI required for testing"))
   implicit val testMarshaller: String => Array[Byte]   = str => str.getBytes("utf-8")
   implicit val testUnmarshaller: Array[Byte] => String = bytes => new String(bytes, Charset.forName("UTF-8"))
-  implicit val bugSnagger: BugSnagger                  = null
+  implicit val reporter                                = BugsnagErrorReporter("")
 
   var rabbitQueue: RabbitQueue[String]        = _
   var failingRabbitQueue: RabbitQueue[String] = _
@@ -131,8 +131,7 @@ class RabbitQueueSpec
       failingRabbitQueue.shutdown
 
       // First create a new queue consumer that has a > 60s constant backoff and that always fails messages
-      val longBackoffFailingRabbitQueue =
-        RabbitQueue[String](amqpUri, "test-failing", ConstantBackoff(61.seconds))(bugSnagger, testMarshaller, testUnmarshaller)
+      val longBackoffFailingRabbitQueue = RabbitQueue[String](amqpUri, "test-failing", ConstantBackoff(61.seconds))(reporter, testMarshaller, testUnmarshaller)
 
       longBackoffFailingRabbitQueue.withConsumer((str: String) => Future.failed(new Exception("This is expected to happen")))
 

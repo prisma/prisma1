@@ -1,11 +1,12 @@
 package cool.graph.messagebus.pubsub.rabbit
 
 import akka.testkit.{TestKit, TestProbe}
+import com.prisma.errors.BugsnagErrorReporter
 import cool.graph.akkautil.SingleThreadedActorSystem
-import cool.graph.bugsnag.BugSnaggerMock
 import cool.graph.messagebus.Conversions
 import cool.graph.messagebus.pubsub.{Everything, Message, Only}
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Matchers, WordSpecLike}
+
 import scala.concurrent.duration._
 
 class RabbitAkkaPubSubSpec
@@ -16,8 +17,8 @@ class RabbitAkkaPubSubSpec
     with BeforeAndAfterEach {
   override def afterAll = shutdown(verifySystemShutdown = true)
 
-  val amqpUri             = sys.env.getOrElse("RABBITMQ_URI", sys.error("RABBITMQ_URI required for testing"))
-  implicit val bugSnagger = BugSnaggerMock
+  val amqpUri           = sys.env.getOrElse("RABBITMQ_URI", sys.error("RABBITMQ_URI required for testing"))
+  implicit val reporter = BugsnagErrorReporter("")
 
   val testTopic = Only("testTopic")
   val testMsg   = "testMsg"

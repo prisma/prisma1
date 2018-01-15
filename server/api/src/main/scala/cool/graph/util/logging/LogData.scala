@@ -16,11 +16,7 @@ case class LogData(
     requestId: String,
     projectId: Option[String] = None,
     payload: Option[Map[String, Any]] = None
-) {
-  import LogDataWrites._
-
-  lazy val json: String = Json.toJson(this).toString()
-}
+)
 
 object LogDataWrites extends DefaultWrites {
   implicit val anyWrites: Writes[Any] = Writes(any => JsString(any.toString))

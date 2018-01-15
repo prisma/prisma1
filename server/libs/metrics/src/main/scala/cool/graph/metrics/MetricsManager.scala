@@ -1,6 +1,7 @@
 package cool.graph.metrics
 
 import akka.actor.ActorSystem
+import com.prisma.errors.ErrorReporter
 import com.timgroup.statsd.{NonBlockingStatsDClient, StatsDClient}
 import cool.graph.akkautil.SingleThreadedActorSystem
 
@@ -26,6 +27,8 @@ import scala.util.{Failure, Success, Try}
   * "ApiSimpleService.RequestCount#env=prod,instance=i-0d3c23cdd0c2f5d03,container=e065fc831976,projectId=someCUID
   */
 trait MetricsManager {
+
+  implicit val reporter: ErrorReporter
 
   def serviceName: String
 

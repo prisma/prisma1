@@ -2,6 +2,7 @@ package cool.graph.api
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
+import com.prisma.errors.{BugsnagErrorReporter, ErrorReporter}
 import com.typesafe.config.{Config, ConfigFactory}
 import cool.graph.api.database.deferreds.DeferredResolverProvider
 import cool.graph.api.database.{DataResolver, Databases}
@@ -10,7 +11,6 @@ import cool.graph.api.schema.{ApiUserContext, SchemaBuilder}
 import cool.graph.api.server.RequestHandler
 import cool.graph.api.subscriptions.Webhook
 import cool.graph.auth.{Auth, AuthImpl}
-import cool.graph.bugsnag.{BugSnagger, BugSnaggerImpl}
 import cool.graph.client.server.{GraphQlRequestHandler, GraphQlRequestHandlerImpl}
 import cool.graph.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
 import cool.graph.messagebus.queue.inmemory.InMemoryAkkaQueue
@@ -33,7 +33,7 @@ trait ApiDependencies extends AwaitUtils {
   def webhookPublisher: Queue[Webhook]
 
   implicit lazy val executionContext: ExecutionContext  = system.dispatcher
-  implicit lazy val bugSnagger: BugSnagger              = BugSnaggerImpl(sys.env("BUGSNAG_API_KEY"))
+  implicit lazy val reporter: ErrorReporter             = BugsnagErrorReporter(sys.env("BUGSNAG_API_KEY"))
   lazy val log: String => Unit                          = println
   lazy val graphQlRequestHandler: GraphQlRequestHandler = GraphQlRequestHandlerImpl(log)
   lazy val auth: Auth                                   = AuthImpl

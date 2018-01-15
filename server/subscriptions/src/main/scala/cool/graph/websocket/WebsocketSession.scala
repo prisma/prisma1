@@ -4,8 +4,8 @@ import java.util.concurrent.TimeUnit
 
 import akka.actor.{Actor, ActorRef, PoisonPill, ReceiveTimeout, Stash, Terminated}
 import akka.http.scaladsl.model.ws.TextMessage
+import com.prisma.errors.ErrorReporter
 import cool.graph.akkautil.{LogUnhandled, LogUnhandledExceptions}
-import cool.graph.bugsnag.BugSnagger
 import cool.graph.messagebus.QueuePublisher
 import cool.graph.subscriptions.SubscriptionDependencies
 import cool.graph.websocket.protocol.Request
@@ -31,8 +31,8 @@ object WebsocketSessionManager {
 
 case class WebsocketSessionManager(
     requestsPublisher: QueuePublisher[Request],
-    bugsnag: BugSnagger
-) extends Actor
+)(implicit val reporter: ErrorReporter)
+    extends Actor
     with LogUnhandled
     with LogUnhandledExceptions {
   import WebsocketSessionManager.Requests._
@@ -77,7 +77,6 @@ case class WebsocketSession(
     outgoing: ActorRef,
     manager: ActorRef,
     requestsPublisher: QueuePublisher[Request],
-    bugsnag: BugSnagger,
     isV7protocol: Boolean
 )(implicit dependencies: SubscriptionDependencies)
     extends Actor
@@ -87,6 +86,7 @@ case class WebsocketSession(
   import WebsocketSessionManager.Requests._
   import metrics.SubscriptionWebsocketMetrics._
 
+  val reporter    = dependencies.reporter
   implicit val ec = context.system.dispatcher
 
   activeWsConnections.inc

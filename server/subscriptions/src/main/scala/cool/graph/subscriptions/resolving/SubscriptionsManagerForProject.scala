@@ -3,7 +3,6 @@ package cool.graph.subscriptions.resolving
 import akka.actor.{Actor, ActorRef, Props, Stash, Terminated}
 import cool.graph.akkautil.{LogUnhandled, LogUnhandledExceptions}
 import cool.graph.api.subscriptions.schema.{QueryTransformer, SubscriptionQueryValidator}
-import cool.graph.bugsnag.BugSnagger
 import cool.graph.messagebus.pubsub.Message
 import cool.graph.shared.models._
 import cool.graph.subscriptions.SubscriptionDependencies
@@ -24,8 +23,7 @@ object SubscriptionsManagerForProject {
 }
 
 case class SubscriptionsManagerForProject(
-    projectId: String,
-    bugsnag: BugSnagger
+    projectId: String
 )(implicit dependencies: SubscriptionDependencies)
     extends Actor
     with Stash
@@ -36,6 +34,7 @@ case class SubscriptionsManagerForProject(
   import SubscriptionsManager.Requests._
   import akka.pattern.pipe
 
+  val reporter                  = dependencies.reporter
   val resolversByModel          = mutable.Map.empty[Model, ActorRef]
   val resolversBySubscriptionId = mutable.Map.empty[StringOrInt, mutable.Set[ActorRef]]
 
@@ -105,7 +104,7 @@ case class SubscriptionsManagerForProject(
     val resolver = resolversByModel.getOrElseUpdate(
       model, {
         val actorName = model.name
-        val ref       = context.actorOf(Props(SubscriptionsManagerForModel(project, model, bugsnag)), actorName)
+        val ref       = context.actorOf(Props(SubscriptionsManagerForModel(project, model)), actorName)
         context.watch(ref)
       }
     )

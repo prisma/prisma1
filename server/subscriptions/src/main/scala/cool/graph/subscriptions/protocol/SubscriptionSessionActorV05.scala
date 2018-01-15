@@ -2,9 +2,9 @@ package cool.graph.subscriptions.protocol
 
 import akka.actor.{Actor, ActorRef}
 import cool.graph.akkautil.{LogUnhandled, LogUnhandledExceptions}
-import cool.graph.bugsnag.BugSnagger
 import cool.graph.messagebus.PubSubPublisher
 import cool.graph.messagebus.pubsub.Only
+import cool.graph.subscriptions.SubscriptionDependencies
 import cool.graph.subscriptions.metrics.SubscriptionMetrics
 import cool.graph.subscriptions.protocol.SubscriptionProtocolV05.Responses.SubscriptionSessionResponseV05
 import cool.graph.subscriptions.protocol.SubscriptionSessionActorV05.Internal.Authorization
@@ -27,9 +27,9 @@ case class SubscriptionSessionActorV05(
     sessionId: String,
     projectId: String,
     subscriptionsManager: ActorRef,
-    bugsnag: BugSnagger,
     responsePublisher: PubSubPublisher[SubscriptionSessionResponseV05]
-) extends Actor
+)(implicit dependencies: SubscriptionDependencies)
+    extends Actor
     with LogUnhandled
     with LogUnhandledExceptions {
 
@@ -37,6 +37,8 @@ case class SubscriptionSessionActorV05(
   import SubscriptionProtocolV05.Requests._
   import SubscriptionProtocolV05.Responses._
   import cool.graph.subscriptions.resolving.SubscriptionsManager.Requests.CreateSubscription
+
+  val reporter = dependencies.reporter
 
   activeSubcriptionSessions.inc
 
