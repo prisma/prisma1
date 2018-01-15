@@ -18,8 +18,8 @@ import cool.graph.deploy.schema.{DeployApiError, InvalidProjectId, SchemaBuilder
 import cool.graph.deploy.{DeployDependencies, DeployMetrics}
 import cool.graph.metrics.extensions.TimeResponseDirectiveImpl
 import cool.graph.shared.models.ProjectWithClientId
-import cool.graph.util.logging.LogDataWrites.logDataWrites
-import cool.graph.util.logging.{LogData, LogKey}
+import com.prisma.logging.{LogData, LogKey}
+import com.prisma.logging.LogDataWrites.logDataWrites
 import play.api.libs.json.Json
 import sangria.execution.Executor
 import sangria.parser.QueryParser

@@ -1,4 +1,4 @@
-package cool.graph.util.logging
+package com.prisma.logging
 
 import play.api.libs.json.{DefaultWrites, JsString, Json, Writes}
 

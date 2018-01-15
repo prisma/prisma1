@@ -18,10 +18,10 @@ import cool.graph.api.{ApiDependencies, ApiMetrics}
 import cool.graph.cuid.Cuid.createCuid
 import cool.graph.metrics.extensions.TimeResponseDirectiveImpl
 import cool.graph.shared.models.{ProjectId, ProjectWithClientId}
-import cool.graph.util.logging.{LogData, LogKey}
+import com.prisma.logging.{LogData, LogKey}
+import com.prisma.logging.LogDataWrites.logDataWrites
 import play.api.libs.json.Json
 import spray.json._
-import cool.graph.util.logging.LogDataWrites.logDataWrites
 
 import scala.concurrent.Future
 import scala.language.postfixOps
