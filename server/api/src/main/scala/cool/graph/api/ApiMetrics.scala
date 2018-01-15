@@ -24,5 +24,6 @@ object ApiMetrics extends MetricsManager {
   val projectCacheMissCount         = defineCounter("projectCacheMissCount")
   val schemaBuilderBuildTimerMetric = defineTimer("schemaBuilderBuildTimer", CustomTag("projectId", recordingThreshold = 600))
   val sqlQueryTimer                 = defineTimer("sqlQueryTimer", CustomTag("projectId", recordingThreshold = 1000), CustomTag("queryName", recordingThreshold = 1000))
+  val sqlDataChangeMutactionTimer   = defineTimer("sqlDataChangeMutactionTimer", CustomTag("projectId", recordingThreshold = 1000))
 
 }
