@@ -1906,19 +1906,19 @@ graphcool-yml@0.4.8:
     scuid "^1.0.2"
     yaml-ast-parser "^0.0.40"
 
-graphql-cli-prepare@1.4.10:
-  version "1.4.10"
-  resolved "https://registry.yarnpkg.com/graphql-cli-prepare/-/graphql-cli-prepare-1.4.10.tgz#cd89b37363e4c1203ee2f2f8d99617ee9e52f926"
+graphql-cli-prepare@1.4.11:
+  version "1.4.11"
+  resolved "https://registry.yarnpkg.com/graphql-cli-prepare/-/graphql-cli-prepare-1.4.11.tgz#21170b26c657992289c7c4d4c3257a8faad5ae9a"
   dependencies:
     chalk "2.3.0"
     fs-extra "5.0.0"
     graphql-import "0.4.0"
-    graphql-static-binding "0.7.0"
+    graphql-static-binding "0.8.0"
     lodash "4.17.4"
 
-graphql-cli@2.12.1:
-  version "2.12.1"
-  resolved "https://registry.yarnpkg.com/graphql-cli/-/graphql-cli-2.12.1.tgz#c19ec8049473b058a956770a898bc1a29ace322e"
+graphql-cli@2.12.2:
+  version "2.12.2"
+  resolved "https://registry.yarnpkg.com/graphql-cli/-/graphql-cli-2.12.2.tgz#d175e4835112eeeed0fc38126808e99808222c21"
   dependencies:
     adm-zip "^0.4.7"
     chalk "^2.3.0"
@@ -1929,12 +1929,12 @@ graphql-cli@2.12.1:
     express "^4.16.2"
     express-request-proxy "^2.0.0"
     graphql "0.12.3"
-    graphql-cli-prepare "1.4.10"
+    graphql-cli-prepare "1.4.11"
     graphql-config "1.1.7"
     graphql-config-extension-graphcool "1.0.5"
     graphql-config-extension-prisma "0.0.3"
     graphql-playground-middleware-express "1.4.9"
-    graphql-schema-linter "0.0.26"
+    graphql-schema-linter "0.0.27"
     inquirer "5.0.0"
     is-url-superb "2.0.0"
     js-yaml "^3.10.0"
@@ -2036,9 +2036,9 @@ graphql-request@^1.3.4, graphql-request@^1.3.6, graphql-request@^1.4.0:
   dependencies:
     cross-fetch "0.0.8"
 
-graphql-schema-linter@0.0.26:
-  version "0.0.26"
-  resolved "https://registry.yarnpkg.com/graphql-schema-linter/-/graphql-schema-linter-0.0.26.tgz#a505cc55b2eb561ee4b594a38ff178a9f0d137fb"
+graphql-schema-linter@0.0.27:
+  version "0.0.27"
+  resolved "https://registry.yarnpkg.com/graphql-schema-linter/-/graphql-schema-linter-0.0.27.tgz#d777a069a8b50baf6f43a6a0b8030020e62512cb"
   dependencies:
     chalk "^2.0.1"
     columnify "^1.5.4"
@@ -2050,9 +2050,9 @@ graphql-schema-linter@0.0.26:
     graphql-config "^1.0.0"
     lodash "^4.17.4"
 
-graphql-static-binding@0.7.0:
-  version "0.7.0"
-  resolved "https://registry.yarnpkg.com/graphql-static-binding/-/graphql-static-binding-0.7.0.tgz#642ca2829d6720f25e52d63116ca7cb194bbef8f"
+graphql-static-binding@0.8.0:
+  version "0.8.0"
+  resolved "https://registry.yarnpkg.com/graphql-static-binding/-/graphql-static-binding-0.8.0.tgz#35858dfc89648573b9a5b6b61b431101b6b376af"
   dependencies:
     cucumber-html-reporter "^3.0.4"
     graphql "0.12.3"
@@ -4360,6 +4360,10 @@ sentence-case@^1.1.1:
   resolved "https://registry.yarnpkg.com/sentence-case/-/sentence-case-1.1.3.tgz#8034aafc2145772d3abe1509aa42c9e1042dc139"
   dependencies:
     lower-case "^1.1.1"
+
+serialize-error@^2.1.0:
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/serialize-error/-/serialize-error-2.1.0.tgz#50b679d5635cdf84667bdc8e59af4e5b81d5f60a"
 
 serializerr@^1.0.3:
   version "1.0.3"

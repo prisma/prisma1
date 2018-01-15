@@ -14,6 +14,7 @@ import * as fs from 'fs-extra'
 import * as path from 'path'
 import { RC } from './types/rc'
 import { PrismaDefinition } from 'prisma-json-schema'
+import { initStatusChecker } from './StatusChecker'
 const debug = require('debug')('command')
 
 const pjson = packagejson as any
@@ -154,6 +155,7 @@ export class Command {
     this.argv = argv!
     this.args = args
     await this.env.load(flags!)
+    initStatusChecker(this.config, this.env)
   }
 
   get stdout(): string {

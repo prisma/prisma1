@@ -3,6 +3,8 @@ import * as fs from 'fs-extra'
 import * as path from 'path'
 import chalk from 'chalk'
 import * as npmRun from 'npm-run'
+const debug = require('debug')('init')
+import * as spawn from 'cross-spawn'
 
 export default class Init extends Command {
   static topic = 'init'
@@ -145,8 +147,35 @@ For next steps follow this tutorial: https://bit.ly/prisma-first-steps`)
       args.push(boilerplate)
     }
 
-    npmRun.spawnSync('graphql', args, {
+    debug('running graphql cli')
+    let binPath = path.join(
+      __dirname,
+      '../../../node_modules/graphql-cli/dist/bin.js',
+    )
+    if (!fs.pathExistsSync(binPath)) {
+      binPath = path.join(__dirname, '../../../../graphql-cli/dist/bin.js')
+    }
+
+    if (!fs.pathExistsSync(binPath)) {
+      binPath = 'graphql'
+    }
+
+    debug({ binPath, args })
+
+    const result = spawn.sync(binPath, args, {
       stdio: 'inherit',
     })
+
+    if (result.error) {
+      if (result.error.message.includes('ENOENT')) {
+        throw new Error(
+          `Could not start graphql cli. Please try to install it globally with ${chalk.bold(
+            'npm install -g graphql-cli',
+          )}`,
+        )
+      }
+
+      throw result.error
+    }
   }
 }

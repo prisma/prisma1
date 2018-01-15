@@ -7,25 +7,35 @@ import * as fs from 'fs-extra'
 import { Environment } from 'prisma-yml'
 import * as os from 'os'
 import { getIsGlobal } from './utils/isGlobal'
+import * as serializeError from 'serialize-error'
+const debug = require('debug')('StatusChecker')
 
 export class StatusChecker {
   config: Config
-  env: Environment
-  constructor(config: Config, env: Environment) {
+  env?: Environment
+  constructor(config: Config, env?: Environment) {
     this.config = config
     this.env = env
   }
-  checkStatus(command: string, args: any, flags: any, argv: any[]) {
+  checkStatus(
+    command: string,
+    args: any,
+    flags: any,
+    argv: any[],
+    error?: Error | string,
+  ) {
     const source = 'CLI'
     const sourceVersion = this.config.version
-    const eventName = 'command_triggered'
+    const eventName = error ? 'command_error' : 'command_triggered'
+    const serializedError = error ? convertError(error) : undefined
     const payload = JSON.stringify({
       command,
       args,
       flags,
       argv,
+      error: serializedError,
     })
-    const auth = this.env.globalRC.cloudSessionKey
+    const auth = this.env ? this.env.globalRC.cloudSessionKey : undefined
     const hashDate = new Date().toISOString()
     const mac = getMac()
 
@@ -90,6 +100,22 @@ export class StatusChecker {
       },
     ).unref()
   }
+}
+
+let statusChecker: StatusChecker | undefined
+
+export function initStatusChecker(
+  config: Config,
+  env?: Environment,
+): StatusChecker {
+  debug('setting status checker')
+  statusChecker = new StatusChecker(config, env)
+
+  return statusChecker!
+}
+
+export function getStatusChecker(): StatusChecker | undefined {
+  return statusChecker
 }
 
 export async function doJobs(cachePath: string, request: any) {
@@ -162,4 +188,12 @@ export function getFid() {
     : ''
   fidCache = fid
   return fid
+}
+
+function convertError(e: Error | string) {
+  if (typeof e === 'string') {
+    return { message: e }
+  }
+
+  return serializeError(e)
 }

@@ -1,4 +1,5 @@
 import * as crossSpawn from 'cross-spawn'
+const debug = require('debug')('spawn')
 
 export function spawn(
   cmd: string,

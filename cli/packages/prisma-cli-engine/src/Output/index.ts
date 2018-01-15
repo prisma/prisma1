@@ -22,6 +22,8 @@ import * as Charm from 'charm'
 import { padEnd, repeat, set, uniqBy, values } from 'lodash'
 import { Project, Stages } from '../types/common'
 import * as Raven from 'raven'
+import { getStatusChecker } from '../StatusChecker'
+const debug = require('debug')('Output')
 
 marked.setOptions({
   renderer: new TerminalRenderer(),
@@ -190,6 +192,17 @@ To get more detailed output, run ${chalk.dim(instruction)}`,
       console.error(err)
     }
     // make sure error is logged first, then execute raven
+    const statusChecker = getStatusChecker()
+    debug({ statusChecker })
+    if (statusChecker) {
+      statusChecker.checkStatus(
+        process.argv[2],
+        {},
+        {},
+        process.argv.slice(2),
+        err,
+      )
+    }
     await new Promise(r => {
       Raven.captureException(err, () => r())
     })

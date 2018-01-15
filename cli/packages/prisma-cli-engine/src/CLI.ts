@@ -8,7 +8,7 @@ import { Dispatcher } from './Dispatcher/Dispatcher'
 import { NotFound } from './NotFound'
 import fs from './fs'
 import { getCommandId } from './util'
-import { StatusChecker, getFid } from './StatusChecker'
+import { getFid, initStatusChecker, getStatusChecker } from './StatusChecker'
 import * as updateNotifier from 'update-notifier'
 import chalk from 'chalk'
 import * as Raven from 'raven'
@@ -88,6 +88,8 @@ export class CLI {
   }
 
   async run() {
+    initStatusChecker(this.config)
+
     out = new Output(this.config)
 
     this.config.setOutput(out)
@@ -95,7 +97,8 @@ export class CLI {
     if (this.cmdAskingForHelp) {
       debug('command asking for help')
       this.cmd = await this.Help.run(this.config)
-      const checker = new StatusChecker(this.config, this.cmd.env)
+
+      const checker = getStatusChecker()!
       checker.checkStatus(
         this.config.argv[1],
         this.cmd.args,
@@ -138,7 +141,7 @@ export class CLI {
 
         this.cmd = await foundCommand.run(this.config)
         this.setRavenUserContext()
-        const checker = new StatusChecker(this.config, this.cmd.env)
+        const checker = getStatusChecker()!
         checker.checkStatus(id, this.cmd.args, this.cmd.flags, this.cmd.argv)
 
         if (process.env.NOCK_WRITE_RESPONSE_CLI === 'true') {
@@ -151,7 +154,7 @@ export class CLI {
         const topic = await dispatcher.findTopic(id)
         if (topic) {
           await this.Help.run(this.config)
-          const checker = new StatusChecker(this.config, this.cmd.env)
+          const checker = getStatusChecker()!
           checker.checkStatus(id, this.cmd.args, this.cmd.flags, this.cmd.argv)
         } else if (id === 'push') {
           throw new Error(

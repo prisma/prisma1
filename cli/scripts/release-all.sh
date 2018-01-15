@@ -2,7 +2,9 @@
 
 set -e
 
-cd packages/prisma-yml
+cd packages
+
+cd prisma-yml
 echo -e "Releasing prisma-yml\n\n"
 npm version patch --no-git-tag-version
 npm publish
