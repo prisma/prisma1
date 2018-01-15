@@ -6,7 +6,6 @@ import cool.graph.deploy.database.persistence.{MigrationPersistence, ProjectPers
 import scala.collection.mutable
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
-
 import slick.jdbc.MySQLProfile.backend.DatabaseDef
 
 case class DeploymentSchedulerActor(
@@ -49,9 +48,14 @@ case class DeploymentSchedulerActor(
   }
 
   def initialize(): Future[Unit] = {
-    migrationPersistence.loadDistinctUnmigratedProjectIds().transformWith {
-      case Success(projectIds) => Future { projectIds.foreach(workerForProject) }
-      case Failure(err)        => Future.failed(err)
+    // Ensure that we're the only deploy agent running on the db, then resume init.
+    println("Obtaining exclusive agent lock...")
+    migrationPersistence.lock().flatMap { _ =>
+      println("Obtaining exclusive agent lock... Successful.")
+      migrationPersistence.loadDistinctUnmigratedProjectIds().transformWith {
+        case Success(projectIds) => Future { projectIds.foreach(workerForProject) }
+        case Failure(err)        => Future.failed(err)
+      }
     }
   }
 

@@ -7,6 +7,9 @@ import org.joda.time.DateTime
 import scala.concurrent.Future
 
 trait MigrationPersistence {
+  // todo: this is temporary, as it should probably move to a general db utility or similar.
+  def lock(): Future[Int]
+
   def byId(migrationId: MigrationId): Future[Option[Migration]]
   def loadAll(projectId: String): Future[Seq[Migration]]
   def create(migration: Migration): Future[Migration]
