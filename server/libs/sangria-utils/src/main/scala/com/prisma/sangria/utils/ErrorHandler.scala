@@ -26,11 +26,9 @@ case class ErrorHandler(
 
     case (marshaller, error: Throwable) =>
       error.printStackTrace()
-
       val requestMetadata = RequestMetadata(requestId, request.method.value, request.uri.toString(), request.headers.map(h => h.name() -> h.value()))
       val graphQlMetadata = GraphQlMetadata(query, variables)
       val projectMetadata = projectId.map(pid => ProjectMetadata(pid))
-
       reporter.report(error, Seq(requestMetadata, graphQlMetadata) ++ projectMetadata: _*)
       HandledException(internalErrorMessage, commonFields(marshaller))
   }

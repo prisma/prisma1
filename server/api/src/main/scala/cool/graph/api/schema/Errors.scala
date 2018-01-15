@@ -5,16 +5,7 @@ import cool.graph.api.database.mutactions.MutactionExecutionResult
 import cool.graph.api.mutations.{NodeSelector, ParentInfo}
 import spray.json.JsValue
 
-trait ApiError extends Exception {
-  def message: String
-  def code: Int
-}
-
-abstract class AbstractApiError(val message: String, val code: Int) extends ApiError with ErrorWithCode
-
-case class InvalidProjectId(projectId: String) extends AbstractApiError(s"No service with id '$projectId'", 4000)
-
-abstract class GeneralError(message: String) extends Exception with MutactionExecutionResult {
+abstract class GeneralError(message: String) extends Exception with MutactionExecutionResult with ErrorWithCode {
   override def getMessage: String = message
 }
 
