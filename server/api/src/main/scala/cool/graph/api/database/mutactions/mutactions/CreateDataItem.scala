@@ -53,8 +53,7 @@ case class CreateDataItem(
           DatabaseMutationBuilder.createDataItem(
             project.id,
             model.name,
-            model.scalarFields
-              .filter(!_.isList)
+            model.scalarNonListFields
               .filter(getValueOrDefault(values, _).isDefined)
               .map(field => (field.name, getValueOrDefault(values, field).get))
               .toMap

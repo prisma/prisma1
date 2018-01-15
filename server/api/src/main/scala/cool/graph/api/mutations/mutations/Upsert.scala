@@ -21,8 +21,12 @@ case class Upsert(
 
   import apiDependencies.system.dispatcher
 
-  val where       = CoolArgs(args.raw).extractNodeSelectorFromWhereField(model)
-  val createArgs  = CoolArgs(args.raw("create").asInstanceOf[Map[String, Any]])
+  val where      = CoolArgs(args.raw).extractNodeSelectorFromWhereField(model)
+  val createArgs = CoolArgs(args.raw("create").asInstanceOf[Map[String, Any]])
+
+  //create args need defaultValue
+  //also need to be checked whether all values are there
+
   val updateArgs  = CoolArgs(args.raw("update").asInstanceOf[Map[String, Any]])
   val upsert      = UpsertDataItem(project, model, createArgs, updateArgs, where)
   val idOfNewItem = upsert.idOfNewItem

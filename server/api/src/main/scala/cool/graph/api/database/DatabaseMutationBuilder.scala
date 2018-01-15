@@ -527,8 +527,7 @@ object DatabaseMutationBuilder {
     DBIO.seq(
       DBIO.seq(createTable(projectId, model.name)),
       DBIO.seq(
-        model.scalarFields
-          .filter(!_.isList)
+        model.scalarNonListFields
           .filter(f => !DatabaseMutationBuilder.implicitlyCreatedColumns.contains(f.name))
           .map { (field) =>
             createColumn(
@@ -541,12 +540,9 @@ object DatabaseMutationBuilder {
               typeIdentifier = field.typeIdentifier
             )
           }: _*),
-      DBIO.seq(
-        model.scalarFields
-          .filter(_.isList)
-          .map { (field) =>
-            createScalarListTable(projectId, model.name, field.name, field.typeIdentifier)
-          }: _*)
+      DBIO.seq(model.scalarListFields.map { (field) =>
+        createScalarListTable(projectId, model.name, field.name, field.typeIdentifier)
+      }: _*)
     )
   }
 }

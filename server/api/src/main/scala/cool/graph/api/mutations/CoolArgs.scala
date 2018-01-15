@@ -79,7 +79,7 @@ case class CoolArgs(raw: Map[String, Any]) {
 
   def nonListScalarArguments(model: Model): Vector[ArgumentValue] = {
     for {
-      field      <- model.scalarFields.toVector.filter(!_.isList)
+      field      <- model.scalarNonListFields.toVector
       fieldValue <- getFieldValueAs[Any](field)
     } yield {
       ArgumentValue(field.name, fieldValue)

@@ -1,6 +1,7 @@
 package cool.graph.api.mutations
 
 import cool.graph.api.ApiBaseSpec
+import cool.graph.gc_values.StringGCValue
 import cool.graph.shared.models.Project
 import cool.graph.shared.project_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
@@ -8,6 +9,7 @@ import org.scalatest.{FlatSpec, Matchers}
 class UpsertMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
   val project: Project = SchemaDsl() { schema =>
     schema.model("Todo").field_!("title", _.String).field_!("alias", _.String, isUnique = true).field("anotherIDField", _.GraphQLID, isUnique = true)
+    schema.model("WithDefaultValue").field("default", _.String, defaultValue = Some(StringGCValue("defaultValue"))).field_!("title", _.String)
   }
 
   override protected def beforeAll(): Unit = {
@@ -45,6 +47,36 @@ class UpsertMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
     )
 
     result.pathAsString("data.upsertTodo.title") should be("new title")
+
+    todoCount should be(1)
+  }
+
+  "an item" should "be created if it does not exist yet and use the defaultValue if necessary" in {
+    todoCount should be(0)
+
+    val todoId = "non-existent-id"
+    val result = server.executeQuerySimple(
+      s"""mutation {
+         |  upsertWithDefaultValue(
+         |    where: {id: "$todoId"}
+         |    create: {
+         |      title: "new title"
+         |    }
+         |    update: {
+         |      title: "updated title"
+         |    }
+         |  ){
+         |    id
+         |    title
+         |    default
+         |  }
+         |}
+      """.stripMargin,
+      project
+    )
+
+    result.pathAsString("data.upsertWithDefaultValue.title") should be("new title")
+    result.pathAsString("data.upsertWithDefaultValue.default") should be("defaultValue")
 
     todoCount should be(1)
   }
@@ -181,7 +213,6 @@ class UpsertMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
 
     todoCount should be(1)
   }
-
 
   "An upsert" should "perform only an update if the update changes the unique field used in the where clause" in {
     val todoId = server

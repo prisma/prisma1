@@ -12,7 +12,7 @@ object SangriaQueryArguments {
 
   def orderByArgument(model: Model, name: String = "orderBy") = {
     val values = for {
-      field     <- model.scalarFields.filter(!_.isList)
+      field     <- model.scalarNonListFields
       sortOrder <- List("ASC", "DESC")
     } yield EnumValue(field.name + "_" + sortOrder, description = None, OrderBy(field, SortOrder.withName(sortOrder.toLowerCase())))
 
@@ -20,19 +20,19 @@ object SangriaQueryArguments {
   }
 
   def whereArgument(model: models.Model, project: models.Project, name: String = "where"): Argument[Option[Any]] = {
-    val utils                              = new FilterObjectTypeBuilder(model, project)
+    val utils                              = FilterObjectTypeBuilder(model, project)
     val filterObject: InputObjectType[Any] = utils.filterObjectType
     Argument(name, OptionInputType(filterObject), description = "")
   }
 
   def whereSubscriptionArgument(model: models.Model, project: models.Project, name: String = "where") = {
-    val utils                              = new FilterObjectTypeBuilder(model, project)
+    val utils                              = FilterObjectTypeBuilder(model, project)
     val filterObject: InputObjectType[Any] = utils.subscriptionFilterObjectType
     Argument(name, OptionInputType(filterObject), description = "")
   }
 
   def internalWhereSubscriptionArgument(model: models.Model, project: models.Project, name: String = "where") = {
-    val utils                              = new FilterObjectTypeBuilder(model, project)
+    val utils                              = FilterObjectTypeBuilder(model, project)
     val filterObject: InputObjectType[Any] = utils.internalSubscriptionFilterObjectType
     Argument(name, OptionInputType(filterObject), description = "")
   }
