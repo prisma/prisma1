@@ -5,7 +5,6 @@ import akka.http.scaladsl.testkit.{ScalatestRouteTest, TestFrameworkInterface, W
 import akka.stream.ActorMaterializer
 import cool.graph.akkautil.http.ServerExecutor
 import cool.graph.api.ApiTestDatabase
-import cool.graph.bugsnag.BugSnaggerImpl
 import cool.graph.shared.models.{Project, ProjectId, ProjectWithClientId}
 import cool.graph.subscriptions._
 import cool.graph.websocket.WebsocketServer
@@ -16,7 +15,6 @@ import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContextExecutor}
 
 trait SpecBase extends TestFrameworkInterface with BeforeAndAfterEach with BeforeAndAfterAll with ScalatestRouteTest { this: Suite =>
-  implicit val bugsnag: BugSnaggerImpl      = BugSnaggerImpl("")
   implicit val ec: ExecutionContextExecutor = system.dispatcher
   implicit val dependencies                 = new SubscriptionDependenciesForTest()
   val testDatabase                          = ApiTestDatabase()

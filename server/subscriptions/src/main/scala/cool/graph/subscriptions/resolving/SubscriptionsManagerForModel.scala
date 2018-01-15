@@ -4,7 +4,6 @@ import java.util.concurrent.atomic.AtomicLong
 
 import akka.actor.{Actor, ActorRef, Stash, Terminated}
 import cool.graph.akkautil.{LogUnhandled, LogUnhandledExceptions}
-import cool.graph.bugsnag.BugSnagger
 import cool.graph.messagebus.pubsub.{Message, Only, Subscription}
 import cool.graph.metrics.GaugeMetric
 import cool.graph.shared.models.ModelMutationType.ModelMutationType
@@ -49,8 +48,7 @@ object SubscriptionsManagerForModel {
 
 case class SubscriptionsManagerForModel(
     project: Project,
-    model: Model,
-    bugsnag: BugSnagger
+    model: Model
 )(implicit dependencies: SubscriptionDependencies)
     extends Actor
     with Stash
@@ -63,6 +61,7 @@ case class SubscriptionsManagerForModel(
   import SubscriptionsManagerForModel.Requests._
   import context.dispatcher
 
+  val reporter                 = dependencies.reporter
   val projectId                = project.id
   val subscriptions            = mutable.Map.empty[SubscriptionId, StartSubscription]
   val smartActiveSubscriptions = SmartGaugeMetric(activeSubscriptions)

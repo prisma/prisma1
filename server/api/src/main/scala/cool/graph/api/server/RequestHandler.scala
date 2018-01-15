@@ -2,6 +2,7 @@ package cool.graph.api.server
 
 import akka.http.scaladsl.model.StatusCodes.OK
 import akka.http.scaladsl.model._
+import com.prisma.errors.{ErrorReporter, ProjectMetadata, RequestMetadata}
 import cool.graph.api.ApiDependencies
 import cool.graph.api.database.DataResolver
 import cool.graph.api.database.import_export.{BulkExport, BulkImport}
@@ -9,7 +10,6 @@ import cool.graph.api.project.ProjectFetcher
 import cool.graph.api.schema.APIErrors.InvalidToken
 import cool.graph.api.schema.{APIErrors, ApiUserContext, PrivateSchemaBuilder, SchemaBuilder}
 import cool.graph.auth.Auth
-import cool.graph.bugsnag.{BugSnagger, GraphCoolRequest}
 import cool.graph.client.server.GraphQlRequestHandler
 import cool.graph.shared.models.{Project, ProjectWithClientId}
 import cool.graph.utils.`try`.TryExtensions._
@@ -25,7 +25,7 @@ case class RequestHandler(
     graphQlRequestHandler: GraphQlRequestHandler,
     auth: Auth,
     log: Function[String, Unit]
-)(implicit bugsnagger: BugSnagger, ec: ExecutionContext, apiDependencies: ApiDependencies) {
+)(implicit reporter: ErrorReporter, ec: ExecutionContext, apiDependencies: ApiDependencies) {
 
   def handleRawRequestForPublicApi(
       projectId: String,
@@ -102,11 +102,8 @@ case class RequestHandler(
     val result = projectFetcher.fetch(projectIdOrAlias = projectId)
 
     result.onComplete {
-      case Failure(t) =>
-        val request = GraphCoolRequest(requestId = "", clientId = None, projectId = Some(projectId), query = "", variables = "")
-        bugsnagger.report(t, request)
-
-      case _ =>
+      case Failure(t) => reporter.report(t, ProjectMetadata(projectId))
+      case _          =>
     }
 
     result map {

@@ -134,7 +134,7 @@ lazy val subscriptions = serverProject("subscriptions", imageName = "subscriptio
   )
 
 lazy val workers = serverProject("workers", imageName = "workers")
-    .dependsOn(bugsnag % "compile")
+    .dependsOn(errorReporting % "compile")
     .dependsOn(messageBus % "compile")
     .dependsOn(scalaUtils % "compile")
     .dependsOn(stubServer % "test")
@@ -145,15 +145,15 @@ lazy val gcValues = libProject("gc-values")
     scalactic
   ) ++ joda)
 
-lazy val bugsnag = libProject("bugsnag")
-  .settings(libraryDependencies ++= Seq(
-    bugsnagClient,
-    specs2,
-    playJson
-  ) ++ jackson)
+//lazy val bugsnag = libProject("bugsnag")
+//  .settings(libraryDependencies ++= Seq(
+//    specs2,
+//    bugsnagClient,
+//    playJson
+//  ) ++ jackson)
 
 lazy val akkaUtils = libProject("akka-utils")
-  .dependsOn(bugsnag % "compile")
+  .dependsOn(errorReporting % "compile")
   .dependsOn(scalaUtils % "compile")
   .dependsOn(stubServer % "test")
   .settings(libraryDependencies ++= Seq(
@@ -171,7 +171,7 @@ lazy val akkaUtils = libProject("akka-utils")
   .settings(scalacOptions := Seq("-deprecation", "-feature"))
 
 lazy val metrics = libProject("metrics")
-  .dependsOn(bugsnag % "compile")
+  .dependsOn(errorReporting % "compile")
   .dependsOn(akkaUtils % "compile")
   .settings(
     libraryDependencies ++= Seq(
@@ -189,11 +189,11 @@ lazy val rabbitProcessor = libProject("rabbit-processor")
       amqp
     ) ++ jackson
   )
-  .dependsOn(bugsnag % "compile")
+  .dependsOn(errorReporting % "compile")
 
 lazy val messageBus = libProject("message-bus")
   .settings(commonSettings: _*)
-  .dependsOn(bugsnag % "compile")
+  .dependsOn(errorReporting % "compile")
   .dependsOn(akkaUtils % "compile")
   .dependsOn(rabbitProcessor % "compile")
   .settings(libraryDependencies ++= Seq(
@@ -241,6 +241,15 @@ lazy val scalaUtils =
       scalactic
     ))
 
+lazy val errorReporting =
+  Project(id = "error-reporting", base = file("./libs/error-reporting"))
+    .settings(commonSettings: _*)
+    .settings(libraryDependencies ++= Seq(
+      bugsnagClient,
+      playJson
+    ))
+
+
 lazy val jsonUtils =
   Project(id = "json-utils", base = file("./libs/json-utils"))
     .settings(commonSettings: _*)
@@ -278,7 +287,7 @@ val allServerProjects = List(
 )
 
 val allLibProjects = List(
-  bugsnag,
+//  bugsnag,
   akkaUtils,
   metrics,
   rabbitProcessor,
@@ -288,7 +297,8 @@ val allLibProjects = List(
   stubServer,
   scalaUtils,
   jsonUtils,
-  cache
+  cache,
+  errorReporting,
 )
 
 lazy val libs = (project in file("libs")).aggregate(allLibProjects.map(Project.projectToRef): _*)

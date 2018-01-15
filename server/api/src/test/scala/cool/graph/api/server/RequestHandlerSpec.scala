@@ -18,7 +18,7 @@ import scala.concurrent.Future
 
 class RequestHandlerSpec extends FlatSpec with Matchers with ApiBaseSpec with AwaitUtils with GraphQLResponseAssertions {
   import system.dispatcher
-  import testDependencies.bugSnagger
+  import testDependencies.reporter
 
   "a request without token" should "result in an InvalidToken error" in {
     val (_, result) = handler(projectWithSecret).handleRawRequestForPublicApi(projectWithSecret.id, request("header")).await
