@@ -1,6 +1,7 @@
 package com.prisma.errors
 
 import com.bugsnag.{Bugsnag, Report}
+import scala.collection.immutable.Seq
 
 case class BugsnagErrorReporter(apiKey: String) extends ErrorReporter {
   private val client = new Bugsnag(apiKey)
@@ -54,7 +55,7 @@ case class BugsnagErrorReporter(apiKey: String) extends ErrorReporter {
     r.addToTab("Project", "Id", meta.id)
   }
 
-  private def headersAsString(headers: Map[String, String]): String = {
+  private def headersAsString(headers: Seq[(String, String)]): String = {
     headers
       .map {
         case (key, value) => s"$key: $value"

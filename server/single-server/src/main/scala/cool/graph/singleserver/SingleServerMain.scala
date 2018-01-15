@@ -20,7 +20,7 @@ object SingleServerMain extends App {
 
   ServerExecutor(
     port = port,
-    ClusterServer(singleServerDependencies.clusterSchemaBuilder, singleServerDependencies.projectPersistence, "cluster"),
+    ClusterServer("cluster"),
     WebsocketServer(singleServerDependencies),
     ApiServer(singleServerDependencies.apiSchemaBuilder),
     SimpleSubscriptionsServer(),

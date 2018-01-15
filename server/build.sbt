@@ -92,6 +92,7 @@ lazy val deploy = serverProject("deploy", imageName = "deploy")
   .dependsOn(messageBus % "compile")
   .dependsOn(graphQlClient % "compile")
   .dependsOn(stubServer % "test")
+  .dependsOn(sangriaUtils % "compile")
   .settings(
     libraryDependencies ++= Seq(
       playJson,
@@ -114,6 +115,7 @@ lazy val api = serverProject("api", imageName = "database")
   .dependsOn(jvmProfiler % "compile")
   .dependsOn(cache % "compile")
   .dependsOn(auth % "compile")
+  .dependsOn(sangriaUtils % "compile")
   .settings(
     libraryDependencies ++= Seq(
       playJson,
@@ -144,13 +146,6 @@ lazy val gcValues = libProject("gc-values")
     playJson,
     scalactic
   ) ++ joda)
-
-//lazy val bugsnag = libProject("bugsnag")
-//  .settings(libraryDependencies ++= Seq(
-//    specs2,
-//    bugsnagClient,
-//    playJson
-//  ) ++ jackson)
 
 lazy val akkaUtils = libProject("akka-utils")
   .dependsOn(errorReporting % "compile")
@@ -249,6 +244,13 @@ lazy val errorReporting =
       playJson
     ))
 
+lazy val sangriaUtils =
+  Project(id = "sangria-utils", base = file("./libs/sangria-utils"))
+    .settings(commonSettings: _*)
+    .dependsOn(errorReporting % "compile")
+    .settings(libraryDependencies ++= Seq(
+      akkaHttp,
+    ) ++ sangria)
 
 lazy val jsonUtils =
   Project(id = "json-utils", base = file("./libs/json-utils"))
@@ -287,7 +289,6 @@ val allServerProjects = List(
 )
 
 val allLibProjects = List(
-//  bugsnag,
   akkaUtils,
   metrics,
   rabbitProcessor,
@@ -299,6 +300,7 @@ val allLibProjects = List(
   jsonUtils,
   cache,
   errorReporting,
+  sangriaUtils
 )
 
 lazy val libs = (project in file("libs")).aggregate(allLibProjects.map(Project.projectToRef): _*)

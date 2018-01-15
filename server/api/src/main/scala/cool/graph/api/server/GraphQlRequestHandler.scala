@@ -2,9 +2,10 @@ package cool.graph.client.server
 
 import akka.http.scaladsl.model.StatusCodes.OK
 import akka.http.scaladsl.model._
+import com.prisma.sangria.utils.ErrorHandler
 import cool.graph.api.ApiDependencies
 import cool.graph.api.schema.ApiUserContext
-import cool.graph.api.server.{ErrorHandler, GraphQlQuery, GraphQlRequest}
+import cool.graph.api.server.{GraphQlQuery, GraphQlRequest}
 import sangria.execution.{Executor, QueryAnalysisError}
 import spray.json.{JsArray, JsValue}
 
@@ -39,8 +40,15 @@ case class GraphQlRequestHandlerImpl(
       request: GraphQlRequest,
       query: GraphQlQuery
   ): Future[JsValue] = {
-    val context      = ApiUserContext(clientId = "clientId")
-    val errorHandler = ErrorHandler(request.id)
+    val context = ApiUserContext(clientId = "clientId")
+    val errorHandler = ErrorHandler(
+      request.id,
+      HttpRequest(HttpMethods.POST),
+      query.queryString,
+      query.variables.toString(),
+      apiDependencies.reporter,
+      projectId = Some(request.project.id)
+    )
 
     val result = Executor.execute(
       schema = request.schema,
@@ -56,8 +64,9 @@ case class GraphQlRequestHandlerImpl(
       case error: QueryAnalysisError =>
         error.resolveError
 
-      case error: Throwable =>
-        errorHandler.handle(error)._2
+      // My theory: Not required. Let it bubble up
+//      case error: Throwable =>
+//        errorHandler.handle(error)._2
     }
   }
 

@@ -19,7 +19,9 @@ import cool.graph.cuid.Cuid.createCuid
 import cool.graph.metrics.extensions.TimeResponseDirectiveImpl
 import cool.graph.shared.models.{ProjectId, ProjectWithClientId}
 import cool.graph.util.logging.{LogData, LogKey}
+import play.api.libs.json.Json
 import spray.json._
+import cool.graph.util.logging.LogDataWrites.logDataWrites
 
 import scala.concurrent.Future
 import scala.language.postfixOps
@@ -27,8 +29,11 @@ import scala.language.postfixOps
 case class ApiServer(
     schemaBuilder: SchemaBuilder,
     prefix: String = ""
-)(implicit apiDependencies: ApiDependencies, system: ActorSystem, materializer: ActorMaterializer)
-    extends Server
+)(
+    implicit apiDependencies: ApiDependencies,
+    system: ActorSystem,
+    materializer: ActorMaterializer
+) extends Server
     with LazyLogging {
   import system.dispatcher
 
@@ -59,21 +64,23 @@ case class ApiServer(
 
     def logRequestEnd(projectId: Option[String] = None, clientId: Option[String] = None) = {
       log(
-        LogData(
-          key = LogKey.RequestComplete,
-          requestId = requestId,
-          projectId = projectId,
-          clientId = clientId,
-          payload = Some(Map("request_duration" -> (System.currentTimeMillis() - requestBeginningTime)))
-        ).json)
+        Json
+          .toJson(
+            LogData(
+              key = LogKey.RequestComplete,
+              requestId = requestId,
+              projectId = projectId,
+              clientId = clientId,
+              payload = Some(Map("request_duration" -> (System.currentTimeMillis() - requestBeginningTime)))
+            )
+          )
+          .toString())
     }
 
     def throttleApiCallIfNeeded(name: String, stage: String, rawRequest: RawRequest) = {
       throttler match {
-        case Some(throttler) =>
-          throttledCall(name, stage, rawRequest, throttler)
-        case None =>
-          unthrottledCall(name, stage, rawRequest)
+        case Some(throttler) => throttledCall(name, stage, rawRequest, throttler)
+        case None            => unthrottledCall(name, stage, rawRequest)
       }
     }
 
@@ -105,7 +112,7 @@ case class ApiServer(
       }
     }
 
-    logger.info(LogData(LogKey.RequestNew, requestId).json)
+    logger.info(Json.toJson(LogData(LogKey.RequestNew, requestId)).toString())
 
     pathPrefix(Segment) { name =>
       pathPrefix(Segment) { stage =>
@@ -189,6 +196,7 @@ case class ApiServer(
     case e: Throwable =>
       println(e.getMessage)
       e.printStackTrace()
-      complete(500 -> s"kaputt: ${e.getMessage}")
+      apiDependencies.reporter.report(e)
+      complete(InternalServerError -> JsObject("errors" -> JsArray(JsObject("requestId" -> JsString(requestId), "message" -> JsString(e.getMessage)))))
   }
 }

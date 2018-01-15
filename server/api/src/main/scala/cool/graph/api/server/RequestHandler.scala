@@ -2,13 +2,13 @@ package cool.graph.api.server
 
 import akka.http.scaladsl.model.StatusCodes.OK
 import akka.http.scaladsl.model._
-import com.prisma.errors.{ErrorReporter, ProjectMetadata, RequestMetadata}
+import com.prisma.errors.{ErrorReporter, ProjectMetadata}
 import cool.graph.api.ApiDependencies
 import cool.graph.api.database.DataResolver
 import cool.graph.api.database.import_export.{BulkExport, BulkImport}
 import cool.graph.api.project.ProjectFetcher
 import cool.graph.api.schema.APIErrors.InvalidToken
-import cool.graph.api.schema.{APIErrors, ApiUserContext, PrivateSchemaBuilder, SchemaBuilder}
+import cool.graph.api.schema._
 import cool.graph.auth.Auth
 import cool.graph.client.server.GraphQlRequestHandler
 import cool.graph.shared.models.{Project, ProjectWithClientId}
@@ -42,20 +42,14 @@ case class RequestHandler(
     }
   }
 
-  def handleRawRequestWithSchemaBuilder(
-      projectId: String,
-      rawRequest: RawRequest
-  )(
-      schemaBuilderFn: Project => Schema[ApiUserContext, Unit]
-  ) = {
+  def handleRawRequestWithSchemaBuilder(projectId: String, rawRequest: RawRequest)(schemaBuilderFn: Project => Schema[ApiUserContext, Unit]) = {
     handleRawRequest(projectId, rawRequest) { project =>
       for {
         graphQlRequest <- rawRequest.toGraphQlRequest(project, schema = schemaBuilderFn(project)).toFuture
         result         <- handleGraphQlRequest(graphQlRequest)
       } yield result
     }.recoverWith {
-      case e: InvalidGraphQlRequest => Future.successful(OK -> JsObject("error" -> JsString(e.underlying.getMessage)))
-      case exception                => Future.successful(ErrorHandler(rawRequest.id).handle(exception))
+      case e: InvalidGraphQlRequest => Future.successful(OK -> JsObject("error" -> JsString(e.underlying.getMessage))) // ???
     }
   }
 
@@ -93,9 +87,7 @@ case class RequestHandler(
   }
 
   def handleGraphQlRequest(graphQlRequest: GraphQlRequest): Future[(StatusCode, JsValue)] = {
-    val resultFuture = graphQlRequestHandler.handle(graphQlRequest)
-
-    resultFuture.recover { case error: Throwable => ErrorHandler(graphQlRequest.id).handle(error) }
+    graphQlRequestHandler.handle(graphQlRequest)
   }
 
   def fetchProject(projectId: String): Future[ProjectWithClientId] = {

@@ -7,9 +7,7 @@ import cool.graph.deploy.server.ClusterServer
 object DeployMain extends App {
   implicit val system       = ActorSystem("deploy-main")
   implicit val materializer = ActorMaterializer()
+  implicit val dependencies = DeployDependenciesImpl()
 
-  val dependencies  = DeployDependenciesImpl()
-  val clusterServer = ClusterServer(dependencies.clusterSchemaBuilder, dependencies.projectPersistence, "cluster")
-
-  ServerExecutor(8081, clusterServer).startBlocking()
+  ServerExecutor(8081, ClusterServer("cluster")).startBlocking()
 }

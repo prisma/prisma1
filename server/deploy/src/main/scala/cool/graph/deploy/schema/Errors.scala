@@ -1,15 +1,16 @@
 package cool.graph.deploy.schema
 
+import com.prisma.sangria.utils.ErrorWithCode
 import cool.graph.shared.models.ProjectId
 
-trait DeployApiError extends Exception {
+trait DeployApiError extends Exception with ErrorWithCode {
   def message: String
-  def errorCode: Int
+  val code: Int
 
   override def getMessage: String = message
 }
 
-abstract class AbstractDeployApiError(val message: String, val errorCode: Int) extends DeployApiError
+abstract class AbstractDeployApiError(val message: String, val code: Int) extends DeployApiError
 
 case class InvalidProjectId(projectId: String)
     extends AbstractDeployApiError({
