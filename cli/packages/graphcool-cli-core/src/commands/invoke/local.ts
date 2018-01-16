@@ -1,4 +1,6 @@
 import { Command, flags, Flags, GraphcoolModule } from 'graphcool-cli-engine'
+import * as Ajv from 'ajv'
+import * as schema from 'graphcool-json-schema/dist/eventschema.json'
 import { flatMap, isEqual } from 'lodash'
 import { LocalInvoker } from '../../LocalInvoker'
 import * as path from 'path'
@@ -89,10 +91,32 @@ export default class InvokeLocal extends Command {
         this.out.error(`Provided json path ${jsonPath} doesn't exist`)
       } else {
         const jsonFile = fs.readFileSync(jsonPath, 'utf-8')
+        
         try {
           event = JSON.parse(jsonFile)
         } catch (e) {
           this.out.error(`Can't parse json of file ${jsonFile}: ` + e.message)
+        }
+
+        const ajv = new Ajv()
+        const validate = ajv.compile(schema)
+        const valid = validate(event)
+
+        if (!valid) {
+          this.out.log(
+            this.out.getErrorPrefix(json) +
+              chalk.bold('Errors while validating event payload:\n'),
+          )
+          this.out.error(
+            chalk.red(
+              ajv
+                .errorsText(validate.errors, {dataVar: 'Event payload'})
+                .split(', ')
+                .map(l => `  ${l}`)
+                .join('\n'),
+            ),
+          )
+          this.out.exit(1)
         }
       }
     }
