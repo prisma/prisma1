@@ -2,6 +2,8 @@ package cool.graph.deploy.schema
 
 import com.prisma.sangria.utils.ErrorWithCode
 import cool.graph.shared.models.ProjectId
+import sangria.execution.ValidationError
+import sangria.parser.SyntaxError
 
 trait DeployApiError extends Exception with ErrorWithCode {
   def message: String
@@ -31,6 +33,8 @@ case class InvalidRelationName(relationName: String) extends AbstractDeployApiEr
 case class InvalidToken(reason: String) extends AbstractDeployApiError(s"Authentication token is invalid: $reason", 3015)
 
 object TokenExpired extends AbstractDeployApiError(s"Authentication token is expired", 3016)
+
+case class InvalidQuery(reason: String) extends AbstractDeployApiError(reason, 3017)
 
 object DeploymentInProgress
     extends AbstractDeployApiError(

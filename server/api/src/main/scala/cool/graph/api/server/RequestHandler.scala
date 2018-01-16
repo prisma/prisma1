@@ -49,7 +49,7 @@ case class RequestHandler(
         result         <- handleGraphQlRequest(graphQlRequest)
       } yield result
     }.recoverWith {
-      case e: InvalidGraphQlRequest => Future.successful(OK -> JsObject("error" -> JsString(e.underlying.getMessage))) // ???
+      case e: InvalidGraphQlRequest => Future.successful(OK -> JsObject("error" -> JsString(e.underlying.getMessage)))
     }
   }
 

@@ -559,11 +559,8 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
   }
 
   "DeployMutation" should "error if defaultValue are provided for list fields" in {
-
-    val (project, _)           = setupProject(basicTypesGql)
-    val nameAndStage           = ProjectId.fromEncodedString(project.id)
-    val loadedProject: Project = projectPersistence.load(project.id).await.get
-
+    val (project, _) = setupProject(basicTypesGql)
+    val nameAndStage = ProjectId.fromEncodedString(project.id)
     val schema =
       """
         |type TestModel {
@@ -586,8 +583,35 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
       """.stripMargin)
 
     result1.pathAsSeq("data.deploy.errors").head.toString should include("List fields cannot have defaultValues.")
-
   }
+
+  "DeployMutation" should "throw a correct error for an invalid query" in {
+    val (project, _) = setupProject(basicTypesGql)
+    val nameAndStage = ProjectId.fromEncodedString(project.id)
+    val schema =
+      """
+        |{
+        |  id: ID! @unique
+        |}
+      """.stripMargin
+
+    val result1 = server.queryThatMustFail(
+      s"""
+        |mutation {
+        |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(schema)}}){
+        |    migration {
+        |      applied
+        |    }
+        |    errors {
+        |      description
+        |    }
+        |  }
+        |}
+      """.stripMargin,
+      3017
+    )
+  }
+
   private def formatFunctions(functions: Vector[FunctionInput]) = {
     def formatFunction(fn: FunctionInput) = {
       s"""{

@@ -6,15 +6,16 @@ import cool.graph.deploy.migration._
 import cool.graph.deploy.migration.inference.{InvalidGCValue, MigrationStepsInferrer, RelationDirectiveNeeded, SchemaInferrer}
 import cool.graph.deploy.migration.migrator.Migrator
 import cool.graph.deploy.migration.validation.{SchemaError, SchemaSyntaxValidator}
-import cool.graph.graphql.GraphQlClient
+import cool.graph.deploy.schema.InvalidQuery
 import cool.graph.messagebus.pubsub.Only
 import cool.graph.shared.models.{Function, Migration, MigrationStep, Project, ProjectId, Schema, ServerSideSubscriptionFunction, WebhookDelivery}
 import org.scalactic.{Bad, Good, Or}
-import play.api.libs.json.{JsString, Json}
+import play.api.libs.json.JsString
 import sangria.parser.QueryParser
 
 import scala.collection.Seq
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success}
 
 case class DeployMutation(
     args: DeployMutationInput,
@@ -30,7 +31,11 @@ case class DeployMutation(
     dependencies: DeployDependencies
 ) extends Mutation[DeployMutationPayload] {
 
-  val graphQlSdl   = QueryParser.parse(args.types).get
+  val graphQlSdl = QueryParser.parse(args.types) match {
+    case Success(res) => res
+    case Failure(e)   => throw InvalidQuery(e.getMessage)
+  }
+
   val validator    = SchemaSyntaxValidator(args.types)
   val schemaErrors = validator.validate()
 

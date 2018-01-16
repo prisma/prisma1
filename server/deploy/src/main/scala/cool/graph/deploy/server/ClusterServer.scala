@@ -21,8 +21,8 @@ import cool.graph.shared.models.ProjectWithClientId
 import com.prisma.logging.{LogData, LogKey}
 import com.prisma.logging.LogDataWrites.logDataWrites
 import play.api.libs.json.Json
-import sangria.execution.Executor
-import sangria.parser.QueryParser
+import sangria.execution.{Executor, QueryAnalysisError, ValidationError}
+import sangria.parser.{QueryParser, SyntaxError}
 import spray.json._
 
 import scala.concurrent.Future
@@ -104,6 +104,9 @@ case class ClusterServer(prefix: String = "")(
                             middleware = List.empty,
                             exceptionHandler = errorHandler.sangriaExceptionHandler
                           )
+                          .recover {
+                            case e: QueryAnalysisError => e.resolveError
+                          }
                           .map(node => OK -> node)
 
                       result.onComplete(_ => logRequestEnd(None, None))

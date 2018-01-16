@@ -7,6 +7,7 @@ import cool.graph.api.ApiDependencies
 import cool.graph.api.schema.ApiUserContext
 import cool.graph.api.server.{GraphQlQuery, GraphQlRequest}
 import sangria.execution.{Executor, QueryAnalysisError}
+import sangria.parser.SyntaxError
 import spray.json.{JsArray, JsValue}
 
 import scala.collection.immutable.Seq
@@ -61,12 +62,7 @@ case class GraphQlRequestHandlerImpl(
     )
 
     result.recover {
-      case error: QueryAnalysisError =>
-        error.resolveError
-
-      // My theory: Not required. Let it bubble up
-//      case error: Throwable =>
-//        errorHandler.handle(error)._2
+      case e: QueryAnalysisError => e.resolveError
     }
   }
 
