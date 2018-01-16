@@ -35,7 +35,7 @@ The Prisma GraphQL API provides powerful abstractions and building blocks to dev
 1. **Install the CLI via NPM:**
 
 ```sh
-npm install -g prisma-cli
+npm install -g prisma
 ```
 
 2. **Create a new service:**

@@ -24,7 +24,7 @@ npm install -g graphql-cli
 </Instruction>
 
  > **Note**: For the purpose of this tutorial you don't explicitly have to install the Prisma CLI because `prisma-cli` is listed as a _development dependency_ in the `node-advanced` boilerplate, which allows to run its commands by prefixing it with `yarn`, e.g. `yarn prisma deploy` or `yarn prisma playground`.
- > If you have `prisma-cli` installed globally on your machine (which you can do with `npm install -g prisma-cli`), you don't need to use the `yarn` prefix throughout this tutorial.
+ > If you have `prisma-cli` installed globally on your machine (which you can do with `npm install -g prisma`), you don't need to use the `yarn` prefix throughout this tutorial.
 
  Once the CLI installed, you can create your GraphQL server.
 
