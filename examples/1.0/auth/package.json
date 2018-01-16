@@ -18,5 +18,10 @@
     "now": "8.5.4",
     "prisma-cli": "beta",
     "rimraf": "2.6.2"
+  },
+  "prettier": {
+    "semi": false,
+    "singleQuote": true,
+    "trailingComma": "all"
   }
 }
