@@ -1,6 +1,23 @@
 {
   "name": "prisma-cli",
-  "version": "1.0.0-alpha.4.3.1",
+  "description": "Prisma is a realtime GraphQL database layer. Connect directly from the frontend or build your own GraphQL server.",
+  "keywords": [
+    "prisma",
+    "graphql",
+    "backend",
+    "deployment",
+    "api",
+    "server"
+  ],
+  "homepage": "https://github.com/graphcool/prisma",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/graphcool/prisma.git"
+  },
+  "bugs": {
+    "url": "https://github.com/graphcool/prisma/issues"
+  },
+  "version": "1.0.0",
   "main": "dist/index.js",
   "bin": {
     "prisma": "dist/index.js"
@@ -48,8 +65,8 @@
   },
   "dependencies": {
     "fs-extra": "^4.0.1",
-    "prisma-cli-core": "0.0.13",
-    "prisma-cli-engine": "0.0.16",
+    "prisma-cli-core": "1.0.0",
+    "prisma-cli-engine": "1.0.0",
     "semver": "^5.4.1",
     "source-map-support": "^0.4.18"
   },

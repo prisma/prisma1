@@ -16,7 +16,7 @@ services:
       - db-persistence:/var/lib/mysql
 
   prisma-database:
-    image: prismagraphql/prisma:1.0.0-beta4.3.1
+    image: prismagraphql/prisma:1.0
     restart: always
     ports:
       - "0.0.0.0:${PORT}:${PORT}"
@@ -42,7 +42,7 @@ services:
       SQL_INTERNAL_CONNECTION_LIMIT: 10
       CLUSTER_PUBLIC_KEY: $CLUSTER_PUBLIC_KEY
       BUGSNAG_API_KEY: ""
-      CLUSTER_VERSION: 1.0.0-beta4.3.1
+      CLUSTER_VERSION: 1.0
 
 networks:
   prisma:

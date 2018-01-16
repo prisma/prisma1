@@ -166,6 +166,16 @@ export class CLI {
               'prisma deploy --help',
             )}`,
           )
+        } else if (id === 'local:down') {
+          throw new Error(
+            `The ${chalk.bold(
+              'local down',
+            )} command has been replaced by the ${chalk.bold(
+              'local nuke',
+            )} command. Get more info with ${chalk.bold.green(
+              'prisma local nuke --help',
+            )}`,
+          )
         } else {
           return new NotFound(out, this.config.argv).run()
         }

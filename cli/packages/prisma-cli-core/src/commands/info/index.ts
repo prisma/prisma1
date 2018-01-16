@@ -56,8 +56,9 @@ export default class InfoCommand extends Command {
     }
     const cluster = this.definition.getCluster()
     if (!cluster) {
-      throw new Error(`Cluster ${clusterName} could not be found in global ~/.prismarc.
-Please make sure it contains the cluster. You can create a local cluster using 'gc local start'`)
+      throw new Error(`Cluster ${clusterName} could not be found in global ~/.prisma/config.yml.
+Please make sure it contains the cluster. You can create a local cluster using 'gc local start'.
+Read more here: https://bit.ly/prisma-graphql-config-yml`)
     }
     if (!json) {
       this.out.log(`Service Name: ${chalk.bold(serviceName)}`)

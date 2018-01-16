@@ -137,6 +137,19 @@ ${chalk.gray(
       )
     }
 
+    if (cluster && !cluster.local) {
+      const workspace = this.definition.getWorkspace()
+      if (
+        workspace &&
+        !workspace.startsWith('public-') &&
+        (!this.env.globalRC.cloudSessionKey ||
+          this.env.globalRC.cloudSessionKey === '')
+      ) {
+        await this.client.login()
+        cluster.clusterSecret = this.env.globalRC.cloudSessionKey
+      }
+    }
+
     await this.client.initClusterClient(
       cluster,
       this.definition.getWorkspace() || '*',
@@ -238,7 +251,9 @@ ${chalk.gray(
   }
 
   private getSillyName() {
-    return `${slugify(sillyname())}-${Math.round(Math.random() * 1000000)}`
+    return `${slugify(sillyname()).split('-')[0]}-${Math.round(
+      Math.random() * 1000,
+    )}`
   }
 
   private getPublicName() {
@@ -585,7 +600,7 @@ ${chalk.gray(
       new inquirer.Separator('                     '),
       new inquirer.Separator(
         chalk.dim(
-          `You can learn more about deployment in the docs: http://bit.ly/prisma-deployment`,
+          `You can learn more about deployment in the docs: http://bit.ly/prisma-graphql-deployment`,
         ),
       ),
     ]
@@ -629,7 +644,7 @@ ${chalk.gray(
       ),
       new inquirer.Separator(
         chalk.dim(
-          `You can learn more about deployment in the docs: http://bit.ly/prisma-deployment`,
+          `You can learn more about deployment in the docs: http://bit.ly/prisma-graphql-deployment`,
         ),
       ),
       new inquirer.Separator('                     '),

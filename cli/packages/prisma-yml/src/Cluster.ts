@@ -44,10 +44,10 @@ export class Cluster {
     if (!this.clusterSecret || this.clusterSecret === '') {
       throw new Error(`Property '${chalk.bold(
         'clusterSecret',
-      )}' of cluster ${chalk.bold(this.name)} in ~/.prismarc is empty.
+      )}' of cluster ${chalk.bold(this.name)} in ~/.prisma/config.yml is empty.
 Please either provide a clusterSecret or run ${chalk.green.bold(
         'prisma local start',
-      )} to generate a new one`)
+      )} to generate a new one. Read more here https://bit.ly/prisma-graphql-config-yml`)
     }
     if (!this.cachedToken) {
       const grants = [{ target: `*/*`, action: '*' }]

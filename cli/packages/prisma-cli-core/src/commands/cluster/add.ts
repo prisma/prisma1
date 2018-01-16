@@ -19,7 +19,7 @@ export default class ClusterAdd extends Command {
     this.env.saveGlobalRC()
 
     this.out.log(
-      `Your cluster is set up and has been saved to ~/.prismarc. Try ${chalk.green(
+      `Your cluster is set up and has been saved to ~/.prisma/config.yml. Try ${chalk.green(
         'prisma deploy',
       )} and choose ${chalk.green(name)} to deploy to your new cluster.`,
     )

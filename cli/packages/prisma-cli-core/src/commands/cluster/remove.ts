@@ -14,7 +14,9 @@ export default class ClusterRemove extends Command {
     const cluster = await this.getCluster()
     await this.askForConfirmation(`cluster ${cluster}`)
 
-    this.out.action.start(`Removing cluster ${cluster} from ~/.prismarc`)
+    this.out.action.start(
+      `Removing cluster ${cluster} from ~/.prisma/config.yml`,
+    )
     this.env.removeCluster(cluster)
     this.env.saveGlobalRC()
     this.out.action.stop()

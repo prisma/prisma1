@@ -127,7 +127,7 @@ ${dirString}You can now run ${chalk.cyan(
       '$ prisma deploy',
     )} to deploy your database service.
 
-For next steps follow this tutorial: https://bit.ly/prisma-first-steps`)
+For next steps follow this tutorial: https://bit.ly/prisma-graphql-first-steps`)
   }
   async graphqlCreate(boilerplate?: string) {
     this.out.log(
