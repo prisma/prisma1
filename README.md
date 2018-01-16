@@ -30,7 +30,7 @@ The Prisma GraphQL API provides powerful abstractions and building blocks to dev
 
 ## Quickstart
 
-[Watch this 5 min tutorial](https://www.youtube.com/watch?v=g0wFABHMzL4) or follow the steps below to get started with Prisma:
+[Watch this 4 min tutorial](https://www.youtube.com/watch?v=20zGexpEitc) or follow the steps below to get started with Prisma:
 
 1. **Install the CLI via NPM:**
 
