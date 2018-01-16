@@ -86,7 +86,7 @@ prisma deploy
 
 Use the endpoint from the previous step in your frontend (or backend) applications to connect to your GraphQL API.
 
-7 **Read more in the dedicated quickstarts for your favorite technology**
+7. **Read more in the dedicated quickstarts for your favorite technology**
 
 [![](https://imgur.com/T5nakij.png)](https://www.prismagraphql.com/docs/quickstart/)
 
