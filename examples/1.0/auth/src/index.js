@@ -1,6 +1,6 @@
 const { GraphQLServer } = require('graphql-yoga')
 const { importSchema } = require('graphql-import')
-const { Graphcool } = require('graphcool-binding')
+const { Prisma } = require('prisma-binding')
 const { me, signup, login, AuthPayload } = require('./auth')
 
 const resolvers = {
@@ -18,7 +18,7 @@ const server = new GraphQLServer({
   resolvers,
   context: req => ({
     ...req,
-    db: new Graphcool({
+    db: new Prisma({
       typeDefs: 'src/generated/graphcool.graphql',
       endpoint: process.env.GRAPHCOOL_ENDPOINT,
       secret: process.env.GRAPHCOOL_SECRET,
@@ -26,4 +26,4 @@ const server = new GraphQLServer({
   }),
 })
 
-server.start(() => console.log('Server is running on http://localhost:4000'))
+server.start(({ port }) => console.log(`Server is running on http://localhost:${port}`))
