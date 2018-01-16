@@ -4,17 +4,15 @@
 
 [![Slack Status](https://slack.graph.cool/badge.svg)](https://slack.graph.cool) [![npm version](https://badge.fury.io/js/graphcool.svg)](https://badge.fury.io/js/graphcool)
 
-**Prisma - turn your database into a GraphQL API**
-
-With Prisma you can design your data model and have a production ready [GraphQL](https://www.howtographql.com/) API online in minutes.
+**Prisma - turn your database into a GraphQL API**. Prisma lets you design your data model and have a production ready [GraphQL](https://www.howtographql.com/) API online in minutes.
 
 The Prisma GraphQL API provides powerful abstractions and building blocks to develop flexible, scalable GraphQL backends:
 
-1. **Type-safe API** that can be used from frontend and backend, including filters, aggregations and transactions
-2. **Data modeling** with declarative SDL. Prisma migrates your underlying database automatically
-3. **Realtime API** using GraphQL Subscriptions
-4. **Advanced API composition** using GraphQL Bindings and schema stitching
-5. **Works with all frontend frameworks** like React, Vue.js, Angular ([Quickstart Examples](https://prismagraphql.com/docs/quickstart/))
+1. **Type-safe API** that can be used from frontend and backend, including filters, aggregations and transactions.
+2. **Data modeling** with declarative SDL. Prisma migrates your underlying database automatically.
+3. **Realtime API** using GraphQL Subscriptions.
+4. **Advanced API composition** using GraphQL Bindings and schema stitching.
+5. **Works with all frontend frameworks** like React, Vue.js, Angular ([Quickstart Examples](https://www.prismagraphql.com/docs/quickstart/)).
 
 ## Contents
 
@@ -30,7 +28,7 @@ The Prisma GraphQL API provides powerful abstractions and building blocks to dev
 
 ## Quickstart
 
-[Watch this 5 min tutorial](https://www.youtube.com/watch?v=xmri5pNR9-Y) or follow the steps below to get started with Prisma:
+[Watch this 5 min tutorial](https://www.youtube.com/watch?v=g0wFABHMzL4) or follow the steps below to get started with Prisma:
 
 1. **Install the CLI via NPM:**
 
@@ -48,7 +46,7 @@ prisma init
 
 3. **Define your data model:**
 
-Edit `datamodel.graphql` to define your data model using the [GraphQL SDL notation](<https://www.prismagraphql.com/docs/reference/service-configuration/data-modelling-(sdl)-eiroozae8u>).
+Edit `datamodel.graphql` to define your data model using the [GraphQL SDL notation](https://www.prismagraphql.com/docs/reference/service-configuration/data-modelling-(sdl)-eiroozae8u).
 
 ```graphql
 type Tweet {
@@ -86,15 +84,25 @@ prisma deploy
 
 Use the endpoint from the previous step in your frontend (or backend) applications to connect to your GraphQL API.
 
+[![](https://imgur.com/mZYjYkh.png)](https://www.prismagraphql.com/docs/quickstart/)
+
 ## Examples
 
-[![Prisma Examples](https://imgur.com/21kBMfD.png)](https://www.prismagraphql.com/docs/quickstart/)
+- [demo-application](https://github.com/graphcool/graphql-server-example)
+- [auth](examples/auth)
+- [file-api](examples/file-api)
+- [github-auth](examples/github-auth)
+- [permissions](examples/permissions)
+- [resolver-forwarding](examples/resolver-forwarding)
+- [rest-wrapper](examples/rest-wrapper)
+- [subscriptions](examples/subscriptions)
+
 
 ## Architecture
 
 Prisma is a secure API layer that sits in front of your database. Acting as a proxy, Prisma exposes a powerful GraphQL API and manages Rate-Limiting, Authentication, Logging and a host of other features. Because Prisma is a standalone process, it can be scaled independently from your application layer and provide scalable subscriptions infrastructure.
 
-![](https://www.prismagraphql.com/static/media/frontend@2x.fef72487.png)
+![](https://imgur.com/SdssPgT.png)
 
 ## GraphQL API
 
