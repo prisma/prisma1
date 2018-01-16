@@ -1,7 +1,7 @@
-package cool.graph.api.schema
+package com.prisma.api.schema
 
-import cool.graph.cache.Cache
-import cool.graph.shared.models.{Field, Model, Project, Relation}
+import com.prisma.cache.Cache
+import com.prisma.shared.models.{Field, Model, Project, Relation}
 import sangria.schema.{InputField, InputObjectType, InputType, ListInputType, OptionInputType}
 
 trait InputTypesBuilder {

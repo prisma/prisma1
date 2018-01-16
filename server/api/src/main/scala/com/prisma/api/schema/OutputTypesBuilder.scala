@@ -1,8 +1,8 @@
-package cool.graph.api.schema
+package com.prisma.api.schema
 
-import cool.graph.api.database.{DataItem, DataResolver}
-import cool.graph.shared.models.ModelMutationType.ModelMutationType
-import cool.graph.shared.models.{Model, Project}
+import com.prisma.api.database.{DataItem, DataResolver}
+import com.prisma.shared.models.ModelMutationType.ModelMutationType
+import com.prisma.shared.models.{Model, Project}
 import sangria.schema
 import sangria.schema._
 
@@ -65,7 +65,7 @@ case class OutputTypesBuilder(project: Project, objectTypes: Map[String, ObjectT
       model: Model,
       objectType: ObjectType[C, DataItem],
       updatedFields: Option[List[String]] = None,
-      mutation: ModelMutationType = cool.graph.shared.models.ModelMutationType.Created,
+      mutation: ModelMutationType = com.prisma.shared.models.ModelMutationType.Created,
       previousValues: Option[DataItem] = None,
       dataItem: Option[SimpleResolveOutput] = None
   ): ObjectType[C, SimpleResolveOutput] = {

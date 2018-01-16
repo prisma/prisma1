@@ -1,9 +1,9 @@
-package cool.graph.shared.project_dsl
+package com.prisma.shared.project_dsl
 
-import cool.graph.gc_values.GCValue
+import com.prisma.gc_values.GCValue
 import cool.graph.cuid.Cuid
-import cool.graph.shared.models.IdType.Id
-import cool.graph.shared.models._
+import com.prisma.shared.models.IdType.Id
+import com.prisma.shared.models._
 
 object SchemaDsl {
 
@@ -14,7 +14,7 @@ object SchemaDsl {
 
   case class SchemaBuilder(modelBuilders: Buffer[ModelBuilder] = Buffer.empty,
                            enums: Buffer[Enum] = Buffer.empty,
-                           functions: Buffer[cool.graph.shared.models.Function] = Buffer.empty) {
+                           functions: Buffer[com.prisma.shared.models.Function] = Buffer.empty) {
 
     def apply(fn: SchemaBuilder => Unit): Project = {
       fn(this)

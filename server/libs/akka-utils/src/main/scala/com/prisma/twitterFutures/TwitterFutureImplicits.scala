@@ -1,4 +1,4 @@
-package cool.graph.twitterFutures
+package com.prisma.twitterFutures
 
 import com.twitter.util.{Future => TwitterFuture, Promise => TwitterPromise, Return, Throw}
 import scala.concurrent.{Future => ScalaFuture, Promise => ScalaPromise, ExecutionContext}

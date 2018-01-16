@@ -1,4 +1,4 @@
-package cool.graph.utils.json
+package com.prisma.utils.json
 
 import play.api.libs.json._
 

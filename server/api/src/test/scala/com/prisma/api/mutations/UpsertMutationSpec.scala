@@ -1,9 +1,9 @@
-package cool.graph.api.mutations
+package com.prisma.api.mutations
 
-import cool.graph.api.ApiBaseSpec
-import cool.graph.gc_values.StringGCValue
-import cool.graph.shared.models.Project
-import cool.graph.shared.project_dsl.SchemaDsl
+import com.prisma.api.ApiBaseSpec
+import com.prisma.gc_values.StringGCValue
+import com.prisma.shared.models.Project
+import com.prisma.shared.project_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class UpsertMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {

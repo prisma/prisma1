@@ -1,19 +1,19 @@
-package cool.graph.subscriptions.resolving
+package com.prisma.subscriptions.resolving
 
 import java.util.concurrent.atomic.AtomicLong
 
 import akka.actor.{ActorSystem, Props}
 import akka.stream.ActorMaterializer
 import akka.testkit.{TestKit, TestProbe}
-import cool.graph.messagebus.pubsub.Only
-import cool.graph.shared.models.ModelMutationType
-import cool.graph.shared.models.ModelMutationType.ModelMutationType
-import cool.graph.shared.project_dsl.SchemaDsl
-import cool.graph.subscriptions.SubscriptionDependenciesForTest
-import cool.graph.subscriptions.protocol.StringOrInt
-import cool.graph.subscriptions.resolving.SubscriptionsManager.Requests.EndSubscription
-import cool.graph.subscriptions.resolving.SubscriptionsManager.Responses.SubscriptionEvent
-import cool.graph.subscriptions.resolving.SubscriptionsManagerForModel.Requests.StartSubscription
+import com.prisma.messagebus.pubsub.Only
+import com.prisma.shared.models.ModelMutationType
+import com.prisma.shared.models.ModelMutationType.ModelMutationType
+import com.prisma.shared.project_dsl.SchemaDsl
+import com.prisma.subscriptions.SubscriptionDependenciesForTest
+import com.prisma.subscriptions.protocol.StringOrInt
+import com.prisma.subscriptions.resolving.SubscriptionsManager.Requests.EndSubscription
+import com.prisma.subscriptions.resolving.SubscriptionsManager.Responses.SubscriptionEvent
+import com.prisma.subscriptions.resolving.SubscriptionsManagerForModel.Requests.StartSubscription
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Matchers, WordSpecLike}
 import play.api.libs.json.{JsValue, Json}
 import sangria.parser.QueryParser

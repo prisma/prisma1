@@ -1,4 +1,4 @@
-package cool.graph.rabbit
+package com.prisma.rabbit
 
 import java.util.concurrent.{Executors, ThreadFactory}
 

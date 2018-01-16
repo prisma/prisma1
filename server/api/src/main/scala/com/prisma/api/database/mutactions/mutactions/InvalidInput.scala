@@ -1,7 +1,7 @@
-package cool.graph.api.database.mutactions.mutactions
+package com.prisma.api.database.mutactions.mutactions
 
-import cool.graph.api.database.mutactions._
-import cool.graph.api.schema.GeneralError
+import com.prisma.api.database.mutactions._
+import com.prisma.api.schema.GeneralError
 import slick.jdbc.MySQLProfile.api._
 
 import scala.concurrent.ExecutionContext.Implicits.global

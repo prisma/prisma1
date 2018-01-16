@@ -1,4 +1,4 @@
-package cool.graph.stub
+package com.prisma.stub
 
 import scala.collection.SortedMap
 import scala.util.parsing.json.{JSONType, JSON}

@@ -1,4 +1,4 @@
-package cool.graph.shared.models
+package com.prisma.shared.models
 
 case class ProjectId(name: String, stage: String)
 

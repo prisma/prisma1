@@ -1,4 +1,4 @@
-package cool.graph.messagebus.queue.rabbit
+package com.prisma.messagebus.queue.rabbit
 
 case class MessageInfo(tries: Int, tryNextAt: Option[Long]) {
   def isDelayed: Boolean = {

@@ -1,6 +1,6 @@
-package cool.graph.api.mutations
+package com.prisma.api.mutations
 
-import cool.graph.shared.models.IdType.Id
+import com.prisma.shared.models.IdType.Id
 
 import scala.language.reflectiveCalls
 

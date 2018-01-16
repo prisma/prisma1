@@ -1,9 +1,9 @@
-package cool.graph.workers
+package com.prisma.workers
 
 import akka.http.scaladsl.model.ContentTypes
-import cool.graph.akkautil.http.{RequestFailedError, SimpleHttpClient}
-import cool.graph.messagebus.QueueConsumer
-import cool.graph.workers.payloads.Webhook
+import com.prisma.akkautil.http.{RequestFailedError, SimpleHttpClient}
+import com.prisma.messagebus.QueueConsumer
+import com.prisma.workers.payloads.Webhook
 import play.api.libs.json.{JsArray, JsObject, Json}
 
 import scala.concurrent.{ExecutionContext, Future}

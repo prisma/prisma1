@@ -1,16 +1,16 @@
-package cool.graph.subscriptions.resolving
+package com.prisma.subscriptions.resolving
 
 import java.util.concurrent.TimeUnit
 
-import cool.graph.api.database.DataItem
-import cool.graph.api.mutations.GraphcoolDataTypes
-import cool.graph.api.subscriptions.SubscriptionExecutor
-import cool.graph.shared.models.ModelMutationType.ModelMutationType
-import cool.graph.shared.models.{Model, ModelMutationType, Project}
-import cool.graph.subscriptions.SubscriptionDependencies
-import cool.graph.subscriptions.metrics.SubscriptionMetrics.handleDatabaseEventTimer
-import cool.graph.subscriptions.resolving.SubscriptionsManagerForModel.Requests.StartSubscription
-import cool.graph.subscriptions.util.PlayJson
+import com.prisma.api.database.DataItem
+import com.prisma.api.mutations.GraphcoolDataTypes
+import com.prisma.api.subscriptions.SubscriptionExecutor
+import com.prisma.shared.models.ModelMutationType.ModelMutationType
+import com.prisma.shared.models.{Model, ModelMutationType, Project}
+import com.prisma.subscriptions.SubscriptionDependencies
+import com.prisma.subscriptions.metrics.SubscriptionMetrics.handleDatabaseEventTimer
+import com.prisma.subscriptions.resolving.SubscriptionsManagerForModel.Requests.StartSubscription
+import com.prisma.subscriptions.util.PlayJson
 import play.api.libs.json._
 
 import scala.concurrent.duration.Duration

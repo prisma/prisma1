@@ -1,12 +1,12 @@
-package cool.graph.subscriptions.resolving
+package com.prisma.subscriptions.resolving
 
 import akka.actor.{Actor, ActorRef, Props, Terminated}
-import cool.graph.akkautil.{LogUnhandled, LogUnhandledExceptions}
-import cool.graph.messagebus.pubsub.Only
-import cool.graph.shared.models.ModelMutationType.ModelMutationType
-import cool.graph.subscriptions.SubscriptionDependencies
-import cool.graph.subscriptions.protocol.StringOrInt
-import cool.graph.subscriptions.resolving.SubscriptionsManager.Requests.CreateSubscription
+import com.prisma.akkautil.{LogUnhandled, LogUnhandledExceptions}
+import com.prisma.messagebus.pubsub.Only
+import com.prisma.shared.models.ModelMutationType.ModelMutationType
+import com.prisma.subscriptions.SubscriptionDependencies
+import com.prisma.subscriptions.protocol.StringOrInt
+import com.prisma.subscriptions.resolving.SubscriptionsManager.Requests.CreateSubscription
 import play.api.libs.json._
 
 import scala.collection.mutable

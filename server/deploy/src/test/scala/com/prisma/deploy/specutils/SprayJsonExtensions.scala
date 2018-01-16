@@ -1,4 +1,4 @@
-package cool.graph.deploy.specutils
+package com.prisma.deploy.specutils
 
 import spray.json._
 

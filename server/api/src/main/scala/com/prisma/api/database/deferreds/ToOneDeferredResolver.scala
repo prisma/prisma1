@@ -1,8 +1,8 @@
-package cool.graph.api.database.deferreds
+package com.prisma.api.database.deferreds
 
-import cool.graph.api.database.{DataItem, DataResolver}
-import cool.graph.api.database.DeferredTypes.{OneDeferredResultType, OrderedDeferred, OrderedDeferredFutureResult, ToOneDeferred}
-import cool.graph.shared.models.Project
+import com.prisma.api.database.{DataItem, DataResolver}
+import com.prisma.api.database.DeferredTypes.{OneDeferredResultType, OrderedDeferred, OrderedDeferredFutureResult, ToOneDeferred}
+import com.prisma.shared.models.Project
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class ToOneDeferredResolver(dataResolver: DataResolver) {

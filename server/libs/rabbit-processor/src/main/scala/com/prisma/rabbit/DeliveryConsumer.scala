@@ -1,4 +1,4 @@
-package cool.graph.rabbit
+package com.prisma.rabbit
 
 import com.prisma.errors.{ErrorReporter, GenericMetadata}
 import com.rabbitmq.client.{AMQP, DefaultConsumer, Envelope, Channel => RabbitChannel}

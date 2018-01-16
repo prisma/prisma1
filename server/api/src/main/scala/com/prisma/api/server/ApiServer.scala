@@ -1,4 +1,4 @@
-package cool.graph.api.server
+package com.prisma.api.server
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
@@ -8,16 +8,16 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{ExceptionHandler, Route}
 import akka.stream.ActorMaterializer
 import com.typesafe.scalalogging.LazyLogging
-import cool.graph.akkautil.http.Server
-import cool.graph.akkautil.throttler.Throttler
-import cool.graph.akkautil.throttler.Throttler.ThrottleBufferFullException
-import cool.graph.api.schema.APIErrors.ProjectNotFound
-import cool.graph.api.schema.CommonErrors.ThrottlerBufferFullException
-import cool.graph.api.schema.{SchemaBuilder, UserFacingError}
-import cool.graph.api.{ApiDependencies, ApiMetrics}
+import com.prisma.akkautil.http.Server
+import com.prisma.akkautil.throttler.Throttler
+import com.prisma.akkautil.throttler.Throttler.ThrottleBufferFullException
+import com.prisma.api.schema.APIErrors.ProjectNotFound
+import com.prisma.api.schema.CommonErrors.ThrottlerBufferFullException
+import com.prisma.api.schema.{SchemaBuilder, UserFacingError}
+import com.prisma.api.{ApiDependencies, ApiMetrics}
 import cool.graph.cuid.Cuid.createCuid
-import cool.graph.metrics.extensions.TimeResponseDirectiveImpl
-import cool.graph.shared.models.{ProjectId, ProjectWithClientId}
+import com.prisma.metrics.extensions.TimeResponseDirectiveImpl
+import com.prisma.shared.models.{ProjectId, ProjectWithClientId}
 import com.prisma.logging.{LogData, LogKey}
 import com.prisma.logging.LogDataWrites.logDataWrites
 import play.api.libs.json.Json

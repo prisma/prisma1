@@ -1,8 +1,8 @@
-package cool.graph.messagebus.pubsub
+package com.prisma.messagebus.pubsub
 
 import akka.actor.ActorRef
-import cool.graph.messagebus.Conversions.Converter
-import cool.graph.messagebus.{PubSubPublisher, PubSubSubscriber}
+import com.prisma.messagebus.Conversions.Converter
+import com.prisma.messagebus.{PubSubPublisher, PubSubSubscriber}
 
 /**
   * PubSubSubscriber decorator that allows subscribers to transparently subscribe to a different type using the given

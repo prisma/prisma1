@@ -1,4 +1,4 @@
-package cool.graph.akkautil
+package com.prisma.akkautil
 
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.{Executors, ThreadFactory}

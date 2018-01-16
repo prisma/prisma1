@@ -1,8 +1,8 @@
-package cool.graph.deploy.gc_value
+package com.prisma.deploy.gc_value
 
-import cool.graph.gc_values._
-import cool.graph.shared.models.{Field, TypeIdentifier}
-import cool.graph.shared.models.TypeIdentifier.TypeIdentifier
+import com.prisma.gc_values._
+import com.prisma.shared.models.{Field, TypeIdentifier}
+import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
 import org.apache.commons.lang.StringEscapeUtils
 import org.joda.time.{DateTime, DateTimeZone}
 import org.joda.time.format.ISODateTimeFormat

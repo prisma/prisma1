@@ -1,8 +1,8 @@
-package cool.graph.messagebus.queue.rabbit
+package com.prisma.messagebus.queue.rabbit
 
-import cool.graph.messagebus.Conversions.ByteMarshaller
-import cool.graph.messagebus.QueuePublisher
-import cool.graph.rabbit.Exchange
+import com.prisma.messagebus.Conversions.ByteMarshaller
+import com.prisma.messagebus.QueuePublisher
+import com.prisma.rabbit.Exchange
 
 import scala.concurrent.Future
 

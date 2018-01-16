@@ -1,7 +1,7 @@
-package cool.graph.deploy.migration.validation
+package com.prisma.deploy.migration.validation
 
-import cool.graph.deploy.validation._
-import cool.graph.shared.models.TypeIdentifier
+import com.prisma.deploy.validation._
+import com.prisma.shared.models.TypeIdentifier
 import sangria.ast.{Directive, FieldDefinition, ObjectTypeDefinition}
 
 import scala.collection.immutable.Seq
@@ -13,7 +13,7 @@ case class RequiredArg(name: String, mustBeAString: Boolean)
 case class FieldAndType(objectType: ObjectTypeDefinition, fieldDef: FieldDefinition)
 
 case class FieldRequirement(name: String, typeName: String, required: Boolean, unique: Boolean, list: Boolean) {
-  import cool.graph.deploy.migration.DataSchemaAstExtensions._
+  import com.prisma.deploy.migration.DataSchemaAstExtensions._
 
   def isValid(field: FieldDefinition): Boolean = {
     if (field.name == name) {
@@ -45,7 +45,7 @@ object SchemaSyntaxValidator {
 }
 
 case class SchemaSyntaxValidator(schema: String, directiveRequirements: Seq[DirectiveRequirement], reservedFieldsRequirements: Seq[FieldRequirement]) {
-  import cool.graph.deploy.migration.DataSchemaAstExtensions._
+  import com.prisma.deploy.migration.DataSchemaAstExtensions._
 
   val result   = SdlSchemaParser.parse(schema)
   lazy val doc = result.get

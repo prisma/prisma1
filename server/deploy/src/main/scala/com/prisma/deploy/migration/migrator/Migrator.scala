@@ -1,6 +1,6 @@
-package cool.graph.deploy.migration.migrator
+package com.prisma.deploy.migration.migrator
 
-import cool.graph.shared.models.{Migration, MigrationStep, Schema, Function}
+import com.prisma.shared.models.{Migration, MigrationStep, Schema, Function}
 
 import scala.concurrent.Future
 

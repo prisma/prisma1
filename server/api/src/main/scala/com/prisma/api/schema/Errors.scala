@@ -1,8 +1,8 @@
-package cool.graph.api.schema
+package com.prisma.api.schema
 
 import com.prisma.sangria.utils.ErrorWithCode
-import cool.graph.api.database.mutactions.MutactionExecutionResult
-import cool.graph.api.mutations.{NodeSelector, ParentInfo}
+import com.prisma.api.database.mutactions.MutactionExecutionResult
+import com.prisma.api.mutations.{NodeSelector, ParentInfo}
 import spray.json.JsValue
 
 abstract class GeneralError(message: String) extends Exception with MutactionExecutionResult with ErrorWithCode {

@@ -1,6 +1,6 @@
-package cool.graph.deploy.schema.fields
+package com.prisma.deploy.schema.fields
 
-import cool.graph.shared.models.ProjectId
+import com.prisma.shared.models.ProjectId
 import sangria.schema.{Argument, InputField, StringType}
 
 object ManualMarshallerHelpers {

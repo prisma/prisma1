@@ -1,8 +1,8 @@
-package cool.graph.deploy.database.tables
+package com.prisma.deploy.database.tables
 
 import com.github.tototoshi.slick.MySQLJodaSupport
-import cool.graph.shared.models.MigrationStatus
-import cool.graph.shared.models.MigrationStatus.MigrationStatus
+import com.prisma.shared.models.MigrationStatus
+import com.prisma.shared.models.MigrationStatus.MigrationStatus
 import org.joda.time.DateTime
 import play.api.libs.json.JsValue
 import slick.dbio.Effect.{Read, Write}

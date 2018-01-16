@@ -1,7 +1,7 @@
-package cool.graph.deploy.specutils
+package com.prisma.deploy.specutils
 
 import cool.graph.cuid.Cuid
-import cool.graph.shared.models.{Project, Schema}
+import com.prisma.shared.models.{Project, Schema}
 
 object TestProject {
   def apply(): Project = {

@@ -1,4 +1,4 @@
-package cool.graph.akkautil.specs2
+package com.prisma.akkautil.specs2
 
 import org.specs2.Specification
 import org.specs2.matcher.ThrownExpectations

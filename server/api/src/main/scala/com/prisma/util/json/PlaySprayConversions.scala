@@ -1,4 +1,4 @@
-package cool.graph.util.json
+package com.prisma.util.json
 
 import play.api.libs.json.{
   JsArray => PJsArray,

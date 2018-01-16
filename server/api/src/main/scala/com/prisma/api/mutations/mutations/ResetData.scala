@@ -1,11 +1,11 @@
-package cool.graph.api.mutations.mutations
+package com.prisma.api.mutations.mutations
 
-import cool.graph.api.ApiDependencies
-import cool.graph.api.database.mutactions.mutactions._
-import cool.graph.api.database.mutactions.{MutactionGroup, TransactionMutaction}
-import cool.graph.api.database.{DataItem, DataResolver}
-import cool.graph.api.mutations.{SingleItemClientMutation, ReturnValue, ReturnValueResult}
-import cool.graph.shared.models._
+import com.prisma.api.ApiDependencies
+import com.prisma.api.database.mutactions.mutactions._
+import com.prisma.api.database.mutactions.{MutactionGroup, TransactionMutaction}
+import com.prisma.api.database.{DataItem, DataResolver}
+import com.prisma.api.mutations.{SingleItemClientMutation, ReturnValue, ReturnValueResult}
+import com.prisma.shared.models._
 
 import scala.concurrent.Future
 

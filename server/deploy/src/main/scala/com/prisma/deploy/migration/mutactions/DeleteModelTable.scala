@@ -1,6 +1,6 @@
-package cool.graph.deploy.migration.mutactions
+package com.prisma.deploy.migration.mutactions
 
-import cool.graph.deploy.database.DatabaseMutationBuilder
+import com.prisma.deploy.database.DatabaseMutationBuilder
 import slick.jdbc.MySQLProfile.api._
 
 import scala.concurrent.Future

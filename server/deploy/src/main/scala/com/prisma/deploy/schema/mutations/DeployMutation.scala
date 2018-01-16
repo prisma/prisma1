@@ -1,14 +1,14 @@
-package cool.graph.deploy.schema.mutations
+package com.prisma.deploy.schema.mutations
 
-import cool.graph.deploy.DeployDependencies
-import cool.graph.deploy.database.persistence.{MigrationPersistence, ProjectPersistence}
-import cool.graph.deploy.migration._
-import cool.graph.deploy.migration.inference.{InvalidGCValue, MigrationStepsInferrer, RelationDirectiveNeeded, SchemaInferrer}
-import cool.graph.deploy.migration.migrator.Migrator
-import cool.graph.deploy.migration.validation.{SchemaError, SchemaSyntaxValidator}
-import cool.graph.deploy.schema.InvalidQuery
-import cool.graph.messagebus.pubsub.Only
-import cool.graph.shared.models.{Function, Migration, MigrationStep, Project, ProjectId, Schema, ServerSideSubscriptionFunction, WebhookDelivery}
+import com.prisma.deploy.DeployDependencies
+import com.prisma.deploy.database.persistence.{MigrationPersistence, ProjectPersistence}
+import com.prisma.deploy.migration._
+import com.prisma.deploy.migration.inference.{InvalidGCValue, MigrationStepsInferrer, RelationDirectiveNeeded, SchemaInferrer}
+import com.prisma.deploy.migration.migrator.Migrator
+import com.prisma.deploy.migration.validation.{SchemaError, SchemaSyntaxValidator}
+import com.prisma.deploy.schema.InvalidQuery
+import com.prisma.messagebus.pubsub.Only
+import com.prisma.shared.models.{Function, Migration, MigrationStep, Project, ProjectId, Schema, ServerSideSubscriptionFunction, WebhookDelivery}
 import org.scalactic.{Bad, Good, Or}
 import play.api.libs.json.JsString
 import sangria.parser.QueryParser

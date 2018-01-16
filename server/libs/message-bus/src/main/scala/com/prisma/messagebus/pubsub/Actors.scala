@@ -1,8 +1,8 @@
-package cool.graph.messagebus.pubsub
+package com.prisma.messagebus.pubsub
 
 import akka.actor.{Actor, ActorRef, Terminated}
-import cool.graph.messagebus.Conversions.Converter
-import cool.graph.messagebus.pubsub.PubSubProtocol.{Subscribe, Unsubscribe}
+import com.prisma.messagebus.Conversions.Converter
+import com.prisma.messagebus.pubsub.PubSubProtocol.{Subscribe, Unsubscribe}
 
 /**
   * Actor receiving all messages that are published to the specified  topic.

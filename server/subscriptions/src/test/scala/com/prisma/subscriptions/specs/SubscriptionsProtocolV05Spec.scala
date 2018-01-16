@@ -1,8 +1,8 @@
-package cool.graph.subscriptions.specs
+package com.prisma.subscriptions.specs
 
-import cool.graph.messagebus.pubsub.Only
-import cool.graph.shared.models.Model
-import cool.graph.shared.project_dsl.SchemaDsl
+import com.prisma.messagebus.pubsub.Only
+import com.prisma.shared.models.Model
+import com.prisma.shared.project_dsl.SchemaDsl
 import org.scalatest._
 import spray.json.{JsArray, JsNumber, JsObject, JsString}
 

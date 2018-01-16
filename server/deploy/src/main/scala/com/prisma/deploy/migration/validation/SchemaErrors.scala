@@ -1,4 +1,4 @@
-package cool.graph.deploy.migration.validation
+package com.prisma.deploy.migration.validation
 
 import sangria.ast.{EnumTypeDefinition, TypeDefinition}
 
@@ -19,7 +19,7 @@ object SchemaError {
 }
 
 object SchemaErrors {
-  import cool.graph.deploy.migration.DataSchemaAstExtensions._
+  import com.prisma.deploy.migration.DataSchemaAstExtensions._
 
   def missingIdField(typeDefinition: TypeDefinition): SchemaError = {
     error(typeDefinition, "All models must specify the `id` field: `id: ID! @unique`")

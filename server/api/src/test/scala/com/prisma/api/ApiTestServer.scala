@@ -1,9 +1,9 @@
-package cool.graph.api
+package com.prisma.api
 
-import cool.graph.api.schema.{ApiUserContext, PrivateSchemaBuilder, SchemaBuilder}
-import cool.graph.api.server.{GraphQlQuery, GraphQlRequest}
-import cool.graph.shared.models.Project
-import cool.graph.util.json.SprayJsonExtensions
+import com.prisma.api.schema.{ApiUserContext, PrivateSchemaBuilder, SchemaBuilder}
+import com.prisma.api.server.{GraphQlQuery, GraphQlRequest}
+import com.prisma.shared.models.Project
+import com.prisma.util.json.SprayJsonExtensions
 import sangria.parser.QueryParser
 import sangria.renderer.SchemaRenderer
 import sangria.schema.Schema

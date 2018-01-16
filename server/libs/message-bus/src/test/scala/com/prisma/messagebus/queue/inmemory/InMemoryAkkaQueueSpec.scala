@@ -1,10 +1,10 @@
-package cool.graph.messagebus.queue.inmemory
+package com.prisma.messagebus.queue.inmemory
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import akka.testkit.{TestKit, TestProbe}
-import cool.graph.messagebus.QueuePublisher
-import cool.graph.messagebus.queue.{BackoffStrategy, ConstantBackoff}
+import com.prisma.messagebus.QueuePublisher
+import com.prisma.messagebus.queue.{BackoffStrategy, ConstantBackoff}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Matchers, WordSpecLike}
 

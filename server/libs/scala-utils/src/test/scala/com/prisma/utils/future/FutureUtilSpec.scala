@@ -1,7 +1,7 @@
-package cool.graph.utils.future
+package com.prisma.utils.future
 
 import org.scalatest.{Matchers, WordSpec}
-import cool.graph.utils.future.FutureUtils._
+import com.prisma.utils.future.FutureUtils._
 import org.scalatest.concurrent.ScalaFutures._
 import org.scalatest.time.{Millis, Seconds, Span}
 import scala.concurrent.ExecutionContext.Implicits.global

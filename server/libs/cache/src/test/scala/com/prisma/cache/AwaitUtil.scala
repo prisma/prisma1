@@ -1,4 +1,4 @@
-package cool.graph.cache
+package com.prisma.cache
 
 import scala.concurrent.{Await, Awaitable}
 

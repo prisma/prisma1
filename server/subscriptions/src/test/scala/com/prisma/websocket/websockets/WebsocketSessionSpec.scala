@@ -1,11 +1,11 @@
-package cool.graph.websocket.websockets
+package com.prisma.websocket.websockets
 
 import akka.actor.{ActorSystem, Props}
 import akka.testkit.TestProbe
-import cool.graph.messagebus.testkits.spechelpers.InMemoryMessageBusTestKits
-import cool.graph.subscriptions.SubscriptionDependenciesForTest
-import cool.graph.websocket.WebsocketSession
-import cool.graph.websocket.protocol.Request
+import com.prisma.messagebus.testkits.spechelpers.InMemoryMessageBusTestKits
+import com.prisma.subscriptions.SubscriptionDependenciesForTest
+import com.prisma.websocket.WebsocketSession
+import com.prisma.websocket.protocol.Request
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 

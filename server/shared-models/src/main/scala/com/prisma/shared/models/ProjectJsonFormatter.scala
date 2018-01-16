@@ -1,12 +1,12 @@
-package cool.graph.shared.models
+package com.prisma.shared.models
 
-import cool.graph.gc_values._
-import cool.graph.shared.models.FieldConstraintType.FieldConstraintType
-import cool.graph.utils.json.JsonUtils
+import com.prisma.gc_values._
+import com.prisma.shared.models.FieldConstraintType.FieldConstraintType
+import com.prisma.utils.json.JsonUtils
 import org.joda.time.format.ISODateTimeFormat
 import org.joda.time.{DateTime, DateTimeZone}
 import play.api.libs.json._
-import cool.graph.utils.json.JsonUtils._
+import com.prisma.utils.json.JsonUtils._
 import MigrationStepsJsonFormatter._
 
 object ProjectJsonFormatter {

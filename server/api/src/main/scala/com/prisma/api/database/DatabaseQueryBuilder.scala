@@ -1,9 +1,9 @@
-package cool.graph.api.database
+package com.prisma.api.database
 
-import cool.graph.api.database.Types.DataItemFilterCollection
-import cool.graph.api.mutations.{NodeSelector, ParentInfo}
-import cool.graph.shared.models.IdType.Id
-import cool.graph.shared.models.{Field, Model, Project, Relation}
+import com.prisma.api.database.Types.DataItemFilterCollection
+import com.prisma.api.mutations.{NodeSelector, ParentInfo}
+import com.prisma.shared.models.IdType.Id
+import com.prisma.shared.models.{Field, Model, Project, Relation}
 import slick.dbio.DBIOAction
 import slick.dbio.Effect.Read
 import slick.jdbc.MySQLProfile.api._

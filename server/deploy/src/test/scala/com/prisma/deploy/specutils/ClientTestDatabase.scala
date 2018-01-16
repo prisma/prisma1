@@ -1,11 +1,11 @@
-package cool.graph.deploy.specutils
+package com.prisma.deploy.specutils
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import cool.graph.deploy.database.DatabaseMutationBuilder
-import cool.graph.deploy.migration.mutactions.ClientSqlMutaction
-import cool.graph.shared.models.Project
-import cool.graph.utils.await.AwaitUtils
+import com.prisma.deploy.database.DatabaseMutationBuilder
+import com.prisma.deploy.migration.mutactions.ClientSqlMutaction
+import com.prisma.shared.models.Project
+import com.prisma.utils.await.AwaitUtils
 import slick.dbio.DBIOAction
 import slick.jdbc.MySQLProfile.api._
 import slick.sql.SqlAction

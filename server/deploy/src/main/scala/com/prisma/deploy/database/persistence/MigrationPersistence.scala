@@ -1,7 +1,7 @@
-package cool.graph.deploy.database.persistence
+package com.prisma.deploy.database.persistence
 
-import cool.graph.shared.models.{Migration, MigrationId}
-import cool.graph.shared.models.MigrationStatus.MigrationStatus
+import com.prisma.shared.models.{Migration, MigrationId}
+import com.prisma.shared.models.MigrationStatus.MigrationStatus
 import org.joda.time.DateTime
 
 import scala.concurrent.Future

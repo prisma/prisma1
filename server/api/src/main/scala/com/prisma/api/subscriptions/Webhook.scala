@@ -1,4 +1,4 @@
-package cool.graph.api.subscriptions
+package com.prisma.api.subscriptions
 
 case class Webhook(
     projectId: String,

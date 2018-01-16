@@ -1,11 +1,11 @@
-package cool.graph.api.database
+package com.prisma.api.database
 
-import cool.graph.api.database.Types.DataItemFilterCollection
-import cool.graph.api.mutations.{CoolArgs, NodeSelector, ParentInfo}
+import com.prisma.api.database.Types.DataItemFilterCollection
+import com.prisma.api.mutations.{CoolArgs, NodeSelector, ParentInfo}
 import cool.graph.cuid.Cuid
-import cool.graph.shared.models.RelationSide.RelationSide
-import cool.graph.shared.models.TypeIdentifier.TypeIdentifier
-import cool.graph.shared.models.{Model, Project, TypeIdentifier}
+import com.prisma.shared.models.RelationSide.RelationSide
+import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
+import com.prisma.shared.models.{Model, Project, TypeIdentifier}
 import slick.dbio.DBIOAction
 import slick.jdbc.MySQLProfile.api._
 import slick.sql.{SqlAction, SqlStreamingAction}

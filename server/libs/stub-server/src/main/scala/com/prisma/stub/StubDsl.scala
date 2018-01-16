@@ -1,4 +1,4 @@
-package cool.graph.stub
+package com.prisma.stub
 
 object StubDsl {
   object Default {

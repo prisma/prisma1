@@ -1,4 +1,4 @@
-package cool.graph.metrics
+package com.prisma.metrics
 
 import java.util.concurrent.atomic.AtomicLong
 

@@ -1,10 +1,10 @@
-package cool.graph.api.import_export
+package com.prisma.api.import_export
 
-import cool.graph.api.ApiBaseSpec
-import cool.graph.api.database.import_export.BulkImport
-import cool.graph.shared.models.Project
-import cool.graph.shared.project_dsl.SchemaDsl
-import cool.graph.utils.await.AwaitUtils
+import com.prisma.api.ApiBaseSpec
+import com.prisma.api.database.import_export.BulkImport
+import com.prisma.shared.models.Project
+import com.prisma.shared.project_dsl.SchemaDsl
+import com.prisma.utils.await.AwaitUtils
 import org.scalatest.{FlatSpec, Matchers}
 import spray.json._
 

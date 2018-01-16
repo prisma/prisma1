@@ -1,6 +1,6 @@
-package cool.graph.api.database.mutactions
+package com.prisma.api.database.mutactions
 
-import cool.graph.api.database.DataResolver
+import com.prisma.api.database.DataResolver
 import slick.dbio.{DBIOAction, Effect, NoStream}
 import slick.jdbc.MySQLProfile.api._
 

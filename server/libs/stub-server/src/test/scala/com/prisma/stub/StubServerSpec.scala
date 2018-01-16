@@ -1,4 +1,4 @@
-package cool.graph.stub
+package com.prisma.stub
 
 import javax.servlet.http.HttpServletRequest
 
@@ -9,7 +9,7 @@ import scala.util.Random
 import scalaj.http.{Http, HttpResponse}
 
 class StubServerSpec extends Specification {
-  import cool.graph.stub.Import._
+  import com.prisma.stub.Import._
 
   def mustBeNotFoundResponse(response: HttpResponse[String]) = {
     response.code must equalTo(999)
@@ -21,7 +21,7 @@ class StubServerSpec extends Specification {
   }
 
   val em = SortedMap.empty[String, String]
-  import cool.graph.stub.StubDsl.Default.Request
+  import com.prisma.stub.StubDsl.Default.Request
 
   "StubServer" should {
     "respond with the default 'not found' stub if there are no stubs" in {

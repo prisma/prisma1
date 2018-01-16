@@ -1,14 +1,14 @@
-package cool.graph.api.import_export
+package com.prisma.api.import_export
 
-import cool.graph.api.ApiBaseSpec
-import cool.graph.api.database.DataResolver
-import cool.graph.api.database.import_export.ImportExport.{Cursor, ExportRequest, ResultFormat}
-import cool.graph.api.database.import_export.{BulkExport, BulkImport}
-import cool.graph.shared.project_dsl.SchemaDsl
-import cool.graph.utils.await.AwaitUtils
+import com.prisma.api.ApiBaseSpec
+import com.prisma.api.database.DataResolver
+import com.prisma.api.database.import_export.ImportExport.{Cursor, ExportRequest, ResultFormat}
+import com.prisma.api.database.import_export.{BulkExport, BulkImport}
+import com.prisma.shared.project_dsl.SchemaDsl
+import com.prisma.utils.await.AwaitUtils
 import org.scalatest.{FlatSpec, Matchers}
 import spray.json._
-import cool.graph.api.database.import_export.ImportExport.MyJsonProtocol._
+import com.prisma.api.database.import_export.ImportExport.MyJsonProtocol._
 
 class BulkExportSpec extends FlatSpec with Matchers with ApiBaseSpec with AwaitUtils {
 

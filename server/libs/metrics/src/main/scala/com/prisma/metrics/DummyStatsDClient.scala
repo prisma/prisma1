@@ -1,4 +1,4 @@
-package cool.graph.metrics
+package com.prisma.metrics
 
 import com.timgroup.statsd.{Event, ServiceCheck, StatsDClient}
 

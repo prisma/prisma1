@@ -1,7 +1,7 @@
-package cool.graph.subscriptions.specs
+package com.prisma.subscriptions.specs
 
-import cool.graph.messagebus.pubsub.Only
-import cool.graph.shared.project_dsl.SchemaDsl
+import com.prisma.messagebus.pubsub.Only
+import com.prisma.shared.project_dsl.SchemaDsl
 import org.scalatest._
 import org.scalatest.concurrent.ScalaFutures
 import play.api.libs.json.{JsNull, Json}

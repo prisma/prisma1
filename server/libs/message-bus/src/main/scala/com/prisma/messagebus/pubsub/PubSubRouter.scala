@@ -1,8 +1,8 @@
-package cool.graph.messagebus.pubsub
+package com.prisma.messagebus.pubsub
 
 import akka.actor.{Actor, ActorRef, Terminated}
 import akka.routing._
-import cool.graph.messagebus.pubsub.PubSubProtocol.{Envelope, Publish, Subscribe, Unsubscribe}
+import com.prisma.messagebus.pubsub.PubSubProtocol.{Envelope, Publish, Subscribe, Unsubscribe}
 
 import scala.collection.{immutable, mutable}
 

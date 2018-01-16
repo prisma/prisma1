@@ -1,7 +1,7 @@
-package cool.graph.api.database.import_export
+package com.prisma.api.database.import_export
 
-import cool.graph.api.database.{DataItem, DataResolver}
-import cool.graph.shared.models.{Model, Project, Relation}
+import com.prisma.api.database.{DataItem, DataResolver}
+import com.prisma.shared.models.{Model, Project, Relation}
 import spray.json.{DefaultJsonProtocol, JsArray, JsBoolean, JsFalse, JsNull, JsNumber, JsObject, JsString, JsTrue, JsValue, JsonFormat, RootJsonFormat}
 
 package object ImportExport {

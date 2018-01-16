@@ -1,7 +1,7 @@
-package cool.graph.deploy.database.schema.mutations
+package com.prisma.deploy.database.schema.mutations
 
-import cool.graph.deploy.specutils.DeploySpecBase
-import cool.graph.shared.models.{MigrationId, MigrationStatus, ProjectId}
+import com.prisma.deploy.specutils.DeploySpecBase
+import com.prisma.shared.models.{MigrationId, MigrationStatus, ProjectId}
 import org.scalatest.{FlatSpec, Matchers}
 
 class DeployMutationRegressionSpec extends FlatSpec with Matchers with DeploySpecBase {

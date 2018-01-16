@@ -1,4 +1,4 @@
-package cool.graph.deploy.schema.mutations
+package com.prisma.deploy.schema.mutations
 
 import scala.concurrent.Future
 

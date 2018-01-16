@@ -1,8 +1,8 @@
-package cool.graph.api.queries
+package com.prisma.api.queries
 
-import cool.graph.api.ApiBaseSpec
-import cool.graph.shared.models.Project
-import cool.graph.shared.project_dsl.SchemaDsl
+import com.prisma.api.ApiBaseSpec
+import com.prisma.shared.models.Project
+import com.prisma.shared.project_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {

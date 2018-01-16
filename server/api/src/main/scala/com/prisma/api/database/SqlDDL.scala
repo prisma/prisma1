@@ -1,7 +1,7 @@
-package cool.graph.api.database
+package com.prisma.api.database
 
-import cool.graph.shared.models.TypeIdentifier.TypeIdentifier
-import cool.graph.shared.models.{Model, TypeIdentifier}
+import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
+import com.prisma.shared.models.{Model, TypeIdentifier}
 import slick.dbio.DBIOAction
 import slick.jdbc.MySQLProfile.api._
 

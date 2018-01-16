@@ -1,10 +1,10 @@
-package cool.graph.subscriptions.specs
+package com.prisma.subscriptions.specs
 
-import cool.graph.api.ApiTestDatabase
-import cool.graph.api.database.mutactions.mutactions.CreateDataItem
-import cool.graph.api.mutations.MutationTypes.ArgumentValue
-import cool.graph.shared.models.{Model, Project}
-import cool.graph.utils.await.AwaitUtils
+import com.prisma.api.ApiTestDatabase
+import com.prisma.api.database.mutactions.mutactions.CreateDataItem
+import com.prisma.api.mutations.MutationTypes.ArgumentValue
+import com.prisma.shared.models.{Model, Project}
+import com.prisma.utils.await.AwaitUtils
 import spray.json.JsValue
 
 object TestData extends AwaitUtils {

@@ -1,11 +1,11 @@
-package cool.graph.api.schema
+package com.prisma.api.schema
 //
-//import cool.graph.client.database.{FilterArgument, FilterArguments}
-//import cool.graph.client.schema.ModelMutationType
-import cool.graph.api.database.{FilterArgument, FilterArguments}
-import cool.graph.shared.models
-import cool.graph.shared.models.{Model, Project, TypeIdentifier}
-import cool.graph.api.schema.CustomScalarTypes.{DateTimeType, JsonType}
+//import com.prisma.client.database.{FilterArgument, FilterArguments}
+//import com.prisma.client.schema.ModelMutationType
+import com.prisma.api.database.{FilterArgument, FilterArguments}
+import com.prisma.shared.models
+import com.prisma.shared.models.{Model, Project, TypeIdentifier}
+import com.prisma.api.schema.CustomScalarTypes.{DateTimeType, JsonType}
 import sangria.schema._
 
 object SchemaBuilderUtils {

@@ -1,7 +1,7 @@
-package cool.graph.api.schema
+package com.prisma.api.schema
 
-import cool.graph.shared.models.{Model, Project}
-import cool.graph.util.coolSangria.FromInputImplicit
+import com.prisma.shared.models.{Model, Project}
+import com.prisma.util.coolSangria.FromInputImplicit
 import sangria.schema._
 
 case class ArgumentsBuilder(project: Project) {

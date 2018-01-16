@@ -1,19 +1,19 @@
-package cool.graph.subscriptions.resolving
+package com.prisma.subscriptions.resolving
 
 import java.util.concurrent.atomic.AtomicLong
 
 import akka.actor.{Actor, ActorRef, Stash, Terminated}
-import cool.graph.akkautil.{LogUnhandled, LogUnhandledExceptions}
-import cool.graph.messagebus.pubsub.{Message, Only, Subscription}
-import cool.graph.metrics.GaugeMetric
-import cool.graph.shared.models.ModelMutationType.ModelMutationType
-import cool.graph.shared.models._
-import cool.graph.subscriptions.SubscriptionDependencies
-import cool.graph.subscriptions.metrics.SubscriptionMetrics
-import cool.graph.subscriptions.protocol.StringOrInt
-import cool.graph.subscriptions.resolving.SubscriptionsManager.Requests.EndSubscription
-import cool.graph.subscriptions.resolving.SubscriptionsManager.Responses.{ProjectSchemaChanged, SubscriptionEvent}
-import cool.graph.subscriptions.resolving.SubscriptionsManagerForProject.SchemaInvalidated
+import com.prisma.akkautil.{LogUnhandled, LogUnhandledExceptions}
+import com.prisma.messagebus.pubsub.{Message, Only, Subscription}
+import com.prisma.metrics.GaugeMetric
+import com.prisma.shared.models.ModelMutationType.ModelMutationType
+import com.prisma.shared.models._
+import com.prisma.subscriptions.SubscriptionDependencies
+import com.prisma.subscriptions.metrics.SubscriptionMetrics
+import com.prisma.subscriptions.protocol.StringOrInt
+import com.prisma.subscriptions.resolving.SubscriptionsManager.Requests.EndSubscription
+import com.prisma.subscriptions.resolving.SubscriptionsManager.Responses.{ProjectSchemaChanged, SubscriptionEvent}
+import com.prisma.subscriptions.resolving.SubscriptionsManagerForProject.SchemaInvalidated
 import play.api.libs.json._
 import sangria.ast.Document
 import sangria.renderer.QueryRenderer
@@ -115,7 +115,7 @@ case class SubscriptionsManagerForModel(
   }
 
   def handleDatabaseMessage(eventStr: String, mutationType: ModelMutationType): Unit = {
-    import cool.graph.utils.future.FutureUtils._
+    import com.prisma.utils.future.FutureUtils._
 
     println(s"handleDatabaseMessage: $mutationType $eventStr")
 

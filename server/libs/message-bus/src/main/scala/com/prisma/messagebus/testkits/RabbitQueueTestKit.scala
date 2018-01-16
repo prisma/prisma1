@@ -1,16 +1,16 @@
-package cool.graph.messagebus.testkits
+package com.prisma.messagebus.testkits
 
 import akka.testkit.TestProbe
 import com.prisma.errors.ErrorReporter
-import cool.graph.akkautil.SingleThreadedActorSystem
-import cool.graph.messagebus.Conversions.{ByteMarshaller, ByteUnmarshaller}
-import cool.graph.messagebus.Queue
-import cool.graph.messagebus.QueueConsumer.ConsumeFn
-import cool.graph.messagebus.queue.rabbit.{RabbitConsumerRef, RabbitQueuesRef}
-import cool.graph.messagebus.queue.{BackoffStrategy, ConstantBackoff}
-import cool.graph.messagebus.utils.RabbitUtils
-import cool.graph.rabbit.Bindings.RoutingKey
-import cool.graph.rabbit.Consumer
+import com.prisma.akkautil.SingleThreadedActorSystem
+import com.prisma.messagebus.Conversions.{ByteMarshaller, ByteUnmarshaller}
+import com.prisma.messagebus.Queue
+import com.prisma.messagebus.QueueConsumer.ConsumeFn
+import com.prisma.messagebus.queue.rabbit.{RabbitConsumerRef, RabbitQueuesRef}
+import com.prisma.messagebus.queue.{BackoffStrategy, ConstantBackoff}
+import com.prisma.messagebus.utils.RabbitUtils
+import com.prisma.rabbit.Bindings.RoutingKey
+import com.prisma.rabbit.Consumer
 
 import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.Await

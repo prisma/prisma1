@@ -1,6 +1,6 @@
-package cool.graph.api.database
+package com.prisma.api.database
 
-import cool.graph.shared.models.Field
+import com.prisma.shared.models.Field
 
 object DatabaseConstraints {
   def isValueSizeValid(value: Any, field: Field): Boolean = {

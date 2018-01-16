@@ -1,4 +1,4 @@
-package cool.graph.auth
+package com.prisma.auth
 
 import pdi.jwt.{Jwt, JwtAlgorithm, JwtOptions}
 

@@ -1,14 +1,14 @@
-package cool.graph.subscriptions.protocol
+package com.prisma.subscriptions.protocol
 
 import akka.actor.{Actor, ActorRef, PoisonPill, Props, Terminated}
-import cool.graph.akkautil.{LogUnhandled, LogUnhandledExceptions}
-import cool.graph.messagebus.PubSubPublisher
-import cool.graph.subscriptions.SubscriptionDependencies
-import cool.graph.subscriptions.protocol.SubscriptionProtocolV05.Requests.{InitConnection, SubscriptionSessionRequestV05}
-import cool.graph.subscriptions.protocol.SubscriptionProtocolV05.Responses.SubscriptionSessionResponseV05
-import cool.graph.subscriptions.protocol.SubscriptionProtocolV07.Requests.{GqlConnectionInit, SubscriptionSessionRequest}
-import cool.graph.subscriptions.protocol.SubscriptionProtocolV07.Responses.SubscriptionSessionResponse
-import cool.graph.subscriptions.protocol.SubscriptionSessionManager.Requests.{EnrichedSubscriptionRequest, EnrichedSubscriptionRequestV05, StopSession}
+import com.prisma.akkautil.{LogUnhandled, LogUnhandledExceptions}
+import com.prisma.messagebus.PubSubPublisher
+import com.prisma.subscriptions.SubscriptionDependencies
+import com.prisma.subscriptions.protocol.SubscriptionProtocolV05.Requests.{InitConnection, SubscriptionSessionRequestV05}
+import com.prisma.subscriptions.protocol.SubscriptionProtocolV05.Responses.SubscriptionSessionResponseV05
+import com.prisma.subscriptions.protocol.SubscriptionProtocolV07.Requests.{GqlConnectionInit, SubscriptionSessionRequest}
+import com.prisma.subscriptions.protocol.SubscriptionProtocolV07.Responses.SubscriptionSessionResponse
+import com.prisma.subscriptions.protocol.SubscriptionSessionManager.Requests.{EnrichedSubscriptionRequest, EnrichedSubscriptionRequestV05, StopSession}
 
 import scala.collection.mutable
 

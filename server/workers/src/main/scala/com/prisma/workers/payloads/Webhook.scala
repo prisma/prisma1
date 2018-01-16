@@ -1,4 +1,4 @@
-package cool.graph.workers.payloads
+package com.prisma.workers.payloads
 
 case class Webhook(
     projectId: String,

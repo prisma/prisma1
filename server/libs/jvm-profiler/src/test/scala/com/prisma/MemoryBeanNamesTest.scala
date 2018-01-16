@@ -1,4 +1,4 @@
-package cool.graph
+package com.prisma
 
 import java.lang.management.ManagementFactory
 

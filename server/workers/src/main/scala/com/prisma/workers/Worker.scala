@@ -1,4 +1,4 @@
-package cool.graph.workers
+package com.prisma.workers
 
 import scala.concurrent.Future
 

@@ -1,9 +1,9 @@
-package cool.graph.singleserver
+package com.prisma.singleserver
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.stream.ActorMaterializer
-import cool.graph.graphql.GraphQlClientImpl
+import com.prisma.graphql.GraphQlClientImpl
 import spray.json._
 
 import scala.concurrent.Future

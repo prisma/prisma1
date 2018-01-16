@@ -1,6 +1,6 @@
-package cool.graph.api.subscriptions
+package com.prisma.api.subscriptions
 
-import cool.graph.shared.models.Project
+import com.prisma.shared.models.Project
 import sangria.ast.Document
 
 case class SubscriptionUserContext(

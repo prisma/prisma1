@@ -1,15 +1,15 @@
-package cool.graph.api.mutations
+package com.prisma.api.mutations
 
-import cool.graph.api.database.mutactions.ClientSqlMutaction
-import cool.graph.api.database.mutactions.mutactions._
-import cool.graph.api.database.{DataItem, DataResolver}
-import cool.graph.api.mutations.MutationTypes.ArgumentValue
-import cool.graph.api.schema.APIErrors
-import cool.graph.api.schema.APIErrors.RelationIsRequired
+import com.prisma.api.database.mutactions.ClientSqlMutaction
+import com.prisma.api.database.mutactions.mutactions._
+import com.prisma.api.database.{DataItem, DataResolver}
+import com.prisma.api.mutations.MutationTypes.ArgumentValue
+import com.prisma.api.schema.APIErrors
+import com.prisma.api.schema.APIErrors.RelationIsRequired
 import cool.graph.cuid.Cuid.createCuid
-import cool.graph.shared.models.IdType.Id
-import cool.graph.shared.models.{Field, Model, Project, Relation}
-import cool.graph.utils.boolean.BooleanUtils._
+import com.prisma.shared.models.IdType.Id
+import com.prisma.shared.models.{Field, Model, Project, Relation}
+import com.prisma.utils.boolean.BooleanUtils._
 
 import scala.collection.immutable.Seq
 import scala.concurrent.ExecutionContext.Implicits.global

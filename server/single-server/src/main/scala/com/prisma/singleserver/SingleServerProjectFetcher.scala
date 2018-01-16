@@ -1,8 +1,8 @@
-package cool.graph.singleserver
+package com.prisma.singleserver
 
-import cool.graph.api.project.RefreshableProjectFetcher
-import cool.graph.deploy.database.persistence.ProjectPersistence
-import cool.graph.shared.models.ProjectWithClientId
+import com.prisma.api.project.RefreshableProjectFetcher
+import com.prisma.deploy.database.persistence.ProjectPersistence
+import com.prisma.shared.models.ProjectWithClientId
 
 import scala.concurrent.{ExecutionContext, Future}
 

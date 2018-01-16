@@ -1,13 +1,13 @@
-package cool.graph.singleserver
+package com.prisma.singleserver
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import cool.graph.akkautil.http.ServerExecutor
-import cool.graph.api.server.ApiServer
-import cool.graph.deploy.server.ClusterServer
-import cool.graph.subscriptions.SimpleSubscriptionsServer
-import cool.graph.websocket.WebsocketServer
-import cool.graph.workers.WorkerServer
+import com.prisma.akkautil.http.ServerExecutor
+import com.prisma.api.server.ApiServer
+import com.prisma.deploy.server.ClusterServer
+import com.prisma.subscriptions.SimpleSubscriptionsServer
+import com.prisma.websocket.WebsocketServer
+import com.prisma.workers.WorkerServer
 
 object SingleServerMain extends App {
   implicit val system       = ActorSystem("single-server")

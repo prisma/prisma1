@@ -1,6 +1,6 @@
-package cool.graph.deploy.schema.fields
+package com.prisma.deploy.schema.fields
 
-import cool.graph.deploy.schema.mutations.AddProjectInput
+import com.prisma.deploy.schema.mutations.AddProjectInput
 import sangria.marshalling.{CoercedScalaResultMarshaller, FromInput}
 import sangria.schema.{InputField, ListInputType, ListType, OptionInputType, StringType}
 

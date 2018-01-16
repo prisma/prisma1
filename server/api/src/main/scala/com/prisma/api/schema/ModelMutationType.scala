@@ -1,6 +1,6 @@
-package cool.graph.api.schema
+package com.prisma.api.schema
 
-import cool.graph.shared.models
+import com.prisma.shared.models
 import sangria.schema._
 
 object ModelMutationType {

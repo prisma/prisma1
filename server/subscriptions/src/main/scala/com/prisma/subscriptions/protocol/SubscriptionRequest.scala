@@ -1,6 +1,6 @@
-package cool.graph.subscriptions.protocol
+package com.prisma.subscriptions.protocol
 
-import cool.graph.messagebus.Conversions
+import com.prisma.messagebus.Conversions
 import play.api.libs.json.Json
 
 object SubscriptionRequest {

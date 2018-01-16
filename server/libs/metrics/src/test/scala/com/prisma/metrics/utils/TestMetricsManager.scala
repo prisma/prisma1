@@ -1,8 +1,8 @@
-package cool.graph.metrics.utils
+package com.prisma.metrics.utils
 
 import com.prisma.errors.BugsnagErrorReporter
 import com.timgroup.statsd.StatsDClient
-import cool.graph.metrics.{DummyStatsDClient, MetricsManager}
+import com.prisma.metrics.{DummyStatsDClient, MetricsManager}
 
 class TestMetricsManager extends MetricsManager {
   def serviceName: String = "TestService"

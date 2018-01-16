@@ -1,7 +1,7 @@
-package cool.graph.deploy.migration
+package com.prisma.deploy.migration
 
-import cool.graph.deploy.migration.mutactions._
-import cool.graph.shared.models._
+import com.prisma.deploy.migration.mutactions._
+import com.prisma.shared.models._
 
 trait MigrationStepMapper {
   def mutactionFor(previousSchema: Schema, nextSchema: Schema, step: MigrationStep): Option[ClientSqlMutaction]

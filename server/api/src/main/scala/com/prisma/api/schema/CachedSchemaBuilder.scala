@@ -1,9 +1,9 @@
-package cool.graph.api.schema
+package com.prisma.api.schema
 
-import cool.graph.cache.Cache
-import cool.graph.messagebus.PubSubSubscriber
-import cool.graph.messagebus.pubsub.{Everything, Message}
-import cool.graph.shared.models.Project
+import com.prisma.cache.Cache
+import com.prisma.messagebus.PubSubSubscriber
+import com.prisma.messagebus.pubsub.{Everything, Message}
+import com.prisma.shared.models.Project
 import sangria.schema.Schema
 
 case class CachedSchemaBuilder(

@@ -1,6 +1,6 @@
-package cool.graph.api.database
+package com.prisma.api.database
 
-import cool.graph.shared.models.{Field, Model}
+import com.prisma.shared.models.{Field, Model}
 import sangria.execution.deferred.Deferred
 
 import scala.concurrent.Future

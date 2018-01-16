@@ -1,9 +1,9 @@
-package cool.graph.deploy.specutils
+package com.prisma.deploy.specutils
 
 import akka.http.scaladsl.model.HttpRequest
 import com.prisma.sangria.utils.ErrorHandler
-import cool.graph.deploy.DeployDependencies
-import cool.graph.deploy.schema.{SchemaBuilder, SystemUserContext}
+import com.prisma.deploy.DeployDependencies
+import com.prisma.deploy.schema.{SchemaBuilder, SystemUserContext}
 import sangria.execution.{Executor, QueryAnalysisError}
 import sangria.parser.QueryParser
 import sangria.renderer.SchemaRenderer
@@ -15,7 +15,7 @@ import scala.concurrent.duration.Duration
 import scala.reflect.io.File
 
 case class DeployTestServer()(implicit dependencies: DeployDependencies) extends SprayJsonExtensions with GraphQLResponseAssertions {
-  import cool.graph.deploy.server.JsonMarshalling._
+  import com.prisma.deploy.server.JsonMarshalling._
 
   def writeSchemaIntoFile(schema: String): Unit = File("schema").writeAll(schema)
 

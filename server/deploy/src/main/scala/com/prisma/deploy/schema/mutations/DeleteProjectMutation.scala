@@ -1,9 +1,9 @@
-package cool.graph.deploy.schema.mutations
+package com.prisma.deploy.schema.mutations
 
-import cool.graph.deploy.database.persistence.{MigrationPersistence, ProjectPersistence}
-import cool.graph.deploy.migration.mutactions.DeleteClientDatabaseForProject
-import cool.graph.deploy.schema.InvalidServiceName
-import cool.graph.shared.models._
+import com.prisma.deploy.database.persistence.{MigrationPersistence, ProjectPersistence}
+import com.prisma.deploy.migration.mutactions.DeleteClientDatabaseForProject
+import com.prisma.deploy.schema.InvalidServiceName
+import com.prisma.shared.models._
 import slick.jdbc.MySQLProfile.backend.DatabaseDef
 
 import scala.concurrent.{ExecutionContext, Future}

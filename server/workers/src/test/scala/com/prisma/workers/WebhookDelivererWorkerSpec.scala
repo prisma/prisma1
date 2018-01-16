@@ -1,12 +1,12 @@
-package cool.graph.workers
+package com.prisma.workers
 
-import cool.graph.akkautil.SingleThreadedActorSystem
-import cool.graph.akkautil.http.SimpleHttpClient
-import cool.graph.messagebus.testkits.InMemoryQueueTestKit
-import cool.graph.messagebus.testkits.spechelpers.InMemoryMessageBusTestKits
-import cool.graph.stub.Import.withStubServer
-import cool.graph.stub.StubDsl.Default.Request
-import cool.graph.workers.payloads.Webhook
+import com.prisma.akkautil.SingleThreadedActorSystem
+import com.prisma.akkautil.http.SimpleHttpClient
+import com.prisma.messagebus.testkits.InMemoryQueueTestKit
+import com.prisma.messagebus.testkits.spechelpers.InMemoryMessageBusTestKits
+import com.prisma.stub.Import.withStubServer
+import com.prisma.stub.StubDsl.Default.Request
+import com.prisma.workers.payloads.Webhook
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Matchers, WordSpecLike}
 

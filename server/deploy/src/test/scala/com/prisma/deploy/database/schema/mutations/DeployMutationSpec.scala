@@ -1,14 +1,14 @@
-package cool.graph.deploy.database.schema.mutations
+package com.prisma.deploy.database.schema.mutations
 
-import cool.graph.deploy.schema.mutations.{FunctionInput, HeaderInput}
-import cool.graph.deploy.specutils.DeploySpecBase
-import cool.graph.shared.models._
-import cool.graph.stub.Stub
+import com.prisma.deploy.schema.mutations.{FunctionInput, HeaderInput}
+import com.prisma.deploy.specutils.DeploySpecBase
+import com.prisma.shared.models._
+import com.prisma.stub.Stub
 import org.scalatest.{FlatSpec, Matchers}
 
 class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
 
-  import cool.graph.stub.Import._
+  import com.prisma.stub.Import._
 
   val projectPersistence   = testDependencies.projectPersistence
   val migrationPersistence = testDependencies.migrationPersistence

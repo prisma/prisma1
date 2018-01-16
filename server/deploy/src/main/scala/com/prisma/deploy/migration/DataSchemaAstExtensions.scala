@@ -1,6 +1,6 @@
-package cool.graph.deploy.migration
+package com.prisma.deploy.migration
 
-import cool.graph.shared.models.TypeIdentifier
+import com.prisma.shared.models.TypeIdentifier
 import sangria.ast._
 
 import scala.collection.Seq

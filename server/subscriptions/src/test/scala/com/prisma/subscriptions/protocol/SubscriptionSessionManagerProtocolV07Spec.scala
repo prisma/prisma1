@@ -1,18 +1,18 @@
-package cool.graph.subscriptions.protocol
+package com.prisma.subscriptions.protocol
 
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.stream.ActorMaterializer
 import akka.testkit.{TestKit, TestProbe}
-import cool.graph.messagebus.pubsub.Message
-import cool.graph.messagebus.testkits.{DummyPubSubPublisher, InMemoryPubSubTestKit}
-import cool.graph.shared.models.ProjectWithClientId
-import cool.graph.shared.project_dsl.TestProject
-import cool.graph.stub.Import.withStubServer
-import cool.graph.subscriptions.SubscriptionDependenciesForTest
-import cool.graph.subscriptions.protocol.SubscriptionProtocolV05.Responses.SubscriptionSessionResponseV05
-import cool.graph.subscriptions.protocol.SubscriptionSessionManager.Requests.EnrichedSubscriptionRequest
-import cool.graph.subscriptions.resolving.SubscriptionsManager.Requests.{CreateSubscription, EndSubscription}
-import cool.graph.subscriptions.resolving.SubscriptionsManager.Responses.CreateSubscriptionSucceeded
+import com.prisma.messagebus.pubsub.Message
+import com.prisma.messagebus.testkits.{DummyPubSubPublisher, InMemoryPubSubTestKit}
+import com.prisma.shared.models.ProjectWithClientId
+import com.prisma.shared.project_dsl.TestProject
+import com.prisma.stub.Import.withStubServer
+import com.prisma.subscriptions.SubscriptionDependenciesForTest
+import com.prisma.subscriptions.protocol.SubscriptionProtocolV05.Responses.SubscriptionSessionResponseV05
+import com.prisma.subscriptions.protocol.SubscriptionSessionManager.Requests.EnrichedSubscriptionRequest
+import com.prisma.subscriptions.resolving.SubscriptionsManager.Requests.{CreateSubscription, EndSubscription}
+import com.prisma.subscriptions.resolving.SubscriptionsManager.Responses.CreateSubscriptionSucceeded
 import org.scalatest._
 import play.api.libs.json.Json
 
@@ -24,8 +24,8 @@ class SubscriptionSessionManagerProtocolV07Spec
     with Matchers
     with BeforeAndAfterAll {
 
-  import cool.graph.subscriptions.protocol.SubscriptionProtocolV07.Requests._
-  import cool.graph.subscriptions.protocol.SubscriptionProtocolV07.Responses._
+  import com.prisma.subscriptions.protocol.SubscriptionProtocolV07.Requests._
+  import com.prisma.subscriptions.protocol.SubscriptionProtocolV07.Responses._
 
   override def afterAll: Unit = shutdown()
 
@@ -203,11 +203,11 @@ class SubscriptionSessionManagerProtocolV07Spec
   }
 
   def withProjectFetcherStub[T](projectId: String)(fn: => T) = {
-    import cool.graph.shared.models.ProjectJsonFormatter._
+    import com.prisma.shared.models.ProjectJsonFormatter._
     val project             = TestProject().copy(id = projectId)
     val projectWithClientId = ProjectWithClientId(project)
     val stubs = List(
-      cool.graph.stub.Import.Request("GET", s"/${dependencies.projectFetcherPath}/${project.id}").stub(200, Json.toJson(projectWithClientId).toString)
+      com.prisma.stub.Import.Request("GET", s"/${dependencies.projectFetcherPath}/${project.id}").stub(200, Json.toJson(projectWithClientId).toString)
     )
     withStubServer(stubs, port = dependencies.projectFetcherPort) {
       fn

@@ -1,6 +1,6 @@
-package cool.graph.subscriptions.specs
+package com.prisma.subscriptions.specs
 
-import cool.graph.shared.project_dsl.SchemaDsl
+import com.prisma.shared.project_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 import pdi.jwt.{Jwt, JwtAlgorithm}
 

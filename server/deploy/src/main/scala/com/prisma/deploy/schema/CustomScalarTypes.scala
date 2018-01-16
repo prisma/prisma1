@@ -1,4 +1,4 @@
-package cool.graph.deploy.schema
+package com.prisma.deploy.schema
 
 import org.joda.time.{DateTime, DateTimeZone}
 import sangria.ast

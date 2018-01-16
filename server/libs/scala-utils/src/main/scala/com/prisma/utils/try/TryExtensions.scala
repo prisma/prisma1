@@ -1,4 +1,4 @@
-package cool.graph.utils.`try`
+package com.prisma.utils.`try`
 
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}

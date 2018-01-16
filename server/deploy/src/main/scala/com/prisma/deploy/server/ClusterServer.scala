@@ -1,4 +1,4 @@
-package cool.graph.deploy.server
+package com.prisma.deploy.server
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
@@ -11,13 +11,13 @@ import akka.stream.ActorMaterializer
 import com.prisma.errors.RequestMetadata
 import com.prisma.sangria.utils.ErrorHandler
 import com.typesafe.scalalogging.LazyLogging
-import cool.graph.akkautil.http.Server
+import com.prisma.akkautil.http.Server
 import cool.graph.cuid.Cuid.createCuid
-import cool.graph.deploy.database.persistence.ProjectPersistence
-import cool.graph.deploy.schema.{DeployApiError, InvalidProjectId, SchemaBuilder, SystemUserContext}
-import cool.graph.deploy.{DeployDependencies, DeployMetrics}
-import cool.graph.metrics.extensions.TimeResponseDirectiveImpl
-import cool.graph.shared.models.ProjectWithClientId
+import com.prisma.deploy.database.persistence.ProjectPersistence
+import com.prisma.deploy.schema.{DeployApiError, InvalidProjectId, SchemaBuilder, SystemUserContext}
+import com.prisma.deploy.{DeployDependencies, DeployMetrics}
+import com.prisma.metrics.extensions.TimeResponseDirectiveImpl
+import com.prisma.shared.models.ProjectWithClientId
 import com.prisma.logging.{LogData, LogKey}
 import com.prisma.logging.LogDataWrites.logDataWrites
 import play.api.libs.json.Json
@@ -35,7 +35,7 @@ case class ClusterServer(prefix: String = "")(
     dependencies: DeployDependencies
 ) extends Server
     with LazyLogging {
-  import cool.graph.deploy.server.JsonMarshalling._
+  import com.prisma.deploy.server.JsonMarshalling._
   import system.dispatcher
 
   val schemaBuilder: SchemaBuilder           = dependencies.clusterSchemaBuilder
@@ -155,7 +155,7 @@ case class ClusterServer(prefix: String = "")(
   }
 
   def getSchema(projectId: String, forceRefresh: Boolean): Future[String] = {
-    import cool.graph.shared.models.ProjectJsonFormatter._
+    import com.prisma.shared.models.ProjectJsonFormatter._
     projectPersistence
       .load(projectId)
       .flatMap {

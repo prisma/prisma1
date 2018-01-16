@@ -1,9 +1,9 @@
-package cool.graph.api.mutations
+package com.prisma.api.mutations
 
-import cool.graph.api.database.Types.UserData
-import cool.graph.api.schema.APIErrors.ValueNotAValidJson
-import cool.graph.shared.models.TypeIdentifier.TypeIdentifier
-import cool.graph.shared.models.{Field, TypeIdentifier}
+import com.prisma.api.database.Types.UserData
+import com.prisma.api.schema.APIErrors.ValueNotAValidJson
+import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
+import com.prisma.shared.models.{Field, TypeIdentifier}
 import org.joda.time.format.DateTimeFormat
 import org.joda.time.{DateTime, DateTimeZone}
 import spray.json.DefaultJsonProtocol._

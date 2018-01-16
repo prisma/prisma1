@@ -1,10 +1,10 @@
-package cool.graph.messagebus.pubsub.rabbit
+package com.prisma.messagebus.pubsub.rabbit
 
 import akka.testkit.{TestKit, TestProbe}
 import com.prisma.errors.BugsnagErrorReporter
-import cool.graph.akkautil.SingleThreadedActorSystem
-import cool.graph.messagebus.Conversions
-import cool.graph.messagebus.pubsub.{Everything, Message, Only}
+import com.prisma.akkautil.SingleThreadedActorSystem
+import com.prisma.messagebus.Conversions
+import com.prisma.messagebus.pubsub.{Everything, Message, Only}
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Matchers, WordSpecLike}
 
 import scala.concurrent.duration._

@@ -1,13 +1,13 @@
-package cool.graph.api.database.mutactions.mutactions
+package com.prisma.api.database.mutactions.mutactions
 
 import com.typesafe.scalalogging.LazyLogging
-import cool.graph.api.ApiDependencies
-import cool.graph.api.database.mutactions.{Mutaction, MutactionExecutionResult, MutactionExecutionSuccess}
-import cool.graph.messagebus.PubSubPublisher
-import cool.graph.messagebus.pubsub.Only
-import cool.graph.shared.models.Project
+import com.prisma.api.ApiDependencies
+import com.prisma.api.database.mutactions.{Mutaction, MutactionExecutionResult, MutactionExecutionSuccess}
+import com.prisma.messagebus.PubSubPublisher
+import com.prisma.messagebus.pubsub.Only
+import com.prisma.shared.models.Project
 import spray.json._
-import cool.graph.util.json.JsonFormats.AnyJsonFormat
+import com.prisma.util.json.JsonFormats.AnyJsonFormat
 
 import scala.concurrent.Future
 

@@ -1,4 +1,4 @@
-package cool.graph.api.database
+package com.prisma.api.database
 
 import com.typesafe.config.Config
 import slick.jdbc.MySQLProfile.api._

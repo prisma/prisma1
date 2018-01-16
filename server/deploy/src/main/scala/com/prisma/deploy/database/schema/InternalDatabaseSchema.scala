@@ -1,4 +1,4 @@
-package cool.graph.deploy.database.schema
+package com.prisma.deploy.database.schema
 
 import slick.jdbc.MySQLProfile.api._
 

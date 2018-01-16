@@ -1,7 +1,7 @@
-package cool.graph.deploy.specutils
+package com.prisma.deploy.specutils
 
-import cool.graph.deploy.database.schema.InternalDatabaseSchema
-import cool.graph.utils.await.AwaitUtils
+import com.prisma.deploy.database.schema.InternalDatabaseSchema
+import com.prisma.utils.await.AwaitUtils
 import slick.dbio.Effect.Read
 import slick.dbio.{DBIOAction, NoStream}
 import slick.jdbc.MySQLProfile.api._

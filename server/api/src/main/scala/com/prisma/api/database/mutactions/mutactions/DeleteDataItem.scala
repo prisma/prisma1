@@ -1,10 +1,10 @@
-package cool.graph.api.database.mutactions.mutactions
+package com.prisma.api.database.mutactions.mutactions
 
-import cool.graph.api.database.mutactions.{ClientSqlDataChangeMutaction, ClientSqlStatementResult, MutactionVerificationSuccess}
-import cool.graph.api.database._
-import cool.graph.api.schema.APIErrors
-import cool.graph.shared.models.IdType.Id
-import cool.graph.shared.models.{Model, Project}
+import com.prisma.api.database.mutactions.{ClientSqlDataChangeMutaction, ClientSqlStatementResult, MutactionVerificationSuccess}
+import com.prisma.api.database._
+import com.prisma.api.schema.APIErrors
+import com.prisma.shared.models.IdType.Id
+import com.prisma.shared.models.{Model, Project}
 import slick.jdbc.MySQLProfile.api._
 
 import scala.concurrent.Future

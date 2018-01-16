@@ -1,4 +1,4 @@
-package cool.graph.deploy.seed
+package com.prisma.deploy.seed
 
 import slick.dbio.{Effect, NoStream}
 import slick.jdbc.MySQLProfile.api._

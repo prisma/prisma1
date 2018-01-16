@@ -1,7 +1,7 @@
-package cool.graph.workers.payloads
+package com.prisma.workers.payloads
 
-import cool.graph.messagebus.Conversions
-import cool.graph.messagebus.Conversions.{ByteMarshaller, ByteUnmarshaller}
+import com.prisma.messagebus.Conversions
+import com.prisma.messagebus.Conversions.{ByteMarshaller, ByteUnmarshaller}
 import play.api.libs.json._
 
 object JsonConversions {

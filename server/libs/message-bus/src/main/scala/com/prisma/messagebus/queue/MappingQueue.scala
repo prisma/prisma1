@@ -1,7 +1,7 @@
-package cool.graph.messagebus.queue
+package com.prisma.messagebus.queue
 
-import cool.graph.messagebus.Conversions.Converter
-import cool.graph.messagebus.{ConsumerRef, Queue, QueueConsumer, QueuePublisher}
+import com.prisma.messagebus.Conversions.Converter
+import com.prisma.messagebus.{ConsumerRef, Queue, QueueConsumer, QueuePublisher}
 
 import scala.concurrent.Future
 

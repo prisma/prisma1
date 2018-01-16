@@ -1,4 +1,4 @@
-//package cool.graph.akkautil.stream
+//package com.prisma.akkautil.stream
 
 //import akka.stream.ActorAttributes.SupervisionStrategy
 //import akka.stream.impl.fusing.GraphStages.SimpleLinearGraphStage

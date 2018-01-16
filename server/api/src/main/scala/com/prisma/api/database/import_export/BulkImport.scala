@@ -1,11 +1,11 @@
-package cool.graph.api.database.import_export
+package com.prisma.api.database.import_export
 
-import cool.graph.api.ApiDependencies
-import cool.graph.api.database.import_export.ImportExport.MyJsonProtocol._
-import cool.graph.api.database.import_export.ImportExport._
-import cool.graph.api.database.{DatabaseMutationBuilder, ProjectRelayId, ProjectRelayIdTable}
+import com.prisma.api.ApiDependencies
+import com.prisma.api.database.import_export.ImportExport.MyJsonProtocol._
+import com.prisma.api.database.import_export.ImportExport._
+import com.prisma.api.database.{DatabaseMutationBuilder, ProjectRelayId, ProjectRelayIdTable}
 import cool.graph.cuid.Cuid
-import cool.graph.shared.models._
+import com.prisma.shared.models._
 import slick.dbio.{DBIOAction, Effect, NoStream}
 import slick.jdbc
 import slick.jdbc.MySQLProfile.api._
@@ -112,7 +112,7 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) {
 
       val fromModel                                                 = project.schema.getModelByName_!(left.identifier.typeName)
       val fromField                                                 = fromModel.getFieldByName_!(left.fieldName.get)
-      val relationSide: cool.graph.shared.models.RelationSide.Value = fromField.relationSide.get
+      val relationSide: com.prisma.shared.models.RelationSide.Value = fromField.relationSide.get
       val relation: Relation                                        = fromField.relation.get
 
       val aValue: String = if (relationSide == RelationSide.A) left.identifier.id else right.identifier.id

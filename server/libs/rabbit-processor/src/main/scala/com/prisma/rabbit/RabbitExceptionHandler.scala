@@ -1,4 +1,4 @@
-package cool.graph.rabbit
+package com.prisma.rabbit
 
 import com.prisma.errors.ErrorReporter
 import com.rabbitmq.client.impl.DefaultExceptionHandler

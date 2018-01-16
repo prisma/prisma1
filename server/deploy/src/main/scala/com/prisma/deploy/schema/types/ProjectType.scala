@@ -1,7 +1,7 @@
-package cool.graph.deploy.schema.types
+package com.prisma.deploy.schema.types
 
-import cool.graph.deploy.schema.SystemUserContext
-import cool.graph.shared.models
+import com.prisma.deploy.schema.SystemUserContext
+import com.prisma.shared.models
 import sangria.schema._
 
 object ProjectType {

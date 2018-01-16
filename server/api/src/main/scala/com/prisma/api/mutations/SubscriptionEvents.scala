@@ -1,10 +1,10 @@
-package cool.graph.api.mutations
+package com.prisma.api.mutations
 
-import cool.graph.api.ApiDependencies
-import cool.graph.api.database.mutactions.ClientSqlMutaction
-import cool.graph.api.database.mutactions.mutactions.{CreateDataItem, DeleteDataItem, PublishSubscriptionEvent, UpdateDataItem}
-import cool.graph.shared.models.IdType.Id
-import cool.graph.shared.models.Project
+import com.prisma.api.ApiDependencies
+import com.prisma.api.database.mutactions.ClientSqlMutaction
+import com.prisma.api.database.mutactions.mutactions.{CreateDataItem, DeleteDataItem, PublishSubscriptionEvent, UpdateDataItem}
+import com.prisma.shared.models.IdType.Id
+import com.prisma.shared.models.Project
 
 import scala.collection.immutable.Seq
 

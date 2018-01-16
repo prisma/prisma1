@@ -1,6 +1,6 @@
-package cool.graph.deploy.database.tables
+package com.prisma.deploy.database.tables
 
-import cool.graph.shared.models.MigrationStatus
+import com.prisma.shared.models.MigrationStatus
 import play.api.libs.json.JsValue
 import slick.dbio.Effect.Read
 import slick.jdbc.MySQLProfile.api._

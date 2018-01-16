@@ -1,16 +1,16 @@
-package cool.graph.deploy
+package com.prisma.deploy
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.prisma.errors.{BugsnagErrorReporter, ErrorReporter}
-import cool.graph.deploy.database.persistence.{MigrationPersistenceImpl, ProjectPersistenceImpl}
-import cool.graph.deploy.database.schema.InternalDatabaseSchema
-import cool.graph.deploy.migration.migrator.{AsyncMigrator, Migrator}
-import cool.graph.deploy.schema.SchemaBuilder
-import cool.graph.deploy.seed.InternalDatabaseSeedActions
-import cool.graph.deploy.server.{ClusterAuth, ClusterAuthImpl, DummyClusterAuth}
-import cool.graph.graphql.GraphQlClient
-import cool.graph.messagebus.PubSubPublisher
+import com.prisma.deploy.database.persistence.{MigrationPersistenceImpl, ProjectPersistenceImpl}
+import com.prisma.deploy.database.schema.InternalDatabaseSchema
+import com.prisma.deploy.migration.migrator.{AsyncMigrator, Migrator}
+import com.prisma.deploy.schema.SchemaBuilder
+import com.prisma.deploy.seed.InternalDatabaseSeedActions
+import com.prisma.deploy.server.{ClusterAuth, ClusterAuthImpl, DummyClusterAuth}
+import com.prisma.graphql.GraphQlClient
+import com.prisma.messagebus.PubSubPublisher
 import slick.jdbc.MySQLProfile
 import slick.jdbc.MySQLProfile.api._
 

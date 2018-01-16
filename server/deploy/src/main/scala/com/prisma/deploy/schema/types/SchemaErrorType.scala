@@ -1,7 +1,7 @@
-package cool.graph.deploy.schema.types
+package com.prisma.deploy.schema.types
 
-import cool.graph.deploy.migration.validation.SchemaError
-import cool.graph.deploy.schema.SystemUserContext
+import com.prisma.deploy.migration.validation.SchemaError
+import com.prisma.deploy.schema.SystemUserContext
 import sangria.schema._
 
 object SchemaErrorType {

@@ -1,4 +1,4 @@
-package cool.graph.api.util
+package com.prisma.api.util
 
 object TroubleCharacters {
   val value = "¥฿" + segment(0x1F600, 0x1F64F) + segment(0x0900, 0x0930) + segment(0x20AC, 0x20C0)

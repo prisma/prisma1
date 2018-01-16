@@ -1,4 +1,4 @@
-package cool.graph.akkautil.http
+package com.prisma.akkautil.http
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
@@ -7,7 +7,7 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.RejectionError
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.ActorMaterializer
-import cool.graph.utils.future.FutureUtils._
+import com.prisma.utils.future.FutureUtils._
 import play.api.libs.json._
 
 import scala.collection.immutable.Seq

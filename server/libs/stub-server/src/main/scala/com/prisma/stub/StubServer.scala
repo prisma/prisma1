@@ -1,8 +1,8 @@
-package cool.graph.stub
+package com.prisma.stub
 
 import javax.servlet.http.{HttpServletRequest, HttpServletResponse}
 
-import cool.graph.stub.StubMatching.MatchResult
+import com.prisma.stub.StubMatching.MatchResult
 import org.eclipse.jetty.server.handler.AbstractHandler
 import org.eclipse.jetty.server.{Server, Request => JettyRequest}
 

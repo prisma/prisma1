@@ -1,6 +1,6 @@
-package cool.graph.shared.project_dsl
+package com.prisma.shared.project_dsl
 
-import cool.graph.shared.models._
+import com.prisma.shared.models._
 import TestIds._
 
 object TestClient {

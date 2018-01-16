@@ -1,11 +1,11 @@
-package cool.graph.subscriptions.protocol
+package com.prisma.subscriptions.protocol
 
 import play.api.libs.json._
 
 object ProtocolV07 {
 
   object SubscriptionResponseWriters {
-    import cool.graph.subscriptions.protocol.SubscriptionProtocolV07.Responses._
+    import com.prisma.subscriptions.protocol.SubscriptionProtocolV07.Responses._
     val emptyJson = Json.obj()
 
     implicit lazy val subscriptionResponseWrites = new Writes[SubscriptionSessionResponse] {
@@ -32,7 +32,7 @@ object ProtocolV07 {
   }
 
   object SubscriptionRequestReaders {
-    import cool.graph.subscriptions.protocol.SubscriptionProtocolV07.Requests._
+    import com.prisma.subscriptions.protocol.SubscriptionProtocolV07.Requests._
 
     implicit lazy val stringOrIntReads     = CommonReaders.stringOrIntReads
     implicit lazy val initReads            = Json.reads[GqlConnectionInit]
@@ -64,7 +64,7 @@ object ProtocolV07 {
 
 object ProtocolV05 {
   object SubscriptionResponseWriters {
-    import cool.graph.subscriptions.protocol.SubscriptionProtocolV05.Responses._
+    import com.prisma.subscriptions.protocol.SubscriptionProtocolV05.Responses._
     val emptyJson = Json.obj()
 
     implicit lazy val subscriptionResponseWrites = new Writes[SubscriptionSessionResponseV05] {
@@ -92,7 +92,7 @@ object ProtocolV05 {
 
   object SubscriptionRequestReaders {
     import CommonReaders._
-    import cool.graph.subscriptions.protocol.SubscriptionProtocolV05.Requests._
+    import com.prisma.subscriptions.protocol.SubscriptionProtocolV05.Requests._
     import play.api.libs.functional.syntax._
 
     implicit lazy val subscriptionStartReads = (

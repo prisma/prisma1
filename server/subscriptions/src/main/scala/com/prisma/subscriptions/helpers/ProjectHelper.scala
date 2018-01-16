@@ -1,8 +1,8 @@
-package cool.graph.subscriptions.helpers
+package com.prisma.subscriptions.helpers
 
 import akka.actor.ActorSystem
-import cool.graph.shared.models.ProjectWithClientId
-import cool.graph.subscriptions.SubscriptionDependencies
+import com.prisma.shared.models.ProjectWithClientId
+import com.prisma.subscriptions.SubscriptionDependencies
 
 import scala.concurrent.{ExecutionContext, Future}
 

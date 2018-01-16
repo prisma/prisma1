@@ -1,9 +1,9 @@
-package cool.graph.api.database.mutactions.mutactions
+package com.prisma.api.database.mutactions.mutactions
 
-import cool.graph.api.database.DatabaseMutationBuilder
-import cool.graph.api.database.mutactions.{ClientSqlDataChangeMutaction, ClientSqlStatementResult}
-import cool.graph.api.mutations.{CoolArgs, NodeSelector, ParentInfo}
-import cool.graph.shared.models.{Model, Project}
+import com.prisma.api.database.DatabaseMutationBuilder
+import com.prisma.api.database.mutactions.{ClientSqlDataChangeMutaction, ClientSqlStatementResult}
+import com.prisma.api.mutations.{CoolArgs, NodeSelector, ParentInfo}
+import com.prisma.shared.models.{Model, Project}
 import slick.dbio.DBIOAction
 
 import scala.concurrent.Future

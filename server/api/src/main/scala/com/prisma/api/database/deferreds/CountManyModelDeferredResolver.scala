@@ -1,7 +1,7 @@
-package cool.graph.api.database.deferreds
+package com.prisma.api.database.deferreds
 
-import cool.graph.api.database.DataResolver
-import cool.graph.api.database.DeferredTypes.{CountManyModelDeferred, OrderedDeferred, OrderedDeferredFutureResult}
+import com.prisma.api.database.DataResolver
+import com.prisma.api.database.DeferredTypes.{CountManyModelDeferred, OrderedDeferred, OrderedDeferredFutureResult}
 
 class CountManyModelDeferredResolver(dataResolver: DataResolver) {
   def resolve(orderedDeferreds: Vector[OrderedDeferred[CountManyModelDeferred]]): Vector[OrderedDeferredFutureResult[Int]] = {

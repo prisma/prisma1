@@ -1,4 +1,4 @@
-package cool.graph.subscriptions.resolving
+package com.prisma.subscriptions.resolving
 
 import spray.json._
 

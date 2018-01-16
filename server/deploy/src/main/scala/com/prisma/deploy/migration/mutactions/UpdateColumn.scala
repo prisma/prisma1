@@ -1,7 +1,7 @@
-package cool.graph.deploy.migration.mutactions
+package com.prisma.deploy.migration.mutactions
 
-import cool.graph.deploy.database.DatabaseMutationBuilder
-import cool.graph.shared.models.{Field, Model}
+import com.prisma.deploy.database.DatabaseMutationBuilder
+import com.prisma.shared.models.{Field, Model}
 import slick.jdbc.MySQLProfile.api._
 
 import scala.concurrent.ExecutionContext.Implicits.global

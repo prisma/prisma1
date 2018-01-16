@@ -1,6 +1,6 @@
-package cool.graph.api.database
+package com.prisma.api.database
 
-import cool.graph.shared.models.{Field, Model, TypeIdentifier}
+import com.prisma.shared.models.{Field, Model, TypeIdentifier}
 
 case class FieldFilterTuple(field: Option[Field], filterArg: FilterArgument)
 case class FilterArgument(name: String, description: String, isList: Boolean = false)

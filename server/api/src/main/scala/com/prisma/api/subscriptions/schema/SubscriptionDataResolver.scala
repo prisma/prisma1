@@ -1,10 +1,10 @@
-package cool.graph.api.subscriptions.schema
+package com.prisma.api.subscriptions.schema
 
-import cool.graph.api.database.DataResolver
-import cool.graph.api.schema.{ObjectTypeBuilder, SimpleResolveOutput}
-import cool.graph.api.subscriptions.SubscriptionUserContext
-import cool.graph.api.subscriptions.resolving.FilteredResolver
-import cool.graph.shared.models.Model
+import com.prisma.api.database.DataResolver
+import com.prisma.api.schema.{ObjectTypeBuilder, SimpleResolveOutput}
+import com.prisma.api.subscriptions.SubscriptionUserContext
+import com.prisma.api.subscriptions.resolving.FilteredResolver
+import com.prisma.shared.models.Model
 import sangria.schema.{Args, Context}
 
 import scala.concurrent.ExecutionContext.Implicits.global

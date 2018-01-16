@@ -1,7 +1,7 @@
-package cool.graph.deploy.database
+package com.prisma.deploy.database
 
-import cool.graph.shared.models.TypeIdentifier
-import cool.graph.shared.models.TypeIdentifier.TypeIdentifier
+import com.prisma.shared.models.TypeIdentifier
+import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
 import slick.jdbc.MySQLProfile.api._
 
 object DatabaseMutationBuilder {

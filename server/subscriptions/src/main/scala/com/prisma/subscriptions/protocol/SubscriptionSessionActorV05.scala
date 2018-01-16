@@ -1,15 +1,15 @@
-package cool.graph.subscriptions.protocol
+package com.prisma.subscriptions.protocol
 
 import akka.actor.{Actor, ActorRef}
-import cool.graph.akkautil.{LogUnhandled, LogUnhandledExceptions}
-import cool.graph.messagebus.PubSubPublisher
-import cool.graph.messagebus.pubsub.Only
-import cool.graph.subscriptions.SubscriptionDependencies
-import cool.graph.subscriptions.metrics.SubscriptionMetrics
-import cool.graph.subscriptions.protocol.SubscriptionProtocolV05.Responses.SubscriptionSessionResponseV05
-import cool.graph.subscriptions.protocol.SubscriptionSessionActorV05.Internal.Authorization
-import cool.graph.subscriptions.resolving.SubscriptionsManager.Requests.EndSubscription
-import cool.graph.subscriptions.resolving.SubscriptionsManager.Responses.{
+import com.prisma.akkautil.{LogUnhandled, LogUnhandledExceptions}
+import com.prisma.messagebus.PubSubPublisher
+import com.prisma.messagebus.pubsub.Only
+import com.prisma.subscriptions.SubscriptionDependencies
+import com.prisma.subscriptions.metrics.SubscriptionMetrics
+import com.prisma.subscriptions.protocol.SubscriptionProtocolV05.Responses.SubscriptionSessionResponseV05
+import com.prisma.subscriptions.protocol.SubscriptionSessionActorV05.Internal.Authorization
+import com.prisma.subscriptions.resolving.SubscriptionsManager.Requests.EndSubscription
+import com.prisma.subscriptions.resolving.SubscriptionsManager.Responses.{
   CreateSubscriptionFailed,
   CreateSubscriptionSucceeded,
   ProjectSchemaChanged,
@@ -36,7 +36,7 @@ case class SubscriptionSessionActorV05(
   import SubscriptionMetrics._
   import SubscriptionProtocolV05.Requests._
   import SubscriptionProtocolV05.Responses._
-  import cool.graph.subscriptions.resolving.SubscriptionsManager.Requests.CreateSubscription
+  import com.prisma.subscriptions.resolving.SubscriptionsManager.Requests.CreateSubscription
 
   val reporter = dependencies.reporter
 

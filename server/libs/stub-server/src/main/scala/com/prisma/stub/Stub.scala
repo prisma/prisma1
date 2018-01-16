@@ -1,4 +1,4 @@
-package cool.graph.stub
+package com.prisma.stub
 
 import java.util.function.BinaryOperator
 import javax.servlet.http.HttpServletRequest

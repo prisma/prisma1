@@ -1,9 +1,9 @@
-package cool.graph.api.database.deferreds
+package com.prisma.api.database.deferreds
 
-import cool.graph.api.database.DeferredTypes._
-import cool.graph.api.database.QueryArguments
-import cool.graph.shared.models.IdType.Id
-import cool.graph.shared.models.{Field, Model}
+import com.prisma.api.database.DeferredTypes._
+import com.prisma.api.database.QueryArguments
+import com.prisma.shared.models.IdType.Id
+import com.prisma.shared.models.{Field, Model}
 import sangria.execution.deferred.Deferred
 
 object DeferredUtils {

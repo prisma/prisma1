@@ -1,4 +1,4 @@
-package cool.graph.util.coolSangria
+package com.prisma.util.coolSangria
 
 import sangria.schema.Args
 

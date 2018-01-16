@@ -1,11 +1,11 @@
-package cool.graph.api.subscriptions.schema
+package com.prisma.api.subscriptions.schema
 
-import cool.graph.api.ApiDependencies
-import cool.graph.api.database.DataItem
-import cool.graph.api.schema._
-import cool.graph.api.subscriptions.SubscriptionUserContext
-import cool.graph.shared.models.ModelMutationType.ModelMutationType
-import cool.graph.shared.models.{Model, ModelMutationType, Project}
+import com.prisma.api.ApiDependencies
+import com.prisma.api.database.DataItem
+import com.prisma.api.schema._
+import com.prisma.api.subscriptions.SubscriptionUserContext
+import com.prisma.shared.models.ModelMutationType.ModelMutationType
+import com.prisma.shared.models.{Model, ModelMutationType, Project}
 import sangria.schema._
 
 import scala.concurrent.Future

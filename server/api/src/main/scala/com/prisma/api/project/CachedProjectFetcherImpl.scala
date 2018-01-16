@@ -1,10 +1,10 @@
-package cool.graph.api.project
+package com.prisma.api.project
 
-import cool.graph.api.ApiMetrics
-import cool.graph.cache.Cache
-import cool.graph.messagebus.PubSubSubscriber
-import cool.graph.messagebus.pubsub.{Everything, Message}
-import cool.graph.shared.models.ProjectWithClientId
+import com.prisma.api.ApiMetrics
+import com.prisma.cache.Cache
+import com.prisma.messagebus.PubSubSubscriber
+import com.prisma.messagebus.pubsub.{Everything, Message}
+import com.prisma.shared.models.ProjectWithClientId
 
 import scala.concurrent.Future
 

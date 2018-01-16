@@ -1,4 +1,4 @@
-package cool.graph.akkautil
+package com.prisma.akkautil
 
 import akka.actor.Actor.Receive
 

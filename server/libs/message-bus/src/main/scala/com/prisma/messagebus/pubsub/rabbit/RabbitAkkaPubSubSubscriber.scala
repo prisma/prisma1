@@ -1,14 +1,14 @@
-package cool.graph.messagebus.pubsub.rabbit
+package com.prisma.messagebus.pubsub.rabbit
 
 import akka.actor.{ActorRef, ActorSystem, Props}
 import com.prisma.errors.ErrorReporter
-import cool.graph.messagebus.Conversions.{ByteUnmarshaller, Converter}
-import cool.graph.messagebus._
-import cool.graph.messagebus.pubsub.PubSubProtocol.Publish
-import cool.graph.messagebus.pubsub._
-import cool.graph.messagebus.utils.Utils
-import cool.graph.rabbit.Bindings.FanOut
-import cool.graph.rabbit.Import.Exchange
+import com.prisma.messagebus.Conversions.{ByteUnmarshaller, Converter}
+import com.prisma.messagebus._
+import com.prisma.messagebus.pubsub.PubSubProtocol.Publish
+import com.prisma.messagebus.pubsub._
+import com.prisma.messagebus.utils.Utils
+import com.prisma.rabbit.Bindings.FanOut
+import com.prisma.rabbit.Import.Exchange
 
 import scala.util.{Failure, Success}
 

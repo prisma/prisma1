@@ -1,6 +1,6 @@
-package cool.graph.deploy.migration
+package com.prisma.deploy.migration
 
-import cool.graph.deploy.migration.inference.{FieldMapping, Mapping, SchemaMapping}
+import com.prisma.deploy.migration.inference.{FieldMapping, Mapping, SchemaMapping}
 import sangria.ast.Document
 
 trait SchemaMapper {

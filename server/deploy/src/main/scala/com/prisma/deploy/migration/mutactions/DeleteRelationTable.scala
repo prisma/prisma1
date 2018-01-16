@@ -1,7 +1,7 @@
-package cool.graph.deploy.migration.mutactions
+package com.prisma.deploy.migration.mutactions
 
-import cool.graph.deploy.database.DatabaseMutationBuilder
-import cool.graph.shared.models.{Relation, Schema}
+import com.prisma.deploy.database.DatabaseMutationBuilder
+import com.prisma.shared.models.{Relation, Schema}
 
 import scala.concurrent.Future
 

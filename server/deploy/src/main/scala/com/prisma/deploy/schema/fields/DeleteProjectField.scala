@@ -1,6 +1,6 @@
-package cool.graph.deploy.schema.fields
+package com.prisma.deploy.schema.fields
 
-import cool.graph.deploy.schema.mutations.DeleteProjectInput
+import com.prisma.deploy.schema.mutations.DeleteProjectInput
 import sangria.marshalling.{CoercedScalaResultMarshaller, FromInput}
 
 object DeleteProjectField {

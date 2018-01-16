@@ -1,9 +1,9 @@
-package cool.graph.metrics
+package com.prisma.metrics
 
 import akka.actor.ActorSystem
 import com.prisma.errors.ErrorReporter
 import com.timgroup.statsd.{NonBlockingStatsDClient, StatsDClient}
-import cool.graph.akkautil.SingleThreadedActorSystem
+import com.prisma.akkautil.SingleThreadedActorSystem
 
 import scala.concurrent.Await
 import scala.concurrent.duration._

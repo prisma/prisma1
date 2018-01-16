@@ -1,18 +1,18 @@
-package cool.graph.subscriptions.protocol
+package com.prisma.subscriptions.protocol
 
 import akka.actor.{Actor, ActorRef, Stash}
-import cool.graph.akkautil.{LogUnhandled, LogUnhandledExceptions}
-import cool.graph.auth.AuthImpl
-import cool.graph.messagebus.PubSubPublisher
-import cool.graph.messagebus.pubsub.Only
-import cool.graph.shared.models.{Project, ProjectWithClientId}
-import cool.graph.subscriptions.SubscriptionDependencies
-import cool.graph.subscriptions.helpers.ProjectHelper
-import cool.graph.subscriptions.metrics.SubscriptionMetrics
-import cool.graph.subscriptions.protocol.SubscriptionProtocolV07.Responses.SubscriptionSessionResponse
-import cool.graph.subscriptions.protocol.SubscriptionSessionActorV05.Internal.Authorization
-import cool.graph.subscriptions.resolving.SubscriptionsManager.Requests.EndSubscription
-import cool.graph.subscriptions.resolving.SubscriptionsManager.Responses.{
+import com.prisma.akkautil.{LogUnhandled, LogUnhandledExceptions}
+import com.prisma.auth.AuthImpl
+import com.prisma.messagebus.PubSubPublisher
+import com.prisma.messagebus.pubsub.Only
+import com.prisma.shared.models.{Project, ProjectWithClientId}
+import com.prisma.subscriptions.SubscriptionDependencies
+import com.prisma.subscriptions.helpers.ProjectHelper
+import com.prisma.subscriptions.metrics.SubscriptionMetrics
+import com.prisma.subscriptions.protocol.SubscriptionProtocolV07.Responses.SubscriptionSessionResponse
+import com.prisma.subscriptions.protocol.SubscriptionSessionActorV05.Internal.Authorization
+import com.prisma.subscriptions.resolving.SubscriptionsManager.Requests.EndSubscription
+import com.prisma.subscriptions.resolving.SubscriptionsManager.Responses.{
   CreateSubscriptionFailed,
   CreateSubscriptionSucceeded,
   ProjectSchemaChanged,
@@ -49,7 +49,7 @@ case class SubscriptionSessionActor(
   import SubscriptionProtocolV07.Responses._
   import akka.pattern.pipe
   import context.dispatcher
-  import cool.graph.subscriptions.resolving.SubscriptionsManager.Requests.CreateSubscription
+  import com.prisma.subscriptions.resolving.SubscriptionsManager.Requests.CreateSubscription
 
   val reporter = dependencies.reporter
 

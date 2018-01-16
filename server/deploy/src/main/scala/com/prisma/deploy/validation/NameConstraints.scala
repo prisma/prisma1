@@ -1,4 +1,4 @@
-package cool.graph.deploy.validation
+package com.prisma.deploy.validation
 
 object NameConstraints {
   // TODO: a few of those won't be needed in the long run. Remove them when we are sure what we need.

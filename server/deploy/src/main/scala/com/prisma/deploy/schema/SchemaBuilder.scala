@@ -1,16 +1,16 @@
-package cool.graph.deploy.schema
+package com.prisma.deploy.schema
 
 import akka.actor.ActorSystem
-import cool.graph.deploy.DeployDependencies
-import cool.graph.deploy.database.persistence.{MigrationPersistence, ProjectPersistence}
-import cool.graph.deploy.migration.SchemaMapper
-import cool.graph.deploy.migration.inference.{MigrationStepsInferrer, SchemaInferrer}
-import cool.graph.deploy.migration.migrator.Migrator
-import cool.graph.deploy.schema.fields.{AddProjectField, DeleteProjectField, DeployField, ManualMarshallerHelpers}
-import cool.graph.deploy.schema.mutations._
-import cool.graph.deploy.schema.types._
-import cool.graph.shared.models.{Project, ProjectId}
-import cool.graph.utils.future.FutureUtils.FutureOpt
+import com.prisma.deploy.DeployDependencies
+import com.prisma.deploy.database.persistence.{MigrationPersistence, ProjectPersistence}
+import com.prisma.deploy.migration.SchemaMapper
+import com.prisma.deploy.migration.inference.{MigrationStepsInferrer, SchemaInferrer}
+import com.prisma.deploy.migration.migrator.Migrator
+import com.prisma.deploy.schema.fields.{AddProjectField, DeleteProjectField, DeployField, ManualMarshallerHelpers}
+import com.prisma.deploy.schema.mutations._
+import com.prisma.deploy.schema.types._
+import com.prisma.shared.models.{Project, ProjectId}
+import com.prisma.utils.future.FutureUtils.FutureOpt
 import sangria.relay.Mutation
 import sangria.schema._
 import slick.jdbc.MySQLProfile.backend.DatabaseDef

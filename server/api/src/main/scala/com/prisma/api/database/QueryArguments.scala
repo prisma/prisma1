@@ -1,10 +1,10 @@
-package cool.graph.api.database
+package com.prisma.api.database
 
-import cool.graph.api.database.DatabaseQueryBuilder.{ResultListTransform, ResultTransform}
-import cool.graph.api.database.Types.DataItemFilterCollection
-import cool.graph.api.schema.APIErrors
-import cool.graph.api.schema.APIErrors.{InvalidFirstArgument, InvalidLastArgument, InvalidSkipArgument}
-import cool.graph.shared.models.{Field, TypeIdentifier}
+import com.prisma.api.database.DatabaseQueryBuilder.{ResultListTransform, ResultTransform}
+import com.prisma.api.database.Types.DataItemFilterCollection
+import com.prisma.api.schema.APIErrors
+import com.prisma.api.schema.APIErrors.{InvalidFirstArgument, InvalidLastArgument, InvalidSkipArgument}
+import com.prisma.shared.models.{Field, TypeIdentifier}
 import slick.jdbc.SQLActionBuilder
 
 case class QueryArguments(

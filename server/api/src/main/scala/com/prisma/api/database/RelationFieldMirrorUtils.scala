@@ -1,6 +1,6 @@
-package cool.graph.api.database
+package com.prisma.api.database
 
-import cool.graph.shared.models.{Field, Project, Relation}
+import com.prisma.shared.models.{Field, Project, Relation}
 
 object RelationFieldMirrorUtils {
   def mirrorColumnName(project: Project, field: Field, relation: Relation): String = {

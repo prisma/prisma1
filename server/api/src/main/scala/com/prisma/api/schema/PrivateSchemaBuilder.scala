@@ -1,11 +1,11 @@
-package cool.graph.api.schema
+package com.prisma.api.schema
 
 import akka.actor.ActorSystem
-import cool.graph.api.ApiDependencies
-import cool.graph.api.mutations.ClientMutationRunner
-import cool.graph.api.mutations.mutations.ResetData
-import cool.graph.api.subscriptions.schema.{SubscriptionQueryError, SubscriptionQueryValidator}
-import cool.graph.shared.models.{Model, Project}
+import com.prisma.api.ApiDependencies
+import com.prisma.api.mutations.ClientMutationRunner
+import com.prisma.api.mutations.mutations.ResetData
+import com.prisma.api.subscriptions.schema.{SubscriptionQueryError, SubscriptionQueryValidator}
+import com.prisma.shared.models.{Model, Project}
 import org.scalactic.{Bad, Good, Or}
 import sangria.schema.{Argument, BooleanType, Context, Field, ListType, ObjectType, OptionType, Schema, SchemaValidationRule, StringType}
 

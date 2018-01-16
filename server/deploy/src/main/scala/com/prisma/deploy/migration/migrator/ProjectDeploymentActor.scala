@@ -1,10 +1,10 @@
-package cool.graph.deploy.migration.migrator
+package com.prisma.deploy.migration.migrator
 
 import akka.actor.{Actor, Stash}
-import cool.graph.deploy.database.persistence.MigrationPersistence
-import cool.graph.deploy.migration.MigrationStepMapperImpl
-import cool.graph.deploy.schema.DeploymentInProgress
-import cool.graph.shared.models.{Migration, MigrationStep, Schema, Function}
+import com.prisma.deploy.database.persistence.MigrationPersistence
+import com.prisma.deploy.migration.MigrationStepMapperImpl
+import com.prisma.deploy.schema.DeploymentInProgress
+import com.prisma.shared.models.{Migration, MigrationStep, Schema, Function}
 import slick.jdbc.MySQLProfile.backend.DatabaseDef
 
 import scala.concurrent.Future

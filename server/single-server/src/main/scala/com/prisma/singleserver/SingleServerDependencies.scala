@@ -1,29 +1,29 @@
-package cool.graph.singleserver
+package com.prisma.singleserver
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import cool.graph.akkautil.http.SimpleHttpClient
-import cool.graph.api.ApiDependencies
-import cool.graph.api.database.Databases
-import cool.graph.api.project.{CachedProjectFetcherImpl, ProjectFetcher, ProjectFetcherImpl}
-import cool.graph.api.schema.{CachedSchemaBuilder, SchemaBuilder}
-import cool.graph.api.subscriptions.Webhook
-import cool.graph.deploy.DeployDependencies
-import cool.graph.deploy.migration.migrator.{AsyncMigrator, Migrator}
-import cool.graph.deploy.server.{ClusterAuthImpl, DummyClusterAuth}
-import cool.graph.graphql.GraphQlClient
-import cool.graph.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
-import cool.graph.messagebus.queue.inmemory.InMemoryAkkaQueue
-import cool.graph.messagebus.{PubSubPublisher, PubSubSubscriber, QueueConsumer, QueuePublisher}
-import cool.graph.shared.models.Project
-import cool.graph.subscriptions.SubscriptionDependencies
-import cool.graph.subscriptions.protocol.SubscriptionProtocolV05.Responses.SubscriptionSessionResponseV05
-import cool.graph.subscriptions.protocol.SubscriptionProtocolV07.Responses.SubscriptionSessionResponse
-import cool.graph.subscriptions.protocol.SubscriptionRequest
-import cool.graph.subscriptions.resolving.SubscriptionsManagerForProject.{SchemaInvalidated, SchemaInvalidatedMessage}
-import cool.graph.websocket.protocol.{Request => WebsocketRequest}
-import cool.graph.workers.dependencies.WorkerDependencies
-import cool.graph.workers.payloads.{Webhook => WorkerWebhook}
+import com.prisma.akkautil.http.SimpleHttpClient
+import com.prisma.api.ApiDependencies
+import com.prisma.api.database.Databases
+import com.prisma.api.project.{CachedProjectFetcherImpl, ProjectFetcher, ProjectFetcherImpl}
+import com.prisma.api.schema.{CachedSchemaBuilder, SchemaBuilder}
+import com.prisma.api.subscriptions.Webhook
+import com.prisma.deploy.DeployDependencies
+import com.prisma.deploy.migration.migrator.{AsyncMigrator, Migrator}
+import com.prisma.deploy.server.{ClusterAuthImpl, DummyClusterAuth}
+import com.prisma.graphql.GraphQlClient
+import com.prisma.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
+import com.prisma.messagebus.queue.inmemory.InMemoryAkkaQueue
+import com.prisma.messagebus.{PubSubPublisher, PubSubSubscriber, QueueConsumer, QueuePublisher}
+import com.prisma.shared.models.Project
+import com.prisma.subscriptions.SubscriptionDependencies
+import com.prisma.subscriptions.protocol.SubscriptionProtocolV05.Responses.SubscriptionSessionResponseV05
+import com.prisma.subscriptions.protocol.SubscriptionProtocolV07.Responses.SubscriptionSessionResponse
+import com.prisma.subscriptions.protocol.SubscriptionRequest
+import com.prisma.subscriptions.resolving.SubscriptionsManagerForProject.{SchemaInvalidated, SchemaInvalidatedMessage}
+import com.prisma.websocket.protocol.{Request => WebsocketRequest}
+import com.prisma.workers.dependencies.WorkerDependencies
+import com.prisma.workers.payloads.{Webhook => WorkerWebhook}
 import play.api.libs.json.Json
 
 trait SingleServerApiDependencies extends DeployDependencies with ApiDependencies with WorkerDependencies {
@@ -68,12 +68,12 @@ case class SingleServerDependencies()(implicit val system: ActorSystem, val mate
   override lazy val responsePubSubSubscriber: PubSubSubscriber[String] = responsePubSub
 
   lazy val converterResponse07ToString: SubscriptionSessionResponse => String = (response: SubscriptionSessionResponse) => {
-    import cool.graph.subscriptions.protocol.ProtocolV07.SubscriptionResponseWriters._
+    import com.prisma.subscriptions.protocol.ProtocolV07.SubscriptionResponseWriters._
     Json.toJson(response).toString
   }
 
   lazy val converterResponse05ToString: SubscriptionSessionResponseV05 => String = (response: SubscriptionSessionResponseV05) => {
-    import cool.graph.subscriptions.protocol.ProtocolV05.SubscriptionResponseWriters._
+    import com.prisma.subscriptions.protocol.ProtocolV05.SubscriptionResponseWriters._
     Json.toJson(response).toString
   }
 

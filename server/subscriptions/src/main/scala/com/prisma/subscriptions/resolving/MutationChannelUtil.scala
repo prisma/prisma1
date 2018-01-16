@@ -1,7 +1,7 @@
-package cool.graph.subscriptions.resolving
+package com.prisma.subscriptions.resolving
 
-import cool.graph.shared.models.ModelMutationType.ModelMutationType
-import cool.graph.shared.models.{Model, ModelMutationType}
+import com.prisma.shared.models.ModelMutationType.ModelMutationType
+import com.prisma.shared.models.{Model, ModelMutationType}
 
 trait MutationChannelUtil {
   protected def mutationChannelsForModel(projectId: String, model: Model): Vector[String] = {

@@ -1,12 +1,12 @@
-package cool.graph.messagebus.testkits
+package com.prisma.messagebus.testkits
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import akka.testkit.TestProbe
-import cool.graph.messagebus.QueueConsumer.ConsumeFn
-import cool.graph.messagebus.queue.inmemory.InMemoryAkkaQueue
-import cool.graph.messagebus.queue.{BackoffStrategy, ConstantBackoff}
-import cool.graph.messagebus.{ConsumerRef, Queue}
+import com.prisma.messagebus.QueueConsumer.ConsumeFn
+import com.prisma.messagebus.queue.inmemory.InMemoryAkkaQueue
+import com.prisma.messagebus.queue.{BackoffStrategy, ConstantBackoff}
+import com.prisma.messagebus.{ConsumerRef, Queue}
 
 import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.Future

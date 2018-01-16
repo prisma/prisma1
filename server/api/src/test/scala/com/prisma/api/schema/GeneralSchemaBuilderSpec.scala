@@ -1,9 +1,9 @@
-package cool.graph.api.schema
+package com.prisma.api.schema
 
-import cool.graph.api.ApiBaseSpec
-import cool.graph.shared.models.Project
-import cool.graph.shared.project_dsl.SchemaDsl
-import cool.graph.util.GraphQLSchemaMatchers
+import com.prisma.api.ApiBaseSpec
+import com.prisma.shared.models.Project
+import com.prisma.shared.project_dsl.SchemaDsl
+import com.prisma.util.GraphQLSchemaMatchers
 import org.scalatest.{Matchers, WordSpec}
 import sangria.renderer.SchemaRenderer
 

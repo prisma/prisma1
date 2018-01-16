@@ -1,11 +1,11 @@
-package cool.graph.messagebus.queue.inmemory
+package com.prisma.messagebus.queue.inmemory
 
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.stream.ActorMaterializer
-import cool.graph.messagebus.QueueConsumer.ConsumeFn
-import cool.graph.messagebus.queue.inmemory.InMemoryQueueingMessages._
-import cool.graph.messagebus.queue.{BackoffStrategy, LinearBackoff}
-import cool.graph.messagebus.{ConsumerRef, Queue}
+import com.prisma.messagebus.QueueConsumer.ConsumeFn
+import com.prisma.messagebus.queue.inmemory.InMemoryQueueingMessages._
+import com.prisma.messagebus.queue.{BackoffStrategy, LinearBackoff}
+import com.prisma.messagebus.{ConsumerRef, Queue}
 
 import scala.concurrent.duration._
 

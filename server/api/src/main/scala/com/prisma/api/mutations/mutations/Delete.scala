@@ -1,16 +1,16 @@
-package cool.graph.api.mutations.mutations
+package com.prisma.api.mutations.mutations
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import cool.graph.api.ApiDependencies
-import cool.graph.api.database.mutactions.mutactions.ServerSideSubscription
-import cool.graph.api.database.mutactions.{MutactionGroup, TransactionMutaction}
-import cool.graph.api.database.{DataItem, DataResolver}
-import cool.graph.api.mutations._
-import cool.graph.api.schema.{APIErrors, ObjectTypeBuilder}
-import cool.graph.shared.models.IdType.Id
-import cool.graph.shared.models.{Model, Project}
-import cool.graph.util.gc_value.GCStringConverter
+import com.prisma.api.ApiDependencies
+import com.prisma.api.database.mutactions.mutactions.ServerSideSubscription
+import com.prisma.api.database.mutactions.{MutactionGroup, TransactionMutaction}
+import com.prisma.api.database.{DataItem, DataResolver}
+import com.prisma.api.mutations._
+import com.prisma.api.schema.{APIErrors, ObjectTypeBuilder}
+import com.prisma.shared.models.IdType.Id
+import com.prisma.shared.models.{Model, Project}
+import com.prisma.util.gc_value.GCStringConverter
 import sangria.schema
 
 import scala.concurrent.ExecutionContext.Implicits.global

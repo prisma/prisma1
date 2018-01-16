@@ -1,10 +1,10 @@
-package cool.graph.deploy.migration.migrator
+package com.prisma.deploy.migration.migrator
 
-import cool.graph.deploy.migration.MigrationStepMapper
-import cool.graph.deploy.migration.mutactions.{ClientSqlMutaction, ClientSqlStatementResult}
-import cool.graph.deploy.specutils.DeploySpecBase
-import cool.graph.shared.models._
-import cool.graph.utils.await.AwaitUtils
+import com.prisma.deploy.migration.MigrationStepMapper
+import com.prisma.deploy.migration.mutactions.{ClientSqlMutaction, ClientSqlStatementResult}
+import com.prisma.deploy.specutils.DeploySpecBase
+import com.prisma.shared.models._
+import com.prisma.utils.await.AwaitUtils
 import org.scalatest.{FlatSpec, Matchers}
 import slick.dbio.DBIOAction
 

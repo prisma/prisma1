@@ -1,4 +1,4 @@
-package cool.graph.api.database
+package com.prisma.api.database
 
 object NameConstraints {
   def isValidEnumValueName(name: String): Boolean = name.length <= 191 && name.matches("^[A-Z][a-zA-Z0-9_]*$")

@@ -1,15 +1,15 @@
-package cool.graph.subscriptions.protocol
+package com.prisma.subscriptions.protocol
 
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.stream.ActorMaterializer
 import akka.testkit.{TestKit, TestProbe}
-import cool.graph.messagebus.pubsub.Message
-import cool.graph.messagebus.testkits._
-import cool.graph.subscriptions.SubscriptionDependenciesForTest
-import cool.graph.subscriptions.protocol.SubscriptionProtocolV07.Responses.SubscriptionSessionResponse
-import cool.graph.subscriptions.protocol.SubscriptionSessionManager.Requests.EnrichedSubscriptionRequestV05
-import cool.graph.subscriptions.resolving.SubscriptionsManager.Requests.{CreateSubscription, EndSubscription}
-import cool.graph.subscriptions.resolving.SubscriptionsManager.Responses.CreateSubscriptionSucceeded
+import com.prisma.messagebus.pubsub.Message
+import com.prisma.messagebus.testkits._
+import com.prisma.subscriptions.SubscriptionDependenciesForTest
+import com.prisma.subscriptions.protocol.SubscriptionProtocolV07.Responses.SubscriptionSessionResponse
+import com.prisma.subscriptions.protocol.SubscriptionSessionManager.Requests.EnrichedSubscriptionRequestV05
+import com.prisma.subscriptions.resolving.SubscriptionsManager.Requests.{CreateSubscription, EndSubscription}
+import com.prisma.subscriptions.resolving.SubscriptionsManager.Responses.CreateSubscriptionSucceeded
 import org.scalatest._
 import play.api.libs.json.Json
 
@@ -21,8 +21,8 @@ class SubscriptionSessionManagerProtocolV05Spec
     with Matchers
     with BeforeAndAfterAll {
 
-  import cool.graph.subscriptions.protocol.SubscriptionProtocolV05.Requests._
-  import cool.graph.subscriptions.protocol.SubscriptionProtocolV05.Responses._
+  import com.prisma.subscriptions.protocol.SubscriptionProtocolV05.Requests._
+  import com.prisma.subscriptions.protocol.SubscriptionProtocolV05.Responses._
 
   implicit val materializer = ActorMaterializer()
 

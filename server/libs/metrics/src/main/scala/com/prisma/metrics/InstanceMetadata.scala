@@ -1,8 +1,8 @@
-package cool.graph.metrics
+package com.prisma.metrics
 
 import com.twitter.finagle
 import com.twitter.finagle.http.{Method, Request, Response}
-import cool.graph.metrics.Utils._
+import com.prisma.metrics.Utils._
 
 import scala.concurrent.Future
 import com.twitter.conversions.time._

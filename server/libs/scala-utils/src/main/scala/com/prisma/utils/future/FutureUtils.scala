@@ -1,4 +1,4 @@
-package cool.graph.utils.future
+package com.prisma.utils.future
 
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.{Failure, Success, Try}

@@ -1,9 +1,9 @@
-package cool.graph.profiling
+package com.prisma.profiling
 
 import java.lang.management.{GarbageCollectorMXBean, ManagementFactory, MemoryUsage}
 
 import akka.actor.Cancellable
-import cool.graph.metrics.MetricsManager
+import com.prisma.metrics.MetricsManager
 
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.duration._

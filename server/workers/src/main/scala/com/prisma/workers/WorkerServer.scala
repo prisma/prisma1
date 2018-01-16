@@ -1,10 +1,10 @@
-package cool.graph.workers
+package com.prisma.workers
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.prisma.errors.ErrorReporter
-import cool.graph.akkautil.http.{Routes, Server}
-import cool.graph.workers.dependencies.WorkerDependencies
+import com.prisma.akkautil.http.{Routes, Server}
+import com.prisma.workers.dependencies.WorkerDependencies
 
 import scala.concurrent.Future
 import scala.util.{Failure, Success}

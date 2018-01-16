@@ -1,6 +1,6 @@
-package cool.graph.api.database
+package com.prisma.api.database
 
-import cool.graph.gc_values._
+import com.prisma.gc_values._
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 import slick.jdbc.MySQLProfile.api._

@@ -1,9 +1,9 @@
-package cool.graph.messagebus.testkits.spechelpers
+package com.prisma.messagebus.testkits.spechelpers
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import akka.testkit.TestKit
-import cool.graph.messagebus.testkits.{InMemoryPubSubTestKit, InMemoryQueueTestKit}
+import com.prisma.messagebus.testkits.{InMemoryPubSubTestKit, InMemoryQueueTestKit}
 
 import scala.reflect.ClassTag
 import scala.util.{Failure, Success, Try}

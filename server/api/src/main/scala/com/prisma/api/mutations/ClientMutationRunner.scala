@@ -1,9 +1,9 @@
-package cool.graph.api.mutations
+package com.prisma.api.mutations
 
-import cool.graph.api.ApiMetrics
-import cool.graph.api.database.mutactions._
-import cool.graph.api.database.{DataItem, DataResolver}
-import cool.graph.api.schema.{APIErrors, GeneralError}
+import com.prisma.api.ApiMetrics
+import com.prisma.api.database.mutactions._
+import com.prisma.api.database.{DataItem, DataResolver}
+import com.prisma.api.schema.{APIErrors, GeneralError}
 
 import scala.collection.immutable.Seq
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -12,7 +12,7 @@ import scala.util.{Failure, Try}
 
 object ClientMutationRunner {
 
-  import cool.graph.utils.future.FutureUtils._
+  import com.prisma.utils.future.FutureUtils._
 
   def run[T](
       clientMutation: ClientMutation[T],

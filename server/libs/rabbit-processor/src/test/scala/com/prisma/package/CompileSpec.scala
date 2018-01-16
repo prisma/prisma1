@@ -1,12 +1,12 @@
-package cool.graph
+package com.prisma
 
 import com.prisma.errors.BugsnagErrorReporter
 
 import scala.util.{Failure, Success, Try}
 
 object CompileSpec {
-  import cool.graph.rabbit.Import.Bindings._
-  import cool.graph.rabbit.Import._
+  import com.prisma.rabbit.Import.Bindings._
+  import com.prisma.rabbit.Import._
 
   implicit val reporter = BugsnagErrorReporter("")
   val amqpUri           = "amqp://localhost"

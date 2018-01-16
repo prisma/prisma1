@@ -1,4 +1,4 @@
-package cool.graph.messagebus.utils
+package com.prisma.messagebus.utils
 
 import scala.io.Source
 import scala.util.{Failure, Success, Try}

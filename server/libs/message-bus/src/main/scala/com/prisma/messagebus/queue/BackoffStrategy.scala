@@ -1,7 +1,7 @@
-package cool.graph.messagebus.queue
+package com.prisma.messagebus.queue
 
 import akka.pattern.after
-import cool.graph.akkautil.SingleThreadedActorSystem
+import com.prisma.akkautil.SingleThreadedActorSystem
 
 import scala.concurrent.Future
 import scala.concurrent.duration.FiniteDuration

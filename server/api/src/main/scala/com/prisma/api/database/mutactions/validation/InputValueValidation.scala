@@ -1,14 +1,14 @@
-package cool.graph.api.database.mutactions.validation
+package com.prisma.api.database.mutactions.validation
 
-import cool.graph.api.database.mutactions.MutactionVerificationSuccess
-import cool.graph.api.mutations.MutationTypes.ArgumentValue
-import cool.graph.api.schema.{APIErrors, CustomScalarTypes}
-import cool.graph.shared.models.IdType.Id
-import cool.graph.shared.models.{Field, Model, TypeIdentifier}
+import com.prisma.api.database.mutactions.MutactionVerificationSuccess
+import com.prisma.api.mutations.MutationTypes.ArgumentValue
+import com.prisma.api.schema.{APIErrors, CustomScalarTypes}
+import com.prisma.shared.models.IdType.Id
+import com.prisma.shared.models.{Field, Model, TypeIdentifier}
 import spray.json.JsonParser.ParsingException
 import spray.json._
 import ConstraintValueValidation._
-import cool.graph.api.database.{DatabaseConstraints, NameConstraints}
+import com.prisma.api.database.{DatabaseConstraints, NameConstraints}
 
 import scala.util.{Failure, Success, Try}
 

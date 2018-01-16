@@ -1,4 +1,4 @@
-package cool.graph.utils.boolean
+package com.prisma.utils.boolean
 
 object BooleanUtils {
   implicit class BoolToOption(val theBool: Boolean) extends AnyVal {

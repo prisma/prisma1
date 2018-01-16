@@ -1,12 +1,12 @@
-package cool.graph.deploy.migration.migrator
+package com.prisma.deploy.migration.migrator
 
 import akka.actor.{ActorSystem, Props}
 import akka.pattern.ask
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
-import cool.graph.deploy.database.persistence.{MigrationPersistence, ProjectPersistence}
-import cool.graph.deploy.migration.migrator.DeploymentProtocol.{Initialize, Schedule}
-import cool.graph.shared.models.{Migration, MigrationStep, Schema, Function}
+import com.prisma.deploy.database.persistence.{MigrationPersistence, ProjectPersistence}
+import com.prisma.deploy.migration.migrator.DeploymentProtocol.{Initialize, Schedule}
+import com.prisma.shared.models.{Migration, MigrationStep, Schema, Function}
 import slick.jdbc.MySQLProfile.backend.DatabaseDef
 
 import scala.concurrent.Future

@@ -1,8 +1,8 @@
-package cool.graph.graphql
+package com.prisma.graphql
 
 import akka.http.scaladsl.Http
 import akka.stream.ActorMaterializer
-import cool.graph.akkautil.SingleThreadedActorSystem
+import com.prisma.akkautil.SingleThreadedActorSystem
 import play.api.libs.json.{JsPath, JsValue, Json, Reads}
 
 import scala.concurrent.Future

@@ -1,4 +1,4 @@
-package cool.graph.graphql
+package com.prisma.graphql
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.HttpExt

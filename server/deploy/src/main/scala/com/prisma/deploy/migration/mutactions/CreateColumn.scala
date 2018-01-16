@@ -1,9 +1,9 @@
-package cool.graph.deploy.migration.mutactions
+package com.prisma.deploy.migration.mutactions
 
-import cool.graph.deploy.database.DatabaseMutationBuilder
-import cool.graph.deploy.validation.NameConstraints
-import cool.graph.shared.errors.UserInputErrors
-import cool.graph.shared.models.{Field, Model}
+import com.prisma.deploy.database.DatabaseMutationBuilder
+import com.prisma.deploy.validation.NameConstraints
+import com.prisma.shared.errors.UserInputErrors
+import com.prisma.shared.models.{Field, Model}
 
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}

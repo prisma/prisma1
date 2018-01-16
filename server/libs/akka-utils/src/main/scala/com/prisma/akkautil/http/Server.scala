@@ -1,4 +1,4 @@
-package cool.graph.akkautil.http
+package com.prisma.akkautil.http
 
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.Directives.pathPrefix

@@ -1,12 +1,12 @@
-package cool.graph.graphql
+package com.prisma.graphql
 
-import cool.graph.stub.Stub
+import com.prisma.stub.Stub
 import org.scalatest.{FlatSpec, Matchers}
 
 import scala.concurrent.{Await, Awaitable}
 
 class GraphQlClientSpec extends FlatSpec with Matchers {
-  import cool.graph.stub.Import._
+  import com.prisma.stub.Import._
   import scala.concurrent.ExecutionContext.Implicits.global
 
   val defaultStub = stub("/graphql-endpoint")

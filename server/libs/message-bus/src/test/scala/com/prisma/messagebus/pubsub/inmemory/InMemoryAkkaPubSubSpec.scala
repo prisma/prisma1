@@ -1,9 +1,9 @@
-package cool.graph.messagebus.pubsub.inmemory
+package com.prisma.messagebus.pubsub.inmemory
 
 import akka.testkit.{TestKit, TestProbe}
-import cool.graph.akkautil.SingleThreadedActorSystem
-import cool.graph.messagebus.{PubSub, PubSubPublisher}
-import cool.graph.messagebus.pubsub.{Everything, Message, Only}
+import com.prisma.akkautil.SingleThreadedActorSystem
+import com.prisma.messagebus.{PubSub, PubSubPublisher}
+import com.prisma.messagebus.pubsub.{Everything, Message, Only}
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Matchers, WordSpecLike}
 import scala.concurrent.duration._
 

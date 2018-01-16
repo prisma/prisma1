@@ -1,12 +1,12 @@
-package cool.graph.api.mutations.mutations
+package com.prisma.api.mutations.mutations
 
-import cool.graph.api.ApiDependencies
-import cool.graph.api.database.DataResolver
-import cool.graph.api.database.Types.DataItemFilterCollection
-import cool.graph.api.database.mutactions.mutactions.DeleteDataItems
-import cool.graph.api.database.mutactions.{MutactionGroup, TransactionMutaction}
-import cool.graph.api.mutations._
-import cool.graph.shared.models.{Model, Project}
+import com.prisma.api.ApiDependencies
+import com.prisma.api.database.DataResolver
+import com.prisma.api.database.Types.DataItemFilterCollection
+import com.prisma.api.database.mutactions.mutactions.DeleteDataItems
+import com.prisma.api.database.mutactions.{MutactionGroup, TransactionMutaction}
+import com.prisma.api.mutations._
+import com.prisma.shared.models.{Model, Project}
 
 import scala.concurrent.Future
 

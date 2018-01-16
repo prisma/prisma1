@@ -1,7 +1,7 @@
-package cool.graph.deploy.database.schema.queries
+package com.prisma.deploy.database.schema.queries
 
-import cool.graph.deploy.specutils.DeploySpecBase
-import cool.graph.shared.models.{CreateField, CreateModel, Migration, ProjectId}
+import com.prisma.deploy.specutils.DeploySpecBase
+import com.prisma.shared.models.{CreateField, CreateModel, Migration, ProjectId}
 import org.scalatest.{FlatSpec, Matchers}
 
 class MigrationStatusSpec extends FlatSpec with Matchers with DeploySpecBase {

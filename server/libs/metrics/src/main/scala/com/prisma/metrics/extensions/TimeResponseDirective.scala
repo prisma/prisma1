@@ -1,11 +1,11 @@
-package cool.graph.metrics.extensions
+package com.prisma.metrics.extensions
 
 import akka.event.Logging.LogLevel
 import akka.event.{Logging, LoggingAdapter}
 import akka.http.scaladsl.model.HttpRequest
 import akka.http.scaladsl.server.RouteResult.{Complete, Rejected}
 import akka.http.scaladsl.server.directives.{DebuggingDirectives, LoggingMagnet}
-import cool.graph.metrics.{CustomTag, MetricsManager, TimerMetric}
+import com.prisma.metrics.{CustomTag, MetricsManager, TimerMetric}
 
 trait TimeResponseDirective {
 

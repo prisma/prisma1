@@ -1,14 +1,14 @@
-package cool.graph.messagebus.queue.rabbit
+package com.prisma.messagebus.queue.rabbit
 
 import java.nio.charset.Charset
 
 import akka.actor.ActorSystem
 import akka.testkit.{TestKit, TestProbe}
 import com.prisma.errors.BugsnagErrorReporter
-import cool.graph.messagebus.queue.ConstantBackoff
-import cool.graph.messagebus.utils.RabbitUtils
-import cool.graph.rabbit.Bindings.RoutingKey
-import cool.graph.rabbit.{Consumer, Delivery}
+import com.prisma.messagebus.queue.ConstantBackoff
+import com.prisma.messagebus.utils.RabbitUtils
+import com.prisma.rabbit.Bindings.RoutingKey
+import com.prisma.rabbit.{Consumer, Delivery}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Matchers, WordSpecLike}
 

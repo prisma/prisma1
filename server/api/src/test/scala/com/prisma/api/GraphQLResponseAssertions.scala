@@ -1,7 +1,7 @@
-package cool.graph.api
+package com.prisma.api
 
-import cool.graph.util.json.SprayJsonExtensions
-import cool.graph.util.json.PlaySprayConversions
+import com.prisma.util.json.SprayJsonExtensions
+import com.prisma.util.json.PlaySprayConversions
 import spray.json._
 import play.api.libs.json.{JsValue => PJsValue}
 

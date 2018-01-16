@@ -1,10 +1,10 @@
-package cool.graph.rabbit
+package com.prisma.rabbit
 
 import java.nio.charset.StandardCharsets
 
 import com.prisma.errors.ErrorReporter
 import com.rabbitmq.client.{Channel => RabbitChannel, Consumer => RabbitConsumer, _}
-import cool.graph.rabbit.Bindings.Binding
+import com.prisma.rabbit.Bindings.Binding
 
 import scala.util.Try
 

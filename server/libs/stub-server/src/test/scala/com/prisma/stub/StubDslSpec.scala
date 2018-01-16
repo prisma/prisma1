@@ -1,6 +1,6 @@
-package cool.graph.stub
+package com.prisma.stub
 
-import cool.graph.stub.StubDsl.Default.Request
+import com.prisma.stub.StubDsl.Default.Request
 import org.specs2.mutable.Specification
 
 class StubDslSpec extends Specification {

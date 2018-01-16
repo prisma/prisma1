@@ -1,9 +1,9 @@
-package cool.graph.api.mutations
+package com.prisma.api.mutations
 
-import cool.graph.api.database.mutactions._
-import cool.graph.api.database.{DataItem, DataResolver}
+import com.prisma.api.database.mutactions._
+import com.prisma.api.database.{DataItem, DataResolver}
 import cool.graph.cuid.Cuid
-import cool.graph.shared.models.IdType.Id
+import com.prisma.shared.models.IdType.Id
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future

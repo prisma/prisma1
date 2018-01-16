@@ -1,8 +1,8 @@
-package cool.graph.deploy
+package com.prisma.deploy
 
 import java.time.Instant
 
-import cool.graph.deploy.server.ClusterAuthImpl
+import com.prisma.deploy.server.ClusterAuthImpl
 import org.scalatest.{FlatSpec, Matchers}
 
 class ClusterAuthSpec extends FlatSpec with Matchers {

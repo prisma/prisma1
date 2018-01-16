@@ -1,6 +1,6 @@
-package cool.graph.shared.errors
+package com.prisma.shared.errors
 
-import cool.graph.shared.models.TypeIdentifier.TypeIdentifier
+import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
 
 // errors caused by user input - these errors should not appear in simple or relay!
 object UserInputErrors {

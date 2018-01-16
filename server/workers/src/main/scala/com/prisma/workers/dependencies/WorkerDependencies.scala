@@ -1,9 +1,9 @@
-package cool.graph.workers.dependencies
+package com.prisma.workers.dependencies
 
 import com.prisma.errors.ErrorReporter
-import cool.graph.akkautil.http.SimpleHttpClient
-import cool.graph.messagebus.QueueConsumer
-import cool.graph.workers.payloads.Webhook
+import com.prisma.akkautil.http.SimpleHttpClient
+import com.prisma.messagebus.QueueConsumer
+import com.prisma.workers.payloads.Webhook
 
 trait WorkerDependencies {
   def httpClient: SimpleHttpClient

@@ -1,7 +1,7 @@
-package cool.graph.api.database.mutactions.mutactions
+package com.prisma.api.database.mutactions.mutactions
 
-import cool.graph.api.database.DatabaseMutationBuilder
-import cool.graph.api.database.mutactions.{ClientSqlDataChangeMutaction, ClientSqlStatementResult}
+import com.prisma.api.database.DatabaseMutationBuilder
+import com.prisma.api.database.mutactions.{ClientSqlDataChangeMutaction, ClientSqlStatementResult}
 
 import scala.concurrent.Future
 

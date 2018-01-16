@@ -1,6 +1,6 @@
-package cool.graph.metrics
+package com.prisma.metrics
 
-import cool.graph.metrics.utils.{TestLiveMetricsManager, TestMetricsManager}
+import com.prisma.metrics.utils.{TestLiveMetricsManager, TestMetricsManager}
 import org.scalatest.{FlatSpec, Matchers}
 
 class MetricsTagSpec extends FlatSpec with Matchers {

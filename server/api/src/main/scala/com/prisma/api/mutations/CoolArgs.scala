@@ -1,10 +1,10 @@
-package cool.graph.api.mutations
+package com.prisma.api.mutations
 
-import cool.graph.api.mutations.MutationTypes.ArgumentValue
-import cool.graph.api.schema.APIErrors
-import cool.graph.gc_values.{GCValue, GraphQLIdGCValue}
-import cool.graph.shared.models._
-import cool.graph.util.gc_value.{GCAnyConverter, GCValueExtractor}
+import com.prisma.api.mutations.MutationTypes.ArgumentValue
+import com.prisma.api.schema.APIErrors
+import com.prisma.gc_values.{GCValue, GraphQLIdGCValue}
+import com.prisma.shared.models._
+import com.prisma.util.gc_value.{GCAnyConverter, GCValueExtractor}
 
 import scala.collection.immutable.Seq
 

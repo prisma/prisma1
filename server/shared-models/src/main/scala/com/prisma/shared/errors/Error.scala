@@ -1,4 +1,4 @@
-package cool.graph.shared.errors
+package com.prisma.shared.errors
 
 abstract class UserFacingError(message: String, errorCode: Int) extends Exception {
   val code: Int = errorCode

@@ -1,10 +1,10 @@
-package cool.graph.akkautil.throttler
+package com.prisma.akkautil.throttler
 
 import java.util.concurrent.TimeUnit
 
 import akka.actor.ActorSystem
-import cool.graph.akkautil.specs2.{AcceptanceSpecification, AkkaTestKitSpecs2Context}
-import cool.graph.akkautil.throttler.Throttler.{ThrottleBufferFullException, ThrottleCallTimeoutException}
+import com.prisma.akkautil.specs2.{AcceptanceSpecification, AkkaTestKitSpecs2Context}
+import com.prisma.akkautil.throttler.Throttler.{ThrottleBufferFullException, ThrottleCallTimeoutException}
 
 import scala.concurrent.{Await, Awaitable, Future}
 import scala.concurrent.duration.FiniteDuration

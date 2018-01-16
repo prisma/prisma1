@@ -1,4 +1,4 @@
-package cool.graph.api.database.mutactions
+package com.prisma.api.database.mutactions
 
 case class MutactionGroup(mutactions: List[Mutaction], async: Boolean) {
 

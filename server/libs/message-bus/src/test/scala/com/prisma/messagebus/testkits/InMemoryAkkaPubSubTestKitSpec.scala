@@ -1,8 +1,8 @@
-package cool.graph.messagebus.testkits
+package com.prisma.messagebus.testkits
 
-import cool.graph.akkautil.SingleThreadedActorSystem
-import cool.graph.messagebus.pubsub.{Message, Only}
-import cool.graph.messagebus.testkits.spechelpers.InMemoryMessageBusTestKits
+import com.prisma.akkautil.SingleThreadedActorSystem
+import com.prisma.messagebus.pubsub.{Message, Only}
+import com.prisma.messagebus.testkits.spechelpers.InMemoryMessageBusTestKits
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Matchers, WordSpecLike}
 

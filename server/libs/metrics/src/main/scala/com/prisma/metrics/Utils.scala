@@ -1,4 +1,4 @@
-package cool.graph.metrics
+package com.prisma.metrics
 
 import com.twitter.util.{Return, Throw, Future => TwitterFuture, Promise => TwitterPromise}
 import scala.concurrent.{ExecutionContext, Future => ScalaFuture, Promise => ScalaPromise}

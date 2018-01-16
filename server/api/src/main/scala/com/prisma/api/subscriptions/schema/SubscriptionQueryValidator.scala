@@ -1,7 +1,7 @@
-package cool.graph.api.subscriptions.schema
+package com.prisma.api.subscriptions.schema
 
-import cool.graph.api.ApiDependencies
-import cool.graph.shared.models.{Model, ModelMutationType, Project}
+import com.prisma.api.ApiDependencies
+import com.prisma.shared.models.{Model, ModelMutationType, Project}
 import org.scalactic.{Bad, Good, Or}
 import sangria.ast.Document
 import sangria.parser.QueryParser

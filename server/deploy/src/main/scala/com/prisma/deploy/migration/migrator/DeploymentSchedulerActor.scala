@@ -1,7 +1,7 @@
-package cool.graph.deploy.migration.migrator
+package com.prisma.deploy.migration.migrator
 
 import akka.actor.{Actor, ActorRef, Props, Stash, Terminated}
-import cool.graph.deploy.database.persistence.{MigrationPersistence, ProjectPersistence}
+import com.prisma.deploy.database.persistence.{MigrationPersistence, ProjectPersistence}
 
 import scala.collection.mutable
 import scala.concurrent.Future

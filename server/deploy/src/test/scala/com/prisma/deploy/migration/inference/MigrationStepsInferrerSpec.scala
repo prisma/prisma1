@@ -1,9 +1,9 @@
-package cool.graph.deploy.migration.inference
+package com.prisma.deploy.migration.inference
 
-import cool.graph.deploy.specutils.DeploySpecBase
-import cool.graph.shared.models._
-import cool.graph.shared.project_dsl.SchemaDsl
-import cool.graph.shared.project_dsl.SchemaDsl.SchemaBuilder
+import com.prisma.deploy.specutils.DeploySpecBase
+import com.prisma.shared.models._
+import com.prisma.shared.project_dsl.SchemaDsl
+import com.prisma.shared.project_dsl.SchemaDsl.SchemaBuilder
 import org.scalatest.{FlatSpec, Matchers}
 
 class MigrationStepsInferrerSpec extends FlatSpec with Matchers with DeploySpecBase {

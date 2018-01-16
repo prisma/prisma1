@@ -1,6 +1,6 @@
-package cool.graph.websocket.protocol
+package com.prisma.websocket.protocol
 
-import cool.graph.messagebus.Conversions
+import com.prisma.messagebus.Conversions
 import play.api.libs.json.Json
 
 object Request {

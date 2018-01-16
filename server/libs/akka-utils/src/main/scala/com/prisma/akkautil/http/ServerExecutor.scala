@@ -1,4 +1,4 @@
-package cool.graph.akkautil.http
+package com.prisma.akkautil.http
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http

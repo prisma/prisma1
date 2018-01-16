@@ -1,11 +1,11 @@
-package cool.graph.client.server
+package com.prisma.client.server
 
 import akka.http.scaladsl.model.StatusCodes.OK
 import akka.http.scaladsl.model._
 import com.prisma.sangria.utils.ErrorHandler
-import cool.graph.api.ApiDependencies
-import cool.graph.api.schema.ApiUserContext
-import cool.graph.api.server.{GraphQlQuery, GraphQlRequest}
+import com.prisma.api.ApiDependencies
+import com.prisma.api.schema.ApiUserContext
+import com.prisma.api.server.{GraphQlQuery, GraphQlRequest}
 import sangria.execution.{Executor, QueryAnalysisError}
 import sangria.parser.SyntaxError
 import spray.json.{JsArray, JsValue}
@@ -25,7 +25,7 @@ case class GraphQlRequestHandlerImpl(
     extends GraphQlRequestHandler {
 
   import apiDependencies.system.dispatcher
-  import cool.graph.api.server.JsonMarshalling._
+  import com.prisma.api.server.JsonMarshalling._
 
   override def handle(graphQlRequest: GraphQlRequest): Future[(StatusCode, JsValue)] = {
     val jsonResult = if (!graphQlRequest.isBatch) {

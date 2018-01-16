@@ -1,12 +1,12 @@
-package cool.graph.deploy.database.persistence
+package com.prisma.deploy.database.persistence
 
-import cool.graph.deploy.database.tables.{Migration, Project}
-import cool.graph.shared.models
-import cool.graph.shared.models.{MigrationStep, Schema}
+import com.prisma.deploy.database.tables.{Migration, Project}
+import com.prisma.shared.models
+import com.prisma.shared.models.{MigrationStep, Schema}
 
 object DbToModelMapper {
-  import cool.graph.shared.models.MigrationStepsJsonFormatter._
-  import cool.graph.shared.models.ProjectJsonFormatter._
+  import com.prisma.shared.models.MigrationStepsJsonFormatter._
+  import com.prisma.shared.models.ProjectJsonFormatter._
 
   def convert(project: Project, migration: Migration): models.Project = {
     models.Project(

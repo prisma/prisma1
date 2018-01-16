@@ -1,4 +1,4 @@
-package cool.graph.gc_values
+package com.prisma.gc_values
 
 import org.scalactic.Or
 

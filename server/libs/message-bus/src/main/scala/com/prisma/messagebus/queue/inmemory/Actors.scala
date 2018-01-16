@@ -1,10 +1,10 @@
-package cool.graph.messagebus.queue.inmemory
+package com.prisma.messagebus.queue.inmemory
 
 import akka.actor.{Actor, ActorRef, Terminated}
 import akka.routing.{ActorRefRoutee, RoundRobinRoutingLogic, Router}
-import cool.graph.messagebus.QueueConsumer.ConsumeFn
-import cool.graph.messagebus.queue.BackoffStrategy
-import cool.graph.messagebus.queue.inmemory.InMemoryQueueingMessages._
+import com.prisma.messagebus.QueueConsumer.ConsumeFn
+import com.prisma.messagebus.queue.BackoffStrategy
+import com.prisma.messagebus.queue.inmemory.InMemoryQueueingMessages._
 
 import scala.util.Failure
 

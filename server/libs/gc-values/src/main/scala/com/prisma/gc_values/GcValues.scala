@@ -1,4 +1,4 @@
-package cool.graph.gc_values
+package com.prisma.gc_values
 
 import org.joda.time.DateTime
 import play.api.libs.json.JsValue

@@ -1,6 +1,6 @@
-package cool.graph.deploy.specutils
+package com.prisma.deploy.specutils
 
-import cool.graph.util.json.PlaySprayConversions
+import com.prisma.util.json.PlaySprayConversions
 import spray.json._
 import play.api.libs.json.{JsValue => PJsValue}
 

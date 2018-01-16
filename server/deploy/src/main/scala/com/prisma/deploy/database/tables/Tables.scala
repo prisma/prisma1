@@ -1,4 +1,4 @@
-package cool.graph.deploy.database.tables
+package com.prisma.deploy.database.tables
 
 import slick.lifted.TableQuery
 

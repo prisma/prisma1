@@ -1,18 +1,18 @@
-package cool.graph.subscriptions
+package com.prisma.subscriptions
 
 import akka.actor.{ActorSystem, Props}
 import akka.stream.ActorMaterializer
 import com.prisma.errors.ErrorReporter
-import cool.graph.akkautil.http.{Routes, Server, ServerExecutor}
-import cool.graph.messagebus.pubsub.Only
-import cool.graph.subscriptions.protocol.SubscriptionProtocolV05.Requests.SubscriptionSessionRequestV05
-import cool.graph.subscriptions.protocol.SubscriptionProtocolV07.Requests.SubscriptionSessionRequest
-import cool.graph.subscriptions.protocol.SubscriptionProtocolV07.Responses.GqlError
-import cool.graph.subscriptions.protocol.SubscriptionSessionManager.Requests.{EnrichedSubscriptionRequest, EnrichedSubscriptionRequestV05, StopSession}
-import cool.graph.subscriptions.protocol.{StringOrInt, SubscriptionRequest, SubscriptionSessionManager}
-import cool.graph.subscriptions.resolving.SubscriptionsManager
-import cool.graph.subscriptions.util.PlayJson
-import cool.graph.websocket.WebsocketServer
+import com.prisma.akkautil.http.{Routes, Server, ServerExecutor}
+import com.prisma.messagebus.pubsub.Only
+import com.prisma.subscriptions.protocol.SubscriptionProtocolV05.Requests.SubscriptionSessionRequestV05
+import com.prisma.subscriptions.protocol.SubscriptionProtocolV07.Requests.SubscriptionSessionRequest
+import com.prisma.subscriptions.protocol.SubscriptionProtocolV07.Responses.GqlError
+import com.prisma.subscriptions.protocol.SubscriptionSessionManager.Requests.{EnrichedSubscriptionRequest, EnrichedSubscriptionRequestV05, StopSession}
+import com.prisma.subscriptions.protocol.{StringOrInt, SubscriptionRequest, SubscriptionSessionManager}
+import com.prisma.subscriptions.resolving.SubscriptionsManager
+import com.prisma.subscriptions.util.PlayJson
+import com.prisma.websocket.WebsocketServer
 import de.heikoseeberger.akkahttpplayjson.PlayJsonSupport
 import play.api.libs.json.{JsError, JsSuccess}
 
@@ -60,8 +60,8 @@ case class SimpleSubscriptionsServer(prefix: String = "")(
   )
 
   def handleProtocolMessage(projectId: String, sessionId: String, messageBody: String) = {
-    import cool.graph.subscriptions.protocol.ProtocolV05.SubscriptionRequestReaders._
-    import cool.graph.subscriptions.protocol.ProtocolV07.SubscriptionRequestReaders._
+    import com.prisma.subscriptions.protocol.ProtocolV05.SubscriptionRequestReaders._
+    import com.prisma.subscriptions.protocol.ProtocolV07.SubscriptionRequestReaders._
 
     val currentProtocol  = PlayJson.parse(messageBody).flatMap(_.validate[SubscriptionSessionRequest])
     lazy val oldProtocol = PlayJson.parse(messageBody).flatMap(_.validate[SubscriptionSessionRequestV05])

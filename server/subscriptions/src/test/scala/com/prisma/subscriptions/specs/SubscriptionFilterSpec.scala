@@ -1,12 +1,12 @@
-package cool.graph.subscriptions.specs
+package com.prisma.subscriptions.specs
 
-import cool.graph.api.database.mutactions.mutactions.{AddDataItemToManyRelation, CreateDataItem}
-import cool.graph.api.mutations.MutationTypes.ArgumentValue
-import cool.graph.api.mutations.{NodeSelector, ParentInfo}
-import cool.graph.messagebus.pubsub.Only
-import cool.graph.shared.models.{Enum, Model, Project}
-import cool.graph.shared.project_dsl.SchemaDsl
-import cool.graph.utils.await.AwaitUtils
+import com.prisma.api.database.mutactions.mutactions.{AddDataItemToManyRelation, CreateDataItem}
+import com.prisma.api.mutations.MutationTypes.ArgumentValue
+import com.prisma.api.mutations.{NodeSelector, ParentInfo}
+import com.prisma.messagebus.pubsub.Only
+import com.prisma.shared.models.{Enum, Model, Project}
+import com.prisma.shared.project_dsl.SchemaDsl
+import com.prisma.utils.await.AwaitUtils
 import org.scalatest.{FlatSpec, Matchers}
 import play.api.libs.json.Json
 import spray.json.JsString

@@ -1,4 +1,4 @@
-package cool.graph.util.gcvalueconverters
+package com.prisma.util.gcvalueconverters
 
 import org.scalatest.{FlatSpec, Matchers}
 

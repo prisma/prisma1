@@ -1,7 +1,7 @@
-package cool.graph.deploy.schema
+package com.prisma.deploy.schema
 
 import com.prisma.sangria.utils.ErrorWithCode
-import cool.graph.shared.models.ProjectId
+import com.prisma.shared.models.ProjectId
 
 trait DeployApiError extends Exception with ErrorWithCode {
   def message: String

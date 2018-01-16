@@ -1,8 +1,8 @@
-package cool.graph.deploy.database.persistence
+package com.prisma.deploy.database.persistence
 
-import cool.graph.deploy.database.tables.Tables
-import cool.graph.deploy.specutils.{DeploySpecBase, TestProject}
-import cool.graph.shared.models.{Migration, MigrationId, MigrationStatus}
+import com.prisma.deploy.database.tables.Tables
+import com.prisma.deploy.specutils.{DeploySpecBase, TestProject}
+import com.prisma.shared.models.{Migration, MigrationId, MigrationStatus}
 import org.scalatest.{FlatSpec, Matchers}
 import slick.jdbc.MySQLProfile.api._
 

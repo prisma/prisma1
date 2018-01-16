@@ -1,9 +1,9 @@
-package cool.graph.util.gcvalueconverters
+package com.prisma.util.gcvalueconverters
 
-import cool.graph.gc_values._
-import cool.graph.shared.models.TypeIdentifier
-import cool.graph.shared.models.TypeIdentifier.TypeIdentifier
-import cool.graph.util.gc_value.GCStringDBConverter
+import com.prisma.gc_values._
+import com.prisma.shared.models.TypeIdentifier
+import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
+import com.prisma.util.gc_value.GCStringDBConverter
 import org.joda.time.{DateTime, DateTimeZone}
 import org.scalactic.{Bad, Good}
 import org.scalatest.{FlatSpec, Matchers}

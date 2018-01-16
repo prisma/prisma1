@@ -1,12 +1,12 @@
-package cool.graph.messagebus.pubsub.rabbit
+package com.prisma.messagebus.pubsub.rabbit
 
 import akka.actor.{ActorRef, ActorSystem}
 import com.prisma.errors.ErrorReporter
-import cool.graph.akkautil.SingleThreadedActorSystem
-import cool.graph.messagebus.Conversions.{ByteMarshaller, ByteUnmarshaller, Converter}
-import cool.graph.messagebus._
-import cool.graph.messagebus.pubsub.{Message, Only, Subscription, Topic}
-import cool.graph.messagebus.utils.RabbitUtils
+import com.prisma.akkautil.SingleThreadedActorSystem
+import com.prisma.messagebus.Conversions.{ByteMarshaller, ByteUnmarshaller, Converter}
+import com.prisma.messagebus._
+import com.prisma.messagebus.pubsub.{Message, Only, Subscription, Topic}
+import com.prisma.messagebus.utils.RabbitUtils
 
 import scala.concurrent.Await
 

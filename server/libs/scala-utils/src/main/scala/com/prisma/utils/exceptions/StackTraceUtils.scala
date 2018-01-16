@@ -1,4 +1,4 @@
-package cool.graph.utils.exceptions
+package com.prisma.utils.exceptions
 
 import java.io.StringWriter
 import java.io.PrintWriter

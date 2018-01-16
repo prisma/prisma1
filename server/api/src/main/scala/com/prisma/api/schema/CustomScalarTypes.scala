@@ -1,7 +1,7 @@
-package cool.graph.api.schema
+package com.prisma.api.schema
 
-import cool.graph.shared.models.TypeIdentifier.TypeIdentifier
-import cool.graph.shared.models.{Field, TypeIdentifier}
+import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
+import com.prisma.shared.models.{Field, TypeIdentifier}
 import org.joda.time.format.DateTimeFormat
 import org.joda.time.{DateTime, DateTimeZone}
 import sangria.ast

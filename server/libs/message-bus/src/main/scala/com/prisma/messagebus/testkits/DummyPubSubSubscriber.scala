@@ -1,11 +1,11 @@
-package cool.graph.messagebus.testkits
+package com.prisma.messagebus.testkits
 
 import akka.actor.{ActorRef, ActorSystem}
 import akka.testkit.TestProbe
-import cool.graph.akkautil.SingleThreadedActorSystem
-import cool.graph.messagebus.Conversions.Converter
-import cool.graph.messagebus.{PubSubPublisher, PubSubSubscriber}
-import cool.graph.messagebus.pubsub.{Message, Only, Subscription, Topic}
+import com.prisma.akkautil.SingleThreadedActorSystem
+import com.prisma.messagebus.Conversions.Converter
+import com.prisma.messagebus.{PubSubPublisher, PubSubSubscriber}
+import com.prisma.messagebus.pubsub.{Message, Only, Subscription, Topic}
 
 object DummyPubSubSubscriber {
   // Initializes a minimal actor system to use

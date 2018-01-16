@@ -1,12 +1,12 @@
-package cool.graph.api.schema
+package com.prisma.api.schema
 
-import cool.graph.api.schema.CustomScalarTypes.{DateTimeType, JsonType}
-import cool.graph.api.database._
-import cool.graph.api.database.DeferredTypes._
-import cool.graph.api.database.Types.DataItemFilterCollection
-import cool.graph.api.mutations.BatchPayload
-import cool.graph.shared.models
-import cool.graph.shared.models.{Field, Model, TypeIdentifier}
+import com.prisma.api.schema.CustomScalarTypes.{DateTimeType, JsonType}
+import com.prisma.api.database._
+import com.prisma.api.database.DeferredTypes._
+import com.prisma.api.database.Types.DataItemFilterCollection
+import com.prisma.api.mutations.BatchPayload
+import com.prisma.shared.models
+import com.prisma.shared.models.{Field, Model, TypeIdentifier}
 import org.joda.time.{DateTime, DateTimeZone}
 import org.joda.time.format.DateTimeFormat
 import sangria.schema.{Field => SangriaField, _}
@@ -171,7 +171,7 @@ class ObjectTypeBuilder(
   }
 
   def mapToUniqueArguments(model: models.Model): List[Argument[_]] = {
-    import cool.graph.util.coolSangria.FromInputImplicit.DefaultScalaResultMarshaller
+    import com.prisma.util.coolSangria.FromInputImplicit.DefaultScalaResultMarshaller
 
     model.scalarNonListFields
       .filter(_.isUnique)
@@ -258,7 +258,7 @@ class ObjectTypeBuilder(
 
   def extractUniqueArgument(model: models.Model, ctx: Context[ApiUserContext, Unit]): Argument[_] = {
 
-    import cool.graph.util.coolSangria.FromInputImplicit.DefaultScalaResultMarshaller
+    import com.prisma.util.coolSangria.FromInputImplicit.DefaultScalaResultMarshaller
 
     val args = model.scalarNonListFields
       .filter(_.isUnique)

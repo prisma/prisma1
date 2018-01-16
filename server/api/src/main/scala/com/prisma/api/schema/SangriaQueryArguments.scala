@@ -1,14 +1,14 @@
-package cool.graph.api.schema
+package com.prisma.api.schema
 
-import cool.graph.shared.models
-import cool.graph.shared.models.Model
-import cool.graph.api.database.Types.DataItemFilterCollection
-import cool.graph.api.database.{OrderBy, QueryArguments, SortOrder}
+import com.prisma.shared.models
+import com.prisma.shared.models.Model
+import com.prisma.api.database.Types.DataItemFilterCollection
+import com.prisma.api.database.{OrderBy, QueryArguments, SortOrder}
 import sangria.schema.{EnumType, EnumValue, _}
 
 object SangriaQueryArguments {
 
-  import cool.graph.util.coolSangria.FromInputImplicit.DefaultScalaResultMarshaller
+  import com.prisma.util.coolSangria.FromInputImplicit.DefaultScalaResultMarshaller
 
   def orderByArgument(model: Model, name: String = "orderBy") = {
     val values = for {

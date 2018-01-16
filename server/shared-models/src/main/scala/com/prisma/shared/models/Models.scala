@@ -1,15 +1,15 @@
-package cool.graph.shared.models
+package com.prisma.shared.models
 
-import cool.graph.gc_values.GCValue
-import cool.graph.shared.errors.SharedErrors
-import cool.graph.shared.models.FieldConstraintType.FieldConstraintType
+import com.prisma.gc_values.GCValue
+import com.prisma.shared.errors.SharedErrors
+import com.prisma.shared.models.FieldConstraintType.FieldConstraintType
 import org.joda.time.DateTime
 
 object IdType {
   type Id = String
 }
 
-import cool.graph.shared.models.IdType._
+import com.prisma.shared.models.IdType._
 
 case class Client(
     id: Id,
@@ -457,7 +457,7 @@ case class Relation(
     } yield field
   }
 
-  def fieldSide(schema: Schema, field: Field): cool.graph.shared.models.RelationSide.Value = {
+  def fieldSide(schema: Schema, field: Field): com.prisma.shared.models.RelationSide.Value = {
     val fieldModel = schema.getModelByFieldId_!(field.id)
     fieldModel.id match {
       case `modelAId` => RelationSide.A

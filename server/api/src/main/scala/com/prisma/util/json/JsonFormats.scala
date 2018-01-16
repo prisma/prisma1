@@ -1,4 +1,4 @@
-package cool.graph.util.json
+package com.prisma.util.json
 
 import spray.json.{JsArray, JsFalse, JsNull, JsNumber, JsObject, JsString, JsTrue, JsValue, JsonFormat, JsonWriter}
 

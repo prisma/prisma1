@@ -1,12 +1,12 @@
-package cool.graph.api.schema
+package com.prisma.api.schema
 
 import akka.actor.ActorSystem
-import cool.graph.api.{ApiDependencies, ApiMetrics}
-import cool.graph.api.database.DataItem
-import cool.graph.api.database.DeferredTypes.{ManyModelDeferred, OneDeferred}
-import cool.graph.api.mutations._
-import cool.graph.api.mutations.mutations._
-import cool.graph.shared.models.{Model, Project}
+import com.prisma.api.{ApiDependencies, ApiMetrics}
+import com.prisma.api.database.DataItem
+import com.prisma.api.database.DeferredTypes.{ManyModelDeferred, OneDeferred}
+import com.prisma.api.mutations._
+import com.prisma.api.mutations.mutations._
+import com.prisma.shared.models.{Model, Project}
 import org.atteo.evo.inflector.English
 import sangria.relay.{Node, NodeDefinition, PossibleNodeObject}
 import sangria.schema._

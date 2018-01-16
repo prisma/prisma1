@@ -1,8 +1,8 @@
-package cool.graph.subscriptions.metrics
+package com.prisma.subscriptions.metrics
 
 import com.prisma.errors.BugsnagErrorReporter
-import cool.graph.metrics.{CustomTag, MetricsManager}
-import cool.graph.profiling.MemoryProfiler
+import com.prisma.metrics.{CustomTag, MetricsManager}
+import com.prisma.profiling.MemoryProfiler
 
 object SubscriptionMetrics extends MetricsManager {
   override def serviceName = "SimpleSubscriptionService"

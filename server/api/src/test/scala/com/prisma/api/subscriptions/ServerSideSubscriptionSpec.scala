@@ -1,9 +1,9 @@
-package cool.graph.api.subscriptions
+package com.prisma.api.subscriptions
 
-import cool.graph.api.ApiBaseSpec
-import cool.graph.shared.models._
-import cool.graph.shared.project_dsl.SchemaDsl
-import cool.graph.shared.project_dsl.SchemaDsl.ModelBuilder
+import com.prisma.api.ApiBaseSpec
+import com.prisma.shared.models._
+import com.prisma.shared.project_dsl.SchemaDsl
+import com.prisma.shared.project_dsl.SchemaDsl.ModelBuilder
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{FlatSpec, Matchers}
 

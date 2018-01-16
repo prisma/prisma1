@@ -1,13 +1,13 @@
-package cool.graph.subscriptions.specs
+package com.prisma.subscriptions.specs
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.testkit.{ScalatestRouteTest, TestFrameworkInterface, WSProbe}
 import akka.stream.ActorMaterializer
-import cool.graph.akkautil.http.ServerExecutor
-import cool.graph.api.ApiTestDatabase
-import cool.graph.shared.models.{Project, ProjectId, ProjectWithClientId}
-import cool.graph.subscriptions._
-import cool.graph.websocket.WebsocketServer
+import com.prisma.akkautil.http.ServerExecutor
+import com.prisma.api.ApiTestDatabase
+import com.prisma.shared.models.{Project, ProjectId, ProjectWithClientId}
+import com.prisma.subscriptions._
+import com.prisma.websocket.WebsocketServer
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
 import play.api.libs.json.{JsObject, JsValue, Json}
 
@@ -71,12 +71,12 @@ trait SpecBase extends TestFrameworkInterface with BeforeAndAfterEach with Befor
 
   def testWebsocket(project: Project)(checkFn: WSProbe => Unit): Unit = {
     val wsClient = WSProbe()
-    import cool.graph.shared.models.ProjectJsonFormatter._
-    import cool.graph.stub.Import._
+    import com.prisma.shared.models.ProjectJsonFormatter._
+    import com.prisma.stub.Import._
 
     val projectWithClientId = ProjectWithClientId(project, "clientId")
     val stubs = List(
-      cool.graph.stub.Import.Request("GET", s"/${dependencies.projectFetcherPath}/${project.id}").stub(200, Json.toJson(projectWithClientId).toString)
+      com.prisma.stub.Import.Request("GET", s"/${dependencies.projectFetcherPath}/${project.id}").stub(200, Json.toJson(projectWithClientId).toString)
     )
     withStubServer(stubs, port = dependencies.projectFetcherPort) {
       val projectId = ProjectId.fromEncodedString(project.id)

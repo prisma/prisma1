@@ -1,4 +1,4 @@
-package cool.graph.util
+package com.prisma.util
 
 import org.scalatest.matchers.{MatchResult, Matcher}
 import scala.util.{Failure, Success, Try}

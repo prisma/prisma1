@@ -1,15 +1,15 @@
-package cool.graph.deploy.migration.inference
+package com.prisma.deploy.migration.inference
 
 import akka.actor.InvalidActorNameException
 import cool.graph.cuid.Cuid
-import cool.graph.deploy.gc_value.GCStringConverter
-import cool.graph.deploy.migration.DataSchemaAstExtensions._
-import cool.graph.deploy.migration.ReservedFields
-import cool.graph.deploy.schema.{InvalidName, InvalidRelationName}
-import cool.graph.deploy.validation.NameConstraints
-import cool.graph.gc_values.{GCValue, InvalidValueForScalarType}
-import cool.graph.shared.models._
-import cool.graph.utils.or.OrExtensions
+import com.prisma.deploy.gc_value.GCStringConverter
+import com.prisma.deploy.migration.DataSchemaAstExtensions._
+import com.prisma.deploy.migration.ReservedFields
+import com.prisma.deploy.schema.{InvalidName, InvalidRelationName}
+import com.prisma.deploy.validation.NameConstraints
+import com.prisma.gc_values.{GCValue, InvalidValueForScalarType}
+import com.prisma.shared.models._
+import com.prisma.utils.or.OrExtensions
 import org.scalactic.{Bad, Good, Or}
 import sangria.ast.{Document, ObjectTypeDefinition}
 

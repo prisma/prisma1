@@ -1,7 +1,7 @@
-package cool.graph.api.project
+package com.prisma.api.project
 
-import cool.graph.api.schema.APIErrors.ProjectNotFound
-import cool.graph.shared.models.ProjectWithClientId
+import com.prisma.api.schema.APIErrors.ProjectNotFound
+import com.prisma.shared.models.ProjectWithClientId
 
 import scala.concurrent.{ExecutionContext, Future}
 

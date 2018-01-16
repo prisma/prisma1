@@ -1,8 +1,8 @@
-package cool.graph.deploy.server
+package com.prisma.deploy.server
 
 import java.time.Instant
 
-import cool.graph.deploy.schema.{InvalidToken, TokenExpired}
+import com.prisma.deploy.schema.{InvalidToken, TokenExpired}
 import play.api.libs.json._
 
 import scala.util.{Failure, Success, Try}

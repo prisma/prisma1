@@ -1,22 +1,22 @@
-package cool.graph.subscriptions
+package com.prisma.subscriptions
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.prisma.errors.{BugsnagErrorReporter, ErrorReporter}
-import cool.graph.api.ApiDependencies
-import cool.graph.api.database.Databases
-import cool.graph.api.project.{ProjectFetcher, ProjectFetcherImpl}
-import cool.graph.api.schema.SchemaBuilder
-import cool.graph.auth.AuthImpl
-import cool.graph.messagebus._
-import cool.graph.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
-import cool.graph.messagebus.pubsub.rabbit.RabbitAkkaPubSub
-import cool.graph.messagebus.queue.inmemory.InMemoryAkkaQueue
-import cool.graph.subscriptions.protocol.SubscriptionProtocolV05.Responses.SubscriptionSessionResponseV05
-import cool.graph.subscriptions.protocol.SubscriptionProtocolV07.Responses.SubscriptionSessionResponse
-import cool.graph.subscriptions.protocol.SubscriptionRequest
-import cool.graph.subscriptions.resolving.SubscriptionsManagerForProject.{SchemaInvalidated, SchemaInvalidatedMessage}
-import cool.graph.websocket.protocol.Request
+import com.prisma.api.ApiDependencies
+import com.prisma.api.database.Databases
+import com.prisma.api.project.{ProjectFetcher, ProjectFetcherImpl}
+import com.prisma.api.schema.SchemaBuilder
+import com.prisma.auth.AuthImpl
+import com.prisma.messagebus._
+import com.prisma.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
+import com.prisma.messagebus.pubsub.rabbit.RabbitAkkaPubSub
+import com.prisma.messagebus.queue.inmemory.InMemoryAkkaQueue
+import com.prisma.subscriptions.protocol.SubscriptionProtocolV05.Responses.SubscriptionSessionResponseV05
+import com.prisma.subscriptions.protocol.SubscriptionProtocolV07.Responses.SubscriptionSessionResponse
+import com.prisma.subscriptions.protocol.SubscriptionRequest
+import com.prisma.subscriptions.resolving.SubscriptionsManagerForProject.{SchemaInvalidated, SchemaInvalidatedMessage}
+import com.prisma.websocket.protocol.Request
 
 trait SubscriptionDependencies extends ApiDependencies {
   implicit val system: ActorSystem
@@ -39,7 +39,7 @@ trait SubscriptionDependencies extends ApiDependencies {
 case class SubscriptionDependenciesImpl()(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends SubscriptionDependencies {
   override implicit def self: ApiDependencies = this
 
-  import cool.graph.subscriptions.protocol.Converters._
+  import com.prisma.subscriptions.protocol.Converters._
 
   implicit val unmarshaller             = (_: Array[Byte]) => SchemaInvalidated
   lazy val globalRabbitUri              = sys.env("GLOBAL_RABBIT_URI")

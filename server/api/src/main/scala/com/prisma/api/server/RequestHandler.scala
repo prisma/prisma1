@@ -1,18 +1,18 @@
-package cool.graph.api.server
+package com.prisma.api.server
 
 import akka.http.scaladsl.model.StatusCodes.OK
 import akka.http.scaladsl.model._
 import com.prisma.errors.{ErrorReporter, ProjectMetadata}
-import cool.graph.api.ApiDependencies
-import cool.graph.api.database.DataResolver
-import cool.graph.api.database.import_export.{BulkExport, BulkImport}
-import cool.graph.api.project.ProjectFetcher
-import cool.graph.api.schema.APIErrors.InvalidToken
-import cool.graph.api.schema._
-import cool.graph.auth.Auth
-import cool.graph.client.server.GraphQlRequestHandler
-import cool.graph.shared.models.{Project, ProjectWithClientId}
-import cool.graph.utils.`try`.TryExtensions._
+import com.prisma.api.ApiDependencies
+import com.prisma.api.database.DataResolver
+import com.prisma.api.database.import_export.{BulkExport, BulkImport}
+import com.prisma.api.project.ProjectFetcher
+import com.prisma.api.schema.APIErrors.InvalidToken
+import com.prisma.api.schema._
+import com.prisma.auth.Auth
+import com.prisma.client.server.GraphQlRequestHandler
+import com.prisma.shared.models.{Project, ProjectWithClientId}
+import com.prisma.utils.`try`.TryExtensions._
 import sangria.schema.Schema
 import spray.json.{JsObject, JsString, JsValue}
 

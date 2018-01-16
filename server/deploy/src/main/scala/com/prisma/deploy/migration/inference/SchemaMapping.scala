@@ -1,4 +1,4 @@
-package cool.graph.deploy.migration.inference
+package com.prisma.deploy.migration.inference
 
 object SchemaMapping {
   val empty = SchemaMapping()

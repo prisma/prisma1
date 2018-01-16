@@ -1,4 +1,4 @@
-package cool.graph.akkautil.specs2
+package com.prisma.akkautil.specs2
 
 import akka.actor.ActorSystem
 import akka.testkit.{ImplicitSender, TestKit}

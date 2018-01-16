@@ -1,7 +1,7 @@
-package cool.graph.messagebus.utils
+package com.prisma.messagebus.utils
 
 import com.prisma.errors.ErrorReporter
-import cool.graph.rabbit.Import.{Exchange, Rabbit}
+import com.prisma.rabbit.Import.{Exchange, Rabbit}
 
 import scala.util.{Failure, Success}
 

@@ -1,8 +1,8 @@
-package cool.graph.deploy
+package com.prisma.deploy
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import cool.graph.akkautil.http.ServerExecutor
-import cool.graph.deploy.server.ClusterServer
+import com.prisma.akkautil.http.ServerExecutor
+import com.prisma.deploy.server.ClusterServer
 
 object DeployMain extends App {
   implicit val system       = ActorSystem("deploy-main")

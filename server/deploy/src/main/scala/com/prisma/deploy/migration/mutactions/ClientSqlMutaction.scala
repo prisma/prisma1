@@ -1,4 +1,4 @@
-package cool.graph.deploy.migration.mutactions
+package com.prisma.deploy.migration.mutactions
 
 import slick.dbio.{DBIOAction, Effect, NoStream}
 

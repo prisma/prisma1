@@ -1,6 +1,6 @@
-package cool.graph.deploy.migration
+package com.prisma.deploy.migration
 
-import cool.graph.shared.models.{Field, TypeIdentifier}
+import com.prisma.shared.models.{Field, TypeIdentifier}
 
 object ReservedFields {
   val idFieldName        = "id"

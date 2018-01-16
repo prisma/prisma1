@@ -1,6 +1,6 @@
-package cool.graph.deploy.migration.inference
+package com.prisma.deploy.migration.inference
 
-import cool.graph.shared.models._
+import com.prisma.shared.models._
 import org.scalatest.{FlatSpec, Matchers}
 import sangria.parser.QueryParser
 

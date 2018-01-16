@@ -1,4 +1,4 @@
-package cool.graph.subscriptions.util
+package com.prisma.subscriptions.util
 
 import play.api.libs.json._
 

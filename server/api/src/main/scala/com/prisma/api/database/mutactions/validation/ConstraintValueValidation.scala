@@ -1,6 +1,6 @@
-package cool.graph.api.database.mutactions.validation
+package com.prisma.api.database.mutactions.validation
 
-import cool.graph.shared.models._
+import com.prisma.shared.models._
 
 import scala.util.matching.Regex
 

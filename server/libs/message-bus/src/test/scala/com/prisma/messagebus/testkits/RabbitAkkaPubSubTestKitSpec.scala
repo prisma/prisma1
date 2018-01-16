@@ -1,8 +1,8 @@
-package cool.graph.messagebus.testkits
+package com.prisma.messagebus.testkits
 
 import com.prisma.errors.BugsnagErrorReporter
-import cool.graph.messagebus.Conversions
-import cool.graph.messagebus.pubsub.{Message, Only}
+import com.prisma.messagebus.Conversions
+import com.prisma.messagebus.pubsub.{Message, Only}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Matchers, WordSpecLike}
 import play.api.libs.json.Json

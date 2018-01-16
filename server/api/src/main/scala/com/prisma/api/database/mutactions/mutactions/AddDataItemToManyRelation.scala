@@ -1,14 +1,14 @@
-package cool.graph.api.database.mutactions.mutactions
+package com.prisma.api.database.mutactions.mutactions
 
 import java.sql.SQLIntegrityConstraintViolationException
 
-import cool.graph.api.database.{DataResolver, DatabaseMutationBuilder, NameConstraints, RelationFieldMirrorUtils}
-import cool.graph.api.database.DatabaseMutationBuilder.MirrorFieldDbValues
-import cool.graph.api.database.mutactions.{ClientSqlDataChangeMutaction, ClientSqlStatementResult, MutactionVerificationSuccess}
-import cool.graph.api.mutations.ParentInfo
-import cool.graph.api.schema.APIErrors
+import com.prisma.api.database.{DataResolver, DatabaseMutationBuilder, NameConstraints, RelationFieldMirrorUtils}
+import com.prisma.api.database.DatabaseMutationBuilder.MirrorFieldDbValues
+import com.prisma.api.database.mutactions.{ClientSqlDataChangeMutaction, ClientSqlStatementResult, MutactionVerificationSuccess}
+import com.prisma.api.mutations.ParentInfo
+import com.prisma.api.schema.APIErrors
 import cool.graph.cuid.Cuid
-import cool.graph.shared.models._
+import com.prisma.shared.models._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -21,7 +21,7 @@ import scala.util.{Failure, Success, Try}
 case class AddDataItemToManyRelation(project: Project, parentInfo: ParentInfo, toId: String, toIdAlreadyInDB: Boolean = true)
     extends ClientSqlDataChangeMutaction {
 
-  val relationSide: cool.graph.shared.models.RelationSide.Value = parentInfo.field.relationSide.get
+  val relationSide: com.prisma.shared.models.RelationSide.Value = parentInfo.field.relationSide.get
 
   val aValue: String = if (relationSide == RelationSide.A) parentInfo.where.fieldValueAsString else toId
   val bValue: String = if (relationSide == RelationSide.A) toId else parentInfo.where.fieldValueAsString

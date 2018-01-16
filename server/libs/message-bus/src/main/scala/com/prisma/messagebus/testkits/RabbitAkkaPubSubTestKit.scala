@@ -1,16 +1,16 @@
-package cool.graph.messagebus.testkits
+package com.prisma.messagebus.testkits
 
 import akka.actor.ActorRef
 import akka.testkit.TestProbe
 import com.prisma.errors.ErrorReporter
-import cool.graph.akkautil.SingleThreadedActorSystem
-import cool.graph.messagebus.Conversions.{ByteMarshaller, ByteUnmarshaller, Converter}
-import cool.graph.messagebus.PubSub
-import cool.graph.messagebus.pubsub.{Message, Only, Subscription, Topic}
-import cool.graph.messagebus.utils.RabbitUtils
-import cool.graph.rabbit
-import cool.graph.rabbit.Bindings.RoutingKey
-import cool.graph.rabbit.Consumer
+import com.prisma.akkautil.SingleThreadedActorSystem
+import com.prisma.messagebus.Conversions.{ByteMarshaller, ByteUnmarshaller, Converter}
+import com.prisma.messagebus.PubSub
+import com.prisma.messagebus.pubsub.{Message, Only, Subscription, Topic}
+import com.prisma.messagebus.utils.RabbitUtils
+import com.prisma.rabbit
+import com.prisma.rabbit.Bindings.RoutingKey
+import com.prisma.rabbit.Consumer
 
 import scala.concurrent.Future
 import scala.concurrent.duration._

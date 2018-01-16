@@ -1,9 +1,9 @@
-package cool.graph.util.gcvalueconverters
+package com.prisma.util.gcvalueconverters
 
-import cool.graph.gc_values.GCValue
-import cool.graph.shared.models.TypeIdentifier
-import cool.graph.shared.models.TypeIdentifier.TypeIdentifier
-import cool.graph.util.gc_value.GCStringConverter
+import com.prisma.gc_values.GCValue
+import com.prisma.shared.models.TypeIdentifier
+import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
+import com.prisma.util.gc_value.GCStringConverter
 import org.scalatest.{FlatSpec, Matchers}
 
 class GCStringEndToEndSpec extends FlatSpec with Matchers {

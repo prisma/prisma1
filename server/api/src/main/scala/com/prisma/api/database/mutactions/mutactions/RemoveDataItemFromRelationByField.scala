@@ -1,9 +1,9 @@
-package cool.graph.api.database.mutactions.mutactions
+package com.prisma.api.database.mutactions.mutactions
 
-import cool.graph.api.database.DatabaseMutationBuilder
-import cool.graph.api.database.mutactions.{ClientMutactionNoop, ClientSqlDataChangeMutaction, ClientSqlStatementResult}
-import cool.graph.shared.models.Field
-import cool.graph.shared.models.IdType.Id
+import com.prisma.api.database.DatabaseMutationBuilder
+import com.prisma.api.database.mutactions.{ClientMutactionNoop, ClientSqlDataChangeMutaction, ClientSqlStatementResult}
+import com.prisma.shared.models.Field
+import com.prisma.shared.models.IdType.Id
 
 import scala.concurrent.Future
 

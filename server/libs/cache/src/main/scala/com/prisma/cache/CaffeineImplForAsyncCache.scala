@@ -1,4 +1,4 @@
-package cool.graph.cache
+package com.prisma.cache
 
 import java.util.concurrent.{CompletableFuture, Executor}
 import java.util.function.BiFunction

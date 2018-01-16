@@ -1,4 +1,4 @@
-package cool.graph.api.schema
+package com.prisma.api.schema
 
 object SchemaBuilderConstants {
   val mutationDepth = 3

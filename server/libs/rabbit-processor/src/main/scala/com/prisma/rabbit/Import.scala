@@ -1,16 +1,16 @@
-package cool.graph.rabbit
+package com.prisma.rabbit
 
 object Import {
-  val Rabbit = cool.graph.rabbit.Rabbit
-  type Channel = cool.graph.rabbit.Channel
-  val Channel = cool.graph.rabbit.Channel
-  type Queue = cool.graph.rabbit.Queue
-  val Queue = cool.graph.rabbit.Queue
-  type Exchange = cool.graph.rabbit.Exchange
-  val Exchange = cool.graph.rabbit.Exchange
-  type Consumer = cool.graph.rabbit.Consumer
-  val Consumer = cool.graph.rabbit.Consumer
+  val Rabbit = com.prisma.rabbit.Rabbit
+  type Channel = com.prisma.rabbit.Channel
+  val Channel = com.prisma.rabbit.Channel
+  type Queue = com.prisma.rabbit.Queue
+  val Queue = com.prisma.rabbit.Queue
+  type Exchange = com.prisma.rabbit.Exchange
+  val Exchange = com.prisma.rabbit.Exchange
+  type Consumer = com.prisma.rabbit.Consumer
+  val Consumer = com.prisma.rabbit.Consumer
 
-  val ExchangeTypes = cool.graph.rabbit.ExchangeTypes
-  val Bindings      = cool.graph.rabbit.Bindings
+  val ExchangeTypes = com.prisma.rabbit.ExchangeTypes
+  val Bindings      = com.prisma.rabbit.Bindings
 }

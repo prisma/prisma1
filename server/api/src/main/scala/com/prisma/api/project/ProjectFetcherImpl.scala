@@ -1,12 +1,12 @@
-package cool.graph.api.project
+package com.prisma.api.project
 
 import akka.http.scaladsl.model.Uri
 import com.twitter.conversions.time._
 import com.typesafe.config.Config
-import cool.graph.shared.models.ProjectWithClientId
-import cool.graph.twitterFutures.TwitterFutureImplicits._
+import com.prisma.shared.models.ProjectWithClientId
+import com.prisma.twitterFutures.TwitterFutureImplicits._
 import play.api.libs.json.Json
-import cool.graph.shared.models.ProjectJsonFormatter._
+import com.prisma.shared.models.ProjectJsonFormatter._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 

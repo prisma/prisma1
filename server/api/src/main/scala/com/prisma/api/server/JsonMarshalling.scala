@@ -1,4 +1,4 @@
-package cool.graph.api.server
+package com.prisma.api.server
 
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat

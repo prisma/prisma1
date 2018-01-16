@@ -1,6 +1,6 @@
-package cool.graph.shared.models
+package com.prisma.shared.models
 
-import cool.graph.shared.models.MigrationStatus.MigrationStatus
+import com.prisma.shared.models.MigrationStatus.MigrationStatus
 import org.joda.time.DateTime
 
 case class MigrationId(projectId: String, revision: Int)

@@ -1,4 +1,4 @@
-package cool.graph.akkautil.http
+package com.prisma.akkautil.http
 
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.{HttpRequest, HttpResponse, ResponseEntity}
@@ -6,8 +6,8 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.ActorMaterializer
-import cool.graph.akkautil.SingleThreadedActorSystem
-import cool.graph.akkautil.specs2.AcceptanceSpecification
+import com.prisma.akkautil.SingleThreadedActorSystem
+import com.prisma.akkautil.specs2.AcceptanceSpecification
 import org.specs2.matcher.MatchResult
 import org.specs2.specification.AfterAll
 

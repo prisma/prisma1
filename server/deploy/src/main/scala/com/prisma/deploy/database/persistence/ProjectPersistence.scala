@@ -1,6 +1,6 @@
-package cool.graph.deploy.database.persistence
+package com.prisma.deploy.database.persistence
 
-import cool.graph.shared.models.Project
+import com.prisma.shared.models.Project
 
 import scala.concurrent.Future
 

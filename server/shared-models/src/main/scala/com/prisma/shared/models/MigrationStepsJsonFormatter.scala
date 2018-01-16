@@ -1,4 +1,4 @@
-package cool.graph.shared.models
+package com.prisma.shared.models
 
 import play.api.libs.json._
 

@@ -1,11 +1,11 @@
-package cool.graph.api
+package com.prisma.api
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import cool.graph.api.database.{DatabaseMutationBuilder, DatabaseQueryBuilder}
-import cool.graph.deploy.migration.mutactions.{ClientSqlMutaction, CreateRelationTable}
-import cool.graph.shared.models._
-import cool.graph.utils.await.AwaitUtils
+import com.prisma.api.database.{DatabaseMutationBuilder, DatabaseQueryBuilder}
+import com.prisma.deploy.migration.mutactions.{ClientSqlMutaction, CreateRelationTable}
+import com.prisma.shared.models._
+import com.prisma.utils.await.AwaitUtils
 import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.MySQLProfile.backend.DatabaseDef
 

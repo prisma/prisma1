@@ -1,6 +1,6 @@
-package cool.graph.deploy.migration.inference
+package com.prisma.deploy.migration.inference
 
-import cool.graph.shared.models._
+import com.prisma.shared.models._
 
 trait MigrationStepsInferrer {
   def infer(previousSchema: Schema, nextSchema: Schema, renames: SchemaMapping): Vector[MigrationStep]
@@ -17,7 +17,7 @@ object MigrationStepsInferrer {
 }
 
 case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema, renames: SchemaMapping) {
-  import cool.graph.util.Diff._
+  import com.prisma.util.Diff._
 
   /**
     * The following evaluation order considers all interdependencies:

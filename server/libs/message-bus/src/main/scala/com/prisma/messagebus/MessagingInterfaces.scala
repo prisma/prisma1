@@ -1,10 +1,10 @@
-package cool.graph.messagebus
+package com.prisma.messagebus
 
 import akka.actor.ActorRef
-import cool.graph.messagebus.Conversions.Converter
-import cool.graph.messagebus.QueueConsumer.ConsumeFn
-import cool.graph.messagebus.pubsub._
-import cool.graph.messagebus.queue.{BackoffStrategy, MappingQueueConsumer, MappingQueuePublisher}
+import com.prisma.messagebus.Conversions.Converter
+import com.prisma.messagebus.QueueConsumer.ConsumeFn
+import com.prisma.messagebus.pubsub._
+import com.prisma.messagebus.queue.{BackoffStrategy, MappingQueueConsumer, MappingQueuePublisher}
 
 import scala.concurrent.Future
 

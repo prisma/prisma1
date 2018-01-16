@@ -1,8 +1,8 @@
-package cool.graph.api.mutations
+package com.prisma.api.mutations
 
-import cool.graph.api.ApiBaseSpec
-import cool.graph.gc_values.{ListGCValue, StringGCValue}
-import cool.graph.shared.project_dsl.SchemaDsl
+import com.prisma.api.ApiBaseSpec
+import com.prisma.gc_values.{ListGCValue, StringGCValue}
+import com.prisma.shared.project_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class DefaultValueSpec extends FlatSpec with Matchers with ApiBaseSpec {

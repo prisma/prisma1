@@ -1,4 +1,4 @@
-package cool.graph.api.util
+package com.prisma.api.util
 
 trait StringMatchers {
   def mustBeEqual(actual: String, expected: String): Unit = {

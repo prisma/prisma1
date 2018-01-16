@@ -1,9 +1,9 @@
-package cool.graph.deploy.database.persistence
+package com.prisma.deploy.database.persistence
 
-import cool.graph.deploy.database.tables.{MigrationTable, Tables}
-import cool.graph.shared.models.{Migration, MigrationId}
-import cool.graph.shared.models.MigrationStatus.MigrationStatus
-import cool.graph.utils.future.FutureUtils.FutureOpt
+import com.prisma.deploy.database.tables.{MigrationTable, Tables}
+import com.prisma.shared.models.{Migration, MigrationId}
+import com.prisma.shared.models.MigrationStatus.MigrationStatus
+import com.prisma.utils.future.FutureUtils.FutureOpt
 import org.joda.time.DateTime
 import play.api.libs.json.Json
 import slick.jdbc.MySQLProfile.api._

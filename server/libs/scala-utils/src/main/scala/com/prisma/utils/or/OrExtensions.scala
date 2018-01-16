@@ -1,4 +1,4 @@
-package cool.graph.utils.or
+package com.prisma.utils.or
 
 import org.scalactic.{Bad, Good, Or}
 

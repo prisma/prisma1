@@ -1,12 +1,12 @@
-package cool.graph.deploy.database.persistence
+package com.prisma.deploy.database.persistence
 
-import cool.graph.deploy.database.tables.{Migration, Project}
-import cool.graph.shared.models
+import com.prisma.deploy.database.tables.{Migration, Project}
+import com.prisma.shared.models
 import play.api.libs.json.Json
 
 object ModelToDbMapper {
-  import cool.graph.shared.models.MigrationStepsJsonFormatter._
-  import cool.graph.shared.models.ProjectJsonFormatter._
+  import com.prisma.shared.models.MigrationStepsJsonFormatter._
+  import com.prisma.shared.models.ProjectJsonFormatter._
 
   def convert(project: models.Project): Project = {
     val secretsJson   = Json.toJson(project.secrets)

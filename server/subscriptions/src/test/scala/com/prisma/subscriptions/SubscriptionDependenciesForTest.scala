@@ -1,17 +1,17 @@
-package cool.graph.subscriptions
+package com.prisma.subscriptions
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import cool.graph.api.ApiDependencies
-import cool.graph.api.database.Databases
-import cool.graph.api.project.{ProjectFetcher, ProjectFetcherImpl}
-import cool.graph.api.schema.SchemaBuilder
-import cool.graph.messagebus.testkits.{InMemoryPubSubTestKit, InMemoryQueueTestKit}
-import cool.graph.messagebus.{PubSubPublisher, PubSubSubscriber, QueueConsumer, QueuePublisher}
-import cool.graph.subscriptions.protocol.SubscriptionProtocolV05.Responses.SubscriptionSessionResponseV05
-import cool.graph.subscriptions.protocol.SubscriptionProtocolV07.Responses.SubscriptionSessionResponse
-import cool.graph.subscriptions.protocol.{Converters, SubscriptionRequest}
-import cool.graph.subscriptions.resolving.SubscriptionsManagerForProject.{SchemaInvalidated, SchemaInvalidatedMessage}
-import cool.graph.websocket.protocol.Request
+import com.prisma.api.ApiDependencies
+import com.prisma.api.database.Databases
+import com.prisma.api.project.{ProjectFetcher, ProjectFetcherImpl}
+import com.prisma.api.schema.SchemaBuilder
+import com.prisma.messagebus.testkits.{InMemoryPubSubTestKit, InMemoryQueueTestKit}
+import com.prisma.messagebus.{PubSubPublisher, PubSubSubscriber, QueueConsumer, QueuePublisher}
+import com.prisma.subscriptions.protocol.SubscriptionProtocolV05.Responses.SubscriptionSessionResponseV05
+import com.prisma.subscriptions.protocol.SubscriptionProtocolV07.Responses.SubscriptionSessionResponse
+import com.prisma.subscriptions.protocol.{Converters, SubscriptionRequest}
+import com.prisma.subscriptions.resolving.SubscriptionsManagerForProject.{SchemaInvalidated, SchemaInvalidatedMessage}
+import com.prisma.websocket.protocol.Request
 
 class SubscriptionDependenciesForTest()(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends SubscriptionDependencies {
   override implicit def self: ApiDependencies = this

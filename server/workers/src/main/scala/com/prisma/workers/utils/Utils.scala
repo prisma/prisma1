@@ -1,4 +1,4 @@
-package cool.graph.workers.utils
+package com.prisma.workers.utils
 
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat

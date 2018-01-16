@@ -1,8 +1,8 @@
-package cool.graph.api.database
+package com.prisma.api.database
 
-import cool.graph.api.database.Types.{DataItemFilterCollection, UserData}
-import cool.graph.shared.models.IdType.Id
-import cool.graph.shared.models.{Field, Model, Relation}
+import com.prisma.api.database.Types.{DataItemFilterCollection, UserData}
+import com.prisma.shared.models.IdType.Id
+import com.prisma.shared.models.{Field, Model, Relation}
 import sangria.relay.Node
 
 object Types {

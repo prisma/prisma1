@@ -1,8 +1,8 @@
-package cool.graph.util.gcvalueconverters
+package com.prisma.util.gcvalueconverters
 
-import cool.graph.shared.models.TypeIdentifier
-import cool.graph.shared.models.TypeIdentifier.TypeIdentifier
-import cool.graph.util.gc_value.{GCSangriaValueConverter, GCStringDBConverter, StringSangriaValueConverter}
+import com.prisma.shared.models.TypeIdentifier
+import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
+import com.prisma.util.gc_value.{GCSangriaValueConverter, GCStringDBConverter, StringSangriaValueConverter}
 import org.scalatest.{FlatSpec, Matchers}
 
 class GCDBStringEndToEndSpec extends FlatSpec with Matchers {

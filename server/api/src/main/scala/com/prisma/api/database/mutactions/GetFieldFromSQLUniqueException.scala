@@ -1,9 +1,9 @@
-package cool.graph.api.database.mutactions
+package com.prisma.api.database.mutactions
 
 import java.sql.SQLIntegrityConstraintViolationException
 
-import cool.graph.api.mutations.CoolArgs
-import cool.graph.api.mutations.MutationTypes.ArgumentValue
+import com.prisma.api.mutations.CoolArgs
+import com.prisma.api.mutations.MutationTypes.ArgumentValue
 
 object GetFieldFromSQLUniqueException {
 

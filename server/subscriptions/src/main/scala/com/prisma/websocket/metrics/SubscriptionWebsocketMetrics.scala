@@ -1,8 +1,8 @@
-package cool.graph.websocket.metrics
+package com.prisma.websocket.metrics
 
 import com.prisma.errors.BugsnagErrorReporter
-import cool.graph.metrics.MetricsManager
-import cool.graph.profiling.MemoryProfiler
+import com.prisma.metrics.MetricsManager
+import com.prisma.profiling.MemoryProfiler
 
 object SubscriptionWebsocketMetrics extends MetricsManager {
   MemoryProfiler.schedule(this)

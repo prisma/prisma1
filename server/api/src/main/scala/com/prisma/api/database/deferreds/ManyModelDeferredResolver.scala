@@ -1,7 +1,7 @@
-package cool.graph.api.database.deferreds
+package com.prisma.api.database.deferreds
 
-import cool.graph.api.database._
-import cool.graph.api.database.DeferredTypes._
+import com.prisma.api.database._
+import com.prisma.api.database.DeferredTypes._
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class ManyModelDeferredResolver(resolver: DataResolver) {

@@ -1,12 +1,12 @@
-package cool.graph.deploy.specutils
+package com.prisma.deploy.specutils
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.prisma.errors.{BugsnagErrorReporter, ErrorReporter}
-import cool.graph.deploy.DeployDependencies
-import cool.graph.deploy.server.DummyClusterAuth
-import cool.graph.graphql.GraphQlClient
-import cool.graph.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
+import com.prisma.deploy.DeployDependencies
+import com.prisma.deploy.server.DummyClusterAuth
+import com.prisma.graphql.GraphQlClient
+import com.prisma.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
 
 case class DeployTestDependencies()(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends DeployDependencies {
   override implicit def self: DeployDependencies = this

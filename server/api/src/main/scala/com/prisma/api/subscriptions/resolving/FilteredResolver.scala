@@ -1,9 +1,9 @@
-package cool.graph.api.subscriptions.resolving
+package com.prisma.api.subscriptions.resolving
 
-import cool.graph.api.database.Types.DataItemFilterCollection
-import cool.graph.api.database.{DataItem, DataResolver, FilterElement, QueryArguments}
-import cool.graph.api.schema.ObjectTypeBuilder
-import cool.graph.shared.models.Model
+import com.prisma.api.database.Types.DataItemFilterCollection
+import com.prisma.api.database.{DataItem, DataResolver, FilterElement, QueryArguments}
+import com.prisma.api.schema.ObjectTypeBuilder
+import com.prisma.shared.models.Model
 import sangria.schema.Context
 
 import scala.concurrent.ExecutionContext.Implicits.global

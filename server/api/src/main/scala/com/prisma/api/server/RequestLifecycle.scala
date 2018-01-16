@@ -1,10 +1,10 @@
-package cool.graph.api.server
+package com.prisma.api.server
 
-import cool.graph.api.schema.APIErrors.VariablesParsingError
-import cool.graph.api.schema.ApiUserContext
-import cool.graph.api.schema.CommonErrors.InputCompletelyMalformed
-import cool.graph.shared.models.{Project, ProjectWithClientId}
-import cool.graph.utils.`try`.TryUtil
+import com.prisma.api.schema.APIErrors.VariablesParsingError
+import com.prisma.api.schema.ApiUserContext
+import com.prisma.api.schema.CommonErrors.InputCompletelyMalformed
+import com.prisma.shared.models.{Project, ProjectWithClientId}
+import com.prisma.utils.`try`.TryUtil
 import sangria.parser.QueryParser
 import sangria.schema.Schema
 import spray.json.JsonParser.ParsingException

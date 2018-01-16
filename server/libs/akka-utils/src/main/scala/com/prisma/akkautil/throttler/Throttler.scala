@@ -1,4 +1,4 @@
-package cool.graph.akkautil.throttler
+package com.prisma.akkautil.throttler
 
 import java.util.concurrent.TimeUnit
 
@@ -7,8 +7,8 @@ import akka.actor.{Actor, ActorRef, ActorSystem, Props, ReceiveTimeout, Terminat
 import akka.contrib.throttle.Throttler.SetTarget
 import akka.contrib.throttle.TimerBasedThrottler
 import akka.pattern.AskTimeoutException
-import cool.graph.akkautil.throttler.Throttler.{ThrottleBufferFullException, ThrottleCallTimeoutException, ThrottleResult}
-import cool.graph.akkautil.throttler.ThrottlerManager.Requests.ThrottledCall
+import com.prisma.akkautil.throttler.Throttler.{ThrottleBufferFullException, ThrottleCallTimeoutException, ThrottleResult}
+import com.prisma.akkautil.throttler.ThrottlerManager.Requests.ThrottledCall
 
 import scala.collection.mutable
 import scala.concurrent.Future
@@ -56,7 +56,7 @@ object ThrottlerManager {
 }
 
 class ThrottlerManager[A](groupBy: A => Any, rate: akka.contrib.throttle.Throttler.Rate, maxCallsInFlight: Int) extends Actor {
-  import cool.graph.akkautil.throttler.ThrottlerManager.Requests._
+  import com.prisma.akkautil.throttler.ThrottlerManager.Requests._
 
   val throttlerGroups: mutable.Map[Any, ActorRef] = mutable.Map.empty
 
@@ -95,7 +95,7 @@ object ThrottlerGroup {
 class ThrottlerGroup(rate: akka.contrib.throttle.Throttler.Rate, maxCallsInFlight: Int) extends Actor {
   import akka.pattern.pipe
   import context.dispatcher
-  import cool.graph.akkautil.throttler.ThrottlerManager.Requests._
+  import com.prisma.akkautil.throttler.ThrottlerManager.Requests._
 
   var requestsInFlight = 0
   val akkaThrottler    = context.actorOf(Props(new TimerBasedThrottler(rate)))

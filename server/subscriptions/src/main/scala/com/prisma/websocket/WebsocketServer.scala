@@ -1,4 +1,4 @@
-package cool.graph.websocket
+package com.prisma.websocket
 
 import akka.NotUsed
 import akka.actor.{ActorSystem, Props}
@@ -8,13 +8,13 @@ import akka.http.scaladsl.server.UnsupportedWebSocketSubprotocolRejection
 import akka.http.scaladsl.server.directives.RouteDirectives.reject
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.Flow
-import cool.graph.akkautil.http.Server
+import com.prisma.akkautil.http.Server
 import cool.graph.cuid.Cuid
-import cool.graph.messagebus.pubsub.Everything
-import cool.graph.shared.models.ProjectId
-import cool.graph.subscriptions.SubscriptionDependencies
-import cool.graph.websocket.WebsocketSessionManager.Requests.IncomingQueueMessage
-import cool.graph.websocket.metrics.SubscriptionWebsocketMetrics
+import com.prisma.messagebus.pubsub.Everything
+import com.prisma.shared.models.ProjectId
+import com.prisma.subscriptions.SubscriptionDependencies
+import com.prisma.websocket.WebsocketSessionManager.Requests.IncomingQueueMessage
+import com.prisma.websocket.metrics.SubscriptionWebsocketMetrics
 import play.api.libs.streams.ActorFlow
 
 import scala.concurrent.Future

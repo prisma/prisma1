@@ -1,4 +1,4 @@
-package cool.graph.util
+package com.prisma.util
 
 object Diff {
 

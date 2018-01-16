@@ -1,7 +1,7 @@
-package cool.graph.messagebus.pubsub
+package com.prisma.messagebus.pubsub
 
 import akka.actor.ActorRef
-import cool.graph.messagebus.pubsub.PubSubProtocol.Unsubscribe
+import com.prisma.messagebus.pubsub.PubSubProtocol.Unsubscribe
 
 /**
   * A topic describes the messages a subscriber is interested in or a publisher wants to publish to.

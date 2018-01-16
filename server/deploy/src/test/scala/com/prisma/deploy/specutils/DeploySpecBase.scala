@@ -1,10 +1,10 @@
-package cool.graph.deploy.specutils
+package com.prisma.deploy.specutils
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import cool.graph.cuid.Cuid
-import cool.graph.shared.models.{Migration, MigrationId, Project}
-import cool.graph.utils.await.AwaitUtils
+import com.prisma.shared.models.{Migration, MigrationId, Project}
+import com.prisma.utils.await.AwaitUtils
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
 import spray.json.JsString
 

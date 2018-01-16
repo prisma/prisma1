@@ -1,11 +1,11 @@
-package cool.graph.api
+package com.prisma.api
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import cool.graph.api.database.DataResolver
-import cool.graph.api.util.StringMatchers
-import cool.graph.shared.models.Project
-import cool.graph.util.json.SprayJsonExtensions
+import com.prisma.api.database.DataResolver
+import com.prisma.api.util.StringMatchers
+import com.prisma.shared.models.Project
+import com.prisma.util.json.SprayJsonExtensions
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
 import play.api.libs.json.JsString
 

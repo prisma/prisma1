@@ -1,4 +1,4 @@
-package cool.graph.messagebus
+package com.prisma.messagebus
 
 import java.nio.charset.Charset
 

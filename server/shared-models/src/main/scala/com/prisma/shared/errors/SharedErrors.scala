@@ -1,4 +1,4 @@
-package cool.graph.shared.errors
+package com.prisma.shared.errors
 
 object SharedErrors {
   sealed trait SharedError extends Exception {

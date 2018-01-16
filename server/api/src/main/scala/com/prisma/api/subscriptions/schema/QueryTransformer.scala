@@ -1,7 +1,7 @@
-package cool.graph.api.subscriptions.schema
+package com.prisma.api.subscriptions.schema
 
-import cool.graph.shared.models.ModelMutationType
-import cool.graph.shared.models.ModelMutationType.ModelMutationType
+import com.prisma.shared.models.ModelMutationType
+import com.prisma.shared.models.ModelMutationType.ModelMutationType
 import sangria.ast.OperationType.Subscription
 import sangria.ast._
 import sangria.visitor.VisitorCommand

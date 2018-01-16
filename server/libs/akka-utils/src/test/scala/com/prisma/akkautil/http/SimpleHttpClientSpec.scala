@@ -1,9 +1,9 @@
-package cool.graph.akkautil.http
+package com.prisma.akkautil.http
 
 import akka.stream.ActorMaterializer
-import cool.graph.akkautil.SingleThreadedActorSystem
-import cool.graph.stub.Import.withStubServer
-import cool.graph.stub.StubDsl.Default.Request
+import com.prisma.akkautil.SingleThreadedActorSystem
+import com.prisma.stub.Import.withStubServer
+import com.prisma.stub.StubDsl.Default.Request
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Millis, Seconds, Span}
 import org.scalatest.{Matchers, WordSpecLike}

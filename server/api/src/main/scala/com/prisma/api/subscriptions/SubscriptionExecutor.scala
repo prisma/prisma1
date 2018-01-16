@@ -1,14 +1,14 @@
-package cool.graph.api.subscriptions
+package com.prisma.api.subscriptions
 
 import akka.http.scaladsl.model.HttpRequest
 import com.prisma.sangria.utils.ErrorHandler
-import cool.graph.api.ApiDependencies
-import cool.graph.api.database.DataItem
-import cool.graph.api.database.deferreds.DeferredResolverProvider
-import cool.graph.api.subscriptions.schema.{QueryTransformer, SubscriptionSchema}
-import cool.graph.shared.models.ModelMutationType.ModelMutationType
-import cool.graph.shared.models._
-import cool.graph.util.json.SprayJsonExtensions
+import com.prisma.api.ApiDependencies
+import com.prisma.api.database.DataItem
+import com.prisma.api.database.deferreds.DeferredResolverProvider
+import com.prisma.api.subscriptions.schema.{QueryTransformer, SubscriptionSchema}
+import com.prisma.shared.models.ModelMutationType.ModelMutationType
+import com.prisma.shared.models._
+import com.prisma.util.json.SprayJsonExtensions
 import sangria.ast.Document
 import sangria.execution.Executor
 import sangria.parser.QueryParser
@@ -64,7 +64,7 @@ object SubscriptionExecutor extends SprayJsonExtensions {
       skipPermissionCheck: Boolean,
       alwaysQueryMasterDatabase: Boolean
   )(implicit dependencies: ApiDependencies, ec: ExecutionContext): Future[Option[JsValue]] = {
-    import cool.graph.api.server.JsonMarshalling._
+    import com.prisma.api.server.JsonMarshalling._
 
     val schema = SubscriptionSchema(model, project, updatedFields, mutationType, previousValues).build()
 

@@ -1,6 +1,6 @@
-package cool.graph.deploy.database.schema.queries
+package com.prisma.deploy.database.schema.queries
 
-import cool.graph.deploy.specutils.DeploySpecBase
+import com.prisma.deploy.specutils.DeploySpecBase
 import org.scalatest.{FlatSpec, Matchers}
 
 class ListProjectsSpec extends FlatSpec with Matchers with DeploySpecBase {

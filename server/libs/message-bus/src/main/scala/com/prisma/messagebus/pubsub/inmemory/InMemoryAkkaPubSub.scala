@@ -1,10 +1,10 @@
-package cool.graph.messagebus.pubsub.inmemory
+package com.prisma.messagebus.pubsub.inmemory
 
 import akka.actor.{ActorRef, ActorSystem, Props}
-import cool.graph.messagebus.Conversions.Converter
-import cool.graph.messagebus.PubSub
-import cool.graph.messagebus.pubsub.PubSubProtocol.Publish
-import cool.graph.messagebus.pubsub._
+import com.prisma.messagebus.Conversions.Converter
+import com.prisma.messagebus.PubSub
+import com.prisma.messagebus.pubsub.PubSubProtocol.Publish
+import com.prisma.messagebus.pubsub._
 
 /**
   * PubSub implementation solely backed by actors, no external queueing or pubsub stack is utilized.

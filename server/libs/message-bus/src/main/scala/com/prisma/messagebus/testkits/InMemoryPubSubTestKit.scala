@@ -1,12 +1,12 @@
-package cool.graph.messagebus.testkits
+package com.prisma.messagebus.testkits
 
 import akka.actor.{ActorRef, ActorSystem}
 import akka.stream.ActorMaterializer
 import akka.testkit.TestProbe
-import cool.graph.messagebus.Conversions.Converter
-import cool.graph.messagebus.PubSub
-import cool.graph.messagebus.pubsub._
-import cool.graph.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
+import com.prisma.messagebus.Conversions.Converter
+import com.prisma.messagebus.PubSub
+import com.prisma.messagebus.pubsub._
+import com.prisma.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
 
 import scala.concurrent.duration._
 import scala.language.existentials

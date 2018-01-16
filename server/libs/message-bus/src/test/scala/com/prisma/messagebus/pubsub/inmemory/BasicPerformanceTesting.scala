@@ -1,11 +1,11 @@
-package cool.graph.messagebus.pubsub.inmemory
+package com.prisma.messagebus.pubsub.inmemory
 
 import java.util.concurrent.atomic.AtomicInteger
 
 import akka.actor.{Actor, ActorSystem, Props}
 import akka.stream.ActorMaterializer
-import cool.graph.messagebus.pubsub.PubSubProtocol.Publish
-import cool.graph.messagebus.pubsub.{IntermediateCallbackActor, Message, PubSubRouterAlt, PubSubRouter}
+import com.prisma.messagebus.pubsub.PubSubProtocol.Publish
+import com.prisma.messagebus.pubsub.{IntermediateCallbackActor, Message, PubSubRouterAlt, PubSubRouter}
 import org.scalatest.WordSpecLike
 
 import scala.reflect.ClassTag

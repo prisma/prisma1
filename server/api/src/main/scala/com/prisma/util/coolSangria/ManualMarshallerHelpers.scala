@@ -1,4 +1,4 @@
-package cool.graph.util.coolSangria
+package com.prisma.util.coolSangria
 
 object ManualMarshallerHelpers {
   implicit class ManualMarshallerHelper(args: Any) {

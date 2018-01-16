@@ -1,13 +1,13 @@
-package cool.graph.messagebus.queue.rabbit
+package com.prisma.messagebus.queue.rabbit
 
 import com.prisma.errors.ErrorReporter
-import cool.graph.messagebus.Conversions.ByteUnmarshaller
-import cool.graph.messagebus.QueueConsumer.ConsumeFn
-import cool.graph.messagebus.queue.BackoffStrategy
-import cool.graph.messagebus.{ConsumerRef, QueueConsumer}
-import cool.graph.rabbit.Bindings.RoutingKey
-import cool.graph.rabbit.Import.Queue
-import cool.graph.rabbit.{Consumer, Delivery, Exchange}
+import com.prisma.messagebus.Conversions.ByteUnmarshaller
+import com.prisma.messagebus.QueueConsumer.ConsumeFn
+import com.prisma.messagebus.queue.BackoffStrategy
+import com.prisma.messagebus.{ConsumerRef, QueueConsumer}
+import com.prisma.rabbit.Bindings.RoutingKey
+import com.prisma.rabbit.Import.Queue
+import com.prisma.rabbit.{Consumer, Delivery, Exchange}
 
 import scala.collection.mutable.ArrayBuffer
 import scala.util.{Failure, Success, Try}

@@ -1,8 +1,8 @@
-//package cool.graph.migration
+//package com.prisma.migration
 //
-//import cool.graph.deploy.migration._
-//import cool.graph.shared.models._
-//import cool.graph.shared.project_dsl.SchemaDsl
+//import com.prisma.deploy.migration._
+//import com.prisma.shared.models._
+//import com.prisma.shared.project_dsl.SchemaDsl
 //import org.scalactic.{Bad, Good, Or}
 //import org.scalatest.{FlatSpec, Matchers}
 //

@@ -1,14 +1,14 @@
-package cool.graph.websocket
+package com.prisma.websocket
 
 import java.util.concurrent.TimeUnit
 
 import akka.actor.{Actor, ActorRef, PoisonPill, ReceiveTimeout, Stash, Terminated}
 import akka.http.scaladsl.model.ws.TextMessage
 import com.prisma.errors.ErrorReporter
-import cool.graph.akkautil.{LogUnhandled, LogUnhandledExceptions}
-import cool.graph.messagebus.QueuePublisher
-import cool.graph.subscriptions.SubscriptionDependencies
-import cool.graph.websocket.protocol.Request
+import com.prisma.akkautil.{LogUnhandled, LogUnhandledExceptions}
+import com.prisma.messagebus.QueuePublisher
+import com.prisma.subscriptions.SubscriptionDependencies
+import com.prisma.websocket.protocol.Request
 
 import scala.collection.mutable
 import scala.concurrent.duration._ // if you don't supply your own Protocol (see below)

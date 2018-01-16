@@ -1,4 +1,4 @@
-package cool.graph.deploy.migration.validation
+package com.prisma.deploy.migration.validation
 
 import sangria.ast.Document
 import sangria.parser.{QueryParser, SyntaxError}

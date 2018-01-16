@@ -1,8 +1,8 @@
-package cool.graph.deploy.database.persistence
+package com.prisma.deploy.database.persistence
 
-import cool.graph.deploy.database.tables
-import cool.graph.deploy.database.tables.{Migration, ProjectTable, Tables}
-import cool.graph.shared.models.Project
+import com.prisma.deploy.database.tables
+import com.prisma.deploy.database.tables.{Migration, ProjectTable, Tables}
+import com.prisma.shared.models.Project
 import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.MySQLProfile.backend.DatabaseDef
 

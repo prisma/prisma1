@@ -1,8 +1,8 @@
-package cool.graph.api
+package com.prisma.api
 
 import com.prisma.errors.BugsnagErrorReporter
-import cool.graph.metrics.{CustomTag, MetricsManager}
-import cool.graph.profiling.MemoryProfiler
+import com.prisma.metrics.{CustomTag, MetricsManager}
+import com.prisma.profiling.MemoryProfiler
 
 object ApiMetrics extends MetricsManager {
   // this is intentionally empty. Since we don't define metrics here, we need to load the object once so the profiler kicks in.

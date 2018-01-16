@@ -1,4 +1,4 @@
-package cool.graph.shared.project_dsl
+package com.prisma.shared.project_dsl
 
 trait TestIds {
   val testClientId           = "test-client-id"
