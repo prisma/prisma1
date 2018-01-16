@@ -1,9 +1,9 @@
 ---
 alias: quaidah9ph
-description: GraphQL Binding
+description: GraphQL Bindings are modular building blocks that allow to embed existing GraphQL APIs into your own GraphQL server.
 ---
 
-# GraphQL Binding
+# graphql-binding
 
 🔗 [`graphql-binding`](https://github.com/graphcool/graphql-binding/) is a package that simplifies the process of creating your own GraphQL bindings. GraphQL bindings are **modular building blocks** that allow to embed existing GraphQL APIs into your own GraphQL server. Think about it as turning (parts of) GraphQL APIs into reusable LEGO building blocks.
 

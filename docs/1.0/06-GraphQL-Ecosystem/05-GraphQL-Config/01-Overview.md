@@ -1,6 +1,6 @@
 ---
 alias: quaidah9pi
-description: GraphQL Config
+description: GraphQL Config is the easiest way to configure a development environment with a GraphQL schema (supported by most tools, editors &amp; IDEs).
 ---
 
 # graphql-config

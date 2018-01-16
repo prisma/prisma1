@@ -1,6 +1,6 @@
 ---
 alias: quaidah9pj
-description: GraphQL CLI
+description: GraphQL CLI is a command line tool for common GraphQL development workflows.
 ---
 
 # graphql-cli

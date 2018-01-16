@@ -1,6 +1,6 @@
 ---
 alias: quaidah9pn
-description: GraphQL Import
+description: GraphQL Import is a package that allows importing &amp; exporting schema definitions in GraphQL SDL (also refered to as GraphQL modules).
 ---
 
 # graphql-import

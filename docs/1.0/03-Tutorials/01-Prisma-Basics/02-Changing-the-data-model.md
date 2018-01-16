@@ -47,7 +47,7 @@ The `age` field is of type `Int` and not required on the `User` type. This means
 
 `createdAt` and `updatedAt` on the other hand are actually special fields that are managed by Prisma. Under the hood, Prisma always maintains these fields - but they're only exposed in your API once you add them to the type definition in the data model (the same is true for the `id` field by the way).
 
-> **Note**: Right now, the values for these fields are read-only. In the future, it will be possible to set the values for these fields via regular mutations as well. To learn more about this feature and timeline, check out this [GitHub issue](https://github.com/prisma/prisma/issues/1278).
+> **Note**: Right now, the values for these fields are read-only. In the future, it will be possible to set the values for these fields via regular mutations as well. To learn more about this feature and timeline, check out this [GitHub issue](https://github.com/graphcool/prisma/issues/1278).
 
 So far, the changes you made are only local. So, you won't be able to access the new fields in a GraphQL Playground if you open it right now.
 
@@ -154,7 +154,7 @@ type User {
 
 </Instruction>
 
-That's it! The new `posts` field represents a list of `Post` nodes which were created by that `User`. 
+That's it! The new `posts` field represents a list of `Post` nodes which were created by that `User`.
 
 <Instruction>
 
@@ -180,5 +180,5 @@ In this tutorial, we covered the very basics of using Prisma - but there's a lot
 Here's a few pointers for where you can go next:
 
 - **Quickstart Tutorials (Backend & Frontend)**: The remaining quickstart tutorials explain how to use Prisma together with conrete languages and frameworks, like [React](!alias-tijghei9go), [Node.js](!alias-phe8vai1oo) or [TypeScript](!alias-rohd6ipoo4).
-- [**Examples**](https://github.com/Prisma/Prisma/tree/master/examples): We're maintaing a list of practical examples showcasing certain use cases and scenarios with Prisma, such as authentication & permissions, file handling, wrapping REST APIs or using GraphQL subscriptions.
+- [**Examples**](https://github.com/graphcool/Prisma/tree/master/examples): We're maintaing a list of practical examples showcasing certain use cases and scenarios with Prisma, such as authentication & permissions, file handling, wrapping REST APIs or using GraphQL subscriptions.
 - [**Deployment Docs**](!alias-eu2ood0she): To learn more about different deployment options, you can check out the cluster documentation.

@@ -1,9 +1,9 @@
 ---
 alias: chaha125ho
-description: Overview
+description: GraphQL Playground is a GraphQL IDE for better development workflows (GraphQL subscriptions, interactive docs & collaboration).
 ---
 
-# Overview
+# graphql-playground
 
 🎮 [`graphql-playground`](https://github.com/graphcool/graphql-playground/) is a GraphQL IDE for better development workflows (GraphQL subscriptions, interactive docs & collaboration).
 

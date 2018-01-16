@@ -1,13 +1,13 @@
 ---
 alias: gai5urai6u
-description: Prisma Binding
+description: Prisma Binding provides a GraphQL Binding for Prisma services (GraphQL Database)
 ---
 
-# Prisma Binding
+# prisma-binding
 
-[`prisma-binding`](https://github.com/prisma/prisma-binding/) is a dedicated [GraphQL binding](!alias-quaidah9ph) for Prisma services.
+[`prisma-binding`](https://github.com/graphcool/prisma-binding/) is a dedicated [GraphQL binding](!alias-quaidah9ph) for Prisma services.
 
-> If you're curios about this topic, you can read the [blog post](https://blog.graph.cool/80a4aa37cff5) which introduces the general idea of GraphQL bindings.
+> If you're curious about this topic, you can read the [blog post](https://blog.graph.cool/80a4aa37cff5) which introduces the general idea of GraphQL bindings.
 
 ## Overview
 
@@ -68,7 +68,7 @@ prisma.mutation.updateUser({ where: { id: 'abc' }, data: { name: 'Sarah' } }, '{
 prisma.mutation.deleteUser({ where: { id: 'abc' } }, '{ id }')
 ```
 
-Under the hood, each of these function calls is simply translated into an actual HTTP request against your Prisma service (using [`graphql-request`](https://github.com/prisma/graphql-request)).
+Under the hood, each of these function calls is simply translated into an actual HTTP request against your Prisma service (using [`graphql-request`](https://github.com/graphcool/graphql-request)).
 
 The API also allows to ask whether a specific node exists in your Prisma database:
 
@@ -130,7 +130,7 @@ This function enables you to easily check whether a node of a specific type exis
 
 #### request
 
-The `request` method lets you send GraphQL queries/mutations to your Prisma service. The functionality is identical to the auto-generated delegate resolves, but the API is more verbose as you need to spell out the full query/mutation. `request` uses [`graphql-request`](https://github.com/prisma/graphql-request) under the hood.
+The `request` method lets you send GraphQL queries/mutations to your Prisma service. The functionality is identical to the auto-generated delegate resolves, but the API is more verbose as you need to spell out the full query/mutation. `request` uses [`graphql-request`](https://github.com/graphcool/graphql-request) under the hood.
 
 Here is an example of how it can be used:
 
@@ -154,8 +154,8 @@ prisma.request(query, variables)
 
 ## Usage
 
-- [graphql-boilerplate](https://github.com/prisma/graphql-boilerplate).
-- [graphql-server-example](https://github.com/prisma/graphql-server-example).
+- [graphql-boilerplate](https://github.com/graphcool/graphql-boilerplate).
+- [graphql-server-example](https://github.com/graphcool/graphql-server-example).
 
 ## Next steps
 

@@ -14,7 +14,7 @@ In this quickstart tutorial, you'll learn how to connect your React app directly
 
 Clone the example repository that contains the React application:
 
-```sh
+```
 git clone https://github.com/graphcool/frontend-examples.git
 cd frontend-examples/react
 ```

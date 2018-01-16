@@ -75,7 +75,7 @@ Next, you're going to seed some initial data for the service.
 
 Create a new file called `seed.graphql` inside the `import-example` directory and add the following mutation to it:
 
-```sh
+```graphql
 mutation {
   createUser(data: {
     name: "Sarah",
@@ -198,7 +198,7 @@ Next, you'll create "clone" of the service by deploying it to a new stage.
 
 Open `prisma.yml` and set the `stage` property to a new value. Also remove the `seed` and `cluster` properties!
 
-```sh
+```yml
 service: import-example
 stage: test
 

@@ -5,8 +5,4 @@ description: Overview
 
 # Overview
 
-TODO S:
-- decide where to put this chapter
-- structure & content
-
-TODO N: polish
+Coming soon.

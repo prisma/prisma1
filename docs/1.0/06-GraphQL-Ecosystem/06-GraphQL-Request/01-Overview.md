@@ -1,9 +1,9 @@
 ---
 alias: chinohsh2j
-description: GraphQL Request
+description: GraphQL Request is a minimal GraphQL client supporting Node and browsers for scripts or simple apps.
 ---
 
-# Overview
+# graphql-request
 
 📡 [`graphql-request`](https://github.com/graphcool/graphql-request) is a minimal GraphQL client supporting Node and browsers for scripts or simple apps.
 
@@ -48,7 +48,7 @@ request(endpoint, query, variables).then(data => console.log(data))
 
 // ... or create a GraphQL client instance to send requests
 const client = new GraphQLClient(endpoint, { headers: {} })
-client.request(query, variables).then(data => console.log(data)) 
+client.request(query, variables).then(data => console.log(data))
 ```
 
 ## Examples
@@ -149,7 +149,7 @@ const query = `{
     }
   }
 }`
-  
+
 request('my-endpoint', query).then(data => console.log(data))
 ```
 

@@ -18,7 +18,7 @@ At the moment, Prisma only supports MySQL as a database technology (with [a lot 
 
 1. Translate your SQL schema into a GraphQL data model written in [SDL](https://blog.graph.cool/graphql-sdl-schema-definition-language-6755bcb9ce51)
 1. Deploy a Prisma service with that data model
-1. [If your database previously contained some data] [Import](!alias-caith9teiy) the data into your Prisma service
+1. If your database previously contained some data, [import the data](!alias-caith9teiy) into your Prisma service
 
 If you want to migrate from an existing data source, you can check out our plans to support automatic data imports [here](https://github.com/graphcool/graphcool/issues/1410).
 

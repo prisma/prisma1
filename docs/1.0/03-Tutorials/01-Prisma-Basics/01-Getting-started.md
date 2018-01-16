@@ -11,7 +11,7 @@ Here are the steps you're going to perform:
 
 - Install the Prisma CLI
 - Bootstraping a Prisma service with `prisma init`
-- Explore the API in a GraphQL Playground and send queries & mutations 
+- Explore the API in a GraphQL Playground and send queries & mutations
 
 > To ensure you're not accidentally skipping an instruction in the tutorial, all required actions on your end are highlighted with a little counter on the left.
 >
@@ -25,10 +25,10 @@ Prisma services are managed with the [Prisma CLI](!alias-ieshoo5ohm). You can in
 
 Open your terminal and run the following command to install the Prisma CLI:
 
-```sh
-npm install -g prisma@beta
+```
+npm install -g prisma-cli
 # or
-# yarn global add prisma@beta
+# yarn global add prisma-cli
 ```
 
 </Instruction>
@@ -50,7 +50,7 @@ This will create a new directory called `hello-world` as well as the two files w
 - [`prisma.yml`](!alias-foatho8aip): The root configuration file for your service. It contains information about your service, like the name (which is used to generate the service's HTTP endpoint), a secret to secure the access to the endpoint and about where it should be deployed.
 - `datamodel.graphql` (can also be called differently, e.g. `types.graphql`): This file contains the definition of your [data model](!alias-eiroozae8u), written in [GraphQL SDL](https://blog.graph.cool/graphql-sdl-schema-definition-language-6755bcb9ce51).
 
-> **Note**: The `hello-world` directory actually contains a third file as well: `.graphqlconfig.yml`. This file follows the industry standard for configuring and structuring GraphQL projects (based on [`graphql-config`](https://github.com/Prisma/graphql-config)). If present, it is used by GraphQL tooling (such as the GraphQL Playground, the [`graphql-cli`](https://github.com/graphql-cli/graphql-cli/), text editors, build tools and others) to improve your local developer workflows.
+> **Note**: The `hello-world` directory actually contains a third file as well: `.graphqlconfig.yml`. This file follows the industry standard for configuring and structuring GraphQL projects (based on [`graphql-config`](https://github.com/graphcool/graphql-config)). If present, it is used by GraphQL tooling (such as the GraphQL Playground, the [`graphql-cli`](https://github.com/graphql-cli/graphql-cli/), text editors, build tools and others) to improve your local developer workflows.
 
 Let's take a look at the contents of the generated files:
 
@@ -72,7 +72,7 @@ Here's an overview of the properties in the generated `prisma.yml`:
 - `service`: Defines the service name which will be part of the service's HTTP endpoint
 - `stage`: A service can be deployed to multiple stages (e.g. a _development_ and a _production_ environment)
 - `datamodel`: The path to the file which contains your data model
-- `disableAuth`: If set to true, everyone who knows the endpoint of your Prisma service has full read and write access. If set to `false`, you need to specify a `secret` in `prisma.yml` which is used to generate JWT authentication tokens. These tokens need to be attached to the `Authorization` header of the requests sent to the API of your service. The easiest way to obtain such a token is the `Prisma token` command from the Prisma CLI.
+- `disableAuth`: If set to true, everyone who knows the endpoint of your Prisma service has full read and write access. If set to `false`, you need to specify a `secret` in `prisma.yml` which is used to generate JWT authentication tokens. These tokens need to be attached to the `Authorization` header of the requests sent to the API of your service. The easiest way to obtain such a token is the `prisma token` command from the Prisma CLI.
 
 > **Note**: We'll keep `disableAuth` set to `true` for this tutorial. In production applications, you'll always want to require authentication for your service! You can read more about this topic [here](!alias-pua7soog4v).
 
@@ -112,6 +112,7 @@ Since `prisma.yml` doesn't yet contain the information about _where_ (meaning to
 When prompted where (i.e. to which _cluster_) to deploy your Prisma service, choose one of the _public cluster_ options: `prisma-eu1` or `prisma-us1`.
 
 </Instruction>
+
 Your Prisma service is now deployed and ready to accept your queries and mutations 🎉
 
 ## Exploring your service in a GraphQL Playground
@@ -132,7 +133,7 @@ Because your datamodel contains the `User` type, the Prisma API now allows for i
 
 > **Note**: This list of generated operations is not complete. The Prisma API exposes a couple of more convenience operations that, for example, allow to batch update/delete many nodes. However, all operations either create, read, update or delete nodes of the types defined in the data model.
 
-To actually use these operations, you need a way to [send requests to your service's API](ohm2ouceuj). Since that API is exposed via HTTP, you could use tools like [`curl`](https://en.wikipedia.org/wiki/CURL) or [Postman](https://www.getpostman.com/) to interact with it. However, GraphQL actually comes with much nicer tooling for that purpose: [GraphQL Playground](https://github.com/Prisma/graphql-playground), an interactive GraphQL IDE.
+To actually use these operations, you need a way to [send requests to your service's API](ohm2ouceuj). Since that API is exposed via HTTP, you could use tools like [`curl`](https://en.wikipedia.org/wiki/CURL) or [Postman](https://www.getpostman.com/) to interact with it. However, GraphQL actually comes with much nicer tooling for that purpose: [GraphQL Playground](https://github.com/graphcool/graphql-playground), an interactive GraphQL IDE.
 
 <Instruction>
 

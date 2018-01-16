@@ -34,7 +34,7 @@ The best way to get started is through our [Quickstart](https://www.prismagraphq
 
 ### What programming languages does Prisma work with?
 
-Prisma (like GraphQL) is language agnostic and will work with any programming language. That said, the best support for building GraphQL servers is currently provided by the JavaScript ecosystem, thanks to tooling like `graphql-js` or [GraphQL bindings](https://blog.graph.cool/reusing-composing-graphql-apis-with-graphql-bindings-80a4aa37cff5). However, it is definitely feasible to use GraphQL in different programming languages as well, Prisma itself is implemented in Scala and TypeScript.
+Prisma (like GraphQL) is language agnostic and will work with any programming language. That said, the best support for building GraphQL servers is currently provided by the JavaScript ecosystem, thanks to tooling like `graphql-js` or [GraphQL bindings](https://blog.graph.cool/reusing-composing-graphql-apis-with-graphql-bindings-80a4aa37cff5). However, it is definitely feasible to use GraphQL in different programming languages as well. Prisma itself is implemented in Scala and TypeScript.
 
 ### What platforms and cloud providers does Prisma work with?
 
