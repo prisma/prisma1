@@ -12,11 +12,13 @@ object InternalDatabaseSchema {
     }
   }
 
-  lazy val dropAction = DBIO.seq(sqlu"DROP SCHEMA IF EXISTS `graphcool`;")
+  val internalDbName = "prisma"
+
+  lazy val dropAction = DBIO.seq(sqlu"DROP SCHEMA IF EXISTS #$internalDbName;")
 
   lazy val setupActions = DBIO.seq(
-    sqlu"CREATE SCHEMA IF NOT EXISTS `graphcool` DEFAULT CHARACTER SET latin1;",
-    sqlu"USE `graphcool`;",
+    sqlu"CREATE SCHEMA IF NOT EXISTS #$internalDbName DEFAULT CHARACTER SET latin1;",
+    sqlu"USE #$internalDbName;",
     // Project
     sqlu"""
       CREATE TABLE IF NOT EXISTS `Project` (

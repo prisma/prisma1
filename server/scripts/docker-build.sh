@@ -16,7 +16,7 @@ TAG=latest
 
 for service in deploy database prisma;
 do
-  latest=$(docker images graphcool/$service -q | head -n 1)
+  latest=$(docker images prismagraphql/$service -q | head -n 1)
 
   echo "Tagging prismagraphql/$service ($latest) image with $TAG..."
   docker tag $latest prismagraphql/$service:$TAG

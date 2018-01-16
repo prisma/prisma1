@@ -7,7 +7,7 @@ import slick.dbio.{DBIOAction, NoStream}
 import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.meta.MTable
 
-class InternalTestDatabase extends AwaitUtils { //this: Suite =>
+class InternalTestDatabase extends AwaitUtils {
   import scala.concurrent.ExecutionContext.Implicits.global
 
   val dbDriver             = new org.mariadb.jdbc.Driver
@@ -17,7 +17,7 @@ class InternalTestDatabase extends AwaitUtils { //this: Suite =>
   def createInternalDatabaseSchema() = internalDatabaseRoot.run(InternalDatabaseSchema.createSchemaActions(recreate = true)).await(10)
 
   def truncateTables(): Unit = {
-    val schemas = internalDatabase.run(getTables("graphcool")).await()
+    val schemas = internalDatabase.run(getTables(InternalDatabaseSchema.internalDbName)).await()
     internalDatabase.run(dangerouslyTruncateTables(schemas)).await()
   }
 
