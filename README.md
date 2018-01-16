@@ -23,7 +23,7 @@ The Prisma GraphQL API provides powerful abstractions and building blocks to dev
 * [Quickstart](#quickstart)
 * [Examples](#examples)
 * [Architecture](#architecture)
-* [Supported Database](#supported-databases)
+* [Supported Databases](#supported-databases)
 * [GraphQL API](#graphql-api)
 * [Community](#community)
 * [Contributing](#contributing)
@@ -110,7 +110,7 @@ Prisma is a secure API layer that sits in front of your database. Acting as a pr
 
 ## Supported Databases
 
-Prisma can be used for MySQL Databases out of the box. More databases connectors will follow:
+Prisma can be used for MySQL Databases out of the box. More database connectors will follow:
 
 * [PostgreSQL Connector](https://github.com/graphcool/prisma/issues/1641)
 * [MS SQL Connector](https://github.com/graphcool/prisma/issues/1642)
