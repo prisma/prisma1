@@ -6,5 +6,5 @@
 
 ## Todo
 
-* [ ] combine Graphcool and REST API
+* [ ] combine Prisma and REST API
 * [ ] write README
