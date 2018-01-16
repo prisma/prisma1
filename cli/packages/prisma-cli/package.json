@@ -1,5 +1,5 @@
 {
-  "name": "prisma-cli",
+  "name": "prisma",
   "description": "Prisma is a realtime GraphQL database layer. Connect directly from the frontend or build your own GraphQL server.",
   "keywords": [
     "prisma",
@@ -17,7 +17,7 @@
   "bugs": {
     "url": "https://github.com/graphcool/prisma/issues"
   },
-  "version": "1.0.0",
+  "version": "1.0.4",
   "main": "dist/index.js",
   "bin": {
     "prisma": "dist/index.js"

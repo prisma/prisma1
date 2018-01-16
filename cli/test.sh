@@ -2,8 +2,10 @@
 
 set -e
 
-cd packages/graphcool-cli-engine
+cd packages/prisma-cli-engine
 npm run build
 npm test
-cd ../../packages/graphcool-cli-core
+cd ../../packages/prisma-cli-core
+npm test
+cd ../../packages/prisma-yml
 npm test
