@@ -17,7 +17,7 @@
   "bugs": {
     "url": "https://github.com/graphcool/prisma/issues"
   },
-  "version": "1.0.4",
+  "version": "1.0.4-beta.1",
   "main": "dist/index.js",
   "bin": {
     "prisma": "dist/index.js"

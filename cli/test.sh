@@ -2,11 +2,12 @@
 
 set -e
 
-cd packages/prisma-cli-engine
-yarn install
+cd packages/prisma-yml
 yarn build
 yarn test
-cd ../../packages/prisma-cli-core
+cd ../prisma-cli-engine
+yarn build
 yarn test
-cd ../../packages/prisma-yml
+cd ../prisma-cli-core
+yarn build
 yarn test
