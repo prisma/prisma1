@@ -8,6 +8,8 @@ import scala.concurrent.Future
 import com.twitter.conversions.time._
 import com.twitter.finagle.service.Backoff
 
+import scala.util.Failure
+
 object InstanceMetadata {
   import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -44,9 +46,10 @@ object InstanceMetadata {
     val request       = Request(Method.Get, path)
     val requestFuture = service(request).asScala
 
-    requestFuture.onFailure({
-      case e => throw MetricsError(s"Error while fetching request ${request.uri}: $e")
-    })
+    requestFuture.onComplete {
+      case Failure(e) => throw MetricsError(s"Error while fetching request ${request.uri}: $e")
+      case _          =>
+    }
 
     requestFuture.map { (response: Response) =>
       response.status match {

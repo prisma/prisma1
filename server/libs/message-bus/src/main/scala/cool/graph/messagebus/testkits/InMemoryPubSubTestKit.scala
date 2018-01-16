@@ -11,7 +11,6 @@ import cool.graph.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
 import scala.concurrent.duration._
 import scala.language.existentials
 import scala.reflect.ClassTag
-import scala.util.Try
 
 /**
   * InMemory testkit for simple test cases that requires reasoning over published or received messages for a PubSub.
@@ -125,14 +124,14 @@ case class InMemoryPubSubTestKit[T]()(
     * For expecting that no message arrived _at any subscriber_ in the given time frame.
     * Requires at least one subscriber to be meaningful.
     */
-  def expectNoMsg(maxWait: FiniteDuration = 6.seconds): Unit = probe.expectNoMsg(maxWait)
+  def expectNoMsg(maxWait: FiniteDuration = 6.seconds): Unit = probe.expectNoMessage(maxWait)
 
   /**
     * For expecting that no message was published to the PubSub in the given time frame.
     * Does _not_ require a subscriber to be meaningful.
     */
   def expectNoPublishedMsg(maxWait: FiniteDuration = 6.seconds): Unit = {
-    publishProbe.expectNoMsg(maxWait)
+    publishProbe.expectNoMessage(maxWait)
   }
 
   /**
@@ -143,7 +142,7 @@ case class InMemoryPubSubTestKit[T]()(
     */
   def expectMsgCount(count: Int, maxWait: FiniteDuration = 6.seconds): Unit = {
     probe.expectMsgAllClassOf(maxWait, Array.fill(count)(messageTag.runtimeClass): _*)
-    probe.expectNoMsg(maxWait)
+    probe.expectNoMessage(maxWait)
   }
 
   /**
@@ -154,7 +153,7 @@ case class InMemoryPubSubTestKit[T]()(
     */
   def expectPublishCount(count: Int, maxWait: FiniteDuration = 6.seconds): Unit = {
     publishProbe.expectMsgAllClassOf(maxWait, Array.fill(count)(messageTag.runtimeClass): _*)
-    publishProbe.expectNoMsg(maxWait)
+    publishProbe.expectNoMessage(maxWait)
   }
 
   /**
@@ -192,12 +191,10 @@ case class InMemoryPubSubTestKit[T]()(
   }
 
   def reset: Unit = {
-    Try {
-      messagesReceived = Vector.empty[Message[T]]
-      messagesPublished = Vector.empty[Message[T]]
-      probe = TestProbe()
-      publishProbe = TestProbe()
-    }
+    messagesReceived = Vector.empty[Message[T]]
+    messagesPublished = Vector.empty[Message[T]]
+    probe = TestProbe()
+    publishProbe = TestProbe()
   }
 
   override def shutdown(): Unit = {

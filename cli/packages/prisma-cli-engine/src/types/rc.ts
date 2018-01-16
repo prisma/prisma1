@@ -18,6 +18,11 @@ export interface InternalRC {
   targets?: InternalTargets
 }
 
+export interface FrameworkRC {
+  'graphcool-framework'?: InternalRC
+  'graphcool-1.0'?: any
+}
+
 export interface InternalTargets {
   [name: string]: string
 }

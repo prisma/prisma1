@@ -1,1 +1,0 @@
-name := "backend-api-simple"

@@ -1,8 +1,8 @@
 package cool.graph.messagebus.pubsub.rabbit
 
 import akka.actor.{ActorRef, ActorSystem}
+import com.prisma.errors.ErrorReporter
 import cool.graph.akkautil.SingleThreadedActorSystem
-import cool.graph.bugsnag.BugSnagger
 import cool.graph.messagebus.Conversions.{ByteMarshaller, ByteUnmarshaller, Converter}
 import cool.graph.messagebus._
 import cool.graph.messagebus.pubsub.{Message, Only, Subscription, Topic}
@@ -28,7 +28,7 @@ case class RabbitAkkaPubSub[T](
     durable: Boolean = false,
     concurrency: Int = 1
 )(
-    implicit val bugSnagger: BugSnagger,
+    implicit val reporter: ErrorReporter,
     system: ActorSystem,
     marshaller: ByteMarshaller[T],
     unmarshaller: ByteUnmarshaller[T]
@@ -59,7 +59,7 @@ object RabbitAkkaPubSub {
       exchangeName: String,
       concurrency: Int = 1,
       durable: Boolean = false
-  )(implicit bugSnagger: BugSnagger, marshaller: ByteMarshaller[T]): RabbitAkkaPubSubPublisher[T] = {
+  )(implicit reporter: ErrorReporter, marshaller: ByteMarshaller[T]): RabbitAkkaPubSubPublisher[T] = {
     val exchange = RabbitUtils.declareExchange(amqpUri, exchangeName, concurrency, durable)
 
     RabbitAkkaPubSubPublisher[T](exchange, onShutdown = () => {
@@ -72,7 +72,7 @@ object RabbitAkkaPubSub {
       exchangeName: String,
       concurrency: Int = 1,
       durable: Boolean = false
-  )(implicit bugSnagger: BugSnagger, unmarshaller: ByteUnmarshaller[T]): RabbitAkkaPubSubSubscriber[T] = {
+  )(implicit reporter: ErrorReporter, unmarshaller: ByteUnmarshaller[T]): RabbitAkkaPubSubSubscriber[T] = {
     import scala.concurrent.duration._
 
     implicit val system = SingleThreadedActorSystem("rabbitPubSubSubscriberStandalone")
@@ -89,7 +89,7 @@ object RabbitAkkaPubSub {
       exchangeName: String,
       concurrency: Int = 1,
       durable: Boolean = false
-  )(implicit bugSnagger: BugSnagger, actorSystem: ActorSystem, unmarshaller: ByteUnmarshaller[T]): RabbitAkkaPubSubSubscriber[T] = {
+  )(implicit reporter: ErrorReporter, actorSystem: ActorSystem, unmarshaller: ByteUnmarshaller[T]): RabbitAkkaPubSubSubscriber[T] = {
     val exchange = RabbitUtils.declareExchange(amqpUri, exchangeName, concurrency, durable)
 
     RabbitAkkaPubSubSubscriber[T](exchange, onShutdown = () => {

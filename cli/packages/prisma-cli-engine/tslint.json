@@ -1,9 +1,5 @@
 {
-  "extends": [
-    "tslint:latest",
-    "tslint-eslint-rules",
-    "tslint-config-prettier"
-  ],
+  "extends": ["tslint:latest", "tslint-eslint-rules", "tslint-config-prettier"],
   "rules": {
     "semicolon": false,
     "ordered-imports": false,
@@ -13,6 +9,8 @@
     "no-object-literal-type-assertion": false,
     "no-console": [false],
     "no-var-requires": null,
-    "no-submodule-imports": null
+    "no-submodule-imports": null,
+    "jsdoc-format": null,
+    "max-classes-per-file": null
   }
 }

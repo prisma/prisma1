@@ -1,6 +1,6 @@
 package cool.graph.messagebus.queue.rabbit
 
-import cool.graph.bugsnag.BugSnagger
+import com.prisma.errors.ErrorReporter
 import cool.graph.messagebus.Conversions.{ByteMarshaller, ByteUnmarshaller}
 import cool.graph.messagebus.QueueConsumer.ConsumeFn
 import cool.graph.messagebus.{ConsumerRef, Queue}
@@ -20,7 +20,7 @@ case class RabbitQueue[T](
     exchangeConcurrency: Int = 1,
     workerConcurrency: Int = 1
 )(
-    implicit bugSnagger: BugSnagger,
+    implicit reporter: ErrorReporter,
     marshaller: ByteMarshaller[T],
     unmarshaller: ByteUnmarshaller[T]
 ) extends Queue[T] {
@@ -58,7 +58,7 @@ object RabbitQueue {
       exchangeName: String,
       concurrency: Int = 1,
       durable: Boolean = false
-  )(implicit bugSnagger: BugSnagger, marshaller: ByteMarshaller[T]): RabbitQueuePublisher[T] = {
+  )(implicit reporter: ErrorReporter, marshaller: ByteMarshaller[T]): RabbitQueuePublisher[T] = {
     val exchange = RabbitUtils.declareExchange(amqpUri, exchangeName, concurrency, durable)
 
     RabbitQueuePublisher[T](exchange, onShutdown = () => {
@@ -73,7 +73,7 @@ object RabbitQueue {
       workerConcurrency: Int = 1,
       durableExchange: Boolean = false,
       backoff: BackoffStrategy = LinearBackoff(5.seconds)
-  )(implicit bugSnagger: BugSnagger, unmarshaller: ByteUnmarshaller[T]): RabbitQueueConsumer[T] = {
+  )(implicit reporter: ErrorReporter, unmarshaller: ByteUnmarshaller[T]): RabbitQueueConsumer[T] = {
     val exchange = RabbitUtils.declareExchange(amqpUri, exchangeName, exchangeConcurrency, durableExchange)
 
     RabbitQueueConsumer[T](exchangeName, exchange, backoff, workerConcurrency, onShutdown = () => exchange.channel.close())
@@ -88,7 +88,7 @@ object RabbitQueue {
       autoDelete: Boolean = true,
       durableExchange: Boolean = false,
       backoff: BackoffStrategy = LinearBackoff(5.seconds)
-  )(implicit bugSnagger: BugSnagger, unmarshaller: ByteUnmarshaller[T]): RabbitPlainQueueConsumer[T] = {
+  )(implicit reporter: ErrorReporter, unmarshaller: ByteUnmarshaller[T]): RabbitPlainQueueConsumer[T] = {
     val exchange = RabbitUtils.declareExchange(amqpUri, exchangeName, exchangeConcurrency, durableExchange)
 
     RabbitPlainQueueConsumer[T](queueName, exchange, backoff, autoDelete = autoDelete, onShutdown = () => exchange.channel.close())
