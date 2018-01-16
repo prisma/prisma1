@@ -1,4 +1,4 @@
-const { forwardTo } = require('graphcool-binding')
+const { forwardTo } = require('prisma-binding')
 
 // here you see the difference between forwarding and delegating a mutation
 const Mutation = {
