@@ -4,19 +4,21 @@ import * as jwt from 'jsonwebtoken'
 
 // Helpers -------------------------------------------------------------------
 
-async function getGraphcoolUser(ctx: Context, githubUserId: string): Promise<User> {
-  return await ctx.db.query.user({ where: { githubUserId }})
+async function getPrismaUser(ctx: Context, githubUserId: string): Promise<User> {
+  return await ctx.db.query.user({ where: { githubUserId } })
 }
 
-async function createGraphcoolUser(ctx, githubUser: GithubUser): Promise<User> {
-  const user = await ctx.db.mutation.createUser({ data: {
-    githubUserId: githubUser.id,
-    name: githubUser.name,
-    bio: githubUser.bio,
-    public_repos: githubUser.public_repos,
-    public_gists: githubUser.public_gists,
-    notes: []
-  }})
+async function createPrismaUser(ctx, githubUser: GithubUser): Promise<User> {
+  const user = await ctx.db.mutation.createUser({
+    data: {
+      githubUserId: githubUser.id,
+      name: githubUser.name,
+      bio: githubUser.bio,
+      public_repos: githubUser.public_repos,
+      public_gists: githubUser.public_gists,
+      notes: [],
+    },
+  })
   return user
 }
 
@@ -27,17 +29,17 @@ export const auth = {
     const githubToken = await getGithubToken(githubCode)
     const githubUser = await getGithubUser(githubToken)
 
-    let user = await getGraphcoolUser(ctx, githubUser.id)
+    let user = await getPrismaUser(ctx, githubUser.id)
 
     if (!user) {
-      user = await createGraphcoolUser(ctx, githubUser)
+      user = await createPrismaUser(ctx, githubUser)
     }
 
     return {
       token: jwt.sign({ userId: user.id }, process.env.JWT_SECRET),
-      user
+      user,
     }
-  }
+  },
 }
 
 // ---------------------------------------------------------------------------
