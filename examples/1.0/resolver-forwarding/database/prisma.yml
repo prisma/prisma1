@@ -2,12 +2,12 @@
 service: passthrough
 
 # the cluster and stage the service is deployed to
-stage: ${env:GRAPHCOOL_STAGE}
-cluster: ${env:GRAPHCOOL_CLUSTER}
+stage: ${env:PRISMA_STAGE}
+cluster: ${env:PRISMA_CLUSTER}
 
 # to disable authentication:
 # disableAuth: true
-secret: ${env:GRAPHCOOL_SECRET}
+secret: ${env:PRISMA_SECRET}
 
 # the file path pointing to your data model
 datamodel: database/datamodel.graphql

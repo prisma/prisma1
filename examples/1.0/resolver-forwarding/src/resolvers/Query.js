@@ -1,4 +1,4 @@
-const { forwardTo } = require('graphcool-binding')
+const { forwardTo } = require('prisma-binding')
 
 /*
  * This is a simple case of passing through a query resolver from the DB to the app
@@ -10,7 +10,7 @@ const { forwardTo } = require('graphcool-binding')
  * to forward the `posts` query to the database
  */
 const Query = {
-  posts: forwardTo('db')
+  posts: forwardTo('db'),
 }
 
 module.exports = { Query }
