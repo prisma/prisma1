@@ -24,7 +24,7 @@ When done, you should be able to run the following command:
 docker-machine version 0.13.0, build 9ba6da9
 ```
 
-## Conenct to Digital Ocean
+## Connect to Digital Ocean
 
 If you are new to Digital Ocean you should start by creating an account at https://www.digitalocean.com/
 
