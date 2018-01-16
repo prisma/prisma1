@@ -5,6 +5,6 @@ projects:
       endpoints:
         default: "http://localhost:4000"
   database:
-    schemaPath: "src/generated/graphcool.graphql"
+    schemaPath: "src/generated/prisma.graphql"
     extensions:
-      graphcool: database/graphcool.yml
+      prisma: database/prisma.yml
