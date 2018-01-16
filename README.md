@@ -23,6 +23,8 @@ The Prisma GraphQL API provides powerful abstractions and building blocks to dev
 * [Quickstart](#quickstart)
 * [Examples](#examples)
 * [Architecture](#architecture)
+* [Supported Database](#supported-databases)
+* [GraphQL API](#graphql-api)
 * [Community](#community)
 * [Contributing](#contributing)
 
@@ -84,6 +86,8 @@ prisma deploy
 
 Use the endpoint from the previous step in your frontend (or backend) applications to connect to your GraphQL API.
 
+7 **Read more in the dedicated quickstarts for your favorite technology**
+
 [![](https://imgur.com/T5nakij.png)](https://www.prismagraphql.com/docs/quickstart/)
 
 ## Examples
@@ -103,6 +107,21 @@ Use the endpoint from the previous step in your frontend (or backend) applicatio
 Prisma is a secure API layer that sits in front of your database. Acting as a proxy, Prisma exposes a powerful GraphQL API and manages Rate-Limiting, Authentication, Logging and a host of other features. Because Prisma is a standalone process, it can be scaled independently from your application layer and provide scalable subscriptions infrastructure.
 
 ![](https://imgur.com/SdssPgT.png)
+
+## Supported Databases
+
+Prisma can be used for MySQL Databases out of the box. More databases connectors will follow:
+
+* [PostgreSQL Connector](https://github.com/graphcool/prisma/issues/1641)
+* [MS SQL Connector](https://github.com/graphcool/prisma/issues/1642)
+* [MongoDB Connector](https://github.com/graphcool/prisma/issues/1643)
+* [Oracle Connector](https://github.com/graphcool/prisma/issues/1644)
+* [ArangoDB Connector](https://github.com/graphcool/prisma/issues/1645)
+* [Neo4j Connector](https://github.com/graphcool/prisma/issues/1646)
+* [Druid Connector](https://github.com/graphcool/prisma/issues/1647)
+* [Dgraph Connector](https://github.com/graphcool/prisma/issues/1648)
+
+Join the discussion or contribute to influence which we'll work on next!
 
 ## GraphQL API
 
@@ -128,10 +147,7 @@ Prisma has a community of thousands of amazing developers and contributors. Welc
 
 Your feedback is **very helpful**, please share your opinion and thoughts!
 
-### +1 an issue
+* [Request a new feature](https://github.com/graphcool/prisma/issues/new)
+* [Report a bug](https://github.com/graphcool/prisma/issues/new)
+* [Participate in existing discussions](https://github.com/graphcool/prisma/issues)
 
-If an existing feature request or bug report is very important to you, please go ahead and :+1: it or leave a comment. We're always open to reprioritize our roadmap to make sure you're having the best possible DX.
-
-### Requesting a new feature
-
-We love your ideas for new features. If you're missing a certain feature, please feel free to [request a new feature here](https://github.com/graphcool/prisma/issues/new). (Please make sure to check first if somebody else already requested it.)
