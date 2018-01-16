@@ -1,16 +1,16 @@
 import * as jwt from 'jsonwebtoken'
-import { Graphcool } from 'graphcool-binding'
+import { Prisma } from 'prisma-binding'
 
 export interface Context {
-  db: Graphcool,
+  db: Prisma
   request: any
 }
 
 export interface User {
-  id: string,
-  name: string,
-  bio: string,
-  public_repos: string,
+  id: string
+  name: string
+  bio: string
+  public_repos: string
   public_gists: string
 }
 

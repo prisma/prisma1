@@ -5,4 +5,4 @@ stage: dev
 datamodel:
   - database/datamodel/types.graphql
 
-secret: ${env:GRAPHCOOL_SECRET}
+secret: ${env:PRISMA_SECRET}

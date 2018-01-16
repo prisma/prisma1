@@ -7,7 +7,7 @@
     // Will extract code from current url
     const githubCode = window.location.search.substring(1).split('&')[0].split('code=')[1]
     if (githubCode) {
-      // call Graphcool authenticateGithubUser mutation
+      // call Prisma authenticateGithubUser mutation
       console.log(githubCode)
     }
     function getgithubCode() {

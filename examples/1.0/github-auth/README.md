@@ -1,13 +1,13 @@
 # GraphQL Server - Github Auth
 
-This example illustrates the implemention of Github Authentication with GraphQL Server, using `graphql-yoga` and `graphcool-biniding`. To get a detailed overview of how things work, you can follow along with [this](https://medium.com/@maticzavadlal/graphcool-1-0-example-series-authentication-282f274b8343) article.
+This example illustrates the implemention of Github Authentication with GraphQL Server, using `graphql-yoga` and `prisma-biniding`.
 
 ## Getting started
 
-### Initializing the Graphcool Database service
+### Initializing the Prisma Database service
 
 ```sh
-graphcool deploy # copy simple API endpoint into the `GRAPHCOOL_ENPOINT` env var in .env
+prisma deploy # copy simple API endpoint into the `PRISMA_ENPOINT` env var in .env
 ```
 
 ### Setting up the Github OAuth2
