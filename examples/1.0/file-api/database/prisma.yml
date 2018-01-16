@@ -2,7 +2,7 @@ service: graphql-server-file-upload-example
 
 stage: dev
 
-secret: ${env:GRAPHCOOL_SECRET}
+secret: ${env:PRISMA_SECRET}
 
 datamodel:
   - datamodel.graphql
