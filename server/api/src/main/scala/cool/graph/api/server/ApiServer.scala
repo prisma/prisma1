@@ -43,6 +43,11 @@ case class ApiServer(
 
   import scala.concurrent.duration._
 
+  lazy val unthrottledProjectIds = sys.env.get("UNTHROTTLED_PROJECT_IDS") match {
+    case Some(envValue) => envValue.split('|').toVector.map(ProjectId.fromEncodedString)
+    case None           => Vector.empty
+  }
+
   lazy val throttler: Option[Throttler[ProjectId]] = {
     for {
       throttlingRate    <- sys.env.get("THROTTLING_RATE")
@@ -84,9 +89,10 @@ case class ApiServer(
     }
 
     def throttleApiCallIfNeeded(name: String, stage: String, rawRequest: RawRequest) = {
+      val projectId = ProjectId(name = name, stage = stage)
       throttler match {
-        case Some(throttler) => throttledCall(name, stage, rawRequest, throttler)
-        case None            => unthrottledCall(name, stage, rawRequest)
+        case Some(throttler) if !unthrottledProjectIds.contains(projectId) => throttledCall(name, stage, rawRequest, throttler)
+        case None                                                          => unthrottledCall(name, stage, rawRequest)
       }
     }
 
