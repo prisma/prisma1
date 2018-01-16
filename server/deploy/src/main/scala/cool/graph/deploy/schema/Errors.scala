@@ -2,8 +2,6 @@ package cool.graph.deploy.schema
 
 import com.prisma.sangria.utils.ErrorWithCode
 import cool.graph.shared.models.ProjectId
-import sangria.execution.ValidationError
-import sangria.parser.SyntaxError
 
 trait DeployApiError extends Exception with ErrorWithCode {
   def message: String
