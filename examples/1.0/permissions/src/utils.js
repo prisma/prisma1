@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken')
-const { Graphcool } = require('graphcool-binding')
+const { Prisma } = require('prisma-binding')
 
 function getUserId(ctx) {
   const Authorization = ctx.request.get('Authorization')
@@ -20,5 +20,5 @@ class AuthError extends Error {
 
 module.exports = {
   getUserId,
-  AuthError
+  AuthError,
 }
