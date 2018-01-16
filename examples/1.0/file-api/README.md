@@ -1,13 +1,13 @@
 # GraphQL Server File Upload Example
 
-This example illustrates the implementation of File API with GraphQL Server pattern. To better understand how things work, you can follow along with [this](https://medium.com/@maticzavadlal/graphcool-1-0-examples-series-file-api-3b16b4b8785f) article.
+This example illustrates the implementation of File API with GraphQL Server pattern. 
 
 ## Getting Started
 
-### Initializing the Graphcool Database Service
+### Initializing the Prisma Database Service
 ```sh
-graphcool deploy # choose local cluster
-# copy API endpoint into the `GRAPHCOOL_ENPOINT` env var in .env
+prisma deploy # choose local cluster
+# copy API endpoint into the `PRISMA_ENPOINT` env var in .env
 ```
 
 ### Setting up the S3 bucket
@@ -29,13 +29,13 @@ yarn start
 
 ## Uploading files
 
-You can upload files  to a project by doing a `multipart/form-data` HTTP request to the File API `http://localhost:5000/upload`.
+You can upload files to a project by doing a `multipart/form-data` HTTP request to the File API `http://localhost:5000/upload`.
 
 It's important to use the form parameter `data` as seen in the example below.
 
 ### Uploading workflow
 
-Everytime you upload a file to Graphcool, a new `File` node is created that contains information about that file.
+Everytime you upload a file to Prisma, a new `File` node is created that contains information about that file.
 
 * `id`: the [familiar system field](!alias-eiroozae8u#id-field)
 * `secret`: a unique, unguessable secret that allows access to the file

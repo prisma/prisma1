@@ -1,13 +1,13 @@
-import { Graphcool } from "graphcool-binding"
+import { Prisma } from 'prisma-binding'
 
 export interface Context {
-  db: Graphcool,
+  db: Prisma
   request: any
 }
 
 export interface FileMeta {
-  name: string,
-  size: number,
-  contentType: string,
+  name: string
+  size: number
+  contentType: string
   secret: string
 }

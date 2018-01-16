@@ -1,4 +1,4 @@
-# import ID, File from "./generated/graphcool.graphql"
+# import ID, File from "./generated/prisma.graphql"
 
 type Query {
   file(id: ID!): File

@@ -2,7 +2,7 @@ import { file } from './Mutation/file'
 
 export const resolvers = {
   Query: {
-    file: async (parent, {id}, context, info) => {
+    file: async (parent, { id }, context, info) => {
       return context.db.query.file({ where: { id } }, info)
     },
     files: async (parent, args, context, info) => {
@@ -11,5 +11,5 @@ export const resolvers = {
   },
   Mutation: {
     ...file,
-  }
+  },
 }
