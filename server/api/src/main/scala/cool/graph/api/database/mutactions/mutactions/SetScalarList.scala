@@ -1,30 +1,18 @@
 package cool.graph.api.database.mutactions.mutactions
 
-import java.sql.SQLIntegrityConstraintViolationException
-
-import cool.graph.api.database.mutactions.validation.InputValueValidation
-import cool.graph.api.database.mutactions.{ClientSqlDataChangeMutaction, ClientSqlStatementResult, GetFieldFromSQLUniqueException, MutactionVerificationSuccess}
-import cool.graph.api.database.{DataResolver, DatabaseMutationBuilder, ProjectRelayId, ProjectRelayIdTable}
-import cool.graph.api.mutations.CoolArgs
-import cool.graph.api.mutations.MutationTypes.{ArgumentValue, ArgumentValueList}
-import cool.graph.api.schema.APIErrors
-import cool.graph.shared.models.IdType.Id
+import cool.graph.api.database.DatabaseMutationBuilder
+import cool.graph.api.database.mutactions.{ClientSqlDataChangeMutaction, ClientSqlStatementResult}
+import cool.graph.api.mutations.NodeSelector
 import cool.graph.shared.models._
-import cool.graph.util.gc_value.GCDBValueConverter
-import cool.graph.util.json.JsonFormats
 import slick.jdbc.MySQLProfile.api._
-import slick.lifted.TableQuery
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.util.{Failure, Success, Try}
 
 case class SetScalarList(
     project: Project,
-    model: Model,
+    where: NodeSelector,
     field: Field,
-    values: Vector[Any],
-    nodeId: String
+    values: Vector[Any]
 ) extends ClientSqlDataChangeMutaction {
 
   override def execute: Future[ClientSqlStatementResult[Any]] = {
@@ -32,7 +20,7 @@ case class SetScalarList(
     Future.successful(
       ClientSqlStatementResult(
         sqlAction = DBIO.seq(
-          DatabaseMutationBuilder.setScalarList(project.id, model.name, field.name, nodeId, values)
+          DatabaseMutationBuilder.setScalarList(project.id, where, field.name, values)
         )))
   }
 

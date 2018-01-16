@@ -320,18 +320,32 @@ object DatabaseMutationBuilder {
 
   //rewrite these to handle use where?
 
-  def setScalarList(projectId: String, modelName: String, fieldName: String, nodeId: String, values: Vector[Any]): DBIOAction[Unit, NoStream, Effect] = {
+  def setScalarList(projectId: String, where: NodeSelector, fieldName: String, values: Vector[Any]) = {
 
-    val escapedValueTuples = for {
-      (escapedValue, position) <- values.map(escapeUnsafeParam).zip((1 to values.length).map(_ * 1000))
-    } yield {
-      sql"($nodeId, $position, " concat escapedValue concat sql")"
+    where.isId match {
+      case false =>
+        val escapedValueTuples = for {
+          (escapedValue, position) <- values.map(escapeUnsafeParam).zip((1 to values.length).map(_ * 1000))
+        } yield {
+          sql"(@nodeId, $position, " concat escapedValue concat sql")"
+        }
+        DBIO.sequence(
+          List(
+            sqlu"""set @nodeId := (select id from `#$projectId`.`#${where.model.name}` where `#${where.field.name}` = ${where.fieldValue})""",
+            (sql"replace into `#$projectId`.`#${where.model.name}_#${fieldName}` (`nodeId`, `position`, `value`) values " concat combineByComma(
+              escapedValueTuples)).asUpdate
+          ))
+      case true =>
+        val escapedValueTuples = for {
+          (escapedValue, position) <- values.map(escapeUnsafeParam).zip((1 to values.length).map(_ * 1000))
+        } yield {
+          sql"(${where.fieldValueAsString}, $position, " concat escapedValue concat sql")"
+        }
+        DBIO.sequence(
+          List(
+            (sql"replace into `#$projectId`.`#${where.model.name}_#${fieldName}` (`nodeId`, `position`, `value`) values " concat combineByComma(
+              escapedValueTuples)).asUpdate))
     }
-
-    DBIO.seq(
-      sqlu"""delete from `#$projectId`.`#${modelName}_#${fieldName}` where nodeId = $nodeId""",
-      (sql"insert into `#$projectId`.`#${modelName}_#${fieldName}` (`nodeId`, `position`, `value`) values " concat combineByComma(escapedValueTuples)).asUpdate
-    )
   }
 
   def pushScalarList(projectId: String, modelName: String, fieldName: String, nodeId: String, values: Vector[Any]): DBIOAction[Int, NoStream, Effect] = {

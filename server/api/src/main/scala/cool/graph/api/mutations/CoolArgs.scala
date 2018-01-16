@@ -225,6 +225,7 @@ object NodeSelector {
 case class NodeSelector(model: Model, field: Field, fieldValue: GCValue) {
   lazy val unwrappedFieldValue: Any   = GCValueExtractor.fromGCValue(fieldValue)
   lazy val fieldValueAsString: String = GCValueExtractor.fromGCValueToString(fieldValue)
+  val isId: Boolean                   = field.name == "id"
 
 //  lazy val unwrappedFieldValue: Any   = {
 //    fieldValue match {

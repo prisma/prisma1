@@ -222,13 +222,12 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
     verifySuccessfulSetAndRetrieval(fieldName, inputValue, outputValue, project)
   }
 
-  "Deeply nested scalar lists" should "work in cre" in {
+  "Deeply nested scalar lists" should "work in creates " in {
 
     val project = SchemaDsl() { schema =>
       val list = schema.model("List").field("listInts", _.Int, isList = true)
       val todo = schema.model("Todo").field("todoInts", _.Int, isList = true).oneToOneRelation("list", "todo", list)
       val tag  = schema.model("Tag").field("tagInts", _.Int, isList = true).oneToOneRelation("todo", "tag", todo)
-
     }
 
     database.setup(project)
@@ -241,6 +240,32 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
     val result = server.executeQuerySimple(s"""query{lists {listInts, todo {todoInts, tag {tagInts}}}}""".stripMargin, project)
 
     result.toString should equal("""{"data":{"lists":[{"listInts":[1,2],"todo":{"todoInts":[3,4],"tag":{"tagInts":[5,6]}}}]}}""")
+  }
+
+  "Deeply nested scalar lists" should "work in updates " in {
+
+    val project = SchemaDsl() { schema =>
+      val list = schema.model("List").field("listInts", _.Int, isList = true).field("uList", _.String, isUnique = true)
+      val todo = schema.model("Todo").field("todoInts", _.Int, isList = true).field("uTodo", _.String, isUnique = true).oneToOneRelation("list", "todo", list)
+      val tag  = schema.model("Tag").field("tagInts", _.Int, isList = true).field("uTag", _.String, isUnique = true).oneToOneRelation("todo", "tag", todo)
+    }
+
+    database.setup(project)
+
+    val listId = server
+      .executeQuerySimple(
+        s"""mutation{createList(data: {uList: "A", listInts: {set: [1, 2]}, todo: {create: {uTodo: "B", todoInts: {set: [3, 4]}, tag: {create: {uTag: "C",tagInts: {set: [5, 6]}}}}}}) {id}}""".stripMargin,
+        project
+      )
+      .pathAsString("data.createList.id")
+
+    server.executeQuerySimple(
+      s"""mutation{updateList(where: {uList: "A"} data: {listInts: {set: [7, 8]}, todo: {update: {where: {uTodo: "B"} data: {todoInts: {set: [9, 10]}, tag: {update: { where: {uTag: "C"} data: {tagInts: {set: [11, 12]}}}}}}}}) {id}}""".stripMargin,
+      project
+    )
+    val result = server.executeQuerySimple(s"""query{lists {listInts, todo {todoInts, tag {tagInts}}}}""".stripMargin, project)
+
+    result.toString should equal("""{"data":{"lists":[{"listInts":[7,8],"todo":{"todoInts":[9,10],"tag":{"tagInts":[11,12]}}}]}}""")
   }
 
   private def verifySuccessfulSetAndRetrieval(fieldName: String, inputValue: Any, outputValue: Any, project: Project) = {
