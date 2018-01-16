@@ -92,7 +92,7 @@ case class ApiServer(
       val projectId = ProjectId(name = name, stage = stage)
       throttler match {
         case Some(throttler) if !unthrottledProjectIds.contains(projectId) => throttledCall(name, stage, rawRequest, throttler)
-        case None                                                          => unthrottledCall(name, stage, rawRequest)
+        case _                                                             => unthrottledCall(name, stage, rawRequest)
       }
     }
 
