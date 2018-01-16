@@ -1,7 +1,0 @@
-type GreetingPayload {
-  message: String!
-}
-
-extend type Query {
-  greeting(name: String): GreetingPayload
-}
