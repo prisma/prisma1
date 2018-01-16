@@ -1,5 +1,5 @@
 const { GraphQLServer } = require('graphql-yoga')
-const { Graphcool } = require('graphcool-binding')
+const { Prisma } = require('prisma-binding')
 
 const resolvers = {
   Query: {
@@ -9,12 +9,16 @@ const resolvers = {
   },
   Mutation: {
     writePost(parent, { title, text, isPublished }, ctx, info) {
-      return ctx.db.mutation.createPost({ data: {
-          title,
-          text,
-          isPublished,
-        }
-      }, info)
+      return ctx.db.mutation.createPost(
+        {
+          data: {
+            title,
+            text,
+            isPublished,
+          },
+        },
+        info,
+      )
     },
     // writeComment(parent, { body, postId }, ctx, info) {
     //   return ctx.db.mutation.writeComment({ data: {
@@ -28,27 +32,37 @@ const resolvers = {
   },
   Subscription: {
     publications: {
-      subscribe: async(parent, args, ctx, info) => {
-        return ctx.db.subscription.post({ where: {
-          mutation_in: ["CREATED", "UPDATED"],
-          node: {
-            isPublished: true
-          }
-        }}, info)
+      subscribe: async (parent, args, ctx, info) => {
+        return ctx.db.subscription.post(
+          {
+            where: {
+              mutation_in: ['CREATED', 'UPDATED'],
+              node: {
+                isPublished: true,
+              },
+            },
+          },
+          info,
+        )
       },
     },
     comments: {
-      subscribe: async(parent, args, ctx, info) => {
-        return ctx.db.subscription.comments({ where: {
-          node: {
-            post: {
-              title_contains: "News"
-            }
-          }
-        }}, info)
-      }
-    }
-  }
+      subscribe: async (parent, args, ctx, info) => {
+        return ctx.db.subscription.comments(
+          {
+            where: {
+              node: {
+                post: {
+                  title_contains: 'News',
+                },
+              },
+            },
+          },
+          info,
+        )
+      },
+    },
+  },
 }
 
 const server = new GraphQLServer({
@@ -56,8 +70,8 @@ const server = new GraphQLServer({
   resolvers,
   context: req => ({
     ...req,
-    db: new Graphcool({
-      typeDefs: 'src/generated/graphcool.graphql',
+    db: new Prisma({
+      typeDefs: 'src/generated/prisma.graphql',
       endpoint: 'http://localhost:60000/subscriptions/dev',
       secret: 'mysecret123',
     }),
@@ -65,4 +79,4 @@ const server = new GraphQLServer({
   }),
 })
 
-server.start(() => console.log('Server is running on http://localhost:4000'))
+server.start(({ port }) => console.log(`Server is running on http://localhost:${port}`))

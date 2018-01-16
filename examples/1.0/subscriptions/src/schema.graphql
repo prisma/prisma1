@@ -1,6 +1,6 @@
-# import Post, PostSubscriptionPayload from "./generated/graphcool.graphql"
+# import Post, PostSubscriptionPayload from "./generated/prisma.graphql"
 
-# you need to activate this later: # import Comment, CommentSubscriptionPayload from "./generated/graphcool.graphql"
+# you need to activate this later: # import Comment, CommentSubscriptionPayload from "./generated/prisma.graphql"
 
 type Query {
   feed: [Post!]!

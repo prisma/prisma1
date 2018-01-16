@@ -4,7 +4,7 @@
 
 ```
 yarn
-yarn graphcool deploy
+yarn prisma deploy
 yarn start
 ```
 

@@ -2,14 +2,19 @@
   "name": "subscriptions",
   "scripts": {
     "start": "NODE_ENV=dev node src/index.js",
-    "graphcool": "graphcool",
+    "prisma": "prisma",
     "playground": "graphcool playground"
   },
   "dependencies": {
-    "graphcool-binding": "1.3.3",
+    "prisma-binding": "1.3.7",
     "graphql-yoga": "1.1.4"
   },
   "devDependencies": {
-    "graphcool": "1.0.0-beta4.0.6"
+    "prisma-cli": "beta"
+  },
+  "prettier": {
+    "semi": false,
+    "singleQuote": true,
+    "trailingComma": "all"
   }
 }
