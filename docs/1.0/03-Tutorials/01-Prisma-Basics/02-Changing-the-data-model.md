@@ -3,7 +3,7 @@ alias: va4ga2phie
 description: Learn the fundamentals of using Prisma.
 ---
 
-# Changing the data mode and updating the API
+# Changing the data model and updating the API
 
 You now learned how to deploy a Prisma service, how to explore its API and how to interact with it by sending queries and mutations.
 
