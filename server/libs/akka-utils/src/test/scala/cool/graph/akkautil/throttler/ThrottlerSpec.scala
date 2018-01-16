@@ -29,7 +29,7 @@ class ThrottlerSpec extends AcceptanceSpecification {
       }
       .await
 
-    result mustEqual "the-result"
+    result.result mustEqual "the-result"
     callExecuted must beTrue
   }
 

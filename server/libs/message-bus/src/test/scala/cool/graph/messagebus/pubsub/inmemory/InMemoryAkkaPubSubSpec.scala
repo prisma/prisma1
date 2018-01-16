@@ -5,6 +5,7 @@ import cool.graph.akkautil.SingleThreadedActorSystem
 import cool.graph.messagebus.{PubSub, PubSubPublisher}
 import cool.graph.messagebus.pubsub.{Everything, Message, Only}
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Matchers, WordSpecLike}
+import scala.concurrent.duration._
 
 class InMemoryAkkaPubSubSpec
     extends TestKit(SingleThreadedActorSystem("pubsub-spec"))
@@ -47,7 +48,7 @@ class InMemoryAkkaPubSubSpec
         pubsub.subscribe(Only("NOPE"), testCallback)
         Thread.sleep(50)
         pubsub.publish(testTopic, testMsg)
-        probe.expectNoMsg()
+        probe.expectNoMessage(6.seconds)
       }
     }
 
@@ -59,7 +60,7 @@ class InMemoryAkkaPubSubSpec
         Thread.sleep(50)
         pubsub.unsubscribe(subscription)
         pubsub.publish(testTopic, testMsg)
-        probe.expectNoMsg()
+        probe.expectNoMessage(6.seconds)
       }
     }
 
@@ -93,7 +94,7 @@ class InMemoryAkkaPubSubSpec
         pubsub.subscribe(Only("NOPE"), probe.ref)
         Thread.sleep(50)
         pubsub.publish(testTopic, testMsg)
-        probe.expectNoMsg()
+        probe.expectNoMessage(6.seconds)
       }
     }
 
@@ -104,7 +105,7 @@ class InMemoryAkkaPubSubSpec
         Thread.sleep(50)
         pubsub.unsubscribe(subscription)
         pubsub.publish(testTopic, testMsg)
-        probe.expectNoMsg()
+        probe.expectNoMessage(6.seconds)
       }
     }
 

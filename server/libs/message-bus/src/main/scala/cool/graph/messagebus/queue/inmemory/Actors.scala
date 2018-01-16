@@ -6,6 +6,8 @@ import cool.graph.messagebus.QueueConsumer.ConsumeFn
 import cool.graph.messagebus.queue.BackoffStrategy
 import cool.graph.messagebus.queue.inmemory.InMemoryQueueingMessages._
 
+import scala.util.Failure
+
 /**
   * Todos
   * - Message protocol? ACK / NACK etc.?
@@ -52,8 +54,9 @@ case class WorkerActor[T](router: ActorRef, fn: ConsumeFn[T]) extends Actor {
   override def receive = {
     case i: Delivery[T] =>
       if (i.tries < 5) {
-        fn(i.payload).onFailure {
-          case _ => router ! DeferredDelivery(i.nextTry)
+        fn(i.payload).onComplete {
+          case Failure(_) => router ! DeferredDelivery(i.nextTry)
+          case _          =>
         }
       } else {
         println(s"Discarding message, tries exceeded: $i")

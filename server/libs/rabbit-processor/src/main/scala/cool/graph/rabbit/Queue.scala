@@ -2,23 +2,22 @@ package cool.graph.rabbit
 
 import java.nio.charset.StandardCharsets
 
+import com.prisma.errors.ErrorReporter
 import com.rabbitmq.client.{Channel => RabbitChannel, Consumer => RabbitConsumer, _}
-import cool.graph.bugsnag.BugSnagger
 import cool.graph.rabbit.Bindings.Binding
-import cool.graph.rabbit.ExchangeTypes._
 
 import scala.util.Try
 
 object Rabbit {
-  def channel(name: String, amqpUri: String, consumerThreads: Int)(implicit bugSnag: BugSnagger): Try[Channel] = {
+  def channel(name: String, amqpUri: String, consumerThreads: Int)(implicit reporter: ErrorReporter): Try[Channel] = {
     channel(name, amqpUri, consumerThreads, None)
   }
 
-  def channel(name: String, amqpUri: String, consumerThreads: Int, qos: Int)(implicit bugSnag: BugSnagger): Try[Channel] = {
+  def channel(name: String, amqpUri: String, consumerThreads: Int, qos: Int)(implicit reporter: ErrorReporter): Try[Channel] = {
     channel(name, amqpUri, consumerThreads, Some(qos))
   }
 
-  def channel(name: String, amqpUri: String, consumerThreads: Int, qos: Option[Int])(implicit bugSnag: BugSnagger): Try[Channel] = {
+  def channel(name: String, amqpUri: String, consumerThreads: Int, qos: Option[Int])(implicit reporter: ErrorReporter): Try[Channel] = {
     PlainRabbit.connect(name, amqpUri, consumerThreads, qos).map { channel =>
       Channel(channel)
     }
@@ -39,7 +38,7 @@ case class Channel(rabbitChannel: RabbitChannel) {
     }
 
   def exchangeDeclare(name: String, durable: Boolean, autoDelete: Boolean = false, confirm: Boolean = false): Try[Exchange] = Try {
-    import collection.JavaConversions.mapAsJavaMap
+    import collection.JavaConverters.mapAsJavaMap
     val internal = false
     rabbitChannel
       .exchangeDeclare(name, BuiltinExchangeType.TOPIC, durable, autoDelete, mapAsJavaMap(Map.empty[String, Object]))
@@ -66,9 +65,9 @@ case class Queue(name: String, channel: Channel) {
     rabbitChannel.queueBind(name, exchangeName, binding.routingKey)
   }
 
-  def consume(f: Delivery => Unit)(implicit bugSnag: BugSnagger): Try[Consumer] = consume(1)(f).map(_.head)
+  def consume(f: Delivery => Unit)(implicit reporter: ErrorReporter): Try[Consumer] = consume(1)(f).map(_.head)
 
-  def consume(numberOfConsumers: Int = 1)(f: Delivery => Unit)(implicit bugSnag: BugSnagger): Try[Seq[Consumer]] =
+  def consume(numberOfConsumers: Int = 1)(f: Delivery => Unit)(implicit reporter: ErrorReporter): Try[Seq[Consumer]] =
     Try {
       (1 to numberOfConsumers).map { _ =>
         consume(DeliveryConsumer(channel, f)).get // get the result so we get the exception if something fails

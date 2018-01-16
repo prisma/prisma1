@@ -2,12 +2,13 @@ package cool.graph.rabbit
 
 import java.util.concurrent.{Executors, ThreadFactory}
 
+import com.prisma.errors.ErrorReporter
+
 import scala.util.Try
 import com.rabbitmq.client.{ConnectionFactory, Channel => RabbitChannel}
-import cool.graph.bugsnag.BugSnagger
 
 object PlainRabbit {
-  def connect(name: String, amqpUri: String, numberOfThreads: Int, qos: Option[Int])(implicit bugSnag: BugSnagger): Try[RabbitChannel] = Try {
+  def connect(name: String, amqpUri: String, numberOfThreads: Int, qos: Option[Int])(implicit reporter: ErrorReporter): Try[RabbitChannel] = Try {
 
     val threadFactory: ThreadFactory = Utils.newNamedThreadFactory(name)
     val factory = {
@@ -15,7 +16,7 @@ object PlainRabbit {
       val timeout = sys.env.getOrElse("RABBIT_TIMEOUT_MS", "500").toInt
       f.setUri(amqpUri)
       f.setConnectionTimeout(timeout)
-      f.setExceptionHandler(RabbitExceptionHandler(bugSnag))
+      f.setExceptionHandler(RabbitExceptionHandler(reporter))
       f.setThreadFactory(threadFactory)
       f.setAutomaticRecoveryEnabled(true)
       f

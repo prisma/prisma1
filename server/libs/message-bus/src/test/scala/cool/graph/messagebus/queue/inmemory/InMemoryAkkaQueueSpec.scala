@@ -50,7 +50,7 @@ class InMemoryAkkaQueueSpec
 
         // 5 tries, 5 times the same message (can't check for the tries explicitly here)
         probe.expectMsgAllOf(2.seconds, Vector.fill(5) { "test" }: _*)
-        probe.expectNoMsg(1.second)
+        probe.expectNoMessage(max = 1.second)
       }
     }
 
