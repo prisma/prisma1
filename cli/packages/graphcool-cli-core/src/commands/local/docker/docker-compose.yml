@@ -13,7 +13,7 @@ services:
       - db-persistence:/var/lib/mysql
 
   localfaas:
-      image: graphcool/localfaas:0.9.0
+      image: graphcool/localfaas:0.11.1
       networks:
         - graphcool
       restart: always
@@ -25,7 +25,7 @@ services:
         - faas-persistence:/var/faas
 
   graphcool:
-    image: graphcool/graphcool-dev:0.9.0
+    image: graphcool/graphcool-dev:0.11.1
     restart: always
     ports:
       - "0.0.0.0:${PORT}:${PORT}"

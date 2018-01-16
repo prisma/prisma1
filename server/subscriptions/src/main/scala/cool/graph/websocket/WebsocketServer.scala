@@ -36,8 +36,7 @@ case class WebsocketServer(dependencies: SubscriptionDependencies, prefix: Strin
     manager ! IncomingQueueMessage(strMsg.topic, strMsg.payload)
   })
 
-  override def healthCheck: Future[_] = Future.successful(())
-  override def onStop: Future[_]      = Future { responseSubscription.unsubscribe }
+  override def onStop: Future[_] = Future { responseSubscription.unsubscribe }
 
   val innerRoutes =
     pathPrefix(Segment) { name =>

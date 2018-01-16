@@ -1,0 +1,9 @@
+service: graphql-server-file-upload-example
+
+stage: dev
+
+secret: ${env:PRISMA_SECRET}
+
+datamodel:
+  - datamodel.graphql
+  

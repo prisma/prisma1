@@ -77,7 +77,9 @@ export class Client {
             const message = e.response.errors[0].message
             this.out.error(
               message +
-                ` in account ${user.email}. Please check if you are logged in to the right account.`,
+                ` in account ${
+                  user.email
+                }. Please check if you are logged in to the right account.`,
             )
           } else if (e.message.startsWith('No valid session')) {
             await this.auth.ensureAuth(true)
@@ -482,9 +484,7 @@ export class Client {
       }
     }
 
-    const { node } = await this.client.request<
-      FunctionLogsPayload
-    >(
+    const { node } = await this.client.request<FunctionLogsPayload>(
       `query ($id: ID!, $count: Int!) {
       node(id: $id) {
         ... on Function {
@@ -604,9 +604,9 @@ export class Client {
 
   async deleteProjects(projectIds: string[]): Promise<string[]> {
     const inputArguments = projectIds.reduce((prev, current, index) => {
-      return `${prev}$projectId${index}: String!${index < projectIds.length - 1
-        ? ', '
-        : ''}`
+      return `${prev}$projectId${index}: String!${
+        index < projectIds.length - 1 ? ', ' : ''
+      }`
     }, '')
     const singleMutations = projectIds.map(
       (projectId, index) => `
@@ -703,6 +703,44 @@ export class Client {
       })
     } catch (e) {
       // noop
+    }
+  }
+
+  async download(projectId: string, exportData: any): Promise<any> {
+    const endpoint = this.env.exportEndpoint(projectId)
+    const result = await fetch(endpoint, {
+      method: 'post',
+      headers: {
+        Authorization: `Bearer ${this.env.token}`,
+        'Content-Type': 'application/json',
+      },
+      body: exportData,
+    })
+
+    const text = await result.text()
+    try {
+      return JSON.parse(text)
+    } catch (e) {
+      throw new Error(text)
+    }
+  }
+
+  async upload(projectId: string, importData: any): Promise<any> {
+    const endpoint = this.env.importEndpoint(projectId)
+    const result = await fetch(endpoint, {
+      method: 'post',
+      headers: {
+        Authorization: `Bearer ${this.env.token}`,
+        'Content-Type': 'application/json',
+      },
+      body: importData,
+    })
+
+    const text = await result.text()
+    try {
+      return JSON.parse(text)
+    } catch (e) {
+      throw new Error(text)
     }
   }
 

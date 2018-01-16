@@ -1,0 +1,10 @@
+type File {
+  id: ID! @unique
+  name: String!
+  size: Int!
+  secret: String! @unique
+  contentType: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  url: String! @unique
+}
