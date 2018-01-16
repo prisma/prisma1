@@ -29,10 +29,10 @@ class PubSubRouterAltSpec
 
       routerActor ! Publish(topic, "test")
       probe.expectMsg("test")
-      probe.expectNoMsg(max = 1.second)
+      probe.expectNoMessage(max = 1.second)
 
       routerActor ! Publish("testTopic2", "test2")
-      probe.expectNoMsg(max = 1.second)
+      probe.expectNoMessage(max = 1.second)
     }
 
     "unsubscribe subscribers correctly" in {
@@ -48,7 +48,7 @@ class PubSubRouterAltSpec
       router.router.routees.length shouldEqual 0
 
       routerActor ! Publish(topic, "test")
-      probe.expectNoMsg(max = 1.second)
+      probe.expectNoMessage(max = 1.second)
     }
 
     "handle actor terminations" in {

@@ -14,12 +14,12 @@ class MemoryBeanNamesTest extends FlatSpec with Matchers {
     * Concurrent Mark Sweep: -XX:+UseConcMarkSweepGC
     * G1: -XX:+UseG1GC
     */
-  import scala.collection.JavaConversions._
+  import scala.collection.JavaConverters._
 
   val gcBeans = ManagementFactory.getGarbageCollectorMXBeans
 
   println(s"There are ${gcBeans.size()} beans")
-  gcBeans.toVector.foreach { gcBean =>
+  asScalaBuffer(gcBeans).foreach { gcBean =>
     println("-" * 75)
     println(s"name: ${gcBean.getName}")
     println(s"ObjectName.canonicalName: ${gcBean.getObjectName.getCanonicalName}")

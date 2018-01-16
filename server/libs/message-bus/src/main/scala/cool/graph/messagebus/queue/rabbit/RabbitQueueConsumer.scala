@@ -1,6 +1,6 @@
 package cool.graph.messagebus.queue.rabbit
 
-import cool.graph.bugsnag.BugSnagger
+import com.prisma.errors.ErrorReporter
 import cool.graph.messagebus.Conversions.ByteUnmarshaller
 import cool.graph.messagebus.QueueConsumer
 import cool.graph.messagebus.QueueConsumer.ConsumeFn
@@ -45,7 +45,7 @@ case class RabbitQueueConsumer[T](
     backoff: BackoffStrategy,
     concurrency: Int,
     onShutdown: () => Unit = () => {}
-)(implicit val bugSnagger: BugSnagger, unmarshaller: ByteUnmarshaller[T])
+)(implicit val reporter: ErrorReporter, unmarshaller: ByteUnmarshaller[T])
     extends QueueConsumer[T] {
 
   val consumers: ArrayBuffer[Consumer] = ArrayBuffer[Consumer]()
@@ -142,7 +142,7 @@ case class RabbitQueueConsumer[T](
         case Failure(err) =>
           queue.ack(delivery)
           exchange.publish(s"msg.${info.tries + 1}", delivery.body)
-          bugSnagger.report(ProcessingFailedError(s"Processing in queue '${queue.name}' (payload '$payload') failed with error $err"))
+          reporter.report(ProcessingFailedError(s"Processing in queue '${queue.name}' (payload '$payload') failed with error $err"))
           println(err)
       })
     }

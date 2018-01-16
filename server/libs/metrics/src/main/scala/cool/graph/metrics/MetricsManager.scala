@@ -1,6 +1,7 @@
 package cool.graph.metrics
 
 import akka.actor.ActorSystem
+import com.prisma.errors.ErrorReporter
 import com.timgroup.statsd.{NonBlockingStatsDClient, StatsDClient}
 import cool.graph.akkautil.SingleThreadedActorSystem
 
@@ -27,6 +28,8 @@ import scala.util.{Failure, Success, Try}
   */
 trait MetricsManager {
 
+  implicit val reporter: ErrorReporter
+
   def serviceName: String
 
   // System used to periodically flush the state of individual gauges
@@ -35,12 +38,12 @@ trait MetricsManager {
   lazy val errorHandler = CustomErrorHandler()
 
   protected val baseTagsString: String = {
-    if (sys.env.isDefinedAt("METRICS_PREFIX")) {
+    if (metricsCollectionIsEnabled) {
       Try {
         val instanceID  = Await.result(InstanceMetadata.fetchInstanceId(), 5.seconds)
         val containerId = ContainerMetadata.fetchContainerId()
         val region      = sys.env.getOrElse("AWS_REGION", "no_region")
-        val env         = sys.env.getOrElse("METRICS_PREFIX", "local")
+        val env         = sys.env.getOrElse("ENV", "local")
 
         s"env=$env,region=$region,instance=$instanceID,container=$containerId"
       } match {
@@ -53,14 +56,15 @@ trait MetricsManager {
   }
 
   protected val client: StatsDClient = {
-    // As we don't have an 'env' ENV var (prod, dev) this variable suppresses failing metrics output locally / during testing
-    if (sys.env.isDefinedAt("METRICS_PREFIX")) {
+    if (metricsCollectionIsEnabled) {
       new NonBlockingStatsDClient("", Integer.MAX_VALUE, new Array[String](0), errorHandler, StatsdHostLookup())
     } else {
-      println("[Metrics] Warning, Metrics can't initialize - no metrics will be recorded.")
+      println("[Metrics] Warning: no metrics will be recorded.")
       DummyStatsDClient()
     }
   }
+
+  protected def metricsCollectionIsEnabled: Boolean = sys.env.getOrElse("ENABLE_METRICS", "0") == "1"
 
   // Gauges DO NOT support custom metric tags per occurrence, only hardcoded custom tags during definition!
   def defineGauge(name: String, predefTags: (CustomTag, String)*): GaugeMetric = GaugeMetric(s"$serviceName.$name", baseTagsString, predefTags, client)

@@ -1,0 +1,67 @@
+{
+  "name": "prisma-yml",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "repository": {
+    "url": "https://github.com/graphcool/graphcool/tree/prisma-cli/cli/packages/prisma-yml"
+  },
+  "files": [
+    "dist"
+  ],
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@types/fs-extra": "^4.0.5",
+    "@types/jest": "^21.1.8",
+    "@types/node": "^8.0.57",
+    "jest": "^21.2.1",
+    "prettier": "^1.9.1",
+    "ts-jest": "^21.2.4",
+    "typescript": "^2.6.2"
+  },
+  "dependencies": {
+    "ajv": "^5.5.1",
+    "bluebird": "^3.5.1",
+    "chalk": "^2.3.0",
+    "debug": "^3.1.0",
+    "dotenv": "^4.0.0",
+    "fs-extra": "^4.0.3",
+    "isomorphic-fetch": "^2.2.1",
+    "js-yaml": "^3.10.0",
+    "json-stable-stringify": "^1.0.1",
+    "jsonwebtoken": "^8.1.0",
+    "lodash": "^4.17.4",
+    "prisma-json-schema": "^0.0.1",
+    "replaceall": "^0.1.6",
+    "scuid": "^1.0.2",
+    "yaml-ast-parser": "^0.0.40"
+  },
+  "scripts": {
+    "test": "jest",
+    "build": "tsc -d",
+    "lint": "tslint src/**/*.ts",
+    "precommit": "lint-staged",
+    "prepublishOnly": "yarn lint && yarn test && yarn build"
+  },
+  "jest": {
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "jsx",
+      "json"
+    ],
+    "rootDir": "./src",
+    "transform": {
+      "^.+\\.(ts|tsx)$": "../../../node_modules/ts-jest/preprocessor.js"
+    },
+    "testMatch": [
+      "**/*.test.(ts|js)"
+    ],
+    "globals": {
+      "ts-jest": {
+        "tsConfigFile": "./tsconfig.json"
+      }
+    }
+  }
+}

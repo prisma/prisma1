@@ -7,8 +7,8 @@ import akka.actor.{Actor, ActorRef, ActorSystem, Props, ReceiveTimeout, Terminat
 import akka.contrib.throttle.Throttler.SetTarget
 import akka.contrib.throttle.TimerBasedThrottler
 import akka.pattern.AskTimeoutException
+import cool.graph.akkautil.throttler.Throttler.{ThrottleBufferFullException, ThrottleCallTimeoutException, ThrottleResult}
 import cool.graph.akkautil.throttler.ThrottlerManager.Requests.ThrottledCall
-import cool.graph.akkautil.throttler.Throttler.{ThrottleBufferFullException, ThrottleCallTimeoutException}
 
 import scala.collection.mutable
 import scala.concurrent.Future
@@ -16,10 +16,13 @@ import scala.concurrent.duration.FiniteDuration
 import scala.reflect.ClassTag
 
 object Throttler {
-  class ThrottleBufferFullException(msg: String)  extends Exception(msg)
-  class ThrottleCallTimeoutException(msg: String) extends Exception(msg)
-}
+  sealed abstract class ThrottlerException(msg: String) extends Exception(msg)
+  class ThrottleBufferFullException(msg: String)        extends ThrottlerException(msg)
+  class ThrottleCallTimeoutException(msg: String)       extends ThrottlerException(msg)
 
+  case class ThrottleResult[T](result: T, throttledBy: Long)
+}
+// Todo - migrate: https://doc.akka.io/docs/akka/2.5.3/scala/project/migration-guide-2.4.x-2.5.x.html
 case class Throttler[A](groupBy: A => Any, amount: Int, per: FiniteDuration, timeout: akka.util.Timeout, maxCallsInFlight: Int)(
     implicit actorSystem: ActorSystem) {
 
@@ -29,11 +32,11 @@ case class Throttler[A](groupBy: A => Any, amount: Int, per: FiniteDuration, tim
   val throttlerActor = actorSystem.actorOf(ThrottlerManager.props(groupBy, amount, per, maxCallsInFlight))
   @throws[ThrottleCallTimeoutException]("thrown if the throttled call cannot be fulfilled within the given timeout")
   @throws[ThrottleBufferFullException]("thrown if the throttled call cannot be fulfilled in the given timeout")
-  def throttled[B](groupBy: A)(call: () => Future[B])(implicit tag: ClassTag[B]): Future[B] = {
+  def throttled[B](groupBy: A)(call: () => Future[B])(implicit tag: ClassTag[B]): Future[ThrottleResult[B]] = {
     val askResult = throttlerActor ? ThrottledCall(call, groupBy)
 
     askResult
-      .mapTo[B]
+      .mapTo[ThrottleResult[B]]
       .recoverWith {
         case _: AskTimeoutException => Future.failed(new ThrottleCallTimeoutException(s"The call to the group [$groupBy] timed out."))
       }(actorSystem.dispatcher)
@@ -44,7 +47,7 @@ object ThrottlerManager {
   object Requests {
     case class ThrottledCall[A, B](fn: () => Future[B], groupBy: A)
     case class ExecutableCall(call: () => Future[Any], sender: ActorRef, groupBy: Any)
-    case class ExecuteCall(call: () => Future[Any], sender: ActorRef)
+    case class ExecuteCall(call: () => Future[Any], sender: ActorRef, created: Long)
   }
 
   def props[A](groupBy: A => Any, numberOfCalls: Int, duration: FiniteDuration, maxCallsInFlight: Int) = {
@@ -71,7 +74,7 @@ class ThrottlerManager[A](groupBy: A => Any, rate: akka.contrib.throttle.Throttl
         case Some((key, _)) =>
           throttlerGroups.remove(key)
         case None =>
-          println(s"tried to remove ${terminatedGroup} from throttlers but could not find it")
+          println(s"Tried to remove non-existing group $terminatedGroup")
       }
   }
 
@@ -90,28 +93,31 @@ object ThrottlerGroup {
 }
 
 class ThrottlerGroup(rate: akka.contrib.throttle.Throttler.Rate, maxCallsInFlight: Int) extends Actor {
-  import cool.graph.akkautil.throttler.ThrottlerManager.Requests._
   import akka.pattern.pipe
   import context.dispatcher
-
-  val akkaThrottler = context.actorOf(Props(new TimerBasedThrottler(rate)))
-  akkaThrottler ! SetTarget(Some(self))
-
-  context.setReceiveTimeout(FiniteDuration(3, TimeUnit.MINUTES))
+  import cool.graph.akkautil.throttler.ThrottlerManager.Requests._
 
   var requestsInFlight = 0
+  val akkaThrottler    = context.actorOf(Props(new TimerBasedThrottler(rate)))
+
+  akkaThrottler ! SetTarget(Some(self))
+  context.setReceiveTimeout(FiniteDuration(3, TimeUnit.MINUTES))
 
   override def receive: Receive = {
     case ExecutableCall(call, callSender, groupBy) =>
       if (requestsInFlight < maxCallsInFlight) {
-        akkaThrottler ! ExecuteCall(call, callSender)
+        akkaThrottler ! ExecuteCall(call, callSender, created = System.currentTimeMillis)
         requestsInFlight += 1
       } else {
         callSender ! Failure(new ThrottleBufferFullException(s"Exceeded the limit of $maxCallsInFlight of in flight calls for groupBy [$groupBy]"))
       }
-    case ExecuteCall(call, callSender) =>
-      pipe(call()) to callSender
+
+    case ExecuteCall(call, callSender, created) =>
+      val throttledBy = System.currentTimeMillis() - created
+      val result      = call().map(x => ThrottleResult(x, throttledBy))
+      pipe(result) to callSender
       requestsInFlight -= 1
+
     case ReceiveTimeout =>
       context.stop(self)
   }

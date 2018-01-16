@@ -1,6 +1,6 @@
 package cool.graph.messagebus.queue.rabbit
 
-import cool.graph.bugsnag.BugSnagger
+import com.prisma.errors.ErrorReporter
 import cool.graph.messagebus.Conversions.ByteUnmarshaller
 import cool.graph.messagebus.QueueConsumer.ConsumeFn
 import cool.graph.messagebus.queue.BackoffStrategy
@@ -27,7 +27,7 @@ case class RabbitPlainQueueConsumer[T](
     autoDelete: Boolean = true,
     onShutdown: () => Unit = () => {},
     routingKey: Option[String] = None
-)(implicit val bugSnagger: BugSnagger, unmarshaller: ByteUnmarshaller[T])
+)(implicit val reporter: ErrorReporter, unmarshaller: ByteUnmarshaller[T])
     extends QueueConsumer[T] {
   import scala.concurrent.ExecutionContext.Implicits.global
 

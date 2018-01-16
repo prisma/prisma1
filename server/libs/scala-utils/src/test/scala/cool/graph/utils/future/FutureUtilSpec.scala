@@ -8,7 +8,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class FutureUtilSpec extends WordSpec with Matchers {
-  val patienceConfig = PatienceConfig(timeout = Span(5, Seconds), interval = Span(5, Millis))
+  implicit val patienceConfig = PatienceConfig(timeout = Span(5, Seconds), interval = Span(5, Millis))
 
   "runSequentially" should {
     "run all given futures in sequence" in {
@@ -19,13 +19,12 @@ class FutureUtilSpec extends WordSpec with Matchers {
         () => { Thread.sleep(100); Future.successful(System.currentTimeMillis()) }
       )
 
-      val values: Seq[Long] = testList.runSequentially.futureValue(patienceConfig)
+      val values: Seq[Long] = testList.runSequentially.futureValue
       (values, values.tail).zipped.forall((a, b) => a < b)
     }
   }
 
   "andThenFuture" should {
-
     "Should work correctly in error and success cases" in {
       val f1 = Future.successful(100)
       val f2 = Future.failed(new Exception("This is a test"))
@@ -48,5 +47,4 @@ class FutureUtilSpec extends WordSpec with Matchers {
       }
     }
   }
-
 }
