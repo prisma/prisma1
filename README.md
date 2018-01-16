@@ -2,17 +2,19 @@
 
 [Website](https://www.prismagraphql.com) • [Docs](https://www.prismagraphql.com/docs/) • [Blog](https://blog.graph.cool/) • [Forum](https://www.graph.cool/forum) • [Slack](https://slack.graph.cool/) • [Twitter](https://twitter.com/graphcool)
 
-[![CircleCI](https://circleci.com/gh/graphcool/graphcool.svg?style=shield)](https://circleci.com/gh/graphcool/graphcool) [![Slack Status](https://slack.graph.cool/badge.svg)](https://slack.graph.cool) [![npm version](https://badge.fury.io/js/graphcool.svg)](https://badge.fury.io/js/graphcool)
+[![Slack Status](https://slack.graph.cool/badge.svg)](https://slack.graph.cool) [![npm version](https://badge.fury.io/js/graphcool.svg)](https://badge.fury.io/js/graphcool)
 
-**Prisma - turn your database into a GraphQL API**. Prisma lets you design your data model and have a production ready [GraphQL](https://www.howtographql.com/) API online in minutes.
+**Prisma - turn your database into a GraphQL API**
 
-Prismas GraphQL API provides powerful abstractions and building blocks to develop flexible, scalable GraphQL backends:
+With Prisma you can design your data model and have a production ready [GraphQL](https://www.howtographql.com/) API online in minutes.
 
-1. **Type-safe API** that can be used from frontend and backend, including filters, aggregations and transactions.
-2. **Data modelling** with declarative SDL. Prisma migrates your underlying database automatically.
-3. **Realtime API** using GraphQL Subscriptions.
-4. **Advanced API composition** using GraphQL Binding and schema stitching.
-5. **Works with all frontend frameworks** like React, Vue.js, Angular ([Quickstart Examples](https://www.prismagraphql.com/docs/quickstart/)).
+The Prisma GraphQL API provides powerful abstractions and building blocks to develop flexible, scalable GraphQL backends:
+
+1. **Type-safe API** that can be used from frontend and backend, including filters, aggregations and transactions
+2. **Data modeling** with declarative SDL. Prisma migrates your underlying database automatically
+3. **Realtime API** using GraphQL Subscriptions
+4. **Advanced API composition** using GraphQL Bindings and schema stitching
+5. **Works with all frontend frameworks** like React, Vue.js, Angular ([Quickstart Examples](https://prismagraphql.com/docs/quickstart/))
 
 ## Contents
 
@@ -21,7 +23,6 @@ Prismas GraphQL API provides powerful abstractions and building blocks to develo
 -->
 
 * [Quickstart](#quickstart)
-* [Features](#features)
 * [Examples](#examples)
 * [Architecture](#architecture)
 * [Community](#community)
@@ -87,7 +88,7 @@ Use the endpoint from the previous step in your frontend (or backend) applicatio
 
 ## Examples
 
-[![Alt text](https://imgur.com/21kBMfD.png)](https://www.prismagraphql.com/docs/quickstart/)
+[![Prisma Examples](https://imgur.com/21kBMfD.png)](https://www.prismagraphql.com/docs/quickstart/)
 
 ## Architecture
 
