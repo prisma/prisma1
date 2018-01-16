@@ -11,7 +11,6 @@ import Bundler from './Bundler/Bundler'
 const debug = require('debug')('deploy')
 
 export default class Deploy extends Command {
-  private deploying: boolean = false
   static topic = 'deploy'
   static description = 'Deploy service changes (or new service)'
   static group = 'general'
@@ -20,18 +19,16 @@ export default class Deploy extends Command {
   
   ${chalk.green.bold('Examples:')}
       
-${chalk.gray(
-    '-',
-  )} Deploy local changes from graphcool.yml to the default service environment.
+${chalk.gray('-')} Deploy local service definition changes to the default stage.
   ${chalk.green('$ graphcool deploy')}
 
-${chalk.gray('-')} Deploy local changes to a specific target
-  ${chalk.green('$ graphcool deploy --target production')}
+${chalk.gray('-')} Deploy local changes to a specific target called \`prod\`
+  ${chalk.green('$ graphcool deploy --target prod')}
     
 ${chalk.gray(
     '-',
-  )} Deploy local changes from default service file accepting potential data loss caused by schema changes
-  ${chalk.green('$ graphcool deploy --force --env production')}
+  )} Deploy local changes to a specific target called \`prod\`, accepting potential data loss caused by schema changes
+  ${chalk.green('$ graphcool deploy --target production --force')}
   `
   static flags: Flags = {
     target: flags.string({
@@ -60,21 +57,22 @@ ${chalk.gray(
     }),
     interactive: flags.boolean({
       char: 'i',
-      description: 'Force interactive mode to select the cluster'
+      description: 'Force interactive mode to select the cluster',
     }),
     default: flags.boolean({
       char: 'D',
-      description: 'Set specified target as default'
+      description: 'Set specified target as default',
     }),
     'dry-run': flags.boolean({
       char: 'd',
-      description: 'Perform a dry-run of the deployment'
+      description: 'Perform a dry-run of the deployment',
     }),
     json: flags.boolean({
       char: 'j',
-      description: 'Json Output'
-    })
+      description: 'Json Output',
+    }),
   }
+  private deploying: boolean = false
   async run() {
     debug('run')
     const { force, watch, alias, interactive } = this.flags
@@ -96,7 +94,9 @@ ${chalk.gray(
     let targetName
     let target
     let cluster
-    const foundTarget = await this.env.getTargetWithName(process.env.GRAPHCOOL_TARGET || this.flags.target)
+    const foundTarget = await this.env.getTargetWithName(
+      process.env.GRAPHCOOL_TARGET || this.flags.target,
+    )
     // load the definition already so we're able to detect missing package.json / node_modules
     // if it is a existing project,
 
@@ -107,23 +107,40 @@ ${chalk.gray(
 
     this.definition.checkNodeModules(Boolean(foundTarget.target))
 
-    if (interactive || (!newServiceCluster && !foundTarget.target) || (newServiceName && !newServiceCluster)) {
+    if (
+      interactive ||
+      (!newServiceCluster && !foundTarget.target) ||
+      (newServiceName && !newServiceCluster)
+    ) {
       cluster = await this.clusterSelection()
       showedDialog = true
       this.env.setActiveCluster(cluster)
       this.env.saveLocalRC()
-      if (cluster === 'local' && (!this.env.rc.clusters || !this.env.rc.clusters!.local)) {
-        this.out.log(`You chose the cluster ${chalk.bold('local')}, but don't have docker initialized, yet.
-Please run ${chalk.green('$ graphcool local up')} to get a local Graphcool cluster.
+      if (
+        cluster === 'local' &&
+        (!this.env.rc.clusters || !this.env.rc.clusters!.local)
+      ) {
+        this.out.log(`You chose the cluster ${chalk.bold(
+          'local',
+        )}, but don't have docker initialized, yet.
+Please run ${chalk.green(
+          '$ graphcool local up',
+        )} to get a local Graphcool cluster.
 `)
         this.out.exit(1)
       }
     }
 
-    if (newServiceName || interactive || (!foundTarget.targetName && !foundTarget.target)) {
+    if (
+      newServiceName ||
+      interactive ||
+      (!foundTarget.targetName && !foundTarget.target)
+    ) {
       targetName = this.flags.target
       if (!targetName) {
-        targetName = await this.targetNameSelector(this.env.getDefaultTargetName(cluster))
+        targetName = await this.targetNameSelector(
+          this.env.getDefaultTargetName(cluster),
+        )
         showedDialog = true
       }
     }
@@ -137,7 +154,9 @@ Please run ${chalk.green('$ graphcool local up')} to get a local Graphcool clust
     }
 
     if ((!newServiceName && !foundTarget.target) || interactive) {
-      newServiceName = await this.serviceNameSelector(path.basename(this.config.definitionDir))
+      newServiceName = await this.serviceNameSelector(
+        path.basename(this.config.definitionDir),
+      )
       showedDialog = true
     }
 
@@ -155,7 +174,9 @@ Please run ${chalk.green('$ graphcool local up')} to get a local Graphcool clust
     let projectId
     let projectIsNew = false
 
-    cluster = cluster ? cluster : (target ? target.cluster : this.env.activeCluster)
+    cluster = cluster
+      ? cluster
+      : target ? target.cluster : this.env.activeCluster
     const isLocal = !this.env.isSharedCluster(cluster)
 
     if (!target) {
@@ -167,7 +188,13 @@ Please run ${chalk.green('$ graphcool local up')} to get a local Graphcool clust
       const region = this.env.getRegionFromCluster(cluster)
 
       // otherwise create a new project
-      const newProject = await this.createProject(isLocal, cluster, newServiceName, alias, region)
+      const newProject = await this.createProject(
+        isLocal,
+        cluster,
+        newServiceName,
+        alias,
+        region,
+      )
       projectId = newProject.projectId
       projectIsNew = true
 
@@ -189,38 +216,62 @@ Please run ${chalk.green('$ graphcool local up')} to get a local Graphcool clust
     const info = await this.client.fetchProjectInfo(projectId)
 
     if (!info.isEjected) {
-      this.out.error(`Your service ${info.name} (${info.id}) is not yet upgraded.
+      this.out.error(`Your service ${info.name} (${
+        info.id
+      }) is not yet upgraded.
 Please go to the console and upgrade it:
 https://console.graph.cool/${encodeURIComponent(info.name)}/settings/general`)
     }
 
-    await this.deploy(projectIsNew, targetName, projectId, isLocal, force, projectName, cluster)
+    await this.deploy(
+      projectIsNew,
+      targetName,
+      projectId,
+      isLocal,
+      force,
+      projectName,
+      cluster,
+    )
 
     if (watch) {
       this.out.log('Watching for change...')
-      chokidar.watch(this.config.definitionDir, {ignoreInitial: true}).on('all', () => {
-        setImmediate(async () => {
-          if (!this.deploying) {
-            await this.definition.load(this.flags)
-            await this.deploy(projectIsNew, targetName, projectId!, isLocal, force, projectName, cluster)
-            this.out.log('Watching for change...')
-          }
+      chokidar
+        .watch(this.config.definitionDir, { ignoreInitial: true })
+        .on('all', () => {
+          setImmediate(async () => {
+            if (!this.deploying) {
+              await this.definition.load(this.flags)
+              await this.deploy(
+                projectIsNew,
+                targetName,
+                projectId!,
+                isLocal,
+                force,
+                projectName,
+                cluster,
+              )
+              this.out.log('Watching for change...')
+            }
+          })
         })
-      })
     }
   }
 
-  private async createProject(isLocal: boolean, cluster: string, name: string, alias?: string, region?: string): Promise<{
+  private async createProject(
+    isLocal: boolean,
+    cluster: string,
+    name: string,
+    alias?: string,
+    region?: string,
+  ): Promise<{
     projectId: string
   }> {
-
-    const localNote =
-      isLocal
-        ? ' locally'
-        : ''
+    const localNote = isLocal ? ' locally' : ''
 
     this.out.log('')
-    const projectMessage = `Creating service ${chalk.bold(name)}${localNote} in cluster ${cluster}`
+    const projectMessage = `Creating service ${chalk.bold(
+      name,
+    )}${localNote} in cluster ${cluster}`
     this.out.action.start(projectMessage)
 
     // create project
@@ -255,7 +306,7 @@ https://console.graph.cool/${encodeURIComponent(info.name)}/settings/general`)
     isLocal: boolean,
     force: boolean,
     projectName: string | null,
-    cluster: string
+    cluster: string,
   ): Promise<void> {
     // bundle and add externalFiles
     debug('bundling')
@@ -265,23 +316,22 @@ https://console.graph.cool/${encodeURIComponent(info.name)}/settings/general`)
       const externalFiles = await bundler.bundle()
       bundler.cleanBuild()
       this.definition.definition!.modules[0].externalFiles = externalFiles
-      Object.keys(externalFiles).forEach(key => delete this.definition.definition!.modules[0].files[key])
+      Object.keys(externalFiles).forEach(
+        key => delete this.definition.definition!.modules[0].files[key],
+      )
     }
     this.out.action.stop(this.prettyTime(Date.now() - before))
     debug('bundled')
 
     this.deploying = true
-    const localNote =
-        isLocal
-        ? ' locally'
-        : ''
+    const localNote = isLocal ? ' locally' : ''
     before = Date.now()
     this.out.action.start(
       projectIsNew
         ? `Deploying${localNote}`
-        : `Deploying to ${chalk.bold(
-            cluster,
-          )} with target ${chalk.bold(targetName || `${cluster}/${projectId}`)}${localNote}`,
+        : `Deploying to ${chalk.bold(cluster)} with target ${chalk.bold(
+            targetName || `${cluster}/${projectId}`,
+          )}${localNote}`,
     )
 
     const migrationResult = await this.client.push(
@@ -298,9 +348,7 @@ https://console.graph.cool/${encodeURIComponent(info.name)}/settings/general`)
         migrationResult.migrationMessages.length === 0) &&
       (!migrationResult.errors || migrationResult.errors.length === 0)
     ) {
-      this.out.log(
-        `Everything up-to-date.`,
-      )
+      this.out.log(`Everything up-to-date.`)
       this.printEndpoints(projectId)
       this.deploying = false
       return
@@ -355,10 +403,24 @@ https://console.graph.cool/${encodeURIComponent(info.name)}/settings/general`)
 
   ${chalk.bold('Simple API:')}        ${this.env.simpleEndpoint(projectId)}
   ${chalk.bold('Relay API:')}         ${this.env.relayEndpoint(projectId)}
-  ${chalk.bold('Subscriptions API:')} ${this.env.subscriptionEndpoint(projectId)}`)
+  ${chalk.bold('Subscriptions API:')} ${this.env.subscriptionEndpoint(
+      projectId,
+    )}`)
   }
 
   private async clusterSelection(): Promise<string> {
+    const localClusters = Object.keys(this.env.rc.clusters || {}).map(
+      clusterName => {
+        return {
+          value: clusterName,
+          name: clusterName,
+        }
+      },
+    )
+
+    if (localClusters.length === 0) {
+      localClusters.push({ value: 'local', name: 'local' })
+    }
     const question = {
       name: 'cluster',
       type: 'list',
@@ -378,12 +440,8 @@ https://console.graph.cool/${encodeURIComponent(info.name)}/settings/general`)
           name: 'shared-us-west-2',
         },
         new inquirer.Separator('                     '),
-        new inquirer.Separator(chalk.bold('Local (docker):')),
-        {
-          value: 'local',
-          name: 'local',
-        },
-      ],
+        new inquirer.Separator(chalk.bold('Custom clusters (local/private):')),
+      ].concat(localClusters),
       pageSize: 8,
     }
 
@@ -419,7 +477,7 @@ https://console.graph.cool/${encodeURIComponent(info.name)}/settings/general`)
   }
 
   private async dryRun() {
-    const {target} = this.flags
+    const { target } = this.flags
 
     await this.definition.load(this.flags)
     await this.auth.ensureAuth()
@@ -489,8 +547,8 @@ https://console.graph.cool/${encodeURIComponent(info.name)}/settings/general`)
         this.out.log(
           `Your changes might result in data loss.
             Use ${chalk.cyan(
-            `\`graphcool deploy --force\``,
-          )} if you know what you're doing!\n`,
+              `\`graphcool deploy --force\``,
+            )} if you know what you're doing!\n`,
         )
         process.exitCode = 1
       }
@@ -499,7 +557,6 @@ https://console.graph.cool/${encodeURIComponent(info.name)}/settings/general`)
       this.out.error(e)
     }
   }
-
 }
 
 export function isValidProjectName(projectName: string): boolean {

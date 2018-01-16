@@ -164,8 +164,6 @@ case class ClusterServer(prefix: String = "")(
       }
   }
 
-  def healthCheck: Future[_] = Future.successful(())
-
   def toplevelExceptionHandler(requestId: String) = ExceptionHandler {
     case e: DeployApiError =>
       complete(OK -> JsObject("code" -> JsNumber(e.code), "requestId" -> JsString(requestId), "error" -> JsString(e.getMessage)))

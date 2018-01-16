@@ -81,8 +81,6 @@ case class SimpleSubscriptionsServer(prefix: String = "")(
     }
   }
 
-  override def healthCheck: Future[_] = Future.successful(())
-
   override def onStop = Future {
     consumerRef.stop
     dependencies.invalidationSubscriber.shutdown

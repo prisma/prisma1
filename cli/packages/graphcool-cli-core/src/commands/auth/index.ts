@@ -39,9 +39,7 @@ export default class Auth extends Command {
     if (token) {
       this.env.setToken(token)
       this.env.saveGlobalRC()
-      this.out.log(
-        `Saved new token to ${chalk.bold(this.config.globalRCPath)}`,
-      )
+      this.out.log(`Saved new token to ${chalk.bold(this.config.globalRCPath)}`)
     } else if (alreadyAuthenticated) {
       this.out.log(
         `You are already authenticated. Your local token is saved at ${chalk.bold(

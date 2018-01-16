@@ -4,7 +4,7 @@ import { compare, linewrap } from '../util'
 import { Command } from '../Command'
 import Plugins from '../Plugin/Plugins'
 import chalk from 'chalk'
-import {groupBy, flatten} from 'lodash'
+import { groupBy, flatten } from 'lodash'
 const debug = require('debug')('help command')
 
 function trimToMaxLeft(n: number): number {
@@ -13,16 +13,14 @@ function trimToMaxLeft(n: number): number {
 }
 
 function maxLength(items: string[]) {
-  return items.reduce(
-    (acc, curr) => Math.max(acc, curr.length),
-    -1,
-  )
+  return items.reduce((acc, curr) => Math.max(acc, curr.length), -1)
 }
 
 function renderList(items: string[][], globalMaxLeftLength?: number): string {
   const S = require('string')
 
-  const maxLeftLength = globalMaxLeftLength || maxLength(items.map(i => i[0])) + 2
+  const maxLeftLength =
+    globalMaxLeftLength || maxLength(items.map(i => i[0])) + 2
   return items
     .map(i => {
       let left = `  ${i[0]}`
@@ -120,24 +118,27 @@ ${chalk.bold('Usage:')} ${chalk.bold('graphcool')} COMMAND`)
       //   t.id,
       //   t.description ? chalk.dim(t.description) : null,
       // ])
-      const list: string[][][] = await Promise.all(groupTopics.map(async t => {
-        const cmds = await this.plugins.commandsForTopic(t.id)
-        // console.log(cmds)
-        // if (t.id === 'local') {
-        //   debugger
-        // }
-        return cmds.map(cmd => {
-          const cmdName = cmd.command ? ` ${cmd.command}` : ''
-          return [t.id + cmdName, chalk.dim(cmd.description || t.description)]
-        })
-      })) as any
+      const list: string[][][] = (await Promise.all(
+        groupTopics.map(async t => {
+          const cmds = await this.plugins.commandsForTopic(t.id)
+          // console.log(cmds)
+          // if (t.id === 'local') {
+          //   debugger
+          // }
+          return cmds.map(cmd => {
+            const cmdName = cmd.command ? ` ${cmd.command}` : ''
+            return [t.id + cmdName, chalk.dim(cmd.description || t.description)]
+          })
+        }),
+      )) as any
       jobs.push({
         group: group.name,
         list: flatten(list),
       })
     }
 
-    const globalMaxLeft = maxLength(flatten(jobs.map(j => j.list)).map(i => i[0])) + 2
+    const globalMaxLeft =
+      maxLength(flatten(jobs.map(j => j.list)).map(i => i[0])) + 2
 
     jobs.forEach(job => {
       this.out.log('')
@@ -145,7 +146,9 @@ ${chalk.bold('Usage:')} ${chalk.bold('graphcool')} COMMAND`)
       this.out.log(renderList(job.list, globalMaxLeft))
     })
 
-    this.out.log(`\nUse ${chalk.green('graphcool help [command]')} for more information about a command.
+    this.out.log(`\nUse ${chalk.green(
+      'graphcool help [command]',
+    )} for more information about a command.
 Docs can be found here:
 https://www.graph.cool/docs/reference/graphcool-cli/commands-aiteerae6l
 

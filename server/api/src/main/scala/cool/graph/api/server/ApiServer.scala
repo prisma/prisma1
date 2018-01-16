@@ -199,8 +199,6 @@ case class ApiServer(
     }
   }
 
-  def healthCheck: Future[_] = Future.successful(())
-
   def toplevelExceptionHandler(requestId: String) = ExceptionHandler {
     case e: UserFacingError =>
       complete(OK -> JsObject("code" -> JsNumber(e.code), "requestId" -> JsString(requestId), "error" -> JsString(e.getMessage)))

@@ -1,0 +1,17 @@
+# import Post, PostSubscriptionPayload from "./generated/prisma.graphql"
+
+# you need to activate this later: # import Comment, CommentSubscriptionPayload from "./generated/prisma.graphql"
+
+type Query {
+  feed: [Post!]!
+}
+
+type Mutation {
+  writePost(title: String!, text: String!, isPublished: Boolean!): Post
+  # writeComment(body: String!, postId: ID!): Comment
+}
+
+type Subscription {
+  publications: PostSubscriptionPayload
+  # comments: CommentSubscriptionPayload
+}
