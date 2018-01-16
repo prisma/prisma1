@@ -1,6 +1,4 @@
-<!--
-<p align="center"><a href="https://www.prismagraphql.com"><img src="https://imgur.com/he8RLRs.png"></a></p>
--->
+<a href="https://www.prismagraphql.com"><img src="https://imgur.com/HUu10rH.png" width="248" /></a>
 
 [Website](https://www.prismagraphql.com) • [Docs](https://www.prismagraphql.com/docs/) • [Blog](https://blog.graph.cool/) • [Forum](https://www.graph.cool/forum) • [Slack](https://slack.graph.cool/) • [Twitter](https://twitter.com/graphcool)
 
