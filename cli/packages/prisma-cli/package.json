@@ -1,0 +1,76 @@
+{
+  "name": "prisma-cli",
+  "description": "Prisma is a realtime GraphQL database layer. Connect directly from the frontend or build your own GraphQL server.",
+  "keywords": [
+    "prisma",
+    "graphql",
+    "backend",
+    "deployment",
+    "api",
+    "server"
+  ],
+  "homepage": "https://github.com/graphcool/prisma",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/graphcool/prisma.git"
+  },
+  "bugs": {
+    "url": "https://github.com/graphcool/prisma/issues"
+  },
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "bin": {
+    "prisma": "dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "typings": "dist/index.d.ts",
+  "author": "Tim Suchanek <tim@graph.cool>",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@types/node": "^8.0.22",
+    "husky": "^0.14.3",
+    "lint-staged": "^4.0.3",
+    "prettier": "^1.5.3",
+    "rimraf": "^2.6.1",
+    "tslint": "^5.6.0",
+    "tslint-config-prettier": "^1.3.0",
+    "tslint-eslint-rules": "^4.1.1",
+    "typescript": "^2.4.2"
+  },
+  "scripts": {
+    "build": "rimraf dist && tsc -d && chmod +x dist/index.js",
+    "lint": "tslint src/**/*.ts",
+    "precommit": "lint-staged",
+    "prettier": "prettier --single-quote --no-semi --trailing-comma all --write '*.ts' 'src/**/*.ts'",
+    "prepublishOnly": "npm run lint && npm run build"
+  },
+  "cli-engine": {
+    "bin": "prisma",
+    "dirname": "prisma",
+    "node": "6.0.0",
+    "defaultCommand": "help",
+    "plugins": [
+      "prisma-cli-core"
+    ]
+  },
+  "lint-staged": {
+    "*.ts": [
+      "prettier --single-quote --no-semi --trailing-comma all --write",
+      "tslint",
+      "git add"
+    ],
+    "gitDir": "../../"
+  },
+  "dependencies": {
+    "fs-extra": "^4.0.1",
+    "prisma-cli-core": "1.0.0",
+    "prisma-cli-engine": "1.0.0",
+    "semver": "^5.4.1",
+    "source-map-support": "^0.4.18"
+  },
+  "engines": {
+    "node": ">=6.0.0"
+  }
+}

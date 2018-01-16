@@ -2,7 +2,7 @@
 
 set -e
 
-cd packages/graphcool-cli-engine
+cd packages/prisma-cli-engine
 yarn precommit
-#cd ../../packages/graphcool-cli-core
-#yarn precommit
+cd ../../packages/prisma-cli-core
+yarn precommit

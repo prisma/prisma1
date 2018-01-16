@@ -1,0 +1,127 @@
+{
+  "name": "prisma-cli-engine",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "typings": "dist/index.d.ts",
+  "author": "Tim Suchanek <tim@graph.cool>",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@types/jest": "^20.0.8",
+    "@types/lodash": "^4.14.77",
+    "@types/node": "^8.0.22",
+    "husky": "^0.14.3",
+    "jest": "^21.2.1",
+    "lint-staged": "^4.2.3",
+    "nock": "^9.0.14",
+    "prettier": "^1.5.3",
+    "rimraf": "^2.6.1",
+    "ts-jest": "^21.0.0",
+    "tslint": "^5.6.0",
+    "tslint-config-prettier": "^1.3.0",
+    "tslint-eslint-rules": "^4.1.1",
+    "typescript": "^2.4.2"
+  },
+  "scripts": {
+    "build": "tsc -d",
+    "lint": "tslint src/**/*.ts",
+    "precommit": "lint-staged",
+    "prettier": "prettier --single-quote --no-semi --trailing-comma all --write '*.ts' 'src/**/*.ts'",
+    "prepublishOnly": "yarn link && yarn test && yarn build",
+    "test": "npm run lint && jest"
+  },
+  "lint-staged": {
+    "gitDir": "../../../"
+  },
+  "linters": {
+    "*.ts": [
+      "prettier --single-quote --no-semi --trailing-comma all --write",
+      "tslint",
+      "jest --findRelatedTests",
+      "git add"
+    ]
+  },
+  "jest": {
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "jsx",
+      "json"
+    ],
+    "rootDir": "./src",
+    "transform": {
+      "^.+\\.(ts|tsx)$": "../../../node_modules/ts-jest/preprocessor.js"
+    },
+    "testMatch": [
+      "**/*.test.(ts|js)"
+    ],
+    "setupFiles": [
+      "../test/init.js"
+    ],
+    "globals": {
+      "ts-jest": {
+        "tsConfigFile": "./tsconfig.json"
+      }
+    }
+  },
+  "dependencies": {
+    "@heroku/linewrap": "^1.0.0",
+    "@types/fs-extra": "^4.0.2",
+    "ajv": "^5.2.2",
+    "ansi-escapes": "^3.0.0",
+    "ansi-styles": "^3.2.0",
+    "bluebird": "^3.5.0",
+    "cache-require-paths": "^0.3.0",
+    "callsites": "^2.0.0",
+    "cardinal": "^1.0.0",
+    "chalk": "^2.2.0",
+    "charm": "^1.0.2",
+    "debug": "^3.0.1",
+    "directory-tree": "^2.0.0",
+    "dotenv": "^4.0.0",
+    "find-up": "^2.1.0",
+    "fs-extra": "^4.0.2",
+    "graphcool-inquirer": "^1.0.3",
+    "graphql-request": "^1.3.4",
+    "isomorphic-fetch": "^2.2.1",
+    "jsonwebtoken": "^8.1.0",
+    "klaw-sync": "^3.0.0",
+    "lodash": "^4.17.4",
+    "lodash.ary": "^4.1.1",
+    "lodash.defaults": "^4.2.0",
+    "lodash.flatten": "^4.4.0",
+    "lodash.get": "^4.4.2",
+    "lodash.groupby": "^4.6.0",
+    "lodash.identity": "^3.0.0",
+    "lodash.keys": "^4.2.0",
+    "lodash.maxby": "4.x",
+    "lodash.merge": "4.x",
+    "lodash.partial": "^4.2.1",
+    "lodash.property": "^4.4.2",
+    "lodash.result": "^4.5.2",
+    "lodash.uniqby": "^4.7.0",
+    "marked": "^0.3.6",
+    "marked-terminal": "^2.0.0",
+    "memfs": "^2.5.3",
+    "opn": "^5.1.0",
+    "prisma-json-schema": "^0.0.1",
+    "prisma-yml": "1.0.0",
+    "raven": "2.3.0",
+    "replaceall": "^0.1.6",
+    "rwlockfile": "^1.4.8",
+    "scuid": "^1.0.2",
+    "serialize-error": "^2.1.0",
+    "source-map-support": "^0.4.18",
+    "string": "3.x",
+    "string-similarity": "^1.2.0",
+    "strip-ansi": "^4.0.0",
+    "supports-color": "^4.4.0",
+    "treeify": "^1.0.1",
+    "update-notifier": "^2.3.0",
+    "validator": "^8.2.0",
+    "yaml-ast-parser": "^0.0.34"
+  }
+}
