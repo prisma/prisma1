@@ -71,4 +71,6 @@ class NestedConnectMutationInsideUpsertSpec extends FlatSpec with Matchers with 
     mustBeEqual(result.pathAsJsValue("data.upsertCustomer.tenant").toString, """{"name":"Gustav G"}""")
   }
 
+  //other direction
+
 }

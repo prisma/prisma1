@@ -117,8 +117,6 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
     result.toString should equal("""{"data":{"model":{"ints":[2,1],"strings":["short","looooooooooong"]}}}""")
   }
 
-  //----------------------------TYPES-----------------------------
-
   "full scalar list" should "return full list for strings" in {
 
     val fieldName   = "strings"
@@ -222,6 +220,27 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
     }
 
     verifySuccessfulSetAndRetrieval(fieldName, inputValue, outputValue, project)
+  }
+
+  "Deeply nested scalar lists" should "work in cre" in {
+
+    val project = SchemaDsl() { schema =>
+      val list = schema.model("List").field("listInts", _.Int, isList = true)
+      val todo = schema.model("Todo").field("todoInts", _.Int, isList = true).oneToOneRelation("list", "todo", list)
+      val tag  = schema.model("Tag").field("tagInts", _.Int, isList = true).oneToOneRelation("todo", "tag", todo)
+
+    }
+
+    database.setup(project)
+
+    server.executeQuerySimple(
+      s"""mutation{createList(data: {listInts: {set: [1, 2]}, todo: {create: {todoInts: {set: [3, 4]}, tag: {create: {tagInts: {set: [5, 6]}}}}}}) {id}}""".stripMargin,
+      project
+    )
+
+    val result = server.executeQuerySimple(s"""query{lists {listInts, todo {todoInts, tag {tagInts}}}}""".stripMargin, project)
+
+    result.toString should equal("""{"data":{"lists":[{"listInts":[1,2],"todo":{"todoInts":[3,4],"tag":{"tagInts":[5,6]}}}]}}""")
   }
 
   private def verifySuccessfulSetAndRetrieval(fieldName: String, inputValue: Any, outputValue: Any, project: Project) = {

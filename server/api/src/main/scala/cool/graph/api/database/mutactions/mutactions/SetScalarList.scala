@@ -32,8 +32,7 @@ case class SetScalarList(
     Future.successful(
       ClientSqlStatementResult(
         sqlAction = DBIO.seq(
-          DatabaseMutationBuilder
-            .setScalarList(project.id, model.name, field.name, nodeId, values)
+          DatabaseMutationBuilder.setScalarList(project.id, model.name, field.name, nodeId, values)
         )))
   }
 

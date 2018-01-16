@@ -318,6 +318,8 @@ object DatabaseMutationBuilder {
     (sql"delete from `#$projectId`.`#$modelName`" concat whereClauseWithWhere).asUpdate
   }
 
+  //rewrite these to handle use where?
+
   def setScalarList(projectId: String, modelName: String, fieldName: String, nodeId: String, values: Vector[Any]): DBIOAction[Unit, NoStream, Effect] = {
 
     val escapedValueTuples = for {
