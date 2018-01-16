@@ -38,9 +38,7 @@ case class SingleServerDependencies()(implicit val system: ActorSystem, val mate
   override val databases        = Databases.initialize(config)
   override val apiSchemaBuilder = CachedSchemaBuilder(SchemaBuilder(), invalidationPubSub)
   override val projectFetcher: ProjectFetcher = {
-    val schemaManagerEndpoint = config.getString("schemaManagerEndpoint")
-    val schemaManagerSecret   = config.getString("schemaManagerSecret")
-    val fetcher               = ProjectFetcherImpl(Vector.empty, config, schemaManagerEndpoint = schemaManagerEndpoint, schemaManagerSecret = schemaManagerSecret)
+    val fetcher = SingleServerProjectFetcher(projectPersistence)
     CachedProjectFetcherImpl(fetcher, invalidationPubSub)
   }
 
