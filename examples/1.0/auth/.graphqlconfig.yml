@@ -7,4 +7,4 @@ projects:
   database:
     schemaPath: "src/generated/prisma.graphql"
     extensions:
-      graphcool: "database/prisma.yml"
+      prisma: "database/prisma.yml"
