@@ -2,22 +2,20 @@
 
 This example demonstrates how to implement **permission rules** in combination with an email-password-based authentication workflow. Feel free to use it as a template for your own project!
 
-To learn more about implemeting permissions with Graphcool and `graphql-yoga`, you can check out [this]() in-depth tutorial.
-
 ## Overview
 
-This directory contains a GraphQL server (based on [`graphql-yoga`](https://github.com/graphcool/graphql-yoga/)) which connects to a Graphcool database service.
+This directory contains a GraphQL server (based on [`graphql-yoga`](https://github.com/graphcool/graphql-yoga/)) which connects to a Prisma database service.
 
 ```
 .
 ├── README.md
 ├── database
 │   ├── datamodel.graphql
-│   └── graphcool.yml
+│   └── prisma.yml
 ├── package.json
 ├── src
 │   ├── generated
-│   │   └── graphcool.graphql
+│   │   └── prisma.graphql
 │   ├── auth.js
 │   ├── index.js
 │   ├── schema.graphql
@@ -34,32 +32,32 @@ This directory contains a GraphQL server (based on [`graphql-yoga`](https://gith
 You need to have the following things installed:
 
 * Node.js 8 (or higher)
-* Yarn
+* Yarn (or npm)
 * Docker (only for deploying locally)
 
 ### 1. Download the example
 
-Clone the Graphcool monorepo and navigate to this directory or download _only_ this example with the following command:
+Clone the Prisma monorepo and navigate to this directory or download _only_ this example with the following command:
 
 ```sh
-curl https://codeload.github.com/graphcool/graphcool/tar.gz/master | tar -xz --strip=2 graphcool-master/examples/1.0/permissions
+curl https://codeload.github.com/graphcool/prisma/tar.gz/master | tar -xz --strip=2 prisma-master/examples/1.0/permissions
 cd 1.0/permissions
 ```
 
-### 2. Deploy the Graphcool database service
+### 2. Deploy the Prisma database service
 
-You can now [deploy](https://graph.cool/docs/reference/graphcool-cli/commands-aiteerae6l#graphcool-deploy) the Graphcool service:
+You can now [deploy](https://www.prismagraphql.com/docs/reference/cli-command-reference/database-service/prisma-deploy-kee1iedaov) the Prisma service:
 
 ```sh
 yarn install
-yarn graphcool deploy
+yarn prisma deploy
 ```
 
-> Note: Whenever you make changes to files in the `database` directory, you need to invoke `graphcool deploy` again to make sure your changes get applied to the running service.
+> Note: Whenever you make changes to files in the `database` directory, you need to invoke `prisma deploy` again to make sure your changes get applied to the running service.
 
 ### 3. Deploy the GraphQL server
 
-Your GraphQL web server that's powered by [`graphql-yoga`](https://github.com/graphcool/graphql-yoga/) is now ready to be deployed. This is because the Graphcool database service it connects to is now available.
+Your GraphQL web server that's powered by [`graphql-yoga`](https://github.com/graphcool/graphql-yoga/) is now ready to be deployed. This is because the Prisma database service it connects to is now available.
 
 ```sh
 yarn start

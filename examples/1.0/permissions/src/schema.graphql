@@ -1,4 +1,4 @@
-# import Post from "./generated/graphcool.graphql"
+# import Post from "./generated/prisma.graphql"
 
 type Query {
   # authenticated users can information retrieve about themselves
