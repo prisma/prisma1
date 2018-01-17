@@ -57,7 +57,7 @@ Single Mutations in the Prisma API that are not batch operations are always exec
 
 An example is creating a `User` node and two `Post` nodes that will be connected, while also connecting the `User` node to two other, already existing `Post` nodes, all in a single mutation. If any of the mentioned actions fail (for example because of a violated unique field constraint), the complete mutation is rolled back.
 
-Even though mutations are _transactional_, they are not _atomic_. This means that between two separate actions of the same nested mutation, other mutations can alter the data.
+Mutations are _transactional_, which means that they are _atomic_ and _isolated_. This means that between two separate actions of the same nested mutation, no other mutations can alter the data. Also the result of a single action cannot be observed until the complete mutation has been processed.
 
 ## Authentication
 
