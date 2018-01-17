@@ -26,9 +26,9 @@ Prisma services are managed with the [Prisma CLI](!alias-ieshoo5ohm). You can in
 Open your terminal and run the following command to install the Prisma CLI:
 
 ```
-npm install -g prisma-cli
+npm install -g prisma
 # or
-# yarn global add prisma-cli
+# yarn global add prisma
 ```
 
 </Instruction>
