@@ -14,7 +14,7 @@ The second option is the one with a tight feedback loop and debugging capabiliti
 - Start sbt in the server folder. Switch to the project you want to build the image for with `project <api | deploy>` (or stay in root if you want to build all images).
 - Execute `docker`. This will build a new image.
 - The image will have the tag from the `build.sbt` `betaImageTag` val. Either you just change it to the version the CLI uses there temporarily, or you retag the images manually.
-  - How to find out what images the CLI uses: `graphcool local eject` and inspect the `docker-compose.yml` `image` key, e.g. `image: graphcool/graphcool-database:1.0.0-beta2`. The part behind the colon is the tag.
+  - How to find out what images the CLI uses: `graphcool local eject` and inspect the `docker-compose.yml` `image` key, e.g. `image: graphcom.prismacool-database:1.0.0-beta2`. The part behind the colon is the tag.
   - ^ OR: `graphcool local start` and `docker ps`, you can see the used images there.
 - As soon as you have new images, you can execute `graphcool local start` again, which recreates containers if there are new images available on your local machine. You should see `recreating <...>` in the output somewhere, which tells you that a new image is spinning up.
 

@@ -120,6 +120,8 @@ Prisma can be used for MySQL Databases out of the box. More database connectors 
 * [Neo4j Connector](https://github.com/graphcool/prisma/issues/1646)
 * [Druid Connector](https://github.com/graphcool/prisma/issues/1647)
 * [Dgraph Connector](https://github.com/graphcool/prisma/issues/1648)
+* [DynamoDB](https://github.com/graphcool/prisma/issues/1655)
+* [Elastic Search](https://github.com/graphcool/prisma/issues/1665)
 
 Join the discussion or contribute to influence which we'll work on next!
 
