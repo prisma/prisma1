@@ -10,4 +10,4 @@ cluster: ${env:PRISMA_CLUSTER}
 secret: ${env:PRISMA_SECRET}
 
 # the file path pointing to your data model
-datamodel: database/datamodel.graphql
+datamodel: datamodel.graphql
