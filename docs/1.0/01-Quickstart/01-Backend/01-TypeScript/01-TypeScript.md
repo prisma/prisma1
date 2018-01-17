@@ -42,10 +42,11 @@ If you don't have Docker installed on your machine yet, go and download it now f
 
 <Instruction>
 
-Now you can use `graphql create` to bootstrap your project. With the following command, you name your project `my-app` and choose to use the `tpyescript-basic` boilerplate:
+Now you can use `graphql create` to bootstrap your project. With the following command, you name your project `my-app` and choose to use the `typescript-basic` boilerplate:
 
 ```sh
 graphql create my-app --boilerplate typescript-basic
+cd my-app
 ```
 
 </Instruction>
