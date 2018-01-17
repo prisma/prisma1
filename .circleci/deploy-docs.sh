@@ -15,7 +15,6 @@ fi
 
 
 BRANCH="${CIRCLE_BRANCH:-dev}"
-CIRCLE_TOKEN="${CIRCLE_TOKEN:?CIRCLE_TOKEN env variable not set}"
 
 export PAT_BLUE="${PAT_BLUE:?PAT_BLUE env variable not set}"
 export PAT_GREEN="${PAT_GREEN:?PAT_GREEN env variable not set}"

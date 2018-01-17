@@ -2,7 +2,7 @@
 
 [Website](https://www.prismagraphql.com) • [Docs](https://www.prismagraphql.com/docs/) • [Blog](https://blog.graph.cool/) • [Forum](https://www.graph.cool/forum) • [Slack](https://slack.graph.cool/) • [Twitter](https://twitter.com/graphcool)
 
-[![Slack Status](https://slack.graph.cool/badge.svg)](https://slack.graph.cool) [![npm version](https://badge.fury.io/js/graphcool.svg)](https://badge.fury.io/js/graphcool)
+[![CircleCI](https://circleci.com/gh/graphcool/prisma.svg?style=shield)](https://circleci.com/gh/graphcool/prisma) [![Slack Status](https://slack.graph.cool/badge.svg)](https://slack.graph.cool) [![npm version](https://badge.fury.io/js/prisma.svg)](https://badge.fury.io/js/prisma)
 
 **Prisma - turn your database into a GraphQL API**. Prisma lets you design your data model and have a production ready [GraphQL](https://www.howtographql.com/) API online in minutes.
 
@@ -30,12 +30,12 @@ The Prisma GraphQL API provides powerful abstractions and building blocks to dev
 
 ## Quickstart
 
-[Watch this 5 min tutorial](https://www.youtube.com/watch?v=g0wFABHMzL4) or follow the steps below to get started with Prisma:
+[Watch this 4 min tutorial](https://www.youtube.com/watch?v=20zGexpEitc) or follow the steps below to get started with Prisma:
 
 1. **Install the CLI via NPM:**
 
 ```sh
-npm install -g prisma-cli
+npm install -g prisma
 ```
 
 2. **Create a new service:**
@@ -120,6 +120,8 @@ Prisma can be used for MySQL Databases out of the box. More database connectors 
 * [Neo4j Connector](https://github.com/graphcool/prisma/issues/1646)
 * [Druid Connector](https://github.com/graphcool/prisma/issues/1647)
 * [Dgraph Connector](https://github.com/graphcool/prisma/issues/1648)
+* [DynamoDB](https://github.com/graphcool/prisma/issues/1655)
+* [Elastic Search](https://github.com/graphcool/prisma/issues/1665)
 
 Join the discussion or contribute to influence which we'll work on next!
 
