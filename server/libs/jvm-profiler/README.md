@@ -7,7 +7,7 @@
  
  Here's an how to use it inside a MetricsManager:
  ```
-import cool.graph.profiling.MemoryProfiler
+import com.prisma.profiling.MemoryProfiler
 
 object MyMetrics extends MetricsManager {
   override def serviceName: String = "MyMetrics"
