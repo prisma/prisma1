@@ -15,7 +15,7 @@ In this quickstart tutorial, you'll learn how to build a fullstack app with Reac
 The first thing you need to do is install the command line tools you'll need for this tutorial:
 
 - `graphql-cli` is used initially to bootstrap the file structure for your fullstack app with `graphql create`
-- `prisma-cli` is used continuously to manage your Prisma database service
+- `prisma` is used continuously to manage your Prisma database service
 
 <Instruction>
 
