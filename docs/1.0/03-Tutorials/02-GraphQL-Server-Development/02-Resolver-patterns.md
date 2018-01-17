@@ -25,7 +25,7 @@ type User {
   email: String! @unique
   password: String!
   name: String!
-  posts: [Post!]! @relation(name: "UserPosts")
+  posts: [Post!]!
 + address: String
 }
 ```
