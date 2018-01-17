@@ -3,7 +3,6 @@
 *.class
 *.log
 .coursier
-.envrc
 
 .ivy2
 

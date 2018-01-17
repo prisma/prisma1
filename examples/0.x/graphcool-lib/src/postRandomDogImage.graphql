@@ -1,7 +1,0 @@
-type RandomDogImagePayload {
-  url: String!
-}
-
-extend type Mutation {
-  postRandomDogImage(authorId: String!): RandomDogImagePayload
-}

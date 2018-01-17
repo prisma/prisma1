@@ -19,14 +19,14 @@ Add the library to your project via your `build.sbt`. Find the latest version in
 
 ```scala
 libraryDependencies ++= Seq(
-  "cool.graph" %% "rabbit-processor-scala" % "<version>"
+  "com.prisma" %% "rabbit-processor-scala" % "<version>"
 )
 ```
 
 You can import all the stuff you need like this:
 ```scala
-import cool.graph.rabbit.Import._
-import cool.graph.rabbit.Import.Bindings._
+import com.prisma.rabbit.Import._
+import com.prisma.rabbit.Import.Bindings._
 ```
 
 As all "dangerous" method calls return a `Try[T]` it is sensible to make heavy use of for comprehensions.

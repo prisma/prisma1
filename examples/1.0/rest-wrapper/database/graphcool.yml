@@ -1,7 +1,0 @@
-service: rest-wrapper
-
-stage: ${env:GRAPHCOOL_STAGE}
-
-datamodel: datamodel.graphql
-
-secret: ${env:GRAPHCOOL_SECRET}

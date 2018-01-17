@@ -9,22 +9,17 @@ services:
     - redis
     - rabbit
     environment:
-      TEST_SQL_CLIENT_HOST: "client-db"
-      TEST_SQL_CLIENT_PORT: "3306"
-      TEST_SQL_CLIENT_USER: "root"
-      TEST_SQL_CLIENT_PASSWORD: "graphcool"
-      TEST_SQL_CLIENT_CONNECTION_LIMIT: 10
-      TEST_SQL_INTERNAL_HOST: "internal-db"
-      TEST_SQL_INTERNAL_PORT: "3306"
-      TEST_SQL_INTERNAL_USER: "root"
-      TEST_SQL_INTERNAL_PASSWORD: "graphcool"
-      TEST_SQL_INTERNAL_DATABASE: "graphcool"
-      TEST_SQL_INTERNAL_CONNECTION_LIMIT: 10
-      TEST_SQL_LOGS_HOST: "internal-db"
-      TEST_SQL_LOGS_PORT: "3306"
-      TEST_SQL_LOGS_USER: "root"
-      TEST_SQL_LOGS_PASSWORD: "graphcool"
-      TEST_SQL_LOGS_DATABASE: "logs"
+      SQL_CLIENT_HOST: "client-db"
+      SQL_CLIENT_PORT: "3306"
+      SQL_CLIENT_USER: "root"
+      SQL_CLIENT_PASSWORD: "graphcool"
+      SQL_CLIENT_CONNECTION_LIMIT: 10
+      SQL_INTERNAL_HOST: "internal-db"
+      SQL_INTERNAL_PORT: "3306"
+      SQL_INTERNAL_USER: "root"
+      SQL_INTERNAL_PASSWORD: "graphcool"
+      SQL_INTERNAL_DATABASE: "graphcool"
+      SQL_INTERNAL_CONNECTION_LIMIT: 10
       SQL_LOGS_HOST: "internal-db"
       SQL_LOGS_PORT: "3306"
       SQL_LOGS_USER: "root"
@@ -39,7 +34,7 @@ services:
       GLOBAL_RABBIT_URI: "amqp://rabbit"
       INITIAL_PRICING_PLAN: "initial-plan"
       BUGSNAG_API_KEY: ""
-      SCHEMA_MANAGER_ENDPOINT: "empty"
+      CLUSTER_ADDRESS: "http://localhost:9000"
       SCHEMA_MANAGER_SECRET: "empty"
       AWS_ACCESS_KEY_ID: "empty"
       AWS_SECRET_ACCESS_KEY: "empty"
@@ -47,8 +42,12 @@ services:
       CLIENT_API_ADDRESS: "http://localhost:8888/"
       PRIVATE_CLIENT_API_SECRET: "empty"
       PACKAGECLOUD_PW: "${PACKAGECLOUD_PW}"
+      CLUSTER_VERSION: "latest"
+
     volumes:
       - ../..:/root
+      - ~/.ivy2:/root/.ivy2
+      - ~/.coursier:/root/.coursier
     working_dir: /root/server
 
   client-db:
