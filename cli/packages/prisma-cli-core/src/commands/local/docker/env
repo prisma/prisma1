@@ -1,0 +1,23 @@
+export PORT=4466
+export SCHEMA_MANAGER_SECRET=MUCHSECRET
+export SCHEMA_MANAGER_ENDPOINT="http://prisma-database:${PORT}/cluster/schema"
+
+export SQL_CLIENT_HOST="prisma-db"
+export SQL_CLIENT_PORT="3306"
+export SQL_CLIENT_USER="root"
+export SQL_CLIENT_PASSWORD="graphcool"
+export SQL_CLIENT_CONNECTION_LIMIT=10
+
+export SQL_LOGS_HOST="prisma-db"
+export SQL_LOGS_PORT="3306"
+export SQL_LOGS_USER="root"
+export SQL_LOGS_PASSWORD="graphcool"
+export SQL_LOGS_DATABASE="logs"
+export SQL_LOGS_CONNECTION_LIMIT=10
+
+export SQL_INTERNAL_HOST="prisma-db"
+export SQL_INTERNAL_PORT="3306"
+export SQL_INTERNAL_USER="root"
+export SQL_INTERNAL_PASSWORD="graphcool"
+export SQL_INTERNAL_DATABASE="graphcool"
+export SQL_INTERNAL_CONNECTION_LIMIT=10

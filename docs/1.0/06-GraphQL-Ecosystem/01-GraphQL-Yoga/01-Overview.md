@@ -1,11 +1,11 @@
 ---
 alias: chaha122ho
-description: GraphQL Yoga
+description: GraphQL Yoga is a fully-featured GraphQL Server with focus on easy setup, performance & great developer experience.
 ---
 
 # graphql-yoga
 
- [`graphql-yoga`](https://github.com/graphcool/graphql-yoga/) is a fully-featured GraphQL Server with focus on easy setup, performance & great developer experience.
+[`graphql-yoga`](https://github.com/graphcool/graphql-yoga/) is a fully-featured GraphQL Server with focus on easy setup, performance & great developer experience.
 
 ## Overview
 
@@ -176,7 +176,7 @@ Once your `graphql-yoga` server is running, you can use [GraphQL Playground](htt
 
 To deploy your `graphql-yoga` server with [`now`](https://zeit.co/now), follow these instructions:
 
-1. Download [**Now Desktop**](https://zeit.co/download) 
+1. Download [**Now Desktop**](https://zeit.co/download)
 1. Navigate to the root directory of your `graphql-yoga` server
 1. Run `now` in your terminal
 

@@ -1,7 +1,0 @@
-type AllSubBreedsPayload {
-  name: String!
-}
-
-extend type Query {
-  allSubBreeds(breedName: String!): [AllSubBreedsPayload!]!
-}
