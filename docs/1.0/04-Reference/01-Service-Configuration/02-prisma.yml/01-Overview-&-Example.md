@@ -43,6 +43,10 @@ stage: dev
 disableAuth: ${env:PRISMA_DISABLE_AUTH}
 
 # OPTIONAL
+# If your Prisma service requires authentication, this is the secret for creating JWT tokens.
+secret: 
+
+# OPTIONAL
 # Path where the full GraphQL schema will be written to
 # after deploying. Note that it is generated based on your
 # data model.
