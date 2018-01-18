@@ -153,9 +153,9 @@ case class ApiServer(
               throttleApiCallIfNeeded(projectId, rawRequest)
             }
           }
-        } ~ get {
-          getFromResource("graphiql.html")
         }
+      } ~ get {
+        getFromResource("graphiql.html")
       }
     }
   }
