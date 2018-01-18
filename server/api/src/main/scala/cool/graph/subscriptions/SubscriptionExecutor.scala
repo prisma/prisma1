@@ -1,11 +1,13 @@
 package cool.graph.subscriptions
 
 import akka.http.scaladsl.model.HttpRequest
+import com.prisma.sangria.utils.ErrorHandler
 import cool.graph.api.ApiDependencies
 import cool.graph.api.database.DataItem
 import cool.graph.api.database.deferreds.DeferredResolverProvider
 import cool.graph.shared.models.ModelMutationType.ModelMutationType
 import cool.graph.shared.models._
+import cool.graph.subscriptions.schema.{QueryTransformer, SubscriptionSchema}
 import cool.graph.util.json.SprayJsonExtensions
 import sangria.ast.Document
 import sangria.execution.Executor
