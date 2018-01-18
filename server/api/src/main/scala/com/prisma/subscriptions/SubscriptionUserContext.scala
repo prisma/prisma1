@@ -1,4 +1,4 @@
-package com.prisma.api.subscriptions
+package com.prisma.subscriptions
 
 import com.prisma.shared.models.Project
 import sangria.ast.Document

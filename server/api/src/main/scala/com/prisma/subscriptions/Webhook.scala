@@ -1,4 +1,4 @@
-package com.prisma.api.subscriptions
+package com.prisma.subscriptions
 
 case class Webhook(
     projectId: String,
