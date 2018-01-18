@@ -2,13 +2,14 @@ package com.prisma.deploy.migration.validation
 
 import com.prisma.deploy.validation._
 import com.prisma.shared.models.TypeIdentifier
-import sangria.ast.{Directive, FieldDefinition, ObjectTypeDefinition}
+import sangria.ast.{Directive, EnumValue, FieldDefinition, ObjectTypeDefinition}
 
 import scala.collection.immutable.Seq
 import scala.util.{Failure, Success}
 
-case class DirectiveRequirement(directiveName: String, arguments: Seq[RequiredArg])
+case class DirectiveRequirement(directiveName: String, requiredArguments: Seq[RequiredArg], optionalArguments: Seq[Argument])
 case class RequiredArg(name: String, mustBeAString: Boolean)
+case class Argument(name: String, isValid: sangria.ast.Value => Boolean)
 
 case class FieldAndType(objectType: ObjectTypeDefinition, fieldDef: FieldDefinition)
 
@@ -26,11 +27,15 @@ case class FieldRequirement(name: String, typeName: String, required: Boolean, u
 
 object SchemaSyntaxValidator {
   val directiveRequirements = Seq(
-    DirectiveRequirement("relation", Seq(RequiredArg("name", mustBeAString = true))),
-    DirectiveRequirement("rename", Seq(RequiredArg("oldName", mustBeAString = true))),
-    DirectiveRequirement("default", Seq(RequiredArg("value", mustBeAString = false))),
-    DirectiveRequirement("migrationValue", Seq(RequiredArg("value", mustBeAString = false))),
-    DirectiveRequirement("unique", Seq.empty)
+    DirectiveRequirement(
+      "relation",
+      requiredArguments = Seq(RequiredArg("name", mustBeAString = true)),
+      optionalArguments = Seq(Argument("onDelete", _.isInstanceOf[EnumValue]))
+    ),
+    DirectiveRequirement("rename", requiredArguments = Seq(RequiredArg("oldName", mustBeAString = true)), optionalArguments = Seq.empty),
+    DirectiveRequirement("default", requiredArguments = Seq(RequiredArg("value", mustBeAString = false)), optionalArguments = Seq.empty),
+    DirectiveRequirement("migrationValue", requiredArguments = Seq(RequiredArg("value", mustBeAString = false)), optionalArguments = Seq.empty),
+    DirectiveRequirement("unique", requiredArguments = Seq.empty, optionalArguments = Seq.empty)
   )
 
   val reservedFieldsRequirements = Seq(
@@ -188,15 +193,27 @@ case class SchemaSyntaxValidator(schema: String, directiveRequirements: Seq[Dire
 
   def validateFieldDirectives(fieldAndType: FieldAndType): Seq[SchemaError] = {
     def validateDirectiveRequirements(directive: Directive): Seq[SchemaError] = {
-      for {
+      val optionalArgs = for {
+        requirement         <- directiveRequirements if requirement.directiveName == directive.name
+        argumentRequirement <- requirement.optionalArguments
+        argument            <- directive.argument(argumentRequirement.name)
+        schemaError <- if (argumentRequirement.isValid(argument.value)) {
+                        None
+                      } else {
+                        Some(SchemaError(fieldAndType, s"not a valid value for ${argumentRequirement.name}"))
+                      }
+      } yield schemaError
+      val requiredArgs = for {
         requirement <- directiveRequirements if requirement.directiveName == directive.name
-        requiredArg <- requirement.arguments
+        requiredArg <- requirement.requiredArguments
         schemaError <- if (!directive.containsArgument(requiredArg.name, requiredArg.mustBeAString)) {
                         Some(SchemaErrors.directiveMissesRequiredArgument(fieldAndType, requirement.directiveName, requiredArg.name))
                       } else {
                         None
                       }
       } yield schemaError
+
+      requiredArgs ++ optionalArgs
     }
 
     def ensureDirectivesAreUnique(fieldAndType: FieldAndType): Option[SchemaError] = {

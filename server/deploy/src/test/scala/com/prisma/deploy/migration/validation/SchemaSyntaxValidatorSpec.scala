@@ -327,9 +327,9 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
 
   "NOT fail if the directives contain all required attributes" in {
     val directiveRequirements = Seq(
-      DirectiveRequirement("zero", Seq.empty),
-      DirectiveRequirement("one", Seq(RequiredArg("a", mustBeAString = true))),
-      DirectiveRequirement("two", Seq(RequiredArg("a", mustBeAString = false), RequiredArg("b", mustBeAString = true)))
+      DirectiveRequirement("zero", Seq.empty, Seq.empty),
+      DirectiveRequirement("one", Seq(RequiredArg("a", mustBeAString = true)), Seq.empty),
+      DirectiveRequirement("two", Seq(RequiredArg("a", mustBeAString = false), RequiredArg("b", mustBeAString = true)), Seq.empty)
     )
     val schema =
       """
@@ -344,8 +344,8 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
 
   "fail if a directive misses a required attribute" in {
     val directiveRequirements = Seq(
-      DirectiveRequirement("one", Seq(RequiredArg("a", mustBeAString = true))),
-      DirectiveRequirement("two", Seq(RequiredArg("a", mustBeAString = false), RequiredArg("b", mustBeAString = true)))
+      DirectiveRequirement("one", Seq(RequiredArg("a", mustBeAString = true)), Seq.empty),
+      DirectiveRequirement("two", Seq(RequiredArg("a", mustBeAString = false), RequiredArg("b", mustBeAString = true)), Seq.empty)
     )
     val schema =
       """
