@@ -1,7 +1,0 @@
-type RandomDogImagePayload {
-  url: String!
-}
-
-extend type Query {
-  randomDogImage: RandomDogImagePayload!
-}

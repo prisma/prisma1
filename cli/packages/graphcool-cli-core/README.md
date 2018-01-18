@@ -1,3 +1,0 @@
-# NodeJS TS Starter
-
-

@@ -19,9 +19,9 @@ jobs:
       - run:
           command: .circleci/deploy-docs.sh
           environment:
-            BLUE_ID: cj67nv8do36px0187fa6i2n6z
-            GREEN_ID: cj6glidms1ego0162chqa3al4
-            ALIAS: graphcool-docs
+            BLUE_ID: cjce1hjzi0z1o01539nc8949x
+            GREEN_ID: cjce1bhux0xwx0127k0ava9o4
+            ALIAS: prisma-docs
 
 workflows:
   version: 2
