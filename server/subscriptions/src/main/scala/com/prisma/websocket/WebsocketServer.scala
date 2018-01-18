@@ -39,17 +39,15 @@ case class WebsocketServer(dependencies: SubscriptionDependencies, prefix: Strin
   override def onStop: Future[_] = Future { responseSubscription.unsubscribe }
 
   val innerRoutes =
-    pathPrefix(Segment) { name =>
-      pathPrefix(Segment) { stage =>
-        get {
-          val projectId = ProjectId.toEncodedString(name = name, stage = stage)
+    pathPrefix(Segments(min = 2, max = 3)) { segments =>
+      get {
+        val projectId = ProjectId.fromSegments(segments).asString
 
-          extractUpgradeToWebSocket { upgrade =>
-            upgrade.requestedProtocols.headOption match {
-              case Some(`v7ProtocolName`) => handleWebSocketMessages(newSession(projectId, v7protocol = true))
-              case Some(`v5ProtocolName`) => handleWebSocketMessages(newSession(projectId, v7protocol = false))
-              case _                      => reject(UnsupportedWebSocketSubprotocolRejection(v7ProtocolName))
-            }
+        extractUpgradeToWebSocket { upgrade =>
+          upgrade.requestedProtocols.headOption match {
+            case Some(`v7ProtocolName`) => handleWebSocketMessages(newSession(projectId, v7protocol = true))
+            case Some(`v5ProtocolName`) => handleWebSocketMessages(newSession(projectId, v7protocol = false))
+            case _                      => reject(UnsupportedWebSocketSubprotocolRejection(v7ProtocolName))
           }
         }
       }
