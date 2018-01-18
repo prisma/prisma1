@@ -26,16 +26,15 @@ import scala.util.{Failure, Success, Try}
   * The final metric that arrives at Statsd looks for example like this:
   * "ApiSimpleService.RequestCount#env=prod,instance=i-0d3c23cdd0c2f5d03,container=e065fc831976,projectId=someCUID
   */
-trait MetricsManager {
-
-  implicit val reporter: ErrorReporter
-
+abstract class MetricsManager(
+    reporter: ErrorReporter
+) {
   def serviceName: String
 
   // System used to periodically flush the state of individual gauges
   implicit lazy val gaugeFlushSystem: ActorSystem = SingleThreadedActorSystem(s"$serviceName-gauges")
 
-  lazy val errorHandler = CustomErrorHandler()
+  lazy val errorHandler = CustomErrorHandler()(reporter)
 
   protected val baseTagsString: String = {
     if (metricsCollectionIsEnabled) {
