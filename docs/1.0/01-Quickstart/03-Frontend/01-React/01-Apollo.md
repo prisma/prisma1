@@ -21,7 +21,7 @@ cd frontend-examples/react
 
 </Instruction>
 
-Feel free to get familiar with the code. The app contains the following React [`components`](https://github.com/graphcool-examples/react-graphql/tree/master/quickstart-with-apollo/src/components):
+Feel free to get familiar with the code. The app contains the following React [`components`](https://github.com/graphcool/frontend-examples/tree/master/react/src/components):
 
 - `Post`: Renders a single post item
 - `ListPage`: Renders a list of post items
