@@ -18,19 +18,11 @@ object DatabaseMutationBuilder {
 
   val implicitlyCreatedColumns = List("id", "createdAt", "updatedAt")
 
-  def createDataItem(project: Project, model: Model, args: CoolArgs): SqlStreamingAction[Vector[Int], Int, Effect]#ResultAction[Int, NoStream, Effect] = {
-    createDataItem(project.id, model.name, args.raw)
-  }
+  def createDataItem(projectId: String, modelName: String, args: CoolArgs): SqlStreamingAction[Vector[Int], Int, Effect]#ResultAction[Int, NoStream, Effect] = {
 
-  def createDataItem(projectId: String,
-                     modelName: String,
-                     values: Map[String, Any]): SqlStreamingAction[Vector[Int], Int, Effect]#ResultAction[Int, NoStream, Effect] = {
-
-    val escapedKeyValueTuples = values.toList.map(x => (escapeKey(x._1), escapeUnsafeParam(x._2)))
+    val escapedKeyValueTuples = args.raw.toList.map(x => (escapeKey(x._1), escapeUnsafeParam(x._2)))
     val escapedKeys           = combineByComma(escapedKeyValueTuples.map(_._1))
     val escapedValues         = combineByComma(escapedKeyValueTuples.map(_._2))
-
-    // ++ query as sql, but then convert it to Update, since is an insert query.
     (sql"insert into `#$projectId`.`#$modelName` (" ++ escapedKeys ++ sql") values (" ++ escapedValues ++ sql")").asUpdate
   }
 
@@ -63,16 +55,16 @@ object DatabaseMutationBuilder {
       sql"where table_schema = ${project.id} AND TABLE_NAME = ${where.model.name})end;").as[Int]
   }
 
-  def connectionFailureTrigger(project: Project, parentInfo: ParentInfo, innerWhere: NodeSelector) = {
-    val innerSide = parentInfo.relation.sideOf(innerWhere.model)
-    val outerSide = parentInfo.relation.sideOf(parentInfo.model)
+  def connectionFailureTrigger(project: Project, parentInfo: ParentInfo, where: NodeSelector) = {
+    val childSide  = parentInfo.relation.sideOf(where.model)
+    val parentSide = parentInfo.relation.sideOf(parentInfo.model)
 
     (sql"select case" ++
       sql"when exists" ++
       sql"(select *" ++
       sql"from `#${project.id}`.`#${parentInfo.relation.id}`" ++
-      sql"where `#$innerSide` = (Select `id` from `#${project.id}`.`#${innerWhere.model.name}`where `#${innerWhere.field.name}` = ${innerWhere.fieldValue})" ++
-      sql"AND `#$outerSide` = (Select `id` from `#${project.id}`.`#${parentInfo.model.name}`where `#${parentInfo.where.field.name}` = ${parentInfo.where.fieldValue}))" ++
+      sql"where `#$childSide` = (Select `id` from `#${project.id}`.`#${where.model.name}`where `#${where.field.name}` = ${where.fieldValue})" ++
+      sql"AND `#$parentSide` = (Select `id` from `#${project.id}`.`#${parentInfo.model.name}`where `#${parentInfo.where.field.name}` = ${parentInfo.where.fieldValue}))" ++
       sql"then 1" ++
       sql"else (select COLUMN_NAME" ++
       sql"from information_schema.columns" ++
@@ -116,7 +108,7 @@ object DatabaseMutationBuilder {
     import scala.concurrent.ExecutionContext.Implicits.global
 
     val q       = DatabaseQueryBuilder.existsNodeIsInRelationshipWith(project, parentInfo, where).as[Boolean]
-    val qInsert = createDataItem(project, where.model, createArgs)
+    val qInsert = createDataItem(project.id, where.model.name, createArgs)
     val qUpdate = updateDataItemByUnique(project, where, updateArgs)
 
     for {
@@ -131,17 +123,10 @@ object DatabaseMutationBuilder {
                         relationTableName: String,
                         id: String,
                         a: String,
-                        b: String,
-                        fieldMirrors: List[MirrorFieldDbValues]): SqlStreamingAction[Vector[Int], Int, Effect]#ResultAction[Int, NoStream, Effect] = {
+                        b: String): SqlStreamingAction[Vector[Int], Int, Effect]#ResultAction[Int, NoStream, Effect] = {
 
-    val fieldMirrorColumns = fieldMirrors.map(_.relationColumnName).map(escapeKey)
-
-    val fieldMirrorValues =
-      fieldMirrors.map(mirror => sql"(SELECT `#${mirror.modelColumnName}` FROM `#$projectId`.`#${mirror.modelTableName}` WHERE id = ${mirror.modelId})")
-
-    // ++ query as sql, but then convert it to Update, since is an insert query.
-    (sql"insert into `#$projectId`.`#$relationTableName` (" ++ combineByComma(List(sql"`id`, `A`, `B`") ++ fieldMirrorColumns) ++ sql") values (" ++ combineByComma(
-      List(sql"$id, $a, $b") ++ fieldMirrorValues) ++ sql") on duplicate key update id=id").asUpdate
+    (sql"insert into `#$projectId`.`#$relationTableName` (" ++ combineByComma(List(sql"`id`, `A`, `B`")) ++ sql") values (" ++ combineByComma(
+      List(sql"$id, $a, $b")) ++ sql") on duplicate key update id=id").asUpdate
   }
 
   def createRelationRowByUniqueValueForA(projectId: String, parentInfo: ParentInfo, where: NodeSelector): SqlAction[Int, NoStream, Effect] = {
@@ -153,13 +138,12 @@ object DatabaseMutationBuilder {
 
   def createRelationRowByUniqueValueForB(projectId: String, parentInfo: ParentInfo, where: NodeSelector): SqlAction[Int, NoStream, Effect] = {
     val relationId = Cuid.createCuid()
-
     sqlu"""insert into `#$projectId`.`#${parentInfo.relation.id}` (`id`, `A`, `B`)
            Select'#$relationId', (select id from `#$projectId`.`#${parentInfo.model.name}` where `#${parentInfo.where.field.name}` = ${parentInfo.where.fieldValue}), `id`
            FROM `#$projectId`.`#${where.model.name}` where `#${where.field.name}` = ${where.fieldValue} on duplicate key update `#$projectId`.`#${parentInfo.relation.id}`.id=`#$projectId`.`#${parentInfo.relation.id}`.id"""
   }
 
-  def deleteRelationRowByUniqueValueForA(projectId: String, parentInfo: ParentInfo, where: NodeSelector): SqlAction[Int, NoStream, Effect] = {
+  def deleteRelationRowByUniqueValue(projectId: String, parentInfo: ParentInfo, where: NodeSelector): SqlAction[Int, NoStream, Effect] = {
     val parentSide = parentInfo.field.relationSide.get
     val childSide  = parentInfo.field.oppositeRelationSide.get
 
@@ -215,27 +199,11 @@ object DatabaseMutationBuilder {
     (sql"update `#$projectId`.`#$relationTable` set" ++ escapedValues ++ sql"where `#$relationSide` = $nodeId").asUpdate
   }
 
-  def populateNullRowsForColumn(projectId: String, modelName: String, fieldName: String, value: Any) = {
-    val escapedValues = escapeKey(fieldName) ++ sql" = " ++ escapeUnsafeParam(value)
-
-    (sql"update `#$projectId`.`#$modelName` set" ++ escapedValues ++ sql"where `#$projectId`.`#$modelName`.`#$fieldName` IS NULL").asUpdate
-  }
-
-  def overwriteInvalidEnumForColumnWithMigrationValue(projectId: String, modelName: String, fieldName: String, oldValue: String, migrationValue: String) = {
-    val escapedValues      = escapeKey(fieldName) ++ sql" = " ++ escapeUnsafeParam(migrationValue)
-    val escapedWhereClause = escapeKey(fieldName) ++ sql" = " ++ escapeUnsafeParam(oldValue)
-
-    (sql"update `#$projectId`.`#$modelName` set" ++ escapedValues ++ sql"where" ++ escapedWhereClause).asUpdate
-  }
-
-  def overwriteAllRowsForColumn(projectId: String, modelName: String, fieldName: String, value: Any) = {
-    val escapedValues = escapeKey(fieldName) ++ sql" = " ++ escapeUnsafeParam(value)
-
-    (sql"update `#$projectId`.`#$modelName` set" ++ escapedValues).asUpdate
-  }
-
   def deleteDataItemById(projectId: String, modelName: String, id: String) =
-    sqlu"delete from `#$projectId`.`#$modelName` where id = $id"
+    sqlu"delete from `#$projectId`.`#$modelName` where `id` = $id"
+
+  def deleteDataItemByUnique(projectId: String, where: NodeSelector) =
+    sqlu"delete from `#$projectId`.`#${where.model.name}` where `#${where.field.name}` = ${where.fieldValue}"
 
   def deleteRelationRowById(projectId: String, relationId: String, id: String) =
     sqlu"delete from `#$projectId`.`#$relationId` where A = $id or B = $id"

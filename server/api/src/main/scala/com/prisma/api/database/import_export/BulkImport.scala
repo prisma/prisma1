@@ -4,6 +4,7 @@ import com.prisma.api.ApiDependencies
 import com.prisma.api.database.import_export.ImportExport.MyJsonProtocol._
 import com.prisma.api.database.import_export.ImportExport._
 import com.prisma.api.database.{DatabaseMutationBuilder, ProjectRelayId, ProjectRelayIdTable}
+import com.prisma.api.mutations.CoolArgs
 import cool.graph.cuid.Cuid
 import com.prisma.shared.models._
 import slick.dbio.{DBIOAction, Effect, NoStream}
@@ -87,7 +88,7 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) {
         case (k, v)                                                                        => (k, v)
       }
 
-      val values: Map[String, Any] = formatedDateTimes + ("id" -> id)
+      val values: CoolArgs = CoolArgs(formatedDateTimes + ("id" -> id))
 
       DatabaseMutationBuilder.createDataItem(project.id, model.name, values).asTry
     }
@@ -118,7 +119,7 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) {
       val aValue: String = if (relationSide == RelationSide.A) left.identifier.id else right.identifier.id
       val bValue: String = if (relationSide == RelationSide.A) right.identifier.id else left.identifier.id
       // the empty list is for the RelationFieldMirrors
-      DatabaseMutationBuilder.createRelationRow(project.id, relation.id, Cuid.createCuid(), aValue, bValue, List.empty).asTry
+      DatabaseMutationBuilder.createRelationRow(project.id, relation.id, Cuid.createCuid(), aValue, bValue).asTry
     }
     DBIO.sequence(x)
   }

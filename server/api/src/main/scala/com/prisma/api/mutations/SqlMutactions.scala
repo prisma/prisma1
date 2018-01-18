@@ -40,10 +40,10 @@ case class SqlMutactions(dataResolver: DataResolver) {
     requiredRelationViolations ++ removeFromConnectionMutactions ++ List(deleteItemMutaction)
   }
 
-  def getMutactionsForUpdate(args: CoolArgs, id: Id, previousValues: DataItem, outerWhere: NodeSelector): List[ClientSqlMutaction] = {
-    val updateMutaction = getUpdateMutaction(outerWhere.model, args, id, previousValues)
-    val nested          = getMutactionsForNestedMutation(args, outerWhere, triggeredFromCreate = false)
-    val scalarLists     = getMutactionsForScalarLists(outerWhere, args)
+  def getMutactionsForUpdate(args: CoolArgs, id: Id, previousValues: DataItem, where: NodeSelector): List[ClientSqlMutaction] = {
+    val updateMutaction = getUpdateMutaction(where.model, args, id, previousValues)
+    val nested          = getMutactionsForNestedMutation(args, where, triggeredFromCreate = false)
+    val scalarLists     = getMutactionsForScalarLists(where, args)
 
     updateMutaction.toList ++ nested ++ scalarLists
   }
