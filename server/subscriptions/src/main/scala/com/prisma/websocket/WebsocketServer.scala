@@ -45,8 +45,8 @@ case class WebsocketServer(dependencies: SubscriptionDependencies, prefix: Strin
 
         extractUpgradeToWebSocket { upgrade =>
           upgrade.requestedProtocols.headOption match {
-            case Some(`v7ProtocolName`) => handleWebSocketMessages(newSession(projectId, v7protocol = true))
-            case Some(`v5ProtocolName`) => handleWebSocketMessages(newSession(projectId, v7protocol = false))
+            case Some(`v7ProtocolName`) => handleWebSocketMessagesForProtocol(newSession(projectId, v7protocol = true), v7ProtocolName)
+            case Some(`v5ProtocolName`) => handleWebSocketMessagesForProtocol(newSession(projectId, v7protocol = false), v5ProtocolName)
             case _                      => reject(UnsupportedWebSocketSubprotocolRejection(v7ProtocolName))
           }
         }
