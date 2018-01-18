@@ -4,10 +4,8 @@ import com.prisma.errors.BugsnagErrorReporter
 import com.prisma.metrics.{CustomTag, MetricsManager}
 import com.prisma.profiling.MemoryProfiler
 
-object SubscriptionMetrics extends MetricsManager {
+object SubscriptionMetrics extends MetricsManager(BugsnagErrorReporter(sys.env.getOrElse("BUGSNAG_API_KEY", ""))) {
   override def serviceName = "SimpleSubscriptionService"
-
-  val reporter = BugsnagErrorReporter(sys.env.getOrElse("BUGSNAG_API_KEY", ""))
 
   MemoryProfiler.schedule(this)
 
