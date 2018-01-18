@@ -38,9 +38,7 @@ case class SingleServerDependencies()(implicit val system: ActorSystem, val mate
   override val databases        = Databases.initialize(config)
   override val apiSchemaBuilder = CachedSchemaBuilder(SchemaBuilder(), invalidationPubSub)
   override val projectFetcher: ProjectFetcher = {
-    val schemaManagerEndpoint = config.getString("schemaManagerEndpoint")
-    val schemaManagerSecret   = config.getString("schemaManagerSecret")
-    val fetcher               = ProjectFetcherImpl(Vector.empty, config, schemaManagerEndpoint = schemaManagerEndpoint, schemaManagerSecret = schemaManagerSecret)
+    val fetcher = SingleServerProjectFetcher(projectPersistence)
     CachedProjectFetcherImpl(fetcher, invalidationPubSub)
   }
 
@@ -91,6 +89,5 @@ case class SingleServerDependencies()(implicit val system: ActorSystem, val mate
   override lazy val webhookPublisher = webhooksQueue
   override lazy val webhooksConsumer = webhooksQueue.map[WorkerWebhook](Converters.apiWebhook2WorkerWebhook)
   override lazy val httpClient       = SimpleHttpClient()
-
-  override lazy val graphQlClient = GraphQlClient(sys.env.getOrElse("CLUSTER_ADDRESS", sys.error("env var CLUSTER_ADDRESS is not set")))
+  override lazy val graphQlClient    = GraphQlClient(sys.env.getOrElse("CLUSTER_ADDRESS", sys.error("env var CLUSTER_ADDRESS is not set")))
 }

@@ -60,6 +60,7 @@ trait SprayJsonExtensions {
 
     def pathAsJsValue(path: String): JsValue   = pathAs[JsValue](path)
     def pathAsJsObject(path: String): JsObject = pathAs[JsObject](path)
+    def pathAsJsArray(path: String): JsArray   = pathAs[JsArray](path)
     def pathExists(path: String): Boolean      = Try(pathAsJsValue(path)).map(_ => true).getOrElse(false)
 
     def pathAsSeq(path: String): Seq[JsValue] = Json.getPathAs[JsArray](jsValue, path).elements

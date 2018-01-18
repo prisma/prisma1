@@ -1,9 +1,10 @@
 package cool.graph.deploy.specutils
 
+import akka.http.scaladsl.model.HttpRequest
+import com.prisma.sangria.utils.ErrorHandler
 import cool.graph.deploy.DeployDependencies
 import cool.graph.deploy.schema.{SchemaBuilder, SystemUserContext}
-import cool.graph.deploy.server.ErrorHandler
-import sangria.execution.Executor
+import sangria.execution.{Executor, QueryAnalysisError}
 import sangria.parser.QueryParser
 import sangria.renderer.SchemaRenderer
 import spray.json._
@@ -95,7 +96,7 @@ case class DeployTestServer()(implicit dependencies: DeployDependencies) extends
     val userContext    = SystemUserContext(None)
     val schema         = schemaBuilder(userContext)
     val renderedSchema = SchemaRenderer.renderSchema(schema)
-    val errorHandler   = ErrorHandler(requestId)
+    val errorHandler   = ErrorHandler(requestId, HttpRequest(), query, variables.toString(), dependencies.reporter)
 
     if (printSchema) println(renderedSchema)
     if (writeSchemaToFile) writeSchemaIntoFile(renderedSchema)
@@ -111,15 +112,9 @@ case class DeployTestServer()(implicit dependencies: DeployDependencies) extends
           variables = variables,
           exceptionHandler = errorHandler.sangriaExceptionHandler
         )
-//        .recover {
-//          case error: QueryAnalysisError => error.resolveError
-//          case error: ErrorWithResolver  =>
-//            //            unhandledErrorLogger(error)
-//            error.resolveError
-//          //          case error: Throwable ⇒ unhandledErrorLogger(error)._2
-//
-//        },
-      ,
+        .recover {
+          case error: QueryAnalysisError => error.resolveError
+        },
       Duration.Inf
     )
     println("Request Result: " + result)

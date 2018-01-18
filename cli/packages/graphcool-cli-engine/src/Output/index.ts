@@ -22,6 +22,7 @@ import * as Charm from 'charm'
 import { padEnd, repeat, set, uniqBy, values } from 'lodash'
 import { Project } from '../types/common'
 import { Targets } from '../types/rc'
+import * as Raven from 'raven'
 
 marked.setOptions({
   renderer: new TerminalRenderer(),
@@ -152,7 +153,10 @@ export class Output {
     return path.join(this.config.cacheDir, 'autoupdate.log')
   }
 
-  error(err: Error | string, exitCode: number | false = 1) {
+  async error(err: Error | string, exitCode: number | false = 1) {
+    await new Promise(r => {
+      Raven.captureException(err, () => r())
+    })
     if (
       (this.mock && typeof err !== 'string' && exitCode !== false) ||
       process.env.NODE_ENV === 'test'

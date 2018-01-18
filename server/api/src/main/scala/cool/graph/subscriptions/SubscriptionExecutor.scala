@@ -1,10 +1,9 @@
 package cool.graph.subscriptions
 
+import akka.http.scaladsl.model.HttpRequest
 import cool.graph.api.ApiDependencies
 import cool.graph.api.database.DataItem
 import cool.graph.api.database.deferreds.DeferredResolverProvider
-import cool.graph.api.server.ErrorHandler
-import cool.graph.subscriptions.schema.{QueryTransformer, SubscriptionSchema}
 import cool.graph.shared.models.ModelMutationType.ModelMutationType
 import cool.graph.shared.models._
 import cool.graph.util.json.SprayJsonExtensions
@@ -90,7 +89,14 @@ object SubscriptionExecutor extends SprayJsonExtensions {
       dependencies.dataResolver(project)
     }
 
-    val sangriaHandler = ErrorHandler(requestId).sangriaExceptionHandler
+    val sangriaHandler = ErrorHandler(
+      requestId,
+      HttpRequest(),
+      query.renderPretty,
+      variables.compactPrint,
+      dependencies.reporter,
+      Some(project.id)
+    ).sangriaExceptionHandler
 
     Executor
       .execute(

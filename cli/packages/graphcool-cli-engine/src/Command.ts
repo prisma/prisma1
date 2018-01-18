@@ -49,7 +49,8 @@ export class Command {
         ? customArgs.mockDefinition
         : mock.mockDefinition
     const mockRC = customArgs && customArgs.mockRC ? customArgs.mockRC : null
-    const mockConfig = customArgs && customArgs.mockConfig ? customArgs.mockConfig : null
+    const mockConfig =
+      customArgs && customArgs.mockConfig ? customArgs.mockConfig : null
     debug(`Using mockDefinition`, mockDefinition)
     debug(`Using mockRC`, mockRC)
 
@@ -105,7 +106,11 @@ export class Command {
   argv: string[]
 
   constructor(options: { config?: RunOptions } = { config: { mock: true } }) {
-    this.config = options.config && options.config.mockConfig || options.config instanceof Config ? (options.config as any) : new Config(options.config)
+    this.config =
+      (options.config && options.config.mockConfig) ||
+      options.config instanceof Config
+        ? (options.config as any)
+        : new Config(options.config)
     this.out = new Output(this.config)
     this.config.setOutput(this.out)
     this.argv = options.config && options.config.argv ? options.config.argv : []
@@ -136,9 +141,6 @@ export class Command {
       variableArgs: (this.constructor as any).variableArgs,
       cmd: this,
     })
-    if (this.argv && (this.argv.includes('-e') || this.argv.includes('--env'))) {
-      this.out.warn('The usage of -e or --env is deprecated. Please use --target instead.')
-    }
     const { argv, flags, args } = await parser.parse({
       flags: this.flags,
       argv: this.argv.slice(2),

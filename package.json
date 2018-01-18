@@ -1,0 +1,11 @@
+{
+  "dependencies": {
+    "docs-cli": "^1.0.25",
+    "global": "^4.3.2"
+  },
+  "prettier": {
+    "semi": false,
+    "trailingComma": "all",
+    "singleQuote": true
+  }
+}

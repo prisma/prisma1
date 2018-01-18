@@ -2,7 +2,7 @@
 
 [Website](https://www.graph.cool/) • [Docs](https://graph.cool/docs/) • [Blog](https://blog.graph.cool/) • [Forum](https://www.graph.cool/forum) • [Slack](https://slack.graph.cool/) • [Twitter](https://twitter.com/graphcool)
 
-[![CircleCI](https://circleci.com/gh/graphcool/framework.svg?style=shield)](https://circleci.com/gh/graphcool/framework) [![Slack Status](https://slack.graph.cool/badge.svg)](https://slack.graph.cool) [![npm version](https://img.shields.io/badge/npm%20package-latest-brightgreen.svg)](https://badge.fury.io/js/graphcool)
+[![CircleCI](https://circleci.com/gh/graphcool/framework.svg?style=shield)](https://circleci.com/gh/graphcool/framework) [![Slack Status](https://slack.graph.cool/badge.svg)](https://slack.graph.cool) [![npm version](https://badge.fury.io/js/graphcool.svg)](https://badge.fury.io/js/graphcool)
 
 **Graphcool is an open-source backend development framework** to develop and deploy production-ready GraphQL microservices. With Graphcool you can design your data model and have a production ready [GraphQL](https://www.howtographql.com/) API online in minutes.
 
@@ -40,16 +40,16 @@ The framework provides powerful abstractions and building blocks to develop flex
 
 1. **Install the CLI via NPM:**
 
-    ```sh
-    npm install -g graphcool
-    ```
+  ```sh
+  npm install -g graphcool-framework
+  ```
 
 2. **Create a new service:**
 
   The following command creates all files you need for a new [service](https://graph.cool/docs/reference/service-definition/overview-opheidaix3).
 
   ```sh
-  graphcool init
+  graphcool-framework init
   ```
 
 3. **Define your data model:**
@@ -108,7 +108,7 @@ The framework provides powerful abstractions and building blocks to develop flex
   To deploy your service simply run the following command and select either a hosted BaaS [cluster](https://graph.cool/docs/reference/graphcool-cli/.graphcoolrc-zoug8seen4) or setup a local Docker-based development environment:
 
   ```sh
-  graphcool deploy
+  graphcool-framework deploy
   ```
 
 6. **Connect to your GraphQL endpoint:**
@@ -190,14 +190,14 @@ Graphcool services can be deployed with [Docker](https://docker.com/) or the [Gr
 
 ### Docker
 
-You can deploy a Graphcool service to a local environment using Docker. To run a graphcool service locally, use the `graphcool local` sub commands.
+You can deploy a Graphcool service to a local environment using Docker. To run a graphcool service locally, use the `graphcool-framework local` sub commands.
 
 This is what a typical workflow looks like:
 
 ```sh
-graphcool init     # bootstrap new Graphcool service
-graphcool local up # start local cluster
-graphcool deploy   # deploy to local cluster
+graphcool-framework init     # bootstrap new Graphcool service
+graphcool-framework local up # start local cluster
+graphcool-framework deploy   # deploy to local cluster
 ```
 
 ### Graphcool Cloud (Backend-as-a-Service)

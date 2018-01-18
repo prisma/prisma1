@@ -1,11 +1,7 @@
 package cool.graph.subscriptions.resolving
 
-import java.util.concurrent.TimeUnit
-
 import akka.actor.{Actor, ActorRef, Props, Terminated}
-import akka.util.Timeout
 import cool.graph.akkautil.{LogUnhandled, LogUnhandledExceptions}
-import cool.graph.bugsnag.BugSnagger
 import cool.graph.messagebus.pubsub.Only
 import cool.graph.shared.models.ModelMutationType.ModelMutationType
 import cool.graph.subscriptions.SubscriptionDependencies
@@ -50,9 +46,7 @@ object SubscriptionsManager {
   }
 }
 
-case class SubscriptionsManager(
-    bugsnag: BugSnagger
-)(
+case class SubscriptionsManager()(
     implicit dependencies: SubscriptionDependencies
 ) extends Actor
     with LogUnhandled
@@ -60,6 +54,7 @@ case class SubscriptionsManager(
 
   import SubscriptionsManager.Requests._
 
+  val reporter                = dependencies.reporter
   val invalidationSubscriber  = dependencies.invalidationSubscriber
   private val projectManagers = mutable.HashMap.empty[String, ActorRef]
 
@@ -72,7 +67,7 @@ case class SubscriptionsManager(
   private def projectActorFor(projectId: String): ActorRef = {
     projectManagers.getOrElseUpdate(
       projectId, {
-        val ref = context.actorOf(Props(SubscriptionsManagerForProject(projectId, bugsnag)), projectId)
+        val ref = context.actorOf(Props(SubscriptionsManagerForProject(projectId)), projectId)
         invalidationSubscriber.subscribe(Only(projectId), ref)
         context.watch(ref)
       }

@@ -2,8 +2,8 @@ package cool.graph.workers
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
+import com.prisma.errors.ErrorReporter
 import cool.graph.akkautil.http.{Routes, Server}
-import cool.graph.bugsnag.BugSnagger
 import cool.graph.workers.dependencies.WorkerDependencies
 
 import scala.concurrent.Future
@@ -12,8 +12,10 @@ import scala.util.{Failure, Success}
 case class WorkerServer(
     dependencies: WorkerDependencies,
     prefix: String = ""
-)(implicit system: ActorSystem, materializer: ActorMaterializer, bugsnag: BugSnagger)
-    extends Server {
+)(
+    implicit system: ActorSystem,
+    materializer: ActorMaterializer
+) extends Server {
   import system.dispatcher
 
   val workers = Vector[Worker](
@@ -21,8 +23,6 @@ case class WorkerServer(
   )
 
   val innerRoutes = Routes.emptyRoute
-
-  def healthCheck: Future[_] = Future.successful(())
 
   override def onStart: Future[_] = {
     println("Initializing workers...")

@@ -3,10 +3,9 @@ package cool.graph.subscriptions.protocol
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.stream.ActorMaterializer
 import akka.testkit.{TestKit, TestProbe}
-import cool.graph.bugsnag.{BugSnagger, BugSnaggerMock}
 import cool.graph.messagebus.pubsub.Message
 import cool.graph.messagebus.testkits.{DummyPubSubPublisher, InMemoryPubSubTestKit}
-import cool.graph.shared.models.{ProjectId, ProjectWithClientId}
+import cool.graph.shared.models.ProjectWithClientId
 import cool.graph.shared.project_dsl.TestProject
 import cool.graph.stub.Import.withStubServer
 import cool.graph.subscriptions.SubscriptionDependenciesForTest
@@ -35,7 +34,6 @@ class SubscriptionSessionManagerProtocolV07Spec
   val ignoreProbe: TestProbe = TestProbe()
   val ignoreRef: ActorRef    = ignoreProbe.testActor
 
-  val bugsnag: BugSnagger   = BugSnaggerMock
   implicit val dependencies = new SubscriptionDependenciesForTest
 
   def ignoreKeepAliveProbe: TestProbe = {
@@ -53,7 +51,7 @@ class SubscriptionSessionManagerProtocolV07Spec
       implicit val response07Publisher = InMemoryPubSubTestKit[SubscriptionSessionResponse]()
       implicit val response05Publisher = DummyPubSubPublisher[SubscriptionSessionResponseV05]()
 
-      val manager      = system.actorOf(Props(new SubscriptionSessionManager(ignoreRef, bugsnag)))
+      val manager      = system.actorOf(Props(new SubscriptionSessionManager(ignoreRef)))
       val emptyPayload = Json.obj()
 
       manager ! EnrichedSubscriptionRequest("sessionId", projectId, GqlConnectionInit(Some(emptyPayload)))
@@ -64,7 +62,7 @@ class SubscriptionSessionManagerProtocolV07Spec
       implicit val response07Publisher = InMemoryPubSubTestKit[SubscriptionSessionResponse]()
       implicit val response05Publisher = DummyPubSubPublisher[SubscriptionSessionResponseV05]()
 
-      val manager         = system.actorOf(Props(new SubscriptionSessionManager(ignoreRef, bugsnag)))
+      val manager         = system.actorOf(Props(new SubscriptionSessionManager(ignoreRef)))
       val payloadWithAuth = Json.obj("Authorization" -> "abc")
 
       manager ! EnrichedSubscriptionRequest("sessionId", "projectId", GqlConnectionInit(Some(payloadWithAuth)))
@@ -75,7 +73,7 @@ class SubscriptionSessionManagerProtocolV07Spec
       implicit val response07Publisher = InMemoryPubSubTestKit[SubscriptionSessionResponse]()
       implicit val response05Publisher = DummyPubSubPublisher[SubscriptionSessionResponseV05]()
 
-      val manager  = system.actorOf(Props(new SubscriptionSessionManager(ignoreRef, bugsnag)))
+      val manager  = system.actorOf(Props(new SubscriptionSessionManager(ignoreRef)))
       val payload1 = Json.obj("Authorization" -> 123)
 
       manager ! EnrichedSubscriptionRequest("sessionId", "projectId", GqlConnectionInit(Some(payload1)))
@@ -96,7 +94,7 @@ class SubscriptionSessionManagerProtocolV07Spec
       implicit val response07Publisher = InMemoryPubSubTestKit[SubscriptionSessionResponse]()
       implicit val response05Publisher = DummyPubSubPublisher[SubscriptionSessionResponseV05]()
 
-      val manager      = system.actorOf(Props(new SubscriptionSessionManager(ignoreRef, bugsnag)))
+      val manager      = system.actorOf(Props(new SubscriptionSessionManager(ignoreRef)))
       val emptyPayload = Json.obj()
 
       manager ! EnrichedSubscriptionRequest("sessionId", "projectId", GqlConnectionInit(Some(emptyPayload)))
@@ -132,7 +130,7 @@ class SubscriptionSessionManagerProtocolV07Spec
       implicit val response05Publisher = DummyPubSubPublisher[SubscriptionSessionResponseV05]()
 
       val testProbe    = TestProbe()
-      val manager      = system.actorOf(Props(new SubscriptionSessionManager(testProbe.ref, bugsnag)))
+      val manager      = system.actorOf(Props(new SubscriptionSessionManager(testProbe.ref)))
       val emptyPayload = Json.obj()
 
       manager ! EnrichedSubscriptionRequest("sessionId", "projectId", GqlConnectionInit(Some(emptyPayload)))
@@ -167,7 +165,7 @@ class SubscriptionSessionManagerProtocolV07Spec
       implicit val response05Publisher = DummyPubSubPublisher[SubscriptionSessionResponseV05]()
 
       val testProbe    = TestProbe()
-      val manager      = system.actorOf(Props(new SubscriptionSessionManager(testProbe.ref, bugsnag)))
+      val manager      = system.actorOf(Props(new SubscriptionSessionManager(testProbe.ref)))
       val emptyPayload = Json.obj()
 
       manager ! EnrichedSubscriptionRequest("sessionId", "projectId", GqlConnectionInit(Some(emptyPayload)))

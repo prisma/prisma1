@@ -9,7 +9,6 @@ import akka.http.scaladsl.server.directives.RouteDirectives.reject
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.Flow
 import cool.graph.akkautil.http.Server
-import cool.graph.bugsnag.BugSnagger
 import cool.graph.cuid.Cuid
 import cool.graph.messagebus.pubsub.Everything
 import cool.graph.shared.models.ProjectId
@@ -23,12 +22,12 @@ import scala.concurrent.Future
 case class WebsocketServer(dependencies: SubscriptionDependencies, prefix: String = "")(
     implicit system: ActorSystem,
     materializer: ActorMaterializer,
-    bugsnag: BugSnagger
 ) extends Server {
   import SubscriptionWebsocketMetrics._
+  import dependencies.reporter
   import system.dispatcher
 
-  val manager        = system.actorOf(Props(WebsocketSessionManager(dependencies.requestsQueuePublisher, bugsnag)))
+  val manager        = system.actorOf(Props(WebsocketSessionManager(dependencies.requestsQueuePublisher)))
   val v5ProtocolName = "graphql-subscriptions"
   val v7ProtocolName = "graphql-ws"
 
@@ -37,8 +36,7 @@ case class WebsocketServer(dependencies: SubscriptionDependencies, prefix: Strin
     manager ! IncomingQueueMessage(strMsg.topic, strMsg.payload)
   })
 
-  override def healthCheck: Future[_] = Future.successful(())
-  override def onStop: Future[_]      = Future { responseSubscription.unsubscribe }
+  override def onStop: Future[_] = Future { responseSubscription.unsubscribe }
 
   val innerRoutes =
     pathPrefix(Segment) { name =>
@@ -67,7 +65,6 @@ case class WebsocketServer(dependencies: SubscriptionDependencies, prefix: Strin
             outgoing = out,
             manager = manager,
             requestsPublisher = dependencies.requestsQueuePublisher,
-            bugsnag = bugsnag,
             isV7protocol = v7protocol
           )(dependencies)
         }

@@ -2,8 +2,7 @@ package cool.graph.subscriptions.protocol
 
 import akka.actor.{Actor, ActorRef, Stash}
 import cool.graph.akkautil.{LogUnhandled, LogUnhandledExceptions}
-import cool.graph.auth.{AuthImpl, AuthSuccess}
-import cool.graph.bugsnag.BugSnagger
+import cool.graph.auth.AuthImpl
 import cool.graph.messagebus.PubSubPublisher
 import cool.graph.messagebus.pubsub.Only
 import cool.graph.shared.models.{Project, ProjectWithClientId}
@@ -38,7 +37,6 @@ case class SubscriptionSessionActor(
     sessionId: String,
     projectId: String,
     subscriptionsManager: ActorRef,
-    bugsnag: BugSnagger,
     responsePublisher: PubSubPublisher[SubscriptionSessionResponse]
 )(implicit dependencies: SubscriptionDependencies)
     extends Actor
@@ -49,9 +47,11 @@ case class SubscriptionSessionActor(
   import SubscriptionMetrics._
   import SubscriptionProtocolV07.Requests._
   import SubscriptionProtocolV07.Responses._
-  import cool.graph.subscriptions.resolving.SubscriptionsManager.Requests.CreateSubscription
   import akka.pattern.pipe
   import context.dispatcher
+  import cool.graph.subscriptions.resolving.SubscriptionsManager.Requests.CreateSubscription
+
+  val reporter = dependencies.reporter
 
   override def preStart() = {
     super.preStart()

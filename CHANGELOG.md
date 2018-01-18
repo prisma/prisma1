@@ -1,10 +1,56 @@
-Download the latest CLI version with `npm install -g graphcool`.
+Download the latest Graphcool Framework version with `npm install -g graphcool-framework`.
+
+# 0.11.4 (2017-12-22)
+
+# CLI
+
+## Features
+
+- You can now export *and* import data efficiently using the CLI commands `graphcool-framework export` and `graphcool-framework import` https://github.com/graphcool/framework/issues/1299
+
+## Binary Changes and the Graphcool 1.0 developer preview
+
+The binary for the Graphcool Framework CLI is now called `graphcool-framework`, or `gcf` in short. Here's an overview how different versions can be installed as of now, and going forward:
+
+* `npm i -g graphcool-framework`: installs the latest _Framework CLI_ as the binary `graphcool-framework`
+* `npm i -g graphcool@beta`: installs the latest version of [the CLI for the Graphcool 1.0 developer preview](https://github.com/graphcool/framework/pull/1318#issuecomment-353673128) as the binary `graphcool`
+
+Currently, `npm i -g graphcool` installs the latest _Framework CLI_ as well. However, this will be switched to install Graphcool 1.0 once it is officially released at a later stage.
+
+# 0.10.1 (2017-12-01)
+
+## CLI
+
+## Features
+- 8faf9a298b062df48f2ccbedda4347c9eb0905d2 support multiple types.graphql files
+
+## Fixes
+- 14d5b2578238e2c52f04a815e6b0ac9ab88c7e2e Fix Windows deployment paths. Thanks @kbrandwijk
+- f79ad6b02af39409ca9ca347f0a3d6729fd1c537 Fix #1220. Thanks @AlexanderChen1989
+- ad619460bced486e118e353ea2e57404959b0c1c Upgrade json-schema. Thanks @kbrandwijk
+- 3ac4e966e368514f9e2aacd88d81815a7301e563 Remove temp folder after add-template. Thanks @kbrandwijk
+- 67729fb8c357b8a96d3901740e4e7bb09037feeb No auth required for local cluster commands. Thanks @kbrandwijk
+- 53ff291236c072ba95384f354d2c2a20448cbea2 Fixed outdated docs links. Thanks @kbrandwijk
+
+
+# Playground `1.3.0`
+New Playground release with awesome features like support for **Apollo Tracing** and **multiple Endpoints!**
+
+## Breaking Change
+The new playground doesn't include the permission tab anymore.
+Your permissions endpoint is available under `https://api.graph.cool/simple/v1/SERVICE_ID/permissions`.
+To access it, please use your platformToken or a rootToken.
+
+You can learn more about permission tabs [here](https://www.graph.cool/forum/t/testing-permission-queries/1661/12?u=nilan).
+
+[![](https://i.imgur.com/AE5W6OW.png)](https://github.com/graphcool/graphql-playground/releases/tag/v1.3.0)
+https://github.com/graphcool/graphql-playground/releases/tag/v1.3.0
 
 # 0.9.2 (2017-11-10)
 
 ## CLI
 The CLI now works with Windows.
-* ced3ae7cb7cdde23d965ca17a3abdf7b623201b0 Fixed local IP address https://github.com/graphcool/framework/issues/1092 
+* ced3ae7cb7cdde23d965ca17a3abdf7b623201b0 Fixed local IP address https://github.com/graphcool/framework/issues/1092
 * 2a3e45b639bc904c30e0423908fbb3a6681568bb Fixed function return type
 * 8605b0db7e85e7262396a38fb43272ceb5619739 Fix Windows deployment paths https://github.com/graphcool/framework/issues/1031 https://github.com/graphcool/framework/issues/836 https://github.com/graphcool/framework/issues/885
 

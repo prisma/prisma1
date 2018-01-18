@@ -24,7 +24,7 @@ case class AsyncMigrator(
   import system.dispatcher
 
   val deploymentScheduler = system.actorOf(Props(DeploymentSchedulerActor(migrationPersistence, projectPersistence, clientDatabase)))
-  implicit val timeout    = new Timeout(30.seconds)
+  implicit val timeout    = new Timeout(5.minutes)
 
   (deploymentScheduler ? Initialize).onComplete {
     case Success(_) =>

@@ -8,56 +8,62 @@ import akka.http.scaladsl.model.headers.RawHeader
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.ExceptionHandler
 import akka.stream.ActorMaterializer
+import com.prisma.errors.RequestMetadata
+import com.prisma.sangria.utils.ErrorHandler
 import com.typesafe.scalalogging.LazyLogging
 import cool.graph.akkautil.http.Server
 import cool.graph.cuid.Cuid.createCuid
-import cool.graph.deploy.DeployMetrics
 import cool.graph.deploy.database.persistence.ProjectPersistence
 import cool.graph.deploy.schema.{DeployApiError, InvalidProjectId, SchemaBuilder, SystemUserContext}
+import cool.graph.deploy.{DeployDependencies, DeployMetrics}
 import cool.graph.metrics.extensions.TimeResponseDirectiveImpl
 import cool.graph.shared.models.ProjectWithClientId
-import cool.graph.util.logging.{LogData, LogKey}
+import com.prisma.logging.{LogData, LogKey}
+import com.prisma.logging.LogDataWrites.logDataWrites
 import play.api.libs.json.Json
-import sangria.execution.{Executor, HandledException}
-import sangria.marshalling.ResultMarshaller
-import sangria.parser.QueryParser
+import sangria.execution.{Executor, QueryAnalysisError, ValidationError}
+import sangria.parser.{QueryParser, SyntaxError}
 import spray.json._
 
 import scala.concurrent.Future
 import scala.language.postfixOps
 import scala.util.{Failure, Success}
 
-case class ClusterServer(
-    schemaBuilder: SchemaBuilder,
-    projectPersistence: ProjectPersistence,
-    prefix: String = ""
-)(implicit system: ActorSystem, materializer: ActorMaterializer)
-    extends Server
+case class ClusterServer(prefix: String = "")(
+    implicit system: ActorSystem,
+    materializer: ActorMaterializer,
+    dependencies: DeployDependencies
+) extends Server
     with LazyLogging {
   import cool.graph.deploy.server.JsonMarshalling._
   import system.dispatcher
 
-  val log: String => Unit = (msg: String) => logger.info(msg)
-  val requestPrefix       = "cluster"
-  val server2serverSecret = sys.env.getOrElse("SCHEMA_MANAGER_SECRET", sys.error("SCHEMA_MANAGER_SECRET env var required but not found"))
+  val schemaBuilder: SchemaBuilder           = dependencies.clusterSchemaBuilder
+  val projectPersistence: ProjectPersistence = dependencies.projectPersistence
+  val log: String => Unit                    = (msg: String) => logger.info(msg)
+  val requestPrefix                          = "cluster"
+  val server2serverSecret                    = sys.env.getOrElse("SCHEMA_MANAGER_SECRET", sys.error("SCHEMA_MANAGER_SECRET env var required but not found"))
 
-  val innerRoutes = extractRequest { _ =>
+  val innerRoutes = extractRequest { req =>
     val requestId            = requestPrefix + ":cluster:" + createCuid()
     val requestBeginningTime = System.currentTimeMillis()
-    val errorHandler         = ErrorHandler(requestId)
 
     def logRequestEnd(projectId: Option[String] = None, clientId: Option[String] = None) = {
       log(
-        LogData(
-          key = LogKey.RequestComplete,
-          requestId = requestId,
-          projectId = projectId,
-          clientId = clientId,
-          payload = Some(Map("request_duration" -> (System.currentTimeMillis() - requestBeginningTime)))
-        ).json)
+        Json
+          .toJson(
+            LogData(
+              key = LogKey.RequestComplete,
+              requestId = requestId,
+              projectId = projectId,
+              clientId = clientId,
+              payload = Some(Map("request_duration" -> (System.currentTimeMillis() - requestBeginningTime)))
+            )
+          )
+          .toString())
     }
 
-    logger.info(LogData(LogKey.RequestNew, requestId).json)
+    logger.info(Json.toJson(LogData(LogKey.RequestNew, requestId)).toString())
 
     handleExceptions(toplevelExceptionHandler(requestId)) {
       TimeResponseDirectiveImpl(DeployMetrics).timeResponse {
@@ -85,8 +91,8 @@ case class ClusterServer(
                       Future.successful(BadRequest -> JsObject("error" -> JsString(error.getMessage)))
 
                     case Success(queryAst) =>
-                      val userContext = SystemUserContext(authorizationHeader = authorizationHeader)
-
+                      val userContext  = SystemUserContext(authorizationHeader = authorizationHeader)
+                      val errorHandler = ErrorHandler(requestId, req, query, variables.toString(), dependencies.reporter)
                       val result: Future[(StatusCode, JsValue)] =
                         Executor
                           .execute(
@@ -98,6 +104,9 @@ case class ClusterServer(
                             middleware = List.empty,
                             exceptionHandler = errorHandler.sangriaExceptionHandler
                           )
+                          .recover {
+                            case e: QueryAnalysisError => e.resolveError
+                          }
                           .map(node => OK -> node)
 
                       result.onComplete(_ => logRequestEnd(None, None))
@@ -155,40 +164,16 @@ case class ClusterServer(
       }
   }
 
-  def healthCheck: Future[_] = Future.successful(())
-
   def toplevelExceptionHandler(requestId: String) = ExceptionHandler {
     case e: DeployApiError =>
-      complete(OK -> JsObject("code" -> JsNumber(e.errorCode), "requestId" -> JsString(requestId), "error" -> JsString(e.getMessage)))
+      complete(OK -> JsObject("code" -> JsNumber(e.code), "requestId" -> JsString(requestId), "error" -> JsString(e.getMessage)))
 
     case e: Throwable =>
-      println(e.getMessage)
-      e.printStackTrace()
-      complete(500 -> e)
+      extractRequest { req =>
+        println(e.getMessage)
+        e.printStackTrace()
+        dependencies.reporter.report(e, RequestMetadata(requestId, req.method.value, req.uri.toString(), req.headers.map(h => h.name() -> h.value())))
+        complete(InternalServerError -> JsObject("errors" -> JsArray(JsObject("requestId" -> JsString(requestId), "message" -> JsString(e.getMessage)))))
+      }
   }
-}
-
-case class ErrorHandler(
-    requestId: String
-) {
-  private val internalErrorMessage =
-    s"Whoops. Looks like an internal server error. Please contact us from the Console (https://console.graph.cool) or via email (support@graph.cool) and include your Request ID: $requestId"
-
-  lazy val handler: PartialFunction[(ResultMarshaller, Throwable), HandledException] = {
-    case (marshaller: ResultMarshaller, error: DeployApiError) =>
-      val additionalFields = Map("code" -> marshaller.scalarNode(error.errorCode, "Int", Set.empty))
-      HandledException(error.getMessage, additionalFields ++ commonFields(marshaller))
-
-    case (marshaller, error: Throwable) =>
-      error.printStackTrace()
-      HandledException(internalErrorMessage, commonFields(marshaller))
-  }
-
-  lazy val sangriaExceptionHandler: Executor.ExceptionHandler = sangria.execution.ExceptionHandler(
-    onException = handler
-  )
-
-  private def commonFields(marshaller: ResultMarshaller) = Map(
-    "requestId" -> marshaller.scalarNode(requestId, "Int", Set.empty)
-  )
 }

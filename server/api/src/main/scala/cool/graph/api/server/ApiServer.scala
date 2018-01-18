@@ -18,7 +18,9 @@ import cool.graph.api.{ApiDependencies, ApiMetrics}
 import cool.graph.cuid.Cuid.createCuid
 import cool.graph.metrics.extensions.TimeResponseDirectiveImpl
 import cool.graph.shared.models.{ProjectId, ProjectWithClientId}
-import cool.graph.util.logging.{LogData, LogKey}
+import com.prisma.logging.{LogData, LogKey}
+import com.prisma.logging.LogDataWrites.logDataWrites
+import play.api.libs.json.Json
 import spray.json._
 
 import scala.concurrent.Future
@@ -27,8 +29,11 @@ import scala.language.postfixOps
 case class ApiServer(
     schemaBuilder: SchemaBuilder,
     prefix: String = ""
-)(implicit apiDependencies: ApiDependencies, system: ActorSystem, materializer: ActorMaterializer)
-    extends Server
+)(
+    implicit apiDependencies: ApiDependencies,
+    system: ActorSystem,
+    materializer: ActorMaterializer
+) extends Server
     with LazyLogging {
   import system.dispatcher
 
@@ -37,6 +42,11 @@ case class ApiServer(
   val projectFetcher      = apiDependencies.projectFetcher
 
   import scala.concurrent.duration._
+
+  lazy val unthrottledProjectIds = sys.env.get("UNTHROTTLED_PROJECT_IDS") match {
+    case Some(envValue) => envValue.split('|').toVector.map(ProjectId.fromEncodedString)
+    case None           => Vector.empty
+  }
 
   lazy val throttler: Option[Throttler[ProjectId]] = {
     for {
@@ -57,23 +67,32 @@ case class ApiServer(
     val requestId            = requestPrefix + ":api:" + createCuid()
     val requestBeginningTime = System.currentTimeMillis()
 
-    def logRequestEnd(projectId: Option[String] = None, clientId: Option[String] = None) = {
+    def logRequestEnd(projectId: String, throttledBy: Long = 0) = {
+      val end            = System.currentTimeMillis()
+      val actualDuration = end - requestBeginningTime - throttledBy
+      ApiMetrics.requestDuration.record(actualDuration, Seq(projectId))
       log(
-        LogData(
-          key = LogKey.RequestComplete,
-          requestId = requestId,
-          projectId = projectId,
-          clientId = clientId,
-          payload = Some(Map("request_duration" -> (System.currentTimeMillis() - requestBeginningTime)))
-        ).json)
+        Json
+          .toJson(
+            LogData(
+              key = LogKey.RequestComplete,
+              requestId = requestId,
+              projectId = Some(projectId),
+              payload = Some(
+                Map(
+                  "request_duration" -> (end - requestBeginningTime),
+                  "throttled_by"     -> throttledBy
+                ))
+            )
+          )
+          .toString())
     }
 
     def throttleApiCallIfNeeded(name: String, stage: String, rawRequest: RawRequest) = {
+      val projectId = ProjectId(name = name, stage = stage)
       throttler match {
-        case Some(throttler) =>
-          throttledCall(name, stage, rawRequest, throttler)
-        case None =>
-          unthrottledCall(name, stage, rawRequest)
+        case Some(throttler) if !unthrottledProjectIds.contains(projectId) => throttledCall(name, stage, rawRequest, throttler)
+        case _                                                             => unthrottledCall(name, stage, rawRequest)
       }
     }
 
@@ -90,22 +109,22 @@ case class ApiServer(
       }
       onComplete(result) {
         case scala.util.Success(result) =>
-          logRequestEnd(Some(projectId))
+          logRequestEnd(projectId)
           respondWithHeader(RawHeader("Throttled-By", result.throttledBy.toString + "ms")) {
             complete(result.result)
           }
 
         case scala.util.Failure(_: ThrottleBufferFullException) =>
-          logRequestEnd(Some(projectId))
+          logRequestEnd(projectId)
           throw ThrottlerBufferFullException()
 
         case scala.util.Failure(exception) => // just propagate the exception
-          logRequestEnd(Some(projectId))
+          logRequestEnd(projectId)
           throw exception
       }
     }
 
-    logger.info(LogData(LogKey.RequestNew, requestId).json)
+    logger.info(Json.toJson(LogData(LogKey.RequestNew, requestId)).toString())
 
     pathPrefix(Segment) { name =>
       pathPrefix(Segment) { stage =>
@@ -115,7 +134,7 @@ case class ApiServer(
               extractRawRequest(requestId) { rawRequest =>
                 val projectId = ProjectId.toEncodedString(name = name, stage = stage)
                 val result    = apiDependencies.requestHandler.handleRawRequestForPrivateApi(projectId = projectId, rawRequest = rawRequest)
-                result.onComplete(_ => logRequestEnd(Some(projectId)))
+                result.onComplete(_ => logRequestEnd(projectId))
                 complete(result)
               }
             } ~
@@ -123,7 +142,7 @@ case class ApiServer(
                 extractRawRequest(requestId) { rawRequest =>
                   val projectId = ProjectId.toEncodedString(name = name, stage = stage)
                   val result    = apiDependencies.requestHandler.handleRawRequestForImport(projectId = projectId, rawRequest = rawRequest)
-                  result.onComplete(_ => logRequestEnd(Some(projectId)))
+                  result.onComplete(_ => logRequestEnd(projectId))
                   complete(result)
                 }
               } ~
@@ -131,7 +150,7 @@ case class ApiServer(
                 extractRawRequest(requestId) { rawRequest =>
                   val projectId = ProjectId.toEncodedString(name = name, stage = stage)
                   val result    = apiDependencies.requestHandler.handleRawRequestForExport(projectId = projectId, rawRequest = rawRequest)
-                  result.onComplete(_ => logRequestEnd(Some(projectId)))
+                  result.onComplete(_ => logRequestEnd(projectId))
                   complete(result)
                 }
               } ~ {
@@ -180,8 +199,6 @@ case class ApiServer(
     }
   }
 
-  def healthCheck: Future[_] = Future.successful(())
-
   def toplevelExceptionHandler(requestId: String) = ExceptionHandler {
     case e: UserFacingError =>
       complete(OK -> JsObject("code" -> JsNumber(e.code), "requestId" -> JsString(requestId), "error" -> JsString(e.getMessage)))
@@ -189,6 +206,7 @@ case class ApiServer(
     case e: Throwable =>
       println(e.getMessage)
       e.printStackTrace()
-      complete(500 -> s"kaputt: ${e.getMessage}")
+      apiDependencies.reporter.report(e)
+      complete(InternalServerError -> JsObject("errors" -> JsArray(JsObject("requestId" -> JsString(requestId), "message" -> JsString(e.getMessage)))))
   }
 }

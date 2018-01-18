@@ -2,6 +2,7 @@ package cool.graph.subscriptions
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
+import com.prisma.errors.{BugsnagErrorReporter, ErrorReporter}
 import cool.graph.api.ApiDependencies
 import cool.graph.api.database.Databases
 import cool.graph.api.project.{ProjectFetcher, ProjectFetcherImpl}

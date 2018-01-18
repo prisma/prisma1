@@ -1,6 +1,6 @@
 package cool.graph.messagebus.testkits
 
-import cool.graph.bugsnag.BugSnagger
+import com.prisma.errors.BugsnagErrorReporter
 import cool.graph.messagebus.Conversions
 import cool.graph.messagebus.pubsub.{Message, Only}
 import org.scalatest.concurrent.ScalaFutures
@@ -11,10 +11,10 @@ class RabbitAkkaPubSubTestKitSpec extends WordSpecLike with Matchers with Before
 
   case class TestMessage(id: String, testOpt: Option[Int], testSeq: Seq[String])
 
-  implicit val bugSnagger: BugSnagger = null
-  implicit val testMessageFormat      = Json.format[TestMessage]
-  implicit val testMarshaller         = Conversions.Marshallers.FromJsonBackedType[TestMessage]()
-  implicit val testUnmarshaller       = Conversions.Unmarshallers.ToJsonBackedType[TestMessage]()
+  implicit val reporter          = BugsnagErrorReporter("")
+  implicit val testMessageFormat = Json.format[TestMessage]
+  implicit val testMarshaller    = Conversions.Marshallers.FromJsonBackedType[TestMessage]()
+  implicit val testUnmarshaller  = Conversions.Unmarshallers.ToJsonBackedType[TestMessage]()
 
   val amqpUri = sys.env.getOrElse("RABBITMQ_URI", sys.error("RABBITMQ_URI required for testing"))
   val testRK  = Only("SomeRoutingKey")
