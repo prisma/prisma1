@@ -26,8 +26,8 @@ If you want to migrate from an existing data source, you can check out our plans
 
 **MySQL** is the very first database supported by Prisma. Here's a list of more databases to be supported soon:
 
-- **Postgres** (see [feature request)(https://github.com/graphcool/prisma/issues/1641))
-- **MongoDB** (see [feature request)(https://github.com/graphcool/prisma/issues/1643))
+- **Postgres** (see [feature request](https://github.com/graphcool/prisma/issues/1641))
+- **MongoDB** (see [feature request](https://github.com/graphcool/prisma/issues/1643))
 - Oracle
 - MS SQL
 - ArangoDB
