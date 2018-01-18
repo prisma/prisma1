@@ -58,16 +58,19 @@ case class SqlMutactions(dataResolver: DataResolver) {
     CreateMutactionsResult(createMutaction = createMutaction, scalarListMutactions = scalarLists, nestedMutactions = nested)
   }
 
+  // we need to rethink this thoroughly, we need to prevent both branches of executing their nested mutations && scalarlist mutations at the same time
+
   def getMutactionsForUpsert(allArgs: CoolArgs, createArgs: CoolArgs, updateArgs: CoolArgs, id: Id, outerWhere: NodeSelector): List[ClientSqlMutaction] = {
     val idWhere           = NodeSelector.forId(outerWhere.model, createArgs.raw("id").toString)
     val upsertMutaction   = UpsertDataItem(project, outerWhere, createArgs, updateArgs)
-    val whereFieldValue   = updateArgs.raw.get(outerWhere.field.name)
+    val whereFieldValue   = updateArgs.raw.get(outerWhere.field.name) // todo WRONG! only when update
     val currentOuterWhere = if (whereFieldValue.isDefined) generateUpdatedWhere(outerWhere, whereFieldValue.get) else outerWhere
     val updateNested      = getMutactionsForNestedMutation(allArgs.updateArgumentsAsCoolArgs, currentOuterWhere, triggeredFromCreate = false)
     val createNested      = getMutactionsForNestedMutation(allArgs.createArgumentsAsCoolArgs, idWhere, triggeredFromCreate = true)
-//    val scalarLists     = getMutactionsForScalarLists(outerWhere.model, args, nodeId = id) // todo scalar lists for both cases?
+    val scalarListsCreate = getMutactionsForScalarLists(outerWhere, allArgs.createArgumentsAsCoolArgs)
+    val scalarListsUpdate = getMutactionsForScalarLists(outerWhere, allArgs.updateArgumentsAsCoolArgs)
 
-    List(upsertMutaction) ++ updateNested ++ createNested
+    List(upsertMutaction) ++ scalarListsUpdate ++ scalarListsCreate ++ updateNested ++ createNested
   }
 
   def generateUpdatedWhere(where: NodeSelector, updatedValue: Any): NodeSelector = {
@@ -198,13 +201,15 @@ case class SqlMutactions(dataResolver: DataResolver) {
     }
   }
 
+  // we need to rethink this thoroughly, we need to prevent both branches of executing their nested mutations && scalarlist mutations at the same time
+  // scalarlists are not in here atm
+
   def getMutactionsForNestedUpsertMutation(model: Model, nestedMutation: NestedMutation, parentInfo: ParentInfo): Seq[ClientSqlMutaction] = {
     nestedMutation.upserts.flatMap { upsert =>
       val upsertItem    = UpsertDataItemIfInRelationWith(project, parentInfo, upsert.where, upsert.create, upsert.update)
       val idWhere       = NodeSelector.forId(model, upsertItem.idOfNewItem)
       val addToRelation = AddDataItemToManyRelationByUniqueField(project, parentInfo, idWhere)
-      Vector(upsertItem, addToRelation) ++
-        getMutactionsForNestedMutation(upsert.update, upsert.where, triggeredFromCreate = false) ++
+      Vector(upsertItem, addToRelation) ++ getMutactionsForNestedMutation(upsert.update, upsert.where, triggeredFromCreate = false) ++
         getMutactionsForNestedMutation(upsert.create, idWhere, triggeredFromCreate = true)
     }
   }

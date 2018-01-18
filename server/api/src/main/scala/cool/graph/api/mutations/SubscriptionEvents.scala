@@ -8,6 +8,7 @@ import cool.graph.shared.models.Project
 
 import scala.collection.immutable.Seq
 
+//todo this does not handle upsert
 object SubscriptionEvents {
   def extractFromSqlMutactions(
       project: Project,

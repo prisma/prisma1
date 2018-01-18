@@ -252,7 +252,7 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
 
     database.setup(project)
 
-    val listId = server
+    server
       .executeQuerySimple(
         s"""mutation{createList(data: {uList: "A", listInts: {set: [1, 2]}, todo: {create: {uTodo: "B", todoInts: {set: [3, 4]}, tag: {create: {uTag: "C",tagInts: {set: [5, 6]}}}}}}) {id}}""".stripMargin,
         project
@@ -266,6 +266,38 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
     val result = server.executeQuerySimple(s"""query{lists {listInts, todo {todoInts, tag {tagInts}}}}""".stripMargin, project)
 
     result.toString should equal("""{"data":{"lists":[{"listInts":[7,8],"todo":{"todoInts":[9,10],"tag":{"tagInts":[11,12]}}}]}}""")
+  }
+
+  "Nested scalar lists" should "work in upserts and only execute one branch of the upsert" ignore {
+
+    val project = SchemaDsl() { schema =>
+      val list = schema.model("List").field("listInts", _.Int, isList = true).field("uList", _.String, isUnique = true)
+      val todo = schema.model("Todo").field("todoInts", _.Int, isList = true).field("uTodo", _.String, isUnique = true).oneToOneRelation("list", "todo", list)
+    }
+
+    database.setup(project)
+
+    server
+      .executeQuerySimple(
+        s"""mutation{createList(data: {uList: "A", listInts: {set: [1, 2]}, todo: {create: {uTodo: "B", todoInts: {set: [3, 4]}}}}) {id}}""".stripMargin,
+        project
+      )
+      .pathAsString("data.createList.id")
+
+    server
+      .executeQuerySimple(
+        s"""mutation upsertListValues {upsertList(
+        |                             where:{uList: "A"}
+	      |                             create:{uList:"Should Not Matter" listInts:{set: [75, 85]}}
+	      |                             update:{listInts:{set: [70, 80]} }
+        |){id}}""".stripMargin,
+        project
+      )
+      .pathAsString("data.upsertList.id")
+
+    val result = server.executeQuerySimple(s"""query{lists {uList, listInts}}""".stripMargin, project)
+
+    result.toString should equal("""{"data":{"lists":[{uList: "A", "listInts":[70,80]}]}}""")
   }
 
   private def verifySuccessfulSetAndRetrieval(fieldName: String, inputValue: Any, outputValue: Any, project: Project) = {

@@ -13,6 +13,8 @@ import spray.json.{JsValue, _}
 
 import scala.concurrent.Future
 
+//todo this does not handle upsert
+
 object ServerSideSubscription {
   def extractFromMutactions(
       project: Project,

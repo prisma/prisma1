@@ -5,7 +5,7 @@ import java.sql.SQLIntegrityConstraintViolationException
 import cool.graph.api.database.mutactions.validation.InputValueValidation
 import cool.graph.api.database.mutactions.{ClientSqlDataChangeMutaction, ClientSqlStatementResult, GetFieldFromSQLUniqueException, MutactionVerificationSuccess}
 import cool.graph.api.database.{DataItem, DataResolver, DatabaseMutationBuilder, RelationFieldMirrorUtils}
-import cool.graph.api.mutations.CoolArgs
+import cool.graph.api.mutations.{CoolArgs, NodeSelector}
 import cool.graph.api.mutations.MutationTypes.ArgumentValue
 import cool.graph.api.schema.APIErrors
 import cool.graph.shared.models.IdType.Id
@@ -63,12 +63,11 @@ case class UpdateDataItem(project: Project,
         sqlAction = DBIO.seq(
           List(
             DatabaseMutationBuilder
-              .updateDataItem(project.id,
-                              model.name,
-                              id,
-                              values
-                                .map(x => (x.name, x.value))
-                                .toMap)) ++ mirrorUpdates: _*)))
+              .updateDataItemByUnique(project,
+                                      NodeSelector.forId(model, id),
+                                      CoolArgs(values
+                                        .map(x => (x.name, x.value))
+                                        .toMap))) ++ mirrorUpdates: _*)))
 
   }
 

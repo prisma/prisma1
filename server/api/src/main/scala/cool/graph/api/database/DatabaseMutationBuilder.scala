@@ -3,6 +3,7 @@ package cool.graph.api.database
 import cool.graph.api.database.Types.DataItemFilterCollection
 import cool.graph.api.mutations.{CoolArgs, NodeSelector, ParentInfo}
 import cool.graph.cuid.Cuid
+import cool.graph.shared.models
 import cool.graph.shared.models.RelationSide.RelationSide
 import cool.graph.shared.models.TypeIdentifier.TypeIdentifier
 import cool.graph.shared.models.{Model, Project, TypeIdentifier}
@@ -30,22 +31,14 @@ object DatabaseMutationBuilder {
     val escapedKeys           = combineByComma(escapedKeyValueTuples.map(_._1))
     val escapedValues         = combineByComma(escapedKeyValueTuples.map(_._2))
 
-    // Concat query as sql, but then convert it to Update, since is an insert query.
-    (sql"insert into `#$projectId`.`#$modelName` (" concat escapedKeys concat sql") values (" concat escapedValues concat sql")").asUpdate
-  }
-
-  def updateDataItem(projectId: String, modelName: String, id: String, values: Map[String, Any]) = {
-    val escapedValues = combineByComma(values.map { case (k, v) => escapeKey(k) concat sql" = " concat escapeUnsafeParam(v) })
-
-    (sql"update `#$projectId`.`#$modelName` set" concat escapedValues concat sql"where id = $id").asUpdate
+    // ++ query as sql, but then convert it to Update, since is an insert query.
+    (sql"insert into `#$projectId`.`#$modelName` (" ++ escapedKeys ++ sql") values (" ++ escapedValues ++ sql")").asUpdate
   }
 
   def updateDataItems(project: Project, model: Model, args: CoolArgs, where: DataItemFilterCollection) = {
     val updateValues = combineByComma(args.raw.map { case (k, v) => escapeKey(k) ++ sql" = " ++ escapeUnsafeParam(v) })
     val whereSql     = QueryArguments.generateFilterConditions(project.id, model.name, where)
-    (sql"update `#${project.id}`.`#${model.name}`" ++
-      sql"set " ++ updateValues ++
-      prefixIfNotNone("where", whereSql)).asUpdate
+    (sql"update `#${project.id}`.`#${model.name}`" ++ sql"set " ++ updateValues ++ prefixIfNotNone("where", whereSql)).asUpdate
   }
 
   def updateDataItemByUnique(project: Project, where: NodeSelector, updateArgs: CoolArgs) = {
@@ -147,9 +140,9 @@ object DatabaseMutationBuilder {
     val fieldMirrorValues =
       fieldMirrors.map(mirror => sql"(SELECT `#${mirror.modelColumnName}` FROM `#$projectId`.`#${mirror.modelTableName}` WHERE id = ${mirror.modelId})")
 
-    // Concat query as sql, but then convert it to Update, since is an insert query.
-    (sql"insert into `#$projectId`.`#$relationTableName` (" concat combineByComma(List(sql"`id`, `A`, `B`") ++ fieldMirrorColumns) concat sql") values (" concat combineByComma(
-      List(sql"$id, $a, $b") ++ fieldMirrorValues) concat sql") on duplicate key update id=id").asUpdate
+    // ++ query as sql, but then convert it to Update, since is an insert query.
+    (sql"insert into `#$projectId`.`#$relationTableName` (" ++ combineByComma(List(sql"`id`, `A`, `B`") ++ fieldMirrorColumns) ++ sql") values (" ++ combineByComma(
+      List(sql"$id, $a, $b") ++ fieldMirrorValues) ++ sql") on duplicate key update id=id").asUpdate
   }
 
   def createRelationRowByUniqueValueForA(projectId: String, parentInfo: ParentInfo, where: NodeSelector): SqlAction[Int, NoStream, Effect] = {
@@ -168,8 +161,12 @@ object DatabaseMutationBuilder {
   }
 
   def deleteRelationRowByUniqueValueForA(projectId: String, parentInfo: ParentInfo, where: NodeSelector): SqlAction[Int, NoStream, Effect] = {
+    val parentSide: models.RelationSide.Value = parentInfo.field.relationSide.get
+    val childSide: models.RelationSide.Value  = parentInfo.field.oppositeRelationSide.get
+
     sqlu"""delete from `#$projectId`.`#${parentInfo.relation.id}`
-           where `B` = (select id from `#$projectId`.`#${parentInfo.model.name}` where `#${parentInfo.where.field.name}` = ${parentInfo.where.fieldValue}) and `A` in (
+           where `#${parentSide}` = (select id from `#$projectId`.`#${parentInfo.model.name}` where `#${parentInfo.where.field.name}` = ${parentInfo.where.fieldValue}) 
+           and `#${childSide}` in (
              select id
              from `#$projectId`.`#${where.model.name}`
              where `#${where.field.name}` = ${where.fieldValue}
@@ -177,22 +174,15 @@ object DatabaseMutationBuilder {
           """
   }
 
-  def deleteRelationRowByUniqueValueForB(projectId: String, parentInfo: ParentInfo, where: NodeSelector): SqlAction[Int, NoStream, Effect] = {
-    sqlu"""delete from `#$projectId`.`#${parentInfo.relation.id}`
-           where `A` = (select id from `#$projectId`.`#${parentInfo.model.name}` where `#${parentInfo.where.field.name}` = ${parentInfo.where.fieldValue}) and `B` in (
-             select id
-             from `#$projectId`.`#${where.model.name}`
-             where `#${where.field.name}` = ${where.fieldValue}
-           )
-          """
-  }
+  def deleteDataItemByUniqueValueIfInRelationWithOtherUniqueValue(projectId: String, parentInfo: ParentInfo, where: NodeSelector) = {
+    val parentSide: models.RelationSide.Value = parentInfo.field.relationSide.get
+    val childSide: models.RelationSide.Value  = parentInfo.field.oppositeRelationSide.get
 
-  def deleteDataItemByUniqueValueForAIfInRelationWithGivenB(projectId: String, parentInfo: ParentInfo, where: NodeSelector) = {
     sqlu"""delete from `#$projectId`.`#${where.model.name}`
            where `#${where.field.name}` = ${where.fieldValue} and id in (
-             select `A`
+             select `#${childSide}`
              from `#$projectId`.`#${parentInfo.relation.id}`
-             where `B` in (
+             where `#${parentSide}` in (
                select id
                from `#$projectId`.`#${parentInfo.where.model.name}`
                where `#${parentInfo.where.field.name}` = ${parentInfo.where.fieldValue}
@@ -201,44 +191,17 @@ object DatabaseMutationBuilder {
            """
   }
 
-  def deleteDataItemByUniqueValueForBIfInRelationWithGivenA(projectId: String, parentInfo: ParentInfo, where: NodeSelector) = {
-    sqlu"""delete from `#$projectId`.`#${where.model.name}`
-           where `#${where.field.name}` = ${where.fieldValue} and id in (
-             select `B`
-             from `#$projectId`.`#${parentInfo.relation.id}`
-             where `A` in (
-               select id
-               from `#$projectId`.`#${parentInfo.where.model.name}`
-               where `#${parentInfo.where.field.name}` = ${parentInfo.where.fieldValue}
-              )
-           )
-           """
-  }
+  def updateDataItemByUniqueValueIfInRelationWithOtherUniqueValue(projectId: String, parentInfo: ParentInfo, where: NodeSelector, values: Map[String, Any]) = {
+    val parentSide: models.RelationSide.Value = parentInfo.field.relationSide.get
+    val childSide: models.RelationSide.Value  = parentInfo.field.oppositeRelationSide.get
 
-  def updateDataItemByUniqueValueForAIfInRelationWithGivenB(projectId: String, parentInfo: ParentInfo, where: NodeSelector, values: Map[String, Any]) = {
-    val escapedValues = combineByComma(values.map { case (k, v) => escapeKey(k) concat sql" = " concat escapeUnsafeParam(v) })
-    (sql"""update `#$projectId`.`#${where.model.name}`""" concat
-      sql"""set""" concat escapedValues concat
+    val escapedValues = combineByComma(values.map { case (k, v) => escapeKey(k) ++ sql" = " ++ escapeUnsafeParam(v) })
+    (sql"""update `#$projectId`.`#${where.model.name}`""" ++
+      sql"""set""" ++ escapedValues ++
       sql"""where `#${where.field.name}` = ${where.fieldValue} and id in (
-             select `A`
+             select `#${childSide}`
              from `#$projectId`.`#${parentInfo.relation.id}`
-             where `B` in (
-               select id
-               from `#$projectId`.`#${parentInfo.where.model.name}`
-               where `#${parentInfo.where.field.name}` = ${parentInfo.where.fieldValue}
-              )
-           )
-        """).asUpdate
-  }
-
-  def updateDataItemByUniqueValueForBIfInRelationWithGivenA(projectId: String, parentInfo: ParentInfo, where: NodeSelector, values: Map[String, Any]) = {
-    val escapedValues = combineByComma(values.map { case (k, v) => escapeKey(k) concat sql" = " concat escapeUnsafeParam(v) })
-    (sql"""update `#$projectId`.`#${where.model.name}`""" concat
-      sql"""set""" concat escapedValues concat
-      sql"""where `#${where.field.name}` = ${where.fieldValue} and id in (
-             select `B`
-             from `#$projectId`.`#${parentInfo.relation.id}`
-             where `A` in (
+             where `#${parentSide}` in (
                select id
                from `#$projectId`.`#${parentInfo.where.model.name}`
                where `#${parentInfo.where.field.name}` = ${parentInfo.where.fieldValue}
@@ -248,28 +211,28 @@ object DatabaseMutationBuilder {
   }
 
   def updateRelationRow(projectId: String, relationTable: String, relationSide: String, nodeId: String, values: Map[String, Any]) = {
-    val escapedValues = combineByComma(values.map { case (k, v) => escapeKey(k) concat sql" = " concat escapeUnsafeParam(v) })
+    val escapedValues = combineByComma(values.map { case (k, v) => escapeKey(k) ++ sql" = " ++ escapeUnsafeParam(v) })
 
-    (sql"update `#$projectId`.`#$relationTable` set" concat escapedValues concat sql"where `#$relationSide` = $nodeId").asUpdate
+    (sql"update `#$projectId`.`#$relationTable` set" ++ escapedValues ++ sql"where `#$relationSide` = $nodeId").asUpdate
   }
 
   def populateNullRowsForColumn(projectId: String, modelName: String, fieldName: String, value: Any) = {
-    val escapedValues = escapeKey(fieldName) concat sql" = " concat escapeUnsafeParam(value)
+    val escapedValues = escapeKey(fieldName) ++ sql" = " ++ escapeUnsafeParam(value)
 
-    (sql"update `#$projectId`.`#$modelName` set" concat escapedValues concat sql"where `#$projectId`.`#$modelName`.`#$fieldName` IS NULL").asUpdate
+    (sql"update `#$projectId`.`#$modelName` set" ++ escapedValues ++ sql"where `#$projectId`.`#$modelName`.`#$fieldName` IS NULL").asUpdate
   }
 
   def overwriteInvalidEnumForColumnWithMigrationValue(projectId: String, modelName: String, fieldName: String, oldValue: String, migrationValue: String) = {
-    val escapedValues      = escapeKey(fieldName) concat sql" = " concat escapeUnsafeParam(migrationValue)
-    val escapedWhereClause = escapeKey(fieldName) concat sql" = " concat escapeUnsafeParam(oldValue)
+    val escapedValues      = escapeKey(fieldName) ++ sql" = " ++ escapeUnsafeParam(migrationValue)
+    val escapedWhereClause = escapeKey(fieldName) ++ sql" = " ++ escapeUnsafeParam(oldValue)
 
-    (sql"update `#$projectId`.`#$modelName` set" concat escapedValues concat sql"where" concat escapedWhereClause).asUpdate
+    (sql"update `#$projectId`.`#$modelName` set" ++ escapedValues ++ sql"where" ++ escapedWhereClause).asUpdate
   }
 
   def overwriteAllRowsForColumn(projectId: String, modelName: String, fieldName: String, value: Any) = {
-    val escapedValues = escapeKey(fieldName) concat sql" = " concat escapeUnsafeParam(value)
+    val escapedValues = escapeKey(fieldName) ++ sql" = " ++ escapeUnsafeParam(value)
 
-    (sql"update `#$projectId`.`#$modelName` set" concat escapedValues).asUpdate
+    (sql"update `#$projectId`.`#$modelName` set" ++ escapedValues).asUpdate
   }
 
   def deleteDataItemById(projectId: String, modelName: String, id: String) =
@@ -309,43 +272,42 @@ object DatabaseMutationBuilder {
 
         val keyValueTuples = escapedKeys zip escapedValues
         combineByAnd(keyValueTuples.map({
-          case (k, v) => k concat sql" = " concat v
+          case (k, v) => k ++ sql" = " ++ v
         }))
       }
 
-    val whereClauseWithWhere = if (whereClause.isEmpty) None else Some(sql"where " concat whereClause)
+    val whereClauseWithWhere = if (whereClause.isEmpty) None else Some(sql"where " ++ whereClause)
 
-    (sql"delete from `#$projectId`.`#$modelName`" concat whereClauseWithWhere).asUpdate
+    (sql"delete from `#$projectId`.`#$modelName`" ++ whereClauseWithWhere).asUpdate
   }
 
   //rewrite these to handle use where?
 
   def setScalarList(projectId: String, where: NodeSelector, fieldName: String, values: Vector[Any]) = {
 
-    where.isId match {
-      case false =>
-        val escapedValueTuples = for {
-          (escapedValue, position) <- values.map(escapeUnsafeParam).zip((1 to values.length).map(_ * 1000))
-        } yield {
-          sql"(@nodeId, $position, " concat escapedValue concat sql")"
-        }
-        DBIO.sequence(
-          List(
-            sqlu"""set @nodeId := (select id from `#$projectId`.`#${where.model.name}` where `#${where.field.name}` = ${where.fieldValue})""",
-            (sql"replace into `#$projectId`.`#${where.model.name}_#${fieldName}` (`nodeId`, `position`, `value`) values " concat combineByComma(
-              escapedValueTuples)).asUpdate
-          ))
-      case true =>
-        val escapedValueTuples = for {
-          (escapedValue, position) <- values.map(escapeUnsafeParam).zip((1 to values.length).map(_ * 1000))
-        } yield {
-          sql"(${where.fieldValueAsString}, $position, " concat escapedValue concat sql")"
-        }
-        DBIO.sequence(
-          List(
-            (sql"replace into `#$projectId`.`#${where.model.name}_#${fieldName}` (`nodeId`, `position`, `value`) values " concat combineByComma(
-              escapedValueTuples)).asUpdate))
+//    where.isId match {
+//      case false =>
+    val escapedValueTuples = for {
+      (escapedValue, position) <- values.map(escapeUnsafeParam).zip((1 to values.length).map(_ * 1000))
+    } yield {
+      sql"(@nodeId, $position, " ++ escapedValue ++ sql")"
     }
+    DBIO.sequence(
+      List(
+        sqlu"""set @nodeId := (select id from `#$projectId`.`#${where.model.name}` where `#${where.field.name}` = ${where.fieldValue})""",
+        (sql"replace into `#$projectId`.`#${where.model.name}_#${fieldName}` (`nodeId`, `position`, `value`) values " ++ combineByComma(escapedValueTuples)).asUpdate
+      ))
+//      case true =>
+//        val escapedValueTuples = for {
+//          (escapedValue, position) <- values.map(escapeUnsafeParam).zip((1 to values.length).map(_ * 1000))
+//        } yield {
+//          sql"(${where.fieldValueAsString}, $position, " ++ escapedValue ++ sql")"
+//        }
+//        DBIO.sequence(
+//          List(
+//            (sql"replace into `#$projectId`.`#${where.model.name}_#${fieldName}` (`nodeId`, `position`, `value`) values " ++ combineByComma(
+//              escapedValueTuples)).asUpdate))
+//    }
   }
 
   def pushScalarList(projectId: String, modelName: String, fieldName: String, nodeId: String, values: Vector[Any]): DBIOAction[Int, NoStream, Effect] = {
@@ -353,14 +315,14 @@ object DatabaseMutationBuilder {
     val escapedValueTuples = for {
       (escapedValue, position) <- values.map(escapeUnsafeParam).zip((1 to values.length).map(_ * 1000))
     } yield {
-      sql"($nodeId, @baseline + $position, " concat escapedValue concat sql")"
+      sql"($nodeId, @baseline + $position, " ++ escapedValue ++ sql")"
     }
 
     DBIO
       .sequence(
         List(
           sqlu"""set @baseline := ifnull((select max(position) from `#$projectId`.`#${modelName}_#${fieldName}` where nodeId = $nodeId), 0) + 1000""",
-          (sql"insert into `#$projectId`.`#${modelName}_#${fieldName}` (`nodeId`, `position`, `value`) values " concat combineByComma(escapedValueTuples)).asUpdate
+          (sql"insert into `#$projectId`.`#${modelName}_#${fieldName}` (`nodeId`, `position`, `value`) values " ++ combineByComma(escapedValueTuples)).asUpdate
         ))
       .map(_.last)
   }
@@ -376,7 +338,7 @@ object DatabaseMutationBuilder {
 
   def copyTableData(sourceProjectId: String, sourceTableName: String, columns: List[String], targetProjectId: String, targetTableName: String) = {
     val columnString = combineByComma(columns.map(c => escapeKey(c)))
-    (sql"INSERT INTO `#$targetProjectId`.`#$targetTableName` (" concat columnString concat sql") SELECT " concat columnString concat sql" FROM `#$sourceProjectId`.`#$sourceTableName`").asUpdate
+    (sql"INSERT INTO `#$targetProjectId`.`#$targetTableName` (" ++ columnString ++ sql") SELECT " ++ columnString ++ sql" FROM `#$sourceProjectId`.`#$sourceTableName`").asUpdate
   }
 
   def dropDatabaseIfExists(database: String) =

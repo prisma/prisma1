@@ -68,7 +68,6 @@ case class CoolArgs(raw: Map[String, Any]) {
         case Some(values) => Some(ScalarListSet(values = values.toVector))
       }
     }
-
   }
 
   def createArgumentsAsCoolArgs: CoolArgs = CoolArgs(raw("create").asInstanceOf[Map[String, Any]])
@@ -225,7 +224,7 @@ object NodeSelector {
 case class NodeSelector(model: Model, field: Field, fieldValue: GCValue) {
   lazy val unwrappedFieldValue: Any   = GCValueExtractor.fromGCValue(fieldValue)
   lazy val fieldValueAsString: String = GCValueExtractor.fromGCValueToString(fieldValue)
-  val isId: Boolean                   = field.name == "id"
+  lazy val isId: Boolean              = field.name == "id"
 
 //  lazy val unwrappedFieldValue: Any   = {
 //    fieldValue match {
