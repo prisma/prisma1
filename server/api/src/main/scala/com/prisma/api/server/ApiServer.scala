@@ -88,75 +88,69 @@ case class ApiServer(
           .toString())
     }
 
-    def throttleApiCallIfNeeded(name: String, stage: String, rawRequest: RawRequest) = {
-      val projectId = ProjectId(name = name, stage = stage)
+    def throttleApiCallIfNeeded(projectId: ProjectId, rawRequest: RawRequest) = {
       throttler match {
-        case Some(throttler) if !unthrottledProjectIds.contains(projectId) => throttledCall(name, stage, rawRequest, throttler)
-        case _                                                             => unthrottledCall(name, stage, rawRequest)
+        case Some(throttler) if !unthrottledProjectIds.contains(projectId) => throttledCall(projectId, rawRequest, throttler)
+        case _                                                             => unthrottledCall(projectId, rawRequest)
       }
     }
 
-    def unthrottledCall(name: String, stage: String, rawRequest: RawRequest) = {
-      val projectId = ProjectId.toEncodedString(name = name, stage = stage)
-      val result    = apiDependencies.requestHandler.handleRawRequestForPublicApi(projectId, rawRequest)
+    def unthrottledCall(projectId: ProjectId, rawRequest: RawRequest) = {
+      val result = apiDependencies.requestHandler.handleRawRequestForPublicApi(projectId.asString, rawRequest)
       complete(result)
     }
 
-    def throttledCall(name: String, stage: String, rawRequest: RawRequest, throttler: Throttler[ProjectId]) = {
-      val projectId = ProjectId.toEncodedString(name = name, stage = stage)
-      val result = throttler.throttled(ProjectId(name, stage)) { () =>
-        apiDependencies.requestHandler.handleRawRequestForPublicApi(projectId, rawRequest)
+    def throttledCall(projectId: ProjectId, rawRequest: RawRequest, throttler: Throttler[ProjectId]) = {
+      val result = throttler.throttled(projectId) { () =>
+        apiDependencies.requestHandler.handleRawRequestForPublicApi(projectId.asString, rawRequest)
       }
       onComplete(result) {
         case scala.util.Success(result) =>
-          logRequestEnd(projectId)
+          logRequestEnd(projectId.asString)
           respondWithHeader(RawHeader("Throttled-By", result.throttledBy.toString + "ms")) {
             complete(result.result)
           }
 
         case scala.util.Failure(_: ThrottleBufferFullException) =>
-          logRequestEnd(projectId)
+          logRequestEnd(projectId.asString)
           throw ThrottlerBufferFullException()
 
         case scala.util.Failure(exception) => // just propagate the exception
-          logRequestEnd(projectId)
+          logRequestEnd(projectId.asString)
           throw exception
       }
     }
 
     logger.info(Json.toJson(LogData(LogKey.RequestNew, requestId)).toString())
+    pathPrefix(Segments(min = 2, max = 3)) { segments =>
+      post {
+        val projectId         = ProjectId.fromSegments(segments)
+        val projectIdAsString = projectId.asString
 
-    pathPrefix(Segment) { name =>
-      pathPrefix(Segment) { stage =>
-        post {
-          handleExceptions(toplevelExceptionHandler(requestId)) {
-            path("private") {
+        handleExceptions(toplevelExceptionHandler(requestId)) {
+          path("private") {
+            extractRawRequest(requestId) { rawRequest =>
+              val result = apiDependencies.requestHandler.handleRawRequestForPrivateApi(projectId = projectIdAsString, rawRequest = rawRequest)
+              result.onComplete(_ => logRequestEnd(projectIdAsString))
+              complete(result)
+            }
+          } ~
+            path("import") {
               extractRawRequest(requestId) { rawRequest =>
-                val projectId = ProjectId.toEncodedString(name = name, stage = stage)
-                val result    = apiDependencies.requestHandler.handleRawRequestForPrivateApi(projectId = projectId, rawRequest = rawRequest)
-                result.onComplete(_ => logRequestEnd(projectId))
+                val result = apiDependencies.requestHandler.handleRawRequestForImport(projectId = projectIdAsString, rawRequest = rawRequest)
+                result.onComplete(_ => logRequestEnd(projectIdAsString))
                 complete(result)
               }
             } ~
-              path("import") {
-                extractRawRequest(requestId) { rawRequest =>
-                  val projectId = ProjectId.toEncodedString(name = name, stage = stage)
-                  val result    = apiDependencies.requestHandler.handleRawRequestForImport(projectId = projectId, rawRequest = rawRequest)
-                  result.onComplete(_ => logRequestEnd(projectId))
-                  complete(result)
-                }
-              } ~
-              path("export") {
-                extractRawRequest(requestId) { rawRequest =>
-                  val projectId = ProjectId.toEncodedString(name = name, stage = stage)
-                  val result    = apiDependencies.requestHandler.handleRawRequestForExport(projectId = projectId, rawRequest = rawRequest)
-                  result.onComplete(_ => logRequestEnd(projectId))
-                  complete(result)
-                }
-              } ~ {
+            path("export") {
               extractRawRequest(requestId) { rawRequest =>
-                throttleApiCallIfNeeded(name, stage, rawRequest)
+                val result = apiDependencies.requestHandler.handleRawRequestForExport(projectId = projectIdAsString, rawRequest = rawRequest)
+                result.onComplete(_ => logRequestEnd(projectIdAsString))
+                complete(result)
               }
+            } ~ {
+            extractRawRequest(requestId) { rawRequest =>
+              throttleApiCallIfNeeded(projectId, rawRequest)
             }
           }
         } ~ get {
