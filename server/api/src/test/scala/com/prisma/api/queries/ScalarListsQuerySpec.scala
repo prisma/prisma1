@@ -268,7 +268,7 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
     result.toString should equal("""{"data":{"lists":[{"listInts":[7,8],"todo":{"todoInts":[9,10],"tag":{"tagInts":[11,12]}}}]}}""")
   }
 
-  "Nested scalar lists" should "work in upserts and only execute one branch of the upsert" ignore {
+  "Nested scalar lists" should "work in upserts and only execute one branch of the upsert" in {
 
     val project = SchemaDsl() { schema =>
       val list = schema.model("List").field("listInts", _.Int, isList = true).field("uList", _.String, isUnique = true)
