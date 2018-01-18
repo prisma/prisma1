@@ -28,7 +28,7 @@ Feel free to get familiar with the code. The app contains the following React [`
 - `CreatePage`: Allows to create a new post item
 - `DetailPage`: Renders the details of a post item and allows to update and delete it
 
-Prisma services are managed with the [Prisma CLI](!alias-zboghez5go). So before moving on, you first need to install it.
+Prisma services are managed with the [Prisma CLI](https://github.com/graphcool/prisma/tree/master/cli). So before moving on, you first need to install it.
 
 <Instruction>
 
