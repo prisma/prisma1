@@ -1,4 +1,4 @@
-package com.prisma.api.subscriptions.resolving
+package com.prisma.subscriptions.resolving
 
 import com.prisma.api.database.Types.DataItemFilterCollection
 import com.prisma.api.database.{DataItem, DataResolver, FilterElement, QueryArguments}

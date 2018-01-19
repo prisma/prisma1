@@ -6,7 +6,6 @@ import com.prisma.api.database.mutactions.GetFieldFromSQLUniqueException._
 import com.prisma.api.database.mutactions.validation.InputValueValidation
 import com.prisma.api.database.mutactions.{ClientSqlDataChangeMutaction, ClientSqlStatementResult, MutactionVerificationSuccess}
 import com.prisma.api.database.{DataResolver, DatabaseMutationBuilder}
-import com.prisma.api.mutations.mutations.UpsertHelper
 import com.prisma.api.mutations.{CoolArgs, NodeSelector, ParentInfo}
 import com.prisma.api.schema.APIErrors
 import cool.graph.cuid.Cuid
@@ -21,8 +20,8 @@ case class UpsertDataItemIfInRelationWith(project: Project, parentInfo: ParentIn
 
   val model                   = where.model
   val idOfNewItem             = Cuid.createCuid()
-  val nonListScalarCreateArgs = CoolArgs(createArgs.raw + ("id" -> idOfNewItem)).nonListScalarArgumentsAsCoolArgs(model)
-  val actualCreateArgs        = CoolArgs(UpsertHelper.generateArgumentMapWithDefaultValues(model, nonListScalarCreateArgs.raw))
+  val nonListScalarCreateArgs = CoolArgs(createArgs.raw).nonListScalarArgumentsAsCoolArgs(model)
+  val actualCreateArgs        = nonListScalarCreateArgs.generateCreateArgs(model, idOfNewItem)
   val actualUpdateArgs        = updateArgs.nonListScalarArgumentsAsCoolArgs(model)
 
   override def execute: Future[ClientSqlStatementResult[Any]] = Future.successful {

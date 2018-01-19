@@ -18,11 +18,12 @@ import scala.util.{Success, Try}
 
 case class UpsertDataItem(
     project: Project,
-    model: Model,
+    where: NodeSelector,
     createArgs: CoolArgs,
-    updateArgs: CoolArgs,
-    where: NodeSelector
+    updateArgs: CoolArgs
 ) extends ClientSqlDataChangeMutaction {
+
+  val model = where.model
 
   override def execute: Future[ClientSqlStatementResult[Any]] = Future.successful {
     ClientSqlStatementResult(DatabaseMutationBuilder.upsert(project, where, createArgs, updateArgs))

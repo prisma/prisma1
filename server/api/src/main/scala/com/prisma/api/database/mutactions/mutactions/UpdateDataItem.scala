@@ -5,7 +5,7 @@ import java.sql.SQLIntegrityConstraintViolationException
 import com.prisma.api.database.mutactions.validation.InputValueValidation
 import com.prisma.api.database.mutactions.{ClientSqlDataChangeMutaction, ClientSqlStatementResult, GetFieldFromSQLUniqueException, MutactionVerificationSuccess}
 import com.prisma.api.database.{DataItem, DataResolver, DatabaseMutationBuilder, RelationFieldMirrorUtils}
-import com.prisma.api.mutations.CoolArgs
+import com.prisma.api.mutations.{CoolArgs, NodeSelector}
 import com.prisma.api.mutations.MutationTypes.ArgumentValue
 import com.prisma.api.schema.APIErrors
 import com.prisma.shared.models.IdType.Id
@@ -63,12 +63,11 @@ case class UpdateDataItem(project: Project,
         sqlAction = DBIO.seq(
           List(
             DatabaseMutationBuilder
-              .updateDataItem(project.id,
-                              model.name,
-                              id,
-                              values
-                                .map(x => (x.name, x.value))
-                                .toMap)) ++ mirrorUpdates: _*)))
+              .updateDataItemByUnique(project,
+                                      NodeSelector.forId(model, id),
+                                      CoolArgs(values
+                                        .map(x => (x.name, x.value))
+                                        .toMap))) ++ mirrorUpdates: _*)))
 
   }
 

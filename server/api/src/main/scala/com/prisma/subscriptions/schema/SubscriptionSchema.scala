@@ -1,9 +1,9 @@
-package com.prisma.api.subscriptions.schema
+package com.prisma.subscriptions.schema
 
 import com.prisma.api.ApiDependencies
 import com.prisma.api.database.DataItem
 import com.prisma.api.schema._
-import com.prisma.api.subscriptions.SubscriptionUserContext
+import com.prisma.subscriptions.SubscriptionUserContext
 import com.prisma.shared.models.ModelMutationType.ModelMutationType
 import com.prisma.shared.models.{Model, ModelMutationType, Project}
 import sangria.schema._

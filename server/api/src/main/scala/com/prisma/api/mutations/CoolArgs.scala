@@ -68,10 +68,38 @@ case class CoolArgs(raw: Map[String, Any]) {
         case Some(values) => Some(ScalarListSet(values = values.toVector))
       }
     }
-
   }
 
-  // todo it would be nice to standardize on one format, at the moment we mix Map[String, Any], CoolArgs and Vector[ArgumentValue]
+  def createArgumentsAsCoolArgs: CoolArgs = CoolArgs(raw("create").asInstanceOf[Map[String, Any]])
+  def updateArgumentsAsCoolArgs: CoolArgs = CoolArgs(raw("update").asInstanceOf[Map[String, Any]])
+
+  def generateCreateArgs(model: Model, id: String): CoolArgs = {
+    CoolArgs(
+      model.scalarNonListFields
+        .filter(_.name != "id")
+        .flatMap { field =>
+          raw.get(field.name) match {
+            case Some(None) if field.defaultValue.isDefined && field.isRequired => throw APIErrors.InputInvalid("null", field.name, model.name)
+            case Some(value)                                                    => Some((field.name, value))
+            case None if field.defaultValue.isDefined                           => Some((field.name, GCValueExtractor.fromGCValue(field.defaultValue.get)))
+            case None                                                           => None
+          }
+        }
+        .toMap + ("id" -> id))
+  }
+
+  def generateUpdateArgs(model: Model): CoolArgs = {
+    CoolArgs(
+      model.scalarNonListFields
+        .filter(_.name != "id")
+        .flatMap { field =>
+          raw.get(field.name) match {
+            case Some(value) => Some((field.name, value))
+            case None        => None
+          }
+        }
+        .toMap)
+  }
 
   def nonListScalarArgumentsAsCoolArgs(model: Model): CoolArgs = {
     val argumentValues = nonListScalarArguments(model)
@@ -196,6 +224,7 @@ object NodeSelector {
 case class NodeSelector(model: Model, field: Field, fieldValue: GCValue) {
   lazy val unwrappedFieldValue: Any   = GCValueExtractor.fromGCValue(fieldValue)
   lazy val fieldValueAsString: String = GCValueExtractor.fromGCValueToString(fieldValue)
+  lazy val isId: Boolean              = field.name == "id"
 
 //  lazy val unwrappedFieldValue: Any   = {
 //    fieldValue match {

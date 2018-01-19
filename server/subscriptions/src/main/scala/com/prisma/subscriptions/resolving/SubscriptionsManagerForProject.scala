@@ -2,7 +2,7 @@ package com.prisma.subscriptions.resolving
 
 import akka.actor.{Actor, ActorRef, Props, Stash, Terminated}
 import com.prisma.akkautil.{LogUnhandled, LogUnhandledExceptions}
-import com.prisma.api.subscriptions.schema.{QueryTransformer, SubscriptionQueryValidator}
+import com.prisma.subscriptions.schema.{QueryTransformer, SubscriptionQueryValidator}
 import com.prisma.messagebus.pubsub.Message
 import com.prisma.shared.models._
 import com.prisma.subscriptions.SubscriptionDependencies
