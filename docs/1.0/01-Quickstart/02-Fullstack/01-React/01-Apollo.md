@@ -56,7 +56,7 @@ Here is an overview of the generated files in the `server` directory and their r
 - `/server/src`
   - [`src/schema.graphql`](https://github.com/graphql-boilerplates/react-fullstack-graphql/tree/master/basic/server/src/schema.graphql) defines your **application schema**. It contains the GraphQL API that you want to expose to your client applications.
   - [`src/generated/prisma.graphql`](https://github.com/graphql-boilerplates/react-fullstack-graphql/tree/master/basic/server/src/generated/prisma.graphql) defines the **Prisma schema**. It contains the definition of the CRUD API for the types in your data model and is generated based on your `datamodel.graphql`. **You should never edit this file manually**, but introduce changes only by altering `datamodel.graphql` and run `prisma deploy`.
-  - [`src/index.ts`](https://github.com/graphql-boilerplates/react-fullstack-graphql/tree/master/basic/server/src/index.ts) is the entry point of your server, pulling everything together and starting the `GraphQLServer` from [`graphql-yoga`](https://github.com/graphcool/graphql-yoga).
+  - [`src/index.js`](https://github.com/graphql-boilerplates/react-fullstack-graphql/tree/master/basic/server/src/index.js) is the entry point of your server, pulling everything together and starting the `GraphQLServer` from [`graphql-yoga`](https://github.com/graphcool/graphql-yoga).
 
 Most important for you at this point are `database/datamodel.graphql` and `src/schema.graphql`.
 
