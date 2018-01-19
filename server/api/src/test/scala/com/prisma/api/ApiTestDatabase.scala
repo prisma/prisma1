@@ -2,7 +2,7 @@ package com.prisma.api
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import com.prisma.api.database.{DatabaseApiTestDatabaseMutationBuilder, DatabaseQueryBuilder}
+import com.prisma.api.database.DatabaseQueryBuilder
 import com.prisma.deploy.migration.mutactions.{ClientSqlMutaction, CreateRelationTable}
 import com.prisma.shared.models._
 import com.prisma.utils.await.AwaitUtils

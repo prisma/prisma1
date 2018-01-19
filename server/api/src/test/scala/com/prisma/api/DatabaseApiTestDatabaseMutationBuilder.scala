@@ -1,5 +1,6 @@
-package com.prisma.api.database
+package com.prisma.api
 
+import com.prisma.api.database.DatabaseMutationBuilder
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
 import com.prisma.shared.models.{Model, TypeIdentifier}
 import slick.dbio.DBIOAction
