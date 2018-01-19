@@ -9,7 +9,7 @@ class UpsertDesignSpec extends FlatSpec with Matchers with ApiBaseSpec {
 
   //top level upserts
 
-  "An upsert on the top level" should "only execute the nested mutations of the correct create branch" in {
+  "An upsert on the top level" should "only execute the nested mutations of the correct create branch" ignore {
 
     val project = SchemaDsl() { schema =>
       val list = schema.model("List").field("listInts", _.Int, isList = true).field("uList", _.String, isUnique = true)
@@ -38,7 +38,7 @@ class UpsertDesignSpec extends FlatSpec with Matchers with ApiBaseSpec {
     countItems(project, "todoes") should be(1)
   }
 
-  "An upsert on the top level" should "only execute the nested mutations of the correct update branch" in {
+  "An upsert on the top level" should "only execute the nested mutations of the correct update branch" ignore {
 
     val project = SchemaDsl() { schema =>
       val list = schema.model("List").field("listInts", _.Int, isList = true).field("uList", _.String, isUnique = true)
@@ -69,7 +69,7 @@ class UpsertDesignSpec extends FlatSpec with Matchers with ApiBaseSpec {
     countItems(project, "todoes") should be(1)
   }
 
-  "An upsert on the top level" should "only execute the scalar lists of the correct create branch" in {
+  "An upsert on the top level" should "only execute the scalar lists of the correct create branch" ignore {
 
     val project = SchemaDsl() { schema =>
       val list = schema.model("List").field("listInts", _.Int, isList = true).field("uList", _.String, isUnique = true)
@@ -95,7 +95,7 @@ class UpsertDesignSpec extends FlatSpec with Matchers with ApiBaseSpec {
     countItems(project, "todoes") should be(0)
   }
 
-  "An upsert on the top level" should "only execute the scalar lists of the correct update branch" in {
+  "An upsert on the top level" should "only execute the scalar lists of the correct update branch" ignore {
 
     val project = SchemaDsl() { schema =>
       val list = schema.model("List").field("listInts", _.Int, isList = true).field("uList", _.String, isUnique = true)
@@ -127,7 +127,7 @@ class UpsertDesignSpec extends FlatSpec with Matchers with ApiBaseSpec {
 
   // nested upserts
 
-  "A nested upsert" should "only execute the nested scalarlists of the correct update branch" in {
+  "A nested upsert" should "only execute the nested scalarlists of the correct update branch" ignore {
 
     val project = SchemaDsl() { schema =>
       val list = schema.model("List").field("listInts", _.Int, isList = true).field("uList", _.String, isUnique = true)
@@ -158,7 +158,7 @@ class UpsertDesignSpec extends FlatSpec with Matchers with ApiBaseSpec {
     countItems(project, "todoes") should be(1)
   }
 
-  "A nested upsert" should "only execute the nested scalarlists of the correct create branch" in {
+  "A nested upsert" should "only execute the nested scalarlists of the correct create branch" ignore {
 
     val project = SchemaDsl() { schema =>
       val list = schema.model("List").field("listInts", _.Int, isList = true).field("uList", _.String, isUnique = true)
@@ -189,7 +189,7 @@ class UpsertDesignSpec extends FlatSpec with Matchers with ApiBaseSpec {
     countItems(project, "todoes") should be(1)
   }
 
-  "A nested upsert" should "only execute the nested mutations of the correct update branch" in {
+  "A nested upsert" should "only execute the nested mutations of the correct update branch" ignore {
 
     val project = SchemaDsl() { schema =>
       val list = schema.model("List").field("uList", _.String, isUnique = true)
@@ -223,7 +223,7 @@ class UpsertDesignSpec extends FlatSpec with Matchers with ApiBaseSpec {
 
   }
 
-  "A nested upsert" should "only execute the nested mutations of the correct create branch" in {
+  "A nested upsert" should "only execute the nested mutations of the correct create branch" ignore {
 
     val project = SchemaDsl() { schema =>
       val list = schema.model("List").field("uList", _.String, isUnique = true)
