@@ -11,7 +11,7 @@ Prisma uses a dedicated, intermediate format for importing and exporting data: T
 +--------------+                    +----------------+                       +------------+
 | +--------------+                  |                |                       |            |
 | |            | |                  |                |                       |            |
-| | SQL        | |  (1) transform   |      NDF       |  (2) chunked upload   |  prisma |
+| | SQL        | |  (1) transform   |      NDF       |  (2) chunked upload   |   prisma   |
 | | MongoDB    | | +--------------> |                | +-------------------> |            |
 | | JSON       | |                  |                |                       |            |
 | |            | |                  |                |                       |            |
