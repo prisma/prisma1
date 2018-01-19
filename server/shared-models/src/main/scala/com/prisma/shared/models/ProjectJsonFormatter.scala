@@ -163,7 +163,6 @@ object ProjectJsonFormatter {
     private def addDiscriminator(json: JsObject, fn: Function) = json ++ Json.obj(discriminatorField -> fn.typeCode.toString)
   }
 
-  implicit lazy val relationFieldMirror       = Json.format[RelationFieldMirror]
   implicit lazy val relation                  = Json.format[Relation]
   implicit lazy val enum                      = Json.format[Enum]
   implicit lazy val field                     = Json.format[Field]

@@ -39,12 +39,6 @@ case class ApiTestDatabase()(implicit dependencies: ApiDependencies) extends Awa
   private def createModelTable(project: Project, model: Model)          = runDbActionOnClientDb(DatabaseMutationBuilder.createTableForModel(project.id, model))
   private def createRelationTable(project: Project, relation: Relation) = runMutaction(CreateRelationTable(project.id, project.schema, relation = relation))
 
-  //  def loadRelationFieldMirrors(project: Project, relation: Relation): Unit = {
-//    relation.fieldMirrors.foreach { mirror =>
-//      runMutaction(CreateRelationFieldMirrorColumn(project, relation, project.getFieldById_!(mirror.fieldId)))
-//    }
-//  }
-
   def deleteExistingDatabases(): Unit = {
     val schemas = {
       clientDatabase
