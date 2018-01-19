@@ -63,7 +63,7 @@ case class UpdateDataItem(project: Project,
         sqlAction = DBIO.seq(
           List(
             DatabaseMutationBuilder
-              .updateDataItemByUnique(project,
+              .updateDataItemByUnique(project.id,
                                       NodeSelector.forId(model, id),
                                       CoolArgs(values
                                         .map(x => (x.name, x.value))
