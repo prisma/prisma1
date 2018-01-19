@@ -200,8 +200,6 @@ docker-compose kill
 docker-compose up -d
 ```
 
-> Note: For some reason this doesn't work. Maybe @dom can take a look tomorrow. Whe deploying a service I get 'Error: Authentication token is invalid: Token can't be decoded: Illegal base64 character 5c:'
-
 ## Deploy a service
 
 On your local machine, verify that the cluster configuration is being picked up correctly:
