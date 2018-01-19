@@ -80,7 +80,7 @@ Based on this data model Prisma generates the **database schema**, a [GraphQL sc
 
 Before you can start the server, you first need to make sure your GraphQL database is available. You can do so by deploying the correspdonding Prisma service that's responsible for the database.
 
-In this case, you'll deploy the Prisma database serviceto the **free development cluster** of Prisma Cloud. Note that this cluster is not intended for production use, but rather for development and demo purposes.
+In this case, you'll deploy the Prisma database service to the **free development cluster** of Prisma Cloud. Note that this cluster is not intended for production use, but rather for development and demo purposes.
 
 > Another option would be to deploy it locally with [Docker](https://www.docker.com/). You can follow the [Node.js Quickstart tutorial](!alias-phe8vai1oo) to learn how that works.
 
