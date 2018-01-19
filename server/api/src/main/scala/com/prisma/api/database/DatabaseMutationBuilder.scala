@@ -76,6 +76,15 @@ object DatabaseMutationBuilder {
     (sql"delete from `#${project.id}`.`#${model.name}`" ++ prefixIfNotNone("where", whereSql)).asUpdate
   }
 
+  def deleteRelayIds(project: Project, model: Model, where: DataItemFilterCollection) = {
+    val whereSql = QueryArguments.generateFilterConditions(project.id, model.name, where)
+    (sql"DELETE FROM `#${project.id}`.`_RelayId`" ++
+      (sql"WHERE `id` IN (" ++
+        sql"SELECT `id`" ++
+        sql"FROM `#${project.id}`.`#${model.name}`" ++
+        prefixIfNotNone("where", whereSql) ++ sql")")).asUpdate
+  }
+
   def createDataItemIfUniqueDoesNotExist(projectId: String, where: NodeSelector, createArgs: CoolArgs) = {
     val escapedColumns = combineByComma(createArgs.raw.keys.map(escapeKey))
     val insertValues   = combineByComma(createArgs.raw.values.map(escapeUnsafeParam))
@@ -169,6 +178,9 @@ object DatabaseMutationBuilder {
 
   def deleteDataItemByUnique(projectId: String, where: NodeSelector) =
     sqlu"delete from `#$projectId`.`#${where.model.name}` where `#${where.field.name}` = ${where.fieldValue}"
+
+  def deleteRelayRowByUnique(projectId: String, where: NodeSelector) =
+    sqlu"delete from `#$projectId`.`_RelayId` where `id` = (select id from `#$projectId`.`#${where.model.name}` where `#${where.field.name}` = ${where.fieldValue})"
 
   def deleteRelationRowById(projectId: String, relationId: String, id: String) =
     sqlu"delete from `#$projectId`.`#$relationId` where A = $id or B = $id"

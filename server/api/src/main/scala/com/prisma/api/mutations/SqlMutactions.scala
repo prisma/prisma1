@@ -32,15 +32,15 @@ case class ParentInfo(field: Field, where: NodeSelector) {
 case class SqlMutactions(dataResolver: DataResolver) {
   val project = dataResolver.project
 
-  def getMutactionsForDelete(model: Model, id: Id, previousValues: DataItem, outerWhere: NodeSelector): List[ClientSqlMutaction] = {
-    val requiredRelationViolations     = model.relationFields.flatMap(field => checkIfRemovalWouldFailARequiredRelation(field, id, project))
-    val removeFromConnectionMutactions = model.relationFields.map(field => RemoveDataItemFromManyRelationByToId(project.id, field, id))
-    val deleteItemMutaction            = DeleteDataItem(project, model, id, previousValues)
+  def getMutactionsForDelete(where: NodeSelector, previousValues: DataItem, id: String): List[ClientSqlMutaction] = {
+    val requiredRelationViolations     = where.model.relationFields.flatMap(field => checkIfRemovalWouldFailARequiredRelation(field, id, project))
+    val removeFromConnectionMutactions = where.model.relationFields.map(field => RemoveDataItemFromManyRelationByToId(project.id, field, id))
+    val deleteItemMutaction            = DeleteDataItem(project, where, previousValues, id)
 
     requiredRelationViolations ++ removeFromConnectionMutactions ++ List(deleteItemMutaction)
   }
 
-  def getMutactionsForUpdate(args: CoolArgs, id: Id, previousValues: DataItem, where: NodeSelector): Vector[ClientSqlMutaction] = {
+  def getMutactionsForUpdate(where: NodeSelector, args: CoolArgs, id: Id, previousValues: DataItem): Vector[ClientSqlMutaction] = {
     val updateMutaction = getUpdateMutactions(where, args, id, previousValues)
     val nested          = getMutactionsForNestedMutation(args, where, triggeredFromCreate = false)
 
@@ -57,11 +57,8 @@ case class SqlMutactions(dataResolver: DataResolver) {
 
   // we need to rethink this thoroughly, we need to prevent both branches of executing their nested mutations && scalarlist mutations at the same time
 
-  def getMutactionsForUpsert(allArgs: CoolArgs,
-                             createArgs: CoolArgs,
-                             updateArgs: CoolArgs,
-                             outerWhere: NodeSelector,
-                             createWhere: NodeSelector): List[ClientSqlMutaction] = {
+  def getMutactionsForUpsert(outerWhere: NodeSelector, createWhere: NodeSelector, allArgs: CoolArgs, createArgs: CoolArgs, updateArgs: CoolArgs,
+  ): List[ClientSqlMutaction] = {
     val upsertMutaction = UpsertDataItem(project, outerWhere, createArgs, updateArgs)
 
     val whereFieldValue   = updateArgs.raw.get(outerWhere.field.name)
@@ -190,7 +187,7 @@ case class SqlMutactions(dataResolver: DataResolver) {
   }
 
   def getMutactionsForNestedDeleteMutation(nestedMutation: NestedMutation, parentInfo: ParentInfo): Seq[ClientSqlMutaction] = {
-    nestedMutation.deletes.map(delete => DeleteDataItemByUniqueFieldIfInRelationWith(project, parentInfo, delete.where))
+    nestedMutation.deletes.map(delete => DeleteDataItemNested(project, delete.where))
   }
 
   def getMutactionsForNestedUpdateMutation(nestedMutation: NestedMutation, parentInfo: ParentInfo): Seq[ClientSqlMutaction] = {

@@ -180,6 +180,10 @@ object DatabaseQueryBuilder {
           )"""
   }
 
+  def existsByWhere(projectId: String, where: NodeSelector) = {
+    sql"select exists (select `id` from `#$projectId`.`#${where.model.name}` where  #${where.field.name} = ${where.fieldValue})"
+  }
+
   def existsByModelAndId(projectId: String, modelName: String, id: String) = {
     sql"select exists (select `id` from `#$projectId`.`#$modelName` where `id` = '#$id')"
   }
