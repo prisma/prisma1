@@ -434,7 +434,13 @@ export default class Docker {
       )
     }
 
-    const output = childProcess.execSync('docker-compose -v').toString()
+    try {
+      const output = childProcess.execSync('docker-compose -v').toString()
+    } catch (e) {
+      throw new Error(
+        `Please install docker-compose 1.13.0 or greater in order to run "prisma local".\nLearn more here: https://docs.docker.com/compose/install/`,
+      )
+    }
     const regex = /.*?(\d{1,2}\.\d{1,2}\.\d{1,2}),?/
     const match = output.match(regex)
     if (match && match[1]) {
