@@ -122,35 +122,44 @@ case class ApiServer(
     }
 
     logger.info(Json.toJson(LogData(LogKey.RequestNew, requestId)).toString())
-    pathPrefix(Segments(min = 2, max = 3)) { segments =>
+    pathPrefix(Segments(min = 2, max = 4)) { segments =>
       post {
-        val projectId         = ProjectId.fromSegments(segments)
+        val actualSegments    = segments.filter(s => s != "private" && s != "import" && s != "export")
+        val projectId         = ProjectId.fromSegments(actualSegments)
         val projectIdAsString = projectId.asString
 
+        val lastSegment = if (segments.size == 3 || segments.size == 4) {
+          segments.last
+        } else {
+          ""
+        }
+
         handleExceptions(toplevelExceptionHandler(requestId)) {
-          path("private") {
-            extractRawRequest(requestId) { rawRequest =>
-              val result = apiDependencies.requestHandler.handleRawRequestForPrivateApi(projectId = projectIdAsString, rawRequest = rawRequest)
-              result.onComplete(_ => logRequestEnd(projectIdAsString))
-              complete(result)
-            }
-          } ~
-            path("import") {
-              extractRawRequest(requestId) { rawRequest =>
+          extractRawRequest(requestId) { rawRequest =>
+            lastSegment match {
+              case "private" =>
+                println("private")
+                val result = apiDependencies.requestHandler.handleRawRequestForPrivateApi(projectId = projectIdAsString, rawRequest = rawRequest)
+                result.onComplete(_ => logRequestEnd(projectIdAsString))
+                complete(result)
+
+              case "import" =>
+                println("import")
                 val result = apiDependencies.requestHandler.handleRawRequestForImport(projectId = projectIdAsString, rawRequest = rawRequest)
                 result.onComplete(_ => logRequestEnd(projectIdAsString))
                 complete(result)
-              }
-            } ~
-            path("export") {
-              extractRawRequest(requestId) { rawRequest =>
+
+              case "export" =>
+                println("export")
                 val result = apiDependencies.requestHandler.handleRawRequestForExport(projectId = projectIdAsString, rawRequest = rawRequest)
                 result.onComplete(_ => logRequestEnd(projectIdAsString))
                 complete(result)
-              }
-            } ~ {
-            extractRawRequest(requestId) { rawRequest =>
-              throttleApiCallIfNeeded(projectId, rawRequest)
+
+              case _ =>
+                println("api")
+                extractRawRequest(requestId) { rawRequest =>
+                  throttleApiCallIfNeeded(projectId, rawRequest)
+                }
             }
           }
         }
