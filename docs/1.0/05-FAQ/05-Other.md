@@ -22,3 +22,5 @@ Finally, for any direct requests, you can always reach out to use via email: [Sa
 The Graphcool Framework is a strongly opinioated open-source solution based on GraphQL and Serverless functions, that provides an entire web server setup with a powerful GraphQL API.
 
 Prisma is the result of many learnings and a lot of feedback from customers and the community, that focuses on the core of Graphcool Framework: the automatic mapping from your database to a GraphQL API. This enables you to take full control of your GraphQL server while still being able to benefit from an auto-generated and powerful GraphQL API.
+
+If you have further questions about how the Graphcool Framework and Prisma compare, go [join the discussion in the Forum](https://www.graph.cool/forum/t/graphcool-framework-and-prisma/2237?u=nilan).
