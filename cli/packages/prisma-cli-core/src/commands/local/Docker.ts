@@ -198,7 +198,7 @@ export default class Docker {
       const endpoint = this.cluster.getDeployEndpoint()
       const sliced = endpoint.slice(endpoint.lastIndexOf(':') + 1)
       port = sliced.slice(0, sliced.indexOf('/'))
-      this.setEnvVars(port, endpoint)
+      await this.setEnvVars(port, endpoint)
       const before = Date.now()
       this.out.action.start('Nuking local cluster')
       await this.run('down', '--remove-orphans', '-v', '--rmi', 'local')
@@ -418,6 +418,7 @@ export default class Docker {
     ]
     const args = defaultArgs.concat(argv)
     // this.out.log(chalk.dim(`$ docker-compose ${argv.join(' ')}\n`))
+    debug({ bin, args })
     const output = await spawn(bin, args, {
       env: this.envVars,
       cwd: this.config.cwd,
@@ -434,8 +435,9 @@ export default class Docker {
       )
     }
 
+    let output
     try {
-      const output = childProcess.execSync('docker-compose -v').toString()
+      output = childProcess.execSync('docker-compose -v').toString()
     } catch (e) {
       throw new Error(
         `Please install docker-compose 1.13.0 or greater in order to run "prisma local".\nLearn more here: https://docs.docker.com/compose/install/`,

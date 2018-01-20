@@ -155,7 +155,7 @@ export class CLI {
         if (topic) {
           await this.Help.run(this.config)
           const checker = getStatusChecker()!
-          checker.checkStatus(id, this.cmd.args, this.cmd.flags, this.cmd.argv)
+          checker.checkStatus(id, {}, {}, [])
         } else if (id === 'push') {
           throw new Error(
             `The ${chalk.bold(

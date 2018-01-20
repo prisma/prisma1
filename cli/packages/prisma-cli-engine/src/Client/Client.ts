@@ -153,11 +153,23 @@ export class Client {
           debug(result)
           return result
         } catch (e) {
-          // if (e.message.startsWith('No valid session')) {
-          // await this.auth.ensureAuth(true)
-          // try again with new token
-          // return await this.client.request(query, variables)
-          /*} else */ if (
+          if (
+            e.response &&
+            e.response.errors &&
+            e.response.errors[0] &&
+            e.response.errors[0].code === 3015 &&
+            e.response.errors[0].message.includes('decoded') &&
+            this.env.activeCluster.local
+          ) {
+            throw new Error(`Cluster secret of cluster \`${
+              this.env.activeCluster.name
+            }\` saved in ~/.prisma/config.yml
+does not match with the actual cluster secret of that cluster. This means the key pair got out of sync.
+To reset the key pair, please run ${chalk.bold.green('prisma local start')}
+`)
+          }
+
+          if (
             e.message.includes('ECONNREFUSED') &&
             (e.message.includes('localhost') || e.message.includes('127.0.0.1'))
           ) {
