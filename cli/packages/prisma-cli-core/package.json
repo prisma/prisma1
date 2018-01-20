@@ -1,6 +1,6 @@
 {
   "name": "prisma-cli-core",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "dist/index.js",
   "files": [
     "dist"
@@ -81,6 +81,7 @@
     "cross-spawn": "^5.1.0",
     "download-github-repo": "^0.1.3",
     "figures": "^2.0.0",
+    "find-up": "^2.1.0",
     "fs-extra": "^4.0.2",
     "globby": "^6.1.0",
     "graphcool-inquirer": "^1.0.3",
@@ -100,7 +101,7 @@
     "pause": "^0.1.0",
     "portfinder": "^1.0.13",
     "prisma-json-schema": "^0.0.1",
-    "prisma-yml": "1.0.0",
+    "prisma-yml": "1.0.1",
     "scuid": "^1.0.2",
     "semver": "^5.4.1",
     "sillyname": "^0.1.0",

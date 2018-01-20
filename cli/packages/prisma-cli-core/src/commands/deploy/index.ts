@@ -19,6 +19,7 @@ import { spawn } from '../../spawn'
 import * as sillyname from 'sillyname'
 import { getSchemaPathFromConfig } from './getSchemaPathFromConfig'
 import { getGraphQLConfig } from 'graphql-config'
+import * as findUp from 'find-up'
 
 export default class Deploy extends Command {
   static topic = 'deploy'
@@ -444,17 +445,27 @@ ${chalk.gray(
   }
 
   private async graphqlPrepare() {
-    let config
+    let dir
     try {
-      config = getGraphQLConfig()
+      dir = this.config.findConfigDir()
     } catch (e) {
       //
     }
-    if (config) {
+    if (dir) {
       const graphqlBin = await getBinPath('graphql')
       if (graphqlBin) {
         this.out.log(`Running ${chalk.cyan(`$ graphql prepare`)}...`)
-        await spawn(`graphql`, ['prepare'])
+        try {
+          const oldCwd = process.cwd()
+          const configDir = this.config.findConfigDir()
+          if (configDir) {
+            process.chdir(configDir)
+          }
+          await spawn(`graphql`, ['prepare'])
+          process.chdir(oldCwd)
+        } catch (e) {
+          this.out.warn(e)
+        }
       }
     }
   }
