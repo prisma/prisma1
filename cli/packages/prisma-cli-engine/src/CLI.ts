@@ -227,6 +227,7 @@ export class CLI {
       tags: {
         version: this.config.version,
         platform: os.platform(),
+        argv: process.argv.slice(1),
       },
     })
     debug({ isGlobal: getIsGlobal() })
