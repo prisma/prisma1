@@ -128,7 +128,7 @@ case class ApiServer(
         val projectId         = ProjectId.fromSegments(actualSegments)
         val projectIdAsString = projectId.asString
 
-        val lastSegment = if (segments.size == 3 || segments.size == 4) {
+        val apiSegment = if (segments.size == 3 || segments.size == 4) {
           segments.last
         } else {
           ""
@@ -136,27 +136,23 @@ case class ApiServer(
 
         handleExceptions(toplevelExceptionHandler(requestId)) {
           extractRawRequest(requestId) { rawRequest =>
-            lastSegment match {
+            apiSegment match {
               case "private" =>
-                println("private")
                 val result = apiDependencies.requestHandler.handleRawRequestForPrivateApi(projectId = projectIdAsString, rawRequest = rawRequest)
                 result.onComplete(_ => logRequestEnd(projectIdAsString))
                 complete(result)
 
               case "import" =>
-                println("import")
                 val result = apiDependencies.requestHandler.handleRawRequestForImport(projectId = projectIdAsString, rawRequest = rawRequest)
                 result.onComplete(_ => logRequestEnd(projectIdAsString))
                 complete(result)
 
               case "export" =>
-                println("export")
                 val result = apiDependencies.requestHandler.handleRawRequestForExport(projectId = projectIdAsString, rawRequest = rawRequest)
                 result.onComplete(_ => logRequestEnd(projectIdAsString))
                 complete(result)
 
               case _ =>
-                println("api")
                 extractRawRequest(requestId) { rawRequest =>
                   throttleApiCallIfNeeded(projectId, rawRequest)
                 }
