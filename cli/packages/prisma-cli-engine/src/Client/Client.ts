@@ -166,7 +166,7 @@ export class Client {
                   'prisma local start',
                 )} to start your local Prisma cluster.`
               : ''
-            this.out.error(
+            throw new Error(
               `Could not connect to cluster ${chalk.bold(
                 this.env.activeCluster.name,
               )}. ${localNotice}`,
