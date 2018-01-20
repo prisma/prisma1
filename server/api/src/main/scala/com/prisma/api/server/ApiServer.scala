@@ -124,7 +124,14 @@ case class ApiServer(
     logger.info(Json.toJson(LogData(LogKey.RequestNew, requestId)).toString())
     pathPrefix(Segments(min = 2, max = 4)) { segments =>
       post {
-        val actualSegments    = segments.filter(s => s != "private" && s != "import" && s != "export")
+        def removeLastElementIfInSet(elements: List[String], set: Set[String]) = {
+          if (set.contains(elements.last)) {
+            elements.dropRight(1)
+          } else {
+            elements
+          }
+        }
+        val actualSegments    = removeLastElementIfInSet(segments, Set("private", "import", "export"))
         val projectId         = ProjectId.fromSegments(actualSegments)
         val projectIdAsString = projectId.asString
 
