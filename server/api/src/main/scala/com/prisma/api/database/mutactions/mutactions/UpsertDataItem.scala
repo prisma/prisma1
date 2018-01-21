@@ -8,11 +8,11 @@ import com.prisma.api.database.mutactions.{ClientSqlDataChangeMutaction, ClientS
 import com.prisma.api.database.{DataResolver, DatabaseMutationBuilder}
 import com.prisma.api.mutations.{CoolArgs, NodeSelector}
 import com.prisma.api.schema.APIErrors
-import cool.graph.cuid.Cuid
-import com.prisma.shared.models.{Model, Project}
-import com.prisma.util.gc_value.GCStringConverter
+import com.prisma.shared.models.Project
 import com.prisma.util.json.JsonFormats
+import slick.dbio.{DBIOAction, Effect, NoStream}
 
+import scala.collection.immutable.Seq
 import scala.concurrent.Future
 import scala.util.{Success, Try}
 
@@ -20,13 +20,15 @@ case class UpsertDataItem(
     project: Project,
     where: NodeSelector,
     createArgs: CoolArgs,
-    updateArgs: CoolArgs
+    updateArgs: CoolArgs,
+    createMutations: Seq[DBIOAction[List[Int], NoStream, Effect]],
+    updateMutations: Seq[DBIOAction[List[Int], NoStream, Effect]]
 ) extends ClientSqlDataChangeMutaction {
 
   val model = where.model
 
   override def execute: Future[ClientSqlStatementResult[Any]] = Future.successful {
-    ClientSqlStatementResult(DatabaseMutationBuilder.upsert(project.id, where, createArgs, updateArgs))
+    ClientSqlStatementResult(DatabaseMutationBuilder.upsert(project.id, where, createArgs, updateArgs, createMutations, updateMutations))
   }
 
   override def handleErrors = {

@@ -69,7 +69,7 @@ class UpsertDesignSpec extends FlatSpec with Matchers with ApiBaseSpec {
     countItems(project, "todoes") should be(1)
   }
 
-  "An upsert on the top level" should "only execute the scalar lists of the correct create branch" ignore {
+  "An upsert on the top level" should "only execute the scalar lists of the correct create branch" in {
 
     val project = SchemaDsl() { schema =>
       val list = schema.model("List").field("listInts", _.Int, isList = true).field("uList", _.String, isUnique = true)
@@ -90,12 +90,12 @@ class UpsertDesignSpec extends FlatSpec with Matchers with ApiBaseSpec {
       .pathAsString("data.upsertList.id")
 
     val result = server.executeQuerySimple(s"""query{lists {uList, listInts}}""", project)
-    result.toString should equal("""{"data":{"lists":[{uList: "A", "listInts":[70,80]}]}}""")
+    result.toString should equal("""{"data":{"lists":[{"uList":"A","listInts":[70,80]}]}}""")
     countItems(project, "lists") should be(1)
     countItems(project, "todoes") should be(0)
   }
 
-  "An upsert on the top level" should "only execute the scalar lists of the correct update branch" ignore {
+  "An upsert on the top level" should "only execute the scalar lists of the correct update branch" in {
 
     val project = SchemaDsl() { schema =>
       val list = schema.model("List").field("listInts", _.Int, isList = true).field("uList", _.String, isUnique = true)
@@ -119,7 +119,7 @@ class UpsertDesignSpec extends FlatSpec with Matchers with ApiBaseSpec {
 
     val result = server.executeQuerySimple(s"""query{lists {uList, listInts}}""", project)
 
-    result.toString should equal("""{"data":{"lists":[{"uList":"A","listInts":[70,80]}]}}""")
+    result.toString should equal("""{"data":{"lists":[{"uList":"A","listInts":[75,85]}]}}""")
 
     countItems(project, "lists") should be(1)
     countItems(project, "todoes") should be(0)
@@ -127,7 +127,7 @@ class UpsertDesignSpec extends FlatSpec with Matchers with ApiBaseSpec {
 
   // nested upserts
 
-  "A nested upsert" should "only execute the nested scalarlists of the correct update branch" ignore {
+  "A nested upsert" should "only execute the nested scalarlists of the correct update branch" in {
 
     val project = SchemaDsl() { schema =>
       val list = schema.model("List").field("listInts", _.Int, isList = true).field("uList", _.String, isUnique = true)
@@ -151,8 +151,8 @@ class UpsertDesignSpec extends FlatSpec with Matchers with ApiBaseSpec {
       )
       .pathAsString("data.updateList.id")
 
-    val result = server.executeQuerySimple(s"""query{lists {uList, todo {todoInts}}}""", project)
-    result.toString should equal("""{"data":{"lists":[{"uList":"A","todo":{"uList":"C","todoInts":[700,800]}}]}}""")
+    val result = server.executeQuerySimple(s"""query{lists {uList, todo {uTodo, todoInts}}}""", project)
+    result.toString should equal("""{"data":{"lists":[{"uList":"A","todo":{"uTodo":"C","todoInts":[700,800]}}]}}""")
 
     countItems(project, "lists") should be(1)
     countItems(project, "todoes") should be(1)
@@ -175,7 +175,7 @@ class UpsertDesignSpec extends FlatSpec with Matchers with ApiBaseSpec {
            |                    data:{todo: { upsert:{
            |                               where:{uTodo: "Does not Matter"}
            |		                           create:{uTodo:"C", todoInts:{set: [100, 200]}}
-           |		                           update:{uTodo:"B", todoInts:{set: [700, 800]}}
+           |		                           update:{uTodo:"D", todoInts:{set: [700, 800]}}
            |}}
            |}){id}}""".stripMargin,
         project
@@ -187,6 +187,38 @@ class UpsertDesignSpec extends FlatSpec with Matchers with ApiBaseSpec {
 
     countItems(project, "lists") should be(1)
     countItems(project, "todoes") should be(1)
+  }
+
+  "A nested upsert" should "only execute the nested scalarlists of the correct create branch for to many relations" in {
+
+    val project = SchemaDsl() { schema =>
+      val todo = schema.model("Todo").field("todoInts", _.Int, isList = true).field("uTodo", _.String, isUnique = true)
+      val list =
+        schema.model("List").field("listInts", _.Int, isList = true).field("uList", _.String, isUnique = true).oneToManyRelation("todoes", "list", todo)
+    }
+
+    database.setup(project)
+
+    server.executeQuerySimple("""mutation {createList(data: {uList: "A" todoes: {create: {uTodo: "B", todoInts: {set: [3, 4]}}}}){id}}""", project)
+
+    server
+      .executeQuerySimple(
+        s"""mutation{updateList(where:{uList: "A"}
+           |                    data:{todoes: { upsert:{
+           |                               where:{uTodo: "Does not Matter"}
+           |		                           create:{uTodo:"C", todoInts:{set: [100, 200]}}
+           |		                           update:{uTodo:"D", todoInts:{set: [700, 800]}}
+           |}}
+           |}){id}}""".stripMargin,
+        project
+      )
+      .pathAsString("data.updateList.id")
+
+    val result = server.executeQuerySimple(s"""query{lists {uList, todoes {uTodo, todoInts}}}""", project)
+    result.toString should equal("""{"data":{"lists":[{"uList":"A","todoes":[{"uTodo":"B","todoInts":[3,4]},{"uTodo":"C","todoInts":[100,200]}]}]}}""")
+
+    countItems(project, "lists") should be(1)
+    countItems(project, "todoes") should be(2)
   }
 
   "A nested upsert" should "only execute the nested mutations of the correct update branch" ignore {

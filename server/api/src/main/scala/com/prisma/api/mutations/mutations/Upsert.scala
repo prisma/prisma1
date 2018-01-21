@@ -29,28 +29,28 @@ case class Upsert(
   val updateArgs  = CoolArgs(args.raw).updateArgumentsAsCoolArgs.generateUpdateArgs(model)
   val createWhere = NodeSelector.forId(model, idOfNewItem)
 
-  val upsert = UpsertDataItem(project, outerwhere, createArgs, updateArgs)
+//  val upsert = UpsertDataItem(project, outerwhere, createArgs, updateArgs)
+//
+//  override def prepareMutactions(): Future[List[MutactionGroup]] = {
+//    val transaction = TransactionMutaction(List(upsert), dataResolver)
+//    Future.successful(List(MutactionGroup(List(transaction), async = false)))
+//  }
 
   override def prepareMutactions(): Future[List[MutactionGroup]] = {
-    val transaction = TransactionMutaction(List(upsert), dataResolver)
-    Future.successful(List(MutactionGroup(List(transaction), async = false)))
-  }
 
-//  override def prepareMutactions(): Future[List[MutactionGroup]] = {
-//
-//    val sqlMutactions        = SqlMutactions(dataResolver).getMutactionsForUpsert(outerwhere, createWhere, CoolArgs(args.raw), createArgs, updateArgs)
-//    val transactionMutaction = TransactionMutaction(sqlMutactions, dataResolver)
-////    val subscriptionMutactions = SubscriptionEvents.extractFromSqlMutactions(project, mutationId, sqlMutactions).toList
-////    val sssActions             = ServerSideSubscription.extractFromMutactions(project, sqlMutactions, requestId = "").toList
-//
-//    Future(
-//      List(
-//        MutactionGroup(mutactions = List(transactionMutaction), async = false)
-////    ,  MutactionGroup(mutactions = sssActions ++ subscriptionMutactions, async = true)
-//      ))
-////    val transaction = TransactionMutaction(List(upsert), dataResolver)
-////    Future.successful(List(MutactionGroup(List(transaction), async = false)))
-//  }
+    val sqlMutactions        = SqlMutactions(dataResolver).getMutactionsForUpsert(outerwhere, createWhere, CoolArgs(args.raw), createArgs, updateArgs)
+    val transactionMutaction = TransactionMutaction(sqlMutactions, dataResolver)
+//    val subscriptionMutactions = SubscriptionEvents.extractFromSqlMutactions(project, mutationId, sqlMutactions).toList
+//    val sssActions             = ServerSideSubscription.extractFromMutactions(project, sqlMutactions, requestId = "").toList
+
+    Future(
+      List(
+        MutactionGroup(mutactions = List(transactionMutaction), async = false)
+//    ,  MutactionGroup(mutactions = sssActions ++ subscriptionMutactions, async = true)
+      ))
+//    val transaction = TransactionMutaction(List(upsert), dataResolver)
+//    Future.successful(List(MutactionGroup(List(transaction), async = false)))
+  }
 
   override def getReturnValue: Future[ReturnValueResult] = {
     val newWhere = updateArgs.raw.get(outerwhere.field.name) match {

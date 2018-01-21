@@ -6,10 +6,11 @@ import com.prisma.shared.models.RelationSide.RelationSide
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
 import com.prisma.shared.models.{Model, Project, TypeIdentifier}
 import cool.graph.cuid.Cuid
-import slick.dbio.DBIOAction
+import slick.dbio.{DBIOAction, Effect, NoStream}
 import slick.jdbc.MySQLProfile.api._
 import slick.sql.{SqlAction, SqlStreamingAction}
 
+import scala.collection.immutable.Seq
 import scala.concurrent.ExecutionContext.Implicits.global
 
 object DatabaseMutationBuilder {
@@ -18,7 +19,11 @@ object DatabaseMutationBuilder {
 
   val implicitlyCreatedColumns = List("id", "createdAt", "updatedAt")
 
-  def createDataItem(projectId: String, modelName: String, args: CoolArgs): SqlStreamingAction[Vector[Int], Int, Effect]#ResultAction[Int, NoStream, Effect] = {
+  def createDataItem(
+      projectId: String,
+      modelName: String,
+      args: CoolArgs,
+      conditionalWheres: Vector[NodeSelector] = Vector.empty): SqlStreamingAction[Vector[Int], Int, Effect]#ResultAction[Int, NoStream, Effect] = {
 
     val escapedKeyValueTuples = args.raw.toList.map(x => (escapeKey(x._1), escapeUnsafeParam(x._2)))
     val escapedKeys           = combineByComma(escapedKeyValueTuples.map(_._1))
@@ -85,21 +90,29 @@ object DatabaseMutationBuilder {
         prefixIfNotNone("where", whereSql) ++ sql")")).asUpdate
   }
 
-  def createDataItemIfUniqueDoesNotExist(projectId: String, where: NodeSelector, createArgs: CoolArgs) = {
+  def createDataItemIfUniqueDoesNotExist(projectId: String,
+                                         where: NodeSelector,
+                                         createArgs: CoolArgs): SqlStreamingAction[Vector[Int], Int, Effect]#ResultAction[Int, NoStream, Effect] = {
     val escapedColumns = combineByComma(createArgs.raw.keys.map(escapeKey))
     val insertValues   = combineByComma(createArgs.raw.values.map(escapeUnsafeParam))
     (sql"INSERT INTO `#${projectId}`.`#${where.model.name}` (" ++ escapedColumns ++ sql")" ++
       sql"SELECT " ++ insertValues ++
       sql"FROM DUAL" ++
-      sql"where not exists (select * from `#${projectId}`.`#${where.model.name}` where `#${where.field.name}` = ${where.fieldValue});").asUpdate
+      sql"where not exists (select `id` from `#${projectId}`.`#${where.model.name}` where `#${where.field.name}` = ${where.fieldValue} limit 1);").asUpdate
   }
 
-  def upsert(projectId: String, where: NodeSelector, createArgs: CoolArgs, updateArgs: CoolArgs) = {
+  //todo pass the mutactions for lists in here
+  def upsert(projectId: String,
+             where: NodeSelector,
+             createArgs: CoolArgs,
+             updateArgs: CoolArgs,
+             create: Seq[DBIOAction[List[Int], NoStream, Effect]],
+             update: Seq[DBIOAction[List[Int], NoStream, Effect]]) = {
     import scala.concurrent.ExecutionContext.Implicits.global
 
     val q       = DatabaseQueryBuilder.existsFromModelsByUniques(projectId, where.model, Vector(where)).as[Boolean]
-    val qInsert = createDataItemIfUniqueDoesNotExist(projectId, where, createArgs)
-    val qUpdate = updateDataItemByUnique(projectId, where, updateArgs)
+    val qInsert = DBIOAction.seq(createDataItemIfUniqueDoesNotExist(projectId, where, createArgs), DBIOAction.seq(create: _*))
+    val qUpdate = DBIOAction.seq(updateDataItemByUnique(projectId, where, updateArgs), DBIOAction.seq(update: _*))
 
     for {
       exists <- q
@@ -111,14 +124,17 @@ object DatabaseMutationBuilder {
       project: Project,
       parentInfo: ParentInfo,
       where: NodeSelector,
+      createWhere: NodeSelector,
       createArgs: CoolArgs,
-      updateArgs: CoolArgs
+      updateArgs: CoolArgs,
+      create: Seq[DBIOAction[List[Int], NoStream, Effect]],
+      update: Seq[DBIOAction[List[Int], NoStream, Effect]]
   ) = {
     import scala.concurrent.ExecutionContext.Implicits.global
 
     val q       = DatabaseQueryBuilder.existsNodeIsInRelationshipWith(project, parentInfo, where).as[Boolean]
-    val qInsert = createDataItem(project.id, where.model.name, createArgs)
-    val qUpdate = updateDataItemByUnique(project.id, where, updateArgs)
+    val qInsert = DBIOAction.seq(createDataItem(project.id, where.model.name, createArgs), DBIOAction.seq(create: _*))
+    val qUpdate = DBIOAction.seq(updateDataItemByUnique(project.id, where, updateArgs), DBIOAction.seq(update: _*))
 
     for {
       exists <- q
@@ -138,6 +154,15 @@ object DatabaseMutationBuilder {
 
   def selectIdByWhere(projectId: String, where: NodeSelector) =
     sqlu"(select id from `#$projectId`.`#${where.model.name}` where `#${where.field.name}` = ${where.fieldValue})"
+
+  def createRelationRowByUniqueValueForChild(projectId: String, parentInfo: ParentInfo, where: NodeSelector): SqlAction[Int, NoStream, Effect] = {
+    val parentSide = parentInfo.field.relationSide.get
+    val childSide  = parentInfo.field.oppositeRelationSide.get
+    val relationId = Cuid.createCuid()
+    sqlu"""insert into `#$projectId`.`#${parentInfo.relation.id}` (`id`, `#$parentSide`, `#$childSide`)
+           Select '#$relationId', (select id from `#$projectId`.`#${parentInfo.model.name}` where `#${parentInfo.where.field.name}` = ${parentInfo.where.fieldValue}), `id`
+           FROM `#$projectId`.`#${where.model.name}` where `#${where.field.name}` = ${where.fieldValue} on duplicate key update `#$projectId`.`#${parentInfo.relation.id}`.id=`#$projectId`.`#${parentInfo.relation.id}`.id"""
+  }
 
   def createRelationRowByUniqueValueForA(projectId: String, parentInfo: ParentInfo, where: NodeSelector): SqlAction[Int, NoStream, Effect] = {
     val relationId = Cuid.createCuid()
@@ -172,9 +197,6 @@ object DatabaseMutationBuilder {
 
     (sql"update `#$projectId`.`#$relationTable` set" ++ escapedValues ++ sql"where `#$relationSide` = $nodeId").asUpdate
   }
-
-  def deleteDataItemById(projectId: String, modelName: String, id: String) =
-    sqlu"delete from `#$projectId`.`#$modelName` where `id` = $id"
 
   def deleteDataItemByUnique(projectId: String, where: NodeSelector) =
     sqlu"delete from `#$projectId`.`#${where.model.name}` where `#${where.field.name}` = ${where.fieldValue}"
@@ -225,32 +247,8 @@ object DatabaseMutationBuilder {
     (sql"delete from `#$projectId`.`#$modelName`" ++ whereClauseWithWhere).asUpdate
   }
 
-  def setScalarList(projectId: String, where: NodeSelector, fieldName: String, values: Vector[Any]) = {
-// we can detect when it is an id and then forego the lookup in the related table
-//    where.isId match {
-//      case false =>
-//    val escapedValueTuples = for {
-//      (escapedValue, position) <- values.map(escapeUnsafeParam).zip((1 to values.length).map(_ * 1000))
-//    } yield {
-//      sql"(@nodeId, $position, " ++ escapedValue ++ sql")"
-//    }
-//    DBIO.sequence(
-//      List(
-//        sqlu"""set @nodeId := (select id from `#$projectId`.`#${where.model.name}` where `#${where.field.name}` = ${where.fieldValue})""",
-//        (sql"replace into `#$projectId`.`#${where.model.name}_#${fieldName}` (`nodeId`, `position`, `value`) values " ++ combineByComma(escapedValueTuples)).asUpdate
-//      ))
-//      case true =>
-//        val escapedValueTuples = for {
-//          (escapedValue, position) <- values.map(escapeUnsafeParam).zip((1 to values.length).map(_ * 1000))
-//        } yield {
-//          sql"(${where.fieldValueAsString}, $position, " ++ escapedValue ++ sql")"
-//        }
-//        DBIO.sequence(
-//          List(
-//            (sql"replace into `#$projectId`.`#${where.model.name}_#${fieldName}` (`nodeId`, `position`, `value`) values " ++ combineByComma(
-//              escapedValueTuples)).asUpdate))
-//    }
-
+  def setScalarList(projectId: String, where: NodeSelector, fieldName: String, values: Vector[Any]): DBIOAction[List[Int], NoStream, Effect] = {
+    // todo we could save a query on ID NodeSelectors
     val escapedValueTuples = for {
       (escapedValue, position) <- values.map(escapeUnsafeParam).zip((1 to values.length).map(_ * 1000))
     } yield {

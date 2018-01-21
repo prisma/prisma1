@@ -5,7 +5,7 @@ import java.sql.SQLIntegrityConstraintViolationException
 import com.prisma.api.database.mutactions._
 import com.prisma.api.database.mutactions.validation.InputValueValidation
 import com.prisma.api.database.{DataResolver, DatabaseMutationBuilder, ProjectRelayId, ProjectRelayIdTable}
-import com.prisma.api.mutations.CoolArgs
+import com.prisma.api.mutations.{CoolArgs, NodeSelector}
 import com.prisma.api.mutations.MutationTypes.{ArgumentValue, ArgumentValueList}
 import com.prisma.api.schema.APIErrors
 import com.prisma.shared.models.IdType.Id
@@ -23,7 +23,8 @@ case class CreateDataItem(
     project: Project,
     model: Model,
     values: List[ArgumentValue],
-    originalArgs: Option[CoolArgs] = None
+    originalArgs: Option[CoolArgs] = None,
+    conditionalWheres: Vector[NodeSelector] = Vector.empty
 ) extends ClientSqlDataChangeMutaction {
 
   // FIXME: it should be guaranteed to always have an id (generate it in here)
