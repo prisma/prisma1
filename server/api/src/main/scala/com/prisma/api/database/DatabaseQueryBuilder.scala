@@ -180,6 +180,10 @@ object DatabaseQueryBuilder {
           )"""
   }
 
+  def existsByWhere(projectId: String, where: NodeSelector) = {
+    sql"select exists (select `id` from `#$projectId`.`#${where.model.name}` where  #${where.field.name} = ${where.fieldValue})"
+  }
+
   def existsByModelAndId(projectId: String, modelName: String, id: String) = {
     sql"select exists (select `id` from `#$projectId`.`#$modelName` where `id` = '#$id')"
   }
@@ -196,8 +200,8 @@ object DatabaseQueryBuilder {
     sql"select * from `#${project.id}`.`#${model.name}`" ++ whereClauseByCombiningPredicatesByOr(predicates)
   }
 
-  def existsFromModelsByUniques(project: Project, model: Model, predicates: Vector[NodeSelector]) = {
-    sql"select exists (select * from `#${project.id}`.`#${model.name}`" ++ whereClauseByCombiningPredicatesByOr(predicates) concat sql")"
+  def existsFromModelsByUniques(projectId: String, model: Model, predicates: Vector[NodeSelector]) = {
+    sql"select exists (select * from `#${projectId}`.`#${model.name}`" ++ whereClauseByCombiningPredicatesByOr(predicates) concat sql")"
   }
 
   def selectFromScalarList(projectId: String, modelName: String, fieldName: String, nodeIds: Vector[String]): SQLActionBuilder = {

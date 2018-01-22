@@ -1,13 +1,9 @@
 package com.prisma.api.database.mutactions.mutactions
 
-import java.sql.SQLIntegrityConstraintViolationException
-
 import com.prisma.api.database.DatabaseMutationBuilder
-import com.prisma.api.database.mutactions.{ClientSqlDataChangeMutaction, ClientSqlStatementResult, GetFieldFromSQLUniqueException}
+import com.prisma.api.database.mutactions.{ClientSqlDataChangeMutaction, ClientSqlStatementResult}
 import com.prisma.api.mutations.NodeSelector
-import com.prisma.api.schema.APIErrors
 import com.prisma.shared.models._
-import com.prisma.util.json.JsonFormats
 import slick.jdbc.MySQLProfile.api._
 
 import scala.concurrent.Future

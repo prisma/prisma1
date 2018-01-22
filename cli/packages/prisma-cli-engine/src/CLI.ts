@@ -15,6 +15,7 @@ import * as Raven from 'raven'
 import * as os from 'os'
 import * as jwt from 'jsonwebtoken'
 import { getIsGlobal } from './utils/isGlobal'
+import { CommandReplacedError } from './errors/CommandReplacedError'
 
 Raven.config(
   'https://1e57780fb0bb4b52938cbb3456268121:fc6a6c6fd8cd4bbf81e2cd5c7c814a49@sentry.io/271168',
@@ -157,25 +158,13 @@ export class CLI {
           const checker = getStatusChecker()!
           checker.checkStatus(id, {}, {}, [])
         } else if (id === 'push') {
-          throw new Error(
-            `The ${chalk.bold(
-              'push',
-            )} command has been replaced by the ${chalk.bold(
-              'deploy',
-            )} command. Get more info with ${chalk.bold.green(
-              'prisma deploy --help',
-            )}`,
-          )
+          throw new CommandReplacedError('push', 'deploy')
+        } else if (id === 'seed') {
+          throw new CommandReplacedError('seed', 'import')
+        } else if (id === 'cluster:info') {
+          throw new CommandReplacedError('cluster info', 'cluster list')
         } else if (id === 'local:down') {
-          throw new Error(
-            `The ${chalk.bold(
-              'local down',
-            )} command has been replaced by the ${chalk.bold(
-              'local nuke',
-            )} command. Get more info with ${chalk.bold.green(
-              'prisma local nuke --help',
-            )}`,
-          )
+          throw new CommandReplacedError('local down', 'local nuke')
         } else {
           return new NotFound(out, this.config.argv).run()
         }

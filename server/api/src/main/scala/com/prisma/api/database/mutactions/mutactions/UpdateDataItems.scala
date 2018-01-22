@@ -16,6 +16,6 @@ case class UpdateDataItems(
 ) extends ClientSqlDataChangeMutaction {
 
   override def execute: Future[ClientSqlStatementResult[Any]] = Future.successful(
-    ClientSqlStatementResult(sqlAction = DatabaseMutationBuilder.updateDataItems(project, model, updateArgs, where))
+    ClientSqlStatementResult(sqlAction = DatabaseMutationBuilder.updateDataItems(project.id, model, updateArgs, where))
   )
 }

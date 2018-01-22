@@ -34,8 +34,8 @@ object SubscriptionEvents {
 
     PublishSubscriptionEvent(
       project = project,
-      value = Map("nodeId" -> mutaction.id, "node" -> nodeData, "modelId" -> mutaction.model.id, "mutationType" -> "DeleteNode"),
-      mutationName = s"delete${mutaction.model.name}"
+      value = Map("nodeId" -> mutaction.id, "node" -> nodeData, "modelId" -> mutaction.where.model.id, "mutationType" -> "DeleteNode"),
+      mutationName = s"delete${mutaction.where.model.name}"
     )
   }
 

@@ -107,14 +107,6 @@ case class Schema(
   def getRelationByName_!(name: String): Relation =
     getRelationByName(name).get //OrElse(throw SystemErrors.InvalidRelation("There is no relation with name: " + name))
 
-  def getRelationFieldMirrorById(id: Id): Option[RelationFieldMirror] = relations.flatMap(_.fieldMirrors).find(_.id == id)
-
-  def getFieldByRelationFieldMirrorId(id: Id): Option[Field] = getRelationFieldMirrorById(id).flatMap(mirror => getFieldById(mirror.fieldId))
-  def getFieldByRelationFieldMirrorId_!(id: Id): Field       = getFieldByRelationFieldMirrorId(id).get //OrElse(throw SystemErrors.InvalidRelationFieldMirrorId(id))
-
-  def getRelationByFieldMirrorId(id: Id): Option[Relation] = relations.find(_.fieldMirrors.exists(_.id == id))
-  def getRelationByFieldMirrorId_!(id: Id): Relation       = getRelationByFieldMirrorId(id).get //OrElse(throw SystemErrors.InvalidRelationFieldMirrorId(id))
-
   def getFieldsByRelationId(id: Id): List[Field] = models.flatMap(_.fields).filter(f => f.relation.isDefined && f.relation.get.id == id)
 
   def getUnambiguousRelationThatConnectsModels_!(modelA: String, modelB: String): Option[Relation] = {
@@ -122,8 +114,6 @@ case class Schema(
     require(candidates.size < 2, "This method must only be called for unambiguous relations!")
     candidates.headOption
   }
-
-  def getRelationFieldMirrorsByFieldId(id: Id): List[RelationFieldMirror] = relations.flatMap(_.fieldMirrors).filter(f => f.fieldId == id)
 
   def getRelatedModelForField(field: Field): Option[Model] = {
     val relation = field.relation.getOrElse {
@@ -408,8 +398,7 @@ case class Relation(
     // val userField = Field(..., relation = Some(relation), relationSide = Some(RelationSide.B)
     // val todoField = Field(..., relation = Some(relation), relationSide = Some(RelationSide.A)
     modelAId: Id,
-    modelBId: Id,
-    fieldMirrors: List[RelationFieldMirror] = List.empty
+    modelBId: Id
 ) {
   val id = "_" + name
 
@@ -465,10 +454,6 @@ case class Relation(
     }
   }
 
-  def getRelationFieldMirrorById(id: String): Option[RelationFieldMirror] = fieldMirrors.find(_.id == id)
-  def getRelationFieldMirrorById_!(id: String): RelationFieldMirror =
-    ??? //getRelationFieldMirrorById(id).getOrElse(throw SystemErrors.InvalidRelationFieldMirrorId(id))
-
   def sideOf(model: Model): RelationSide.Value = {
     if (model.id == modelAId) {
       RelationSide.A
@@ -486,12 +471,6 @@ case class Relation(
     }
   }
 }
-
-case class RelationFieldMirror(
-    id: String,
-    relationId: String,
-    fieldId: String
-)
 
 object ModelMutationType extends Enumeration {
   type ModelMutationType = Value

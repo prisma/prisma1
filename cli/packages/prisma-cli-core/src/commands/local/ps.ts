@@ -17,8 +17,8 @@ export default class PsLocal extends Command {
   async run() {
     const docker = new Docker(this.out, this.config, this.env, this.flags.name)
     this.out.action.start('Executing docker-compose ps')
-    await this.init()
-    // await docker.ps()
+    await docker.init()
+    await docker.ps()
     this.out.action.stop()
     if (docker.stdout) {
       this.out.log(docker.stdout)

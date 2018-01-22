@@ -26,7 +26,7 @@ case class UpsertDataItem(
   val model = where.model
 
   override def execute: Future[ClientSqlStatementResult[Any]] = Future.successful {
-    ClientSqlStatementResult(DatabaseMutationBuilder.upsert(project, where, createArgs, updateArgs))
+    ClientSqlStatementResult(DatabaseMutationBuilder.upsert(project.id, where, createArgs, updateArgs))
   }
 
   override def handleErrors = {
