@@ -16,7 +16,7 @@ const debug = require('debug')('Docker')
 import * as portfinder from 'portfinder'
 import { prettyTime } from '../../util'
 import { createRsaKeyPair } from '../../utils/crypto'
-import { defaultPort } from './constants'
+import { defaultPort, defaultDBPort } from './constants'
 
 export default class Docker {
   out: Output
@@ -33,6 +33,7 @@ export default class Docker {
   envVars: { [varName: string]: string }
   clusterName: string
   privateKey?: string
+  stdout?: string
   constructor(
     out: Output,
     config: Config,
@@ -86,7 +87,7 @@ export default class Docker {
       }
       endpoint = `http://${this.hostName}:${port}`
     }
-    await this.setEnvVars(port, endpoint)
+    await this.setEnvVars(port, endpoint, String(defaultDBPort))
   }
   async setKeyPair() {
     const pair = await createRsaKeyPair()
@@ -162,7 +163,6 @@ export default class Docker {
   }
 
   async ps(): Promise<Docker> {
-    await this.init()
     return this.run('ps')
   }
 
@@ -186,6 +186,14 @@ export default class Docker {
     return this.run('pull')
   }
 
+  async kill(): Promise<Docker> {
+    return this.run('kill')
+  }
+
+  async down(): Promise<Docker> {
+    return this.run('down', '--remove-orphans', '-v', '--rmi', 'local')
+  }
+
   async logs(): Promise<Docker> {
     await this.init()
     return this.run('logs', '-f')
@@ -198,10 +206,11 @@ export default class Docker {
       const endpoint = this.cluster.getDeployEndpoint()
       const sliced = endpoint.slice(endpoint.lastIndexOf(':') + 1)
       port = sliced.slice(0, sliced.indexOf('/'))
-      this.setEnvVars(port, endpoint)
+      await this.setEnvVars(port, endpoint, String(defaultDBPort))
       const before = Date.now()
       this.out.action.start('Nuking local cluster')
-      await this.run('down', '--remove-orphans', '-v', '--rmi', 'local')
+      await this.kill()
+      await this.down()
       this.out.action.stop(prettyTime(Date.now() - before))
     }
 
@@ -215,6 +224,7 @@ export default class Docker {
     await this.setEnvVars(
       String(defaultPort),
       `http://${this.hostName}:${defaultPort}`,
+      String(defaultDBPort),
     )
     await this.run('up', '-d', '--remove-orphans')
     this.out.action.stop(prettyTime(Date.now() - before))
@@ -278,12 +288,13 @@ export default class Docker {
     })
   }
 
-  async setEnvVars(port: string, endpoint: string) {
+  async setEnvVars(port: string, endpoint: string, dbPort: string) {
     const defaultVars = this.getDockerEnvVars()
     const customVars = {
       PORT: port,
       SCHEMA_MANAGER_ENDPOINT: `http://prisma-database:${port}/cluster/schema`,
       CLUSTER_ADDRESS: `http://${this.hostName}:${port}`,
+      DB_PORT: dbPort,
     }
     this.envVars = { ...process.env, ...defaultVars, ...customVars }
     await this.setKeyPair()
@@ -306,7 +317,11 @@ export default class Docker {
       let error
       try {
         if (nameStart.startsWith('localdatabase')) {
-          this.setEnvVars(port, `http://${this.hostName}:${port}`)
+          this.setEnvVars(
+            port,
+            `http://${this.hostName}:${port}`,
+            String(defaultDBPort),
+          )
           await this.nukeContainers(nameStart, true)
         } else if (nameStart.startsWith('local')) {
           console.log('nuking framework')
@@ -346,22 +361,8 @@ export default class Docker {
   }
 
   async nukeContainers(name: string, isDB: boolean = false) {
-    const argv = ['down', '--remove-orphans', '-v', '--rmi', 'local']
-    const bin = await this.getBin()
-    const defaultArgs = [
-      '-p',
-      JSON.stringify(name),
-      '--file',
-      isDB ? this.ymlPath : this.frameworkYmlPath,
-      '--project-directory',
-      this.config.cwd,
-    ]
-    const args = defaultArgs.concat(argv)
-    // this.out.log(chalk.dim(`$ docker-compose ${argv.join(' ')}\n`))
-    const result = await spawn(bin, args, {
-      env: this.envVars,
-      cwd: this.config.cwd,
-    })
+    await this.kill()
+    await this.down()
   }
 
   private parsePs(output): ContainerInfo[] {
@@ -418,11 +419,13 @@ export default class Docker {
     ]
     const args = defaultArgs.concat(argv)
     // this.out.log(chalk.dim(`$ docker-compose ${argv.join(' ')}\n`))
+    debug({ bin, args })
     const output = await spawn(bin, args, {
       env: this.envVars,
       cwd: this.config.cwd,
     })
     debug(output)
+    this.stdout = output
     return this
   }
 
@@ -434,7 +437,14 @@ export default class Docker {
       )
     }
 
-    const output = childProcess.execSync('docker-compose -v').toString()
+    let output
+    try {
+      output = childProcess.execSync('docker-compose -v').toString()
+    } catch (e) {
+      throw new Error(
+        `Please install docker-compose 1.13.0 or greater in order to run "prisma local".\nLearn more here: https://docs.docker.com/compose/install/`,
+      )
+    }
     const regex = /.*?(\d{1,2}\.\d{1,2}\.\d{1,2}),?/
     const match = output.match(regex)
     if (match && match[1]) {

@@ -17,7 +17,7 @@
   "bugs": {
     "url": "https://github.com/graphcool/prisma/issues"
   },
-  "version": "1.0.4-beta.1",
+  "version": "1.0.4-beta.2",
   "main": "dist/index.js",
   "bin": {
     "prisma": "dist/index.js"
@@ -65,8 +65,8 @@
   },
   "dependencies": {
     "fs-extra": "^4.0.1",
-    "prisma-cli-core": "1.0.0",
-    "prisma-cli-engine": "1.0.0",
+    "prisma-cli-core": "1.0.1",
+    "prisma-cli-engine": "1.0.1",
     "semver": "^5.4.1",
     "source-map-support": "^0.4.18"
   },

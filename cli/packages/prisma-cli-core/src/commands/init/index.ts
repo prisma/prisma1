@@ -56,12 +56,12 @@ export default class Init extends Command {
       message: `How to set up a new Prisma service?`,
       choices: [
         {
-          name: 'GraphQL server/fullstack boilerplate (recommended)',
-          value: 'create',
-        },
-        {
           name: 'Minimal setup: database-only',
           value: 'minimal',
+        },
+        {
+          name: 'GraphQL server/fullstack boilerplate (recommended)',
+          value: 'create',
         },
       ],
       pageSize: 2,

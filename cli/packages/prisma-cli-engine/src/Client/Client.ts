@@ -153,11 +153,23 @@ export class Client {
           debug(result)
           return result
         } catch (e) {
-          // if (e.message.startsWith('No valid session')) {
-          // await this.auth.ensureAuth(true)
-          // try again with new token
-          // return await this.client.request(query, variables)
-          /*} else */ if (
+          if (
+            e.response &&
+            e.response.errors &&
+            e.response.errors[0] &&
+            e.response.errors[0].code === 3015 &&
+            e.response.errors[0].message.includes('decoded') &&
+            this.env.activeCluster.local
+          ) {
+            throw new Error(`Cluster secret of cluster \`${
+              this.env.activeCluster.name
+            }\` saved in ~/.prisma/config.yml
+does not match with the actual cluster secret of that cluster. This means the key pair got out of sync.
+To reset the key pair, please run ${chalk.bold.green('prisma local start')}
+`)
+          }
+
+          if (
             e.message.includes('ECONNREFUSED') &&
             (e.message.includes('localhost') || e.message.includes('127.0.0.1'))
           ) {
@@ -166,7 +178,7 @@ export class Client {
                   'prisma local start',
                 )} to start your local Prisma cluster.`
               : ''
-            this.out.error(
+            throw new Error(
               `Could not connect to cluster ${chalk.bold(
                 this.env.activeCluster.name,
               )}. ${localNotice}`,
@@ -287,21 +299,20 @@ export class Client {
     token?: string,
     workspaceSlug?: string,
   ): Promise<any> {
-    const result = await fetch(
-      this.env.activeCluster.getImportEndpoint(
-        serviceName,
-        stage,
-        workspaceSlug,
-      ),
-      {
-        method: 'post',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: exportData,
-      },
+    const endpoint = this.env.activeCluster.getImportEndpoint(
+      serviceName,
+      stage,
+      workspaceSlug,
     )
+    debug(`Uploading to endpoint ${endpoint}`)
+    const result = await fetch(endpoint, {
+      method: 'post',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: exportData,
+    })
 
     const text = await result.text()
     try {
@@ -378,12 +389,7 @@ export class Client {
   }
 
   async ensureAuth(): Promise<void> {
-    let authenticated
-    try {
-      authenticated = Boolean(await this.getAccount())
-    } catch (e) {
-      //
-    }
+    const authenticated = await this.isAuthenticated()
 
     if (!authenticated) {
       await this.login()
@@ -391,26 +397,33 @@ export class Client {
   }
 
   async login(key?: string): Promise<void> {
-    const secret = await this.requestCloudToken()
-
-    const url = `${this.config.consoleEndpoint}/cli-auth?secret=${secret}`
-
-    this.out.log(`Opening ${url} in the browser\n`)
-
-    opn(url)
-
+    let token = key
     this.out.action.start(`Authenticating`)
+    if (!token) {
+      const secret = await this.requestCloudToken()
 
-    let token
-    while (!token) {
-      const cloud = await this.cloudTokenRequest(secret)
-      if (cloud.token) {
-        token = cloud.token
+      const url = `${this.config.consoleEndpoint}/cli-auth?secret=${secret}`
+
+      this.out.log(`Opening ${url} in the browser\n`)
+
+      opn(url)
+
+      while (!token) {
+        const cloud = await this.cloudTokenRequest(secret)
+        if (cloud.token) {
+          token = cloud.token
+        }
+        await new Promise(r => setTimeout(r, 500))
       }
-      await new Promise(r => setTimeout(r, 500))
+      this.env.globalRC.cloudSessionKey = token
+    } else {
+      this.env.globalRC.cloudSessionKey = token
+      const authenticated = await this.isAuthenticated()
+      if (!authenticated) {
+        throw new Error('The provided key is invalid')
+      }
     }
 
-    this.env.globalRC.cloudSessionKey = token
     this.env.saveGlobalRC()
     debug(`Saved token ${token}`)
 
