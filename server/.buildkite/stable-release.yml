@@ -16,12 +16,6 @@ steps:
 
   - wait
 
-  - label: ":docker: Build"
-    command: ./server/scripts/docker-build.sh
-    branches: master
+  - label: ":docker: Build and deploy US1 & EU1"
+    command: ./server/scripts/docker-build-and-deploy.sh public-us-west-2,public-eu-west-1
 
-  - wait
-
-  - label: ":llama: Deploy"
-    command: ./server/scripts/beta_deploy.sh
-    branches: master
