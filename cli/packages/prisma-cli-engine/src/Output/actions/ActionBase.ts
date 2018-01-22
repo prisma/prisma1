@@ -29,14 +29,14 @@ export class ActionBase {
   }
 
   start(action: string, status?: string) {
-    const task = (this.task = {
+    this.task = {
       action,
       status,
-      active: this.task && this.task.active,
-    })
+      active: true,
+    }
     this._start()
-    task.active = true
-    this.log(task)
+    this.task.active = true
+    this.log(this.task)
   }
 
   stop(msg: string = chalk.green(figures.tick) as any) {
@@ -73,11 +73,12 @@ export class ActionBase {
     if (task && active) {
       this._pause(icon)
       task.active = false
+    } else {
+      if (task && !task.active) {
+        this.resume()
+      }
     }
     const ret = fn ? fn() : null
-    if (task && active) {
-      this.resume()
-    }
     return ret
   }
 

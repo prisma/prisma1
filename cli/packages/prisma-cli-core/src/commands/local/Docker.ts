@@ -158,7 +158,7 @@ export default class Docker {
         question,
       )
       if (confirmation === 'stop') {
-        await this.stopContainersBlockingPort(port)
+        await this.stopContainersBlockingPort(port, true, true)
         this.out.action.resume()
         return
       }
@@ -383,7 +383,11 @@ Please close the process by hand. ${instruction}`)
     debug(this.envVars)
   }
 
-  async stopContainersBlockingPort(port: string, nuke: boolean = false) {
+  async stopContainersBlockingPort(
+    port: string,
+    nuke: boolean = false,
+    kill: boolean = false,
+  ) {
     const output = childProcess.execSync('docker ps').toString()
     const containers = this.parsePs(output)
     const regex = /\d+\.\d+\.\d+\.\d+:(\d+)->/
@@ -395,49 +399,50 @@ Please close the process by hand. ${instruction}`)
     if (blockingContainer) {
       const nameStart = blockingContainer.NAMES.split('_')[0]
 
-      this.out.action.start(`Stopping docker containers`)
       let error
-      try {
-        if (nameStart.startsWith('localdatabase')) {
-          this.setEnvVars(
-            port,
-            `http://${this.hostName}:${port}`,
-            String(defaultDBPort),
-          )
-          await this.nukeContainers(nameStart, true)
-        } else if (nameStart.startsWith('local')) {
-          console.log('nuking framework')
-          const defaultVars = this.getDockerEnvVars(false)
-          const FUNCTIONS_PORT = '60050'
-          const customVars = {
-            PORT: String(port),
-            FUNCTIONS_PORT,
-            FUNCTION_ENDPOINT_INTERNAL: `http://localfaas:${FUNCTIONS_PORT}`,
-            FUNCTION_ENDPOINT_EXTERNAL: `http://${
-              this.hostName
-            }:${FUNCTIONS_PORT}`,
-            CLUSTER_ADDRESS: `http://${this.hostName}:${port}`,
+      if (!kill) {
+        try {
+          if (nameStart.startsWith('localdatabase')) {
+            this.setEnvVars(
+              port,
+              `http://${this.hostName}:${port}`,
+              String(defaultDBPort),
+            )
+            await this.nukeContainers(nameStart, true)
+          } else if (nameStart.startsWith('local')) {
+            console.log('nuking framework')
+            const defaultVars = this.getDockerEnvVars(false)
+            const FUNCTIONS_PORT = '60050'
+            const customVars = {
+              PORT: String(port),
+              FUNCTIONS_PORT,
+              FUNCTION_ENDPOINT_INTERNAL: `http://localfaas:${FUNCTIONS_PORT}`,
+              FUNCTION_ENDPOINT_EXTERNAL: `http://${
+                this.hostName
+              }:${FUNCTIONS_PORT}`,
+              CLUSTER_ADDRESS: `http://${this.hostName}:${port}`,
+            }
+            this.envVars = { ...process.env, ...defaultVars, ...customVars }
+            await this.nukeContainers(nameStart, false)
           }
-          this.envVars = { ...process.env, ...defaultVars, ...customVars }
-          await this.nukeContainers(nameStart, false)
+        } catch (e) {
+          error = e
         }
-      } catch (e) {
-        error = e
       }
 
-      console.error(error)
-      if (error) {
+      if (error || kill) {
         const relatedContainers = containers.filter(
           c => c.NAMES.split('_')[0] === nameStart,
         )
         const containerNames = relatedContainers.map(c => c.NAMES)
         await spawn('docker', [nuke ? 'kill' : 'stop'].concat(containerNames))
       }
-      this.out.action.stop()
       this.out.log('')
     } else {
       throw new Error(
-        `Could not find container blocking port ${port}. Please either stop it by hand or choose another port.`,
+        `Could not find container blocking port ${port}. Please stop it by hand using ${chalk.bold.green(
+          'docker kill',
+        )}`,
       )
     }
   }
