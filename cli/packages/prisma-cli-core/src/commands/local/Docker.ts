@@ -410,7 +410,6 @@ Please close the process by hand. ${instruction}`)
             )
             await this.nukeContainers(nameStart, true)
           } else if (nameStart.startsWith('local')) {
-            console.log('nuking framework')
             const defaultVars = this.getDockerEnvVars(false)
             const FUNCTIONS_PORT = '60050'
             const customVars = {
