@@ -14,6 +14,6 @@ case class DeleteDataItemByUniqueFieldIfInRelationWith(
 ) extends ClientSqlDataChangeMutaction {
 
   override def execute: Future[ClientSqlStatementResult[Any]] = Future.successful(
-    ClientSqlStatementResult(DatabaseMutationBuilder.deleteDataItemByUniqueValueIfInRelationWithOtherUniqueValue(project.id, parentInfo, where))
+    ClientSqlStatementResult(DatabaseMutationBuilder.deleteDataItemByUnique(project.id, where))
   )
 }

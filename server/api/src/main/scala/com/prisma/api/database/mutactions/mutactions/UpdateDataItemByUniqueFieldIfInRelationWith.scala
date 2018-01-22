@@ -14,7 +14,7 @@ case class UpdateDataItemByUniqueFieldIfInRelationWith(project: Project, parentI
   val scalarArgs = args.nonListScalarArgumentsAsCoolArgs(where.model)
 
   override def execute: Future[ClientSqlStatementResult[Any]] = Future.successful {
-    val action = DatabaseMutationBuilder.updateDataItemByUniqueValueIfInRelationWithOtherUniqueValue(project.id, parentInfo, where, scalarArgs.raw)
+    val action = DatabaseMutationBuilder.updateDataItemByUnique(project.id, where, scalarArgs)
 
     if (scalarArgs.isNonEmpty) {
       ClientSqlStatementResult(sqlAction = action)

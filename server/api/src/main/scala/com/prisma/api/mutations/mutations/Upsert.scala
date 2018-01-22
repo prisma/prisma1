@@ -22,13 +22,14 @@ case class Upsert(
 
   import apiDependencies.system.dispatcher
 
-  val where = CoolArgs(args.raw).extractNodeSelectorFromWhereField(model)
+  val outerwhere = CoolArgs(args.raw).extractNodeSelectorFromWhereField(model)
 
   val idOfNewItem = Cuid.createCuid()
   val createArgs  = CoolArgs(args.raw).createArgumentsAsCoolArgs.generateCreateArgs(model, idOfNewItem)
   val updateArgs  = CoolArgs(args.raw).updateArgumentsAsCoolArgs.generateUpdateArgs(model)
+  val createWhere = NodeSelector.forId(model, idOfNewItem)
 
-  val upsert = UpsertDataItem(project, where, createArgs, updateArgs)
+  val upsert = UpsertDataItem(project, outerwhere, createArgs, updateArgs)
 
   override def prepareMutactions(): Future[List[MutactionGroup]] = {
     val transaction = TransactionMutaction(List(upsert), dataResolver)
@@ -37,7 +38,7 @@ case class Upsert(
 
 //  override def prepareMutactions(): Future[List[MutactionGroup]] = {
 //
-//    val sqlMutactions        = SqlMutactions(dataResolver).getMutactionsForUpsert(CoolArgs(args.raw), createArgs, updateArgs, idOfNewItem, where)
+//    val sqlMutactions        = SqlMutactions(dataResolver).getMutactionsForUpsert(outerwhere, createWhere, CoolArgs(args.raw), createArgs, updateArgs)
 //    val transactionMutaction = TransactionMutaction(sqlMutactions, dataResolver)
 ////    val subscriptionMutactions = SubscriptionEvents.extractFromSqlMutactions(project, mutationId, sqlMutactions).toList
 ////    val sssActions             = ServerSideSubscription.extractFromMutactions(project, sqlMutactions, requestId = "").toList
@@ -52,9 +53,9 @@ case class Upsert(
 //  }
 
   override def getReturnValue: Future[ReturnValueResult] = {
-    val newWhere = updateArgs.raw.get(where.field.name) match {
+    val newWhere = updateArgs.raw.get(outerwhere.field.name) match {
       case Some(_) => updateArgs.extractNodeSelector(model)
-      case None    => where
+      case None    => outerwhere
     }
 
     val uniques = Vector(NodeSelector.forId(model, idOfNewItem), newWhere)

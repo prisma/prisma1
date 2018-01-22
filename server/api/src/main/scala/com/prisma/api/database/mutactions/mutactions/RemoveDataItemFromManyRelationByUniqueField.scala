@@ -10,5 +10,5 @@ import scala.concurrent.Future
 case class RemoveDataItemFromManyRelationByUniqueField(project: Project, parentInfo: ParentInfo, where: NodeSelector) extends ClientSqlDataChangeMutaction {
 
   override def execute: Future[ClientSqlStatementResult[Any]] =
-    Future.successful(ClientSqlStatementResult(DatabaseMutationBuilder.deleteRelationRowByUniqueValueForA(project.id, parentInfo, where)))
+    Future.successful(ClientSqlStatementResult(DatabaseMutationBuilder.deleteRelationRowByUniqueValue(project.id, parentInfo, where)))
 }

@@ -37,8 +37,8 @@ case class CreateDataItem(
     }
   }
 
-  def generateArgumentMapWithDefaultValues(model: Model, values: List[ArgumentValue]): Map[String, Any] = {
-    model.scalarNonListFields.flatMap { field =>
+  def generateCoolArgsWithDefaultValues(model: Model, values: List[ArgumentValue]): CoolArgs = {
+    val valuesWithDefault = model.scalarNonListFields.flatMap { field =>
       values.find(_.name == field.name) match {
         case Some(v) if v.value == None && field.defaultValue.isEmpty && field.isRequired => throw APIErrors.InputInvalid("null", field.name, model.name)
         case Some(v)                                                                      => Some((field.name, v.value))
@@ -46,6 +46,7 @@ case class CreateDataItem(
         case None                                                                         => None
       }
     }.toMap
+    CoolArgs(valuesWithDefault)
   }
 
   override def execute: Future[ClientSqlStatementResult[Any]] = {
@@ -54,7 +55,7 @@ case class CreateDataItem(
     Future.successful(
       ClientSqlStatementResult(
         sqlAction = DBIO.seq(
-          DatabaseMutationBuilder.createDataItem(project.id, model.name, generateArgumentMapWithDefaultValues(model, values)),
+          DatabaseMutationBuilder.createDataItem(project.id, model.name, generateCoolArgsWithDefaultValues(model, values)),
           relayIds += ProjectRelayId(id = id, model.stableIdentifier)
         )))
   }

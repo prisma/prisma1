@@ -1,6 +1,7 @@
 package com.prisma.api.mutations
 
 import com.prisma.api.ApiBaseSpec
+import com.prisma.api.database.DatabaseQueryBuilder
 import com.prisma.shared.project_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
@@ -58,6 +59,8 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     val query = server.executeQuerySimple("""{ comments { id }}""", project)
     mustBeEqual(query.toString, """{"data":{"comments":[]}}""")
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_RelayId").as[Int]) should be(Vector(1))
+
   }
 
   "a one to many relation" should "be deletable by any unique argument through a nested mutation" in {
@@ -109,6 +112,8 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     val query = server.executeQuerySimple("""{ comments { id }}""", project)
     mustBeEqual(query.toString, """{"data":{"comments":[]}}""")
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_RelayId").as[Int]) should be(Vector(1))
+
   }
 
   "a many to one relation" should "be deletable by id through a nested mutation" in {
