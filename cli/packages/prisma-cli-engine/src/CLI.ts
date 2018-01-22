@@ -159,6 +159,8 @@ export class CLI {
           checker.checkStatus(id, {}, {}, [])
         } else if (id === 'push') {
           throw new CommandReplacedError('push', 'deploy')
+        } else if (id === 'seed') {
+          throw new CommandReplacedError('seed', 'import')
         } else if (id === 'cluster:info') {
           throw new CommandReplacedError('cluster info', 'cluster list')
         } else if (id === 'local:down') {
