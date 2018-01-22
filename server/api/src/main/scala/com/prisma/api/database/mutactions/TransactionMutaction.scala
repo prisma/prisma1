@@ -8,15 +8,15 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.{Success, Try}
 
-
 case class TransactionMutaction(clientSqlMutactions: List[ClientSqlMutaction], dataResolver: DataResolver) extends Mutaction {
 
   override def execute: Future[MutactionExecutionResult] = {
-    val statements: Future[List[DBIOAction[Any, NoStream, Effect.All]]] = Future.sequence(clientSqlMutactions.map(_.execute)).map(_.collect { case ClientSqlStatementResult(sqlAction) => sqlAction})
+    val statements: Future[List[DBIOAction[Any, NoStream, Effect.All]]] =
+      Future.sequence(clientSqlMutactions.map(_.execute)).map(_.collect { case ClientSqlStatementResult(sqlAction) => sqlAction })
 
-    val executionResult= statements.flatMap{sqlActions =>
+    val executionResult = statements.flatMap { sqlActions =>
       val actions: immutable.Seq[DBIOAction[Any, NoStream, Effect.All]] = sqlActions
-      val action: DBIOAction[Unit, NoStream, Effect.All] = DBIO.seq(actions: _*)
+      val action: DBIOAction[Unit, NoStream, Effect.All]                = DBIO.seq(actions: _*)
       dataResolver.runOnClientDatabase("Transaction", action.transactionally)
     }
 
