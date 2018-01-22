@@ -2,7 +2,6 @@ package com.prisma.api.database
 
 import com.prisma.api.database.Types.DataItemFilterCollection
 import com.prisma.api.mutations.{CoolArgs, NodeSelector, ParentInfo}
-import com.prisma.shared.models.RelationSide.RelationSide
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
 import com.prisma.shared.models.{Model, Project, TypeIdentifier}
 import cool.graph.cuid.Cuid
@@ -19,11 +18,9 @@ object DatabaseMutationBuilder {
 
   val implicitlyCreatedColumns = List("id", "createdAt", "updatedAt")
 
-  def createDataItem(
-      projectId: String,
-      modelName: String,
-      args: CoolArgs,
-      conditionalWheres: Vector[NodeSelector] = Vector.empty): SqlStreamingAction[Vector[Int], Int, Effect]#ResultAction[Int, NoStream, Effect] = {
+  //CREATE
+
+  def createDataItem(projectId: String, modelName: String, args: CoolArgs): SqlStreamingAction[Vector[Int], Int, Effect]#ResultAction[Int, NoStream, Effect] = {
 
     val escapedKeyValueTuples = args.raw.toList.map(x => (escapeKey(x._1), escapeUnsafeParam(x._2)))
     val escapedKeys           = combineByComma(escapedKeyValueTuples.map(_._1))
@@ -31,9 +28,41 @@ object DatabaseMutationBuilder {
     (sql"insert into `#$projectId`.`#$modelName` (" ++ escapedKeys ++ sql") values (" ++ escapedValues ++ sql")").asUpdate
   }
 
-  def updateDataItems(projectId: String, model: Model, args: CoolArgs, where: DataItemFilterCollection) = {
+  def createDataItemIfUniqueDoesNotExist(projectId: String,
+                                         where: NodeSelector,
+                                         createArgs: CoolArgs): SqlStreamingAction[Vector[Int], Int, Effect]#ResultAction[Int, NoStream, Effect] = {
+    val escapedColumns = combineByComma(createArgs.raw.keys.map(escapeKey))
+    val insertValues   = combineByComma(createArgs.raw.values.map(escapeUnsafeParam))
+    (sql"INSERT INTO `#${projectId}`.`#${where.model.name}` (" ++ escapedColumns ++ sql")" ++
+      sql"SELECT " ++ insertValues ++
+      sql"FROM DUAL" ++
+      sql"where not exists (select `id` from `#${projectId}`.`#${where.model.name}` where `#${where.field.name}` = ${where.fieldValue} limit 1);").asUpdate
+  }
+
+  def createRelationRow(projectId: String,
+                        relationTableName: String,
+                        id: String,
+                        a: String,
+                        b: String): SqlStreamingAction[Vector[Int], Int, Effect]#ResultAction[Int, NoStream, Effect] = {
+
+    (sql"insert into `#$projectId`.`#$relationTableName` (" ++ combineByComma(List(sql"`id`, `A`, `B`")) ++ sql") values (" ++ combineByComma(
+      List(sql"$id, $a, $b")) ++ sql") on duplicate key update id=id").asUpdate
+  }
+
+  def createRelationRowByUniqueValueForChild(projectId: String, parentInfo: ParentInfo, where: NodeSelector): SqlAction[Int, NoStream, Effect] = {
+    val parentSide = parentInfo.field.relationSide.get
+    val childSide  = parentInfo.field.oppositeRelationSide.get
+    val relationId = Cuid.createCuid()
+    sqlu"""insert into `#$projectId`.`#${parentInfo.relation.id}` (`id`, `#$parentSide`, `#$childSide`)
+           Select '#$relationId', (select id from `#$projectId`.`#${parentInfo.model.name}` where `#${parentInfo.where.field.name}` = ${parentInfo.where.fieldValue}), `id`
+           FROM `#$projectId`.`#${where.model.name}` where `#${where.field.name}` = ${where.fieldValue} on duplicate key update `#$projectId`.`#${parentInfo.relation.id}`.id=`#$projectId`.`#${parentInfo.relation.id}`.id"""
+  }
+
+  //UPDATE
+
+  def updateDataItems(projectId: String, model: Model, args: CoolArgs, whereFilter: DataItemFilterCollection) = {
     val updateValues = combineByComma(args.raw.map { case (k, v) => escapeKey(k) ++ sql" = " ++ escapeUnsafeParam(v) })
-    val whereSql     = QueryArguments.generateFilterConditions(projectId, model.name, where)
+    val whereSql     = QueryArguments.generateFilterConditions(projectId, model.name, whereFilter)
     (sql"update `#${projectId}`.`#${model.name}`" ++ sql"set " ++ updateValues ++ prefixIfNotNone("where", whereSql)).asUpdate
   }
 
@@ -48,60 +77,8 @@ object DatabaseMutationBuilder {
     }
   }
 
-  def whereFailureTrigger(project: Project, where: NodeSelector) = {
-    (sql"select case" ++
-      sql"when exists" ++
-      sql"(select *" ++
-      sql"from `#${project.id}`.`#${where.model.name}`" ++
-      sql"where `#${where.field.name}` = ${where.fieldValue})" ++
-      sql"then 1" ++
-      sql"else (select COLUMN_NAME" ++
-      sql"from information_schema.columns" ++
-      sql"where table_schema = ${project.id} AND TABLE_NAME = ${where.model.name})end;").as[Int]
-  }
+  //UPSERT
 
-  def connectionFailureTrigger(project: Project, parentInfo: ParentInfo, where: NodeSelector) = {
-    val childSide  = parentInfo.relation.sideOf(where.model)
-    val parentSide = parentInfo.relation.sideOf(parentInfo.model)
-
-    (sql"select case" ++
-      sql"when exists" ++
-      sql"(select *" ++
-      sql"from `#${project.id}`.`#${parentInfo.relation.id}`" ++
-      sql"where `#$childSide` = (Select `id` from `#${project.id}`.`#${where.model.name}`where `#${where.field.name}` = ${where.fieldValue})" ++
-      sql"AND `#$parentSide` = (Select `id` from `#${project.id}`.`#${parentInfo.model.name}`where `#${parentInfo.where.field.name}` = ${parentInfo.where.fieldValue}))" ++
-      sql"then 1" ++
-      sql"else (select COLUMN_NAME" ++
-      sql"from information_schema.columns" ++
-      sql"where table_schema = ${project.id} AND TABLE_NAME = ${parentInfo.relation.id})end;").as[Int]
-  }
-
-  def deleteDataItems(project: Project, model: Model, where: DataItemFilterCollection) = {
-    val whereSql = QueryArguments.generateFilterConditions(project.id, model.name, where)
-    (sql"delete from `#${project.id}`.`#${model.name}`" ++ prefixIfNotNone("where", whereSql)).asUpdate
-  }
-
-  def deleteRelayIds(project: Project, model: Model, where: DataItemFilterCollection) = {
-    val whereSql = QueryArguments.generateFilterConditions(project.id, model.name, where)
-    (sql"DELETE FROM `#${project.id}`.`_RelayId`" ++
-      (sql"WHERE `id` IN (" ++
-        sql"SELECT `id`" ++
-        sql"FROM `#${project.id}`.`#${model.name}`" ++
-        prefixIfNotNone("where", whereSql) ++ sql")")).asUpdate
-  }
-
-  def createDataItemIfUniqueDoesNotExist(projectId: String,
-                                         where: NodeSelector,
-                                         createArgs: CoolArgs): SqlStreamingAction[Vector[Int], Int, Effect]#ResultAction[Int, NoStream, Effect] = {
-    val escapedColumns = combineByComma(createArgs.raw.keys.map(escapeKey))
-    val insertValues   = combineByComma(createArgs.raw.values.map(escapeUnsafeParam))
-    (sql"INSERT INTO `#${projectId}`.`#${where.model.name}` (" ++ escapedColumns ++ sql")" ++
-      sql"SELECT " ++ insertValues ++
-      sql"FROM DUAL" ++
-      sql"where not exists (select `id` from `#${projectId}`.`#${where.model.name}` where `#${where.field.name}` = ${where.fieldValue} limit 1);").asUpdate
-  }
-
-  //todo pass the mutactions for lists in here
   def upsert(projectId: String,
              where: NodeSelector,
              createArgs: CoolArgs,
@@ -142,43 +119,33 @@ object DatabaseMutationBuilder {
     } yield action
   }
 
-  def createRelationRow(projectId: String,
-                        relationTableName: String,
-                        id: String,
-                        a: String,
-                        b: String): SqlStreamingAction[Vector[Int], Int, Effect]#ResultAction[Int, NoStream, Effect] = {
+  //DELETE
 
-    (sql"insert into `#$projectId`.`#$relationTableName` (" ++ combineByComma(List(sql"`id`, `A`, `B`")) ++ sql") values (" ++ combineByComma(
-      List(sql"$id, $a, $b")) ++ sql") on duplicate key update id=id").asUpdate
+  def deleteDataItems(project: Project, model: Model, whereFilter: DataItemFilterCollection) = {
+    val whereSql = QueryArguments.generateFilterConditions(project.id, model.name, whereFilter)
+    (sql"delete from `#${project.id}`.`#${model.name}`" ++ prefixIfNotNone("where", whereSql)).asUpdate
   }
 
-  def selectIdByWhere(projectId: String, where: NodeSelector) =
-    sqlu"(select id from `#$projectId`.`#${where.model.name}` where `#${where.field.name}` = ${where.fieldValue})"
-
-  def createRelationRowByUniqueValueForChild(projectId: String, parentInfo: ParentInfo, where: NodeSelector): SqlAction[Int, NoStream, Effect] = {
-    val parentSide = parentInfo.field.relationSide.get
-    val childSide  = parentInfo.field.oppositeRelationSide.get
-    val relationId = Cuid.createCuid()
-    sqlu"""insert into `#$projectId`.`#${parentInfo.relation.id}` (`id`, `#$parentSide`, `#$childSide`)
-           Select '#$relationId', (select id from `#$projectId`.`#${parentInfo.model.name}` where `#${parentInfo.where.field.name}` = ${parentInfo.where.fieldValue}), `id`
-           FROM `#$projectId`.`#${where.model.name}` where `#${where.field.name}` = ${where.fieldValue} on duplicate key update `#$projectId`.`#${parentInfo.relation.id}`.id=`#$projectId`.`#${parentInfo.relation.id}`.id"""
+  def deleteRelayIds(project: Project, model: Model, whereFilter: DataItemFilterCollection) = {
+    val whereSql = QueryArguments.generateFilterConditions(project.id, model.name, whereFilter)
+    (sql"DELETE FROM `#${project.id}`.`_RelayId`" ++
+      (sql"WHERE `id` IN (" ++
+        sql"SELECT `id`" ++
+        sql"FROM `#${project.id}`.`#${model.name}`" ++
+        prefixIfNotNone("where", whereSql) ++ sql")")).asUpdate
   }
 
-  def createRelationRowByUniqueValueForA(projectId: String, parentInfo: ParentInfo, where: NodeSelector): SqlAction[Int, NoStream, Effect] = {
-    val relationId = Cuid.createCuid()
-    sqlu"""insert into `#$projectId`.`#${parentInfo.relation.id}` (`id`, `A`, `B`)
-           Select '#$relationId', (select id from `#$projectId`.`#${where.model.name}` where `#${where.field.name}` = ${where.fieldValue}), `id`
-           FROM   `#$projectId`.`#${parentInfo.model.name}` where `#${parentInfo.where.field.name}` = ${parentInfo.where.fieldValue} on duplicate key update `#$projectId`.`#${parentInfo.relation.id}`.id=`#$projectId`.`#${parentInfo.relation.id}`.id"""
+  def deleteDataItemByUnique(projectId: String, where: NodeSelector) =
+    sqlu"delete from `#$projectId`.`#${where.model.name}` where `#${where.field.name}` = ${where.fieldValue}"
+
+  def deleteRelayRowByUnique(projectId: String, where: NodeSelector) =
+    sqlu"delete from `#$projectId`.`_RelayId` where `id` = (select id from `#$projectId`.`#${where.model.name}` where `#${where.field.name}` = ${where.fieldValue})"
+
+  def deleteRelationRowsByRelationSideAndId(projectId: String, modelName: String, relationSide: String, id: String) = {
+    (sql"delete from `#$projectId`.`#$modelName` where `#${relationSide}` = #${id}").asUpdate
   }
 
-  def createRelationRowByUniqueValueForB(projectId: String, parentInfo: ParentInfo, where: NodeSelector): SqlAction[Int, NoStream, Effect] = {
-    val relationId = Cuid.createCuid()
-    sqlu"""insert into `#$projectId`.`#${parentInfo.relation.id}` (`id`, `A`, `B`)
-           Select'#$relationId', (select id from `#$projectId`.`#${parentInfo.model.name}` where `#${parentInfo.where.field.name}` = ${parentInfo.where.fieldValue}), `id`
-           FROM `#$projectId`.`#${where.model.name}` where `#${where.field.name}` = ${where.fieldValue} on duplicate key update `#$projectId`.`#${parentInfo.relation.id}`.id=`#$projectId`.`#${parentInfo.relation.id}`.id"""
-  }
-
-  def deleteRelationRowByUniqueValue(projectId: String, parentInfo: ParentInfo, where: NodeSelector): SqlAction[Int, NoStream, Effect] = {
+  def deleteRelationRowByUniqueValueForChild(projectId: String, parentInfo: ParentInfo, where: NodeSelector): SqlAction[Int, NoStream, Effect] = {
     val parentSide = parentInfo.field.relationSide.get
     val childSide  = parentInfo.field.oppositeRelationSide.get
 
@@ -188,64 +155,10 @@ object DatabaseMutationBuilder {
              select id
              from `#$projectId`.`#${where.model.name}`
              where `#${where.field.name}` = ${where.fieldValue}
-           )
-          """
+           )"""
   }
 
-  def updateRelationRow(projectId: String, relationTable: String, relationSide: String, nodeId: String, values: Map[String, Any]) = {
-    val escapedValues = combineByComma(values.map { case (k, v) => escapeKey(k) ++ sql" = " ++ escapeUnsafeParam(v) })
-
-    (sql"update `#$projectId`.`#$relationTable` set" ++ escapedValues ++ sql"where `#$relationSide` = $nodeId").asUpdate
-  }
-
-  def deleteDataItemByUnique(projectId: String, where: NodeSelector) =
-    sqlu"delete from `#$projectId`.`#${where.model.name}` where `#${where.field.name}` = ${where.fieldValue}"
-
-  def deleteRelayRowByUnique(projectId: String, where: NodeSelector) =
-    sqlu"delete from `#$projectId`.`_RelayId` where `id` = (select id from `#$projectId`.`#${where.model.name}` where `#${where.field.name}` = ${where.fieldValue})"
-
-  def deleteRelationRowById(projectId: String, relationId: String, id: String) =
-    sqlu"delete from `#$projectId`.`#$relationId` where A = $id or B = $id"
-
-  def deleteRelationRowBySideAndId(projectId: String, relationId: String, relationSide: RelationSide, id: String) = {
-    sqlu"delete from `#$projectId`.`#$relationId` where `#${relationSide.toString}` = $id"
-  }
-
-  def deleteRelationRowByToAndFromSideAndId(projectId: String,
-                                            relationId: String,
-                                            aRelationSide: RelationSide,
-                                            aId: String,
-                                            bRelationSide: RelationSide,
-                                            bId: String) = {
-    sqlu"delete from `#$projectId`.`#$relationId` where `#${aRelationSide.toString}` = $aId and `#${bRelationSide.toString}` = $bId"
-  }
-
-  def deleteAllDataItems(projectId: String, modelName: String) =
-    sqlu"delete from `#$projectId`.`#$modelName`"
-
-  //only use transactionally in this order
-  def disableForeignKeyConstraintChecks                   = sqlu"SET FOREIGN_KEY_CHECKS=0"
-  def truncateTable(projectId: String, tableName: String) = sqlu"TRUNCATE TABLE `#$projectId`.`#$tableName`"
-  def enableForeignKeyConstraintChecks                    = sqlu"SET FOREIGN_KEY_CHECKS=1"
-
-  def deleteDataItemByValues(projectId: String, modelName: String, values: Map[String, Any]) = {
-    val whereClause =
-      if (values.isEmpty) {
-        None
-      } else {
-        val escapedKeys   = values.keys.map(escapeKey)
-        val escapedValues = values.values.map(escapeUnsafeParam)
-
-        val keyValueTuples = escapedKeys zip escapedValues
-        combineByAnd(keyValueTuples.map({
-          case (k, v) => k ++ sql" = " ++ v
-        }))
-      }
-
-    val whereClauseWithWhere = if (whereClause.isEmpty) None else Some(sql"where " ++ whereClause)
-
-    (sql"delete from `#$projectId`.`#$modelName`" ++ whereClauseWithWhere).asUpdate
-  }
+  //SCALAR LISTS
 
   def setScalarList(projectId: String, where: NodeSelector, fieldName: String, values: Vector[Any]): DBIOAction[List[Int], NoStream, Effect] = {
     // todo we could save a query on ID NodeSelectors
@@ -277,6 +190,43 @@ object DatabaseMutationBuilder {
         ))
       .map(_.last)
   }
+
+  //TRANSACTIONAL FAILURE TRIGGERS
+
+  def whereFailureTrigger(project: Project, where: NodeSelector) = {
+    (sql"select case" ++
+      sql"when exists" ++
+      sql"(select *" ++
+      sql"from `#${project.id}`.`#${where.model.name}`" ++
+      sql"where `#${where.field.name}` = ${where.fieldValue})" ++
+      sql"then 1" ++
+      sql"else (select COLUMN_NAME" ++
+      sql"from information_schema.columns" ++
+      sql"where table_schema = ${project.id} AND TABLE_NAME = ${where.model.name})end;").as[Int]
+  }
+
+  def connectionFailureTrigger(project: Project, parentInfo: ParentInfo, where: NodeSelector) = {
+    val childSide  = parentInfo.relation.sideOf(where.model)
+    val parentSide = parentInfo.relation.sideOf(parentInfo.model)
+
+    (sql"select case" ++
+      sql"when exists" ++
+      sql"(select *" ++
+      sql"from `#${project.id}`.`#${parentInfo.relation.id}`" ++
+      sql"where `#$childSide` = (Select `id` from `#${project.id}`.`#${where.model.name}`where `#${where.field.name}` = ${where.fieldValue})" ++
+      sql"AND `#$parentSide` = (Select `id` from `#${project.id}`.`#${parentInfo.model.name}`where `#${parentInfo.where.field.name}` = ${parentInfo.where.fieldValue}))" ++
+      sql"then 1" ++
+      sql"else (select COLUMN_NAME" ++
+      sql"from information_schema.columns" ++
+      sql"where table_schema = ${project.id} AND TABLE_NAME = ${parentInfo.relation.id})end;").as[Int]
+  }
+
+  //RESET DATA
+
+  //only use transactionally in this order
+  def disableForeignKeyConstraintChecks                   = sqlu"SET FOREIGN_KEY_CHECKS=0"
+  def truncateTable(projectId: String, tableName: String) = sqlu"TRUNCATE TABLE `#$projectId`.`#$tableName`"
+  def enableForeignKeyConstraintChecks                    = sqlu"SET FOREIGN_KEY_CHECKS=1"
 
   // note: utf8mb4 requires up to 4 bytes per character and includes full utf8 support, including emoticons
   // utf8 requires up to 3 bytes per character and does not have full utf8 support.

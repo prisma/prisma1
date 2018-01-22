@@ -15,9 +15,7 @@ case class RemoveDataItemFromManyRelationByToId(projectId: String, fromField: Fi
     val relation       = fromField.relation.get
 
     Future.successful(
-      ClientSqlStatementResult(
-        sqlAction = DatabaseMutationBuilder
-          .deleteDataItemByValues(projectId, relation.id, Map(toRelationSide.toString -> toId))))
+      ClientSqlStatementResult(DatabaseMutationBuilder.deleteRelationRowsByRelationSideAndId(projectId, relation.id, toRelationSide.toString, toId)))
   }
 
   override def rollback = {
