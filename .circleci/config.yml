@@ -8,6 +8,7 @@ jobs:
       - checkout
       - run: cd cli && yarn
       - run: cd cli && yarn test
+      - run: env
 
   # content deployment
   content:
@@ -32,8 +33,8 @@ workflows:
             branches:
               only:
                 - master
-      - content:
-          filters:
-            branches:
-              only:
-                - master
+#      - content:
+#          filters:
+#            branches:
+#              only:
+#                - master
