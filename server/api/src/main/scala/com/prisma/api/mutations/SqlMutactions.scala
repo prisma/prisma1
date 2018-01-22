@@ -43,7 +43,6 @@ case class SqlMutactions(dataResolver: DataResolver) {
 
   def getMutactionsForUpdate(where: NodeSelector, args: CoolArgs, id: Id, previousValues: DataItem): Vector[ClientSqlMutaction] = {
     val updateMutaction = getUpdateMutactions(where, args, id, previousValues)
-    // updated where ->
     val whereFieldValue = args.raw.get(where.field.name)
     val updatedWhere    = if (whereFieldValue.isDefined) generateUpdatedWhere(where, whereFieldValue.get) else where
     val nested          = getMutactionsForNestedMutation(args, updatedWhere, triggeredFromCreate = false)
@@ -212,7 +211,6 @@ case class SqlMutactions(dataResolver: DataResolver) {
   def getMutactionsForNestedUpdateMutation(nestedMutation: NestedMutation, parentInfo: ParentInfo): Seq[ClientSqlMutaction] = {
     nestedMutation.updates.flatMap { update =>
       val updateMutaction = UpdateDataItemByUniqueFieldIfInRelationWith(project, parentInfo, update.where, update.data)
-      //-> updated where
       val whereFieldValue = update.data.raw.get(update.where.field.name)
       val updatedWhere    = if (whereFieldValue.isDefined) generateUpdatedWhere(update.where, whereFieldValue.get) else update.where
       val scalarLists     = getMutactionsForScalarLists(updatedWhere, update.data)
@@ -220,19 +218,14 @@ case class SqlMutactions(dataResolver: DataResolver) {
     }
   }
 
-  // we need to rethink this thoroughly, we need to prevent both branches of executing their nested mutations && scalarlist mutations at the same time
-  // scalarlists are not in here atm
-
+  // we need to rethink this thoroughly, we need to prevent both branches of executing their nested mutations
   def getMutactionsForNestedUpsertMutation(nestedMutation: NestedMutation, parentInfo: ParentInfo): Seq[ClientSqlMutaction] = {
     nestedMutation.upserts.flatMap { upsert =>
-      val id               = createCuid()
-      val createWhere      = NodeSelector.forId(upsert.where.model, id)
-      val createArgsWithId = CoolArgs(upsert.create.raw + ("id" -> id))
-
-      //updated upsert where ->
-      val whereFieldValue = upsert.update.raw.get(upsert.where.field.name)
-      val updatedWhere    = if (whereFieldValue.isDefined) generateUpdatedWhere(upsert.where, whereFieldValue.get) else upsert.where
-
+      val id                                                              = createCuid()
+      val createWhere                                                     = NodeSelector.forId(upsert.where.model, id)
+      val createArgsWithId                                                = CoolArgs(upsert.create.raw + ("id" -> id))
+      val whereFieldValue                                                 = upsert.update.raw.get(upsert.where.field.name)
+      val updatedWhere                                                    = if (whereFieldValue.isDefined) generateUpdatedWhere(upsert.where, whereFieldValue.get) else upsert.where
       val scalarListsCreate: Seq[DBIOAction[List[Int], NoStream, Effect]] = getMutactionsForScalarLists2(createWhere, createArgsWithId)
       val scalarListsUpdate: Seq[DBIOAction[List[Int], NoStream, Effect]] = getMutactionsForScalarLists2(updatedWhere, upsert.update)
       val upsertItem =

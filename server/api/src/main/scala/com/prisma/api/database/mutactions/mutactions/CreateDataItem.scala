@@ -23,8 +23,7 @@ case class CreateDataItem(
     project: Project,
     model: Model,
     values: List[ArgumentValue],
-    originalArgs: Option[CoolArgs] = None,
-    conditionalWheres: Vector[NodeSelector] = Vector.empty
+    originalArgs: Option[CoolArgs] = None
 ) extends ClientSqlDataChangeMutaction {
 
   // FIXME: it should be guaranteed to always have an id (generate it in here)
