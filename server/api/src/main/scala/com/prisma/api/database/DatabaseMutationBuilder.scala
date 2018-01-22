@@ -141,8 +141,8 @@ object DatabaseMutationBuilder {
   def deleteRelayRowByUnique(projectId: String, where: NodeSelector) =
     sqlu"delete from `#$projectId`.`_RelayId` where `id` = (select id from `#$projectId`.`#${where.model.name}` where `#${where.field.name}` = ${where.fieldValue})"
 
-  def deleteRelationRowsByRelationSideAndId(projectId: String, modelName: String, relationSide: String, id: String) = {
-    (sql"delete from `#$projectId`.`#$modelName` where `#${relationSide}` = #${id}").asUpdate
+  def deleteRelationRowsByRelationSideAndId(projectId: String, relationId: String, relationSide: String, id: String) = {
+    (sql"delete from `#$projectId`.`#$relationId` where `#${relationSide}` = '#${id}'").asUpdate
   }
 
   def deleteRelationRowByUniqueValueForChild(projectId: String, parentInfo: ParentInfo, where: NodeSelector): SqlAction[Int, NoStream, Effect] = {
