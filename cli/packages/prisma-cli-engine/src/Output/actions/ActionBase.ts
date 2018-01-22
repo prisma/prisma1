@@ -3,12 +3,20 @@ import chalk from 'chalk'
 import * as figures from 'figures'
 
 export function shouldDisplaySpinner(out: Output) {
-  return !process.env.DEBUG && !out.mock && !out.config.debug && !!process.stdin.isTTY && !!process.stderr.isTTY && !process.env.CI && process.env.TERM !== 'dumb'
+  return (
+    !process.env.DEBUG &&
+    !out.mock &&
+    !out.config.debug &&
+    !!process.stdin.isTTY &&
+    !!process.stderr.isTTY &&
+    !process.env.CI &&
+    process.env.TERM !== 'dumb'
+  )
 }
 
 export interface Task {
-  action: string,
-  status?: string,
+  action: string
+  status?: string
   active?: boolean
 }
 
@@ -21,7 +29,11 @@ export class ActionBase {
   }
 
   start(action: string, status?: string) {
-    const task = this.task = {action, status, active: this.task && this.task.active}
+    const task = (this.task = {
+      action,
+      status,
+      active: this.task && this.task.active,
+    })
     this._start()
     task.active = true
     this.log(task)
@@ -55,21 +67,21 @@ export class ActionBase {
     this.log(task)
   }
 
-  pause(fn: () => any, icon?: string) {
+  pause(fn?: () => any, icon?: string) {
     const task = this.task
     const active = task && task.active
     if (task && active) {
       this._pause(icon)
       task.active = false
     }
-    const ret = fn()
+    const ret = fn ? fn() : null
     if (task && active) {
-      this._resume()
+      this.resume()
     }
     return ret
   }
 
-  log({action, status}: { action: string, status?: string }) {
+  log({ action, status }: { action: string; status?: string }) {
     const msg = status ? `${action}... ${status}\n` : `${action}...\n`
     this.out.stderr.writeLogFile(msg, true)
   }
@@ -82,7 +94,7 @@ export class ActionBase {
     throw new Error('not implemented')
   }
 
-  _resume() {
+  resume() {
     if (this.task) {
       this.start(this.task.action, this.task.status)
     }
