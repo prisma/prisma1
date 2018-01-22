@@ -8,7 +8,7 @@ import com.prisma.shared.models.IdType.Id
 import scala.concurrent.Future
 import scala.util.{Success, Try}
 
-case class RemoveDataItemFromManyRelationByToId(projectId: String, fromField: Field, toId: Id) extends ClientSqlDataChangeMutaction {
+case class RemoveDataItemFromManyRelationsByFieldAndId(projectId: String, fromField: Field, toId: Id) extends ClientSqlDataChangeMutaction {
 
   override def execute = {
     val relation = fromField.relation.get
