@@ -8,18 +8,18 @@ export default class Export extends Command {
   static description = 'Export service data to local file'
   static group = 'data'
   static flags: Flags = {
-    ['export-path']: flags.string({
-      char: 'e',
+    ['path']: flags.string({
+      char: 'p',
       description: 'Path to export .zip file',
     }),
     ['env-file']: flags.string({
       description: 'Path to .env file to inject env vars',
-      char: 'E',
+      char: 'e',
     }),
   }
   async run() {
     const exportPath =
-      this.flags['export-path'] || `export-${new Date().toISOString()}.zip`
+      this.flags['path'] || `export-${new Date().toISOString()}.zip`
 
     if (!exportPath.endsWith('.zip')) {
       throw new Error(`export-path must point to a .zip file`)

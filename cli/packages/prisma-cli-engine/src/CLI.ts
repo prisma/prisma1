@@ -155,7 +155,7 @@ export class CLI {
         if (topic) {
           await this.Help.run(this.config)
           const checker = getStatusChecker()!
-          checker.checkStatus(id, this.cmd.args, this.cmd.flags, this.cmd.argv)
+          checker.checkStatus(id, {}, {}, [])
         } else if (id === 'push') {
           throw new Error(
             `The ${chalk.bold(
@@ -227,6 +227,7 @@ export class CLI {
       tags: {
         version: this.config.version,
         platform: os.platform(),
+        argv: process.argv.slice(1),
       },
     })
     debug({ isGlobal: getIsGlobal() })
