@@ -39,9 +39,8 @@ case class CreateDataItem(
   override def handleErrors = {
     implicit val anyFormat = JsonFormats.AnyJsonFormat
     Some({
-      case e: SQLIntegrityConstraintViolationException
-          if e.getErrorCode == 1062 && GetFieldFromSQLUniqueException.getFieldOptionFromCoolArgs(List(args), e).isDefined =>
-        APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOptionFromCoolArgs(List(args), e).get)
+      case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1062 && GetFieldFromSQLUniqueException.getFieldOption(List(args), e).isDefined =>
+        APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOption(List(args), e).get)
       case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1452 =>
         APIErrors.NodeDoesNotExist("")
     })

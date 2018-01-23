@@ -2,7 +2,7 @@ package com.prisma.subscriptions.specs
 
 import com.prisma.api.ApiTestDatabase
 import com.prisma.api.database.mutactions.mutactions.CreateDataItem
-import com.prisma.api.mutations.MutationTypes.ArgumentValue
+import com.prisma.api.mutations.{CoolArgs, NodeSelector}
 import com.prisma.shared.models.{Model, Project}
 import com.prisma.utils.await.AwaitUtils
 import spray.json.JsValue
@@ -17,16 +17,9 @@ object TestData extends AwaitUtils {
       model: Model,
       testDatabase: ApiTestDatabase
   ) = {
-    val mutaction = CreateDataItem(
-      project = project,
-      model = model,
-      values = List(
-        ArgumentValue(name = "text", value = text),
-        ArgumentValue(name = "id", value = id),
-        ArgumentValue(name = "done", value = done.getOrElse(true)),
-        ArgumentValue(name = "json", value = json)
-      )
-    )
+    val mutaction = CreateDataItem(project = project,
+                                   where = NodeSelector.forId(model, id),
+                                   args = CoolArgs(Map("text" -> text, "id" -> id, "done" -> done.getOrElse(true), "json" -> json)))
     val action = mutaction.execute.await.sqlAction
     testDatabase.runDbActionOnClientDb(action)
   }

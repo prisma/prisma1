@@ -35,15 +35,15 @@ case class UpsertDataItem(
   override def handleErrors = {
     implicit val anyFormat = JsonFormats.AnyJsonFormat
     Some({
-      case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1062 && getFieldOptionFromCoolArgs(List(createArgs, updateArgs), e).isDefined =>
-        APIErrors.UniqueConstraintViolation(model.name, getFieldOptionFromCoolArgs(List(createArgs, updateArgs), e).get)
+      case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1062 && getFieldOption(List(createArgs, updateArgs), e).isDefined =>
+        APIErrors.UniqueConstraintViolation(model.name, getFieldOption(List(createArgs, updateArgs), e).get)
       case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1452 => APIErrors.NodeDoesNotExist(where.fieldValueAsString)
       case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1048 => APIErrors.FieldCannotBeNull()
     })
   }
   override def verify(resolver: DataResolver): Future[Try[MutactionVerificationSuccess]] = {
-    val (createCheck, _) = InputValueValidation.validateDataItemInputs(model, createArgs.nonListScalarArguments(model).toList)
-    val (updateCheck, _) = InputValueValidation.validateDataItemInputs(model, updateArgs.nonListScalarArguments(model).toList)
+    val (createCheck, _) = InputValueValidation.validateDataItemInputsCoolArgs(model, createArgs)
+    val (updateCheck, _) = InputValueValidation.validateDataItemInputsCoolArgs(model, updateArgs)
 
     (createCheck.isFailure, updateCheck.isFailure) match {
       case (true, _)      => Future.successful(createCheck)

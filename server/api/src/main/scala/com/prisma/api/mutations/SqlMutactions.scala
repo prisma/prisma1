@@ -2,7 +2,6 @@ package com.prisma.api.mutations
 import com.prisma.api.database.mutactions.ClientSqlMutaction
 import com.prisma.api.database.mutactions.mutactions._
 import com.prisma.api.database.{DataItem, DataResolver, DatabaseMutationBuilder}
-import com.prisma.api.mutations.MutationTypes.ArgumentValue
 import com.prisma.api.schema.APIErrors.RelationIsRequired
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models.{Field, Model, Project, Relation}
@@ -88,14 +87,12 @@ case class SqlMutactions(dataResolver: DataResolver) {
 
   //needs to treat relations as well
   def getUpdateMutactions(where: NodeSelector, args: CoolArgs, id: Id, previousValues: DataItem): Vector[ClientSqlMutaction] = {
-    val scalarArguments = args.nonListScalarArguments(where.model)
     val updateNonLists =
       UpdateDataItem(
         project = project,
         model = where.model,
         id = id,
-        values = scalarArguments,
-        originalArgs = Some(args),
+        args = args.nonListScalarArgumentsAsCoolArgs(where.model),
         previousValues = previousValues,
         itemExists = true
       )

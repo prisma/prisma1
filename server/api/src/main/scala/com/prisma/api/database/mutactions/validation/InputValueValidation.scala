@@ -1,45 +1,20 @@
 package com.prisma.api.database.mutactions.validation
 
+import com.prisma.api.database.DatabaseConstraints
 import com.prisma.api.database.mutactions.MutactionVerificationSuccess
-import com.prisma.api.database.{DatabaseConstraints, NameConstraints}
 import com.prisma.api.mutations.CoolArgs
-import com.prisma.api.mutations.MutationTypes.ArgumentValue
-import com.prisma.api.schema.{APIErrors, CustomScalarTypes}
-import com.prisma.shared.models.IdType.Id
-import com.prisma.shared.models.{Field, Model, TypeIdentifier}
-import spray.json.JsonParser.ParsingException
+import com.prisma.api.schema.APIErrors
+import com.prisma.shared.models.{Field, Model}
 import spray.json._
 
 import scala.util.{Failure, Success, Try}
 
 object InputValueValidation {
 
-  def validateDataItemInputsWithID(model: Model, id: Id, values: List[ArgumentValue]): (Try[MutactionVerificationSuccess], List[Field]) = {
-    if (!NameConstraints.isValidDataItemId(id)) (Failure(APIErrors.IdIsInvalid(id)), InputValueValidation.fieldsWithValues(model, values))
-    else validateDataItemInputs(model, values)
-  }
+  def validateDataItemInputs(model: Model, args: CoolArgs): (Try[MutactionVerificationSuccess], List[Field]) = {
 
-  def validateDataItemInputs(model: Model, values: List[ArgumentValue]): (Try[MutactionVerificationSuccess], List[Field]) = {
-
-    val fieldsWithValues              = InputValueValidation.fieldsWithValues(model, values)
-    val fieldsWithIllegallySizedValue = InputValueValidation.checkValueSize(values, fieldsWithValues)
-    lazy val extraValues              = values.filter(v => !model.fields.exists(_.name == v.name) && v.name != "id")
-//    lazy val constraintErrors         = checkConstraints(values, fieldsWithValues.filter(_.constraints.nonEmpty))
-
-    val validationResult = () match {
-      case _ if extraValues.nonEmpty                   => Failure(APIErrors.ExtraArguments(extraValues.map(_.name), model.name))
-      case _ if fieldsWithIllegallySizedValue.nonEmpty => Failure(APIErrors.ValueTooLong(fieldsWithIllegallySizedValue.head.name))
-//      case _ if constraintErrors.nonEmpty              => Failure(APIErrors.ConstraintViolated(constraintErrors))
-      case _ => Success(MutactionVerificationSuccess())
-    }
-
-    (validationResult, fieldsWithValues)
-  }
-
-  def validateDataItemInputsCoolArgs(model: Model, args: CoolArgs): (Try[MutactionVerificationSuccess], List[Field]) = {
-
-    val fieldsWithValues              = InputValueValidation.scalarFieldsWithValuesCoolArgs(model, args)
-    val fieldsWithIllegallySizedValue = InputValueValidation.checkValueSizeCoolArgs(args, fieldsWithValues)
+    val fieldsWithValues              = InputValueValidation.scalarFieldsWithValues(model, args)
+    val fieldsWithIllegallySizedValue = InputValueValidation.checkValueSize(args, fieldsWithValues)
     lazy val extraValues              = args.raw.keys.filter(k => !model.fields.exists(_.name == k) && k != "id").toList
 //    lazy val constraintErrors         = checkConstraints(values, fieldsWithValues.filter(_.constraints.nonEmpty))
 
@@ -128,23 +103,13 @@ object InputValueValidation {
 //      .mkString("\n")
 //  }
 
-  def checkValueSize(values: List[ArgumentValue], updatedFields: List[Field]): List[Field] = {
-    updatedFields
-      .filter(field => values.exists(v => v.name == field.name && v.value != None))
-      .filter(field => !DatabaseConstraints.isValueSizeValid(values.filter(v => v.name == field.name).head.unwrappedValue, field))
-  }
-
-  def checkValueSizeCoolArgs(args: CoolArgs, updatedFields: List[Field]): List[Field] = {
+  def checkValueSize(args: CoolArgs, updatedFields: List[Field]): List[Field] = {
     updatedFields
       .filter(field => args.hasArgFor(field) && args.getUnwrappedFieldValue(field) != None)
       .filter(field => !DatabaseConstraints.isValueSizeValid(args.getUnwrappedFieldValue(field), field))
   }
 
-  def fieldsWithValues(model: Model, values: List[ArgumentValue]): List[Field] = {
-    model.fields.filter(field => values.exists(_.name == field.name)).filter(_.name != "id")
-  }
-
-  def scalarFieldsWithValuesCoolArgs(model: Model, args: CoolArgs): List[Field] = {
+  def scalarFieldsWithValues(model: Model, args: CoolArgs): List[Field] = {
     model.scalarFields.filter(field => args.hasArgFor(field)).filter(_.name != "id")
   }
 

@@ -1,6 +1,5 @@
 package com.prisma.api.mutations
 
-import com.prisma.api.mutations.MutationTypes.ArgumentValue
 import com.prisma.api.schema.APIErrors
 import com.prisma.gc_values.{GCValue, GraphQLIdGCValue}
 import com.prisma.shared.models._
@@ -10,6 +9,13 @@ import scala.collection.immutable.Seq
 
 /**
   * It's called CoolArgs to easily differentiate from Sangrias Args class.
+  *
+  * - implement subclasses
+  *   - nonlistscalarCoolArgs
+  *   - listscalarCoolArgs
+  *   - relationCoolArgs
+  *   - Upsert Create/Delete CoolArgs
+  *
   */
 case class CoolArgs(raw: Map[String, Any]) {
   def isEmpty: Boolean    = raw.isEmpty
@@ -102,31 +108,15 @@ case class CoolArgs(raw: Map[String, Any]) {
   }
 
   def nonListScalarArgumentsAsCoolArgs(model: Model): CoolArgs = {
-    val argumentValues = nonListScalarArguments(model)
-    val rawArgs        = argumentValues.map(x => x.name -> x.value).toMap
-    CoolArgs(rawArgs)
-  }
-
-  def nonListScalarArguments(model: Model): Vector[ArgumentValue] = {
-    for {
+    val values: Seq[(String, Any)] = for {
       field      <- model.scalarNonListFields.toVector
       fieldValue <- getFieldValueAs[Any](field)
+      if fieldValue.nonEmpty
     } yield {
-      ArgumentValue(field.name, fieldValue)
+      field.name -> fieldValue
     }
+    CoolArgs(values.toMap)
   }
-
-//  def subArgsList2(field: Field): Option[Seq[CoolArgs]] = {
-//    val fieldValues: Option[Seq[Map[String, Any]]] = field.isList match {
-//      case true  => getFieldValuesAs[Map[String, Any]](field)
-//      case false => getFieldValueAsSeq[Map[String, Any]](field.name)
-//    }
-//
-//    fieldValues match {
-//      case None    => None
-//      case Some(x) => Some(x.map(CoolArgs(_)))
-//    }
-//  }
 
   def subArgsVector(field: String): Option[Vector[CoolArgs]] = subArgsList(field).map(_.toVector)
 
