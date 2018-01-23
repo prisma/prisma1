@@ -30,6 +30,8 @@ workflows:
     jobs:
       - cli:
           filters:
+            tags:
+              only: /.*/
             branches:
               only:
                 - master
