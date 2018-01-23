@@ -42,8 +42,8 @@ case class UpsertDataItem(
     })
   }
   override def verify(resolver: DataResolver): Future[Try[MutactionVerificationSuccess]] = {
-    val (createCheck, _) = InputValueValidation.validateDataItemInputsCoolArgs(model, createArgs)
-    val (updateCheck, _) = InputValueValidation.validateDataItemInputsCoolArgs(model, updateArgs)
+    val (createCheck, _) = InputValueValidation.validateDataItemInputs(model, createArgs)
+    val (updateCheck, _) = InputValueValidation.validateDataItemInputs(model, updateArgs)
 
     (createCheck.isFailure, updateCheck.isFailure) match {
       case (true, _)      => Future.successful(createCheck)

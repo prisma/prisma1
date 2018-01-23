@@ -5,7 +5,6 @@ import com.prisma.api.database.{DataItem, DataResolver, DatabaseMutationBuilder}
 import com.prisma.api.schema.APIErrors.RelationIsRequired
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models.{Field, Model, Project, Relation}
-import com.prisma.util.gc_value.GCAnyConverter
 import com.prisma.utils.boolean.BooleanUtils._
 import cool.graph.cuid.Cuid.createCuid
 import slick.dbio.{DBIOAction, Effect, NoStream}
@@ -43,7 +42,7 @@ case class SqlMutactions(dataResolver: DataResolver) {
   def getMutactionsForUpdate(where: NodeSelector, args: CoolArgs, id: Id, previousValues: DataItem): Vector[ClientSqlMutaction] = {
     val updateMutaction = getUpdateMutactions(where, args, id, previousValues)
     val whereFieldValue = args.raw.get(where.field.name)
-    val updatedWhere    = if (whereFieldValue.isDefined) generateUpdatedWhere(where, whereFieldValue.get) else where
+    val updatedWhere    = if (whereFieldValue.isDefined) where.updateValue(whereFieldValue.get) else where
     val nested          = getMutactionsForNestedMutation(args, updatedWhere, triggeredFromCreate = false)
 
     updateMutaction ++ nested
@@ -66,16 +65,6 @@ case class SqlMutactions(dataResolver: DataResolver) {
 //    val createNested = getMutactionsForNestedMutation(allArgs.createArgumentsAsCoolArgs, createWhere, triggeredFromCreate = true)
 
     List(upsertMutaction) //++ updateNested ++ createNested
-  }
-
-  def generateUpdatedWhere(where: NodeSelector, updatedValue: Any): NodeSelector = {
-    val unwrapped = updatedValue match {
-      case Some(x) => x
-      case x       => x
-    }
-
-    val newGCValue = GCAnyConverter(where.field.typeIdentifier, isList = false).toGCValue(unwrapped).get
-    where.copy(fieldValue = newGCValue)
   }
 
   def getCreateMutactions(where: NodeSelector, args: CoolArgs): Vector[ClientSqlMutaction] = {
@@ -222,7 +211,7 @@ case class SqlMutactions(dataResolver: DataResolver) {
     nestedMutation.updates.flatMap { update =>
       val updateMutaction = UpdateDataItemByUniqueFieldIfInRelationWith(project, parentInfo, update.where, update.data)
       val whereFieldValue = update.data.raw.get(update.where.field.name)
-      val updatedWhere    = if (whereFieldValue.isDefined) generateUpdatedWhere(update.where, whereFieldValue.get) else update.where
+      val updatedWhere    = if (whereFieldValue.isDefined) update.where.updateValue(whereFieldValue.get) else update.where
       val scalarLists     = getMutactionsForScalarLists(updatedWhere, update.data)
       List(updateMutaction) ++ scalarLists ++ getMutactionsForNestedMutation(update.data, updatedWhere, triggeredFromCreate = false)
     }
@@ -236,7 +225,7 @@ case class SqlMutactions(dataResolver: DataResolver) {
       val createWhere                                                     = NodeSelector.forId(upsert.where.model, id)
       val createArgsWithId                                                = CoolArgs(upsert.create.raw + ("id" -> id))
       val whereFieldValue                                                 = upsert.update.raw.get(upsert.where.field.name)
-      val updatedWhere                                                    = if (whereFieldValue.isDefined) generateUpdatedWhere(upsert.where, whereFieldValue.get) else upsert.where
+      val updatedWhere                                                    = if (whereFieldValue.isDefined) upsert.where.updateValue(whereFieldValue.get) else upsert.where
       val scalarListsCreate: Seq[DBIOAction[List[Int], NoStream, Effect]] = getDbActionsForUpsertScalarLists(createWhere, createArgsWithId)
       val scalarListsUpdate: Seq[DBIOAction[List[Int], NoStream, Effect]] = getDbActionsForUpsertScalarLists(updatedWhere, upsert.update)
       val upsertItem =

@@ -222,6 +222,15 @@ case class NodeSelector(model: Model, field: Field, fieldValue: GCValue) {
   lazy val fieldValueAsString: String = GCValueExtractor.fromGCValueToString(fieldValue)
   lazy val isId: Boolean              = field.name == "id"
 
+  def updateValue(value: Any): NodeSelector = {
+    val unwrapped = value match {
+      case Some(x) => x
+      case x       => x
+    }
+
+    val newGCValue = GCAnyConverter(field.typeIdentifier, isList = false).toGCValue(unwrapped).get
+    this.copy(fieldValue = newGCValue)
+  }
 //  lazy val unwrappedFieldValue: Any   = {
 //    fieldValue match {
 //      case x: DateTimeGCValue => x.toMySqlDateTimeFormat

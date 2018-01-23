@@ -47,7 +47,7 @@ case class UpdateDataItem(project: Project,
   }
 
   override def verify(resolver: DataResolver): Future[Try[MutactionVerificationSuccess]] = {
-    lazy val (dataItemInputValidation, fieldsWithValues) = InputValueValidation.validateDataItemInputsCoolArgs(model, args)
+    lazy val (dataItemInputValidation, fieldsWithValues) = InputValueValidation.validateDataItemInputs(model, args)
 
     def isReadonly(field: Field): Boolean = {
       // todo: replace with readOnly property on Field
