@@ -2,6 +2,7 @@
   "name": "prisma-auth",
   "scripts": {
     "start": "node src/index.js",
+    "dev": "npm-run-all --parallel start playground",
     "prisma": "prisma"
   },
   "dependencies": {
@@ -13,7 +14,8 @@
   },
   "devDependencies": {
     "graphql-cli": "2.1.4",
-    "prisma": "1.0.4"
+    "prisma": "1.0.4",
+    "npm-run-all": "4.1.2"
   },
   "prettier": {
     "semi": false,
