@@ -1,6 +1,6 @@
 # Authentication
 
-This example demonstrates how to implement a GraphQL server with an **email-password-based authentication** workflow based on Prisma & `graphql-yoga`.
+This example demonstrates how to implement a GraphQL server with an **email-password-based authentication** workflow based on Prisma & [`graphql-yoga`](https://github.com/graphcool/graphql-yoga).
 
 ## Get started
 
