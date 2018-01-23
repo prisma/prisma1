@@ -64,7 +64,7 @@ To deploy your service to a public cluster (rather than locally with Docker), yo
 
 </details>
 
-### 3. Deploy the GraphQL server
+### 3. Start the GraphQL server
 
 The Prisma database service that's backing your GraphQL server is now available. This means you can now start the server:
 
@@ -87,6 +87,8 @@ yarn prisma playground
 ```
 
 Or you can open a Playground by navigating to [http://localhost:4000](http://localhost:4000) in your browser.
+
+> **Note**: You can also invoke the `yarn dev` script (instead of `yarn start`) which starts the server and opens a Playground in parallel. This will also give you access to the Prisma API directly.
 
 ### Register a new user with the `signup` mutation
 
