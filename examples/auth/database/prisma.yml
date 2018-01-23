@@ -11,3 +11,4 @@ datamodel: datamodel.graphql
 secret: mysecret123
 
 # if you deploy to a puclic cluster, you need do adjust the `endpoint` in `index.js`
+cluster: local
