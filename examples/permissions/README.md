@@ -71,7 +71,7 @@ Or you can open a Playground by simply navigating to [http://localhost:4000](htt
 
 ### Register users with the `signup` mutation
 
-You can send the following mutation in the Playground to create a new `User` node and at the same time retrieve an authentication `token` for it:
+You can send the following mutation in the Playground to create a new `User` node and at the same time retrieve an authentication `token` for that `User`:
 
 ```graphql
 mutation {
@@ -80,14 +80,11 @@ mutation {
     password: "graphql"
   ) {
     token
-    user {
-      id
-    }
   }
 }
 ```
 
-If no `admin` field is set, the role defaults to `CUSTOMER`. Create users with the `ADMIN` role by setting `admin` to `true`:
+If no `admin` field is set, the role defaults to `CUSTOMER`. You can create users with the `ADMIN` role by setting `admin` to `true`:
 
 ```graphql
 mutation {
@@ -97,16 +94,13 @@ mutation {
     admin: true
   ) {
     token
-    user {
-      id
-    }
   }
 }
 ```
 
 ### Logging in an existing user with the `login` mutation
 
-This mutation will log in an _existing_ user by requesting a new authentication `token` for her:
+This mutation will log in an _existing_ `User` node by requesting a new authentication `token`:
 
 ```graphql
 mutation {
@@ -140,28 +134,28 @@ If the token is valid, the server will return the `id` and `email` of the `User`
 
 ### Change the password with the `updatePassword` mutation
 
-This mutation changes the password of the authenticated user. Make sure the Authorization header is set:
+This mutation changes the password of the authenticated `User`. Make sure the `Authorization` header is set:
 
 ```graphql
 mutation {
   updatePassword(
     oldPassword: "graphql"
-    newPassword:"dKt9kAn6gkq"
+    newPassword: "GraphQL42"
   ) {
     id
   }
 }
 ```
 
-You can verify the password change by trying the login mutation with the new password.
+You can verify the password change by trying the `login` mutation with the new password.
 
-Admin users can also change the password of other users. Make sure the provided Authorization token is obtained from a `login` mutation of a user with the `ADMIN` role:
+Admin users can also change the password of other users. Make sure the provided `Authorization` token is obtained from a `login` mutation of a `User` with the `ADMIN` role (you need to replace the placeholder `__USER_ID__` with the `id` of an actual `User`):
 
 ```graphql
 mutation {
   updatePassword(
-    userId: "cjcaldr891d1d0180hl8lb1lp"
-    newPassword:"test"
+    userId: "__USER_ID__"
+    newPassword: "test"
   ) {
     id
     email
@@ -169,29 +163,29 @@ mutation {
 }
 ```
 
-### Create Posts via `createPost` mutation
+### Create posts with the `createPost` mutation
 
-With this mutation authorized users can create a new post. Make sure the `Authorization` header is set:
+With this mutation, authenitcated users can create a new `Post`. Make sure the `Authorization` header is set:
 
 ```graphql
 mutation {
   createPost(
-    title: "Observation of Gravitational Waves from a Binary Black Hole Merger"
+    title: "GraphQL is awesome"
   ) {
     id
   }
 }
 ```
 
-### `updatePosts` mutation
+### Update posts with the `updatePost` mutation
 
-With this mutation users with the default `CUSTOMER` role can change their own posts and users with the `ADMIN` role can also change postst of other users:
+With this mutation users with the default `CUSTOMER` role can change their own posts (i.e. the one for which they're the `author`) and users with the `ADMIN` role can also change posts of other users (replace the `__POST_ID__` placeholder with the `id` of the `Post` to be updated):
 
 ```graphql
 mutation {
   updatePost(
-    id: "cjcanspge1e4z01802of5gqp1"
-    title: "Hyperloop Alpha - SpaceX"
+    id: "__POST_ID__"
+    title: "Prisma makes building GraphQL servers a breeze"
   ) {
     title
   }
