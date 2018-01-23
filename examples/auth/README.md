@@ -27,14 +27,6 @@ This directory contains a GraphQL server (based on [`graphql-yoga`](https://gith
 
 ## Get started
 
-### 0. Prerequisites
-
-You need to have the following things installed: 
-
-* Node.js 8 (or higher)
-* Yarn (or npm)
-* Docker (only for deploying locally)
-
 ### 1. Download the example
 
 Clone the Prisma monorepo and navigate to this directory or download _only_ this example with the following command:

@@ -16,7 +16,7 @@
     "graphql-cli": "2.1.4",
     "nodemon": "1.14.3",
     "now": "8.5.4",
-    "prisma-cli": "1.0.0",
+    "prisma": "1.0.0",
     "rimraf": "2.6.2"
   },
   "prettier": {
