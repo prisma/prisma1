@@ -1,4 +1,4 @@
-package com.prisma.api.subscriptions.schema
+package com.prisma.subscriptions.schema
 
 import sangria.ast._
 

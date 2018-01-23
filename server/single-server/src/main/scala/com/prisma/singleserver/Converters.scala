@@ -1,6 +1,6 @@
 package com.prisma.singleserver
 
-import com.prisma.api.subscriptions.{Webhook => ApiWebhook}
+import com.prisma.subscriptions.{Webhook => ApiWebhook}
 import com.prisma.messagebus.Conversions.Converter
 import com.prisma.subscriptions.protocol.SubscriptionRequest
 import com.prisma.websocket.protocol.Request

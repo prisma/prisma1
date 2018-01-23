@@ -23,3 +23,5 @@ export GREEN_ID="${GREEN_ID:?GREEN_ID env variable not set}"
 export SYSTEM_AUTH_TOKEN="${SYSTEM_AUTH_TOKEN:?SYSTEM_AUTH_TOKEN env variable not set}"
 
 docs-cli -c ./docs
+
+curl -X POST -d '' $NETLIFY_HOOK

@@ -255,7 +255,7 @@ The `seed` property expects an **object**, with either one of two sub-properties
 
 > Note: `run` is currently not supported. Follow [the proposal](https://github.com/graphcool/framework/issues/1181) to stay informed.
 
-Seeds are implicitely executed when deploying a service for the first time (unless explicitely disabled using the `--no-seed` flag). You can run the seeding anytime with the `seed` command.
+Seeds are implicitely executed when deploying a service for the first time (unless explicitely disabled using the `--no-seed` flag). Track [this feature request for additional seeding workflows](https://github.com/graphcool/prisma/issues/1536).
 
 #### Examples
 

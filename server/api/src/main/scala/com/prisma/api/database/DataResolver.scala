@@ -59,6 +59,11 @@ case class DataResolver(project: Project, useMasterDatabaseOnly: Boolean = false
     performWithTiming("existsByModelAndId", readonlyClientDatabase.run(readOnlyBoolean(query))).map(_.head)
   }
 
+  def existsByWhere(where: NodeSelector): Future[Boolean] = {
+    val query = DatabaseQueryBuilder.existsByWhere(project.id, where)
+    performWithTiming("existsByWhere", readonlyClientDatabase.run(readOnlyBoolean(query))).map(_.head)
+  }
+
   def existsByModel(model: Model): Future[Boolean] = {
     val query = DatabaseQueryBuilder.existsByModel(project.id, model.name)
     performWithTiming("existsByModel", readonlyClientDatabase.run(readOnlyBoolean(query))).map(_.head)

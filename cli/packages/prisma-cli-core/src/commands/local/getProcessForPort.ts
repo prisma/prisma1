@@ -46,18 +46,25 @@ function getDirectoryOfProcessById(processId) {
   ).trim()
 }
 
-export function getProcessForPort(port) {
+export interface ProcessInfo {
+  command?: string
+  processId: string
+}
+
+export function getProcessForPort(port): ProcessInfo | null {
   try {
     const processId = getProcessIdOnPort(port)
     const directory = getDirectoryOfProcessById(processId)
     const command = getProcessCommand(processId, directory)
-    return (
-      chalk.cyan(command) + chalk.grey(' (pid ' + processId + ')')
-      // chalk.blue('  in ') +
-      // chalk.cyan(directory)
-    )
+    return {
+      command,
+      processId,
+    }
   } catch (e) {
     // console.error(e)
     return null
   }
 }
+
+export const printProcess = ({ command, processId }: ProcessInfo) =>
+  chalk.cyan(command) + chalk.grey(' (pid ' + processId + ')')

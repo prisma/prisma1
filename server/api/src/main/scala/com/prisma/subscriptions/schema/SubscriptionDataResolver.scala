@@ -1,9 +1,9 @@
-package com.prisma.api.subscriptions.schema
+package com.prisma.subscriptions.schema
 
 import com.prisma.api.database.DataResolver
 import com.prisma.api.schema.{ObjectTypeBuilder, SimpleResolveOutput}
-import com.prisma.api.subscriptions.SubscriptionUserContext
-import com.prisma.api.subscriptions.resolving.FilteredResolver
+import com.prisma.subscriptions.SubscriptionUserContext
+import com.prisma.subscriptions.resolving.FilteredResolver
 import com.prisma.shared.models.Model
 import sangria.schema.{Args, Context}
 

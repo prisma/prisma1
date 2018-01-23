@@ -1,6 +1,6 @@
 {
   "name": "prisma-cli-core",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "dist/index.js",
   "files": [
     "dist"
@@ -24,13 +24,15 @@
     "tslint": "^5.6.0",
     "tslint-config-prettier": "^1.3.0",
     "tslint-eslint-rules": "^4.1.1",
-    "typescript": "^2.5.3"
+    "typescript": "^2.5.3",
+    "watch-cli": "^0.2.3"
   },
   "engines": {
     "node": ">=6.0.0"
   },
   "scripts": {
     "build": "rimraf dist && tsc -d && scripts/cp-assets.sh",
+    "watch": "../../node_modules/.bin/watch -p 'src/**/*.*' -c 'yarn build'",
     "lint": "tslint src/**/*.ts",
     "precommit": "lint-staged",
     "prettier": "prettier --single-quote --no-semi --trailing-comma all --write '*.ts' 'src/**/*.ts'",
@@ -81,6 +83,7 @@
     "cross-spawn": "^5.1.0",
     "download-github-repo": "^0.1.3",
     "figures": "^2.0.0",
+    "find-up": "^2.1.0",
     "fs-extra": "^4.0.2",
     "globby": "^6.1.0",
     "graphcool-inquirer": "^1.0.3",
@@ -100,7 +103,7 @@
     "pause": "^0.1.0",
     "portfinder": "^1.0.13",
     "prisma-json-schema": "^0.0.1",
-    "prisma-yml": "1.0.0",
+    "prisma-yml": "1.0.1",
     "scuid": "^1.0.2",
     "semver": "^5.4.1",
     "sillyname": "^0.1.0",

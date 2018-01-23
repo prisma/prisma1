@@ -1,4 +1,4 @@
-package com.prisma.api.subscriptions.schema
+package com.prisma.subscriptions.schema
 
 import com.prisma.api.ApiDependencies
 import com.prisma.shared.models.{Model, ModelMutationType, Project}

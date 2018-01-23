@@ -27,11 +27,12 @@ export default class Up extends Command {
 
     const docker = new Docker(this.out, this.config, this.env, name)
 
+    this.out.action.start('Booting local development cluster')
+
     await docker.init()
 
     const cluster = docker.saveCluster()
 
-    this.out.action.start('Booting local development cluster')
     await docker.up()
 
     const before = Date.now()

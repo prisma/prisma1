@@ -1,6 +1,6 @@
 package com.prisma.subscriptions.specs
 
-import com.prisma.api.database.mutactions.mutactions.{AddDataItemToManyRelation, CreateDataItem}
+import com.prisma.api.database.mutactions.mutactions.{AddDataItemToManyRelationByUniqueField, CreateDataItem}
 import com.prisma.api.mutations.MutationTypes.ArgumentValue
 import com.prisma.api.mutations.{NodeSelector, ParentInfo}
 import com.prisma.messagebus.pubsub.Only
@@ -41,7 +41,8 @@ class SubscriptionFilterSpec extends FlatSpec with Matchers with SpecBase with A
 
     val parentInfo = ParentInfo(model.getFieldByName_!("comments"), NodeSelector.forId(model, "test-node-id"))
 
-    testDatabase.runDbActionOnClientDb { AddDataItemToManyRelation(project, parentInfo, toId = "comment-id").execute.await.sqlAction }
+    val where = NodeSelector.forId(model, "comment-id")
+    testDatabase.runDbActionOnClientDb { AddDataItemToManyRelationByUniqueField(project, parentInfo, where).execute.await.sqlAction }
   }
 
   "The Filter" should "support enums in previous values" in {
