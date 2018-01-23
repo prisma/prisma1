@@ -35,15 +35,20 @@ Clone the Prisma monorepo and navigate to this directory or download _only_ this
 
 ```sh
 curl https://codeload.github.com/graphcool/prisma/tar.gz/master | tar -xz --strip=2 prisma-master/examples/auth
+```
+
+Next, navigate into the downloaded folder and install the NPM dependencies:
+
+```sh
 cd auth
+yarn install
 ```
 
 ### 2. Deploy the Prisma database service
 
-You can now [deploy](https://www.prismagraphql.com/docs/reference/cli-command-reference/database-service/prisma-deploy-kee1iedaov) the Prisma service. Before you do so, you need to install the dependencies for this project:
+You can now [deploy](https://www.prismagraphql.com/docs/reference/cli-command-reference/database-service/prisma-deploy-kee1iedaov) the Prisma service (note that this requires you to have [Docker](https://www.docker.com) installed on your machine - if that's not the case, follow the collapsed instructions below the code block):
 
 ```sh
-yarn install
 yarn prisma deploy
 ```
 
