@@ -1,29 +1,6 @@
 # Authentication
 
-This example demonstrates how to implement an **email-password-based authentication** workflow with Prisma. Feel free to use it as a template for your own project!
-
-## Overview
-
-This directory contains a GraphQL server (based on [`graphql-yoga`](https://github.com/graphcool/graphql-yoga/)) which connects to a Prisma database service.
-
-```
-.
-├── README.md
-├── database
-│   ├── datamodel.graphql
-│   └── prisma.yml
-├── src
-│   ├── generated
-│   │   └── prisma.graphql
-│   ├── schema.graphql
-│   ├── index.js
-│   ├── auth.js
-│   └── utils.js
-├── package.json
-├── yarn.lock
-├── .env
-└── .graphqlconfig.yml
-```
+This example demonstrates how to implement a GraphQL server with an **email-password-based authentication** workflow based on Prisma & `graphql-yoga`.
 
 ## Get started
 
@@ -88,7 +65,7 @@ yarn playground
 
 Or you can open a Playground by navigating to [http://localhost:4000](http://localhost:4000) in your browser.
 
-> **Note**: You can also invoke the `yarn dev` script (instead of `yarn start`) which starts the server and opens a Playground in parallel. This will also give you access to the Prisma API directly.
+> **Note**: You can also invoke the `yarn dev` script (instead of `yarn start`) which starts the server _and_ opens a Playground in parallel. This will also give you access to the Prisma API directly.
 
 ### Register a new user with the `signup` mutation
 
