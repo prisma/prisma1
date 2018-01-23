@@ -11,13 +11,11 @@ import scala.util.{Success, Try}
 case class RemoveDataItemFromManyRelationByToId(projectId: String, fromField: Field, toId: Id) extends ClientSqlDataChangeMutaction {
 
   override def execute = {
-    val toRelationSide = fromField.oppositeRelationSide.get
-    val relation       = fromField.relation.get
+    val relation = fromField.relation.get
 
     Future.successful(
       ClientSqlStatementResult(
-        sqlAction = DatabaseMutationBuilder
-          .deleteDataItemByValues(projectId, relation.id, Map(toRelationSide.toString -> toId))))
+        DatabaseMutationBuilder.deleteRelationRowsByRelationSideAndId(projectId, relation.id, fromField.relationSide.get.toString, toId)))
   }
 
   override def rollback = {

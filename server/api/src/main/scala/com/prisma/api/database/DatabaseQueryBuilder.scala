@@ -172,10 +172,10 @@ object DatabaseQueryBuilder {
     val oppositeRelationSide = parentInfo.relation.oppositeSideOf(where.model).toString
     sql"""select EXISTS (
             select `id`from `#${project.id}`.`#${where.model.name}`
-            where  #${where.field.name} = ${where.fieldValue} and `id` IN (
+            where  `#${where.field.name}` = ${where.fieldValue} and `id` IN (
              select `#$relationSide`
              from `#${project.id}`.`#${parentInfo.relation.id}`
-             where `#$oppositeRelationSide` = '#${parentInfo.where.fieldValueAsString}'
+             where `#$oppositeRelationSide` = (select `id` from `#${project.id}`.`#${parentInfo.model.name}` where `#${parentInfo.where.field.name}` = ${parentInfo.where.fieldValue})
            )
           )"""
   }
