@@ -92,7 +92,7 @@ case class SqlMutactions(dataResolver: DataResolver) {
         project = project,
         model = where.model,
         id = id,
-        args = args.nonListScalarArgumentsAsCoolArgs(where.model),
+        args = args.nonListScalarArguments(where.model),
         previousValues = previousValues,
         itemExists = true
       )

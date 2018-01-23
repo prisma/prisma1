@@ -107,7 +107,7 @@ case class CoolArgs(raw: Map[String, Any]) {
         .toMap)
   }
 
-  def nonListScalarArgumentsAsCoolArgs(model: Model): CoolArgs = {
+  def nonListScalarArguments(model: Model): CoolArgs = {
     val values: Seq[(String, Any)] = for {
       field      <- model.scalarNonListFields.toVector
       fieldValue <- getFieldValueAs[Any](field)
