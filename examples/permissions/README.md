@@ -1,63 +1,49 @@
 # Permissions
 
-This example demonstrates how to implement **permission rules** in combination with an email-password-based authentication workflow. Feel free to use it as a template for your own project!
-
-## Overview
-
-This directory contains a GraphQL server (based on [`graphql-yoga`](https://github.com/graphcool/graphql-yoga/)) which connects to a Prisma database service.
-
-```
-.
-├── README.md
-├── database
-│   ├── datamodel.graphql
-│   └── prisma.yml
-├── package.json
-├── src
-│   ├── generated
-│   │   └── prisma.graphql
-│   ├── auth.js
-│   ├── index.js
-│   ├── schema.graphql
-│   └── utils.js
-├── yarn.lock
-├── .env
-└── .graphqlconfig.yml
-```
+This example demonstrates how to implement a GraphQL server with authentication and **permission rules** based on Prisma & [`graphql-yoga`](https://github.com/graphcool/graphql-yoga).
 
 ## Get started
 
-### 0. Prerequisites
+> **Note**: `prisma` is listed as a _development dependency_ and _script_ in this project's [`package.json`](./package.json). This means you can invoke the Prisma CLI without having it globally installed on your machine (by prefixing it with `yarn`), e.g. `yarn prisma deploy` or `yarn prisma playground`. If you have the Prisma CLI installed globally (which you can do with `npm install -g prisma`), you can omit the `yarn` prefix.
 
-You need to have the following things installed:
-
-* Node.js 8 (or higher)
-* Yarn (or npm)
-* Docker (only for deploying locally)
-
-### 1. Download the example
+### 1. Download the example & install dependencies
 
 Clone the Prisma monorepo and navigate to this directory or download _only_ this example with the following command:
 
 ```sh
-curl https://codeload.github.com/graphcool/prisma/tar.gz/master | tar -xz --strip=2 prisma-master/examples/1.0/permissions
-cd 1.0/permissions
+curl https://codeload.github.com/graphcool/prisma/tar.gz/master | tar -xz --strip=2 prisma-master/examples/permissions
+```
+
+Next, navigate into the downloaded folder and install the NPM dependencies:
+
+```sh
+cd permissions
+yarn install
 ```
 
 ### 2. Deploy the Prisma database service
 
-You can now [deploy](https://www.prismagraphql.com/docs/reference/cli-command-reference/database-service/prisma-deploy-kee1iedaov) the Prisma service:
+You can now [deploy](https://www.prismagraphql.com/docs/reference/cli-command-reference/database-service/prisma-deploy-kee1iedaov) the Prisma service (note that this requires you to have [Docker](https://www.docker.com) installed on your machine - if that's not the case, follow the collapsed instructions below the code block):
 
 ```sh
-yarn install
 yarn prisma deploy
 ```
 
-> Note: Whenever you make changes to files in the `database` directory, you need to invoke `prisma deploy` again to make sure your changes get applied to the running service.
+<details>
+ <summary><strong>I don't have <a href="https://www.docker.com">Docker</a> installed on my machine</strong></summary>
 
-### 3. Deploy the GraphQL server
+To deploy your service to a public cluster (rather than locally with Docker), you need to perform the following steps:
 
-Your GraphQL web server that's powered by [`graphql-yoga`](https://github.com/graphcool/graphql-yoga/) is now ready to be deployed. This is because the Prisma database service it connects to is now available.
+1. Remove the `cluster` property from `prisma.yml`
+1. Run `yarn prisma deploy`
+1. When prompted by the CLI, select a public cluster (e.g. `prisma-eu1` or `prisma-us1`)
+1. Replace the [`endpoint`](./src/index.js#L23) in `index.js` with the HTTP endpoint that was printed after the previous command
+
+</details>
+
+### 3. Start the GraphQL server
+
+The Prisma database service that's backing your GraphQL server is now available. This means you can now start the server:
 
 ```sh
 yarn start
@@ -65,7 +51,7 @@ yarn start
 
 The server is now running on [http://localhost:4000](http://localhost:4000).
 
-## Testing the service
+## Testing the API
 
 The easiest way to test the deployed service is by using a [GraphQL Playground](https://github.com/graphcool/graphql-playground).
 
@@ -77,7 +63,9 @@ You can either start the [desktop app](https://github.com/graphcool/graphql-play
 yarn playground
 ```
 
-Or you can open a Playground by navigating to [http://localhost:4000](http://localhost:4000) in your browser.
+Or you can open a Playground by simply navigating to [http://localhost:4000](http://localhost:4000) in your browser.
+
+> **Note**: You can also invoke the `yarn dev` script (instead of `yarn start`) which starts the server _and_ opens a Playground in parallel. This will also give you access to the Prisma API directly.
 
 ### Register users with the `signup` mutation
 
