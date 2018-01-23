@@ -10,9 +10,9 @@ stage: dev
 datamodel: datamodel.graphql
 
 # The secret is used to generate JTWs which allow to authenticate 
-# against your Prisma service. You can use the `prisma token` to generate
-# a JWT based on it - when using `prisma-binding`, you don't need to 
-# generate the JWTs manually as the library is doing that for you.
+# against your Prisma service. You can use the `prisma token` command from the CLI
+# to generate a JWT based on the secret. When using the `prisma-binding` package, 
+# you don't need to generate the JWTs manually as the library is doing that for you.
 secret: mysecret123
 
 # The cluster your service is deployed to. Cluster information (such as
