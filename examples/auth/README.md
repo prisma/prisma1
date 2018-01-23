@@ -27,10 +27,6 @@ This directory contains a GraphQL server (based on [`graphql-yoga`](https://gith
 
 ## Get started
 
-### 0. Prerequisites
-
-- [Docker](https://www.docker.com): For the purpose of this tutorial, you're going to deploy the Prisma service locally with Docker. Note that if you don't want to use Docker, you also can deploy the Prisma service on a _public cluster_. In that case, you need to adjust the Prisma service endpoint in [`index.js`](./index.js#L23) to the one of your service on the public cluster
-
 > **Note**: `prisma` is listed as a _development dependency_ and _script_ in this project's [`package.json`](./package.json). This means you can invoke the Prisma CLI without having it globally installed on your machine (by prefixing it with `yarn`), e.g. `yarn prisma deploy` or `yarn prisma playground`. If you have the Prisma CLI installed globally (which you can do with `npm install -g prisma`), you can omit the `yarn` prefix.
 
 ### 1. Download the example
@@ -52,7 +48,7 @@ yarn prisma deploy
 ```
 
 <details>
- <summary>Deploy to a public cluster</summary>
+ <summary>**I don't have [Docker](https://www.docker.com) installed on my machine**</summary>
 
 To deploy your service to a public cluster (rather than locally with Docker), you need to perform the following steps:
 
