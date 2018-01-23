@@ -1,8 +1,6 @@
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
-const { Context, getUserId } = require('./utils')
-
-const JWT_SECRET = 'jwtsecret321'
+const { Context, getUserId, JWT_SECRET } = require('./utils')
 
 // resolve the `AuthPayload` type
 const AuthPayload = {
