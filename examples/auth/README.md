@@ -29,7 +29,7 @@ This directory contains a GraphQL server (based on [`graphql-yoga`](https://gith
 
 > **Note**: `prisma` is listed as a _development dependency_ and _script_ in this project's [`package.json`](./package.json). This means you can invoke the Prisma CLI without having it globally installed on your machine (by prefixing it with `yarn`), e.g. `yarn prisma deploy` or `yarn prisma playground`. If you have the Prisma CLI installed globally (which you can do with `npm install -g prisma`), you can omit the `yarn` prefix.
 
-### 1. Download the example
+### 1. Download the example & install dependencies
 
 Clone the Prisma monorepo and navigate to this directory or download _only_ this example with the following command:
 
