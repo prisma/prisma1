@@ -74,7 +74,7 @@ yarn start
 
 The server is now running on [http://localhost:4000](http://localhost:4000).
 
-## Testing the service
+## Testing the API
 
 The easiest way to test the deployed service is by using a [GraphQL Playground](https://github.com/graphcool/graphql-playground).
 
