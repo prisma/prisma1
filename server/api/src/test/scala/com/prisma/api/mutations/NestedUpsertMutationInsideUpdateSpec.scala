@@ -180,7 +180,7 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     )
   }
 
-  "a deeply nested mutation" should "execute all levels of the mutation" in {
+  "a deeply nested mutation" should "execute all levels of the mutation" ignore {
     val project = SchemaDsl() { schema =>
       val list = schema.model("List").field_!("name", _.String)
       val todo = schema.model("Todo").field_!("title", _.String)
