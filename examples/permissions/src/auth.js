@@ -20,14 +20,10 @@ async function signup(parent, args, ctx, info) {
   const password = await bcrypt.hash(args.password, 10)
   const role = args.admin ? 'ADMIN' : 'CUSTOMER'
 
-  args = {
-    email: args.email,
-    password: args.password
-  }
   const user = await ctx.db.mutation.createUser({
     data: { ...args, role, password },
   })
-
+  console.log(`created user: `, user)
   return {
     token: jwt.sign({ userId: user.id }, APP_SECRET),
     user,
