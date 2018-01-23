@@ -1,6 +1,6 @@
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
-const { Context, getUserId } = require('./utils')
+const { Context, getUserId, APP_SECRET } = require('./utils')
 
 // resolve the `AuthPayload` type
 const AuthPayload = {
@@ -29,7 +29,7 @@ async function signup(parent, args, ctx, info) {
   })
 
   return {
-    token: jwt.sign({ userId: user.id }, process.env.APP_SECRET),
+    token: jwt.sign({ userId: user.id }, APP_SECRET),
     user,
   }
 }
@@ -47,7 +47,7 @@ async function login(parent, { email, password }, ctx, info) {
   }
 
   return {
-    token: jwt.sign({ userId: user.id }, process.env.APP_SECRET),
+    token: jwt.sign({ userId: user.id }, APP_SECRET),
     user,
   }
 }

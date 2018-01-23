@@ -2,6 +2,8 @@
 
 This example demonstrates how to implement a GraphQL server with authentication and **permission rules** based on Prisma & [`graphql-yoga`](https://github.com/graphcool/graphql-yoga).
 
+For more information on implementing a permissions system with GraphQL, you can also follow [this tutorial](https://www.prismagraphql.com/docs/tutorials/graphql-server-development/permissions-thohp1zaih).
+
 ## Get started
 
 > **Note**: `prisma` is listed as a _development dependency_ and _script_ in this project's [`package.json`](./package.json). This means you can invoke the Prisma CLI without having it globally installed on your machine (by prefixing it with `yarn`), e.g. `yarn prisma deploy` or `yarn prisma playground`. If you have the Prisma CLI installed globally (which you can do with `npm install -g prisma`), you can omit the `yarn` prefix.

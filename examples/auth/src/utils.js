@@ -1,13 +1,13 @@
 const jwt = require('jsonwebtoken')
 const { Prisma } = require('prisma-binding')
 
-const JWT_SECRET = 'jwtsecret321'
+const APP_SECRET = 'appsecret321'
 
 function getUserId(ctx) {
   const Authorization = ctx.request.get('Authorization')
   if (Authorization) {
     const token = Authorization.replace('Bearer ', '')
-    const { userId } = jwt.verify(token, JWT_SECRET)
+    const { userId } = jwt.verify(token, APP_SECRET)
     return userId
   }
 
@@ -23,5 +23,5 @@ class AuthError extends Error {
 module.exports = {
   getUserId,
   AuthError,
-  JWT_SECRET,
+  APP_SECRET,
 }
