@@ -7,7 +7,7 @@ function getUserId(ctx) {
   const Authorization = ctx.request.get('Authorization')
   if (Authorization) {
     const token = Authorization.replace('Bearer ', '')
-    const { userId } = jwt.verify(JWT_SECRET)
+    const { userId } = jwt.verify(token, JWT_SECRET)
     return userId
   }
 
@@ -23,5 +23,5 @@ class AuthError extends Error {
 module.exports = {
   getUserId,
   AuthError,
-  JWT_SECRET
+  JWT_SECRET,
 }

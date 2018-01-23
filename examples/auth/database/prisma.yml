@@ -1,5 +1,5 @@
 # the name for the service (will be part of the service's HTTP endpoint)
-service: auth-example
+service: auth-example-3
 
 # the cluster and stage the service is deployed to
 stage: dev

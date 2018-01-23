@@ -83,7 +83,7 @@ The easiest way to test the deployed service is by using a [GraphQL Playground](
 You can either start the [desktop app](https://github.com/graphcool/graphql-playground) via
 
 ```sh
-yarn prisma playground
+yarn playground
 ```
 
 Or you can open a Playground by navigating to [http://localhost:4000](http://localhost:4000) in your browser.
