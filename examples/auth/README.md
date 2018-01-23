@@ -48,7 +48,7 @@ yarn prisma deploy
 ```
 
 <details>
- <summary>**I don't have [Docker](https://www.docker.com) installed on my machine**</summary>
+ <summary><em>I don't have <a href="https://www.docker.com">Docker</a> installed on my machine</em></summary>
 
 To deploy your service to a public cluster (rather than locally with Docker), you need to perform the following steps:
 
