@@ -1,5 +1,5 @@
 # the name for the service (will be part of the service's HTTP endpoint)
-service: myapp
+service: auth-example
 
 # the cluster and stage the service is deployed to
 stage: dev
@@ -9,3 +9,6 @@ datamodel: datamodel.graphql
 # to disable authentication:
 # disableAuth: true
 secret: mysecret123
+
+# if you deploy to a puclic cluster, you need do adjust the `endpoint` in `index.js`
+cluster: local

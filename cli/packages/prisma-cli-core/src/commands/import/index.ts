@@ -27,12 +27,12 @@ export default class Import extends Command {
     const cluster = this.env.clusterByName(clusterName!, true)
     this.env.setActiveCluster(cluster!)
 
-    if (!data.endsWith('.zip')) {
-      throw new Error(`data must end with .zip`)
-    }
-
     if (!fs.pathExistsSync(data)) {
       throw new Error(`Path ${data} does not exist`)
+    }
+
+    if (!data.endsWith('.zip') && !fs.lstatSync(data).isDirectory()) {
+      throw new Error(`data must be a directory or end with .zip`)
     }
 
     // continue

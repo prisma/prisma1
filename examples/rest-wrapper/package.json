@@ -11,7 +11,7 @@
     "jsonwebtoken": "8.1.0"
   },
   "devDependencies": {
-    "prisma-cli": "1.0.0"
+    "prisma": "1.0.0"
   },
   "prettier": {
     "semi": false,

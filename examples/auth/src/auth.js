@@ -1,6 +1,6 @@
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
-const { Context, getUserId } = require('./utils')
+const { Context, getUserId, JWT_SECRET } = require('./utils')
 
 // resolve the `AuthPayload` type
 const AuthPayload = {
@@ -23,7 +23,7 @@ async function signup(parent, args, ctx, info) {
   })
 
   return {
-    token: jwt.sign({ userId: user.id }, process.env.JWT_SECRET),
+    token: jwt.sign({ userId: user.id }, JWT_SECRET),
     user,
   }
 }
@@ -32,7 +32,7 @@ async function signup(parent, args, ctx, info) {
 async function login(parent, { email, password }, ctx, info) {
   const user = await ctx.db.query.user({ where: { email } })
   if (!user) {
-    throw new Error(`No such user found for email: ${email}`)
+    throw new Error(`No user found for email: ${email}`)
   }
 
   const valid = await bcrypt.compare(password, user.password)
@@ -41,7 +41,7 @@ async function login(parent, { email, password }, ctx, info) {
   }
 
   return {
-    token: jwt.sign({ userId: user.id }, process.env.JWT_SECRET),
+    token: jwt.sign({ userId: user.id }, JWT_SECRET),
     user,
   }
 }

@@ -6,11 +6,11 @@
     "playground": "graphcool playground"
   },
   "dependencies": {
-    "prisma-binding": "1.3.7",
-    "graphql-yoga": "1.1.4"
+    "graphql-yoga": "1.2.0",
+    "prisma-binding": "1.4.0"
   },
   "devDependencies": {
-    "prisma-cli": "1.0.0"
+    "prisma": "1.0.4"
   },
   "prettier": {
     "semi": false,

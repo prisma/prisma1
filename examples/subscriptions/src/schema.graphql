@@ -8,10 +8,8 @@ type Query {
 
 type Mutation {
   writePost(title: String!, text: String!, isPublished: Boolean!): Post
-  # writeComment(body: String!, postId: ID!): Comment
 }
 
 type Subscription {
   publications: PostSubscriptionPayload
-  # comments: CommentSubscriptionPayload
 }

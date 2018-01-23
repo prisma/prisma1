@@ -15,12 +15,12 @@ In this quickstart tutorial, you'll learn how to build a GraphQL server with Typ
 You'll be using two CLIs throughout the course of this tutorial:
 
 - `graphql-cli` is used initially to bootstrap the file structure for your server with `graphql create`
-- `prisma-cli` is used continuously to manage your Prisma database service (the "GraphQL database")
+- `prisma` is used continuously to manage your Prisma database service (the "GraphQL database")
 
 <Instruction>
 
 ```sh
-npm install -g prisma-cli graphql-cli
+npm install -g prisma graphql-cli
 ```
 
 </Instruction>

@@ -27,7 +27,7 @@
     "graphql-cli": "^2.0.5",
     "graphql-cli-prepare": "1.4.6",
     "nodemon": "^1.12.5",
-    "prisma-cli": "1.0.0",
+    "prisma": "1.0.0",
     "ts-node": "^3.3.0",
     "typescript": "^2.6.2"
   },
