@@ -19,11 +19,11 @@ const server = new GraphQLServer({
   context: req => ({
     ...req,
     db: new Prisma({
-      typeDefs: 'src/generated/graphcool.graphql',
-      endpoint: process.env.GRAPHCOOL_ENDPOINT,
-      secret: process.env.GRAPHCOOL_SECRET,
+      typeDefs: 'src/generated/prisma.graphql',             // points to Prisma database schema
+      endpoint: 'http://localhost:4466/auth-example/dev',   // (local) endpoint for Prisma service
+      secret: 'mysecret123',                                // `secret` taken from `prisma.yml`
     }),
   }),
 })
 
-server.start(({ port }) => console.log(`Server is running on http://localhost:${port}`))
+server.start(() => console.log(`Server is running on http://localhost:4000`))

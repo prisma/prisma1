@@ -27,6 +27,12 @@ This directory contains a GraphQL server (based on [`graphql-yoga`](https://gith
 
 ## Get started
 
+### 0. Prerequisites
+
+- [Docker](https://www.docker.com): For the purpose of this tutorial, you're going to deploy the Prisma service locally with Docker. Note that if you don't want to use Docker, you also can deploy the Prisma service on a _public cluster_. In that case, you need to adjust the Prisma service endpoint in [`index.js`](./index.js#L23) to the one of your service on the public cluster
+
+> **Note**: `prisma` is listed as a _development dependency_ and _script_ in this project's [`package.json`](./package.json). This means you can invoke the Prisma CLI without having it globally installed on your machine (by prefixing it with `yarn`), e.g. `yarn prisma deploy` or `yarn prisma playground`. If you have the Prisma CLI installed globally (which you can do with `npm install -g prisma`), you can omit the `yarn` prefix.
+
 ### 1. Download the example
 
 Clone the Prisma monorepo and navigate to this directory or download _only_ this example with the following command:
@@ -38,17 +44,28 @@ cd auth
 
 ### 2. Deploy the Prisma database service
 
-You can now [deploy](https://www.prismagraphql.com/docs/reference/cli-command-reference/database-service/prisma-deploy-kee1iedaov) the Prisma service:
+You can now [deploy](https://www.prismagraphql.com/docs/reference/cli-command-reference/database-service/prisma-deploy-kee1iedaov) the Prisma service. Before you do so, you need to install the dependencies for this project:
 
 ```sh
+yarn install
 yarn prisma deploy
 ```
 
-> Note: Whenever you make changes to files in the `database` directory, you need to invoke `prisma deploy` again to make sure your changes get applied to the running service.
+<details>
+ <summary>Deploy to a public cluster</summary>
+
+To deploy your service to a public cluster (rather than locally with Docker), you need to perform the following steps:
+
+1. Remove the `cluster` property from `prisma.yml`
+1. Run `yarn prisma deploy`
+1. When prompted by the CLI, select a public cluster (e.g. `prisma-eu1` or `prisma-us1`)
+1. Replace the [`endpoint`](./src/index.js#L23) in `index.js` with the HTTP endpoint that was printed after the previous command
+
+</details>
 
 ### 3. Deploy the GraphQL server
 
-Your GraphQL web server that's powered by [`graphql-yoga`](https://github.com/graphcool/graphql-yoga/) is now ready to be deployed. This is because the Prisma database service it connects to is now available.
+The Prisma database service that's backing your GraphQL server is now available. This means you can now start the server:
 
 ```sh
 yarn start
@@ -65,7 +82,7 @@ The easiest way to test the deployed service is by using a [GraphQL Playground](
 You can either start the [desktop app](https://github.com/graphcool/graphql-playground) via
 
 ```sh
-prisma playground
+yarn prisma playground
 ```
 
 Or you can open a Playground by navigating to [http://localhost:4000](http://localhost:4000) in your browser.
@@ -78,9 +95,6 @@ You can send the following mutation in the Playground to create a new `User` nod
 mutation {
   signup(email: "alice@graph.cool" password: "graphql") {
     token
-    user {
-      id
-    }
   }
 }
 ```
