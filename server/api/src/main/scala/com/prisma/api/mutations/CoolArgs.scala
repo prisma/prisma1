@@ -73,7 +73,7 @@ case class CoolArgs(raw: Map[String, Any]) {
   def createArgumentsAsCoolArgs: CoolArgs = CoolArgs(raw("create").asInstanceOf[Map[String, Any]])
   def updateArgumentsAsCoolArgs: CoolArgs = CoolArgs(raw("update").asInstanceOf[Map[String, Any]])
 
-  def generateCreateArgs(model: Model, id: String): CoolArgs = {
+  def generateNonListCreateArgs(model: Model, id: String): CoolArgs = {
     CoolArgs(
       model.scalarNonListFields
         .filter(_.name != "id")
@@ -88,7 +88,7 @@ case class CoolArgs(raw: Map[String, Any]) {
         .toMap + ("id" -> id))
   }
 
-  def generateUpdateArgs(model: Model): CoolArgs = {
+  def generateNonListUpdateArgs(model: Model): CoolArgs = {
     CoolArgs(
       model.scalarNonListFields
         .filter(_.name != "id")
@@ -180,6 +180,12 @@ case class CoolArgs(raw: Map[String, Any]) {
           Seq(fieldValue.asInstanceOf[T])
       }
     }
+  }
+
+  def getFieldValue(field: Field): Any = raw(field.name)
+  def getUnwrappedFieldValue(field: Field): Any = getFieldValue(field) match {
+    case Some(x) => x
+    case x       => x
   }
 
   /**

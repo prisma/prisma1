@@ -29,7 +29,7 @@ case class UpsertDataItemIfInRelationWith(project: Project,
 
   val model                   = where.model
   val nonListScalarCreateArgs = CoolArgs(createArgs.raw).nonListScalarArgumentsAsCoolArgs(model)
-  val actualCreateArgs        = nonListScalarCreateArgs.generateCreateArgs(model, createWhere.fieldValueAsString)
+  val actualCreateArgs        = nonListScalarCreateArgs.generateNonListCreateArgs(model, createWhere.fieldValueAsString)
   val actualUpdateArgs        = updateArgs.nonListScalarArgumentsAsCoolArgs(model)
 
   override def execute: Future[ClientSqlStatementResult[Any]] = Future.successful {

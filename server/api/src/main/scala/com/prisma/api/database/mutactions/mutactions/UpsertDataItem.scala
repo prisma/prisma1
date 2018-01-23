@@ -1,34 +1,35 @@
 package com.prisma.api.database.mutactions.mutactions
 
 import java.sql.SQLIntegrityConstraintViolationException
-
 import com.prisma.api.database.mutactions.GetFieldFromSQLUniqueException._
 import com.prisma.api.database.mutactions.validation.InputValueValidation
 import com.prisma.api.database.mutactions.{ClientSqlDataChangeMutaction, ClientSqlStatementResult, MutactionVerificationSuccess}
 import com.prisma.api.database.{DataResolver, DatabaseMutationBuilder}
-import com.prisma.api.mutations.{CoolArgs, NodeSelector}
+import com.prisma.api.mutations.{CoolArgs, NodeSelector, SqlMutactions}
 import com.prisma.api.schema.APIErrors
 import com.prisma.shared.models.Project
 import com.prisma.util.json.JsonFormats
-import slick.dbio.{DBIOAction, Effect, NoStream}
 
-import scala.collection.immutable.Seq
 import scala.concurrent.Future
 import scala.util.{Success, Try}
 
 case class UpsertDataItem(
     project: Project,
     where: NodeSelector,
-    createArgs: CoolArgs,
-    updateArgs: CoolArgs,
-    createMutations: Seq[DBIOAction[List[Int], NoStream, Effect]],
-    updateMutations: Seq[DBIOAction[List[Int], NoStream, Effect]]
+    createWhere: NodeSelector,
+    updateWhere: NodeSelector,
+    allArgs: CoolArgs,
+    dataResolver: DataResolver
 ) extends ClientSqlDataChangeMutaction {
 
-  val model = where.model
+  val model      = where.model
+  val createArgs = allArgs.createArgumentsAsCoolArgs.generateNonListCreateArgs(model, createWhere.fieldValueAsString)
+  val updateArgs = allArgs.updateArgumentsAsCoolArgs.generateNonListUpdateArgs(model)
 
-  override def execute: Future[ClientSqlStatementResult[Any]] = Future.successful {
-    ClientSqlStatementResult(DatabaseMutationBuilder.upsert(project.id, where, createArgs, updateArgs, createMutations, updateMutations))
+  override def execute: Future[ClientSqlStatementResult[Any]] = {
+    val createActions = SqlMutactions(dataResolver).getDbActionsForUpsertScalarLists(createWhere, allArgs.createArgumentsAsCoolArgs)
+    val updateActions = SqlMutactions(dataResolver).getDbActionsForUpsertScalarLists(updateWhere, allArgs.updateArgumentsAsCoolArgs)
+    Future.successful { ClientSqlStatementResult(DatabaseMutationBuilder.upsert(project.id, where, createArgs, updateArgs, createActions, updateActions)) }
   }
 
   override def handleErrors = {
