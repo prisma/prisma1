@@ -52,6 +52,7 @@ if [ $ymlChanged ]; then
     npm version patch --no-git-tag-version
     npm publish
   else
+    npm version $(npm info prisma-yml version)
     npm version prerelease --no-git-tag-version
     npm publish --tag beta
   fi
