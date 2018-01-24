@@ -30,9 +30,17 @@ fi
 
 echo "yml changed: $ymlChanged. core changed: $coreChanged. engine changed: $engineChanged"
 
+latestVersion=$(npm info prisma version)
+tag=${CIRCLE_TAG:-$latestVersion}
+tagElements=(${tag//./ })
+nextDockerTag="${tagElements[0]}.${tagElements[1]}"
+
+node cli/scripts/waitUntilTagPublished.js $nextDockerTag
+
 cd cli/packages/
 
 export ymlVersionBefore=$(cat prisma-yml/package.json | jq -r '.version')
+
 if [ $ymlChanged ]; then
   echo "Going to publish yml"
   cd prisma-yml
@@ -52,10 +60,9 @@ export ymlVersion=$(cat prisma-yml/package.json | jq -r '.version')
 if [ $ymlVersionBefore != $ymlVersion ] || [ $engineChanged ]; then
   cd prisma-cli-engine
   sleep 3.0
-  #npm install prisma-yml@$ymlVersion --save --no-package-lock
   yarn add prisma-yml@$ymlVersion
   sleep 0.2
-  yarn install
+  ../../scripts/doubleInstall.sh
   yarn build
   if [[ $CIRCLE_TAG ]]; then
     npm version patch --no-git-tag-version
@@ -71,12 +78,17 @@ export engineVersion=$(cat prisma-cli-engine/package.json | jq -r '.version')
 if [ $ymlVersionBefore != $ymlVersion ] || [ $coreChanged ]; then
   cd prisma-cli-core
   sleep 3.0
-  # npm install prisma-yml@$ymlVersion --save --no-package-lock
   yarn add prisma-yml@$ymlVersion
   sleep 0.2
   yarn install
+
+  # replace docker tag
+  sed -i.bak "s/CLUSTER_VERSION: [0-9]\{1,\}\.[0-9]\{1,\}/CLUSTER_VERSION: $nextDockerTag/g" src/commands/local/docker/docker-compose.yml
+  sed -i.bak "s/image: prismagraphql\/prisma:[0-9]\{1,\}\.[0-9]\{1,\}/image: prismagraphql\/prisma:$nextDockerTag/g" src/commands/local/docker/docker-compose.yml
+
   yarn build
   if [[ $CIRCLE_TAG ]]; then
+
     npm version patch --no-git-tag-version
     npm publish
   else
@@ -94,12 +106,17 @@ yarn install
 yarn build
 
 if [ -z "$CIRCLE_TAG" ]; then
-  latestVersion=$(npm info prisma version)
   latestBetaVersion=$(npm info prisma version --tag beta)
-  betaMinor=`echo $latestBetaVersion | sed -n 's/[0-9]\{1,\}\.\([0-9]\{1,\}\)\.[0-9]\{1,\}.*/\1/p'`
-  latestMinor=`echo $latestVersion | sed -n 's/[0-9]\{1,\}\.\([0-9]\{1,\}\)\.[0-9]\{1,\}/\1/p'`
-  latestMajor=`echo $latestVersion | sed -n 's/\([0-9]\{1,\}\)\.\([0-9]\{1,\}\)\.[0-9]\{1,\}/\1/p'`
+  latestVersionElements=(${latestVersion//./ })
+  latestBetaVersionElements=(${latestBetaVersion//./ })
+
+  betaMinor=${latestBetaVersionElements[1]}
+  latestMinor=${latestVersionElements[1]}
+  latestMajor=${latestVersionElements[0]}
+
   betaLastNumber=`echo $latestBetaVersion | sed -n 's/.*beta\.\([0-9]\{1,\}\)/\1/p'`
+
+  echo "betaLastNumber $betaLastNumber"
 
   # calc next minor
   step=1
@@ -116,14 +133,16 @@ if [ -z "$CIRCLE_TAG" ]; then
   fi
 
   newVersion="$latestMajor.$nextMinor.0-beta.$nextLastNumber"
-
   echo "new version: $newVersion"
+
   npm version $newVersion
-  npm publish
+  echo "npm publish --tag beta. NOT"
+  # npm publish --tag beta
 else
   newVersion=$CIRCLE_TAG
 
   echo "new version: $newVersion"
   npm version $newVersion
-  npm publish --tag beta
+  # npm publish
+  echo "npm publish"
 fi
