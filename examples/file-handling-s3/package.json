@@ -1,5 +1,5 @@
 {
-  "name": "prisma-file-api",
+  "name": "prisma-file-handling-s3",
   "version": "1.0.0",
   "license": "MIT",
   "scripts": {

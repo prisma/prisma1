@@ -13,9 +13,9 @@ const s3client = new S3({
 })
 
 const prisma = new Prisma({
-  endpoint: process.env.PRISMA_ENDPOINT,
-  secret: process.env.PRISMA_SECRET,
-  debug: true,
+  endpoint: process.env.PRISMA_ENDPOINT,  // Prisma service endpoint (see `~/.prisma/config.yml`)
+  secret: process.env.PRISMA_SECRET,      // `secret` taken from `prisma.yml`
+  debug: true                             // log all requests to the Prisma API to console
 })
 
 const server = new GraphQLServer({
@@ -35,6 +35,4 @@ server.express.post(
   }),
 )
 
-server.start(() => {
-  console.log(`Server is running on http://localhost:4000`)
-})
+server.start(() => console.log(`Server is running on http://localhost:4000`))
