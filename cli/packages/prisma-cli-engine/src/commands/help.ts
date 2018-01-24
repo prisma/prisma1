@@ -64,7 +64,7 @@ export default class Help extends Command {
     debug(`argv`, argv)
     debug(`cmd`, cmd)
     if (!cmd) {
-      return await this.topics()
+      return this.topics()
     }
 
     const topic = await this.plugins.findTopic(cmd)
@@ -121,7 +121,7 @@ ${chalk.bold('Usage:')} ${chalk.bold('prisma')} COMMAND`)
         continue
       }
       const list: string[][][] = (await Promise.all(
-        groupTopics.map(async t => {
+        groupTopics.map(async (t: any) => {
           const cmds = await this.plugins.commandsForTopic(t.id)
           // console.log(cmds)
           // if (t.id === 'local') {

@@ -1,6 +1,6 @@
 {
   "name": "prisma-yml",
-  "version": "1.0.13",
+  "version": "1.0.14-5",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "repository": {
@@ -11,21 +11,21 @@
   ],
   "license": "Apache-2.0",
   "devDependencies": {
-    "@types/fs-extra": "^4.0.5",
+    "@types/fs-extra": "^5.0.0",
     "@types/jest": "^21.1.8",
     "@types/node": "^8.0.57",
     "jest": "^21.2.1",
-    "prettier": "^1.9.1",
+    "prettier": "^1.10.2",
     "ts-jest": "^21.2.4",
     "typescript": "^2.6.2"
   },
   "dependencies": {
-    "ajv": "^5.5.1",
+    "ajv": "5",
     "bluebird": "^3.5.1",
     "chalk": "^2.3.0",
     "debug": "^3.1.0",
     "dotenv": "^4.0.0",
-    "fs-extra": "^4.0.3",
+    "fs-extra": "^5.0.0",
     "isomorphic-fetch": "^2.2.1",
     "js-yaml": "^3.10.0",
     "json-stable-stringify": "^1.0.1",
