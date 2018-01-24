@@ -117,7 +117,7 @@ mutation {
 
 For this query, you need to make sure a valid authentication token is sent along with the `Bearer `-prefix in the `Authorization` header of the request. Inside the Playground, you can set HTTP headers in the bottom-left corner:
 
-![](https://i.imgur.com/BLNI8z1.png)
+![](https://imgur.com/bEGUtO0.png)
 
 Once you've set the header, you can send the following query to check whether the token is valid:
 
