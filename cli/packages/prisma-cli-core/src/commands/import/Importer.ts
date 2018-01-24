@@ -188,7 +188,9 @@ export class Importer {
     this.out.log(
       'Uploading relations done ' + chalk.cyan(`${Date.now() - before}ms`),
     )
-    fs.removeSync(this.importDir)
+    if (!this.isDir) {
+      fs.removeSync(this.importDir)
+    }
   }
 
   validateFiles(files: Files) {

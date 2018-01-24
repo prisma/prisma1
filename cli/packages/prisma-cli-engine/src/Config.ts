@@ -56,9 +56,7 @@ export class Config {
   /**
    * Urls
    */
-  cloudApiEndpoint = isDevConsole
-    ? 'http://localhost:4000'
-    : 'https://api.cloud.prisma.sh'
+  cloudApiEndpoint = 'https://api.cloud.prisma.sh'
   consoleEndpoint = isDevConsole
     ? 'http://localhost:3000'
     : 'https://app.prismagraphql.com'
