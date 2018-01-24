@@ -44,6 +44,7 @@ export ymlVersionBefore=$(cat prisma-yml/package.json | jq -r '.version')
 if [ $ymlChanged ]; then
   echo "Going to publish yml"
   cd prisma-yml
+  yarn install
   yarn build
   if [[ $CIRCLE_TAG ]]; then
     npm version patch --no-git-tag-version
