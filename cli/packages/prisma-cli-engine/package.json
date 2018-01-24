@@ -1,6 +1,6 @@
 {
   "name": "prisma-cli-engine",
-  "version": "1.0.3-0",
+  "version": "1.0.3-2",
   "main": "dist/index.js",
   "files": [
     "dist"
@@ -84,6 +84,7 @@
     "debug": "^3.1.0",
     "directory-tree": "^2.0.0",
     "dotenv": "^4.0.0",
+    "figures": "^2.0.0",
     "find-up": "^2.1.0",
     "fs-extra": "^5.0.0",
     "graphcool-inquirer": "^1.0.3",
@@ -110,7 +111,7 @@
     "memfs": "^2.5.3",
     "opn": "^5.1.0",
     "prisma-json-schema": "^0.0.1",
-    "prisma-yml": "1.0.11-12",
+    "prisma-yml": "1.0.11-15",
     "raven": "2.3.0",
     "replaceall": "^0.1.6",
     "rwlockfile": "^1.4.8",
