@@ -16,9 +16,9 @@
   dependencies:
     "@types/node" "*"
 
-"@types/fs-extra@^4.0.5":
-  version "4.0.7"
-  resolved "https://registry.yarnpkg.com/@types/fs-extra/-/fs-extra-4.0.7.tgz#02533262386b5a6b9a49797dc82feffdf269140a"
+"@types/fs-extra@^5.0.0":
+  version "5.0.0"
+  resolved "https://registry.yarnpkg.com/@types/fs-extra/-/fs-extra-5.0.0.tgz#d3e225b35eb5c6d3a5a782c28219df365c781413"
   dependencies:
     "@types/node" "*"
 
@@ -82,6 +82,15 @@ adm-zip@^0.4.3, adm-zip@^0.4.7:
 ajv-keywords@^2.1.0:
   version "2.1.0"
   resolved "https://registry.yarnpkg.com/ajv-keywords/-/ajv-keywords-2.1.0.tgz#a296e17f7bfae7c1ce4f7e0de53d29cb32162df0"
+
+ajv@5:
+  version "5.5.2"
+  resolved "https://registry.yarnpkg.com/ajv/-/ajv-5.5.2.tgz#73b5eeca3fab653e3d3f9422b341ad42205dc965"
+  dependencies:
+    co "^4.6.0"
+    fast-deep-equal "^1.0.0"
+    fast-json-stable-stringify "^2.0.0"
+    json-schema-traverse "^0.3.0"
 
 ajv@^4.9.1:
   version "4.11.8"
@@ -821,8 +830,8 @@ code-point-at@^1.0.0:
   resolved "https://registry.yarnpkg.com/code-point-at/-/code-point-at-1.1.0.tgz#0d070b4d043a5bea33a2f1a40e2edb3d9a4ccf77"
 
 color-convert@^1.9.0:
-  version "1.9.0"
-  resolved "https://registry.yarnpkg.com/color-convert/-/color-convert-1.9.0.tgz#1accf97dd739b983bf994d56fec8f95853641b7a"
+  version "1.9.1"
+  resolved "https://registry.yarnpkg.com/color-convert/-/color-convert-1.9.1.tgz#c1261107aeb2f294ebffec9ed9ecad529a6097ed"
   dependencies:
     color-name "^1.1.1"
 
@@ -1629,7 +1638,7 @@ fresh@0.5.2:
   version "0.5.2"
   resolved "https://registry.yarnpkg.com/fresh/-/fresh-0.5.2.tgz#3d8cadd90d976569fa835ab1f8e4b23a105605a7"
 
-fs-extra@5.0.0:
+fs-extra@5.0.0, fs-extra@^5.0.0:
   version "5.0.0"
   resolved "https://registry.yarnpkg.com/fs-extra/-/fs-extra-5.0.0.tgz#414d0110cdd06705734d055652c5411260c31abd"
   dependencies:
@@ -2008,7 +2017,7 @@ graphql-config-extension-prisma@0.0.3:
     graphql-config "^1.1.4"
     prisma-yml "0.0.4"
 
-graphql-config@1.1.7:
+graphql-config@1.1.7, graphql-config@^1.1.7:
   version "1.1.7"
   resolved "https://registry.yarnpkg.com/graphql-config/-/graphql-config-1.1.7.tgz#546c443d3ad877ceb8e13f40fbc8937af0d35dbe"
   dependencies:
@@ -3953,11 +3962,7 @@ preserve@^0.2.0:
   version "0.2.0"
   resolved "https://registry.yarnpkg.com/preserve/-/preserve-0.2.0.tgz#815ed1f6ebc65926f865b310c0713bcb3315ce4b"
 
-prettier@^1.5.3:
-  version "1.5.3"
-  resolved "https://registry.yarnpkg.com/prettier/-/prettier-1.5.3.tgz#59dadc683345ec6b88f88b94ed4ae7e1da394bfe"
-
-prettier@^1.9.1:
+prettier@^1.10.2:
   version "1.10.2"
   resolved "https://registry.yarnpkg.com/prettier/-/prettier-1.10.2.tgz#1af8356d1842276a99a5b5529c82dd9e9ad3cc93"
 
@@ -3967,6 +3972,110 @@ pretty-format@^21.2.1:
   dependencies:
     ansi-regex "^3.0.0"
     ansi-styles "^3.2.0"
+
+prisma-cli-core@1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/prisma-cli-core/-/prisma-cli-core-1.0.1.tgz#e53e17dc3af747427f27a49ba5378fe36a0208ca"
+  dependencies:
+    archiver "^2.0.3"
+    callsites "^2.0.0"
+    chalk "^2.2.0"
+    chokidar "^1.7.0"
+    copy-paste "^1.3.0"
+    cross-spawn "^5.1.0"
+    download-github-repo "^0.1.3"
+    figures "^2.0.0"
+    find-up "^2.1.0"
+    fs-extra "^4.0.2"
+    globby "^6.1.0"
+    graphcool-inquirer "^1.0.3"
+    graphql "^0.11.7"
+    graphql-cli "2.12.2"
+    graphql-config "^1.0.9"
+    inquirer "^3.3.0"
+    isomorphic-fetch "^2.2.1"
+    js-yaml "^3.9.1"
+    jwt-decode "^2.2.0"
+    lodash "^4.17.4"
+    lodash.differenceby "^4.8.0"
+    multimatch "^2.1.0"
+    node-forge "^0.7.1"
+    npm-run "^4.1.2"
+    opn "^5.1.0"
+    pause "^0.1.0"
+    portfinder "^1.0.13"
+    prisma-json-schema "^0.0.1"
+    prisma-yml "1.0.1"
+    scuid "^1.0.2"
+    semver "^5.4.1"
+    sillyname "^0.1.0"
+    source-map-support "^0.4.18"
+    table "^4.0.1"
+    ts-node "^3.3.0"
+    typescript "^2.5.3"
+    unzip "^0.1.11"
+    util.promisify "^1.0.0"
+    validator "^8.2.0"
+
+prisma-cli-engine@1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/prisma-cli-engine/-/prisma-cli-engine-1.0.1.tgz#d4e615561ab417d261c28b303573113b7307e9e9"
+  dependencies:
+    "@heroku/linewrap" "^1.0.0"
+    "@types/fs-extra" "^4.0.2"
+    ajv "^5.2.2"
+    ansi-escapes "^3.0.0"
+    ansi-styles "^3.2.0"
+    bluebird "^3.5.0"
+    cache-require-paths "^0.3.0"
+    callsites "^2.0.0"
+    cardinal "^1.0.0"
+    chalk "^2.2.0"
+    charm "^1.0.2"
+    debug "^3.0.1"
+    directory-tree "^2.0.0"
+    dotenv "^4.0.0"
+    find-up "^2.1.0"
+    fs-extra "^4.0.2"
+    graphcool-inquirer "^1.0.3"
+    graphql-request "^1.3.4"
+    isomorphic-fetch "^2.2.1"
+    jsonwebtoken "^8.1.0"
+    klaw-sync "^3.0.0"
+    lodash "^4.17.4"
+    lodash.ary "^4.1.1"
+    lodash.defaults "^4.2.0"
+    lodash.flatten "^4.4.0"
+    lodash.get "^4.4.2"
+    lodash.groupby "^4.6.0"
+    lodash.identity "^3.0.0"
+    lodash.keys "^4.2.0"
+    lodash.maxby "4.x"
+    lodash.merge "4.x"
+    lodash.partial "^4.2.1"
+    lodash.property "^4.4.2"
+    lodash.result "^4.5.2"
+    lodash.uniqby "^4.7.0"
+    marked "^0.3.6"
+    marked-terminal "^2.0.0"
+    memfs "^2.5.3"
+    opn "^5.1.0"
+    prisma-json-schema "^0.0.1"
+    prisma-yml "1.0.1"
+    raven "2.3.0"
+    replaceall "^0.1.6"
+    rwlockfile "^1.4.8"
+    scuid "^1.0.2"
+    serialize-error "^2.1.0"
+    source-map-support "^0.4.18"
+    string "3.x"
+    string-similarity "^1.2.0"
+    strip-ansi "^4.0.0"
+    supports-color "^4.4.0"
+    treeify "^1.0.1"
+    update-notifier "^2.3.0"
+    validator "^8.2.0"
+    yaml-ast-parser "^0.0.34"
 
 prisma-json-schema@^0.0.1:
   version "0.0.1"
@@ -3982,6 +4091,46 @@ prisma-yml@0.0.4:
     debug "^3.1.0"
     dotenv "^4.0.0"
     fs-extra "^4.0.3"
+    isomorphic-fetch "^2.2.1"
+    js-yaml "^3.10.0"
+    json-stable-stringify "^1.0.1"
+    jsonwebtoken "^8.1.0"
+    lodash "^4.17.4"
+    prisma-json-schema "^0.0.1"
+    replaceall "^0.1.6"
+    scuid "^1.0.2"
+    yaml-ast-parser "^0.0.40"
+
+prisma-yml@1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/prisma-yml/-/prisma-yml-1.0.1.tgz#3e4cfc7cbf25c4e5c73dec0a8bc71604afa266d9"
+  dependencies:
+    ajv "^5.5.1"
+    bluebird "^3.5.1"
+    chalk "^2.3.0"
+    debug "^3.1.0"
+    dotenv "^4.0.0"
+    fs-extra "^4.0.3"
+    isomorphic-fetch "^2.2.1"
+    js-yaml "^3.10.0"
+    json-stable-stringify "^1.0.1"
+    jsonwebtoken "^8.1.0"
+    lodash "^4.17.4"
+    prisma-json-schema "^0.0.1"
+    replaceall "^0.1.6"
+    scuid "^1.0.2"
+    yaml-ast-parser "^0.0.40"
+
+prisma-yml@1.0.11-11:
+  version "1.0.11-11"
+  resolved "https://registry.yarnpkg.com/prisma-yml/-/prisma-yml-1.0.11-11.tgz#16bbce6ec73b70daa9acf94f65a271423de97e8f"
+  dependencies:
+    ajv "5"
+    bluebird "^3.5.1"
+    chalk "^2.3.0"
+    debug "^3.1.0"
+    dotenv "^4.0.0"
+    fs-extra "^5.0.0"
     isomorphic-fetch "^2.2.1"
     js-yaml "^3.10.0"
     json-stable-stringify "^1.0.1"
