@@ -5,6 +5,7 @@ const { Context, getUserId, APP_SECRET } = require('./utils')
 // resolve the `AuthPayload` type
 const AuthPayload = {
   user: async ({ user: { id } }, args, ctx, info) => {
+    console.log(`resolve AuthPayload`)
     return ctx.db.query.user({ where: { id } }, info)
   },
 }
@@ -20,10 +21,13 @@ async function signup(parent, args, ctx, info) {
   const password = await bcrypt.hash(args.password, 10)
   const role = args.admin ? 'ADMIN' : 'CUSTOMER'
 
+  // remove `admin` from `args`
+  const { admin, ...data } = args
+
   const user = await ctx.db.mutation.createUser({
-    data: { ...args, role, password },
+    data: { ...data, role, password },
   })
-  console.log(`created user: `, user)
+
   return {
     token: jwt.sign({ userId: user.id }, APP_SECRET),
     user,

@@ -165,7 +165,7 @@ mutation {
 
 ### Create posts with the `createPost` mutation
 
-With this mutation, authenitcated users can create a new `Post`. Make sure the `Authorization` header is set:
+With this mutation, authenicated users can create a new `Post`. Make sure the `Authorization` header is set:
 
 ```graphql
 mutation {
@@ -177,15 +177,15 @@ mutation {
 }
 ```
 
-### Update posts with the `updatePost` mutation
+### Update posts with the `updateTitle` mutation
 
 With this mutation users with the default `CUSTOMER` role can change their own posts (i.e. the one for which they're the `author`) and users with the `ADMIN` role can also change posts of other users (replace the `__POST_ID__` placeholder with the `id` of the `Post` to be updated):
 
 ```graphql
 mutation {
-  updatePost(
+  updateTitle(
     id: "__POST_ID__"
-    title: "Prisma makes building GraphQL servers a breeze"
+    newTitle: "Prisma makes building GraphQL servers a breeze"
   ) {
     title
   }

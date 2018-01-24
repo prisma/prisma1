@@ -23,4 +23,5 @@ class AuthError extends Error {
 module.exports = {
   getUserId,
   AuthError,
+  APP_SECRET,
 }
