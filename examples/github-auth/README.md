@@ -23,7 +23,7 @@ yarn install
 
 ### 2. Set up the GitHub OAuth application
 
-Since the authentication mechanism is based on GitHub, you first need to create an OAuth applicatoin in your GitHub account.
+Since the authentication mechanism is based on GitHub, you first need to create an OAuth application in your GitHub account.
 
 1. Click your profile in the top-right corner of GitHub.com and select **Settings** from the dropdown.
 1. In the left side-menu, select **Developer settings**.
@@ -66,7 +66,7 @@ To deploy your service to a public cluster (rather than locally with Docker), yo
 
 ## Testing the API
 
-### 1. Server`login.html` locally
+### 1. Serve `login.html` locally
 
 In the root directory of the project, start a local web server, e.g. using Python and the following command:
 
