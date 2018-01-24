@@ -47,6 +47,8 @@ if [ $ymlChanged ]; then
   yarn install
   yarn build
   if [[ $CIRCLE_TAG ]]; then
+    # make sure it is the latest version
+    npm version $(npm info prisma-yml version)
     npm version patch --no-git-tag-version
     npm publish
   else
@@ -66,9 +68,11 @@ if [ $ymlVersionBefore != $ymlVersion ] || [ $engineChanged ]; then
   ../../scripts/doubleInstall.sh
   yarn build
   if [[ $CIRCLE_TAG ]]; then
+    npm version $(npm info prisma-cli-engine version)
     npm version patch --no-git-tag-version
     npm publish
   else
+    npm version $(npm info prisma-cli-engine version)
     npm version prerelease --no-git-tag-version
     npm publish --tag beta
   fi
@@ -89,10 +93,11 @@ if [ $ymlVersionBefore != $ymlVersion ] || [ $coreChanged ]; then
 
   yarn build
   if [[ $CIRCLE_TAG ]]; then
-
+    npm version $(npm info prisma-cli-core version)
     npm version patch --no-git-tag-version
     npm publish
   else
+    npm version $(npm info prisma-cli-core version)
     npm version prerelease --no-git-tag-version
     npm publish --tag beta
   fi
