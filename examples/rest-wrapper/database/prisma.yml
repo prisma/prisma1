@@ -1,7 +1,0 @@
-service: rest-wrapper
-
-stage: ${env:PRISMA_STAGE}
-
-datamodel: datamodel.graphql
-
-secret: ${env:PRISMA_SECRET}

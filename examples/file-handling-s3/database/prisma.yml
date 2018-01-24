@@ -1,6 +1,6 @@
 # The name for the service. It will be part of the service's HTTP endpoint,
-# e.g. http://localhost:4466/auth-example/dev.
-service: auth-example
+# e.g. http://localhost:4466/file-handling-s3-example/dev.
+service: file-handling-s3-example
 
 # The stage to which the service is deployed. This is the last part
 # of the service's HTTP endpoint (see example above).
@@ -14,7 +14,8 @@ datamodel: datamodel.graphql
 # to generate a JWT based on the secret. When using the `prisma-binding` package, 
 # you don't need to generate the JWTs manually as the library is doing that for you
 # (this is why you're passing it to the `Prisma` constructor).
-secret: mysecret123
+# Here, the secret is loaded as an environment variable from .env.
+secret: ${env:PRISMA_SECRET}
 
 # The cluster your service is deployed to. Cluster information (such as
 # host and cluster secret) are stored in `~/.prisma/config.yml`.

@@ -1,7 +1,7 @@
 const { GraphQLServer } = require('graphql-yoga')
 const { Prisma } = require('prisma-binding')
 const { me, signup, login, updatePassword, AuthPayload } = require('./auth')
-const { createPost, updatePost, deletePost, posts } = require('./posts')
+const { createPost, updateTitle, deletePost, posts } = require('./posts')
 const { user } = require('./users')
 
 const resolvers = {
@@ -15,7 +15,7 @@ const resolvers = {
     login,
     updatePassword,
     createPost,
-    updatePost,
+    updateTitle,
     deletePost,
   },
 }
@@ -26,12 +26,12 @@ const server = new GraphQLServer({
   context: req => ({
     ...req,
     db: new Prisma({
-      typeDefs: 'src/generated/prisma.graphql',
-      endpoint: process.env.PRISMA_ENDPOINT,
-      secret: process.env.PRISMA_SECRET,
-      debug: true,
+      typeDefs: 'src/generated/prisma.graphql',                     // points to Prisma database schema
+      endpoint: 'http://localhost:4466/permissions-example/dev',    // Prisma service endpoint (see `~/.prisma/config.yml`)
+      secret: 'mysecret123',                                        // `secret` taken from `prisma.yml`
+      debug: true                                                   // log all requests to the Prisma API to console
     }),
   }),
 })
 
-server.start(({ port }) => console.log(`Server is running on http://localhost:${port}`))
+server.start(() => console.log(`Server is running on http://localhost:4000`))

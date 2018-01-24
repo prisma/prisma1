@@ -6,10 +6,8 @@ enum Role {
 type User {
   id: ID! @unique
   createdAt: DateTime!
-
   role: Role!
   posts: [Post!]!
-
   email: String @unique
   password: String
 }
@@ -17,8 +15,6 @@ type User {
 type Post {
   id: ID! @unique
   createdAt: DateTime!
-
   title: String!
-
   author: User!
 }

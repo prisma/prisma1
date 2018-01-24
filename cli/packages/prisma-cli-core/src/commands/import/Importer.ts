@@ -32,6 +32,7 @@ export class Importer {
   out: Output
   statePath: string
   config: Config
+  isDir: boolean
   constructor(
     importPath: string,
     types: string,
@@ -44,7 +45,8 @@ export class Importer {
     }
     this.config = config
     this.importPath = importPath
-    this.importDir = path.join(config.cwd, '.import/')
+    this.isDir = fs.lstatSync(importPath).isDirectory()
+    this.importDir = this.isDir ? importPath : path.join(config.cwd, '.import/')
     this.client = client
     this.types = types
     this.out = out
@@ -93,7 +95,9 @@ export class Importer {
     token?: string,
     workspaceSlug?: string,
   ) {
-    await this.unzip()
+    if (!this.isDir) {
+      await this.unzip()
+    }
     let before = Date.now()
     this.out.action.start('Validating data')
     const files = await this.getFiles()
@@ -184,7 +188,9 @@ export class Importer {
     this.out.log(
       'Uploading relations done ' + chalk.cyan(`${Date.now() - before}ms`),
     )
-    fs.removeSync(this.importDir)
+    if (!this.isDir) {
+      fs.removeSync(this.importDir)
+    }
   }
 
   validateFiles(files: Files) {

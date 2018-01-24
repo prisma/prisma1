@@ -11,21 +11,31 @@ import com.prisma.api.schema.APIErrors
 import cool.graph.cuid.Cuid
 import com.prisma.shared.models.Project
 import com.prisma.util.json.JsonFormats
+import slick.dbio.{DBIOAction, Effect, NoStream}
 
+import scala.collection.immutable.Seq
 import scala.concurrent.Future
 import scala.util.{Success, Try}
 
-case class UpsertDataItemIfInRelationWith(project: Project, parentInfo: ParentInfo, where: NodeSelector, createArgs: CoolArgs, updateArgs: CoolArgs)
+case class UpsertDataItemIfInRelationWith(project: Project,
+                                          parentInfo: ParentInfo,
+                                          where: NodeSelector,
+                                          createWhere: NodeSelector,
+                                          createArgs: CoolArgs,
+                                          updateArgs: CoolArgs,
+                                          createMutations: Seq[DBIOAction[List[Int], NoStream, Effect]],
+                                          updateMutations: Seq[DBIOAction[List[Int], NoStream, Effect]])
     extends ClientSqlDataChangeMutaction {
 
   val model                   = where.model
-  val idOfNewItem             = Cuid.createCuid()
   val nonListScalarCreateArgs = CoolArgs(createArgs.raw).nonListScalarArgumentsAsCoolArgs(model)
-  val actualCreateArgs        = nonListScalarCreateArgs.generateCreateArgs(model, idOfNewItem)
+  val actualCreateArgs        = nonListScalarCreateArgs.generateCreateArgs(model, createWhere.fieldValueAsString)
   val actualUpdateArgs        = updateArgs.nonListScalarArgumentsAsCoolArgs(model)
 
   override def execute: Future[ClientSqlStatementResult[Any]] = Future.successful {
-    ClientSqlStatementResult(DatabaseMutationBuilder.upsertIfInRelationWith(project, parentInfo, where, actualCreateArgs, actualUpdateArgs))
+    ClientSqlStatementResult(
+      DatabaseMutationBuilder
+        .upsertIfInRelationWith(project, parentInfo, where, createWhere, actualCreateArgs, actualUpdateArgs, createMutations, updateMutations))
   }
 
   override def handleErrors = {

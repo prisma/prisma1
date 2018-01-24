@@ -4,31 +4,30 @@ const { Prisma } = require('prisma-binding')
 const resolvers = {
   Query: {
     feed(parent, args, ctx, info) {
-      return ctx.db.query.posts({ where: { isPublished: true } }, info)
+      return ctx.db.query.posts({}, info)
     },
   },
   Mutation: {
-    writePost(parent, { title, text, isPublished }, ctx, info) {
+    writePost(parent, { title }, ctx, info) {
       return ctx.db.mutation.createPost(
         {
           data: {
             title,
-            text,
-            isPublished,
           },
         },
         info,
       )
     },
-    // writeComment(parent, { body, postId }, ctx, info) {
-    //   return ctx.db.mutation.writeComment({ data: {
-    //       body,
-    //       post: {
-    //         connect: { postId }
-    //       },
-    //     }
-    //   }, info)
-    // },
+    updateTitle(parent, { newTitle }, ctx, info) {
+      return ctx.db.mutation.updatePost(
+        {
+          data: {
+            title: newTitle,
+          },
+        },
+        info,
+      )
+    },
   },
   Subscription: {
     publications: {
@@ -37,25 +36,6 @@ const resolvers = {
           {
             where: {
               mutation_in: ['CREATED', 'UPDATED'],
-              node: {
-                isPublished: true,
-              },
-            },
-          },
-          info,
-        )
-      },
-    },
-    comments: {
-      subscribe: async (parent, args, ctx, info) => {
-        return ctx.db.subscription.comments(
-          {
-            where: {
-              node: {
-                post: {
-                  title_contains: 'News',
-                },
-              },
             },
           },
           info,
@@ -72,11 +52,11 @@ const server = new GraphQLServer({
     ...req,
     db: new Prisma({
       typeDefs: 'src/generated/prisma.graphql',
-      endpoint: 'http://localhost:60000/subscriptions/dev',
+      endpoint: 'http://localhost:4466/subscriptions-example/dev',
       secret: 'mysecret123',
     }),
     debug: true,
   }),
 })
 
-server.start(({ port }) => console.log(`Server is running on http://localhost:${port}`))
+server.start(() => console.log(`Server is running on http://localhost:4000`))
