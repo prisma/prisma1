@@ -1,4 +1,4 @@
-# import User, Note from './generated/database.graphql'
+# import User, Note from './generated/prisma.graphql'
 
 type Query {
   me: User,

@@ -1,8 +1,0 @@
-service: graphql-server-github-auth-example
-
-stage: dev
-
-datamodel:
-  - database/datamodel/types.graphql
-
-secret: ${env:PRISMA_SECRET}
