@@ -32,9 +32,10 @@ case class SqlMutactions(dataResolver: DataResolver) {
   val project = dataResolver.project
 
   def getMutactionsForDelete(where: NodeSelector, previousValues: DataItem, id: String): List[ClientSqlMutaction] = {
-    val requiredRelationViolations     = where.model.relationFields.flatMap(field => checkIfRemovalWouldFailARequiredRelation(project, ParentInfo(field, where)))
-    val removeFromConnectionMutactions = where.model.relationFields.map(field => RemoveDataItemFromManyRelationsByParentInfo(project, ParentInfo(field, where)))
-    val deleteItemMutaction            = DeleteDataItem(project, where, previousValues, id)
+    val requiredRelationViolations = where.model.relationFields.flatMap(field => checkIfRemovalWouldFailARequiredRelation(project, ParentInfo(field, where)))
+    val removeFromConnectionMutactions =
+      where.model.relationFields.map(field => RemoveDataItemFromManyRelationsByParentInfo(project, ParentInfo(field, where), where))
+    val deleteItemMutaction = DeleteDataItem(project, where, previousValues, id)
 
     requiredRelationViolations ++ removeFromConnectionMutactions ++ List(deleteItemMutaction)
   }
@@ -134,7 +135,7 @@ case class SqlMutactions(dataResolver: DataResolver) {
       val checkMutactions = getMutactionsForWhereChecks(nestedMutation) ++ getMutactionsForConnectionChecks(subModel, nestedMutation, parentInfo)
 
       val mutactionsThatACreateCanTrigger = getMutactionsForNestedCreateMutation(subModel, nestedMutation, parentInfo) ++
-        getMutactionsForNestedConnectMutation(nestedMutation, parentInfo)
+        getMutactionsForNestedConnectMutation2(nestedMutation, parentInfo, triggeredFromCreate)
 
       val otherMutactions = getMutactionsForNestedDisconnectMutation(nestedMutation, parentInfo) ++
         getMutactionsForNestedDeleteMutation(nestedMutation, parentInfo) ++
@@ -165,8 +166,7 @@ case class SqlMutactions(dataResolver: DataResolver) {
   // needs required relation check and cardinality check
   def getMutactionsForNestedCreateMutation(model: Model, nestedMutation: NestedMutation, parentInfo: ParentInfo): Seq[ClientSqlMutaction] = {
     nestedMutation.creates.flatMap { create =>
-      val id               = createCuid()
-      val where            = NodeSelector.forId(model, id)
+      val where            = NodeSelector.forId(model, createCuid())
       val createMutactions = getCreateMutactions(where, create.data)
       val connectItem      = List(AddDataItemToManyRelationByUniqueField(project, parentInfo, where))
 
@@ -177,23 +177,32 @@ case class SqlMutactions(dataResolver: DataResolver) {
     }
   }
 
-  // needs required relation check and cardinality check
-  def getMutactionsForNestedConnectMutation(nestedMutation: NestedMutation, parentInfo: ParentInfo): Seq[ClientSqlMutaction] = {
-    nestedMutation.connects.flatMap { connect =>
-      val removeOldToRelation: List[ClientSqlMutaction] = if (parentInfo.field.isOneToOneRelation(project)) {
+//  // needs required relation check and cardinality check
+//  def getMutactionsForNestedConnectMutation(nestedMutation: NestedMutation, parentInfo: ParentInfo): Seq[ClientSqlMutaction] = {
+//    nestedMutation.connects.flatMap { connect =>
+//      val removeOldToRelation: List[ClientSqlMutaction] = if (parentInfo.field.isOneToOneRelation(project)) {
+//
+//        // if from create
+//        // check on old partner of node
+//
+//        // if from update
+//
+//        val x: List[ClientSqlMutaction] = checkIfRemovalWouldFailARequiredRelation(project, parentInfo) match {
+//          case Some(x) => List(x)
+//          case None    => List.empty
+//        }
+//
+//        x :+ NestedConnectRelationMutactions(project, parentInfo, connect.where) //remove the child
+//      } else List()
+//
+//      val addToRelation = AddDataItemToManyRelationByUniqueField(project, parentInfo, connect.where)
+//
+//      removeOldToRelation :+ addToRelation
+//    }
+//  }
 
-        val x: List[ClientSqlMutaction] = checkIfRemovalWouldFailARequiredRelation(project, parentInfo) match {
-          case Some(x) => List(x)
-          case None    => List.empty
-        }
-
-        x :+ RemoveDataItemFromManyRelationsByParentInfo(project, parentInfo)
-      } else List()
-
-      val addToRelation = AddDataItemToManyRelationByUniqueField(project, parentInfo, connect.where)
-
-      removeOldToRelation :+ addToRelation
-    }
+  def getMutactionsForNestedConnectMutation2(nestedMutation: NestedMutation, parentInfo: ParentInfo, topIsCreate: Boolean): Seq[ClientSqlMutaction] = {
+    nestedMutation.connects.map(connect => NestedConnectRelationMutactions(project, parentInfo, connect.where, topIsCreate))
   }
 
   // needs required relation check and cardinality check

@@ -134,10 +134,34 @@ object DatabaseMutationBuilder {
   def deleteRelayRowByUnique(projectId: String, where: NodeSelector) =
     sqlu"delete from `#$projectId`.`_RelayId` where `id` = (select id from `#$projectId`.`#${where.model.name}` where `#${where.field.name}` = ${where.fieldValue})"
 
-  def deleteRelationRowsByRelationSideAndId(projectId: String, parentInfo: ParentInfo) = {
+  def deleteRelationRowsByRelationSideAndId(projectId: String, parentInfo: ParentInfo, where: NodeSelector) = {
 
     (sql"delete from `#$projectId`.`#${parentInfo.relation.id}` " ++
-      sql"where `#${parentInfo.field.relationSide.get}` = (select id from `#$projectId`.`#${parentInfo.model.name}` " ++
+      sql"where `#${parentInfo.field.oppositeRelationSide.get}` = (select id from `#$projectId`.`#${where.model.name}` " ++
+      sql"where `#${where.field.name}` = ${where.fieldValue})").asUpdate
+  }
+
+  def deleteRelationRowByParent(projectId: String, parentInfo: ParentInfo) = {
+
+    (sql"delete from `#$projectId`.`#${parentInfo.relation.id}` " ++
+      sql"where `#${parentInfo.field.relationSide.get}` = (select id from `#$projectId`.`#${parentInfo.where.model.name}` " ++
+      sql"where `#${parentInfo.where.field.name}` = ${parentInfo.where.fieldValue})").asUpdate
+  }
+
+  def deleteRelationRowByChild(projectId: String, parentInfo: ParentInfo, where: NodeSelector) = {
+
+    (sql"delete from `#$projectId`.`#${parentInfo.relation.id}` " ++
+      sql"where `#${parentInfo.field.oppositeRelationSide.get}` = (select id from `#$projectId`.`#${where.model.name}` " ++
+      sql"where `#${where.field.name}` = ${where.fieldValue})").asUpdate
+  }
+
+  def deleteRelationRowByParentAndChild(projectId: String, parentInfo: ParentInfo, where: NodeSelector) = {
+
+    (sql"delete from `#$projectId`.`#${parentInfo.relation.id}` " ++
+      sql"where " ++
+      sql"`#${parentInfo.field.oppositeRelationSide.get}` = (select id from `#$projectId`.`#${where.model.name}` " ++
+      sql"where `#${where.field.name}` = ${where.fieldValue})" ++
+      sql" AND `#${parentInfo.field.relationSide.get}` = (select id from `#$projectId`.`#${parentInfo.where.model.name}` " ++
       sql"where `#${parentInfo.where.field.name}` = ${parentInfo.where.fieldValue})").asUpdate
   }
 
@@ -216,6 +240,36 @@ object DatabaseMutationBuilder {
       sql"from information_schema.columns" ++
       sql"where table_schema = ${project.id} AND TABLE_NAME = ${parentInfo.relation.id})end;").as[Int]
   }
+
+  def oldParentFailureTrigger(project: Project, parentInfo: ParentInfo, where: NodeSelector) = {
+    val childSide = parentInfo.relation.sideOf(where.model)
+
+    (sql"select case" ++
+      sql"when exists" ++
+      sql"(select *" ++
+      sql"from `#${project.id}`.`#${parentInfo.relation.id}`" ++
+      sql"where `#$childSide` = (Select `id` from `#${project.id}`.`#${where.model.name}`where `#${where.field.name}` = ${where.fieldValue}))" ++
+      sql"then 1" ++
+      sql"else (select COLUMN_NAME" ++
+      sql"from information_schema.columns" ++
+      sql"where table_schema = ${project.id} AND TABLE_NAME = ${parentInfo.relation.id})end;").as[Int]
+  }
+
+  def oldChildFailureTrigger(project: Project, parentInfo: ParentInfo) = {
+    val parentSide = parentInfo.relation.sideOf(parentInfo.model)
+
+    (sql"select case" ++
+      sql"when exists" ++
+      sql"(select *" ++
+      sql"from `#${project.id}`.`#${parentInfo.relation.id}`" ++
+      sql"where `#$parentSide` = (Select `id` from `#${project.id}`.`#${parentInfo.where.model.name}`where `#${parentInfo.where.field.name}` = ${parentInfo.where.fieldValue}))" ++
+      sql"then 1" ++
+      sql"else (select COLUMN_NAME" ++
+      sql"from information_schema.columns" ++
+      sql"where table_schema = ${project.id} AND TABLE_NAME = ${parentInfo.relation.id})end;").as[Int]
+  }
+
+  // check for old child
 
   // Control Flow
 

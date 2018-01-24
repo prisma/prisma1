@@ -2,13 +2,14 @@ package com.prisma.api.database.mutactions.mutactions
 
 import com.prisma.api.database.DatabaseMutationBuilder
 import com.prisma.api.database.mutactions.{ClientSqlDataChangeMutaction, ClientSqlStatementResult}
-import com.prisma.api.mutations.ParentInfo
+import com.prisma.api.mutations.{NodeSelector, ParentInfo}
 import com.prisma.shared.models.Project
 
 import scala.concurrent.Future
 
-case class RemoveDataItemFromManyRelationsByParentInfo(project: Project, parentInfo: ParentInfo) extends ClientSqlDataChangeMutaction {
+case class RemoveDataItemFromManyRelationsByParentInfo(project: Project, parentInfo: ParentInfo, where: NodeSelector) extends ClientSqlDataChangeMutaction {
 
-  override def execute = Future.successful(ClientSqlStatementResult(DatabaseMutationBuilder.deleteRelationRowsByRelationSideAndId(project.id, parentInfo)))
+  override def execute =
+    Future.successful(ClientSqlStatementResult(DatabaseMutationBuilder.deleteRelationRowsByRelationSideAndId(project.id, parentInfo, where)))
 
 }
