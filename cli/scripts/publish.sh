@@ -136,13 +136,11 @@ if [ -z "$CIRCLE_TAG" ]; then
   echo "new version: $newVersion"
 
   npm version $newVersion
-  echo "npm publish --tag beta. NOT"
-  # npm publish --tag beta
+  npm publish --tag beta
 else
   newVersion=$CIRCLE_TAG
 
   echo "new version: $newVersion"
   npm version $newVersion
-  # npm publish
-  echo "npm publish"
+  npm publish
 fi
