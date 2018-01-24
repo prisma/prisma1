@@ -3968,9 +3968,9 @@ pretty-format@^21.2.1:
     ansi-regex "^3.0.0"
     ansi-styles "^3.2.0"
 
-prisma-cli-core@1.0.2:
-  version "1.0.2"
-  resolved "https://registry.yarnpkg.com/prisma-cli-core/-/prisma-cli-core-1.0.2.tgz#a64dce1af72013fbccf6195efaa75c68c62ed7d3"
+prisma-cli-core@1.0.3:
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/prisma-cli-core/-/prisma-cli-core-1.0.3.tgz#a989a67d9a3157c9e4c83029c86f463642f0bb89"
   dependencies:
     archiver "^2.0.3"
     callsites "^2.0.0"
