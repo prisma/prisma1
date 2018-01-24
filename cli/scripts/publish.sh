@@ -52,7 +52,7 @@ if [ $ymlChanged ]; then
     npm version patch --no-git-tag-version
     npm publish
   else
-    npm version $(npm info prisma-yml version)
+    npm version $(npm info prisma-yml version --tag beta)
     npm version prerelease --no-git-tag-version
     npm publish --tag beta
   fi
@@ -73,7 +73,7 @@ if [ $ymlVersionBefore != $ymlVersion ] || [ $engineChanged ]; then
     npm version patch --no-git-tag-version
     npm publish
   else
-    npm version $(npm info prisma-cli-engine version)
+    npm version $(npm info prisma-cli-engine version --tag beta)
     npm version prerelease --no-git-tag-version
     npm publish --tag beta
   fi
@@ -98,7 +98,7 @@ if [ $ymlVersionBefore != $ymlVersion ] || [ $coreChanged ]; then
     npm version patch --no-git-tag-version
     npm publish
   else
-    npm version $(npm info prisma-cli-core version)
+    npm version $(npm info prisma-cli-core version --tag beta)
     npm version prerelease --no-git-tag-version
     npm publish --tag beta
   fi
