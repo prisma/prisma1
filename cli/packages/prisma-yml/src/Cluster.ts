@@ -90,7 +90,7 @@ Please either provide a clusterSecret or run ${chalk.green.bold(
       }
     `
 
-    debug('generateClusterToken')
+    debug('generateClusterToken', cloudApiEndpoint)
 
     const {
       generateClusterToken: { clusterToken },

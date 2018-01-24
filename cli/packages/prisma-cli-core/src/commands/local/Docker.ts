@@ -278,7 +278,7 @@ Please close the process by hand. ${instruction}`)
 
   async logs(): Promise<Docker> {
     await this.init()
-    return this.run('logs', '-f')
+    return this.run('logs')
   }
 
   async nuke(): Promise<Docker> {
