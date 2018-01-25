@@ -30,6 +30,11 @@ fi
 
 echo "yml changed: $ymlChanged. core changed: $coreChanged. engine changed: $engineChanged"
 
+if [ !$ymlChanged ] && [ !$coreChanged ] && [ !$engineChanged ]; then
+  echo "There are no changes in the CLI."
+  exit 0;
+fi
+
 latestVersion=$(npm info prisma version)
 tag=${CIRCLE_TAG:-$latestVersion}
 tagElements=(${tag//./ })
