@@ -108,10 +108,10 @@ That's what you can use the `--dotenv` option of the `now` command for! It takes
 
 <Instruction>
 
-All you need to is navigate into the `hello-basic` directory and invoke `now` with that argument:
+All you need to is navigate into the `hello-advanced` directory and invoke `now` with that argument:
 
 ```
-cd hello-basic
+cd hello-advanced
 now --dotenv .env
 ```
 
