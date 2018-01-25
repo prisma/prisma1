@@ -48,7 +48,7 @@ prisma init
 
 3. **Define your data model:**
 
-Edit `datamodel.graphql` to define your data model using the [GraphQL SDL notation](https://www.prismagraphql.com/docs/reference/service-configuration/data-modelling-(sdl)-eiroozae8u).
+Edit `datamodel.graphql` to define your data model using the [GraphQL SDL notation](<https://www.prismagraphql.com/docs/reference/service-configuration/data-modelling-(sdl)-eiroozae8u>).
 
 ```graphql
 type Tweet {
@@ -92,15 +92,14 @@ Use the endpoint from the previous step in your frontend (or backend) applicatio
 
 ## Examples
 
-- [demo-application](https://github.com/graphcool/graphql-server-example)
-- [auth](examples/auth)
-- [file-api](examples/file-api)
-- [github-auth](examples/github-auth)
-- [permissions](examples/permissions)
-- [resolver-forwarding](examples/resolver-forwarding)
-- [rest-wrapper](examples/rest-wrapper)
-- [subscriptions](examples/subscriptions)
-
+* [demo-application](https://github.com/graphcool/graphql-server-example)
+* [auth](examples/auth)
+* [file-api](examples/file-api)
+* [github-auth](examples/github-auth)
+* [permissions](examples/permissions)
+* [resolver-forwarding](examples/resolver-forwarding)
+* [rest-wrapper](examples/rest-wrapper)
+* [subscriptions](examples/subscriptions)
 
 ## Architecture
 
@@ -150,4 +149,3 @@ Your feedback is **very helpful**, please share your opinion and thoughts!
 * [Request a new feature](https://github.com/graphcool/prisma/issues/new)
 * [Report a bug](https://github.com/graphcool/prisma/issues/new)
 * [Participate in existing discussions](https://github.com/graphcool/prisma/issues)
-

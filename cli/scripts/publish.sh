@@ -36,7 +36,7 @@ fi
 
 echo "yml changed: $ymlChanged. core changed: $coreChanged. engine changed: $engineChanged"
 
-if [ !$ymlChanged ] && [ !$coreChanged ] && [ !$engineChanged ]; then
+if [ $ymlChanged == false ] && [ $coreChanged == false ] && [ $engineChanged == false ]; then
   echo "There are no changes in the CLI."
   exit 0;
 fi
