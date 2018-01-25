@@ -35,7 +35,7 @@ export class StatusChecker {
       argv,
       error: serializedError,
     })
-    const auth = this.env ? this.env.globalRC.cloudSessionKey : undefined
+    const auth = this.env ? this.env.cloudSessionKey : undefined
     const hashDate = new Date().toISOString()
     const mac = getMac()
 

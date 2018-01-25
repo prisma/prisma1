@@ -223,8 +223,8 @@ export class CLI {
   }
 
   setRavenUserContext() {
-    if (this.cmd && this.cmd.env && this.cmd.env.globalRC.cloudSessionKey) {
-      const data = jwt.decode(this.cmd.env.globalRC.cloudSessionKey)
+    if (this.cmd && this.cmd.env && this.cmd.env.cloudSessionKey) {
+      const data = jwt.decode(this.cmd.env.cloudSessionKey)
       Raven.mergeContext({
         user: {
           fid: getFid(),

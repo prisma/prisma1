@@ -194,9 +194,9 @@ To reset the key pair, please run ${chalk.bold.green('prisma local start')}
     const options = {
       headers: {},
     }
-    if (this.env.globalRC.cloudSessionKey) {
+    if (this.env.cloudSessionKey) {
       options.headers = {
-        Authorization: `Bearer ${this.env.globalRC.cloudSessionKey}`,
+        Authorization: `Bearer ${this.env.cloudSessionKey}`,
       }
     }
     const client = new GraphQLClient(this.config.cloudApiEndpoint, options)

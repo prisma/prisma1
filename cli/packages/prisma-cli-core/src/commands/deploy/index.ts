@@ -143,11 +143,10 @@ ${chalk.gray(
       if (
         workspace &&
         !workspace.startsWith('public-') &&
-        (!this.env.globalRC.cloudSessionKey ||
-          this.env.globalRC.cloudSessionKey === '')
+        (!this.env.cloudSessionKey || this.env.cloudSessionKey === '')
       ) {
         await this.client.login()
-        cluster.clusterSecret = this.env.globalRC.cloudSessionKey
+        cluster.clusterSecret = this.env.cloudSessionKey
       }
     }
 
