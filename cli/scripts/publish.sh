@@ -10,7 +10,13 @@ else
   echo "INFO: This will deploy a new version on the @beta tag"
 fi
 
-export changedFiles=$(git diff-tree --no-commit-id --name-only -r HEAD)
+if [[ $CIRCLE_COMPARE_URL ]]; then
+  export lastCommits=`echo $CIRCLE_COMPARE_URL | sed -n 's/.*compare\/\(.*\)/\1/p' | sed 's/\.\.\./ /'`
+else
+  export lastCommits="HEAD"
+fi
+
+export changedFiles=$(git diff-tree --no-commit-id --name-only -r $lastCommits)
 
 ymlChanged=false
 coreChanged=false
@@ -29,6 +35,11 @@ if [[ "$changedFiles" = *"cli/packages/prisma-cli-engine"* ]]; then
 fi
 
 echo "yml changed: $ymlChanged. core changed: $coreChanged. engine changed: $engineChanged"
+
+if [ $ymlChanged == false ] && [ $coreChanged == false ] && [ $engineChanged == false ]; then
+  echo "There are no changes in the CLI."
+  exit 0;
+fi
 
 latestVersion=$(npm info prisma version)
 tag=${CIRCLE_TAG:-$latestVersion}

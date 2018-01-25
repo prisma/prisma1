@@ -3,6 +3,21 @@
 set -e
 set -o pipefail
 
+if [[ $CIRCLE_COMPARE_URL ]]; then
+  export lastCommits=`echo $CIRCLE_COMPARE_URL | sed -n 's/.*compare\/\(.*\)/\1/p' | sed 's/\.\.\./ /'`
+else
+  export lastCommits="HEAD"
+fi
+
+export changedFiles=$(git diff-tree --no-commit-id --name-only -r $lastCommits)
+
+if [[ "$changedFiles" = *"docs/"* ]]; then
+  echo "There were changes in the docs folder. Going to deploy docs"
+else
+  echo "No Changes. Exiting"
+  exit 0
+fi
+
 
 if [ ! -z "$CIRCLE_BRANCH" ]; then
   UPPER_BRANCH="MASTER"
