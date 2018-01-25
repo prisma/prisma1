@@ -16,7 +16,7 @@ The tutorial has two parts:
 
 ## Install Now Desktop
 
-The first thing you to do is download the Now Desktop and login.
+The first thing you need to do is download the Now Desktop and login.
 
 <Instruction>
 
