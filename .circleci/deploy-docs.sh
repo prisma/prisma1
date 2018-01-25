@@ -3,7 +3,13 @@
 set -e
 set -o pipefail
 
-export changedFiles=$(git diff-tree --no-commit-id --name-only -r HEAD)
+if [[ $CIRCLE_COMPARE_URL ]]; then
+  export lastCommits=`echo $CIRCLE_COMPARE_URL | sed -n 's/.*compare\/\(.*\)/\1/p' | sed 's/\.\.\./ /'`
+else
+  export lastCommits="HEAD"
+fi
+
+export changedFiles=$(git diff-tree --no-commit-id --name-only -r $lastCommits)
 
 if [[ "$changedFiles" = *"docs/"* ]]; then
   echo "There were changes in the docs folder. Going to deploy docs"
