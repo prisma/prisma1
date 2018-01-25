@@ -117,7 +117,7 @@ mutation {
 
 For this query, you need to make sure a valid authentication token is sent along with the `Bearer `-prefix in the `Authorization` header of the request. Inside the Playground, you can set HTTP headers in the bottom-left corner:
 
-![](https://i.imgur.com/BLNI8z1.png)
+![](https://imgur.com/bEGUtO0.png)
 
 Once you've set the header, you can send the following query to check whether the token is valid:
 
@@ -165,7 +165,7 @@ mutation {
 
 ### Create posts with the `createPost` mutation
 
-With this mutation, authenitcated users can create a new `Post`. Make sure the `Authorization` header is set:
+With this mutation, authenicated users can create a new `Post`. Make sure the `Authorization` header is set:
 
 ```graphql
 mutation {
@@ -177,17 +177,33 @@ mutation {
 }
 ```
 
-### Update posts with the `updatePost` mutation
+### Update posts with the `updateTitle` mutation
 
 With this mutation users with the default `CUSTOMER` role can change their own posts (i.e. the one for which they're the `author`) and users with the `ADMIN` role can also change posts of other users (replace the `__POST_ID__` placeholder with the `id` of the `Post` to be updated):
 
 ```graphql
 mutation {
-  updatePost(
+  updateTitle(
     id: "__POST_ID__"
-    title: "Prisma makes building GraphQL servers a breeze"
+    newTitle: "Prisma makes building GraphQL servers a breeze"
   ) {
     title
   }
 }
 ```
+
+## Troubleshooting
+
+<details>
+ <summary><strong>I'm getting the error message <code>[Network error]: FetchError: request to http://localhost:4466/permissions-example/dev failed, reason: connect ECONNREFUSED</code> when trying to send a query or mutation</strong></summary>
+
+This is because the endpoint for the Prisma service is hardcoded in [`index.js`](index.js#L23). The service is assumed to be running on the default port for a local cluster: `http://localhost:4466`. Apparently, your local cluster is using a different port.
+
+You now have two options:
+
+1. Figure out the port of your local cluster and adjust it in `index.js`. You can look it up in `~/.prisma/config.yml`.
+1. Deploy the service to a public cluster. Expand the `I don't have Docker installed on my machine`-section in step 2 for instructions.
+
+Either way, you need to adjust the `endpoint` that's passed to the `Prisma` constructor in `index.js` so it reflects the actual cluster domain and service endpoint.
+
+</details>

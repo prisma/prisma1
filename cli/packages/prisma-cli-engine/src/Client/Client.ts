@@ -207,7 +207,7 @@ To reset the key pair, please run ${chalk.bold.green('prisma local start')}
         debug(query)
         debug(variables)
         debug(options)
-        return await client.request(query, variables)
+        return client.request(query, variables)
       },
     } as any
   }

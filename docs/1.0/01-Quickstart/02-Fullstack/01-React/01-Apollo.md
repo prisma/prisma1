@@ -56,7 +56,7 @@ Here is an overview of the generated files in the `server` directory and their r
 - `/server/src`
   - [`src/schema.graphql`](https://github.com/graphql-boilerplates/react-fullstack-graphql/tree/master/basic/server/src/schema.graphql) defines your **application schema**. It contains the GraphQL API that you want to expose to your client applications.
   - [`src/generated/prisma.graphql`](https://github.com/graphql-boilerplates/react-fullstack-graphql/tree/master/basic/server/src/generated/prisma.graphql) defines the **Prisma schema**. It contains the definition of the CRUD API for the types in your data model and is generated based on your `datamodel.graphql`. **You should never edit this file manually**, but introduce changes only by altering `datamodel.graphql` and run `prisma deploy`.
-  - [`src/index.ts`](https://github.com/graphql-boilerplates/react-fullstack-graphql/tree/master/basic/server/src/index.ts) is the entry point of your server, pulling everything together and starting the `GraphQLServer` from [`graphql-yoga`](https://github.com/graphcool/graphql-yoga).
+  - [`src/index.js`](https://github.com/graphql-boilerplates/react-fullstack-graphql/tree/master/basic/server/src/index.js) is the entry point of your server, pulling everything together and starting the `GraphQLServer` from [`graphql-yoga`](https://github.com/graphcool/graphql-yoga).
 
 Most important for you at this point are `database/datamodel.graphql` and `src/schema.graphql`.
 
@@ -80,7 +80,7 @@ Based on this data model Prisma generates the **database schema**, a [GraphQL sc
 
 Before you can start the server, you first need to make sure your GraphQL database is available. You can do so by deploying the correspdonding Prisma service that's responsible for the database.
 
-In this case, you'll deploy the Prisma database serviceto the **free development cluster** of Prisma Cloud. Note that this cluster is not intended for production use, but rather for development and demo purposes.
+In this case, you'll deploy the Prisma database service to the **free development cluster** of Prisma Cloud. Note that this cluster is not intended for production use, but rather for development and demo purposes.
 
 > Another option would be to deploy it locally with [Docker](https://www.docker.com/). You can follow the [Node.js Quickstart tutorial](!alias-phe8vai1oo) to learn how that works.
 

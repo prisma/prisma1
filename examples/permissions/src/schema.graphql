@@ -1,34 +1,34 @@
-# import Post from "./generated/prisma.graphql"
+# import Role, Post from "./generated/prisma.graphql"
 
 type Query {
-  # authenticated users can information retrieve about themselves
+  # Authenticated users can information retrieve about themselves
   me: User
 
-  # all authenticated users can retrieve a list of posts
+  # All authenticated users can retrieve a list of posts
   posts: [Post!]!
 
-  # only admins can retrieve info about given users
+  # Only admins can retrieve info about given users
   user(id: ID!): User
 }
 
 type Mutation {
-  # everyone can signup
+  # Everyone can signup
   signup(email: String!, password: String!, admin: Boolean): AuthPayload!
 
-  # everyone can login
+  # Everyone can login
   login(email: String!, password: String!): AuthPayload!
 
-  # users can only update their own passwords
+  # Users can only update their own passwords
   # if `userId` is set, the user trying to update the password needs to be an admin
   updatePassword(oldPassword: String, newPassword: String!, userId: ID): User!
 
-  # all authenticated users can create posts
+  # All authenticated users can create posts
   createPost(title: String!): Post!
 
-  # only the author of a post or an admins can update it
-  updatePost(id: ID!, title: String!): Post
+  # Only the author of a post or an admins can update it
+  updateTitle(id: ID!, newTitle: String!): Post
 
-  # only the author of a post or an admin can delete it
+  # Only the author of a post or an admin can delete it
   deletePost(id: ID!): Post
 }
 
@@ -37,11 +37,13 @@ type AuthPayload {
   user: User!
 }
 
-# The `User` type is a reduced version ("mask") of the `User` type from the data model (and database schema).
+# The `User` type is a reduced version ("mask") of the `User` 
+# type from the data model (and database schema).
 # It does not expose the `password` and `role` fields.
 type User {
   id: ID!
   createdAt: DateTime!
+  role: Role!
   email: String!
   posts: [Post!]!
 }

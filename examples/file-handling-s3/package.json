@@ -1,29 +1,33 @@
 {
-  "name": "prisma-github-auth",
+  "name": "prisma-file-handling-s3",
   "version": "1.0.0",
+  "license": "MIT",
   "scripts": {
     "start": "dotenv -- nodemon -x ts-node -e ts,graphql src/index.ts",
     "debug": "dotenv -- nodemon -x 'ts-node --inspect' -e ts,graphql src/index.ts",
     "playground": "dotenv -- graphql playground",
+    "bind": "graphql prepare",
     "build": "rm -rf dist && tsc"
   },
   "dependencies": {
-    "graphql": "0.12.3",
+    "aws-sdk": "2.167.0",
+    "express": "4.16.2",
+    "graphql": "0.12.0",
     "graphql-import": "0.4.1",
-    "graphql-yoga": "1.2.0",
-    "isomorphic-fetch": "2.2.1",
-    "jsonwebtoken": "8.1.1",
-    "prisma-binding": "1.4.0"
+    "graphql-yoga": "1.1.5",
+    "mime-types": "2.1.17",
+    "multiparty": "4.1.3",
+    "prisma-binding": "1.3.7",
+    "uuid": "3.1.0"
   },
   "devDependencies": {
     "dotenv-cli": "1.4.0",
-    "graphql-cli": "2.12.4",
-    "nodemon": "1.14.11",
-    "prisma": "1.0.7",
+    "graphql-cli": "2.0.5",
+    "nodemon": "1.12.5",
+    "prisma": "1.0.4",
     "ts-node": "4.1.0",
     "typescript": "2.6.2"
   },
-  "license": "MIT",
   "prettier": {
     "semi": false,
     "singleQuote": true,

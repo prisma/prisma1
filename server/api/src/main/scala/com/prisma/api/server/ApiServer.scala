@@ -160,9 +160,7 @@ case class ApiServer(
                 complete(result)
 
               case _ =>
-                extractRawRequest(requestId) { rawRequest =>
-                  throttleApiCallIfNeeded(projectId, rawRequest)
-                }
+                throttleApiCallIfNeeded(projectId, rawRequest)
             }
           }
         }

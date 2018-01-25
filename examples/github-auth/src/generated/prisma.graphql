@@ -13,8 +13,6 @@ type Note implements Node {
 
 type User implements Node {
   id: ID!
-  createdAt: DateTime!
-  updatedAt: DateTime!
   githubUserId: String!
   name: String!
   bio: String!
@@ -28,11 +26,17 @@ type User implements Node {
 # Other Types
 #
 
+type AggregateNote {
+  count: Int!
+}
+
+type AggregateUser {
+  count: Int!
+}
+
 type BatchPayload {
   count: Long!
 }
-
-scalar DateTime
 
 scalar Long
 
@@ -49,7 +53,6 @@ type Mutation {
   updateManyNotes(data: NoteUpdateInput!, where: NoteWhereInput!): BatchPayload!
   deleteManyUsers(where: UserWhereInput!): BatchPayload!
   deleteManyNotes(where: NoteWhereInput!): BatchPayload!
-  resetData: Boolean
 }
 
 enum MutationType {
@@ -65,6 +68,7 @@ interface Node {
 type NoteConnection {
   pageInfo: PageInfo!
   edges: [NoteEdge]!
+  aggregate: AggregateNote!
 }
 
 input NoteCreateInput {
@@ -211,6 +215,7 @@ type Subscription {
 type UserConnection {
   pageInfo: PageInfo!
   edges: [UserEdge]!
+  aggregate: AggregateUser!
 }
 
 input UserCreateInput {
@@ -243,10 +248,6 @@ type UserEdge {
 enum UserOrderByInput {
   id_ASC
   id_DESC
-  createdAt_ASC
-  createdAt_DESC
-  updatedAt_ASC
-  updatedAt_DESC
   githubUserId_ASC
   githubUserId_DESC
   name_ASC
@@ -257,12 +258,14 @@ enum UserOrderByInput {
   public_repos_DESC
   public_gists_ASC
   public_gists_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  createdAt_ASC
+  createdAt_DESC
 }
 
 type UserPreviousValues {
   id: ID!
-  createdAt: DateTime!
-  updatedAt: DateTime!
   githubUserId: String!
   name: String!
   bio: String!
@@ -341,22 +344,6 @@ input UserWhereInput {
   id_not_starts_with: ID
   id_ends_with: ID
   id_not_ends_with: ID
-  createdAt: DateTime
-  createdAt_not: DateTime
-  createdAt_in: [DateTime!]
-  createdAt_not_in: [DateTime!]
-  createdAt_lt: DateTime
-  createdAt_lte: DateTime
-  createdAt_gt: DateTime
-  createdAt_gte: DateTime
-  updatedAt: DateTime
-  updatedAt_not: DateTime
-  updatedAt_in: [DateTime!]
-  updatedAt_not_in: [DateTime!]
-  updatedAt_lt: DateTime
-  updatedAt_lte: DateTime
-  updatedAt_gt: DateTime
-  updatedAt_gte: DateTime
   githubUserId: String
   githubUserId_not: String
   githubUserId_in: [String!]

@@ -147,9 +147,9 @@ prisma playground
 
 This will open a Playground looking as follows:
 
-![](https://imgur.com/tmoqQX3.png)
+![](https://imgur.com/HuJfglj.png)
 
-> **Note**: The Playground can be installed on your machine as a standalone application. If you don't have the Playground installed, the command automatically opens a Playground in your default browser.
+> **Note**: The Playground can be installed on your machine as a [standalone desktop application](https://github.com/graphcool/graphql-playground/releases). If you don't have the Playground installed, the command automatically opens a Playground in your default browser.
 
 One really cool property of GraphQL APIs is that they're effectively _self-documenting_. The [GraphQL schema](https://blog.graph.cool/graphql-server-basics-the-schema-ac5e2950214e) defines all the operations of an API, including input arguments and return types. This allows for tooling like the GraphQL Playground to auto-generate API documentation.
 
@@ -161,7 +161,7 @@ To see the documentation for your service's API, click the green **SCHEMA**-butt
 
 This brings up the Playground's documentation pane. The left-most column is a list of all the operations the API accepts. You can then drill down to learn the details about the input arguments or return types that are involved with each operation.
 
-![](https://imgur.com/tnSrede.png)
+![](https://imgur.com/l82HjFR.png)
 
 ## Sending queries and mutations
 
@@ -219,7 +219,7 @@ You can now go back to the previous tab with the `users` query and send that one
 
 This time, the `User` node that was just created is returned in the server response:
 
-![](https://imgur.com/2730NIr.png)
+![](https://imgur.com/LfXtmbc.png)
 
 Note that the API also offers powerful filtering, ordering and pagination capabilities. Here are examples for queries that provide the corresponding input arguments to the `users` query.
 
