@@ -1,6 +1,6 @@
 {
   "name": "prisma-cli-engine",
-  "version": "1.0.2",
+  "version": "1.0.3-7",
   "main": "dist/index.js",
   "files": [
     "dist"
@@ -9,6 +9,7 @@
   "author": "Tim Suchanek <tim@graph.cool>",
   "license": "Apache-2.0",
   "devDependencies": {
+    "@types/fs-extra": "^5.0.0",
     "@types/jest": "^20.0.8",
     "@types/lodash": "^4.14.77",
     "@types/node": "^8.0.22",
@@ -16,13 +17,13 @@
     "jest": "^21.2.1",
     "lint-staged": "^4.2.3",
     "nock": "^9.0.14",
-    "prettier": "^1.5.3",
+    "prettier": "^1.10.2",
     "rimraf": "^2.6.1",
     "ts-jest": "^21.0.0",
     "tslint": "^5.6.0",
     "tslint-config-prettier": "^1.3.0",
     "tslint-eslint-rules": "^4.1.1",
-    "typescript": "^2.4.2",
+    "typescript": "^2.6.2",
     "watch-cli": "^0.2.3"
   },
   "scripts": {
@@ -31,7 +32,7 @@
     "precommit": "lint-staged",
     "watch": "../../node_modules/.bin/watch -p 'src/**/*.*' -c 'yarn build'",
     "prettier": "prettier --single-quote --no-semi --trailing-comma all --write '*.ts' 'src/**/*.ts'",
-    "prepublishOnly": "yarn link && yarn test && yarn build",
+    "prepublishOnly": "yarn lint && yarn test && yarn build",
     "test": "npm run lint && jest"
   },
   "lint-staged": {
@@ -71,21 +72,21 @@
   },
   "dependencies": {
     "@heroku/linewrap": "^1.0.0",
-    "@types/fs-extra": "^4.0.2",
-    "ajv": "^5.2.2",
+    "ajv": "5",
     "ansi-escapes": "^3.0.0",
     "ansi-styles": "^3.2.0",
     "bluebird": "^3.5.0",
     "cache-require-paths": "^0.3.0",
     "callsites": "^2.0.0",
     "cardinal": "^1.0.0",
-    "chalk": "^2.2.0",
+    "chalk": "^2.3.0",
     "charm": "^1.0.2",
-    "debug": "^3.0.1",
+    "debug": "^3.1.0",
     "directory-tree": "^2.0.0",
     "dotenv": "^4.0.0",
+    "figures": "^2.0.0",
     "find-up": "^2.1.0",
-    "fs-extra": "^4.0.2",
+    "fs-extra": "^5.0.0",
     "graphcool-inquirer": "^1.0.3",
     "graphql-request": "^1.3.4",
     "isomorphic-fetch": "^2.2.1",
@@ -110,7 +111,7 @@
     "memfs": "^2.5.3",
     "opn": "^5.1.0",
     "prisma-json-schema": "^0.0.1",
-    "prisma-yml": "1.0.13",
+    "prisma-yml": "1.0.14-5",
     "raven": "2.3.0",
     "replaceall": "^0.1.6",
     "rwlockfile": "^1.4.8",

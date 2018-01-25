@@ -1,13 +1,13 @@
 jobs:
-
-  # CLI testing
+  # CLI publishing
   cli:
     docker:
       - image: circleci/node:8
     steps:
       - checkout
+      - run: echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
       - run: cd cli && yarn
-      - run: cd cli && yarn test
+      - run: ./cli/scripts/publish.sh
 
   # content deployment
   content:
@@ -17,7 +17,7 @@ jobs:
       - checkout
       - run: sudo npm i -g @graphcool/docs-cli
       - run:
-          command: .circleci/deploy-docs.sh
+          command: .circleci/deploy-docs.sh || .circleci/deploy-docs.sh
           environment:
             BLUE_ID: cjce1hjzi0z1o01539nc8949x
             GREEN_ID: cjce1bhux0xwx0127k0ava9o4
@@ -29,6 +29,8 @@ workflows:
     jobs:
       - cli:
           filters:
+            tags:
+              only: /.*/
             branches:
               only:
                 - master

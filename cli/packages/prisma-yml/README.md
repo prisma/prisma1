@@ -150,5 +150,3 @@ Your feedback is **very helpful**, please share your opinion and thoughts!
 * [Request a new feature](https://github.com/graphcool/prisma/issues/new)
 * [Report a bug](https://github.com/graphcool/prisma/issues/new)
 * [Participate in existing discussions](https://github.com/graphcool/prisma/issues)
-
-
