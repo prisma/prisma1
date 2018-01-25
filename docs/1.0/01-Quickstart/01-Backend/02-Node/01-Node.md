@@ -81,15 +81,15 @@ Note that the endpoint is referenced in `src/index.js`. There, it is used to ins
 
 ```js(path="src/index.js"&nocopy)
 const server = new GraphQLServer({
-  typeDefs: './src/schema.graphql',
+  typeDefs: './src/schema.graphql',                 // points to the application schema
   resolvers,
   context: req => ({
     ...req,
     db: new Prisma({
       typeDefs: 'src/generated/prisma.graphql',     // points to the auto-generated Prisma DB schema
       endpoint: 'http://localhost:4466/my-app/dev', // the endpoint of the Prisma DB service
-      secret: 'mysecret123',                        // specified in database/prisma.yml
-      debug: true,                                  // log all GraphQL queryies & mutations
+      secret: 'mysecret123',                        // specified in `database/prisma.yml`
+      debug: true,                                  // log all GraphQL queries & mutations
     }),
   }),
 })

@@ -81,14 +81,14 @@ Note that the endpoint is referenced in `src/index.ts`. There, it is used to ins
 
 ```ts(path="src/index.ts"&nocopy)
 const server = new GraphQLServer({
-  typeDefs,
+  typeDefs: './src/schema.graphql',                 // points to the application schema
   resolvers,
   context: req => ({
     ...req,
     db: new Prisma({
       endpoint: 'http://localhost:4466/my-app/dev', // the endpoint of the Prisma DB service
-      secret: 'mysecret123',                        // specified in database/prisma.yml
-      debug: true,                                  // log all GraphQL queryies & mutations
+      secret: 'mysecret123',                        // specified in `database/prisma.yml`
+      debug: true,                                  // log all GraphQL queries & mutations
     }),
   }),
 })
@@ -143,8 +143,8 @@ yarn dev
 
 Note that the Playground let's you interact with two GraphQL APIs side-by-side:
 
-- `app`: The web server's GraphQL API defined in the **application schema** (from `./server/src/schema.graphql`)
-- `database`: The CRUD GraphQL API of the Prisma database service defined in the **Prisma schema** (from `./server/src/generated/prisma.graphql`)
+- `app`: The web server's GraphQL API defined in the **application schema** (from `./src/schema.graphql`)
+- `database`: The CRUD GraphQL API of the Prisma database service defined in the **Prisma schema** (from `./src/generated/prisma.graphql`)
 
 ![](https://imgur.com/z7MWZA8.png)
 
@@ -215,7 +215,7 @@ As you're now running directly against the database API, you're not limited to t
 <Instruction>
 
 Paste the following mutation into the left pane of the `database` Playground and hit the _Play_-button (or use the keyboard shortcut `CMD+Enter`):
-
+`
 ```graphql
 mutation {
   createPost(
