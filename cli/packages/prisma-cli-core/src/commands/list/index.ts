@@ -43,7 +43,7 @@ export default class List extends Command {
     let gotCloud = false
 
     try {
-      if (this.env.globalRC.cloudSessionKey) {
+      if (this.env.cloudSessionKey) {
         const services = await this.client.getCloudServices()
         const mappedServices = services.filter(s => s.cluster).map(s => ({
           name: s.name,
