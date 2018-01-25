@@ -3523,9 +3523,9 @@ prisma-binding@1.4.0:
     jsonwebtoken "^8.1.0"
     subscriptions-transport-ws "0.9.5"
 
-prisma-cli-core@1.0.3:
-  version "1.0.3"
-  resolved "https://registry.yarnpkg.com/prisma-cli-core/-/prisma-cli-core-1.0.3.tgz#a989a67d9a3157c9e4c83029c86f463642f0bb89"
+prisma-cli-core@1.0.4:
+  version "1.0.4"
+  resolved "https://registry.yarnpkg.com/prisma-cli-core/-/prisma-cli-core-1.0.4.tgz#32a3bd311d5a3f0eaa531922476555ea016305a7"
   dependencies:
     archiver "^2.0.3"
     callsites "^2.0.0"
@@ -3671,12 +3671,12 @@ prisma-yml@1.0.13:
     scuid "^1.0.2"
     yaml-ast-parser "^0.0.40"
 
-prisma@1.0.7:
-  version "1.0.7"
-  resolved "https://registry.yarnpkg.com/prisma/-/prisma-1.0.7.tgz#aa91fb3057251ba5f92514d82a48256de0ffac42"
+prisma@1.0.8:
+  version "1.0.8"
+  resolved "https://registry.yarnpkg.com/prisma/-/prisma-1.0.8.tgz#24348333b71455ab95c68cae9ac3c7d84a476077"
   dependencies:
     fs-extra "^4.0.1"
-    prisma-cli-core "1.0.3"
+    prisma-cli-core "1.0.4"
     prisma-cli-engine "1.0.2"
     semver "^5.4.1"
     source-map-support "^0.4.18"

@@ -18,8 +18,8 @@ type Note implements Node {
 type User implements Node {
   id: ID!
   githubUserId: String!
-  name: String!
-  bio: String!
+  name: String
+  bio: String
   public_repos: Int!
   public_gists: Int!
   notes(where: NoteWhereInput, orderBy: NoteOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Note!]
@@ -224,10 +224,10 @@ type UserConnection {
 
 input UserCreateInput {
   githubUserId: String!
-  name: String!
-  bio: String!
-  public_repos: Int!
-  public_gists: Int!
+  name: String
+  bio: String
+  public_repos: Int
+  public_gists: Int
   notes: NoteCreateManyWithoutOwnerInput
 }
 
@@ -238,10 +238,10 @@ input UserCreateOneWithoutNotesInput {
 
 input UserCreateWithoutNotesInput {
   githubUserId: String!
-  name: String!
-  bio: String!
-  public_repos: Int!
-  public_gists: Int!
+  name: String
+  bio: String
+  public_repos: Int
+  public_gists: Int
 }
 
 type UserEdge {
@@ -271,8 +271,8 @@ enum UserOrderByInput {
 type UserPreviousValues {
   id: ID!
   githubUserId: String!
-  name: String!
-  bio: String!
+  name: String
+  bio: String
   public_repos: Int!
   public_gists: Int!
 }
@@ -536,10 +536,10 @@ export interface UserWhereInput {
 
 export interface UserCreateWithoutNotesInput {
   githubUserId: String
-  name: String
-  bio: String
-  public_repos: Int
-  public_gists: Int
+  name?: String
+  bio?: String
+  public_repos?: Int
+  public_gists?: Int
 }
 
 export interface NoteWhereInput {
@@ -616,10 +616,10 @@ export interface UserWhereUniqueInput {
 
 export interface UserCreateInput {
   githubUserId: String
-  name: String
-  bio: String
-  public_repos: Int
-  public_gists: Int
+  name?: String
+  bio?: String
+  public_repos?: Int
+  public_gists?: Int
   notes?: NoteCreateManyWithoutOwnerInput
 }
 
@@ -714,8 +714,8 @@ export interface NotePreviousValues {
 export interface User extends Node {
   id: ID_Output
   githubUserId: String
-  name: String
-  bio: String
+  name?: String
+  bio?: String
   public_repos: Int
   public_gists: Int
   notes?: Note[]
@@ -735,8 +735,8 @@ export interface BatchPayload {
 export interface UserPreviousValues {
   id: ID_Output
   githubUserId: String
-  name: String
-  bio: String
+  name?: String
+  bio?: String
   public_repos: Int
   public_gists: Int
 }
