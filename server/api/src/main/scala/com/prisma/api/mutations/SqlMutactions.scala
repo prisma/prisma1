@@ -179,7 +179,7 @@ case class SqlMutactions(dataResolver: DataResolver) {
   }
 
   def getMutactionsForNestedDisconnectMutation(nestedMutation: NestedMutation, parentInfo: ParentInfo): Seq[ClientSqlMutaction] = {
-    nestedMutation.disconnects.map(disconnect => RemoveRelationRowByParentInfoAndChild(project, parentInfo, disconnect.where))
+    nestedMutation.disconnects.map(disconnect => NestedDisconnectRelationMutaction(project, parentInfo, disconnect.where))
   }
 
   def getMutactionsForNestedDeleteMutation(nestedMutation: NestedMutation, parentInfo: ParentInfo): Seq[ClientSqlMutaction] = {
