@@ -32,10 +32,9 @@ case class SqlMutactions(dataResolver: DataResolver) {
   val project = dataResolver.project
 
   def getMutactionsForDelete(where: NodeSelector, previousValues: DataItem, id: String): List[ClientSqlMutaction] = {
-    val requiredRelationViolations = where.model.relationFields.flatMap(field => checkIfRemovalWouldFailARequiredRelation(project, ParentInfo(field, where)))
-    val removeFromConnectionMutactions =
-      where.model.relationFields.map(field => RemoveDataItemFromManyRelationsByParentInfo(project, ParentInfo(field, where), where))
-    val deleteItemMutaction = DeleteDataItem(project, where, previousValues, id)
+    val requiredRelationViolations     = where.model.relationFields.flatMap(field => checkIfRemovalWouldFailARequiredRelation(project, ParentInfo(field, where)))
+    val removeFromConnectionMutactions = where.model.relationFields.map(field => RemoveRelationRowByParentInfo(project, ParentInfo(field, where)))
+    val deleteItemMutaction            = DeleteDataItem(project, where, previousValues, id)
 
     requiredRelationViolations ++ removeFromConnectionMutactions ++ List(deleteItemMutaction)
   }
@@ -180,7 +179,7 @@ case class SqlMutactions(dataResolver: DataResolver) {
   }
 
   def getMutactionsForNestedDisconnectMutation(nestedMutation: NestedMutation, parentInfo: ParentInfo): Seq[ClientSqlMutaction] = {
-    nestedMutation.disconnects.map(disconnect => RemoveDataItemFromManyRelationByUniqueField(project, parentInfo, disconnect.where))
+    nestedMutation.disconnects.map(disconnect => RemoveRelationRowByParentInfoAndChild(project, parentInfo, disconnect.where))
   }
 
   def getMutactionsForNestedDeleteMutation(nestedMutation: NestedMutation, parentInfo: ParentInfo): Seq[ClientSqlMutaction] = {

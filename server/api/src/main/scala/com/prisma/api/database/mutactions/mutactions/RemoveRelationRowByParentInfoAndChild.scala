@@ -7,8 +7,8 @@ import com.prisma.shared.models.Project
 
 import scala.concurrent.Future
 
-case class RemoveDataItemFromManyRelationByUniqueField(project: Project, parentInfo: ParentInfo, where: NodeSelector) extends ClientSqlDataChangeMutaction {
+case class RemoveRelationRowByParentInfoAndChild(project: Project, parentInfo: ParentInfo, where: NodeSelector) extends ClientSqlDataChangeMutaction {
 
   override def execute: Future[ClientSqlStatementResult[Any]] =
-    Future.successful(ClientSqlStatementResult(DatabaseMutationBuilder.deleteRelationRowByUniqueValueForChild(project.id, parentInfo, where)))
+    Future.successful(ClientSqlStatementResult(DatabaseMutationBuilder.deleteRelationRowByParentAndChild(project.id, parentInfo, where)))
 }

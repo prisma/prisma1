@@ -119,6 +119,9 @@ object DatabaseMutationBuilder {
     (sql"delete from `#${project.id}`.`#${model.name}`" ++ prefixIfNotNone("where", whereSql)).asUpdate
   }
 
+  def deleteDataItemByUnique(projectId: String, where: NodeSelector) =
+    sqlu"delete from `#$projectId`.`#${where.model.name}` where `#${where.field.name}` = ${where.fieldValue}"
+
   def deleteRelayIds(project: Project, model: Model, whereFilter: DataItemFilterCollection) = {
     val whereSql = QueryArguments.generateFilterConditions(project.id, model.name, whereFilter)
     (sql"DELETE FROM `#${project.id}`.`_RelayId`" ++
@@ -128,18 +131,8 @@ object DatabaseMutationBuilder {
         prefixIfNotNone("where", whereSql) ++ sql")")).asUpdate
   }
 
-  def deleteDataItemByUnique(projectId: String, where: NodeSelector) =
-    sqlu"delete from `#$projectId`.`#${where.model.name}` where `#${where.field.name}` = ${where.fieldValue}"
-
   def deleteRelayRowByUnique(projectId: String, where: NodeSelector) =
     sqlu"delete from `#$projectId`.`_RelayId` where `id` = (select id from `#$projectId`.`#${where.model.name}` where `#${where.field.name}` = ${where.fieldValue})"
-
-  def deleteRelationRowsByRelationSideAndId(projectId: String, parentInfo: ParentInfo, where: NodeSelector) = {
-
-    (sql"delete from `#$projectId`.`#${parentInfo.relation.id}` " ++
-      sql"where `#${parentInfo.field.oppositeRelationSide.get}` = (select id from `#$projectId`.`#${where.model.name}` " ++
-      sql"where `#${where.field.name}` = ${where.fieldValue})").asUpdate
-  }
 
   def deleteRelationRowByParent(projectId: String, parentInfo: ParentInfo) = {
 
@@ -163,19 +156,6 @@ object DatabaseMutationBuilder {
       sql"where `#${where.field.name}` = ${where.fieldValue})" ++
       sql" AND `#${parentInfo.field.relationSide.get}` = (select id from `#$projectId`.`#${parentInfo.where.model.name}` " ++
       sql"where `#${parentInfo.where.field.name}` = ${parentInfo.where.fieldValue})").asUpdate
-  }
-
-  def deleteRelationRowByUniqueValueForChild(projectId: String, parentInfo: ParentInfo, where: NodeSelector): SqlAction[Int, NoStream, Effect] = {
-    val parentSide = parentInfo.field.relationSide.get
-    val childSide  = parentInfo.field.oppositeRelationSide.get
-
-    sqlu"""delete from `#$projectId`.`#${parentInfo.relation.id}`
-           where `#${parentSide}` = (select id from `#$projectId`.`#${parentInfo.model.name}` where `#${parentInfo.where.field.name}` = ${parentInfo.where.fieldValue}) 
-           and `#${childSide}` in (
-             select id
-             from `#$projectId`.`#${where.model.name}`
-             where `#${where.field.name}` = ${where.fieldValue}
-           )"""
   }
 
   //SCALAR LISTS
@@ -241,7 +221,7 @@ object DatabaseMutationBuilder {
       sql"where table_schema = ${project.id} AND TABLE_NAME = ${parentInfo.relation.id})end;").as[Int]
   }
 
-  def oldParentFailureTrigger(project: Project, parentInfo: ParentInfo, where: NodeSelector) = {
+  def oldParentFailureTriggerForRequiredRelations(project: Project, parentInfo: ParentInfo, where: NodeSelector) = {
     val childSide = parentInfo.relation.sideOf(where.model)
 
     (sql"select case" ++
@@ -255,7 +235,7 @@ object DatabaseMutationBuilder {
       sql"where table_schema = ${project.id} AND TABLE_NAME = ${parentInfo.relation.id})end;").as[Int]
   }
 
-  def oldChildFailureTrigger(project: Project, parentInfo: ParentInfo) = {
+  def oldChildFailureTriggerForRequiredRelations(project: Project, parentInfo: ParentInfo) = {
     val parentSide = parentInfo.relation.sideOf(parentInfo.model)
 
     (sql"select case" ++
@@ -268,8 +248,6 @@ object DatabaseMutationBuilder {
       sql"from information_schema.columns" ++
       sql"where table_schema = ${project.id} AND TABLE_NAME = ${parentInfo.relation.id})end;").as[Int]
   }
-
-  // check for old child
 
   // Control Flow
 

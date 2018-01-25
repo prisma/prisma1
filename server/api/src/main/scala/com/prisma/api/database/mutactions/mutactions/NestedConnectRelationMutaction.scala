@@ -1,7 +1,6 @@
 package com.prisma.api.database.mutactions.mutactions
 
 import java.sql.SQLException
-
 import com.prisma.api.database.DatabaseMutationBuilder._
 import com.prisma.api.database.mutactions.{ClientSqlDataChangeMutaction, ClientSqlStatementResult}
 import com.prisma.api.mutations.{NodeSelector, ParentInfo}
@@ -9,7 +8,6 @@ import com.prisma.api.schema.APIErrors.RequiredRelationWouldBeViolated
 import com.prisma.gc_values._
 import com.prisma.shared.models.Project
 import slick.dbio.DBIOAction
-
 import scala.concurrent.Future
 
 case class NestedConnectRelationMutaction(project: Project, parentInfo: ParentInfo, where: NodeSelector, topIsCreate: Boolean)
@@ -20,8 +18,8 @@ case class NestedConnectRelationMutaction(project: Project, parentInfo: ParentIn
     val p = parentInfo.field
     val c = parentInfo.relation.getOtherModel_!(project.schema, parentInfo.where.model).fields.find(_.relation.contains(parentInfo.relation)).get
 
-    val checkForOldParent = oldParentFailureTrigger(project, parentInfo, where)
-    val checkForOldChild  = oldChildFailureTrigger(project, parentInfo)
+    val checkForOldParent = oldParentFailureTriggerForRequiredRelations(project, parentInfo, where)
+    val checkForOldChild  = oldChildFailureTriggerForRequiredRelations(project, parentInfo)
 
     val removalByParent         = deleteRelationRowByParent(project.id, parentInfo)
     val removalByChild          = deleteRelationRowByChild(project.id, parentInfo, where)
@@ -32,7 +30,7 @@ case class NestedConnectRelationMutaction(project: Project, parentInfo: ParentIn
         (p.isList, p.isRequired, c.isList, c.isRequired) match {
           case (false, true, false, true)   => throw RequiredRelationWouldBeViolated(parentInfo, where)
           case (false, true, false, false)  => List(checkForOldParent)
-          case (false, false, false, true)  => List.empty
+          case (false, false, false, true)  => List(checkForOldChild)
           case (false, false, false, false) => List.empty
           case (true, false, false, true)   => List.empty
           case (true, false, false, false)  => List.empty
@@ -60,7 +58,7 @@ case class NestedConnectRelationMutaction(project: Project, parentInfo: ParentIn
       case false =>
         (p.isList, p.isRequired, c.isList, c.isRequired) match {
           case (false, true, false, true)   => throw RequiredRelationWouldBeViolated(parentInfo, where)
-          case (false, true, false, false)  => List.empty
+          case (false, true, false, false)  => List(removalByParent)
           case (false, false, false, true)  => List(removalByParent, removalByChild)
           case (false, false, false, false) => List(removalByParent, removalByChild)
           case (true, false, false, true)   => List(removalByChild)
@@ -99,9 +97,7 @@ case class NestedConnectRelationMutaction(project: Project, parentInfo: ParentIn
   }
 
   def causedByThisMutaction(cause: String) = {
-    println(cause)
-
-    val parameterString = where.fieldValue match {
+    def parameterString(where: NodeSelector) = where.fieldValue match {
       case StringGCValue(x)      => s"parameters ['$x',"
       case IntGCValue(x)         => s"parameters [$x,"
       case FloatGCValue(x)       => s"parameters [$x,"
@@ -116,9 +112,11 @@ case class NestedConnectRelationMutaction(project: Project, parentInfo: ParentIn
       case NullGCValue           => sys.error("Not an acceptable Where")
     }
 
-    val relationString = s"`${parentInfo.relation.id}` where `${parentInfo.relation.sideOf(where.model)}` ="
+    val parentCheckString = s"`${parentInfo.relation.id}` where `${parentInfo.relation.sideOf(where.model)}` ="
+    val childCheckString  = s"`${parentInfo.relation.id}` where `${parentInfo.relation.sideOf(parentInfo.model)}` ="
 
-    cause.contains(relationString) && cause.contains(parameterString)
+    (cause.contains(parentCheckString) && cause.contains(parameterString(where))) ||
+    (cause.contains(childCheckString) && cause.contains(parameterString(parentInfo.where)))
   }
 
 }
