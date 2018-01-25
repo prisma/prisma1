@@ -113,7 +113,7 @@ If the token is valid, the server will return the `id` and `email` of the `User`
 ## Troubleshooting
 
 <details>
- <summaryI'm getting the error message <code>[Network error]: FetchError: request to http://localhost:4466/auth-example/dev failed, reason: connect ECONNREFUSED</code> when trying to send a query or mutation</summary>
+ <summary>I'm getting the error message <code>[Network error]: FetchError: request to http://localhost:4466/auth-example/dev failed, reason: connect ECONNREFUSED</code> when trying to send a query or mutation</summary>
 
 This is because the endpoint for the Prisma service is hardcoded in [`index.js`](index.js#L23). The service is assumed to be running on the default port for a local cluster: `http://localhost:4466`. Apparently, your local cluster is using a different port.
 
