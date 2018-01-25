@@ -32,14 +32,7 @@ const resolvers = {
   Subscription: {
     publications: {
       subscribe: async (parent, args, ctx, info) => {
-        return ctx.db.subscription.post(
-          {
-            where: {
-              mutation_in: ['CREATED', 'UPDATED'],
-            },
-          },
-          info,
-        )
+        return ctx.db.subscription.post({}, info)
       },
     },
   },
@@ -52,7 +45,7 @@ const server = new GraphQLServer({
     ...req,
     db: new Prisma({
       typeDefs: 'src/generated/prisma.graphql',
-      endpoint: 'http://localhost:4466/subscriptions-example/dev',
+      endpoint: 'https://eu1.prisma.sh/public-motleymoose-kicker-19179/subscriptions-example/dev',
       secret: 'mysecret123',
     }),
     debug: true,
