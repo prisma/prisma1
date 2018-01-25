@@ -245,7 +245,7 @@ object DatabaseMutationBuilder {
     val childSide = parentInfo.relation.sideOf(where.model)
 
     (sql"select case" ++
-      sql"when exists" ++
+      sql"when not exists" ++
       sql"(select *" ++
       sql"from `#${project.id}`.`#${parentInfo.relation.id}`" ++
       sql"where `#$childSide` = (Select `id` from `#${project.id}`.`#${where.model.name}`where `#${where.field.name}` = ${where.fieldValue}))" ++
@@ -259,7 +259,7 @@ object DatabaseMutationBuilder {
     val parentSide = parentInfo.relation.sideOf(parentInfo.model)
 
     (sql"select case" ++
-      sql"when exists" ++
+      sql"when not exists" ++
       sql"(select *" ++
       sql"from `#${project.id}`.`#${parentInfo.relation.id}`" ++
       sql"where `#$parentSide` = (Select `id` from `#${project.id}`.`#${parentInfo.where.model.name}`where `#${parentInfo.where.field.name}` = ${parentInfo.where.fieldValue}))" ++

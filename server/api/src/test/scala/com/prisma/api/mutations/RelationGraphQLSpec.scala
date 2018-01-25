@@ -94,7 +94,7 @@ class RelationGraphQLSpec extends FlatSpec with Matchers with ApiBaseSpec {
 
     //create new owner and connect to garfield
 
-    val res3 = server.executeQuerySimple(
+    server.executeQuerySimpleThatMustFail(
       """mutation {createOwner(
         |data: {ownerName: "gargamel", cat : {connect: {catName: "garfield"}}}) {
         |    ownerName
@@ -103,16 +103,16 @@ class RelationGraphQLSpec extends FlatSpec with Matchers with ApiBaseSpec {
         |    }
         |  }
         |}""".stripMargin,
-      project
+      project,
+      errorCode = 3042,
+      errorContains = "The change you are trying to make would violate a required relation between Owner and Cat"
     )
 
-    res3.toString should be("""{"data":{"createOwner":{"ownerName":"gargamel","cat":{"catName":"garfield"}}}}""")
+    val res5 = server.executeQuerySimple("""query{owner(where:{ownerName:"jon"}){ownerName, cat{catName}}}""", project)
+    res5.toString should be("""{"data":{"owner":{"ownerName":"jon","cat":{"catName":"garfield"}}}}""")
 
-//    val res5 = server.executeQuerySimple("""query{owner(where:{ownerName:"jon"}){ownerName, cat{catName}}}""", project)
-//    res5.toString should be("""{"data":{"owner":{"ownerName":"jon","cat":null}}}""")
-//
-//    val res6 = server.executeQuerySimple("""query{owner(where:{ownerName:"gargamel"}){ownerName, cat{catName}}}""", project)
-//    res6.toString should be("""{"data":{"owner":{"ownerName":"gargamel","cat":{"catName":"garfield"}}}}""")
+    val res6 = server.executeQuerySimple("""query{owner(where:{ownerName:"gargamel"}){ownerName, cat{catName}}}""", project)
+    res6.toString should be("""{"data":{"owner":null}}""")
   }
 
   def createItem(project: Project, modelName: String, name: String): Unit = {
