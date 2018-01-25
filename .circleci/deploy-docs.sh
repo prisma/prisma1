@@ -3,6 +3,15 @@
 set -e
 set -o pipefail
 
+export changedFiles=$(git diff-tree --no-commit-id --name-only -r HEAD)
+
+if [[ "$changedFiles" = *"docs/"* ]]; then
+  echo "There were changes in the docs folder. Going to deploy docs"
+else
+  echo "No Changes. Exiting"
+  exit 0
+fi
+
 
 if [ ! -z "$CIRCLE_BRANCH" ]; then
   UPPER_BRANCH="MASTER"
