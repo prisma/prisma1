@@ -19,7 +19,7 @@
     "dotenv-cli": "1.4.0",
     "graphql-cli": "2.12.4",
     "nodemon": "1.14.11",
-    "prisma": "1.0.7",
+    "prisma": "1.0.8",
     "ts-node": "4.1.0",
     "typescript": "2.6.2"
   },

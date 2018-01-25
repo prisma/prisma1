@@ -14,8 +14,8 @@
   },
   "devDependencies": {
     "graphql-cli": "2.12.4",
-    "prisma": "1.0.7",
-    "npm-run-all": "4.1.2"
+    "npm-run-all": "4.1.2",
+    "prisma": "1.0.8"
   },
   "prettier": {
     "semi": false,
