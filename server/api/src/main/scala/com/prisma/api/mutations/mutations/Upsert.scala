@@ -24,13 +24,16 @@ case class Upsert(
   val outerWhere: NodeSelector = CoolArgs(args.raw).extractNodeSelectorFromWhereField(model)
 
   val idOfNewItem: String       = Cuid.createCuid()
-  val createArgs: CoolArgs      = CoolArgs(args.raw).createArgumentsAsCoolArgs.generateCreateArgs(model, idOfNewItem)
-  val updateArgs: CoolArgs      = CoolArgs(args.raw).updateArgumentsAsCoolArgs.generateUpdateArgs(model)
   val createWhere: NodeSelector = NodeSelector.forId(model, idOfNewItem)
+  val updateArgs: CoolArgs      = CoolArgs(args.raw).updateArgumentsAsCoolArgs.generateNonListUpdateArgs(model)
+  val updatedWhere: NodeSelector = updateArgs.raw.get(outerWhere.field.name) match {
+    case Some(_) => updateArgs.extractNodeSelector(model)
+    case None    => outerWhere
+  }
 
   override def prepareMutactions(): Future[List[MutactionGroup]] = {
 
-    val sqlMutactions        = SqlMutactions(dataResolver).getMutactionsForUpsert(outerWhere, createWhere, CoolArgs(args.raw), createArgs, updateArgs)
+    val sqlMutactions        = SqlMutactions(dataResolver).getMutactionsForUpsert(outerWhere, createWhere, updatedWhere, CoolArgs(args.raw))
     val transactionMutaction = TransactionMutaction(sqlMutactions, dataResolver)
 //    val subscriptionMutactions = SubscriptionEvents.extractFromSqlMutactions(project, mutationId, sqlMutactions).toList
 //    val sssActions             = ServerSideSubscription.extractFromMutactions(project, sqlMutactions, requestId = "").toList
@@ -45,12 +48,8 @@ case class Upsert(
   }
 
   override def getReturnValue: Future[ReturnValueResult] = {
-    val newWhere = updateArgs.raw.get(outerWhere.field.name) match {
-      case Some(_) => updateArgs.extractNodeSelector(model)
-      case None    => outerWhere
-    }
 
-    val uniques = Vector(NodeSelector.forId(model, idOfNewItem), newWhere)
+    val uniques = Vector(createWhere, updatedWhere)
     dataResolver.resolveByUniques(model, uniques).map { items =>
       items.headOption match {
         case Some(item) => ReturnValue(item)

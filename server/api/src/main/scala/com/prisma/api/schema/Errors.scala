@@ -150,4 +150,10 @@ object APIErrors {
         3041
       )
 
+  case class RequiredRelationWouldBeViolated(parentInfo: ParentInfo, where: NodeSelector)
+      extends ClientApiError(
+        s"The change you are trying to make would violate a required relation between ${parentInfo.model.name} and ${where.model.name}",
+        3042
+      )
+
 }

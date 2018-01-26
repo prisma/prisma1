@@ -1,8 +1,7 @@
 package com.prisma.subscriptions.specs
 
 import com.prisma.api.database.mutactions.mutactions.{AddDataItemToManyRelationByUniqueField, CreateDataItem}
-import com.prisma.api.mutations.MutationTypes.ArgumentValue
-import com.prisma.api.mutations.{NodeSelector, ParentInfo}
+import com.prisma.api.mutations.{CoolArgs, NodeSelector, ParentInfo}
 import com.prisma.messagebus.pubsub.Only
 import com.prisma.shared.models.{Enum, Model, Project}
 import com.prisma.shared.project_dsl.SchemaDsl
@@ -34,8 +33,8 @@ class SubscriptionFilterSpec extends FlatSpec with Matchers with SpecBase with A
     testDatabase.runDbActionOnClientDb {
       CreateDataItem(
         project = project,
-        model = project.schema.getModelByName_!("Comment"),
-        values = List(ArgumentValue(name = "text", value = "some comment"), ArgumentValue(name = "id", value = "comment-id"))
+        where = NodeSelector.forId(project.schema.getModelByName_!("Comment"), "comment-id"),
+        args = CoolArgs(Map("text" -> "some comment", "id" -> "comment-id"))
       ).execute.await.sqlAction
     }
 

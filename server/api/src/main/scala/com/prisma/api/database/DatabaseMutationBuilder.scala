@@ -2,6 +2,7 @@ package com.prisma.api.database
 
 import com.prisma.api.database.Types.DataItemFilterCollection
 import com.prisma.api.mutations.{CoolArgs, NodeSelector, ParentInfo}
+import com.prisma.api.schema.GeneralError
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
 import com.prisma.shared.models.{Model, Project, TypeIdentifier}
 import cool.graph.cuid.Cuid
@@ -85,16 +86,12 @@ object DatabaseMutationBuilder {
              updateArgs: CoolArgs,
              create: Seq[DBIOAction[List[Int], NoStream, Effect]],
              update: Seq[DBIOAction[List[Int], NoStream, Effect]]) = {
-    import scala.concurrent.ExecutionContext.Implicits.global
 
-    val q       = DatabaseQueryBuilder.existsFromModelsByUniques(projectId, where.model, Vector(where)).as[Boolean]
+    val q       = DatabaseQueryBuilder.existsByWhere(projectId, where).as[Boolean]
     val qInsert = DBIOAction.seq(createDataItemIfUniqueDoesNotExist(projectId, where, createArgs), DBIOAction.seq(create: _*))
     val qUpdate = DBIOAction.seq(updateDataItemByUnique(projectId, where, updateArgs), DBIOAction.seq(update: _*))
 
-    for {
-      exists <- q
-      action <- if (exists.head) qUpdate else qInsert
-    } yield action
+    ifThenElse(q, qUpdate, qInsert)
   }
 
   def upsertIfInRelationWith(
@@ -107,16 +104,12 @@ object DatabaseMutationBuilder {
       create: Seq[DBIOAction[List[Int], NoStream, Effect]],
       update: Seq[DBIOAction[List[Int], NoStream, Effect]]
   ) = {
-    import scala.concurrent.ExecutionContext.Implicits.global
 
     val q       = DatabaseQueryBuilder.existsNodeIsInRelationshipWith(project, parentInfo, where).as[Boolean]
     val qInsert = DBIOAction.seq(createDataItem(project.id, where.model.name, createArgs), DBIOAction.seq(create: _*))
     val qUpdate = DBIOAction.seq(updateDataItemByUnique(project.id, where, updateArgs), DBIOAction.seq(update: _*))
 
-    for {
-      exists <- q
-      action <- if (exists.head) qUpdate else qInsert
-    } yield action
+    ifThenElse(q, qUpdate, qInsert)
   }
 
   //DELETE
@@ -125,6 +118,9 @@ object DatabaseMutationBuilder {
     val whereSql = QueryArguments.generateFilterConditions(project.id, model.name, whereFilter)
     (sql"delete from `#${project.id}`.`#${model.name}`" ++ prefixIfNotNone("where", whereSql)).asUpdate
   }
+
+  def deleteDataItemByUnique(projectId: String, where: NodeSelector) =
+    sqlu"delete from `#$projectId`.`#${where.model.name}` where `#${where.field.name}` = ${where.fieldValue}"
 
   def deleteRelayIds(project: Project, model: Model, whereFilter: DataItemFilterCollection) = {
     val whereSql = QueryArguments.generateFilterConditions(project.id, model.name, whereFilter)
@@ -135,27 +131,31 @@ object DatabaseMutationBuilder {
         prefixIfNotNone("where", whereSql) ++ sql")")).asUpdate
   }
 
-  def deleteDataItemByUnique(projectId: String, where: NodeSelector) =
-    sqlu"delete from `#$projectId`.`#${where.model.name}` where `#${where.field.name}` = ${where.fieldValue}"
-
   def deleteRelayRowByUnique(projectId: String, where: NodeSelector) =
     sqlu"delete from `#$projectId`.`_RelayId` where `id` = (select id from `#$projectId`.`#${where.model.name}` where `#${where.field.name}` = ${where.fieldValue})"
 
-  def deleteRelationRowsByRelationSideAndId(projectId: String, relationId: String, relationSide: String, id: String) = {
-    (sql"delete from `#$projectId`.`#$relationId` where `#${relationSide}` = '#${id}'").asUpdate
+  def deleteRelationRowByParent(projectId: String, parentInfo: ParentInfo) = {
+
+    (sql"delete from `#$projectId`.`#${parentInfo.relation.id}` " ++
+      sql"where `#${parentInfo.field.relationSide.get}` = (select id from `#$projectId`.`#${parentInfo.where.model.name}` " ++
+      sql"where `#${parentInfo.where.field.name}` = ${parentInfo.where.fieldValue})").asUpdate
   }
 
-  def deleteRelationRowByUniqueValueForChild(projectId: String, parentInfo: ParentInfo, where: NodeSelector): SqlAction[Int, NoStream, Effect] = {
-    val parentSide = parentInfo.field.relationSide.get
-    val childSide  = parentInfo.field.oppositeRelationSide.get
+  def deleteRelationRowByChild(projectId: String, parentInfo: ParentInfo, where: NodeSelector) = {
 
-    sqlu"""delete from `#$projectId`.`#${parentInfo.relation.id}`
-           where `#${parentSide}` = (select id from `#$projectId`.`#${parentInfo.model.name}` where `#${parentInfo.where.field.name}` = ${parentInfo.where.fieldValue}) 
-           and `#${childSide}` in (
-             select id
-             from `#$projectId`.`#${where.model.name}`
-             where `#${where.field.name}` = ${where.fieldValue}
-           )"""
+    (sql"delete from `#$projectId`.`#${parentInfo.relation.id}` " ++
+      sql"where `#${parentInfo.field.oppositeRelationSide.get}` = (select id from `#$projectId`.`#${where.model.name}` " ++
+      sql"where `#${where.field.name}` = ${where.fieldValue})").asUpdate
+  }
+
+  def deleteRelationRowByParentAndChild(projectId: String, parentInfo: ParentInfo, where: NodeSelector) = {
+
+    (sql"delete from `#$projectId`.`#${parentInfo.relation.id}` " ++
+      sql"where " ++
+      sql"`#${parentInfo.field.oppositeRelationSide.get}` = (select id from `#$projectId`.`#${where.model.name}` " ++
+      sql"where `#${where.field.name}` = ${where.fieldValue})" ++
+      sql" AND `#${parentInfo.field.relationSide.get}` = (select id from `#$projectId`.`#${parentInfo.where.model.name}` " ++
+      sql"where `#${parentInfo.where.field.name}` = ${parentInfo.where.fieldValue})").asUpdate
   }
 
   //SCALAR LISTS
@@ -219,6 +219,56 @@ object DatabaseMutationBuilder {
       sql"else (select COLUMN_NAME" ++
       sql"from information_schema.columns" ++
       sql"where table_schema = ${project.id} AND TABLE_NAME = ${parentInfo.relation.id})end;").as[Int]
+  }
+
+  def oldParentFailureTriggerForRequiredRelations(project: Project, parentInfo: ParentInfo, where: NodeSelector) = {
+    val childSide = parentInfo.relation.sideOf(where.model)
+
+    (sql"select case" ++
+      sql"when not exists" ++
+      sql"(select *" ++
+      sql"from `#${project.id}`.`#${parentInfo.relation.id}`" ++
+      sql"where `#$childSide` = (Select `id` from `#${project.id}`.`#${where.model.name}`where `#${where.field.name}` = ${where.fieldValue}))" ++
+      sql"then 1" ++
+      sql"else (select COLUMN_NAME" ++
+      sql"from information_schema.columns" ++
+      sql"where table_schema = ${project.id} AND TABLE_NAME = ${parentInfo.relation.id})end;").as[Int]
+  }
+
+  def oldChildFailureTriggerForRequiredRelations(project: Project, parentInfo: ParentInfo) = {
+    val parentSide = parentInfo.relation.sideOf(parentInfo.model)
+
+    (sql"select case" ++
+      sql"when not exists" ++
+      sql"(select *" ++
+      sql"from `#${project.id}`.`#${parentInfo.relation.id}`" ++
+      sql"where `#$parentSide` = (Select `id` from `#${project.id}`.`#${parentInfo.where.model.name}`where `#${parentInfo.where.field.name}` = ${parentInfo.where.fieldValue}))" ++
+      sql"then 1" ++
+      sql"else (select COLUMN_NAME" ++
+      sql"from information_schema.columns" ++
+      sql"where table_schema = ${project.id} AND TABLE_NAME = ${parentInfo.relation.id})end;").as[Int]
+  }
+
+  // Control Flow
+
+  def ifThenElse(condition: SqlStreamingAction[Vector[Boolean], Boolean, Effect],
+                 thenMutactions: DBIOAction[Unit, NoStream, Effect],
+                 elseMutactions: DBIOAction[Unit, NoStream, Effect]) = {
+    import scala.concurrent.ExecutionContext.Implicits.global
+    for {
+      exists <- condition
+      action <- if (exists.head) thenMutactions else elseMutactions
+    } yield action
+  }
+
+  def ifThenElseError(condition: SqlStreamingAction[Vector[Boolean], Boolean, Effect],
+                      thenMutactions: DBIOAction[Unit, NoStream, Effect],
+                      elseError: GeneralError) = {
+    import scala.concurrent.ExecutionContext.Implicits.global
+    for {
+      exists <- condition
+      action <- if (exists.head) thenMutactions else throw elseError
+    } yield action
   }
 
   //RESET DATA

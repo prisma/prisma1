@@ -2,13 +2,11 @@ package com.prisma.api.mutations
 import com.prisma.api.database.mutactions.ClientSqlMutaction
 import com.prisma.api.database.mutactions.mutactions._
 import com.prisma.api.database.{DataItem, DataResolver, DatabaseMutationBuilder}
-import com.prisma.api.mutations.MutationTypes.ArgumentValue
 import com.prisma.api.schema.APIErrors.RelationIsRequired
-import cool.graph.cuid.Cuid.createCuid
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models.{Field, Model, Project, Relation}
-import com.prisma.util.gc_value.GCAnyConverter
 import com.prisma.utils.boolean.BooleanUtils._
+import cool.graph.cuid.Cuid.createCuid
 import slick.dbio.{DBIOAction, Effect, NoStream}
 
 import scala.collection.immutable.Seq
@@ -34,8 +32,8 @@ case class SqlMutactions(dataResolver: DataResolver) {
   val project = dataResolver.project
 
   def getMutactionsForDelete(where: NodeSelector, previousValues: DataItem, id: String): List[ClientSqlMutaction] = {
-    val requiredRelationViolations     = where.model.relationFields.flatMap(field => checkIfRemovalWouldFailARequiredRelation(field, id, project))
-    val removeFromConnectionMutactions = where.model.relationFields.map(field => RemoveDataItemFromManyRelationByToId(project.id, field, id))
+    val requiredRelationViolations     = where.model.relationFields.flatMap(field => checkIfRemovalWouldFailARequiredRelation(project, ParentInfo(field, where)))
+    val removeFromConnectionMutactions = where.model.relationFields.map(field => RemoveRelationRowByParentInfo(project, ParentInfo(field, where)))
     val deleteItemMutaction            = DeleteDataItem(project, where, previousValues, id)
 
     requiredRelationViolations ++ removeFromConnectionMutactions ++ List(deleteItemMutaction)
@@ -44,13 +42,13 @@ case class SqlMutactions(dataResolver: DataResolver) {
   def getMutactionsForUpdate(where: NodeSelector, args: CoolArgs, id: Id, previousValues: DataItem): Vector[ClientSqlMutaction] = {
     val updateMutaction = getUpdateMutactions(where, args, id, previousValues)
     val whereFieldValue = args.raw.get(where.field.name)
-    val updatedWhere    = if (whereFieldValue.isDefined) generateUpdatedWhere(where, whereFieldValue.get) else where
+    val updatedWhere    = if (whereFieldValue.isDefined) where.updateValue(whereFieldValue.get) else where
     val nested          = getMutactionsForNestedMutation(args, updatedWhere, triggeredFromCreate = false)
 
     updateMutaction ++ nested
   }
 
-  def getMutactionsForCreate(model: Model, args: CoolArgs, id: Id = createCuid()): Vector[ClientSqlMutaction] = {
+  def getMutactionsForCreate(model: Model, args: CoolArgs, id: Id): Vector[ClientSqlMutaction] = {
     val where            = NodeSelector.forId(model, id)
     val createMutactions = getCreateMutactions(where, args)
     val nestedMutactions = getMutactionsForNestedMutation(args, where, triggeredFromCreate = true)
@@ -59,15 +57,8 @@ case class SqlMutactions(dataResolver: DataResolver) {
   }
 
   // we need to rethink this thoroughly, we need to prevent both branches of executing their nested mutations
-
-  def getMutactionsForUpsert(outerWhere: NodeSelector, createWhere: NodeSelector, allArgs: CoolArgs, createArgs: CoolArgs, updateArgs: CoolArgs,
-  ): List[ClientSqlMutaction] = {
-    val whereFieldValue                                                 = updateArgs.raw.get(outerWhere.field.name)
-    val updatedOuterWhere                                               = if (whereFieldValue.isDefined) generateUpdatedWhere(outerWhere, whereFieldValue.get) else outerWhere
-    val scalarListsCreate: Seq[DBIOAction[List[Int], NoStream, Effect]] = getMutactionsForScalarLists2(createWhere, allArgs.createArgumentsAsCoolArgs)
-    val scalarListsUpdate: Seq[DBIOAction[List[Int], NoStream, Effect]] = getMutactionsForScalarLists2(updatedOuterWhere, allArgs.updateArgumentsAsCoolArgs)
-
-    val upsertMutaction = UpsertDataItem(project, outerWhere, createArgs, updateArgs, scalarListsCreate, scalarListsUpdate)
+  def getMutactionsForUpsert(outerWhere: NodeSelector, createWhere: NodeSelector, updateWhere: NodeSelector, allArgs: CoolArgs): List[ClientSqlMutaction] = {
+    val upsertMutaction = UpsertDataItem(project, outerWhere, createWhere, updateWhere, allArgs, dataResolver)
 
 //    val updateNested = getMutactionsForNestedMutation(allArgs.updateArgumentsAsCoolArgs, updatedOuterWhere, triggeredFromCreate = false)
 //    val createNested = getMutactionsForNestedMutation(allArgs.createArgumentsAsCoolArgs, createWhere, triggeredFromCreate = true)
@@ -75,33 +66,20 @@ case class SqlMutactions(dataResolver: DataResolver) {
     List(upsertMutaction) //++ updateNested ++ createNested
   }
 
-  def generateUpdatedWhere(where: NodeSelector, updatedValue: Any): NodeSelector = {
-    val unwrapped = updatedValue match {
-      case Some(x) => x
-      case x       => x
-    }
-
-    val newGCValue = GCAnyConverter(where.field.typeIdentifier, false).toGCValue(unwrapped).get
-    where.copy(fieldValue = newGCValue)
-  }
-
   def getCreateMutactions(where: NodeSelector, args: CoolArgs): Vector[ClientSqlMutaction] = {
-    val scalarArguments = args.nonListScalarArguments(where.model).toList :+ ArgumentValue("id", where.fieldValueAsString)
-    val createNonLists  = CreateDataItem(project, where.model, values = scalarArguments, originalArgs = Some(args))
-    val createLists     = getMutactionsForScalarLists(where, args)
+    val createNonLists = CreateDataItem(project, where, args)
+    val createLists    = getMutactionsForScalarLists(where, args)
 
     createNonLists +: createLists
   }
 
   def getUpdateMutactions(where: NodeSelector, args: CoolArgs, id: Id, previousValues: DataItem): Vector[ClientSqlMutaction] = {
-    val scalarArguments = args.nonListScalarArguments(where.model)
     val updateNonLists =
       UpdateDataItem(
         project = project,
         model = where.model,
         id = id,
-        values = scalarArguments,
-        originalArgs = Some(args),
+        args = args.nonListScalarArguments(where.model),
         previousValues = previousValues,
         itemExists = true
       )
@@ -127,7 +105,7 @@ case class SqlMutactions(dataResolver: DataResolver) {
     x.flatten.toVector
   }
 
-  def getMutactionsForScalarLists2(where: NodeSelector, args: CoolArgs) = {
+  def getDbActionsForUpsertScalarLists(where: NodeSelector, args: CoolArgs) = {
     val x = for {
       field  <- where.model.scalarListFields
       values <- args.subScalarList(field)
@@ -139,6 +117,7 @@ case class SqlMutactions(dataResolver: DataResolver) {
     x.flatten.toVector
   }
 
+  //filter for duplicates here? multiple identical where checks for example?
   def getMutactionsForNestedMutation(args: CoolArgs,
                                      outerWhere: NodeSelector,
                                      triggeredFromCreate: Boolean,
@@ -154,7 +133,7 @@ case class SqlMutactions(dataResolver: DataResolver) {
       val checkMutactions = getMutactionsForWhereChecks(nestedMutation) ++ getMutactionsForConnectionChecks(subModel, nestedMutation, parentInfo)
 
       val mutactionsThatACreateCanTrigger = getMutactionsForNestedCreateMutation(subModel, nestedMutation, parentInfo) ++
-        getMutactionsForNestedConnectMutation(nestedMutation, parentInfo)
+        getMutactionsForNestedConnectMutation(nestedMutation, parentInfo, triggeredFromCreate)
 
       val otherMutactions = getMutactionsForNestedDisconnectMutation(nestedMutation, parentInfo) ++
         getMutactionsForNestedDeleteMutation(nestedMutation, parentInfo) ++
@@ -184,8 +163,7 @@ case class SqlMutactions(dataResolver: DataResolver) {
 
   def getMutactionsForNestedCreateMutation(model: Model, nestedMutation: NestedMutation, parentInfo: ParentInfo): Seq[ClientSqlMutaction] = {
     nestedMutation.creates.flatMap { create =>
-      val id               = createCuid()
-      val where            = NodeSelector.forId(model, id)
+      val where            = NodeSelector.forId(model, createCuid())
       val createMutactions = getCreateMutactions(where, create.data)
       val connectItem      = List(AddDataItemToManyRelationByUniqueField(project, parentInfo, where))
 
@@ -196,12 +174,12 @@ case class SqlMutactions(dataResolver: DataResolver) {
     }
   }
 
-  def getMutactionsForNestedConnectMutation(nestedMutation: NestedMutation, parentInfo: ParentInfo): Seq[ClientSqlMutaction] = {
-    nestedMutation.connects.map(connect => AddDataItemToManyRelationByUniqueField(project, parentInfo, connect.where))
+  def getMutactionsForNestedConnectMutation(nestedMutation: NestedMutation, parentInfo: ParentInfo, topIsCreate: Boolean): Seq[ClientSqlMutaction] = {
+    nestedMutation.connects.map(connect => NestedConnectRelationMutaction(project, parentInfo, connect.where, topIsCreate))
   }
 
   def getMutactionsForNestedDisconnectMutation(nestedMutation: NestedMutation, parentInfo: ParentInfo): Seq[ClientSqlMutaction] = {
-    nestedMutation.disconnects.map(disconnect => RemoveDataItemFromManyRelationByUniqueField(project, parentInfo, disconnect.where))
+    nestedMutation.disconnects.map(disconnect => NestedDisconnectRelationMutaction(project, parentInfo, disconnect.where))
   }
 
   def getMutactionsForNestedDeleteMutation(nestedMutation: NestedMutation, parentInfo: ParentInfo): Seq[ClientSqlMutaction] = {
@@ -212,22 +190,23 @@ case class SqlMutactions(dataResolver: DataResolver) {
     nestedMutation.updates.flatMap { update =>
       val updateMutaction = UpdateDataItemByUniqueFieldIfInRelationWith(project, parentInfo, update.where, update.data)
       val whereFieldValue = update.data.raw.get(update.where.field.name)
-      val updatedWhere    = if (whereFieldValue.isDefined) generateUpdatedWhere(update.where, whereFieldValue.get) else update.where
+      val updatedWhere    = if (whereFieldValue.isDefined) update.where.updateValue(whereFieldValue.get) else update.where
       val scalarLists     = getMutactionsForScalarLists(updatedWhere, update.data)
       List(updateMutaction) ++ scalarLists ++ getMutactionsForNestedMutation(update.data, updatedWhere, triggeredFromCreate = false)
     }
   }
 
   // we need to rethink this thoroughly, we need to prevent both branches of executing their nested mutations
+  // generate default value in create case
   def getMutactionsForNestedUpsertMutation(nestedMutation: NestedMutation, parentInfo: ParentInfo): Seq[ClientSqlMutaction] = {
     nestedMutation.upserts.flatMap { upsert =>
       val id                                                              = createCuid()
       val createWhere                                                     = NodeSelector.forId(upsert.where.model, id)
       val createArgsWithId                                                = CoolArgs(upsert.create.raw + ("id" -> id))
       val whereFieldValue                                                 = upsert.update.raw.get(upsert.where.field.name)
-      val updatedWhere                                                    = if (whereFieldValue.isDefined) generateUpdatedWhere(upsert.where, whereFieldValue.get) else upsert.where
-      val scalarListsCreate: Seq[DBIOAction[List[Int], NoStream, Effect]] = getMutactionsForScalarLists2(createWhere, createArgsWithId)
-      val scalarListsUpdate: Seq[DBIOAction[List[Int], NoStream, Effect]] = getMutactionsForScalarLists2(updatedWhere, upsert.update)
+      val updatedWhere                                                    = if (whereFieldValue.isDefined) upsert.where.updateValue(whereFieldValue.get) else upsert.where
+      val scalarListsCreate: Seq[DBIOAction[List[Int], NoStream, Effect]] = getDbActionsForUpsertScalarLists(createWhere, createArgsWithId)
+      val scalarListsUpdate: Seq[DBIOAction[List[Int], NoStream, Effect]] = getDbActionsForUpsertScalarLists(updatedWhere, upsert.update)
       val upsertItem =
         UpsertDataItemIfInRelationWith(project, parentInfo, upsert.where, createWhere, createArgsWithId, upsert.update, scalarListsCreate, scalarListsUpdate)
       val addToRelation = AddDataItemToManyRelationByUniqueField(project, parentInfo, createWhere)
@@ -236,18 +215,19 @@ case class SqlMutactions(dataResolver: DataResolver) {
     }
   }
 
-  private def checkIfRemovalWouldFailARequiredRelation(field: Field, fromId: String, project: Project): Option[InvalidInputClientSqlMutaction] = {
-    val isInvalid = () => dataResolver.resolveByRelation(fromField = field, fromModelId = fromId, args = None).map(_.items.nonEmpty)
+  private def checkIfRemovalWouldFailARequiredRelation(project: Project, parentInfo: ParentInfo): Option[InvalidInputClientSqlMutaction] = {
+    val isInvalid = () => dataResolver.resolveByUnique(parentInfo.where).map(_.nonEmpty)
 
-    runRequiredRelationCheckWithInvalidFunction(field, isInvalid)
+    runRequiredRelationCheckWithInvalidFunction(parentInfo.field, isInvalid)
   }
 
   private def runRequiredRelationCheckWithInvalidFunction(field: Field, isInvalid: () => Future[Boolean]): Option[InvalidInputClientSqlMutaction] = {
     field.relatedField(project.schema).flatMap { relatedField =>
-      val relatedModel = field.relatedModel_!(project.schema)
+      val relatedModel              = field.relatedModel_!(project.schema)
+      val error: RelationIsRequired = RelationIsRequired(fieldName = relatedField.name, typeName = relatedModel.name)
 
       (relatedField.isRequired && !relatedField.isList).toOption {
-        InvalidInputClientSqlMutaction(RelationIsRequired(fieldName = relatedField.name, typeName = relatedModel.name), isInvalid = isInvalid)
+        InvalidInputClientSqlMutaction(error, isInvalid = isInvalid)
       }
     }
   }
