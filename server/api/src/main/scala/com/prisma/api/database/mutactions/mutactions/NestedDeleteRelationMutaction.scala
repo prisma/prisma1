@@ -18,7 +18,7 @@ case class NestedDeleteRelationMutaction(project: Project, parentInfo: ParentInf
       case (false, true, false, false)  => requiredRelationViolation
       case (false, false, false, true)  => noCheckRequired
       case (false, false, false, false) => noCheckRequired
-      case (true, false, false, true)   => requiredRelationViolation
+      case (true, false, false, true)   => noCheckRequired
       case (true, false, false, false)  => noCheckRequired
       case (false, true, true, false)   => requiredRelationViolation
       case (false, false, true, false)  => noCheckRequired

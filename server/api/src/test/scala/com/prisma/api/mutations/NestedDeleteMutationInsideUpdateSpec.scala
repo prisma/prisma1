@@ -7,7 +7,7 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with ApiBaseSpec {
 
-  "a P1! to C1! relation with the child already in a relation" should "error when disconnecting by id since old required parent relation would be broken" ignore {
+  "a P1! to C1! relation " should "error when deleting the child" in {
     val project = SchemaDsl() { schema =>
       val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)
       val child  = schema.model("Child").field_!("c", _.String, isUnique = true).oneToOneRelation_!("parentReq", "childReq", parent)
@@ -43,7 +43,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
          |  where: {id: "$parentId"}
          |  data:{
          |    p: "p2"
-         |    childReq: {disconnect: {id: "$childId"}}
+         |    childReq: {delete: {id: "$childId"}}
          |  }){
          |    childReq {
          |      c
@@ -59,7 +59,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
   }
 
-  "a P1! to C1 relation" should "always fail when trying to disconnect" ignore {
+  "a P1! to C1 relation" should "always fail when trying to delete the child" in {
     val project = SchemaDsl() { schema =>
       val child = schema.model("Child").field_!("c", _.String, isUnique = true)
       schema.model("Parent").field_!("p", _.String, isUnique = true).oneToOneRelation_!("childReq", "parentOpt", child, isRequiredOnOtherField = false)
@@ -96,7 +96,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
          |  where: {id: "$parentId"}
          |  data:{
          |    p: "p2"
-         |    childReq: {disconnect: {id: "$childId"}}
+         |    childReq: {delete: {id: "$childId"}}
          |  }){
          |    childReq {
          |      c
@@ -112,7 +112,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(1))
   }
 
-  "a P1 to C1  relation " should "be disconnectable through a nested mutation by id" ignore {
+  "a P1 to C1  relation " should "work through a nested mutation by id" in {
     val project = SchemaDsl() { schema =>
       val child = schema.model("Child").field_!("c", _.String, isUnique = true)
       schema.model("Parent").field_!("p", _.String, isUnique = true).oneToOneRelation("childOpt", "parentOpt", child)
@@ -149,7 +149,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
          |  where:{id: "$parentId"}
          |  data:{
          |    p: "p2"
-         |    childOpt: {disconnect: {id: "$childId"}}
+         |    childOpt: {delete: {id: "$childId"}}
          |  }){
          |    childOpt {
          |      c
@@ -165,7 +165,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(0))
   }
 
-  "a P1 to C1  relation with the child and the parent without a relation" should "be disconnectable through a nested mutation by id" ignore {
+  "a P1 to C1  relation" should "error if the nodes are not connected" in {
     val project = SchemaDsl() { schema =>
       val child = schema.model("Child").field_!("c", _.String, isUnique = true)
       schema.model("Parent").field_!("p", _.String, isUnique = true).oneToOneRelation("childOpt", "parentOpt", child)
@@ -205,7 +205,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
          |  where:{id: "$parent1Id"}
          |  data:{
          |    p: "p2"
-         |    childOpt: {disconnect: {id: "$child1Id"}}
+         |    childOpt: {delete: {id: "$child1Id"}}
          |  }){
          |    childOpt {
          |      c
@@ -217,10 +217,13 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
       errorCode = 3041
     )
 
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Parent").as[Int]) should be(Vector(1))
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Child").as[Int]) should be(Vector(1))
+
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(0))
   }
 
-  "a PM to C1!  relation with the child already in a relation" should "not be disconnectable through a nested mutation by unique" ignore {
+  "a PM to C1!  relation " should "work" in {
     val project = SchemaDsl() { schema =>
       val child = schema.model("Child").field_!("c", _.String, isUnique = true)
       schema.model("Parent").field_!("p", _.String, isUnique = true).oneToManyRelation_!("childrenOpt", "parentReq", child)
@@ -245,13 +248,13 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(1))
 
-    server.executeQuerySimpleThatMustFail(
+    server.executeQuerySimple(
       s"""
          |mutation {
          |  updateParent(
          |    where: {p: "p1"}
          |    data:{
-         |    childrenOpt: {disconnect: {c: "c1"}}
+         |    childrenOpt: {delete: {c: "c1"}}
          |  }){
          |    childrenOpt {
          |      c
@@ -259,14 +262,15 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
          |  }
          |}
       """.stripMargin,
-      project,
-      errorCode = 3042
+      project
     )
 
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(1))
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(0))
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Parent").as[Int]) should be(Vector(1))
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Child").as[Int]) should be(Vector(0))
   }
 
-  "a P1 to C1!  relation with the child and the parent already in a relation" should "should error in a nested mutation by unique" ignore {
+  "a P1 to C1!  relation " should "work" in {
     val project = SchemaDsl() { schema =>
       val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)
       schema.model("Child").field_!("c", _.String, isUnique = true).oneToOneRelation_!("parentReq", "childOpt", parent, isRequiredOnOtherField = false)
@@ -291,13 +295,13 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
 
-    server.executeQuerySimpleThatMustFail(
+    server.executeQuerySimple(
       s"""
          |mutation {
          |  updateParent(
          |  where: {p: "p1"}
          |  data:{
-         |    childOpt: {disconnect: {c: "c1"}}
+         |    childOpt: {delete: {c: "c1"}}
          |  }){
          |    childOpt {
          |      c
@@ -305,15 +309,15 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
          |  }
          |}
       """.stripMargin,
-      project,
-      errorCode = 3042,
-      errorContains = "The change you are trying to make would violate a required relation between Parent and Child"
+      project
     )
 
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(0))
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Parent").as[Int]) should be(Vector(1))
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Child").as[Int]) should be(Vector(0))
   }
 
-  "a PM to C1  relation with the child already in a relation" should "be disconnectable through a nested mutation by unique" ignore {
+  "a PM to C1 " should "work" in {
     val project = SchemaDsl() { schema =>
       val child = schema.model("Child").field_!("c", _.String, isUnique = true)
       schema.model("Parent").field_!("p", _.String, isUnique = true).oneToManyRelation("childrenOpt", "parentOpt", child)
@@ -345,7 +349,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
          |  updateParent(
          |  where: { p: "p1"}
          |  data:{
-         |    childrenOpt: {disconnect: [{c: "c2"}]}
+         |    childrenOpt: {delete: [{c: "c2"}]}
          |  }){
          |    childrenOpt {
          |      c
@@ -359,9 +363,11 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     res.toString should be("""{"data":{"updateParent":{"childrenOpt":[{"c":"c1"}]}}}""")
 
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(1))
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Parent").as[Int]) should be(Vector(1))
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Child").as[Int]) should be(Vector(1))
   }
 
-  "a P1! to CM  relation with the child already in a relation" should "error through a nested mutation by unique" ignore {
+  "a P1! to CM  relation" should "error " in {
     val project = SchemaDsl() { schema =>
       val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)
       val child  = schema.model("Child").field_!("c", _.String, isUnique = true).oneToManyRelation_!("parentsOpt", "childReq", parent)
@@ -392,7 +398,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
          |  updateParent(
          |  where: {p: "p1"}
          |  data:{
-         |    childReq: {disconnect: {c: "c1"}}
+         |    childReq: {delete: {c: "c1"}}
          |  }){
          |    childReq {
          |      c
@@ -407,7 +413,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
   }
 
-  "a P1 to CM  relation with the child already in a relation" should "be disconnectable through a nested mutation by unique" ignore {
+  "a P1 to CM  relation " should "work" in {
     val project = SchemaDsl() { schema =>
       val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)
       val child  = schema.model("Child").field_!("c", _.String, isUnique = true).oneToManyRelation("parentsOpt", "childOpt", parent)
@@ -438,7 +444,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
          |  updateParent(
          |    where: {p: "p1"}
          |    data:{
-         |    childOpt: {disconnect: {c: "c1"}}
+         |    childOpt: {delete: {c: "c1"}}
          |  }){
          |    childOpt{
          |      c
@@ -451,12 +457,12 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     res.toString should be("""{"data":{"updateParent":{"childOpt":null}}}""")
 
-    server.executeQuerySimple(s"""query{children{c, parentsOpt{p}}}""", project).toString should be("""{"data":{"children":[{"c":"c1","parentsOpt":[]}]}}""")
+    server.executeQuerySimple(s"""query{children{c, parentsOpt{p}}}""", project).toString should be("""{"data":{"children":[]}}""")
 
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(0))
   }
 
-  "a PM to CM  relation with the children already in a relation" should "be disconnectable through a nested mutation by unique" ignore {
+  "a PM to CM  relation" should "work" in {
     val project = SchemaDsl() { schema =>
       val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)
       val child  = schema.model("Child").field_!("c", _.String, isUnique = true).manyToManyRelation("parentsOpt", "childrenOpt", parent)
@@ -487,7 +493,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
          |  updateParent(
          |  where: { p: "p1"}
          |  data:{
-         |    childrenOpt: {disconnect: [{c: "c1"}]}
+         |    childrenOpt: {delete: [{c: "c1"}, {c: "c2"}]}
          |  }){
          |    childrenOpt{
          |      c
@@ -498,13 +504,14 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
       project
     )
 
-    res.toString should be("""{"data":{"updateParent":{"childrenOpt":[{"c":"c2"}]}}}""")
+    res.toString should be("""{"data":{"updateParent":{"childrenOpt":[]}}}""")
 
-    server.executeQuerySimple(s"""query{children{c, parentsOpt{p}}}""", project).toString should be(
-      """{"data":{"children":[{"c":"c1","parentsOpt":[]},{"c":"c2","parentsOpt":[{"p":"p1"}]}]}}""")
+    server.executeQuerySimple(s"""query{children{c, parentsOpt{p}}}""", project).toString should be("""{"data":{"children":[]}}""")
 
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(0))
   }
+
+  // in a second pass test the removal and checks on other relations of the child
 
   "a one to many relation" should "be deletable by id through a nested mutation" in {
     val project = SchemaDsl() { schema =>
