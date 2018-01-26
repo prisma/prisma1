@@ -625,7 +625,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
         |}
       """.stripMargin
 
-    val res = server.query(
+    server.query(
       s"""
          |mutation {
          |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(schema)}}){
@@ -639,8 +639,6 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
          |}
       """.stripMargin
     )
-
-    res.toString should be("""{"data":{"deploy":{"migration":{"applied":0},"errors":[]}}}""")
 
     val migrations = migrationPersistence.loadAll(project.id).await
     migrations should have(size(3))
