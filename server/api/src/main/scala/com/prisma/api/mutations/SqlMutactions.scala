@@ -132,7 +132,7 @@ case class SqlMutactions(dataResolver: DataResolver) {
 
       val checkMutactions = getMutactionsForWhereChecks(nestedMutation) ++ getMutactionsForConnectionChecks(subModel, nestedMutation, parentInfo)
 
-      val mutactionsThatACreateCanTrigger = getMutactionsForNestedCreateMutation(subModel, nestedMutation, parentInfo) ++
+      val mutactionsThatACreateCanTrigger = getMutactionsForNestedCreateMutation(subModel, nestedMutation, parentInfo, triggeredFromCreate) ++
         getMutactionsForNestedConnectMutation(nestedMutation, parentInfo, triggeredFromCreate)
 
       val otherMutactions = getMutactionsForNestedDisconnectMutation(nestedMutation, parentInfo) ++
@@ -161,11 +161,14 @@ case class SqlMutactions(dataResolver: DataResolver) {
       nestedMutation.disconnects.map(disconnect => VerifyConnection(project, parentInfo, disconnect.where))
   }
 
-  def getMutactionsForNestedCreateMutation(model: Model, nestedMutation: NestedMutation, parentInfo: ParentInfo): Seq[ClientSqlMutaction] = {
+  def getMutactionsForNestedCreateMutation(model: Model,
+                                           nestedMutation: NestedMutation,
+                                           parentInfo: ParentInfo,
+                                           triggeredFromCreate: Boolean): Seq[ClientSqlMutaction] = {
     nestedMutation.creates.flatMap { create =>
       val where            = NodeSelector.forId(model, createCuid())
       val createMutactions = getCreateMutactions(where, create.data)
-      val connectItem      = List(AddDataItemToManyRelationByUniqueField(project, parentInfo, where))
+      val connectItem      = List(NestedCreateRelationMutaction(project, parentInfo, where, triggeredFromCreate))
 
       createMutactions ++ connectItem ++ getMutactionsForNestedMutation(create.data,
                                                                         where,
@@ -188,11 +191,12 @@ case class SqlMutactions(dataResolver: DataResolver) {
 
   def getMutactionsForNestedUpdateMutation(nestedMutation: NestedMutation, parentInfo: ParentInfo): Seq[ClientSqlMutaction] = {
     nestedMutation.updates.flatMap { update =>
-      val updateMutaction = UpdateDataItemByUniqueFieldIfInRelationWith(project, parentInfo, update.where, update.data)
+      val updateMutaction = List(UpdateDataItemByUniqueFieldIfInRelationWith(project, parentInfo, update.where, update.data))
       val whereFieldValue = update.data.raw.get(update.where.field.name)
       val updatedWhere    = if (whereFieldValue.isDefined) update.where.updateValue(whereFieldValue.get) else update.where
       val scalarLists     = getMutactionsForScalarLists(updatedWhere, update.data)
-      List(updateMutaction) ++ scalarLists ++ getMutactionsForNestedMutation(update.data, updatedWhere, triggeredFromCreate = false)
+
+      updateMutaction ++ scalarLists ++ getMutactionsForNestedMutation(update.data, updatedWhere, triggeredFromCreate = false)
     }
   }
 
