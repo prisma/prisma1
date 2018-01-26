@@ -7,7 +7,7 @@ import com.prisma.api.database.mutactions.{ClientSqlDataChangeMutaction, ClientS
 import com.prisma.api.mutations.{NodeSelector, ParentInfo}
 import com.prisma.api.schema.APIErrors.RequiredRelationWouldBeViolated
 import com.prisma.gc_values._
-import com.prisma.shared.models.Project
+import com.prisma.shared.models.{Project, Relation}
 import slick.dbio.{DBIOAction, Effect, NoStream}
 
 import scala.concurrent.Future
@@ -45,33 +45,40 @@ trait NestedRelationMutactionBaseClass extends ClientSqlDataChangeMutaction {
 
   override def handleErrors = {
     Some({
-      case e: SQLException if e.getErrorCode == 1242 && causedByThisMutaction(e.getCause.toString) => throw RequiredRelationWouldBeViolated(parentInfo, where)
+      case e: SQLException if e.getErrorCode == 1242 && causedByThisMutaction(parentInfo.relation, e.getCause.toString) =>
+        throw RequiredRelationWouldBeViolated(project, parentInfo.relation)
     })
   }
 
-  def requiredRelationViolation = throw RequiredRelationWouldBeViolated(parentInfo, where)
+  def requiredRelationViolation = throw RequiredRelationWouldBeViolated(project, parentInfo.relation)
   def sysError                  = sys.error("This should not happen, since it means a many side is required")
 
-  def causedByThisMutaction(cause: String) = {
-    def parameterString(where: NodeSelector) = where.fieldValue match {
-      case StringGCValue(x)      => s"parameters ['$x',"
-      case IntGCValue(x)         => s"parameters [$x,"
-      case FloatGCValue(x)       => s"parameters [$x,"
-      case BooleanGCValue(false) => s"parameters [0,"
-      case BooleanGCValue(true)  => s"parameters [1,"
-      case GraphQLIdGCValue(x)   => s"parameters ['$x',"
-      case EnumGCValue(x)        => s"parameters ['$x',"
-      case DateTimeGCValue(x)    => throw sys.error("Implement DateTime") // todo
-      case JsonGCValue(x)        => s"parameters ['$x',"
-      case ListGCValue(_)        => sys.error("Not an acceptable Where")
-      case RootGCValue(_)        => sys.error("Not an acceptable Where")
-      case NullGCValue           => sys.error("Not an acceptable Where")
-    }
-
-    val parentCheckString = s"`${parentInfo.relation.id}` where `${parentInfo.relation.sideOf(where.model)}` ="
-    val childCheckString  = s"`${parentInfo.relation.id}` where `${parentInfo.relation.sideOf(parentInfo.model)}` ="
+  def causedByThisMutaction(relation: Relation, cause: String) = {
+    val parentCheckString = s"`${relation.id}` where `${relation.sideOf(where.model)}` ="
+    val childCheckString  = s"`${relation.id}` where `${relation.sideOf(parentInfo.model)}` ="
 
     (cause.contains(parentCheckString) && cause.contains(parameterString(where))) ||
     (cause.contains(childCheckString) && cause.contains(parameterString(parentInfo.where)))
+  }
+
+  def causedByThisMutactionChildOnly(relation: Relation, cause: String) = {
+    val parentCheckString = s"`${relation.id}` where `${relation.sideOf(where.model)}` ="
+
+    cause.contains(parentCheckString) && cause.contains(parameterString(where))
+  }
+
+  def parameterString(where: NodeSelector) = where.fieldValue match {
+    case StringGCValue(x)      => s"parameters ['$x',"
+    case IntGCValue(x)         => s"parameters [$x,"
+    case FloatGCValue(x)       => s"parameters [$x,"
+    case BooleanGCValue(false) => s"parameters [0,"
+    case BooleanGCValue(true)  => s"parameters [1,"
+    case GraphQLIdGCValue(x)   => s"parameters ['$x',"
+    case EnumGCValue(x)        => s"parameters ['$x',"
+    case DateTimeGCValue(x)    => throw sys.error("Implement DateTime") // todo
+    case JsonGCValue(x)        => s"parameters ['$x',"
+    case ListGCValue(_)        => sys.error("Not an acceptable Where")
+    case RootGCValue(_)        => sys.error("Not an acceptable Where")
+    case NullGCValue           => sys.error("Not an acceptable Where")
   }
 }

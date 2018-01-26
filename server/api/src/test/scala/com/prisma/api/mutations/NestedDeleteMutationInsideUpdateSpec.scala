@@ -53,7 +53,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
       """.stripMargin,
       project,
       errorCode = 3042,
-      errorContains = "The change you are trying to make would violate a required relation between Parent and Child"
+      errorContains = "The change you are trying to make would violate the required relation '_ChildToParent' between Child and Parent"
     )
 
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
@@ -106,7 +106,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
       """.stripMargin,
       project,
       errorCode = 3042,
-      errorContains = "The change you are trying to make would violate a required relation between Parent and Child"
+      errorContains = "The change you are trying to make would violate the required relation '_ParentToChild' between Parent and Child"
     )
 
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(1))
@@ -511,7 +511,135 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(0))
   }
 
-  // in a second pass test the removal and checks on other relations of the child
+  "a PM to CM  relation" should "delete fail if other req relations would be violated" in {
+    val project = SchemaDsl() { schema =>
+      val parent   = schema.model("Parent").field_!("p", _.String, isUnique = true)
+      val child    = schema.model("Child").field_!("c", _.String, isUnique = true).manyToManyRelation("parentsOpt", "childrenOpt", parent)
+      val reqOther = schema.model("ReqOther").field_!("r", _.String, isUnique = true).oneToOneRelation_!("childReq", "otherReq", child)
+    }
+    database.setup(project)
+
+    server.executeQuerySimple(
+      """mutation {
+        |  createReqOther(data: {
+        |    r: "r1"
+        |    childReq: {
+        |      create: {c: "c1"}
+        |    }
+        |  }){
+        |    r
+        |  }
+        |}""".stripMargin,
+      project
+    )
+
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ReqOtherToChild").as[Int]) should be(Vector(1))
+
+    server.executeQuerySimple(
+      """mutation {
+        |  createParent(data: {
+        |    p: "p1"
+        |    childrenOpt: {
+        |      connect: {c: "c1"}
+        |    }
+        |  }){
+        |    p
+        |  }
+        |}""".stripMargin,
+      project
+    )
+
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
+
+    server.executeQuerySimpleThatMustFail(
+      s"""
+         |mutation {
+         |  updateParent(
+         |  where: { p: "p1"}
+         |  data:{
+         |    childrenOpt: {delete: [{c: "c1"}]}
+         |  }){
+         |    childrenOpt{
+         |      c
+         |    }
+         |  }
+         |}
+      """.stripMargin,
+      project,
+      errorCode = 3042,
+      errorContains = """The change you are trying to make would violate the required relation '_ReqOtherToChild' between ReqOther and Child"""
+    )
+
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ReqOtherToChild").as[Int]) should be(Vector(1))
+
+  }
+
+  "a PM to CM  relation" should "delete the child from other relations as well" in {
+    val project = SchemaDsl() { schema =>
+      val parent   = schema.model("Parent").field_!("p", _.String, isUnique = true)
+      val child    = schema.model("Child").field_!("c", _.String, isUnique = true).manyToManyRelation("parentsOpt", "childrenOpt", parent)
+      val optOther = schema.model("OptOther").field_!("o", _.String, isUnique = true).oneToOneRelation("childOpt", "otherOpt", child)
+
+    }
+    database.setup(project)
+
+    server.executeQuerySimple(
+      """mutation {
+        |  createOptOther(data: {
+        |    o: "o1"
+        |    childOpt: {
+        |      create: {c: "c1"}
+        |    }
+        |  }){
+        |    o
+        |  }
+        |}""".stripMargin,
+      project
+    )
+
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_OptOtherToChild").as[Int]) should be(Vector(1))
+
+    server.executeQuerySimple(
+      """mutation {
+        |  createParent(data: {
+        |    p: "p1"
+        |    childrenOpt: {
+        |      connect: {c: "c1"}
+        |    }
+        |  }){
+        |    p
+        |  }
+        |}""".stripMargin,
+      project
+    )
+
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
+
+    val res = server.executeQuerySimple(
+      s"""
+         |mutation {
+         |  updateParent(
+         |  where: { p: "p1"}
+         |  data:{
+         |    childrenOpt: {delete: [{c: "c1"}]}
+         |  }){
+         |    childrenOpt{
+         |      c
+         |    }
+         |  }
+         |}
+      """.stripMargin,
+      project
+    )
+
+    res.toString should be("""{"data":{"updateParent":{"childrenOpt":[]}}}""")
+
+    server.executeQuerySimple(s"""query{children{c, parentsOpt{p}}}""", project).toString should be("""{"data":{"children":[]}}""")
+
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(0))
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_OptOtherToChild").as[Int]) should be(Vector(0))
+  }
 
   "a one to many relation" should "be deletable by id through a nested mutation" in {
     val project = SchemaDsl() { schema =>

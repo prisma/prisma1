@@ -54,7 +54,7 @@ class NestedCreateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
       """.stripMargin,
       project,
       errorCode = 3042,
-      errorContains = "The change you are trying to make would violate a required relation between Parent and Child"
+      errorContains = "The change you are trying to make would violate the required relation '_ChildToParent' between Child and Parent"
     )
 
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
@@ -296,7 +296,7 @@ class NestedCreateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
       """.stripMargin,
       project,
       errorCode = 3042,
-      errorContains = "The change you are trying to make would violate a required relation between Parent and Child"
+      errorContains = "The change you are trying to make would violate the required relation '_ChildToParent' between Child and Parent"
     )
   }
 

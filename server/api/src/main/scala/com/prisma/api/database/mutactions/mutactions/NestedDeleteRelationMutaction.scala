@@ -1,8 +1,11 @@
 package com.prisma.api.database.mutactions.mutactions
 
+import java.sql.SQLException
+
 import com.prisma.api.database.DatabaseMutationBuilder
 import com.prisma.api.mutations.{NodeSelector, ParentInfo}
-import com.prisma.shared.models.Project
+import com.prisma.api.schema.APIErrors.RequiredRelationWouldBeViolated
+import com.prisma.shared.models.{Project, Relation}
 
 case class NestedDeleteRelationMutaction(project: Project, parentInfo: ParentInfo, where: NodeSelector, topIsCreate: Boolean = false)
     extends NestedRelationMutactionBaseClass {
@@ -43,4 +46,18 @@ case class NestedDeleteRelationMutaction(project: Project, parentInfo: ParentInf
   }
 
   override def addAction = noActionRequired
+
+  override def handleErrors = {
+    Some({
+      case e: SQLException if e.getErrorCode == 1242 && causedByThisMutaction(parentInfo.relation, e.getCause.toString) =>
+        throw RequiredRelationWouldBeViolated(project, parentInfo.relation)
+      case e: SQLException if e.getErrorCode == 1242 && otherFailingRequiredRelationOnChild(e.getCause.toString).isDefined =>
+        throw RequiredRelationWouldBeViolated(project, otherFailingRequiredRelationOnChild(e.getCause.toString).get)
+    })
+  }
+
+  def otherFailingRequiredRelationOnChild(cause: String): Option[Relation] = relationsWhereTheChildIsRequired.collectFirst {
+    case x if causedByThisMutactionChildOnly(x, cause) => x
+  }
+
 }
