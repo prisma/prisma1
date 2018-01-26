@@ -44,7 +44,7 @@ case class ApiServer(
   import scala.concurrent.duration._
 
   lazy val unthrottledProjectIds = sys.env.get("UNTHROTTLED_PROJECT_IDS") match {
-    case Some(envValue) => envValue.split('|').toVector.map(ProjectId.fromEncodedString)
+    case Some(envValue) => envValue.split('|').filter(_.nonEmpty).toVector.map(ProjectId.fromEncodedString)
     case None           => Vector.empty
   }
 
