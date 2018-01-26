@@ -186,7 +186,8 @@ case class SqlMutactions(dataResolver: DataResolver) {
   }
 
   def getMutactionsForNestedDeleteMutation(nestedMutation: NestedMutation, parentInfo: ParentInfo): Seq[ClientSqlMutaction] = {
-    nestedMutation.deletes.map(delete => DeleteDataItemNested(project, delete.where))
+    nestedMutation.deletes.flatMap(delete =>
+      List(NestedDeleteRelationMutaction(project, parentInfo, delete.where), DeleteDataItemNested(project, delete.where)))
   }
 
   def getMutactionsForNestedUpdateMutation(nestedMutation: NestedMutation, parentInfo: ParentInfo): Seq[ClientSqlMutaction] = {

@@ -22,13 +22,15 @@ trait NestedRelationMutactionBaseClass extends ClientSqlDataChangeMutaction {
   val p = parentInfo.field
   val c = parentInfo.relation.getOtherModel_!(project.schema, parentInfo.where.model).fields.find(_.relation.contains(parentInfo.relation)).get
 
-  val checkForOldParent = oldParentFailureTriggerForRequiredRelations(project, parentInfo, where)
+  val checkForOldParent = oldParentFailureTriggerForRequiredRelations(project, parentInfo.relation, where)
   val checkForOldChild  = oldChildFailureTriggerForRequiredRelations(project, parentInfo)
+  val noCheckRequired   = List.empty
 
   val removalByParent         = deleteRelationRowByParent(project.id, parentInfo)
-  val removalByChild          = deleteRelationRowByChild(project.id, parentInfo, where)
+  val removalByChild          = deleteRelationRowByChild(project.id, parentInfo.relation, where)
   val removalByParentAndChild = deleteRelationRowByParentAndChild(project.id, parentInfo, where)
   val createRelationRow       = List(createRelationRowByUniqueValueForChild(project.id, parentInfo, where))
+  val noActionRequired        = List.empty
 
   def requiredCheck: List[DBIOAction[_, NoStream, Effect]]
 
@@ -46,6 +48,9 @@ trait NestedRelationMutactionBaseClass extends ClientSqlDataChangeMutaction {
       case e: SQLException if e.getErrorCode == 1242 && causedByThisMutaction(e.getCause.toString) => throw RequiredRelationWouldBeViolated(parentInfo, where)
     })
   }
+
+  def requiredRelationViolation = throw RequiredRelationWouldBeViolated(parentInfo, where)
+  def sysError                  = sys.error("This should not happen, since it means a many side is required")
 
   def causedByThisMutaction(cause: String) = {
     def parameterString(where: NodeSelector) = where.fieldValue match {
