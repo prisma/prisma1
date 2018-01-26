@@ -6,7 +6,7 @@ type Query {
 
 type Mutation {
   writePost(title: String!): Post
-  updateTitle(newTitle: String!): Post
+  updateTitle(id: ID!, newTitle: String!): Post
 }
 
 type Subscription {
