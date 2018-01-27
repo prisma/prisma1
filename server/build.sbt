@@ -50,6 +50,8 @@ def commonBackendSettings(imageName: String) = commonSettings ++ Seq(
     new Dockerfile {
       from("anapsix/alpine-java")
       entryPoint(s"$targetDir/bin/${executableScriptName.value}")
+      env("COMMIT_SHA", sys.env.getOrElse("COMMIT_SHA", sys.error("Env var COMMIT_SHA required but not found.")))
+      env("CLUSTER_VERSION", sys.env.getOrElse("CLUSTER_VERSION", sys.error("Env var CLUSTER_VERSION required but not found.")))
       copy(appDir, targetDir)
     }
   },
@@ -62,8 +64,7 @@ def commonBackendSettings(imageName: String) = commonSettings ++ Seq(
     "-J-Dcom.sun.management.jmxremote.ssl=false",
     "-J-Dcom.sun.management.jmxremote.port=3333",
     "-J-Dcom.sun.management.jmxremote.rmi.port=3333",
-    "-J-Djava.rmi.server.hostname=localhost",
-    "-J-Xmx2560m"
+    "-J-Djava.rmi.server.hostname=localhost"
   )
 )
 
