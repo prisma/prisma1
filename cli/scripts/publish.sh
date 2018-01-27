@@ -36,7 +36,7 @@ fi
 
 echo "yml changed: $ymlChanged. core changed: $coreChanged. engine changed: $engineChanged"
 
-if [ $ymlChanged == false ] && [ $coreChanged == false ] && [ $engineChanged == false ]; then
+if [ $ymlChanged == false ] && [ $coreChanged == false ] && [ $engineChanged == false ] && [ -z "$CIRCLE_TAG" ]; then
   echo "There are no changes in the CLI."
   exit 0;
 fi
@@ -52,7 +52,7 @@ cd cli/packages/
 
 export ymlVersionBefore=$(cat prisma-yml/package.json | jq -r '.version')
 
-if [ $ymlChanged ]; then
+if [ $ymlChanged ] || [ $CIRCLE_TAG ]; then
   echo "Going to publish yml"
   cd prisma-yml
   yarn install
