@@ -5,7 +5,13 @@ description: How to use the API
 
 # Overview
 
-A Prisma service exposes a GraphQL API that is automatically generated based on the deployed _data model_. It is also referred to as the **Prisma API**.
+A Prisma service exposes a GraphQL API that is automatically generated based on the deployed [data model](!alias-eiroozae8u). It is also referred to as the **Prisma API**. The Prisma API defines CRUD operations for the types in the data model.
+
+<InfoBox>
+
+The Prisma API is defined by a corresponding GraphQL schema, called [**Prisma database schema**](!alias-eiroozae8u#prisma-database-schema-vs-data-model).
+
+</InfoBox>
 
 ## Exploring the Prisma API
 

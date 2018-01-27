@@ -172,11 +172,11 @@ type Subscription {
 }
 ```
 
-> Note that this is a simplified version of the generated schema, you can find the full schema [here](https://gist.github.com/gc-codesnippets/f302c104f2806f9e13f41d909e07d82d).
+Note that this is a simplified version of the generated schema, you can find the full schema [here](https://gist.github.com/gc-codesnippets/f302c104f2806f9e13f41d909e07d82d).
 
 <InfoBox>
 
-Note that if you've already looked into building your own GraphQL server based on Prisma, you might have come across another `.graphql`-file which is referred to as your **application schema**. This is another proper GraphQL schema (meaning it contains the `Query`, `Mutation` and `Subscription` root types) that defines the API exposed to your client applications. It uses the underlying Prisma GraphQL API as a "query engine" to actually run the queries, mutations and subscriptions against the database.
+If you've already looked into building your own GraphQL server based on Prisma, you might have come across another `.graphql`-file which is referred to as your **application schema**. This is another proper GraphQL schema (meaning it contains the `Query`, `Mutation` and `Subscription` root types) that defines the API exposed to your client applications. It uses the underlying Prisma GraphQL API as a "query engine" to actually run the queries, mutations and subscriptions against the database.
 
 A GraphQL server based on Prisma usually has two GraphQL APIs, think of them as two layers for your service:
 
@@ -412,17 +412,17 @@ Fields in the data model affect the available [query arguments](!alias-ahwee4zae
 
 ## Relations
 
-A _relation_ defines the semantics of a connection between two [types](#object-types). Two types in a relation are connected via a [relation field](#scalar-and-relation-fields). When a relation might be ambiguous, the relation field needs to be annotated with the [`@relation`](#relation-fields) directive.
+A _relation_ defines the semantics of a connection between two [types](#object-types). Two types in a relation are connected via a [relation field](#scalar-and-relation-fields). When a relation might be ambiguous, the relation field needs to be annotated with the [`@relation`](#relation-fields) directive to disambiguate it.
 
 A relation can also connect a type with itself. It is then referred to as a _self-relation_.
 
 ### Required relations
 
-For a `to-one` relation field, you can configure whether it is _required_ or _optional_. The required flag acts as a contract in GraphQL that this field can never be `null`. A field for the address of a user would therefore be of type `Address` or `Address!`.
+For a _to-one_ relation field, you can configure whether it is _required_ or _optional_. The required flag acts as a contract in GraphQL that this field can never be `null`. A field for the address of a user would therefore be of type `Address` or `Address!`.
 
-Nodes for a type that contains a required `to-one` relation field can only be created using a [nested mutation](!alias-ol0yuoz6go#nested-mutations) to ensure the according field will not be `null`.
+Nodes for a type that contains a required _to-one_ relation field can only be created using a [nested mutation](!alias-ol0yuoz6go#nested-mutations) to ensure the according field will not be `null`.
 
-> Note that a `to-many` relation field is always set to required. For example, a field that contains many user addresses always uses the type `[Address!]!` and can never be of type `[Address!]`. The reason is that in case the field doesn't contain any nodes, `[]` will be returned, which is not `null`.
+> Note that a _to-many_ relation field is always set to required. For example, a field that contains many user addresses always uses the type `[Address!]!` and can never be of type `[Address!]`. The reason is that in case the field doesn't contain any nodes, `[]` will be returned, which is not `null`.
 
 ### The `@relation` directive
 
@@ -518,9 +518,9 @@ Let's investigate the deletion behaviour for the three types:
 
 The relations that are included in your schema affect the available operations in the [GraphQL API](!alias-abogasd0go). For every relation,
 
-* [relation queries](!alias-nia9nushae#relation-queries) allow you to query data across types or aggregated for a relation
+* [relation queries](!alias-ahwee4zaey#querying-data-across-relations) allow you to query data across types or aggregated for a relation (note that this is also possible using [Relay](https://facebook.github.io/relay/)'s [connection model](!alias-ahwee4zaey#connection-queries))
 * [nested mutations](!alias-ol0yuoz6go#nested-mutations) allow you to create, connect, update, upsert and delete nodes across types
-* [relation subscriptions](!alias-aip7oojeiv#relation-subscriptions) allow you to get notified of changes to a relation
+* [relation subscriptions](!alias-aey0vohche#relation-subscriptions) allow you to get notified of changes to a relation
 
 ## GraphQL directives
 
@@ -545,7 +545,7 @@ Find more info about the `@unique` directive [above](#unique).
 
 #### Relation fields
 
-The directive `@relation(name: String, onDelete: ON_DELETE! = NO_ACTION)` can be attached to a [relation field](#scalar-and-relation-fields).
+The directive `@relation(name: String, onDelete: ON_DELETE! = NO_ACTION)` can be attached to a relation field.
 
 [See above](#the-relation-directive) for more information.
 
@@ -572,12 +572,16 @@ The temporary directive `@rename(oldName: String!)` is used to rename a type or 
 
 ```graphql
 # renaming the `Post` type to `Story`, and its `text` field to `content`
-type Story @model @rename(oldName: "Post") {
+type Story @rename(oldName: "Post") {
   content: String @rename(oldName: "text")
 }
 ```
 
-If the rename directive is not used, Prisma would remove the old type and field before creating the new one, resulting in loss of data.
+<InfoBox type="warning">
+
+If the rename directive is not used, Prisma would remove the old type and field before creating the new one, resulting in loss of data!
+
+</InfoBox>
 
 #### Migrating the value of a scalar field
 
