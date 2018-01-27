@@ -74,6 +74,7 @@ ${chalk.gray(
   }
   private deploying: boolean = false
   private showedLines: number = 0
+  private showedHooks: boolean = false
   async run() {
     debug('run')
     const { force, watch, interactive } = this.flags
@@ -367,12 +368,12 @@ ${chalk.gray(
     }
     // TODO move up to if statement after testing done
     if (migrationResult.migration) {
-      this.out.log(chalk.bold(`\nHooks:\n`))
       if (
         this.definition.definition!.seed &&
         !this.flags['no-seed'] &&
         projectNew
       ) {
+        this.printHooks()
         await this.seed(
           projectNew,
           serviceName,
@@ -380,8 +381,6 @@ ${chalk.gray(
           this.definition.getWorkspace(),
         )
       }
-      await this.generateSchema(serviceName, stageName)
-      await this.graphqlPrepare()
 
       // no action required
       this.deploying = false
@@ -393,6 +392,16 @@ ${chalk.gray(
           this.definition.getWorkspace() || undefined,
         )
       }
+    }
+
+    const schemaChanged = await this.generateSchema(serviceName, stageName)
+    await this.graphqlPrepare()
+  }
+
+  private printHooks() {
+    if (!this.showedHooks) {
+      this.out.log(chalk.bold(`\nHooks:`))
+      this.showedHooks = true
     }
   }
 
@@ -423,24 +432,41 @@ ${chalk.gray(
     this.out.action.stop(prettyTime(Date.now() - before))
   }
 
-  private async generateSchema(serviceName: string, stageName: string) {
+  /**
+   * Returns true if there was a change
+   */
+  private async generateSchema(
+    serviceName: string,
+    stageName: string,
+  ): Promise<boolean> {
     const schemaPath =
-      this.definition.definition!.schema || getSchemaPathFromConfig()
+      getSchemaPathFromConfig() || this.definition.definition!.schema
     if (schemaPath) {
+      this.printHooks()
       const schemaDir = path.dirname(schemaPath)
       fs.mkdirpSync(schemaDir)
       const token = this.definition.getToken(serviceName, stageName)
       const before = Date.now()
-      this.out.action.start(`Writing database schema to \`${schemaPath}\` `)
+      this.out.action.start(`Checking, if schema file changed`)
       const schemaString = await fetchAndPrintSchema(
         this.client,
         concatName(serviceName, this.definition.getWorkspace()),
         stageName,
         token,
       )
-      fs.writeFileSync(schemaPath, schemaString)
       this.out.action.stop(prettyTime(Date.now() - before))
+      const oldSchemaString = fs.pathExistsSync(schemaPath)
+        ? fs.readFileSync(schemaPath, 'utf-8')
+        : null
+      if (schemaString !== oldSchemaString) {
+        const beforeWrite = Date.now()
+        this.out.action.start(`Writing database schema to \`${schemaPath}\` `)
+        fs.writeFileSync(schemaPath, schemaString)
+        this.out.action.stop(prettyTime(Date.now() - beforeWrite))
+      }
     }
+
+    return false
   }
 
   private async graphqlPrepare() {
