@@ -22,7 +22,7 @@ if [ -z ${BUILDKITE_TAG} ]; then
     if [ -z LAST_DOCKER_TAG ]; then
         NEXT_DOCKER_TAG="$NEXT_VERSION-beta-1"
     else
-        IFS=- read version betaStr rollingVersion <<< $LAST_DOCKER_TAG
+        IFS=- read version betaStr rollingVersion <<< ${LAST_DOCKER_TAG}
         NEXT_DOCKER_TAG="$NEXT_VERSION-beta-$(($rollingVersion + 1))"
 
         echo "Rolling version: $rollingVersion"
@@ -39,7 +39,7 @@ else
 
     # Check which image we additionally have to tag. Either x.x or x.x.x, depending which tag we pushed
     if [ -z $patch ]; then
-        # We are releaseing a x.x image, so tag x.x.x as well.
+        # We are releasing a x.x image, so tag x.x.x as well.
         ADDITIONALLY_RELEASE="$BUILDKITE_TAG.0"
     else
         # We already have x.x.x, so we need to retag the x.x image.
@@ -48,32 +48,32 @@ else
 fi
 
 
-docker run -e "BRANCH=${BUILDKITE_BRANCH}" -e "COMMIT_SHA=${BUILDKIT_COMMIT}" -e "CLUSTER_VERSION=${NEXT_DOCKER_TAG}" -v $(pwd):/root/build -w /root/build/server -v ~/.ivy2:/root/.ivy2 -v ~/.coursier:/root/.coursier  -v /var/run/docker.sock:/var/run/docker.sock graphcool/scala-sbt-docker sbt docker
+docker run -e "BRANCH=$BUILDKITE_BRANCH" -e "COMMIT_SHA=$BUILDKIT_COMMIT" -e "CLUSTER_VERSION=$NEXT_DOCKER_TAG" -v $(pwd):/root/build -w /root/build/server -v ~/.ivy2:/root/.ivy2 -v ~/.coursier:/root/.coursier  -v /var/run/docker.sock:/var/run/docker.sock graphcool/scala-sbt-docker sbt docker
 docker images
 
 for service in prisma deploy database workers subscriptions;
 do
   echo "Tagging prismagraphql/$service:latest image with $NEXT_DOCKER_TAG..."
-  docker tag prismagraphql/$service:latest prismagraphql/$service:$NEXT_DOCKER_TAG
+  docker tag prismagraphql/${service}:latest prismagraphql/${service}:${NEXT_DOCKER_TAG}
 
   echo "Pushing prismagraphql/$service:$NEXT_DOCKER_TAG..."
-  docker push prismagraphql/$service:$NEXT_DOCKER_TAG
+  docker push prismagraphql/${service}:${NEXT_DOCKER_TAG}
 
   if [ ! -z "$ADDITIONALLY_RELEASE" ]; then
     echo "Additionally tagging and pushing prismagraphql/$service:latest image with $ADDITIONALLY_RELEASE..."
-    docker tag prismagraphql/$service:latest prismagraphql/$service:$ADDITIONALLY_RELEASE
-    docker push prismagraphql/$service:$ADDITIONALLY_RELEASE
+    docker tag prismagraphql/${service}:latest prismagraphql/${service}:${ADDITIONALLY_RELEASE}
+    docker push prismagraphql/${service}:${ADDITIONALLY_RELEASE}
   fi
 done
 
 echo "Fetching cb binary..."
-curl --header "Authorization: token ${TOKEN}" \
+curl --header "Authorization: token $TOKEN" \
      --header 'Accept: application/vnd.github.v3.raw' \
      --location "https://api.github.com/repos/graphcool/coolbelt/releases/latest" -sSL | \
      jq '.assets[] | select(.name == "coolbelt_linux") | .url' | \
      xargs -I "{}" \
          curl -sSL --header 'Accept: application/octet-stream' -o cb \
-         --location "{}?access_token=${TOKEN}"
+         --location "{}?access_token=$TOKEN"
 
 chmod +x cb
 
@@ -84,5 +84,5 @@ export CB_TAG_OVERRIDE=${NEXT_DOCKER_TAG}
 CLUSTER_ELEMENTS=(${CLUSTERS//,/ })
 for cluster in "${CLUSTER_ELEMENTS[@]}"
 do
-    ./cb service replace-all --customer graphcool --cluster $cluster
+    ./cb service replace-all --customer graphcool --cluster ${cluster}
 done
