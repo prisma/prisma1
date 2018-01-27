@@ -75,6 +75,7 @@
     }
   },
   "dependencies": {
+    "adm-zip": "^0.4.7",
     "archiver": "^2.0.3",
     "callsites": "^2.0.0",
     "chalk": "^2.3.0",
@@ -88,7 +89,7 @@
     "globby": "^6.1.0",
     "graphcool-inquirer": "^1.0.3",
     "graphql": "^0.11.7",
-    "graphql-cli": "2.12.2",
+    "graphql-cli": "2.12.4",
     "graphql-config": "^1.1.7",
     "inquirer": "^3.3.0",
     "isomorphic-fetch": "^2.2.1",
@@ -109,7 +110,6 @@
     "sillyname": "^0.1.0",
     "source-map-support": "^0.4.18",
     "table": "^4.0.1",
-    "unzip": "^0.1.11",
     "util.promisify": "^1.0.0",
     "validator": "^8.2.0"
   }
