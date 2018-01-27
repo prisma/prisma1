@@ -5,6 +5,7 @@ import chalk from 'chalk'
 import * as npmRun from 'npm-run'
 const debug = require('debug')('init')
 import * as spawn from 'cross-spawn'
+import getGraphQLCliBin from '../../utils/getGraphQLCliBin'
 
 export default class Init extends Command {
   static topic = 'init'
@@ -148,17 +149,7 @@ For next steps follow this tutorial: https://bit.ly/prisma-graphql-first-steps`)
     }
 
     debug('running graphql cli')
-    let binPath = path.join(
-      __dirname,
-      '../../../node_modules/graphql-cli/dist/bin.js',
-    )
-    if (!fs.pathExistsSync(binPath)) {
-      binPath = path.join(__dirname, '../../../../graphql-cli/dist/bin.js')
-    }
-
-    if (!fs.pathExistsSync(binPath)) {
-      binPath = 'graphql'
-    }
+    const binPath = await getGraphQLCliBin()
 
     debug({ binPath, args })
 

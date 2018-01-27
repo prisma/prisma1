@@ -11,7 +11,6 @@ import { fetchAndPrintSchema } from './printSchema'
 import Up from '../local/up'
 import { Seeder } from '../seed/Seeder'
 import * as childProcess from 'child_process'
-import { getBinPath } from './getbin'
 import * as semver from 'semver'
 const debug = require('debug')('deploy')
 import { prettyTime, concatName } from '../../util'
@@ -20,6 +19,7 @@ import * as sillyname from 'sillyname'
 import { getSchemaPathFromConfig } from './getSchemaPathFromConfig'
 import { getGraphQLConfig } from 'graphql-config'
 import * as findUp from 'find-up'
+import getGraphQLCliBin from '../../utils/getGraphQLCliBin'
 
 export default class Deploy extends Command {
   static topic = 'deploy'
@@ -395,7 +395,9 @@ ${chalk.gray(
     }
 
     const schemaChanged = await this.generateSchema(serviceName, stageName)
-    await this.graphqlPrepare()
+    if (schemaChanged) {
+      await this.graphqlPrepare()
+    }
   }
 
   private printHooks() {
@@ -463,6 +465,7 @@ ${chalk.gray(
         this.out.action.start(`Writing database schema to \`${schemaPath}\` `)
         fs.writeFileSync(schemaPath, schemaString)
         this.out.action.stop(prettyTime(Date.now() - beforeWrite))
+        return true
       }
     }
 
@@ -477,8 +480,9 @@ ${chalk.gray(
       //
     }
     if (dir) {
-      const graphqlBin = await getBinPath('graphql')
+      const graphqlBin = await getGraphQLCliBin()
       if (graphqlBin) {
+        debug({ graphqlBin })
         this.out.log(`Running ${chalk.cyan(`$ graphql prepare`)}...`)
         try {
           const oldCwd = process.cwd()
@@ -486,7 +490,7 @@ ${chalk.gray(
           if (configDir) {
             process.chdir(configDir)
           }
-          await spawn(`graphql`, ['prepare'])
+          await spawn(graphqlBin, ['prepare'])
           process.chdir(oldCwd)
         } catch (e) {
           this.out.warn(e)
