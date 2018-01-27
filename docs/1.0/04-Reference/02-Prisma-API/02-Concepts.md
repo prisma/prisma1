@@ -5,11 +5,12 @@ description: Concepts
 
 # Concepts
 
-## Data Model and Data Schema
+## Data model and Prisma database schema
 
 The Prisma API of a Prisma service is fully centered around its data model.
 
-The API is automatically generated based on the [data model](!alias-eiroozae8u) deployed to your Prisma service.
+The API is automatically generated based on the [data model](!alias-eiroozae8u) that's associated with your Prisma service.
+
 Every operation exposed in the Prisma API is associated with a model or relation from your data model:
 
 * [Queries](!alias-ahwee4zaey)
@@ -23,37 +24,93 @@ Every operation exposed in the Prisma API is associated with a model or relation
 * [Subscriptions](!alias-aey0vohche)
   * get notified about created, updated and deleted nodes
 
-The actual [GraphQL schema](https://blog.graph.cool/graphql-server-basics-the-schema-ac5e2950214e) defining the available GraphQL operations available in a Prisma API is also referred to as **data schema**.
+The actual [GraphQL schema](https://blog.graph.cool/graphql-server-basics-the-schema-ac5e2950214e) defining the available GraphQL operations available in the Prisma API is also referred to as **Prisma database schema**.
 
-## Advanced API Concepts
+> You can learn more about the differences between the data model and the prisma database in the [data modelling](!alias-eiroozae8u#prisma-database-schema-vs-data-model) chapter.
 
-### Node Selection
+## Advanced API concepts
 
-Many operations in the Prisma API can be narrowed down to a specific subset of all nodes they would otherwise affect. Some operations even _require_ the selection of specific nodes. Oftentimes, this is done via a `where` parameter.
+### Node selection
 
-An example is selecting all `Post` nodes that are connected to a specific `User` node, and contain a certain string in their `title`.
+Many operations in the Prisma API only affect a subset of the existing nodes in the database, oftentimes even only a single node.
 
-#### Variant: Select Nodes by Unique Identifier
+In these case, you need a way to ask for specific nodes in the API - most of the time this is done via a `where` argument.
 
-This is a special case of node selection. Whenever you can select only one node, you can do so by providing a value for any of the fields that are marked [unique](!alias-eiroozae8u#field-constraints) on the according model.
+Nodes can be selected via any field that's annotated with the [`@unique`](!alias-eiroozae8u#unique) directive.
 
-An example is connecting a `Post` node to a specific `User` node by providing the user's unique email address.
+Consider the following simple data model:
 
-### Batch Operations
+```graphql
+type Post {
+  id: ID! @unique
+  title: String!
+  published: Boolean @default(value: "false")
+}
+```
+
+Here are a few scenarios where node selection is required.
+
+**Retrieve a single node by its `email`**:
+
+```graphql
+query {
+  post(where: {
+    id: "ohco0iewee6eizidohwigheif"
+  }) {
+    id
+  }
+}
+```
+
+**Update the `title` of a single node**:
+
+```graphql
+mutation {
+  updatePost(
+    where: {
+      id: "ohco0iewee6eizidohwigheif"
+    }
+    data: {
+      title: "GraphQL is awesome"
+    }
+  ) {
+    id
+  }
+}
+```
+
+**Update `published` of a many nodes at once** (also see [Batch operations](#batch-operations)):
+
+```graphql
+mutation {
+  updatePost(
+    where: {
+      id_in: ["ohco0iewee6eizidohwigheif", "phah4ooqueengij0kan4sahlo", "chae8keizohmiothuewuvahpa"]
+    }
+    data: {
+      published: true
+    }
+  ) {
+    count
+  }
+}
+```
+
+### Batch operations
 
 One application of the node selection concept is the exposed [batch operations](!alias-utee3eiquo#batch-operations). Batch updating or deleting is optimized for making changes to a large number of nodes. As such, these mutations only return _how many_ nodes have been affected, rather than full information on specific nodes.
 
-For example, the mutations `updateManyPosts` and `deleteManyPosts` provide a `where` argument to select specific nodes, and return a `count` field with the number of affected nodes.
+For example, the mutations `updateManyPosts` and `deleteManyPosts` provide a `where` argument to select specific nodes, and return a `count` field with the number of affected nodes (see example above).
 
 ### Connections
 
-In constrast to the simpler model queries that directly return a list of nodes, connection queries are based on [Relay Connections](https://facebook.github.io/relay/graphql/connections.htm). Connections not only expose edges and pagination information needed for Relay, but also offer advanced features like aggregation.
+In contrast to the simpler object queries that directly return a list of nodes, connection queries are based on the [Relay Connection](https://facebook.github.io/relay/graphql/connections.htm) model. In addition to pagination information, connections also offer advanced features like aggregation.
 
-For example, while the `posts` query allows you to select specific `Post` nodes, sort them by their publication date and paginate over the result, the `postsConnection` query additionally allows you to _count_ all unpublished posts.
+For example, while the `posts` query allows you to select specific `Post` nodes, sort them by some field and paginate over the result, the `postsConnection` query additionally allows you to _count_ all unpublished posts.
 
-### Transactional Mutations
+### Transactional mutations
 
-Single Mutations in the Prisma API that are not batch operations are always executed transactionally, even if they consist of many actions that potentially spread across relations. This is especially useful for [nested mutations](!alias-ol0yuoz6go#batch-mutations), that span operations across relations.
+Single mutations in the Prisma API that are not batch operations are always executed _transactionally_, even if they consist of many actions that potentially spread across relations. This is especially useful for [nested mutations](!alias-ol0yuoz6go#nested-mutations) that perform multiple several database writes on multiple types.
 
 An example is creating a `User` node and two `Post` nodes that will be connected, while also connecting the `User` node to two other, already existing `Post` nodes, all in a single mutation. If any of the mentioned actions fail (for example because of a violated unique field constraint), the complete mutation is rolled back.
 
@@ -61,15 +118,15 @@ Mutations are _transactional_, which means that they are _atomic_ and _isolated_
 
 ## Authentication
 
-The GraphQL API of a Prisma service is typically protected by a secret specified in `prisma.yml`.
+The GraphQL API of a Prisma service is typically protected by a [`secret`](!alias-ufeshusai8#secret-optional) specified in `prisma.yml`.
 
-The secret is used to sign a JWT that can then be used in the Authorization header:
+The secret is used to sign a [JWT](https://jwt.io/) that can then be used in the `Authorization` field of the HTTP header (notice that the `__TOKEN__` placeholder needs to be replaced with an actual token):
 
 ```
-Authorization: Bearer ${jwt}
+Authorization: Bearer __TOKEN__
 ```
 
-This is an example JWT:
+This is an a sample payload for a JWT:
 
 ```json
 {
@@ -80,22 +137,22 @@ This is an example JWT:
 
 ### Claims
 
-The JWT must contain different claims:
+The JWT must contain different [claims](https://jwt.io/introduction/#payload):
 
-* **Expiration Time**: `exp`, the expiration time of the token.
-* **Service Information**: `service`, the name and stage of the service
+* **Expiration time**: `exp`, the expiration time of the token.
+* **Service information**: `service`, the name and stage of the service
 
-> In the future we might add support for more fine grained access control by introducing a concept of roles such as `["write:Log", "read:*"]`
+> In the future there might be support for more fine grained access control by introducing a concept of roles such as `["write:Log", "read:*"]`
 
-### Generating a Signed JWT
+### Generating a signed JWT
 
 #### In the CLI
 
-Run `prisma token` to obtain a new signed JWT.
+Run `prisma token` to obtain a new signed JWT for your current Prisma service.
 
 #### In Node
 
-Consider this `prisma.yml`:
+Consider the following `prisma.yml`:
 
 ```yml
 service: my-service
@@ -108,7 +165,7 @@ datamodel: database/datamodel.graphql
 secret: ${env:PRISMA_SECRET}
 ```
 
-A Node server could create a signed JWT for the stage `PRISMA_STAGE` of the service `my-service` like this:
+A Node server could create a signed JWT, based on the [`jsonwebtoken`](https://github.com/auth0/node-jsonwebtoken) library, for the stage `PRISMA_STAGE` of the service `my-service` like this:
 
 ```js
 var jwt = require('jsonwebtoken')
@@ -128,22 +185,24 @@ jwt.sign(
 
 ### JWT verification
 
-For requests made to a Prisma service, the following properties of the JWT will be verified:
+For requests made against a Prisma service, the following properties of the JWT will be verified:
 
 * It must be signed with a secret configured for the service
 * It must contain an `exp` claim with a time value in the future
 * It must contain a `service` claim with service and stage matching the current request
 
-## Error Handling
+## Error handling
 
 When an error occurs for one of your queries or mutations, the response contains an `errors` property with more information about the error `code`, the error `message` and more.
 
 There are two kind of API errors:
 
-* application errors usually indicate that your request was invalid. Try to
-* internal server errors usually means that something unexpected happened in the service. Check your service logs for more information.
+* **Application errors** usually indicate that your request was invalid. Try to
+* **Internal server errors** usually means that something unexpected happened inside of the Prisma service. Check your service logs for more information.
 
-### Application Errors
+> **Note**: The `errors` field behaves according to the offical [GraphQL specification for error handling](http://facebook.github.io/graphql/October2016/#sec-Errors).
+
+### Application errors
 
 An error returned by the API usually indicates that something is not correct with the requested query or mutation. Try to investigate your input for possible errors related to the error message.
 
@@ -153,7 +212,7 @@ Here is a list of common errors that you might encounter:
 
 ##### Authentication
 
-**Insufficient Permissions or Invalid Token**
+###### Insufficient permissions / Invalid token
 
 ```json
 {
@@ -170,6 +229,6 @@ Here is a list of common errors that you might encounter:
 
 Check if the token you provided has not yet expired and is signed with a secret listed in [`prisma.yml`](!alias-foatho8aip).
 
-### Internal Server Errors
+### Internal server errors
 
 Consult the service logs for more information on the error. For the local cluster, this can be done using the [prisma logs](!alias-aenael2eek) command.

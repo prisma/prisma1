@@ -17,7 +17,6 @@ import { prettyTime, concatName } from '../../util'
 import { spawn } from '../../spawn'
 import * as sillyname from 'sillyname'
 import { getSchemaPathFromConfig } from './getSchemaPathFromConfig'
-import { getGraphQLConfig } from 'graphql-config'
 import * as findUp from 'find-up'
 import getGraphQLCliBin from '../../utils/getGraphQLCliBin'
 
@@ -481,20 +480,18 @@ ${chalk.gray(
     }
     if (dir) {
       const graphqlBin = await getGraphQLCliBin()
-      if (graphqlBin) {
-        debug({ graphqlBin })
-        this.out.log(`Running ${chalk.cyan(`$ graphql prepare`)}...`)
-        try {
-          const oldCwd = process.cwd()
-          const configDir = this.config.findConfigDir()
-          if (configDir) {
-            process.chdir(configDir)
-          }
-          await spawn(graphqlBin, ['prepare'])
-          process.chdir(oldCwd)
-        } catch (e) {
-          this.out.warn(e)
+      debug({ graphqlBin })
+      this.out.log(`Running ${chalk.cyan(`$ graphql prepare`)}...`)
+      try {
+        const oldCwd = process.cwd()
+        const configDir = this.config.findConfigDir()
+        if (configDir) {
+          process.chdir(configDir)
         }
+        await spawn(graphqlBin, ['prepare'])
+        process.chdir(oldCwd)
+      } catch (e) {
+        this.out.warn(e)
       }
     }
   }
