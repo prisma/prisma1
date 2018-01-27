@@ -1,6 +1,5 @@
 package com.prisma.api.mutations
 
-import com.prisma.api.mutations.MutationTypes.ArgumentValue
 import com.prisma.api.schema.APIErrors
 import com.prisma.gc_values.{GCValue, GraphQLIdGCValue}
 import com.prisma.shared.models._
@@ -10,6 +9,13 @@ import scala.collection.immutable.Seq
 
 /**
   * It's called CoolArgs to easily differentiate from Sangrias Args class.
+  *
+  * - implement subclasses
+  *   - nonlistscalarCoolArgs
+  *   - listscalarCoolArgs
+  *   - relationCoolArgs
+  *   - Upsert Create/Delete CoolArgs
+  *
   */
 case class CoolArgs(raw: Map[String, Any]) {
   def isEmpty: Boolean    = raw.isEmpty
@@ -73,7 +79,7 @@ case class CoolArgs(raw: Map[String, Any]) {
   def createArgumentsAsCoolArgs: CoolArgs = CoolArgs(raw("create").asInstanceOf[Map[String, Any]])
   def updateArgumentsAsCoolArgs: CoolArgs = CoolArgs(raw("update").asInstanceOf[Map[String, Any]])
 
-  def generateCreateArgs(model: Model, id: String): CoolArgs = {
+  def generateNonListCreateArgs(model: Model, id: String): CoolArgs = {
     CoolArgs(
       model.scalarNonListFields
         .filter(_.name != "id")
@@ -88,7 +94,7 @@ case class CoolArgs(raw: Map[String, Any]) {
         .toMap + ("id" -> id))
   }
 
-  def generateUpdateArgs(model: Model): CoolArgs = {
+  def generateNonListUpdateArgs(model: Model): CoolArgs = {
     CoolArgs(
       model.scalarNonListFields
         .filter(_.name != "id")
@@ -101,32 +107,16 @@ case class CoolArgs(raw: Map[String, Any]) {
         .toMap)
   }
 
-  def nonListScalarArgumentsAsCoolArgs(model: Model): CoolArgs = {
-    val argumentValues = nonListScalarArguments(model)
-    val rawArgs        = argumentValues.map(x => x.name -> x.value).toMap
-    CoolArgs(rawArgs)
-  }
-
-  def nonListScalarArguments(model: Model): Vector[ArgumentValue] = {
-    for {
+  def nonListScalarArguments(model: Model): CoolArgs = {
+    val values: Seq[(String, Any)] = for {
       field      <- model.scalarNonListFields.toVector
       fieldValue <- getFieldValueAs[Any](field)
+      if fieldValue.nonEmpty
     } yield {
-      ArgumentValue(field.name, fieldValue)
+      field.name -> fieldValue
     }
+    CoolArgs(values.toMap)
   }
-
-//  def subArgsList2(field: Field): Option[Seq[CoolArgs]] = {
-//    val fieldValues: Option[Seq[Map[String, Any]]] = field.isList match {
-//      case true  => getFieldValuesAs[Map[String, Any]](field)
-//      case false => getFieldValueAsSeq[Map[String, Any]](field.name)
-//    }
-//
-//    fieldValues match {
-//      case None    => None
-//      case Some(x) => Some(x.map(CoolArgs(_)))
-//    }
-//  }
 
   def subArgsVector(field: String): Option[Vector[CoolArgs]] = subArgsList(field).map(_.toVector)
 
@@ -182,6 +172,12 @@ case class CoolArgs(raw: Map[String, Any]) {
     }
   }
 
+  def getFieldValue(field: Field): Any = raw(field.name)
+  def getUnwrappedFieldValue(field: Field): Any = getFieldValue(field) match {
+    case Some(x) => x
+    case x       => x
+  }
+
   /**
     * The outer option is defined if the field key was specified in the arguments at all.
     * The inner sequence then contains all the values specified.
@@ -226,6 +222,15 @@ case class NodeSelector(model: Model, field: Field, fieldValue: GCValue) {
   lazy val fieldValueAsString: String = GCValueExtractor.fromGCValueToString(fieldValue)
   lazy val isId: Boolean              = field.name == "id"
 
+  def updateValue(value: Any): NodeSelector = {
+    val unwrapped = value match {
+      case Some(x) => x
+      case x       => x
+    }
+
+    val newGCValue = GCAnyConverter(field.typeIdentifier, isList = false).toGCValue(unwrapped).get
+    this.copy(fieldValue = newGCValue)
+  }
 //  lazy val unwrappedFieldValue: Any   = {
 //    fieldValue match {
 //      case x: DateTimeGCValue => x.toMySqlDateTimeFormat

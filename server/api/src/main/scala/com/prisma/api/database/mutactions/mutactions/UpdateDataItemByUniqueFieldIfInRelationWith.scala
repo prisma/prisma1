@@ -11,7 +11,7 @@ import scala.concurrent.Future
 case class UpdateDataItemByUniqueFieldIfInRelationWith(project: Project, parentInfo: ParentInfo, where: NodeSelector, args: CoolArgs)
     extends ClientSqlDataChangeMutaction {
 
-  val scalarArgs = args.nonListScalarArgumentsAsCoolArgs(where.model)
+  val scalarArgs = args.nonListScalarArguments(where.model)
 
   override def execute: Future[ClientSqlStatementResult[Any]] = Future.successful {
     val action = DatabaseMutationBuilder.updateDataItemByUnique(project.id, where, scalarArgs)

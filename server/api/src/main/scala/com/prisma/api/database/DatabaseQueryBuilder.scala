@@ -73,20 +73,6 @@ object DatabaseQueryBuilder {
     (query, resultTransform)
   }
 
-  def selectAllFromModels(projectId: String, modelName: String, args: Option[QueryArguments]): (SQLActionBuilder, ResultTransform) = {
-
-    val (conditionCommand, orderByCommand, limitCommand, resultTransform) =
-      extractQueryArgs(projectId, modelName, args)
-
-    val query =
-      sql"select * from `#$projectId`.`#$modelName`" concat
-        prefixIfNotNone("where", conditionCommand) concat
-        prefixIfNotNone("order by", orderByCommand) concat
-        prefixIfNotNone("limit", limitCommand)
-
-    (query, resultTransform)
-  }
-
   def countAllFromModel(project: Project, model: Model, where: Option[DataItemFilterCollection]): SQLActionBuilder = {
     val whereSql = where.flatMap { where =>
       QueryArguments.generateFilterConditions(project.id, model.name, where)
@@ -152,11 +138,6 @@ object DatabaseQueryBuilder {
           WHERE `#$projectId`.`#$modelName`.#$fieldName IS NULL)"""
   }
 
-  def valueCountForScalarField(projectId: String, modelName: String, fieldName: String, value: String) = {
-    sql"""SELECT COUNT(*) AS Count FROM `#$projectId`.`#$modelName`
-          WHERE `#$projectId`.`#$modelName`.#$fieldName = $value"""
-  }
-
   def existsNullByModelAndRelationField(projectId: String, modelName: String, field: Field) = {
     val relationId   = field.relation.get.id
     val relationSide = field.relationSide.get.toString
@@ -180,10 +161,6 @@ object DatabaseQueryBuilder {
           )"""
   }
 
-  def existsByWhere(projectId: String, where: NodeSelector) = {
-    sql"select exists (select `id` from `#$projectId`.`#${where.model.name}` where  #${where.field.name} = ${where.fieldValue})"
-  }
-
   def existsByModelAndId(projectId: String, modelName: String, id: String) = {
     sql"select exists (select `id` from `#$projectId`.`#$modelName` where `id` = '#$id')"
   }
@@ -200,8 +177,8 @@ object DatabaseQueryBuilder {
     sql"select * from `#${project.id}`.`#${model.name}`" ++ whereClauseByCombiningPredicatesByOr(predicates)
   }
 
-  def existsFromModelsByUniques(projectId: String, model: Model, predicates: Vector[NodeSelector]) = {
-    sql"select exists (select * from `#${projectId}`.`#${model.name}`" ++ whereClauseByCombiningPredicatesByOr(predicates) concat sql")"
+  def existsByWhere(projectId: String, where: NodeSelector) = {
+    sql"select exists (select `id` from `#$projectId`.`#${where.model.name}` where  #${where.field.name} = ${where.fieldValue})"
   }
 
   def selectFromScalarList(projectId: String, modelName: String, fieldName: String, nodeIds: Vector[String]): SQLActionBuilder = {
@@ -310,27 +287,6 @@ object DatabaseQueryBuilder {
   case class IndexDescription(name: Option[String], nonUnique: Boolean, column: Option[String])
   case class ForeignKeyDescription(name: Option[String], column: String, foreignTable: String, foreignColumn: String)
   case class TableInfo(columns: List[ColumnDescription], indexes: List[IndexDescription], foreignKeys: List[ForeignKeyDescription])
-
-  def getTableInfo(projectId: String, tableName: Option[String] = None): DBIOAction[TableInfo, NoStream, Read] = {
-    for {
-      metaTables <- MTable
-                     .getTables(cat = Some(projectId), schemaPattern = None, namePattern = tableName, types = None)
-      columns     <- metaTables.head.getColumns
-      indexes     <- metaTables.head.getIndexInfo(unique = false, approximate = false)
-      foreignKeys <- metaTables.head.getImportedKeys
-    } yield
-      TableInfo(
-        columns = columns
-          .map(x => ColumnDescription(name = x.name, isNullable = x.isNullable.get, typeName = x.typeName, size = x.size))
-          .toList,
-        indexes = indexes
-          .map(x => IndexDescription(name = x.indexName, nonUnique = x.nonUnique, column = x.column))
-          .toList,
-        foreignKeys = foreignKeys
-          .map(x => ForeignKeyDescription(name = x.fkName, column = x.fkColumn, foreignColumn = x.pkColumn, foreignTable = x.pkTable.name))
-          .toList
-      )
-  }
 
   def getTables(projectId: String): DBIOAction[Vector[String], NoStream, Read] = {
     for {

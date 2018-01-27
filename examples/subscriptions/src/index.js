@@ -18,9 +18,12 @@ const resolvers = {
         info,
       )
     },
-    updateTitle(parent, { newTitle }, ctx, info) {
+    updateTitle(parent, { id, newTitle }, ctx, info) {
       return ctx.db.mutation.updatePost(
         {
+          where: {
+            id,
+          },
           data: {
             title: newTitle,
           },
@@ -45,7 +48,7 @@ const server = new GraphQLServer({
     ...req,
     db: new Prisma({
       typeDefs: 'src/generated/prisma.graphql',
-      endpoint: 'https://eu1.prisma.sh/public-motleymoose-kicker-19179/subscriptions-example/dev',
+      endpoint: 'https://eu1.prisma.sh/local/subscriptions-example/dev',
       secret: 'mysecret123',
     }),
     debug: true,

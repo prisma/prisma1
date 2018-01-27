@@ -27,10 +27,9 @@ case class UpsertDataItemIfInRelationWith(project: Project,
                                           updateMutations: Seq[DBIOAction[List[Int], NoStream, Effect]])
     extends ClientSqlDataChangeMutaction {
 
-  val model                   = where.model
-  val nonListScalarCreateArgs = CoolArgs(createArgs.raw).nonListScalarArgumentsAsCoolArgs(model)
-  val actualCreateArgs        = nonListScalarCreateArgs.generateCreateArgs(model, createWhere.fieldValueAsString)
-  val actualUpdateArgs        = updateArgs.nonListScalarArgumentsAsCoolArgs(model)
+  val model            = where.model
+  val actualCreateArgs = CoolArgs(createArgs.raw).generateNonListCreateArgs(model, createWhere.fieldValueAsString)
+  val actualUpdateArgs = updateArgs.nonListScalarArguments(model)
 
   override def execute: Future[ClientSqlStatementResult[Any]] = Future.successful {
     ClientSqlStatementResult(
@@ -42,15 +41,15 @@ case class UpsertDataItemIfInRelationWith(project: Project,
     implicit val anyFormat = JsonFormats.AnyJsonFormat
     Some({
       // https://dev.mysql.com/doc/refman/5.5/en/error-messages-server.html#error_er_dup_entry
-      case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1062 && getFieldOptionFromCoolArgs(List(createArgs, updateArgs), e).isDefined =>
-        APIErrors.UniqueConstraintViolation(model.name, getFieldOptionFromCoolArgs(List(createArgs, updateArgs), e).get)
+      case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1062 && getFieldOption(List(createArgs, updateArgs), e).isDefined =>
+        APIErrors.UniqueConstraintViolation(model.name, getFieldOption(List(createArgs, updateArgs), e).get)
       case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1452 => APIErrors.NodeDoesNotExist(where.fieldValueAsString)
       case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1048 => APIErrors.FieldCannotBeNull()
     })
   }
   override def verify(resolver: DataResolver): Future[Try[MutactionVerificationSuccess]] = {
-    val (createCheck, _) = InputValueValidation.validateDataItemInputs(model, createArgs.nonListScalarArguments(model).toList)
-    val (updateCheck, _) = InputValueValidation.validateDataItemInputs(model, updateArgs.nonListScalarArguments(model).toList)
+    val (createCheck, _) = InputValueValidation.validateDataItemInputs(model, createArgs)
+    val (updateCheck, _) = InputValueValidation.validateDataItemInputs(model, updateArgs)
 
     (createCheck.isFailure, updateCheck.isFailure) match {
       case (true, _)      => Future.successful(createCheck)

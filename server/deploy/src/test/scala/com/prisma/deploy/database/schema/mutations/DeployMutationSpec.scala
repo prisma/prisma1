@@ -612,6 +612,40 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
     )
   }
 
+  "DeployMutation" should "work with self relations" in {
+    val (project, _) = setupProject(basicTypesGql)
+    val nameAndStage = ProjectId.fromEncodedString(project.id)
+    val schema =
+      """
+        |type Comment{
+        |  id: ID! @unique
+        |  title: String
+        |  comments: [Comment!]! @relation(name: "RelatedComments")
+        |  parent: Comment @relation(name: "RelatedComments")
+        |}
+      """.stripMargin
+
+    server.query(
+      s"""
+         |mutation {
+         |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(schema)}}){
+         |    migration {
+         |      applied
+         |    }
+         |    errors {
+         |      description
+         |    }
+         |  }
+         |}
+      """.stripMargin
+    )
+
+    val migrations = migrationPersistence.loadAll(project.id).await
+    migrations should have(size(3))
+    migrations.exists(x => x.status != MigrationStatus.Success) shouldEqual false
+    migrations.head.revision shouldEqual 3 // order is DESC
+  }
+
   private def formatFunctions(functions: Vector[FunctionInput]) = {
     def formatFunction(fn: FunctionInput) = {
       s"""{
