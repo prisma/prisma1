@@ -253,7 +253,11 @@ case class SchemaSyntaxValidator(schema: String, directiveRequirements: Seq[Dire
     val fieldsOnTypeB      = fieldsWithType(oppositeObjectType, fieldAndType.objectType.name)
 
     // TODO: this probably only works if a relation directive appears twice actually in case of ambiguous relations
-    (fieldsOnTypeA ++ fieldsOnTypeB).count(_.relationName == fieldAndType.fieldDef.relationName)
+
+    isSelfRelation(fieldAndType) match {
+      case true  => (fieldsOnTypeB).count(_.relationName == fieldAndType.fieldDef.relationName)
+      case false => (fieldsOnTypeA ++ fieldsOnTypeB).count(_.relationName == fieldAndType.fieldDef.relationName)
+    }
   }
 
   def isSelfRelation(fieldAndType: FieldAndType): Boolean  = fieldAndType.fieldDef.typeName == fieldAndType.objectType.name

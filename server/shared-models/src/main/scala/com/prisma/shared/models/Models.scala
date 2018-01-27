@@ -281,6 +281,21 @@ case class Field(
     isRelationWithId(relationId) && this.relationSide.contains(relationSide)
   }
 
+  def isOneToOneRelation(project: Project): Boolean = {
+    val otherField = this.relatedField(project.schema).get
+    !this.isList && !otherField.isList
+  }
+
+  def isManyToManyRelation(project: Project): Boolean = {
+    val otherField = this.relatedField(project.schema).get
+    this.isList && otherField.isList
+  }
+
+  def isOneToManyRelation(project: Project): Boolean = {
+    val otherField = this.relatedField(project.schema).get
+    (this.isList && !otherField.isList) || (!this.isList && otherField.isList)
+  }
+
   private val excludedFromMutations = Vector("updatedAt", "createdAt", "id")
   def isWritable: Boolean           = !isReadonly && !excludedFromMutations.contains(name)
   def isVisible: Boolean            = !isHidden

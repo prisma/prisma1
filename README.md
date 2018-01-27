@@ -94,11 +94,10 @@ Use the endpoint from the previous step in your frontend (or backend) applicatio
 
 - [demo-application](https://github.com/graphcool/graphql-server-example)
 - [auth](examples/auth)
-- [file-api](examples/file-api)
+- [file-handling-s3](examples/file-handling-s3)
 - [github-auth](examples/github-auth)
 - [permissions](examples/permissions)
 - [resolver-forwarding](examples/resolver-forwarding)
-- [rest-wrapper](examples/rest-wrapper)
 - [subscriptions](examples/subscriptions)
 
 

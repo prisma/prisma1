@@ -191,6 +191,22 @@ mutation {
 }
 ```
 
+## Troubleshooting
+
+<details>
+ <summary>I'm getting the error message <code>[Network error]: FetchError: request to http://localhost:4466/file-handling-s3-example/dev failed, reason: connect ECONNREFUSED</code> when trying to send a query or mutation</summary>
+
+This is because the endpoint for the Prisma service is hardcoded in [`index.js`](index.js#L23). The service is assumed to be running on the default port for a local cluster: `http://localhost:4466`. Apparently, your local cluster is using a different port.
+
+You now have two options:
+
+1. Figure out the port of your local cluster and adjust it in `index.js`. You can look it up in `~/.prisma/config.yml`.
+1. Deploy the service to a public cluster. Expand the `I don't have Docker installed on my machine`-section in step 2 for instructions.
+
+Either way, you need to adjust the `endpoint` that's passed to the `Prisma` constructor in `index.js` so it reflects the actual cluster domain and service endpoint.
+
+</details>
+
 ## License
 
 MIT

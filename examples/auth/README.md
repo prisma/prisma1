@@ -67,7 +67,7 @@ Or you can open a Playground by navigating to [http://localhost:4000](http://loc
 
 > **Note**: You can also invoke the `yarn dev` script (instead of `yarn start`) which starts the server _and_ opens a Playground in parallel. This will also give you access to the Prisma API directly.
 
-### Register a new user with the `signup` mutation
+#### Register a new user with the `signup` mutation
 
 You can send the following mutation in the Playground to create a new `User` node and at the same time retrieve an authentication token for it:
 
@@ -79,7 +79,7 @@ mutation {
 }
 ```
 
-### Logging in an existing user with the `login` mutation
+#### Logging in an existing user with the `login` mutation
 
 This mutation will log in an _existing_ user by requesting a new authentication token for her:
 
@@ -91,7 +91,7 @@ mutation {
 }
 ```
 
-### Checking whether a user is currently logged in with the `me` query
+#### Checking whether a user is currently logged in with the `me` query
 
 For this query, you need to make sure a valid authentication token is sent along with the `Bearer `-prefix in the `Authorization` header of the request. Inside the Playground, you can set HTTP headers in the bottom-left corner:
 
@@ -113,7 +113,7 @@ If the token is valid, the server will return the `id` and `email` of the `User`
 ## Troubleshooting
 
 <details>
- <summary><strong>I'm getting the error message <code>[Network error]: FetchError: request to http://localhost:4466/auth-example/dev failed, reason: connect ECONNREFUSED</code> when trying to send a query or mutation</strong></summary>
+ <summary>I'm getting the error message <code>[Network error]: FetchError: request to http://localhost:4466/auth-example/dev failed, reason: connect ECONNREFUSED</code> when trying to send a query or mutation</summary>
 
 This is because the endpoint for the Prisma service is hardcoded in [`index.js`](index.js#L23). The service is assumed to be running on the default port for a local cluster: `http://localhost:4466`. Apparently, your local cluster is using a different port.
 

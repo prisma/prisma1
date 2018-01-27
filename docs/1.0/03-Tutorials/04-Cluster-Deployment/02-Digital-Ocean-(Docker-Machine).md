@@ -158,7 +158,7 @@ docker-compose up -d
 
 ## Enable Cluster Security
 
-By default, anyone can connect to the new cluster using the Prisma CLI and deploy services. To lock down access, you need to configura a public/private keypair.
+By default, anyone can connect to the new cluster using the Prisma CLI and deploy services. To lock down access, you need to configure a public/private keypair.
 
 ```
 openssl genrsa -out private.pem 2048
