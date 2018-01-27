@@ -84,7 +84,6 @@ export class Importer {
 
     const zip = new AdmZip(this.importPath)
     zip.extractAllTo(this.importDir)
-    const output = unzip.Extract({ path: this.importDir })
 
     this.out.action.stop(chalk.cyan(`${Date.now() - before}ms`))
   }
