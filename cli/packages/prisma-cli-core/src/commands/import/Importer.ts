@@ -4,7 +4,6 @@ import { Client, Output, Config } from 'prisma-cli-engine'
 import * as globby from 'globby'
 import { Validator } from './Validator'
 import chalk from 'chalk'
-import * as unzip from 'unzip'
 import * as AdmZip from 'adm-zip'
 const debug = require('debug')('Importer')
 
