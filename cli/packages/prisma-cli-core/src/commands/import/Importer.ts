@@ -5,6 +5,8 @@ import * as globby from 'globby'
 import { Validator } from './Validator'
 import chalk from 'chalk'
 import * as unzip from 'unzip'
+import * as AdmZip from 'adm-zip'
+const debug = require('debug')('Importer')
 
 export interface Files {
   lists: string[]
@@ -77,17 +79,20 @@ export class Importer {
 
     return 0
   }
-  unzip(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      const before = Date.now()
-      this.out.action.start('Unzipping')
-      const output = unzip.Extract({ path: this.importDir })
-      fs.createReadStream(this.importPath).pipe(output)
-      output.on('close', () => {
-        this.out.action.stop(chalk.cyan(`${Date.now() - before}ms`))
-        resolve()
-      })
-    })
+  unzip(): void {
+    const before = Date.now()
+    this.out.action.start('Unzipping')
+
+    const zip = new AdmZip(this.importPath)
+    zip.extractAllTo(this.importDir)
+    const output = unzip.Extract({ path: this.importDir })
+
+    this.out.action.stop(chalk.cyan(`${Date.now() - before}ms`))
+  }
+  checkForErrors(result: any) {
+    if (!Array.isArray(result) && result.errors) {
+      throw new Error(JSON.stringify(result, null, 2))
+    }
   }
   async upload(
     serviceName: string,
@@ -96,7 +101,7 @@ export class Importer {
     workspaceSlug?: string,
   ) {
     if (!this.isDir) {
-      await this.unzip()
+      this.unzip()
     }
     let before = Date.now()
     this.out.action.start('Validating data')
@@ -122,6 +127,7 @@ export class Importer {
         token,
         workspaceSlug,
       )
+      this.checkForErrors(result)
       if (result.length > 0) {
         this.out.log(this.out.getStyledJSON(result))
         this.out.exit(1)
@@ -150,6 +156,7 @@ export class Importer {
         token,
         workspaceSlug,
       )
+      this.checkForErrors(result)
       if (result.length > 0) {
         this.out.log(this.out.getStyledJSON(result))
         this.out.exit(1)
@@ -177,6 +184,7 @@ export class Importer {
         token,
         workspaceSlug,
       )
+      this.checkForErrors(result)
       if (result.length > 0) {
         this.out.log(this.out.getStyledJSON(result))
         this.out.exit(1)

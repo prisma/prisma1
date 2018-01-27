@@ -3,7 +3,6 @@ import * as path from 'path'
 const debug = require('debug')('isGlobal')
 
 export function getIsGlobal() {
-  debug({ argv: process.argv })
   if (isGlobal !== null) {
     return isGlobal
   }
