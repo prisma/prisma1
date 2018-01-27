@@ -7,12 +7,12 @@ description: Queries
 
 The Prisma API offers two kinds of queries:
 
-* **Model Queries**, to fetch single or multiple nodes of a certain model
-* **Connection Queries**, that expose advanced features like aggregations and [Relay compliant connections](https://facebook.github.io/relay/graphql/connections.htm)
+* **Object queries**, to fetch single or multiple nodes of a certain [object type](!alias-eiroozae8u#object-types)
+* **Connection queries**, that expose advanced features like aggregations and [Relay compliant connections](https://facebook.github.io/relay/graphql/connections.htm)
 
 When working with the Prisma API, the following features are also useful to keep in mind:
 
-* **Hierarchical Queries**, allowing to fetch data across relations
+* **Hierarchical queries**, allowing to fetch data across relations
 * **Query arguments**, for filters, sorting, pagination and more
 
 In general, the Prisma API of a service is structured according to [its data model](!alias-eiroozae8u). To explore the concrete operations in your Prisma API, use the [GraphQL Playground](https://github.com/graphcool/graphql-playground).
@@ -36,9 +36,9 @@ type User {
 }
 ```
 
-## Model Queries
+## Obect queries
 
-We can use **model queries** to fetch either a single node, or a list of nodes for a certain model.
+We can use **object queries** to fetch either a single node, or a list of nodes for a certain object type.
 
 Here, we use the `posts` query to fetch a list of posts:
 
@@ -103,7 +103,7 @@ query {
 
 You can read more about [node selection here](!alias-utee3eiquo#node-selection).
 
-## Connection Queries
+## Connection queries
 
 Model queries directly return list of nodes. In special cases or when using advanced features, using **connection queries** is the preferred option. They are an extension of [Relay connections](https://facebook.github.io/relay/graphql/connections.htm).
 
