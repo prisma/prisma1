@@ -84,8 +84,8 @@ object DatabaseMutationBuilder {
              where: NodeSelector,
              createArgs: CoolArgs,
              updateArgs: CoolArgs,
-             create: Seq[DBIOAction[List[Int], NoStream, Effect]],
-             update: Seq[DBIOAction[List[Int], NoStream, Effect]]) = {
+             create: Vector[DBIOAction[Any, NoStream, Effect]],
+             update: Vector[DBIOAction[Any, NoStream, Effect]]) = {
 
     val q       = DatabaseQueryBuilder.existsByWhere(projectId, where).as[Boolean]
     val qInsert = DBIOAction.seq(createDataItemIfUniqueDoesNotExist(projectId, where, createArgs), DBIOAction.seq(create: _*))
@@ -101,8 +101,8 @@ object DatabaseMutationBuilder {
       createWhere: NodeSelector,
       createArgs: CoolArgs,
       updateArgs: CoolArgs,
-      create: Seq[DBIOAction[List[Int], NoStream, Effect]],
-      update: Seq[DBIOAction[List[Int], NoStream, Effect]]
+      create: Vector[DBIOAction[Any, NoStream, Effect]],
+      update: Vector[DBIOAction[Any, NoStream, Effect]]
   ) = {
 
     val q       = DatabaseQueryBuilder.existsNodeIsInRelationshipWith(project, parentInfo, where).as[Boolean]
@@ -172,6 +172,10 @@ object DatabaseMutationBuilder {
         sqlu"""set @nodeId := (select id from `#$projectId`.`#${where.model.name}` where `#${where.field.name}` = ${where.fieldValue})""",
         (sql"replace into `#$projectId`.`#${where.model.name}_#${fieldName}` (`nodeId`, `position`, `value`) values " ++ combineByComma(escapedValueTuples)).asUpdate
       ))
+  }
+
+  def setScalarListToEmpty(projectId: String, where: NodeSelector, fieldName: String) = {
+    sql"DELETE FROM `#$projectId`.`#${where.model.name}_#${fieldName}` WHERE `nodeId` = (select id from `#$projectId`.`#${where.model.name}` where `#${where.field.name}` = ${where.fieldValue})".asUpdate
   }
 
   def pushScalarList(projectId: String, modelName: String, fieldName: String, nodeId: String, values: Vector[Any]): DBIOAction[Int, NoStream, Effect] = {

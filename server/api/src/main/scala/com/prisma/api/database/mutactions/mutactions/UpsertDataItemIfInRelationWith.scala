@@ -23,8 +23,8 @@ case class UpsertDataItemIfInRelationWith(project: Project,
                                           createWhere: NodeSelector,
                                           createArgs: CoolArgs,
                                           updateArgs: CoolArgs,
-                                          createMutations: Seq[DBIOAction[List[Int], NoStream, Effect]],
-                                          updateMutations: Seq[DBIOAction[List[Int], NoStream, Effect]])
+                                          createMutations: Vector[DBIOAction[Any, NoStream, Effect]],
+                                          updateMutations: Vector[DBIOAction[Any, NoStream, Effect]])
     extends ClientSqlDataChangeMutaction {
 
   val model            = where.model
