@@ -27,7 +27,6 @@ class UpsertDesignSpec extends FlatSpec with Matchers with ApiBaseSpec {
            |){id}}""".stripMargin,
         project
       )
-      .pathAsString("data.upsertList.id")
 
     val result = server.executeQuerySimple(s"""query{lists {uList, todo {uTodo}}}""", project)
     result.toString should equal("""{"data":{"lists":[{"uList":"A","todo":{"uTodo":"B"}}]}}""")
@@ -58,7 +57,6 @@ class UpsertDesignSpec extends FlatSpec with Matchers with ApiBaseSpec {
            |){id}}""".stripMargin,
         project
       )
-      .pathAsString("data.upsertList.id")
 
     val result = server.executeQuerySimple(s"""query{lists {uList, todo {uTodo}}}""", project)
     result.toString should equal("""{"data":{"lists":[{"uList":"C","todo":{"uTodo":"C"}}]}}""")
@@ -87,10 +85,49 @@ class UpsertDesignSpec extends FlatSpec with Matchers with ApiBaseSpec {
            |){id}}""".stripMargin,
         project
       )
-      .pathAsString("data.upsertList.id")
 
     val result = server.executeQuerySimple(s"""query{lists {uList, listInts}}""", project)
     result.toString should equal("""{"data":{"lists":[{"uList":"A","listInts":[70,80]}]}}""")
+    countItems(project, "lists") should be(1)
+    countItems(project, "todoes") should be(0)
+  }
+
+  "An upsert on the top level" should "be able to reset lists to empty" in {
+
+    val project = SchemaDsl() { schema =>
+      val list = schema.model("List").field("listInts", _.Int, isList = true).field("uList", _.String, isUnique = true)
+      val todo = schema.model("Todo").field("todoInts", _.Int, isList = true).field("uTodo", _.String, isUnique = true).oneToOneRelation("list", "todo", list)
+    }
+
+    database.setup(project)
+
+    server
+      .executeQuerySimple(
+        s"""mutation upsertListValues {upsertList(
+           |                             where:{uList: "Does not Exist"}
+           |                             create:{uList:"A" listInts:{set: [70, 80]}}
+           |                             update:{listInts:{set: [75, 85]}}
+           |){id}}""".stripMargin,
+        project
+      )
+
+    val result = server.executeQuerySimple(s"""query{lists {uList, listInts}}""", project)
+    result.toString should equal("""{"data":{"lists":[{"uList":"A","listInts":[70,80]}]}}""")
+    countItems(project, "lists") should be(1)
+    countItems(project, "todoes") should be(0)
+
+    server
+      .executeQuerySimple(
+        s"""mutation upsertListValues {upsertList(
+           |                             where:{uList: "A"}
+           |                             create:{uList:"A" listInts:{set: [70, 80]}}
+           |                             update:{listInts:{set: []}}
+           |){id}}""".stripMargin,
+        project
+      )
+
+    val result2 = server.executeQuerySimple(s"""query{lists {uList, listInts}}""", project)
+    result2.toString should equal("""{"data":{"lists":[{"uList":"A","listInts":[]}]}}""")
     countItems(project, "lists") should be(1)
     countItems(project, "todoes") should be(0)
   }
@@ -115,7 +152,6 @@ class UpsertDesignSpec extends FlatSpec with Matchers with ApiBaseSpec {
            |){id}}""".stripMargin,
         project
       )
-      .pathAsString("data.upsertList.id")
 
     val result = server.executeQuerySimple(s"""query{lists {uList, listInts}}""", project)
 
@@ -149,7 +185,6 @@ class UpsertDesignSpec extends FlatSpec with Matchers with ApiBaseSpec {
         |}){id}}""".stripMargin,
         project
       )
-      .pathAsString("data.updateList.id")
 
     val result = server.executeQuerySimple(s"""query{lists {uList, todo {uTodo, todoInts}}}""", project)
     result.toString should equal("""{"data":{"lists":[{"uList":"A","todo":{"uTodo":"C","todoInts":[700,800]}}]}}""")
@@ -180,7 +215,6 @@ class UpsertDesignSpec extends FlatSpec with Matchers with ApiBaseSpec {
            |}){id}}""".stripMargin,
         project
       )
-      .pathAsString("data.updateList.id")
 
     val result = server.executeQuerySimple(s"""query{lists {uList, todo {uTodo, todoInts}}}""", project)
     result.toString should equal("""{"data":{"lists":[{"uList":"A","todo":{"uTodo":"C","todoInts":[100,200]}}]}}""")
@@ -212,13 +246,43 @@ class UpsertDesignSpec extends FlatSpec with Matchers with ApiBaseSpec {
            |}){id}}""".stripMargin,
         project
       )
-      .pathAsString("data.updateList.id")
 
     val result = server.executeQuerySimple(s"""query{lists {uList, todoes {uTodo, todoInts}}}""", project)
     result.toString should equal("""{"data":{"lists":[{"uList":"A","todoes":[{"uTodo":"B","todoInts":[3,4]},{"uTodo":"C","todoInts":[100,200]}]}]}}""")
 
     countItems(project, "lists") should be(1)
     countItems(project, "todoes") should be(2)
+  }
+
+  "A nested upsert" should "be able to reset lists to empty" in {
+
+    val project = SchemaDsl() { schema =>
+      val todo = schema.model("Todo").field("todoInts", _.Int, isList = true).field("uTodo", _.String, isUnique = true)
+      val list =
+        schema.model("List").field("listInts", _.Int, isList = true).field("uList", _.String, isUnique = true).oneToManyRelation("todoes", "list", todo)
+    }
+
+    database.setup(project)
+
+    server.executeQuerySimple("""mutation {createList(data: {uList: "A" todoes: {create: {uTodo: "B", todoInts: {set: [3, 4]}}}}){id}}""", project)
+
+    server
+      .executeQuerySimple(
+        s"""mutation{updateList(where:{uList: "A"}
+           |                    data:{todoes: { upsert:{
+           |                               where:{uTodo: "B"}
+           |		                           create:{uTodo:"C", todoInts:{set: [100, 200]}}
+           |		                           update:{ todoInts:{set: []}}
+           |}}
+           |}){id}}""".stripMargin,
+        project
+      )
+
+    val result = server.executeQuerySimple(s"""query{lists {uList, todoes {uTodo, todoInts}}}""", project)
+    result.toString should equal("""{"data":{"lists":[{"uList":"A","todoes":[{"uTodo":"B","todoInts":[]}]}]}}""")
+
+    countItems(project, "lists") should be(1)
+    countItems(project, "todoes") should be(1)
   }
 
   "A nested upsert" should "only execute the nested mutations of the correct update branch" ignore {
@@ -244,7 +308,6 @@ class UpsertDesignSpec extends FlatSpec with Matchers with ApiBaseSpec {
            |}){id}}""".stripMargin,
         project
       )
-      .pathAsString("data.updateList.id")
 
     val result = server.executeQuerySimple(s"""query{lists {uList, todo {uTodo, tag {uTag }}}}""", project)
     result.toString should equal("""{"data":{"lists":[{"uList":"A","todo":{"uTodo":"C","tag":{"uTag":"E"}}}]}}""")
@@ -278,7 +341,6 @@ class UpsertDesignSpec extends FlatSpec with Matchers with ApiBaseSpec {
            |}){id}}""".stripMargin,
         project
       )
-      .pathAsString("data.updateList.id")
 
     val result = server.executeQuerySimple(s"""query{lists {uList, todo {uTodo, tag {uTag }}}}""", project)
     result.toString should equal("""{"data":{"lists":[{"uList":"A","todo":{"uTodo":"D","tag":{"uTag":"D"}}}]}}""")
