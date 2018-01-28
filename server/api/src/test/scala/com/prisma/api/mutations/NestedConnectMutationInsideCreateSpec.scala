@@ -691,7 +691,7 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
   "a PM to CM  relation with the child not already in a relation" should "be connectable through a nested mutation by unique" in {
     val project = SchemaDsl() { schema =>
       val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)
-      val child  = schema.model("Child").field_!("c", _.String, isUnique = true).oneToManyRelation("parentsOpt", "childOpt", parent)
+      val child  = schema.model("Child").field_!("c", _.String, isUnique = true).manyToManyRelation("parentsOpt", "childrenOpt", parent)
     }
     database.setup(project)
 
@@ -711,9 +711,9 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
          |mutation {
          |  createParent(data:{
          |    p: "p2"
-         |    childOpt: {connect: {c: "c1"}}
+         |    childrenOpt: {connect: {c: "c1"}}
          |  }){
-         |    childOpt {
+         |    childrenOpt {
          |      c
          |    }
          |  }
@@ -722,11 +722,50 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
       project
     )
 
-    res.toString should be("""{"data":{"createParent":{"childOpt":{"c":"c1"}}}}""")
+    res.toString should be("""{"data":{"createParent":{"childrenOpt":[{"c":"c1"}]}}}""")
 
     server.executeQuerySimple(s"""query{children{parentsOpt{p}}}""", project).toString should be("""{"data":{"children":[{"parentsOpt":[{"p":"p2"}]}]}}""")
 
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
+  }
+
+  "a PM to CM  relation without a backrelation" should "be connectable through a nested mutation by unique" in {
+    val project = SchemaDsl() { schema =>
+      val role = schema.model("Role").field_!("r", _.String, isUnique = true)
+      val user = schema.model("User").field_!("u", _.String, isUnique = true).manyToManyRelation("roles", "notexposed", role, includeOtherField = false)
+    }
+    database.setup(project)
+
+    server.executeQuerySimple(
+      """mutation {
+        |  createRole(data: {r: "r1"}){
+        |       r
+        |  }
+        |}""".stripMargin,
+      project
+    )
+
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_UserToRole").as[Int]) should be(Vector(0))
+
+    val res = server.executeQuerySimple(
+      s"""
+         |mutation {
+         |  createUser(data:{
+         |    u: "u2"
+         |    roles: {connect: {r: "r1"}}
+         |  }){
+         |    roles {
+         |      r
+         |    }
+         |  }
+         |}
+      """.stripMargin,
+      project
+    )
+
+    res.toString should be("""{"data":{"createUser":{"roles":[{"r":"r1"}]}}}""")
+
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_UserToRole").as[Int]) should be(Vector(1))
   }
 
   "a many relation" should "be connectable through a nested mutation by id" in {

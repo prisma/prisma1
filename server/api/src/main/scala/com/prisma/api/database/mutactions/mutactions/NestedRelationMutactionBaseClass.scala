@@ -19,8 +19,13 @@ trait NestedRelationMutactionBaseClass extends ClientSqlDataChangeMutaction {
   def where: NodeSelector
   def topIsCreate: Boolean
 
-  val p = parentInfo.field
-  val c = parentInfo.relation.getOtherModel_!(project.schema, parentInfo.where.model).fields.find(_.relation.contains(parentInfo.relation)).get
+  val p                = parentInfo.field
+  val otherModel       = parentInfo.relation.getOtherModel_!(project.schema, parentInfo.where.model)
+  val otherFieldOption = otherModel.fields.find(_.relation.contains(parentInfo.relation))
+  val c = otherFieldOption match {
+    case Some(x) => x
+    case None    => p.copy(isRequired = false, isList = true) //optional backrelation defaults to List-NonRequired
+  }
 
   val checkForOldParent = oldParentFailureTriggerForRequiredRelations(project, parentInfo.relation, where)
   val checkForOldChild  = oldChildFailureTriggerForRequiredRelations(project, parentInfo)
