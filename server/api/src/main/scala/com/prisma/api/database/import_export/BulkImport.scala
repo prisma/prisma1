@@ -81,14 +81,15 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) {
       val id    = element.identifier.id
       val model = project.schema.getModelByName_!(element.identifier.typeName)
 
-      val formatedDateTimes = element.values.map {
+      val formatedValues = element.values.map {
         case (k, v) if k == "createdAt" || k == "updatedAt"                                => (k, dateTimeFromISO8601(v))
         case (k, v) if !model.fields.map(_.name).contains(k)                               => (k, v) // let it fail at db level
         case (k, v) if model.getFieldByName_!(k).typeIdentifier == TypeIdentifier.DateTime => (k, dateTimeFromISO8601(v))
+        case (k, v) if model.getFieldByName_!(k).typeIdentifier == TypeIdentifier.Json     => (k, v.toJson)
         case (k, v)                                                                        => (k, v)
       }
 
-      val values: CoolArgs = CoolArgs(formatedDateTimes + ("id" -> id))
+      val values: CoolArgs = CoolArgs(formatedValues + ("id" -> id))
 
       DatabaseMutationBuilder.createDataItem(project.id, model.name, values).asTry
     }
@@ -129,11 +130,17 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) {
     val updateListValueActions = lists.flatMap { element =>
       def isDateTime(fieldName: String) =
         project.schema.getModelByName_!(element.identifier.typeName).getFieldByName_!(fieldName).typeIdentifier == TypeIdentifier.DateTime
+      def isJson(fieldName: String) =
+        project.schema.getModelByName_!(element.identifier.typeName).getFieldByName_!(fieldName).typeIdentifier == TypeIdentifier.Json
 
       element.values.map {
         case (fieldName, values) if isDateTime(fieldName) =>
           DatabaseMutationBuilder
             .pushScalarList(project.id, element.identifier.typeName, fieldName, element.identifier.id, values.map(dateTimeFromISO8601))
+            .asTry
+        case (fieldName, values) if isJson(fieldName) =>
+          DatabaseMutationBuilder
+            .pushScalarList(project.id, element.identifier.typeName, fieldName, element.identifier.id, values.map(v => v.toJson))
             .asTry
         case (fieldName, values) =>
           DatabaseMutationBuilder.pushScalarList(project.id, element.identifier.typeName, fieldName, element.identifier.id, values).asTry
