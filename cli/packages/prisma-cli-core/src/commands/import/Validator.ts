@@ -60,6 +60,9 @@ export class Validator {
       )
     },
     Boolean: isBoolean,
+    Json: value => {
+      return typeof value === 'object'
+    },
   }
   constructor(typesString: string) {
     this.typesString = typesString
@@ -122,7 +125,7 @@ export class Validator {
   validateRelationNode(node: RelationNode): true {
     this.checkTypeName(node)
     this.checkIdField(node)
-    this.checkFieldName(node)
+    // this.checkFieldName(node)
     return true
   }
 
@@ -139,16 +142,24 @@ export class Validator {
       this.validateRelationNode(tuple[i])
     }
 
+    const hasFieldName = tuple.reduce((acc, node) => {
+      return this.checkFieldName(node) || acc
+    }, false)
+
+    if (!hasFieldName) {
+      throw new Error(
+        `Relation tuple ${JSON.stringify(
+          tuple,
+        )} must include a "fieldName" property`,
+      )
+    }
+
     return true
   }
 
-  private checkFieldName(node: RelationNode): true {
+  private checkFieldName(node: RelationNode): boolean {
     if (!node.fieldName) {
-      throw new Error(
-        `Relation node ${JSON.stringify(
-          node,
-        )} must include a "fieldName" property`,
-      )
+      return false
     }
     if (!this.types[node._typeName].fields[node.fieldName]) {
       throw new Error(

@@ -193,7 +193,6 @@ To get more detailed output, run ${chalk.dim(instruction)}`,
     }
     // make sure error is logged first, then execute raven
     const statusChecker = getStatusChecker()
-    debug({ statusChecker })
     if (statusChecker) {
       statusChecker.checkStatus(
         process.argv[2],

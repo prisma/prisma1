@@ -6,6 +6,9 @@ const debug = require('debug')('playground')
 import * as path from 'path'
 import * as os from 'os'
 import * as crypto from 'crypto'
+import getGraphQLCliBin from '../../utils/getGraphQLCliBin'
+import chalk from 'chalk'
+import { spawn } from '../../spawn'
 
 function randomString(len = 32) {
   return crypto
@@ -41,21 +44,29 @@ export default class Playground extends Command {
     const cluster = this.env.clusterByName(clusterName!, true)
     this.env.setActiveCluster(cluster!)
 
-    const localPlaygroundPath = `/Applications/GraphQL\ Playground.app/Contents/MacOS/GraphQL\ Playground`
-
-    const endpoint = cluster!.getApiEndpoint(
-      this.definition.definition!.service!,
-      stage,
-    )
-    if (fs.pathExistsSync(localPlaygroundPath) && !web) {
-      const envPath = path.join(os.tmpdir(), `${randomString()}.json`)
-      fs.writeFileSync(envPath, JSON.stringify(process.env))
-      const url = `graphql-playground://?cwd=${process.cwd()}&envPath=${envPath}&endpoint=${endpoint}`
-      opn(url, { wait: false })
-      debug(url)
-      debug(process.env)
+    if (this.config.findConfigDir() === this.config.definitionDir) {
+      const graphqlBin = await getGraphQLCliBin()
+      debug({ graphqlBin })
+      this.out.log(`Running ${chalk.cyan(`$ graphql playground`)}...`)
+      await spawn(graphqlBin, ['playground'])
     } else {
-      opn(endpoint)
+      const localPlaygroundPath = `/Applications/GraphQL\ Playground.app/Contents/MacOS/GraphQL\ Playground`
+
+      const endpoint = cluster!.getApiEndpoint(
+        this.definition.definition!.service!,
+        stage,
+        this.definition.getWorkspace() || undefined,
+      )
+      if (fs.pathExistsSync(localPlaygroundPath) && !web) {
+        const envPath = path.join(os.tmpdir(), `${randomString()}.json`)
+        fs.writeFileSync(envPath, JSON.stringify(process.env))
+        const url = `graphql-playground://?cwd=${process.cwd()}&envPath=${envPath}&endpoint=${endpoint}`
+        opn(url, { wait: false })
+        debug(url)
+        debug(process.env)
+      } else {
+        opn(endpoint)
+      }
     }
   }
 }

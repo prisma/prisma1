@@ -43,6 +43,7 @@ services:
       PRIVATE_CLIENT_API_SECRET: "empty"
       PACKAGECLOUD_PW: "${PACKAGECLOUD_PW}"
       CLUSTER_VERSION: "latest"
+      COMMIT_SHA: "123abcd"
 
     volumes:
       - ../..:/root
