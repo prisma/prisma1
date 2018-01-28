@@ -4,7 +4,7 @@ import com.prisma.api.database.Types.DataItemFilterCollection
 import com.prisma.api.mutations.{CoolArgs, NodeSelector, ParentInfo}
 import com.prisma.api.schema.GeneralError
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
-import com.prisma.shared.models.{Model, Project, TypeIdentifier}
+import com.prisma.shared.models.{Model, Project, Relation, TypeIdentifier}
 import cool.graph.cuid.Cuid
 import slick.dbio.{DBIOAction, Effect, NoStream}
 import slick.jdbc.MySQLProfile.api._
@@ -141,10 +141,10 @@ object DatabaseMutationBuilder {
       sql"where `#${parentInfo.where.field.name}` = ${parentInfo.where.fieldValue})").asUpdate
   }
 
-  def deleteRelationRowByChild(projectId: String, parentInfo: ParentInfo, where: NodeSelector) = {
+  def deleteRelationRowByChild(projectId: String, relation: Relation, where: NodeSelector) = {
 
-    (sql"delete from `#$projectId`.`#${parentInfo.relation.id}` " ++
-      sql"where `#${parentInfo.field.oppositeRelationSide.get}` = (select id from `#$projectId`.`#${where.model.name}` " ++
+    (sql"delete from `#$projectId`.`#${relation.id}` " ++
+      sql"where `#${relation.sideOf(where.model)}` = (select id from `#$projectId`.`#${where.model.name}` " ++
       sql"where `#${where.field.name}` = ${where.fieldValue})").asUpdate
   }
 
@@ -221,18 +221,18 @@ object DatabaseMutationBuilder {
       sql"where table_schema = ${project.id} AND TABLE_NAME = ${parentInfo.relation.id})end;").as[Int]
   }
 
-  def oldParentFailureTriggerForRequiredRelations(project: Project, parentInfo: ParentInfo, where: NodeSelector) = {
-    val childSide = parentInfo.relation.sideOf(where.model)
+  def oldParentFailureTriggerForRequiredRelations(project: Project, relation: Relation, where: NodeSelector) = {
+    val childSide = relation.sideOf(where.model)
 
     (sql"select case" ++
       sql"when not exists" ++
       sql"(select *" ++
-      sql"from `#${project.id}`.`#${parentInfo.relation.id}`" ++
+      sql"from `#${project.id}`.`#${relation.id}`" ++
       sql"where `#$childSide` = (Select `id` from `#${project.id}`.`#${where.model.name}`where `#${where.field.name}` = ${where.fieldValue}))" ++
       sql"then 1" ++
       sql"else (select COLUMN_NAME" ++
       sql"from information_schema.columns" ++
-      sql"where table_schema = ${project.id} AND TABLE_NAME = ${parentInfo.relation.id})end;").as[Int]
+      sql"where table_schema = ${project.id} AND TABLE_NAME = ${relation.id})end;").as[Int]
   }
 
   def oldChildFailureTriggerForRequiredRelations(project: Project, parentInfo: ParentInfo) = {

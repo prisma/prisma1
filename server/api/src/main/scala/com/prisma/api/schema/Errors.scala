@@ -3,6 +3,7 @@ package com.prisma.api.schema
 import com.prisma.sangria.utils.ErrorWithCode
 import com.prisma.api.database.mutactions.MutactionExecutionResult
 import com.prisma.api.mutations.{NodeSelector, ParentInfo}
+import com.prisma.shared.models.{Project, Relation}
 import spray.json.JsValue
 
 abstract class GeneralError(message: String) extends Exception with MutactionExecutionResult with ErrorWithCode {
@@ -150,9 +151,9 @@ object APIErrors {
         3041
       )
 
-  case class RequiredRelationWouldBeViolated(parentInfo: ParentInfo, where: NodeSelector)
+  case class RequiredRelationWouldBeViolated(project: Project, relation: Relation)
       extends ClientApiError(
-        s"The change you are trying to make would violate a required relation between ${parentInfo.model.name} and ${where.model.name}",
+        s"The change you are trying to make would violate the required relation '${relation.id}' between ${relation.getModelA_!(project.schema).name} and ${relation.getModelB_!(project.schema).name}",
         3042
       )
 

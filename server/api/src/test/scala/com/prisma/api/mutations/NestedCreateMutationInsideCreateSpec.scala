@@ -1,10 +1,304 @@
 package com.prisma.api.mutations
 
 import com.prisma.api.ApiBaseSpec
+import com.prisma.api.database.DatabaseQueryBuilder
 import com.prisma.shared.project_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with ApiBaseSpec {
+
+  "a P1! to C1! relation" should "be possible" in {
+    val project = SchemaDsl() { schema =>
+      val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)
+      val child  = schema.model("Child").field_!("c", _.String, isUnique = true).oneToOneRelation_!("parentReq", "childReq", parent)
+    }
+    database.setup(project)
+
+    val res = server
+      .executeQuerySimple(
+        """mutation {
+          |  createParent(data: {
+          |    p: "p1"
+          |    childReq: {
+          |      create: {c: "c1"}
+          |    }
+          |  }){
+          |    p
+          |    childReq{
+          |       c
+          |    }
+          |  }
+          |}""".stripMargin,
+        project
+      )
+
+    res.toString should be("""{"data":{"createParent":{"p":"p1","childReq":{"c":"c1"}}}}""")
+
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
+
+  }
+
+  "a P1! to C1 relation " should "work" in {
+    val project = SchemaDsl() { schema =>
+      val child = schema.model("Child").field_!("c", _.String, isUnique = true)
+      schema.model("Parent").field_!("p", _.String, isUnique = true).oneToOneRelation_!("childReq", "parentOpt", child, isRequiredOnOtherField = false)
+    }
+    database.setup(project)
+
+    val child1Id = server
+      .executeQuerySimple(
+        """mutation {
+          |  createParent(data: {
+          |    p: "p1"
+          |    childReq: {
+          |      create: {c: "c1"}
+          |    }
+          |  }){
+          |    childReq{
+          |       id
+          |    }
+          |  }
+          |}""".stripMargin,
+        project
+      )
+      .pathAsString("data.createParent.childReq.id")
+
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(1))
+
+  }
+
+  "a P1! to C1  relation " should "work" in {
+    val project = SchemaDsl() { schema =>
+      val child = schema.model("Child").field_!("c", _.String, isUnique = true)
+      schema.model("Parent").field_!("p", _.String, isUnique = true).oneToOneRelation_!("childReq", "parentOpt", child, isRequiredOnOtherField = false)
+    }
+    database.setup(project)
+
+    val res = server
+      .executeQuerySimple(
+        """mutation {
+          |  createParent(data: {
+          |    p: "p1"
+          |    childReq: {
+          |      create: {c: "c1"}
+          |    }
+          |  }){
+          |   childReq{
+          |     c
+          |   }
+          |  }
+          |}""".stripMargin,
+        project
+      )
+
+    res.toString should be("""{"data":{"createParent":{"childReq":{"c":"c1"}}}}""")
+
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(1))
+
+  }
+
+  "a P1 to C1  relation" should "work" in {
+    val project = SchemaDsl() { schema =>
+      val child = schema.model("Child").field_!("c", _.String, isUnique = true)
+      schema.model("Parent").field_!("p", _.String, isUnique = true).oneToOneRelation("childOpt", "parentOpt", child)
+    }
+    database.setup(project)
+
+    val res = server
+      .executeQuerySimple(
+        """mutation {
+          |  createParent(data: {
+          |    p: "p1"
+          |    childOpt: {
+          |      create: {c: "c1"}
+          |    }
+          |  }){
+          |   childOpt{
+          |     c
+          |   }
+          |  }
+          |}""".stripMargin,
+        project
+      )
+
+    res.toString should be("""{"data":{"createParent":{"childOpt":{"c":"c1"}}}}""")
+
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(1))
+  }
+
+  "a PM to C1! " should "work" in {
+    val project = SchemaDsl() { schema =>
+      val child = schema.model("Child").field_!("c", _.String, isUnique = true)
+      schema.model("Parent").field_!("p", _.String, isUnique = true).oneToManyRelation_!("childrenOpt", "parentReq", child)
+    }
+    database.setup(project)
+
+    val res = server
+      .executeQuerySimple(
+        """mutation {
+          |  createParent(data: {
+          |    p: "p1"
+          |    childrenOpt: {
+          |      create: [{c: "c1"},{c:"c2"}]
+          |    }
+          |  }){
+          |   childrenOpt{
+          |     c
+          |   }
+          |  }
+          |}""".stripMargin,
+        project
+      )
+
+    res.toString should be("""{"data":{"createParent":{"childrenOpt":[{"c":"c1"},{"c":"c2"}]}}}""")
+
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(2))
+  }
+
+  "a P1 to C1!  relation " should "work" in {
+    val project = SchemaDsl() { schema =>
+      val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)
+      schema.model("Child").field_!("c", _.String, isUnique = true).oneToOneRelation_!("parentReq", "childOpt", parent, isRequiredOnOtherField = false)
+    }
+    database.setup(project)
+
+    val res = server
+      .executeQuerySimple(
+        """mutation {
+          |  createParent(data: {
+          |    p: "p1"
+          |    childOpt: {
+          |      create: {c: "c1"}
+          |    }
+          |  }){
+          |   childOpt{
+          |     c
+          |   }
+          |  }
+          |}""".stripMargin,
+        project
+      )
+
+    res.toString should be("""{"data":{"createParent":{"childOpt":{"c":"c1"}}}}""")
+
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
+  }
+
+  "a PM to C1  relation" should "work" in {
+    val project = SchemaDsl() { schema =>
+      val child = schema.model("Child").field_!("c", _.String, isUnique = true)
+      schema.model("Parent").field_!("p", _.String, isUnique = true).oneToManyRelation("childrenOpt", "parentOpt", child)
+    }
+    database.setup(project)
+
+    val res = server
+      .executeQuerySimple(
+        """mutation {
+          |  createParent(data: {
+          |    p: "p1"
+          |    childrenOpt: {
+          |      create: [{c: "c1"},{c: "c2"}]
+          |    }
+          |  }){
+          |   childrenOpt{
+          |     c
+          |   }
+          |  }
+          |}""".stripMargin,
+        project
+      )
+
+    res.toString should be("""{"data":{"createParent":{"childrenOpt":[{"c":"c1"},{"c":"c2"}]}}}""")
+
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(2))
+  }
+
+  "a P1! to CM  relation " should "work" in {
+    val project = SchemaDsl() { schema =>
+      val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)
+      val child  = schema.model("Child").field_!("c", _.String, isUnique = true).oneToManyRelation_!("parentsOpt", "childReq", parent)
+    }
+    database.setup(project)
+
+    val res = server
+      .executeQuerySimple(
+        """mutation {
+          |  createParent(data: {
+          |    p: "p1"
+          |    childReq: {
+          |      create: {c: "c1"}
+          |    }
+          |  }){
+          |   childReq{
+          |     c
+          |   }
+          |  }
+          |}""".stripMargin,
+        project
+      )
+
+    res.toString should be("""{"data":{"createParent":{"childReq":{"c":"c1"}}}}""")
+
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
+  }
+
+  "a P1 to CM relation" should "work" in {
+    val project = SchemaDsl() { schema =>
+      val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)
+      val child  = schema.model("Child").field_!("c", _.String, isUnique = true).oneToManyRelation("parentsOpt", "childOpt", parent)
+    }
+    database.setup(project)
+
+    val res = server
+      .executeQuerySimple(
+        """mutation {
+          |  createParent(data: {
+          |    p: "p1"
+          |    childOpt: {
+          |      create: {c: "c1"}
+          |    }
+          |  }){
+          |   childOpt{
+          |     c
+          |   }
+          |  }
+          |}""".stripMargin,
+        project
+      )
+
+    res.toString should be("""{"data":{"createParent":{"childOpt":{"c":"c1"}}}}""")
+
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
+  }
+
+  "a PM to CM  relation " should "work" in {
+    val project = SchemaDsl() { schema =>
+      val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)
+      val child  = schema.model("Child").field_!("c", _.String, isUnique = true).manyToManyRelation("parentsOpt", "childrenOpt", parent)
+    }
+    database.setup(project)
+
+    val res = server
+      .executeQuerySimple(
+        """mutation {
+          |  createParent(data: {
+          |    p: "p1"
+          |    childrenOpt: {
+          |      create: [{c: "c1"},{c:"c2"}]
+          |    }
+          |  }){
+          |   childrenOpt{
+          |     c
+          |   }
+          |  }
+          |}""".stripMargin,
+        project
+      )
+
+    res.toString should be("""{"data":{"createParent":{"childrenOpt":[{"c":"c1"},{"c":"c2"}]}}}""")
+
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(2))
+  }
 
   "a one to many relation" should "be creatable through a nested mutation" in {
     val project = SchemaDsl() { schema =>
