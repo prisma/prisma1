@@ -300,6 +300,66 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
     result.toString should equal("""{"data":{"lists":[{uList: "A", "listInts":[70,80]}]}}""")
   }
 
+  "Overwriting a full scalar list with an empty list" should "return an empty list" in {
+
+    val project = SchemaDsl() { schema =>
+      schema.model("Model").field("ints", _.Int, isList = true).field("strings", _.String, isList = true)
+    }
+
+    database.setup(project)
+
+    val id = server
+      .executeQuerySimple(
+        s"""mutation {
+           |  createModel(data: {ints: { set: [1] }, strings: { set: ["short", "looooooooooong"]}}) {
+           |    id
+           |    strings
+           |    ints
+           |  }
+           |}""".stripMargin,
+        project
+      )
+      .pathAsString("data.createModel.id")
+
+    val result = server.executeQuerySimple(
+      s"""{
+         |  model(where: {id:"$id"}) {
+         |    ints
+         |    strings
+         |  }
+         |}""".stripMargin,
+      project
+    )
+
+    result.toString should equal("""{"data":{"model":{"ints":[1],"strings":["short","looooooooooong"]}}}""")
+
+    server
+      .executeQuerySimple(
+        s"""mutation {
+           |  updateModel(
+           |  where: {id: "$id"}
+           |  data: {ints: { set: [] }, strings: { set: []}}) {
+           |    id
+           |    strings
+           |    ints
+           |  }
+           |}""".stripMargin,
+        project
+      )
+    val result2 = server.executeQuerySimple(
+      s"""{
+         |  model(where: {id:"$id"}) {
+         |    ints
+         |    strings
+         |  }
+         |}""".stripMargin,
+      project
+    )
+
+    result2.toString should equal("""{"data":{"model":{"ints":[],"strings":[]}}}""")
+
+  }
+
   private def verifySuccessfulSetAndRetrieval(fieldName: String, inputValue: Any, outputValue: Any, project: Project) = {
     database.setup(project)
 

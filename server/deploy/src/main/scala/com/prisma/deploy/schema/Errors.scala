@@ -40,6 +40,9 @@ object DeploymentInProgress
       4004
     )
 
+case class ProjectAlreadyExists(name: String, stage: String)
+    extends AbstractDeployApiError(s"Service with name '$name' and stage '$stage' already exists", 4005)
+
 object InvalidNames {
   def mustStartUppercase(name: String, entityType: String): String =
     s"'${default(name, entityType)} It must begin with an uppercase letter. It may contain letters and numbers."

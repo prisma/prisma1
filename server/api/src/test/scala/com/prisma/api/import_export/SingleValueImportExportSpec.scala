@@ -49,7 +49,8 @@ class SingleValueImportExportSpec extends FlatSpec with Matchers with ApiBaseSpe
         |{"_typeName": "Model0", "id": "3","boolean": true, "createdAt":"2017-11-29T14:35:13.000Z", "updatedAt":"2017-12-05T12:34:23.000Z"},
         |{"_typeName": "Model0", "id": "4","datetime": "2018-01-07T15:55:19Z", "createdAt":"2017-11-29T14:35:13.000Z", "updatedAt":"2017-12-05T12:34:23.000Z"},
         |{"_typeName": "Model0", "id": "5","enum": "HA", "createdAt":"2017-11-29T14:35:13.000Z", "updatedAt":"2017-12-05T12:34:23.000Z"},
-        |{"_typeName": "Model0", "id": "6","json": "{\"a\":2}", "createdAt":"2017-11-29T14:35:13.000Z", "updatedAt":"2017-12-05T12:34:23.000Z"}
+        |{"_typeName": "Model0", "id": "6","json": {"a":2}, "createdAt":"2017-11-29T14:35:13.000Z", "updatedAt":"2017-12-05T12:34:23.000Z"},
+        |{"_typeName": "Model0", "id": "7","json": [{"a": {"b": {"c": [1,2,3]}}},{"a": {"b": {"c": [1,2,3]}}}], "createdAt":"2017-11-29T14:35:13.000Z", "updatedAt":"2017-12-05T12:34:23.000Z"}
         |]}""".stripMargin.parseJson
 
     importer.executeImport(nodes).await(5).toString should be("[]")
@@ -68,7 +69,19 @@ class SingleValueImportExportSpec extends FlatSpec with Matchers with ApiBaseSpe
     res should include("""{"updatedAt":"2017-12-05T12:34:23.000Z","_typeName":"Model0","id":"5","enum":"HA","createdAt":"2017-11-29T14:35:13.000Z"}""")
     res should include("""{"updatedAt":"2017-12-05T12:34:23.000Z","_typeName":"Model0","json":{"a":2},"id":"6","createdAt":"2017-11-29T14:35:13.000Z"}""")
 
-    firstChunk.cursor.table should be(-1)
-    firstChunk.cursor.row should be(-1)
+    firstChunk.cursor.table should be(0)
+    firstChunk.cursor.row should be(7)
+
+    val request2    = ExportRequest("nodes", firstChunk.cursor)
+    val secondChunk = exporter.executeExport(dataResolver, request2.toJson).await(5).convertTo[ResultFormat]
+
+    val res2 = JsArray(secondChunk.out.jsonElements).toString
+
+    res2 should include(
+      """[{"updatedAt":"2017-12-05T12:34:23.000Z","_typeName":"Model0","json":[{"a":{"b":{"c":[1,2,3]}}},{"a":{"b":{"c":[1,2,3]}}}],"id":"7","createdAt":"2017-11-29T14:35:13.000Z"}]""")
+
+    secondChunk.cursor.table should be(-1)
+    secondChunk.cursor.row should be(-1)
+
   }
 }
