@@ -153,8 +153,10 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
     } yield {
       CreateRelation(
         name = nextRelation.name,
-        leftModelName = nextRelation.modelAId,
-        rightModelName = nextRelation.modelBId
+        modelAName = nextRelation.modelAId,
+        modelBName = nextRelation.modelBId,
+        modelAOnDelete = nextRelation.modelAOnDelete,
+        modelBOnDelete = nextRelation.modelBOnDelete
       )
     }
   }
@@ -179,7 +181,9 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
         name = previousRelation.name,
         newName = diff(previousRelation.name, nextRelation.name),
         modelAId = diff(previousRelation.modelAId, nextRelation.modelAId),
-        modelBId = diff(previousRelation.modelBId, nextRelation.modelBId)
+        modelBId = diff(previousRelation.modelBId, nextRelation.modelBId),
+        modelAOnDelete = diff_!(previousRelation.modelAOnDelete, nextRelation.modelAOnDelete),
+        modelBOnDelete = diff_!(previousRelation.modelBOnDelete, nextRelation.modelBOnDelete)
       )
     }
     updates.filter(isAnyOptionSet)

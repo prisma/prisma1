@@ -182,7 +182,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
       """.stripMargin
     val result = SchemaSyntaxValidator(schema).validate
     result should have(size(1))
-    result.head.description should include("not a valid value for onDelete.")
+    result.head.description should include("not a valid value for onDelete")
   }
 
   // TODO: adapt

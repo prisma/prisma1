@@ -53,8 +53,8 @@ package object ImportExport {
     lazy val current: RelationData = relations.find(_._2 == cursor.table).get._1
   }
 
-  case class RelationData(relationId: String, leftModel: String, leftField: Option[String], rightModel: String, rightField: Option[String]) {
-    require(leftField.isDefined || rightField.isDefined)
+  case class RelationData(relationId: String, modelBName: String, fieldBName: Option[String], modelAName: String, fieldAName: Option[String]) {
+    require(fieldBName.isDefined || fieldAName.isDefined)
   }
 
   def toRelationData(r: Relation, project: Project): RelationData = {

@@ -121,141 +121,165 @@ object SchemaDsl {
     }
 
     def oneToOneRelation(
-        fieldName: String,
-        otherFieldName: String,
-        other: ModelBuilder,
+        fieldAName: String,
+        fieldBName: String,
+        modelB: ModelBuilder,
         relationName: Option[String] = None,
-        includeOtherField: Boolean = true
+        includeFieldB: Boolean = true,
+        modelAOnDelete: OnDelete.Value = OnDelete.SetNull,
+        modelBOnDelete: OnDelete.Value = OnDelete.SetNull
     ): ModelBuilder = {
       val relation = Relation(
-        name = relationName.getOrElse(s"${this.name}To${other.name}"),
+        name = relationName.getOrElse(s"${this.name}To${modelB.name}"),
         modelAId = this.id,
-        modelBId = other.id
+        modelBId = modelB.id,
+        modelAOnDelete = modelAOnDelete,
+        modelBOnDelete = modelAOnDelete
       )
-      val newField = relationField(fieldName, this, other, relation, isList = false, isBackward = false)
+      val newField = relationField(fieldAName, this, modelB, relation, isList = false, isBackward = false)
       fields += newField
 
-      if (includeOtherField) {
-        val otherNewField = relationField(otherFieldName, other, this, relation, isList = false, isBackward = true)
-        other.fields += otherNewField
+      if (includeFieldB) {
+        val newBField = relationField(fieldBName, modelB, this, relation, isList = false, isBackward = true)
+        modelB.fields += newBField
       }
 
       this
     }
 
     def oneToOneRelation_!(
-        fieldName: String,
-        otherFieldName: String,
-        other: ModelBuilder,
+        fieldAName: String,
+        fieldBName: String,
+        modelB: ModelBuilder,
         relationName: Option[String] = None,
-        isRequiredOnOtherField: Boolean = true,
-        includeOtherField: Boolean = true
+        isRequiredOnFieldB: Boolean = true,
+        includeFieldB: Boolean = true,
+        modelAOnDelete: OnDelete.Value = OnDelete.SetNull,
+        modelBOnDelete: OnDelete.Value = OnDelete.SetNull
     ): ModelBuilder = {
       val relation = Relation(
-        name = relationName.getOrElse(s"${this.name}To${other.name}"),
+        name = relationName.getOrElse(s"${this.name}To${modelB.name}"),
         modelAId = this.id,
-        modelBId = other.id
+        modelBId = modelB.id,
+        modelAOnDelete = modelAOnDelete,
+        modelBOnDelete = modelAOnDelete
       )
 
-      val newField = relationField(fieldName, this, other, relation, isList = false, isBackward = false, isRequired = true)
+      val newField = relationField(fieldAName, this, modelB, relation, isList = false, isBackward = false, isRequired = true)
       fields += newField
 
-      if (includeOtherField) {
-        val otherNewField = relationField(otherFieldName, other, this, relation, isList = false, isBackward = true, isRequired = isRequiredOnOtherField)
-        other.fields += otherNewField
+      if (includeFieldB) {
+        val newBField = relationField(fieldBName, modelB, this, relation, isList = false, isBackward = true, isRequired = isRequiredOnFieldB)
+        modelB.fields += newBField
       }
 
       this
     }
 
     def oneToManyRelation_!(
-        fieldName: String,
-        otherFieldName: String,
-        other: ModelBuilder,
+        fieldAName: String,
+        fieldBName: String,
+        modelB: ModelBuilder,
         relationName: Option[String] = None,
-        includeOtherField: Boolean = true
+        includeFieldB: Boolean = true,
+        modelAOnDelete: OnDelete.Value = OnDelete.SetNull,
+        modelBOnDelete: OnDelete.Value = OnDelete.SetNull
     ): ModelBuilder = {
       val relation = Relation(
-        name = relationName.getOrElse(s"${this.name}To${other.name}"),
+        name = relationName.getOrElse(s"${this.name}To${modelB.name}"),
         modelAId = this.id,
-        modelBId = other.id
+        modelBId = modelB.id,
+        modelAOnDelete = modelAOnDelete,
+        modelBOnDelete = modelAOnDelete
       )
 
-      val newField = relationField(fieldName, this, other, relation, isList = true, isBackward = false, isRequired = false)
+      val newField = relationField(fieldAName, this, modelB, relation, isList = true, isBackward = false, isRequired = false)
       fields += newField
 
-      if (includeOtherField) {
-        val otherNewField = relationField(otherFieldName, other, this, relation, isList = false, isBackward = true, isRequired = true)
-        other.fields += otherNewField
+      if (includeFieldB) {
+        val newBField = relationField(fieldBName, modelB, this, relation, isList = false, isBackward = true, isRequired = true)
+        modelB.fields += newBField
       }
 
       this
     }
 
     def oneToManyRelation(
-        fieldName: String,
-        otherFieldName: String,
-        other: ModelBuilder,
+        fieldAName: String,
+        fieldBName: String,
+        modelB: ModelBuilder,
         relationName: Option[String] = None,
-        includeOtherField: Boolean = true
+        includeFieldB: Boolean = true,
+        modelAOnDelete: OnDelete.Value = OnDelete.SetNull,
+        modelBOnDelete: OnDelete.Value = OnDelete.SetNull
     ): ModelBuilder = {
       val relation = Relation(
-        name = relationName.getOrElse(s"${this.name}To${other.name}"),
+        name = relationName.getOrElse(s"${this.name}To${modelB.name}"),
         modelAId = this.id,
-        modelBId = other.id
+        modelBId = modelB.id,
+        modelAOnDelete = modelAOnDelete,
+        modelBOnDelete = modelAOnDelete
       )
-      val newField = relationField(fieldName, this, other, relation, isList = true, isBackward = false)
+      val newField = relationField(fieldAName, this, modelB, relation, isList = true, isBackward = false)
       fields += newField
 
-      if (includeOtherField) {
-        val otherNewField = relationField(otherFieldName, other, this, relation, isList = false, isBackward = true)
-        other.fields += otherNewField
+      if (includeFieldB) {
+        val newBField = relationField(fieldBName, modelB, this, relation, isList = false, isBackward = true)
+        modelB.fields += newBField
       }
 
       this
     }
 
     def manyToOneRelation(
-        fieldName: String,
-        otherFieldName: String,
-        other: ModelBuilder,
+        fieldAName: String,
+        fieldBName: String,
+        modelB: ModelBuilder,
         relationName: Option[String] = None,
-        includeOtherField: Boolean = true
+        includeFieldB: Boolean = true,
+        modelAOnDelete: OnDelete.Value = OnDelete.SetNull,
+        modelBOnDelete: OnDelete.Value = OnDelete.SetNull
     ): ModelBuilder = {
       val relation = Relation(
-        name = relationName.getOrElse(s"${this.name}To${other.name}"),
+        name = relationName.getOrElse(s"${this.name}To${modelB.name}"),
         modelAId = this.id,
-        modelBId = other.id
+        modelBId = modelB.id,
+        modelAOnDelete = modelAOnDelete,
+        modelBOnDelete = modelAOnDelete
       )
-      val newField = relationField(fieldName, this, other, relation, isList = false, isBackward = false)
+      val newField = relationField(fieldAName, this, modelB, relation, isList = false, isBackward = false)
       fields += newField
 
-      if (includeOtherField) {
-        val otherNewField = relationField(otherFieldName, other, this, relation, isList = true, isBackward = true)
-        other.fields += otherNewField
+      if (includeFieldB) {
+        val newBField = relationField(fieldBName, modelB, this, relation, isList = true, isBackward = true)
+        modelB.fields += newBField
       }
 
       this
     }
 
     def manyToManyRelation(
-        fieldName: String,
-        otherFieldName: String,
-        other: ModelBuilder,
+        fieldAName: String,
+        fieldBName: String,
+        modelB: ModelBuilder,
         relationName: Option[String] = None,
-        includeOtherField: Boolean = true
+        includeFieldB: Boolean = true,
+        modelAOnDelete: OnDelete.Value = OnDelete.SetNull,
+        modelBOnDelete: OnDelete.Value = OnDelete.SetNull
     ): ModelBuilder = {
       val relation = Relation(
-        name = relationName.getOrElse(s"${this.name}To${other.name}"),
+        name = relationName.getOrElse(s"${this.name}To${modelB.name}"),
         modelAId = this.id,
-        modelBId = other.id
+        modelBId = modelB.id,
+        modelAOnDelete = modelAOnDelete,
+        modelBOnDelete = modelAOnDelete
       )
-      val newField = relationField(fieldName, from = this, to = other, relation, isList = true, isBackward = false)
+      val newField = relationField(fieldAName, from = this, to = modelB, relation, isList = true, isBackward = false)
       fields += newField
 
-      if (includeOtherField) {
-        val otherNewField = relationField(otherFieldName, from = other, to = this, relation, isList = true, isBackward = true)
-        other.fields += otherNewField
+      if (includeFieldB) {
+        val newBField = relationField(fieldBName, from = modelB, to = this, relation, isList = true, isBackward = true)
+        modelB.fields += newBField
       }
 
       this

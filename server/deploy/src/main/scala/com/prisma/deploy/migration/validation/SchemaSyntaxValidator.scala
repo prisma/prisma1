@@ -26,11 +26,24 @@ case class FieldRequirement(name: String, typeName: String, required: Boolean, u
 }
 
 object SchemaSyntaxValidator {
+
+  def validOnDeleteEnum(x: sangria.ast.Value): Boolean = {
+    val enum = x.isInstanceOf[EnumValue]
+
+    val valid = x.renderPretty match {
+      case "CASCADE"   => true
+      case "NO_ACTION" => true
+      case "SET_NULL"  => true
+      case _           => false
+    }
+    enum && valid
+  }
+
   val directiveRequirements = Seq(
     DirectiveRequirement(
       "relation",
       requiredArguments = Seq(RequiredArg("name", mustBeAString = true)),
-      optionalArguments = Seq(Argument("onDelete", _.isInstanceOf[EnumValue]))
+      optionalArguments = Seq(Argument("onDelete", validOnDeleteEnum))
     ),
     DirectiveRequirement("rename", requiredArguments = Seq(RequiredArg("oldName", mustBeAString = true)), optionalArguments = Seq.empty),
     DirectiveRequirement("default", requiredArguments = Seq(RequiredArg("value", mustBeAString = false)), optionalArguments = Seq.empty),
@@ -203,6 +216,7 @@ case class SchemaSyntaxValidator(schema: String, directiveRequirements: Seq[Dire
                         Some(SchemaError(fieldAndType, s"not a valid value for ${argumentRequirement.name}"))
                       }
       } yield schemaError
+
       val requiredArgs = for {
         requirement <- directiveRequirements if requirement.directiveName == directive.name
         requiredArg <- requirement.requiredArguments

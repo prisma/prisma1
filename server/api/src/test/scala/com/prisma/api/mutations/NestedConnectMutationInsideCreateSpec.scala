@@ -58,7 +58,7 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
   "a P1! to C1 relation with the child already in a relation" should "should fail on existing old parent" in {
     val project = SchemaDsl() { schema =>
       val child = schema.model("Child").field_!("c", _.String, isUnique = true)
-      schema.model("Parent").field_!("p", _.String, isUnique = true).oneToOneRelation_!("childReq", "parentOpt", child, isRequiredOnOtherField = false)
+      schema.model("Parent").field_!("p", _.String, isUnique = true).oneToOneRelation_!("childReq", "parentOpt", child, isRequiredOnFieldB = false)
     }
     database.setup(project)
 
@@ -106,7 +106,7 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
   "a P1! to C1  relation with the child not in a relation" should "be connectable through a nested mutation by id" in {
     val project = SchemaDsl() { schema =>
       val child = schema.model("Child").field_!("c", _.String, isUnique = true)
-      schema.model("Parent").field_!("p", _.String, isUnique = true).oneToOneRelation_!("childReq", "parentOpt", child, isRequiredOnOtherField = false)
+      schema.model("Parent").field_!("p", _.String, isUnique = true).oneToOneRelation_!("childReq", "parentOpt", child, isRequiredOnFieldB = false)
     }
     database.setup(project)
 
@@ -284,7 +284,7 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
     val project = SchemaDsl() { schema =>
       val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)
       val child =
-        schema.model("Child").field_!("c", _.String, isUnique = true).oneToOneRelation_!("parentReq", "childOpt", parent, isRequiredOnOtherField = false)
+        schema.model("Child").field_!("c", _.String, isUnique = true).oneToOneRelation_!("parentReq", "childOpt", parent, isRequiredOnFieldB = false)
     }
     database.setup(project)
 
@@ -732,7 +732,7 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
   "a PM to CM  relation without a backrelation" should "be connectable through a nested mutation by unique" in {
     val project = SchemaDsl() { schema =>
       val role = schema.model("Role").field_!("r", _.String, isUnique = true)
-      val user = schema.model("User").field_!("u", _.String, isUnique = true).manyToManyRelation("roles", "notexposed", role, includeOtherField = false)
+      val user = schema.model("User").field_!("u", _.String, isUnique = true).manyToManyRelation("roles", "notexposed", role, includeFieldB = false)
     }
     database.setup(project)
 

@@ -41,7 +41,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
   "a P1! to C1 relation " should "work" in {
     val project = SchemaDsl() { schema =>
       val child = schema.model("Child").field_!("c", _.String, isUnique = true)
-      schema.model("Parent").field_!("p", _.String, isUnique = true).oneToOneRelation_!("childReq", "parentOpt", child, isRequiredOnOtherField = false)
+      schema.model("Parent").field_!("p", _.String, isUnique = true).oneToOneRelation_!("childReq", "parentOpt", child, isRequiredOnFieldB = false)
     }
     database.setup(project)
 
@@ -70,7 +70,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
   "a P1! to C1  relation " should "work" in {
     val project = SchemaDsl() { schema =>
       val child = schema.model("Child").field_!("c", _.String, isUnique = true)
-      schema.model("Parent").field_!("p", _.String, isUnique = true).oneToOneRelation_!("childReq", "parentOpt", child, isRequiredOnOtherField = false)
+      schema.model("Parent").field_!("p", _.String, isUnique = true).oneToOneRelation_!("childReq", "parentOpt", child, isRequiredOnFieldB = false)
     }
     database.setup(project)
 
@@ -158,7 +158,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
   "a P1 to C1!  relation " should "work" in {
     val project = SchemaDsl() { schema =>
       val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)
-      schema.model("Child").field_!("c", _.String, isUnique = true).oneToOneRelation_!("parentReq", "childOpt", parent, isRequiredOnOtherField = false)
+      schema.model("Child").field_!("c", _.String, isUnique = true).oneToOneRelation_!("parentReq", "childOpt", parent, isRequiredOnFieldB = false)
     }
     database.setup(project)
 
@@ -566,7 +566,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
         .model("Comment")
         .field_!("reqOnComment", _.String)
         .field("optOnComment", _.String)
-        .oneToOneRelation_!("todo", "comment", todo, isRequiredOnOtherField = false)
+        .oneToOneRelation_!("todo", "comment", todo, isRequiredOnFieldB = false)
     }
     database.setup(project)
 

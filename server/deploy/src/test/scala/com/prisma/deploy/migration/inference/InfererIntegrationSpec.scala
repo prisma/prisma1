@@ -224,13 +224,13 @@ class InfererIntegrationSpec extends FlatSpec with Matchers {
       ),
       CreateRelation(
         name = "TodoToComment1",
-        leftModelName = "Comment",
-        rightModelName = "Todo"
+        modelAName = "Comment",
+        modelBName = "Todo"
       ),
       CreateRelation(
         name = "TodoToComment2",
-        leftModelName = "Comment",
-        rightModelName = "Todo"
+        modelAName = "Comment",
+        modelBName = "Todo"
       )
     )
   }

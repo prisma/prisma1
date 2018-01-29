@@ -62,7 +62,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
   "a P1! to C1 relation" should "always fail when trying to delete the child" in {
     val project = SchemaDsl() { schema =>
       val child = schema.model("Child").field_!("c", _.String, isUnique = true)
-      schema.model("Parent").field_!("p", _.String, isUnique = true).oneToOneRelation_!("childReq", "parentOpt", child, isRequiredOnOtherField = false)
+      schema.model("Parent").field_!("p", _.String, isUnique = true).oneToOneRelation_!("childReq", "parentOpt", child, isRequiredOnFieldB = false)
     }
     database.setup(project)
 
@@ -273,7 +273,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
   "a P1 to C1!  relation " should "work" in {
     val project = SchemaDsl() { schema =>
       val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)
-      schema.model("Child").field_!("c", _.String, isUnique = true).oneToOneRelation_!("parentReq", "childOpt", parent, isRequiredOnOtherField = false)
+      schema.model("Child").field_!("c", _.String, isUnique = true).oneToOneRelation_!("parentReq", "childOpt", parent, isRequiredOnFieldB = false)
     }
     database.setup(project)
 
