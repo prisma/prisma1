@@ -1,7 +1,6 @@
 package com.prisma.shared.models
 
 import com.prisma.shared.models.MigrationStatus.MigrationStatus
-import com.prisma.shared.models.OnDelete.OnDelete
 import org.joda.time.DateTime
 
 case class MigrationId(projectId: String, revision: Int)
