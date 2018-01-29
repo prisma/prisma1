@@ -6,17 +6,21 @@ import scala.collection.immutable.Seq
 case class BugsnagErrorReporter(apiKey: String) extends ErrorReporter {
   private val client = new Bugsnag(apiKey)
 
-  val environment = sys.env.getOrElse("ENV", "No env set")
+  val env         = sys.env.getOrElse("ENV", "No env set")
+  val environment = sys.env.getOrElse("ENVIRONMENT", "No environment set")
   val service     = sys.env.getOrElse("SERVICE_NAME", "No service set")
   val version     = sys.env.getOrElse("CLUSTER_VERSION", "No version set")
+  val region      = sys.env.getOrElse("AWS_REGION", "No region set")
 
   override def report(t: Throwable, meta: ErrorMetadata*): Unit = {
     val report: Report = client.buildReport(t)
 
     // General metadata
-    report.addToTab("App", "Env", environment)
+    report.addToTab("App", "Env", env)
+    report.addToTab("App", "Environment", environment)
     report.addToTab("App", "Service", service)
     report.addToTab("App", "Version", version)
+    report.addToTab("App", "Region", region)
 
     // Specific metadata
     meta foreach {
