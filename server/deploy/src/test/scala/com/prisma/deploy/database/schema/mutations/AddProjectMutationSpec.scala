@@ -2,6 +2,7 @@ package com.prisma.deploy.database.schema.mutations
 
 import cool.graph.cuid.Cuid
 import com.prisma.deploy.specutils.DeploySpecBase
+import com.prisma.shared.models.ProjectId
 import org.scalatest.{FlatSpec, Matchers}
 
 class AddProjectMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
@@ -33,24 +34,23 @@ class AddProjectMutationSpec extends FlatSpec with Matchers with DeploySpecBase 
   }
 
   "AddProjectMutation" should "fail if a project already exists" in {
-//    val project      = setupProject(basicTypesGql)
-//    val nameAndStage = ProjectId.fromEncodedString(project.id)
-//c
-//    val result = server.querySimpleThatMustFail(
-//      s"""
-//       |mutation {
-//       | addProject(input: {
-//       |   name: "${nameAndStage.name}",
-//       |   stage: "${nameAndStage.stage}"
-//       | }) {
-//       |   project {
-//       |     name
-//       |     stage
-//       |   }
-//       | }
-//       |}
-//      """.stripMargin,
-//      3000
-//    )
+    val (project, _) = setupProject(basicTypesGql)
+    val nameAndStage = ProjectId.fromEncodedString(project.id)
+    val result = server.queryThatMustFail(
+      s"""
+       |mutation {
+       | addProject(input: {
+       |   name: "${nameAndStage.name}",
+       |   stage: "${nameAndStage.stage}"
+       | }) {
+       |   project {
+       |     name
+       |     stage
+       |   }
+       | }
+       |}
+      """.stripMargin,
+      4005
+    )
   }
 }

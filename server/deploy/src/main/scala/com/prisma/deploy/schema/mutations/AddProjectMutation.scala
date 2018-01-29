@@ -2,9 +2,10 @@ package com.prisma.deploy.schema.mutations
 
 import com.prisma.deploy.database.persistence.{MigrationPersistence, ProjectPersistence}
 import com.prisma.deploy.migration.mutactions.CreateClientDatabaseForProject
-import com.prisma.deploy.schema.{InvalidServiceName, InvalidServiceStage}
+import com.prisma.deploy.schema.{InvalidServiceName, InvalidServiceStage, ProjectAlreadyExists}
 import com.prisma.deploy.validation.NameConstraints
 import com.prisma.shared.models._
+import com.prisma.utils.await.AwaitUtils
 import slick.jdbc.MySQLProfile.backend.DatabaseDef
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -16,12 +17,13 @@ case class AddProjectMutation(
     clientDb: DatabaseDef
 )(
     implicit ec: ExecutionContext
-) extends Mutation[AddProjectMutationPayload] {
+) extends Mutation[AddProjectMutationPayload]
+    with AwaitUtils {
+  val projectId = ProjectId.toEncodedString(name = args.name, stage = args.stage)
 
   override def execute: Future[MutationResult[AddProjectMutationPayload]] = {
     validate()
 
-    val projectId = ProjectId.toEncodedString(name = args.name, stage = args.stage)
     val newProject = Project(
       id = projectId,
       ownerId = args.ownerId.getOrElse(""),
@@ -55,6 +57,10 @@ case class AddProjectMutation(
     }
     if (!NameConstraints.isValidServiceStage(args.stage)) {
       throw InvalidServiceStage(args.stage)
+    }
+    val projectForGivenId = projectPersistence.load(projectId).await()
+    if (projectForGivenId.isDefined) {
+      throw ProjectAlreadyExists(name = args.name, stage = args.stage)
     }
   }
 }
