@@ -1,20 +1,21 @@
 package com.prisma.api.database.mutactions.mutactions
 
 import java.sql.SQLException
+
 import com.prisma.api.database.DatabaseMutationBuilder
 import com.prisma.api.database.mutactions.{ClientSqlDataChangeMutaction, ClientSqlStatementResult}
 import com.prisma.api.mutations.NodeSelector
 import com.prisma.api.schema.APIErrors.RequiredRelationWouldBeViolated
 import com.prisma.gc_values._
-import com.prisma.shared.models.{Project, Relation}
+import com.prisma.shared.models.{Field, Project, Relation}
 import slick.dbio.DBIOAction
 
 import scala.concurrent.Future
 
 case class DeleteRelationMutaction(project: Project, where: NodeSelector) extends ClientSqlDataChangeMutaction {
 
-  val relationsWhereThisIsRequired    = where.model.relationFields.filter(field => field.relatedField(project.schema).get.isRequired).map(_.relation.get)
-  val relationsWhereThisIsNotRequired = where.model.relationFields.filter(field => !field.relatedField(project.schema).get.isRequired).map(_.relation.get)
+  val relationsWhereThisIsRequired    = where.model.relationFields.filter(otherSideIsRequired).map(_.relation.get)
+  val relationsWhereThisIsNotRequired = where.model.relationFields.filter(otherSideIsNotRequired).map(_.relation.get)
 
   val requiredCheck =
     relationsWhereThisIsRequired.map(relation => DatabaseMutationBuilder.oldParentFailureTriggerForRequiredRelations(project, relation, where))
@@ -59,5 +60,13 @@ case class DeleteRelationMutaction(project: Project, where: NodeSelector) extend
     case RootGCValue(_)        => sys.error("Not an acceptable Where")
     case NullGCValue           => sys.error("Not an acceptable Where")
   }
+
+  def otherSideIsRequired(field: Field): Boolean = field.relatedField(project.schema) match {
+    case Some(f) if f.isRequired => true
+    case Some(f)                 => false
+    case None                    => false
+  }
+
+  def otherSideIsNotRequired(field: Field): Boolean = !otherSideIsRequired(field)
 
 }
