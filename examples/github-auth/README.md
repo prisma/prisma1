@@ -1,108 +1,149 @@
-# GraphQL Server - Github Auth
+# Login with GitHub
 
-This example illustrates the implemention of Github Authentication with GraphQL Server, using `graphql-yoga` and `prisma-biniding`.
+This example demonstrates how to implement a GraphQL server that uses **GitHub authentication** and is based on Prisma & [graphql-yoga](https://github.com/graphcool/graphql-yoga).
 
-## Getting started
+## Get started
 
-### Initializing the Prisma Database service
+> **Note**: `prisma` is listed as a _development dependency_ and _script_ in this project's [`package.json`](./package.json). This means you can invoke the Prisma CLI without having it globally installed on your machine (by prefixing it with `yarn`), e.g. `yarn prisma deploy` or `yarn prisma playground`. If you have the Prisma CLI installed globally (which you can do with `npm install -g prisma`), you can omit the `yarn` prefix.
 
-```sh
-prisma deploy # copy simple API endpoint into the `PRISMA_ENPOINT` env var in .env
-```
+### 1. Download the example & install dependencies
 
-### Setting up the Github OAuth2
-
-You need to configure these credentials from a new Github OAuth2 app as environment variables:
-
-* `GITHUB_CLIENT_ID`
-* `GITHUB_CLIENT_SECRET`
-
-1. Go to [github.com](github.com) and navigate to your profile. Click on your profile icon in the upper right corner and enter `Settings`.
-2. In the lower left side find _Developer Settings_ and navigate to _OAuth Apps_.
-3. Click `New OAuth App` and give your app a nice name. For the purposes of the example, it is best to set the _Homepage URL_ to `http://localhost:8000` and _Authorization callback URL_ to `http://localhost:8000/login`. (Application description is optional).
-4. Register the application.
-5. Copy _Client ID_ and _Client Secret_ to the __.env__ file.
-
-#### Testing with WEB
-
-* Replace `__CLIENT_ID__` in `login.html`
-* Serve `login.html`, for example by using `python -m SimpleHTTPServer`
-* Open `https://localhost:8000/login.html` in a browser, open the DevTools and authenticate with your Github account
-* Copy the code printed in the Console of your DevTools
-
-#### Testing with "simple hack"
-
-In order to obtain `Github code` you can also use this little hack.
-
-1. Navigate to `https://github.com/login/oauth/authorize?client_id={GITHUB_CLIENT_ID}&scope=user` and replace `{GITHUB_CLIENT_ID}` with your Github client ID.
-2. Authorise access to the account and you will be redirected to `localhost:8000/login.html?code={GITHUB_CODE}`.
-3. Copy the `{GITHUB_CODE}` part of `localhost:8000/login.html?code={GITHUB_CODE}` url to your GraphQL playground where you can test authentication.
-
-#### Queries and Mutations
-1. To authenticate the user use `Mutation authenticate`:
-```gql
-mutation LoginOrSignup {
-    authenticate(githubCode: "mygithubcode") {
-        token
-        user {
-            name
-            notes
-        }
-    }
-}
-```
-Every time `authenticate` is called user info is loaded from Github server using provided code. If code is valid, user id is compared against existing users. If no user with such id exists, new one is created, otherwise the existsing one is returned.
-
-2. To get info about currently authenticated user use `Query me`:
-```gql
-query Me {
-    me {
-        name
-        bio
-        public_repos
-        notes {
-            id
-            text
-        }
-    }
-}
-```
-Server will use the token, provided under `Authorization: Bearer <token>` http header, to identify userId and will search the database for an existsing user.
-
-3. To create a Note use `Mutation createNote`, this will create a note connected with your profile.
-```gql
-mutation NewNote {
-    createNote(text: "Super cool text.") {
-        id
-        text
-    }
-}
-
-query MyProfile {
-    me {
-        id
-        notes { # <- Note will appear here
-            id
-            text
-        }
-    }
-}
-```
-
-4. To read, delete or update Note you will have to be authenticated, otherwise __*NotAuthorized*__ Error will be returned.
-```gql
-query MyNote($id: ID!) {
-    note(id: $id) { text }
-}
-```
-
-### Starting the Server
+Clone the Prisma monorepo and navigate to this directory or download _only_ this example with the following command:
 
 ```sh
+curl https://codeload.github.com/graphcool/prisma/tar.gz/master | tar -xz --strip=2 prisma-master/examples/github-auth
+```
+
+Next, navigate into the downloaded folder and install the NPM dependencies:
+
+```sh
+cd github-auth
 yarn install
-yarn start
-# Open http://localhost:5000/
 ```
 
-## License
-MIT
+### 2. Set up the GitHub OAuth application
+
+Since the authentication mechanism is based on GitHub, you first need to create an OAuth application in your GitHub account.
+
+1. Click your profile in the top-right corner of GitHub.com and select **Settings** from the dropdown.
+1. In the left side-menu, select **Developer settings**.
+1. On the new page, click the **New OAuth App** button.
+1. Enter application data:
+    1. **Application name**: _choose anything you like, e.g._ `auth-example`
+    1. **Homepage URL**: `http://localhost:8000`
+    1. **Authorization callback URL**: `http://localhost:8000/login.html`
+1. Click **Register application**.
+1. Don't close the page, you will need the displayed **Client ID** and **Client Secret** in the next step.
+
+Next, you need to copy the values for the **Client ID** and **Client Secret** into your GraphQL server project. They're _used_ in [`github.ts`](./src/github.ts), but referenced as environment variables which are defined in [`.env`](./.env).
+
+For each environment variable in `.env` that's prefixed with `GITHUB`, set the corresponding value by replacing the placeholder.
+
+1. Replace `__GITHUB_CLIENT_ID__` with the **Client ID**, e.g. `GITHUB_CLIENT_ID="0c3d893e724b336a1131"`
+1. Replace `__GITHUB_CLIENT_SECRET__` with the **Client Secret**, e.g. `GITHUB_CLIENT_SECRET="c0f4ecf2740fb3fc2dc70f9d9e33690a9d56d2gg"`
+
+Finally, you also need to replace the `__GITHUB_CLIENT_ID__` placeholder in [`login.html`](./login.html#L6) with the value for **Client ID**.
+
+### 3. Deploy the Prisma database service
+
+You can now [deploy](https://www.prismagraphql.com/docs/reference/cli-command-reference/database-service/prisma-deploy-kee1iedaov) the Prisma service (note that this requires you to have [Docker](https://www.docker.com) installed on your machine - if that's not the case, follow the collapsed instructions below the code block):
+
+```sh
+yarn prisma deploy
+```
+
+<details>
+ <summary><strong>I don't have <a href="https://www.docker.com">Docker</a> installed on my machine</strong></summary>
+
+To deploy your service to a public cluster (rather than locally with Docker), you need to perform the following steps:
+
+1. Remove the `cluster` property from `prisma.yml`.
+1. Run `yarn prisma deploy`.
+1. When prompted by the CLI, select a public cluster (e.g. `prisma-eu1` or `prisma-us1`).
+1. Set the value of the `PRISMA_ENDPOINT` environment variable in [`.env`](./.env#L2) to the HTTP endpoint that was printed after the previous command.
+
+</details>
+
+## Testing the API
+
+### 1. Serve `login.html` locally
+
+In the root directory of the project, start a local web server, e.g. using Python and the following command:
+
+```sh
+python -m SimpleHTTPServer
+```
+
+A server is now running on `http://localhost:8000`.
+
+### 2. Open `login.html` in your browser
+
+In your browser, navigate to [`http://localhost:8000/login.html`](http://localhost:8000/login.html).
+
+![](https://imgur.com/V9ppfuW.png)
+
+> **Note**: Make sure the browser is not using `https`.
+
+Then click the **Authenticate with GitHub** button.
+
+### 3. Authorize application
+
+On the next page, select the green **Authorize <your-username>** button.
+
+![](https://imgur.com/2wFZO2D.png)
+
+### 4. Copy the GitHub code
+
+You now need to copy the `code` from the URL you see in the address bar (it's also printed to the developer console in your browser):
+
+![](https://imgur.com/boYso3p.png)
+
+This code can be used to authenticate the Github user in your GraphQL API.
+
+### 5. Start the GraphQL server
+
+Next you need to start the GraphQL server:
+
+```sh
+yarn start
+```
+
+The server is now running on [http://localhost:4000](http://localhost:4000) which you can open in your browser.
+
+### 6. Send the `authenticate` mutation
+
+Next you can send the `authenticate` mutation to the API. Notice that you need to replace the `__GITHUB_CODE__` placeholder with the GitHub code from step 4.
+
+```graphql
+mutation {
+  authenticate(githubCode: "__GITHUB_CODE__") {
+    token
+    user {
+      name
+      bio
+      public_repos
+      public_gists
+    }
+  }
+}
+```
+
+> In the response for that mutation, `name`, `bio`, `public_repos` and `public_gists` are directly retrieved from the GitHub API.
+
+The `token` can be used to authenticate subsequent requests by setting it as the `Authorization` header in the bottom-left corner. See the [`auth`](../auth) and [`permissions`](../permissions) examples to learn more.
+
+## Troubleshooting
+
+<details>
+ <summary>I'm getting the error message <code>[Network error]: FetchError: request to http://localhost:4466/github-auth-example/dev failed, reason: connect ECONNREFUSED</code> when trying to send a query or mutation</summary>
+
+This is because the endpoint for the Prisma service is hardcoded in [`index.js`](index.js#L23). The service is assumed to be running on the default port for a local cluster: `http://localhost:4466`. Apparently, your local cluster is using a different port.
+
+You now have two options:
+
+1. Figure out the port of your local cluster and adjust it in `index.js`. You can look it up in `~/.prisma/config.yml`.
+1. Deploy the service to a public cluster. Expand the `I don't have Docker installed on my machine`-section in step 2 for instructions.
+
+Either way, you need to adjust the `endpoint` that's passed to the `Prisma` constructor in `index.js` so it reflects the actual cluster domain and service endpoint.
+
+</details>

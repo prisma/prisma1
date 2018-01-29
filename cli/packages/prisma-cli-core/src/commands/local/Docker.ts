@@ -5,7 +5,7 @@ import * as path from 'path'
 import * as fs from 'fs-extra'
 import chalk from 'chalk'
 import { mapValues } from 'lodash'
-import { getProcessForPort } from './getProcessForPort'
+import { getProcessForPort, printProcess } from './getProcessForPort'
 import { getBinPath } from '../deploy/getbin'
 import * as semver from 'semver'
 import { ContainerInfo } from './types'
@@ -16,7 +16,7 @@ const debug = require('debug')('Docker')
 import * as portfinder from 'portfinder'
 import { prettyTime } from '../../util'
 import { createRsaKeyPair } from '../../utils/crypto'
-import { defaultPort } from './constants'
+import { defaultPort, defaultDBPort } from './constants'
 
 export default class Docker {
   out: Output
@@ -33,6 +33,8 @@ export default class Docker {
   envVars: { [varName: string]: string }
   clusterName: string
   privateKey?: string
+  stdout?: string
+  psResult?: string
   constructor(
     out: Output,
     config: Config,
@@ -86,8 +88,19 @@ export default class Docker {
       }
       endpoint = `http://${this.hostName}:${port}`
     }
-    await this.setEnvVars(port, endpoint)
+    await this.setEnvVars(port, endpoint, String(defaultDBPort))
+    await this.ps()
+    this.psResult = this.stdout
+
+    // check if the db port (3307) is free
+    const nextDBPort = await portfinder.getPortPromise({ port: defaultDBPort })
+    if (nextDBPort > defaultDBPort) {
+      if (!this.psResult!.includes(`:${defaultDBPort}->`)) {
+        await this.askIfDBPortShouldBeUnblocked(String(defaultDBPort))
+      }
+    }
   }
+
   async setKeyPair() {
     const pair = await createRsaKeyPair()
     if (!this.envVars) {
@@ -97,6 +110,7 @@ export default class Docker {
     this.privateKey = pair.private
     debug(pair)
   }
+
   saveCluster(): Cluster {
     const cluster = new Cluster(
       this.clusterName,
@@ -107,6 +121,71 @@ export default class Docker {
     this.env.addCluster(cluster)
     this.env.saveGlobalRC()
     return cluster
+  }
+
+  /**
+   * returns true, if higher port should be used
+   * @param port original port
+   * @param higherPort alternative port
+   */
+  async askIfDBPortShouldBeUnblocked(port: string): Promise<void> {
+    const processForPort = getProcessForPort(port)
+    if (
+      processForPort &&
+      processForPort.command &&
+      processForPort.command.includes('docker')
+    ) {
+      this.out.action.pause()
+      const question = {
+        name: 'confirmation',
+        type: 'list',
+        message: `Port ${port}, that is needed for the DB to be locally accessible, is already in use by ${printProcess(
+          processForPort,
+        )}. What do you want to do?`,
+        choices: [
+          {
+            value: 'stop',
+            name: `Stop container running on ${port}`,
+          },
+          {
+            value: 'cancel',
+            name: 'Do not continue',
+          },
+        ],
+        pageSize: 8,
+      }
+      const { confirmation }: { confirmation: string } = await this.out.prompt(
+        question,
+      )
+      if (confirmation === 'stop') {
+        await this.stopContainersBlockingPort(port, true, true)
+        this.out.action.resume()
+        return
+      }
+      if (confirmation === 'next') {
+        this.out.action.resume()
+        return
+      }
+      if (confirmation === 'cancel') {
+        this.out.exit(0)
+      }
+    } else {
+      const processName =
+        processForPort && processForPort.command
+          ? ` (${printProcess(processForPort)})`
+          : ''
+      const instruction =
+        processForPort && processForPort.processId
+          ? `You can kill the process by running ${chalk.bold.green(
+              `kill ${processForPort!.processId}`,
+            )}`
+          : `You can find the process id by running ${chalk.bold.green(
+              `lsof -i:${port} -P -t -sTCP:LISTEN`,
+            )}`
+
+      throw new Error(`Port ${port}, which is used for binding the database, is already in use by a process${processName} that could not be stopped by docker-compose.
+Please close the process by hand. ${instruction}`)
+    }
   }
   /**
    * returns true, if higher port should be used
@@ -123,7 +202,7 @@ export default class Docker {
         choices: [
           {
             value: 'stop',
-            name: `Stop container running on ${defaultPort}`,
+            name: `Stop container running on ${port}`,
           },
           {
             value: 'next',
@@ -162,7 +241,10 @@ export default class Docker {
   }
 
   async ps(): Promise<Docker> {
-    await this.init()
+    if (this.psResult) {
+      this.stdout = this.psResult
+      return this
+    }
     return this.run('ps')
   }
 
@@ -186,9 +268,17 @@ export default class Docker {
     return this.run('pull')
   }
 
+  async kill(): Promise<Docker> {
+    return this.run('kill')
+  }
+
+  async down(): Promise<Docker> {
+    return this.run('down', '--remove-orphans', '-v', '--rmi', 'local')
+  }
+
   async logs(): Promise<Docker> {
     await this.init()
-    return this.run('logs', '-f')
+    return this.run('logs')
   }
 
   async nuke(): Promise<Docker> {
@@ -198,10 +288,11 @@ export default class Docker {
       const endpoint = this.cluster.getDeployEndpoint()
       const sliced = endpoint.slice(endpoint.lastIndexOf(':') + 1)
       port = sliced.slice(0, sliced.indexOf('/'))
-      this.setEnvVars(port, endpoint)
+      await this.setEnvVars(port, endpoint, String(defaultDBPort))
       const before = Date.now()
       this.out.action.start('Nuking local cluster')
-      await this.run('down', '--remove-orphans', '-v', '--rmi', 'local')
+      await this.kill()
+      await this.down()
       this.out.action.stop(prettyTime(Date.now() - before))
     }
 
@@ -215,6 +306,7 @@ export default class Docker {
     await this.setEnvVars(
       String(defaultPort),
       `http://${this.hostName}:${defaultPort}`,
+      String(defaultDBPort),
     )
     await this.run('up', '-d', '--remove-orphans')
     this.out.action.stop(prettyTime(Date.now() - before))
@@ -278,19 +370,24 @@ export default class Docker {
     })
   }
 
-  async setEnvVars(port: string, endpoint: string) {
+  async setEnvVars(port: string, endpoint: string, dbPort: string) {
     const defaultVars = this.getDockerEnvVars()
     const customVars = {
       PORT: port,
       SCHEMA_MANAGER_ENDPOINT: `http://prisma-database:${port}/cluster/schema`,
       CLUSTER_ADDRESS: `http://${this.hostName}:${port}`,
+      DB_PORT: dbPort,
     }
     this.envVars = { ...process.env, ...defaultVars, ...customVars }
     await this.setKeyPair()
     debug(this.envVars)
   }
 
-  async stopContainersBlockingPort(port: string, nuke: boolean = false) {
+  async stopContainersBlockingPort(
+    port: string,
+    nuke: boolean = false,
+    kill: boolean = false,
+  ) {
     const output = childProcess.execSync('docker ps').toString()
     const containers = this.parsePs(output)
     const regex = /\d+\.\d+\.\d+\.\d+:(\d+)->/
@@ -302,66 +399,56 @@ export default class Docker {
     if (blockingContainer) {
       const nameStart = blockingContainer.NAMES.split('_')[0]
 
-      this.out.action.start(`Stopping docker containers`)
       let error
-      try {
-        if (nameStart.startsWith('localdatabase')) {
-          this.setEnvVars(port, `http://${this.hostName}:${port}`)
-          await this.nukeContainers(nameStart, true)
-        } else if (nameStart.startsWith('local')) {
-          console.log('nuking framework')
-          const defaultVars = this.getDockerEnvVars(false)
-          const FUNCTIONS_PORT = '60050'
-          const customVars = {
-            PORT: String(port),
-            FUNCTIONS_PORT,
-            FUNCTION_ENDPOINT_INTERNAL: `http://localfaas:${FUNCTIONS_PORT}`,
-            FUNCTION_ENDPOINT_EXTERNAL: `http://${
-              this.hostName
-            }:${FUNCTIONS_PORT}`,
-            CLUSTER_ADDRESS: `http://${this.hostName}:${port}`,
+      if (!kill) {
+        try {
+          if (nameStart.startsWith('localdatabase')) {
+            this.setEnvVars(
+              port,
+              `http://${this.hostName}:${port}`,
+              String(defaultDBPort),
+            )
+            await this.nukeContainers(nameStart, true)
+          } else if (nameStart.startsWith('local')) {
+            const defaultVars = this.getDockerEnvVars(false)
+            const FUNCTIONS_PORT = '60050'
+            const customVars = {
+              PORT: String(port),
+              FUNCTIONS_PORT,
+              FUNCTION_ENDPOINT_INTERNAL: `http://localfaas:${FUNCTIONS_PORT}`,
+              FUNCTION_ENDPOINT_EXTERNAL: `http://${
+                this.hostName
+              }:${FUNCTIONS_PORT}`,
+              CLUSTER_ADDRESS: `http://${this.hostName}:${port}`,
+            }
+            this.envVars = { ...process.env, ...defaultVars, ...customVars }
+            await this.nukeContainers(nameStart, false)
           }
-          this.envVars = { ...process.env, ...defaultVars, ...customVars }
-          await this.nukeContainers(nameStart, false)
+        } catch (e) {
+          error = e
         }
-      } catch (e) {
-        error = e
       }
 
-      console.error(error)
-      if (error) {
+      if (error || kill) {
         const relatedContainers = containers.filter(
           c => c.NAMES.split('_')[0] === nameStart,
         )
         const containerNames = relatedContainers.map(c => c.NAMES)
         await spawn('docker', [nuke ? 'kill' : 'stop'].concat(containerNames))
       }
-      this.out.action.stop()
       this.out.log('')
     } else {
       throw new Error(
-        `Could not find container blocking port ${port}. Please either stop it by hand or choose another port.`,
+        `Could not find container blocking port ${port}. Please stop it by hand using ${chalk.bold.green(
+          'docker kill',
+        )}`,
       )
     }
   }
 
   async nukeContainers(name: string, isDB: boolean = false) {
-    const argv = ['down', '--remove-orphans', '-v', '--rmi', 'local']
-    const bin = await this.getBin()
-    const defaultArgs = [
-      '-p',
-      JSON.stringify(name),
-      '--file',
-      isDB ? this.ymlPath : this.frameworkYmlPath,
-      '--project-directory',
-      this.config.cwd,
-    ]
-    const args = defaultArgs.concat(argv)
-    // this.out.log(chalk.dim(`$ docker-compose ${argv.join(' ')}\n`))
-    const result = await spawn(bin, args, {
-      env: this.envVars,
-      cwd: this.config.cwd,
-    })
+    await this.kill()
+    await this.down()
   }
 
   private parsePs(output): ContainerInfo[] {
@@ -418,11 +505,13 @@ export default class Docker {
     ]
     const args = defaultArgs.concat(argv)
     // this.out.log(chalk.dim(`$ docker-compose ${argv.join(' ')}\n`))
+    debug({ bin, args })
     const output = await spawn(bin, args, {
       env: this.envVars,
       cwd: this.config.cwd,
     })
     debug(output)
+    this.stdout = output
     return this
   }
 
@@ -434,7 +523,14 @@ export default class Docker {
       )
     }
 
-    const output = childProcess.execSync('docker-compose -v').toString()
+    let output
+    try {
+      output = childProcess.execSync('docker-compose -v').toString()
+    } catch (e) {
+      throw new Error(
+        `Please install docker-compose 1.13.0 or greater in order to run "prisma local".\nLearn more here: https://docs.docker.com/compose/install/`,
+      )
+    }
     const regex = /.*?(\d{1,2}\.\d{1,2}\.\d{1,2}),?/
     const match = output.match(regex)
     if (match && match[1]) {

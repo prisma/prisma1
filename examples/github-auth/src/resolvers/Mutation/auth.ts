@@ -13,7 +13,7 @@ async function createPrismaUser(ctx, githubUser: GithubUser): Promise<User> {
     data: {
       githubUserId: githubUser.id,
       name: githubUser.name,
-      bio: githubUser.bio,
+      bio: githubUser.bio || 'User has no bio',
       public_repos: githubUser.public_repos,
       public_gists: githubUser.public_gists,
       notes: [],
@@ -34,12 +34,10 @@ export const auth = {
     if (!user) {
       user = await createPrismaUser(ctx, githubUser)
     }
-
+    console.log(`app secret`, process.env.APP_SECRET)
     return {
-      token: jwt.sign({ userId: user.id }, process.env.JWT_SECRET),
+      token: jwt.sign({ userId: user.id }, process.env.APP_SECRET),
       user,
     }
   },
 }
-
-// ---------------------------------------------------------------------------

@@ -280,7 +280,6 @@ seed:
   run: node script.js
 ```
 
-
 ## `custom` (optional)
 
 The `custom` property lets you specify any sorts of values you want to resuse elsewhere in your `prisma.yml`. It thus doesn't have a predefined structure. You can reference the values using variables with the `self` variable source, e.g.: `${self.custom.myVariable}`.

@@ -117,8 +117,6 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
     result.toString should equal("""{"data":{"model":{"ints":[2,1],"strings":["short","looooooooooong"]}}}""")
   }
 
-  //----------------------------TYPES-----------------------------
-
   "full scalar list" should "return full list for strings" in {
 
     val fieldName   = "strings"
@@ -222,6 +220,144 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
     }
 
     verifySuccessfulSetAndRetrieval(fieldName, inputValue, outputValue, project)
+  }
+
+  "Deeply nested scalar lists" should "work in creates " in {
+
+    val project = SchemaDsl() { schema =>
+      val list = schema.model("List").field("listInts", _.Int, isList = true)
+      val todo = schema.model("Todo").field("todoInts", _.Int, isList = true).oneToOneRelation("list", "todo", list)
+      val tag  = schema.model("Tag").field("tagInts", _.Int, isList = true).oneToOneRelation("todo", "tag", todo)
+    }
+
+    database.setup(project)
+
+    server.executeQuerySimple(
+      s"""mutation{createList(data: {listInts: {set: [1, 2]}, todo: {create: {todoInts: {set: [3, 4]}, tag: {create: {tagInts: {set: [5, 6]}}}}}}) {id}}""".stripMargin,
+      project
+    )
+
+    val result = server.executeQuerySimple(s"""query{lists {listInts, todo {todoInts, tag {tagInts}}}}""".stripMargin, project)
+
+    result.toString should equal("""{"data":{"lists":[{"listInts":[1,2],"todo":{"todoInts":[3,4],"tag":{"tagInts":[5,6]}}}]}}""")
+  }
+
+  "Deeply nested scalar lists" should "work in updates " in {
+
+    val project = SchemaDsl() { schema =>
+      val list = schema.model("List").field("listInts", _.Int, isList = true).field("uList", _.String, isUnique = true)
+      val todo = schema.model("Todo").field("todoInts", _.Int, isList = true).field("uTodo", _.String, isUnique = true).oneToOneRelation("list", "todo", list)
+      val tag  = schema.model("Tag").field("tagInts", _.Int, isList = true).field("uTag", _.String, isUnique = true).oneToOneRelation("todo", "tag", todo)
+    }
+
+    database.setup(project)
+
+    server
+      .executeQuerySimple(
+        s"""mutation{createList(data: {uList: "A", listInts: {set: [1, 2]}, todo: {create: {uTodo: "B", todoInts: {set: [3, 4]}, tag: {create: {uTag: "C",tagInts: {set: [5, 6]}}}}}}) {id}}""".stripMargin,
+        project
+      )
+      .pathAsString("data.createList.id")
+
+    server.executeQuerySimple(
+      s"""mutation{updateList(where: {uList: "A"} data: {listInts: {set: [7, 8]}, todo: {update: {where: {uTodo: "B"} data: {todoInts: {set: [9, 10]}, tag: {update: { where: {uTag: "C"} data: {tagInts: {set: [11, 12]}}}}}}}}) {id}}""".stripMargin,
+      project
+    )
+    val result = server.executeQuerySimple(s"""query{lists {listInts, todo {todoInts, tag {tagInts}}}}""".stripMargin, project)
+
+    result.toString should equal("""{"data":{"lists":[{"listInts":[7,8],"todo":{"todoInts":[9,10],"tag":{"tagInts":[11,12]}}}]}}""")
+  }
+
+  "Nested scalar lists" should "work in upserts and only execute one branch of the upsert" ignore {
+
+    val project = SchemaDsl() { schema =>
+      val list = schema.model("List").field("listInts", _.Int, isList = true).field("uList", _.String, isUnique = true)
+      val todo = schema.model("Todo").field("todoInts", _.Int, isList = true).field("uTodo", _.String, isUnique = true).oneToOneRelation("list", "todo", list)
+    }
+
+    database.setup(project)
+
+    server
+      .executeQuerySimple(
+        s"""mutation{createList(data: {uList: "A", listInts: {set: [1, 2]}, todo: {create: {uTodo: "B", todoInts: {set: [3, 4]}}}}) {id}}""".stripMargin,
+        project
+      )
+      .pathAsString("data.createList.id")
+
+    server
+      .executeQuerySimple(
+        s"""mutation upsertListValues {upsertList(
+        |                             where:{uList: "A"}
+	      |                             create:{uList:"Should Not Matter" listInts:{set: [75, 85]}}
+	      |                             update:{listInts:{set: [70, 80]} }
+        |){id}}""".stripMargin,
+        project
+      )
+      .pathAsString("data.upsertList.id")
+
+    val result = server.executeQuerySimple(s"""query{lists {uList, listInts}}""".stripMargin, project)
+
+    result.toString should equal("""{"data":{"lists":[{uList: "A", "listInts":[70,80]}]}}""")
+  }
+
+  "Overwriting a full scalar list with an empty list" should "return an empty list" in {
+
+    val project = SchemaDsl() { schema =>
+      schema.model("Model").field("ints", _.Int, isList = true).field("strings", _.String, isList = true)
+    }
+
+    database.setup(project)
+
+    val id = server
+      .executeQuerySimple(
+        s"""mutation {
+           |  createModel(data: {ints: { set: [1] }, strings: { set: ["short", "looooooooooong"]}}) {
+           |    id
+           |    strings
+           |    ints
+           |  }
+           |}""".stripMargin,
+        project
+      )
+      .pathAsString("data.createModel.id")
+
+    val result = server.executeQuerySimple(
+      s"""{
+         |  model(where: {id:"$id"}) {
+         |    ints
+         |    strings
+         |  }
+         |}""".stripMargin,
+      project
+    )
+
+    result.toString should equal("""{"data":{"model":{"ints":[1],"strings":["short","looooooooooong"]}}}""")
+
+    server
+      .executeQuerySimple(
+        s"""mutation {
+           |  updateModel(
+           |  where: {id: "$id"}
+           |  data: {ints: { set: [] }, strings: { set: []}}) {
+           |    id
+           |    strings
+           |    ints
+           |  }
+           |}""".stripMargin,
+        project
+      )
+    val result2 = server.executeQuerySimple(
+      s"""{
+         |  model(where: {id:"$id"}) {
+         |    ints
+         |    strings
+         |  }
+         |}""".stripMargin,
+      project
+    )
+
+    result2.toString should equal("""{"data":{"model":{"ints":[],"strings":[]}}}""")
+
   }
 
   private def verifySuccessfulSetAndRetrieval(fieldName: String, inputValue: Any, outputValue: Any, project: Project) = {

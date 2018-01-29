@@ -4,7 +4,7 @@ import java.util.concurrent.TimeUnit
 
 import com.prisma.api.database.DataItem
 import com.prisma.api.mutations.GraphcoolDataTypes
-import com.prisma.api.subscriptions.SubscriptionExecutor
+import com.prisma.subscriptions.SubscriptionExecutor
 import com.prisma.shared.models.ModelMutationType.ModelMutationType
 import com.prisma.shared.models.{Model, ModelMutationType, Project}
 import com.prisma.subscriptions.SubscriptionDependencies

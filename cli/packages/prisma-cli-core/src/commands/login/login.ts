@@ -14,6 +14,6 @@ export default class Login extends Command {
   async run() {
     const { key } = this.flags
 
-    await this.client.login()
+    await this.client.login(key)
   }
 }

@@ -14,7 +14,7 @@ async function createPost(parent, { title }, ctx, info) {
   }, info)
 }
 
-async function updatePost(parent, { id, title }, ctx, info) {
+async function updateTitle(parent, { id, newTitle }, ctx, info) {
   const userId = getUserId(ctx)
   const requestingUserIsAuthor = await ctx.db.exists.Post({
     id,
@@ -30,7 +30,7 @@ async function updatePost(parent, { id, title }, ctx, info) {
   if (requestingUserIsAdmin || requestingUserIsAuthor) {
     return await ctx.db.mutation.updatePost({
       where: { id },
-      data: { title },
+      data: { title: newTitle },
     }, info)
   }
   throw new Error(
@@ -71,7 +71,7 @@ async function posts(parent, args, ctx, info) {
 
 module.exports = {
   createPost,
-  updatePost,
+  updateTitle,
   deletePost,
   posts,
 }

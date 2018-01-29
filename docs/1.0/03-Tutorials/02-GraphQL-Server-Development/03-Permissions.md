@@ -11,7 +11,7 @@ For the purpose of this tutorial, you'll use the [`node-advanced`](https://githu
 
 ## Bootstrapping the GraphQL server
 
-Before you can bootstrap the GraphQL server with `graphql create`, you need to install the [GraphQL CLI](https://github.com/graphql-cli/graphql-cli/)
+Before you can bootstrap the GraphQL server with `graphql create`, you need to install the [GraphQL CLI](https://github.com/graphql-cli/graphql-cli/).
 
 <Instruction>
 
@@ -23,10 +23,10 @@ npm install -g graphql-cli
 
 </Instruction>
 
- > **Note**: For the purpose of this tutorial you don't explicitly have to install the Prisma CLI because `prisma-cli` is listed as a _development dependency_ in the `node-advanced` boilerplate, which allows to run its commands by prefixing it with `yarn`, e.g. `yarn prisma deploy` or `yarn prisma playground`.
- > If you have `prisma-cli` installed globally on your machine (which you can do with `npm install -g prisma`), you don't need to use the `yarn` prefix throughout this tutorial.
+ > **Note**: For the purpose of this tutorial you don't explicitly have to install the Prisma CLI because `prisma` is listed as a _development dependency_ in the `node-advanced` boilerplate, which allows to run its commands by prefixing it with `yarn`, e.g. `yarn prisma deploy` or `yarn prisma playground`.
+ > If you have `prisma` installed globally on your machine (which you can do with `npm install -g prisma`), you don't need to use the `yarn` prefix throughout this tutorial.
 
- Once the CLI installed, you can create your GraphQL server.
+Once the CLI is installed, you can create your GraphQL server.
 
 <Instruction>
 
@@ -44,7 +44,7 @@ When prompted where (i.e. to which _cluster_) to deploy your Prisma service, cho
 
 </Instruction>
 
-> **Note**: You can also the Prisma service locally, this however requires you to have [Docker](https://www.docker.com) installed on your machine. For the purpose of this tutorial, we'll go with a public demo cluster to keep things simple and straightforward .
+> **Note**: You can also deploy the Prisma service locally, this however requires you to have [Docker](https://www.docker.com) installed on your machine. For the purpose of this tutorial, we'll go with a public demo cluster to keep things simple and straightforward .
 
 This will create a new directory called `permissions-example` where it places the source files for the GraphQL server (based on `graphql-yoga`) and the required configuration for the belonging Prisma database service.
 

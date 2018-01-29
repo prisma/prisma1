@@ -21,8 +21,11 @@ export default class ClusterLogs extends Command {
 
     if (cluster.local) {
       const docker = new Docker(this.out, this.config, this.env, 'local')
+      this.out.action.start(`Loading logs from docker`)
       await docker.init()
       await docker.logs()
+      this.out.action.stop()
+      this.out.log(docker.stdout)
     } else {
       throw new Error(
         'Cluster logs for non-local clusters is not implemented yet',

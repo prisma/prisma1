@@ -66,8 +66,7 @@ subscriptions:
 
 # OPTIONAL
 # Points to a `.graphql` file containing GraphQL operations that will be
-# executed when initially deploying a service, or when explicitely
-# running the `seed` command.
+# executed when initially deploying a service.
 seed:
   import: database/seed.graphql
 

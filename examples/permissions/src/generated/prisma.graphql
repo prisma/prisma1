@@ -26,6 +26,14 @@ type User implements Node {
 # Other Types
 #
 
+type AggregatePost {
+  count: Int!
+}
+
+type AggregateUser {
+  count: Int!
+}
+
 type BatchPayload {
   count: Long!
 }
@@ -69,6 +77,7 @@ type PageInfo {
 type PostConnection {
   pageInfo: PageInfo!
   edges: [PostEdge]!
+  aggregate: AggregatePost!
 }
 
 input PostCreateInput {
@@ -222,6 +231,7 @@ type Subscription {
 type UserConnection {
   pageInfo: PageInfo!
   edges: [UserEdge]!
+  aggregate: AggregateUser!
 }
 
 input UserCreateInput {

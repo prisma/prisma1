@@ -1,37 +1,33 @@
 package com.prisma.api.database.mutactions.mutactions
 
-import com.prisma.api.database.mutactions.{ClientSqlDataChangeMutaction, ClientSqlStatementResult, MutactionVerificationSuccess}
 import com.prisma.api.database._
+import com.prisma.api.database.mutactions.{ClientSqlDataChangeMutaction, ClientSqlStatementResult, MutactionVerificationSuccess}
+import com.prisma.api.mutations.NodeSelector
 import com.prisma.api.schema.APIErrors
-import com.prisma.shared.models.IdType.Id
-import com.prisma.shared.models.{Model, Project}
+import com.prisma.shared.models.Project
 import slick.jdbc.MySQLProfile.api._
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
-import scala.concurrent.ExecutionContext.Implicits.global
 
-case class DeleteDataItem(project: Project, model: Model, id: Id, previousValues: DataItem, requestId: Option[String] = None)
+case class DeleteDataItem(project: Project, where: NodeSelector, previousValues: DataItem, id: String, requestId: Option[String] = None)
     extends ClientSqlDataChangeMutaction {
 
   override def execute: Future[ClientSqlStatementResult[Any]] = {
-    val relayIds = TableQuery(new ProjectRelayIdTable(_, project.id))
     Future.successful(
       ClientSqlStatementResult(
         sqlAction = DBIO.seq(
-          DatabaseMutationBuilder.deleteDataItemById(project.id, model.name, id),
-          relayIds.filter(_.id === id).delete
+          DatabaseMutationBuilder.deleteRelayRowByUnique(project.id, where),
+          DatabaseMutationBuilder.deleteDataItemByUnique(project.id, where)
         )
       )
     )
   }
 
   override def verify(resolver: DataResolver): Future[Try[MutactionVerificationSuccess]] = {
-    if (!NameConstraints.isValidDataItemId(id))
-      return Future.successful(Failure(APIErrors.IdIsInvalid(id)))
-
-    resolver.existsByModelAndId(model, id) map {
-      case false => Failure(APIErrors.DataItemDoesNotExist(model.name, id))
+    resolver.existsByWhere(where) map {
+      case false => Failure(APIErrors.NodeNotFoundForWhereError(where))
       case true  => Success(MutactionVerificationSuccess())
     }
   }

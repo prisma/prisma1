@@ -158,7 +158,7 @@ docker-compose up -d
 
 ## Enable Cluster Security
 
-By default, anyone can connect to the new cluster using the Prisma CLI and deploy services. To lock down access, you need to configura a public/private keypair.
+By default, anyone can connect to the new cluster using the Prisma CLI and deploy services. To lock down access, you need to configure a public/private keypair.
 
 ```
 openssl genrsa -out private.pem 2048
@@ -199,8 +199,6 @@ to restart the Prisma cluster:
 docker-compose kill
 docker-compose up -d
 ```
-
-> Note: For some reason this doesn't work. Maybe @dom can take a look tomorrow. Whe deploying a service I get 'Error: Authentication token is invalid: Token can't be decoded: Illegal base64 character 5c:'
 
 ## Deploy a service
 

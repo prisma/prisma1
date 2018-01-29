@@ -8,6 +8,7 @@ import com.prisma.shared.models.Project
 
 import scala.collection.immutable.Seq
 
+//todo this does not handle upsert
 object SubscriptionEvents {
   def extractFromSqlMutactions(
       project: Project,
@@ -33,8 +34,8 @@ object SubscriptionEvents {
 
     PublishSubscriptionEvent(
       project = project,
-      value = Map("nodeId" -> mutaction.id, "node" -> nodeData, "modelId" -> mutaction.model.id, "mutationType" -> "DeleteNode"),
-      mutationName = s"delete${mutaction.model.name}"
+      value = Map("nodeId" -> mutaction.id, "node" -> nodeData, "modelId" -> mutaction.where.model.id, "mutationType" -> "DeleteNode"),
+      mutationName = s"delete${mutaction.where.model.name}"
     )
   }
 

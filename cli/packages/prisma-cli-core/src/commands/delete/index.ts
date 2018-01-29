@@ -13,11 +13,16 @@ export default class Delete extends Command {
       char: 'f',
       description: 'Force delete, without confirmation',
     }),
+    ['env-file']: flags.string({
+      description: 'Path to .env file to inject env vars',
+      char: 'e',
+    }),
   }
   async run() {
     const { force } = this.flags
 
-    await this.definition.load(this.flags)
+    const envFile = this.flags['env-file']
+    await this.definition.load(this.flags, envFile)
     const serviceName = this.definition.definition!.service
     const workspaceName = this.definition.getWorkspace()
     const stage = this.definition.definition!.stage

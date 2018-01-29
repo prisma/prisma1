@@ -56,9 +56,7 @@ export class Config {
   /**
    * Urls
    */
-  cloudApiEndpoint = isDevConsole
-    ? 'http://localhost:4000'
-    : 'https://api.cloud.prisma.sh'
+  cloudApiEndpoint = 'https://api.cloud.prisma.sh'
   consoleEndpoint = isDevConsole
     ? 'http://localhost:3000'
     : 'https://app.prismagraphql.com'
@@ -112,6 +110,17 @@ export class Config {
   get requestsCachePath() {
     return path.join(this.cacheDir, '/.requests.json')
   }
+  findConfigDir(): null | string {
+    const configPath = findUp.sync(['.graphqlconfig', '.graphqlconfig.yml'], {
+      cwd: this.cwd,
+    })
+
+    if (configPath) {
+      return path.dirname(configPath)
+    }
+
+    return null
+  }
   private readPackageJson(options: RunOptions) {
     this.mock = options.mock
     this.argv = options.argv || this.argv
@@ -156,7 +165,8 @@ export class Config {
     // try to lookup with graphql config
     let definitionPath
     try {
-      const config = getGraphQLConfig().config
+      const configDir = this.findConfigDir()!
+      const config = getGraphQLConfig(configDir).config
 
       const allExtensions = [
         config.extensions,
@@ -165,9 +175,13 @@ export class Config {
 
       const prismaExtension = allExtensions.find(e => Boolean(e && e.prisma))
       if (prismaExtension) {
-        const { prisma } = prismaExtension
+        let { prisma } = prismaExtension
+        if (!fs.pathExistsSync(prisma)) {
+          prisma = path.join(configDir, prisma)
+        }
         definitionPath = path.resolve(prisma)
       }
+      this.definitionDir = configDir
     } catch (e) {
       debug(e)
     }

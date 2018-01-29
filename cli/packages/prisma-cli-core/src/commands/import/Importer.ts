@@ -4,7 +4,8 @@ import { Client, Output, Config } from 'prisma-cli-engine'
 import * as globby from 'globby'
 import { Validator } from './Validator'
 import chalk from 'chalk'
-import * as unzip from 'unzip'
+import * as AdmZip from 'adm-zip'
+const debug = require('debug')('Importer')
 
 export interface Files {
   lists: string[]
@@ -32,6 +33,7 @@ export class Importer {
   out: Output
   statePath: string
   config: Config
+  isDir: boolean
   constructor(
     importPath: string,
     types: string,
@@ -44,7 +46,8 @@ export class Importer {
     }
     this.config = config
     this.importPath = importPath
-    this.importDir = path.join(config.cwd, '.import/')
+    this.isDir = fs.lstatSync(importPath).isDirectory()
+    this.importDir = this.isDir ? importPath : path.join(config.cwd, '.import/')
     this.client = client
     this.types = types
     this.out = out
@@ -75,17 +78,19 @@ export class Importer {
 
     return 0
   }
-  unzip(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      const before = Date.now()
-      this.out.action.start('Unzipping')
-      const output = unzip.Extract({ path: this.importDir })
-      fs.createReadStream(this.importPath).pipe(output)
-      output.on('close', () => {
-        this.out.action.stop(chalk.cyan(`${Date.now() - before}ms`))
-        resolve()
-      })
-    })
+  unzip(): void {
+    const before = Date.now()
+    this.out.action.start('Unzipping')
+
+    const zip = new AdmZip(this.importPath)
+    zip.extractAllTo(this.importDir)
+
+    this.out.action.stop(chalk.cyan(`${Date.now() - before}ms`))
+  }
+  checkForErrors(result: any) {
+    if (!Array.isArray(result) && result.errors) {
+      throw new Error(JSON.stringify(result, null, 2))
+    }
   }
   async upload(
     serviceName: string,
@@ -93,7 +98,9 @@ export class Importer {
     token?: string,
     workspaceSlug?: string,
   ) {
-    await this.unzip()
+    if (!this.isDir) {
+      this.unzip()
+    }
     let before = Date.now()
     this.out.action.start('Validating data')
     const files = await this.getFiles()
@@ -118,6 +125,7 @@ export class Importer {
         token,
         workspaceSlug,
       )
+      this.checkForErrors(result)
       if (result.length > 0) {
         this.out.log(this.out.getStyledJSON(result))
         this.out.exit(1)
@@ -146,6 +154,7 @@ export class Importer {
         token,
         workspaceSlug,
       )
+      this.checkForErrors(result)
       if (result.length > 0) {
         this.out.log(this.out.getStyledJSON(result))
         this.out.exit(1)
@@ -173,6 +182,7 @@ export class Importer {
         token,
         workspaceSlug,
       )
+      this.checkForErrors(result)
       if (result.length > 0) {
         this.out.log(this.out.getStyledJSON(result))
         this.out.exit(1)
@@ -184,7 +194,9 @@ export class Importer {
     this.out.log(
       'Uploading relations done ' + chalk.cyan(`${Date.now() - before}ms`),
     )
-    fs.removeSync(this.importDir)
+    if (!this.isDir) {
+      fs.removeSync(this.importDir)
+    }
   }
 
   validateFiles(files: Files) {

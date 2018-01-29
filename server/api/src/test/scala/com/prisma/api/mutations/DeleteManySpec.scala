@@ -1,6 +1,7 @@
 package com.prisma.api.mutations
 
 import com.prisma.api.ApiBaseSpec
+import com.prisma.api.database.DatabaseQueryBuilder
 import com.prisma.shared.models.Project
 import com.prisma.shared.project_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
@@ -24,7 +25,7 @@ class DeleteManySpec extends FlatSpec with Matchers with ApiBaseSpec {
   "The delete many Mutation" should "delete the items matching the where clause" in {
     createTodo("title1")
     createTodo("title2")
-    todoCount should equal(2)
+    todoAndRelayCountShouldBe(2)
 
     val result = server.executeQuerySimple(
       """mutation {
@@ -39,13 +40,14 @@ class DeleteManySpec extends FlatSpec with Matchers with ApiBaseSpec {
     )
     result.pathAsLong("data.deleteManyTodoes.count") should equal(1)
 
-    todoCount should equal(1)
+    todoAndRelayCountShouldBe(1)
   }
 
   "The delete many Mutation" should "delete all items if the where clause is empty" in {
     createTodo("title1")
     createTodo("title2")
     createTodo("title3")
+    todoAndRelayCountShouldBe(3)
 
     val result = server.executeQuerySimple(
       """mutation {
@@ -60,7 +62,7 @@ class DeleteManySpec extends FlatSpec with Matchers with ApiBaseSpec {
     )
     result.pathAsLong("data.deleteManyTodoes.count") should equal(3)
 
-    todoCount should equal(0)
+    todoAndRelayCountShouldBe(0)
   }
 
   "The delete many Mutation" should "delete all items using in" in {
@@ -81,7 +83,8 @@ class DeleteManySpec extends FlatSpec with Matchers with ApiBaseSpec {
     )
     result.pathAsLong("data.deleteManyTodoes.count") should equal(2)
 
-    todoCount should equal(1)
+    todoAndRelayCountShouldBe(1)
+
   }
 
   "The delete many Mutation" should "delete all items using notin" in {
@@ -102,7 +105,8 @@ class DeleteManySpec extends FlatSpec with Matchers with ApiBaseSpec {
     )
     result.pathAsLong("data.deleteManyTodoes.count") should equal(3)
 
-    todoCount should equal(0)
+    todoAndRelayCountShouldBe(0)
+
   }
 
   def todoCount: Int = {
@@ -111,6 +115,17 @@ class DeleteManySpec extends FlatSpec with Matchers with ApiBaseSpec {
       project
     )
     result.pathAsSeq("data.todoes").size
+  }
+
+  def todoAndRelayCountShouldBe(int: Int) = {
+    val result = server.executeQuerySimple(
+      "{ todoes { id } }",
+      project
+    )
+    result.pathAsSeq("data.todoes").size should be(int)
+
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_RelayId").as[Int]) should be(Vector(int))
+
   }
 
   def createTodo(title: String): Unit = {

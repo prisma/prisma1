@@ -53,16 +53,16 @@ object SlickExtensions {
   def listToJson(param: List[Any]): String = {
     param
       .map {
-        case v: String => v.toJson
-        case v: JsValue => v.toJson
-        case v: Boolean => v.toJson
-        case v: Int => v.toJson
-        case v: Long => v.toJson
-        case v: Float => v.toJson
-        case v: Double => v.toJson
-        case v: BigInt => v.toJson
+        case v: String     => v.toJson
+        case v: JsValue    => v.toJson
+        case v: Boolean    => v.toJson
+        case v: Int        => v.toJson
+        case v: Long       => v.toJson
+        case v: Float      => v.toJson
+        case v: Double     => v.toJson
+        case v: BigInt     => v.toJson
         case v: BigDecimal => v.toJson
-        case v: DateTime => v.toString.toJson
+        case v: DateTime   => v.toString.toJson
       }
       .toJson
       .toString
@@ -76,21 +76,21 @@ object SlickExtensions {
       }
     }
     unwrapSome(param) match {
-      case param: String     => sql"$param"
-      case param: PlayJsValue    => sql"${param.toString}"
-      case param: SprayJsValue    => sql"${param.compactPrint}"
-      case param: Boolean    => sql"$param"
-      case param: Int        => sql"$param"
-      case param: Long       => sql"$param"
-      case param: Float      => sql"$param"
-      case param: Double     => sql"$param"
-      case param: BigInt     => sql"#${param.toString}"
-      case param: BigDecimal => sql"#${param.toString}"
-      case param: DateTime   => sql"${param.toString(DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSS").withZoneUTC())}"
-      case param: Vector[_]  => sql"${listToJson(param.toList)}"
-      case None              => sql"NULL"
-      case null              => sql"NULL"
-      case _                 => throw new IllegalArgumentException("Unsupported scalar value in SlickExtensions: " + param.toString)
+      case param: String       => sql"$param"
+      case param: PlayJsValue  => sql"${param.toString}"
+      case param: SprayJsValue => sql"${param.compactPrint}"
+      case param: Boolean      => sql"$param"
+      case param: Int          => sql"$param"
+      case param: Long         => sql"$param"
+      case param: Float        => sql"$param"
+      case param: Double       => sql"$param"
+      case param: BigInt       => sql"#${param.toString}"
+      case param: BigDecimal   => sql"#${param.toString}"
+      case param: DateTime     => sql"${param.toString(DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSS").withZoneUTC())}"
+      case param: Vector[_]    => sql"${listToJson(param.toList)}"
+      case None                => sql"NULL"
+      case null                => sql"NULL"
+      case _                   => throw new IllegalArgumentException("Unsupported scalar value in SlickExtensions: " + param.toString)
     }
   }
 
@@ -103,12 +103,11 @@ object SlickExtensions {
 
   def escapeKey(key: String) = sql"`#$key`"
 
-  def combineByAnd(actions: Iterable[SQLActionBuilder]) =
-    generateParentheses(combineBy(actions, "and"))
-  def combineByOr(actions: Iterable[SQLActionBuilder]) =
-    generateParentheses(combineBy(actions, "or"))
-  def combineByComma(actions: Iterable[SQLActionBuilder]) =
-    combineBy(actions, ",")
+  def combineByAnd(actions: Iterable[SQLActionBuilder]) = generateParentheses(combineBy(actions, "and"))
+
+  def combineByOr(actions: Iterable[SQLActionBuilder]) = generateParentheses(combineBy(actions, "or"))
+
+  def combineByComma(actions: Iterable[SQLActionBuilder]) = combineBy(actions, ",")
 
   def generateParentheses(sql: Option[SQLActionBuilder]) = {
     sql match {

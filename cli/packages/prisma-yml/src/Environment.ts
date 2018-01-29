@@ -40,6 +40,10 @@ export class Environment {
     await Promise.all([this.loadGlobalRC(), this.setSharedClusters()])
   }
 
+  get cloudSessionKey(): string | undefined {
+    return process.env.PRISMA_CLOUD_SESSION_KEY || this.globalRC.cloudSessionKey
+  }
+
   async setSharedClusters() {
     try {
       const res = await fetch('https://stats.graph.cool/', {

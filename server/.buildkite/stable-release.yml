@@ -1,0 +1,21 @@
+steps:
+  - label: ":scala: libs"
+    command: cd server && ./scripts/test.sh libs
+
+  - label: ":scala: subscriptions"
+    command: cd server && ./scripts/test.sh subscriptions
+
+  - label: ":scala: deploy"
+    command: cd server && ./scripts/test.sh deploy
+
+  - label: ":scala: api"
+    command: cd server && ./scripts/test.sh api
+
+  - label: ":scala: single-server"
+    command: cd server && ./scripts/test.sh single-server
+
+  - wait
+
+  - label: ":docker: Build and deploy US1 & EU1"
+    command: ./server/scripts/docker-build-and-deploy.sh public-us-west-2,public-eu-west-1
+

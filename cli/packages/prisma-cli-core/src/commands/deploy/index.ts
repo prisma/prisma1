@@ -11,14 +11,14 @@ import { fetchAndPrintSchema } from './printSchema'
 import Up from '../local/up'
 import { Seeder } from '../seed/Seeder'
 import * as childProcess from 'child_process'
-import { getBinPath } from './getbin'
 import * as semver from 'semver'
 const debug = require('debug')('deploy')
 import { prettyTime, concatName } from '../../util'
 import { spawn } from '../../spawn'
 import * as sillyname from 'sillyname'
 import { getSchemaPathFromConfig } from './getSchemaPathFromConfig'
-import { getGraphQLConfig } from 'graphql-config'
+import * as findUp from 'find-up'
+import getGraphQLCliBin from '../../utils/getGraphQLCliBin'
 
 export default class Deploy extends Command {
   static topic = 'deploy'
@@ -73,6 +73,7 @@ ${chalk.gray(
   }
   private deploying: boolean = false
   private showedLines: number = 0
+  private showedHooks: boolean = false
   async run() {
     debug('run')
     const { force, watch, interactive } = this.flags
@@ -142,11 +143,10 @@ ${chalk.gray(
       if (
         workspace &&
         !workspace.startsWith('public-') &&
-        (!this.env.globalRC.cloudSessionKey ||
-          this.env.globalRC.cloudSessionKey === '')
+        (!this.env.cloudSessionKey || this.env.cloudSessionKey === '')
       ) {
         await this.client.login()
-        cluster.clusterSecret = this.env.globalRC.cloudSessionKey
+        cluster.clusterSecret = this.env.cloudSessionKey
       }
     }
 
@@ -367,12 +367,12 @@ ${chalk.gray(
     }
     // TODO move up to if statement after testing done
     if (migrationResult.migration) {
-      this.out.log(chalk.bold(`\nHooks:\n`))
       if (
         this.definition.definition!.seed &&
         !this.flags['no-seed'] &&
         projectNew
       ) {
+        this.printHooks()
         await this.seed(
           projectNew,
           serviceName,
@@ -380,8 +380,6 @@ ${chalk.gray(
           this.definition.getWorkspace(),
         )
       }
-      await this.generateSchema(serviceName, stageName)
-      await this.graphqlPrepare()
 
       // no action required
       this.deploying = false
@@ -393,6 +391,18 @@ ${chalk.gray(
           this.definition.getWorkspace() || undefined,
         )
       }
+    }
+
+    const schemaChanged = await this.generateSchema(serviceName, stageName)
+    if (schemaChanged) {
+      await this.graphqlPrepare()
+    }
+  }
+
+  private printHooks() {
+    if (!this.showedHooks) {
+      this.out.log(chalk.bold(`\nHooks:`))
+      this.showedHooks = true
     }
   }
 
@@ -423,38 +433,65 @@ ${chalk.gray(
     this.out.action.stop(prettyTime(Date.now() - before))
   }
 
-  private async generateSchema(serviceName: string, stageName: string) {
+  /**
+   * Returns true if there was a change
+   */
+  private async generateSchema(
+    serviceName: string,
+    stageName: string,
+  ): Promise<boolean> {
     const schemaPath =
-      this.definition.definition!.schema || getSchemaPathFromConfig()
+      getSchemaPathFromConfig() || this.definition.definition!.schema
     if (schemaPath) {
+      this.printHooks()
       const schemaDir = path.dirname(schemaPath)
       fs.mkdirpSync(schemaDir)
       const token = this.definition.getToken(serviceName, stageName)
       const before = Date.now()
-      this.out.action.start(`Writing database schema to \`${schemaPath}\` `)
+      this.out.action.start(`Checking, if schema file changed`)
       const schemaString = await fetchAndPrintSchema(
         this.client,
         concatName(serviceName, this.definition.getWorkspace()),
         stageName,
         token,
       )
-      fs.writeFileSync(schemaPath, schemaString)
       this.out.action.stop(prettyTime(Date.now() - before))
+      const oldSchemaString = fs.pathExistsSync(schemaPath)
+        ? fs.readFileSync(schemaPath, 'utf-8')
+        : null
+      if (schemaString !== oldSchemaString) {
+        const beforeWrite = Date.now()
+        this.out.action.start(`Writing database schema to \`${schemaPath}\` `)
+        fs.writeFileSync(schemaPath, schemaString)
+        this.out.action.stop(prettyTime(Date.now() - beforeWrite))
+        return true
+      }
     }
+
+    return false
   }
 
   private async graphqlPrepare() {
-    let config
+    let dir
     try {
-      config = getGraphQLConfig()
+      dir = this.config.findConfigDir()
     } catch (e) {
       //
     }
-    if (config) {
-      const graphqlBin = await getBinPath('graphql')
-      if (graphqlBin) {
-        this.out.log(`Running ${chalk.cyan(`$ graphql prepare`)}...`)
-        await spawn(`graphql`, ['prepare'])
+    if (dir) {
+      const graphqlBin = await getGraphQLCliBin()
+      debug({ graphqlBin })
+      this.out.log(`Running ${chalk.cyan(`$ graphql prepare`)}...`)
+      try {
+        const oldCwd = process.cwd()
+        const configDir = this.config.findConfigDir()
+        if (configDir) {
+          process.chdir(configDir)
+        }
+        await spawn(graphqlBin, ['prepare'])
+        process.chdir(oldCwd)
+      } catch (e) {
+        this.out.warn(e)
       }
     }
   }

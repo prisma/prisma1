@@ -3,8 +3,8 @@ package com.prisma.api.database.mutactions.mutactions
 import com.prisma.api.ApiDependencies
 import com.prisma.api.database.DataItem
 import com.prisma.api.database.mutactions.{ClientSqlMutaction, Mutaction, MutactionExecutionResult, MutactionExecutionSuccess}
-import com.prisma.api.subscriptions.schema.QueryTransformer
-import com.prisma.api.subscriptions.{SubscriptionExecutor, Webhook}
+import com.prisma.subscriptions.schema.QueryTransformer
+import com.prisma.subscriptions.{SubscriptionExecutor, Webhook}
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models.ModelMutationType.ModelMutationType
 import com.prisma.shared.models._
@@ -12,6 +12,8 @@ import sangria.parser.QueryParser
 import spray.json.{JsValue, _}
 
 import scala.concurrent.Future
+
+//todo this does not handle upsert
 
 object ServerSideSubscription {
   def extractFromMutactions(
@@ -78,11 +80,11 @@ object ServerSideSubscription {
   )(implicit apiDependencies: ApiDependencies): Seq[ServerSideSubscription] = {
     for {
       mutaction <- mutactions
-      sssFn     <- serverSideSubscriptionFunctionsFor(project, mutaction.model, ModelMutationType.Deleted)
+      sssFn     <- serverSideSubscriptionFunctionsFor(project, mutaction.where.model, ModelMutationType.Deleted)
     } yield {
       ServerSideSubscription(
         project,
-        mutaction.model,
+        mutaction.where.model,
         ModelMutationType.Deleted,
         sssFn,
         nodeId = mutaction.id,
