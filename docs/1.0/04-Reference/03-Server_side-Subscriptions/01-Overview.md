@@ -7,15 +7,15 @@ description: Overview
 
 ## Introduction
 
-A Serverside Subscription is equivalent in power to normal GraphQL subscriptions. That means you can use filters to retrieve only the events you are interested in and perform an arbitrary query on the selection set to get related data.
+A server-side subscription is equivalent in power to normal GraphQL subscriptions. That means they have the same API, e.g. allowing to provide the same filters in order to only get notified for the events you are interested in.
 
-When a Serverside Subscription is set up, Prisma will monitor data changes and execute the associated query when applicable, just like normal GraphQL Subscriptions. The difference is the delivery mechanism.
+When a server-side subscription is set up, Prisma will monitor data changes and execute the associated query when applicable, just like normal GraphQL Subscriptions. The difference is the delivery mechanism.
 
-Serverside Subscriptions are designed to work well with modern serverless infrastructure. Currently, Prisma support delivering events via webhooks and in the future we will add support for direct AWS Lambda invocation as well as different queue implementations.
+server-side subscriptions are designed to work well with modern serverless infrastructure. Currently, Prisma support delivering events via webhooks and in the future we will add support for direct AWS Lambda invocation as well as different queue implementations.
 
 ## Configuration
 
-You configure a Serverside Subscription by adding the `subscriptions` section in the `prisma.yml` file for your service.
+You configure a server-side subscription by adding the `subscriptions` section in the `prisma.yml` file for your service.
 
 ### Prisma.yml
 
