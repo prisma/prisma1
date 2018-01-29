@@ -1,10 +1,23 @@
 package com.prisma.errors
 
+import java.lang.Thread.UncaughtExceptionHandler
+
 import com.bugsnag.{Bugsnag, Report}
+
 import scala.collection.immutable.Seq
 
 case class BugsnagErrorReporter(apiKey: String) extends ErrorReporter {
-  private val client = new Bugsnag(apiKey)
+  private val client = {
+    val sendUncaughtExceptions = false // we are doing this ourselves
+    new Bugsnag(apiKey, sendUncaughtExceptions)
+  }
+
+  // use this instance as uncaught exception handler
+  val self = this
+  val selfAsUncaughtExceptionHandler = new UncaughtExceptionHandler {
+    override def uncaughtException(t: Thread, e: Throwable): Unit = self.report(e)
+  }
+  Thread.setDefaultUncaughtExceptionHandler(selfAsUncaughtExceptionHandler)
 
   val env         = sys.env.getOrElse("ENV", "No env set")
   val environment = sys.env.getOrElse("ENVIRONMENT", "No environment set")
