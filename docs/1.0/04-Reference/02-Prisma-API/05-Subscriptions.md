@@ -203,7 +203,7 @@ You can make use of a similar [filter system as for queries](!alias-nia9nushae#f
 For example, to only be notified of a created `Post` if a specific user _follows_ the `author`:
 
 ```graphql
-subscription followedAuthorCreatedPost {
+subscription {
   post(where: {
     mutation_in: [CREATED]
     node: {
@@ -261,7 +261,7 @@ You can make use of a similar [filter system as for queries](!alias-nia9nushae#f
 For example, to only be notified of a deleted `Post` if a specific user follows the `author`:
 
 ```graphql
-subscription followedAuthorUpdatedPost {
+subscription {
   post(where: {
     mutation_in: [DELETED]
     node: {
@@ -289,7 +289,7 @@ For a given type, you can subscribe to all nodes being updated using the generat
 If you want to subscribe to updated nodes of the `Post` type, you can use the `Post` subscription and specify the `where` object and set `mutation_in: [UPDATED]`.
 
 ```graphql
-subscription updatePost {
+subscription {
   post(where: {
     mutation_in: [UPDATED]
   }) {
@@ -326,7 +326,7 @@ You can make use of a similar [filter system as for queries](!alias-nia9nushae#f
 For example, to only be notified of an updated `Post` if its `description` changed:
 
 ```graphql
-subscription followedAuthorUpdatedPost {
+subscription {
   post(where: {
     mutation_in: [UPDATED]
     updatedFields_contains: "description"
@@ -405,7 +405,7 @@ subscription {
 To select specific nodes that you want to be notified about, use the `node` argument of the `where` object. You can combine it with `mutation_in`. For example, to only be notified of created, updated and deleted posts if a specific user follows the author:
 
 ```graphql
-subscription changedPost {
+subscription {
   post(
     where: {
       mutation_in: [CREATED, UPDATED, DELETED]
@@ -438,10 +438,10 @@ subscription changedPost {
 
 You can make use of a similar [filter system as for queries](!alias-nia9nushae#filtering-by-field) using the `where` argument.
 
-For example, you can subscribe to all `CREATED` and `DELETE` subscriptions, as well as all `UPDATED` subscriptions when the `imageUrl` was updated
+For example, you can subscribe to all `CREATED` and `DELETE` subscriptions, as well as all `UPDATED` subscriptions when the `imageUrl` was updated:
 
 ```graphql
-subscription changedPost {
+subscription {
   post(where: {
     OR: [{
       mutation_in: [CREATED, DELETED]

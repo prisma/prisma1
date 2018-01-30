@@ -11,13 +11,13 @@ A server-side subscription is equivalent in power to normal GraphQL subscription
 
 When a server-side subscription is set up, Prisma will monitor data changes and execute the associated query when applicable, just like normal GraphQL Subscriptions. The difference is the delivery mechanism.
 
-server-side subscriptions are designed to work well with modern serverless infrastructure. Currently, Prisma support delivering events via webhooks and in the future we will add support for direct AWS Lambda invocation as well as different queue implementations.
+Server-side subscriptions are designed to work well with modern serverless infrastructure. Currently, Prisma support delivering events via webhooks and in the future we will add support for direct AWS Lambda invocation as well as different queue implementations.
 
 ## Configuration
 
-You configure a server-side subscription by adding the `subscriptions` section in the `prisma.yml` file for your service.
+You configure a server-side subscription by adding the [`subscriptions`](!alias-ufeshusai8#subscriptions-optional) property in the [`prisma.yml`](!alias-foatho8aip) file for your service.
 
-### Prisma.yml
+### prisma.yml
 
 ```yml
 service: my-service
@@ -39,7 +39,7 @@ subscriptions:
       {
         user({
           where: {
-            mutation_in: UPDATED,
+            mutation_in: [UPDATED],
             updatedFields_contains: "email"
           }
         }) {
@@ -49,7 +49,7 @@ subscriptions:
       }
 ```
 
-## Example
+### Example
 
 The `userChangedEmail` subscription configured above would be triggered by a mutation like this:
 
