@@ -9,8 +9,8 @@ Prisma services are deployed to so-called _clusters_. A cluster is a hosted envi
 
 In essence, there are two kinds of _clusters_ you can deploy to:
 
-- **Self-hosted / local clusters**: Self-hosted clusters are running on Docker. They are created and managed using the Prisma CLI. For the vast majority of use cases, **self-hosted clusters are the preferred option to deploy Prisma services**. This chapter explains how to create and manage your own self-hosted clusters.
-- **Public clusters** (based on Prisma Cloud): Allow to conventiently deploy your Prisma service to the web. Note that deploying to public clusters **does not require an account in the Prisma cloud**. Public clusters have certain limitations, such as rate limiting of incoming requests and an upperbound in storage capacity. Services deployed to public clusters are deleted after a certain period of inactivity.
+- **Self-hosted / local clusters**: Self-hosted clusters are running on Docker. They are created and managed using the Prisma CLI. For the vast majority of use cases, _self-hosted clusters are the preferred option to deploy Prisma services_. This chapter explains how to create and manage your own self-hosted clusters.
+- **Public clusters** (based on Prisma Cloud): Allow to conventiently deploy your Prisma service to the web. Note that deploying to public clusters _does not require an account in the Prisma cloud_. Public clusters have certain limitations, such as rate limiting of incoming requests and an upperbound in storage capacity. Services deployed to public clusters are deleted after a certain period of inactivity.
 
 ## Cluster registry
 
@@ -36,4 +36,4 @@ You can list your clusters and more information using `prisma cluster list`.
 
 ## Cluster deployment
 
-Check the tutorials for setting up the Docker container for the [Local Cluster](meemaesh3k) or on [Digital Ocean](!alias-texoo9aemu).
+Check the tutorials for setting up the Docker container for the [Local Cluster](alias-meemaesh3k) or on [Digital Ocean](!alias-texoo9aemu).
