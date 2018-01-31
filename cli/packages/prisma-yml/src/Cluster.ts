@@ -9,6 +9,7 @@ export class Cluster {
   name: string
   baseUrl: string
   local: boolean
+  shared: boolean
   clusterSecret?: string
   requiresAuth: boolean
   private cachedToken?: string
@@ -17,11 +18,13 @@ export class Cluster {
     baseUrl: string,
     clusterSecret?: string,
     local: boolean = true,
+    shared: boolean = true,
   ) {
     this.name = name
     this.baseUrl = baseUrl
     this.clusterSecret = clusterSecret
     this.local = local
+    this.shared = shared
   }
 
   async getToken(
@@ -33,10 +36,10 @@ export class Cluster {
     if (this.name === 'shared-public-demo') {
       return ''
     }
-    if (this.local) {
-      return this.getLocalToken()
-    } else {
+    if (this.shared) {
       return this.generateClusterToken(serviceName, workspaceSlug, stageName)
+    } else {
+      return this.getLocalToken()
     }
   }
 

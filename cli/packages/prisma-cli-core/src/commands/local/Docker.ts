@@ -52,6 +52,10 @@ export default class Docker {
   }
 
   get hostName(): string {
+    if (this.cluster) {
+      return this.cluster.baseUrl
+    }
+
     if (process.env.GRAPHCOOL_HOST) {
       return process.env.GRAPHCOOL_HOST!
     }
@@ -88,7 +92,7 @@ export default class Docker {
       }
       endpoint = `http://${this.hostName}:${port}`
     }
-    await this.setEnvVars(port, endpoint, String(defaultDBPort))
+    await this.setEnvVars(port, String(defaultDBPort))
     await this.ps()
     this.psResult = this.stdout
 
@@ -99,16 +103,6 @@ export default class Docker {
         await this.askIfDBPortShouldBeUnblocked(String(defaultDBPort))
       }
     }
-  }
-
-  async setKeyPair() {
-    const pair = await createRsaKeyPair()
-    if (!this.envVars) {
-      this.envVars = {}
-    }
-    this.envVars.CLUSTER_PUBLIC_KEY = pair.public
-    this.privateKey = pair.private
-    debug(pair)
   }
 
   saveCluster(): Cluster {
@@ -288,7 +282,7 @@ Please close the process by hand. ${instruction}`)
       const endpoint = this.cluster.getDeployEndpoint()
       const sliced = endpoint.slice(endpoint.lastIndexOf(':') + 1)
       port = sliced.slice(0, sliced.indexOf('/'))
-      await this.setEnvVars(port, endpoint, String(defaultDBPort))
+      await this.setEnvVars(port, String(defaultDBPort))
       const before = Date.now()
       this.out.action.start('Nuking local cluster')
       await this.kill()
@@ -303,11 +297,7 @@ Please close the process by hand. ${instruction}`)
     }
     const before = Date.now()
     this.out.action.start('Booting fresh local development cluster')
-    await this.setEnvVars(
-      String(defaultPort),
-      `http://${this.hostName}:${defaultPort}`,
-      String(defaultDBPort),
-    )
+    await this.setEnvVars(String(defaultPort), String(defaultDBPort))
     await this.run('up', '-d', '--remove-orphans')
     this.out.action.stop(prettyTime(Date.now() - before))
     return this
@@ -370,7 +360,7 @@ Please close the process by hand. ${instruction}`)
     })
   }
 
-  async setEnvVars(port: string, endpoint: string, dbPort: string) {
+  async setEnvVars(port: string, dbPort: string) {
     const defaultVars = this.getDockerEnvVars()
     const customVars = {
       PORT: port,
@@ -379,8 +369,20 @@ Please close the process by hand. ${instruction}`)
       DB_PORT: dbPort,
     }
     this.envVars = { ...process.env, ...defaultVars, ...customVars }
-    await this.setKeyPair()
+    if (this.cluster ? this.cluster.local : true) {
+      await this.setKeyPair()
+    }
     debug(this.envVars)
+  }
+
+  async setKeyPair() {
+    const pair = await createRsaKeyPair()
+    if (!this.envVars) {
+      this.envVars = {}
+    }
+    this.envVars.CLUSTER_PUBLIC_KEY = pair.public
+    this.privateKey = pair.private
+    debug(pair)
   }
 
   async stopContainersBlockingPort(
@@ -403,11 +405,7 @@ Please close the process by hand. ${instruction}`)
       if (!kill) {
         try {
           if (nameStart.startsWith('localdatabase')) {
-            this.setEnvVars(
-              port,
-              `http://${this.hostName}:${port}`,
-              String(defaultDBPort),
-            )
+            this.setEnvVars(port, String(defaultDBPort))
             await this.nukeContainers(nameStart, true)
           } else if (nameStart.startsWith('local')) {
             const defaultVars = this.getDockerEnvVars(false)
