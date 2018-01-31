@@ -90,20 +90,20 @@ volumes:
 
 The `prisma-db` service is based on the [`mysql`](https://hub.docker.com/_/mysql/) Docker image. Here is an overview of its most important properties:
 
-- `networks`: "Networks to join, referencing entries under the top-level networks key." (Quoted from [Docker](https://docs.docker.com/compose/compose-file/#networks), Value: "`Prisma"`)
-- `restart`: "`no` is the default restart policy, and it does not restart a container under any circumstance. When `always` is specified, the container always restarts. The `on-failure` policy restarts a container if the exit code indicates an on-failure error." (Quoted from [Docker](https://docs.docker.com/compose/compose-file/#restart), Value: `always`)
-- `command`: "Override the default command." (Quoted from [Docker](https://docs.docker.com/compose/compose-file/#command))
-- `environment.MYSQL_ROOT_PASSWORD`: "This variable is mandatory and specifies the password that will be set for the MySQL root superuser account." (Quoted from [DockerHub](https://hub.docker.com/_/mysql/))
-- `environment.MYSQL_DATABASE`: "This variable is optional and allows you to specify the name of a database to be created on image startup. If a user/password was supplied (see below) then that user will be granted superuser access (corresponding to GRANT ALL) to this database." (Quoted from [DockerHub](https://hub.docker.com/_/mysql/))
-- `ports`: "Expose ports." (Quoted from [DockerHub](https://docs.docker.com/compose/compose-file/#ports); Value: `"3366:3306"`)
-- `volumes`: "Mount host paths or named volumes, specified as sub-options to a service." (Quoted from [DockerHub](https://docs.docker.com/compose/compose-file/#volumes); Value: `db-persistence:/var/lib/mysql`)
+- `networks`: _Networks to join, referencing entries under the top-level networks key._ (from [Docker](https://docs.docker.com/compose/compose-file/#networks), Value: `"Prisma"`)
+- `restart`: _`no` is the default restart policy, and it does not restart a container under any circumstance. When `always` is specified, the container always restarts. The `on-failure` policy restarts a container if the exit code indicates an on-failure error._ (from [Docker](https://docs.docker.com/compose/compose-file/#restart), Value: `always`)
+- `command`: _Override the default command._ (from [Docker](https://docs.docker.com/compose/compose-file/#command))
+- `environment.MYSQL_ROOT_PASSWORD`: _This variable is mandatory and specifies the password that will be set for the MySQL root superuser account._ (from [DockerHub](https://hub.docker.com/_/mysql/))
+- `environment.MYSQL_DATABASE`: _This variable is optional and allows you to specify the name of a database to be created on image startup. If a user/password was supplied (see below) then that user will be granted superuser access (corresponding to GRANT ALL) to this database._ (from [DockerHub](https://hub.docker.com/_/mysql/))
+- `ports`: _Expose ports._ (from [DockerHub](https://docs.docker.com/compose/compose-file/#ports); Value: `_3366:3306_`)
+- `volumes`: _Mount host paths or named volumes, specified as sub-options to a service._ (from [DockerHub](https://docs.docker.com/compose/compose-file/#volumes); Value: `db-persistence:/var/lib/mysql`)
 
 ##### `prisma-database`
 
 The `prisma-db` service is based on the [`prismagraphlq/prisma`](https://hub.docker.com/r/prismagraphql/prisma/) Docker image. Here is an overview of its most important properties:
 
-- `networks`: "Networks to join, referencing entries under the top-level networks key." (Quoted from [Docker](https://docs.docker.com/compose/compose-file/#networks), Value: "`Prisma"`)
-- `restart`: "`no` is the default restart policy, and it does not restart a container under any circumstance. When `always` is specified, the container always restarts. The `on-failure` policy restarts a container if the exit code indicates an on-failure error." (Quoted from [Docker](https://docs.docker.com/compose/compose-file/#restart); Value: `always`)
+- `networks`: _Networks to join, referencing entries under the top-level networks key._ (from [Docker](https://docs.docker.com/compose/compose-file/#networks), Value: `"Prisma"`)
+- `restart`: _`no` is the default restart policy, and it does not restart a container under any circumstance. When `always` is specified, the container always restarts. The `on-failure` policy restarts a container if the exit code indicates an on-failure error._ (from [Docker](https://docs.docker.com/compose/compose-file/#restart); Value: `always`)
 - `environment.SCHEMA_MANAGER_SECRET`: 
 - `environment.SCHEMA_MANAGER_ENDPOINT`: 
 - `environment.SQL_CLIENT_HOST_CLIENT1`: 
@@ -121,7 +121,7 @@ The `prisma-db` service is based on the [`prismagraphlq/prisma`](https://hub.doc
 - `environment.CLUSTER_ADDRESS`: 
 - `environment.SQL_INTERNAL_CONNECTION_LIMIT`: (Value: `10`)
 - `environment.CLUSTER_PUBLIC_KEY`: 
-- `environment.BUGSNAG_API_KEY`: ""
+- `environment.BUGSNAG_API_KEY`: __
 - `environment.ENABLE_METRICS`: (Value: `"0"`, i.e. _false_)
 - `environment.JAVA_OPTS`: Maximum heap size available to Prisma (Value: `"-Xmx1G"`, i.e. 1GB)
 
