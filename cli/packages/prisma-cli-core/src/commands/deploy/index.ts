@@ -100,8 +100,20 @@ ${chalk.gray(
       (!cluster || !isOnline)
     ) {
       cluster = await this.localUp()
-    } else if (!isOnline && cluster && cluster.local) {
+    } else if (
+      !isOnline &&
+      cluster &&
+      cluster.local &&
+      (cluster.baseUrl.includes('127.0.0.1') ||
+        cluster.baseUrl.includes('localhost'))
+    ) {
       cluster = await this.localUp()
+    } else if (cluster && !isOnline) {
+      throw new Error(
+        `Could not connect to cluster ${chalk.bold(cluster.name)} with host ${
+          cluster.baseUrl
+        }. Did you provide the right port?`,
+      )
     }
     let gotCluster = false
 
@@ -261,7 +273,7 @@ ${chalk.gray(
   }
 
   private async localUp(): Promise<Cluster> {
-    await Up.run(new Config({ mock: false, argv: [] }))
+    await Up.run(this.config)
     await this.env.load(this.flags)
     const cluster = this.env.clusterByName('local')!
     this.env.setActiveCluster(cluster)
