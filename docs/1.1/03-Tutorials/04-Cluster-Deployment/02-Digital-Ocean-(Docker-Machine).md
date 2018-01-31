@@ -3,24 +3,33 @@ alias: texoo9aemu
 description: Learn how to deploy your Prisma database service to Digital Ocean using Docker Machine.
 ---
 
-# Digital Ocean - Docker Machine
+# Digital Ocean (Docker Machine)
 
-This section describes how to set up a fully functioning Prisma server on Digital Ocean in less than 20 minutes. We will use Docker Machine to automate the entire installation process.
+In this tutorial, you will learn how to create a Prisma [cluster](!alias-eu2ood0she) on Digital Ocean and deploy your Prisma services to it.
 
-Digital Ocean is an easy to use provider of virtual servers. They offer different compute sizes called droplets. The 10$ droplet is a good starting point for a Prisma server.
+[Digital Ocean](https://www.digitalocean.com/) is an easy-to-use provider of virtual servers. They offer different computation units, called [droplets](https://www.digitalocean.com/products/droplets/). The 10$ droplet is a good starting point for a Prisma server.
 
-> The setup described in this section does not include features you would normally expect from production ready servers, such as backup and active failover. We will add more guides in the future describing a more complete setup suitable for production use.
+<InfoBox>
 
-## Install Docker
+The setup described in this section does not include features you would normally expect from production-ready servers, such as _automated backups_ and _active failover_. We will add more guides in the future describing a more complete setup suitable for production use.
 
-You need Docker and Docker Machine.
+</InfoBox>
 
-Follow the instructions at https://docs.docker.com/machine/install-machine/#install-machine-directly
+## Install Docker & Docker Machine
+
+The first thing you need to is install Docker and Docker Machine. The easiest way to install theses tools is by following the step in the Docker Docs directly.
+
+<Instruction>
+
+Follow the instructions (step 1 through 3) at [https://docs.docker.com/machine/install-machine/#install-machine-directly](https://docs.docker.com/machine/install-machine/#install-machine-directly) to install Docker as well as  Docker Machine.
+
+</Instruction>
+
 
 When done, you should be able to run the following command:
 
 ```
-❯ docker-machine -v
+$ docker-machine -v
 docker-machine version 0.13.0, build 9ba6da9
 ```
 

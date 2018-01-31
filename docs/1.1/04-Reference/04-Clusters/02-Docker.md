@@ -181,11 +181,11 @@ To get insights into the internals of your Prisma cluster, you can check the log
 
 ### Accessing Docker logs
 
-If you need more extensive logs you can view the raw logs from the Docker containers:
+If you need more extensive logs you can view the raw logs from the running Docker containers:
 
 ```sh
 docker logs prisma-db
-docker logs prisma-database
+docker logs local_prisma-database_1
 ```
 
 ### Verify Docker containers
@@ -199,7 +199,7 @@ docker ps
 You should see output similar to this:
 
 ```
-❯ docker ps
+$ docker ps
 CONTAINER ID  IMAGE                       COMMAND                 CREATED            STATUS            PORTS                   NAMES
 7210106b6650  prismagraphql/prisma:1.0.0  "/app/bin/single-ser…"  About an hour ago  Up About an hour  0.0.0.0:4466->4466/tcp  prisma
 1c15922e15ba  mysql:5.7                   "docker-entrypoint.s…"  About an hour ago  Up About an hour  0.0.0.0:3306->3306/tcp  prisma-db
@@ -210,7 +210,7 @@ CONTAINER ID  IMAGE                       COMMAND                 CREATED       
 If your local prisma cluster is in an unrecoverable state, the easiest option might be to completely reset it. Be careful as **this command will reset all data** in your local cluster.
 
 ```sh
-❯ prisma local nuke
+$ prisma local nuke
 Nuking local cluster 10.9s
 Booting fresh local development cluster 18.4s
 ```
