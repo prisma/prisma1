@@ -60,5 +60,3 @@ Consider the above example for a cluster registry. In that case, the following w
 If you want to add a custom cluster to the cluster registry, you can either use the `prisma cluster add` command or manually add a cluster entry to the file, providing the required information. Similarly, to delete a cluster you can either run `prisma cluster remove` or  simply remove it from the cluster registry by hand.
 
 You can list your clusters and associated information using `prisma cluster list`. If you're authenticated with the Prisma Cloud, the command will also output the clusters you've configured there.
-
-## Cluster deployment

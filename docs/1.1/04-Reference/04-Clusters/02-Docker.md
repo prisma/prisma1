@@ -107,8 +107,7 @@ volumes:
   - `SQL_INTERNAL_CONNECTION_LIMIT`: 
 - Cluster: 
   - `CLUSTER_ADDRESS`: 
-  - `CLUSTER_PUBLIC_KEY`: The public key for that cluster
-
+  - `CLUSTER_PUBLIC_KEY`: The public key for that cluster, it will be used to validate the _deployment token_
 
 ##### Local
 
