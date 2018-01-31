@@ -86,35 +86,53 @@ volumes:
   db-persistence:
 ```
 
-#### Environment variables
+##### `prisma-db`
 
-- Prisma
-  - `PORT`: The port your Prisma service(s) will running on
-  - `SCHEMA_MANAGER_SECRET`: 
-  - `SCHEMA_MANAGER_ENDPOINT`: 
-- SQL client
-  - `SQL_CLIENT_HOST`:
-  - `SQL_CLIENT_PORT`:
-  - `SQL_CLIENT_USER`:
-  - `SQL_CLIENT_PASSWORD`:
-  - `SQL_CLIENT_CONNECTION_LIMIT`:
-- SQL internal:
-  - `SQL_INTERNAL_HOST`: 
-  - `SQL_INTERNAL_PORT`: 
-  - `SQL_INTERNAL_USER`: 
-  - `SQL_INTERNAL_PASSWORD`: 
-  - `SQL_INTERNAL_DATABASE`: 
-  - `SQL_INTERNAL_CONNECTION_LIMIT`: 
-- Cluster: 
-  - `CLUSTER_ADDRESS`: 
-  - `CLUSTER_PUBLIC_KEY`: The public key for that cluster, it will be used to validate the _deployment token_
+The `prisma-db` service is based on the [`mysql`](https://hub.docker.com/_/mysql/) Docker image. Here is an overview of its most important properties:
+
+- `networks`: "Networks to join, referencing entries under the top-level networks key." (Quoted from [Docker](https://docs.docker.com/compose/compose-file/#networks), Value: "`Prisma"`)
+- `restart`: "`no` is the default restart policy, and it does not restart a container under any circumstance. When `always` is specified, the container always restarts. The `on-failure` policy restarts a container if the exit code indicates an on-failure error." (Quoted from [Docker](https://docs.docker.com/compose/compose-file/#restart), Value: `always`)
+- `command`: "Override the default command." (Quoted from [Docker](https://docs.docker.com/compose/compose-file/#command))
+- `environment.MYSQL_ROOT_PASSWORD`: "This variable is mandatory and specifies the password that will be set for the MySQL root superuser account." (Quoted from [DockerHub](https://hub.docker.com/_/mysql/))
+- `environment.MYSQL_DATABASE`: "This variable is optional and allows you to specify the name of a database to be created on image startup. If a user/password was supplied (see below) then that user will be granted superuser access (corresponding to GRANT ALL) to this database." (Quoted from [DockerHub](https://hub.docker.com/_/mysql/))
+- `ports`: "Expose ports." (Quoted from [DockerHub](https://docs.docker.com/compose/compose-file/#ports); Value: `"3366:3306"`)
+- `volumes`: "Mount host paths or named volumes, specified as sub-options to a service." (Quoted from [DockerHub](https://docs.docker.com/compose/compose-file/#volumes); Value: `db-persistence:/var/lib/mysql`)
+
+##### `prisma-database`
+
+The `prisma-db` service is based on the [`prismagraphlq/prisma`](https://hub.docker.com/r/prismagraphql/prisma/) Docker image. Here is an overview of its most important properties:
+
+- `networks`: "Networks to join, referencing entries under the top-level networks key." (Quoted from [Docker](https://docs.docker.com/compose/compose-file/#networks), Value: "`Prisma"`)
+- `restart`: "`no` is the default restart policy, and it does not restart a container under any circumstance. When `always` is specified, the container always restarts. The `on-failure` policy restarts a container if the exit code indicates an on-failure error." (Quoted from [Docker](https://docs.docker.com/compose/compose-file/#restart); Value: `always`)
+- `environment.SCHEMA_MANAGER_SECRET`: 
+- `environment.SCHEMA_MANAGER_ENDPOINT`: 
+- `environment.SQL_CLIENT_HOST_CLIENT1`: 
+- `environment.SQL_CLIENT_HOST_READONLY_CLIENT1`: 
+- `environment.SQL_CLIENT_HOST`: 
+- `environment.SQL_CLIENT_PORT`: 
+- `environment.SQL_CLIENT_USER`: 
+- `environment.SQL_CLIENT_PASSWORD`: 
+- `environment.SQL_CLIENT_CONNECTION_LIMIT`: (Value: `10`)
+- `environment.SQL_INTERNAL_HOST`: 
+- `environment.SQL_INTERNAL_PORT`: 
+- `environment.SQL_INTERNAL_USER`: 
+- `environment.SQL_INTERNAL_PASSWORD`: 
+- `environment.SQL_INTERNAL_DATABASE`: 
+- `environment.CLUSTER_ADDRESS`: 
+- `environment.SQL_INTERNAL_CONNECTION_LIMIT`: (Value: `10`)
+- `environment.CLUSTER_PUBLIC_KEY`: 
+- `environment.BUGSNAG_API_KEY`: ""
+- `environment.ENABLE_METRICS`: (Value: `"0"`, i.e. _false_)
+- `environment.JAVA_OPTS`: Maximum heap size available to Prisma (Value: `"-Xmx1G"`, i.e. 1GB)
+
+#### Environment variables
 
 ##### Local
 
 ```
 PORT=4466
 SCHEMA_MANAGER_SECRET=MUCHSECRET
-SCHEMA_MANAGER_ENDPOINT="http://prisma-database:${PORT}/cluster/schema"
+SCHEMA_MANAGER_ENDPOINT="http://prisma-database:PORT}/cluster/schema"
 
 SQL_CLIENT_HOST="prisma-db"
 SQL_CLIENT_PORT="3306"
