@@ -45,13 +45,13 @@ Consider the above example for a cluster registry. In that case, the following w
 
 - Deploy the service to the `local` cluster:
 
-  ```yml
+  ```yml(path="prisma.yml")
   cluster: local
   ```
 
 - Deploy the service to the `digital-ocean` cluster:
 
-  ```yml
+  ```yml(path="prisma.yml")
   cluster: digital-ocean
   ```
 
@@ -60,3 +60,11 @@ Consider the above example for a cluster registry. In that case, the following w
 If you want to add a custom cluster to the cluster registry, you can either use the `prisma cluster add` command or manually add a cluster entry to the file, providing the required information. Similarly, to delete a cluster you can either run `prisma cluster remove` or  simply remove it from the cluster registry by hand.
 
 You can list your clusters and associated information using `prisma cluster list`. If you're authenticated with the Prisma Cloud, the command will also output the clusters you've configured there.
+
+## Authentication
+
+Clusters are secured using public/private key pairs. The cluster knows the public key. The private key is known locally by the Prisma CLI and used to generate _cluster tokens_. These cluster tokens are used to authenticate requests against the cluster (e.g. an invokation of `prisma deploy`) which can then be validated by the cluster using the public key.
+
+<!-- 
+![](https://imgur.com/SmHhGDD.png)
+-->
