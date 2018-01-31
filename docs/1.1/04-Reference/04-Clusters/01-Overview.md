@@ -36,8 +36,8 @@ clusters:
 
 When you're running `prisma deploy` for a Prisma service, there are two scenarios with respect to the target cluster:
 
-- The `cluster` property in `prisma.yml` is specified. In this case, the CLI will directly deploy the specified cluster.
-- The `cluster` property in `prisma.yml` is not specified. In this case, the CLI will prompt you with an interactive selection of your available clusters. After you selected a cluster, it will write it to `prisma.yml`. To bring 
+- The `cluster` property in `prisma.yml` is **specified**. In this case, the CLI will directly deploy the specified cluster.
+- The `cluster` property in `prisma.yml` is **not specified**. In this case, the CLI will prompt you with an interactive selection of your available clusters. After you selected a cluster, it will write your decision to `prisma.yml`, so the selected cluster will be used as the default cluster for future deploys. To bring up the interactive selection prompt again, you can invoke `prisma deploy --interactive` or simply remove the `cluster` property from `prisma.yml`.
 
 In any case, the value of [`cluster`](!alias-ufeshusai8#clusters-optional) needs to be the identical to the key of an entry in the `clusters` map from the cluster registry (_or_ refer to one of the clusters configured through your Prisma Cloud account).
 
@@ -62,13 +62,3 @@ If you want to add a custom cluster to the cluster registry, you can either use 
 You can list your clusters and associated information using `prisma cluster list`. If you're authenticated with the Prisma Cloud, the command will also output the clusters you've configured there.
 
 ## Cluster deployment
-
-Prisma services are deployed with the Prisma CLI. Because the Prisma deployment infrastructure is based on [Docker](https://docs.docker.com), a number of commands in the Prisma CLI actually are simple _proxies_ for the [Docker CLI](https://docs.docker.com/engine/reference/commandline/cli). In fact, all of the `prisma local <subcommand>` commands as well as the `prisma cluster logs` command fall into that category.
-
-- `prisma local start`: Starts the Prisma Docker containers by invoking [`docker-compose up`](https://docs.docker.com/compose/reference/up/)
-- `prisma local stop`: Stops the Prisma Docker containers by invoking [`docker stop`](https://docs.docker.com/engine/reference/commandline/stop/)
-- `prisma local upgrade`: Downloads the [latest Prisma images](https://hub.docker.com/r/prismagraphql/prisma/tags/) from Docker Hub using [`docker pull`](https://docs.docker.com/engine/reference/commandline/pull/)
-- `prisma local nuke`: Hard-resets the local development cluster by invoking [`docker-compose kill`](https://docs.docker.com/compose/reference/kill/), [`docker-compose down`](https://docs.docker.com/compose/reference/down/) and [`docker-compose up`](https://docs.docker.com/compose/reference/up/) (in that order)
-- `prisma cluster logs`: Shows the logs of the Docker containers using [`docker logs`](https://docs.docker.com/engine/reference/commandline/logs/)
-
-Check the tutorials for setting up the Docker container for the [Local Cluster](alias-meemaesh3k) or on [Digital Ocean](!alias-texoo9aemu).
