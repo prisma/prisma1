@@ -44,7 +44,7 @@ services:
       MYSQL_ROOT_PASSWORD: $SQL_INTERNAL_PASSWORD
       MYSQL_DATABASE: $SQL_INTERNAL_DATABASE
     ports:
-      - "3366:3306" # Temporary/debug mapping to the host
+      - "3306:3306" # Temporary/debug mapping to the host
     volumes:
       - db-persistence:/var/lib/mysql
 
@@ -86,6 +86,8 @@ volumes:
   db-persistence:
 ```
 
+> **Note**: In an upcoming release, [`prisma-database` will be renamed to just `prisma`](https://github.com/graphcool/prisma/issues/1791).
+
 ##### `prisma-db`
 
 The `prisma-db` service is based on the [`mysql`](https://hub.docker.com/_/mysql/) Docker image. Here is an overview of its most important properties:
@@ -95,7 +97,7 @@ The `prisma-db` service is based on the [`mysql`](https://hub.docker.com/_/mysql
 - `command`: _Override the default command._ (from [Docker](https://docs.docker.com/compose/compose-file/#command))
 - `environment.MYSQL_ROOT_PASSWORD`: _This variable is mandatory and specifies the password that will be set for the MySQL root superuser account._ (from [DockerHub](https://hub.docker.com/_/mysql/))
 - `environment.MYSQL_DATABASE`: _This variable is optional and allows you to specify the name of a database to be created on image startup. If a user/password was supplied (see below) then that user will be granted superuser access (corresponding to GRANT ALL) to this database._ (from [DockerHub](https://hub.docker.com/_/mysql/))
-- `ports`: _Expose ports._ (from [DockerHub](https://docs.docker.com/compose/compose-file/#ports); value: `_3366:3306_`)
+- `ports`: _Expose ports._ (from [DockerHub](https://docs.docker.com/compose/compose-file/#ports); value: `_3366:3306_`) (left is host, right is container which is the port to be exposed)
 - `volumes`: _Mount host paths or named volumes, specified as sub-options to a service._ (from [DockerHub](https://docs.docker.com/compose/compose-file/#volumes); value: `db-persistence:/var/lib/mysql`)
 
 ##### `prisma-database`
@@ -104,26 +106,24 @@ The `prisma-db` service is based on the [`prismagraphlq/prisma`](https://hub.doc
 
 - `networks`: _Networks to join, referencing entries under the top-level networks key._ (from [Docker](https://docs.docker.com/compose/compose-file/#networks); value: `"Prisma"`)
 - `restart`: _`no` is the default restart policy, and it does not restart a container under any circumstance. When `always` is specified, the container always restarts. The `on-failure` policy restarts a container if the exit code indicates an on-failure error._ (from [Docker](https://docs.docker.com/compose/compose-file/#restart); value: `always`)
-- `environment.SCHEMA_MANAGER_SECRET`: 
-- `environment.SCHEMA_MANAGER_ENDPOINT`: 
-- `environment.SQL_CLIENT_HOST_CLIENT1`: 
-- `environment.SQL_CLIENT_HOST_READONLY_CLIENT1`: 
-- `environment.SQL_CLIENT_HOST`: 
-- `environment.SQL_CLIENT_PORT`: 
-- `environment.SQL_CLIENT_USER`: 
-- `environment.SQL_CLIENT_PASSWORD`: 
-- `environment.SQL_CLIENT_CONNECTION_LIMIT`:;(value: `10`)
-- `environment.SQL_INTERNAL_HOST`: 
-- `environment.SQL_INTERNAL_PORT`: 
-- `environment.SQL_INTERNAL_USER`: 
-- `environment.SQL_INTERNAL_PASSWORD`: 
-- `environment.SQL_INTERNAL_DATABASE`: 
-- `environment.CLUSTER_ADDRESS`: 
-- `environment.SQL_INTERNAL_CONNECTION_LIMIT`:;(value: `10`)
-- `environment.CLUSTER_PUBLIC_KEY`: 
-- `environment.BUGSNAG_API_KEY`: __
-- `environment.ENABLE_METRICS`:;(value: `"0"`, i.e. _false_)
-- `environment.JAVA_OPTS`: Maximum heap size available to Prisma;(value: `"-Xmx1G"`, i.e. 1GB)
+- `environment.SQL_CLIENT_HOST_CLIENT1`:
+- `environment.SQL_CLIENT_HOST_READONLY_CLIENT1`:
+- `environment.SQL_CLIENT_HOST`:
+- `environment.SQL_CLIENT_PORT`:
+- `environment.SQL_CLIENT_USER`:
+- `environment.SQL_CLIENT_PASSWORD`:
+- `environment.SQL_CLIENT_CONNECTION_LIMIT`: (value: `10`)
+- `environment.SQL_INTERNAL_HOST`:
+- `environment.SQL_INTERNAL_PORT`:
+- `environment.SQL_INTERNAL_USER`:
+- `environment.SQL_INTERNAL_PASSWORD`:
+- `environment.SQL_INTERNAL_DATABASE`:
+- `environment.CLUSTER_ADDRESS`:
+- `environment.SQL_INTERNAL_CONNECTION_LIMIT`: (value: `10`)
+- `environment.CLUSTER_PUBLIC_KEY`:
+- `environment.BUGSNAG_API_KEY`:
+- `environment.ENABLE_METRICS`:(value: `"0"`, i.e. _false_)
+- `environment.JAVA_OPTS`: Maximum heap size available to Prisma (value: `"-Xmx1G"`, i.e. 1GB)
 
 #### Environment variables
 
@@ -131,8 +131,6 @@ The `prisma-db` service is based on the [`prismagraphlq/prisma`](https://hub.doc
 
 ```
 PORT=4466
-SCHEMA_MANAGER_SECRET=MUCHSECRET
-SCHEMA_MANAGER_ENDPOINT="http://prisma-database:PORT}/cluster/schema"
 
 SQL_CLIENT_HOST="prisma-db"
 SQL_CLIENT_PORT="3306"
@@ -159,8 +157,6 @@ SQL_INTERNAL_CONNECTION_LIMIT=10
 
 ```
 PORT=4466
-SCHEMA_MANAGER_SECRET=SECRET_1
-SCHEMA_MANAGER_ENDPOINT=http://prisma-database:${PORT}/cluster/schema
 
 SQL_CLIENT_HOST=prisma-db
 SQL_CLIENT_PORT=3306
@@ -177,4 +173,44 @@ SQL_INTERNAL_CONNECTION_LIMIT=10
 
 CLUSTER_ADDRESS=http://prisma-database:${PORT}
 CLUSTER_PUBLIC_KEY=PUBLIC_KEY
+```
+
+## Debugging
+
+To get insights into the internals of your Prisma cluster, you can check the logs of the corresponding Docker container.
+
+### Accessing Docker logs
+
+If you need more extensive logs you can view the raw logs from the Docker containers:
+
+```sh
+docker logs prisma-db
+docker logs prisma-database
+```
+
+### Verify Docker containers
+
+If you get an error message saying `Error response from daemon: No such container` you can verify that the containers are running:
+
+```sh
+docker ps
+```
+
+You should see output similar to this:
+
+```
+❯ docker ps
+CONTAINER ID  IMAGE                       COMMAND                 CREATED            STATUS            PORTS                   NAMES
+7210106b6650  prismagraphql/prisma:1.0.0  "/app/bin/single-ser…"  About an hour ago  Up About an hour  0.0.0.0:4466->4466/tcp  prisma
+1c15922e15ba  mysql:5.7                   "docker-entrypoint.s…"  About an hour ago  Up About an hour  0.0.0.0:3306->3306/tcp  prisma-db
+```
+
+### Nuke
+
+If your local prisma cluster is in an unrecoverable state, the easiest option might be to completely reset it. Be careful as **this command will reset all data** in your local cluster.
+
+```sh
+❯ prisma local nuke
+Nuking local cluster 10.9s
+Booting fresh local development cluster 18.4s
 ```
