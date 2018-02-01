@@ -55,7 +55,7 @@ You can upload an unlimited number of files for each of these types, but each fi
 
 The Prisma CLI offers the `prisma import` command. It accepts one option:
 
-- `--data` (short: `-d`): A file path to a .zip-directory containing the data to be imported
+- `--data` (short: `-d`): A file path to a directory containing the data to be imported (this can either be _regular_ or a _zipped_ directory)
 
 Under the hood, the CLI uses the import API that's described in the next section. However, using the CLI provides some major benefits:
 
@@ -86,15 +86,14 @@ Consider the following file structure defining a Prisma service:
 │   │   └── 0002.json
 │   └── relations
 │       └── 0001.json
-├── data.zip
 ├── datamodel.graphql
 └── prisma.yml
 ```
 
-`data.zip` is the _compressed_ version of the `data` directory. Further, all files ending on `.json` are adhering to NDF. To import the data from these files, you can simply run the following command in the terminal:
+`data` contains the files data to be imported. Further, all files ending on `.json` are adhering to NDF. To import the data from these files, you can simply run the following command in the terminal:
 
 ```sh
-prisma import --source data.zip
+prisma import --source data
 ```
 
 ## Data import using the raw import API
