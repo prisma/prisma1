@@ -327,6 +327,94 @@ mutation {
 }
 ```
 
+## Scalar list mutations
+
+When an [object type](!alias-eiroozae8u#object-types) has a field that is has a _scalar list_ as its type, there are a number of special mutations available.
+
+In the following data model, the `User` type has three such fields:
+
+```graphql
+type User {
+  id: ID! @unique
+  scores: [Int!]!         # scalar list for integers
+  friends: [String!]!     # scalar list for strings
+  coinFlips: [Boolean!]!  # scalar list for booleans
+}
+```
+
+### Creating nodes
+
+When creating a new node of type `User`, a list of values can be provided for each scalar list field using `set`.
+
+#### Example
+
+```grahpql
+mutation {
+  createUser(data: {
+    scores: { set: [1, 2, 3] }
+    friends: { set: ["Sarah", "Jane"] }
+    throws: { set: [false, false] }
+  }) {
+    id
+  }
+}
+```
+
+### Updating nodes
+
+When updating an existing node of type `User`, a number of additional operations can be performed on the scalar list fields:
+
+- `set`: Override the existing list with an entirely new list.
+- `push` (coming soon): Add one or more elements anywhere in the list.
+- `pop` (coming soon): Remove one or more elements from the beginning or the end of the list.
+- `remove` (coming soon): Remove all elements from the list that match a given filter.
+
+> **Note**: `push`, `pop` and `remove` are not yet implemented. If you're curios what these are going to look like, you can get a preview in the respective [specification](https://github.com/graphcool/prisma/issues/1275).
+
+#### `set`
+
+Each scalar list field takes an object with a `set` field in an `update`-mutation. The value of that field is a single value _or_ a list of the corresponding scalar type.
+
+##### Examples
+
+Set the `scores` of an existing `User` node to `[1]`:
+
+```graphql
+mutation {
+  updateUser(
+    where: {
+      id: "cjd4lfdyww0h00144zst9alur"
+    }
+    data: {
+      scores: {
+        set: 1
+      }
+    }
+  ) {
+    id
+  }
+}
+```
+
+Set the `scores` of an existing `User` node to `[10,20,30]`:
+
+```graphql
+mutation {
+  updateUser(
+    where: {
+      id: "cjd4lfdyww0h00144zst9alur"
+    }
+    data: {
+      scores: {
+        set: [10,20,30]
+      }
+    }
+  ) {
+    id
+  }
+}
+```
+
 ## Batch Mutations
 
 Batch mutations are useful to update or delete many nodes at once. The returned data only contains the `count` of affected nodes.
