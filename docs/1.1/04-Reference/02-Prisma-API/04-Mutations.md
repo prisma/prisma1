@@ -333,6 +333,12 @@ Batch mutations are useful to update or delete many nodes at once. The returned 
 
 For updating many nodes, you can [select the affected nodes](!alias-utee3eiquo#node-selection) using the `where` argument, while you specify the new values with `data`. All nodes will be updated to the same value.
 
+<InfoBox type="warning">
+
+Note that no [subscription](!alias-aey0vohche) events are triggered for batch mutations!
+
+</InfoBox>
+
 Here, we are publishing all unpublished `Post` nodes that were created in 2017:
 
 ```graphql

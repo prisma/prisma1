@@ -412,7 +412,7 @@ This query takes a few seconds and then returns a public and a private key.
 From the response, copy the public key and add it as the `CLUSTER_PUBLIC_KEY` to your `.env` file:
 
 ```(path="digital-ocean-demo/.env")
-CLUSTER_PUBLIC_KEY="-----BEGIN PUBLIC KEY-----\r\n [long key omitted] -----END PUBLIC KEY-----\r\n",
+CLUSTER_PUBLIC_KEY="-----BEGIN PUBLIC KEY-----\r\n [ long key omitted ] -----END PUBLIC KEY-----\r\n",
 ```
 
 </Instruction>
@@ -470,7 +470,7 @@ Open `~/.prisma/config.yml` and paste the `private` key you received as the resp
 clusters:
   digital-ocean-cluster:
     host: 'http://__DROPLET_IP_ADDRESS__:4466'
-    clusterSecret: "-----BEGIN RSA PRIVATE KEY-----\r\n[long key omitted]]\r\n-----END RSA PRIVATE KEY-----\r\n"
+    clusterSecret: "-----BEGIN RSA PRIVATE KEY-----\r\n[ long key omitted ]]\r\n-----END RSA PRIVATE KEY-----\r\n"
 ```
 
 </Instruction>
