@@ -647,3 +647,26 @@ _Enum value names are unique on an enum level._
 * `A`
 * `ROLE_TAG`
 * `RoleTag`
+
+## More SDL features
+
+In this section, we describe further SDL features that are not yet supported for data modelling with Prisma.
+
+### Interfaces
+
+"Like many type systems, GraphQL supports interfaces. An interface is an abstract type that includes a certain set of fields that a type must include to implement the interface." From the official [GraphQL Documentation](http://graphql.org/learn/schema/#interfaces)
+
+> **Note**: To learn more about when and how interfaces are coming to Prisma, check out this [feature request](https://github.com/graphcool/prisma/issues/83).
+
+### Interfaces
+
+"Like many type systems, GraphQL supports interfaces. An interface is an abstract type that includes a certain set of fields that a type must include to implement the interface." From the official [GraphQL Documentation](http://graphql.org/learn/schema/#interfaces)
+
+> **Note**: To learn more about when and how interfaces are coming to Prisma, check out this [feature request](https://github.com/graphcool/prisma/issues/83).
+
+### Union types
+
+"Union types are very similar to interfaces, but they don't get to specify any common fields between the types." From the official [GraphQL Documentation](http://graphql.org/learn/schema/#union-types)
+
+> **Note**: To learn more about when and how union types are coming to Prisma, check out this [feature request](https://github.com/graphcool/prisma/issues/165).
+
