@@ -7,7 +7,7 @@ description: Learn how to deploy your Prisma database service to Digital Ocean u
 
 In this tutorial, you will learn how to create a Prisma [cluster](!alias-eu2ood0she) on Digital Ocean and deploy your Prisma services to it.
 
-[Digital Ocean](https://www.digitalocean.com/) is an easy-to-use provider of virtual servers. They offer different computation units, called [Droplets](https://www.digitalocean.com/products/droplets/).
+[Digital Ocean](https://www.digitalocean.com/) is an easy-to-use provider of virtual servers. They offer configurable compute units of various sizes, called [Droplets](https://www.digitalocean.com/products/droplets/).
 
 <InfoBox>
 
@@ -21,7 +21,7 @@ The first thing you need to is install Docker and Docker Machine. The easiest wa
 
 <Instruction>
 
-Follow the instructions (step 1 through 3) at [https://docs.docker.com/machine/install-machine/#install-machine-directly](https://docs.docker.com/machine/install-machine/#install-machine-directly) to install Docker as well as  Docker Machine.
+Follow the instructions (steps 1 through 3) at [https://docs.docker.com/machine/install-machine/#install-machine-directly](https://docs.docker.com/machine/install-machine/#install-machine-directly) to install Docker as well as  Docker Machine.
 
 </Instruction>
 
@@ -257,12 +257,9 @@ Open `~/.prisma/config.yml` and add a new entry (here called `digital-ocean-clus
 clusters:
   digital-ocean-cluster:
     host: 'http://__DROPLET_IP_ADDRESS__:4466'
-    clusterSecret: "-----BEGIN RSA PRIVATE KEY-----\r\nMIIEpQIBAAKCAQEA1s/Gt2fNZj6JTIgzllscsxBOXezT8rmVzAJRb1lMvEVOoTYd\r\n51AMoIAunimFbq+DBNUBDw+9E17/ogGH3pGjZuYpzd2TQO6U1z5Bk1Zv2e8XebKV\r\ncblRGqlIN442uk4Th1MhhLaMxEUAsoXUIq3fZ8gWGWC1qUn5ZV1dHj14EosBtWJg\r\nntqB2MkYym7MLqM1m0vIVzuNIME8k5JS9zzIalQOPPKK7RBN8/eb3hT3qfPHltDi\r\nrQwwYMXMllYHjNg6h07w18+nK04vu3tDDrS7vtJxJ6B8gVrbyJcNZDCuXBb/GWb9\r\nqHd1ivGuXNPvyljsIr7vusSALlIRJwW/uSGofwIDAQABAoIBAC71tzRrDd0XOL6x\r\nW82311tR6j/gQSlj5tp1e0YDWKIj6J+XjAwAVPJVc1uCKjhbSCIrSpL3VtdAQlQx\r\nT3mZjwY0tNjbYpCkV4eChaVnFQaonRIutzroT1GrxizW+yHZZa2Ev+QaYEWb7B4a\r\n4Zg/OIKgnCwqFyyODmZZdbzhpTkwIZXoeB5zGzoPLVckJ5782spwCDZqStyYPSQ1\r\nG7t7bD4dhQlmbdqHl0bfJdqmmsuU94Zb/fRAbAb4/Kh267Czs1yq+g4eFKAltviR\r\nOZgvsOHtwq/REv6PwCzKQtLz5FMSPLThVIeI0/aCTZJQi8FHX7DLkDrbl9pKCT58\r\n4ltA+jkCgYEA+OptXjNJiijGTGhF1coGG88JzGP891+mv3AamFEgAckChb5vbgwQ\r\n70Uld/v0+6emJQdfT8vurq/v3SMzcgbcbWsZUG+BwgxSeEStLYI2/WknvVGdPE4/\r\nGnTqRN5Ufy9HP9Zw054TaBHTnvq076/BPPjWgBzaOK9rBxshcKHnENMCgYEA3Oze\r\nx930m3dKHylv3k3OHh3mxb9YgcwgX0pYQ5TZSsHOssWsa4AbevE/ciHoI0fDBzmP\r\nH1aTPHrECbC3jMG6eS0JEV6Zbd0PkPh44ouOkwK6bvqX79D/cEQs3t9VAVNTXpLi\r\n11kl7u4YyZinOkAq2T2cujEeLJaLWN9O18f+niUCgYEA86m4KhCWmpJTm5QvWJqM\r\n5EgF1XjDtvyBZME+p4AyjszQlU/YEKfrI+5SQWP5ayev8muHF7wQCBzd92FwCN1C\r\nhjHi8+RT5zrcuDKyO+xOHD8F0cPE4bXO+/0bHxNtL5t+abVneSAy6xsYR3YwDLnF\r\ntgP5JiwYSokdgjVCxNkYMlUCgYEAxVFysQSWwnxK4YY6+kx3ugJu6VO7k0Jj73gR\r\nWVsKsHBlUtqm4uTqpmXuitup4Ejp8fwAzraejrf/e8AwUDF/gVct8CuT0cJNcufZ\r\n4E1RLBCVvyVmqrT6UKUzhmPmImbv4VpD7J8c+EgEL5p+UdKZ8qnK36mbD6vuDZR1\r\ncNiZm1kCgYEAjUA+1ath9AakMs0rdwxBPjuLA/G66B40DfU6ideZxyJoa+ToQ1o/\r\n/JuN+Vd081lCNqkovqt2JDxO+tA+EXG80Hdy53HXNzn38+ZK854a2dk8bB9SqFXP\r\nYXCoDVl6B03u75tdb7VGC+mXqclVhF2q37Zu8bdzB0e2ucKh6QQ7Q/s=\r\n-----END RSA PRIVATE KEY-----\r\n"
 ```
 
 </Instruction>
-
-> **Note**: Wait a minute! Didn't we say there's no need for a `clusterSecret` right now because we are not using cluster authentication? Yes, indeed. And the fact that we're still adding a `clusterSecret` to the cluster configuration is simply due to a [bug](https://github.com/graphcool/prisma/issues/1800) in the Prisma CLI which requires to provide _any_ RSA private key here. Once the bug is fixed, you'll be able to only provide the name and the `host` for the new cluster.
 
 Notice that there currently is a placeholder of the IP address of the Digital Ocean Droplet, so the value for `host` is not yet valid!
 
