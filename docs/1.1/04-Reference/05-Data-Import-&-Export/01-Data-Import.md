@@ -7,6 +7,16 @@ description: Data Import
 
 Data to be imported needs to adhere to the Normalized Data Format (NDF). As of today, the conversion from any concrete data source (like MySQL, MongoDB or Firebase) to NDF must be performed manually. In the [future](https://github.com/graphcool/framework/issues/1410), the Prisma CLI will support importing from these data sources directly.
 
+<InfoBox type="warning">
+
+Note that import operations are **not idempotent**. This means multiple import operations with the same data will bring your service into an inconsistent state! For example, importing a node with the same `id` more than once will lead to undefined behaviour and likely break your service!
+
+As the service maintainer, you are responsible to ensure the validity of the imported data!
+
+**Protip**: To see what a valid import data set looks like, it is often helpful to [export](!alias-pa0aip3loh) data from an existing service. You can use this as foundation for the data you want to import.
+
+</InfoBox>
+
 Here is a general overview of the data import process:
 
 ```
@@ -37,7 +47,7 @@ You can upload an unlimited number of files for each of these types, but each fi
 
 The Prisma CLI offers the `prisma import` command. It accepts one option:
 
-- `--data`  (short: `-d`): A file path to a .zip-directory containing the data to be imported
+- `--data` (short: `-d`): A file path to a .zip-directory containing the data to be imported
 
 Under the hood, the CLI uses the import API that's described in the next section. However, using the CLI provides some major benefits:
 

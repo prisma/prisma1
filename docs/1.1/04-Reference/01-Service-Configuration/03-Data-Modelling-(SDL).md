@@ -669,4 +669,3 @@ In this section, we describe further SDL features that are not yet supported for
 "Union types are very similar to interfaces, but they don't get to specify any common fields between the types." From the official [GraphQL Documentation](http://graphql.org/learn/schema/#union-types)
 
 > **Note**: To learn more about when and how union types are coming to Prisma, check out this [feature request](https://github.com/graphcool/prisma/issues/165).
-
