@@ -73,7 +73,7 @@ docker-machine ls
 
 ## 4. Install Prisma on your Droplet
 
-Now that you have your Droplet up-and-running, you can install Prisma on it. As [the Prisma infrastructure runs on Docker](!alias-aira9zama5), you could theoretically do this by using the Docker CLI directly. In that case, you could use the [Docker Compose file](!alias-aira9zama5#docker-compose-file) as foundation and run the required commands (e.g. [`docker-compose up`](https://docs.docker.com/compose/reference/up/)) yourself.
+Now that you have your Droplet up and running, you can install Prisma on it. As [the Prisma infrastructure runs on Docker](!alias-aira9zama5), you could theoretically do this by using the Docker CLI directly. In that case, you could use the [Docker Compose file](!alias-aira9zama5#docker-compose-file) as foundation and run the required commands (e.g. [`docker-compose up`](https://docs.docker.com/compose/reference/up/)) yourself.
 
 However, the Prisma CLI actually offers some commands that you can use for convenience to not fiddle with Docker yourself. In this tutorial, you'll take advantage of these commands - under the hood they will simply configure your Docker environment and invoke the required CLI commands.
 
@@ -156,8 +156,6 @@ services:
       - prisma
     environment:
       PORT: $PORT
-      SCHEMA_MANAGER_SECRET: $SCHEMA_MANAGER_SECRET
-      SCHEMA_MANAGER_ENDPOINT: $SCHEMA_MANAGER_ENDPOINT
       SQL_CLIENT_HOST_CLIENT1: $SQL_CLIENT_HOST
       SQL_CLIENT_HOST_READONLY_CLIENT1: $SQL_CLIENT_HOST
       SQL_CLIENT_HOST: $SQL_CLIENT_HOST
@@ -172,7 +170,7 @@ services:
       SQL_INTERNAL_DATABASE: $SQL_INTERNAL_DATABASE
       CLUSTER_ADDRESS: $CLUSTER_ADDRESS
       SQL_INTERNAL_CONNECTION_LIMIT: 10
-      CLUSTER_PUBLIC_KEY: $CLUSTER_PUBLIC_KEY
+      #CLUSTER_PUBLIC_KEY: $CLUSTER_PUBLIC_KEY
       BUGSNAG_API_KEY: ""
       ENABLE_METRICS: "0"
       JAVA_OPTS: "-Xmx1G"
@@ -187,6 +185,8 @@ volumes:
 
 </Instruction>
 
+Note the comment in front of the `environment.CLUSTER_PUBLIC_KEY` property. For now, we don't provide a public key to the Prisma cluster which is going to enable _everyone_ with access to the IP address of the Droplet to deploy and delete services to and from it! We'll add the security layer afterwards!
+
 <Instruction>
 
 Next, create another file that you call `.env`. Then paste the following contents into it:
@@ -194,7 +194,6 @@ Next, create another file that you call `.env`. Then paste the following content
 ```(path="digital-ocean-demo/.env")
 PORT=4466
 CLUSTER_ADDRESS=http://prisma-database:${PORT}
-CLUSTER_PUBLIC_KEY=PUBLIC_KEY
 
 SQL_CLIENT_HOST=prisma-db
 SQL_CLIENT_PORT=3306
@@ -208,6 +207,9 @@ SQL_INTERNAL_USER=root
 SQL_INTERNAL_PASSWORD=__SECRET_2__
 SQL_INTERNAL_DATABASE=graphcool
 SQL_INTERNAL_CONNECTION_LIMIT=10
+
+SCHEMA_MANAGER_SECRET=SECRET_1
+SCHEMA_MANAGER_ENDPOINT=http://prisma-database:${PORT}/cluster/schema
 ```
 
 </Instruction>
@@ -226,107 +228,259 @@ docker-compose up -d
 
 </Instruction>
 
-Remember that thanks to Docker Machine, this command will now run against the remote host, i.e. your Digital Ocean Droplet.
+Remember that thanks to Docker Machine, this command will now run against the remote host, i.e. your Digital Ocean Droplet. The `-d` option starts the container in _detached mode_, meaning it will run as a background process.
 
+Awesome, you now have your Prisma cluster available on the Digital Ocean Droplet! This means you can add it as a new cluster to your [cluster registry](!alias-eu2ood0she#cluster-registry) and then deploy your Prisma services to it!
 
+## 5. Add the cluster to your cluster registry
 
+The cluster registry is stored in `~/.prisma/config.yml`. It lists all the clusters you can use to deploy your Prisma services (excluding the ones you configured through the Prisma Cloud).
 
+There is two ways how you can a new cluster to the registry:
 
+1. Use the interactive Prisma CLI using the  `prisma cluster add` command
+1. Open `~/.prisma/config.yml` and add the cluster manually
 
+In both cases, there are three pieces of information that need to be provided:
 
+- The **name** of the cluster, you can choose anything you like here.
+- The **host**, i.e. the IP (or domain) including the port where the cluster is running.
+- The **cluster secret** (optional). This is the private key matching the public key which was deployed to the Prisma cluster as the `environment.CLUSTER_PUBLIC_KEY` variables. As noted above, we skipped that step for now but will come back to it in a bit to enable cluster security.
 
-<!-- 
+You'll use the second option and add the cluster configuration to the registry manually.
 
-Now you need to copy the Configuration files for Prisma Cluster. In a new folder create the two files:
+<Instruction>
 
-> .env
+Open `~/.prisma/config.yml` and add a new entry (here called `digital-ocean-cluster`) to the `clusters` map:
 
-```
-PORT=4466
-SCHEMA_MANAGER_SECRET=SECRET_1
-SCHEMA_MANAGER_ENDPOINT=http://prisma-database:${PORT}/cluster/schema
-CLUSTER_ADDRESS=http://prisma-database:${PORT}
-CLUSTER_PUBLIC_KEY=PUBLIC_KEY
-
-SQL_CLIENT_HOST=prisma-db
-SQL_CLIENT_PORT=3306
-SQL_CLIENT_USER=root
-SQL_CLIENT_PASSWORD=SECRET_2
-SQL_CLIENT_CONNECTION_LIMIT=10
-
-SQL_INTERNAL_HOST=prisma-db
-SQL_INTERNAL_PORT=3306
-SQL_INTERNAL_USER=root
-SQL_INTERNAL_PASSWORD=SECRET_2
-SQL_INTERNAL_DATABASE=graphcool
-SQL_INTERNAL_CONNECTION_LIMIT=10
+```yml(path="/.prisma/config.yml")
+clusters:
+  digital-ocean-cluster:
+    host: 'http://__DROPLET_IP_ADDRESS__:4466'
+    clusterSecret: "-----BEGIN RSA PRIVATE KEY-----\r\nMIIEpQIBAAKCAQEA1s/Gt2fNZj6JTIgzllscsxBOXezT8rmVzAJRb1lMvEVOoTYd\r\n51AMoIAunimFbq+DBNUBDw+9E17/ogGH3pGjZuYpzd2TQO6U1z5Bk1Zv2e8XebKV\r\ncblRGqlIN442uk4Th1MhhLaMxEUAsoXUIq3fZ8gWGWC1qUn5ZV1dHj14EosBtWJg\r\nntqB2MkYym7MLqM1m0vIVzuNIME8k5JS9zzIalQOPPKK7RBN8/eb3hT3qfPHltDi\r\nrQwwYMXMllYHjNg6h07w18+nK04vu3tDDrS7vtJxJ6B8gVrbyJcNZDCuXBb/GWb9\r\nqHd1ivGuXNPvyljsIr7vusSALlIRJwW/uSGofwIDAQABAoIBAC71tzRrDd0XOL6x\r\nW82311tR6j/gQSlj5tp1e0YDWKIj6J+XjAwAVPJVc1uCKjhbSCIrSpL3VtdAQlQx\r\nT3mZjwY0tNjbYpCkV4eChaVnFQaonRIutzroT1GrxizW+yHZZa2Ev+QaYEWb7B4a\r\n4Zg/OIKgnCwqFyyODmZZdbzhpTkwIZXoeB5zGzoPLVckJ5782spwCDZqStyYPSQ1\r\nG7t7bD4dhQlmbdqHl0bfJdqmmsuU94Zb/fRAbAb4/Kh267Czs1yq+g4eFKAltviR\r\nOZgvsOHtwq/REv6PwCzKQtLz5FMSPLThVIeI0/aCTZJQi8FHX7DLkDrbl9pKCT58\r\n4ltA+jkCgYEA+OptXjNJiijGTGhF1coGG88JzGP891+mv3AamFEgAckChb5vbgwQ\r\n70Uld/v0+6emJQdfT8vurq/v3SMzcgbcbWsZUG+BwgxSeEStLYI2/WknvVGdPE4/\r\nGnTqRN5Ufy9HP9Zw054TaBHTnvq076/BPPjWgBzaOK9rBxshcKHnENMCgYEA3Oze\r\nx930m3dKHylv3k3OHh3mxb9YgcwgX0pYQ5TZSsHOssWsa4AbevE/ciHoI0fDBzmP\r\nH1aTPHrECbC3jMG6eS0JEV6Zbd0PkPh44ouOkwK6bvqX79D/cEQs3t9VAVNTXpLi\r\n11kl7u4YyZinOkAq2T2cujEeLJaLWN9O18f+niUCgYEA86m4KhCWmpJTm5QvWJqM\r\n5EgF1XjDtvyBZME+p4AyjszQlU/YEKfrI+5SQWP5ayev8muHF7wQCBzd92FwCN1C\r\nhjHi8+RT5zrcuDKyO+xOHD8F0cPE4bXO+/0bHxNtL5t+abVneSAy6xsYR3YwDLnF\r\ntgP5JiwYSokdgjVCxNkYMlUCgYEAxVFysQSWwnxK4YY6+kx3ugJu6VO7k0Jj73gR\r\nWVsKsHBlUtqm4uTqpmXuitup4Ejp8fwAzraejrf/e8AwUDF/gVct8CuT0cJNcufZ\r\n4E1RLBCVvyVmqrT6UKUzhmPmImbv4VpD7J8c+EgEL5p+UdKZ8qnK36mbD6vuDZR1\r\ncNiZm1kCgYEAjUA+1ath9AakMs0rdwxBPjuLA/G66B40DfU6ideZxyJoa+ToQ1o/\r\n/JuN+Vd081lCNqkovqt2JDxO+tA+EXG80Hdy53HXNzn38+ZK854a2dk8bB9SqFXP\r\nYXCoDVl6B03u75tdb7VGC+mXqclVhF2q37Zu8bdzB0e2ucKh6QQ7Q/s=\r\n-----END RSA PRIVATE KEY-----\r\n"
 ```
 
-> docker-compose.yml
+</Instruction>
 
-```yml
-version: "3"
-services:
-  prisma-db:
-    container_name: prisma-db
-    image: mysql:5.7
-    networks:
-      - prisma
-    restart: always
-    command: mysqld --max-connections=1000 --sql-mode="ALLOW_INVALID_DATES,ANSI_QUOTES,ERROR_FOR_DIVISION_BY_ZERO,HIGH_NOT_PRECEDENCE,IGNORE_SPACE,NO_AUTO_CREATE_USER,NO_AUTO_VALUE_ON_ZERO,NO_BACKSLASH_ESCAPES,NO_DIR_IN_CREATE,NO_ENGINE_SUBSTITUTION,NO_FIELD_OPTIONS,NO_KEY_OPTIONS,NO_TABLE_OPTIONS,NO_UNSIGNED_SUBTRACTION,NO_ZERO_DATE,NO_ZERO_IN_DATE,ONLY_FULL_GROUP_BY,PIPES_AS_CONCAT,REAL_AS_FLOAT,STRICT_ALL_TABLES,STRICT_TRANS_TABLES,ANSI,DB2,MAXDB,MSSQL,MYSQL323,MYSQL40,ORACLE,POSTGRESQL,TRADITIONAL"
-    environment:
-      MYSQL_ROOT_PASSWORD: $SQL_INTERNAL_PASSWORD
-      MYSQL_DATABASE: $SQL_INTERNAL_DATABASE
-    ports:
-      - "3306:3306" # Temporary/debug mapping to the host
-    volumes:
-      - db-persistence:/var/lib/mysql
+> **Note**: Wait a minute! Didn't we say there's no need for a `clusterSecret` right now because we are not using cluster authentication? Yes, indeed. And the fact that we're still adding a `clusterSecret` to the cluster configuration is simply due to a [bug](https://github.com/graphcool/prisma/issues/1800) in the Prisma CLI which requires to provide _any_ RSA private key here. Once the bug is fixed, you'll be able to only provide the name and the `host` for the new cluster.
 
-  prisma:
-    image: prismagraphql/prisma:1.0.0-beta4.2
-    restart: always
-    ports:
-      - "0.0.0.0:${PORT}:${PORT}"
-    networks:
-      - prisma
-    environment:
-      PORT: $PORT
-      SCHEMA_MANAGER_SECRET: $SCHEMA_MANAGER_SECRET
-      SCHEMA_MANAGER_ENDPOINT: $SCHEMA_MANAGER_ENDPOINT
-      SQL_CLIENT_HOST_CLIENT1: $SQL_CLIENT_HOST
-      SQL_CLIENT_HOST_READONLY_CLIENT1: $SQL_CLIENT_HOST
-      SQL_CLIENT_HOST: $SQL_CLIENT_HOST
-      SQL_CLIENT_PORT: $SQL_CLIENT_PORT
-      SQL_CLIENT_USER: $SQL_CLIENT_USER
-      SQL_CLIENT_PASSWORD: $SQL_CLIENT_PASSWORD
-      SQL_CLIENT_CONNECTION_LIMIT: 10
-      SQL_INTERNAL_HOST: $SQL_INTERNAL_HOST
-      SQL_INTERNAL_PORT: $SQL_INTERNAL_PORT
-      SQL_INTERNAL_USER: $SQL_INTERNAL_USER
-      SQL_INTERNAL_PASSWORD: $SQL_INTERNAL_PASSWORD
-      SQL_INTERNAL_DATABASE: $SQL_INTERNAL_DATABASE
-      CLUSTER_ADDRESS: $CLUSTER_ADDRESS
-      SQL_INTERNAL_CONNECTION_LIMIT: 10
-      CLUSTER_PUBLIC_KEY: $CLUSTER_PUBLIC_KEY
-      BUGSNAG_API_KEY: ""
-      CLUSTER_VERSION: 1.0.0-beta4.2
+Notice that there currently is a placeholder of the IP address of the Digital Ocean Droplet, so the value for `host` is not yet valid!
 
-networks:
-  prisma:
-    driver: bridge
+There are several ways to figure out the IP of your Droplet, e.g. by checking the [Digital Ocean Console](https://cloud.digitalocean.com/droplets). For this tutorial, you'll use the `docker-machine` CLI again.
 
-volumes:
-  db-persistence:
+<Instruction>
+
+In your terminal, run the following command:
+
+```sh
+docker-machine ip prisma
 ```
 
-In `.env`, replace `SECRET_1` and `SECRET_2` (occurs twice) with a long and secure random string.
+</Instruction>
 
-Now you are ready to use `docker-compose` to start your Prisma cluster:
+Note that `prisma` is just the _name_ of the Droplet you initally created. This will print the IP address of that Droplet.
+
+<Instruction>
+
+Copy the IP address that was printed from the command and use it to replace the `__DROPLET_IP_ADDRESS__` placeholder in the URL that's the value for the `host` property of your `digitical-ocean-cluster` cluster in `~/.prisma/config.yml`, e.g.:
+
+```yml(path="/.prisma/config.yml")
+host: 'http://104.131.127.241:4466'
+```
+
+</Instruction>
+
+## 6. Deploy a Prisma service to the cluster
+
+You're now ready to deploy a Prisma service to the cluster.
+
+<Instruction>
+
+Inside the `digital-ocean-demo` directory, run the following command:
+
+```sh(path="digital-ocean-demo")
+prisma init hello-world
+```
+
+</Instruction>
+
+<Instruction>
+
+From the interactive prompt, choose the `Minimal setup: database-only` option.
+
+</Instruction>
+
+This creates a new directory that has the initial setup for a minimal Prisma service:
+
+```
+hello-world
+  ├── .graphqlconfig.yml
+  ├── datamodel.graphql
+  └── prisma.yml
+```
+
+Next, you can go ahead and deploy the Prisma service.
+
+<Instruction>
+
+Navigate into the newly-created `hello-world` directory and deploy the service:
+
+```sh(path="digital-ocean-demo")
+cd hello-world
+prisma deploy
+```
+
+</Instruction>
+
+Because no `cluster` is specified in `prisma.yml`, the CLI now prompts you to select a cluster. The list includes the `digital-ocean-cluster` you previously added:
+
+```
+$ prisma deploy
+
+? Please choose the cluster you want to deploy "hello-world@dev" to (Use arrow keys)
+
+  local                   Local cluster (requires Docker)
+❯ digital-ocean-cluster   Self-hosted
+```
+
+<Instruction>
+
+Select the `digital-ocean-cluster` from the list.
+
+</Instruction>
+
+The CLI is now going to deploy the service to that cluster and write the `cluster` entry to `prismal.yml`.
+
+<InfoBox>
+
+The Prisma CLI in that case acts as a _client_ for the Prisma Cluster API which is used to manage services on a spefic cluster. If you want to explore that Cluster API yourself, you can navigate your browser to `http://__DROPLET_IP_ADDRESS__:4466/cluster`. Similar to before, you'll have to replace the `__DROPLET_IP_ADDRESS__` placeholder with the actual IP address of your Digital Ocean Droplet.
+
+</InfoBox>
+
+This is it! Your Prisma service is now running on your local cluster and can be access through the endpoint that was printed by the `prisma deploy` command! It will look similar to this: `http://__DROPLET_IP_ADDRESS__:4466/hello-world/dev`.
+
+You can go ahead and send the following mutation and query to it:
+
+```graphql
+mutation {
+  createUser(data: {
+    name: "Sarah"
+  }) {
+    id
+  }
+}
+```
+
+```graphql
+{
+  users {
+    id
+    name
+  }
+}
+```
+
+## 7. Enable cluster authentication
+
+As noted before, _everyone_ with access to the endpoint of your cluster (`http://__DROPLET_IP_ADDRESS__:4466/`) will be able to access your cluster in any way they like. This means they can add new services or delete existing ones and also get full read/write-access to the application data from these services. This is a major security leak and should never be the case in any sort of production environment! Let's go and fix it.
+
+Here's a quick overview of the steps you need to perform (like before, we'll go through each step in detail afterwards):
+
+1. Generate an RSA public/private keypair
+1. Submit the public key as the `CLUSTER_PUBLIC_KEY` environment variable to the Prisma cluster (this step enables the cluster authentication)
+1. Add the private key as the `clusterSecret` to the cluster registry
+1. Redeploy the Prisma service
+
+To generate a public/private-keypair, you can use any mechanism you wish, e.g. the [`openssl`](https://www.openssl.org/docs/manmaster/man1/openssl.html) CLI. For the purpose of this tutorial, you'll use the Prisma Cloud API.
+
+<Instruction>
+
+Open [`https://api.cloud.prisma.sh/`](https://api.cloud.prisma.sh/) in your browser and send the following query:
+
+```graphql
+{
+  generateKeypair {
+    public
+    private
+  }
+}
+```
+
+</Instruction>
+
+This query takes a few seconds and then returns a public and a private key.
+
+<Instruction>
+
+From the response, copy the public key and add it as the `CLUSTER_PUBLIC_KEY` to your `.env` file:
+
+```(path="digital-ocean-demo/.env")
+CLUSTER_PUBLIC_KEY="-----BEGIN PUBLIC KEY-----\r\n [long key omitted] -----END PUBLIC KEY-----\r\n",
+```
+
+</Instruction>
+
+<Instruction>
+
+Next, you need to remove the comment in front of the `environment.CLUSTER_PUBLIC_KEY` property in `docker-compose.yml`:
+
+```yml(path="digital-ocean-demo/docker-compose.yml")
+# ... other properties
+environment:
+  PORT: $PORT
+  SQL_CLIENT_HOST_CLIENT1: $SQL_CLIENT_HOST
+  SQL_CLIENT_HOST_READONLY_CLIENT1: $SQL_CLIENT_HOST
+  SQL_CLIENT_HOST: $SQL_CLIENT_HOST
+  SQL_CLIENT_PORT: $SQL_CLIENT_PORT
+  SQL_CLIENT_USER: $SQL_CLIENT_USER
+  SQL_CLIENT_PASSWORD: $SQL_CLIENT_PASSWORD
+  SQL_CLIENT_CONNECTION_LIMIT: 10
+  SQL_INTERNAL_HOST: $SQL_INTERNAL_HOST
+  SQL_INTERNAL_PORT: $SQL_INTERNAL_PORT
+  SQL_INTERNAL_USER: $SQL_INTERNAL_USER
+  SQL_INTERNAL_PASSWORD: $SQL_INTERNAL_PASSWORD
+  SQL_INTERNAL_DATABASE: $SQL_INTERNAL_DATABASE
+  CLUSTER_ADDRESS: $CLUSTER_ADDRESS
+  SQL_INTERNAL_CONNECTION_LIMIT: 10
+  CLUSTER_PUBLIC_KEY: $CLUSTER_PUBLIC_KEY # remove comment here
+  BUGSNAG_API_KEY: ""
+  ENABLE_METRICS: "0"
+  JAVA_OPTS: "-Xmx1G"
+# ... other properties
+```
+
+</Instruction>
+
+<Instruction>
+
+Inside the `digital-ocean-demo` directory, run the following command to submit the new property along with its environment variable:
 
 ```sh
 docker-compose up -d
 ```
 
+</Instruction>
+
+Awesome - your cluster is now secured and only people who have access to your private key will be able to access it from now on!
+
+Next, you need to make the private key available to the CLI so your `prisma deploy` and similar commands can be properly authenticated. The way to do this is by setting it as the `clusterSecret` in `~/.prisma/config.yml`:
+
+<Instruction>
+
+Open `~/.prisma/config.yml` and paste the `private` key you received as the response from the previous `generateKeypair` query as the `clusterSecret` into it. The `digital-ocean-cluster` entry will then look similar to this:
+
+```yml(path="/.prisma/config.yml")
+clusters:
+  digital-ocean-cluster:
+    host: 'http://__DROPLET_IP_ADDRESS__:4466'
+    clusterSecret: "-----BEGIN RSA PRIVATE KEY-----\r\n[long key omitted]]\r\n-----END RSA PRIVATE KEY-----\r\n"
+```
+
+</Instruction>
+
+That's it - from now on all deploys to the cluster will be authenticated using the `clusterSecret`.
+
+<!-- 
 ## Enable Cluster Security
 
 By default, anyone can connect to the new cluster using the Prisma CLI and deploy services. To lock down access, you need to configure a public/private keypair.
@@ -369,49 +523,4 @@ to restart the Prisma cluster:
 ```
 docker-compose kill
 docker-compose up -d
-```
-
-## Deploy a service
-
-On your local machine, verify that the cluster configuration is being picked up correctly:
-
-```sh
-prisma cluster list
-```
-
-The output should include your newly added cluster.
-
-Now you can create a new service and deploy it to the cluster:
-
-```
-prisma init
-prisma deploy
-```
-
-Pick the new cluster in the deployment option. You should see output similar to this:
-
-```
-Added cluster: do-cluster to prisma.yml
-Creating stage dev for service demo ✔
-Deploying service `demo` to stage `dev` on cluster `do-cluster` 1.3s
-
-Changes:
-
-  User (Type)
-  + Created type `User`
-  + Created field `id` of type `GraphQLID!`
-  + Created field `name` of type `String!`
-  + Created field `updatedAt` of type `DateTime!`
-  + Created field `createdAt` of type `DateTime!`
-
-Applying changes 1.8s
-
-Hooks:
-
-Running $ graphql prepare...
-
-Your GraphQL database endpoint is live:
-
-  HTTP:  http://45.55.177.154:4466/demo/dev
-  WS:    ws://45.55.177.154:4466/demo/dev
 ``` -->
