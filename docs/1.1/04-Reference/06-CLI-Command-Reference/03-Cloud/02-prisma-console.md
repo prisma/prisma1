@@ -10,11 +10,5 @@ Open the Prisma Console in browser.
 #### Usage
 
 ```sh
-prisma local stop [flags]
-```
-
-#### Flags
-
-```
- -n, --name NAME    Name of the cluster instance
+prisma console
 ```
