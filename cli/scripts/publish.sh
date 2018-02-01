@@ -145,7 +145,7 @@ if [ -z "$CIRCLE_TAG" ]; then
   echo "beta minor $betaMinor latest minor $latestMinor"
 
   # calc next last number
-  if [ $betaMinor > $latestMinor ] && [ $betaMinor != $latestMinor ]; then
+  if [ $betaMinor == $latestMinor ]; then
     echo "$betaMinor is greater than $latestMinor"
     nextLastNumber=$((betaLastNumber + step))
   fi
