@@ -9,11 +9,17 @@ Data to be imported needs to adhere to the Normalized Data Format (NDF). As of t
 
 <InfoBox type="warning">
 
-Note that import operations are **not idempotent**. This means multiple import operations with the same data will bring your service into an inconsistent state! For example, importing a node with the same `id` more than once will lead to undefined behaviour and likely break your service!
+#### Idempotency
+
+Note that import operations are **not idempotent**. This means running an import **always adds** data to your service. It **never updates** existing nodes.  This means importing the same dataset multiple times will lead to undefined behaviour. For example, importing a node with the same `id` more than once will lead to undefined behaviour and likely break your service!
+
+#### Data Validation
+
+The import API does not perform any validation checks on the data to be imported. When using the CLI to import data, basic validation checks are executed. Importing invalid data leads to undefined behaviour and might break your service!
 
 As the service maintainer, you are responsible to ensure the validity of the imported data!
 
-**Protip**: To see what a valid import data set looks like, it is often helpful to [export](!alias-pa0aip3loh) data from an existing service. You can use this as foundation for the data you want to import.
+**Tip**: A good way to ensure valid data when importing is inspecting the data of a previous [export](!alias-pa0aip3loh) on a service with an identical data model.
 
 </InfoBox>
 
