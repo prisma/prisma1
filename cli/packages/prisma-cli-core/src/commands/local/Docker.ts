@@ -53,7 +53,9 @@ export default class Docker {
 
   get hostName(): string {
     if (this.cluster) {
-      return this.cluster.baseUrl
+      // extract hostname: http://localhost:4466 -> localhost
+      const regex = /^(?:https?:\/\/)?(?:[^@\n]+@)?(?:www\.)?([^:\/\n]+)/im
+      return this.cluster.baseUrl.match(regex)![1]
     }
 
     if (process.env.GRAPHCOOL_HOST) {

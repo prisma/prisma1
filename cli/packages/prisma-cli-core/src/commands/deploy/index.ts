@@ -618,19 +618,27 @@ ${chalk.gray(
   }
 
   private getLocalClusterChoices(): string[][] {
-    const clusters = this.env.clusters.filter(c => c.local).map(c => c.name)
-    if (clusters.length === 0) {
-      clusters.push('local')
-    }
+    const clusters = this.env.clusters.filter(c => !c.shared)
 
-    return clusters.map(c => [c, 'Local cluster (requires Docker)'])
+    const clusterNames: string[][] = clusters.map(c => {
+      const note =
+        c.baseUrl.includes('localhost') || c.baseUrl.includes('127.0.0.1')
+          ? 'Local cluster (requires Docker)'
+          : 'Self-hosted'
+      return [c.name, note]
+    })
+
+    if (clusterNames.length === 0) {
+      clusterNames.push(['local', 'Local cluster (requires Docker)'])
+    }
+    return clusterNames
   }
 
   private async getLoggedInChoices(): Promise<any[]> {
     const localChoices = this.getLocalClusterChoices()
     const workspaces = await this.client.getWorkspaces()
     const clusters = this.env.clusters.filter(
-      c => !c.local && c.name !== 'shared-public-demo',
+      c => c.shared && c.name !== 'shared-public-demo',
     )
     const combinations: string[][] = []
     workspaces.forEach(workspace => {
