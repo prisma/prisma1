@@ -102,6 +102,12 @@ One application of the node selection concept is the exposed [batch operations](
 
 For example, the mutations `updateManyPosts` and `deleteManyPosts` provide a `where` argument to select specific nodes, and return a `count` field with the number of affected nodes (see the example above).
 
+<InfoBox type="warning">
+
+Note that no [subscription](!alias-aey0vohche) events are triggered for batch mutations!
+
+</InfoBox>
+
 ### Connections
 
 In contrast to the simpler object queries that directly return a list of nodes, connection queries are based on the [Relay Connection](https://facebook.github.io/relay/graphql/connections.htm) model. In addition to pagination information, connections also offer advanced features like aggregation.
