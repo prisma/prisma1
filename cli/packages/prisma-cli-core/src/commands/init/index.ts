@@ -24,6 +24,11 @@ export default class Init extends Command {
       description:
         'Full URL or repo shorthand (e.g. `owner/repo`) to boilerplate GitHub repository',
     }),
+    minimal: flags.string({
+      char: 'm',
+      description:
+        'Minimal setup: database-only',
+    }),
   }
 
   async run() {
@@ -36,9 +41,11 @@ export default class Init extends Command {
       this.config.definitionDir = process.cwd()
     }
 
-    const { boilerplate } = this.flags
+    const { boilerplate, minimal } = this.flags
     if (boilerplate) {
       await this.graphqlCreate(boilerplate)
+    } else if (minimal) {
+      this.initMinimal()
     } else {
       const choice = await this.prompt()
 
@@ -114,7 +121,7 @@ Either try using a new directory name, or remove the files listed above.
       : ``
 
     this.out.log(`\
-Created 3 new files:               
+Created 3 new files:
 
   ${chalk.cyan('prisma.yml')}           Prisma service definition
   ${chalk.cyan(
