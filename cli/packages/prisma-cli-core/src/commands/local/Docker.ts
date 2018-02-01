@@ -119,6 +119,7 @@ export default class Docker {
 
   saveCluster(): Cluster {
     const cluster = new Cluster(
+      this.out,
       this.clusterName,
       `http://${this.hostName}:${this.envVars.PORT}`,
       this.privateKey,

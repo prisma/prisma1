@@ -4,6 +4,8 @@ import * as jwt from 'jsonwebtoken'
 import { cloudApiEndpoint } from './constants'
 import { GraphQLClient } from 'graphql-request'
 import chalk from 'chalk'
+import { isLocal } from './Environment'
+import { IOutput } from './Output'
 
 export class Cluster {
   name: string
@@ -12,14 +14,17 @@ export class Cluster {
   shared: boolean
   clusterSecret?: string
   requiresAuth: boolean
+  out: IOutput
   private cachedToken?: string
   constructor(
+    out: IOutput,
     name: string,
     baseUrl: string,
     clusterSecret?: string,
     local: boolean = true,
     shared: boolean = true,
   ) {
+    this.out = out
     this.name = name
     this.baseUrl = baseUrl
     this.clusterSecret = clusterSecret
@@ -31,7 +36,7 @@ export class Cluster {
     serviceName: string,
     workspaceSlug?: string,
     stageName?: string,
-  ): Promise<string> {
+  ): Promise<string | null> {
     // public clusters just take the token
     if (this.name === 'shared-public-demo') {
       return ''
@@ -43,14 +48,20 @@ export class Cluster {
     }
   }
 
-  getLocalToken() {
+  getLocalToken(): string | null {
     if (!this.clusterSecret || this.clusterSecret === '') {
-      throw new Error(`Property '${chalk.bold(
-        'clusterSecret',
-      )}' of cluster ${chalk.bold(this.name)} in ~/.prisma/config.yml is empty.
-Please either provide a clusterSecret or run ${chalk.green.bold(
-        'prisma local start',
-      )} to generate a new one. Read more here https://bit.ly/prisma-graphql-config-yml`)
+      const localNote = isLocal(this.baseUrl)
+        ? `Please either provide a clusterSecret or run ${chalk.green.bold(
+            'prisma local start',
+          )} to generate a new one. `
+        : ''
+
+      this.out.warn(
+        `Property '${chalk.bold('clusterSecret')}' of cluster ${chalk.bold(
+          this.name,
+        )} in ~/.prisma/config.yml is empty. ${localNote}Read more here https://bit.ly/prisma-graphql-config-yml`,
+      )
+      return null
     }
     if (!this.cachedToken) {
       const grants = [{ target: `*/*`, action: '*' }]

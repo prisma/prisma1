@@ -7,6 +7,7 @@ Array [
     "clusterSecret": undefined,
     "local": false,
     "name": "prisma-eu1",
+    "out": Output {},
     "shared": true,
   },
   Cluster {
@@ -14,6 +15,7 @@ Array [
     "clusterSecret": undefined,
     "local": false,
     "name": "prisma-us1",
+    "out": Output {},
     "shared": true,
   },
 ]
@@ -26,6 +28,7 @@ Array [
     "clusterSecret": undefined,
     "local": false,
     "name": "prisma-eu1",
+    "out": Output {},
     "shared": true,
   },
   Cluster {
@@ -33,6 +36,7 @@ Array [
     "clusterSecret": undefined,
     "local": false,
     "name": "prisma-us1",
+    "out": Output {},
     "shared": true,
   },
 ]
@@ -45,6 +49,7 @@ Array [
     "clusterSecret": undefined,
     "local": false,
     "name": "prisma-eu1",
+    "out": Output {},
     "shared": true,
   },
   Cluster {
@@ -52,6 +57,7 @@ Array [
     "clusterSecret": undefined,
     "local": false,
     "name": "prisma-us1",
+    "out": Output {},
     "shared": true,
   },
 ]
@@ -66,6 +72,7 @@ Array [
     "clusterSecret": undefined,
     "local": false,
     "name": "prisma-eu1",
+    "out": Output {},
     "shared": true,
   },
   Cluster {
@@ -73,6 +80,7 @@ Array [
     "clusterSecret": undefined,
     "local": false,
     "name": "prisma-us1",
+    "out": Output {},
     "shared": true,
   },
 ]
@@ -93,6 +101,7 @@ Array [
     "clusterSecret": undefined,
     "local": false,
     "name": "prisma-eu1",
+    "out": Output {},
     "shared": true,
   },
   Cluster {
@@ -100,6 +109,7 @@ Array [
     "clusterSecret": undefined,
     "local": false,
     "name": "prisma-us1",
+    "out": Output {},
     "shared": true,
   },
   Cluster {
@@ -107,6 +117,7 @@ Array [
     "clusterSecret": "",
     "local": true,
     "name": "cluster",
+    "out": Output {},
     "shared": true,
   },
 ]
@@ -119,6 +130,7 @@ Array [
     "clusterSecret": undefined,
     "local": false,
     "name": "prisma-eu1",
+    "out": Output {},
     "shared": true,
   },
   Cluster {
@@ -126,6 +138,7 @@ Array [
     "clusterSecret": undefined,
     "local": false,
     "name": "prisma-us1",
+    "out": Output {},
     "shared": true,
   },
 ]

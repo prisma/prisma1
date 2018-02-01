@@ -189,6 +189,7 @@ export class Environment {
   private getSharedClusters(rc: RC): Cluster[] {
     return this.sharedClusters.map(clusterName => {
       return new Cluster(
+        this.out,
         clusterName,
         this.clusterEndpointMap[clusterName],
         rc && rc.cloudSessionKey,
@@ -205,6 +206,7 @@ export class Environment {
     return Object.keys(rc.clusters).map(name => {
       const cluster = rc.clusters![name]
       return new Cluster(
+        this.out,
         name,
         cluster.host,
         cluster.clusterSecret,
