@@ -19,7 +19,7 @@ For example, importing a node with the same `id` more than once will lead to und
 
 **Data Validation**
 
-The [import API](data-import-using-the-raw-import-api) does not perform any validation checks on the data to be imported. When [using the CLI](#data-import-with-the-cli) to import data, basic validation checks are executed.
+The [import API](data-import-using-the-raw-import-api) does not perform any validation checks on the data to be imported. When using the [CLI](#data-import-with-the-cli) to import data, basic validation checks are executed.
 
 Importing invalid data leads to undefined behaviour and might break your service! As the service maintainer, you are responsible to ensure the validity of the imported data.
 
