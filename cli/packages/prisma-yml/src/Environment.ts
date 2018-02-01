@@ -211,7 +211,7 @@ export class Environment {
         cluster.host,
         cluster.clusterSecret,
         isLocal(cluster.host),
-        true,
+        false,
       )
     })
   }
