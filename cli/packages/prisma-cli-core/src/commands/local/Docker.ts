@@ -72,35 +72,47 @@ export default class Docker {
   async init() {
     // either get the ports
     let port: any = null
-    let endpoint
     if (this.cluster) {
-      endpoint = this.cluster.getDeployEndpoint()
+      const endpoint = this.cluster.getDeployEndpoint()
       const sliced = endpoint.slice(endpoint.lastIndexOf(':') + 1)
       port = sliced.slice(0, sliced.indexOf('/'))
     }
     const defaultVars = this.getDockerEnvVars()
     if (!port) {
-      port = await portfinder.getPortPromise({ port: defaultPort })
-      if (port > defaultPort) {
-        const useHigherPort = await this.askForHigherPort(
-          String(defaultPort),
-          port,
-        )
-        if (!useHigherPort) {
-          port = defaultPort
+      if (
+        this.hostName.includes('localhost') ||
+        this.hostName.includes('127.0.0.1')
+      ) {
+        port = await portfinder.getPortPromise({ port: defaultPort })
+        if (port > defaultPort) {
+          const useHigherPort = await this.askForHigherPort(
+            String(defaultPort),
+            port,
+          )
+          if (!useHigherPort) {
+            port = defaultPort
+          }
         }
+      } else {
+        port = defaultPort
       }
-      endpoint = `http://${this.hostName}:${port}`
     }
     await this.setEnvVars(port, String(defaultDBPort))
     await this.ps()
     this.psResult = this.stdout
 
-    // check if the db port (3307) is free
-    const nextDBPort = await portfinder.getPortPromise({ port: defaultDBPort })
-    if (nextDBPort > defaultDBPort) {
-      if (!this.psResult!.includes(`:${defaultDBPort}->`)) {
-        await this.askIfDBPortShouldBeUnblocked(String(defaultDBPort))
+    if (
+      this.hostName.includes('localhost') ||
+      this.hostName.includes('127.0.0.1')
+    ) {
+      // check if the db port (3307) is free
+      const nextDBPort = await portfinder.getPortPromise({
+        port: defaultDBPort,
+      })
+      if (nextDBPort > defaultDBPort) {
+        if (!this.psResult!.includes(`:${defaultDBPort}->`)) {
+          await this.askIfDBPortShouldBeUnblocked(String(defaultDBPort))
+        }
       }
     }
   }

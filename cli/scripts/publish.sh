@@ -138,11 +138,11 @@ if [ -z "$CIRCLE_TAG" ]; then
 
   # calc next minor
   step=1
-  nextMinor=$((minor + step))
+  nextMinor=$((latestMinor + step))
 
   nextLastNumber=0
 
-  echo "beta minor $betaMinor latest minor $latestMinor"
+  echo "beta minor $betaMinor latest minor $latestMinor next minor ${nextMinor}"
 
   # calc next last number
   if [ $betaMinor > $latestMinor ] && [ $betaMinor != $latestMinor ]; then
