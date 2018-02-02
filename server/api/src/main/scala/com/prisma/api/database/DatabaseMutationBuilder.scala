@@ -38,7 +38,7 @@ object DatabaseMutationBuilder {
     (sql"INSERT INTO `#${projectId}`.`#${where.model.name}` (" ++ escapedColumns ++ sql")" ++
       sql"SELECT " ++ insertValues ++
       sql"FROM DUAL" ++
-      sql"where not exists (select `id` from `#${projectId}`.`#${where.model.name}` where `#${where.field.name}` = ${where.fieldValue} limit 1);").asUpdate
+      sql"where not exists " ++ idFromWhere(projectId, where) ++ sql";").asUpdate
   }
 
   def createRelationRow(projectId: String,
@@ -55,9 +55,10 @@ object DatabaseMutationBuilder {
     val parentSide = parentInfo.field.relationSide.get
     val childSide  = parentInfo.field.oppositeRelationSide.get
     val relationId = Cuid.createCuid()
-    sqlu"""insert into `#$projectId`.`#${parentInfo.relation.id}` (`id`, `#$parentSide`, `#$childSide`)
-           Select '#$relationId', (select id from `#$projectId`.`#${parentInfo.model.name}` where `#${parentInfo.where.field.name}` = ${parentInfo.where.fieldValue}), `id`
-           FROM `#$projectId`.`#${where.model.name}` where `#${where.field.name}` = ${where.fieldValue} on duplicate key update `#$projectId`.`#${parentInfo.relation.id}`.id=`#$projectId`.`#${parentInfo.relation.id}`.id"""
+    (sql"insert into `#$projectId`.`#${parentInfo.relation.id}` (`id`, `#$parentSide`, `#$childSide`)" ++
+      sql"Select '#$relationId'," ++ idFromWhere(projectId, parentInfo.where) ++ sql"," ++
+      sql"`id` FROM `#$projectId`.`#${where.model.name}` where `#${where.field.name}` = ${where.fieldValue}" ++
+      sql"on duplicate key update `#$projectId`.`#${parentInfo.relation.id}`.id=`#$projectId`.`#${parentInfo.relation.id}`.id").asUpdate
   }
 
   //UPDATE
@@ -133,38 +134,44 @@ object DatabaseMutationBuilder {
   }
 
   def deleteRelayRowByUnique(projectId: String, where: NodeSelector) =
-    sqlu"delete from `#$projectId`.`_RelayId` where `id` = (select id from `#$projectId`.`#${where.model.name}` where `#${where.field.name}` = ${where.fieldValue})"
+    (sql"DELETE FROM `#$projectId`.`_RelayId` WHERE `id` = " ++ idFromWhere(projectId, where)).asUpdate
 
   def deleteRelationRowByParent(projectId: String, parentInfo: ParentInfo) = {
-
-    (sql"delete from `#$projectId`.`#${parentInfo.relation.id}` " ++
-      sql"where `#${parentInfo.field.relationSide.get}` = (select id from `#$projectId`.`#${parentInfo.where.model.name}` " ++
-      sql"where `#${parentInfo.where.field.name}` = ${parentInfo.where.fieldValue})").asUpdate
+    (sql"DELETE FROM `#$projectId`.`#${parentInfo.relation.id}` WHERE `#${parentInfo.field.relationSide.get}` = " ++ idFromWhere(projectId, parentInfo.where)).asUpdate
   }
 
   def deleteRelationRowByChild(projectId: String, relation: Relation, where: NodeSelector) = {
-
-    (sql"delete from `#$projectId`.`#${relation.id}` " ++
-      sql"where `#${relation.sideOf(where.model)}` = (select id from `#$projectId`.`#${where.model.name}` " ++
-      sql"where `#${where.field.name}` = ${where.fieldValue})").asUpdate
+    (sql"DELETE FROM `#$projectId`.`#${relation.id}` WHERE `#${relation.sideOf(where.model)}` = " ++ idFromWhere(projectId, where)).asUpdate
   }
 
   def deleteRelationRowByParentAndChild(projectId: String, parentInfo: ParentInfo, where: NodeSelector) = {
 
     (sql"delete from `#$projectId`.`#${parentInfo.relation.id}` " ++
-      sql"where " ++
-      sql"`#${parentInfo.field.oppositeRelationSide.get}` = (select id from `#$projectId`.`#${where.model.name}` " ++
-      sql"where `#${where.field.name}` = ${where.fieldValue})" ++
-      sql" AND `#${parentInfo.field.relationSide.get}` = (select id from `#$projectId`.`#${parentInfo.where.model.name}` " ++
-      sql"where `#${parentInfo.where.field.name}` = ${parentInfo.where.fieldValue})").asUpdate
+      sql"where `#${parentInfo.field.oppositeRelationSide.get}` = " ++ idFromWhere(projectId, where) ++
+      sql" AND `#${parentInfo.field.relationSide.get}` =" ++ idFromWhere(projectId, parentInfo.where)).asUpdate
   }
 
   def deleteRelationRowByPath(projectId: String, relation: Relation, path: Path) = {
     val childModel: Model           = path.mwrs.reverse.head.child
     val pathQuery: SQLActionBuilder = ???
+//
+//
+//      def pathQuery(path: Path) : SQLActionBuilder={
+//
+//        path.mwrs match {
+//          case x if x.isEmpty                                 => sql"(select id from `#$projectId`.`#${path.where.model.name}` where `#${path.where.field.name}` = ${path.where.fieldValue})"
+//          case x if x.nonEmpty && seen.contains(x.head.child) => sys.error("Circle")
+//          case head :: Nil if head.parent == head.child       => sys.error("Circle")
+//          case head :: tail                                   => detectCircle(tail, seen :+ head.parent)
+//        }
+//
+//
+//        }
 
-    (sql"delete from `#$projectId`.`#${relation.id}` " ++
-      sql"where `#${relation.sideOf(childModel)}` in ( " ++ pathQuery ++ sql"").asUpdate
+  }
+
+  def idFromWhere(projectId: String, where: NodeSelector): SQLActionBuilder = {
+    sql"(SELECT `id` FROM `#$projectId`.`#${where.model.name}` WHERE `#${where.field.name}` = ${where.fieldValue} LIMIT 1)"
   }
 
   //SCALAR LISTS
@@ -185,7 +192,7 @@ object DatabaseMutationBuilder {
   }
 
   def setScalarListToEmpty(projectId: String, where: NodeSelector, fieldName: String) = {
-    sql"DELETE FROM `#$projectId`.`#${where.model.name}_#${fieldName}` WHERE `nodeId` = (select id from `#$projectId`.`#${where.model.name}` where `#${where.field.name}` = ${where.fieldValue})".asUpdate
+    (sql"DELETE FROM `#$projectId`.`#${where.model.name}_#${fieldName}` WHERE `nodeId` = " ++ idFromWhere(projectId, where)).asUpdate
   }
 
   def pushScalarList(projectId: String, modelName: String, fieldName: String, nodeId: String, values: Vector[Any]): DBIOAction[Int, NoStream, Effect] = {
@@ -209,9 +216,7 @@ object DatabaseMutationBuilder {
 
   def whereFailureTrigger(project: Project, where: NodeSelector) = {
     val table = where.model.name
-    val query = sql"select *" ++
-      sql"from `#${project.id}`.`#${where.model.name}`" ++
-      sql"where `#${where.field.name}` = ${where.fieldValue}"
+    val query = idFromWhere(project.id, where)
 
     triggerFailureWhen(project, query, table)
   }
@@ -220,10 +225,9 @@ object DatabaseMutationBuilder {
     val childSide  = parentInfo.relation.sideOf(where.model)
     val parentSide = parentInfo.relation.sideOf(parentInfo.model)
     val table      = parentInfo.relation.id
-    val query = sql"select *" ++
-      sql"from `#${project.id}`.`#$table`" ++
-      sql"where `#$childSide` = (Select `id` from `#${project.id}`.`#${where.model.name}`where `#${where.field.name}` = ${where.fieldValue})" ++
-      sql"AND `#$parentSide` = (Select `id` from `#${project.id}`.`#${parentInfo.model.name}`where `#${parentInfo.where.field.name}` = ${parentInfo.where.fieldValue})"
+    val query = sql"SELECT `id` FROM `#${project.id}`.`#$table`" ++
+      sql"WHERE `#$childSide` =" ++ idFromWhere(project.id, where) ++
+      sql"AND `#$parentSide` =" ++ idFromWhere(project.id, parentInfo.where)
 
     triggerFailureWhen(project, query, table)
   }
@@ -231,9 +235,7 @@ object DatabaseMutationBuilder {
   def oldParentFailureTriggerForRequiredRelations(project: Project, relation: Relation, where: NodeSelector) = {
     val childSide = relation.sideOf(where.model)
     val table     = relation.id
-    val query = sql"select *" ++
-      sql"from `#${project.id}`.`#$table`" ++
-      sql"where `#$childSide` = (Select `id` from `#${project.id}`.`#${where.model.name}`where `#${where.field.name}` = ${where.fieldValue})"
+    val query     = sql"SELECT `id` FROM `#${project.id}`.`#$table` WHERE `#$childSide` =" ++ idFromWhere(project.id, where)
 
     triggerFailureWhenNot(project, query, table)
   }
@@ -241,11 +243,7 @@ object DatabaseMutationBuilder {
   def oldChildFailureTriggerForRequiredRelations(project: Project, parentInfo: ParentInfo) = {
     val parentSide = parentInfo.relation.sideOf(parentInfo.model)
     val table      = parentInfo.relation.id
-    val query = sql"select *" ++
-      sql"from `#${project.id}`.`#$table`" ++
-      sql"where `#$parentSide` = (Select `id` " ++
-      sql"from `#${project.id}`.`#${parentInfo.where.model.name}` " ++
-      sql"where `#${parentInfo.where.field.name}` = ${parentInfo.where.fieldValue})"
+    val query      = sql"SELECT `id` FROM `#${project.id}`.`#$table` WHERE `#$parentSide` =" ++ idFromWhere(project.id, parentInfo.where)
 
     triggerFailureWhenNot(project, query, table)
   }
@@ -255,7 +253,7 @@ object DatabaseMutationBuilder {
     val table                       = relation.id
     val pathQuery: SQLActionBuilder = ???
 
-    val query = sql"select *" ++
+    val query = sql"select `id`" ++
       sql"from `#${project.id}`.`#$table`" ++
       sql"where `#$childSide` IN ( " ++ pathQuery ++ sql" )"
 
@@ -291,7 +289,7 @@ object DatabaseMutationBuilder {
       sql"then 1" ++
       sql"else (select COLUMN_NAME" ++
       sql"from information_schema.columns" ++
-      sql"where table_schema = ${project.id} AND TABLE_NAME = $table)end;").as[Int]
+      sql"where table_schema = ${project.id} and TABLE_NAME = $table)end;").as[Int]
   }
 
   def triggerFailureWhenNot(project: Project, query: SQLActionBuilder, table: String) = {

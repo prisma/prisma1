@@ -39,7 +39,7 @@ case class DeleteRelationMutaction(project: Project, where: NodeSelector) extend
   }
 
   def causedByThisMutactionChildOnly(relation: Relation, cause: String) = {
-    val parentCheckString = s"`${relation.id}` where `${relation.sideOf(where.model)}` ="
+    val parentCheckString = s"`${project.id}`.`${relation.id}` WHERE `${relation.sideOf(where.model)}` = (SELECT"
 
     cause.contains(parentCheckString) && cause.contains(parameterString(where))
   }

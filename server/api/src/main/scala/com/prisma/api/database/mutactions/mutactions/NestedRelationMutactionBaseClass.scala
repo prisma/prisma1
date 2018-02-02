@@ -59,15 +59,18 @@ trait NestedRelationMutactionBaseClass extends ClientSqlDataChangeMutaction {
   def sysError                  = sys.error("This should not happen, since it means a many side is required")
 
   def causedByThisMutaction(relation: Relation, cause: String) = {
-    val parentCheckString = s"`${relation.id}` where `${relation.sideOf(where.model)}` ="
-    val childCheckString  = s"`${relation.id}` where `${relation.sideOf(parentInfo.model)}` ="
+    val parentCheckString = s"`${relation.id}` WHERE `${relation.sideOf(where.model)}` = (SELECT "
+    val childCheckString  = s"`${relation.id}` WHERE `${relation.sideOf(parentInfo.model)}` = (SELECT "
 
     (cause.contains(parentCheckString) && cause.contains(parameterString(where))) ||
     (cause.contains(childCheckString) && cause.contains(parameterString(parentInfo.where)))
   }
 
   def causedByThisMutactionChildOnly(relation: Relation, cause: String) = {
-    val parentCheckString = s"`${relation.id}` where `${relation.sideOf(where.model)}` ="
+
+    // SELECT `id` FROM `test-project-id@test-stage`.`_ParentToChild` WHERE `B` =  (select `id` from `test-project-id@test-stage`.`Child` where `id` = ? Limit 1)  )
+
+    val parentCheckString = s"`${relation.id}` WHERE `${relation.sideOf(where.model)}` = (SELECT "
 
     cause.contains(parentCheckString) && cause.contains(parameterString(where))
   }
