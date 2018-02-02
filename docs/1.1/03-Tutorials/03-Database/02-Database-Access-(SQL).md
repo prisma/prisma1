@@ -31,7 +31,7 @@ Verify that there is a container with the name `prisma-db` image `mysql:5.7`.
 To open the MySQL client in your terminal, run the following command. Note that prisma-db is the container name from the list above:
 
 ```sh
- docker exec -it prisma-db mysql -u root --host 127.0.0.1 --port 3306 --password=prisma
+ docker exec -it prisma-db mysql -u root --host 127.0.0.1 --port 3306 --password=graphcool
 ```
 
 #### 3. Send SQL queries to the database
