@@ -8,6 +8,7 @@ import com.prisma.shared.models.{Field, Model, Project, Relation}
 import com.prisma.utils.boolean.BooleanUtils._
 import cool.graph.cuid.Cuid.createCuid
 import slick.dbio.{DBIOAction, Effect, NoStream}
+import com.prisma.api.database.CascadingDeletes.generateCascadingDeleteMutactions
 
 import scala.collection.immutable.Seq
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -32,10 +33,11 @@ case class SqlMutactions(dataResolver: DataResolver) {
   val project = dataResolver.project
 
   def getMutactionsForDelete(where: NodeSelector, previousValues: DataItem, id: String): List[ClientSqlMutaction] = {
-    val relationMutactions  = DeleteRelationMutaction(project, where)
-    val deleteItemMutaction = DeleteDataItem(project, where, previousValues, id)
+    val cascadingDeleteMutactions = generateCascadingDeleteMutactions(project, where)
+    val relationMutactions        = DeleteRelationMutaction(project, where)
+    val deleteItemMutaction       = DeleteDataItem(project, where, previousValues, id)
 
-    List(relationMutactions, deleteItemMutaction)
+    cascadingDeleteMutactions ++ List(relationMutactions, deleteItemMutaction)
   }
 
   def getMutactionsForUpdate(where: NodeSelector, args: CoolArgs, id: Id, previousValues: DataItem): Vector[ClientSqlMutaction] = {
@@ -187,8 +189,12 @@ case class SqlMutactions(dataResolver: DataResolver) {
   }
 
   def getMutactionsForNestedDeleteMutation(nestedMutation: NestedMutation, parentInfo: ParentInfo): Seq[ClientSqlMutaction] = {
-    nestedMutation.deletes.flatMap(delete =>
-      List(NestedDeleteRelationMutaction(project, parentInfo, delete.where), DeleteDataItemNested(project, delete.where)))
+    nestedMutation.deletes.flatMap(
+      delete =>
+        generateCascadingDeleteMutactions(project, delete.where) ++ List(
+          NestedDeleteRelationMutaction(project, parentInfo, delete.where),
+          DeleteDataItemNested(project, delete.where)
+      ))
   }
 
   def getMutactionsForNestedUpdateMutation(nestedMutation: NestedMutation, parentInfo: ParentInfo): Seq[ClientSqlMutaction] = {

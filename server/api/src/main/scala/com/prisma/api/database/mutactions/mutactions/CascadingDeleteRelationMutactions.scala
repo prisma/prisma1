@@ -2,23 +2,28 @@ package com.prisma.api.database.mutactions.mutactions
 
 import java.sql.SQLException
 
-import com.prisma.api.database.DatabaseMutationBuilder
+import com.prisma.api.database.CascadingDeletes.Path
+import com.prisma.api.database.{CascadingDeletes, DatabaseMutationBuilder}
 import com.prisma.api.database.mutactions.{ClientSqlDataChangeMutaction, ClientSqlStatementResult}
 import com.prisma.api.mutations.NodeSelector
 import com.prisma.api.schema.APIErrors.RequiredRelationWouldBeViolated
 import com.prisma.gc_values._
-import com.prisma.shared.models.{Field, Project, Relation}
+import com.prisma.shared.models.{Field, Model, Project, Relation}
 import slick.dbio.DBIOAction
 
 import scala.concurrent.Future
 
-case class DeleteRelationMutaction(project: Project, where: NodeSelector) extends ClientSqlDataChangeMutaction {
+case class CascadingDeleteRelationMutactions(project: Project, path: Path) extends ClientSqlDataChangeMutaction {
 
-  val relationsWhereThisIsRequired    = where.model.relationFields.filter(otherSideIsRequired).map(_.relation.get)
-  val relationsWhereThisIsNotRequired = where.model.relationFields.filter(otherSideIsNotRequired).map(_.relation.get)
+  val lastSegment: CascadingDeletes.ModelsWithRelation = path.mwrs.reverse.head
+  val lastModel: Model                                 = lastSegment.child
+  val relationFieldsNotOnPath                          = lastModel.relationFields.filter(f => f.relation.contains(lastSegment.relation))
+
+  val relationsWhereThisIsRequired    = relationFieldsNotOnPath.filter(otherSideIsRequired).map(_.relation.get)
+  val relationsWhereThisIsNotRequired = relationFieldsNotOnPath.filter(otherSideIsNotRequired).map(_.relation.get)
 
   val requiredCheck =
-    relationsWhereThisIsRequired.map(relation => DatabaseMutationBuilder.oldParentFailureTriggerForRequiredRelations(project, relation, where))
+    relationsWhereThisIsRequired.map(relation => DatabaseMutationBuilder.oldParentFailureTriggerForRequiredRelationsByPath(project, relation, path))
 
   val removalActions = relationsWhereThisIsNotRequired.map(relation => DatabaseMutationBuilder.deleteRelationRowByChild(project.id, relation, where))
 

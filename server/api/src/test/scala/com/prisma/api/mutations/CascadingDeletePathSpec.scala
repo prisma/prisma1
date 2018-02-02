@@ -4,10 +4,11 @@ import com.prisma.api.ApiBaseSpec
 import com.prisma.shared.models._
 import com.prisma.shared.project_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
+import com.prisma.api.database.CascadingDeletes._
 
 class CascadingDeletePathSpec extends FlatSpec with Matchers with ApiBaseSpec {
 
-  "Paths" should "not be generated for non-cascading relations" ignore {
+  "Paths" should "not be generated for non-cascading relations" in {
 
     //                                P
     //                        C             SC
@@ -29,11 +30,11 @@ class CascadingDeletePathSpec extends FlatSpec with Matchers with ApiBaseSpec {
     database.setup(project)
 
     val parent = project.schema.getModelByName_!("P")
-    val res    = collectPaths(project, parent)
+    val res    = collectPaths(project, NodeSelector.forId(parent, "does not exist"), parent)
     res should be(List.empty)
   }
 
-  "Paths for nested relations where all sides are cascading" should "be generated correctly" ignore {
+  "Paths for nested relations where all sides are cascading" should "be generated correctly" in {
 
     //                                P
     //                        C             SC
@@ -79,21 +80,21 @@ class CascadingDeletePathSpec extends FlatSpec with Matchers with ApiBaseSpec {
     database.setup(project)
 
     val parent = project.schema.getModelByName_!("P")
-    val res    = collectPaths(project, parent)
+    val res    = collectPaths(project, NodeSelector.forId(parent, "does not exist"), parent)
     res.foreach(x => println(x.pretty))
 
     val res2 = res.map(x => x.pretty).mkString("\n")
-    res2 should be("""P<->C
-                      |P<->C C<->GC
-                      |P<->C C<->GC GC<->GGC
-                      |P<->C C<->GC2
-                      |P<->SC
-                      |P<->SC SC<->SGC
-                      |P<->SC SC<->SGC SGC<->SGGC
-                      |P<->SC SC<->SGC SGC<->SGGC2""".stripMargin)
+    res2 should be("""Where: P, id, does not exist |  P<->C
+                     |Where: P, id, does not exist |  P<->C C<->GC
+                     |Where: P, id, does not exist |  P<->C C<->GC GC<->GGC
+                     |Where: P, id, does not exist |  P<->C C<->GC2
+                     |Where: P, id, does not exist |  P<->SC
+                     |Where: P, id, does not exist |  P<->SC SC<->SGC
+                     |Where: P, id, does not exist |  P<->SC SC<->SGC SGC<->SGGC
+                     |Where: P, id, does not exist |  P<->SC SC<->SGC SGC<->SGGC2""".stripMargin)
   }
 
-  "Paths for graphs with  circles" should "terminate" ignore {
+  "Paths for graphs with  circles" should "terminate" in {
 
     //                                P
     //                              /   \
@@ -114,7 +115,7 @@ class CascadingDeletePathSpec extends FlatSpec with Matchers with ApiBaseSpec {
     database.setup(project)
 
     val parent = project.schema.getModelByName_!("P")
-    val res    = collectPaths(project, parent)
+    val res    = collectPaths(project, NodeSelector.forId(parent, "does not exist"), parent)
     res.foreach(x => println(x.pretty))
 
     val res2 = res.map(x => x.pretty).mkString("\n")
@@ -128,7 +129,7 @@ class CascadingDeletePathSpec extends FlatSpec with Matchers with ApiBaseSpec {
                      |P<->SC SC<->C""".stripMargin)
   }
 
-  "Paths for graphs with  circles" should "terminate does not go up to the parent again on the childs" ignore {
+  "Paths for graphs with  circles" should "terminate does not go up to the parent again on the childs" in {
 
     //                                P
     //                              /   \
@@ -149,15 +150,15 @@ class CascadingDeletePathSpec extends FlatSpec with Matchers with ApiBaseSpec {
     database.setup(project)
 
     val parent = project.schema.getModelByName_!("P")
-    val res    = collectPaths(project, parent)
+    val res    = collectPaths(project, NodeSelector.forId(parent, "does not exist"), parent)
     res.foreach(x => println(x.pretty))
 
     val res2 = res.map(x => x.pretty).mkString("\n")
-    res2 should be("""P<->C C<->SC
-                     |P<->SC SC<->C""".stripMargin)
+    res2 should be("""Where: P, id, does not exist |  P<->C C<->SC
+                     |Where: P, id, does not exist |  P<->SC SC<->C""".stripMargin)
   }
 
-  "Paths for graphs with  circles" should "detect the circle and error" ignore {
+  "Paths for graphs with  circles" should "detect the circle and error" in {
 
     //                            A       A2
     //                              \   /
@@ -186,7 +187,7 @@ class CascadingDeletePathSpec extends FlatSpec with Matchers with ApiBaseSpec {
     database.setup(project)
 
     val parent = project.schema.getModelByName_!("P")
-    val res    = collectPaths(project, parent)
+    val res    = collectPaths(project, NodeSelector.forId(parent, "does not exist"), parent)
     res.foreach(x => println(x.pretty))
 
     val res2 = res.map(x => x.pretty).mkString("\n")
@@ -204,7 +205,7 @@ class CascadingDeletePathSpec extends FlatSpec with Matchers with ApiBaseSpec {
                      |P<->SC SC<->C""".stripMargin)
   }
 
-  "Paths for graphs with  circles" should "detect the circle also on selfrelations and error" ignore {
+  "Paths for graphs with  circles" should "detect the circle also on selfrelations and error" in {
 
     //                            C  -  C
 
@@ -216,7 +217,7 @@ class CascadingDeletePathSpec extends FlatSpec with Matchers with ApiBaseSpec {
     database.setup(project)
 
     val parent = project.schema.getModelByName_!("C")
-    val res    = collectPaths(project, parent)
+    val res    = collectPaths(project, NodeSelector.forId(parent, "does not exist"), parent)
     res.foreach(x => println(x.pretty))
 
     val res2 = res.map(x => x.pretty).mkString("\n")
@@ -234,41 +235,4 @@ class CascadingDeletePathSpec extends FlatSpec with Matchers with ApiBaseSpec {
                      |P<->SC SC<->C""".stripMargin)
   }
 
-  case class ModelWithRelation(parent: Model, child: Model, relation: Relation)
-
-  def getMWR(project: Project, model: Model, field: Field): ModelWithRelation =
-    ModelWithRelation(model, field.relatedModel(project.schema).get, field.relation.get)
-
-  case class Path(mwrs: List[ModelWithRelation]) {
-    def prepend(mwr: ModelWithRelation): Path = copy(mwr +: mwrs)
-    def pretty: String                        = mwrs.map(mwr => s"${mwr.parent.name}<->${mwr.child.name}").mkString(" ")
-    def detectCircle(path: List[ModelWithRelation] = this.mwrs, seen: List[Model] = List.empty): Unit = {
-      path match {
-        case x if x.isEmpty                                 =>
-        case x if x.nonEmpty && seen.contains(x.head.child) => sys.error("Circle")
-        case head :: Nil if head.parent == head.child       => sys.error("Circle")
-        case head :: tail                                   => detectCircle(tail, seen :+ head.parent)
-      }
-    }
-  }
-  object Path {
-    lazy val empty = Path(List.empty)
-  }
-
-  def collectPaths(project: Project, startNode: Model, excludes: List[Relation] = List.empty): List[Path] = {
-    val cascadingRelationFields = startNode.cascadingRelationFields
-    val res = cascadingRelationFields.flatMap { field =>
-      val mwr = getMWR(project, startNode, field)
-      if (excludes.contains(mwr.relation)) {
-        List(Path.empty)
-      } else {
-        val childPaths = collectPaths(project, mwr.child, excludes :+ mwr.relation)
-        childPaths.map(path => path.prepend(mwr))
-      }
-    }
-    val distinct = res.distinct
-    distinct.map(path => path.detectCircle())
-    distinct
-
-  }
 }

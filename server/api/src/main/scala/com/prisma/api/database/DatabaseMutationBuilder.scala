@@ -1,5 +1,6 @@
 package com.prisma.api.database
 
+import com.prisma.api.database.CascadingDeletes.Path
 import com.prisma.api.database.Types.DataItemFilterCollection
 import com.prisma.api.mutations.{CoolArgs, NodeSelector, ParentInfo}
 import com.prisma.api.schema.GeneralError
@@ -8,9 +9,9 @@ import com.prisma.shared.models.{Model, Project, Relation, TypeIdentifier}
 import cool.graph.cuid.Cuid
 import slick.dbio.{DBIOAction, Effect, NoStream}
 import slick.jdbc.MySQLProfile.api._
+import slick.jdbc.SQLActionBuilder
 import slick.sql.{SqlAction, SqlStreamingAction}
 
-import scala.collection.immutable.Seq
 import scala.concurrent.ExecutionContext.Implicits.global
 
 object DatabaseMutationBuilder {
@@ -158,6 +159,14 @@ object DatabaseMutationBuilder {
       sql"where `#${parentInfo.where.field.name}` = ${parentInfo.where.fieldValue})").asUpdate
   }
 
+  def deleteRelationRowByPath(projectId: String, relation: Relation, path: Path) = {
+    val childModel: Model           = path.mwrs.reverse.head.child
+    val pathQuery: SQLActionBuilder = ???
+
+    (sql"delete from `#$projectId`.`#${relation.id}` " ++
+      sql"where `#${relation.sideOf(childModel)}` in ( " ++ pathQuery ++ sql"").asUpdate
+  }
+
   //SCALAR LISTS
 
   def setScalarList(projectId: String, where: NodeSelector, fieldName: String, values: Vector[Any]) = {
@@ -173,7 +182,6 @@ object DatabaseMutationBuilder {
       sqlu"""delete from `#$projectId`.`#${where.model.name}_#${fieldName}` where nodeId = @nodeId""",
       (sql"insert into `#$projectId`.`#${where.model.name}_#${fieldName}` (`nodeId`, `position`, `value`) values " concat combineByComma(escapedValueTuples)).asUpdate
     )
-
   }
 
   def setScalarListToEmpty(projectId: String, where: NodeSelector, fieldName: String) = {
@@ -200,59 +208,58 @@ object DatabaseMutationBuilder {
   //TRANSACTIONAL FAILURE TRIGGERS
 
   def whereFailureTrigger(project: Project, where: NodeSelector) = {
-    (sql"select case" ++
-      sql"when exists" ++
-      sql"(select *" ++
+    val table = where.model.name
+    val query = sql"select *" ++
       sql"from `#${project.id}`.`#${where.model.name}`" ++
-      sql"where `#${where.field.name}` = ${where.fieldValue})" ++
-      sql"then 1" ++
-      sql"else (select COLUMN_NAME" ++
-      sql"from information_schema.columns" ++
-      sql"where table_schema = ${project.id} AND TABLE_NAME = ${where.model.name})end;").as[Int]
+      sql"where `#${where.field.name}` = ${where.fieldValue}"
+
+    triggerFailureWhen(project, query, table)
   }
 
   def connectionFailureTrigger(project: Project, parentInfo: ParentInfo, where: NodeSelector) = {
     val childSide  = parentInfo.relation.sideOf(where.model)
     val parentSide = parentInfo.relation.sideOf(parentInfo.model)
-
-    (sql"select case" ++
-      sql"when exists" ++
-      sql"(select *" ++
-      sql"from `#${project.id}`.`#${parentInfo.relation.id}`" ++
+    val table      = parentInfo.relation.id
+    val query = sql"select *" ++
+      sql"from `#${project.id}`.`#$table`" ++
       sql"where `#$childSide` = (Select `id` from `#${project.id}`.`#${where.model.name}`where `#${where.field.name}` = ${where.fieldValue})" ++
-      sql"AND `#$parentSide` = (Select `id` from `#${project.id}`.`#${parentInfo.model.name}`where `#${parentInfo.where.field.name}` = ${parentInfo.where.fieldValue}))" ++
-      sql"then 1" ++
-      sql"else (select COLUMN_NAME" ++
-      sql"from information_schema.columns" ++
-      sql"where table_schema = ${project.id} AND TABLE_NAME = ${parentInfo.relation.id})end;").as[Int]
+      sql"AND `#$parentSide` = (Select `id` from `#${project.id}`.`#${parentInfo.model.name}`where `#${parentInfo.where.field.name}` = ${parentInfo.where.fieldValue})"
+
+    triggerFailureWhen(project, query, table)
   }
 
   def oldParentFailureTriggerForRequiredRelations(project: Project, relation: Relation, where: NodeSelector) = {
     val childSide = relation.sideOf(where.model)
+    val table     = relation.id
+    val query = sql"select *" ++
+      sql"from `#${project.id}`.`#$table`" ++
+      sql"where `#$childSide` = (Select `id` from `#${project.id}`.`#${where.model.name}`where `#${where.field.name}` = ${where.fieldValue})"
 
-    (sql"select case" ++
-      sql"when not exists" ++
-      sql"(select *" ++
-      sql"from `#${project.id}`.`#${relation.id}`" ++
-      sql"where `#$childSide` = (Select `id` from `#${project.id}`.`#${where.model.name}`where `#${where.field.name}` = ${where.fieldValue}))" ++
-      sql"then 1" ++
-      sql"else (select COLUMN_NAME" ++
-      sql"from information_schema.columns" ++
-      sql"where table_schema = ${project.id} AND TABLE_NAME = ${relation.id})end;").as[Int]
+    triggerFailureWhenNot(project, query, table)
   }
 
   def oldChildFailureTriggerForRequiredRelations(project: Project, parentInfo: ParentInfo) = {
     val parentSide = parentInfo.relation.sideOf(parentInfo.model)
+    val table      = parentInfo.relation.id
+    val query = sql"select *" ++
+      sql"from `#${project.id}`.`#$table`" ++
+      sql"where `#$parentSide` = (Select `id` " ++
+      sql"from `#${project.id}`.`#${parentInfo.where.model.name}` " ++
+      sql"where `#${parentInfo.where.field.name}` = ${parentInfo.where.fieldValue})"
 
-    (sql"select case" ++
-      sql"when not exists" ++
-      sql"(select *" ++
-      sql"from `#${project.id}`.`#${parentInfo.relation.id}`" ++
-      sql"where `#$parentSide` = (Select `id` from `#${project.id}`.`#${parentInfo.where.model.name}`where `#${parentInfo.where.field.name}` = ${parentInfo.where.fieldValue}))" ++
-      sql"then 1" ++
-      sql"else (select COLUMN_NAME" ++
-      sql"from information_schema.columns" ++
-      sql"where table_schema = ${project.id} AND TABLE_NAME = ${parentInfo.relation.id})end;").as[Int]
+    triggerFailureWhenNot(project, query, table)
+  }
+
+  def oldParentFailureTriggerForRequiredRelationsByPath(project: Project, relation: Relation, path: Path) = {
+    val childSide                   = relation.sideOf(path.mwrs.reverse.head.child)
+    val table                       = relation.id
+    val pathQuery: SQLActionBuilder = ???
+
+    val query = sql"select *" ++
+      sql"from `#${project.id}`.`#$table`" ++
+      sql"where `#$childSide` IN ( " ++ pathQuery ++ sql" )"
+
+    triggerFailureWhenNot(project, query, table)
   }
 
   // Control Flow
@@ -276,6 +283,30 @@ object DatabaseMutationBuilder {
       action <- if (exists.head) thenMutactions else throw elseError
     } yield action
   }
+
+  def triggerFailureWhen(project: Project, query: SQLActionBuilder, table: String) = {
+
+    (sql"select case" ++
+      sql"when exists( " ++ query ++ sql" )" ++
+      sql"then 1" ++
+      sql"else (select COLUMN_NAME" ++
+      sql"from information_schema.columns" ++
+      sql"where table_schema = ${project.id} AND TABLE_NAME = $table)end;").as[Int]
+  }
+
+  def triggerFailureWhenNot(project: Project, query: SQLActionBuilder, table: String) = {
+
+    (sql"select case" ++
+      sql"when not exists( " ++ query ++ sql" )" ++
+      sql"then 1" ++
+      sql"else (select COLUMN_NAME" ++
+      sql"from information_schema.columns" ++
+      sql"where table_schema = ${project.id} AND TABLE_NAME = $table)end;").as[Int]
+  }
+
+  // PATH QUERY
+
+  def pathQuery(project: Project, path: Path) = {}
 
   //RESET DATA
 
