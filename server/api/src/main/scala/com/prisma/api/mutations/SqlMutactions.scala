@@ -90,7 +90,7 @@ case class SqlMutactions(dataResolver: DataResolver) {
   }
 
   def getSetScalarList(where: NodeSelector, field: Field, values: Vector[Any]): SetScalarList = SetScalarList(project, where, field, values)
-  def getSetScalarListActionsForUpsert(where: NodeSelector, field: Field, values: Vector[Any]): DBIOAction[List[Int], NoStream, Effect] =
+  def getSetScalarListActionsForUpsert(where: NodeSelector, field: Field, values: Vector[Any]) =
     DatabaseMutationBuilder.setScalarList(project.id, where, field.name, values)
 
   def getMutactionsForScalarLists(where: NodeSelector, args: CoolArgs): Vector[ClientSqlDataChangeMutaction] = {

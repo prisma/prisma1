@@ -160,18 +160,20 @@ object DatabaseMutationBuilder {
 
   //SCALAR LISTS
 
-  def setScalarList(projectId: String, where: NodeSelector, fieldName: String, values: Vector[Any]): DBIOAction[List[Int], NoStream, Effect] = {
+  def setScalarList(projectId: String, where: NodeSelector, fieldName: String, values: Vector[Any]) = {
     // todo we could save a query on ID NodeSelectors
     val escapedValueTuples = for {
       (escapedValue, position) <- values.map(escapeUnsafeParam).zip((1 to values.length).map(_ * 1000))
     } yield {
       sql"(@nodeId, $position, " ++ escapedValue ++ sql")"
     }
-    DBIO.sequence(
-      List(
-        sqlu"""set @nodeId := (select id from `#$projectId`.`#${where.model.name}` where `#${where.field.name}` = ${where.fieldValue})""",
-        (sql"replace into `#$projectId`.`#${where.model.name}_#${fieldName}` (`nodeId`, `position`, `value`) values " ++ combineByComma(escapedValueTuples)).asUpdate
-      ))
+
+    DBIO.seq(
+      sqlu"""set @nodeId := (select id from `#$projectId`.`#${where.model.name}` where `#${where.field.name}` = ${where.fieldValue})""",
+      sqlu"""delete from `#$projectId`.`#${where.model.name}_#${fieldName}` where nodeId = @nodeId""",
+      (sql"insert into `#$projectId`.`#${where.model.name}_#${fieldName}` (`nodeId`, `position`, `value`) values " concat combineByComma(escapedValueTuples)).asUpdate
+    )
+
   }
 
   def setScalarListToEmpty(projectId: String, where: NodeSelector, fieldName: String) = {
