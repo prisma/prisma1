@@ -268,7 +268,7 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
     result.toString should equal("""{"data":{"lists":[{"listInts":[7,8],"todo":{"todoInts":[9,10],"tag":{"tagInts":[11,12]}}}]}}""")
   }
 
-  "Nested scalar lists" should "work in upserts and only execute one branch of the upsert" ignore {
+  "Nested scalar lists" should "work in upserts and only execute one branch of the upsert" in {
 
     val project = SchemaDsl() { schema =>
       val list = schema.model("List").field("listInts", _.Int, isList = true).field("uList", _.String, isUnique = true)
@@ -297,7 +297,7 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
 
     val result = server.executeQuerySimple(s"""query{lists {uList, listInts}}""".stripMargin, project)
 
-    result.toString should equal("""{"data":{"lists":[{uList: "A", "listInts":[70,80]}]}}""")
+    result.toString should equal("""{"data":{"lists":[{"uList":"A","listInts":[70,80]}]}}""")
   }
 
   "Overwriting a full scalar list with an empty list" should "return an empty list" in {
@@ -357,6 +357,66 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
     )
 
     result2.toString should equal("""{"data":{"model":{"ints":[],"strings":[]}}}""")
+
+  }
+
+  "Overwriting a full scalar list with a list of different length" should "delete all members of the old list" in {
+
+    val project = SchemaDsl() { schema =>
+      schema.model("Model").field("ints", _.Int, isList = true).field("strings", _.String, isList = true)
+    }
+
+    database.setup(project)
+
+    val id = server
+      .executeQuerySimple(
+        s"""mutation {
+           |  createModel(data: {ints: { set: [1] }, strings: { set: ["short", "looooooooooong", "three", "four", "five"]}}) {
+           |    id
+           |    strings
+           |    ints
+           |  }
+           |}""".stripMargin,
+        project
+      )
+      .pathAsString("data.createModel.id")
+
+    val result = server.executeQuerySimple(
+      s"""{
+         |  model(where: {id:"$id"}) {
+         |    ints
+         |    strings
+         |  }
+         |}""".stripMargin,
+      project
+    )
+
+    result.toString should equal("""{"data":{"model":{"ints":[1],"strings":["short","looooooooooong","three","four","five"]}}}""")
+
+    server
+      .executeQuerySimple(
+        s"""mutation {
+           |  updateModel(
+           |  where: {id: "$id"}
+           |  data: {ints: { set: [1,2] }, strings: { set: ["one", "two"]}}) {
+           |    id
+           |    strings
+           |    ints
+           |  }
+           |}""".stripMargin,
+        project
+      )
+    val result2 = server.executeQuerySimple(
+      s"""{
+         |  model(where: {id:"$id"}) {
+         |    ints
+         |    strings
+         |  }
+         |}""".stripMargin,
+      project
+    )
+
+    result2.toString should equal("""{"data":{"model":{"ints":[1,2],"strings":["one","two"]}}}""")
 
   }
 
