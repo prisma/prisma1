@@ -134,7 +134,7 @@ object SchemaDsl {
         modelAId = this.id,
         modelBId = modelB.id,
         modelAOnDelete = modelAOnDelete,
-        modelBOnDelete = modelAOnDelete
+        modelBOnDelete = modelBOnDelete
       )
       val newField = relationField(fieldAName, this, modelB, relation, isList = false, isBackward = false)
       fields += newField
@@ -162,7 +162,7 @@ object SchemaDsl {
         modelAId = this.id,
         modelBId = modelB.id,
         modelAOnDelete = modelAOnDelete,
-        modelBOnDelete = modelAOnDelete
+        modelBOnDelete = modelBOnDelete
       )
 
       val newField = relationField(fieldAName, this, modelB, relation, isList = false, isBackward = false, isRequired = true)
@@ -190,7 +190,7 @@ object SchemaDsl {
         modelAId = this.id,
         modelBId = modelB.id,
         modelAOnDelete = modelAOnDelete,
-        modelBOnDelete = modelAOnDelete
+        modelBOnDelete = modelBOnDelete
       )
 
       val newField = relationField(fieldAName, this, modelB, relation, isList = true, isBackward = false, isRequired = false)
@@ -218,7 +218,7 @@ object SchemaDsl {
         modelAId = this.id,
         modelBId = modelB.id,
         modelAOnDelete = modelAOnDelete,
-        modelBOnDelete = modelAOnDelete
+        modelBOnDelete = modelBOnDelete
       )
       val newField = relationField(fieldAName, this, modelB, relation, isList = true, isBackward = false)
       fields += newField
@@ -245,7 +245,7 @@ object SchemaDsl {
         modelAId = this.id,
         modelBId = modelB.id,
         modelAOnDelete = modelAOnDelete,
-        modelBOnDelete = modelAOnDelete
+        modelBOnDelete = modelBOnDelete
       )
       val newField = relationField(fieldAName, this, modelB, relation, isList = false, isBackward = false)
       fields += newField
@@ -272,7 +272,7 @@ object SchemaDsl {
         modelAId = this.id,
         modelBId = modelB.id,
         modelAOnDelete = modelAOnDelete,
-        modelBOnDelete = modelAOnDelete
+        modelBOnDelete = modelBOnDelete
       )
       val newField = relationField(fieldAName, from = this, to = modelB, relation, isList = true, isBackward = false)
       fields += newField
