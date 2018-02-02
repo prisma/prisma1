@@ -51,6 +51,8 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
       errorContains = "The change you are trying to make would violate the required relation '_ChildToParent' between Child and Parent"
     )
 
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Parent").as[Int]) should be(Vector(1))
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Child").as[Int]) should be(Vector(1))
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
   }
 
@@ -95,7 +97,8 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
       """.stripMargin,
       project
     )
-
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Parent").as[Int]) should be(Vector(0))
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Child").as[Int]) should be(Vector(1))
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(0))
   }
 
@@ -141,6 +144,47 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
       project
     )
 
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Parent").as[Int]) should be(Vector(0))
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Child").as[Int]) should be(Vector(1))
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(0))
+  }
+
+  "a P1 to C1  relation " should "succeed when trying to delete the parent if there are no children" in {
+    val project = SchemaDsl() { schema =>
+      val child = schema.model("Child").field_!("c", _.String, isUnique = true)
+      schema.model("Parent").field_!("p", _.String, isUnique = true).oneToOneRelation("childOpt", "parentOpt", child)
+    }
+    database.setup(project)
+
+    server
+      .executeQuerySimple(
+        """mutation {
+          |  createParent(data: {
+          |    p: "p1"
+          |  }){
+          |    id
+          |  }
+          |}""".stripMargin,
+        project
+      )
+
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(0))
+
+    server.executeQuerySimple(
+      s"""
+         |mutation {
+         |  deleteParent(
+         |  where: {p: "p1"}
+         |  ){
+         |  p
+         |  }
+         |}
+      """.stripMargin,
+      project
+    )
+
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Parent").as[Int]) should be(Vector(0))
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Child").as[Int]) should be(Vector(0))
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(0))
   }
 
@@ -208,6 +252,7 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
     )
 
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Parent").as[Int]) should be(Vector(1))
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Child").as[Int]) should be(Vector(0))
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(0))
 
     server.executeQuerySimple(
@@ -225,6 +270,7 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
 
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(0))
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Parent").as[Int]) should be(Vector(0))
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Child").as[Int]) should be(Vector(0))
 
   }
 
@@ -267,8 +313,49 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
       errorCode = 3042,
       errorContains = "The change you are trying to make would violate the required relation '_ChildToParent' between Child and Parent"
     )
-
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Parent").as[Int]) should be(Vector(1))
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Child").as[Int]) should be(Vector(1))
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
+  }
+
+  "a P1 to C1!  relation " should "succeed when trying to delete the parent if there is no child" in {
+    val project = SchemaDsl() { schema =>
+      val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)
+      schema.model("Child").field_!("c", _.String, isUnique = true).oneToOneRelation_!("parentReq", "childOpt", parent, isRequiredOnFieldB = false)
+    }
+    database.setup(project)
+
+    server.executeQuerySimple(
+      """mutation {
+        |  createParent(data: {
+        |    p: "p1"
+        |
+        |  }){
+        |    p
+        |  }
+        |}""".stripMargin,
+      project
+    )
+
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Parent").as[Int]) should be(Vector(1))
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Child").as[Int]) should be(Vector(0))
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(0))
+
+    server.executeQuerySimple(
+      s"""
+         |mutation {
+         |  deleteParent(
+         |  where: {p: "p1"}
+         |  ){
+         |  p
+         |  }
+         |}
+      """.stripMargin,
+      project
+    )
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Parent").as[Int]) should be(Vector(0))
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Child").as[Int]) should be(Vector(0))
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(0))
   }
 
   "a PM to C1 " should "succeed in deleting the parent" in {
@@ -313,6 +400,45 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(0))
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Parent").as[Int]) should be(Vector(0))
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Child").as[Int]) should be(Vector(2))
+  }
+
+  "a PM to C1 " should "succeed in deleting the parent if there is no child" in {
+    val project = SchemaDsl() { schema =>
+      val child = schema.model("Child").field_!("c", _.String, isUnique = true)
+      schema.model("Parent").field_!("p", _.String, isUnique = true).oneToManyRelation("childrenOpt", "parentOpt", child)
+    }
+    database.setup(project)
+
+    server
+      .executeQuerySimple(
+        """mutation {
+          |  createParent(data: {
+          |    p: "p1"
+          |  }){
+          |    p
+          |  }
+          |}""".stripMargin,
+        project
+      )
+
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(0))
+
+    server.executeQuerySimple(
+      s"""
+         |mutation {
+         |  deleteParent(
+         |  where: { p: "p1"}
+         |  ){
+         |    p
+         |  }
+         |}
+      """.stripMargin,
+      project
+    )
+
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(0))
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Parent").as[Int]) should be(Vector(0))
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Child").as[Int]) should be(Vector(0))
   }
 
   "a P1! to CM  relation" should "should succeed in deleting the parent " in {
@@ -399,7 +525,45 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(0))
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Parent").as[Int]) should be(Vector(0))
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Child").as[Int]) should be(Vector(1))
+  }
 
+  "a P1 to CM  relation " should " should succeed in deleting the parent if there is no child" in {
+    val project = SchemaDsl() { schema =>
+      val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)
+      val child  = schema.model("Child").field_!("c", _.String, isUnique = true).oneToManyRelation("parentsOpt", "childOpt", parent)
+    }
+    database.setup(project)
+
+    server.executeQuerySimple(
+      """mutation {
+        |  createParent(data: {
+        |    p: "p1"
+        |
+        |  }){
+        |    p
+        |  }
+        |}""".stripMargin,
+      project
+    )
+
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(0))
+
+    server.executeQuerySimple(
+      s"""
+         |mutation {
+         |  deleteParent(
+         |  where: {p: "p1"}
+         |  ){
+         |    p
+         |  }
+         |}
+      """.stripMargin,
+      project
+    )
+
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(0))
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Parent").as[Int]) should be(Vector(0))
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Child").as[Int]) should be(Vector(0))
   }
 
   "a PM to CM  relation" should "succeed in deleting the parent" in {
@@ -446,7 +610,47 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiBaseSpe
 
   }
 
-  "a PM to CM  relation" should "delete the child from other relations as well" in {
+  "a PM to CM  relation" should "succeed in deleting the parent if there is no child" in {
+    val project = SchemaDsl() { schema =>
+      val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)
+      val child  = schema.model("Child").field_!("c", _.String, isUnique = true).manyToManyRelation("parentsOpt", "childrenOpt", parent)
+    }
+    database.setup(project)
+
+    server.executeQuerySimple(
+      """mutation {
+        |  createParent(data: {
+        |    p: "p1"
+        |
+        |  }){
+        |    p
+        |  }
+        |}""".stripMargin,
+      project
+    )
+
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(0))
+
+    server.executeQuerySimple(
+      s"""
+         |mutation {
+         |  deleteParent(
+         |  where: {p: "p1"}
+         |  ){
+         |    p
+         |  }
+         |}
+      """.stripMargin,
+      project
+    )
+
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(0))
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Parent").as[Int]) should be(Vector(0))
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Child").as[Int]) should be(Vector(0))
+
+  }
+
+  "a PM to CM  relation" should "delete the parent from other relations as well" in {
     val project = SchemaDsl() { schema =>
       val parent   = schema.model("Parent").field_!("p", _.String, isUnique = true)
       val child    = schema.model("Child").field_!("c", _.String, isUnique = true).manyToManyRelation("parentsOpt", "childrenOpt", parent)
