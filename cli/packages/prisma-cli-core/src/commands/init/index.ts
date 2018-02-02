@@ -24,7 +24,7 @@ export default class Init extends Command {
       description:
         'Full URL or repo shorthand (e.g. `owner/repo`) to boilerplate GitHub repository',
     }),
-    minimal: flags.string({
+    minimal: flags.boolean({
       char: 'm',
       description:
         'Minimal setup: database-only',
