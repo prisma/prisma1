@@ -7,7 +7,7 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class CascadingDeletePathSpec extends FlatSpec with Matchers with ApiBaseSpec {
 
-  "Paths" should "not be generated for non-cascading relations" in {
+  "Paths" should "not be generated for non-cascading relations" ignore {
 
     //                                P
     //                        C             SC
@@ -33,7 +33,7 @@ class CascadingDeletePathSpec extends FlatSpec with Matchers with ApiBaseSpec {
     res should be(List.empty)
   }
 
-  "Paths for nested relations where all sides are cascading" should "be generated correctly" in {
+  "Paths for nested relations where all sides are cascading" should "be generated correctly" ignore {
 
     //                                P
     //                        C             SC
@@ -93,7 +93,7 @@ class CascadingDeletePathSpec extends FlatSpec with Matchers with ApiBaseSpec {
                       |P<->SC SC<->SGC SGC<->SGGC2""".stripMargin)
   }
 
-  "Paths for graphs with  circles" should "terminate" in {
+  "Paths for graphs with  circles" should "terminate" ignore {
 
     //                                P
     //                              /   \
@@ -128,7 +128,7 @@ class CascadingDeletePathSpec extends FlatSpec with Matchers with ApiBaseSpec {
                      |P<->SC SC<->C""".stripMargin)
   }
 
-  "Paths for graphs with  circles" should "terminate does not go up to the parent again on the childs" in {
+  "Paths for graphs with  circles" should "terminate does not go up to the parent again on the childs" ignore {
 
     //                                P
     //                              /   \
@@ -157,7 +157,7 @@ class CascadingDeletePathSpec extends FlatSpec with Matchers with ApiBaseSpec {
                      |P<->SC SC<->C""".stripMargin)
   }
 
-  "Paths for graphs with  circles" should "detect the circle and error" in {
+  "Paths for graphs with  circles" should "detect the circle and error" ignore {
 
     //                            A       A2
     //                              \   /
@@ -204,7 +204,7 @@ class CascadingDeletePathSpec extends FlatSpec with Matchers with ApiBaseSpec {
                      |P<->SC SC<->C""".stripMargin)
   }
 
-  "Paths for graphs with  circles" should "detect the circle also on selfrelations and error" in {
+  "Paths for graphs with  circles" should "detect the circle also on selfrelations and error" ignore {
 
     //                            C  -  C
 
