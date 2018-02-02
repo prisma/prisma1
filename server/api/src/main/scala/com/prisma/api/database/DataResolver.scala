@@ -34,7 +34,7 @@ case class DataResolver(project: Project, useMasterDatabaseOnly: Boolean = false
     else apiDependencies.databases.readOnly
 
   protected def performWithTiming[A](name: String, f: => Future[A]): Future[A] = {
-    ApiMetrics.sqlQueryTimer.timeFuture() {
+    ApiMetrics.sqlQueryTimer.timeFuture(project.id, name) {
       f
     }
   }

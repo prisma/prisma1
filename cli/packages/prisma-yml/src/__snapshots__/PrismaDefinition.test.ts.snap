@@ -7,12 +7,16 @@ Array [
     "clusterSecret": undefined,
     "local": false,
     "name": "prisma-eu1",
+    "out": Output {},
+    "shared": true,
   },
   Cluster {
     "baseUrl": "https://us1.prisma.sh",
     "clusterSecret": undefined,
     "local": false,
     "name": "prisma-us1",
+    "out": Output {},
+    "shared": true,
   },
 ]
 `;
@@ -24,12 +28,16 @@ Array [
     "clusterSecret": undefined,
     "local": false,
     "name": "prisma-eu1",
+    "out": Output {},
+    "shared": true,
   },
   Cluster {
     "baseUrl": "https://us1.prisma.sh",
     "clusterSecret": undefined,
     "local": false,
     "name": "prisma-us1",
+    "out": Output {},
+    "shared": true,
   },
 ]
 `;
@@ -41,12 +49,16 @@ Array [
     "clusterSecret": undefined,
     "local": false,
     "name": "prisma-eu1",
+    "out": Output {},
+    "shared": true,
   },
   Cluster {
     "baseUrl": "https://us1.prisma.sh",
     "clusterSecret": undefined,
     "local": false,
     "name": "prisma-us1",
+    "out": Output {},
+    "shared": true,
   },
 ]
 `;
@@ -60,12 +72,16 @@ Array [
     "clusterSecret": undefined,
     "local": false,
     "name": "prisma-eu1",
+    "out": Output {},
+    "shared": true,
   },
   Cluster {
     "baseUrl": "https://us1.prisma.sh",
     "clusterSecret": undefined,
     "local": false,
     "name": "prisma-us1",
+    "out": Output {},
+    "shared": true,
   },
 ]
 `;
@@ -85,18 +101,24 @@ Array [
     "clusterSecret": undefined,
     "local": false,
     "name": "prisma-eu1",
+    "out": Output {},
+    "shared": true,
   },
   Cluster {
     "baseUrl": "https://us1.prisma.sh",
     "clusterSecret": undefined,
     "local": false,
     "name": "prisma-us1",
+    "out": Output {},
+    "shared": true,
   },
   Cluster {
     "baseUrl": "http://localhost:60000",
     "clusterSecret": "",
     "local": true,
     "name": "cluster",
+    "out": Output {},
+    "shared": true,
   },
 ]
 `;
@@ -108,12 +130,16 @@ Array [
     "clusterSecret": undefined,
     "local": false,
     "name": "prisma-eu1",
+    "out": Output {},
+    "shared": true,
   },
   Cluster {
     "baseUrl": "https://us1.prisma.sh",
     "clusterSecret": undefined,
     "local": false,
     "name": "prisma-us1",
+    "out": Output {},
+    "shared": true,
   },
 ]
 `;

@@ -189,10 +189,12 @@ export class Environment {
   private getSharedClusters(rc: RC): Cluster[] {
     return this.sharedClusters.map(clusterName => {
       return new Cluster(
+        this.out,
         clusterName,
         this.clusterEndpointMap[clusterName],
         rc && rc.cloudSessionKey,
         false,
+        true,
       )
     })
   }
@@ -203,7 +205,14 @@ export class Environment {
     }
     return Object.keys(rc.clusters).map(name => {
       const cluster = rc.clusters![name]
-      return new Cluster(name, cluster.host, cluster.clusterSecret, true)
+      return new Cluster(
+        this.out,
+        name,
+        cluster.host,
+        cluster.clusterSecret,
+        isLocal(cluster.host),
+        false,
+      )
     })
   }
 
@@ -219,3 +228,6 @@ export class Environment {
     }, {})
   }
 }
+
+export const isLocal = hostname =>
+  hostname.includes('localhost') || hostname.includes('127.0.0.1')

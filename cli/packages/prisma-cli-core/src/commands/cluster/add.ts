@@ -13,7 +13,7 @@ export default class ClusterAdd extends Command {
     const clusterSecret = await this.clusterSecretSelector()
     const name = await this.nameSelector()
 
-    const cluster = new Cluster(name, endpoint, clusterSecret)
+    const cluster = new Cluster(this.out, name, endpoint, clusterSecret)
     debug('Saving cluster', cluster)
     this.env.addCluster(cluster)
     this.env.saveGlobalRC()
