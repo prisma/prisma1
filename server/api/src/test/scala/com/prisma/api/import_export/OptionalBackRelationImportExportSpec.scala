@@ -21,9 +21,9 @@ class OptionalBackRelationImportExportSpec extends FlatSpec with Matchers with A
     schema
       .model("Model1")
       .field("a", _.String)
-      .oneToOneRelation("model0", "doesn't matter", model0, Some("Relation0to1"), includeOtherField = false)
+      .oneToOneRelation("model0", "doesn't matter", model0, Some("Relation0to1"), includeFieldB = false)
 
-    model0.oneToOneRelation("model0self", "doesn't matter", model0, Some("Relation0to0"), includeOtherField = false)
+    model0.oneToOneRelation("model0self", "doesn't matter", model0, Some("Relation0to0"), includeFieldB = false)
   }
 
   override protected def beforeAll(): Unit = {
@@ -35,10 +35,9 @@ class OptionalBackRelationImportExportSpec extends FlatSpec with Matchers with A
     database.truncate(project)
   }
 
-  val importer = new BulkImport(project)
-  val exporter = new BulkExport(project)
+  val importer                   = new BulkImport(project)
+  val exporter                   = new BulkExport(project)
   val dataResolver: DataResolver = this.dataResolver(project)
-
 
   "Relations without back relation" should "be able to be imported if one fieldName is null" in {
 
@@ -127,7 +126,7 @@ class OptionalBackRelationImportExportSpec extends FlatSpec with Matchers with A
 
     importer.executeImport(nodes).await(5)
 
-    assertThrows[RuntimeException] {importer.executeImport(relations).await(5)}
+    assertThrows[RuntimeException] { importer.executeImport(relations).await(5) }
   }
 
   "Relations without back relations" should "be able to be exported" in {
@@ -156,7 +155,6 @@ class OptionalBackRelationImportExportSpec extends FlatSpec with Matchers with A
     val request    = ExportRequest("relations", cursor)
     val firstChunk = exporter.executeExport(dataResolver, request.toJson).await(5).convertTo[ResultFormat]
 
-
     JsArray(firstChunk.out.jsonElements).toString should be(
       """[""" concat
         """[{"_typeName":"Model0","id":"4"},{"_typeName":"Model0","id":"3","fieldName":"model0self"}],""" concat
@@ -165,6 +163,5 @@ class OptionalBackRelationImportExportSpec extends FlatSpec with Matchers with A
     firstChunk.cursor.table should be(-1)
     firstChunk.cursor.row should be(-1)
   }
-
 
 }

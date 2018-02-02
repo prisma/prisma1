@@ -92,8 +92,8 @@ object MigrationStepType {
 
   lazy val CreateRelationType = fieldsHelper[CreateRelation](
     Field("name", StringType, resolve = _.value.name),
-    Field("leftModel", StringType, resolve = _.value.leftModelName),
-    Field("rightModel", StringType, resolve = _.value.rightModelName)
+    Field("leftModel", StringType, resolve = _.value.modelAName),
+    Field("rightModel", StringType, resolve = _.value.modelBName)
   )
 
   lazy val UpdateRelationType = fieldsHelper[UpdateRelation](
