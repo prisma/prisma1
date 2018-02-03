@@ -5,6 +5,7 @@ import com.prisma.shared.models._
 import com.prisma.shared.project_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 import com.prisma.api.database.CascadingDeletes._
+import com.prisma.api.database.DatabaseMutationBuilder
 
 class CascadingDeletePathSpec extends FlatSpec with Matchers with ApiBaseSpec {
 
@@ -233,6 +234,69 @@ class CascadingDeletePathSpec extends FlatSpec with Matchers with ApiBaseSpec {
                      |P<->SC SC<->C C<->P P<->A2
                      |P<->SC SC<->C C<->P
                      |P<->SC SC<->C""".stripMargin)
+  }
+
+  "The mutation builder" should "generate the correct query for terminate" in {
+
+    //                                P
+    //                              /   \
+    //                            C  ... SC
+
+    val project = SchemaDsl() { schema =>
+      val parent = schema.model("P").field_!("p", _.String, isUnique = true)
+      val child = schema
+        .model("C")
+        .field_!("c", _.String, isUnique = true)
+        .oneToOneRelation("p", "c", parent, modelAOnDelete = OnDelete.Cascade, modelBOnDelete = OnDelete.Cascade)
+      val stepchild = schema
+        .model("SC")
+        .field_!("sc", _.String, isUnique = true)
+        .oneToOneRelation("p", "sc", parent, modelAOnDelete = OnDelete.Cascade, modelBOnDelete = OnDelete.Cascade)
+        .manyToManyRelation("c", "sc", child)
+    }
+    database.setup(project)
+
+    val parent = project.schema.getModelByName_!("P")
+
+    //set up nodes for p1 and children
+
+    val setup    = server.executeQuerySimple("""mutation{createP(data:{p:"p", c: {create:{c: "c"}}, sc: {create: {sc: "sc"}}}){id, c {id}, sc{id}}}""", project)
+    val parentId = setup.pathAsString("data.createP.id")
+
+    // connect children of p1 with other siblings that are not in relation to p1
+
+    server.executeQuerySimple("""mutation{updateC(where: {c: "c"},    data:{sc: {create:[{ sc: "sc2"},{ sc: "sc3"}]}}){c}}""", project)
+    server.executeQuerySimple("""mutation{updateSC(where: {sc: "sc"}, data:{c:  {create:[{  c: "c2"}, {  c:  "c3"}]}}){sc}}""", project)
+
+    //set up nodes for p2 and children
+    server.executeQuerySimple("""mutation{createP(data:{p:"p2", c: {create:{c: "cx"}}, sc: {create: {sc: "scx"}}}){id, c {id}, sc{id}}}""", project)
+    server.executeQuerySimple("""mutation{updateC(where: {c: "cx"},    data:{sc: {create:[{ sc: "scx2"},{ sc: "scx3"}]}}){c}}""", project)
+    server.executeQuerySimple("""mutation{updateSC(where: {sc: "scx"}, data:{c:  {create:[{  c: "cx2"}, {  c:  "cx3"}]}}){sc}}""", project)
+
+    val res = collectPaths(project, NodeSelector.forId(parent, parentId), parent)
+    res.foreach(x => println(x.pretty))
+
+    val res2 = res.map(x => x.pretty).mkString("\n")
+
+    val childrenRelation = project.schema.getUnambiguousRelationThatConnectsModels_!("SC", "C").get
+
+    //first side
+    val check1 = DatabaseMutationBuilder.oldParentFailureTriggerByPath(project, childrenRelation, res.head)
+    database.runDbActionOnClientDb(check1)
+
+    //second side
+    val check2 = DatabaseMutationBuilder.oldParentFailureTriggerByPath(project, childrenRelation, res.reverse.head)
+    database.runDbActionOnClientDb(check2)
+
+    //first side
+    val query = DatabaseMutationBuilder.deleteRelationRowByPath(project.id, childrenRelation, res.head)
+    database.runDbActionOnClientDb(query)
+
+    //second side
+    val query2 = DatabaseMutationBuilder.deleteRelationRowByPath(project.id, childrenRelation, res.reverse.head)
+    database.runDbActionOnClientDb(query2)
+
+    println(query)
   }
 
 }

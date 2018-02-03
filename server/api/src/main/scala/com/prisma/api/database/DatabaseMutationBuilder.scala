@@ -151,27 +151,24 @@ object DatabaseMutationBuilder {
       sql" AND `#${parentInfo.field.relationSide.get}` =" ++ idFromWhere(projectId, parentInfo.where)).asUpdate
   }
 
-  def deleteRelationRowByPath(projectId: String, relation: Relation, path: Path) = {
-    val childModel: Model           = path.mwrs.reverse.head.child
-    val pathQuery: SQLActionBuilder = ???
-//
-//
-//      def pathQuery(path: Path) : SQLActionBuilder={
-//
-//        path.mwrs match {
-//          case x if x.isEmpty                                 => sql"(select id from `#$projectId`.`#${path.where.model.name}` where `#${path.where.field.name}` = ${path.where.fieldValue})"
-//          case x if x.nonEmpty && seen.contains(x.head.child) => sys.error("Circle")
-//          case head :: Nil if head.parent == head.child       => sys.error("Circle")
-//          case head :: tail                                   => detectCircle(tail, seen :+ head.parent)
-//        }
-//
-//
-//        }
+  //CASCADING DELETE
 
+  def deleteDataItemsByPath(projectId: String, relation: Relation, path: Path) = {
+    (sql"DELETE FROM `#$projectId`.`#${lastPathModel(path)}` " ++
+      sql"where `id` IN " ++ pathQuery(projectId, path)).asUpdate
   }
 
-  def idFromWhere(projectId: String, where: NodeSelector): SQLActionBuilder = {
-    sql"(SELECT `id` FROM `#$projectId`.`#${where.model.name}` WHERE `#${where.field.name}` = ${where.fieldValue} LIMIT 1)"
+  def deleteRelationRowsByPath(projectId: String, relation: Relation, path: Path) = {
+    (sql"DELETE FROM `#$projectId`.`#${relation.id}` " ++
+      sql"where `#${relation.sideOf(lastPathModel(path))}` IN " ++ pathQuery(projectId, path)).asUpdate
+  }
+
+  def oldParentFailureTriggerByPath(project: Project, relation: Relation, path: Path) = {
+    val query = sql"select `id`" ++
+      sql"from `#${project.id}`.`#${relation.id}`" ++
+      sql"where `#${relation.sideOf(lastPathModel(path))}` IN ( " ++ pathQuery(project.id, path) ++ sql" )"
+
+    triggerFailureWhenExists(project, query, relation.id)
   }
 
   //SCALAR LISTS
@@ -212,13 +209,17 @@ object DatabaseMutationBuilder {
       .map(_.last)
   }
 
-  //TRANSACTIONAL FAILURE TRIGGERS
+  //HELPERS
+//We could save a ton of queries here if we do not run extra queries if it is a IdNodeSelector
+  def idFromWhere(projectId: String, where: NodeSelector): SQLActionBuilder = {
+    sql"(SELECT `id` FROM `#$projectId`.`#${where.model.name}` WHERE `#${where.field.name}` = ${where.fieldValue})"
+  }
 
   def whereFailureTrigger(project: Project, where: NodeSelector) = {
     val table = where.model.name
     val query = idFromWhere(project.id, where)
 
-    triggerFailureWhen(project, query, table)
+    triggerFailureWhenNotExists(project, query, table)
   }
 
   def connectionFailureTrigger(project: Project, parentInfo: ParentInfo, where: NodeSelector) = {
@@ -229,7 +230,7 @@ object DatabaseMutationBuilder {
       sql"WHERE `#$childSide` =" ++ idFromWhere(project.id, where) ++
       sql"AND `#$parentSide` =" ++ idFromWhere(project.id, parentInfo.where)
 
-    triggerFailureWhen(project, query, table)
+    triggerFailureWhenNotExists(project, query, table)
   }
 
   def oldParentFailureTriggerForRequiredRelations(project: Project, relation: Relation, where: NodeSelector) = {
@@ -237,7 +238,7 @@ object DatabaseMutationBuilder {
     val table     = relation.id
     val query     = sql"SELECT `id` FROM `#${project.id}`.`#$table` WHERE `#$childSide` =" ++ idFromWhere(project.id, where)
 
-    triggerFailureWhenNot(project, query, table)
+    triggerFailureWhenExists(project, query, table)
   }
 
   def oldChildFailureTriggerForRequiredRelations(project: Project, parentInfo: ParentInfo) = {
@@ -245,22 +246,8 @@ object DatabaseMutationBuilder {
     val table      = parentInfo.relation.id
     val query      = sql"SELECT `id` FROM `#${project.id}`.`#$table` WHERE `#$parentSide` =" ++ idFromWhere(project.id, parentInfo.where)
 
-    triggerFailureWhenNot(project, query, table)
+    triggerFailureWhenExists(project, query, table)
   }
-
-  def oldParentFailureTriggerForRequiredRelationsByPath(project: Project, relation: Relation, path: Path) = {
-    val childSide                   = relation.sideOf(path.mwrs.reverse.head.child)
-    val table                       = relation.id
-    val pathQuery: SQLActionBuilder = ???
-
-    val query = sql"select `id`" ++
-      sql"from `#${project.id}`.`#$table`" ++
-      sql"where `#$childSide` IN ( " ++ pathQuery ++ sql" )"
-
-    triggerFailureWhenNot(project, query, table)
-  }
-
-  // Control Flow
 
   def ifThenElse(condition: SqlStreamingAction[Vector[Boolean], Boolean, Effect],
                  thenMutactions: DBIOAction[Unit, NoStream, Effect],
@@ -282,7 +269,7 @@ object DatabaseMutationBuilder {
     } yield action
   }
 
-  def triggerFailureWhen(project: Project, query: SQLActionBuilder, table: String) = {
+  def triggerFailureWhenNotExists(project: Project, query: SQLActionBuilder, table: String) = {
 
     (sql"select case" ++
       sql"when exists( " ++ query ++ sql" )" ++
@@ -292,7 +279,7 @@ object DatabaseMutationBuilder {
       sql"where table_schema = ${project.id} and TABLE_NAME = $table)end;").as[Int]
   }
 
-  def triggerFailureWhenNot(project: Project, query: SQLActionBuilder, table: String) = {
+  def triggerFailureWhenExists(project: Project, query: SQLActionBuilder, table: String) = {
 
     (sql"select case" ++
       sql"when not exists( " ++ query ++ sql" )" ++
@@ -302,9 +289,23 @@ object DatabaseMutationBuilder {
       sql"where table_schema = ${project.id} AND TABLE_NAME = $table)end;").as[Int]
   }
 
-  // PATH QUERY
+  def pathQuery(projectId: String, path: Path): SQLActionBuilder = {
+    path.mwrs match {
+      case x if x.isEmpty =>
+        idFromWhere(projectId, path.where)
 
-  def pathQuery(project: Project, path: Path) = {}
+      case x if x.nonEmpty =>
+        val last = x.reverse.head
+        sql"(SELECT `#${last.relation.sideOf(last.child)}`" ++
+          sql" FROM `#$projectId`.`#${last.relation.id}`" ++
+          sql" WHERE `#${last.relation.sideOf(last.parent)}` IN " ++ pathQuery(projectId, path.cutOne) ++ sql")"
+    }
+  }
+
+  def lastPathModel(path: Path): Model = path.mwrs match {
+    case x if x.isEmpty => path.where.model
+    case x              => x.reverse.head.child
+  }
 
   //RESET DATA
 

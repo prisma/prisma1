@@ -1,5 +1,6 @@
 package com.prisma.api.database
 
+import com.prisma.api.database.mutactions.ClientSqlMutaction
 import com.prisma.api.mutations.NodeSelector
 import com.prisma.shared.models.{Field, Model, Project, Relation}
 
@@ -8,6 +9,10 @@ object CascadingDeletes {
   case class ModelsWithRelation(parent: Model, child: Model, relation: Relation)
 
   case class Path(where: NodeSelector, mwrs: List[ModelsWithRelation]) {
+    def cutOne: Path = mwrs match {
+      case x if x.isEmpty => sys.error("Dont call this on an empty path")
+      case x              => copy(where, mwrs.drop(1))
+    }
     def prepend(mwr: ModelsWithRelation): Path = copy(where, mwr +: mwrs)
     def pretty: String =
       s"Where: ${where.model.name}, ${where.field.name}, ${where.fieldValueAsString} |  " + mwrs
@@ -45,10 +50,10 @@ object CascadingDeletes {
     distinct
   }
 
-//  def generateCascadingDeleteMutactions(project: Project, where: NodeSelector): List[ClientSqlMutaction] = {
-//
-//    val paths: List[Path] = collectPaths(project, where, where.model)
-//
-//    paths.map(CascadingDeleteRelationMutactions(project, _))
-//  }
+  def generateCascadingDeleteMutactions(project: Project, where: NodeSelector): List[ClientSqlMutaction] = {
+
+    val paths: List[Path] = collectPaths(project, where, where.model)
+
+    paths.map(CascadingDeleteRelationMutactions(project, _))
+  }
 }
