@@ -42,6 +42,8 @@ services:
       SQL_INTERNAL_CONNECTION_LIMIT: 10
       CLUSTER_PUBLIC_KEY: $CLUSTER_PUBLIC_KEY
       BUGSNAG_API_KEY: ""
+      ENABLE_METRICS: "0"
+      JAVA_OPTS: "-Xmx1G"
 
 networks:
   prisma:

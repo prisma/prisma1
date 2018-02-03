@@ -13,6 +13,10 @@ object SchemaError {
     SchemaError(`type`, description, None)
   }
 
+  def apply(fieldAndType: FieldAndType, description: String): SchemaError = {
+    apply(fieldAndType.objectType.name, fieldAndType.fieldDef.name, description)
+  }
+
   def global(description: String): SchemaError = {
     SchemaError("Global", description, None)
   }

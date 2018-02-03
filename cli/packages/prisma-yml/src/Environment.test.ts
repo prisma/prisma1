@@ -3,11 +3,14 @@ import { getTmpDir } from './test/getTmpDir'
 import * as path from 'path'
 import * as fs from 'fs-extra'
 import { Cluster } from './Cluster'
+import { Output } from './Output'
 
 export function makeEnv(rc?: string) {
   const tmpDir = getTmpDir()
   return new Environment(tmpDir)
 }
+
+const out = new Output()
 
 describe('Environment', () => {
   test('non-existent global prisma rc', async () => {
@@ -18,7 +21,7 @@ describe('Environment', () => {
   test('persists .prisma correctly', async () => {
     const env = makeEnv()
     await env.load({})
-    const cluster = new Cluster('cluster', `http://localhost:60000`, '')
+    const cluster = new Cluster(out, 'cluster', `http://localhost:60000`, '')
     env.addCluster(cluster)
     env.saveGlobalRC()
     expect(fs.readFileSync(env.rcPath, 'utf-8')).toMatchSnapshot()

@@ -102,18 +102,32 @@ case class CreateEnum(name: String, values: Seq[String])                        
 case class DeleteEnum(name: String)                                                          extends EnumMigrationStep
 case class UpdateEnum(name: String, newName: Option[String], values: Option[Vector[String]]) extends EnumMigrationStep
 
+object OnDelete extends Enumeration {
+  type OnDelete = Value
+
+  val SetNull  = Value("SET_NULL")
+  val NoAction = Value("NO_ACTION")
+  val Cascade  = Value("CASCADE")
+
+  val default = SetNull
+}
+
 sealed trait RelationMigrationStep extends MigrationStep
 case class CreateRelation(
     name: String,
-    leftModelName: String,
-    rightModelName: String
+    modelAName: String,
+    modelBName: String,
+    modelAOnDelete: OnDelete.Value = OnDelete.SetNull,
+    modelBOnDelete: OnDelete.Value = OnDelete.SetNull
 ) extends RelationMigrationStep
 
 case class UpdateRelation(
     name: String,
     newName: Option[String],
     modelAId: Option[String],
-    modelBId: Option[String]
+    modelBId: Option[String],
+    modelAOnDelete: OnDelete.Value = OnDelete.SetNull,
+    modelBOnDelete: OnDelete.Value = OnDelete.SetNull
 ) extends RelationMigrationStep
 
 case class DeleteRelation(

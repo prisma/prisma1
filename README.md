@@ -148,7 +148,7 @@ Prisma has a community of thousands of amazing developers and contributors. Welc
 
 Your feedback is **very helpful**, please share your opinion and thoughts!
 
-* [Request a new feature](https://github.com/graphcool/prisma/issues/new)
-* [Report a bug](https://github.com/graphcool/prisma/issues/new)
+* [Request a new feature](https://github.com/graphcool/prisma/issues/new?template=feature_request.md)
+* [Report a bug](https://github.com/graphcool/prisma/issues/new?template=bug.md)
 * [Participate in existing discussions](https://github.com/graphcool/prisma/issues)
 

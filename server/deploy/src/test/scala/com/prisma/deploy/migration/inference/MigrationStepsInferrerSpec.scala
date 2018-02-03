@@ -211,8 +211,8 @@ class MigrationStepsInferrerSpec extends FlatSpec with Matchers with DeploySpecB
       ),
       CreateRelation(
         name = relationName,
-        leftModelName = "Todo",
-        rightModelName = "Comment"
+        modelAName = "Todo",
+        modelBName = "Comment"
       )
     )
   }

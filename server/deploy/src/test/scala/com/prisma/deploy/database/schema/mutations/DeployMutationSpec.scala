@@ -646,6 +646,45 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
     migrations.head.revision shouldEqual 3 // order is DESC
   }
 
+  "DeployMutation" should "work with cascading delete directives" in {
+    val (project, _) = setupProject(basicTypesGql)
+    val nameAndStage = ProjectId.fromEncodedString(project.id)
+    val schema =
+      """
+        |type Author{
+        |  id: ID! @unique
+        |  name: String!
+        |  comments: [Comment!]! @relation(name: "AuthorComments" onDelete: CASCADE)
+        |}
+        |
+        |type Comment{
+        |  id: ID! @unique
+        |  title: String
+        |  author: Author! @relation(name: "AuthorComments" onDelete: SET_NULL)
+        |}
+      """.stripMargin
+
+    server.query(
+      s"""
+         |mutation {
+         |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(schema)}}){
+         |    migration {
+         |      applied
+         |    }
+         |    errors {
+         |      description
+         |    }
+         |  }
+         |}
+      """.stripMargin
+    )
+
+    val migrations = migrationPersistence.loadAll(project.id).await
+    migrations should have(size(3))
+    migrations.exists(x => x.status != MigrationStatus.Success) shouldEqual false
+    migrations.head.revision shouldEqual 3 // order is DESC
+  }
+
   private def formatFunctions(functions: Vector[FunctionInput]) = {
     def formatFunction(fn: FunctionInput) = {
       s"""{

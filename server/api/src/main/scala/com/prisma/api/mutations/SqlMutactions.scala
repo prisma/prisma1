@@ -32,11 +32,10 @@ case class SqlMutactions(dataResolver: DataResolver) {
   val project = dataResolver.project
 
   def getMutactionsForDelete(where: NodeSelector, previousValues: DataItem, id: String): List[ClientSqlMutaction] = {
-    val requiredRelationViolations     = where.model.relationFields.flatMap(field => checkIfRemovalWouldFailARequiredRelation(project, ParentInfo(field, where)))
-    val removeFromConnectionMutactions = where.model.relationFields.map(field => RemoveRelationRowByParentInfo(project, ParentInfo(field, where)))
-    val deleteItemMutaction            = DeleteDataItem(project, where, previousValues, id)
+    val relationMutactions  = DeleteRelationMutaction(project, where)
+    val deleteItemMutaction = DeleteDataItem(project, where, previousValues, id)
 
-    requiredRelationViolations ++ removeFromConnectionMutactions ++ List(deleteItemMutaction)
+    List(relationMutactions, deleteItemMutaction)
   }
 
   def getMutactionsForUpdate(where: NodeSelector, args: CoolArgs, id: Id, previousValues: DataItem): Vector[ClientSqlMutaction] = {
@@ -90,7 +89,7 @@ case class SqlMutactions(dataResolver: DataResolver) {
   }
 
   def getSetScalarList(where: NodeSelector, field: Field, values: Vector[Any]): SetScalarList = SetScalarList(project, where, field, values)
-  def getSetScalarListActionsForUpsert(where: NodeSelector, field: Field, values: Vector[Any]): DBIOAction[List[Int], NoStream, Effect] =
+  def getSetScalarListActionsForUpsert(where: NodeSelector, field: Field, values: Vector[Any]) =
     DatabaseMutationBuilder.setScalarList(project.id, where, field.name, values)
 
   def getMutactionsForScalarLists(where: NodeSelector, args: CoolArgs): Vector[ClientSqlDataChangeMutaction] = {
@@ -219,23 +218,6 @@ case class SqlMutactions(dataResolver: DataResolver) {
       val addToRelation = AddDataItemToManyRelationByUniqueField(project, parentInfo, createWhere)
       Vector(upsertItem, addToRelation) //++ getMutactionsForNestedMutation(upsert.update, upsert.where, triggeredFromCreate = false) ++
     //getMutactionsForNestedMutation(upsert.create, createWhere, triggeredFromCreate = true)
-    }
-  }
-
-  private def checkIfRemovalWouldFailARequiredRelation(project: Project, parentInfo: ParentInfo): Option[InvalidInputClientSqlMutaction] = {
-    val isInvalid = () => dataResolver.resolveByUnique(parentInfo.where).map(_.nonEmpty)
-
-    runRequiredRelationCheckWithInvalidFunction(parentInfo.field, isInvalid)
-  }
-
-  private def runRequiredRelationCheckWithInvalidFunction(field: Field, isInvalid: () => Future[Boolean]): Option[InvalidInputClientSqlMutaction] = {
-    field.relatedField(project.schema).flatMap { relatedField =>
-      val relatedModel              = field.relatedModel_!(project.schema)
-      val error: RelationIsRequired = RelationIsRequired(fieldName = relatedField.name, typeName = relatedModel.name)
-
-      (relatedField.isRequired && !relatedField.isList).toOption {
-        InvalidInputClientSqlMutaction(error, isInvalid = isInvalid)
-      }
     }
   }
 }

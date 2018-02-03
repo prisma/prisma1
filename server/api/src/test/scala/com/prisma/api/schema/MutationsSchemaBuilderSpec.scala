@@ -236,7 +236,7 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec
         .model("Todo")
         .field_!("title", _.String)
         .field("tag", _.String)
-        .oneToManyRelation("comments", "todo", comment, includeOtherField = false)
+        .oneToManyRelation("comments", "todo", comment, includeFieldB = false)
     }
 
     val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
