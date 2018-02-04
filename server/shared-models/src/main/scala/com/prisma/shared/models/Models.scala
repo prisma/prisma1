@@ -484,13 +484,14 @@ case class Relation(
   }
 
   def sideOfModelCascades(model: Model): Boolean = {
-    if (model.id == modelAId) {
+    val res = if (model.id == modelAId) {
       modelAOnDelete == OnDelete.Cascade
     } else if (model.id == modelBId) {
       modelBOnDelete == OnDelete.Cascade
     } else {
       sys.error(s"The model ${model.name} is not part of the relation $name")
     }
+    res
   }
 
   def oppositeSideOf(model: Model): RelationSide.Value = {

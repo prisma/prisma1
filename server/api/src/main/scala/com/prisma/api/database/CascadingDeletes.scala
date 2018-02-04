@@ -1,6 +1,7 @@
 package com.prisma.api.database
 
 import com.prisma.api.database.mutactions.ClientSqlMutaction
+import com.prisma.api.database.mutactions.mutactions.CascadingDeleteRelationMutactions
 import com.prisma.api.mutations.NodeSelector
 import com.prisma.shared.models.{Field, Model, Project, Relation}
 
@@ -26,6 +27,15 @@ object CascadingDeletes {
         case head :: tail                                   => detectCircle(tail, seen :+ head.parent)
       }
     }
+    def lastModel = mwrs match {
+      case x if x.isEmpty => where.model
+      case x              => x.reverse.head.child
+    }
+
+    def lastRelation = mwrs match {
+      case x if x.isEmpty => None
+      case x              => Some(x.reverse.head.relation)
+    }
   }
   object Path {
     def empty(where: NodeSelector) = Path(where, List.empty)
@@ -34,21 +44,28 @@ object CascadingDeletes {
   def getMWR(project: Project, model: Model, field: Field): ModelsWithRelation =
     ModelsWithRelation(model, field.relatedModel(project.schema).get, field.relation.get)
 
-  def collectPaths(project: Project, where: NodeSelector, startNode: Model, excludes: List[Relation] = List.empty): List[Path] = {
-    val cascadingRelationFields = startNode.cascadingRelationFields
-    val res = cascadingRelationFields.flatMap { field =>
-      val mwr = getMWR(project, startNode, field)
-      if (excludes.contains(mwr.relation)) {
+  def collectPaths(project: Project, where: NodeSelector, startModel: Model, excludes: List[Relation] = List.empty): List[Path] = {
+    val otherRelationFields = startModel.cascadingRelationFields.filter(field => !excludes.contains(field.relation.get))
+
+    otherRelationFields match {
+      case x if x.isEmpty =>
         List(Path.empty(where))
-      } else {
-        val childPaths = collectPaths(project, where, mwr.child, excludes :+ mwr.relation)
-        childPaths.map(path => path.prepend(mwr))
-      }
+
+      case x =>
+        x.flatMap { field =>
+          val mwr        = getMWR(project, startModel, field)
+          val childPaths = collectPaths(project, where, mwr.child, excludes :+ mwr.relation)
+          childPaths.map(path => path.prepend(mwr))
+        }
     }
-    val distinct = res.distinct
-    distinct.map(path => path.detectCircle())
-    distinct
   }
+//    val distinct = res.distinct
+//    distinct.map { path =>
+//      println(path.pretty)
+//      path.detectCircle()
+//    }
+//    distinct
+//  }
 
   def generateCascadingDeleteMutactions(project: Project, where: NodeSelector): List[ClientSqlMutaction] = {
 
