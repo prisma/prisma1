@@ -43,10 +43,8 @@ case class VerifyWhere(project: Project, where: NodeSelector) extends ClientSqlD
       case NullGCValue           => sys.error("Not an acceptable Where")
     }
 
-    val modelString  = s"`${where.model.name}` WHERE `${where.field.name}` ="
-    val equalsString = " = (SELECT"
+    val modelString = s"`${where.model.name}` WHEREFAILURETRIGGER WHERE `${where.field.name}`"
 
-    val res = cause.contains(modelString) && !cause.contains(equalsString) && cause.contains(parameterString)
-    res
+    cause.contains(modelString) && cause.contains(parameterString)
   }
 }

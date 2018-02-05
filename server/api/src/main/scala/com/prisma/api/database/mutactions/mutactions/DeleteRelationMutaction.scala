@@ -35,7 +35,7 @@ case class DeleteRelationMutaction(project: Project, where: NodeSelector) extend
   }
 
   def causedByThisMutactionChildOnly(relation: Relation, cause: String) = {
-    val parentCheckString = s"`${project.id}`.`${relation.id}` WHERE `${relation.sideOf(where.model)}` = (SELECT"
+    val parentCheckString = s"`${project.id}`.`${relation.id}` OLDPARENTFAILURETRIGGER WHERE `${relation.sideOf(where.model)}`"
 
     cause.contains(parentCheckString) && cause.contains(parameterString(where))
   }

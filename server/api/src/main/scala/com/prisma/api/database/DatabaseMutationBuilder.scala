@@ -134,21 +134,21 @@ object DatabaseMutationBuilder {
   }
 
   def deleteRelayRowByUnique(projectId: String, where: NodeSelector) =
-    (sql"DELETE FROM `#$projectId`.`_RelayId` WHERE `id` = " ++ idFromWhere(projectId, where)).asUpdate
+    (sql"DELETE FROM `#$projectId`.`_RelayId` WHERE `id`" ++ idFromWhereEquals(projectId, where)).asUpdate
 
   def deleteRelationRowByParent(projectId: String, parentInfo: ParentInfo) = {
     (sql"DELETE FROM `#$projectId`.`#${parentInfo.relation.id}` WHERE `#${parentInfo.field.relationSide.get}` = " ++ idFromWhere(projectId, parentInfo.where)).asUpdate
   }
 
   def deleteRelationRowByChild(projectId: String, relation: Relation, where: NodeSelector) = {
-    (sql"DELETE FROM `#$projectId`.`#${relation.id}` WHERE `#${relation.sideOf(where.model)}` = " ++ idFromWhere(projectId, where)).asUpdate
+    (sql"DELETE FROM `#$projectId`.`#${relation.id}` WHERE `#${relation.sideOf(where.model)}`" ++ idFromWhereEquals(projectId, where)).asUpdate
   }
 
   def deleteRelationRowByParentAndChild(projectId: String, parentInfo: ParentInfo, where: NodeSelector) = {
 
     (sql"delete from `#$projectId`.`#${parentInfo.relation.id}` " ++
       sql"where `#${parentInfo.field.oppositeRelationSide.get}` = " ++ idFromWhere(projectId, where) ++
-      sql" AND `#${parentInfo.field.relationSide.get}` =" ++ idFromWhere(projectId, parentInfo.where)).asUpdate
+      sql" AND `#${parentInfo.field.relationSide.get}`" ++ idFromWhereEquals(projectId, parentInfo.where)).asUpdate
   }
 
   //CASCADING DELETE
@@ -184,7 +184,7 @@ object DatabaseMutationBuilder {
   }
 
   def setScalarListToEmpty(projectId: String, where: NodeSelector, fieldName: String) = {
-    (sql"DELETE FROM `#$projectId`.`#${where.model.name}_#${fieldName}` WHERE `nodeId` = " ++ idFromWhere(projectId, where)).asUpdate
+    (sql"DELETE FROM `#$projectId`.`#${where.model.name}_#${fieldName}` WHERE `nodeId`" ++ idFromWhereEquals(projectId, where)).asUpdate
   }
 
   def pushScalarList(projectId: String, modelName: String, fieldName: String, nodeId: String, values: Vector[Any]): DBIOAction[Int, NoStream, Effect] = {
@@ -211,13 +211,24 @@ object DatabaseMutationBuilder {
     sql"(SELECT `id` FROM `#$projectId`.`#${where.model.name}` WHERE `#${where.field.name}` = ${where.fieldValue})"
   }
 
+  def idFromWhereIn(projectId: String, where: NodeSelector): SQLActionBuilder = {
+    sql"IN " ++ idFromWhere(projectId, where)
+  }
+
+  def idFromWhereEquals(projectId: String, where: NodeSelector): SQLActionBuilder = {
+    where.isId match {
+      case true  => sql" = ${where.fieldValue}"
+      case false => sql" = " ++ idFromWhere(projectId, where)
+    }
+  }
+
   def idFromWherePath(projectId: String, where: NodeSelector): SQLActionBuilder = {
     sql"(SELECT `id` FROM (SELECT  * From `#$projectId`.`#${where.model.name}`) IDFROMWHEREPATH WHERE `#${where.field.name}` = ${where.fieldValue})"
   }
 
   def whereFailureTrigger(project: Project, where: NodeSelector) = {
     val table = where.model.name
-    val query = idFromWhere(project.id, where)
+    val query = sql"(SELECT `id` FROM `#${project.id}`.`#${where.model.name}` WHEREFAILURETRIGGER WHERE `#${where.field.name}` = ${where.fieldValue})"
 
     triggerFailureWhenNotExists(project, query, table)
   }
@@ -226,9 +237,9 @@ object DatabaseMutationBuilder {
     val childSide  = parentInfo.relation.sideOf(where.model)
     val parentSide = parentInfo.relation.sideOf(parentInfo.model)
     val table      = parentInfo.relation.id
-    val query = sql"SELECT `id` FROM `#${project.id}`.`#$table`" ++
-      sql"WHERE `#$childSide` =" ++ idFromWhere(project.id, where) ++
-      sql"AND `#$parentSide` =" ++ idFromWhere(project.id, parentInfo.where)
+    val query = sql"SELECT `id` FROM `#${project.id}`.`#$table` CONNECTIONFAILURETRIGGER" ++
+      sql"WHERE `#$childSide` " ++ idFromWhereEquals(project.id, where) ++
+      sql"AND `#$parentSide` " ++ idFromWhereEquals(project.id, parentInfo.where)
 
     triggerFailureWhenNotExists(project, query, table)
   }
@@ -236,7 +247,7 @@ object DatabaseMutationBuilder {
   def oldParentFailureTriggerForRequiredRelations(project: Project, relation: Relation, where: NodeSelector) = {
     val childSide = relation.sideOf(where.model)
     val table     = relation.id
-    val query     = sql"SELECT `id` FROM `#${project.id}`.`#$table` WHERE `#$childSide` =" ++ idFromWhere(project.id, where)
+    val query     = sql"SELECT `id` FROM `#${project.id}`.`#$table` OLDPARENTFAILURETRIGGER WHERE `#$childSide`" ++ idFromWhereEquals(project.id, where)
 
     triggerFailureWhenExists(project, query, table)
   }
@@ -244,7 +255,7 @@ object DatabaseMutationBuilder {
   def oldChildFailureTriggerForRequiredRelations(project: Project, parentInfo: ParentInfo) = {
     val parentSide = parentInfo.relation.sideOf(parentInfo.model)
     val table      = parentInfo.relation.id
-    val query      = sql"SELECT `id` FROM `#${project.id}`.`#$table` WHERE `#$parentSide` =" ++ idFromWhere(project.id, parentInfo.where)
+    val query      = sql"SELECT `id` FROM `#${project.id}`.`#$table` OLDCHILDFAILURETRIGGER WHERE `#$parentSide`" ++ idFromWhereEquals(project.id, parentInfo.where)
 
     triggerFailureWhenExists(project, query, table)
   }

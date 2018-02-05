@@ -46,10 +46,9 @@ case class VerifyConnection(project: Project, parentInfo: ParentInfo, where: Nod
       case NullGCValue           => sys.error("Not an acceptable Where")
     }
 
-    val childString  = s"`${parentInfo.relation.id}` WHERE `${parentInfo.relation.sideOf(where.model)}` ="
-    val parentString = s"AND `${parentInfo.relation.sideOf(parentInfo.where.model)}` ="
+    val childString  = s"`${parentInfo.relation.id}` CONNECTIONFAILURETRIGGER WHERE `${parentInfo.relation.sideOf(where.model)}`"
+    val parentString = s"AND `${parentInfo.relation.sideOf(parentInfo.where.model)}`"
 
-    val res = cause.contains(childString) && cause.contains(parentString) && cause.contains(parameterString)
-    res
+    cause.contains(childString) && cause.contains(parentString) && cause.contains(parameterString)
   }
 }
