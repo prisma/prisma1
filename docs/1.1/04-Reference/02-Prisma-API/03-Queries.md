@@ -168,7 +168,7 @@ query {
 
 ## Query arguments
 
-Throughout the Prisma API, you'll find query arguments that you cam provide to further control the query response. It can be either of the following:
+Throughout the Prisma API, you'll find query arguments that you can provide to further control the query response. It can be either of the following:
 
 - sorting nodes by any field value using `orderBy`
 - selecting nodes in a query by scalar or relational filters using `where`
@@ -401,7 +401,7 @@ query {
 }
 ```
 
-To query the first two `Post` node after the first `Post` node:
+To query the first two `Post` nodes after the first `Post` node:
 
 ```graphql
 query {
