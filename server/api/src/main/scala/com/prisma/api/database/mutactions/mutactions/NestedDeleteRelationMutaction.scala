@@ -10,9 +10,8 @@ import com.prisma.shared.models.{Field, Project, Relation}
 case class NestedDeleteRelationMutaction(project: Project, parentInfo: ParentInfo, where: NodeSelector, topIsCreate: Boolean = false)
     extends NestedRelationMutactionBaseClass {
 
-  val otherRelationFieldsOfChild          = where.model.relationFields.filter(field => !field.relation.contains(parentInfo.relation))
-  val relationsWhereTheChildIsRequired    = otherRelationFieldsOfChild.filter(otherSideIsRequired).map(_.relation.get)
-  val relationsWhereTheChildIsNotRequired = otherRelationFieldsOfChild.filter(otherSideIsNotRequired).map(_.relation.get)
+  val otherRelationFieldsOfChild       = where.model.relationFields.filter(field => !field.relation.contains(parentInfo.relation))
+  val relationsWhereTheChildIsRequired = otherRelationFieldsOfChild.filter(otherSideIsRequired).map(_.relation.get)
 
   override def requiredCheck = {
     val checksForThisParentRelation = (p.isList, p.isRequired, c.isList, c.isRequired) match {
@@ -35,14 +34,7 @@ case class NestedDeleteRelationMutaction(project: Project, parentInfo: ParentInf
     checksForThisParentRelation ++ checksForOtherRelationsOfTheChild
   }
 
-  override def removalActions = {
-
-    val removeChildFromOtherRelationRows = relationsWhereTheChildIsNotRequired.map { relation =>
-      DatabaseMutationBuilder.deleteRelationRowByChild(project.id, relation, where)
-    }
-
-    List(removalByChild) ++ removeChildFromOtherRelationRows
-  }
+  override def removalActions = noActionRequired
 
   override def addAction = noActionRequired
 
@@ -64,7 +56,4 @@ case class NestedDeleteRelationMutaction(project: Project, parentInfo: ParentInf
     case Some(f)                 => false
     case None                    => false
   }
-
-  def otherSideIsNotRequired(field: Field): Boolean = !otherSideIsRequired(field)
-
 }

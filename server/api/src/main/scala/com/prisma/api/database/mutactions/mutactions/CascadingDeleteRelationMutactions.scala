@@ -15,7 +15,7 @@ import scala.concurrent.Future
 
 case class CascadingDeleteRelationMutactions(project: Project, path: Path) extends ClientSqlDataChangeMutaction {
 
-  val relationFieldsNotOnPath = path.lastModel.relationFields.filter(f => !path.lastRelation.contains(f.relation.get))
+  val relationFieldsNotOnPath = path.lastModel.relationFields.filter(f => !path.mwrs.map(_.relation).contains(f.relation.get))
 
   val relationsWhereThisIsRequired                    = relationFieldsNotOnPath.filter(otherSideIsRequired).map(_.relation.get)
   val relationsWhereThisIsNotRequired: List[Relation] = relationFieldsNotOnPath.filter(otherSideIsNotRequired).map(_.relation.get)
@@ -34,6 +34,20 @@ case class CascadingDeleteRelationMutactions(project: Project, path: Path) exten
     val allActions = requiredCheck ++ deleteAction
     Future.successful(ClientSqlStatementResult(DBIOAction.seq(allActions: _*)))
   }
+
+  // the error parsing needs some love here
+//  select case when not exists(
+//    SELECT `id`
+//      FROM `test-project-id@test-stage`.`_GCToC`
+//  WHERE `B` IN
+//  (SELECT `A`
+//    FROM (SELECT * FROM `test-project-id@test-stage`.`_CToP`) PATHQUERY
+//    WHERE `B` IN  (
+//    SELECT `id`
+//      FROM (SELECT  * From `test-project-id@test-stage`.`P`) IDFROMWHEREPATH
+//    WHERE `p` = 'p') )
+//  ) then 1
+//  else (select COLUMN_NAME from information_schema.columns where table_schema = ? AND TABLE_NAME = ?)end;
 
   override def handleErrors = {
     Some({

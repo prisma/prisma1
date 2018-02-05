@@ -12,7 +12,7 @@ object CascadingDeletes {
   case class Path(where: NodeSelector, mwrs: List[ModelsWithRelation]) {
     def cutOne: Path = mwrs match {
       case x if x.isEmpty => sys.error("Dont call this on an empty path")
-      case x              => copy(where, mwrs.drop(1))
+      case x              => copy(where, mwrs.dropRight(1))
     }
     def prepend(mwr: ModelsWithRelation): Path = copy(where, mwr +: mwrs)
     def pretty: String =
@@ -62,6 +62,29 @@ object CascadingDeletes {
 
   def generateCascadingDeleteMutactions(project: Project, where: NodeSelector): List[ClientSqlMutaction] = {
     val paths: List[Path] = collectPaths(project, where, where.model)
-    paths.map(CascadingDeleteRelationMutactions(project, _))
+
+    def getMutactions(paths: List[Path]): List[ClientSqlMutaction] = {
+      val nonEmptyPaths = paths.filter(_.mwrs.nonEmpty)
+
+      nonEmptyPaths match {
+        case x if x.isEmpty => List.empty
+        case x =>
+          val maxPathLength = x.map(_.mwrs.length).max
+
+          val longestPaths = x.filter(_.mwrs.lengthCompare(maxPathLength) == 0)
+
+          val longestMutactions = longestPaths.map(CascadingDeleteRelationMutactions(project, _))
+
+          val shortenedPaths = longestPaths.map(_.cutOne)
+
+          val newPaths = x.filter(_.mwrs.lengthCompare(maxPathLength) < 0) ++ shortenedPaths
+
+          longestMutactions ++ getMutactions(newPaths)
+
+      }
+
+    }
+
+    getMutactions(paths)
   }
 }

@@ -14,17 +14,13 @@ import scala.concurrent.Future
 
 case class DeleteRelationMutaction(project: Project, where: NodeSelector) extends ClientSqlDataChangeMutaction {
 
-  val relationsWhereThisIsRequired    = where.model.relationFields.filter(otherSideIsRequired).map(_.relation.get)
-  val relationsWhereThisIsNotRequired = where.model.relationFields.filter(otherSideIsNotRequired).map(_.relation.get)
+  val relationsWhereThisIsRequired = where.model.relationFields.filter(otherSideIsRequired).map(_.relation.get)
 
   val requiredCheck =
     relationsWhereThisIsRequired.map(relation => DatabaseMutationBuilder.oldParentFailureTriggerForRequiredRelations(project, relation, where))
 
-  val removalActions = relationsWhereThisIsNotRequired.map(relation => DatabaseMutationBuilder.deleteRelationRowByChild(project.id, relation, where))
-
   override def execute = {
-    val allActions = requiredCheck ++ removalActions
-    Future.successful(ClientSqlStatementResult(DBIOAction.seq(allActions: _*)))
+    Future.successful(ClientSqlStatementResult(DBIOAction.seq(requiredCheck: _*)))
   }
 
   override def handleErrors = {
@@ -64,7 +60,4 @@ case class DeleteRelationMutaction(project: Project, where: NodeSelector) extend
     case Some(f)                 => false
     case None                    => false
   }
-
-  def otherSideIsNotRequired(field: Field): Boolean = !otherSideIsRequired(field)
-
 }
