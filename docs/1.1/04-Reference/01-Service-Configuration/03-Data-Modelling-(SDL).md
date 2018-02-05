@@ -347,7 +347,7 @@ To specify a default value for a field, you can use the `@default` directive:
 
 ```graphql
 type Story {
-  isPublished: Boolean @default(value: "false")
+  isPublished: Boolean @default(value: false)
   someNumber: Int! @default(value: "42")
   title: String! @default(value: "My New Post")
   publishDate: DateTime! @default(value: "2018-01-26")
