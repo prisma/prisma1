@@ -177,7 +177,7 @@ object DatabaseMutationBuilder {
     }
 
     DBIO.seq(
-      sqlu"""set @nodeId := (select id from `#$projectId`.`#${where.model.name}` where `#${where.field.name}` = ${where.fieldValue})""", // Todo use idFromWhere here
+      (sql"set @nodeId := " ++ idFromWhere(projectId, where)).asUpdate,
       sqlu"""delete from `#$projectId`.`#${where.model.name}_#${fieldName}` where nodeId = @nodeId""",
       (sql"insert into `#$projectId`.`#${where.model.name}_#${fieldName}` (`nodeId`, `position`, `value`) values " concat combineByComma(escapedValueTuples)).asUpdate
     )
