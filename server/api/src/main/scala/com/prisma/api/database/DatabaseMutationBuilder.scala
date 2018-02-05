@@ -153,20 +153,24 @@ object DatabaseMutationBuilder {
 
   //CASCADING DELETE
 
-  def deleteDataItemsByPath(projectId: String, relation: Relation, path: Path) = {
-    (sql"DELETE FROM `#$projectId`.`#${lastPathModel(path)}` " ++
-      sql"where `id` IN " ++ pathQuery(projectId, path)).asUpdate
-  }
+  def cascadingDeleteChildActions(projectId: String, path: Path, relations: List[Relation]) = {
+    val getIds = (sql"set @nodeIds :=" ++ pathQuery(projectId, path)).asUpdate
+    val deleteFromRelations = for {
+      relation <- relations
+    } yield {
+      (sql"DELETE FROM `#$projectId`.`#${relation.id}` WHERE `#${relation.sideOf(path.lastModel)}` IN (@nodeIds)").asUpdate
+    }
+    val deleteRelayIds  = (sql"DELETE FROM `#$projectId`.`_RelayId` WHERE `id` IN (@nodeIds)").asUpdate
+    val deleteDataItems = (sql"DELETE FROM `#$projectId`.`#${path.lastModel.name}` WHERE `id` IN (@nodeIds)").asUpdate
+    val allActions      = getIds +: deleteFromRelations :+ deleteRelayIds :+ deleteDataItems
 
-  def deleteRelationRowsByPath(projectId: String, relation: Relation, path: Path) = {
-    (sql"DELETE FROM `#$projectId`.`#${relation.id}` " ++
-      sql"where `#${relation.sideOf(lastPathModel(path))}` IN " ++ pathQuery(projectId, path)).asUpdate
+    DBIO.seq(allActions: _*)
   }
 
   def oldParentFailureTriggerByPath(project: Project, relation: Relation, path: Path) = {
-    val query = sql"select `id`" ++
-      sql"from `#${project.id}`.`#${relation.id}`" ++
-      sql"where `#${relation.sideOf(lastPathModel(path))}` IN ( " ++ pathQuery(project.id, path) ++ sql" )"
+    val query = sql"SELECT `id`" ++
+      sql"FROM `#${project.id}`.`#${relation.id}`" ++
+      sql"WHERE `#${relation.sideOf(path.lastModel)}` IN " ++ pathQuery(project.id, path)
 
     triggerFailureWhenExists(project, query, relation.id)
   }
@@ -174,7 +178,6 @@ object DatabaseMutationBuilder {
   //SCALAR LISTS
 
   def setScalarList(projectId: String, where: NodeSelector, fieldName: String, values: Vector[Any]) = {
-    // todo we could save a query on ID NodeSelectors
     val escapedValueTuples = for {
       (escapedValue, position) <- values.map(escapeUnsafeParam).zip((1 to values.length).map(_ * 1000))
     } yield {
@@ -182,7 +185,7 @@ object DatabaseMutationBuilder {
     }
 
     DBIO.seq(
-      sqlu"""set @nodeId := (select id from `#$projectId`.`#${where.model.name}` where `#${where.field.name}` = ${where.fieldValue})""",
+      sqlu"""set @nodeId := (select id from `#$projectId`.`#${where.model.name}` where `#${where.field.name}` = ${where.fieldValue})""", // Todo use idFromWhere here
       sqlu"""delete from `#$projectId`.`#${where.model.name}_#${fieldName}` where nodeId = @nodeId""",
       (sql"insert into `#$projectId`.`#${where.model.name}_#${fieldName}` (`nodeId`, `position`, `value`) values " concat combineByComma(escapedValueTuples)).asUpdate
     )
@@ -210,9 +213,14 @@ object DatabaseMutationBuilder {
   }
 
   //HELPERS
-//We could save a ton of queries here if we do not run extra queries if it is a IdNodeSelector
+  // Todo We could save a ton of queries here if we do not run extra queries if it is a IdNodeSelector Probably only works on =
+
   def idFromWhere(projectId: String, where: NodeSelector): SQLActionBuilder = {
     sql"(SELECT `id` FROM `#$projectId`.`#${where.model.name}` WHERE `#${where.field.name}` = ${where.fieldValue})"
+  }
+
+  def idFromWherePath(projectId: String, where: NodeSelector): SQLActionBuilder = {
+    sql"(SELECT `id` FROM (SELECT  * From `#$projectId`.`#${where.model.name}`) IDFROMWHEREPATH WHERE `#${where.field.name}` = ${where.fieldValue})"
   }
 
   def whereFailureTrigger(project: Project, where: NodeSelector) = {
@@ -292,19 +300,14 @@ object DatabaseMutationBuilder {
   def pathQuery(projectId: String, path: Path): SQLActionBuilder = {
     path.mwrs match {
       case x if x.isEmpty =>
-        idFromWhere(projectId, path.where)
+        idFromWherePath(projectId, path.where)
 
       case x if x.nonEmpty =>
         val last = x.reverse.head
         sql"(SELECT `#${last.relation.sideOf(last.child)}`" ++
-          sql" FROM `#$projectId`.`#${last.relation.id}`" ++
+          sql" FROM (SELECT * FROM `#$projectId`.`#${last.relation.id}`) PATHQUERY" ++
           sql" WHERE `#${last.relation.sideOf(last.parent)}` IN " ++ pathQuery(projectId, path.cutOne) ++ sql")"
     }
-  }
-
-  def lastPathModel(path: Path): Model = path.mwrs match {
-    case x if x.isEmpty => path.where.model
-    case x              => x.reverse.head.child
   }
 
   //RESET DATA

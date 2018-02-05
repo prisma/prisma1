@@ -289,14 +289,14 @@ class CascadingDeletePathSpec extends FlatSpec with Matchers with ApiBaseSpec {
     database.runDbActionOnClientDb(check2)
 
     //first side
-    val query = DatabaseMutationBuilder.deleteRelationRowsByPath(project.id, childrenRelation, res.head)
-    database.runDbActionOnClientDb(query)
+//    val query = DatabaseMutationBuilder.deleteRelationRowsByPath(project.id, childrenRelation, res.head)
+//    database.runDbActionOnClientDb(query)
+//
+//    //second side
+//    val query2 = DatabaseMutationBuilder.deleteRelationRowsByPath(project.id, childrenRelation, res.reverse.head)
+//    database.runDbActionOnClientDb(query2)
 
-    //second side
-    val query2 = DatabaseMutationBuilder.deleteRelationRowsByPath(project.id, childrenRelation, res.reverse.head)
-    database.runDbActionOnClientDb(query2)
-
-    println(query)
+//    println(query)
   }
 
 }

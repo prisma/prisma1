@@ -188,11 +188,11 @@ case class SqlMutactions(dataResolver: DataResolver) {
   def getMutactionsForNestedDeleteMutation(nestedMutation: NestedMutation, parentInfo: ParentInfo): Seq[ClientSqlMutaction] = {
     nestedMutation.deletes.flatMap(
       delete =>
-        CascadingDeletes.generateCascadingDeleteMutactions(project, delete.where) ++
-          List(
-            NestedDeleteRelationMutaction(project, parentInfo, delete.where),
-            DeleteDataItemNested(project, delete.where)
-        ))
+//        CascadingDeletes.generateCascadingDeleteMutactions(project, delete.where) ++
+        List(
+          NestedDeleteRelationMutaction(project, parentInfo, delete.where),
+          DeleteDataItemNested(project, delete.where)
+      ))
   }
 
   def getMutactionsForNestedUpdateMutation(nestedMutation: NestedMutation, parentInfo: ParentInfo): Seq[ClientSqlMutaction] = {

@@ -59,18 +59,9 @@ object CascadingDeletes {
         }
     }
   }
-//    val distinct = res.distinct
-//    distinct.map { path =>
-//      println(path.pretty)
-//      path.detectCircle()
-//    }
-//    distinct
-//  }
 
   def generateCascadingDeleteMutactions(project: Project, where: NodeSelector): List[ClientSqlMutaction] = {
-
     val paths: List[Path] = collectPaths(project, where, where.model)
-
     paths.map(CascadingDeleteRelationMutactions(project, _))
   }
 }
