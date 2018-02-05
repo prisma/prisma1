@@ -153,7 +153,7 @@ object DatabaseMutationBuilder {
 
   //CASCADING DELETE
 
-  def cascadingDeleteChildActions(projectId: String, path: Path, relations: List[Relation]) = {
+  def cascadingDeleteChildActions(projectId: String, path: Path) = {
     val deleteRelayIds  = (sql"DELETE FROM `#$projectId`.`_RelayId` WHERE `id` IN " ++ pathQuery(projectId, path)).asUpdate
     val deleteDataItems = (sql"DELETE FROM `#$projectId`.`#${path.lastModel.name}` WHERE `id` IN " ++ pathQuery(projectId, path)).asUpdate
     DBIO.seq(deleteRelayIds, deleteDataItems)
@@ -161,7 +161,7 @@ object DatabaseMutationBuilder {
 
   def oldParentFailureTriggerByPath(project: Project, relation: Relation, path: Path) = {
     val query = sql"SELECT `id`" ++
-      sql"FROM `#${project.id}`.`#${relation.id}`" ++
+      sql"FROM `#${project.id}`.`#${relation.id}` OLDPARENTPATHFAILURETRIGGER" ++
       sql"WHERE `#${relation.sideOf(path.lastModel)}` IN " ++ pathQuery(project.id, path)
 
     triggerFailureWhenExists(project, query, relation.id)

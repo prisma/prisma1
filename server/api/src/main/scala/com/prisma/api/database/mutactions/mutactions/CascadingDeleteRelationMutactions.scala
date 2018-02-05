@@ -17,37 +17,17 @@ case class CascadingDeleteRelationMutactions(project: Project, path: Path) exten
 
   val relationFieldsNotOnPath = path.lastModel.relationFields.filter(f => !path.mwrs.map(_.relation).contains(f.relation.get))
 
-  val relationsWhereThisIsRequired                    = relationFieldsNotOnPath.filter(otherSideIsRequired).map(_.relation.get)
-  val relationsWhereThisIsNotRequired: List[Relation] = relationFieldsNotOnPath.filter(otherSideIsNotRequired).map(_.relation.get)
+  val relationsWhereThisIsRequired = relationFieldsNotOnPath.filter(otherSideIsRequired).map(_.relation.get)
 
   val requiredCheck =
     relationsWhereThisIsRequired.map(relation => DatabaseMutationBuilder.oldParentFailureTriggerByPath(project, relation, path))
 
-  val allRelationsThatNeedToBeRemoved = path.lastRelation match {
-    case Some(x) => relationsWhereThisIsNotRequired :+ x
-    case None    => relationsWhereThisIsNotRequired
-  }
-
-  val deleteAction = List(DatabaseMutationBuilder.cascadingDeleteChildActions(project.id, path, allRelationsThatNeedToBeRemoved))
+  val deleteAction = List(DatabaseMutationBuilder.cascadingDeleteChildActions(project.id, path))
 
   override def execute = {
     val allActions = requiredCheck ++ deleteAction
     Future.successful(ClientSqlStatementResult(DBIOAction.seq(allActions: _*)))
   }
-
-  // the error parsing needs some love here
-//  select case when not exists(
-//    SELECT `id`
-//      FROM `test-project-id@test-stage`.`_GCToC`
-//  WHERE `B` IN
-//  (SELECT `A`
-//    FROM (SELECT * FROM `test-project-id@test-stage`.`_CToP`) PATHQUERY
-//    WHERE `B` IN  (
-//    SELECT `id`
-//      FROM (SELECT  * From `test-project-id@test-stage`.`P`) IDFROMWHEREPATH
-//    WHERE `p` = 'p') )
-//  ) then 1
-//  else (select COLUMN_NAME from information_schema.columns where table_schema = ? AND TABLE_NAME = ?)end;
 
   override def handleErrors = {
     Some({
@@ -61,7 +41,7 @@ case class CascadingDeleteRelationMutactions(project: Project, path: Path) exten
   }
 
   def causedByThisMutactionChildOnly(relation: Relation, cause: String) = {
-    val parentCheckString = s"`${relation.id}` where `${relation.sideOf(path.lastModel)}` IN "
+    val parentCheckString = s"`${relation.id}` OLDPARENTPATHFAILURETRIGGER WHERE `${relation.sideOf(path.lastModel)}`"
 
     cause.contains(parentCheckString) && cause.contains(parameterString(path.where))
   }
@@ -86,7 +66,4 @@ case class CascadingDeleteRelationMutactions(project: Project, path: Path) exten
     case Some(f)                 => false
     case None                    => false
   }
-
-  def otherSideIsNotRequired(field: Field): Boolean = !otherSideIsRequired(field)
-
 }
