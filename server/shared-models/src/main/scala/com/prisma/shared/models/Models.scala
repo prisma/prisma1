@@ -416,8 +416,8 @@ case class Relation(
     // val todoField = Field(..., relation = Some(relation), relationSide = Some(RelationSide.A)
     modelAId: Id,
     modelBId: Id,
-    modelAOnDelete: OnDelete.Value = OnDelete.SetNull,
-    modelBOnDelete: OnDelete.Value = OnDelete.SetNull
+    modelAOnDelete: OnDelete.Value,
+    modelBOnDelete: OnDelete.Value
 ) {
   val id = "_" + name
 
