@@ -5,36 +5,31 @@ description: Overview
 
 # Overview
 
-## Graphcool evolution
+## From Graphcool Framework to Prisma
 
-Graphcool has evolved quite a bit since it first went live. Here is an overview of its three major phases:
+The **Graphcool Framework** is the open-source version of the former Graphcool Backend-as-a-Service offering. **Prisma** is a GraphQL query engine and the core technology that is powering the Graphcool Framework.
 
-* **Graphcool Backend-as-a-Service**: The initial product of Graphcool was a "BaaS for GraphQL". In that version, an entire backend is configured through the web-based GUI of the Graphcool Console, including the integration of serverless functions and features like authentication and 3rd party integrations.
-* **Graphcool Framework**: The Graphcool Framework is the open source version of the BaaS. Everything that was previously done through the Graphcool Console, is now possible with a local developer workflow using the Graphcool CLI. This enables private hosting of Graphcool, better testing, debugging and CI workflows. A major change compared to the BaaS version is that authentication is now done with resolver functions rather than being configured through the UI. Permission queries are not configured through the UI any more but are also written in source files.
-* **Graphcool 1.0 - "GraphQL Database"**: Graphcool 1.0 focusses on the core: Its GraphQL API. Note that the GraphQL API introduces a few breaking changes in 1.0. On an architectural level, the biggest difference is that Graphcool now requires a web server (such as Express.js) for which it then provides the persistence layer. This web server implements all functionality that was previously performed by serverless functions (except for subscriptions, they're still available in 1.0). In JavaScript, you can use `graphql-yoga` as your Express.js-based GraphQL server.
+While the Graphcool Framework offers an opinionated setup for your GraphQL backend and doesn't require you to write a lot of server-side code, Prisma provides more flexibility and leaves many decisions up to the preferences of the developer.
 
-<InfoBox type=info>
-
-To learn more about the migration from the BaaS to the Graphcool Framework, you can check out the previous [upgrade guide](!alias-aemieb1aev).
-
-</InfoBox>
+To get an overview of the major differences between Prisma and the Graphcool Framework, read [this](https://www.graph.cool/forum/t/graphcool-framework-and-prisma/2237) forum post.
 
 ## Migrating to 1.0
 
-We recommend that you migrate your project in a development environment before putting it into production. This ensures a smooth migration process. You can use the [import](!alias-ol2eoh8xie) and [export](!alias-pa0aip3loh) functionality for Graphcool services to migrate data between the different projects.
+We recommend that you migrate your project in a development environment before putting it into production. This ensures a smooth migration process. You can use the [import](!alias-ol2eoh8xie) and [export](!alias-pa0aip3loh) functionality for Graphcool/Prisma services to migrate data between different projects.
 
-### New architecture: Your GraphQL server uses Graphcool as a data store
+## New architecture: Your GraphQL server uses Prisma as a database layer
 
-The core idea of Graphcool 1.0 is to use an additional GraphQL server that uses Graphcool as a data store. The easiest way to build this GraphQL server is using `graphql-yoga`. When implementing the resolvers for this GraphQL server, you can use schema bindings and the `graphcool-binding` package to conventiently forward incoming queries to Graphcool.
+The core idea when building GraphQL servers with Prisma is that you have **two GraphQL layers** for your server:
 
-### The GraphQL server takes over implementation of business logic and auth workflows
+1. The **database layer** is provided by Prisma, this is the core of your server. In essence, the GraphQL API provided by the database layer corresponds to a combined version of the familiar _Simple & Relay APIs_. The API exposes generic and powerful CRUD operations for the types defined in your data model.
+2. The **application layer** - this is a new idea if you've only worked with the Graphcool Framework before. The application layer defines another GraphQL API, the one that is exposed to your client applications and tailored to your application's needs. The reason why this layer is necessary is that you commonly don't want to expose your entire database to your clients.
 
-Another important change in Graphcool 1.0 is that it is not possible to integrate any serverless functions directly with your Graphcool service any more. Instead, functionality you previously would have implemented with [resolvers](!alias-su6wu3yoo2) or [hooks](!alias-pa6guruhaf) now goes into your GraphQL server directly. This gives a lot more flexibility and caters a higher number of and overall more advanced use cases.
+In that new architecture, the application layer is entirely responsible for business logic and other common workflows such as authentication, permissions or file handling. Features you previously used to implement with [Resolver](https://www.graph.cool/docs/reference/functions/resolvers-su6wu3yoo2) or [Hook](https://www.graph.cool/docs/reference/functions/hooks-pa6guruhaf) functions are now simply part of your GraphQL server implementation.
 
-This includes functionality for authentication and permissions which were previously handled by the Graphcool Framework directly. Another piece of logic many applications are dealing with, file handling, is moved into the GraphQL server as well.
+Implementing the resolver functions for your application layer doesn't require a lot of overhead since incoming requests can simply be delegated to the underlying Prisma API using the [`prisma-binding`](!alias-gai5urai6u) package.
 
-### Deploying your GraphQL server
+## Deployment
 
-As Graphcool 1.0 only represents the "database" component in your server architecture, you need to host the GraphQL server yourself.
+Another major difference with Prisma, compared to using the Graphcool Framework, is that you now need to take care of deploying the GraphQL server. One great option for doing so is the Zeit Now one-click deployment tool, you can read a tutorial [here](!alias-ahs1jahkee).
 
-A quick and easy way to deploy your GraphQL server is using [Now](https://zeit.co/now) or using a serverless function and the [Serverless Framework](https://serverless.com). When doing so, you should ensure that your server is deployed to the same [AWS region](http://docs.aws.amazon.com/general/latest/gr/rande.html) as your Graphcool service to not introduce additional latency and ensure optimal performance.
+Your Prisma service is running on Docker and can be deployed to any cloud provider, such as Digital Ocean or AWS. There also are deployment options based on the Prisma Cloud.
