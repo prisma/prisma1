@@ -147,7 +147,7 @@ A secret is used to generate (or _sign_) authentication tokens ([JWT](https://jw
 - must not contain spaces
 - must be at most 256 characters long
 
-Note that it's possible to encode multiple secrets in this string, which allows smoothless secret rotation.
+Note that it's possible to encode multiple secrets in this string, which allows smooth secret rotations.
 
 Read more about Database [authentication here](!alias-utee3eiquo#authentication).
 
@@ -255,7 +255,7 @@ The `seed` property expects an **object**, with either one of two sub-properties
 
 > Note: `run` is currently not supported. Follow [the proposal](https://github.com/graphcool/framework/issues/1181) to stay informed.
 
-Seeds are implicitely executed when deploying a service for the first time (unless explicitely disabled using the `--no-seed` flag). Track [this feature request for additional seeding workflows](https://github.com/graphcool/prisma/issues/1536).
+Seeds are implicitly executed when deploying a service for the first time (unless explicitly disabled using the `--no-seed` flag). Track [this feature request for additional seeding workflows](https://github.com/graphcool/prisma/issues/1536).
 
 #### Examples
 
@@ -282,7 +282,7 @@ seed:
 
 ## `custom` (optional)
 
-The `custom` property lets you specify any sorts of values you want to resuse elsewhere in your `prisma.yml`. It thus doesn't have a predefined structure. You can reference the values using variables with the `self` variable source, e.g.: `${self.custom.myVariable}`.
+The `custom` property lets you specify any sorts of values you want to reuse elsewhere in your `prisma.yml`. It thus doesn't have a predefined structure. You can reference the values using variables with the `self` variable source, e.g.: `${self.custom.myVariable}`.
 
 #### Type
 

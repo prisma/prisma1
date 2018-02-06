@@ -102,7 +102,7 @@ The service is now deployed to a public cluster.
 
 This time, your service requires certain environment variables to be set. If you just ran `now` like in the previous section, the deployment would not succeed - or rather the Playground that would be deployed wouldn't work correctly because it doesn't know against which Prisma service it should be running. Because this information is now provided in terms of environment variables.
 
-That's what you can use the `--dotenv` option of the `now` command for! It takes as an argument a `.env` file where environment variables are specifed.
+That's what you can use the `--dotenv` option of the `now` command for! It takes as an argument a `.env` file where environment variables are specified.
 
 > `.env` files are a convention / best practice for specifying environment variables. Many tools (such as Docker or other deployment tooling) "understand" `.env` files - and so does `now` when using the [`--dotenv`](https://zeit.co/docs/features/env-and-secrets#--dotenv-option) flag.
 

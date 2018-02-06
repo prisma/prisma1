@@ -225,7 +225,7 @@ There are two kind of API errors:
 * **Application errors** usually indicate that your request was invalid.
 * **Internal server errors** usually mean that something unexpected happened inside of the Prisma service. Check your service logs for more information.
 
-> **Note**: The `errors` field behaves according to the offical [GraphQL specification for error handling](http://facebook.github.io/graphql/October2016/#sec-Errors).
+> **Note**: The `errors` field behaves according to the official [GraphQL specification for error handling](http://facebook.github.io/graphql/October2016/#sec-Errors).
 
 ### Application errors
 
