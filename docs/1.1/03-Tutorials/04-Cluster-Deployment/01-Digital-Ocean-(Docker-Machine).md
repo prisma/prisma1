@@ -51,7 +51,7 @@ Make sure to save the token, you'll need it in the next step.
 
 ## 3. Create your Digital Ocean Droplet
 
-You can now go ahead and create your Droplet. The personal access token from the previous step will be used to associate the Droplet your with Digital Ocean account.
+You can now go ahead and create your Droplet. The personal access token from the previous step will be used to associate the Droplet with your Digital Ocean account.
 
 <Instruction>
 
