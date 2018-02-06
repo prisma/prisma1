@@ -12,11 +12,9 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiBaseSpec {
     //         P-C
     val project = SchemaDsl() { schema =>
       val parent = schema.model("P").field_!("p", _.String, isUnique = true)
-      val child = schema
-        .model("C")
-        .field_!("c", _.String, isUnique = true)
-        .oneToOneRelation_!("p", "c", parent, modelBOnDelete = OnDelete.Cascade)
+      val child  = schema.model("C").field_!("c", _.String, isUnique = true)
 
+      child.oneToOneRelation_!("p", "c", parent, modelBOnDelete = OnDelete.Cascade)
     }
     database.setup(project)
 
@@ -33,11 +31,9 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiBaseSpec {
     //         P-C
     val project = SchemaDsl() { schema =>
       val parent = schema.model("P").field_!("p", _.String, isUnique = true)
-      val child = schema
-        .model("C")
-        .field_!("c", _.String, isUnique = true)
-        .manyToManyRelation("p", "c", parent, modelBOnDelete = OnDelete.Cascade)
+      val child  = schema.model("C").field_!("c", _.String, isUnique = true)
 
+      child.manyToManyRelation("p", "c", parent, modelBOnDelete = OnDelete.Cascade)
     }
     database.setup(project)
 
@@ -53,18 +49,15 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiBaseSpec {
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_RelayId").as[Int]) should be(Vector(4))
   }
 
-  "PM-CM relation deleting the parent" should "error if both sides are marked cascading since it would be a circle" ignore {
-
-    //also self relations? at the moment the exclude relations serves as a loop breaker here
+  "PM-CM relation deleting the parent" should "error if both sides are marked cascading since it would be a circle" in {
+    // Todo this is also a circle. For now we should error here
 
     //         P-C
     val project = SchemaDsl() { schema =>
       val parent = schema.model("P").field_!("p", _.String, isUnique = true)
-      val child = schema
-        .model("C")
-        .field_!("c", _.String, isUnique = true)
-        .manyToManyRelation("p", "c", parent, modelAOnDelete = OnDelete.Cascade, modelBOnDelete = OnDelete.Cascade)
+      val child  = schema.model("C").field_!("c", _.String, isUnique = true)
 
+      child.manyToManyRelation("p", "c", parent, modelAOnDelete = OnDelete.Cascade, modelBOnDelete = OnDelete.Cascade)
     }
     database.setup(project)
 
@@ -78,16 +71,17 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiBaseSpec {
     server.executeQuerySimple("""query{cs{c, p {p}}}""", project).toString should be(
       """{"data":{"cs":[{"c":"cx","p":[{"p":"p2"}]},{"c":"cx2","p":[{"p":"p2"}]}]}}""")
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_RelayId").as[Int]) should be(Vector(4))
+
+    true should be(false)
   }
 
   "P1!-C1! relation deleting the parent" should "work if both sides are marked marked cascading" in {
     //         P-C
     val project = SchemaDsl() { schema =>
       val parent = schema.model("P").field_!("p", _.String, isUnique = true)
-      val child = schema
-        .model("C")
-        .field_!("c", _.String, isUnique = true)
-        .oneToOneRelation_!("p", "c", parent, modelAOnDelete = OnDelete.Cascade, modelBOnDelete = OnDelete.Cascade)
+      val child  = schema.model("C").field_!("c", _.String, isUnique = true)
+
+      child.oneToOneRelation_!("p", "c", parent, modelAOnDelete = OnDelete.Cascade, modelBOnDelete = OnDelete.Cascade)
     }
     database.setup(project)
 
@@ -104,11 +98,9 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiBaseSpec {
     //         P-C
     val project = SchemaDsl() { schema =>
       val parent = schema.model("P").field_!("p", _.String, isUnique = true)
-      val child = schema
-        .model("C")
-        .field_!("c", _.String, isUnique = true)
-        .oneToOneRelation_!("p", "c", parent, modelAOnDelete = OnDelete.Cascade)
+      val child  = schema.model("C").field_!("c", _.String, isUnique = true)
 
+      child.oneToOneRelation_!("p", "c", parent, modelAOnDelete = OnDelete.Cascade)
     }
     database.setup(project)
 
@@ -125,16 +117,12 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiBaseSpec {
   "P1!-C1!-C1!-GC! relation deleting the parent and child and grandchild if marked cascading" should "work" in {
     //         P-C-GC
     val project = SchemaDsl() { schema =>
-      val parent = schema.model("P").field_!("p", _.String, isUnique = true)
-      val child = schema
-        .model("C")
-        .field_!("c", _.String, isUnique = true)
-        .oneToOneRelation_!("p", "c", parent, modelBOnDelete = OnDelete.Cascade)
-      val grandChild = schema
-        .model("GC")
-        .field_!("gc", _.String, isUnique = true)
-        .oneToOneRelation_!("c", "gc", child, modelBOnDelete = OnDelete.Cascade)
+      val parent     = schema.model("P").field_!("p", _.String, isUnique = true)
+      val child      = schema.model("C").field_!("c", _.String, isUnique = true)
+      val grandChild = schema.model("GC").field_!("gc", _.String, isUnique = true)
 
+      grandChild.oneToOneRelation_!("c", "gc", child, modelBOnDelete = OnDelete.Cascade)
+      child.oneToOneRelation_!("p", "c", parent, modelBOnDelete = OnDelete.Cascade)
     }
     database.setup(project)
 
@@ -156,16 +144,12 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiBaseSpec {
   "P1!-C1!-C1-GC relation deleting the parent and child marked cascading" should "work but preserve the grandchild" in {
     //         P-C-GC
     val project = SchemaDsl() { schema =>
-      val parent = schema.model("P").field_!("p", _.String, isUnique = true)
-      val child = schema
-        .model("C")
-        .field_!("c", _.String, isUnique = true)
-        .oneToOneRelation_!("p", "c", parent, modelBOnDelete = OnDelete.Cascade)
-      val grandChild = schema
-        .model("GC")
-        .field_!("gc", _.String, isUnique = true)
-        .oneToOneRelation("c", "gc", child)
+      val parent     = schema.model("P").field_!("p", _.String, isUnique = true)
+      val child      = schema.model("C").field_!("c", _.String, isUnique = true)
+      val grandChild = schema.model("GC").field_!("gc", _.String, isUnique = true)
 
+      child.oneToOneRelation_!("p", "c", parent, modelBOnDelete = OnDelete.Cascade)
+      grandChild.oneToOneRelation("c", "gc", child)
     }
     database.setup(project)
 
@@ -187,16 +171,12 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiBaseSpec {
   "P1!-C1! relation deleting the parent marked cascading" should "error if the child is required in another non-cascading relation" in {
     //         P-C-GC
     val project = SchemaDsl() { schema =>
-      val parent = schema.model("P").field_!("p", _.String, isUnique = true)
-      val child = schema
-        .model("C")
-        .field_!("c", _.String, isUnique = true)
-        .oneToOneRelation_!("p", "c", parent, modelBOnDelete = OnDelete.Cascade)
-      val grandChild = schema
-        .model("GC")
-        .field_!("gc", _.String, isUnique = true)
-        .oneToOneRelation_!("c", "gc", child)
+      val parent     = schema.model("P").field_!("p", _.String, isUnique = true)
+      val child      = schema.model("C").field_!("c", _.String, isUnique = true)
+      val grandChild = schema.model("GC").field_!("gc", _.String, isUnique = true)
 
+      child.oneToOneRelation_!("p", "c", parent, modelBOnDelete = OnDelete.Cascade)
+      grandChild.oneToOneRelation_!("c", "gc", child)
     }
     database.setup(project)
 
@@ -216,17 +196,14 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiBaseSpec {
     //      C     SC
 
     val project = SchemaDsl() { schema =>
-      val parent = schema.model("P").field_!("p", _.String, isUnique = true)
-      val child = schema
-        .model("C")
-        .field_!("c", _.String, isUnique = true)
-        .oneToOneRelation_!("p", "c", parent, modelBOnDelete = OnDelete.Cascade)
-      val stepChild = schema
-        .model("SC")
-        .field_!("sc", _.String, isUnique = true)
-      parent.oneToManyRelation_!("scs", "p", stepChild, modelAOnDelete = OnDelete.Cascade)
+      val parent    = schema.model("P").field_!("p", _.String, isUnique = true)
+      val child     = schema.model("C").field_!("c", _.String, isUnique = true)
+      val stepChild = schema.model("SC").field_!("sc", _.String, isUnique = true)
 
+      child.oneToOneRelation_!("p", "c", parent, modelBOnDelete = OnDelete.Cascade)
+      parent.oneToManyRelation_!("scs", "p", stepChild, modelAOnDelete = OnDelete.Cascade)
     }
+
     database.setup(project)
 
     server.executeQuerySimple("""mutation{createP(data:{p:"p", c: {create:{c: "c"}}, scs: {create:[{sc: "sc1"},{sc: "sc2"}]}}){p, c {c},scs{sc}}}""", project)
@@ -243,60 +220,53 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiBaseSpec {
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_RelayId").as[Int]) should be(Vector(4))
   }
 
-  //just a template for now
-  "PM-C1! PM-SC1! relation deleting the parent marked cascading" should "work" ignore {
+  "P!->C PM->SC relation without backrelations" should "work when deleting the parent marked cascading" in {
     //         P
-    //       /   \
-    //      C     SC
+    //       /   \      not a real circle since from the children there are no backrelations to the parent
+    //      C  -  SC
 
     val project = SchemaDsl() { schema =>
-      val parent = schema.model("P").field_!("p", _.String, isUnique = true)
-      val child = schema
-        .model("C")
-        .field_!("c", _.String, isUnique = true)
-        .oneToOneRelation_!("p", "c", parent, modelBOnDelete = OnDelete.Cascade)
-      val stepChild = schema
-        .model("SC")
-        .field_!("sc", _.String, isUnique = true)
-      parent.oneToManyRelation_!("scs", "p", stepChild, modelAOnDelete = OnDelete.Cascade)
+      val parent    = schema.model("P").field_!("p", _.String, isUnique = true)
+      val child     = schema.model("C").field_!("c", _.String, isUnique = true)
+      val stepChild = schema.model("SC").field_!("sc", _.String, isUnique = true)
+
+      parent.oneToOneRelation_!("c", "doesNotMatter", child, modelAOnDelete = OnDelete.Cascade, includeFieldB = false)
+      parent.oneToManyRelation("scs", "doesNotMatter", stepChild, modelAOnDelete = OnDelete.Cascade, includeFieldB = false)
+      child.oneToOneRelation_!("sc", "c", stepChild, modelAOnDelete = OnDelete.Cascade, modelBOnDelete = OnDelete.Cascade)
 
     }
     database.setup(project)
 
-    server.executeQuerySimple("""mutation{createP(data:{p:"p", c: {create:{c: "c"}}, scs: {create:[{sc: "sc1"},{sc: "sc2"}]}}){p, c {c},scs{sc}}}""", project)
-    server.executeQuerySimple("""mutation{createP(data:{p:"p2", c: {create:{c: "c2"}}, scs: {create:[{sc: "sc3"},{sc: "sc4"}]}}){p, c {c},scs{sc}}}""", project)
+    server.executeQuerySimple("""mutation{createC(data:{c:"c", sc: {create:{sc: "sc"}}}){c, sc{sc}}}""", project)
+    server.executeQuerySimple("""mutation{createC(data:{c:"c2", sc: {create:{sc: "sc2"}}}){c, sc{sc}}}""", project)
+    server.executeQuerySimple("""mutation{createC(data:{c:"c3", sc: {create:{sc: "sc3"}}}){c, sc{sc}}}""", project)
+
+    server.executeQuerySimple("""mutation{createP(data:{p:"p", c: {connect:{c: "c"}}, scs: {connect:[{sc: "sc"},{sc: "sc2"}]}}){p, c {c}, scs{sc}}}""", project)
+    server.executeQuerySimple("""mutation{createP(data:{p:"p2", c: {connect:{c: "c3"}}, scs: {connect:[{sc: "sc3"}]}}){p, c {c},scs{sc}}}""", project)
 
     server.executeQuerySimple("""mutation{deleteP(where: {p:"p"}){id}}""", project)
 
     server.executeQuerySimple("""query{ps{p, c {c}, scs {sc}}}""", project).toString should be(
-      """{"data":{"ps":[{"p":"p2","c":{"c":"c2"},"scs":[{"sc":"sc3"},{"sc":"sc4"}]}]}}""")
-    server.executeQuerySimple("""query{cs{c, p {p}}}""", project).toString should be("""{"data":{"cs":[{"c":"c2","p":{"p":"p2"}}]}}""")
-    server.executeQuerySimple("""query{sCs{sc,  p{p}}}""", project).toString should be(
-      """{"data":{"sCs":[{"sc":"sc3","p":{"p":"p2"}},{"sc":"sc4","p":{"p":"p2"}}]}}""")
+      """{"data":{"ps":[{"p":"p2","c":{"c":"c3"},"scs":[{"sc":"sc3"}]}]}}""")
+    server.executeQuerySimple("""query{cs{c}}""", project).toString should be("""{"data":{"cs":[{"c":"c3"}]}}""")
+    server.executeQuerySimple("""query{sCs{sc}}""", project).toString should be("""{"data":{"sCs":[{"sc":"sc3"}]}}""")
 
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_RelayId").as[Int]) should be(Vector(4))
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_RelayId").as[Int]) should be(Vector(3))
   }
 
   "A path that is interrupted since there are nodes missing" should "only cascade up until the gap" in {
     //         P-C-GC-|-D-E
     val project = SchemaDsl() { schema =>
-      val parent = schema.model("P").field_!("p", _.String, isUnique = true)
-      val child = schema
-        .model("C")
-        .field_!("c", _.String, isUnique = true)
-        .oneToOneRelation_!("p", "c", parent, modelBOnDelete = OnDelete.Cascade)
-      val grandChild = schema
-        .model("GC")
-        .field_!("gc", _.String, isUnique = true)
-        .oneToOneRelation_!("c", "gc", child, modelBOnDelete = OnDelete.Cascade)
-      val levelD = schema
-        .model("D")
-        .field_!("d", _.String, isUnique = true)
-        .manyToManyRelation("gc", "d", grandChild, modelBOnDelete = OnDelete.Cascade)
-      val levelE = schema
-        .model("E")
-        .field_!("e", _.String, isUnique = true)
-        .manyToManyRelation("d", "e", levelD, modelBOnDelete = OnDelete.Cascade)
+      val parent     = schema.model("P").field_!("p", _.String, isUnique = true)
+      val child      = schema.model("C").field_!("c", _.String, isUnique = true)
+      val grandChild = schema.model("GC").field_!("gc", _.String, isUnique = true)
+      val levelD     = schema.model("D").field_!("d", _.String, isUnique = true)
+      val levelE     = schema.model("E").field_!("e", _.String, isUnique = true)
+
+      child.oneToOneRelation_!("p", "c", parent, modelBOnDelete = OnDelete.Cascade)
+      grandChild.oneToOneRelation_!("c", "gc", child, modelBOnDelete = OnDelete.Cascade)
+      levelD.manyToManyRelation("gc", "d", grandChild, modelBOnDelete = OnDelete.Cascade)
+      levelE.manyToManyRelation("d", "e", levelD, modelBOnDelete = OnDelete.Cascade)
     }
     database.setup(project)
 
@@ -319,23 +289,16 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiBaseSpec {
   "A deep uninterrupted path" should "cascade all the way down" in {
     //         P-C-GC-D-E
     val project = SchemaDsl() { schema =>
-      val parent = schema.model("P").field_!("p", _.String, isUnique = true)
-      val child = schema
-        .model("C")
-        .field_!("c", _.String, isUnique = true)
-        .oneToOneRelation_!("p", "c", parent, modelBOnDelete = OnDelete.Cascade)
-      val grandChild = schema
-        .model("GC")
-        .field_!("gc", _.String, isUnique = true)
-        .oneToOneRelation_!("c", "gc", child, modelBOnDelete = OnDelete.Cascade)
-      val levelD = schema
-        .model("D")
-        .field_!("d", _.String, isUnique = true)
-        .manyToManyRelation("gc", "d", grandChild, modelBOnDelete = OnDelete.Cascade)
-      val levelE = schema
-        .model("E")
-        .field_!("e", _.String, isUnique = true)
-        .manyToManyRelation("d", "e", levelD, modelBOnDelete = OnDelete.Cascade)
+      val parent     = schema.model("P").field_!("p", _.String, isUnique = true)
+      val child      = schema.model("C").field_!("c", _.String, isUnique = true)
+      val grandChild = schema.model("GC").field_!("gc", _.String, isUnique = true)
+      val levelD     = schema.model("D").field_!("d", _.String, isUnique = true)
+      val levelE     = schema.model("E").field_!("e", _.String, isUnique = true)
+
+      child.oneToOneRelation_!("p", "c", parent, modelBOnDelete = OnDelete.Cascade)
+      grandChild.oneToOneRelation_!("c", "gc", child, modelBOnDelete = OnDelete.Cascade)
+      levelD.manyToManyRelation("gc", "d", grandChild, modelBOnDelete = OnDelete.Cascade)
+      levelE.manyToManyRelation("d", "e", levelD, modelBOnDelete = OnDelete.Cascade)
     }
     database.setup(project)
 
