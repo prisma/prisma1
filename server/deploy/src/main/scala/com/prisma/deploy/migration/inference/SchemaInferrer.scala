@@ -1,17 +1,16 @@
 package com.prisma.deploy.migration.inference
 
-import akka.actor.InvalidActorNameException
-import cool.graph.cuid.Cuid
 import com.prisma.deploy.gc_value.GCStringConverter
 import com.prisma.deploy.migration.DataSchemaAstExtensions._
 import com.prisma.deploy.migration.ReservedFields
-import com.prisma.deploy.schema.{InvalidName, InvalidRelationName}
+import com.prisma.deploy.schema.InvalidRelationName
 import com.prisma.deploy.validation.NameConstraints
 import com.prisma.gc_values.{GCValue, InvalidValueForScalarType}
-import com.prisma.shared.models._
+import com.prisma.shared.models.{OnDelete, _}
 import com.prisma.utils.or.OrExtensions
+import cool.graph.cuid.Cuid
 import org.scalactic.{Bad, Good, Or}
-import sangria.ast.{Document, ObjectTypeDefinition}
+import sangria.ast.{Field => _, _}
 
 trait SchemaInferrer {
   def infer(baseSchema: Schema, schemaMapping: SchemaMapping, graphQlSdl: Document): Schema Or ProjectSyntaxError
@@ -116,9 +115,26 @@ case class SchemaInferrerImpl(
       objectType    <- sdl.objectTypes
       relationField <- objectType.fields if typeIdentifierForTypename(relationField.typeName) == TypeIdentifier.Relation
     } yield {
-      val model1           = objectType.name
-      val model2           = relationField.typeName
-      val (modelA, modelB) = if (model1 < model2) (model1, model2) else (model2, model1)
+      val model1 = objectType.name
+      val model2 = relationField.typeName
+
+      val model1OnDelete: OnDelete.Value = getOnDeleteFromField(relationField)
+
+      val model2OnDelete: OnDelete.Value = sdl.objectType(model2) match {
+        case None =>
+          sys.error("The other model should always exist.")
+
+        case Some(secondModel) if secondModel.name == model1 => //self relation
+          val otherFieldsOnModel2RelatedToModel1: Vector[FieldDefinition] = secondModel.fields.filter(_.typeName == model1).filter(_.name != relationField.name)
+          getOppositeField(relationField, otherFieldsOnModel2RelatedToModel1).map(getOnDeleteFromField).getOrElse(OnDelete.SetNull)
+
+        case Some(secondModel) if secondModel.name != model1 =>
+          val fieldsOnModel2RelatedToModel1: Vector[FieldDefinition] = secondModel.fields.filter(_.typeName == model1)
+          getOppositeField(relationField, fieldsOnModel2RelatedToModel1).map(getOnDeleteFromField).getOrElse(OnDelete.SetNull)
+      }
+
+      val (modelA, modelAOnDelete, modelB, modelBOnDelete) =
+        if (model1 < model2) (model1, model1OnDelete, model2, model2OnDelete) else (model2, model2OnDelete, model1, model1OnDelete)
 
       /**
         * 1: has relation directive. use that one.
@@ -161,18 +177,56 @@ case class SchemaInferrerImpl(
           relation.copy(
             name = relationName,
             modelAId = nextModelAId,
-            modelBId = nextModelBId
+            modelBId = nextModelBId,
+            modelAOnDelete = modelAOnDelete,
+            modelBOnDelete = modelBOnDelete
           )
         case None =>
           Relation(
             name = relationName,
             modelAId = modelA,
-            modelBId = modelB
+            modelBId = modelB,
+            modelAOnDelete = modelAOnDelete,
+            modelBOnDelete = modelBOnDelete
           )
       }
     }
 
     tmp.groupBy(_.name).values.flatMap(_.headOption).toSet
+  }
+
+  private def getOppositeField(relationField: FieldDefinition, otherFieldsOnModelBRelatedToModelA: Vector[FieldDefinition]) = {
+    val field = relationField.directive("relation") match {
+      case Some(directive) =>
+        otherFieldsOnModelBRelatedToModelA.find(field =>
+          field.directive("relation") match {
+            case Some(otherDirective) => directive.argument_!("name").value.renderCompact == otherDirective.argument_!("name").value.renderCompact
+            case None                 => false
+        })
+      case None => otherFieldsOnModelBRelatedToModelA.headOption
+    }
+    field
+  }
+
+  private def getOnDeleteFromField(field: FieldDefinition): OnDelete.Value = {
+    field.directive("relation") match {
+      case None =>
+        OnDelete.SetNull
+
+      case Some(directive) =>
+        directive.argument("onDelete") match {
+          case None =>
+            OnDelete.SetNull
+
+          case Some(x) =>
+            val asString = x.value.asInstanceOf[EnumValue].value
+            asString match {
+              case "SET_NULL" => OnDelete.SetNull
+              case "CASCADE"  => OnDelete.Cascade
+              case _          => sys.error("")
+            }
+        }
+    }
   }
 
   lazy val nextEnums: Vector[Enum] = {
@@ -184,7 +238,7 @@ case class SchemaInferrerImpl(
     }
   }
 
-  private def typeIdentifierForTypename(typeName: String): TypeIdentifier.Value = {
+  def typeIdentifierForTypename(typeName: String): TypeIdentifier.Value = {
     if (sdl.objectType(typeName).isDefined) {
       TypeIdentifier.Relation
     } else if (sdl.enumType(typeName).isDefined) {
