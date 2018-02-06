@@ -9,6 +9,7 @@ import * as yaml from 'js-yaml'
 const debug = require('debug')('config')
 import { getGraphQLConfig } from 'graphql-config'
 import { values } from 'lodash'
+import { getRoot } from './util'
 
 const isDevConsole =
   (process.env.CONSOLE_ENDPOINT || '').toLowerCase() === 'dev'
@@ -28,7 +29,7 @@ export class Config {
   commandsDir: string = path.join(__dirname, '../dist/commands')
   defaultCommand: string = 'help'
   userPlugins: boolean = false
-  version: string = '1.3.11'
+  version: string = '1.1'
   name: string = 'prisma'
   pjson: any = {
     name: 'cli-engine',
@@ -71,9 +72,7 @@ export class Config {
     debug(`HOME`, this.home)
     this.setDefinitionPaths()
     this.setPaths()
-    if (options) {
-      this.readPackageJson(options)
-    }
+    this.readPackageJson(options!)
   }
   setOutput(out: Output) {
     this.out = out
@@ -121,12 +120,23 @@ export class Config {
 
     return null
   }
-  private readPackageJson(options: RunOptions) {
-    this.mock = options.mock
-    this.argv = options.argv || this.argv
-    if (options.root) {
-      this.root = options.root
-      const pjsonPath = path.join(options.root, 'package.json')
+  private readPackageJson(options?: RunOptions) {
+    if (options) {
+      this.mock = options.mock
+      this.argv = options.argv || this.argv
+      if (options.root) {
+        this.root = options.root
+        const pjsonPath = path.join(options.root, 'package.json')
+        const pjson = fs.readJSONSync(pjsonPath)
+        if (pjson && pjson['cli-engine']) {
+          this.pjson = pjson
+          this.version = pjson.version
+        }
+      }
+    } else {
+      const root = getRoot()
+      this.root = root
+      const pjsonPath = path.join(root, 'package.json')
       const pjson = fs.readJSONSync(pjsonPath)
       if (pjson && pjson['cli-engine']) {
         this.pjson = pjson

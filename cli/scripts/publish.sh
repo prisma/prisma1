@@ -44,7 +44,15 @@ fi
 latestVersion=$(npm info prisma version)
 tag=${CIRCLE_TAG:-$latestVersion}
 tagElements=(${tag//./ })
-nextDockerTag="${tagElements[0]}.${tagElements[1]}"
+nextDockerMinor=${tagElements[1]}
+if [[ $CIRCLE_TAG ]]; then
+  nextDockerTag="${tagElements[0]}.${nextDockerMinor}"
+else
+  #TODO: add when backend releases are ready
+  #step=1
+  #nextDockerMinor=$((nextDockerMinor + step))
+  nextDockerTag="${tagElements[0]}.${nextDockerMinor}-beta"
+fi
 
 node cli/scripts/waitUntilTagPublished.js $nextDockerTag
 
