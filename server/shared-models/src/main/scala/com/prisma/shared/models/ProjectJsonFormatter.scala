@@ -5,9 +5,11 @@ import com.prisma.shared.models.FieldConstraintType.FieldConstraintType
 import com.prisma.utils.json.JsonUtils
 import org.joda.time.format.ISODateTimeFormat
 import org.joda.time.{DateTime, DateTimeZone}
-import play.api.libs.json._
 import com.prisma.utils.json.JsonUtils._
 import MigrationStepsJsonFormatter._
+import play.api.libs.functional.FunctionalBuilder
+import play.api.libs.json._
+import play.api.libs.functional.syntax._
 
 object ProjectJsonFormatter {
 
@@ -163,7 +165,38 @@ object ProjectJsonFormatter {
     private def addDiscriminator(json: JsObject, fn: Function) = json ++ Json.obj(discriminatorField -> fn.typeCode.toString)
   }
 
-  implicit lazy val relation                  = Json.format[Relation]
+  implicit val relationWrites: Writes[Relation] = (
+    (JsPath \ "name").write[String] and
+      (JsPath \ "description").writeNullable[String] and
+      (JsPath \ "modelAId").write[String] and
+      (JsPath \ "modelBId").write[String] and
+      (JsPath \ "modelAOnDelete").write[OnDelete.Value] and
+      (JsPath \ "modelBOnDelete").write[OnDelete.Value]
+  )(unlift(Relation.unapply))
+
+  implicit val relationReads: Reads[Relation] = {
+    val x = (
+      (JsPath \ "name").read[String] and
+        (JsPath \ "description").readNullable[String] and
+        (JsPath \ "modelAId").read[String] and
+        (JsPath \ "modelBId").read[String] and
+        (JsPath \ "modelAOnDelete").readNullable[OnDelete.Value] and
+        (JsPath \ "modelBOnDelete").readNullable[OnDelete.Value]
+    )
+
+    x.apply { (name, description, modelAId, modelBId, modelAOnDelete, modelBOnDelete) =>
+      Relation(
+        name = name,
+        description = description,
+        modelAId = modelAId,
+        modelBId = modelBId,
+        modelAOnDelete = modelAOnDelete.getOrElse(OnDelete.SetNull),
+        modelBOnDelete = modelBOnDelete.getOrElse(OnDelete.SetNull)
+      )
+    }
+  }
+
+  implicit lazy val relation                  = Format(relationReads, relationWrites)
   implicit lazy val enum                      = Json.format[Enum]
   implicit lazy val field                     = Json.format[Field]
   implicit lazy val model                     = Json.format[Model]
