@@ -7,7 +7,7 @@ description: Learn how to deploy your Prisma database service to Digital Ocean u
 
 In this tutorial, you will learn how to create a Prisma [cluster](!alias-eu2ood0she) on Digital Ocean and deploy your Prisma services to it.
 
-[Digital Ocean](https://www.digitalocean.com/) is an easy-to-use provider of virtual servers. They offer configurable compute units of various sizes, called [Droplets](https://www.digitalocean.com/products/droplets/).
+[Digital Ocean](https://www.digitalocean.com/) is an easy-to-use provider of virtual servers. They offer configurable compute units of various sizes, called [Dropletmis](https://www.digitalocean.com/products/droplets/).
 
 <InfoBox>
 
@@ -84,7 +84,7 @@ So, the next step is to make sure your `docker` commands actually run against th
 The following command prints the correct environment variables for you to set - in fact it even prints the commands that you need to execute in your terminal in order to set them correctly. Thank you `docker-machine`! 🙏
 
 ```sh
-docker-machien env prisma
+docker-machine env prisma
 ```
 
 The output of that command looks somewhat similar to the following (depending on your shell and OS the commands to set environment variables might differ):

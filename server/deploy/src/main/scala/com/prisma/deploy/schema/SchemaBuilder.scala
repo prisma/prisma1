@@ -217,7 +217,8 @@ case class SchemaBuilderImpl(
           DeleteProjectMutation(
             args = args,
             projectPersistence = projectPersistence,
-            clientDb = clientDb
+            clientDb = clientDb,
+            invalidationPubSub = dependencies.invalidationPublisher
           ).execute
       }
     )
