@@ -117,7 +117,7 @@ case class SqlMutactions(dataResolver: DataResolver) {
     x.toVector
   }
 
-  //filter for duplicates here? multiple identical where checks for example?
+  // Todo filter for duplicates here? multiple identical where checks for example?
   def getMutactionsForNestedMutation(args: CoolArgs,
                                      outerWhere: NodeSelector,
                                      triggeredFromCreate: Boolean,

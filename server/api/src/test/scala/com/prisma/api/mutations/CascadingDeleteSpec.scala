@@ -243,6 +243,7 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiBaseSpec {
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_RelayId").as[Int]) should be(Vector(4))
   }
 
+  //just a template for now
   "PM-C1! PM-SC1! relation deleting the parent marked cascading" should "work" ignore {
     //         P
     //       /   \
