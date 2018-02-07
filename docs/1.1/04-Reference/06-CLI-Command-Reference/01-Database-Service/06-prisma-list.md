@@ -12,3 +12,11 @@ List all deployed services.
 ```sh
 prisma list
 ```
+
+#### Examples
+
+##### List all deployed services.
+
+```sh
+prisma list
+```

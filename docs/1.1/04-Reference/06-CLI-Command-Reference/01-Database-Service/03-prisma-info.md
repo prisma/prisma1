@@ -8,7 +8,8 @@ description: Display service information (endpoints, cluster, ...)
 Display service information:
 
 - All [clusters](!alias-eu2ood0she) to which the service is currently deployed
-- API endpoints
+- Stage
+- API endpoints (HTTP and Websocket)
 
 #### Usage
 

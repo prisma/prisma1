@@ -1,11 +1,11 @@
 ---
 alias: ohmohx8yei
-description: Open the Prisma Console in browser
+description: Open the Prisma Console in your browser
 ---
 
 # `prisma console`
 
-Open the Prisma Console in browser.
+Open the Prisma Console in your browser.
 
 #### Usage
 

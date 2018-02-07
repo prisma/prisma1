@@ -16,6 +16,6 @@ prisma import [flags]
 #### Flags
 
 ```
--d, --data PATH           File path to a .zip directory with import data (NDF)
---dotenv DOTENV           Path to .env file to inject env vars
+-d, --data PATH            (required) Path to zip or directory with import data (NDF)
+-e, --env-file ENV-FILE    Path to .env file to inject env vars
 ```

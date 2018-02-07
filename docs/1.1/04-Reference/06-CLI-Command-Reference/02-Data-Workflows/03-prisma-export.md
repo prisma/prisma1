@@ -5,7 +5,7 @@ description: Export service data to a local file
 
 # `prisma export`
 
-Exports your service data.
+Exports your service data to a local zip directory.
 
 #### Usage
 
@@ -16,19 +16,20 @@ prisma export [flags]
 #### Flags
 
 ```
---dotenv DOTENV           Path to .env file to inject env vars
+-e, --env-file ENV-FILE    Path to .env file to inject env vars
+-p, --path PATH            Path to export .zip file
 ```
 
 #### Examples
 
-##### Export data
+##### Export data to file with default name (`export-<timestamp>.zip`).
 
 ```sh
 prisma export
 ```
 
-##### Export data with specific environment variables
+##### Export data to file called `mydata.zip`.
 
 ```sh
-prisma export --dotenv .env.prods
+prisma export --path mydata.zip
 ```

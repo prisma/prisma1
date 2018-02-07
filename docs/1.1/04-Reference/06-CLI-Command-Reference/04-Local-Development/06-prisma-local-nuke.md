@@ -18,3 +18,17 @@ prisma local logs [flags]
 ```
  -n, --name NAME    Name of the cluster instance
 ```
+
+#### Examples
+
+##### Nuke local default cluster called `local`.
+
+```sh
+prisma local nuke
+```
+
+##### Nuke local cluster called `mycluster`.
+
+```sh
+prisma local stop --name mycluster
+```

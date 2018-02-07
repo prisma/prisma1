@@ -18,3 +18,17 @@ prisma local stop [flags]
 ```
  -n, --name NAME    Name of the cluster instance
 ```
+
+#### Examples
+
+##### Stop local default cluster called `local`.
+
+```sh
+prisma local stop
+```
+
+##### Stop local cluster called `mycluster`.
+
+```sh
+prisma local stop --name mycluster
+```
