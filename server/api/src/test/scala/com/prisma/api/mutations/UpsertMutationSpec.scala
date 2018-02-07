@@ -11,7 +11,6 @@ class UpsertMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
     schema.model("Todo").field_!("title", _.String).field_!("alias", _.String, isUnique = true).field("anotherIDField", _.GraphQLID, isUnique = true)
     schema.model("WithDefaultValue").field_!("reqString", _.String, defaultValue = Some(StringGCValue("defaultValue"))).field_!("title", _.String)
     schema.model("MultipleFields").field_!("reqString", _.String).field_!("reqInt", _.Int).field_!("reqFloat", _.Float).field_!("reqBoolean", _.Boolean)
-
   }
 
   override protected def beforeAll(): Unit = {
