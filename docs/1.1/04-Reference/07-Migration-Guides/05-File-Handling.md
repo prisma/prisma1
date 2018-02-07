@@ -5,6 +5,6 @@ description: File Handling
 
 # File Handling
 
-Prisma doesn't provide a dedicated API for file handling any more. This gives you more flexibility and allows to manage files in a way that's appropriate to your application.
+Prisma doesn't provide a dedicated API for file handling. This gives you more flexibility and allows to manage files in a way that's appropriate to your application.
 
-To learn what a file handling API based on [AWS S3](https://aws.amazon.com/s3/) looks like, check out this [example](https://aws.amazon.com/s3/) project.
+To learn what a file handling API based on [AWS S3](https://aws.amazon.com/s3/) can look like, check out this [example](https://github.com/graphcool/prisma/tree/master/examples/file-handling-s3) project.

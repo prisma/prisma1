@@ -9,13 +9,17 @@ When building a GraphQL server based on Prisma, you need to host the GraphQL ser
 
 <InfoBox type=warning>
 
-When hosting your GraphQL server (e.g. with Zeit Now, AWS Lambda or some other hosting provider), you should ensure that it is deployed to the same _region_ as your Prisma service. Otherwise this might have a negative performance impact on your service.
+When hosting your GraphQL server (e.g. with Zeit Now, AWS Lambda or some other hosting provider), you should ensure that it is deployed to the same _region_ as your Prisma service to ensure highest performance.
 
 <InfoBox>
 
 ## Deployment with Zeit Now
 
 [Now](https://zeit.co/now) is a one-click deployment tool for web applications. You can find a comprehensive tutorial explaining how to deploy and host your Prisma-based GraphQL server with Now [here](!alias-ahs1jahkee).
+
+## Deployment with Apex Up
+
+[Apex Up](https://up.docs.apex.sh) allows you to deploy traditional web servers to AWS Lambda.
 
 ## Deployment with the Serverless Framework
 
