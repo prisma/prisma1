@@ -37,13 +37,15 @@ Building a GraphQL server with Prisma involves four major steps:
 
 The application schema can be thought of as a "mask" for the database schema. It is used to _tailor_ an API that matches your application's needs rather than exposing full CRUD capabilities to all clients. (You usually don't want to expose your entire database to your client applications.)
 
-## Prisma connects your web server with the database
+## Architecture
+
+### Prisma connects your web server with the database
 
 Considering the classic [three-tier architecture](https://en.wikipedia.org/wiki/Multitier_architecture#Three-tier_architecture) of client, (web) server and database, Prisma is a layer which _connects your database with the server_. In that sense, it can somewhat be thought of as an [ORM](https://en.wikipedia.org/wiki/Object-relational_mapping), but comes with many additional benefits compared to conventional ORMs - most importantly: it enables an idiomatic way of building GraphQL servers!
 
 When implementing your GraphQL web server, you can use [GraphQL bindings](https://blog.graph.cool/reusing-composing-graphql-apis-with-graphql-bindings-80a4aa37cff5), and in particular the [`prisma-binding`](https://github.com/graphcool/prisma-binding) package, to conveniently implement your Prisma resolvers. In short, `prisma-binding` allows to simply _forward_ incoming queries to Prisma's powerful CRUD API.
 
-## Architectural components
+### Architectural components
 
 When working with Prisma, you typically have the following components in your stack:
 
@@ -71,7 +73,7 @@ Prisma is sometimes, somewhat inaccurately, referred to as a “GraphQL database
 
 In that sense, Prisma is not a database because it only provides a data access layer - but does not have a built-in data store! The term "GraphQL database" therefore refers more to the _architectural role_ of Prisma in a server-side setup.
 
-### Open source & Prisma Cloud
+## Open source & Prisma Cloud
 
 Prisma is free and entirely [open source](https://github.com/prisma/prisma). You can run Prisma in production on custom infrastructure or using your preferred IaaS provider (such as AWS, Digital Ocean, Microsoft Azure and Google Cloud).
 
