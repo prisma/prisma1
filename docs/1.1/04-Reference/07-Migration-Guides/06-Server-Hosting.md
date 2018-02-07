@@ -5,46 +5,17 @@ description: Server Hosting
 
 # Server Hosting
 
-In this section, you'll learn how you can host a GraphQL server that connects with your Graphcool data store.
+When building a GraphQL server based on Prisma, you need to host the GraphQL server to make its functionality available to client applications.
 
-## Background
+<InfoBox type=warning>
 
-With Graphcool 1.0, Graphcool only acts as a "database" for your GraphQL server. This is different from the Graphcool Framework and BaaS where Graphcool was responsible for _all_ server-side logic and other functionality.
-
-It is recommended that you're using `graphql-yoga` as your GraphQL server.
-
-<InfoBox type=info>
-
-**IMPORTANT**: When hosting your GraphQL server (e.g. with Zeit Now, AWS Lambda or some other hosting provider), you should ensure that it is deployed to the same _region_ as your Graphcool service.
+When hosting your GraphQL server (e.g. with Zeit Now, AWS Lambda or some other hosting provider), you should ensure that it is deployed to the same _region_ as your Prisma service. Otherwise this might have a negative performance impact on your service.
 
 <InfoBox>
 
 ## Deployment with Zeit Now
 
-Now is a "one-click-deployment" tool allowing to easily deploy a server to the web. Here is how it works:
-
-* **Step 1 - Download Zeit Desktop**: Zeit provides a Desktop app to manage your deployments. There also is a CLI that comes along with the desktop app. You can download the app [here](https://zeit.co/download) or using homebrew. For information about installation using homebrew, check this [GitHub issue](https://github.com/zeit/now-cli/issues/688).
-* **Step 2 - Deploy your GraphQL server**: To deploy your GraphQL server, all you need to is run the `now` command in the root directory of your web server.
-
-Assume your GraphQL server has the following file structure:
-
-```
-myapp/
-├── database
-│   ├── datamodel.graphql
-│   └── graphcool.yml
-├── node_modules
-├── package.json
-└── src
-    └── index.js
-```
-
-In that case, you can deploy web server like so:
-
-```sh
-cd /path/to/myapp
-now
-```
+[Now](https://zeit.co/now) is a one-click deployment tool for web applications. You can find a comprehensive tutorial explaining how to deploy and host your Prisma-based GraphQL server with Now [here](!alias-ahs1jahkee).
 
 ## Deployment with the Serverless Framework
 
@@ -52,7 +23,7 @@ Another option to deploy your GraphQL server is by simply using a serverless fun
 
 <InfoBox type=warning>
 
-**Attention**: Deploying your GraphQL server using a serverless functions provider is only possible if your clients are not using GraphQL subscriptions for realtime functionality. The reason for that is that subscriptions require the web server to _maintain state_ (because the server needs to remember which clients are subscribed to which events and retain an open connection to these clients). This is not possible with serverless functions.
+Deploying your GraphQL server using a serverless functions provider is only possible if your clients are not using GraphQL subscriptions for realtime functionality. The reason for that is that subscriptions require the web server to _maintain state_ (because the server needs to remember which clients are subscribed to which events and retain an open connection to these clients). This is not possible with serverless functions.
 
 </InfoBox>
 
