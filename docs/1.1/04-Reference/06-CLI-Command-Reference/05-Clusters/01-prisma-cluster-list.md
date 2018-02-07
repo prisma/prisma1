@@ -5,10 +5,18 @@ description: List all clusters.
 
 # `prisma cluster list`
 
-List all clusters
+List all [clusters](!alias-eu2ood0she). This includes the cluster from your [cluster registry](!alias-eu2ood0she#cluster-registry) as well as the ones you have configured through Prisma Cloud.
 
 #### Usage
 
 ```sh
-prisma cluster list [flags]
+prisma cluster list
+```
+
+#### Examples
+
+##### List all clusters.
+
+```sh
+prisma cluster list
 ```

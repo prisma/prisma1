@@ -5,10 +5,10 @@ description: Output cluster logs.
 
 # `prisma cluster logs`
 
-Output cluster logs.
+Output [cluster](!alias-eu2ood0she) logs.
 
 #### Usage
 
 ```sh
-prisma local logs [flags]
+prisma cluster logs [flags]
 ```

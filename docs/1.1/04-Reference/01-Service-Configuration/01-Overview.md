@@ -19,7 +19,7 @@ You can download the Prisma CLI from npm:
 npm install -g prisma
 ```
 
-To initialize a new service, use the `init` command:
+To initialize a new service, use the `init` command. Then follow the interactive prompt to bootstrap the service based on a template of your choice:
 
 ```sh
 prisma init
