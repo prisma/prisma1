@@ -196,6 +196,7 @@ case class SchemaInferrerImpl(
   }
 
   private def getOppositeField(relationField: FieldDefinition, otherFieldsOnModelBRelatedToModelA: Vector[FieldDefinition]) = {
+
     val field = relationField.directive("relation") match {
       case Some(directive) =>
         otherFieldsOnModelBRelatedToModelA.find(field =>
@@ -209,23 +210,11 @@ case class SchemaInferrerImpl(
   }
 
   private def getOnDeleteFromField(field: FieldDefinition): OnDelete.Value = {
-    field.directive("relation") match {
-      case None =>
-        OnDelete.SetNull
-
-      case Some(directive) =>
-        directive.argument("onDelete") match {
-          case None =>
-            OnDelete.SetNull
-
-          case Some(x) =>
-            val asString = x.value.asInstanceOf[EnumValue].value
-            asString match {
-              case "SET_NULL" => OnDelete.SetNull
-              case "CASCADE"  => OnDelete.Cascade
-              case _          => sys.error("")
-            }
-        }
+    field.directiveArgumentAsString("relation", "onDelete") match {
+      case None             => OnDelete.SetNull
+      case Some("SET_NULL") => OnDelete.SetNull
+      case Some("CASCADE")  => OnDelete.Cascade
+      case Some(_)          => sys.error("Unexpected onDelete enum value. The schema syntax validator should have caught that.")
     }
   }
 

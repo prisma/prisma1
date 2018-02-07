@@ -2,14 +2,13 @@ package com.prisma.shared.models
 
 import com.prisma.gc_values._
 import com.prisma.shared.models.FieldConstraintType.FieldConstraintType
+import com.prisma.shared.models.MigrationStepsJsonFormatter._
 import com.prisma.utils.json.JsonUtils
+import com.prisma.utils.json.JsonUtils._
 import org.joda.time.format.ISODateTimeFormat
 import org.joda.time.{DateTime, DateTimeZone}
-import com.prisma.utils.json.JsonUtils._
-import MigrationStepsJsonFormatter._
-import play.api.libs.functional.FunctionalBuilder
-import play.api.libs.json._
 import play.api.libs.functional.syntax._
+import play.api.libs.json._
 
 object ProjectJsonFormatter {
 
@@ -165,7 +164,7 @@ object ProjectJsonFormatter {
     private def addDiscriminator(json: JsObject, fn: Function) = json ++ Json.obj(discriminatorField -> fn.typeCode.toString)
   }
 
-  implicit val relationWrites: Writes[Relation] = (
+  val relationWrites: Writes[Relation] = (
     (JsPath \ "name").write[String] and
       (JsPath \ "description").writeNullable[String] and
       (JsPath \ "modelAId").write[String] and
@@ -174,27 +173,14 @@ object ProjectJsonFormatter {
       (JsPath \ "modelBOnDelete").write[OnDelete.Value]
   )(unlift(Relation.unapply))
 
-  implicit val relationReads: Reads[Relation] = {
-    val x = (
-      (JsPath \ "name").read[String] and
-        (JsPath \ "description").readNullable[String] and
-        (JsPath \ "modelAId").read[String] and
-        (JsPath \ "modelBId").read[String] and
-        (JsPath \ "modelAOnDelete").readNullable[OnDelete.Value] and
-        (JsPath \ "modelBOnDelete").readNullable[OnDelete.Value]
-    )
-
-    x.apply { (name, description, modelAId, modelBId, modelAOnDelete, modelBOnDelete) =>
-      Relation(
-        name = name,
-        description = description,
-        modelAId = modelAId,
-        modelBId = modelBId,
-        modelAOnDelete = modelAOnDelete.getOrElse(OnDelete.SetNull),
-        modelBOnDelete = modelBOnDelete.getOrElse(OnDelete.SetNull)
-      )
-    }
-  }
+  val relationReads: Reads[Relation] = (
+    (JsPath \ "name").read[String] and
+      (JsPath \ "description").readNullable[String] and
+      (JsPath \ "modelAId").read[String] and
+      (JsPath \ "modelBId").read[String] and
+      (JsPath \ "modelAOnDelete").readNullable[OnDelete.Value].map(_.getOrElse(OnDelete.SetNull)) and
+      (JsPath \ "modelBOnDelete").readNullable[OnDelete.Value].map(_.getOrElse(OnDelete.SetNull))
+  )(Relation.apply _)
 
   implicit lazy val relation                  = Format(relationReads, relationWrites)
   implicit lazy val enum                      = Json.format[Enum]
