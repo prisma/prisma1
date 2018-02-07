@@ -2,12 +2,13 @@ package com.prisma.shared.models
 
 import com.prisma.gc_values._
 import com.prisma.shared.models.FieldConstraintType.FieldConstraintType
+import com.prisma.shared.models.MigrationStepsJsonFormatter._
 import com.prisma.utils.json.JsonUtils
+import com.prisma.utils.json.JsonUtils._
 import org.joda.time.format.ISODateTimeFormat
 import org.joda.time.{DateTime, DateTimeZone}
+import play.api.libs.functional.syntax._
 import play.api.libs.json._
-import com.prisma.utils.json.JsonUtils._
-import MigrationStepsJsonFormatter._
 
 object ProjectJsonFormatter {
 
@@ -163,7 +164,25 @@ object ProjectJsonFormatter {
     private def addDiscriminator(json: JsObject, fn: Function) = json ++ Json.obj(discriminatorField -> fn.typeCode.toString)
   }
 
-  implicit lazy val relation                  = Json.format[Relation]
+  val relationWrites: Writes[Relation] = (
+    (JsPath \ "name").write[String] and
+      (JsPath \ "description").writeNullable[String] and
+      (JsPath \ "modelAId").write[String] and
+      (JsPath \ "modelBId").write[String] and
+      (JsPath \ "modelAOnDelete").write[OnDelete.Value] and
+      (JsPath \ "modelBOnDelete").write[OnDelete.Value]
+  )(unlift(Relation.unapply))
+
+  val relationReads: Reads[Relation] = (
+    (JsPath \ "name").read[String] and
+      (JsPath \ "description").readNullable[String] and
+      (JsPath \ "modelAId").read[String] and
+      (JsPath \ "modelBId").read[String] and
+      (JsPath \ "modelAOnDelete").readNullable[OnDelete.Value].map(_.getOrElse(OnDelete.SetNull)) and
+      (JsPath \ "modelBOnDelete").readNullable[OnDelete.Value].map(_.getOrElse(OnDelete.SetNull))
+  )(Relation.apply _)
+
+  implicit lazy val relation                  = Format(relationReads, relationWrites)
   implicit lazy val enum                      = Json.format[Enum]
   implicit lazy val field                     = Json.format[Field]
   implicit lazy val model                     = Json.format[Model]

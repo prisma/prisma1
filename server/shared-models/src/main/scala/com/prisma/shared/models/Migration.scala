@@ -105,9 +105,8 @@ case class UpdateEnum(name: String, newName: Option[String], values: Option[Vect
 object OnDelete extends Enumeration {
   type OnDelete = Value
 
-  val SetNull  = Value("SET_NULL")
-  val NoAction = Value("NO_ACTION")
-  val Cascade  = Value("CASCADE")
+  val SetNull = Value("SET_NULL")
+  val Cascade = Value("CASCADE")
 
   val default = SetNull
 }

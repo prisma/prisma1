@@ -31,10 +31,9 @@ object SchemaSyntaxValidator {
     val enum = x.isInstanceOf[EnumValue]
 
     val valid = x.renderPretty match {
-      case "CASCADE"   => true
-      case "NO_ACTION" => true
-      case "SET_NULL"  => true
-      case _           => false
+      case "CASCADE"  => true
+      case "SET_NULL" => true
+      case _          => false
     }
     enum && valid
   }
