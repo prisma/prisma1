@@ -141,7 +141,11 @@ Mutations are _transactional_, meaning they are [_atomic_](https://en.wikipedia.
 
 ## Authentication
 
-The GraphQL API of a Prisma service is typically protected by a [`secret`](!alias-ufeshusai8#secret-optional) which you specify in [`prisma.yml`](!alias-foatho8aip).
+### Service secret
+
+The GraphQL API of a Prisma service is typically protected by a [service secret](!alias-ufeshusai8#secret-optional) which you specify in [`prisma.yml`](!alias-foatho8aip).
+
+### Service token
 
 The `secret` is used to sign a [JWT](https://jwt.io/) which can then be used in the `Authorization` field of the HTTP header:
 
@@ -158,7 +162,7 @@ This is a sample payload for a JWT:
 }
 ```
 
-### Claims
+#### Claims
 
 The JWT must contain different [claims](https://jwt.io/introduction/#payload):
 
@@ -167,13 +171,13 @@ The JWT must contain different [claims](https://jwt.io/introduction/#payload):
 
 > In the future there might be support for more fine grained access control by introducing a concept of roles such as `["write:Log", "read:*"]`
 
-### Generating a signed JWT
+#### Generating a service token
 
-#### Prisma CLI
+##### Prisma CLI
 
 Run `prisma token` to obtain a new signed JWT for your current Prisma service.
 
-#### JavaScript
+##### JavaScript
 
 Consider the following `prisma.yml`:
 
@@ -208,7 +212,7 @@ jwt.sign(
 )
 ```
 
-### JWT verification
+#### JWT verification
 
 For requests made against a Prisma service, the following properties of the JWT will be verified:
 

@@ -19,10 +19,9 @@ prisma info
 #### Flags
 
 ```
- -c, --current              Only show info for current service
  -e, --env-file ENV-FILE    Path to .env file to inject env vars
- -j, --json                 Json Output
- -s, --secret               Print secret in json output
+ -j, --json                 JSON Output
+ -s, --secret               Print secret in JSON output (requires --json option)
 ```
 
 #### Examples
@@ -30,5 +29,19 @@ prisma info
 ##### Print information about current service.
 
 ```sh
-prisma info --current
+prisma info
 ```
+
+##### Print information about current service in JSON.
+
+```sh
+prisma info --json
+```
+
+##### Print information about current service in JSON and include service secret.
+
+```sh
+prisma info --json --secret
+```
+
+> **Note**: The secret will not be printed if the `--json` flag is not provided.

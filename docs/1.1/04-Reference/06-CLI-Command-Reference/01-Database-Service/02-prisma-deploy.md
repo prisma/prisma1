@@ -43,7 +43,6 @@ prisma deploy
 prisma deploy --interactive
 ```
 
-
 ##### Deploy service with environment variables specified in `.env.prod`.
 
 ```sh

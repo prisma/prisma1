@@ -5,7 +5,7 @@ description: Create a new service token
 
 # `prisma token`
 
-Generate a new service token. The token is a JWT that is signed with the [service secret](!alias-ufeshusai8#secret-optional).
+Generate a new [service token](!alias-utee3eiquo#service-token). The token is a [JWT](https://jwt.io) that is signed with the [service secret](!alias-utee3eiquo#service-secret).
 
 #### Usage
 
@@ -22,8 +22,14 @@ prisma token [flags]
 
 #### Examples
 
-##### Copy token to clipboard.
+##### Print service token.
 
+```sh
+prisma token
 ```
+
+##### Copy service token to clipboard.
+
+```sh
 prisma token --copy
 ```
