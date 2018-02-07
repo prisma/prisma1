@@ -31,11 +31,13 @@ object DatabaseMutationBuilder {
 
   def createDataItemIfUniqueDoesNotExist(projectId: String,
                                          where: NodeSelector,
-                                         createArgs: CoolArgs): SqlStreamingAction[Vector[Int], Int, Effect]#ResultAction[Int, NoStream, Effect] = {
-    val escapedColumns = combineByComma(createArgs.raw.keys.map(escapeKey))
-    val insertValues   = combineByComma(createArgs.raw.values.map(escapeUnsafeParam))
-    (sql"INSERT INTO `#${projectId}`.`#${where.model.name}` (" ++ escapedColumns ++ sql")" ++
-      sql"SELECT " ++ insertValues ++
+                                         args: CoolArgs): SqlStreamingAction[Vector[Int], Int, Effect]#ResultAction[Int, NoStream, Effect] = {
+
+    val escapedKeyValueTuples = args.raw.toList.map(x => (escapeKey(x._1), escapeUnsafeParam(x._2)))
+    val escapedKeys           = combineByComma(escapedKeyValueTuples.map(_._1))
+    val escapedValues         = combineByComma(escapedKeyValueTuples.map(_._2))
+    (sql"INSERT INTO `#${projectId}`.`#${where.model.name}` (" ++ escapedKeys ++ sql")" ++
+      sql"SELECT " ++ escapedValues ++
       sql"FROM DUAL" ++
       sql"where not exists (select `id` from `#${projectId}`.`#${where.model.name}` where `#${where.field.name}` = ${where.fieldValue} limit 1);").asUpdate
   }
