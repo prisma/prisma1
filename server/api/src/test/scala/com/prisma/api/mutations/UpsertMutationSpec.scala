@@ -10,6 +10,8 @@ class UpsertMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
   val project: Project = SchemaDsl() { schema =>
     schema.model("Todo").field_!("title", _.String).field_!("alias", _.String, isUnique = true).field("anotherIDField", _.GraphQLID, isUnique = true)
     schema.model("WithDefaultValue").field_!("reqString", _.String, defaultValue = Some(StringGCValue("defaultValue"))).field_!("title", _.String)
+    schema.model("MultipleFields").field_!("reqString", _.String).field_!("reqInt", _.Int).field_!("reqFloat", _.Float).field_!("reqBoolean", _.Boolean)
+
   }
 
   override protected def beforeAll(): Unit = {
@@ -49,6 +51,44 @@ class UpsertMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
     result.pathAsString("data.upsertTodo.title") should be("new title")
 
     todoCount should be(1)
+  }
+
+  "an item" should "be created with multiple fields of different types" in {
+    todoCount should be(0)
+
+    val id = "non-existent-id"
+    val result = server.executeQuerySimple(
+      s"""mutation {
+         |  upsertMultipleFields(
+         |    where: {id: "$id"}
+         |    create: {
+         |      reqString: "new title"
+         |      reqInt: 1
+         |      reqFloat: 1.22
+         |      reqBoolean: true
+         |    }
+         |    update: {
+         |      reqString: "title"
+         |      reqInt: 2
+         |      reqFloat: 5.223423423423
+         |      reqBoolean: false
+         |    }
+         |  ){
+         |    id
+         |    reqString
+         |    reqInt
+         |    reqFloat
+         |    reqBoolean
+         |  }
+         |}
+      """.stripMargin,
+      project
+    )
+    result.pathAsString("data.upsertMultipleFields.reqString") should be("new title")
+    result.pathAsLong("data.upsertMultipleFields.reqInt") should be(1)
+    result.pathAsDouble("data.upsertMultipleFields.reqFloat") should be(1.22)
+    result.pathAsBool("data.upsertMultipleFields.reqBoolean") should be(true)
+
   }
 
   "an item" should "be created if it does not exist yet and use the defaultValue if necessary" in {
