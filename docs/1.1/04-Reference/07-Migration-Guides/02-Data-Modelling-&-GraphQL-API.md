@@ -11,7 +11,7 @@ Prisma introduces a few canges to the way how your data model is written as well
 
 ### Remove `@model` directive
 
-The `@model` directive that was previously required to denote your model types is removed. 
+The `@model` directive that was previously required to denote your model types is removed.
 
 #### Before
 
@@ -69,7 +69,7 @@ type Post @model {
 
 ### `id` field is optional
 
-The `id` field is now optinal on the model types in your data model (similar to `createdAt` and `updatedAt`), you can remove it if it's not needed on a type.
+The `id` field is now optional on the model types in your data model (similar to `createdAt` and `updatedAt`), you can remove it if it's not needed on a type.
 
 ### `@isUnique` is renamed to `@unique`
 
@@ -111,7 +111,7 @@ type User {
 ```graphql
 type User {
   id: ID! @unique
-  name: String! @defaultValue(value: "Unknown")
+  name: String! @default(value: "Unknown")
 }
 ```
 
@@ -206,8 +206,11 @@ The `filter` argument has been renamed to `where` in the Prisma GraphQL API. \
 
 ```graphql
 query {
-  createPost(title: "GraphQL is great" text: "It really is") {
+  allUsers(filter: {
+    name_contains: "Karl"
+  }) {
     id
+    name
   }
 }
 ```
@@ -215,19 +218,19 @@ query {
 #### After
 
 ```graphql
-mutation {
-  createPost(data: {
-    title: "GraphQL is great"
-    text: "It really is"
+query {
+  users(where: {
+    name_contains: "Karl"
   }) {
     id
+    name
   }
 }
 ```
 
 ### Selecting nodes by any `@unique` field
 
-In the Graphcool Framework GraphQL API, it was only possible to update and delete nodes by selecting them via their `id` field. With Prisma, you can use any field that's annotated with the `@id` directive for that.
+In the Graphcool Framework GraphQL API, it was only possible to update and delete nodes by selecting them via their `id` field. With Prisma, you can use any field that's annotated with the `@unique` directive for that.
 
 Consider this data model:
 
@@ -249,3 +252,9 @@ mutation {
   }
 }
 ```
+
+## New API features
+
+New API features introduced in Prisma include [batch operations](!alias-utee3eiquo#batch-mutations), [improved nested mutations](!alias-utee3eiquo#nested-mutations), [transactional mutations](!alias-utee3eiquo#transactional-mutations) and more.
+
+This means that for these use cases, you can now use these new primitives instead of following a more complex setup as before.

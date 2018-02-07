@@ -20,7 +20,7 @@ type User {
 }
 ```
 
-Further, assume the Prisma service exposes the following _application schema_:
+Further, assume your GraphQL server exposes the following _application schema_:
 
 ```graphql
 type Query {
@@ -44,7 +44,7 @@ In a hook function, we'd ensure this constraint by implementing the following fu
 event => {
 
   if (event.data.name.length < 2) {
-    return { error: `The provided name '${}' is too short. A name must have at least two letters.` }
+    return { error: `The provided name '${event.data.name}' is too short. A name must have at least two letters.` }
   }
 
   return { data: event.data }
@@ -58,7 +58,7 @@ Now, with Prisma that functionality moves into the application layer, i.e. the i
 ```js
 function createUser(parent, { name }, context, info) {
   if (name.length < 2) {
-    throw new Error(`The provided name '${}' is too short. A name must have at least two letters.`)
+    throw new Error(`The provided name '${name}' is too short. A name must have at least two letters.`)
   }
 
   return context.db.mutation.createUser({ data: { name }, info)
@@ -92,9 +92,9 @@ function createUser(parent, { name }, context, info) {
 }
 ```
 
-## Resolvers
+## Resolver Functions
 
-Resolver in the Graphcool Framework are used to extend the capabilities of the auto-generated CRUD API. Typical use cases include authentication (e.g. `signup` and `login` mutations) as well as integrating 3rd party services or wrapping REST APIs.
+Resolver functions in the Graphcool Framework are used to extend the capabilities of the auto-generated CRUD API. Typical use cases include authentication (e.g. `signup` and `login` mutations) as well as integrating 3rd party services or wrapping REST APIs.
 
 For the following example, we'll consider the use case of wrapping a REST API (based on the [`rest-wrapper`](https://github.com/graphcool/graphcool-framework/tree/master/examples/0.x/rest-wrapper) example from the Graphcool Framework). We'll use `https://dog.ceo/api/breed/${breedName}/images/random` endpoint.
 
@@ -139,7 +139,7 @@ module.exports = event => {
 
 ### Prisma
 
-Similar as for hooks, the functionality of Graphcool Framework resolvers is now implemented in the application layer and thus not directly taken care of by Prisma any more.
+Similar as for hooks, the functionality of Graphcool Framework resolver functions is now implemented in the application layer and thus not directly taken care of by Prisma any more.
 
 The application schema needs to define the corresponding root field:
 
@@ -171,7 +171,7 @@ function(parent, { breedName }, context, info) {
 
 ## Subscriptions
 
-Server-side subscriptions are the only feature that are still part of Prisma. However, with Prisma it is not possible to host the corresponding functions as [managed functions](https://www.graph.cool/docs/reference/functions/overview-aiw4aimie9#managed-functions-vs-webhooks) any more - instead they need to be configured through _web hooks_, pointing to an HTTP endpoint that you deployed yourself (e.g. using AWS Lamba, Google Cloud Functions, Zeit Now, ...).
+Server-side subscriptions are following the same concept in Prisma. However, with Prisma it is not possible to host the corresponding functions as [managed functions](https://www.graph.cool/docs/reference/functions/overview-aiw4aimie9#managed-functions-vs-webhooks) anymore - instead they need to be configured through _web hooks_, pointing to an HTTP endpoint that you deployed yourself (e.g. using AWS Lamba, Google Cloud Functions, Zeit Now, ...).
 
 The following example is based on the [`subscriptions`](https://github.com/graphcool/graphcool-framework/blob/master/examples/0.x/subscriptions) from the Graphcool Framework.
 
