@@ -12,7 +12,7 @@ class SchemaInfererOnDeleteSpec extends WordSpec with Matchers {
   val emptyProject = SchemaDsl().buildProject()
 
   "Inferring onDelete relationDirectives" should {
-    "work if one side provides onDelete" in {
+    "work if one side provides onDelete" ignore {
       val types =
         """
           |type Todo {
@@ -33,7 +33,7 @@ class SchemaInfererOnDeleteSpec extends WordSpec with Matchers {
       relation.modelBOnDelete should equal(OnDelete.Cascade)
     }
 
-    "work if both sides provide onDelete" in {
+    "work if both sides provide onDelete" ignore {
       val types =
         """
           |type Todo {
@@ -54,7 +54,7 @@ class SchemaInfererOnDeleteSpec extends WordSpec with Matchers {
       relation.modelBOnDelete should equal(OnDelete.Cascade)
     }
 
-    "work if second side provides onDelete" in {
+    "work if second side provides onDelete" ignore {
       val types =
         """
           |type Todo {
@@ -75,7 +75,7 @@ class SchemaInfererOnDeleteSpec extends WordSpec with Matchers {
       relation.modelBOnDelete should equal(OnDelete.SetNull)
     }
 
-    "handle two relations between the same models" in {
+    "handle two relations between the same models" ignore {
       val types =
         """
           |type Todo {

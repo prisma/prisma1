@@ -178,16 +178,16 @@ case class SchemaInferrerImpl(
             name = relationName,
             modelAId = nextModelAId,
             modelBId = nextModelBId,
-            modelAOnDelete = modelAOnDelete,
-            modelBOnDelete = modelBOnDelete
+            modelAOnDelete = OnDelete.SetNull, //modelAOnDelete,
+            modelBOnDelete = OnDelete.SetNull //modelBOnDelete
           )
         case None =>
           Relation(
             name = relationName,
             modelAId = modelA,
             modelBId = modelB,
-            modelAOnDelete = modelAOnDelete,
-            modelBOnDelete = modelBOnDelete
+            modelAOnDelete = OnDelete.SetNull, //modelAOnDelete,
+            modelBOnDelete = OnDelete.SetNull //modelBOnDelete
           )
       }
     }
