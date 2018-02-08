@@ -151,7 +151,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
         |  title: String
         |  comments1: [Comment1!]! @relation(name: "TodoToComments1", onDelete: CASCADE)
         |  comments2: [Comment2!]! @relation(name: "TodoToComments2", onDelete: SET_NULL)
-        |  comments3: [Comment3!]! @relation(name: "TodoToComments3", onDelete: NO_ACTION)
+        |  comments3: [Comment3!]! @relation(name: "TodoToComments3")
         |}
         |
         |type Comment1 @model{

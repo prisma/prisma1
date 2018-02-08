@@ -156,5 +156,4 @@ object APIErrors {
         s"The change you are trying to make would violate the required relation '${relation.id}' between ${relation.getModelA_!(project.schema).name} and ${relation.getModelB_!(project.schema).name}",
         3042
       )
-
 }
