@@ -8,9 +8,9 @@ import com.prisma.shared.models.{Model, Project, Relation, TypeIdentifier}
 import cool.graph.cuid.Cuid
 import slick.dbio.{DBIOAction, Effect, NoStream}
 import slick.jdbc.MySQLProfile.api._
+import slick.jdbc.SQLActionBuilder
 import slick.sql.{SqlAction, SqlStreamingAction}
 
-import scala.collection.immutable.Seq
 import scala.concurrent.ExecutionContext.Implicits.global
 
 object DatabaseMutationBuilder {
@@ -21,21 +21,25 @@ object DatabaseMutationBuilder {
 
   //CREATE
 
-  def createDataItem(projectId: String, modelName: String, args: CoolArgs): SqlStreamingAction[Vector[Int], Int, Effect]#ResultAction[Int, NoStream, Effect] = {
-
+  private def combineKeysAndValuesSeparately(args: CoolArgs) = {
     val escapedKeyValueTuples = args.raw.toList.map(x => (escapeKey(x._1), escapeUnsafeParam(x._2)))
     val escapedKeys           = combineByComma(escapedKeyValueTuples.map(_._1))
     val escapedValues         = combineByComma(escapedKeyValueTuples.map(_._2))
+    (escapedKeys, escapedValues)
+  }
+
+  def createDataItem(projectId: String, modelName: String, args: CoolArgs): SqlStreamingAction[Vector[Int], Int, Effect]#ResultAction[Int, NoStream, Effect] = {
+    val (escapedKeys: Option[SQLActionBuilder], escapedValues: Option[SQLActionBuilder]) = combineKeysAndValuesSeparately(args)
     (sql"insert into `#$projectId`.`#$modelName` (" ++ escapedKeys ++ sql") values (" ++ escapedValues ++ sql")").asUpdate
   }
 
   def createDataItemIfUniqueDoesNotExist(projectId: String,
                                          where: NodeSelector,
-                                         createArgs: CoolArgs): SqlStreamingAction[Vector[Int], Int, Effect]#ResultAction[Int, NoStream, Effect] = {
-    val escapedColumns = combineByComma(createArgs.raw.keys.map(escapeKey))
-    val insertValues   = combineByComma(createArgs.raw.values.map(escapeUnsafeParam))
-    (sql"INSERT INTO `#${projectId}`.`#${where.model.name}` (" ++ escapedColumns ++ sql")" ++
-      sql"SELECT " ++ insertValues ++
+                                         args: CoolArgs): SqlStreamingAction[Vector[Int], Int, Effect]#ResultAction[Int, NoStream, Effect] = {
+
+    val (escapedKeys: Option[SQLActionBuilder], escapedValues: Option[SQLActionBuilder]) = combineKeysAndValuesSeparately(args)
+    (sql"INSERT INTO `#${projectId}`.`#${where.model.name}` (" ++ escapedKeys ++ sql")" ++
+      sql"SELECT " ++ escapedValues ++
       sql"FROM DUAL" ++
       sql"where not exists (select `id` from `#${projectId}`.`#${where.model.name}` where `#${where.field.name}` = ${where.fieldValue} limit 1);").asUpdate
   }
