@@ -15,6 +15,10 @@ The setup in this tutorial assumes that you have a running Kubernetes cluster in
 
 </InfoBox>
 
+<InfoBox>
+All Kubernetes definition files are also bundled in this [repository](https://github.com/akoenig/prisma-kubernetes-deployment).
+</InfoBox>
+
 ## 1 Prerequisites
 
 If you haven't done that before, you need to fulfill the following prerequisites before you can deploy a Prisma cluster on Kubernetes. You need ...
@@ -376,3 +380,7 @@ prisma cluster add
 ```
 
 Okay, you made it! Congratulations, you have successfully deployed a Prisma server to a production Kubernetes cluster environment.
+
+## Author
+
+[André König](https://andrekoenig.de) – Freelance Software Architect & Software Engineer
