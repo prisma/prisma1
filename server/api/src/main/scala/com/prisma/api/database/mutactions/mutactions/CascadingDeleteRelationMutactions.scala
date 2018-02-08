@@ -15,7 +15,7 @@ import scala.concurrent.Future
 
 case class CascadingDeleteRelationMutactions(project: Project, path: Path) extends ClientSqlDataChangeMutaction {
 
-  val relationFieldsNotOnPath = path.lastModel.relationFields.filter(f => !path.mwrs.map(_.relation).contains(f.relation.get))
+  val relationFieldsNotOnPath = path.lastModel.relationFields.filter(f => !path.edges.map(_.relation).contains(f.relation.get))
 
   val relationsWhereThisIsRequired = relationFieldsNotOnPath.filter(otherSideIsRequired).map(_.relation.get)
 

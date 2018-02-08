@@ -7,19 +7,19 @@ import com.prisma.shared.models.{Field, Model, Project, Relation}
 
 object CascadingDeletes {
 
-  case class ModelsWithRelation(parent: Model, child: Model, relation: Relation)
+  case class Edge(parent: Model, child: Model, relation: Relation)
 
-  case class Path(where: NodeSelector, mwrs: List[ModelsWithRelation]) {
-    def cutOne: Path = mwrs match {
+  case class Path(where: NodeSelector, edges: List[Edge]) {
+    def cutOne: Path = edges match {
       case x if x.isEmpty => sys.error("Dont call this on an empty path")
-      case x              => copy(where, mwrs.dropRight(1))
+      case x              => copy(where, edges.dropRight(1))
     }
-    def prepend(mwr: ModelsWithRelation): Path = copy(where, mwr +: mwrs)
+    def prepend(edge: Edge): Path = copy(where, edge +: edges)
     def pretty: String =
-      s"Where: ${where.model.name}, ${where.field.name}, ${where.fieldValueAsString} |  " + mwrs
-        .map(mwr => s"${mwr.parent.name}<->${mwr.child.name}")
+      s"Where: ${where.model.name}, ${where.field.name}, ${where.fieldValueAsString} |  " + edges
+        .map(edge => s"${edge.parent.name}<->${edge.child.name}")
         .mkString(" ")
-    def detectCircle(path: List[ModelsWithRelation] = this.mwrs, seen: List[Model] = List.empty): Unit = {
+    def detectCircle(path: List[Edge] = this.edges, seen: List[Model] = List.empty): Unit = {
       path match {
         case x if x.isEmpty                                 =>
         case x if x.nonEmpty && seen.contains(x.head.child) => sys.error("Circle")
@@ -27,22 +27,22 @@ object CascadingDeletes {
         case head :: tail                                   => detectCircle(tail, seen :+ head.parent)
       }
     }
-    def lastModel = mwrs match {
+    def lastModel = edges match {
       case x if x.isEmpty => where.model
-      case x              => x.reverse.head.child
+      case x              => x.last.child
     }
 
-    def lastRelation = mwrs match {
+    def lastRelation = edges match {
       case x if x.isEmpty => None
-      case x              => Some(x.reverse.head.relation)
+      case x              => Some(x.last.relation)
     }
   }
   object Path {
     def empty(where: NodeSelector) = Path(where, List.empty)
   }
 
-  def getMWR(project: Project, model: Model, field: Field): ModelsWithRelation =
-    ModelsWithRelation(model, field.relatedModel(project.schema).get, field.relation.get)
+  def getEdge(project: Project, model: Model, field: Field): Edge =
+    Edge(model, field.relatedModel(project.schema).get, field.relation.get)
 
   def collectPaths(project: Project, where: NodeSelector, startModel: Model, excludes: List[Relation] = List.empty): List[Path] = {
     val otherRelationFields = startModel.cascadingRelationFields.filter(field => !excludes.contains(field.relation.get))
@@ -53,38 +53,31 @@ object CascadingDeletes {
 
       case x =>
         x.flatMap { field =>
-          val mwr        = getMWR(project, startModel, field)
-          val childPaths = collectPaths(project, where, mwr.child, excludes :+ mwr.relation)
-          childPaths.map(path => path.prepend(mwr))
+          val edge       = getEdge(project, startModel, field)
+          val childPaths = collectPaths(project, where, edge.child, excludes :+ edge.relation)
+          childPaths.map(path => path.prepend(edge))
         }
     }
   }
 
   def generateCascadingDeleteMutactions(project: Project, where: NodeSelector): List[ClientSqlMutaction] = {
-    val paths: List[Path] = collectPaths(project, where, where.model)
-
     def getMutactions(paths: List[Path]): List[ClientSqlMutaction] = {
-      val nonEmptyPaths = paths.filter(_.mwrs.nonEmpty)
+      paths.filter(_.edges.nonEmpty) match {
+        case x if x.isEmpty =>
+          List.empty
 
-      nonEmptyPaths match {
-        case x if x.isEmpty => List.empty
         case x =>
-          val maxPathLength = x.map(_.mwrs.length).max
-
-          val longestPaths = x.filter(_.mwrs.lengthCompare(maxPathLength) == 0)
-
+          val maxPathLength     = x.map(_.edges.length).max
+          val longestPaths      = x.filter(_.edges.lengthCompare(maxPathLength) == 0)
           val longestMutactions = longestPaths.map(CascadingDeleteRelationMutactions(project, _))
-
-          val shortenedPaths = longestPaths.map(_.cutOne)
-
-          val newPaths = x.filter(_.mwrs.lengthCompare(maxPathLength) < 0) ++ shortenedPaths
+          val shortenedPaths    = longestPaths.map(_.cutOne)
+          val newPaths          = x.filter(_.edges.lengthCompare(maxPathLength) < 0) ++ shortenedPaths
 
           longestMutactions ++ getMutactions(newPaths)
-
       }
-
     }
 
+    val paths: List[Path] = collectPaths(project, where, where.model)
     getMutactions(paths)
   }
 }

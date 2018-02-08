@@ -305,12 +305,12 @@ object DatabaseMutationBuilder {
   }
 
   def pathQuery(projectId: String, path: Path): SQLActionBuilder = {
-    path.mwrs match {
+    path.edges match {
       case x if x.isEmpty =>
         idFromWherePath(projectId, path.where)
 
       case x if x.nonEmpty =>
-        val last = x.reverse.head
+        val last = x.last
         sql"(SELECT `#${last.relation.sideOf(last.child)}`" ++
           sql" FROM (SELECT * FROM `#$projectId`.`#${last.relation.id}`) PATHQUERY" ++
           sql" WHERE `#${last.relation.sideOf(last.parent)}` IN " ++ pathQuery(projectId, path.cutOne) ++ sql")"

@@ -285,7 +285,7 @@ class CascadingDeletePathSpec extends FlatSpec with Matchers with ApiBaseSpec {
     database.runDbActionOnClientDb(check1)
 
     //second side
-    val check2 = DatabaseMutationBuilder.oldParentFailureTriggerByPath(project, childrenRelation, res.reverse.head)
+    val check2 = DatabaseMutationBuilder.oldParentFailureTriggerByPath(project, childrenRelation, res.last)
     database.runDbActionOnClientDb(check2)
 
     //first side
@@ -293,7 +293,7 @@ class CascadingDeletePathSpec extends FlatSpec with Matchers with ApiBaseSpec {
 //    database.runDbActionOnClientDb(query)
 //
 //    //second side
-//    val query2 = DatabaseMutationBuilder.deleteRelationRowsByPath(project.id, childrenRelation, res.reverse.head)
+//    val query2 = DatabaseMutationBuilder.deleteRelationRowsByPath(project.id, childrenRelation, res.last)
 //    database.runDbActionOnClientDb(query2)
 
 //    println(query)

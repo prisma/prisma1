@@ -7,7 +7,7 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class OnDeleteDirectiveSpec extends FlatSpec with Matchers with ApiBaseSpec {
 
-  "A relation with a onDelete SET_NULL directive" should "set the value on the other node to null" ignore {
+  "A relation with a onDelete SET_NULL directive" should "set the value on the other node to null" in {
     val project = SchemaDsl() { schema =>
       val modelB = schema.model("ModelB").field_!("b", _.String, isUnique = true)
       val modelA = schema.model("ModelA").field_!("a", _.String, isUnique = true).oneToOneRelation("modelB", "modelA", modelB)
@@ -37,7 +37,7 @@ class OnDeleteDirectiveSpec extends FlatSpec with Matchers with ApiBaseSpec {
     server.executeQuerySimple("{modelAs{a}}", project).toString should be("""{"data":{"modelAs":[{"a":"a"}]}}""")
   }
 
-  "A relation with a onDelete CASCADE directive" should "delete the connected node" ignore {
+  "A relation with a onDelete CASCADE directive" should "delete the connected node" in {
     val project = SchemaDsl() { schema =>
       val modelB = schema.model("ModelB").field_!("b", _.String, isUnique = true)
       val modelA = schema
