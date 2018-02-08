@@ -8,6 +8,8 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class CascadingDeleteSpec extends FlatSpec with Matchers with ApiBaseSpec {
 
+  //region  TOP LEVEL DELETE
+
   "P1!-C1! relation deleting the parent" should "work if parent is marked marked cascading" in {
     //         P-C
     val project = SchemaDsl() { schema =>
@@ -317,5 +319,30 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiBaseSpec {
 
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_RelayId").as[Int]) should be(Vector(3))
   }
+
+  //endregion
+
+  //region  NESTED DELETE
+
+  "NESTING P1!-C1! relation deleting the parent" should "work if parent is marked marked cascading" in {
+    //         P-C
+    val project = SchemaDsl() { schema =>
+      val parent = schema.model("P").field_!("p", _.String, isUnique = true)
+      val child  = schema.model("C").field_!("c", _.String, isUnique = true)
+
+      child.oneToOneRelation_!("p", "c", parent, modelBOnDelete = OnDelete.Cascade)
+    }
+    database.setup(project)
+
+    server.executeQuerySimple("""mutation{createP(data:{p:"p", c: {create:{c: "c"}}}){p, c {c}}}""", project)
+    server.executeQuerySimple("""mutation{createP(data:{p:"p2", c: {create:{c: "c2"}}}){p, c {c}}}""", project)
+
+    server.executeQuerySimple("""mutation{updateC(where: {c:"c"} data: {p: {delete:{p:"P"}}}){id}}""", project)
+    server.executeQuerySimple("""query{ps{p, c {c}}}""", project).toString should be("""{"data":{"ps":[{"p":"p2","c":{"c":"c2"}}]}}""")
+    server.executeQuerySimple("""query{cs{c, p {p}}}""", project).toString should be("""{"data":{"cs":[{"c":"c2","p":{"p":"p2"}}]}}""")
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_RelayId").as[Int]) should be(Vector(2))
+  }
+
+  //endregion
 
 }

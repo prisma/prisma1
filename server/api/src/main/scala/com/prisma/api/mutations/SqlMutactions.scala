@@ -4,10 +4,9 @@ import com.prisma.api.database.mutactions.{ClientSqlDataChangeMutaction, ClientS
 import com.prisma.api.database.{CascadingDeletes, DataItem, DataResolver, DatabaseMutationBuilder}
 import com.prisma.api.schema.APIErrors.RelationIsRequired
 import com.prisma.shared.models.IdType.Id
-import com.prisma.shared.models.{Field, Model, OnDelete, Relation}
+import com.prisma.shared.models.{Field, Model, Relation}
 import cool.graph.cuid.Cuid.createCuid
 import slick.dbio.{DBIOAction, Effect, NoStream}
-
 import scala.collection.immutable.Seq
 
 case class CreateMutactionsResult(createMutaction: CreateDataItem,
@@ -30,11 +29,11 @@ case class SqlMutactions(dataResolver: DataResolver) {
   val project = dataResolver.project
 
   def getMutactionsForDelete(where: NodeSelector, previousValues: DataItem, id: String): List[ClientSqlMutaction] = {
-    val cascadingDeleteMutactions = CascadingDeletes.generateCascadingDeleteMutactions(project, where)
-    val relationMutactions        = DeleteRelationMutaction(project, where)
-    val deleteItemMutaction       = DeleteDataItem(project, where, previousValues, id)
+    val cascadingDeleteMutactions  = CascadingDeletes.generateCascadingDeleteMutactions(project, where)
+    val relationMutactionsForRoot  = DeleteRelationMutaction(project, where)
+    val deleteItemMutactionForRoot = DeleteDataItem(project, where, previousValues, id)
 
-    cascadingDeleteMutactions ++ List(relationMutactions, deleteItemMutaction)
+    cascadingDeleteMutactions ++ List(relationMutactionsForRoot, deleteItemMutactionForRoot)
   }
 
   def getMutactionsForUpdate(where: NodeSelector, args: CoolArgs, id: Id, previousValues: DataItem): Vector[ClientSqlMutaction] = {
@@ -186,13 +185,10 @@ case class SqlMutactions(dataResolver: DataResolver) {
   }
 
   def getMutactionsForNestedDeleteMutation(nestedMutation: NestedMutation, parentInfo: ParentInfo): Seq[ClientSqlMutaction] = {
-    nestedMutation.deletes.flatMap(
-      delete =>
-//        CascadingDeletes.generateCascadingDeleteMutactions(project, delete.where) ++
-        List(
-          NestedDeleteRelationMutaction(project, parentInfo, delete.where),
-          DeleteDataItemNested(project, delete.where)
-      ))
+    nestedMutation.deletes.flatMap { delete =>
+      val cascadingDeleteMutactions = CascadingDeletes.generateCascadingDeleteMutactions(project, delete.where)
+      cascadingDeleteMutactions ++ List(NestedDeleteRelationMutaction(project, parentInfo, delete.where), DeleteDataItemNested(project, delete.where))
+    }
   }
 
   def getMutactionsForNestedUpdateMutation(nestedMutation: NestedMutation, parentInfo: ParentInfo): Seq[ClientSqlMutaction] = {

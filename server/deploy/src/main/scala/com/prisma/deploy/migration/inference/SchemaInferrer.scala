@@ -143,12 +143,12 @@ case class SchemaInferrerImpl(
         */
       def generateRelationName: String = {
         def concat(modelName: String, otherModelName: String): String = {
-          val concatenedString = s"${modelName}To${otherModelName}"
+          val concatenatedString = s"${modelName}To${otherModelName}"
 
-          !NameConstraints.isValidRelationName(concatenedString) match {
+          !NameConstraints.isValidRelationName(concatenatedString) match {
             case true if otherModelName.length > modelName.length => concat(modelName, otherModelName.substring(0, otherModelName.length - 1))
             case true                                             => concat(modelName.substring(0, modelName.length - 1), otherModelName)
-            case false                                            => concatenedString
+            case false                                            => concatenatedString
           }
         }
         concat(modelA, modelB)
@@ -191,22 +191,21 @@ case class SchemaInferrerImpl(
           )
       }
     }
-
     tmp.groupBy(_.name).values.flatMap(_.headOption).toSet
   }
 
   private def getOppositeField(relationField: FieldDefinition, otherFieldsOnModelBRelatedToModelA: Vector[FieldDefinition]) = {
-
-    val field = relationField.directive("relation") match {
+    relationField.directive("relation") match {
       case Some(directive) =>
         otherFieldsOnModelBRelatedToModelA.find(field =>
           field.directive("relation") match {
             case Some(otherDirective) => directive.argument_!("name").value.renderCompact == otherDirective.argument_!("name").value.renderCompact
             case None                 => false
         })
-      case None => otherFieldsOnModelBRelatedToModelA.headOption
+
+      case None =>
+        otherFieldsOnModelBRelatedToModelA.headOption
     }
-    field
   }
 
   private def getOnDeleteFromField(field: FieldDefinition): OnDelete.Value = {
