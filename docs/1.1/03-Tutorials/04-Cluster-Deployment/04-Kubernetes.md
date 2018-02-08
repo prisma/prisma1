@@ -16,10 +16,10 @@ The setup in this tutorial assumes that you have a running Kubernetes cluster in
 </InfoBox>
 
 <InfoBox>
-All Kubernetes definition files are also bundled in this [repository](https://github.com/akoenig/prisma-kubernetes-deployment).
+All Kubernetes definition files are also bundled in this [repository](https://github.com/akoenig/prisma-kubernetes-deployment)
 </InfoBox>
 
-## 1 Prerequisites
+## Prerequisites
 
 If you haven't done that before, you need to fulfill the following prerequisites before you can deploy a Prisma cluster on Kubernetes. You need ...
 
@@ -28,7 +28,7 @@ If you haven't done that before, you need to fulfill the following prerequisites
 
 You can go ahead now and create a new directory on your local machine – call it `kubernetes-demo`. This will be the reference directory for our journey.
 
-## 2 Creating a separate namespace
+## Creating a separate namespace
 
 As you may know, Kubernetes comes with a primitive called `namespace`. This allows you to group your applications logically. Before applying the actual namespace on the cluster, we have to write the definition file for it. Inside our project directory, create a file called `namespace.yml` with the following content:
 
@@ -56,7 +56,7 @@ kube-system     Active    1d
 prisma          Active    2s
 ```
 
-## 3 MySQL
+## MySQL
 
 Now that we have a valid namespace in which we can rage, it is time to deploy MySQL. Kubernetes separates between stateless and stateful deployments. A database is by nature a stateful deployment and needs a disk to actually store the data. As described in the introduction above, every cloud provider comes with a different mechanism of creating disks. In the case of the [Google Cloud Platform](https://cloud.google.com), you can create a disk by following the following steps:
 
@@ -80,7 +80,7 @@ To keep things simple, we created the disk above manually. You can automate that
 
 </InfoBox>
 
-### 3.1 Deploying the Pod
+### Deploying the Pod
 
 Now where we have our disk for the database, it is time to create the actual deployment definition of our MySQL instance. A short reminder: Kubernetes comes with the primitives of `Pods` and `ReplicationControllers`.
 
@@ -155,7 +155,7 @@ database-3199294884-93hw4   1/1       Running   0          1m
 
 It runs!
 
-## 3.2 Deploying the Service
+## Deploying the Service
 
 Before diving into this section, here's a short recap.
 
@@ -204,13 +204,13 @@ NAME       TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)    AGE
 database   ClusterIP   10.3.241.165   <none>        3306/TCP   1m
 ```
 
-## 4 Prisma
+## Prisma
 
 Okay, fair enough, the database is deployed. Next up: Deploying the actual Prisma server which is responsible for serving as an endpoint for the Prisma CLI.
 
 This application communicates with the already deployed `database` service and uses it as the storage backend. Therefore, the Prisma server is a stateless application because it doesn't need any additional disk storage.
 
-### 4.1 Deploying the Pod
+### Deploying the Pod
 
 Deploying the actual Prisma server to run in a Pod is pretty straightforward. First of all you have to define the deployment definition:
 
@@ -319,7 +319,7 @@ prisma-1733176504-zlphg     1/1       Running   0          1m
 
 Yay! The Prisma server is running! Off to our next and last step:
 
-### 4.2 Deploying the Service
+### Deploying the Service
 
 Okay, cool, the database `Pod` is running and has an internal load balancer in front of it, the Prisma server `Pod` is also running, but is missing the load balancer a.k.a. `Service`. Let's fix that:
 
@@ -358,7 +358,7 @@ The upcoming last step is also necessary if you want to integrate `prisma deploy
 
 </InfoBox>
 
-## 5 Configuration of the Prisma CLI
+## Configuration of the Prisma CLI
 
 The Prisma server is running on the Kubernetes cluster and has an internal load balancer. This is a sane security default, because you won't expose the Prisma server to the public directly. Instead, you would develop a GraphQL API and deploy it to the Kubernetes cluster as well.
 
