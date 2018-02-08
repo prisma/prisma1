@@ -29,18 +29,13 @@ case class SqlMutactions(dataResolver: DataResolver) {
   val project = dataResolver.project
 
   def getMutactionsForDelete(where: NodeSelector, previousValues: DataItem, id: String): List[ClientSqlMutaction] = {
-    val cascadingDeleteMutactions  = CascadingDeletes.generateCascadingDeleteMutactions(project, where)
-    val relationMutactionsForRoot  = DeleteRelationMutaction(project, where)
-    val deleteItemMutactionForRoot = DeleteDataItem(project, where, previousValues, id)
-
-    cascadingDeleteMutactions ++ List(relationMutactionsForRoot, deleteItemMutactionForRoot)
+    val cascadingDeleteMutactions = CascadingDeletes.generateCascadingDeleteMutactions(project, where)
+    cascadingDeleteMutactions ++ List(DeleteRelationMutaction(project, where), DeleteDataItem(project, where, previousValues, id))
   }
 
   def getMutactionsForUpdate(where: NodeSelector, args: CoolArgs, id: Id, previousValues: DataItem): Vector[ClientSqlMutaction] = {
     val updateMutaction = getUpdateMutactions(where, args, id, previousValues)
-    val whereFieldValue = args.raw.get(where.field.name)
-    val updatedWhere    = if (whereFieldValue.isDefined) where.updateValue(whereFieldValue.get) else where
-    val nested          = getMutactionsForNestedMutation(args, updatedWhere, triggeredFromCreate = false)
+    val nested          = getMutactionsForNestedMutation(args, currentWhere(where, args), triggeredFromCreate = false)
 
     updateMutaction ++ nested
   }
@@ -64,10 +59,7 @@ case class SqlMutactions(dataResolver: DataResolver) {
   }
 
   def getCreateMutactions(where: NodeSelector, args: CoolArgs): Vector[ClientSqlMutaction] = {
-    val createNonLists = CreateDataItem(project, where, args)
-    val createLists    = getMutactionsForScalarLists(where, args)
-
-    createNonLists +: createLists
+    CreateDataItem(project, where, args) +: getMutactionsForScalarLists(where, args)
   }
 
   def getUpdateMutactions(where: NodeSelector, args: CoolArgs, id: Id, previousValues: DataItem): Vector[ClientSqlMutaction] = {
@@ -194,8 +186,7 @@ case class SqlMutactions(dataResolver: DataResolver) {
   def getMutactionsForNestedUpdateMutation(nestedMutation: NestedMutation, parentInfo: ParentInfo): Seq[ClientSqlMutaction] = {
     nestedMutation.updates.flatMap { update =>
       val updateMutaction = List(UpdateDataItemByUniqueFieldIfInRelationWith(project, parentInfo, update.where, update.data))
-      val whereFieldValue = update.data.raw.get(update.where.field.name)
-      val updatedWhere    = if (whereFieldValue.isDefined) update.where.updateValue(whereFieldValue.get) else update.where
+      val updatedWhere    = currentWhere(update.where, update.data)
       val scalarLists     = getMutactionsForScalarLists(updatedWhere, update.data)
 
       updateMutaction ++ scalarLists ++ getMutactionsForNestedMutation(update.data, updatedWhere, triggeredFromCreate = false)
@@ -209,16 +200,20 @@ case class SqlMutactions(dataResolver: DataResolver) {
       val id                = createCuid()
       val createWhere       = NodeSelector.forId(upsert.where.model, id)
       val createArgsWithId  = CoolArgs(upsert.create.raw + ("id" -> id))
-      val whereFieldValue   = upsert.update.raw.get(upsert.where.field.name)
-      val updatedWhere      = if (whereFieldValue.isDefined) upsert.where.updateValue(whereFieldValue.get) else upsert.where
       val scalarListsCreate = getDbActionsForUpsertScalarLists(createWhere, createArgsWithId)
-      val scalarListsUpdate = getDbActionsForUpsertScalarLists(updatedWhere, upsert.update)
+      val scalarListsUpdate = getDbActionsForUpsertScalarLists(currentWhere(upsert.where, upsert.update), upsert.update)
       val upsertItem =
         UpsertDataItemIfInRelationWith(project, parentInfo, upsert.where, createWhere, createArgsWithId, upsert.update, scalarListsCreate, scalarListsUpdate)
       val addToRelation = AddDataItemToManyRelationByUniqueField(project, parentInfo, createWhere)
       Vector(upsertItem, addToRelation) //++ getMutactionsForNestedMutation(upsert.update, upsert.where, triggeredFromCreate = false) ++
     //getMutactionsForNestedMutation(upsert.create, createWhere, triggeredFromCreate = true)
     }
+  }
+
+  private def currentWhere(where: NodeSelector, args: CoolArgs) = {
+    val whereFieldValue = args.raw.get(where.field.name)
+    val updatedWhere    = whereFieldValue.map(where.updateValue).getOrElse(where)
+    updatedWhere
   }
 }
 
