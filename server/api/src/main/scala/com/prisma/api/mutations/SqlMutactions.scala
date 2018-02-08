@@ -187,7 +187,7 @@ case class SqlMutactions(dataResolver: DataResolver) {
   def getMutactionsForNestedDeleteMutation(nestedMutation: NestedMutation, parentInfo: ParentInfo): Seq[ClientSqlMutaction] = {
     nestedMutation.deletes.flatMap { delete =>
       val cascadingDeleteMutactions = CascadingDeletes.generateCascadingDeleteMutactions(project, delete.where)
-      cascadingDeleteMutactions ++ List(NestedDeleteRelationMutaction(project, parentInfo, delete.where), DeleteDataItemNested(project, delete.where))
+      cascadingDeleteMutactions ++ List(DeleteRelationMutaction(project, delete.where), DeleteDataItemNested(project, delete.where))
     }
   }
 
