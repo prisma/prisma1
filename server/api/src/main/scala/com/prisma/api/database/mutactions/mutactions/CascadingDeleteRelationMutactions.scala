@@ -3,26 +3,23 @@ package com.prisma.api.database.mutactions.mutactions
 import java.sql.SQLException
 
 import com.prisma.api.database.CascadingDeletes.Path
-import com.prisma.api.database.DatabaseMutationBuilder
+import com.prisma.api.database.DatabaseMutationBuilder._
 import com.prisma.api.database.mutactions.{ClientSqlDataChangeMutaction, ClientSqlStatementResult}
-import com.prisma.api.mutations.NodeSelector
 import com.prisma.api.schema.APIErrors.RequiredRelationWouldBeViolated
-import com.prisma.gc_values._
 import com.prisma.shared.models.{Field, Project, Relation}
+import com.prisma.util.gc_value.OtherGCStuff.parameterStringFromSQLException
 import slick.dbio.DBIOAction
 
 import scala.concurrent.Future
 
 case class CascadingDeleteRelationMutactions(project: Project, path: Path) extends ClientSqlDataChangeMutaction {
 
-  val relationFieldsNotOnPath = path.lastModel.relationFields.filter(f => !path.edges.map(_.relation).contains(f.relation.get))
-
+  val relationFieldsNotOnPath      = path.lastModel.relationFields.filter(f => !path.edges.map(_.relation).contains(f.relation.get))
   val relationsWhereThisIsRequired = relationFieldsNotOnPath.filter(otherSideIsRequired).map(_.relation.get)
 
-  val requiredCheck =
-    relationsWhereThisIsRequired.map(relation => DatabaseMutationBuilder.oldParentFailureTriggerByPath(project, relation, path))
+  val requiredCheck = relationsWhereThisIsRequired.map(relation => oldParentFailureTriggerByPath(project, relation, path))
 
-  val deleteAction = List(DatabaseMutationBuilder.cascadingDeleteChildActions(project.id, path))
+  val deleteAction = List(cascadingDeleteChildActions(project.id, path))
 
   override def execute = {
     val allActions = requiredCheck ++ deleteAction
@@ -42,28 +39,12 @@ case class CascadingDeleteRelationMutactions(project: Project, path: Path) exten
 
   def causedByThisMutactionChildOnly(relation: Relation, cause: String) = {
     val parentCheckString = s"`${relation.id}` OLDPARENTPATHFAILURETRIGGER WHERE `${relation.sideOf(path.lastModel)}`"
-
-    cause.contains(parentCheckString) && cause.contains(parameterString(path.where))
-  }
-
-  def parameterString(where: NodeSelector) = where.fieldValue match {
-    case StringGCValue(x)      => s"parameters ['$x',"
-    case IntGCValue(x)         => s"parameters [$x,"
-    case FloatGCValue(x)       => s"parameters [$x,"
-    case BooleanGCValue(false) => s"parameters [0,"
-    case BooleanGCValue(true)  => s"parameters [1,"
-    case GraphQLIdGCValue(x)   => s"parameters ['$x',"
-    case EnumGCValue(x)        => s"parameters ['$x',"
-    case DateTimeGCValue(x)    => throw sys.error("Implement DateTime") // todo
-    case JsonGCValue(x)        => s"parameters ['$x',"
-    case ListGCValue(_)        => sys.error("Not an acceptable Where")
-    case RootGCValue(_)        => sys.error("Not an acceptable Where")
-    case NullGCValue           => sys.error("Not an acceptable Where")
+    cause.contains(parentCheckString) && cause.contains(parameterStringFromSQLException(path.where))
   }
 
   def otherSideIsRequired(field: Field): Boolean = field.relatedField(project.schema) match {
     case Some(f) if f.isRequired => true
-    case Some(f)                 => false
+    case Some(_)                 => false
     case None                    => false
   }
 }

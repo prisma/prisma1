@@ -6,8 +6,8 @@ import com.prisma.api.database.DatabaseMutationBuilder._
 import com.prisma.api.database.mutactions.{ClientSqlDataChangeMutaction, ClientSqlStatementResult}
 import com.prisma.api.mutations.{NodeSelector, ParentInfo}
 import com.prisma.api.schema.APIErrors.RequiredRelationWouldBeViolated
-import com.prisma.gc_values._
 import com.prisma.shared.models.{Project, Relation}
+import com.prisma.util.gc_value.OtherGCStuff.parameterStringFromSQLException
 import slick.dbio.{DBIOAction, Effect, NoStream}
 
 import scala.concurrent.Future
@@ -62,28 +62,13 @@ trait NestedRelationMutactionBaseClass extends ClientSqlDataChangeMutaction {
     val parentCheckString = s"`${relation.id}` OLDPARENTFAILURETRIGGER WHERE `${relation.sideOf(where.model)}`"
     val childCheckString  = s"`${relation.id}` OLDCHILDFAILURETRIGGER WHERE `${relation.sideOf(parentInfo.model)}`"
 
-    (cause.contains(parentCheckString) && cause.contains(parameterString(where))) ||
-    (cause.contains(childCheckString) && cause.contains(parameterString(parentInfo.where)))
+    (cause.contains(parentCheckString) && cause.contains(parameterStringFromSQLException(where))) ||
+    (cause.contains(childCheckString) && cause.contains(parameterStringFromSQLException(parentInfo.where)))
   }
 
   def causedByThisMutactionChildOnly(relation: Relation, cause: String) = {
     val parentCheckString = s"`${relation.id}` OLDPARENTFAILURETRIGGER WHERE `${relation.sideOf(where.model)}`"
 
-    cause.contains(parentCheckString) && cause.contains(parameterString(where))
-  }
-
-  def parameterString(where: NodeSelector) = where.fieldValue match {
-    case StringGCValue(x)      => s"parameters ['$x',"
-    case IntGCValue(x)         => s"parameters [$x,"
-    case FloatGCValue(x)       => s"parameters [$x,"
-    case BooleanGCValue(false) => s"parameters [0,"
-    case BooleanGCValue(true)  => s"parameters [1,"
-    case GraphQLIdGCValue(x)   => s"parameters ['$x',"
-    case EnumGCValue(x)        => s"parameters ['$x',"
-    case DateTimeGCValue(x)    => throw sys.error("Implement DateTime") // todo
-    case JsonGCValue(x)        => s"parameters ['$x',"
-    case ListGCValue(_)        => sys.error("Not an acceptable Where")
-    case RootGCValue(_)        => sys.error("Not an acceptable Where")
-    case NullGCValue           => sys.error("Not an acceptable Where")
+    cause.contains(parentCheckString) && cause.contains(parameterStringFromSQLException(where))
   }
 }

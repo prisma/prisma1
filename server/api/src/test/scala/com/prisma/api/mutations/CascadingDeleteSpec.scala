@@ -29,7 +29,7 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiBaseSpec {
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_RelayId").as[Int]) should be(Vector(2))
   }
 
-  "PM-CM relation deleting the parent" should "delete all Children if the parent is marked cascading" in {
+  "PM-CM relation deleting the parent" should "delete all children if the parent is marked cascading" in {
     //         P-C
     val project = SchemaDsl() { schema =>
       val parent = schema.model("P").field_!("p", _.String, isUnique = true)
@@ -320,6 +320,44 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiBaseSpec {
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_RelayId").as[Int]) should be(Vector(3))
   }
 
+  "A required relation violation anywhere on the path" should "error and roll back all of the changes" in {
+
+    /**           A           If cascading all the way down to D from A is fine, but deleting C would
+      *          /            violate a required relation on E then this should error and not delete
+      *         B             anything.
+      *          \
+      *          C - E
+      *          /
+      *         D
+      */
+    val project = SchemaDsl() { schema =>
+      val a = schema.model("A").field_!("a", _.DateTime, isUnique = true)
+      val b = schema.model("B").field_!("b", _.DateTime, isUnique = true)
+      val c = schema.model("C").field_!("c", _.DateTime, isUnique = true)
+      val d = schema.model("D").field_!("d", _.DateTime, isUnique = true)
+      val e = schema.model("E").field_!("e", _.DateTime, isUnique = true)
+
+      a.oneToOneRelation_!("b", "a", b, modelAOnDelete = OnDelete.Cascade)
+      b.oneToOneRelation_!("c", "b", c, modelAOnDelete = OnDelete.Cascade)
+      c.manyToManyRelation("d", "c", d, modelAOnDelete = OnDelete.Cascade)
+      c.oneToOneRelation_!("e", "c", e)
+    }
+    database.setup(project)
+
+    server.executeQuerySimple("""mutation{createA(data:{a:"2020", b: {create:{b: "2021", c :{create:{c: "2022", e: {create:{e: "2023"}}}}}}}){a}}""", project)
+    server.executeQuerySimple("""mutation{createA(data:{a:"2030", b: {create:{b: "2031", c :{create:{c: "2032", e: {create:{e: "2033"}}}}}}}){a}}""", project)
+
+    server.executeQuerySimple("""mutation{updateC(where: {c: "2022"}, data:{d: {create:[{d: "2024"},{d: "2025"}] }}){c}}""", project)
+    server.executeQuerySimple("""mutation{updateC(where: {c: "2032"}, data:{d: {create:[{d: "2034"},{d: "2035"}] }}){c}}""", project)
+
+    server.executeQuerySimpleThatMustFail(
+      """mutation{deleteA(where: {a:"2020"}){a}}""",
+      project,
+      errorCode = 3042,
+      errorContains = "The change you are trying to make would violate the required relation '_CToE' between C and E"
+    )
+  }
+
   //endregion
 
   //region  NESTED DELETE
@@ -344,6 +382,65 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiBaseSpec {
     server.executeQuerySimple("""query{ps{p, c {c}}}""", project).toString should be("""{"data":{"ps":[{"p":"p2","c":{"c":"c2"}}]}}""")
     server.executeQuerySimple("""query{cs{c, p {p}}}""", project).toString should be("""{"data":{"cs":[{"c":"c2","p":{"p":"p2"}}]}}""")
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_RelayId").as[Int]) should be(Vector(2))
+  }
+
+  "P1-C1-C1!-GC! relation updating the parent to delete the child and grandchild if marked cascading" should "work" in {
+    //         P-C-GC
+    val project = SchemaDsl() { schema =>
+      val parent     = schema.model("P").field_!("p", _.String, isUnique = true)
+      val child      = schema.model("C").field_!("c", _.String, isUnique = true)
+      val grandChild = schema.model("GC").field_!("gc", _.String, isUnique = true)
+
+      grandChild.oneToOneRelation_!("c", "gc", child, modelBOnDelete = OnDelete.Cascade)
+      child.oneToOneRelation("p", "c", parent)
+    }
+    database.setup(project)
+
+    server.executeQuerySimple("""mutation{createP(data:{p:"p", c: {create:{c: "c", gc :{create:{gc: "gc"}}}}}){p, c {c, gc{gc}}}}""", project)
+    server.executeQuerySimple("""mutation{createP(data:{p:"p2", c: {create:{c: "c2", gc :{create:{gc: "gc2"}}}}}){p, c {c,gc{gc}}}}""", project)
+
+    server.executeQuerySimple("""mutation{updateP(where: {p:"p"}, data: { c: {delete:{c:"c"}}}){id}}""", project)
+
+    server.executeQuerySimple("""query{ps{p, c {c, gc{gc}}}}""", project).toString should be(
+      """{"data":{"ps":[{"p":"p","c":null},{"p":"p2","c":{"c":"c2","gc":{"gc":"gc2"}}}]}}""")
+    server.executeQuerySimple("""query{cs{c, gc{gc}, p {p}}}""", project).toString should be(
+      """{"data":{"cs":[{"c":"c2","gc":{"gc":"gc2"},"p":{"p":"p2"}}]}}""")
+    server.executeQuerySimple("""query{gCs{gc, c {c, p{p}}}}""", project).toString should be(
+      """{"data":{"gCs":[{"gc":"gc2","c":{"c":"c2","p":{"p":"p2"}}}]}}""")
+
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_RelayId").as[Int]) should be(Vector(4))
+  }
+
+  "P1!-C1!-C1!-GC! relation updating the parent to delete the child and grandchild if marked cascading" should "error if the child is required on parent" in {
+    //         P-C-GC
+    val project = SchemaDsl() { schema =>
+      val parent     = schema.model("P").field_!("p", _.String, isUnique = true)
+      val child      = schema.model("C").field_!("c", _.String, isUnique = true)
+      val grandChild = schema.model("GC").field_!("gc", _.String, isUnique = true)
+
+      grandChild.oneToOneRelation_!("c", "gc", child, modelBOnDelete = OnDelete.Cascade)
+      child.oneToOneRelation_!("p", "c", parent)
+    }
+    database.setup(project)
+
+    server.executeQuerySimple("""mutation{createP(data:{p:"p", c: {create:{c: "c", gc :{create:{gc: "gc"}}}}}){p, c {c, gc{gc}}}}""", project)
+    server.executeQuerySimple("""mutation{createP(data:{p:"p2", c: {create:{c: "c2", gc :{create:{gc: "gc2"}}}}}){p, c {c,gc{gc}}}}""", project)
+
+    server.executeQuerySimpleThatMustFail(
+      """mutation{updateP(where: {p:"p"}, data: { c: {delete:{c:"c"}}}){id}}""",
+      project,
+      errorCode = 3042,
+      errorContains = "The change you are trying to make would violate the required relation '_CToP' between C and P"
+    )
+
+    server.executeQuerySimple("""query{ps{p, c {c, gc{gc}}}}""", project).toString should be(
+      """{"data":{"ps":[{"p":"p","c":{"c":"c","gc":{"gc":"gc"}}},{"p":"p2","c":{"c":"c2","gc":{"gc":"gc2"}}}]}}""")
+    server.executeQuerySimple("""query{cs{c, gc{gc}, p {p}}}""", project).toString should be(
+      """{"data":{"cs":[{"c":"c","gc":{"gc":"gc"},"p":{"p":"p"}},{"c":"c2","gc":{"gc":"gc2"},"p":{"p":"p2"}}]}}""")
+    server.executeQuerySimple("""query{gCs{gc, c {c, p{p}}}}""", project).toString should be(
+      """{"data":{"gCs":[{"gc":"gc","c":{"c":"c","p":{"p":"p"}}},{"gc":"gc2","c":{"c":"c2","p":{"p":"p2"}}}]}}""")
+
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_RelayId").as[Int]) should be(Vector(6))
   }
 
   //endregion
