@@ -8,7 +8,7 @@ import sangria.parser.QueryParser
 
 class SchemaInfererSpec extends WordSpec with Matchers {
 
-  val inferer      = SchemaInferrer()
+  val inferrer     = SchemaInferrer()
   val emptyProject = SchemaDsl().buildProject()
 
   "if a given relation does not exist yet, the inferer" should {
@@ -28,6 +28,28 @@ class SchemaInfererSpec extends WordSpec with Matchers {
       val relation = schema.getRelationByName_!("MyNameForTodoToComments")
       relation.modelAId should equal("Comment")
       relation.modelBId should equal("Todo")
+    }
+
+    "infer relations with the given name if a relation directive is provided on both sides and there are two relations between models" in {
+      val types =
+        """
+          |type User {
+          |  calls: [Call!]! @relation(name: "CallRequester")
+          |  calls_member: [Call!]! @relation(name: "CallMembers")
+          |}
+          |type Call {
+          |  created_by: User! @relation(name: "CallRequester")
+          |  members: [User!]! @relation(name: "CallMembers")
+          |}""".stripMargin.trim()
+      val schema = infer(emptyProject.schema, types).get
+
+      val relation = schema.getRelationByName_!("CallRequester")
+      relation.modelAId should equal("Call")
+      relation.modelBId should equal("User")
+
+      val relation2 = schema.getRelationByName_!("CallMembers")
+      relation2.modelAId should equal("Call")
+      relation2.modelBId should equal("User")
     }
 
     "infer relations with provided name if only one relation directive is given" in {
@@ -187,6 +209,6 @@ class SchemaInfererSpec extends WordSpec with Matchers {
 
   def infer(schema: Schema, types: String, mapping: SchemaMapping = SchemaMapping.empty): Or[Schema, ProjectSyntaxError] = {
     val document = QueryParser.parse(types).get
-    inferer.infer(schema, mapping, document)
+    inferrer.infer(schema, mapping, document)
   }
 }

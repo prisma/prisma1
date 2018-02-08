@@ -56,7 +56,8 @@ trait NestedRelationMutactionBaseClass extends ClientSqlDataChangeMutaction {
   }
 
   def requiredRelationViolation = throw RequiredRelationWouldBeViolated(project, parentInfo.relation)
-  def sysError                  = sys.error("This should not happen, since it means a many side is required")
+
+  def sysError = sys.error("This should not happen, since it means a many side is required")
 
   def causedByThisMutaction(relation: Relation, cause: String) = {
     val parentCheckString = s"`${relation.id}` OLDPARENTFAILURETRIGGER WHERE `${relation.sideOf(where.model)}`"

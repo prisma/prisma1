@@ -1,6 +1,6 @@
 package com.prisma.deploy.migration
 
-import com.prisma.shared.models.TypeIdentifier
+import com.prisma.shared.models.{OnDelete, TypeIdentifier}
 import sangria.ast._
 
 import scala.collection.Seq
@@ -23,8 +23,25 @@ object DataSchemaAstExtensions {
     def enumTypes: Vector[EnumTypeDefinition]              = doc.definitions collect { case x: EnumTypeDefinition => x }
 
     def relatedFieldOf(objectType: ObjectTypeDefinition, fieldDef: FieldDefinition): Option[FieldDefinition] = {
-      val relatedType = objectType_!(fieldDef.typeName)
-      relatedType.fields.find(_.typeName == objectType.name)
+      val otherFieldsOnOppositeModel = objectType_!(fieldDef.typeName) match {
+        case otherModel if otherModel.name == objectType.name => otherModel.fields.filter(_.typeName == objectType.name).filter(_.name != fieldDef.name)
+        case otherModel                                       => otherModel.fields.filter(_.typeName == objectType.name)
+      }
+      getOppositeField(fieldDef, otherFieldsOnOppositeModel)
+    }
+
+    private def getOppositeField(relationField: FieldDefinition, otherFieldsOnModelBRelatedToModelA: Vector[FieldDefinition]) = {
+      relationField.directive("relation") match {
+        case Some(directive) =>
+          otherFieldsOnModelBRelatedToModelA.find(field =>
+            field.directive("relation") match {
+              case Some(otherDirective) => directive.argument_!("name").value.renderCompact == otherDirective.argument_!("name").value.renderCompact
+              case None                 => false
+          })
+
+        case None =>
+          otherFieldsOnModelBRelatedToModelA.headOption
+      }
     }
   }
 
