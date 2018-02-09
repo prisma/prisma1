@@ -43,7 +43,7 @@ Once you have your account available, you need to generate a personal access tok
 
 <Instruction>
 
-Folle the instructions [here](https://docs.docker.com/machine/examples/ocean/#step-2-generate-a-personal-access-token) to obtain your personal access token.
+Follow the instructions [here](https://docs.docker.com/machine/examples/ocean/#step-2-generate-a-personal-access-token) to obtain your personal access token.
 
 Make sure to save the token, you'll need it in the next step.
 
@@ -275,7 +275,7 @@ docker-machine ip prisma
 
 </Instruction>
 
-Note that `prisma` is just the _name_ of the Droplet you initally created. This will print the IP address of that Droplet.
+Note that `prisma` is just the _name_ of the Droplet you initially created. This will print the IP address of that Droplet.
 
 <Instruction>
 
@@ -350,7 +350,7 @@ The CLI is now going to deploy the service to that cluster and write the `cluste
 
 <InfoBox>
 
-The Prisma CLI in that case acts as a _client_ for the Prisma Cluster API which is used to manage services on a spefic cluster. If you want to explore that Cluster API yourself, you can navigate your browser to `http://__DROPLET_IP_ADDRESS__:4466/cluster`. Similar to before, you'll have to replace the `__DROPLET_IP_ADDRESS__` placeholder with the actual IP address of your Digital Ocean Droplet.
+The Prisma CLI in that case acts as a _client_ for the Prisma Cluster API which is used to manage services on a specific cluster. If you want to explore that Cluster API yourself, you can navigate your browser to `http://__DROPLET_IP_ADDRESS__:4466/cluster`. Similar to before, you'll have to replace the `__DROPLET_IP_ADDRESS__` placeholder with the actual IP address of your Digital Ocean Droplet.
 
 </InfoBox>
 
