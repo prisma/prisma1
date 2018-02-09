@@ -174,7 +174,7 @@ drafts(parent, args, ctx, info) {
 },
 ```
 
-In fact, this already accounts for the requirement because it filters the `posts` and only retrieves the one for the authenticated `User`. So, there's nothing to do for you here.
+In fact, this already accounts for the requirement because it filters the `posts` and only retrieves the one for the authenticated `User`. So, there's nothing for you to do here.
 
 ### `post`
 
@@ -190,7 +190,7 @@ post(parent, { id }, ctx, info) {
 }
 ```
 
-It's very simple and straightforward! But now, you need to make sure that it only returns a `Post` if the `User` that sent the request is either the `author` of it _or_ and `ADMIN` user.
+It's very simple and straightforward! But now, you need to make sure that it only returns a `Post` if the `User` that sent the request is either the `author` of it _or_ an `ADMIN` user.
 
 You'll use the `exists` function of the `prisma-binding` package for that.
 
@@ -378,11 +378,11 @@ Copy the `token` and set it as the `Authorization` header in the bottom-left cor
 
 From now on, all requests sent through the Playground are sent _on behalf_ of the `User` you just created.
 
-Equipped with that knowledge, you can now play around with the available queries and mutations nd verify if the permission rules work.
+Equipped with that knowledge, you can now play around with the available queries and mutations and verify if the permission rules work.
 
 For example, you can go through the following flow:
 
-1. Create a new _draft_ with the `createDraft` mutation on behalf `Sarah` (the `User` you just created).
+1. Create a new _draft_ with the `createDraft` mutation on behalf of `Sarah` (the `User` you just created).
 1. Create another `User` with the `signup` mutation and ask for a `token` for them.
 1. Use the new authentication token to try and publish Sarah's draft. This should return the following error: `Post not found or you're not the author`.
 
