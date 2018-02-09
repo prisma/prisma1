@@ -55,7 +55,7 @@ Here are a few scenarios where node selection is required.
 ```graphql
 query {
   post(where: {
-    id: "ohco0iewee6eizidohwigheif"
+    email: "hello@graph.cool"
   }) {
     id
   }
