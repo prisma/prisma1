@@ -408,6 +408,47 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiBaseSpec {
     )
   }
 
+  "A required relation violation on the parent" should "roll back all cascading deletes on the path" in {
+
+    /**           A           If A!<->D! ia not marked cascading an existing D should cause all the deletes to fail
+      *         / | :         even if A<->B, A<->C and C<->E could successfully cascade.
+      *        B  C  D
+      *          |
+      *          E
+      */
+    val project = SchemaDsl() { schema =>
+      val a = schema.model("A").field_!("a", _.String, isUnique = true)
+      val b = schema.model("B").field_!("b", _.String, isUnique = true)
+      val c = schema.model("C").field_!("c", _.String, isUnique = true)
+      val d = schema.model("D").field_!("d", _.String, isUnique = true)
+      val e = schema.model("E").field_!("e", _.String, isUnique = true)
+
+      a.oneToOneRelation_!("d", "a", d)
+      a.oneToOneRelation_!("b", "a", b, modelAOnDelete = OnDelete.Cascade)
+      a.manyToManyRelation("c", "a", c, modelAOnDelete = OnDelete.Cascade)
+      c.oneToOneRelation_!("e", "c", e, modelAOnDelete = OnDelete.Cascade)
+    }
+    database.setup(project)
+
+    server.executeQuerySimple(
+      """mutation{createA(data:{a:"a", 
+        |                       b: {create: {b: "b"}},
+        |                       c: {create:[{c: "c1", e: {create:{e: "e"}}},{c: "c2", e: {create:{e: "e2"}}}]}, 
+        |                       d: {create: {d: "d"}}
+        |                      }){a}}""".stripMargin,
+      project
+    )
+
+    server.executeQuerySimpleThatMustFail(
+      """mutation{deleteA(where: {a:"a"}){a}}""",
+      project,
+      errorCode = 3042,
+      errorContains = "The change you are trying to make would violate the required relation '_AToD' between A and D"
+    )
+
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_RelayId").as[Int]) should be(Vector(7))
+  }
+
   "Several relations between the same model" should "be handled correctly" in {
 
     /**           A           If there are two relations between B and C and only one of them is marked
