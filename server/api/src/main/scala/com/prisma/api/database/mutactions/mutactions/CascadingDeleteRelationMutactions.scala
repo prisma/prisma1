@@ -2,7 +2,7 @@ package com.prisma.api.database.mutactions.mutactions
 
 import java.sql.SQLException
 
-import com.prisma.api.database.CascadingDeletes.Path
+import com.prisma.api.mutations.mutations.CascadingDeletes.Path
 import com.prisma.api.database.DatabaseMutationBuilder._
 import com.prisma.api.database.mutactions.{ClientSqlDataChangeMutaction, ClientSqlStatementResult}
 import com.prisma.api.schema.APIErrors.RequiredRelationWouldBeViolated
@@ -16,8 +16,7 @@ case class CascadingDeleteRelationMutactions(project: Project, path: Path) exten
 
   val relationFieldsNotOnPath      = path.lastModel.relationFields.filter(f => !path.edges.map(_.relation).contains(f.relation.get))
   val relationsWhereThisIsRequired = relationFieldsNotOnPath.filter(otherSideIsRequired).map(_.relation.get)
-
-  val requiredCheck = relationsWhereThisIsRequired.map(relation => oldParentFailureTriggerByPath(project, relation, path))
+  val requiredCheck                = relationsWhereThisIsRequired.map(relation => oldParentFailureTriggerByPath(project, relation, path))
 
   val deleteAction = List(cascadingDeleteChildActions(project.id, path))
 

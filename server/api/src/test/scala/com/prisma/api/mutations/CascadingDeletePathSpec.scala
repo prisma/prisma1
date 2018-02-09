@@ -1,7 +1,7 @@
 package com.prisma.api.mutations
 
 import com.prisma.api.ApiBaseSpec
-import com.prisma.api.database.CascadingDeletes._
+import com.prisma.api.mutations.mutations.CascadingDeletes._
 import com.prisma.api.schema.APIErrors.CascadingDeletePathLoops
 import com.prisma.shared.models._
 import com.prisma.shared.project_dsl.SchemaDsl

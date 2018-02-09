@@ -1,6 +1,6 @@
 package com.prisma.api.database
 
-import com.prisma.api.database.CascadingDeletes.Path
+import com.prisma.api.mutations.mutations.CascadingDeletes.Path
 import com.prisma.api.database.SlickExtensions._
 import com.prisma.api.database.Types.DataItemFilterCollection
 import com.prisma.api.mutations.{CoolArgs, NodeSelector, ParentInfo}
@@ -326,7 +326,7 @@ object DatabaseMutationBuilder {
         val last = x.last
         sql"(SELECT `#${last.relation.sideOf(last.child)}`" ++
           sql" FROM (SELECT * FROM `#$projectId`.`#${last.relation.id}`) PATHQUERY" ++
-          sql" WHERE `#${last.relation.sideOf(last.parent)}` IN " ++ pathQuery(projectId, path.cutOne) ++ sql")"
+          sql" WHERE `#${last.relation.sideOf(last.parent)}` IN " ++ pathQuery(projectId, path.removeLastEdge) ++ sql")"
     }
   }
 

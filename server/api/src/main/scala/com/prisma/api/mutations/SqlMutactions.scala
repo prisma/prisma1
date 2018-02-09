@@ -1,12 +1,15 @@
 package com.prisma.api.mutations
+import com.prisma.api.ApiMetrics
 import com.prisma.api.database.mutactions.mutactions._
 import com.prisma.api.database.mutactions.{ClientSqlDataChangeMutaction, ClientSqlMutaction}
-import com.prisma.api.database.{CascadingDeletes, DataItem, DataResolver, DatabaseMutationBuilder}
+import com.prisma.api.database.{DataItem, DataResolver, DatabaseMutationBuilder}
+import com.prisma.api.mutations.mutations.CascadingDeletes.{Path, collectPaths}
 import com.prisma.api.schema.APIErrors.RelationIsRequired
 import com.prisma.shared.models.IdType.Id
-import com.prisma.shared.models.{Field, Model, Relation}
+import com.prisma.shared.models.{Field, Model, Project, Relation}
 import cool.graph.cuid.Cuid.createCuid
 import slick.dbio.{DBIOAction, Effect, NoStream}
+
 import scala.collection.immutable.Seq
 
 case class CreateMutactionsResult(createMutaction: CreateDataItem,
@@ -24,23 +27,26 @@ case class ParentInfo(field: Field, where: NodeSelector) {
   )
 }
 
-// Todo start collecting metrics on nr of mutactions created
 case class SqlMutactions(dataResolver: DataResolver) {
   val project = dataResolver.project
 
-  def getMutactionsForDelete(where: NodeSelector, previousValues: DataItem, id: String): List[ClientSqlMutaction] = {
-    val cascadingDeleteMutactions = CascadingDeletes.generateCascadingDeleteMutactions(project, where)
-    cascadingDeleteMutactions ++ List(DeleteRelationMutaction(project, where), DeleteDataItem(project, where, previousValues, id))
+  def report(mutactions: Seq[ClientSqlMutaction]): Seq[ClientSqlMutaction] = {
+    ApiMetrics.mutactionCount.incBy(mutactions.size, project.id)
+    mutactions
   }
 
-  def getMutactionsForUpdate(where: NodeSelector, args: CoolArgs, id: Id, previousValues: DataItem): Vector[ClientSqlMutaction] = {
+  def getMutactionsForDelete(where: NodeSelector, previousValues: DataItem, id: String): Seq[ClientSqlMutaction] = report {
+    generateCascadingDeleteMutactions(project, where) ++ List(DeleteRelationMutaction(project, where), DeleteDataItem(project, where, previousValues, id))
+  }
+
+  def getMutactionsForUpdate(where: NodeSelector, args: CoolArgs, id: Id, previousValues: DataItem): Seq[ClientSqlMutaction] = report {
     val updateMutaction = getUpdateMutactions(where, args, id, previousValues)
     val nested          = getMutactionsForNestedMutation(args, currentWhere(where, args), triggeredFromCreate = false)
 
     updateMutaction ++ nested
   }
 
-  def getMutactionsForCreate(model: Model, args: CoolArgs, id: Id): Vector[ClientSqlMutaction] = {
+  def getMutactionsForCreate(model: Model, args: CoolArgs, id: Id): Seq[ClientSqlMutaction] = report {
     val where            = NodeSelector.forId(model, id)
     val createMutactions = getCreateMutactions(where, args)
     val nestedMutactions = getMutactionsForNestedMutation(args, where, triggeredFromCreate = true)
@@ -49,14 +55,15 @@ case class SqlMutactions(dataResolver: DataResolver) {
   }
 
   // we need to rethink this thoroughly, we need to prevent both branches of executing their nested mutations
-  def getMutactionsForUpsert(outerWhere: NodeSelector, createWhere: NodeSelector, updateWhere: NodeSelector, allArgs: CoolArgs): List[ClientSqlMutaction] = {
-    val upsertMutaction = UpsertDataItem(project, outerWhere, createWhere, updateWhere, allArgs, dataResolver)
+  def getMutactionsForUpsert(outerWhere: NodeSelector, createWhere: NodeSelector, updateWhere: NodeSelector, allArgs: CoolArgs): Seq[ClientSqlMutaction] =
+    report {
+      val upsertMutaction = UpsertDataItem(project, outerWhere, createWhere, updateWhere, allArgs, dataResolver)
 
 //    val updateNested = getMutactionsForNestedMutation(allArgs.updateArgumentsAsCoolArgs, updatedOuterWhere, triggeredFromCreate = false)
 //    val createNested = getMutactionsForNestedMutation(allArgs.createArgumentsAsCoolArgs, createWhere, triggeredFromCreate = true)
 
-    List(upsertMutaction) //++ updateNested ++ createNested
-  }
+      List(upsertMutaction) //++ updateNested ++ createNested
+    }
 
   def getCreateMutactions(where: NodeSelector, args: CoolArgs): Vector[ClientSqlMutaction] = {
     CreateDataItem(project, where, args) +: getMutactionsForScalarLists(where, args)
@@ -178,7 +185,7 @@ case class SqlMutactions(dataResolver: DataResolver) {
 
   def getMutactionsForNestedDeleteMutation(nestedMutation: NestedMutation, parentInfo: ParentInfo): Seq[ClientSqlMutaction] = {
     nestedMutation.deletes.flatMap { delete =>
-      val cascadingDeleteMutactions = CascadingDeletes.generateCascadingDeleteMutactions(project, delete.where)
+      val cascadingDeleteMutactions = generateCascadingDeleteMutactions(project, delete.where)
       cascadingDeleteMutactions ++ List(DeleteRelationMutaction(project, delete.where), DeleteDataItemNested(project, delete.where))
     }
   }
@@ -214,6 +221,27 @@ case class SqlMutactions(dataResolver: DataResolver) {
     val whereFieldValue = args.raw.get(where.field.name)
     val updatedWhere    = whereFieldValue.map(where.updateValue).getOrElse(where)
     updatedWhere
+  }
+
+  def generateCascadingDeleteMutactions(project: Project, where: NodeSelector): List[ClientSqlMutaction] = {
+    def getMutactionsForEdges(paths: List[Path]): List[ClientSqlMutaction] = {
+      paths.filter(_.edges.nonEmpty) match {
+        case res if res.isEmpty =>
+          List.empty
+
+        case x =>
+          val maxPathLength     = x.map(_.edges.length).max
+          val longestPaths      = x.filter(_.edges.length == maxPathLength)
+          val longestMutactions = longestPaths.map(CascadingDeleteRelationMutactions(project, _))
+          val shortenedPaths    = longestPaths.map(_.removeLastEdge) // todo to set? to cut duplicates?
+          val newPaths          = x.filter(_.edges.length < maxPathLength) ++ shortenedPaths
+
+          longestMutactions ++ getMutactionsForEdges(newPaths)
+      }
+    }
+
+    val paths: List[Path] = collectPaths(project, where, where.model)
+    getMutactionsForEdges(paths)
   }
 }
 
