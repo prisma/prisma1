@@ -8,43 +8,42 @@ class MetricsTagSpec extends FlatSpec with Matchers {
     val manager = new TestMetricsManager()
     val counter = manager.defineCounter("testCounter")
 
-    counter.constructMetricString(0, Seq("1", "2")) should equal("TestService.testCounter#env=test,instance=local,container=none")
+    counter.constructMetricString(0, Seq("1", "2")) should equal("testCounter#env=test,instance=local,container=none")
   }
 
   it should "have the correct metrics tags with custom metrics set" in {
     val manager = new TestMetricsManager()
     val counter = manager.defineCounter("testCounter", CustomTag("testCustomTag1"), CustomTag("testCustomTag2"))
 
-    counter.constructMetricString(0, Seq("1", "2")) should equal(
-      "TestService.testCounter#env=test,instance=local,container=none,testCustomTag1=1,testCustomTag2=2")
+    counter.constructMetricString(0, Seq("1", "2")) should equal("testCounter#env=test,instance=local,container=none,testCustomTag1=1,testCustomTag2=2")
   }
 
   it should "have the correct metrics tags for gauges" in {
     val manager = new TestMetricsManager()
     val gauge   = manager.defineGauge("testCounter", (CustomTag("testCustomTag1"), "1"), (CustomTag("testCustomTag2"), "2"))
 
-    gauge.constructedMetricName should equal("TestService.testCounter#env=test,instance=local,container=none,testCustomTag1=1,testCustomTag2=2")
+    gauge.constructedMetricName should equal("testCounter#env=test,instance=local,container=none,testCustomTag1=1,testCustomTag2=2")
   }
 
   it should "have the correct metrics tags for timers" in {
     val manager = new TestMetricsManager()
     val timer   = manager.defineTimer("testTimer", CustomTag("projectId"))
 
-    timer.constructMetricString(0, Seq("1234")) should equal("TestService.testTimer#env=test,instance=local,container=none,projectId=1234")
+    timer.constructMetricString(0, Seq("1234")) should equal("testTimer#env=test,instance=local,container=none,projectId=1234")
   }
 
   it should "ignore custom metric tags if the number of provided values doesn't match" in {
     val manager = new TestMetricsManager()
     val counter = manager.defineCounter("testCounter", CustomTag("testCustomTag1"), CustomTag("testCustomTag2"))
 
-    counter.constructMetricString(0, Seq("1")) should equal("TestService.testCounter#env=test,instance=local,container=none")
+    counter.constructMetricString(0, Seq("1")) should equal("testCounter#env=test,instance=local,container=none")
   }
 
   it should "not record a custom tag value if the recorded value is above the specified threshold" in {
     val manager = new TestMetricsManager()
     val timer   = manager.defineTimer("testTimer", CustomTag("projectId", recordingThreshold = 100))
 
-    timer.constructMetricString(90, Seq("1234")) should equal("TestService.testTimer#env=test,instance=local,container=none,projectId=-")
+    timer.constructMetricString(90, Seq("1234")) should equal("testTimer#env=test,instance=local,container=none,projectId=-")
   }
 
   // Only run if you want some live metrics in librato
