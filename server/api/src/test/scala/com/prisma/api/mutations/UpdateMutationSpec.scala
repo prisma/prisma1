@@ -199,7 +199,7 @@ class UpdateMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
 
     res.toString should be("""{"data":{"updateTodo":{"title":null,"text":"some text"}}}""")
 
-    server.executeQuerySimple("""{"data":{"todoes":[{"title":null,"text":"some text"}]}}""", project)
+    server.executeQuerySimple("""query{todoes{title, text}}""", project).toString should be("""{"data":{"todoes":[{"title":null,"text":"some text"}]}}""")
 
   }
 }
