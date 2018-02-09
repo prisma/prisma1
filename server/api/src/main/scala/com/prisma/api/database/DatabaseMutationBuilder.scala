@@ -1,6 +1,7 @@
 package com.prisma.api.database
 
 import com.prisma.api.database.CascadingDeletes.Path
+import com.prisma.api.database.SlickExtensions._
 import com.prisma.api.database.Types.DataItemFilterCollection
 import com.prisma.api.mutations.{CoolArgs, NodeSelector, ParentInfo}
 import com.prisma.api.schema.GeneralError
@@ -11,16 +12,12 @@ import slick.dbio.{DBIOAction, Effect, NoStream}
 import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.SQLActionBuilder
 import slick.sql.{SqlAction, SqlStreamingAction}
-
 import scala.concurrent.ExecutionContext.Implicits.global
 
 object DatabaseMutationBuilder {
-
-  import SlickExtensions._
-
   val implicitlyCreatedColumns = List("id", "createdAt", "updatedAt")
 
-  //CREATE
+  // region CREATE
 
   private def combineKeysAndValuesSeparately(args: CoolArgs) = {
     val escapedKeyValueTuples = args.raw.toList.map(x => (escapeKey(x._1), escapeUnsafeParam(x._2)))
@@ -31,7 +28,7 @@ object DatabaseMutationBuilder {
 
   def createDataItem(projectId: String, modelName: String, args: CoolArgs): SqlStreamingAction[Vector[Int], Int, Effect]#ResultAction[Int, NoStream, Effect] = {
     val (escapedKeys: Option[SQLActionBuilder], escapedValues: Option[SQLActionBuilder]) = combineKeysAndValuesSeparately(args)
-    (sql"insert into `#$projectId`.`#$modelName` (" ++ escapedKeys ++ sql") values (" ++ escapedValues ++ sql")").asUpdate
+    (sql"INSERT INTO `#$projectId`.`#$modelName` (" ++ escapedKeys ++ sql") VALUES (" ++ escapedValues ++ sql")").asUpdate
   }
 
   def createDataItemIfUniqueDoesNotExist(projectId: String,
@@ -42,7 +39,7 @@ object DatabaseMutationBuilder {
     (sql"INSERT INTO `#${projectId}`.`#${where.model.name}` (" ++ escapedKeys ++ sql")" ++
       sql"SELECT " ++ escapedValues ++
       sql"FROM DUAL" ++
-      sql"where not exists " ++ idFromWhere(projectId, where) ++ sql";").asUpdate
+      sql"WHERE NOT EXISTS " ++ idFromWhere(projectId, where) ++ sql";").asUpdate
   }
 
   def createRelationRow(projectId: String,
@@ -65,26 +62,29 @@ object DatabaseMutationBuilder {
       sql"on duplicate key update `#$projectId`.`#${parentInfo.relation.id}`.id=`#$projectId`.`#${parentInfo.relation.id}`.id").asUpdate
   }
 
-  //UPDATE
+  //endregion
+
+  //region UPDATE
 
   def updateDataItems(projectId: String, model: Model, args: CoolArgs, whereFilter: DataItemFilterCollection) = {
     val updateValues = combineByComma(args.raw.map { case (k, v) => escapeKey(k) ++ sql" = " ++ escapeUnsafeParam(v) })
     val whereSql     = QueryArguments.generateFilterConditions(projectId, model.name, whereFilter)
-    (sql"update `#${projectId}`.`#${model.name}`" ++ sql"set " ++ updateValues ++ prefixIfNotNone("where", whereSql)).asUpdate
+    (sql"UPDATE `#${projectId}`.`#${model.name}`" ++ sql"SET " ++ updateValues ++ prefixIfNotNone("where", whereSql)).asUpdate
   }
 
   def updateDataItemByUnique(projectId: String, where: NodeSelector, updateArgs: CoolArgs) = {
     val updateValues = combineByComma(updateArgs.raw.map { case (k, v) => escapeKey(k) ++ sql" = " ++ escapeUnsafeParam(v) })
     if (updateArgs.isNonEmpty) {
-      (sql"update `#${projectId}`.`#${where.model.name}`" ++
-        sql"set " ++ updateValues ++
-        sql"where `#${where.field.name}` = ${where.fieldValue};").asUpdate
+      (sql"UPDATE `#${projectId}`.`#${where.model.name}`" ++
+        sql"SET " ++ updateValues ++
+        sql"WHERE `#${where.field.name}` = ${where.fieldValue};").asUpdate
     } else {
       DBIOAction.successful(())
     }
   }
+  //endregion
 
-  //UPSERT
+  //region UPSERT
 
   def upsert(projectId: String,
              where: NodeSelector,
@@ -117,16 +117,17 @@ object DatabaseMutationBuilder {
 
     ifThenElse(q, qUpdate, qInsert)
   }
+  //endregion
 
-  //DELETE
+  //region DELETE
 
   def deleteDataItems(project: Project, model: Model, whereFilter: DataItemFilterCollection) = {
     val whereSql = QueryArguments.generateFilterConditions(project.id, model.name, whereFilter)
-    (sql"delete from `#${project.id}`.`#${model.name}`" ++ prefixIfNotNone("where", whereSql)).asUpdate
+    (sql"DELETE FROM `#${project.id}`.`#${model.name}`" ++ prefixIfNotNone("where", whereSql)).asUpdate
   }
 
   def deleteDataItemByUnique(projectId: String, where: NodeSelector) =
-    sqlu"delete from `#$projectId`.`#${where.model.name}` where `#${where.field.name}` = ${where.fieldValue}"
+    sqlu"DELETE FROM `#$projectId`.`#${where.model.name}` WHERE `#${where.field.name}` = ${where.fieldValue}"
 
   def deleteRelayIds(project: Project, model: Model, whereFilter: DataItemFilterCollection) = {
     val whereSql = QueryArguments.generateFilterConditions(project.id, model.name, whereFilter)
@@ -141,7 +142,8 @@ object DatabaseMutationBuilder {
     (sql"DELETE FROM `#$projectId`.`_RelayId` WHERE `id`" ++ idFromWhereEquals(projectId, where)).asUpdate
 
   def deleteRelationRowByParent(projectId: String, parentInfo: ParentInfo) = {
-    (sql"DELETE FROM `#$projectId`.`#${parentInfo.relation.id}` WHERE `#${parentInfo.field.relationSide.get}` = " ++ idFromWhere(projectId, parentInfo.where)).asUpdate
+    (sql"DELETE FROM `#$projectId`.`#${parentInfo.relation.id}` WHERE `#${parentInfo.field.relationSide.get}`" ++ idFromWhereEquals(projectId,
+                                                                                                                                    parentInfo.where)).asUpdate
   }
 
   def deleteRelationRowByChild(projectId: String, relation: Relation, where: NodeSelector) = {
@@ -149,13 +151,13 @@ object DatabaseMutationBuilder {
   }
 
   def deleteRelationRowByParentAndChild(projectId: String, parentInfo: ParentInfo, where: NodeSelector) = {
-
-    (sql"delete from `#$projectId`.`#${parentInfo.relation.id}` " ++
-      sql"where `#${parentInfo.field.oppositeRelationSide.get}` = " ++ idFromWhere(projectId, where) ++
+    (sql"DELETE FROM `#$projectId`.`#${parentInfo.relation.id}` " ++
+      sql"WHERE `#${parentInfo.field.oppositeRelationSide.get}`" ++ idFromWhereEquals(projectId, where) ++
       sql" AND `#${parentInfo.field.relationSide.get}`" ++ idFromWhereEquals(projectId, parentInfo.where)).asUpdate
   }
+  //endregion
 
-  //CASCADING DELETE
+  //region CASCADING DELETE
 
   def cascadingDeleteChildActions(projectId: String, path: Path) = {
     val deleteRelayIds  = (sql"DELETE FROM `#$projectId`.`_RelayId` WHERE `id` IN " ++ pathQuery(projectId, path)).asUpdate
@@ -170,8 +172,9 @@ object DatabaseMutationBuilder {
 
     triggerFailureWhenExists(project, query, relation.id)
   }
+  //endregion
 
-  //SCALAR LISTS
+  //region SCALAR LISTS
 
   def setScalarList(projectId: String, where: NodeSelector, fieldName: String, values: Vector[Any]) = {
     val escapedValueTuples = for {
@@ -207,8 +210,18 @@ object DatabaseMutationBuilder {
         ))
       .map(_.last)
   }
+  //endregion
 
-  //HELPERS
+  //region RESET DATA
+
+  // todo roll this into one query
+  def disableForeignKeyConstraintChecks                   = sqlu"SET FOREIGN_KEY_CHECKS=0"
+  def truncateTable(projectId: String, tableName: String) = sqlu"TRUNCATE TABLE `#$projectId`.`#$tableName`"
+  def enableForeignKeyConstraintChecks                    = sqlu"SET FOREIGN_KEY_CHECKS=1"
+
+  //endregion
+
+  // region HELPERS
   // Todo We could save a ton of queries here if we do not run extra queries if it is a IdNodeSelector Probably only works on =
 
   def idFromWhere(projectId: String, where: NodeSelector): SQLActionBuilder = {
@@ -317,13 +330,6 @@ object DatabaseMutationBuilder {
     }
   }
 
-  //RESET DATA
-
-  //only use transactionally in this order
-  def disableForeignKeyConstraintChecks                   = sqlu"SET FOREIGN_KEY_CHECKS=0"
-  def truncateTable(projectId: String, tableName: String) = sqlu"TRUNCATE TABLE `#$projectId`.`#$tableName`"
-  def enableForeignKeyConstraintChecks                    = sqlu"SET FOREIGN_KEY_CHECKS=1"
-
   // note: utf8mb4 requires up to 4 bytes per character and includes full utf8 support, including emoticons
   // utf8 requires up to 3 bytes per character and does not have full utf8 support.
   // mysql indexes have a max size of 767 bytes or 191 utf8mb4 characters.
@@ -345,4 +351,5 @@ object DatabaseMutationBuilder {
       case TypeIdentifier.Relation  => sys.error("Relation is not a scalar type. Are you trying to create a db column for a relation?")
     }
   }
+  //endregion
 }
