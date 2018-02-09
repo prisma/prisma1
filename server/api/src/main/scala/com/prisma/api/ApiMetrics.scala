@@ -2,7 +2,7 @@ package com.prisma.api
 
 import com.prisma.errors.BugsnagErrorReporter
 import com.prisma.metrics.{CustomTag, MetricsManager}
-import com.prisma.profiling.MemoryProfiler
+import com.prisma.profiling.{JvmProfiler, MemoryProfiler}
 
 object ApiMetrics extends MetricsManager(BugsnagErrorReporter(sys.env.getOrElse("BUGSNAG_API_KEY", ""))) {
   // this is intentionally empty. Since we don't define metrics here, we need to load the object once so the profiler kicks in.
@@ -19,7 +19,7 @@ object ApiMetrics extends MetricsManager(BugsnagErrorReporter(sys.env.getOrElse(
       }
       .mkString
 
-  MemoryProfiler.schedule(this)
+  JvmProfiler.schedule(this)
 
   val projectCacheGetCount          = defineCounter("projectCacheGetCount")
   val projectCacheMissCount         = defineCounter("projectCacheMissCount")
