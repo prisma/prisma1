@@ -119,19 +119,7 @@ case class SchemaInferrerImpl(
       val model2 = relationField.typeName
 
       val model1OnDelete: OnDelete.Value = getOnDeleteFromField(relationField)
-
-      val model2OnDelete: OnDelete.Value = sdl.objectType(model2) match {
-        case None =>
-          sys.error("The other model should always exist.")
-
-        case Some(secondModel) if secondModel.name == model1 => //self relation
-          val otherFieldsOnModel2RelatedToModel1: Vector[FieldDefinition] = secondModel.fields.filter(_.typeName == model1).filter(_.name != relationField.name)
-          getOppositeField(relationField, otherFieldsOnModel2RelatedToModel1).map(getOnDeleteFromField).getOrElse(OnDelete.SetNull)
-
-        case Some(secondModel) if secondModel.name != model1 =>
-          val fieldsOnModel2RelatedToModel1: Vector[FieldDefinition] = secondModel.fields.filter(_.typeName == model1)
-          getOppositeField(relationField, fieldsOnModel2RelatedToModel1).map(getOnDeleteFromField).getOrElse(OnDelete.SetNull)
-      }
+      val model2OnDelete: OnDelete.Value = sdl.relatedFieldOf(objectType, relationField).map(getOnDeleteFromField).getOrElse(OnDelete.SetNull)
 
       val (modelA, modelAOnDelete, modelB, modelBOnDelete) =
         if (model1 < model2) (model1, model1OnDelete, model2, model2OnDelete) else (model2, model2OnDelete, model1, model1OnDelete)
@@ -141,14 +129,15 @@ case class SchemaInferrerImpl(
         * 2: has no relation directive but there's a related field with directive. Use name of the related field.
         * 3: use auto generated name else
         */
+      //TODO this will generate duplicate relationnames in cases where there are two unnamed relations between the same models, then sql will blow up on duplicate table name
       def generateRelationName: String = {
         def concat(modelName: String, otherModelName: String): String = {
-          val concatenedString = s"${modelName}To${otherModelName}"
+          val concatenatedString = s"${modelName}To${otherModelName}"
 
-          !NameConstraints.isValidRelationName(concatenedString) match {
+          !NameConstraints.isValidRelationName(concatenatedString) match {
             case true if otherModelName.length > modelName.length => concat(modelName, otherModelName.substring(0, otherModelName.length - 1))
             case true                                             => concat(modelName.substring(0, modelName.length - 1), otherModelName)
-            case false                                            => concatenedString
+            case false                                            => concatenatedString
           }
         }
         concat(modelA, modelB)
@@ -178,35 +167,20 @@ case class SchemaInferrerImpl(
             name = relationName,
             modelAId = nextModelAId,
             modelBId = nextModelBId,
-            modelAOnDelete = OnDelete.SetNull, //modelAOnDelete,
-            modelBOnDelete = OnDelete.SetNull //modelBOnDelete
+            modelAOnDelete = modelAOnDelete,
+            modelBOnDelete = modelBOnDelete
           )
         case None =>
           Relation(
             name = relationName,
             modelAId = modelA,
             modelBId = modelB,
-            modelAOnDelete = OnDelete.SetNull, //modelAOnDelete,
-            modelBOnDelete = OnDelete.SetNull //modelBOnDelete
+            modelAOnDelete = modelAOnDelete,
+            modelBOnDelete = modelBOnDelete
           )
       }
     }
-
     tmp.groupBy(_.name).values.flatMap(_.headOption).toSet
-  }
-
-  private def getOppositeField(relationField: FieldDefinition, otherFieldsOnModelBRelatedToModelA: Vector[FieldDefinition]) = {
-
-    val field = relationField.directive("relation") match {
-      case Some(directive) =>
-        otherFieldsOnModelBRelatedToModelA.find(field =>
-          field.directive("relation") match {
-            case Some(otherDirective) => directive.argument_!("name").value.renderCompact == otherDirective.argument_!("name").value.renderCompact
-            case None                 => false
-        })
-      case None => otherFieldsOnModelBRelatedToModelA.headOption
-    }
-    field
   }
 
   private def getOnDeleteFromField(field: FieldDefinition): OnDelete.Value = {

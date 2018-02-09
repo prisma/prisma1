@@ -1,5 +1,6 @@
 package com.prisma.util.gc_value
 
+import com.prisma.api.mutations.NodeSelector
 import com.prisma.gc_values._
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
 import com.prisma.shared.models.{Field, TypeIdentifier}
@@ -26,8 +27,6 @@ import scala.util.{Failure, Success}
   * 5.  SangriaValue  <->  String      for reading and writing default and migrationValues
   * 6.  InputString   <->  GCValue     chains String -> SangriaValue -> GCValue and back
   */
-
-
 /**
   * 0. This gets us a GCValue as String or Any without requiring context like field it therefore only works from GCValue
   * Can be made a singleton
@@ -41,7 +40,7 @@ object GCValueExtractor {
     }
   }
 
-   def fromGCValue(t: GCValue): Any = {
+  def fromGCValue(t: GCValue): Any = {
     t match {
       case NullGCValue         => None
       case x: StringGCValue    => x.value
@@ -68,21 +67,22 @@ case class GCDBValueConverter(typeIdentifier: TypeIdentifier, isList: Boolean) e
   override def toGCValue(t: Any): Or[GCValue, InvalidValueForScalarType] = {
     try {
       val result = (t, typeIdentifier) match {
-        case (x: String, TypeIdentifier.String)                 => StringGCValue(x)
-        case (x: Int, TypeIdentifier.Int)                       => IntGCValue(x)
-        case (x: Float, TypeIdentifier.Float)                   => FloatGCValue(x)
-        case (x: Double, TypeIdentifier.Float)                  => FloatGCValue(x)
-        case (x: Boolean, TypeIdentifier.Boolean)               => BooleanGCValue(x)
-        case (x: java.sql.Timestamp, TypeIdentifier.DateTime)   => DateTimeGCValue(DateTime.parse(x.toString, DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSS").withZoneUTC()))
-        case (x: DateTime, TypeIdentifier.DateTime)             => DateTimeGCValue(x)
-        case (x: String, TypeIdentifier.GraphQLID)              => GraphQLIdGCValue(x)
-        case (x: String, TypeIdentifier.Enum)                   => EnumGCValue(x)
-        case (x: String, TypeIdentifier.Json)                   => JsonGCValue(Json.parse(x))
-        case (x: PlayJsObject, TypeIdentifier.Json)             => JsonGCValue(x)
-        case (x: SprayJsObject, TypeIdentifier.Json)            => JsonGCValue(Json.parse(x.compactPrint))
-        case (x: Vector[Any], _) if isList                      => sequence(x.map(this.toGCValue)).map(seq => ListGCValue(seq)).get
-        case (None, _)                                          => NullGCValue
-        case _                                                  => sys.error("Error in GCDBValueConverter. Value: " + t.toString)
+        case (x: String, TypeIdentifier.String)   => StringGCValue(x)
+        case (x: Int, TypeIdentifier.Int)         => IntGCValue(x)
+        case (x: Float, TypeIdentifier.Float)     => FloatGCValue(x)
+        case (x: Double, TypeIdentifier.Float)    => FloatGCValue(x)
+        case (x: Boolean, TypeIdentifier.Boolean) => BooleanGCValue(x)
+        case (x: java.sql.Timestamp, TypeIdentifier.DateTime) =>
+          DateTimeGCValue(DateTime.parse(x.toString, DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSS").withZoneUTC()))
+        case (x: DateTime, TypeIdentifier.DateTime)  => DateTimeGCValue(x)
+        case (x: String, TypeIdentifier.GraphQLID)   => GraphQLIdGCValue(x)
+        case (x: String, TypeIdentifier.Enum)        => EnumGCValue(x)
+        case (x: String, TypeIdentifier.Json)        => JsonGCValue(Json.parse(x))
+        case (x: PlayJsObject, TypeIdentifier.Json)  => JsonGCValue(x)
+        case (x: SprayJsObject, TypeIdentifier.Json) => JsonGCValue(Json.parse(x.compactPrint))
+        case (x: Vector[Any], _) if isList           => sequence(x.map(this.toGCValue)).map(seq => ListGCValue(seq)).get
+        case (None, _)                               => NullGCValue
+        case _                                       => sys.error("Error in GCDBValueConverter. Value: " + t.toString)
       }
 
       Good(result)
@@ -423,4 +423,29 @@ object OtherGCStuff {
     }
     recurse(seq)(Vector.empty)
   }
+
+  /**
+    * This is used to parse SQL exceptions for references of specific GCValues
+    */
+  def parameterStringFromSQLException(where: NodeSelector) = where.fieldValue match {
+    case StringGCValue(x)      => s"parameters ['$x',"
+    case IntGCValue(x)         => s"parameters [$x,"
+    case FloatGCValue(x)       => s"parameters [$x,"
+    case BooleanGCValue(false) => s"parameters [0,"
+    case BooleanGCValue(true)  => s"parameters [1,"
+    case GraphQLIdGCValue(x)   => s"parameters ['$x',"
+    case EnumGCValue(x)        => s"parameters ['$x',"
+    case DateTimeGCValue(x)    => s"parameters ['${dateTimeFromISO8601(x)}'," // Todo
+    case JsonGCValue(x)        => s"parameters ['$x'," // Todo
+    case ListGCValue(_)        => sys.error("Not an acceptable Where")
+    case RootGCValue(_)        => sys.error("Not an acceptable Where")
+    case NullGCValue           => sys.error("Not an acceptable Where")
+  }
+
+  private def dateTimeFromISO8601(v: Any) = {
+    val string = v.toString
+    //"2017-12-05T12:34:23.000Z" to "2017-12-05T12:34:23.000" which MySQL will accept
+    string.replace("Z", "")
+  }
+
 }

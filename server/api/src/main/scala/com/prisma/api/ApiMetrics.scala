@@ -27,5 +27,6 @@ object ApiMetrics extends MetricsManager(BugsnagErrorReporter(sys.env.getOrElse(
   val sqlQueryTimer                 = defineTimer("sqlQueryTimer", CustomTag("projectId", recordingThreshold = 1000), CustomTag("queryName", recordingThreshold = 1000))
   val sqlDataChangeMutactionTimer   = defineTimer("sqlDataChangeMutactionTimer", CustomTag("projectId", recordingThreshold = 1000))
   val requestDuration               = defineTimer("requestDuration", CustomTag("projectId", recordingThreshold = 1500))
+  val mutactionCount                = defineCounter("mutactionCount", CustomTag("projectId", recordingThreshold = 100))
 
 }

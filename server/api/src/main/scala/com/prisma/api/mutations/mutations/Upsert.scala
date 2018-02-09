@@ -33,7 +33,7 @@ case class Upsert(
 
   override def prepareMutactions(): Future[List[MutactionGroup]] = {
 
-    val sqlMutactions        = SqlMutactions(dataResolver).getMutactionsForUpsert(outerWhere, createWhere, updatedWhere, CoolArgs(args.raw))
+    val sqlMutactions        = SqlMutactions(dataResolver).getMutactionsForUpsert(outerWhere, createWhere, updatedWhere, CoolArgs(args.raw)).toList
     val transactionMutaction = TransactionMutaction(sqlMutactions, dataResolver)
 //    val subscriptionMutactions = SubscriptionEvents.extractFromSqlMutactions(project, mutationId, sqlMutactions).toList
 //    val sssActions             = ServerSideSubscription.extractFromMutactions(project, sqlMutactions, requestId = "").toList

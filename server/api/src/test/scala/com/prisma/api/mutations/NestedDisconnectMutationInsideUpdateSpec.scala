@@ -165,7 +165,7 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(0))
   }
 
-  "a P1 to C1  relation with the child and the parent without a relation" should "be disconnectable through a nested mutation by id" in {
+  "a P1 to C1  relation with the child and the parent without a relation" should "not be disconnectable through a nested mutation by id" in {
     val project = SchemaDsl() { schema =>
       val child = schema.model("Child").field_!("c", _.String, isUnique = true)
       schema.model("Parent").field_!("p", _.String, isUnique = true).oneToOneRelation("childOpt", "parentOpt", child)
