@@ -12,7 +12,7 @@ description: An overview of Prisma.
 Prisma is a _GraphQL database abstraction layer_ that turns your database into a GraphQL API. Rather than directly writing SQL or using a NoSQL API (like MongoDB), you get to interact with your data using GraphQL:
 
 * **Powerful CRUD GraphQL API**: Reading and writing data is done with GraphQL queries and mutations (including out-of-the-box realtime support with GraphQL subscriptions)
-* **Flexible data modelling & migrations**: Define your data model and schema migrations using GraphQL's expressive [schema definition language](https://blog.graph.cool/graphql-sdl-schema-definition-language-6755bcb9ce51) (SDL)
+* **Flexible data modeling & migrations**: Define your data model and schema migrations using GraphQL's expressive [schema definition language](https://blog.graph.cool/graphql-sdl-schema-definition-language-6755bcb9ce51) (SDL)
 * **Rich ecosystem and helpful tooling**: The GraphQL ecosystem is growing rapidly and open source tools like [GraphQL Playground](https://github.com/Prisma/graphql-playground) and [GraphQL bindings](https://blog.graph.cool/graphql-schema-stitching-explained-schema-delegation-4c6caf468405) are notably improving workflows and overall developer experience
 
 ### What does a Prisma-powered GraphQL server look like?
