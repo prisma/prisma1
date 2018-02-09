@@ -52,8 +52,6 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiBaseSpec {
   }
 
   "PM-CM relation deleting the parent" should "error if both sides are marked cascading since it would be a circle" in {
-    // Todo this is also a circle. For now we should error here
-
     //         P-C
     val project = SchemaDsl() { schema =>
       val parent = schema.model("P").field_!("p", _.String, isUnique = true)
@@ -64,20 +62,15 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiBaseSpec {
     database.setup(project)
 
     server.executeQuerySimple("""mutation{createP(data:{p:"p",  c: {create:[{c: "c"},  {c: "c2"}]}}){p, c {c}}}""", project)
-    server.executeQuerySimple("""mutation{createP(data:{p:"p2", c: {create:[{c: "cx"}, {c: "cx2"}]}}){p, c {c}}}""", project)
     server.executeQuerySimple("""mutation{updateC(where:{c:"c2"}, data:{p: {create:{p: "pz"}}}){id}}""", project)
 
-    server.executeQuerySimple("""mutation{deleteP(where: {p:"p"}){id}}""", project)
+    server.executeQuerySimpleThatMustFail("""mutation{deleteP(where: {p:"p"}){id}}""", project, errorCode = 3043)
     server.executeQuerySimple("""query{ps{p, c {c}}}""", project).toString should be(
-      """{"data":{"ps":[{"p":"p2","c":[{"c":"cx"},{"c":"cx2"}]},{"p":"pz","c":[]}]}}""")
-    server.executeQuerySimple("""query{cs{c, p {p}}}""", project).toString should be(
-      """{"data":{"cs":[{"c":"cx","p":[{"p":"p2"}]},{"c":"cx2","p":[{"p":"p2"}]}]}}""")
+      """{"data":{"ps":[{"p":"p","c":[{"c":"c"},{"c":"c2"}]},{"p":"pz","c":[{"c":"c2"}]}]}}""")
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_RelayId").as[Int]) should be(Vector(4))
-
-    true should be(false)
   }
 
-  "P1!-C1! relation deleting the parent" should "work if both sides are marked marked cascading" in {
+  "P1!-C1! relation deleting the parent" should "error if both sides are marked marked cascading" in {
     //         P-C
     val project = SchemaDsl() { schema =>
       val parent = schema.model("P").field_!("p", _.String, isUnique = true)
@@ -88,11 +81,9 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiBaseSpec {
     database.setup(project)
 
     server.executeQuerySimple("""mutation{createP(data:{p:"p", c: {create:{c: "c"}}}){p, c {c}}}""", project)
-    server.executeQuerySimple("""mutation{createP(data:{p:"p2", c: {create:{c: "c2"}}}){p, c {c}}}""", project)
 
-    server.executeQuerySimple("""mutation{deleteP(where: {p:"p"}){id}}""", project)
-    server.executeQuerySimple("""query{ps{p, c {c}}}""", project).toString should be("""{"data":{"ps":[{"p":"p2","c":{"c":"c2"}}]}}""")
-    server.executeQuerySimple("""query{cs{c, p {p}}}""", project).toString should be("""{"data":{"cs":[{"c":"c2","p":{"p":"p2"}}]}}""")
+    server.executeQuerySimpleThatMustFail("""mutation{deleteP(where: {p:"p"}){id}}""", project, errorCode = 3043)
+    server.executeQuerySimple("""query{ps{p, c {c}}}""", project).toString should be("""{"data":{"ps":[{"p":"p","c":{"c":"c"}}]}}""")
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_RelayId").as[Int]) should be(Vector(2))
   }
 
@@ -256,26 +247,22 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiBaseSpec {
 
       parent.oneToOneRelation_!("c", "doesNotMatter", child, modelAOnDelete = OnDelete.Cascade, includeFieldB = false)
       parent.oneToManyRelation("scs", "doesNotMatter", stepChild, modelAOnDelete = OnDelete.Cascade, includeFieldB = false)
-      child.oneToOneRelation_!("sc", "c", stepChild, modelAOnDelete = OnDelete.Cascade, modelBOnDelete = OnDelete.Cascade)
-
+      child.oneToOneRelation("sc", "c", stepChild, modelAOnDelete = OnDelete.Cascade)
     }
+
     database.setup(project)
 
     server.executeQuerySimple("""mutation{createC(data:{c:"c", sc: {create:{sc: "sc"}}}){c, sc{sc}}}""", project)
     server.executeQuerySimple("""mutation{createC(data:{c:"c2", sc: {create:{sc: "sc2"}}}){c, sc{sc}}}""", project)
-    server.executeQuerySimple("""mutation{createC(data:{c:"c3", sc: {create:{sc: "sc3"}}}){c, sc{sc}}}""", project)
-
     server.executeQuerySimple("""mutation{createP(data:{p:"p", c: {connect:{c: "c"}}, scs: {connect:[{sc: "sc"},{sc: "sc2"}]}}){p, c {c}, scs{sc}}}""", project)
-    server.executeQuerySimple("""mutation{createP(data:{p:"p2", c: {connect:{c: "c3"}}, scs: {connect:[{sc: "sc3"}]}}){p, c {c},scs{sc}}}""", project)
 
     server.executeQuerySimple("""mutation{deleteP(where: {p:"p"}){id}}""", project)
 
-    server.executeQuerySimple("""query{ps{p, c {c}, scs {sc}}}""", project).toString should be(
-      """{"data":{"ps":[{"p":"p2","c":{"c":"c3"},"scs":[{"sc":"sc3"}]}]}}""")
-    server.executeQuerySimple("""query{cs{c}}""", project).toString should be("""{"data":{"cs":[{"c":"c3"}]}}""")
-    server.executeQuerySimple("""query{sCs{sc}}""", project).toString should be("""{"data":{"sCs":[{"sc":"sc3"}]}}""")
+    server.executeQuerySimple("""query{ps{p, c {c}, scs {sc}}}""", project).toString should be("""{"data":{"ps":[]}}""")
+    server.executeQuerySimple("""query{cs{c}}""", project).toString should be("""{"data":{"cs":[{"c":"c2"}]}}""")
+    server.executeQuerySimple("""query{sCs{sc}}""", project).toString should be("""{"data":{"sCs":[]}}""")
 
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_RelayId").as[Int]) should be(Vector(3))
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_RelayId").as[Int]) should be(Vector(1))
   }
 
   "A path that is interrupted since there are nodes missing" should "only cascade up until the gap" in {
@@ -543,7 +530,5 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiBaseSpec {
 
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_RelayId").as[Int]) should be(Vector(6))
   }
-
   //endregion
-
 }

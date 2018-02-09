@@ -3,6 +3,7 @@ package com.prisma.api.database
 import com.prisma.api.database.mutactions.ClientSqlMutaction
 import com.prisma.api.database.mutactions.mutactions.CascadingDeleteRelationMutactions
 import com.prisma.api.mutations.NodeSelector
+import com.prisma.api.schema.APIErrors
 import com.prisma.shared.models.{Field, Model, Project, Relation}
 
 object CascadingDeletes {
@@ -10,23 +11,19 @@ object CascadingDeletes {
   case class Edge(parent: Model, child: Model, relation: Relation)
 
   case class Path(where: NodeSelector, edges: List[Edge]) {
+
     def cutOne: Path = edges match {
       case x if x.isEmpty => sys.error("Dont call this on an empty path")
       case x              => copy(where, edges.dropRight(1))
     }
+
     def prepend(edge: Edge): Path = copy(where, edge +: edges)
+
     def pretty: String =
       s"Where: ${where.model.name}, ${where.field.name}, ${where.fieldValueAsString} |  " + edges
         .map(edge => s"${edge.parent.name}<->${edge.child.name}")
         .mkString(" ")
-    def detectCircle(path: List[Edge] = this.edges, seen: List[Model] = List.empty): Unit = {
-      path match {
-        case x if x.isEmpty                                 =>
-        case x if x.nonEmpty && seen.contains(x.head.child) => sys.error("Circle")
-        case head :: Nil if head.parent == head.child       => sys.error("Circle")
-        case head :: tail                                   => detectCircle(tail, seen :+ head.parent)
-      }
-    }
+
     def lastModel = edges match {
       case x if x.isEmpty => where.model
       case x              => x.last.child
@@ -44,17 +41,17 @@ object CascadingDeletes {
   def getEdge(project: Project, model: Model, field: Field): Edge =
     Edge(model, field.relatedModel(project.schema).get, field.relation.get)
 
-  def collectPaths(project: Project, where: NodeSelector, startModel: Model, excludes: List[Relation] = List.empty): List[Path] = {
-    val otherRelationFields = startModel.cascadingRelationFields.filter(field => !excludes.contains(field.relation.get))
-
-    otherRelationFields match {
+  def collectPaths(project: Project, where: NodeSelector, startModel: Model, seen: List[Model] = List.empty): List[Path] = {
+    startModel.cascadingRelationFields match {
       case x if x.isEmpty =>
         List(Path.empty(where))
 
       case x =>
         x.flatMap { field =>
-          val edge       = getEdge(project, startModel, field)
-          val childPaths = collectPaths(project, where, edge.child, excludes :+ edge.relation)
+          val edge = getEdge(project, startModel, field)
+          if (seen.contains(edge.child)) throw APIErrors.CascadingDeletePathLoops()
+
+          val childPaths = collectPaths(project, where, edge.child, seen :+ edge.child)
           childPaths.map(path => path.prepend(edge))
         }
     }
