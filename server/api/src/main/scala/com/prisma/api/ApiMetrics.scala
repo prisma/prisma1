@@ -12,7 +12,7 @@ object ApiMetrics extends MetricsManager(BugsnagErrorReporter(sys.env.getOrElse(
   // CamelCase the service name read from env
   override def serviceName =
     sys.env
-      .getOrElse("SERVICE_NAME", "SystemShared")
+      .getOrElse("SERVICE_NAME", "Api")
       .split("-")
       .map { x =>
         x.head.toUpper + x.tail

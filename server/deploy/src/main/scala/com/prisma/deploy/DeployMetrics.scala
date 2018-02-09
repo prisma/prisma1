@@ -12,7 +12,7 @@ object DeployMetrics extends MetricsManager(BugsnagErrorReporter(sys.env.getOrEl
   // CamelCase the service name read from env
   override def serviceName =
     sys.env
-      .getOrElse("SERVICE_NAME", "SystemShared")
+      .getOrElse("SERVICE_NAME", "Deploy")
       .split("-")
       .map { x =>
         x.head.toUpper + x.tail
