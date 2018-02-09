@@ -129,7 +129,6 @@ case class SchemaInferrerImpl(
         * 2: has no relation directive but there's a related field with directive. Use name of the related field.
         * 3: use auto generated name else
         */
-      //TODO this will generate duplicate relationnames in cases where there are two unnamed relations between the same models, then sql will blow up on duplicate table name
       def generateRelationName: String = {
         def concat(modelName: String, otherModelName: String): String = {
           val concatenatedString = s"${modelName}To${otherModelName}"

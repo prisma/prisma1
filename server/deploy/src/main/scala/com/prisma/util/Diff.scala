@@ -2,11 +2,6 @@ package com.prisma.util
 
 object Diff {
 
-  def diff_![T](current: T, updated: T): T = {
-    if (current == updated) current
-    else updated
-  }
-
   def diff[T](current: T, updated: T): Option[T] = {
     diffOpt(Some(current), Some(updated))
   }
