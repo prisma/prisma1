@@ -82,7 +82,9 @@ class InfererIntegrationSpec extends FlatSpec with Matchers {
         name = "ManualRelationName",
         newName = Some("CommentToTodo"),
         modelAId = None,
-        modelBId = None
+        modelBId = None,
+        modelAOnDelete = None,
+        modelBOnDelete = None
       )
     )
 
@@ -145,7 +147,9 @@ class InfererIntegrationSpec extends FlatSpec with Matchers {
         name = "CommentToTodo",
         newName = Some("ManualRelationName"),
         modelAId = None,
-        modelBId = None
+        modelBId = None,
+        modelAOnDelete = None,
+        modelBOnDelete = None
       )
     )
   }
@@ -225,12 +229,57 @@ class InfererIntegrationSpec extends FlatSpec with Matchers {
       CreateRelation(
         name = "TodoToComment1",
         modelAName = "Comment",
-        modelBName = "Todo"
+        modelBName = "Todo",
+        modelAOnDelete = OnDelete.SetNull,
+        modelBOnDelete = OnDelete.SetNull
       ),
       CreateRelation(
         name = "TodoToComment2",
         modelAName = "Comment",
-        modelBName = "Todo"
+        modelBName = "Todo",
+        modelAOnDelete = OnDelete.SetNull,
+        modelBOnDelete = OnDelete.SetNull
+      )
+    )
+  }
+
+  "they" should "detect a change in the onDelete relation argument" in {
+    val previousSchema =
+      """
+        |type Course {
+        |  id: ID! @unique
+        |	sections: [CourseSection!]! @relation(name: "CourseSections" onDelete: CASCADE)
+        |}
+        |
+        |type CourseSection {
+        |  id: ID! @unique
+        |  course: Course! @relation(name: "CourseSections")
+        |}
+      """.stripMargin
+    val project = inferSchema(previousSchema)
+
+    val nextSchema =
+      """
+        |type Course {
+        |  id: ID! @unique
+        |	sections: [CourseSection!]! @relation(name: "CourseSections")
+        |}
+        |
+        |type CourseSection {
+        |  id: ID! @unique
+        |  course: Course! @relation(name: "CourseSections")
+        |}
+      """.stripMargin
+    val steps = inferSteps(previousSchema = project, next = nextSchema)
+    steps should have(size(1))
+    steps should contain(
+      UpdateRelation(
+        name = "CourseSections",
+        newName = None,
+        modelAId = None,
+        modelBId = None,
+        modelAOnDelete = Some(OnDelete.SetNull),
+        modelBOnDelete = None
       )
     )
   }
