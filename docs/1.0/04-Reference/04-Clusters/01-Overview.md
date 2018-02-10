@@ -37,3 +37,7 @@ You can list your clusters and more information using `prisma cluster list`.
 ## Cluster deployment
 
 Check the tutorials for setting up the Docker container for the [Local Cluster](alias-meemaesh3k) or on [Digital Ocean](!alias-texoo9aemu).
+
+## Logout
+
+To logout from Prisma CLI remove the `cloudSessionKey` from `~/.prisma/config.yml` file.
