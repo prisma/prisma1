@@ -436,7 +436,8 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
     val error1 = result.head
     error1.`type` should equal("Todo")
     error1.field should equal(Some("title"))
-    error1.description should include(s"Directives must appear exactly once on a field.")
+    error1.description should include(
+      s"""You are using an '@defaultValue' directive. Prisma uses '@default(value: "Value as String")' to declare default values.""")
   }
 
   "fail if an id field does not specify @unique directive" in {
