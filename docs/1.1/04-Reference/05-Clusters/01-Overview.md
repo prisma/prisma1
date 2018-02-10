@@ -65,6 +65,10 @@ You can list your clusters and associated information using `prisma cluster list
 
 Clusters are secured using public/private key pairs. The cluster knows the public key. The private key is known locally by the Prisma CLI and used to generate _cluster tokens_. These cluster tokens are used to authenticate requests against the cluster (e.g. an invocation of `prisma deploy`) which can then be validated by the cluster using the public key.
 
+## Logout
+
+To logout from Prisma CLI remove the `cloudSessionKey` from `~/.prisma/config.yml` file.
+
 <!-- 
 ![](https://imgur.com/SmHhGDD.png)
 -->
