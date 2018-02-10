@@ -26,7 +26,6 @@ object CommonErrors {
   case class ThrottlerBufferFullException() extends UserFacingError("There are too many concurrent queries for this service.", 1004)
 }
 
-// errors caused by the client when using the relay/simple API- should only appear in relay/simple/shared!
 object APIErrors {
   abstract class ClientApiError(message: String, errorCode: Int) extends UserFacingError(message, errorCode)
 
@@ -44,21 +43,12 @@ object APIErrors {
     def apply(model: String, id: String): DataItemDoesNotExist = DataItemDoesNotExist(model, "id", id)
   }
 
-  case class IdIsMissing() extends ClientApiError(s"An Id argument was expected, but not found.", 3003)
-
   case class DataItemAlreadyExists(modelId: String, id: String) extends ClientApiError(s"'$modelId' already has an item with id '$id'", 3004)
 
   case class ExtraArguments(arguments: List[String], model: String)
       extends ClientApiError(s"The parameters $arguments were present in the argument list, but are not present in the model $model.", 3005)
 
-  case class InvalidValue(valueName: String) extends ClientApiError(s"Please supply a valid value for $valueName.", 3006)
-
   case class ValueTooLong(fieldName: String) extends ClientApiError(s"Value for field $fieldName is too long.", 3007)
-
-  case class InsufficientPermissions(reason: String) extends ClientApiError(reason, 3008)
-
-  case class RelationAlreadyFull(relationId: String, field1: String, field2: String)
-      extends ClientApiError(s"'$relationId' is already connecting fields '$field1' and '$field2'", 3009)
 
   case class UniqueConstraintViolation(modelName: String, details: String)
       extends ClientApiError(s"A unique constraint would be violated on $modelName. Details: $details", 3010)
@@ -69,11 +59,6 @@ object APIErrors {
         3011
       )
 
-  case class ItemAlreadyInRelation() extends ClientApiError(s"An edge already exists between the two nodes.", 3012)
-
-  case class NodeNotFoundError(id: String) extends ClientApiError(s"Node with id $id not found", 3013)
-
-  // todo: throw in simple
   case class InvalidConnectionArguments()
       extends ClientApiError(
         s"Including a value for both first and last is not supported. See the spec for a discussion of why https://facebook.github.io/relay/graphql/connections.htm#sec-Pagination-algorithm",
@@ -85,8 +70,6 @@ object APIErrors {
 
   case class ProjectNotFound(projectId: String) extends ClientApiError(s"Project not found: '$projectId'", 3016)
 
-  case class InvalidSigninData() extends ClientApiError("Your signin credentials are incorrect. Please try again", 3018)
-
   case class ReadonlyField(fieldName: String) extends ClientApiError(s"The field $fieldName is read only.", 3019)
 
   case class FieldCannotBeNull(fieldName: String = "")
@@ -95,16 +78,7 @@ object APIErrors {
         3020
       )
 
-  case class CannotCreateUserWhenSignedIn() extends ClientApiError(s"It is not possible to create a user when you are already signed in.", 3021)
-
-  case class CannotSignInCredentialsInvalid() extends ClientApiError(s"No user found with that information", 3022)
-
-  case class CannotSignUpUserWithCredentialsExist() extends ClientApiError(s"User already exists with that information", 3023)
-
   case class VariablesParsingError(variables: String) extends ClientApiError(s"Variables could not be parsed as json: $variables", 3024)
-
-  case class Auth0IdTokenIsInvalid()
-      extends ClientApiError(s"The provided idToken is invalid. Please see https://auth0.com/docs/tokens/id_token for how to obtain a valid idToken", 3025)
 
   case class InvalidFirstArgument() extends ClientApiError(s"The 'first' argument must be non negative", 3026)
 
@@ -112,21 +86,11 @@ object APIErrors {
 
   case class InvalidSkipArgument() extends ClientApiError(s"The 'skip' argument must be non negative", 3028)
 
-  case class UnsuccessfulSynchronousMutationCallback() extends ClientApiError(s"A Synchronous Mutation Callback failed", 3029)
-
-  case class InvalidAuthProviderData(message: String) extends ClientApiError(s"provided authProvider fields is invalid: '$message'", 3030)
-
-  case class GenericServerlessFunctionError(functionName: String, message: String)
-      extends ClientApiError(s"The function '$functionName' returned an error: '$message'", 3031)
-
   case class RelationIsRequired(fieldName: String, typeName: String)
       extends ClientApiError(s"The field '$fieldName' on type '$typeName' is required. Performing this mutation would violate that constraint", 3032)
 
   case class FilterCannotBeNullOnToManyField(fieldName: String)
       extends ClientApiError(s"The field '$fieldName' is a toMany relation. This cannot be filtered by null.", 3033)
-
-  case class UnhandledFunctionError(functionName: String, requestId: String)
-      extends ClientApiError(s"The function '$functionName' returned an unhandled error. Please check the logs for requestId '$requestId'", 3034)
 
   case class ConstraintViolated(error: String) extends ClientApiError("The input value violated one or more constraints: " + error, 3035)
 

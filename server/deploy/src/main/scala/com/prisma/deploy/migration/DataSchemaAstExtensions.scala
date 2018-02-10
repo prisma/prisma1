@@ -110,9 +110,10 @@ object DataSchemaAstExtensions {
 
     def hasRelationDirective: Boolean        = relationName.isDefined
     def hasDefaultValueDirective: Boolean    = defaultValue.isDefined
+    def hasOldDefaultValueDirective: Boolean = oldDefaultValue.isDefined
     def description: Option[String]          = fieldDefinition.directiveArgumentAsString("description", "text")
     def defaultValue: Option[String]         = fieldDefinition.directiveArgumentAsString("default", "value")
-    def migrationValue: Option[String]       = fieldDefinition.directiveArgumentAsString("migrationValue", "value")
+    def oldDefaultValue: Option[String]      = fieldDefinition.directiveArgumentAsString("defaultValue", "value")
     def relationName: Option[String]         = fieldDefinition.directiveArgumentAsString("relation", "name")
     def previousRelationName: Option[String] = fieldDefinition.directiveArgumentAsString("relation", "oldName").orElse(relationName)
   }
@@ -122,9 +123,7 @@ object DataSchemaAstExtensions {
       val nameBeforeRename = enumType.directiveArgumentAsString("rename", "oldName")
       nameBeforeRename.getOrElse(enumType.name)
     }
-
-    def migrationValue: Option[String] = enumType.directiveArgumentAsString("migrationValue", "value")
-    def valuesAsStrings: Seq[String]   = enumType.values.map(_.name)
+    def valuesAsStrings: Seq[String] = enumType.values.map(_.name)
   }
 
   implicit class CoolWithDirectives(val withDirectives: WithDirectives) extends AnyVal {
