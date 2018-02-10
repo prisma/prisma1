@@ -437,7 +437,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
     error1.`type` should equal("Todo")
     error1.field should equal(Some("title"))
     error1.description should include(
-      s"""You are using an '@defaultValue' directive. Prisma uses '@default(value: "Value as String")' to declare default values.""")
+      s"""You are using a '@defaultValue' directive. Prisma uses '@default(value: "Value as String")' to declare default values.""")
   }
 
   "fail if an id field does not specify @unique directive" in {
