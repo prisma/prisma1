@@ -182,8 +182,8 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
         newName = diff(previousRelation.name, nextRelation.name),
         modelAId = diff(previousRelation.modelAId, nextRelation.modelAId),
         modelBId = diff(previousRelation.modelBId, nextRelation.modelBId),
-        modelAOnDelete = diff_!(previousRelation.modelAOnDelete, nextRelation.modelAOnDelete),
-        modelBOnDelete = diff_!(previousRelation.modelBOnDelete, nextRelation.modelBOnDelete)
+        modelAOnDelete = diff(previousRelation.modelAOnDelete, nextRelation.modelAOnDelete),
+        modelBOnDelete = diff(previousRelation.modelBOnDelete, nextRelation.modelBOnDelete)
       )
     }
     updates.filter(isAnyOptionSet)

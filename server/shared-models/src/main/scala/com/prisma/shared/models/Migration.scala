@@ -116,8 +116,8 @@ case class CreateRelation(
     name: String,
     modelAName: String,
     modelBName: String,
-    modelAOnDelete: OnDelete.Value = OnDelete.SetNull,
-    modelBOnDelete: OnDelete.Value = OnDelete.SetNull
+    modelAOnDelete: OnDelete.Value,
+    modelBOnDelete: OnDelete.Value
 ) extends RelationMigrationStep
 
 case class UpdateRelation(
@@ -125,8 +125,8 @@ case class UpdateRelation(
     newName: Option[String],
     modelAId: Option[String],
     modelBId: Option[String],
-    modelAOnDelete: OnDelete.Value = OnDelete.SetNull,
-    modelBOnDelete: OnDelete.Value = OnDelete.SetNull
+    modelAOnDelete: Option[OnDelete.Value],
+    modelBOnDelete: Option[OnDelete.Value]
 ) extends RelationMigrationStep
 
 case class DeleteRelation(

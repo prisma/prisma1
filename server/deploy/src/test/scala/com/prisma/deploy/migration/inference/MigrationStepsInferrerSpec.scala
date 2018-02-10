@@ -212,7 +212,9 @@ class MigrationStepsInferrerSpec extends FlatSpec with Matchers with DeploySpecB
       CreateRelation(
         name = relationName,
         modelAName = "Todo",
-        modelBName = "Comment"
+        modelBName = "Comment",
+        modelAOnDelete = OnDelete.SetNull,
+        modelBOnDelete = OnDelete.SetNull
       )
     )
   }
@@ -270,7 +272,8 @@ class MigrationStepsInferrerSpec extends FlatSpec with Matchers with DeploySpecB
     val steps    = inferrer.evaluate()
 
     steps should have(size(5))
-    steps should contain(UpdateRelation("CommentToTodo", newName = Some("CommentNewToTodoNew"), modelAId = Some("TodoNew"), modelBId = Some("CommentNew")))
+    steps should contain(
+      UpdateRelation("CommentToTodo", newName = Some("CommentNewToTodoNew"), modelAId = Some("TodoNew"), modelBId = Some("CommentNew"), None, None))
     steps should contain(UpdateModel("Comment", newName = "CommentNew"))
     steps should contain(UpdateModel("Todo", newName = "TodoNew"))
     steps should contain(UpdateField("Comment", "todo", Some("todoNew"), None, None, None, None, None, Some(Some("_CommentNewToTodoNew")), None, None))
