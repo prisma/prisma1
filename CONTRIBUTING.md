@@ -1,7 +1,5 @@
 # Contribution Guidelines
 
-# Contributing
-
 Please read this guide if you're interested in contributing to Prisma.
 
 **We welcome any form of contribution, especially from new members of our community** 💚
