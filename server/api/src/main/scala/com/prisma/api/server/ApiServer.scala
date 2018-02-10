@@ -53,10 +53,11 @@ case class ApiServer(
       throttlingRate    <- sys.env.get("THROTTLING_RATE")
       maxCallsInFlights <- sys.env.get("THROTTLING_MAX_CALLS_IN_FLIGHT")
     } yield {
+      val per = sys.env.getOrElse("THROTTLING_RATE_PER_SECONDS", "1")
       Throttler[ProjectId](
         groupBy = pid => pid.name + "_" + pid.stage,
         amount = throttlingRate.toInt,
-        per = 1.seconds,
+        per = per.toInt.seconds,
         timeout = 25.seconds,
         maxCallsInFlight = maxCallsInFlights.toInt
       )
