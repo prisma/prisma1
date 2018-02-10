@@ -87,11 +87,8 @@ lazy val sharedModels = normalProject("shared-models")
   ) ++ joda
 )
 
-lazy val schemaInference = normalProject("schema-inference").dependsOn(sharedModels % "compile")
-
 lazy val deploy = serverProject("deploy", imageName = "deploy")
   .dependsOn(sharedModels % "compile")
-  .dependsOn(schemaInference % "compile")
   .dependsOn(akkaUtils % "compile")
   .dependsOn(metrics % "compile")
   .dependsOn(jvmProfiler % "compile")
@@ -114,7 +111,7 @@ lazy val deploy = serverProject("deploy", imageName = "deploy")
 
 lazy val api = serverProject("api", imageName = "database")
   .dependsOn(sharedModels % "compile")
-  .dependsOn(deploy % "test")
+  .dependsOn(deploy % "test->test")
   .dependsOn(messageBus % "compile")
   .dependsOn(akkaUtils % "compile")
   .dependsOn(metrics % "compile")
