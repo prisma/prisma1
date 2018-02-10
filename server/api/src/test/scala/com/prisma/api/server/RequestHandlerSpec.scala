@@ -8,7 +8,7 @@ import com.prisma.api.{ApiBaseSpec, GraphQLResponseAssertions}
 import com.prisma.auth.AuthImpl
 import com.prisma.client.server.GraphQlRequestHandler
 import com.prisma.shared.models.{Project, ProjectWithClientId}
-import com.prisma.shared.project_dsl.TestProject
+import com.prisma.shared.schema_dsl.TestProject
 import com.prisma.utils.await.AwaitUtils
 import org.scalatest.{FlatSpec, Matchers}
 import pdi.jwt.{Jwt, JwtAlgorithm}

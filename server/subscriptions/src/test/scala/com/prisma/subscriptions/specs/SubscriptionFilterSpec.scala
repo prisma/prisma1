@@ -4,7 +4,7 @@ import com.prisma.api.database.mutactions.mutactions.{AddDataItemToManyRelationB
 import com.prisma.api.mutations.{CoolArgs, NodeSelector, ParentInfo}
 import com.prisma.messagebus.pubsub.Only
 import com.prisma.shared.models.{Enum, Model, Project}
-import com.prisma.shared.project_dsl.SchemaDsl
+import com.prisma.shared.schema_dsl.SchemaDsl
 import com.prisma.utils.await.AwaitUtils
 import org.scalatest.{FlatSpec, Matchers}
 import play.api.libs.json.Json

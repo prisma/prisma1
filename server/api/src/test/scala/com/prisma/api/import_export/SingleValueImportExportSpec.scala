@@ -6,7 +6,7 @@ import com.prisma.api.database.import_export.ImportExport.MyJsonProtocol._
 import com.prisma.api.database.import_export.ImportExport.{Cursor, ExportRequest, ResultFormat}
 import com.prisma.api.database.import_export.{BulkExport, BulkImport}
 import com.prisma.shared.models.Project
-import com.prisma.shared.project_dsl.SchemaDsl
+import com.prisma.shared.schema_dsl.SchemaDsl
 import com.prisma.utils.await.AwaitUtils
 import org.scalatest.{FlatSpec, Matchers}
 import spray.json._

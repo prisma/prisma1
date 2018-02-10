@@ -1,6 +1,6 @@
 package com.prisma.subscriptions.specs
 
-import com.prisma.shared.project_dsl.SchemaDsl
+import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 import pdi.jwt.{Jwt, JwtAlgorithm}
 

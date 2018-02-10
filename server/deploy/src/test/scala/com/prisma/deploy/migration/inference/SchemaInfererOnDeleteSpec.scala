@@ -1,7 +1,7 @@
 package com.prisma.deploy.migration.inference
 
 import com.prisma.shared.models.{OnDelete, Schema}
-import com.prisma.shared.project_dsl.SchemaDsl
+import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalactic.Or
 import org.scalatest.{Matchers, WordSpec}
 import sangria.parser.QueryParser

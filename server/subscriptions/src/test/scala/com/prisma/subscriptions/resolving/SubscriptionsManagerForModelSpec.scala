@@ -8,7 +8,7 @@ import akka.testkit.{TestKit, TestProbe}
 import com.prisma.messagebus.pubsub.Only
 import com.prisma.shared.models.ModelMutationType
 import com.prisma.shared.models.ModelMutationType.ModelMutationType
-import com.prisma.shared.project_dsl.SchemaDsl
+import com.prisma.shared.schema_dsl.SchemaDsl
 import com.prisma.subscriptions.SubscriptionDependenciesForTest
 import com.prisma.subscriptions.protocol.StringOrInt
 import com.prisma.subscriptions.resolving.SubscriptionsManager.Requests.EndSubscription

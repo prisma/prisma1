@@ -6,7 +6,7 @@ import akka.testkit.{TestKit, TestProbe}
 import com.prisma.messagebus.pubsub.Message
 import com.prisma.messagebus.testkits.{DummyPubSubPublisher, InMemoryPubSubTestKit}
 import com.prisma.shared.models.ProjectWithClientId
-import com.prisma.shared.project_dsl.TestProject
+import com.prisma.shared.schema_dsl.TestProject
 import com.prisma.stub.Import.withStubServer
 import com.prisma.subscriptions.SubscriptionDependenciesForTest
 import com.prisma.subscriptions.protocol.SubscriptionProtocolV05.Responses.SubscriptionSessionResponseV05

@@ -1,6 +1,6 @@
 package com.prisma.deploy.migration
 
-import com.prisma.shared.models.{OnDelete, TypeIdentifier}
+import com.prisma.shared.models.TypeIdentifier
 import sangria.ast._
 
 import scala.collection.Seq
