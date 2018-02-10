@@ -22,7 +22,7 @@ import scala.util.control.NonFatal
   * 2.  SangriaValue  <->  GCValue     for transforming the Any we get from Sangria per field back and forth
   * 3.  DBString      <->  GCValue     for writing default values in the System-DB since they are always a String, and JSArray for Lists
   * 4.  Json          <->  GCValue     for SchemaSerialization
-  * 5.  SangriaValue  <->  String      for reading and writing default and migrationValues
+  * 5.  SangriaValue  <->  String      for reading and writing default values
   * 6.  InputString   <->  GCValue     chains String -> SangriaValue -> GCValue and back
   */
 /**
@@ -198,7 +198,7 @@ case class GCJsonConverter(typeIdentifier: TypeIdentifier, isList: Boolean) exte
 }
 
 /**
-  * 5. String <-> SangriaAST - This is reads and writes Default and MigrationValues we get/need as String.
+  * 5. String <-> SangriaAST - This is reads and writes Default values we get/need as String.
   */
 class MyQueryParser(val input: ParserInput) extends Parser with Tokens with Ignored with Operations with Fragments with Values with Directives with Types
 

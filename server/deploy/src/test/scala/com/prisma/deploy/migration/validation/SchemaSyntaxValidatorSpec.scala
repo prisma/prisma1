@@ -413,7 +413,22 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
     val schema =
       """
         |type Todo @model{
-        |  title: String @defaultValue(value: "foo") @defaultValue(value: "bar")
+        |  title: String @default(value: "foo") @default(value: "bar")
+        |}
+      """.stripMargin
+    val result = SchemaSyntaxValidator(schema).validate
+    result should have(size(1))
+    val error1 = result.head
+    error1.`type` should equal("Todo")
+    error1.field should equal(Some("title"))
+    error1.description should include(s"Directives must appear exactly once on a field.")
+  }
+
+  "fail if the old defaultValue directive appears on a field" in {
+    val schema =
+      """
+        |type Todo @model{
+        |  title: String @defaultValue(value: "foo")
         |}
       """.stripMargin
     val result = SchemaSyntaxValidator(schema).validate
