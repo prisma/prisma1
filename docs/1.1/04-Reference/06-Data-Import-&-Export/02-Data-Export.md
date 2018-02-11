@@ -9,11 +9,11 @@ Exporting data can be done either using the CLI or the raw export API. In both c
 
 ## Data export with the CLI
 
-The PRrisma CLI offers the `prisma export` command. It accepts one option:
+The Prisma CLI offers the `prisma export` command. It accepts one option:
 
 - `--export-path` (short: `-e`): A file path to a .zip-directory which will be created by the CLI and where the exported data is stored
 
-Under the hood, the CLI uses the expport API that's described in the next section. However, using the CLI provides some major benefits:
+Under the hood, the CLI uses the export API that's described in the next section. However, using the CLI provides some major benefits:
 
 - **leveraging the CLI's authentication mechanism** (i.e. you don't need to manually send your authentication token)
 - **writing downloaded data directly to file system**

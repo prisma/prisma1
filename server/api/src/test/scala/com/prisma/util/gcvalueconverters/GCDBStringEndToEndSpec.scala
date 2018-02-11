@@ -33,7 +33,7 @@ class GCDBStringEndToEndSpec extends FlatSpec with Matchers {
 
   val nullValue = "null"
 
-  "It should take a String Default or MigrationValue for a non-list field and" should "convert it to a DBString and Back" in {
+  "It should take a String Default for a non-list field and" should "convert it to a DBString and Back" in {
     println("Single Values")
     forthAndBack(string, TypeIdentifier.String, false) should be(string)
     forthAndBack(int, TypeIdentifier.Int, false) should be(int)

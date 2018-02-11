@@ -2,7 +2,7 @@ package com.prisma.deploy
 
 import com.prisma.errors.{BugsnagErrorReporter, ErrorReporter}
 import com.prisma.metrics.MetricsManager
-import com.prisma.profiling.MemoryProfiler
+import com.prisma.profiling.{JvmProfiler, MemoryProfiler}
 
 object DeployMetrics extends MetricsManager(BugsnagErrorReporter(sys.env.getOrElse("BUGSNAG_API_KEY", ""))) {
   // this is intentionally empty. Since we don't define metrics here, we need to load the object once so the profiler kicks in.
@@ -12,12 +12,12 @@ object DeployMetrics extends MetricsManager(BugsnagErrorReporter(sys.env.getOrEl
   // CamelCase the service name read from env
   override def serviceName =
     sys.env
-      .getOrElse("SERVICE_NAME", "SystemShared")
+      .getOrElse("SERVICE_NAME", "Deploy")
       .split("-")
       .map { x =>
         x.head.toUpper + x.tail
       }
       .mkString
 
-  MemoryProfiler.schedule(this)
+  JvmProfiler.schedule(this)
 }

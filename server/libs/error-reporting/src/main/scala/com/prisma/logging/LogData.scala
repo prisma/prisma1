@@ -21,6 +21,7 @@ case class LogData(
 )
 
 object LogDataWrites extends DefaultWrites {
-  implicit val anyWrites: Writes[Any] = Writes(any => JsString(any.toString))
-  implicit val logDataWrites          = Json.writes[LogData]
+  val anyWrites: Writes[Any] = Writes(any => JsString(any.toString))
+  implicit val mapAnyWrites  = mapWrites[Any](anyWrites)
+  implicit val logDataWrites = Json.writes[LogData]
 }

@@ -84,7 +84,7 @@ This service definition expects the following file structure:
 ├── prisma.yml
 ├── database
 │   ├── subscriptions
-│   │   └── welcomeEmail.graphql
+│   │   └── sendWelcomeEmail.graphql
 │   ├── types.graphql
 │   └── enums.graphql
 └── schemas

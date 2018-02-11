@@ -1,7 +1,7 @@
 package com.prisma.api.mutations
 
 import com.prisma.api.ApiBaseSpec
-import com.prisma.shared.project_dsl.SchemaDsl
+import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with ApiBaseSpec {

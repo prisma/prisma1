@@ -23,8 +23,25 @@ object DataSchemaAstExtensions {
     def enumTypes: Vector[EnumTypeDefinition]              = doc.definitions collect { case x: EnumTypeDefinition => x }
 
     def relatedFieldOf(objectType: ObjectTypeDefinition, fieldDef: FieldDefinition): Option[FieldDefinition] = {
-      val relatedType = objectType_!(fieldDef.typeName)
-      relatedType.fields.find(_.typeName == objectType.name)
+      val otherFieldsOnOppositeModel = objectType_!(fieldDef.typeName) match {
+        case otherModel if otherModel.name == objectType.name => otherModel.fields.filter(_.typeName == objectType.name).filter(_.name != fieldDef.name)
+        case otherModel                                       => otherModel.fields.filter(_.typeName == objectType.name)
+      }
+      getOppositeField(fieldDef, otherFieldsOnOppositeModel)
+    }
+
+    private def getOppositeField(relationField: FieldDefinition, otherFieldsOnModelBRelatedToModelA: Vector[FieldDefinition]) = {
+      relationField.directive("relation") match {
+        case Some(directive) =>
+          otherFieldsOnModelBRelatedToModelA.find(field =>
+            field.directive("relation") match {
+              case Some(otherDirective) => directive.argument_!("name").value.renderCompact == otherDirective.argument_!("name").value.renderCompact
+              case None                 => false
+          })
+
+        case None =>
+          otherFieldsOnModelBRelatedToModelA.headOption
+      }
     }
   }
 
@@ -93,9 +110,10 @@ object DataSchemaAstExtensions {
 
     def hasRelationDirective: Boolean        = relationName.isDefined
     def hasDefaultValueDirective: Boolean    = defaultValue.isDefined
+    def hasOldDefaultValueDirective: Boolean = oldDefaultValue.isDefined
     def description: Option[String]          = fieldDefinition.directiveArgumentAsString("description", "text")
     def defaultValue: Option[String]         = fieldDefinition.directiveArgumentAsString("default", "value")
-    def migrationValue: Option[String]       = fieldDefinition.directiveArgumentAsString("migrationValue", "value")
+    def oldDefaultValue: Option[String]      = fieldDefinition.directiveArgumentAsString("defaultValue", "value")
     def relationName: Option[String]         = fieldDefinition.directiveArgumentAsString("relation", "name")
     def previousRelationName: Option[String] = fieldDefinition.directiveArgumentAsString("relation", "oldName").orElse(relationName)
   }
@@ -105,9 +123,7 @@ object DataSchemaAstExtensions {
       val nameBeforeRename = enumType.directiveArgumentAsString("rename", "oldName")
       nameBeforeRename.getOrElse(enumType.name)
     }
-
-    def migrationValue: Option[String] = enumType.directiveArgumentAsString("migrationValue", "value")
-    def valuesAsStrings: Seq[String]   = enumType.values.map(_.name)
+    def valuesAsStrings: Seq[String] = enumType.values.map(_.name)
   }
 
   implicit class CoolWithDirectives(val withDirectives: WithDirectives) extends AnyVal {

@@ -131,6 +131,10 @@ object SchemaErrors {
     error(fieldAndType, s"List fields cannot have defaultValues.")
   }
 
+  def invalidSyntaxForDefaultValue(fieldAndType: FieldAndType) = {
+    error(fieldAndType, s"""You are using a '@defaultValue' directive. Prisma uses '@default(value: "Value as String")' to declare default values.""")
+  }
+
   def relationFieldTypeWrong(fieldAndType: FieldAndType): SchemaError = {
     val oppositeType = fieldAndType.fieldDef.fieldType.namedType.name
     error(

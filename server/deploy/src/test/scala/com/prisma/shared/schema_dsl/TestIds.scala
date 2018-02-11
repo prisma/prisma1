@@ -1,4 +1,4 @@
-package com.prisma.shared.project_dsl
+package com.prisma.shared.schema_dsl
 
 trait TestIds {
   val testClientId           = "test-client-id"

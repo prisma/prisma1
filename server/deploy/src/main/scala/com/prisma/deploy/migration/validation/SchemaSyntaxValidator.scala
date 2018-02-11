@@ -247,6 +247,14 @@ case class SchemaSyntaxValidator(schema: String, directiveRequirements: Seq[Dire
       }
     }
 
+    def ensureNoOldDefaultValueDirectives(fieldAndTypes: FieldAndType): Option[SchemaError] = {
+      if (fieldAndType.fieldDef.hasOldDefaultValueDirective) {
+        Some(SchemaErrors.invalidSyntaxForDefaultValue(fieldAndType))
+      } else {
+        None
+      }
+    }
+
     def ensureNoDefaultValuesOnListFields(fieldAndTypes: FieldAndType): Option[SchemaError] = {
       if (fieldAndType.fieldDef.isList && fieldAndType.fieldDef.hasDefaultValueDirective) {
         Some(SchemaErrors.listFieldsCantHaveDefaultValues(fieldAndType))
@@ -257,6 +265,7 @@ case class SchemaSyntaxValidator(schema: String, directiveRequirements: Seq[Dire
 
     fieldAndType.fieldDef.directives.flatMap(validateDirectiveRequirements) ++
       ensureDirectivesAreUnique(fieldAndType) ++
+      ensureNoOldDefaultValueDirectives(fieldAndType) ++
       ensureRelationDirectivesArePlacedCorrectly(fieldAndType) ++
       ensureNoDefaultValuesOnListFields(fieldAndType)
   }

@@ -5,7 +5,7 @@ description: Authenticate with Prisma Cloud.
 
 # `prisma login`
 
-Authenticate with Prisma Cloud.
+Authenticate with Prisma Cloud. Note that rather than providing your cloud session key via the `--key` flag, you can also set the `PRISMA_CLOUD_SESSION_KEY` environment variable - this is especially useful for CI environments.
 
 #### Usage
 

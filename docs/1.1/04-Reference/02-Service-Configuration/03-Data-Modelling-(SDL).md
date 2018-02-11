@@ -527,7 +527,7 @@ The relations that are included in your schema affect the available operations i
 
 ## GraphQL directives
 
-Directives are used to provide additional information in your data model. They look like this: `@name(argument: "value")` or simply `@name` when there are no arguments
+Directives are used to provide additional information in your data model. They look like this: `@name(argument: "value")` or simply `@name` when there are no arguments.
 
 ### Data model directives
 
@@ -588,7 +588,7 @@ If the rename directive is not used, Prisma would remove the old type and field 
 
 #### Migrating the value of a scalar field
 
-The temporary directive `@migrationValue(value: String!)` is used to migrate the value of a scalar field. When changing an optional field to a requried field, it is necessary to also use this directive.
+The temporary directive `@migrationValue(value: String!)` is used to migrate the value of a scalar field. When changing an optional field to a required field, it is necessary to also use this directive.
 
 ## Naming conventions
 

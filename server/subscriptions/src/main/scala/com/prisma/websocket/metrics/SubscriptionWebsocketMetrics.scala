@@ -2,10 +2,10 @@ package com.prisma.websocket.metrics
 
 import com.prisma.errors.BugsnagErrorReporter
 import com.prisma.metrics.MetricsManager
-import com.prisma.profiling.MemoryProfiler
+import com.prisma.profiling.{JvmProfiler, MemoryProfiler}
 
 object SubscriptionWebsocketMetrics extends MetricsManager(BugsnagErrorReporter(sys.env.getOrElse("BUGSNAG_API_KEY", ""))) {
-  MemoryProfiler.schedule(this)
+  JvmProfiler.schedule(this)
 
   override def serviceName = "SubscriptionWebsocketService"
 

@@ -36,11 +36,11 @@ Here's a list of available subscriptions. To explore them, use the [GraphQL Play
 - For every [object type](!alias-eiroozae8u#object-types) in your data model, a [type subscription](#type-subscriptions) is available to listen for data changes on that type.
 - Currently, connecting or disconnecting nodes in a [relation](!alias-eiroozae8u#relations) does not trigger a subscription! You can find more info in this [GitHub issue](https://github.com/graphcool/framework/issues/146) and read below for a [workaround](#relation-subscriptions).
 
-You can [combine multiple subscription triggers](#combining-subscriptions) within a single subscription request to control exactly what events you want to be notified of. The subscriptions API also uses the rich fitler system that's available for [queries](!alias-ahwee4zaey).
+You can [combine multiple subscription triggers](#combining-subscriptions) within a single subscription request to control exactly what events you want to be notified of. The subscriptions API also uses the rich filter system that's available for [queries](!alias-ahwee4zaey).
 
 ## Subscription requests
 
-When using [Apollo Client](https://www.apollographql.com/client/), you can use the [`apollo-link-ws`](https://github.com/apollographql/apollo-link-ws) library to facilite subscription use. [Here's an example](https://github.com/graphcool-examples/react-graphql/tree/master/subscriptions-with-apollo-worldchat).
+When using [Apollo Client](https://www.apollographql.com/client/), you can use the [`apollo-link-ws`](https://github.com/apollographql/apollo-link-ws) library to facilitate subscription use. [Here's an example](https://github.com/graphcool-examples/react-graphql/tree/master/subscriptions-with-apollo-worldchat).
 
 You can also use the [GraphQL Playground](https://github.com/graphcool/graphql-playground) or any WebSocket client as described below.
 
@@ -164,7 +164,7 @@ type Post {
 }
 ```
 
-In the gerated [Prisma API](!alias-ohm2ouceuj), a `post` subscription will be available that you can use to be notified whenever certain nodes of type `Post` are [created](#subscribing-to-created-nodes), [updated](#subscribing-to-updated-nodes) or [deleted](#subscribing-to-deleted-nodes).
+In the generated [Prisma API](!alias-ohm2ouceuj), a `post` subscription will be available that you can use to be notified whenever certain nodes of type `Post` are [created](#subscribing-to-created-nodes), [updated](#subscribing-to-updated-nodes) or [deleted](#subscribing-to-deleted-nodes).
 
 ### Subscribing to created nodes
 
@@ -343,7 +343,7 @@ subscription {
 }
 ```
 
-Similarily to `updatedFields_contains`, more filter conditions exist:
+Similarly to `updatedFields_contains`, more filter conditions exist:
 
 - `updatedFields_contains_every: [String!]`: Matches if all fields specified have been updated.
 - `updatedFields_contains_some: [String!]`: Matches if some of the specified fields have been updated.

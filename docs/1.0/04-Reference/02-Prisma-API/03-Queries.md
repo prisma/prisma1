@@ -42,7 +42,7 @@ enum AccessRole {
 }
 ```
 
-## Obect queries
+## Object queries
 
 We can use **object queries** to fetch either a single node, or a list of nodes for a certain object type.
 
