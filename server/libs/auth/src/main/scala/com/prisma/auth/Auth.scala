@@ -21,7 +21,7 @@ object AuthFailure extends AuthResult {
 }
 
 object AuthImpl extends Auth {
-  private val jwtOptions      = JwtOptions(signature = true, expiration = false)
+  private val jwtOptions      = JwtOptions(signature = true, expiration = true)
   private val algorithm       = JwtAlgorithm.HS256
   private val algorithms      = Seq(algorithm)
   private val secondsOfOneDay = 86400
@@ -37,18 +37,20 @@ object AuthImpl extends Auth {
     }
   }
 
-  override def createToken(secrets: Vector[String]) = {
+  override def createToken(secrets: Vector[String]) = createToken(secrets, secondsOfOneDay)
+
+  def createToken(secrets: Vector[String], expirationInSeconds: Long) = {
     secrets.headOption match {
       case Some(secret) =>
         val nowInSeconds = Instant.now().toEpochMilli / 1000
-        val claim        = JwtClaim(expiration = Some(nowInSeconds + secondsOfOneDay), notBefore = Some(nowInSeconds))
+        val claim        = JwtClaim(expiration = Some(nowInSeconds + expirationInSeconds), notBefore = Some(nowInSeconds))
         Jwt.encode(claim, secret, algorithm)
       case None =>
         ""
     }
   }
 
-  private def verify(secrets: Vector[String], authHeader: String): AuthResult = {
+  def verify(secrets: Vector[String], authHeader: String): AuthResult = {
     val isValid = secrets.exists { secret =>
       val claims = Jwt.decodeRaw(token = authHeader.stripPrefix("Bearer "), key = secret, algorithms = algorithms, options = jwtOptions)
       // todo: also verify claims in accordance with https://github.com/graphcool/framework/issues/1365

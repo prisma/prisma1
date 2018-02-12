@@ -274,7 +274,7 @@ lazy val cache =
       jsr305
     ))
 
-lazy val auth = libProject("auth").settings(libraryDependencies += jwt)
+lazy val auth = libProject("auth").settings(libraryDependencies ++= Seq(jwt, scalaTest))
 
 lazy val singleServer = serverProject("single-server", imageName = "prisma")
   .dependsOn(api% "compile")
