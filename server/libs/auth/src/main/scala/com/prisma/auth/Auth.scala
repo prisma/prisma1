@@ -1,6 +1,8 @@
 package com.prisma.auth
 
-import pdi.jwt.{Jwt, JwtAlgorithm, JwtOptions}
+import java.time.Instant
+
+import pdi.jwt.{Jwt, JwtAlgorithm, JwtClaim, JwtOptions}
 
 trait Auth {
   def verify(secrets: Vector[String], authHeader: Option[String]): AuthResult
@@ -19,8 +21,10 @@ object AuthFailure extends AuthResult {
 }
 
 object AuthImpl extends Auth {
-  private val jwtOptions = JwtOptions(signature = true, expiration = false)
-  private val algorithms = Seq(JwtAlgorithm.HS256)
+  private val jwtOptions      = JwtOptions(signature = true, expiration = false)
+  private val algorithm       = JwtAlgorithm.HS256
+  private val algorithms      = Seq(algorithm)
+  private val secondsOfOneDay = 86400
 
   override def verify(secrets: Vector[String], authHeader: Option[String]): AuthResult = {
     if (secrets.isEmpty) {
@@ -35,8 +39,12 @@ object AuthImpl extends Auth {
 
   override def createToken(secrets: Vector[String]) = {
     secrets.headOption match {
-      case Some(secret) => Jwt.encode("irrelevant-claim", secret, algorithms.head)
-      case None         => ""
+      case Some(secret) =>
+        val nowInSeconds = Instant.now().toEpochMilli / 1000
+        val claim        = JwtClaim(expiration = Some(nowInSeconds + secondsOfOneDay), notBefore = Some(nowInSeconds))
+        Jwt.encode(claim, secret, algorithm)
+      case None =>
+        ""
     }
   }
 
