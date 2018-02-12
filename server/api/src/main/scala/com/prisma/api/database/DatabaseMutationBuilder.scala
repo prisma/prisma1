@@ -117,14 +117,14 @@ object DatabaseMutationBuilder {
       updateArgs: CoolArgs,
       create: Vector[DBIOAction[Any, NoStream, Effect]],
       update: Vector[DBIOAction[Any, NoStream, Effect]],
-      createCheck: NestedCreateRelationMutaction
+      relationMutactions: NestedCreateRelationMutaction
   ) = {
 
     val q       = DatabaseQueryBuilder.existsNodeIsInRelationshipWith(project, parentInfo, where).as[Boolean]
     val qInsert = DBIOAction.seq(createDataItem(project.id, where.model.name, createArgs), createRelayRow(project.id, createWhere), DBIOAction.seq(create: _*))
     val qUpdate = DBIOAction.seq(updateDataItemByUnique(project.id, where, updateArgs), DBIOAction.seq(update: _*))
 
-    ifThenElseNestedUpsert(q, qUpdate, qInsert, createCheck)
+    ifThenElseNestedUpsert(q, qUpdate, qInsert, relationMutactions)
   }
   //endregion
 
@@ -298,14 +298,11 @@ object DatabaseMutationBuilder {
   def ifThenElseNestedUpsert(condition: SqlStreamingAction[Vector[Boolean], Boolean, Effect],
                              thenMutactions: DBIOAction[Unit, NoStream, Effect],
                              elseMutactions: DBIOAction[Unit, NoStream, Effect],
-                             elseChecks: NestedCreateRelationMutaction) = {
+                             relationMutactions: NestedCreateRelationMutaction) = {
     import scala.concurrent.ExecutionContext.Implicits.global
     for {
       exists <- condition
-      action <- if (exists.head) { thenMutactions } else {
-                 val list = List(elseMutactions) ++ elseChecks.requiredCheck ++ elseChecks.removalActions ++ elseChecks.addAction
-                 DBIO.seq(list: _*)
-               }
+      action <- if (exists.head) thenMutactions else DBIO.seq(elseMutactions +: relationMutactions.allActions: _*)
     } yield action
   }
 
@@ -318,8 +315,10 @@ object DatabaseMutationBuilder {
       action <- if (exists.head) thenMutactions else throw elseError
     } yield action
   }
+  def triggerFailureWhenExists(project: Project, query: SQLActionBuilder, table: String)    = triggerFailureInternal(project, query, table, notExists = false)
+  def triggerFailureWhenNotExists(project: Project, query: SQLActionBuilder, table: String) = triggerFailureInternal(project, query, table, notExists = true)
 
-  def triggerFailureWhenExists(project: Project, query: SQLActionBuilder, table: String, notExists: Boolean = false) = {
+  private def triggerFailureInternal(project: Project, query: SQLActionBuilder, table: String, notExists: Boolean) = {
     val notValue = if (notExists) sql"" else sql"not"
 
     (sql"select case" ++
@@ -329,8 +328,6 @@ object DatabaseMutationBuilder {
       sql"from information_schema.columns" ++
       sql"where table_schema = ${project.id} AND TABLE_NAME = $table)end;").as[Int]
   }
-
-  def triggerFailureWhenNotExists(project: Project, query: SQLActionBuilder, table: String) = triggerFailureWhenExists(project, query, table, notExists = true)
 
   def pathQuery(projectId: String, path: Path): SQLActionBuilder = {
     path.edges match {

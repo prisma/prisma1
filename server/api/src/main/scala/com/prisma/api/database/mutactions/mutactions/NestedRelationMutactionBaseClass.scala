@@ -43,8 +43,9 @@ trait NestedRelationMutactionBaseClass extends ClientSqlDataChangeMutaction {
 
   def addAction: List[DBIOAction[_, NoStream, Effect]]
 
+  def allActions = requiredCheck ++ removalActions ++ addAction
+
   override def execute = {
-    val allActions = requiredCheck ++ removalActions ++ addAction
     Future.successful(ClientSqlStatementResult(DBIOAction.seq(allActions: _*)))
   }
 
