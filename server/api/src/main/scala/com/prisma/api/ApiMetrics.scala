@@ -31,8 +31,8 @@ object ApiMetrics extends MetricsManager(BugsnagErrorReporter(sys.env.getOrElse(
   val mutactionCount                = defineCounter("mutactionCount", CustomTag("projectId", recordingThreshold = 100))
 
   // these Metrics are consumed by the console to power the dashboard. Only change them with extreme caution!
-  val requestDuration    = defineTimer("requestDuration", projectIdTag)
-  val requestCounter     = defineCounter("requestCount", projectIdTag)
-  val databaseSize       = defineGauge("databaseSize") // ???
-  val subscriptionEvents = defineCounter("subscriptionEvents", projectIdTag)
+  val requestDuration          = defineTimer("requestDuration", projectIdTag)
+  val requestCounter           = defineCounter("requestCount", projectIdTag)
+  val databaseSize             = defineGauge("databaseSize") // ???
+  val subscriptionEventCounter = defineCounter("subscriptionEventCount", projectIdTag)
 }
