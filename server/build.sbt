@@ -96,6 +96,7 @@ lazy val deploy = serverProject("deploy", imageName = "deploy")
   .dependsOn(graphQlClient % "compile")
   .dependsOn(stubServer % "test")
   .dependsOn(sangriaUtils % "compile")
+  .dependsOn(auth % "compile")
   .settings(
     libraryDependencies ++= Seq(
       playJson,

@@ -67,7 +67,8 @@ case class SchemaBuilderImpl(
     listProjectsField,
     listMigrationsField,
     projectField,
-    clusterInfoField
+    clusterInfoField,
+    generateProjectTokenField
   )
 
   def getMutationFields: Vector[Field[SystemUserContext, Unit]] = Vector(
@@ -146,6 +147,20 @@ case class SchemaBuilderImpl(
     ClusterInfoType.Type,
     description = Some("Information about the cluster"),
     resolve = (ctx) => ()
+  )
+
+  val generateProjectTokenField: Field[SystemUserContext, Unit] = Field(
+    "generateProjectToken",
+    StringType,
+    arguments = projectIdArguments,
+    description = Some("generates a token for the given project"),
+    resolve = (ctx) => {
+      val projectId    = ctx.args.raw.projectId
+      val nameAndStage = ProjectId.fromEncodedString(projectId)
+      verifyAuthOrThrow(nameAndStage.name, nameAndStage.stage, ctx.ctx.authorizationHeader)
+
+      "wow-so-secret"
+    }
   )
 
   def deployField: Field[SystemUserContext, Unit] = {
