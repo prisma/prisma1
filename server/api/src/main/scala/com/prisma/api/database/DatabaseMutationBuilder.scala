@@ -3,6 +3,7 @@ package com.prisma.api.database
 import com.prisma.api.mutations.mutations.CascadingDeletes.Path
 import com.prisma.api.database.SlickExtensions._
 import com.prisma.api.database.Types.DataItemFilterCollection
+import com.prisma.api.database.mutactions.mutactions.NestedCreateRelationMutaction
 import com.prisma.api.mutations.{CoolArgs, NodeSelector, ParentInfo}
 import com.prisma.api.schema.GeneralError
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
@@ -12,6 +13,7 @@ import slick.dbio.{DBIOAction, Effect, NoStream}
 import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.SQLActionBuilder
 import slick.sql.{SqlAction, SqlStreamingAction}
+
 import scala.concurrent.ExecutionContext.Implicits.global
 
 object DatabaseMutationBuilder {
@@ -108,14 +110,15 @@ object DatabaseMutationBuilder {
       createArgs: CoolArgs,
       updateArgs: CoolArgs,
       create: Vector[DBIOAction[Any, NoStream, Effect]],
-      update: Vector[DBIOAction[Any, NoStream, Effect]]
+      update: Vector[DBIOAction[Any, NoStream, Effect]],
   ) = {
 
-    val q       = DatabaseQueryBuilder.existsNodeIsInRelationshipWith(project, parentInfo, where).as[Boolean]
-    val qInsert = DBIOAction.seq(createDataItem(project.id, where.model.name, createArgs), DBIOAction.seq(create: _*))
-    val qUpdate = DBIOAction.seq(updateDataItemByUnique(project.id, where, updateArgs), DBIOAction.seq(update: _*))
+    val q                                      = DatabaseQueryBuilder.existsNodeIsInRelationshipWith(project, parentInfo, where).as[Boolean]
+    val qChecks: NestedCreateRelationMutaction = NestedCreateRelationMutaction(project, parentInfo, createWhere, false)
+    val qInsert                                = DBIOAction.seq(createDataItem(project.id, where.model.name, createArgs), DBIOAction.seq(create: _*))
+    val qUpdate                                = DBIOAction.seq(updateDataItemByUnique(project.id, where, updateArgs), DBIOAction.seq(update: _*))
 
-    ifThenElse(q, qUpdate, qInsert)
+    ifThenElseNestedUpsert(q, qUpdate, qInsert, qChecks)
   }
   //endregion
 
@@ -222,7 +225,6 @@ object DatabaseMutationBuilder {
   //endregion
 
   // region HELPERS
-  // Todo We could save a ton of queries here if we do not run extra queries if it is a IdNodeSelector Probably only works on =
 
   def idFromWhere(projectId: String, where: NodeSelector): SQLActionBuilder = {
     sql"(SELECT `id` FROM `#$projectId`.`#${where.model.name}` WHERE `#${where.field.name}` = ${where.fieldValue})"
@@ -287,6 +289,20 @@ object DatabaseMutationBuilder {
     } yield action
   }
 
+  def ifThenElseNestedUpsert(condition: SqlStreamingAction[Vector[Boolean], Boolean, Effect],
+                             thenMutactions: DBIOAction[Unit, NoStream, Effect],
+                             elseMutactions: DBIOAction[Unit, NoStream, Effect],
+                             elseChecks: NestedCreateRelationMutaction) = {
+    import scala.concurrent.ExecutionContext.Implicits.global
+    for {
+      exists <- condition
+      action <- if (exists.head) { thenMutactions } else {
+                 val list = List(elseMutactions) ++ elseChecks.requiredCheck ++ elseChecks.removalActions ++ elseChecks.addAction
+                 DBIO.seq(list: _*)
+               }
+    } yield action
+  }
+
   def ifThenElseError(condition: SqlStreamingAction[Vector[Boolean], Boolean, Effect],
                       thenMutactions: DBIOAction[Unit, NoStream, Effect],
                       elseError: GeneralError) = {
@@ -297,25 +313,18 @@ object DatabaseMutationBuilder {
     } yield action
   }
 
-  def triggerFailureWhenNotExists(project: Project, query: SQLActionBuilder, table: String) = {
+  def triggerFailureWhenExists(project: Project, query: SQLActionBuilder, table: String, notExists: Boolean = false) = {
+    val notValue = if (notExists) sql"" else sql"not"
 
     (sql"select case" ++
-      sql"when exists( " ++ query ++ sql" )" ++
-      sql"then 1" ++
-      sql"else (select COLUMN_NAME" ++
-      sql"from information_schema.columns" ++
-      sql"where table_schema = ${project.id} and TABLE_NAME = $table)end;").as[Int]
-  }
-
-  def triggerFailureWhenExists(project: Project, query: SQLActionBuilder, table: String) = {
-
-    (sql"select case" ++
-      sql"when not exists( " ++ query ++ sql" )" ++
+      sql"when" ++ notValue ++ sql"exists( " ++ query ++ sql" )" ++
       sql"then 1" ++
       sql"else (select COLUMN_NAME" ++
       sql"from information_schema.columns" ++
       sql"where table_schema = ${project.id} AND TABLE_NAME = $table)end;").as[Int]
   }
+
+  def triggerFailureWhenNotExists(project: Project, query: SQLActionBuilder, table: String) = triggerFailureWhenExists(project, query, table, notExists = true)
 
   def pathQuery(projectId: String, path: Path): SQLActionBuilder = {
     path.edges match {

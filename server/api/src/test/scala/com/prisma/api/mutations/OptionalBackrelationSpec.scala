@@ -7,7 +7,7 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class OptionalBackrelationSpec extends FlatSpec with Matchers with ApiBaseSpec {
 
-  "Nested Update" should "be generated models with missing backrelations " in {
+  "Nested Update" should "be generated for models with missing backrelations " in {
 
     val project = SchemaDsl.fromString() {
       """
@@ -106,6 +106,8 @@ class OptionalBackrelationSpec extends FlatSpec with Matchers with ApiBaseSpec {
         |}""".stripMargin,
       project
     )
+
+    res2.toString should be("""{"data":{"updateOwner":{"ownerName":"jon","cat":{"catName":"azrael"}}}}""")
   }
 
   "Nested Upsert" should "be generated for models with missing backrelations 2 " in {
