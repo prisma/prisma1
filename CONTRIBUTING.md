@@ -48,3 +48,40 @@ Here are further contribution instructions:
 * [examples](./examples/CONTRIBUTING.md)
 * [server](./server/CONTRIBUTING.md)
 
+## Logistics
+
+**Clone your fork.**
+
+SSH:
+```sh
+git clone git@github.com:YOUR_USERNAME/prisma.git
+```
+
+HTTPS:
+```sh
+git clone https://github.com/YOUR_USERNAME/prisma.git
+```
+
+**Add the remote upstream**
+
+```sh
+git remote add upstream git://github.com/graphcool/prisma.git
+```
+
+**Fetch changes from upstream**
+
+```sh
+git fetch upstream # fetch is essentially the same as `pull` but also does a merge
+```
+
+**Pull changes locally**
+
+```sh
+git pull upstream master
+```
+
+**Push changes up**
+
+```sh
+git push
+```
