@@ -2,6 +2,7 @@ package com.prisma.deploy
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
+import com.prisma.auth.{Auth, AuthImpl}
 import com.prisma.errors.{BugsnagErrorReporter, ErrorReporter}
 import com.prisma.deploy.database.persistence.{MigrationPersistenceImpl, ProjectPersistenceImpl}
 import com.prisma.deploy.database.schema.InternalDatabaseSchema
@@ -29,6 +30,7 @@ trait DeployDependencies {
   def clusterAuth: ClusterAuth
   def graphQlClient: GraphQlClient
   def invalidationPublisher: PubSubPublisher[String]
+  def apiAuth: Auth
 
   lazy val internalDb           = setupAndGetInternalDatabase()
   lazy val clientDb             = Database.forConfig("client")
@@ -63,4 +65,6 @@ case class DeployDependenciesImpl()(implicit val system: ActorSystem, val materi
 
   override lazy val graphQlClient         = GraphQlClient(sys.env.getOrElse("CLUSTER_ADDRESS", sys.error("env var CLUSTER_ADDRESS is not set")))
   override lazy val invalidationPublisher = ???
+
+  override def apiAuth = AuthImpl
 }
