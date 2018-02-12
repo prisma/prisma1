@@ -29,7 +29,9 @@ case class UpsertDataItem(
   override def execute: Future[ClientSqlStatementResult[Any]] = {
     val createActions = SqlMutactions(dataResolver).getDbActionsForUpsertScalarLists(createWhere, allArgs.createArgumentsAsCoolArgs)
     val updateActions = SqlMutactions(dataResolver).getDbActionsForUpsertScalarLists(updateWhere, allArgs.updateArgumentsAsCoolArgs)
-    Future.successful { ClientSqlStatementResult(DatabaseMutationBuilder.upsert(project.id, where, createArgs, updateArgs, createActions, updateActions)) }
+    Future.successful {
+      ClientSqlStatementResult(DatabaseMutationBuilder.upsert(project.id, where, createWhere, createArgs, updateArgs, createActions, updateActions))
+    }
   }
 
   override def handleErrors = {

@@ -33,6 +33,10 @@ object DatabaseMutationBuilder {
     (sql"INSERT INTO `#$projectId`.`#$modelName` (" ++ escapedKeys ++ sql") VALUES (" ++ escapedValues ++ sql")").asUpdate
   }
 
+  def createRelayRow(projectId: String, where: NodeSelector): SqlStreamingAction[Vector[Int], Int, Effect]#ResultAction[Int, NoStream, Effect] = {
+    (sql"INSERT INTO `#$projectId`.`_RelayId` (`id`, `stableModelIdentifier`) VALUES (${where.fieldValue}, ${where.model.stableIdentifier})").asUpdate
+  }
+
   def createDataItemIfUniqueDoesNotExist(projectId: String,
                                          where: NodeSelector,
                                          args: CoolArgs): SqlStreamingAction[Vector[Int], Int, Effect]#ResultAction[Int, NoStream, Effect] = {
@@ -90,13 +94,15 @@ object DatabaseMutationBuilder {
 
   def upsert(projectId: String,
              where: NodeSelector,
+             createWhere: NodeSelector,
              createArgs: CoolArgs,
              updateArgs: CoolArgs,
              create: Vector[DBIOAction[Any, NoStream, Effect]],
              update: Vector[DBIOAction[Any, NoStream, Effect]]) = {
 
-    val q       = DatabaseQueryBuilder.existsByWhere(projectId, where).as[Boolean]
-    val qInsert = DBIOAction.seq(createDataItemIfUniqueDoesNotExist(projectId, where, createArgs), DBIOAction.seq(create: _*))
+    val q = DatabaseQueryBuilder.existsByWhere(projectId, where).as[Boolean]
+    val qInsert =
+      DBIOAction.seq(createDataItemIfUniqueDoesNotExist(projectId, where, createArgs), createRelayRow(projectId, createWhere), DBIOAction.seq(create: _*))
     val qUpdate = DBIOAction.seq(updateDataItemByUnique(projectId, where, updateArgs), DBIOAction.seq(update: _*))
 
     ifThenElse(q, qUpdate, qInsert)
@@ -113,10 +119,10 @@ object DatabaseMutationBuilder {
       update: Vector[DBIOAction[Any, NoStream, Effect]],
   ) = {
 
-    val q                                      = DatabaseQueryBuilder.existsNodeIsInRelationshipWith(project, parentInfo, where).as[Boolean]
-    val qChecks: NestedCreateRelationMutaction = NestedCreateRelationMutaction(project, parentInfo, createWhere, false)
-    val qInsert                                = DBIOAction.seq(createDataItem(project.id, where.model.name, createArgs), DBIOAction.seq(create: _*))
-    val qUpdate                                = DBIOAction.seq(updateDataItemByUnique(project.id, where, updateArgs), DBIOAction.seq(update: _*))
+    val q       = DatabaseQueryBuilder.existsNodeIsInRelationshipWith(project, parentInfo, where).as[Boolean]
+    val qChecks = NestedCreateRelationMutaction(project, parentInfo, createWhere, false)
+    val qInsert = DBIOAction.seq(createDataItem(project.id, where.model.name, createArgs), createRelayRow(project.id, createWhere), DBIOAction.seq(create: _*))
+    val qUpdate = DBIOAction.seq(updateDataItemByUnique(project.id, where, updateArgs), DBIOAction.seq(update: _*))
 
     ifThenElseNestedUpsert(q, qUpdate, qInsert, qChecks)
   }
