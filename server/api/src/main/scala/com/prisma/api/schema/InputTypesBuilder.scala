@@ -97,11 +97,15 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
     val updateDataInput = computeInputObjectTypeForNestedUpdateData(model, omitRelation)
 
     for {
-      field    <- omitRelation.getField(project.schema, model)
       whereArg <- computeInputObjectTypeForWhereUnique(model)
     } yield {
+      val typeName = omitRelation.getField(project.schema, model) match {
+        case Some(field) => s"${model.name}UpdateWithout${field.name.capitalize}Input"
+        case None        => s"${model.name}UpdateInput"
+      }
+
       InputObjectType[Any](
-        name = s"${model.name}UpdateWithout${field.name.capitalize}Input",
+        name = typeName,
         fieldsFn = () => {
           List(
             InputField[Any]("where", whereArg),
@@ -129,12 +133,16 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
   protected def computeInputObjectTypeForNestedUpsert(model: Model, omitRelation: Relation): Option[InputObjectType[Any]] = {
 
     for {
-      field     <- omitRelation.getField(project.schema, model)
       whereArg  <- computeInputObjectTypeForWhereUnique(model)
       createArg <- computeInputObjectTypeForCreate(model, Some(omitRelation))
     } yield {
+      val typeName = omitRelation.getField(project.schema, model) match {
+        case Some(field) => s"${model.name}UpsertWithout${field.name.capitalize}Input"
+        case None        => s"${model.name}UpsertInput"
+      }
+
       InputObjectType[Any](
-        name = s"${model.name}UpsertWithout${field.name.capitalize}Input",
+        name = typeName,
         fieldsFn = () => {
           List(
             InputField[Any]("where", whereArg),
