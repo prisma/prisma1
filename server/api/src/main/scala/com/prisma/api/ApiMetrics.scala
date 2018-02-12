@@ -33,6 +33,5 @@ object ApiMetrics extends MetricsManager(BugsnagErrorReporter(sys.env.getOrElse(
   // these Metrics are consumed by the console to power the dashboard. Only change them with extreme caution!
   val requestDuration          = defineTimer("requestDuration", projectIdTag)
   val requestCounter           = defineCounter("requestCount", projectIdTag)
-  val databaseSize             = defineGauge("databaseSize") // ???
   val subscriptionEventCounter = defineCounter("subscriptionEventCount", projectIdTag)
 }

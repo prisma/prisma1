@@ -1,6 +1,6 @@
 package com.prisma.deploy
 
-import akka.actor.ActorSystem
+import akka.actor.{ActorSystem, Props}
 import akka.stream.ActorMaterializer
 import com.prisma.auth.{Auth, AuthImpl}
 import com.prisma.errors.{BugsnagErrorReporter, ErrorReporter}
@@ -46,7 +46,13 @@ trait DeployDependencies {
     val db = Database.forConfig("internal")
     await(db.run(InternalDatabaseSeedActions.seedActions()))
 
+    startDatabaseSizeReporting()
+
     db
+  }
+
+  def startDatabaseSizeReporting(): Unit = {
+    system.actorOf(Props(DatabaseSizeReporter(projectPersistence, clientDb)))
   }
 
   private def await[T](awaitable: Awaitable[T]): T = Await.result(awaitable, Duration.Inf)
