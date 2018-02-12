@@ -187,7 +187,7 @@ class ObjectTypeBuilder(
   def generateFilterElement(input: Map[String, Any], model: Model, isSubscriptionFilter: Boolean = false): DataItemFilterCollection = {
     val filterArguments = new FilterArguments(model, isSubscriptionFilter)
 
-    val res = input
+    input
       .map {
         case (key, value) =>
           val FieldFilterTuple(field, filter) = filterArguments.lookup(key)
@@ -228,8 +228,6 @@ class ObjectTypeBuilder(
       }
       .toList
       .asInstanceOf[DataItemFilterCollection]
-
-    res
   }
 
   def extractQueryArgumentsFromContext(model: Model, ctx: Context[ApiUserContext, Unit]): Option[QueryArguments] = {

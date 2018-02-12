@@ -108,7 +108,7 @@ class DeleteManySpec extends FlatSpec with Matchers with ApiBaseSpec {
     todoAndRelayCountShouldBe(0)
   }
 
-  "The delete many Mutation" should "delete items using  Or" in {
+  "The delete many Mutation" should "delete items using  OR" in {
     createTodo("title1")
     createTodo("title2")
     createTodo("title3")
@@ -125,6 +125,8 @@ class DeleteManySpec extends FlatSpec with Matchers with ApiBaseSpec {
       project
     )
 
+    query.toString should be("""{"data":{"todoes":[{"title":"title1"},{"title":"title2"}]}}""")
+
     val result = server.executeQuerySimple(
       """mutation {
         |  deleteManyTodoes(
@@ -139,7 +141,41 @@ class DeleteManySpec extends FlatSpec with Matchers with ApiBaseSpec {
     result.pathAsLong("data.deleteManyTodoes.count") should equal(2)
 
     todoAndRelayCountShouldBe(1)
+  }
 
+  "The delete many Mutation" should "delete items using  AND" in {
+    createTodo("title1")
+    createTodo("title2")
+    createTodo("title3")
+
+    val query = server.executeQuerySimple(
+      """query {
+        |  todoes(
+        |    where: { AND: [{title: "title1"}, {title: "title2"}]}
+        |  ){
+        |    title
+        |  }
+        |}
+      """.stripMargin,
+      project
+    )
+
+    query.toString should be("""{"data":{"todoes":[]}}""")
+
+    val result = server.executeQuerySimple(
+      """mutation {
+        |  deleteManyTodoes(
+        |    where: { AND: [{title: "title1"}, {title: "title2"}]}
+        |  ){
+        |    count
+        |  }
+        |}
+      """.stripMargin,
+      project
+    )
+    result.pathAsLong("data.deleteManyTodoes.count") should equal(0)
+
+    todoAndRelayCountShouldBe(3)
   }
 
   def todoCount: Int = {
