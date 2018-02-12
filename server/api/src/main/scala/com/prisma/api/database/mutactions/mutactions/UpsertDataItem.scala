@@ -43,6 +43,7 @@ case class UpsertDataItem(
       case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1048 => APIErrors.FieldCannotBeNull()
     })
   }
+
   override def verify(resolver: DataResolver): Future[Try[MutactionVerificationSuccess]] = {
     val (createCheck, _) = InputValueValidation.validateDataItemInputs(model, createArgs)
     val (updateCheck, _) = InputValueValidation.validateDataItemInputs(model, updateArgs)

@@ -117,14 +117,14 @@ object DatabaseMutationBuilder {
       updateArgs: CoolArgs,
       create: Vector[DBIOAction[Any, NoStream, Effect]],
       update: Vector[DBIOAction[Any, NoStream, Effect]],
+      createCheck: NestedCreateRelationMutaction
   ) = {
 
     val q       = DatabaseQueryBuilder.existsNodeIsInRelationshipWith(project, parentInfo, where).as[Boolean]
-    val qChecks = NestedCreateRelationMutaction(project, parentInfo, createWhere, false)
     val qInsert = DBIOAction.seq(createDataItem(project.id, where.model.name, createArgs), createRelayRow(project.id, createWhere), DBIOAction.seq(create: _*))
     val qUpdate = DBIOAction.seq(updateDataItemByUnique(project.id, where, updateArgs), DBIOAction.seq(update: _*))
 
-    ifThenElseNestedUpsert(q, qUpdate, qInsert, qChecks)
+    ifThenElseNestedUpsert(q, qUpdate, qInsert, createCheck)
   }
   //endregion
 
