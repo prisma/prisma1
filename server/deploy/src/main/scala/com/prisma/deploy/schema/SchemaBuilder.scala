@@ -159,7 +159,12 @@ case class SchemaBuilderImpl(
       val nameAndStage = ProjectId.fromEncodedString(projectId)
       verifyAuthOrThrow(nameAndStage.name, nameAndStage.stage, ctx.ctx.authorizationHeader)
 
-      "wow-so-secret"
+      for {
+        projectOpt <- projectPersistence.load(projectId)
+        project    = projectOpt.getOrElse(throw InvalidProjectId(projectId))
+      } yield {
+        dependencies.apiAuth.createToken(project.secrets)
+      }
     }
   )
 

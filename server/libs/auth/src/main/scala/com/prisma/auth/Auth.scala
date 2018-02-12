@@ -4,6 +4,8 @@ import pdi.jwt.{Jwt, JwtAlgorithm, JwtOptions}
 
 trait Auth {
   def verify(secrets: Vector[String], authHeader: Option[String]): AuthResult
+
+  def createToken(secrets: Vector[String]): String
 }
 
 sealed trait AuthResult {
@@ -28,6 +30,13 @@ object AuthImpl extends Auth {
         case None       => AuthFailure
         case Some(auth) => verify(secrets, auth)
       }
+    }
+  }
+
+  override def createToken(secrets: Vector[String]) = {
+    secrets.headOption match {
+      case Some(secret) => Jwt.encode("irrelevant-claim", secret, algorithms.head)
+      case None         => ""
     }
   }
 
