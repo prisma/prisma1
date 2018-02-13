@@ -50,7 +50,9 @@ Here are further contribution instructions:
 
 ## Logistics
 
-**Clone your fork.**
+Below are a series of steps to help you from a more "practical" perspective. If you need additional help concerning Git, Github has some great guides that you may want to check out! Check them out [here](https://guides.github.com/)
+
+**Fork the repo and then clone your fork**
 
 SSH:
 ```sh
@@ -71,7 +73,7 @@ git remote add upstream git://github.com/graphcool/prisma.git
 **Fetch changes from upstream**
 
 ```sh
-git fetch upstream # fetch is essentially the same as `pull` but also does a merge
+git fetch upstream
 ```
 
 **Pull changes locally**
