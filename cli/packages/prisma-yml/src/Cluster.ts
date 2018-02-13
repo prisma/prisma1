@@ -22,7 +22,7 @@ export class Cluster {
     baseUrl: string,
     clusterSecret?: string,
     local: boolean = true,
-    shared: boolean = true,
+    shared: boolean = false,
   ) {
     this.out = out
     this.name = name

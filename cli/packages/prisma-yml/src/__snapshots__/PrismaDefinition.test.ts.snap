@@ -118,7 +118,7 @@ Array [
     "local": true,
     "name": "cluster",
     "out": Output {},
-    "shared": true,
+    "shared": false,
   },
 ]
 `;
