@@ -6,10 +6,9 @@ import com.prisma.deploy.DatabaseSizeReporter.{DatabaseSize, Report}
 import com.prisma.deploy.database.persistence.ProjectPersistence
 import com.prisma.errors.{BugsnagErrorReporter, ErrorReporter}
 import com.prisma.metrics.{CustomTag, GaugeMetric, MetricsManager}
-import com.prisma.profiling.{JvmProfiler, MemoryProfiler}
+import com.prisma.profiling.JvmProfiler
 import com.prisma.shared.models.Project
 import slick.jdbc
-import slick.jdbc.MySQLProfile
 import slick.jdbc.MySQLProfile.api._
 
 import scala.collection.mutable
@@ -21,14 +20,7 @@ object DeployMetrics extends MetricsManager(BugsnagErrorReporter(sys.env.getOrEl
   def init(reporter: ErrorReporter): Unit = {}
 
   // CamelCase the service name read from env
-  override def serviceName =
-    sys.env
-      .getOrElse("SERVICE_NAME", "Deploy")
-      .split("-")
-      .map { x =>
-        x.head.toUpper + x.tail
-      }
-      .mkString
+  override def serviceName = "Deploy"
 
   JvmProfiler.schedule(this)
 }
@@ -43,8 +35,9 @@ case class DatabaseSizeReporter(
     database: jdbc.MySQLProfile.backend.Database
 ) extends Actor
     with LogUnhandled {
-  import scala.concurrent.duration._
   import context.dispatcher
+
+  import scala.concurrent.duration._
 
   scheduleReport()
 
@@ -72,7 +65,7 @@ case class DatabaseSizeReporter(
   def gaugeForProject(project: Project): GaugeMetric = {
     // these Metrics are consumed by the console to power the dashboard. Only change them with extreme caution!
     gauges.getOrElseUpdate(project.id, {
-      DeployMetrics.defineGauge("databaseSize", (projectIdTag, project.id))
+      DeployMetrics.defineGauge("projectDatabase.sizeInMb", (projectIdTag, project.id))
     })
   }
 
