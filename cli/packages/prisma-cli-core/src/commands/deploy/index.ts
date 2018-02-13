@@ -637,16 +637,32 @@ ${chalk.gray(
   private async getLoggedInChoices(): Promise<any[]> {
     const localChoices = this.getLocalClusterChoices()
     const workspaces = await this.client.getWorkspaces()
-    const clusters = this.env.clusters.filter(
-      c => c.shared && c.name !== 'shared-public-demo',
-    )
+    // const clusters = this.env.clusters.filter(
+    //   c => c.shared && c.name !== 'shared-public-demo',
+    // )
     const combinations: string[][] = []
     workspaces.forEach(workspace => {
-      clusters.forEach(cluster => {
-        combinations.push([
-          `${workspace.slug}/${cluster.name}`,
-          'Free development cluster (hosted on Prisma Cloud)',
-        ])
+      workspace.clusters.forEach(cluster => {
+        const publicClusterNames = []
+        const label = this.env.sharedClusters.includes(cluster.name)
+          ? 'Free development cluster (hosted on Prisma Cloud)'
+          : 'Private Prisma Cluster'
+        combinations.push([`${workspace.slug}/${cluster.name}`, label])
+        if (
+          !this.env.sharedClusters.includes(cluster.name) &&
+          cluster.connectInfo
+        ) {
+          this.env.addCluster(
+            new Cluster(
+              this.out,
+              cluster.name,
+              cluster.connectInfo.endpoint,
+              this.env.cloudSessionKey,
+              false,
+              true,
+            ),
+          )
+        }
       })
     })
 
