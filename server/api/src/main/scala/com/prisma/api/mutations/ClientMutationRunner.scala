@@ -71,7 +71,7 @@ object ClientMutationRunner {
       s"execute ${mutaction.getClass.getSimpleName}", {
         mutaction match {
           case mut: ClientSqlDataChangeMutaction =>
-            ApiMetrics.sqlDataChangeMutactionTimer.timeFuture(projectId) {
+            ApiMetrics.mutactionTimer.timeFuture(projectId) {
               runWithErrorHandler(mut)
             }
           case mut =>

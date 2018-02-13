@@ -72,6 +72,7 @@ case class ApiServer(
       val end            = System.currentTimeMillis()
       val actualDuration = end - requestBeginningTime - throttledBy
       ApiMetrics.requestDuration.record(actualDuration, Seq(projectId))
+      ApiMetrics.requestCounter.inc(projectId)
       log(
         Json
           .toJson(
