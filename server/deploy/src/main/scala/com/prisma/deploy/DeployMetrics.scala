@@ -60,7 +60,7 @@ case class DatabaseSizeReporter(
       }
   }
 
-  def scheduleReport() = context.system.scheduler.scheduleOnce(5.seconds, self, Report)
+  def scheduleReport() = context.system.scheduler.scheduleOnce(5.minutes, self, Report)
 
   def gaugeForProject(project: Project): GaugeMetric = {
     // these Metrics are consumed by the console to power the dashboard. Only change them with extreme caution!
