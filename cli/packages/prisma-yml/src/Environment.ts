@@ -238,7 +238,7 @@ export class Environment {
   }
 
   private getLocalClusterConfig() {
-    return this.clusters.filter(c => c.local).reduce((acc, cluster) => {
+    return this.clusters.filter(c => !c.shared).reduce((acc, cluster) => {
       return {
         ...acc,
         [cluster.name]: {
