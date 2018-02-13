@@ -184,7 +184,7 @@ Let's investigate the deletion behaviour for the three types:
   - the related `Blog` node continues to exist and the deleted `Comment` node is removed from its `comments` list.
   - the related `User` node continues to exist and the deleted `Comment` node is removed from its `comments` list.
 
-You can find more detailled info about the `@relation` directive and its usage [here](!alias-)eiroozae8u#the-relation-directive).
+You can find more detailled info about the `@relation` directive and its usage [here](!alias-eiroozae8u#the-relation-directive).
 
 ## Authentication
 

@@ -541,7 +541,7 @@ Let's investigate the deletion behaviour for the three types:
   - the related `User` node will have its `blog` field set to `null`.
 - When a `Comment` node gets deleted,
   - the related `Blog` node continues to exist and the deleted `Comment` node is removed from its `comments` list.
-  - the related `User` node continues to exist and the deleted `Comment` node is removed from its `comments` list..
+  - the related `User` node continues to exist and the deleted `Comment` node is removed from its `comments` list.
 
 ### Generated API operations for relations
 
