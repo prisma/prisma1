@@ -14,9 +14,10 @@ import scala.concurrent.Future
 
 case class DeleteRelationMutaction(project: Project, where: NodeSelector) extends ClientSqlDataChangeMutaction {
 
-  val relationsWhereThisIsRequired = where.model.relationFields.filter(otherSideIsRequired).map(_.relation.get)
+  val relationFieldsWhereOtherSideIsRequired = where.model.relationFields.filter(otherSideIsRequired)
 
-  val requiredCheck = relationsWhereThisIsRequired.map(relation => oldParentFailureTriggerForRequiredRelations(project, relation, where))
+  val requiredCheck =
+    relationFieldsWhereOtherSideIsRequired.map(field => oldParentFailureTriggerForRequiredRelations(project, field.relation.get, where, field))
 
   override def execute = {
     Future.successful(ClientSqlStatementResult(DBIOAction.seq(requiredCheck: _*)))
@@ -29,7 +30,7 @@ case class DeleteRelationMutaction(project: Project, where: NodeSelector) extend
     })
   }
 
-  def otherFailingRequiredRelationOnChild(cause: String): Option[Relation] = relationsWhereThisIsRequired.collectFirst {
+  def otherFailingRequiredRelationOnChild(cause: String): Option[Relation] = relationFieldsWhereOtherSideIsRequired.map(_.relation.get).collectFirst {
     case x if causedByThisMutactionChildOnly(x, cause) => x
   }
 

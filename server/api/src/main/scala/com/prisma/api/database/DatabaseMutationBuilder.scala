@@ -7,7 +7,7 @@ import com.prisma.api.database.mutactions.mutactions.NestedCreateRelationMutacti
 import com.prisma.api.mutations.{CoolArgs, NodeSelector, ParentInfo}
 import com.prisma.api.schema.GeneralError
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
-import com.prisma.shared.models.{Model, Project, Relation, TypeIdentifier}
+import com.prisma.shared.models._
 import cool.graph.cuid.Cuid
 import slick.dbio.{DBIOAction, Effect, NoStream}
 import slick.jdbc.MySQLProfile.api._
@@ -155,8 +155,8 @@ object DatabaseMutationBuilder {
                                                                                                                                     parentInfo.where)).asUpdate
   }
 
-  def deleteRelationRowByChild(projectId: String, relation: Relation, where: NodeSelector) = {
-    (sql"DELETE FROM `#$projectId`.`#${relation.id}` WHERE `#${relation.sideOf(where.model)}`" ++ idFromWhereEquals(projectId, where)).asUpdate
+  def deleteRelationRowByChild(projectId: String, parentInfo: ParentInfo, where: NodeSelector) = {
+    (sql"DELETE FROM `#$projectId`.`#${parentInfo.relation.id}` WHERE `#${parentInfo.field.oppositeRelationSide.get}`" ++ idFromWhereEquals(projectId, where)).asUpdate
   }
 
   def deleteRelationRowByParentAndChild(projectId: String, parentInfo: ParentInfo, where: NodeSelector) = {
@@ -177,7 +177,7 @@ object DatabaseMutationBuilder {
   def oldParentFailureTriggerByPath(project: Project, relation: Relation, path: Path) = {
     val query = sql"SELECT `id`" ++
       sql"FROM `#${project.id}`.`#${relation.id}` OLDPARENTPATHFAILURETRIGGER" ++
-      sql"WHERE `#${relation.sideOf(path.lastModel)}` IN " ++ pathQuery(project.id, path)
+      sql"WHERE `#${relation.sideOf(path.lastModel)}` IN " ++ pathQuery(project.id, path) //todo
 
     triggerFailureWhenExists(project, query, relation.id)
   }
@@ -259,8 +259,8 @@ object DatabaseMutationBuilder {
   }
 
   def connectionFailureTrigger(project: Project, parentInfo: ParentInfo, where: NodeSelector) = {
-    val childSide  = parentInfo.relation.sideOf(where.model)
-    val parentSide = parentInfo.relation.sideOf(parentInfo.model)
+    val parentSide = parentInfo.field.relationSide.get
+    val childSide  = parentInfo.field.oppositeRelationSide.get
     val table      = parentInfo.relation.id
     val query = sql"SELECT `id` FROM `#${project.id}`.`#$table` CONNECTIONFAILURETRIGGER" ++
       sql"WHERE `#$childSide` " ++ idFromWhereEquals(project.id, where) ++
@@ -269,8 +269,8 @@ object DatabaseMutationBuilder {
     triggerFailureWhenNotExists(project, query, table)
   }
 
-  def oldParentFailureTriggerForRequiredRelations(project: Project, relation: Relation, where: NodeSelector) = {
-    val childSide = relation.sideOf(where.model)
+  def oldParentFailureTriggerForRequiredRelations(project: Project, relation: Relation, where: NodeSelector, field: Field) = { //todo
+    val childSide = field.relationSide.get
     val table     = relation.id
     val query     = sql"SELECT `id` FROM `#${project.id}`.`#$table` OLDPARENTFAILURETRIGGER WHERE `#$childSide`" ++ idFromWhereEquals(project.id, where)
 
@@ -278,7 +278,7 @@ object DatabaseMutationBuilder {
   }
 
   def oldChildFailureTriggerForRequiredRelations(project: Project, parentInfo: ParentInfo) = {
-    val parentSide = parentInfo.relation.sideOf(parentInfo.model)
+    val parentSide = parentInfo.field.relationSide.get
     val table      = parentInfo.relation.id
     val query      = sql"SELECT `id` FROM `#${project.id}`.`#$table` OLDCHILDFAILURETRIGGER WHERE `#$parentSide`" ++ idFromWhereEquals(project.id, parentInfo.where)
 

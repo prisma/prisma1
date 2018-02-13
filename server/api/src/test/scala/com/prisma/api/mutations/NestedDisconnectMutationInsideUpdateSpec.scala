@@ -760,4 +760,69 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
 
     mustBeEqual(result2.pathAsJsValue("data.updateTodo.comments").toString, """[{"text":"comment1"}]""")
   }
+
+  "A PM CM self relation" should "be disconnectable by unique through a nested mutation" in {
+    val project = SchemaDsl.fromString() { """|type User {
+                                              |  id: ID! @unique
+                                              |  banned: Boolean! @default(value: "false")
+                                              |  username: String! @unique
+                                              |  password: String!
+                                              |  salt: String!
+                                              |  followers: [User!]! @relation(name: "UserFollowers")
+                                              |  follows: [User!]! @relation(name: "UserFollows")
+                                              |}""".stripMargin }
+    database.setup(project)
+
+    server.executeQuerySimple("""mutation { createUser(data: {username: "Paul", password: "1234", salt: "so salty"}){ id } }""", project)
+    server.executeQuerySimple("""mutation { createUser(data: {username: "Peter", password: "abcd", salt: "so salty"}){ id } }""", project)
+
+    val result = server.executeQuerySimple(
+      s"""mutation {
+         |  updateUser(
+         |    where: {
+         |      username: "Paul"
+         |    }
+         |    data:{
+         |      follows: {
+         |        connect: [{username: "Peter"}]
+         |      }
+         |    }
+         |  ){
+         |    username
+         |    follows {
+         |      username
+         |    }
+         |  }
+         |}
+      """.stripMargin,
+      project
+    )
+
+    mustBeEqual(result.pathAsJsValue("data.updateUser.follows").toString, """[{"username":"Peter"}]""")
+
+    val result2 = server.executeQuerySimple(
+      s"""mutation {
+         |  updateUser(
+         |    where: {
+         |      username: "Paul"
+         |    }
+         |    data:{
+         |      follows: {
+         |        disconnect: [{username: "Peter"}]
+         |      }
+         |    }
+         |  ){
+         |    username
+         |    follows {
+         |      username
+         |    }
+         |  }
+         |}
+      """.stripMargin,
+      project
+    )
+
+    mustBeEqual(result2.pathAsJsValue("data.updateUser.follows").toString, """[]""")
+  }
+
 }
