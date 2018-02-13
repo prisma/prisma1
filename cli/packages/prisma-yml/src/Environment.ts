@@ -238,15 +238,17 @@ export class Environment {
   }
 
   private getLocalClusterConfig() {
-    return this.clusters.filter(c => !c.shared).reduce((acc, cluster) => {
-      return {
-        ...acc,
-        [cluster.name]: {
-          host: cluster.baseUrl,
-          clusterSecret: cluster.clusterSecret,
-        },
-      }
-    }, {})
+    return this.clusters
+      .filter(c => !c.shared && c.clusterSecret !== this.cloudSessionKey)
+      .reduce((acc, cluster) => {
+        return {
+          ...acc,
+          [cluster.name]: {
+            host: cluster.baseUrl,
+            clusterSecret: cluster.clusterSecret,
+          },
+        }
+      }, {})
   }
 }
 
