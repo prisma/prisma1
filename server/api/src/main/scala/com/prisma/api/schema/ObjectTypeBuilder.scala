@@ -252,8 +252,12 @@ class ObjectTypeBuilder(
   }
 
   def extractRequiredFilterFromContext(model: Model, ctx: Context[ApiUserContext, Unit]): Types.DataItemFilterCollection = {
-    val rawFilter = ctx.arg[Map[String, Any]]("where")
-    generateFilterElement(rawFilter, model, isSubscriptionFilter = false)
+    val rawFilter: Map[String, Any] = ctx.arg[Map[String, Any]]("where")
+    val unwrappedValues = rawFilter.map {
+      case (k, Some(x)) => (k, x)
+      case (k, v)       => (k, v)
+    }
+    generateFilterElement(unwrappedValues, model, isSubscriptionFilter = false)
   }
 
   def extractUniqueArgument(model: models.Model, ctx: Context[ApiUserContext, Unit]): Argument[_] = {
