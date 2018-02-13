@@ -30,12 +30,11 @@ case class DeleteRelationMutaction(project: Project, where: NodeSelector) extend
     })
   }
 
-  def otherFailingRequiredRelationOnChild(cause: String): Option[Relation] = relationFieldsWhereOtherSideIsRequired.map(_.relation.get).collectFirst {
-    case x if causedByThisMutactionChildOnly(x, cause) => x
-  }
+  def otherFailingRequiredRelationOnChild(cause: String): Option[Relation] =
+    relationFieldsWhereOtherSideIsRequired.collectFirst { case f if causedByThisMutactionChildOnly(f, f.relation.get, cause) => f.relation.get }
 
-  def causedByThisMutactionChildOnly(relation: Relation, cause: String) = {
-    val parentCheckString = s"`${project.id}`.`${relation.id}` OLDPARENTFAILURETRIGGER WHERE `${relation.sideOf(where.model)}`"
+  def causedByThisMutactionChildOnly(field: Field, relation: Relation, cause: String) = {
+    val parentCheckString = s"`${project.id}`.`${relation.id}` OLDPARENTFAILURETRIGGER WHERE `${field.relationSide.get}`"
 
     cause.contains(parentCheckString) && cause.contains(parameterStringFromSQLException(where))
   }

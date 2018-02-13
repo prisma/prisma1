@@ -177,7 +177,7 @@ object DatabaseMutationBuilder {
   def oldParentFailureTriggerByPath(project: Project, relation: Relation, path: Path) = {
     val query = sql"SELECT `id`" ++
       sql"FROM `#${project.id}`.`#${relation.id}` OLDPARENTPATHFAILURETRIGGER" ++
-      sql"WHERE `#${relation.sideOf(path.lastModel)}` IN " ++ pathQuery(project.id, path) //todo
+      sql"WHERE `#${relation.sideOf(path.lastModel)}` IN " ++ pathQuery(project.id, path)
 
     triggerFailureWhenExists(project, query, relation.id)
   }

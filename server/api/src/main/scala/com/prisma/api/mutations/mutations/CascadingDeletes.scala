@@ -11,7 +11,7 @@ object CascadingDeletes {
   case class Path(where: NodeSelector, edges: List[Edge]) {
 
     def removeLastEdge: Path = edges match {
-      case x if x.isEmpty => sys.error("Dont call this on an empty path")
+      case x if x.isEmpty => sys.error("Don't call this on an empty path")
       case x              => copy(where, edges.dropRight(1))
     }
 
