@@ -95,7 +95,7 @@ Consider the following file structure defining a Prisma service:
 `data` contains the files data to be imported. Further, all files ending on `.json` are adhering to NDF. To import the data from these files, you can simply run the following command in the terminal:
 
 ```sh
-prisma import --source data
+prisma import --data data
 ```
 
 ## Data import using the raw import API
