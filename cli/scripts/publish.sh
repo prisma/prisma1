@@ -48,9 +48,8 @@ nextDockerMinor=${tagElements[1]}
 if [[ $CIRCLE_TAG ]]; then
   nextDockerTag="${tagElements[0]}.${nextDockerMinor}"
 else
-  #TODO: add when backend releases are ready
-  #step=1
-  #nextDockerMinor=$((nextDockerMinor + step))
+  step=1
+  nextDockerMinor=$((nextDockerMinor + step))
   nextDockerTag="${tagElements[0]}.${nextDockerMinor}-beta"
 fi
 
