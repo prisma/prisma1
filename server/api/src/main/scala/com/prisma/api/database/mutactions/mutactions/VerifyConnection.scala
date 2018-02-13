@@ -24,8 +24,10 @@ case class VerifyConnection(project: Project, parentInfo: ParentInfo, where: Nod
   }
 
   def causedByThisMutaction(cause: String) = {
-    val childString  = s"`${parentInfo.relation.id}` CONNECTIONFAILURETRIGGER WHERE `${parentInfo.relation.sideOf(where.model)}`"
-    val parentString = s"AND `${parentInfo.relation.sideOf(parentInfo.where.model)}`"
+    val childSide    = parentInfo.field.oppositeRelationSide.get
+    val parentSide   = parentInfo.field.relationSide.get
+    val childString  = s"`${parentInfo.relation.id}` CONNECTIONFAILURETRIGGER WHERE `$childSide`"
+    val parentString = s"AND `$parentSide`"
 
     cause.contains(childString) && cause.contains(parentString) && cause.contains(parameterStringFromSQLException(where))
   }

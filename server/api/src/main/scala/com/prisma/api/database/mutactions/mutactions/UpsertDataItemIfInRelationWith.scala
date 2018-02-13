@@ -46,7 +46,7 @@ case class UpsertDataItemIfInRelationWith(project: Project,
         APIErrors.UniqueConstraintViolation(model.name, getFieldOption(List(createArgs, updateArgs), e).get)
       case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1452 => APIErrors.NodeDoesNotExist(where.fieldValueAsString)
       case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1048 => APIErrors.FieldCannotBeNull()
-      case e: SQLException if e.getErrorCode == 1242 && createCheck.causedByThisMutaction(parentInfo.relation, e.getCause.toString) =>
+      case e: SQLException if e.getErrorCode == 1242 && createCheck.causedByThisMutaction(parentInfo, e.getCause.toString) =>
         throw RequiredRelationWouldBeViolated(project, parentInfo.relation)
     })
   }

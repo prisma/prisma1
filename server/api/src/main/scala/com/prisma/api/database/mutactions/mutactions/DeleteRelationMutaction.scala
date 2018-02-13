@@ -17,7 +17,7 @@ case class DeleteRelationMutaction(project: Project, where: NodeSelector) extend
   val relationFieldsWhereOtherSideIsRequired = where.model.relationFields.filter(otherSideIsRequired)
 
   val requiredCheck =
-    relationFieldsWhereOtherSideIsRequired.map(field => oldParentFailureTriggerForRequiredRelations(project, field.relation.get, where, field))
+    relationFieldsWhereOtherSideIsRequired.map(field => oldParentFailureTriggerForRequiredRelations(project, field.relation.get, where, field.relationSide.get))
 
   override def execute = {
     Future.successful(ClientSqlStatementResult(DBIOAction.seq(requiredCheck: _*)))

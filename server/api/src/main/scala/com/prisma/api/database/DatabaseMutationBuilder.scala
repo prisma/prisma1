@@ -269,10 +269,9 @@ object DatabaseMutationBuilder {
     triggerFailureWhenNotExists(project, query, table)
   }
 
-  def oldParentFailureTriggerForRequiredRelations(project: Project, relation: Relation, where: NodeSelector, field: Field) = { //todo
-    val childSide = field.relationSide.get
-    val table     = relation.id
-    val query     = sql"SELECT `id` FROM `#${project.id}`.`#$table` OLDPARENTFAILURETRIGGER WHERE `#$childSide`" ++ idFromWhereEquals(project.id, where)
+  def oldParentFailureTriggerForRequiredRelations(project: Project, relation: Relation, where: NodeSelector, childSide: RelationSide.Value) = {
+    val table = relation.id
+    val query = sql"SELECT `id` FROM `#${project.id}`.`#$table` OLDPARENTFAILURETRIGGER WHERE `#$childSide`" ++ idFromWhereEquals(project.id, where)
 
     triggerFailureWhenExists(project, query, table)
   }
