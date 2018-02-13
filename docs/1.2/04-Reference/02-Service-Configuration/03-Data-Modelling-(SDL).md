@@ -211,7 +211,7 @@ The type defined above has the following properties:
 * Name: `Article`
 * Fields: `id`, `text` and `isPublished` (with the default value `false`)
 
-### Generated operations based on types
+### Generated API operations for types
 
 The types in your data model affect the available operations in the [Prisma GraphQL API](!alias-abogasd0go). For every type,
 
@@ -409,7 +409,7 @@ type User {
 }
 ```
 
-### Generated operations based on fields
+### Generated API operations for fields
 
 Fields in the data model affect the available [query arguments](!alias-ahwee4zaey#query-arguments).
 
@@ -431,15 +431,38 @@ Nodes for a type that contains a required _to-one_ relation field can only be cr
 
 When defining relations between types, there is the `@relation` directive which provides meta-information about the relation. It can take two arguments:
 
-* `name`: An identifier for this relation (provided as a string). This argument is only required if relations are ambiguous.
-* `onDelete` ([pending feature request](https://github.com/graphcool/framework/issues/1262)): Specifies the _deletion behaviour_. (In case a node with related nodes gets deleted, the deletion behaviour determines what should happen to the related node(s).) The input values for this argument are defined as an enum with the following possible values:
-  * `NO_ACTION` (default): Keep the related node
-  * `CASCADE`: Delete the related node
-  * `SET_NULL`: Set the related node to `null`
+* `name`: An identifier for this relation (provided as a string). This argument is only required if relations are ambiguous. Note that the `name` argument is required every time you're using the `@relation` directive.
+* `onDelete`: Specifies the _deletion behaviour_ and enables _cascading deletes_. In case a node with related nodes gets deleted, the deletion behaviour determines what should happen to the related nodes. The input values for this argument are defined as an enum with the following possible values:
+  * `SET_NULL` (default): Set the related node(s) to `null`.
+  * `CASCADE`: Delete the related node(s). Note that is not possible to set _both_ ends of a bidirectional relation to `CASCADE`.
+
+> **Note**:
+
+Here is an example of a data model where the `@relation` directive is used:
+
+```graphql
+type User {
+  id: ID! @unique
+  stories: [Story!]! @relation(name: "StoriesByUser" onDelete: CASCADE)
+}
+
+type Story {
+  id: ID! @unique
+  text: String!
+  author: User @relation(name: "StoriesByUser")
+}
+```
+
+The deletion behaviour in this example is as follows:
+
+- When a `User` node gets deleted, all its related `Story` nodes will be deleted as well.
+- When a `Story` node gets deleted, it will simply be removed from the `stories` list on the related `User` node.
 
 #### Omitting the `@relation` directive
 
-In the simplest case, where a relation between two types is unambiguous and the default deletion behaviour (`NO_ACTION`) should be applied, the corresponding relation fields do not have to be annotated with the `@relation` directive:
+In the simplest case, where a relation between two types is unambiguous and the default deletion behaviour (`SET_NULL`) should be applied, the corresponding relation fields do not have to be annotated with the `@relation` directive.
+
+Here we are defining a bidirectional _one-to-many_ relation between the `User` and `Story` types. Since `onDelete` has not been provided, the default deletion behaviour is used: `SET_NULL`:
 
 ```graphql
 type User {
@@ -450,11 +473,14 @@ type User {
 type Story {
   id: ID! @unique
   text: String!
-  author: User!
+  author: User
 }
 ```
 
-Here we are defining a _one-to-many_ relation between the `User` and `Story` types. Since `onDelete` has not been provided, the default deletion behaviour is used: `NO_ACTION`. The semantics of this deletion behaviour are that stories and users can exists completely independently from another: When a `User` node is deleted, the nodes from its `stories` field will remain to exist. Likewise, when a `Story` node is deleted, the corresponding `author` node will remain to exist.
+The deletion behaviour in this example is as follows:
+
+- When a `User` node gets deleted, the `author` field on all its related `Story` nodes will be set to `null`. Note that if the `author` field was marked as [required](#required), the operation would result in an error.
+- When a `Story` node gets deleted, it will simply be removed from the `stories` list on the related `User` node.
 
 #### Using the `name` argument of the `@relation` directive
 
@@ -500,24 +526,24 @@ type Blog {
 
 type Comment {
   id: ID! @unique
-  blog: Blog! @relation(name: "Comments", onDelete: NO_ACTION)
-  author: User @relation(name: "CommentAuthor", onDelete: NO_ACTION)
+  blog: Blog! @relation(name: "Comments", onDelete: SET_NULL)
+  author: User @relation(name: "CommentAuthor", onDelete: SET_NULL)
 }
 ```
 
 Let's investigate the deletion behaviour for the three types:
 
-* When a `User` node gets deleted:
-  * all related `Comment` nodes will be deleted
-  * the related `Blog` node will be deleted
-* When a `Blog` node gets deleted:
-  * all related `Comment` nodes will be deleted
-  * the related `User` node will have its `blog` field set to `null`
-* When a `Comment` node gets deleted:
-  * the related `Blog` node continues to exist
-  * the related `User` node continues to exist
+- When a `User` node gets deleted,
+  - all related `Comment` nodes will be deleted.
+  - the related `Blog` node will be deleted.
+- When a `Blog` node gets deleted,
+  - all related `Comment` nodes will be deleted.
+  - the related `User` node will have its `blog` field set to `null`.
+- When a `Comment` node gets deleted,
+  - the related `Blog` node continues to exist and the deleted `Comment` node is removed from its `comments` list.
+  - the related `User` node continues to exist and the deleted `Comment` node is removed from its `comments` list..
 
-### Generated operations based on relations
+### Generated API operations for relations
 
 The relations that are included in your schema affect the available operations in the [GraphQL API](!alias-abogasd0go). For every relation,
 

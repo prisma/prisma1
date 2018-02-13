@@ -139,6 +139,53 @@ An example is creating a `User` node and two `Post` nodes that will be connected
 
 Mutations are _transactional_, meaning they are [_atomic_](https://en.wikipedia.org/wiki/Atomicity_(database_systems)) and [_isolated_](https://en.wikipedia.org/wiki/Isolation_(database_systems)). This means that between two separate actions of the same nested mutation, no other mutations can alter the data. Also the result of a single action cannot be observed until the complete mutation has been processed.
 
+### Cascading deletes
+
+Prisma supports different _deletion behaviours_ for _relations_ in your data model. There are two major deletion behaviours:
+
+- `CASCADE`: When a node with a relation to one or more other nodes gets deleted, these nodes will be deleted as well.
+- `SET_NULL`:  When a node with a relation to one or more other nodes gets deleted, the fields referring to the deleted node are set to `null`.
+
+Consider this example:
+
+As mentioned above, you can specify a dedicated deletion behaviour for the related nodes. That's what the `onDelete` argument of the `@relation` directive is for.
+
+Consider the following example:
+
+```graphql
+type User {
+  id: ID! @unique
+  comments: [Comment!]! @relation(name: "CommentAuthor", onDelete: CASCADE)
+  blog: Blog @relation(name: "BlogOwner", onDelete: CASCADE)
+}
+
+type Blog {
+  id: ID! @unique
+  comments: [Comment!]! @relation(name: "Comments", onDelete: CASCADE)
+  owner: User! @relation(name: "BlogOwner", onDelete: SET_NULL)
+}
+
+type Comment {
+  id: ID! @unique
+  blog: Blog! @relation(name: "Comments", onDelete: SET_NULL)
+  author: User @relation(name: "CommentAuthor", onDelete: SET_NULL)
+}
+```
+
+Let's investigate the deletion behaviour for the three types:
+
+- When a `User` node gets deleted,
+  - all related `Comment` nodes will be deleted.
+  - the related `Blog` node will be deleted.
+- When a `Blog` node gets deleted,
+  - all related `Comment` nodes will be deleted.
+  - the related `User` node will have its `blog` field set to `null`.
+- When a `Comment` node gets deleted,
+  - the related `Blog` node continues to exist and the deleted `Comment` node is removed from its `comments` list.
+  - the related `User` node continues to exist and the deleted `Comment` node is removed from its `comments` list.
+
+You can find more detailled info about the `@relation` directive and its usage [here](!alias-)eiroozae8u#the-relation-directive).
+
 ## Authentication
 
 ### Service secret
