@@ -1,6 +1,5 @@
 package com.prisma.shared.models
 
-import com.prisma.shared.models.ProjectJsonFormatter.{relationReads, relationWrites}
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
@@ -97,6 +96,10 @@ object MigrationStepsJsonFormatter extends DefaultReads {
   implicit val deleteEnumFormat = Json.format[DeleteEnum]
   implicit val updateEnumFormat = Json.format[UpdateEnum]
 
+//  implicit val createRelationFormat = Json.format[CreateRelation]
+//  implicit val deleteRelationFormat = Json.format[DeleteRelation]
+  implicit val updateRelationFormat = Json.format[UpdateRelation]
+
   implicit val createRelationFormat: OFormat[CreateRelation] = {
     val reads = (
       (JsPath \ "name").read[String] and
@@ -116,23 +119,25 @@ object MigrationStepsJsonFormatter extends DefaultReads {
 
     OFormat(reads, writes)
   }
+
   implicit val deleteRelationFormat: OFormat[DeleteRelation] = {
     val reads  = (JsPath \ "name").read[String].map(DeleteRelation.apply)
     val writes = OWrites[DeleteRelation](delete => Json.obj("name" -> delete.name))
     OFormat(reads, writes)
   }
-  implicit val updateRelationFormat: OFormat[UpdateRelation] = {
-    val format: OFormat[UpdateRelation] = (
-      (JsPath \ "name").format[String] and
-        (JsPath \ "newName").formatNullable[String] and
-        (JsPath \ "modelAId").formatNullable[String] and
-        (JsPath \ "modelBId").formatNullable[String] and
-        (JsPath \ "modelAOnDelete").formatNullable[OnDelete.Value] and
-        (JsPath \ "modelBOnDelete").formatNullable[OnDelete.Value]
-    )(UpdateRelation.apply, unlift(UpdateRelation.unapply))
 
-    format
-  }
+//  implicit val updateRelationFormat: OFormat[UpdateRelation] = {
+//    val format: OFormat[UpdateRelation] = (
+//      (JsPath \ "name").format[String] and
+//        (JsPath \ "newName").formatNullable[String] and
+//        (JsPath \ "modelAId").formatNullable[String] and
+//        (JsPath \ "modelBId").formatNullable[String] and
+//        (JsPath \ "modelAOnDelete").formatNullable[OnDelete.Value] and
+//        (JsPath \ "modelBOnDelete").formatNullable[OnDelete.Value]
+//    )(UpdateRelation.apply, unlift(UpdateRelation.unapply))
+//
+//    format
+//  }
 
   implicit val migrationStepFormat: Format[MigrationStep] = new Format[MigrationStep] {
     val discriminatorField = "discriminator"
