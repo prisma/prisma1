@@ -29,7 +29,9 @@ case class UpsertDataItem(
   override def execute: Future[ClientSqlStatementResult[Any]] = {
     val createActions = SqlMutactions(dataResolver).getDbActionsForUpsertScalarLists(createWhere, allArgs.createArgumentsAsCoolArgs)
     val updateActions = SqlMutactions(dataResolver).getDbActionsForUpsertScalarLists(updateWhere, allArgs.updateArgumentsAsCoolArgs)
-    Future.successful { ClientSqlStatementResult(DatabaseMutationBuilder.upsert(project.id, where, createArgs, updateArgs, createActions, updateActions)) }
+    Future.successful {
+      ClientSqlStatementResult(DatabaseMutationBuilder.upsert(project.id, where, createWhere, createArgs, updateArgs, createActions, updateActions))
+    }
   }
 
   override def handleErrors = {
@@ -41,6 +43,7 @@ case class UpsertDataItem(
       case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1048 => APIErrors.FieldCannotBeNull()
     })
   }
+
   override def verify(resolver: DataResolver): Future[Try[MutactionVerificationSuccess]] = {
     val (createCheck, _) = InputValueValidation.validateDataItemInputs(model, createArgs)
     val (updateCheck, _) = InputValueValidation.validateDataItemInputs(model, updateArgs)

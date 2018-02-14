@@ -535,6 +535,13 @@ To reset the key pair, please run ${chalk.bold.green('prisma local start')}
             id
             name
             slug
+            clusters {
+              id
+              name
+              connectInfo {
+                endpoint
+              }
+            }
           }
         }
       }

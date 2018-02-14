@@ -351,8 +351,7 @@ object QueryArguments {
           Some(sql"`#$projectId`.`#$tableName`.`#$key` = " concat escapeUnsafeParam(value))
 
         case FilterElement(key, value, Some(field), filterName, Some(relatedFilter)) if filterName == "_some" =>
-          val (alias, modTableName) =
-            getAliasAndTableName(relatedFilter.fromModel.name, relatedFilter.toModel.name)
+          val (alias, modTableName) = getAliasAndTableName(relatedFilter.fromModel.name, relatedFilter.toModel.name)
           Some(sql"""exists (
             select * from `#$projectId`.`#${relatedFilter.toModel.name}` as `#$alias`
             inner join `#$projectId`.`#${relatedFilter.relation.id}`
@@ -361,8 +360,7 @@ object QueryArguments {
             and""" concat filterOnRelation(alias, relatedFilter) concat sql")")
 
         case FilterElement(key, value, Some(field), filterName, Some(relatedFilter)) if filterName == "_every" =>
-          val (alias, modTableName) =
-            getAliasAndTableName(relatedFilter.fromModel.name, relatedFilter.toModel.name)
+          val (alias, modTableName) = getAliasAndTableName(relatedFilter.fromModel.name, relatedFilter.toModel.name)
           Some(sql"""not exists (
             select * from `#$projectId`.`#${relatedFilter.toModel.name}` as `#$alias`
             inner join `#$projectId`.`#${relatedFilter.relation.id}`
@@ -371,8 +369,7 @@ object QueryArguments {
             and not""" concat filterOnRelation(alias, relatedFilter) concat sql")")
 
         case FilterElement(key, value, Some(field), filterName, Some(relatedFilter)) if filterName == "_none" =>
-          val (alias, modTableName) =
-            getAliasAndTableName(relatedFilter.fromModel.name, relatedFilter.toModel.name)
+          val (alias, modTableName) = getAliasAndTableName(relatedFilter.fromModel.name, relatedFilter.toModel.name)
           Some(sql"""not exists (
             select * from `#$projectId`.`#${relatedFilter.toModel.name}` as `#$alias`
             inner join `#$projectId`.`#${relatedFilter.relation.id}`
@@ -381,8 +378,7 @@ object QueryArguments {
             and """ concat filterOnRelation(alias, relatedFilter) concat sql")")
 
         case FilterElement(key, value, Some(field), filterName, Some(relatedFilter)) if filterName == "" =>
-          val (alias, modTableName) =
-            getAliasAndTableName(relatedFilter.fromModel.name, relatedFilter.toModel.name)
+          val (alias, modTableName) = getAliasAndTableName(relatedFilter.fromModel.name, relatedFilter.toModel.name)
           Some(sql"""exists (
             select * from `#$projectId`.`#${relatedFilter.toModel.name}` as `#$alias`
             inner join `#$projectId`.`#${relatedFilter.relation.id}`

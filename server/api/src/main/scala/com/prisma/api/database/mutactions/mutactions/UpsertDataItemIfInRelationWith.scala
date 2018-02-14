@@ -1,6 +1,6 @@
 package com.prisma.api.database.mutactions.mutactions
 
-import java.sql.SQLIntegrityConstraintViolationException
+import java.sql.{SQLException, SQLIntegrityConstraintViolationException}
 
 import com.prisma.api.database.mutactions.GetFieldFromSQLUniqueException._
 import com.prisma.api.database.mutactions.validation.InputValueValidation
@@ -8,12 +8,11 @@ import com.prisma.api.database.mutactions.{ClientSqlDataChangeMutaction, ClientS
 import com.prisma.api.database.{DataResolver, DatabaseMutationBuilder}
 import com.prisma.api.mutations.{CoolArgs, NodeSelector, ParentInfo}
 import com.prisma.api.schema.APIErrors
-import cool.graph.cuid.Cuid
+import com.prisma.api.schema.APIErrors.RequiredRelationWouldBeViolated
 import com.prisma.shared.models.Project
 import com.prisma.util.json.JsonFormats
 import slick.dbio.{DBIOAction, Effect, NoStream}
 
-import scala.collection.immutable.Seq
 import scala.concurrent.Future
 import scala.util.{Success, Try}
 
@@ -31,10 +30,12 @@ case class UpsertDataItemIfInRelationWith(project: Project,
   val actualCreateArgs = CoolArgs(createArgs.raw).generateNonListCreateArgs(model, createWhere.fieldValueAsString)
   val actualUpdateArgs = updateArgs.nonListScalarArguments(model)
 
+  val createCheck: NestedCreateRelationMutaction = NestedCreateRelationMutaction(project, parentInfo, createWhere, false)
+
   override def execute: Future[ClientSqlStatementResult[Any]] = Future.successful {
     ClientSqlStatementResult(
       DatabaseMutationBuilder
-        .upsertIfInRelationWith(project, parentInfo, where, createWhere, actualCreateArgs, actualUpdateArgs, createMutations, updateMutations))
+        .upsertIfInRelationWith(project, parentInfo, where, createWhere, actualCreateArgs, actualUpdateArgs, createMutations, updateMutations, createCheck))
   }
 
   override def handleErrors = {
@@ -45,6 +46,8 @@ case class UpsertDataItemIfInRelationWith(project: Project,
         APIErrors.UniqueConstraintViolation(model.name, getFieldOption(List(createArgs, updateArgs), e).get)
       case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1452 => APIErrors.NodeDoesNotExist(where.fieldValueAsString)
       case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1048 => APIErrors.FieldCannotBeNull()
+      case e: SQLException if e.getErrorCode == 1242 && createCheck.causedByThisMutaction(parentInfo.relation, e.getCause.toString) =>
+        throw RequiredRelationWouldBeViolated(project, parentInfo.relation)
     })
   }
   override def verify(resolver: DataResolver): Future[Try[MutactionVerificationSuccess]] = {
