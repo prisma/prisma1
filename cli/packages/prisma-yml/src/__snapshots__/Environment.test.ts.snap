@@ -5,18 +5,22 @@ Array [
   Cluster {
     "baseUrl": "https://eu1.prisma.sh",
     "clusterSecret": undefined,
+    "isPrivate": false,
     "local": false,
     "name": "prisma-eu1",
     "out": Output {},
     "shared": true,
+    "workspaceSlug": undefined,
   },
   Cluster {
     "baseUrl": "https://us1.prisma.sh",
     "clusterSecret": undefined,
+    "isPrivate": false,
     "local": false,
     "name": "prisma-us1",
     "out": Output {},
     "shared": true,
+    "workspaceSlug": undefined,
   },
 ]
 `;
@@ -26,18 +30,22 @@ Array [
   Cluster {
     "baseUrl": "https://eu1.prisma.sh",
     "clusterSecret": undefined,
+    "isPrivate": false,
     "local": false,
     "name": "prisma-eu1",
     "out": Output {},
     "shared": true,
+    "workspaceSlug": undefined,
   },
   Cluster {
     "baseUrl": "https://us1.prisma.sh",
     "clusterSecret": undefined,
+    "isPrivate": false,
     "local": false,
     "name": "prisma-us1",
     "out": Output {},
     "shared": true,
+    "workspaceSlug": undefined,
   },
 ]
 `;
@@ -47,18 +55,22 @@ Array [
   Cluster {
     "baseUrl": "https://eu1.prisma.sh",
     "clusterSecret": undefined,
+    "isPrivate": false,
     "local": false,
     "name": "prisma-eu1",
     "out": Output {},
     "shared": true,
+    "workspaceSlug": undefined,
   },
   Cluster {
     "baseUrl": "https://us1.prisma.sh",
     "clusterSecret": undefined,
+    "isPrivate": false,
     "local": false,
     "name": "prisma-us1",
     "out": Output {},
     "shared": true,
+    "workspaceSlug": undefined,
   },
 ]
 `;
@@ -70,18 +82,22 @@ Array [
   Cluster {
     "baseUrl": "https://eu1.prisma.sh",
     "clusterSecret": undefined,
+    "isPrivate": false,
     "local": false,
     "name": "prisma-eu1",
     "out": Output {},
     "shared": true,
+    "workspaceSlug": undefined,
   },
   Cluster {
     "baseUrl": "https://us1.prisma.sh",
     "clusterSecret": undefined,
+    "isPrivate": false,
     "local": false,
     "name": "prisma-us1",
     "out": Output {},
     "shared": true,
+    "workspaceSlug": undefined,
   },
 ]
 `;
@@ -99,26 +115,32 @@ Array [
   Cluster {
     "baseUrl": "https://eu1.prisma.sh",
     "clusterSecret": undefined,
+    "isPrivate": false,
     "local": false,
     "name": "prisma-eu1",
     "out": Output {},
     "shared": true,
+    "workspaceSlug": undefined,
   },
   Cluster {
     "baseUrl": "https://us1.prisma.sh",
     "clusterSecret": undefined,
+    "isPrivate": false,
     "local": false,
     "name": "prisma-us1",
     "out": Output {},
     "shared": true,
+    "workspaceSlug": undefined,
   },
   Cluster {
     "baseUrl": "http://localhost:60000",
     "clusterSecret": "",
+    "isPrivate": false,
     "local": true,
     "name": "cluster",
     "out": Output {},
     "shared": false,
+    "workspaceSlug": undefined,
   },
 ]
 `;
@@ -128,18 +150,22 @@ Array [
   Cluster {
     "baseUrl": "https://eu1.prisma.sh",
     "clusterSecret": undefined,
+    "isPrivate": false,
     "local": false,
     "name": "prisma-eu1",
     "out": Output {},
     "shared": true,
+    "workspaceSlug": undefined,
   },
   Cluster {
     "baseUrl": "https://us1.prisma.sh",
     "clusterSecret": undefined,
+    "isPrivate": false,
     "local": false,
     "name": "prisma-us1",
     "out": Output {},
     "shared": true,
+    "workspaceSlug": undefined,
   },
 ]
 `;
