@@ -108,7 +108,7 @@ export class Environment {
                     endpoint,
                     this.globalRC.cloudSessionKey,
                     false,
-                    false,
+                    ['prisma-eu1', 'prisma-us1'].includes(cluster.name),
                     true,
                     m.workspace.slug,
                   ),
