@@ -47,12 +47,13 @@ export class Environment {
   }
 
   async getClusters() {
-    if (this.globalRC.cloudSessionKey) {
+    if (this.cloudSessionKey) {
       try {
         const res = await fetch('https://api.cloud.prisma.sh', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            Authorization: `Bearer ${this.cloudSessionKey}`,
           } as any,
           body: JSON.stringify({
             query: `
@@ -87,21 +88,33 @@ export class Environment {
           const clusters = _.flattenDeep(
             json.data.me.memberships.map(m => m.workspace.clusters),
           )
-          clusters
-            .filter((c: any) => ['prisma-eu1', 'prisma-us1'].includes(c.name))
-            .forEach((cluster: any) => {
-              this.addCluster(
-                new Cluster(
-                  this.out,
-                  cluster.name,
-                  cluster.connectInfo.endpoint,
-                  this.globalRC.cloudSessionKey,
-                  false,
-                  false,
-                ),
-              )
-            })
-
+          const euIndex = this.clusters.findIndex(c => c.name === 'prisma-eu1')
+          this.clusters.splice(euIndex, 1)
+          const usIndex = this.clusters.findIndex(c => c.name === 'prisma-us1')
+          this.clusters.splice(usIndex, 1)
+          json.data.me.memberships.forEach(m => {
+            m.workspace.clusters
+              // .filter(
+              //   (c: any) => !['prisma-eu1', 'prisma-us1'].includes(c.name),
+              // )
+              .forEach(cluster => {
+                const endpoint = cluster.connectInfo
+                  ? cluster.connectInfo.endpoint
+                  : this.clusterEndpointMap[cluster.name]
+                this.addCluster(
+                  new Cluster(
+                    this.out,
+                    cluster.name,
+                    endpoint,
+                    this.globalRC.cloudSessionKey,
+                    false,
+                    false,
+                    true,
+                    m.workspace.slug,
+                  ),
+                )
+              })
+          })
           debug(this.sharedClusters)
           debug(this.clusterEndpointMap)
         }

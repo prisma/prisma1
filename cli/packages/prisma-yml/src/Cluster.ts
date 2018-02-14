@@ -15,6 +15,8 @@ export class Cluster {
   clusterSecret?: string
   requiresAuth: boolean
   out: IOutput
+  isPrivate: boolean
+  workspaceSlug?: string
   private cachedToken?: string
   constructor(
     out: IOutput,
@@ -23,6 +25,8 @@ export class Cluster {
     clusterSecret?: string,
     local: boolean = true,
     shared: boolean = false,
+    isPrivate: boolean = false,
+    workspaceSlug?: string,
   ) {
     this.out = out
     this.name = name
@@ -30,6 +34,8 @@ export class Cluster {
     this.clusterSecret = clusterSecret
     this.local = local
     this.shared = shared
+    this.isPrivate = isPrivate
+    this.workspaceSlug = workspaceSlug
   }
 
   async getToken(
@@ -41,7 +47,7 @@ export class Cluster {
     if (this.name === 'shared-public-demo') {
       return ''
     }
-    if (this.shared) {
+    if (this.shared || this.isPrivate) {
       return this.generateClusterToken(serviceName, workspaceSlug, stageName)
     } else {
       return this.getLocalToken()

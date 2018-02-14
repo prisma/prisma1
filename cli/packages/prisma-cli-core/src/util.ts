@@ -1,5 +1,6 @@
 import { Region } from 'prisma-cli-engine'
 import chalk from 'chalk'
+import { Cluster } from 'prisma-yml'
 
 const devPrefix = process.env.ENV === 'DEV' ? 'dev.' : ''
 
@@ -28,7 +29,15 @@ export function prettyTime(time: number): string {
   return chalk.cyan(output)
 }
 
-export function concatName(name: string, workspace: string | null) {
-  const workspaceString = workspace ? `${workspace}~` : ''
-  return `${workspaceString}${name}`
+export function concatName(
+  cluster: Cluster,
+  name: string,
+  workspace: string | null,
+) {
+  if (cluster.shared) {
+    const workspaceString = workspace ? `${workspace}~` : ''
+    return `${workspaceString}${name}`
+  }
+
+  return name
 }
