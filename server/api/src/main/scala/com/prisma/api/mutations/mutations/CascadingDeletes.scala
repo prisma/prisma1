@@ -39,17 +39,21 @@ object CascadingDeletes {
   def getEdge(project: Project, model: Model, field: Field): Edge =
     Edge(model, field.relatedModel(project.schema).get, field.relation.get)
 
-  def collectPaths(project: Project, where: NodeSelector, startModel: Model, seen: List[Model] = List.empty): List[Path] = {
-    startModel.cascadingRelationFields match {
+  def collectPaths(project: Project,
+                   where: NodeSelector,
+                   startModel: Model,
+                   seenModels: List[Model] = List.empty,
+                   seenRelations: List[Relation] = List.empty): List[Path] = {
+    startModel.cascadingRelationFields.filter(relationField => !seenRelations.contains(relationField.relation.get)) match {
       case x if x.isEmpty =>
         List(Path.empty(where))
 
       case x =>
         x.flatMap { field =>
           val edge = getEdge(project, startModel, field)
-          if (seen.contains(edge.child)) throw APIErrors.CascadingDeletePathLoops()
+          if (seenModels.contains(edge.child) || edge.relation.bothSidesCascade) throw APIErrors.CascadingDeletePathLoops()
 
-          val childPaths = collectPaths(project, where, edge.child, seen :+ edge.child)
+          val childPaths = collectPaths(project, where, edge.child, seenModels :+ edge.child, seenRelations :+ edge.relation)
           childPaths.map(path => path.prepend(edge))
         }
     }

@@ -493,6 +493,8 @@ case class Relation(
     }
   }
 
+  def bothSidesCascade: Boolean = modelAOnDelete == OnDelete.Cascade && modelBOnDelete == OnDelete.Cascade
+
   def oppositeSideOf(model: Model): RelationSide.Value = {
     sideOf(model) match {
       case RelationSide.A => RelationSide.B

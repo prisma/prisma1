@@ -29,7 +29,7 @@ class CascadingDeletePathSpec extends FlatSpec with Matchers with ApiBaseSpec {
     database.setup(project)
 
     val parent = project.schema.getModelByName_!("P")
-    val res    = collectPaths(project, NodeSelector.forId(parent, "does not exist"), parent)
+    val res    = collectPaths(project, NodeSelector.forId(parent, "does not exist"), parent, List(parent))
 
     res.length should be(1)
     res.head.edges should be(List.empty)
@@ -64,7 +64,7 @@ class CascadingDeletePathSpec extends FlatSpec with Matchers with ApiBaseSpec {
     database.setup(project)
 
     val parent = project.schema.getModelByName_!("P")
-    val res    = collectPaths(project, NodeSelector.forId(parent, "does not exist"), parent)
+    val res    = collectPaths(project, NodeSelector.forId(parent, "does not exist"), parent, List(parent))
     res.foreach(x => println(x.pretty))
 
     val res2 = res.map(x => x.pretty).mkString("\n")
@@ -91,7 +91,7 @@ class CascadingDeletePathSpec extends FlatSpec with Matchers with ApiBaseSpec {
     database.setup(project)
 
     val parent = project.schema.getModelByName_!("P")
-    val res    = collectPaths(project, NodeSelector.forId(parent, "does not exist"), parent)
+    val res    = collectPaths(project, NodeSelector.forId(parent, "does not exist"), parent, List(parent))
     res.foreach(x => println(x.pretty))
 
     val res2 = res.map(x => x.pretty).mkString("\n")
@@ -100,20 +100,6 @@ class CascadingDeletePathSpec extends FlatSpec with Matchers with ApiBaseSpec {
   }
 
   //region Loops
-
-  "Paths for graphs with  circles" should "detect the circle also on selfrelations and error" in {
-    //                            C  -  C
-
-    val project = SchemaDsl() { schema =>
-      val child = schema.model("C").field_!("c", _.String, isUnique = true)
-      child.manyToManyRelation("brother", "sister", child, modelAOnDelete = OnDelete.Cascade, modelBOnDelete = OnDelete.Cascade)
-
-    }
-    database.setup(project)
-
-    val parent = project.schema.getModelByName_!("C")
-    assertThrows[CascadingDeletePathLoops] { collectPaths(project, NodeSelector.forId(parent, "does not exist"), parent) }
-  }
 
   "Paths for graphs with  circles" should "error" in {
     //                                P
@@ -132,7 +118,7 @@ class CascadingDeletePathSpec extends FlatSpec with Matchers with ApiBaseSpec {
     database.setup(project)
 
     val parent = project.schema.getModelByName_!("P")
-    assertThrows[CascadingDeletePathLoops] { collectPaths(project, NodeSelector.forId(parent, "does not exist"), parent) }
+    assertThrows[CascadingDeletePathLoops] { collectPaths(project, NodeSelector.forId(parent, "does not exist"), parent, List(parent)) }
   }
 
   "Paths for graphs with  circles" should "detect the circle and error" in {
@@ -158,7 +144,37 @@ class CascadingDeletePathSpec extends FlatSpec with Matchers with ApiBaseSpec {
     database.setup(project)
 
     val parent = project.schema.getModelByName_!("P")
-    assertThrows[CascadingDeletePathLoops] { collectPaths(project, NodeSelector.forId(parent, "does not exist"), parent) }
+    assertThrows[CascadingDeletePathLoops] { collectPaths(project, NodeSelector.forId(parent, "does not exist"), parent, List(parent)) }
+  }
+
+  "Self relations that are only marked cascading on one side" should "error because they could loop indefinitely" in {
+    //                               ___
+    //                               \ /
+    //                                P
+
+    val project = SchemaDsl() { schema =>
+      val parent = schema.model("P").field_!("p", _.String, isUnique = true)
+      parent.manyToManyRelation("follow", "Opposite Side", parent, modelAOnDelete = OnDelete.Cascade)
+    }
+    database.setup(project)
+
+    val parent = project.schema.getModelByName_!("P")
+    assertThrows[CascadingDeletePathLoops] { collectPaths(project, NodeSelector.forId(parent, "does not exist"), parent, List(parent)) }
+  }
+
+  "Self relations that are marked cascading on both sides" should "error because they could loop indefinitely" in {
+    //                               ___
+    //                               \ /
+    //                                P
+
+    val project = SchemaDsl() { schema =>
+      val parent = schema.model("P").field_!("p", _.String, isUnique = true)
+      parent.manyToManyRelation("follow", "Opposite Side", parent, modelAOnDelete = OnDelete.Cascade, modelBOnDelete = OnDelete.Cascade)
+    }
+    database.setup(project)
+
+    val parent = project.schema.getModelByName_!("P")
+    assertThrows[CascadingDeletePathLoops] { collectPaths(project, NodeSelector.forId(parent, "does not exist"), parent, List(parent)) }
   }
   //endregion
 }
