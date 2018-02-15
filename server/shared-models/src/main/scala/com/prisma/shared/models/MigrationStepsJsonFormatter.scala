@@ -96,15 +96,11 @@ object MigrationStepsJsonFormatter extends DefaultReads {
   implicit val deleteEnumFormat = Json.format[DeleteEnum]
   implicit val updateEnumFormat = Json.format[UpdateEnum]
 
-//  implicit val createRelationFormat = Json.format[CreateRelation]
-//  implicit val deleteRelationFormat = Json.format[DeleteRelation]
-  implicit val updateRelationFormat = Json.format[UpdateRelation]
-
   implicit val createRelationFormat: OFormat[CreateRelation] = {
     val reads = (
       (JsPath \ "name").read[String] and
-        (JsPath \ "leftModelName").read[String] and
-        (JsPath \ "rightModelName").read[String] and
+        readOneOf[String]("leftModelName", "modelAName") and
+        readOneOf[String]("rightModelName", "modelBName") and
         (JsPath \ "modelAOnDelete").readWithDefault(OnDelete.SetNull) and
         (JsPath \ "modelBOnDelete").readWithDefault(OnDelete.SetNull)
     )(CreateRelation.apply _)
@@ -126,18 +122,18 @@ object MigrationStepsJsonFormatter extends DefaultReads {
     OFormat(reads, writes)
   }
 
-//  implicit val updateRelationFormat: OFormat[UpdateRelation] = {
-//    val format: OFormat[UpdateRelation] = (
-//      (JsPath \ "name").format[String] and
-//        (JsPath \ "newName").formatNullable[String] and
-//        (JsPath \ "modelAId").formatNullable[String] and
-//        (JsPath \ "modelBId").formatNullable[String] and
-//        (JsPath \ "modelAOnDelete").formatNullable[OnDelete.Value] and
-//        (JsPath \ "modelBOnDelete").formatNullable[OnDelete.Value]
-//    )(UpdateRelation.apply, unlift(UpdateRelation.unapply))
-//
-//    format
-//  }
+  implicit val updateRelationFormat: OFormat[UpdateRelation] = {
+    val format: OFormat[UpdateRelation] = (
+      (JsPath \ "name").format[String] and
+        (JsPath \ "newName").formatNullable[String] and
+        (JsPath \ "modelAId").formatNullable[String] and
+        (JsPath \ "modelBId").formatNullable[String] and
+        (JsPath \ "modelAOnDelete").formatNullable[OnDelete.Value] and
+        (JsPath \ "modelBOnDelete").formatNullable[OnDelete.Value]
+    )(UpdateRelation.apply, unlift(UpdateRelation.unapply))
+
+    format
+  }
 
   implicit val migrationStepFormat: Format[MigrationStep] = new Format[MigrationStep] {
     val discriminatorField = "discriminator"
@@ -192,4 +188,6 @@ object MigrationStepsJsonFormatter extends DefaultReads {
       case JsDefined(json)   => rds.reads(json).map(v => Some(Some(v)))
     }
   }
+
+  def readOneOf[T](field1: String, field2: String)(implicit reads: Reads[T]) = (JsPath \ field1).read[T].orElse((JsPath \ field2).read[T])
 }

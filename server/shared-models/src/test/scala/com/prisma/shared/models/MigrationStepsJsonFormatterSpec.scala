@@ -7,7 +7,7 @@ class MigrationStepsJsonFormatterSpec extends FlatSpec with Matchers {
 
   import MigrationStepsJsonFormatter._
 
-  "CreateRelation" should "be readable in the old format" in {
+  "CreateRelation" should "be readable in the format of January 2018" in {
     val json = Json.parse("""
         |{
         |    "name": "ListToTodo",
@@ -25,7 +25,7 @@ class MigrationStepsJsonFormatterSpec extends FlatSpec with Matchers {
     create.modelBOnDelete should equal(OnDelete.SetNull)
   }
 
-  "CreateRelation" should "be readable in the new format" in {
+  "CreateRelation" should "be readable in the format of February 2018" in {
     val json = Json.parse("""
                             |{
                             |    "name": "ListToTodo",
@@ -45,7 +45,27 @@ class MigrationStepsJsonFormatterSpec extends FlatSpec with Matchers {
     create.modelBOnDelete should equal(OnDelete.SetNull)
   }
 
-  "UpdateRelation" should "be readable in the old format" in {
+  "CreateRelation" should "be readable in the BROKEN format of February 2018" in {
+    val json = Json.parse("""
+                            |{
+                            |    "name": "ListToTodo",
+                            |    "modelAName": "List",
+                            |    "modelBName": "Todo",
+                            |    "modelAOnDelete": "CASCADE",
+                            |    "modelBOnDelete": "SET_NULL",
+                            |    "discriminator": "CreateRelation"
+                            |  }
+                          """.stripMargin)
+
+    val create = json.as[CreateRelation]
+    create.name should equal("ListToTodo")
+    create.modelAName should equal("List")
+    create.modelBName should equal("Todo")
+    create.modelAOnDelete should equal(OnDelete.Cascade)
+    create.modelBOnDelete should equal(OnDelete.SetNull)
+  }
+
+  "UpdateRelation" should "be readable in the format of January 2018" in {
     val json = Json.parse("""
                             |{
                             |    "name": "ListToTodo",
@@ -65,7 +85,7 @@ class MigrationStepsJsonFormatterSpec extends FlatSpec with Matchers {
     create.modelBOnDelete should equal(None)
   }
 
-  "UpdateRelation" should "be readable in the new format" in {
+  "UpdateRelation" should "be readable in the format of February 2018" in {
     val json = Json.parse("""
                             |{
                             |    "name": "ListToTodo",
