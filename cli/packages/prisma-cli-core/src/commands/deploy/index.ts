@@ -174,12 +174,18 @@ ${chalk.gray(
     let projectNew = false
     if (
       !await this.projectExists(
+        cluster,
         serviceName,
         stage,
         this.definition.getWorkspace(),
       )
     ) {
-      await this.addProject(serviceName, stage, this.definition.getWorkspace())
+      await this.addProject(
+        cluster,
+        serviceName,
+        stage,
+        this.definition.getWorkspace(),
+      )
       projectNew = true
     }
 
@@ -281,13 +287,17 @@ ${chalk.gray(
   }
 
   private async projectExists(
+    cluster: Cluster,
     name: string,
     stage: string,
     workspace: string | null,
   ): Promise<boolean> {
     try {
       return Boolean(
-        await this.client.getProject(concatName(name, workspace), stage),
+        await this.client.getProject(
+          concatName(cluster, name, workspace),
+          stage,
+        ),
       )
     } catch (e) {
       return false
@@ -295,13 +305,14 @@ ${chalk.gray(
   }
 
   private async addProject(
+    cluster: Cluster,
     name: string,
     stage: string,
     workspace: string | null,
   ): Promise<void> {
     this.out.action.start(`Creating stage ${stage} for service ${name}`)
     const createdProject = await this.client.addProject(
-      concatName(name, workspace),
+      concatName(cluster, name, workspace),
       stage,
       this.definition.secrets,
     )
@@ -333,7 +344,7 @@ ${chalk.gray(
     )
 
     const migrationResult: DeployPayload = await this.client.deploy(
-      concatName(serviceName, workspace),
+      concatName(cluster, serviceName, workspace),
       stageName,
       this.definition.typesString!,
       dryRun,
@@ -357,7 +368,7 @@ ${chalk.gray(
       while (!done) {
         const revision = migrationResult.migration.revision
         const migration = await this.client.getMigration(
-          concatName(serviceName, workspace),
+          concatName(cluster, serviceName, workspace),
           stageName,
         )
 
@@ -386,6 +397,7 @@ ${chalk.gray(
       ) {
         this.printHooks()
         await this.seed(
+          cluster,
           projectNew,
           serviceName,
           stageName,
@@ -405,7 +417,11 @@ ${chalk.gray(
       }
     }
 
-    const schemaChanged = await this.generateSchema(serviceName, stageName)
+    const schemaChanged = await this.generateSchema(
+      cluster,
+      serviceName,
+      stageName,
+    )
     if (schemaChanged) {
       await this.graphqlPrepare()
     }
@@ -423,6 +439,7 @@ ${chalk.gray(
   }
 
   private async seed(
+    cluster: Cluster,
     projectNew: boolean,
     serviceName: string,
     stageName: string,
@@ -441,7 +458,7 @@ ${chalk.gray(
         ? ` from \`${this.definition.definition!.seed!.import}\``
         : ''
     this.out.action.start(`Importing seed dataset${from}`)
-    await seeder.seed(concatName(serviceName, workspace), stageName)
+    await seeder.seed(concatName(cluster, serviceName, workspace), stageName)
     this.out.action.stop(prettyTime(Date.now() - before))
   }
 
@@ -449,6 +466,7 @@ ${chalk.gray(
    * Returns true if there was a change
    */
   private async generateSchema(
+    cluster: Cluster,
     serviceName: string,
     stageName: string,
   ): Promise<boolean> {
@@ -463,7 +481,7 @@ ${chalk.gray(
       this.out.action.start(`Checking, if schema file changed`)
       const schemaString = await fetchAndPrintSchema(
         this.client,
-        concatName(serviceName, this.definition.getWorkspace()),
+        concatName(cluster, serviceName, this.definition.getWorkspace()),
         stageName,
         token,
       )
@@ -618,7 +636,7 @@ ${chalk.gray(
   }
 
   private getLocalClusterChoices(): string[][] {
-    const clusters = this.env.clusters.filter(c => !c.shared)
+    const clusters = this.env.clusters.filter(c => !c.shared && !c.isPrivate)
 
     const clusterNames: string[][] = clusters.map(c => {
       const note =
@@ -636,34 +654,19 @@ ${chalk.gray(
 
   private async getLoggedInChoices(): Promise<any[]> {
     const localChoices = this.getLocalClusterChoices()
-    const workspaces = await this.client.getWorkspaces()
+    // const workspaces = await this.client.getWorkspaces()
     // const clusters = this.env.clusters.filter(
     //   c => c.shared && c.name !== 'shared-public-demo',
     // )
     const combinations: string[][] = []
-    workspaces.forEach(workspace => {
-      workspace.clusters.forEach(cluster => {
-        const publicClusterNames = []
-        const label = this.env.sharedClusters.includes(cluster.name)
-          ? 'Free development cluster (hosted on Prisma Cloud)'
-          : 'Private Prisma Cluster'
-        combinations.push([`${workspace.slug}/${cluster.name}`, label])
-        if (
-          !this.env.sharedClusters.includes(cluster.name) &&
-          cluster.connectInfo
-        ) {
-          this.env.addCluster(
-            new Cluster(
-              this.out,
-              cluster.name,
-              cluster.connectInfo.endpoint,
-              this.env.cloudSessionKey,
-              false,
-              true,
-            ),
-          )
-        }
-      })
+    const remoteClusters = this.env.clusters.filter(
+      c => c.shared || c.isPrivate,
+    )
+    remoteClusters.forEach(cluster => {
+      const label = this.env.sharedClusters.includes(cluster.name)
+        ? 'Free development cluster (hosted on Prisma Cloud)'
+        : 'Private Prisma Cluster'
+      combinations.push([`${cluster.workspaceSlug}/${cluster.name}`, label])
     })
 
     const allCombinations = [...combinations, ...localChoices]

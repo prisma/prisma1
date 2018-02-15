@@ -240,7 +240,7 @@ case class SqlMutactions(dataResolver: DataResolver) {
       }
     }
 
-    val paths: List[Path] = collectPaths(project, where, where.model)
+    val paths: List[Path] = collectPaths(project, where, where.model, List(where.model))
     getMutactionsForEdges(paths)
   }
 }

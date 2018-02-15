@@ -149,8 +149,8 @@ object DatabaseQueryBuilder {
   }
 
   def existsNodeIsInRelationshipWith(project: Project, parentInfo: ParentInfo, where: NodeSelector) = {
-    val relationSide         = parentInfo.relation.sideOf(where.model).toString
-    val oppositeRelationSide = parentInfo.relation.oppositeSideOf(where.model).toString
+    val relationSide         = parentInfo.field.oppositeRelationSide.get
+    val oppositeRelationSide = parentInfo.field.relationSide.get
     sql"""select EXISTS (
             select `id`from `#${project.id}`.`#${where.model.name}`
             where  `#${where.field.name}` = ${where.fieldValue} and `id` IN (

@@ -24,18 +24,18 @@ trait NestedRelationMutactionBaseClass extends ClientSqlDataChangeMutaction {
   val otherFieldOption = otherModel.fields.find(_.relation.contains(parentInfo.relation))
   val c = otherFieldOption match {
     case Some(x) => x
-    case None    => p.copy(isRequired = false, isList = true) //optional backrelation defaults to List-NonRequired
+    case None    => p.copy(isRequired = false, isList = true) //optional back-relation defaults to List-NonRequired
   }
 
-  val checkForOldParent = oldParentFailureTriggerForRequiredRelations(project, parentInfo.relation, where)
-  val checkForOldChild  = oldChildFailureTriggerForRequiredRelations(project, parentInfo)
-  val noCheckRequired   = List.empty
+  def checkForOldParent = oldParentFailureTriggerForRequiredRelations(project, parentInfo.relation, where, parentInfo.field.oppositeRelationSide.get)
+  def checkForOldChild  = oldChildFailureTriggerForRequiredRelations(project, parentInfo)
+  def noCheckRequired   = List.empty
 
-  val removalByParent         = deleteRelationRowByParent(project.id, parentInfo)
-  val removalByChild          = deleteRelationRowByChild(project.id, parentInfo.relation, where)
-  val removalByParentAndChild = deleteRelationRowByParentAndChild(project.id, parentInfo, where)
-  val createRelationRow       = List(createRelationRowByUniqueValueForChild(project.id, parentInfo, where))
-  val noActionRequired        = List.empty
+  def removalByParent         = deleteRelationRowByParent(project.id, parentInfo)
+  def removalByChild          = deleteRelationRowByChild(project.id, parentInfo, where)
+  def removalByParentAndChild = deleteRelationRowByParentAndChild(project.id, parentInfo, where)
+  def createRelationRow       = List(createRelationRowByUniqueValueForChild(project.id, parentInfo, where))
+  def noActionRequired        = List.empty
 
   def requiredCheck: List[DBIOAction[_, NoStream, Effect]]
 
@@ -51,7 +51,7 @@ trait NestedRelationMutactionBaseClass extends ClientSqlDataChangeMutaction {
 
   override def handleErrors = {
     Some({
-      case e: SQLException if e.getErrorCode == 1242 && causedByThisMutaction(parentInfo.relation, e.getCause.toString) =>
+      case e: SQLException if e.getErrorCode == 1242 && causedByThisMutaction(parentInfo, e.getCause.toString) =>
         throw RequiredRelationWouldBeViolated(project, parentInfo.relation)
     })
   }
@@ -60,17 +60,11 @@ trait NestedRelationMutactionBaseClass extends ClientSqlDataChangeMutaction {
 
   def sysError = sys.error("This should not happen, since it means a many side is required")
 
-  def causedByThisMutaction(relation: Relation, cause: String) = {
-    val parentCheckString = s"`${relation.id}` OLDPARENTFAILURETRIGGER WHERE `${relation.sideOf(where.model)}`"
-    val childCheckString  = s"`${relation.id}` OLDCHILDFAILURETRIGGER WHERE `${relation.sideOf(parentInfo.model)}`"
+  def causedByThisMutaction(parentInfo: ParentInfo, cause: String) = {
+    val parentCheckString = s"`${parentInfo.relation.id}` OLDPARENTFAILURETRIGGER WHERE `${parentInfo.field.oppositeRelationSide.get}`"
+    val childCheckString  = s"`${parentInfo.relation.id}` OLDCHILDFAILURETRIGGER WHERE `${parentInfo.field.relationSide.get}`"
 
     (cause.contains(parentCheckString) && cause.contains(parameterStringFromSQLException(where))) ||
     (cause.contains(childCheckString) && cause.contains(parameterStringFromSQLException(parentInfo.where)))
-  }
-
-  def causedByThisMutactionChildOnly(relation: Relation, cause: String) = {
-    val parentCheckString = s"`${relation.id}` OLDPARENTFAILURETRIGGER WHERE `${relation.sideOf(where.model)}`"
-
-    cause.contains(parentCheckString) && cause.contains(parameterStringFromSQLException(where))
   }
 }

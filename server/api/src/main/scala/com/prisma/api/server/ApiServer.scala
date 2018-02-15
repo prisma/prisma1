@@ -20,11 +20,13 @@ import com.prisma.metrics.extensions.TimeResponseDirectiveImpl
 import com.prisma.shared.models.{ProjectId, ProjectWithClientId}
 import com.prisma.logging.{LogData, LogKey}
 import com.prisma.logging.LogDataWrites.logDataWrites
+import com.prisma.util.env.EnvUtils
 import play.api.libs.json.Json
 import spray.json._
 
 import scala.concurrent.Future
 import scala.language.postfixOps
+import scala.util.Try
 
 case class ApiServer(
     schemaBuilder: SchemaBuilder,
@@ -50,14 +52,14 @@ case class ApiServer(
 
   lazy val throttler: Option[Throttler[ProjectId]] = {
     for {
-      throttlingRate    <- sys.env.get("THROTTLING_RATE")
-      maxCallsInFlights <- sys.env.get("THROTTLING_MAX_CALLS_IN_FLIGHT")
+      throttlingRate    <- EnvUtils.asInt("THROTTLING_RATE")
+      maxCallsInFlights <- EnvUtils.asInt("THROTTLING_MAX_CALLS_IN_FLIGHT")
     } yield {
-      val per = sys.env.getOrElse("THROTTLING_RATE_PER_SECONDS", "1")
+      val per = EnvUtils.asInt("THROTTLING_RATE_PER_SECONDS").getOrElse(1)
       Throttler[ProjectId](
         groupBy = pid => pid.name + "_" + pid.stage,
         amount = throttlingRate.toInt,
-        per = per.toInt.seconds,
+        per = per.seconds,
         timeout = 25.seconds,
         maxCallsInFlight = maxCallsInFlights.toInt
       )

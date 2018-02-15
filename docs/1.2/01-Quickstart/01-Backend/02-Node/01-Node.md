@@ -35,7 +35,19 @@ If you don't have Docker installed on your machine yet, go and download it now f
 
 </Instruction>
 
-After it's downloaded, you can install it right away. Note that this also gives you access to the `docker` CLI.
+Once it's downloaded, you can install it right away. Note that this also gives you access to the `docker` CLI.
+
+The last step is to boot the local development [cluster](!alias-eu2ood0she) to which you're going to deploy the Prisma service.
+
+<Instruction>
+
+In your terminal, run the following command:
+
+```sh
+prisma local start
+```
+
+</Instruction>
 
 ## Step 2: Bootstrap your GraphQL server
 
