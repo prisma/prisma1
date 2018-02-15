@@ -71,7 +71,7 @@ case class SubscriptionsManagerForModel(
   override def preStart() = {
     super.preStart()
 
-    activeSubscriptionsManagerForModelAndMutation.inc
+    activeSubscriptionsManagerForModel.inc
     smartActiveSubscriptions.set(0)
 
     pubSubSubscriptions ++= mutationChannelsForModel(projectId, model).map { channel =>
@@ -82,7 +82,7 @@ case class SubscriptionsManagerForModel(
   override def postStop(): Unit = {
     super.postStop()
 
-    activeSubscriptionsManagerForModelAndMutation.dec
+    activeSubscriptionsManagerForModel.dec
     smartActiveSubscriptions.set(0)
     pubSubSubscriptions.foreach(_.unsubscribe)
     pubSubSubscriptions.clear()

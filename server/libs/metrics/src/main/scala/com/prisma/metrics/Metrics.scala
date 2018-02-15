@@ -16,8 +16,9 @@ case class CustomTag(name: String, recordingThreshold: Long = 0) {
     * This is mostly interesting for timings right now to reduce noise in custom dimensions.
     */
   def apply(recordedValue: Long, tagValue: String): String = {
+    val sanitizedValue = tagValue.replace('@', '-').replace('~', '-')
     if (recordedValue >= recordingThreshold) {
-      s"$name=$tagValue"
+      s"$name=$sanitizedValue"
     } else {
       s"$name=-"
     }

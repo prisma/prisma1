@@ -7,6 +7,7 @@ import com.prisma.api.ApiDependencies
 import com.prisma.api.database.Databases
 import com.prisma.api.project.{CachedProjectFetcherImpl, ProjectFetcher}
 import com.prisma.api.schema.{CachedSchemaBuilder, SchemaBuilder}
+import com.prisma.auth.AuthImpl
 import com.prisma.subscriptions.Webhook
 import com.prisma.deploy.DeployDependencies
 import com.prisma.deploy.migration.migrator.{AsyncMigrator, Migrator}
@@ -89,4 +90,6 @@ case class SingleServerDependencies()(implicit val system: ActorSystem, val mate
   override lazy val webhooksConsumer = webhooksQueue.map[WorkerWebhook](Converters.apiWebhook2WorkerWebhook)
   override lazy val httpClient       = SimpleHttpClient()
   override lazy val graphQlClient    = GraphQlClient(sys.env.getOrElse("CLUSTER_ADDRESS", sys.error("env var CLUSTER_ADDRESS is not set")))
+
+  override def apiAuth = AuthImpl
 }

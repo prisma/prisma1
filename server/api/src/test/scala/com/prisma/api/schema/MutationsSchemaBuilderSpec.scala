@@ -1,7 +1,7 @@
 package com.prisma.api.schema
 
 import com.prisma.api.ApiBaseSpec
-import com.prisma.shared.project_dsl.SchemaDsl
+import com.prisma.shared.schema_dsl.SchemaDsl
 import com.prisma.util.GraphQLSchemaMatchers
 import org.scalatest.{FlatSpec, Matchers}
 import sangria.renderer.SchemaRenderer
@@ -229,30 +229,26 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec
     )
   }
 
-  "the update Mutation for a model with omitted back relation" should "be generated correctly" in {
+  "the update and upsert Mutation for a model with omitted back relation" should "be generated correctly" in {
     val project = SchemaDsl() { schema =>
       val comment = schema.model("Comment").field_!("text", _.String)
-      schema
-        .model("Todo")
-        .field_!("title", _.String)
-        .field("tag", _.String)
-        .oneToManyRelation("comments", "todo", comment, includeOtherField = false)
+      val todo    = schema.model("Todo").field_!("title", _.String).field("tag", _.String)
+      todo.oneToManyRelation("comments", "todo", comment, includeFieldB = false)
     }
 
     val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
-    schema should not(containInputType("CommentCreateWithoutTodoInput"))
-    schema should not(containInputType("CommentUpdateWithoutTodoInput"))
 
-    schema should containInputType("TodoCreateInput",
-                                   fields = Vector(
-                                     "comments: CommentCreateManyInput"
-                                   ))
-
-    schema should containInputType("CommentCreateManyInput",
-                                   fields = Vector(
-                                     "create: [CommentCreateInput!]"
-                                   ))
-
+    schema should containInputType(
+      "CommentUpdateManyInput",
+      fields = Vector(
+        "create: [CommentCreateInput!]",
+        "connect: [CommentWhereUniqueInput!]",
+        "disconnect: [CommentWhereUniqueInput!]",
+        "delete: [CommentWhereUniqueInput!]",
+        "update: [CommentUpdateInput!]",
+        "upsert: [CommentUpsertInput!]"
+      )
+    )
   }
 
   "the upsert Mutation for a model" should "be generated correctly" in {

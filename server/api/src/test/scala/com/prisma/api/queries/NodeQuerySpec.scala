@@ -1,15 +1,20 @@
 package com.prisma.api.queries
 
 import com.prisma.api.ApiBaseSpec
-import com.prisma.shared.project_dsl.SchemaDsl
+import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 import slick.jdbc.MySQLProfile.api._
 
 class NodeQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
 
   "the node query" should "return null if the id does not exist" in {
-    val project = SchemaDsl() { schema =>
-      schema.model("Todo").field_!("title", _.String)
+    val project = SchemaDsl.fromString() {
+      """
+        |type Todo {
+        |  id: ID!
+        |  title: String!
+        |}
+      """.stripMargin
     }
     database.setup(project)
 
@@ -29,8 +34,13 @@ class NodeQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
   }
 
   "the node query" should "work if the given id exists" in {
-    val project = SchemaDsl() { schema =>
-      schema.model("Todo").field_!("title", _.String)
+    val project = SchemaDsl.fromString() {
+      """
+        |type Todo {
+        |  id: ID!
+        |  title: String!
+        |}
+      """.stripMargin
     }
     database.setup(project)
 
@@ -62,8 +72,13 @@ class NodeQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
   }
 
   "the node query" should "work if the model name changed and the stableRelayIdentifier is the same" in {
-    val project = SchemaDsl() { schema =>
-      schema.model("Todo").field_!("title", _.String)
+    val project = SchemaDsl.fromString() {
+      """
+        |type Todo {
+        |  id: ID!
+        |  title: String!
+        |}
+      """.stripMargin
     }
     database.setup(project)
 

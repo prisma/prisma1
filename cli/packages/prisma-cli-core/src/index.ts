@@ -29,6 +29,7 @@ import Delete from './commands/delete/index'
 import ClusterLogs from './commands/cluster/logs'
 import ClusterAdd from './commands/cluster/add'
 import ClusterRemove from './commands/cluster/remove'
+import InitPrisma from './commands/init-prisma'
 
 export const groups = [
   {
@@ -114,6 +115,7 @@ export const topics = [
   },
   /* Clusters */
   { name: 'cluster', description: 'Manage local clusters', group: 'cluster' },
+  { name: 'init-prisma', description: 'Manage local clusters' },
 ]
 
 export const commands = [
@@ -173,4 +175,5 @@ export {
   ClusterLogs,
   ClusterAdd,
   ClusterRemove,
+  InitPrisma,
 }

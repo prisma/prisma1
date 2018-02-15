@@ -1,6 +1,8 @@
 package com.prisma.shared.models
 
+import com.prisma.shared.models.OnDelete.OnDelete
 import play.api.libs.json._
+import scala.language.implicitConversions
 
 object MigrationStepsJsonFormatter extends DefaultReads {
   implicit val createModelFormat = Json.format[CreateModel]
@@ -64,6 +66,30 @@ object MigrationStepsJsonFormatter extends DefaultReads {
       ) ++ writeDoubleOpt(relationField, x.relation) ++ writeDoubleOpt(defaultValueField, x.defaultValue) ++ writeDoubleOpt(enumField, x.enum)
     }
   }
+
+  object EnumUtils {
+    def enumReads[E <: Enumeration](enum: E): Reads[E#Value] = new Reads[E#Value] {
+      def reads(json: JsValue): JsResult[E#Value] = json match {
+        case JsString(s) =>
+          try {
+            JsSuccess(enum.withName(s))
+          } catch {
+            case _: NoSuchElementException => JsError(s"Enumeration expected of type: '${enum.getClass}', but it does not appear to contain the value: '$s'")
+          }
+        case _ => JsError("String value expected")
+      }
+    }
+
+    implicit def enumWrites[E <: Enumeration]: Writes[E#Value] = new Writes[E#Value] {
+      def writes(v: E#Value): JsValue = JsString(v.toString)
+    }
+
+    implicit def enumFormat[E <: Enumeration](enum: E): Format[E#Value] = {
+      Format(EnumUtils.enumReads(enum), EnumUtils.enumWrites)
+    }
+  }
+
+  implicit val onDeleteEnumTypeFormat = EnumUtils.enumFormat(OnDelete)
 
   implicit val createEnumFormat = Json.format[CreateEnum]
   implicit val deleteEnumFormat = Json.format[DeleteEnum]

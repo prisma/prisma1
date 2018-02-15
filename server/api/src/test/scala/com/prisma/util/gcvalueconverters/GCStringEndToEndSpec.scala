@@ -38,7 +38,7 @@ class GCStringEndToEndSpec extends FlatSpec with Matchers {
 
   val nullValue: Option[String] = None
 
-  "It should take a String Default or MigrationValue for a non-list field and" should "convert it into Sangria AST and Back" in {
+  "It should take a String Default for a non-list field and" should "convert it into Sangria AST and Back" in {
     println("SingleValues")
     forthAndBackOptional(string, TypeIdentifier.String, false) should be(string)
     forthAndBackOptional(int, TypeIdentifier.Int, false) should be(int)

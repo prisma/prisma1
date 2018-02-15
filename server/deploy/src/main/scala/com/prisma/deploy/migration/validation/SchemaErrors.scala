@@ -13,6 +13,10 @@ object SchemaError {
     SchemaError(`type`, description, None)
   }
 
+  def apply(fieldAndType: FieldAndType, description: String): SchemaError = {
+    apply(fieldAndType.objectType.name, fieldAndType.fieldDef.name, description)
+  }
+
   def global(description: String): SchemaError = {
     SchemaError("Global", description, None)
   }
@@ -125,6 +129,10 @@ object SchemaErrors {
 
   def listFieldsCantHaveDefaultValues(fieldAndType: FieldAndType) = {
     error(fieldAndType, s"List fields cannot have defaultValues.")
+  }
+
+  def invalidSyntaxForDefaultValue(fieldAndType: FieldAndType) = {
+    error(fieldAndType, s"""You are using a '@defaultValue' directive. Prisma uses '@default(value: "Value as String")' to declare default values.""")
   }
 
   def relationFieldTypeWrong(fieldAndType: FieldAndType): SchemaError = {

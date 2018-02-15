@@ -2,7 +2,7 @@ import { Prisma } from './generated/prisma'
 import { GraphQLServer } from 'graphql-yoga'
 import { S3 } from 'aws-sdk'
 import { resolvers } from './resolvers'
-import fileApi from './modules/fileApi'
+import fileApi from './modules/fileAPI'
 
 const s3client = new S3({
   accessKeyId: process.env.S3_ACCESS_KEY_ID,

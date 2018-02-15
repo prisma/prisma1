@@ -2,7 +2,7 @@ package com.prisma.api.mutations
 
 import com.prisma.api.ApiBaseSpec
 import com.prisma.api.database.DatabaseQueryBuilder
-import com.prisma.shared.project_dsl.SchemaDsl
+import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers with ApiBaseSpec {
@@ -62,7 +62,7 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
   "a P1! to C1 relation" should "always fail when trying to disconnect" in {
     val project = SchemaDsl() { schema =>
       val child = schema.model("Child").field_!("c", _.String, isUnique = true)
-      schema.model("Parent").field_!("p", _.String, isUnique = true).oneToOneRelation_!("childReq", "parentOpt", child, isRequiredOnOtherField = false)
+      schema.model("Parent").field_!("p", _.String, isUnique = true).oneToOneRelation_!("childReq", "parentOpt", child, isRequiredOnFieldB = false)
     }
     database.setup(project)
 
@@ -165,7 +165,7 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(0))
   }
 
-  "a P1 to C1  relation with the child and the parent without a relation" should "be disconnectable through a nested mutation by id" in {
+  "a P1 to C1  relation with the child and the parent without a relation" should "not be disconnectable through a nested mutation by id" in {
     val project = SchemaDsl() { schema =>
       val child = schema.model("Child").field_!("c", _.String, isUnique = true)
       schema.model("Parent").field_!("p", _.String, isUnique = true).oneToOneRelation("childOpt", "parentOpt", child)
@@ -269,7 +269,7 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
   "a P1 to C1!  relation with the child and the parent already in a relation" should "should error in a nested mutation by unique" in {
     val project = SchemaDsl() { schema =>
       val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)
-      schema.model("Child").field_!("c", _.String, isUnique = true).oneToOneRelation_!("parentReq", "childOpt", parent, isRequiredOnOtherField = false)
+      schema.model("Child").field_!("c", _.String, isUnique = true).oneToOneRelation_!("parentReq", "childOpt", parent, isRequiredOnFieldB = false)
     }
     database.setup(project)
 
@@ -759,5 +759,135 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
     )
 
     mustBeEqual(result2.pathAsJsValue("data.updateTodo.comments").toString, """[{"text":"comment1"}]""")
+  }
+
+  "A PM CM self relation" should "be disconnectable by unique through a nested mutation" in {
+    val project = SchemaDsl.fromString() { """|type User {
+                                              |  id: ID! @unique
+                                              |  banned: Boolean! @default(value: "false")
+                                              |  username: String! @unique
+                                              |  password: String!
+                                              |  salt: String!
+                                              |  followers: [User!]! @relation(name: "UserFollowers")
+                                              |  follows: [User!]! @relation(name: "UserFollows")
+                                              |}""".stripMargin }
+    database.setup(project)
+
+    server.executeQuerySimple("""mutation { createUser(data: {username: "Paul", password: "1234", salt: "so salty"}){ id } }""", project)
+    server.executeQuerySimple("""mutation { createUser(data: {username: "Peter", password: "abcd", salt: "so salty"}){ id } }""", project)
+
+    val result = server.executeQuerySimple(
+      s"""mutation {
+         |  updateUser(
+         |    where: {
+         |      username: "Paul"
+         |    }
+         |    data:{
+         |      follows: {
+         |        connect: [{username: "Peter"}]
+         |      }
+         |    }
+         |  ){
+         |    username
+         |    follows {
+         |      username
+         |    }
+         |  }
+         |}
+      """.stripMargin,
+      project
+    )
+
+    mustBeEqual(result.pathAsJsValue("data.updateUser.follows").toString, """[{"username":"Peter"}]""")
+
+    val result2 = server.executeQuerySimple(
+      s"""mutation {
+         |  updateUser(
+         |    where: {
+         |      username: "Paul"
+         |    }
+         |    data:{
+         |      follows: {
+         |        disconnect: [{username: "Peter"}]
+         |      }
+         |    }
+         |  ){
+         |    username
+         |    follows {
+         |      username
+         |    }
+         |  }
+         |}
+      """.stripMargin,
+      project
+    )
+
+    mustBeEqual(result2.pathAsJsValue("data.updateUser.follows").toString, """[]""")
+  }
+
+  "A PM CM self relation" should "should throw a correct error for disconnect on invalid unique" in {
+    val project = SchemaDsl.fromString() { """|type User {
+                                              |  id: ID! @unique
+                                              |  banned: Boolean! @default(value: "false")
+                                              |  username: String! @unique
+                                              |  password: String!
+                                              |  salt: String!
+                                              |  followers: [User!]! @relation(name: "UserFollowers")
+                                              |  follows: [User!]! @relation(name: "UserFollows")
+                                              |}""".stripMargin }
+    database.setup(project)
+
+    server.executeQuerySimple("""mutation { createUser(data: {username: "Paul", password: "1234", salt: "so salty"}){ id } }""", project)
+    server.executeQuerySimple("""mutation { createUser(data: {username: "Peter", password: "abcd", salt: "so salty"}){ id } }""", project)
+    server.executeQuerySimple("""mutation { createUser(data: {username: "Anton", password: "abcd3", salt: "so salty"}){ id } }""", project)
+
+    val result = server.executeQuerySimple(
+      s"""mutation {
+         |  updateUser(
+         |    where: {
+         |      username: "Paul"
+         |    }
+         |    data:{
+         |      follows: {
+         |        connect: [{username: "Peter"}]
+         |      }
+         |    }
+         |  ){
+         |    username
+         |    follows {
+         |      username
+         |    }
+         |  }
+         |}
+      """.stripMargin,
+      project
+    )
+
+    mustBeEqual(result.pathAsJsValue("data.updateUser.follows").toString, """[{"username":"Peter"}]""")
+
+    server.executeQuerySimpleThatMustFail(
+      s"""mutation {
+         |  updateUser(
+         |    where: {
+         |      username: "Paul"
+         |    }
+         |    data:{
+         |      follows: {
+         |        disconnect: [{username: "Anton"}]
+         |      }
+         |    }
+         |  ){
+         |    username
+         |    follows {
+         |      username
+         |    }
+         |  }
+         |}
+      """.stripMargin,
+      project,
+      errorCode = 3041,
+      errorContains =
+        "The relation UserFollows has no Node for the model User with value `Paul` for username connected to a Node for the model User with value `Anton` for username"
+    )
   }
 }

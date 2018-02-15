@@ -144,6 +144,47 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
     result should have(size(0))
   }
 
+  "succeed if a relation directive specifies a valid onDelete attribute" in {
+    val schema =
+      """
+        |type Todo @model{
+        |  title: String
+        |  comments1: [Comment1!]! @relation(name: "TodoToComments1", onDelete: CASCADE)
+        |  comments2: [Comment2!]! @relation(name: "TodoToComments2", onDelete: SET_NULL)
+        |  comments3: [Comment3!]! @relation(name: "TodoToComments3")
+        |}
+        |
+        |type Comment1 @model{
+        |  bla: String
+        |}
+        |type Comment2 @model{
+        |  bla: String
+        |}
+        |type Comment3 @model{
+        |  bla: String
+        |}
+      """.stripMargin
+    val result = SchemaSyntaxValidator(schema).validate
+    result should have(size(0))
+  }
+
+  "fail if a relation directive specifies an invalid onDelete attribute" in {
+    val schema =
+      """
+        |type Todo @model{
+        |  title: String
+        |  comments: [Comment!]! @relation(name: "TodoToComments", onDelete: INVALID)
+        |}
+        |
+        |type Comment @model{
+        |  bla: String
+        |}
+      """.stripMargin
+    val result = SchemaSyntaxValidator(schema).validate
+    result should have(size(1))
+    result.head.description should include("not a valid value for onDelete")
+  }
+
   // TODO: adapt
   "succeed if a relation gets renamed" in {
     val schema =
@@ -286,9 +327,9 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
 
   "NOT fail if the directives contain all required attributes" in {
     val directiveRequirements = Seq(
-      DirectiveRequirement("zero", Seq.empty),
-      DirectiveRequirement("one", Seq(RequiredArg("a", mustBeAString = true))),
-      DirectiveRequirement("two", Seq(RequiredArg("a", mustBeAString = false), RequiredArg("b", mustBeAString = true)))
+      DirectiveRequirement("zero", Seq.empty, Seq.empty),
+      DirectiveRequirement("one", Seq(RequiredArg("a", mustBeAString = true)), Seq.empty),
+      DirectiveRequirement("two", Seq(RequiredArg("a", mustBeAString = false), RequiredArg("b", mustBeAString = true)), Seq.empty)
     )
     val schema =
       """
@@ -303,8 +344,8 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
 
   "fail if a directive misses a required attribute" in {
     val directiveRequirements = Seq(
-      DirectiveRequirement("one", Seq(RequiredArg("a", mustBeAString = true))),
-      DirectiveRequirement("two", Seq(RequiredArg("a", mustBeAString = false), RequiredArg("b", mustBeAString = true)))
+      DirectiveRequirement("one", Seq(RequiredArg("a", mustBeAString = true)), Seq.empty),
+      DirectiveRequirement("two", Seq(RequiredArg("a", mustBeAString = false), RequiredArg("b", mustBeAString = true)), Seq.empty)
     )
     val schema =
       """
@@ -372,7 +413,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
     val schema =
       """
         |type Todo @model{
-        |  title: String @defaultValue(value: "foo") @defaultValue(value: "bar")
+        |  title: String @default(value: "foo") @default(value: "bar")
         |}
       """.stripMargin
     val result = SchemaSyntaxValidator(schema).validate
@@ -381,6 +422,22 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
     error1.`type` should equal("Todo")
     error1.field should equal(Some("title"))
     error1.description should include(s"Directives must appear exactly once on a field.")
+  }
+
+  "fail if the old defaultValue directive appears on a field" in {
+    val schema =
+      """
+        |type Todo @model{
+        |  title: String @defaultValue(value: "foo")
+        |}
+      """.stripMargin
+    val result = SchemaSyntaxValidator(schema).validate
+    result should have(size(1))
+    val error1 = result.head
+    error1.`type` should equal("Todo")
+    error1.field should equal(Some("title"))
+    error1.description should include(
+      s"""You are using a '@defaultValue' directive. Prisma uses '@default(value: "Value as String")' to declare default values.""")
   }
 
   "fail if an id field does not specify @unique directive" in {

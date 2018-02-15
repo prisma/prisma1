@@ -86,6 +86,7 @@ lazy val sharedModels = normalProject("shared-models")
     cuid
   ) ++ joda
 )
+
 lazy val deploy = serverProject("deploy", imageName = "deploy")
   .dependsOn(sharedModels % "compile")
   .dependsOn(akkaUtils % "compile")
@@ -95,6 +96,7 @@ lazy val deploy = serverProject("deploy", imageName = "deploy")
   .dependsOn(graphQlClient % "compile")
   .dependsOn(stubServer % "test")
   .dependsOn(sangriaUtils % "compile")
+  .dependsOn(auth % "compile")
   .settings(
     libraryDependencies ++= Seq(
       playJson,
@@ -110,7 +112,7 @@ lazy val deploy = serverProject("deploy", imageName = "deploy")
 
 lazy val api = serverProject("api", imageName = "database")
   .dependsOn(sharedModels % "compile")
-  .dependsOn(deploy % "test")
+  .dependsOn(deploy % "test->test")
   .dependsOn(messageBus % "compile")
   .dependsOn(akkaUtils % "compile")
   .dependsOn(metrics % "compile")
@@ -272,7 +274,7 @@ lazy val cache =
       jsr305
     ))
 
-lazy val auth = libProject("auth").settings(libraryDependencies += jwt)
+lazy val auth = libProject("auth").settings(libraryDependencies ++= Seq(jwt, scalaTest))
 
 lazy val singleServer = serverProject("single-server", imageName = "prisma")
   .dependsOn(api% "compile")

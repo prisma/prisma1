@@ -11,8 +11,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
 
-case class DeleteDataItem(project: Project, where: NodeSelector, previousValues: DataItem, id: String, requestId: Option[String] = None)
-    extends ClientSqlDataChangeMutaction {
+case class DeleteDataItem(project: Project, where: NodeSelector, previousValues: DataItem, id: String) extends ClientSqlDataChangeMutaction {
 
   override def execute: Future[ClientSqlStatementResult[Any]] = {
     Future.successful(

@@ -111,7 +111,6 @@ case class CoolArgs(raw: Map[String, Any]) {
     val values: Seq[(String, Any)] = for {
       field      <- model.scalarNonListFields.toVector
       fieldValue <- getFieldValueAs[Any](field)
-      if fieldValue.nonEmpty
     } yield {
       field.name -> fieldValue
     }

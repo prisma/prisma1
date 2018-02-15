@@ -2,7 +2,7 @@ package com.prisma.api.mutations.mutations
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import com.prisma.api.ApiDependencies
+import com.prisma.api.{ApiDependencies, ApiMetrics}
 import com.prisma.api.database.mutactions.mutactions.ServerSideSubscription
 import com.prisma.api.database.mutactions.{ClientSqlMutaction, MutactionGroup, TransactionMutaction}
 import com.prisma.api.database.{DataItem, DataResolver}
@@ -47,10 +47,12 @@ case class Update(
         val transactionMutaction   = TransactionMutaction(sqlMutactions, dataResolver)
         val subscriptionMutactions = SubscriptionEvents.extractFromSqlMutactions(project, mutationId, sqlMutactions).toList
         val sssActions             = ServerSideSubscription.extractFromMutactions(project, sqlMutactions, requestId = "").toList
+        val asyncMutactions        = sssActions ++ subscriptionMutactions
+        ApiMetrics.subscriptionEventCounter.incBy(asyncMutactions.size, project.id)
 
         List(
           MutactionGroup(mutactions = List(transactionMutaction), async = false),
-          MutactionGroup(mutactions = sssActions ++ subscriptionMutactions, async = true)
+          MutactionGroup(mutactions = asyncMutactions, async = true)
         )
 
       case None =>

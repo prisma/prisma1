@@ -215,7 +215,7 @@ As you're now running directly against the database API, you're not limited to t
 <Instruction>
 
 Paste the following mutation into the left pane of the `database` Playground and hit the _Play_-button (or use the keyboard shortcut `CMD+Enter`):
-`
+
 ```graphql
 mutation {
   createPost(

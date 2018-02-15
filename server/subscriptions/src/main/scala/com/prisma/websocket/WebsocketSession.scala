@@ -108,11 +108,11 @@ case class WebsocketSession(
   def receive: Receive = logUnhandled {
     case TextMessage.Strict(body) =>
       requestsPublisher.publish(Request(sessionId, projectId, body))
-      incomingWebsocketMessageRate.inc()
+      incomingWebsocketMessageCount.inc()
 
     case IncomingQueueMessage(_, body) =>
       outgoing ! TextMessage(body)
-      outgoingWebsocketMessageRate.inc()
+      outgoingWebsocketMessageCount.inc()
 
     case ReceiveTimeout =>
       context.stop(self)

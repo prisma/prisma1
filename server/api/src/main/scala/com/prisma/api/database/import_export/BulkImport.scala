@@ -63,7 +63,7 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) {
   private def convertToImportRelation(json: JsValue): ImportRelation = {
     val array    = json.convertTo[JsArray]
     val leftMap  = array.elements.head.convertTo[Map[String, Option[String]]]
-    val rightMap = array.elements.reverse.head.convertTo[Map[String, Option[String]]]
+    val rightMap = array.elements.last.convertTo[Map[String, Option[String]]]
     val left     = ImportRelationSide(ImportIdentifier(leftMap("_typeName").get, leftMap("id").get), leftMap.get("fieldName").flatten)
     val right    = ImportRelationSide(ImportIdentifier(rightMap("_typeName").get, rightMap("id").get), rightMap.get("fieldName").flatten)
 

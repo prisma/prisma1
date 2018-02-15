@@ -73,6 +73,15 @@ export interface Workspace {
   id: string
   name: string
   slug: string
+  clusters: Cluster[]
+}
+
+export interface Cluster {
+  id: string
+  name: string
+  connectInfo: {
+    endpoint: string
+  }
 }
 
 export interface Service {

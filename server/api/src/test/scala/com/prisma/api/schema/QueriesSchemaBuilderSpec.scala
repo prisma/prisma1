@@ -1,7 +1,7 @@
 package com.prisma.api.schema
 
 import com.prisma.api.ApiBaseSpec
-import com.prisma.shared.project_dsl.SchemaDsl
+import com.prisma.shared.schema_dsl.SchemaDsl
 import com.prisma.util.GraphQLSchemaMatchers
 import org.scalatest.{Matchers, WordSpec}
 import sangria.renderer.SchemaRenderer

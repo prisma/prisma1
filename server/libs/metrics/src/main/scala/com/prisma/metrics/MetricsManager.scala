@@ -36,7 +36,7 @@ abstract class MetricsManager(
 
   lazy val errorHandler = CustomErrorHandler()(reporter)
 
-  protected val baseTagsString: String = {
+  protected lazy val baseTagsString: String = {
     if (metricsCollectionIsEnabled) {
       Try {
         val instanceID  = Await.result(InstanceMetadata.fetchInstanceId(), 5.seconds)
@@ -44,7 +44,7 @@ abstract class MetricsManager(
         val region      = sys.env.getOrElse("AWS_REGION", "no_region")
         val env         = sys.env.getOrElse("ENV", "local")
 
-        s"env=$env,region=$region,instance=$instanceID,container=$containerId"
+        s"env=$env,region=$region,instance=$instanceID,container=$containerId,service=$serviceName"
       } match {
         case Success(baseTags) => baseTags
         case Failure(err)      => errorHandler.handle(new Exception(err)); ""
@@ -66,9 +66,9 @@ abstract class MetricsManager(
   protected def metricsCollectionIsEnabled: Boolean = sys.env.getOrElse("ENABLE_METRICS", "0") == "1"
 
   // Gauges DO NOT support custom metric tags per occurrence, only hardcoded custom tags during definition!
-  def defineGauge(name: String, predefTags: (CustomTag, String)*): GaugeMetric = GaugeMetric(s"$serviceName.$name", baseTagsString, predefTags, client)
-  def defineCounter(name: String, customTags: CustomTag*): CounterMetric       = CounterMetric(s"$serviceName.$name", baseTagsString, customTags, client)
-  def defineTimer(name: String, customTags: CustomTag*): TimerMetric           = TimerMetric(s"$serviceName.$name", baseTagsString, customTags, client)
+  def defineGauge(name: String, predefTags: (CustomTag, String)*): GaugeMetric = GaugeMetric(name, baseTagsString, predefTags, client)
+  def defineCounter(name: String, customTags: CustomTag*): CounterMetric       = CounterMetric(name, baseTagsString, customTags, client)
+  def defineTimer(name: String, customTags: CustomTag*): TimerMetric           = TimerMetric(name, baseTagsString, customTags, client)
 
   def shutdown: Unit = Await.result(gaugeFlushSystem.terminate(), 10.seconds)
 }

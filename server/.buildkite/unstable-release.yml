@@ -17,5 +17,5 @@ steps:
   - wait
 
   - label: ":docker: Build and deploy DEV"
-    command: ./server/scripts/docker-build-and-deploy.sh db-beta-ew1-dev
+    command: ./server/scripts/docker-build-and-deploy.sh db-beta-ew1-dev-2
     branches: master

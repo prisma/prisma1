@@ -1,4 +1,5 @@
 import { stdtermwidth } from './Output/actions/screen'
+import * as path from 'path'
 
 const debug = require('debug')('util')
 
@@ -63,4 +64,16 @@ export function getCommandId(argv: string[]) {
       return argv.slice(0, firstFlag).join(':')
     }
   }
+}
+
+export function getRoot() {
+  const parentFilename = module.parent!.parent!
+    ? module.parent!.parent!.filename
+    : module.parent!.filename
+  const findUp = require('find-up')
+  return path.dirname(
+    findUp.sync('package.json', {
+      cwd: parentFilename,
+    }),
+  )
 }
