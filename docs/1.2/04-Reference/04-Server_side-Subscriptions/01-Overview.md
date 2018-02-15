@@ -49,7 +49,35 @@ subscriptions:
       }
 ```
 
-### Example
+## Adding a Subscription as Resolver
+You can also add the Subscription directly as a resolver:
+
+```
+const resolvers = {
+...
+Subscription: {
+  userChangedEmail: {
+    subscribe: async (parent, args, ctx, info) => {
+      return await ctx.db.subscription.user(
+        {
+          where: {
+            mutation_in: ['UPDATED'],
+            updatedFields_contains: "email"}
+        }, info);
+    },
+  },
+},
+```
+
+You also have to add the subscription to your schema to be able to call it:
+
+```
+type Subscription {
+    userChangedEmail: UserSubscriptionPayload
+}
+```
+
+## Example Querry to trigger subscription
 
 The `userChangedEmail` subscription configured above would be triggered by a mutation like this:
 
