@@ -113,6 +113,55 @@ class NestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     mustBeEqual(result.pathAsString("data.updateTodo.comments.[1].text").toString, """update comment2""")
   }
 
+  "a one to many relation with an optional backrelation" should "be updateable by any unique argument through a nested mutation" in {
+    val project = SchemaDsl() { schema =>
+      val list = schema.model("List").field_!("listUnique", _.String, isUnique = true)
+      val todo = schema.model("Todo").field_!("todoUnique", _.String, isUnique = true)
+      list.manyToManyRelation("todoes", "does not matter", todo, includeFieldB = false)
+    }
+    database.setup(project)
+
+    server.executeQuerySimple(
+      """mutation {
+        |  createList(
+        |    data: {
+        |      listUnique : "list",
+        |      todoes: {
+        |        create: [{todoUnique: "todo"}]
+        |      }
+        |    }
+        |  ){
+        |    listUnique
+        |    todoes { todoUnique }
+        |  }
+        |}""".stripMargin,
+      project
+    )
+    val result = server.executeQuerySimple(
+      s"""mutation {
+         |  updateList(
+         |    where: {
+         |      listUnique: "list"
+         |    }
+         |    data:{
+         |      todoes: {
+         |        update: [{where: {todoUnique: "todo"}, data: {todoUnique: "new todo"}}]
+         |      }
+         |    }
+         |  ){
+         |    listUnique
+         |    todoes{
+         |      todoUnique
+         |    }
+         |  }
+         |}
+      """.stripMargin,
+      project
+    )
+
+    mustBeEqual(result.pathAsString("data.updateList.todoes.[0].todoUnique").toString, """new todo""")
+  }
+
   "a many to one relation" should "be updateable by id through a nested mutation" in {
     val project = SchemaDsl() { schema =>
       val comment = schema.model("Comment").field("text", _.String)

@@ -101,7 +101,7 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
     } yield {
       val typeName = omitRelation.getField(project.schema, model) match {
         case Some(field) => s"${model.name}UpdateWithout${field.name.capitalize}Input"
-        case None        => s"${model.name}UpdateInput"
+        case None        => s"${model.name}UpdateNestedInput"
       }
 
       InputObjectType[Any](
@@ -138,7 +138,7 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
     } yield {
       val typeName = omitRelation.getField(project.schema, model) match {
         case Some(field) => s"${model.name}UpsertWithout${field.name.capitalize}Input"
-        case None        => s"${model.name}UpsertInput"
+        case None        => s"${model.name}UpsertNestedInput"
       }
 
       InputObjectType[Any](
@@ -166,7 +166,6 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
         InputObjectType[Any](
           name = s"${model.name}WhereUniqueInput",
           fieldsFn = () => {
-
             uniqueFields.map { field =>
               InputField(name = field.name, fieldType = SchemaBuilderUtils.mapToOptionalInputType(field))
             }
