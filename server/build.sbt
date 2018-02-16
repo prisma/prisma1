@@ -83,7 +83,8 @@ lazy val sharedModels = normalProject("shared-models")
   .dependsOn(jsonUtils % "compile")
   .settings(
   libraryDependencies ++= Seq(
-    cuid
+    cuid,
+    scalaTest
   ) ++ joda
 )
 

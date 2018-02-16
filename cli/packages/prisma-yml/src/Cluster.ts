@@ -133,11 +133,17 @@ export class Cluster {
   }
 
   getApiEndpoint(serviceName: string, stage: string, workspaceSlug?: string) {
+    if (this.isPrivate) {
+      return `${this.baseUrl}/${serviceName}/${stage}`
+    }
     const workspaceString = workspaceSlug ? `${workspaceSlug}/` : ''
     return `${this.baseUrl}/${workspaceString}${serviceName}/${stage}`
   }
 
   getWSEndpoint(serviceName: string, stage: string, workspaceSlug?: string) {
+    if (this.isPrivate) {
+      return `${this.baseUrl}/${serviceName}/${stage}`
+    }
     const replacedUrl = this.baseUrl.replace('http', 'ws')
     const workspaceString = workspaceSlug ? `${workspaceSlug}/` : ''
     return `${replacedUrl}/${workspaceString}${serviceName}/${stage}`
@@ -148,6 +154,9 @@ export class Cluster {
     stage: string,
     workspaceSlug?: string,
   ) {
+    if (this.isPrivate) {
+      return `${this.baseUrl}/${serviceName}/${stage}/import`
+    }
     const workspaceString = workspaceSlug ? `${workspaceSlug}/` : ''
     return `${this.baseUrl}/${workspaceString}${serviceName}/${stage}/import`
   }
@@ -157,6 +166,9 @@ export class Cluster {
     stage: string,
     workspaceSlug?: string,
   ) {
+    if (this.isPrivate) {
+      return `${this.baseUrl}/${serviceName}/${stage}/export`
+    }
     const workspaceString = workspaceSlug ? `${workspaceSlug}/` : ''
     return `${this.baseUrl}/${workspaceString}${serviceName}/${stage}/export`
   }

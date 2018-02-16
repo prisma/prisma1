@@ -12,6 +12,7 @@ import { Environment } from './Environment'
 import { IOutput } from './Output'
 import { Cluster } from './Cluster'
 import { FunctionInput, Header } from './types/rc'
+import chalk from 'chalk'
 
 interface ErrorMessage {
   message: string
@@ -89,14 +90,22 @@ export class PrismaDefinitionClass {
 
     // shared clusters need a workspace
     const clusterName = this.getClusterName()
+    const cluster = this.env.clusterByName(clusterName!)!
     if (
       clusterName &&
-      this.env.sharedClusters.includes(clusterName) &&
+      cluster &&
+      (cluster.shared || cluster.isPrivate) &&
       !this.getWorkspace() &&
       clusterName !== 'shared-public-demo'
     ) {
       throw new Error(
-        `You provided the cluster ${clusterName}, but it needs to be prepended with the workspace you want to deploy to`,
+        `Your \`cluster\` property in the prisma.yml is missing the workspace slug.
+Make sure that your \`cluster\` property looks like this: ${chalk.bold(
+          '<workspace>/<cluster-name>',
+        )}. You can also remove the cluster property from the prisma.yml
+and execute ${chalk.bold.green(
+          'prisma deploy',
+        )} again, to get that value auto-filled.`,
       )
     }
     this.env.sharedClusters
@@ -118,16 +127,22 @@ export class PrismaDefinitionClass {
     return undefined
   }
 
-  getCluster(): Cluster | undefined {
+  getCluster(throws: boolean = true): Cluster | undefined {
     const clusterName = this.getClusterName()
     if (clusterName) {
       const cluster = this.env.clusterByName(clusterName)
       if (!cluster && clusterName !== 'local') {
-        throw new Error(
-          `Cluster ${clusterName}, that is provided in the prisma.yml could not be found.`,
-        )
+        if (throws) {
+          throw new Error(
+            `Cluster ${clusterName}, that is provided in the prisma.yml could not be found.
+If it is a private cluster, make sure that you're logged in with ${chalk.bold.green(
+              'prisma login',
+            )}`,
+          )
+        }
+      } else {
+        return cluster
       }
-      return cluster
     }
 
     return undefined
@@ -174,7 +189,8 @@ export class PrismaDefinitionClass {
   }
 
   getDeployName() {
-    return concatName(this.definition!.service!, this.getWorkspace())
+    const cluster = this.getCluster()
+    return concatName(cluster!, this.definition!.service!, this.getWorkspace())
   }
 
   getSubscriptions(): FunctionInput[] {
@@ -223,9 +239,17 @@ export class PrismaDefinitionClass {
   }
 }
 
-export function concatName(name: string, workspace: string | null) {
-  const workspaceString = workspace ? `${workspace}~` : ''
-  return `${workspaceString}${name}`
+export function concatName(
+  cluster: Cluster,
+  name: string,
+  workspace: string | null,
+) {
+  if (cluster.shared) {
+    const workspaceString = workspace ? `${workspace}~` : ''
+    return `${workspaceString}${name}`
+  }
+
+  return name
 }
 
 function transformHeaders(headers?: { [key: string]: string }): Header[] {
