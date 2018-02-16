@@ -252,7 +252,7 @@ export class Environment {
 
   private getLocalClusterConfig() {
     return this.clusters
-      .filter(c => !c.shared && c.clusterSecret !== this.cloudSessionKey)
+      .filter(c => !c.shared && c.clusterSecret !== this.cloudSessionKey && !c.isPrivate)
       .reduce((acc, cluster) => {
         return {
           ...acc,

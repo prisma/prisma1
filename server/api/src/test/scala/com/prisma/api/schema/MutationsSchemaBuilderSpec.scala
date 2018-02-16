@@ -95,6 +95,55 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec
                                    ))
   }
 
+  "the update Mutation for a model with a optional backrelation" should "be generated correctly" in {
+    val project = SchemaDsl() { schema =>
+      val list = schema.model("List").field_!("listUnique", _.String, isUnique = true).field("optList", _.String)
+      val todo = schema.model("Todo").field_!("todoUnique", _.String, isUnique = true).field("optString", _.String)
+      list.manyToManyRelation("todoes", "does not matter", todo, includeFieldB = false)
+    }
+
+    val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
+
+    schema should containMutation("updateTodo(data: TodoUpdateInput!, where: TodoWhereUniqueInput!): Todo")
+
+    schema should containInputType("TodoCreateInput",
+                                   fields = Vector(
+                                     "todoUnique: String!",
+                                     "optString: String"
+                                   ))
+
+    schema should containInputType("TodoUpdateInput",
+                                   fields = Vector(
+                                     "todoUnique: String",
+                                     "optString: String"
+                                   ))
+
+    schema should containInputType("TodoUpdateDataInput",
+                                   fields = Vector(
+                                     "todoUnique: String",
+                                     "optString: String"
+                                   ))
+
+    schema should containInputType("TodoWhereUniqueInput",
+                                   fields = Vector(
+                                     "id: ID",
+                                     "todoUnique: String"
+                                   ))
+
+    schema should containInputType("TodoUpdateNestedInput",
+                                   fields = Vector(
+                                     "where: TodoWhereUniqueInput!",
+                                     "data: TodoUpdateDataInput!"
+                                   ))
+
+    schema should containInputType("TodoUpsertNestedInput",
+                                   fields = Vector(
+                                     "where: TodoWhereUniqueInput!",
+                                     "update: TodoUpdateDataInput!",
+                                     "create: TodoCreateInput!"
+                                   ))
+  }
+
   "the update many Mutation for a model" should "be generated correctly" in {
     val project = SchemaDsl() { schema =>
       schema.model("Todo").field_!("title", _.String).field("alias", _.String, isUnique = true)
@@ -245,8 +294,8 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec
         "connect: [CommentWhereUniqueInput!]",
         "disconnect: [CommentWhereUniqueInput!]",
         "delete: [CommentWhereUniqueInput!]",
-        "update: [CommentUpdateInput!]",
-        "upsert: [CommentUpsertInput!]"
+        "update: [CommentUpdateNestedInput!]",
+        "upsert: [CommentUpsertNestedInput!]"
       )
     )
   }

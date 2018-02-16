@@ -93,7 +93,17 @@ ${chalk.gray(
     const serviceName = this.definition.definition!.service
     const stage = this.definition.definition!.stage
 
-    let cluster = this.definition.getCluster()
+    let cluster = this.definition.getCluster(false)
+    const clusterName = this.definition.getClusterName()
+    if (!cluster && clusterName && clusterName !== 'local') {
+      this.out.log(
+        `You're not logged in and cluster ${chalk.bold(
+          clusterName!,
+        )} could not be found locally. Trying to authanticate.\n`,
+      )
+      await this.client.login()
+      cluster = this.definition.getCluster()
+    }
     const isOnline = cluster ? await cluster.isOnline() : false
     if (
       this.definition.definition.cluster === 'local' &&
@@ -584,7 +594,7 @@ ${chalk.gray(
     const exists = this.env.clusterByName(clusterName)
 
     // in this case it's a public cluster and we need to generate a workspace name
-    if (!loggedIn && exists && !exists.local) {
+    if (!loggedIn && exists && exists.shared) {
       workspace = this.getPublicName()
       debug(`silly name`, workspace)
       workspaceClusterCombination = `${workspace}/${clusterName}`
@@ -596,7 +606,13 @@ ${chalk.gray(
       } else {
         await this.out.error(`Could not find selected cluster ${clusterName}`)
       }
+    } else {
+      // make sure that local clusters are booted
+      if (!exists.isPrivate && !exists.shared && !await exists.isOnline()) {
+        await this.localUp()
+      }
     }
+
     await this.definition.addCluster(workspaceClusterCombination, this.flags)
 
     return {
