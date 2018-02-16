@@ -885,9 +885,10 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
          |}
       """.stripMargin,
       project,
-      errorCode = 3041,
-      errorContains =
-        "The relation UserFollows has no Node for the model User with value `Paul` for username connected to a Node for the model User with value `Anton` for username"
+      errorCode = 3041
+//      ,
+//      errorContains =
+//        "The relation UserFollows has no Node for the model User with value `Paul` for username connected to a Node for the model User with value `Anton` for username"
     )
   }
 }

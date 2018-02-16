@@ -281,13 +281,17 @@ object DatabaseMutationBuilder {
     triggerFailureWhenNotExists(project, query, table)
   }
 
-  def connectionFailureTrigger(project: Project, parentInfo: ParentInfo, where: NodeSelector) = {
-    val parentSide = parentInfo.field.relationSide.get
-    val childSide  = parentInfo.field.oppositeRelationSide.get
-    val table      = parentInfo.relation.id
-    val query = sql"SELECT `id` FROM `#${project.id}`.`#$table` CONNECTIONFAILURETRIGGER" ++
-      sql"WHERE `#$childSide` " ++ idFromWhereEquals(project.id, where) ++
-      sql"AND `#$parentSide` " ++ idFromWhereEquals(project.id, parentInfo.where)
+  def connectionFailureTriggerPath(project: Project, path: Path) = {
+    val table = path.lastRelation.get.id
+    val query = path.lastEdge_! match {
+      case edge: ModelEdge =>
+        sql""
+
+      case edge: NodeEdge =>
+        sql"SELECT `id` FROM `#${project.id}`.`#$table` CONNECTIONFAILURETRIGGER" ++
+          sql"WHERE `#${edge.childRelationSide}` " ++ idFromWhereEquals(project.id, edge.childWhere) ++
+          sql"AND `#${edge.parentRelationSide}` = " ++ pathQuery(project.id, path.removeLastEdge)
+    }
 
     triggerFailureWhenNotExists(project, query, table)
   }

@@ -1,6 +1,6 @@
 package com.prisma.api.mutations.mutations
 
-import com.prisma.api.mutations.{CoolArgs, NodeSelector}
+import com.prisma.api.mutations.{CoolArgs, NestedMutationBase, NestedWhere, NodeSelector}
 import com.prisma.api.schema.APIErrors
 import com.prisma.shared.models.RelationSide.RelationSide
 import com.prisma.shared.models.{Field, Model, Project, Relation}
@@ -15,6 +15,9 @@ object CascadingDeletes {
     def childField: Option[Field]
     def childRelationSide: RelationSide = parentField.oppositeRelationSide.get
     def relation: Relation
+    def toNodeEdge(where: NodeSelector): NodeEdge = {
+      NodeEdge(parent, parentField, child, childField, where, relation)
+    }
   }
   case class ModelEdge(parent: Model, parentField: Field, child: Model, childField: Option[Field], relation: Relation)                          extends Edge
   case class NodeEdge(parent: Model, parentField: Field, child: Model, childField: Option[Field], childWhere: NodeSelector, relation: Relation) extends Edge
@@ -36,10 +39,15 @@ object CascadingDeletes {
       copy(root, edges :+ edge)
     }
 
+    def append(edge: Edge): Path = copy(root, edges :+ edge)
+
     def lastModel = edges match {
       case Nil => root.model
       case x   => x.last.child
     }
+
+    def lastEdge_!     = edges.last
+    def lastRelation_! = lastRelation.get
 
     def lastRelation = edges match {
       case Nil => None
@@ -56,14 +64,14 @@ object CascadingDeletes {
       val updatedWhere    = whereFieldValue.map(root.updateValue).getOrElse(root)
       this.copy(root = updatedWhere)
     }
+
+    def lastEdgeToNodeEdge(nested: NestedMutationBase): Path = nested match {
+      case x: NestedWhere => this.copy(edges = removeLastEdge.edges :+ lastEdge_!.toNodeEdge(x.where))
+      case _              => this
+    }
+
   }
   object Path { def empty(where: NodeSelector) = Path(where, List.empty) }
-
-  private def cascadingEdge(project: Project, model: Model, field: Field): Edge = {
-    val edge = ModelEdge(model, field, field.relatedModel(project.schema).get, field.relatedField(project.schema), field.relation.get)
-    if (edge.relation.bothSidesCascade) throw APIErrors.CascadingDeletePathLoops()
-    edge
-  }
 
   def collectCascadingPaths(project: Project, path: Path): List[Path] = path.otherCascadingRelationFields match {
     case Nil   => List(path)

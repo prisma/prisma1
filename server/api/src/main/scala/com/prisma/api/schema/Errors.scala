@@ -2,6 +2,7 @@ package com.prisma.api.schema
 
 import com.prisma.sangria.utils.ErrorWithCode
 import com.prisma.api.database.mutactions.MutactionExecutionResult
+import com.prisma.api.mutations.mutations.CascadingDeletes.Path
 import com.prisma.api.mutations.{NodeSelector, ParentInfo}
 import com.prisma.shared.models.{Project, Relation}
 import spray.json.JsValue
@@ -109,9 +110,9 @@ object APIErrors {
   case class NullProvidedForWhereError(modelName: String)
       extends ClientApiError(s"You provided an invalid argument for the where selector on $modelName.", 3040)
 
-  case class NodesNotConnectedError(parentInfo: ParentInfo, innerWhere: NodeSelector)
+  case class NodesNotConnectedError(path: Path)
       extends ClientApiError(
-        s"The relation ${parentInfo.relation.name} has no Node for the model ${parentInfo.model.name} with value `${parentInfo.where.fieldValueAsString}` for ${parentInfo.where.field.name} connected to a Node for the model ${innerWhere.model.name} with value `${innerWhere.fieldValueAsString}` for ${innerWhere.field.name}",
+        s"The relation ${path.lastEdge_!.relation.name} has no Node for the model ${path.lastEdge_!.parent.name} connected to a Node for the model ${path.lastEdge_!.child.name}",
         3041
       )
 
