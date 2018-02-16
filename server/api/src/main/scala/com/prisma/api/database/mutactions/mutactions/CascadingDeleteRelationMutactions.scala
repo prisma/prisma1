@@ -38,7 +38,7 @@ case class CascadingDeleteRelationMutactions(project: Project, path: Path) exten
 
   def causedByThisMutactionChildOnly(relation: Relation, cause: String) = {
     val parentCheckString = s"`${relation.id}` OLDPARENTPATHFAILURETRIGGER WHERE `${relation.sideOf(path.lastModel)}`"
-    cause.contains(parentCheckString) && cause.contains(parameterStringFromSQLException(path.where))
+    cause.contains(parentCheckString) && cause.contains(parameterStringFromSQLException(path.root))
   }
 
   def otherSideIsRequired(field: Field): Boolean = field.relatedField(project.schema) match {

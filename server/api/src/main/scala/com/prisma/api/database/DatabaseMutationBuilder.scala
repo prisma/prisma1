@@ -1,9 +1,10 @@
 package com.prisma.api.database
 
-import com.prisma.api.mutations.mutations.CascadingDeletes.Path
+import com.prisma.api.mutations.mutations.CascadingDeletes.{ModelEdge, NodeEdge, Path}
 import com.prisma.api.database.SlickExtensions._
 import com.prisma.api.database.Types.DataItemFilterCollection
 import com.prisma.api.database.mutactions.mutactions.NestedCreateRelationMutaction
+import com.prisma.api.mutations.mutations.CascadingDeletes
 import com.prisma.api.mutations.{CoolArgs, NodeSelector, ParentInfo}
 import com.prisma.api.schema.GeneralError
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
@@ -240,15 +241,31 @@ object DatabaseMutationBuilder {
     sql"IN " ++ idFromWhere(projectId, where)
   }
 
-  def idFromWhereEquals(projectId: String, where: NodeSelector): SQLActionBuilder = {
-    where.isId match {
-      case true  => sql" = ${where.fieldValue}"
-      case false => sql" = " ++ idFromWhere(projectId, where)
-    }
+  def idFromWhereEquals(projectId: String, where: NodeSelector): SQLActionBuilder = where.isId match {
+    case true  => sql" = ${where.fieldValue}"
+    case false => sql" = " ++ idFromWhere(projectId, where)
   }
 
   def idFromWherePath(projectId: String, where: NodeSelector): SQLActionBuilder = {
     sql"(SELECT `id` FROM (SELECT  * From `#$projectId`.`#${where.model.name}`) IDFROMWHEREPATH WHERE `#${where.field.name}` = ${where.fieldValue})"
+  }
+
+  def pathQuery(projectId: String, path: Path): SQLActionBuilder = {
+    object ::> { def unapply[A](l: List[A]) = Some((l.init, l.last)) }
+    def nodeSelector(last: CascadingDeletes.Edge) = last match {
+      case edge: NodeEdge => sql" `#${edge.childRelationSide}`" ++ idFromWhereEquals(projectId, edge.childWhere) ++ sql" AND "
+      case _: ModelEdge   => sql""
+    }
+
+    path.edges match {
+      case Nil =>
+        idFromWherePath(projectId, path.root)
+
+      case _ ::> last =>
+        sql"(SELECT `#${last.childRelationSide}`" ++
+          sql" FROM (SELECT * FROM `#$projectId`.`#${last.relation.id}`) PATHQUERY" ++
+          sql" WHERE " ++ nodeSelector(last) ++ sql"`#${last.parentRelationSide}` IN " ++ pathQuery(projectId, path.removeLastEdge) ++ sql")"
+    }
   }
 
   def whereFailureTrigger(project: Project, where: NodeSelector) = {
@@ -326,19 +343,6 @@ object DatabaseMutationBuilder {
       sql"else (select COLUMN_NAME" ++
       sql"from information_schema.columns" ++
       sql"where table_schema = ${project.id} AND TABLE_NAME = $table)end;").as[Int]
-  }
-
-  def pathQuery(projectId: String, path: Path): SQLActionBuilder = {
-    path.edges match {
-      case x if x.isEmpty =>
-        idFromWherePath(projectId, path.where)
-
-      case x if x.nonEmpty =>
-        val last = x.last
-        sql"(SELECT `#${last.relation.sideOf(last.child)}`" ++
-          sql" FROM (SELECT * FROM `#$projectId`.`#${last.relation.id}`) PATHQUERY" ++
-          sql" WHERE `#${last.relation.sideOf(last.parent)}` IN " ++ pathQuery(projectId, path.removeLastEdge) ++ sql")"
-    }
   }
 
   // note: utf8mb4 requires up to 4 bytes per character and includes full utf8 support, including emoticons
