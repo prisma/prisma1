@@ -127,16 +127,22 @@ and execute ${chalk.bold.green(
     return undefined
   }
 
-  getCluster(): Cluster | undefined {
+  getCluster(throws: boolean = true): Cluster | undefined {
     const clusterName = this.getClusterName()
     if (clusterName) {
       const cluster = this.env.clusterByName(clusterName)
       if (!cluster && clusterName !== 'local') {
-        throw new Error(
-          `Cluster ${clusterName}, that is provided in the prisma.yml could not be found.`,
-        )
+        if (throws) {
+          throw new Error(
+            `Cluster ${clusterName}, that is provided in the prisma.yml could not be found.
+If it is a private cluster, make sure that you're logged in with ${chalk.bold.green(
+              'prisma login',
+            )}`,
+          )
+        }
+      } else {
+        return cluster
       }
-      return cluster
     }
 
     return undefined

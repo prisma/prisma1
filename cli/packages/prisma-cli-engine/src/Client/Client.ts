@@ -426,6 +426,7 @@ To reset the key pair, please run ${chalk.bold.green('prisma local start')}
 
     this.env.saveGlobalRC()
     debug(`Saved token ${token}`)
+    await this.env.getClusters()
 
     this.out.action.stop()
   }
