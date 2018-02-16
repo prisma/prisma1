@@ -12,6 +12,7 @@ import { Environment } from './Environment'
 import { IOutput } from './Output'
 import { Cluster } from './Cluster'
 import { FunctionInput, Header } from './types/rc'
+import chalk from 'chalk'
 
 interface ErrorMessage {
   message: string
@@ -89,14 +90,22 @@ export class PrismaDefinitionClass {
 
     // shared clusters need a workspace
     const clusterName = this.getClusterName()
+    const cluster = this.env.clusterByName(clusterName!)!
     if (
       clusterName &&
-      this.env.sharedClusters.includes(clusterName) &&
+      cluster &&
+      (cluster.shared || cluster.isPrivate) &&
       !this.getWorkspace() &&
       clusterName !== 'shared-public-demo'
     ) {
       throw new Error(
-        `You provided the cluster ${clusterName}, but it needs to be prepended with the workspace you want to deploy to`,
+        `Your \`cluster\` property in the prisma.yml is missing the workspace slug.
+Make sure that your \`cluster\` property looks like this: ${chalk.bold(
+          '<workspace>/<cluster-name>',
+        )}. You can also remove the cluster property from the prisma.yml
+and execute ${chalk.bold.green(
+          'prisma deploy',
+        )} again, to get that value auto-filled.`,
       )
     }
     this.env.sharedClusters
