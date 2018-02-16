@@ -95,7 +95,7 @@ ${chalk.gray(
 
     let cluster = this.definition.getCluster(false)
     const clusterName = this.definition.getClusterName()
-    if (!cluster && clusterName !== 'local') {
+    if (!cluster && clusterName && clusterName !== 'local') {
       this.out.log(
         `You're not logged in and cluster ${chalk.bold(
           clusterName!,
@@ -606,7 +606,13 @@ ${chalk.gray(
       } else {
         await this.out.error(`Could not find selected cluster ${clusterName}`)
       }
+    } else {
+      // make sure that local clusters are booted
+      if (!exists.isPrivate && !exists.shared && !await exists.isOnline()) {
+        await this.localUp()
+      }
     }
+
     await this.definition.addCluster(workspaceClusterCombination, this.flags)
 
     return {
