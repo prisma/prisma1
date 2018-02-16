@@ -1,34 +1,25 @@
-import * as nock from 'nock'
-import * as fs from 'fs-extra'
-import * as path from 'path'
-import { Config } from 'prisma-cli-engine'
-import { getTmpDir } from '../../test/getTmpDir'
-import Init from './'
+import * as nock from "nock";
+import * as fs from "fs-extra";
+import * as path from "path";
+import { Config } from "prisma-cli-engine";
+import { getTmpDir } from "../../test/getTmpDir";
+import Init from "./";
+import { tmpdir } from "os";
 
 afterAll(() => {
-  nock.cleanAll()
-})
+  nock.cleanAll();
+});
 
-describe('init', () => {
-  test('test project', async () => {
+describe("init", () => {
+  test("test project", async () => {
+    const tmpDir = getTmpDir();
+    const result = await Init.mock(tmpDir, "-m");
 
-    // I am not really sure what I need to do with this?
-    const tmpDir = getTmpDir()
+    expect(result.out.stdout.output).toContain("Created 3 new files");
 
-    const testFolder = './'
-
-    // This doesn't see to be the correct test.
     fs.readdir(tmpDir, (err, files) => {
-      files.map(file => expect(file).toMatchSnapshot())
-    })
+      files.map(file => expect(file).toMatchSnapshot());
+    });
+  });
+});
 
-    // console.log(tmpDir)
-    // const result = await Init
-    //   .mock
-    //   //'-t',
-    //   //'blank',
-    //   ()
-    // expect(result.out.stdout.output).toContain('Written files:')
-    // expect(true).toBe(true)
-  })
-})
