@@ -21,52 +21,45 @@ object CascadingDeletes {
 
   case class Path(root: NodeSelector, edges: List[Edge]) {
 
+    def relations                    = edges.map(_.relation)
+    def models                       = root.model +: edges.map(_.child)
+    def otherCascadingRelationFields = lastModel.cascadingRelationFields.filter(relationField => relations.contains(relationField.relation.get))
+
     def removeLastEdge: Path = edges match {
-      case x if x.isEmpty => sys.error("Don't call this on an empty path")
-      case x              => copy(root, edges.dropRight(1))
+      case Nil => sys.error("Don't call this on an empty path")
+      case _   => copy(root, edges.dropRight(1))
     }
 
-    def prepend(edge: Edge): Path = copy(root, edge +: edges)
+    def cascadeAppend(edge: Edge): Path = {
+      if (models.contains(edge.child)) throw APIErrors.CascadingDeletePathLoops()
+      copy(root, edges :+ edge)
+    }
+
+    def lastModel = edges match {
+      case Nil => root.model
+      case x   => x.last.child
+    }
+
+    def lastRelation = edges match {
+      case Nil => None
+      case x   => Some(x.last.relation)
+    }
 
     def pretty: String =
       s"Where: ${root.model.name}, ${root.field.name}, ${root.fieldValueAsString} |  " + edges
         .map(edge => s"${edge.parent.name}<->${edge.child.name}")
         .mkString(" ")
-
-    def lastModel = edges match {
-      case x if x.isEmpty => root.model
-      case x              => x.last.child
-    }
-
-    def lastRelation = edges match {
-      case x if x.isEmpty => None
-      case x              => Some(x.last.relation)
-    }
   }
-  object Path {
-    def empty(where: NodeSelector) = Path(where, List.empty)
+  object Path { def empty(where: NodeSelector) = Path(where, List.empty) }
+
+  def cascadingEdge(project: Project, model: Model, field: Field): Edge = {
+    val edge = ModelEdge(model, field, field.relatedModel(project.schema).get, field.relatedField(project.schema), field.relation.get)
+    if (edge.relation.bothSidesCascade) throw APIErrors.CascadingDeletePathLoops()
+    edge
   }
 
-  def getEdge(project: Project, model: Model, field: Field): Edge =
-    ModelEdge(model, field, field.relatedModel(project.schema).get, field.relatedField(project.schema), field.relation.get)
-
-  def collectPaths(project: Project,
-                   where: NodeSelector,
-                   startModel: Model,
-                   seenModels: List[Model] = List.empty,
-                   seenRelations: List[Relation] = List.empty): List[Path] = {
-    startModel.cascadingRelationFields.filter(relationField => !seenRelations.contains(relationField.relation.get)) match {
-      case x if x.isEmpty =>
-        List(Path.empty(where))
-
-      case x =>
-        x.flatMap { field =>
-          val edge = getEdge(project, startModel, field)
-          if (seenModels.contains(edge.child) || edge.relation.bothSidesCascade) throw APIErrors.CascadingDeletePathLoops()
-
-          val childPaths = collectPaths(project, where, edge.child, seenModels :+ edge.child, seenRelations :+ edge.relation)
-          childPaths.map(path => path.prepend(edge))
-        }
-    }
+  def collectPaths(project: Project, path: Path): List[Path] = path.otherCascadingRelationFields match {
+    case Nil => List(path)
+    case x   => x.flatMap(field => collectPaths(project, path.cascadeAppend(cascadingEdge(project, path.lastModel, field))))
   }
 }
