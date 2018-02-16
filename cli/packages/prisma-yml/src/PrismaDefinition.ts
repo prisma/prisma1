@@ -183,7 +183,8 @@ and execute ${chalk.bold.green(
   }
 
   getDeployName() {
-    return concatName(this.definition!.service!, this.getWorkspace())
+    const cluster = this.getCluster()
+    return concatName(cluster!, this.definition!.service!, this.getWorkspace())
   }
 
   getSubscriptions(): FunctionInput[] {
@@ -232,9 +233,17 @@ and execute ${chalk.bold.green(
   }
 }
 
-export function concatName(name: string, workspace: string | null) {
-  const workspaceString = workspace ? `${workspace}~` : ''
-  return `${workspaceString}${name}`
+export function concatName(
+  cluster: Cluster,
+  name: string,
+  workspace: string | null,
+) {
+  if (cluster.shared) {
+    const workspaceString = workspace ? `${workspace}~` : ''
+    return `${workspaceString}${name}`
+  }
+
+  return name
 }
 
 function transformHeaders(headers?: { [key: string]: string }): Header[] {
