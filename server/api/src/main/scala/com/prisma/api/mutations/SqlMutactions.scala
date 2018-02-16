@@ -3,7 +3,7 @@ import com.prisma.api.ApiMetrics
 import com.prisma.api.database.mutactions.mutactions._
 import com.prisma.api.database.mutactions.{ClientSqlDataChangeMutaction, ClientSqlMutaction}
 import com.prisma.api.database.{DataItem, DataResolver, DatabaseMutationBuilder}
-import com.prisma.api.mutations.mutations.CascadingDeletes.{Path, collectPaths}
+import com.prisma.api.mutations.mutations.CascadingDeletes.{Path, collectCascadingPaths}
 import com.prisma.api.schema.APIErrors.RelationIsRequired
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models.{Field, Model, Project, Relation}
@@ -35,13 +35,14 @@ case class SqlMutactions(dataResolver: DataResolver) {
     mutactions
   }
 
-  def getMutactionsForDelete(where: NodeSelector, previousValues: DataItem, id: String): Seq[ClientSqlMutaction] = report {
-    generateCascadingDeleteMutactions(project, where) ++ List(DeleteRelationMutaction(project, where), DeleteDataItem(project, where, previousValues, id))
+  def getMutactionsForDelete(path: Path, previousValues: DataItem, id: String): Seq[ClientSqlMutaction] = report {
+    generateCascadingDeleteMutactions(project, path) ++ List(DeleteRelationMutaction(project, path.root), DeleteDataItem(project, path, previousValues, id))
   }
 
-  def getMutactionsForUpdate(where: NodeSelector, args: CoolArgs, id: Id, previousValues: DataItem): Seq[ClientSqlMutaction] = report {
-    val updateMutaction = getUpdateMutactions(where, args, id, previousValues)
-    val nested          = getMutactionsForNestedMutation(args, currentWhere(where, args), triggeredFromCreate = false)
+  def getMutactionsForUpdate(path: Path, args: CoolArgs, id: Id, previousValues: DataItem): Seq[ClientSqlMutaction] = report {
+    val updateMutaction = getUpdateMutactions(path, args, id, previousValues)
+    val nested          = getMutactionsForNestedMutation(args, currentWhere(path.root, args), triggeredFromCreate = false)
+//    val nested          = getMutactionsForNestedMutation(args, path.updatedRoot(args), triggeredFromCreate = false)
 
     updateMutaction ++ nested
   }
@@ -69,18 +70,18 @@ case class SqlMutactions(dataResolver: DataResolver) {
     CreateDataItem(project, where, args) +: getMutactionsForScalarLists(where, args)
   }
 
-  def getUpdateMutactions(where: NodeSelector, args: CoolArgs, id: Id, previousValues: DataItem): Vector[ClientSqlMutaction] = {
+  def getUpdateMutactions(path: Path, args: CoolArgs, id: Id, previousValues: DataItem): Vector[ClientSqlMutaction] = {
     val updateNonLists =
       UpdateDataItem(
         project = project,
-        model = where.model,
+        model = path.lastModel,
         id = id,
-        args = args.nonListScalarArguments(where.model),
+        args = args.nonListScalarArguments(path.lastModel),
         previousValues = previousValues,
         itemExists = true
       )
 
-    val updateLists = getMutactionsForScalarLists(where, args)
+    val updateLists = getMutactionsForScalarLists(path.root, args)
 
     updateNonLists +: updateLists
   }
@@ -185,7 +186,7 @@ case class SqlMutactions(dataResolver: DataResolver) {
 
   def getMutactionsForNestedDeleteMutation(nestedMutation: NestedMutation, parentInfo: ParentInfo): Seq[ClientSqlMutaction] = {
     nestedMutation.deletes.flatMap { delete =>
-      val cascadingDeleteMutactions = generateCascadingDeleteMutactions(project, delete.where)
+      val cascadingDeleteMutactions = generateCascadingDeleteMutactions(project, Path.empty(delete.where))
       cascadingDeleteMutactions ++ List(DeleteRelationMutaction(project, delete.where), DeleteDataItemNested(project, delete.where))
     }
   }
@@ -223,7 +224,7 @@ case class SqlMutactions(dataResolver: DataResolver) {
     updatedWhere
   }
 
-  def generateCascadingDeleteMutactions(project: Project, where: NodeSelector): List[ClientSqlMutaction] = {
+  def generateCascadingDeleteMutactions(project: Project, path: Path): List[ClientSqlMutaction] = {
     def getMutactionsForEdges(paths: List[Path]): List[ClientSqlMutaction] = {
       paths.filter(_.edges.nonEmpty) match {
         case res if res.isEmpty =>
@@ -240,7 +241,7 @@ case class SqlMutactions(dataResolver: DataResolver) {
       }
     }
 
-    val paths: List[Path] = collectPaths(project, Path.empty(where))
+    val paths: List[Path] = collectCascadingPaths(project, path)
     getMutactionsForEdges(paths)
   }
 }

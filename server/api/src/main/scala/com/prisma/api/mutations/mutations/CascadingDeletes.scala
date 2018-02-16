@@ -1,6 +1,6 @@
 package com.prisma.api.mutations.mutations
 
-import com.prisma.api.mutations.NodeSelector
+import com.prisma.api.mutations.{CoolArgs, NodeSelector}
 import com.prisma.api.schema.APIErrors
 import com.prisma.shared.models.RelationSide.RelationSide
 import com.prisma.shared.models.{Field, Model, Project, Relation}
@@ -23,15 +23,16 @@ object CascadingDeletes {
 
     def relations                    = edges.map(_.relation)
     def models                       = root.model +: edges.map(_.child)
-    def otherCascadingRelationFields = lastModel.cascadingRelationFields.filter(relationField => relations.contains(relationField.relation.get))
+    def otherCascadingRelationFields = lastModel.cascadingRelationFields.filter(relationField => !relations.contains(relationField.relation.get))
 
     def removeLastEdge: Path = edges match {
       case Nil => sys.error("Don't call this on an empty path")
       case _   => copy(root, edges.dropRight(1))
     }
 
-    def cascadeAppend(edge: Edge): Path = {
-      if (models.contains(edge.child)) throw APIErrors.CascadingDeletePathLoops()
+    def appendCascadingEdge(project: Project, field: Field): Path = {
+      val edge = ModelEdge(lastModel, field, field.relatedModel(project.schema).get, field.relatedField(project.schema), field.relation.get)
+      if (edge.relation.bothSidesCascade || models.contains(edge.child)) throw APIErrors.CascadingDeletePathLoops()
       copy(root, edges :+ edge)
     }
 
@@ -49,17 +50,24 @@ object CascadingDeletes {
       s"Where: ${root.model.name}, ${root.field.name}, ${root.fieldValueAsString} |  " + edges
         .map(edge => s"${edge.parent.name}<->${edge.child.name}")
         .mkString(" ")
+
+    def updatedRoot(args: CoolArgs): Path = {
+      val whereFieldValue = args.raw.get(root.field.name)
+      val updatedWhere    = whereFieldValue.map(root.updateValue).getOrElse(root)
+      this.copy(root = updatedWhere)
+    }
   }
   object Path { def empty(where: NodeSelector) = Path(where, List.empty) }
 
-  def cascadingEdge(project: Project, model: Model, field: Field): Edge = {
+  private def cascadingEdge(project: Project, model: Model, field: Field): Edge = {
     val edge = ModelEdge(model, field, field.relatedModel(project.schema).get, field.relatedField(project.schema), field.relation.get)
     if (edge.relation.bothSidesCascade) throw APIErrors.CascadingDeletePathLoops()
     edge
   }
 
-  def collectPaths(project: Project, path: Path): List[Path] = path.otherCascadingRelationFields match {
-    case Nil => List(path)
-    case x   => x.flatMap(field => collectPaths(project, path.cascadeAppend(cascadingEdge(project, path.lastModel, field))))
+  def collectCascadingPaths(project: Project, path: Path): List[Path] = path.otherCascadingRelationFields match {
+    case Nil   => List(path)
+    case edges => edges.flatMap(field => collectCascadingPaths(project, path.appendCascadingEdge(project, field)))
   }
+
 }

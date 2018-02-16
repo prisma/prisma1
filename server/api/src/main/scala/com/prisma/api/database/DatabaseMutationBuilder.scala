@@ -139,6 +139,9 @@ object DatabaseMutationBuilder {
   def deleteDataItemByUnique(projectId: String, where: NodeSelector) =
     sqlu"DELETE FROM `#$projectId`.`#${where.model.name}` WHERE `#${where.field.name}` = ${where.fieldValue}"
 
+  def deleteDataItemByPath(projectId: String, path: Path) =
+    (sql"DELETE FROM `#$projectId`.`#${path.lastModel.name}` WHERE `id` = " ++ pathQuery(projectId, path)).asUpdate
+
   def deleteRelayIds(project: Project, model: Model, whereFilter: DataItemFilterCollection) = {
     val whereSql = QueryArguments.generateFilterConditions(project.id, model.name, whereFilter)
     (sql"DELETE FROM `#${project.id}`.`_RelayId`" ++
@@ -150,6 +153,9 @@ object DatabaseMutationBuilder {
 
   def deleteRelayRowByUnique(projectId: String, where: NodeSelector) =
     (sql"DELETE FROM `#$projectId`.`_RelayId` WHERE `id`" ++ idFromWhereEquals(projectId, where)).asUpdate
+
+  def deleteRelayRowByPath(projectId: String, path: Path) =
+    (sql"DELETE FROM `#$projectId`.`_RelayId` WHERE `id` =" ++ pathQuery(projectId, path)).asUpdate
 
   def deleteRelationRowByParent(projectId: String, parentInfo: ParentInfo) = {
     (sql"DELETE FROM `#$projectId`.`#${parentInfo.relation.id}` WHERE `#${parentInfo.field.relationSide.get}`" ++ idFromWhereEquals(projectId,
