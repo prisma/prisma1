@@ -40,7 +40,7 @@ case class SchemaBuilderImpl(
   val outputTypesBuilder                   = OutputTypesBuilder(project, objectTypes, dataResolver)
   val pluralsCache                         = new PluralsCache
 
-  def build(): Schema[ApiUserContext, Unit] = ApiMetrics.schemaBuilderBuildTimerMetric.time(project.id) {
+  def build(): Schema[ApiUserContext, Unit] = ApiMetrics.schemaBuilderTimer.time(project.id) {
     val query        = buildQuery()
     val mutation     = buildMutation()
     val subscription = buildSubscription()

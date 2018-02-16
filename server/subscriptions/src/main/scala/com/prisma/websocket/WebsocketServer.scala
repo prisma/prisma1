@@ -32,7 +32,7 @@ case class WebsocketServer(dependencies: SubscriptionDependencies, prefix: Strin
   val v7ProtocolName = "graphql-ws"
 
   val responseSubscription = dependencies.responsePubSubSubscriber.subscribe(Everything, { strMsg =>
-    incomingResponseQueueMessageRate.inc()
+    incomingResponseQueueMessageCount.inc()
     manager ! IncomingQueueMessage(strMsg.topic, strMsg.payload)
   })
 

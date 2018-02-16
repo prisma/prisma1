@@ -1,7 +1,7 @@
 package com.prisma.api.mutations
 
 import com.prisma.api.ApiBaseSpec
-import com.prisma.shared.project_dsl.SchemaDsl
+import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class WhereAndDateTimeSpec extends FlatSpec with Matchers with ApiBaseSpec {
@@ -57,11 +57,14 @@ class WhereAndDateTimeSpec extends FlatSpec with Matchers with ApiBaseSpec {
       project
     )
 
-    server.executeQuerySimple(s"""query{note(where:{outerDateTime:$outerWhere}){outerString}}""", project, dataContains = s"""{"note":{"outerString":"Changed Outer String"}}""")
-    server.executeQuerySimple(s"""query{todo(where:{innerDateTime:$innerWhere}){innerString}}""", project, dataContains = s"""{"todo":{"innerString":"Changed Inner String"}}""")
+    server.executeQuerySimple(s"""query{note(where:{outerDateTime:$outerWhere}){outerString}}""",
+                              project,
+                              dataContains = s"""{"note":{"outerString":"Changed Outer String"}}""")
+    server.executeQuerySimple(s"""query{todo(where:{innerDateTime:$innerWhere}){innerString}}""",
+                              project,
+                              dataContains = s"""{"todo":{"innerString":"Changed Inner String"}}""")
 
   }
-
 
   "Using the same input in an update using where as used during creation of the item" should "work 2" in {
 
@@ -114,10 +117,13 @@ class WhereAndDateTimeSpec extends FlatSpec with Matchers with ApiBaseSpec {
       project
     )
 
-    server.executeQuerySimple(s"""query{note(where:{outerDateTime:$outerWhere}){outerString}}""", project, dataContains = s"""{"note":{"outerString":"Changed Outer String"}}""")
-    server.executeQuerySimple(s"""query{todo(where:{innerDateTime:$innerWhere}){innerString}}""", project, dataContains = s"""{"todo":{"innerString":"Changed Inner String"}}""")
+    server.executeQuerySimple(s"""query{note(where:{outerDateTime:$outerWhere}){outerString}}""",
+                              project,
+                              dataContains = s"""{"note":{"outerString":"Changed Outer String"}}""")
+    server.executeQuerySimple(s"""query{todo(where:{innerDateTime:$innerWhere}){innerString}}""",
+                              project,
+                              dataContains = s"""{"todo":{"innerString":"Changed Inner String"}}""")
 
   }
 
 }
-

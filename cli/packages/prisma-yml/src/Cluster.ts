@@ -15,6 +15,8 @@ export class Cluster {
   clusterSecret?: string
   requiresAuth: boolean
   out: IOutput
+  isPrivate: boolean
+  workspaceSlug?: string
   private cachedToken?: string
   constructor(
     out: IOutput,
@@ -22,7 +24,9 @@ export class Cluster {
     baseUrl: string,
     clusterSecret?: string,
     local: boolean = true,
-    shared: boolean = true,
+    shared: boolean = false,
+    isPrivate: boolean = false,
+    workspaceSlug?: string,
   ) {
     this.out = out
     this.name = name
@@ -30,6 +34,8 @@ export class Cluster {
     this.clusterSecret = clusterSecret
     this.local = local
     this.shared = shared
+    this.isPrivate = isPrivate
+    this.workspaceSlug = workspaceSlug
   }
 
   async getToken(
@@ -41,7 +47,7 @@ export class Cluster {
     if (this.name === 'shared-public-demo') {
       return ''
     }
-    if (this.shared) {
+    if (this.shared || this.isPrivate) {
       return this.generateClusterToken(serviceName, workspaceSlug, stageName)
     } else {
       return this.getLocalToken()
@@ -127,11 +133,17 @@ export class Cluster {
   }
 
   getApiEndpoint(serviceName: string, stage: string, workspaceSlug?: string) {
+    if (this.isPrivate) {
+      return `${this.baseUrl}/${serviceName}/${stage}`
+    }
     const workspaceString = workspaceSlug ? `${workspaceSlug}/` : ''
     return `${this.baseUrl}/${workspaceString}${serviceName}/${stage}`
   }
 
   getWSEndpoint(serviceName: string, stage: string, workspaceSlug?: string) {
+    if (this.isPrivate) {
+      return `${this.baseUrl}/${serviceName}/${stage}`
+    }
     const replacedUrl = this.baseUrl.replace('http', 'ws')
     const workspaceString = workspaceSlug ? `${workspaceSlug}/` : ''
     return `${replacedUrl}/${workspaceString}${serviceName}/${stage}`
@@ -142,6 +154,9 @@ export class Cluster {
     stage: string,
     workspaceSlug?: string,
   ) {
+    if (this.isPrivate) {
+      return `${this.baseUrl}/${serviceName}/${stage}/import`
+    }
     const workspaceString = workspaceSlug ? `${workspaceSlug}/` : ''
     return `${this.baseUrl}/${workspaceString}${serviceName}/${stage}/import`
   }
@@ -151,6 +166,9 @@ export class Cluster {
     stage: string,
     workspaceSlug?: string,
   ) {
+    if (this.isPrivate) {
+      return `${this.baseUrl}/${serviceName}/${stage}/export`
+    }
     const workspaceString = workspaceSlug ? `${workspaceSlug}/` : ''
     return `${this.baseUrl}/${workspaceString}${serviceName}/${stage}/export`
   }

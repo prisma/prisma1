@@ -1,7 +1,7 @@
 package com.prisma.api.mutations
 
 import com.prisma.api.ApiBaseSpec
-import com.prisma.shared.project_dsl.SchemaDsl
+import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class WhereAndJsonSpec extends FlatSpec with Matchers with ApiBaseSpec {
@@ -57,9 +57,12 @@ class WhereAndJsonSpec extends FlatSpec with Matchers with ApiBaseSpec {
       project
     )
 
-    server.executeQuerySimple(s"""query{note(where:{outerJson:$outerWhere}){outerString}}""", project, dataContains = s"""{"note":{"outerString":"Changed Outer String"}}""")
-    server.executeQuerySimple(s"""query{todo(where:{innerJson:$innerWhere}){innerString}}""", project, dataContains = s"""{"todo":{"innerString":"Changed Inner String"}}""")
+    server.executeQuerySimple(s"""query{note(where:{outerJson:$outerWhere}){outerString}}""",
+                              project,
+                              dataContains = s"""{"note":{"outerString":"Changed Outer String"}}""")
+    server.executeQuerySimple(s"""query{todo(where:{innerJson:$innerWhere}){innerString}}""",
+                              project,
+                              dataContains = s"""{"todo":{"innerString":"Changed Inner String"}}""")
 
   }
 }
-

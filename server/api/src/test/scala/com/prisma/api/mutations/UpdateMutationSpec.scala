@@ -2,7 +2,7 @@ package com.prisma.api.mutations
 
 import com.prisma.api.ApiBaseSpec
 import com.prisma.api.util.TroubleCharacters
-import com.prisma.shared.project_dsl.SchemaDsl
+import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class UpdateMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
@@ -154,4 +154,52 @@ class UpdateMutationSpec extends FlatSpec with Matchers with ApiBaseSpec {
       errorContains = "No Node for the model Todo with value NOT A VALID ALIAS for alias found"
     )
   }
+
+  "The Update Mutation" should "be able to set an optional value to null missing values unchanged" in {
+    val project = SchemaDsl() { schema =>
+      schema.model("Todo").field("title", _.String).field("text", _.String).field("alias", _.String, isUnique = true)
+    }
+    database.setup(project)
+
+    val alias = "the-alias"
+    server.executeQuerySimple(
+      s"""
+         |mutation {
+         |  createTodo(
+         |    data: {
+         |      title: "initial title",
+         |      text: "some text"
+         |      alias: "$alias"
+         |    }
+         |  ){
+         |    id
+         |  }
+         |}
+      """.stripMargin,
+      project
+    )
+
+    val res = server.executeQuerySimple(
+      s"""
+         |mutation {
+         |  updateTodo(
+         |    data: {
+         |      title: null
+         |    }
+         |    where: {
+         |      alias: "$alias"
+         |    }
+         |  ){
+         |    title
+         |    text
+         |  }
+         |}""".stripMargin,
+      project
+    )
+
+    res.toString should be("""{"data":{"updateTodo":{"title":null,"text":"some text"}}}""")
+
+    server.executeQuerySimple("""query{todoes{title, text}}""", project).toString should be("""{"data":{"todoes":[{"title":null,"text":"some text"}]}}""")
+  }
+
 }

@@ -1,7 +1,7 @@
 package com.prisma.api.schema
 
 import com.prisma.api.ApiBaseSpec
-import com.prisma.shared.project_dsl.SchemaDsl
+import com.prisma.shared.schema_dsl.SchemaDsl
 import com.prisma.util.GraphQLSchemaMatchers
 import org.scalatest.{FlatSpec, Matchers}
 import sangria.renderer.SchemaRenderer
@@ -92,6 +92,55 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec
                                    fields = Vector(
                                      "id: ID",
                                      "alias: String"
+                                   ))
+  }
+
+  "the update Mutation for a model with a optional backrelation" should "be generated correctly" in {
+    val project = SchemaDsl() { schema =>
+      val list = schema.model("List").field_!("listUnique", _.String, isUnique = true).field("optList", _.String)
+      val todo = schema.model("Todo").field_!("todoUnique", _.String, isUnique = true).field("optString", _.String)
+      list.manyToManyRelation("todoes", "does not matter", todo, includeFieldB = false)
+    }
+
+    val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
+
+    schema should containMutation("updateTodo(data: TodoUpdateInput!, where: TodoWhereUniqueInput!): Todo")
+
+    schema should containInputType("TodoCreateInput",
+                                   fields = Vector(
+                                     "todoUnique: String!",
+                                     "optString: String"
+                                   ))
+
+    schema should containInputType("TodoUpdateInput",
+                                   fields = Vector(
+                                     "todoUnique: String",
+                                     "optString: String"
+                                   ))
+
+    schema should containInputType("TodoUpdateDataInput",
+                                   fields = Vector(
+                                     "todoUnique: String",
+                                     "optString: String"
+                                   ))
+
+    schema should containInputType("TodoWhereUniqueInput",
+                                   fields = Vector(
+                                     "id: ID",
+                                     "todoUnique: String"
+                                   ))
+
+    schema should containInputType("TodoUpdateNestedInput",
+                                   fields = Vector(
+                                     "where: TodoWhereUniqueInput!",
+                                     "data: TodoUpdateDataInput!"
+                                   ))
+
+    schema should containInputType("TodoUpsertNestedInput",
+                                   fields = Vector(
+                                     "where: TodoWhereUniqueInput!",
+                                     "update: TodoUpdateDataInput!",
+                                     "create: TodoCreateInput!"
                                    ))
   }
 
@@ -229,30 +278,26 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec
     )
   }
 
-  "the update Mutation for a model with omitted back relation" should "be generated correctly" in {
+  "the update and upsert Mutation for a model with omitted back relation" should "be generated correctly" in {
     val project = SchemaDsl() { schema =>
       val comment = schema.model("Comment").field_!("text", _.String)
-      schema
-        .model("Todo")
-        .field_!("title", _.String)
-        .field("tag", _.String)
-        .oneToManyRelation("comments", "todo", comment, includeOtherField = false)
+      val todo    = schema.model("Todo").field_!("title", _.String).field("tag", _.String)
+      todo.oneToManyRelation("comments", "todo", comment, includeFieldB = false)
     }
 
     val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
-    schema should not(containInputType("CommentCreateWithoutTodoInput"))
-    schema should not(containInputType("CommentUpdateWithoutTodoInput"))
 
-    schema should containInputType("TodoCreateInput",
-                                   fields = Vector(
-                                     "comments: CommentCreateManyInput"
-                                   ))
-
-    schema should containInputType("CommentCreateManyInput",
-                                   fields = Vector(
-                                     "create: [CommentCreateInput!]"
-                                   ))
-
+    schema should containInputType(
+      "CommentUpdateManyInput",
+      fields = Vector(
+        "create: [CommentCreateInput!]",
+        "connect: [CommentWhereUniqueInput!]",
+        "disconnect: [CommentWhereUniqueInput!]",
+        "delete: [CommentWhereUniqueInput!]",
+        "update: [CommentUpdateNestedInput!]",
+        "upsert: [CommentUpsertNestedInput!]"
+      )
+    )
   }
 
   "the upsert Mutation for a model" should "be generated correctly" in {

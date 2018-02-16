@@ -1,6 +1,9 @@
 package com.prisma.shared.models
 
+import play.api.libs.functional.syntax._
 import play.api.libs.json._
+
+import scala.language.implicitConversions
 
 object MigrationStepsJsonFormatter extends DefaultReads {
   implicit val createModelFormat = Json.format[CreateModel]
@@ -65,13 +68,72 @@ object MigrationStepsJsonFormatter extends DefaultReads {
     }
   }
 
+  object EnumUtils {
+    def enumReads[E <: Enumeration](enum: E): Reads[E#Value] = new Reads[E#Value] {
+      def reads(json: JsValue): JsResult[E#Value] = json match {
+        case JsString(s) =>
+          try {
+            JsSuccess(enum.withName(s))
+          } catch {
+            case _: NoSuchElementException => JsError(s"Enumeration expected of type: '${enum.getClass}', but it does not appear to contain the value: '$s'")
+          }
+        case _ => JsError("String value expected")
+      }
+    }
+
+    implicit def enumWrites[E <: Enumeration]: Writes[E#Value] = new Writes[E#Value] {
+      def writes(v: E#Value): JsValue = JsString(v.toString)
+    }
+
+    implicit def enumFormat[E <: Enumeration](enum: E): Format[E#Value] = {
+      Format(EnumUtils.enumReads(enum), EnumUtils.enumWrites)
+    }
+  }
+
+  implicit val onDeleteEnumTypeFormat = EnumUtils.enumFormat(OnDelete)
+
   implicit val createEnumFormat = Json.format[CreateEnum]
   implicit val deleteEnumFormat = Json.format[DeleteEnum]
   implicit val updateEnumFormat = Json.format[UpdateEnum]
 
-  implicit val createRelationFormat = Json.format[CreateRelation]
-  implicit val deleteRelationFormat = Json.format[DeleteRelation]
-  implicit val updateRelationFormat = Json.format[UpdateRelation]
+  implicit val createRelationFormat: OFormat[CreateRelation] = {
+    val reads = (
+      (JsPath \ "name").read[String] and
+        readOneOf[String]("leftModelName", "modelAName") and
+        readOneOf[String]("rightModelName", "modelBName") and
+        (JsPath \ "modelAOnDelete").readWithDefault(OnDelete.SetNull) and
+        (JsPath \ "modelBOnDelete").readWithDefault(OnDelete.SetNull)
+    )(CreateRelation.apply _)
+
+    val writes = (
+      (JsPath \ "name").write[String] and
+        (JsPath \ "leftModelName").write[String] and
+        (JsPath \ "rightModelName").write[String] and
+        (JsPath \ "modelAOnDelete").write[OnDelete.Value] and
+        (JsPath \ "modelBOnDelete").write[OnDelete.Value]
+    )(unlift(CreateRelation.unapply))
+
+    OFormat(reads, writes)
+  }
+
+  implicit val deleteRelationFormat: OFormat[DeleteRelation] = {
+    val reads  = (JsPath \ "name").read[String].map(DeleteRelation.apply)
+    val writes = OWrites[DeleteRelation](delete => Json.obj("name" -> delete.name))
+    OFormat(reads, writes)
+  }
+
+  implicit val updateRelationFormat: OFormat[UpdateRelation] = {
+    val format: OFormat[UpdateRelation] = (
+      (JsPath \ "name").format[String] and
+        (JsPath \ "newName").formatNullable[String] and
+        (JsPath \ "modelAId").formatNullable[String] and
+        (JsPath \ "modelBId").formatNullable[String] and
+        (JsPath \ "modelAOnDelete").formatNullable[OnDelete.Value] and
+        (JsPath \ "modelBOnDelete").formatNullable[OnDelete.Value]
+    )(UpdateRelation.apply, unlift(UpdateRelation.unapply))
+
+    format
+  }
 
   implicit val migrationStepFormat: Format[MigrationStep] = new Format[MigrationStep] {
     val discriminatorField = "discriminator"
@@ -126,4 +188,6 @@ object MigrationStepsJsonFormatter extends DefaultReads {
       case JsDefined(json)   => rds.reads(json).map(v => Some(Some(v)))
     }
   }
+
+  def readOneOf[T](field1: String, field2: String)(implicit reads: Reads[T]) = (JsPath \ field1).read[T].orElse((JsPath \ field2).read[T])
 }

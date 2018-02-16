@@ -28,7 +28,7 @@ class GCDBValueEndToEndSpec extends FlatSpec with Matchers {
 
   // Work in Progress
 
-//  "It should take a String Default or MigrationValue for a non-list field and" should "convert it into Sangria AST and Back" in {
+//  "It should take a atring default value for a non-list field and" should "convert it into Sangria AST and Back" in {
 //    forthAndBack(string, TypeIdentifier.String, false) should be(Result.Equal)
 //    forthAndBack(int, TypeIdentifier.Int, false) should be(Result.Equal)
 //    forthAndBack(float, TypeIdentifier.Float, false) should be(Result.Equal)

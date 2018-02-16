@@ -1,14 +1,14 @@
 ## Local Development
 
 ```sh
-$ git clone git@github.com:graphcool/framework.git
-$ cd framework/cli
+$ git clone git@github.com:graphcool/prisma.git
+$ cd prisma/cli
 $ yarn install
-$ cd packages/graphcool-cli-engine
+$ cd packages/prisma-cli-engine
 $ yarn build
-$ cd ../graphcool-cli-core
+$ cd ../prisma-cli-core
 $ yarn build
-$ cd ../graphcool-cli
+$ cd ../prisma-cli
 $ yarn build
 $ node dist/index.js
 ```

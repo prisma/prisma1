@@ -11,6 +11,7 @@ import chalk from 'chalk'
 import 'isomorphic-fetch'
 import { RC } from './index'
 import { ClusterNotSet } from './errors/ClusterNotSet'
+import * as _ from 'lodash'
 const debug = require('debug')('Environment')
 
 const isDev = (process.env.ENV || '').toLowerCase() === 'dev'
@@ -37,57 +38,90 @@ export class Environment {
   }
 
   async load(args: Args) {
-    await Promise.all([this.loadGlobalRC(), this.setSharedClusters()])
+    await this.loadGlobalRC()
+    await this.getClusters()
   }
 
   get cloudSessionKey(): string | undefined {
     return process.env.PRISMA_CLOUD_SESSION_KEY || this.globalRC.cloudSessionKey
   }
 
-  async setSharedClusters() {
-    try {
-      const res = await fetch('https://stats.graph.cool/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        } as any,
-        body: JSON.stringify({
-          query: `
-        {
-          publicClusters {
-            name
-            endpoint
-            description
-          }
-        }
-        `,
-        }),
-      })
-      const json = await res.json()
-      if (
-        json &&
-        json.data &&
-        json.data.publicClusters &&
-        Array.isArray(json.data.publicClusters) &&
-        json.data.publicClusters.length > 0
-      ) {
-        this.sharedClusters = json.data.publicClusters.map(c => c.name)
-        this.clusterEndpointMap = json.data.publicClusters.reduce(
-          (acc, curr) => {
-            return {
-              ...acc,
-              [curr.name]: curr.endpoint,
+  async getClusters() {
+    if (this.cloudSessionKey) {
+      try {
+        const res = await fetch('https://api.cloud.prisma.sh', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${this.cloudSessionKey}`,
+          } as any,
+          body: JSON.stringify({
+            query: `
+          {
+            me {
+              memberships {
+                workspace {
+                  id
+                  slug
+                  clusters {
+                    id
+                    name
+                    connectInfo {
+                      endpoint
+                    }
+                  }
+                }
+              }
             }
-          },
-          {},
-        )
-
-        debug(this.sharedClusters)
-        debug(this.clusterEndpointMap)
+          }
+        `,
+          }),
+        })
+        const json = await res.json()
+        if (
+          json &&
+          json.data &&
+          json.data.me &&
+          json.data.me.memberships &&
+          Array.isArray(json.data.me.memberships)
+        ) {
+          const clusters = _.flattenDeep(
+            json.data.me.memberships.map(m => m.workspace.clusters),
+          )
+          const euIndex = this.clusters.findIndex(c => c.name === 'prisma-eu1')
+          this.clusters.splice(euIndex, 1)
+          const usIndex = this.clusters.findIndex(c => c.name === 'prisma-us1')
+          this.clusters.splice(usIndex, 1)
+          json.data.me.memberships.forEach(m => {
+            m.workspace.clusters
+              // .filter(
+              //   (c: any) => !['prisma-eu1', 'prisma-us1'].includes(c.name),
+              // )
+              .forEach(cluster => {
+                const endpoint = cluster.connectInfo
+                  ? cluster.connectInfo.endpoint
+                  : this.clusterEndpointMap[cluster.name]
+                this.addCluster(
+                  new Cluster(
+                    this.out,
+                    cluster.name,
+                    endpoint,
+                    this.globalRC.cloudSessionKey,
+                    false,
+                    ['prisma-eu1', 'prisma-us1'].includes(cluster.name),
+                    true,
+                    m.workspace.slug,
+                  ),
+                )
+              })
+          })
+          debug(this.sharedClusters)
+          debug(this.clusterEndpointMap)
+        }
+      } catch (e) {
+        debug(e)
+        //
       }
-    } catch (e) {
-      debug(e)
-      //
     }
   }
 
@@ -217,15 +251,17 @@ export class Environment {
   }
 
   private getLocalClusterConfig() {
-    return this.clusters.filter(c => c.local).reduce((acc, cluster) => {
-      return {
-        ...acc,
-        [cluster.name]: {
-          host: cluster.baseUrl,
-          clusterSecret: cluster.clusterSecret,
-        },
-      }
-    }, {})
+    return this.clusters
+      .filter(c => !c.shared && c.clusterSecret !== this.cloudSessionKey && !c.isPrivate)
+      .reduce((acc, cluster) => {
+        return {
+          ...acc,
+          [cluster.name]: {
+            host: cluster.baseUrl,
+            clusterSecret: cluster.clusterSecret,
+          },
+        }
+      }, {})
   }
 }
 

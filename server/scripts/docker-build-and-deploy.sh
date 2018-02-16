@@ -10,7 +10,7 @@ $DIR/kill-all-docker-containers.sh
 
 if [ -z ${BUILDKITE_TAG} ]; then
     # Rolling number versioning for unstable
-    LAST_GIT_TAG=$(git describe --abbrev=0) # Get closest git tag
+    LAST_GIT_TAG=$(git describe --tags $(git rev-list --tags --max-count=1))
     TAG_ELEMENTS=(${LAST_GIT_TAG//./ })
     NEXT_VERSION="${TAG_ELEMENTS[0]}.$((${TAG_ELEMENTS[1]} + 1))"
     LAST_DOCKER_TAG=$(curl -sS 'https://registry.hub.docker.com/v2/repositories/prismagraphql/prisma/tags/' | jq '."results"[]["name"]' --raw-output | grep -v latest | grep ${NEXT_VERSION}-beta- | head -n 1)

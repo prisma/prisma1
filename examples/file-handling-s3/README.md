@@ -177,7 +177,7 @@ mutation {
 }
 ```
 
-### Renaming a file
+### Deleting a file
 
 You can delete a file with the `deleteFile` mutation:
 

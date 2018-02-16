@@ -196,6 +196,8 @@ case class Model(
   lazy val relationNonListFields: List[Field] = relationFields.filter(!_.isList)
   lazy val relations: List[Relation]          = fields.flatMap(_.relation).distinct
 
+  lazy val cascadingRelationFields: List[Field] = relationFields.filter(field => field.relation.get.sideOfModelCascades(this))
+
   def relationFieldForIdAndSide(relationId: String, relationSide: RelationSide.Value): Option[Field] = {
     fields.find(_.isRelationWithIdAndSide(relationId, relationSide))
   }
@@ -413,7 +415,9 @@ case class Relation(
     // val userField = Field(..., relation = Some(relation), relationSide = Some(RelationSide.B)
     // val todoField = Field(..., relation = Some(relation), relationSide = Some(RelationSide.A)
     modelAId: Id,
-    modelBId: Id
+    modelBId: Id,
+    modelAOnDelete: OnDelete.Value,
+    modelBOnDelete: OnDelete.Value
 ) {
   val id = "_" + name
 
@@ -478,6 +482,18 @@ case class Relation(
       sys.error(s"The model ${model.name} is not part of the relation $name")
     }
   }
+
+  def sideOfModelCascades(model: Model): Boolean = {
+    if (model.id == modelAId) {
+      modelAOnDelete == OnDelete.Cascade
+    } else if (model.id == modelBId) {
+      modelBOnDelete == OnDelete.Cascade
+    } else {
+      sys.error(s"The model ${model.name} is not part of the relation $name")
+    }
+  }
+
+  def bothSidesCascade: Boolean = modelAOnDelete == OnDelete.Cascade && modelBOnDelete == OnDelete.Cascade
 
   def oppositeSideOf(model: Model): RelationSide.Value = {
     sideOf(model) match {

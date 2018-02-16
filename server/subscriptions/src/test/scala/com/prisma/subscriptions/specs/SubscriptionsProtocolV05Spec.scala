@@ -2,7 +2,7 @@ package com.prisma.subscriptions.specs
 
 import com.prisma.messagebus.pubsub.Only
 import com.prisma.shared.models.Model
-import com.prisma.shared.project_dsl.SchemaDsl
+import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest._
 import spray.json.{JsArray, JsNumber, JsObject, JsString}
 

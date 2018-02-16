@@ -170,62 +170,6 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
     migrations.head.revision shouldEqual 5 // order is DESC
   }
 
-  "DeployMutation" should "handle renames with migration values" in {
-    val (project, _) = setupProject(basicTypesGql)
-    val nameAndStage = ProjectId.fromEncodedString(project.id)
-
-    val schema = basicTypesGql +
-      """
-        |type TestModel2 {
-        |  id: ID! @unique
-        |  test: String
-        |}
-      """.stripMargin
-
-    val result = server.query(s"""
-       |mutation {
-       |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(schema)}}){
-       |    migration {
-       |      applied
-       |    }
-       |    errors {
-       |      description
-       |    }
-       |  }
-       |}
-      """.stripMargin)
-
-    // Todo create some client data to check / migrate
-
-    val updatedSchema = basicTypesGql +
-      """
-        |type TestModel2 {
-        |  id: ID! @unique
-        |  renamed: String @migrationValue(value: "SuchMigrationWow")
-        |}
-      """.stripMargin
-
-    val updateResult = server.query(s"""
-        |mutation {
-        |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(schema)}}){
-        |    migration {
-        |      applied
-        |    }
-        |    errors {
-        |      description
-        |    }
-        |  }
-        |}
-      """.stripMargin)
-
-    updateResult.pathAsSeq("data.deploy.errors") should be(empty)
-
-//    val migrations = migrationPersistence.loadAll(project.id).await
-//    migrations should have(size(3))
-//    migrations.exists(!_.hasBeenApplied) shouldEqual false
-//    migrations.head.revision shouldEqual 3 // order is DESC
-  }
-
   "DeployMutation" should "fail if reserved fields are malformed" in {
     val (project, _) = setupProject(basicTypesGql)
     val nameAndStage = ProjectId.fromEncodedString(project.id)
@@ -622,6 +566,45 @@ class DeployMutationSpec extends FlatSpec with Matchers with DeploySpecBase {
         |  title: String
         |  comments: [Comment!]! @relation(name: "RelatedComments")
         |  parent: Comment @relation(name: "RelatedComments")
+        |}
+      """.stripMargin
+
+    server.query(
+      s"""
+         |mutation {
+         |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(schema)}}){
+         |    migration {
+         |      applied
+         |    }
+         |    errors {
+         |      description
+         |    }
+         |  }
+         |}
+      """.stripMargin
+    )
+
+    val migrations = migrationPersistence.loadAll(project.id).await
+    migrations should have(size(3))
+    migrations.exists(x => x.status != MigrationStatus.Success) shouldEqual false
+    migrations.head.revision shouldEqual 3 // order is DESC
+  }
+
+  "DeployMutation" should "work with cascading delete directives" in {
+    val (project, _) = setupProject(basicTypesGql)
+    val nameAndStage = ProjectId.fromEncodedString(project.id)
+    val schema =
+      """
+        |type Author{
+        |  id: ID! @unique
+        |  name: String!
+        |  comments: [Comment!]! @relation(name: "AuthorComments" onDelete: CASCADE)
+        |}
+        |
+        |type Comment{
+        |  id: ID! @unique
+        |  title: String
+        |  author: Author! @relation(name: "AuthorComments" onDelete: SET_NULL)
         |}
       """.stripMargin
 

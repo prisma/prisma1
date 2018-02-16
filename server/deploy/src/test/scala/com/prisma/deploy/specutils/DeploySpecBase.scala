@@ -6,7 +6,7 @@ import cool.graph.cuid.Cuid
 import com.prisma.shared.models.{Migration, MigrationId, Project}
 import com.prisma.utils.await.AwaitUtils
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
-import spray.json.JsString
+import play.api.libs.json.{JsArray, JsString}
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -46,7 +46,12 @@ trait DeploySpecBase extends BeforeAndAfterEach with BeforeAndAfterAll with Awai
     projectsToCleanUp.clear()
   }
 
-  def setupProject(schema: String, name: String = Cuid.createCuid(), stage: String = Cuid.createCuid()): (Project, Migration) = {
+  def setupProject(
+      schema: String,
+      name: String = Cuid.createCuid(),
+      stage: String = Cuid.createCuid(),
+      secrets: Vector[String] = Vector.empty
+  ): (Project, Migration) = {
     server.query(s"""
         |mutation {
         | addProject(input: {
@@ -63,10 +68,11 @@ trait DeploySpecBase extends BeforeAndAfterEach with BeforeAndAfterAll with Awai
 
     val projectId = name + "@" + stage
     projectsToCleanUp :+ projectId
+    val secretsFormatted = JsArray(secrets.map(JsString)).toString()
 
     val deployResult = server.query(s"""
         |mutation {
-        |  deploy(input:{name: "$name", stage: "$stage", types: ${formatSchema(schema)}}){
+        |  deploy(input:{name: "$name", stage: "$stage", types: ${formatSchema(schema)}, secrets: $secretsFormatted}){
         |    migration {
         |      revision
         |    }
