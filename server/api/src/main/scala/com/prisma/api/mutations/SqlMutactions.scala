@@ -164,7 +164,7 @@ case class SqlMutactions(dataResolver: DataResolver) {
       val createMutactions = getCreateMutactions(where, create.data)
       val connectItem      = List(NestedCreateRelationMutaction(project, path.lastEdgeToNodeEdge(where), triggeredFromCreate))
 
-      createMutactions ++ connectItem ++ getMutactionsForNestedMutation(create.data, where, path, triggeredFromCreate = true)
+      createMutactions ++ connectItem ++ getMutactionsForNestedMutation(create.data, where, path.lastEdgeToNodeEdge(where), triggeredFromCreate = true)
     }
   }
 
@@ -230,21 +230,21 @@ case class SqlMutactions(dataResolver: DataResolver) {
   def generateCascadingDeleteMutactions(project: Project, path: Path): List[ClientSqlMutaction] = {
     def getMutactionsForEdges(paths: List[Path]): List[ClientSqlMutaction] = {
       paths.filter(_.edges.nonEmpty) match {
-        case res if res.isEmpty =>
-          List.empty
+        case Nil => List.empty
 
-        case x =>
-          val maxPathLength     = x.map(_.edges.length).max
-          val longestPaths      = x.filter(_.edges.length == maxPathLength)
+        case pathsList =>
+          val maxPathLength     = pathsList.map(_.edges.length).max
+          val longestPaths      = pathsList.filter(_.edges.length == maxPathLength)
           val longestMutactions = longestPaths.map(CascadingDeleteRelationMutactions(project, _))
           val shortenedPaths    = longestPaths.map(_.removeLastEdge) // todo to set? to cut duplicates?
-          val newPaths          = x.filter(_.edges.length < maxPathLength) ++ shortenedPaths
+          val newPaths          = pathsList.filter(_.edges.length < maxPathLength) ++ shortenedPaths
 
           longestMutactions ++ getMutactionsForEdges(newPaths)
       }
     }
 
     val paths: List[Path] = collectCascadingPaths(project, path)
+    paths.map(path => println(path.pretty))
     getMutactionsForEdges(paths)
   }
 }

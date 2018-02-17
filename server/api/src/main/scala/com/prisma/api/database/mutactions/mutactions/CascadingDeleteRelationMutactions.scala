@@ -16,7 +16,7 @@ case class CascadingDeleteRelationMutactions(project: Project, path: Path) exten
 
   val relationFieldsNotOnPath      = path.lastModel.relationFields.filter(f => !path.edges.map(_.relation).contains(f.relation.get))
   val relationsWhereThisIsRequired = relationFieldsNotOnPath.filter(otherSideIsRequired).map(_.relation.get)
-  val requiredCheck                = relationsWhereThisIsRequired.map(relation => oldParentFailureTriggerByPath(project, path)) // todo append paths here?
+  val requiredCheck                = relationFieldsNotOnPath.filter(otherSideIsRequired).map(field => oldParentFailureTriggerByPath(project, path.appendEdge(project, field)))
 
   val deleteAction = List(cascadingDeleteChildActions(project.id, path))
 
@@ -37,8 +37,8 @@ case class CascadingDeleteRelationMutactions(project: Project, path: Path) exten
   }
 
   def causedByThisMutactionChildOnly(relation: Relation, cause: String) = {
-    val parentCheckString = s"`${relation.id}` OLDPARENTPATHFAILURETRIGGER WHERE `${relation.sideOf(path.lastModel)}`"
-    cause.contains(parentCheckString) && cause.contains(parameterStringFromSQLException(path.root))
+    val parentCheckString = s"`${relation.id}` OLDPARENTPATHFAILURETRIGGER WHERE `${path.lastEdge_!.childRelationSide}`"
+    cause.contains(parentCheckString) // && cause.contains(parameterStringFromSQLException(path.root)) //todo reintroduce parameterchecks
   }
 
   def otherSideIsRequired(field: Field): Boolean = field.relatedField(project.schema) match {

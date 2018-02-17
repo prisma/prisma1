@@ -41,6 +41,11 @@ object CascadingDeletes {
       copy(root, edges :+ edge)
     }
 
+    def appendEdge(project: Project, field: Field): Path = {
+      val edge = ModelEdge(lastModel, field, field.relatedModel(project.schema).get, field.relatedField(project.schema), field.relation.get)
+      copy(root, edges :+ edge)
+    }
+
     def append(edge: Edge): Path = copy(root, edges :+ edge)
 
     def lastModel = edges match {
