@@ -25,11 +25,16 @@ const server = new GraphQLServer({
   }),
 })
 
+// create another Prisma instance for file uploads
 server.express.post(
   '/upload',
   fileApi({
     s3: s3client,
-    prisma,
+    new Prisma({
+      endpoint: process.env.PRISMA_ENDPOINT,
+      secret: process.env.PRISMA_SECRET,
+      debug: true
+    }),
   }),
 )
 
