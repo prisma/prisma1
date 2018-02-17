@@ -34,7 +34,7 @@ server.express.post(
   '/upload',
   fileApi({
     s3: s3client,
-    getPrismaInstance()
+    prisma: getPrismaInstance()
   })
 )
 
