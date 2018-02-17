@@ -48,33 +48,33 @@ case class CoolArgs(raw: Map[String, Any]) {
         disconnects = subArgsVector("disconnect").getOrElse(Vector.empty).map(args => DisconnectByWhere(args.extractNodeSelector(subModel)))
       )
     } else {
+//      NestedMutation(
+//        creates = subArgsOption("create").flatten.map(CreateOne).toVector,
+//        updates = subArgsOption("update").flatten.map { args =>
+//          UpdateByWhere(args.extractNodeSelectorFromWhereField(subModel), args.subArgsOption("data").get.get)
+//        }.toVector,
+//        upserts = subArgsOption("upsert").flatten.map { args =>
+//          UpsertByWhere(
+//            where = args.extractNodeSelectorFromWhereField(subModel),
+//            update = args.subArgsOption("update").get.get,
+//            create = args.subArgsOption("create").get.get
+//          )
+//        }.toVector,
+//        deletes = subArgsOption("delete").flatten.map(args => DeleteByWhere(args.extractNodeSelector(subModel))).toVector,
+//        connects = subArgsOption("connect").flatten.map(args => ConnectByWhere(args.extractNodeSelector(subModel))).toVector,
+//        disconnects = subArgsOption("disconnect").flatten.map(args => DisconnectByWhere(args.extractNodeSelector(subModel))).toVector
+//      )
+
       NestedMutation(
         creates = subArgsOption("create").flatten.map(CreateOne).toVector,
-        updates = subArgsOption("update").flatten.map { args =>
-          UpdateByWhere(args.extractNodeSelectorFromWhereField(subModel), args.subArgsOption("data").get.get)
-        }.toVector,
-        upserts = subArgsOption("upsert").flatten.map { args =>
-          UpsertByWhere(
-            where = args.extractNodeSelectorFromWhereField(subModel),
-            update = args.subArgsOption("update").get.get,
-            create = args.subArgsOption("create").get.get
-          )
-        }.toVector,
-        deletes = subArgsOption("delete").flatten.map(args => DeleteByWhere(args.extractNodeSelector(subModel))).toVector,
+        updates = subArgsOption("update").flatten.map(args => UpdateByRelation(args.subArgsOption("data").get.get)).toVector,
+        upserts = subArgsOption("upsert").flatten
+          .map(args => UpsertByRelation(update = args.subArgsOption("update").get.get, create = args.subArgsOption("create").get.get))
+          .toVector,
+        deletes = subArgsOption("delete").flatten.map(args => DeleteByRelation(args.extractBoolean)).toVector,
         connects = subArgsOption("connect").flatten.map(args => ConnectByWhere(args.extractNodeSelector(subModel))).toVector,
-        disconnects = subArgsOption("disconnect").flatten.map(args => DisconnectByWhere(args.extractNodeSelector(subModel))).toVector
+        disconnects = subArgsOption("disconnect").flatten.map(args => DisconnectByRelation(args.extractBoolean)).toVector
       )
-
-      //      NestedMutation(
-//        creates = subArgsOption("create").flatten.map(CreateOne).toVector,
-//        updates = subArgsOption("update").flatten.map(args => UpdateByRelation(args.subArgsOption("data").get.get)).toVector,
-//        upserts = subArgsOption("upsert").flatten
-//          .map(args => UpsertByRelation(update = args.subArgsOption("update").get.get, create = args.subArgsOption("create").get.get))
-//          .toVector,
-//        deletes = subArgsOption("delete").flatten.map(args => DeleteByRelation(args.extractBoolean)).toVector,
-//        connects = subArgsOption("connect").flatten.map(args => ConnectByWhere(args.extractNodeSelector(subModel))).toVector,
-//        disconnects = subArgsOption("disconnect").flatten.map(args => DisconnectByRelation(args.extractBoolean)).toVector
-//      )
     }
   }
 
@@ -221,7 +221,7 @@ case class CoolArgs(raw: Map[String, Any]) {
     }
   }
 
-  def extractBoolean: Boolean = raw.asInstanceOf[Boolean]
+  def extractBoolean: Boolean = true // raw.asInstanceOf[Boolean]  todo
 }
 
 object NodeSelector {

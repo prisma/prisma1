@@ -101,6 +101,19 @@ object DatabaseMutationBuilder {
       DBIOAction.successful(())
     }
   }
+
+  def updateDataItemByPath(projectId: String, path: Path, updateArgs: CoolArgs) = {
+    val updateValues = combineByComma(updateArgs.raw.map { case (k, v) => escapeKey(k) ++ sql" = " ++ escapeUnsafeParam(v) })
+    if (updateArgs.isNonEmpty) {
+      (sql"UPDATE `#${projectId}`.`#${path.lastModel.name}`" ++
+        sql"SET " ++ updateValues ++
+        sql"WHERE `id` = (SELECT `#${path.lastEdge_!.childRelationSide}` " ++
+        sql"FROM `#${projectId}`.`#${path.lastRelation_!.id}`" ++
+        sql"WHERE `#${path.lastEdge_!.parentRelationSide}` = " ++ pathQuery(projectId, path.removeLastEdge) ++ sql")").asUpdate
+    } else {
+      DBIOAction.successful(())
+    }
+  }
   //endregion
 
   //region UPSERT

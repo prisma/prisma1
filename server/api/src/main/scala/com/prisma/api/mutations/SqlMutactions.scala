@@ -6,7 +6,7 @@ import com.prisma.api.database.{DataItem, DataResolver, DatabaseMutationBuilder}
 import com.prisma.api.mutations.mutations.CascadingDeletes.{ModelEdge, Path, collectCascadingPaths}
 import com.prisma.api.schema.APIErrors.RelationIsRequired
 import com.prisma.shared.models.IdType.Id
-import com.prisma.shared.models.{Field, Model, Project, Relation}
+import com.prisma.shared.models.{Field, Model, Relation}
 import cool.graph.cuid.Cuid.createCuid
 import slick.dbio.{DBIOAction, Effect, NoStream}
 
@@ -36,7 +36,7 @@ case class SqlMutactions(dataResolver: DataResolver) {
   }
 
   def getMutactionsForDelete(path: Path, previousValues: DataItem, id: String): Seq[ClientSqlMutaction] = report {
-    generateCascadingDeleteMutactions(project, path) ++ List(DeleteRelationMutaction(project, path.root), DeleteDataItem(project, path, previousValues, id))
+    generateCascadingDeleteMutactions(path) ++ List(DeleteRelationMutaction(project, path), DeleteDataItem(project, path, previousValues, id))
   }
 
   def getMutactionsForUpdate(path: Path, args: CoolArgs, id: Id, previousValues: DataItem): Seq[ClientSqlMutaction] = report {
@@ -119,7 +119,7 @@ case class SqlMutactions(dataResolver: DataResolver) {
   def getMutactionsForNestedMutation(args: CoolArgs, outerWhere: NodeSelector, path: Path, triggeredFromCreate: Boolean): Seq[ClientSqlMutaction] = {
 
     val x = for {
-      field          <- outerWhere.model.relationFields.filter(f => f.relation != path.lastRelation)
+      field          <- path.lastModel.relationFields.filter(f => f.relation != path.lastRelation)
       subModel       = field.relatedModel_!(project.schema)
       nestedMutation = args.subNestedMutation(field, subModel)
       parentInfo     = ParentInfo(field, outerWhere)
@@ -177,11 +177,10 @@ case class SqlMutactions(dataResolver: DataResolver) {
   }
 
   def getMutactionsForNestedDeleteMutation(nestedMutation: NestedMutation, path: Path): Seq[ClientSqlMutaction] = {
-    nestedMutation.deletes.collect {
-      case delete: DeleteByWhere =>
-        val cascadingDeleteMutactions = generateCascadingDeleteMutactions(project, Path.empty(delete.where))
-        cascadingDeleteMutactions ++ List(DeleteRelationMutaction(project, delete.where), DeleteDataItemNested(project, delete.where))
-    }.flatten
+    nestedMutation.deletes.flatMap { delete =>
+      val cascadingDeleteMutactions = generateCascadingDeleteMutactions(path.lastEdgeToNodeEdgeIfNecessary(delete))
+      cascadingDeleteMutactions ++ List(DeleteRelationMutaction(project, path.lastEdgeToNodeEdgeIfNecessary(delete)), DeleteDataItemNested(project, path))
+    }
   }
 
   def getMutactionsForNestedUpdateMutation(nestedMutation: NestedMutation, parentInfo: ParentInfo, path: Path): Seq[ClientSqlMutaction] = {
@@ -192,6 +191,13 @@ case class SqlMutactions(dataResolver: DataResolver) {
         val scalarLists     = getMutactionsForScalarLists(updatedWhere, update.data)
 
         updateMutaction ++ scalarLists ++ getMutactionsForNestedMutation(update.data, updatedWhere, path, triggeredFromCreate = false)
+      case update: UpdateByRelation =>
+        val updateMutaction = List(UpdateDataItemIfInRelationWith(project, path, update.data))
+//        val scalarLists     = getMutactionsForScalarLists(updatedWhere, update.data) todo
+
+//        updateMutaction ++ scalarLists ++ getMutactionsForNestedMutation(update.data, updatedWhere, path, triggeredFromCreate = false)
+        updateMutaction ++ getMutactionsForNestedMutation(update.data, NodeSelector.forId(path.lastModel, "TODO"), path, triggeredFromCreate = false)
+
     }.flatten
   }
 
@@ -227,7 +233,7 @@ case class SqlMutactions(dataResolver: DataResolver) {
     updatedWhere
   }
 
-  def generateCascadingDeleteMutactions(project: Project, path: Path): List[ClientSqlMutaction] = {
+  def generateCascadingDeleteMutactions(path: Path): List[ClientSqlMutaction] = {
     def getMutactionsForEdges(paths: List[Path]): List[ClientSqlMutaction] = {
       paths.filter(_.edges.nonEmpty) match {
         case Nil => List.empty

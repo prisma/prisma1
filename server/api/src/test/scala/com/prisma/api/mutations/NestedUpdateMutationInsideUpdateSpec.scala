@@ -165,7 +165,8 @@ class NestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
   "a many to one relation" should "be updateable by id through a nested mutation" in {
     val project = SchemaDsl() { schema =>
       val comment = schema.model("Comment").field("text", _.String)
-      schema.model("Todo").field("title", _.String).oneToManyRelation("comments", "todo", comment)
+      val todo    = schema.model("Todo").field("title", _.String)
+      todo.oneToManyRelation("comments", "todo", comment)
     }
     database.setup(project)
 
