@@ -27,6 +27,8 @@ object CascadingDeletes {
     def relations                    = edges.map(_.relation)
     def models                       = root.model +: edges.map(_.child)
     def otherCascadingRelationFields = lastModel.cascadingRelationFields.filter(relationField => !relations.contains(relationField.relation.get))
+    def lastEdge_!                   = edges.last
+    def lastRelation_!               = lastRelation.get
 
     def removeLastEdge: Path = edges match {
       case Nil => sys.error("Don't call this on an empty path")
@@ -46,9 +48,6 @@ object CascadingDeletes {
       case x   => x.last.child
     }
 
-    def lastEdge_!     = edges.last
-    def lastRelation_! = lastRelation.get
-
     def lastRelation = edges match {
       case Nil => None
       case x   => Some(x.last.relation)
@@ -65,17 +64,18 @@ object CascadingDeletes {
       this.copy(root = updatedWhere)
     }
 
-    def lastEdgeToNodeEdge(nested: NestedMutationBase): Path = nested match {
+    def lastEdgeToNodeEdge(where: NodeSelector): Path = this.copy(edges = removeLastEdge.edges :+ lastEdge_!.toNodeEdge(where))
+
+    def lastEdgeToNodeEdgeIfNecessary(nested: NestedMutationBase): Path = nested match {
       case x: NestedWhere => this.copy(edges = removeLastEdge.edges :+ lastEdge_!.toNodeEdge(x.where))
       case _              => this
     }
-
   }
+
   object Path { def empty(where: NodeSelector) = Path(where, List.empty) }
 
   def collectCascadingPaths(project: Project, path: Path): List[Path] = path.otherCascadingRelationFields match {
     case Nil   => List(path)
     case edges => edges.flatMap(field => collectCascadingPaths(project, path.appendCascadingEdge(project, field)))
   }
-
 }

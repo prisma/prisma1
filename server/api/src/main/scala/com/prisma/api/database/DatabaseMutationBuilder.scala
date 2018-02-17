@@ -1,10 +1,10 @@
 package com.prisma.api.database
 
-import com.prisma.api.mutations.mutations.CascadingDeletes.{ModelEdge, NodeEdge, Path}
 import com.prisma.api.database.SlickExtensions._
 import com.prisma.api.database.Types.DataItemFilterCollection
 import com.prisma.api.database.mutactions.mutactions.NestedCreateRelationMutaction
 import com.prisma.api.mutations.mutations.CascadingDeletes
+import com.prisma.api.mutations.mutations.CascadingDeletes.{ModelEdge, NodeEdge, Path}
 import com.prisma.api.mutations.{CoolArgs, NodeSelector, ParentInfo}
 import com.prisma.api.schema.GeneralError
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
@@ -67,6 +67,18 @@ object DatabaseMutationBuilder {
       sql"Select '#$relationId'," ++ idFromWhere(projectId, parentInfo.where) ++ sql"," ++
       sql"`id` FROM `#$projectId`.`#${where.model.name}` where `#${where.field.name}` = ${where.fieldValue}" ++
       sql"on duplicate key update `#$projectId`.`#${parentInfo.relation.id}`.id=`#$projectId`.`#${parentInfo.relation.id}`.id").asUpdate
+  }
+
+  def createRelationRowByUniqueValueForChildPath(projectId: String, path: Path): SqlAction[Int, NoStream, Effect] = {
+    val childWhere = path.lastEdge_! match {
+      case edge: ModelEdge => sys.error("Needs to be a node edge.")
+      case edge: NodeEdge  => edge.childWhere
+    }
+    val relationId = Cuid.createCuid()
+    (sql"insert into `#$projectId`.`#${path.lastRelation_!.id}` (`id`, `#${path.lastEdge_!.parentRelationSide}`, `#${path.lastEdge_!.childRelationSide}`)" ++
+      sql"Select '#$relationId'," ++ pathQuery(projectId, path.removeLastEdge) ++ sql"," ++
+      sql"`id` FROM `#$projectId`.`#${childWhere.model.name}` where `#${childWhere.field.name}` = ${childWhere.fieldValue}" ++
+      sql"on duplicate key update `#$projectId`.`#${path.lastRelation_!.id}`.id = `#$projectId`.`#${path.lastRelation_!.id}`.id").asUpdate
   }
 
   //endregion
@@ -162,14 +174,33 @@ object DatabaseMutationBuilder {
                                                                                                                                     parentInfo.where)).asUpdate
   }
 
+  def deleteRelationRowByParentPath(projectId: String, path: Path) = {
+    (sql"DELETE FROM `#$projectId`.`#${path.lastRelation_!.id}` WHERE `#${path.lastEdge_!.parentRelationSide}` = " ++ pathQuery(projectId, path.removeLastEdge)).asUpdate
+  }
+
   def deleteRelationRowByChild(projectId: String, parentInfo: ParentInfo, where: NodeSelector) = {
     (sql"DELETE FROM `#$projectId`.`#${parentInfo.relation.id}` WHERE `#${parentInfo.field.oppositeRelationSide.get}`" ++ idFromWhereEquals(projectId, where)).asUpdate
+  }
+
+  def deleteRelationRowByChildPathWithWhere(projectId: String, path: Path) = {
+    val where = path.lastEdge_! match {
+      case _: ModelEdge   => sys.error("Should be a node Edge")
+      case edge: NodeEdge => edge.childWhere
+
+    }
+    (sql"DELETE FROM `#$projectId`.`#${path.lastRelation_!.id}` WHERE `#${path.lastEdge_!.childRelationSide}`" ++ idFromWhereEquals(projectId, where)).asUpdate
   }
 
   def deleteRelationRowByParentAndChild(projectId: String, parentInfo: ParentInfo, where: NodeSelector) = {
     (sql"DELETE FROM `#$projectId`.`#${parentInfo.relation.id}` " ++
       sql"WHERE `#${parentInfo.field.oppositeRelationSide.get}`" ++ idFromWhereEquals(projectId, where) ++
       sql" AND `#${parentInfo.field.relationSide.get}`" ++ idFromWhereEquals(projectId, parentInfo.where)).asUpdate
+  }
+
+  def deleteRelationRowByParentAndChildPath(projectId: String, path: Path) = {
+    (sql"DELETE FROM `#$projectId`.`#${path.lastRelation_!.id}` " ++
+      sql"WHERE `#${path.lastEdge_!.childRelationSide}` = " ++ pathQuery(projectId, path) ++
+      sql" AND `#${path.lastEdge_!.parentRelationSide}` = " ++ pathQuery(projectId, path.removeLastEdge)).asUpdate
   }
   //endregion
 
@@ -181,13 +212,6 @@ object DatabaseMutationBuilder {
     DBIO.seq(deleteRelayIds, deleteDataItems)
   }
 
-  def oldParentFailureTriggerByPath(project: Project, relation: Relation, path: Path) = {
-    val query = sql"SELECT `id`" ++
-      sql"FROM `#${project.id}`.`#${relation.id}` OLDPARENTPATHFAILURETRIGGER" ++
-      sql"WHERE `#${relation.sideOf(path.lastModel)}` IN " ++ pathQuery(project.id, path)
-
-    triggerFailureWhenExists(project, query, relation.id)
-  }
   //endregion
 
   //region SCALAR LISTS
@@ -285,7 +309,8 @@ object DatabaseMutationBuilder {
     val table = path.lastRelation.get.id
     val query = path.lastEdge_! match {
       case edge: ModelEdge =>
-        sql""
+        sql"SELECT `id` FROM `#${project.id}`.`#$table` CONNECTIONFAILURETRIGGER" ++
+          sql"WHERE `#${edge.parentRelationSide}` = " ++ pathQuery(project.id, path.removeLastEdge)
 
       case edge: NodeEdge =>
         sql"SELECT `id` FROM `#${project.id}`.`#$table` CONNECTIONFAILURETRIGGER" ++
@@ -298,16 +323,24 @@ object DatabaseMutationBuilder {
 
   def oldParentFailureTriggerForRequiredRelations(project: Project, relation: Relation, where: NodeSelector, childSide: RelationSide.Value) = {
     val table = relation.id
-    val query = sql"SELECT `id` FROM `#${project.id}`.`#$table` OLDPARENTFAILURETRIGGER WHERE `#$childSide`" ++ idFromWhereEquals(project.id, where)
+    val query = sql"SELECT `id` FROM `#${project.id}`.`#$table` OLDPARENTFAILURETRIGGER WHERE `#$childSide` " ++ idFromWhereEquals(project.id, where)
 
     triggerFailureWhenExists(project, query, table)
   }
 
-  def oldChildFailureTriggerForRequiredRelations(project: Project, parentInfo: ParentInfo) = {
-    val parentSide = parentInfo.field.relationSide.get
-    val table      = parentInfo.relation.id
-    val query      = sql"SELECT `id` FROM `#${project.id}`.`#$table` OLDCHILDFAILURETRIGGER WHERE `#$parentSide`" ++ idFromWhereEquals(project.id, parentInfo.where)
+  def oldParentFailureTriggerByPath(project: Project, path: Path) = {
+    val table = path.lastRelation_!.id
+    val query = sql"SELECT `id` FROM `#${project.id}`.`#$table` OLDPARENTFAILURETRIGGER WHERE `#${path.lastEdge_!.childRelationSide}` = " ++ pathQuery(
+      project.id,
+      path)
+    triggerFailureWhenExists(project, query, table)
+  }
 
+  def oldChildFailureTriggerByPath(project: Project, path: Path) = {
+    val table = path.lastRelation_!.id
+    val query = sql"SELECT `id` FROM `#${project.id}`.`#$table` OLDCHILDFAILURETRIGGER WHERE `#${path.lastEdge_!.parentRelationSide}` = " ++ pathQuery(
+      project.id,
+      path.removeLastEdge)
     triggerFailureWhenExists(project, query, table)
   }
 

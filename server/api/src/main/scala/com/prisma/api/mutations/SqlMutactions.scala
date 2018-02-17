@@ -116,14 +116,10 @@ case class SqlMutactions(dataResolver: DataResolver) {
   }
 
   // Todo filter for duplicates here? multiple identical where checks for example?
-  def getMutactionsForNestedMutation(args: CoolArgs,
-                                     outerWhere: NodeSelector,
-                                     path: Path,
-                                     triggeredFromCreate: Boolean,
-                                     omitRelation: Option[Relation] = None): Seq[ClientSqlMutaction] = {
+  def getMutactionsForNestedMutation(args: CoolArgs, outerWhere: NodeSelector, path: Path, triggeredFromCreate: Boolean): Seq[ClientSqlMutaction] = {
 
     val x = for {
-      field          <- outerWhere.model.relationFields.filter(f => f.relation != omitRelation)
+      field          <- outerWhere.model.relationFields.filter(f => f.relation != path.lastRelation)
       subModel       = field.relatedModel_!(project.schema)
       nestedMutation = args.subNestedMutation(field, subModel)
       parentInfo     = ParentInfo(field, outerWhere)
@@ -131,14 +127,13 @@ case class SqlMutactions(dataResolver: DataResolver) {
       extendedPath   = path.append(edge)
     } yield {
 
-      println(extendedPath.pretty)
-      val checkMutactions = getMutactionsForWhereChecks(nestedMutation) ++ getMutactionsForConnectionChecks(subModel, nestedMutation, parentInfo, extendedPath)
+      val checkMutactions = getMutactionsForWhereChecks(nestedMutation) ++ getMutactionsForConnectionChecks(subModel, nestedMutation, extendedPath)
 
-      val mutactionsThatACreateCanTrigger = getMutactionsForNestedCreateMutation(subModel, nestedMutation, parentInfo, extendedPath, triggeredFromCreate) ++
-        getMutactionsForNestedConnectMutation(nestedMutation, parentInfo, extendedPath, triggeredFromCreate)
+      val mutactionsThatACreateCanTrigger = getMutactionsForNestedCreateMutation(subModel, nestedMutation, extendedPath, triggeredFromCreate) ++
+        getMutactionsForNestedConnectMutation(nestedMutation, extendedPath, triggeredFromCreate)
 
-      val otherMutactions = getMutactionsForNestedDisconnectMutation(nestedMutation, parentInfo, extendedPath) ++
-        getMutactionsForNestedDeleteMutation(nestedMutation, parentInfo, extendedPath) ++
+      val otherMutactions = getMutactionsForNestedDisconnectMutation(nestedMutation, extendedPath) ++
+        getMutactionsForNestedDeleteMutation(nestedMutation, extendedPath) ++
         getMutactionsForNestedUpdateMutation(nestedMutation, parentInfo, extendedPath) ++
         getMutactionsForNestedUpsertMutation(nestedMutation, parentInfo, extendedPath)
 
@@ -157,42 +152,31 @@ case class SqlMutactions(dataResolver: DataResolver) {
       nestedMutation.disconnects.collect { case disconnect: DisconnectByWhere => VerifyWhere(project, disconnect.where) }
   }
 
-  def getMutactionsForConnectionChecks(model: Model, nestedMutation: NestedMutation, parentInfo: ParentInfo, path: Path): Seq[ClientSqlMutaction] = {
-    nestedMutation.updates.map(update => VerifyConnection(project, parentInfo, path.lastEdgeToNodeEdge(update))) ++
-      nestedMutation.deletes.map(delete => VerifyConnection(project, parentInfo, path.lastEdgeToNodeEdge(delete))) ++
-      nestedMutation.disconnects.map(disconnect => VerifyConnection(project, parentInfo, path.lastEdgeToNodeEdge(disconnect)))
+  def getMutactionsForConnectionChecks(model: Model, nestedMutation: NestedMutation, path: Path): Seq[ClientSqlMutaction] = {
+    nestedMutation.updates.map(update => VerifyConnection(project, path.lastEdgeToNodeEdgeIfNecessary(update))) ++
+      nestedMutation.deletes.map(delete => VerifyConnection(project, path.lastEdgeToNodeEdgeIfNecessary(delete))) ++
+      nestedMutation.disconnects.map(disconnect => VerifyConnection(project, path.lastEdgeToNodeEdgeIfNecessary(disconnect)))
   }
 
-  def getMutactionsForNestedCreateMutation(model: Model,
-                                           nestedMutation: NestedMutation,
-                                           parentInfo: ParentInfo,
-                                           path: Path,
-                                           triggeredFromCreate: Boolean): Seq[ClientSqlMutaction] = {
+  def getMutactionsForNestedCreateMutation(model: Model, nestedMutation: NestedMutation, path: Path, triggeredFromCreate: Boolean): Seq[ClientSqlMutaction] = {
     nestedMutation.creates.flatMap { create =>
       val where            = NodeSelector.forId(model, createCuid())
       val createMutactions = getCreateMutactions(where, create.data)
-      val connectItem      = List(NestedCreateRelationMutaction(project, parentInfo, where, triggeredFromCreate))
+      val connectItem      = List(NestedCreateRelationMutaction(project, path.lastEdgeToNodeEdge(where), triggeredFromCreate))
 
-      createMutactions ++ connectItem ++ getMutactionsForNestedMutation(create.data,
-                                                                        where,
-                                                                        path,
-                                                                        triggeredFromCreate = true,
-                                                                        omitRelation = parentInfo.field.relation)
+      createMutactions ++ connectItem ++ getMutactionsForNestedMutation(create.data, where, path, triggeredFromCreate = true)
     }
   }
 
-  def getMutactionsForNestedConnectMutation(nestedMutation: NestedMutation,
-                                            parentInfo: ParentInfo,
-                                            path: Path,
-                                            topIsCreate: Boolean): Seq[ClientSqlMutaction] = {
-    nestedMutation.connects.map(connect => NestedConnectRelationMutaction(project, parentInfo, connect.where, topIsCreate))
+  def getMutactionsForNestedConnectMutation(nestedMutation: NestedMutation, path: Path, topIsCreate: Boolean): Seq[ClientSqlMutaction] = {
+    nestedMutation.connects.map(connect => NestedConnectRelationMutaction(project, path.lastEdgeToNodeEdgeIfNecessary(connect), topIsCreate))
   }
 
-  def getMutactionsForNestedDisconnectMutation(nestedMutation: NestedMutation, parentInfo: ParentInfo, path: Path): Seq[ClientSqlMutaction] = {
-    nestedMutation.disconnects.collect { case disconnect: DisconnectByWhere => NestedDisconnectRelationMutaction(project, parentInfo, disconnect.where) }
+  def getMutactionsForNestedDisconnectMutation(nestedMutation: NestedMutation, path: Path): Seq[ClientSqlMutaction] = {
+    nestedMutation.disconnects.map(disconnect => NestedDisconnectRelationMutaction(project, path.lastEdgeToNodeEdgeIfNecessary(disconnect)))
   }
 
-  def getMutactionsForNestedDeleteMutation(nestedMutation: NestedMutation, parentInfo: ParentInfo, path: Path): Seq[ClientSqlMutaction] = {
+  def getMutactionsForNestedDeleteMutation(nestedMutation: NestedMutation, path: Path): Seq[ClientSqlMutaction] = {
     nestedMutation.deletes.collect {
       case delete: DeleteByWhere =>
         val cascadingDeleteMutactions = generateCascadingDeleteMutactions(project, Path.empty(delete.where))
@@ -222,7 +206,15 @@ case class SqlMutactions(dataResolver: DataResolver) {
         val scalarListsCreate = getDbActionsForUpsertScalarLists(createWhere, createArgsWithId)
         val scalarListsUpdate = getDbActionsForUpsertScalarLists(currentWhere(upsert.where, upsert.update), upsert.update)
         val upsertItem =
-          UpsertDataItemIfInRelationWith(project, parentInfo, upsert.where, createWhere, createArgsWithId, upsert.update, scalarListsCreate, scalarListsUpdate)
+          UpsertDataItemIfInRelationWith(project,
+                                         parentInfo,
+                                         upsert.where,
+                                         createWhere,
+                                         createArgsWithId,
+                                         upsert.update,
+                                         scalarListsCreate,
+                                         scalarListsUpdate,
+                                         path)
 
         Vector(upsertItem) //++ getMutactionsForNestedMutation(upsert.update, upsert.where, triggeredFromCreate = false) ++
       //getMutactionsForNestedMutation(upsert.create, createWhere, triggeredFromCreate = true)
@@ -273,7 +265,7 @@ object NestedMutation {
 trait NestedMutationBase
 trait NestedWhere { def where: NodeSelector }
 case class CreateOne(data: CoolArgs)           extends NestedMutationBase
-case class ConnectByWhere(where: NodeSelector) extends NestedMutationBase
+case class ConnectByWhere(where: NodeSelector) extends NestedMutationBase with NestedWhere
 
 trait UpdateOne                                               extends NestedMutationBase { def data: CoolArgs }
 case class UpdateByRelation(data: CoolArgs)                   extends UpdateOne

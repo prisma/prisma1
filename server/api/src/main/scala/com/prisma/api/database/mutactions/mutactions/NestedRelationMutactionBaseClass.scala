@@ -4,37 +4,41 @@ import java.sql.SQLException
 
 import com.prisma.api.database.DatabaseMutationBuilder._
 import com.prisma.api.database.mutactions.{ClientSqlDataChangeMutaction, ClientSqlStatementResult}
-import com.prisma.api.mutations.{NodeSelector, ParentInfo}
+import com.prisma.api.mutations.mutations.CascadingDeletes.{ModelEdge, NodeEdge, Path}
 import com.prisma.api.schema.APIErrors.RequiredRelationWouldBeViolated
-import com.prisma.shared.models.{Project, Relation}
-import com.prisma.util.gc_value.OtherGCStuff.parameterStringFromSQLException
+import com.prisma.shared.models.Project
 import slick.dbio.{DBIOAction, Effect, NoStream}
 
 import scala.concurrent.Future
 
 trait NestedRelationMutactionBaseClass extends ClientSqlDataChangeMutaction {
 
+  def path: Path
   def project: Project
-  def parentInfo: ParentInfo
-  def where: NodeSelector
   def topIsCreate: Boolean
 
-  val p                = parentInfo.field
-  val otherModel       = parentInfo.relation.getOtherModel_!(project.schema, parentInfo.where.model)
-  val otherFieldOption = otherModel.fields.find(_.relation.contains(parentInfo.relation))
+  val lastEdge         = path.lastEdge_!
+  val p                = lastEdge.parentField
+  val otherModel       = lastEdge.child
+  val otherFieldOption = lastEdge.childField
   val c = otherFieldOption match {
     case Some(x) => x
     case None    => p.copy(isRequired = false, isList = true) //optional back-relation defaults to List-NonRequired
   }
 
-  def checkForOldParent = oldParentFailureTriggerForRequiredRelations(project, parentInfo.relation, where, parentInfo.field.oppositeRelationSide.get)
-  def checkForOldChild  = oldChildFailureTriggerForRequiredRelations(project, parentInfo)
-  def noCheckRequired   = List.empty
+  def checkForOldParent = oldParentFailureTriggerByPath(project, path)
+  def checkForOldParentByChildWhere = path.lastEdge_! match {
+    case _: ModelEdge   => sys.error("Should be a node edge")
+    case edge: NodeEdge => oldParentFailureTriggerForRequiredRelations(project, edge.relation, edge.childWhere, edge.childRelationSide)
+  }
 
-  def removalByParent         = deleteRelationRowByParent(project.id, parentInfo)
-  def removalByChild          = deleteRelationRowByChild(project.id, parentInfo, where)
-  def removalByParentAndChild = deleteRelationRowByParentAndChild(project.id, parentInfo, where)
-  def createRelationRow       = List(createRelationRowByUniqueValueForChild(project.id, parentInfo, where))
+  def checkForOldChild = oldChildFailureTriggerByPath(project, path)
+  def noCheckRequired  = List.empty
+
+  def removalByParent         = deleteRelationRowByParentPath(project.id, path)
+  def removalByChildWhere     = deleteRelationRowByChildPathWithWhere(project.id, path)
+  def removalByParentAndChild = deleteRelationRowByParentAndChildPath(project.id, path)
+  def createRelationRow       = List(createRelationRowByUniqueValueForChildPath(project.id, path))
   def noActionRequired        = List.empty
 
   def requiredCheck: List[DBIOAction[_, NoStream, Effect]]
@@ -51,20 +55,22 @@ trait NestedRelationMutactionBaseClass extends ClientSqlDataChangeMutaction {
 
   override def handleErrors = {
     Some({
-      case e: SQLException if e.getErrorCode == 1242 && causedByThisMutaction(parentInfo, e.getCause.toString) =>
-        throw RequiredRelationWouldBeViolated(project, parentInfo.relation)
+      case e: SQLException if e.getErrorCode == 1242 && causedByThisMutaction(path, e.getCause.toString) =>
+        throw RequiredRelationWouldBeViolated(project, path.lastRelation_!)
     })
   }
 
-  def requiredRelationViolation = throw RequiredRelationWouldBeViolated(project, parentInfo.relation)
+  def requiredRelationViolation = throw RequiredRelationWouldBeViolated(project, path.lastRelation_!)
 
   def sysError = sys.error("This should not happen, since it means a many side is required")
 
-  def causedByThisMutaction(parentInfo: ParentInfo, cause: String) = {
-    val parentCheckString = s"`${parentInfo.relation.id}` OLDPARENTFAILURETRIGGER WHERE `${parentInfo.field.oppositeRelationSide.get}`"
-    val childCheckString  = s"`${parentInfo.relation.id}` OLDCHILDFAILURETRIGGER WHERE `${parentInfo.field.relationSide.get}`"
+  def causedByThisMutaction(path: Path, cause: String) = {
+    val parentCheckString = s"`${path.lastRelation_!.id}` OLDPARENTFAILURETRIGGER WHERE `${path.lastEdge_!.childRelationSide}`"
+    val childCheckString  = s"`${path.lastRelation_!.id}` OLDCHILDFAILURETRIGGER WHERE `${path.lastEdge_!.parentRelationSide}`"
 
-    (cause.contains(parentCheckString) && cause.contains(parameterStringFromSQLException(where))) ||
-    (cause.contains(childCheckString) && cause.contains(parameterStringFromSQLException(parentInfo.where)))
+//    (cause.contains(parentCheckString) && cause.contains(parameterStringFromSQLException(where))) ||  //todo reintroduce check on parameter
+//    (cause.contains(childCheckString) && cause.contains(parameterStringFromSQLException(parentInfo.where)))
+
+    cause.contains(parentCheckString) || cause.contains(childCheckString)
   }
 }
