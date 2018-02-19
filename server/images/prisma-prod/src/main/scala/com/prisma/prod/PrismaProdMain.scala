@@ -12,7 +12,6 @@ import com.prisma.workers.WorkerServer
 object PrismaProdMain {
   implicit val system       = ActorSystem("single-server")
   implicit val materializer = ActorMaterializer()
-
   val port                  = sys.env.getOrElse("PORT", "9000").toInt
   implicit val dependencies = PrismaProdDependencies()
 

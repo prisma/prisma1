@@ -1,4 +1,4 @@
-package com.prisma.singleserver
+package com.prisma.local
 
 import com.prisma.subscriptions.{Webhook => ApiWebhook}
 import com.prisma.messagebus.Conversions.Converter
