@@ -13,7 +13,7 @@ import com.prisma.client.server.{GraphQlRequestHandler, GraphQlRequestHandlerImp
 import com.prisma.errors.{BugsnagErrorReporter, ErrorReporter}
 import com.prisma.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
 import com.prisma.messagebus.queue.inmemory.InMemoryAkkaQueue
-import com.prisma.messagebus.{PubSub, PubSubPublisher, Queue}
+import com.prisma.messagebus.{PubSub, PubSubPublisher, Queue, QueuePublisher}
 import com.prisma.shared.models.Project
 import com.prisma.utils.await.AwaitUtils
 import com.typesafe.config.{Config, ConfigFactory}
@@ -30,7 +30,7 @@ trait ApiDependencies extends AwaitUtils {
   def projectFetcher: ProjectFetcher
   def apiSchemaBuilder: SchemaBuilder
   def databases: Databases
-  def webhookPublisher: Queue[Webhook]
+  def webhookPublisher: QueuePublisher[Webhook]
 
   implicit lazy val executionContext: ExecutionContext  = system.dispatcher
   implicit lazy val reporter: ErrorReporter             = BugsnagErrorReporter(sys.env("BUGSNAG_API_KEY"))

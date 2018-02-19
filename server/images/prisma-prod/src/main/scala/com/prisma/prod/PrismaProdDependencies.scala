@@ -23,7 +23,7 @@ import com.prisma.subscriptions.protocol.SubscriptionProtocolV07.Responses.Subsc
 import com.prisma.subscriptions.protocol.SubscriptionRequest
 import com.prisma.subscriptions.resolving.SubscriptionsManagerForProject.{SchemaInvalidated, SchemaInvalidatedMessage}
 import com.prisma.workers.dependencies.WorkerDependencies
-import com.prisma.workers.payloads.{Webhook => WorkerWebhook}
+import com.prisma.workers.payloads.{JsonConversions, Webhook => WorkerWebhook}
 import com.prisma.websocket.protocol.{Request => WebsocketRequest}
 import play.api.libs.json.Json
 
@@ -53,15 +53,19 @@ case class PrismaProdDependencies()(implicit val system: ActorSystem, val materi
 
   val rabbitUri: String = sys.env("RABBITMQ_URI")
 
-  lazy val invalidationPubSub = RabbitAkkaPubSub[String](
-    rabbitUri,
-    "project-schema-invalidation",
-    durable = true
-  )
+  lazy val invalidationPubSub = {
+    implicit val marshaller   = Conversions.Marshallers.FromString
+    implicit val unmarshaller = Conversions.Unmarshallers.ToString
+    RabbitAkkaPubSub[String](rabbitUri, "project-schema-invalidation", durable = true)
+  }
   override lazy val invalidationPublisher                                              = invalidationPubSub
   override lazy val invalidationSubscriber: PubSubSubscriber[SchemaInvalidatedMessage] = invalidationPubSub.map((_: String) => SchemaInvalidated)
 
-  lazy val theSssEventsPubSub                                     = RabbitAkkaPubSub[String](rabbitUri, exchangeName = "sss-events", durable = true)
+  lazy val theSssEventsPubSub = {
+    implicit val marshaller   = Conversions.Marshallers.FromString
+    implicit val unmarshaller = Conversions.Unmarshallers.ToString
+    RabbitAkkaPubSub[String](rabbitUri, exchangeName = "sss-events", durable = true)
+  }
   override lazy val sssEventsPubSub: PubSub[String]               = theSssEventsPubSub
   override lazy val sssEventsSubscriber: PubSubSubscriber[String] = theSssEventsPubSub
 
@@ -88,10 +92,12 @@ case class PrismaProdDependencies()(implicit val system: ActorSystem, val materi
 
   override val keepAliveIntervalSeconds = 10
 
-  override lazy val webhookPublisher = RabbitQueue.publisher[Webhook](rabbitUri, "webhooks")
-  override lazy val webhooksConsumer = RabbitQueue.consumer[Webhook](rabbitUri, "webhooks")
-  override lazy val httpClient       = SimpleHttpClient()
-  override lazy val graphQlClient    = GraphQlClient(sys.env.getOrElse("CLUSTER_ADDRESS", sys.error("env var CLUSTER_ADDRESS is not set")))
+  override lazy val webhookPublisher =
+    RabbitQueue.publisher[Webhook](rabbitUri, "webhooks")(reporter, Webhook.marshaller).asInstanceOf[QueuePublisher[Webhook]]
+  override lazy val webhooksConsumer =
+    RabbitQueue.consumer[WorkerWebhook](rabbitUri, "webhooks")(reporter, JsonConversions.webhookUnmarshaller).asInstanceOf[QueueConsumer[WorkerWebhook]]
+  override lazy val httpClient    = SimpleHttpClient()
+  override lazy val graphQlClient = GraphQlClient(sys.env.getOrElse("CLUSTER_ADDRESS", sys.error("env var CLUSTER_ADDRESS is not set")))
 
   override def apiAuth = AuthImpl
 }
