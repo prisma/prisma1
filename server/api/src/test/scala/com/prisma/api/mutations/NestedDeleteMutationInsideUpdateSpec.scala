@@ -966,7 +966,8 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     mustBeEqual(query2.toString, """{"data":{"notes":[{"text":"FirstUnique"},{"text":"SecondUnique"}]}}""")
   }
 
-  "A one2one relation" should "not do a nested delete by id if the nodes are not connected" in {
+// todo remove this once the api is changed
+  "A one2one relation" should "not do a nested delete by id if the nodes are not connected" ignore {
     val project = SchemaDsl() { schema =>
       val note = schema.model("Note").field("text", _.String)
       schema.model("Todo").field_!("title", _.String).oneToOneRelation("note", "todo", note)
@@ -1025,7 +1026,8 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     mustBeEqual(query2.toString, """{"data":{"notes":[{"text":"Note"}]}}""")
   }
 
-  "a one to one relation" should "not do a nested delete by id if the nested node does not exist" in {
+  //todo rewrite this once the api is changed
+  "a one to one relation" should "not do a nested delete by id if the nested node does not exist" ignore {
     val project = SchemaDsl() { schema =>
       val note = schema.model("Note").field("text", _.String)
       schema.model("Todo").field_!("title", _.String).oneToOneRelation("note", "todo", note)

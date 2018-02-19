@@ -29,6 +29,8 @@ object CascadingDeletes {
     def otherCascadingRelationFields = lastModel.cascadingRelationFields.filter(relationField => !relations.contains(relationField.relation.get))
     def lastEdge_!                   = edges.last
     def lastRelation_!               = lastRelation.get
+    def lastParentSide               = lastEdge_!.parentRelationSide
+    def lastChildSide                = lastEdge_!.childRelationSide
 
     def removeLastEdge: Path = edges match {
       case Nil => sys.error("Don't call this on an empty path")

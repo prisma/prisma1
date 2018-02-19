@@ -7,7 +7,7 @@ import com.prisma.api.database.mutactions.{ClientSqlDataChangeMutaction, ClientS
 import com.prisma.api.mutations.mutations.CascadingDeletes.{ModelEdge, NodeEdge, Path}
 import com.prisma.api.schema.APIErrors
 import com.prisma.shared.models.Project
-import com.prisma.util.gc_value.OtherGCStuff.parameterStringFromSQLException
+import com.prisma.util.gc_value.OtherGCStuff.parameterString
 
 import scala.concurrent.Future
 
@@ -24,12 +24,11 @@ case class VerifyConnection(project: Project, path: Path) extends ClientSqlDataC
   }
 
   def causedByThisMutaction(cause: String) = {
-    val childString  = s"`${path.lastRelation_!.id}` CONNECTIONFAILURETRIGGER WHERE `${path.lastEdge_!.childRelationSide}`"
-    val parentString = s"AND `${path.lastEdge_!.parentRelationSide}`"
+    val string = s"`${path.lastRelation_!.id}` CONNECTIONFAILURETRIGGERPATH WHERE "
 
     path.lastEdge_! match {
-      case edge: ModelEdge => cause.contains(childString) && cause.contains(parentString)
-      case edge: NodeEdge  => cause.contains(childString) && cause.contains(parentString) && cause.contains(parameterStringFromSQLException(edge.childWhere))
+      case _: ModelEdge   => cause.contains(string ++ s"`${path.lastParentSide}`")
+      case edge: NodeEdge => cause.contains(string ++ s"`${path.lastChildSide}`") && cause.contains(parameterString(edge.childWhere))
     }
   }
 }

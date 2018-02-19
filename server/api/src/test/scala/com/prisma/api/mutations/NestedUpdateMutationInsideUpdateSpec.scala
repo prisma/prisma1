@@ -261,10 +261,12 @@ class NestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     mustBeEqual(result.pathAsJsValue("data.updateNote.todo").toString, """{"title":"updated title"}""")
   }
 
-  "a one to one relation" should "fail gracefully on wrong where and assign error correctly and not execute partially" in {
+  //todo remove this once the api is changed
+  "a one to one relation" should "fail gracefully on wrong where and assign error correctly and not execute partially" ignore {
     val project = SchemaDsl() { schema =>
       val note = schema.model("Note").field("text", _.String)
-      schema.model("Todo").field_!("title", _.String).oneToOneRelation("note", "todo", note)
+      val todo = schema.model("Todo").field_!("title", _.String)
+      todo.oneToOneRelation("note", "todo", note)
     }
     database.setup(project)
 

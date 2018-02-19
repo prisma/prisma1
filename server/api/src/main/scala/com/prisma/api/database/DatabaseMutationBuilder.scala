@@ -322,11 +322,11 @@ object DatabaseMutationBuilder {
     val table = path.lastRelation.get.id
     val query = path.lastEdge_! match {
       case edge: ModelEdge =>
-        sql"SELECT `id` FROM `#${project.id}`.`#$table` CONNECTIONFAILURETRIGGER" ++
+        sql"SELECT `id` FROM `#${project.id}`.`#$table` CONNECTIONFAILURETRIGGERPATH" ++
           sql"WHERE `#${edge.parentRelationSide}` = " ++ pathQuery(project.id, path.removeLastEdge)
 
       case edge: NodeEdge =>
-        sql"SELECT `id` FROM `#${project.id}`.`#$table` CONNECTIONFAILURETRIGGER" ++
+        sql"SELECT `id` FROM `#${project.id}`.`#$table` CONNECTIONFAILURETRIGGERPATH" ++
           sql"WHERE `#${edge.childRelationSide}` " ++ idFromWhereEquals(project.id, edge.childWhere) ++
           sql"AND `#${edge.parentRelationSide}` = " ++ pathQuery(project.id, path.removeLastEdge)
     }
@@ -341,19 +341,24 @@ object DatabaseMutationBuilder {
     triggerFailureWhenExists(project, query, table)
   }
 
+  def oldParentFailureTriggerByPath2(project: Project, path: Path) = {
+    val table = path.lastRelation_!.id
+    val query = sql"SELECT `id` FROM `#${project.id}`.`#$table` OLDPARENTPATHFAILURETRIGGER WHERE `#${path.lastParentSide}` = " ++ pathQuery(
+      project.id,
+      path.removeLastEdge)
+    triggerFailureWhenExists(project, query, table)
+  }
+
   def oldParentFailureTriggerByPath(project: Project, path: Path) = {
     val table = path.lastRelation_!.id
-    val query = sql"SELECT `id` FROM `#${project.id}`.`#$table` OLDPARENTPATHFAILURETRIGGER WHERE `#${path.lastEdge_!.childRelationSide}` = " ++ pathQuery(
-      project.id,
-      path)
+    val query = sql"SELECT `id` FROM `#${project.id}`.`#$table` OLDPARENTPATHFAILURETRIGGER  WHERE `#${path.lastChildSide}` = " ++ pathQuery(project.id, path)
     triggerFailureWhenExists(project, query, table)
   }
 
   def oldChildFailureTriggerByPath(project: Project, path: Path) = {
     val table = path.lastRelation_!.id
-    val query = sql"SELECT `id` FROM `#${project.id}`.`#$table` OLDCHILDFAILURETRIGGER WHERE `#${path.lastEdge_!.parentRelationSide}` = " ++ pathQuery(
-      project.id,
-      path.removeLastEdge)
+    val query = sql"SELECT `id` FROM `#${project.id}`.`#$table` OLDCHILDFAILURETRIGGER WHERE `#${path.lastParentSide}` = " ++ pathQuery(project.id,
+                                                                                                                                        path.removeLastEdge)
     triggerFailureWhenExists(project, query, table)
   }
 

@@ -178,8 +178,9 @@ case class SqlMutactions(dataResolver: DataResolver) {
 
   def getMutactionsForNestedDeleteMutation(nestedMutation: NestedMutation, path: Path): Seq[ClientSqlMutaction] = {
     nestedMutation.deletes.flatMap { delete =>
-      val cascadingDeleteMutactions = generateCascadingDeleteMutactions(path.lastEdgeToNodeEdgeIfNecessary(delete))
-      cascadingDeleteMutactions ++ List(DeleteRelationMutaction(project, path.lastEdgeToNodeEdgeIfNecessary(delete)), DeleteDataItemNested(project, path))
+      val updatedPath               = path.lastEdgeToNodeEdgeIfNecessary(delete)
+      val cascadingDeleteMutactions = generateCascadingDeleteMutactions(updatedPath)
+      cascadingDeleteMutactions ++ List(DeleteRelationMutaction(project, updatedPath), DeleteDataItemNested(project, updatedPath))
     }
   }
 
@@ -233,24 +234,24 @@ case class SqlMutactions(dataResolver: DataResolver) {
     updatedWhere
   }
 
-  def generateCascadingDeleteMutactions(path: Path): List[ClientSqlMutaction] = {
+  def generateCascadingDeleteMutactions(startPoint: Path): List[ClientSqlMutaction] = {
     def getMutactionsForEdges(paths: List[Path]): List[ClientSqlMutaction] = {
-      paths.filter(_.edges.nonEmpty) match {
-        case Nil => List.empty
+      paths.filter(_.edges.length > startPoint.edges.length) match {
+        case Nil =>
+          List.empty
 
         case pathsList =>
           val maxPathLength     = pathsList.map(_.edges.length).max
           val longestPaths      = pathsList.filter(_.edges.length == maxPathLength)
           val longestMutactions = longestPaths.map(CascadingDeleteRelationMutactions(project, _))
-          val shortenedPaths    = longestPaths.map(_.removeLastEdge) // todo to set? to cut duplicates?
+          val shortenedPaths    = longestPaths.map(_.removeLastEdge)
           val newPaths          = pathsList.filter(_.edges.length < maxPathLength) ++ shortenedPaths
 
           longestMutactions ++ getMutactionsForEdges(newPaths)
       }
     }
 
-    val paths: List[Path] = collectCascadingPaths(project, path)
-    paths.map(path => println(path.pretty))
+    val paths: List[Path] = collectCascadingPaths(project, startPoint)
     getMutactionsForEdges(paths)
   }
 }
@@ -270,7 +271,8 @@ object NestedMutation {
 
 trait NestedMutationBase
 trait NestedWhere { def where: NodeSelector }
-case class CreateOne(data: CoolArgs)           extends NestedMutationBase
+case class CreateOne(data: CoolArgs) extends NestedMutationBase
+
 case class ConnectByWhere(where: NodeSelector) extends NestedMutationBase with NestedWhere
 
 trait UpdateOne                                               extends NestedMutationBase { def data: CoolArgs }

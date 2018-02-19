@@ -7,16 +7,18 @@ import com.prisma.api.database.DatabaseMutationBuilder._
 import com.prisma.api.database.mutactions.{ClientSqlDataChangeMutaction, ClientSqlStatementResult}
 import com.prisma.api.schema.APIErrors.RequiredRelationWouldBeViolated
 import com.prisma.shared.models.{Field, Project, Relation}
-import com.prisma.util.gc_value.OtherGCStuff.parameterStringFromSQLException
+import com.prisma.util.gc_value.OtherGCStuff.parameterString
 import slick.dbio.DBIOAction
 
 import scala.concurrent.Future
 
 case class CascadingDeleteRelationMutactions(project: Project, path: Path) extends ClientSqlDataChangeMutaction {
 
-  val relationFieldsNotOnPath      = path.lastModel.relationFields.filter(f => !path.edges.map(_.relation).contains(f.relation.get))
-  val relationsWhereThisIsRequired = relationFieldsNotOnPath.filter(otherSideIsRequired).map(_.relation.get)
-  val requiredCheck                = relationFieldsNotOnPath.filter(otherSideIsRequired).map(field => oldParentFailureTriggerByPath(project, path.appendEdge(project, field)))
+  val relationFieldsNotOnPath         = path.lastModel.relationFields.filter(f => !path.edges.map(_.relation).contains(f.relation.get))
+  val requiredRelationFieldsNotOnPath = relationFieldsNotOnPath.filter(otherSideIsRequired)
+  val extendedPaths                   = requiredRelationFieldsNotOnPath.map(path.appendEdge(project, _))
+
+  val requiredCheck = extendedPaths.map(oldParentFailureTriggerByPath(project, _))
 
   val deleteAction = List(cascadingDeleteChildActions(project.id, path))
 
@@ -32,12 +34,12 @@ case class CascadingDeleteRelationMutactions(project: Project, path: Path) exten
     })
   }
 
-  def otherFailingRequiredRelationOnChild(cause: String): Option[Relation] = relationsWhereThisIsRequired.collectFirst {
-    case x if causedByThisMutactionChildOnly(x, cause) => x
+  def otherFailingRequiredRelationOnChild(cause: String): Option[Relation] = extendedPaths.collectFirst {
+    case x if causedByThisMutactionChildOnly(x, cause) => x.lastRelation_!
   }
 
-  def causedByThisMutactionChildOnly(relation: Relation, cause: String) = {
-    val parentCheckString = s"`${relation.id}` OLDPARENTPATHFAILURETRIGGER WHERE `${path.lastEdge_!.childRelationSide}`"
+  def causedByThisMutactionChildOnly(path: Path, cause: String) = {
+    val parentCheckString = s"`${path.lastRelation_!.id}` OLDPARENTPATHFAILURETRIGGER WHERE `${path.lastChildSide}`"
     cause.contains(parentCheckString) // && cause.contains(parameterStringFromSQLException(path.root)) //todo reintroduce parameterchecks
   }
 
