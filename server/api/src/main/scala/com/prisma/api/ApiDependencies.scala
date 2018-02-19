@@ -13,7 +13,7 @@ import com.prisma.client.server.{GraphQlRequestHandler, GraphQlRequestHandlerImp
 import com.prisma.errors.{BugsnagErrorReporter, ErrorReporter}
 import com.prisma.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
 import com.prisma.messagebus.queue.inmemory.InMemoryAkkaQueue
-import com.prisma.messagebus.{PubSubPublisher, Queue}
+import com.prisma.messagebus.{PubSub, PubSubPublisher, Queue}
 import com.prisma.shared.models.Project
 import com.prisma.utils.await.AwaitUtils
 import com.typesafe.config.{Config, ConfigFactory}
@@ -40,7 +40,7 @@ trait ApiDependencies extends AwaitUtils {
   lazy val requestHandler: RequestHandler               = RequestHandler(projectFetcher, apiSchemaBuilder, graphQlRequestHandler, auth, log)
   lazy val maxImportExportSize: Int                     = 10000000
 
-  val sssEventsPubSub: InMemoryAkkaPubSub[String]
+  val sssEventsPubSub: PubSub[String]
   lazy val sssEventsPublisher: PubSubPublisher[String] = sssEventsPubSub
 
   def dataResolver(project: Project): DataResolver       = DataResolver(project)
