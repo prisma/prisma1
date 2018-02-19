@@ -136,17 +136,17 @@ object DatabaseMutationBuilder {
 
   def upsertIfInRelationWith(
       project: Project,
-      parentInfo: ParentInfo,
       where: NodeSelector,
       createWhere: NodeSelector,
       createArgs: CoolArgs,
       updateArgs: CoolArgs,
       create: Vector[DBIOAction[Any, NoStream, Effect]],
       update: Vector[DBIOAction[Any, NoStream, Effect]],
-      relationMutactions: NestedCreateRelationMutaction
+      relationMutactions: NestedCreateRelationMutaction,
+      path: Path
   ) = {
 
-    val q       = DatabaseQueryBuilder.existsNodeIsInRelationshipWith(project, parentInfo, where).as[Boolean]
+    val q       = DatabaseQueryBuilder.existsNodeIsInRelationshipWith(project, path, where).as[Boolean]
     val qInsert = DBIOAction.seq(createDataItem(project.id, where.model.name, createArgs), createRelayRow(project.id, createWhere), DBIOAction.seq(create: _*))
     val qUpdate = DBIOAction.seq(updateDataItemByUnique(project.id, where, updateArgs), DBIOAction.seq(update: _*))
 
@@ -243,8 +243,26 @@ object DatabaseMutationBuilder {
     )
   }
 
+  def setScalarListPath(projectId: String, path: Path, fieldName: String, values: Vector[Any]) = {
+    val escapedValueTuples = for {
+      (escapedValue, position) <- values.map(escapeUnsafeParam).zip((1 to values.length).map(_ * 1000))
+    } yield {
+      sql"(@nodeId, $position, " ++ escapedValue ++ sql")"
+    }
+
+    DBIO.seq(
+      (sql"set @nodeId := " ++ pathQuery(projectId, path)).asUpdate,
+      sqlu"""delete from `#$projectId`.`#${path.lastModel.name}_#${fieldName}` where nodeId = @nodeId""",
+      (sql"insert into `#$projectId`.`#${path.lastModel.name}_#${fieldName}` (`nodeId`, `position`, `value`) values " concat combineByComma(escapedValueTuples)).asUpdate
+    )
+  }
+
   def setScalarListToEmpty(projectId: String, where: NodeSelector, fieldName: String) = {
     (sql"DELETE FROM `#$projectId`.`#${where.model.name}_#${fieldName}` WHERE `nodeId`" ++ idFromWhereEquals(projectId, where)).asUpdate
+  }
+
+  def setScalarListToEmptyPath(projectId: String, path: Path, fieldName: String) = {
+    (sql"DELETE FROM `#$projectId`.`#${path.lastModel.name}_#${fieldName}` WHERE `nodeId` = " ++ pathQuery(projectId, path)).asUpdate
   }
 
   def pushScalarList(projectId: String, modelName: String, fieldName: String, nodeId: String, values: Vector[Any]): DBIOAction[Int, NoStream, Effect] = {

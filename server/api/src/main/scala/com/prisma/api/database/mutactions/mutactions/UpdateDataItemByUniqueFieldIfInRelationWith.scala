@@ -13,7 +13,7 @@ case class UpdateDataItemByUniqueFieldIfInRelationWith(project: Project, parentI
 
   val scalarArgs = args.nonListScalarArguments(where.model)
 
-  override def execute: Future[ClientSqlStatementResult[Any]] = Future.successful(
-    ClientSqlStatementResult(DatabaseMutationBuilder.updateDataItemByUnique(project.id, where, scalarArgs))
-  )
+  override def execute: Future[ClientSqlStatementResult[Any]] =
+    Future.successful(ClientSqlStatementResult(DatabaseMutationBuilder.updateDataItemByUnique(project.id, where, scalarArgs)))
+
 }

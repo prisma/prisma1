@@ -5,7 +5,8 @@ import java.sql.SQLIntegrityConstraintViolationException
 import com.prisma.api.database.mutactions._
 import com.prisma.api.database.mutactions.validation.InputValueValidation
 import com.prisma.api.database.{DataResolver, DatabaseMutationBuilder, ProjectRelayId, ProjectRelayIdTable}
-import com.prisma.api.mutations.{CoolArgs, NodeSelector}
+import com.prisma.api.mutations.CoolArgs
+import com.prisma.api.mutations.mutations.CascadingDeletes.{NodeEdge, Path}
 import com.prisma.api.schema.APIErrors
 import com.prisma.shared.models._
 import com.prisma.util.json.JsonFormats
@@ -18,12 +19,17 @@ import scala.util.{Failure, Success, Try}
 
 case class CreateDataItem(
     project: Project,
-    where: NodeSelector,
+    path: Path,
     args: CoolArgs
 ) extends ClientSqlDataChangeMutaction {
 
-  val model = where.model
-  val id    = where.fieldValueAsString
+  val model = path.lastModel
+  val where = path.edges match {
+    case x if x.isEmpty => path.root
+    case x              => x.last.asInstanceOf[NodeEdge].childWhere
+  }
+
+  val id = where.fieldValueAsString
 
   override def execute: Future[ClientSqlStatementResult[Any]] = {
     val relayIds = TableQuery(new ProjectRelayIdTable(_, project.id))

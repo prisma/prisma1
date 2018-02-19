@@ -18,7 +18,6 @@ import scala.concurrent.Future
 import scala.util.{Success, Try}
 
 case class UpsertDataItemIfInRelationWith(project: Project,
-                                          parentInfo: ParentInfo,
                                           where: NodeSelector,
                                           createWhere: NodeSelector,
                                           createArgs: CoolArgs,
@@ -38,7 +37,7 @@ case class UpsertDataItemIfInRelationWith(project: Project,
   override def execute: Future[ClientSqlStatementResult[Any]] = Future.successful {
     ClientSqlStatementResult(
       DatabaseMutationBuilder
-        .upsertIfInRelationWith(project, parentInfo, where, createWhere, actualCreateArgs, actualUpdateArgs, createMutations, updateMutations, createCheck))
+        .upsertIfInRelationWith(project, where, createWhere, actualCreateArgs, actualUpdateArgs, createMutations, updateMutations, createCheck, path))
   }
 
   override def handleErrors = {

@@ -1,6 +1,7 @@
 package com.prisma.api.database
 
 import com.prisma.api.database.Types.DataItemFilterCollection
+import com.prisma.api.mutations.mutations.CascadingDeletes.Path
 import com.prisma.api.mutations.{NodeSelector, ParentInfo}
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models.{Field, Model, Project, Relation}
@@ -147,16 +148,16 @@ object DatabaseQueryBuilder {
             (Select `#$projectId`.`#$relationId`.#$relationSide from `#$projectId`.`#$relationId`)
           )"""
   }
-
-  def existsNodeIsInRelationshipWith(project: Project, parentInfo: ParentInfo, where: NodeSelector) = {
-    val relationSide         = parentInfo.field.oppositeRelationSide.get
-    val oppositeRelationSide = parentInfo.field.relationSide.get
+  //todo this is completely wrong
+  def existsNodeIsInRelationshipWith(project: Project, path: Path, where: NodeSelector) = {
+    val relationSide         = path.lastChildSide
+    val oppositeRelationSide = path.lastParentSide
     sql"""select EXISTS (
             select `id`from `#${project.id}`.`#${where.model.name}`
             where  `#${where.field.name}` = ${where.fieldValue} and `id` IN (
              select `#$relationSide`
-             from `#${project.id}`.`#${parentInfo.relation.id}`
-             where `#$oppositeRelationSide` = (select `id` from `#${project.id}`.`#${parentInfo.model.name}` where `#${parentInfo.where.field.name}` = ${parentInfo.where.fieldValue})
+             from `#${project.id}`.`#${path.lastRelation_!.id}`
+             where `#$oppositeRelationSide` = (select `id` from `#${project.id}`.`#${path.lastModel.name}` where `#${path.root.field.name}` = ${path.root.fieldValueAsString})
            )
           )"""
   }
