@@ -1,4 +1,4 @@
-package com.prisma.singleserver
+package com.prisma.local
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
@@ -9,21 +9,20 @@ import com.prisma.subscriptions.SimpleSubscriptionsServer
 import com.prisma.websocket.WebsocketServer
 import com.prisma.workers.WorkerServer
 
-object SingleServerMain extends App {
+object PrismaLocalMain extends App {
   implicit val system       = ActorSystem("single-server")
   implicit val materializer = ActorMaterializer()
-
-  val port                              = sys.env.getOrElse("PORT", "9000").toInt
-  implicit val singleServerDependencies = SingleServerDependencies()
+  val port                  = sys.env.getOrElse("PORT", "9000").toInt
+  implicit val dependencies = PrismaLocalDependencies()
 
   Version.check()
 
   ServerExecutor(
     port = port,
     ClusterServer("cluster"),
-    WebsocketServer(singleServerDependencies),
-    ApiServer(singleServerDependencies.apiSchemaBuilder),
+    WebsocketServer(dependencies),
+    ApiServer(dependencies.apiSchemaBuilder),
     SimpleSubscriptionsServer(),
-    WorkerServer(singleServerDependencies)
+    WorkerServer(dependencies)
   ).startBlocking()
 }

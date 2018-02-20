@@ -13,7 +13,7 @@ import com.prisma.client.server.{GraphQlRequestHandler, GraphQlRequestHandlerImp
 import com.prisma.errors.{BugsnagErrorReporter, ErrorReporter}
 import com.prisma.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
 import com.prisma.messagebus.queue.inmemory.InMemoryAkkaQueue
-import com.prisma.messagebus.{PubSubPublisher, Queue}
+import com.prisma.messagebus.{PubSub, PubSubPublisher, Queue, QueuePublisher}
 import com.prisma.shared.models.Project
 import com.prisma.utils.await.AwaitUtils
 import com.typesafe.config.{Config, ConfigFactory}
@@ -30,7 +30,7 @@ trait ApiDependencies extends AwaitUtils {
   def projectFetcher: ProjectFetcher
   def apiSchemaBuilder: SchemaBuilder
   def databases: Databases
-  def webhookPublisher: Queue[Webhook]
+  def webhookPublisher: QueuePublisher[Webhook]
 
   implicit lazy val executionContext: ExecutionContext  = system.dispatcher
   implicit lazy val reporter: ErrorReporter             = BugsnagErrorReporter(sys.env("BUGSNAG_API_KEY"))
@@ -40,7 +40,7 @@ trait ApiDependencies extends AwaitUtils {
   lazy val requestHandler: RequestHandler               = RequestHandler(projectFetcher, apiSchemaBuilder, graphQlRequestHandler, auth, log)
   lazy val maxImportExportSize: Int                     = 10000000
 
-  val sssEventsPubSub: InMemoryAkkaPubSub[String]
+  val sssEventsPubSub: PubSub[String]
   lazy val sssEventsPublisher: PubSubPublisher[String] = sssEventsPubSub
 
   def dataResolver(project: Project): DataResolver       = DataResolver(project)
@@ -54,18 +54,4 @@ trait ApiDependencies extends AwaitUtils {
     materializer.shutdown()
     system.terminate().await()
   }
-}
-
-case class ApiDependenciesImpl(sssEventsPubSub: InMemoryAkkaPubSub[String])(implicit val system: ActorSystem, val materializer: ActorMaterializer)
-    extends ApiDependencies {
-  override implicit def self: ApiDependencies = this
-
-  val databases        = Databases.initialize(config)
-  val apiSchemaBuilder = SchemaBuilder()(system, this)
-  val projectFetcher: ProjectFetcher = {
-    val schemaManagerEndpoint = config.getString("schemaManagerEndpoint")
-    val schemaManagerSecret   = config.getString("schemaManagerSecret")
-    ProjectFetcherImpl(Vector.empty, config, schemaManagerEndpoint = schemaManagerEndpoint, schemaManagerSecret = schemaManagerSecret)
-  }
-  override val webhookPublisher = InMemoryAkkaQueue[Webhook]()
 }

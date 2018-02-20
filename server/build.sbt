@@ -38,8 +38,9 @@ lazy val commonSettings = versionSettings ++ Seq(
   )
 )
 
-def commonBackendSettings(imageName: String) = commonSettings ++ Seq(
-  libraryDependencies ++= common,
+lazy val commonServerSettings = commonSettings ++ Seq(libraryDependencies ++= common)
+
+def commonDockerImageSettings(imageName: String) = commonServerSettings ++ Seq(
   imageNames in docker := Seq(
     ImageName(s"prismagraphql/$imageName:latest")
   ),
@@ -68,13 +69,13 @@ def commonBackendSettings(imageName: String) = commonSettings ++ Seq(
   )
 )
 
-def serverProject(name: String, imageName: String): Project = {
-  normalProject(name)
+def dockerImageProject(name: String, imageName: String): Project = {
+  Project(id = name, base = file(s"./images/$name"))
     .enablePlugins(sbtdocker.DockerPlugin, JavaAppPackaging)
-    .settings(commonBackendSettings(imageName): _*)
-    .dependsOn(scalaUtils)
+    .settings(commonDockerImageSettings(imageName): _*)
 }
 
+def serverProject(name: String): Project = Project(id = name, base = file(s"./$name")).settings(commonServerSettings: _*).dependsOn(scalaUtils)
 def normalProject(name: String): Project = Project(id = name, base = file(s"./$name")).settings(commonSettings: _*)
 def libProject(name: String): Project =  Project(id = name, base = file(s"./libs/$name")).settings(commonSettings: _*)
 
@@ -88,7 +89,7 @@ lazy val sharedModels = normalProject("shared-models")
   ) ++ joda
 )
 
-lazy val deploy = serverProject("deploy", imageName = "deploy")
+lazy val deploy = serverProject("deploy")
   .dependsOn(sharedModels % "compile")
   .dependsOn(akkaUtils % "compile")
   .dependsOn(metrics % "compile")
@@ -111,7 +112,7 @@ lazy val deploy = serverProject("deploy", imageName = "deploy")
 //    buildInfoPackage := "build_info"
 //  )
 
-lazy val api = serverProject("api", imageName = "database")
+lazy val api = serverProject("api")
   .dependsOn(sharedModels % "compile")
   .dependsOn(deploy % "test->test")
   .dependsOn(messageBus % "compile")
@@ -128,7 +129,7 @@ lazy val api = serverProject("api", imageName = "database")
     )
   )
 
-lazy val subscriptions = serverProject("subscriptions", imageName = "subscriptions")
+lazy val subscriptions = serverProject("subscriptions")
   .dependsOn(api % "compile;test->test")
   .dependsOn(stubServer % "compile")
   .settings(
@@ -140,7 +141,7 @@ lazy val subscriptions = serverProject("subscriptions", imageName = "subscriptio
     )
   )
 
-lazy val workers = serverProject("workers", imageName = "workers")
+lazy val workers = serverProject("workers")
     .dependsOn(errorReporting % "compile")
     .dependsOn(messageBus % "compile")
     .dependsOn(scalaUtils % "compile")
@@ -277,19 +278,29 @@ lazy val cache =
 
 lazy val auth = libProject("auth").settings(libraryDependencies ++= Seq(jwt, scalaTest))
 
-lazy val singleServer = serverProject("single-server", imageName = "prisma")
+lazy val prismaLocal = dockerImageProject("prisma-local", imageName = "prisma")
   .dependsOn(api% "compile")
   .dependsOn(deploy % "compile")
   .dependsOn(subscriptions % "compile")
   .dependsOn(workers % "compile")
   .dependsOn(graphQlClient % "compile")
 
+lazy val prismaProd = dockerImageProject("prisma-prod", imageName = "prisma-prod")
+  .dependsOn(api% "compile")
+  .dependsOn(deploy % "compile")
+  .dependsOn(subscriptions % "compile")
+  .dependsOn(workers % "compile")
+  .dependsOn(graphQlClient % "compile")
+
+val allDockerImageProjects = List(
+  prismaLocal,
+  prismaProd
+)
+
 val allServerProjects = List(
   api,
   deploy,
   subscriptions,
-  singleServer,
-  sharedModels,
   workers
 )
 
@@ -309,9 +320,10 @@ val allLibProjects = List(
 )
 
 lazy val libs = (project in file("libs")).aggregate(allLibProjects.map(Project.projectToRef): _*)
+lazy val images = (project in file("images")).aggregate(allDockerImageProjects.map(Project.projectToRef): _*)
 
 lazy val root = (project in file("."))
-  .aggregate(allServerProjects.map(Project.projectToRef): _*)
+  .aggregate((allServerProjects ++ allDockerImageProjects).map(Project.projectToRef): _*)
   .settings(
     publish := { } // do not publish a JAR for the root project
   )

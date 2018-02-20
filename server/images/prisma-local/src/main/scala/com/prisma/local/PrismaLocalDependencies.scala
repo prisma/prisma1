@@ -1,4 +1,4 @@
-package com.prisma.singleserver
+package com.prisma.local
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
@@ -26,12 +26,10 @@ import com.prisma.workers.dependencies.WorkerDependencies
 import com.prisma.workers.payloads.{Webhook => WorkerWebhook}
 import play.api.libs.json.Json
 
-trait SingleServerApiDependencies extends DeployDependencies with ApiDependencies with WorkerDependencies {
-  override implicit def self: SingleServerDependencies
-}
-
-case class SingleServerDependencies()(implicit val system: ActorSystem, val materializer: ActorMaterializer)
-    extends SingleServerApiDependencies
+case class PrismaLocalDependencies()(implicit val system: ActorSystem, val materializer: ActorMaterializer)
+    extends DeployDependencies
+    with ApiDependencies
+    with WorkerDependencies
     with SubscriptionDependencies {
   override implicit def self = this
 
