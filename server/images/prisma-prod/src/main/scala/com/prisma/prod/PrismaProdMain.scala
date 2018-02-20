@@ -15,9 +15,7 @@ object PrismaProdMain {
   implicit val materializer = ActorMaterializer()
   implicit val dependencies = PrismaProdDependencies()
   val port                  = sys.env.getOrElse("PORT", "9000").toInt
-
-  // TODO: add if for inclusion of cluster server
-  val includeClusterServer = sys.env.get("CLUSTER_API_ENABLED").contains("1")
+  val includeClusterServer  = sys.env.get("CLUSTER_API_ENABLED").contains("1")
 
   val servers = List(
     ApiServer(dependencies.apiSchemaBuilder),
