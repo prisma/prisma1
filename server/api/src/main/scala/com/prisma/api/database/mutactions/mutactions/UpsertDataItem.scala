@@ -1,10 +1,12 @@
 package com.prisma.api.database.mutactions.mutactions
 
 import java.sql.SQLIntegrityConstraintViolationException
+
 import com.prisma.api.database.mutactions.GetFieldFromSQLUniqueException._
 import com.prisma.api.database.mutactions.validation.InputValueValidation
 import com.prisma.api.database.mutactions.{ClientSqlDataChangeMutaction, ClientSqlStatementResult, MutactionVerificationSuccess}
 import com.prisma.api.database.{DataResolver, DatabaseMutationBuilder}
+import com.prisma.api.mutations.mutations.CascadingDeletes.Path
 import com.prisma.api.mutations.{CoolArgs, NodeSelector, SqlMutactions}
 import com.prisma.api.schema.APIErrors
 import com.prisma.shared.models.Project
@@ -15,22 +17,22 @@ import scala.util.{Success, Try}
 
 case class UpsertDataItem(
     project: Project,
-    where: NodeSelector,
+    path: Path,
     createWhere: NodeSelector,
     updateWhere: NodeSelector,
     allArgs: CoolArgs,
     dataResolver: DataResolver
 ) extends ClientSqlDataChangeMutaction {
 
-  val model      = where.model
+  val model      = path.lastModel
   val createArgs = allArgs.createArgumentsAsCoolArgs.generateNonListCreateArgs(model, createWhere.fieldValueAsString)
   val updateArgs = allArgs.updateArgumentsAsCoolArgs.generateNonListUpdateArgs(model)
 
   override def execute: Future[ClientSqlStatementResult[Any]] = {
-    val createActions = SqlMutactions(dataResolver).getDbActionsForUpsertScalarLists(createWhere, allArgs.createArgumentsAsCoolArgs)
-    val updateActions = SqlMutactions(dataResolver).getDbActionsForUpsertScalarLists(updateWhere, allArgs.updateArgumentsAsCoolArgs)
+    val createActions = SqlMutactions(dataResolver).getDbActionsForUpsertScalarLists(path, allArgs.createArgumentsAsCoolArgs)
+    val updateActions = SqlMutactions(dataResolver).getDbActionsForUpsertScalarLists(path.updatedRoot(updateArgs), allArgs.updateArgumentsAsCoolArgs)
     Future.successful {
-      ClientSqlStatementResult(DatabaseMutationBuilder.upsert(project.id, where, createWhere, createArgs, updateArgs, createActions, updateActions))
+      ClientSqlStatementResult(DatabaseMutationBuilder.upsert(project.id, path, createWhere, createArgs, updateArgs, createActions, updateActions))
     }
   }
 
@@ -39,7 +41,7 @@ case class UpsertDataItem(
     Some({
       case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1062 && getFieldOption(List(createArgs, updateArgs), e).isDefined =>
         APIErrors.UniqueConstraintViolation(model.name, getFieldOption(List(createArgs, updateArgs), e).get)
-      case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1452 => APIErrors.NodeDoesNotExist(where.fieldValueAsString)
+      case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1452 => APIErrors.NodeDoesNotExist("") //todo
       case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1048 => APIErrors.FieldCannotBeNull()
     })
   }

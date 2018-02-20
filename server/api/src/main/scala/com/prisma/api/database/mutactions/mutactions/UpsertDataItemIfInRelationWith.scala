@@ -18,16 +18,15 @@ import scala.concurrent.Future
 import scala.util.{Success, Try}
 
 case class UpsertDataItemIfInRelationWith(project: Project,
-                                          where: NodeSelector,
+                                          path: Path,
                                           createWhere: NodeSelector,
                                           createArgs: CoolArgs,
                                           updateArgs: CoolArgs,
                                           createMutations: Vector[DBIOAction[Any, NoStream, Effect]],
-                                          updateMutations: Vector[DBIOAction[Any, NoStream, Effect]],
-                                          path: Path)
+                                          updateMutations: Vector[DBIOAction[Any, NoStream, Effect]])
     extends ClientSqlDataChangeMutaction {
 
-  val model            = where.model
+  val model            = path.lastModel
   val actualCreateArgs = CoolArgs(createArgs.raw).generateNonListCreateArgs(model, createWhere.fieldValueAsString)
   val actualUpdateArgs = updateArgs.nonListScalarArguments(model)
   val createPath       = path.lastEdgeToNodeEdge(createWhere)
@@ -37,7 +36,7 @@ case class UpsertDataItemIfInRelationWith(project: Project,
   override def execute: Future[ClientSqlStatementResult[Any]] = Future.successful {
     ClientSqlStatementResult(
       DatabaseMutationBuilder
-        .upsertIfInRelationWith(project, where, createWhere, actualCreateArgs, actualUpdateArgs, createMutations, updateMutations, createCheck, path))
+        .upsertIfInRelationWith(project, path, createWhere, actualCreateArgs, actualUpdateArgs, createMutations, updateMutations, createCheck))
   }
 
   override def handleErrors = {
@@ -46,7 +45,7 @@ case class UpsertDataItemIfInRelationWith(project: Project,
       // https://dev.mysql.com/doc/refman/5.5/en/error-messages-server.html#error_er_dup_entry
       case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1062 && getFieldOption(List(createArgs, updateArgs), e).isDefined =>
         APIErrors.UniqueConstraintViolation(model.name, getFieldOption(List(createArgs, updateArgs), e).get)
-      case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1452 => APIErrors.NodeDoesNotExist(where.fieldValueAsString)
+      case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1452 => APIErrors.NodeDoesNotExist("") //todo
       case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1048 => APIErrors.FieldCannotBeNull()
       case e: SQLException if e.getErrorCode == 1242 && createCheck.causedByThisMutaction(createPath, e.getCause.toString) =>
         throw RequiredRelationWouldBeViolated(project, path.lastRelation_!)

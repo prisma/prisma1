@@ -222,6 +222,25 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
     verifySuccessfulSetAndRetrieval(fieldName, inputValue, outputValue, project)
   }
 
+  "Nested scalar lists" should "work in creates " in {
+
+    val project = SchemaDsl() { schema =>
+      val list = schema.model("List").field("listInts", _.Int, isList = true)
+      val todo = schema.model("Todo").field("todoInts", _.Int, isList = true).manyToManyRelation("list", "todo", list)
+    }
+
+    database.setup(project)
+
+    server.executeQuerySimple(
+      s"""mutation{createList(data: {listInts: {set: [1, 2]}, todo: {create: {todoInts: {set: [3, 4]}}}}) {id}}""".stripMargin,
+      project
+    )
+
+    val result = server.executeQuerySimple(s"""query{lists {listInts, todo {todoInts}}}""".stripMargin, project)
+
+    result.toString should equal("""{"data":{"lists":[{"listInts":[1,2],"todo":[{"todoInts":[3,4]}]}]}}""")
+  }
+
   "Deeply nested scalar lists" should "work in creates " in {
 
     val project = SchemaDsl() { schema =>
@@ -257,10 +276,9 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
         s"""mutation{createList(data: {uList: "A", listInts: {set: [1, 2]}, todo: {create: {uTodo: "B", todoInts: {set: [3, 4]}, tag: {create: {uTag: "C",tagInts: {set: [5, 6]}}}}}}) {id}}""".stripMargin,
         project
       )
-      .pathAsString("data.createList.id")
 
     server.executeQuerySimple(
-      s"""mutation{updateList(where: {uList: "A"} data: {listInts: {set: [7, 8]}, todo: {update: {where: {uTodo: "B"} data: {todoInts: {set: [9, 10]}, tag: {update: { where: {uTag: "C"} data: {tagInts: {set: [11, 12]}}}}}}}}) {id}}""".stripMargin,
+      s"""mutation{updateList(where: {uList: "A"} data: {listInts: {set: [7, 8]}, todo: {update: {where: {uTodo: "REMOVE THIS LATER"} data: {todoInts: {set: [9, 10]}, tag: {update: { where: {uTag: "REMOVE THIS LATER"} data: {tagInts: {set: [11, 12]}}}}}}}}) {id}}""".stripMargin,
       project
     )
     val result = server.executeQuerySimple(s"""query{lists {listInts, todo {todoInts, tag {tagInts}}}}""".stripMargin, project)

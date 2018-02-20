@@ -75,7 +75,7 @@ object DatabaseMutationBuilder {
       case edge: NodeEdge  => edge.childWhere
     }
     val relationId = Cuid.createCuid()
-    (sql"insert into `#$projectId`.`#${path.lastRelation_!.id}` (`id`, `#${path.lastEdge_!.parentRelationSide}`, `#${path.lastEdge_!.childRelationSide}`)" ++
+    (sql"insert into `#$projectId`.`#${path.lastRelation_!.id}` (`id`, `#${path.lastParentSide}`, `#${path.lastChildSide}`)" ++
       sql"Select '#$relationId'," ++ pathQuery(projectId, path.removeLastEdge) ++ sql"," ++
       sql"`id` FROM `#$projectId`.`#${childWhere.model.name}` where `#${childWhere.field.name}` = ${childWhere.fieldValue}" ++
       sql"on duplicate key update `#$projectId`.`#${path.lastRelation_!.id}`.id = `#$projectId`.`#${path.lastRelation_!.id}`.id").asUpdate
@@ -104,12 +104,17 @@ object DatabaseMutationBuilder {
 
   def updateDataItemByPath(projectId: String, path: Path, updateArgs: CoolArgs) = {
     val updateValues = combineByComma(updateArgs.raw.map { case (k, v) => escapeKey(k) ++ sql" = " ++ escapeUnsafeParam(v) })
+    def nodeSelector(last: CascadingDeletes.Edge) = last match {
+      case edge: NodeEdge => sql" `#${edge.childRelationSide}`" ++ idFromWhereEquals(projectId, edge.childWhere) ++ sql" AND "
+      case _: ModelEdge   => sql""
+    }
+
     if (updateArgs.isNonEmpty) {
       (sql"UPDATE `#${projectId}`.`#${path.lastModel.name}`" ++
         sql"SET " ++ updateValues ++
-        sql"WHERE `id` = (SELECT `#${path.lastEdge_!.childRelationSide}` " ++
+        sql"WHERE `id` = (SELECT `#${path.lastChildSide}` " ++
         sql"FROM `#${projectId}`.`#${path.lastRelation_!.id}`" ++
-        sql"WHERE `#${path.lastEdge_!.parentRelationSide}` = " ++ pathQuery(projectId, path.removeLastEdge) ++ sql")").asUpdate
+        sql"WHERE" ++ nodeSelector(path.lastEdge_!) ++ sql"`#${path.lastParentSide}` = " ++ pathQuery(projectId, path.removeLastEdge) ++ sql")").asUpdate
     } else {
       DBIOAction.successful(())
     }
@@ -119,36 +124,36 @@ object DatabaseMutationBuilder {
   //region UPSERT
 
   def upsert(projectId: String,
-             where: NodeSelector,
+             path: Path,
              createWhere: NodeSelector,
              createArgs: CoolArgs,
              updateArgs: CoolArgs,
              create: Vector[DBIOAction[Any, NoStream, Effect]],
              update: Vector[DBIOAction[Any, NoStream, Effect]]) = {
 
-    val q = DatabaseQueryBuilder.existsByWhere(projectId, where).as[Boolean]
+    val q = DatabaseQueryBuilder.existsByPath(projectId, path).as[Boolean]
     val qInsert =
-      DBIOAction.seq(createDataItemIfUniqueDoesNotExist(projectId, where, createArgs), createRelayRow(projectId, createWhere), DBIOAction.seq(create: _*))
-    val qUpdate = DBIOAction.seq(updateDataItemByUnique(projectId, where, updateArgs), DBIOAction.seq(update: _*))
+      DBIOAction.seq(createDataItemIfUniqueDoesNotExist(projectId, where, createArgs), createRelayRow(projectId, createWhere), DBIOAction.seq(create: _*)) //todo
+    val qUpdate = DBIOAction.seq(updateDataItemByPath(projectId, path, updateArgs), DBIOAction.seq(update: _*))
 
     ifThenElse(q, qUpdate, qInsert)
   }
 
   def upsertIfInRelationWith(
       project: Project,
-      where: NodeSelector,
+      path: Path,
       createWhere: NodeSelector,
       createArgs: CoolArgs,
       updateArgs: CoolArgs,
       create: Vector[DBIOAction[Any, NoStream, Effect]],
       update: Vector[DBIOAction[Any, NoStream, Effect]],
       relationMutactions: NestedCreateRelationMutaction,
-      path: Path
   ) = {
 
-    val q       = DatabaseQueryBuilder.existsNodeIsInRelationshipWith(project, path, where).as[Boolean]
-    val qInsert = DBIOAction.seq(createDataItem(project.id, where.model.name, createArgs), createRelayRow(project.id, createWhere), DBIOAction.seq(create: _*))
-    val qUpdate = DBIOAction.seq(updateDataItemByUnique(project.id, where, updateArgs), DBIOAction.seq(update: _*))
+    val q = DatabaseQueryBuilder.existsNodeIsInRelationshipWith(project, path).as[Boolean]
+    val qInsert =
+      DBIOAction.seq(createDataItem(project.id, path.lastModel.name, createArgs), createRelayRow(project.id, createWhere), DBIOAction.seq(create: _*))
+    val qUpdate = DBIOAction.seq(updateDataItemByPath(project.id, path, updateArgs), DBIOAction.seq(update: _*))
 
     ifThenElseNestedUpsert(q, qUpdate, qInsert, relationMutactions)
   }
@@ -295,7 +300,7 @@ object DatabaseMutationBuilder {
   // region HELPERS
 
   def idFromWhere(projectId: String, where: NodeSelector): SQLActionBuilder = {
-    sql"(SELECT `id` FROM `#$projectId`.`#${where.model.name}` WHERE `#${where.field.name}` = ${where.fieldValue})"
+    sql"(SELECT `id` FROM (SELECT * FROM `#$projectId`.`#${where.model.name}`) IDFROMWHERE WHERE `#${where.field.name}` = ${where.fieldValue})"
   }
 
   def idFromWhereIn(projectId: String, where: NodeSelector): SQLActionBuilder = {
