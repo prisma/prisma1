@@ -10,7 +10,7 @@ import com.prisma.websocket.WebsocketServer
 import com.prisma.workers.WorkerServer
 import com.prisma.utils.boolean.BooleanUtils._
 
-object PrismaProdMain {
+object PrismaProdMain extends App {
   implicit val system       = ActorSystem("single-server")
   implicit val materializer = ActorMaterializer()
   implicit val dependencies = PrismaProdDependencies()
