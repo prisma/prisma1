@@ -34,6 +34,8 @@ case class PrismaProdDependencies()(implicit val system: ActorSystem, val materi
     with WorkerDependencies {
   import com.prisma.prod.Converters._
 
+  val rabbitUri: String = sys.env("RABBITMQ_URI")
+
   override implicit def self: PrismaProdDependencies = this
 
   override val databases        = Databases.initialize(config)
@@ -50,8 +52,6 @@ case class PrismaProdDependencies()(implicit val system: ActorSystem, val materi
       case _                                     => DummyClusterAuth()
     }
   }
-
-  val rabbitUri: String = sys.env("RABBITMQ_URI")
 
   lazy val invalidationPubSub = {
     implicit val marshaller   = Conversions.Marshallers.FromString
