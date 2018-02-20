@@ -11,8 +11,8 @@ steps:
   - label: ":scala: api"
     command: cd server && ./scripts/test.sh api
 
-  - label: ":scala: single-server"
-    command: cd server && ./scripts/test.sh prisma-local prisma-prod
+  - label: ":scala: images"
+    command: cd server && ./scripts/test.sh images
 
   - wait
 
