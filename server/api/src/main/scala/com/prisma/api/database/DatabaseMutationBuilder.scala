@@ -110,11 +110,13 @@ object DatabaseMutationBuilder {
     }
 
     if (updateArgs.isNonEmpty) {
-      (sql"UPDATE `#${projectId}`.`#${path.lastModel.name}`" ++
+      val res = sql"UPDATE `#${projectId}`.`#${path.lastModel.name}`" ++
         sql"SET " ++ updateValues ++
         sql"WHERE `id` = (SELECT `#${path.lastChildSide}` " ++
         sql"FROM `#${projectId}`.`#${path.lastRelation_!.id}`" ++
-        sql"WHERE" ++ nodeSelector(path.lastEdge_!) ++ sql"`#${path.lastParentSide}` = " ++ pathQuery(projectId, path.removeLastEdge) ++ sql")").asUpdate
+        sql"WHERE" ++ nodeSelector(path.lastEdge_!) ++ sql"`#${path.lastParentSide}` = " ++ pathQuery(projectId, path.removeLastEdge) ++ sql")"
+      println(res.queryParts)
+      res.asUpdate
     } else {
       DBIOAction.successful(())
     }

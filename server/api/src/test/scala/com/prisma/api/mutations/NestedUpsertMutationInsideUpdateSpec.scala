@@ -65,7 +65,7 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
   }
 
-  "a P1! to C1! relation" should "succeed on update" in {
+  "a P1! to C1! relation" should "succeed on update" ignore { //todo delete this this should not be generated since it can only ever hit update
     val project = SchemaDsl() { schema =>
       val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)
       val child  = schema.model("Child").field_!("c", _.String, isUnique = true)
@@ -297,7 +297,7 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(1))
   }
 
-  "a P1 to C1 relation" should "work on create" in {
+  "a P1 to C1 relation" should "trigger updated if there is already a child" in {
     val project = SchemaDsl() { schema =>
       val child  = schema.model("Child").field_!("c", _.String, isUnique = true)
       val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)
@@ -336,8 +336,8 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
          |    p: "p2"
          |    childOpt: {upsert: {
          |    where: {c: "DOES NOT EXIST"}
-         |    update: {c: "DOES NOT MATTER"}
-         |    create :{c: "new C"}
+         |    update: {c: "updated C"}
+         |    create :{c: "DOES NOT MATTER"}
          |    }}
          |  }){
          |    childOpt {
@@ -349,10 +349,10 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
       project
     )
 
-    res2.toString should be("""{"data":{"updateParent":{"childOpt":{"c":"new C"}}}}""")
+    res2.toString should be("""{"data":{"updateParent":{"childOpt":{"c":"updated C"}}}}""")
 
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Parent").as[Int]) should be(Vector(1))
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Child").as[Int]) should be(Vector(2))
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Child").as[Int]) should be(Vector(1))
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(1))
   }
 
@@ -516,7 +516,7 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(1))
   }
 
-  "a P1 to C1!  relation with the parent and a child already in a relation" should "error in a nested mutation by unique for create" in {
+  "a P1 to C1!  relation with the parent and a child already in a relation" should "update the child node successfully" in {
     val project = SchemaDsl() { schema =>
       val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)
       val child  = schema.model("Child").field_!("c", _.String, isUnique = true)
@@ -542,7 +542,7 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
 
-    server.executeQuerySimpleThatMustFail(
+    val res = server.executeQuerySimple(
       s"""
          |mutation {
          |  updateParent(
@@ -550,8 +550,8 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
          |  data:{
          |    childOpt: {upsert: {
          |    where: {c: "DOES NOT EXIST"}
-         |    update: {c: "DOES NOT MATTER"}
-         |    create :{c: "new C"}
+         |    update: {c: "updated C"}
+         |    create :{c: "DOES NOT MATTER"}
          |    }}
          |  }){
          |    childOpt {
@@ -560,10 +560,10 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
          |  }
          |}
       """.stripMargin,
-      project,
-      errorCode = 3042,
-      errorContains = "The change you are trying to make would violate the required relation '_ChildToParent' between Child and Parent"
+      project
     )
+
+    res.toString should be("""{"data":{"updateParent":{"childOpt":{"c":"updated C"}}}}""")
   }
 
   "a P1 to C1!  relation with the parent and a child already in a relation" should "succeed in a nested mutation by unique for update" in {
@@ -839,7 +839,7 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
   }
 
-  "a P1! to CM  relation with the parent already in a relation" should "work through a nested mutation by unique for create" in {
+  "a P1! to CM  relation with the parent already in a relation" should "work through a nested mutation by unique for create" ignore { // todo do not generate this case
     val project = SchemaDsl() { schema =>
       val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)
       val child  = schema.model("Child").field_!("c", _.String, isUnique = true)
@@ -894,7 +894,7 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
   }
 
-  "a P1 to CM  relation with the child already in a relation" should "work through a nested mutation by unique for create" in {
+  "a P1 to CM  relation with the child already in a relation" should "trigger an update" in {
     val project = SchemaDsl() { schema =>
       val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)
       val child  = schema.model("Child").field_!("c", _.String, isUnique = true)
@@ -928,64 +928,6 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
          |    data:{
          |    childOpt: {upsert: {
          |    where: {c: "DOES NOT EXIST"}
-         |    update: {c: "DOES NOT MATTER"}
-         |    create :{c: "new C"}
-         |    }}
-         |  }){
-         |    childOpt{
-         |      c
-         |    }
-         |  }
-         |}
-      """.stripMargin,
-      project
-    )
-
-    res.toString should be("""{"data":{"updateParent":{"childOpt":{"c":"new C"}}}}""")
-
-    server.executeQuerySimple(s"""query{children{c, parentsOpt{p}}}""", project).toString should be(
-      """{"data":{"children":[{"c":"c1","parentsOpt":[]},{"c":"new C","parentsOpt":[{"p":"p1"}]}]}}""")
-
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Parent").as[Int]) should be(Vector(1))
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Child").as[Int]) should be(Vector(2))
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_RelayId").as[Int]) should be(Vector(3))
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
-  }
-
-  "a P1 to CM  relation with the child already in a relation" should "work through a nested mutation by unique for update" in {
-    val project = SchemaDsl() { schema =>
-      val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)
-      val child  = schema.model("Child").field_!("c", _.String, isUnique = true)
-      child.oneToManyRelation("parentsOpt", "childOpt", parent)
-    }
-    database.setup(project)
-
-    server.executeQuerySimple(
-      """mutation {
-        |  createParent(data: {
-        |    p: "p1"
-        |    childOpt: {
-        |      create: {c: "c1"}
-        |    }
-        |  }){
-        |    childOpt{
-        |       c
-        |    }
-        |  }
-        |}""".stripMargin,
-      project
-    )
-
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
-
-    val res = server.executeQuerySimple(
-      s"""
-         |mutation {
-         |  updateParent(
-         |    where: {p: "p1"}
-         |    data:{
-         |    childOpt: {upsert: {
-         |    where: {c: "c1"}
          |    update: {c: "updated C"}
          |    create :{c: "DOES NOT MATTER"}
          |    }}
@@ -1003,6 +945,61 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     server.executeQuerySimple(s"""query{children{c, parentsOpt{p}}}""", project).toString should be(
       """{"data":{"children":[{"c":"updated C","parentsOpt":[{"p":"p1"}]}]}}""")
+
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Parent").as[Int]) should be(Vector(1))
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Child").as[Int]) should be(Vector(1))
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_RelayId").as[Int]) should be(Vector(2))
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
+  }
+
+  "a P1 to CM  relation without a child" should "trigger create" in {
+    val project = SchemaDsl() { schema =>
+      val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)
+      val child  = schema.model("Child").field_!("c", _.String, isUnique = true)
+      child.oneToManyRelation("parentsOpt", "childOpt", parent)
+    }
+    database.setup(project)
+
+    server.executeQuerySimple(
+      """mutation {
+        |  createParent(data: {
+        |    p: "p1"
+        |  }){
+        |    childOpt{
+        |       c
+        |    }
+        |  }
+        |}""".stripMargin,
+      project
+    )
+
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(0))
+
+    val res = server.executeQuerySimple(
+      s"""
+         |mutation {
+         |  updateParent(
+         |    where: {p: "p1"}
+         |    data:{
+         |    childOpt: {upsert: {
+         |    where: {c: "c1"}
+         |    update: {c: "DOES NOT MATTER"}
+         |    create :{c: "new C"}
+         |    }}
+         |  }){
+         |    childOpt{
+         |      c
+         |    }
+         |  }
+         |}
+      """.stripMargin,
+      project
+    )
+
+    res.toString should be("""{"data":{"updateParent":{"childOpt":{"c":"new C"}}}}""")
+
+    server.executeQuerySimple(s"""query{children{c, parentsOpt{p}}}""", project).toString should be(
+      """{"data":{"children":[{"c":"new C","parentsOpt":[{"p":"p1"}]}]}}""")
 
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Parent").as[Int]) should be(Vector(1))
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Child").as[Int]) should be(Vector(1))

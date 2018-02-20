@@ -182,11 +182,11 @@ case class SqlMutactions(dataResolver: DataResolver) {
   def getMutactionsForNestedUpdateMutation(nestedMutation: NestedMutation, path: Path): Seq[ClientSqlMutaction] = {
     nestedMutation.updates.collect {
       case update: UpdateByWhere =>
+        val updateMutaction = List(UpdateDataItemByUniqueFieldIfInRelationWith(project, path.lastEdgeToNodeEdge(update.where), update.data))
         val updatedWhere    = currentWhere(update.where, update.data)
-        val updateMutaction = List(UpdateDataItemByUniqueFieldIfInRelationWith(project, path.lastEdgeToNodeEdge(updatedWhere), update.data))
         val scalarLists     = getMutactionsForScalarLists(path.lastEdgeToNodeEdge(updatedWhere), update.data)
 
-        updateMutaction ++ scalarLists ++ getMutactionsForNestedMutation(update.data, path, triggeredFromCreate = false)
+        updateMutaction ++ scalarLists ++ getMutactionsForNestedMutation(update.data, path.lastEdgeToNodeEdge(updatedWhere), triggeredFromCreate = false)
       case update: UpdateByRelation =>
         val updateMutaction = List(UpdateDataItemIfInRelationWith(project, path, update.data))
         val scalarLists     = getMutactionsForScalarLists(path, update.data)

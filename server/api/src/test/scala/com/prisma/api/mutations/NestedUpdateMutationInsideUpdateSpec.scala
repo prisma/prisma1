@@ -113,7 +113,7 @@ class NestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     mustBeEqual(result.pathAsString("data.updateTodo.comments.[1].text").toString, """update comment2""")
   }
 
-  "a one to many relation with an optional backrelation" should "be updateable by any unique argument through a nested mutation" in {
+  "a many to many relation with an optional backrelation" should "be updateable by any unique argument through a nested mutation" in {
     val project = SchemaDsl() { schema =>
       val list = schema.model("List").field_!("listUnique", _.String, isUnique = true)
       val todo = schema.model("Todo").field_!("todoUnique", _.String, isUnique = true)
