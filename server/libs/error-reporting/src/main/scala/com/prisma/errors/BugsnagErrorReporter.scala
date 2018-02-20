@@ -47,6 +47,7 @@ case class BugsnagErrorReporter(apiKey: String) extends ErrorReporter {
     // In case we're running in an env without api key (local or testing), just print the messages for debugging
     if (apiKey.isEmpty) {
       println(s"[Bugsnag - local / testing] Error report: $report")
+      report.getException.printStackTrace()
     } else {
       client.notify(report)
     }
