@@ -19,7 +19,7 @@ case class UpsertDataItem(
     project: Project,
     path: Path,
     createWhere: NodeSelector,
-    updateWhere: NodeSelector,
+    updatedWhere: NodeSelector,
     allArgs: CoolArgs,
     dataResolver: DataResolver
 ) extends ClientSqlDataChangeMutaction {
@@ -29,11 +29,10 @@ case class UpsertDataItem(
   val updateArgs = allArgs.updateArgumentsAsCoolArgs.generateNonListUpdateArgs(model)
 
   override def execute: Future[ClientSqlStatementResult[Any]] = {
-    val createActions = SqlMutactions(dataResolver).getDbActionsForUpsertScalarLists(path, allArgs.createArgumentsAsCoolArgs)
+    val createActions = SqlMutactions(dataResolver).getDbActionsForUpsertScalarLists(path.updatedRoot(createArgs), allArgs.createArgumentsAsCoolArgs)
     val updateActions = SqlMutactions(dataResolver).getDbActionsForUpsertScalarLists(path.updatedRoot(updateArgs), allArgs.updateArgumentsAsCoolArgs)
-    Future.successful {
-      ClientSqlStatementResult(DatabaseMutationBuilder.upsert(project.id, path, createWhere, createArgs, updateArgs, createActions, updateActions))
-    }
+    Future.successful(
+      ClientSqlStatementResult(DatabaseMutationBuilder.upsert(project.id, path, createWhere, createArgs, updateArgs, createActions, updateActions)))
   }
 
   override def handleErrors = {
@@ -42,7 +41,7 @@ case class UpsertDataItem(
       case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1062 && getFieldOption(List(createArgs, updateArgs), e).isDefined =>
         APIErrors.UniqueConstraintViolation(model.name, getFieldOption(List(createArgs, updateArgs), e).get)
       case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1452 => APIErrors.NodeDoesNotExist("") //todo
-      case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1048 => APIErrors.FieldCannotBeNull()
+      case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1048 => APIErrors.FieldCannotBeNull(e.getCause.getMessage)
     })
   }
 

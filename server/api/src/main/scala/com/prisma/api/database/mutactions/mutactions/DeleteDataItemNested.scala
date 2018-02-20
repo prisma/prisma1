@@ -12,6 +12,8 @@ case class DeleteDataItemNested(project: Project, path: Path) extends ClientSqlD
 
   override def execute: Future[ClientSqlStatementResult[Any]] = {
 
+    // todo see if deleting by path is enough
+
     path.lastEdge_! match {
       case edge: NodeEdge =>
         Future.successful(

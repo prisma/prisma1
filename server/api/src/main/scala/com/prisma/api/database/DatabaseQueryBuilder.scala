@@ -150,10 +150,11 @@ object DatabaseQueryBuilder {
             (Select `#$projectId`.`#$relationId`.#$relationSide from `#$projectId`.`#$relationId`)
           )"""
   }
+
   //todo this is completely wrong
   def existsNodeIsInRelationshipWith(project: Project, path: Path) = {
     def nodeSelector(last: CascadingDeletes.Edge) = last match {
-      case edge: NodeEdge => sql" `#${edge.childRelationSide}`" ++ idFromWhereEquals(project.id, edge.childWhere) ++ sql" AND "
+      case edge: NodeEdge => sql" `id`" ++ idFromWhereEquals(project.id, edge.childWhere) ++ sql" AND "
       case _: ModelEdge   => sql""
     }
 

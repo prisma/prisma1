@@ -55,9 +55,9 @@ case class SqlMutactions(dataResolver: DataResolver) {
   }
 
   // we need to rethink this thoroughly, we need to prevent both branches of executing their nested mutations
-  def getMutactionsForUpsert(path: Path, createWhere: NodeSelector, updateWhere: NodeSelector, allArgs: CoolArgs): Seq[ClientSqlMutaction] =
+  def getMutactionsForUpsert(path: Path, createWhere: NodeSelector, updatedWhere: NodeSelector, allArgs: CoolArgs): Seq[ClientSqlMutaction] =
     report {
-      val upsertMutaction = UpsertDataItem(project, path, createWhere, updateWhere, allArgs, dataResolver)
+      val upsertMutaction = UpsertDataItem(project, path, createWhere, updatedWhere, allArgs, dataResolver)
 
 //    val updateNested = getMutactionsForNestedMutation(allArgs.updateArgumentsAsCoolArgs, updatedOuterWhere, triggeredFromCreate = false)
 //    val createNested = getMutactionsForNestedMutation(allArgs.createArgumentsAsCoolArgs, createWhere, triggeredFromCreate = true)
@@ -203,6 +203,8 @@ case class SqlMutactions(dataResolver: DataResolver) {
       val createWhere       = NodeSelector.forId(path.lastModel, id)
       val createArgsWithId  = CoolArgs(upsert.create.raw + ("id" -> id))
       val scalarListsCreate = getDbActionsForUpsertScalarLists(path.lastEdgeToNodeEdge(createWhere), createArgsWithId)
+
+      //todo where do we actually set the item in relation ?
 
       val upsertItem = upsert match {
         case upsert: UpsertByWhere =>

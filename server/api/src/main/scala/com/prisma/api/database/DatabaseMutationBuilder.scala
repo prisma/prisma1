@@ -131,10 +131,9 @@ object DatabaseMutationBuilder {
              create: Vector[DBIOAction[Any, NoStream, Effect]],
              update: Vector[DBIOAction[Any, NoStream, Effect]]) = {
 
-    val q = DatabaseQueryBuilder.existsByPath(projectId, path).as[Boolean]
-    val qInsert =
-      DBIOAction.seq(createDataItemIfUniqueDoesNotExist(projectId, where, createArgs), createRelayRow(projectId, createWhere), DBIOAction.seq(create: _*)) //todo
-    val qUpdate = DBIOAction.seq(updateDataItemByPath(projectId, path, updateArgs), DBIOAction.seq(update: _*))
+    val q       = DatabaseQueryBuilder.existsByPath(projectId, path).as[Boolean]
+    val qInsert = DBIOAction.seq(createDataItem(projectId, path.lastModel.name, createArgs), createRelayRow(projectId, createWhere), DBIOAction.seq(create: _*))
+    val qUpdate = DBIOAction.seq(updateDataItemByUnique(projectId, path.root, updateArgs), DBIOAction.seq(update: _*))
 
     ifThenElse(q, qUpdate, qInsert)
   }
@@ -152,10 +151,15 @@ object DatabaseMutationBuilder {
 
     val q = DatabaseQueryBuilder.existsNodeIsInRelationshipWith(project, path).as[Boolean]
     val qInsert =
-      DBIOAction.seq(createDataItem(project.id, path.lastModel.name, createArgs), createRelayRow(project.id, createWhere), DBIOAction.seq(create: _*))
+      DBIOAction.seq(
+        createDataItem(project.id, path.lastModel.name, createArgs),
+        createRelayRow(project.id, createWhere),
+        DBIOAction.seq(relationMutactions.allActions: _*),
+        DBIOAction.seq(create: _*)
+      )
     val qUpdate = DBIOAction.seq(updateDataItemByPath(project.id, path, updateArgs), DBIOAction.seq(update: _*))
 
-    ifThenElseNestedUpsert(q, qUpdate, qInsert, relationMutactions)
+    ifThenElseNestedUpsert(q, qUpdate, qInsert)
   }
   //endregion
 
@@ -397,12 +401,11 @@ object DatabaseMutationBuilder {
 
   def ifThenElseNestedUpsert(condition: SqlStreamingAction[Vector[Boolean], Boolean, Effect],
                              thenMutactions: DBIOAction[Unit, NoStream, Effect],
-                             elseMutactions: DBIOAction[Unit, NoStream, Effect],
-                             relationMutactions: NestedCreateRelationMutaction) = {
+                             elseMutactions: DBIOAction[Unit, NoStream, Effect]) = {
     import scala.concurrent.ExecutionContext.Implicits.global
     for {
       exists <- condition
-      action <- if (exists.head) thenMutactions else DBIO.seq(elseMutactions +: relationMutactions.allActions: _*)
+      action <- if (exists.head) thenMutactions else elseMutactions
     } yield action
   }
 

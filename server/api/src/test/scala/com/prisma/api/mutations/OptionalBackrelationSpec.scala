@@ -31,9 +31,9 @@ class OptionalBackrelationSpec extends FlatSpec with Matchers with ApiBaseSpec {
     val res = server.executeQuerySimple(
       """mutation {updateOwner(where: {ownerName: "jon"},
         |data: {cat: {upsert: {
-        |                   where:{catName: "does not exist"},
-        |                   update: {catName: "should not matter"}
-        |                   create: {catName: "azrael"}
+        |                   where:{catName: "TAKE THIS OUT LATER"},
+        |                   update: {catName: "azrael"}
+        |                   create: {catName: "should not matter"}
         |                   }}})
         |{
         |    ownerName
@@ -114,5 +114,4 @@ class OptionalBackrelationSpec extends FlatSpec with Matchers with ApiBaseSpec {
 
     project
   }
-
 }

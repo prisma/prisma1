@@ -122,7 +122,7 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ChildToParent").as[Int]) should be(Vector(1))
   }
 
-  "a P1! to C1 relation" should "work on create" in {
+  "a P1! to C1 relation" should "hit update if there is already a connected node" ignore { //todo delete this, as upsert should not be generated here
     val project = SchemaDsl() { schema =>
       val child  = schema.model("Child").field_!("c", _.String, isUnique = true)
       val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)
@@ -161,8 +161,8 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
          |    p: "p2"
          |    childReq: {upsert: {
          |    where: {c: "DOES NOT EXIST"}
-         |    update: {c: "DOES NOT MATTER"}
-         |    create :{c: "new C"}
+         |    update: {c: "updated C"}
+         |    create :{c: "DOES NOT MATTER"}
          |    }}
          |  }){
          |    childReq {
@@ -174,13 +174,13 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
       project
     )
 
-    res2.toString should be("""{"data":{"updateParent":{"childReq":{"c":"new C"}}}}""")
+    res2.toString should be("""{"data":{"updateParent":{"childReq":{"c":"updated C"}}}}""")
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Parent").as[Int]) should be(Vector(1))
-    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Child").as[Int]) should be(Vector(2))
+    database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "Child").as[Int]) should be(Vector(1))
     database.runDbActionOnClientDb(DatabaseQueryBuilder.itemCountForTable(project.id, "_ParentToChild").as[Int]) should be(Vector(1))
   }
 
-  "a P1! to C1 relation" should "work on update" in {
+  "a P1! to C1 relation" should "work on update" ignore { //todo delete this, as upsert should not be generated here
     val project = SchemaDsl() { schema =>
       val child  = schema.model("Child").field_!("c", _.String, isUnique = true)
       val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)
