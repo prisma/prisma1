@@ -17,6 +17,9 @@ object PrismaProdMain extends App {
   val port                  = sys.env.getOrElse("PORT", "9000").toInt
   val includeClusterServer  = sys.env.get("CLUSTER_API_ENABLED").contains("1")
 
+  val word = if (includeClusterServer) "with" else "without"
+  println(s"Will start $word cluster server")
+
   val servers = List(
     ApiServer(dependencies.apiSchemaBuilder),
     WebsocketServer(dependencies),
