@@ -200,7 +200,7 @@ Update the implementation of the resolver in `src/resolvers/Query.js` as follows
 
 ```js
 async post(parent, { id }, ctx, info) {
-
+  const userId = getUserId(ctx)
   const requestingUserIsAuthor = await ctx.db.exists.Post({
     id,
     author: {
