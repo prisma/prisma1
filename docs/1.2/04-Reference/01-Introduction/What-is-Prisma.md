@@ -5,6 +5,15 @@ description: An overview of Prisma.
 
 # What is Prisma
 
+<InfoBox>
+
+To understand what Prisma is and how it works, it is crucial that you have a solid understanding of GraphQL and how it is implemented on the server-side. If you're not familiar with the concept of a **GraphQL schema**, its **root types** and the role of **GraphQL resolvers**, please make sure to read the following articles:
+
+- [GraphQL Server Basics: The Schema](https://blog.graph.cool/ac5e2950214e)
+- [How to build a GraphQL Server with `graphql-yoga`](https://blog.graph.cool/6da86f346e68)
+
+</InfoBox>
+
 ## Overview
 
 ### tldr
@@ -16,12 +25,6 @@ Prisma is a _GraphQL database abstraction layer_ that turns your database into a
 * **Rich ecosystem and helpful tooling**: The GraphQL ecosystem is growing rapidly and open source tools like [GraphQL Playground](https://github.com/Prisma/graphql-playground) and [GraphQL bindings](https://blog.graph.cool/graphql-schema-stitching-explained-schema-delegation-4c6caf468405) are notably improving workflows and overall developer experience
 
 ### What does a Prisma-powered GraphQL server look like?
-
-<InfoBox>
-
-If you have never built a GraphQL server before, please read [this tutorial](https://blog.graph.cool/6da86f346e68) before moving on.
-  
-</InfoBox>
 
 When building a GraphQL server with Prisma, you are dealing with two GraphQL APIs that represent two separate layers inside your backend:
 
