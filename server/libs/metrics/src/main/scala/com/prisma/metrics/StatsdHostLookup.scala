@@ -1,6 +1,6 @@
 package com.prisma.metrics
 
-import java.net.{InetAddress, InetSocketAddress, Socket}
+import java.net.{DatagramSocket, InetAddress, InetSocketAddress, Socket}
 import java.util.concurrent.Callable
 
 import scala.concurrent.Await
@@ -25,14 +25,15 @@ case class StatsdHostLookup(dnsName: String, port: Int, reachableTimeout: Int) e
         resolveAndPutIntoCache()
 
       case Some(inetSocketAddr) =>
-        val isReachable = doesServerListenOnSocketAddress(inetSocketAddr)
-        if (isReachable) {
-          log(s"isReachable: ${pretty(inetSocketAddr)}")
-          inetSocketAddr
-        } else {
-          log(s"socket address was not reachable anymore")
-          resolveAndPutIntoCache()
-        }
+//        val isReachable = doesServerListenOnSocketAddress(inetSocketAddr)
+//        if (isReachable) {
+//          log(s"isReachable: ${pretty(inetSocketAddr)}")
+//          inetSocketAddr
+//        } else {
+//          log(s"socket address was not reachable anymore")
+//          resolveAndPutIntoCache()
+//        }
+        inetSocketAddr
     }
   }
 
@@ -46,22 +47,22 @@ case class StatsdHostLookup(dnsName: String, port: Int, reachableTimeout: Int) e
 
   def pretty(socketAddress: InetSocketAddress) = s"IP:${socketAddress.getAddress.getHostAddress} Port:${socketAddress.getPort}"
 
-  def doesServerListenOnSocketAddress(socketAddress: InetSocketAddress): Boolean = {
-    Try {
-      val socket = new Socket()
-      socket.connect(socketAddress, 500)
-      socket
-    } match {
-      case Success(socket) =>
-        Try(socket.close())
-        true
-
-      case Failure(exception) =>
-        log(s"failed with the following exception")
-        exception.printStackTrace()
-        false
-    }
-  }
+//  def doesServerListenOnSocketAddress(socketAddress: InetSocketAddress): Boolean = {
+//    Try {
+//      val socket = new DatagramSocket()
+//      socket.connect(socketAddress)
+//      socket
+//    } match {
+//      case Success(socket) =>
+//        Try(socket.close())
+//        true
+//
+//      case Failure(exception) =>
+//        log(s"failed with the following exception")
+//        exception.printStackTrace()
+//        false
+//    }
+//  }
 
   def log(msg: String): Unit = println(s"[${this.getClass.getSimpleName}] $msg")
 }
