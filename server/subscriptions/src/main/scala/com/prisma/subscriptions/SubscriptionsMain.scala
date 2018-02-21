@@ -2,8 +2,7 @@ package com.prisma.subscriptions
 
 import akka.actor.{ActorSystem, Props}
 import akka.stream.ActorMaterializer
-import com.prisma.errors.ErrorReporter
-import com.prisma.akkautil.http.{Routes, Server, ServerExecutor}
+import com.prisma.akkautil.http.{Routes, Server}
 import com.prisma.messagebus.pubsub.Only
 import com.prisma.subscriptions.protocol.SubscriptionProtocolV05.Requests.SubscriptionSessionRequestV05
 import com.prisma.subscriptions.protocol.SubscriptionProtocolV07.Requests.SubscriptionSessionRequest
@@ -12,23 +11,10 @@ import com.prisma.subscriptions.protocol.SubscriptionSessionManager.Requests.{En
 import com.prisma.subscriptions.protocol.{StringOrInt, SubscriptionRequest, SubscriptionSessionManager}
 import com.prisma.subscriptions.resolving.SubscriptionsManager
 import com.prisma.subscriptions.util.PlayJson
-import com.prisma.websocket.WebsocketServer
 import de.heikoseeberger.akkahttpplayjson.PlayJsonSupport
 import play.api.libs.json.{JsError, JsSuccess}
 
 import scala.concurrent.Future
-
-object SubscriptionsMain extends App {
-  implicit val system       = ActorSystem("graphql-subscriptions")
-  implicit val materializer = ActorMaterializer()
-  implicit val dependencies = SubscriptionDependenciesImpl()
-  import dependencies.reporter
-
-  val subscriptionsServer = SimpleSubscriptionsServer()
-  val websocketServer     = WebsocketServer(dependencies)
-
-  ServerExecutor(port = 8086, websocketServer, subscriptionsServer).startBlocking()
-}
 
 case class SimpleSubscriptionsServer(prefix: String = "")(
     implicit dependencies: SubscriptionDependencies,

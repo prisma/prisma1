@@ -109,7 +109,7 @@ export class Environment {
                     this.globalRC.cloudSessionKey,
                     false,
                     ['prisma-eu1', 'prisma-us1'].includes(cluster.name),
-                    true,
+                    !['prisma-eu1', 'prisma-us1'].includes(cluster.name),
                     m.workspace.slug,
                   ),
                 )

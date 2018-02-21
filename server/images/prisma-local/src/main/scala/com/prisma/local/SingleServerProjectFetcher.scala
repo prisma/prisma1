@@ -1,4 +1,4 @@
-package com.prisma.singleserver
+package com.prisma.local
 
 import com.prisma.api.project.RefreshableProjectFetcher
 import com.prisma.deploy.database.persistence.ProjectPersistence

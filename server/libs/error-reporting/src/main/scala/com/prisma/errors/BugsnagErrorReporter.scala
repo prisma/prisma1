@@ -47,6 +47,7 @@ case class BugsnagErrorReporter(apiKey: String) extends ErrorReporter {
     // In case we're running in an env without api key (local or testing), just print the messages for debugging
     if (apiKey.isEmpty) {
       println(s"[Bugsnag - local / testing] Error report: $report")
+      report.getException.printStackTrace()
     } else {
       client.notify(report)
     }
@@ -57,7 +58,7 @@ case class BugsnagErrorReporter(apiKey: String) extends ErrorReporter {
   }
 
   private def addRequest(r: Report, meta: RequestMetadata) = {
-    r.addToTab("Request", "Id", meta.requestId)
+    r.addToTab("Request", "RequestId", meta.requestId)
     r.addToTab("Request", "Method", meta.method)
     r.addToTab("Request", "Uri", meta.uri)
     r.addToTab("Request", "Headers", headersAsString(meta.headers))
@@ -69,7 +70,7 @@ case class BugsnagErrorReporter(apiKey: String) extends ErrorReporter {
   }
 
   private def addProject(r: Report, meta: ProjectMetadata) = {
-    r.addToTab("Project", "Id", meta.id)
+    r.addToTab("Project", "ProjectId", meta.id)
   }
 
   private def headersAsString(headers: Seq[(String, String)]): String = {

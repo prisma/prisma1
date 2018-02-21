@@ -1,4 +1,4 @@
-package com.prisma.singleserver
+package com.prisma.local
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
