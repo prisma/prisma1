@@ -41,12 +41,11 @@ abstract class MetricsManager(
   protected lazy val baseTagsString: String = {
     if (metricsCollectionIsEnabled) {
       Try {
-        val instanceID  = Await.result(InstanceMetadata.fetchInstanceId(), 5.seconds)
         val containerId = ContainerMetadata.fetchContainerId()
         val region      = sys.env.getOrElse("AWS_REGION", "no_region")
         val env         = sys.env.getOrElse("ENV", "local")
 
-        s"env=$env,region=$region,instance=$instanceID,container=$containerId,service=$serviceName"
+        s"env=$env,region=$region,container=$containerId,service=$serviceName"
       } match {
         case Success(baseTags) => baseTags
         case Failure(err)      => errorHandler.handle(new Exception(err)); ""
