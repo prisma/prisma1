@@ -36,6 +36,8 @@ abstract class MetricsManager(
 
   lazy val errorHandler = CustomErrorHandler()(reporter)
 
+  private val metricsCollectionIsEnabled: Boolean = sys.env.getOrElse("ENABLE_METRICS", "0") == "1"
+
   protected lazy val baseTagsString: String = {
     if (metricsCollectionIsEnabled) {
       Try {
@@ -56,14 +58,26 @@ abstract class MetricsManager(
 
   protected val client: StatsDClient = {
     if (metricsCollectionIsEnabled) {
-      new NonBlockingStatsDClient("", Integer.MAX_VALUE, new Array[String](0), errorHandler, StatsdHostLookup())
+      val dnsNameOpt         = sys.env.get("STATSD_DNS_NAME")
+      val portOpt            = Utils.envVarAsInt("STATSD_PORT")
+      val isReachableTimeout = Utils.envVarAsInt("STATSD_REACHABLE_TIMEOUT").getOrElse(500)
+
+      (dnsNameOpt, portOpt) match {
+        case (Some(dnsName), Some(port)) =>
+          log(s"Will report metrics to $dnsName on port $port")
+          new NonBlockingStatsDClient("", Integer.MAX_VALUE, new Array[String](0), errorHandler, StatsdHostLookup(dnsName, port, isReachableTimeout))
+
+        case _ =>
+          log("Warning: no metrics will be recorded. The env vars STATSD_DNS_NAME and STATSD_PORT must be set.")
+          DummyStatsDClient()
+      }
     } else {
-      println("[Metrics] Warning: no metrics will be recorded.")
+      log("Warning: no metrics will be recorded.")
       DummyStatsDClient()
     }
   }
 
-  protected def metricsCollectionIsEnabled: Boolean = sys.env.getOrElse("ENABLE_METRICS", "0") == "1"
+  private def log(msg: String): Unit = println(s"[Metrics] $msg")
 
   // Gauges DO NOT support custom metric tags per occurrence, only hardcoded custom tags during definition!
   def defineGauge(name: String, predefTags: (CustomTag, String)*): GaugeMetric = GaugeMetric(name, baseTagsString, predefTags, client)
