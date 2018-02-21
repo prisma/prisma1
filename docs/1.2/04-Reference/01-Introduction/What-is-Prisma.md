@@ -17,6 +17,12 @@ Prisma is a _GraphQL database abstraction layer_ that turns your database into a
 
 ### What does a Prisma-powered GraphQL server look like?
 
+<InfoBox>
+
+If you have never built a GraphQL server before, please read [this tutorial](https://blog.graph.cool/6da86f346e68) before moving on.
+  
+</InfoBox>
+
 When building a GraphQL server with Prisma, you are dealing with two GraphQL APIs that represent two separate layers inside your backend:
 
 - The **application layer** contains the business logic for your application and implements other common workflows such as authentication or integration of 3rd party services.
