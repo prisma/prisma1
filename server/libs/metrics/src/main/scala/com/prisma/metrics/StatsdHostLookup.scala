@@ -1,9 +1,10 @@
 package com.prisma.metrics
 
-import java.net.{InetAddress, InetSocketAddress}
+import java.net.{InetAddress, InetSocketAddress, Socket}
 import java.util.concurrent.Callable
 
 import scala.concurrent.Await
+import scala.util.{Failure, Success, Try}
 
 /**
   * As soon as metrics are flushed, this callable is evaluated.
@@ -20,11 +21,17 @@ case class StatsdHostLookup(dnsName: String, port: Int, reachableTimeout: Int) e
 
   override def call(): InetSocketAddress = {
     lookupCache match {
-      case Some(inetSocketAddr) =>
-        val isReachable = inetSocketAddr.getAddress.isReachable(reachableTimeout)
-        if (isReachable) inetSocketAddr else resolveAndPutIntoCache()
       case None =>
         resolveAndPutIntoCache()
+
+      case Some(inetSocketAddr) =>
+        val isReachable = doesServerListenOnSocketAddress(inetSocketAddr)
+        if (isReachable) {
+          inetSocketAddr
+        } else {
+          log(s"socket address was not reachable anymore")
+          resolveAndPutIntoCache()
+        }
     }
   }
 
@@ -34,4 +41,21 @@ case class StatsdHostLookup(dnsName: String, port: Int, reachableTimeout: Int) e
     lookupCache = Some(socketAddress)
     socketAddress
   }
+
+  def doesServerListenOnSocketAddress(socketAddress: InetSocketAddress): Boolean = {
+    Try {
+      new Socket(socketAddress.getAddress, socketAddress.getPort)
+    } match {
+      case Success(socket) =>
+        Try(socket.close())
+        true
+
+      case Failure(exception) =>
+        log(s"failed with the following exception")
+        exception.printStackTrace()
+        false
+    }
+  }
+
+  def log(msg: String): Unit = println(s"[${this.getClass.getSimpleName}] $msg")
 }
