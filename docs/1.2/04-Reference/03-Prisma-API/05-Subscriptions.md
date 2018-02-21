@@ -205,14 +205,16 @@ For example, to only be notified of a created `Post` if a specific user _follows
 ```graphql
 subscription {
   post(where: {
-    mutation_in: [CREATED]
+    AND: [{
+      mutation_in: [CREATED]
+    }, {
     node: {
       author: {
         followedBy_some: {
           id: "cj03x3nacox6m0119755kmcm3"
         }
       }
-    }
+    }]
   }) {
     mutation
     node {
