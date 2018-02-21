@@ -27,6 +27,7 @@ case class StatsdHostLookup(dnsName: String, port: Int, reachableTimeout: Int) e
       case Some(inetSocketAddr) =>
         val isReachable = doesServerListenOnSocketAddress(inetSocketAddr)
         if (isReachable) {
+          log(s"isReachable: ${pretty(inetSocketAddr)}")
           inetSocketAddr
         } else {
           log(s"socket address was not reachable anymore")
@@ -38,9 +39,12 @@ case class StatsdHostLookup(dnsName: String, port: Int, reachableTimeout: Int) e
   def resolveAndPutIntoCache(): InetSocketAddress = {
     val address       = InetAddress.getByName(dnsName)
     val socketAddress = new InetSocketAddress(address, port)
+    log(s"resolved: ${pretty(socketAddress)}")
     lookupCache = Some(socketAddress)
     socketAddress
   }
+
+  def pretty(socketAddress: InetSocketAddress) = s"IP:${socketAddress.getAddress.getHostAddress} Port:${socketAddress.getPort}"
 
   def doesServerListenOnSocketAddress(socketAddress: InetSocketAddress): Boolean = {
     Try {
