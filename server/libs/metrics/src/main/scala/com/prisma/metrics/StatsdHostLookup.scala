@@ -44,7 +44,9 @@ case class StatsdHostLookup(dnsName: String, port: Int, reachableTimeout: Int) e
 
   def doesServerListenOnSocketAddress(socketAddress: InetSocketAddress): Boolean = {
     Try {
-      new Socket(socketAddress.getAddress, socketAddress.getPort)
+      val socket = new Socket()
+      socket.connect(socketAddress, 500)
+      socket
     } match {
       case Success(socket) =>
         Try(socket.close())
