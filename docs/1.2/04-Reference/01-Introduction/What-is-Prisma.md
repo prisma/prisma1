@@ -7,7 +7,7 @@ description: An overview of Prisma.
 
 <InfoBox>
 
-To understand what Prisma is and how it works, it is crucial that you have a solid understanding of GraphQL and how it is implemented on the server-side. If you're not familiar with the concept of a **GraphQL schema**, its **root types** and the role of **GraphQL resolvers**, please make sure to read the following articles:
+To understand what Prisma is and how it works, it is crucial that you have a solid understanding of GraphQL and how it is implemented on the server-side. If you're not familiar with the concept of a **GraphQL schema**, its **root types** and the role of **resolver functions**, please make sure to read the following articles:
 
 - [GraphQL Server Basics: The Schema](https://blog.graph.cool/ac5e2950214e)
 - [How to build a GraphQL Server with `graphql-yoga`](https://blog.graph.cool/6da86f346e68)
