@@ -100,29 +100,34 @@ case class ApiServer(
     }
 
     def unthrottledCall(projectId: ProjectId, rawRequest: RawRequest) = {
-      val result = apiDependencies.requestHandler.handleRawRequestForPublicApi(projectId.asString, rawRequest)
+      val result = handleRequestForPublicApi(projectId, rawRequest)
       complete(result)
     }
 
     def throttledCall(projectId: ProjectId, rawRequest: RawRequest, throttler: Throttler[ProjectId]) = {
       val result = throttler.throttled(projectId) { () =>
-        apiDependencies.requestHandler.handleRawRequestForPublicApi(projectId.asString, rawRequest)
+        handleRequestForPublicApi(projectId, rawRequest)
       }
       onComplete(result) {
         case scala.util.Success(result) =>
-          logRequestEnd(projectId.asString)
           respondWithHeader(RawHeader("Throttled-By", result.throttledBy.toString + "ms")) {
             complete(result.result)
           }
 
         case scala.util.Failure(_: ThrottleBufferFullException) =>
-          logRequestEnd(projectId.asString)
           throw ThrottlerBufferFullException()
 
         case scala.util.Failure(exception) => // just propagate the exception
-          logRequestEnd(projectId.asString)
           throw exception
       }
+    }
+
+    def handleRequestForPublicApi(projectId: ProjectId, rawRequest: RawRequest) = {
+      val result = apiDependencies.requestHandler.handleRawRequestForPublicApi(projectId.asString, rawRequest)
+      result.onComplete { _ =>
+        logRequestEnd(projectId.asString)
+      }
+      result
     }
 
     logger.info(Json.toJson(LogData(LogKey.RequestNew, requestId)).toString())

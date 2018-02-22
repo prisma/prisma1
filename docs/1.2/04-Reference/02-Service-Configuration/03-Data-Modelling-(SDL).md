@@ -259,9 +259,9 @@ The `DateTime` type can be used to store date or time values. A good example mig
 
 In queries or mutations, `DateTime` fields have to be specified in [ISO 8601 format](https://en.wikipedia.org/wiki/ISO_8601) with enclosing double quotes:
 
-* `datatime: "2015"`
-* `datatime: "2015-11"`
-* `datatime: "2015-11-22"`
+* `datetime: "2015"`
+* `datetime: "2015-11"`
+* `datetime: "2015-11-22"`
 * `datetime: "2015-11-22T13:57:31.123Z"`.
 
 #### Enum
