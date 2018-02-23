@@ -278,7 +278,10 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiBaseSpec {
       )
 
     server.executeQuerySimple(
-      s"""mutation{updateList(where: {uList: "A"} data: {listInts: {set: [7, 8]}, todo: {update: {where: {uTodo: "REMOVE THIS LATER"} data: {todoInts: {set: [9, 10]}, tag: {update: { where: {uTag: "REMOVE THIS LATER"} data: {tagInts: {set: [11, 12]}}}}}}}}) {id}}""".stripMargin,
+      s"""mutation{updateList(where: {uList: "A"}
+         |                    data: {listInts: {set: [7, 8]},
+         |                           todo: {update: {todoInts: {set: [9, 10]},
+         |                                           tag: {update: { tagInts: {set: [11, 12]}}}}}}) {id}}""".stripMargin,
       project
     )
     val result = server.executeQuerySimple(s"""query{lists {listInts, todo {todoInts, tag {tagInts}}}}""".stripMargin, project)

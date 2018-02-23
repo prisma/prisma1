@@ -67,6 +67,8 @@ class OneRelationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseS
 
     val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
 
+    println(schema)
+
     schema should containMutation("updateTodo(data: TodoUpdateInput!, where: TodoWhereUniqueInput!): Todo")
 
     schema should containInputType("TodoCreateInput",
@@ -93,11 +95,17 @@ class OneRelationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseS
                                      "todoUnique: String"
                                    ))
 
-    schema should containInputType("TodoUpdateNestedInput",
-                                   fields = Vector(
-                                     "where: TodoWhereUniqueInput!",
-                                     "data: TodoUpdateDataInput!"
-                                   ))
+    schema should containInputType(
+      "TodoUpdateOneInput",
+      fields = Vector(
+        "create: TodoCreateInput",
+        "connect: TodoWhereUniqueInput",
+        "disconnect: TodoWhereUniqueInput",
+        "delete: TodoWhereUniqueInput",
+        "update: TodoUpdateDataInput",
+        "upsert: TodoUpsertNestedInput"
+      )
+    )
 
     schema should containInputType("TodoUpsertNestedInput",
                                    fields = Vector(

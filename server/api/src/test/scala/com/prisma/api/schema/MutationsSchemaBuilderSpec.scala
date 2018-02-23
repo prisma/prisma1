@@ -341,7 +341,6 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec
                                      "unique: Int"
                                    ))
   }
-
   "the delete many Mutation for a model" should "be generated correctly" in {
     val project = SchemaDsl() { schema =>
       schema
@@ -353,5 +352,47 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec
 
     schema should containMutation("deleteManyTodoes(where: TodoWhereInput!): BatchPayload!")
     schema should containInputType("TodoWhereInput")
+  }
+
+  "Sample schema with selfrelations and optional backrelations" should "be generated correctly" in {
+
+    val project = SchemaDsl.fromString() {
+
+      """type User{
+        |   name: String! @unique
+        |   friends: [User!]!  @relation(name: "UserFriends")
+        |   friendOf: [User!]! @relation(name: "UserFriends")
+        |   bestFriend: User   @relation(name: "BestFriend")
+        |   bestFriendOf: User @relation(name: "BestFriend")
+        |   bestBuddy: User
+        |}""".stripMargin
+    }
+
+    val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
+
+    println(schema)
+  }
+
+  "Sample schema with optional backrelations" should "be generated correctly" in {
+
+    val project = SchemaDsl.fromString() {
+
+      """type User{
+        |   name: String! @unique
+        |   friends: [OtherUser!]!  @relation(name: "UserFriends")
+        |   bestFriend: OtherUser   @relation(name: "BestFriend")
+        |   bestBuddy: OtherUser
+        |}
+        |
+        |type OtherUser{
+        |   name: String! @unique
+        |   friendOf: [User!]! @relation(name: "UserFriends")
+        |   bestFriendOf: User @relation(name: "BestFriend")
+        |}""".stripMargin
+    }
+
+    val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
+
+    println(schema)
   }
 }

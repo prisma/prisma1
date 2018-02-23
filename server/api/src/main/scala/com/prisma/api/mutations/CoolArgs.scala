@@ -67,7 +67,7 @@ case class CoolArgs(raw: Map[String, Any]) {
 
       NestedMutation(
         creates = subArgsOption("create").flatten.map(CreateOne).toVector,
-        updates = subArgsOption("update").flatten.map(args => UpdateByRelation(args.subArgsOption("data").get.get)).toVector,
+        updates = subArgsOption("update").flatten.map(UpdateByRelation).toVector,
         upserts = subArgsOption("upsert").flatten
           .map(args => UpsertByRelation(update = args.subArgsOption("update").get.get, create = args.subArgsOption("create").get.get))
           .toVector,

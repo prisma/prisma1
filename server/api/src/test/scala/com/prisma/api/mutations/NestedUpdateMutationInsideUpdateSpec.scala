@@ -197,7 +197,7 @@ class NestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
          |    }
          |    data: {
          |      todo: {
-         |        update: {where: {id: "$todoId"}, data: {title: "updated title"}}
+         |        update: {title: "updated title"}
          |      }
          |    }
          |  ){
@@ -246,7 +246,7 @@ class NestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
          |    }
          |    data: {
          |      todo: {
-         |        update: { where: {id: "$todoId"}, data:{title: "updated title"} }
+         |        update: { title: "updated title" }
          |      }
          |    }
          |  ){
@@ -261,12 +261,11 @@ class NestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     mustBeEqual(result.pathAsJsValue("data.updateNote.todo").toString, """{"title":"updated title"}""")
   }
 
-  //todo remove this once the api is changed
-  "a one to one relation" should "fail gracefully on wrong where and assign error correctly and not execute partially" ignore {
+  "a many to many relation" should "fail gracefully on wrong where and assign error correctly and not execute partially" in {
     val project = SchemaDsl() { schema =>
       val note = schema.model("Note").field("text", _.String)
       val todo = schema.model("Todo").field_!("title", _.String)
-      todo.oneToOneRelation("note", "todo", note)
+      todo.manyToManyRelation("notes", "todoes", note)
     }
     database.setup(project)
 
@@ -275,19 +274,19 @@ class NestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
         |  createNote(
         |    data: {
         |      text: "Some Text"
-        |      todo: {
+        |      todoes: {
         |        create: { title: "the title" }
         |      }
         |    }
         |  ){
         |    id
-        |    todo { id }
+        |    todoes { id }
         |  }
         |}""".stripMargin,
       project
     )
     val noteId = createResult.pathAsString("data.createNote.id")
-    val todoId = createResult.pathAsString("data.createNote.todo.id")
+    val todoId = createResult.pathAsString("data.createNote.todoes.[0].id")
 
     server.executeQuerySimpleThatMustFail(
       s"""
@@ -298,7 +297,7 @@ class NestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
          |    }
          |    data: {
          |      text: "Some Changed Text"
-         |      todo: {
+         |      todoes: {
          |        update: {
          |          where: {id: "DOES NOT EXIST"},
          |          data:{title: "updated title"}
@@ -437,14 +436,7 @@ class NestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
         |            data: {
         |              title: "updated todo"
         |              tag: {
-        |                update: {
-        |                  where: {
-        |                    id: "$tagId"
-        |                  }
-        |                  data: {
-        |                    name: "updated tag"
-        |                  }
-        |                }
+        |                update: {name: "updated tag"}
         |              }
         |            }
         |          }
