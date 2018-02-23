@@ -34,12 +34,13 @@ case class CascadingDeleteRelationMutactions(project: Project, path: Path) exten
     })
   }
 
-  def otherFailingRequiredRelationOnChild(cause: String): Option[Relation] = extendedPaths.collectFirst {
-    case x if causedByThisMutactionChildOnly(x, cause) => x.lastRelation_!
+  def otherFailingRequiredRelationOnChild(cause: String): Option[Relation] = {
+    extendedPaths.collectFirst { case x: Path if causedByThisMutactionChildOnly(x, cause) => x.lastRelation_! }
   }
 
   def causedByThisMutactionChildOnly(path: Path, cause: String) = {
     val parentCheckString = s"`${path.lastRelation_!.id}` OLDPARENTPATHFAILURETRIGGER WHERE `${path.lastChildSide}`"
+
     cause.contains(parentCheckString) // && cause.contains(parameterStringFromSQLException(path.root)) //todo reintroduce parameterchecks
   }
 

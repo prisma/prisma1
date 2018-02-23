@@ -380,7 +380,7 @@ object DatabaseMutationBuilder {
 
   def oldParentFailureTriggerByPath(project: Project, path: Path) = {
     val table = path.lastRelation_!.id
-    val query = sql"SELECT `id` FROM `#${project.id}`.`#$table` OLDPARENTPATHFAILURETRIGGER  WHERE `#${path.lastChildSide}` = " ++ pathQuery(project.id, path)
+    val query = sql"SELECT `id` FROM `#${project.id}`.`#$table` OLDPARENTPATHFAILURETRIGGER WHERE `#${path.lastChildSide}` = " ++ pathQuery(project.id, path)
     triggerFailureWhenExists(project, query, table)
   }
 
