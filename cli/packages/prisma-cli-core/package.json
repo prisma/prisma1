@@ -1,6 +1,6 @@
 {
   "name": "prisma-cli-core",
-  "version": "1.0.5-2",
+  "version": "1.0.5-3",
   "main": "dist/index.js",
   "files": [
     "dist"
@@ -11,10 +11,11 @@
   "devDependencies": {
     "@types/aws-lambda": "^0.0.17",
     "@types/fs-extra": "^5.0.0",
-    "@types/graphql": "^0.11.7",
+    "@types/graphql": "^0.12.4",
     "@types/node": "^8.0.22",
     "faker": "^4.1.0",
     "husky": "^0.14.3",
+    "graphql": "^0.13.1",
     "jest": "^21.0.2",
     "lint-staged": "^4.2.3",
     "nock": "^9.0.14",
@@ -88,9 +89,8 @@
     "fs-extra": "^5.0.0",
     "globby": "^6.1.0",
     "graphcool-inquirer": "^1.0.3",
-    "graphql": "^0.11.7",
-    "graphql-cli": "2.15.0",
-    "graphql-config": "^1.1.7",
+    "graphql-cli": "2.15.2",
+    "graphql-config": "^2.0.0",
     "inquirer": "^3.3.0",
     "isomorphic-fetch": "^2.2.1",
     "js-yaml": "^3.9.1",
@@ -104,7 +104,7 @@
     "pause": "^0.1.0",
     "portfinder": "^1.0.13",
     "prisma-json-schema": "^0.0.1",
-    "prisma-yml": "1.0.14-5",
+    "prisma-yml": "1.0.14-6",
     "scuid": "^1.0.2",
     "semver": "^5.4.1",
     "sillyname": "^0.1.0",
@@ -112,5 +112,8 @@
     "table": "^4.0.1",
     "util.promisify": "^1.0.0",
     "validator": "^8.2.0"
+  },
+  "peerDependencies": {
+    "graphql": "^0.11.0 || ^0.12.0 || ^0.13.0"
   }
 }
