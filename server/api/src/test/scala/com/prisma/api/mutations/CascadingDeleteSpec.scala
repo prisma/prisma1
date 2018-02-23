@@ -504,7 +504,7 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiBaseSpec {
     server.executeQuerySimple("""mutation{createP(data:{p:"p", c: {create:{c: "c"}}}){p, c {c}}}""", project)
     server.executeQuerySimple("""mutation{createP(data:{p:"p2", c: {create:{c: "c2"}}}){p, c {c}}}""", project)
 
-    server.executeQuerySimpleThatMustFail("""mutation{updateC(where: {c:"c"} data: {p: {delete:{p:"P"}}}){id}}""",
+    server.executeQuerySimpleThatMustFail("""mutation{updateC(where: {c:"c"} data: {p: {delete: true}}){id}}""",
                                           project,
                                           errorCode = 3039,
                                           errorContains = "No Node for the model")
@@ -528,7 +528,7 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiBaseSpec {
     server.executeQuerySimple("""mutation{createP(data:{p:"p", c: {create:{c: "c", gc :{create:{gc: "gc"}}}}}){p, c {c, gc{gc}}}}""", project)
     server.executeQuerySimple("""mutation{createP(data:{p:"p2", c: {create:{c: "c2", gc :{create:{gc: "gc2"}}}}}){p, c {c,gc{gc}}}}""", project)
 
-    server.executeQuerySimple("""mutation{updateP(where: {p:"p"}, data: { c: {delete:{c:"c"}}}){id}}""", project)
+    server.executeQuerySimple("""mutation{updateP(where: {p:"p"}, data: { c: {delete: true}}){id}}""", project)
 
     server.executeQuerySimple("""query{ps{p, c {c, gc{gc}}}}""", project).toString should be(
       """{"data":{"ps":[{"p":"p","c":null},{"p":"p2","c":{"c":"c2","gc":{"gc":"gc2"}}}]}}""")
@@ -556,7 +556,7 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiBaseSpec {
     server.executeQuerySimple("""mutation{createP(data:{p:"p2", c: {create:{c: "c2", gc :{create:{gc: "gc2"}}}}}){p, c {c,gc{gc}}}}""", project)
 
     server.executeQuerySimpleThatMustFail(
-      """mutation{updateP(where: {p:"p"}, data: { c: {delete:{c:"c"}}}){id}}""",
+      """mutation{updateP(where: {p:"p"}, data: { c: {delete: true}}){id}}""",
       project,
       errorCode = 3042,
       errorContains = "The change you are trying to make would violate the required relation '_CToP' between C and P"

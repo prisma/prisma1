@@ -2,7 +2,8 @@ package com.prisma.api.schema
 
 import com.prisma.cache.Cache
 import com.prisma.shared.models.{Field, Model, Project, Relation}
-import sangria.schema.{InputField, InputObjectType, InputType, ListInputType, OptionInputType}
+import sangria.ast.BooleanValue
+import sangria.schema._
 
 trait InputTypesBuilder {
   def inputObjectTypeForCreate(model: Model, omitRelation: Option[Relation] = None): Option[InputObjectType[Any]]
@@ -106,7 +107,7 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
       } yield {
         val typeName = omitRelation.getField(project.schema, model) match {
           case Some(field) => s"${model.name}UpdateWithWhereUniqueWithout${field.name.capitalize}Input"
-          case None        => s"${model.name}UpdateNestedWithWhereUniqueInput"
+          case None        => s"${model.name}UpdateWithWhereUniqueNestedInput"
         }
 
         InputObjectType[Any](
@@ -308,9 +309,22 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
 
   def nestedConnectInputField(field: Field): Option[InputField[Any]] = whereInputField(field, name = "connect")
 
-  def nestedDisconnectInputField(field: Field): Option[InputField[Any]] = whereInputField(field, name = "disconnect")
+  def nestedDisconnectInputField(field: Field): Option[InputField[Any]] = field.isList match {
+    case true  => whereInputField(field, name = "disconnect")
+    case false => Some(InputField[Any]("disconnect", OptionInputType(BooleanType)))
+  }
 
-  def nestedDeleteInputField(field: Field): Option[InputField[Any]] = whereInputField(field, name = "delete")
+  def nestedDeleteInputField(field: Field): Option[InputField[Any]] = field.isList match {
+    case true  => whereInputField(field, name = "delete")
+    case false => Some(InputField[Any]("delete", OptionInputType(BooleanType)))
+  }
+
+  def trueInputFlag(field: Field, name: String): Option[InputField[Any]] = {
+    val subModel        = field.relatedModel_!(project.schema)
+    val inputObjectType = inputObjectTypeForWhereUnique(subModel)
+
+    generateInputType(inputObjectType, field.isList).map(x => InputField[Any](name, x))
+  }
 
   def whereInputField(field: Field, name: String): Option[InputField[Any]] = {
     val subModel        = field.relatedModel_!(project.schema)

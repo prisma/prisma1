@@ -43,7 +43,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
          |  where: {id: "$parentId"}
          |  data:{
          |    p: "p2"
-         |    childReq: {delete: {id: "$childId"}}
+         |    childReq: {delete: true}
          |  }){
          |    childReq {
          |      c
@@ -96,7 +96,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
          |  where: {id: "$parentId"}
          |  data:{
          |    p: "p2"
-         |    childReq: {delete: {id: "$childId"}}
+         |    childReq: {delete: true}
          |  }){
          |    childReq {
          |      c
@@ -149,7 +149,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
          |  where:{id: "$parentId"}
          |  data:{
          |    p: "p2"
-         |    childOpt: {delete: {id: "$childId"}}
+         |    childOpt: {delete: true}
          |  }){
          |    childOpt {
          |      c
@@ -205,7 +205,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
          |  where:{id: "$parent1Id"}
          |  data:{
          |    p: "p2"
-         |    childOpt: {delete: {id: "$child1Id"}}
+         |    childOpt: {delete: true}
          |  }){
          |    childOpt {
          |      c
@@ -301,7 +301,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
          |  updateParent(
          |  where: {p: "p1"}
          |  data:{
-         |    childOpt: {delete: {c: "c1"}}
+         |    childOpt: {delete: true}
          |  }){
          |    childOpt {
          |      c
@@ -398,7 +398,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
          |  updateParent(
          |  where: {p: "p1"}
          |  data:{
-         |    childReq: {delete: {c: "c1"}}
+         |    childReq: {delete: true}
          |  }){
          |    childReq {
          |      c
@@ -444,7 +444,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
          |  updateParent(
          |    where: {p: "p1"}
          |    data:{
-         |    childOpt: {delete: {c: "c1"}}
+         |    childOpt: {delete: true}
          |  }){
          |    childOpt{
          |      c
@@ -784,7 +784,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
          |    }
          |    data: {
          |      todo: {
-         |        delete: {id: "$todoId"}
+         |        delete: true
          |      }
          |    }
          |  ){
@@ -836,7 +836,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
          |    }
          |    data: {
          |      todo: {
-         |        delete: {id: "$todoId"}
+         |        delete: true
          |      }
          |    }
          |  ){
@@ -886,7 +886,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
          |    }
          |    data: {
          |      todo: {
-         |        delete: {title: "the title"}
+         |        delete: true
          |      }
          |    }
          |  ){
@@ -908,125 +908,6 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     mustBeEqual(query2.toString, """{"data":{"notes":[{"text":"FirstUnique"}]}}""")
   }
 
-  "A nested delete in a one2one relation where both nodes exist but are not connected" should "fail completely" in {
-    val project = SchemaDsl() { schema =>
-      val note = schema.model("Note").field("text", _.String, isUnique = true)
-      schema.model("Todo").field_!("title", _.String, isUnique = true).oneToOneRelation("note", "todo", note)
-    }
-    database.setup(project)
-
-    val createResult = server.executeQuerySimple(
-      """mutation {
-        |  createNote(
-        |    data: {
-        |      text: "FirstUnique"
-        |      todo: {
-        |        create: { title: "the title" }
-        |      }
-        |    }
-        |  ){
-        |    id
-        |  }
-        |}""".stripMargin,
-      project
-    )
-
-    server.executeQuerySimple("""mutation {createNote(data: {text: "SecondUnique"}){id}}""", project)
-
-    val result = server.executeQuerySimpleThatMustFail(
-      s"""
-         |mutation {
-         |  updateNote(
-         |    where: {
-         |      text: "SecondUnique"
-         |    }
-         |    data: {
-         |      todo: {
-         |        delete: {title: "the title"}
-         |      }
-         |    }
-         |  ){
-         |    todo {
-         |      title
-         |    }
-         |  }
-         |}
-      """.stripMargin,
-      project,
-      errorCode = 3041
-//      ,
-//      errorContains =
-//        "The relation TodoToNote has no Node for the model Note with value `SecondUnique` for text connected to a Node for the model Todo with value `the title` for title"
-    )
-
-    val query = server.executeQuerySimple("""{ todoes { title }}""", project)
-    mustBeEqual(query.toString, """{"data":{"todoes":[{"title":"the title"}]}}""")
-
-    val query2 = server.executeQuerySimple("""{ notes { text }}""", project)
-    mustBeEqual(query2.toString, """{"data":{"notes":[{"text":"FirstUnique"},{"text":"SecondUnique"}]}}""")
-  }
-
-// todo remove this once the api is changed
-  "A one2one relation" should "not do a nested delete by id if the nodes are not connected" ignore {
-    val project = SchemaDsl() { schema =>
-      val note = schema.model("Note").field("text", _.String)
-      schema.model("Todo").field_!("title", _.String).oneToOneRelation("note", "todo", note)
-    }
-    database.setup(project)
-
-    val createResult = server.executeQuerySimple(
-      """mutation {
-        |  createNote(
-        |    data: {
-        |      text: "Note"
-        |      todo: {
-        |        create: { title: "the title" }
-        |      }
-        |    }
-        |  ){
-        |    id
-        |    todo { id }
-        |  }
-        |}""".stripMargin,
-      project
-    )
-    val noteId = createResult.pathAsString("data.createNote.id")
-    val todoId = createResult.pathAsString("data.createNote.todo.id")
-
-    val todoId2 = server.executeQuerySimple("""mutation {createTodo(data: { title: "the title2" }){id}}""", project).pathAsString("data.createTodo.id")
-
-    val result = server.executeQuerySimpleThatMustFail(
-      s"""
-         |mutation {
-         |  updateNote(
-         |    where: {
-         |      id: "$noteId"
-         |    }
-         |    data: {
-         |      todo: {
-         |        delete: {id: "$todoId2"}
-         |      }
-         |    }
-         |  ){
-         |    todo {
-         |      title
-         |    }
-         |  }
-         |}
-      """.stripMargin,
-      project,
-      errorCode = 3041,
-      errorContains = "The relation TodoToNote has no Node for the model Note"
-    )
-
-    val query = server.executeQuerySimple("""{ todoes { title }}""", project)
-    mustBeEqual(query.toString, """{"data":{"todoes":[{"title":"the title"},{"title":"the title2"}]}}""")
-
-    val query2 = server.executeQuerySimple("""{ notes { text }}""", project)
-    mustBeEqual(query2.toString, """{"data":{"notes":[{"text":"Note"}]}}""")
-  }
-
-  //todo rewrite this once the api is changed
   "a one to one relation" should "not do a nested delete by id if the nested node does not exist" ignore {
     val project = SchemaDsl() { schema =>
       val note = schema.model("Note").field("text", _.String)
@@ -1039,9 +920,6 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
         |  createNote(
         |    data: {
         |      text: "Note"
-        |      todo: {
-        |        create: { title: "the title" }
-        |      }
         |    }
         |  ){
         |    id
@@ -1059,7 +937,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
          |    where: {id: "$noteId"}
          |    data: {
          |      todo: {
-         |        delete: {id: "DOES NOT EXISTS"}
+         |        delete: true
          |      }
          |    }
          |  ){

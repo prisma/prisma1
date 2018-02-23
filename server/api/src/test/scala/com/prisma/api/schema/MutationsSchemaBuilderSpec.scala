@@ -130,13 +130,13 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec
                                      "todoUnique: String"
                                    ))
 
-    schema should containInputType("TodoUpdateNestedInput",
+    schema should containInputType("TodoUpdateWithWhereUniqueNestedInput",
                                    fields = Vector(
                                      "where: TodoWhereUniqueInput!",
                                      "data: TodoUpdateDataInput!"
                                    ))
 
-    schema should containInputType("TodoUpsertNestedInput",
+    schema should containInputType("TodoUpsertWithWhereUniqueNestedInput",
                                    fields = Vector(
                                      "where: TodoWhereUniqueInput!",
                                      "update: TodoUpdateDataInput!",

@@ -6,10 +6,10 @@ import com.prisma.util.GraphQLSchemaMatchers
 import org.scalatest.{FlatSpec, Matchers}
 import sangria.renderer.SchemaRenderer
 
-class OneRelationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec with GraphQLSchemaMatchers {
+class RelationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseSpec with GraphQLSchemaMatchers {
   val schemaBuilder = testDependencies.apiSchemaBuilder
 
-  "the update Mutation for a many to many relation with a optional backrelation" should "be generated correctly" in {
+  "the update Mutation for a many to many relation with an optional backrelation" should "be generated correctly" in {
     val project = SchemaDsl() { schema =>
       val list = schema.model("List").field_!("listUnique", _.String, isUnique = true).field("optList", _.String)
       val todo = schema.model("Todo").field_!("todoUnique", _.String, isUnique = true).field("optString", _.String)
@@ -44,13 +44,13 @@ class OneRelationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseS
                                      "todoUnique: String"
                                    ))
 
-    schema should containInputType("TodoUpdateNestedInput",
+    schema should containInputType("TodoUpdateWithWhereUniqueNestedInput",
                                    fields = Vector(
                                      "where: TodoWhereUniqueInput!",
                                      "data: TodoUpdateDataInput!"
                                    ))
 
-    schema should containInputType("TodoUpsertNestedInput",
+    schema should containInputType("TodoUpsertWithWhereUniqueNestedInput",
                                    fields = Vector(
                                      "where: TodoWhereUniqueInput!",
                                      "update: TodoUpdateDataInput!",
@@ -58,7 +58,7 @@ class OneRelationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseS
                                    ))
   }
 
-  "the update Mutation for a one to one relation with a optional backrelation" should "be generated correctly" in {
+  "the update Mutation for a one to one relation with an optional backrelation" should "be generated correctly" in {
     val project = SchemaDsl() { schema =>
       val list = schema.model("List").field_!("listUnique", _.String, isUnique = true).field("optList", _.String)
       val todo = schema.model("Todo").field_!("todoUnique", _.String, isUnique = true).field("optString", _.String)
@@ -66,8 +66,6 @@ class OneRelationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseS
     }
 
     val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
-
-    println(schema)
 
     schema should containMutation("updateTodo(data: TodoUpdateInput!, where: TodoWhereUniqueInput!): Todo")
 
@@ -100,19 +98,11 @@ class OneRelationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiBaseS
       fields = Vector(
         "create: TodoCreateInput",
         "connect: TodoWhereUniqueInput",
-        "disconnect: TodoWhereUniqueInput",
-        "delete: TodoWhereUniqueInput",
-        "update: TodoUpdateDataInput",
-        "upsert: TodoUpsertNestedInput"
+        "disconnect: Boolean",
+        "delete: Boolean",
+        "update: TodoUpdateDataInput"
       )
     )
-
-    schema should containInputType("TodoUpsertNestedInput",
-                                   fields = Vector(
-                                     "where: TodoWhereUniqueInput!",
-                                     "update: TodoUpdateDataInput!",
-                                     "create: TodoCreateInput!"
-                                   ))
   }
 
 }

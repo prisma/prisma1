@@ -43,7 +43,7 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
          |  where: {id: "$parentId"}
          |  data:{
          |    p: "p2"
-         |    childReq: {disconnect: {id: "$childId"}}
+         |    childReq: {disconnect: true}
          |  }){
          |    childReq {
          |      c
@@ -96,7 +96,7 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
          |  where: {id: "$parentId"}
          |  data:{
          |    p: "p2"
-         |    childReq: {disconnect: {id: "$childId"}}
+         |    childReq: {disconnect: true}
          |  }){
          |    childReq {
          |      c
@@ -149,7 +149,7 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
          |  where:{id: "$parentId"}
          |  data:{
          |    p: "p2"
-         |    childOpt: {disconnect: {id: "$childId"}}
+         |    childOpt: {disconnect: true}
          |  }){
          |    childOpt {
          |      c
@@ -205,7 +205,7 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
          |  where:{id: "$parent1Id"}
          |  data:{
          |    p: "p2"
-         |    childOpt: {disconnect: {id: "$child1Id"}}
+         |    childOpt: {disconnect: true}
          |  }){
          |    childOpt {
          |      c
@@ -297,7 +297,7 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
          |  updateParent(
          |  where: {p: "p1"}
          |  data:{
-         |    childOpt: {disconnect: {c: "c1"}}
+         |    childOpt: {disconnect: true}
          |  }){
          |    childOpt {
          |      c
@@ -392,7 +392,7 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
          |  updateParent(
          |  where: {p: "p1"}
          |  data:{
-         |    childReq: {disconnect: {c: "c1"}}
+         |    childReq: {disconnect: true}
          |  }){
          |    childReq {
          |      c
@@ -438,7 +438,7 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
          |  updateParent(
          |    where: {p: "p1"}
          |    data:{
-         |    childOpt: {disconnect: {c: "c1"}}
+         |    childOpt: {disconnect: true}
          |  }){
          |    childOpt{
          |      c
@@ -638,9 +638,7 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
          |      id: "$commentId"
          |    }
          |    data: {
-         |      todo: {
-         |        disconnect: {id: "$todoId"}
-         |      }
+         |      todo: {disconnect: true}
          |    }
          |  ){
          |    todo {
@@ -687,9 +685,7 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
          |      id: "$noteId"
          |    }
          |    data: {
-         |      todo: {
-         |        disconnect: {id: "$todoId"}
-         |      }
+         |      todo: {   disconnect: true}
          |    }
          |  ){
          |    todo {
