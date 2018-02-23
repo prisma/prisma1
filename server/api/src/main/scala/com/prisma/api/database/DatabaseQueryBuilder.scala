@@ -151,7 +151,6 @@ object DatabaseQueryBuilder {
           )"""
   }
 
-  //todo this is completely wrong
   def existsNodeIsInRelationshipWith(project: Project, path: Path) = {
     def nodeSelector(last: CascadingDeletes.Edge) = last match {
       case edge: NodeEdge => sql" `id`" ++ idFromWhereEquals(project.id, edge.childWhere) ++ sql" AND "

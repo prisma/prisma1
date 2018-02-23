@@ -38,7 +38,7 @@ trait NestedRelationMutactionBaseClass extends ClientSqlDataChangeMutaction {
   def removalByParent         = deleteRelationRowByParentPath(project.id, path)
   def removalByChildWhere     = deleteRelationRowByChildPathWithWhere(project.id, path)
   def removalByParentAndChild = deleteRelationRowByParentAndChildPath(project.id, path)
-  def createRelationRow       = List(createRelationRowByUniqueValueForChildPath(project.id, path))
+  def createRelationRow       = List(createRelationRowByPath(project.id, path))
   def noActionRequired        = List.empty
 
   def requiredCheck: List[DBIOAction[_, NoStream, Effect]]

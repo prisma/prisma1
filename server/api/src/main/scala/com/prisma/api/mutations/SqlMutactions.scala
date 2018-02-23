@@ -204,8 +204,6 @@ case class SqlMutactions(dataResolver: DataResolver) {
       val createArgsWithId  = CoolArgs(upsert.create.raw + ("id" -> id))
       val scalarListsCreate = getDbActionsForUpsertScalarLists(path.lastEdgeToNodeEdge(createWhere), createArgsWithId)
 
-      //todo where do we actually set the item in relation ?
-
       val upsertItem = upsert match {
         case upsert: UpsertByWhere =>
           val scalarListsUpdate = getDbActionsForUpsertScalarLists(path.lastEdgeToNodeEdge(currentWhere(upsert.where, upsert.update)), upsert.update)

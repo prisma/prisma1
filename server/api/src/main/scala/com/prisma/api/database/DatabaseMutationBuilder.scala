@@ -69,7 +69,7 @@ object DatabaseMutationBuilder {
       sql"on duplicate key update `#$projectId`.`#${parentInfo.relation.id}`.id=`#$projectId`.`#${parentInfo.relation.id}`.id").asUpdate
   }
 
-  def createRelationRowByUniqueValueForChildPath(projectId: String, path: Path): SqlAction[Int, NoStream, Effect] = {
+  def createRelationRowByPath(projectId: String, path: Path): SqlAction[Int, NoStream, Effect] = {
     val childWhere = path.lastEdge_! match {
       case edge: ModelEdge => sys.error("Needs to be a node edge.")
       case edge: NodeEdge  => edge.childWhere

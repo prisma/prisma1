@@ -125,7 +125,6 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) {
     DBIO.sequence(x)
   }
 
-  //Todo datetime format in here -.-
   private def generateImportListsDBActions(lists: Vector[ImportList]): DBIOAction[Vector[Try[Int]], NoStream, jdbc.MySQLProfile.api.Effect] = {
     val updateListValueActions = lists.flatMap { element =>
       def isDateTime(fieldName: String) =
