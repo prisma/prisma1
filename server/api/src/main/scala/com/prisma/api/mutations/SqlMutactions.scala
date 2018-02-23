@@ -82,8 +82,6 @@ case class SqlMutactions(dataResolver: DataResolver) {
   }
 
   def getSetScalarList(path: Path, field: Field, values: Vector[Any]): SetScalarList = SetScalarList(project, path, field, values)
-  def getSetScalarListActionsForUpsert(where: NodeSelector, field: Field, values: Vector[Any]) =
-    DatabaseMutationBuilder.setScalarList(project.id, where, field.name, values)
 
   def getMutactionsForScalarLists(path: Path, args: CoolArgs): Vector[ClientSqlDataChangeMutaction] = {
     val x = for {

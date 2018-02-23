@@ -240,20 +240,6 @@ object DatabaseMutationBuilder {
 
   //region SCALAR LISTS
 
-  def setScalarList(projectId: String, where: NodeSelector, fieldName: String, values: Vector[Any]) = {
-    val escapedValueTuples = for {
-      (escapedValue, position) <- values.map(escapeUnsafeParam).zip((1 to values.length).map(_ * 1000))
-    } yield {
-      sql"(@nodeId, $position, " ++ escapedValue ++ sql")"
-    }
-
-    DBIO.seq(
-      (sql"set @nodeId := " ++ idFromWhere(projectId, where)).asUpdate,
-      sqlu"""delete from `#$projectId`.`#${where.model.name}_#${fieldName}` where nodeId = @nodeId""",
-      (sql"insert into `#$projectId`.`#${where.model.name}_#${fieldName}` (`nodeId`, `position`, `value`) values " concat combineByComma(escapedValueTuples)).asUpdate
-    )
-  }
-
   def setScalarListPath(projectId: String, path: Path, fieldName: String, values: Vector[Any]) = {
     val escapedValueTuples = for {
       (escapedValue, position) <- values.map(escapeUnsafeParam).zip((1 to values.length).map(_ * 1000))
