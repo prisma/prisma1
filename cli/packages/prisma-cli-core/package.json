@@ -89,7 +89,7 @@
     "globby": "^6.1.0",
     "graphcool-inquirer": "^1.0.3",
     "graphql": "^0.11.7",
-    "graphql-cli": "2.12.4",
+    "graphql-cli": "2.15.0",
     "graphql-config": "^1.1.7",
     "inquirer": "^3.3.0",
     "isomorphic-fetch": "^2.2.1",
