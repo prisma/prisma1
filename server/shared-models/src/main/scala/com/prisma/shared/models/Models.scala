@@ -188,6 +188,7 @@ case class Model(
 ) {
   def id = name
 
+  lazy val uniqueFields: List[Field]          = fields.filter(f => f.isUnique && f.isVisible)
   lazy val scalarFields: List[Field]          = fields.filter(_.isScalar)
   lazy val scalarListFields: List[Field]      = scalarFields.filter(_.isList)
   lazy val scalarNonListFields: List[Field]   = scalarFields.filter(!_.isList)
