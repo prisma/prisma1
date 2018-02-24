@@ -47,7 +47,6 @@ else
     fi
 fi
 
-
 docker run -e "BRANCH=$BUILDKITE_BRANCH" -e "COMMIT_SHA=$BUILDKITE_COMMIT" -e "CLUSTER_VERSION=$NEXT_DOCKER_TAG" -v $(pwd):/root/build -w /root/build/server -v ~/.ivy2:/root/.ivy2 -v ~/.coursier:/root/.coursier  -v /var/run/docker.sock:/var/run/docker.sock graphcool/scala-sbt-docker sbt docker
 docker images
 
@@ -78,11 +77,8 @@ curl --header "Authorization: token $TOKEN" \
 chmod +x cb
 
 echo "Replacing images..."
-export CB_MODE=env
-export CB_TAG_OVERRIDE=${NEXT_DOCKER_TAG}
-
 CLUSTER_ELEMENTS=(${CLUSTERS//,/ })
 for cluster in "${CLUSTER_ELEMENTS[@]}"
 do
-    ./cb service replace-all --customer graphcool --cluster ${cluster}
+    ./cb service launch prisma-primary ${NEXT_DOCKER_TAG} --customer graphcool --cluster ${cluster}
 done
