@@ -40,7 +40,7 @@ trait DeployDependencies {
 
   def setupAndGetInternalDatabase()(implicit ec: ExecutionContext): MySQLProfile.backend.Database = {
     val rootDb = Database.forConfig(s"internalRoot")
-    Await.result(rootDb.run(InternalDatabaseSchema.createSchemaActions(recreate = false)), 30.seconds)
+    await(rootDb.run(InternalDatabaseSchema.createSchemaActions(recreate = false)))
     rootDb.close()
 
     val db = Database.forConfig("internal")
@@ -55,5 +55,5 @@ trait DeployDependencies {
     system.actorOf(Props(DatabaseSizeReporter(projectPersistence, clientDb)))
   }
 
-  private def await[T](awaitable: Awaitable[T]): T = Await.result(awaitable, Duration.Inf)
+  private def await[T](awaitable: Awaitable[T]): T = Await.result(awaitable, 30.seconds)
 }
