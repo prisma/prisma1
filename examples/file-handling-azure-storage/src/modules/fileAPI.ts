@@ -30,8 +30,9 @@ export default ({ prisma }) => (req, res) => {
     const name = `${secret}_${part.filename}`;
     const size = part.byteCount;
     const contentType = mime.lookup(part.filename);
+    // Change this to your container name
     const container = 'unizonn';
-    
+
     blobService.createBlockBlobFromStream(
       // tslint:disable-next-line:typedef
       container, name, part, size , async function(error, result, response) {
