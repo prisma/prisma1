@@ -38,21 +38,29 @@ abstract class MetricsManager(
 
   private val metricsCollectionIsEnabled: Boolean = sys.env.getOrElse("ENABLE_METRICS", "0") == "1"
 
-  protected lazy val baseTagsString: String = {
+  protected lazy val baseTags: Map[String, String] = {
     if (metricsCollectionIsEnabled) {
       Try {
-        val containerId = ContainerMetadata.fetchContainerId()
-        val region      = sys.env.getOrElse("AWS_REGION", "no_region")
-        val env         = sys.env.getOrElse("ENV", "local")
-
-        s"env=$env,region=$region,container=$containerId,service=$serviceName"
+        Map(
+          "env"       -> sys.env.getOrElse("ENV", "local"),
+          "region"    -> sys.env.getOrElse("AWS_REGION", "no_region"),
+          "container" -> ContainerMetadata.fetchContainerId(),
+          "service"   -> serviceName
+        )
       } match {
-        case Success(baseTags) => baseTags
-        case Failure(err)      => errorHandler.handle(new Exception(err)); ""
+        case Success(tags) => tags
+        case Failure(err)  => errorHandler.handle(new Exception(err)); Map.empty
       }
     } else {
-      ""
+      Map.empty
     }
+  }
+  protected lazy val baseTagsString: String = {
+    baseTags
+      .map {
+        case (key, value) => s"$key=$value"
+      }
+      .mkString(",")
   }
 
   protected val client: StatsDClient = {

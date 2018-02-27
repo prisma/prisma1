@@ -30,7 +30,6 @@ trait Metric {
   val name: String
   val baseTags: String
   val customTags: Seq[CustomTag]
-  val client: StatsDClient
 
   // Merges base tags, defined custom tags, and given custom tag values to construct the metric string for statsd.
   def constructMetricString(recordedValue: Long, customTagValues: Seq[String]): String = {
