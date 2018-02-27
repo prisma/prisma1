@@ -67,7 +67,7 @@ Clusters are secured using public/private key pairs. The cluster knows the publi
 
 ## Logout
 
-To logout from Prisma CLI remove the `cloudSessionKey` from `~/.prisma/config.yml` file.
+To logout from the Prisma CLI remove the `cloudSessionKey` from `~/.prisma/config.yml` file.
 
 <!-- 
 ![](https://imgur.com/SmHhGDD.png)
