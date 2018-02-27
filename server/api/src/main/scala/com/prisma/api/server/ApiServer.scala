@@ -159,14 +159,18 @@ case class ApiServer(
                 complete(result)
 
               case "import" =>
-                val result = apiDependencies.requestHandler.handleRawRequestForImport(projectId = projectIdAsString, rawRequest = rawRequest)
-                result.onComplete(_ => logRequestEnd(projectIdAsString))
-                complete(result)
+                withRequestTimeout(5.minutes) {
+                  val result = apiDependencies.requestHandler.handleRawRequestForImport(projectId = projectIdAsString, rawRequest = rawRequest)
+                  result.onComplete(_ => logRequestEnd(projectIdAsString))
+                  complete(result)
+                }
 
               case "export" =>
-                val result = apiDependencies.requestHandler.handleRawRequestForExport(projectId = projectIdAsString, rawRequest = rawRequest)
-                result.onComplete(_ => logRequestEnd(projectIdAsString))
-                complete(result)
+                withRequestTimeout(5.minutes) {
+                  val result = apiDependencies.requestHandler.handleRawRequestForExport(projectId = projectIdAsString, rawRequest = rawRequest)
+                  result.onComplete(_ => logRequestEnd(projectIdAsString))
+                  complete(result)
+                }
 
               case _ =>
                 throttleApiCallIfNeeded(projectId, rawRequest)

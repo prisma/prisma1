@@ -21,19 +21,23 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) {
   val db = apiDependencies.databases
 
   def executeImport(json: JsValue): Future[JsValue] = {
-    import scala.concurrent.ExecutionContext.Implicits.global
+    import apiDependencies.system.dispatcher
+
     val bundle = json.convertTo[ImportBundle]
     val count  = bundle.values.elements.length
 
-    val actions = bundle.valueType match {
-      case "nodes"     => generateImportNodesDBActions(bundle.values.elements.map(convertToImportNode))
-      case "relations" => generateImportRelationsDBActions(bundle.values.elements.map(convertToImportRelation))
-      case "lists"     => generateImportListsDBActions(bundle.values.elements.map(convertToImportList))
-    }
+    val actions =
+      bundle.valueType match {
+        case "nodes"     => generateImportNodesDBActions(bundle.values.elements.map(convertToImportNode))
+        case "relations" => generateImportRelationsDBActions(bundle.values.elements.map(convertToImportRelation))
+        case "lists"     => generateImportListsDBActions(bundle.values.elements.map(convertToImportList))
+
+      }
 
     val res: Future[Vector[Try[Int]]] = runDBActions(actions)
 
     def messageWithOutConnection(tryelem: Try[Any]): String = tryelem.failed.get.getMessage.substring(tryelem.failed.get.getMessage.indexOf(")") + 1)
+
     res
       .map(vector =>
         vector.zipWithIndex.collect {
