@@ -54,13 +54,13 @@ type Post @model {
 #### After
 
 ```graphql
-type User @model {
+type User {
   id: ID! @unique
   name: String!
   posts: [Post!]!
 }
 
-type Post @model {
+type Post {
   id: ID! @unique
   title: String!
   author: User!
