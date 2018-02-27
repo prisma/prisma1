@@ -112,8 +112,10 @@ All you need to is navigate into the `hello-advanced` directory and invoke `now`
 
 ```
 cd hello-advanced
-now --dotenv
+now --dotenv .env
 ```
+
+> Note: you may obmit the path to the `.env` file since `now` by default uses a file named `.env`.
 
 </Instruction>
 
