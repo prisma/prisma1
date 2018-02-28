@@ -2,11 +2,10 @@ package com.prisma.api.database
 
 import com.prisma.api.database.DatabaseMutationBuilder.idFromWhereEquals
 import com.prisma.api.database.Types.DataItemFilterCollection
+import com.prisma.api.mutations.NodeSelector
 import com.prisma.api.mutations.mutations.CascadingDeletes
 import com.prisma.api.mutations.mutations.CascadingDeletes.{ModelEdge, NodeEdge, Path}
-import com.prisma.api.mutations.{NodeSelector, ParentInfo}
-import com.prisma.shared.models.IdType.Id
-import com.prisma.shared.models.{Field, Model, Project, Relation}
+import com.prisma.shared.models.{Field, Model, Project}
 import slick.dbio.DBIOAction
 import slick.dbio.Effect.Read
 import slick.jdbc.MySQLProfile.api._

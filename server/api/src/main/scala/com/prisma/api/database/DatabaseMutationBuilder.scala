@@ -5,7 +5,7 @@ import com.prisma.api.database.Types.DataItemFilterCollection
 import com.prisma.api.database.mutactions.mutactions.NestedCreateRelationMutaction
 import com.prisma.api.mutations.mutations.CascadingDeletes
 import com.prisma.api.mutations.mutations.CascadingDeletes.{ModelEdge, NodeEdge, Path}
-import com.prisma.api.mutations.{CoolArgs, NodeSelector, ParentInfo}
+import com.prisma.api.mutations.{CoolArgs, NodeSelector}
 import com.prisma.api.schema.GeneralError
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
 import com.prisma.shared.models._
@@ -57,16 +57,6 @@ object DatabaseMutationBuilder {
 
     (sql"insert into `#$projectId`.`#$relationTableName` (" ++ combineByComma(List(sql"`id`, `A`, `B`")) ++ sql") values (" ++ combineByComma(
       List(sql"$id, $a, $b")) ++ sql") on duplicate key update id=id").asUpdate
-  }
-
-  def createRelationRowByUniqueValueForChild(projectId: String, parentInfo: ParentInfo, where: NodeSelector): SqlAction[Int, NoStream, Effect] = {
-    val parentSide = parentInfo.field.relationSide.get
-    val childSide  = parentInfo.field.oppositeRelationSide.get
-    val relationId = Cuid.createCuid()
-    (sql"insert into `#$projectId`.`#${parentInfo.relation.id}` (`id`, `#$parentSide`, `#$childSide`)" ++
-      sql"Select '#$relationId'," ++ idFromWhere(projectId, parentInfo.where) ++ sql"," ++
-      sql"`id` FROM `#$projectId`.`#${where.model.name}` where `#${where.field.name}` = ${where.fieldValue}" ++
-      sql"on duplicate key update `#$projectId`.`#${parentInfo.relation.id}`.id=`#$projectId`.`#${parentInfo.relation.id}`.id").asUpdate
   }
 
   def createRelationRowByPath(projectId: String, path: Path): SqlAction[Int, NoStream, Effect] = {
@@ -193,17 +183,8 @@ object DatabaseMutationBuilder {
   def deleteRelayRowByPath(projectId: String, path: Path) =
     (sql"DELETE FROM `#$projectId`.`_RelayId` WHERE `id` =" ++ pathQuery(projectId, path)).asUpdate
 
-  def deleteRelationRowByParent(projectId: String, parentInfo: ParentInfo) = {
-    (sql"DELETE FROM `#$projectId`.`#${parentInfo.relation.id}` WHERE `#${parentInfo.field.relationSide.get}`" ++ idFromWhereEquals(projectId,
-                                                                                                                                    parentInfo.where)).asUpdate
-  }
-
   def deleteRelationRowByParentPath(projectId: String, path: Path) = {
     (sql"DELETE FROM `#$projectId`.`#${path.lastRelation_!.id}` WHERE `#${path.lastEdge_!.parentRelationSide}` = " ++ pathQuery(projectId, path.removeLastEdge)).asUpdate
-  }
-
-  def deleteRelationRowByChild(projectId: String, parentInfo: ParentInfo, where: NodeSelector) = {
-    (sql"DELETE FROM `#$projectId`.`#${parentInfo.relation.id}` WHERE `#${parentInfo.field.oppositeRelationSide.get}`" ++ idFromWhereEquals(projectId, where)).asUpdate
   }
 
   def deleteRelationRowByChildPathWithWhere(projectId: String, path: Path) = {
@@ -213,12 +194,6 @@ object DatabaseMutationBuilder {
 
     }
     (sql"DELETE FROM `#$projectId`.`#${path.lastRelation_!.id}` WHERE `#${path.lastEdge_!.childRelationSide}`" ++ idFromWhereEquals(projectId, where)).asUpdate
-  }
-
-  def deleteRelationRowByParentAndChild(projectId: String, parentInfo: ParentInfo, where: NodeSelector) = {
-    (sql"DELETE FROM `#$projectId`.`#${parentInfo.relation.id}` " ++
-      sql"WHERE `#${parentInfo.field.oppositeRelationSide.get}`" ++ idFromWhereEquals(projectId, where) ++
-      sql" AND `#${parentInfo.field.relationSide.get}`" ++ idFromWhereEquals(projectId, parentInfo.where)).asUpdate
   }
 
   def deleteRelationRowByParentAndChildPath(projectId: String, path: Path) = {

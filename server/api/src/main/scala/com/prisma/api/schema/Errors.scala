@@ -1,9 +1,9 @@
 package com.prisma.api.schema
 
-import com.prisma.sangria.utils.ErrorWithCode
 import com.prisma.api.database.mutactions.MutactionExecutionResult
+import com.prisma.api.mutations.NodeSelector
 import com.prisma.api.mutations.mutations.CascadingDeletes.Path
-import com.prisma.api.mutations.{NodeSelector, ParentInfo}
+import com.prisma.sangria.utils.ErrorWithCode
 import com.prisma.shared.models.{Project, Relation}
 import spray.json.JsValue
 

@@ -7,7 +7,7 @@ import com.prisma.api.database.mutactions.validation.InputValueValidation
 import com.prisma.api.database.mutactions.{ClientSqlDataChangeMutaction, ClientSqlStatementResult, MutactionVerificationSuccess}
 import com.prisma.api.database.{DataResolver, DatabaseMutationBuilder}
 import com.prisma.api.mutations.mutations.CascadingDeletes.Path
-import com.prisma.api.mutations.{CoolArgs, NodeSelector, ParentInfo}
+import com.prisma.api.mutations.{CoolArgs, NodeSelector}
 import com.prisma.api.schema.APIErrors
 import com.prisma.api.schema.APIErrors.RequiredRelationWouldBeViolated
 import com.prisma.shared.models.Project

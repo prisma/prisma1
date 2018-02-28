@@ -18,15 +18,6 @@ case class CreateMutactionsResult(createMutaction: CreateDataItem,
   def allMutactions: Vector[ClientSqlMutaction] = Vector(createMutaction) ++ scalarListMutactions ++ nestedMutactions
 }
 
-case class ParentInfo(field: Field, where: NodeSelector) {
-  val model: Model       = where.model
-  val relation: Relation = field.relation.get
-  assert(
-    model.fields.exists(_.id == field.id),
-    s"${model.name} does not contain the field ${field.name}. If this assertion fires, this mutaction is used wrong by the programmer."
-  )
-}
-
 case class SqlMutactions(dataResolver: DataResolver) {
   val project = dataResolver.project
 
