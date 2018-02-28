@@ -84,6 +84,7 @@ object Dependencies {
   val snakeYML     = "org.yaml"                   % "snakeyaml"                % "1.17"
   val moultingYML  = "net.jcazevedo"              %% "moultingyaml"            % "0.4.0"
   val logstash     = "net.logstash.logback"       % "logstash-logback-encoder" % "4.7"
+  val librato      = "com.librato.metrics"        % "librato-java"             % "2.1.0"
 
   lazy val common: Seq[ModuleID] = sangria ++ slick ++ joda ++ Seq(
     guava,

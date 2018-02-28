@@ -24,4 +24,6 @@ object Utils {
       converted <- Try(value.toInt).toOption
     } yield converted
   }
+
+  def envVar_!(name: String): String = sys.env.getOrElse(name, sys.error(s"The environment variable $name must be set!"))
 }
