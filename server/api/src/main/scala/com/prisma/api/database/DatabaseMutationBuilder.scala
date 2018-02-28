@@ -105,7 +105,6 @@ object DatabaseMutationBuilder {
         sql"WHERE `id` = (SELECT `#${path.lastChildSide}` " ++
         sql"FROM `#${projectId}`.`#${path.lastRelation_!.id}`" ++
         sql"WHERE" ++ nodeSelector(path.lastEdge_!) ++ sql"`#${path.lastParentSide}` = " ++ pathQuery(projectId, path.removeLastEdge) ++ sql")"
-      println(res.queryParts)
       res.asUpdate
     } else {
       DBIOAction.successful(())
