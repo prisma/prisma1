@@ -11,11 +11,11 @@ steps:
   - label: ":scala: api"
     command: cd server && ./scripts/test.sh api
 
-  - label: ":scala: single-server"
-    command: cd server && ./scripts/test.sh single-server
+  - label: ":scala: images"
+    command: cd server && ./scripts/test.sh images
 
   - wait
 
   - label: ":docker: Build and deploy DEV"
-    command: ./server/scripts/docker-build-and-deploy.sh db-beta-ew1-dev-2
+    command: ./server/scripts/docker-build-and-deploy.sh dev
     branches: master

@@ -40,7 +40,7 @@ trait DeployDependencies {
 
   def setupAndGetInternalDatabase()(implicit ec: ExecutionContext): MySQLProfile.backend.Database = {
     val rootDb = Database.forConfig(s"internalRoot")
-    Await.result(rootDb.run(InternalDatabaseSchema.createSchemaActions(recreate = false)), 30.seconds)
+    await(rootDb.run(InternalDatabaseSchema.createSchemaActions(recreate = false)))
     rootDb.close()
 
     val db = Database.forConfig("internal")
@@ -55,22 +55,5 @@ trait DeployDependencies {
     system.actorOf(Props(DatabaseSizeReporter(projectPersistence, clientDb)))
   }
 
-  private def await[T](awaitable: Awaitable[T]): T = Await.result(awaitable, Duration.Inf)
-}
-
-case class DeployDependenciesImpl()(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends DeployDependencies {
-  override implicit def self: DeployDependencies = this
-  override implicit val reporter                 = BugsnagErrorReporter(sys.env.getOrElse("BUGSNAG_API_KEY", ""))
-  override lazy val migrator: Migrator           = AsyncMigrator(clientDb, migrationPersistence, projectPersistence)
-  override lazy val clusterAuth = {
-    sys.env.get("CLUSTER_PUBLIC_KEY") match {
-      case Some(publicKey) if publicKey.nonEmpty => ClusterAuthImpl(publicKey)
-      case _                                     => DummyClusterAuth()
-    }
-  }
-
-  override lazy val graphQlClient         = GraphQlClient(sys.env.getOrElse("CLUSTER_ADDRESS", sys.error("env var CLUSTER_ADDRESS is not set")))
-  override lazy val invalidationPublisher = ???
-
-  override def apiAuth = AuthImpl
+  private def await[T](awaitable: Awaitable[T]): T = Await.result(awaitable, 30.seconds)
 }

@@ -259,9 +259,9 @@ The `DateTime` type can be used to store date or time values. A good example mig
 
 In queries or mutations, `DateTime` fields have to be specified in [ISO 8601 format](https://en.wikipedia.org/wiki/ISO_8601) with enclosing double quotes:
 
-* `datatime: "2015"`
-* `datatime: "2015-11"`
-* `datatime: "2015-11-22"`
+* `datetime: "2015"`
+* `datetime: "2015-11"`
+* `datetime: "2015-11-22"`
 * `datetime: "2015-11-22T13:57:31.123Z"`.
 
 #### Enum
@@ -677,12 +677,6 @@ _Enum value names are unique on an enum level._
 ## More SDL features
 
 In this section, we describe further SDL features that are not yet supported for data modelling with Prisma.
-
-### Interfaces
-
-"Like many type systems, GraphQL supports interfaces. An interface is an abstract type that includes a certain set of fields that a type must include to implement the interface." From the official [GraphQL Documentation](http://graphql.org/learn/schema/#interfaces)
-
-> **Note**: To learn more about when and how interfaces are coming to Prisma, check out this [feature request](https://github.com/graphcool/prisma/issues/83).
 
 ### Interfaces
 

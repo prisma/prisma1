@@ -157,6 +157,8 @@ export class CLI {
           await this.Help.run(this.config)
           const checker = getStatusChecker()!
           checker.checkStatus(id, {}, {}, [])
+        } else if (id === 'logs') {
+          throw new CommandReplacedError('logs', 'cluster logs')
         } else if (id === 'push') {
           throw new CommandReplacedError('push', 'deploy')
         } else if (id === 'seed') {

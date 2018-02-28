@@ -34,7 +34,7 @@ The Prisma GraphQL API provides powerful abstractions and building blocks to dev
 
 1. **Install the CLI via NPM:**
 
-```sh
+```console
 npm install -g prisma
 ```
 
@@ -42,7 +42,7 @@ npm install -g prisma
 
 The following command creates all files you need for a new [service](https://www.prismagraphql.com/docs/reference/service-configuration/overview-ieshoo5ohm).
 
-```sh
+```console
 prisma init
 ```
 
@@ -78,7 +78,7 @@ type Location {
 
 To deploy your service simply run the following command and select one of the hosted development clusters or setup a local Docker-based development environment:
 
-```sh
+```console
 prisma deploy
 ```
 
@@ -119,8 +119,15 @@ Prisma can be used for MySQL Databases out of the box. More database connectors 
 * [Neo4j Connector](https://github.com/graphcool/prisma/issues/1646)
 * [Druid Connector](https://github.com/graphcool/prisma/issues/1647)
 * [Dgraph Connector](https://github.com/graphcool/prisma/issues/1648)
-* [DynamoDB](https://github.com/graphcool/prisma/issues/1655)
-* [Elastic Search](https://github.com/graphcool/prisma/issues/1665)
+* [DynamoDB Connector](https://github.com/graphcool/prisma/issues/1655)
+* [Elastic Search Connector](https://github.com/graphcool/prisma/issues/1665)
+* [Cloud Firestore Connector](https://github.com/graphcool/prisma/issues/1660)
+* [CockroachDB Connector](https://github.com/graphcool/prisma/issues/1705)
+* [Cassandra Connector](https://github.com/graphcool/prisma/issues/1750)
+* [Redis Connector](https://github.com/graphcool/prisma/issues/1722)
+* [AWS Neptune Connector](https://github.com/graphcool/prisma/issues/1752)
+* [CosmosDB Connector](https://github.com/graphcool/prisma/issues/1663)
+* [Influx Connector](https://github.com/graphcool/prisma/issues/1857)
 
 Join the discussion or contribute to influence which we'll work on next!
 

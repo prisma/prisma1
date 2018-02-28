@@ -42,7 +42,7 @@ ssh root@37.139.15.166 -i /Users/demo/.ssh/id_rsa_do
 
 ### Install Docker & node & Prisma
 
-Digital Ocean has a detailed guide at https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-on-ubuntu-16-04
+You need to install both Docker and Docker Compose. Digital Ocean has a detailed guide for installation that you can find [here](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-on-ubuntu-16-04) and [here](https://www.digitalocean.com/community/tutorials/how-to-install-docker-compose-on-ubuntu-16-04).
 
 For the quick path, execute these commands on your droplet:
 

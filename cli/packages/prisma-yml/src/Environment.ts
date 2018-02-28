@@ -109,7 +109,7 @@ export class Environment {
                     this.globalRC.cloudSessionKey,
                     false,
                     ['prisma-eu1', 'prisma-us1'].includes(cluster.name),
-                    true,
+                    !['prisma-eu1', 'prisma-us1'].includes(cluster.name),
                     m.workspace.slug,
                   ),
                 )
@@ -252,7 +252,7 @@ export class Environment {
 
   private getLocalClusterConfig() {
     return this.clusters
-      .filter(c => !c.shared && c.clusterSecret !== this.cloudSessionKey)
+      .filter(c => !c.shared && c.clusterSecret !== this.cloudSessionKey && !c.isPrivate)
       .reduce((acc, cluster) => {
         return {
           ...acc,

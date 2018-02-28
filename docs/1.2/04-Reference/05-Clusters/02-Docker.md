@@ -40,9 +40,7 @@ services:
       - prisma
     restart: always
     command: mysqld --max-connections=1000 --sql-mode="ALLOW_INVALID_DATES,ANSI_QUOTES,ERROR_FOR_DIVISION_BY_ZERO,HIGH_NOT_PRECEDENCE,IGNORE_SPACE,NO_AUTO_CREATE_USER,NO_AUTO_VALUE_ON_ZERO,NO_BACKSLASH_ESCAPES,NO_DIR_IN_CREATE,NO_ENGINE_SUBSTITUTION,NO_FIELD_OPTIONS,NO_KEY_OPTIONS,NO_TABLE_OPTIONS,NO_UNSIGNED_SUBTRACTION,NO_ZERO_DATE,NO_ZERO_IN_DATE,ONLY_FULL_GROUP_BY,PIPES_AS_CONCAT,REAL_AS_FLOAT,STRICT_ALL_TABLES,STRICT_TRANS_TABLES,ANSI,DB2,MAXDB,MSSQL,MYSQL323,MYSQL40,ORACLE,POSTGRESQL,TRADITIONAL"
-    environment:
-      MYSQL_ROOT_PASSWORD: $SQL_INTERNAL_PASSWORD
-      MYSQL_DATABASE: $SQL_INTERNAL_DATABASE
+    env_file: './.mysql.env'
     ports:
       - "3306:3306" # Temporary/debug mapping to the host
     volumes:
@@ -55,28 +53,7 @@ services:
       - "0.0.0.0:${PORT}:${PORT}"
     networks:
       - prisma
-    environment:
-      PORT: $PORT
-      SCHEMA_MANAGER_SECRET: $SCHEMA_MANAGER_SECRET
-      SCHEMA_MANAGER_ENDPOINT: $SCHEMA_MANAGER_ENDPOINT
-      SQL_CLIENT_HOST_CLIENT1: $SQL_CLIENT_HOST
-      SQL_CLIENT_HOST_READONLY_CLIENT1: $SQL_CLIENT_HOST
-      SQL_CLIENT_HOST: $SQL_CLIENT_HOST
-      SQL_CLIENT_PORT: $SQL_CLIENT_PORT
-      SQL_CLIENT_USER: $SQL_CLIENT_USER
-      SQL_CLIENT_PASSWORD: $SQL_CLIENT_PASSWORD
-      SQL_CLIENT_CONNECTION_LIMIT: 10
-      SQL_INTERNAL_HOST: $SQL_INTERNAL_HOST
-      SQL_INTERNAL_PORT: $SQL_INTERNAL_PORT
-      SQL_INTERNAL_USER: $SQL_INTERNAL_USER
-      SQL_INTERNAL_PASSWORD: $SQL_INTERNAL_PASSWORD
-      SQL_INTERNAL_DATABASE: $SQL_INTERNAL_DATABASE
-      CLUSTER_ADDRESS: $CLUSTER_ADDRESS
-      SQL_INTERNAL_CONNECTION_LIMIT: 10
-      CLUSTER_PUBLIC_KEY: $CLUSTER_PUBLIC_KEY
-      BUGSNAG_API_KEY: ""
-      ENABLE_METRICS: "0"
-      JAVA_OPTS: "-Xmx1G"
+    env_file: './.prisma.env'
 
 networks:
   prisma:
@@ -106,74 +83,69 @@ The `prisma-db` service is based on the [`prismagraphlq/prisma`](https://hub.doc
 
 - `networks`: _Networks to join, referencing entries under the top-level networks key._ (from [Docker](https://docs.docker.com/compose/compose-file/#networks); value: `"Prisma"`)
 - `restart`: _`no` is the default restart policy, and it does not restart a container under any circumstance. When `always` is specified, the container always restarts. The `on-failure` policy restarts a container if the exit code indicates an on-failure error._ (from [Docker](https://docs.docker.com/compose/compose-file/#restart); value: `always`)
-- `environment.SQL_CLIENT_HOST_CLIENT1`:
-- `environment.SQL_CLIENT_HOST_READONLY_CLIENT1`:
-- `environment.SQL_CLIENT_HOST`:
-- `environment.SQL_CLIENT_PORT`:
-- `environment.SQL_CLIENT_USER`:
-- `environment.SQL_CLIENT_PASSWORD`:
-- `environment.SQL_CLIENT_CONNECTION_LIMIT`: (value: `10`)
-- `environment.SQL_INTERNAL_HOST`:
-- `environment.SQL_INTERNAL_PORT`:
-- `environment.SQL_INTERNAL_USER`:
-- `environment.SQL_INTERNAL_PASSWORD`:
-- `environment.SQL_INTERNAL_DATABASE`:
-- `environment.CLUSTER_ADDRESS`:
-- `environment.SQL_INTERNAL_CONNECTION_LIMIT`: (value: `10`)
-- `environment.CLUSTER_PUBLIC_KEY`:
-- `environment.BUGSNAG_API_KEY`:
-- `environment.ENABLE_METRICS`:(value: `"0"`, i.e. _false_)
-- `environment.JAVA_OPTS`: Maximum heap size available to Prisma (value: `"-Xmx1G"`, i.e. 1GB)
 
 #### Environment variables
 
-##### Local
+You might have noticed the `env_file` definitions in the `docker-compose.yml` above. The two files will define how both containers (`mysql` and `prisma server`) will be configured. The following section describes how to configure them for development purposes **without any security mechanisms enabled**.
 
+MySQL environment:
+
+```env(path=./.mysql.env)
+MYSQL_ROOT_PASSWORD=prisma
 ```
+
+Prisma environment:
+
+```env(path=./.prisma.env)
 PORT=4466
-
-SQL_CLIENT_HOST="prisma-db"
-SQL_CLIENT_PORT="3306"
-SQL_CLIENT_USER="root"
-SQL_CLIENT_PASSWORD="graphcool"
+SQL_CLIENT_HOST_CLIENT1=prisma-db
+SQL_CLIENT_HOST_READONLY_CLIENT1=prisma-db
+SQL_CLIENT_HOST=prisma-db
+SQL_CLIENT_PORT=3306
+SQL_CLIENT_USER=root
+SQL_CLIENT_PASSWORD=prisma
 SQL_CLIENT_CONNECTION_LIMIT=10
-
-SQL_LOGS_HOST="prisma-db"
-SQL_LOGS_PORT="3306"
-SQL_LOGS_USER="root"
-SQL_LOGS_PASSWORD="graphcool"
-SQL_LOGS_DATABASE="logs"
-SQL_LOGS_CONNECTION_LIMIT=10
-
-SQL_INTERNAL_HOST="prisma-db"
-SQL_INTERNAL_PORT="3306"
-SQL_INTERNAL_USER="root"
-SQL_INTERNAL_PASSWORD="graphcool"
-SQL_INTERNAL_DATABASE="graphcool"
+SQL_INTERNAL_HOST=prisma-db
+SQL_INTERNAL_PORT=3306
+SQL_INTERNAL_USER=root
+SQL_INTERNAL_PASSWORD=prisma
+SQL_INTERNAL_DATABASE=graphcool
+CLUSTER_ADDRESS=http://prisma-database:4466
 SQL_INTERNAL_CONNECTION_LIMIT=10
+SCHEMA_MANAGER_SECRET=graphcool
+SCHEMA_MANAGER_ENDPOINT=http://prisma-database:4466/cluster/schema
+CLUSTER_PUBLIC_KEY=<GENERATE VIA https://api.cloud.prisma.sh/>
+BUGSNAG_API_KEY=""
+ENABLE_METRICS=0
+JAVA_OPTS=-Xmx1G
 ```
 
 ##### Digital Ocean
 
+The environment definition above works as well when deploying to Digital Ocean with one **big** caveat: No security is enabled. You have to configure the environment variables differently in order to secure your cluster deployment for a production kind of scenario:
+
+  * `./.mysql.env`: Use a more secure password and define it in `MYSQL_ROOT_PASSWORD`
+  * `./.prisma.env`: Use the new MySQL root password in the variables: `SQL_CLIENT_PASSWORD` and `SQL_INTERNAL_PASSWORD`
+
+
+**Important:** Follow the section about [Enable cluster authentication](https://www.prismagraphql.com/docs/tutorials/cluster-deployment/digital-ocean-(docker-machine)-texoo9aemu#7.-enable-cluster-authentication) in the [Digital Ocean Tutorial](https://www.prismagraphql.com/docs/tutorials/cluster-deployment/digital-ocean-(docker-machine)-texoo9aemu). The steps described in there could be summarized as:
+
+  1. Generate a RSA public/private keypair
+  2. Submit the public key as the `CLUSTER_PUBLIC_KEY` environment variable to the Prisma cluster (this step enables the cluster authentication)
+  3. Add your cluster via `prisma cluster add` and provide the `private key` when asked about the cluster secret (see next section)
+
+## Adding the cluster to your local Prisma configuration
+
+You have to tell Prisma CLI your new configuration in order to be capable of deploying a Prisma service to the new cluster:
+
 ```
-PORT=4466
-
-SQL_CLIENT_HOST=prisma-db
-SQL_CLIENT_PORT=3306
-SQL_CLIENT_USER=root
-SQL_CLIENT_PASSWORD=SECRET_2
-SQL_CLIENT_CONNECTION_LIMIT=10
-
-SQL_INTERNAL_HOST=prisma-db
-SQL_INTERNAL_PORT=3306
-SQL_INTERNAL_USER=root
-SQL_INTERNAL_PASSWORD=SECRET_2
-SQL_INTERNAL_DATABASE=graphcool
-SQL_INTERNAL_CONNECTION_LIMIT=10
-
-CLUSTER_ADDRESS=http://prisma-database:${PORT}
-CLUSTER_PUBLIC_KEY=PUBLIC_KEY
+❯ prisma cluster add
+? Please provide the cluster endpoint "Define your cluster endpoint. Local: http://localhost:4466; Digital Ocean: http://droplet-ip-address:4466
+? Please provide the cluster secret "Local: Leave empty (CLUSTER_PUBLIC_KEY is commented); Digital Ocean: The private key from the key pair generated via `https://api.cloud.prisma.sh"
+? Please provide a name for your cluster "your-cluster-name"
 ```
+
+**Note:** Please provide all inputs **without the quotation marks**.
 
 ## Debugging
 

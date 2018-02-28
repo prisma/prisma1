@@ -281,7 +281,7 @@ mutation {
     }
     data: {
       author: {
-        upsert: {
+        upsert: [{
           where: {
             id: "cjcf1cj0c017y01461c6enbfe"
           }
@@ -293,7 +293,7 @@ mutation {
             email: "zeus@example.com"
             name: "Zeus"
           }
-        }
+        }]
       }
     }
   ) {
