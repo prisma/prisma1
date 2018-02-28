@@ -66,7 +66,7 @@ case class DatabaseSizeReporter(
   def gaugeForProject(project: Project): LibratoGaugeMetric = {
     // these Metrics are consumed by the console to power the dashboard. Only change them with extreme caution!
     gauges.getOrElseUpdate(project.id, {
-      DeployMetrics.defineLibratoGauge("projectDatabase.sizeInMb", libratoFlushInterval, (projectIdTag, project.id))
+      DeployMetrics.defineLibratoGauge("projectDatabase.sizeInMb2", libratoFlushInterval, (projectIdTag, project.id))
     })
   }
 
