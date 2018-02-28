@@ -15,7 +15,7 @@ case class LibratoGaugeMetric(
 )(implicit flushSystem: ActorSystem) {
 
   import flushSystem.dispatcher
-  flushSystem.scheduler.schedule(10.seconds, flushInterval) { flush() }
+  flushSystem.scheduler.schedule(flushInterval, flushInterval) { flush() }
 
   val value = new AtomicLong(0)
 
