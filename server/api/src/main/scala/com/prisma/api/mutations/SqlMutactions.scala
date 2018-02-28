@@ -6,7 +6,7 @@ import com.prisma.api.database.{DataItem, DataResolver, DatabaseMutationBuilder}
 import com.prisma.api.mutations.mutations.CascadingDeletes.{ModelEdge, Path, collectCascadingPaths}
 import com.prisma.api.schema.APIErrors.RelationIsRequired
 import com.prisma.shared.models.IdType.Id
-import com.prisma.shared.models.{Field, Model, Relation}
+import com.prisma.shared.models.{Field, Model, Project}
 import cool.graph.cuid.Cuid.createCuid
 import slick.dbio.{DBIOAction, Effect, NoStream}
 
@@ -19,7 +19,7 @@ case class CreateMutactionsResult(createMutaction: CreateDataItem,
 }
 
 case class SqlMutactions(dataResolver: DataResolver) {
-  val project = dataResolver.project
+  val project: Project = dataResolver.project
 
   def report(mutactions: Seq[ClientSqlMutaction]): Seq[ClientSqlMutaction] = {
     ApiMetrics.mutactionCount.incBy(mutactions.size, project.id)
