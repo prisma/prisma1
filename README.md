@@ -34,7 +34,7 @@ The Prisma GraphQL API provides powerful abstractions and building blocks to dev
 
 1. **Install the CLI via NPM:**
 
-```sh
+```console
 npm install -g prisma
 ```
 
@@ -42,7 +42,7 @@ npm install -g prisma
 
 The following command creates all files you need for a new [service](https://www.prismagraphql.com/docs/reference/service-configuration/overview-ieshoo5ohm).
 
-```sh
+```console
 prisma init
 ```
 
@@ -78,7 +78,7 @@ type Location {
 
 To deploy your service simply run the following command and select one of the hosted development clusters or setup a local Docker-based development environment:
 
-```sh
+```console
 prisma deploy
 ```
 
