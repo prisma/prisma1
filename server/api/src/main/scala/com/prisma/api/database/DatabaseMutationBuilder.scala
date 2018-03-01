@@ -254,6 +254,8 @@ object DatabaseMutationBuilder {
     sql"(SELECT `id` FROM (SELECT  * From `#$projectId`.`#${where.model.name}`) IDFROMWHEREPATH WHERE `#${where.field.name}` = ${where.fieldValue})"
   }
 
+  //we could probably save even more queries if we start the paths always at the last node edge
+
   def pathQuery(projectId: String, path: Path): SQLActionBuilder = {
     path.edges match {
       case Nil                                => idFromWhere(projectId, path.root)

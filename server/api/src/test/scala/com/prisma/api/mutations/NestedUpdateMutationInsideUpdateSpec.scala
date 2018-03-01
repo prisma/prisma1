@@ -813,7 +813,8 @@ class NestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
       updateMutation,
       project,
       errorCode = 3041,
-      errorContains = """The relation BelowToBottom has no Node for the model Bottom connected to a Node for the model Below"""
+      errorContains =
+        """The relation BelowToBottom has no node for the model Bottom connected to a Node for the model Below with the value 'other below' for the field 'nameBelow' on your mutation path."""
     )
   }
 
@@ -1034,7 +1035,7 @@ class NestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
       updateMutation,
       project,
       errorCode = 3041,
-      errorContains = """The relation BottomToMiddle has no Node for the model Middle connected to a Node for the model Bottom"""
+      errorContains = """The relation BottomToMiddle has no node for the model Middle connected to a Node for the model Bottom on your mutation path."""
     )
 
   }

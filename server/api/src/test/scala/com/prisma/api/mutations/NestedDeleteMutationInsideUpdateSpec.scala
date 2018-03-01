@@ -949,7 +949,8 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
       """.stripMargin,
       project,
       errorCode = 3041,
-      errorContains = "The relation TodoToNote has no Node for the model Note connected to a Node for the model Todo"
+      errorContains =
+        s"The relation TodoToNote has no node for the model Note with the value '$noteId' for the field 'id' connected to a node for the model Todo on your mutation path."
     )
 
     val query = server.executeQuerySimple("""{ todoes { title }}""", project)
