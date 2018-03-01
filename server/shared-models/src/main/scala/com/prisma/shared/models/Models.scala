@@ -356,6 +356,12 @@ case class Field(
 
     returnField.orElse(fallback)
   }
+
+  def otherSideIsRequired(project: Project): Boolean = relatedField(project.schema) match {
+    case Some(f) if f.isRequired => true
+    case Some(_)                 => false
+    case None                    => false
+  }
 }
 
 sealed trait FieldConstraint {

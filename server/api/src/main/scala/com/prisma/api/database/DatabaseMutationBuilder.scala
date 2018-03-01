@@ -183,9 +183,6 @@ object DatabaseMutationBuilder {
       sql"WHERE `#${path.lastEdge_!.childRelationSide}` = " ++ pathQuery(projectId, path) ++
       sql" AND `#${path.lastEdge_!.parentRelationSide}` = " ++ pathQuery(projectId, path.removeLastEdge)).asUpdate
   }
-  //endregion
-
-  //region CASCADING DELETE
 
   def cascadingDeleteChildActions(projectId: String, path: Path) = {
     val deleteRelayIds  = (sql"DELETE FROM `#$projectId`.`_RelayId` WHERE `id` IN " ++ pathQuery(projectId, path)).asUpdate

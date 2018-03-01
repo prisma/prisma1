@@ -7,6 +7,7 @@ import com.prisma.api.database.mutactions.{ClientSqlDataChangeMutaction, ClientS
 import com.prisma.api.mutations.mutations.CascadingDeletes.{ModelEdge, NodeEdge, Path}
 import com.prisma.api.schema.APIErrors.RequiredRelationWouldBeViolated
 import com.prisma.shared.models.Project
+import com.prisma.util.gc_value.OtherGCStuff.parameterString
 import slick.dbio.{DBIOAction, Effect, NoStream}
 
 import scala.concurrent.Future
@@ -68,9 +69,26 @@ trait NestedRelationMutactionBaseClass extends ClientSqlDataChangeMutaction {
     val parentCheckString = s"`${path.lastRelation_!.id}` OLDPARENTFAILURETRIGGER WHERE `${path.lastEdge_!.childRelationSide}`"
     val childCheckString  = s"`${path.lastRelation_!.id}` OLDCHILDPATHFAILURETRIGGER WHERE `${path.lastEdge_!.parentRelationSide}`"
 
-//    (cause.contains(parentCheckString) && cause.contains(parameterStringFromSQLException(where))) ||  //todo reintroduce check on parameter
-//    (cause.contains(childCheckString) && cause.contains(parameterStringFromSQLException(parentInfo.where)))
+    val parentParameterString = path.lastEdge_! match {
+      case edge: NodeEdge => parameterString(edge.childWhere)
+      case _: ModelEdge   => ""
+    }
 
-    cause.contains(parentCheckString) || cause.contains(childCheckString)
+    val childParameterString = path.edges.length match {
+      case 0 =>
+        sys.error("There should always be at least one edge on the path if this is called.")
+
+      case 1 =>
+        parameterString(path.root)
+
+      case _ =>
+        path.removeLastEdge.lastEdge_! match {
+          case edge: NodeEdge => parameterString(edge.childWhere)
+          case _: ModelEdge   => ""
+        }
+    }
+
+    (cause.contains(parentCheckString) && cause.contains(parentParameterString)) ||
+    (cause.contains(childCheckString) && cause.contains(childParameterString))
   }
 }

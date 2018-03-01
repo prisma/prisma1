@@ -2,11 +2,11 @@ package com.prisma.api.database.mutactions.mutactions
 
 import java.sql.SQLException
 
-import com.prisma.api.mutations.mutations.CascadingDeletes.Path
 import com.prisma.api.database.DatabaseMutationBuilder._
 import com.prisma.api.database.mutactions.{ClientSqlDataChangeMutaction, ClientSqlStatementResult}
+import com.prisma.api.mutations.mutations.CascadingDeletes.{ModelEdge, NodeEdge, Path}
 import com.prisma.api.schema.APIErrors.RequiredRelationWouldBeViolated
-import com.prisma.shared.models.{Field, Project, Relation}
+import com.prisma.shared.models.{Project, Relation}
 import com.prisma.util.gc_value.OtherGCStuff.parameterString
 import slick.dbio.DBIOAction
 
@@ -15,7 +15,7 @@ import scala.concurrent.Future
 case class CascadingDeleteRelationMutactions(project: Project, path: Path) extends ClientSqlDataChangeMutaction {
 
   val relationFieldsNotOnPath         = path.lastModel.relationFields.filter(f => !path.edges.map(_.relation).contains(f.relation.get))
-  val requiredRelationFieldsNotOnPath = relationFieldsNotOnPath.filter(otherSideIsRequired)
+  val requiredRelationFieldsNotOnPath = relationFieldsNotOnPath.filter(_.otherSideIsRequired(project))
   val extendedPaths                   = requiredRelationFieldsNotOnPath.map(path.appendEdge(project, _))
 
   val requiredCheck = extendedPaths.map(oldParentFailureTrigger(project, _))
@@ -34,19 +34,16 @@ case class CascadingDeleteRelationMutactions(project: Project, path: Path) exten
     })
   }
 
-  def otherFailingRequiredRelationOnChild(cause: String): Option[Relation] = {
+  private def otherFailingRequiredRelationOnChild(cause: String): Option[Relation] = {
     extendedPaths.collectFirst { case x: Path if causedByThisMutactionChildOnly(x, cause) => x.lastRelation_! }
   }
 
-  def causedByThisMutactionChildOnly(path: Path, cause: String) = {
+  private def causedByThisMutactionChildOnly(path: Path, cause: String) = {
     val parentCheckString = s"`${path.lastRelation_!.id}` OLDPARENTPATHFAILURETRIGGER WHERE `${path.lastChildSide}`"
 
-    cause.contains(parentCheckString) // && cause.contains(parameterStringFromSQLException(path.root)) //todo reintroduce parameterchecks
-  }
-
-  def otherSideIsRequired(field: Field): Boolean = field.relatedField(project.schema) match {
-    case Some(f) if f.isRequired => true
-    case Some(_)                 => false
-    case None                    => false
+    path.lastEdge_! match {
+      case edge: NodeEdge => cause.contains(parentCheckString) && cause.contains(parameterString(edge.childWhere))
+      case _: ModelEdge   => cause.contains(parentCheckString)
+    }
   }
 }
