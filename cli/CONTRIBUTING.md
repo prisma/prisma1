@@ -4,6 +4,8 @@
 $ git clone git@github.com:graphcool/prisma.git
 $ cd prisma/cli
 $ yarn install
+$ cd packages/prisma-yml
+$ yarn install
 $ cd packages/prisma-cli-engine
 $ yarn build
 $ cd ../prisma-cli-core
