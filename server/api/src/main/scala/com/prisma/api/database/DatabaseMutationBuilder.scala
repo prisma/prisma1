@@ -255,6 +255,14 @@ object DatabaseMutationBuilder {
   }
 
   def pathQuery(projectId: String, path: Path): SQLActionBuilder = {
+    path.edges match {
+      case Nil                                => idFromWhere(projectId, path.root)
+      case x if x.last.isInstanceOf[NodeEdge] => idFromWhere(projectId, x.last.asInstanceOf[NodeEdge].childWhere)
+      case _                                  => pathQueryThatUsesWholePath(projectId, path)
+    }
+  }
+
+  def pathQueryThatUsesWholePath(projectId: String, path: Path): SQLActionBuilder = {
     object ::> { def unapply[A](l: List[A]) = Some((l.init, l.last)) }
     def nodeSelector(last: CascadingDeletes.Edge) = last match {
       case edge: NodeEdge => sql" `#${edge.childRelationSide}`" ++ idFromWhereEquals(projectId, edge.childWhere) ++ sql" AND "

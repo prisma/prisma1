@@ -158,7 +158,7 @@ object DatabaseQueryBuilder {
 
     sql"""select EXISTS (
             select `id`from `#${project.id}`.`#${path.lastModel.name}`
-            where""" ++ nodeSelector(path.lastEdge_!) ++ sql""" `id` IN""" ++ DatabaseMutationBuilder.pathQuery(project.id, path) ++ sql")"
+            where""" ++ nodeSelector(path.lastEdge_!) ++ sql""" `id` IN""" ++ DatabaseMutationBuilder.pathQueryThatUsesWholePath(project.id, path) ++ sql")"
   }
 
   def existsByModelAndId(projectId: String, modelName: String, id: String) = {

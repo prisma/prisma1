@@ -6,7 +6,7 @@ import com.prisma.api.database.DatabaseMutationBuilder._
 import com.prisma.api.database.mutactions.{ClientSqlDataChangeMutaction, ClientSqlStatementResult}
 import com.prisma.api.mutations.mutations.CascadingDeletes.{ModelEdge, NodeEdge, Path}
 import com.prisma.api.schema.APIErrors.RequiredRelationWouldBeViolated
-import com.prisma.shared.models.{Field, Project, Relation}
+import com.prisma.shared.models.{Project, Relation}
 import com.prisma.util.gc_value.OtherGCStuff.parameterString
 import slick.dbio.DBIOAction
 
