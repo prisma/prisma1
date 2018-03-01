@@ -38,17 +38,6 @@ object DatabaseMutationBuilder {
     (sql"INSERT INTO `#$projectId`.`_RelayId` (`id`, `stableModelIdentifier`) VALUES (${where.fieldValue}, ${where.model.stableIdentifier})").asUpdate
   }
 
-  def createDataItemIfUniqueDoesNotExist(projectId: String,
-                                         where: NodeSelector,
-                                         args: CoolArgs): SqlStreamingAction[Vector[Int], Int, Effect]#ResultAction[Int, NoStream, Effect] = {
-
-    val (escapedKeys: Option[SQLActionBuilder], escapedValues: Option[SQLActionBuilder]) = combineKeysAndValuesSeparately(args)
-    (sql"INSERT INTO `#${projectId}`.`#${where.model.name}` (" ++ escapedKeys ++ sql")" ++
-      sql"SELECT " ++ escapedValues ++
-      sql"FROM DUAL" ++
-      sql"WHERE NOT EXISTS " ++ idFromWhere(projectId, where) ++ sql";").asUpdate
-  }
-
   def createRelationRow(projectId: String,
                         relationTableName: String,
                         id: String,
@@ -161,9 +150,6 @@ object DatabaseMutationBuilder {
     (sql"DELETE FROM `#${project.id}`.`#${model.name}`" ++ prefixIfNotNone("where", whereSql)).asUpdate
   }
 
-  def deleteDataItemByUnique(projectId: String, where: NodeSelector) =
-    sqlu"DELETE FROM `#$projectId`.`#${where.model.name}` WHERE `#${where.field.name}` = ${where.fieldValue}"
-
   def deleteDataItemByPath(projectId: String, path: Path) =
     (sql"DELETE FROM `#$projectId`.`#${path.lastModel.name}` WHERE `id` = " ++ pathQuery(projectId, path)).asUpdate
 
@@ -228,10 +214,6 @@ object DatabaseMutationBuilder {
     )
   }
 
-  def setScalarListToEmpty(projectId: String, where: NodeSelector, fieldName: String) = {
-    (sql"DELETE FROM `#$projectId`.`#${where.model.name}_#${fieldName}` WHERE `nodeId`" ++ idFromWhereEquals(projectId, where)).asUpdate
-  }
-
   def setScalarListToEmptyPath(projectId: String, path: Path, fieldName: String) = {
     (sql"DELETE FROM `#$projectId`.`#${path.lastModel.name}_#${fieldName}` WHERE `nodeId` = " ++ pathQuery(projectId, path)).asUpdate
   }
@@ -267,10 +249,6 @@ object DatabaseMutationBuilder {
 
   def idFromWhere(projectId: String, where: NodeSelector): SQLActionBuilder = {
     sql"(SELECT `id` FROM (SELECT * FROM `#$projectId`.`#${where.model.name}`) IDFROMWHERE WHERE `#${where.field.name}` = ${where.fieldValue})"
-  }
-
-  def idFromWhereIn(projectId: String, where: NodeSelector): SQLActionBuilder = {
-    sql"IN " ++ idFromWhere(projectId, where)
   }
 
   def idFromWhereEquals(projectId: String, where: NodeSelector): SQLActionBuilder = where.isId match {
