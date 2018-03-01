@@ -18,7 +18,7 @@ case class CascadingDeleteRelationMutactions(project: Project, path: Path) exten
   val requiredRelationFieldsNotOnPath = relationFieldsNotOnPath.filter(otherSideIsRequired)
   val extendedPaths                   = requiredRelationFieldsNotOnPath.map(path.appendEdge(project, _))
 
-  val requiredCheck = extendedPaths.map(oldParentFailureTriggerByPath(project, _))
+  val requiredCheck = extendedPaths.map(oldParentFailureTrigger(project, _))
 
   val deleteAction = List(cascadingDeleteChildActions(project.id, path))
 

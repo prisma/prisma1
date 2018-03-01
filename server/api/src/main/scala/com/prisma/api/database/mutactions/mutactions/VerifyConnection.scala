@@ -14,7 +14,7 @@ import scala.concurrent.Future
 case class VerifyConnection(project: Project, path: Path) extends ClientSqlDataChangeMutaction {
 
   override def execute: Future[ClientSqlStatementResult[Any]] = {
-    Future.successful(ClientSqlStatementResult(sqlAction = DatabaseMutationBuilder.connectionFailureTriggerPath(project, path)))
+    Future.successful(ClientSqlStatementResult(sqlAction = DatabaseMutationBuilder.connectionFailureTrigger(project, path)))
   }
 
   override def handleErrors = {

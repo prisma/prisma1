@@ -26,13 +26,13 @@ trait NestedRelationMutactionBaseClass extends ClientSqlDataChangeMutaction {
     case None    => p.copy(isRequired = false, isList = true) //optional back-relation defaults to List-NonRequired
   }
 
-  def checkForOldParent = oldParentFailureTriggerByPath(project, path)
+  def checkForOldParent = oldParentFailureTrigger(project, path)
   def checkForOldParentByChildWhere = path.lastEdge_! match {
     case _: ModelEdge   => sys.error("Should be a node edge")
     case edge: NodeEdge => oldParentFailureTriggerForRequiredRelations(project, edge.relation, edge.childWhere, edge.childRelationSide)
   }
 
-  def checkForOldChild = oldChildFailureTriggerByPath(project, path)
+  def checkForOldChild = oldChildFailureTrigger(project, path)
   def noCheckRequired  = List.empty
 
   def removalByParent         = deleteRelationRowByParent(project.id, path)

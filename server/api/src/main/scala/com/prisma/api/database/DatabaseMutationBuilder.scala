@@ -282,7 +282,7 @@ object DatabaseMutationBuilder {
     triggerFailureWhenNotExists(project, query, table)
   }
 
-  def connectionFailureTriggerPath(project: Project, path: Path) = {
+  def connectionFailureTrigger(project: Project, path: Path) = {
     val table = path.lastRelation.get.id
     val query = path.lastEdge_! match {
       case edge: ModelEdge =>
@@ -305,13 +305,13 @@ object DatabaseMutationBuilder {
     triggerFailureWhenExists(project, query, table)
   }
 
-  def oldParentFailureTriggerByPath(project: Project, path: Path) = {
+  def oldParentFailureTrigger(project: Project, path: Path) = {
     val table = path.lastRelation_!.id
     val query = sql"SELECT `id` FROM `#${project.id}`.`#$table` OLDPARENTPATHFAILURETRIGGER WHERE `#${path.lastChildSide}` = " ++ pathQuery(project.id, path)
     triggerFailureWhenExists(project, query, table)
   }
 
-  def oldChildFailureTriggerByPath(project: Project, path: Path) = {
+  def oldChildFailureTrigger(project: Project, path: Path) = {
     val table = path.lastRelation_!.id
     val query = sql"SELECT `id` FROM `#${project.id}`.`#$table` OLDCHILDPATHFAILURETRIGGER WHERE `#${path.lastParentSide}` = " ++ pathQuery(project.id,
                                                                                                                                             path.removeLastEdge)
